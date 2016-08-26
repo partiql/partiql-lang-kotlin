@@ -1,7 +1,8 @@
 <?xml version="1.0"?>
 
 <project name="IonSQLSandbox-1.0" basedir="." default="release" xmlns:ht="happytrails">
-  <property name="allow.empty.sources.dir" value="true" />
+  <property name="tests.dir" location="${basedir}/test" />
+
   <import file="${happytrails.root}/happytrails.xml"/>
   <ht:import file="happier-kotlin-trails.xml"/>
 </project>
