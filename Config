@@ -1,0 +1,50 @@
+# -*-perl-*-
+
+package.IonSQLSandbox = {
+    interfaces = (1.0);
+    deploy = {
+        generic = true;
+    };
+
+    dependencies = {
+        1.0 = {
+        };
+    };
+
+    runtime-dependencies = {
+        1.0 = {
+            # If you're building a library, you don't need a runtime
+            # dependency on JDK. If you're writing a top-level
+            # package, uncomment the following line to add a
+            # dependency on JDK
+            # JDK8 = 1.0;
+        };
+    };
+
+    test-dependencies = {
+        1.0 = {
+            junit = 4;
+        };
+    };
+
+    build-environment = {
+        chroot = basic;
+        network-access = blocked;
+    };
+
+    build-system = happytrails;
+
+    build-tools = {
+        1.0 = {
+            JDK8 = 1.0;
+            HappierTrails = 3.3;
+        };
+    };
+
+
+    # For more information on how to declare targets for HappyTrails packages
+    # see: https://w.amazon.com/?BrazilBuildSystem/HappyTrails/GettingStarted
+    targets = {
+        IonSQLSandbox-1.0 = { type = javalibrary; };
+    };
+};
