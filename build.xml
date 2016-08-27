@@ -1,19 +1,7 @@
 <?xml version="1.0"?>
 
 <project name="IonSQLSandbox-1.0" basedir="." default="release" xmlns:ht="happytrails">
-
-  <!-- This is provided solely so that this package will build
-       out-of-the-box.  Feel free to remove this as soon as you add actual
-       content under the src/ and tst/ directories. -->
   <property name="allow.empty.sources.dir" value="true" />
-
   <import file="${happytrails.root}/happytrails.xml"/>
-
-  <!-- Define HappierTrails property overrides here -->
-  <property name="tests.additional.jvmargs" value=""/>
-
-  <ht:import file="happier-trails.xml"/>
-  <!-- For more information on targets and how to override them, see
-       https://w.amazon.com/index.php/HappierTrails-3.0/Targets -->
-       
+  <ht:import file="happier-kotlin-trails.xml"/>
 </project>

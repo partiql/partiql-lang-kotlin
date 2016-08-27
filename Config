@@ -8,22 +8,20 @@ package.IonSQLSandbox = {
 
     dependencies = {
         1.0 = {
+            IonJava = 1.0;
         };
     };
 
     runtime-dependencies = {
         1.0 = {
-            # If you're building a library, you don't need a runtime
-            # dependency on JDK. If you're writing a top-level
-            # package, uncomment the following line to add a
-            # dependency on JDK
             # JDK8 = 1.0;
+            # KotlinRuntime = 1.x;
         };
     };
 
     test-dependencies = {
         1.0 = {
-            junit = 4;
+            junit = 4.12;
         };
     };
 
@@ -38,6 +36,8 @@ package.IonSQLSandbox = {
         1.0 = {
             JDK8 = 1.0;
             HappierTrails = 3.3;
+            Kotlin = 1.x;
+            KotlinTrails = 1.0;
         };
     };
 
