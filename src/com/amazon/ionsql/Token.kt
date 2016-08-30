@@ -16,7 +16,8 @@ data class Token(val type: Type, val value: IonValue? = null) {
         val KEYWORDS = setOf(
             "select",
             "from",
-            "where"
+            "where",
+            "as"
         )
 
         val BINARY_OPERATORS = setOf(
@@ -70,6 +71,12 @@ data class Token(val type: Type, val value: IonValue? = null) {
 
     val text: String?
         get() = value?.stringValue()
+
+    val keywordText: String?
+        get() = when(type) {
+            KEYWORD -> text
+            else -> null
+        }
 
     val isBinaryOperator: Boolean
         get() = type == OPERATOR && text in BINARY_OPERATORS
