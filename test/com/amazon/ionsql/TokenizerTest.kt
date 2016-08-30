@@ -51,7 +51,7 @@ class TokenizerTest : Base() {
             LEFT_PAREN of null,
             KEYWORD of "select",
             IDENTIFIER of "a",
-            SEPARATOR of "','",
+            COMMA of "','",
             IDENTIFIER of "b",
             KEYWORD of "from",
             IDENTIFIER of "$",

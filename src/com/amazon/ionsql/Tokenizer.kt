@@ -40,38 +40,11 @@ object Tokenizer {
             when (value) {
                 is IonList -> tokenizeContainer(LEFT_BRACKET, RIGHT_BRACKET, value)
                 is IonSexp -> tokenizeContainer(LEFT_PAREN, RIGHT_PAREN, value)
-                is IonSymbol -> add(value.toToken())
+                is IonSymbol -> add(Token.fromSymbol(value))
                 else -> add(Token(LITERAL, value))
             }
         }
     }
 
-    private val KEYWORDS = setOf(
-        "select",
-        "from",
-        "where"
-    )
 
-    private val OPERATORS = setOf(
-        "+", "-", "*", "/", "%", "**",
-        "<", "<=", ">", ">=", "==", "!=",
-        "!"
-    )
-
-    private fun IonSymbol.toToken(): Token {
-        // names are not case sensitive
-        val text = stringValue().toLowerCase()
-
-        val type = when (text) {
-            in KEYWORDS -> KEYWORD
-            in OPERATORS -> OPERATOR
-            "," -> SEPARATOR
-            "." -> DOT
-            else -> IDENTIFIER
-        }
-
-        val tokenValue = system.newSymbol(text)
-
-        return Token(type, tokenValue)
-    }
 }
