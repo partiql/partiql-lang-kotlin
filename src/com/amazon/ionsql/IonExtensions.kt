@@ -48,6 +48,6 @@ fun IonValue.decimalValue(): Decimal? =
             else -> throw IllegalArgumentException()
         }
 
-fun IonSequence.add(text: String) = add().newString(text)
+fun IonSequence.addSymbol(text: String) = add().newSymbol(text)
 
 fun IonSequence.addClone(value: IonValue) = add(value.clone())

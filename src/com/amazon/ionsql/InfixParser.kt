@@ -17,18 +17,30 @@ import java.util.*
  * as the abstract syntax tree.
  */
 class InfixParser(val ion: IonSystem) {
+    companion object {
+        private val SELECT_BOUNDARY_TOKEN_TYPES =
+            setOf(KEYWORD)
+        private val CALL_BOUNDARY_TOKEN_TYPES =
+            setOf(RIGHT_PAREN)
+        private val ARGLIST_BOUNDARY_TOKEN_TYPES =
+            setOf(COMMA)
+        private val ARGLIST_WITH_ALIAS_BOUNDARY_TOKEN_TYPES =
+            ARGLIST_BOUNDARY_TOKEN_TYPES union setOf(AS)
+    }
+
     internal enum class ParseType {
         ATOM,
         SELECT,
         CALL,
         ARG_LIST,
         ALIAS
+        // TODO support operators (including bracket and dot)
     }
 
     internal data class ParseNode(val type: ParseType,
-                                 val token: Token?,
-                                 val children: List<ParseNode>,
-                                 val remaining: List<Token>) {
+                                  val token: Token?,
+                                  val children: List<ParseNode>,
+                                  val remaining: List<Token>) {
         /** Derives a [ParseNode] transforming the list of remaining tokens. */
         fun derive(tokensHandler: (List<Token>) -> List<Token>): ParseNode =
             copy(remaining = tokensHandler(remaining))
@@ -60,38 +72,38 @@ class InfixParser(val ion: IonSystem) {
     internal fun ParseNode.toSexp(): IonSexp = when (type) {
         ATOM -> when (token?.type) {
             LITERAL -> sexp {
-                add("lit")
+                addSymbol("lit")
                 addClone(token?.value!!)
             }
             IDENTIFIER -> sexp {
-                add("ident")
+                addSymbol("id")
                 addClone(token?.value!!)
             }
             else -> throw IllegalStateException("Unsupported atom: ${this}")
         }
         SELECT -> sexp {
-            add("select")
+            addSymbol("select")
             addSexp {
                 addChildNodes(children[0])
             }
             addSexp {
-                add("from")
+                addSymbol("from")
                 addChildNodes(children[1])
             }
             if (children.size > 2) {
                 addSexp {
-                    add("where")
-                    addChildNodes(children[3])
+                    addSymbol("where")
+                    add(children[2].toSexp())
                 }
             }
         }
         CALL -> sexp {
-            add(token?.text!!)
+            addSymbol(token?.text!!)
             addChildNodes(this@toSexp)
         }
         ALIAS -> sexp {
-            add("as")
-            add(token?.text!!)
+            addSymbol("as")
+            addSymbol(token?.text!!)
             addChildNodes(this@toSexp)
         }
         else -> throw IllegalStateException("Unsupported type for ion value: ${this}")
@@ -102,15 +114,16 @@ class InfixParser(val ion: IonSystem) {
 
     fun parse(tokens: List<Token>): IonSexp = parseExpression(tokens).toSexp()
 
-    internal fun parseExpression(tokens: List<Token>): ParseNode {
+    internal fun parseExpression(tokens: List<Token>,
+                                 boundaryTokenTypes: Set<Type> = emptySet()): ParseNode {
         var rem = tokens
         while (rem.isNotEmpty()) {
             val term = parseTerm(rem)
             rem = term.remaining
 
             // FIXME support operators via Shunting-Yard infix translation
-            if (rem.isNotEmpty()) {
-                throw UnsupportedOperationException("FIXME!")
+            if (rem.isNotEmpty() && rem.head?.type !in boundaryTokenTypes) {
+                throw UnsupportedOperationException("FIXME! ${rem}")
             }
             return term
         }
@@ -134,7 +147,8 @@ class InfixParser(val ion: IonSystem) {
     private fun parseSelect(tokens: List<Token>): ParseNode {
         val children = ArrayList<ParseNode>()
 
-        val selectList = parseArgList(tokens, supportsAlias = true)
+        val selectList = parseArgList(
+            tokens, supportsAlias = true, boundaryTokenTypes = SELECT_BOUNDARY_TOKEN_TYPES)
         var rem = selectList.remaining
         children.add(selectList)
 
@@ -142,7 +156,8 @@ class InfixParser(val ion: IonSystem) {
             throw IllegalArgumentException("Expected FROM after select list ${tokens}")
         }
 
-        val fromList = parseArgList(rem.tail, supportsAlias = true)
+        val fromList = parseArgList(
+            rem.tail, supportsAlias = true, boundaryTokenTypes = SELECT_BOUNDARY_TOKEN_TYPES)
         rem = fromList.remaining
         children.add(fromList)
 
@@ -158,18 +173,26 @@ class InfixParser(val ion: IonSystem) {
     private fun parseFunctionCall(name: Token, tokens: List<Token>): ParseNode =
         parseArgList(
             tokens,
-            supportsAlias = false
+            supportsAlias = false,
+            boundaryTokenTypes = CALL_BOUNDARY_TOKEN_TYPES
         ).copy(
             type = CALL,
             token = name
         ).deriveExpected(RIGHT_PAREN)
 
     private fun parseArgList(tokens: List<Token>,
-                              supportsAlias: Boolean): ParseNode {
+                             supportsAlias: Boolean,
+                             boundaryTokenTypes: Set<Type> = emptySet()): ParseNode {
+        val argListBoundaryTokenTypes = when (supportsAlias) {
+            true -> ARGLIST_WITH_ALIAS_BOUNDARY_TOKEN_TYPES
+            false -> ARGLIST_BOUNDARY_TOKEN_TYPES
+        } union boundaryTokenTypes
         val argList = ArrayList<ParseNode>()
         var rem = tokens
-        while (rem.isNotEmpty()) {
-            var child = parseExpression(tokens)
+        while (rem.isNotEmpty()
+                && rem.head?.type !in boundaryTokenTypes) {
+            var child = parseExpression(rem, argListBoundaryTokenTypes)
+            rem = child.remaining
             if (supportsAlias && rem.head?.keywordText == "as") {
                 val name = rem.tail.head
                 if (name == null || name.type != IDENTIFIER) {
@@ -177,14 +200,15 @@ class InfixParser(val ion: IonSystem) {
                 }
                 rem = rem.tail.tail
                 child = ParseNode(ALIAS, name, listOf(child), rem)
+                rem = child.remaining
             }
 
             argList.add(child)
-            rem = child.remaining
 
             if (rem.head?.type != COMMA) {
                 break
             }
+            rem = rem.tail
         }
 
         return ParseNode(ARG_LIST, null, argList, rem)
