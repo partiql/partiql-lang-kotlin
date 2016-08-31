@@ -6,6 +6,7 @@ package com.amazon.ionsql
 
 import com.amazon.ion.IonSexp
 import com.amazon.ion.IonSystem
+import com.amazon.ion.IonValue
 import com.amazon.ionsql.InfixParser.ParseType.*
 import com.amazon.ionsql.Token.Type
 import com.amazon.ionsql.Token.Type.*
@@ -18,15 +19,16 @@ import java.util.*
 class InfixParser(val ion: IonSystem) {
     internal enum class ParseType {
         ATOM,
-        FUNCTION_CALL,
+        SELECT,
+        CALL,
         ARG_LIST,
         ALIAS
     }
 
     internal data class ParseNode(val type: ParseType,
-                                  val token: Token?,
-                                  val children: List<ParseNode>,
-                                  val remaining: List<Token>) {
+                                 val token: Token?,
+                                 val children: List<ParseNode>,
+                                 val remaining: List<Token>) {
         /** Derives a [ParseNode] transforming the list of remaining tokens. */
         fun derive(tokensHandler: (List<Token>) -> List<Token>): ParseNode =
             copy(remaining = tokensHandler(remaining))
@@ -43,18 +45,83 @@ class InfixParser(val ion: IonSystem) {
         }
     }
 
+    inline private fun sexp(builder: IonSexp.() -> Unit): IonSexp =
+        ion.newEmptySexp().apply(builder)
+
+    inline private fun IonSexp.addSexp(builder: IonSexp.() -> Unit) =
+        add().newEmptySexp().apply(builder)
+
+    private fun IonSexp.addChildNodes(parent: ParseNode) {
+        for (node in parent.children) {
+            add(node.toSexp())
+        }
+    }
+
+    internal fun ParseNode.toSexp(): IonSexp = when (type) {
+        ATOM -> when (token?.type) {
+            LITERAL -> sexp {
+                add("lit")
+                addClone(token?.value!!)
+            }
+            IDENTIFIER -> sexp {
+                add("ident")
+                addClone(token?.value!!)
+            }
+            else -> throw IllegalStateException("Unsupported atom: ${this}")
+        }
+        SELECT -> sexp {
+            add("select")
+            addSexp {
+                addChildNodes(children[0])
+            }
+            addSexp {
+                add("from")
+                addChildNodes(children[1])
+            }
+            if (children.size > 2) {
+                addSexp {
+                    add("where")
+                    addChildNodes(children[3])
+                }
+            }
+        }
+        CALL -> sexp {
+            add(token?.text!!)
+            addChildNodes(this@toSexp)
+        }
+        ALIAS -> sexp {
+            add("as")
+            add(token?.text!!)
+            addChildNodes(this@toSexp)
+        }
+        else -> throw IllegalStateException("Unsupported type for ion value: ${this}")
+    }
+
     private fun List<Token>.atomFromHead(): ParseNode =
         ParseNode(ATOM, head, emptyList(), tail)
 
-    fun parse(tokens: List<Token>): IonSexp {
-        throw UnsupportedOperationException("FIXME!")
-    }
+    fun parse(tokens: List<Token>): IonSexp = parseExpression(tokens).toSexp()
 
     internal fun parseExpression(tokens: List<Token>): ParseNode {
-        throw UnsupportedOperationException("FIXME!")
+        var rem = tokens
+        while (rem.isNotEmpty()) {
+            val term = parseTerm(rem)
+            rem = term.remaining
+
+            // FIXME support operators via Shunting-Yard infix translation
+            if (rem.isNotEmpty()) {
+                throw UnsupportedOperationException("FIXME!")
+            }
+            return term
+        }
+        throw IllegalArgumentException("Empty expression not allowed")
     }
 
-    internal fun parseTerm(tokens: List<Token>): ParseNode = when (tokens.head?.type) {
+    private fun parseTerm(tokens: List<Token>): ParseNode = when (tokens.head?.type) {
+        KEYWORD -> when (tokens.head?.keywordText) {
+            "select" -> parseSelect(tokens.tail)
+            else -> throw IllegalArgumentException("Unexpected keyword: ${tokens}")
+        }
         LEFT_PAREN -> parseExpression(tokens.tail).deriveExpected(RIGHT_PAREN)
         IDENTIFIER -> when (tokens.tail.head?.type) {
             LEFT_PAREN -> parseFunctionCall(tokens.head!!, tokens.tail.tail)
@@ -64,16 +131,40 @@ class InfixParser(val ion: IonSystem) {
         else -> throw IllegalArgumentException("Unexpected term: ${tokens}")
     }
 
-    internal fun parseFunctionCall(name: Token, tokens: List<Token>): ParseNode =
+    private fun parseSelect(tokens: List<Token>): ParseNode {
+        val children = ArrayList<ParseNode>()
+
+        val selectList = parseArgList(tokens, supportsAlias = true)
+        var rem = selectList.remaining
+        children.add(selectList)
+
+        if (rem.head?.keywordText != "from") {
+            throw IllegalArgumentException("Expected FROM after select list ${tokens}")
+        }
+
+        val fromList = parseArgList(rem.tail, supportsAlias = true)
+        rem = fromList.remaining
+        children.add(fromList)
+
+        if (rem.head?.keywordText == "where") {
+            val whereExpr = parseExpression(rem.tail)
+            rem = whereExpr.remaining
+            children.add(whereExpr)
+        }
+
+        return ParseNode(SELECT, null, children, rem)
+    }
+
+    private fun parseFunctionCall(name: Token, tokens: List<Token>): ParseNode =
         parseArgList(
             tokens,
             supportsAlias = false
         ).copy(
-            type = FUNCTION_CALL,
+            type = CALL,
             token = name
         ).deriveExpected(RIGHT_PAREN)
 
-    internal fun parseArgList(tokens: List<Token>,
+    private fun parseArgList(tokens: List<Token>,
                               supportsAlias: Boolean): ParseNode {
         val argList = ArrayList<ParseNode>()
         var rem = tokens
