@@ -7,7 +7,7 @@ package com.amazon.ionsql.tools
 import com.amazon.ion.system.IonSystemBuilder
 
 val TEXT = """(
-    SELECT val.. name AS gas, val.value AS val FROM reading.value as val
+    SELECT val..,a name AS gas, val.value AS val FROM reading.value as val
 )"""
 
 fun main(args: Array<String>) {

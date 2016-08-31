@@ -40,11 +40,51 @@ object Tokenizer {
             when (value) {
                 is IonList -> tokenizeContainer(LEFT_BRACKET, RIGHT_BRACKET, value)
                 is IonSexp -> tokenizeContainer(LEFT_PAREN, RIGHT_PAREN, value)
-                is IonSymbol -> add(Token.fromSymbol(value))
+                is IonSymbol -> addAll(value.tokenize())
                 else -> add(Token(LITERAL, value))
             }
         }
     }
 
+    private val BREAK_OUT_OPERATORS = setOf("*", ".")
+    private val IDENTIFIER_PATTERN = Regex("""[a-z_$][a-z0-9_$]*""")
 
+    private fun IonSymbol.tokenize(): List<Token> {
+        val tokens = ArrayList<Token>()
+
+        // names are not case sensitive
+        var text = stringValue().toLowerCase()
+
+        // we need to deal with the case that operator characters may get glommed together
+        // and we need to be able to distinguish those as distinct tokens
+        while (text.length > 1) {
+            val head = text.substring(0, 1)
+            if (head in BREAK_OUT_OPERATORS) {
+                tokens.add(Token(OPERATOR, system.newSymbol(head)))
+            } else {
+                break
+            }
+            text = text.substring(1)
+        }
+
+        val type = when (text) {
+            in Token.KEYWORDS -> KEYWORD
+            in Token.ALL_OPERATORS -> OPERATOR
+            "," -> COMMA
+            "." -> DOT
+            else -> {
+                // TODO we should probably be less strict here
+                if (text.matches(IDENTIFIER_PATTERN)) {
+                    IDENTIFIER
+                } else {
+                    throw IllegalArgumentException("Illegal identifier $text")
+                }
+            }
+        }
+
+        val tokenValue = system.newSymbol(text)
+        tokens.add(Token(type, tokenValue))
+
+        return tokens
+    }
 }

@@ -16,18 +16,18 @@ class TokenizerTest : Base() {
         else -> Token(this, literal(text))
     }
 
-    @Test
-    fun empty() {
-        val actual = tokenize("()")
-        val expected = emptyList<Token>()
-
-        assertEquals(expected, actual)
+    fun assertTokens(text: String, expectedTokens: List<Token>) {
+        val actual = tokenize(text)
+        assertEquals(expectedTokens, actual)
     }
 
     @Test
-    fun select() {
-        val actual = tokenize("(SELECT * FROM $ WHERE $.a > 5)")
-        val expected = listOf(
+    fun empty() = assertTokens("()", emptyList())
+
+    @Test
+    fun select() = assertTokens(
+        "(SELECT * FROM $ WHERE $.a > 5)",
+        listOf(
             KEYWORD of "select",
             OPERATOR of "'*'",
             KEYWORD of "from",
@@ -39,14 +39,12 @@ class TokenizerTest : Base() {
             OPERATOR of "'>'",
             LITERAL of "5"
         )
-
-        assertEquals(expected, actual)
-    }
+    )
 
     @Test
-    fun function() {
-        val actual = tokenize("(EXTRACT_FIRST(SELECT a, b FROM $))")
-        val expected = listOf(
+    fun function() = assertTokens(
+        "(EXTRACT_FIRST(SELECT a, b FROM $))",
+        listOf(
             IDENTIFIER of "extract_first",
             LEFT_PAREN of null,
             KEYWORD of "select",
@@ -57,7 +55,24 @@ class TokenizerTest : Base() {
             IDENTIFIER of "$",
             RIGHT_PAREN of null
         )
+    )
 
-        assertEquals(expected, actual)
-    }
+    @Test
+    fun multidot() = assertTokens(
+        "(a..**..>=)",
+        listOf(
+            IDENTIFIER of "a",
+            OPERATOR of "'.'",
+            OPERATOR of "'.'",
+            OPERATOR of "'*'",
+            OPERATOR of "'*'",
+            OPERATOR of "'.'",
+            OPERATOR of "'.'",
+            OPERATOR of "'>='"
+
+        )
+    )
+
+    @Test(expected = IllegalArgumentException::class)
+    fun illegalSymbol() { tokenize("(a++)") }
 }
