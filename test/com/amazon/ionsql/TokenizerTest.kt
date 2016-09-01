@@ -9,7 +9,9 @@ import com.amazon.ionsql.Token.Type
 import com.amazon.ionsql.Token.Type.*
 
 class TokenizerTest : Base() {
-    fun tokenize(text: String): List<Token> = Tokenizer.tokenize(literal(text)!!)
+    val tokenizer = Tokenizer(ion)
+
+    fun tokenize(text: String): List<Token> = tokenizer.tokenize(literal(text)!!)
 
     infix fun Type.of(text: String?) = when (text) {
         null -> Token(this, null)
@@ -43,7 +45,7 @@ class TokenizerTest : Base() {
 
     @Test
     fun function() = assertTokens(
-        "(EXTRACT_FIRST(SELECT a, b FROM $))",
+        "(extract_first(SELECT a, b FROM $))",
         listOf(
             IDENTIFIER of "extract_first",
             LEFT_PAREN of null,

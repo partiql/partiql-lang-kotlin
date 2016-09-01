@@ -4,10 +4,8 @@
 
 package com.amazon.ionsql
 
-import com.amazon.ion.IonSymbol
 import com.amazon.ion.IonValue
 import com.amazon.ionsql.Token.Type.*
-import java.util.*
 
 /**
  * Simple [IonValue] based token for lexing Ion SQL.

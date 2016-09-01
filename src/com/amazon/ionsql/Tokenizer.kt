@@ -4,11 +4,8 @@
 
 package com.amazon.ionsql
 
-import com.amazon.ion.IonList
-import com.amazon.ion.IonSexp
-import com.amazon.ion.IonSymbol
+import com.amazon.ion.*
 import com.amazon.ion.IonType.*
-import com.amazon.ion.IonValue
 import com.amazon.ionsql.Token.Type
 import com.amazon.ionsql.Token.Type.*
 import java.util.*
@@ -16,7 +13,12 @@ import java.util.*
 /**
  * Provides generates a list of tokens from an expression.
  */
-object Tokenizer {
+class Tokenizer(private val ion: IonSystem) {
+    companion object {
+        private val BREAK_OUT_OPERATORS = setOf("*", ".")
+        private val IDENTIFIER_PATTERN = Regex("""[a-z_$][a-z0-9_$]*""")
+    }
+
     fun tokenize(source: IonValue): List<Token> {
         // make sure we have an expression
         val expr = when(source.type) {
@@ -46,21 +48,18 @@ object Tokenizer {
         }
     }
 
-    private val BREAK_OUT_OPERATORS = setOf("*", ".")
-    private val IDENTIFIER_PATTERN = Regex("""[a-z_$][a-z0-9_$]*""")
-
     private fun IonSymbol.tokenize(): List<Token> {
         val tokens = ArrayList<Token>()
 
         // names are not case sensitive
-        var text = stringValue().toLowerCase()
+        var text = stringValue()
 
         // we need to deal with the case that certain operator characters may get glommed together
         // and we need to be able to distinguish those as distinct tokens
         while (text.length > 1) {
             val head = text.substring(0, 1)
             if (head in BREAK_OUT_OPERATORS) {
-                tokens.add(Token(type(head), system.newSymbol(head)))
+                tokens.add(token(head))
             } else {
                 break
             }
@@ -68,24 +67,34 @@ object Tokenizer {
         }
 
         // add in remainder as the appropriate token
-        tokens.add(Token(type(text), system.newSymbol(text)))
+        tokens.add(token(text))
 
         return tokens
     }
 
-    private fun type(text: String): Type = when (text) {
-        in Token.KEYWORDS -> KEYWORD
-        in Token.ALL_OPERATORS -> OPERATOR
-        "," -> COMMA
-        "*" -> STAR
-        "." -> DOT
-        else -> {
-            // TODO we should probably be less strict here
-            if (text.matches(IDENTIFIER_PATTERN)) {
-                IDENTIFIER
-            } else {
-                throw IllegalArgumentException("Illegal identifier $text")
+    private fun token(text: String): Token {
+        val lower = text.toLowerCase()
+        val type = when (lower) {
+            in Token.KEYWORDS -> KEYWORD
+            in Token.ALL_OPERATORS -> OPERATOR
+            "," -> COMMA
+            "*" -> STAR
+            "." -> DOT
+            else -> {
+                // TODO we should probably be less strict here
+                if (text.matches(IDENTIFIER_PATTERN)) {
+                    IDENTIFIER
+                } else {
+                    throw IllegalArgumentException("Illegal identifier $text")
+                }
             }
         }
+
+        val actualText = when(type) {
+            KEYWORD, OPERATOR -> lower
+            else -> text
+        }
+
+        return Token(type, ion.newSymbol(actualText))
     }
 }

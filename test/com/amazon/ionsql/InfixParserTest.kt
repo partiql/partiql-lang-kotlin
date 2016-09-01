@@ -8,10 +8,11 @@ import org.junit.Before
 import org.junit.Test
 
 class InfixParserTest : Base() {
-    val parser: InfixParser = InfixParser(ion)
+    val parser = InfixParser(ion)
+    val tokenizer = Tokenizer(ion)
 
     fun assertExpression(expectedText: String, source: String) {
-        val tokens = Tokenizer.tokenize(literal("($source)"))
+        val tokens = tokenizer.tokenize(literal("($source)"))
         val actual = parser.parse(tokens)
         val expected = literal(expectedText)
 
@@ -32,13 +33,13 @@ class InfixParserTest : Base() {
 
     @Test
     fun callEmpty() = assertExpression(
-        "(foobar)",
+        "(call foobar)",
         "foobar()"
     )
 
     @Test
     fun callWithMultiple() = assertExpression(
-        "(foobar (lit 5) (lit 6) (id a))",
+        "(call foobar (lit 5) (lit 6) (id a))",
         "foobar(5, 6, a)"
     )
 
@@ -53,7 +54,7 @@ class InfixParserTest : Base() {
         """(select
              ((id a) (id b))
              (from (as t1 (id table1)) (id table2))
-             (where (f (id t1)))
+             (where (call f (id t1)))
            )
         """,
         "SELECT a, b FROM table1 as t1, table2 WHERE f(t1)"
@@ -67,7 +68,19 @@ class InfixParserTest : Base() {
 
     @Test
     fun dotStar() = assertExpression(
-        "(. (foo (id x) (id y)) (id a) (*) (id b))",
+        "(. (call foo (id x) (id y)) (id a) (*) (id b))",
         "foo(x, y).a.*.b"
+    )
+
+    @Test
+    fun dotDot() = assertExpression(
+        "(. (call foo (id x) (id y)) (..) (..) (..) (id a))",
+        "foo(x, y)....a"
+    )
+
+    @Test
+    fun dotDotAndStar() = assertExpression(
+        "(. (id x) (..) (..) (..) (id a) (..) (*) (id b))",
+        "x....a..*.b"
     )
 }

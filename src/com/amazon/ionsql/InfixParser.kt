@@ -6,7 +6,6 @@ package com.amazon.ionsql
 
 import com.amazon.ion.IonSexp
 import com.amazon.ion.IonSystem
-import com.amazon.ion.IonValue
 import com.amazon.ionsql.InfixParser.ParseType.*
 import com.amazon.ionsql.Token.Type
 import com.amazon.ionsql.Token.Type.*
@@ -110,6 +109,7 @@ class InfixParser(val ion: IonSystem) {
             }
         }
         CALL -> sexp {
+            addSymbol("call")
             addSymbol(token?.text!!)
             addChildNodes(this@toSexp)
         }
@@ -135,7 +135,7 @@ class InfixParser(val ion: IonSystem) {
 
             // FIXME support operators via Shunting-Yard infix translation
             if (rem.isNotEmpty() && rem.head?.type !in boundaryTokenTypes) {
-                throw UnsupportedOperationException("FIXME! ${rem}")
+                throw UnsupportedOperationException("FIXME! $rem")
             }
             return term
         }
@@ -147,21 +147,21 @@ class InfixParser(val ion: IonSystem) {
         val path = ArrayList<ParseNode>(listOf(term))
         var rem = term.remaining
         while (rem.head?.type == DOT) {
-            // consume dot
+            // consume first dot
             rem = rem.tail
-            when (rem.head?.type) {
-                DOT -> {
-                    // consume all dots succeeding the initial one as a parent ref
-                    while (rem.head?.type == DOT) {
-                        path.add(rem.atomFromHead())
-                        rem = rem.tail
-                    }
-                }
-                IDENTIFIER, STAR -> path.add(rem.atomFromHead())
-                else -> throw IllegalArgumentException("Path must have identifier: $tokens")
+
+            // consume all dots succeeding the initial one as a parent ref
+            while (rem.head?.type == DOT) {
+                path.add(rem.atomFromHead())
+                rem = rem.tail
             }
 
-            // consume what we just read
+            when (rem.head?.type) {
+                IDENTIFIER, STAR -> {
+                    path.add(rem.atomFromHead())
+                }
+                else -> throw IllegalArgumentException("Path must have identifier: $tokens")
+            }
             rem = rem.tail
         }
 
