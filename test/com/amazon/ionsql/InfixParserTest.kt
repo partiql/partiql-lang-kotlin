@@ -83,4 +83,23 @@ class InfixParserTest : Base() {
         "(. (id x) (..) (..) (..) (id a) (..) (*) (id b))",
         "x....a..*.b"
     )
+
+    @Test
+    fun pathsAndSelect() = assertExpression(
+        """(select
+             (
+               (as a (. (call process (id t1)) (..) (id a)))
+               (as b (. (id t2) (id b)))
+             )
+             (from
+               (id t1)
+               (. (id t2) (id x) (*) (id b))
+             )
+             (where
+               (call test (. (id t2) (..) (..) (id name)) (. (id t1) (id name)))
+             )
+           )
+        """,
+        "SELECT process(t1)..a AS a, t2.b AS b FROM t1, t2.x.*.b WHERE test(t2...name, t1.name)"
+    )
 }
