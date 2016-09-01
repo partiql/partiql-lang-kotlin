@@ -21,8 +21,9 @@ data class Token(val type: Type, val value: IonValue? = null) {
             "as"
         )
 
+        // note that '*' is treated specially
         internal val BINARY_OPERATORS = setOf(
-            "+", "-", "*", "/", "%",
+            "+", "-", "/", "%",
             "<", "<=", ">", ">=", "==", "!=",
             "and", "or"
         )
@@ -45,6 +46,7 @@ data class Token(val type: Type, val value: IonValue? = null) {
         LITERAL,
         AS,
         DOT,
+        STAR,
         COMMA
     }
 
@@ -58,8 +60,16 @@ data class Token(val type: Type, val value: IonValue? = null) {
         }
 
     val isBinaryOperator: Boolean
-        get() = type == OPERATOR && text in BINARY_OPERATORS
+        get() = when(type) {
+            OPERATOR -> text in BINARY_OPERATORS
+            STAR -> true
+            else -> false
+        }
 
     val isUnaryOperator: Boolean
-        get() = type == OPERATOR && text in UNARY_OPERATORS
+        get() = when(type){
+            OPERATOR -> text in UNARY_OPERATORS
+            STAR -> true
+            else -> false
+        }
 }

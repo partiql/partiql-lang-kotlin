@@ -55,36 +55,37 @@ object Tokenizer {
         // names are not case sensitive
         var text = stringValue().toLowerCase()
 
-        // we need to deal with the case that operator characters may get glommed together
+        // we need to deal with the case that certain operator characters may get glommed together
         // and we need to be able to distinguish those as distinct tokens
         while (text.length > 1) {
             val head = text.substring(0, 1)
             if (head in BREAK_OUT_OPERATORS) {
-                tokens.add(Token(OPERATOR, system.newSymbol(head)))
+                tokens.add(Token(type(head), system.newSymbol(head)))
             } else {
                 break
             }
             text = text.substring(1)
         }
 
-        val type = when (text) {
-            in Token.KEYWORDS -> KEYWORD
-            in Token.ALL_OPERATORS -> OPERATOR
-            "," -> COMMA
-            "." -> DOT
-            else -> {
-                // TODO we should probably be less strict here
-                if (text.matches(IDENTIFIER_PATTERN)) {
-                    IDENTIFIER
-                } else {
-                    throw IllegalArgumentException("Illegal identifier $text")
-                }
-            }
-        }
-
-        val tokenValue = system.newSymbol(text)
-        tokens.add(Token(type, tokenValue))
+        // add in remainder as the appropriate token
+        tokens.add(Token(type(text), system.newSymbol(text)))
 
         return tokens
+    }
+
+    private fun type(text: String): Type = when (text) {
+        in Token.KEYWORDS -> KEYWORD
+        in Token.ALL_OPERATORS -> OPERATOR
+        "," -> COMMA
+        "*" -> STAR
+        "." -> DOT
+        else -> {
+            // TODO we should probably be less strict here
+            if (text.matches(IDENTIFIER_PATTERN)) {
+                IDENTIFIER
+            } else {
+                throw IllegalArgumentException("Illegal identifier $text")
+            }
+        }
     }
 }

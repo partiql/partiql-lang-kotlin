@@ -58,4 +58,16 @@ class InfixParserTest : Base() {
         """,
         "SELECT a, b FROM table1 as t1, table2 WHERE f(t1)"
     )
+
+    @Test
+    fun dot() = assertExpression(
+        "(. (id a) (id b))",
+        "a.b"
+    )
+
+    @Test
+    fun dotStar() = assertExpression(
+        "(. (foo (id x) (id y)) (id a) (*) (id b))",
+        "foo(x, y).a.*.b"
+    )
 }

@@ -29,7 +29,7 @@ class TokenizerTest : Base() {
         "(SELECT * FROM $ WHERE $.a > 5)",
         listOf(
             KEYWORD of "select",
-            OPERATOR of "'*'",
+            STAR of "'*'",
             KEYWORD of "from",
             IDENTIFIER of "$",
             KEYWORD of "where",
@@ -62,14 +62,13 @@ class TokenizerTest : Base() {
         "(a..**..>=)",
         listOf(
             IDENTIFIER of "a",
-            OPERATOR of "'.'",
-            OPERATOR of "'.'",
-            OPERATOR of "'*'",
-            OPERATOR of "'*'",
-            OPERATOR of "'.'",
-            OPERATOR of "'.'",
+            DOT of "'.'",
+            DOT of "'.'",
+            STAR of "'*'",
+            STAR of "'*'",
+            DOT of "'.'",
+            DOT of "'.'",
             OPERATOR of "'>='"
-
         )
     )
 

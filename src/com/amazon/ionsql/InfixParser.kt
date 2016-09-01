@@ -33,8 +33,9 @@ class InfixParser(val ion: IonSystem) {
         SELECT,
         CALL,
         ARG_LIST,
-        ALIAS
-        // TODO support operators (including bracket and dot)
+        ALIAS,
+        PATH
+        // TODO support operators
     }
 
     internal data class ParseNode(val type: ParseType,
@@ -49,7 +50,7 @@ class InfixParser(val ion: IonSystem) {
             var rem = it
             for (type in types) {
                 if (type != rem.head?.type) {
-                    throw IllegalArgumentException("Expected ${type}, got ${rem.head}: ${it}")
+                    throw IllegalArgumentException("Expected $type, got ${rem.head}: $it")
                 }
                 rem = rem.tail
             }
@@ -77,9 +78,20 @@ class InfixParser(val ion: IonSystem) {
             }
             IDENTIFIER -> sexp {
                 addSymbol("id")
-                addClone(token?.value!!)
+                addSymbol(token?.text!!)
             }
-            else -> throw IllegalStateException("Unsupported atom: ${this}")
+            DOT -> sexp {
+                // an atom that is a dot is a parent reference
+                addSymbol("..")
+            }
+            STAR -> sexp {
+                addSymbol("*")
+            }
+            else -> throw IllegalStateException("Unsupported atom: $this")
+        }
+        PATH -> sexp {
+            addSymbol(".")
+            addChildNodes(this@toSexp)
         }
         SELECT -> sexp {
             addSymbol("select")
@@ -106,7 +118,7 @@ class InfixParser(val ion: IonSystem) {
             addSymbol(token?.text!!)
             addChildNodes(this@toSexp)
         }
-        else -> throw IllegalStateException("Unsupported type for ion value: ${this}")
+        else -> throw IllegalStateException("Unsupported type for ion value: $this")
     }
 
     private fun List<Token>.atomFromHead(): ParseNode =
@@ -118,7 +130,7 @@ class InfixParser(val ion: IonSystem) {
                                  boundaryTokenTypes: Set<Type> = emptySet()): ParseNode {
         var rem = tokens
         while (rem.isNotEmpty()) {
-            val term = parseTerm(rem)
+            val term = parseDottedTerm(rem)
             rem = term.remaining
 
             // FIXME support operators via Shunting-Yard infix translation
@@ -130,10 +142,39 @@ class InfixParser(val ion: IonSystem) {
         throw IllegalArgumentException("Empty expression not allowed")
     }
 
+    private fun parseDottedTerm(tokens: List<Token>): ParseNode {
+        val term = parseTerm(tokens)
+        val path = ArrayList<ParseNode>(listOf(term))
+        var rem = term.remaining
+        while (rem.head?.type == DOT) {
+            // consume dot
+            rem = rem.tail
+            when (rem.head?.type) {
+                DOT -> {
+                    // consume all dots succeeding the initial one as a parent ref
+                    while (rem.head?.type == DOT) {
+                        path.add(rem.atomFromHead())
+                        rem = rem.tail
+                    }
+                }
+                IDENTIFIER, STAR -> path.add(rem.atomFromHead())
+                else -> throw IllegalArgumentException("Path must have identifier: $tokens")
+            }
+
+            // consume what we just read
+            rem = rem.tail
+        }
+
+        return when (path.size) {
+            1 -> term
+            else -> ParseNode(PATH,  null, path, rem)
+        }
+    }
+
     private fun parseTerm(tokens: List<Token>): ParseNode = when (tokens.head?.type) {
         KEYWORD -> when (tokens.head?.keywordText) {
             "select" -> parseSelect(tokens.tail)
-            else -> throw IllegalArgumentException("Unexpected keyword: ${tokens}")
+            else -> throw IllegalArgumentException("Unexpected keyword: $tokens")
         }
         LEFT_PAREN -> parseExpression(tokens.tail).deriveExpected(RIGHT_PAREN)
         IDENTIFIER -> when (tokens.tail.head?.type) {
@@ -141,7 +182,7 @@ class InfixParser(val ion: IonSystem) {
             else -> tokens.atomFromHead()
         }
         LITERAL -> tokens.atomFromHead()
-        else -> throw IllegalArgumentException("Unexpected term: ${tokens}")
+        else -> throw IllegalArgumentException("Unexpected term: $tokens")
     }
 
     private fun parseSelect(tokens: List<Token>): ParseNode {
@@ -153,7 +194,7 @@ class InfixParser(val ion: IonSystem) {
         children.add(selectList)
 
         if (rem.head?.keywordText != "from") {
-            throw IllegalArgumentException("Expected FROM after select list ${tokens}")
+            throw IllegalArgumentException("Expected FROM after select list $tokens")
         }
 
         val fromList = parseArgList(
@@ -196,7 +237,7 @@ class InfixParser(val ion: IonSystem) {
             if (supportsAlias && rem.head?.keywordText == "as") {
                 val name = rem.tail.head
                 if (name == null || name.type != IDENTIFIER) {
-                    throw IllegalArgumentException("Expected identifier for alias: ${rem}")
+                    throw IllegalArgumentException("Expected identifier for alias: $rem")
                 }
                 rem = rem.tail.tail
                 child = ParseNode(ALIAS, name, listOf(child), rem)
