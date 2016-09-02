@@ -19,14 +19,20 @@ class InfixParser(val ion: IonSystem) {
     companion object {
         private val SELECT_BOUNDARY_TOKEN_TYPES =
             setOf(KEYWORD)
+
         private val GROUP_AND_CALL_BOUNDARY_TOKEN_TYPES =
             setOf(RIGHT_PAREN)
+
         private val BRACKET_BOUNDARY_TOKEN_TYPES =
             setOf(RIGHT_BRACKET)
+
         private val ARGLIST_BOUNDARY_TOKEN_TYPES =
             setOf(COMMA)
+
         private val ARGLIST_WITH_ALIAS_BOUNDARY_TOKEN_TYPES =
             ARGLIST_BOUNDARY_TOKEN_TYPES union setOf(AS)
+
+        private val PATH_START_TOKENS = setOf(DOT, LEFT_BRACKET)
     }
 
     internal enum class ParseType {
@@ -190,39 +196,49 @@ class InfixParser(val ion: IonSystem) {
         val term = parseTerm(tokens)
         val path = ArrayList<ParseNode>(listOf(term))
         var rem = term.remaining
-        while (rem.head?.type == DOT) {
-            // consume first dot
-            rem = rem.tail
-
-            // consume all dots succeeding the initial one as a parent ref
-            while (rem.head?.type == DOT) {
-                path.add(rem.atomFromHead())
-                rem = rem.tail
-            }
-
+        var hasPath = true
+        while (hasPath) {
             when (rem.head?.type) {
-                IDENTIFIER -> {
-                    // re-write the identifier as a literal string element
-                    val token = Token(LITERAL, ion.newString(rem.head?.text!!))
-                    path.add(ParseNode(ATOM, token, emptyList(), rem.tail))
+                DOT -> {
+                    // consume first dot
+                    rem = rem.tail
+
+                    // consume all dots succeeding the initial one as a parent ref
+                    while (rem.head?.type == DOT) {
+                        path.add(rem.atomFromHead())
+                        rem = rem.tail
+                    }
+
+                    when (rem.head?.type) {
+                        IDENTIFIER -> {
+                            // re-write the identifier as a literal string element
+                            val token = Token(LITERAL, ion.newString(rem.head?.text!!))
+                            path.add(ParseNode(ATOM, token, emptyList(), rem.tail))
+                        }
+                        STAR -> path.add(rem.atomFromHead())
+                        else -> throw IllegalArgumentException(
+                            "Dotted member access invalid: $tokens"
+                        )
+                    }
+                    rem = rem.tail
                 }
-                STAR -> path.add(rem.atomFromHead())
-                LEFT_BRACKET -> path.add(
-                    parseExpression(
+                LEFT_BRACKET -> {
+                    val expr = parseExpression(
                         rem.tail,
                         boundaryTokenTypes = BRACKET_BOUNDARY_TOKEN_TYPES
                     ).deriveExpected(
                         RIGHT_BRACKET
                     )
-                )
-                else -> throw IllegalArgumentException("Path must have identifier: $tokens")
+                    path.add(expr)
+                    rem = expr.remaining
+                }
+                else -> hasPath = false
             }
-            rem = rem.tail
         }
 
         return when (path.size) {
             1 -> term
-            else -> ParseNode(PATH,  null, path, rem)
+            else -> ParseNode(PATH, null, path, rem)
         }
     }
 

@@ -122,10 +122,16 @@ class InfixParserTest : Base() {
     )
 
     @Test
+    fun bracket() = assertExpression(
+        """(. (id a) (lit 5) (lit "b") (+ (id a) (lit 3)))""",
+        """a[5]["b"][(a + 3)]"""
+    )
+
+    @Test
     fun pathsAndSelect() = assertExpression(
         """(select
              (
-               (as a (. (call process (id t1)) (..) (lit "a")))
+               (as a (. (call process (id t1)) (..) (lit "a") (lit 0)))
                (as b (. (id t2) (lit "b")))
              )
              (from
@@ -140,7 +146,7 @@ class InfixParserTest : Base() {
              )
            )
         """,
-        """SELECT process(t1)..a AS a, t2.b AS b
+        """SELECT process(t1)..a[0] AS a, t2.b AS b
            FROM t1, t2.x.*.b
            WHERE test(t2...name, t1.name) AND t1.id == t2.id
         """
