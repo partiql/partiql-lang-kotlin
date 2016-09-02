@@ -50,6 +50,12 @@ class InfixParserTest : Base() {
     )
 
     @Test
+    fun unaryPlusMinusIdentNoSpaces() = assertExpression(
+        "(+ (- (call baz)))",
+        "+-baz()"
+    )
+
+    @Test
     fun callWithMultiple() = assertExpression(
         "(call foobar (lit 5) (lit 6) (id a))",
         "foobar(5, 6, a)"

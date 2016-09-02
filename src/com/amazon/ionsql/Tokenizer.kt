@@ -15,7 +15,8 @@ import java.util.*
  */
 class Tokenizer(private val ion: IonSystem) {
     companion object {
-        private val BREAK_OUT_OPERATORS = setOf("*", ".")
+        // note that this has to be length == 1 strings
+        private val BREAK_OUT_OPERATORS = setOf("*", ".", "+", "-")
         private val IDENTIFIER_PATTERN = Regex("""[a-z_$][a-z0-9_$]*""")
     }
 

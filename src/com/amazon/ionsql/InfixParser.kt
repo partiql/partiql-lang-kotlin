@@ -129,6 +129,7 @@ class InfixParser(val ion: IonSystem) {
     private fun List<Token>.atomFromHead(): ParseNode =
         ParseNode(ATOM, head, emptyList(), tail)
 
+    /** Entry point into the parser. */
     fun parse(tokens: List<Token>): IonSexp = parseExpression(tokens).toSexp()
 
     internal fun parseExpression(tokens: List<Token>,

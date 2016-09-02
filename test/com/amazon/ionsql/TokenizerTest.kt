@@ -75,5 +75,5 @@ class TokenizerTest : Base() {
     )
 
     @Test(expected = IllegalArgumentException::class)
-    fun illegalSymbol() { tokenize("(a++)") }
+    fun illegalSymbol() { tokenize("(a>>)") }
 }
