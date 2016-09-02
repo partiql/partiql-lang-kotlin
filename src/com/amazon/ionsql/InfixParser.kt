@@ -19,7 +19,7 @@ class InfixParser(val ion: IonSystem) {
     companion object {
         private val SELECT_BOUNDARY_TOKEN_TYPES =
             setOf(KEYWORD)
-        private val CALL_BOUNDARY_TOKEN_TYPES =
+        private val GROUP_AND_CALL_BOUNDARY_TOKEN_TYPES =
             setOf(RIGHT_PAREN)
         private val ARGLIST_BOUNDARY_TOKEN_TYPES =
             setOf(COMMA)
@@ -196,7 +196,12 @@ class InfixParser(val ion: IonSystem) {
             "select" -> parseSelect(tokens.tail)
             else -> throw IllegalArgumentException("Unexpected keyword: $tokens")
         }
-        LEFT_PAREN -> parseExpression(tokens.tail).deriveExpected(RIGHT_PAREN)
+        LEFT_PAREN -> parseExpression(
+            tokens.tail,
+            boundaryTokenTypes = GROUP_AND_CALL_BOUNDARY_TOKEN_TYPES
+        ).deriveExpected(
+            RIGHT_PAREN
+        )
         IDENTIFIER -> when (tokens.tail.head?.type) {
             LEFT_PAREN -> parseFunctionCall(tokens.head!!, tokens.tail.tail)
             else -> tokens.atomFromHead()
@@ -235,7 +240,7 @@ class InfixParser(val ion: IonSystem) {
         parseArgList(
             tokens,
             supportsAlias = false,
-            boundaryTokenTypes = CALL_BOUNDARY_TOKEN_TYPES
+            boundaryTokenTypes = GROUP_AND_CALL_BOUNDARY_TOKEN_TYPES
         ).copy(
             type = CALL,
             token = name

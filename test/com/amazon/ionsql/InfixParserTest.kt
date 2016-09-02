@@ -38,9 +38,15 @@ class InfixParserTest : Base() {
     )
 
     @Test
-    fun unaryMinus() = assertExpression(
+    fun unaryMinusCall() = assertExpression(
         "(- (call baz))",
         "-baz()"
+    )
+
+    @Test
+    fun unaryPlusMinusIdent() = assertExpression(
+        "(+ (- (call baz)))",
+        "+(-baz())"
     )
 
     @Test
