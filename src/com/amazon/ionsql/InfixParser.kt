@@ -21,6 +21,8 @@ class InfixParser(val ion: IonSystem) {
             setOf(KEYWORD)
         private val GROUP_AND_CALL_BOUNDARY_TOKEN_TYPES =
             setOf(RIGHT_PAREN)
+        private val BRACKET_BOUNDARY_TOKEN_TYPES =
+            setOf(RIGHT_BRACKET)
         private val ARGLIST_BOUNDARY_TOKEN_TYPES =
             setOf(COMMA)
         private val ARGLIST_WITH_ALIAS_BOUNDARY_TOKEN_TYPES =
@@ -89,7 +91,7 @@ class InfixParser(val ion: IonSystem) {
             }
             else -> throw IllegalStateException("Unsupported atom: $this")
         }
-        UNARY -> sexp {
+        UNARY, BINARY -> sexp {
             addSymbol(token?.text!!)
             addChildNodes(this@toSexp)
         }
@@ -132,20 +134,41 @@ class InfixParser(val ion: IonSystem) {
     /** Entry point into the parser. */
     fun parse(tokens: List<Token>): IonSexp = parseExpression(tokens).toSexp()
 
+    /**
+     * Parses the given token list.
+     *
+     * @param tokens The list of tokens to parse.
+     * @param precedence The precedence of the current expression parsing.
+     *                   A negative value represents the "top-level" parsing.
+     * @param boundaryTokenTypes The token types that are considered the "end" of the parse.
+     *                           Empty implies until end of stream.
+     *
+     * @return The parse tree for the given expression.
+     */
     internal fun parseExpression(tokens: List<Token>,
+                                 precedence: Int = -1,
                                  boundaryTokenTypes: Set<Type> = emptySet()): ParseNode {
-        var rem = tokens
-        while (rem.isNotEmpty()) {
-            val term = parseUnaryTerm(rem)
-            rem = term.remaining
+        var expr = parseUnaryTerm(tokens)
+        var rem = expr.remaining
 
-            // FIXME support operators via Shunting-Yard infix translation
-            if (rem.isNotEmpty() && rem.head?.type !in boundaryTokenTypes) {
-                throw UnsupportedOperationException("FIXME! $rem")
+        fun atBoundary() = rem.isEmpty() || rem.head?.type in boundaryTokenTypes
+        fun headPrecedence() = rem.head?.infixPrecedence ?: 0
+
+        // XXX this is a Pratt Top-Down Operator Precedence implementation
+        while (!atBoundary() && precedence < headPrecedence()) {
+            val op = rem.head!!
+            if (!op.isBinaryOperator) {
+                throw IllegalArgumentException("Expected binary operator: $rem")
             }
-            return term
+            val right = parseExpression(
+                rem.tail,
+                precedence = op.infixPrecedence,
+                boundaryTokenTypes = boundaryTokenTypes
+            )
+            rem = right.remaining
+            expr = ParseNode(BINARY, op, listOf(expr, right), rem)
         }
-        throw IllegalArgumentException("Empty expression not allowed")
+        return expr
     }
 
     private fun parseUnaryTerm(tokens: List<Token>): ParseNode =
@@ -184,6 +207,14 @@ class InfixParser(val ion: IonSystem) {
                     path.add(ParseNode(ATOM, token, emptyList(), rem.tail))
                 }
                 STAR -> path.add(rem.atomFromHead())
+                LEFT_BRACKET -> path.add(
+                    parseExpression(
+                        rem.tail,
+                        boundaryTokenTypes = BRACKET_BOUNDARY_TOKEN_TYPES
+                    ).deriveExpected(
+                        RIGHT_BRACKET
+                    )
+                )
                 else -> throw IllegalArgumentException("Path must have identifier: $tokens")
             }
             rem = rem.tail
@@ -253,15 +284,15 @@ class InfixParser(val ion: IonSystem) {
     private fun parseArgList(tokens: List<Token>,
                              supportsAlias: Boolean,
                              boundaryTokenTypes: Set<Type> = emptySet()): ParseNode {
-        val argListBoundaryTokenTypes = when (supportsAlias) {
-            true -> ARGLIST_WITH_ALIAS_BOUNDARY_TOKEN_TYPES
-            false -> ARGLIST_BOUNDARY_TOKEN_TYPES
+        val argListBoundaryTokenTypes = when {
+            supportsAlias -> ARGLIST_WITH_ALIAS_BOUNDARY_TOKEN_TYPES
+            else -> ARGLIST_BOUNDARY_TOKEN_TYPES
         } union boundaryTokenTypes
         val argList = ArrayList<ParseNode>()
         var rem = tokens
         while (rem.isNotEmpty()
                 && rem.head?.type !in boundaryTokenTypes) {
-            var child = parseExpression(rem, argListBoundaryTokenTypes)
+            var child = parseExpression(rem, boundaryTokenTypes = argListBoundaryTokenTypes)
             rem = child.remaining
             if (supportsAlias && rem.head?.keywordText == "as") {
                 val name = rem.tail.head

@@ -56,6 +56,25 @@ class InfixParserTest : Base() {
     )
 
     @Test
+    fun binaryOperatorsWithPrecedence() = assertExpression(
+        """(and
+             (+
+               (id a)
+               (id b)
+             )
+             (-
+               (*
+                 (/ (id c) (id d))
+                 (id e)
+               )
+               (id f)
+             )
+           )
+        """,
+        "a + b and c / d * e - f"
+    )
+
+    @Test
     fun callWithMultiple() = assertExpression(
         "(call foobar (lit 5) (lit 6) (id a))",
         "foobar(5, 6, a)"
@@ -114,10 +133,16 @@ class InfixParserTest : Base() {
                (. (id t2) (lit "x") (*) (lit "b"))
              )
              (where
-               (call test (. (id t2) (..) (..) (lit "name")) (. (id t1) (lit "name")))
+               (and
+                 (call test (. (id t2) (..) (..) (lit "name")) (. (id t1) (lit "name")))
+                 (== (. (id t1) (lit "id")) (. (id t2) (lit "id")))
+               )
              )
            )
         """,
-        "SELECT process(t1)..a AS a, t2.b AS b FROM t1, t2.x.*.b WHERE test(t2...name, t1.name)"
+        """SELECT process(t1)..a AS a, t2.b AS b
+           FROM t1, t2.x.*.b
+           WHERE test(t2...name, t1.name) AND t1.id == t2.id
+        """
     )
 }

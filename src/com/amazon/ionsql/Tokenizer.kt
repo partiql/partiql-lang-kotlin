@@ -34,7 +34,7 @@ class Tokenizer(private val ion: IonSystem) {
 
     private fun MutableList<Token>.tokenizeContainer(left: Type, right: Type, value: IonValue) {
         add(Token(left))
-        this.tokenize(value)
+        tokenize(value)
         add(Token(right))
     }
 
