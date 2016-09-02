@@ -32,6 +32,12 @@ class InfixParserTest : Base() {
     )
 
     @Test
+    fun listLiteral() = assertExpression(
+        "(list (id a) (lit 5) (+ (id b) (lit 6)))",
+        "[a, 5, (b + 6)]"
+    )
+
+    @Test
     fun callEmpty() = assertExpression(
         "(call foobar)",
         "foobar()"

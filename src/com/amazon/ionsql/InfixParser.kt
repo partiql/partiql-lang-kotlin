@@ -4,8 +4,10 @@
 
 package com.amazon.ionsql
 
+import com.amazon.ion.IonSequence
 import com.amazon.ion.IonSexp
 import com.amazon.ion.IonSystem
+import com.amazon.ion.IonValue
 import com.amazon.ionsql.InfixParser.ParseType.*
 import com.amazon.ionsql.Token.Type
 import com.amazon.ionsql.Token.Type.*
@@ -32,7 +34,6 @@ class InfixParser(val ion: IonSystem) {
         private val ARGLIST_WITH_ALIAS_BOUNDARY_TOKEN_TYPES =
             ARGLIST_BOUNDARY_TOKEN_TYPES union setOf(AS)
 
-        private val PATH_START_TOKENS = setOf(DOT, LEFT_BRACKET)
     }
 
     internal enum class ParseType {
@@ -43,7 +44,9 @@ class InfixParser(val ion: IonSystem) {
         ALIAS,
         PATH,
         UNARY,
-        BINARY
+        BINARY,
+        LIST,
+        STRUCT
     }
 
     internal data class ParseNode(val type: ParseType,
@@ -78,6 +81,10 @@ class InfixParser(val ion: IonSystem) {
         }
     }
 
+    private fun IonSequence.addSymbol(text: String) = add().newSymbol(text)
+
+    private fun IonSequence.addClone(value: IonValue) = add(value.clone())
+
     internal fun ParseNode.toSexp(): IonSexp = when (type) {
         ATOM -> when (token?.type) {
             LITERAL -> sexp {
@@ -96,6 +103,13 @@ class InfixParser(val ion: IonSystem) {
                 addSymbol("*")
             }
             else -> throw IllegalStateException("Unsupported atom: $this")
+        }
+        LIST -> sexp {
+            addSymbol("list")
+            addChildNodes(this@toSexp)
+        }
+        STRUCT -> sexp {
+            throw UnsupportedOperationException("FIXME!")
         }
         UNARY, BINARY -> sexp {
             addSymbol(token?.text!!)
@@ -253,6 +267,7 @@ class InfixParser(val ion: IonSystem) {
         ).deriveExpected(
             RIGHT_PAREN
         )
+        LEFT_BRACKET -> parseListLiteral(tokens.tail)
         IDENTIFIER -> when (tokens.tail.head?.type) {
             LEFT_PAREN -> parseFunctionCall(tokens.head!!, tokens.tail.tail)
             else -> tokens.atomFromHead()
@@ -296,6 +311,15 @@ class InfixParser(val ion: IonSystem) {
             type = CALL,
             token = name
         ).deriveExpected(RIGHT_PAREN)
+
+    private fun parseListLiteral(tokens: List<Token>): ParseNode =
+        parseArgList(
+            tokens,
+            supportsAlias = false,
+            boundaryTokenTypes = BRACKET_BOUNDARY_TOKEN_TYPES
+        ).copy(
+            type = LIST
+        ).deriveExpected(RIGHT_BRACKET)
 
     private fun parseArgList(tokens: List<Token>,
                              supportsAlias: Boolean,

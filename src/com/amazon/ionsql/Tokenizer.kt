@@ -39,13 +39,19 @@ class Tokenizer(private val ion: IonSystem) {
     }
 
     private fun MutableList<Token>.tokenize(source: IonValue) {
+        var first = true
         for (value in source) {
+            if (!first && source is IonList) {
+                // we "put back in" the commas in the list to normalize parsing
+                add(Token(COMMA, ion.newSymbol(",")))
+            }
             when (value) {
                 is IonList -> tokenizeContainer(LEFT_BRACKET, RIGHT_BRACKET, value)
                 is IonSexp -> tokenizeContainer(LEFT_PAREN, RIGHT_PAREN, value)
                 is IonSymbol -> addAll(value.tokenize())
                 else -> add(Token(LITERAL, value))
             }
+            first = false
         }
     }
 

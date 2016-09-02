@@ -62,6 +62,8 @@ data class Token(val type: Type, val value: IonValue? = null) {
         RIGHT_PAREN,
         LEFT_BRACKET,
         RIGHT_BRACKET,
+        LEFT_CURLY,
+        RIGHT_CURLY,
         IDENTIFIER,
         OPERATOR,
         KEYWORD,
