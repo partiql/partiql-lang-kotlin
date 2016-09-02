@@ -80,25 +80,25 @@ class InfixParserTest : Base() {
 
     @Test
     fun dot() = assertExpression(
-        "(. (id a) (id b))",
+        """(. (id a) (lit "b"))""",
         "a.b"
     )
 
     @Test
     fun dotStar() = assertExpression(
-        "(. (call foo (id x) (id y)) (id a) (*) (id b))",
+        """(. (call foo (id x) (id y)) (lit "a") (*) (lit "b"))""",
         "foo(x, y).a.*.b"
     )
 
     @Test
     fun dotDot() = assertExpression(
-        "(. (call foo (id x) (id y)) (..) (..) (..) (id a))",
+        """(. (call foo (id x) (id y)) (..) (..) (..) (lit "a"))""",
         "foo(x, y)....a"
     )
 
     @Test
     fun dotDotAndStar() = assertExpression(
-        "(. (id x) (..) (..) (..) (id a) (..) (*) (id b))",
+        """(. (id x) (..) (..) (..) (lit "a") (..) (*) (lit "b"))""",
         "x....a..*.b"
     )
 
@@ -106,15 +106,15 @@ class InfixParserTest : Base() {
     fun pathsAndSelect() = assertExpression(
         """(select
              (
-               (as a (. (call process (id t1)) (..) (id a)))
-               (as b (. (id t2) (id b)))
+               (as a (. (call process (id t1)) (..) (lit "a")))
+               (as b (. (id t2) (lit "b")))
              )
              (from
                (id t1)
-               (. (id t2) (id x) (*) (id b))
+               (. (id t2) (lit "x") (*) (lit "b"))
              )
              (where
-               (call test (. (id t2) (..) (..) (id name)) (. (id t1) (id name)))
+               (call test (. (id t2) (..) (..) (lit "name")) (. (id t1) (lit "name")))
              )
            )
         """,

@@ -136,7 +136,7 @@ class InfixParser(val ion: IonSystem) {
                                  boundaryTokenTypes: Set<Type> = emptySet()): ParseNode {
         var rem = tokens
         while (rem.isNotEmpty()) {
-            val term = parseUnaryOperatorTerm(rem)
+            val term = parseUnaryTerm(rem)
             rem = term.remaining
 
             // FIXME support operators via Shunting-Yard infix translation
@@ -148,10 +148,10 @@ class InfixParser(val ion: IonSystem) {
         throw IllegalArgumentException("Empty expression not allowed")
     }
 
-    private fun parseUnaryOperatorTerm(tokens: List<Token>): ParseNode =
+    private fun parseUnaryTerm(tokens: List<Token>): ParseNode =
         when (tokens.head?.isUnaryOperator) {
             true -> {
-                val term = parseUnaryOperatorTerm(tokens.tail)
+                val term = parseUnaryTerm(tokens.tail)
 
                 ParseNode(
                     UNARY,
@@ -160,10 +160,10 @@ class InfixParser(val ion: IonSystem) {
                     term.remaining
                 )
             }
-            else -> parseDottedTerm(tokens)
+            else -> parsePathTerm(tokens)
         }
 
-    private fun parseDottedTerm(tokens: List<Token>): ParseNode {
+    private fun parsePathTerm(tokens: List<Token>): ParseNode {
         val term = parseTerm(tokens)
         val path = ArrayList<ParseNode>(listOf(term))
         var rem = term.remaining
@@ -178,9 +178,12 @@ class InfixParser(val ion: IonSystem) {
             }
 
             when (rem.head?.type) {
-                IDENTIFIER, STAR -> {
-                    path.add(rem.atomFromHead())
+                IDENTIFIER -> {
+                    // re-write the identifier as a literal string element
+                    val token = Token(LITERAL, ion.newString(rem.head?.text!!))
+                    path.add(ParseNode(ATOM, token, emptyList(), rem.tail))
                 }
+                STAR -> path.add(rem.atomFromHead())
                 else -> throw IllegalArgumentException("Path must have identifier: $tokens")
             }
             rem = rem.tail
