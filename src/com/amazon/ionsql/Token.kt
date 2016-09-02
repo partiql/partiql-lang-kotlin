@@ -71,7 +71,8 @@ data class Token(val type: Type, val value: IonValue? = null) {
         AS,
         DOT,
         STAR,
-        COMMA
+        COMMA,
+        COLON
     }
 
     val text: String?

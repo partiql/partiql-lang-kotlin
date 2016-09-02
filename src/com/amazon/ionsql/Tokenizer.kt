@@ -38,18 +38,32 @@ class Tokenizer(private val ion: IonSystem) {
         add(Token(right))
     }
 
-    private fun MutableList<Token>.tokenize(source: IonValue) {
+    private fun MutableList<Token>.tokenizeStruct(struct: IonValue) {
+        add(Token(LEFT_CURLY))
+        tokenize(struct, isInStruct = true)
+        add(Token(RIGHT_CURLY))
+    }
+
+    private fun MutableList<Token>.tokenize(source: IonValue, isInStruct: Boolean = false) {
         var first = true
-        for (value in source) {
-            if (!first && source is IonList) {
-                // we "put back in" the commas in the list to normalize parsing
-                add(Token(COMMA, ion.newSymbol(",")))
+        for (child in source) {
+            if (!first) {
+                when (source) {
+                    // we "put back in" the commas in the list to normalize parsing
+                    is IonList, is IonStruct -> add(Token(COMMA))
+                }
             }
-            when (value) {
-                is IonList -> tokenizeContainer(LEFT_BRACKET, RIGHT_BRACKET, value)
-                is IonSexp -> tokenizeContainer(LEFT_PAREN, RIGHT_PAREN, value)
-                is IonSymbol -> addAll(value.tokenize())
-                else -> add(Token(LITERAL, value))
+            if (isInStruct) {
+                add(Token(LITERAL, ion.newString(child.fieldName)))
+                // we "put back in" the colon to normalize the parsing
+                add(Token(COLON))
+            }
+            when (child) {
+                is IonList -> tokenizeContainer(LEFT_BRACKET, RIGHT_BRACKET, child)
+                is IonSexp -> tokenizeContainer(LEFT_PAREN, RIGHT_PAREN, child)
+                is IonStruct -> tokenizeStruct(child)
+                is IonSymbol -> addAll(child.tokenize())
+                else -> add(Token(LITERAL, child))
             }
             first = false
         }

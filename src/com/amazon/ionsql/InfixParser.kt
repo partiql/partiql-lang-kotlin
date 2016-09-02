@@ -28,12 +28,17 @@ class InfixParser(val ion: IonSystem) {
         private val BRACKET_BOUNDARY_TOKEN_TYPES =
             setOf(RIGHT_BRACKET)
 
+        private val STRUCT_BOUNDARY_TOKEN_TYPES =
+            setOf(RIGHT_CURLY)
+
         private val ARGLIST_BOUNDARY_TOKEN_TYPES =
             setOf(COMMA)
 
         private val ARGLIST_WITH_ALIAS_BOUNDARY_TOKEN_TYPES =
             ARGLIST_BOUNDARY_TOKEN_TYPES union setOf(AS)
 
+        private val FIELD_NAME_BOUNDARY_TOKEN_TYPES =
+            setOf(COLON)
     }
 
     internal enum class ParseType {
@@ -46,7 +51,8 @@ class InfixParser(val ion: IonSystem) {
         UNARY,
         BINARY,
         LIST,
-        STRUCT
+        STRUCT,
+        MEMBER
     }
 
     internal data class ParseNode(val type: ParseType,
@@ -109,7 +115,11 @@ class InfixParser(val ion: IonSystem) {
             addChildNodes(this@toSexp)
         }
         STRUCT -> sexp {
-            throw UnsupportedOperationException("FIXME!")
+            addSymbol("struct")
+            addChildNodes(this@toSexp)
+        }
+        MEMBER -> sexp {
+            addChildNodes(this@toSexp)
         }
         UNARY, BINARY -> sexp {
             addSymbol(token?.text!!)
@@ -268,6 +278,7 @@ class InfixParser(val ion: IonSystem) {
             RIGHT_PAREN
         )
         LEFT_BRACKET -> parseListLiteral(tokens.tail)
+        LEFT_CURLY -> parseStructLiteral(tokens.tail)
         IDENTIFIER -> when (tokens.tail.head?.type) {
             LEFT_PAREN -> parseFunctionCall(tokens.head!!, tokens.tail.tail)
             else -> tokens.atomFromHead()
@@ -280,7 +291,11 @@ class InfixParser(val ion: IonSystem) {
         val children = ArrayList<ParseNode>()
 
         val selectList = parseArgList(
-            tokens, supportsAlias = true, boundaryTokenTypes = SELECT_BOUNDARY_TOKEN_TYPES)
+            tokens,
+            supportsAlias = true,
+            supportsMemberName = false,
+            boundaryTokenTypes = SELECT_BOUNDARY_TOKEN_TYPES
+        )
         var rem = selectList.remaining
         children.add(selectList)
 
@@ -289,7 +304,10 @@ class InfixParser(val ion: IonSystem) {
         }
 
         val fromList = parseArgList(
-            rem.tail, supportsAlias = true, boundaryTokenTypes = SELECT_BOUNDARY_TOKEN_TYPES)
+            rem.tail,
+            supportsAlias = true,
+            supportsMemberName = false,
+            boundaryTokenTypes = SELECT_BOUNDARY_TOKEN_TYPES)
         rem = fromList.remaining
         children.add(fromList)
 
@@ -306,6 +324,7 @@ class InfixParser(val ion: IonSystem) {
         parseArgList(
             tokens,
             supportsAlias = false,
+            supportsMemberName = false,
             boundaryTokenTypes = GROUP_AND_CALL_BOUNDARY_TOKEN_TYPES
         ).copy(
             type = CALL,
@@ -316,13 +335,25 @@ class InfixParser(val ion: IonSystem) {
         parseArgList(
             tokens,
             supportsAlias = false,
+            supportsMemberName = false,
             boundaryTokenTypes = BRACKET_BOUNDARY_TOKEN_TYPES
         ).copy(
             type = LIST
         ).deriveExpected(RIGHT_BRACKET)
 
+    private fun parseStructLiteral(tokens: List<Token>): ParseNode =
+        parseArgList(
+            tokens,
+            supportsAlias = false,
+            supportsMemberName = true,
+            boundaryTokenTypes = STRUCT_BOUNDARY_TOKEN_TYPES
+        ).copy(
+            type = STRUCT
+        ).deriveExpected(RIGHT_CURLY)
+
     private fun parseArgList(tokens: List<Token>,
                              supportsAlias: Boolean,
+                             supportsMemberName: Boolean,
                              boundaryTokenTypes: Set<Type> = emptySet()): ParseNode {
         val argListBoundaryTokenTypes = when {
             supportsAlias -> ARGLIST_WITH_ALIAS_BOUNDARY_TOKEN_TYPES
@@ -330,9 +361,23 @@ class InfixParser(val ion: IonSystem) {
         } union boundaryTokenTypes
         val argList = ArrayList<ParseNode>()
         var rem = tokens
+
+        fun parseField() = parseExpression(
+            rem, boundaryTokenTypes = FIELD_NAME_BOUNDARY_TOKEN_TYPES)
+        fun parseChild() = parseExpression(
+            rem, boundaryTokenTypes = argListBoundaryTokenTypes)
+
         while (rem.isNotEmpty()
                 && rem.head?.type !in boundaryTokenTypes) {
-            var child = parseExpression(rem, boundaryTokenTypes = argListBoundaryTokenTypes)
+            var child = when {
+                supportsMemberName -> {
+                    val field = parseField().deriveExpected(COLON)
+                    rem = field.remaining
+                    val value = parseChild()
+                    ParseNode(MEMBER, null, listOf(field, value), value.remaining)
+                }
+                else -> parseChild()
+            }
             rem = child.remaining
             if (supportsAlias && rem.head?.keywordText == "as") {
                 val name = rem.tail.head

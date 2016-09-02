@@ -38,6 +38,12 @@ class InfixParserTest : Base() {
     )
 
     @Test
+    fun structLiteral() = assertExpression(
+        """(struct ((lit "x") (id a)) ((lit "y") (lit 5)) ((lit "z") (+ (id b) (lit 6))))""",
+        "{x:a, y:5, z:(b + 6)}"
+    )
+
+    @Test
     fun callEmpty() = assertExpression(
         "(call foobar)",
         "foobar()"
