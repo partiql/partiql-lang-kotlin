@@ -33,7 +33,8 @@ class InfixParser(val ion: IonSystem) {
         CALL,
         ARG_LIST,
         ALIAS,
-        PATH
+        PATH,
+        UNARY
         // TODO support operators
     }
 
@@ -130,7 +131,7 @@ class InfixParser(val ion: IonSystem) {
                                  boundaryTokenTypes: Set<Type> = emptySet()): ParseNode {
         var rem = tokens
         while (rem.isNotEmpty()) {
-            val term = parseDottedTerm(rem)
+            val term = parseUnaryOperatorTerm(rem)
             rem = term.remaining
 
             // FIXME support operators via Shunting-Yard infix translation
@@ -141,6 +142,21 @@ class InfixParser(val ion: IonSystem) {
         }
         throw IllegalArgumentException("Empty expression not allowed")
     }
+
+    private fun parseUnaryOperatorTerm(tokens: List<Token>): ParseNode =
+        when (tokens.head?.isUnaryOperator) {
+            true -> {
+                val term = parseUnaryOperatorTerm(tokens.tail)
+
+                ParseNode(
+                    UNARY,
+                    tokens.head,
+                    listOf(term),
+                    term.remaining
+                )
+            }
+            else -> parseDottedTerm(tokens)
+        }
 
     private fun parseDottedTerm(tokens: List<Token>): ParseNode {
         val term = parseTerm(tokens)
