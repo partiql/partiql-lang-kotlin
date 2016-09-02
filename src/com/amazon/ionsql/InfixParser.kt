@@ -89,6 +89,10 @@ class InfixParser(val ion: IonSystem) {
             }
             else -> throw IllegalStateException("Unsupported atom: $this")
         }
+        UNARY -> sexp {
+            addSymbol(token?.text!!)
+            addChildNodes(this@toSexp)
+        }
         PATH -> sexp {
             addSymbol(".")
             addChildNodes(this@toSexp)
