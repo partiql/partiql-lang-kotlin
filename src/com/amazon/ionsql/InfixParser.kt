@@ -34,8 +34,8 @@ class InfixParser(val ion: IonSystem) {
         ARG_LIST,
         ALIAS,
         PATH,
-        UNARY
-        // TODO support operators
+        UNARY,
+        BINARY
     }
 
     internal data class ParseNode(val type: ParseType,
