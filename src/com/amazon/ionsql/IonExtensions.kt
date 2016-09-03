@@ -26,21 +26,6 @@ fun IonValue.stringValue(): String? = when (this) {
     else -> throw IllegalArgumentException("Expected text: $this")
 }
 
-fun IonValue.longValue(): Long? = when (this) {
-    is IonInt -> longValue()
-    else -> throw IllegalArgumentException("Expected int: $this")
-}
-
-fun IonValue.doubleValue(): Double? = when (this) {
-    is IonFloat -> doubleValue()
-    else -> throw IllegalArgumentException("Expected float: $this")
-}
-
-fun IonValue.decimalValue(): Decimal? = when (this) {
-    is IonDecimal -> decimalValue()
-    else -> throw IllegalArgumentException("Expected decimal: $this")
-}
-
 fun IonValue.numberValue(): Number = when {
     isNullValue -> throw IllegalArgumentException("Expected non-null number: $this")
     else -> when (this) {
