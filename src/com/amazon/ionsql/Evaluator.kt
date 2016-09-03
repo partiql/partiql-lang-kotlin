@@ -27,7 +27,7 @@ class Evaluator(private val ion: IonSystem) : Compiler {
 
     private val syntax: Map<String, (Bindings, IonSexp) -> ExprValue> = mapOf(
         "lit" to { env, expr ->
-            IonExprValue(expr[1])
+            expr[1].exprValue()
         },
         "id" to { env, expr ->
             val name = expr[1].text

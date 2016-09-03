@@ -47,3 +47,8 @@ fun IonValue.decimalValue(): Decimal? =
             is IonDecimal -> decimalValue()
             else -> throw IllegalArgumentException("Expected decimal: $this")
         }
+
+val IonValue.ordinal: Int
+    get() = container.indexOf(this)
+
+fun IonValue.exprValue(): ExprValue = IonExprValue(this)

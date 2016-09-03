@@ -26,7 +26,7 @@ interface ExprValue : Iterable<ExprValue> {
      *
      * @param parent The parent to delegate to.
      */
-    fun bindOver(parent: Bindings): Bindings
+    fun bind(parent: Bindings): Bindings
 
     /**
      * Iterates over this value.
