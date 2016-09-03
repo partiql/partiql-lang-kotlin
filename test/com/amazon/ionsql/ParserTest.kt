@@ -7,8 +7,8 @@ package com.amazon.ionsql
 import org.junit.Before
 import org.junit.Test
 
-class InfixParserTest : Base() {
-    val parser = InfixParser(ion)
+class ParserTest : Base() {
+    val parser = Parser(ion)
     val tokenizer = Tokenizer(ion)
 
     fun assertExpression(expectedText: String, source: String) {

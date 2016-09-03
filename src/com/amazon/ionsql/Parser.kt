@@ -8,7 +8,7 @@ import com.amazon.ion.IonSequence
 import com.amazon.ion.IonSexp
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
-import com.amazon.ionsql.InfixParser.ParseType.*
+import com.amazon.ionsql.Parser.ParseType.*
 import com.amazon.ionsql.Token.Type
 import com.amazon.ionsql.Token.Type.*
 import java.util.*
@@ -17,7 +17,7 @@ import java.util.*
  * Parses a list of tokens as infix query expression into a prefix s-expression
  * as the abstract syntax tree.
  */
-class InfixParser(val ion: IonSystem) {
+class Parser(val ion: IonSystem) {
     companion object {
         private val SELECT_BOUNDARY_TOKEN_TYPES =
             setOf(KEYWORD)
