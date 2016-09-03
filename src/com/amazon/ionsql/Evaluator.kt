@@ -19,15 +19,15 @@ import java.util.*
  * supports `,` in s-expressions directly to make it convenient, which is non-standard Ion.
  * It will technically work without this variant but separators become awkward.
  *
- * This implementation produces a very simple AST-walking evaluator as its *compilation*.
+ * This implementation produces a very simple AST-walking evaluator as its "compiled" form.
  */
 class Evaluator(private val ion: IonSystem) : Compiler {
     private val tokenizer = Tokenizer(ion)
     private val parser = Parser(ion)
 
-    private val syntax: Map<String, (Bindings, IonSexp) -> IonValue> = mapOf(
+    private val syntax: Map<String, (Bindings, IonSexp) -> ExpressionValue> = mapOf(
         "lit" to { env, expr ->
-            expr[1]
+            IonExpressionValue(expr[1])
         },
         "id" to { env, expr ->
             val name = expr[1].text
@@ -43,16 +43,17 @@ class Evaluator(private val ion: IonSystem) : Compiler {
         // TODO implement all of the syntax
     )
 
-    private val functions: Map<String, (Bindings, List<IonValue>) -> IonValue> = mapOf(
-        // TODO implement the functions
-    )
+    private val functions: Map<String, (Bindings, List<ExpressionValue>) -> ExpressionValue> =
+        mapOf(
+            // TODO implement the supported functions
+        )
 
     private val IonValue.text: String
         get() = stringValue() ?:
             throw IllegalArgumentException("Expected non-null string: $this")
 
-    private fun IonSexp.evalCallArgs(env: Bindings, startIndex: Int = 2): List<IonValue> {
-        val args = ArrayList<IonValue>()
+    private fun IonSexp.evalCallArgs(env: Bindings, startIndex: Int = 2): List<ExpressionValue> {
+        val args = ArrayList<ExpressionValue>()
         for (idx in startIndex until size) {
             val raw = this[idx]
             args.add(raw.eval(env))
@@ -60,7 +61,7 @@ class Evaluator(private val ion: IonSystem) : Compiler {
         return args
     }
 
-    private fun IonValue.eval(env: Bindings): IonValue {
+    private fun IonValue.eval(env: Bindings): ExpressionValue {
         if (this !is IonSexp) {
             throw IllegalArgumentException("AST node is not s-expression: $this")
         }
@@ -79,7 +80,7 @@ class Evaluator(private val ion: IonSystem) : Compiler {
         val ast = parser.parse(tokens)
 
         return object : Expression {
-            override fun eval(env: Bindings): IonValue = ast.eval(env)
+            override fun eval(env: Bindings): ExpressionValue = ast.eval(env)
         }
     }
 }

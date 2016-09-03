@@ -4,9 +4,7 @@
 
 package com.amazon.ionsql
 
-import com.amazon.ion.IonValue
-
-/** A simple mapping of name to [IonValue]. */
+/** A simple mapping of name to [ExpressionValue]. */
 interface Bindings {
     /**
      * Looks up a name within the environment.
@@ -17,5 +15,5 @@ interface Bindings {
      *         For the expression if a `null` **Ion** value is required, a non-`null`
      *         reference value for a `null` **must** be returned.
      */
-    operator fun get(name: String): IonValue?
+    operator fun get(name: String): ExpressionValue?
 }
