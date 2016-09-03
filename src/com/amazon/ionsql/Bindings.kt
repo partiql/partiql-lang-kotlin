@@ -4,7 +4,7 @@
 
 package com.amazon.ionsql
 
-/** A simple mapping of name to [ExpressionValue]. */
+/** A simple mapping of name to [ExprValue]. */
 interface Bindings {
     /**
      * Looks up a name within the environment.
@@ -15,5 +15,5 @@ interface Bindings {
      *         For the expression if a `null` **Ion** value is required, a non-`null`
      *         reference value for a `null` **must** be returned.
      */
-    operator fun get(name: String): ExpressionValue?
+    operator fun get(name: String): ExprValue?
 }
