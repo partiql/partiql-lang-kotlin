@@ -36,6 +36,12 @@ fun IonValue.numberValue(): Number = when {
     }
 }
 
+val IonValue.isNumeric: Boolean
+    get() = when (this) {
+        is IonInt, is IonFloat, is IonDecimal -> true
+        else -> false
+    }
+
 val IonValue.ordinal: Int
     get() = container.indexOf(this)
 

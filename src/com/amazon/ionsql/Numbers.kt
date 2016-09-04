@@ -96,3 +96,13 @@ operator fun Number.mod(other: Number): Number {
         else -> throw IllegalStateException()
     }
 }
+
+operator fun Number.compareTo(other: Number): Int {
+    val (first, second) = coerceNumbers(this, other)
+    return when (first) {
+        is Long -> first.compareTo(second as Long)
+        is Double -> first.compareTo(second as Double)
+        is BigDecimal -> first.compareTo(second as BigDecimal)
+        else -> throw IllegalStateException()
+    }
+}

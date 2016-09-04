@@ -4,10 +4,7 @@
 
 package com.amazon.ionsql
 
-import com.amazon.ion.IonSequence
-import com.amazon.ion.IonSexp
-import com.amazon.ion.IonSystem
-import com.amazon.ion.IonValue
+import com.amazon.ion.*
 import java.math.BigDecimal
 import java.util.*
 
@@ -31,6 +28,7 @@ class Evaluator(private val ion: IonSystem) : Compiler {
         expr.evalCall(env, startIndex = 0)
     }
 
+    /** Dispatch table for syntax "op-codes."  */
     private val syntax: Map<String, (Bindings, IonSexp) -> ExprValue> = mapOf(
         "lit" to { env, expr ->
             expr[1].exprValue()
@@ -71,13 +69,41 @@ class Evaluator(private val ion: IonSystem) : Compiler {
         },
         "%" to bindOp { env, args ->
             (args[0].numberValue() % args[1].numberValue()).exprValue()
+        },
+        "<" to bindOp { env, args ->
+            (args[0] < args[1]).exprValue()
+        },
+        "<=" to bindOp { env, args ->
+            (args[0] <= args[1]).exprValue()
+        },
+        ">" to bindOp { env, args ->
+            (args[0] > args[1]).exprValue()
+        },
+        ">=" to bindOp { env, args ->
+            (args[0] >= args[1]).exprValue()
+        },
+        "==" to bindOp { env, args ->
+            // TODO this is broken for things like LOBs and structued values
+            (args[0].compareTo(args[1]) == 0).exprValue()
+        },
+        "!=" to bindOp { env, args ->
+            // TODO this is broken for things like LOBs and structued values
+            (args[0].compareTo(args[1]) != 0).exprValue()
         }
         // TODO implement all of the syntax constructs
     )
 
+    /** Dispatch table for built-in functions. */
     private val functions: Map<String, (Bindings, List<ExprValue>) -> ExprValue> = mapOf(
         "list" to { env, args ->
             ion.newEmptyList().apply {
+                for (value in args) {
+                    add(value.ionValue.clone())
+                }
+            }.exprValue()
+        },
+        "sexp" to { env, args ->
+            ion.newEmptySexp().apply {
                 for (value in args) {
                     add(value.ionValue.clone())
                 }
@@ -105,20 +131,10 @@ class Evaluator(private val ion: IonSystem) : Compiler {
                 }
             }.exprValue()
         }
+        // TODO finish implementing "standard" functions
     )
 
-    private fun bindOp(minArity: Int = 2,
-                       maxArity: Int = 2,
-                       op: (Bindings, List<ExprValue>) -> ExprValue): (Bindings, IonSexp) -> ExprValue {
-        return { env, expr ->
-            val arity = expr.size - 1
-            when {
-                arity < minArity -> throw IllegalArgumentException("Not enough arguments: $expr")
-                arity > maxArity -> throw IllegalArgumentException("Too many arguments: $expr")
-            }
-            expr.evalFunc(env, 1, op)
-        }
-    }
+    private fun Boolean.exprValue(): ExprValue = ion.newBool(this).exprValue()
 
     private fun Number.exprValue(): ExprValue = when (this) {
         is Long -> ion.newInt(this)
@@ -128,6 +144,23 @@ class Evaluator(private val ion: IonSystem) : Compiler {
     }.exprValue()
 
     private fun ExprValue.numberValue(): Number = ionValue.numberValue()
+
+    private operator fun ExprValue.compareTo(other: ExprValue): Int {
+        val first = this.ionValue
+        val second = other.ionValue
+
+        return when {
+            first.isNullValue || second.isNullValue ->
+                throw IllegalArgumentException("Null value cannot be compared: $first, $second")
+            first.isNumeric && second.isNumeric ->
+                first.numberValue().compareTo(second.numberValue())
+            first is IonTimestamp && second is IonTimestamp ->
+                first.timestampValue().compareTo(second.timestampValue())
+            first is IonText && second is IonText ->
+                first.stringValue().compareTo(second.stringValue())
+            else -> throw IllegalArgumentException("Cannot compare values: $first, $second")
+        }
+    }
 
     private val IonValue.text: String
         get() = stringValue() ?:
@@ -167,6 +200,19 @@ class Evaluator(private val ion: IonSystem) : Compiler {
         val handler = syntax[name] ?:
             throw IllegalArgumentException("No such syntax handler for $name")
         return handler(env, this)
+    }
+
+    private fun bindOp(minArity: Int = 2,
+                       maxArity: Int = 2,
+                       op: (Bindings, List<ExprValue>) -> ExprValue): (Bindings, IonSexp) -> ExprValue {
+        return { env, expr ->
+            val arity = expr.size - 1
+            when {
+                arity < minArity -> throw IllegalArgumentException("Not enough arguments: $expr")
+                arity > maxArity -> throw IllegalArgumentException("Too many arguments: $expr")
+            }
+            expr.evalFunc(env, 1, op)
+        }
     }
 
     override fun compile(source: String): Expression {
