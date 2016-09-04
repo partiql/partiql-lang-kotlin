@@ -103,7 +103,8 @@ class Evaluator(private val ion: IonSystem) : Compiler {
                 else -> throw IllegalArgumentException("Arity incorrect for 'and': $expr")
             }.exprValue()
         }
-        // TODO implement all of the syntax constructs
+        // TODO support '.'
+        // TODO support 'select'
     )
 
     /** Dispatch table for built-in functions. */
