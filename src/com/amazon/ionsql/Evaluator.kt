@@ -8,6 +8,7 @@ import com.amazon.ion.IonSequence
 import com.amazon.ion.IonSexp
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
+import java.math.BigDecimal
 import java.util.*
 
 /**
@@ -46,9 +47,30 @@ class Evaluator(private val ion: IonSystem) : Compiler {
         "struct" to instrinsicCall,
         "+" to bindOp(minArity = 1, maxArity = 2) { env, args ->
             when (args.size) {
-                1 -> throw UnsupportedOperationException("TODO")
-                else -> throw UnsupportedOperationException("TODO")
+                1 -> {
+                    // force interpretation as a number, and do nothing
+                    args[0].numberValue()
+                    args[0]
+                }
+                else -> (args[0].numberValue() + args[1].numberValue()).exprValue()
             }
+        },
+        "-" to bindOp(minArity = 1, maxArity = 2) { env, args ->
+            when (args.size) {
+                1 -> {
+                    -args[0].numberValue()
+                }
+                else -> args[0].numberValue() - args[1].numberValue()
+            }.exprValue()
+        },
+        "*" to bindOp { env, args ->
+            (args[0].numberValue() * args[1].numberValue()).exprValue()
+        },
+        "/" to bindOp { env, args ->
+            (args[0].numberValue() / args[1].numberValue()).exprValue()
+        },
+        "%" to bindOp { env, args ->
+            (args[0].numberValue() % args[1].numberValue()).exprValue()
         }
         // TODO implement all of the syntax constructs
     )
@@ -85,8 +107,8 @@ class Evaluator(private val ion: IonSystem) : Compiler {
         }
     )
 
-    private fun bindOp(minArity: Int,
-                       maxArity: Int,
+    private fun bindOp(minArity: Int = 2,
+                       maxArity: Int = 2,
                        op: (Bindings, List<ExprValue>) -> ExprValue): (Bindings, IonSexp) -> ExprValue {
         return { env, expr ->
             val arity = expr.size - 1
@@ -97,6 +119,15 @@ class Evaluator(private val ion: IonSystem) : Compiler {
             expr.evalFunc(env, 1, op)
         }
     }
+
+    private fun Number.exprValue(): ExprValue = when (this) {
+        is Long -> ion.newInt(this)
+        is Double -> ion.newFloat(this)
+        is BigDecimal -> ion.newDecimal(this)
+        else -> throw IllegalArgumentException("Cannot convert number to expression value: $this")
+    }.exprValue()
+
+    private fun ExprValue.numberValue(): Number = ionValue.numberValue()
 
     private val IonValue.text: String
         get() = stringValue() ?:
