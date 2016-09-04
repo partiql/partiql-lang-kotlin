@@ -4,6 +4,7 @@
 
 package com.amazon.ionsql
 
+import com.amazon.ion.IonSexp
 import org.junit.Before
 import org.junit.Test
 
@@ -11,9 +12,14 @@ class ParserTest : Base() {
     val parser = Parser(ion)
     val tokenizer = Tokenizer(ion)
 
-    fun assertExpression(expectedText: String, source: String) {
+    fun parse(source: String): IonSexp {
         val tokens = tokenizer.tokenize(literal("($source)"))
-        val actual = parser.parse(tokens)
+        val ast = parser.parse(tokens)
+        return ast
+    }
+
+    fun assertExpression(expectedText: String, source: String) {
+        val actual = parse(source)
         val expected = literal(expectedText)
 
         assertEquals(expected, actual)
@@ -97,6 +103,17 @@ class ParserTest : Base() {
         "(select ((id a)) (from (id table)))",
         "SELECT a FROM table"
     )
+
+    @Test
+    fun selectStar() = assertExpression(
+        "(select (*) (from (id table)))",
+        "SELECT * FROM table"
+    )
+
+    @Test(expected = IllegalArgumentException::class)
+    fun selectNothing() {
+        parse("SELECT FROM table")
+    }
 
     @Test
     fun selectMultipleWithMultipleFromSimpleWhere() = assertExpression(
