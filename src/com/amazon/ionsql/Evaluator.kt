@@ -92,24 +92,16 @@ class Evaluator(private val ion: IonSystem) : Compiler {
             (!args[0].booleanValue()).exprValue()
         },
         "or" to { env, expr ->
-            var result = false
-            for (idx in 1 until expr.size) {
-                result = expr[idx].eval(env).booleanValue()
-                if (result) {
-                    break
-                }
-            }
-            result.exprValue()
+            when (expr.size) {
+                3 -> expr[1].eval(env).booleanValue() || expr[2].eval(env).booleanValue()
+                else -> throw IllegalArgumentException("Arity incorrect for 'or': $expr")
+            }.exprValue()
         },
         "and" to { env, expr ->
-            var result = false
-            for (idx in 1 until expr.size) {
-                result = expr[idx].eval(env).booleanValue()
-                if (!result) {
-                    break
-                }
-            }
-            result.exprValue()
+            when (expr.size) {
+                3 -> expr[1].eval(env).booleanValue() && expr[2].eval(env).booleanValue()
+                else -> throw IllegalArgumentException("Arity incorrect for 'and': $expr")
+            }.exprValue()
         }
         // TODO implement all of the syntax constructs
     )
