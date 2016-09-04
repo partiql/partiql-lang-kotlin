@@ -28,7 +28,7 @@ class Evaluator(private val ion: IonSystem) : Compiler {
         expr.evalCall(env, startIndex = 0)
     }
 
-    /** Dispatch table for syntax "op-codes."  */
+    /** Dispatch table for AST "op-codes."  */
     private val syntax: Map<String, (Bindings, IonSexp) -> ExprValue> = mapOf(
         "lit" to { env, expr ->
             expr[1].exprValue()
@@ -83,12 +83,30 @@ class Evaluator(private val ion: IonSystem) : Compiler {
             (args[0] >= args[1]).exprValue()
         },
         "==" to bindOp { env, args ->
-            // TODO this is broken for things like LOBs and structued values
-            (args[0].compareTo(args[1]) == 0).exprValue()
+            args[0].exprEquals(args[1]).exprValue()
         },
         "!=" to bindOp { env, args ->
-            // TODO this is broken for things like LOBs and structued values
-            (args[0].compareTo(args[1]) != 0).exprValue()
+            (!args[0].exprEquals(args[1])).exprValue()
+        },
+        "or" to { env, expr ->
+            var result = false
+            for (idx in 1 until expr.size) {
+                result = expr[idx].eval(env).booleanValue()
+                if (result) {
+                    break
+                }
+            }
+            result.exprValue()
+        },
+        "and" to { env, expr ->
+            var result = false
+            for (idx in 1 until expr.size) {
+                result = expr[idx].eval(env).booleanValue()
+                if (!result) {
+                    break
+                }
+            }
+            result.exprValue()
         }
         // TODO implement all of the syntax constructs
     )
@@ -145,20 +163,48 @@ class Evaluator(private val ion: IonSystem) : Compiler {
 
     private fun ExprValue.numberValue(): Number = ionValue.numberValue()
 
+    private fun ExprValue.booleanValue(): Boolean =
+        ionValue.booleanValue() ?:
+            throw IllegalArgumentException("Expected non-null boolean: $ionValue")
+
     private operator fun ExprValue.compareTo(other: ExprValue): Int {
         val first = this.ionValue
         val second = other.ionValue
 
         return when {
+            // nulls can't compare
             first.isNullValue || second.isNullValue ->
                 throw IllegalArgumentException("Null value cannot be compared: $first, $second")
+            // compare the number types
             first.isNumeric && second.isNumeric ->
                 first.numberValue().compareTo(second.numberValue())
+            // timestamps compare against timestamps
             first is IonTimestamp && second is IonTimestamp ->
                 first.timestampValue().compareTo(second.timestampValue())
+            // string/symbol compare against themselves
             first is IonText && second is IonText ->
                 first.stringValue().compareTo(second.stringValue())
+            // TODO should bool/LOBs/aggregates compare?
             else -> throw IllegalArgumentException("Cannot compare values: $first, $second")
+        }
+    }
+
+    // TODO define the various forms of equality properly
+    private fun ExprValue.exprEquals(other: ExprValue): Boolean {
+        val first = this.ionValue
+        val second = other.ionValue
+
+        return when {
+            // any nulls involved need strict equality
+            first.isNullValue || second.isNullValue -> first == second
+            // arithmetic equality
+            first.isNumeric && second.isNumeric ->
+                first.numberValue().compareTo(second.numberValue()) == 0
+            // text equality for symbols/strings
+            first is IonText && second is IonText ->
+                first.stringValue() == second.stringValue()
+            // defer to strict equality
+            else -> first == second
         }
     }
 

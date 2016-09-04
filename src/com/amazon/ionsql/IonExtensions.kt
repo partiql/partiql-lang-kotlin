@@ -36,6 +36,11 @@ fun IonValue.numberValue(): Number = when {
     }
 }
 
+fun IonValue.booleanValue(): Boolean? = when (this) {
+    is IonBool -> booleanValue()
+    else -> throw IllegalArgumentException("Expected boolean: $this")
+}
+
 val IonValue.isNumeric: Boolean
     get() = when (this) {
         is IonInt, is IonFloat, is IonDecimal -> true
