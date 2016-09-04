@@ -106,7 +106,7 @@ class ParserTest : Base() {
 
     @Test
     fun selectStar() = assertExpression(
-        "(select (*) (from (id table)))",
+        "(select () (from (id table)))",
         "SELECT * FROM table"
     )
 

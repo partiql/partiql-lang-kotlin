@@ -94,7 +94,6 @@ data class Token(val type: Type, val value: IonValue? = null) {
     val isUnaryOperator: Boolean
         get() = when (type){
             OPERATOR -> text in UNARY_OPERATORS
-            STAR -> true
             else -> false
         }
 

@@ -290,12 +290,25 @@ class Parser(val ion: IonSystem) {
     private fun parseSelect(tokens: List<Token>): ParseNode {
         val children = ArrayList<ParseNode>()
 
-        val selectList = parseArgList(
-            tokens,
-            supportsAlias = true,
-            supportsMemberName = false,
-            boundaryTokenTypes = SELECT_BOUNDARY_TOKEN_TYPES
-        )
+        val selectList = when (tokens.head?.type) {
+            STAR -> {
+                // special form for * is empty arg-list
+                ParseNode(ARG_LIST, null, emptyList(), tokens.tail)
+            }
+            else -> {
+                val list = parseArgList(
+                    tokens,
+                    supportsAlias = true,
+                    supportsMemberName = false,
+                    boundaryTokenTypes = SELECT_BOUNDARY_TOKEN_TYPES
+                )
+                if (list.children.size == 0) {
+                    throw IllegalArgumentException("Cannot have empty select list: $tokens")
+                }
+
+                list
+            }
+        }
         var rem = selectList.remaining
         children.add(selectList)
 
