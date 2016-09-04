@@ -88,6 +88,9 @@ class Evaluator(private val ion: IonSystem) : Compiler {
         "!=" to bindOp { env, args ->
             (!args[0].exprEquals(args[1])).exprValue()
         },
+        "not" to bindOp(minArity = 1, maxArity = 1) { env, args ->
+            (!args[0].booleanValue()).exprValue()
+        },
         "or" to { env, expr ->
             var result = false
             for (idx in 1 until expr.size) {
