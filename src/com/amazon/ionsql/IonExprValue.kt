@@ -25,7 +25,7 @@ class IonExprValue(override val ionValue: IonValue) : ExprValue {
         member ?: when (name) {
             SYS_NAME -> when (parent) {
                 is IonStruct -> ionValue.fieldName?.toIon()?.exprValue()
-            // note that we don't surface the ordinal to the datagram
+                // note that we don't surface the ordinal to the datagram
                 is IonList, is IonSexp -> ionValue.ordinal.toIon().exprValue()
                 else -> null
             }

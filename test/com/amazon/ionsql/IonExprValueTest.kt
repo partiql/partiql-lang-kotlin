@@ -37,9 +37,12 @@ class IonExprValueTest : Base() {
             }
             .run(block)
 
-    fun over(text: String, block: AssertExprValue.() -> Unit = { }) = over(
-        literal(text),
-        null,
+    fun over(text: String,
+             transform: IonValue.() -> IonValue = { this },
+             name: Any? = null,
+             block: AssertExprValue.() -> Unit = { }) = over(
+        literal(text).transform(),
+        name,
         block
     )
 
@@ -60,4 +63,9 @@ class IonExprValueTest : Base() {
         assertNoBinding("d")
     }
 
+    @Test
+    fun listChild() = over("[1, 2, 3]", { this[0] }, name = 0)
+
+    @Test
+    fun structChild() = over("{a: 1, b: 2, c: 3}", { this["a"] }, name = "a")
 }
