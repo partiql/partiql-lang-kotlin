@@ -13,29 +13,27 @@ class IonExprValue(override val ionValue: IonValue) : ExprValue {
     private fun String.toIon() = ion.newString(this)
     private fun Int.toIon() = ion.newInt(this)
 
-    override fun bind(parent: Bindings): Bindings = DelegateBindings(
-        object : Bindings {
-            override fun get(name: String): ExprValue? {
-                val parent = ionValue.container
+    override fun bind(parent: Bindings): Bindings = Bindings.over { name ->
+        val parent = ionValue.container
 
-                // all struct fields get surfaced as top-level names
-                val member = when (ionValue) {
-                    is IonStruct -> ionValue[name]?.exprValue()
-                    else -> null
-                }
+        // all struct fields get surfaced as top-level names
+        val member = when (ionValue) {
+            is IonStruct -> ionValue[name]?.exprValue()
+            else -> null
+        }
 
-                return member ?: when (name) {
-                    SYS_NAME -> when (parent) {
-                        is IonStruct -> ionValue.fieldName?.toIon()?.exprValue()
-                        // note that we don't surface the ordinal to the datagram
-                        is IonList, is IonSexp -> ionValue.ordinal.toIon().exprValue()
-                        else -> null
-                    }
-                    else -> null
-                }
+        member ?: when (name) {
+            SYS_NAME -> when (parent) {
+                is IonStruct -> ionValue.fieldName?.toIon()?.exprValue()
+            // note that we don't surface the ordinal to the datagram
+                is IonList, is IonSexp -> ionValue.ordinal.toIon().exprValue()
+                else -> null
             }
-        },
-        Bindings.over(this),
+            else -> null
+        }
+    }.delegate(
+        Bindings.over(this)
+    ).delegate(
         parent
     )
 

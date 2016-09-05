@@ -14,9 +14,12 @@ open class Base : Assert() {
 
     fun literal(text: String): IonValue = ion.singleValue(text)
 
-    inner class AssertExprValue(val exprValue: ExprValue) {
+    inner class AssertExprValue(val exprValue: ExprValue,
+                                val bindingsTransform: Bindings.() -> Bindings = { this }) {
         fun assertBindings(predicate: Bindings.() -> Boolean) =
-            assertTrue(exprValue.bind(Bindings.empty()).predicate())
+            assertTrue(
+                exprValue.bind(Bindings.empty()).bindingsTransform().predicate()
+            )
 
         fun assertBinding(name: String, predicate: ExprValue.() -> Boolean) = assertBindings {
             get(name)?.predicate() ?: false
