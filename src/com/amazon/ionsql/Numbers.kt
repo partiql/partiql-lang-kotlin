@@ -7,15 +7,15 @@ package com.amazon.ionsql
 import java.math.BigDecimal
 
 private val RANKS = mapOf(
-    Long::class.java        to 1,
-    Double::class.java      to 2,
-    BigDecimal::class.java  to 3
+    Long::class.javaObjectType        to 1,
+    Double::class.javaObjectType      to 2,
+    BigDecimal::class.javaObjectType  to 3
 )
 
 private val CONVERTERS = mapOf<Class<*>, (Number) -> Number>(
-    Long::class.java        to Number::toLong,
-    Double::class.java      to Number::toDouble,
-    BigDecimal::class.java  to { num ->
+    Long::class.javaObjectType      to Number::toLong,
+    Double::class.javaObjectType    to Number::toDouble,
+    BigDecimal::class.java          to { num ->
         when (num) {
             is Long -> BigDecimal.valueOf(num)
             is Double -> BigDecimal.valueOf(num)
@@ -27,13 +27,21 @@ private val CONVERTERS = mapOf<Class<*>, (Number) -> Number>(
     }
 )
 
+/** Provides a narrowing or widening operator on supported numbers. */
 fun Number.coerce(type: Class<Number>): Number {
     val conv = CONVERTERS[type] ?: throw IllegalArgumentException("No converter for $type")
     return conv(this)
 }
 
+/**
+ * Implements a very simple number tower to convert two numbers to their arithmetic
+ * compatible type.
+ *
+ * This is only supported on limited types needed by the expression system.
+ */
 fun coerceNumbers(first: Number, second: Number): Pair<Number, Number> {
-    val type = listOf(first.javaClass, second.javaClass).maxBy { RANKS[it]!! }!!
+    val type = listOf(first.javaClass, second.javaClass)
+        .maxBy { RANKS[it] ?: throw IllegalArgumentException("No coercion support for $it") }!!
 
     return Pair(first.coerce(type), second.coerce(type))
 }
