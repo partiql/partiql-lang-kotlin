@@ -7,6 +7,11 @@ package com.amazon.ionsql
 /** A simple mapping of name to [ExprValue]. */
 interface Bindings {
     companion object {
+        private val EMPTY by lazy { over { null } }
+
+        /** The empty bindings. */
+        fun empty(): Bindings = EMPTY
+
         /** Binds over an [ExprValue], which surfaces the `$value` name as itself. */
         fun over(value: ExprValue): Bindings = over {
             when (it) {
@@ -25,10 +30,20 @@ interface Bindings {
             override fun get(name: String): ExprValue? = func(name)
         }
 
-        private val EMPTY by lazy { over { null } }
-
-        /** The empty bindings. */
-        fun empty(): Bindings = EMPTY
+        /**
+         * Wraps a binding with a set of names that should not be resolved to anything.
+         *
+         * @param
+         */
+        fun blacklist(bindings: Bindings, vararg names: String): Bindings {
+            val blacklisted = names.toSet()
+            return over {
+                when (it) {
+                    in blacklisted -> null
+                    else -> bindings[it]
+                }
+            }
+        }
     }
 
     /**

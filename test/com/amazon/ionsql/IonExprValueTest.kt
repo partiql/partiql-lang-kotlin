@@ -6,6 +6,7 @@ package com.amazon.ionsql
 
 import com.amazon.ion.*
 import org.junit.Test
+import java.math.BigDecimal
 
 class IonExprValueTest : Base() {
     fun over(expectedIonValue: IonValue,
@@ -50,5 +51,13 @@ class IonExprValueTest : Base() {
 
     @Test
     fun list() = over("[1, 2, 3]")
+
+    @Test
+    fun struct() = over("{a: 1, b: 3.14, c: \"hello\"}") {
+        assertBinding("a") { ion.newInt(1) == ionValue }
+        assertBinding("b") { ion.newDecimal(BigDecimal("3.14")) == ionValue }
+        assertBinding("c") { ion.newString("hello") == ionValue }
+        assertNoBinding("d")
+    }
 
 }
