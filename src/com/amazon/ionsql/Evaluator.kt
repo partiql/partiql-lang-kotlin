@@ -24,6 +24,8 @@ class Evaluator(private val ion: IonSystem) : Compiler {
     private val tokenizer = Tokenizer(ion)
     private val parser = Parser(ion)
 
+    private val wildCard = ion.newSexp().apply { add().newSymbol("*") }.seal()
+
     private val instrinsicCall: (Bindings, IonSexp) -> ExprValue = { env, expr ->
         expr.evalCall(env, startIndex = 0)
     }
@@ -102,8 +104,44 @@ class Evaluator(private val ion: IonSystem) : Compiler {
                 3 -> expr[1].eval(env).booleanValue() && expr[2].eval(env).booleanValue()
                 else -> throw IllegalArgumentException("Arity incorrect for 'and': $expr")
             }.exprValue()
+        },
+        "." to { env, expr ->
+            if (expr.size < 3) {
+                throw IllegalArgumentException("Path arity to low: $expr")
+            }
+
+            var root = expr[1].exprValue()
+
+            // extract all the non-wildcard paths
+            var idx = 2
+            while (idx < expr.size) {
+                val raw = expr[idx]
+                if (raw == wildCard) {
+                    // need special processing for the rest of the path
+                    break
+                }
+
+                root = root[raw.exprValue()]
+                idx++
+            }
+
+            // we are either done or we have wild-card paths and beyond
+            val components = ArrayList<(ExprValue) -> Sequence<ExprValue>>()
+            while (idx < expr.size) {
+                val raw = expr[idx]
+                components.add(when (raw) {
+                    // treat the entire value as a sequence
+                    wildCard -> { exprVal -> exprVal.asSequence() }
+                    // "index" into the value lazily
+                    else -> { exprVal -> sequenceOf(exprVal[raw.exprValue()]) }
+                })
+            }
+
+            when (components.size) {
+                0 -> root
+                else -> ExpandedExprValue(ion, root, components)
+            }
         }
-        // TODO support '.'
         // TODO support 'select'
     )
 
@@ -162,6 +200,15 @@ class Evaluator(private val ion: IonSystem) : Compiler {
     private fun ExprValue.booleanValue(): Boolean =
         ionValue.booleanValue() ?:
             throw IllegalArgumentException("Expected non-null boolean: $ionValue")
+
+    private operator fun ExprValue.get(index: ExprValue): ExprValue {
+        val indexVal = index.ionValue
+        return when (indexVal) {
+            is IonInt -> ionValue[indexVal.intValue()]
+            is IonText -> ionValue[indexVal.stringValue()]
+            else -> throw IllegalArgumentException("Cannot convert index to int/string: $indexVal")
+        }.exprValue()
+    }
 
     private operator fun ExprValue.compareTo(other: ExprValue): Int {
         val first = this.ionValue

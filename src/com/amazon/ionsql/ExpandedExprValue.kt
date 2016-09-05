@@ -11,19 +11,23 @@ import com.amazon.ion.IonValue
  * A lazily evaluated [ExprValue] that represents a value with path components that
  * are functional transforms over the logical sequence of values starting at the root.
  *
+ * Values of this type necessarily "detach" from whatever context they were in when
+ * evaluated as an [IonValue].  Thus for static paths (paths of single field/indices),
+ * this class is not appropriate.
+ *
+ * @param ion The ion system to synthesize over.
  * @param root The value from whence the path starts.
  * @param components The transforms on the root to yield the eventual sequence of values.
- *                   Each element in this list can be thought of as a path element as
- *                   a functional transformation over the sequence of [IonValue]
+ *                       Each element in this list can be thought of as a path element as
+ *                       a functional transformation over the sequence of [IonValue]
  */
-class PathExprValue(private val ion: IonSystem,
-                    private val root: ExprValue,
-                    private val components: List<(ExprValue) -> Sequence<ExprValue>>) : ExprValue {
-    // FIXME need to support this directly if scalar
+class ExpandedExprValue(private val ion: IonSystem,
+                        private val root: ExprValue,
+                        private val components: List<(ExprValue) -> Sequence<ExprValue>>) : ExprValue {
     override val ionValue: IonValue
         get() = iterator()
             .asSequence()
-            .mapTo(ion.newDatagram()) { it.ionValue.clone() }
+            .mapTo(ion.newEmptyList()) { it.ionValue.clone() }
             .seal()
 
     override fun bind(parent: Bindings): Bindings = Bindings.over(this)
