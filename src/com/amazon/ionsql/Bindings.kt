@@ -7,6 +7,7 @@ package com.amazon.ionsql
 /** A simple mapping of name to [ExprValue]. */
 interface Bindings {
     companion object {
+        /** Binds over an [ExprValue], which surfaces the `$value` name as itself. */
         fun over(value: ExprValue): Bindings = over {
             when (it) {
                 "\$value" -> value
@@ -14,10 +15,17 @@ interface Bindings {
             }
         }
 
+        /**
+         * A SAM conversion for [Bindings] from a function object.
+         *
+         * This is necessary as Kotlin currently doesn't support SAM conversions to
+         * Kotlin defined interfaces (only Java defined interfaces).
+         */
         fun over(func: (String) -> ExprValue?): Bindings = object : Bindings {
             override fun get(name: String): ExprValue? = func(name)
         }
     }
+
     /**
      * Looks up a name within the environment.
      *
