@@ -6,6 +6,10 @@ package com.amazon.ionsql
 
 import com.amazon.ion.*
 
+fun IonValue.seal(): IonValue = apply { makeReadOnly() }
+
+fun IonValue.sealClone(): IonValue = clone().seal()
+
 operator fun IonValue.get(name: String): IonValue = when (this) {
     is IonStruct -> get(name)
     else -> throw IllegalArgumentException("Expected struct: $this")

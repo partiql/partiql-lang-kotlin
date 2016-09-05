@@ -114,14 +114,14 @@ class Evaluator(private val ion: IonSystem) : Compiler {
                 for (value in args) {
                     add(value.ionValue.clone())
                 }
-            }.exprValue()
+            }.seal().exprValue()
         },
         "sexp" to { env, args ->
             ion.newEmptySexp().apply {
                 for (value in args) {
                     add(value.ionValue.clone())
                 }
-            }.exprValue()
+            }.seal().exprValue()
         },
         "struct" to { env, args ->
             ion.newEmptyStruct().apply {
@@ -143,19 +143,19 @@ class Evaluator(private val ion: IonSystem) : Compiler {
                         )
                     }
                 }
-            }.exprValue()
+            }.seal().exprValue()
         }
         // TODO finish implementing "standard" functions
     )
 
-    private fun Boolean.exprValue(): ExprValue = ion.newBool(this).exprValue()
+    private fun Boolean.exprValue(): ExprValue = ion.newBool(this).seal().exprValue()
 
     private fun Number.exprValue(): ExprValue = when (this) {
         is Long -> ion.newInt(this)
         is Double -> ion.newFloat(this)
         is BigDecimal -> ion.newDecimal(this)
         else -> throw IllegalArgumentException("Cannot convert number to expression value: $this")
-    }.exprValue()
+    }.seal().exprValue()
 
     private fun ExprValue.numberValue(): Number = ionValue.numberValue()
 
@@ -259,7 +259,7 @@ class Evaluator(private val ion: IonSystem) : Compiler {
 
     override fun compile(source: String): Expression {
         // We have to wrap the source in an s-expression to get the right parsing behavior
-        val expression = ion.singleValue("($source)")
+        val expression = ion.singleValue("($source)").seal()
         val tokens = tokenizer.tokenize(expression)
         val ast = parser.parse(tokens)
 

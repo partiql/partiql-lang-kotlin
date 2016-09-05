@@ -19,11 +19,12 @@ import com.amazon.ion.IonValue
 class PathExprValue(private val ion: IonSystem,
                     private val root: ExprValue,
                     private val components: List<(ExprValue) -> Sequence<ExprValue>>) : ExprValue {
+    // FIXME need to support this directly if scalar
     override val ionValue: IonValue
         get() = iterator()
             .asSequence()
             .mapTo(ion.newDatagram()) { it.ionValue.clone() }
-            .apply { makeReadOnly() }
+            .seal()
 
     override fun bind(parent: Bindings): Bindings = Bindings.over(this)
 

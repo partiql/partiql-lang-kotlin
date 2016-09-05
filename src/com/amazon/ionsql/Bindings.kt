@@ -10,7 +10,7 @@ interface Bindings {
         /** Binds over an [ExprValue], which surfaces the `$value` name as itself. */
         fun over(value: ExprValue): Bindings = over {
             when (it) {
-                "\$value" -> value
+                SYS_VALUE -> value
                 else -> null
             }
         }
@@ -24,6 +24,11 @@ interface Bindings {
         fun over(func: (String) -> ExprValue?): Bindings = object : Bindings {
             override fun get(name: String): ExprValue? = func(name)
         }
+
+        private val EMPTY by lazy { over { null } }
+
+        /** The empty bindings. */
+        fun empty(): Bindings = EMPTY
     }
 
     /**

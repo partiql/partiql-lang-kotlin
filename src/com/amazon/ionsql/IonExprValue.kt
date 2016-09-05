@@ -25,7 +25,7 @@ class IonExprValue(override val ionValue: IonValue) : ExprValue {
                 }
 
                 return member ?: when (name) {
-                    "\$name" -> when (parent) {
+                    SYS_NAME -> when (parent) {
                         is IonStruct -> ionValue.fieldName?.toIon()?.exprValue()
                         // note that we don't surface the ordinal to the datagram
                         is IonList, is IonSexp -> ionValue.ordinal.toIon().exprValue()
@@ -40,7 +40,7 @@ class IonExprValue(override val ionValue: IonValue) : ExprValue {
     )
 
     override fun iterator(): Iterator<ExprValue> = when (ionValue) {
-        is IonContainer -> ionValue.map { it.exprValue() }.iterator()
+        is IonContainer -> ionValue.iterator().asSequence().map { it.exprValue() }.iterator()
         else -> listOf(this).iterator()
     }
 }
