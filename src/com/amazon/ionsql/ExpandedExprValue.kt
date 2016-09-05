@@ -25,15 +25,14 @@ class ExpandedExprValue(private val ion: IonSystem,
                         private val root: ExprValue,
                         private val components: List<(ExprValue) -> Sequence<ExprValue>>) : ExprValue {
     override val ionValue: IonValue
-        get() = iterator()
-            .asSequence()
+        get() = asSequence()
             .mapTo(ion.newEmptyList()) { it.ionValue.clone() }
             .seal()
 
     override fun bind(parent: Bindings): Bindings = Bindings.over(this)
 
     override fun iterator(): Iterator<ExprValue> {
-        var seq = root.iterator().asSequence()
+        var seq = root.asSequence()
         for (component in components) {
             seq = seq. flatMap(component)
         }

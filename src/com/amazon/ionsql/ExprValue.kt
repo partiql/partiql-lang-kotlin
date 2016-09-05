@@ -35,4 +35,28 @@ interface ExprValue : Iterable<ExprValue> {
      * If the underlying value is a *scalar* type, this produces a singleton.
      */
     operator override fun iterator(): Iterator<ExprValue>
+
+    /**
+     * Wraps the underlying [ExprValue] with an additional bind name.
+     *
+     * This does not mutate, but decorates this value.
+     */
+    fun alias(name: String): ExprValue = object : ExprValue {
+        override val ionValue: IonValue
+            get() = this@ExprValue.ionValue
+
+        override fun bind(parent: Bindings): Bindings {
+            val actual = this@ExprValue.bind(parent)
+
+            return Bindings.over {
+                when (it) {
+                    name -> this
+                    else -> actual[name]
+                }
+            }
+        }
+
+        override fun iterator(): Iterator<ExprValue> = this@ExprValue.iterator()
+
+    }
 }

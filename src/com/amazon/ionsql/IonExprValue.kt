@@ -6,7 +6,9 @@ package com.amazon.ionsql
 
 import com.amazon.ion.*
 
-/** [ExprValue] over an [IonValue]. */
+/**
+ * Core [ExprValue] over an [IonValue].
+ */
 class IonExprValue(override val ionValue: IonValue) : ExprValue {
     private val ion = ionValue.system
 
@@ -38,7 +40,7 @@ class IonExprValue(override val ionValue: IonValue) : ExprValue {
     )
 
     override fun iterator(): Iterator<ExprValue> = when (ionValue) {
-        is IonContainer -> ionValue.iterator().asSequence().map { it.exprValue() }.iterator()
+        is IonContainer -> ionValue.asSequence().map { it.exprValue() }.iterator()
         else -> listOf(this).iterator()
     }
 }

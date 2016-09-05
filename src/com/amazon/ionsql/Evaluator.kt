@@ -24,7 +24,8 @@ class Evaluator(private val ion: IonSystem) : Compiler {
     private val tokenizer = Tokenizer(ion)
     private val parser = Parser(ion)
 
-    private val wildCard = ion.newSexp().apply { add().newSymbol("*") }.seal()
+    private val wildcardPath = ion.newSexp().apply { add().newSymbol("*") }.seal()
+    private val parentPath = ion.newSexp().apply { add().newSymbol("..") }.seal()
 
     private val instrinsicCall: (Bindings, IonSexp) -> ExprValue = { env, expr ->
         expr.evalCall(env, startIndex = 0)
@@ -110,18 +111,22 @@ class Evaluator(private val ion: IonSystem) : Compiler {
                 throw IllegalArgumentException("Path arity to low: $expr")
             }
 
-            var root = expr[1].exprValue()
+            var root = expr[1].eval(env)
 
             // extract all the non-wildcard paths
             var idx = 2
             while (idx < expr.size) {
                 val raw = expr[idx]
-                if (raw == wildCard) {
+                if (raw == wildcardPath) {
                     // need special processing for the rest of the path
                     break
                 }
 
-                root = root[raw.exprValue()]
+                root = when (raw) {
+                    parentPath -> root.ionValue.container?.exprValue() ?:
+                        throw IllegalArgumentException("Cannot .. out of top-level: $root")
+                    else -> root[raw.eval(env)]
+                }
                 idx++
             }
 
@@ -131,9 +136,17 @@ class Evaluator(private val ion: IonSystem) : Compiler {
                 val raw = expr[idx]
                 components.add(when (raw) {
                     // treat the entire value as a sequence
-                    wildCard -> { exprVal -> exprVal.asSequence() }
+                    wildcardPath -> { exprVal -> exprVal.asSequence() }
+                    parentPath -> { exprVal ->
+                        sequenceOf(
+                            exprVal.ionValue.container?.exprValue() ?:
+                                throw IllegalArgumentException(
+                                    "Cannot .. out of top-level: ${exprVal.ionValue}"
+                                )
+                        )
+                    }
                     // "index" into the value lazily
-                    else -> { exprVal -> sequenceOf(exprVal[raw.exprValue()]) }
+                    else -> { exprVal -> sequenceOf(exprVal[raw.eval(env)]) }
                 })
             }
 
@@ -141,8 +154,37 @@ class Evaluator(private val ion: IonSystem) : Compiler {
                 0 -> root
                 else -> ExpandedExprValue(ion, root, components)
             }
+        },
+        "as" to { env, expr ->
+            when (expr.size) {
+                3 -> {
+                    expr[2].eval(env).alias(expr[1].text)
+                }
+                else -> throw IllegalArgumentException("Bad alias: $expr")
+            }
+        },
+        "select" to { env, expr ->
+            if (expr.size < 3 || expr.size > 4) {
+                throw IllegalArgumentException("Bad arity on SELECT form $expr: ${expr.size}")
+            }
+
+            val selectExprs = expr[1]
+
+            val fromValues = expr[2].asSequence()
+                .drop(1)
+                .map { it.eval(env) }
+                .toList()
+
+            val whereExpr = when {
+                expr.size > 3 -> expr[3][0]
+                else -> null
+            }
+
+
+
+
+            throw UnsupportedOperationException("TODO Implement!")
         }
-        // TODO support 'select'
     )
 
     /** Dispatch table for built-in functions. */

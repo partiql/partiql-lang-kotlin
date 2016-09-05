@@ -8,8 +8,6 @@ import com.amazon.ion.*
 
 fun IonValue.seal(): IonValue = apply { makeReadOnly() }
 
-fun IonValue.sealClone(): IonValue = clone().seal()
-
 operator fun IonValue.get(name: String): IonValue = when (this) {
     is IonStruct -> get(name)
     else -> throw IllegalArgumentException("Expected struct: $this")
@@ -24,6 +22,8 @@ operator fun IonValue.iterator(): Iterator<IonValue> = when (this) {
     is IonContainer -> iterator()
     else -> throw IllegalArgumentException("Expected container: $this")
 }
+
+fun IonValue.asSequence(): Sequence<IonValue> = iterator().asSequence()
 
 fun IonValue.stringValue(): String? = when (this) {
     is IonText -> stringValue()

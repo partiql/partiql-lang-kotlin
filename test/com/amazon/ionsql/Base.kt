@@ -35,7 +35,7 @@ open class Base : Assert() {
 
         fun assertIterator(expected: Collection<IonValue>) {
             val actual = ArrayList<IonValue>()
-            exprValue.iterator().asSequence().map { it.ionValue }.toCollection(actual)
+            exprValue.asSequence().map { it.ionValue }.toCollection(actual)
             assertEquals(expected, actual)
         }
     }
