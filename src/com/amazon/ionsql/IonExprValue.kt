@@ -25,7 +25,6 @@ class IonExprValue(override val ionValue: IonValue) : ExprValue {
                 }
 
                 return member ?: when (name) {
-                    "\$value" -> this@IonExprValue
                     "\$name" -> when (parent) {
                         is IonStruct -> ionValue.fieldName?.toIon()?.exprValue()
                         // note that we don't surface the ordinal to the datagram
@@ -36,6 +35,7 @@ class IonExprValue(override val ionValue: IonValue) : ExprValue {
                 }
             }
         },
+        Bindings.over(this),
         parent
     )
 

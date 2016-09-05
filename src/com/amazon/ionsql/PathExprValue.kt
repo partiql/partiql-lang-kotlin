@@ -25,12 +25,7 @@ class PathExprValue(private val ion: IonSystem,
             .mapTo(ion.newDatagram()) { it.ionValue.clone() }
             .apply { makeReadOnly() }
 
-    override fun bind(parent: Bindings): Bindings = object : Bindings {
-        override fun get(name: String): ExprValue? = when (name) {
-            "\$value" -> this@PathExprValue
-            else -> null
-        }
-    }
+    override fun bind(parent: Bindings): Bindings = Bindings.over(this)
 
     override fun iterator(): Iterator<ExprValue> {
         var seq = root.iterator().asSequence()

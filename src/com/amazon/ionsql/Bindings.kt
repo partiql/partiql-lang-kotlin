@@ -6,6 +6,18 @@ package com.amazon.ionsql
 
 /** A simple mapping of name to [ExprValue]. */
 interface Bindings {
+    companion object {
+        fun over(value: ExprValue): Bindings = over {
+            when (it) {
+                "\$value" -> value
+                else -> null
+            }
+        }
+
+        fun over(func: (String) -> ExprValue?): Bindings = object : Bindings {
+            override fun get(name: String): ExprValue? = func(name)
+        }
+    }
     /**
      * Looks up a name within the environment.
      *
