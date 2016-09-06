@@ -194,26 +194,29 @@ class Evaluator(private val ion: IonSystem) : Compiler {
                 fromValues.product().asSequence()
                     .map { joinedValues ->
                         // bind the joined value to the bindings for the filter/project
-                        joinedValues.bind(env)
+                        Pair(joinedValues, joinedValues.bind(env))
                     }
-                    .filter { locals ->
+                    .filter {
+                        val locals = it.second
                         when (whereExpr) {
                             null -> true
                             else -> whereExpr.eval(locals).booleanValue()
                         }
                     }
-                    .map { locals ->
+                    .map {
+                        val (joinedValues, locals) = it
                         ion.newEmptyStruct().apply {
                             when (selectExprs.size) {
                                 0 -> {
-                                    // SELECT *
-                                    throw UnsupportedOperationException("TODO Implement!")
+                                    // select * case
+                                    projectAllInto(joinedValues);
                                 }
                                 else -> {
-                                    throw UnsupportedOperationException("TODO Implement!")
+                                    // select a, b as c, ... case
+                                    projectSelectList(locals, selectExprs)
                                 }
                             }
-                        }.exprValue()
+                        }.seal().exprValue()
                     }
             }
         }
@@ -259,6 +262,38 @@ class Evaluator(private val ion: IonSystem) : Compiler {
         }
         // TODO finish implementing "standard" functions
     )
+
+    private fun IonStruct.projectAllInto(joinedValues: List<ExprValue?>) {
+        joinedValues.forEachIndexed { col, joinValue ->
+            val ionVal = joinValue?.ionValue!!
+            val names = HashSet<String>()
+            when (ionVal) {
+                is IonStruct -> {
+                    for (child in ionVal) {
+                        val childName = child.fieldName
+                        val name = when {
+                            childName in names -> "${col}_$childName"
+                            else -> childName
+                        }
+                        names.add(name)
+                        add(name, child.clone())
+                    }
+                }
+                else -> {
+                    val name = when {
+                        SYS_VALUE in names -> "${col}_$SYS_VALUE"
+                        else -> SYS_VALUE
+                    }
+                    names.add(name)
+                    add(name, ionVal.clone())
+                }
+            }
+        }
+    }
+
+    private fun IonStruct.projectSelectList(locals: Bindings, exprs: IonSequence) {
+        throw UnsupportedOperationException("TODO Implement me!")
+    }
 
     private fun List<ExprValue?>.bind(parent: Bindings): Bindings {
         val locals = map { it?.bind(Bindings.empty()) }
