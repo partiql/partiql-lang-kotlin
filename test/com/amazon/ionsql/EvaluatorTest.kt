@@ -64,4 +64,16 @@ class EvaluatorTest : Base() {
 
     @Test
     fun addIntFloat() = assertEval("i + f", "3e0")
+
+    @Test
+    fun subIntFloatDecimal() = assertEval("i - f - d", "-4.0")
+
+    @Test
+    fun mulFloatIntInt() = assertEval("f * 2 * 4", "16e0")
+
+    @Test
+    fun divDecimalInt() = assertEval("d / 2", "1.5")
+
+    @Test
+    fun modIntInt() = assertEval("3 % 2", "1.5")
 }
