@@ -264,9 +264,9 @@ class Evaluator(private val ion: IonSystem) : Compiler {
     )
 
     private fun IonStruct.projectAllInto(joinedValues: List<ExprValue?>) {
+        val names = HashSet<String>()
         joinedValues.forEachIndexed { col, joinValue ->
             val ionVal = joinValue?.ionValue!!
-            val names = HashSet<String>()
             when (ionVal) {
                 is IonStruct -> {
                     for (child in ionVal) {
@@ -292,7 +292,24 @@ class Evaluator(private val ion: IonSystem) : Compiler {
     }
 
     private fun IonStruct.projectSelectList(locals: Bindings, exprs: IonSequence) {
-        throw UnsupportedOperationException("TODO Implement me!")
+        val names = HashSet<String>()
+        exprs.forEachIndexed { col, raw ->
+            var desiredName = "$col"
+            val value = when (raw[0].text) {
+                "as" -> {
+                    // extract alias
+                    desiredName = raw[1].text
+                    raw[2]
+                }
+                else -> raw
+            }.eval(locals)
+            val name = when {
+                desiredName in names -> "${col}_$desiredName"
+                else -> desiredName
+            }
+            names.add(name)
+            add(name, value.ionValue.clone())
+        }
     }
 
     private fun List<ExprValue?>.bind(parent: Bindings): Bindings {
