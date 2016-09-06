@@ -152,7 +152,13 @@ class Evaluator(private val ion: IonSystem) : Compiler {
 
             when (components.size) {
                 0 -> root
-                else -> ExpandedExprValue(ion, root, components)
+                else -> SequenceExprValue(ion) {
+                    var seq = root.asSequence()
+                    for (component in components) {
+                        seq = seq. flatMap(component)
+                    }
+                    seq
+                }
             }
         },
         "as" to { env, expr ->
