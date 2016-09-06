@@ -45,7 +45,12 @@ class ParserTest : Base() {
 
     @Test
     fun structLiteral() = assertExpression(
-        """(struct ((lit "x") (id a)) ((lit "y") (lit 5)) ((lit "z") (+ (id b) (lit 6))))""",
+        """(struct
+             (list (lit "x") (id a))
+             (list (lit "y") (lit 5))
+             (list (lit "z") (+ (id b) (lit 6)))
+           )
+        """,
         "{x:a, y:5, z:(b + 6)}"
     )
 

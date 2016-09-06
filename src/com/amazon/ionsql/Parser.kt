@@ -119,6 +119,8 @@ class Parser(val ion: IonSystem) {
             addChildNodes(this@toSexp)
         }
         MEMBER -> sexp {
+            // we translate this to construct a list to normalize with the struct function
+            addSymbol("list")
             addChildNodes(this@toSexp)
         }
         UNARY, BINARY -> sexp {
