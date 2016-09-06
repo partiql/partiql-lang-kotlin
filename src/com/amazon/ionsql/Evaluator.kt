@@ -169,6 +169,9 @@ class Evaluator(private val ion: IonSystem) : Compiler {
             }
 
             val selectExprs = expr[1]
+            if (selectExprs !is IonSequence) {
+                throw IllegalArgumentException("SELECT list must be sequence: $selectExprs")
+            }
 
             val fromValues = expr[2].asSequence()
                 .drop(1)
@@ -180,10 +183,33 @@ class Evaluator(private val ion: IonSystem) : Compiler {
                 else -> null
             }
 
-
-
-
-            throw UnsupportedOperationException("TODO Implement!")
+            SequenceExprValue(ion) {
+                // compute the join over the data sources
+                fromValues.product().asSequence()
+                    .map { joinedValues ->
+                        // bind the joined value to the bindings for the filter/project
+                        joinedValues.bind(env)
+                    }
+                    .filter { locals ->
+                        when (whereExpr) {
+                            null -> true
+                            else -> whereExpr.eval(locals).booleanValue()
+                        }
+                    }
+                    .map { locals ->
+                        ion.newEmptyStruct().apply {
+                            when (selectExprs.size) {
+                                0 -> {
+                                    // SELECT *
+                                    throw UnsupportedOperationException("TODO Implement!")
+                                }
+                                else -> {
+                                    throw UnsupportedOperationException("TODO Implement!")
+                                }
+                            }
+                        }.exprValue()
+                    }
+            }
         }
     )
 
@@ -227,6 +253,26 @@ class Evaluator(private val ion: IonSystem) : Compiler {
         }
         // TODO finish implementing "standard" functions
     )
+
+    private fun List<ExprValue?>.bind(parent: Bindings): Bindings {
+        val locals = map { it?.bind(Bindings.empty()) }
+
+        return Bindings.over { name ->
+            val found = locals.asSequence()
+                .map { it?.get(name) }
+                .filter { it != null }
+                .toList()
+            when (found.size) {
+                // nothing found at our scope, got to parent
+                0 -> parent[name]
+                // found exactly one thing, success
+                1 -> found.head!!
+                // multiple things with the same name is a conflict
+                else -> throw IllegalArgumentException(
+                    "$name is ambigious: ${found.map { it?.ionValue }}")
+            }
+        }
+    }
 
     private fun Boolean.exprValue(): ExprValue = ion.newBool(this).seal().exprValue()
 

@@ -7,6 +7,8 @@ package com.amazon.ionsql
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
 
+// TODO consolidate this with ResultSetExprValue
+
 /**
  * A lazily evaluated [ExprValue] that represents a value with path components that
  * are functional transforms over the logical sequence of values starting at the root.
