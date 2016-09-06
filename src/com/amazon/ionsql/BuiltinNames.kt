@@ -9,3 +9,7 @@ val SYS_NAME = "\$name"
 
 /** Synthesized name for the "current" value. */
 val SYS_VALUE = "\$value"
+
+// TODO add AST "op-codes"
+
+// TODO add built-in function names
