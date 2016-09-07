@@ -19,8 +19,12 @@ import java.util.*
  * It will technically work without this variant but separators become awkward.
  *
  * This implementation produces a very simple AST-walking evaluator as its "compiled" form.
+ *
+ * @param ion The ion system to use for synthesizing Ion values.
+ * @param userFuncs Functions to provide access to in addition to the built-ins.
  */
-class Evaluator(private val ion: IonSystem) : Compiler {
+class Evaluator(private val ion: IonSystem,
+                userFuncs: Map<String, (Bindings, List<ExprValue>) -> ExprValue> = emptyMap()) : Compiler {
     private val tokenizer = Tokenizer(ion)
     private val parser = Parser(ion)
 
@@ -247,7 +251,7 @@ class Evaluator(private val ion: IonSystem) : Compiler {
     )
 
     /** Dispatch table for built-in functions. */
-    private val functions: Map<String, (Bindings, List<ExprValue>) -> ExprValue> = mapOf(
+    private val builtins: Map<String, (Bindings, List<ExprValue>) -> ExprValue> = mapOf(
         "list" to { env, args ->
             ion.newEmptyList().apply {
                 for (value in args) {
@@ -286,6 +290,8 @@ class Evaluator(private val ion: IonSystem) : Compiler {
         }
         // TODO finish implementing "standard" functions
     )
+
+    val functions = builtins + userFuncs
 
     private fun IonStruct.projectAllInto(joinedValues: List<ExprValue?>) {
         val names = HashSet<String>()
@@ -477,11 +483,20 @@ class Evaluator(private val ion: IonSystem) : Compiler {
         }
     }
 
-    override fun compile(source: String): Expression {
+    /** Parses the given source into an s-expression syntax tree. */
+    fun parse(source: String): IonSexp {
         // We have to wrap the source in an s-expression to get the right parsing behavior
         val expression = ion.singleValue("($source)").seal()
         val tokens = tokenizer.tokenize(expression)
-        val ast = parser.parse(tokens)
+        return parser.parse(tokens)
+    }
+
+    /** Evaluates an unbound syntax tree against a set of bindings. */
+    fun eval(expr: IonSexp, env: Bindings) = expr.eval(env)
+
+    /** Compiles the given source expression into a bound [Expression]. */
+    override fun compile(source: String): Expression {
+        val ast = parse(source)
 
         return object : Expression {
             override fun eval(env: Bindings): ExprValue = ast.eval(env)
