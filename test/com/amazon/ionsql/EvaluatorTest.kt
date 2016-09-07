@@ -75,5 +75,41 @@ class EvaluatorTest : Base() {
     fun divDecimalInt() = assertEval("d / 2", "1.5")
 
     @Test
-    fun modIntInt() = assertEval("3 % 2", "1.5")
+    fun modIntInt() = assertEval("3 % 2", "1")
+
+    @Test
+    fun moreIntFloat() = assertEval("3 > 2e0", "true")
+
+    @Test
+    fun moreIntFloatFalse() = assertEval("1 > 2e0", "false")
+
+    @Test
+    fun lessIntFloat() = assertEval("1 < 2e0", "true")
+
+    @Test
+    fun lessIntFloatFalse() = assertEval("3 < 2e0", "false")
+
+    @Test
+    fun moreEqIntFloat() = assertEval("3 >= 2e0", "true")
+
+    @Test
+    fun moreEqIntFloatFalse() = assertEval("1 >= 2e0", "false")
+
+    @Test
+    fun lessEqIntFloat() = assertEval("1 <= 2e0", "true")
+
+    @Test
+    fun lessEqIntFloatFalse() = assertEval("5 <= 2e0", "false")
+
+    @Test
+    fun equalIntFloat() = assertEval("1 == 1e0", "true")
+
+    @Test
+    fun equalIntFloatFalse() = assertEval("1 == 1e1", "false")
+
+    @Test
+    fun notEqualIntFloat() = assertEval("1 != 2e0", "true")
+
+    @Test
+    fun notEqualIntFloatFalse() = assertEval("1 != 1e0", "false")
 }
