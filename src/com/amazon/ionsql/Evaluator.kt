@@ -125,7 +125,9 @@ class Evaluator(private val ion: IonSystem) : Compiler {
                 root = when (raw) {
                     parentPath -> root.ionValue.container?.exprValue() ?:
                         throw IllegalArgumentException("Cannot .. out of top-level: $root")
-                    else -> root[raw.eval(env)]
+                    else -> {
+                        root[raw.eval(env)]
+                    }
                 }
                 idx++
             }
@@ -136,7 +138,9 @@ class Evaluator(private val ion: IonSystem) : Compiler {
                 val raw = expr[idx]
                 components.add(when (raw) {
                     // treat the entire value as a sequence
-                    wildcardPath -> { exprVal -> exprVal.asSequence() }
+                    wildcardPath -> { exprVal ->
+                        exprVal.asSequence()
+                    }
                     parentPath -> { exprVal ->
                         sequenceOf(
                             exprVal.ionValue.container?.exprValue() ?:
@@ -146,16 +150,19 @@ class Evaluator(private val ion: IonSystem) : Compiler {
                         )
                     }
                     // "index" into the value lazily
-                    else -> { exprVal -> sequenceOf(exprVal[raw.eval(env)]) }
+                    else -> { exprVal ->
+                        sequenceOf(exprVal[raw.eval(env)])
+                    }
                 })
+                idx++
             }
 
             when (components.size) {
                 0 -> root
                 else -> SequenceExprValue(ion) {
-                    var seq = root.asSequence()
+                    var seq = sequenceOf(root)
                     for (component in components) {
-                        seq = seq. flatMap(component)
+                        seq = seq.flatMap(component)
                     }
                     seq
                 }
@@ -350,10 +357,15 @@ class Evaluator(private val ion: IonSystem) : Compiler {
     private operator fun ExprValue.get(index: ExprValue): ExprValue {
         val indexVal = index.ionValue
         return when (indexVal) {
-            is IonInt -> ionValue[indexVal.intValue()]
-            is IonText -> ionValue[indexVal.stringValue()]
+            is IonInt -> ionValue[indexVal.intValue()].exprValue()
+            is IonText -> {
+                val name = indexVal.stringValue()
+                // delegate to bindings logic as the scope of lookup by name
+                bind(Bindings.empty())[name] ?:
+                    throw IllegalArgumentException("Could not find member $name in $ionValue")
+            }
             else -> throw IllegalArgumentException("Cannot convert index to int/string: $indexVal")
-        }.exprValue()
+        }
     }
 
     private operator fun ExprValue.compareTo(other: ExprValue): Int {

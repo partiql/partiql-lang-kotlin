@@ -67,5 +67,5 @@ class IonExprValueTest : Base() {
     fun listChild() = over("[1, 2, 3]", { this[0] }, name = 0)
 
     @Test
-    fun structChild() = over("{a: 1, b: 2, c: 3}", { this["a"] }, name = "a")
+    fun structChild() = over("{a: 1, b: 2, c: 3}", { this["a"]!! }, name = "a")
 }

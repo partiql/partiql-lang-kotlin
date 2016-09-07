@@ -8,7 +8,7 @@ import com.amazon.ion.*
 
 fun IonValue.seal(): IonValue = apply { makeReadOnly() }
 
-operator fun IonValue.get(name: String): IonValue = when (this) {
+operator fun IonValue.get(name: String): IonValue? = when (this) {
     is IonStruct -> get(name)
     else -> throw IllegalArgumentException("Expected struct: $this")
 }

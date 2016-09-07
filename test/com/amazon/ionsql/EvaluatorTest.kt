@@ -15,10 +15,33 @@ class EvaluatorTest : Base() {
             .eval(
                 Bindings.over {
                     when (it) {
+                        "a" -> literal("{b:{c:{d:{e:5, f:6}}}}").exprValue()
                         "i" -> literal("1").exprValue()
                         "f" -> literal("2e0").exprValue()
                         "d" -> literal("3d0").exprValue()
                         "s" -> literal("\"hello\"").exprValue()
+                        "stores" -> literal(
+                            """
+                            [
+                              {
+                                id: "5",
+                                books: [
+                                  {title:"A", price: 5.0, categories:["sci-fi", "action"]},
+                                  {title:"B", price: 2.0, categories:["sci-fi", "comedy"]},
+                                  {title:"C", price: 7.0, categories:["action", "suspense"]},
+                                  {title:"D", price: 9.0, categories:["suspense"]},
+                                ]
+                              },
+                              {
+                                id: "6",
+                                books: [
+                                  {title:"A", price: 5.0, categories:["sci-fi", "action"]},
+                                  {title:"E", price: 9.5, categories:["fantasy", "comedy"]},
+                                  {title:"F", price: 10.0, categories:["history"]},
+                                ]
+                              }
+                            ]
+                            """).exprValue()
                         else -> null
                     }
                 }
@@ -144,5 +167,29 @@ class EvaluatorTest : Base() {
     fun comparisonsDisjunctFalse() = assertEval(
         "i < f and (f > d or i > d)",
         "false"
+    )
+
+    @Test
+    fun pathDotOnly() = assertEval("a.b.c.d.e", "5")
+
+    @Test
+    fun pathIndexing() = assertEval("stores[0].books[2].title", "\"C\"")
+
+    @Test
+    fun pathParent() = assertEval("stores[0].books[2].title....books[3].title", "\"D\"")
+
+    @Test
+    fun pathWildcard() = assertEval("stores[0].books.*.title", """["A", "B", "C", "D"]""")
+
+    @Test
+    fun pathDoubleWildCard() = assertEval(
+        "stores.*.books.*.title",
+        """["A", "B", "C", "D", "A", "E", "F"]"""
+    )
+
+    @Test
+    fun pathDoubleWildCardWithParent() = assertEval(
+        "stores.*.books.*.title..title",
+        """["A", "B", "C", "D", "A", "E", "F"]"""
     )
 }
