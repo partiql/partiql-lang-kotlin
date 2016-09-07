@@ -224,4 +224,10 @@ class EvaluatorTest : Base() {
         """SELECT id AS name FROM stores""",
         """[{name:"5"}, {name:"6"}]"""
     )
+
+    @Test
+    fun explicitAliasSelectSingleSourceWithWhere() = assertEval(
+        """SELECT id AS name FROM stores WHERE id == "5" """,
+        """[{name:"5"}]"""
+    )
 }

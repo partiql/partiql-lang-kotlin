@@ -209,7 +209,7 @@ class Evaluator(private val ion: IonSystem) : Compiler {
             val fromNames = aliasExtractor(expr[2].asSequence().drop(1))
 
             val whereExpr = when {
-                expr.size > 3 -> expr[3][0]
+                expr.size > 3 -> expr[3][1]
                 else -> null
             }
 
