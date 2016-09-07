@@ -20,6 +20,14 @@ class EvaluatorTest : Base() {
                         "f" -> literal("2e0").exprValue()
                         "d" -> literal("3d0").exprValue()
                         "s" -> literal("\"hello\"").exprValue()
+                        "animals" -> literal(
+                            """
+                            [
+                              {name: "Kumo", type: "dog"},
+                              {name: "Mochi", type: "dog"},
+                              {name: "Lilikoi", type: "cat"},
+                            ]
+                            """).exprValue()
                         "stores" -> literal(
                             """
                             [
@@ -189,7 +197,31 @@ class EvaluatorTest : Base() {
 
     @Test
     fun pathDoubleWildCardWithParent() = assertEval(
-        "stores.*.books.*.title..title",
+        "stores.*.books.*.categories..title",
         """["A", "B", "C", "D", "A", "E", "F"]"""
+    )
+
+    @Test
+    fun selectStarSingleSource() = assertEval(
+        """SELECT * FROM animals""",
+        """
+          [
+            {name: "Kumo", type: "dog"},
+            {name: "Mochi", type: "dog"},
+            {name: "Lilikoi", type: "cat"},
+          ]
+        """
+    )
+
+    @Test
+    fun implicitAliasSelectSingleSource() = assertEval(
+        """SELECT id FROM stores""",
+        """[{id:"5"}, {id:"6"}]"""
+    )
+
+    @Test
+    fun explicitAliasSelectSingleSource() = assertEval(
+        """SELECT id AS name FROM stores""",
+        """[{name:"5"}, {name:"6"}]"""
     )
 }

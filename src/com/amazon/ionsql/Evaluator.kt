@@ -31,6 +31,20 @@ class Evaluator(private val ion: IonSystem) : Compiler {
         expr.evalCall(env, startIndex = 0)
     }
 
+    private val aliasExtractor: (Sequence<IonValue>) -> List<String> = { seq ->
+        seq.mapIndexed { col, value ->
+            when (value) {
+                is IonSexp -> {
+                    when (value[0].text) {
+                        "as", "id" -> value[1].text
+                        else -> "$col"
+                    }
+                }
+                else -> throw IllegalArgumentException("Cannot extract alias out of: $value")
+            }
+        }.toList()
+    }
+
     /** Dispatch table for AST "op-codes."  */
     private val syntax: Map<String, (Bindings, IonSexp) -> ExprValue> = mapOf(
         "lit" to { env, expr ->
@@ -171,7 +185,8 @@ class Evaluator(private val ion: IonSystem) : Compiler {
         "as" to { env, expr ->
             when (expr.size) {
                 3 -> {
-                    expr[2].eval(env).alias(expr[1].text)
+                    // NO-OP for evaluation--handled separately by syntax handlers
+                    expr[2].eval(env)
                 }
                 else -> throw IllegalArgumentException("Bad alias: $expr")
             }
@@ -185,11 +200,13 @@ class Evaluator(private val ion: IonSystem) : Compiler {
             if (selectExprs !is IonSequence) {
                 throw IllegalArgumentException("SELECT list must be sequence: $selectExprs")
             }
+            val selectNames = aliasExtractor(selectExprs.asSequence())
 
             val fromValues = expr[2].asSequence()
                 .drop(1)
                 .map { it.eval(env) }
                 .toList()
+            val fromNames = aliasExtractor(expr[2].asSequence().drop(1))
 
             val whereExpr = when {
                 expr.size > 3 -> expr[3][0]
@@ -201,7 +218,7 @@ class Evaluator(private val ion: IonSystem) : Compiler {
                 fromValues.product().asSequence()
                     .map { joinedValues ->
                         // bind the joined value to the bindings for the filter/project
-                        Pair(joinedValues, joinedValues.bind(env))
+                        Pair(joinedValues, joinedValues.bind(env, fromNames))
                     }
                     .filter {
                         val locals = it.second
@@ -220,7 +237,7 @@ class Evaluator(private val ion: IonSystem) : Compiler {
                                 }
                                 else -> {
                                     // select a, b as c, ... case
-                                    projectSelectList(locals, selectExprs)
+                                    projectSelectList(locals, selectExprs, selectNames)
                                 }
                             }
                         }.seal().exprValue()
@@ -298,37 +315,35 @@ class Evaluator(private val ion: IonSystem) : Compiler {
         }
     }
 
-    private fun IonStruct.projectSelectList(locals: Bindings, exprs: IonSequence) {
+    private fun IonStruct.projectSelectList(locals: Bindings,
+                                            exprs: IonSequence,
+                                            aliases: List<String>) {
         val names = HashSet<String>()
         exprs.forEachIndexed { col, raw ->
-            var desiredName = "$col"
-            val value = when (raw[0].text) {
-                "as" -> {
-                    // extract alias
-                    desiredName = raw[1].text
-                    raw[2]
-                }
-                else -> raw
-            }.eval(locals)
-            val name = when {
-                desiredName in names -> "${col}_$desiredName"
-                else -> desiredName
-            }
+            var name = aliases[col]
+            val value = raw.eval(locals)
             names.add(name)
             add(name, value.ionValue.clone())
         }
     }
 
-    private fun List<ExprValue?>.bind(parent: Bindings): Bindings {
+    private fun List<ExprValue?>.bind(parent: Bindings, aliases: List<String>): Bindings {
         val locals = map { it?.bind(Bindings.empty()) }
 
         return Bindings.over { name ->
             val found = locals.asSequence()
-                .map { it?.get(name) }
+                .mapIndexed { col, value ->
+                    when {
+                        // the alias binds to the value itself
+                        aliases[col] == name -> this[col]!!
+                        // otherwise scope look up within the value
+                        else -> value?.get(name)
+                    }
+                }
                 .filter { it != null }
                 .toList()
             when (found.size) {
-                // nothing found at our scope, got to parent
+                // nothing found at our scope, go to parent
                 0 -> parent[name]
                 // found exactly one thing, success
                 1 -> found.head!!
