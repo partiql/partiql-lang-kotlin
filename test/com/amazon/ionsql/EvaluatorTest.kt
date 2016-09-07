@@ -39,7 +39,7 @@ class EvaluatorTest : Base() {
     }
 
     @Test(expected = IllegalArgumentException::class)
-    fun empty() = voidEval("")
+    fun emptyThrows() = voidEval("")
 
     @Test
     fun literal() = assertEval("5", "5")
@@ -112,4 +112,37 @@ class EvaluatorTest : Base() {
 
     @Test
     fun notEqualIntFloatFalse() = assertEval("1 != 1e0", "false")
+
+    @Test(expected = IllegalArgumentException::class)
+    fun notOnNonBooleanThrows() = voidEval("!i")
+
+    @Test
+    fun notTrue() = assertEval("not true", "false")
+
+    @Test
+    fun notFalse() = assertEval("not false", "true")
+
+    @Test
+    fun andTrueFalse() = assertEval("true and false", "false")
+
+    @Test
+    fun andTrueTrue() = assertEval("true and true", "true")
+
+    @Test
+    fun orTrueFalse() = assertEval("true or false", "true")
+
+    @Test
+    fun orFalseFalse() = assertEval("false or false", "false")
+
+    @Test
+    fun comparisonsConjuctTrue() = assertEval(
+        "i < f and f < d",
+        "true"
+    )
+
+    @Test
+    fun comparisonsDisjunctFalse() = assertEval(
+        "i < f and (f > d or i > d)",
+        "false"
+    )
 }
