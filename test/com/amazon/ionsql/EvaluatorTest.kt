@@ -293,5 +293,29 @@ class EvaluatorTest : Base() {
           ]
         """
     )
+
+    @Test
+    fun nestedSelectJoin() = assertEval(
+        """
+          SELECT ${'$'}name AS col, ${'$'}value AS val
+          FROM (SELECT * FROM animals, animal_types WHERE type == id).*
+          WHERE ${'$'}name != "id"
+        """,
+        """
+          [
+            {col: "name", val: "Kumo"},
+            {col: "type", val: "dog"},
+            {col: "is_magic", val: false},
+
+            {col: "name", val: "Mochi"},
+            {col: "type", val: "dog"},
+            {col: "is_magic", val: false},
+
+            {col: "name", val: "Lilikoi"},
+            {col: "type", val: "unicorn"},
+            {col: "is_magic", val: true},
+          ]
+        """
+    )
 }
 

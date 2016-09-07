@@ -138,6 +138,12 @@ class ParserTest : Base() {
     )
 
     @Test
+    fun groupDot() = assertExpression(
+        """(. (id a) (lit "b"))""",
+        "(a).b"
+    )
+
+    @Test
     fun dotStar() = assertExpression(
         """(. (call foo (id x) (id y)) (lit "a") (*) (lit "b"))""",
         "foo(x, y).a.*.b"
@@ -184,5 +190,44 @@ class ParserTest : Base() {
            FROM t1.a AS t, t2.x.*.b
            WHERE test(t2...name, t1.name) AND t1.id == t2.id
         """
+    )
+
+    @Test
+    fun nestedSelectNoWhere() = assertExpression(
+        """(select
+             ()
+             (from
+               (.
+                 (select
+                   ()
+                   (from (id x))
+                 )
+                 (*)
+                 (lit "a")
+               )
+             )
+           )
+        """,
+        "SELECT * FROM (SELECT * FROM x).a"
+    )
+
+    @Test
+    fun nestedSelect() = assertExpression(
+        """(select
+             ()
+             (from
+               (.
+                 (select
+                   ()
+                   (from (id x))
+                   (where (id b))
+                 )
+                 (*)
+                 (lit "a")
+               )
+             )
+           )
+        """,
+        "SELECT * FROM (SELECT * FROM x WHERE b).a"
     )
 }

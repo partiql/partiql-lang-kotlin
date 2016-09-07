@@ -20,7 +20,7 @@ import java.util.*
 class Parser(val ion: IonSystem) {
     companion object {
         private val SELECT_BOUNDARY_TOKEN_TYPES =
-            setOf(KEYWORD)
+            setOf(KEYWORD, RIGHT_PAREN)
 
         private val GROUP_AND_CALL_BOUNDARY_TOKEN_TYPES =
             setOf(RIGHT_PAREN)
@@ -353,7 +353,10 @@ class Parser(val ion: IonSystem) {
         children.add(fromList)
 
         if (rem.head?.keywordText == "where") {
-            val whereExpr = parseExpression(rem.tail)
+            val whereExpr = parseExpression(
+                rem.tail,
+                boundaryTokenTypes = GROUP_AND_CALL_BOUNDARY_TOKEN_TYPES
+            )
             rem = whereExpr.remaining
             children.add(whereExpr)
         }
