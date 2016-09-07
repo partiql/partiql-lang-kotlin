@@ -5,7 +5,6 @@
 package com.amazon.ionsql
 
 import org.junit.Test
-
 class EvaluatorTest : Base() {
     val evaluator = Evaluator(ion)
 
@@ -25,7 +24,15 @@ class EvaluatorTest : Base() {
                             [
                               {name: "Kumo", type: "dog"},
                               {name: "Mochi", type: "dog"},
-                              {name: "Lilikoi", type: "cat"},
+                              {name: "Lilikoi", type: "unicorn"},
+                            ]
+                            """).exprValue()
+                        "animal_types" -> literal(
+                            """
+                            [
+                              {id: "dog", is_magic: false},
+                              {id: "cat", is_magic: false},
+                              {id: "unicorn", is_magic: true},
                             ]
                             """).exprValue()
                         "stores" -> literal(
@@ -208,7 +215,7 @@ class EvaluatorTest : Base() {
           [
             {name: "Kumo", type: "dog"},
             {name: "Mochi", type: "dog"},
-            {name: "Lilikoi", type: "cat"},
+            {name: "Lilikoi", type: "unicorn"},
           ]
         """
     )
@@ -220,9 +227,33 @@ class EvaluatorTest : Base() {
     )
 
     @Test
+    fun selectStarSingleSourceHoisted() = assertEval(
+        """SELECT * FROM stores.books.* AS b WHERE b.price >= 9.0""",
+        """
+          [
+            {title:"D", price: 9.0, categories:["suspense"]},
+            {title:"E", price: 9.5, categories:["fantasy", "comedy"]},
+            {title:"F", price: 10.0, categories:["history"]},
+          ]
+        """
+    )
+
+    @Test
     fun explicitAliasSelectSingleSource() = assertEval(
         """SELECT id AS name FROM stores""",
         """[{name:"5"}, {name:"6"}]"""
+    )
+
+    @Test
+    fun selectImplicitAndExplicitAliasSingleSourceHoisted() = assertEval(
+        """SELECT title AS name, price FROM stores.books.* AS b WHERE b.price >= 9.0""",
+        """
+          [
+            {name:"D", price: 9.0},
+            {name:"E", price: 9.5},
+            {name:"F", price: 10.0},
+          ]
+        """
     )
 
     @Test
@@ -230,4 +261,37 @@ class EvaluatorTest : Base() {
         """SELECT id AS name FROM stores WHERE id == "5" """,
         """[{name:"5"}]"""
     )
+
+    @Test
+    fun selectCrossProduct() = assertEval(
+        """SELECT * FROM animals, animal_types""",
+        """
+          [
+            {name: "Kumo", type: "dog", id: "dog", is_magic: false},
+            {name: "Kumo", type: "dog", id: "cat", is_magic: false},
+            {name: "Kumo", type: "dog", id: "unicorn", is_magic: true},
+
+            {name: "Mochi", type: "dog", id: "dog", is_magic: false},
+            {name: "Mochi", type: "dog", id: "cat", is_magic: false},
+            {name: "Mochi", type: "dog", id: "unicorn", is_magic: true},
+
+            {name: "Lilikoi", type: "unicorn", id: "dog", is_magic: false},
+            {name: "Lilikoi", type: "unicorn", id: "cat", is_magic: false},
+            {name: "Lilikoi", type: "unicorn", id: "unicorn", is_magic: true},
+          ]
+        """
+    )
+
+    @Test
+    fun selectJoin() = assertEval(
+        """SELECT * FROM animals, animal_types WHERE type == id""",
+        """
+          [
+            {name: "Kumo", type: "dog", id: "dog", is_magic: false},
+            {name: "Mochi", type: "dog", id: "dog", is_magic: false},
+            {name: "Lilikoi", type: "unicorn", id: "unicorn", is_magic: true},
+          ]
+        """
+    )
 }
+

@@ -165,12 +165,12 @@ class ParserTest : Base() {
     fun pathsAndSelect() = assertExpression(
         """(select
              (
-               (as a (. (call process (id t1)) (..) (lit "a") (lit 0)))
+               (as a (. (call process (id t)) (..) (lit "a") (lit 0)))
                (as b (. (id t2) (lit "b")))
              )
              (from
-               (id t1)
-               (. (id t2) (lit "x") (*) (lit "b"))
+               (as t (. (id t1) (*) (lit "a")))
+               (. (id t2) (*) (lit "x") (*) (lit "b"))
              )
              (where
                (and
@@ -180,8 +180,8 @@ class ParserTest : Base() {
              )
            )
         """,
-        """SELECT process(t1)..a[0] AS a, t2.b AS b
-           FROM t1, t2.x.*.b
+        """SELECT process(t)..a[0] AS a, t2.b AS b
+           FROM t1.a AS t, t2.x.*.b
            WHERE test(t2...name, t1.name) AND t1.id == t2.id
         """
     )

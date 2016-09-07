@@ -68,6 +68,7 @@ interface Bindings {
      * @param fallback The bindings to delegate to when lookup fails to find a name.
      */
     fun delegate(fallback: Bindings): Bindings = over {
-        this@Bindings[it] ?: fallback[it]
+        val binding = this@Bindings[it]
+        binding ?: fallback[it]
     }
 }

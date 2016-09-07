@@ -73,6 +73,9 @@ class Parser(val ion: IonSystem) {
             }
             rem
         }
+
+        fun deriveChildren(transform: (List<ParseNode>) -> List<ParseNode>) =
+            copy(children = transform(children))
     }
 
     inline private fun sexp(builder: IonSexp.() -> Unit): IonSexp =
@@ -322,7 +325,30 @@ class Parser(val ion: IonSystem) {
             rem.tail,
             supportsAlias = true,
             supportsMemberName = false,
-            boundaryTokenTypes = SELECT_BOUNDARY_TOKEN_TYPES)
+            boundaryTokenTypes = SELECT_BOUNDARY_TOKEN_TYPES
+        ).deriveChildren {
+            // FROM <path> has an implicit wildcard, we need to rewrite the parse tree to
+            // handle this
+            it.map {
+                when (it.type) {
+                    PATH -> it.deriveChildren {
+                        injectWildCardForFromClause(it)
+                    }
+                    ALIAS -> it.deriveChildren {
+                        it.map {
+                            when (it.type) {
+                                PATH -> it.deriveChildren {
+                                    injectWildCardForFromClause(it)
+                                }
+                                else -> it
+                            }
+                        }
+                    }
+                    else -> it
+                }
+            }
+        }
+
         rem = fromList.remaining
         children.add(fromList)
 
@@ -334,6 +360,9 @@ class Parser(val ion: IonSystem) {
 
         return ParseNode(SELECT, null, children, rem)
     }
+
+    private fun injectWildCardForFromClause(nodes: List<ParseNode>): List<ParseNode> =
+        listOf(nodes.head!!, ParseNode(ATOM, Token(STAR), emptyList(), emptyList())) + nodes.tail
 
     private fun parseFunctionCall(name: Token, tokens: List<Token>): ParseNode =
         parseArgList(
