@@ -16,7 +16,7 @@ class IonExprValue(override val ionValue: IonValue) : ExprValue {
     private fun Int.toIon() = ion.newInt(this)
 
     override fun bind(parent: Bindings): Bindings = Bindings.over { name ->
-        val parent = ionValue.container
+        val container = ionValue.container
 
         // all struct fields get surfaced as top-level names
         val member = when (ionValue) {
@@ -25,7 +25,7 @@ class IonExprValue(override val ionValue: IonValue) : ExprValue {
         }
 
         member ?: when (name) {
-            SYS_NAME -> when (parent) {
+            SYS_NAME -> when (container) {
                 is IonStruct -> ionValue.fieldName?.toIon()?.exprValue()
                 // note that we don't surface the ordinal to the datagram
                 is IonList, is IonSexp -> ionValue.ordinal.toIon().exprValue()

@@ -10,9 +10,7 @@ import com.amazon.ion.IonSexp
 import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
 import com.amazon.ionsql.*
-import java.io.BufferedInputStream
 import java.io.File
-import java.io.InputStreamReader
 import java.io.OutputStream
 import java.util.*
 
