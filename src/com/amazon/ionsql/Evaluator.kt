@@ -492,7 +492,7 @@ class Evaluator(private val ion: IonSystem,
     }
 
     /** Evaluates an unbound syntax tree against a set of bindings. */
-    fun eval(expr: IonSexp, env: Bindings) = expr.eval(env)
+    fun eval(ast: IonSexp, env: Bindings) = ast.eval(env)
 
     /** Compiles the given source expression into a bound [Expression]. */
     override fun compile(source: String): Expression {
