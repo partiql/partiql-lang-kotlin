@@ -103,6 +103,4 @@ fun main(args: Array<String>) {
             else -> buffer.appendln(line)
         }
     }
-
-    throw UnsupportedOperationException("Implement Me!")
 }
