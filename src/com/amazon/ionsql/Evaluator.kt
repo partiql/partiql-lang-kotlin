@@ -287,6 +287,16 @@ class Evaluator(private val ion: IonSystem,
                     }
                 }
             }.seal().exprValue()
+        },
+        "exists" to { env, args ->
+            when (args.size) {
+                1 -> {
+                    args[0].asSequence().any().exprValue()
+                }
+                else -> throw IllegalArgumentException(
+                    "Expected a single argument for exists: ${args.size}"
+                )
+            }
         }
         // TODO finish implementing "standard" functions
     )

@@ -84,7 +84,7 @@ For example a file named `config.ion`, containing the following:
     {id: "dog", is_magic: false},
     {id: "cat", is_magic: false},
     {id: "unicorn", is_magic: true},
-  ]
+  ],
 }
 ```
 
@@ -122,28 +122,147 @@ ionsql> SELECT name, type, is_magic FROM animals, types WHERE type == id
 OK!
 ```
 
+#### Working with Structure
+Let's consider the following *initial environment*:
+
+```
+{
+  stores:[
+    {
+     id: "5",
+     books: [
+       {title:"A", price: 5.0, categories:["sci-fi", "action"]},
+       {title:"B", price: 2.0, categories:["sci-fi", "comedy"]},
+       {title:"C", price: 7.0, categories:["action", "suspense"]},
+       {title:"D", price: 9.0, categories:["suspense"]},
+     ]
+    },
+    {
+     id: "6",
+     books: [
+       {title:"A", price: 5.0, categories:["sci-fi", "action"]},
+       {title:"E", price: 9.5, categories:["fantasy", "comedy"]},
+       {title:"F", price: 10.0, categories:["history"]},
+     ]
+    }
+  ]
+}
+```
+
+If we wanted to find all books *as their own rows* with a price greater than `7`
+we can use paths on the `FROM` for this:
+
+```
+ionsql> SELECT * FROM stores.books.* WHERE price > 7
+      | 
+======'
+{
+  title:"D",
+  price:9.0,
+  categories:[
+    "suspense"
+  ]
+}
+{
+  title:"E",
+  price:9.5,
+  categories:[
+    "fantasy",
+    "comedy"
+  ]
+}
+{
+  title:"F",
+  price:10.0,
+  categories:[
+    "history"
+  ]
+}
+------
+
+OK!
+```
+
+If you wanted to also de-normalize the store ID and title into the above rows:
+
+```
+ionsql> SELECT b...id AS store, b.title AS title FROM stores.books.* AS b WHERE b.price > 7
+      | 
+======'
+{
+  store:"5",
+  title:"D"
+}
+{
+  store:"6",
+  title:"E"
+}
+{
+  store:"6",
+  title:"F"
+}
+------
+
+OK!
+```
+
+We can also use sub-queries with paths to predicate on sub-structure without changing the
+cardinality.  So if we wanted to find all stores with books having prices greater than
+`9.5`
+
+```
+ionsql> SELECT * FROM stores AS s
+      | WHERE exists(
+      |   SELECT * FROM stores.books.* AS b WHERE price > 9.5 AND b...id == s.id
+      | )
+      | 
+======'
+{
+  id:"6",
+  books:[
+    {
+      title:"A",
+      price:5.0,
+      categories:[
+        "sci-fi",
+        "action"
+      ]
+    },
+    {
+      title:"E",
+      price:9.5,
+      categories:[
+        "fantasy",
+        "comedy"
+      ]
+    },
+    {
+      title:"F",
+      price:10.0,
+      categories:[
+        "history"
+      ]
+    }
+  ]
+}
+------
+
+OK!
+```
+
 #### Reading/Writing Files
 The REPL provides the `read_file` function to stream data from a file. For example:
 
 ```
-ionsql> SELECT city FROM read_file("data.ion")
+ionsql> SELECT city FROM read_file("data.ion") AS c, ["HI", "NY"] AS s WHERE c.state == s.$value
       | 
 ======'
-{
-  city:"Seattle"
-}
-{
-  city:"Bellevue"
-}
 {
   city:"Honolulu"
 }
 {
   city:"Rochester"
 }
-------
-
-OK!
 ```
 
 The REPL also has the capability to write files with the `write_file` function:

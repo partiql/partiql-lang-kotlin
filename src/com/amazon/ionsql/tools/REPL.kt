@@ -131,7 +131,7 @@ fun main(args: Array<String>) {
                     println("\nOK!")
 
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    e.printStackTrace(System.out)
                     println("\nERROR!")
                 }
 
