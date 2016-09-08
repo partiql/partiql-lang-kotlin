@@ -297,6 +297,31 @@ class Evaluator(private val ion: IonSystem,
                     "Expected a single argument for exists: ${args.size}"
                 )
             }
+        },
+        // TODO make this a proper aggregate
+        "count" to { env, args ->
+            when (args.size) {
+                1 -> {
+                    args[0].asSequence().count().exprValue()
+                }
+                else -> throw IllegalArgumentException(
+                    "Expected a single argument for count: ${args.size}"
+                )
+            }
+        },
+        // TODO make this a proper syntax
+        "limit" to { env, args ->
+            when (args.size) {
+                2 -> {
+                    val limit = args[1].numberValue().toInt()
+                    SequenceExprValue(ion) {
+                        args[0].asSequence().take(limit)
+                    }
+                }
+                else -> throw IllegalArgumentException(
+                    "Expected a single argument for limit: ${args.size}"
+                )
+            }
         }
         // TODO finish implementing "standard" functions
     )
@@ -373,6 +398,7 @@ class Evaluator(private val ion: IonSystem,
     private fun Boolean.exprValue(): ExprValue = ion.newBool(this).seal().exprValue()
 
     private fun Number.exprValue(): ExprValue = when (this) {
+        is Int -> ion.newInt(this)
         is Long -> ion.newInt(this)
         is Double -> ion.newFloat(this)
         is BigDecimal -> ion.newDecimal(this)
