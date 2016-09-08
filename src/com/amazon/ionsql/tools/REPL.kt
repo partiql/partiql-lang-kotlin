@@ -11,6 +11,8 @@ import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
 import com.amazon.ionsql.*
 import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.io.OutputStream
 import java.util.*
 
@@ -26,7 +28,44 @@ private val BAR_2    = "------"
 fun main(args: Array<String>) {
     val ion = IonSystemBuilder.standard().build()
 
-    val evaluator = Evaluator(ion)
+    // TODO probably should be in "common" utility
+    val repl_functions = mapOf<String, (Bindings, List<ExprValue>) -> ExprValue>(
+        "read_file" to { env, args ->
+            when (args.size) {
+                1 -> {
+                    val fileName = args[0].ionValue.stringValue()
+                    SequenceExprValue(ion) {
+                        // TODO we should take care to clean this up properly
+                        ion.iterate(FileInputStream(fileName)).asSequence().map { it.exprValue() }
+                    }
+                }
+                else -> throw IllegalArgumentException(
+                    "Bad number of arguments for read_file: ${args.size}"
+                )
+            }
+        },
+        "write_file" to { env, args ->
+            when (args.size) {
+                2 -> {
+                    val fileName = args[0].ionValue.stringValue()
+                    val results = args[1]
+                    FileOutputStream(fileName).use {
+                        IonTextWriterBuilder.pretty().build(it).use {
+                            for (result in results) {
+                                result.ionValue.writeTo(it)
+                            }
+                        }
+                    }
+                    ion.newBool(true).exprValue()
+                }
+                else -> throw IllegalArgumentException(
+                    "Bad number of arguments for write_file: ${args.size}"
+                )
+            }
+        }
+    )
+
+    val evaluator = Evaluator(ion, repl_functions)
 
     // we use the low-level parser for our config file
     val tokenizer = Tokenizer(ion)

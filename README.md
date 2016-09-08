@@ -69,7 +69,7 @@ ionsql> SELECT id + 4 AS name FROM _
 
 #### Initial Environment
 The initial environment for the REPL can be setup with a configuration file, which should be
-an Ion file with a single `struct` containing the initial global environment.
+an Ion file with a single `struct` containing the initial *global environment*.
 
 For example a file named `config.ion`, containing the following:
 
@@ -121,6 +121,83 @@ ionsql> SELECT name, type, is_magic FROM animals, types WHERE type == id
 
 OK!
 ```
+
+#### Reading/Writing Files
+The REPL provides the `read_file` function to stream data from a file. For example:
+
+```
+ionsql> SELECT city FROM read_file("data.ion")
+      | 
+======'
+{
+  city:"Seattle"
+}
+{
+  city:"Bellevue"
+}
+{
+  city:"Honolulu"
+}
+{
+  city:"Rochester"
+}
+------
+
+OK!
+```
+
+The REPL also has the capability to write files with the `write_file` function:
+
+```
+ionsql> write_file("out.ion", SELECT * FROM _)
+      | 
+======'
+true
+------
+```
+
+Functions and expressions can be used in the *global configuration* as well.  Consider
+the following `config.ion`:
+
+```
+{
+  data: (read_file("data.ion"))
+}
+```
+
+The `data` variable will now be bound to file containing Ion:
+
+```
+ionsql> SELECT * FROM data
+      | 
+======'
+{
+  city:"Seattle",
+  state:"WA"
+}
+{
+  city:"Bellevue",
+  state:"WA"
+}
+{
+  city:"Honolulu",
+  state:"HI"
+}
+{
+  city:"Rochester",
+  state:"NY"
+}
+------
+
+OK!
+```
+
+## TODO
+
+* Implement a proper lexer, probably using the Ion one.
+* Add support for aliasing wildcards within paths.
+* Implement more the "standard" functions.
+* Implement aggregation functions.
   
 [ionjava]: https://code.amazon.com/packages/IonJava
 [ionjava-sql-hack]: https://code.amazon.com/packages/IonJava/logs/heads/sqlhack

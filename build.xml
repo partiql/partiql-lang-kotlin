@@ -6,7 +6,7 @@
   <import file="${happytrails.root}/happytrails.xml"/>
   <ht:import file="happier-kotlin-trails.xml"/>
 
-  <target name="single-jar">
+  <target name="single-jar" depends="standard-compile-jar">
     <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask" classpath="${bp:tool.classpath}"/>
     <jarjar destfile="${lib.dir}/ionsql-sandbox-single.jar">
       <fileset dir="${classes.dir}"/>
