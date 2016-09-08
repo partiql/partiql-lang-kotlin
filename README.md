@@ -263,6 +263,9 @@ ionsql> SELECT city FROM read_file("data.ion") AS c, ["HI", "NY"] AS s WHERE c.s
 {
   city:"Rochester"
 }
+------
+
+OK!
 ```
 
 The REPL also has the capability to write files with the `write_file` function:
@@ -273,6 +276,8 @@ ionsql> write_file("out.ion", SELECT * FROM _)
 ======'
 true
 ------
+
+OK!
 ```
 
 Functions and expressions can be used in the *global configuration* as well.  Consider

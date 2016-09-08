@@ -17,7 +17,7 @@ class Tokenizer(private val ion: IonSystem) {
     companion object {
         // note that this has to be length == 1 strings
         private val BREAK_OUT_OPERATORS = setOf("*", ".", "+", "-")
-        private val IDENTIFIER_PATTERN = Regex("""[a-z_$][a-z0-9_$]*""")
+        private val IDENTIFIER_PATTERN = Regex("""[a-zA-Z_$][a-zA-Z0-9_$]*""")
     }
 
     fun tokenize(source: IonValue): List<Token> {
