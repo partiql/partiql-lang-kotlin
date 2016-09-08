@@ -329,28 +329,17 @@ class Evaluator(private val ion: IonSystem,
     val functions = builtins + userFuncs
 
     private fun IonStruct.projectAllInto(joinedValues: List<ExprValue?>) {
-        val names = HashSet<String>()
         joinedValues.forEachIndexed { col, joinValue ->
             val ionVal = joinValue?.ionValue!!
             when (ionVal) {
                 is IonStruct -> {
                     for (child in ionVal) {
-                        val childName = child.fieldName
-                        val name = when {
-                            childName in names -> "${col}_$childName"
-                            else -> childName
-                        }
-                        names.add(name)
+                        val name = child.fieldName
                         add(name, child.clone())
                     }
                 }
                 else -> {
-                    val name = when {
-                        SYS_VALUE in names -> "${col}_$SYS_VALUE"
-                        else -> SYS_VALUE
-                    }
-                    names.add(name)
-                    add(name, ionVal.clone())
+                    add(SYS_VALUE, ionVal.clone())
                 }
             }
         }
@@ -359,11 +348,9 @@ class Evaluator(private val ion: IonSystem,
     private fun IonStruct.projectSelectList(locals: Bindings,
                                             exprs: IonSequence,
                                             aliases: List<String>) {
-        val names = HashSet<String>()
         exprs.forEachIndexed { col, raw ->
             var name = aliases[col]
             val value = raw.eval(locals)
-            names.add(name)
             add(name, value.ionValue.clone())
         }
     }
