@@ -310,7 +310,7 @@ class Evaluator(private val ion: IonSystem,
             }
         },
         // TODO make this a proper syntax
-        "limit" to { env, args ->
+        "__limit" to { env, args ->
             when (args.size) {
                 2 -> {
                     val limit = args[1].numberValue().toInt()
@@ -326,7 +326,7 @@ class Evaluator(private val ion: IonSystem,
         // TODO finish implementing "standard" functions
     )
 
-    val functions = builtins + userFuncs
+    private val functions = builtins + userFuncs
 
     private fun IonStruct.projectAllInto(joinedValues: List<ExprValue?>) {
         joinedValues.forEachIndexed { col, joinValue ->

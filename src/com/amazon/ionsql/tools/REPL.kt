@@ -114,12 +114,17 @@ fun main(args: Array<String>) {
         }
         val line = readLine()
         when (line) {
-            "", null -> {
+            "", "!!", null -> {
                 val source = buffer.toString().trim()
                 buffer.setLength(0)
                 try {
                     if (source != "") {
-                        result = evaluator.compile(source).eval(locals)
+                        result = when (line) {
+                            "!!" -> ion.newEmptyList().apply {
+                                add(evaluator.parse(source))
+                            }.exprValue()
+                            else -> evaluator.compile(source).eval(locals)
+                        }
 
                         print(BAR_1)
                         for (value in result) {
