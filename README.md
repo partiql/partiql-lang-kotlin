@@ -321,7 +321,8 @@ OK!
 * Implement a proper lexer, probably using the Ion one.
 * Add support for aliasing wildcards within paths.
 * Implement more the "standard" functions.
-* Implement aggregation functions.
+* Implement aggregation, sort
+* Eliminate boundary token concept in parser (it is probably not necessary).
   
 [ionjava]: https://code.amazon.com/packages/IonJava
 [ionjava-sql-hack]: https://code.amazon.com/packages/IonJava/logs/heads/sqlhack
