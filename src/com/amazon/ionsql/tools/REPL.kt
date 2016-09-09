@@ -20,9 +20,9 @@ import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.TimeUnit.NANOSECONDS
 
 private val PROMPT_1 = "ionsql> "
-private val PROMPT_2 = "      | "
-private val BAR_1    = "======'"
-private val BAR_2    = "------"
+private val PROMPT_2 = ""
+private val BAR_1    = "======="
+private val BAR_2    = "-------"
 
 /**
  * A very simple implementation of a read-eval-print loop (REPL)
