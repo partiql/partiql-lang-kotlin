@@ -15,6 +15,9 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.OutputStream
 import java.util.*
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeUnit.MILLISECONDS
+import java.util.concurrent.TimeUnit.NANOSECONDS
 
 private val PROMPT_1 = "ionsql> "
 private val PROMPT_2 = "      | "
@@ -117,6 +120,7 @@ fun main(args: Array<String>) {
             "", "!!", null -> {
                 val source = buffer.toString().trim()
                 buffer.setLength(0)
+                val startNs = System.nanoTime()
                 try {
                     if (source != "") {
                         result = when (line) {
@@ -133,12 +137,15 @@ fun main(args: Array<String>) {
                         }
                         println("\n$BAR_2")
                     }
-                    println("\nOK!")
+                    print("\nOK!")
 
                 } catch (e: Exception) {
                     e.printStackTrace(System.out)
-                    println("\nERROR!")
+                    print("\nERROR!")
                 }
+                val endNs = System.nanoTime()
+                val totalMs = MILLISECONDS.convert(endNs - startNs, NANOSECONDS)
+                println(" ($totalMs ms)")
 
                 if (line == null) {
                     running = false

@@ -405,8 +405,9 @@ class Evaluator(private val ion: IonSystem,
             is IonText -> {
                 val name = indexVal.stringValue()
                 // delegate to bindings logic as the scope of lookup by name
+                // TODO determine if we should fail here when the member doesn't exist
                 return bind(Bindings.empty())[name] ?:
-                    throw IllegalArgumentException("Could not find member $name in $ionValue")
+                    ion.newNull().seal().exprValue()
             }
             else -> throw IllegalArgumentException("Cannot convert index to int/string: $indexVal")
         }
