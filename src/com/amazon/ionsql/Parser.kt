@@ -355,13 +355,30 @@ class Parser(val ion: IonSystem) {
         if (rem.head?.keywordText == "where") {
             val whereExpr = parseExpression(
                 rem.tail,
-                boundaryTokenTypes = GROUP_AND_CALL_BOUNDARY_TOKEN_TYPES
+                boundaryTokenTypes = SELECT_BOUNDARY_TOKEN_TYPES
             )
             rem = whereExpr.remaining
             children.add(whereExpr)
         }
 
-        return ParseNode(SELECT, null, children, rem)
+        var parseNode = ParseNode(SELECT, null, children, rem)
+
+        if (rem.head?.keywordText == "limit") {
+            val limitExpr = parseExpression(
+                rem.tail,
+                boundaryTokenTypes = GROUP_AND_CALL_BOUNDARY_TOKEN_TYPES
+            )
+            rem = limitExpr.remaining
+            // TODO figure out if this should be first class syntax (it's a bit of a hack)
+            parseNode = ParseNode(
+                CALL,
+                Token(IDENTIFIER, ion.newSymbol("__limit")),
+                listOf(parseNode, limitExpr),
+                rem
+            )
+        }
+
+        return parseNode
     }
 
     private fun injectWildCardForFromClause(nodes: List<ParseNode>): List<ParseNode> =

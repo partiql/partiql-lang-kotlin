@@ -309,7 +309,6 @@ class Evaluator(private val ion: IonSystem,
                 )
             }
         },
-        // TODO make this a proper syntax
         "__limit" to { env, args ->
             when (args.size) {
                 2 -> {

@@ -16,6 +16,7 @@ data class Token(val type: Type, val value: IonValue? = null) {
             "select",
             "from",
             "where",
+            "limit",
             "as"
         )
 

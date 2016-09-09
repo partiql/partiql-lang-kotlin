@@ -317,5 +317,22 @@ class EvaluatorTest : Base() {
           ]
         """
     )
+
+    @Test
+    fun nestedSelectJoinLimit() = assertEval(
+        """
+          SELECT ${'$'}name AS col, ${'$'}value AS val
+          FROM (SELECT * FROM animals, animal_types WHERE type == id).*
+          WHERE ${'$'}name != "id"
+          LIMIT 6 - 3
+        """,
+        """
+          [
+            {col: "name", val: "Kumo"},
+            {col: "type", val: "dog"},
+            {col: "is_magic", val: false},
+          ]
+        """
+    )
 }
 
