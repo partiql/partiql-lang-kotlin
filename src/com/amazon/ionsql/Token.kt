@@ -17,13 +17,25 @@ data class Token(val type: Type, val value: IonValue? = null) {
             "from",
             "where",
             "limit",
-            "as"
+            "group",
+            "order",
+            "limit",
+            "values",
+            "pivot",
+            "unpivot",
+            "case",
+            "when",
+            "else",
+            "end",
+            "by",
+            "as",
+            "at"
         )
 
         // note that '*' is treated specially
         internal val BINARY_OPERATORS = setOf(
             "+", "-", "/", "%",
-            "<", "<=", ">", ">=", "==", "!=",
+            "<", "<=", ">", ">=", "=", "!=",
             "and", "or"
         )
 
