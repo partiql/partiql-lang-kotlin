@@ -316,6 +316,93 @@ ionsql> SELECT * FROM data
 OK!
 ```
 
+##### TSV/CSV Data
+The `read_file` function supports an optional struct argument to add additional parsing options.
+Parsing delimited files can be specified with the `type` field with a string `tsv` or `csv`
+to parse tab or comma separated values respectively.
+
+```
+ionsql> read_file("simple.tsv", {type:"tsv"})
+      | 
+======' 
+{
+  _0:"title",
+  _1:"category",
+  _2:"price"
+}
+{
+  _0:"harry potter",
+  _1:"book",
+  _2:"7.99"
+}
+{
+  _0:"dot",
+  _1:"electronics",
+  _2:"49.99"
+}
+{
+  _0:"echo",
+  _1:"electronics",
+  _2:"99.99"
+}
+------- 
+
+OK! 
+```
+
+The options `struct` can also define if the first row for delimited data should be the
+column names with the `header` field.
+
+```
+ionsql> read_file("simple.tsv", {type:"tsv", header:true})
+      | 
+======' 
+{
+  title:"harry potter",
+  category:"book",
+  price:"7.99"
+}
+{
+  title:"dot",
+  category:"electronics",
+  price:"49.99"
+}
+{
+  title:"echo",
+  category:"electronics",
+  price:"99.99"
+}
+------- 
+
+OK!
+```
+
+Auto conversion can also be specified numeric and timestamps in delimited data.
+
+```
+ionsql> read_file("simple.tsv", {type:"tsv", header:true, conversion:"auto"})
+      | 
+======' 
+{
+  title:"harry potter",
+  category:"book",
+  price:7.99
+}
+{
+  title:"dot",
+  category:"electronics",
+  price:49.99
+}
+{
+  title:"echo",
+  category:"electronics",
+  price:99.99
+}
+------- 
+
+OK!
+```
+
 ## TODO
 
 * Implement a proper lexer, probably using the Ion one.
