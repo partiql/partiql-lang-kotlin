@@ -6,8 +6,9 @@ package com.amazon.ionsql.tools;
 
 import com.amazon.ion.IonSystem;
 import com.amazon.ion.system.IonSystemBuilder;
+import com.amazon.ionsql.Bindings;
 import com.amazon.ionsql.Evaluator;
-import com.amazon.ionsql.*;
+import com.amazon.ionsql.Expression;
 
 import static java.util.Collections.emptyMap;
 
@@ -18,7 +19,10 @@ import static java.util.Collections.emptyMap;
  * not to be a serious REPL or application.
  */
 public class Example {
-    public static void main(String[] args) throws Exception {
+    private Example() {}
+
+    /** Simple example driver. */
+    public static void main(final String[] args) throws Exception {
         if (args.length != 1) {
             throw new IllegalArgumentException("Usage: Example EXPRESSION");
         }
