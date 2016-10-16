@@ -28,7 +28,7 @@ private val DELIM_CONVERTERS = mapOf<String, (String) -> IonValue>(
         try {
             val converted = ION.singleValue(raw)
             when (converted) {
-                is IonNumber, is IonTimestamp -> converted
+                is IonInt, is IonFloat, is IonDecimal, is IonTimestamp -> converted
                 else -> ION.newString(raw)
             }
         } catch (e: IonException) {
