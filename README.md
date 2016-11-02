@@ -403,6 +403,48 @@ ionsql> read_file("simple.tsv", {type:"tsv", header:true, conversion:"auto"})
 OK!
 ```
 
+Writing TSV/CSV data can be done by specifying the optional `struct` argument to specify output
+format to the `write_file` function.  Similar to the `read_file` function, the `type` field
+can be used to specify `tsv`, `csv`, or `ion` output.
+
+```
+ionsql> write_file("out.csv", {type:"csv"}, SELECT name, type FROM animals)
+      | 
+======' 
+true
+-------
+```
+
+This would produce the following file:
+
+```
+$ cat out.csv
+Kumo,dog
+Mochi,dog
+Lilikoi,unicorn
+```
+
+The options `struct` can also specify a `header` Boolean field to indicate whether the output
+TSV/CSV should have a header row.
+
+```
+ionsql> write_file("out.csv", {type:"csv", header:true}, SELECT name, type FROM animals)
+      | 
+======' 
+true
+-------
+```
+
+Which would produce the following file:
+
+```
+$ cat out.csv 
+name,type
+Kumo,dog
+Mochi,dog
+Lilikoi,unicorn
+```
+
 ## TODO
 
 * Implement a proper lexer, probably using the Ion one.

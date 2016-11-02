@@ -233,7 +233,7 @@ class Evaluator(private val ion: IonSystem,
                     }
                     .map {
                         val (joinedValues, locals) = it
-                        ion.newEmptyStruct().apply {
+                        val value = ion.newEmptyStruct().apply {
                             when (selectExprs.size) {
                                 0 -> {
                                     // select * case
@@ -245,6 +245,14 @@ class Evaluator(private val ion: IonSystem,
                                 }
                             }
                         }.seal().exprValue()
+
+                        when (selectNames.size) {
+                            // select * doesn't project ordered tuples
+                            // TODO this should work for very specific cases...
+                            0 -> value
+                            // select with list projects
+                            else -> value.orderedNamesValue(selectNames)
+                        }
                     }
             }
         }
@@ -267,6 +275,7 @@ class Evaluator(private val ion: IonSystem,
             }.seal().exprValue()
         },
         "struct" to { env, args ->
+            val names = ArrayList<String>(args.size)
             ion.newEmptyStruct().apply {
                 for (arg in args) {
                     val value = arg.ionValue
@@ -275,6 +284,7 @@ class Evaluator(private val ion: IonSystem,
                             2 -> {
                                 val name = value[0].text
                                 val child = value[1].clone()
+                                names.add(name)
                                 add(name, child)
                             }
                             else -> throw IllegalArgumentException(
@@ -286,7 +296,7 @@ class Evaluator(private val ion: IonSystem,
                         )
                     }
                 }
-            }.seal().exprValue()
+            }.seal().exprValue().orderedNamesValue(names)
         },
         "exists" to { env, args ->
             when (args.size) {

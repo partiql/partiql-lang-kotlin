@@ -7,6 +7,7 @@
 package com.amazon.ionsql.tools
 
 import com.amazon.ion.*
+import com.amazon.ion.IonType.*
 import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
 import com.amazon.ionsql.*
@@ -37,7 +38,7 @@ private val DELIM_CONVERTERS = mapOf<String, (String) -> IonValue>(
     }
 )
 
-private fun createDelimitedReadHandler(delimiter: String): (InputStream, IonStruct) -> Sequence<ExprValue> =
+private fun delimitedReadHandler(delimiter: String): (InputStream, IonStruct) -> Sequence<ExprValue> =
     { input, options ->
         val encoding = options["encoding"]?.stringValue() ?: "UTF-8"
         val reader = BufferedReader(InputStreamReader(input, encoding))
@@ -82,13 +83,87 @@ private fun createDelimitedReadHandler(delimiter: String): (InputStream, IonStru
         }.asSequence()
     }
 
-private val READ_HANDLERS = mapOf<String, (InputStream, IonStruct) -> Sequence<ExprValue>>(
+private val READ_HANDLERS = mapOf(
     "ion" to { input, options ->
         ION.iterate(input).asSequence().map { it.exprValue() }
     },
-    "tsv" to createDelimitedReadHandler("\t"),
-    "csv" to createDelimitedReadHandler(",")
+    "tsv" to delimitedReadHandler("\t"),
+    "csv" to delimitedReadHandler(",")
 )
+
+private fun delimitedWriteHandler(delimiter: String): (ExprValue, OutputStream, IonStruct) -> Unit =
+    { results, out, options ->
+        val encoding = options["encoding"]?.stringValue() ?: "UTF-8"
+        val writeHeader = options["header"]?.booleanValue() ?: false
+        val nl = options["nl"]?.stringValue() ?: "\n"
+
+        val writer = OutputStreamWriter(out, encoding)
+        writer.use {
+            var names: List<String>? = null
+            for (row in results) {
+                val colNames = row.asFacet(OrderedBindNames::class.java)?.orderedNames
+                    ?: throw IllegalArgumentException("Delimited data must be ordered tuple: $row")
+                if (names == null) {
+                    // first row defines column names
+                    names = colNames
+
+                    if (writeHeader) {
+                        names.joinTo(writer, delimiter)
+                        writer.write(nl)
+                    }
+                } else if (names != colNames) {
+                    // mismatch on the tuples
+                    throw IllegalArgumentException(
+                        "Inconsistent row names: $colNames != $names"
+                    )
+                }
+
+                row.map {
+                    val col = it.ionValue
+                    when (col.type) {
+                        // TODO configurable null handling
+                        NULL, BOOL, INT, FLOAT, DECIMAL, TIMESTAMP -> col.toString()
+                        SYMBOL, STRING -> col.stringValue()
+                        // TODO LOB/BLOB support
+                        else -> throw IllegalArgumentException(
+                            "Delimited data column must not be ${col.type} type"
+                        )
+                    }
+                }.joinTo(writer, delimiter)
+                writer.write(nl)
+            }
+        }
+    }
+
+private val WRITE_HANDLERS = mapOf(
+    "ion" to { results, out, options ->
+        IonTextWriterBuilder.pretty().build(out).use {
+            for (result in results) {
+                result.ionValue.writeTo(it)
+            }
+        }
+    },
+    "tsv" to delimitedWriteHandler("\t"),
+    "csv" to delimitedWriteHandler(",")
+)
+
+private fun optionsStruct(requiredArity: Int,
+                          args: List<ExprValue>,
+                          optionsIndex: Int = requiredArity): IonStruct = when (args.size) {
+    requiredArity -> ION.newEmptyStruct()
+    requiredArity + 1 -> {
+        val optVal = args[optionsIndex].ionValue
+        when (optVal) {
+            is IonStruct -> optVal
+            else -> throw IllegalArgumentException(
+                "Invalid option: $optVal"
+            )
+        }
+    }
+    else -> throw IllegalArgumentException(
+        "Bad number of arguments: ${args.size}"
+    )
+}
 
 /**
  * A very simple implementation of a read-eval-print loop (REPL)
@@ -98,24 +173,7 @@ fun main(args: Array<String>) {
     // TODO probably should be in "common" utility
     val repl_functions = mapOf<String, (Bindings, List<ExprValue>) -> ExprValue>(
         "read_file" to { env, args ->
-            val options = when (args.size) {
-                1 -> {
-                    ION.newEmptyStruct()
-                }
-                2 -> {
-                    val optVal = args[1].ionValue
-                    when (optVal) {
-                        is IonStruct -> optVal
-                        else -> throw IllegalArgumentException(
-                            "Invalid option: $optVal"
-                        )
-                    }
-                }
-                else -> throw IllegalArgumentException(
-                    "Bad number of arguments for read_file: ${args.size}"
-                )
-            }
-
+            val options = optionsStruct(1, args)
             val fileName = args[0].ionValue.stringValue()
             val fileType = options["type"]?.stringValue() ?: "ion"
             val handler = READ_HANDLERS[fileType] ?:
@@ -127,22 +185,25 @@ fun main(args: Array<String>) {
             }
         },
         "write_file" to { env, args ->
-            when (args.size) {
-                2 -> {
-                    val fileName = args[0].ionValue.stringValue()
-                    val results = args[1]
-                    FileOutputStream(fileName).use {
-                        IonTextWriterBuilder.pretty().build(it).use {
-                            for (result in results) {
-                                result.ionValue.writeTo(it)
-                            }
-                        }
-                    }
-                    ION.newBool(true).exprValue()
+            val options = optionsStruct(2, args, optionsIndex = 1)
+            val fileName = args[0].ionValue.stringValue()
+            val fileType = options["type"]?.stringValue() ?: "ion"
+            val resultsIndex = when (args.size) {
+                2 -> 1
+                else -> 2
+            }
+            val results = args[resultsIndex]
+            val handler = WRITE_HANDLERS[fileType] ?:
+                throw IllegalArgumentException("Unknown file type: $fileType")
+
+            try {
+                FileOutputStream(fileName).use {
+                    handler(results, it, options)
                 }
-                else -> throw IllegalArgumentException(
-                    "Bad number of arguments for write_file: ${args.size}"
-                )
+                ION.newBool(true).exprValue()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                ION.newBool(false).exprValue()
             }
         }
     )

@@ -41,34 +41,4 @@ interface Bindings {
      *         reference value for a `null` **must** be returned.
      */
     operator fun get(name: String): ExprValue?
-
-    /**
-     * Wraps a binding with a set of names that should not be resolved to anything.
-     *
-     * @param bindings The bindings to delegate over.
-     * @param names, the blacklisted names
-     */
-    fun blacklist(vararg names: String): Bindings {
-        val blacklisted = names.toSet()
-        return over {
-            when (it) {
-                in blacklisted -> null
-                else -> get(it)
-            }
-        }
-    }
-
-    /**
-     * Wraps these [Bindings] to delegate lookup to another instance when lookup on this
-     * one fails.
-     *
-     * Note that this doesn't modify an existing [Bindings] but creates a new instance that
-     * does delegation.
-     *
-     * @param fallback The bindings to delegate to when lookup fails to find a name.
-     */
-    fun delegate(fallback: Bindings): Bindings = over {
-        val binding = this@Bindings[it]
-        binding ?: fallback[it]
-    }
 }

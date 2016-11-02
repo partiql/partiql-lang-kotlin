@@ -9,7 +9,7 @@ import com.amazon.ion.*
 /**
  * Core [ExprValue] over an [IonValue].
  */
-class IonExprValue(override val ionValue: IonValue) : ExprValue {
+class IonExprValue(override val ionValue: IonValue) : BaseExprValue() {
     private val ion = ionValue.system
 
     private fun String.toIon() = ion.newString(this)

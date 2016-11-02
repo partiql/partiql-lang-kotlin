@@ -5,6 +5,7 @@
 package com.amazon.ionsql
 
 import com.amazon.ion.IonSystem
+import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
 
 /**
@@ -20,7 +21,7 @@ import com.amazon.ion.IonValue
  * @param sequence The [Sequence] generating function.
  */
 class SequenceExprValue(private val ion: IonSystem,
-                        private val sequence: () -> Sequence<ExprValue>) : ExprValue {
+                        private val sequence: () -> Sequence<ExprValue>) : BaseExprValue() {
     override val ionValue: IonValue by lazy {
         asSequence()
             .mapTo(ion.newEmptyList()) { it.ionValue.clone() }

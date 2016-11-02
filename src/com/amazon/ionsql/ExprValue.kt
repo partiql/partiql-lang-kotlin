@@ -4,12 +4,14 @@
 
 package com.amazon.ionsql
 
+import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
+import com.amazon.ion.facet.Faceted
 
 /**
  * Representation of a result of an [Expression].
  */
-interface ExprValue : Iterable<ExprValue> {
+interface ExprValue : Iterable<ExprValue>, Faceted {
     /**
      * Materializes the expression value as an [IonValue].
      *
