@@ -140,10 +140,10 @@ class EvaluatorTest : Base() {
     fun lessEqIntFloatFalse() = assertEval("5 <= 2e0", "false")
 
     @Test
-    fun equalIntFloat() = assertEval("1 == 1e0", "true")
+    fun equalIntFloat() = assertEval("1 = 1e0", "true")
 
     @Test
-    fun equalIntFloatFalse() = assertEval("1 == 1e1", "false")
+    fun equalIntFloatFalse() = assertEval("1 = 1e1", "false")
 
     @Test
     fun notEqualIntFloat() = assertEval("1 != 2e0", "true")
@@ -227,6 +227,12 @@ class EvaluatorTest : Base() {
     )
 
     @Test
+    fun selectValues() = assertEval(
+        """SELECT VALUES id FROM stores""",
+        """["5", "6"]"""
+    )
+
+    @Test
     fun selectStarSingleSourceHoisted() = assertEval(
         """SELECT * FROM stores.books.* AS b WHERE b.price >= 9.0""",
         """
@@ -258,7 +264,7 @@ class EvaluatorTest : Base() {
 
     @Test
     fun explicitAliasSelectSingleSourceWithWhere() = assertEval(
-        """SELECT id AS name FROM stores WHERE id == "5" """,
+        """SELECT id AS name FROM stores WHERE id = "5" """,
         """[{name:"5"}]"""
     )
 
@@ -284,7 +290,7 @@ class EvaluatorTest : Base() {
 
     @Test
     fun selectJoin() = assertEval(
-        """SELECT * FROM animals, animal_types WHERE type == id""",
+        """SELECT * FROM animals, animal_types WHERE type = id""",
         """
           [
             {name: "Kumo", type: "dog", id: "dog", is_magic: false},
@@ -298,7 +304,7 @@ class EvaluatorTest : Base() {
     fun nestedSelectJoin() = assertEval(
         """
           SELECT ${'$'}name AS col, ${'$'}value AS val
-          FROM (SELECT * FROM animals, animal_types WHERE type == id).*
+          FROM (SELECT * FROM animals, animal_types WHERE type = id).*
           WHERE ${'$'}name != "id"
         """,
         """
@@ -322,7 +328,7 @@ class EvaluatorTest : Base() {
     fun nestedSelectJoinLimit() = assertEval(
         """
           SELECT ${'$'}name AS col, ${'$'}value AS val
-          FROM (SELECT * FROM animals, animal_types WHERE type == id).*
+          FROM (SELECT * FROM animals, animal_types WHERE type = id).*
           WHERE ${'$'}name != "id"
           LIMIT 6 - 3
         """,

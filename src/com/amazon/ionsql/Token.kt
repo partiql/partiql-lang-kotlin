@@ -50,7 +50,7 @@ data class Token(val type: Type, val value: IonValue? = null) {
             "and" to 2,
 
             // equality group (TODO add other morphemes of equality/non-equality)
-            "=="  to 3,
+            "="  to 3,
             "!="  to 3,
 
             // comparison group

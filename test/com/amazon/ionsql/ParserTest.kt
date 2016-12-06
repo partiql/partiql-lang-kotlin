@@ -5,7 +5,6 @@
 package com.amazon.ionsql
 
 import com.amazon.ion.IonSexp
-import org.junit.Before
 import org.junit.Test
 
 class ParserTest : Base() {
@@ -105,14 +104,20 @@ class ParserTest : Base() {
 
     @Test
     fun selectWithSingleFrom() = assertExpression(
-        "(select ((id a)) (from (id table)))",
+        "(select (list (id a)) (from (id table)))",
         "SELECT a FROM table"
     )
 
     @Test
     fun selectStar() = assertExpression(
-        "(select () (from (id table)))",
+        "(select (*) (from (id table)))",
         "SELECT * FROM table"
+    )
+
+    @Test
+    fun selectValues() = assertExpression(
+        "(select (values (id v)) (from (as v (id table))))",
+        "SELECT VALUES v FROM table AS v"
     )
 
     @Test(expected = IllegalArgumentException::class)
@@ -123,7 +128,7 @@ class ParserTest : Base() {
     @Test
     fun selectMultipleWithMultipleFromSimpleWhere() = assertExpression(
         """(select
-             ((id a) (id b))
+             (list (id a) (id b))
              (from (as t1 (id table1)) (id table2))
              (where (call f (id t1)))
            )
@@ -170,7 +175,7 @@ class ParserTest : Base() {
     @Test
     fun pathsAndSelect() = assertExpression(
         """(select
-             (
+             (list
                (as a (. (call process (id t)) (..) (lit "a") (lit 0)))
                (as b (. (id t2) (lit "b")))
              )
@@ -181,25 +186,25 @@ class ParserTest : Base() {
              (where
                (and
                  (call test (. (id t2) (..) (..) (lit "name")) (. (id t1) (lit "name")))
-                 (== (. (id t1) (lit "id")) (. (id t2) (lit "id")))
+                 (= (. (id t1) (lit "id")) (. (id t2) (lit "id")))
                )
              )
            )
         """,
         """SELECT process(t)..a[0] AS a, t2.b AS b
            FROM t1.a AS t, t2.x.*.b
-           WHERE test(t2...name, t1.name) AND t1.id == t2.id
+           WHERE test(t2...name, t1.name) AND t1.id = t2.id
         """
     )
 
     @Test
     fun nestedSelectNoWhere() = assertExpression(
         """(select
-             ()
+             (*)
              (from
                (.
                  (select
-                   ()
+                   (*)
                    (from (id x))
                  )
                  (*)
@@ -214,11 +219,11 @@ class ParserTest : Base() {
     @Test
     fun nestedSelect() = assertExpression(
         """(select
-             ()
+             (*)
              (from
                (.
                  (select
-                   ()
+                   (*)
                    (from (id x))
                    (where (id b))
                  )
@@ -235,7 +240,7 @@ class ParserTest : Base() {
     fun selectLimit() = assertExpression(
         """(call __limit
              (select
-               ()
+               (*)
                (from (id a))
              )
              (lit 10)
@@ -248,13 +253,13 @@ class ParserTest : Base() {
     fun selectWhereLimit() = assertExpression(
         """(call __limit
              (select
-               ()
+               (*)
                (from (id a))
-               (where (== (id a) (lit 5)))
+               (where (= (id a) (lit 5)))
              )
              (lit 10)
            )
         """,
-        "SELECT * FROM a WHERE a == 5 LIMIT 10"
+        "SELECT * FROM a WHERE a = 5 LIMIT 10"
     )
 }

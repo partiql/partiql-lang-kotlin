@@ -35,7 +35,7 @@ class Evaluator(private val ion: IonSystem,
         expr.evalCall(env, startIndex = 0)
     }
 
-    private val aliasExtractor: (Sequence<IonValue>) -> List<String> = { seq ->
+    private fun aliasExtractor(seq: Sequence<IonValue>): List<String> =
         seq.mapIndexed { col, value ->
             when (value) {
                 is IonSexp -> {
@@ -47,7 +47,6 @@ class Evaluator(private val ion: IonSystem,
                 else -> throw IllegalArgumentException("Cannot extract alias out of: $value")
             }
         }.toList()
-    }
 
     /** Dispatch table for AST "op-codes."  */
     private val syntax: Map<String, (Bindings, IonSexp) -> ExprValue> = mapOf(
@@ -103,7 +102,7 @@ class Evaluator(private val ion: IonSystem,
         ">=" to bindOp { env, args ->
             (args[0] >= args[1]).exprValue()
         },
-        "==" to bindOp { env, args ->
+        "=" to bindOp { env, args ->
             args[0].exprEquals(args[1]).exprValue()
         },
         "!=" to bindOp { env, args ->
@@ -200,11 +199,48 @@ class Evaluator(private val ion: IonSystem,
                 throw IllegalArgumentException("Bad arity on SELECT form $expr: ${expr.size}")
             }
 
+            // FIXME - don't use arity, use the tag name
+
             val selectExprs = expr[1]
-            if (selectExprs !is IonSequence) {
-                throw IllegalArgumentException("SELECT list must be sequence: $selectExprs")
+            if (selectExprs !is IonSequence || selectExprs.isEmpty()) {
+                throw IllegalArgumentException(
+                    "SELECT projection must be non-empty sequence: $selectExprs"
+                )
             }
-            val selectNames = aliasExtractor(selectExprs.asSequence())
+
+            val selectFunc: (List<ExprValue?>, Bindings) -> ExprValue = when (selectExprs[0].text) {
+                "*" -> {
+                    if (selectExprs.size != 1) {
+                        throw IllegalArgumentException("SELECT * must be a singleton list")
+                    }
+                    // FIXME select * doesn't project ordered tuples
+                    // TODO this should work for very specific cases...
+                    { joinedValues, locals -> applyToNewStruct { projectAllInto(joinedValues) } }
+                }
+                "list" -> {
+                    if (selectExprs.size < 2) {
+                        throw IllegalArgumentException(
+                            "SELECT ... must have at least one expression"
+                        )
+                    }
+                    val selectNames = aliasExtractor(selectExprs.asSequence().drop(1));
+
+                    { joinedValues, locals ->
+                        applyToNewStruct {
+                            projectSelectList(locals, selectExprs.asSequence().drop(1), selectNames)
+                        }
+                    }
+                }
+                "values" -> {
+                    if (selectExprs.size != 2) {
+                        throw IllegalArgumentException("SELECT VALUES must have a single expression")
+                    }
+                    { joinedValues, locals ->
+                        selectExprs[1].eval(locals)
+                    }
+                }
+                else -> throw IllegalArgumentException("Invalid node in SELECT: $selectExprs")
+            }
 
             val fromValues = expr[2].asSequence()
                 .drop(1)
@@ -233,30 +269,14 @@ class Evaluator(private val ion: IonSystem,
                     }
                     .map {
                         val (joinedValues, locals) = it
-                        val value = ion.newEmptyStruct().apply {
-                            when (selectExprs.size) {
-                                0 -> {
-                                    // select * case
-                                    projectAllInto(joinedValues);
-                                }
-                                else -> {
-                                    // select a, b as c, ... case
-                                    projectSelectList(locals, selectExprs, selectNames)
-                                }
-                            }
-                        }.seal().exprValue()
-
-                        when (selectNames.size) {
-                            // select * doesn't project ordered tuples
-                            // TODO this should work for very specific cases...
-                            0 -> value
-                            // select with list projects
-                            else -> value.orderedNamesValue(selectNames)
-                        }
+                        selectFunc(joinedValues, locals)
                     }
             }
         }
     )
+
+    private fun applyToNewStruct(applicator: IonStruct.() -> Unit): ExprValue =
+        ion.newEmptyStruct().apply(applicator).seal().exprValue()
 
     /** Dispatch table for built-in functions. */
     private val builtins: Map<String, (Bindings, List<ExprValue>) -> ExprValue> = mapOf(
@@ -355,7 +375,7 @@ class Evaluator(private val ion: IonSystem,
     }
 
     private fun IonStruct.projectSelectList(locals: Bindings,
-                                            exprs: IonSequence,
+                                            exprs: Sequence<IonValue>,
                                             aliases: List<String>) {
         exprs.forEachIndexed { col, raw ->
             var name = aliases[col]

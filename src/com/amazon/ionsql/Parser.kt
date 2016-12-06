@@ -43,7 +43,8 @@ class Parser(val ion: IonSystem) {
 
     internal enum class ParseType {
         ATOM,
-        SELECT,
+        SELECT_LIST,
+        SELECT_VALUES,
         CALL,
         ARG_LIST,
         ALIAS,
@@ -134,10 +135,22 @@ class Parser(val ion: IonSystem) {
             addSymbol(".")
             addChildNodes(this@toSexp)
         }
-        SELECT -> sexp {
+        SELECT_LIST, SELECT_VALUES -> sexp {
             addSymbol("select")
             addSexp {
-                addChildNodes(children[0])
+                addSymbol(when (this@toSexp.type) {
+                    SELECT_LIST -> when {
+                        children[0].children.isEmpty() -> "*"
+                        else -> "list"
+                    }
+                    SELECT_VALUES -> "values"
+                    else -> throw IllegalStateException("Unsupported SELECT type: $this")
+                })
+                when (this@toSexp.type) {
+                    SELECT_VALUES -> add(children[0].toSexp())
+                    else -> addChildNodes(children[0])
+                }
+
             }
             addSexp {
                 addSymbol("from")
@@ -293,12 +306,16 @@ class Parser(val ion: IonSystem) {
     }
 
     private fun parseSelect(tokens: List<Token>): ParseNode {
-        val children = ArrayList<ParseNode>()
-
-        val selectList = when (tokens.head?.type) {
-            STAR -> {
+        val head = tokens.head
+        var type = SELECT_LIST
+        val projection = when {
+            head?.type == STAR -> {
                 // special form for * is empty arg-list
                 ParseNode(ARG_LIST, null, emptyList(), tokens.tail)
+            }
+            head?.keywordText == "values" -> {
+                type = SELECT_VALUES
+                parseExpression(tokens.tail, boundaryTokenTypes = SELECT_BOUNDARY_TOKEN_TYPES)
             }
             else -> {
                 val list = parseArgList(
@@ -307,18 +324,24 @@ class Parser(val ion: IonSystem) {
                     supportsMemberName = false,
                     boundaryTokenTypes = SELECT_BOUNDARY_TOKEN_TYPES
                 )
-                if (list.children.size == 0) {
+                if (list.children.isEmpty()) {
                     throw IllegalArgumentException("Cannot have empty select list: $tokens")
                 }
 
                 list
             }
         }
-        var rem = selectList.remaining
-        children.add(selectList)
+
+        return parseSelectAfterProjection(type, projection)
+    }
+
+    private fun parseSelectAfterProjection(selectType: ParseType, projection: ParseNode): ParseNode {
+        val children = ArrayList<ParseNode>()
+        var rem = projection.remaining
+        children.add(projection)
 
         if (rem.head?.keywordText != "from") {
-            throw IllegalArgumentException("Expected FROM after select list $tokens")
+            throw IllegalArgumentException("Expected FROM after select list $rem")
         }
 
         val fromList = parseArgList(
@@ -361,7 +384,7 @@ class Parser(val ion: IonSystem) {
             children.add(whereExpr)
         }
 
-        var parseNode = ParseNode(SELECT, null, children, rem)
+        var parseNode = ParseNode(selectType, null, children, rem)
 
         if (rem.head?.keywordText == "limit") {
             val limitExpr = parseExpression(

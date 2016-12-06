@@ -11,7 +11,7 @@ import com.amazon.ionsql.Token.Type.*
 class TokenizerTest : Base() {
     val tokenizer = Tokenizer(ion)
 
-    fun tokenize(text: String): List<Token> = tokenizer.tokenize(literal(text)!!)
+    fun tokenize(text: String): List<Token> = tokenizer.tokenize(literal(text))
 
     infix fun Type.of(text: String?) = when (text) {
         null -> Token(this, null)
