@@ -9,7 +9,6 @@ import com.amazon.ion.IonSexp
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
 import com.amazon.ionsql.Parser.ParseType.*
-import com.amazon.ionsql.TokenType
 import com.amazon.ionsql.TokenType.*
 import java.util.*
 

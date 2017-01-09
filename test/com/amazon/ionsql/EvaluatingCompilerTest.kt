@@ -92,7 +92,7 @@ class EvaluatingCompilerTest : Base() {
     fun listLiteral() = assertEval("[i, f, d]", "[1, 2e0, 3d0]")
 
     @Test
-    fun structLiteral() = assertEval("{a:i, b:f, c:d}", "{a:1, b:2e0, c:3d0}")
+    fun structLiteral() = assertEval("{'a':i, 'b':f, 'c':d}", "{a:1, b:2e0, c:3d0}")
 
     @Test
     fun unaryPlus() = assertEval("+i", "1")
@@ -264,7 +264,7 @@ class EvaluatingCompilerTest : Base() {
 
     @Test
     fun explicitAliasSelectSingleSourceWithWhere() = assertEval(
-        """SELECT id AS name FROM stores WHERE id = "5" """,
+        """SELECT id AS name FROM stores WHERE id = '5' """,
         """[{name:"5"}]"""
     )
 
@@ -305,7 +305,7 @@ class EvaluatingCompilerTest : Base() {
         """
           SELECT ${'$'}name AS col, ${'$'}value AS val
           FROM (SELECT * FROM animals, animal_types WHERE type = id).*
-          WHERE ${'$'}name != "id"
+          WHERE ${'$'}name != 'id'
         """,
         """
           [
@@ -329,7 +329,7 @@ class EvaluatingCompilerTest : Base() {
         """
           SELECT ${'$'}name AS col, ${'$'}value AS val
           FROM (SELECT * FROM animals, animal_types WHERE type = id).*
-          WHERE ${'$'}name != "id"
+          WHERE ${'$'}name != 'id'
           LIMIT 6 - 3
         """,
         """

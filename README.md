@@ -43,7 +43,7 @@ ionsql>
 At this point you can type in Ion SQL and press *double enter* to execute SQL:
 
 ```
-ionsql> SELECT id FROM [{id: 5, name:"bill"}, {id: 6, name:"bob"}] WHERE name == "bob"
+ionsql> SELECT id FROM `[{id: 5, name:"bill"}, {id: 6, name:"bob"}]` WHERE name = 'bob'
       | 
 ======'
 {
@@ -69,22 +69,22 @@ ionsql> SELECT id + 4 AS name FROM _
 
 #### Initial Environment
 The initial environment for the REPL can be setup with a configuration file, which should be
-an Ion file with a single `struct` containing the initial *global environment*.
+an IonSQL file with a single `struct` containing the initial *global environment*.
 
-For example a file named `config.ion`, containing the following:
+For example a file named `config.sql`, containing the following:
 
 ```
 {
-  animals:[
+  'animals':`[
     {name: "Kumo", type: "dog"},
     {name: "Mochi", type: "dog"},
     {name: "Lilikoi", type: "unicorn"},
-  ],
-  types:[
+  ]`,
+  'types':`[
     {id: "dog", is_magic: false},
     {id: "cat", is_magic: false},
     {id: "unicorn", is_magic: true},
-  ],
+  ]`,
 }
 ```
 
@@ -93,13 +93,13 @@ Could be loaded into the REPL with `animals` and `types` bound list of `struct` 
 The REPL could be started up with:
 
 ```
-$ rlwrap java -jar build/lib/ionsql-sandbox-single.jar config.ion
+$ rlwrap java -jar build/lib/ionsql-sandbox-single.jar config.sql
 ```
 
 And expressions can use the bound names.
 
 ```
-ionsql> SELECT name, type, is_magic FROM animals, types WHERE type == id
+ionsql> SELECT name, type, is_magic FROM animals, types WHERE type = id
       | 
 ======'
 {
@@ -127,7 +127,7 @@ Let's consider the following *initial environment*:
 
 ```
 {
-  stores:[
+  'stores':`[
     {
      id: "5",
      books: [
@@ -145,7 +145,7 @@ Let's consider the following *initial environment*:
        {title:"F", price: 10.0, categories:["history"]},
      ]
     }
-  ]
+  ]`
 }
 ```
 
@@ -254,7 +254,7 @@ OK!
 The REPL provides the `read_file` function to stream data from a file. For example:
 
 ```
-ionsql> SELECT city FROM read_file("data.ion") AS c, ["HI", "NY"] AS s WHERE c.state == s.$value
+ionsql> SELECT city FROM read_file('data.ion') AS c, `["HI", "NY"]` AS s WHERE c.state == s.$value
       | 
 ======'
 {
@@ -271,7 +271,7 @@ OK!
 The REPL also has the capability to write files with the `write_file` function:
 
 ```
-ionsql> write_file("out.ion", SELECT * FROM _)
+ionsql> write_file('out.ion', SELECT * FROM _)
       | 
 ======'
 true
@@ -285,7 +285,7 @@ the following `config.ion`:
 
 ```
 {
-  data: (read_file("data.ion"))
+  data: (read_file('data.ion'))
 }
 ```
 
@@ -322,7 +322,7 @@ Parsing delimited files can be specified with the `type` field with a string `ts
 to parse tab or comma separated values respectively.
 
 ```
-ionsql> read_file("simple.tsv", {type:"tsv"})
+ionsql> read_file('simple.tsv', `{type:"tsv"}`)
       | 
 ======' 
 {
@@ -354,7 +354,7 @@ The options `struct` can also define if the first row for delimited data should 
 column names with the `header` field.
 
 ```
-ionsql> read_file("simple.tsv", {type:"tsv", header:true})
+ionsql> read_file('simple.tsv', `{type:"tsv", header:true}`)
       | 
 ======' 
 {
@@ -380,7 +380,7 @@ OK!
 Auto conversion can also be specified numeric and timestamps in delimited data.
 
 ```
-ionsql> read_file("simple.tsv", {type:"tsv", header:true, conversion:"auto"})
+ionsql> read_file('simple.tsv', `{type:"tsv", header:true, conversion:"auto"}`)
       | 
 ======' 
 {
@@ -408,7 +408,7 @@ format to the `write_file` function.  Similar to the `read_file` function, the `
 can be used to specify `tsv`, `csv`, or `ion` output.
 
 ```
-ionsql> write_file("out.csv", {type:"csv"}, SELECT name, type FROM animals)
+ionsql> write_file('out.csv', `{type:"csv"}`, SELECT name, type FROM animals)
       | 
 ======' 
 true
@@ -428,7 +428,7 @@ The options `struct` can also specify a `header` Boolean field to indicate wheth
 TSV/CSV should have a header row.
 
 ```
-ionsql> write_file("out.csv", {type:"csv", header:true}, SELECT name, type FROM animals)
+ionsql> write_file('out.csv', `{type:"csv", header:true}`, SELECT name, type FROM animals)
       | 
 ======' 
 true
@@ -447,11 +447,8 @@ Lilikoi,unicorn
 
 ## TODO
 
-* Implement a proper lexer, probably using the Ion one.
-* Add support for aliasing wildcards within paths.
 * Implement more the "standard" functions.
-* Implement aggregation, sort
-* Eliminate boundary token concept in parser (it is probably not necessary).
+* Implement aggregation, sort, grouping.
   
 [ionjava]: https://code.amazon.com/packages/IonJava
 [ionjava-sql-hack]: https://code.amazon.com/packages/IonJava/logs/heads/sqlhack

@@ -12,6 +12,7 @@ import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
 import com.amazon.ionsql.*
 import java.io.*
+import java.nio.charset.Charset
 import java.util.*
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.TimeUnit.NANOSECONDS
@@ -171,7 +172,7 @@ private fun optionsStruct(requiredArity: Int,
  */
 fun main(args: Array<String>) {
     // TODO probably should be in "common" utility
-    val repl_functions = mapOf<String, (Bindings, List<ExprValue>) -> ExprValue>(
+    val replFunctions = mapOf<String, (Bindings, List<ExprValue>) -> ExprValue>(
         "read_file" to { env, args ->
             val options = optionsStruct(1, args)
             val fileName = args[0].ionValue.stringValue()
@@ -208,34 +209,13 @@ fun main(args: Array<String>) {
         }
     )
 
-    val evaluator = EvaluatingCompiler(ION, repl_functions)
-
-    // we use the low-level parser for our config file
-    val tokenizer = IonSqlHackLexer(ION)
-    val parser = Parser(ION)
-
-    fun evalConfig(expr: IonSexp): ExprValue {
-        val tokens = tokenizer.tokenize(expr)
-        val ast = parser.parse(tokens)
-        return evaluator.eval(ast, Bindings.empty())
-    }
+    val evaluator = EvaluatingCompiler(ION, replFunctions)
 
     val globals = when {
-        args.size > 0 -> {
-            // we evaluate this configuration manually to avoid materializing values that
-            // may be really large if we just evaluate the struct as-is it will force
-            // conversion to IonValue
-            val bindings = HashMap<String, ExprValue>()
-            val config = ION.loader.load(File(args[0]))[0]
-            for (member in config) {
-                val name = member.fieldName
-                val exprVal = when (member) {
-                    is IonSexp -> evalConfig(member)
-                    else -> member.exprValue()
-                }
-                bindings.put(name, exprVal)
-            }
-            Bindings.over { bindings[it] }
+        args.isNotEmpty() -> {
+            val configSource = File(args[0]).readText(charset("UTF-8"))
+            val config = evaluator.compile(configSource).eval(Bindings.empty())
+            config.bind(Bindings.empty())
         }
         else -> Bindings.empty()
     }

@@ -101,6 +101,7 @@ class IonSqlLexerTest : Base() {
         for (op in ALL_OPERATORS) {
             val type = when (op) {
                 "*" -> STAR
+                in ALL_OPERATORS -> OPERATOR
                 in KEYWORDS -> KEYWORD
                 else -> OPERATOR
             }

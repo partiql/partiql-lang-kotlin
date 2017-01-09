@@ -406,7 +406,7 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
                                 val unaliased = OPERATOR_ALIASES[text] ?: text
                                 when (unaliased) {
                                     in ALL_OPERATORS -> ion.newSymbol(unaliased)
-                                    else -> error("Unknown operator $unaliased")
+                                    else -> err("Unknown operator $unaliased")
                                 }
                             }
                             IDENTIFIER -> {
