@@ -9,15 +9,15 @@ import com.amazon.ion.IonSexp
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
 import com.amazon.ionsql.Parser.ParseType.*
-import com.amazon.ionsql.Token.Type
-import com.amazon.ionsql.Token.Type.*
+import com.amazon.ionsql.TokenType
+import com.amazon.ionsql.TokenType.*
 import java.util.*
 
 /**
  * Parses a list of tokens as infix query expression into a prefix s-expression
  * as the abstract syntax tree.
  */
-class Parser(val ion: IonSystem) {
+class Parser(private val ion: IonSystem) {
     companion object {
         private val SELECT_BOUNDARY_TOKEN_TYPES =
             setOf(KEYWORD, RIGHT_PAREN)
@@ -64,7 +64,7 @@ class Parser(val ion: IonSystem) {
         fun derive(tokensHandler: (List<Token>) -> List<Token>): ParseNode =
             copy(remaining = tokensHandler(remaining))
 
-        fun deriveExpected(vararg types: Type): ParseNode = derive {
+        fun deriveExpected(vararg types: TokenType): ParseNode = derive {
             var rem = it
             for (type in types) {
                 if (type != rem.head?.type) {
@@ -195,7 +195,7 @@ class Parser(val ion: IonSystem) {
      */
     internal fun parseExpression(tokens: List<Token>,
                                  precedence: Int = -1,
-                                 boundaryTokenTypes: Set<Type> = emptySet()): ParseNode {
+                                 boundaryTokenTypes: Set<TokenType> = emptySet()): ParseNode {
         var expr = parseUnaryTerm(tokens)
         var rem = expr.remaining
 
@@ -441,7 +441,7 @@ class Parser(val ion: IonSystem) {
     private fun parseArgList(tokens: List<Token>,
                              supportsAlias: Boolean,
                              supportsMemberName: Boolean,
-                             boundaryTokenTypes: Set<Type> = emptySet()): ParseNode {
+                             boundaryTokenTypes: Set<TokenType> = emptySet()): ParseNode {
         val argListBoundaryTokenTypes = when {
             supportsAlias -> ARGLIST_WITH_ALIAS_BOUNDARY_TOKEN_TYPES
             else -> ARGLIST_BOUNDARY_TOKEN_TYPES

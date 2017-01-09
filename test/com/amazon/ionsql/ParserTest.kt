@@ -9,10 +9,10 @@ import org.junit.Test
 
 class ParserTest : Base() {
     val parser = Parser(ion)
-    val tokenizer = Tokenizer(ion)
+    val tokenizer = IonSqlLexer(ion)
 
     fun parse(source: String): IonSexp {
-        val tokens = tokenizer.tokenize(literal("($source)"))
+        val tokens = tokenizer.tokenize(source)
         val ast = parser.parse(tokens)
         return ast
     }
@@ -50,7 +50,7 @@ class ParserTest : Base() {
              (list (lit "z") (+ (id b) (lit 6)))
            )
         """,
-        "{x:a, y:5, z:(b + 6)}"
+        "{'x':a, 'y':5, 'z':(b + 6)}"
     )
 
     @Test
@@ -84,16 +84,19 @@ class ParserTest : Base() {
                (id a)
                (id b)
              )
-             (-
-               (*
-                 (/ (id c) (id d))
-                 (id e)
+             (||
+               (-
+                 (*
+                   (/ (id c) (id d))
+                   (id e)
+                 )
+                 (id f)
                )
-               (id f)
+               (id g)
              )
            )
         """,
-        "a + b and c / d * e - f"
+        "a + b and c / d * e - f || g"
     )
 
     @Test
@@ -104,25 +107,25 @@ class ParserTest : Base() {
 
     @Test
     fun selectWithSingleFrom() = assertExpression(
-        "(select (list (id a)) (from (id table)))",
-        "SELECT a FROM table"
+        "(select (list (id a)) (from (id table1)))",
+        "SELECT a FROM table1"
     )
 
     @Test
     fun selectStar() = assertExpression(
-        "(select (*) (from (id table)))",
-        "SELECT * FROM table"
+        "(select (*) (from (id table1)))",
+        "SELECT * FROM table1"
     )
 
     @Test
     fun selectValues() = assertExpression(
-        "(select (values (id v)) (from (as v (id table))))",
-        "SELECT VALUES v FROM table AS v"
+        "(select (values (id v)) (from (as v (id table1))))",
+        "SELECT VALUES v FROM table1 AS v"
     )
 
     @Test(expected = IllegalArgumentException::class)
     fun selectNothing() {
-        parse("SELECT FROM table")
+        parse("SELECT FROM table1")
     }
 
     @Test
@@ -155,28 +158,22 @@ class ParserTest : Base() {
     )
 
     @Test
-    fun dotDot() = assertExpression(
-        """(. (call foo (id x) (id y)) (..) (..) (..) (lit "a"))""",
-        "foo(x, y)....a"
-    )
-
-    @Test
     fun dotDotAndStar() = assertExpression(
-        """(. (id x) (..) (..) (..) (lit "a") (..) (*) (lit "b"))""",
-        "x....a..*.b"
+        """(. (id x) (lit "a") (*) (lit "b"))""",
+        "x.a.*.b"
     )
 
     @Test
     fun bracket() = assertExpression(
         """(. (id a) (lit 5) (lit "b") (+ (id a) (lit 3)))""",
-        """a[5]["b"][(a + 3)]"""
+        """a[5]['b'][(a + 3)]"""
     )
 
     @Test
     fun pathsAndSelect() = assertExpression(
         """(select
              (list
-               (as a (. (call process (id t)) (..) (lit "a") (lit 0)))
+               (as a (. (call process (id t)) (lit "a") (lit 0)))
                (as b (. (id t2) (lit "b")))
              )
              (from
@@ -185,15 +182,15 @@ class ParserTest : Base() {
              )
              (where
                (and
-                 (call test (. (id t2) (..) (..) (lit "name")) (. (id t1) (lit "name")))
+                 (call test (. (id t2) (lit "name")) (. (id t1) (lit "name")))
                  (= (. (id t1) (lit "id")) (. (id t2) (lit "id")))
                )
              )
            )
         """,
-        """SELECT process(t)..a[0] AS a, t2.b AS b
+        """SELECT process(t).a[0] AS a, t2.b AS b
            FROM t1.a AS t, t2.x.*.b
-           WHERE test(t2...name, t1.name) AND t1.id = t2.id
+           WHERE test(t2.name, t1.name) AND t1.id = t2.id
         """
     )
 
