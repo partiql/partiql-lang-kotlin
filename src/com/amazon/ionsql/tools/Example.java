@@ -7,7 +7,7 @@ package com.amazon.ionsql.tools;
 import com.amazon.ion.IonSystem;
 import com.amazon.ion.system.IonSystemBuilder;
 import com.amazon.ionsql.Bindings;
-import com.amazon.ionsql.Evaluator;
+import com.amazon.ionsql.EvaluatingCompiler;
 import com.amazon.ionsql.Expression;
 
 import static java.util.Collections.emptyMap;
@@ -30,7 +30,7 @@ public class Example {
         // TODO add examples of environment binding and adding user functions.
 
         IonSystem ion = IonSystemBuilder.standard().build();
-        Evaluator evaluator = new Evaluator(ion, emptyMap());
+        EvaluatingCompiler evaluator = new EvaluatingCompiler(ion, emptyMap());
 
         String source = args[0];
         Expression expr = evaluator.compile(source);

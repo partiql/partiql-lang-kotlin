@@ -208,10 +208,10 @@ fun main(args: Array<String>) {
         }
     )
 
-    val evaluator = Evaluator(ION, repl_functions)
+    val evaluator = EvaluatingCompiler(ION, repl_functions)
 
     // we use the low-level parser for our config file
-    val tokenizer = Tokenizer(ION)
+    val tokenizer = IonSqlHackLexer(ION)
     val parser = Parser(ION)
 
     fun evalConfig(expr: IonSexp): ExprValue {

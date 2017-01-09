@@ -23,9 +23,9 @@ import java.util.*
  * @param ion The ion system to use for synthesizing Ion values.
  * @param userFuncs Functions to provide access to in addition to the built-ins.
  */
-class Evaluator(private val ion: IonSystem,
-                userFuncs: Map<String, (Bindings, List<ExprValue>) -> ExprValue> = emptyMap()) : Compiler {
-    private val tokenizer = Tokenizer(ion)
+class EvaluatingCompiler(private val ion: IonSystem,
+                         userFuncs: Map<String, (Bindings, List<ExprValue>) -> ExprValue> = emptyMap()) : Compiler {
+    private val tokenizer = IonSqlHackLexer(ion)
     private val parser = Parser(ion)
 
     private val wildcardPath = ion.newSexp().apply { add().newSymbol("*") }.seal()
@@ -105,7 +105,7 @@ class Evaluator(private val ion: IonSystem,
         "=" to bindOp { env, args ->
             args[0].exprEquals(args[1]).exprValue()
         },
-        "!=" to bindOp { env, args ->
+        "<>" to bindOp { env, args ->
             (!args[0].exprEquals(args[1])).exprValue()
         },
         "not" to bindOp(minArity = 1, maxArity = 1) { env, args ->
@@ -538,9 +538,7 @@ class Evaluator(private val ion: IonSystem,
 
     /** Parses the given source into an s-expression syntax tree. */
     fun parse(source: String): IonSexp {
-        // We have to wrap the source in an s-expression to get the right parsing behavior
-        val expression = ion.singleValue("($source)").seal()
-        val tokens = tokenizer.tokenize(expression)
+        val tokens = tokenizer.tokenize(source)
         return parser.parse(tokens)
     }
 

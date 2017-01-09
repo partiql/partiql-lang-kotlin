@@ -5,8 +5,8 @@
 package com.amazon.ionsql
 
 import org.junit.Test
-class EvaluatorTest : Base() {
-    val evaluator = Evaluator(ion)
+class EvaluatingCompilerTest : Base() {
+    val evaluator = EvaluatingCompiler(ion)
 
     fun eval(source: String): ExprValue =
         evaluator

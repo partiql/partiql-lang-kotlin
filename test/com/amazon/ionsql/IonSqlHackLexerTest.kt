@@ -4,16 +4,15 @@
 
 package com.amazon.ionsql
 
+import com.amazon.ionsql.TokenType.*
 import org.junit.Test
-import com.amazon.ionsql.Token.Type
-import com.amazon.ionsql.Token.Type.*
 
-class TokenizerTest : Base() {
-    val tokenizer = Tokenizer(ion)
+class IonSqlHackLexerTest : Base() {
+    val tokenizer = IonSqlHackLexer(ion)
 
     fun tokenize(text: String): List<Token> = tokenizer.tokenize(literal(text))
 
-    infix fun Type.of(text: String?) = when (text) {
+    infix fun TokenType.of(text: String?) = when (text) {
         null -> Token(this, null)
         else -> Token(this, literal(text))
     }
