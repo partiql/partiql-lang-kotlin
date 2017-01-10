@@ -141,31 +141,31 @@ class IonSqlParserTest : Base() {
 
     @Test
     fun dot() = assertExpression(
-        """(. (id a) (lit "b"))""",
+        """(path (id a) (lit "b"))""",
         "a.b"
     )
 
     @Test
     fun groupDot() = assertExpression(
-        """(. (id a) (lit "b"))""",
+        """(path (id a) (lit "b"))""",
         "(a).b"
     )
 
     @Test
     fun dotStar() = assertExpression(
-        """(. (call foo (id x) (id y)) (lit "a") (*) (lit "b"))""",
+        """(path (call foo (id x) (id y)) (lit "a") (*) (lit "b"))""",
         "foo(x, y).a.*.b"
     )
 
     @Test
     fun dotDotAndStar() = assertExpression(
-        """(. (id x) (lit "a") (*) (lit "b"))""",
+        """(path (id x) (lit "a") (*) (lit "b"))""",
         "x.a.*.b"
     )
 
     @Test
     fun bracket() = assertExpression(
-        """(. (id a) (lit 5) (lit "b") (+ (id a) (lit 3)))""",
+        """(path (id a) (lit 5) (lit "b") (+ (id a) (lit 3)))""",
         """a[5]['b'][(a + 3)]"""
     )
 
@@ -173,17 +173,17 @@ class IonSqlParserTest : Base() {
     fun pathsAndSelect() = assertExpression(
         """(select
              (list
-               (as a (. (call process (id t)) (lit "a") (lit 0)))
-               (as b (. (id t2) (lit "b")))
+               (as a (path (call process (id t)) (lit "a") (lit 0)))
+               (as b (path (id t2) (lit "b")))
              )
              (from
-               (as t (. (id t1) (*) (lit "a")))
-               (. (id t2) (*) (lit "x") (*) (lit "b"))
+               (as t (path (id t1) (*) (lit "a")))
+               (path (id t2) (*) (lit "x") (*) (lit "b"))
              )
              (where
                (and
-                 (call test (. (id t2) (lit "name")) (. (id t1) (lit "name")))
-                 (= (. (id t1) (lit "id")) (. (id t2) (lit "id")))
+                 (call test (path (id t2) (lit "name")) (path (id t1) (lit "name")))
+                 (= (path (id t1) (lit "id")) (path (id t2) (lit "id")))
                )
              )
            )
@@ -199,7 +199,7 @@ class IonSqlParserTest : Base() {
         """(select
              (*)
              (from
-               (.
+               (path
                  (select
                    (*)
                    (from (id x))
@@ -218,7 +218,7 @@ class IonSqlParserTest : Base() {
         """(select
              (*)
              (from
-               (.
+               (path
                  (select
                    (*)
                    (from (id x))

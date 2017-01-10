@@ -9,14 +9,8 @@ import java.math.BigDecimal
 import java.util.*
 
 /**
- * A basic implementation of the [Compiler] that parses Ion SQL into an [Expression].
- *
- * In particular, this implementation parses a SQL-like syntax over Ion s-expressions
- * by treating the s-expressions as an effective token stream.
- *
- * Note that this implementation relies on a variant of the Ion parser that
- * supports `,` in s-expressions directly to make it convenient, which is non-standard Ion.
- * It will technically work without this variant but separators become awkward.
+ * A basic implementation of the [Compiler] that parses Ion SQL [Token] instances
+ * into an [Expression].
  *
  * This implementation produces a very simple AST-walking evaluator as its "compiled" form.
  *
