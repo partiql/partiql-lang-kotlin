@@ -14,7 +14,7 @@ Where `name` is the AST node name, which can be one of:
 * `(id <NAME>)` - an identifier.
 * `(<OPERATOR> ...)` - A binary or unary operator.
 * `(select ...)` - A `SELECT-FROM-WHERE` expression.
-* `(. <VALUE EXPR> <PATH COMPONENT>...)` - A path.
+* `(path <VALUE EXPR> <PATH COMPONENT>...)` - A path (which is used for normal dotted name resolution).
 * `(call <NAME> <VALUE EXPR>...)` - A function invocation.
 * `(struct <NAME EXPR> <VALUE EXPR> ...)` - A *comprehension* for a tuple/struct that
   is to be evaluated.

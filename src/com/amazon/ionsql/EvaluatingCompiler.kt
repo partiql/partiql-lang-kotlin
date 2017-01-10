@@ -122,7 +122,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 else -> throw IllegalArgumentException("Arity incorrect for 'and': $expr")
             }.exprValue()
         },
-        "." to { env, expr ->
+        "path" to { env, expr ->
             if (expr.size < 3) {
                 throw IllegalArgumentException("Path arity to low: $expr")
             }

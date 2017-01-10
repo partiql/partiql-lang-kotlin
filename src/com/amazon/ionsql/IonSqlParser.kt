@@ -127,7 +127,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             addChildNodes(this@toSexp)
         }
         PATH -> sexp {
-            addSymbol(".")
+            addSymbol("path")
             addChildNodes(this@toSexp)
         }
         SELECT_LIST, SELECT_VALUES -> sexp {
