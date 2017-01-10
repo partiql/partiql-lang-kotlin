@@ -191,20 +191,11 @@ class EvaluatingCompilerTest : Base() {
     fun pathIndexing() = assertEval("stores[0].books[2].title", "\"C\"")
 
     @Test
-    fun pathParent() = assertEval("stores[0].books[2].title....books[3].title", "\"D\"")
-
-    @Test
     fun pathWildcard() = assertEval("stores[0].books.*.title", """["A", "B", "C", "D"]""")
 
     @Test
     fun pathDoubleWildCard() = assertEval(
         "stores.*.books.*.title",
-        """["A", "B", "C", "D", "A", "E", "F"]"""
-    )
-
-    @Test
-    fun pathDoubleWildCardWithParent() = assertEval(
-        "stores.*.books.*.categories..title",
         """["A", "B", "C", "D", "A", "E", "F"]"""
     )
 

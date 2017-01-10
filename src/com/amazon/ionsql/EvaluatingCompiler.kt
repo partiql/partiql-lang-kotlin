@@ -29,7 +29,6 @@ class EvaluatingCompiler(private val ion: IonSystem,
     private val parser = IonSqlParser(ion)
 
     private val wildcardPath = ion.newSexp().apply { add().newSymbol("*") }.seal()
-    private val parentPath = ion.newSexp().apply { add().newSymbol("..") }.seal()
 
     private val instrinsicCall: (Bindings, IonSexp) -> ExprValue = { env, expr ->
         expr.evalCall(env, startIndex = 0)
@@ -139,13 +138,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                     break
                 }
 
-                root = when (raw) {
-                    parentPath -> root.ionValue.container?.exprValue() ?:
-                        throw IllegalArgumentException("Cannot .. out of top-level: $root")
-                    else -> {
-                        root[raw.eval(env)]
-                    }
-                }
+                root = root[raw.eval(env)]
                 idx++
             }
 
@@ -157,14 +150,6 @@ class EvaluatingCompiler(private val ion: IonSystem,
                     // treat the entire value as a sequence
                     wildcardPath -> { exprVal ->
                         exprVal.asSequence()
-                    }
-                    parentPath -> { exprVal ->
-                        sequenceOf(
-                            exprVal.ionValue.container?.exprValue() ?:
-                                throw IllegalArgumentException(
-                                    "Cannot .. out of top-level: ${exprVal.ionValue}"
-                                )
-                        )
                     }
                     // "index" into the value lazily
                     else -> { exprVal ->
