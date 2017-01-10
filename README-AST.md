@@ -22,3 +22,25 @@ Where `name` is the AST node name, which can be one of:
 * `(as <NAME> <VALUE EXPR>)` - A name aliasing/binding.
 * `(meta <NODE> ...)` - Metadata about an enclosing AST node, from a semantic perspective
   this is a *no-op*, but can provide diagnostic context such as line/column position.
+
+## Operators
+Currently, the following unary operators are defined in the form `(<OPNAME> <VALUE EXPR>)`:
+
+* `+` - Unary plus.
+* `-` - Unary negation.
+
+The following binary operators are defined in the form `(<OPNAME> <LEFT EXPR> <RIGHT EXPR>)`:
+
+* `/` - Division.
+* `%` - Division remainder.
+* `*` - Multplication.
+* `||` - String concatenation.
+* `like` - String pattern comparison.
+* `<`, `<=`, `>`, `>=`, `=`, `<>` - Comparison operators.
+* `and`, `or` - Logical operators.
+* `is`, `is_not` - Identity comparison.
+* `union`, `union_all`, `except`, `intersect` - Set operators.
+
+The following additional operators are defined:
+
+* `(between <VALUE EXPR> <START EXPR> <END EXPR>)` - Interval containment.

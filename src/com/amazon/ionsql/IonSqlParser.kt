@@ -34,7 +34,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             setOf(COMMA)
 
         private val ARGLIST_WITH_ALIAS_BOUNDARY_TOKEN_TYPES =
-            ARGLIST_BOUNDARY_TOKEN_TYPES union setOf(AS)
+            ARGLIST_BOUNDARY_TOKEN_TYPES union setOf(AS, IDENTIFIER)
 
         private val FIELD_NAME_BOUNDARY_TOKEN_TYPES =
             setOf(COLON)
@@ -461,14 +461,17 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 else -> parseChild()
             }
             rem = child.remaining
-            if (supportsAlias && rem.head?.keywordText == "as") {
-                val name = rem.tail.head
+            val aliasType = rem.head?.type
+            if (supportsAlias && (aliasType == AS || aliasType == IDENTIFIER)) {
+                if (aliasType == AS) {
+                    rem = rem.tail
+                }
+                val name = rem.head
                 if (name == null || name.type != IDENTIFIER) {
                     throw IllegalArgumentException("Expected identifier for alias: $rem")
                 }
-                rem = rem.tail.tail
+                rem = rem.tail
                 child = ParseNode(ALIAS, name, listOf(child), rem)
-                rem = child.remaining
             }
 
             argList.add(child)

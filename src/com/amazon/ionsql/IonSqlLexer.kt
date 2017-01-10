@@ -418,6 +418,11 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
                                         tokenType = OPERATOR
                                         ion.newSymbol(lower)
                                     }
+                                    lower == "as" -> {
+                                        // AS token
+                                        tokenType = AS
+                                        ion.newSymbol(lower)
+                                    }
                                     lower == "null" -> {
                                         // literal null
                                         tokenType = LITERAL

@@ -257,7 +257,7 @@ val SINGLE_LEXEME_BINARY_OPERATORS = sortedSetOf(
     "||",
     "and", "or",
     "is",
-    "like", "between",
+    "like",
     "union", "except", "intersect"
 )
 
@@ -275,8 +275,13 @@ val UNARY_OPERATORS = sortedSetOf(
     "+", "-", "not", "@"
 )
 
+/** Operators with special parsing rules. */
+val SPECIAL_OPERATORS = sortedSetOf(
+    "between"
+)
+
 val ALL_SINGLE_LEXEME_OPERATORS = SINGLE_LEXEME_BINARY_OPERATORS + UNARY_OPERATORS
-val ALL_OPERATORS = BINARY_OPERATORS union UNARY_OPERATORS
+val ALL_OPERATORS = BINARY_OPERATORS union UNARY_OPERATORS union SPECIAL_OPERATORS
 
 /**
  * Precedence rank integer is ascending with higher precedance and is in terms of the

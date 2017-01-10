@@ -140,6 +140,17 @@ class IonSqlParserTest : Base() {
     )
 
     @Test
+    fun selectMultipleWithMultipleFromSimpleWhereNoAsAlias() = assertExpression(
+        """(select
+             (list (as a1 (id a)) (as b1 (id b)))
+             (from (as t1 (id table1)) (id table2))
+             (where (call f (id t1)))
+           )
+        """,
+        "SELECT a a1, b b1 FROM table1 t1, table2 WHERE f(t1)"
+    )
+
+    @Test
     fun dot() = assertExpression(
         """(path (id a) (lit "b"))""",
         "a.b"
