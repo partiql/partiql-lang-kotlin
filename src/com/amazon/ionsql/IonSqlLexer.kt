@@ -360,8 +360,8 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
     }
 
     private fun repr(codepoint: Int): String = when {
-        codepoint == -1 -> "<EOF>"
-        codepoint < -1 -> "<INVALID: ${codepoint}>"
+        codepoint == EOF -> "<EOF>"
+        codepoint < EOF -> "<INVALID: ${codepoint}>"
         else -> "'${String(Character.toChars(codepoint))}' [U+${Integer.toHexString(codepoint)}]"
     }
 

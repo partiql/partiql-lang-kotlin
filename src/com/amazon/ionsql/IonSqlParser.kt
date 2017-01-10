@@ -104,10 +104,6 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 addSymbol("id")
                 addSymbol(token?.text!!)
             }
-            DOT -> sexp {
-                // an atom that is a dot is a parent reference
-                addSymbol("..")
-            }
             STAR -> sexp {
                 addSymbol("*")
             }
