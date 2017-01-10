@@ -98,7 +98,7 @@ class IonSqlLexerTest : Base() {
     fun operators() {
         val buf = StringBuilder()
         val expected = ArrayList<Token>()
-        for (op in ALL_OPERATORS) {
+        for (op in ALL_SINGLE_LEXEME_OPERATORS) {
             val type = when (op) {
                 "*" -> STAR
                 in ALL_OPERATORS -> OPERATOR
@@ -111,5 +111,14 @@ class IonSqlLexerTest : Base() {
         }
         assertTokens(buf.toString(), *expected.toTypedArray())
     }
+
+    @Test
+    fun multiLexemeOperators() = assertTokens(
+        "UNION ALL IS NOT union_all is_not",
+        token(OPERATOR, "union_all", 1, 1),
+        token(OPERATOR, "is_not", 1, 11),
+        token(IDENTIFIER, "union_all", 1, 18),
+        token(IDENTIFIER, "is_not", 1, 28)
+    )
 
 }

@@ -413,10 +413,15 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
                                 val lower = text.toLowerCase()
                                 when {
                                     curr.lexType == DQ_STRING -> ion.newSymbol(text)
-                                    lower in ALL_OPERATORS -> {
+                                    lower in ALL_SINGLE_LEXEME_OPERATORS -> {
                                         // an operator that looks like a keyword
                                         tokenType = OPERATOR
                                         ion.newSymbol(lower)
+                                    }
+                                    lower == "null" -> {
+                                        // literal null
+                                        tokenType = LITERAL
+                                        ion.newNull()
                                     }
                                     lower in BOOLEAN_KEYWORDS -> {
                                         // literal boolean
@@ -440,8 +445,7 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
                             }
                             else -> ion.newSymbol(text)
                         }
-
-                        tokens.add(Token(tokenType, ionValue, currPos))
+                        tokens.addOrMerge(Token(tokenType, ionValue, currPos))
                     }
 
                     // get ready for next token
@@ -461,5 +465,19 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
         }
 
         return tokens
+    }
+
+    private fun MutableList<Token>.addOrMerge(newToken: Token) {
+        val prevToken = lastOrNull()
+        val keywordPair = prevToken?.keywordText to newToken.keywordText
+        val multiKeywordOp = DOUBLE_LEXEME_BINARY_OPERATOR_MAP[keywordPair]
+        when (multiKeywordOp) {
+            null -> add(newToken)
+            else -> {
+                // merge the last token into a new operator
+                this[lastIndex] =
+                    Token(OPERATOR, ion.newSymbol(multiKeywordOp), prevToken?.position)
+            }
+        }
     }
 }

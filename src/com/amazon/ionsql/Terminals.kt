@@ -250,21 +250,32 @@ val OPERATOR_ALIASES = mapOf(
     "!=" to "<>"
 )
 
-/**
- * Binary operators not including set operators.
- * Set operators have interesting grammar implications (e.g. UNION ALL)
- */
-val BINARY_OPERATORS = sortedSetOf(
+/** Binary operators with verbatim lexical token equivalents. */
+val SINGLE_LEXEME_BINARY_OPERATORS = sortedSetOf(
     "+", "-", "/", "%", "*",
     "<", "<=", ">", ">=", "=", "<>",
     "||",
-    "and", "or"
+    "and", "or",
+    "is",
+    "like", "between",
+    "union", "except", "intersect"
 )
 
+/** Binary operators comprising two lexemes. */
+val DOUBLE_LEXEME_BINARY_OPERATOR_MAP = mapOf(
+    ("is" to "not")     to "is_not",
+    ("union" to "all")  to "union_all"
+)
+
+/** Binary operators. */
+val BINARY_OPERATORS = SINGLE_LEXEME_BINARY_OPERATORS + DOUBLE_LEXEME_BINARY_OPERATOR_MAP.values
+
+/** Unary operators. */
 val UNARY_OPERATORS = sortedSetOf(
     "+", "-", "not", "@"
 )
 
+val ALL_SINGLE_LEXEME_OPERATORS = SINGLE_LEXEME_BINARY_OPERATORS + UNARY_OPERATORS
 val ALL_OPERATORS = BINARY_OPERATORS union UNARY_OPERATORS
 
 /**
@@ -272,31 +283,42 @@ val ALL_OPERATORS = BINARY_OPERATORS union UNARY_OPERATORS
  * un-aliased names of the operators.
  */
 val OPERATOR_PRECEDENCE = mapOf(
-    "or"  to 1,
-    "and" to 2,
+    // set operator group
+    "intersect" to 5,
+    "except"    to 5,
+    "union"     to 5,
+    "union_all" to 5,
+
+    // logical group
+    "or"        to 10,
+    "and"       to 20,
 
     // equality group (TODO add other morphemes of equality/non-equality)
-    "="   to 3,
-    "<>"  to 3,
+    "="         to 30,
+    "<>"        to 30,
+    "is"        to 30,
+    "is_not"    to 30,
 
     // comparison group
-    "<"   to 4,
-    "<="  to 4,
-    ">"   to 4,
-    ">="  to 4,
+    "<"         to 40,
+    "<="        to 40,
+    ">"         to 40,
+    ">="        to 40,
+    "between"   to 40,
+    "like"      to 40,
 
     // the addition group
-    "+"   to 5,
-    "-"   to 5,
-    "||"  to 5,
+    "+"         to 50,
+    "-"         to 50,
+    "||"        to 50,
 
     // multiply group (TODO add exponentiation)
-    "*"   to 6,
-    "/"   to 6,
-    "%"   to 6,
+    "*"         to 60,
+    "/"         to 60,
+    "%"         to 60,
 
     // lexical scope operator
-    "@"   to 7
+    "@"         to 70
 )
 
 //
