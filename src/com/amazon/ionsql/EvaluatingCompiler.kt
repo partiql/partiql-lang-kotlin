@@ -26,7 +26,7 @@ import java.util.*
 class EvaluatingCompiler(private val ion: IonSystem,
                          userFuncs: Map<String, (Bindings, List<ExprValue>) -> ExprValue> = emptyMap()) : Compiler {
     private val tokenizer = IonSqlLexer(ion)
-    private val parser = Parser(ion)
+    private val parser = IonSqlParser(ion)
 
     private val wildcardPath = ion.newSexp().apply { add().newSymbol("*") }.seal()
     private val parentPath = ion.newSexp().apply { add().newSymbol("..") }.seal()

@@ -7,8 +7,8 @@ package com.amazon.ionsql
 import com.amazon.ion.IonSexp
 import org.junit.Test
 
-class ParserTest : Base() {
-    val parser = Parser(ion)
+class IonSqlParserTest : Base() {
+    val parser = IonSqlParser(ion)
     val tokenizer = IonSqlLexer(ion)
 
     fun parse(source: String): IonSexp {

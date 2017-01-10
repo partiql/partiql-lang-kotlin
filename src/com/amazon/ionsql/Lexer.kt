@@ -5,7 +5,7 @@
 package com.amazon.ionsql
 
 /**
- * Parses query expression source into an s-expression based abstract syntax tree.
+ * Tokenizes a [String] representation of a query into a [List] of [Token].
  */
 interface Lexer {
     fun tokenize(source: String): List<Token>
