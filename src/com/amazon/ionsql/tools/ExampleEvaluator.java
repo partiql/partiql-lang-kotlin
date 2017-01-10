@@ -18,13 +18,13 @@ import static java.util.Collections.emptyMap;
  * This class is purely to demonstrate how to use the APIs from Java,
  * not to be a serious REPL or application.
  */
-public class Example {
-    private Example() {}
+public class ExampleEvaluator {
+    private ExampleEvaluator() {}
 
     /** Simple example driver. */
     public static void main(final String[] args) throws Exception {
         if (args.length != 1) {
-            throw new IllegalArgumentException("Usage: Example EXPRESSION");
+            throw new IllegalArgumentException("Usage: ExampleEvaluator EXPRESSION");
         }
 
         // TODO add examples of environment binding and adding user functions.
