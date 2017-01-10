@@ -34,7 +34,8 @@ public class ExampleParse {
         IonSystem ion = IonSystemBuilder.standard().build();
         Lexer lexer = new IonSqlLexer(ion);
         Parser parser = new IonSqlParser(ion);
-        // generate
+
+        // Generate AST
         String source = args[0];
         List<Token> tokens = lexer.tokenize(source);
         IonSexp ast = parser.parse(tokens);
