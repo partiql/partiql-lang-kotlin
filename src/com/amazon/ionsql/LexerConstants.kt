@@ -4,10 +4,8 @@
 
 package com.amazon.ionsql
 
-import com.amazon.ionsql.TokenType.*
-
 /** All SQL-92 keywords. */
-val SQL92_KEYWORDS = sortedSetOf(
+internal val SQL92_KEYWORDS = sortedSetOf(
     "absolute",
     "action",
     "add",
@@ -237,21 +235,21 @@ val SQL92_KEYWORDS = sortedSetOf(
 )
 
 /** All Keywords. */
-val KEYWORDS = SQL92_KEYWORDS union sortedSetOf(
+internal val KEYWORDS = SQL92_KEYWORDS union sortedSetOf(
     "pivot",
     "unpivot",
     "limit"
 )
 
-val BOOLEAN_KEYWORDS = sortedSetOf("true", "false")
+internal val BOOLEAN_KEYWORDS = sortedSetOf("true", "false")
 
 /** Operator renames for the AST. */
-val OPERATOR_ALIASES = mapOf(
+internal val OPERATOR_ALIASES = mapOf(
     "!=" to "<>"
 )
 
 /** Binary operators with verbatim lexical token equivalents. */
-val SINGLE_LEXEME_BINARY_OPERATORS = sortedSetOf(
+internal val SINGLE_LEXEME_BINARY_OPERATORS = sortedSetOf(
     "+", "-", "/", "%", "*",
     "<", "<=", ">", ">=", "=", "<>",
     "||",
@@ -262,32 +260,35 @@ val SINGLE_LEXEME_BINARY_OPERATORS = sortedSetOf(
 )
 
 /** Binary operators comprising two lexemes. */
-val DOUBLE_LEXEME_BINARY_OPERATOR_MAP = mapOf(
+internal val DOUBLE_LEXEME_BINARY_OPERATOR_MAP = mapOf(
     ("is" to "not")     to "is_not",
     ("union" to "all")  to "union_all"
 )
 
 /** Binary operators. */
-val BINARY_OPERATORS = SINGLE_LEXEME_BINARY_OPERATORS + DOUBLE_LEXEME_BINARY_OPERATOR_MAP.values
+internal val BINARY_OPERATORS =
+    SINGLE_LEXEME_BINARY_OPERATORS + DOUBLE_LEXEME_BINARY_OPERATOR_MAP.values
 
 /** Unary operators. */
-val UNARY_OPERATORS = sortedSetOf(
+internal val UNARY_OPERATORS = sortedSetOf(
     "+", "-", "not", "@"
 )
 
 /** Operators with special parsing rules. */
-val SPECIAL_OPERATORS = sortedSetOf(
+internal val SPECIAL_OPERATORS = sortedSetOf(
     "between"
 )
 
-val ALL_SINGLE_LEXEME_OPERATORS = SINGLE_LEXEME_BINARY_OPERATORS + UNARY_OPERATORS + SPECIAL_OPERATORS
-val ALL_OPERATORS = BINARY_OPERATORS + UNARY_OPERATORS + SPECIAL_OPERATORS
+internal val ALL_SINGLE_LEXEME_OPERATORS =
+    SINGLE_LEXEME_BINARY_OPERATORS + UNARY_OPERATORS + SPECIAL_OPERATORS
+internal val ALL_OPERATORS =
+    BINARY_OPERATORS + UNARY_OPERATORS + SPECIAL_OPERATORS
 
 /**
  * Precedence rank integer is ascending with higher precedance and is in terms of the
  * un-aliased names of the operators.
  */
-val OPERATOR_PRECEDENCE = mapOf(
+internal val OPERATOR_PRECEDENCE = mapOf(
     // set operator group
     "intersect" to 5,
     "except"    to 5,
@@ -333,27 +334,24 @@ val OPERATOR_PRECEDENCE = mapOf(
 
 private fun allCase(chars: String) = chars.toLowerCase() + chars.toUpperCase()
 
-val SIGN_CHARS = "+-"
+internal val SIGN_CHARS = "+-"
 
-val NON_ZERO_DIGIT_CHARS = "123456789"
-val DIGIT_CHARS = "0" + NON_ZERO_DIGIT_CHARS
-val HEXDIGIT_CHARS = DIGIT_CHARS + allCase("ABCDEF")
+internal val NON_ZERO_DIGIT_CHARS = "123456789"
+internal val DIGIT_CHARS = "0" + NON_ZERO_DIGIT_CHARS
 
-val E_NOTATION_CHARS = allCase("E")
-val HEX_NOTATION_CHARS = allCase("X")
-val BIN_NOTATION_CHARS = allCase("B")
+internal val E_NOTATION_CHARS = allCase("E")
 
-val NON_OVERLOADED_OPERATOR_CHARS = "^!%<>=|@"
-val OPERATOR_CHARS = NON_OVERLOADED_OPERATOR_CHARS + "+-*/"
+internal val NON_OVERLOADED_OPERATOR_CHARS = "^!%<>=|@"
+internal val OPERATOR_CHARS = NON_OVERLOADED_OPERATOR_CHARS + "+-*/"
 
-val ALPHA_CHARS = allCase("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-val IDENT_START_CHARS = "_\$" + ALPHA_CHARS
-val IDENT_CONTINUE_CHARS = IDENT_START_CHARS + DIGIT_CHARS
+internal val ALPHA_CHARS = allCase("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+internal val IDENT_START_CHARS = "_\$" + ALPHA_CHARS
+internal val IDENT_CONTINUE_CHARS = IDENT_START_CHARS + DIGIT_CHARS
 
-val NL_WHITESPACE_CHARS = "\u000D\u000A"                 // CR, LF
-val NON_NL_WHITESPACE_CHARS = "\u0009\u000B\u000C\u0020" // TAB, VT, FF, SPACE
-val ALL_WHITESPACE_CHARS = NL_WHITESPACE_CHARS + NON_NL_WHITESPACE_CHARS
+internal val NL_WHITESPACE_CHARS = "\u000D\u000A"                 // CR, LF
+internal val NON_NL_WHITESPACE_CHARS = "\u0009\u000B\u000C\u0020" // TAB, VT, FF, SPACE
+internal val ALL_WHITESPACE_CHARS = NL_WHITESPACE_CHARS + NON_NL_WHITESPACE_CHARS
 
-val DOUBLE_QUOTE_CHARS = "\""
-val SINGLE_QUOTE_CHARS = "'"
-val BACKTICK_CHARS = "`"
+internal val DOUBLE_QUOTE_CHARS = "\""
+internal val SINGLE_QUOTE_CHARS = "'"
+internal val BACKTICK_CHARS = "`"

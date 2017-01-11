@@ -6,7 +6,7 @@ package com.amazon.ionsql
 
 /** Provides a lazy sequence over the code points in the given string. */
 fun String.codePointSequence(): Sequence<Int> {
-    var text = this
+    val text = this
     return Sequence {
         var pos = 0
         object : Iterator<Int> {

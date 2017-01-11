@@ -4,7 +4,6 @@
 
 package com.amazon.ionsql
 
-import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
 import com.amazon.ion.facet.Faceted
 

@@ -4,13 +4,14 @@
 
 package com.amazon.ionsql
 
+import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
 import com.amazon.ion.system.IonSystemBuilder
 import org.junit.Assert
 import java.util.*
 
 open class Base : Assert() {
-    val ion = IonSystemBuilder.standard().build()
+    val ion: IonSystem = IonSystemBuilder.standard().build()
 
     fun literal(text: String): IonValue = ion.singleValue(text)
 
@@ -30,8 +31,6 @@ open class Base : Assert() {
         fun assertIonValue(expected: IonValue) {
             assertEquals(expected, exprValue.ionValue)
         }
-
-        fun assertLiteral(expected: String) = assertIonValue(literal(expected))
 
         fun assertIterator(expected: Collection<IonValue>) {
             val actual = ArrayList<IonValue>()

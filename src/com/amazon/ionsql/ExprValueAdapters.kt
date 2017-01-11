@@ -4,8 +4,6 @@
 
 package com.amazon.ionsql
 
-import com.amazon.ion.facet.Facets
-
 /**
  * Wraps the given [ExprValue] with a delegate that provides the [OrderedBindNames] facet.
  */

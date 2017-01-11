@@ -5,7 +5,6 @@
 package com.amazon.ionsql
 
 import com.amazon.ionsql.TokenType.*
-import org.junit.Ignore
 import org.junit.Test
 import java.util.*
 

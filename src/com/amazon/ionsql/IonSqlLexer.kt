@@ -85,12 +85,15 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
             setup()
         }
 
-        operator fun Array<State?>.set(chars: String, new: State) = chars.forEach {
-            val cp = it.toInt()
-            val old = this[cp]
-            this[cp] = when(old) {
-                null -> new
-                else -> throw IllegalStateException("Cannot replace existing state $old with $new")
+        operator fun Array<State?>.set(chars: String, new: State) {
+            chars.forEach {
+                val cp = it.toInt()
+                val old = this[cp]
+                this[cp] = when (old) {
+                    null -> new
+                    else -> throw IllegalStateException(
+                        "Cannot replace existing state $old with $new")
+                }
             }
         }
 
@@ -120,10 +123,6 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
             }
             table[chars] = child
             return child
-        }
-
-        fun noRepeat(chars: String) {
-            table[chars] = ERROR_STATE
         }
     }
 
@@ -359,10 +358,10 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
         }
     }
 
-    private fun repr(codepoint: Int): String = when {
-        codepoint == EOF -> "<EOF>"
-        codepoint < EOF -> "<INVALID: ${codepoint}>"
-        else -> "'${String(Character.toChars(codepoint))}' [U+${Integer.toHexString(codepoint)}]"
+    private fun repr(codePoint: Int): String = when {
+        codePoint == EOF -> "<EOF>"
+        codePoint < EOF -> "<INVALID: $codePoint>"
+        else -> "'${String(Character.toChars(codePoint))}' [U+${Integer.toHexString(codePoint)}]"
     }
 
     override fun tokenize(source: String): List<Token> {

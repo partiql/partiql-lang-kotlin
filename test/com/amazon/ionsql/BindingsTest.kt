@@ -4,7 +4,6 @@
 
 package com.amazon.ionsql
 
-import com.amazon.ion.IonValue
 import org.junit.Test
 
 class BindingsTest : Base() {

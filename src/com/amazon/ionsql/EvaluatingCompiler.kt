@@ -179,7 +179,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
             }
 
             val selectExprs = expr[1]
-            if (selectExprs !is IonSequence || selectExprs.isEmpty()) {
+            if (selectExprs !is IonSequence || selectExprs.isEmpty) {
                 throw IllegalArgumentException(
                     "SELECT projection must be non-empty sequence: $selectExprs"
                 )
@@ -285,25 +285,26 @@ class EvaluatingCompiler(private val ion: IonSystem,
         "struct" to { env, args ->
             val names = ArrayList<String>(args.size)
             ion.newEmptyStruct().apply {
-                for (arg in args) {
-                    val value = arg.ionValue
-                    when (value) {
-                        is IonSequence -> when (value.size) {
-                            2 -> {
-                                val name = value[0].text
-                                val child = value[1].clone()
-                                names.add(name)
-                                add(name, child)
+                args.asSequence()
+                    .map { it.ionValue }
+                    .forEach {
+                        when (it) {
+                            is IonSequence -> when (it.size) {
+                                2 -> {
+                                    val name = it[0].text
+                                    val child = it[1].clone()
+                                    names.add(name)
+                                    add(name, child)
+                                }
+                                else -> throw IllegalArgumentException(
+                                    "Expected pair for struct argument: $it"
+                                )
                             }
                             else -> throw IllegalArgumentException(
-                                "Expected pair for struct argument: $value"
+                                "Expected pair for struct argument: $it"
                             )
                         }
-                        else -> throw IllegalArgumentException(
-                            "Expected pair for struct argument: $value"
-                        )
                     }
-                }
             }.seal().exprValue().orderedNamesValue(names)
         },
         "exists" to { env, args ->
@@ -366,7 +367,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                                             exprs: Sequence<IonValue>,
                                             aliases: List<String>) {
         exprs.forEachIndexed { col, raw ->
-            var name = aliases[col]
+            val name = aliases[col]
             val value = raw.eval(locals)
             add(name, value.ionValue.clone())
         }
@@ -378,9 +379,9 @@ class EvaluatingCompiler(private val ion: IonSystem,
         return Bindings.over { name ->
             val found = locals.asSequence()
                 .mapIndexed { col, value ->
-                    when {
+                    when (name) {
                         // the alias binds to the value itself
-                        aliases[col] == name -> this[col]!!
+                        aliases[col] -> this[col]!!
                         // otherwise scope look up within the value
                         else -> value?.get(name)
                     }
@@ -483,14 +484,12 @@ class EvaluatingCompiler(private val ion: IonSystem,
         return evalFunc(env, argIndex, func)
     }
 
-    private fun IonSexp.evalArgs(env: Bindings, startIndex: Int): List<ExprValue> {
-        val args = ArrayList<ExprValue>()
-        for (idx in startIndex until size) {
-            val raw = this[idx]
-            args.add(raw.eval(env))
-        }
-        return args
-    }
+    private fun IonSexp.evalArgs(env: Bindings, startIndex: Int): List<ExprValue> =
+        (startIndex until size)
+            .asSequence()
+            .map { this[it] }
+            .map { it.eval(env) }
+            .toList()
 
     private fun IonSexp.evalFunc(env: Bindings,
                                  argIndex: Int,

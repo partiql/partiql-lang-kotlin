@@ -5,7 +5,6 @@
 package com.amazon.ionsql
 
 import com.amazon.ion.IonSystem
-import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
 
 /**
