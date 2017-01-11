@@ -309,7 +309,7 @@ val OPERATOR_PRECEDENCE = mapOf(
     "<="        to 40,
     ">"         to 40,
     ">="        to 40,
-    "between"   to 40,
+    "between"   to 40, // note that this **must** be above 'AND'
     "like"      to 40,
 
     // the addition group
