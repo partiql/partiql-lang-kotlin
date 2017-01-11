@@ -72,6 +72,17 @@ The following fields within a meta node's struct is defined currently:
 * `line` - The one-based line number of where the enclosed node is located in the program source.
 * `column` - The one-based column number of where the enclosed node is located in the program source.
 
+Example:
+
+```
+(meta
+  (lit 5)
+  {line: 1, column: 1}
+)
+```
+
+The above would indicate the the integer literal `5` was located at line 1, column 1.
+
 ## TODO
 * Support `JOIN` constructs.
 * Support `GROUP BY` and `HAVING`.
