@@ -5,6 +5,7 @@
 package com.amazon.ionsql
 
 import com.amazon.ion.*
+import java.math.BigInteger
 
 fun IonValue.seal(): IonValue = apply { makeReadOnly() }
 
@@ -37,6 +38,22 @@ fun IonValue.numberValue(): Number = when {
         is IonFloat -> doubleValue()
         is IonDecimal -> bigDecimalValue()
         else -> throw IllegalArgumentException("Expected number: $this")
+    }
+}
+
+private val MAX_INT = Int.MAX_VALUE.toLong()
+private val MIN_INT = Int.MIN_VALUE.toLong()
+
+fun IonValue.intValue(): Int {
+    val number = numberValue()
+    if (number > MAX_INT || number < MIN_INT) {
+        throw IllegalArgumentException("Number out of integer range: $number")
+    }
+    return when (number) {
+        is Int -> number
+        is Long -> number.toInt()
+        is BigInteger -> number.intValueExact()
+        else -> throw IllegalArgumentException("Number is not an integer: $number")
     }
 }
 

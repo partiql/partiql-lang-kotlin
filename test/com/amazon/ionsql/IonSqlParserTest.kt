@@ -252,12 +252,10 @@ class IonSqlParserTest : Base() {
 
     @Test
     fun selectLimit() = assertExpression(
-        """(call __limit
-             (select
-               (*)
-               (from (id a))
-             )
-             (lit 10)
+        """(select
+             (*)
+             (from (id a))
+             (limit (lit 10))
            )
         """,
         "SELECT * FROM a LIMIT 10"
@@ -265,13 +263,11 @@ class IonSqlParserTest : Base() {
 
     @Test
     fun selectWhereLimit() = assertExpression(
-        """(call __limit
-             (select
-               (*)
-               (from (id a))
-               (where (= (id a) (lit 5)))
-             )
-             (lit 10)
+        """(select
+             (*)
+             (from (id a))
+             (where (= (id a) (lit 5)))
+             (limit (lit 10))
            )
         """,
         "SELECT * FROM a WHERE a = 5 LIMIT 10"

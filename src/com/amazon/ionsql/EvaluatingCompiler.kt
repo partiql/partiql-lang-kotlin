@@ -174,11 +174,9 @@ class EvaluatingCompiler(private val ion: IonSystem,
             }
         },
         "select" to { env, expr ->
-            if (expr.size < 3 || expr.size > 4) {
+            if (expr.size < 3) {
                 throw IllegalArgumentException("Bad arity on SELECT form $expr: ${expr.size}")
             }
-
-            // FIXME - don't use arity, use the tag name
 
             val selectExprs = expr[1]
             if (selectExprs !is IonSequence || selectExprs.isEmpty()) {
@@ -227,14 +225,19 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 .toList()
             val fromNames = aliasExtractor(expr[2].asSequence().drop(1))
 
-            val whereExpr = when {
-                expr.size > 3 -> expr[3][1]
-                else -> null
+            var whereExpr: IonValue? = null
+            var limitExpr: IonValue? = null
+            for (clause in expr.drop(3)) {
+                when (clause[0].text) {
+                    "where" -> whereExpr = clause[1]
+                    "limit" -> limitExpr = clause[1]
+                    else -> throw IllegalArgumentException("Unknown clause in SELECT: $clause")
+                }
             }
 
             SequenceExprValue(ion) {
                 // compute the join over the data sources
-                fromValues.product().asSequence()
+                var seq = fromValues.product().asSequence()
                     .map { joinedValues ->
                         // bind the joined value to the bindings for the filter/project
                         Pair(joinedValues, joinedValues.bind(env, fromNames))
@@ -243,13 +246,19 @@ class EvaluatingCompiler(private val ion: IonSystem,
                         val locals = it.second
                         when (whereExpr) {
                             null -> true
-                            else -> whereExpr.eval(locals).booleanValue()
+                            else -> whereExpr!!.eval(locals).booleanValue()
                         }
                     }
                     .map {
                         val (joinedValues, locals) = it
                         selectFunc(joinedValues, locals)
                     }
+
+                if (limitExpr != null) {
+                    seq = seq.take(limitExpr!!.eval(env).ionValue.intValue())
+                }
+
+                seq
             }
         }
     )

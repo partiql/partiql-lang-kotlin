@@ -44,6 +44,8 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         ATOM,
         SELECT_LIST,
         SELECT_VALUES,
+        WHERE,
+        LIMIT,
         CALL,
         ARG_LIST,
         ALIAS,
@@ -60,6 +62,8 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                                   val token: Token?,
                                   val children: List<ParseNode>,
                                   val remaining: List<Token>) {
+        val name = type.name.toLowerCase()
+
         /** Derives a [ParseNode] transforming the list of remaining tokens. */
         fun derive(tokensHandler: (List<Token>) -> List<Token>): ParseNode =
             copy(remaining = tokensHandler(remaining))
@@ -140,7 +144,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                         else -> "list"
                     }
                     SELECT_VALUES -> "values"
-                    else -> throw IllegalStateException("Unsupported SELECT type: $this")
+                    else -> throw IllegalStateException("Unsupported SELECT type: ${this@toSexp}")
                 })
                 when (this@toSexp.type) {
                     SELECT_VALUES -> add(children[0].toSexp())
@@ -153,9 +157,14 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 addChildNodes(children[1])
             }
             if (children.size > 2) {
-                addSexp {
-                    addSymbol("where")
-                    add(children[2].toSexp())
+                for (clause in children.slice(2..children.lastIndex)) {
+                    when (clause.type) {
+                        WHERE, LIMIT -> addSexp {
+                            addSymbol(clause.name)
+                            addChildNodes(clause)
+                        }
+                        else -> throw IllegalStateException("Unsupported SELECT clause: ${this@toSexp}")
+                    }
                 }
             }
         }
@@ -397,27 +406,33 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 boundaryTokenTypes = SELECT_BOUNDARY_TOKEN_TYPES
             )
             rem = whereExpr.remaining
-            children.add(whereExpr)
+            children.add(
+                ParseNode(
+                    WHERE,
+                    null,
+                    listOf(whereExpr),
+                    rem
+                )
+            )
         }
-
-        var parseNode = ParseNode(selectType, null, children, rem)
 
         if (rem.head?.keywordText == "limit") {
             val limitExpr = parseExpression(
                 rem.tail,
-                boundaryTokenTypes = GROUP_AND_CALL_BOUNDARY_TOKEN_TYPES
+                boundaryTokenTypes = SELECT_BOUNDARY_TOKEN_TYPES
             )
             rem = limitExpr.remaining
-            // TODO figure out if this should be first class syntax (it's a bit of a hack)
-            parseNode = ParseNode(
-                CALL,
-                Token(IDENTIFIER, ion.newSymbol("__limit")),
-                listOf(parseNode, limitExpr),
-                rem
+            children.add(
+                ParseNode(
+                    LIMIT,
+                    null,
+                    listOf(limitExpr),
+                    rem
+                )
             )
         }
 
-        return parseNode
+        return ParseNode(selectType, null, children, rem)
     }
 
     private fun injectWildCardForFromClause(nodes: List<ParseNode>): List<ParseNode> =
