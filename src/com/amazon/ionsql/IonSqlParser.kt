@@ -50,6 +50,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         PATH,
         UNARY,
         BINARY,
+        TERNARY,
         LIST,
         STRUCT,
         MEMBER
@@ -122,7 +123,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             addSymbol("list")
             addChildNodes(this@toSexp)
         }
-        UNARY, BINARY -> sexp {
+        UNARY, BINARY, TERNARY -> sexp {
             addSymbol(token?.text!!)
             addChildNodes(this@toSexp)
         }
@@ -200,16 +201,36 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         // XXX this is a Pratt Top-Down Operator Precedence implementation
         while (!atBoundary() && precedence < headPrecedence()) {
             val op = rem.head!!
-            if (!op.isBinaryOperator) {
-                throw IllegalArgumentException("Expected binary operator: $rem")
+            if (!op.isBinaryOperator && op.keywordText != "between") {
+                throw IllegalArgumentException("Expected binary operator or BETWEEN: $rem")
             }
+
             val right = parseExpression(
                 rem.tail,
                 precedence = op.infixPrecedence,
                 boundaryTokenTypes = boundaryTokenTypes
             )
             rem = right.remaining
-            expr = ParseNode(BINARY, op, listOf(expr, right), rem)
+
+            expr = when {
+                op.isBinaryOperator -> ParseNode(BINARY, op, listOf(expr, right), rem)
+                else -> when (op.keywordText) {
+                    "between" -> {
+                        if (rem.head?.keywordText != "and") {
+                            throw IllegalArgumentException("Expected AND after BETWEEN: $rem")
+                        }
+                        val third = parseExpression(
+                            rem.tail,
+                            precedence = op.infixPrecedence,
+                            boundaryTokenTypes = boundaryTokenTypes
+                        )
+                        rem = third.remaining
+                        ParseNode(TERNARY, op, listOf(expr, right, third), rem)
+                    }
+                    else -> throw IllegalStateException(
+                        "Illegal infix operator ${op.keywordText}: $rem")
+                }
+            }
         }
         return expr
     }

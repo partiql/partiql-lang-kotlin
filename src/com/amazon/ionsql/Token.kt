@@ -22,6 +22,12 @@ data class Token(val type: TokenType,
             else -> null
         }
 
+    val isSpecialOperator: Boolean
+        get() = when (type) {
+            OPERATOR -> text in SPECIAL_OPERATORS
+            else -> false
+        }
+
     val isBinaryOperator: Boolean
         get() = when (type) {
             OPERATOR, KEYWORD -> text in BINARY_OPERATORS
@@ -36,8 +42,8 @@ data class Token(val type: TokenType,
         }
 
     val infixPrecedence: Int
-        get() = when (isBinaryOperator) {
-            true -> OPERATOR_PRECEDENCE.get(text) ?: 0
+        get() = when {
+            isBinaryOperator || isSpecialOperator -> OPERATOR_PRECEDENCE.get(text) ?: 0
             else -> 0
         }
 }

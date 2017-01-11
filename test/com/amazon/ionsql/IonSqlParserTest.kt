@@ -100,6 +100,12 @@ class IonSqlParserTest : Base() {
     )
 
     @Test
+    fun betweenOperator() = assertExpression(
+        """(between (lit 5) (lit 1) (lit 10))""",
+        "5 BETWEEN 1 AND 10"
+    )
+
+    @Test
     fun callWithMultiple() = assertExpression(
         "(call foobar (lit 5) (lit 6) (id a))",
         "foobar(5, 6, a)"
