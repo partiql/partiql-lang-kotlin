@@ -283,27 +283,19 @@ class EvaluatingCompiler(private val ion: IonSystem,
             }.seal().exprValue()
         },
         "struct" to { env, args ->
-            val names = ArrayList<String>(args.size)
+            if (args.size % 2 != 0) {
+                throw IllegalArgumentException("struct requires even number of parameters")
+            }
+            val names = ArrayList<String>(args.size / 2)
             ion.newEmptyStruct().apply {
-                args.asSequence()
-                    .map { it.ionValue }
+                (0 until args.size).step(2)
+                    .asSequence()
+                    .map { args[it].ionValue to args[it + 1].ionValue }
                     .forEach {
-                        when (it) {
-                            is IonSequence -> when (it.size) {
-                                2 -> {
-                                    val name = it[0].text
-                                    val child = it[1].clone()
-                                    names.add(name)
-                                    add(name, child)
-                                }
-                                else -> throw IllegalArgumentException(
-                                    "Expected pair for struct argument: $it"
-                                )
-                            }
-                            else -> throw IllegalArgumentException(
-                                "Expected pair for struct argument: $it"
-                            )
-                        }
+                        val (nameVal, child) = it
+                        val name = nameVal.text
+                        names.add(name)
+                        add(name, child)
                     }
             }.seal().exprValue().orderedNamesValue(names)
         },
@@ -325,19 +317,6 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 }
                 else -> throw IllegalArgumentException(
                     "Expected a single argument for count: ${args.size}"
-                )
-            }
-        },
-        "__limit" to { env, args ->
-            when (args.size) {
-                2 -> {
-                    val limit = args[1].numberValue().toInt()
-                    SequenceExprValue(ion) {
-                        args[0].asSequence().take(limit)
-                    }
-                }
-                else -> throw IllegalArgumentException(
-                    "Expected a single argument for limit: ${args.size}"
                 )
             }
         }

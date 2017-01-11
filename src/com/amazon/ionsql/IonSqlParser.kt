@@ -120,12 +120,14 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         }
         STRUCT -> sexp {
             addSymbol("struct")
-            addChildNodes(this@toSexp)
-        }
-        MEMBER -> sexp {
-            // we translate this to construct a list to normalize with the struct function
-            addSymbol("list")
-            addChildNodes(this@toSexp)
+            // unfold the MEMBER nodes
+            for (child in children) {
+                if (child.type != MEMBER) {
+                    throw IllegalStateException("Expected MEMBER node: $child")
+                }
+                addChildNodes(child)
+            }
+
         }
         UNARY, BINARY, TERNARY -> sexp {
             addSymbol(token?.text!!)

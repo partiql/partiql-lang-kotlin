@@ -45,9 +45,9 @@ class IonSqlParserTest : Base() {
     @Test
     fun structLiteral() = assertExpression(
         """(struct
-             (list (lit "x") (id a))
-             (list (lit "y") (lit 5))
-             (list (lit "z") (+ (id b) (lit 6)))
+             (lit "x") (id a)
+             (lit "y") (lit 5)
+             (lit "z") (+ (id b) (lit 6))
            )
         """,
         "{'x':a, 'y':5, 'z':(b + 6)}"
