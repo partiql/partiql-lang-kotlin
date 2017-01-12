@@ -235,7 +235,7 @@ internal val SQL92_KEYWORDS = sortedSetOf(
 )
 
 /** All Keywords. */
-internal val KEYWORDS = SQL92_KEYWORDS union sortedSetOf(
+val KEYWORDS = SQL92_KEYWORDS union sortedSetOf(
     "pivot",
     "unpivot",
     "limit"
@@ -279,9 +279,9 @@ internal val SPECIAL_OPERATORS = sortedSetOf(
     "between"
 )
 
-internal val ALL_SINGLE_LEXEME_OPERATORS =
+val ALL_SINGLE_LEXEME_OPERATORS =
     SINGLE_LEXEME_BINARY_OPERATORS + UNARY_OPERATORS + SPECIAL_OPERATORS
-internal val ALL_OPERATORS =
+val ALL_OPERATORS =
     BINARY_OPERATORS + UNARY_OPERATORS + SPECIAL_OPERATORS
 
 /**
