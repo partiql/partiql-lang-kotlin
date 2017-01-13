@@ -11,16 +11,17 @@ The general format is as follows:
 Where `name` is the AST node name, which can be one of:
 
 * `(lit <ION VALUE>)` - a verbatim (quoted) Ion value.
-* `(id <NAME>)` - an identifier.
-* `(<OPERATOR> ...)` - A binary or unary operator.
+* `(missing)` - The literal `MISSING` value.
+* `(id <NAME SYMBOL>)` - an identifier.
+* `(<OPERATOR SYMBOL> ...)` - A binary or unary operator.
 * `(select ...)` - A `SELECT-FROM-WHERE` expression.
-* `(path <VALUE EXPR> <PATH COMPONENT>...)` - A path (which is used for normal dotted name resolution).
-* `(call <NAME> <VALUE EXPR>...)` - A function invocation.
+* `(path <VALUE EXPR> <PATH COMPONENT EXPR>...)` - A path (which is used for normal dotted name resolution).
+* `(call <NAME SYMBOL> <VALUE EXPR>...)` - A function invocation.
 * `(struct <NAME EXPR> <VALUE EXPR>...)` - A *comprehension* for a tuple/struct that
   is to be evaluated.
 * `(list <VALUE EXPR>...)` - A *comprehension* for a list/array that is to be evaluated.
-* `(as <NAME> <VALUE EXPR>)` - A name aliasing/binding.
-* `(meta <NODE> <STRUCT>)` - Metadata about an enclosing AST node, from a semantic perspective
+* `(as <NAME SYMBOL> <VALUE EXPR>)` - A name aliasing/binding.
+* `(meta <NODE EXPR> <STRUCT>)` - Metadata about an enclosing AST node, from a semantic perspective
   this is a *no-op*, but can provide diagnostic context such as line/column position.
 
 ## Operators

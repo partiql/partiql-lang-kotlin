@@ -236,6 +236,7 @@ internal val SQL92_KEYWORDS = sortedSetOf(
 
 /** All Keywords. */
 val KEYWORDS = SQL92_KEYWORDS union sortedSetOf(
+    "missing",
     "pivot",
     "unpivot",
     "limit"

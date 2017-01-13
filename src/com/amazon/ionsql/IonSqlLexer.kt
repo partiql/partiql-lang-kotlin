@@ -427,6 +427,11 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
                                         tokenType = LITERAL
                                         ion.newNull()
                                     }
+                                    lower == "missing" -> {
+                                        // special literal for MISSING
+                                        tokenType = MISSING
+                                        ion.newNull()
+                                    }
                                     lower in BOOLEAN_KEYWORDS -> {
                                         // literal boolean
                                         tokenType = LITERAL
@@ -448,7 +453,7 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
                                 else -> err("Invalid literal $text")
                             }
                             else -> ion.newSymbol(text)
-                        }
+                        }.seal()
                         tokens.addOrMerge(Token(tokenType, ionValue, currPos))
                     }
 

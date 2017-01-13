@@ -129,6 +129,12 @@ class IonSqlParserTest : Base() {
         "SELECT VALUES v FROM table1 AS v"
     )
 
+    @Test
+    fun selectWithMissing() = assertExpression(
+        "(select (list (id a)) (from (id stuff)) (where (is (id b) (missing))))",
+        "SELECT a FROM stuff WHERE b IS MISSING"
+    )
+
     @Test(expected = IllegalArgumentException::class)
     fun selectNothing() {
         parse("SELECT FROM table1")
@@ -154,6 +160,17 @@ class IonSqlParserTest : Base() {
            )
         """,
         "SELECT a a1, b b1 FROM table1 t1, table2 WHERE f(t1)"
+    )
+
+    @Test
+    fun selectCorrelatedJoin() = assertExpression(
+        """(select
+             (list (id a) (id b))
+             (from (as s (id stuff)) (@ (id s)))
+             (where (call f (id s)))
+           )
+        """,
+        "SELECT a, b FROM stuff s, @s WHERE f(s)"
     )
 
     @Test

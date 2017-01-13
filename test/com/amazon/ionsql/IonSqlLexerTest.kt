@@ -58,6 +58,14 @@ class IonSqlLexerTest : Base() {
     )
 
     @Test
+    fun nullAndMissing() = assertTokens(
+        "null Null MISSING",
+        token(LITERAL, "null", 1, 1),
+        token(LITERAL, "null", 1, 6),
+        token(MISSING, "null", 1, 11)
+    )
+
+    @Test
     fun numbers() = assertTokens(
         "500 600. 0.1 . .1 0000 0.00e0 1e+1",
         token(LITERAL, "500", 1, 1),

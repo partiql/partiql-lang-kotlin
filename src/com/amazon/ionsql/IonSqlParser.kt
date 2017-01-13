@@ -105,6 +105,9 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 addSymbol("lit")
                 addClone(token?.value!!)
             }
+            MISSING -> sexp {
+                addSymbol("missing")
+            }
             IDENTIFIER -> sexp {
                 addSymbol("id")
                 addSymbol(token?.text!!)
@@ -328,7 +331,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             LEFT_PAREN -> parseFunctionCall(tokens.head!!, tokens.tail.tail)
             else -> tokens.atomFromHead()
         }
-        LITERAL -> tokens.atomFromHead()
+        LITERAL, MISSING -> tokens.atomFromHead()
         else -> throw IllegalArgumentException("Unexpected term: $tokens")
     }
 

@@ -20,5 +20,6 @@ enum class TokenType {
     DOT,
     STAR,
     COMMA,
+    MISSING,
     COLON
 }
