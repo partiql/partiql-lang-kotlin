@@ -288,7 +288,7 @@ val ALL_OPERATORS =
  * Precedence rank integer is ascending with higher precedance and is in terms of the
  * un-aliased names of the operators.
  */
-internal val OPERATOR_PRECEDENCE = mapOf(
+internal val INFIX_OPERATOR_PRECEDENCE = mapOf(
     // set operator group
     "intersect" to 5,
     "except"    to 5,
@@ -321,10 +321,7 @@ internal val OPERATOR_PRECEDENCE = mapOf(
     // multiply group (TODO add exponentiation)
     "*"         to 60,
     "/"         to 60,
-    "%"         to 60,
-
-    // lexical scope operator
-    "@"         to 70
+    "%"         to 60
 )
 
 //

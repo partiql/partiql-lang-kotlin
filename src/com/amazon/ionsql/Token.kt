@@ -43,7 +43,7 @@ data class Token(val type: TokenType,
 
     val infixPrecedence: Int
         get() = when {
-            isBinaryOperator || isSpecialOperator -> OPERATOR_PRECEDENCE[text] ?: 0
+            isBinaryOperator || isSpecialOperator -> INFIX_OPERATOR_PRECEDENCE[text] ?: 0
             else -> 0
         }
 }
