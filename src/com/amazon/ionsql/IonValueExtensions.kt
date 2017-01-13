@@ -57,6 +57,16 @@ fun IonValue.intValue(): Int {
     }
 }
 
+fun IonValue.longValue(): Long {
+    val number = numberValue()
+    return when (number) {
+        is Int -> number.toLong()
+        is Long -> number
+        is BigInteger -> number.longValueExact()
+        else -> throw IllegalArgumentException("Number is not a long: $number")
+    }
+}
+
 fun IonValue.booleanValue(): Boolean? = when (this) {
     is IonBool -> booleanValue()
     else -> throw IllegalArgumentException("Expected boolean: $this")
@@ -65,6 +75,12 @@ fun IonValue.booleanValue(): Boolean? = when (this) {
 val IonValue.isNumeric: Boolean
     get() = when (this) {
         is IonInt, is IonFloat, is IonDecimal -> true
+        else -> false
+    }
+
+val IonValue.isUnsignedInteger: Boolean
+    get() = when (this) {
+        is IonInt -> longValue() >= 0
         else -> false
     }
 

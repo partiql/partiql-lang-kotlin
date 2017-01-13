@@ -289,4 +289,44 @@ class IonSqlParserTest : Base() {
         """,
         "SELECT * FROM a WHERE a = 5 LIMIT 10"
     )
+
+    @Test
+    fun castNoArgs() = assertExpression(
+        """(cast
+             (lit 5)
+             (type character_varying)
+           )
+        """,
+        "CAST(5 AS VARCHAR)"
+    )
+
+    @Test
+    fun castArg() = assertExpression(
+        """(cast
+             (+ (lit 5) (id a))
+             (type character_varying 1)
+           )
+        """,
+        "CAST(5 + a AS VARCHAR(1))"
+    )
+
+    @Test(expected = IllegalArgumentException::class)
+    fun castTooManyArgs() {
+        parse("CAST(5 AS INTEGER(10))")
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun castNonLiteralArg() {
+        parse("CAST(5 AS VARCHAR(a))")
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun castNegativeArg() {
+        parse("CAST(5 AS VARCHAR(-1))")
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun castNonTypArg() {
+        parse("CAST(5 AS SELECT)")
+    }
 }

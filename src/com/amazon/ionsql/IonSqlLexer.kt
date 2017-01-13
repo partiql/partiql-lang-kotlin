@@ -440,7 +440,7 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
                                     lower in KEYWORDS -> {
                                         // unquoted identifier that is a keyword
                                         tokenType = KEYWORD
-                                        ion.newSymbol(lower)
+                                        ion.newSymbol(KEYWORD_ALIASES[lower] ?: lower)
                                     }
                                     else -> ion.newSymbol(text)
                                 }
@@ -479,13 +479,14 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
     private fun MutableList<Token>.addOrMerge(newToken: Token) {
         val prevToken = lastOrNull()
         val keywordPair = prevToken?.keywordText to newToken.keywordText
-        val multiKeywordOp = DOUBLE_LEXEME_BINARY_OPERATOR_MAP[keywordPair]
-        when (multiKeywordOp) {
+        val lexemeMapping = DOUBLE_LEXEME_TOKEN_MAP[keywordPair]
+        when (lexemeMapping) {
             null -> add(newToken)
             else -> {
+                val (keyword, type) = lexemeMapping
                 // merge the last token into a new operator
                 this[lastIndex] =
-                    Token(OPERATOR, ion.newSymbol(multiKeywordOp), prevToken?.position)
+                    Token(type, ion.newSymbol(keyword), prevToken?.position)
             }
         }
     }

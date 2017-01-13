@@ -21,6 +21,7 @@ Where `name` is the AST node name, which can be one of:
   is to be evaluated.
 * `(list <VALUE EXPR>...)` - A *comprehension* for a list/array that is to be evaluated.
 * `(as <NAME SYMBOL> <VALUE EXPR>)` - A name aliasing/binding.
+* `(cast <VALUE EXPR> (type <TYPE NAME> ...))` - `CAST` operator
 * `(meta <NODE EXPR> <STRUCT>)` - Metadata about an enclosing AST node, from a semantic perspective
   this is a *no-op*, but can provide diagnostic context such as line/column position.
 
@@ -61,6 +62,20 @@ All other nodes are optional and not positionally defined.  Possible nodes:
 
 * `(where <CONDITIONAL EXPR>)` - The `WHERE` clause filter expression.
 * `(limit <EXPR>)` - The `LIMIT` clause expression. 
+
+## `CAST` Expressions
+The first position of a `cast` node is the value expression node to be casted.  The
+second position is a `type` node which consists of a name and integral parameters for said
+type specification.
+
+Example:
+
+```
+(cast
+  (lit 5)
+  (type character_varying 10)
+)
+```
 
 ## Meta Nodes
 Meta nodes are no-ops from a semantic perspective.  They provide meta-data about node the

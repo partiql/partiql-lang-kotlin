@@ -141,4 +141,137 @@ class IonSqlLexerTest : Base() {
         token(IDENTIFIER, "is_not", 1, 28)
     )
 
+    @Test
+    fun multiLexemeKeywords() = assertTokens(
+        "CHARACTER VARYING DoUblE PrEcision double_precision character_varying",
+        token(KEYWORD, "character_varying", 1, 1),
+        token(KEYWORD, "double_precision", 1, 19),
+        token(IDENTIFIER, "double_precision", 1, 36),
+        token(IDENTIFIER, "character_varying", 1, 53)
+    )
+
+    @Test
+    fun boolType() = assertTokens(
+        "BOOL",
+        token(KEYWORD, "bool", 1, 1)
+    )
+    @Test
+    fun smallintType() = assertTokens(
+        "SMALLINT",
+        token(KEYWORD, "smallint", 1, 1)
+    )
+
+    @Test
+    fun intType() = assertTokens(
+        "INT",
+        token(KEYWORD, "integer", 1, 1)
+    )
+
+    @Test
+    fun integerType() = assertTokens(
+        "INTEGER",
+        token(KEYWORD, "integer", 1, 1)
+    )
+
+    @Test
+    fun floatType() = assertTokens(
+        "FLOAT",
+        token(KEYWORD, "float", 1, 1)
+    )
+
+    @Test
+    fun realType() = assertTokens(
+        "REAL",
+        token(KEYWORD, "real", 1, 1)
+    )
+
+    @Test
+    fun doublePrecisionType() = assertTokens(
+        "DOUBLE PRECISION",
+        token(KEYWORD, "double_precision", 1, 1)
+    )
+
+    @Test
+    fun decimalType() = assertTokens(
+        "DECIMAL",
+        token(KEYWORD, "decimal", 1, 1)
+    )
+
+    @Test
+    fun numericType() = assertTokens(
+        "NUMERIC",
+        token(KEYWORD, "numeric", 1, 1)
+    )
+
+    @Test
+    fun timestampType() = assertTokens(
+        "TIMESTAMP",
+        token(KEYWORD, "timestamp", 1, 1)
+    )
+
+    @Test
+    fun characterType() = assertTokens(
+        "CHARACTER",
+        token(KEYWORD, "character", 1, 1)
+    )
+
+    @Test
+    fun charType() = assertTokens(
+        "CHAR",
+        token(KEYWORD, "character", 1, 1)
+    )
+
+    @Test
+    fun varcharType() = assertTokens(
+        "VARCHAR",
+        token(KEYWORD, "character_varying", 1, 1)
+    )
+
+    @Test
+    fun characterVaryingType() = assertTokens(
+        "CHARACTER VARYING",
+        token(KEYWORD, "character_varying", 1, 1)
+    )
+
+    @Test
+    fun stringType() = assertTokens(
+        "STRING",
+        token(KEYWORD, "string", 1, 1)
+    )
+
+    @Test
+    fun symbolType() = assertTokens(
+        "SYMBOL",
+        token(KEYWORD, "symbol", 1, 1)
+    )
+
+    @Test
+    fun clobType() = assertTokens(
+        "CLOB",
+        token(KEYWORD, "clob", 1, 1)
+    )
+
+    @Test
+    fun blobType() = assertTokens(
+        "BLOB",
+        token(KEYWORD, "blob", 1, 1)
+    )
+
+    @Test
+    fun structType() = assertTokens(
+        "STRUCT",
+        token(KEYWORD, "struct", 1, 1)
+    )
+
+    @Test
+    fun listType() = assertTokens(
+        "LIST",
+        token(KEYWORD, "list", 1, 1)
+    )
+
+    @Test
+    fun sexpType() = assertTokens(
+        "SEXP",
+        token(KEYWORD, "sexp", 1, 1)
+    )
 }

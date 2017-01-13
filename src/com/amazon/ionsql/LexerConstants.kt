@@ -4,8 +4,10 @@
 
 package com.amazon.ionsql
 
+import com.amazon.ionsql.TokenType.*
+
 /** All SQL-92 keywords. */
-internal val SQL92_KEYWORDS = sortedSetOf(
+internal val SQL92_KEYWORDS = setOf(
     "absolute",
     "action",
     "add",
@@ -235,7 +237,7 @@ internal val SQL92_KEYWORDS = sortedSetOf(
 )
 
 /** */
-internal val IONSQL_KEYWORDS = sortedSetOf(
+internal val IONSQL_KEYWORDS = setOf(
     "missing",
     "pivot",
     "unpivot",
@@ -261,12 +263,47 @@ internal val IONSQL_KEYWORDS = sortedSetOf(
 /** All Keywords. */
 val KEYWORDS = SQL92_KEYWORDS union IONSQL_KEYWORDS
 
+/** Keywords that are purely aliases to other keywords. */
+internal val KEYWORD_ALIASES = mapOf(
+    "varchar"   to "character_varying",
+    "char"      to "character",
+    "dec"       to "decimal",
+    "int"       to "integer"
+)
+
+/**
+ * Indicates the keywords (and pseudo keywords) the indicate types.
+ * Some of these types (e.g. VARCHAR) requires a parameters, but many implementations
+ * don't require that.
+ */
+internal val TYPE_NAME_ARITY_MAP = mapOf(
+    "bool"              to 0..0, // Ion
+    "smallint"          to 0..0, // SQL-92
+    "integer"           to 0..0, // Ion & SQL-92
+    "float"             to 0..1, // Ion & SQL-92
+    "real"              to 0..1, // SQL-92
+    "double_precision"  to 0..0, // SQL-92
+    "decimal"           to 0..2, // Ion & SQL-92
+    "numeric"           to 0..2, // SQL-92
+    "timestamp"         to 0..0, // Ion & SQL-92
+    "character"         to 0..1, // SQL-92
+    "character_varying" to 0..1, // SQL-92
+    "string"            to 0..0, // Ion
+    "symbol"            to 0..0, // Ion
+    "clob"              to 0..0, // Ion
+    "blob"              to 0..0, // Ion
+    "struct"            to 0..0, // Ion
+    "list"              to 0..0, // Ion
+    "sexp"              to 0..0  // Ion
+    // TODO SQL-92 types BIT, BIT VARYING, DATE, TIME, INTERVAL and TIMEZONE qualifier
+)
+
 /** Keywords that are normal function names. */
-internal val FUNCTION_NAME_KEYWORDS = sortedSetOf(
+internal val FUNCTION_NAME_KEYWORDS = setOf(
     "exists"
 )
 
-internal val BOOLEAN_KEYWORDS = sortedSetOf("true", "false")
+internal val BOOLEAN_KEYWORDS = setOf("true", "false")
 
 /** Operator renames for the AST. */
 internal val OPERATOR_ALIASES = mapOf(
@@ -274,7 +311,7 @@ internal val OPERATOR_ALIASES = mapOf(
 )
 
 /** Binary operators with verbatim lexical token equivalents. */
-internal val SINGLE_LEXEME_BINARY_OPERATORS = sortedSetOf(
+internal val SINGLE_LEXEME_BINARY_OPERATORS = setOf(
     "+", "-", "/", "%", "*",
     "<", "<=", ">", ">=", "=", "<>",
     "||",
@@ -284,23 +321,28 @@ internal val SINGLE_LEXEME_BINARY_OPERATORS = sortedSetOf(
     "union", "except", "intersect"
 )
 
-/** Binary operators comprising two lexemes. */
-internal val DOUBLE_LEXEME_BINARY_OPERATOR_MAP = mapOf(
-    ("is" to "not")     to "is_not",
-    ("union" to "all")  to "union_all"
+/** Binary operators comprising two lexemes (should not map to a keyword alias). */
+internal val DOUBLE_LEXEME_TOKEN_MAP = mapOf(
+    ("is" to "not")             to ("is_not" to OPERATOR),
+    ("union" to "all")          to ("union_all" to OPERATOR),
+    ("character" to "varying")  to ("character_varying" to KEYWORD),
+    ("double" to "precision")   to ("double_precision" to KEYWORD)
 )
+
+internal val DOUBLE_LEXEME_BINARY_OPERATORS =
+    DOUBLE_LEXEME_TOKEN_MAP.values.filter { it.second == TokenType.OPERATOR }.map { it.first }
 
 /** Binary operators. */
 internal val BINARY_OPERATORS =
-    SINGLE_LEXEME_BINARY_OPERATORS + DOUBLE_LEXEME_BINARY_OPERATOR_MAP.values
+    SINGLE_LEXEME_BINARY_OPERATORS + DOUBLE_LEXEME_BINARY_OPERATORS
 
 /** Unary operators. */
-internal val UNARY_OPERATORS = sortedSetOf(
+internal val UNARY_OPERATORS = setOf(
     "+", "-", "not", "@"
 )
 
 /** Operators with special parsing rules. */
-internal val SPECIAL_OPERATORS = sortedSetOf(
+internal val SPECIAL_OPERATORS = setOf(
     "between"
 )
 

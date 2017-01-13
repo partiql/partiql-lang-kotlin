@@ -21,6 +21,9 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         private val SELECT_BOUNDARY_TOKEN_TYPES =
             setOf(KEYWORD, RIGHT_PAREN)
 
+        private val CAST_BOUNDARY_TOKEN_TYPES =
+            setOf(AS)
+
         private val GROUP_AND_CALL_BOUNDARY_TOKEN_TYPES =
             setOf(RIGHT_PAREN)
 
@@ -66,7 +69,9 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         TERNARY,
         LIST,
         STRUCT,
-        MEMBER
+        MEMBER,
+        CAST,
+        TYPE
     }
 
     internal data class ParseNode(val type: ParseType,
@@ -189,6 +194,17 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 addSymbol("call")
                 addSymbol(token?.text!!)
                 addChildNodes(this@toSexp)
+            }
+            CAST -> sexp {
+                addSymbol("cast")
+                addChildNodes(this@toSexp)
+            }
+            TYPE -> sexp {
+                addSymbol("type")
+                addSymbol(token?.text!!)
+                for (child in children) {
+                    add().newInt(child.token!!.value!!.longValue())
+                }
             }
             ALIAS -> sexp {
                 addSymbol("as")
@@ -332,6 +348,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
 
     private fun List<Token>.parseTerm(): ParseNode = when (head?.type) {
         KEYWORD -> when (head?.keywordText) {
+            "cast" -> tail.parseCast()
             "select" -> tail.parseSelect()
             in FUNCTION_NAME_KEYWORDS -> when (tail.head?.type) {
                 LEFT_PAREN -> tail.tail.parseFunctionCall(head!!)
@@ -352,6 +369,58 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         }
         LITERAL, MISSING -> atomFromHead()
         else -> err("Unexpected term")
+    }
+
+    private fun List<Token>.parseCast(): ParseNode {
+        if (head?.type != LEFT_PAREN) {
+            err("Missing left parenthesis after CAST")
+        }
+        val valueExpr = tail.parseExpression(
+            boundaryTokenTypes = CAST_BOUNDARY_TOKEN_TYPES
+        )
+        var rem = valueExpr.remaining
+        if (rem.head?.type != AS) {
+            rem.err("CAST value expression must be followed by AS")
+        }
+        rem = rem.tail
+
+        val typeNode = rem.parseType()
+        rem = typeNode.remaining
+        if (rem.head?.type != RIGHT_PAREN) {
+            rem.err("Expected end of CAST")
+        }
+
+        return ParseNode(CAST, null, listOf(valueExpr, typeNode), rem.tail)
+    }
+
+    private fun List<Token>.parseType(): ParseNode {
+        val typeName = head?.keywordText
+        val typeArity = TYPE_NAME_ARITY_MAP[typeName] ?: err("Expected type for CAST")
+
+        val typeNode = when (tail.head?.type) {
+            LEFT_PAREN -> tail.tail.parseArgList(
+                supportsAlias = false,
+                supportsMemberName = false,
+                boundaryTokenTypes = GROUP_AND_CALL_BOUNDARY_TOKEN_TYPES
+            ).copy(
+                type = TYPE,
+                token = head
+            ).deriveExpected(RIGHT_PAREN)
+
+            else -> ParseNode(TYPE, head, emptyList(), tail)
+        }
+        if (typeNode.children.size !in typeArity) {
+            tail.err("CAST for $typeName must have arity of $typeArity")
+        }
+        for (child in typeNode.children) {
+            if (child.type != ATOM
+                    || child.token?.type != LITERAL
+                    || !(child.token?.value?.isUnsignedInteger ?: false)) {
+                err("Type parameter must be an unsigned integer literal")
+            }
+        }
+
+        return typeNode
     }
 
     private fun List<Token>.parseSelect(): ParseNode {
