@@ -38,6 +38,17 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
 
         private val FIELD_NAME_BOUNDARY_TOKEN_TYPES =
             setOf(COLON)
+
+        private fun List<Token>.err(message: String): Nothing {
+            val tokenMessage = when (head) {
+                null -> "end of expression"
+                else -> "${head!!.type} ${head!!.value ?: "<NONE>"} at ${head?.position ?: "unknown position"}"
+            }
+
+            throw IllegalArgumentException(
+                "$message at $tokenMessage"
+            )
+        }
     }
 
     internal enum class ParseType {
@@ -72,7 +83,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             var rem = it
             for (type in types) {
                 if (type != rem.head?.type) {
-                    throw IllegalArgumentException("Expected $type, got ${rem.head}: $it")
+                    rem.err("Expected $type")
                 }
                 rem = rem.tail
             }
@@ -205,14 +216,9 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
     private fun List<Token>.atomFromHead(): ParseNode =
         ParseNode(ATOM, head, emptyList(), tail)
 
-    /** Entry point into the parser. */
-    override fun parse(tokens: List<Token>): IonSexp =
-        parseExpression(tokens).toSexp().apply { makeReadOnly() }
-
     /**
      * Parses the given token list.
      *
-     * @param tokens The list of tokens to parse.
      * @param precedence The precedence of the current expression parsing.
      *                   A negative value represents the "top-level" parsing.
      * @param boundaryTokenTypes The token types that are considered the "end" of the parse.
@@ -220,10 +226,9 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
      *
      * @return The parse tree for the given expression.
      */
-    internal fun parseExpression(tokens: List<Token>,
-                                 precedence: Int = -1,
-                                 boundaryTokenTypes: Set<TokenType> = emptySet()): ParseNode {
-        var expr = parseUnaryTerm(tokens)
+    internal fun List<Token>.parseExpression(precedence: Int = -1,
+                                             boundaryTokenTypes: Set<TokenType> = emptySet()): ParseNode {
+        var expr = parseUnaryTerm()
         var rem = expr.remaining
 
         fun atBoundary() = rem.isEmpty() || rem.head?.type in boundaryTokenTypes
@@ -233,11 +238,10 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         while (!atBoundary() && precedence < headPrecedence()) {
             val op = rem.head!!
             if (!op.isBinaryOperator && op.keywordText != "between") {
-                throw IllegalArgumentException("Expected binary operator or BETWEEN: $rem")
+                rem.err("Expected binary operator or BETWEEN")
             }
 
-            val right = parseExpression(
-                rem.tail,
+            val right = rem.tail.parseExpression(
                 precedence = op.infixPrecedence,
                 boundaryTokenTypes = boundaryTokenTypes
             )
@@ -248,41 +252,39 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 else -> when (op.keywordText) {
                     "between" -> {
                         if (rem.head?.keywordText != "and") {
-                            throw IllegalArgumentException("Expected AND after BETWEEN: $rem")
+                            rem.err("Expected AND after BETWEEN")
                         }
-                        val third = parseExpression(
-                            rem.tail,
+                        val third = rem.tail.parseExpression(
                             precedence = op.infixPrecedence,
                             boundaryTokenTypes = boundaryTokenTypes
                         )
                         rem = third.remaining
                         ParseNode(TERNARY, op, listOf(expr, right, third), rem)
                     }
-                    else -> throw IllegalStateException(
-                        "Illegal infix operator ${op.keywordText}: $rem")
+                    else -> rem.err("Unknown infix operator")
                 }
             }
         }
         return expr
     }
 
-    private fun parseUnaryTerm(tokens: List<Token>): ParseNode =
-        when (tokens.head?.isUnaryOperator) {
+    private fun List<Token>.parseUnaryTerm(): ParseNode =
+        when (head?.isUnaryOperator) {
             true -> {
-                val term = parseUnaryTerm(tokens.tail)
+                val term = tail.parseUnaryTerm()
 
                 ParseNode(
                     UNARY,
-                    tokens.head,
+                    head,
                     listOf(term),
                     term.remaining
                 )
             }
-            else -> parsePathTerm(tokens)
+            else -> parsePathTerm()
         }
 
-    private fun parsePathTerm(tokens: List<Token>): ParseNode {
-        val term = parseTerm(tokens)
+    private fun List<Token>.parsePathTerm(): ParseNode {
+        val term = parseTerm()
         val path = ArrayList<ParseNode>(listOf(term))
         var rem = term.remaining
         var hasPath = true
@@ -305,15 +307,12 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                             path.add(ParseNode(ATOM, token, emptyList(), rem.tail))
                         }
                         STAR -> path.add(rem.atomFromHead())
-                        else -> throw IllegalArgumentException(
-                            "Dotted member access invalid: $tokens"
-                        )
+                        else -> err("Invalid path dot component")
                     }
                     rem = rem.tail
                 }
                 LEFT_BRACKET -> {
-                    val expr = parseExpression(
-                        rem.tail,
+                    val expr = rem.tail.parseExpression(
                         boundaryTokenTypes = BRACKET_BOUNDARY_TOKEN_TYPES
                     ).deriveExpected(
                         RIGHT_BRACKET
@@ -331,52 +330,49 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         }
     }
 
-    private fun parseTerm(tokens: List<Token>): ParseNode = when (tokens.head?.type) {
-        KEYWORD -> when (tokens.head?.keywordText) {
-            "select" -> parseSelect(tokens.tail)
-            in FUNCTION_NAME_KEYWORDS -> when (tokens.tail.head?.type) {
-                LEFT_PAREN -> parseFunctionCall(tokens.head!!, tokens.tail.tail)
-                else -> throw IllegalArgumentException("Unexpected keyword: $tokens")
+    private fun List<Token>.parseTerm(): ParseNode = when (head?.type) {
+        KEYWORD -> when (head?.keywordText) {
+            "select" -> tail.parseSelect()
+            in FUNCTION_NAME_KEYWORDS -> when (tail.head?.type) {
+                LEFT_PAREN -> tail.tail.parseFunctionCall(head!!)
+                else -> err("Unexpected keyword")
             }
-            else -> throw IllegalArgumentException("Unexpected keyword: $tokens")
+            else -> err("Unexpected keyword")
         }
-        LEFT_PAREN -> parseExpression(
-            tokens.tail,
+        LEFT_PAREN -> tail.parseExpression(
             boundaryTokenTypes = GROUP_AND_CALL_BOUNDARY_TOKEN_TYPES
         ).deriveExpected(
             RIGHT_PAREN
         )
-        LEFT_BRACKET -> parseListLiteral(tokens.tail)
-        LEFT_CURLY -> parseStructLiteral(tokens.tail)
-        IDENTIFIER -> when (tokens.tail.head?.type) {
-            LEFT_PAREN -> parseFunctionCall(tokens.head!!, tokens.tail.tail)
-            else -> tokens.atomFromHead()
+        LEFT_BRACKET -> tail.parseListLiteral()
+        LEFT_CURLY -> tail.parseStructLiteral()
+        IDENTIFIER -> when (tail.head?.type) {
+            LEFT_PAREN -> tail.tail.parseFunctionCall(head!!)
+            else -> atomFromHead()
         }
-        LITERAL, MISSING -> tokens.atomFromHead()
-        else -> throw IllegalArgumentException("Unexpected term: $tokens")
+        LITERAL, MISSING -> atomFromHead()
+        else -> err("Unexpected term")
     }
 
-    private fun parseSelect(tokens: List<Token>): ParseNode {
-        val head = tokens.head
+    private fun List<Token>.parseSelect(): ParseNode {
         var type = SELECT_LIST
         val projection = when {
             head?.type == STAR -> {
                 // special form for * is empty arg-list
-                ParseNode(ARG_LIST, null, emptyList(), tokens.tail)
+                ParseNode(ARG_LIST, null, emptyList(), tail)
             }
             head?.keywordText == "values" -> {
                 type = SELECT_VALUES
-                parseExpression(tokens.tail, boundaryTokenTypes = SELECT_BOUNDARY_TOKEN_TYPES)
+                tail.parseExpression(boundaryTokenTypes = SELECT_BOUNDARY_TOKEN_TYPES)
             }
             else -> {
                 val list = parseArgList(
-                    tokens,
                     supportsAlias = true,
                     supportsMemberName = false,
                     boundaryTokenTypes = SELECT_BOUNDARY_TOKEN_TYPES
                 )
                 if (list.children.isEmpty()) {
-                    throw IllegalArgumentException("Cannot have empty select list: $tokens")
+                    err("Cannot have empty SELECT list")
                 }
 
                 list
@@ -392,11 +388,10 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         children.add(projection)
 
         if (rem.head?.keywordText != "from") {
-            throw IllegalArgumentException("Expected FROM after select list $rem")
+            rem.err("Expected FROM after SELECT list")
         }
 
-        val fromList = parseArgList(
-            rem.tail,
+        val fromList = rem.tail.parseArgList(
             supportsAlias = true,
             supportsMemberName = false,
             boundaryTokenTypes = SELECT_BOUNDARY_TOKEN_TYPES
@@ -406,13 +401,13 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             it.map {
                 when (it.type) {
                     PATH -> it.deriveChildren {
-                        injectWildCardForFromClause(it)
+                        it.injectWildCardForFromClause()
                     }
                     ALIAS -> it.deriveChildren {
                         it.map {
                             when (it.type) {
                                 PATH -> it.deriveChildren {
-                                    injectWildCardForFromClause(it)
+                                    it.injectWildCardForFromClause()
                                 }
                                 else -> it
                             }
@@ -427,8 +422,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         children.add(fromList)
 
         if (rem.head?.keywordText == "where") {
-            val whereExpr = parseExpression(
-                rem.tail,
+            val whereExpr = rem.tail.parseExpression(
                 boundaryTokenTypes = SELECT_BOUNDARY_TOKEN_TYPES
             )
             rem = whereExpr.remaining
@@ -443,8 +437,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         }
 
         if (rem.head?.keywordText == "limit") {
-            val limitExpr = parseExpression(
-                rem.tail,
+            val limitExpr = rem.tail.parseExpression(
                 boundaryTokenTypes = SELECT_BOUNDARY_TOKEN_TYPES
             )
             rem = limitExpr.remaining
@@ -461,12 +454,11 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         return ParseNode(selectType, null, children, rem)
     }
 
-    private fun injectWildCardForFromClause(nodes: List<ParseNode>): List<ParseNode> =
-        listOf(nodes.head!!, ParseNode(ATOM, Token(STAR), emptyList(), emptyList())) + nodes.tail
+    private fun List<ParseNode>.injectWildCardForFromClause(): List<ParseNode> =
+        listOf(head!!, ParseNode(ATOM, Token(STAR), emptyList(), emptyList())) + tail
 
-    private fun parseFunctionCall(name: Token, tokens: List<Token>): ParseNode =
+    private fun List<Token>.parseFunctionCall(name: Token): ParseNode =
         parseArgList(
-            tokens,
             supportsAlias = false,
             supportsMemberName = false,
             boundaryTokenTypes = GROUP_AND_CALL_BOUNDARY_TOKEN_TYPES
@@ -475,9 +467,8 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             token = name
         ).deriveExpected(RIGHT_PAREN)
 
-    private fun parseListLiteral(tokens: List<Token>): ParseNode =
+    private fun List<Token>.parseListLiteral(): ParseNode =
         parseArgList(
-            tokens,
             supportsAlias = false,
             supportsMemberName = false,
             boundaryTokenTypes = BRACKET_BOUNDARY_TOKEN_TYPES
@@ -485,9 +476,8 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             type = LIST
         ).deriveExpected(RIGHT_BRACKET)
 
-    private fun parseStructLiteral(tokens: List<Token>): ParseNode =
+    private fun List<Token>.parseStructLiteral(): ParseNode =
         parseArgList(
-            tokens,
             supportsAlias = false,
             supportsMemberName = true,
             boundaryTokenTypes = STRUCT_BOUNDARY_TOKEN_TYPES
@@ -495,21 +485,20 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             type = STRUCT
         ).deriveExpected(RIGHT_CURLY)
 
-    private fun parseArgList(tokens: List<Token>,
-                             supportsAlias: Boolean,
-                             supportsMemberName: Boolean,
-                             boundaryTokenTypes: Set<TokenType> = emptySet()): ParseNode {
+    private fun List<Token>.parseArgList(supportsAlias: Boolean,
+                                         supportsMemberName: Boolean,
+                                         boundaryTokenTypes: Set<TokenType> = emptySet()): ParseNode {
         val argListBoundaryTokenTypes = when {
             supportsAlias -> ARGLIST_WITH_ALIAS_BOUNDARY_TOKEN_TYPES
             else -> ARGLIST_BOUNDARY_TOKEN_TYPES
         } union boundaryTokenTypes
         val argList = ArrayList<ParseNode>()
-        var rem = tokens
+        var rem = this
 
-        fun parseField() = parseExpression(
-            rem, boundaryTokenTypes = FIELD_NAME_BOUNDARY_TOKEN_TYPES)
-        fun parseChild() = parseExpression(
-            rem, boundaryTokenTypes = argListBoundaryTokenTypes)
+        fun parseField() = rem.parseExpression(
+            boundaryTokenTypes = FIELD_NAME_BOUNDARY_TOKEN_TYPES)
+        fun parseChild() = rem.parseExpression(
+            boundaryTokenTypes = argListBoundaryTokenTypes)
 
         while (rem.isNotEmpty()
                 && rem.head?.type !in boundaryTokenTypes) {
@@ -530,7 +519,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 }
                 val name = rem.head
                 if (name == null || name.type != IDENTIFIER) {
-                    throw IllegalArgumentException("Expected identifier for alias: $rem")
+                    rem.err("Expected identifier for alias")
                 }
                 rem = rem.tail
                 child = ParseNode(ALIAS, name, listOf(child), rem)
@@ -546,4 +535,8 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
 
         return ParseNode(ARG_LIST, null, argList, rem)
     }
+
+    /** Entry point into the parser. */
+    override fun parse(tokens: List<Token>): IonSexp =
+        tokens.parseExpression().toSexp().apply { makeReadOnly() }
 }
