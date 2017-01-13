@@ -72,3 +72,19 @@ val IonValue.ordinal: Int
     get() = container.indexOf(this)
 
 fun IonValue.exprValue(): ExprValue = IonExprValue(this)
+
+/** Creates a new [IonSexp] from an AST [IonSexp] that strips out meta nodes. */
+fun IonSexp.filterMetaNodes(): IonSexp = system.newEmptySexp().apply {
+    var target = this@filterMetaNodes
+    while (target[0].stringValue() == "meta") {
+        target = target[1] as IonSexp
+    }
+    for (child in target) {
+        add(
+            when (child) {
+                is IonSexp -> child.filterMetaNodes()
+                else -> child.clone()
+            }
+        )
+    }
+}

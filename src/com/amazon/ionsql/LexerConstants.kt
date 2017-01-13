@@ -234,12 +234,36 @@ internal val SQL92_KEYWORDS = sortedSetOf(
     "zone"
 )
 
-/** All Keywords. */
-val KEYWORDS = SQL92_KEYWORDS union sortedSetOf(
+/** */
+internal val IONSQL_KEYWORDS = sortedSetOf(
     "missing",
     "pivot",
     "unpivot",
-    "limit"
+    "limit",
+
+    // Ion type names
+
+    // null
+    "bool",
+    // int
+    // float
+    // decimal
+    // timestamp
+    "string",
+    "symbol",
+    "clob",
+    "blob",
+    "struct",
+    "list",
+    "sexp"
+)
+
+/** All Keywords. */
+val KEYWORDS = SQL92_KEYWORDS union IONSQL_KEYWORDS
+
+/** Keywords that are normal function names. */
+internal val FUNCTION_NAME_KEYWORDS = sortedSetOf(
+    "exists"
 )
 
 internal val BOOLEAN_KEYWORDS = sortedSetOf("true", "false")

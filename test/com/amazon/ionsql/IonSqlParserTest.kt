@@ -18,7 +18,7 @@ class IonSqlParserTest : Base() {
     }
 
     fun assertExpression(expectedText: String, source: String) {
-        val actual = parse(source)
+        val actual = parse(source).filterMetaNodes()
         val expected = literal(expectedText)
 
         assertEquals(expected, actual)

@@ -54,8 +54,30 @@ class EvaluatingCompiler(private val ion: IonSystem,
         "call" to { env, expr ->
             expr.evalCall(env, startIndex = 1)
         },
-        "list" to instrinsicCall,
-        "struct" to instrinsicCall,
+        "list" to bindOp(minArity = 0, maxArity = Integer.MAX_VALUE) { env, args ->
+            ion.newEmptyList().apply {
+                for (value in args) {
+                    add(value.ionValue.clone())
+                }
+            }.seal().exprValue()
+        },
+        "struct" to bindOp(minArity = 0, maxArity = Integer.MAX_VALUE) { env, args ->
+            if (args.size % 2 != 0) {
+                throw IllegalArgumentException("struct requires even number of parameters")
+            }
+            val names = ArrayList<String>(args.size / 2)
+            ion.newEmptyStruct().apply {
+                (0 until args.size).step(2)
+                    .asSequence()
+                    .map { args[it].ionValue to args[it + 1].ionValue }
+                    .forEach {
+                        val (nameVal, child) = it
+                        val name = nameVal.text
+                        names.add(name)
+                        add(name, child)
+                    }
+            }.seal().exprValue().orderedNamesValue(names)
+        },
         "+" to bindOp(minArity = 1, maxArity = 2) { env, args ->
             when (args.size) {
                 1 -> {
@@ -268,37 +290,6 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
     /** Dispatch table for built-in functions. */
     private val builtins: Map<String, (Bindings, List<ExprValue>) -> ExprValue> = mapOf(
-        "list" to { env, args ->
-            ion.newEmptyList().apply {
-                for (value in args) {
-                    add(value.ionValue.clone())
-                }
-            }.seal().exprValue()
-        },
-        "sexp" to { env, args ->
-            ion.newEmptySexp().apply {
-                for (value in args) {
-                    add(value.ionValue.clone())
-                }
-            }.seal().exprValue()
-        },
-        "struct" to { env, args ->
-            if (args.size % 2 != 0) {
-                throw IllegalArgumentException("struct requires even number of parameters")
-            }
-            val names = ArrayList<String>(args.size / 2)
-            ion.newEmptyStruct().apply {
-                (0 until args.size).step(2)
-                    .asSequence()
-                    .map { args[it].ionValue to args[it + 1].ionValue }
-                    .forEach {
-                        val (nameVal, child) = it
-                        val name = nameVal.text
-                        names.add(name)
-                        add(name, child)
-                    }
-            }.seal().exprValue().orderedNamesValue(names)
-        },
         "exists" to { env, args ->
             when (args.size) {
                 1 -> {
@@ -508,15 +499,17 @@ class EvaluatingCompiler(private val ion: IonSystem,
         return parser.parse(tokens)
     }
 
+    // TODO support meta-nodes properly for error reporting
+
     /** Evaluates an unbound syntax tree against a set of bindings. */
-    fun eval(ast: IonSexp, env: Bindings) = ast.eval(env)
+    fun eval(ast: IonSexp, env: Bindings) = ast.filterMetaNodes().seal().eval(env)
 
     /** Compiles the given source expression into a bound [Expression]. */
     override fun compile(source: String): Expression {
         val ast = parse(source)
 
         return object : Expression {
-            override fun eval(env: Bindings): ExprValue = ast.eval(env)
+            override fun eval(env: Bindings): ExprValue = eval(ast, env)
         }
     }
 }

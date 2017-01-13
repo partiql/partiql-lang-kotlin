@@ -99,98 +99,115 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
 
     private fun IonSequence.addClone(value: IonValue) = add(value.clone())
 
-    internal fun ParseNode.toSexp(): IonSexp = when (type) {
-        ATOM -> when (token?.type) {
-            LITERAL -> sexp {
-                addSymbol("lit")
-                addClone(token?.value!!)
+    internal fun ParseNode.toSexp(): IonSexp {
+        val astNode = when (type) {
+            ATOM -> when (token?.type) {
+                LITERAL -> sexp {
+                    addSymbol("lit")
+                    addClone(token?.value!!)
+                }
+                MISSING -> sexp {
+                    addSymbol("missing")
+                }
+                IDENTIFIER -> sexp {
+                    addSymbol("id")
+                    addSymbol(token?.text!!)
+                }
+                STAR -> sexp {
+                    addSymbol("*")
+                }
+                else -> throw IllegalStateException("Unsupported atom: $this")
             }
-            MISSING -> sexp {
-                addSymbol("missing")
+            LIST -> sexp {
+                addSymbol("list")
+                addChildNodes(this@toSexp)
             }
-            IDENTIFIER -> sexp {
-                addSymbol("id")
+            STRUCT -> sexp {
+                addSymbol("struct")
+                // unfold the MEMBER nodes
+                for (child in children) {
+                    if (child.type != MEMBER) {
+                        throw IllegalStateException("Expected MEMBER node: $child")
+                    }
+                    addChildNodes(child)
+                }
+
+            }
+            UNARY, BINARY, TERNARY -> sexp {
                 addSymbol(token?.text!!)
+                addChildNodes(this@toSexp)
             }
-            STAR -> sexp {
-                addSymbol("*")
+            PATH -> sexp {
+                addSymbol("path")
+                addChildNodes(this@toSexp)
             }
-            else -> throw IllegalStateException("Unsupported atom: $this")
-        }
-        LIST -> sexp {
-            addSymbol("list")
-            addChildNodes(this@toSexp)
-        }
-        STRUCT -> sexp {
-            addSymbol("struct")
-            // unfold the MEMBER nodes
-            for (child in children) {
-                if (child.type != MEMBER) {
-                    throw IllegalStateException("Expected MEMBER node: $child")
-                }
-                addChildNodes(child)
-            }
-
-        }
-        UNARY, BINARY, TERNARY -> sexp {
-            addSymbol(token?.text!!)
-            addChildNodes(this@toSexp)
-        }
-        PATH -> sexp {
-            addSymbol("path")
-            addChildNodes(this@toSexp)
-        }
-        SELECT_LIST, SELECT_VALUES -> sexp {
-            addSymbol("select")
-            addSexp {
-                addSymbol(when (this@toSexp.type) {
-                    SELECT_LIST -> when {
-                        children[0].children.isEmpty() -> "*"
-                        else -> "list"
-                    }
-                    SELECT_VALUES -> "values"
-                    else -> throw IllegalStateException("Unsupported SELECT type: ${this@toSexp}")
-                })
-                when (this@toSexp.type) {
-                    SELECT_VALUES -> add(children[0].toSexp())
-                    else -> addChildNodes(children[0])
-                }
-
-            }
-            addSexp {
-                addSymbol("from")
-                addChildNodes(children[1])
-            }
-            if (children.size > 2) {
-                for (clause in children.slice(2..children.lastIndex)) {
-                    when (clause.type) {
-                        WHERE, LIMIT -> addSexp {
-                            addSymbol(clause.name)
-                            addChildNodes(clause)
+            SELECT_LIST, SELECT_VALUES -> sexp {
+                addSymbol("select")
+                addSexp {
+                    addSymbol(when (this@toSexp.type) {
+                        SELECT_LIST -> when {
+                            children[0].children.isEmpty() -> "*"
+                            else -> "list"
                         }
-                        else -> throw IllegalStateException("Unsupported SELECT clause: ${this@toSexp}")
+                        SELECT_VALUES -> "values"
+                        else -> throw IllegalStateException("Unsupported SELECT type: ${this@toSexp}")
+                    })
+                    when (this@toSexp.type) {
+                        SELECT_VALUES -> add(children[0].toSexp())
+                        else -> addChildNodes(children[0])
+                    }
+
+                }
+                addSexp {
+                    addSymbol("from")
+                    addChildNodes(children[1])
+                }
+                if (children.size > 2) {
+                    for (clause in children.slice(2..children.lastIndex)) {
+                        when (clause.type) {
+                            WHERE, LIMIT -> addSexp {
+                                addSymbol(clause.name)
+                                addChildNodes(clause)
+                            }
+                            else -> throw IllegalStateException("Unsupported SELECT clause: ${this@toSexp}")
+                        }
                     }
                 }
             }
+            CALL -> sexp {
+                addSymbol("call")
+                addSymbol(token?.text!!)
+                addChildNodes(this@toSexp)
+            }
+            ALIAS -> sexp {
+                addSymbol("as")
+                addSymbol(token?.text!!)
+                addChildNodes(this@toSexp)
+            }
+            else -> throw IllegalStateException("Unsupported type for ion value: $this")
         }
-        CALL -> sexp {
-            addSymbol("call")
-            addSymbol(token?.text!!)
-            addChildNodes(this@toSexp)
+
+        // wrap the meta node as appropriate
+        val sourcePos = token?.position
+        return when (sourcePos) {
+            null -> astNode
+            else -> sexp {
+                addSymbol("meta")
+                add(astNode)
+
+                val details = add().newEmptyStruct()
+                details.put("line").newInt(sourcePos.line)
+                details.put("column").newInt(sourcePos.column)
+            }
         }
-        ALIAS -> sexp {
-            addSymbol("as")
-            addSymbol(token?.text!!)
-            addChildNodes(this@toSexp)
-        }
-        else -> throw IllegalStateException("Unsupported type for ion value: $this")
     }
 
     private fun List<Token>.atomFromHead(): ParseNode =
         ParseNode(ATOM, head, emptyList(), tail)
 
     /** Entry point into the parser. */
-    override fun parse(tokens: List<Token>): IonSexp = parseExpression(tokens).toSexp()
+    override fun parse(tokens: List<Token>): IonSexp =
+        parseExpression(tokens).toSexp().apply { makeReadOnly() }
 
     /**
      * Parses the given token list.
@@ -317,6 +334,10 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
     private fun parseTerm(tokens: List<Token>): ParseNode = when (tokens.head?.type) {
         KEYWORD -> when (tokens.head?.keywordText) {
             "select" -> parseSelect(tokens.tail)
+            in FUNCTION_NAME_KEYWORDS -> when (tokens.tail.head?.type) {
+                LEFT_PAREN -> parseFunctionCall(tokens.head!!, tokens.tail.tail)
+                else -> throw IllegalArgumentException("Unexpected keyword: $tokens")
+            }
             else -> throw IllegalArgumentException("Unexpected keyword: $tokens")
         }
         LEFT_PAREN -> parseExpression(

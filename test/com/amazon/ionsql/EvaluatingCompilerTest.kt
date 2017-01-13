@@ -86,7 +86,7 @@ class EvaluatingCompilerTest : Base() {
     fun identifier() = assertEval("i", "1")
 
     @Test
-    fun functionCall() = assertEval("sexp(i, f, d)", "(1 2e0 3d0)")
+    fun functionCall() = assertEval("exists(select * from [1])", "true")
 
     @Test
     fun listLiteral() = assertEval("[i, f, d]", "[1, 2e0, 3d0]")
