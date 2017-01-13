@@ -6,6 +6,8 @@ package com.amazon.ionsql
 
 /**
  * Tokenizes a [String] representation of a query into a [List] of [Token].
+ *
+ * Implementations must be thread-safe.
  */
 interface Lexer {
     fun tokenize(source: String): List<Token>

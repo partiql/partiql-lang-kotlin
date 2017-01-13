@@ -8,6 +8,8 @@ import com.amazon.ion.IonSexp
 
 /**
  * Parses a list of [Token] into an [IonSexp] based AST.
+ *
+ * Implementations must be thread-safe.
  */
 interface Parser {
     fun parse(tokens: List<Token>): IonSexp
