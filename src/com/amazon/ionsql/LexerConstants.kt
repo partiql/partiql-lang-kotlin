@@ -309,13 +309,16 @@ internal val FUNCTION_NAME_KEYWORDS = setOf(
     "min",
     "sum",
 
-    // POSITION, EXTRACT, SUBSTRING, TRANSLATE, TRIM, TRANSLATE, CONVERT have special syntax
+    // string functions
+    // POSITION, SUBSTRING, TRIM, EXTRACT, TRANSLATE, CONVERT have special syntax
     "char_length",
     "character_length",
     "octet_length",
     "bit_length",
     "upper",
     "lower",
+
+    // conditionals
     "nullif",
     "coalesce"
 )
