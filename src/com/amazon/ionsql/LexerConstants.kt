@@ -236,7 +236,7 @@ internal val SQL92_KEYWORDS = setOf(
     "zone"
 )
 
-/** */
+/** Ion SQL++ additional keywords. */
 internal val IONSQL_KEYWORDS = setOf(
     "missing",
     "pivot",
@@ -300,7 +300,24 @@ internal val TYPE_NAME_ARITY_MAP = mapOf(
 
 /** Keywords that are normal function names. */
 internal val FUNCTION_NAME_KEYWORDS = setOf(
-    "exists"
+    "exists",
+
+    // aggregate functions
+    // COUNT has special syntax
+    "avg",
+    "max",
+    "min",
+    "sum",
+
+    // POSITION, EXTRACT, SUBSTRING, TRANSLATE, TRIM, TRANSLATE, CONVERT have special syntax
+    "char_length",
+    "character_length",
+    "octet_length",
+    "bit_length",
+    "upper",
+    "lower",
+    "nullif",
+    "coalesce"
 )
 
 internal val BOOLEAN_KEYWORDS = setOf("true", "false")
@@ -324,6 +341,8 @@ internal val SINGLE_LEXEME_BINARY_OPERATORS = setOf(
 /** Binary operators comprising two lexemes (should not map to a keyword alias). */
 internal val DOUBLE_LEXEME_TOKEN_MAP = mapOf(
     ("is" to "not")             to ("is_not" to OPERATOR),
+    ("intersect" to "all")      to ("intersect_all" to OPERATOR),
+    ("except" to "all")         to ("except_all" to OPERATOR),
     ("union" to "all")          to ("union_all" to OPERATOR),
     ("character" to "varying")  to ("character_varying" to KEYWORD),
     ("double" to "precision")   to ("double_precision" to KEYWORD)
@@ -357,10 +376,12 @@ val ALL_OPERATORS =
  */
 internal val INFIX_OPERATOR_PRECEDENCE = mapOf(
     // set operator group
-    "intersect" to 5,
-    "except"    to 5,
-    "union"     to 5,
-    "union_all" to 5,
+    "intersect"     to 5,
+    "intersect_all" to 5,
+    "except"        to 5,
+    "except_all"    to 5,
+    "union"         to 5,
+    "union_all"     to 5,
 
     // logical group
     "or"        to 10,
