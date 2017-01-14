@@ -32,13 +32,11 @@ public class ExampleParse {
         }
 
         IonSystem ion = IonSystemBuilder.standard().build();
-        Lexer lexer = new IonSqlLexer(ion);
         Parser parser = new IonSqlParser(ion);
 
         // Generate AST
         String source = args[0];
-        List<Token> tokens = lexer.tokenize(source);
-        IonSexp ast = parser.parse(tokens);
+        IonSexp ast = parser.parse(source);
 
         // Dump the AST
         try (IonWriter out = PRETTY.build((OutputStream) System.out)) {

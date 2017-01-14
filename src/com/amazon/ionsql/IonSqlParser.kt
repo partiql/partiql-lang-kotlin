@@ -54,6 +54,8 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         }
     }
 
+    private val lexer = IonSqlLexer(ion)
+
     internal enum class ParseType {
         ATOM,
         SELECT_LIST,
@@ -606,6 +608,6 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
     }
 
     /** Entry point into the parser. */
-    override fun parse(tokens: List<Token>): IonSexp =
-        tokens.parseExpression().toSexp().apply { makeReadOnly() }
+    override fun parse(source: String): IonSexp =
+        lexer.tokenize(source).parseExpression().toSexp().apply { makeReadOnly() }
 }

@@ -19,7 +19,6 @@ import java.util.*
  */
 class EvaluatingCompiler(private val ion: IonSystem,
                          userFuncs: Map<String, (Bindings, List<ExprValue>) -> ExprValue> = emptyMap()) : Compiler {
-    private val tokenizer = IonSqlLexer(ion)
     private val parser = IonSqlParser(ion)
 
     private val wildcardPath = ion.newSexp().apply { add().newSymbol("*") }.seal()
@@ -495,8 +494,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
     /** Parses the given source into an s-expression syntax tree. */
     fun parse(source: String): IonSexp {
-        val tokens = tokenizer.tokenize(source)
-        return parser.parse(tokens)
+        return parser.parse(source)
     }
 
     // TODO support meta-nodes properly for error reporting

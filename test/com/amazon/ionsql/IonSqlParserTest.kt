@@ -9,13 +9,8 @@ import org.junit.Test
 
 class IonSqlParserTest : Base() {
     val parser = IonSqlParser(ion)
-    val tokenizer = IonSqlLexer(ion)
 
-    fun parse(source: String): IonSexp {
-        val tokens = tokenizer.tokenize(source)
-        val ast = parser.parse(tokens)
-        return ast
-    }
+    fun parse(source: String): IonSexp = parser.parse(source)
 
     fun assertExpression(expectedText: String, source: String) {
         val actual = parse(source).filterMetaNodes()

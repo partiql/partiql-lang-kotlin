@@ -12,5 +12,5 @@ import com.amazon.ion.IonSexp
  * Implementations must be thread-safe.
  */
 interface Parser {
-    fun parse(tokens: List<Token>): IonSexp
+    fun parse(source: String): IonSexp
 }
