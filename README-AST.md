@@ -55,6 +55,9 @@ The first position of the `select` node is the projection which must be one of:
   column names defined with an `(as ...)` node.
 * `(values <VALUE EXPR>)` - Projects a direct value.
 
+Optionally the above nodes can be wrapped with the `(distinct <PROJECTION>)` modifier
+representing `SELECT DISTINCT` modifier.
+
 The second position is a `(from <SOURCE EXPR>)` which is the `FROM` list, each element could have
 source names defined with the `(as ...)` node.
 

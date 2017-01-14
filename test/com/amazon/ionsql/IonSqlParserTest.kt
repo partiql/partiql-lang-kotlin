@@ -113,15 +113,51 @@ class IonSqlParserTest : Base() {
     )
 
     @Test
+    fun selectAllWithSingleFrom() = assertExpression(
+        "(select (list (id a)) (from (id table1)))",
+        "SELECT ALL a FROM table1"
+    )
+
+    @Test
+    fun selectDistinctWithSingleFrom() = assertExpression(
+        "(select (distinct (list (id a))) (from (id table1)))",
+        "SELECT DISTINCT a FROM table1"
+    )
+
+    @Test
     fun selectStar() = assertExpression(
         "(select (*) (from (id table1)))",
         "SELECT * FROM table1"
     )
 
     @Test
+    fun selectAllStar() = assertExpression(
+        "(select (*) (from (id table1)))",
+        "SELECT ALL * FROM table1"
+    )
+
+    @Test
+    fun selectDistinctStar() = assertExpression(
+        "(select (distinct (*)) (from (id table1)))",
+        "SELECT DISTINCT * FROM table1"
+    )
+
+    @Test
     fun selectValues() = assertExpression(
         "(select (values (id v)) (from (as v (id table1))))",
         "SELECT VALUES v FROM table1 AS v"
+    )
+
+    @Test
+    fun selectAllValues() = assertExpression(
+        "(select (values (id v)) (from (as v (id table1))))",
+        "SELECT ALL VALUES v FROM table1 AS v"
+    )
+
+    @Test
+    fun selectDistinctValues() = assertExpression(
+        "(select (distinct (values (id v))) (from (as v (id table1))))",
+        "SELECT DISTINCT VALUES v FROM table1 AS v"
     )
 
     @Test

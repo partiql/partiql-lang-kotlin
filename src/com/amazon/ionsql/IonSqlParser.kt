@@ -60,6 +60,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         ATOM,
         SELECT_LIST,
         SELECT_VALUES,
+        DISTINCT,
         WHERE,
         LIMIT,
         CALL,
@@ -162,19 +163,30 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             SELECT_LIST, SELECT_VALUES -> sexp {
                 addSymbol("select")
                 addSexp {
-                    addSymbol(when (this@toSexp.type) {
-                        SELECT_LIST -> when {
-                            children[0].children.isEmpty() -> "*"
-                            else -> "list"
-                        }
-                        SELECT_VALUES -> "values"
-                        else -> throw IllegalStateException("Unsupported SELECT type: ${this@toSexp}")
-                    })
-                    when (this@toSexp.type) {
-                        SELECT_VALUES -> add(children[0].toSexp())
-                        else -> addChildNodes(children[0])
+                    var target = this
+                    var projection = children[0]
+
+                    // unwrap the DISTINCT modifier
+                    if (children[0].type == DISTINCT) {
+                        addSymbol("distinct")
+                        target = add().newEmptySexp()
+                        projection = projection.children[0]
                     }
 
+                    target.run {
+                        addSymbol(when (this@toSexp.type) {
+                            SELECT_LIST -> when {
+                                projection.children.isEmpty() -> "*"
+                                else -> "list"
+                            }
+                            SELECT_VALUES -> "values"
+                            else -> throw IllegalStateException("Unsupported SELECT type: ${this@toSexp}")
+                        })
+                        when (this@toSexp.type) {
+                            SELECT_VALUES -> add(projection.toSexp())
+                            else -> addChildNodes(projection)
+                        }
+                    }
                 }
                 addSexp {
                     addSymbol("from")
@@ -426,28 +438,46 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
     }
 
     private fun List<Token>.parseSelect(): ParseNode {
-        var type = SELECT_LIST
-        val projection = when {
-            head?.type == STAR -> {
-                // special form for * is empty arg-list
-                ParseNode(ARG_LIST, null, emptyList(), tail)
+        var rem = this
+        val distinct = when (head?.keywordText) {
+            "distinct" -> {
+                rem = tail
+                true
             }
-            head?.keywordText == "values" -> {
+            "all" -> {
+                // SELECT ALL is default semantics
+                rem = tail
+                false
+            }
+            else -> false
+        }
+
+
+        var type = SELECT_LIST
+        var projection = when {
+            rem.head?.type == STAR -> {
+                // special form for * is empty arg-list
+                ParseNode(ARG_LIST, null, emptyList(), rem.tail)
+            }
+            rem.head?.keywordText == "values" -> {
                 type = SELECT_VALUES
-                tail.parseExpression(boundaryTokenTypes = SELECT_BOUNDARY_TOKEN_TYPES)
+                rem.tail.parseExpression(boundaryTokenTypes = SELECT_BOUNDARY_TOKEN_TYPES)
             }
             else -> {
-                val list = parseArgList(
+                val list = rem.parseArgList(
                     supportsAlias = true,
                     supportsMemberName = false,
                     boundaryTokenTypes = SELECT_BOUNDARY_TOKEN_TYPES
                 )
                 if (list.children.isEmpty()) {
-                    err("Cannot have empty SELECT list")
+                    rem.err("Cannot have empty SELECT list")
                 }
 
                 list
             }
+        }
+        if (distinct) {
+            projection = ParseNode(DISTINCT, null, listOf(projection), projection.remaining)
         }
 
         return parseSelectAfterProjection(type, projection)
