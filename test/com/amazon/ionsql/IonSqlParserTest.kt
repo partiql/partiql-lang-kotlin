@@ -466,4 +466,68 @@ class IonSqlParserTest : Base() {
     fun simpleCaseNoWhenWithElse() {
         parse("CASE name ELSE 1 END")
     }
+
+    @Test
+    fun tableValueConstructorWithSimpleExpressions() = assertExpression(
+        """(list (lit 1) (lit 2) (lit 3) (lit 4))""",
+        "VALUES 1, 2, 3, 4"
+    )
+
+    @Test
+    fun rowValueConstructorWithSimpleExpressions() = assertExpression(
+        """(list (lit 1) (lit 2) (lit 3) (lit 4))""",
+        "(1, 2, 3, 4)"
+    )
+
+    @Test
+    fun tableValueConstructorWithRowValueConstructors() = assertExpression(
+        """(list (list (lit 1) (lit 2)) (list (lit 3) (lit 4)))""",
+        "((1, 2), (3, 4))"
+    )
+
+    @Test
+    fun tableValueExplicitConstructorWithRowValueConstructors() = assertExpression(
+        """(list (list (lit 1) (lit 2)) (list (lit 3) (lit 4)))""",
+        "VALUES (1, 2), (3, 4)"
+    )
+
+    @Test
+    fun inOperatorWithExplicitValues() = assertExpression(
+        """(in
+             (id a)
+             (list (lit 1) (lit 2) (lit 3) (lit 4))
+           )
+        """,
+        "a IN (VALUES 1, 2, 3, 4)"
+    )
+
+    @Test
+    fun inOperatorWithImplicitValues() = assertExpression(
+        """(in
+             (id a)
+             (list (lit 1) (lit 2) (lit 3) (lit 4))
+           )
+        """,
+        "a IN (1, 2, 3, 4)"
+    )
+
+    @Test
+    fun notInOperatorWithImplicitValues() = assertExpression(
+        """(not_in
+             (id a)
+             (list (lit 1) (lit 2) (lit 3) (lit 4))
+           )
+        """,
+        "a NOT IN (1, 2, 3, 4)"
+    )
+
+    @Test
+    fun inOperatorWithImplicitValuesRowConstructor() = assertExpression(
+        """(in
+             (list (id a) (id b))
+             (list (list (lit 1) (lit 2)) (list (lit 3) (lit 4)))
+           )
+        """,
+        "(a, b) IN ((1, 2), (3, 4))"
+    )
 }

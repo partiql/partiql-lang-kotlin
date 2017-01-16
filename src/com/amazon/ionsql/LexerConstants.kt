@@ -336,13 +336,14 @@ internal val SINGLE_LEXEME_BINARY_OPERATORS = setOf(
     "<", "<=", ">", ">=", "=", "<>",
     "||",
     "and", "or",
-    "is",
+    "is", "in",
     "like",
     "union", "except", "intersect"
 )
 
 /** Binary operators comprising two lexemes (should not map to a keyword alias). */
 internal val DOUBLE_LEXEME_TOKEN_MAP = mapOf(
+    ("not" to "in")             to ("not_in" to OPERATOR),
     ("is" to "not")             to ("is_not" to OPERATOR),
     ("intersect" to "all")      to ("intersect_all" to OPERATOR),
     ("except" to "all")         to ("except_all" to OPERATOR),
@@ -395,6 +396,8 @@ internal val INFIX_OPERATOR_PRECEDENCE = mapOf(
     "<>"        to 30,
     "is"        to 30,
     "is_not"    to 30,
+    "in"        to 30,
+    "not_in"    to 30,
 
     // comparison group
     "<"         to 40,

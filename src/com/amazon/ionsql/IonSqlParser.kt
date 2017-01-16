@@ -414,17 +414,33 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             }.deriveExpected()
             "cast" -> tail.parseCast()
             "select" -> tail.parseSelect()
+            // table value constructor--which aliases to list constructor in SQL++
+            "values" -> tail.parseArgList(
+                supportsAlias = false,
+                supportsMemberName = false,
+                boundaryTokenTypes = GROUP_AND_CALL_BOUNDARY_TOKEN_TYPES
+            ).copy(type = LIST)
             in FUNCTION_NAME_KEYWORDS -> when (tail.head?.type) {
                 LEFT_PAREN -> tail.tail.parseFunctionCall(head!!)
                 else -> err("Unexpected keyword")
             }
             else -> err("Unexpected keyword")
         }
-        LEFT_PAREN -> tail.parseExpression(
-            boundaryTokenTypes = GROUP_AND_CALL_BOUNDARY_TOKEN_TYPES
-        ).deriveExpected(
-            RIGHT_PAREN
-        )
+        LEFT_PAREN -> {
+            val group = tail.parseArgList(
+                supportsAlias = false,
+                supportsMemberName = false,
+                boundaryTokenTypes = GROUP_AND_CALL_BOUNDARY_TOKEN_TYPES
+            ).deriveExpected(RIGHT_PAREN)
+
+            when (group.children.size) {
+                0 -> tail.err("Expression group cannot be empty")
+                // expression grouping
+                1 -> group.children[0].copy(remaining = group.remaining)
+                // table/row value constructor--which aliases to list constructor in SQL++
+                else -> group.copy(type = LIST)
+            }
+        }
         LEFT_BRACKET -> tail.parseListLiteral()
         LEFT_CURLY -> tail.parseStructLiteral()
         IDENTIFIER -> when (tail.head?.type) {
