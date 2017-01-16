@@ -21,7 +21,8 @@ Where `name` is the AST node name, which can be one of:
   is to be evaluated.
 * `(list <VALUE EXPR>...)` - A *comprehension* for a list/array that is to be evaluated.
 * `(as <NAME SYMBOL> <VALUE EXPR>)` - A name aliasing/binding.
-* `(cast <VALUE EXPR> (type <TYPE NAME> ...))` - `CAST` operator
+* `(cast <VALUE EXPR> (type <TYPE NAME> ...))` - `CAST` operator.
+* `(simple_case ...)` and `(searched_case ...)` - `CASE` expression forms.
 * `(meta <NODE EXPR> <STRUCT>)` - Metadata about an enclosing AST node, from a semantic perspective
   this is a *no-op*, but can provide diagnostic context such as line/column position.
 
@@ -41,7 +42,7 @@ The following binary operators are defined in the form `(<OPNAME> <LEFT EXPR> <R
 * `<`, `<=`, `>`, `>=`, `=`, `<>` - Comparison operators.
 * `and`, `or` - Logical operators.
 * `is`, `is_not` - Identity comparison.
-* `union`, `union_all`, `except`, `intersect` - Set operators.
+* `union`, `union_all`, `except`, `except_all`, `intersect`, and `intersect_all` - Set operators.
 
 The following additional operators are defined:
 
@@ -77,6 +78,43 @@ Example:
 (cast
   (lit 5)
   (type character_varying 10)
+)
+```
+
+## `CASE` Expressions
+There are two supported forms of `CASE` expressions, the first is the `simple_case` which is
+similar to `switch` in C-like languages, and the second is `searched_case` which is
+more like a sequence of `if`/`else if`/`else` branches.
+
+Both forms have at least one `(when <VALUE EXPR> <RESULT EXPR>)` nodes and an optional
+`(else <RESULT EXPR>)` node.
+
+Simple `CASE` expressions have a common expression at the first position, the result
+of which are compared to the result of each `<VALUE EXPR>` in the `when` nodes.
+
+Example for `CASE name WHEN 'zoe' THEN 1 END`:
+
+```
+(simple_case
+  (id name)
+  (when
+    (lit "zoe")
+    (lit 1)
+  )
+)
+```
+
+Searched `CASE` expressions have no such common expression and each `<VALUE EXPR>` in the `when`
+nodes are Boolean expressions for the condition.
+
+Example for `CASE WHEN name = 'zoe' THEN 1 END`:
+
+```
+(searched_case
+  (when
+    (= (id name) (lit "zoe"))
+    (lit 1)
+  )
 )
 ```
 

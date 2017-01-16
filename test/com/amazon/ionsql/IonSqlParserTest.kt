@@ -360,4 +360,110 @@ class IonSqlParserTest : Base() {
     fun castNonTypArg() {
         parse("CAST(5 AS SELECT)")
     }
+
+    @Test
+    fun searchedCaseSingleNoElse() = assertExpression(
+        """(searched_case
+             (when
+               (= (id name) (lit "zoe"))
+               (lit 1)
+             )
+           )
+        """,
+        "CASE WHEN name = 'zoe' THEN 1 END"
+    )
+
+    @Test
+    fun searchedCaseSingleWithElse() = assertExpression(
+        """(searched_case
+             (when
+               (= (id name) (lit "zoe"))
+               (lit 1)
+             )
+             (else (lit 0))
+           )
+        """,
+        "CASE WHEN name = 'zoe' THEN 1 ELSE 0 END"
+    )
+
+    @Test
+    fun searchedCaseMultiWithElse() = assertExpression(
+        """(searched_case
+             (when
+               (= (id name) (lit "zoe"))
+               (lit 1)
+             )
+             (when
+               (> (id name) (lit "kumo"))
+               (lit 2)
+             )
+             (else (lit 0))
+           )
+        """,
+        "CASE WHEN name = 'zoe' THEN 1 WHEN name > 'kumo' THEN 2 ELSE 0 END"
+    )
+
+    @Test
+    fun simpleCaseSingleNoElse() = assertExpression(
+        """(simple_case
+             (id name)
+             (when
+               (lit "zoe")
+               (lit 1)
+             )
+           )
+        """,
+        "CASE name WHEN 'zoe' THEN 1 END"
+    )
+
+    @Test
+    fun simpleCaseSingleWithElse() = assertExpression(
+        """(simple_case
+             (id name)
+             (when
+               (lit "zoe")
+               (lit 1)
+             )
+             (else (lit 0))
+           )
+        """,
+        "CASE name WHEN 'zoe' THEN 1 ELSE 0 END"
+    )
+
+    @Test
+    fun simpleCaseMultiWithElse() = assertExpression(
+        """(simple_case
+             (id name)
+             (when
+               (lit "zoe")
+               (lit 1)
+             )
+             (when
+               (lit "kumo")
+               (lit 2)
+             )
+             (when
+               (lit "mary")
+               (lit 3)
+             )
+             (else (lit 0))
+           )
+        """,
+        "CASE name WHEN 'zoe' THEN 1 WHEN 'kumo' THEN 2 WHEN 'mary' THEN 3 ELSE 0 END"
+    )
+
+    @Test(expected = IllegalArgumentException::class)
+    fun caseOnlyEnd() {
+        parse("CASE END")
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun searchedCaseNoWhenWithElse() {
+        parse("CASE ELSE 1 END")
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun simpleCaseNoWhenWithElse() {
+        parse("CASE name ELSE 1 END")
+    }
 }

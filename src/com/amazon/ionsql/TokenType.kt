@@ -16,10 +16,12 @@ enum class TokenType {
     OPERATOR,
     KEYWORD,
     LITERAL,
-    AS,
+    // punctuation
     DOT,
     STAR,
     COMMA,
-    MISSING,
-    COLON
+    COLON,
+    // keywords that get their own token type
+    AS,
+    MISSING
 }
