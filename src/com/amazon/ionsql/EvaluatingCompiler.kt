@@ -68,7 +68,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
             ion.newEmptyStruct().apply {
                 (0 until args.size).step(2)
                     .asSequence()
-                    .map { args[it].ionValue to args[it + 1].ionValue }
+                    .map { args[it].ionValue to args[it + 1].ionValue.clone() }
                     .forEach {
                         val (nameVal, child) = it
                         val name = nameVal.text
