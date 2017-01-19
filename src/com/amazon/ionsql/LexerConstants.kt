@@ -257,7 +257,8 @@ internal val IONSQL_KEYWORDS = setOf(
     "blob",
     "struct",
     "list",
-    "sexp"
+    "sexp",
+    "bag"
 )
 
 /** All Keywords. */
@@ -294,7 +295,8 @@ internal val TYPE_NAME_ARITY_MAP = mapOf(
     "blob"              to 0..0, // Ion
     "struct"            to 0..0, // Ion
     "list"              to 0..0, // Ion
-    "sexp"              to 0..0  // Ion
+    "sexp"              to 0..0, // Ion
+    "bag"               to 0..0  // IonSQL++
     // TODO SQL-92 types BIT, BIT VARYING, DATE, TIME, INTERVAL and TIMEZONE qualifier
 )
 
