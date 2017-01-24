@@ -250,6 +250,14 @@ fun main(args: Array<String>) {
                         }
 
                         print(BAR_1)
+                        result = when (result) {
+                            // TODO make this distinction more obvious
+                            !is SequenceExprValue -> {
+                                val value = result
+                                SequenceExprValue(ION) { listOf(value).asSequence() }
+                            }
+                            else -> result
+                        }
                         for (value in result) {
                             value.ionValue.writeTo(out)
                             out.flush()
