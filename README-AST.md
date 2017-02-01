@@ -49,15 +49,13 @@ The following additional operators are defined:
 * `(between <VALUE EXPR> <START EXPR> <END EXPR>)` - Interval containment.
 
 ## `SELECT` Expressions
-The first position of the `select` node is the projection which must be one of:
+The first position of the `select` node is the projection node which is marked by
+`(project <PROJECT-EXPR>)` or `(project_distinct <PROJECT-EXPR>)` which must be one of:
 
 * `(*)` - Tuple wildcard projection, mapping to `SELECT * ...`
 * `(list <ITEM EXPR>...)` - Projection tuple-list, the expression node could have
   column names defined with an `(as ...)` node.
 * `(values <VALUE EXPR>)` - Projects a direct value.
-
-Optionally the above nodes can be wrapped with the `(distinct <PROJECTION>)` modifier
-representing `SELECT DISTINCT` modifier.
 
 The second position is a `(from <SOURCE EXPR>)` which is the `FROM` list, each element could have
 source names defined with the `(as ...)` node.

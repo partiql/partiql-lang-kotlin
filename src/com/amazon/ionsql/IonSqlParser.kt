@@ -181,17 +181,17 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             SELECT_LIST, SELECT_VALUES -> sexp {
                 addSymbol("select")
                 addSexp {
-                    var target = this
                     var projection = children[0]
 
                     // unwrap the DISTINCT modifier
                     if (children[0].type == DISTINCT) {
-                        addSymbol("distinct")
-                        target = add().newEmptySexp()
+                        addSymbol("project_distinct")
                         projection = projection.children[0]
+                    } else {
+                        addSymbol("project")
                     }
 
-                    target.run {
+                    addSexp {
                         addSymbol(when (this@toSexp.type) {
                             SELECT_LIST -> when {
                                 projection.children.isEmpty() -> "*"

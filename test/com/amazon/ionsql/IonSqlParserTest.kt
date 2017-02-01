@@ -108,61 +108,61 @@ class IonSqlParserTest : Base() {
 
     @Test
     fun selectWithSingleFrom() = assertExpression(
-        "(select (list (id a)) (from (id table1)))",
+        "(select (project (list (id a))) (from (id table1)))",
         "SELECT a FROM table1"
     )
 
     @Test
     fun selectAllWithSingleFrom() = assertExpression(
-        "(select (list (id a)) (from (id table1)))",
+        "(select (project (list (id a))) (from (id table1)))",
         "SELECT ALL a FROM table1"
     )
 
     @Test
     fun selectDistinctWithSingleFrom() = assertExpression(
-        "(select (distinct (list (id a))) (from (id table1)))",
+        "(select (project_distinct (list (id a))) (from (id table1)))",
         "SELECT DISTINCT a FROM table1"
     )
 
     @Test
     fun selectStar() = assertExpression(
-        "(select (*) (from (id table1)))",
+        "(select (project (*)) (from (id table1)))",
         "SELECT * FROM table1"
     )
 
     @Test
     fun selectAllStar() = assertExpression(
-        "(select (*) (from (id table1)))",
+        "(select (project (*)) (from (id table1)))",
         "SELECT ALL * FROM table1"
     )
 
     @Test
     fun selectDistinctStar() = assertExpression(
-        "(select (distinct (*)) (from (id table1)))",
+        "(select (project_distinct (*)) (from (id table1)))",
         "SELECT DISTINCT * FROM table1"
     )
 
     @Test
     fun selectValues() = assertExpression(
-        "(select (values (id v)) (from (as v (id table1))))",
+        "(select (project (values (id v))) (from (as v (id table1))))",
         "SELECT VALUES v FROM table1 AS v"
     )
 
     @Test
     fun selectAllValues() = assertExpression(
-        "(select (values (id v)) (from (as v (id table1))))",
+        "(select (project (values (id v))) (from (as v (id table1))))",
         "SELECT ALL VALUES v FROM table1 AS v"
     )
 
     @Test
     fun selectDistinctValues() = assertExpression(
-        "(select (distinct (values (id v))) (from (as v (id table1))))",
+        "(select (project_distinct (values (id v))) (from (as v (id table1))))",
         "SELECT DISTINCT VALUES v FROM table1 AS v"
     )
 
     @Test
     fun selectWithMissing() = assertExpression(
-        "(select (list (id a)) (from (id stuff)) (where (is (id b) (missing))))",
+        "(select (project (list (id a))) (from (id stuff)) (where (is (id b) (missing))))",
         "SELECT a FROM stuff WHERE b IS MISSING"
     )
 
@@ -174,7 +174,7 @@ class IonSqlParserTest : Base() {
     @Test
     fun selectMultipleWithMultipleFromSimpleWhere() = assertExpression(
         """(select
-             (list (id a) (id b))
+             (project (list (id a) (id b)))
              (from (as t1 (id table1)) (id table2))
              (where (call f (id t1)))
            )
@@ -185,7 +185,7 @@ class IonSqlParserTest : Base() {
     @Test
     fun selectMultipleWithMultipleFromSimpleWhereNoAsAlias() = assertExpression(
         """(select
-             (list (as a1 (id a)) (as b1 (id b)))
+             (project (list (as a1 (id a)) (as b1 (id b))))
              (from (as t1 (id table1)) (id table2))
              (where (call f (id t1)))
            )
@@ -196,7 +196,7 @@ class IonSqlParserTest : Base() {
     @Test
     fun selectCorrelatedJoin() = assertExpression(
         """(select
-             (list (id a) (id b))
+             (project (list (id a) (id b)))
              (from (as s (id stuff)) (@ (id s)))
              (where (call f (id s)))
            )
@@ -237,9 +237,11 @@ class IonSqlParserTest : Base() {
     @Test
     fun pathsAndSelect() = assertExpression(
         """(select
-             (list
-               (as a (path (call process (id t)) (lit "a") (lit 0)))
-               (as b (path (id t2) (lit "b")))
+             (project
+               (list
+                 (as a (path (call process (id t)) (lit "a") (lit 0)))
+                 (as b (path (id t2) (lit "b")))
+               )
              )
              (from
                (as t (path (id t1) (*) (lit "a")))
@@ -262,11 +264,11 @@ class IonSqlParserTest : Base() {
     @Test
     fun nestedSelectNoWhere() = assertExpression(
         """(select
-             (*)
+             (project (*))
              (from
                (path
                  (select
-                   (*)
+                   (project (*))
                    (from (id x))
                  )
                  (*)
@@ -281,11 +283,11 @@ class IonSqlParserTest : Base() {
     @Test
     fun nestedSelect() = assertExpression(
         """(select
-             (*)
+             (project (*))
              (from
                (path
                  (select
-                   (*)
+                   (project (*))
                    (from (id x))
                    (where (id b))
                  )
@@ -301,7 +303,7 @@ class IonSqlParserTest : Base() {
     @Test
     fun selectLimit() = assertExpression(
         """(select
-             (*)
+             (project (*))
              (from (id a))
              (limit (lit 10))
            )
@@ -312,7 +314,7 @@ class IonSqlParserTest : Base() {
     @Test
     fun selectWhereLimit() = assertExpression(
         """(select
-             (*)
+             (project (*))
              (from (id a))
              (where (= (id a) (lit 5)))
              (limit (lit 10))

@@ -199,7 +199,18 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 throw IllegalArgumentException("Bad arity on SELECT form $expr: ${expr.size}")
             }
 
-            val selectExprs = expr[1]
+            val projectExprs = expr[1]
+            if (projectExprs !is IonSequence || projectExprs.isEmpty) {
+                throw IllegalArgumentException(
+                    "SELECT projection node must be non-empty sequence: $projectExprs"
+                )
+            }
+            if (projectExprs[0].text != "project") {
+                throw IllegalArgumentException(
+                    "SELECT projection is not supported ${projectExprs[0].text}"
+                )
+            }
+            val selectExprs = projectExprs[1]
             if (selectExprs !is IonSequence || selectExprs.isEmpty) {
                 throw IllegalArgumentException(
                     "SELECT projection must be non-empty sequence: $selectExprs"
