@@ -38,6 +38,12 @@ class IonSqlParserTest : Base() {
     )
 
     @Test
+    fun bagLiteral() = assertExpression(
+        "(bag (id a) (lit 5) (+ (id b) (lit 6)))",
+        "<<a, 5, (b + 6)>>"
+    )
+
+    @Test
     fun structLiteral() = assertExpression(
         """(struct
              (lit "x") (id a)

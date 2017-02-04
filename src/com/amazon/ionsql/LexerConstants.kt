@@ -434,8 +434,8 @@ internal val DIGIT_CHARS = "0" + NON_ZERO_DIGIT_CHARS
 
 internal val E_NOTATION_CHARS = allCase("E")
 
-internal val NON_OVERLOADED_OPERATOR_CHARS = "^!%<>=|@"
-internal val OPERATOR_CHARS = NON_OVERLOADED_OPERATOR_CHARS + "+-*/"
+internal val NON_OVERLOADED_OPERATOR_CHARS = "^!%=|@"
+internal val OPERATOR_CHARS = NON_OVERLOADED_OPERATOR_CHARS + "+-*/<>"
 
 internal val ALPHA_CHARS = allCase("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 internal val IDENT_START_CHARS = "_\$" + ALPHA_CHARS

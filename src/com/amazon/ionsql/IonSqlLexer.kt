@@ -203,6 +203,16 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
                 delta(OPERATOR_CHARS, TERMINAL, OPERATOR)
             }
 
+            delta("<", START_AND_TERMINAL, OPERATOR) {
+                delta("=", TERMINAL, OPERATOR, delegate = initialState)
+                delta(">", TERMINAL, OPERATOR, delegate = initialState)
+                delta("<", TERMINAL, LEFT_DOUBLE_ANGLE_BRACKET, delegate = initialState)
+            }
+            delta(">", START_AND_TERMINAL, OPERATOR) {
+                delta("=", TERMINAL, OPERATOR, delegate = initialState)
+                delta(">", TERMINAL, RIGHT_DOUBLE_ANGLE_BRACKET, delegate = initialState)
+            }
+
             delta(IDENT_START_CHARS, START_AND_TERMINAL,IDENTIFIER) {
                 delta(IDENT_CONTINUE_CHARS, TERMINAL, IDENTIFIER)
             }

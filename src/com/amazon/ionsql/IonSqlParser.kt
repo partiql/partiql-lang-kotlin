@@ -33,6 +33,9 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         private val BRACKET_BOUNDARY_TOKEN_TYPES =
             setOf(RIGHT_BRACKET)
 
+        private val BAG_BOUNDARY_TOKEN_TYPES =
+            setOf(RIGHT_DOUBLE_ANGLE_BRACKET)
+
         private val STRUCT_BOUNDARY_TOKEN_TYPES =
             setOf(RIGHT_CURLY)
 
@@ -432,6 +435,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             }
         }
         LEFT_BRACKET -> tail.parseListLiteral()
+        LEFT_DOUBLE_ANGLE_BRACKET -> tail.parseBagLiteral()
         LEFT_CURLY -> tail.parseStructLiteral()
         IDENTIFIER -> when (tail.head?.type) {
             LEFT_PAREN -> tail.tail.parseFunctionCall(head!!)
@@ -674,6 +678,15 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             type = LIST
         ).deriveExpected(RIGHT_BRACKET)
 
+    private fun List<Token>.parseBagLiteral(): ParseNode =
+        parseArgList(
+            supportsAlias = false,
+            supportsMemberName = false,
+            boundaryTokenTypes = BAG_BOUNDARY_TOKEN_TYPES
+        ).copy(
+            type = BAG
+        ).deriveExpected(RIGHT_DOUBLE_ANGLE_BRACKET)
+
     private fun List<Token>.parseStructLiteral(): ParseNode =
         parseArgList(
             supportsAlias = false,
@@ -682,7 +695,6 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         ).copy(
             type = STRUCT
         ).deriveExpected(RIGHT_CURLY)
-
 
     private fun List<Token>.parseTableValues(): ParseNode =
         parseCommaList() {
