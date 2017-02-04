@@ -82,7 +82,8 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         TYPE,
         CASE,
         WHEN,
-        ELSE
+        ELSE,
+        BAG
     }
 
     internal data class ParseNode(val type: ParseType,
@@ -155,8 +156,8 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 }
                 else -> unsupported("Unsupported atom token")
             }
-            LIST -> sexp {
-                addSymbol("list")
+            CAST, PATH, LIST, BAG -> sexp {
+                addSymbol(this@toSexp.type.name.toLowerCase())
                 addChildNodes(this@toSexp)
             }
             STRUCT -> sexp {
@@ -172,10 +173,6 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             }
             UNARY, BINARY, TERNARY -> sexp {
                 addSymbol(token?.text!!)
-                addChildNodes(this@toSexp)
-            }
-            PATH -> sexp {
-                addSymbol("path")
                 addChildNodes(this@toSexp)
             }
             SELECT_LIST, SELECT_VALUES -> sexp {
@@ -225,10 +222,6 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             CALL -> sexp {
                 addSymbol("call")
                 addSymbol(token?.text!!)
-                addChildNodes(this@toSexp)
-            }
-            CAST -> sexp {
-                addSymbol("cast")
                 addChildNodes(this@toSexp)
             }
             CASE -> sexp {
@@ -414,12 +407,9 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             }.deriveExpected()
             "cast" -> tail.parseCast()
             "select" -> tail.parseSelect()
-            // table value constructor--which aliases to list constructor in SQL++
-            "values" -> tail.parseArgList(
-                supportsAlias = false,
-                supportsMemberName = false,
-                boundaryTokenTypes = GROUP_AND_CALL_BOUNDARY_TOKEN_TYPES
-            ).copy(type = LIST)
+            // table value constructor--which aliases to bag constructor in SQL++ with very
+            // specific syntax
+            "values" -> tail.parseTableValues().copy(type = BAG)
             in FUNCTION_NAME_KEYWORDS -> when (tail.head?.type) {
                 LEFT_PAREN -> tail.tail.parseFunctionCall(head!!)
                 else -> err("Unexpected keyword")
@@ -437,7 +427,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 0 -> tail.err("Expression group cannot be empty")
                 // expression grouping
                 1 -> group.children[0].copy(remaining = group.remaining)
-                // table/row value constructor--which aliases to list constructor in SQL++
+                // row value constructor--which aliases to list constructor in SQL++
                 else -> group.copy(type = LIST)
             }
         }
@@ -693,6 +683,23 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             type = STRUCT
         ).deriveExpected(RIGHT_CURLY)
 
+
+    private fun List<Token>.parseTableValues(): ParseNode =
+        parseCommaList() {
+            var rem = this
+            if (rem.head?.type != LEFT_PAREN) {
+                err("Expected $LEFT_PAREN for row value constructor")
+            }
+            rem = rem.tail
+            rem.parseArgList(
+                supportsAlias = false,
+                supportsMemberName = false,
+                boundaryTokenTypes = GROUP_AND_CALL_BOUNDARY_TOKEN_TYPES
+            ).copy(
+                type = LIST
+            ).deriveExpected(RIGHT_PAREN)
+        }
+
     private fun List<Token>.parseArgList(supportsAlias: Boolean,
                                          supportsMemberName: Boolean,
                                          boundaryTokenTypes: Set<TokenType> = emptySet()): ParseNode {
@@ -700,21 +707,19 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             supportsAlias -> ARGLIST_WITH_ALIAS_BOUNDARY_TOKEN_TYPES
             else -> ARGLIST_BOUNDARY_TOKEN_TYPES
         } union boundaryTokenTypes
-        val argList = ArrayList<ParseNode>()
-        var rem = this
 
-        fun parseField() = rem.parseExpression(
+        fun List<Token>.parseField() = parseExpression(
             boundaryTokenTypes = FIELD_NAME_BOUNDARY_TOKEN_TYPES)
-        fun parseChild() = rem.parseExpression(
+        fun List<Token>.parseChild() = parseExpression(
             boundaryTokenTypes = argListBoundaryTokenTypes)
 
-        while (rem.isNotEmpty()
-                && rem.head?.type !in boundaryTokenTypes) {
+        return parseCommaList(boundaryTokenTypes) {
+            var rem = this
             var child = when {
                 supportsMemberName -> {
-                    val field = parseField().deriveExpected(COLON)
+                    val field = rem.parseField().deriveExpected(COLON)
                     rem = field.remaining
-                    val value = parseChild()
+                    val value = rem.parseChild()
                     ParseNode(MEMBER, null, listOf(field, value), value.remaining)
                 }
                 else -> parseChild()
@@ -733,15 +738,28 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 child = ParseNode(ALIAS, name, listOf(child), rem)
             }
 
-            argList.add(child)
+            child
+        }
+    }
+
+    private inline fun List<Token>.parseCommaList(boundaryTokenTypes: Set<TokenType> = emptySet(),
+                                                  parseItem: List<Token>.() -> ParseNode): ParseNode {
+        val items = ArrayList<ParseNode>()
+        var rem = this
+
+        while (rem.isNotEmpty() && rem.head?.type !in boundaryTokenTypes) {
+            val child = rem.parseItem()
+            items.add(child)
+
+            rem = child.remaining
 
             if (rem.head?.type != COMMA) {
                 break
             }
             rem = rem.tail
-        }
 
-        return ParseNode(ARG_LIST, null, argList, rem)
+        }
+        return ParseNode(ARG_LIST, null, items, rem)
     }
 
     /** Entry point into the parser. */

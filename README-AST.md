@@ -17,9 +17,10 @@ Where `name` is the AST node name, which can be one of:
 * `(select ...)` - A `SELECT-FROM-WHERE` expression.
 * `(path <VALUE EXPR> <PATH COMPONENT EXPR>...)` - A path (which is used for normal dotted name resolution).
 * `(call <NAME SYMBOL> <VALUE EXPR>...)` - A function invocation.
-* `(struct <NAME EXPR> <VALUE EXPR>...)` - A *comprehension* for a tuple/struct that
+* `(struct <NAME EXPR> <VALUE EXPR>...)` - A *constructor* for a tuple/struct that
   is to be evaluated.
-* `(list <VALUE EXPR>...)` - A *comprehension* for a list/array that is to be evaluated.
+* `(list <VALUE EXPR>...)` - A *constructor* for a list/array that is to be evaluated.
+* `(bag <VALUE EXPR>...)` - A *constructor* for a bag that is to be evaluated.
 * `(as <NAME SYMBOL> <VALUE EXPR>)` - A name aliasing/binding.
 * `(cast <VALUE EXPR> (type <TYPE NAME> ...))` - `CAST` operator.
 * `(simple_case ...)` and `(searched_case ...)` - `CASE` expression forms.
