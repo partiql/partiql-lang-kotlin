@@ -262,7 +262,7 @@ internal val IONSQL_KEYWORDS = setOf(
 )
 
 /** All Keywords. */
-val KEYWORDS = SQL92_KEYWORDS union IONSQL_KEYWORDS
+internal val KEYWORDS = SQL92_KEYWORDS union IONSQL_KEYWORDS
 
 /** Keywords that are purely aliases to other keywords. */
 internal val KEYWORD_ALIASES = mapOf(
@@ -371,9 +371,9 @@ internal val SPECIAL_OPERATORS = setOf(
     "between"
 )
 
-val ALL_SINGLE_LEXEME_OPERATORS =
+internal val ALL_SINGLE_LEXEME_OPERATORS =
     SINGLE_LEXEME_BINARY_OPERATORS + UNARY_OPERATORS + SPECIAL_OPERATORS
-val ALL_OPERATORS =
+internal val ALL_OPERATORS =
     BINARY_OPERATORS + UNARY_OPERATORS + SPECIAL_OPERATORS
 
 /**

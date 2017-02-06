@@ -9,8 +9,8 @@ package.IonSQLSandbox = {
     dependencies = {
         1.0 = {
             IonJava = 1.0;
-            KotlinRuntime = 1.x;
-            KotlinReflect = 1.x;
+            KotlinRuntime = 1.0.x;
+            KotlinReflect = 1.0.x;
         };
     };
 
@@ -37,8 +37,8 @@ package.IonSQLSandbox = {
         1.0 = {
             JDK8 = 1.0;
             HappierTrails = 3.3;
-            Kotlin = 1.x;
-            KotlinTrails = 1.0;
+            Kotlin = 1.0.x;
+            KotlinTrails = 1.0.x;
             JarJar = 1.x;
         };
     };
