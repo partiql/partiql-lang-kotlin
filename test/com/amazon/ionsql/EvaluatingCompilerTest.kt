@@ -219,7 +219,7 @@ class EvaluatingCompilerTest : Base() {
 
     @Test
     fun selectValues() = assertEval(
-        """SELECT VALUES id FROM stores""",
+        """SELECT VALUE id FROM stores""",
         """["5", "6"]"""
     )
 

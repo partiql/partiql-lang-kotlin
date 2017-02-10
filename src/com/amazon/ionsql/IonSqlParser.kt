@@ -560,7 +560,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 // special form for * is empty arg-list
                 ParseNode(ARG_LIST, null, emptyList(), rem.tail)
             }
-            rem.head?.keywordText == "values" -> {
+            rem.head?.keywordText == "value" -> {
                 type = SELECT_VALUES
                 rem.tail.parseExpression(boundaryTokenTypes = SELECT_BOUNDARY_TOKEN_TYPES)
             }
