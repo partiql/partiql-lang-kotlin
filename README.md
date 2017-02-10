@@ -213,7 +213,7 @@ cardinality.  So if we wanted to find all stores with books having prices greate
 ```
 ionsql> SELECT * FROM stores AS s
       | WHERE exists(
-      |   SELECT * FROM stores.books.* AS b WHERE price > 9.5 AND b...id == s.id
+      |   SELECT * FROM stores.books.* AS b WHERE price > 9.5 AND b...id = s.id
       | )
       | 
 ======'
@@ -254,7 +254,7 @@ OK!
 The REPL provides the `read_file` function to stream data from a file. For example:
 
 ```
-ionsql> SELECT city FROM read_file('data.ion') AS c, `["HI", "NY"]` AS s WHERE c.state == s.$value
+ionsql> SELECT city FROM read_file('data.ion') AS c, `["HI", "NY"]` AS s WHERE c.state = s.$value
       | 
 ======'
 {

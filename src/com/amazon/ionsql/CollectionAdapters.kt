@@ -5,6 +5,7 @@
 package com.amazon.ionsql
 
 import java.util.*
+import java.util.Collections.*
 
 val <T> List<T>.head: T?
     get() = firstOrNull()
@@ -31,18 +32,29 @@ fun <T> List<T>.headTailIterator(): Iterator<Pair<T, List<T>>> = object : Iterat
  * Calculates the cartesian product of the given ordered lists of collections
  * of homogeneous values.
  *
- * Note that the requirement of the underlying [Iterable] is that it is repeatable.
+ * Note that the requirement of the underlying [Iterable] is that it is repeatable,
+ * though for singleton cases, this requirement is relaxed.
  */
 fun <T> List<Iterable<T?>>.product(): Iterable<List<T?>> = object : Iterable<List<T?>> {
     override fun iterator(): Iterator<List<T?>> {
         val collections = this@product
+
+        // special case for singleton
+        if (collections.size == 1) {
+            val iterator = collections[0].iterator()
+            return object : Iterator<List<T?>> {
+                override fun hasNext() = iterator.hasNext()
+                override fun next(): List<T?> = singletonList(iterator.next())
+            }
+        }
 
         if (collections.any { !it.iterator().hasNext() }) {
             // one of the collections is empty, the cross product is empty
             return emptyList<List<T?>>().iterator()
         }
 
-        val iterators = collections.mapTo(ArrayList()) { emptyList<T?>().iterator() }
+        val iterators: MutableList<Iterator<T?>> =
+            collections.mapTo(ArrayList()) { emptyList<T?>().iterator() }
         iterators[0] = collections[0].iterator()
 
         val curr = collections.mapTo(ArrayList<T?>()) { null }

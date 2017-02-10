@@ -18,7 +18,7 @@ import java.util.*
  * @param userFuncs Functions to provide access to in addition to the built-ins.
  */
 class EvaluatingCompiler(private val ion: IonSystem,
-                         userFuncs: Map<String, (Bindings, List<ExprValue>) -> ExprValue> = emptyMap()) : Compiler {
+                         userFuncs: @JvmSuppressWildcards Map<String, (Bindings, List<ExprValue>) -> ExprValue> = emptyMap()) : Compiler {
     private val parser = IonSqlParser(ion)
 
     private val wildcardPath = ion.newSexp().apply { add().newSymbol("*") }.seal()
