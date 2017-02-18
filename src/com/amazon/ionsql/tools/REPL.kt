@@ -214,7 +214,7 @@ fun main(args: Array<String>) {
         args.isNotEmpty() -> {
             val configSource = File(args[0]).readText(charset("UTF-8"))
             val config = evaluator.compile(configSource).eval(Bindings.empty())
-            config.bind(Bindings.empty())
+            config.bindings
         }
         else -> Bindings.empty()
     }

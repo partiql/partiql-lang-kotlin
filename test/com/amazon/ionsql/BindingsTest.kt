@@ -7,7 +7,7 @@ package com.amazon.ionsql
 import org.junit.Test
 
 class BindingsTest : Base() {
-    fun bind(text: String): Bindings = literal(text).exprValue().bind(Bindings.empty())
+    fun bind(text: String): Bindings = literal(text).exprValue().bindings
 
     fun over(text: String,
              bindingsTransform: Bindings.() -> Bindings,
@@ -27,6 +27,5 @@ class BindingsTest : Base() {
     fun delegate() = over("{a:1, b:2}", { this.delegate(bind("{b:3, c:4}")) }) {
         assertBinding("b") { ion.newInt(2) == ionValue }
         assertBinding("c") { ion.newInt(4) == ionValue }
-        assertBinding(SYS_VALUE) { literal("{a:1, b:2}") == ionValue }
     }
 }

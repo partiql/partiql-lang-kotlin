@@ -337,7 +337,8 @@ class EvaluatingCompiler(private val ion: IonSystem,
                     }
                 }
                 else -> {
-                    add(SYS_VALUE, ionVal.clone())
+                    // construct an artificial tuple for SELECT *
+                    add("value$col", ionVal.clone())
                 }
             }
         }
@@ -354,7 +355,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
     }
 
     private fun List<ExprValue?>.bind(parent: Bindings, aliases: List<String>): Bindings {
-        val locals = map { it?.bind(Bindings.empty()) }
+        val locals = map { it?.bindings }
 
         return Bindings.over { name ->
             val found = locals.asSequence()
@@ -404,7 +405,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 val name = indexVal.stringValue()
                 // delegate to bindings logic as the scope of lookup by name
                 // TODO determine if we should fail here when the member doesn't exist
-                return bind(Bindings.empty())[name] ?:
+                return bindings[name] ?:
                     ion.newNull().seal().exprValue()
             }
             else -> throw IllegalArgumentException("Cannot convert index to int/string: $indexVal")

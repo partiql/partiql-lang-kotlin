@@ -10,25 +10,10 @@ import java.math.BigDecimal
 
 class IonExprValueTest : Base() {
     fun over(expectedIonValue: IonValue,
-             name: Any?,
              block: AssertExprValue.() -> Unit = { }) =
         AssertExprValue(IonExprValue(expectedIonValue))
             .apply {
                 assertIonValue(expectedIonValue)
-                when (name) {
-                    null -> assertNoBinding(SYS_NAME)
-                    else -> assertBinding(SYS_NAME) {
-                        val nameIonVal = when (name) {
-                            is String -> ion.newString(name)
-                            is Int -> ion.newInt(name)
-                            else -> throw IllegalArgumentException("Unsupported name value: $name")
-                        }.seal()
-
-                        nameIonVal == ionValue
-                    }
-                }
-                assertBinding(SYS_VALUE) { expectedIonValue == ionValue }
-                assertBinding(SYS_VALUE) { exprValue.ionValue === ionValue }
 
                 when (expectedIonValue) {
                     is IonContainer -> expectedIonValue.map { it }
@@ -39,10 +24,8 @@ class IonExprValueTest : Base() {
 
     fun over(text: String,
              transform: IonValue.() -> IonValue = { this },
-             name: Any? = null,
              block: AssertExprValue.() -> Unit = { }) = over(
         literal(text).transform(),
-        name,
         block
     )
 
@@ -64,8 +47,8 @@ class IonExprValueTest : Base() {
     }
 
     @Test
-    fun listChild() = over("[1, 2, 3]", { this[0] }, name = 0)
+    fun listChild() = over("[1, 2, 3]", { this[0] })
 
     @Test
-    fun structChild() = over("{a: 1, b: 2, c: 3}", { this["a"]!! }, name = "a")
+    fun structChild() = over("{a: 1, b: 2, c: 3}", { this["a"]!! })
 }
