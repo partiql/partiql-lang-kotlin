@@ -21,7 +21,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         private val SELECT_BOUNDARY_TOKEN_TYPES =
             setOf(KEYWORD, RIGHT_PAREN)
 
-        private val CASE_BOUNDARY_TOKEN_TYPES =
+        private val KEYWORD_BOUNDARY_TOKEN_TYPES =
             setOf(KEYWORD)
 
         private val CAST_BOUNDARY_TOKEN_TYPES =
@@ -48,18 +48,31 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         private val FIELD_NAME_BOUNDARY_TOKEN_TYPES =
             setOf(COLON)
 
-        private fun List<Token>.err(message: String,
-                                    ctor: (String) -> Throwable = ::IllegalArgumentException): Nothing {
-            val token = head
-            val tokenMessage = when (token) {
+        private fun Token?.err(message: String,
+                              ctor: (String) -> Throwable =
+                                ::IllegalArgumentException): Nothing {
+            val tokenMessage = when (this) {
                 null -> "end of expression"
-                else -> "[${token.type} ${token.value ?: "<NONE>"}] at ${token.position ?: "<UNKNOWN>"}"
+                else -> "[${type} ${value ?: "<NONE>"}] at ${position ?: "<UNKNOWN>"}"
             }
 
             throw ctor(
                 "$message at $tokenMessage"
             )
         }
+
+        private fun List<Token>.err(message: String,
+                                    ctor: (String) -> Throwable =
+                                        ::IllegalArgumentException): Nothing =
+            head.err(message, ctor)
+
+        private fun List<Token>.atomFromHead(): ParseNode = ParseNode(ATOM, head, emptyList(), tail)
+
+        private fun List<Token>.tailExpectedKeyword(keyword: String): List<Token> =
+            when (head?.keywordText) {
+                keyword -> tail
+                else -> err("Expected ${keyword.toUpperCase()} keyword")
+            }
     }
 
     private val lexer = IonSqlLexer(ion)
@@ -70,6 +83,8 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         SELECT_VALUES,
         DISTINCT,
         WHERE,
+        GROUP,
+        GROUP_PARTIAL,
         LIMIT,
         CALL,
         ARG_LIST,
@@ -96,11 +111,11 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         val name = type.name.toLowerCase()
 
         /** Derives a [ParseNode] transforming the list of remaining tokens. */
-        fun derive(tokensHandler: (List<Token>) -> List<Token>): ParseNode =
+        fun derive(tokensHandler: List<Token>.() -> List<Token>): ParseNode =
             copy(remaining = tokensHandler(remaining))
 
         fun deriveExpected(vararg types: TokenType): ParseNode = derive {
-            var rem = it
+            var rem = this
             for (type in types) {
                 if (type != rem.head?.type) {
                     rem.err("Expected $type")
@@ -110,12 +125,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             rem
         }
 
-        fun deriveExpectedKeyword(keyword: String): ParseNode = derive {
-            if (it.head?.keywordText != keyword) {
-                it.err("Expected ${keyword.toUpperCase()}")
-            }
-            it.tail
-        }
+        fun deriveExpectedKeyword(keyword: String): ParseNode = derive { tailExpectedKeyword(keyword) }
 
         fun deriveChildren(transform: (List<ParseNode>) -> List<ParseNode>) =
             copy(children = transform(children))
@@ -217,6 +227,19 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                                 addSymbol(clause.name)
                                 addChildNodes(clause)
                             }
+                            GROUP, GROUP_PARTIAL -> addSexp {
+                                addSymbol(clause.name)
+                                addSexp {
+                                    addSymbol("by")
+                                    addChildNodes(clause.children[0])
+                                }
+                                if (clause.children.size > 1) {
+                                    addSexp {
+                                        addSymbol("name")
+                                        addSymbol(clause.children[1].token?.text!!)
+                                    }
+                                }
+                            }
                             else -> clause.unsupported("Unsupported SELECT clause")
                         }
                     }
@@ -285,9 +308,6 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         }
     }
 
-    private fun List<Token>.atomFromHead(): ParseNode =
-        ParseNode(ATOM, head, emptyList(), tail)
-
     /**
      * Parses the given token list.
      *
@@ -323,10 +343,8 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 op.isBinaryOperator -> ParseNode(BINARY, op, listOf(expr, right), rem)
                 else -> when (op.keywordText) {
                     "between" -> {
-                        if (rem.head?.keywordText != "and") {
-                            rem.err("Expected AND after BETWEEN")
-                        }
-                        val third = rem.tail.parseExpression(
+                        rem = rem.tailExpectedKeyword("and")
+                        val third = rem.parseExpression(
                             precedence = op.infixPrecedence,
                             boundaryTokenTypes = boundaryTokenTypes
                         )
@@ -449,7 +467,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         var rem = this
         val children = ArrayList<ParseNode>()
         if (isSimple) {
-            val valueExpr = parseExpression(boundaryTokenTypes = CASE_BOUNDARY_TOKEN_TYPES)
+            val valueExpr = parseExpression(boundaryTokenTypes = KEYWORD_BOUNDARY_TOKEN_TYPES)
             children.add(valueExpr)
             rem = valueExpr.remaining
         }
@@ -466,12 +484,12 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         var rem = this
         while (rem.head?.keywordText == "when") {
             val conditionExpr = rem.tail.parseExpression(
-                boundaryTokenTypes = CASE_BOUNDARY_TOKEN_TYPES
+                boundaryTokenTypes = KEYWORD_BOUNDARY_TOKEN_TYPES
             ).deriveExpectedKeyword("then")
             rem = conditionExpr.remaining
 
             val result = rem.parseExpression(
-                boundaryTokenTypes = CASE_BOUNDARY_TOKEN_TYPES
+                boundaryTokenTypes = KEYWORD_BOUNDARY_TOKEN_TYPES
             )
             rem = result.remaining
 
@@ -482,7 +500,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         }
         if (rem.head?.keywordText == "else") {
             val elseExpr = rem.tail.parseExpression(
-                boundaryTokenTypes = CASE_BOUNDARY_TOKEN_TYPES
+                boundaryTokenTypes = KEYWORD_BOUNDARY_TOKEN_TYPES
             )
             rem = elseExpr.remaining
 
@@ -589,6 +607,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         var rem = projection.remaining
         children.add(projection)
 
+        // TODO support SELECT with no FROM
         if (rem.head?.keywordText != "from") {
             rem.err("Expected FROM after SELECT list")
         }
@@ -633,6 +652,53 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                     WHERE,
                     null,
                     listOf(whereExpr),
+                    rem
+                )
+            )
+        }
+
+        if (rem.head?.keywordText == "group") {
+            rem = rem.tail
+            val type = when (rem.head?.keywordText) {
+                "partial" -> {
+                    rem = rem.tail
+                    GROUP_PARTIAL
+                }
+                else -> GROUP
+            }
+
+            val groupChildren = ArrayList<ParseNode>()
+
+            rem = rem.tailExpectedKeyword("by")
+
+            val groupKey = rem.parseArgList(
+                supportsAlias = false,
+                supportsMemberName = false,
+                boundaryTokenTypes = KEYWORD_BOUNDARY_TOKEN_TYPES
+            )
+            groupKey.children.forEach {
+                // TODO support ordinal case
+                if (it.token?.type == LITERAL) {
+                    it.token.err("Literals (including ordinals) not supported in GROUP BY")
+                }
+            }
+            groupChildren.add(groupKey)
+            rem = groupKey.remaining
+
+            if (rem.head?.keywordText == "group") {
+                rem = rem.tail.tailExpectedKeyword("as")
+
+                if (rem.head?.type != IDENTIFIER) {
+                    rem.err("Expected identifier for GROUP name")
+                }
+                groupChildren.add(rem.atomFromHead())
+                rem = rem.tail
+            }
+            children.add(
+                ParseNode(
+                    type,
+                    null,
+                    groupChildren,
                     rem
                 )
             )
@@ -697,7 +763,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         ).deriveExpected(RIGHT_CURLY)
 
     private fun List<Token>.parseTableValues(): ParseNode =
-        parseCommaList() {
+        parseCommaList {
             var rem = this
             if (rem.head?.type != LEFT_PAREN) {
                 err("Expected $LEFT_PAREN for row value constructor")

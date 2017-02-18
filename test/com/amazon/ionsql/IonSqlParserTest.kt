@@ -528,4 +528,64 @@ class IonSqlParserTest : Base() {
         """,
         "(a, b) IN ((1, 2), (3, 4))"
     )
+
+    @Test
+    fun groupBySingleId() = assertExpression(
+        """(select
+             (project (list (id a)))
+             (from (id data))
+             (group (by (id a)))
+           )
+        """,
+        "SELECT a FROM data GROUP BY a"
+    )
+
+    @Test
+    fun groupBySingleExpr() = assertExpression(
+        """(select
+             (project (list (+ (id a) (id b))))
+             (from (id data))
+             (group (by (+ (id a) (id b))))
+           )
+        """,
+        "SELECT a + b FROM data GROUP BY a + b"
+    )
+
+    @Test
+    fun groupPartialByMultiAliased() = assertExpression(
+        """(select
+             (project (list (id g)))
+             (from (id data))
+             (group_partial
+               (by
+                 (id a)
+                 (+ (id b) (id c))
+                 (call foo (id d))
+               )
+               (name g)
+             )
+           )
+        """,
+        "SELECT g FROM data GROUP PARTIAL BY a, b + c, foo(d) GROUP AS g"
+    )
+
+    @Test(expected = IllegalArgumentException::class)
+    fun groupByOrdinal() {
+        parse("SELECT a FROM data GROUP BY 1")
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun groupByOutOfBoundsOrdinal() {
+        parse("SELECT a FROM data GROUP BY 2")
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun groupByBadOrdinal() {
+        parse("SELECT a FROM data GROUP BY -1")
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun groupByStringConstantOrdinal() {
+        parse("SELECT COUNT(*) FROM data GROUP BY 'a'")
+    }
 }

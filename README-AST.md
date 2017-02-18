@@ -64,7 +64,27 @@ source names defined with the `(as ...)` node.
 All other nodes are optional and not positionally defined.  Possible nodes:
 
 * `(where <CONDITIONAL EXPR>)` - The `WHERE` clause filter expression.
+* `(group ...)` or `(group_partial ...)` - The `GROUP BY` or `GROUP PARTIAL BY` clause.
 * `(limit <EXPR>)` - The `LIMIT` clause expression. 
+
+### `GROUP BY` Clause
+The `(group ...)` and `(group_partial ...)` clause have one mandatory element:
+
+* `(by <VALUE EXPR>...)` - the expressions to group by.
+
+There is an optional second element that binds the group itself as a collection to a name
+visible in the `HAVING` clause and the `SELECT` projection clause.  It is specified as:
+
+* `(name <NAME SYMBOL>)` - the name to bind the group collections to.
+
+For example, the clause `GROUP PARTIAL BY age GROUP AS age_group`:
+
+```
+(group_partial
+  (by (id age))
+  (name age_group)
+)
+```
 
 ## `CAST` Expressions
 The first position of a `cast` node is the value expression node to be casted.  The
