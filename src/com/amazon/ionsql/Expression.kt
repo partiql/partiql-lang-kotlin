@@ -8,6 +8,6 @@ import com.amazon.ion.IonValue
 
 /** An expression that can be evaluated to [IonValue]. */
 interface Expression {
-    /** Evaluates the expression with the given environment. */
-    fun eval(env: Bindings): ExprValue
+    /** Evaluates the expression with the given global name bindings. */
+    fun eval(globals: Bindings): ExprValue
 }

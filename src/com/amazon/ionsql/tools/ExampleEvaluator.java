@@ -62,13 +62,11 @@ public class ExampleEvaluator {
         IonSystem ion = IonSystemBuilder.standard().build();
 
         // additional functions to be made available to the query
-        Map<String, Function2<Bindings, List<ExprValue>, ExprValue>> funcs = new HashMap<>();
+        Map<String, Function2<Environment, List<ExprValue>, ExprValue>> funcs = new HashMap<>();
         funcs.put(
             // a very trivial extension function
             "bork",
-            (bindings, funArgs) -> {
-                return new IonExprValue(ion.newString("BORK!"));
-            }
+            (env, funArgs) -> new IonExprValue(ion.newString("BORK!"))
         );
 
         EvaluatingCompiler evaluator = new EvaluatingCompiler(ion, funcs);
