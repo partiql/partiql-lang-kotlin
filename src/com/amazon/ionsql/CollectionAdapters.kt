@@ -16,18 +16,6 @@ val <T> List<T>.tail: List<T>
         else -> subList(1, size)
     }
 
-fun <T> List<T>.headTailIterator(): Iterator<Pair<T, List<T>>> = object : Iterator<Pair<T, List<T>>> {
-    var curr = this@headTailIterator
-
-    override fun hasNext(): Boolean = curr.isEmpty()
-
-    override fun next(): Pair<T, List<T>> {
-        val pair = Pair(curr.head!!, curr.tail)
-        curr = curr.tail
-        return pair
-    }
-}
-
 /**
  * Calculates the cartesian product of the given ordered lists of collections
  * of homogeneous values.
