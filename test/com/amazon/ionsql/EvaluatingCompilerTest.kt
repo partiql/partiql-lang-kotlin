@@ -225,7 +225,7 @@ class EvaluatingCompilerTest : Base() {
 
     @Test
     fun selectStarSingleSourceHoisted() = assertEval(
-        """SELECT * FROM stores.books.* AS b WHERE b.price >= 9.0""",
+        """SELECT * FROM stores.*.books.* AS b WHERE b.price >= 9.0""",
         """
           [
             {title:"D", price: 9.0, categories:["suspense"]},
@@ -243,7 +243,7 @@ class EvaluatingCompilerTest : Base() {
 
     @Test
     fun selectImplicitAndExplicitAliasSingleSourceHoisted() = assertEval(
-        """SELECT title AS name, price FROM stores.books.* AS b WHERE b.price >= 9.0""",
+        """SELECT title AS name, price FROM stores.*.books.* AS b WHERE b.price >= 9.0""",
         """
           [
             {name:"D", price: 9.0},
@@ -295,7 +295,7 @@ class EvaluatingCompilerTest : Base() {
     fun nestedSelectJoin() = assertEval(
         """
           SELECT ${'$'}name AS col, ${'$'}value AS val
-          FROM (SELECT * FROM animals, animal_types WHERE type = id).*
+          FROM (SELECT * FROM animals, animal_types WHERE type = id).*.*
           WHERE ${'$'}name != 'id'
         """,
         """
@@ -319,7 +319,7 @@ class EvaluatingCompilerTest : Base() {
     fun nestedSelectJoinLimit() = assertEval(
         """
           SELECT ${'$'}name AS col, ${'$'}value AS val
-          FROM (SELECT * FROM animals, animal_types WHERE type = id).*
+          FROM (SELECT * FROM animals, animal_types WHERE type = id).*.*
           WHERE ${'$'}name != 'id'
           LIMIT 6 - 3
         """,

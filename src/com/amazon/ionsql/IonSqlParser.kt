@@ -616,28 +616,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             supportsAlias = true,
             supportsMemberName = false,
             boundaryTokenTypes = SELECT_BOUNDARY_TOKEN_TYPES
-        ).deriveChildren {
-            // FROM <path> has an implicit wildcard, we need to rewrite the parse tree to
-            // handle this
-            it.map {
-                when (it.type) {
-                    PATH -> it.deriveChildren {
-                        it.injectWildCardForFromClause()
-                    }
-                    ALIAS -> it.deriveChildren {
-                        it.map {
-                            when (it.type) {
-                                PATH -> it.deriveChildren {
-                                    it.injectWildCardForFromClause()
-                                }
-                                else -> it
-                            }
-                        }
-                    }
-                    else -> it
-                }
-            }
-        }
+        )
 
         rem = fromList.remaining
         children.add(fromList)
@@ -721,9 +700,6 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
 
         return ParseNode(selectType, null, children, rem)
     }
-
-    private fun List<ParseNode>.injectWildCardForFromClause(): List<ParseNode> =
-        listOf(head!!, ParseNode(ATOM, Token(STAR), emptyList(), emptyList())) + tail
 
     private fun List<Token>.parseFunctionCall(name: Token): ParseNode =
         parseArgList(

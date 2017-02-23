@@ -250,8 +250,8 @@ class IonSqlParserTest : Base() {
                )
              )
              (from
-               (as t (path (id t1) (*) (lit "a")))
-               (path (id t2) (*) (lit "x") (*) (lit "b"))
+               (as t (path (id t1) (lit "a")))
+               (path (id t2) (lit "x") (*) (lit "b"))
              )
              (where
                (and
@@ -277,7 +277,6 @@ class IonSqlParserTest : Base() {
                    (project (*))
                    (from (id x))
                  )
-                 (*)
                  (lit "a")
                )
              )
@@ -297,7 +296,6 @@ class IonSqlParserTest : Base() {
                    (from (id x))
                    (where (id b))
                  )
-                 (*)
                  (lit "a")
                )
              )
