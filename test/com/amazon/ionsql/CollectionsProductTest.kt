@@ -6,10 +6,15 @@ package com.amazon.ionsql
 
 import org.junit.Test
 
-class CollectionsTest : Base() {
+open class CollectionsProductTest() : Base() {
     fun <T> assertCartesianProduct(collections: List<List<T>>, expected: List<List<T>>) {
-        assertEquals(expected, collections.product().toList())
+        assertEquals(expected, product(collections).toList())
+        afterProduct()
     }
+
+    open fun <T> product(collections: List<List<T>>): Iterable<List<T>> = collections.product()
+
+    open fun afterProduct() {}
 
     @Test
     fun empty() = assertCartesianProduct(
