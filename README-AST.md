@@ -56,7 +56,7 @@ The first position of the `select` node is the projection node which is marked b
 * `(*)` - Tuple wildcard projection, mapping to `SELECT * ...`
 * `(list <ITEM EXPR>...)` - Projection tuple-list, the expression node could have
   column names defined with an `(as ...)` node.
-* `(values <VALUE EXPR>)` - Projects a direct value.
+* `(value <VALUE EXPR>)` - Projects a direct value.
 
 The second position is a `(from <SOURCE EXPR>)` which is the `FROM` list, each element could have
 source names defined with the `(as ...)` node.

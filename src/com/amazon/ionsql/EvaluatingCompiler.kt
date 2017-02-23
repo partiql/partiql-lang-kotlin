@@ -240,9 +240,9 @@ class EvaluatingCompiler(private val ion: IonSystem,
                         }
                     }
                 }
-                "values" -> {
+                "value" -> {
                     if (selectExprs.size != 2) {
-                        throw IllegalArgumentException("SELECT VALUES must have a single expression")
+                        throw IllegalArgumentException("SELECT VALUE must have a single expression")
                     }
                     { joinedValues, locals ->
                         selectExprs[1].eval(locals)

@@ -80,7 +80,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
     internal enum class ParseType {
         ATOM,
         SELECT_LIST,
-        SELECT_VALUES,
+        SELECT_VALUE,
         DISTINCT,
         WHERE,
         GROUP,
@@ -188,7 +188,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 addSymbol(token?.text!!)
                 addChildNodes(this@toSexp)
             }
-            SELECT_LIST, SELECT_VALUES -> sexp {
+            SELECT_LIST, SELECT_VALUE -> sexp {
                 addSymbol("select")
                 addSexp {
                     var projection = children[0]
@@ -207,11 +207,11 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                                 projection.children.isEmpty() -> "*"
                                 else -> "list"
                             }
-                            SELECT_VALUES -> "values"
+                            SELECT_VALUE -> "value"
                             else -> unsupported("Unsupported SELECT type")
                         })
                         when (this@toSexp.type) {
-                            SELECT_VALUES -> add(projection.toSexp())
+                            SELECT_VALUE -> add(projection.toSexp())
                             else -> addChildNodes(projection)
                         }
                     }
@@ -579,7 +579,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 ParseNode(ARG_LIST, null, emptyList(), rem.tail)
             }
             rem.head?.keywordText == "value" -> {
-                type = SELECT_VALUES
+                type = SELECT_VALUE
                 rem.tail.parseExpression(boundaryTokenTypes = SELECT_BOUNDARY_TOKEN_TYPES)
             }
             else -> {

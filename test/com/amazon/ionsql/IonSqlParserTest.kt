@@ -150,19 +150,19 @@ class IonSqlParserTest : Base() {
 
     @Test
     fun selectValues() = assertExpression(
-        "(select (project (values (id v))) (from (as v (id table1))))",
+        "(select (project (value (id v))) (from (as v (id table1))))",
         "SELECT VALUE v FROM table1 AS v"
     )
 
     @Test
     fun selectAllValues() = assertExpression(
-        "(select (project (values (id v))) (from (as v (id table1))))",
+        "(select (project (value (id v))) (from (as v (id table1))))",
         "SELECT ALL VALUE v FROM table1 AS v"
     )
 
     @Test
     fun selectDistinctValues() = assertExpression(
-        "(select (project_distinct (values (id v))) (from (as v (id table1))))",
+        "(select (project_distinct (value (id v))) (from (as v (id table1))))",
         "SELECT DISTINCT VALUE v FROM table1 AS v"
     )
 
