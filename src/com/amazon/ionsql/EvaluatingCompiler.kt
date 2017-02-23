@@ -26,7 +26,11 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 userFuncs: @JvmSuppressWildcards Map<String, (Environment, List<ExprValue>) -> ExprValue>)
         : this(ion, IonSqlParser(ion), userFuncs)
 
+    private data class FromSource(val name: String, val expr: IonValue)
+
     private val wildcardPath = ion.newSexp().apply { add().newSymbol("*") }.seal()
+
+    private fun valueName(col: Int): String = "_$col"
 
     private fun aliasExtractor(seq: Sequence<IonValue>): List<String> =
         seq.mapIndexed { col, value ->
@@ -34,7 +38,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 is IonSexp -> {
                     when (value[0].text) {
                         "as", "id" -> value[1].text
-                        else -> "$col"
+                        else -> valueName(col)
                     }
                 }
                 else -> throw IllegalArgumentException("Cannot extract alias out of: $value")
@@ -252,11 +256,13 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 else -> throw IllegalArgumentException("Invalid node in SELECT: $selectExprs")
             }
 
-            val fromValues = expr[2].asSequence()
-                .drop(1)
-                .map { it.eval(env) }
-                .toList()
             val fromNames = aliasExtractor(expr[2].asSequence().drop(1))
+            val fromSources = expr[2].asSequence()
+                .drop(1)
+                .mapIndexed { idx, expr -> FromSource(fromNames[idx], expr) }
+                .toList()
+            // TODO make this support correct scoping of FROM to globals.
+            val fromEnv = env
 
             var whereExpr: IonValue? = null
             var limitExpr: IonValue? = null
@@ -270,7 +276,19 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
             SequenceExprValue(ion) {
                 // compute the join over the data sources
-                var seq = fromValues.product().asSequence()
+                var seq = fromSources
+                    .foldLeftProduct(fromEnv) { env, source ->
+                        source.expr.eval(env)
+                            .asSequence()
+                            .map { value ->
+                                // add the correlated binding
+                                // TODO make this honor correct scoping rules
+                                val childEnv = env.nest(Bindings.singleton(source.name, value))
+                                Pair(childEnv, value)
+                            }
+                            .iterator()
+                    }
+                    .asSequence()
                     .map { joinedValues ->
                         // bind the joined value to the bindings for the filter/project
                         Pair(joinedValues, joinedValues.bind(env, fromNames))
@@ -339,7 +357,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 }
                 else -> {
                     // construct an artificial tuple for SELECT *
-                    add("value$col", ionVal.clone())
+                    add(valueName(col), ionVal.clone())
                 }
             }
         }

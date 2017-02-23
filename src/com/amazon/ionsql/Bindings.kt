@@ -21,6 +21,14 @@ interface Bindings {
         fun over(func: (String) -> ExprValue?): Bindings = object : Bindings {
             override fun get(name: String): ExprValue? = func(name)
         }
+
+        /** A [Bindings] instance with exactly one mapping. */
+        fun singleton(name: String, value: ExprValue): Bindings = over {
+            when (it) {
+                name -> value
+                else -> null
+            }
+        }
     }
 
     /**

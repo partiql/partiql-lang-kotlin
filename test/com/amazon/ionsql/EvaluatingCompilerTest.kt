@@ -292,6 +292,19 @@ class EvaluatingCompilerTest : Base() {
         """
     )
 
+    @Test
+    fun selectCorrelatedJoin() = assertEval(
+        """SELECT s.id AS id, b.title AS title FROM stores AS s, s.books AS b WHERE b.price > 5""",
+        """
+          [
+            {id: "5", title: "C"},
+            {id: "5", title: "D"},
+            {id: "6", title: "E"},
+            {id: "6", title: "F"},
+          ]
+        """
+    )
+
     // FIXME This needs to be implemented as UNPIVOT
     @Ignore
     @Test
