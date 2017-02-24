@@ -4,6 +4,7 @@
 
 package com.amazon.ionsql
 
+import org.junit.Ignore
 import org.junit.Test
 class EvaluatingCompilerTest : Base() {
     val evaluator = EvaluatingCompiler(ion)
@@ -84,6 +85,9 @@ class EvaluatingCompilerTest : Base() {
 
     @Test
     fun identifier() = assertEval("i", "1")
+
+    @Test
+    fun lexicalScope() = assertEval("@i", "1")
 
     @Test
     fun functionCall() = assertEval("exists(select * from [1])", "true")
@@ -200,6 +204,30 @@ class EvaluatingCompilerTest : Base() {
     )
 
     @Test
+    fun rangeOverScalar() = assertEval(
+        "SELECT VALUE v FROM 1 AS v",
+        """[1]"""
+    )
+
+    @Test
+    fun rangeOverSexp() = assertEval(
+        "SELECT VALUE v FROM `(a b c)` AS v",
+        """[(a b c)]"""
+    )
+
+    @Test
+    fun rangeOverStruct() = assertEval(
+        "SELECT VALUE v FROM `{a:5}` AS v",
+        """[{a:5}]"""
+    )
+
+    @Test
+    fun rangeOverList() = assertEval(
+        "SELECT VALUE v FROM `[1, 2, 3]` AS v",
+        """[1, 2, 3]"""
+    )
+
+    @Test
     fun selectStarSingleSource() = assertEval(
         """SELECT * FROM animals""",
         """
@@ -292,6 +320,33 @@ class EvaluatingCompilerTest : Base() {
     )
 
     @Test
+    fun selectCorrelatedJoin() = assertEval(
+        """SELECT s.id AS id, b.title AS title FROM stores AS s, @s.books AS b WHERE b.price > 5""",
+        """
+          [
+            {id: "5", title: "C"},
+            {id: "5", title: "D"},
+            {id: "6", title: "E"},
+            {id: "6", title: "F"},
+          ]
+        """
+    )
+
+    @Test
+    fun selectNonCorrelatedJoin() = assertEval(
+        // Note that the joined s is coming from the global scope without @-operator
+        """SELECT s.id AS id, v AS title FROM stores AS s, s AS v""",
+        """
+          [
+            {id: "5", title: "hello"},
+            {id: "6", title: "hello"},
+          ]
+        """
+    )
+
+    // FIXME This needs to be implemented as UNPIVOT
+    @Ignore
+    @Test
     fun nestedSelectJoin() = assertEval(
         """
           SELECT ${'$'}name AS col, ${'$'}value AS val
@@ -315,6 +370,8 @@ class EvaluatingCompilerTest : Base() {
         """
     )
 
+    // FIXME This needs to be implemented as UNPIVOT
+    @Ignore
     @Test
     fun nestedSelectJoinLimit() = assertEval(
         """

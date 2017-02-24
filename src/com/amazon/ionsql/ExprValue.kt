@@ -20,14 +20,12 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
     val ionValue: IonValue
 
     /**
-     * Creates [Bindings] over this result.
+     * Returns the [Bindings] over this value.
      *
      * This is generally used for operations that scope over the *result*
      * of some computation.
-     *
-     * @param parent The parent to delegate to.
      */
-    fun bind(parent: Bindings): Bindings
+    val bindings: Bindings
 
     /**
      * Iterates over this value.

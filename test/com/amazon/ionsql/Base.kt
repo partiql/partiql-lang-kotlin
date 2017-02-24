@@ -19,7 +19,7 @@ open class Base : Assert() {
                                 val bindingsTransform: Bindings.() -> Bindings = { this }) {
         fun assertBindings(predicate: Bindings.() -> Boolean) =
             assertTrue(
-                exprValue.bind(Bindings.empty()).bindingsTransform().predicate()
+                exprValue.bindings.bindingsTransform().predicate()
             )
 
         fun assertBinding(name: String, predicate: ExprValue.() -> Boolean) = assertBindings {

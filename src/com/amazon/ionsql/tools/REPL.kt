@@ -171,7 +171,7 @@ private fun optionsStruct(requiredArity: Int,
  */
 fun main(args: Array<String>) {
     // TODO probably should be in "common" utility
-    val replFunctions = mapOf<String, (Bindings, List<ExprValue>) -> ExprValue>(
+    val replFunctions = mapOf<String, (Environment, List<ExprValue>) -> ExprValue>(
         "read_file" to { env, args ->
             val options = optionsStruct(1, args)
             val fileName = args[0].ionValue.stringValue()
@@ -208,13 +208,14 @@ fun main(args: Array<String>) {
         }
     )
 
-    val evaluator = EvaluatingCompiler(ION, replFunctions)
+    val parser = IonSqlParser(ION)
+    val evaluator = EvaluatingCompiler(ION, parser, replFunctions)
 
     val globals = when {
         args.isNotEmpty() -> {
             val configSource = File(args[0]).readText(charset("UTF-8"))
             val config = evaluator.compile(configSource).eval(Bindings.empty())
-            config.bind(Bindings.empty())
+            config.bindings
         }
         else -> Bindings.empty()
     }
@@ -244,7 +245,7 @@ fun main(args: Array<String>) {
                     if (source != "") {
                         result = when (line) {
                             "!!" -> ION.newEmptyList().apply {
-                                add(evaluator.parse(source))
+                                add(parser.parse(source))
                             }.exprValue()
                             else -> evaluator.compile(source).eval(locals)
                         }

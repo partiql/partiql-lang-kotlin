@@ -421,6 +421,19 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
     }
 
     private fun List<Token>.parseTerm(): ParseNode = when (head?.type) {
+        OPERATOR -> when (head?.keywordText) {
+            // the lexical scope operator is **only** allowed with identifiers
+            "@" -> when (tail.head?.type) {
+                IDENTIFIER -> ParseNode(
+                    UNARY,
+                    head,
+                    listOf(tail.atomFromHead()),
+                    tail.tail
+                )
+                else -> err("Identifier must follow @-operator")
+            }
+            else -> err("Unexpected operator")
+        }
         KEYWORD -> when (head?.keywordText) {
             "case" -> when (tail.head?.keywordText) {
                 "when" -> tail.parseCase(isSimple = false)

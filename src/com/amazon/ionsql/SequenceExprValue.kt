@@ -27,7 +27,7 @@ class SequenceExprValue(private val ion: IonSystem,
             .seal()
     }
 
-    override fun bind(parent: Bindings): Bindings = Bindings.over(this)
+    override val bindings = Bindings.empty()
 
     override fun iterator(): Iterator<ExprValue> = sequence().iterator()
 }

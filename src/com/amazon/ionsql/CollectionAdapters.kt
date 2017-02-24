@@ -16,18 +16,6 @@ val <T> List<T>.tail: List<T>
         else -> subList(1, size)
     }
 
-fun <T> List<T>.headTailIterator(): Iterator<Pair<T, List<T>>> = object : Iterator<Pair<T, List<T>>> {
-    var curr = this@headTailIterator
-
-    override fun hasNext(): Boolean = curr.isEmpty()
-
-    override fun next(): Pair<T, List<T>> {
-        val pair = Pair(curr.head!!, curr.tail)
-        curr = curr.tail
-        return pair
-    }
-}
-
 /**
  * Calculates the cartesian product of the given ordered lists of collections
  * of homogeneous values.
@@ -35,58 +23,85 @@ fun <T> List<T>.headTailIterator(): Iterator<Pair<T, List<T>>> = object : Iterat
  * Note that the requirement of the underlying [Iterable] is that it is repeatable,
  * though for singleton cases, this requirement is relaxed.
  */
-fun <T> List<Iterable<T?>>.product(): Iterable<List<T?>> = object : Iterable<List<T?>> {
-    override fun iterator(): Iterator<List<T?>> {
-        val collections = this@product
+fun <T> List<Iterable<T>>.product(): Iterable<List<T>> = foldLeftProduct(Unit) { ctx, iterable ->
+    iterable.asSequence().map { Pair<Unit, T>(ctx, it) }.iterator()
+}
 
-        // special case for singleton
-        if (collections.size == 1) {
-            val iterator = collections[0].iterator()
-            return object : Iterator<List<T?>> {
-                override fun hasNext() = iterator.hasNext()
-                override fun next(): List<T?> = singletonList(iterator.next())
-            }
-        }
+/**
+ * Constructs a cartesian product of the given ordered list of source elements, by computing
+ * the [Iterable] via a mapping function with a context.  The mapping function constructs
+ * an [Iterator] of [Pair] instances of [C] and [S] that are used to derive subsequent iterators.
+ *
+ * @param initialContext The initial context to map/fold with.
+ * @param map The mapping function to convert [S] to [Iterable] of [T] with the folded context.
+ *
+ * @param T The element type of the product.
+ * @param S The source type of the list to be map and folded upon.
+ * @param C The context to map and fold over [S].
+ */
+fun <T, S, C> List<S>.foldLeftProduct(initialContext: C,
+                                      map: (C, S) -> Iterator<Pair<C, T>>) : Iterable<List<T>> =
+    object : Iterable<List<T>> {
+        override fun iterator(): Iterator<List<T>> {
+            val sources = this@foldLeftProduct
 
-        if (collections.any { !it.iterator().hasNext() }) {
-            // one of the collections is empty, the cross product is empty
-            return emptyList<List<T?>>().iterator()
-        }
+            // seed the iterators with the highest order iterator
+            val iterators: MutableList<Iterator<Pair<C, T>>> =
+                sources.mapTo(ArrayList()) { emptyList<Pair<C, T>>().iterator() }
+            iterators[0] = map(initialContext, sources[0])
 
-        val iterators: MutableList<Iterator<T?>> =
-            collections.mapTo(ArrayList()) { emptyList<T?>().iterator() }
-        iterators[0] = collections[0].iterator()
+            return object : Iterator<List<T>> {
+                private var fetched = false
+                private val curr = sources.mapTo(ArrayList<Pair<C, T>?>()) { null }
 
-        val curr = collections.mapTo(ArrayList<T?>()) { null }
+                fun fetchIfNeeded(): Boolean {
+                    fetchLoop@ while (!fetched && iterators.any { it.hasNext() }) {
+                        // start from the least significant iterator and move towards the
+                        // most significant, finding the first iterator that isn't exhausted
+                        var idx = iterators.size - 1
+                        while (idx >= 0) {
+                            val iter = iterators[idx]
+                            if (iter.hasNext()) {
+                                break
+                            }
+                            idx--
+                        }
 
-        return object : Iterator<List<T?>> {
-            override fun hasNext(): Boolean = iterators.any { it.hasNext() }
+                        // at this point we are at the position of the next viable iterator
+                        curr[idx] = iterators[idx].next()
+                        idx++
+                        while (idx < iterators.size) {
+                            val ctx = curr[idx - 1]!!.first
+                            // we need to materialize a new iterator
+                            val iter = map(ctx, sources[idx])
+                            iterators[idx] = iter
+                            if (!iter.hasNext()) {
+                                // an empty iterator means we have no values to fetch
+                                // and we need to repeat the process
+                                continue@fetchLoop
+                            }
+                            curr[idx] = iter.next()
+                            idx++
+                        }
 
-            override fun next(): List<T?> {
-                // find the least significant iterator with something
-                var idx = iterators.size - 1
-                while (idx >= -1) {
-                    val iter = iterators[idx]
-                    if (iter.hasNext()) {
-                        break
+                        // at this point we've created the row of values
+                        fetched = true
                     }
-                    idx--
-                }
-                if (idx == -1) {
-                    throw NoSuchElementException("Exhausted iterator")
+                    return fetched
                 }
 
-                curr[idx] = iterators[idx].next()
-                idx++
-                while (idx < iterators.size) {
-                    val iter = collections[idx].iterator()
-                    iterators[idx] = iter
-                    curr[idx] = iter.next()
-                    idx++
-                }
+                override fun hasNext(): Boolean = fetchIfNeeded()
 
-                return curr.toList()
+                override fun next(): List<T> {
+                    if (!fetchIfNeeded()) {
+                        throw NoSuchElementException("Exhausted iterator")
+                    }
+
+                    fetched = false
+
+                    // generate the record
+                    return curr.map { it!!.second }
+                }
             }
         }
     }
-}

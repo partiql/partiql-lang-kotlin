@@ -7,18 +7,10 @@ package com.amazon.ionsql
 /** A simple mapping of name to [ExprValue]. */
 interface Bindings {
     companion object {
-        private val EMPTY by lazy { over { null } }
+        private val EMPTY = over { null }
 
         /** The empty bindings. */
         fun empty(): Bindings = EMPTY
-
-        /** Binds over an [ExprValue], which surfaces the `$value` name as itself. */
-        fun over(value: ExprValue): Bindings = over {
-            when (it) {
-                SYS_VALUE -> value
-                else -> null
-            }
-        }
 
         /**
          * A SAM conversion for [Bindings] from a function object.
@@ -28,6 +20,14 @@ interface Bindings {
          */
         fun over(func: (String) -> ExprValue?): Bindings = object : Bindings {
             override fun get(name: String): ExprValue? = func(name)
+        }
+
+        /** A [Bindings] instance with exactly one mapping. */
+        fun singleton(name: String, value: ExprValue): Bindings = over {
+            when (it) {
+                name -> value
+                else -> null
+            }
         }
     }
 

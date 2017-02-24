@@ -153,7 +153,7 @@ If we wanted to find all books *as their own rows* with a price greater than `7`
 we can use paths on the `FROM` for this:
 
 ```
-ionsql> SELECT * FROM stores.books.* WHERE price > 7
+ionsql> SELECT * FROM stores[*].books AS b WHERE b.price > 7
       | 
 ======'
 {
@@ -186,7 +186,7 @@ OK!
 If you wanted to also de-normalize the store ID and title into the above rows:
 
 ```
-ionsql> SELECT b...id AS store, b.title AS title FROM stores.books.* AS b WHERE b.price > 7
+ionsql> SELECT s.id AS store, b.title AS title FROM stores AS s, @s.books AS b WHERE b.price > 7
       | 
 ======'
 {
@@ -212,8 +212,8 @@ cardinality.  So if we wanted to find all stores with books having prices greate
 
 ```
 ionsql> SELECT * FROM stores AS s
-      | WHERE exists(
-      |   SELECT * FROM stores.books.* AS b WHERE price > 9.5 AND b...id = s.id
+      | WHERE EXISTS(
+      |   SELECT * FROM @s.books AS b WHERE b.price > 9.5
       | )
       | 
 ======'

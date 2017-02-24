@@ -18,14 +18,19 @@ import java.util.*
  * @param userFuncs Functions to provide access to in addition to the built-ins.
  */
 class EvaluatingCompiler(private val ion: IonSystem,
-                         userFuncs: @JvmSuppressWildcards Map<String, (Bindings, List<ExprValue>) -> ExprValue> = emptyMap()) : Compiler {
-    private val parser = IonSqlParser(ion)
+                         private val parser: Parser,
+                         userFuncs: @JvmSuppressWildcards Map<String, (Environment, List<ExprValue>) -> ExprValue>) : Compiler {
+    constructor(ion: IonSystem)
+        : this(ion, IonSqlParser(ion), emptyMap())
+    constructor(ion: IonSystem,
+                userFuncs: @JvmSuppressWildcards Map<String, (Environment, List<ExprValue>) -> ExprValue>)
+        : this(ion, IonSqlParser(ion), userFuncs)
+
+    private data class FromSource(val name: String, val expr: IonValue)
 
     private val wildcardPath = ion.newSexp().apply { add().newSymbol("*") }.seal()
 
-    private val instrinsicCall: (Bindings, IonSexp) -> ExprValue = { env, expr ->
-        expr.evalCall(env, startIndex = 0)
-    }
+    private fun valueName(col: Int): String = "_$col"
 
     private fun aliasExtractor(seq: Sequence<IonValue>): List<String> =
         seq.mapIndexed { col, value ->
@@ -33,7 +38,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 is IonSexp -> {
                     when (value[0].text) {
                         "as", "id" -> value[1].text
-                        else -> "$col"
+                        else -> valueName(col)
                     }
                 }
                 else -> throw IllegalArgumentException("Cannot extract alias out of: $value")
@@ -41,13 +46,13 @@ class EvaluatingCompiler(private val ion: IonSystem,
         }.toList()
 
     /** Dispatch table for AST "op-codes."  */
-    private val syntax: Map<String, (Bindings, IonSexp) -> ExprValue> = mapOf(
+    private val syntax: Map<String, (Environment, IonSexp) -> ExprValue> = mapOf(
         "lit" to { env, expr ->
             expr[1].exprValue()
         },
         "id" to { env, expr ->
             val name = expr[1].text
-            env[name] ?:
+            env.current[name] ?:
                 throw IllegalArgumentException("No such binding: $name")
         },
         "call" to { env, expr ->
@@ -130,6 +135,9 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 3 -> expr[1].eval(env).booleanValue() || expr[2].eval(env).booleanValue()
                 else -> throw IllegalArgumentException("Arity incorrect for 'or': $expr")
             }.exprValue()
+        },
+        "@" to { env, expr ->
+            expr[1].eval(env.flipToLocals())
         },
         "and" to { env, expr ->
             when (expr.size) {
@@ -217,7 +225,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 )
             }
 
-            val selectFunc: (List<ExprValue?>, Bindings) -> ExprValue = when (selectExprs[0].text) {
+            val selectFunc: (List<ExprValue?>, Environment) -> ExprValue = when (selectExprs[0].text) {
                 "*" -> {
                     if (selectExprs.size != 1) {
                         throw IllegalArgumentException("SELECT * must be a singleton list")
@@ -251,11 +259,12 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 else -> throw IllegalArgumentException("Invalid node in SELECT: $selectExprs")
             }
 
-            val fromValues = expr[2].asSequence()
-                .drop(1)
-                .map { it.eval(env) }
-                .toList()
             val fromNames = aliasExtractor(expr[2].asSequence().drop(1))
+            val fromSources = expr[2].asSequence()
+                .drop(1)
+                .mapIndexed { idx, expr -> FromSource(fromNames[idx], expr) }
+                .toList()
+            val fromEnv = env.flipToGlobals()
 
             var whereExpr: IonValue? = null
             var limitExpr: IonValue? = null
@@ -269,7 +278,21 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
             SequenceExprValue(ion) {
                 // compute the join over the data sources
-                var seq = fromValues.product().asSequence()
+                var seq = fromSources
+                    .foldLeftProduct(fromEnv) { env, source ->
+                        source.expr.eval(env)
+                            .asSequence()
+                            .map { value ->
+                                // add the correlated binding
+                                val childEnv = env.nest(
+                                    Bindings.singleton(source.name, value),
+                                    useAsCurrent = false
+                                )
+                                Pair(childEnv, value)
+                            }
+                            .iterator()
+                    }
+                    .asSequence()
                     .map { joinedValues ->
                         // bind the joined value to the bindings for the filter/project
                         Pair(joinedValues, joinedValues.bind(env, fromNames))
@@ -299,7 +322,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
         ion.newEmptyStruct().apply(applicator).seal().exprValue()
 
     /** Dispatch table for built-in functions. */
-    private val builtins: Map<String, (Bindings, List<ExprValue>) -> ExprValue> = mapOf(
+    private val builtins: Map<String, (Environment, List<ExprValue>) -> ExprValue> = mapOf(
         "exists" to { env, args ->
             when (args.size) {
                 1 -> {
@@ -337,26 +360,27 @@ class EvaluatingCompiler(private val ion: IonSystem,
                     }
                 }
                 else -> {
-                    add(SYS_VALUE, ionVal.clone())
+                    // construct an artificial tuple for SELECT *
+                    add(valueName(col), ionVal.clone())
                 }
             }
         }
     }
 
-    private fun IonStruct.projectSelectList(locals: Bindings,
+    private fun IonStruct.projectSelectList(env: Environment,
                                             exprs: Sequence<IonValue>,
                                             aliases: List<String>) {
         exprs.forEachIndexed { col, raw ->
             val name = aliases[col]
-            val value = raw.eval(locals)
+            val value = raw.eval(env)
             add(name, value.ionValue.clone())
         }
     }
 
-    private fun List<ExprValue?>.bind(parent: Bindings, aliases: List<String>): Bindings {
-        val locals = map { it?.bind(Bindings.empty()) }
+    private fun List<ExprValue?>.bind(parent: Environment, aliases: List<String>): Environment {
+        val locals = map { it?.bindings }
 
-        return Bindings.over { name ->
+        val bindings = Bindings.over { name ->
             val found = locals.asSequence()
                 .mapIndexed { col, value ->
                     when (name) {
@@ -369,8 +393,8 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 .filter { it != null }
                 .toList()
             when (found.size) {
-                // nothing found at our scope, go to parent
-                0 -> parent[name]
+                // nothing found at our scope, return nothing
+                0 -> null
                 // found exactly one thing, success
                 1 -> found.head!!
                 // multiple things with the same name is a conflict
@@ -378,6 +402,8 @@ class EvaluatingCompiler(private val ion: IonSystem,
                     "$name is ambigious: ${found.map { it?.ionValue }}")
             }
         }
+
+        return parent.nest(bindings)
     }
 
     private fun Boolean.exprValue(): ExprValue = ion.newBool(this).seal().exprValue()
@@ -404,7 +430,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 val name = indexVal.stringValue()
                 // delegate to bindings logic as the scope of lookup by name
                 // TODO determine if we should fail here when the member doesn't exist
-                return bind(Bindings.empty())[name] ?:
+                return bindings[name] ?:
                     ion.newNull().seal().exprValue()
             }
             else -> throw IllegalArgumentException("Cannot convert index to int/string: $indexVal")
@@ -456,7 +482,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
         get() = stringValue() ?:
             throw IllegalArgumentException("Expected non-null string: $this")
 
-    private fun IonSexp.evalCall(env: Bindings, startIndex: Int): ExprValue {
+    private fun IonSexp.evalCall(env: Environment, startIndex: Int): ExprValue {
         val name = this[startIndex].text
         val func = functions[name] ?:
             throw IllegalArgumentException("No such function: $name")
@@ -464,21 +490,21 @@ class EvaluatingCompiler(private val ion: IonSystem,
         return evalFunc(env, argIndex, func)
     }
 
-    private fun IonSexp.evalArgs(env: Bindings, startIndex: Int): List<ExprValue> =
+    private fun IonSexp.evalArgs(env: Environment, startIndex: Int): List<ExprValue> =
         (startIndex until size)
             .asSequence()
             .map { this[it] }
             .map { it.eval(env) }
             .toList()
 
-    private fun IonSexp.evalFunc(env: Bindings,
+    private fun IonSexp.evalFunc(env: Environment,
                                  argIndex: Int,
-                                 func: (Bindings, List<ExprValue>) -> ExprValue): ExprValue {
+                                 func: (Environment, List<ExprValue>) -> ExprValue): ExprValue {
         val args = evalArgs(env, argIndex)
         return func(env, args)
     }
 
-    private fun IonValue.eval(env: Bindings): ExprValue {
+    private fun IonValue.eval(env: Environment): ExprValue {
         if (this !is IonSexp) {
             throw IllegalArgumentException("AST node is not s-expression: $this")
         }
@@ -492,7 +518,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
     private fun bindOp(minArity: Int = 2,
                        maxArity: Int = 2,
-                       op: (Bindings, List<ExprValue>) -> ExprValue): (Bindings, IonSexp) -> ExprValue {
+                       op: (Environment, List<ExprValue>) -> ExprValue): (Environment, IonSexp) -> ExprValue {
         return { env, expr ->
             val arity = expr.size - 1
             when {
@@ -503,22 +529,20 @@ class EvaluatingCompiler(private val ion: IonSystem,
         }
     }
 
-    /** Parses the given source into an s-expression syntax tree. */
-    fun parse(source: String): IonSexp {
-        return parser.parse(source)
-    }
-
     // TODO support meta-nodes properly for error reporting
 
-    /** Evaluates an unbound syntax tree against a set of bindings. */
-    fun eval(ast: IonSexp, env: Bindings) = ast.filterMetaNodes().seal().eval(env)
+    /** Evaluates an unbound syntax tree against a global set of bindings. */
+    fun eval(ast: IonSexp, globals: Bindings): ExprValue {
+        val env = Environment(globals = globals, locals = globals, current = globals)
+        return ast.filterMetaNodes().seal().eval(env)
+    }
 
     /** Compiles the given source expression into a bound [Expression]. */
     override fun compile(source: String): Expression {
-        val ast = parse(source)
+        val ast = parser.parse(source)
 
         return object : Expression {
-            override fun eval(env: Bindings): ExprValue = eval(ast, env)
+            override fun eval(globals: Bindings): ExprValue = eval(ast, globals)
         }
     }
 }
