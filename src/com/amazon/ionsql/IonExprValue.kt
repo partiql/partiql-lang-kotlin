@@ -27,7 +27,7 @@ class IonExprValue(override val ionValue: IonValue) : BaseExprValue() {
     }
 
     override fun iterator(): Iterator<ExprValue> = when (ionValue) {
-        is IonContainer -> ionValue.asSequence().map { it.exprValue() }.iterator()
+        is IonList -> ionValue.asSequence().map { it.exprValue() }.iterator()
         else -> listOf(this).iterator()
     }
 }

@@ -204,6 +204,30 @@ class EvaluatingCompilerTest : Base() {
     )
 
     @Test
+    fun rangeOverScalar() = assertEval(
+        "SELECT VALUE v FROM 1 AS v",
+        """[1]"""
+    )
+
+    @Test
+    fun rangeOverSexp() = assertEval(
+        "SELECT VALUE v FROM `(a b c)` AS v",
+        """[(a b c)]"""
+    )
+
+    @Test
+    fun rangeOverStruct() = assertEval(
+        "SELECT VALUE v FROM `{a:5}` AS v",
+        """[{a:5}]"""
+    )
+
+    @Test
+    fun rangeOverList() = assertEval(
+        "SELECT VALUE v FROM `[1, 2, 3]` AS v",
+        """[1, 2, 3]"""
+    )
+
+    @Test
     fun selectStarSingleSource() = assertEval(
         """SELECT * FROM animals""",
         """
