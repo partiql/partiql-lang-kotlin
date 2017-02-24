@@ -107,6 +107,23 @@ class IonSqlParserTest : Base() {
     )
 
     @Test
+    fun atOperatorOnIdentifier() = assertExpression(
+        """(@ (id a))""",
+        "@a"
+    )
+
+    @Test
+    fun atOperatorOnPath() = assertExpression(
+        """(path (@ (id a)) (lit "b"))""",
+        "@a.b"
+    )
+
+    @Test(expected = IllegalArgumentException::class)
+    fun atOperatorOnNonIdentifier() {
+        parse("@(a)")
+    }
+
+    @Test
     fun callWithMultiple() = assertExpression(
         "(call foobar (lit 5) (lit 6) (id a))",
         "foobar(5, 6, a)"

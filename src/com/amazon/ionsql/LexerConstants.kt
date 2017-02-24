@@ -363,12 +363,12 @@ internal val BINARY_OPERATORS =
 
 /** Unary operators. */
 internal val UNARY_OPERATORS = setOf(
-    "+", "-", "not", "@"
+    "+", "-", "not"
 )
 
 /** Operators with special parsing rules. */
 internal val SPECIAL_OPERATORS = setOf(
-    "between"
+    "between", "@"
 )
 
 internal val ALL_SINGLE_LEXEME_OPERATORS =
