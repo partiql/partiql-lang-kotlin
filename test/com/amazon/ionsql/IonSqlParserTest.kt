@@ -123,6 +123,11 @@ class IonSqlParserTest : Base() {
         parse("@(a)")
     }
 
+    @Test(expected = IllegalArgumentException::class)
+    fun atOperatorDoubleOnIdentifier() {
+        parse("@@a")
+    }
+
     @Test
     fun callWithMultiple() = assertExpression(
         "(call foobar (lit 5) (lit 6) (id a))",

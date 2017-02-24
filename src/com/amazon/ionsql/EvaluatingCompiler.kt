@@ -136,6 +136,9 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 else -> throw IllegalArgumentException("Arity incorrect for 'or': $expr")
             }.exprValue()
         },
+        "@" to { env, expr ->
+            expr[1].eval(env.flipToLocals())
+        },
         "and" to { env, expr ->
             when (expr.size) {
                 3 -> expr[1].eval(env).booleanValue() && expr[2].eval(env).booleanValue()
@@ -261,8 +264,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 .drop(1)
                 .mapIndexed { idx, expr -> FromSource(fromNames[idx], expr) }
                 .toList()
-            // TODO make this support correct scoping of FROM to globals.
-            val fromEnv = env
+            val fromEnv = env.flipToGlobals()
 
             var whereExpr: IonValue? = null
             var limitExpr: IonValue? = null
@@ -282,8 +284,10 @@ class EvaluatingCompiler(private val ion: IonSystem,
                             .asSequence()
                             .map { value ->
                                 // add the correlated binding
-                                // TODO make this honor correct scoping rules
-                                val childEnv = env.nest(Bindings.singleton(source.name, value))
+                                val childEnv = env.nest(
+                                    Bindings.singleton(source.name, value),
+                                    useAsCurrent = false
+                                )
                                 Pair(childEnv, value)
                             }
                             .iterator()

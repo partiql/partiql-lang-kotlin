@@ -87,6 +87,9 @@ class EvaluatingCompilerTest : Base() {
     fun identifier() = assertEval("i", "1")
 
     @Test
+    fun lexicalScope() = assertEval("@i", "1")
+
+    @Test
     fun functionCall() = assertEval("exists(select * from [1])", "true")
 
     @Test
@@ -294,13 +297,25 @@ class EvaluatingCompilerTest : Base() {
 
     @Test
     fun selectCorrelatedJoin() = assertEval(
-        """SELECT s.id AS id, b.title AS title FROM stores AS s, s.books AS b WHERE b.price > 5""",
+        """SELECT s.id AS id, b.title AS title FROM stores AS s, @s.books AS b WHERE b.price > 5""",
         """
           [
             {id: "5", title: "C"},
             {id: "5", title: "D"},
             {id: "6", title: "E"},
             {id: "6", title: "F"},
+          ]
+        """
+    )
+
+    @Test
+    fun selectNonCorrelatedJoin() = assertEval(
+        // Note that the joined s is coming from the global scope without @-operator
+        """SELECT s.id AS id, v AS title FROM stores AS s, s AS v""",
+        """
+          [
+            {id: "5", title: "hello"},
+            {id: "6", title: "hello"},
           ]
         """
     )

@@ -16,11 +16,18 @@ data class Environment(internal val globals: Bindings,
                        internal val locals: Bindings,
                        val current: Bindings = locals) {
     /** Constructs a new nested environment with the locals being the [current] bindings. */
-    internal fun nest(newLocals: Bindings): Environment {
+    internal fun nest(newLocals: Bindings, useAsCurrent: Boolean = true): Environment {
         val derivedLocals = newLocals.delegate(locals)
-        return copy(locals = derivedLocals, current = derivedLocals)
+        val newCurrent = when {
+            useAsCurrent -> derivedLocals
+            else -> current
+        }
+        return copy(locals = derivedLocals, current = newCurrent)
     }
 
+    /** Constructs a copy of this environment wit the locals being the current bindings. */
+    internal fun flipToLocals(): Environment = copy(current = locals)
+
     /** Constructs a copy of this environment with the [globals] being the current bindings. */
-    internal fun currentAsGlobals(): Environment = copy(current = globals)
+    internal fun flipToGlobals(): Environment = copy(current = globals)
 }
