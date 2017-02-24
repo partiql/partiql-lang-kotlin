@@ -29,7 +29,7 @@ fun <T> List<Iterable<T>>.product(): Iterable<List<T>> = foldLeftProduct(Unit) {
 
 /**
  * Constructs a cartesian product of the given ordered list of source elements, by computing
- * the [Iterable] via a mapping function with a context.  The mapping function is constructs
+ * the [Iterable] via a mapping function with a context.  The mapping function constructs
  * an [Iterator] of [Pair] instances of [C] and [S] that are used to derive subsequent iterators.
  *
  * @param initialContext The initial context to map/fold with.
@@ -44,15 +44,6 @@ fun <T, S, C> List<S>.foldLeftProduct(initialContext: C,
     object : Iterable<List<T>> {
         override fun iterator(): Iterator<List<T>> {
             val sources = this@foldLeftProduct
-
-            // special case for singleton -- no data dependencies
-            if (sources.size == 1) {
-                val iterator = map(initialContext, sources[0])
-                return object : Iterator<List<T>> {
-                    override fun hasNext() = iterator.hasNext()
-                    override fun next(): List<T> = singletonList(iterator.next().second)
-                }
-            }
 
             // seed the iterators with the highest order iterator
             val iterators: MutableList<Iterator<Pair<C, T>>> =
