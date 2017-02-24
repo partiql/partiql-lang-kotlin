@@ -7,6 +7,8 @@ package com.amazon.ionsql
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
 import com.amazon.ion.system.IonSystemBuilder
+import com.amazon.ionsql.eval.Bindings
+import com.amazon.ionsql.eval.ExprValue
 import org.junit.Assert
 import java.util.*
 

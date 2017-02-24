@@ -10,7 +10,9 @@ import com.amazon.ion.*
 import com.amazon.ion.IonType.*
 import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
-import com.amazon.ionsql.*
+import com.amazon.ionsql.eval.*
+import com.amazon.ionsql.syntax.IonSqlParser
+import com.amazon.ionsql.util.*
 import java.io.*
 import java.util.*
 import java.util.concurrent.TimeUnit.MILLISECONDS
