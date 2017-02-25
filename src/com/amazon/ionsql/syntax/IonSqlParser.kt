@@ -112,9 +112,6 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
 
         fun deriveExpectedKeyword(keyword: String): ParseNode = derive { tailExpectedKeyword(keyword) }
 
-        fun deriveChildren(transform: (List<ParseNode>) -> List<ParseNode>) =
-            copy(children = transform(children))
-
         fun unsupported(message: String): Nothing =
             remaining.err(message, ::IllegalStateException)
     }
@@ -318,7 +315,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             val op = rem.head!!
             if (!op.isBinaryOperator && op.keywordText != "between") {
                 // unrecognized operator
-                break;
+                break
             }
 
             val right = rem.tail.parseExpression(
@@ -733,7 +730,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
 
     private fun List<Token>.parseArgList(aliasSupportType: AliasSupportType,
                                          mode: ArgListMode): ParseNode {
-        return parseCommaList() {
+        return parseCommaList {
             var rem = this
             var child = when (mode) {
                 STRUCT_LITERAL_ARG_LIST -> {
