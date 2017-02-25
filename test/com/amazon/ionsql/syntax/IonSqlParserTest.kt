@@ -623,4 +623,9 @@ class IonSqlParserTest : Base() {
     fun groupByStringConstantOrdinal() {
         parse("SELECT COUNT(*) FROM data GROUP BY 'a'")
     }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun leftOvers() {
+        parse("5 5")
+    }
 }
