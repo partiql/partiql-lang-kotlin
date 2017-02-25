@@ -173,6 +173,55 @@ class IonSqlParserTest : Base() {
         "SELECT ord, val FROM table1 AS val AT ord"
     )
 
+    @Test(expected = IllegalArgumentException::class)
+    fun selectWithFromAtAndAs() {
+        parse("SELECT ord, val FROM table1 AT ord AS val")
+    }
+
+    @Test
+    fun selectWithFromUnpivot() = assertExpression(
+        """
+        (select
+          (project (*))
+          (from (unpivot (id item)))
+        )
+        """,
+        "SELECT * FROM UNPIVOT item"
+    )
+
+    @Test
+    fun selectWithFromUnpivotWithAt() = assertExpression(
+        """
+        (select
+          (project (list (id ord)))
+          (from (at name (unpivot (id item))))
+        )
+        """,
+        "SELECT ord FROM UNPIVOT item AT name"
+    )
+
+    @Test
+    fun selectWithFromUnpivotWithAs() = assertExpression(
+        """
+        (select
+          (project (list (id ord)))
+          (from (as val (unpivot (id item))))
+        )
+        """,
+        "SELECT ord FROM UNPIVOT item AS val"
+    )
+
+    @Test
+    fun selectWithFromUnpivotWithAsAndAt() = assertExpression(
+        """
+        (select
+          (project (list (id ord)))
+          (from (at name (as val (unpivot (id item)))))
+        )
+        """,
+        "SELECT ord FROM UNPIVOT item AS val AT name"
+    )
+
     @Test
     fun selectAllStar() = assertExpression(
         "(select (project (*)) (from (id table1)))",

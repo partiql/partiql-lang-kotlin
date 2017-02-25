@@ -8,8 +8,9 @@ import com.amazon.ion.IonSequence
 import com.amazon.ion.IonSexp
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
-import com.amazon.ionsql.syntax.IonSqlParser.ParseType.*
 import com.amazon.ionsql.syntax.IonSqlParser.AliasSupportType.*
+import com.amazon.ionsql.syntax.IonSqlParser.ArgListMode.*
+import com.amazon.ionsql.syntax.IonSqlParser.ParseType.*
 import com.amazon.ionsql.syntax.TokenType.*
 import com.amazon.ionsql.util.*
 import java.util.*
@@ -53,6 +54,12 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         AS_AND_AT(supportsAs = true, supportsAt = true)
     }
 
+    internal enum class ArgListMode {
+        NORMAL_ARG_LIST,
+        STRUCT_LITERAL_ARG_LIST,
+        FROM_CLAUSE_ARG_LIST
+    }
+
     internal enum class ParseType {
         ATOM,
         SELECT_LIST,
@@ -62,6 +69,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         GROUP,
         GROUP_PARTIAL,
         LIMIT,
+        UNPIVOT,
         CALL,
         ARG_LIST,
         AS_ALIAS,
@@ -147,7 +155,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 }
                 else -> unsupported("Unsupported atom token")
             }
-            CAST, PATH, LIST, BAG -> sexp {
+            CAST, PATH, LIST, BAG, UNPIVOT -> sexp {
                 addSymbol(node.name)
                 addChildNodes(node)
             }
@@ -427,7 +435,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         LEFT_PAREN -> {
             val group = tail.parseArgList(
                 aliasSupportType = NONE,
-                supportsMemberName = false
+                mode = NORMAL_ARG_LIST
             ).deriveExpected(RIGHT_PAREN)
 
             when (group.children.size) {
@@ -511,7 +519,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         val typeNode = when (tail.head?.type) {
             LEFT_PAREN -> tail.tail.parseArgList(
                 aliasSupportType = NONE,
-                supportsMemberName = false
+                mode = NORMAL_ARG_LIST
             ).copy(
                 type = TYPE,
                 token = head
@@ -562,7 +570,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             else -> {
                 val list = rem.parseArgList(
                     aliasSupportType = AS_ONLY,
-                    supportsMemberName = false
+                    mode = NORMAL_ARG_LIST
                 )
                 if (list.children.isEmpty()) {
                     rem.err("Cannot have empty SELECT list")
@@ -590,7 +598,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
 
         val fromList = rem.tail.parseArgList(
             aliasSupportType = AS_AND_AT,
-            supportsMemberName = false
+            mode = FROM_CLAUSE_ARG_LIST
         )
 
         rem = fromList.remaining
@@ -625,7 +633,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
 
             val groupKey = rem.parseArgList(
                 aliasSupportType = NONE,
-                supportsMemberName = false
+                mode = NORMAL_ARG_LIST
             )
             groupKey.children.forEach {
                 // TODO support ordinal case
@@ -676,7 +684,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         else -> {
             parseArgList(
                 aliasSupportType = NONE,
-                supportsMemberName = false
+                mode = NORMAL_ARG_LIST
             ).copy(
                 type = CALL,
                 token = name
@@ -687,7 +695,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
     private fun List<Token>.parseListLiteral(): ParseNode =
         parseArgList(
             aliasSupportType = NONE,
-            supportsMemberName = false
+            mode = NORMAL_ARG_LIST
         ).copy(
             type = LIST
         ).deriveExpected(RIGHT_BRACKET)
@@ -695,7 +703,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
     private fun List<Token>.parseBagLiteral(): ParseNode =
         parseArgList(
             aliasSupportType = NONE,
-            supportsMemberName = false
+            mode = NORMAL_ARG_LIST
         ).copy(
             type = BAG
         ).deriveExpected(RIGHT_DOUBLE_ANGLE_BRACKET)
@@ -703,7 +711,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
     private fun List<Token>.parseStructLiteral(): ParseNode =
         parseArgList(
             aliasSupportType = NONE,
-            supportsMemberName = true
+            mode = STRUCT_LITERAL_ARG_LIST
         ).copy(
             type = STRUCT
         ).deriveExpected(RIGHT_CURLY)
@@ -717,26 +725,41 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             rem = rem.tail
             rem.parseArgList(
                 aliasSupportType = NONE,
-                supportsMemberName = false
+                mode = NORMAL_ARG_LIST
             ).copy(
                 type = LIST
             ).deriveExpected(RIGHT_PAREN)
         }
 
     private fun List<Token>.parseArgList(aliasSupportType: AliasSupportType,
-                                         supportsMemberName: Boolean): ParseNode {
+                                         mode: ArgListMode): ParseNode {
         return parseCommaList() {
             var rem = this
-            var child = when {
-                supportsMemberName -> {
+            var child = when (mode) {
+                STRUCT_LITERAL_ARG_LIST -> {
                     val field = rem.parseExpression().deriveExpected(COLON)
                     rem = field.remaining
                     val value = rem.parseExpression()
                     ParseNode(MEMBER, null, listOf(field, value), value.remaining)
                 }
-                else -> parseExpression()
+                FROM_CLAUSE_ARG_LIST -> {
+                    when (rem.head?.keywordText) {
+                        "unpivot" -> {
+                            val actualChild = rem.tail.parseExpression()
+                            ParseNode(
+                                UNPIVOT,
+                                null,
+                                listOf(actualChild),
+                                actualChild.remaining
+                            )
+                        }
+                        else -> rem.parseExpression()
+                    }
+                }
+                else -> rem.parseExpression()
             }
             rem = child.remaining
+
             val aliasTokenType = rem.head?.type
             if (aliasSupportType.supportsAs
                     && (aliasTokenType == AS || aliasTokenType == IDENTIFIER)) {
