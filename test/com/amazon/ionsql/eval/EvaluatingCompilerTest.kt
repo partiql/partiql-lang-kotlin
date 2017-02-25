@@ -5,12 +5,10 @@
 package com.amazon.ionsql.eval
 
 import com.amazon.ionsql.Base
-import com.amazon.ionsql.eval.Bindings
-import com.amazon.ionsql.eval.EvaluatingCompiler
-import com.amazon.ionsql.eval.ExprValue
 import com.amazon.ionsql.util.exprValue
 import org.junit.Ignore
 import org.junit.Test
+
 class EvaluatingCompilerTest : Base() {
     val evaluator = EvaluatingCompiler(ion)
 

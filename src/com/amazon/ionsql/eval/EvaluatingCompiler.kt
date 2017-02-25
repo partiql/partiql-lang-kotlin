@@ -5,7 +5,6 @@
 package com.amazon.ionsql.eval
 
 import com.amazon.ion.*
-import com.amazon.ionsql.*
 import com.amazon.ionsql.syntax.IonSqlParser
 import com.amazon.ionsql.syntax.Parser
 import com.amazon.ionsql.syntax.Token

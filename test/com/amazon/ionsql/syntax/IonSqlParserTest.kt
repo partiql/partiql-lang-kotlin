@@ -6,8 +6,7 @@ package com.amazon.ionsql.syntax
 
 import com.amazon.ion.IonSexp
 import com.amazon.ionsql.Base
-import com.amazon.ionsql.util.*
-import org.junit.Ignore
+import com.amazon.ionsql.util.filterMetaNodes
 import org.junit.Test
 
 class IonSqlParserTest : Base() {
