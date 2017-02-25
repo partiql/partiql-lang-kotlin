@@ -161,17 +161,15 @@ class IonSqlParserTest : Base() {
         "SELECT * FROM table1"
     )
 
-    @Ignore
     @Test
     fun selectWithFromAt() = assertExpression(
         "(select (project (list (id ord))) (from (at ord (id table1))))",
         "SELECT ord FROM table1 AT ord"
     )
 
-    @Ignore
     @Test
     fun selectWithFromAsAndAt() = assertExpression(
-        "(select (project (list (id ord))) (from (at ord (as val (id table1)))))",
+        "(select (project (list (id ord) (id val))) (from (at ord (as val (id table1)))))",
         "SELECT ord, val FROM table1 AS val AT ord"
     )
 
