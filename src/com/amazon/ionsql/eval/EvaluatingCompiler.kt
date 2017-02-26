@@ -23,31 +23,52 @@ import java.util.*
  */
 class EvaluatingCompiler(private val ion: IonSystem,
                          private val parser: Parser,
-                         userFuncs: @JvmSuppressWildcards Map<String, (Environment, List<ExprValue>) -> ExprValue>) : Compiler {
-    constructor(ion: IonSystem)
-        : this(ion, IonSqlParser(ion), emptyMap())
+                         userFuncs: @JvmSuppressWildcards
+                                    Map<String, (Environment, List<ExprValue>) -> ExprValue>) : Compiler {
+    constructor(ion: IonSystem) : this(ion, IonSqlParser(ion), emptyMap())
     constructor(ion: IonSystem,
-                userFuncs: @JvmSuppressWildcards Map<String, (Environment, List<ExprValue>) -> ExprValue>)
+                userFuncs: @JvmSuppressWildcards
+                           Map<String, (Environment, List<ExprValue>) -> ExprValue>)
         : this(ion, IonSqlParser(ion), userFuncs)
 
-    private data class FromSource(val name: String, val expr: IonValue)
+    private data class Alias(val asName: String, val atName: String?)
+    private data class FromSource(val alias: Alias, val expr: IonValue)
 
     private val wildcardPath = ion.newSexp().apply { add().newSymbol("*") }.seal()
 
+    private val missingValue = object : ExprValue by ion.newNull().seal().exprValue() {
+        override val type = ExprValueType.MISSING
+    }
+
     private fun valueName(col: Int): String = "_$col"
 
-    private fun aliasExtractor(seq: Sequence<IonValue>): List<String> =
-        seq.mapIndexed { col, value ->
-            when (value) {
-                is IonSexp -> {
-                    when (value[0].text) {
-                        "as", "id" -> value[1].text
-                        else -> valueName(col)
-                    }
+    private fun IonValue.extractAsName(id: Int) = when (this[0].text) {
+        "as", "id" -> this[1].text
+        else -> valueName(id)
+    }
+
+    private fun aliasExtractor(seq: Sequence<IonValue>): List<Alias> =
+        seq.mapIndexed { idx, value ->
+            var asName: String = value.extractAsName(idx)
+            val atName: String? = when (value[0].text) {
+                "at" -> {
+                    asName = value[2].extractAsName(idx)
+                    value[1].text
                 }
-                else -> throw IllegalArgumentException("Cannot extract alias out of: $value")
+                else -> null
             }
+            Alias(asName, atName)
         }.toList()
+
+    private val aliasHandler = { env: Environment, expr: IonSexp ->
+        when (expr.size) {
+            3 -> {
+                // NO-OP for evaluation--handled separately by syntax handlers
+                expr[2].eval(env)
+            }
+            else -> throw IllegalArgumentException("Bad alias: $expr")
+        }
+    }
 
     /** Dispatch table for AST "op-codes."  */
     private val syntax: Map<String, (Environment, IonSexp) -> ExprValue> = mapOf(
@@ -197,13 +218,21 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 }
             }
         },
-        "as" to { env, expr ->
-            when (expr.size) {
-                3 -> {
-                    // NO-OP for evaluation--handled separately by syntax handlers
-                    expr[2].eval(env)
+        "as" to aliasHandler,
+        "at" to aliasHandler,
+        "unpivot" to { env, expr ->
+            if (expr.size != 2) {
+                throw IllegalArgumentException("UNPIVOT form must have one expression")
+            }
+            val value = expr[1].eval(env)
+            when (value.type) {
+                // enable iteration for structs
+                ExprValueType.STRUCT -> object : ExprValue by value {
+                    override fun iterator() =
+                        ionValue.asSequence().map { it.exprValue() }.iterator()
                 }
-                else -> throw IllegalArgumentException("Bad alias: $expr")
+                // for non-struct, this is a no-op
+                else -> value
             }
         },
         "select" to { env, expr ->
@@ -244,7 +273,8 @@ class EvaluatingCompiler(private val ion: IonSystem,
                             "SELECT ... must have at least one expression"
                         )
                     }
-                    val selectNames = aliasExtractor(selectExprs.asSequence().drop(1));
+                    val selectNames =
+                        aliasExtractor(selectExprs.asSequence().drop(1)).map { it.asName };
 
                     { joinedValues, locals ->
                         applyToNewStruct {
@@ -287,9 +317,16 @@ class EvaluatingCompiler(private val ion: IonSystem,
                         source.expr.eval(env)
                             .asSequence()
                             .map { value ->
-                                // add the correlated binding
+                                // add the correlated binding(s)
+                                val alias = source.alias
                                 val childEnv = env.nest(
-                                    Bindings.singleton(source.name, value),
+                                    Bindings.over {
+                                        when (it) {
+                                            alias.asName -> value
+                                            alias.atName -> value.name
+                                            else -> null
+                                        }
+                                    },
                                     useAsCurrent = false
                                 )
                                 Pair(childEnv, value)
@@ -381,17 +418,19 @@ class EvaluatingCompiler(private val ion: IonSystem,
         }
     }
 
-    private fun List<ExprValue?>.bind(parent: Environment, aliases: List<String>): Environment {
-        val locals = map { it?.bindings }
+    private fun List<ExprValue>.bind(parent: Environment, aliases: List<Alias>): Environment {
+        val locals = map { it.bindings }
 
         val bindings = Bindings.over { name ->
             val found = locals.asSequence()
                 .mapIndexed { col, value ->
                     when (name) {
                         // the alias binds to the value itself
-                        aliases[col] -> this[col]!!
+                        aliases[col].asName -> this[col]
+                        // the alias binds to the name of the value
+                        aliases[col].atName -> this[col].name
                         // otherwise scope look up within the value
-                        else -> value?.get(name)
+                        else -> value.get(name)
                     }
                 }
                 .filter { it != null }
@@ -433,9 +472,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
             is IonText -> {
                 val name = indexVal.stringValue()
                 // delegate to bindings logic as the scope of lookup by name
-                // TODO determine if we should fail here when the member doesn't exist
-                return bindings[name] ?:
-                    ion.newNull().seal().exprValue()
+                return bindings[name] ?: missingValue
             }
             else -> throw IllegalArgumentException("Cannot convert index to int/string: $indexVal")
         }
@@ -481,6 +518,9 @@ class EvaluatingCompiler(private val ion: IonSystem,
             else -> first == second
         }
     }
+
+    private val ExprValue.name: ExprValue
+        get() = asFacet(Named::class.java)?.name ?: missingValue
 
     private val IonValue.text: String
         get() = stringValue() ?:

@@ -4,10 +4,13 @@
 
 package com.amazon.ionsql.eval
 
-import com.amazon.ion.*
+import com.amazon.ion.IonContainer
+import com.amazon.ion.IonValue
 import com.amazon.ionsql.Base
-import com.amazon.ionsql.eval.IonExprValue
+import com.amazon.ionsql.util.asFacet
 import com.amazon.ionsql.util.get
+import com.amazon.ionsql.util.intValue
+import com.amazon.ionsql.util.stringValue
 import org.junit.Test
 import java.math.BigDecimal
 
@@ -33,13 +36,19 @@ class IonExprValueTest : Base() {
     )
 
     @Test
-    fun scalarInt() = over("5")
+    fun scalarInt() = over("5") {
+        assertNull(exprValue.asFacet(Named::class.java))
+    }
 
     @Test
-    fun scalarString() = over("\"hello\"")
+    fun scalarString() = over("\"hello\"") {
+        assertNull(exprValue.asFacet(Named::class.java))
+    }
 
     @Test
-    fun list() = over("[1, 2, 3]")
+    fun list() = over("[1, 2, 3]") {
+        assertNull(exprValue.asFacet(Named::class.java))
+    }
 
     @Test
     fun struct() = over("{a: 1, b: 3.14, c: \"hello\"}") {
@@ -50,8 +59,14 @@ class IonExprValueTest : Base() {
     }
 
     @Test
-    fun listChild() = over("[1, 2, 3]", { this[0] })
+    fun listChild() = over("[1, 2, 3]", { this[0] }) {
+        val named = exprValue.asFacet(Named::class.java)!!
+        assertEquals(0, named.name.ionValue.intValue())
+    }
 
     @Test
-    fun structChild() = over("{a: 1, b: 2, c: 3}", { this["a"]!! })
+    fun structChild() = over("{a: 1, b: 2, c: 3}", { this["a"]!! }) {
+        val named = exprValue.asFacet(Named::class.java)!!
+        assertEquals("a", named.name.ionValue.stringValue())
+    }
 }

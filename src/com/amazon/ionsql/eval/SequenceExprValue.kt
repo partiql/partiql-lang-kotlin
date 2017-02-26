@@ -22,6 +22,9 @@ import com.amazon.ionsql.util.*
  */
 class SequenceExprValue(private val ion: IonSystem,
                         private val sequence: () -> Sequence<ExprValue>) : BaseExprValue() {
+    // TODO allow a sequence to report itself as a LIST for ORDER BY cases
+    override val type = ExprValueType.BAG
+
     override val ionValue: IonValue by lazy {
         asSequence()
             .mapTo(ion.newEmptyList()) { it.ionValue.clone() }
@@ -30,5 +33,9 @@ class SequenceExprValue(private val ion: IonSystem,
 
     override val bindings = Bindings.empty()
 
-    override fun iterator(): Iterator<ExprValue> = sequence().iterator()
+    override fun iterator() = sequence()
+        // TODO make this expose the ordinal for ordered sequences
+        // make sure we don't expose the underlying value's name
+        .map { it.unnamedValue() }
+        .iterator()
 }

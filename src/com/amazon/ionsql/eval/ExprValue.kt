@@ -8,9 +8,12 @@ import com.amazon.ion.IonValue
 import com.amazon.ion.facet.Faceted
 
 /**
- * Representation of a result of an [Expression].
+ * Representation of a value within the context of an [Expression].
  */
 interface ExprValue : Iterable<ExprValue>, Faceted {
+    /** The type of value independent of its implementation. */
+    val type: ExprValueType
+
     /**
      * Materializes the expression value as an [IonValue].
      *

@@ -17,3 +17,22 @@ fun ExprValue.orderedNamesValue(names: List<String>): ExprValue =
         override fun <T : Any?> asFacet(type: Class<T>?): T? =
             downcast(type) ?: this@orderedNamesValue.asFacet(type)
     }
+
+/** Wraps the given [ExprValue] as a [Named] instance */
+fun ExprValue.asNamed(): Named = object : Named {
+    override val name: ExprValue
+        get() = this@asNamed
+}
+
+/** Wraps this [ExprValue] in a delegate that always masks the [Named] facet. */
+fun ExprValue.unnamedValue(): ExprValue = when (asFacet(Named::class.java)) {
+    null -> this
+    else -> object : ExprValue by this {
+        override fun <T : Any?> asFacet(type: Class<T>?): T? =
+            when (type) {
+                // always mask the name facet
+                Named::class.java -> null
+                else -> this@unnamedValue.asFacet(type)
+            }
+    }
+}

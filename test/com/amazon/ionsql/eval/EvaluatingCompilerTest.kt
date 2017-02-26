@@ -231,6 +231,24 @@ class EvaluatingCompilerTest : Base() {
     )
 
     @Test
+    fun rangeOverListWithAt() = assertEval(
+        "SELECT VALUE i FROM `[1, 2, 3]` AT i",
+        """[0, 1, 2]"""
+    )
+
+    @Test
+    fun rangeOverListWithAsAndAt() = assertEval(
+        "SELECT VALUE [i, v] FROM `[1, 2, 3]` AS v AT i",
+        """[[0, 1], [1, 2], [2, 3]]"""
+    )
+
+    @Test
+    fun rangeOverNestedWithAt() = assertEval(
+        "SELECT VALUE i FROM (SELECT VALUE v FROM `[1, 2, 3]` AS v) AT i",
+        """[null, null, null]"""
+    )
+
+    @Test
     fun selectStarSingleSource() = assertEval(
         """SELECT * FROM animals""",
         """
@@ -347,14 +365,30 @@ class EvaluatingCompilerTest : Base() {
         """
     )
 
-    // FIXME This needs to be implemented as UNPIVOT
-    @Ignore
     @Test
-    fun nestedSelectJoin() = assertEval(
+    fun selectCorrelatedUnpivot() = assertEval(
         """
-          SELECT ${'$'}name AS col, ${'$'}value AS val
-          FROM (SELECT * FROM animals, animal_types WHERE type = id).*.*
-          WHERE ${'$'}name != 'id'
+          SELECT n1, n2, n3, n4, val
+          FROM UNPIVOT a AS b AT n1,
+               UNPIVOT @b AS c AT n2,
+               UNPIVOT @c AS d AT n3,
+               UNPIVOT @d AS val AT n4
+        """,
+        """
+          [
+            {n1: "b", n2: "c", n3: "d", n4: "e", val: 5},
+            {n1: "b", n2: "c", n3: "d", n4: "f", val: 6}
+          ]
+        """
+    )
+
+    @Test
+    fun nestedSelectJoinWithUnpivot() = assertEval(
+        """
+          SELECT col, val
+          FROM (SELECT * FROM animals, animal_types WHERE type = id) AS a,
+               UNPIVOT @a AS val AT col
+          WHERE col != 'id'
         """,
         """
           [
@@ -373,14 +407,13 @@ class EvaluatingCompilerTest : Base() {
         """
     )
 
-    // FIXME This needs to be implemented as UNPIVOT
-    @Ignore
     @Test
     fun nestedSelectJoinLimit() = assertEval(
         """
-          SELECT ${'$'}name AS col, ${'$'}value AS val
-          FROM (SELECT * FROM animals, animal_types WHERE type = id).*.*
-          WHERE ${'$'}name != 'id'
+          SELECT col, val
+          FROM (SELECT * FROM animals, animal_types WHERE type = id) AS a,
+               UNPIVOT @a AS val AT col
+          WHERE col != 'id'
           LIMIT 6 - 3
         """,
         """

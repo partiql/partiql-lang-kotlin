@@ -13,8 +13,18 @@ import com.amazon.ionsql.util.*
 class IonExprValue(override val ionValue: IonValue) : BaseExprValue() {
     private val ion = ionValue.system
 
+    private val namedFacet: Named? = when {
+        ionValue.fieldName != null -> ion.newString(ionValue.fieldName).seal().exprValue().asNamed()
+        ionValue.type != IonType.DATAGRAM
+            && ionValue.container != null
+            && ionValue.ordinal >= 0 -> ion.newInt(ionValue.ordinal).seal().exprValue().asNamed()
+        else -> null
+    }
+
     private fun String.toIon() = ion.newString(this)
     private fun Int.toIon() = ion.newInt(this)
+
+    override val type = ExprValueType.fromIonType(ionValue.type)
 
     override val bindings by lazy {
         Bindings.over { name ->
@@ -27,8 +37,14 @@ class IonExprValue(override val ionValue: IonValue) : BaseExprValue() {
         }
     }
 
-    override fun iterator(): Iterator<ExprValue> = when (ionValue) {
+    override fun iterator() = when (ionValue) {
         is IonList -> ionValue.asSequence().map { it.exprValue() }.iterator()
         else -> listOf(this).iterator()
     }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T> provideFacet(type: Class<T>?) = when(type) {
+        Named::class.java -> namedFacet
+        else -> null
+    } as T?
 }
