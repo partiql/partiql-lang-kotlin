@@ -36,3 +36,14 @@ fun ExprValue.unnamedValue(): ExprValue = when (asFacet(Named::class.java)) {
             }
     }
 }
+
+/** Unpivots a `struct`, and does nothing for any other [ExprValue]. */
+fun ExprValue.unpivot(): ExprValue = when (type) {
+    // enable iteration for structs
+    ExprValueType.STRUCT -> object : ExprValue by this {
+        override fun iterator() =
+            ionValue.asSequence().map { it.exprValue() }.iterator()
+    }
+    // for non-struct, this is a no-op
+    else -> this
+}

@@ -21,6 +21,7 @@ Where `name` is the AST node name, which can be one of:
   is to be evaluated.
 * `(list <VALUE EXPR>...)` - A *constructor* for a list/array that is to be evaluated.
 * `(bag <VALUE EXPR>...)` - A *constructor* for a bag that is to be evaluated.
+* `(unpivot <VALUE EXPR>)` - Treat a struct as a collection.
 * `(as <NAME SYMBOL> <VALUE EXPR>)` - A name aliasing/binding for a value.
 * `(at <NAME SYMBOL> <VALUE EXPR>)` - An ordinal or attribute name binding.
 * `(cast <VALUE EXPR> (type <TYPE NAME> ...))` - `CAST` operator.
@@ -49,6 +50,11 @@ The following binary operators are defined in the form `(<OPNAME> <LEFT EXPR> <R
 The following additional operators are defined:
 
 * `(between <VALUE EXPR> <START EXPR> <END EXPR>)` - Interval containment.
+
+## Path Component Expressions
+In addition to any normal expression, a path component can be the special form `(*)` which
+is the wildcard that is syntactically equivalent to the path component `[*]` and
+`(* unpivot)` which is syntactically equivalent to the path component `.*`. 
 
 ## `SELECT` Expressions
 The first position of the `select` node is the projection node which is marked by
@@ -164,6 +170,5 @@ The above would indicate the the integer literal `5` was located at line 1, colu
 
 ## TODO
 * Support `JOIN` constructs.
-* Support `GROUP BY` and `HAVING`.
-* Support `SELECT` projection modifiers (e.g. `DISTINCT`)
-* Support `ORDER BY`
+* Support `HAVING`.
+* Support `ORDER BY`.

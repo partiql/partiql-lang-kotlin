@@ -198,18 +198,69 @@ class EvaluatingCompilerTest : Base() {
     fun pathIndexing() = assertEval("stores[0].books[2].title", "\"C\"")
 
     @Test
-    fun pathWildcard() = assertEval("stores[0].books.*.title", """["A", "B", "C", "D"]""")
+    fun pathWildcard() = assertEval("stores[0].books[*].title", """["A", "B", "C", "D"]""")
+
+    @Test
+    fun pathUnpivotWildcard() = assertEval("stores[0].books.*.title", """["A", "B", "C", "D"]""")
 
     @Test
     fun pathDoubleWildCard() = assertEval(
+        "stores[*].books[*].title",
+        """["A", "B", "C", "D", "A", "E", "F"]"""
+    )
+
+    @Test
+    fun pathDoubleUnpivotWildCard() = assertEval(
         "stores.*.books.*.title",
         """["A", "B", "C", "D", "A", "E", "F"]"""
+    )
+
+    @Test
+    fun pathWildCardOverScalar() = assertEval(
+        "s[*]",
+        """["hello"]"""
+    )
+
+    @Test
+    fun pathUnpivotWildCardOverScalar() = assertEval(
+        "s.*",
+        """["hello"]"""
+    )
+
+    @Test
+    fun pathWildCardOverScalarMultiple() = assertEval(
+        "(100)[*][*][*]",
+        """[100]"""
+    )
+
+    @Test
+    fun pathUnpivotWildCardOverScalarMultiple() = assertEval(
+        "(100).*.*.*",
+        """[100]"""
+    )
+
+    @Test
+    fun pathWildCardOverStructMultiple() = assertEval(
+        "a[*][*][*][*]",
+        """[{b:{c:{d:{e:5, f:6}}}}]"""
+    )
+
+    @Test
+    fun pathUnpivotWildCardOverStructMultiple() = assertEval(
+        "a.*.*.*.*",
+        """[5, 6]"""
     )
 
     @Test
     fun rangeOverScalar() = assertEval(
         "SELECT VALUE v FROM 1 AS v",
         """[1]"""
+    )
+
+    @Test
+    fun rangeTwiceOverScalar() = assertEval(
+        "SELECT VALUE [v1, v2] FROM 1 AS v1, @v1 AS v2",
+        """[[1, 1]]"""
     )
 
     @Test

@@ -309,15 +309,20 @@ class IonSqlParserTest : Base() {
 
     @Test
     fun dotStar() = assertExpression(
-        """(path (call foo (id x) (id y)) (lit "a") (*) (lit "b"))""",
+        """(path (call foo (id x) (id y)) (lit "a") (* unpivot) (lit "b"))""",
         "foo(x, y).a.*.b"
     )
 
     @Test
-    fun dotDotAndStar() = assertExpression(
+    fun dotAndBracketStar() = assertExpression(
         """(path (id x) (lit "a") (*) (lit "b"))""",
-        "x.a.*.b"
+        "x.a[*].b"
     )
+
+    @Test(expected = IllegalArgumentException::class)
+    fun tooManyDots() {
+        parse("x...a")
+    }
 
     @Test
     fun bracket() = assertExpression(
@@ -336,7 +341,7 @@ class IonSqlParserTest : Base() {
              )
              (from
                (as t (path (id t1) (lit "a")))
-               (path (id t2) (lit "x") (*) (lit "b"))
+               (path (id t2) (lit "x") (* unpivot) (lit "b"))
              )
              (where
                (and

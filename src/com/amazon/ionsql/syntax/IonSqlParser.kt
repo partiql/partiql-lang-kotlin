@@ -62,6 +62,8 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
 
     internal enum class ParseType {
         ATOM,
+        PATH_WILDCARD,
+        PATH_WILDCARD_UNPIVOT,
         SELECT_LIST,
         SELECT_VALUE,
         DISTINCT,
@@ -147,9 +149,6 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                     addSymbol("id")
                     addSymbol(token?.text!!)
                 }
-                STAR -> sexp {
-                    addSymbol("*")
-                }
                 else -> unsupported("Unsupported atom token")
             }
             CAST, PATH, LIST, BAG, UNPIVOT -> sexp {
@@ -166,6 +165,12 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                     addChildNodes(child)
                 }
 
+            }
+            PATH_WILDCARD, PATH_WILDCARD_UNPIVOT -> sexp {
+                addSymbol("*")
+                if (node.type == PATH_WILDCARD_UNPIVOT) {
+                    addSymbol("unpivot")
+                }
             }
             UNARY, BINARY, TERNARY -> sexp {
                 addSymbol(token?.text!!)
@@ -367,25 +372,25 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                     // consume first dot
                     rem = rem.tail
 
-                    // consume all dots succeeding the initial one as a parent ref
-                    while (rem.head?.type == DOT) {
-                        path.add(rem.atomFromHead())
-                        rem = rem.tail
-                    }
-
                     when (rem.head?.type) {
                         IDENTIFIER -> {
                             // re-write the identifier as a literal string element
                             val token = Token(LITERAL, ion.newString(rem.head?.text!!))
                             path.add(ParseNode(ATOM, token, emptyList(), rem.tail))
                         }
-                        STAR -> path.add(rem.atomFromHead())
+                        STAR -> path.add(
+                            ParseNode(PATH_WILDCARD_UNPIVOT, rem.head, emptyList(), rem.tail)
+                        )
                         else -> err("Invalid path dot component")
                     }
                     rem = rem.tail
                 }
                 LEFT_BRACKET -> {
-                    val expr = rem.tail.parseExpression().deriveExpected(RIGHT_BRACKET)
+                    rem = rem.tail
+                    val expr = when (rem.head?.type) {
+                        STAR -> ParseNode(PATH_WILDCARD, rem.head, emptyList(), rem.tail)
+                        else -> rem.parseExpression()
+                    }.deriveExpected(RIGHT_BRACKET)
                     path.add(expr)
                     rem = expr.remaining
                 }

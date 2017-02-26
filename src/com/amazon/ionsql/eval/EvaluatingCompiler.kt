@@ -34,10 +34,23 @@ class EvaluatingCompiler(private val ion: IonSystem,
     private data class Alias(val asName: String, val atName: String?)
     private data class FromSource(val alias: Alias, val expr: IonValue)
 
-    private val wildcardPath = ion.newSexp().apply { add().newSymbol("*") }.seal()
+    private enum class PathWildcardKind(val isWildcard: Boolean) {
+        NONE(isWildcard = false),
+        NORMAL(isWildcard = true),
+        UNPIVOT(isWildcard = true)
+    }
+
+    private val normalPathWildcard = ion.singleValue("(*)").seal()
+    private val unpivotPathWildcard = ion.singleValue("(* unpivot)").seal()
 
     private val missingValue = object : ExprValue by ion.newNull().seal().exprValue() {
         override val type = ExprValueType.MISSING
+    }
+
+    private fun IonValue.determinePathWildcard(): PathWildcardKind = when (this) {
+        normalPathWildcard -> PathWildcardKind.NORMAL
+        unpivotPathWildcard -> PathWildcardKind.UNPIVOT
+        else -> PathWildcardKind.NONE
     }
 
     private fun valueName(col: Int): String = "_$col"
@@ -175,18 +188,20 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 throw IllegalArgumentException("Path arity to low: $expr")
             }
 
-            var root = expr[1].eval(env)
+            var curr = expr[1].eval(env)
+            var firstWildcardKind = PathWildcardKind.NONE
 
             // extract all the non-wildcard paths
             var idx = 2
             while (idx < expr.size) {
                 val raw = expr[idx]
-                if (raw == wildcardPath) {
+                firstWildcardKind = raw.determinePathWildcard()
+                if (firstWildcardKind.isWildcard) {
                     // need special processing for the rest of the path
                     break
                 }
 
-                root = root[raw.eval(env)]
+                curr = curr[raw.eval(env)]
                 idx++
             }
 
@@ -194,23 +209,31 @@ class EvaluatingCompiler(private val ion: IonSystem,
             val components = ArrayList<(ExprValue) -> Sequence<ExprValue>>()
             while (idx < expr.size) {
                 val raw = expr[idx]
-                components.add(when (raw) {
+                val wildcardKind = raw.determinePathWildcard()
+                components.add(when (wildcardKind) {
                     // treat the entire value as a sequence
-                    wildcardPath -> { exprVal ->
+                    PathWildcardKind.NORMAL -> { exprVal ->
                         exprVal.asSequence()
                     }
+                    // treat the entire value as a sequence
+                    PathWildcardKind.UNPIVOT -> { exprVal ->
+                        exprVal.unpivot().asSequence()
+                    }
                     // "index" into the value lazily
-                    else -> { exprVal ->
+                    PathWildcardKind.NONE -> { exprVal ->
                         sequenceOf(exprVal[raw.eval(env)])
                     }
                 })
                 idx++
             }
 
-            when (components.size) {
-                0 -> root
+            when (firstWildcardKind) {
+                PathWildcardKind.NONE -> curr
                 else -> SequenceExprValue(ion) {
-                    var seq = sequenceOf(root)
+                    if (firstWildcardKind == PathWildcardKind.UNPIVOT) {
+                        curr = curr.unpivot()
+                    }
+                    var seq = sequenceOf(curr)
                     for (component in components) {
                         seq = seq.flatMap(component)
                     }
@@ -224,16 +247,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
             if (expr.size != 2) {
                 throw IllegalArgumentException("UNPIVOT form must have one expression")
             }
-            val value = expr[1].eval(env)
-            when (value.type) {
-                // enable iteration for structs
-                ExprValueType.STRUCT -> object : ExprValue by value {
-                    override fun iterator() =
-                        ionValue.asSequence().map { it.exprValue() }.iterator()
-                }
-                // for non-struct, this is a no-op
-                else -> value
-            }
+            expr[1].eval(env).unpivot()
         },
         "select" to { env, expr ->
             if (expr.size < 3) {
