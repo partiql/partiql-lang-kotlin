@@ -74,6 +74,7 @@ All other nodes are optional and not positionally defined.  Possible nodes:
 
 * `(where <CONDITIONAL EXPR>)` - The `WHERE` clause filter expression.
 * `(group ...)` or `(group_partial ...)` - The `GROUP BY` or `GROUP PARTIAL BY` clause.
+* `(having <CONDITIONAL EXPR>)` - The `HAVING` clause filter expression.
 * `(limit <EXPR>)` - The `LIMIT` clause expression. 
 
 ### `GROUP BY` Clause

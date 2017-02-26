@@ -674,11 +674,50 @@ class IonSqlParserTest : Base() {
 
     @Test(expected = IllegalArgumentException::class)
     fun groupByStringConstantOrdinal() {
-        parse("SELECT COUNT(*) FROM data GROUP BY 'a'")
+        parse("SELECT a FROM data GROUP BY 'a'")
     }
 
     @Test(expected = IllegalArgumentException::class)
     fun leftOvers() {
         parse("5 5")
     }
+
+    @Test
+    fun havingMinimal() = assertExpression(
+        """
+          (select
+            (project (list (id a)))
+            (from (id data))
+            (having (= (id a) (id b)))
+          )
+        """,
+        "SELECT a FROM data HAVING a = b"
+    )
+
+    @Test
+    fun havingWithWhere() = assertExpression(
+        """
+          (select
+            (project (list (id a)))
+            (from (id data))
+            (where (= (id a) (id b)))
+            (having (= (id c) (id d)))
+          )
+        """,
+        "SELECT a FROM data WHERE a = b HAVING c = d"
+    )
+
+    @Test
+    fun havingWithWhereAndGroupBy() = assertExpression(
+        """
+          (select
+            (project (list (id g)))
+            (from (id data))
+            (where (= (id a) (id b)))
+            (group (by (id c) (id d)) (name g))
+            (having (> (id d) (lit 6)))
+          )
+        """,
+        "SELECT g FROM data WHERE a = b GROUP BY c, d GROUP AS g HAVING d > 6"
+    )
 }

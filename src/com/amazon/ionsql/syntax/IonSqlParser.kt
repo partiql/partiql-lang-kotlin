@@ -70,6 +70,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         WHERE,
         GROUP,
         GROUP_PARTIAL,
+        HAVING,
         LIMIT,
         UNPIVOT,
         CALL,
@@ -88,15 +89,15 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         CASE,
         WHEN,
         ELSE,
-        BAG
+        BAG;
+
+        val identifier = name.toLowerCase()
     }
 
     internal data class ParseNode(val type: ParseType,
                                   val token: Token?,
                                   val children: List<ParseNode>,
                                   val remaining: List<Token>) {
-        val name = type.name.toLowerCase()
-
         /** Derives a [ParseNode] transforming the list of remaining tokens. */
         fun derive(tokensHandler: List<Token>.() -> List<Token>): ParseNode =
             copy(remaining = tokensHandler(remaining))
@@ -152,7 +153,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 else -> unsupported("Unsupported atom token")
             }
             CAST, PATH, LIST, BAG, UNPIVOT -> sexp {
-                addSymbol(node.name)
+                addSymbol(node.type.identifier)
                 addChildNodes(node)
             }
             STRUCT -> sexp {
@@ -211,12 +212,12 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 if (children.size > 2) {
                     for (clause in children.slice(2..children.lastIndex)) {
                         when (clause.type) {
-                            WHERE, LIMIT -> addSexp {
-                                addSymbol(clause.name)
+                            WHERE, HAVING, LIMIT -> addSexp {
+                                addSymbol(clause.type.identifier)
                                 addChildNodes(clause)
                             }
                             GROUP, GROUP_PARTIAL -> addSexp {
-                                addSymbol(clause.name)
+                                addSymbol(clause.type.identifier)
                                 addSexp {
                                     addSymbol("by")
                                     addChildNodes(clause.children[0])
@@ -606,18 +607,15 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         rem = fromList.remaining
         children.add(fromList)
 
-        if (rem.head?.keywordText == "where") {
-            val whereExpr = rem.tail.parseExpression()
-            rem = whereExpr.remaining
-            children.add(
-                ParseNode(
-                    WHERE,
-                    null,
-                    listOf(whereExpr),
-                    rem
-                )
-            )
+        fun parseOptionalSingleExpressionClause(type: ParseType) {
+            if (rem.head?.keywordText == type.identifier) {
+                val expr = rem.tail.parseExpression()
+                rem = expr.remaining
+                children.add(ParseNode(type, null, listOf(expr), rem))
+            }
         }
+
+        parseOptionalSingleExpressionClause(WHERE)
 
         if (rem.head?.keywordText == "group") {
             rem = rem.tail
@@ -665,18 +663,9 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             )
         }
 
-        if (rem.head?.keywordText == "limit") {
-            val limitExpr = rem.tail.parseExpression()
-            rem = limitExpr.remaining
-            children.add(
-                ParseNode(
-                    LIMIT,
-                    null,
-                    listOf(limitExpr),
-                    rem
-                )
-            )
-        }
+        parseOptionalSingleExpressionClause(HAVING)
+
+        parseOptionalSingleExpressionClause(LIMIT)
 
         return ParseNode(selectType, null, children, rem)
     }
