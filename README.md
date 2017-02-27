@@ -153,7 +153,7 @@ If we wanted to find all books *as their own rows* with a price greater than `7`
 we can use paths on the `FROM` for this:
 
 ```
-ionsql> SELECT * FROM stores[*].books AS b WHERE b.price > 7
+ionsql> SELECT * FROM stores[*].books[*] AS b WHERE b.price > 7
       | 
 ======'
 {
@@ -254,7 +254,7 @@ OK!
 The REPL provides the `read_file` function to stream data from a file. For example:
 
 ```
-ionsql> SELECT city FROM read_file('data.ion') AS c, `["HI", "NY"]` AS s WHERE c.state = s.$value
+ionsql> SELECT city FROM read_file('data.ion') AS c, `["HI", "NY"]` AS s WHERE c.state = s
       | 
 ======'
 {
@@ -285,7 +285,7 @@ the following `config.ion`:
 
 ```
 {
-  data: (read_file('data.ion'))
+  'data': read_file('data.ion')
 }
 ```
 
