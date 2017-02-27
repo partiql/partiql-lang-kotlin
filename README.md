@@ -4,15 +4,10 @@ that uses the Ion type system natively, but is designed to be used over sparse, 
 data in a relational way.
 
 ## Getting Started
-In order to build Ion SQL Sandbox, your workspace should have the [sql-hack][ionjava-sql-hack]
-branch of [IonJava][ionjava] in your workspace or built into your version set.  This is
-required because this implementation currently leverages the Ion parser as its tokenizer, 
-and this branch specifically supports unquoted `,` in S-expressions.
-
-Once this is done the package can be built as normal with:
+Building the package requires a standard Brazil workspace and should be buildable against `live`.
 
 ```
-$ brazil-build
+$ brazil-build release
 ```
 
 Building a self-contained JAR with a very basic read-eval-print loop (REPL), can be done
@@ -451,4 +446,3 @@ Lilikoi,unicorn
 * Implement aggregation, sort, grouping.
   
 [ionjava]: https://code.amazon.com/packages/IonJava
-[ionjava-sql-hack]: https://code.amazon.com/packages/IonJava/logs/heads/sqlhack
