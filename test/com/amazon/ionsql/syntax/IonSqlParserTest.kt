@@ -131,6 +131,34 @@ class IonSqlParserTest : Base() {
     }
 
     @Test
+    fun nullIsNull() = assertExpression(
+        "(is (lit null) (type 'null'))",
+        "null IS NULL"
+    )
+
+    @Test
+    fun missingIsMissing() = assertExpression(
+        "(is (missing) (type missing))",
+        "mIsSiNg IS MISSING"
+    )
+
+    @Test
+    fun callIsVarchar() = assertExpression(
+        "(is (call f) (type character_varying 200))",
+        "f() IS VARCHAR(200)"
+    )
+
+    @Test(expected = IllegalArgumentException::class)
+    fun nullIsNullIonLiteral() {
+        parse("NULL is `null`")
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun idIsStringLiteral() {
+        parse("a is 'missing'")
+    }
+
+    @Test
     fun callWithMultiple() = assertExpression(
         "(call foobar (lit 5) (lit 6) (id a))",
         "foobar(5, 6, a)"
@@ -253,7 +281,7 @@ class IonSqlParserTest : Base() {
 
     @Test
     fun selectWithMissing() = assertExpression(
-        "(select (project (list (id a))) (from (id stuff)) (where (is (id b) (missing))))",
+        "(select (project (list (id a))) (from (id stuff)) (where (is (id b) (type missing))))",
         "SELECT a FROM stuff WHERE b IS MISSING"
     )
 

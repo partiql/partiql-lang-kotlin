@@ -139,7 +139,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         val node = this
         val astNode = when (type) {
             ATOM -> when (token?.type) {
-                LITERAL -> sexp {
+                LITERAL, NULL -> sexp {
                     addSymbol("lit")
                     addClone(token?.value!!)
                 }
@@ -269,7 +269,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             }
             TYPE -> sexp {
                 addSymbol("type")
-                addSymbol(token?.text!!)
+                addSymbol(token?.keywordText!!)
                 for (child in children) {
                     add().newInt(child.token!!.value!!.longValue())
                 }
@@ -324,9 +324,13 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 break
             }
 
-            val right = rem.tail.parseExpression(
-                precedence = op.infixPrecedence
-            )
+            val right = when (op.keywordText) {
+                // IS requires a type
+                "is" -> rem.tail.parseType()
+                else -> rem.tail.parseExpression(
+                    precedence = op.infixPrecedence
+                )
+            }
             rem = right.remaining
 
             expr = when {
@@ -456,7 +460,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             LEFT_PAREN -> tail.tail.parseFunctionCall(head!!)
             else -> atomFromHead()
         }
-        LITERAL, MISSING -> atomFromHead()
+        LITERAL, NULL, MISSING -> atomFromHead()
         else -> err("Unexpected term")
     }
 
@@ -517,7 +521,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
 
     private fun List<Token>.parseType(): ParseNode {
         val typeName = head?.keywordText
-        val typeArity = TYPE_NAME_ARITY_MAP[typeName] ?: err("Expected type for CAST")
+        val typeArity = TYPE_NAME_ARITY_MAP[typeName] ?: err("Expected type name")
 
         val typeNode = when (tail.head?.type) {
             LEFT_PAREN -> tail.tail.parseArgList(

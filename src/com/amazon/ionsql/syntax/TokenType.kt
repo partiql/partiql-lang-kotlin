@@ -26,5 +26,6 @@ enum class TokenType {
     // keywords that get their own token type
     AS,
     AT,
-    MISSING
+    MISSING,
+    NULL
 }

@@ -20,6 +20,8 @@ data class Token(val type: TokenType,
     val keywordText: String?
         get() = when (type) {
             OPERATOR, KEYWORD, AS, AT -> text
+            MISSING -> "missing"
+            NULL -> "null"
             else -> null
         }
 

@@ -440,7 +440,7 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
                                     }
                                     lower == "null" -> {
                                         // literal null
-                                        tokenType = LITERAL
+                                        tokenType = NULL
                                         ion.newNull()
                                     }
                                     lower == "missing" -> {

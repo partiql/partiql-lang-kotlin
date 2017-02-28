@@ -278,6 +278,8 @@ internal val KEYWORD_ALIASES = mapOf(
  * don't require that.
  */
 internal val TYPE_NAME_ARITY_MAP = mapOf(
+    "missing"           to 0..0, // IonSQL++
+    "null"              to 0..0, // Ion
     "bool"              to 0..0, // Ion
     "smallint"          to 0..0, // SQL-92
     "integer"           to 0..0, // Ion & SQL-92

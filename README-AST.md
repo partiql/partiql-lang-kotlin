@@ -25,6 +25,8 @@ Where `name` is the AST node name, which can be one of:
 * `(as <NAME SYMBOL> <VALUE EXPR>)` - A name aliasing/binding for a value.
 * `(at <NAME SYMBOL> <VALUE EXPR>)` - An ordinal or attribute name binding.
 * `(cast <VALUE EXPR> (type <TYPE NAME> ...))` - `CAST` operator.
+* `(is <VALUE EXPR> (type <TYPE NAME> ...))` and `(is_not <VALUE EXPR> (type <TYPE NAME> ...))` -
+  Type predicate.  The type node is the same as that defined for `CAST`.
 * `(simple_case ...)` and `(searched_case ...)` - `CASE` expression forms.
 * `(meta <NODE EXPR> <STRUCT>)` - Metadata about an enclosing AST node, from a semantic perspective
   this is a *no-op*, but can provide diagnostic context such as line/column position.
@@ -44,7 +46,6 @@ The following binary operators are defined in the form `(<OPNAME> <LEFT EXPR> <R
 * `like` - String pattern comparison.
 * `<`, `<=`, `>`, `>=`, `=`, `<>` - Comparison operators.
 * `and`, `or` - Logical operators.
-* `is`, `is_not` - Identity comparison.
 * `union`, `union_all`, `except`, `except_all`, `intersect`, and `intersect_all` - Set operators.
 
 The following additional operators are defined:
