@@ -158,8 +158,32 @@ class EvaluatingCompilerTest : Base() {
     @Test
     fun notEqualIntFloatFalse() = assertEval("1 != 1e0", "false")
 
+    @Test
+    fun missingIsMissing() = assertEval("MISSING IS MISSING", "true")
+
+    @Test
+    fun missingIsNull() = assertEval("MISSING IS NULL", "true")
+
+    @Test
+    fun nullIsNotMissing() = assertEval("NULL IS NOT MISSING", "true")
+
+    @Test
+    fun nullIsNotNull() = assertEval("NULL IS NOT NULL", "false")
+
+    @Test
+    fun typedNullIsNull() = assertEval("`null.string` IS NOT NULL", "false")
+
+    @Test
+    fun stringIsVarchar() = assertEval("'hello' IS CHARACTER VARYING", "true")
+
+    @Test
+    fun stringIsString() = assertEval("'hello' IS STRING", "true")
+
+    @Test
+    fun intIsNotSmallInt() = assertEval("50000 IS NOT SMALLINT", "false")
+
     @Test(expected = IllegalArgumentException::class)
-    fun notOnNonBooleanThrows() = voidEval("!i")
+    fun notOnNonBooleanThrows() = voidEval("not i")
 
     @Test
     fun notTrue() = assertEval("not true", "false")

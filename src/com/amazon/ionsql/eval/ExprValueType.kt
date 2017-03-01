@@ -5,6 +5,7 @@
 package com.amazon.ionsql.eval
 
 import com.amazon.ion.IonType
+import com.amazon.ionsql.syntax.TYPE_NAME_ARITY_MAP
 
 /**
  * The core types of [ExprValue] that exist within the type system of the evaluator.
@@ -39,5 +40,27 @@ enum class ExprValueType {
 
         /** Maps an [IonType] to an [ExprType]. */
         fun fromIonType(ionType: IonType): ExprValueType = ION_TYPE_MAP[ionType]!!
+
+        private val LEX_TYPE_MAP = mapOf(
+            *TYPE_NAME_ARITY_MAP.keys.map {
+                val type = try {
+                    ExprValueType.valueOf(it.toUpperCase())
+                } catch (e: IllegalArgumentException) {
+                    // no direct type mapping
+                    when (it) {
+                        "smallint", "integer" -> INT
+                        "real", "double_precision" -> FLOAT
+                        "numeric" -> DECIMAL
+                        "character", "character_varying" -> STRING
+                        else -> throw IllegalStateException("No ExprValueType handler for $it")
+                    }
+                }
+
+                Pair(it, type)
+            }.toTypedArray()
+        )
+
+        fun fromTypeName(name: String): ExprValueType = LEX_TYPE_MAP[name]
+            ?: throw IllegalArgumentException("No such value type for $name")
     }
 }

@@ -83,6 +83,25 @@ class EvaluatingCompiler(private val ion: IonSystem,
         }
     }
 
+    private val isHandler = { env: Environment, expr: IonSexp ->
+        when (expr.size) {
+            3 -> {
+                val instance = expr[1].eval(env)
+                // TODO consider the type parameters
+                val targetType = ExprValueType.fromTypeName(expr[2][1].text)
+
+                when {
+                    // MISSING is NULL
+                    instance.type == ExprValueType.MISSING
+                        && targetType == ExprValueType.NULL -> true
+                    else -> instance.type == targetType
+                }.exprValue()
+            }
+            else -> throw IllegalArgumentException("Arity incorrect for 'is'/'is_not': $expr")
+        }
+
+    }
+
     /** Dispatch table for AST "op-codes."  */
     private val syntax: Map<String, (Environment, IonSexp) -> ExprValue> = mapOf(
         "lit" to { env, expr ->
@@ -93,6 +112,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
             env.current[name] ?:
                 throw IllegalArgumentException("No such binding: $name")
         },
+        "missing" to { env, expr -> missingValue },
         "call" to { env, expr ->
             expr.evalCall(env, startIndex = 1)
         },
@@ -174,14 +194,18 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 else -> throw IllegalArgumentException("Arity incorrect for 'or': $expr")
             }.exprValue()
         },
-        "@" to { env, expr ->
-            expr[1].eval(env.flipToLocals())
-        },
         "and" to { env, expr ->
             when (expr.size) {
                 3 -> expr[1].eval(env).booleanValue() && expr[2].eval(env).booleanValue()
                 else -> throw IllegalArgumentException("Arity incorrect for 'and': $expr")
             }.exprValue()
+        },
+        "is" to isHandler,
+        "is_not" to { env, expr ->
+            (!isHandler(env, expr).booleanValue()).exprValue()
+        },
+        "@" to { env, expr ->
+            expr[1].eval(env.flipToLocals())
         },
         "path" to { env, expr ->
             if (expr.size < 3) {
@@ -520,15 +544,15 @@ class EvaluatingCompiler(private val ion: IonSystem,
         val second = other.ionValue
 
         return when {
-            // any nulls involved need strict equality
-            first.isNullValue || second.isNullValue -> first == second
+            // null is never equal to anything
+            first.isNullValue || second.isNullValue -> false
             // arithmetic equality
             first.isNumeric && second.isNumeric ->
                 first.numberValue().compareTo(second.numberValue()) == 0
             // text equality for symbols/strings
             first is IonText && second is IonText ->
                 first.stringValue() == second.stringValue()
-            // defer to strict equality
+            // defer to strict Ion equality
             else -> first == second
         }
     }

@@ -158,6 +158,44 @@ class IonSqlParserTest : Base() {
         parse("a is 'missing'")
     }
 
+    @Test(expected = IllegalArgumentException::class)
+    fun idIsGroupMissing() {
+        parse("a is (missing)")
+    }
+
+    @Test
+    fun nullIsNotNull() = assertExpression(
+        "(is_not (lit null) (type 'null'))",
+        "null IS NOT NULL"
+    )
+
+    @Test
+    fun missingIsNotMissing() = assertExpression(
+        "(is_not (missing) (type missing))",
+        "mIsSiNg IS NOT MISSING"
+    )
+
+    @Test
+    fun callIsNotVarchar() = assertExpression(
+        "(is_not (call f) (type character_varying 200))",
+        "f() IS NOT VARCHAR(200)"
+    )
+
+    @Test(expected = IllegalArgumentException::class)
+    fun nullIsNotNullIonLiteral() {
+        parse("NULL is not `null`")
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun idIsNotStringLiteral() {
+        parse("a is not 'missing'")
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun idIsNotGroupMissing() {
+        parse("a is not (missing)")
+    }
+
     @Test
     fun callWithMultiple() = assertExpression(
         "(call foobar (lit 5) (lit 6) (id a))",

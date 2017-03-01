@@ -325,8 +325,8 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             }
 
             val right = when (op.keywordText) {
-                // IS requires a type
-                "is" -> rem.tail.parseType()
+                // IS/IS NOT requires a type
+                "is", "is_not" -> rem.tail.parseType()
                 else -> rem.tail.parseExpression(
                     precedence = op.infixPrecedence
                 )
