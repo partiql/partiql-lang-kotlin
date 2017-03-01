@@ -5,6 +5,9 @@
   <property name="findbugs.failOnError" value="false" />
   <property name="checkstyle.failOnError" value="false" />
 
+  <!-- Targeting 1.8 causes verifier errors with extensions around Number and primitives boxing. -->
+  <property name="target.kotlin.vm.version" value="1.6" />
+
   <import file="${happytrails.root}/happytrails.xml"/>
   <ht:import file="happier-kotlin-trails.xml"/>
 

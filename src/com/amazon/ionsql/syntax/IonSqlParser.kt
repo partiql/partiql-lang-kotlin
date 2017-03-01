@@ -141,14 +141,14 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             ATOM -> when (token?.type) {
                 LITERAL, NULL -> sexp {
                     addSymbol("lit")
-                    addClone(token?.value!!)
+                    addClone(token.value!!)
                 }
                 MISSING -> sexp {
                     addSymbol("missing")
                 }
                 IDENTIFIER -> sexp {
                     addSymbol("id")
-                    addSymbol(token?.text!!)
+                    addSymbol(token.text!!)
                 }
                 else -> unsupported("Unsupported atom token")
             }
@@ -253,17 +253,17 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                     else -> unsupported("CASE must be searched or simple")
                 }
 
-                clauses.children.forEachIndexed { idx, clause ->
+                clauses.children.forEach {
                     add(
                         sexp {
                             addSymbol(
-                                when (clause.type) {
+                                when (it.type) {
                                     WHEN -> "when"
                                     ELSE -> "else"
                                     else -> unsupported("CASE clause must be WHEN or ELSE")
                                 }
                             )
-                        }.apply { addChildNodes(clause) }
+                        }.apply { addChildNodes(it) }
                     )
                 }
             }
@@ -540,7 +540,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         for (child in typeNode.children) {
             if (child.type != ATOM
                     || child.token?.type != LITERAL
-                    || !(child.token?.value?.isUnsignedInteger ?: false)) {
+                    || !(child.token.value?.isUnsignedInteger ?: false)) {
                 err("Type parameter must be an unsigned integer literal")
             }
         }

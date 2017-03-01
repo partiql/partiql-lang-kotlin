@@ -95,7 +95,7 @@ operator fun Number.div(other: Number): Number {
     }
 }
 
-operator fun Number.mod(other: Number): Number {
+operator fun Number.rem(other: Number): Number {
     val (first, second) = coerceNumbers(this, other)
     return when (first) {
         is Long -> first % second as Long

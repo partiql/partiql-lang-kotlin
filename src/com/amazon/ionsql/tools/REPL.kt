@@ -86,7 +86,7 @@ private fun delimitedReadHandler(delimiter: String): (InputStream, IonStruct) ->
     }
 
 private val READ_HANDLERS = mapOf(
-    "ion" to { input, options ->
+    "ion" to { input, _ ->
         ION.iterate(input).asSequence().map { it.exprValue() }
     },
     "tsv" to delimitedReadHandler("\t"),
@@ -138,7 +138,7 @@ private fun delimitedWriteHandler(delimiter: String): (ExprValue, OutputStream, 
     }
 
 private val WRITE_HANDLERS = mapOf(
-    "ion" to { results, out, options ->
+    "ion" to { results, out, _ ->
         IonTextWriterBuilder.pretty().build(out).use {
             for (result in results) {
                 result.ionValue.writeTo(it)
@@ -174,7 +174,7 @@ private fun optionsStruct(requiredArity: Int,
 fun main(args: Array<String>) {
     // TODO probably should be in "common" utility
     val replFunctions = mapOf<String, (Environment, List<ExprValue>) -> ExprValue>(
-        "read_file" to { env, args ->
+        "read_file" to { _, args ->
             val options = optionsStruct(1, args)
             val fileName = args[0].ionValue.stringValue()
             val fileType = options["type"]?.stringValue() ?: "ion"
@@ -186,7 +186,7 @@ fun main(args: Array<String>) {
                 handler(fileInput, options)
             }
         },
-        "write_file" to { env, args ->
+        "write_file" to { _, args ->
             val options = optionsStruct(2, args, optionsIndex = 1)
             val fileName = args[0].ionValue.stringValue()
             val fileType = options["type"]?.stringValue() ?: "ion"

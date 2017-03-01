@@ -104,7 +104,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
     /** Dispatch table for AST "op-codes."  */
     private val syntax: Map<String, (Environment, IonSexp) -> ExprValue> = mapOf(
-        "lit" to { env, expr ->
+        "lit" to { _, expr ->
             expr[1].exprValue()
         },
         "id" to { env, expr ->
@@ -112,18 +112,18 @@ class EvaluatingCompiler(private val ion: IonSystem,
             env.current[name] ?:
                 throw IllegalArgumentException("No such binding: $name")
         },
-        "missing" to { env, expr -> missingValue },
+        "missing" to { _, _ -> missingValue },
         "call" to { env, expr ->
             expr.evalCall(env, startIndex = 1)
         },
-        "list" to bindOp(minArity = 0, maxArity = Integer.MAX_VALUE) { env, args ->
+        "list" to bindOp(minArity = 0, maxArity = Integer.MAX_VALUE) { _, args ->
             ion.newEmptyList().apply {
                 for (value in args) {
                     add(value.ionValue.clone())
                 }
             }.seal().exprValue()
         },
-        "struct" to bindOp(minArity = 0, maxArity = Integer.MAX_VALUE) { env, args ->
+        "struct" to bindOp(minArity = 0, maxArity = Integer.MAX_VALUE) { _, args ->
             if (args.size % 2 != 0) {
                 throw IllegalArgumentException("struct requires even number of parameters")
             }
@@ -140,7 +140,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                     }
             }.seal().exprValue().orderedNamesValue(names)
         },
-        "+" to bindOp(minArity = 1, maxArity = 2) { env, args ->
+        "+" to bindOp(minArity = 1, maxArity = 2) { _, args ->
             when (args.size) {
                 1 -> {
                     // force interpretation as a number, and do nothing
@@ -150,7 +150,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 else -> (args[0].numberValue() + args[1].numberValue()).exprValue()
             }
         },
-        "-" to bindOp(minArity = 1, maxArity = 2) { env, args ->
+        "-" to bindOp(minArity = 1, maxArity = 2) { _, args ->
             when (args.size) {
                 1 -> {
                     -args[0].numberValue()
@@ -158,34 +158,34 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 else -> args[0].numberValue() - args[1].numberValue()
             }.exprValue()
         },
-        "*" to bindOp { env, args ->
+        "*" to bindOp { _, args ->
             (args[0].numberValue() * args[1].numberValue()).exprValue()
         },
-        "/" to bindOp { env, args ->
+        "/" to bindOp { _, args ->
             (args[0].numberValue() / args[1].numberValue()).exprValue()
         },
-        "%" to bindOp { env, args ->
+        "%" to bindOp { _, args ->
             (args[0].numberValue() % args[1].numberValue()).exprValue()
         },
-        "<" to bindOp { env, args ->
+        "<" to bindOp { _, args ->
             (args[0] < args[1]).exprValue()
         },
-        "<=" to bindOp { env, args ->
+        "<=" to bindOp { _, args ->
             (args[0] <= args[1]).exprValue()
         },
-        ">" to bindOp { env, args ->
+        ">" to bindOp { _, args ->
             (args[0] > args[1]).exprValue()
         },
-        ">=" to bindOp { env, args ->
+        ">=" to bindOp { _, args ->
             (args[0] >= args[1]).exprValue()
         },
-        "=" to bindOp { env, args ->
+        "=" to bindOp { _, args ->
             args[0].exprEquals(args[1]).exprValue()
         },
-        "<>" to bindOp { env, args ->
+        "<>" to bindOp { _, args ->
             (!args[0].exprEquals(args[1])).exprValue()
         },
-        "not" to bindOp(minArity = 1, maxArity = 1) { env, args ->
+        "not" to bindOp(minArity = 1, maxArity = 1) { _, args ->
             (!args[0].booleanValue()).exprValue()
         },
         "or" to { env, expr ->
@@ -303,7 +303,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                     }
                     // FIXME select * doesn't project ordered tuples
                     // TODO this should work for very specific cases...
-                    { joinedValues, locals -> applyToNewStruct { projectAllInto(joinedValues) } }
+                    { joinedValues, _ -> applyToNewStruct { projectAllInto(joinedValues) } }
                 }
                 "list" -> {
                     if (selectExprs.size < 2) {
@@ -314,7 +314,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                     val selectNames =
                         aliasExtractor(selectExprs.asSequence().drop(1)).map { it.asName };
 
-                    { joinedValues, locals ->
+                    { _, locals ->
                         applyToNewStruct {
                             projectSelectList(locals, selectExprs.asSequence().drop(1), selectNames)
                         }
@@ -324,7 +324,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                     if (selectExprs.size != 2) {
                         throw IllegalArgumentException("SELECT VALUE must have a single expression")
                     }
-                    { joinedValues, locals ->
+                    { _, locals ->
                         selectExprs[1].eval(locals)
                     }
                 }
@@ -402,7 +402,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
     /** Dispatch table for built-in functions. */
     private val builtins: Map<String, (Environment, List<ExprValue>) -> ExprValue> = mapOf(
-        "exists" to { env, args ->
+        "exists" to { _, args ->
             when (args.size) {
                 1 -> {
                     args[0].asSequence().any().exprValue()
@@ -413,7 +413,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
             }
         },
         // TODO make this a proper aggregate
-        "count" to { env, args ->
+        "count" to { _, args ->
             when (args.size) {
                 1 -> {
                     args[0].asSequence().count().exprValue()

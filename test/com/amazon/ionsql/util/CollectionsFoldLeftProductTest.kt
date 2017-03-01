@@ -30,8 +30,8 @@ class CollectionsFoldLeftProductTest : CollectionsProductTest() {
             assertEquals(collections.indexOfFirst { it === list }, ctx.level)
             assertFalse("$ctx already in $contexts", ctx in contexts)
             contexts += ctx
-            list.asSequence().mapIndexed { idx, elem ->
-                Pair(Context(ctx.level + 1, id++), elem)
+            list.asSequence().map {
+                Pair(Context(ctx.level + 1, id++), it)
             }.iterator()
         }
     }
