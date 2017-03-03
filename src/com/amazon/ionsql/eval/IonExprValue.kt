@@ -21,9 +21,6 @@ class IonExprValue(override val ionValue: IonValue) : BaseExprValue() {
         else -> null
     }
 
-    private fun String.toIon() = ion.newString(this)
-    private fun Int.toIon() = ion.newInt(this)
-
     override val type = when {
         ionValue.isNullValue -> ExprValueType.NULL
         else -> ExprValueType.fromIonType(ionValue.type)

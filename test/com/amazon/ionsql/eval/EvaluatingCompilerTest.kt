@@ -7,7 +7,6 @@ package com.amazon.ionsql.eval
 import com.amazon.ionsql.Base
 import com.amazon.ionsql.syntax.ParserException
 import com.amazon.ionsql.util.exprValue
-import org.junit.Ignore
 import org.junit.Test
 
 class EvaluatingCompilerTest : Base() {
@@ -498,6 +497,61 @@ class EvaluatingCompilerTest : Base() {
             {col: "type", val: "dog"},
             {col: "is_magic", val: false},
           ]
+        """
+    )
+
+    @Test
+    fun pivotFrom() = assertEval(
+        """
+          PIVOT a."type" AT a.name FROM animals AS a
+        """,
+        """
+          {
+            Kumo: "dog",
+            Mochi: "dog",
+            Lilikoi: "unicorn",
+          }
+        """
+    )
+
+    @Test
+    fun pivotLiteralFieldNameFrom() = assertEval(
+        """
+          PIVOT a.name AT 'name' FROM animals AS a
+        """,
+        """
+          {
+            name: "Kumo",
+            name: "Mochi",
+            name: "Lilikoi",
+          }
+        """
+    )
+
+    @Test
+    fun pivotBadFieldType() = assertEval(
+        """
+          PIVOT a.name AT i FROM animals AS a AT i
+        """,
+        """
+          {}
+        """
+    )
+
+    @Test
+    fun pivotUnpivotWithWhereLimit() = assertEval(
+        """
+          PIVOT val AT 'new_' || name
+          FROM UNPIVOT `{a:1, b:2, c:3, d:4, e:5, f: 6}` AS val AT name
+          WHERE name <> 'b' AND val <> 3
+          LIMIT 3
+        """,
+        """
+          {
+            new_a: 1,
+            new_d: 4,
+            new_e: 5,
+          }
         """
     )
 }

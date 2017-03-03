@@ -5,7 +5,6 @@
 package com.amazon.ionsql.syntax
 
 import com.amazon.ionsql.Base
-import com.amazon.ionsql.syntax.*
 import com.amazon.ionsql.syntax.TokenType.*
 import org.junit.Test
 import java.util.*

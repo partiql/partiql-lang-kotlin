@@ -133,13 +133,15 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 (0 until args.size).step(2)
                     .asSequence()
                     .map { args[it].ionValue to args[it + 1].ionValue.clone() }
-                    .forEach {
-                        val (nameVal, child) = it
+                    .forEach { (nameVal, child) ->
                         val name = nameVal.text
                         names.add(name)
                         add(name, child)
                     }
             }.seal().exprValue().orderedNamesValue(names)
+        },
+        "||" to bindOp { _, args ->
+            (args[0].stringValue() + args[1].stringValue()).exprValue()
         },
         "+" to bindOp(minArity = 1, maxArity = 2) { _, args ->
             when (args.size) {
@@ -291,7 +293,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 err("SELECT projection must be non-empty sequence: $selectExprs")
             }
 
-            val selectFunc: (List<ExprValue?>, Environment) -> ExprValue = when (selectExprs[0].text) {
+            val selectFunc: (List<ExprValue>, Environment) -> ExprValue = when (selectExprs[0].text) {
                 "*" -> {
                     if (selectExprs.size != 1) {
                         err("SELECT * must be a singleton list")
@@ -324,71 +326,104 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 else -> err("Invalid node in SELECT: $selectExprs")
             }
 
-            val fromNames = aliasExtractor(expr[2].asSequence().drop(1))
-            val fromSources = expr[2].asSequence()
-                .drop(1)
-                .mapIndexed { idx, expr -> FromSource(fromNames[idx], expr) }
-                .toList()
-            val fromEnv = env.flipToGlobals()
-
-            var whereExpr: IonValue? = null
-            var limitExpr: IonValue? = null
-            for (clause in expr.drop(3)) {
-                when (clause[0].text) {
-                    "where" -> whereExpr = clause[1]
-                    "limit" -> limitExpr = clause[1]
-                    else -> err("Unknown clause in SELECT: $clause")
-                }
-            }
-
             SequenceExprValue(ion) {
-                // compute the join over the data sources
-                var seq = fromSources
-                    .foldLeftProduct(fromEnv) { env, source ->
-                        source.expr.eval(env)
-                            .asSequence()
-                            .map { value ->
-                                // add the correlated binding(s)
-                                val alias = source.alias
-                                val childEnv = env.nest(
-                                    Bindings.over {
-                                        when (it) {
-                                            alias.asName -> value
-                                            alias.atName -> value.name
-                                            else -> null
-                                        }
-                                    },
-                                    useAsCurrent = false
-                                )
-                                Pair(childEnv, value)
-                            }
-                            .iterator()
-                    }
-                    .asSequence()
-                    .map { joinedValues ->
-                        // bind the joined value to the bindings for the filter/project
-                        Pair(joinedValues, joinedValues.bind(env, fromNames))
-                    }
-                    .filter {
-                        val locals = it.second
-                        when (whereExpr) {
-                            null -> true
-                            else -> whereExpr!!.eval(locals).booleanValue()
-                        }
-                    }
-                    .map {
-                        val (joinedValues, locals) = it
-                        selectFunc(joinedValues, locals)
-                    }
-
-                if (limitExpr != null) {
-                    seq = seq.take(limitExpr!!.eval(env).ionValue.intValue())
+                evalQueryWithoutProjection(env, expr).map { (joinedValues, locals) ->
+                    selectFunc(joinedValues, locals)
                 }
-
-                seq
             }
+        },
+        "pivot" to { env, expr ->
+            if (expr.size < 3) {
+                err("Bad arity on PIVOT form $expr: ${expr.size}")
+            }
+
+            val memberExpr = expr[1]
+            if (memberExpr !is IonSequence
+                    || memberExpr.size != 3
+                    || memberExpr[0].text != "member") {
+                err("PIVOT member node must be of the form (member <name> <value>): $memberExpr")
+            }
+            val nameExpr = memberExpr[1]
+            val valueExpr = memberExpr[2]
+
+            // TODO support ordered names (when underlying sequence is ordered)
+            // TODO support doing this as a lazy value
+            ion.newEmptyStruct().apply {
+                evalQueryWithoutProjection(env, expr).map { (_, locals) ->
+                    Pair(nameExpr.eval(locals), valueExpr.eval(locals))
+                }.filter { (nameVal, _) ->
+                    nameVal.type.isText
+                }.forEach { (nameVal, valueVal) ->
+                    val name = nameVal.stringValue()
+                    val value = valueVal.ionValue.clone()
+                    add(name, value)
+                }
+            }.seal().exprValue()
         }
     )
+
+    /** Evaluates the clauses of the SELECT or PIVOT without generating the final projection. */
+    private fun evalQueryWithoutProjection(env: Environment,
+                                           expr: IonSexp): Sequence<Pair<List<ExprValue>, Environment>> {
+        val fromNames = aliasExtractor(expr[2].asSequence().drop(1))
+        val fromSources = expr[2].asSequence()
+            .drop(1)
+            .mapIndexed { idx, expr -> FromSource(fromNames[idx], expr) }
+            .toList()
+        val fromEnv = env.flipToGlobals()
+
+        var whereExpr: IonValue? = null
+        var limitExpr: IonValue? = null
+        for (clause in expr.drop(3)) {
+            when (clause[0].text) {
+                "where" -> whereExpr = clause[1]
+                "limit" -> limitExpr = clause[1]
+                else -> err("Unknown clause in SELECT: $clause")
+            }
+        }
+
+        // compute the join over the data sources
+        var seq = fromSources
+            .foldLeftProduct(fromEnv) { env, source ->
+                source.expr.eval(env)
+                    .asSequence()
+                    .map { value ->
+                        // add the correlated binding(s)
+                        val alias = source.alias
+                        val childEnv = env.nest(
+                            Bindings.over {
+                                when (it) {
+                                    alias.asName -> value
+                                    alias.atName -> value.name
+                                    else -> null
+                                }
+                            },
+                            useAsCurrent = false
+                        )
+                        Pair(childEnv, value)
+                    }
+                    .iterator()
+            }
+            .asSequence()
+            .map { joinedValues ->
+                // bind the joined value to the bindings for the filter/project
+                Pair(joinedValues, joinedValues.bind(env, fromNames))
+            }
+            .filter {
+                val locals = it.second
+                when (whereExpr) {
+                    null -> true
+                    else -> whereExpr!!.eval(locals).booleanValue()
+                }
+            }
+
+        if (limitExpr != null) {
+            // TODO determine if this needs to be scoped over projection
+            seq = seq.take(limitExpr.eval(env).ionValue.intValue())
+        }
+
+        return seq
+    }
 
     private fun applyToNewStruct(applicator: IonStruct.() -> Unit): ExprValue =
         ion.newEmptyStruct().apply(applicator).seal().exprValue()
@@ -457,7 +492,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                         // the alias binds to the name of the value
                         aliases[col].atName -> this[col].name
                         // otherwise scope look up within the value
-                        else -> value.get(name)
+                        else -> value[name]
                     }
                 }
                 .filter { it != null }
@@ -485,11 +520,15 @@ class EvaluatingCompiler(private val ion: IonSystem,
         else -> err("Cannot convert number to expression value: $this")
     }.seal().exprValue()
 
-    private fun ExprValue.numberValue(): Number = ionValue.numberValue()
+    private fun String.exprValue(): ExprValue = ion.newString(this).seal().exprValue()
 
     private fun ExprValue.booleanValue(): Boolean =
-        ionValue.booleanValue() ?:
-            err("Expected non-null boolean: $ionValue")
+        ionValue.booleanValue() ?: err("Expected non-null boolean: $ionValue")
+
+    private fun ExprValue.numberValue(): Number = ionValue.numberValue()
+
+    private fun ExprValue.stringValue(): String =
+        ionValue.stringValue() ?: err("Expected non-null string: $ionValue")
 
     private operator fun ExprValue.get(index: ExprValue): ExprValue {
         val indexVal = index.ionValue
@@ -606,7 +645,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
             throw e
         } catch (e: Exception) {
             val message = e.message ?: "<NO MESSAGE>"
-            throw EvaluationException("Internal error, $message" ?: "unknown", e)
+            throw EvaluationException("Internal error, $message", e)
         }
     }
 

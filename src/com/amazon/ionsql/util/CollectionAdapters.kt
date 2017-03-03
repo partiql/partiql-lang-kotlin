@@ -26,7 +26,7 @@ val <T> List<T>.tail: List<T>
  * though for singleton cases, this requirement is relaxed.
  */
 fun <T> List<Iterable<T>>.product(): Iterable<List<T>> = foldLeftProduct(Unit) { ctx, iterable ->
-    iterable.asSequence().map { Pair<Unit, T>(ctx, it) }.iterator()
+    iterable.asSequence().map { Pair(ctx, it) }.iterator()
 }
 
 /**

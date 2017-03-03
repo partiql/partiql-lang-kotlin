@@ -7,7 +7,6 @@ package com.amazon.ionsql.eval
 import com.amazon.ion.IonContainer
 import com.amazon.ion.IonValue
 import com.amazon.ionsql.Base
-import com.amazon.ionsql.util.asFacet
 import com.amazon.ionsql.util.get
 import com.amazon.ionsql.util.intValue
 import com.amazon.ionsql.util.stringValue
