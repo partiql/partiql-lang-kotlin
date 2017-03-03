@@ -21,13 +21,13 @@ open class SyntaxException(message: String,
     : IonSqlException(genMessage(message, position), cause)
 
 /** Error in the Lexer. */
-class LexerException(message: String,
-                     position: SourcePosition?,
-                     cause: Throwable? = null)
+open class LexerException(message: String,
+                          position: SourcePosition?,
+                          cause: Throwable? = null)
     : SyntaxException(message, position, cause)
 
 /** Error in the parser. */
-class ParserException(message: String,
-                      position: SourcePosition?,
-                      cause: Throwable? = null)
+open class ParserException(message: String,
+                           position: SourcePosition?,
+                           cause: Throwable? = null)
     : SyntaxException(message, position, cause)

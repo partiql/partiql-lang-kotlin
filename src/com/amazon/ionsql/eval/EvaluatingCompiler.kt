@@ -30,6 +30,8 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 userFuncs: @JvmSuppressWildcards
                            Map<String, (Environment, List<ExprValue>) -> ExprValue>)
         : this(ion, IonSqlParser(ion), userFuncs)
+    
+    private fun err(message: String): Nothing = throw EvaluationException(message)
 
     private data class Alias(val asName: String, val atName: String?)
     private data class FromSource(val alias: Alias, val expr: IonValue)
@@ -79,7 +81,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 // NO-OP for evaluation--handled separately by syntax handlers
                 expr[2].eval(env)
             }
-            else -> throw IllegalArgumentException("Bad alias: $expr")
+            else -> err("Bad alias: $expr")
         }
     }
 
@@ -97,7 +99,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                     else -> instance.type == targetType
                 }.exprValue()
             }
-            else -> throw IllegalArgumentException("Arity incorrect for 'is'/'is_not': $expr")
+            else -> err("Arity incorrect for 'is'/'is_not': $expr")
         }
 
     }
@@ -109,8 +111,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
         },
         "id" to { env, expr ->
             val name = expr[1].text
-            env.current[name] ?:
-                throw IllegalArgumentException("No such binding: $name")
+            env.current[name] ?: err("No such binding: $name")
         },
         "missing" to { _, _ -> missingValue },
         "call" to { env, expr ->
@@ -125,7 +126,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
         },
         "struct" to bindOp(minArity = 0, maxArity = Integer.MAX_VALUE) { _, args ->
             if (args.size % 2 != 0) {
-                throw IllegalArgumentException("struct requires even number of parameters")
+                err("struct requires even number of parameters")
             }
             val names = ArrayList<String>(args.size / 2)
             ion.newEmptyStruct().apply {
@@ -191,13 +192,13 @@ class EvaluatingCompiler(private val ion: IonSystem,
         "or" to { env, expr ->
             when (expr.size) {
                 3 -> expr[1].eval(env).booleanValue() || expr[2].eval(env).booleanValue()
-                else -> throw IllegalArgumentException("Arity incorrect for 'or': $expr")
+                else -> err("Arity incorrect for 'or': $expr")
             }.exprValue()
         },
         "and" to { env, expr ->
             when (expr.size) {
                 3 -> expr[1].eval(env).booleanValue() && expr[2].eval(env).booleanValue()
-                else -> throw IllegalArgumentException("Arity incorrect for 'and': $expr")
+                else -> err("Arity incorrect for 'and': $expr")
             }.exprValue()
         },
         "is" to isHandler,
@@ -209,7 +210,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
         },
         "path" to { env, expr ->
             if (expr.size < 3) {
-                throw IllegalArgumentException("Path arity to low: $expr")
+                err("Path arity to low: $expr")
             }
 
             var curr = expr[1].eval(env)
@@ -269,37 +270,31 @@ class EvaluatingCompiler(private val ion: IonSystem,
         "at" to aliasHandler,
         "unpivot" to { env, expr ->
             if (expr.size != 2) {
-                throw IllegalArgumentException("UNPIVOT form must have one expression")
+                err("UNPIVOT form must have one expression")
             }
             expr[1].eval(env).unpivot()
         },
         "select" to { env, expr ->
             if (expr.size < 3) {
-                throw IllegalArgumentException("Bad arity on SELECT form $expr: ${expr.size}")
+                err("Bad arity on SELECT form $expr: ${expr.size}")
             }
 
             val projectExprs = expr[1]
             if (projectExprs !is IonSequence || projectExprs.isEmpty) {
-                throw IllegalArgumentException(
-                    "SELECT projection node must be non-empty sequence: $projectExprs"
-                )
+                err("SELECT projection node must be non-empty sequence: $projectExprs")
             }
             if (projectExprs[0].text != "project") {
-                throw IllegalArgumentException(
-                    "SELECT projection is not supported ${projectExprs[0].text}"
-                )
+                err("SELECT projection is not supported ${projectExprs[0].text}")
             }
             val selectExprs = projectExprs[1]
             if (selectExprs !is IonSequence || selectExprs.isEmpty) {
-                throw IllegalArgumentException(
-                    "SELECT projection must be non-empty sequence: $selectExprs"
-                )
+                err("SELECT projection must be non-empty sequence: $selectExprs")
             }
 
             val selectFunc: (List<ExprValue?>, Environment) -> ExprValue = when (selectExprs[0].text) {
                 "*" -> {
                     if (selectExprs.size != 1) {
-                        throw IllegalArgumentException("SELECT * must be a singleton list")
+                        err("SELECT * must be a singleton list")
                     }
                     // FIXME select * doesn't project ordered tuples
                     // TODO this should work for very specific cases...
@@ -307,9 +302,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 }
                 "list" -> {
                     if (selectExprs.size < 2) {
-                        throw IllegalArgumentException(
-                            "SELECT ... must have at least one expression"
-                        )
+                        err("SELECT ... must have at least one expression")
                     }
                     val selectNames =
                         aliasExtractor(selectExprs.asSequence().drop(1)).map { it.asName };
@@ -322,13 +315,13 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 }
                 "value" -> {
                     if (selectExprs.size != 2) {
-                        throw IllegalArgumentException("SELECT VALUE must have a single expression")
+                        err("SELECT VALUE must have a single expression")
                     }
                     { _, locals ->
                         selectExprs[1].eval(locals)
                     }
                 }
-                else -> throw IllegalArgumentException("Invalid node in SELECT: $selectExprs")
+                else -> err("Invalid node in SELECT: $selectExprs")
             }
 
             val fromNames = aliasExtractor(expr[2].asSequence().drop(1))
@@ -344,7 +337,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 when (clause[0].text) {
                     "where" -> whereExpr = clause[1]
                     "limit" -> limitExpr = clause[1]
-                    else -> throw IllegalArgumentException("Unknown clause in SELECT: $clause")
+                    else -> err("Unknown clause in SELECT: $clause")
                 }
             }
 
@@ -407,9 +400,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 1 -> {
                     args[0].asSequence().any().exprValue()
                 }
-                else -> throw IllegalArgumentException(
-                    "Expected a single argument for exists: ${args.size}"
-                )
+                else -> err("Expected a single argument for exists: ${args.size}")
             }
         },
         // TODO make this a proper aggregate
@@ -418,9 +409,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 1 -> {
                     args[0].asSequence().count().exprValue()
                 }
-                else -> throw IllegalArgumentException(
-                    "Expected a single argument for count: ${args.size}"
-                )
+                else -> err("Expected a single argument for count: ${args.size}")
             }
         }
         // TODO finish implementing "standard" functions
@@ -479,8 +468,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 // found exactly one thing, success
                 1 -> found.head!!
                 // multiple things with the same name is a conflict
-                else -> throw IllegalArgumentException(
-                    "$name is ambigious: ${found.map { it?.ionValue }}")
+                else -> err("$name is ambigious: ${found.map { it?.ionValue }}")
             }
         }
 
@@ -494,14 +482,14 @@ class EvaluatingCompiler(private val ion: IonSystem,
         is Long -> ion.newInt(this)
         is Double -> ion.newFloat(this)
         is BigDecimal -> ion.newDecimal(this)
-        else -> throw IllegalArgumentException("Cannot convert number to expression value: $this")
+        else -> err("Cannot convert number to expression value: $this")
     }.seal().exprValue()
 
     private fun ExprValue.numberValue(): Number = ionValue.numberValue()
 
     private fun ExprValue.booleanValue(): Boolean =
         ionValue.booleanValue() ?:
-            throw IllegalArgumentException("Expected non-null boolean: $ionValue")
+            err("Expected non-null boolean: $ionValue")
 
     private operator fun ExprValue.get(index: ExprValue): ExprValue {
         val indexVal = index.ionValue
@@ -512,7 +500,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 // delegate to bindings logic as the scope of lookup by name
                 return bindings[name] ?: missingValue
             }
-            else -> throw IllegalArgumentException("Cannot convert index to int/string: $indexVal")
+            else -> err("Cannot convert index to int/string: $indexVal")
         }
     }
 
@@ -523,7 +511,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
         return when {
             // nulls can't compare
             first.isNullValue || second.isNullValue ->
-                throw IllegalArgumentException("Null value cannot be compared: $first, $second")
+                err("Null value cannot be compared: $first, $second")
             // compare the number types
             first.isNumeric && second.isNumeric ->
                 first.numberValue().compareTo(second.numberValue())
@@ -534,7 +522,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
             first is IonText && second is IonText ->
                 first.stringValue().compareTo(second.stringValue())
             // TODO should bool/LOBs/aggregates compare?
-            else -> throw IllegalArgumentException("Cannot compare values: $first, $second")
+            else -> err("Cannot compare values: $first, $second")
         }
     }
 
@@ -557,17 +545,13 @@ class EvaluatingCompiler(private val ion: IonSystem,
         }
     }
 
-    private val ExprValue.name: ExprValue
-        get() = asFacet(Named::class.java)?.name ?: missingValue
+    private val ExprValue.name get() = asFacet(Named::class.java)?.name ?: missingValue
 
-    private val IonValue.text: String
-        get() = stringValue() ?:
-            throw IllegalArgumentException("Expected non-null string: $this")
+    private val IonValue.text get() = stringValue() ?: err("Expected non-null string: $this")
 
     private fun IonSexp.evalCall(env: Environment, startIndex: Int): ExprValue {
         val name = this[startIndex].text
-        val func = functions[name] ?:
-            throw IllegalArgumentException("No such function: $name")
+        val func = functions[name] ?: err("No such function: $name")
         val argIndex = startIndex + 1
         return evalFunc(env, argIndex, func)
     }
@@ -588,13 +572,13 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
     private fun IonValue.eval(env: Environment): ExprValue {
         if (this !is IonSexp) {
-            throw IllegalArgumentException("AST node is not s-expression: $this")
+            err("AST node is not s-expression: $this")
         }
 
         val name = this[0].stringValue() ?:
-            throw IllegalArgumentException("AST node does not start with non-null string: $this")
+            err("AST node does not start with non-null string: $this")
         val handler = syntax[name] ?:
-            throw IllegalArgumentException("No such syntax handler for $name")
+            err("No such syntax handler for $name")
         return handler(env, this)
     }
 
@@ -604,8 +588,8 @@ class EvaluatingCompiler(private val ion: IonSystem,
         return { env, expr ->
             val arity = expr.size - 1
             when {
-                arity < minArity -> throw IllegalArgumentException("Not enough arguments: $expr")
-                arity > maxArity -> throw IllegalArgumentException("Too many arguments: $expr")
+                arity < minArity -> err("Not enough arguments: $expr")
+                arity > maxArity -> err("Too many arguments: $expr")
             }
             expr.evalFunc(env, 1, op)
         }
@@ -616,7 +600,14 @@ class EvaluatingCompiler(private val ion: IonSystem,
     /** Evaluates an unbound syntax tree against a global set of bindings. */
     fun eval(ast: IonSexp, globals: Bindings): ExprValue {
         val env = Environment(globals = globals, locals = globals, current = globals)
-        return ast.filterMetaNodes().seal().eval(env)
+        try {
+            return ast.filterMetaNodes().seal().eval(env)
+        } catch (e: EvaluationException) {
+            throw e
+        } catch (e: Exception) {
+            val message = e.message ?: "<NO MESSAGE>"
+            throw EvaluationException("Internal error, $message" ?: "unknown", e)
+        }
     }
 
     /** Compiles the given source expression into a bound [Expression]. */

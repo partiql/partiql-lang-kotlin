@@ -61,6 +61,6 @@ enum class ExprValueType {
         )
 
         fun fromTypeName(name: String): ExprValueType = LEX_TYPE_MAP[name]
-            ?: throw IllegalArgumentException("No such value type for $name")
+            ?: throw EvaluationException("No such value type for $name")
     }
 }

@@ -183,7 +183,7 @@ class EvaluatingCompilerTest : Base() {
     @Test
     fun intIsNotSmallInt() = assertEval("50000 IS NOT SMALLINT", "false")
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test(expected = EvaluationException::class)
     fun notOnNonBooleanThrows() = voidEval("not i")
 
     @Test
