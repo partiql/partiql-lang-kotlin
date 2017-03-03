@@ -21,21 +21,17 @@ import java.util.*
  */
 class IonSqlParser(private val ion: IonSystem) : Parser {
     companion object {
-        private fun Token?.err(message: String,
-                               ctor: (String) -> Throwable = ::IllegalArgumentException): Nothing {
+        private fun Token?.err(message: String): Nothing {
             val tokenMessage = when (this) {
-                null -> "end of expression"
-                else -> "[${type} ${value ?: "<NONE>"}] at ${position ?: "<UNKNOWN>"}"
+                null -> "<EOF>"
+                else -> "[${type} ${value ?: "<NONE>"}]"
             }
 
-            throw ctor(
-                "$message at $tokenMessage"
-            )
+            throw ParserException("$message at token $tokenMessage", this?.position)
         }
 
-        private fun List<Token>.err(message: String,
-                                    ctor: (String) -> Throwable = ::IllegalArgumentException): Nothing =
-            head.err(message, ctor)
+        private fun List<Token>.err(message: String): Nothing =
+            head.err(message)
 
         private fun List<Token>.atomFromHead(): ParseNode = ParseNode(ATOM, head, emptyList(), tail)
 
@@ -116,7 +112,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         fun deriveExpectedKeyword(keyword: String): ParseNode = derive { tailExpectedKeyword(keyword) }
 
         fun unsupported(message: String): Nothing =
-            remaining.err(message, ::IllegalStateException)
+            remaining.err(message)
     }
 
     inline private fun sexp(builder: IonSexp.() -> Unit): IonSexp =

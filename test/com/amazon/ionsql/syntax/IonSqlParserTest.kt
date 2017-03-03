@@ -120,14 +120,14 @@ class IonSqlParserTest : Base() {
         "@a.b"
     )
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test(expected = ParserException::class)
     fun atOperatorOnNonIdentifier() {
         parse("@(a)")
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test(expected = ParserException::class)
     fun atOperatorDoubleOnIdentifier() {
-        parse("@@a")
+        parse("@ @a")
     }
 
     @Test
@@ -148,17 +148,17 @@ class IonSqlParserTest : Base() {
         "f() IS VARCHAR(200)"
     )
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test(expected = ParserException::class)
     fun nullIsNullIonLiteral() {
         parse("NULL is `null`")
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test(expected = ParserException::class)
     fun idIsStringLiteral() {
         parse("a is 'missing'")
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test(expected = ParserException::class)
     fun idIsGroupMissing() {
         parse("a is (missing)")
     }
@@ -181,17 +181,17 @@ class IonSqlParserTest : Base() {
         "f() IS NOT VARCHAR(200)"
     )
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test(expected = ParserException::class)
     fun nullIsNotNullIonLiteral() {
         parse("NULL is not `null`")
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test(expected = ParserException::class)
     fun idIsNotStringLiteral() {
         parse("a is not 'missing'")
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test(expected = ParserException::class)
     fun idIsNotGroupMissing() {
         parse("a is not (missing)")
     }
@@ -238,7 +238,7 @@ class IonSqlParserTest : Base() {
         "SELECT ord, val FROM table1 AS val AT ord"
     )
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test(expected = ParserException::class)
     fun selectWithFromAtAndAs() {
         parse("SELECT ord, val FROM table1 AT ord AS val")
     }
@@ -323,7 +323,7 @@ class IonSqlParserTest : Base() {
         "SELECT a FROM stuff WHERE b IS MISSING"
     )
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test(expected = ParserException::class)
     fun selectNothing() {
         parse("SELECT FROM table1")
     }
@@ -385,7 +385,7 @@ class IonSqlParserTest : Base() {
         "x.a[*].b"
     )
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test(expected = ParserException::class)
     fun tooManyDots() {
         parse("x...a")
     }
@@ -503,22 +503,22 @@ class IonSqlParserTest : Base() {
         "CAST(5 + a AS VARCHAR(1))"
     )
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test(expected = ParserException::class)
     fun castTooManyArgs() {
         parse("CAST(5 AS INTEGER(10))")
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test(expected = ParserException::class)
     fun castNonLiteralArg() {
         parse("CAST(5 AS VARCHAR(a))")
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test(expected = ParserException::class)
     fun castNegativeArg() {
         parse("CAST(5 AS VARCHAR(-1))")
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test(expected = ParserException::class)
     fun castNonTypArg() {
         parse("CAST(5 AS SELECT)")
     }
@@ -614,17 +614,17 @@ class IonSqlParserTest : Base() {
         "CASE name WHEN 'zoe' THEN 1 WHEN 'kumo' THEN 2 WHEN 'mary' THEN 3 ELSE 0 END"
     )
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test(expected = ParserException::class)
     fun caseOnlyEnd() {
         parse("CASE END")
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test(expected = ParserException::class)
     fun searchedCaseNoWhenWithElse() {
         parse("CASE ELSE 1 END")
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test(expected = ParserException::class)
     fun simpleCaseNoWhenWithElse() {
         parse("CASE name ELSE 1 END")
     }
@@ -723,27 +723,27 @@ class IonSqlParserTest : Base() {
         "SELECT g FROM data GROUP PARTIAL BY a AS x, b + c AS y, foo(d) AS z GROUP AS g"
     )
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test(expected = ParserException::class)
     fun groupByOrdinal() {
         parse("SELECT a FROM data GROUP BY 1")
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test(expected = ParserException::class)
     fun groupByOutOfBoundsOrdinal() {
         parse("SELECT a FROM data GROUP BY 2")
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test(expected = ParserException::class)
     fun groupByBadOrdinal() {
         parse("SELECT a FROM data GROUP BY -1")
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test(expected = ParserException::class)
     fun groupByStringConstantOrdinal() {
         parse("SELECT a FROM data GROUP BY 'a'")
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test(expected = ParserException::class)
     fun leftOvers() {
         parse("5 5")
     }

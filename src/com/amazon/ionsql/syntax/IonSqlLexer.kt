@@ -386,7 +386,7 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
 
         for (cp in codePoints) {
             fun err(prefix: String = "Invalid character ${repr(cp)}"): Nothing {
-                throw IllegalArgumentException("$prefix at $tracker")
+                throw LexerException(prefix, tracker.position)
             }
 
             tracker.advance(cp)

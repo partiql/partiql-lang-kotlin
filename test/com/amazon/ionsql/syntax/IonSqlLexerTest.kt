@@ -21,9 +21,11 @@ class IonSqlLexerTest : Base() {
         return Token(type, value, SourcePosition(line, column))
     }
 
+    fun tokenize(text: String) = lexer.tokenize(text)
+
     fun assertTokens(text: String, vararg tokens: Token) {
         val expected = listOf(*tokens)
-        val actual = lexer.tokenize(text)
+        val actual = tokenize(text)
         assertEquals(expected, actual)
     }
 
@@ -279,4 +281,9 @@ class IonSqlLexerTest : Base() {
         "SEXP",
         token(KEYWORD, "sexp", 1, 1)
     )
+
+    @Test(expected = LexerException::class)
+    fun invalidNumber() {
+        tokenize("1E++0")
+    }
 }
