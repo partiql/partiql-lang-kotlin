@@ -636,7 +636,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             rem = rem.tailExpectedKeyword("by")
 
             val groupKey = rem.parseArgList(
-                aliasSupportType = NONE,
+                aliasSupportType = AS_ONLY,
                 mode = NORMAL_ARG_LIST
             )
             groupKey.children.forEach {

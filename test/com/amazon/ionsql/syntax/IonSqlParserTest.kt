@@ -706,21 +706,21 @@ class IonSqlParserTest : Base() {
     )
 
     @Test
-    fun groupPartialByMultiAliased() = assertExpression(
+    fun groupPartialByMultiAliasedAndGroupAliased() = assertExpression(
         """(select
              (project (list (id g)))
              (from (id data))
              (group_partial
                (by
-                 (id a)
-                 (+ (id b) (id c))
-                 (call foo (id d))
+                 (as x (id a))
+                 (as y (+ (id b) (id c)))
+                 (as z (call foo (id d)))
                )
                (name g)
              )
            )
         """,
-        "SELECT g FROM data GROUP PARTIAL BY a, b + c, foo(d) GROUP AS g"
+        "SELECT g FROM data GROUP PARTIAL BY a AS x, b + c AS y, foo(d) AS z GROUP AS g"
     )
 
     @Test(expected = IllegalArgumentException::class)

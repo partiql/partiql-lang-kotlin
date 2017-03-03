@@ -81,7 +81,8 @@ All other nodes are optional and not positionally defined.  Possible nodes:
 ### `GROUP BY` Clause
 The `(group ...)` and `(group_partial ...)` clause have one mandatory element:
 
-* `(by <VALUE EXPR>...)` - the expressions to group by.
+* `(by <VALUE EXPR>...)` - the expressions to group by.  Each clause may be wrapped in an
+  `(as ...)` node to alias the group component.
 
 There is an optional second element that binds the group itself as a collection to a name
 visible in the `HAVING` clause and the `SELECT` projection clause.  It is specified as:
