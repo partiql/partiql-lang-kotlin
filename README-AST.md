@@ -15,6 +15,7 @@ Where `name` is the AST node name, which can be one of:
 * `(id <NAME SYMBOL>)` - an identifier.
 * `(<OPERATOR SYMBOL> ...)` - A binary or unary operator.
 * `(select ...)` - A `SELECT-FROM-WHERE` expression.
+* `(pivot ...)` - Convert a collection into a tuple/struct.
 * `(path <VALUE EXPR> <PATH COMPONENT EXPR>...)` - A path (which is used for normal dotted name resolution).
 * `(call <NAME SYMBOL> <VALUE EXPR>...)` - A function invocation.
 * `(struct <NAME EXPR> <VALUE EXPR>...)` - A *constructor* for a tuple/struct that
@@ -95,6 +96,24 @@ For example, the clause `GROUP PARTIAL BY age GROUP AS age_group`:
 (group_partial
   (by (id age))
   (name age_group)
+)
+```
+
+## `PIVOT` Expressions
+The `(pivot ...)` is very similar to the `(select ...)` form with the only difference that the 
+first element is **not** a `(project ...)` node.  Instead, the first node is a
+`(member <NAME EXPR> <VALUE EXPR>)` form, where `<NAME EXPR>` is the computed
+field name of the struct and `<VALUE EXPR>` is the computed value.
+
+The semantics of `PIVOT` are essentially that of `SELECT`, but with the projection being
+struct members.
+
+For example, the expression `PIVOT value AT name FROM data`, translates to:
+
+```
+(pivot
+  (member (id name) (id value))
+  (from (id data))
 )
 ```
 

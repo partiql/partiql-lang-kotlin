@@ -68,6 +68,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         GROUP_PARTIAL,
         HAVING,
         LIMIT,
+        PIVOT,
         UNPIVOT,
         CALL,
         ARG_LIST,
@@ -148,7 +149,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 }
                 else -> unsupported("Unsupported atom token")
             }
-            CAST, PATH, LIST, BAG, UNPIVOT -> sexp {
+            CAST, PATH, LIST, BAG, UNPIVOT, MEMBER -> sexp {
                 addSymbol(node.type.identifier)
                 addChildNodes(node)
             }
@@ -173,31 +174,39 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 addSymbol(token?.text!!)
                 addChildNodes(node)
             }
-            SELECT_LIST, SELECT_VALUE -> sexp {
-                addSymbol("select")
-                addSexp {
-                    var projection = children[0]
-
-                    // unwrap the DISTINCT modifier
-                    if (children[0].type == DISTINCT) {
-                        addSymbol("project_distinct")
-                        projection = projection.children[0]
-                    } else {
-                        addSymbol("project")
+            PIVOT, SELECT_LIST, SELECT_VALUE -> sexp {
+                when (node.type) {
+                    PIVOT -> {
+                        addSymbol("pivot")
+                        add(children[0].toSexp())
                     }
+                    else -> {
+                        addSymbol("select")
+                        addSexp {
+                            var projection = children[0]
 
-                    addSexp {
-                        addSymbol(when (node.type) {
-                            SELECT_LIST -> when {
-                                projection.children.isEmpty() -> "*"
-                                else -> "list"
+                            // unwrap the DISTINCT modifier
+                            if (children[0].type == DISTINCT) {
+                                addSymbol("project_distinct")
+                                projection = projection.children[0]
+                            } else {
+                                addSymbol("project")
                             }
-                            SELECT_VALUE -> "value"
-                            else -> unsupported("Unsupported SELECT type")
-                        })
-                        when (node.type) {
-                            SELECT_VALUE -> add(projection.toSexp())
-                            else -> addChildNodes(projection)
+
+                            addSexp {
+                                addSymbol(when (node.type) {
+                                    SELECT_LIST -> when {
+                                        projection.children.isEmpty() -> "*"
+                                        else -> "list"
+                                    }
+                                    SELECT_VALUE -> "value"
+                                    else -> unsupported("Unsupported SELECT type")
+                                })
+                                when (node.type) {
+                                    SELECT_VALUE -> add(projection.toSexp())
+                                    else -> addChildNodes(projection)
+                                }
+                            }
                         }
                     }
                 }
@@ -426,6 +435,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             }.deriveExpected()
             "cast" -> tail.parseCast()
             "select" -> tail.parseSelect()
+            "pivot" -> tail.parsePivot()
             // table value constructor--which aliases to bag constructor in SQL++ with very
             // specific syntax
             "values" -> tail.parseTableValues().copy(type = BAG)
@@ -542,6 +552,15 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         }
 
         return typeNode
+    }
+
+    private fun List<Token>.parsePivot(): ParseNode {
+        var rem = this
+        val value = rem.parseExpression().deriveExpectedKeyword("at")
+        rem = value.remaining
+        val name = rem.parseExpression()
+        rem = name.remaining
+        return parseSelectAfterProjection(PIVOT, ParseNode(MEMBER, null, listOf(name, value), rem))
     }
 
     private fun List<Token>.parseSelect(): ParseNode {

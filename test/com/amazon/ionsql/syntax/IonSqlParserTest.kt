@@ -786,4 +786,34 @@ class IonSqlParserTest : Base() {
         """,
         "SELECT g FROM data WHERE a = b GROUP BY c, d GROUP AS g HAVING d > 6"
     )
+
+    @Test
+    fun pivotWithOnlyFrom() = assertExpression(
+        """
+          (pivot
+            (member (id n) (id v))
+            (from (id data))
+          )
+        """,
+        "PIVOT v AT n FROM data"
+    )
+
+    @Test
+    fun pivotHavingWithWhereAndGroupBy() = assertExpression(
+        """
+          (pivot
+            (member (|| (lit "prefix:") (id c)) (id g))
+            (from (id data))
+            (where (= (id a) (id b)))
+            (group (by (id c) (id d)) (name g))
+            (having (> (id d) (lit 6)))
+          )
+        """,
+        "PIVOT g AT ('prefix:' || c) FROM data WHERE a = b GROUP BY c, d GROUP AS g HAVING d > 6"
+    )
+
+    @Test(expected = ParserException::class)
+    fun pivotNoAt() {
+        parse("PIVOT v FROM data")
+    }
 }
