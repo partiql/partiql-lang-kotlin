@@ -140,6 +140,14 @@ class EvaluatingCompiler(private val ion: IonSystem,
                     }
             }.seal().exprValue().orderedNamesValue(names)
         },
+        "bag" to bindOp(minArity = 0, maxArity = Integer.MAX_VALUE) { _, args ->
+            SequenceExprValue(ion) {
+                args.asSequence().map {
+                    // make sure we don't expose any underlying value name/ordinal
+                    it.unnamedValue()
+                }
+            }
+        },
         "||" to bindOp { _, args ->
             (args[0].stringValue() + args[1].stringValue()).exprValue()
         },

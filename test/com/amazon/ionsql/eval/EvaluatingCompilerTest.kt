@@ -102,10 +102,16 @@ class EvaluatingCompilerTest : Base() {
     fun structLiteral() = assertEval("{'a':i, 'b':f, 'c':d, 'd': 1}", "{a:1, b:2e0, c:3d0, d:1}")
 
     @Test
+    fun bagLiteral() = assertEval("<<i, f, d>>", "[1, 2e0, 3d0]")
+
+    @Test
     fun emptyListLiteral() = assertEval("[]", "[]")
 
     @Test
     fun emptyStructLiteral() = assertEval("{}", "{}")
+
+    @Test
+    fun emptyBagLiteral() = assertEval("<<>>", "[]")
 
     @Test
     fun unaryPlus() = assertEval("+i", "1")
@@ -327,6 +333,12 @@ class EvaluatingCompilerTest : Base() {
     fun rangeOverListWithAsAndAt() = assertEval(
         "SELECT VALUE [i, v] FROM `[1, 2, 3]` AS v AT i",
         """[[0, 1], [1, 2], [2, 3]]"""
+    )
+
+    @Test
+    fun rangeOverBagWithAt() = assertEval(
+        "SELECT VALUE i FROM <<1, 2, 3>> AS v AT i",
+        """[null, null, null]"""
     )
 
     @Test
