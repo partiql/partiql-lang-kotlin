@@ -102,6 +102,12 @@ class EvaluatingCompilerTest : Base() {
     fun structLiteral() = assertEval("{'a':i, 'b':f, 'c':d, 'd': 1}", "{a:1, b:2e0, c:3d0, d:1}")
 
     @Test
+    fun emptyListLiteral() = assertEval("[]", "[]")
+
+    @Test
+    fun emptyStructLiteral() = assertEval("{}", "{}")
+
+    @Test
     fun unaryPlus() = assertEval("+i", "1")
 
     @Test

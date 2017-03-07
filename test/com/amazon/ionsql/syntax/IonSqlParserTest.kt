@@ -57,6 +57,24 @@ class IonSqlParserTest : Base() {
     )
 
     @Test
+    fun nestedEmptyListLiteral() = assertExpression(
+        "(list (list))",
+        "[[]]"
+    )
+
+    @Test
+    fun nestedEmptyBagLiteral() = assertExpression(
+        "(bag (bag))",
+        "<<<<>>>>"
+    )
+
+    @Test
+    fun nestedEmptyStructLiteral() = assertExpression(
+        """(struct (lit "a") (struct))""",
+        "{'a':{}}"
+    )
+
+    @Test
     fun callEmpty() = assertExpression(
         "(call foobar)",
         "foobar()"

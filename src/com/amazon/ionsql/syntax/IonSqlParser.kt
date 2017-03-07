@@ -459,9 +459,18 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 else -> group.copy(type = LIST)
             }
         }
-        LEFT_BRACKET -> tail.parseListLiteral()
-        LEFT_DOUBLE_ANGLE_BRACKET -> tail.parseBagLiteral()
-        LEFT_CURLY -> tail.parseStructLiteral()
+        LEFT_BRACKET -> when (tail.head?.type) {
+            RIGHT_BRACKET -> ParseNode(LIST, null, emptyList(), tail.tail)
+            else -> tail.parseListLiteral()
+        }
+        LEFT_DOUBLE_ANGLE_BRACKET -> when (tail.head?.type) {
+            RIGHT_DOUBLE_ANGLE_BRACKET -> ParseNode(BAG, null, emptyList(), tail.tail)
+            else -> tail.parseBagLiteral()
+        }
+        LEFT_CURLY -> when (tail.head?.type) {
+            RIGHT_CURLY -> ParseNode(STRUCT, null, emptyList(), tail.tail)
+            else -> tail.parseStructLiteral()
+        }
         IDENTIFIER -> when (tail.head?.type) {
             LEFT_PAREN -> tail.tail.parseFunctionCall(head!!)
             else -> atomFromHead()
