@@ -282,6 +282,12 @@ class EvaluatingCompilerTest : Base() {
     )
 
     @Test
+    fun selectPathUnpivotWildCardOverStructMultiple() = assertEval(
+        "SELECT name, val FROM a.*.*.*.* AS val AT name",
+        """[{name: "e", val: 5}, {name: "f", val: 6}]"""
+    )
+
+    @Test
     fun rangeOverScalar() = assertEval(
         "SELECT VALUE v FROM 1 AS v",
         """[1]"""

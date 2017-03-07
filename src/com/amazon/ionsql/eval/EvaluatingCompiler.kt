@@ -329,6 +329,10 @@ class EvaluatingCompiler(private val ion: IonSystem,
             SequenceExprValue(ion) {
                 evalQueryWithoutProjection(env, expr).map { (joinedValues, locals) ->
                     selectFunc(joinedValues, locals)
+                }.map {
+                    // TODO make this expose the ordinal for ordered sequences
+                    // make sure we don't expose the underlying value's name out of a SELECT
+                    it.unnamedValue()
                 }
             }
         },

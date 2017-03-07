@@ -33,9 +33,5 @@ class SequenceExprValue(private val ion: IonSystem,
 
     override val bindings = Bindings.empty()
 
-    override fun iterator() = sequence()
-        // TODO make this expose the ordinal for ordered sequences
-        // make sure we don't expose the underlying value's name
-        .map { it.unnamedValue() }
-        .iterator()
+    override fun iterator() = sequence().iterator()
 }
