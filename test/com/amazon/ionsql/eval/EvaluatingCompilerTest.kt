@@ -6,7 +6,6 @@ package com.amazon.ionsql.eval
 
 import com.amazon.ionsql.Base
 import com.amazon.ionsql.syntax.ParserException
-import com.amazon.ionsql.util.asFacet
 import com.amazon.ionsql.util.exprValue
 import org.junit.Test
 
