@@ -42,7 +42,7 @@ The following binary operators are defined in the form `(<OPNAME> <LEFT EXPR> <R
 
 * `/` - Division.
 * `%` - Division remainder.
-* `*` - Multplication.
+* `*` - Multiplication.
 * `||` - String concatenation.
 * `like` - String pattern comparison.
 * `<`, `<=`, `>`, `>=`, `=`, `<>` - Comparison operators.
