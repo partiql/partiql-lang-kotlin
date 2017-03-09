@@ -6,6 +6,7 @@ package com.amazon.ionsql.eval
 
 import com.amazon.ionsql.Base
 import com.amazon.ionsql.syntax.ParserException
+import com.amazon.ionsql.util.asFacet
 import com.amazon.ionsql.util.exprValue
 import org.junit.Test
 
@@ -69,8 +70,8 @@ class EvaluatingCompilerTest : Base() {
     fun voidEval(source: String) { eval(source) }
 
     fun assertEval(source: String,
-             expectedLit: String,
-             block: AssertExprValue.() -> Unit = { }) {
+                   expectedLit: String,
+                   block: AssertExprValue.() -> Unit = { }) {
         val expectedIon = literal(expectedLit)
         val exprVal = eval(source)
         AssertExprValue(exprVal)
@@ -99,7 +100,11 @@ class EvaluatingCompilerTest : Base() {
     fun listLiteral() = assertEval("[i, f, d]", "[1, 2e0, 3d0]")
 
     @Test
-    fun structLiteral() = assertEval("{'a':i, 'b':f, 'c':d, 'd': 1}", "{a:1, b:2e0, c:3d0, d:1}")
+    fun structLiteral() = assertEval("{'a':i, 'b':f, 'c':d, 'd': 1}", "{a:1, b:2e0, c:3d0, d:1}") {
+        // struct literals provide ordered names
+        val bindNames = exprValue.asFacet(OrderedBindNames::class.java)!!
+        assertEquals(listOf("a", "b", "c", "d"), bindNames.orderedNames)
+    }
 
     @Test
     fun bagLiteral() = assertEval("<<i, f, d>>", "[1, 2e0, 3d0]")
@@ -357,13 +362,24 @@ class EvaluatingCompilerTest : Base() {
             {name: "Lilikoi", type: "unicorn"},
           ]
         """
-    )
+    ) {
+        // SELECT * from schema-less Ion provides no ordered names
+        exprValue.forEach {
+            assertNull(it.asFacet(OrderedBindNames::class.java))
+        }
+    }
 
     @Test
     fun implicitAliasSelectSingleSource() = assertEval(
         """SELECT id FROM stores""",
         """[{id:"5"}, {id:"6"}]"""
-    )
+    ) {
+        // SELECT list provides ordered names facet
+        exprValue.forEach {
+            val bindNames = it.asFacet(OrderedBindNames::class.java)!!
+            assertEquals(listOf("id"), bindNames.orderedNames)
+        }
+    }
 
     @Test
     fun selectValues() = assertEval(

@@ -11,6 +11,8 @@ import com.amazon.ion.IonType.*
 import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
 import com.amazon.ionsql.eval.*
+import com.amazon.ionsql.eval.io.DelimitedValues
+import com.amazon.ionsql.eval.io.DelimitedValues.ConversionMode
 import com.amazon.ionsql.syntax.IonSqlParser
 import com.amazon.ionsql.util.*
 import java.io.*
@@ -25,69 +27,28 @@ private val BAR_2    = "------- "
 
 private val ION = IonSystemBuilder.standard().build()
 
-private val DELIM_CONVERTERS = mapOf<String, (String) -> IonValue>(
-    "none" to { raw -> ION.newString(raw) },
-    "auto" to { raw ->
-        try {
-            val converted = ION.singleValue(raw)
-            when (converted) {
-                is IonInt, is IonFloat, is IonDecimal, is IonTimestamp -> converted
-                else -> ION.newString(raw)
-            }
-        } catch (e: IonException) {
-            ION.newString(raw)
-        }
-    }
-)
-
-private fun delimitedReadHandler(delimiter: String): (InputStream, IonStruct) -> Sequence<ExprValue> =
+private fun delimitedReadHandler(delimiter: String): (InputStream, IonStruct) -> ExprValue =
     { input, options ->
         val encoding = options["encoding"]?.stringValue() ?: "UTF-8"
-        val reader = BufferedReader(InputStreamReader(input, encoding))
+        val reader = InputStreamReader(input, encoding)
 
         val conversion = options["conversion"]?.stringValue() ?: "none"
-        val converter = DELIM_CONVERTERS[conversion] ?:
-            throw IllegalArgumentException("Unknown conversion: $conversion")
+        val conversionMode = ConversionMode
+            .values()
+            .find { it.name.toLowerCase() == conversion } ?:
+                throw IllegalArgumentException("Unknown conversion: $conversion")
 
         val hasHeader = options["header"]?.booleanValue() ?: false
-        val columns: List<String> = when {
-            hasHeader -> {
-                val line = reader.readLine()
-                    ?: throw IllegalArgumentException("Got EOF for header row")
 
-                line.split(delimiter)
-            }
-            else -> emptyList()
-        }
-
-        object : Iterator<ExprValue> {
-            var line = reader.readLine()
-
-            override fun hasNext(): Boolean = line != null
-
-            override fun next(): ExprValue {
-                if (line == null) {
-                    throw NoSuchElementException()
-                }
-                val row = ION.newEmptyStruct()
-                line.splitToSequence(delimiter)
-                    .forEachIndexed { i, raw ->
-                        val name = when {
-                            i < columns.size -> columns[i]
-                            else -> "_$i"
-                        }
-                        row.add(name, converter(raw))
-                    }
-
-                line = reader.readLine()
-                return IonExprValue(row)
-            }
-        }.asSequence()
+        DelimitedValues.exprValue(ION, reader, delimiter, hasHeader, conversionMode)
     }
 
 private val READ_HANDLERS = mapOf(
     "ion" to { input, _ ->
-        ION.iterate(input).asSequence().map { it.exprValue() }
+        SequenceExprValue(
+            ION,
+            ION.iterate(input).asSequence().map { it.exprValue() }
+        )
     },
     "tsv" to delimitedReadHandler("\t"),
     "csv" to delimitedReadHandler(",")
@@ -101,39 +62,7 @@ private fun delimitedWriteHandler(delimiter: String): (ExprValue, OutputStream, 
 
         val writer = OutputStreamWriter(out, encoding)
         writer.use {
-            var names: List<String>? = null
-            for (row in results) {
-                val colNames = row.asFacet(OrderedBindNames::class.java)?.orderedNames
-                    ?: throw IllegalArgumentException("Delimited data must be ordered tuple: $row")
-                if (names == null) {
-                    // first row defines column names
-                    names = colNames
-
-                    if (writeHeader) {
-                        names.joinTo(writer, delimiter)
-                        writer.write(nl)
-                    }
-                } else if (names != colNames) {
-                    // mismatch on the tuples
-                    throw IllegalArgumentException(
-                        "Inconsistent row names: $colNames != $names"
-                    )
-                }
-
-                row.map {
-                    val col = it.ionValue
-                    when (col.type) {
-                        // TODO configurable null handling
-                        NULL, BOOL, INT, FLOAT, DECIMAL, TIMESTAMP -> col.toString()
-                        SYMBOL, STRING -> col.stringValue()
-                        // TODO LOB/BLOB support
-                        else -> throw IllegalArgumentException(
-                            "Delimited data column must not be ${col.type} type"
-                        )
-                    }
-                }.joinTo(writer, delimiter)
-                writer.write(nl)
-            }
+            DelimitedValues.writeTo(ION, writer, results, delimiter, nl, writeHeader)
         }
     }
 
@@ -180,11 +109,12 @@ fun main(args: Array<String>) {
             val fileType = options["type"]?.stringValue() ?: "ion"
             val handler = READ_HANDLERS[fileType] ?:
                 throw IllegalArgumentException("Unknown file type: $fileType")
-            SequenceExprValue(ION) {
+            val seq = Sequence<ExprValue> {
                 // TODO we should take care to clean this up properly
                 val fileInput = FileInputStream(fileName)
-                handler(fileInput, options)
+                handler(fileInput, options).iterator()
             }
+            SequenceExprValue(ION, seq)
         },
         "write_file" to { _, args ->
             val options = optionsStruct(2, args, optionsIndex = 1)
@@ -257,7 +187,7 @@ fun main(args: Array<String>) {
                             // TODO make this distinction more obvious
                             !is SequenceExprValue -> {
                                 val value = result
-                                SequenceExprValue(ION) { listOf(value).asSequence() }
+                                SequenceExprValue(ION, listOf(value).asSequence())
                             }
                             else -> result
                         }

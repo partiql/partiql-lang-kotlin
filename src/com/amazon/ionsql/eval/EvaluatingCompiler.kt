@@ -141,12 +141,13 @@ class EvaluatingCompiler(private val ion: IonSystem,
             }.seal().exprValue().orderedNamesValue(names)
         },
         "bag" to bindOp(minArity = 0, maxArity = Integer.MAX_VALUE) { _, args ->
-            SequenceExprValue(ion) {
+            SequenceExprValue(
+                ion,
                 args.asSequence().map {
                     // make sure we don't expose any underlying value name/ordinal
                     it.unnamedValue()
                 }
-            }
+            )
         },
         "||" to bindOp { _, args ->
             (args[0].stringValue() + args[1].stringValue()).exprValue()
@@ -264,7 +265,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
             when (firstWildcardKind) {
                 PathWildcardKind.NONE -> curr
-                else -> SequenceExprValue(ion) {
+                else -> {
                     if (firstWildcardKind == PathWildcardKind.UNPIVOT) {
                         curr = curr.unpivot()
                     }
@@ -272,7 +273,8 @@ class EvaluatingCompiler(private val ion: IonSystem,
                     for (component in components) {
                         seq = seq.flatMap(component)
                     }
-                    seq
+
+                    SequenceExprValue(ion, seq)
                 }
             }
         },
@@ -320,7 +322,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                     { _, locals ->
                         applyToNewStruct {
                             projectSelectList(locals, selectExprs.asSequence().drop(1), selectNames)
-                        }
+                        }.orderedNamesValue(selectNames)
                     }
                 }
                 "value" -> {
@@ -334,7 +336,8 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 else -> err("Invalid node in SELECT: $selectExprs")
             }
 
-            SequenceExprValue(ion) {
+            SequenceExprValue(
+                ion,
                 evalQueryWithoutProjection(env, expr).map { (joinedValues, locals) ->
                     selectFunc(joinedValues, locals)
                 }.map {
@@ -342,7 +345,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                     // make sure we don't expose the underlying value's name out of a SELECT
                     it.unnamedValue()
                 }
-            }
+            )
         },
         "pivot" to { env, expr ->
             if (expr.size < 3) {

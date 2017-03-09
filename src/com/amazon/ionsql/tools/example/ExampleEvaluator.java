@@ -9,6 +9,7 @@ import com.amazon.ion.IonValue;
 import com.amazon.ion.system.IonSystemBuilder;
 import com.amazon.ionsql.eval.*;
 import kotlin.jvm.functions.Function2;
+import kotlin.sequences.Sequence;
 import kotlin.sequences.SequencesKt;
 
 import java.util.HashMap;
@@ -72,19 +73,12 @@ public class ExampleEvaluator {
         EvaluatingCompiler evaluator = new EvaluatingCompiler(ion, funcs);
 
         // create a streaming source out of stdin (only allowing one pass)
-        AtomicReference<Iterator<IonValue>> input = new AtomicReference<>(ion.iterate(System.in));
-        ExprValue data = new SequenceExprValue(
-            ion,
-            () -> {
-                Iterator<IonValue> iter = input.getAndSet(null);
-                if (iter == null) {
-                    throw new IllegalStateException("Cannot range over input more than once");
-                }
-
-                // adapt to Kotlin sequence
-                return SequencesKt.map(SequencesKt.asSequence(iter), IonExprValue::new);
-            }
+        Iterator<IonValue> iter = ion.iterate(System.in);
+        Sequence<ExprValue> seq = SequencesKt.map(
+            SequencesKt.asSequence(iter),
+            IonExprValue::new
         );
+        ExprValue data = new SequenceExprValue(ion, seq);
 
         String source = args[0];
         Expression expr = evaluator.compile(source);

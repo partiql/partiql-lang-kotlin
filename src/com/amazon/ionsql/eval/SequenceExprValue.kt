@@ -14,14 +14,11 @@ import com.amazon.ionsql.util.*
  * closest analog to the `Dataset` concept in Ion SQL.  Materialzing the
  * `ionValue` field generates an [IonList] from the sequence **once**.
  *
- * The Given [sequence] function **must** be stable, meaning each subsequent invocation
- * returns the same sequence of values otherwise the behavior of this value is *undefined*.
- *
  * @param ion The underlying [IonSystem] for generating values.
  * @param sequence The [Sequence] generating function.
  */
 class SequenceExprValue(private val ion: IonSystem,
-                        private val sequence: () -> Sequence<ExprValue>) : BaseExprValue() {
+                        private val sequence: Sequence<ExprValue>) : BaseExprValue() {
     // TODO allow a sequence to report itself as a LIST for ORDER BY cases
     override val type = ExprValueType.BAG
 
@@ -33,5 +30,5 @@ class SequenceExprValue(private val ion: IonSystem,
 
     override val bindings = Bindings.empty()
 
-    override fun iterator() = sequence().iterator()
+    override fun iterator() = sequence.iterator()
 }
