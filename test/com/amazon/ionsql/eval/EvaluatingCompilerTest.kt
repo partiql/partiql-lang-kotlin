@@ -97,7 +97,13 @@ class EvaluatingCompilerTest : Base() {
     fun functionCall() = assertEval("exists(select * from [1])", "true")
 
     @Test
+    fun grouping() = assertEval("((i))", "1")
+
+    @Test
     fun listLiteral() = assertEval("[i, f, d]", "[1, 2e0, 3d0]")
+
+    @Test
+    fun rowValueConstructor() = assertEval("(i, f, d)", "[1, 2e0, 3d0]")
 
     @Test
     fun structLiteral() = assertEval("{'a':i, 'b':f, 'c':d, 'd': 1}", "{a:1, b:2e0, c:3d0, d:1}") {
@@ -108,6 +114,9 @@ class EvaluatingCompilerTest : Base() {
 
     @Test
     fun bagLiteral() = assertEval("<<i, f, d>>", "[1, 2e0, 3d0]")
+
+    @Test
+    fun tableValueConstructor() = assertEval("VALUES (i), (f, d)", "[[1], [2e0, 3d0]]")
 
     @Test
     fun emptyListLiteral() = assertEval("[]", "[]")
