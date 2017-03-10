@@ -350,14 +350,14 @@ class EvaluatingCompilerTest : Base() {
 
     @Test
     fun rangeOverBagWithAt() = assertEval(
-        "SELECT VALUE i FROM <<1, 2, 3>> AS v AT i",
-        """[null, null, null]"""
+        "SELECT VALUE [i, v] FROM <<1, 2, 3>> AS v AT i",
+        """[[null, 1], [null, 2], [null, 3]]"""
     )
 
     @Test
     fun rangeOverNestedWithAt() = assertEval(
-        "SELECT VALUE i FROM (SELECT VALUE v FROM `[1, 2, 3]` AS v) AT i",
-        """[null, null, null]"""
+        "SELECT VALUE [i, v] FROM (SELECT VALUE v FROM `[1, 2, 3]` AS v) AS v AT i",
+        """[[null, 1], [null, 2], [null, 3]]"""
     )
 
     @Test
