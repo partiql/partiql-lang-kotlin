@@ -86,15 +86,24 @@ class IonSqlLexerTest : Base() {
 
     @Test
     fun signedNumbers() = assertTokens(
-        "+500 -600. -0.1 . +.1 -0000 +0.00e0 -1e+1",
-        token(LITERAL, "500", 1, 1),
-        token(LITERAL, "-600d0", 1, 6),
-        token(LITERAL, "-1d-1", 1, 12),
+        "+500 -600. -0.1 . +.1 -0000 +0.00e0 -+-1e+1",
+        token(OPERATOR, "'+'", 1, 1),
+        token(LITERAL, "500", 1, 2),
+        token(OPERATOR, "'-'", 1, 6),
+        token(LITERAL, "600d0", 1, 7),
+        token(OPERATOR, "'-'", 1, 12),
+        token(LITERAL, "1d-1", 1, 13),
         token(DOT, "'.'", 1, 17),
-        token(LITERAL, "1d-1", 1, 19),
-        token(LITERAL, "0", 1, 23),
-        token(LITERAL, "0d-2", 1, 29),
-        token(LITERAL, "-1d1", 1, 37)
+        token(OPERATOR, "'+'", 1, 19),
+        token(LITERAL, "1d-1", 1, 20),
+        token(OPERATOR, "'-'", 1, 23),
+        token(LITERAL, "0", 1, 24),
+        token(OPERATOR, "'+'", 1, 29),
+        token(LITERAL, "0d-2", 1, 30),
+        token(OPERATOR, "'-'", 1, 37),
+        token(OPERATOR, "'+'", 1, 38),
+        token(OPERATOR, "'-'", 1, 39),
+        token(LITERAL, "1d1", 1, 40)
     )
 
     @Test

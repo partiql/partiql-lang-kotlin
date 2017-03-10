@@ -200,10 +200,14 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
             delta(",", START_AND_TERMINAL, COMMA)
             delta("*", START_AND_TERMINAL, STAR)
 
-            delta(NON_OVERLOADED_OPERATOR_CHARS, START_AND_TERMINAL, OPERATOR) {
-                delta(OPERATOR_CHARS, TERMINAL, OPERATOR)
-            }
+            delta(NON_OVERLOADED_OPERATOR_CHARS, START_AND_TERMINAL, OPERATOR)
 
+            delta("|", START) {
+                delta("|", TERMINAL, OPERATOR, delegate = initialState)
+            }
+            delta("!", START) {
+                delta("=", TERMINAL, OPERATOR, delegate = initialState)
+            }
             delta("<", START_AND_TERMINAL, OPERATOR) {
                 delta("=", TERMINAL, OPERATOR, delegate = initialState)
                 delta(">", TERMINAL, OPERATOR, delegate = initialState)
@@ -262,14 +266,9 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
                         }
                     }
                 }
-
             }
             
             deltaNumber(START_AND_TERMINAL)
-
-            delta("+", START_AND_TERMINAL, OPERATOR) {
-                deltaNumber(TERMINAL)
-            }
 
             fun TableState.deltaQuote(quoteChar: String, tokenType: TokenType, lexType: LexType): Unit {
                 delta(quoteChar, START, replacement = REPLACE_NOTHING) {
@@ -362,7 +361,6 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
                     selfRepeatingDelegate(INCOMPLETE)
                     delta(NL_WHITESPACE_CHARS, TERMINAL, delegate = initialState)
                 }
-                deltaNumber(TERMINAL)
             }
 
             // TODO datetime/hex/bin literals (not required for SQL-92 Entry compliance)

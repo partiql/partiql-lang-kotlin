@@ -112,6 +112,14 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
 
         fun deriveExpectedKeyword(keyword: String): ParseNode = derive { tailExpectedKeyword(keyword) }
 
+        val isNumericLiteral = type == ATOM && when (token?.type) {
+            LITERAL -> token.value?.isNumeric ?: false
+            else -> false
+        }
+
+        fun numberValue(): Number = token?.value?.numberValue()
+            ?: unsupported("Could not interpret token as number")
+
         fun unsupported(message: String): Nothing =
             remaining.err(message)
     }
@@ -361,12 +369,36 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             true -> {
                 val term = tail.parseUnaryTerm()
 
-                ParseNode(
+                var expr = ParseNode(
                     UNARY,
                     head,
                     listOf(term),
                     term.remaining
                 )
+                // constant fold unary plus/minus into constant literals
+                when (head?.keywordText) {
+                    "+" -> when {
+                        term.isNumericLiteral -> {
+                            // unary plus is a NO-OP
+                            expr = term
+                        }
+                    }
+                    "-" -> when {
+                        term.isNumericLiteral -> {
+                            val num = -term.numberValue()
+                            expr = ParseNode(
+                                ATOM,
+                                term.token!!.copy(
+                                    value = num.ionValue(ion)
+                                ),
+                                emptyList(),
+                                term.remaining
+                            )
+                        }
+                    }
+                }
+
+                expr
             }
             else -> parsePathTerm()
         }

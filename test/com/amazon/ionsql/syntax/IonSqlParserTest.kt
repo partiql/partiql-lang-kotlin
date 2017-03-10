@@ -121,6 +121,54 @@ class IonSqlParserTest : Base() {
     )
 
     @Test
+    fun mixedAddMinusAndUnaryPlusMinus() = assertExpression(
+        """(and
+             (+
+               (id a)
+               (lit -5.)
+             )
+             (-
+               (id c)
+               (lit 7.0)
+             )
+           )
+        """,
+        "(a+-5e0) and (c-+7.0)"
+    )
+
+    @Test
+    fun mixedMultiplyComparisonAndUnaryPlusMinus() = assertExpression(
+        """(and
+             (*
+               (id d)
+               (lit 9)
+             )
+             (>=
+               (id e)
+               (+ (- (+ (id foo))))
+             )
+           )
+        """,
+        "d*-+-9 and e>=+-+foo"
+    )
+
+    @Test
+    fun unaryIonFloatLiteral() = assertExpression(
+        """
+        (lit 5e0)
+        """,
+        "+-+-+-`-5e0`"
+    )
+
+    @Test
+    fun unaryIonTimestampLiteral() = assertExpression(
+        """
+        (+ (- (lit 2017-01-01T)))
+        """,
+        "+-`2017-01-01`"
+    )
+
+    @Test
     fun betweenOperator() = assertExpression(
         """(between (lit 5) (lit 1) (lit 10))""",
         "5 BETWEEN 1 AND 10"

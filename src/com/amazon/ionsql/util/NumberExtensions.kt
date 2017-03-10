@@ -4,6 +4,8 @@
 
 package com.amazon.ionsql.util
 
+import com.amazon.ion.IonSystem
+import com.amazon.ion.IonValue
 import java.math.BigDecimal
 
 private val RANKS = mapOf(
@@ -44,6 +46,13 @@ fun coerceNumbers(first: Number, second: Number): Pair<Number, Number> {
         .maxBy { RANKS[it] ?: throw IllegalArgumentException("No coercion support for $it") }!!
 
     return Pair(first.coerce(type), second.coerce(type))
+}
+
+fun Number.ionValue(ion: IonSystem): IonValue = when (this) {
+    is Long -> ion.newInt(this)
+    is Double -> ion.newFloat(this)
+    is BigDecimal -> ion.newDecimal(this)
+    else -> throw IllegalArgumentException("Cannot convert to IonValue: $this")
 }
 
 operator fun Number.unaryMinus(): Number {
