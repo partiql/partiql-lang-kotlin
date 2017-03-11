@@ -32,7 +32,10 @@ operator fun IonValue.iterator(): Iterator<IonValue> = when (this) {
     else -> throw IllegalArgumentException("Expected container: $this")
 }
 
-fun IonValue.asSequence(): Sequence<IonValue> = iterator().asSequence()
+fun IonValue.asSequence(): Sequence<IonValue> = when (this) {
+    is IonContainer -> Sequence { iterator() }
+    else -> err("Expected container: $this")
+}
 
 fun IonValue.stringValue(): String? = when (this) {
     is IonText -> stringValue()
