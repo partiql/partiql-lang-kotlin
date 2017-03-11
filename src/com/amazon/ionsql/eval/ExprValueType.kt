@@ -11,18 +11,21 @@ import com.amazon.ionsql.syntax.TYPE_NAME_ARITY_MAP
  * The core types of [ExprValue] that exist within the type system of the evaluator.
  * There is a correspondence to [IonType], but it isn't quite one-to-one.
  */
-enum class ExprValueType(val isText: Boolean = false) {
-    MISSING,
-    NULL,
+enum class ExprValueType(val isNull: Boolean = false,
+                         val isNumber: Boolean = false,
+                         val isText: Boolean = false,
+                         val isLob: Boolean = false) {
+    MISSING(isNull = true),
+    NULL(isNull = true),
     BOOL,
-    INT,
-    FLOAT,
-    DECIMAL,
+    INT(isNumber = true),
+    FLOAT(isNumber = true),
+    DECIMAL(isNumber = true),
     TIMESTAMP,
     SYMBOL(isText = true),
     STRING(isText = true),
-    CLOB,
-    BLOB,
+    CLOB(isLob = true),
+    BLOB(isLob = true),
     LIST,
     SEXP,
     STRUCT,

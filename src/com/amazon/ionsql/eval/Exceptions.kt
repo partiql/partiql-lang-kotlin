@@ -10,3 +10,6 @@ import com.amazon.ionsql.IonSqlException
 open class EvaluationException(message: String,
                                cause: Throwable? = null)
     : IonSqlException(message, cause)
+
+/** Shorthand for throwing evaluation errors. */
+internal fun err(message: String): Nothing = throw EvaluationException(message)

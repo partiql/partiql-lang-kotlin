@@ -192,5 +192,4 @@ The above would indicate the the integer literal `5` was located at line 1, colu
 
 ## TODO
 * Support `JOIN` constructs.
-* Support `HAVING`.
 * Support `ORDER BY`.

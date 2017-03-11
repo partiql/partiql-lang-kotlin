@@ -9,27 +9,35 @@ import com.amazon.ionsql.eval.ExprValue
 import com.amazon.ionsql.eval.IonExprValue
 import java.math.BigInteger
 
+private fun err(message: String): Nothing = throw IllegalArgumentException(message)
+
 fun IonValue.seal(): IonValue = apply { makeReadOnly() }
 
 operator fun IonValue.get(name: String): IonValue? = when (this) {
     is IonStruct -> get(name)
-    else -> throw IllegalArgumentException("Expected struct: $this")
+    else -> err("Expected struct: $this")
 }
+
+val IonValue.size: Int
+    get() = when (this) {
+        is IonContainer -> size
+        else -> err("Expected container: $this")
+    }
 
 val IonValue.lastIndex: Int
     get() = when (this) {
         is IonSequence -> size - 1
-        else -> throw IllegalArgumentException("Expected sequence $this")
+        else -> err("Expected sequence $this")
     }
 
 operator fun IonValue.get(index: Int): IonValue = when (this) {
     is IonSequence -> get(index)
-    else -> throw IllegalArgumentException("Expected sequence: $this")
+    else -> err("Expected sequence: $this")
 }
 
 operator fun IonValue.iterator(): Iterator<IonValue> = when (this) {
     is IonContainer -> iterator()
-    else -> throw IllegalArgumentException("Expected container: $this")
+    else -> err("Expected container: $this")
 }
 
 fun IonValue.asSequence(): Sequence<IonValue> = when (this) {
@@ -37,18 +45,13 @@ fun IonValue.asSequence(): Sequence<IonValue> = when (this) {
     else -> err("Expected container: $this")
 }
 
-fun IonValue.stringValue(): String? = when (this) {
-    is IonText -> stringValue()
-    else -> throw IllegalArgumentException("Expected text: $this")
-}
-
 fun IonValue.numberValue(): Number = when {
-    isNullValue -> throw IllegalArgumentException("Expected non-null number: $this")
+    isNullValue -> err("Expected non-null number: $this")
     else -> when (this) {
         is IonInt -> longValue()
         is IonFloat -> doubleValue()
         is IonDecimal -> bigDecimalValue()
-        else -> throw IllegalArgumentException("Expected number: $this")
+        else -> err("Expected number: $this")
     }
 }
 
@@ -58,13 +61,13 @@ private val MIN_INT = Int.MIN_VALUE.toLong()
 fun IonValue.intValue(): Int {
     val number = numberValue()
     if (number > MAX_INT || number < MIN_INT) {
-        throw IllegalArgumentException("Number out of integer range: $number")
+        err("Number out of integer range: $number")
     }
     return when (number) {
         is Int -> number
         is Long -> number.toInt()
         is BigInteger -> number.intValueExact()
-        else -> throw IllegalArgumentException("Number is not an integer: $number")
+        else -> err("Number is not an integer: $number")
     }
 }
 
@@ -74,13 +77,28 @@ fun IonValue.longValue(): Long {
         is Int -> number.toLong()
         is Long -> number
         is BigInteger -> number.longValueExact()
-        else -> throw IllegalArgumentException("Number is not a long: $number")
+        else -> err("Number is not a long: $number")
     }
 }
 
 fun IonValue.booleanValue(): Boolean? = when (this) {
     is IonBool -> booleanValue()
-    else -> throw IllegalArgumentException("Expected boolean: $this")
+    else -> err("Expected boolean: $this")
+}
+
+fun IonValue.timestampValue(): Timestamp = when (this) {
+    is IonTimestamp -> timestampValue()
+    else -> err("Expected timestamp: $this")
+}
+
+fun IonValue.stringValue(): String? = when (this) {
+    is IonText -> stringValue()
+    else -> err("Expected text: $this")
+}
+
+fun IonValue.bytesValue(): ByteArray? = when (this) {
+    is IonLob -> bytes
+    else -> err("Expected LOB: $this")
 }
 
 val IonValue.isNumeric: Boolean

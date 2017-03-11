@@ -148,28 +148,28 @@ class EvaluatingCompilerTest : Base() {
     fun modIntInt() = assertEval("3 % 2", "1")
 
     @Test
-    fun moreIntFloat() = assertEval("3 > 2e0", "true")
+    fun moreIntFloat() = assertEval("3 > `2e0`", "true")
 
     @Test
-    fun moreIntFloatFalse() = assertEval("1 > 2e0", "false")
+    fun moreIntFloatFalse() = assertEval("1 > `2e0`", "false")
 
     @Test
-    fun lessIntFloat() = assertEval("1 < 2e0", "true")
+    fun lessIntFloat() = assertEval("1 < `2e0`", "true")
 
     @Test
-    fun lessIntFloatFalse() = assertEval("3 < 2e0", "false")
+    fun lessIntFloatFalse() = assertEval("3 < `2e0`", "false")
 
     @Test
-    fun moreEqIntFloat() = assertEval("3 >= 2e0", "true")
+    fun moreEqIntFloat() = assertEval("3 >= `2e0`", "true")
 
     @Test
-    fun moreEqIntFloatFalse() = assertEval("1 >= 2e0", "false")
+    fun moreEqIntFloatFalse() = assertEval("1 >= `2e0`", "false")
 
     @Test
-    fun lessEqIntFloat() = assertEval("1 <= 2e0", "true")
+    fun lessEqIntFloat() = assertEval("1 <= `2e0`", "true")
 
     @Test
-    fun lessEqIntFloatFalse() = assertEval("5 <= 2e0", "false")
+    fun lessEqIntFloatFalse() = assertEval("5 <= `2e0`", "false")
 
     @Test
     fun equalIntFloat() = assertEval("1 = 1e0", "true")
@@ -178,10 +178,28 @@ class EvaluatingCompilerTest : Base() {
     fun equalIntFloatFalse() = assertEval("1 = 1e1", "false")
 
     @Test
-    fun notEqualIntFloat() = assertEval("1 != 2e0", "true")
+    fun equalListDifferentTypesTrue() = assertEval(
+        """[1, `2e0`, 'hello'] = [1.0, 2, `hello`]""",
+        "true"
+    )
 
     @Test
-    fun notEqualIntFloatFalse() = assertEval("1 != 1e0", "false")
+    fun equalListDifferentLengthsShortFirst() = assertEval(
+        """[1.0, 2] = [1.0, 2, `hello`]""",
+        "false"
+    )
+
+    @Test
+    fun equalListDifferentLengthsLongFirst() = assertEval(
+        """[1, `2e0`, 'hello'] = [1, `2e0`]""",
+        "false"
+    )
+
+    @Test
+    fun notEqualIntFloat() = assertEval("1 != `2e0`", "true")
+
+    @Test
+    fun notEqualIntFloatFalse() = assertEval("1 != `1e0`", "false")
 
     @Test
     fun missingIsMissing() = assertEval("MISSING IS MISSING", "true")
@@ -627,6 +645,82 @@ class EvaluatingCompilerTest : Base() {
               id: "5",
               title: ["A", "B", "C", "D"]
             }
+          ]
+        """
+    )
+
+    @Test
+    fun inPredicate() = assertEval(
+        """
+          SELECT VALUE b.title FROM stores[*].books[*] AS b WHERE b.price IN (5, `2e0`)
+        """,
+        """
+          [
+            "A", "B", "A"
+          ]
+        """
+    )
+
+    @Test
+    fun notInPredicate() = assertEval(
+        """
+          SELECT VALUE b.title FROM stores[*].books[*] AS b WHERE b.price NOT IN (5, `2e0`)
+        """,
+        """
+          [
+            "C", "D", "E", "F"
+          ]
+        """
+    )
+
+    @Test
+    fun inPredicateWithTableConstructor() = assertEval(
+        """
+          SELECT VALUE b.title FROM stores[*].books[*] AS b
+          WHERE (b.title, b.price) IN (VALUES ('A', `5e0`), ('B', 3.0), ('X', 9.0))
+        """,
+        """
+          [
+            "A", "A"
+          ]
+        """
+    )
+
+    @Test
+    fun notInPredicateWithTableConstructor() = assertEval(
+        """
+          SELECT VALUE b.title FROM stores[*].books[*] AS b
+          WHERE (b.title, b.price) NOT IN (VALUES ('A', `5e0`), ('B', 3.0), ('X', 9.0))
+        """,
+        """
+          [
+            "B", "C", "D", "E", "F"
+          ]
+        """
+    )
+
+    @Test
+    fun inPredicateWithExpressionOnRightSide() = assertEval(
+        """
+          SELECT VALUE b.title FROM stores[*].books[*] AS b
+          WHERE 'comedy' IN b.categories
+        """,
+        """
+          [
+            "B", "E"
+          ]
+        """
+    )
+
+    @Test
+    fun notInPredicateWithExpressionOnRightSide() = assertEval(
+        """
+          SELECT VALUE b.title FROM stores[*].books[*] AS b
+          WHERE 'comedy' NOT IN b.categories
+        """,
+        """
+          [
+            "A", "C", "D", "A", "F"
           ]
         """
     )

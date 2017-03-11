@@ -30,8 +30,6 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 userFuncs: @JvmSuppressWildcards
                            Map<String, (Environment, List<ExprValue>) -> ExprValue>)
         : this(ion, IonSqlParser(ion), userFuncs)
-    
-    private fun err(message: String): Nothing = throw EvaluationException(message)
 
     private data class Alias(val asName: String, val atName: String?)
     private data class FromSource(val alias: Alias, val expr: IonValue)
@@ -209,6 +207,14 @@ class EvaluatingCompiler(private val ion: IonSystem,
         },
         "<>" to bindOp { _, args ->
             (!args[0].exprEquals(args[1])).exprValue()
+        },
+        "in" to bindOp { _, args ->
+            val needle = args[0]
+            args[1].asSequence().any { needle.exprEquals(it) }.exprValue()
+        },
+        "not_in" to bindOp { _, args ->
+            val needle = args[0]
+            (!args[1].asSequence().any { needle.exprEquals(it) }).exprValue()
         },
         "not" to bindOp(minArity = 1, maxArity = 1) { _, args ->
             (!args[0].booleanValue()).exprValue()
@@ -550,14 +556,6 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
     private fun String.exprValue(): ExprValue = ion.newString(this).seal().exprValue()
 
-    private fun ExprValue.booleanValue(): Boolean =
-        ionValue.booleanValue() ?: err("Expected non-null boolean: $ionValue")
-
-    private fun ExprValue.numberValue(): Number = ionValue.numberValue()
-
-    private fun ExprValue.stringValue(): String =
-        ionValue.stringValue() ?: err("Expected non-null string: $ionValue")
-
     private operator fun ExprValue.get(index: ExprValue): ExprValue {
         val indexVal = index.ionValue
         return when (indexVal) {
@@ -568,47 +566,6 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 return bindings[name] ?: missingValue
             }
             else -> err("Cannot convert index to int/string: $indexVal")
-        }
-    }
-
-    private operator fun ExprValue.compareTo(other: ExprValue): Int {
-        val first = this.ionValue
-        val second = other.ionValue
-
-        return when {
-            // nulls can't compare
-            first.isNullValue || second.isNullValue ->
-                err("Null value cannot be compared: $first, $second")
-            // compare the number types
-            first.isNumeric && second.isNumeric ->
-                first.numberValue().compareTo(second.numberValue())
-            // timestamps compare against timestamps
-            first is IonTimestamp && second is IonTimestamp ->
-                first.timestampValue().compareTo(second.timestampValue())
-            // string/symbol compare against themselves
-            first is IonText && second is IonText ->
-                first.stringValue().compareTo(second.stringValue())
-            // TODO should bool/LOBs/aggregates compare?
-            else -> err("Cannot compare values: $first, $second")
-        }
-    }
-
-    // TODO define the various forms of equality properly
-    private fun ExprValue.exprEquals(other: ExprValue): Boolean {
-        val first = this.ionValue
-        val second = other.ionValue
-
-        return when {
-            // null is never equal to anything
-            first.isNullValue || second.isNullValue -> false
-            // arithmetic equality
-            first.isNumeric && second.isNumeric ->
-                first.numberValue().compareTo(second.numberValue()) == 0
-            // text equality for symbols/strings
-            first is IonText && second is IonText ->
-                first.stringValue() == second.stringValue()
-            // defer to strict Ion equality
-            else -> first == second
         }
     }
 
