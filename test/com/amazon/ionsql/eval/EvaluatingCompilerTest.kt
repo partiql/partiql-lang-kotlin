@@ -609,4 +609,25 @@ class EvaluatingCompilerTest : Base() {
           }
         """
     )
+
+    @Test
+    fun syntheticColumnNameInSelect() = assertEval(
+        """SELECT i+1 FROM <<100>> i""",
+        """[{_1: 101}]"""
+    )
+
+    @Test
+    fun properAliasFromPathInSelect() = assertEval(
+        """
+          SELECT s.id, s.books[*].title FROM stores AS s WHERE s.id = '5'
+        """,
+        """
+          [
+            {
+              id: "5",
+              title: ["A", "B", "C", "D"]
+            }
+          ]
+        """
+    )
 }

@@ -5,10 +5,7 @@
 package com.amazon.ionsql.eval.io
 
 import com.amazon.ion.*
-import com.amazon.ionsql.eval.ExprValue
-import com.amazon.ionsql.eval.IonExprValue
-import com.amazon.ionsql.eval.OrderedBindNames
-import com.amazon.ionsql.eval.SequenceExprValue
+import com.amazon.ionsql.eval.*
 import com.amazon.ionsql.util.*
 import java.io.BufferedReader
 import java.io.Reader
@@ -83,7 +80,7 @@ object DelimitedValues {
                             .forEachIndexed { i, raw ->
                                 val name = when {
                                     i < columns.size -> columns[i]
-                                    else -> "_$i"
+                                    else -> syntheticColumnName(i)
                                 }
                                 add(name, conversionMode.convert(ion, raw).ionValue)
                             }

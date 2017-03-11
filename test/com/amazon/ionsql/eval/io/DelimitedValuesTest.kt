@@ -101,7 +101,7 @@ class DelimitedValuesTest : Base() {
 
     @Test
     fun singleExprValueCommaNoAutoNoHeader() = assertValues(
-        """[{_0: "1", _1: "2", _2: "3"}]""",
+        """[{_1: "1", _2: "2", _3: "3"}]""",
         read(
             """1,2,3""",
             delimiter = ",",
@@ -113,9 +113,9 @@ class DelimitedValuesTest : Base() {
     @Test
     fun multiExprValueCommaAutoNoHeader() = assertValues(
         """[
-          {_0: 1, _1: 2, _2: 3},
-          {_0: 1.0, _1: 2e0, _2: 2007-10-10T12:00:00Z},
-          {_0: "hello", _1: "{", _2: "}"},
+          {_1: 1, _2: 2, _3: 3},
+          {_1: 1.0, _2: 2e0, _3: 2007-10-10T12:00:00Z},
+          {_1: "hello", _2: "{", _3: "}"},
         ]""",
         read(
             """
@@ -132,9 +132,9 @@ class DelimitedValuesTest : Base() {
     @Test
     fun multiExprValueCommaAutoHeader() = assertValues(
         """[
-          {a: 1, b: 2, _2: 3},
-          {a: 1.0, b: 2e0, _2: 2007-10-10T12:00:00Z},
-          {a: "hello", b: "{", _2: "}"},
+          {a: 1, b: 2, _3: 3},
+          {a: 1.0, b: 2e0, _3: 2007-10-10T12:00:00Z},
+          {a: "hello", b: "{", _3: "}"},
         ]""",
         read(
             """

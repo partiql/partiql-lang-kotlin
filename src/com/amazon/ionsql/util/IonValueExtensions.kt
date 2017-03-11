@@ -16,6 +16,12 @@ operator fun IonValue.get(name: String): IonValue? = when (this) {
     else -> throw IllegalArgumentException("Expected struct: $this")
 }
 
+val IonValue.lastIndex: Int
+    get() = when (this) {
+        is IonSequence -> size - 1
+        else -> throw IllegalArgumentException("Expected sequence $this")
+    }
+
 operator fun IonValue.get(index: Int): IonValue = when (this) {
     is IonSequence -> get(index)
     else -> throw IllegalArgumentException("Expected sequence: $this")
@@ -83,6 +89,12 @@ val IonValue.isNumeric: Boolean
 val IonValue.isUnsignedInteger: Boolean
     get() = when (this) {
         is IonInt -> longValue() >= 0
+        else -> false
+    }
+
+val IonValue.isNonNullText: Boolean
+    get() = when (this) {
+        is IonText -> !isNullValue
         else -> false
     }
 

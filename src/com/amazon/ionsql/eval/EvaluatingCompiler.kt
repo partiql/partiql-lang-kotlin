@@ -55,11 +55,24 @@ class EvaluatingCompiler(private val ion: IonSystem,
         else -> PathWildcardKind.NONE
     }
 
-    private fun valueName(col: Int): String = "_$col"
-
     private fun IonValue.extractAsName(id: Int) = when (this[0].text) {
         "as", "id" -> this[1].text
-        else -> valueName(id)
+        "path" -> {
+            var name = syntheticColumnName(id)
+            val lastExpr = this[lastIndex]
+            when (lastExpr[0].text) {
+                "lit" -> {
+                    val literal = lastExpr[1]
+                    when {
+                         literal.isNonNullText -> {
+                             name = literal.text
+                         }
+                    }
+                }
+            }
+            name
+        }
+        else -> syntheticColumnName(id)
     }
 
     private fun aliasExtractor(seq: Sequence<IonValue>): List<Alias> =
@@ -479,7 +492,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 }
                 else -> {
                     // construct an artificial tuple for SELECT *
-                    add(valueName(col), ionVal.clone())
+                    add(syntheticColumnName(col), ionVal.clone())
                 }
             }
         }
