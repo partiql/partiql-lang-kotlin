@@ -105,9 +105,13 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
 
         override fun get(next: Int): State = getFromTable(next) ?: delegate[next]
 
-        fun selfRepeatingDelegate(stateType: StateType) {
+        fun selfRepeatingDelegate(stateType: StateType,
+                                  tokenType: TokenType? = null,
+                                  lexType: LexType = NONE) {
             delegate = object : State {
-                override val stateType: StateType = stateType
+                override val stateType = stateType
+                override val tokenType = tokenType
+                override val lexType = lexType
                 override fun get(next: Int): State = getFromTable(next) ?: this
             }
         }
@@ -357,9 +361,10 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
             }
             // line comment, subtraction operator, and signed positive integer
             delta("-", START_AND_TERMINAL, OPERATOR) {
-                delta("-", TERMINAL) {
-                    selfRepeatingDelegate(INCOMPLETE)
-                    delta(NL_WHITESPACE_CHARS, TERMINAL, delegate = initialState)
+                // inline comments don't need a special terminator before EOF
+                delta("-", TERMINAL, null, WHITESPACE) {
+                    selfRepeatingDelegate(TERMINAL, null, WHITESPACE)
+                    delta(NL_WHITESPACE_CHARS, TERMINAL, null, WHITESPACE, delegate = initialState)
                 }
             }
 

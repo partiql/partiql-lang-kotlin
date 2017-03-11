@@ -55,6 +55,30 @@ class IonSqlLexerTest : Base() {
     )
 
     @Test
+    fun inlineCommentAtEnd() = assertTokens(
+        "ab\n--Ignore Me",
+        token(IDENTIFIER, "ab", 1, 1)
+    )
+
+    @Test
+    fun inlineCommentAtEndNoContent() = assertTokens(
+        "ab--",
+        token(IDENTIFIER, "ab", 1, 1)
+    )
+
+    @Test
+    fun blockCommentAtStart() = assertTokens(
+        "/*Ignore Me*/ab",
+        token(IDENTIFIER, "ab", 1, 14)
+    )
+
+    @Test
+    fun blockCommentAtEnd() = assertTokens(
+        "ab\n/*Ignore Me*/",
+        token(IDENTIFIER, "ab", 1, 1)
+    )
+
+    @Test
     fun booleans() = assertTokens(
         "true false truefalse",
         token(LITERAL, "true", 1, 1),
