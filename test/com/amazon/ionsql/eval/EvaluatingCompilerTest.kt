@@ -396,6 +396,13 @@ class EvaluatingCompilerTest : Base() {
     )
 
     @Test
+    fun variableShadow() = assertEval(
+        // Note that i, f, d, and s are defined in the global environment
+        """SELECT f, d, s FROM i AS f, f AS d, @f AS s WHERE f = 1 AND d = 2e0 and s = 1""",
+        """[{f: 1, d: 2e0, s: 1}]"""
+    )
+
+    @Test
     fun selectStarSingleSourceHoisted() = assertEval(
         """SELECT * FROM stores.*.books.* AS b WHERE b.price >= 9.0""",
         """
