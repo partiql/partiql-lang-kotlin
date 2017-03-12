@@ -46,6 +46,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
     private val missingValue = object : ExprValue by ion.newNull().seal().exprValue() {
         override val type = ExprValueType.MISSING
     }
+    private val nullValue = ion.newNull().seal().exprValue()
 
     private fun IonValue.determinePathWildcard(): PathWildcardKind = when (this) {
         normalPathWildcard -> PathWildcardKind.NORMAL
@@ -234,6 +235,56 @@ class EvaluatingCompiler(private val ion: IonSystem,
         "is" to isHandler,
         "is_not" to { env, expr ->
             (!isHandler(env, expr).booleanValue()).exprValue()
+        },
+        "simple_case" to { env, expr ->
+            if (expr.size < 3) {
+                err("Arity incorrect for simple case: $expr")
+            }
+
+            val target = expr[1].eval(env)
+            val match = expr.asSequence().drop(2).map {
+                when (it[0].text) {
+                    "when" -> when (it.size) {
+                        3 -> when (target.exprEquals(it[1].eval(env))) {
+                            true -> it[2].eval(env)
+                            else -> null
+                        }
+                        else -> err("Arity incorrect for 'when': $it")
+                    }
+                    "else" -> when (it.size) {
+                        2 -> it[1].eval(env)
+                        else -> err("Arity incorrect for 'else': $it")
+                    }
+                    else -> err("Unexpected syntax in search case: ${it[0]}")
+                }
+            }.find { it != null }
+
+            match ?: nullValue
+        },
+        "searched_case" to { env, expr ->
+            if (expr.size < 2) {
+                err("Arity incorrect for searched case: $expr")
+            }
+
+            // go through the cases and else and evaluate them
+            val match = expr.asSequence().drop(1).map {
+                when (it[0].text) {
+                    "when" -> when (it.size) {
+                        3 -> when (it[1].eval(env).booleanValue()) {
+                            true -> it[2].eval(env)
+                            else -> null
+                        }
+                        else -> err("Arity incorrect for 'when': $it")
+                    }
+                    "else" -> when (it.size) {
+                        2 -> it[1].eval(env)
+                        else -> err("Arity incorrect for 'else': $it")
+                    }
+                    else -> err("Unexpected syntax in search case: ${it[0]}")
+                }
+            }.find { it != null }
+
+            match ?: nullValue
         },
         "@" to { env, expr ->
             expr[1].eval(env.flipToLocals())

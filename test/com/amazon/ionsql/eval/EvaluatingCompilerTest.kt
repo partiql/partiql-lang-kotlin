@@ -724,4 +724,78 @@ class EvaluatingCompilerTest : Base() {
           ]
         """
     )
+
+    @Test
+    fun simpleCase() = assertEval(
+        """
+          SELECT VALUE
+            CASE x + 1
+              WHEN i THEN 'ONE'
+              WHEN f THEN 'TWO'
+              WHEN d THEN 'THREE'
+              ELSE '?'
+            END
+          FROM << i, f, d >> AS x
+        """,
+        """
+          [
+            "TWO", "THREE", "?"
+          ]
+        """
+    )
+
+    @Test
+    fun simpleCaseNoElse() = assertEval(
+        """
+          SELECT VALUE
+            CASE x + 1
+              WHEN i THEN 'ONE'
+              WHEN f THEN 'TWO'
+              WHEN d THEN 'THREE'
+            END
+          FROM << i, f, d >> AS x
+        """,
+        """
+          [
+            "TWO", "THREE", null
+          ]
+        """
+    )
+
+    @Test
+    fun searchedCase() = assertEval(
+        """
+          SELECT VALUE
+            CASE
+              WHEN x + 1 < i THEN '< ONE'
+              WHEN x + 1 = f THEN 'TWO'
+              WHEN (x + 1 > d) AND (x + 1 < 100) THEN '>= THREE < 100'
+              ELSE '?'
+            END
+          FROM << -1.0000, i, f, d, 100e0 >> AS x
+        """,
+        """
+          [
+            "< ONE", "TWO", "?", ">= THREE < 100", "?"
+          ]
+        """
+    )
+
+    @Test
+    fun searchedCaseNoElse() = assertEval(
+        """
+          SELECT VALUE
+            CASE
+              WHEN x + 1 < i THEN '< ONE'
+              WHEN x + 1 = f THEN 'TWO'
+              WHEN (x + 1 > d) AND (x + 1 < 100) THEN '>= THREE < 100'
+            END
+          FROM << -1.0000, i, f, d, 100e0 >> AS x
+        """,
+        """
+          [
+            "< ONE", "TWO", null, ">= THREE < 100", null
+          ]
+        """
+    )
 }
