@@ -20,7 +20,7 @@ operator fun IonValue.get(name: String): IonValue? = when (this) {
 
 val IonValue.size: Int
     get() = when (this) {
-        is IonContainer -> size
+        is IonContainer -> size()
         else -> err("Expected container: $this")
     }
 
