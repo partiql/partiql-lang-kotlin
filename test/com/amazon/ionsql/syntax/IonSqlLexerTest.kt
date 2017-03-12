@@ -166,7 +166,10 @@ class IonSqlLexerTest : Base() {
             }
             expected.add(token(type, "'$op'", 1, buf.length + 1L))
             buf.append(op)
-            buf.append(" ")
+            // make sure we have a token between things to avoid hitting multi-lexeme
+            // tokens by mistake
+            expected.add(token(LITERAL, "1", 1, buf.length + 2L))
+            buf.append(" 1 ")
         }
         assertTokens(buf.toString(), *expected.toTypedArray())
     }

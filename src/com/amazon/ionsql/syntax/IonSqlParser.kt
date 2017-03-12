@@ -332,7 +332,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         // XXX this is a Pratt Top-Down Operator Precedence implementation
         while (!rem.isEmpty() && precedence < headPrecedence()) {
             val op = rem.head!!
-            if (!op.isBinaryOperator && op.keywordText != "between") {
+            if (!op.isBinaryOperator && op.keywordText !in SPECIAL_INFIX_OPERATORS) {
                 // unrecognized operator
                 break
             }
@@ -349,7 +349,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             expr = when {
                 op.isBinaryOperator -> ParseNode(BINARY, op, listOf(expr, right), rem)
                 else -> when (op.keywordText) {
-                    "between" -> {
+                    "between", "not_between" -> {
                         rem = rem.tailExpectedKeyword("and")
                         val third = rem.parseExpression(
                             precedence = op.infixPrecedence

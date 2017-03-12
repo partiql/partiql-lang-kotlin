@@ -349,6 +349,7 @@ internal val SINGLE_LEXEME_BINARY_OPERATORS = setOf(
 internal val DOUBLE_LEXEME_TOKEN_MAP = mapOf(
     ("not" to "in")             to ("not_in" to OPERATOR),
     ("is" to "not")             to ("is_not" to OPERATOR),
+    ("not" to "between")        to ("not_between" to OPERATOR),
     ("intersect" to "all")      to ("intersect_all" to OPERATOR),
     ("except" to "all")         to ("except_all" to OPERATOR),
     ("union" to "all")          to ("union_all" to OPERATOR),
@@ -357,7 +358,9 @@ internal val DOUBLE_LEXEME_TOKEN_MAP = mapOf(
 )
 
 internal val DOUBLE_LEXEME_BINARY_OPERATORS =
-    DOUBLE_LEXEME_TOKEN_MAP.values.filter { it.second == TokenType.OPERATOR }.map { it.first }
+    DOUBLE_LEXEME_TOKEN_MAP.values.filter {
+        it.second == TokenType.OPERATOR && it.first != "not_between"
+    }.map { it.first }
 
 /** Binary operators. */
 internal val BINARY_OPERATORS =
@@ -368,9 +371,14 @@ internal val UNARY_OPERATORS = setOf(
     "+", "-", "not"
 )
 
-/** Operators with special parsing rules. */
-internal val SPECIAL_OPERATORS = setOf(
-    "between", "@"
+/** Operators that parse as infix, but have special parsing rules. */
+internal val SPECIAL_INFIX_OPERATORS = setOf(
+    "between", "not_between"
+)
+
+/** All operators with special parsing rules. */
+internal val SPECIAL_OPERATORS = SPECIAL_INFIX_OPERATORS + setOf(
+    "@"
 )
 
 internal val ALL_SINGLE_LEXEME_OPERATORS =
@@ -392,34 +400,35 @@ internal val INFIX_OPERATOR_PRECEDENCE = mapOf(
     "union_all"     to 5,
 
     // logical group
-    "or"        to 10,
-    "and"       to 20,
+    "or"            to 10,
+    "and"           to 20,
 
     // equality group (TODO add other morphemes of equality/non-equality)
-    "="         to 30,
-    "<>"        to 30,
-    "is"        to 30,
-    "is_not"    to 30,
-    "in"        to 30,
-    "not_in"    to 30,
+    "="             to 30,
+    "<>"            to 30,
+    "is"            to 30,
+    "is_not"        to 30,
+    "in"            to 30,
+    "not_in"        to 30,
 
     // comparison group
-    "<"         to 40,
-    "<="        to 40,
-    ">"         to 40,
-    ">="        to 40,
-    "between"   to 40, // note that this **must** be above 'AND'
-    "like"      to 40,
+    "<"             to 40,
+    "<="            to 40,
+    ">"             to 40,
+    ">="            to 40,
+    "between"       to 40, // note that this **must** be above 'AND'
+    "not_between"   to 40, // note that this **must** be above 'AND'
+    "like"          to 40,
 
     // the addition group
-    "+"         to 50,
-    "-"         to 50,
-    "||"        to 50,
+    "+"             to 50,
+    "-"             to 50,
+    "||"            to 50,
 
     // multiply group (TODO add exponentiation)
-    "*"         to 60,
-    "/"         to 60,
-    "%"         to 60
+    "*"             to 60,
+    "/"             to 60,
+    "%"             to 60
 )
 
 //

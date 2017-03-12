@@ -209,6 +209,12 @@ class EvaluatingCompiler(private val ion: IonSystem,
         "<>" to bindOp { _, args ->
             (!args[0].exprEquals(args[1])).exprValue()
         },
+        "between" to bindOp(minArity = 3, maxArity = 3) { _, args ->
+            (args[0] >= args[1] && args[0] <= args[2]).exprValue()
+        },
+        "not_between" to bindOp(minArity = 3, maxArity = 3) { _, args ->
+            (!(args[0] >= args[1] && args[0] <= args[2])).exprValue()
+        },
         "in" to bindOp { _, args ->
             val needle = args[0]
             args[1].asSequence().any { needle.exprEquals(it) }.exprValue()

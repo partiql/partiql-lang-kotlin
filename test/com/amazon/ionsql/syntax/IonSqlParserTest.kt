@@ -175,6 +175,12 @@ class IonSqlParserTest : Base() {
     )
 
     @Test
+    fun notBetweenOperator() = assertExpression(
+        """(not_between (lit 5) (lit 1) (lit 10))""",
+        "5 NOT BETWEEN 1 AND 10"
+    )
+
+    @Test
     fun atOperatorOnIdentifier() = assertExpression(
         """(@ (id a))""",
         "@a"

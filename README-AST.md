@@ -52,6 +52,7 @@ The following binary operators are defined in the form `(<OPNAME> <LEFT EXPR> <R
 The following additional operators are defined:
 
 * `(between <VALUE EXPR> <START EXPR> <END EXPR>)` - Interval containment.
+* `(not_between <VALUE EXPR> <START EXPR> <END EXPR>)` - Interval non-containment.
 
 ## Path Component Expressions
 In addition to any normal expression, a path component can be the special form `(*)` which

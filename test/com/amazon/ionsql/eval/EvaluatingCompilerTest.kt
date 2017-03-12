@@ -798,4 +798,32 @@ class EvaluatingCompilerTest : Base() {
           ]
         """
     )
+
+    @Test
+    fun betweenPredicate() = assertEval(
+        """
+          SELECT VALUE x
+          FROM << -1.0000, i, f, d, 100e0 >> AS x
+          WHERE x BETWEEN 1.000001 AND 3.0000000
+        """,
+        """
+          [
+            2e0, 3d0
+          ]
+        """
+    )
+
+    @Test
+    fun notBetweenPredicate() = assertEval(
+        """
+          SELECT VALUE x
+          FROM << -1.0000, i, f, d, 100e0 >> AS x
+          WHERE x NOT BETWEEN 1.000001 AND 3.0000000
+        """,
+        """
+          [
+            -1.0000, 1, 100d0
+          ]
+        """
+    )
 }
