@@ -61,6 +61,25 @@ class EvaluatingCompilerTest : Base() {
                               }
                             ]
                             """).exprValue()
+                        "friends" -> literal(
+                            """
+                            {
+                               kumo: {
+                                 type: "dog",
+                                 likes: {
+                                   mochi: { type: "dog" },
+                                   zoe: { type: "human" },
+                                 }
+                               },
+                               mochi: {
+                                 type: "dog",
+                                 likes: {
+                                   kumo: { type: "dog" },
+                                   brownie: { type: "cat" },
+                                 }
+                               },
+                            }
+                            """).exprValue()
                         else -> null
                     }
                 }
@@ -268,7 +287,7 @@ class EvaluatingCompilerTest : Base() {
     fun pathWildcard() = assertEval("stores[0].books[*].title", """["A", "B", "C", "D"]""")
 
     @Test
-    fun pathUnpivotWildcard() = assertEval("stores[0].books.*.title", """["A", "B", "C", "D"]""")
+    fun pathUnpivotWildcard() = assertEval("friends.kumo.likes.*.type", """["dog", "human"]""")
 
     @Test
     fun pathDoubleWildCard() = assertEval(
@@ -278,8 +297,8 @@ class EvaluatingCompilerTest : Base() {
 
     @Test
     fun pathDoubleUnpivotWildCard() = assertEval(
-        "stores.*.books.*.title",
-        """["A", "B", "C", "D", "A", "E", "F"]"""
+        "friends.*.likes.*.type",
+        """["dog", "human", "dog", "cat"]"""
     )
 
     @Test
@@ -304,6 +323,34 @@ class EvaluatingCompilerTest : Base() {
     fun pathUnpivotWildCardOverScalarMultiple() = assertEval(
         "(100).*.*.*",
         """[100]"""
+    )
+
+    @Test
+    fun selectFromScalarAndAtUnpivotWildCardOverScalar() = assertEval(
+        "SELECT VALUE [n, v] FROM (100).* AS v AT n",
+        """[
+          ["_1", 100]
+        ]"""
+    )
+
+    @Test
+    fun selectFromListAndAtUnpivotWildCardOverScalar() = assertEval(
+        "SELECT VALUE [n, (SELECT VALUE [i, x] FROM @v AS x AT i)] FROM [100, 200].*.*.* AS v AT n",
+        """[
+          ["_1", [[0, 100], [1, 200]]]
+        ]"""
+    )
+
+    @Test
+    fun selectFromBagAndAtUnpivotWildCardOverScalar() = assertEval(
+        """
+          SELECT VALUE
+            [n, (SELECT VALUE [i IS MISSING, i, x] FROM @v AS x AT i)]
+          FROM <<100, 200>>.* AS v AT n
+        """,
+        """[
+          ["_1", [[true, null, 100], [true, null, 200]]]
+        ]"""
     )
 
     @Test
@@ -422,7 +469,7 @@ class EvaluatingCompilerTest : Base() {
 
     @Test
     fun selectStarSingleSourceHoisted() = assertEval(
-        """SELECT * FROM stores.*.books.* AS b WHERE b.price >= 9.0""",
+        """SELECT * FROM stores[*].books[*] AS b WHERE b.price >= 9.0""",
         """
           [
             {title:"D", price: 9.0, categories:["suspense"]},
@@ -440,7 +487,7 @@ class EvaluatingCompilerTest : Base() {
 
     @Test
     fun selectImplicitAndExplicitAliasSingleSourceHoisted() = assertEval(
-        """SELECT title AS name, price FROM stores.*.books.* AS b WHERE b.price >= 9.0""",
+        """SELECT title AS name, price FROM stores[*].books[*] AS b WHERE b.price >= 9.0""",
         """
           [
             {name:"D", price: 9.0},

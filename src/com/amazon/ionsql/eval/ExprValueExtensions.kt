@@ -4,11 +4,9 @@
 
 package com.amazon.ionsql.eval
 
-import com.amazon.ion.IonText
-import com.amazon.ion.IonTimestamp
-import com.amazon.ion.Timestamp
-import com.amazon.ionsql.util.*
+import com.amazon.ion.*
 import com.amazon.ionsql.eval.ExprValueType.*
+import com.amazon.ionsql.util.*
 import java.util.*
 
 /**
@@ -16,17 +14,24 @@ import java.util.*
  */
 fun ExprValue.orderedNamesValue(names: List<String>): ExprValue =
     object : ExprValue by this, OrderedBindNames {
-        override val orderedNames: List<String>
-            get() = names
+        override val orderedNames = names
 
         override fun <T : Any?> asFacet(type: Class<T>?): T? =
             downcast(type) ?: this@orderedNamesValue.asFacet(type)
     }
 
-/** Wraps the given [ExprValue] as a [Named] instance */
+/** Wraps the this [ExprValue] as a [Named] instance. */
 fun ExprValue.asNamed(): Named = object : Named {
     override val name: ExprValue
         get() = this@asNamed
+}
+
+/** Binds the given name value as a [Named] facet delegate over this [ExprValue]. */
+fun ExprValue.namedValue(nameValue: ExprValue): ExprValue = object : ExprValue by this, Named {
+    override val name = nameValue
+
+    override fun <T : Any?> asFacet(type: Class<T>?): T? =
+        downcast(type) ?: this@namedValue.asFacet(type)
 }
 
 /** Wraps this [ExprValue] in a delegate that always masks the [Named] facet. */
@@ -42,15 +47,39 @@ fun ExprValue.unnamedValue(): ExprValue = when (asFacet(Named::class.java)) {
     }
 }
 
-/** Unpivots a `struct`, and does nothing for any other [ExprValue]. */
-fun ExprValue.unpivot(): ExprValue = when (type) {
+/**
+ * A special wrapper over non-`struct` values for `UNPIVOT`, only applicable in computing
+ * iteration within a FROM-clause or wildcarded-path
+ */
+private class SingletonUnpivotStruct(ion: IonSystem, value: ExprValue) : BaseExprValue() {
+    private val singleton = listOf(
+        value.namedValue(
+            ion.newString(syntheticColumnName(0)).exprValue()
+        )
+    )
+
+    override fun iterator() = singleton.iterator()
+
+    // XXX this value is only ever produced in a FROM iteration, thus none of these should ever be called
+    override val type
+        get() = throw UnsupportedOperationException("Synthetic value cannot provide type")
+    override val ionValue
+        get() = throw UnsupportedOperationException("Synthetic value cannot provide ion value")
+    override val bindings
+        get() = throw UnsupportedOperationException("Synthetic value cannot provide bindings")
+}
+
+/** Unpivots a `struct`, and synthesizes a synthetic singleton `struct` for other [ExprValue]. */
+internal fun ExprValue.unpivot(ion: IonSystem): ExprValue = when {
+    // special case for our special UNPIVOT pseudo-struct
+    this is SingletonUnpivotStruct -> this
     // enable iteration for structs
-    ExprValueType.STRUCT -> object : ExprValue by this {
+    type == STRUCT -> object : ExprValue by this {
         override fun iterator() =
             ionValue.asSequence().map { it.exprValue() }.iterator()
     }
-    // for non-struct, this is a no-op
-    else -> this
+    // for non-struct, this wraps any value into a synthetic singleton pseudo-struct
+    else -> SingletonUnpivotStruct(ion, this)
 }
 
 fun ExprValue.booleanValue(): Boolean =

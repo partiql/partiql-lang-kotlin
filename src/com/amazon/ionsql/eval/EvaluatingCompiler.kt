@@ -329,7 +329,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                     }
                     // treat the entire value as a sequence
                     PathWildcardKind.UNPIVOT -> { exprVal ->
-                        exprVal.unpivot().asSequence()
+                        exprVal.unpivot(ion).asSequence()
                     }
                     // "index" into the value lazily
                     PathWildcardKind.NONE -> { exprVal ->
@@ -343,7 +343,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 PathWildcardKind.NONE -> curr
                 else -> {
                     if (firstWildcardKind == PathWildcardKind.UNPIVOT) {
-                        curr = curr.unpivot()
+                        curr = curr.unpivot(ion)
                     }
                     var seq = sequenceOf(curr)
                     for (component in components) {
@@ -360,7 +360,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
             if (expr.size != 2) {
                 err("UNPIVOT form must have one expression")
             }
-            expr[1].eval(env).unpivot()
+            expr[1].eval(env).unpivot(ion)
         },
         "select" to { env, expr ->
             if (expr.size < 3) {
