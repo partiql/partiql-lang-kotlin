@@ -242,11 +242,13 @@ internal val IONSQL_KEYWORDS = setOf(
     "pivot",
     "unpivot",
     "limit",
+    "tuple",
 
     // Ion type names
 
     // null
     "bool",
+    "boolean",
     // int
     // float
     // decimal
@@ -264,13 +266,17 @@ internal val IONSQL_KEYWORDS = setOf(
 /** All Keywords. */
 internal val KEYWORDS = SQL92_KEYWORDS union IONSQL_KEYWORDS
 
-/** Keywords that are purely aliases to other keywords. */
-internal val KEYWORD_ALIASES = mapOf(
+/** Keywords that are aliases for type keywords. */
+internal val TYPE_ALIASES = mapOf(
     "varchar"   to "character_varying",
     "char"      to "character",
     "dec"       to "decimal",
-    "int"       to "integer"
+    "int"       to "integer",
+    "bool"      to "boolean"
 )
+
+/** Keywords that are purely aliases to other keywords. */
+internal val KEYWORD_ALIASES = TYPE_ALIASES
 
 /**
  * Indicates the keywords (and pseudo keywords) the indicate types.
@@ -280,7 +286,7 @@ internal val KEYWORD_ALIASES = mapOf(
 internal val TYPE_NAME_ARITY_MAP = mapOf(
     "missing"           to 0..0, // IonSQL++
     "null"              to 0..0, // Ion
-    "bool"              to 0..0, // Ion
+    "boolean"           to 0..0, // Ion & SQL-99
     "smallint"          to 0..0, // SQL-92
     "integer"           to 0..0, // Ion & SQL-92
     "float"             to 0..1, // Ion & SQL-92
@@ -296,6 +302,7 @@ internal val TYPE_NAME_ARITY_MAP = mapOf(
     "clob"              to 0..0, // Ion
     "blob"              to 0..0, // Ion
     "struct"            to 0..0, // Ion
+    "tuple"             to 0..0, // IonSQL++
     "list"              to 0..0, // Ion
     "sexp"              to 0..0, // Ion
     "bag"               to 0..0  // IonSQL++
