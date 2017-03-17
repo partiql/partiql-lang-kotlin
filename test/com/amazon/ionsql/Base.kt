@@ -9,10 +9,13 @@ import com.amazon.ion.IonValue
 import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionsql.eval.Bindings
 import com.amazon.ionsql.eval.ExprValue
+import junitparams.JUnitParamsRunner
 import org.junit.Assert
+import org.junit.runner.RunWith
 import java.util.*
 
-open class Base : Assert() {
+@RunWith(JUnitParamsRunner::class)
+abstract class Base : Assert() {
     val ion: IonSystem = IonSystemBuilder.standard().build()
 
     fun literal(text: String): IonValue = ion.singleValue(text)
