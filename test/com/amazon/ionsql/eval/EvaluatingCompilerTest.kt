@@ -85,7 +85,10 @@ class EvaluatingCompilerTest : Base() {
                 }
             )
 
-    fun voidEval(source: String) { eval(source) }
+    fun voidEval(source: String) {
+        // force materialization
+        eval(source).ionValue
+    }
 
     fun assertEval(source: String,
                    expectedLit: String,
@@ -871,6 +874,52 @@ class EvaluatingCompilerTest : Base() {
           [
             -1.0000, 1, 100d0
           ]
+        """
+    )
+
+    @Test
+    fun betweenStringsPredicate() = assertEval(
+        """
+          SELECT VALUE x
+          FROM << 'APPLE', 'ZOE', 'YOYO' >> AS x
+          WHERE x BETWEEN 'A' AND 'Y'
+        """,
+        """
+          [
+            "APPLE"
+          ]
+        """
+    )
+
+    @Test
+    fun notBetweenStringsPredicate() = assertEval(
+        """
+          SELECT VALUE x
+          FROM << 'APPLE', 'ZOE', 'YOYO' >> AS x
+          WHERE x NOT BETWEEN 'A' AND 'Y'
+        """,
+        """
+          [
+            "ZOE", "YOYO"
+          ]
+        """
+    )
+
+    @Test(expected = EvaluationException::class)
+    fun betweenIncompatiblePredicate() = voidEval(
+        """
+          SELECT VALUE x
+          FROM << 'APPLE', 'ZOE', 'YOYO' >> AS x
+          WHERE x BETWEEN 'A' AND 2
+        """
+    )
+
+    @Test(expected = EvaluationException::class)
+    fun notBetweenIncompatiblePredicate() = voidEval(
+        """
+          SELECT VALUE x
+          FROM << 'APPLE', 'ZOE', 'YOYO' >> AS x
+          WHERE x NOT BETWEEN 1 AND 'Y'
         """
     )
 }
