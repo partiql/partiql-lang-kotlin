@@ -20,7 +20,7 @@ fun ExprValue.orderedNamesValue(names: List<String>): ExprValue =
             downcast(type) ?: this@orderedNamesValue.asFacet(type)
     }
 
-/** Wraps the this [ExprValue] as a [Named] instance. */
+/** Wraps this [ExprValue] as a [Named] instance. */
 fun ExprValue.asNamed(): Named = object : Named {
     override val name: ExprValue
         get() = this@asNamed
