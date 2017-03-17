@@ -140,7 +140,7 @@ private fun ExprValue.listEquals(other: ExprValue): Boolean {
             return false
         }
     }
-    return !left.hasNext() && !right.hasNext()
+    return !right.hasNext()
 }
 
 private fun ExprValue.structEquals(other: ExprValue): Boolean {
