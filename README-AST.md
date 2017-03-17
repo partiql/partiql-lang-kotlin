@@ -143,7 +143,7 @@ Both forms have at least one `(when <VALUE EXPR> <RESULT EXPR>)` nodes and an op
 Simple `CASE` expressions have a common expression at the first position, the result
 of which are compared to the result of each `<VALUE EXPR>` in the `when` nodes.
 
-Example for `CASE name WHEN 'zoe' THEN 1 END`:
+Example, for `CASE name WHEN 'zoe' THEN 1 END`:
 
 ```
 (simple_case
@@ -152,6 +152,23 @@ Example for `CASE name WHEN 'zoe' THEN 1 END`:
     (lit "zoe")
     (lit 1)
   )
+)
+```
+
+Another example, for `CASE name WHEN 'zoe' THEN 1 WHEN 'kumo' THEN 2 ELSE 0 END`:
+
+```
+(simple_case
+  (id name)
+  (when
+    (lit "zoe")
+    (lit 1)
+  )
+  (when
+    (lit "kumo')
+    (lit 2)
+  )
+  (else (lit 0))
 )
 ```
 
@@ -168,6 +185,22 @@ Example for `CASE WHEN name = 'zoe' THEN 1 END`:
   )
 )
 ```
+Another example, for `CASE WHEN name = 'zoe' THEN 1 WHEN name = 'kumo' THEN 2 ELSE 0 END`:
+
+```
+(searched_case
+  (when
+    (= (id name) (lit "zoe"))
+    (lit 1)
+  )
+  (when
+    (= (id name) (lit "kumo"))
+    (lit 2)
+  )    
+  (else (lit 0))
+)
+```
+
 
 ## Meta Nodes
 Meta nodes are no-ops from a semantic perspective.  They provide meta-data about node the

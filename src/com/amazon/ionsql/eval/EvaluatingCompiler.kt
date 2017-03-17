@@ -261,7 +261,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                         2 -> it[1].eval(env)
                         else -> err("Arity incorrect for 'else': $it")
                     }
-                    else -> err("Unexpected syntax in search case: ${it[0]}")
+                    else -> err("Unexpected syntax in simple case: ${it[0]}")
                 }
             }.find { it != null }
 
