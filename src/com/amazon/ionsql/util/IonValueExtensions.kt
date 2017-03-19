@@ -130,10 +130,11 @@ fun IonSexp.filterMetaNodes(): IonSexp = system.newEmptySexp().apply {
     while (target[0].stringValue() == "meta") {
         target = target[1] as IonSexp
     }
+    val isLiteral = target[0].stringValue() == "lit"
     for (child in target) {
         add(
-            when (child) {
-                is IonSexp -> child.filterMetaNodes()
+            when {
+                !isLiteral && child is IonSexp -> child.filterMetaNodes()
                 else -> child.clone()
             }
         )

@@ -118,6 +118,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
     /** Dispatch table for AST "op-codes."  */
     private val syntax: Map<String, (Environment, IonSexp) -> ExprValue> = mapOf(
+        "missing" to { _, _ -> missingValue },
         "lit" to { _, expr ->
             expr[1].exprValue()
         },
@@ -125,9 +126,22 @@ class EvaluatingCompiler(private val ion: IonSystem,
             val name = expr[1].text
             env.current[name] ?: err("No such binding: $name")
         },
-        "missing" to { _, _ -> missingValue },
+        "@" to { env, expr ->
+            expr[1].eval(env.flipToLocals())
+        },
         "call" to { env, expr ->
             expr.evalCall(env, startIndex = 1)
+        },
+        "cast" to { env, expr ->
+            if (expr.size != 3) {
+                err("cast requires two arguments")
+            }
+
+            val source = expr[1].eval(env)
+            // TODO honor type parameters
+            val targetTypeName = expr[2][1].text
+            val targetType = ExprValueType.fromTypeName(targetTypeName)
+            source.cast(ion, targetType)
         },
         "list" to bindOp(minArity = 0, maxArity = Integer.MAX_VALUE) { _, args ->
             ion.newEmptyList().apply {
@@ -291,9 +305,6 @@ class EvaluatingCompiler(private val ion: IonSystem,
             }.find { it != null }
 
             match ?: nullValue
-        },
-        "@" to { env, expr ->
-            expr[1].eval(env.flipToLocals())
         },
         "path" to { env, expr ->
             if (expr.size < 3) {
