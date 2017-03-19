@@ -195,7 +195,7 @@ class IonSqlLexerTest : Base() {
     @Test
     fun boolType() = assertTokens(
         "BOOL",
-        token(KEYWORD, "bool", 1, 1)
+        token(KEYWORD, "boolean", 1, 1)
     )
     @Test
     fun smallintType() = assertTokens(

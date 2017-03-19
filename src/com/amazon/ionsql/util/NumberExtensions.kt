@@ -30,7 +30,7 @@ private val CONVERTERS = mapOf<Class<*>, (Number) -> Number>(
 )
 
 /** Provides a narrowing or widening operator on supported numbers. */
-fun Number.coerce(type: Class<Number>): Number {
+fun Number.coerce(type: Class<out Number>): Number {
     val conv = CONVERTERS[type] ?: throw IllegalArgumentException("No converter for $type")
     return conv(this)
 }

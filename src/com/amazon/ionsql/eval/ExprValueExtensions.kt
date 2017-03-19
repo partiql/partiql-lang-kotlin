@@ -4,9 +4,13 @@
 
 package com.amazon.ionsql.eval
 
-import com.amazon.ion.*
+import com.amazon.ion.IonSystem
+import com.amazon.ion.IonText
+import com.amazon.ion.IonTimestamp
+import com.amazon.ion.Timestamp
 import com.amazon.ionsql.eval.ExprValueType.*
 import com.amazon.ionsql.util.*
+import java.math.BigDecimal
 import java.util.*
 
 /**
@@ -175,4 +179,137 @@ operator fun ExprValue.compareTo(other: ExprValue): Int {
         // TODO should bool/LOBs/aggregates compare?
         else -> err("Cannot compare values: $first, $second")
     }
+}
+
+/** The types that CAST to `string` as their Ion serialization*/
+private val ION_TEXT_STRING_CAST_TYPES = setOf(BOOL, TIMESTAMP, CLOB, BLOB, LIST, SEXP, STRUCT)
+
+/**
+ * Casts this [ExprValue] to the target type.
+ *
+ * `MISSING` and `NULL` always convert to themselves no matter the target type.  When the
+ * source type and target type are the same, this operation is a non-operation.
+ *
+ * The conversion *to* a particular type is as follows, any conversion not specified raises
+ * an [EvaluationException]:
+ *
+ *  * `BOOL`
+ *      * Number types will convert to `false` if numerically equal to zero, `true` otherwise.
+ *      * Text types will convert to `true` if case insensitive compared to the text `"true"`,
+ *    false otherwise.
+ *  * `INT`, `FLOAT`, and `DECIMAL`
+ *      * `BOOL` converts as `1` for `true` and `0` for `false`
+ *      * Number types will narrow or widen from the source type.
+ *      * Text types will convert using base-10 integral notation
+ *          * For `FLOAT` and `DECIMAL` targets, decimal and e-notation is also supported.
+ *  * `TIMESTAMP`
+ *      * Text types will convert using the Ion text notation for timestamp (W3C/ISO-8601).
+ *  * `STRING` and `SYMBOL`
+ *      * `BOOL` converts to the text `"true"` and `"false"`.
+ *      * Number types convert to decimal form with optional e-notation.
+ *      * LOB types convert to their Ion textual representation.
+ *      * `LIST`, `SEXP`, and `STRUCT` convert to their Ion textual representation.
+ *      * `BAG` convert to a SQL++ literal form as the text image.
+ *  * `BLOB` and `CLOB` can only convert between each other directly.
+ *  * `LIST` and `SEXP`
+ *      * Convert directly between each other.
+ *      * `BAG` converts with an *arbitrary* order.
+ *  * `STRUCT` only supports casting from itself.
+ *  * `BAG` converts from `LIST` and `SEXP` by eliding order (order no longer is guaranteed
+ *    after this operation).
+ *
+ * Note that *text types* is defined by [ExprValueType.isText], *number types* is defined by
+ * [ExprValueType.isNumber], and *LOB types* is defined by [ExprValueType.isLob]
+ *
+ * @param ion The ion system to synthesize values with.
+ * @param type The target type to cast this value to.
+ */
+fun ExprValue.cast(ion: IonSystem, targetType: ExprValueType): ExprValue {
+    // TODO refactor this out appropriately (probably we need to refactor as a sort of mixin)
+    fun boolTrue() = ion.newBool(true).seal().exprValue()
+    fun boolFalse() = ion.newBool(false).seal().exprValue()
+
+    fun Number.exprValue() = ionValue(ion).seal().exprValue()
+
+    fun String.exprValue(type: ExprValueType) = when (type) {
+        STRING -> ion.newString(this)
+        SYMBOL -> ion.newSymbol(this)
+        else -> err("Invalid type for textual conversion: $type")
+    }.seal().exprValue()
+
+    fun ExprValue.bagToString(): String = StringBuilder().apply {
+        append("<<")
+        this@bagToString.forEachIndexed { i, child ->
+            if (i > 0) {
+                append(",")
+            }
+            when (child.type) {
+                BAG -> append(child.bagToString())
+                else -> {
+                    append("`")
+                    append(child.ionValue.toString())
+                    append("`")
+                }
+            }
+        }
+        append(">>")
+    }.toString()
+
+    when {
+        type.isNull || type == targetType -> return this
+        else -> {
+            when (targetType) {
+                BOOL -> when {
+                    type.isNumber -> return when {
+                        numberValue().compareTo(0L) == 0 -> boolFalse()
+                        else -> boolTrue()
+                    }
+                    type.isText -> return when (stringValue().toLowerCase()) {
+                        "true" -> boolTrue()
+                        else -> boolFalse()
+                    }
+                }
+                INT -> when {
+                    type == BOOL -> return if (booleanValue()) 1L.exprValue() else 0L.exprValue()
+                    type.isNumber -> return numberValue().toLong().exprValue()
+                    type.isText -> return stringValue().toLong().exprValue()
+                }
+                FLOAT -> when {
+                    type == BOOL -> return if (booleanValue()) 1.0.exprValue() else 0.0.exprValue()
+                    type.isNumber -> return numberValue().toDouble().exprValue()
+                    type.isText -> return stringValue().toDouble().exprValue()
+                }
+                DECIMAL -> when {
+                    type == BOOL -> return if (booleanValue()) BigDecimal.ONE.exprValue() else BigDecimal.ZERO.exprValue()
+                    type.isNumber -> return numberValue().coerce(BigDecimal::class.java).exprValue()
+                    type.isText -> return BigDecimal(stringValue()).exprValue()
+                }
+                TIMESTAMP -> when {
+                    type.isText -> return ion.newTimestamp(Timestamp.valueOf(stringValue())).seal().exprValue()
+                }
+                STRING, SYMBOL -> when {
+                    type.isNumber -> return numberValue().toString().exprValue(targetType)
+                    type.isText -> return stringValue().exprValue(targetType)
+                    type in ION_TEXT_STRING_CAST_TYPES -> return ionValue.toString().exprValue(targetType)
+                    type == BAG -> return bagToString().exprValue(targetType)
+                }
+                CLOB -> when {
+                    type.isLob -> return ion.newClob(ionValue.bytesValue()).seal().exprValue()
+                }
+                BLOB -> when {
+                    type.isLob -> return ion.newBlob(ionValue.bytesValue()).seal().exprValue()
+                }
+                LIST, SEXP, BAG -> when {
+                    // XXX s-expressions behave like scalars, so we need to generate the sequence ourselves.
+                    type == SEXP -> return SequenceExprValue(
+                        ion, targetType, ionValue.asSequence().map { it.exprValue() }
+                    )
+                    type.isSequence -> return SequenceExprValue(ion, targetType, asSequence())
+                }
+            }
+        }
+    }
+
+    // incompatible types
+    err("Cannot convert $type to $targetType")
 }

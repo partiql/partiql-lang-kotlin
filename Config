@@ -23,6 +23,7 @@ package.IonSQLSandbox = {
     test-dependencies = {
         1.0 = {
             junit = 4.12;
+            JUnitParams = 1.0.5;
         };
     };
 
