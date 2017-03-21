@@ -85,6 +85,13 @@ enum class ExprValueType(val typeNames: List<String>,
     /** The canonical SQL++ textual names for the runtime type. */
     val sqlTextNames = typeNames.map { it.toUpperCase().replace("_", " ") }
 
+    /** Whether or not the given type is in the same type grouping as another. */
+    fun isDirectlyComparableTo(other: ExprValueType): Boolean =
+        (this == other)
+            || (isNumber && other.isNumber)
+            || (isText && other.isText)
+            || (isLob && other.isLob)
+
     companion object {
         init {
             // validate that this enum is consistent with the normalized type names and aliases
