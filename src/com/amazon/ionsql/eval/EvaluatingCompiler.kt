@@ -45,6 +45,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
     private val missingValue = object : ExprValue by ion.newNull().seal().exprValue() {
         override val type = ExprValueType.MISSING
+        override fun toString(): String = stringify()
     }
     private val nullValue = ion.newNull().seal().exprValue()
 

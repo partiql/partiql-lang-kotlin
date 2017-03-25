@@ -19,9 +19,9 @@ import java.util.*
 fun ExprValue.orderedNamesValue(names: List<String>): ExprValue =
     object : ExprValue by this, OrderedBindNames {
         override val orderedNames = names
-
         override fun <T : Any?> asFacet(type: Class<T>?): T? =
             downcast(type) ?: this@orderedNamesValue.asFacet(type)
+        override fun toString(): String = stringify()
     }
 
 /** Wraps this [ExprValue] as a [Named] instance. */
@@ -33,9 +33,9 @@ fun ExprValue.asNamed(): Named = object : Named {
 /** Binds the given name value as a [Named] facet delegate over this [ExprValue]. */
 fun ExprValue.namedValue(nameValue: ExprValue): ExprValue = object : ExprValue by this, Named {
     override val name = nameValue
-
     override fun <T : Any?> asFacet(type: Class<T>?): T? =
         downcast(type) ?: this@namedValue.asFacet(type)
+    override fun toString(): String = stringify()
 }
 
 /** Wraps this [ExprValue] in a delegate that always masks the [Named] facet. */
@@ -48,6 +48,7 @@ fun ExprValue.unnamedValue(): ExprValue = when (asFacet(Named::class.java)) {
                 Named::class.java -> null
                 else -> this@unnamedValue.asFacet(type)
             }
+        override fun toString(): String = stringify()
     }
 }
 
@@ -100,6 +101,22 @@ fun ExprValue.bytesValue(): ByteArray =
     ionValue.bytesValue() ?: err("Expected non-null LOB: $ionValue")
 
 val ExprValue.size: Int get() = ionValue.size
+
+/** A very simple string representation--to be used for diagnostic purposes only. */
+fun ExprValue.stringify(): String = when (type) {
+    MISSING -> "MISSING"
+    BAG -> StringBuilder().apply {
+        append("<<")
+        this@stringify.forEachIndexed { i, e ->
+            if (i > 0) {
+                append(",")
+            }
+            append(e)
+        }
+        append(">>")
+    }.toString()
+    else -> ionValue.toString()
+}
 
 /** Provides SQL's equality function. */
 fun ExprValue.exprEquals(other: ExprValue): Boolean {
