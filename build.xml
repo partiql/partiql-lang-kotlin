@@ -12,7 +12,7 @@
     <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask" classpath="${bp:tool.classpath}"/>
     <jarjar destfile="${lib.dir}/ionsql-sandbox-single.jar">
       <fileset dir="${classes.dir}"/>
-      <zipfileset src="${bp:[KotlinRuntime]pkg.lib}/kotlin-runtime.jar"/>
+      <zipfileset src="${bp:[KotlinRuntime]pkg.lib}/kotlin-stdlib.jar"/>
       <zipfileset src="${bp:[KotlinReflect]pkg.lib}/kotlin-reflect.jar"/>
       <zipfileset src="${bp:[IonJava]pkg.lib}/IonJava.jar"/>
       <manifest>
