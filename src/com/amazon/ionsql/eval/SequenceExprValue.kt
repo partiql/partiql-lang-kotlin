@@ -16,6 +16,7 @@ import com.amazon.ionsql.eval.ExprValueType.*
  * `ionValue` field generates an [IonList] from the sequence **once**.
  *
  * @param ion The underlying [IonSystem] for generating values.
+ * @param type The reported [ExprValueType] for this value.
  * @param sequence The [Sequence] generating function.
  */
 class SequenceExprValue(private val ion: IonSystem,

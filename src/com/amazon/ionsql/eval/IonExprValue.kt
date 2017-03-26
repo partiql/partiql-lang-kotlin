@@ -38,8 +38,8 @@ class IonExprValue(override val ionValue: IonValue) : BaseExprValue() {
     }
 
     override fun iterator() = when (ionValue) {
-        is IonList -> ionValue.asSequence().map { it.exprValue() }.iterator()
-        else -> listOf(this).iterator()
+        is IonContainer -> ionValue.asSequence().map { it.exprValue() }.iterator()
+        else -> emptyList<ExprValue>().iterator()
     }
 
     @Suppress("UNCHECKED_CAST")

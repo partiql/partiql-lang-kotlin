@@ -13,13 +13,15 @@ import com.amazon.ionsql.syntax.TYPE_NAME_ARITY_MAP
  * There is a correspondence to [IonType], but it isn't quite one-to-one.
  *
  * @param typeNames The normalized type names and aliases associated with the runtime type.
+ * @param isRangedFrom Whether or not the `FROM` clause uses the value's iterator directly.
  */
 enum class ExprValueType(val typeNames: List<String>,
                          val isNull: Boolean = false,
                          val isNumber: Boolean = false,
                          val isText: Boolean = false,
                          val isLob: Boolean = false,
-                         val isSequence: Boolean = false) {
+                         val isSequence: Boolean = false,
+                         val isRangedFrom: Boolean = false) {
     MISSING(
         typeNames = listOf("missing"),
         isNull = true
@@ -64,7 +66,8 @@ enum class ExprValueType(val typeNames: List<String>,
     ),
     LIST(
         typeNames = listOf("list"),
-        isSequence = true
+        isSequence = true,
+        isRangedFrom = true
     ),
     SEXP(
         typeNames = listOf("sexp"),
@@ -75,7 +78,8 @@ enum class ExprValueType(val typeNames: List<String>,
     ),
     BAG(
         typeNames = listOf("bag"),
-        isSequence = true
+        isSequence = true,
+        isRangedFrom = true
     );
 
     /** The canonical SQL++ textual names for the runtime type. */

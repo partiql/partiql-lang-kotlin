@@ -52,22 +52,12 @@ fun ExprValue.unnamedValue(): ExprValue = when (asFacet(Named::class.java)) {
     }
 }
 
-/**
- * A special wrapper over non-`struct` values for `UNPIVOT`, only applicable in computing
- * iteration within a FROM-clause or wildcarded-path
- */
-private class SingletonUnpivotStruct(ion: IonSystem, value: ExprValue) : BaseExprValue() {
-    private val singleton = listOf(
-        value.namedValue(
-            ion.newString(syntheticColumnName(0)).exprValue()
-        )
-    )
-
-    override fun iterator() = singleton.iterator()
+/** A special wrapper for `UNPIVOT` values as a BAG. */
+private class UnpivotedExprValue(private val values: Iterable<ExprValue>) : BaseExprValue() {
+    override val type = BAG
+    override fun iterator() = values.iterator()
 
     // XXX this value is only ever produced in a FROM iteration, thus none of these should ever be called
-    override val type
-        get() = throw UnsupportedOperationException("Synthetic value cannot provide type")
     override val ionValue
         get() = throw UnsupportedOperationException("Synthetic value cannot provide ion value")
     override val bindings
@@ -76,15 +66,16 @@ private class SingletonUnpivotStruct(ion: IonSystem, value: ExprValue) : BaseExp
 
 /** Unpivots a `struct`, and synthesizes a synthetic singleton `struct` for other [ExprValue]. */
 internal fun ExprValue.unpivot(ion: IonSystem): ExprValue = when {
-    // special case for our special UNPIVOT pseudo-struct
-    this is SingletonUnpivotStruct -> this
-    // enable iteration for structs
-    type == STRUCT -> object : ExprValue by this {
-        override fun iterator() =
-            ionValue.asSequence().map { it.exprValue() }.iterator()
-    }
-    // for non-struct, this wraps any value into a synthetic singleton pseudo-struct
-    else -> SingletonUnpivotStruct(ion, this)
+    // special case for our special UNPIVOT value to avoid double wrapping
+    this is UnpivotedExprValue -> this
+    // Wrap into a pseudo-BAG
+    type == STRUCT -> UnpivotedExprValue(this)
+    // for non-struct, this wraps any value into a BAG with a synthetic name
+    else -> UnpivotedExprValue(
+        listOf(
+            this.namedValue(ion.newString(syntheticColumnName(0)).exprValue())
+        )
+    )
 }
 
 fun ExprValue.booleanValue(): Boolean =
