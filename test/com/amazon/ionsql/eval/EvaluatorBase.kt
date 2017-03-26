@@ -63,14 +63,14 @@ abstract class EvaluatorBase : Base() {
                             """
                             {
                                kumo: {
-                                 type: "dog",
+                                 type: "DOG",
                                  likes: {
                                    mochi: { type: "dog" },
                                    zoe: { type: "human" },
                                  }
                                },
                                mochi: {
-                                 type: "dog",
+                                 type: "DOG",
                                  likes: {
                                    kumo: { type: "dog" },
                                    brownie: { type: "cat" },
