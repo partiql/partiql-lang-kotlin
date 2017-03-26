@@ -4,6 +4,7 @@
 
 package com.amazon.ionsql.eval
 
+import com.amazon.ionsql.eval.ExprValueType.*
 import com.amazon.ionsql.util.*
 
 /**
@@ -20,4 +21,6 @@ abstract class BaseExprValue: ExprValue {
      * This implementation returns `null`.
      */
     open fun <T> provideFacet(type: Class<T>?): T? = null
+
+    override fun toString(): String = stringify()
 }

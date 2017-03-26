@@ -123,3 +123,18 @@ operator fun Number.compareTo(other: Number): Int {
         else -> throw IllegalStateException()
     }
 }
+
+val Number.isNaN get() = when(this) {
+    is Double -> isNaN()
+    else -> false
+}
+
+val Number.isNegInf get() = when(this) {
+    is Double -> isInfinite() && this < 0
+    else -> false
+}
+
+val Number.isPosInf get() = when(this) {
+    is Double -> isInfinite() && this > 0
+    else -> false
+}

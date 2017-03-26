@@ -11,7 +11,6 @@ import com.amazon.ion.Timestamp
 import com.amazon.ionsql.eval.ExprValueType.*
 import com.amazon.ionsql.util.*
 import java.math.BigDecimal
-import java.util.*
 
 /**
  * Wraps the given [ExprValue] with a delegate that provides the [OrderedBindNames] facet.
@@ -19,9 +18,9 @@ import java.util.*
 fun ExprValue.orderedNamesValue(names: List<String>): ExprValue =
     object : ExprValue by this, OrderedBindNames {
         override val orderedNames = names
-
         override fun <T : Any?> asFacet(type: Class<T>?): T? =
             downcast(type) ?: this@orderedNamesValue.asFacet(type)
+        override fun toString(): String = stringify()
     }
 
 /** Wraps this [ExprValue] as a [Named] instance. */
@@ -33,9 +32,9 @@ fun ExprValue.asNamed(): Named = object : Named {
 /** Binds the given name value as a [Named] facet delegate over this [ExprValue]. */
 fun ExprValue.namedValue(nameValue: ExprValue): ExprValue = object : ExprValue by this, Named {
     override val name = nameValue
-
     override fun <T : Any?> asFacet(type: Class<T>?): T? =
         downcast(type) ?: this@namedValue.asFacet(type)
+    override fun toString(): String = stringify()
 }
 
 /** Wraps this [ExprValue] in a delegate that always masks the [Named] facet. */
@@ -48,25 +47,16 @@ fun ExprValue.unnamedValue(): ExprValue = when (asFacet(Named::class.java)) {
                 Named::class.java -> null
                 else -> this@unnamedValue.asFacet(type)
             }
+        override fun toString(): String = stringify()
     }
 }
 
-/**
- * A special wrapper over non-`struct` values for `UNPIVOT`, only applicable in computing
- * iteration within a FROM-clause or wildcarded-path
- */
-private class SingletonUnpivotStruct(ion: IonSystem, value: ExprValue) : BaseExprValue() {
-    private val singleton = listOf(
-        value.namedValue(
-            ion.newString(syntheticColumnName(0)).exprValue()
-        )
-    )
-
-    override fun iterator() = singleton.iterator()
+/** A special wrapper for `UNPIVOT` values as a BAG. */
+private class UnpivotedExprValue(private val values: Iterable<ExprValue>) : BaseExprValue() {
+    override val type = BAG
+    override fun iterator() = values.iterator()
 
     // XXX this value is only ever produced in a FROM iteration, thus none of these should ever be called
-    override val type
-        get() = throw UnsupportedOperationException("Synthetic value cannot provide type")
     override val ionValue
         get() = throw UnsupportedOperationException("Synthetic value cannot provide ion value")
     override val bindings
@@ -75,15 +65,16 @@ private class SingletonUnpivotStruct(ion: IonSystem, value: ExprValue) : BaseExp
 
 /** Unpivots a `struct`, and synthesizes a synthetic singleton `struct` for other [ExprValue]. */
 internal fun ExprValue.unpivot(ion: IonSystem): ExprValue = when {
-    // special case for our special UNPIVOT pseudo-struct
-    this is SingletonUnpivotStruct -> this
-    // enable iteration for structs
-    type == STRUCT -> object : ExprValue by this {
-        override fun iterator() =
-            ionValue.asSequence().map { it.exprValue() }.iterator()
-    }
-    // for non-struct, this wraps any value into a synthetic singleton pseudo-struct
-    else -> SingletonUnpivotStruct(ion, this)
+    // special case for our special UNPIVOT value to avoid double wrapping
+    this is UnpivotedExprValue -> this
+    // Wrap into a pseudo-BAG
+    type == STRUCT -> UnpivotedExprValue(this)
+    // for non-struct, this wraps any value into a BAG with a synthetic name
+    else -> UnpivotedExprValue(
+        listOf(
+            this.namedValue(ion.newString(syntheticColumnName(0)).exprValue())
+        )
+    )
 }
 
 fun ExprValue.booleanValue(): Boolean =
@@ -101,83 +92,39 @@ fun ExprValue.bytesValue(): ByteArray =
 
 val ExprValue.size: Int get() = ionValue.size
 
+/** A very simple string representation--to be used for diagnostic purposes only. */
+fun ExprValue.stringify(): String = when (type) {
+    MISSING -> "MISSING"
+    BAG -> StringBuilder().apply {
+        append("<<")
+        this@stringify.forEachIndexed { i, e ->
+            if (i > 0) {
+                append(",")
+            }
+            append(e)
+        }
+        append(">>")
+    }.toString()
+    else -> ionValue.toString()
+}
+
+val DEFAULT_COMPARATOR = NaturalExprValueComparators.NULLS_FIRST
+
 /** Provides SQL's equality function. */
-fun ExprValue.exprEquals(other: ExprValue): Boolean {
-    return when {
-        // null/missing is never equal to anything
-        this.type.isNull || other.type.isNull -> false
-        // arithmetic equality
-        this.type.isNumber && other.type.isNumber ->
-            this.numberValue().compareTo(other.numberValue()) == 0
-        // text equality for symbols/strings
-        this.type.isText && other.type.isText ->
-            this.stringValue() == other.stringValue()
-        // LOB equality for byte content
-        this.type.isLob && other.type.isLob ->
-            Arrays.equals(this.bytesValue(), other.bytesValue())
-        // at this point, types better line up
-        this.type != other.type -> false
-        else -> when (this.type) {
-            BOOL -> this.booleanValue() == other.booleanValue()
-            // TODO consider being more lax about offset and precision
-            TIMESTAMP -> this.timestampValue() == other.timestampValue()
-            LIST, SEXP -> this.listEquals(other)
-            STRUCT -> this.structEquals(other)
-            BAG -> this.bagEquals(other)
-            else -> throw IllegalStateException("Invalid type fall-through: $type")
-        }
-    }
-}
+fun ExprValue.exprEquals(other: ExprValue): Boolean = DEFAULT_COMPARATOR.compare(this, other) == 0
 
-private fun ExprValue.listEquals(other: ExprValue): Boolean {
-    val left = this.iterator()
-    val right = other.iterator()
-
-    while (left.hasNext()) {
-        if (!right.hasNext()) {
-            return false
-        }
-
-        val leftChild = left.next()
-        val rightChild = right.next()
-        if (!leftChild.exprEquals(rightChild)) {
-            return false
-        }
-    }
-    return !right.hasNext()
-}
-
-private fun ExprValue.structEquals(other: ExprValue): Boolean {
-    // FIXME strict Ion equality is not right for this
-    // TODO use a total natural ordering to calculate this
-    return this.ionValue == other.ionValue
-}
-
-private fun ExprValue.bagEquals(other: ExprValue): Boolean {
-    // FIXME strict Ion equality is not right for this
-    // TODO use a total natural ordering to calculate this
-    return this.ionValue == other.ionValue
-}
-
+/**
+ * Provides the comparison predicate--which is not a total ordering.
+ *
+ * In particular, this operation will fail for non-comparable types.
+ * For a total ordering over the IonSQL++ type space, see [NaturalExprValueComparators]
+ */
 operator fun ExprValue.compareTo(other: ExprValue): Int {
-    val first = this.ionValue
-    val second = other.ionValue
-
     return when {
-        // nulls can't compare
-        first.isNullValue || second.isNullValue ->
-            throw EvaluationException("Null value cannot be compared: $first, $second")
-        // compare the number types
-        first.isNumeric && second.isNumeric ->
-            first.numberValue().compareTo(second.numberValue())
-        // timestamps compare against timestamps
-        first is IonTimestamp && second is IonTimestamp ->
-            first.timestampValue().compareTo(second.timestampValue())
-        // string/symbol compare against themselves
-        first is IonText && second is IonText ->
-            first.stringValue().compareTo(second.stringValue())
-        // TODO should bool/LOBs/aggregates compare?
-        else -> err("Cannot compare values: $first, $second")
+        type.isNull || other.type.isNull ->
+            throw EvaluationException("Null value cannot be compared: $this, $other")
+        type.isDirectlyComparableTo(other.type) -> DEFAULT_COMPARATOR.compare(this, other)
+        else -> err("Cannot compare values: $this, $other")
     }
 }
 

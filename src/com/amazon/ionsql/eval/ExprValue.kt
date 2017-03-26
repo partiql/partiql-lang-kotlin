@@ -31,10 +31,9 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
     val bindings: Bindings
 
     /**
-     * Iterates over this value.
+     * Iterates over this value's *child* elements.
      *
-     * If the underlying value is an *aggregate* type, this is a simple delegation.
-     * If the underlying value is a *scalar* type, this produces a singleton.
+     * If this value has no children, then it should return the empty iterator.
      */
     operator override fun iterator(): Iterator<ExprValue>
 }

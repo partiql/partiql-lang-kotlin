@@ -22,7 +22,7 @@ class IonExprValueTest : Base() {
 
                 when (expectedIonValue) {
                     is IonContainer -> expectedIonValue.map { it }
-                    else -> assertIterator(listOf(expectedIonValue))
+                    else -> assertIterator(emptyList())
                 }
             }
             .run(block)

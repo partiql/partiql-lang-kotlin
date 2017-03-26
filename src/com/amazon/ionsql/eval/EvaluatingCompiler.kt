@@ -45,6 +45,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
     private val missingValue = object : ExprValue by ion.newNull().seal().exprValue() {
         override val type = ExprValueType.MISSING
+        override fun toString(): String = stringify()
     }
     private val nullValue = ion.newNull().seal().exprValue()
 
@@ -336,7 +337,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 components.add(when (wildcardKind) {
                     // treat the entire value as a sequence
                     PathWildcardKind.NORMAL -> { exprVal ->
-                        exprVal.asSequence()
+                        exprVal.rangeOver()
                     }
                     // treat the entire value as a sequence
                     PathWildcardKind.UNPIVOT -> { exprVal ->
@@ -488,7 +489,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
         var seq = fromSources
             .foldLeftProduct(fromEnv) { env, source ->
                 source.expr.eval(env)
-                    .asSequence()
+                    .rangeOver()
                     .map { value ->
                         // add the correlated binding(s)
                         val alias = source.alias
@@ -623,6 +624,18 @@ class EvaluatingCompiler(private val ion: IonSystem,
     }.seal().exprValue()
 
     private fun String.exprValue(): ExprValue = ion.newString(this).seal().exprValue()
+
+    /** Implements the `FROM` range operation. */
+    private fun ExprValue.rangeOver(): Sequence<ExprValue> = run {
+        when {
+            type.isRangedFrom -> this
+            // everything else ranges as a singleton BAG
+            else -> SequenceExprValue(
+                ion,
+                listOf(this.unnamedValue()).asSequence()
+            )
+        }
+    }.asSequence()
 
     private operator fun ExprValue.get(index: ExprValue): ExprValue {
         val indexVal = index.ionValue
