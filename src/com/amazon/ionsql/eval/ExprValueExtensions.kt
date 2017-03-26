@@ -128,25 +128,25 @@ operator fun ExprValue.compareTo(other: ExprValue): Int {
     }
 }
 
-/** The types that CAST to `string` as their Ion serialization*/
-private val ION_TEXT_STRING_CAST_TYPES = setOf(BOOL, TIMESTAMP, CLOB, BLOB, LIST, SEXP, STRUCT)
+/** Types that are cast to the [ExprValueType.isText] types by calling `IonValue.toString()`. */
+private val ION_TEXT_STRING_CAST_TYPES = setOf(BOOL, TIMESTAMP)
 
 /**
  * Casts this [ExprValue] to the target type.
  *
  * `MISSING` and `NULL` always convert to themselves no matter the target type.  When the
- * source type and target type are the same, this operation is a non-operation.
+ * source type and target type are the same, this operation is a no-op.
  *
  * The conversion *to* a particular type is as follows, any conversion not specified raises
  * an [EvaluationException]:
  *
  *  * `BOOL`
  *      * Number types will convert to `false` if numerically equal to zero, `true` otherwise.
- *      * Text types will convert to `true` if case insensitive compared to the text `"true"`,
- *    false otherwise.
+ *      * Text types will convert to `true` if case-insensitive compared to the text `"true"`,
+ *    `false` otherwise.
  *  * `INT`, `FLOAT`, and `DECIMAL`
  *      * `BOOL` converts as `1` for `true` and `0` for `false`
- *      * Number types will narrow or widen from the source type.
+ *      * Number types will narrow or widen from the source type.  Narrowing is a truncation
  *      * Text types will convert using base-10 integral notation
  *          * For `FLOAT` and `DECIMAL` targets, decimal and e-notation is also supported.
  *  * `TIMESTAMP`
@@ -154,9 +154,7 @@ private val ION_TEXT_STRING_CAST_TYPES = setOf(BOOL, TIMESTAMP, CLOB, BLOB, LIST
  *  * `STRING` and `SYMBOL`
  *      * `BOOL` converts to the text `"true"` and `"false"`.
  *      * Number types convert to decimal form with optional e-notation.
- *      * LOB types convert to their Ion textual representation.
- *      * `LIST`, `SEXP`, and `STRUCT` convert to their Ion textual representation.
- *      * `BAG` convert to a SQL++ literal form as the text image.
+ *      * `TIMESTAMP` converts to the ISO-8601 format.
  *  * `BLOB` and `CLOB` can only convert between each other directly.
  *  * `LIST` and `SEXP`
  *      * Convert directly between each other.
@@ -183,24 +181,6 @@ fun ExprValue.cast(ion: IonSystem, targetType: ExprValueType): ExprValue {
         SYMBOL -> ion.newSymbol(this)
         else -> err("Invalid type for textual conversion: $type")
     }.seal().exprValue()
-
-    fun ExprValue.bagToString(): String = StringBuilder().apply {
-        append("<<")
-        this@bagToString.forEachIndexed { i, child ->
-            if (i > 0) {
-                append(",")
-            }
-            when (child.type) {
-                BAG -> append(child.bagToString())
-                else -> {
-                    append("`")
-                    append(child.ionValue.toString())
-                    append("`")
-                }
-            }
-        }
-        append(">>")
-    }.toString()
 
     when {
         type.isNull || type == targetType -> return this
@@ -238,7 +218,6 @@ fun ExprValue.cast(ion: IonSystem, targetType: ExprValueType): ExprValue {
                     type.isNumber -> return numberValue().toString().exprValue(targetType)
                     type.isText -> return stringValue().exprValue(targetType)
                     type in ION_TEXT_STRING_CAST_TYPES -> return ionValue.toString().exprValue(targetType)
-                    type == BAG -> return bagToString().exprValue(targetType)
                 }
                 CLOB -> when {
                     type.isLob -> return ion.newClob(ionValue.bytesValue()).seal().exprValue()
@@ -253,6 +232,8 @@ fun ExprValue.cast(ion: IonSystem, targetType: ExprValueType): ExprValue {
                     )
                     type.isSequence -> return SequenceExprValue(ion, targetType, asSequence())
                 }
+                // no support for anything else
+                else -> {}
             }
         }
     }

@@ -102,7 +102,9 @@ class EvaluatingCompilerCastTest : EvaluatorBase() {
                 case("5",                       "5"),
                 case("`0e0`",                   "0"),
                 case("1.1",                     "1"),
+                case("1.9",                     "1"),
                 case("-20.1",                   "-20"),
+                case("-20.9",                   "-20"),
                 // timestamp
                 case("`2007-10-10T`",           null),
                 // text
@@ -274,31 +276,31 @@ class EvaluatingCompilerCastTest : EvaluatorBase() {
                 case("""`'2e100'`""",           "'2e100'"),
                 case("""`'2d100'`""",           "'2d100'"),
                 // lob
-                case("""`{{""}}`""",            """'{{""}}'"""),
-                case("""`{{"0"}}`""",           """'{{"0"}}'"""),
-                case("""`{{"1.0"}}`""",         """'{{"1.0"}}'"""),
-                case("""`{{"2e10"}}`""",        """'{{"2e10"}}'"""),
-                case("`{{}}`",                  """'{{}}'"""),
-                case("`{{MA==}}`",              """'{{MA==}}'"""),      // 0
-                case("`{{MS4w}}`",              """'{{MS4w}}'"""),      // 1.0
-                case("`{{MmUxMA==}}`",          """'{{MmUxMA==}}'"""),  // 2e10
+                case("""`{{""}}`""",            null),
+                case("""`{{"0"}}`""",           null),
+                case("""`{{"1.0"}}`""",         null),
+                case("""`{{"2e10"}}`""",        null),
+                case("`{{}}`",                  null),
+                case("`{{MA==}}`",              null),  // 0
+                case("`{{MS4w}}`",              null),  // 1.0
+                case("`{{MmUxMA==}}`",          null),  // 2e10
                 // list
-                case("`[]`",                    """'[]'"""),
-                case("['hello']",               """'["hello"]'"""),
-                case("`[-2d0, 0d0]`",           """'[-2.,0.]'"""),
+                case("`[]`",                    null),
+                case("['hello']",               null),
+                case("`[-2d0, 0d0]`",           null),
                 // sexp
-                case("`()`",                    """'()'"""),
-                case("`(1d0)`",                 """'(1.)'"""),
-                case("`(0d0)`",                 """'(0.)'"""),
+                case("`()`",                    null),
+                case("`(1d0)`",                 null),
+                case("`(0d0)`",                 null),
                 // struct
-                case("`{}`",                    """'{}'"""),
-                case("{}",                      """'{}'"""),
-                case("`{a:12d0}`",              """'{a:12.}'"""),
-                case("{'b':`-4d0`}",            """'{b:-4.}'"""),
+                case("`{}`",                    null),
+                case("{}",                      null),
+                case("`{a:12d0}`",              null),
+                case("{'b':`-4d0`}",            null),
                 // bag
-                case("<<>>",                    """'<<>>'"""),
-                case("<<`14d0`>>",              """'<<`14.`>>'"""),
-                case("<<`20d0`>>",              """'<<`20.`>>'""")
+                case("<<>>",                    null),
+                case("<<`14d0`>>",              null),
+                case("<<`20d0`>>",              null)
             ).types(SYMBOL.sqlTextNames),
             listOf(
                 // booleans
@@ -318,32 +320,32 @@ class EvaluatingCompilerCastTest : EvaluatorBase() {
                 case("""`'2e100'`""",           "\"2e100\""),
                 case("""`'2d100'`""",           "\"2d100\""),
                 // lob
-                case("""`{{""}}`""",            """'''{{""}}'''"""),
-                case("""`{{"0"}}`""",           """'''{{"0"}}'''"""),
-                case("""`{{"1.0"}}`""",         """'''{{"1.0"}}'''"""),
-                case("""`{{"2e10"}}`""",        """'''{{"2e10"}}'''"""),
-                case("`{{}}`",                  """'''{{}}'''"""),
-                case("`{{MA==}}`",              """'''{{MA==}}'''"""),      // 0
-                case("`{{MS4w}}`",              """'''{{MS4w}}'''"""),      // 1.0
-                case("`{{MmUxMA==}}`",          """'''{{MmUxMA==}}'''"""),  // 2e10
+                case("""`{{""}}`""",            null),
+                case("""`{{"0"}}`""",           null),
+                case("""`{{"1.0"}}`""",         null),
+                case("""`{{"2e10"}}`""",        null),
+                case("`{{}}`",                  null),
+                case("`{{MA==}}`",              null),  // 0
+                case("`{{MS4w}}`",              null),  // 1.0
+                case("`{{MmUxMA==}}`",          null),  // 2e10
                 // list
-                case("`[]`",                    """'''[]'''"""),
-                case("['hello']",               """'''["hello"]'''"""),
-                case("`[-2d0, 0d0]`",           """'''[-2.,0.]'''"""),
+                case("`[]`",                    null),
+                case("['hello']",               null),
+                case("`[-2d0, 0d0]`",           null),
                 // sexp
-                case("`()`",                    """'''()'''"""),
-                case("`(1d0)`",                 """'''(1.)'''"""),
-                case("`(0d0)`",                 """'''(0.)'''"""),
+                case("`()`",                    null),
+                case("`(1d0)`",                 null),
+                case("`(0d0)`",                 null),
                 // struct
-                case("`{}`",                    """'''{}'''"""),
-                case("{}",                      """'''{}'''"""),
-                case("`{a:12d0}`",              """'''{a:12.}'''"""),
-                case("{'b':`-4d0`}",            """'''{b:-4.}'''"""),
+                case("`{}`",                    null),
+                case("{}",                      null),
+                case("`{a:12d0}`",              null),
+                case("{'b':`-4d0`}",            null),
                 // bag
-                case("<<>>",                    """'''<<>>'''"""),
-                case("<<`14d0`>>",              """'''<<`14.`>>'''"""),
-                case("<<'a', <<'hello'>>>>",    """'''<<`"a"`,<<`"hello"`>>>>'''"""),
-                case("<<`20d0`>>",              """'''<<`20.`>>'''""")
+                case("<<>>",                    null),
+                case("<<`14d0`>>",              null),
+                case("<<'a', <<'hello'>>>>",    null),
+                case("<<`20d0`>>",              null)
             ).types(STRING.sqlTextNames),
             listOf(
                 // booleans
@@ -389,6 +391,50 @@ class EvaluatingCompilerCastTest : EvaluatorBase() {
                 case("<<`14d0`>>",              null),
                 case("<<`20d0`>>",              null)
             ).types(CLOB.sqlTextNames),
+            listOf(
+                // booleans
+                case("TRUE AND FALSE",          null),
+                case("`true`",                  null),
+                // numbers
+                case("5",                       null),
+                case("`0e0`",                   null),
+                case("1.1",                     null),
+                case("-20.1",                   null),
+                // timestamp
+                case("`2007-10-10T`",           null),
+                // text
+                case("'hello'",                 null),
+                case("'-20'",                   null),
+                case("""`"1000"`""",            null),
+                case("""`'2e100'`""",           null),
+                case("""`'2d100'`""",           null),
+                // lob
+                case("""`{{""}}`""",            """{{}}"""),
+                case("""`{{"0"}}`""",           """{{MA==}}"""),
+                case("""`{{"1.0"}}`""",         """{{MS4w}}"""),
+                case("""`{{"2e10"}}`""",        """{{MmUxMA==}}"""),
+                case("`{{}}`",                  """{{}}"""),
+                case("`{{MA==}}`",              """{{MA==}}"""),     // 0
+                case("`{{MS4w}}`",              """{{MS4w}}"""),     // 1.0
+                case("`{{MmUxMA==}}`",          """{{MmUxMA==}}"""), // 2e10
+                // list
+                case("`[]`",                    null),
+                case("['hello']",               null),
+                case("`[-2d0, 0d0]`",           null),
+                // sexp
+                case("`()`",                    null),
+                case("`(1d0)`",                 null),
+                case("`(0d0)`",                 null),
+                // struct
+                case("`{}`",                    null),
+                case("{}",                      null),
+                case("`{a:12d0}`",              null),
+                case("{'b':`-4d0`}",            null),
+                // bag
+                case("<<>>",                    null),
+                case("<<`14d0`>>",              null),
+                case("<<`20d0`>>",              null)
+            ).types(BLOB.sqlTextNames),
             listOf(
                 // booleans
                 case("TRUE AND FALSE",          null),
