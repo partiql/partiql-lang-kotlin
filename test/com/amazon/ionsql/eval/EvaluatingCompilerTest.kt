@@ -787,12 +787,12 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     fun betweenStringsPredicate() = assertEval(
         """
           SELECT VALUE x
-          FROM << 'APPLE', 'ZOE', 'YOYO' >> AS x
-          WHERE x BETWEEN 'A' AND 'Y'
+          FROM << 'APPLE', 'AZURE', 'B', 'XZ', 'ZOE', 'YOYO' >> AS x
+          WHERE x BETWEEN 'B' AND 'Y'
         """,
         """
           [
-            "APPLE"
+            "B", "XZ"
           ]
         """
     )
@@ -801,12 +801,12 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     fun notBetweenStringsPredicate() = assertEval(
         """
           SELECT VALUE x
-          FROM << 'APPLE', 'ZOE', 'YOYO' >> AS x
-          WHERE x NOT BETWEEN 'A' AND 'Y'
+          FROM << 'APPLE', 'AZURE', 'B', 'XZ', 'Z', 'ZOE', 'YOYO' >> AS x
+          WHERE x NOT BETWEEN 'B' AND 'Y'
         """,
         """
           [
-            "ZOE", "YOYO"
+            "APPLE", "AZURE", "Z", "ZOE", "YOYO"
           ]
         """
     )
