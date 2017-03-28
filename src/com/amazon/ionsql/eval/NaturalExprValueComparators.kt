@@ -22,7 +22,7 @@ import com.amazon.ionsql.util.*
  *    of precision or specific type.
  *      For `FLOAT` special values, `nan` comes before `-inf`, which comes before all normal
  *      numeric values, which is followed by `+inf`.
- *  * `TIMESTAMP` values follow and are compared by the re point of time irrespective of precision nor
+ *  * `TIMESTAMP` values follow and are compared by the point of time irrespective of precision and
  *    local UTC offset.
  *  * The [ExprValueType.isText] types come next ordered by their lexicographical ordering by
  *    Unicode scalar irrespective of their specific type.
@@ -32,8 +32,7 @@ import com.amazon.ionsql.util.*
  *    child elements recursively based on this definition.
  *  * `SEXP` follows and compares within its type similar to `LIST`.
  *  * `STRUCT` values follow and compare lexicographically based on the *sorted*
- *    (as defined by this definition) attributes, first by the field name, and secondly
- *    by the child elements themselves.
+ *    (as defined by this definition) members, as pairs of field name and the member value.
  *  * `BAG` values come finally (except with [NullOrder.NULLS_LAST]), and their values
  *    compare lexicographically based on the *sorted* child elements.
  */

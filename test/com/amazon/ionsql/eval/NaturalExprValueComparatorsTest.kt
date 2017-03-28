@@ -13,32 +13,12 @@ import com.amazon.ionsql.eval.NaturalExprValueComparators.*
 import org.junit.Ignore
 
 class NaturalExprValueComparatorsTest : EvaluatorBase() {
-    data class CompareCase(val id: Int,
-                           val description: String,
-                           val comparator: Comparator<ExprValue>,
-                           val unordered: List<ExprValue>,
-                           val expected: List<List<ExprValue>>) {
-        override fun toString() = "$description.$id"
-    }
-
-    private fun <T> List<List<T>>.flatten() = this.flatMap { it }
-    private fun List<List<String>>.eval() = map {
-        it.map {
-            try {
-                eval(it)
-            } catch (e: Exception) {
-                throw IonSqlException("Could not evaluate $it", e)
-            }
-        }
-    }
-
-    private val iterations = 500
-
     // the lists below represent the expected ordering of values
     // grouped by lists of equivalent values.
 
     private val basicExprs = listOf(
         listOf(
+            // reminder, annotations don't affect order
             "null",
             "missing",
             "`a::null`",
@@ -181,6 +161,15 @@ class NaturalExprValueComparatorsTest : EvaluatorBase() {
             "{'c': false}"
         ),
         listOf(
+            "{'d': 1, 'f': 2}"
+        ),
+        listOf(
+            "{'d': 2, 'e': 3, 'f': 4}"
+        ),
+        listOf(
+            "{'d': 3, 'e': 2}"
+        ),
+        listOf(
             "<<>>"
         ),
         listOf(
@@ -196,6 +185,27 @@ class NaturalExprValueComparatorsTest : EvaluatorBase() {
             "<< <<>>, <<>> >>"
         )
     )
+
+    private fun <T> List<List<T>>.flatten() = this.flatMap { it }
+    private fun List<List<String>>.eval() = map {
+        it.map {
+            try {
+                eval(it)
+            } catch (e: Exception) {
+                throw IonSqlException("Could not evaluate $it", e)
+            }
+        }
+    }
+
+    private val iterations = 1000
+
+    data class CompareCase(val id: Int,
+                           val description: String,
+                           val comparator: Comparator<ExprValue>,
+                           val unordered: List<ExprValue>,
+                           val expected: List<List<ExprValue>>) {
+        override fun toString() = "$description.$id"
+    }
 
     fun parametersForShuffleAndSort(): List<CompareCase> {
         // TODO consider replacing linear congruential generator with something else (e.g. xorshift)
