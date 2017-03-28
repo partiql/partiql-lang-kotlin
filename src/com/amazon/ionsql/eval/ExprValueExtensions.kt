@@ -88,7 +88,12 @@ fun ExprValue.stringValue(): String =
 fun ExprValue.bytesValue(): ByteArray =
     scalar.bytesValue() ?: err("Expected non-null LOB: $ionValue")
 
-/** Implements the `FROM` range operation. */
+/**
+ * Implements the `FROM` range operation.
+ * Specifically, this is distinct from the normal [ExprValue.iterator] in that
+ * types that are **not** [ExprValueType.isRangeFrom] get treated as a singleton
+ * as per SQL++ specification.
+ */
 fun ExprValue.rangeOver(): Iterable<ExprValue> = when {
     type.isRangedFrom -> this
     // everything else ranges as a singleton unnamed value
