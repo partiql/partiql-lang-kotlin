@@ -152,7 +152,8 @@ private val ION_TEXT_STRING_CAST_TYPES = setOf(BOOL, TIMESTAMP)
  *  * `TIMESTAMP`
  *      * Text types will convert using the Ion text notation for timestamp (W3C/ISO-8601).
  *  * `STRING` and `SYMBOL`
- *      * `BOOL` converts to the text `"true"` and `"false"`.
+ *      * `BOOL` converts to `STRING` as `"true"` and `"false"`;
+ *        converts to `SYMBOL` as `'true'` and `'false'`.
  *      * Number types convert to decimal form with optional e-notation.
  *      * `TIMESTAMP` converts to the ISO-8601 format.
  *  * `BLOB` and `CLOB` can only convert between each other directly.
@@ -160,8 +161,7 @@ private val ION_TEXT_STRING_CAST_TYPES = setOf(BOOL, TIMESTAMP)
  *      * Convert directly between each other.
  *      * `BAG` converts with an *arbitrary* order.
  *  * `STRUCT` only supports casting from itself.
- *  * `BAG` converts from `LIST` and `SEXP` by eliding order (order no longer is guaranteed
- *    after this operation).
+ *  * `BAG` converts from `LIST` and `SEXP` by drops order guarantees.
  *
  * Note that *text types* is defined by [ExprValueType.isText], *number types* is defined by
  * [ExprValueType.isNumber], and *LOB types* is defined by [ExprValueType.isLob]
