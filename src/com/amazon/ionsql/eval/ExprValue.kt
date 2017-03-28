@@ -22,13 +22,22 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
      */
     val ionValue: IonValue
 
+    /** Returns the [Scalar] view of this value. */
+    val scalar: Scalar
+
     /**
      * Returns the [Bindings] over this value.
      *
-     * This is generally used for operations that scope over the *result*
-     * of some computation.
+     * This is generally used to access a component of a value by name.
      */
     val bindings: Bindings
+
+    /**
+     * Returns the [OrdinalBindings] over this value.
+     *
+     * This is generally used to access a component of a value by index.
+     */
+    val ordinalBindings: OrdinalBindings
 
     /**
      * Iterates over this value's *child* elements.

@@ -4,13 +4,13 @@
 
 package com.amazon.ionsql.eval
 
-/** A simple mapping of name to [ExprValue]. */
-interface Bindings {
+/** A simple mapping of ordinal index to [ExprValue]. */
+interface OrdinalBindings {
     companion object {
         private val EMPTY = over { null }
 
         /** The empty bindings. */
-        fun empty(): Bindings = EMPTY
+        fun empty(): OrdinalBindings = EMPTY
 
         /**
          * A SAM conversion for [Bindings] from a function object.
@@ -18,17 +18,17 @@ interface Bindings {
          * This is necessary as Kotlin currently doesn't support SAM conversions to
          * Kotlin defined interfaces (only Java defined interfaces).
          */
-        fun over(func: (String) -> ExprValue?): Bindings = object : Bindings {
-            override fun get(name: String): ExprValue? = func(name)
+        fun over(func: (Int) -> ExprValue?): OrdinalBindings = object : OrdinalBindings {
+            override fun get(index: Int): ExprValue? = func(index)
         }
     }
 
     /**
-     * Looks up a name within the environment.
+     * Looks up an index within this binding.
      *
-     * @param name The binding to look up.
+     * @param index The binding to look up.  The index is zero-based.
      *
      * @return The value mapped to the binding, or `null` if no such binding exists.
      */
-    operator fun get(name: String): ExprValue?
+    operator fun get(index: Int): ExprValue?
 }

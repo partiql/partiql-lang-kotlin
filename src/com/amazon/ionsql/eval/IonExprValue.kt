@@ -26,12 +26,31 @@ class IonExprValue(override val ionValue: IonValue) : BaseExprValue() {
         else -> ExprValueType.fromIonType(ionValue.type)
     }
 
+    override val scalar: Scalar by lazy {
+        object : Scalar() {
+            override fun booleanValue(): Boolean? = ionValue.booleanValue()
+            override fun numberValue(): Number? = ionValue.numberValue()
+            override fun timestampValue(): Timestamp? = ionValue.timestampValue()
+            override fun stringValue(): String? = ionValue.stringValue()
+            override fun bytesValue(): ByteArray? = ionValue.bytesValue()
+        }
+    }
+
     override val bindings by lazy {
         Bindings.over { name ->
             // All struct fields get surfaced as top-level names
             // TODO deal with SQL++ syntax rules about this (i.e. only works with schema)
             when (ionValue) {
                 is IonStruct -> ionValue[name]?.exprValue()
+                else -> null
+            }
+        }
+    }
+
+    override val ordinalBindings by lazy {
+        OrdinalBindings.over { index ->
+            when (ionValue) {
+                is IonSequence -> ionValue[index]?.exprValue()
                 else -> null
             }
         }

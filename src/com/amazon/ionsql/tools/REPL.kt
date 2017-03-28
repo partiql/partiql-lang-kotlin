@@ -105,7 +105,7 @@ fun main(args: Array<String>) {
     val replFunctions = mapOf<String, (Environment, List<ExprValue>) -> ExprValue>(
         "read_file" to { _, args ->
             val options = optionsStruct(1, args)
-            val fileName = args[0].ionValue.stringValue()
+            val fileName = args[0].stringValue()
             val fileType = options["type"]?.stringValue() ?: "ion"
             val handler = READ_HANDLERS[fileType] ?:
                 throw IllegalArgumentException("Unknown file type: $fileType")
@@ -118,7 +118,7 @@ fun main(args: Array<String>) {
         },
         "write_file" to { _, args ->
             val options = optionsStruct(2, args, optionsIndex = 1)
-            val fileName = args[0].ionValue.stringValue()
+            val fileName = args[0].stringValue()
             val fileType = options["type"]?.stringValue() ?: "ion"
             val resultsIndex = when (args.size) {
                 2 -> 1
@@ -183,15 +183,7 @@ fun main(args: Array<String>) {
                         }
 
                         print(BAR_1)
-                        result = when (result) {
-                            // TODO make this distinction more obvious
-                            !is SequenceExprValue -> {
-                                val value = result
-                                SequenceExprValue(ION, listOf(value).asSequence())
-                            }
-                            else -> result
-                        }
-                        for (value in result) {
+                        for (value in result.rangeOver()) {
                             value.ionValue.writeTo(out)
                             out.flush()
                         }

@@ -5,8 +5,6 @@
 package com.amazon.ionsql.eval
 
 import com.amazon.ion.IonSystem
-import com.amazon.ion.IonText
-import com.amazon.ion.IonTimestamp
 import com.amazon.ion.Timestamp
 import com.amazon.ionsql.eval.ExprValueType.*
 import com.amazon.ionsql.util.*
@@ -59,8 +57,6 @@ private class UnpivotedExprValue(private val values: Iterable<ExprValue>) : Base
     // XXX this value is only ever produced in a FROM iteration, thus none of these should ever be called
     override val ionValue
         get() = throw UnsupportedOperationException("Synthetic value cannot provide ion value")
-    override val bindings
-        get() = throw UnsupportedOperationException("Synthetic value cannot provide bindings")
 }
 
 /** Unpivots a `struct`, and synthesizes a synthetic singleton `struct` for other [ExprValue]. */
@@ -78,19 +74,27 @@ internal fun ExprValue.unpivot(ion: IonSystem): ExprValue = when {
 }
 
 fun ExprValue.booleanValue(): Boolean =
-    ionValue.booleanValue() ?: err("Expected non-null boolean: $ionValue")
+    scalar.booleanValue() ?: err("Expected non-null boolean: $ionValue")
 
-fun ExprValue.numberValue(): Number = ionValue.numberValue()
+fun ExprValue.numberValue(): Number =
+    scalar.numberValue() ?: err("Expected non-null number: $ionValue")
 
-fun ExprValue.timestampValue(): Timestamp = ionValue.timestampValue()
+fun ExprValue.timestampValue(): Timestamp =
+    scalar.timestampValue() ?: err("Expected non-null timestamp: $ionValue")
 
 fun ExprValue.stringValue(): String =
-    ionValue.stringValue() ?: err("Expected non-null string: $ionValue")
+    scalar.stringValue() ?: err("Expected non-null string: $ionValue")
 
 fun ExprValue.bytesValue(): ByteArray =
-    ionValue.bytesValue() ?: err("Expected non-null LOB: $ionValue")
+    scalar.bytesValue() ?: err("Expected non-null LOB: $ionValue")
 
-val ExprValue.size: Int get() = ionValue.size
+/** Implements the `FROM` range operation. */
+fun ExprValue.rangeOver(): Iterable<ExprValue> = when {
+    type.isRangedFrom -> this
+    // everything else ranges as a singleton unnamed value
+    else -> listOf(this.unnamedValue())
+}
+
 
 /** A very simple string representation--to be used for diagnostic purposes only. */
 fun ExprValue.stringify(): String = when (type) {
@@ -220,16 +224,12 @@ fun ExprValue.cast(ion: IonSystem, targetType: ExprValueType): ExprValue {
                     type in ION_TEXT_STRING_CAST_TYPES -> return ionValue.toString().exprValue(targetType)
                 }
                 CLOB -> when {
-                    type.isLob -> return ion.newClob(ionValue.bytesValue()).seal().exprValue()
+                    type.isLob -> return ion.newClob(bytesValue()).seal().exprValue()
                 }
                 BLOB -> when {
-                    type.isLob -> return ion.newBlob(ionValue.bytesValue()).seal().exprValue()
+                    type.isLob -> return ion.newBlob(bytesValue()).seal().exprValue()
                 }
                 LIST, SEXP, BAG -> when {
-                    // XXX s-expressions behave like scalars, so we need to generate the sequence ourselves.
-                    type == SEXP -> return SequenceExprValue(
-                        ion, targetType, ionValue.asSequence().map { it.exprValue() }
-                    )
                     type.isSequence -> return SequenceExprValue(ion, targetType, asSequence())
                 }
                 // no support for anything else

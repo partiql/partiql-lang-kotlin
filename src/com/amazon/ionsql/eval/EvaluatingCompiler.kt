@@ -337,7 +337,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 components.add(when (wildcardKind) {
                     // treat the entire value as a sequence
                     PathWildcardKind.NORMAL -> { exprVal ->
-                        exprVal.rangeOver()
+                        exprVal.rangeOver().asSequence()
                     }
                     // treat the entire value as a sequence
                     PathWildcardKind.UNPIVOT -> { exprVal ->
@@ -490,6 +490,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
             .foldLeftProduct(fromEnv) { env, source ->
                 source.expr.eval(env)
                     .rangeOver()
+                    .asSequence()
                     .map { value ->
                         // add the correlated binding(s)
                         val alias = source.alias
@@ -522,7 +523,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
         if (limitExpr != null) {
             // TODO determine if this needs to be scoped over projection
-            seq = seq.take(limitExpr.eval(env).ionValue.intValue())
+            seq = seq.take(limitExpr.eval(env).numberValue().toInt())
         }
 
         return seq
@@ -625,29 +626,17 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
     private fun String.exprValue(): ExprValue = ion.newString(this).seal().exprValue()
 
-    /** Implements the `FROM` range operation. */
-    private fun ExprValue.rangeOver(): Sequence<ExprValue> = run {
-        when {
-            type.isRangedFrom -> this
-            // everything else ranges as a singleton BAG
-            else -> SequenceExprValue(
-                ion,
-                listOf(this.unnamedValue()).asSequence()
-            )
+    private operator fun ExprValue.get(member: ExprValue): ExprValue = when {
+        member.type == ExprValueType.INT -> {
+            val index = member.numberValue().toInt()
+            ordinalBindings[index] ?: missingValue
         }
-    }.asSequence()
-
-    private operator fun ExprValue.get(index: ExprValue): ExprValue {
-        val indexVal = index.ionValue
-        return when (indexVal) {
-            is IonInt -> ionValue[indexVal.intValue()].exprValue()
-            is IonText -> {
-                val name = indexVal.stringValue()
-                // delegate to bindings logic as the scope of lookup by name
-                return bindings[name] ?: missingValue
-            }
-            else -> err("Cannot convert index to int/string: $indexVal")
+        member.type.isText -> {
+            val name = member.stringValue()
+            // delegate to bindings logic as the scope of lookup by name
+            bindings[name] ?: missingValue
         }
+        else -> err("Cannot convert index to int/string: $member")
     }
 
     private val ExprValue.name get() = asFacet(Named::class.java)?.name ?: missingValue
