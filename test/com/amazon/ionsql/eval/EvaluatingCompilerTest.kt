@@ -193,6 +193,17 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     fun pathIndexing() = assertEval("stores[0].books[2].title", "\"C\"")
 
     @Test
+    fun pathIndexListLiteral() = assertEval("[1, 2, 3][1]", "2")
+
+    @Test
+    fun pathIndexBagLiteral() = assertEval("<<1, 2, 3>>[1]", "null") {
+        assertEquals(ExprValueType.MISSING, exprValue.type)
+    }
+
+    @Test
+    fun pathFieldStructLiteral() = assertEval("{'a': 1, 'b': 2, 'b': 3}.a", "1")
+
+    @Test
     fun pathWildcard() = assertEval("stores[0].books[*].title", """["A", "B", "C", "D"]""")
 
     @Test
@@ -319,6 +330,18 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     @Test
     fun rangeOverListWithAsAndAt() = assertEval(
         "SELECT VALUE [i, v] FROM `[1, 2, 3]` AS v AT i",
+        """[[0, 1], [1, 2], [2, 3]]"""
+    )
+
+    @Test
+    fun rangeOverListConstructorWithAt() = assertEval(
+        "SELECT VALUE i FROM [1, 2, 3] AT i",
+        """[0, 1, 2]"""
+    )
+
+    @Test
+    fun rangeOverListConstructorWithAsAndAt() = assertEval(
+        "SELECT VALUE [i, v] FROM [1, 2, 3] AS v AT i",
         """[[0, 1], [1, 2], [2, 3]]"""
     )
 

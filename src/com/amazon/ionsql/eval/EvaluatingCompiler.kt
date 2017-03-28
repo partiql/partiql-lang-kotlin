@@ -145,11 +145,13 @@ class EvaluatingCompiler(private val ion: IonSystem,
             source.cast(ion, targetType)
         },
         "list" to bindOp(minArity = 0, maxArity = Integer.MAX_VALUE) { _, args ->
-            ion.newEmptyList().apply {
-                for (value in args) {
-                    add(value.ionValue.clone())
+            SequenceExprValue(
+                ion,
+                ExprValueType.LIST,
+                args.asSequence().mapIndexed { i, arg ->
+                    arg.namedValue(i.exprValue())
                 }
-            }.seal().exprValue()
+            )
         },
         "struct" to bindOp(minArity = 0, maxArity = Integer.MAX_VALUE) { _, args ->
             if (args.size % 2 != 0) {
