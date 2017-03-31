@@ -1,5 +1,7 @@
 /build
-/*.iml
 /data
+/bench-lib
+/bench-data
+/*.iml
 *.swp
 *.~

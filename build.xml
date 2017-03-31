@@ -8,7 +8,93 @@
   <import file="${happytrails.root}/happytrails.xml"/>
   <ht:import file="happier-kotlin-trails.xml"/>
 
-  <target name="single-jar" depends="standard-compile-jar">
+  <!-- JMH infrastructure -->
+  <property name="bench.data.key"   value="IonSQLSandbox-bench-data.zip" />
+  <property name="bench.data.file"  value="${output.dir}/private/${bench.data.key}" />
+  <property name="bench.data.dir"   value="${output.dir}/private/bench-data" />
+  <property name="bench.data.rev"   value="1" />
+  <property name="bench.lib.key"    value="IonSQLSandbox-bench-lib.zip" />
+  <property name="bench.lib.file"   value="${output.dir}/private/${bench.lib.key}" />
+  <property name="bench.lib.dir"    value="${output.dir}/private/bench-lib" />
+  <property name="bench.lib.rev"    value="1" />
+
+  <target name="check-benchmark-data">
+    <available file="${bench.data.file}" property="bench.data.file.present" />
+  </target>
+  <target name="download-benchmark-data" depends="check-benchmark-data" unless="bench.data.file.present">
+    <exec executable="/apollo/env/SDETools/bin/downloadS3Binary">
+       <arg value="--file" />
+       <arg value="${bench.data.file}" />
+       <arg value="--key" />
+       <arg value="${bench.data.key}" />
+       <arg value="--revision" />
+       <arg value="${bench.data.rev}" />
+     </exec>
+
+     <unzip src="${bench.data.file}" dest="${output.dir}/private"/>
+   </target>
+
+  <target name="check-benchmark-lib">
+    <available file="${bench.lib.file}" property="bench.lib.file.present" />
+  </target>
+  <target name="download-benchmark-lib" depends="check-benchmark-lib" unless="bench.lib.file.present">
+    <exec executable="/apollo/env/SDETools/bin/downloadS3Binary">
+       <arg value="--file" />
+       <arg value="${bench.lib.file}" />
+       <arg value="--key" />
+       <arg value="${bench.lib.key}" />
+       <arg value="--revision" />
+       <arg value="${bench.lib.rev}" />
+     </exec>
+
+     <unzip src="${bench.lib.file}" dest="${output.dir}/private"/>
+   </target>
+
+  <property name="bench.src.dir"     location="${basedir}/bench" />
+  <property name="bench.gen.dir"     location="${output.dir}/private/bench-gen-src" />
+  <property name="bench.classes.dir" location="${output.dir}/private/classes/bench" />
+  <property name="bench.main.class"  value="com.amazon.ionsql.eval.bench.Benchmarks" />
+
+  <target name="benchmark"
+          depends="download-benchmark-data, download-benchmark-lib, standard-release">
+    <mkdir dir="${bench.gen.dir}" />
+    <mkdir dir="${bench.classes.dir}" />
+
+    <fileset id="bench.jars" dir="${bench.lib.dir}">
+      <include name="*.jar"/>
+    </fileset>
+    <pathconvert refid="bench.jars" property="bench.jars"/>
+    <property name="bench.compile.classpath"
+              value="${classes.dir}${path.separator}${standard.compile.classpath}${path.separator}${bp:testbuild.classpath}${path.separator}${bench.jars}"/>
+    <echo message="${bench.compile.classpath}"/>
+
+    <javac destdir="${bench.classes.dir}"
+           source="${test.source.java.vm.version}"
+           target="${test.target.java.vm.version}"
+           encoding="${sources.encoding}"
+           debug="true">
+        <src>
+            <dirset dir="${bench.src.dir}" />
+        </src>
+        <compilerarg line="-s ${bench.gen.dir}"/>
+        <classpath>
+            <path path="${bench.compile.classpath}" />
+        </classpath>
+        <withKotlin/>
+    </javac>
+
+    <java classname="${bench.main.class}"
+          fork="true"
+          failonerror="true">
+      <classpath>
+        <pathelement path="${bench.compile.classpath}"/>
+        <pathelement location="${bench.classes.dir}"/>
+      </classpath>
+    </java>
+  </target>
+
+  <!-- Fat JAR build -->
+  <target name="single-jar" depends="standard-release">
     <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask" classpath="${bp:tool.classpath}"/>
     <jarjar destfile="${lib.dir}/ionsql-sandbox-single.jar">
       <fileset dir="${classes.dir}"/>
