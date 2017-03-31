@@ -157,17 +157,19 @@ class EvaluatingCompiler(private val ion: IonSystem,
             if (args.size % 2 != 0) {
                 err("struct requires even number of parameters")
             }
-            val names = ArrayList<String>(args.size / 2)
-            ion.newEmptyStruct().apply {
-                (0 until args.size).step(2)
-                    .asSequence()
-                    .map { args[it].ionValue to args[it + 1].ionValue.clone() }
-                    .forEach { (nameVal, child) ->
-                        val name = nameVal.text
-                        names.add(name)
-                        add(name, child)
-                    }
-            }.seal().exprValue().orderedNamesValue(names)
+
+            val seq = (0 until args.size).step(2)
+                .asSequence()
+                .map {
+                    args[it] to args[it + 1]
+                }
+                .filter { (name, _) ->
+                    name.type.isText
+                }
+                .map { (name, value) ->
+                    value.namedValue(name)
+                }
+            SequenceStruct(ion, isOrdered = true, sequence = seq)
         },
         "bag" to bindOp(minArity = 0, maxArity = Integer.MAX_VALUE) { _, args ->
             SequenceExprValue(
@@ -400,7 +402,9 @@ class EvaluatingCompiler(private val ion: IonSystem,
                     }
                     // FIXME select * doesn't project ordered tuples
                     // TODO this should work for very specific cases...
-                    { joinedValues, _ -> applyToNewStruct { projectAllInto(joinedValues) } }
+                    { joinedValues, _ ->
+                        projectAllInto(joinedValues)
+                    }
                 }
                 "list" -> {
                     if (selectExprs.size < 2) {
@@ -410,9 +414,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                         aliasExtractor(selectExprs.asSequence().drop(1)).map { it.asName };
 
                     { _, locals ->
-                        applyToNewStruct {
-                            projectSelectList(locals, selectExprs.asSequence().drop(1), selectNames)
-                        }.orderedNamesValue(selectNames)
+                        projectSelectList(locals, selectExprs.asSequence().drop(1), selectNames)
                     }
                 }
                 "value" -> {
@@ -451,21 +453,49 @@ class EvaluatingCompiler(private val ion: IonSystem,
             val nameExpr = memberExpr[1]
             val valueExpr = memberExpr[2]
 
-            // TODO support ordered names (when underlying sequence is ordered)
-            // TODO support doing this as a lazy value
-            ion.newEmptyStruct().apply {
-                evalQueryWithoutProjection(env, expr).map { (_, locals) ->
+            val source = evalQueryWithoutProjection(env, expr)
+            val seq = source.asSequence()
+                .map { (_, locals) ->
                     Pair(nameExpr.eval(locals), valueExpr.eval(locals))
-                }.filter { (nameVal, _) ->
-                    nameVal.type.isText
-                }.forEach { (nameVal, valueVal) ->
-                    val name = nameVal.stringValue()
-                    val value = valueVal.ionValue.clone()
-                    add(name, value)
+                }.filter { (name, _) ->
+                    name.type.isText
+                }.map { (name, value) ->
+                    value.namedValue(name)
                 }
-            }.seal().exprValue()
+            // TODO support ordered names (when ORDER BY)
+            SequenceStruct(ion, isOrdered = false, sequence = seq)
         }
     )
+
+    /** Provides SELECT * */
+    private fun projectAllInto(joinedValues: List<ExprValue>): ExprValue {
+        val seq = joinedValues
+            .asSequence()
+            .mapIndexed { col, joinValue ->
+                when (joinValue.type) {
+                    ExprValueType.STRUCT -> joinValue
+                    else -> {
+                        // construct an artificial tuple for SELECT *
+                        val name = syntheticColumnName(col).exprValue()
+                        listOf(joinValue.namedValue(name))
+                    }
+                }
+            }.flatMap { it.asSequence() }
+
+        return SequenceStruct(ion, isOrdered = false, sequence = seq)
+    }
+
+    /** Provides SELECT <list> */
+    private fun projectSelectList(env: Environment,
+                                  exprs: Sequence<IonValue>,
+                                  aliases: List<String>): ExprValue {
+        val seq = exprs.mapIndexed { col, raw ->
+            val name = aliases[col].exprValue()
+            val value = raw.eval(env)
+            value.namedValue(name)
+        }
+        return SequenceStruct(ion, isOrdered = true, sequence = seq)
+    }
 
     /** Evaluates the clauses of the SELECT or PIVOT without generating the final projection. */
     private fun evalQueryWithoutProjection(env: Environment,
@@ -531,9 +561,6 @@ class EvaluatingCompiler(private val ion: IonSystem,
         return seq
     }
 
-    private fun applyToNewStruct(applicator: IonStruct.() -> Unit): ExprValue =
-        ion.newEmptyStruct().apply(applicator).seal().exprValue()
-
     /** Dispatch table for built-in functions. */
     private val builtins: Map<String, (Environment, List<ExprValue>) -> ExprValue> = mapOf(
         "exists" to { _, args ->
@@ -557,34 +584,6 @@ class EvaluatingCompiler(private val ion: IonSystem,
     )
 
     private val functions = builtins + userFuncs
-
-    private fun IonStruct.projectAllInto(joinedValues: List<ExprValue?>) {
-        joinedValues.forEachIndexed { col, joinValue ->
-            val ionVal = joinValue?.ionValue!!
-            when (ionVal) {
-                is IonStruct -> {
-                    for (child in ionVal) {
-                        val name = child.fieldName
-                        add(name, child.clone())
-                    }
-                }
-                else -> {
-                    // construct an artificial tuple for SELECT *
-                    add(syntheticColumnName(col), ionVal.clone())
-                }
-            }
-        }
-    }
-
-    private fun IonStruct.projectSelectList(env: Environment,
-                                            exprs: Sequence<IonValue>,
-                                            aliases: List<String>) {
-        exprs.forEachIndexed { col, raw ->
-            val name = aliases[col]
-            val value = raw.eval(env)
-            add(name, value.ionValue.clone())
-        }
-    }
 
     private fun List<ExprValue>.bind(parent: Environment, aliases: List<Alias>): Environment {
         val locals = map { it.bindings }

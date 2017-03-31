@@ -204,6 +204,19 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     fun pathFieldStructLiteral() = assertEval("{'a': 1, 'b': 2, 'b': 3}.a", "1")
 
     @Test
+    fun pathIndexStructLiteral() = assertEval("{'a': 1, 'b': 2, 'b': 3}[1]", "2")
+
+    @Test
+    fun pathIndexStructOutOfBoundsLowLiteral() = assertEval("{'a': 1, 'b': 2, 'b': 3}[-1]", "null") {
+        assertEquals(ExprValueType.MISSING, exprValue.type)
+    }
+
+    @Test
+    fun pathIndexStructOutOfBoundsHighLiteral() = assertEval("{'a': 1, 'b': 2, 'b': 3}[3]", "null") {
+        assertEquals(ExprValueType.MISSING, exprValue.type)
+    }
+
+    @Test
     fun pathWildcard() = assertEval("stores[0].books[*].title", """["A", "B", "C", "D"]""")
 
     @Test
@@ -385,6 +398,12 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             assertEquals(listOf("id"), bindNames)
         }
     }
+
+    @Test
+    fun selectIndexStruct() = assertEval(
+        """SELECT VALUE x[0] FROM (SELECT s.id FROM stores AS s) AS x""",
+        """["5", "6"]"""
+    )
 
     @Test
     fun selectValues() = assertEval(
