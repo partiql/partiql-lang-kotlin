@@ -34,7 +34,7 @@ class SequenceExprValue(private val ion: IonSystem,
     }
 
     override val ionValue: IonValue by lazy {
-        asSequence()
+        sequence
             .mapTo(
                 when (type) {
                     BAG, LIST -> ion.newEmptyList()

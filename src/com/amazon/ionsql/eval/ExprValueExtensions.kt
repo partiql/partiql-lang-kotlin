@@ -21,6 +21,9 @@ fun ExprValue.orderedNamesValue(names: List<String>): ExprValue =
         override fun toString(): String = stringify()
     }
 
+val ExprValue.orderedNames: List<String>?
+    get() = asFacet(OrderedBindNames::class.java)?.orderedNames
+
 /** Wraps this [ExprValue] as a [Named] instance. */
 fun ExprValue.asNamed(): Named = object : Named {
     override val name: ExprValue
@@ -48,6 +51,9 @@ fun ExprValue.unnamedValue(): ExprValue = when (asFacet(Named::class.java)) {
         override fun toString(): String = stringify()
     }
 }
+
+val ExprValue.name: ExprValue?
+    get() = asFacet(Named::class.java)?.name
 
 /** A special wrapper for `UNPIVOT` values as a BAG. */
 private class UnpivotedExprValue(private val values: Iterable<ExprValue>) : BaseExprValue() {

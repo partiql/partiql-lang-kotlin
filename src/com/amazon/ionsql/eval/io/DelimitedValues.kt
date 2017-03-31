@@ -128,7 +128,7 @@ object DelimitedValues {
         val nullValue = ion.newNull()
         var names: List<String>? = null
         for (row in value) {
-            val colNames = row.asFacet(OrderedBindNames::class.java)?.orderedNames
+            val colNames = row.orderedNames
                 ?: throw IllegalArgumentException("Delimited data must be ordered tuple: $row")
             if (names == null) {
                 // first row defines column names

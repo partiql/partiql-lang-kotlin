@@ -500,7 +500,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                             Bindings.over {
                                 when (it) {
                                     alias.asName -> value
-                                    alias.atName -> value.name
+                                    alias.atName -> value.name ?: missingValue
                                     else -> null
                                 }
                             },
@@ -596,7 +596,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                         // the alias binds to the value itself
                         aliases[col].asName -> this[col]
                         // the alias binds to the name of the value
-                        aliases[col].atName -> this[col].name
+                        aliases[col].atName -> this[col].name ?: missingValue
                         // otherwise scope look up within the value
                         else -> value[name]
                     }
@@ -640,8 +640,6 @@ class EvaluatingCompiler(private val ion: IonSystem,
         }
         else -> err("Cannot convert index to int/string: $member")
     }
-
-    private val ExprValue.name get() = asFacet(Named::class.java)?.name ?: missingValue
 
     private val IonValue.text get() = stringValue() ?: err("Expected non-null string: $this")
 

@@ -36,17 +36,17 @@ class IonExprValueTest : Base() {
 
     @Test
     fun scalarInt() = over("5") {
-        assertNull(exprValue.asFacet(Named::class.java))
+        assertNull(exprValue.name)
     }
 
     @Test
     fun scalarString() = over("\"hello\"") {
-        assertNull(exprValue.asFacet(Named::class.java))
+        assertNull(exprValue.name)
     }
 
     @Test
     fun list() = over("[1, 2, 3]") {
-        assertNull(exprValue.asFacet(Named::class.java))
+        assertNull(exprValue.name)
     }
 
     @Test
@@ -59,13 +59,13 @@ class IonExprValueTest : Base() {
 
     @Test
     fun listChild() = over("[1, 2, 3]", { this[0] }) {
-        val named = exprValue.asFacet(Named::class.java)!!
-        assertEquals(0, named.name.ionValue.intValue())
+        val name = exprValue.name!!
+        assertEquals(0L, name.numberValue())
     }
 
     @Test
     fun structChild() = over("{a: 1, b: 2, c: 3}", { this["a"]!! }) {
-        val named = exprValue.asFacet(Named::class.java)!!
-        assertEquals("a", named.name.ionValue.stringValue())
+        val name = exprValue.name!!
+        assertEquals("a", name.stringValue())
     }
 }

@@ -35,8 +35,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     @Test
     fun structLiteral() = assertEval("{'a':i, 'b':f, 'c':d, 'd': 1}", "{a:1, b:2e0, c:3d0, d:1}") {
         // struct literals provide ordered names
-        val bindNames = exprValue.asFacet(OrderedBindNames::class.java)!!
-        assertEquals(listOf("a", "b", "c", "d"), bindNames.orderedNames)
+        val bindNames = exprValue.orderedNames!!
+        assertEquals(listOf("a", "b", "c", "d"), bindNames)
     }
 
     @Test
@@ -370,7 +370,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     ) {
         // SELECT * from schema-less Ion provides no ordered names
         exprValue.forEach {
-            assertNull(it.asFacet(OrderedBindNames::class.java))
+            assertNull(it.orderedNames)
         }
     }
 
@@ -381,8 +381,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     ) {
         // SELECT list provides ordered names facet
         exprValue.forEach {
-            val bindNames = it.asFacet(OrderedBindNames::class.java)!!
-            assertEquals(listOf("id"), bindNames.orderedNames)
+            val bindNames = it.orderedNames!!
+            assertEquals(listOf("id"), bindNames)
         }
     }
 

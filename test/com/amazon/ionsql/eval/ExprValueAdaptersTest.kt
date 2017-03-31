@@ -19,7 +19,7 @@ class ExprValueAdaptersTest : Base() {
     @Test
     fun unnamedValue() {
         val value = literal("{a:5}").exprValue().bindings["a"]!!
-        assertNotNull(value.asFacet(Named::class.java))
-        assertNull(value.unnamedValue().asFacet(Named::class.java))
+        assertNotNull(value.name)
+        assertNull(value.unnamedValue().name)
     }
 }
