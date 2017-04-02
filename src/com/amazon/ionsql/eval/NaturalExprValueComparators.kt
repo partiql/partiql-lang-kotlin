@@ -119,9 +119,6 @@ enum class NaturalExprValueComparators(private val nullOrder: NullOrder) : Compa
         return compareOrdered(left.sorted(), right.sorted(), entityCmp)
     }
 
-    // TODO consolidate this with the evaluator
-    private val ExprValue.name get() = asFacet(Named::class.java)?.name
-
     private val structFieldComparator = object : Comparator<ExprValue> {
         override fun compare(left: ExprValue, right: ExprValue): Int {
             val lName = left.name!!

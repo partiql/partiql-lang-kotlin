@@ -35,8 +35,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     @Test
     fun structLiteral() = assertEval("{'a':i, 'b':f, 'c':d, 'd': 1}", "{a:1, b:2e0, c:3d0, d:1}") {
         // struct literals provide ordered names
-        val bindNames = exprValue.asFacet(OrderedBindNames::class.java)!!
-        assertEquals(listOf("a", "b", "c", "d"), bindNames.orderedNames)
+        val bindNames = exprValue.orderedNames!!
+        assertEquals(listOf("a", "b", "c", "d"), bindNames)
     }
 
     @Test
@@ -193,6 +193,30 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     fun pathIndexing() = assertEval("stores[0].books[2].title", "\"C\"")
 
     @Test
+    fun pathIndexListLiteral() = assertEval("[1, 2, 3][1]", "2")
+
+    @Test
+    fun pathIndexBagLiteral() = assertEval("<<1, 2, 3>>[1]", "null") {
+        assertEquals(ExprValueType.MISSING, exprValue.type)
+    }
+
+    @Test
+    fun pathFieldStructLiteral() = assertEval("{'a': 1, 'b': 2, 'b': 3}.a", "1")
+
+    @Test
+    fun pathIndexStructLiteral() = assertEval("{'a': 1, 'b': 2, 'b': 3}[1]", "2")
+
+    @Test
+    fun pathIndexStructOutOfBoundsLowLiteral() = assertEval("{'a': 1, 'b': 2, 'b': 3}[-1]", "null") {
+        assertEquals(ExprValueType.MISSING, exprValue.type)
+    }
+
+    @Test
+    fun pathIndexStructOutOfBoundsHighLiteral() = assertEval("{'a': 1, 'b': 2, 'b': 3}[3]", "null") {
+        assertEquals(ExprValueType.MISSING, exprValue.type)
+    }
+
+    @Test
     fun pathWildcard() = assertEval("stores[0].books[*].title", """["A", "B", "C", "D"]""")
 
     @Test
@@ -323,6 +347,18 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     )
 
     @Test
+    fun rangeOverListConstructorWithAt() = assertEval(
+        "SELECT VALUE i FROM [1, 2, 3] AT i",
+        """[0, 1, 2]"""
+    )
+
+    @Test
+    fun rangeOverListConstructorWithAsAndAt() = assertEval(
+        "SELECT VALUE [i, v] FROM [1, 2, 3] AS v AT i",
+        """[[0, 1], [1, 2], [2, 3]]"""
+    )
+
+    @Test
     fun rangeOverBagWithAt() = assertEval(
         "SELECT VALUE [i, v] FROM <<1, 2, 3>> AS v AT i",
         """[[null, 1], [null, 2], [null, 3]]"""
@@ -347,7 +383,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     ) {
         // SELECT * from schema-less Ion provides no ordered names
         exprValue.forEach {
-            assertNull(it.asFacet(OrderedBindNames::class.java))
+            assertNull(it.orderedNames)
         }
     }
 
@@ -358,10 +394,16 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     ) {
         // SELECT list provides ordered names facet
         exprValue.forEach {
-            val bindNames = it.asFacet(OrderedBindNames::class.java)!!
-            assertEquals(listOf("id"), bindNames.orderedNames)
+            val bindNames = it.orderedNames!!
+            assertEquals(listOf("id"), bindNames)
         }
     }
+
+    @Test
+    fun selectIndexStruct() = assertEval(
+        """SELECT VALUE x[0] FROM (SELECT s.id FROM stores AS s) AS x""",
+        """["5", "6"]"""
+    )
 
     @Test
     fun selectValues() = assertEval(

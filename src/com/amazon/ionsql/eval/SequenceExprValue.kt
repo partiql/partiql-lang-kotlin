@@ -11,9 +11,11 @@ import com.amazon.ionsql.eval.ExprValueType.*
 
 /**
  * Provides an [ExprValue] over a function that yields a [Sequence].
- * This implementation is used to implement lazy sequences of values and is the
- * closest analog to the `Dataset` concept in Ion SQL.  Materialzing the
- * `ionValue` field generates an [IonList] from the sequence **once**.
+ * This implementation is used to implement lazy sequences of values.
+ *
+ * The [ExprValue.ionValue] property lazily generates an [IonList] from the sequence **once**.
+ * The [ExprValue.ordinalBindings] property lazily generates a backing [List] **once**
+ * for non-`BAG` types.
  *
  * @param ion The underlying [IonSystem] for generating values.
  * @param type The reported [ExprValueType] for this value.
@@ -32,7 +34,7 @@ class SequenceExprValue(private val ion: IonSystem,
     }
 
     override val ionValue: IonValue by lazy {
-        asSequence()
+        sequence
             .mapTo(
                 when (type) {
                     BAG, LIST -> ion.newEmptyList()
@@ -43,7 +45,19 @@ class SequenceExprValue(private val ion: IonSystem,
             .seal()
     }
 
-    override val bindings = Bindings.empty()
+    override val ordinalBindings: OrdinalBindings by lazy {
+        when (type) {
+            // no ordinal access over BAG
+            BAG -> OrdinalBindings.empty()
+            else -> {
+                // materialize the sequence as a backing list
+                val list = toList()
+                OrdinalBindings.over {
+                    list[it]
+                }
+            }
+        }
+    }
 
     override fun iterator() = sequence.iterator()
 }
