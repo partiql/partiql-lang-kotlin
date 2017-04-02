@@ -16,7 +16,14 @@ import java.util.*
  * A basic implementation of the [Compiler] that parses Ion SQL [Token] instances
  * into an [Expression].
  *
- * This implementation produces a very simple AST-walking evaluator as its "compiled" form.
+ * This implementation produces a "compiled" form consisting of context-threaded
+ * code in the form of a tree of thunks.  An overview of this technique can be found
+ * [here][1]
+ *
+ * **Note:** *threaded* in this context is used in how the code gets *threaded* together for
+ * interpretation and **not** the concurrency primitive.
+ *
+ * [1]: https://www.complang.tuwien.ac.at/anton/lvas/sem06w/fest.pdf
  *
  * @param ion The ion system to use for synthesizing Ion values.
  * @param userFuncs Functions to provide access to in addition to the built-ins.
@@ -28,11 +35,39 @@ class EvaluatingCompiler(private val ion: IonSystem,
     constructor(ion: IonSystem) : this(ion, IonSqlParser(ion), emptyMap())
     constructor(ion: IonSystem,
                 userFuncs: @JvmSuppressWildcards
-                           Map<String, (Environment, List<ExprValue>) -> ExprValue>)
+                Map<String, (Environment, List<ExprValue>) -> ExprValue>)
         : this(ion, IonSqlParser(ion), userFuncs)
 
+    private interface ExprThunk {
+        fun eval(env: Environment): ExprValue
+    }
+
+    private fun exprThunk(thunk: (Environment) -> ExprValue) = object : ExprThunk {
+        // TODO make this memoize the result when valid and possible
+        override fun eval(env: Environment) = thunk(env)
+    }
+
     private data class Alias(val asName: String, val atName: String?)
-    private data class FromSource(val alias: Alias, val expr: IonValue)
+    private data class FromSource(val alias: Alias, val expr: ExprThunk)
+
+    /** A condition clause for `CASE`. */
+    private data class ConditionThunks(val cond: (Environment) -> Boolean, val resultExpr: ExprThunk)
+
+    /** Compiles the list of [ConditionThunks] as the body of a `CASE`-`WHEN`. */
+    private fun List<ConditionThunks>.compile(): ExprThunk = exprThunk { env ->
+        find { (condThunk, _) ->
+            condThunk(env)
+        }?.resultExpr?.eval(env) ?: nullValue
+    }
+
+    /**
+     * Represents a single `FROM` source production of values.
+     *
+     * @param values A single production of values from the `FROM` source.
+     * @param env The environment scoped to the values of this production.
+     */
+    private data class FromProductionThunks(val values: List<ExprValue>,
+                                            val env: Environment)
 
     private enum class PathWildcardKind(val isWildcard: Boolean) {
         NONE(isWildcard = false),
@@ -64,9 +99,9 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 "lit" -> {
                     val literal = lastExpr[1]
                     when {
-                         literal.isNonNullText -> {
-                             name = literal.text
-                         }
+                        literal.isNonNullText -> {
+                            name = literal.text
+                        }
                     }
                 }
             }
@@ -88,61 +123,70 @@ class EvaluatingCompiler(private val ion: IonSystem,
             Alias(asName, atName)
         }.toList()
 
-    private val aliasHandler = { env: Environment, expr: IonSexp ->
-        when (expr.size) {
+    private val aliasHandler = { ast: IonSexp ->
+        when (ast.size) {
             3 -> {
-                // NO-OP for evaluation--handled separately by syntax handlers
-                expr[2].eval(env)
+                // TODO we should make the compiler elide this completely
+                // NO-OP for evaluation--handled separately by compilation
+                val expr = ast[2].compile()
+                exprThunk { env -> expr.eval(env) }
             }
-            else -> err("Bad alias: $expr")
+            else -> err("Bad alias: $ast")
         }
     }
 
-    private val isHandler = { env: Environment, expr: IonSexp ->
-        when (expr.size) {
+    private val isHandler = { ast: IonSexp ->
+        when (ast.size) {
             3 -> {
-                val instance = expr[1].eval(env)
+                val instanceExpr = ast[1].compile()
                 // TODO consider the type parameters
-                val targetType = ExprValueType.fromTypeName(expr[2][1].text)
+                val targetType = ExprValueType.fromTypeName(ast[2][1].text)
 
-                when {
+                exprThunk { env ->
+                    val instance = instanceExpr.eval(env)
+                    when {
                     // MISSING is NULL
-                    instance.type == ExprValueType.MISSING
-                        && targetType == ExprValueType.NULL -> true
-                    else -> instance.type == targetType
-                }.exprValue()
+                        instance.type == ExprValueType.MISSING
+                            && targetType == ExprValueType.NULL -> true
+                        else -> instance.type == targetType
+                    }.exprValue()
+                }
             }
-            else -> err("Arity incorrect for 'is'/'is_not': $expr")
+            else -> err("Arity incorrect for 'is'/'is_not': $ast")
         }
 
     }
 
-    /** Dispatch table for AST "op-codes."  */
-    private val syntax: Map<String, (Environment, IonSexp) -> ExprValue> = mapOf(
-        "missing" to { _, _ -> missingValue },
-        "lit" to { _, expr ->
-            expr[1].exprValue()
+    /** Dispatch table for AST "op-codes" to thunks.  */
+    private val syntax: Map<String, (IonSexp) -> ExprThunk> = mapOf(
+        "missing" to { _ ->
+            exprThunk { missingValue }
         },
-        "id" to { env, expr ->
-            val name = expr[1].text
-            env.current[name] ?: err("No such binding: $name")
+        "lit" to { ast ->
+            val literal = ast[1].exprValue()
+            exprThunk { literal }
         },
-        "@" to { env, expr ->
-            expr[1].eval(env.flipToLocals())
+        "id" to { ast ->
+            val name = ast[1].text
+            exprThunk { env -> env.current[name] ?: err("No such binding: $name") }
         },
-        "call" to { env, expr ->
-            expr.evalCall(env, startIndex = 1)
+        "@" to { ast ->
+            val expr = ast[1].compile()
+            exprThunk { env -> expr.eval(env.flipToLocals()) }
         },
-        "cast" to { env, expr ->
-            if (expr.size != 3) {
+        "call" to { ast ->
+            ast.compileCall(startIndex = 1)
+        },
+        "cast" to { ast ->
+            if (ast.size != 3) {
                 err("cast requires two arguments")
             }
 
-            val source = expr[1].eval(env)
+            val sourceExpr = ast[1].compile()
             // TODO honor type parameters
-            val targetTypeName = expr[2][1].text
+            val targetTypeName = ast[2][1].text
             val targetType = ExprValueType.fromTypeName(targetTypeName)
-            source.cast(ion, targetType)
+            exprThunk { env -> sourceExpr.eval(env).cast(ion, targetType) }
         },
         "list" to bindOp(minArity = 0, maxArity = Integer.MAX_VALUE) { _, args ->
             SequenceExprValue(
@@ -245,225 +289,282 @@ class EvaluatingCompiler(private val ion: IonSystem,
         "not" to bindOp(minArity = 1, maxArity = 1) { _, args ->
             (!args[0].booleanValue()).exprValue()
         },
-        "or" to { env, expr ->
-            when (expr.size) {
-                3 -> expr[1].eval(env).booleanValue() || expr[2].eval(env).booleanValue()
-                else -> err("Arity incorrect for 'or': $expr")
-            }.exprValue()
+        "or" to { ast ->
+            when (ast.size) {
+                3 -> {
+                    val left = ast[1].compile()
+                    val right = ast[2].compile()
+                    exprThunk { env ->
+                        (left.eval(env).booleanValue() || right.eval(env).booleanValue()).exprValue()
+                    }
+                }
+                else -> err("Arity incorrect for 'or': $ast")
+            }
         },
-        "and" to { env, expr ->
-            when (expr.size) {
-                3 -> expr[1].eval(env).booleanValue() && expr[2].eval(env).booleanValue()
-                else -> err("Arity incorrect for 'and': $expr")
-            }.exprValue()
+        "and" to { ast ->
+            when (ast.size) {
+                3 -> {
+                    val left = ast[1].compile()
+                    val right = ast[2].compile()
+                    exprThunk { env ->
+                        (left.eval(env).booleanValue() && right.eval(env).booleanValue()).exprValue()
+                    }
+                }
+                else -> err("Arity incorrect for 'and': $ast")
+            }
         },
         "is" to isHandler,
-        "is_not" to { env, expr ->
-            (!isHandler(env, expr).booleanValue()).exprValue()
+        "is_not" to { ast ->
+            val isExpr = isHandler(ast)
+            exprThunk { env ->
+                (!isExpr.eval(env).booleanValue()).exprValue()
+            }
         },
-        "simple_case" to { env, expr ->
-            if (expr.size < 3) {
-                err("Arity incorrect for simple case: $expr")
+        "simple_case" to { ast ->
+            if (ast.size < 3) {
+                err("Arity incorrect for simple case: $ast")
             }
 
-            val target = expr[1].eval(env)
-            val match = expr.asSequence().drop(2).map {
+            val targetExpr = ast[1].compile()
+            val matchExprs = ast.drop(2).map {
                 when (it[0].text) {
                     "when" -> when (it.size) {
-                        3 -> when (target.exprEquals(it[1].eval(env))) {
-                            true -> it[2].eval(env)
-                            else -> null
+                        3 -> {
+                            val candidateExpr = it[1].compile()
+                            val resultExpr = it[2].compile()
+
+                            ConditionThunks(
+                                { env ->
+                                    val target = targetExpr.eval(env)
+                                    val candidate = candidateExpr.eval(env)
+                                    target.exprEquals(candidate)
+                                },
+                                resultExpr
+                            )
                         }
                         else -> err("Arity incorrect for 'when': $it")
                     }
                     "else" -> when (it.size) {
-                        2 -> it[1].eval(env)
+                        2 -> {
+                            val elseExpr = it[1].compile()
+                            ConditionThunks({ true }, elseExpr)
+                        }
                         else -> err("Arity incorrect for 'else': $it")
                     }
                     else -> err("Unexpected syntax in simple case: ${it[0]}")
                 }
-            }.find { it != null }
+            }
 
-            match ?: nullValue
+            matchExprs.compile()
         },
-        "searched_case" to { env, expr ->
-            if (expr.size < 2) {
-                err("Arity incorrect for searched case: $expr")
+        "searched_case" to { ast ->
+            if (ast.size < 2) {
+                err("Arity incorrect for searched case: $ast")
             }
 
             // go through the cases and else and evaluate them
-            val match = expr.asSequence().drop(1).map {
+            val matchExprs = ast.drop(1).map {
                 when (it[0].text) {
                     "when" -> when (it.size) {
-                        3 -> when (it[1].eval(env).booleanValue()) {
-                            true -> it[2].eval(env)
-                            else -> null
+                        3 -> {
+                            val condExpr = it[1].compile()
+                            val resultExpr = it[2].compile()
+
+                            ConditionThunks(
+                                { env -> condExpr.eval(env).booleanValue() },
+                                resultExpr
+                            )
                         }
                         else -> err("Arity incorrect for 'when': $it")
                     }
                     "else" -> when (it.size) {
-                        2 -> it[1].eval(env)
+                        2 -> {
+                            val elseExpr = it[1].compile()
+                            ConditionThunks({ true }, elseExpr)
+                        }
                         else -> err("Arity incorrect for 'else': $it")
                     }
                     else -> err("Unexpected syntax in search case: ${it[0]}")
                 }
-            }.find { it != null }
-
-            match ?: nullValue
-        },
-        "path" to { env, expr ->
-            if (expr.size < 3) {
-                err("Path arity to low: $expr")
             }
 
-            var curr = expr[1].eval(env)
+            matchExprs.compile()
+        },
+        "path" to { ast ->
+            if (ast.size < 3) {
+                err("Path arity to low: $ast")
+            }
+
+            var currExpr = ast[1].compile()
             var firstWildcardKind = PathWildcardKind.NONE
 
             // extract all the non-wildcard paths
             var idx = 2
-            while (idx < expr.size) {
-                val raw = expr[idx]
+            while (idx < ast.size) {
+                val raw = ast[idx]
                 firstWildcardKind = raw.determinePathWildcard()
                 if (firstWildcardKind.isWildcard) {
                     // need special processing for the rest of the path
                     break
                 }
 
-                curr = curr[raw.eval(env)]
+                val targetExpr = currExpr
+                val indexExpr = raw.compile()
+                currExpr = exprThunk { env ->
+                    val target = targetExpr.eval(env)
+                    val index = indexExpr.eval(env)
+                    target[index]
+                }
                 idx++
             }
 
             // we are either done or we have wild-card paths and beyond
-            val components = ArrayList<(ExprValue) -> Sequence<ExprValue>>()
-            while (idx < expr.size) {
-                val raw = expr[idx]
+            val components = ArrayList<(Environment, ExprValue) -> Sequence<ExprValue>>()
+            while (idx < ast.size) {
+                val raw = ast[idx]
                 val wildcardKind = raw.determinePathWildcard()
-                components.add(when (wildcardKind) {
-                    // treat the entire value as a sequence
-                    PathWildcardKind.NORMAL -> { exprVal ->
-                        exprVal.rangeOver().asSequence()
+                components.add(
+                    when (wildcardKind) {
+                        // treat the entire value as a sequence
+                        PathWildcardKind.NORMAL -> { _, exprVal ->
+                            exprVal.rangeOver().asSequence()
+                        }
+                        // treat the entire value as a sequence
+                        PathWildcardKind.UNPIVOT -> { _, exprVal ->
+                            exprVal.unpivot(ion).asSequence()
+                        }
+                        // "index" into the value lazily
+                        PathWildcardKind.NONE -> {
+                            val indexExpr = raw.compile();
+                            { env, exprVal ->
+                                sequenceOf(exprVal[indexExpr.eval(env)])
+                            }
+                        }
                     }
-                    // treat the entire value as a sequence
-                    PathWildcardKind.UNPIVOT -> { exprVal ->
-                        exprVal.unpivot(ion).asSequence()
-                    }
-                    // "index" into the value lazily
-                    PathWildcardKind.NONE -> { exprVal ->
-                        sequenceOf(exprVal[raw.eval(env)])
-                    }
-                })
+                )
                 idx++
             }
 
             when (firstWildcardKind) {
-                PathWildcardKind.NONE -> curr
+                PathWildcardKind.NONE -> currExpr
                 else -> {
                     if (firstWildcardKind == PathWildcardKind.UNPIVOT) {
-                        curr = curr.unpivot(ion)
-                    }
-                    var seq = sequenceOf(curr)
-                    for (component in components) {
-                        seq = seq.flatMap(component)
+                        val targetExpr = currExpr
+                        currExpr = exprThunk { env -> targetExpr.eval(env).unpivot(ion) }
                     }
 
-                    SequenceExprValue(ion, seq)
+                    exprThunk { env ->
+                        var seq = sequenceOf(currExpr.eval(env))
+                        for (component in components) {
+                            seq = seq.flatMap { component(env, it) }
+                        }
+
+                        SequenceExprValue(ion, seq)
+                    }
                 }
             }
         },
         "as" to aliasHandler,
         "at" to aliasHandler,
-        "unpivot" to { env, expr ->
-            if (expr.size != 2) {
+        "unpivot" to { ast ->
+            if (ast.size != 2) {
                 err("UNPIVOT form must have one expression")
             }
-            expr[1].eval(env).unpivot(ion)
+            val expr = ast[1].compile()
+            exprThunk { env -> expr.eval(env).unpivot(ion) }
         },
-        "select" to { env, expr ->
-            if (expr.size < 3) {
-                err("Bad arity on SELECT form $expr: ${expr.size}")
+        "select" to { ast ->
+            if (ast.size < 3) {
+                err("Bad arity on SELECT form $ast: ${ast.size}")
             }
 
-            val projectExprs = expr[1]
-            if (projectExprs !is IonSequence || projectExprs.isEmpty) {
-                err("SELECT projection node must be non-empty sequence: $projectExprs")
+            val projectForm = ast[1]
+            if (projectForm !is IonSequence || projectForm.isEmpty) {
+                err("SELECT projection node must be non-empty sequence: $projectForm")
             }
-            if (projectExprs[0].text != "project") {
-                err("SELECT projection is not supported ${projectExprs[0].text}")
+            if (projectForm[0].text != "project") {
+                err("SELECT projection is not supported ${projectForm[0].text}")
             }
-            val selectExprs = projectExprs[1]
-            if (selectExprs !is IonSequence || selectExprs.isEmpty) {
-                err("SELECT projection must be non-empty sequence: $selectExprs")
+            val selectForm = projectForm[1]
+            if (selectForm !is IonSequence || selectForm.isEmpty) {
+                err("SELECT projection must be non-empty sequence: $selectForm")
             }
 
-            val selectFunc: (List<ExprValue>, Environment) -> ExprValue = when (selectExprs[0].text) {
+            val selectFunc: (List<ExprValue>, Environment) -> ExprValue = when (selectForm[0].text) {
                 "*" -> {
-                    if (selectExprs.size != 1) {
+                    if (selectForm.size != 1) {
                         err("SELECT * must be a singleton list")
                     }
                     // FIXME select * doesn't project ordered tuples
                     // TODO this should work for very specific cases...
-                    { joinedValues, _ ->
-                        projectAllInto(joinedValues)
-                    }
+                    { joinedValues, _ -> projectAllInto(joinedValues) }
                 }
                 "list" -> {
-                    if (selectExprs.size < 2) {
+                    if (selectForm.size < 2) {
                         err("SELECT ... must have at least one expression")
                     }
                     val selectNames =
-                        aliasExtractor(selectExprs.asSequence().drop(1)).map { it.asName };
+                        aliasExtractor(selectForm.asSequence().drop(1)).map { it.asName }
+                    val selectExprs =
+                        selectForm.drop(1).map { it.compile() };
 
-                    { _, locals ->
-                        projectSelectList(locals, selectExprs.asSequence().drop(1), selectNames)
-                    }
+                    { _, env -> projectSelectList(env, selectExprs, selectNames) }
                 }
                 "value" -> {
-                    if (selectExprs.size != 2) {
+                    if (selectForm.size != 2) {
                         err("SELECT VALUE must have a single expression")
                     }
-                    { _, locals ->
-                        selectExprs[1].eval(locals)
+                    val expr = selectForm[1].compile();
+
+                    { _, env -> expr.eval(env) }
+                }
+                else -> err("Invalid node in SELECT: $selectForm")
+            }
+
+            val sourceThunk = compileQueryWithoutProjection(ast)
+            exprThunk { env ->
+                SequenceExprValue(
+                    ion,
+                    sourceThunk(env).map { (joinedValues, env) ->
+                        selectFunc(joinedValues, env)
+                    }.map {
+                        // TODO make this expose the ordinal for ordered sequences
+                        // make sure we don't expose the underlying value's name out of a SELECT
+                        it.unnamedValue()
                     }
-                }
-                else -> err("Invalid node in SELECT: $selectExprs")
+                )
             }
-
-            SequenceExprValue(
-                ion,
-                evalQueryWithoutProjection(env, expr).map { (joinedValues, locals) ->
-                    selectFunc(joinedValues, locals)
-                }.map {
-                    // TODO make this expose the ordinal for ordered sequences
-                    // make sure we don't expose the underlying value's name out of a SELECT
-                    it.unnamedValue()
-                }
-            )
         },
-        "pivot" to { env, expr ->
-            if (expr.size < 3) {
-                err("Bad arity on PIVOT form $expr: ${expr.size}")
+        "pivot" to { ast ->
+            if (ast.size < 3) {
+                err("Bad arity on PIVOT form $ast: ${ast.size}")
             }
 
-            val memberExpr = expr[1]
-            if (memberExpr !is IonSequence
-                    || memberExpr.size != 3
-                    || memberExpr[0].text != "member") {
-                err("PIVOT member node must be of the form (member <name> <value>): $memberExpr")
+            val memberForm = ast[1]
+            if (memberForm !is IonSequence
+                || memberForm.size != 3
+                || memberForm[0].text != "member") {
+                err("PIVOT member node must be of the form (member <name> <value>): $memberForm")
             }
-            val nameExpr = memberExpr[1]
-            val valueExpr = memberExpr[2]
+            val nameExpr = memberForm[1].compile()
+            val valueExpr = memberForm[2].compile()
+            val sourceThunk = compileQueryWithoutProjection(ast)
 
-            val source = evalQueryWithoutProjection(env, expr)
-            val seq = source.asSequence()
-                .map { (_, locals) ->
-                    Pair(nameExpr.eval(locals), valueExpr.eval(locals))
-                }.filter { (name, _) ->
-                    name.type.isText
-                }.map { (name, value) ->
-                    value.namedValue(name)
-                }
-            // TODO support ordered names (when ORDER BY)
-            SequenceStruct(ion, isOrdered = false, sequence = seq)
+            exprThunk { env ->
+                val seq = sourceThunk(env)
+                    .asSequence()
+                    .map { (_, env) ->
+                        Pair(nameExpr.eval(env), valueExpr.eval(env))
+                    }
+                    .filter { (name, _) ->
+                        name.type.isText
+                    }
+                    .map { (name, value) ->
+                        value.namedValue(name)
+                    }
+                // TODO support ordered names (when ORDER BY)
+                SequenceStruct(ion, isOrdered = false, sequence = seq)
+            }
         }
     )
 
@@ -487,78 +588,86 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
     /** Provides SELECT <list> */
     private fun projectSelectList(env: Environment,
-                                  exprs: Sequence<IonValue>,
+                                  exprs: List<ExprThunk>,
                                   aliases: List<String>): ExprValue {
-        val seq = exprs.mapIndexed { col, raw ->
+        val seq = exprs.asSequence().mapIndexed { col, expr ->
             val name = aliases[col].exprValue()
-            val value = raw.eval(env)
+            val value = expr.eval(env)
             value.namedValue(name)
         }
+
         return SequenceStruct(ion, isOrdered = true, sequence = seq)
     }
 
-    /** Evaluates the clauses of the SELECT or PIVOT without generating the final projection. */
-    private fun evalQueryWithoutProjection(env: Environment,
-                                           expr: IonSexp): Sequence<Pair<List<ExprValue>, Environment>> {
-        val fromNames = aliasExtractor(expr[2].asSequence().drop(1))
-        val fromSources = expr[2].asSequence()
+    /**
+     * Compiles the clauses of the SELECT or PIVOT into a thunk that does not generate
+     * the final projection.
+     */
+    private fun compileQueryWithoutProjection(ast: IonSexp): (Environment) -> Sequence<FromProductionThunks> {
+        val fromNames = aliasExtractor(ast[2].asSequence().drop(1))
+        val fromSources = ast[2].asSequence()
             .drop(1)
-            .mapIndexed { idx, expr -> FromSource(fromNames[idx], expr) }
+            .mapIndexed { idx, ast -> FromSource(fromNames[idx], ast.compile()) }
             .toList()
-        val fromEnv = env.flipToGlobals()
 
-        var whereExpr: IonValue? = null
-        var limitExpr: IonValue? = null
-        for (clause in expr.drop(3)) {
+        var whereExpr: ExprThunk? = null
+        var limitExpr: ExprThunk? = null
+        for (clause in ast.drop(3)) {
             when (clause[0].text) {
-                "where" -> whereExpr = clause[1]
-                "limit" -> limitExpr = clause[1]
+                "where" -> whereExpr = clause[1].compile()
+                "limit" -> limitExpr = clause[1].compile()
                 else -> err("Unknown clause in SELECT: $clause")
             }
         }
 
-        // compute the join over the data sources
-        var seq = fromSources
-            .foldLeftProduct(fromEnv) { env, source ->
-                source.expr.eval(env)
-                    .rangeOver()
-                    .asSequence()
-                    .map { value ->
-                        // add the correlated binding(s)
-                        val alias = source.alias
-                        val childEnv = env.nest(
-                            Bindings.over {
-                                when (it) {
-                                    alias.asName -> value
-                                    alias.atName -> value.name ?: missingValue
-                                    else -> null
-                                }
-                            },
-                            useAsCurrent = false
-                        )
-                        Pair(childEnv, value)
-                    }
-                    .iterator()
-            }
-            .asSequence()
-            .map { joinedValues ->
-                // bind the joined value to the bindings for the filter/project
-                Pair(joinedValues, joinedValues.bind(env, fromNames))
-            }
-            .filter {
-                val locals = it.second
-                when (whereExpr) {
-                    null -> true
-                    else -> whereExpr!!.eval(locals).booleanValue()
+        return { rootEnv ->
+            val fromEnv = rootEnv.flipToGlobals()
+
+            // compute the join over the data sources
+            var seq = fromSources
+                .foldLeftProduct({ env: Environment -> env }) { bindEnv, source ->
+                    source.expr.eval(bindEnv(fromEnv))
+                        .rangeOver()
+                        .asSequence()
+                        .map { value ->
+                            // add the correlated binding(s)
+                            val alias = source.alias
+                            val nextBindEnv = { env: Environment ->
+                                val childEnv = bindEnv(env)
+                                childEnv.nest(
+                                    Bindings.over {
+                                        when (it) {
+                                            alias.asName -> value
+                                            alias.atName -> value.name ?: missingValue
+                                            else -> null
+                                        }
+                                    },
+                                    useAsCurrent = false
+                                )
+                            }
+                            Pair(nextBindEnv, value)
+                        }
+                        .iterator()
+                }
+                .asSequence()
+                .map { joinedValues ->
+                    // bind the joined value to the bindings for the filter/project
+                    FromProductionThunks(joinedValues, joinedValues.bind(fromEnv, fromNames))
+                }
+
+            if (whereExpr != null) {
+                seq = seq.filter { (_, env) ->
+                    whereExpr!!.eval(env).booleanValue()
                 }
             }
 
-        if (limitExpr != null) {
-            // TODO determine if this needs to be scoped over projection
-            seq = seq.take(limitExpr.eval(env).numberValue().toInt())
-        }
+            if (limitExpr != null) {
+                // TODO determine if this needs to be scoped over projection
+                seq = seq.take(limitExpr!!.eval(rootEnv).numberValue().toInt())
+            }
 
-        return seq
+            seq
+        }
     }
 
     /** Dispatch table for built-in functions. */
@@ -592,22 +701,22 @@ class EvaluatingCompiler(private val ion: IonSystem,
             val found = locals.asSequence()
                 .mapIndexed { col, value ->
                     when (name) {
-                        // the alias binds to the value itself
+                    // the alias binds to the value itself
                         aliases[col].asName -> this[col]
-                        // the alias binds to the name of the value
+                    // the alias binds to the name of the value
                         aliases[col].atName -> this[col].name ?: missingValue
-                        // otherwise scope look up within the value
+                    // otherwise scope look up within the value
                         else -> value[name]
                     }
                 }
                 .filter { it != null }
                 .toList()
             when (found.size) {
-                // nothing found at our scope, return nothing
+            // nothing found at our scope, return nothing
                 0 -> null
-                // found exactly one thing, success
+            // found exactly one thing, success
                 1 -> found.head!!
-                // multiple things with the same name is a conflict
+            // multiple things with the same name is a conflict
                 else -> err("$name is ambigious: ${found.map { it?.ionValue }}")
             }
         }
@@ -642,28 +751,30 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
     private val IonValue.text get() = stringValue() ?: err("Expected non-null string: $this")
 
-    private fun IonSexp.evalCall(env: Environment, startIndex: Int): ExprValue {
+    private fun IonSexp.compileCall(startIndex: Int): ExprThunk {
         val name = this[startIndex].text
         val func = functions[name] ?: err("No such function: $name")
         val argIndex = startIndex + 1
-        return evalFunc(env, argIndex, func)
+        return compileFunc(argIndex, func)
     }
 
-    private fun IonSexp.evalArgs(env: Environment, startIndex: Int): List<ExprValue> =
+    private fun IonSexp.compileArgs(startIndex: Int): List<ExprThunk> =
         (startIndex until size)
             .asSequence()
             .map { this[it] }
-            .map { it.eval(env) }
+            .map { it.compile() }
             .toList()
 
-    private fun IonSexp.evalFunc(env: Environment,
-                                 argIndex: Int,
-                                 func: (Environment, List<ExprValue>) -> ExprValue): ExprValue {
-        val args = evalArgs(env, argIndex)
-        return func(env, args)
+    private fun IonSexp.compileFunc(argIndex: Int,
+                                    func: (Environment, List<ExprValue>) -> ExprValue): ExprThunk {
+        val argThunks = compileArgs(argIndex)
+        return exprThunk { env ->
+            val args = argThunks.map { it.eval(env) }
+            func(env, args)
+        }
     }
 
-    private fun IonValue.eval(env: Environment): ExprValue {
+    private fun IonValue.compile(): ExprThunk {
         if (this !is IonSexp) {
             err("AST node is not s-expression: $this")
         }
@@ -672,34 +783,43 @@ class EvaluatingCompiler(private val ion: IonSystem,
             err("AST node does not start with non-null string: $this")
         val handler = syntax[name] ?:
             err("No such syntax handler for $name")
-        return handler(env, this)
+        return handler(this)
     }
 
     private fun bindOp(minArity: Int = 2,
                        maxArity: Int = 2,
-                       op: (Environment, List<ExprValue>) -> ExprValue): (Environment, IonSexp) -> ExprValue {
-        return { env, expr ->
-            val arity = expr.size - 1
+                       op: (Environment, List<ExprValue>) -> ExprValue): (IonSexp) -> ExprThunk {
+        return { ast ->
+            val arity = ast.size - 1
             when {
-                arity < minArity -> err("Not enough arguments: $expr")
-                arity > maxArity -> err("Too many arguments: $expr")
+                arity < minArity -> err("Not enough arguments: $ast")
+                arity > maxArity -> err("Too many arguments: $ast")
             }
-            expr.evalFunc(env, 1, op)
+            ast.compileFunc(1, op)
         }
     }
 
     // TODO support meta-nodes properly for error reporting
 
     /** Evaluates an unbound syntax tree against a global set of bindings. */
-    fun eval(ast: IonSexp, globals: Bindings): ExprValue {
-        val env = Environment(globals = globals, locals = globals, current = globals)
-        try {
-            return ast.filterMetaNodes().seal().eval(env)
-        } catch (e: EvaluationException) {
-            throw e
-        } catch (e: Exception) {
-            val message = e.message ?: "<NO MESSAGE>"
-            throw EvaluationException("Internal error, $message", e)
+    fun eval(ast: IonSexp, globals: Bindings): ExprValue = compile(ast).eval(globals)
+
+    /** Compiles a syntax tree to an [Expression]. */
+    fun compile(ast: IonSexp): Expression {
+        val expr = ast.filterMetaNodes().seal().compile()
+
+        return object : Expression {
+            override fun eval(globals: Bindings): ExprValue {
+                val env = Environment(globals = globals, locals = globals, current = globals)
+                try {
+                    return expr.eval(env)
+                } catch (e: EvaluationException) {
+                    throw e
+                } catch (e: Exception) {
+                    val message = e.message ?: "<NO MESSAGE>"
+                    throw EvaluationException("Internal error, $message", e)
+                }
+            }
         }
     }
 
