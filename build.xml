@@ -90,6 +90,7 @@
         <pathelement path="${bench.compile.classpath}"/>
         <pathelement location="${bench.classes.dir}"/>
       </classpath>
+      <arg line="${bench.cli.args}"/>
     </java>
   </target>
 
