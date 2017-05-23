@@ -63,7 +63,7 @@ public class ExampleEvaluator {
         IonSystem ion = IonSystemBuilder.standard().build();
 
         // additional functions to be made available to the query
-        Map<String, Function2<Environment, List<ExprValue>, ExprValue>> funcs = new HashMap<>();
+        Map<String, ExprFunction> funcs = new HashMap<>();
         funcs.put(
             // a very trivial extension function
             "bork",

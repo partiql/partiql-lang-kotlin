@@ -102,8 +102,8 @@ private fun optionsStruct(requiredArity: Int,
  */
 fun main(args: Array<String>) {
     // TODO probably should be in "common" utility
-    val replFunctions = mapOf<String, (Environment, List<ExprValue>) -> ExprValue>(
-        "read_file" to { _, args ->
+    val replFunctions = mapOf<String, ExprFunction>(
+        "read_file" to ExprFunction.over { _, args ->
             val options = optionsStruct(1, args)
             val fileName = args[0].stringValue()
             val fileType = options["type"]?.stringValue() ?: "ion"
@@ -116,7 +116,7 @@ fun main(args: Array<String>) {
             }
             SequenceExprValue(ION, seq)
         },
-        "write_file" to { _, args ->
+        "write_file" to ExprFunction.over { _, args ->
             val options = optionsStruct(2, args, optionsIndex = 1)
             val fileName = args[0].stringValue()
             val fileType = options["type"]?.stringValue() ?: "ion"

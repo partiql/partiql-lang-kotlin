@@ -30,12 +30,10 @@ import java.util.*
  */
 class EvaluatingCompiler(private val ion: IonSystem,
                          private val parser: Parser,
-                         userFuncs: @JvmSuppressWildcards
-                                    Map<String, (Environment, List<ExprValue>) -> ExprValue>) : Compiler {
+                         userFuncs: @JvmSuppressWildcards Map<String, ExprFunction>) : Compiler {
     constructor(ion: IonSystem) : this(ion, IonSqlParser(ion), emptyMap())
     constructor(ion: IonSystem,
-                userFuncs: @JvmSuppressWildcards
-                Map<String, (Environment, List<ExprValue>) -> ExprValue>)
+                userFuncs: @JvmSuppressWildcards Map<String, ExprFunction>)
         : this(ion, IonSqlParser(ion), userFuncs)
 
     private interface ExprThunk {
@@ -671,8 +669,8 @@ class EvaluatingCompiler(private val ion: IonSystem,
     }
 
     /** Dispatch table for built-in functions. */
-    private val builtins: Map<String, (Environment, List<ExprValue>) -> ExprValue> = mapOf(
-        "exists" to { _, args ->
+    private val builtins: Map<String, ExprFunction> = mapOf(
+        "exists" to ExprFunction.over { _, args ->
             when (args.size) {
                 1 -> {
                     args[0].asSequence().any().exprValue()
@@ -681,7 +679,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
             }
         },
         // TODO make this a proper aggregate
-        "count" to { _, args ->
+        "count" to ExprFunction.over { _, args ->
             when (args.size) {
                 1 -> {
                     args[0].asSequence().count().exprValue()
@@ -766,11 +764,11 @@ class EvaluatingCompiler(private val ion: IonSystem,
             .toList()
 
     private fun IonSexp.compileFunc(argIndex: Int,
-                                    func: (Environment, List<ExprValue>) -> ExprValue): ExprThunk {
+                                    func: ExprFunction): ExprThunk {
         val argThunks = compileArgs(argIndex)
         return exprThunk { env ->
             val args = argThunks.map { it.eval(env) }
-            func(env, args)
+            func.call(env, args)
         }
     }
 
@@ -795,7 +793,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 arity < minArity -> err("Not enough arguments: $ast")
                 arity > maxArity -> err("Too many arguments: $ast")
             }
-            ast.compileFunc(1, op)
+            ast.compileFunc(1, ExprFunction.over(op))
         }
     }
 
