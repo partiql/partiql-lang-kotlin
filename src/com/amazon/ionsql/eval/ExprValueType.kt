@@ -112,7 +112,7 @@ enum class ExprValueType(val typeNames: List<String>,
             }
         }
 
-        private val ION_TYPE_MAP = IonType.values().asSequence()
+          private val ION_TYPE_MAP = enumValues<IonType>().asSequence()
             .map {
                 val ourType = when (it) {
                     IonType.DATAGRAM -> BAG
