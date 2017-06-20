@@ -1,5 +1,5 @@
-# IonSQL Sandbox
-This package is a basic implementation of Ion SQL, a generalized extended SQL language
+# IonSQL++ Sandbox
+This package is a basic implementation of Ion SQL++, a generalized extended SQL language
 that uses the Ion type system natively, but is designed to be used over sparse, hierarchical
 data in a relational way.
 
