@@ -177,7 +177,7 @@ fun main(args: Array<String>) {
                     if (source != "") {
                         result = when (line) {
                             "!!" -> ION.newEmptyList().apply {
-                                add(parser.parse(source))
+                                add(parser.parse(source).clone())
                             }.exprValue()
                             else -> evaluator.compile(source).eval(locals)
                         }
