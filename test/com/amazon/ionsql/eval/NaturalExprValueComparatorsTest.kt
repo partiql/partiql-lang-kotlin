@@ -10,7 +10,6 @@ import junitparams.naming.TestCaseName
 import org.junit.Test
 import java.util.*
 import com.amazon.ionsql.eval.NaturalExprValueComparators.*
-import org.junit.Ignore
 
 class NaturalExprValueComparatorsTest : EvaluatorBase() {
     // the lists below represent the expected ordering of values

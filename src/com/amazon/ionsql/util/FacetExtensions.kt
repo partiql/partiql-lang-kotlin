@@ -4,8 +4,6 @@
 
 package com.amazon.ionsql.util
 
-import com.amazon.ion.facet.Faceted
-import com.amazon.ion.facet.Facets
 
 /**
  * Simple dynamic downcast for a type.

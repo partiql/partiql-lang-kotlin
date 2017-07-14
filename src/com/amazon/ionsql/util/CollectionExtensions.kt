@@ -15,8 +15,25 @@ val <T> List<T>.head: T?
 val <T> List<T>.tail: List<T>
     get() = when (size) {
         0, 1 -> emptyList()
-        else -> subList(1, size)
+        else -> drop(1) // ION-92, subList is not implemented by IonSequenceLight
     }
+
+
+/**
+ * Given a predicate function, return `true` if all members of the list satisfy the predicate, return false otherwise.
+ * In the case that an empty list is given, the result is `true`.
+ *
+ * ```
+ * (a b ... z).forAll(f) <=> (f(a) && f(b) && ... && f(z))
+ * ().forAll(f)          <=> true
+ * ```
+ *
+ * @param predicate function that consumes a [T] returns a [Boolean]
+ * @param T type of each element in the list
+ *
+ */
+fun <T> List<T>.forAll(predicate: (T) -> Boolean) : Boolean =
+    this.find { x -> !predicate(x) } == null
 
 /**
  * Calculates the cartesian product of the given ordered lists of collections
@@ -107,3 +124,5 @@ fun <T, S, C> List<S>.foldLeftProduct(initialContext: C,
             }
         }
     }
+
+

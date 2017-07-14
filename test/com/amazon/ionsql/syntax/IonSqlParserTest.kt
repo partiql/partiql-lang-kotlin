@@ -888,4 +888,139 @@ class IonSqlParserTest : Base() {
     fun pivotNoAt() {
         parse("PIVOT v FROM data")
     }
+
+
+    /*
+    From SQL92 https://www.contrib.andrew.cmu.edu/~shadow/sql/sql1992.txt
+         <like predicate>   ::= <match value> [ NOT ] LIKE <pattern>
+                                    [ ESCAPE <escape character> ]
+
+         <match value>      ::= <character value expression>
+         <pattern>          ::= <character value expression>
+         <escape character> ::= <character value expression>
+     */
+    @Test
+    fun likeColNameLikeString() = assertExpression(
+        """
+        (select (project (list (id a))) (from (id data)) (where (like (id a) (lit "_AAA%"))))
+        """,
+        "SELECT a FROM data WHERE a LIKE '_AAA%'"
+    )
+
+    @Test
+    fun likeColNameLikeColName() = assertExpression(
+        """
+        (select (project (list (id a) (id b))) (from (id data)) (where (like (id a) (id b))))
+        """,
+        "SELECT a, b FROM data WHERE a LIKE b"
+    )
+
+    @Test
+    fun likeColNameLikeColNameDot() = assertExpression(
+        """
+        (select (project (*)) (from (as a (id data))) (where (like (path (id a) (lit "name")) (path (id b) (lit "pattern")))))
+        """,
+        "SELECT * FROM data as a WHERE a.name LIKE b.pattern"
+    )
+
+
+    @Test
+    fun likeColNameLikeColNamePqth() = assertExpression(
+        """
+        (select (project (*)) (from (as a (id data))) (where (like (path (id a) (lit "name")) (path (id b) (lit "pattern")))))
+        """,
+        "SELECT * FROM data as a WHERE a.name LIKE b.pattern"
+    )
+    @Test
+    fun likeColNameLikeStringEscape() = assertExpression(
+        """
+        (select (project (list (id a))) (from (id data)) (where (like (id a) (lit "_AAA%") (lit "["))))
+        """,
+        "SELECT a FROM data WHERE a LIKE '_AAA%' ESCAPE '[' "
+    )
+
+    @Test
+    fun notLikeColNameLikeString() = assertExpression(
+        """
+        (select (project (list (id a))) (from (id data)) (where (not_like (id a) (lit "_AAA%"))))
+        """,
+        "SELECT a FROM data WHERE a NOT LIKE '_AAA%'"
+    )
+
+    @Test
+    fun likeColNameLikeColNameEscape() = assertExpression(
+        """
+        (select (project (list (id a) (id b))) (from (id data)) (where (like (id a) (id b) (lit "\\"))))
+        """, //  escape \ inside a Kotlin/Java String
+        "SELECT a, b FROM data WHERE a LIKE b ESCAPE '\\'" // escape \ inside a Kotlin/Java String
+    )
+
+    @Test
+    fun likeColNameLikeColNameEscapeNonLit() = assertExpression(
+        """
+        (select (project (list (id a) (id b))) (from (id data)) (where (like (id a) (id b) (id c))))
+        """, //  escape \ inside a Kotlin/Java String
+        "SELECT a, b FROM data WHERE a LIKE b ESCAPE c"
+    )
+
+    @Test
+    fun likeColNameLikeColNameEscapePath() = assertExpression(
+        """
+        (select (project (list (id a) (id b))) (from (as x (id data))) (where (like (id a) (id b) (path (id x) (lit "c")))))
+        """, //  escape \ inside a Kotlin/Java String
+        "SELECT a, b FROM data as x WHERE a LIKE b ESCAPE x.c"
+
+
+    )
+    /*
+    From SQL92 Spec
+     3) "M NOT LIKE P" is equivalent to "NOT (M LIKE P)".
+     */
+    @Test
+    fun likeNotEquivalent() = assertExpression(
+        "(select (project (list (id a) (id b))) (from (id data)) (where (not (like (id a) (id b)))))",
+        "SELECT a, b FROM data WHERE NOT (a LIKE b)"
+    )
+
+    @Test
+    fun likeNotEquivalentWithEscape() = assertExpression(
+        "(select (project (list (id a) (id b))) (from (id data)) (where (not (like (id a) (id b) (lit \"[\")))))",
+        "SELECT a, b FROM data WHERE NOT (a LIKE b ESCAPE '[')"
+    )
+
+    @Test(expected = ParserException::class)
+    fun likeColNameLikeColNameEscapeTypo() {
+        parse("SELECT a, b FROM data WHERE a LIKE b ECSAPE '\\'")
+    }
+
+    @Test(expected = ParserException::class)
+    fun likeWrongOrderOfArgs() {
+        parse("SELECT a, b FROM data WHERE LIKE a b")
+    }
+
+    @Test(expected = ParserException::class)
+    fun likeMissingEscapeValue() {
+        parse("SELECT a, b FROM data WHERE a LIKE b ESCAPE")
+    }
+
+    @Test(expected = ParserException::class)
+    fun likeMissingPattern() {
+        parse("SELECT a, b FROM data WHERE a LIKE")
+    }
+
+    @Test(expected = ParserException::class)
+    fun likeEscapeIncorrectOrder() {
+        parse("SELECT a, b FROM data WHERE ECSAPE '\\' a LIKE b ")
+    }
+
+    @Test(expected = ParserException::class)
+    fun likeEscapeAsSecondArgument() {
+        parse("SELECT a, b FROM data WHERE a LIKE ECSAPE '\\' b ")
+    }
+
+    @Test(expected = ParserException::class)
+    fun likeEscapeNotIncorrectOrder() {
+        parse("SELECT a, b FROM data WHERE NOT a LIKE b ECSAPE '\\'")
+    }
+
 }

@@ -11,6 +11,7 @@ import com.amazon.ionsql.syntax.Token
 import com.amazon.ionsql.util.*
 import java.math.BigDecimal
 import java.util.*
+import kotlin.collections.HashMap
 
 /**
  * A basic implementation of the [Compiler] that parses Ion SQL [Token] instances
@@ -276,6 +277,13 @@ class EvaluatingCompiler(private val ion: IonSystem,
         "not_between" to bindOp(minArity = 3, maxArity = 3) { _, args ->
             (!(args[0] >= args[1] && args[0] <= args[2])).exprValue()
         },
+        "like" to { ast ->
+            astToLikeExprThunk(ast)
+        },
+        "not_like" to { ast ->
+            val likeExprThunk = astToLikeExprThunk(ast)
+            exprThunk { env -> (!likeExprThunk.eval(env).booleanValue()).exprValue() }
+        },
         "in" to bindOp { _, args ->
             val needle = args[0]
             args[1].asSequence().any { needle.exprEquals(it) }.exprValue()
@@ -423,15 +431,15 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 val wildcardKind = raw.determinePathWildcard()
                 components.add(
                     when (wildcardKind) {
-                        // treat the entire value as a sequence
+                    // treat the entire value as a sequence
                         PathWildcardKind.NORMAL -> { _, exprVal ->
                             exprVal.rangeOver().asSequence()
                         }
-                        // treat the entire value as a sequence
+                    // treat the entire value as a sequence
                         PathWildcardKind.UNPIVOT -> { _, exprVal ->
                             exprVal.unpivot(ion).asSequence()
                         }
-                        // "index" into the value lazily
+                    // "index" into the value lazily
                         PathWildcardKind.NONE -> {
                             val indexExpr = raw.compile();
                             { env, exprVal ->
@@ -565,6 +573,171 @@ class EvaluatingCompiler(private val ion: IonSystem,
             }
         }
     )
+
+    /**
+     * Given an AST node that represents a `LIKE` predicate return an [ExprThunk] that evaluates a `LIKE` predicate.
+     *
+     * Three cases
+     *
+     * 1. All arguments are literals, then compile and run the DFA
+     * 1. Search pattern and escape pattern are literals, compile the DFA. Running the DFA is deferred to evaluation time.
+     * 1. Pattern or escape (or both) are *not* literals, compile and running of DFA deferred to evaluation time.
+     *
+     *  @param ast ast node representing a `LIKE` predicate
+     *
+     * @return a thunk that when provided with an environment evaluates the `LIKE` predicate
+     */
+    private fun astToLikeExprThunk(ast: IonSexp): ExprThunk {
+        // AST should be of the form (like V P [E])
+        // where V is the value to match on
+        //       P is the pattern
+        //       E is the escape character which is optional
+        checkArity(ast, 2, 3)
+        checkArgsAreIonSexps(ast)
+
+
+        return when {
+            ast.tail.forAll(IonValue::isAstLiteral) -> {
+                // value, pattern and optional escape character are literals, compile regular expression to DFA and run
+                // DFA
+                val ionVals = ast.tail.map { it[1] }
+                val dfaInput = ionVals[0]
+                val dfa = fromLiteralsToDfa(ionVals.tail)
+                val matches = dfa.run(dfaInput.stringValue()).exprValue()
+                exprThunk { _ -> matches }
+            }
+
+            ast.tail.tail.forAll(IonValue::isAstLiteral) -> {
+                // pattern and escape are literals, but value to match against is not
+                val ionVals = ast.tail.tail.map { it[1] }
+                val compiledDfaInput = ast[1].compile()
+                val dfa = fromLiteralsToDfa(ionVals)
+
+                exprThunk { env ->
+                    val value = compiledDfaInput.eval(env).ionValue
+                    dfa.run(value.stringValue()).exprValue()
+                }
+            }
+            else -> {
+                // pattern and/or escape are not literals, delay compilation of regular expression to DFA till evaluation
+                val compiledVal = ast[1].compile()
+                val compiledPattern = ast[2].compile()
+                val compiledEscape = if (ast.size == 4) {
+                    ast[3].compile()
+                } else {
+                    null
+                }
+
+                exprThunk { env ->
+                    val value = compiledVal.eval(env).ionValue
+                    val pattern = compiledPattern.eval(env).ionValue
+                    val escape: IonValue? = compiledEscape?.let { it.eval(env).ionValue }
+                    val (patternString: String, escapeChar: Int?, patternSize) = checkPattern(pattern, escape)
+                    val dfa: IDFAState = buildDfaFromPattern(patternString, escapeChar, patternSize)
+                    dfa.run(value.stringValue()).exprValue()
+                }
+
+            }
+        }
+    }
+
+    /**
+     * Given a list of literals (Ion values) that are part of a `LIKE` predicate build and return the DFA
+     *
+     * @param ionVals list of literals (Ion values) that comprise of the `LIKE`'s pattern and  optionally escape character
+     * @return DFA for the pattern and optional escape character
+     */
+    private fun fromLiteralsToDfa(ionVals: List<IonValue>): IDFAState {
+        val pattern = ionVals[0]
+        var escape: IonValue? = null
+        if (ionVals.size == 2) {
+            escape = ionVals[1]
+
+        }
+        val (patternString: String, escapeChar: Int?, patternSize) = checkPattern(pattern, escape)
+        val dfa: IDFAState = buildDfaFromPattern(patternString, escapeChar, patternSize)
+        return dfa
+    }
+
+    /**
+     * Given the pattern and optional escape character in a `LIKE` SQL predicate as [IonValue]s
+     * check their validity based on the SQL92 spec and return a triple that contains in order
+     *
+     * - the search pattern as a string
+     * - the escape character, possibly `null`
+     * - the length of the search pattern. The length of the search pattern is either
+     *   - the length of the string representing the search pattern when no escape character is used
+     *   - the length of the string representing the search pattern without counting uses of the escape character
+     *     when an escape character is used
+     *
+     * A search pattern is valid when
+     * 1. pattern is not null
+     * 1. pattern contains characters where `_` means any 1 character and `%` means any string of length 0 or more
+     * 1. if the escape character is specified then pattern can be deterministically partitioned into character groups where
+     *     1. A length 1 character group consists of any character other than the ESCAPE character
+     *     1. A length 2 character group consists of the ESCAPE character followed by either `_` or `%` or the ESCAPE character itself
+     *
+     * @param pattern search pattern
+     * @param escape optional escape character provided in the `LIKE` predicate
+     *
+     * @return a triple that contains in order the search pattern as a [String], optionally the code point for the escape character if one was provided
+     * and the size of the search pattern excluding uses of the escape character
+     */
+    private fun checkPattern(pattern: IonValue, escape: IonValue?): Triple<String, Int?, Int> {
+        val patternString = pattern.stringValue()?.let { it } ?: err("Must provide a non-null value for PATTERN in a LIKE predicate: $pattern")
+        escape?.let {
+            val escapeChar = checkEscapeChar(escape).codePointAt(0)  // escape is a string of length 1
+            val validEscapedChars = setOf('_'.toInt(), '%'.toInt(), escapeChar)
+            val iter = patternString.codePointSequence().iterator()
+            var count = 0
+
+            while (iter.hasNext()) {
+                val current = iter.next()
+                if (current == escapeChar) {
+                    if (!iter.hasNext()) err("Invalid escape sequence : $patternString")
+                    else {
+                        if (!validEscapedChars.contains(iter.next())) err("Invalid escape sequence : $patternString")
+                    }
+                }
+                count++
+            }
+            return Triple(patternString, escapeChar, count)
+        }
+        return Triple(patternString, null, patternString.length)
+    }
+
+    /**
+     * Given an [IonValue] to be used as the escape character in a `LIKE` predicate check that it is
+     * a valid character based on the SQL Spec.
+     *
+     *
+     * A values is a valid escape when
+     * 1. it is 1 character long, and,
+     * 1. Cannot be null (SQL92 spec marks this cases as *unknown*)
+     *
+     * @param escape value provided as an escape character for a `LIKE` predicate
+     *
+     * @return the escape character as a [String] or throws an exception when the input is invalid
+     */
+    private fun checkEscapeChar(escape: IonValue): String {
+        val escapeChar = escape.stringValue()?.let { it } ?: err("Must provide a value when using ESCAPE in a LIKE predicate: $escape")
+        when (escapeChar) {
+            "" -> err("Cannot use empty character as ESCAPE character in a LIKE predicate: $escape")
+            else -> if (escapeChar.trim().length != 1) err("Escape character must have size 1 : $escapeChar")
+        }
+        return escapeChar
+    }
+
+    /**
+     * Given an AST as an [IonSexp] check that all arguments (index 1 to n of the s-exp) are also [IonSexp]
+     *
+     * @param ast AST node
+     *
+     * @returns true when all elements of ast are [IonSexp], false otherwise
+     */
+    private fun checkArgsAreIonSexps(ast: IonSexp) =
+        ast.tail.filter { x -> x !is IonSexp }.isEmpty()
+
 
     /** Provides SELECT * */
     private fun projectAllInto(joinedValues: List<ExprValue>): ExprValue {
@@ -763,9 +936,9 @@ class EvaluatingCompiler(private val ion: IonSystem,
             .map { it.compile() }
             .toList()
 
-    private fun IonSexp.compileFunc(argIndex: Int,
+    private fun IonSexp.compileFunc(argStartIndex: Int,
                                     func: ExprFunction): ExprThunk {
-        val argThunks = compileArgs(argIndex)
+        val argThunks = compileArgs(argStartIndex)
         return exprThunk { env ->
             val args = argThunks.map { it.eval(env) }
             func.call(env, args)
@@ -788,12 +961,16 @@ class EvaluatingCompiler(private val ion: IonSystem,
                        maxArity: Int = 2,
                        op: (Environment, List<ExprValue>) -> ExprValue): (IonSexp) -> ExprThunk {
         return { ast ->
-            val arity = ast.size - 1
-            when {
-                arity < minArity -> err("Not enough arguments: $ast")
-                arity > maxArity -> err("Too many arguments: $ast")
-            }
+            checkArity(ast, minArity, maxArity)
             ast.compileFunc(1, ExprFunction.over(op))
+        }
+    }
+
+    private fun checkArity(ast: IonSexp, minArity: Int, maxArity: Int) {
+        val arity = ast.size - 1
+        when {
+            arity < minArity -> err("Not enough arguments: $ast")
+            arity > maxArity -> err("Too many arguments: $ast")
         }
     }
 
@@ -830,3 +1007,4 @@ class EvaluatingCompiler(private val ion: IonSystem,
         }
     }
 }
+

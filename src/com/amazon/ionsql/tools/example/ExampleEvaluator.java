@@ -8,15 +8,12 @@ import com.amazon.ion.IonSystem;
 import com.amazon.ion.IonValue;
 import com.amazon.ion.system.IonSystemBuilder;
 import com.amazon.ionsql.eval.*;
-import kotlin.jvm.functions.Function2;
 import kotlin.sequences.Sequence;
 import kotlin.sequences.SequencesKt;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * An example embedding of the Ion SQL interpreter using Java.

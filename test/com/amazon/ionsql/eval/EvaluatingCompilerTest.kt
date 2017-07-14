@@ -124,6 +124,17 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     )
 
     @Test
+    fun symbolEquality() = assertEval(
+        """ 'A' = 'A' """,
+        "true")
+
+    @Test
+    fun symbolCaseEquality() = assertEval(
+        """ 'A' = 'a' """,
+        "false")
+
+
+    @Test
     fun notEqualIntFloat() = assertEval("1 != `2e0`", "true")
 
     @Test
@@ -221,6 +232,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
 
     @Test
     fun pathUnpivotWildcard() = assertEval("friends.kumo.likes.*.type", """["dog", "human"]""")
+
 
     @Test
     fun pathDoubleWildCard() = assertEval(
@@ -387,6 +399,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
         }
     }
 
+
     @Test
     fun implicitAliasSelectSingleSource() = assertEval(
         """SELECT id FROM stores""",
@@ -474,6 +487,23 @@ class EvaluatingCompilerTest : EvaluatorBase() {
         """
     )
 
+    @Test
+    fun selectWhereStringEqualsSameCase() = assertEval(
+        """SELECT * FROM animals as a WHERE a.name = 'Kumo' """,
+        """
+          [
+            {name: "Kumo", type: "dog"}
+          ]
+        """
+    )
+
+    @Test
+    fun selectWhereStrinEqualsDifferentCase() = assertEval(
+        """SELECT * FROM animals as a WHERE a.name = 'KUMO' """,
+        """
+          []
+        """
+    )
     @Test
     fun selectJoin() = assertEval(
         """SELECT * FROM animals, animal_types WHERE type = id""",

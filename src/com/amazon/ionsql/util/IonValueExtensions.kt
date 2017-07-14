@@ -140,3 +140,7 @@ fun IonSexp.filterMetaNodes(): IonSexp = system.newEmptySexp().apply {
         )
     }
 }
+
+fun IonValue.isAstLiteral(): Boolean =
+    this is IonSexp &&
+    this[0].stringValue() == "lit" //TODO AST node names should be refactored to statics

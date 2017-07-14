@@ -40,6 +40,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 keyword -> tail
                 else -> err("Expected ${keyword.toUpperCase()} keyword")
             }
+
     }
 
     private val lexer = IonSqlLexer(ion)
@@ -356,6 +357,17 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                         )
                         rem = third.remaining
                         ParseNode(TERNARY, op, listOf(expr, right, third), rem)
+                    }
+                    "like", "not_like" -> {
+                        when  {
+                            rem.head?.keywordText == "escape" -> {
+                                rem = rem.tailExpectedKeyword("escape")
+                                val third = rem.parseExpression(precedence = op.infixPrecedence)
+                                rem = third.remaining
+                                ParseNode(TERNARY, op, listOf(expr, right, third), rem)
+                            }
+                            else -> ParseNode(BINARY, op, listOf(expr, right), rem)
+                        }
                     }
                     else -> rem.err("Unknown infix operator")
                 }

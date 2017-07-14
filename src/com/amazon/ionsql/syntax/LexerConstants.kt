@@ -348,7 +348,6 @@ internal val SINGLE_LEXEME_BINARY_OPERATORS = setOf(
     "||",
     "and", "or",
     "is", "in",
-    "like",
     "union", "except", "intersect"
 )
 
@@ -361,12 +360,13 @@ internal val DOUBLE_LEXEME_TOKEN_MAP = mapOf(
     ("except" to "all")         to ("except_all" to OPERATOR),
     ("union" to "all")          to ("union_all" to OPERATOR),
     ("character" to "varying")  to ("character_varying" to KEYWORD),
-    ("double" to "precision")   to ("double_precision" to KEYWORD)
+    ("double" to "precision")   to ("double_precision" to KEYWORD),
+    ("not" to "like")           to ("not_like" to OPERATOR)
 )
 
 internal val DOUBLE_LEXEME_BINARY_OPERATORS =
     DOUBLE_LEXEME_TOKEN_MAP.values.filter {
-        it.second == TokenType.OPERATOR && it.first != "not_between"
+        it.second == TokenType.OPERATOR &&  !setOf("not_between", "not_like").contains(it.first)
     }.map { it.first }
 
 /** Binary operators. */
@@ -380,7 +380,8 @@ internal val UNARY_OPERATORS = setOf(
 
 /** Operators that parse as infix, but have special parsing rules. */
 internal val SPECIAL_INFIX_OPERATORS = setOf(
-    "between", "not_between"
+    "between", "not_between",
+    "like", "not_like"        // optionally a ternary operator when `ESCAPE` is present
 )
 
 /** All operators with special parsing rules. */
@@ -426,6 +427,7 @@ internal val INFIX_OPERATOR_PRECEDENCE = mapOf(
     "between"       to 40, // note that this **must** be above 'AND'
     "not_between"   to 40, // note that this **must** be above 'AND'
     "like"          to 40,
+    "not_like"      to 40,
 
     // the addition group
     "+"             to 50,

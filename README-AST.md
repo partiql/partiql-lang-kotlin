@@ -54,6 +54,27 @@ The following additional operators are defined:
 * `(between <VALUE EXPR> <START EXPR> <END EXPR>)` - Interval containment.
 * `(not_between <VALUE EXPR> <START EXPR> <END EXPR>)` - Interval non-containment.
 
+### LIKE operator
+
+The `LIKE` operator can be a binary or ternary operator depending on the input. The grammar 
+allows for 
+
+1. `<EXPR1> LIKE <EXPR2>` where `<EXPR1>` is the value we are matching on, `<EXPR2>` is the search pattern
+1. `<EXPR1> LIKE <EXPR2> ESCAPE <EXPR3>` where `<EXPR1>` is the value we are matching on, `<EXPR2>` is the search pattern and `<EXPR3>` is the escape character that might be used inside `<EXPR2>` 
+
+On top of these cases for `LIKE` we also have the negation `NOT LIKE` that is treated similarly as the other operators and their negated form. 
+
+In the first case `LIKE` translates to an binary operator 
+
+* `(like <NODE EXPR1> <NODE EXPR2>)` 
+* `(not_like <NODE EXPR1> <NODE EXPR2>)` 
+
+In the second case where an escape expression is provided `LIKE` translates to a ternary operator 
+
+* `(like <NODE EXPR1> <NODE EXPR2> <NODE EXPR3>)`
+* `(not_like <NODE EXPR1> <NODE EXPR2> <NODE EXPR3>)`
+
+
 ## Path Component Expressions
 In addition to any normal expression, a path component can be the special form `(*)` which
 is the wildcard that is syntactically equivalent to the path component `[*]` and
