@@ -341,6 +341,12 @@ internal val OPERATOR_ALIASES = mapOf(
     "!=" to "<>"
 )
 
+/** Operators that parse as infix, but have special parsing rules. */
+internal val SPECIAL_INFIX_OPERATORS = setOf(
+    "between", "not_between",
+    "like", "not_like"        // optionally a ternary operator when `ESCAPE` is present
+)
+
 /** Binary operators with verbatim lexical token equivalents. */
 internal val SINGLE_LEXEME_BINARY_OPERATORS = setOf(
     "+", "-", "/", "%", "*",
@@ -351,37 +357,43 @@ internal val SINGLE_LEXEME_BINARY_OPERATORS = setOf(
     "union", "except", "intersect"
 )
 
-/** Binary operators comprising two lexemes (should not map to a keyword alias). */
-internal val DOUBLE_LEXEME_TOKEN_MAP = mapOf(
-    ("not" to "in")             to ("not_in" to OPERATOR),
-    ("is" to "not")             to ("is_not" to OPERATOR),
-    ("not" to "between")        to ("not_between" to OPERATOR),
-    ("intersect" to "all")      to ("intersect_all" to OPERATOR),
-    ("except" to "all")         to ("except_all" to OPERATOR),
-    ("union" to "all")          to ("union_all" to OPERATOR),
-    ("character" to "varying")  to ("character_varying" to KEYWORD),
-    ("double" to "precision")   to ("double_precision" to KEYWORD),
-    ("not" to "like")           to ("not_like" to OPERATOR)
+/** Tokens comprising multiple lexemes (**happens before** keyword aliasing). */
+internal val MULTI_LEXEME_TOKEN_MAP = mapOf(
+    listOf("not", "in")                 to ("not_in" to OPERATOR),
+    listOf("is", "not")                 to ("is_not" to OPERATOR),
+    listOf("not", "between")            to ("not_between" to OPERATOR),
+    listOf("intersect", "all")          to ("intersect_all" to OPERATOR),
+    listOf("except", "all")             to ("except_all" to OPERATOR),
+    listOf("union", "all")              to ("union_all" to OPERATOR),
+    listOf("character", "varying")      to ("character_varying" to KEYWORD),
+    listOf("double", "precision")       to ("double_precision" to KEYWORD),
+    listOf("not", "like")               to ("not_like" to OPERATOR),
+    listOf("cross", "join")             to ("cross_join" to KEYWORD),
+    listOf("inner", "join")             to ("inner_join" to KEYWORD),
+    listOf("left", "join")              to ("left_join" to KEYWORD),
+    listOf("left", "outer", "join")     to ("left_join" to KEYWORD),
+    listOf("right", "join")             to ("right_join" to KEYWORD),
+    listOf("right", "outer", "join")    to ("right_join" to KEYWORD),
+    listOf("full", "join")              to ("outer_join" to KEYWORD),
+    listOf("outer", "join")             to ("outer_join" to KEYWORD),
+    listOf("full", "outer", "join")     to ("outer_join" to KEYWORD)
 )
 
-internal val DOUBLE_LEXEME_BINARY_OPERATORS =
-    DOUBLE_LEXEME_TOKEN_MAP.values.filter {
-        it.second == TokenType.OPERATOR &&  !setOf("not_between", "not_like").contains(it.first)
+internal val MULTI_LEXEME_MIN_LENGTH = MULTI_LEXEME_TOKEN_MAP.keys.map { it.size }.min()!!
+internal val MULTI_LEXEME_MAX_LENGTH = MULTI_LEXEME_TOKEN_MAP.keys.map { it.size }.max()!!
+
+internal val MULTI_LEXEME_BINARY_OPERATORS =
+    MULTI_LEXEME_TOKEN_MAP.values.filter {
+        it.second == TokenType.OPERATOR && it.first !in SPECIAL_INFIX_OPERATORS
     }.map { it.first }
 
 /** Binary operators. */
 internal val BINARY_OPERATORS =
-    SINGLE_LEXEME_BINARY_OPERATORS + DOUBLE_LEXEME_BINARY_OPERATORS
+    SINGLE_LEXEME_BINARY_OPERATORS + MULTI_LEXEME_BINARY_OPERATORS
 
 /** Unary operators. */
 internal val UNARY_OPERATORS = setOf(
     "+", "-", "not"
-)
-
-/** Operators that parse as infix, but have special parsing rules. */
-internal val SPECIAL_INFIX_OPERATORS = setOf(
-    "between", "not_between",
-    "like", "not_like"        // optionally a ternary operator when `ESCAPE` is present
 )
 
 /** All operators with special parsing rules. */

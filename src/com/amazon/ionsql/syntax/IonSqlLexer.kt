@@ -495,18 +495,36 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
         return tokens
     }
 
-    private fun MutableList<Token>.addOrMerge(newToken: Token) {
-        val prevToken = lastOrNull()
-        val keywordPair = prevToken?.keywordText to newToken.keywordText
-        val lexemeMapping = DOUBLE_LEXEME_TOKEN_MAP[keywordPair]
-        when (lexemeMapping) {
-            null -> add(newToken)
-            else -> {
-                val (keyword, type) = lexemeMapping
-                // merge the last token into a new operator
-                this[lastIndex] =
-                    Token(type, ion.newSymbol(keyword), prevToken?.position)
+    private fun MutableList<Token>.addOrMerge(token: Token) {
+        var newToken = token
+
+        // try to merge with previous tokens (have to go from greatest to lowest)
+        for (i in MULTI_LEXEME_MAX_LENGTH downTo MULTI_LEXEME_MIN_LENGTH) {
+            val prefixLength = i - 1
+            if (prefixLength > size) {
+                // go to the next size down
+                continue
             }
+
+            // composite candidate
+            val keywords = subList(size - prefixLength, size)
+                .asSequence()
+                .plus(newToken)
+                .map { it.keywordText }
+                .toList()
+            val lexemeMapping = MULTI_LEXEME_TOKEN_MAP[keywords] ?: continue
+
+            // at this point we found the candidate so we need to replace the suffix
+            var newPos = newToken.position
+            for (count in 1..prefixLength) {
+                newPos = removeAt(size - 1).position
+            }
+
+            // create our new token
+            val (keyword, type) = lexemeMapping
+            newToken = Token(type, ion.newSymbol(keyword), newPos)
         }
+
+        add(newToken)
     }
 }
