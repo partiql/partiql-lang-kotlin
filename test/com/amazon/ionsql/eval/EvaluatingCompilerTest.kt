@@ -403,7 +403,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     @Test
     fun implicitAliasSelectSingleSource() = assertEval(
         """SELECT id FROM stores""",
-        """[{id:"5"}, {id:"6"}]"""
+        """[{id:"5"}, {id:"6"}, {id:"7"}]"""
     ) {
         // SELECT list provides ordered names facet
         exprValue.forEach {
@@ -415,13 +415,13 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     @Test
     fun selectIndexStruct() = assertEval(
         """SELECT VALUE x[0] FROM (SELECT s.id FROM stores AS s) AS x""",
-        """["5", "6"]"""
+        """["5", "6", "7"]"""
     )
 
     @Test
     fun selectValues() = assertEval(
         """SELECT VALUE id FROM stores""",
-        """["5", "6"]"""
+        """["5", "6", "7"]"""
     )
 
     @Test
@@ -446,7 +446,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     @Test
     fun explicitAliasSelectSingleSource() = assertEval(
         """SELECT id AS name FROM stores""",
-        """[{name:"5"}, {name:"6"}]"""
+        """[{name:"5"}, {name:"6"}, {name:"7"}]"""
     )
 
     @Test
@@ -518,13 +518,61 @@ class EvaluatingCompilerTest : EvaluatorBase() {
 
     @Test
     fun selectCorrelatedJoin() = assertEval(
-        """SELECT s.id AS id, b.title AS title FROM stores AS s, @s.books AS b WHERE b.price > 5""",
+        """SELECT s.id AS id, b.title AS title FROM stores AS s, @s.books AS b WHERE b IS NULL OR b.price > 5""",
         """
           [
             {id: "5", title: "C"},
             {id: "5", title: "D"},
             {id: "6", title: "E"},
             {id: "6", title: "F"},
+          ]
+        """
+    )
+
+    @Test
+    fun selectCorrelatedLeftJoin() = assertEval(
+        """SELECT s.id AS id, b.title AS title FROM stores AS s LEFT JOIN @s.books AS b WHERE b IS NULL""",
+        """
+          [
+            {id: "7", title: null}
+          ]
+        """
+    )
+
+    @Test
+    fun selectCorrelatedLeftJoinOnClause() = assertEval(
+        """
+        SELECT
+          s.id AS id, b.title AS title
+        FROM stores AS s LEFT OUTER JOIN @s.books AS b ON b.price > 9
+        """,
+        """
+          [
+            {id: "5", title: null},
+            {id: "6", title: "E"},
+            {id: "6", title: "F"},
+            {id: "7", title: null}
+          ]
+        """
+    )
+
+    @Test
+    fun selectJoinOnClauseScoping() = assertEval(
+        // note that d is a global
+        """
+        SELECT VALUE [a, b, d]
+        FROM
+          [1, 3] AS a
+        INNER JOIN [1, 2, 3] AS b ON b < d
+        LEFT JOIN [1.1, 2.1] AS d ON b < d AND a <= d
+        """,
+        """
+          [
+            [1, 1, 1.1],
+            [1, 1, 2.1],
+            [1, 2, 2.1],
+            [3, 1, null],
+            [3, 2, null],
           ]
         """
     )
@@ -537,6 +585,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
           [
             {id: "5", title: "hello"},
             {id: "6", title: "hello"},
+            {id: "7", title: "hello"},
           ]
         """
     )

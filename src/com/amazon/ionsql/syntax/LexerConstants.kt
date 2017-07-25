@@ -368,7 +368,7 @@ internal val MULTI_LEXEME_TOKEN_MAP = mapOf(
     listOf("character", "varying")      to ("character_varying" to KEYWORD),
     listOf("double", "precision")       to ("double_precision" to KEYWORD),
     listOf("not", "like")               to ("not_like" to OPERATOR),
-    listOf("cross", "join")             to ("cross_join" to KEYWORD),
+    listOf("cross", "join")             to ("inner_join" to KEYWORD),
     listOf("inner", "join")             to ("inner_join" to KEYWORD),
     listOf("left", "join")              to ("left_join" to KEYWORD),
     listOf("left", "outer", "join")     to ("left_join" to KEYWORD),

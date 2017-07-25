@@ -4,14 +4,16 @@
 
 package com.amazon.ionsql.eval
 
-import com.amazon.ion.*
+import com.amazon.ion.IonSequence
+import com.amazon.ion.IonSexp
+import com.amazon.ion.IonSystem
+import com.amazon.ion.IonValue
 import com.amazon.ionsql.syntax.IonSqlParser
 import com.amazon.ionsql.syntax.Parser
 import com.amazon.ionsql.syntax.Token
 import com.amazon.ionsql.util.*
 import java.math.BigDecimal
 import java.util.*
-import kotlin.collections.HashMap
 
 /**
  * A basic implementation of the [Compiler] that parses Ion SQL [Token] instances
@@ -46,8 +48,20 @@ class EvaluatingCompiler(private val ion: IonSystem,
         override fun eval(env: Environment) = thunk(env)
     }
 
+    /** Specifies the expansion for joins. */
+    private enum class JoinExpansion {
+        /** Default for non-joined values, CROSS and INNER JOIN. */
+        INNER,
+        /** Expansion mode for LEFT/RIGHT/FULL JOIN. */
+        OUTER
+    }
+
     private data class Alias(val asName: String, val atName: String?)
-    private data class FromSource(val alias: Alias, val expr: ExprThunk)
+
+    private data class FromSource(val alias: Alias,
+                                  val expr: ExprThunk,
+                                  val joinExpansion: JoinExpansion,
+                                  val filter: ExprThunk?)
 
     /** A condition clause for `CASE`. */
     private data class ConditionThunks(val cond: (Environment) -> Boolean, val resultExpr: ExprThunk)
@@ -109,18 +123,20 @@ class EvaluatingCompiler(private val ion: IonSystem,
         else -> syntheticColumnName(id)
     }
 
-    private fun aliasExtractor(seq: Sequence<IonValue>): List<Alias> =
-        seq.mapIndexed { idx, value ->
-            var asName: String = value.extractAsName(idx)
-            val atName: String? = when (value[0].text) {
-                "at" -> {
-                    asName = value[2].extractAsName(idx)
-                    value[1].text
-                }
-                else -> null
+    private fun extractAlias(id: Int, node: IonValue): Alias {
+        var asName: String = node.extractAsName(id)
+        val atName: String? = when (node[0].text) {
+            "at" -> {
+                asName = node[2].extractAsName(id)
+                node[1].text
             }
-            Alias(asName, atName)
-        }.toList()
+            else -> null
+        }
+        return Alias(asName, atName)
+    }
+
+    private fun extractAliases(seq: Sequence<IonValue>): List<Alias> =
+        seq.mapIndexed { idx, value -> extractAlias(idx, value) }.toList()
 
     private val aliasHandler = { ast: IonSexp ->
         when (ast.size) {
@@ -510,7 +526,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                         err("SELECT ... must have at least one expression")
                     }
                     val selectNames =
-                        aliasExtractor(selectForm.asSequence().drop(1)).map { it.asName }
+                        extractAliases(selectForm.asSequence().drop(1)).map { it.asName }
                     val selectExprs =
                         selectForm.drop(1).map { it.compile() };
 
@@ -770,16 +786,39 @@ class EvaluatingCompiler(private val ion: IonSystem,
         return SequenceStruct(ion, isOrdered = true, sequence = seq)
     }
 
+    /** Flattens JOINs in an AST to a list of [FromSource] for generating the join product. */
+    private fun IonValue.compileFromClauseSources(): List<FromSource> {
+        val sourceAst = this as IonSexp
+        fun IonSexp.toFromSource(id: Int, joinExpansion: JoinExpansion, filter: ExprThunk?) =
+            FromSource(extractAlias(id, this), this.compile(), joinExpansion, filter)
+
+        fun joinSources(joinExpansion: JoinExpansion): List<FromSource> {
+            val leftSources = sourceAst[1].compileFromClauseSources()
+            val rightAst = sourceAst[2] as IonSexp
+            val filter = when {
+                sourceAst.size > 3 -> sourceAst[3].compile()
+                else -> null
+            }
+            return leftSources + rightAst.toFromSource(leftSources.size, joinExpansion, filter)
+        }
+
+        return when (sourceAst[0].text) {
+            "inner_join" -> joinSources(JoinExpansion.INNER)
+            "left_join" -> joinSources(JoinExpansion.OUTER)
+            // TODO support this--will require reworking the left fold product approach
+            "right_join", "outer_join" -> err("RIGHT and FULL JOIN not supported")
+            // base case, a singleton with no special expansion
+            else -> listOf(sourceAst.toFromSource(0, JoinExpansion.INNER, null))
+        }
+    }
+
     /**
      * Compiles the clauses of the SELECT or PIVOT into a thunk that does not generate
      * the final projection.
      */
     private fun compileQueryWithoutProjection(ast: IonSexp): (Environment) -> Sequence<FromProductionThunks> {
-        val fromNames = aliasExtractor(ast[2].asSequence().drop(1))
-        val fromSources = ast[2].asSequence()
-            .drop(1)
-            .mapIndexed { idx, ast -> FromSource(fromNames[idx], ast.compile()) }
-            .toList()
+        val fromSources = ast[2][1].compileFromClauseSources()
+        val fromNames = fromSources.map { it.alias }
 
         var whereExpr: ExprThunk? = null
         var limitExpr: ExprThunk? = null
@@ -797,28 +836,52 @@ class EvaluatingCompiler(private val ion: IonSystem,
             // compute the join over the data sources
             var seq = fromSources
                 .foldLeftProduct({ env: Environment -> env }) { bindEnv, source ->
-                    source.expr.eval(bindEnv(fromEnv))
+                    fun correlatedBind(value: ExprValue): Pair<(Environment) -> Environment, ExprValue> {
+                        // add the correlated binding environment thunk
+                        val alias = source.alias
+                        val nextBindEnv = { env: Environment ->
+                            val childEnv = bindEnv(env)
+                            childEnv.nest(
+                                Bindings.over {
+                                    when (it) {
+                                        alias.asName -> value
+                                        alias.atName -> value.name ?: missingValue
+                                        else -> null
+                                    }
+                                },
+                                useAsCurrent = false
+                            )
+                        }
+                        return Pair(nextBindEnv, value)
+                    }
+
+                    var iter = source.expr.eval(bindEnv(fromEnv))
                         .rangeOver()
                         .asSequence()
-                        .map { value ->
-                            // add the correlated binding(s)
-                            val alias = source.alias
-                            val nextBindEnv = { env: Environment ->
-                                val childEnv = bindEnv(env)
-                                childEnv.nest(
-                                    Bindings.over {
-                                        when (it) {
-                                            alias.asName -> value
-                                            alias.atName -> value.name ?: missingValue
-                                            else -> null
-                                        }
-                                    },
-                                    useAsCurrent = false
-                                )
-                            }
-                            Pair(nextBindEnv, value)
-                        }
+                        .map { correlatedBind(it) }
                         .iterator()
+
+                    if (source.filter != null) {
+                        // evaluate the ON-clause (before calculating the outer join NULL)
+                        // TODO add facet for ExprValue to directly evaluate theta-joins
+                        iter = iter
+                            .asSequence()
+                            .filter { (bindEnv, _) ->
+                                // make sure we operate with lexical scoping
+                                val filterEnv = bindEnv(rootEnv).flipToLocals()
+                                source.filter.eval(filterEnv).booleanValue()
+                            }
+                            .iterator()
+                    }
+
+                    if (!iter.hasNext()) {
+                        iter = when (source.joinExpansion) {
+                            JoinExpansion.OUTER -> listOf(correlatedBind(nullValue)).iterator()
+                            JoinExpansion.INNER -> iter
+                        }
+                    }
+
+                    iter
                 }
                 .asSequence()
                 .map { joinedValues ->

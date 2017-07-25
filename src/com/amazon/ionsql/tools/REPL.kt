@@ -101,9 +101,9 @@ private fun optionsStruct(requiredArity: Int,
 fun main(args: Array<String>) {
     // TODO probably should be in "common" utility
     val replFunctions = mapOf<String, ExprFunction>(
-        "read_file" to ExprFunction.over { _, args ->
-            val options = optionsStruct(1, args)
-            val fileName = args[0].stringValue()
+        "read_file" to ExprFunction.over { _, funcArgs ->
+            val options = optionsStruct(1, funcArgs)
+            val fileName = funcArgs[0].stringValue()
             val fileType = options["type"]?.stringValue() ?: "ion"
             val handler = READ_HANDLERS[fileType] ?:
                 throw IllegalArgumentException("Unknown file type: $fileType")
@@ -114,15 +114,15 @@ fun main(args: Array<String>) {
             }
             SequenceExprValue(ION, seq)
         },
-        "write_file" to ExprFunction.over { _, args ->
-            val options = optionsStruct(2, args, optionsIndex = 1)
-            val fileName = args[0].stringValue()
+        "write_file" to ExprFunction.over { _, funcArgs ->
+            val options = optionsStruct(2, funcArgs, optionsIndex = 1)
+            val fileName = funcArgs[0].stringValue()
             val fileType = options["type"]?.stringValue() ?: "ion"
-            val resultsIndex = when (args.size) {
+            val resultsIndex = when (funcArgs.size) {
                 2 -> 1
                 else -> 2
             }
-            val results = args[resultsIndex]
+            val results = funcArgs[resultsIndex]
             val handler = WRITE_HANDLERS[fileType] ?:
                 throw IllegalArgumentException("Unknown file type: $fileType")
 

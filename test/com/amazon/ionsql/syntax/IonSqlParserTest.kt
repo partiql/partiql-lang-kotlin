@@ -404,7 +404,7 @@ class IonSqlParserTest : Base() {
     fun selectMultipleWithMultipleFromSimpleWhere() = assertExpression(
         """(select
              (project (list (id a) (id b)))
-             (from (as t1 (id table1)) (id table2))
+             (from (inner_join (as t1 (id table1)) (id table2)))
              (where (call f (id t1)))
            )
         """,
@@ -415,7 +415,7 @@ class IonSqlParserTest : Base() {
     fun selectMultipleWithMultipleFromSimpleWhereNoAsAlias() = assertExpression(
         """(select
              (project (list (as a1 (id a)) (as b1 (id b))))
-             (from (as t1 (id table1)) (id table2))
+             (from (inner_join (as t1 (id table1)) (id table2)))
              (where (call f (id t1)))
            )
         """,
@@ -426,11 +426,120 @@ class IonSqlParserTest : Base() {
     fun selectCorrelatedJoin() = assertExpression(
         """(select
              (project (list (id a) (id b)))
-             (from (as s (id stuff)) (@ (id s)))
+             (from (inner_join (as s (id stuff)) (@ (id s))))
              (where (call f (id s)))
            )
         """,
         "SELECT a, b FROM stuff s, @s WHERE f(s)"
+    )
+
+    @Test
+    fun selectCorrelatedExplicitInnerJoin() = assertExpression(
+        """(select
+             (project (list (id a) (id b)))
+             (from (inner_join (as s (id stuff)) (@ (id s))))
+             (where (call f (id s)))
+           )
+        """,
+        "SELECT a, b FROM stuff s INNER JOIN @s WHERE f(s)"
+    )
+
+    @Test
+    fun selectCorrelatedExplicitCrossJoin() = assertExpression(
+        """(select
+             (project (list (id a) (id b)))
+             (from (inner_join (as s (id stuff)) (@ (id s))))
+             (where (call f (id s)))
+           )
+        """,
+        "SELECT a, b FROM stuff s CROSS JOIN @s WHERE f(s)"
+    )
+
+    @Test
+    fun selectCorrelatedExplicitLeftJoin() = assertExpression(
+        """(select
+             (project (list (id a) (id b)))
+             (from (left_join (as s (id stuff)) (@ (id s))))
+             (where (call f (id s)))
+           )
+        """,
+        "SELECT a, b FROM stuff s LEFT JOIN @s WHERE f(s)"
+    )
+
+    @Test
+    fun selectCorrelatedLeftOuterJoinOn() = assertExpression(
+        """(select
+             (project (list (id a) (id b)))
+             (from
+               (left_join
+                 (as s (id stuff))
+                 (@ (id s))
+                 (call f (id s))
+               )
+             )
+           )
+        """,
+        "SELECT a, b FROM stuff s LEFT JOIN @s ON f(s)"
+    )
+
+    @Test
+    fun selectRightJoin() = assertExpression(
+        """(select
+             (project (list (id a) (id b)))
+             (from
+               (right_join
+                 (as s (id stuff))
+                 (as f (id foo))
+               )
+             )
+           )
+        """,
+        "SELECT a, b FROM stuff s RIGHT JOIN foo f"
+    )
+
+    @Test
+    fun selectFullOuterJoinOn() = assertExpression(
+        """(select
+             (project (list (id a) (id b)))
+             (from
+               (outer_join
+                 (as s (id stuff))
+                 (as f (id foo))
+                 (= (id s) (id f))
+               )
+             )
+           )
+        """,
+        "SELECT a, b FROM stuff s FULL OUTER JOIN foo f ON s = f"
+    )
+
+    @Test
+    fun selectJoins() = assertExpression(
+        """(select
+             (project (list (id x)))
+             (from
+               (outer_join
+                 (right_join
+                   (left_join
+                     (inner_join
+                       (inner_join
+                         (id a)
+                         (id b)
+                       )
+                       (id c)
+                     )
+                     (id d)
+                     (id e)
+                   )
+                   (id f)
+                 )
+                 (id g)
+                 (id h)
+               )
+             )
+           )
+        """,
+        "SELECT x FROM a, b CROSS JOIN c LEFT JOIN d ON e RIGHT OUTER JOIN f OUTER JOIN g ON h"
     )
 
     @Test
@@ -478,8 +587,10 @@ class IonSqlParserTest : Base() {
                )
              )
              (from
-               (as t (path (id t1) (lit "a")))
-               (path (id t2) (lit "x") (* unpivot) (lit "b"))
+               (inner_join
+                 (as t (path (id t1) (lit "a")))
+                 (path (id t2) (lit "x") (* unpivot) (lit "b"))
+               )
              )
              (where
                (and

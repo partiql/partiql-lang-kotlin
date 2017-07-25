@@ -33,14 +33,14 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         private fun List<Token>.err(message: String): Nothing =
             head.err(message)
 
-        private fun List<Token>.atomFromHead(): ParseNode = ParseNode(ATOM, head, emptyList(), tail)
+        private fun List<Token>.atomFromHead(parseType: ParseType = ATOM): ParseNode =
+            ParseNode(parseType, head, emptyList(), tail)
 
         private fun List<Token>.tailExpectedKeyword(keyword: String): List<Token> =
             when (head?.keywordText) {
                 keyword -> tail
                 else -> err("Expected ${keyword.toUpperCase()} keyword")
             }
-
     }
 
     private val lexer = IonSqlLexer(ion)
@@ -57,13 +57,17 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         FROM_CLAUSE_ARG_LIST
     }
 
-    internal enum class ParseType {
+    internal enum class ParseType(val isJoin: Boolean = false) {
         ATOM,
         PATH_WILDCARD,
         PATH_WILDCARD_UNPIVOT,
         SELECT_LIST,
         SELECT_VALUE,
         DISTINCT,
+        INNER_JOIN(isJoin = true),
+        LEFT_JOIN(isJoin = true),
+        RIGHT_JOIN(isJoin = true),
+        OUTER_JOIN(isJoin = true),
         WHERE,
         GROUP,
         GROUP_PARTIAL,
@@ -158,7 +162,8 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 }
                 else -> unsupported("Unsupported atom token")
             }
-            CAST, PATH, LIST, BAG, UNPIVOT, MEMBER -> sexp {
+            CAST, PATH, LIST, BAG, UNPIVOT, MEMBER,
+            INNER_JOIN, LEFT_JOIN, RIGHT_JOIN, OUTER_JOIN -> sexp {
                 addSymbol(node.type.identifier)
                 addChildNodes(node)
             }
@@ -221,7 +226,21 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 }
                 addSexp {
                     addSymbol("from")
-                    addChildNodes(children[1])
+                    // The FROM list in the parse tree is a ARG_LIST with
+                    // potential JOIN nodes--we need to translate that into a single prefix
+                    // node for the joins
+                    val fromItem = children[1].children
+                    var source = fromItem.head!!
+                    for (fromItem in fromItem.tail) {
+                        if (!fromItem.type.isJoin) {
+                            unsupported("Non-first FROM clause item must be a JOIN")
+                        }
+                        // derive a binary operator type node
+                        source = fromItem.copy(
+                            children = listOf(source) + fromItem.children
+                        )
+                    }
+                    add(source.toSexp())
                 }
                 if (children.size > 2) {
                     for (clause in children.slice(2..children.lastIndex)) {
@@ -794,9 +813,35 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             ).deriveExpected(RIGHT_PAREN)
         }
 
+    private val parseCommaDelim: List<Token>.() -> ParseNode? = {
+        when (head?.type) {
+            COMMA -> atomFromHead()
+            else -> null
+        }
+    }
+
+    private val parseJoinDelim: List<Token>.() -> ParseNode? = {
+        when (head?.type) {
+            COMMA -> atomFromHead(INNER_JOIN)
+            KEYWORD -> when (head?.keywordText) {
+                "join", "inner_join" -> atomFromHead(INNER_JOIN)
+                "left_join" -> atomFromHead(LEFT_JOIN)
+                "right_join" -> atomFromHead(RIGHT_JOIN)
+                "outer_join" -> atomFromHead(OUTER_JOIN)
+                else -> null
+            }
+            else -> null
+        }
+    }
+
     private fun List<Token>.parseArgList(aliasSupportType: AliasSupportType,
                                          mode: ArgListMode): ParseNode {
-        return parseCommaList {
+        val parseDelim = when (mode) {
+            FROM_CLAUSE_ARG_LIST -> parseJoinDelim
+            else -> parseCommaDelim
+        }
+
+        return parseDelimitedList(parseDelim) { delim ->
             var rem = this
             var child = when (mode) {
                 STRUCT_LITERAL_ARG_LIST -> {
@@ -847,24 +892,58 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 child = ParseNode(AT_ALIAS, name, listOf(child), rem)
             }
 
+            if (delim?.type?.isJoin == true) {
+                val operands = mutableListOf(child)
+
+                // TODO determine if this should be restricted for some joins
+                // check for an ON-clause
+                if (rem.head?.keywordText == "on") {
+                    val onClause = rem.tail.parseExpression()
+                    rem = onClause.remaining
+                    operands.add(onClause)
+                }
+
+                // wrap the join node based on the infix delimiter
+                child = delim.copy(
+                    children = operands,
+                    remaining = rem
+                )
+            }
+
             child
         }
     }
 
-    private inline fun List<Token>.parseCommaList(parseItem: List<Token>.() -> ParseNode): ParseNode {
+    private inline fun List<Token>.parseCommaList(parseItem: List<Token>.() -> ParseNode) =
+        parseDelimitedList(parseCommaDelim) { parseItem() }
+
+    /**
+     * Parses the given list-like construct.  This is typically for things like argument lists,
+     * but can be used for other list-like constructs such as `JOIN` clauses.
+     *
+     * @param parseDelim the function to parse each delimiter, should return a non-null [ParseNode]
+     *  if the delimiter is encountered and `null` if there is no delimiter (i.e. the end of the
+     *  list has been reached.
+     * @param parseItem the function to parse each item in a list, it is given the [ParseNode]
+     *  of the delimiter that was encountered prior to the item to be parsed which could be `null`
+     *  for the first item in the list.
+     */
+    private inline fun List<Token>.parseDelimitedList(parseDelim: List<Token>.() -> ParseNode?,
+                                                      parseItem: List<Token>.(delim: ParseNode?) -> ParseNode): ParseNode {
         val items = ArrayList<ParseNode>()
+        var delim: ParseNode? = null
         var rem = this
 
         while (rem.isNotEmpty()) {
-            val child = rem.parseItem()
+            val child = rem.parseItem(delim)
             items.add(child)
-
             rem = child.remaining
 
-            if (rem.head?.type != COMMA) {
+            delim = rem.parseDelim()
+            if (delim == null) {
                 break
             }
-            rem = rem.tail
+            rem = delim.remaining
 
         }
         return ParseNode(ARG_LIST, null, items, rem)

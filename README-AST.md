@@ -89,10 +89,8 @@ The first position of the `select` node is the projection node which is marked b
   column names defined with an `(as ...)` node.
 * `(value <VALUE EXPR>)` - Projects a direct value.
 
-The second position is a `(from <SOURCE EXPR>...)` which is the `FROM` list, each element could have
-source names defined with the `(as ...)`.  The `<SOURCE EXPR>` could also be wrapped with
-an `(at ...)` node.  If bot `(as ...)` and `(at ...)` exist they are to be wrapped as
-`(at <NAME SYMBOL> (as ...))`
+The second position is a `(from <SOURCE EXPR>)` which is the `FROM` clause that sources and
+joins data to operate on.
 
 All other nodes are optional and not positionally defined.  Possible nodes:
 
@@ -100,6 +98,39 @@ All other nodes are optional and not positionally defined.  Possible nodes:
 * `(group ...)` or `(group_partial ...)` - The `GROUP BY` or `GROUP PARTIAL BY` clause.
 * `(having <CONDITIONAL EXPR>)` - The `HAVING` clause filter expression.
 * `(limit <EXPR>)` - The `LIMIT` clause expression. 
+
+### `FROM` Clause
+The single `<SOURCE EXPR>` in this clause is as follows:
+
+* Any top-level expression, where the source can be aliased with the `(as ...)` node.
+  The node could also be wrapped with an `(at ...)` node.  If both `(as ...)` and `(at ...)` exist
+  they are to be wrapped as `(at <NAME SYMBOL> (as ...))`
+* A join expression node, has the form `(<JOIN OP SYMBOL> <SOURCE EXPR> <EXPR> <COND EXPR>)`.
+  `<EXPR>` is a top-level expression node, `<COND EXPR>` is a join condition similar to the `WHERE`
+  clause and is optional; not specifying it is as if `(lit true)` was provided.
+  `<JOIN OP SYMBOL>` is one of:
+  * `inner_join`
+  * `left_join`
+  * `right_join`
+  * `outer_join`
+
+For implicit cross joins (e.g. `FROM A, B`) and explicit `CROSS JOIN`, `inner_join` without a
+condition is the way it is represented in the AST.
+
+For example, the clause `FROM a, b CROSS JOIN c LEFT JOIN d ON x = y` would be translated as:
+
+```
+(from
+  (left_join
+    (inner_join
+      (inner_join (id a) (id b))
+      (id c)
+    )
+    (id d)
+    (= (id x) (id y))
+  )
+)
+```
 
 ### `GROUP BY` Clause
 The `(group ...)` and `(group_partial ...)` clause have one mandatory element:
@@ -246,5 +277,4 @@ Example:
 The above would indicate the the integer literal `5` was located at line 1, column 1.
 
 ## TODO
-* Support `JOIN` constructs.
 * Support `ORDER BY`.

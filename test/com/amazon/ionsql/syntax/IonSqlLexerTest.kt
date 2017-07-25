@@ -197,7 +197,7 @@ class IonSqlLexerTest : Base() {
         "cRoSs Join left join left left Inner joiN RIGHT JOIN RIGHT OUTER JOIN LEFT OUTER JOIN" +
         "\nFULL join OUTER JOIN FULL OUTER JOIN" +
         "\nCROSS CROSS JOIN JOIN",
-        token(KEYWORD, "cross_join", 1, 1),
+        token(KEYWORD, "inner_join", 1, 1),
         token(KEYWORD, "left_join", 1, 12),
         token(KEYWORD, "left", 1, 22),
         token(KEYWORD, "left", 1, 27),
@@ -209,7 +209,7 @@ class IonSqlLexerTest : Base() {
         token(KEYWORD, "outer_join", 2, 11),
         token(KEYWORD, "outer_join", 2, 22),
         token(KEYWORD, "cross", 3, 1),
-        token(KEYWORD, "cross_join", 3, 7),
+        token(KEYWORD, "inner_join", 3, 7),
         token(KEYWORD, "join", 3, 18)
     )
 

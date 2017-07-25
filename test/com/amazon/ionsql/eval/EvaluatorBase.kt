@@ -56,6 +56,10 @@ abstract class EvaluatorBase : Base() {
                                   {title:"E", price: 9.5, categories:["fantasy", "comedy"]},
                                   {title:"F", price: 10.0, categories:["history"]},
                                 ]
+                              },
+                              {
+                                id: "7",
+                                books: []
                               }
                             ]
                             """).exprValue()
