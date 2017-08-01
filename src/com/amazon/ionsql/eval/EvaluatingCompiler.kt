@@ -872,22 +872,27 @@ class EvaluatingCompiler(private val ion: IonSystem,
             val found = locals.asSequence()
                 .mapIndexed { col, value ->
                     when (name) {
-                    // the alias binds to the value itself
+                        // the alias binds to the value itself
                         aliases[col].asName -> this[col]
-                    // the alias binds to the name of the value
+                        // the alias binds to the name of the value
                         aliases[col].atName -> this[col].name ?: missingValue
-                    // otherwise scope look up within the value
-                        else -> value[name]
+                        else -> null
                     }
                 }
                 .filter { it != null }
                 .toList()
             when (found.size) {
-            // nothing found at our scope, return nothing
-                0 -> null
-            // found exactly one thing, success
+                // nothing found at our scope, attempt to look at the attributes in our variables
+                // TODO fix dynamic scoping to be in line with SQL++ rules
+                0 -> {
+                    locals.asSequence()
+                        .map { it[name] }
+                        .filter { it != null }
+                        .firstOrNull()
+                }
+                // found exactly one thing, success
                 1 -> found.head!!
-            // multiple things with the same name is a conflict
+                // multiple things with the same name is a conflict
                 else -> err("$name is ambigious: ${found.map { it?.ionValue }}")
             }
         }

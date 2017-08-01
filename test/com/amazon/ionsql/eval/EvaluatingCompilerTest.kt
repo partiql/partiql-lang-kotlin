@@ -900,4 +900,15 @@ class EvaluatingCompilerTest : EvaluatorBase() {
           WHERE x NOT BETWEEN 1 AND 'Y'
         """
     )
+
+    @Test
+    fun correlatedJoinWithShadowedAttributes() = assertEval(
+        """SELECT VALUE v FROM `[{v:5}]` AS item, @item.v AS v""",
+        """[5]"""
+    )
+
+    @Test(expected = EvaluationException::class)
+    fun shadowedVariables() = voidEval(
+        """SELECT VALUE a FROM `[{v:5}]` AS item, @item.v AS a, @item.v AS a"""
+    )
 }
