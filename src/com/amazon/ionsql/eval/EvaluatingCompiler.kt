@@ -831,7 +831,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
         }
 
         return { rootEnv ->
-            val fromEnv = rootEnv.flipToGlobals()
+            val fromEnv = rootEnv.flipToGlobalsFirst()
 
             // compute the join over the data sources
             var seq = fromSources
@@ -849,7 +849,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                                         else -> null
                                     }
                                 },
-                                useAsCurrent = false
+                                Environment.CurrentMode.GLOBALS_THEN_LOCALS
                             )
                         }
                         return Pair(nextBindEnv, value)

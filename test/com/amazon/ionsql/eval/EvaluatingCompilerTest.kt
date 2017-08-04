@@ -960,4 +960,17 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     fun shadowedVariables() = voidEval(
         """SELECT VALUE a FROM `[{v:5}]` AS item, @item.v AS a, @item.v AS a"""
     )
+
+    @Test
+    fun correlatedJoinWithoutLexicalScope() = assertEval(
+        """SELECT VALUE b FROM `[{b:5}]` AS item, item.b AS b""",
+        """[5]"""
+    )
+
+    @Test
+    fun joinWithShadowedGlobal() = assertEval(
+        // 'a' is a global variable
+        """SELECT VALUE b FROM `[{b:5}]` AS a, a.b AS b""",
+        """[{c:{d:{e:5, f:6}}}]"""
+    )
 }

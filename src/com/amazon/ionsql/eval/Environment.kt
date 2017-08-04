@@ -15,12 +15,17 @@ package com.amazon.ionsql.eval
 data class Environment(internal val globals: Bindings,
                        internal val locals: Bindings,
                        val current: Bindings = locals) {
+    internal enum class CurrentMode {
+        LOCALS,
+        GLOBALS_THEN_LOCALS
+    }
+
     /** Constructs a new nested environment with the locals being the [current] bindings. */
-    internal fun nest(newLocals: Bindings, useAsCurrent: Boolean = true): Environment {
+    internal fun nest(newLocals: Bindings, currentMode: CurrentMode = CurrentMode.LOCALS): Environment {
         val derivedLocals = newLocals.delegate(locals)
-        val newCurrent = when {
-            useAsCurrent -> derivedLocals
-            else -> current
+        val newCurrent = when (currentMode) {
+            CurrentMode.LOCALS -> derivedLocals
+            CurrentMode.GLOBALS_THEN_LOCALS -> globals.delegate(derivedLocals)
         }
         return copy(locals = derivedLocals, current = newCurrent)
     }
@@ -29,5 +34,5 @@ data class Environment(internal val globals: Bindings,
     internal fun flipToLocals(): Environment = copy(current = locals)
 
     /** Constructs a copy of this environment with the [globals] being the current bindings. */
-    internal fun flipToGlobals(): Environment = copy(current = globals)
+    internal fun flipToGlobalsFirst(): Environment = copy(current = globals.delegate(locals))
 }
