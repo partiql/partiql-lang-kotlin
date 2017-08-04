@@ -52,6 +52,7 @@ internal val SQL92_KEYWORDS = setOf(
     "continue",
     "convert",
     "corresponding",
+    "count",
     "create",
     "cross",
     "current",
@@ -314,7 +315,7 @@ internal val FUNCTION_NAME_KEYWORDS = setOf(
     "exists",
 
     // aggregate functions
-    // COUNT has special syntax
+    "count",
     "avg",
     "max",
     "min",
@@ -332,6 +333,15 @@ internal val FUNCTION_NAME_KEYWORDS = setOf(
     // conditionals
     "nullif",
     "coalesce"
+)
+
+/** Aggregates functions. */
+internal val STANDARD_AGGREGATE_FUNCTIONS = setOf(
+    "count",
+    "avg",
+    "max",
+    "min",
+    "sum"
 )
 
 internal val BOOLEAN_KEYWORDS = setOf("true", "false")
