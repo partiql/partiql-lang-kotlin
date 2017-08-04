@@ -8,8 +8,15 @@ import com.amazon.ionsql.Base
 import com.amazon.ionsql.util.exprValue
 
 abstract class EvaluatorBase : Base() {
+    /**
+     * creates a [ExprValue] from the IonValue represented by this String. Assumes the string represents a single
+     * IonValue
+     */
+    private fun String.toExprValue(): ExprValue = literal(this).exprValue()
+
     val evaluator = EvaluatingCompiler(ion)
 
+    @Deprecated("use eval2 instead")
     fun eval(source: String): ExprValue =
         evaluator
             .compile(source)
@@ -92,6 +99,7 @@ abstract class EvaluatorBase : Base() {
         eval(source).ionValue
     }
 
+    @Deprecated("Use assertEval2 instead")
     fun assertEval(source: String,
                    expectedLit: String,
                    block: AssertExprValue.() -> Unit = { }) {
@@ -102,5 +110,37 @@ abstract class EvaluatorBase : Base() {
                 assertIonValue(expectedIon)
             }
             .run(block)
+    }
+
+    /**
+     * Assert that the evaluation of source is the same as expected given a binding map
+     *
+     * @receiver optional, used to plug in custom assertions
+     *
+     * @param source query source to be tested
+     * @param expected expected result
+     * @param bindings map with all bindings used for evaluation
+     */
+    protected fun assertEval2(source: String,
+                              expected: String,
+                              bindings: Map<String, String> = emptyMap(),
+                              block: AssertExprValue.() -> Unit = { }) {
+
+        val expectedIon = literal(expected)
+        val exprValue = eval2(source, bindings)
+
+        AssertExprValue(exprValue).apply { assertIonValue(expectedIon) }
+                                  .run(block)
+    }
+
+    /**
+     * Evaluates a source query given a binding map
+     *
+     * @param source query source to be evaluated
+     * @param bindings map with all bindings. Assumes all map values are String representations of single IonValues.
+     */
+    protected fun eval2(source: String, bindings: Map<String, String> = emptyMap()): ExprValue {
+        return evaluator.compile(source)
+                        .eval(Bindings.over { key -> bindings[key]?.toExprValue() })
     }
 }

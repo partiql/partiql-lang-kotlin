@@ -61,7 +61,9 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     fun unaryMinus() = assertEval("-f", "-2e0")
 
     @Test
-    fun addIntFloat() = assertEval("i + f", "3e0")
+    fun addIntFloat() = assertEval2("i + f", "3e0", mapOf(
+        "i" to "1",
+        "f" to "2e0"))
 
     @Test
     fun subIntFloatDecimal() = assertEval("i - f - d", "-4.0")
@@ -103,7 +105,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     fun equalIntFloat() = assertEval("1 = 1e0", "true")
 
     @Test
-    fun equalIntFloatFalse() = assertEval("1 = 1e1", "false")
+    fun equalIntFloatFalse() = assertEval2("1 = 1e1", "false")
 
     @Test
     fun equalListDifferentTypesTrue() = assertEval(
@@ -201,7 +203,33 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     fun pathDotOnly() = assertEval("a.b.c.d.e", "5")
 
     @Test
-    fun pathIndexing() = assertEval("stores[0].books[2].title", "\"C\"")
+    fun pathIndexing() = assertEval2("stores[0].books[2].title", "\"C\"", mapOf(
+        "stores" to """
+        [
+          {
+            id: "5",
+            books: [
+              {title:"A", price: 5.0, categories:["sci-fi", "action"]},
+              {title:"B", price: 2.0, categories:["sci-fi", "comedy"]},
+              {title:"C", price: 7.0, categories:["action", "suspense"]},
+              {title:"D", price: 9.0, categories:["suspense"]},
+            ]
+          },
+          {
+            id: "6",
+            books: [
+              {title:"A", price: 5.0, categories:["sci-fi", "action"]},
+              {title:"E", price: 9.5, categories:["fantasy", "comedy"]},
+              {title:"F", price: 10.0, categories:["history"]},
+            ]
+          },
+          {
+            id: "7",
+            books: []
+          }
+        ]
+        """
+    ))
 
     @Test
     fun pathIndexListLiteral() = assertEval("[1, 2, 3][1]", "2")
