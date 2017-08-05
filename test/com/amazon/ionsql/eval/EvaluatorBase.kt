@@ -14,133 +14,67 @@ abstract class EvaluatorBase : Base() {
      */
     private fun String.toExprValue(): ExprValue = literal(this).exprValue()
 
+    private fun Map<String, String>.toBindings(): Bindings = Bindings.over { key -> this[key]?.toExprValue() }
+
     val evaluator = EvaluatingCompiler(ion)
 
-    @Deprecated("use eval2 instead")
-    fun eval(source: String): ExprValue =
-        evaluator
-            .compile(source)
-            .eval(
-                Bindings.over {
-                    when (it) {
-                        "a" -> literal("{b:{c:{d:{e:5, f:6}}}}").exprValue()
-                        "i" -> literal("1").exprValue()
-                        "f" -> literal("2e0").exprValue()
-                        "d" -> literal("3d0").exprValue()
-                        "s" -> literal("\"hello\"").exprValue()
-                        "animals" -> literal(
-                            """
-                            [
-                              {name: "Kumo", type: "dog"},
-                              {name: "Mochi", type: "dog"},
-                              {name: "Lilikoi", type: "unicorn"},
-                            ]
-                            """).exprValue()
-                        "animal_types" -> literal(
-                            """
-                            [
-                              {id: "dog", is_magic: false},
-                              {id: "cat", is_magic: false},
-                              {id: "unicorn", is_magic: true},
-                            ]
-                            """).exprValue()
-                        "stores" -> literal(
-                            """
-                            [
-                              {
-                                id: "5",
-                                books: [
-                                  {title:"A", price: 5.0, categories:["sci-fi", "action"]},
-                                  {title:"B", price: 2.0, categories:["sci-fi", "comedy"]},
-                                  {title:"C", price: 7.0, categories:["action", "suspense"]},
-                                  {title:"D", price: 9.0, categories:["suspense"]},
-                                ]
-                              },
-                              {
-                                id: "6",
-                                books: [
-                                  {title:"A", price: 5.0, categories:["sci-fi", "action"]},
-                                  {title:"E", price: 9.5, categories:["fantasy", "comedy"]},
-                                  {title:"F", price: 10.0, categories:["history"]},
-                                ]
-                              },
-                              {
-                                id: "7",
-                                books: []
-                              }
-                            ]
-                            """).exprValue()
-                        "friends" -> literal(
-                            """
-                            {
-                               kumo: {
-                                 type: "DOG",
-                                 likes: {
-                                   mochi: { type: "dog" },
-                                   zoe: { type: "human" },
-                                 }
-                               },
-                               mochi: {
-                                 type: "DOG",
-                                 likes: {
-                                   kumo: { type: "dog" },
-                                   brownie: { type: "cat" },
-                                 }
-                               },
-                            }
-                            """).exprValue()
-                        else -> null
-                    }
-                }
-            )
-
-    fun voidEval(source: String) {
-        // force materialization
-        eval(source).ionValue
+    fun voidEval(source: String, bindingsMap: Map<String, String>) {
+        voidEval(source, bindingsMap.toBindings())
     }
 
-    @Deprecated("Use assertEval2 instead")
-    fun assertEval(source: String,
-                   expectedLit: String,
-                   block: AssertExprValue.() -> Unit = { }) {
-        val expectedIon = literal(expectedLit)
-        val exprVal = eval(source)
-        AssertExprValue(exprVal)
-            .apply {
-                assertIonValue(expectedIon)
-            }
-            .run(block)
+    fun voidEval(source: String, bindings: Bindings = Bindings.empty()) {
+        // force materialization
+        evalWithBindings(source, bindings).ionValue
     }
 
     /**
      * Assert that the evaluation of source is the same as expected given a binding map
      *
-     * @receiver optional, used to plug in custom assertions
+     * @param source query source to be tested
+     * @param expected expected result
+     * @param bindingsMap map with all bindings used for evaluation, assumes the map values are string representations of
+     *                 single IonValue's
+     * @param block function literal with receiver used to plug in custom assertions
+     */
+    protected fun assertEval(source: String,
+                             expected: String,
+                             bindingsMap: Map<String, String>,
+                             block: AssertExprValue.() -> Unit = { }) {
+
+        assertEval(source,
+                   expected,
+                   bindingsMap.toBindings(),
+                   block)
+    }
+
+    /**
+     * Assert that the evaluation of source is the same as expected given a [Bindings]
      *
      * @param source query source to be tested
      * @param expected expected result
-     * @param bindings map with all bindings used for evaluation
+     * @param bindings [Bindings] used for evaluation
+     * @param block function literal with receiver used to plug in custom assertions
      */
-    protected fun assertEval2(source: String,
-                              expected: String,
-                              bindings: Map<String, String> = emptyMap(),
-                              block: AssertExprValue.() -> Unit = { }) {
+    protected fun assertEval(source: String,
+                             expected: String,
+                             bindings: Bindings = Bindings.empty(),
+                             block: AssertExprValue.() -> Unit = { }) {
 
         val expectedIon = literal(expected)
-        val exprValue = eval2(source, bindings)
+        val exprValue = evalWithBindings(source, bindings)
 
         AssertExprValue(exprValue).apply { assertIonValue(expectedIon) }
                                   .run(block)
     }
 
     /**
-     * Evaluates a source query given a binding map
+     * Evaluates a source query given a [Bindings]
      *
      * @param source query source to be evaluated
-     * @param bindings map with all bindings. Assumes all map values are String representations of single IonValues.
+     * @param bindings [Bindings] used for evaluation
      */
-    protected fun eval2(source: String, bindings: Map<String, String> = emptyMap()): ExprValue {
+    protected fun evalWithBindings(source: String, bindings: Bindings = Bindings.empty()): ExprValue {
         return evaluator.compile(source)
-                        .eval(Bindings.over { key -> bindings[key]?.toExprValue() })
+                        .eval(bindings)
     }
 }

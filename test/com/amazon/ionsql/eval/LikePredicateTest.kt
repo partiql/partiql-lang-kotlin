@@ -2,13 +2,21 @@
  * Copyright 2016 Amazon.com, Inc. or its affiliates.  All rights reserved.
  */
 
-
 package com.amazon.ionsql.eval
 
 import org.junit.Test
 
-
 class LikePredicateTest : EvaluatorBase() {
+
+    private val animals = mapOf(
+        "animals" to """
+        [
+          {name: "Kumo", type: "dog"},
+          {name: "Mochi", type: "dog"},
+          {name: "Lilikoi", type: "unicorn"},
+        ]
+        """
+    )
 
     @Test
     fun noEscapeAllArgsLiteralsMatches() =
@@ -20,7 +28,8 @@ class LikePredicateTest : EvaluatorBase() {
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """
+        """,
+            animals
         )
 
     @Test
@@ -29,7 +38,8 @@ class LikePredicateTest : EvaluatorBase() {
             """SELECT * FROM animals as a WHERE 'Kumo' LIKE 'KuMo' """,
             """
           []
-        """
+        """,
+            animals
         )
 
 
@@ -39,7 +49,8 @@ class LikePredicateTest : EvaluatorBase() {
             """SELECT * FROM animals as a WHERE 'xxx' LIKE 'Kumo' """,
             """
           []
-        """
+        """,
+            animals
         )
 
     @Test
@@ -52,7 +63,8 @@ class LikePredicateTest : EvaluatorBase() {
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """
+        """,
+            animals
         )
 
     @Test
@@ -61,7 +73,8 @@ class LikePredicateTest : EvaluatorBase() {
             """SELECT * FROM animals as a WHERE 'Kuumo' LIKE 'K_mo' """,
             """
           []
-        """
+        """,
+            animals
         )
 
     @Test
@@ -70,7 +83,8 @@ class LikePredicateTest : EvaluatorBase() {
             """SELECT * FROM animals as a WHERE 'KKumo' LIKE 'K_mo' """,
             """
           []
-        """
+        """,
+            animals
         )
 
     @Test
@@ -83,7 +97,8 @@ class LikePredicateTest : EvaluatorBase() {
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """
+        """,
+            animals
         )
 
     @Test
@@ -96,7 +111,8 @@ class LikePredicateTest : EvaluatorBase() {
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """
+        """,
+            animals
         )
 
     @Test
@@ -109,7 +125,8 @@ class LikePredicateTest : EvaluatorBase() {
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """
+        """,
+            animals
         )
 
     @Test
@@ -122,7 +139,8 @@ class LikePredicateTest : EvaluatorBase() {
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """
+        """,
+            animals
         )
 
     @Test
@@ -131,7 +149,8 @@ class LikePredicateTest : EvaluatorBase() {
             """SELECT * FROM animals as a WHERE 'KKumo' LIKE 'Ku%o' """,
             """
           []
-        """
+        """,
+            animals
         )
 
     @Test
@@ -140,7 +159,8 @@ class LikePredicateTest : EvaluatorBase() {
             """SELECT * FROM animals as a WHERE 'Kumol' LIKE 'Ku%o' """,
             """
           []
-        """
+        """,
+            animals
         )
 
 
@@ -154,7 +174,8 @@ class LikePredicateTest : EvaluatorBase() {
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """
+        """,
+            animals
         )
 
     @Test
@@ -167,7 +188,8 @@ class LikePredicateTest : EvaluatorBase() {
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """
+        """,
+            animals
         )
 
     @Test
@@ -180,7 +202,8 @@ class LikePredicateTest : EvaluatorBase() {
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """
+        """,
+            animals
         )
 
     @Test
@@ -193,7 +216,8 @@ class LikePredicateTest : EvaluatorBase() {
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """
+        """,
+            animals
         )
 
 
@@ -207,7 +231,8 @@ class LikePredicateTest : EvaluatorBase() {
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """
+        """,
+            animals
         )
 
     @Test
@@ -220,7 +245,8 @@ class LikePredicateTest : EvaluatorBase() {
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """
+        """,
+            animals
         )
 
     @Test
@@ -233,7 +259,8 @@ class LikePredicateTest : EvaluatorBase() {
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """
+        """,
+            animals
         )
 
     @Test
@@ -246,7 +273,8 @@ class LikePredicateTest : EvaluatorBase() {
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """
+        """,
+            animals
         )
 
     @Test
@@ -259,7 +287,8 @@ class LikePredicateTest : EvaluatorBase() {
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """
+        """,
+            animals
         )
 
     @Test
@@ -272,7 +301,8 @@ class LikePredicateTest : EvaluatorBase() {
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """
+        """,
+            animals
         )
 
 
@@ -286,7 +316,8 @@ class LikePredicateTest : EvaluatorBase() {
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """
+        """,
+            animals
         )
 
     @Test
@@ -299,7 +330,8 @@ class LikePredicateTest : EvaluatorBase() {
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """
+        """,
+            animals
         )
 
     @Test
@@ -312,7 +344,8 @@ class LikePredicateTest : EvaluatorBase() {
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """
+        """,
+            animals
         )
 
     @Test
@@ -325,7 +358,8 @@ class LikePredicateTest : EvaluatorBase() {
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """
+        """,
+            animals
         )
 
     @Test
@@ -338,7 +372,8 @@ class LikePredicateTest : EvaluatorBase() {
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """
+        """,
+            animals
         )
 
     @Test
@@ -347,7 +382,8 @@ class LikePredicateTest : EvaluatorBase() {
             """SELECT * FROM animals as a WHERE '%1XX' LIKE '[%_00' ESCAPE '[' """,
             """
           []
-        """
+        """,
+            animals
         )
 
     @Test
@@ -360,7 +396,8 @@ class LikePredicateTest : EvaluatorBase() {
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """
+        """,
+            animals
         )
 
     @Test
@@ -373,7 +410,8 @@ class LikePredicateTest : EvaluatorBase() {
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """
+        """,
+            animals
         )
 
     @Test
@@ -386,7 +424,8 @@ class LikePredicateTest : EvaluatorBase() {
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """
+        """,
+            animals
         )
 
     @Test
@@ -397,7 +436,8 @@ class LikePredicateTest : EvaluatorBase() {
           [
             {name: "Kumo", type: "dog"}
           ]
-        """
+        """,
+            animals
         )
 
     @Test
@@ -410,7 +450,8 @@ class LikePredicateTest : EvaluatorBase() {
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """
+        """,
+            animals
         )
 
     @Test

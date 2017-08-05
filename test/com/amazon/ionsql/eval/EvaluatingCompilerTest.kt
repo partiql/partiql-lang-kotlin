@@ -8,6 +8,90 @@ import com.amazon.ionsql.syntax.ParserException
 import org.junit.Test
 
 class EvaluatingCompilerTest : EvaluatorBase() {
+
+    private val struct = mapOf("a" to "{b:{c:{d:{e:5, f:6}}}}")
+    private val hello = mapOf("s" to "\"hello\"")
+
+    /**
+     * mappings to different number types
+     */
+    private val numbers = mapOf(
+        "i" to "1",
+        "f" to "2e0",
+        "d" to "3d0")
+
+    /**
+     * Sample ion containing a collection of stores
+     */
+    private val stores = mapOf(
+        "stores" to """
+        [
+          {
+            id: "5",
+            books: [
+              {title:"A", price: 5.0, categories:["sci-fi", "action"]},
+              {title:"B", price: 2.0, categories:["sci-fi", "comedy"]},
+              {title:"C", price: 7.0, categories:["action", "suspense"]},
+              {title:"D", price: 9.0, categories:["suspense"]},
+            ]
+          },
+          {
+            id: "6",
+            books: [
+              {title:"A", price: 5.0, categories:["sci-fi", "action"]},
+              {title:"E", price: 9.5, categories:["fantasy", "comedy"]},
+              {title:"F", price: 10.0, categories:["history"]},
+            ]
+          },
+          {
+            id: "7",
+            books: []
+          }
+        ]
+        """
+    )
+
+    private val animals = mapOf(
+        "animals" to """
+        [
+          {name: "Kumo", type: "dog"},
+          {name: "Mochi", type: "dog"},
+          {name: "Lilikoi", type: "unicorn"},
+        ]
+        """
+    )
+
+    private val animalTypes = mapOf(
+        "animal_types" to """
+        [
+          {id: "dog", is_magic: false},
+          {id: "cat", is_magic: false},
+          {id: "unicorn", is_magic: true},
+        ]
+        """
+    )
+
+    private val friends = mapOf(
+        "friends" to """
+        {
+           kumo: {
+             type: "DOG",
+             likes: {
+               mochi: { type: "dog" },
+               zoe: { type: "human" },
+             }
+           },
+           mochi: {
+             type: "DOG",
+             likes: {
+               kumo: { type: "dog" },
+               brownie: { type: "cat" },
+             }
+           },
+        }
+        """
+    )
+
     @Test(expected = ParserException::class)
     fun emptyThrows() = voidEval("")
 
@@ -15,35 +99,35 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     fun literal() = assertEval("5", "5")
 
     @Test
-    fun identifier() = assertEval("i", "1")
+    fun identifier() = assertEval("i", "1", numbers)
 
     @Test
-    fun lexicalScope() = assertEval("@i", "1")
+    fun lexicalScope() = assertEval("@i", "1", numbers)
 
     @Test
     fun functionCall() = assertEval("exists(select * from [1])", "true")
 
     @Test
-    fun grouping() = assertEval("((i))", "1")
+    fun grouping() = assertEval("((i))", "1", numbers)
 
     @Test
-    fun listLiteral() = assertEval("[i, f, d]", "[1, 2e0, 3d0]")
+    fun listLiteral() = assertEval("[i, f, d]", "[1, 2e0, 3d0]", numbers)
 
     @Test
-    fun rowValueConstructor() = assertEval("(i, f, d)", "[1, 2e0, 3d0]")
+    fun rowValueConstructor() = assertEval("(i, f, d)", "[1, 2e0, 3d0]", numbers)
 
     @Test
-    fun structLiteral() = assertEval("{'a':i, 'b':f, 'c':d, 'd': 1}", "{a:1, b:2e0, c:3d0, d:1}") {
+    fun structLiteral() = assertEval("{'a':i, 'b':f, 'c':d, 'd': 1}", "{a:1, b:2e0, c:3d0, d:1}", struct + numbers) {
         // struct literals provide ordered names
         val bindNames = exprValue.orderedNames!!
         assertEquals(listOf("a", "b", "c", "d"), bindNames)
     }
 
     @Test
-    fun bagLiteral() = assertEval("<<i, f, d>>", "[1, 2e0, 3d0]")
+    fun bagLiteral() = assertEval("<<i, f, d>>", "[1, 2e0, 3d0]", numbers)
 
     @Test
-    fun tableValueConstructor() = assertEval("VALUES (i), (f, d)", "[[1], [2e0, 3d0]]")
+    fun tableValueConstructor() = assertEval("VALUES (i), (f, d)", "[[1], [2e0, 3d0]]", numbers)
 
     @Test
     fun emptyListLiteral() = assertEval("[]", "[]")
@@ -55,24 +139,22 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     fun emptyBagLiteral() = assertEval("<<>>", "[]")
 
     @Test
-    fun unaryPlus() = assertEval("+i", "1")
+    fun unaryPlus() = assertEval("+i", "1", numbers)
 
     @Test
-    fun unaryMinus() = assertEval("-f", "-2e0")
+    fun unaryMinus() = assertEval("-f", "-2e0", numbers)
 
     @Test
-    fun addIntFloat() = assertEval2("i + f", "3e0", mapOf(
-        "i" to "1",
-        "f" to "2e0"))
+    fun addIntFloat() = assertEval("i + f", "3e0", numbers)
 
     @Test
-    fun subIntFloatDecimal() = assertEval("i - f - d", "-4.0")
+    fun subIntFloatDecimal() = assertEval("i - f - d", "-4.0", numbers)
 
     @Test
-    fun mulFloatIntInt() = assertEval("f * 2 * 4", "16e0")
+    fun mulFloatIntInt() = assertEval("f * 2 * 4", "16e0", numbers)
 
     @Test
-    fun divDecimalInt() = assertEval("d / 2", "1.5")
+    fun divDecimalInt() = assertEval("d / 2", "1.5", numbers)
 
     @Test
     fun modIntInt() = assertEval("3 % 2", "1")
@@ -105,7 +187,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     fun equalIntFloat() = assertEval("1 = 1e0", "true")
 
     @Test
-    fun equalIntFloatFalse() = assertEval2("1 = 1e1", "false")
+    fun equalIntFloatFalse() = assertEval("1 = 1e1", "false")
 
     @Test
     fun equalListDifferentTypesTrue() = assertEval(
@@ -188,48 +270,20 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     fun orFalseFalse() = assertEval("false or false", "false")
 
     @Test
-    fun comparisonsConjuctTrue() = assertEval(
-        "i < f and f < d",
-        "true"
-    )
+    fun comparisonsConjuctTrue() = assertEval("i < f and f < d", "true", numbers)
 
     @Test
     fun comparisonsDisjunctFalse() = assertEval(
         "i < f and (f > d or i > d)",
-        "false"
+        "false",
+        numbers
     )
 
     @Test
-    fun pathDotOnly() = assertEval("a.b.c.d.e", "5")
+    fun pathDotOnly() = assertEval("a.b.c.d.e", "5", struct)
 
     @Test
-    fun pathIndexing() = assertEval2("stores[0].books[2].title", "\"C\"", mapOf(
-        "stores" to """
-        [
-          {
-            id: "5",
-            books: [
-              {title:"A", price: 5.0, categories:["sci-fi", "action"]},
-              {title:"B", price: 2.0, categories:["sci-fi", "comedy"]},
-              {title:"C", price: 7.0, categories:["action", "suspense"]},
-              {title:"D", price: 9.0, categories:["suspense"]},
-            ]
-          },
-          {
-            id: "6",
-            books: [
-              {title:"A", price: 5.0, categories:["sci-fi", "action"]},
-              {title:"E", price: 9.5, categories:["fantasy", "comedy"]},
-              {title:"F", price: 10.0, categories:["history"]},
-            ]
-          },
-          {
-            id: "7",
-            books: []
-          }
-        ]
-        """
-    ))
+    fun pathIndexing() = assertEval("stores[0].books[2].title", "\"C\"", stores)
 
     @Test
     fun pathIndexListLiteral() = assertEval("[1, 2, 3][1]", "2")
@@ -256,34 +310,38 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     }
 
     @Test
-    fun pathWildcard() = assertEval("stores[0].books[*].title", """["A", "B", "C", "D"]""")
+    fun pathWildcard() = assertEval("stores[0].books[*].title", """["A", "B", "C", "D"]""", stores)
 
     @Test
-    fun pathUnpivotWildcard() = assertEval("friends.kumo.likes.*.type", """["dog", "human"]""")
+    fun pathUnpivotWildcard() = assertEval("friends.kumo.likes.*.type", """["dog", "human"]""", friends)
 
 
     @Test
     fun pathDoubleWildCard() = assertEval(
         "stores[*].books[*].title",
-        """["A", "B", "C", "D", "A", "E", "F"]"""
+        """["A", "B", "C", "D", "A", "E", "F"]""",
+        stores
     )
 
     @Test
     fun pathDoubleUnpivotWildCard() = assertEval(
         "friends.*.likes.*.type",
-        """["dog", "human", "dog", "cat"]"""
+        """["dog", "human", "dog", "cat"]""",
+        friends
     )
 
     @Test
     fun pathWildCardOverScalar() = assertEval(
         "s[*]",
-        """["hello"]"""
+        """["hello"]""",
+        hello
     )
 
     @Test
     fun pathUnpivotWildCardOverScalar() = assertEval(
         "s.*",
-        """["hello"]"""
+        """["hello"]""",
+        hello
     )
 
     @Test
@@ -329,19 +387,22 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     @Test
     fun pathWildCardOverStructMultiple() = assertEval(
         "a[*][*][*][*]",
-        """[{b:{c:{d:{e:5, f:6}}}}]"""
+        """[{b:{c:{d:{e:5, f:6}}}}]""",
+        struct
     )
 
     @Test
     fun pathUnpivotWildCardOverStructMultiple() = assertEval(
         "a.*.*.*.*",
-        """[5, 6]"""
+        """[5, 6]""",
+        struct
     )
 
     @Test
     fun selectPathUnpivotWildCardOverStructMultiple() = assertEval(
         "SELECT name, val FROM a.*.*.*.* AS val AT name",
-        """[{name: "e", val: 5}, {name: "f", val: 6}]"""
+        """[{name: "e", val: 5}, {name: "f", val: 6}]""",
+        struct
     )
 
     @Test
@@ -419,7 +480,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             {name: "Mochi", type: "dog"},
             {name: "Lilikoi", type: "unicorn"},
           ]
-        """
+        """,
+        animals
     ) {
         // SELECT * from schema-less Ion provides no ordered names
         exprValue.forEach {
@@ -431,7 +493,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     @Test
     fun implicitAliasSelectSingleSource() = assertEval(
         """SELECT id FROM stores""",
-        """[{id:"5"}, {id:"6"}, {id:"7"}]"""
+        """[{id:"5"}, {id:"6"}, {id:"7"}]""",
+        stores
     ) {
         // SELECT list provides ordered names facet
         exprValue.forEach {
@@ -443,20 +506,23 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     @Test
     fun selectIndexStruct() = assertEval(
         """SELECT VALUE x[0] FROM (SELECT s.id FROM stores AS s) AS x""",
-        """["5", "6", "7"]"""
+        """["5", "6", "7"]""",
+        stores
     )
 
     @Test
     fun selectValues() = assertEval(
         """SELECT VALUE id FROM stores""",
-        """["5", "6", "7"]"""
+        """["5", "6", "7"]""",
+        stores
     )
 
     @Test
     fun variableShadow() = assertEval(
         // Note that i, f, d, and s are defined in the global environment
         """SELECT f, d, s FROM i AS f, f AS d, @f AS s WHERE f = 1 AND d = 2e0 and s = 1""",
-        """[{f: 1, d: 2e0, s: 1}]"""
+        """[{f: 1, d: 2e0, s: 1}]""",
+        numbers
     )
 
     @Test
@@ -468,13 +534,15 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             {title:"E", price: 9.5, categories:["fantasy", "comedy"]},
             {title:"F", price: 10.0, categories:["history"]},
           ]
-        """
+        """,
+        stores
     )
 
     @Test
     fun explicitAliasSelectSingleSource() = assertEval(
         """SELECT id AS name FROM stores""",
-        """[{name:"5"}, {name:"6"}, {name:"7"}]"""
+        """[{name:"5"}, {name:"6"}, {name:"7"}]""",
+        stores
     )
 
     @Test
@@ -486,13 +554,15 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             {name:"E", price: 9.5},
             {name:"F", price: 10.0},
           ]
-        """
+        """,
+        stores
     )
 
     @Test
     fun explicitAliasSelectSingleSourceWithWhere() = assertEval(
         """SELECT id AS name FROM stores WHERE id = '5' """,
-        """[{name:"5"}]"""
+        """[{name:"5"}]""",
+        stores
     )
 
     @Test
@@ -512,7 +582,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             {name: "Lilikoi", type: "unicorn", id: "cat", is_magic: false},
             {name: "Lilikoi", type: "unicorn", id: "unicorn", is_magic: true},
           ]
-        """
+        """,
+        animals + animalTypes
     )
 
     @Test
@@ -522,7 +593,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
           [
             {name: "Kumo", type: "dog"}
           ]
-        """
+        """,
+        animals
     )
 
     @Test
@@ -530,7 +602,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
         """SELECT * FROM animals as a WHERE a.name = 'KUMO' """,
         """
           []
-        """
+        """,
+        animals
     )
     @Test
     fun selectJoin() = assertEval(
@@ -541,7 +614,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             {name: "Mochi", type: "dog", id: "dog", is_magic: false},
             {name: "Lilikoi", type: "unicorn", id: "unicorn", is_magic: true},
           ]
-        """
+        """,
+        animals + animalTypes
     )
 
     @Test
@@ -554,7 +628,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             {id: "6", title: "E"},
             {id: "6", title: "F"},
           ]
-        """
+        """,
+        stores
     )
 
     @Test
@@ -564,7 +639,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
           [
             {id: "7", title: null}
           ]
-        """
+        """,
+        stores
     )
 
     @Test
@@ -581,7 +657,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             {id: "6", title: "F"},
             {id: "7", title: null}
           ]
-        """
+        """,
+        stores
     )
 
     @Test
@@ -602,7 +679,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             [3, 1, null],
             [3, 2, null],
           ]
-        """
+        """,
+        struct + numbers
     )
 
     @Test
@@ -615,7 +693,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             {id: "6", title: "hello"},
             {id: "7", title: "hello"},
           ]
-        """
+        """,
+        stores + hello
     )
 
     @Test
@@ -632,7 +711,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             {n1: "b", n2: "c", n3: "d", n4: "e", val: 5},
             {n1: "b", n2: "c", n3: "d", n4: "f", val: 6}
           ]
-        """
+        """,
+        struct
     )
 
     @Test
@@ -657,7 +737,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             {col: "type", val: "unicorn"},
             {col: "is_magic", val: true},
           ]
-        """
+        """,
+        animals + animalTypes
     )
 
     @Test
@@ -675,7 +756,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             {col: "type", val: "dog"},
             {col: "is_magic", val: false},
           ]
-        """
+        """,
+        animals + animalTypes
     )
 
     @Test
@@ -689,7 +771,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             Mochi: "dog",
             Lilikoi: "unicorn",
           }
-        """
+        """,
+        animals
     )
 
     @Test
@@ -703,7 +786,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             name: "Mochi",
             name: "Lilikoi",
           }
-        """
+        """,
+        animals
     )
 
     @Test
@@ -713,7 +797,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
         """,
         """
           {}
-        """
+        """,
+        animals
     )
 
     @Test
@@ -730,7 +815,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             new_d: 4,
             new_e: 5,
           }
-        """
+        """,
+        struct
     )
 
     @Test
@@ -751,7 +837,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
               title: ["A", "B", "C", "D"]
             }
           ]
-        """
+        """,
+        stores
     )
 
     @Test
@@ -763,7 +850,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
           [
             "A", "B", "A"
           ]
-        """
+        """,
+        stores
     )
 
     @Test
@@ -775,7 +863,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
           [
             "C", "D", "E", "F"
           ]
-        """
+        """,
+        stores
     )
 
     @Test
@@ -788,7 +877,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
           [
             "A", "A"
           ]
-        """
+        """,
+        stores
     )
 
     @Test
@@ -801,7 +891,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
           [
             "B", "C", "D", "E", "F"
           ]
-        """
+        """,
+        stores
     )
 
     @Test
@@ -814,7 +905,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
           [
             "B", "E"
           ]
-        """
+        """,
+        stores
     )
 
     @Test
@@ -827,7 +919,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
           [
             "A", "C", "D", "A", "F"
           ]
-        """
+        """,
+        stores
     )
 
     @Test
@@ -846,7 +939,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
           [
             "TWO", "THREE", "?"
           ]
-        """
+        """,
+        numbers
     )
 
     @Test
@@ -864,7 +958,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
           [
             "TWO", "THREE", null
           ]
-        """
+        """,
+        numbers
     )
 
     @Test
@@ -883,7 +978,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
           [
             "< ONE", "TWO", "?", ">= THREE < 100", "?"
           ]
-        """
+        """,
+        numbers
     )
 
     @Test
@@ -901,7 +997,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
           [
             "< ONE", "TWO", null, ">= THREE < 100", null
           ]
-        """
+        """,
+        numbers
     )
 
     @Test
@@ -915,7 +1012,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
           [
             2e0, 3d0
           ]
-        """
+        """,
+        numbers
     )
 
     @Test
@@ -929,7 +1027,8 @@ class EvaluatingCompilerTest : EvaluatorBase() {
           [
             -1.0000, 1, 100d0
           ]
-        """
+        """,
+        numbers
     )
 
     @Test
@@ -999,6 +1098,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     fun joinWithShadowedGlobal() = assertEval(
         // 'a' is a global variable
         """SELECT VALUE b FROM `[{b:5}]` AS a, a.b AS b""",
-        """[{c:{d:{e:5, f:6}}}]"""
+        """[{c:{d:{e:5, f:6}}}]""",
+        struct
     )
 }

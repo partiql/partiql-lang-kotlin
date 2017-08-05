@@ -189,7 +189,7 @@ class NaturalExprValueComparatorsTest : EvaluatorBase() {
     private fun List<List<String>>.eval() = map {
         it.map {
             try {
-                eval(it)
+                evalWithBindings(it)
             } catch (e: Exception) {
                 throw IonSqlException("Could not evaluate $it", e)
             }
