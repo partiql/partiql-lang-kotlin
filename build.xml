@@ -9,6 +9,7 @@
   <ht:import file="happier-kotlin-trails.xml"/>
 
   <!-- JMH infrastructure -->
+  <property name="bench.cli.args"   value="" />
   <property name="bench.data.key"   value="IonSQLSandbox-bench-data.zip" />
   <property name="bench.data.file"  value="${output.dir}/private/${bench.data.key}" />
   <property name="bench.data.dir"   value="${output.dir}/private/bench-data" />
