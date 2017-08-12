@@ -9,13 +9,14 @@ import org.junit.Test
 
 class EvaluatingCompilerTest : EvaluatorBase() {
 
-    private val struct = mapOf("a" to "{b:{c:{d:{e:5, f:6}}}}")
-    private val hello = mapOf("s" to "\"hello\"")
+    private val globalStruct = mapOf("a" to "{b:{c:{d:{e:5, f:6}}}}")
+    private val globalHello = mapOf("s" to "\"hello\"")
+    private val globalListOfNumbers = mapOf("numbers" to "[1, 2.0, 3e0, 4, 5d0]")
 
     /**
      * mappings to different number types
      */
-    private val numbers = mapOf(
+    private val globalNumbers = mapOf(
         "i" to "1",
         "f" to "2e0",
         "d" to "3d0")
@@ -99,35 +100,35 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     fun literal() = assertEval("5", "5")
 
     @Test
-    fun identifier() = assertEval("i", "1", numbers)
+    fun identifier() = assertEval("i", "1", globalNumbers)
 
     @Test
-    fun lexicalScope() = assertEval("@i", "1", numbers)
+    fun lexicalScope() = assertEval("@i", "1", globalNumbers)
 
     @Test
     fun functionCall() = assertEval("exists(select * from [1])", "true")
 
     @Test
-    fun grouping() = assertEval("((i))", "1", numbers)
+    fun grouping() = assertEval("((i))", "1", globalNumbers)
 
     @Test
-    fun listLiteral() = assertEval("[i, f, d]", "[1, 2e0, 3d0]", numbers)
+    fun listLiteral() = assertEval("[i, f, d]", "[1, 2e0, 3d0]", globalNumbers)
 
     @Test
-    fun rowValueConstructor() = assertEval("(i, f, d)", "[1, 2e0, 3d0]", numbers)
+    fun rowValueConstructor() = assertEval("(i, f, d)", "[1, 2e0, 3d0]", globalNumbers)
 
     @Test
-    fun structLiteral() = assertEval("{'a':i, 'b':f, 'c':d, 'd': 1}", "{a:1, b:2e0, c:3d0, d:1}", struct + numbers) {
+    fun structLiteral() = assertEval("{'a':i, 'b':f, 'c':d, 'd': 1}", "{a:1, b:2e0, c:3d0, d:1}", globalStruct + globalNumbers) {
         // struct literals provide ordered names
         val bindNames = exprValue.orderedNames!!
         assertEquals(listOf("a", "b", "c", "d"), bindNames)
     }
 
     @Test
-    fun bagLiteral() = assertEval("<<i, f, d>>", "[1, 2e0, 3d0]", numbers)
+    fun bagLiteral() = assertEval("<<i, f, d>>", "[1, 2e0, 3d0]", globalNumbers)
 
     @Test
-    fun tableValueConstructor() = assertEval("VALUES (i), (f, d)", "[[1], [2e0, 3d0]]", numbers)
+    fun tableValueConstructor() = assertEval("VALUES (i), (f, d)", "[[1], [2e0, 3d0]]", globalNumbers)
 
     @Test
     fun emptyListLiteral() = assertEval("[]", "[]")
@@ -139,22 +140,22 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     fun emptyBagLiteral() = assertEval("<<>>", "[]")
 
     @Test
-    fun unaryPlus() = assertEval("+i", "1", numbers)
+    fun unaryPlus() = assertEval("+i", "1", globalNumbers)
 
     @Test
-    fun unaryMinus() = assertEval("-f", "-2e0", numbers)
+    fun unaryMinus() = assertEval("-f", "-2e0", globalNumbers)
 
     @Test
-    fun addIntFloat() = assertEval("i + f", "3e0", numbers)
+    fun addIntFloat() = assertEval("i + f", "3e0", globalNumbers)
 
     @Test
-    fun subIntFloatDecimal() = assertEval("i - f - d", "-4.0", numbers)
+    fun subIntFloatDecimal() = assertEval("i - f - d", "-4.0", globalNumbers)
 
     @Test
-    fun mulFloatIntInt() = assertEval("f * 2 * 4", "16e0", numbers)
+    fun mulFloatIntInt() = assertEval("f * 2 * 4", "16e0", globalNumbers)
 
     @Test
-    fun divDecimalInt() = assertEval("d / 2", "1.5", numbers)
+    fun divDecimalInt() = assertEval("d / 2", "1.5", globalNumbers)
 
     @Test
     fun modIntInt() = assertEval("3 % 2", "1")
@@ -270,17 +271,17 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     fun orFalseFalse() = assertEval("false or false", "false")
 
     @Test
-    fun comparisonsConjuctTrue() = assertEval("i < f and f < d", "true", numbers)
+    fun comparisonsConjuctTrue() = assertEval("i < f and f < d", "true", globalNumbers)
 
     @Test
     fun comparisonsDisjunctFalse() = assertEval(
         "i < f and (f > d or i > d)",
         "false",
-        numbers
+        globalNumbers
     )
 
     @Test
-    fun pathDotOnly() = assertEval("a.b.c.d.e", "5", struct)
+    fun pathDotOnly() = assertEval("a.b.c.d.e", "5", globalStruct)
 
     @Test
     fun pathIndexing() = assertEval("stores[0].books[2].title", "\"C\"", stores)
@@ -334,14 +335,14 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     fun pathWildCardOverScalar() = assertEval(
         "s[*]",
         """["hello"]""",
-        hello
+        globalHello
     )
 
     @Test
     fun pathUnpivotWildCardOverScalar() = assertEval(
         "s.*",
         """["hello"]""",
-        hello
+        globalHello
     )
 
     @Test
@@ -388,21 +389,21 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     fun pathWildCardOverStructMultiple() = assertEval(
         "a[*][*][*][*]",
         """[{b:{c:{d:{e:5, f:6}}}}]""",
-        struct
+        globalStruct
     )
 
     @Test
     fun pathUnpivotWildCardOverStructMultiple() = assertEval(
         "a.*.*.*.*",
         """[5, 6]""",
-        struct
+        globalStruct
     )
 
     @Test
     fun selectPathUnpivotWildCardOverStructMultiple() = assertEval(
         "SELECT name, val FROM a.*.*.*.* AS val AT name",
         """[{name: "e", val: 5}, {name: "f", val: 6}]""",
-        struct
+        globalStruct
     )
 
     @Test
@@ -522,7 +523,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
         // Note that i, f, d, and s are defined in the global environment
         """SELECT f, d, s FROM i AS f, f AS d, @f AS s WHERE f = 1 AND d = 2e0 and s = 1""",
         """[{f: 1, d: 2e0, s: 1}]""",
-        numbers
+        globalNumbers
     )
 
     @Test
@@ -680,7 +681,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             [3, 2, null],
           ]
         """,
-        struct + numbers
+        globalStruct + globalNumbers
     )
 
     @Test
@@ -694,7 +695,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             {id: "7", title: "hello"},
           ]
         """,
-        stores + hello
+        stores + globalHello
     )
 
     @Test
@@ -712,7 +713,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             {n1: "b", n2: "c", n3: "d", n4: "f", val: 6}
           ]
         """,
-        struct
+        globalStruct
     )
 
     @Test
@@ -816,7 +817,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             new_e: 5,
           }
         """,
-        struct
+        globalStruct
     )
 
     @Test
@@ -940,7 +941,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             "TWO", "THREE", "?"
           ]
         """,
-        numbers
+        globalNumbers
     )
 
     @Test
@@ -959,7 +960,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             "TWO", "THREE", null
           ]
         """,
-        numbers
+        globalNumbers
     )
 
     @Test
@@ -979,7 +980,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             "< ONE", "TWO", "?", ">= THREE < 100", "?"
           ]
         """,
-        numbers
+        globalNumbers
     )
 
     @Test
@@ -998,7 +999,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             "< ONE", "TWO", null, ">= THREE < 100", null
           ]
         """,
-        numbers
+        globalNumbers
     )
 
     @Test
@@ -1013,7 +1014,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             2e0, 3d0
           ]
         """,
-        numbers
+        globalNumbers
     )
 
     @Test
@@ -1028,7 +1029,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             -1.0000, 1, 100d0
           ]
         """,
-        numbers
+        globalNumbers
     )
 
     @Test
@@ -1099,6 +1100,97 @@ class EvaluatingCompilerTest : EvaluatorBase() {
         // 'a' is a global variable
         """SELECT VALUE b FROM `[{b:5}]` AS a, a.b AS b""",
         """[{c:{d:{e:5, f:6}}}]""",
-        struct
+        globalStruct
     )
+
+    @Test
+    fun topLevelCount() = assertEval(
+        """COUNT(numbers)""",
+        """5""",
+        globalListOfNumbers
+    )
+
+    @Test
+    fun topLevelSum() = assertEval(
+        """SUM(numbers)""",
+        """15.0""",
+        globalListOfNumbers
+    )
+
+    @Test
+    fun topLevelMin() = assertEval(
+        """MIN(numbers)""",
+        """1""",
+        globalListOfNumbers
+    )
+
+    @Test
+    fun topLevelMax() = assertEval(
+        """MAX(numbers)""",
+        """5d0""",
+        globalListOfNumbers
+    )
+
+    @Test
+    fun topLevelAvg() = assertEval(
+        """AVG(numbers)""",
+        """3.0""",
+        globalListOfNumbers
+    )
+
+    @Test(expected = EvaluationException::class)
+    fun topLevelCountStar() = voidEval("""COUNT(*)""")
+
+    @Test
+    fun selectValueAggregate() = assertEval(
+        // SELECT VALUE does not do legacy SQL aggregation
+        """SELECT VALUE COUNT(v) + SUM(v) FROM <<numbers, numbers>> AS v""",
+        """[20.0, 20.0]""",
+        globalListOfNumbers
+    )
+
+    @Test(expected = EvaluationException::class)
+    fun selectValueCountStar() = voidEval("""SELECT VALUE COUNT(*) FROM numbers""", globalListOfNumbers)
+
+    @Test
+    fun selectListCountStar() = assertEval(
+        """SELECT COUNT(*) AS c FROM <<numbers, numbers>> AS v""",
+        """[{c:2}]""",
+        globalListOfNumbers
+    )
+
+    @Test
+    fun selectListCountVariable() = assertEval(
+        """SELECT COUNT(v) AS c FROM <<numbers, numbers>> AS v""",
+        """[{c:2}]""",
+        globalListOfNumbers
+    )
+
+    @Test
+    fun selectListMultipleAggregates() = assertEval(
+        """SELECT COUNT(*) AS c, AVG(v * 2) + SUM(v + v) AS result FROM numbers AS v""",
+        """[{c:5, result:36.0}]""",
+        globalListOfNumbers
+    )
+
+    @Test
+    fun selectListMultipleAggregatesNestedQuery() = assertEval(
+            """
+            SELECT VALUE
+              (SELECT MAX(v2 * v2) + MIN(v2 * 2) * v1 AS result FROM numbers AS v2)
+            FROM numbers AS v1
+        """,
+            """[
+            [{result:27.}],
+            [{result:29.0}],
+            [{result:31.0}],
+            [{result:33.}],
+            [{result:35.}],
+        ]""",
+            globalListOfNumbers
+        )
+
+    @Test(expected = EvaluationException::class)
+    fun selectListNestedAggregateCall() =
+        voidEval("""SELECT SUM(AVG(n)) FROM <<numbers, numbers>> AS n""", globalListOfNumbers)
 }

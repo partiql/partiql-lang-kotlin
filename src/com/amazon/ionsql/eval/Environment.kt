@@ -11,10 +11,13 @@ package com.amazon.ionsql.eval
  * @param locals The current local bindings.
  * @param current The current bindings to use for evaluation which is generally
  *                `globals` or `locals` depending on the context.
+ * @param registers The compiler specific *register* slots.
  */
 data class Environment(internal val globals: Bindings,
                        internal val locals: Bindings,
-                       val current: Bindings = locals) {
+                       val current: Bindings = locals,
+                       val registers: RegisterBank) {
+
     internal enum class CurrentMode {
         LOCALS,
         GLOBALS_THEN_LOCALS

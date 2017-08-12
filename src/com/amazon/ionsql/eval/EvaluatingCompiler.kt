@@ -14,6 +14,7 @@ import com.amazon.ionsql.syntax.Token
 import com.amazon.ionsql.util.*
 import java.math.BigDecimal
 import java.util.*
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * A basic implementation of the [Compiler] that parses Ion SQL [Token] instances
@@ -29,11 +30,11 @@ import java.util.*
  * [1]: https://www.complang.tuwien.ac.at/anton/lvas/sem06w/fest.pdf
  *
  * @param ion The ion system to use for synthesizing Ion values.
- * @param userFuncs Functions to provide access to in addition to the built-ins.
+ * @param userFunctions Functions to provide access to in addition to the built-ins.
  */
 class EvaluatingCompiler(private val ion: IonSystem,
                          private val parser: Parser,
-                         userFuncs: @JvmSuppressWildcards Map<String, ExprFunction>) : Compiler {
+                         userFunctions: @JvmSuppressWildcards Map<String, ExprFunction>) : Compiler {
     constructor(ion: IonSystem) : this(ion, IonSqlParser(ion), emptyMap())
     constructor(ion: IonSystem,
                 userFuncs: @JvmSuppressWildcards Map<String, ExprFunction>)
@@ -81,6 +82,24 @@ class EvaluatingCompiler(private val ion: IonSystem,
      */
     private data class FromProductionThunks(val values: List<ExprValue>,
                                             val env: Environment)
+
+    /**
+     * Represents an aggregate expression within a `SELECT <list>`.
+     *
+     * It can be thought of as the components of the following projection:
+     *
+     * ```
+     * SELECT <aggregator>(<inputExpr>) FROM ...
+     * ```
+     *
+     * @param aggregatorFactory The aggregate function factory for this aggregate.
+     * @param inputExpr The expression to evaluate for each instance of the data source.
+     * @param registerId The ID of the register in the [RegisterBank] allocated for the
+     *  [ExprAggregator] intermediate state for execution
+     */
+    private class Aggregate(val aggregatorFactory: ExprAggregatorFactory,
+                            val inputExpr: ExprThunk,
+                            val registerId: Int)
 
     private enum class PathWildcardKind(val isWildcard: Boolean) {
         NONE(isWildcard = false),
@@ -138,22 +157,22 @@ class EvaluatingCompiler(private val ion: IonSystem,
     private fun extractAliases(seq: Sequence<IonValue>): List<Alias> =
         seq.mapIndexed { idx, value -> extractAlias(idx, value) }.toList()
 
-    private val aliasHandler = { ast: IonSexp ->
+    private val aliasHandler = { cEnv: CompilationEnvironment, ast: IonSexp ->
         when (ast.size) {
             3 -> {
                 // TODO we should make the compiler elide this completely
                 // NO-OP for evaluation--handled separately by compilation
-                val expr = ast[2].compile()
+                val expr = ast[2].compile(cEnv)
                 exprThunk { env -> expr.eval(env) }
             }
             else -> err("Bad alias: $ast")
         }
     }
 
-    private val isHandler = { ast: IonSexp ->
+    private val isHandler = { cEnv: CompilationEnvironment, ast: IonSexp ->
         when (ast.size) {
             3 -> {
-                val instanceExpr = ast[1].compile()
+                val instanceExpr = ast[1].compile(cEnv)
                 // TODO consider the type parameters
                 val targetType = ExprValueType.fromTypeName(ast[2][1].text)
 
@@ -172,32 +191,78 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
     }
 
+    /** The compilation dispatch table for the AST. */
+    private interface CompilationTable {
+        /**
+         * Returns the compilation routine for a given AST node.
+         *
+         * @param name The name of the AST node to provide a compilation routine for.
+         *
+         * @return A function that takes a compiles the [IonSexp] AST node with the given
+         *  [CompilationEnvironment].  In general, the [CompilationEnvironment] will be a single global one for the
+         *  compiler, but context sensitive compilation (e.g. SQL aggregates) can inject
+         *  different compilation behavior by using a custom [CompilationTable] within its environment.
+         *  Returns `null` if no handler exists.
+         */
+        operator fun get(name: String): ((CompilationEnvironment, IonSexp) -> ExprThunk)?
+    }
+
+    private fun compilationTableOf(vararg members: Pair<String, (CompilationEnvironment, IonSexp) -> ExprThunk>): CompilationTable {
+        val table = mapOf(*members)
+
+        return object : CompilationTable {
+            override fun get(name: String) = table[name]
+        }
+    }
+
+    private fun CompilationTable.delegate(fallback: CompilationTable) = object : CompilationTable {
+        override fun get(name: String) = this@delegate[name] ?: fallback[name]
+    }
+
+    private fun CompilationTable.blacklist(vararg names: String) = object : CompilationTable {
+        override fun get(name: String) = when (name) {
+            in names -> null
+            else -> this@blacklist[name]
+        }
+    }
+
+    /**
+     * The static environment for the compiler.
+     *
+     * @param table The syntax table to utilize for compilation.
+     * @param regCounter The number of registers for allocated for the compilation unit.
+     */
+    private data class CompilationEnvironment(val table: CompilationTable, val regCounter: AtomicInteger)
+
     /** Dispatch table for AST "op-codes" to thunks.  */
-    private val syntax: Map<String, (IonSexp) -> ExprThunk> = mapOf(
-        "missing" to { _ ->
+    private val syntaxTable = compilationTableOf(
+        "missing" to { _, _ ->
             exprThunk { missingValue }
         },
-        "lit" to { ast ->
+        "lit" to { _, ast ->
             val literal = ast[1].exprValue()
             exprThunk { literal }
         },
-        "id" to { ast ->
+        "id" to { _, ast ->
             val name = ast[1].text
             exprThunk { env -> env.current[name] ?: err("No such binding: $name") }
         },
-        "@" to { ast ->
-            val expr = ast[1].compile()
+        "@" to { cEnv, ast ->
+            val expr = ast[1].compile(cEnv)
             exprThunk { env -> expr.eval(env.flipToLocals()) }
         },
-        "call" to { ast ->
-            ast.compileCall(startIndex = 1)
+        "call" to { cEnv, ast ->
+            ast.compileCall(cEnv, startIndex = 1)
         },
-        "cast" to { ast ->
+        "call_agg" to { cEnv, ast ->
+            ast.compileAggregateCall(cEnv)
+        },
+        "cast" to { cEnv, ast ->
             if (ast.size != 3) {
                 err("cast requires two arguments")
             }
 
-            val sourceExpr = ast[1].compile()
+            val sourceExpr = ast[1].compile(cEnv)
             // TODO honor type parameters
             val targetTypeName = ast[2][1].text
             val targetType = ExprValueType.fromTypeName(targetTypeName)
@@ -293,11 +358,11 @@ class EvaluatingCompiler(private val ion: IonSystem,
         "not_between" to bindOp(minArity = 3, maxArity = 3) { _, args ->
             (!(args[0] >= args[1] && args[0] <= args[2])).exprValue()
         },
-        "like" to { ast ->
-            astToLikeExprThunk(ast)
+        "like" to { cEnv, ast ->
+            compileLike(cEnv, ast)
         },
-        "not_like" to { ast ->
-            val likeExprThunk = astToLikeExprThunk(ast)
+        "not_like" to { cEnv, ast ->
+            val likeExprThunk = compileLike(cEnv, ast)
             exprThunk { env -> (!likeExprThunk.eval(env).booleanValue()).exprValue() }
         },
         "in" to bindOp { _, args ->
@@ -311,11 +376,11 @@ class EvaluatingCompiler(private val ion: IonSystem,
         "not" to bindOp(minArity = 1, maxArity = 1) { _, args ->
             (!args[0].booleanValue()).exprValue()
         },
-        "or" to { ast ->
+        "or" to { cEnv, ast ->
             when (ast.size) {
                 3 -> {
-                    val left = ast[1].compile()
-                    val right = ast[2].compile()
+                    val left = ast[1].compile(cEnv)
+                    val right = ast[2].compile(cEnv)
                     exprThunk { env ->
                         (left.eval(env).booleanValue() || right.eval(env).booleanValue()).exprValue()
                     }
@@ -323,11 +388,11 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 else -> err("Arity incorrect for 'or': $ast")
             }
         },
-        "and" to { ast ->
+        "and" to { cEnv, ast ->
             when (ast.size) {
                 3 -> {
-                    val left = ast[1].compile()
-                    val right = ast[2].compile()
+                    val left = ast[1].compile(cEnv)
+                    val right = ast[2].compile(cEnv)
                     exprThunk { env ->
                         (left.eval(env).booleanValue() && right.eval(env).booleanValue()).exprValue()
                     }
@@ -336,24 +401,24 @@ class EvaluatingCompiler(private val ion: IonSystem,
             }
         },
         "is" to isHandler,
-        "is_not" to { ast ->
-            val isExpr = isHandler(ast)
+        "is_not" to { cEnv, ast ->
+            val isExpr = isHandler(cEnv, ast)
             exprThunk { env ->
                 (!isExpr.eval(env).booleanValue()).exprValue()
             }
         },
-        "simple_case" to { ast ->
+        "simple_case" to { cEnv, ast ->
             if (ast.size < 3) {
                 err("Arity incorrect for simple case: $ast")
             }
 
-            val targetExpr = ast[1].compile()
+            val targetExpr = ast[1].compile(cEnv)
             val matchExprs = ast.drop(2).map {
                 when (it[0].text) {
                     "when" -> when (it.size) {
                         3 -> {
-                            val candidateExpr = it[1].compile()
-                            val resultExpr = it[2].compile()
+                            val candidateExpr = it[1].compile(cEnv)
+                            val resultExpr = it[2].compile(cEnv)
 
                             ConditionThunks(
                                 { env ->
@@ -368,7 +433,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                     }
                     "else" -> when (it.size) {
                         2 -> {
-                            val elseExpr = it[1].compile()
+                            val elseExpr = it[1].compile(cEnv)
                             ConditionThunks({ true }, elseExpr)
                         }
                         else -> err("Arity incorrect for 'else': $it")
@@ -379,7 +444,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
             matchExprs.compile()
         },
-        "searched_case" to { ast ->
+        "searched_case" to { cEnv, ast ->
             if (ast.size < 2) {
                 err("Arity incorrect for searched case: $ast")
             }
@@ -389,8 +454,8 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 when (it[0].text) {
                     "when" -> when (it.size) {
                         3 -> {
-                            val condExpr = it[1].compile()
-                            val resultExpr = it[2].compile()
+                            val condExpr = it[1].compile(cEnv)
+                            val resultExpr = it[2].compile(cEnv)
 
                             ConditionThunks(
                                 { env -> condExpr.eval(env).booleanValue() },
@@ -401,7 +466,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                     }
                     "else" -> when (it.size) {
                         2 -> {
-                            val elseExpr = it[1].compile()
+                            val elseExpr = it[1].compile(cEnv)
                             ConditionThunks({ true }, elseExpr)
                         }
                         else -> err("Arity incorrect for 'else': $it")
@@ -412,12 +477,12 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
             matchExprs.compile()
         },
-        "path" to { ast ->
+        "path" to { cEnv, ast ->
             if (ast.size < 3) {
                 err("Path arity to low: $ast")
             }
 
-            var currExpr = ast[1].compile()
+            var currExpr = ast[1].compile(cEnv)
             var firstWildcardKind = PathWildcardKind.NONE
 
             // extract all the non-wildcard paths
@@ -431,7 +496,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 }
 
                 val targetExpr = currExpr
-                val indexExpr = raw.compile()
+                val indexExpr = raw.compile(cEnv)
                 currExpr = exprThunk { env ->
                     val target = targetExpr.eval(env)
                     val index = indexExpr.eval(env)
@@ -457,7 +522,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                         }
                     // "index" into the value lazily
                         PathWildcardKind.NONE -> {
-                            val indexExpr = raw.compile();
+                            val indexExpr = raw.compile(cEnv);
                             { env, exprVal ->
                                 sequenceOf(exprVal[indexExpr.eval(env)])
                             }
@@ -488,14 +553,14 @@ class EvaluatingCompiler(private val ion: IonSystem,
         },
         "as" to aliasHandler,
         "at" to aliasHandler,
-        "unpivot" to { ast ->
+        "unpivot" to { cEnv, ast ->
             if (ast.size != 2) {
                 err("UNPIVOT form must have one expression")
             }
-            val expr = ast[1].compile()
+            val expr = ast[1].compile(cEnv)
             exprThunk { env -> expr.eval(env).unpivot(ion) }
         },
-        "select" to { ast ->
+        "select" to { cEnv, ast ->
             if (ast.size < 3) {
                 err("Bad arity on SELECT form $ast: ${ast.size}")
             }
@@ -512,6 +577,9 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 err("SELECT projection must be non-empty sequence: $selectForm")
             }
 
+            // the captured list of legacy SQL style aggregates
+            val aggregates: MutableList<Aggregate> = mutableListOf()
+
             val selectFunc: (List<ExprValue>, Environment) -> ExprValue = when (selectForm[0].text) {
                 "*" -> {
                     if (selectForm.size != 1) {
@@ -527,8 +595,29 @@ class EvaluatingCompiler(private val ion: IonSystem,
                     }
                     val selectNames =
                         extractAliases(selectForm.asSequence().drop(1)).map { it.asName }
+
+                    // nested aggregates within aggregates are not allowed
+                    val cEnvInner = cEnv.copy(
+                        table = cEnv.table.blacklist("call_agg", "call_agg_wildcard")
+                    )
+                    val aggHandler = { _: CompilationEnvironment, aggAst: IonSexp ->
+                        val aggregate = aggAst.compileAggregateWithinSelectList(cEnvInner)
+                        aggregates.add(aggregate)
+                        exprThunk { env ->
+                            // the result of aggregation is stored in the allocated register
+                            env.registers[aggregate.registerId].aggregator.compute()
+                        }
+                    }
+                    // intercept aggregates and COUNT(*)
+                    val cEnvOuter = cEnv.copy(
+                        table = compilationTableOf(
+                            "call_agg" to aggHandler,
+                            "call_agg_wildcard" to aggHandler
+                        ).delegate(cEnv.table)
+                    )
+
                     val selectExprs =
-                        selectForm.drop(1).map { it.compile() };
+                        selectForm.drop(1).map { it.compile(cEnvOuter) };
 
                     { _, env -> projectSelectList(env, selectExprs, selectNames) }
                 }
@@ -536,28 +625,59 @@ class EvaluatingCompiler(private val ion: IonSystem,
                     if (selectForm.size != 2) {
                         err("SELECT VALUE must have a single expression")
                     }
-                    val expr = selectForm[1].compile();
+                    val expr = selectForm[1].compile(cEnv);
 
                     { _, env -> expr.eval(env) }
                 }
                 else -> err("Invalid node in SELECT: $selectForm")
             }
 
-            val sourceThunk = compileQueryWithoutProjection(ast)
-            exprThunk { env ->
-                SequenceExprValue(
-                    ion,
-                    sourceThunk(env).map { (joinedValues, env) ->
-                        selectFunc(joinedValues, env)
-                    }.map {
-                        // TODO make this expose the ordinal for ordered sequences
-                        // make sure we don't expose the underlying value's name out of a SELECT
-                        it.unnamedValue()
-                    }
-                )
+            val sourceThunk = compileQueryWithoutProjection(cEnv, ast)
+            when {
+                // generate a singleton with the aggregates
+                aggregates.isNotEmpty() -> exprThunk { env ->
+                    SequenceExprValue(
+                        ion,
+                        listOf(nullValue).asSequence()
+                            .map {
+                                // set up aggregate registers
+                                val aggregators = aggregates.map {
+                                    val aggregator = it.aggregatorFactory.create()
+                                    env.registers[it.registerId] = aggregator
+                                    aggregator
+                                }
+
+                                // map/filter the source table into the inner-expressions
+                                // and accumulate into the aggregators
+                                sourceThunk(env).forEach { (_, projectEnv) ->
+                                    aggregators.forEachIndexed { i, aggregator ->
+                                        val inputExpr = aggregates[i].inputExpr
+                                        aggregator.next(inputExpr.eval(projectEnv))
+                                    }
+                                }
+
+                                // generate the final aggregate projection
+                                // XXX this only happens for SELECT list so we can use a dummy list
+                                selectFunc(emptyList(), env)
+                            }
+                    )
+                }
+                // do normal map/filter
+                else -> exprThunk { env ->
+                    SequenceExprValue(
+                        ion,
+                        sourceThunk(env).map { (joinedValues, projectEnv) ->
+                            selectFunc(joinedValues, projectEnv)
+                        }.map {
+                            // TODO make this expose the ordinal for ordered sequences
+                            // make sure we don't expose the underlying value's name out of a SELECT
+                            it.unnamedValue()
+                        }
+                    )
+                }
             }
         },
-        "pivot" to { ast ->
+        "pivot" to { cEnv, ast ->
             if (ast.size < 3) {
                 err("Bad arity on PIVOT form $ast: ${ast.size}")
             }
@@ -568,9 +688,9 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 || memberForm[0].text != "member") {
                 err("PIVOT member node must be of the form (member <name> <value>): $memberForm")
             }
-            val nameExpr = memberForm[1].compile()
-            val valueExpr = memberForm[2].compile()
-            val sourceThunk = compileQueryWithoutProjection(ast)
+            val nameExpr = memberForm[1].compile(cEnv)
+            val valueExpr = memberForm[2].compile(cEnv)
+            val sourceThunk = compileQueryWithoutProjection(cEnv, ast)
 
             exprThunk { env ->
                 val seq = sourceThunk(env)
@@ -603,7 +723,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
      *
      * @return a thunk that when provided with an environment evaluates the `LIKE` predicate
      */
-    private fun astToLikeExprThunk(ast: IonSexp): ExprThunk {
+    private fun compileLike(cEnv: CompilationEnvironment, ast: IonSexp): ExprThunk {
         // AST should be of the form (like V P [E])
         // where V is the value to match on
         //       P is the pattern
@@ -626,7 +746,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
             ast.tail.tail.forAll(IonValue::isAstLiteral) -> {
                 // pattern and escape are literals, but value to match against is not
                 val ionVals = ast.tail.tail.map { it[1] }
-                val compiledDfaInput = ast[1].compile()
+                val compiledDfaInput = ast[1].compile(cEnv)
                 val dfa = fromLiteralsToDfa(ionVals)
 
                 exprThunk { env ->
@@ -636,10 +756,10 @@ class EvaluatingCompiler(private val ion: IonSystem,
             }
             else -> {
                 // pattern and/or escape are not literals, delay compilation of regular expression to DFA till evaluation
-                val compiledVal = ast[1].compile()
-                val compiledPattern = ast[2].compile()
+                val compiledVal = ast[1].compile(cEnv)
+                val compiledPattern = ast[2].compile(cEnv)
                 val compiledEscape = if (ast.size == 4) {
-                    ast[3].compile()
+                    ast[3].compile(cEnv)
                 } else {
                     null
                 }
@@ -647,7 +767,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 exprThunk { env ->
                     val value = compiledVal.eval(env).ionValue
                     val pattern = compiledPattern.eval(env).ionValue
-                    val escape: IonValue? = compiledEscape?.let { it.eval(env).ionValue }
+                    val escape: IonValue? = compiledEscape?.eval(env)?.ionValue
                     val (patternString: String, escapeChar: Int?, patternSize) = checkPattern(pattern, escape)
                     val dfa: IDFAState = buildDfaFromPattern(patternString, escapeChar, patternSize)
                     dfa.run(value.stringValue()).exprValue()
@@ -787,16 +907,16 @@ class EvaluatingCompiler(private val ion: IonSystem,
     }
 
     /** Flattens JOINs in an AST to a list of [FromSource] for generating the join product. */
-    private fun IonValue.compileFromClauseSources(): List<FromSource> {
+    private fun IonValue.compileFromClauseSources(cEnv: CompilationEnvironment): List<FromSource> {
         val sourceAst = this as IonSexp
         fun IonSexp.toFromSource(id: Int, joinExpansion: JoinExpansion, filter: ExprThunk?) =
-            FromSource(extractAlias(id, this), this.compile(), joinExpansion, filter)
+            FromSource(extractAlias(id, this), this.compile(cEnv), joinExpansion, filter)
 
         fun joinSources(joinExpansion: JoinExpansion): List<FromSource> {
-            val leftSources = sourceAst[1].compileFromClauseSources()
+            val leftSources = sourceAst[1].compileFromClauseSources(cEnv)
             val rightAst = sourceAst[2] as IonSexp
             val filter = when {
-                sourceAst.size > 3 -> sourceAst[3].compile()
+                sourceAst.size > 3 -> sourceAst[3].compile(cEnv)
                 else -> null
             }
             return leftSources + rightAst.toFromSource(leftSources.size, joinExpansion, filter)
@@ -816,16 +936,16 @@ class EvaluatingCompiler(private val ion: IonSystem,
      * Compiles the clauses of the SELECT or PIVOT into a thunk that does not generate
      * the final projection.
      */
-    private fun compileQueryWithoutProjection(ast: IonSexp): (Environment) -> Sequence<FromProductionThunks> {
-        val fromSources = ast[2][1].compileFromClauseSources()
+    private fun compileQueryWithoutProjection(cEnv: CompilationEnvironment, ast: IonSexp): (Environment) -> Sequence<FromProductionThunks> {
+        val fromSources = ast[2][1].compileFromClauseSources(cEnv)
         val fromNames = fromSources.map { it.alias }
 
         var whereExpr: ExprThunk? = null
         var limitExpr: ExprThunk? = null
         for (clause in ast.drop(3)) {
             when (clause[0].text) {
-                "where" -> whereExpr = clause[1].compile()
-                "limit" -> limitExpr = clause[1].compile()
+                "where" -> whereExpr = clause[1].compile(cEnv)
+                "limit" -> limitExpr = clause[1].compile(cEnv)
                 else -> err("Unknown clause in SELECT: $clause")
             }
         }
@@ -904,8 +1024,10 @@ class EvaluatingCompiler(private val ion: IonSystem,
         }
     }
 
+    // TODO hoist built-ins outside of this implementation--requires some decoupling from IonSystem
+
     /** Dispatch table for built-in functions. */
-    private val builtins: Map<String, ExprFunction> = mapOf(
+    private val builtinFunctions: Map<String, ExprFunction> = mapOf(
         "exists" to ExprFunction.over { _, args ->
             when (args.size) {
                 1 -> {
@@ -913,27 +1035,66 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 }
                 else -> err("Expected a single argument for exists: ${args.size}")
             }
-        },
-        // TODO make this a proper aggregate
-        "count" to ExprFunction.over { _, args ->
-            when (args.size) {
-                1 -> {
-                    args[0].asSequence().count().exprValue()
-                }
-                else -> err("Expected a single argument for count: ${args.size}")
-            }
         }
         // TODO finish implementing "standard" functions
     )
 
-    private val functions = builtins + userFuncs
+    private val functions = builtinFunctions + userFunctions
+
+    private inner class Accumulator(var current: Number? = 0L,
+                                    private val nextFunc: (Number?, ExprValue) -> Number) : ExprAggregator {
+        override fun next(value: ExprValue) {
+            current = nextFunc(current, value)
+        }
+        override fun compute() = current!!.exprValue()
+    }
+
+    private fun comparisonAccumulator(cmpFunc: (Number, Number) -> Boolean): (Number?, ExprValue) -> Number = { curr, next ->
+        val nextNum = next.numberValue()
+        when (curr) {
+            null -> nextNum
+            else -> when {
+                cmpFunc(nextNum, curr) -> nextNum
+                else -> curr
+            }
+        }
+    }
+
+    // TODO consolidate this definition with LexerConstants and allow users to provide their own aggregates
+
+    /** Dispatch table for built-in aggregate functions. */
+    private val builtinAggregates: Map<String, ExprAggregatorFactory> = mapOf(
+        "count" to ExprAggregatorFactory.over {
+            Accumulator { curr, next -> curr!! + 1L }
+        },
+        "sum" to ExprAggregatorFactory.over {
+            Accumulator { curr, next -> curr!! + next.numberValue() }
+        },
+        "min" to ExprAggregatorFactory.over {
+            Accumulator(null, comparisonAccumulator { left, right -> left < right })
+        },
+        "max" to ExprAggregatorFactory.over {
+            Accumulator(null, comparisonAccumulator { left, right -> left > right })
+        },
+        "avg" to ExprAggregatorFactory.over {
+            object : ExprAggregator {
+                var sum: Number = 0L
+                var count = 0L
+                override fun next(value: ExprValue) {
+                    sum += value.numberValue()
+                    count++
+                }
+                override fun compute() = (sum / count).exprValue()
+            }
+        }
+    )
 
     private fun List<ExprValue>.bind(parent: Environment, aliases: List<Alias>): Environment {
         val locals = map { it.bindings }
 
         val bindings = Bindings.over { name ->
             val found = locals.asSequence()
-                .mapIndexed { col, value ->
+                .mapIndexed { col, _ ->
                     when (name) {
                         // the alias binds to the value itself
                         aliases[col].asName -> this[col]
@@ -990,47 +1151,100 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
     private val IonValue.text get() = stringValue() ?: err("Expected non-null string: $this")
 
-    private fun IonSexp.compileCall(startIndex: Int): ExprThunk {
+    private fun IonSexp.compileCall(cEnv: CompilationEnvironment, startIndex: Int): ExprThunk {
         val name = this[startIndex].text
         val func = functions[name] ?: err("No such function: $name")
         val argIndex = startIndex + 1
-        return compileFunc(argIndex, func)
+        return compileFunc(cEnv, argIndex, func)
     }
 
-    private fun IonSexp.compileArgs(startIndex: Int): List<ExprThunk> =
+    /**
+     * Compiles an aggregate function call within a `SELECT <list>` context.
+     * Note that the given syntax table should be one suitable for the expression
+     * **within** the function call.
+     */
+    private fun IonSexp.compileAggregateWithinSelectList(cEnv: CompilationEnvironment): Aggregate {
+        val aggFactory = loadAggregateFactory()
+        val inputExpr = when (this[0].text) {
+            "call_agg" -> this[3].compile(cEnv)
+            // for wild cards we don't need to materialize anything (i.e. count all the things)
+            "call_agg_wildcard" -> exprThunk { _ -> nullValue }
+            else -> err("Invalid aggregate node: $this")
+        }
+
+        return Aggregate(aggFactory, inputExpr, cEnv.regCounter.getAndIncrement())
+    }
+
+    private fun IonSexp.compileAggregateCall(cEnv: CompilationEnvironment): ExprThunk {
+        val aggFactory = loadAggregateFactory()
+        val argThunk = this[3].compile(cEnv)
+        return exprThunk { env ->
+            val agg = aggFactory.create()
+            val arg = argThunk.eval(env)
+            arg.forEach { agg.next(it) }
+            agg.compute()
+        }
+    }
+
+    private fun IonSexp.loadAggregateFactory(): ExprAggregatorFactory {
+        val expectedSize = when(this[0].text) {
+            "call_agg" -> {
+                val qualifier = this[2].text
+                if (qualifier != "all") {
+                    // TODO support DISTINCT aggregates
+                    err("DISTINCT aggregate function call not supported")
+                }
+                4
+            }
+            "call_agg_wildcard" -> 2
+            else -> err("Invalid aggregate node: $this")
+        }
+        val name = this[1].text
+
+        if (size != expectedSize) {
+            err("Aggregate function call node must have arity of $expectedSize")
+        }
+
+        val aggFactory = builtinAggregates[name] ?: err("No such aggregate function: $name")
+
+        return aggFactory
+    }
+
+    private fun IonSexp.compileArgs(cEnv: CompilationEnvironment, startIndex: Int): List<ExprThunk> =
         (startIndex until size)
             .asSequence()
             .map { this[it] }
-            .map { it.compile() }
+            .map { it.compile(cEnv) }
             .toList()
 
-    private fun IonSexp.compileFunc(argStartIndex: Int,
+    private fun IonSexp.compileFunc(cEnv: CompilationEnvironment,
+                                    argStartIndex: Int,
                                     func: ExprFunction): ExprThunk {
-        val argThunks = compileArgs(argStartIndex)
+        val argThunks = compileArgs(cEnv, argStartIndex)
         return exprThunk { env ->
             val args = argThunks.map { it.eval(env) }
             func.call(env, args)
         }
     }
 
-    private fun IonValue.compile(): ExprThunk {
+    private fun IonValue.compile(cEnv: CompilationEnvironment): ExprThunk {
         if (this !is IonSexp) {
             err("AST node is not s-expression: $this")
         }
 
         val name = this[0].stringValue() ?:
             err("AST node does not start with non-null string: $this")
-        val handler = syntax[name] ?:
+        val handler = cEnv.table[name] ?:
             err("No such syntax handler for $name")
-        return handler(this)
+        return handler(cEnv, this)
     }
 
     private fun bindOp(minArity: Int = 2,
                        maxArity: Int = 2,
-                       op: (Environment, List<ExprValue>) -> ExprValue): (IonSexp) -> ExprThunk {
-        return { ast ->
+                       op: (Environment, List<ExprValue>) -> ExprValue): (CompilationEnvironment, IonSexp) -> ExprThunk {
+        return { cEnv, ast ->
             checkArity(ast, minArity, maxArity)
-            ast.compileFunc(1, ExprFunction.over(op))
+            ast.compileFunc(cEnv, 1, ExprFunction.over(op))
         }
     }
 
@@ -1049,11 +1263,18 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
     /** Compiles a syntax tree to an [Expression]. */
     fun compile(ast: IonSexp): Expression {
-        val expr = ast.filterMetaNodes().seal().compile()
+        val cEnv = CompilationEnvironment(syntaxTable, AtomicInteger(0))
+        val expr = ast.filterMetaNodes().seal().compile(cEnv)
+        val registerCount = cEnv.regCounter.get()
 
         return object : Expression {
             override fun eval(globals: Bindings): ExprValue {
-                val env = Environment(globals = globals, locals = globals, current = globals)
+                val env = Environment(
+                    globals = globals,
+                    locals = globals,
+                    current = globals,
+                    registers = RegisterBank(registerCount)
+                )
                 try {
                     return expr.eval(env)
                 } catch (e: EvaluationException) {
