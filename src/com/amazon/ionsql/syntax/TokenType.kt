@@ -27,5 +27,6 @@ enum class TokenType {
     AS,
     AT,
     MISSING,
-    NULL
+    NULL,
+    EOF // End of Stream token.
 }

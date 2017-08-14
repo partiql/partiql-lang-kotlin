@@ -5,6 +5,7 @@
 package com.amazon.ionsql.syntax
 
 import com.amazon.ion.IonSexp
+import com.amazon.ionsql.errorhandling.IErrorHandler
 
 /**
  * Parses a list of [Token] into an [IonSexp] based AST.
@@ -13,4 +14,5 @@ import com.amazon.ion.IonSexp
  */
 interface Parser {
     fun parse(source: String): IonSexp
+    fun parse(source: String, errorHandler: IErrorHandler): IonSexp
 }

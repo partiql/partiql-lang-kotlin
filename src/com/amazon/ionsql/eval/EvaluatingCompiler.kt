@@ -8,6 +8,8 @@ import com.amazon.ion.IonSequence
 import com.amazon.ion.IonSexp
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
+import com.amazon.ionsql.errorhandling.DefaultErrorHandler
+import com.amazon.ionsql.errorhandling.IErrorHandler
 import com.amazon.ionsql.syntax.IonSqlParser
 import com.amazon.ionsql.syntax.Parser
 import com.amazon.ionsql.syntax.Token
@@ -34,11 +36,12 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 class EvaluatingCompiler(private val ion: IonSystem,
                          private val parser: Parser,
-                         userFunctions: @JvmSuppressWildcards Map<String, ExprFunction>) : Compiler {
-    constructor(ion: IonSystem) : this(ion, IonSqlParser(ion), emptyMap())
-    constructor(ion: IonSystem,
-                userFuncs: @JvmSuppressWildcards Map<String, ExprFunction>)
-        : this(ion, IonSqlParser(ion), userFuncs)
+                         userFuncs: @JvmSuppressWildcards Map<String, ExprFunction>,
+                         private var errorHandler: IErrorHandler = DefaultErrorHandler()) : Compiler {
+
+    constructor(ion: IonSystem) : this(ion, IonSqlParser(ion), emptyMap(), DefaultErrorHandler())
+    constructor(ion: IonSystem, errorHandler: IErrorHandler) : this(ion, IonSqlParser(ion), emptyMap(), errorHandler)
+    constructor(ion: IonSystem, userFuncs: @JvmSuppressWildcards Map<String, ExprFunction>, errorHandler: IErrorHandler): this(ion, IonSqlParser(ion), userFuncs, errorHandler)
 
     private interface ExprThunk {
         fun eval(env: Environment): ExprValue
@@ -1294,6 +1297,19 @@ class EvaluatingCompiler(private val ion: IonSystem,
         return object : Expression {
             override fun eval(globals: Bindings): ExprValue = eval(ast, globals)
         }
+    }
+
+    /**
+     * Compiles the given source expression into a bound [Expression] delegating errors to [errorHandler]
+     */
+    override fun compile(source: String, errorHandler: IErrorHandler): Expression {
+        this.errorHandler = errorHandler
+        val ast = parser.parse(source)
+
+        return object : Expression {
+            override fun eval(globals: Bindings): ExprValue = eval(ast, globals)
+        }
+
     }
 }
 

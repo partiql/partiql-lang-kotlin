@@ -8,6 +8,7 @@ import com.amazon.ion.IonSequence
 import com.amazon.ion.IonSexp
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
+import com.amazon.ionsql.errorhandling.*
 import com.amazon.ionsql.syntax.IonSqlParser.AliasSupportType.*
 import com.amazon.ionsql.syntax.IonSqlParser.ArgListMode.*
 import com.amazon.ionsql.syntax.IonSqlParser.ParseType.*
@@ -19,19 +20,42 @@ import java.util.*
  * Parses a list of tokens as infix query expression into a prefix s-expression
  * as the abstract syntax tree.
  */
-class IonSqlParser(private val ion: IonSystem) : Parser {
-    companion object {
-        private fun Token?.err(message: String): Nothing {
-            val tokenMessage = when (this) {
-                null -> "<EOF>"
-                else -> "[${type} ${value ?: "<NONE>"}]"
-            }
+class IonSqlParser(private val ion: IonSystem,
+                   private var errorHandler: IErrorHandler = DefaultErrorHandler()) : Parser {
 
-            throw ParserException("$message at token $tokenMessage", this?.position)
+    constructor (ion: IonSystem) : this(ion, DefaultErrorHandler())
+
+    companion object {
+
+        /**
+         * Given an error context ([PropertyBag]) and a source position ([SourcePosition]) populate the given
+         * error context with line and column information found in source position.
+         */
+        private fun populateLineAndColumn(errorContext: PropertyBag, sourcePosition: SourcePosition?) =
+        when(sourcePosition) {
+            null -> errorContext.addProperty(Property.LINE_NO, null)
+                .addProperty(Property.COLUMN_NO, null)
+            else -> {
+                val (line, col) = sourcePosition
+                errorContext.addProperty(Property.LINE_NO, line).
+                    addProperty(Property.COLUMN_NO, col)
+            }
         }
 
-        private fun List<Token>.err(message: String): Nothing =
-            head.err(message)
+        private fun Token?.err(message: String, errorCode: ErrorCode, errorContext: PropertyBag = PropertyBag()): Nothing {
+            when (this) {
+                null -> throw ParserException(errorCode = errorCode, errorContext = errorContext)
+                else -> throw ParserException(message,
+                    errorCode,
+                    populateLineAndColumn(errorContext, this.position)
+                        .addPropertyIfKeyNotPresent(Property.TOKEN_TYPE, type)
+                        .addPropertyIfKeyNotPresent(Property.TOKEN_VALUE, value))
+            }
+
+        }
+
+        private fun List<Token>.err(message: String, errorCode: ErrorCode, errorContext: PropertyBag = PropertyBag()): Nothing =
+            head.err(message, errorCode, errorContext)
 
         private fun List<Token>.atomFromHead(parseType: ParseType = ATOM): ParseNode =
             ParseNode(parseType, head, emptyList(), tail)
@@ -39,7 +63,9 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         private fun List<Token>.tailExpectedKeyword(keyword: String): List<Token> =
             when (head?.keywordText) {
                 keyword -> tail
-                else -> err("Expected ${keyword.toUpperCase()} keyword")
+                else -> err("Expected ${keyword.toUpperCase()} keyword",
+                    ErrorCode.PARSE_EXPECTED_KEYWORD,
+                    PropertyBag().addProperty(Property.KEYWORD, keyword.toUpperCase()))
             }
     }
 
@@ -110,7 +136,9 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             var rem = this
             for (type in types) {
                 if (type != rem.head?.type) {
-                    rem.err("Expected $type")
+                    rem.err("Expected $type",
+                        ErrorCode.PARSE_EXPECTED_TOKEN_TYPE,
+                        PropertyBag().addProperty(Property.TOKEN_TYPE, type))
                 }
                 rem = rem.tail
             }
@@ -125,10 +153,10 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         }
 
         fun numberValue(): Number = token?.value?.numberValue()
-            ?: unsupported("Could not interpret token as number")
+            ?: unsupported("Could not interpret token as number", ErrorCode.PARSE_EXPECTED_NUMBER)
 
-        fun unsupported(message: String): Nothing =
-            remaining.err(message)
+        fun unsupported(message: String, errorCode: ErrorCode, errorContext: PropertyBag = PropertyBag()): Nothing =
+            remaining.err(message, errorCode, errorContext)
     }
 
     inline private fun sexp(builder: IonSexp.() -> Unit): IonSexp =
@@ -162,7 +190,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                     addSymbol("id")
                     addSymbol(token.text!!)
                 }
-                else -> unsupported("Unsupported atom token")
+                else -> unsupported("Unsupported atom token", ErrorCode.PARSE_UNSUPPORTED_TOKEN)
             }
             CAST, PATH, LIST, BAG, UNPIVOT, MEMBER,
             INNER_JOIN, LEFT_JOIN, RIGHT_JOIN, OUTER_JOIN -> sexp {
@@ -174,7 +202,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 // unfold the MEMBER nodes
                 for (child in children) {
                     if (child.type != MEMBER) {
-                        unsupported("Expected MEMBER node")
+                        unsupported("Expected MEMBER node", ErrorCode.PARSE_EXPECTED_MEMBER)
                     }
                     addChildNodes(child)
                 }
@@ -216,7 +244,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                                         else -> "list"
                                     }
                                     SELECT_VALUE -> "value"
-                                    else -> unsupported("Unsupported SELECT type")
+                                    else -> unsupported("Unsupported SELECT type", ErrorCode.PARSE_UNSUPPORTED_SELECT)
                                 })
                                 when (node.type) {
                                     SELECT_VALUE -> add(projection.toSexp())
@@ -264,7 +292,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                                     }
                                 }
                             }
-                            else -> clause.unsupported("Unsupported SELECT clause")
+                            else -> clause.unsupported("Unsupported SELECT clause", ErrorCode.PARSE_UNSUPPORTED_SELECT)
                         }
                     }
                 }
@@ -289,7 +317,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                         add(children[0].toSexp())
                         children[1]
                     }
-                    else -> unsupported("CASE must be searched or simple")
+                    else -> unsupported("CASE must be searched or simple", ErrorCode.PARSE_UNSUPPORTED_CASE)
                 }
 
                 clauses.children.forEach {
@@ -299,7 +327,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                                 when (it.type) {
                                     WHEN -> "when"
                                     ELSE -> "else"
-                                    else -> unsupported("CASE clause must be WHEN or ELSE")
+                                    else -> unsupported("CASE clause must be WHEN or ELSE", ErrorCode.PARSE_UNSUPPORTED_CASE_CLAUSE)
                                 }
                             )
                         }.apply { addChildNodes(it) }
@@ -317,13 +345,13 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 val tag = when (node.type) {
                     AS_ALIAS -> "as"
                     AT_ALIAS -> "at"
-                    else -> unsupported("Bad alias node: ${node.type}")
+                    else -> unsupported("Bad alias node: ${node.type}", ErrorCode.PARSE_UNSUPPORTED_ALIAS)
                 }
                 addSymbol(tag)
                 addSymbol(token?.text!!)
                 addChildNodes(node)
             }
-            else -> unsupported("Unsupported syntax for $type")
+            else -> unsupported("Unsupported syntax for $type", ErrorCode.PARSE_UNSUPPORTED_SYNTAX)
         }
 
         // wrap the meta node as appropriate
@@ -366,9 +394,15 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             val right = when (op.keywordText) {
                 // IS/IS NOT requires a type
                 "is", "is_not" -> rem.tail.parseType()
-                else -> rem.tail.parseExpression(
-                    precedence = op.infixPrecedence
-                )
+                else -> {
+                    if (rem.size < 3) {
+                        rem.err("Missing right-hand side expression of infix operator", ErrorCode.PARSE_EXPECTED_EXPRESSION)
+                    } else {
+                        rem.tail.parseExpression(
+                            precedence = op.infixPrecedence
+                        )
+                    }
+                }
             }
             rem = right.remaining
 
@@ -376,25 +410,35 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 op.isBinaryOperator -> ParseNode(BINARY, op, listOf(expr, right), rem)
                 else -> when (op.keywordText) {
                     "between", "not_between" -> {
-                        rem = rem.tailExpectedKeyword("and")
-                        val third = rem.parseExpression(
-                            precedence = op.infixPrecedence
-                        )
-                        rem = third.remaining
-                        ParseNode(TERNARY, op, listOf(expr, right, third), rem)
+                        val rest = rem.tailExpectedKeyword("and")
+                        if (rest.onlyEof()) {
+                            rem.head.err("Expected expression after AND", ErrorCode.PARSE_EXPECTED_EXPRESSION)
+                        } else {
+                            rem = rest
+                            val third = rem.parseExpression(
+                                precedence = op.infixPrecedence
+                            )
+                            rem = third.remaining
+                            ParseNode(TERNARY, op, listOf(expr, right, third), rem)
+                        }
                     }
                     "like", "not_like" -> {
                         when  {
                             rem.head?.keywordText == "escape" -> {
-                                rem = rem.tailExpectedKeyword("escape")
-                                val third = rem.parseExpression(precedence = op.infixPrecedence)
-                                rem = third.remaining
-                                ParseNode(TERNARY, op, listOf(expr, right, third), rem)
+                                val rest = rem.tailExpectedKeyword("escape")
+                                if (rest.onlyEof()) {
+                                    rem.head.err("Expected expression after ESCAPE", ErrorCode.PARSE_EXPECTED_EXPRESSION)
+                                } else {
+                                    rem = rest
+                                    val third = rem.parseExpression(precedence = op.infixPrecedence)
+                                    rem = third.remaining
+                                    ParseNode(TERNARY, op, listOf(expr, right, third), rem)
+                                }
                             }
                             else -> ParseNode(BINARY, op, listOf(expr, right), rem)
                         }
                     }
-                    else -> rem.err("Unknown infix operator")
+                    else -> rem.err("Unknown infix operator", ErrorCode.PARSE_UNKNOWN_OPERATOR)
                 }
             }
         }
@@ -460,7 +504,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                         STAR -> path.add(
                             ParseNode(PATH_WILDCARD_UNPIVOT, rem.head, emptyList(), rem.tail)
                         )
-                        else -> err("Invalid path dot component")
+                        else -> err("Invalid path dot component", ErrorCode.PARSE_INVALID_PATH_COMPONENT)
                     }
                     rem = rem.tail
                 }
@@ -493,9 +537,9 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                     listOf(tail.atomFromHead()),
                     tail.tail
                 )
-                else -> err("Identifier must follow @-operator")
+                else -> err("Identifier must follow @-operator", ErrorCode.PARSE_MISSING_IDENT_AFTER_AT)
             }
-            else -> err("Unexpected operator")
+            else -> err("Unexpected operator", ErrorCode.PARSE_UNEXPECTED_OPERATOR)
         }
         KEYWORD -> when (head?.keywordText) {
             "case" -> when (tail.head?.keywordText) {
@@ -510,9 +554,9 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             "values" -> tail.parseTableValues().copy(type = BAG)
             in FUNCTION_NAME_KEYWORDS -> when (tail.head?.type) {
                 LEFT_PAREN -> tail.tail.parseFunctionCall(head!!)
-                else -> err("Unexpected keyword")
+                else -> err("Unexpected keyword", ErrorCode.PARSE_UNEXPECTED_KEYWORD)
             }
-            else -> err("Unexpected keyword")
+            else -> err("Unexpected keyword", ErrorCode.PARSE_UNEXPECTED_KEYWORD)
         }
         LEFT_PAREN -> {
             val group = tail.parseArgList(
@@ -521,7 +565,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             ).deriveExpected(RIGHT_PAREN)
 
             when (group.children.size) {
-                0 -> tail.err("Expression group cannot be empty")
+                0 -> tail.err("Expression group cannot be empty", ErrorCode.PARSE_EXPECTED_EXPRESSION)
                 // expression grouping
                 1 -> group.children[0].copy(remaining = group.remaining)
                 // row value constructor--which aliases to list constructor in SQL++
@@ -545,7 +589,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             else -> atomFromHead()
         }
         LITERAL, NULL, MISSING -> atomFromHead()
-        else -> err("Unexpected term")
+        else -> err("Unexpected term", ErrorCode.PARSE_UNEXPECTED_TERM)
     }
 
     private fun List<Token>.parseCase(isSimple: Boolean): ParseNode {
@@ -577,7 +621,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             children.add(ParseNode(WHEN, null, listOf(conditionExpr, result), rem))
         }
         if (children.isEmpty()) {
-            err("Expected a WHEN clause in CASE")
+            err("Expected a WHEN clause in CASE", ErrorCode.PARSE_EXPECTED_WHEN_CLAUSE)
         }
         if (rem.head?.keywordText == "else") {
             val elseExpr = rem.tail.parseExpression()
@@ -592,7 +636,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
 
     private fun List<Token>.parseCast(): ParseNode {
         if (head?.type != LEFT_PAREN) {
-            err("Missing left parenthesis after CAST")
+            err("Missing left parenthesis after CAST", ErrorCode.PARSE_EXPECTED_LEFT_PAREN_AFTER_CAST)
         }
         val valueExpr = tail.parseExpression().deriveExpected(AS)
         var rem = valueExpr.remaining
@@ -605,7 +649,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
 
     private fun List<Token>.parseType(): ParseNode {
         val typeName = head?.keywordText
-        val typeArity = TYPE_NAME_ARITY_MAP[typeName] ?: err("Expected type name")
+        val typeArity = TYPE_NAME_ARITY_MAP[typeName] ?: err("Expected type name", ErrorCode.PARSE_EXPECTED_TYPE_NAME)
 
         val typeNode = when (tail.head?.type) {
             LEFT_PAREN -> tail.tail.parseArgList(
@@ -619,13 +663,17 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             else -> ParseNode(TYPE, head, emptyList(), tail)
         }
         if (typeNode.children.size !in typeArity) {
-            tail.err("CAST for $typeName must have arity of $typeArity")
+            tail.err("CAST for $typeName must have arity of $typeArity",
+                ErrorCode.PARSE_CAST_ARITY,
+                PropertyBag().addProperty(Property.CAST_TO, typeName)
+                    .addProperty(Property.EXPECTED_ARITY_MIN, typeArity.first)
+                    .addProperty(Property.EXPECTED_ARITY_MAX, typeArity.last))
         }
         for (child in typeNode.children) {
             if (child.type != ATOM
                     || child.token?.type != LITERAL
                     || !(child.token.value?.isUnsignedInteger ?: false)) {
-                err("Type parameter must be an unsigned integer literal")
+                err("Type parameter must be an unsigned integer literal", ErrorCode.PARSE_INVALID_TYPE_PARAM)
             }
         }
 
@@ -673,7 +721,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                     mode = NORMAL_ARG_LIST
                 )
                 if (list.children.isEmpty()) {
-                    rem.err("Cannot have empty SELECT list")
+                    rem.err("Cannot have empty SELECT list", ErrorCode.PARSE_EMPTY_SELECT)
                 }
 
                 list
@@ -693,7 +741,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
 
         // TODO support SELECT with no FROM
         if (rem.head?.keywordText != "from") {
-            rem.err("Expected FROM after SELECT list")
+            rem.err("Expected FROM after SELECT list", ErrorCode.PARSE_SELECT_MISSING_FROM)
         }
 
         val fromList = rem.tail.parseArgList(
@@ -735,7 +783,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             groupKey.children.forEach {
                 // TODO support ordinal case
                 if (it.token?.type == LITERAL) {
-                    it.token.err("Literals (including ordinals) not supported in GROUP BY")
+                    it.token.err("Literals (including ordinals) not supported in GROUP BY", ErrorCode.PARSE_UNSUPPORTED_LITERALS_GROUPBY)
                 }
             }
             groupChildren.add(groupKey)
@@ -745,7 +793,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 rem = rem.tail.tailExpectedKeyword("as")
 
                 if (rem.head?.type != IDENTIFIER) {
-                    rem.err("Expected identifier for GROUP name")
+                    rem.err("Expected identifier for GROUP name", ErrorCode.PARSE_EXPECTED_IDENT_FOR_GROUP_NAME)
                 }
                 groupChildren.add(rem.atomFromHead())
                 rem = rem.tail
@@ -838,7 +886,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         parseCommaList {
             var rem = this
             if (rem.head?.type != LEFT_PAREN) {
-                err("Expected $LEFT_PAREN for row value constructor")
+                err("Expected $LEFT_PAREN for row value constructor", ErrorCode.PARSE_EXPECTED_LEFT_PAREN_VALUE_CONSTRUCTOR)
             }
             rem = rem.tail
             rem.parseArgList(
@@ -912,7 +960,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 }
                 val name = rem.head
                 if (name == null || name.type != IDENTIFIER) {
-                    rem.err("Expected identifier for alias")
+                    rem.err("Expected identifier for alias", ErrorCode.PARSE_EXPECTED_IDENT_FOR_ALIAS)
                 }
                 rem = rem.tail
                 child = ParseNode(AS_ALIAS, name, listOf(child), rem)
@@ -922,7 +970,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 rem = rem.tail
                 val name = rem.head
                 if (name?.type != IDENTIFIER) {
-                    rem.err("Expected identifier for AT-name")
+                    rem.err("Expected identifier for AT-name", ErrorCode.PARSE_EXPECTED_IDENT_FOR_AT)
                 }
                 rem = rem.tail
                 child = ParseNode(AT_ALIAS, name, listOf(child), rem)
@@ -989,9 +1037,15 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
     override fun parse(source: String): IonSexp {
         val node = lexer.tokenize(source).parseExpression()
         val rem = node.remaining
-        if (rem.isNotEmpty()) {
-            rem.err("Unexpected token after expression")
+        if (!rem.onlyEof()) {
+            rem.err("Unexpected token after expression", ErrorCode.PARSE_UNEXPECTED_TOKEN)
         }
         return node.toSexp().apply { makeReadOnly() }
+    }
+
+    /** Entry point into the parser. */
+    override fun parse(source: String, errorHandler: IErrorHandler): IonSexp {
+        this.errorHandler = errorHandler
+        return parse(source)
     }
 }

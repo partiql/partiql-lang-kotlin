@@ -4,6 +4,8 @@
 
 package com.amazon.ionsql.syntax
 
+import com.amazon.ionsql.errorhandling.IErrorHandler
+
 /**
  * Tokenizes a [String] representation of a query into a [List] of [Token].
  *
@@ -11,4 +13,5 @@ package com.amazon.ionsql.syntax
  */
 interface Lexer {
     fun tokenize(source: String): List<Token>
+    fun tokenize(source: String, errorHandler: IErrorHandler): List<Token>
 }
