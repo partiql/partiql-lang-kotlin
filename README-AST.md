@@ -18,6 +18,9 @@ Where `name` is the AST node name, which can be one of:
 * `(pivot ...)` - Convert a collection into a tuple/struct.
 * `(path <VALUE EXPR> <PATH COMPONENT EXPR>...)` - A path (which is used for normal dotted name resolution).
 * `(call <NAME SYMBOL> <VALUE EXPR>...)` - A function invocation.
+* `(call_agg <NAME SYMBOL> <QUANTIFIER SYMBOL> <VALUE EXPR>)` - An aggregate call.
+* `(call_agg_wildcard <NAME SYMBOL>)` - An aggregate call with wildcard,
+  specifically for the special form `COUNT(*)`.
 * `(struct <NAME EXPR> <VALUE EXPR>...)` - A *constructor* for a tuple/struct that
   is to be evaluated.
 * `(list <VALUE EXPR>...)` - A *constructor* for a list/array that is to be evaluated.
@@ -54,7 +57,17 @@ The following additional operators are defined:
 * `(between <VALUE EXPR> <START EXPR> <END EXPR>)` - Interval containment.
 * `(not_between <VALUE EXPR> <START EXPR> <END EXPR>)` - Interval non-containment.
 
-### LIKE operator
+## Aggregate Functions
+For `(call_agg ...)`, the `<QUANTIFIER SYMBOL>` is one of `all` or `distinct`.
+In most contexts, `(call_agg ...)` evaluates similar to `(call ...)` with the
+exception that the input arguments are generally collections.  Within the `SELECT` list and
+`HAVING` clauses, there are additional, context sensitive, semantics about how aggregate
+functions work due to legacy SQL compatibility.  `(call_agg ...)` functions are **always** unary
+as per SQL rules.
+
+`(call_agg_wildcard ...)` is a special form that captures the legacy syntax form of `COUNT(*)`
+
+## LIKE operator
 
 The `LIKE` operator can be a binary or ternary operator depending on the input. The grammar 
 allows for 

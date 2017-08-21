@@ -76,6 +76,8 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         PIVOT,
         UNPIVOT,
         CALL,
+        CALL_AGG,
+        CALL_AGG_WILDCARD,
         ARG_LIST,
         AS_ALIAS,
         AT_ALIAS,
@@ -231,13 +233,13 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                     // node for the joins
                     val fromItem = children[1].children
                     var source = fromItem.head!!
-                    for (fromItem in fromItem.tail) {
-                        if (!fromItem.type.isJoin) {
+                    for (fromJoinItem in fromItem.tail) {
+                        if (!fromJoinItem.type.isJoin) {
                             unsupported("Non-first FROM clause item must be a JOIN")
                         }
                         // derive a binary operator type node
-                        source = fromItem.copy(
-                            children = listOf(source) + fromItem.children
+                        source = fromJoinItem.copy(
+                            children = listOf(source) + fromJoinItem.children
                         )
                     }
                     add(source.toSexp())
@@ -267,9 +269,13 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                     }
                 }
             }
-            CALL -> sexp {
-                addSymbol("call")
+            CALL, CALL_AGG, CALL_AGG_WILDCARD -> sexp {
+                addSymbol(node.type.identifier)
                 addSymbol(token?.text!!)
+                if (node.type == CALL_AGG) {
+                    // TODO IONSQL-93 support DISTINCT node modifier
+                    addSymbol("all")
+                }
                 addChildNodes(node)
             }
             CASE -> sexp {
@@ -761,17 +767,47 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         return ParseNode(selectType, null, children, rem)
     }
 
-    private fun List<Token>.parseFunctionCall(name: Token): ParseNode = when (head?.type) {
-        RIGHT_PAREN -> ParseNode(CALL, name, emptyList(), tail)
-        else -> {
-            parseArgList(
-                aliasSupportType = NONE,
-                mode = NORMAL_ARG_LIST
-            ).copy(
-                type = CALL,
-                token = name
-            ).deriveExpected(RIGHT_PAREN)
+    private fun List<Token>.parseFunctionCall(name: Token): ParseNode {
+        val nameText = name.text!!
+        var callType = when {
+            // TODO make this injectable
+            nameText in STANDARD_AGGREGATE_FUNCTIONS -> CALL_AGG
+            else -> CALL
         }
+
+        // TODO IONSQL-93 support DISTINCT/ALL syntax
+
+        var call =  when (head?.type) {
+            RIGHT_PAREN -> ParseNode(callType, name, emptyList(), tail)
+            STAR -> {
+                // support for special form COUNT(*)
+                callType = CALL_AGG_WILDCARD
+                if (nameText != "count") {
+                    err("$nameText(*) is not allowed")
+                }
+                ParseNode(
+                    callType,
+                    name,
+                    emptyList(),
+                    tail
+                ).deriveExpected(RIGHT_PAREN)
+            }
+            else -> {
+                parseArgList(
+                    aliasSupportType = NONE,
+                    mode = NORMAL_ARG_LIST
+                ).copy(
+                    type = callType,
+                    token = name
+                ).deriveExpected(RIGHT_PAREN)
+            }
+        }
+
+        if (callType == CALL_AGG && call.children.size != 1) {
+            err("SQL aggregate functions are always unary")
+        }
+
+        return call
     }
 
     private fun List<Token>.parseListLiteral(): ParseNode =

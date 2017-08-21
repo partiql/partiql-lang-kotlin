@@ -543,6 +543,50 @@ class IonSqlParserTest : Base() {
     )
 
     @Test
+    fun aggregateFunctionCall() = assertExpression(
+        """(call_agg count all (id a))""",
+        "COUNT(a)"
+    )
+
+    @Test
+    fun selectListWithAggregateWildcardCall() = assertExpression(
+        """
+        (select
+          (project
+            (list
+              (+ (call_agg sum all (id a)) (call_agg_wildcard count))
+              (call_agg avg all (id b))
+              (call_agg min all (id c))
+              (call_agg max all (+ (id d) (id e)))
+            )
+          )
+          (from (id foo))
+        )
+        """,
+        "SELECT sum(a) + count(*), AVG(b), MIN(c), MAX(d + e) FROM foo"
+    )
+
+    @Test(expected = ParserException::class)
+    fun aggregateWithNoArgs() {
+        parse("SUM()")
+    }
+
+    @Test(expected = ParserException::class)
+    fun aggregateWithTooManyArgs() {
+        parse("SUM(a, b)")
+    }
+
+    @Test(expected = ParserException::class)
+    fun aggregateWithWildcardOnNonCount() {
+        parse("SUM(*)")
+    }
+
+    @Test(expected = ParserException::class)
+    fun aggregateWithWildcardOnNonCountNonAggregate() {
+        parse("F(*)")
+    }
+
+    @Test
     fun dot() = assertExpression(
         """(path (id a) (lit "b"))""",
         "a.b"
