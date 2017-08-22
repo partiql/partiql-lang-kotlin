@@ -36,8 +36,27 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 class EvaluatingCompiler(private val ion: IonSystem,
                          private val parser: Parser,
-                         userFunctions: @JvmSuppressWildcards Map<String, ExprFunction>,
+                         userFuncs: @JvmSuppressWildcards Map<String, ExprFunction>,
                          private var errorHandler: ErrorHandler = DefaultErrorHandler()) : Compiler {
+
+<<<<<<< HEAD
+    constructor(ion: IonSystem) : this(ion, IonSqlParser(ion), emptyMap(), DefaultErrorHandler())
+    constructor(ion: IonSystem, errorHandler: IErrorHandler) : this(ion, IonSqlParser(ion), emptyMap(), errorHandler)
+    constructor(ion: IonSystem, userFuncs: @JvmSuppressWildcards Map<String, ExprFunction>, errorHandler: IErrorHandler): this(ion, IonSqlParser(ion), userFuncs, errorHandler)
+||||||| merged common ancestors
+
+    constructor(ion: IonSystem) :
+        this(ion, IonSqlParser(ion), emptyMap(), DefaultErrorHandler())
+    constructor(ion: IonSystem, errorHandler: IErrorHandler) :
+        this(ion, IonSqlParser(ion), emptyMap(), errorHandler)
+    constructor(ion: IonSystem,
+                userFuncs: @JvmSuppressWildcards Map<String, ExprFunction>):
+        this(ion, IonSqlParser(ion), userFuncs)
+    constructor(ion: IonSystem,
+                userFuncs: @JvmSuppressWildcards Map<String, ExprFunction>,
+                errorHandler: IErrorHandler):
+        this(ion, IonSqlParser(ion), userFuncs, errorHandler)
+=======
 
     constructor(ion: IonSystem) :
         this(ion, IonSqlParser(ion), emptyMap(), DefaultErrorHandler())
@@ -50,6 +69,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 userFuncs: @JvmSuppressWildcards Map<String, ExprFunction>,
                 errorHandler: ErrorHandler):
         this(ion, IonSqlParser(ion), userFuncs, errorHandler)
+>>>>>>> addressing CR comments
 
     private interface ExprThunk {
         fun eval(env: Environment): ExprValue

@@ -1,4 +1,4 @@
-package com.amazon.ionsql.errorhandling
+package com.amazon.ionsql.errors
 
 import com.amazon.ionsql.syntax.IonSqlParser
 import com.amazon.ionsql.syntax.ParserException
@@ -35,8 +35,8 @@ class ParserErrors : ErrorsBase() {
         checkInputTrowingParserException("5 BETWEEN 1  10",
             ErrorCode.PARSE_EXPECTED_KEYWORD,
             mapOf(
-                Property.LINE_NO to 1L,
-                Property.COLUMN_NO to 14L,
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 14L,
                 Property.KEYWORD to "AND",
                 Property.TOKEN_TYPE to TokenType.LITERAL,
                 Property.TOKEN_VALUE to ion.newInt(10)))
@@ -47,8 +47,8 @@ class ParserErrors : ErrorsBase() {
         checkInputTrowingParserException("NULL is `null`",
             ErrorCode.PARSE_EXPECTED_TYPE_NAME,
             mapOf(
-                Property.LINE_NO to 1L,
-                Property.COLUMN_NO to 9L,
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 9L,
                 Property.TOKEN_TYPE to TokenType.LITERAL,
                 Property.TOKEN_VALUE to ion.newNull()))
 
@@ -59,8 +59,8 @@ class ParserErrors : ErrorsBase() {
         checkInputTrowingParserException("@",
             ErrorCode.PARSE_MISSING_IDENT_AFTER_AT,
             mapOf(
-                Property.LINE_NO to 1L,
-                Property.COLUMN_NO to 1L,
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 1L,
                 Property.TOKEN_TYPE to TokenType.OPERATOR,
                 Property.TOKEN_VALUE to ion.newSymbol("@")))
 
@@ -71,8 +71,8 @@ class ParserErrors : ErrorsBase() {
         checkInputTrowingParserException("a is 'missing'",
             ErrorCode.PARSE_EXPECTED_TYPE_NAME,
             mapOf(
-                Property.LINE_NO to 1L,
-                Property.COLUMN_NO to 6L,
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 6L,
                 Property.TOKEN_TYPE to TokenType.LITERAL,
                 Property.TOKEN_VALUE to ion.newString("missing")))
 
@@ -83,8 +83,8 @@ class ParserErrors : ErrorsBase() {
         checkInputTrowingParserException("SELECT ord, val FROM table1 AT ord AS val",
             ErrorCode.PARSE_UNEXPECTED_TOKEN,
             mapOf(
-                Property.LINE_NO to 1L,
-                Property.COLUMN_NO to 36L,
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 36L,
                 Property.TOKEN_TYPE to TokenType.AS,
                 Property.TOKEN_VALUE to ion.newSymbol("as")))
 
@@ -95,8 +95,8 @@ class ParserErrors : ErrorsBase() {
         checkInputTrowingParserException("SELECT FROM table1",
             ErrorCode.PARSE_UNEXPECTED_KEYWORD,
             mapOf(
-                Property.LINE_NO to 1L,
-                Property.COLUMN_NO to 8L,
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 8L,
                 Property.TOKEN_TYPE to TokenType.KEYWORD,
                 Property.TOKEN_VALUE to ion.newSymbol("from")))
 
@@ -107,8 +107,8 @@ class ParserErrors : ErrorsBase() {
         checkInputTrowingParserException("x...a",
             ErrorCode.PARSE_INVALID_PATH_COMPONENT,
             mapOf(
-                Property.LINE_NO to 1L,
-                Property.COLUMN_NO to 1L,
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 1L,
                 Property.TOKEN_TYPE to TokenType.IDENTIFIER,
                 Property.TOKEN_VALUE to ion.newSymbol("x")))
 
@@ -119,8 +119,8 @@ class ParserErrors : ErrorsBase() {
         checkInputTrowingParserException("CAST(5 AS INTEGER(10))",
             ErrorCode.PARSE_CAST_ARITY,
             mapOf(
-                Property.LINE_NO to 1L,
-                Property.COLUMN_NO to 18L,
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 18L,
                 Property.TOKEN_TYPE to TokenType.LEFT_PAREN,
                 Property.EXPECTED_ARITY_MIN to 0,
                 Property.EXPECTED_ARITY_MAX to 0,
@@ -134,8 +134,8 @@ class ParserErrors : ErrorsBase() {
         checkInputTrowingParserException("CAST(5 AS VARCHAR(a))",
             ErrorCode.PARSE_INVALID_TYPE_PARAM,
             mapOf(
-                Property.LINE_NO to 1L,
-                Property.COLUMN_NO to 11L,
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 11L,
                 Property.TOKEN_TYPE to TokenType.KEYWORD,
                 Property.TOKEN_VALUE to ion.newSymbol("character_varying")))
 
@@ -146,8 +146,8 @@ class ParserErrors : ErrorsBase() {
         checkInputTrowingParserException("CASE name ELSE 1 END",
             ErrorCode.PARSE_EXPECTED_WHEN_CLAUSE,
             mapOf(
-                Property.LINE_NO to 1L,
-                Property.COLUMN_NO to 11L,
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 11L,
                 Property.TOKEN_TYPE to TokenType.KEYWORD,
                 Property.TOKEN_VALUE to ion.newSymbol("else")))
 
@@ -158,8 +158,8 @@ class ParserErrors : ErrorsBase() {
         checkInputTrowingParserException("SELECT a FROM data GROUP BY 1",
             ErrorCode.PARSE_UNSUPPORTED_LITERALS_GROUPBY,
             mapOf(
-                Property.LINE_NO to 1L,
-                Property.COLUMN_NO to 29L,
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 29L,
                 Property.TOKEN_TYPE to TokenType.LITERAL,
                 Property.TOKEN_VALUE to ion.newInt(1)))
 
@@ -170,8 +170,8 @@ class ParserErrors : ErrorsBase() {
         checkInputTrowingParserException("SELECT a, b FROM data WHERE LIKE a b",
             ErrorCode.PARSE_UNEXPECTED_OPERATOR,
             mapOf(
-                Property.LINE_NO to 1L,
-                Property.COLUMN_NO to 29L,
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 29L,
                 Property.TOKEN_TYPE to TokenType.OPERATOR,
                 Property.TOKEN_VALUE to ion.newSymbol("like")))
 
@@ -182,8 +182,8 @@ class ParserErrors : ErrorsBase() {
         checkInputTrowingParserException("SELECT a, b FROM data WHERE a LIKE b ESCAPE",
             ErrorCode.PARSE_EXPECTED_EXPRESSION,
             mapOf(
-                Property.LINE_NO to 1L,
-                Property.COLUMN_NO to 38L,
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 38L,
                 Property.TOKEN_TYPE to TokenType.KEYWORD,
                 Property.TOKEN_VALUE to ion.newSymbol("escape")))
 
@@ -194,8 +194,8 @@ class ParserErrors : ErrorsBase() {
         checkInputTrowingParserException("SELECT a, b FROM data WHERE a LIKE",
             ErrorCode.PARSE_EXPECTED_EXPRESSION,
             mapOf(
-                Property.LINE_NO to 1L,
-                Property.COLUMN_NO to 31L,
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 31L,
                 Property.TOKEN_TYPE to TokenType.OPERATOR,
                 Property.TOKEN_VALUE to ion.newSymbol("like")))
 
@@ -206,8 +206,8 @@ class ParserErrors : ErrorsBase() {
         checkInputTrowingParserException("(1 + 2",
             ErrorCode.PARSE_EXPECTED_TOKEN_TYPE,
             mapOf(
-                Property.LINE_NO to 1L,
-                Property.COLUMN_NO to 7L,
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 7L,
                 Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
                 Property.TOKEN_VALUE to ion.newSymbol("EOF")))
 
@@ -218,8 +218,8 @@ class ParserErrors : ErrorsBase() {
         checkInputTrowingParserException("CAST 5 as integer",
             ErrorCode.PARSE_EXPECTED_LEFT_PAREN_AFTER_CAST,
             mapOf(
-                Property.LINE_NO to 1L,
-                Property.COLUMN_NO to 6L,
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 6L,
                 Property.TOKEN_TYPE to TokenType.LITERAL,
                 Property.TOKEN_VALUE to ion.newInt(5)))
 
@@ -230,8 +230,8 @@ class ParserErrors : ErrorsBase() {
         checkInputTrowingParserException("values 1,2)",
             ErrorCode.PARSE_EXPECTED_LEFT_PAREN_VALUE_CONSTRUCTOR,
             mapOf(
-                Property.LINE_NO to 1L,
-                Property.COLUMN_NO to 8L,
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 8L,
                 Property.TOKEN_TYPE to TokenType.LITERAL,
                 Property.TOKEN_VALUE to ion.newInt(1)))
 
@@ -242,8 +242,8 @@ class ParserErrors : ErrorsBase() {
         checkInputTrowingParserException("select () from data",
             ErrorCode.PARSE_UNEXPECTED_TERM,
             mapOf(
-                Property.LINE_NO to 1L,
-                Property.COLUMN_NO to 9L,
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 9L,
                 Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
                 Property.TOKEN_VALUE to ion.newSymbol(")")))
 
@@ -254,8 +254,8 @@ class ParserErrors : ErrorsBase() {
         checkInputTrowingParserException("select a  data",
             ErrorCode.PARSE_SELECT_MISSING_FROM,
             mapOf(
-                Property.LINE_NO to 1L,
-                Property.COLUMN_NO to 15L,
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 15L,
                 Property.TOKEN_TYPE to TokenType.EOF,
                 Property.TOKEN_VALUE to ion.newSymbol("EOF")))
 
@@ -266,8 +266,8 @@ class ParserErrors : ErrorsBase() {
         checkInputTrowingParserException("select a from data group by 1",
             ErrorCode.PARSE_UNSUPPORTED_LITERALS_GROUPBY,
             mapOf(
-                Property.LINE_NO to 1L,
-                Property.COLUMN_NO to 29L,
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 29L,
                 Property.TOKEN_TYPE to TokenType.LITERAL,
                 Property.TOKEN_VALUE to ion.newInt(1)))
 
@@ -278,8 +278,8 @@ class ParserErrors : ErrorsBase() {
         checkInputTrowingParserException("select a as true from data",
             ErrorCode.PARSE_EXPECTED_IDENT_FOR_ALIAS,
             mapOf(
-                Property.LINE_NO to 1L,
-                Property.COLUMN_NO to 13L,
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 13L,
                 Property.TOKEN_TYPE to TokenType.LITERAL,
                 Property.TOKEN_VALUE to ion.newBool(true)))
 
@@ -290,8 +290,8 @@ class ParserErrors : ErrorsBase() {
         checkInputTrowingParserException("select a from data at true",
             ErrorCode.PARSE_EXPECTED_IDENT_FOR_AT,
             mapOf(
-                Property.LINE_NO to 1L,
-                Property.COLUMN_NO to 23L,
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 23L,
                 Property.TOKEN_TYPE to TokenType.LITERAL,
                 Property.TOKEN_VALUE to ion.newBool(true)))
 

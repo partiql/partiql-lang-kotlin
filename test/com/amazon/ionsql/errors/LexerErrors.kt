@@ -1,4 +1,4 @@
-package com.amazon.ionsql.errorhandling
+package com.amazon.ionsql.errors
 
 import com.amazon.ionsql.syntax.*
 import org.junit.Test
@@ -35,8 +35,8 @@ class LexerErrors : ErrorsBase() {
         checkInputTrowingLexerException("?",
             ErrorCode.LEXER_INVALID_CHAR,
             mapOf(
-                Property.LINE_NO to 1L,
-                Property.COLUMN_NO to 1L,
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 1L,
                 Property.TOKEN_STRING to representation("?".codePointAt(0))))
     }
 
@@ -45,8 +45,8 @@ class LexerErrors : ErrorsBase() {
         checkInputTrowingLexerException("10 ^ 4",
             ErrorCode.LEXER_INVALID_OPERATOR,
             mapOf(
-                Property.LINE_NO to 1L,
-                Property.COLUMN_NO to 5L,
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 5L,
                 Property.TOKEN_STRING to "^"))
     }
 

@@ -4,7 +4,8 @@
 
 package com.amazon.ionsql.eval
 
-import com.amazon.ionsql.errorhandling.IErrorHandler
+import com.amazon.ionsql.errors.DefaultErrorHandler
+import com.amazon.ionsql.errors.ErrorHandler
 
 /**
  * Compiles query expression source into an [Expression].
@@ -16,5 +17,5 @@ interface Compiler {
     /**
      * Compile query expression and delegate errors to [errorHandler]
      */
-    fun compile(source: String, errorHandler: IErrorHandler): Expression
+    fun compile(source: String, errorHandler: ErrorHandler = DefaultErrorHandler()): Expression
 }

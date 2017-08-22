@@ -5,10 +5,13 @@
 package com.amazon.ionsql.syntax
 
 import com.amazon.ion.IonSystem
-import com.amazon.ionsql.errorhandling.*
+import com.amazon.ionsql.errors.*
+import com.amazon.ionsql.errors.ErrorCode.*
+import com.amazon.ionsql.errors.Property.*
 import com.amazon.ionsql.syntax.IonSqlLexer.LexType.*
 import com.amazon.ionsql.syntax.IonSqlLexer.StateType.*
 import com.amazon.ionsql.syntax.TokenType.*
+import com.amazon.ionsql.syntax.TokenType.KEYWORD
 import com.amazon.ionsql.util.*
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -19,7 +22,7 @@ import java.util.*
  * Simple tokenizer for IonSQL++.
  */
 class IonSqlLexer(private val ion: IonSystem,
-                  private var errorHandler: IErrorHandler = DefaultErrorHandler()) : Lexer {
+                  private var errorHandler: ErrorHandler = DefaultErrorHandler()) : Lexer {
     /** Transition types. */
     internal enum class StateType(val beginsToken: Boolean = false,
                                   val endsToken: Boolean = false) {
@@ -27,7 +30,7 @@ class IonSqlLexer(private val ion: IonSystem,
         INITIAL(),
         /** Indicates an error state. */
         ERROR(),
-        /** Indicates the ernd of the stream */
+        /** Indicates the end of the stream */
         END(beginsToken = true),
         /** Indicates the middle of a token. */
         INCOMPLETE(),
@@ -383,17 +386,19 @@ class IonSqlLexer(private val ion: IonSystem,
     }
 
     /**
-     * Given a token as a [String] and a [tracker] creates and populates a [PropertyBag] with line and column number as
+     * Given a token as a [String] and a [tracker] creates and populates a [PropertyValueMap] with line and column number as
      * well as the token string.
      */
-    private fun makePropertyBag(tokenString: String, tracker: PositionTracker): PropertyBag =
-        PropertyBag()
-            .addProperty(Property.LINE_NO, tracker.line)
-            .addProperty(Property.COLUMN_NO, tracker.col)
-            .addProperty(Property.TOKEN_STRING, tokenString)
+    private fun makePropertyBag(tokenString: String, tracker: PositionTracker): PropertyValueMap {
+        val pvmap = PropertyValueMap()
+        pvmap[LINE_NUMBER] =  tracker.line
+        pvmap[COLUMN_NUMBER] =  tracker.col
+        pvmap[TOKEN_STRING] =  tokenString
+        return pvmap
+    }
 
 
-    override fun tokenize(source: String, errorHandler: IErrorHandler): List<Token> {
+    override fun tokenize(source: String, errorHandler: ErrorHandler): List<Token> {
         this.errorHandler = errorHandler
         return tokenize(source)
     }
@@ -413,13 +418,13 @@ class IonSqlLexer(private val ion: IonSystem,
         for (cp in codePoints) {
 
             fun errInvalidChar(): Nothing =
-                throw LexerException(errorCode = ErrorCode.LEXER_INVALID_CHAR, errorContext = makePropertyBag(repr(cp), tracker))
+                throw LexerException(errorCode = LEXER_INVALID_CHAR, errorContext = makePropertyBag(repr(cp), tracker))
 
             fun errInvalidOperator(operator: String): Nothing =
-                throw LexerException(errorCode = ErrorCode.LEXER_INVALID_OPERATOR, errorContext = makePropertyBag(operator, tracker))
+                throw LexerException(errorCode = LEXER_INVALID_OPERATOR, errorContext = makePropertyBag(operator, tracker))
 
             fun errInvalidLiteral(literal: String): Nothing =
-                throw LexerException(errorCode = ErrorCode.LEXER_INVALID_LITERAL, errorContext = makePropertyBag(literal, tracker))
+                throw LexerException(errorCode = LEXER_INVALID_LITERAL, errorContext = makePropertyBag(literal, tracker))
 
 
             tracker.advance(cp)

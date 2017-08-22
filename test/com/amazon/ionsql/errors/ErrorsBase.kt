@@ -1,4 +1,4 @@
-package com.amazon.ionsql.errorhandling
+package com.amazon.ionsql.errors
 
 import com.amazon.ionsql.Base
 import com.amazon.ionsql.IonSqlException
@@ -28,7 +28,7 @@ open class ErrorsBase : Base() {
      * @param errorCode for the exception thrown by the test
      * @param errorContext errorContext that was part of the exception thrown by the test
      */
-    protected fun correctContextKeys(errorCode: ErrorCode, errorContext: PropertyBag?): Unit =
+    protected fun correctContextKeys(errorCode: ErrorCode, errorContext: PropertyValueMap?): Unit =
         errorCode.getProperties().forEach { assertTrue("Error Context does not contain $it", errorContext!!.hasProperty(it)) }
 
 
@@ -43,14 +43,14 @@ open class ErrorsBase : Base() {
      *        if `false` [expected] must contain a **subset** of keys and their values as the exception's errorContext.
      *
      */
-    protected fun correctContextValues(errorCode: ErrorCode, errorContext: PropertyBag?, expected: Map<Property, Any>, strict: Boolean) {
+    protected fun correctContextValues(errorCode: ErrorCode, errorContext: PropertyValueMap?, expected: Map<Property, Any>, strict: Boolean) {
         if (strict)
             assertTrue("Strict mode requires expected param to contain all Properties for the error code",
                 errorCode.getProperties().containsAll(expected.keys))
 
         expected.forEach { entry ->
             assertTrue("Error Context does not contain ${entry.key}", errorContext!!.hasProperty(entry.key))
-            assertEquals("$entry", entry.value, errorContext.getProperty(entry.key, entry.key.type))
+            assertEquals("$entry", entry.value, errorContext[entry.key])
         }
     }
 

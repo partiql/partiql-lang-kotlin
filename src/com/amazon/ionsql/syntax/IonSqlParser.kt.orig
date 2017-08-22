@@ -273,9 +273,19 @@ class IonSqlParser(private val ion: IonSystem,
                     // node for the joins
                     val fromItem = children[1].children
                     var source = fromItem.head!!
+<<<<<<< HEAD
                     for (fromJoinItem in fromItem.tail) {
                         if (!fromJoinItem.type.isJoin) {
-                            unsupported("Non-first FROM clause item must be a JOIN", PARSE_MALFORMED_JOIN)
+                            unsupported("Non-first FROM clause item must be a JOIN")
+||||||| merged common ancestors
+                    for (fromItem in fromItem.tail) {
+                        if (!fromItem.type.isJoin) {
+                            unsupported("Non-first FROM clause item must be a JOIN", ErrorCode.PARSE_UNSUPPORTED_SELECT)
+=======
+                    for (fromItem in fromItem.tail) {
+                        if (!fromItem.type.isJoin) {
+                            unsupported("Non-first FROM clause item must be a JOIN", PARSE_UNSUPPORTED_SELECT)
+>>>>>>> addressing CR comments
                         }
                         // derive a binary operator type node
                         source = fromJoinItem.copy(
@@ -843,7 +853,7 @@ class IonSqlParser(private val ion: IonSystem,
                 // support for special form COUNT(*)
                 callType = CALL_AGG_WILDCARD
                 if (nameText != "count") {
-                    err("$nameText(*) is not allowed", PARSE_UNSUPPORTED_CALL_WITH_STAR)
+                    err("$nameText(*) is not allowed")
                 }
                 ParseNode(
                     callType,
@@ -864,7 +874,7 @@ class IonSqlParser(private val ion: IonSystem,
         }
 
         if (callType == CALL_AGG && call.children.size != 1) {
-            err("SQL aggregate functions are always unary", PARSE_NON_UNARY_AGREGATE_FUNCTION_CALL)
+            err("SQL aggregate functions are always unary")
         }
 
         return call
