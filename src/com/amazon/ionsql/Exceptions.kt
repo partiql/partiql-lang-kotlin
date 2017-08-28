@@ -21,39 +21,22 @@ import com.amazon.ionsql.errors.Property.*
  *   1. Provide an [ErrorCode] and context as a [PropertyValueMap] and optionally a [cause]
  *       * Used when an error occurs and we want an auto-generated message from the given error code and error context
  *
- * @param message human friendly detail text message for this exception
- * @param cause the cause for this exception
+ * @param message the message for this exception
+ * @param errorCode the error code for this exception
+ * @param propertyValueMap context for this error
+ * @param cause for this exception
  *
- * @constructor given a [message] and an optional [cause] creates an [IonSqlException]. This is the constructor for the
- * first configuration explained above
+ * @constructor a custom error [message], the [errorCode], error context as a [propertyValueMap] and optional [cause] creates an
+ * [IonSqlException]. This is the constructor for the second configuration explained above.
+ *
+
  */
-open class IonSqlException(override var message: String, cause: Throwable? = null)
+open class IonSqlException(override var message: String,
+                           val errorCode: ErrorCode? = null,
+                           val errorContext: PropertyValueMap? = null,
+                           cause: Throwable? = null)
     : RuntimeException(message, cause) {
 
-
-    private var errorCode: ErrorCode? = null
-
-    fun getErrorCode() = this.errorCode
-
-    private var errorContext: PropertyValueMap? = null
-
-    fun getErrorContext() = this.errorContext
-
-    /**
-     * Given a custom error [message], the [errorCode], error context as a [propertyValueMap] and optional [cause] creates an
-     * [IonSqlException]. This is the constructor for the second configuration explained above.
-     *
-     * @param message the message for this exception
-     * @param errorCode the error code for this exception
-     * @param propertyValueMap context for this error
-     * @param cause for this exception
-     *
-     */
-    constructor(message: String, errorCode: ErrorCode, propertyValueMap: PropertyValueMap, cause: Throwable? = null) :
-        this(message, cause) {
-        this.errorCode = errorCode
-        this.errorContext = propertyValueMap
-    }
 
     /**
      * Given  the [errorCode], error context as a [propertyValueMap] and optional [cause] creates an
@@ -65,12 +48,7 @@ open class IonSqlException(override var message: String, cause: Throwable? = nul
      * @param cause for this exception
      */
     constructor(errorCode: ErrorCode, propertyValueMap: PropertyValueMap, cause: Throwable? = null) :
-        this("", cause) {
-        this.errorCode = errorCode
-        this.errorContext = propertyValueMap
-
-    }
-
+        this("",errorCode, propertyValueMap, cause)
 
     /**
      * Auto-generated message has the structure

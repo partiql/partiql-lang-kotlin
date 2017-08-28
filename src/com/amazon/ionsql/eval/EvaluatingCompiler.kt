@@ -8,8 +8,8 @@ import com.amazon.ion.IonSequence
 import com.amazon.ion.IonSexp
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
-import com.amazon.ionsql.errors.DefaultErrorHandler
 import com.amazon.ionsql.errors.ErrorHandler
+import com.amazon.ionsql.errors.alwaysThrowsErrorHandler
 import com.amazon.ionsql.syntax.IonSqlParser
 import com.amazon.ionsql.syntax.Parser
 import com.amazon.ionsql.syntax.Token
@@ -36,20 +36,16 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 class EvaluatingCompiler(private val ion: IonSystem,
                          private val parser: Parser,
-                         userFunctions: @JvmSuppressWildcards Map<String, ExprFunction>,
-                         private var errorHandler: ErrorHandler = DefaultErrorHandler()) : Compiler {
+                         private val userFunctions: @JvmSuppressWildcards Map<String, ExprFunction>,
+                         private val errorHandler: ErrorHandler = alwaysThrowsErrorHandler) : Compiler {
 
     constructor(ion: IonSystem) :
-        this(ion, IonSqlParser(ion), emptyMap(), DefaultErrorHandler())
-    constructor(ion: IonSystem, errorHandler: ErrorHandler) :
-        this(ion, IonSqlParser(ion), emptyMap(), errorHandler)
+        this(ion, IonSqlParser(ion), emptyMap(), alwaysThrowsErrorHandler)
+
     constructor(ion: IonSystem,
                 userFuncs: @JvmSuppressWildcards Map<String, ExprFunction>):
         this(ion, IonSqlParser(ion), userFuncs)
-    constructor(ion: IonSystem,
-                userFuncs: @JvmSuppressWildcards Map<String, ExprFunction>,
-                errorHandler: ErrorHandler):
-        this(ion, IonSqlParser(ion), userFuncs, errorHandler)
+
 
     private interface ExprThunk {
         fun eval(env: Environment): ExprValue
@@ -1076,7 +1072,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
     /** Dispatch table for built-in aggregate functions. */
     private val builtinAggregates: Map<String, ExprAggregatorFactory> = mapOf(
         "count" to ExprAggregatorFactory.over {
-            Accumulator { curr, next -> curr!! + 1L }
+            Accumulator { curr, _ -> curr!! + 1L }
         },
         "sum" to ExprAggregatorFactory.over {
             Accumulator { curr, next -> curr!! + next.numberValue() }
@@ -1311,8 +1307,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
      * Compiles the given source expression into a bound [Expression] delegating errors to [errorHandler]
      */
     override fun compile(source: String, errorHandler: ErrorHandler): Expression {
-        this.errorHandler = errorHandler
-        return compile(source)
+        return EvaluatingCompiler(ion, parser, userFunctions, errorHandler).compile(source)
     }
 }
 

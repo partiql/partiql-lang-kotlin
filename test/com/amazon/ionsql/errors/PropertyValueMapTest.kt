@@ -18,7 +18,7 @@ class PropertyValueMapTest : Base() {
         onlyColumnValueMap[COLUMN_NUMBER] = 11L
         oneOfEachType[EXPECTED_TOKEN_TYPE] = TokenType.COMMA
         oneOfEachType[KEYWORD] = "test"
-        oneOfEachType[EXPECTED_ARITY_MAX] = 1 as Int?
+        oneOfEachType[EXPECTED_ARITY_MAX] = 1
         oneOfEachType[TOKEN_VALUE] = ion.newEmptyList()
         oneOfEachType[COLUMN_NUMBER] = 11L
     }

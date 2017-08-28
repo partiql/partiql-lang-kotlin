@@ -5,8 +5,7 @@
 package com.amazon.ionsql.errors
 
 import com.amazon.ion.IonValue
-import com.amazon.ionsql.errors.ErrorCategory.*
-import com.amazon.ionsql.errors.Property.*
+import com.amazon.ionsql.errors.PropertyType.*
 import com.amazon.ionsql.syntax.TokenType
 import java.util.*
 
@@ -14,347 +13,30 @@ import java.util.*
 internal const val UNKNOWN: String = "<UNKNOWN>"
 
 /**
- * Categories for errors
+ * Categories for errors. Should map to stages in the Compiler and Evaluator.
  */
-enum class ErrorCategory {
-    LEXER {
-        override fun toString(): String {
-            return "Lexer Error"
-        }
-    }
-    ,
-    PARSER {
-        override fun toString(): String {
-            return "Parser Error"
-        }
-    },
-    EVALUATOR {
-        override fun toString(): String {
-            return "Evaluator Error"
-        }
-    }
-}
-
-/** Each [ErrorCode] contains an immutable set of [Property].
- *  These are the properties used as keys in [PropertyBag] created at each error location.
- */
-
-/** Property Set constants used in [ErrorCode] */
-private val LOCATION = setOf(LINE_NUMBER, COLUMN_NUMBER)
-private val TOKEN_INFO = setOf(TOKEN_TYPE, TOKEN_VALUE)
-private val LOC_TOKEN = LOCATION.union(TOKEN_INFO)
-private val LOC_TOKEN_STR = LOCATION.union(setOf(TOKEN_STRING))
-
-enum class ErrorCode(private val category: ErrorCategory, private val properties: Set<Property>) {
-
-
-
-
-    LEXER_INVALID_CHAR(
-        LEXER,
-        LOC_TOKEN_STR) {
-        override fun detailMessageSuffix(errorContext: PropertyValueMap?): String =
-            getTokenString(errorContext)
-
-        override fun detailMessagePrefix(): String = "invalid character at"
-    },
-    LEXER_INVALID_OPERATOR(
-        LEXER,
-        LOC_TOKEN_STR) {
-        override fun detailMessageSuffix(errorContext: PropertyValueMap?): String =
-            getTokenString(errorContext)
-
-        override fun detailMessagePrefix(): String = "invalid operator at"
-
-    },
-    LEXER_INVALID_LITERAL(
-        LEXER,
-        LOC_TOKEN_STR) {
-        override fun detailMessageSuffix(errorContext: PropertyValueMap?): String =
-            getTokenString(errorContext)
-
-        override fun detailMessagePrefix(): String = "invalid literal at"
-
-    },
-    PARSE_EXPECTED_KEYWORD(
-        PARSER,
-        LOC_TOKEN.union(setOf(KEYWORD))) {
-        override fun detailMessageSuffix(errorContext: PropertyValueMap?): String =
-            getKeyword(errorContext)
-
-        override fun detailMessagePrefix(): String = "expected keyword"
-
-    },
-    PARSE_EXPECTED_TOKEN_TYPE(
-        PARSER,
-        LOC_TOKEN.union(setOf(EXPECTED_TOKEN_TYPE))) {
-        override fun detailMessageSuffix(errorContext: PropertyValueMap?): String =
-            errorContext?.get(EXPECTED_TOKEN_TYPE)?.tokenTypeValue()?.toString() ?: UNKNOWN +
-                "found ${getTokenType(errorContext)}"
-
-        override fun detailMessagePrefix(): String = "expected token of type"
-
-    },
-    PARSE_EXPECTED_NUMBER(
-        PARSER,
-        LOC_TOKEN) {
-        override fun detailMessageSuffix(errorContext: PropertyValueMap?): String =
-            getTokenValue(errorContext)
-
-        override fun detailMessagePrefix(): String = "Expected number, found"
-
-    },
-    PARSE_EXPECTED_TYPE_NAME(
-        PARSER,
-        LOC_TOKEN) {
-        override fun detailMessagePrefix(): String = "Expected type name, found"
-
-    },
-    PARSE_EXPECTED_WHEN_CLAUSE(
-        PARSER,
-        LOC_TOKEN) {
-        override fun detailMessagePrefix(): String = "Expected WHEN clause in CASE"
-
-    },
-    PARSE_UNSUPPORTED_TOKEN(
-        PARSER,
-        LOC_TOKEN) {
-        override fun detailMessagePrefix(): String = "Unexpected token"
-
-    },
-    PARSE_UNSUPPORTED_LITERALS_GROUPBY(
-        PARSER,
-        LOC_TOKEN) {
-        override fun detailMessagePrefix(): String = "Unsupported literal in GROUP BY"
-
-    },
-    PARSE_EXPECTED_MEMBER(
-        PARSER,
-        LOC_TOKEN) {
-        override fun detailMessagePrefix(): String = "Expected MEMBER node"
-
-    },
-    PARSE_UNSUPPORTED_SELECT(
-        PARSER,
-        LOC_TOKEN) {
-        override fun detailMessagePrefix(): String = "Unsupported use of SELECT"
-
-    },
-    PARSE_UNSUPPORTED_CASE(
-        PARSER,
-        LOC_TOKEN) {
-        override fun detailMessagePrefix(): String = "Unsupported use of CASE"
-
-    },
-    PARSE_UNSUPPORTED_CASE_CLAUSE(
-        PARSER,
-        LOC_TOKEN) {
-        override fun detailMessagePrefix(): String = "Unsupported use of CASE statement"
-
-    },
-    PARSE_UNSUPPORTED_ALIAS(
-        PARSER,
-        LOC_TOKEN) {
-        override fun detailMessagePrefix(): String = "Unsupported syntax for alias, `at` and `as` are supported"
-
-    },
-    PARSE_UNSUPPORTED_SYNTAX(
-        PARSER,
-        LOC_TOKEN) {
-        override fun detailMessagePrefix(): String = "Unsupported Syntax"
-
-    },
-    PARSE_UNKNOWN_OPERATOR(
-        PARSER,
-        LOC_TOKEN) {
-        override fun detailMessagePrefix(): String = "Unsupported operator"
-
-    },
-    PARSE_INVALID_PATH_COMPONENT(
-        PARSER,
-        LOC_TOKEN) {
-        override fun detailMessagePrefix(): String = "Invalid Path component"
-
-    },
-    PARSE_MISSING_IDENT_AFTER_AT(
-        PARSER,
-        LOC_TOKEN) {
-        override fun detailMessagePrefix(): String = "Identifier expected after `@` symbol"
-
-    },
-    PARSE_UNEXPECTED_OPERATOR(
-        PARSER,
-        LOC_TOKEN) {
-        override fun detailMessagePrefix(): String = "Unexpected operator"
-
-    },
-    PARSE_UNEXPECTED_TERM(
-        PARSER,
-        LOC_TOKEN) {
-        override fun detailMessagePrefix(): String = "Unexpected term found"
-
-    },
-    PARSE_UNEXPECTED_TOKEN(
-        PARSER,
-        LOC_TOKEN) {
-        override fun detailMessagePrefix(): String = "Unexpected token found"
-
-    },
-    PARSE_UNEXPECTED_KEYWORD(
-        PARSER,
-        LOC_TOKEN) {
-        override fun detailMessagePrefix(): String = "Unexpected keyword found"
-
-    },
-    PARSE_EXPECTED_EXPRESSION(
-        PARSER,
-        LOC_TOKEN) {
-        override fun detailMessagePrefix(): String = "Expected expression"
-
-    },
-    PARSE_EXPECTED_LEFT_PAREN_AFTER_CAST(
-        PARSER,
-        LOC_TOKEN) {
-        override fun detailMessagePrefix(): String = "Expected left parenthesis after CAST"
-
-    },
-    PARSE_EXPECTED_LEFT_PAREN_VALUE_CONSTRUCTOR(
-        PARSER,
-        LOC_TOKEN) {
-        override fun detailMessagePrefix(): String = "Expected left parenthesis"
-
-    },
-    PARSE_CAST_ARITY(
-        PARSER,
-        LOC_TOKEN.union(setOf(CAST_TO, EXPECTED_ARITY_MIN, EXPECTED_ARITY_MAX))) {
-        override fun detailMessagePrefix(): String = ""
-        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
-            "Cast to type ${errorContext?.get(CAST_TO)?.stringValue() ?: UNKNOWN} has incorrect arity." +
-                "Correct arity is ${errorContext?.get(EXPECTED_ARITY_MIN)?.integerValue() ?: UNKNOWN}.." +
-                "${errorContext?.get(EXPECTED_ARITY_MAX)?.integerValue() ?: UNKNOWN}"
-
-    },
-    PARSE_INVALID_TYPE_PARAM(
-        PARSER,
-        LOC_TOKEN) {
-        override fun detailMessagePrefix(): String = "Invalid value used for type parameter"
-
-    },
-    PARSE_EMPTY_SELECT(
-        PARSER,
-        LOC_TOKEN) {
-        override fun detailMessagePrefix(): String = "Found empty SELECT list"
-
-    },
-    PARSE_SELECT_MISSING_FROM(
-        PARSER,
-        LOC_TOKEN) {
-        override fun detailMessagePrefix(): String = "Missing FROM after SELECT list"
-
-    },
-    PARSE_EXPECTED_IDENT_FOR_GROUP_NAME(
-        PARSER,
-        LOC_TOKEN) {
-        override fun detailMessagePrefix(): String = "Expected identifier for GROUP name"
-
-    },
-    PARSE_EXPECTED_IDENT_FOR_ALIAS(
-        PARSER,
-        LOC_TOKEN) {
-        override fun detailMessagePrefix(): String = "Expected identifier for alias"
-
-    },
-    PARSE_UNSUPPORTED_CALL_WITH_STAR(
-        PARSER,
-        LOC_TOKEN){
-        override fun detailMessagePrefix(): String = "Function call, other than COUNT, with (*) as parameter is not supported"
-
-    },
-
-    PARSE_NON_UNARY_AGREGATE_FUNCTION_CALL(
-        PARSER,
-        LOC_TOKEN){
-        override fun detailMessagePrefix(): String = "Aggregate function calls take 1 argument only"
-
-    },
-
-    PARSE_MALFORMED_JOIN(
-        PARSER,
-        LOC_TOKEN){
-        override fun detailMessagePrefix(): String = "Malformed use of FROM with JOIN"
-    },
-
-    PARSE_EXPECTED_IDENT_FOR_AT(
-        PARSER,
-        LOC_TOKEN) {
-        override fun detailMessagePrefix(): String = "Expected identifier for AT name"
-
-    },
-    ;
-
-
-    constructor(category: ErrorCategory, vararg props: Property) : this(category, setOf(*props))
-
-    protected fun getTokenString(errorContext: PropertyValueMap?): String =
-        errorContext?.get(TOKEN_STRING)?.stringValue() ?: UNKNOWN
-
-    protected fun getTokenValue(errorContext: PropertyValueMap?): String =
-        errorContext?.get(TOKEN_VALUE)?.ionValue()?.toString() ?: UNKNOWN
-
-    protected fun getTokenType(errorContext: PropertyValueMap?): String =
-        errorContext?.get(TOKEN_TYPE)?.tokenTypeValue()?.toString() ?: UNKNOWN
-
-    protected fun getKeyword(errorContext: PropertyValueMap?): String =
-        errorContext?.get(KEYWORD)?.stringValue() ?: UNKNOWN
-
-    protected fun getTokenTypeAndTokenValue(errorContext: PropertyValueMap?): String =
-        getTokenType(errorContext) + " : " + getTokenValue(errorContext)
-
-
-    abstract protected fun detailMessagePrefix(): String
-
-    open protected fun detailMessageSuffix(errorContext: PropertyValueMap?): String =
-        getTokenTypeAndTokenValue(errorContext)
-
-    /**
-     * Given an [errorContext] generate a detailed error message.
-     *
-     * Template method.
-     *
-     * @param errorContext  that contains information about the error
-     * @return detailed error message as a [String]
-     */
-    open fun getErrorMessage(errorContext: PropertyValueMap?): String =
-        "${detailMessagePrefix()}, ${detailMessageSuffix(errorContext)}"
-
-    fun errorCategory(): String = this.category.toString()
-
-
-    fun getProperties(): Set<Property> {
-        return Collections.unmodifiableSet(properties)
-    }
-
-
+enum class ErrorCategory(val message: String) {
+    LEXER ("Lexer Error"),
+    PARSER ("Parser Error"),
+    EVALUATOR ("Evaluator Error");
+
+    override fun toString() = message
 }
 
 
-internal val LONG_CLASS = Long::class.javaObjectType
-internal val STRING_CLASS = String::class.javaObjectType
-internal val INTEGER_CLASS = Int::class.javaObjectType
-internal val TOKEN_CLASS = TokenType::class.javaObjectType
-internal val ION_VALUE_CLASS = IonValue::class.javaObjectType
 
-/** Each possible value that can be reported as part of an error maps to a
- * [Property].
+/** Each possible value that can be reported as part of an error has a
+ * [Property]. [Property] is used as a key in [PropertyValueMap].
  *
- * Each property contains a string name and a [type] of the values that this property can have.
+ * Each property contains
+ *   1. a string name and a [propertyType] of the values that this property can have,
+ *   1. and a [PropertyType] the denotes the type that the property's value can have.
  *
  * @param propertyName string name (internal use)
- * @param type [Class] of object's that this property can hold in a [PropertyValueMap]
+ * @param propertyType [Class] of object's that this property can hold in a [PropertyValueMap]
  *
  */
-enum class Property(val propertyName: String, val type: Class<*>) {
-
+enum class Property(val propertyName: String, val propertyType: PropertyType) {
 
     LINE_NUMBER("line_no", LONG_CLASS),
     COLUMN_NUMBER("column_no", LONG_CLASS),
@@ -370,7 +52,12 @@ enum class Property(val propertyName: String, val type: Class<*>) {
 
 }
 
-abstract class PropertyValue(val value: Any?, val type: Class<*>) {
+/**
+ * A [PropertyValue] is the top level type for all values that appear as properties in error codes.
+ * For each type of value that can be a [Property] there is a method to allow clients to obtain the
+ * correctly typed value.
+ */
+abstract class PropertyValue(val value: Any?, val type: PropertyType) {
     open fun stringValue(): String? = throw IllegalArgumentException("Property value is of type $type and not String")
     open fun longValue(): Long? = throw IllegalArgumentException("Property value is of type $type and not Long")
     open fun tokenTypeValue(): TokenType? = throw IllegalArgumentException("Property value is of type $type and not TokenType")
@@ -380,77 +67,135 @@ abstract class PropertyValue(val value: Any?, val type: Class<*>) {
 
 
 /**
- * A typed map of properties used to capture an error context.
+ * A [PropertyType] is a top level type for all types of values that appear as properties in error codes.
+ * Clients can access the type (as a `Class<*>`) of a property's value through [getType()].
+ *
  */
-class PropertyValueMap(private val map: EnumMap<Property, PropertyValue?> = EnumMap(Property::class.java)) {
+enum class PropertyType(private val type: Class<*>){
+    LONG_CLASS (Long::class.javaObjectType),
+    STRING_CLASS(String::class.javaObjectType),
+    INTEGER_CLASS(Int::class.javaObjectType),
+    TOKEN_CLASS(TokenType::class.javaObjectType),
+    ION_VALUE_CLASS(IonValue::class.javaObjectType);
+
+    public fun getType() = type
+}
+
+/**
+ * A typed map of properties used to capture an error context.
+ *
+ * At each error location and for the specific error code `ec`  the implementation of IonSql++
+ *
+ *  1. creates a new [PropertyValueMap]
+ *  1. **attempts** to add to add values for **all** [Property] found in `ec.getProperties()` set
+ *
+ *  It may be the case that the implementation was not able to populate one of the [Property] of `ec.getProperties()`.
+ *  In that case the [PropertyValueMap] will **not** contains a key-value pair for that [Property].
+ *
+ *  Absence of a key means that there is no information. Clients **should** test a [Property] for membership in [PropertyValueMap]
+ *
+ *
+ */
+class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumMap(Property::class.java)) {
 
 
     /**
      * Given a [Property]  retrieve the value mapped to [p] in this map.
      *
      *
-     * @param p key to be retrieved from the map
-     * @return the value stored in this [PropertyValueMap] as a [PropertyValue]
+     * @param key to be retrieved from the map
+     * @return the value stored in this [PropertyValueMap] as a [PropertyValue], `null` if key is not present
      *
-     * @throws IllegalArgumentException when the [type] passed as argument does not match the [Property]'s type
      */
     operator fun get(key: Property): PropertyValue? = map[key]
 
 
-    operator fun set(key: Property, strValue: String?) {
-        if (key.type == STRING_CLASS) {
-            map[key] = object : PropertyValue(strValue, STRING_CLASS) {
-                override fun stringValue(): String? = strValue
-            }
+    private fun <T> verifyTypeAndSet(prop: Property, expectedType: PropertyType, value : T,  pValue: PropertyValue) {
+        if (prop.propertyType == expectedType) {
+            map[prop] = pValue
         } else {
-            throw IllegalArgumentException("Property $key requires a value of type ${key.type} but was given $strValue")
+            throw IllegalArgumentException("Property $prop requires a value of type ${prop.propertyType.getType()} but was given $value")
         }
     }
 
-
-    operator fun set(key: Property, longValue: Long?) {
-        if (key.type == LONG_CLASS) {
-            map[key] = object : PropertyValue(longValue, LONG_CLASS) {
-                override fun longValue(): Long? = longValue
-            }
-        } else {
-            throw IllegalArgumentException("Property $key requires a value of type ${key.type} but was given $longValue")
+    /**
+     * Given a `key` and a [String] value, insert the key-value pair into the [PropertyValueMap].
+     *
+     * @param key to be added into the [PropertyValueMap]
+     * @param strValue [String] value to be associated with `key` in the [PropertyValueMap]
+     *
+     * @throws [IllegalArgumentException] if the [Property] used as `key` requires values of type **other than** [String]
+     */
+    operator fun set(key: Property, strValue: String) {
+        val o = object : PropertyValue(strValue, STRING_CLASS) {
+            override fun stringValue(): String? = strValue
         }
+        verifyTypeAndSet(key, STRING_CLASS, strValue ,o)
     }
 
 
-    operator fun set(key: Property, intValue: Int?) {
-        if (key.type == INTEGER_CLASS) {
-            map[key] = object : PropertyValue(intValue, INTEGER_CLASS) {
-                override fun integerValue(): Int? = intValue
-            }
-        } else {
-            throw IllegalArgumentException("Property $key requires a value of type ${key.type} but was given $intValue")
+    /**
+     * Given a `key` and a [Long] value, insert the key-value pair into the [PropertyValueMap].
+     *
+     * @param key to be added into the [PropertyValueMap]
+     * @param longValue [Long] value to be associated with `key` in the [PropertyValueMap]
+     *
+     * @throws [IllegalArgumentException] if the [Property] used as `key` requires values of type **other than** [Long]
+     */
+    operator fun set(key: Property, longValue: Long) {
+        val o = object : PropertyValue(longValue, LONG_CLASS) {
+            override fun longValue(): Long? = longValue
         }
+        verifyTypeAndSet(key, LONG_CLASS, longValue, o)
     }
 
 
-    operator fun set(key: Property, ionValue: IonValue?) {
-        if (key.type == ION_VALUE_CLASS) {
-            map[key] = object : PropertyValue(ionValue, ION_VALUE_CLASS) {
-                override fun ionValue(): IonValue? = ionValue
-            }
-        } else {
-            throw IllegalArgumentException("Property $key requires a value of type ${key.type} but was given $ionValue")
+    /**
+     * Given a `key` and a [Int] value, insert the key-value pair into the [PropertyValueMap].
+     *
+     * @param key to be added into the [PropertyValueMap]
+     * @param intValue [Int] value to be associated with `key` in the [PropertyValueMap]
+     *
+     * @throws [IllegalArgumentException] if the [Property] used as `key` requires values of type **other than** [Int]
+     */
+    operator fun set(key: Property, intValue: Int) {
+        val o = object : PropertyValue(intValue, INTEGER_CLASS) {
+            override fun integerValue(): Int? = intValue
         }
-    }
-
-    operator fun set(key: Property, tokenTypeValue: TokenType?) {
-        if (key.type == TOKEN_CLASS) {
-            map[key] = object : PropertyValue(tokenTypeValue, TOKEN_CLASS) {
-                override fun tokenTypeValue(): TokenType? = tokenTypeValue
-            }
-        } else {
-            throw IllegalArgumentException("Property $key requires a value of type ${key.type} but was given $tokenTypeValue")
-        }
+        verifyTypeAndSet(key, INTEGER_CLASS, intValue, o)
     }
 
 
+    /**
+     * Given a `key` and a [IonValue] value, insert the key-value pair into the [PropertyValueMap].
+     *
+     * @param key to be added into the [PropertyValueMap]
+     * @param ionValue [IonValue] value to be associated with `key` in the [PropertyValueMap]
+     *
+     * @throws [IllegalArgumentException] if the [Property] used as `key` requires values of type **other than** [IonValue]
+     */
+    operator fun set(key: Property, ionValue: IonValue) {
+        val o = object : PropertyValue(ionValue, ION_VALUE_CLASS) {
+            override fun ionValue(): IonValue? = ionValue
+        }
+        verifyTypeAndSet(key, ION_VALUE_CLASS, ionValue, o)
+    }
+
+
+    /**
+     * Given a `key` and a [TokenType] value, insert the key-value pair into the [PropertyValueMap].
+     *
+     * @param key to be added into the [PropertyValueMap]
+     * @param tokenTypeValue [TokenType] value to be associated with `key` in the [PropertyValueMap]
+     *
+     * @throws [IllegalArgumentException] if the [Property] used as `key` requires values of type **other than** [TokenType]
+     */
+    operator fun set(key: Property, tokenTypeValue: TokenType) {
+        val o = object : PropertyValue(tokenTypeValue, TOKEN_CLASS) {
+            override fun tokenTypeValue(): TokenType? = tokenTypeValue
+        }
+        verifyTypeAndSet(key, TOKEN_CLASS, tokenTypeValue, o)
+    }
 
 
     /**

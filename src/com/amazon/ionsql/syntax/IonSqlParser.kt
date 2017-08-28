@@ -24,9 +24,9 @@ import java.util.*
  * as the abstract syntax tree.
  */
 class IonSqlParser(private val ion: IonSystem,
-                   private var errorHandler: ErrorHandler = DefaultErrorHandler()) : Parser {
+                   private var errorHandler: ErrorHandler = alwaysThrowsErrorHandler) : Parser {
 
-    constructor (ion: IonSystem) : this(ion, DefaultErrorHandler())
+    constructor (ion: IonSystem) : this(ion, alwaysThrowsErrorHandler)
 
     companion object {
 
@@ -37,8 +37,6 @@ class IonSqlParser(private val ion: IonSystem,
         private fun populateLineAndColumn(errorContext: PropertyValueMap, sourcePosition: SourcePosition?): PropertyValueMap {
             when (sourcePosition) {
                 null -> {
-                    errorContext[LINE_NUMBER] = null as Long?    // disambiguate overloaded set method
-                    errorContext[COLUMN_NUMBER] = null as Long?  // disambiguate overloaded set method
                     return errorContext
                 }
                 else -> {
@@ -56,7 +54,7 @@ class IonSqlParser(private val ion: IonSystem,
                 else -> {
                     val pvmap = populateLineAndColumn(errorContext, this.position)
                     pvmap[TOKEN_TYPE] = type
-                    pvmap[TOKEN_VALUE] = value
+                    value?.let { pvmap[TOKEN_VALUE] = it }
                     throw ParserException(message, errorCode, pvmap)
                 }
             }
@@ -676,7 +674,7 @@ class IonSqlParser(private val ion: IonSystem,
         }
         if (typeNode.children.size !in typeArity) {
             val pvmap = PropertyValueMap()
-            pvmap[CAST_TO] = typeName
+            pvmap[CAST_TO] = typeName?: ""
             pvmap[EXPECTED_ARITY_MIN] = typeArity.first
             pvmap[EXPECTED_ARITY_MAX] = typeArity.last
             tail.err("CAST for $typeName must have arity of $typeArity", PARSE_CAST_ARITY, pvmap)

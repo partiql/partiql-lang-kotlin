@@ -16,8 +16,8 @@ open class ErrorsBase : Base() {
      *        if `false` [expectedValues] must contain a **subset** of keys and their values as the exception's errorContext.
      */
     protected fun <T : IonSqlException> checkErrorAndErrorContext(errorCode: ErrorCode, ex: T, expectedValues: Map<Property, Any>, strict: Boolean) {
-        assertEquals(errorCode, ex.getErrorCode())
-        val errorContext = ex.getErrorContext()
+        assertEquals(errorCode, ex.errorCode)
+        val errorContext = ex.errorContext
         correctContextKeys(errorCode, errorContext)
         correctContextValues(errorCode, errorContext, expectedValues, strict)
     }

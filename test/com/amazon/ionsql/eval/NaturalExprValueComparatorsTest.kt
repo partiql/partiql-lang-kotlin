@@ -191,7 +191,7 @@ class NaturalExprValueComparatorsTest : EvaluatorBase() {
             try {
                 evalWithBindings(it)
             } catch (e: Exception) {
-                throw IonSqlException("Could not evaluate $it", e)
+                throw IonSqlException("Could not evaluate $it", cause = e)
             }
         }
     }

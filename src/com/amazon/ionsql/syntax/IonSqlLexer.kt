@@ -22,7 +22,7 @@ import java.util.*
  * Simple tokenizer for IonSQL++.
  */
 class IonSqlLexer(private val ion: IonSystem,
-                  private var errorHandler: ErrorHandler = DefaultErrorHandler()) : Lexer {
+                  private var errorHandler: ErrorHandler = alwaysThrowsErrorHandler) : Lexer {
     /** Transition types. */
     internal enum class StateType(val beginsToken: Boolean = false,
                                   val endsToken: Boolean = false) {
