@@ -21,8 +21,7 @@ import java.util.*
 /**
  * Simple tokenizer for IonSQL++.
  */
-class IonSqlLexer(private val ion: IonSystem,
-                  private var errorHandler: ErrorHandler = alwaysThrowsErrorHandler) : Lexer {
+class IonSqlLexer(private val ion: IonSystem) : Lexer {
     /** Transition types. */
     internal enum class StateType(val beginsToken: Boolean = false,
                                   val endsToken: Boolean = false) {
@@ -397,11 +396,6 @@ class IonSqlLexer(private val ion: IonSystem,
         return pvmap
     }
 
-
-    override fun tokenize(source: String, errorHandler: ErrorHandler): List<Token> {
-        this.errorHandler = errorHandler
-        return tokenize(source)
-    }
 
     override fun tokenize(source: String): List<Token> {
 

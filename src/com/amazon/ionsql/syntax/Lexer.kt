@@ -13,5 +13,4 @@ import com.amazon.ionsql.errors.ErrorHandler
  */
 interface Lexer {
     fun tokenize(source: String): List<Token>
-    fun tokenize(source: String, errorHandler: ErrorHandler): List<Token>
 }

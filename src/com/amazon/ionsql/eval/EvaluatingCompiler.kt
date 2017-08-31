@@ -9,7 +9,6 @@ import com.amazon.ion.IonSexp
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
 import com.amazon.ionsql.errors.ErrorHandler
-import com.amazon.ionsql.errors.alwaysThrowsErrorHandler
 import com.amazon.ionsql.syntax.IonSqlParser
 import com.amazon.ionsql.syntax.Parser
 import com.amazon.ionsql.syntax.Token
@@ -36,11 +35,11 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 class EvaluatingCompiler(private val ion: IonSystem,
                          private val parser: Parser,
-                         private val userFunctions: @JvmSuppressWildcards Map<String, ExprFunction>,
-                         private val errorHandler: ErrorHandler = alwaysThrowsErrorHandler) : Compiler {
+                         private val userFunctions: @JvmSuppressWildcards Map<String, ExprFunction>) : Compiler {
+
 
     constructor(ion: IonSystem) :
-        this(ion, IonSqlParser(ion), emptyMap(), alwaysThrowsErrorHandler)
+        this(ion, IonSqlParser(ion), emptyMap())
 
     constructor(ion: IonSystem,
                 userFuncs: @JvmSuppressWildcards Map<String, ExprFunction>):
@@ -1303,11 +1302,5 @@ class EvaluatingCompiler(private val ion: IonSystem,
         }
     }
 
-    /**
-     * Compiles the given source expression into a bound [Expression] delegating errors to [errorHandler]
-     */
-    override fun compile(source: String, errorHandler: ErrorHandler): Expression {
-        return EvaluatingCompiler(ion, parser, userFunctions, errorHandler).compile(source)
-    }
 }
 

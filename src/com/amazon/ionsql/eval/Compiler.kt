@@ -15,8 +15,5 @@ import com.amazon.ionsql.errors.ErrorHandler
  */
 interface Compiler {
     fun compile(source: String): Expression
-    /**
-     * Compile query expression and delegate errors to [errorHandler]
-     */
-    fun compile(source: String, errorHandler: ErrorHandler): Expression
+
 }

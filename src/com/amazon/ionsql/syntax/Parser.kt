@@ -14,5 +14,4 @@ import com.amazon.ionsql.errors.ErrorHandler
  */
 interface Parser {
     fun parse(source: String): IonSexp
-    fun parse(source: String, errorHandler: ErrorHandler): IonSexp
 }

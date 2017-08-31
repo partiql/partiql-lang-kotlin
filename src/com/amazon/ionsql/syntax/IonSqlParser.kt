@@ -23,10 +23,7 @@ import java.util.*
  * Parses a list of tokens as infix query expression into a prefix s-expression
  * as the abstract syntax tree.
  */
-class IonSqlParser(private val ion: IonSystem,
-                   private var errorHandler: ErrorHandler = alwaysThrowsErrorHandler) : Parser {
-
-    constructor (ion: IonSystem) : this(ion, alwaysThrowsErrorHandler)
+class IonSqlParser(private val ion: IonSystem) : Parser {
 
     companion object {
 
@@ -1053,9 +1050,4 @@ class IonSqlParser(private val ion: IonSystem,
         return node.toSexp().apply { makeReadOnly() }
     }
 
-    /** Entry point into the parser. */
-    override fun parse(source: String, errorHandler: ErrorHandler): IonSexp {
-        this.errorHandler = errorHandler
-        return parse(source)
-    }
 }

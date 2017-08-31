@@ -57,12 +57,12 @@ enum class Property(val propertyName: String, val propertyType: PropertyType) {
  * For each type of value that can be a [Property] there is a method to allow clients to obtain the
  * correctly typed value.
  */
-abstract class PropertyValue(val value: Any?, val type: PropertyType) {
-    open fun stringValue(): String? = throw IllegalArgumentException("Property value is of type $type and not String")
-    open fun longValue(): Long? = throw IllegalArgumentException("Property value is of type $type and not Long")
-    open fun tokenTypeValue(): TokenType? = throw IllegalArgumentException("Property value is of type $type and not TokenType")
-    open fun integerValue(): Int? = throw IllegalArgumentException("Property value is of type $type and not Integer")
-    open fun ionValue(): IonValue? = throw IllegalArgumentException("Property value is of type $type and not IonValue")
+abstract class PropertyValue(val type: PropertyType) {
+    open fun stringValue(): String = throw IllegalArgumentException("Property value is of type $type and not String")
+    open fun longValue(): Long = throw IllegalArgumentException("Property value is of type $type and not Long")
+    open fun tokenTypeValue(): TokenType = throw IllegalArgumentException("Property value is of type $type and not TokenType")
+    open fun integerValue(): Int = throw IllegalArgumentException("Property value is of type $type and not Integer")
+    open fun ionValue(): IonValue = throw IllegalArgumentException("Property value is of type $type and not IonValue")
 }
 
 
@@ -127,8 +127,8 @@ class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumM
      * @throws [IllegalArgumentException] if the [Property] used as `key` requires values of type **other than** [String]
      */
     operator fun set(key: Property, strValue: String) {
-        val o = object : PropertyValue(strValue, STRING_CLASS) {
-            override fun stringValue(): String? = strValue
+        val o = object : PropertyValue(STRING_CLASS) {
+            override fun stringValue(): String = strValue
         }
         verifyTypeAndSet(key, STRING_CLASS, strValue ,o)
     }
@@ -143,8 +143,8 @@ class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumM
      * @throws [IllegalArgumentException] if the [Property] used as `key` requires values of type **other than** [Long]
      */
     operator fun set(key: Property, longValue: Long) {
-        val o = object : PropertyValue(longValue, LONG_CLASS) {
-            override fun longValue(): Long? = longValue
+        val o = object : PropertyValue(LONG_CLASS) {
+            override fun longValue(): Long = longValue
         }
         verifyTypeAndSet(key, LONG_CLASS, longValue, o)
     }
@@ -159,8 +159,8 @@ class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumM
      * @throws [IllegalArgumentException] if the [Property] used as `key` requires values of type **other than** [Int]
      */
     operator fun set(key: Property, intValue: Int) {
-        val o = object : PropertyValue(intValue, INTEGER_CLASS) {
-            override fun integerValue(): Int? = intValue
+        val o = object : PropertyValue(INTEGER_CLASS) {
+            override fun integerValue(): Int = intValue
         }
         verifyTypeAndSet(key, INTEGER_CLASS, intValue, o)
     }
@@ -175,8 +175,8 @@ class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumM
      * @throws [IllegalArgumentException] if the [Property] used as `key` requires values of type **other than** [IonValue]
      */
     operator fun set(key: Property, ionValue: IonValue) {
-        val o = object : PropertyValue(ionValue, ION_VALUE_CLASS) {
-            override fun ionValue(): IonValue? = ionValue
+        val o = object : PropertyValue(ION_VALUE_CLASS) {
+            override fun ionValue(): IonValue = ionValue
         }
         verifyTypeAndSet(key, ION_VALUE_CLASS, ionValue, o)
     }
@@ -191,8 +191,8 @@ class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumM
      * @throws [IllegalArgumentException] if the [Property] used as `key` requires values of type **other than** [TokenType]
      */
     operator fun set(key: Property, tokenTypeValue: TokenType) {
-        val o = object : PropertyValue(tokenTypeValue, TOKEN_CLASS) {
-            override fun tokenTypeValue(): TokenType? = tokenTypeValue
+        val o = object : PropertyValue(TOKEN_CLASS) {
+            override fun tokenTypeValue(): TokenType = tokenTypeValue
         }
         verifyTypeAndSet(key, TOKEN_CLASS, tokenTypeValue, o)
     }
