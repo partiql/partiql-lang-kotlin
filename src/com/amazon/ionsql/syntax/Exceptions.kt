@@ -5,29 +5,28 @@
 package com.amazon.ionsql.syntax
 
 import com.amazon.ionsql.IonSqlException
+import com.amazon.ionsql.errors.ErrorCode
+import com.amazon.ionsql.errors.PropertyValueMap
 
-private fun genMessage(message: String, position: SourcePosition?): String {
-    val positionMsg = when (position) {
-        null -> "<UNKNOWN POSITION>"
-        else -> position.toString()
-    }
-    return "$message at $positionMsg"
-}
+
 
 /** Root exception type for syntactic problems. */
-open class SyntaxException(message: String,
-                           val position: SourcePosition?,
+open class SyntaxException(message: String = "",
+                           errorCode: ErrorCode,
+                           errorContext: PropertyValueMap,
                            cause: Throwable? = null)
-    : IonSqlException(genMessage(message, position), cause)
+    : IonSqlException(message, errorCode, errorContext, cause)
 
 /** Error in the Lexer. */
-open class LexerException(message: String,
-                          position: SourcePosition?,
+open class LexerException(message: String = "",
+                          errorCode: ErrorCode,
+                          errorContext: PropertyValueMap,
                           cause: Throwable? = null)
-    : SyntaxException(message, position, cause)
+    : SyntaxException(message, errorCode, errorContext, cause)
 
 /** Error in the parser. */
-open class ParserException(message: String,
-                           position: SourcePosition?,
+open class ParserException(message: String = "",
+                           errorCode: ErrorCode,
+                           errorContext: PropertyValueMap,
                            cause: Throwable? = null)
-    : SyntaxException(message, position, cause)
+    : SyntaxException(message, errorCode, errorContext, cause)

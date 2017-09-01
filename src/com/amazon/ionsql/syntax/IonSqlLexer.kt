@@ -5,9 +5,13 @@
 package com.amazon.ionsql.syntax
 
 import com.amazon.ion.IonSystem
+import com.amazon.ionsql.errors.*
+import com.amazon.ionsql.errors.ErrorCode.*
+import com.amazon.ionsql.errors.Property.*
 import com.amazon.ionsql.syntax.IonSqlLexer.LexType.*
 import com.amazon.ionsql.syntax.IonSqlLexer.StateType.*
 import com.amazon.ionsql.syntax.TokenType.*
+import com.amazon.ionsql.syntax.TokenType.KEYWORD
 import com.amazon.ionsql.util.*
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -25,6 +29,8 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
         INITIAL(),
         /** Indicates an error state. */
         ERROR(),
+        /** Indicates the end of the stream */
+        END(beginsToken = true),
         /** Indicates the middle of a token. */
         INCOMPLETE(),
         /** Indicates the begining of a new token. */
@@ -71,7 +77,7 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
     internal class RepeatingState(override val stateType: StateType) : State {
         override fun get(next: Int): State = this
     }
-    
+
     /** State node and corresponding state table. */
     internal class TableState(override val stateType: StateType,
                               override val tokenType: TokenType? = null,
@@ -185,7 +191,7 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
         private val REPLACE_NOTHING = -2
 
         /** Synthetic state for EOF to trigger a flush of the last token. */
-        private val EOF_STATE = RepeatingState(START)
+        private val EOF_STATE = RepeatingState(END)
 
         /** Error state. */
         private val ERROR_STATE = RepeatingState(ERROR)
@@ -260,18 +266,18 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
                         // at the top-level we need to support dot as a special
                         delta(".", START_AND_TERMINAL, DOT) {
                             deltaDecimalInteger(TERMINAL, DECIMAL) {
-                                deltaExponent {  }
+                                deltaExponent { }
                             }
                         }
                     }
                     else -> {
                         deltaDecimalFraction {
-                            deltaExponent {  }
+                            deltaExponent { }
                         }
                     }
                 }
             }
-            
+
             deltaNumber(START_AND_TERMINAL)
 
             fun TableState.deltaQuote(quoteChar: String, tokenType: TokenType, lexType: LexType): Unit {
@@ -374,11 +380,26 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
 
     private fun repr(codePoint: Int): String = when {
         codePoint == EOF -> "<EOF>"
-        codePoint < EOF -> "<INVALID: $codePoint>"
+        codePoint < EOF -> "<$codePoint>"
         else -> "'${String(Character.toChars(codePoint))}' [U+${Integer.toHexString(codePoint)}]"
     }
 
+    /**
+     * Given a token as a [String] and a [tracker] creates and populates a [PropertyValueMap] with line and column number as
+     * well as the token string.
+     */
+    private fun makePropertyBag(tokenString: String, tracker: PositionTracker): PropertyValueMap {
+        val pvmap = PropertyValueMap()
+        pvmap[LINE_NUMBER] =  tracker.line
+        pvmap[COLUMN_NUMBER] =  tracker.col
+        pvmap[TOKEN_STRING] =  tokenString
+        return pvmap
+    }
+
+
     override fun tokenize(source: String): List<Token> {
+
+
         val codePoints = source.codePointSequence() + EOF
 
         val tokens = ArrayList<Token>()
@@ -387,15 +408,23 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
         var curr: State = INITIAL_STATE
         val buffer = StringBuilder()
 
+
         for (cp in codePoints) {
-            fun err(prefix: String = "Invalid character ${repr(cp)}"): Nothing {
-                throw LexerException(prefix, tracker.position)
-            }
+
+            fun errInvalidChar(): Nothing =
+                throw LexerException(errorCode = LEXER_INVALID_CHAR, errorContext = makePropertyBag(repr(cp), tracker))
+
+            fun errInvalidOperator(operator: String): Nothing =
+                throw LexerException(errorCode = LEXER_INVALID_OPERATOR, errorContext = makePropertyBag(operator, tracker))
+
+            fun errInvalidLiteral(literal: String): Nothing =
+                throw LexerException(errorCode = LEXER_INVALID_LITERAL, errorContext = makePropertyBag(literal, tracker))
+
 
             tracker.advance(cp)
 
             // retrieve the next state
-            val next = when(cp) {
+            val next = when (cp) {
                 EOF -> EOF_STATE
                 else -> curr[cp]
             }
@@ -403,11 +432,12 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
             val currType = curr.stateType
             val nextType = next.stateType
             when {
-                nextType == ERROR -> err()
+
+                nextType == ERROR -> errInvalidChar()
                 nextType.beginsToken -> {
                     // we can only start a token if we've properly ended another one.
                     if (currType != INITIAL && !currType.endsToken) {
-                        err()
+                        errInvalidChar()
                     }
                     if (currType.endsToken && curr.lexType != WHITESPACE) {
                         // flush out the previous token
@@ -419,7 +449,7 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
                                 val unaliased = OPERATOR_ALIASES[text] ?: text
                                 when (unaliased) {
                                     in ALL_OPERATORS -> ion.newSymbol(unaliased)
-                                    else -> err("Unknown operator $unaliased")
+                                    else -> errInvalidOperator(unaliased)
                                 }
                             }
                             IDENTIFIER -> {
@@ -469,7 +499,7 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
                                 INTEGER -> ion.newInt(BigInteger(text, 10))
                                 DECIMAL -> ion.newDecimal(BigDecimal(text))
                                 ION_LITERAL -> ion.singleValue(text)
-                                else -> err("Invalid literal $text")
+                                else -> errInvalidLiteral(text)
                             }
                             else -> ion.newSymbol(text)
                         }.seal()
@@ -489,6 +519,8 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
                 })
             }
 
+            // if next state is the EOF marker add it to `tokens`.
+            if (next.stateType == END) tokens.add(Token(TokenType.EOF,ion.newSymbol("EOF"), currPos))
             curr = next
         }
 

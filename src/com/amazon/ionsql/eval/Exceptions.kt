@@ -9,7 +9,7 @@ import com.amazon.ionsql.IonSqlException
 /** Error for evaluation problems. */
 open class EvaluationException(message: String,
                                cause: Throwable? = null)
-    : IonSqlException(message, cause)
+    : IonSqlException(message, cause = cause)
 
 /** Shorthand for throwing evaluation errors. */
 internal fun err(message: String): Nothing = throw EvaluationException(message)

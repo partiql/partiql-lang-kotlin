@@ -20,12 +20,18 @@ class IonSqlLexerTest : Base() {
         return Token(type, value, SourcePosition(line, column))
     }
 
-    fun tokenize(text: String) = lexer.tokenize(text)
+    fun tokenize(text: String): Pair<Token, List<Token>> {
+        val tokens = lexer.tokenize(text)
+        return Pair(tokens[tokens.size - 1], tokens.dropLast(1))
+    }
+
 
     fun assertTokens(text: String, vararg tokens: Token) {
         val expected = listOf(*tokens)
-        val actual = tokenize(text)
+        val (eofToken, actual) = tokenize(text)
+
         assertEquals(expected, actual)
+        assertEquals(TokenType.EOF, eofToken.type)
     }
 
     @Test

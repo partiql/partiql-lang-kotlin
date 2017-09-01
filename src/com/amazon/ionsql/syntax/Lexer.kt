@@ -4,6 +4,8 @@
 
 package com.amazon.ionsql.syntax
 
+import com.amazon.ionsql.errors.ErrorHandler
+
 /**
  * Tokenizes a [String] representation of a query into a [List] of [Token].
  *

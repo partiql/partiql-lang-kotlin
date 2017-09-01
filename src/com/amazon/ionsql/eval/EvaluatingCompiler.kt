@@ -8,6 +8,7 @@ import com.amazon.ion.IonSequence
 import com.amazon.ion.IonSexp
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
+import com.amazon.ionsql.errors.ErrorHandler
 import com.amazon.ionsql.syntax.IonSqlParser
 import com.amazon.ionsql.syntax.Parser
 import com.amazon.ionsql.syntax.Token
@@ -34,11 +35,16 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 class EvaluatingCompiler(private val ion: IonSystem,
                          private val parser: Parser,
-                         userFunctions: @JvmSuppressWildcards Map<String, ExprFunction>) : Compiler {
-    constructor(ion: IonSystem) : this(ion, IonSqlParser(ion), emptyMap())
+                         private val userFunctions: @JvmSuppressWildcards Map<String, ExprFunction>) : Compiler {
+
+
+    constructor(ion: IonSystem) :
+        this(ion, IonSqlParser(ion), emptyMap())
+
     constructor(ion: IonSystem,
-                userFuncs: @JvmSuppressWildcards Map<String, ExprFunction>)
-        : this(ion, IonSqlParser(ion), userFuncs)
+                userFuncs: @JvmSuppressWildcards Map<String, ExprFunction>):
+        this(ion, IonSqlParser(ion), userFuncs)
+
 
     private interface ExprThunk {
         fun eval(env: Environment): ExprValue
@@ -1065,7 +1071,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
     /** Dispatch table for built-in aggregate functions. */
     private val builtinAggregates: Map<String, ExprAggregatorFactory> = mapOf(
         "count" to ExprAggregatorFactory.over {
-            Accumulator { curr, next -> curr!! + 1L }
+            Accumulator { curr, _ -> curr!! + 1L }
         },
         "sum" to ExprAggregatorFactory.over {
             Accumulator { curr, next -> curr!! + next.numberValue() }
@@ -1295,5 +1301,6 @@ class EvaluatingCompiler(private val ion: IonSystem,
             override fun eval(globals: Bindings): ExprValue = eval(ast, globals)
         }
     }
+
 }
 
