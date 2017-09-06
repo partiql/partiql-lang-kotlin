@@ -1,0 +1,128 @@
+# Introduction
+
+This guide serves as style guide, code conventions and idioms for [Kotlin](https://kotlinlang.org/) for the [IonTeam](https://w.amazon.com/index.php/Ion). This document uses [Kotlin official coding conventions](http://kotlinlang.org/docs/reference/coding-conventions.html) document as base, if it's not specified here use that as a reference
+
+# Packages
+Maintain directory structure and package names consistent, e.g. foo.bar should be in foo/bar folder. Keeping both consistent makes easier to find any resource, e.g. class or function, that is part of the package and naturally groups them all
+
+# Imports
+Use fully qualified imports to avoid name clashing and use alphabetical order to simplify git merges
+
+# Control Flow
+use `when` instead of `if else if` when possible, e.g.
+
+```kotlin
+// Bad
+fun foo(i: Int) {
+    if(i == 0){
+        // (...)
+    }
+    else if (i in 1..10){
+        // (...)
+    }
+    else {
+        // (...)
+    }
+}
+
+// Good
+fun foo(i: Int) {
+    when(i)
+    {
+        0 -> // (...)
+        in 0..10 -> // (...)
+        else -> // (...)
+    }
+}
+
+```
+
+Apart from being cleaner `when` is safer when operating over sealed [classes](http://kotlinlang.org/docs/reference/sealed-classes.html), e.g.
+```kotlin
+sealed class Shape {}
+data class Round(val radius: Double) : Shape() {}
+data class Square(val width: Double, val height: Double) : Shape() {}
+
+// compilation error as it's missing Square and has no `else` clause
+fun calculateArea(shape: Shape): Double = when(shape) {
+    is Square -> shape.width * shape.height
+}
+
+// works and will give a compilation error when another Shape is introduced
+fun calculateArea(shape: Shape): Double = when(shape) {
+    is Square -> shape.width * shape.height
+    is Round -> shape.radius*shape.radius*Math.PI
+}
+
+// Won't give any compilation error when another Shape is introduced forcing you to implement a runtime failure
+fun calculateArea(shape: Shape): Double {
+    if(shape is Square) {
+        return shape.width * shape.height
+    }
+    else if (shape is Round) {
+        return shape.radius*shape.radius*Math.PI
+    }
+
+    throw new RuntimeException("unknown shape $shape")
+}
+```
+
+# Extensions
+IonSQL++ is not an extension library, like guava is for example, so we should limit the scope of helper extensions to avoid polluting clients and avoid clashes.
+```kotlin
+// bad: forAll will be seen by client
+fun <T> List<T>.forAll(predicate: (T) -> Boolean): Boolean = // (...)
+
+// good: Only seen by the IonSQL++ module itself   
+internal fun <T> List<T>.forAll(predicate: (T) -> Boolean): Boolean = // (...)
+```
+**Note**: this is not as much an issue for Java clients as extensions are exposed by a something similar to `public static PackageName.forAll(...)`. It's still exposing internal API externally creating more opportunity for bad coupling with clients
+
+Consider `inline` for extensions. Doing so can lead to better performance as skips a method call and avoids the Java interoperability issue of exposing `static` APIs.
+
+Separate module scoped extensions in their own class inside `com.amazon.ionsql.util`, e.g.: https://code.amazon.com/packages/IonSQLSandbox/blobs/sqlpp/--/src/com/amazon/ionsql/util/CollectionExtensions.kt
+
+# Lambdas
+Name big lambda expressions by transforming them in `val` or functions. example:
+```kotlin
+// bad: hard to tell what what it's being filtered
+val numbers = IntRange(1, 100).filter {
+    if (it <= 0) false
+    else if (it <= 3) true
+    else if (it % 2 ==0 || it % 3 == 0) false
+    else {
+        var i = 5
+        var r = true
+        while (i * i <= it && r) {
+            if(it % i == 0 || it % (i + 2) == 0) {
+                r = false
+            }
+            i += 6
+        }
+
+        r
+    }
+}
+
+// good: a name helps to understand the filter intent  
+fun isPrime(n: Int): Boolean {
+    // (...)
+}
+val numbers = IntRange(1, 100).filter(::isPrime)
+
+
+// also good
+val isPrime = { n: Int ->
+    // (...)
+}
+val numbers = IntRange(1, 100).filter(isPrime)
+```
+
+# Visibility Modifiers
+Be mindful of what should be exposed to clients and what should be internal to the module. The library flexibility should be by design, being more restrictive avoids accidental coupling with internal parts of the library making future refactorings simpler and safer
+
+**TODO** example
+
+# Java Interop
+
+**TODO**
