@@ -153,12 +153,6 @@ fun main(args: Array<String>) {
     val out = IonTextWriterBuilder.pretty().build(System.out as OutputStream)
     val buffer = StringBuilder()
     var result = ION.newNull().exprValue()
-    val locals = Bindings.over {
-        when (it) {
-            "_" -> result
-            else -> globals[it]
-        }
-    }
     var running = true
     while (running) {
         when {
@@ -173,6 +167,15 @@ fun main(args: Array<String>) {
                 val startNs = System.nanoTime()
                 try {
                     if (source != "") {
+                        // capture the result in a non-mutable binding
+                        // and construct an environment for evaluation over it
+                        val previousResult = result
+                        val locals = Bindings.over {
+                            when (it) {
+                                "_" -> previousResult
+                                else -> globals[it]
+                            }
+                        }
                         result = when (line) {
                             "!!" -> ION.newEmptyList().apply {
                                 add(parser.parse(source).clone())
