@@ -5,7 +5,7 @@ import com.amazon.ionsql.syntax.ParserException
 import com.amazon.ionsql.syntax.TokenType
 import org.junit.Test
 
-class ParserErrors : ErrorsBase() {
+class ParserErrorsTest : ErrorsBase() {
 
     private val parser = IonSqlParser(ion)
 
@@ -19,7 +19,6 @@ class ParserErrors : ErrorsBase() {
             parser.parse(input)
             fail("Expected ParserException but there was no Exception")
         } catch (pex: ParserException) {
-            println(pex.toString())
             checkErrorAndErrorContext(errorCode, pex, expectErrorContextValues, strict)
         } catch (ex: Exception) {
             fail("Expected ParserException but a different exception was thrown \n\t  $ex")
@@ -208,7 +207,7 @@ class ParserErrors : ErrorsBase() {
             mapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 7L,
-                Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
+                Property.TOKEN_TYPE to TokenType.EOF,
                 Property.TOKEN_VALUE to ion.newSymbol("EOF")))
 
     }

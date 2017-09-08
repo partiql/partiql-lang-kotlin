@@ -3,7 +3,7 @@ package com.amazon.ionsql.errors
 import com.amazon.ionsql.syntax.*
 import org.junit.Test
 
-class LexerErrors : ErrorsBase() {
+class LexerErrorsTest : ErrorsBase() {
 
     val lexer = IonSqlLexer(ion)
 

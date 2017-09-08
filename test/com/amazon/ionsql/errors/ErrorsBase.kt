@@ -2,6 +2,7 @@ package com.amazon.ionsql.errors
 
 import com.amazon.ionsql.Base
 import com.amazon.ionsql.IonSqlException
+import com.amazon.ionsql.errors.Property.*
 
 open class ErrorsBase : Base() {
 
@@ -50,7 +51,20 @@ open class ErrorsBase : Base() {
 
         expected.forEach { entry ->
             assertTrue("Error Context does not contain ${entry.key}", errorContext!!.hasProperty(entry.key))
-            assertEquals("$entry", entry.value, errorContext[entry.key])
+
+            when (entry.key) {
+                LINE_NUMBER,
+                COLUMN_NUMBER -> assertEquals("$entry", entry.value, errorContext[entry.key]?.longValue())
+                TOKEN_STRING,
+                CAST_TO,
+                KEYWORD -> assertEquals("$entry", entry.value, errorContext[entry.key]?.stringValue())
+                TOKEN_TYPE,
+                EXPECTED_TOKEN_TYPE -> assertEquals("$entry", entry.value, errorContext[entry.key]?.tokenTypeValue())
+                TOKEN_VALUE -> assertEquals("$entry", entry.value, errorContext[entry.key]?.ionValue())
+                EXPECTED_ARITY_MIN,
+                EXPECTED_ARITY_MAX -> assertEquals("$entry", entry.value, errorContext[entry.key]?.integerValue())
+            }
+
         }
     }
 
