@@ -56,9 +56,9 @@ class IonExprValueTest : Base() {
     }
 
     @Test
-    fun listChild() = over("[1, 2, 3]", { this[0] }) {
+    fun listChild() = over("[1, 2, 3]", { this[1] }) {
         val name = exprValue.name!!
-        assertEquals(0L, name.numberValue())
+        assertEquals(1, name.numberValue())
     }
 
     @Test

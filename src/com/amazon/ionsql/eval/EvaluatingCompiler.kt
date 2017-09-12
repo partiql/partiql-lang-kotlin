@@ -8,7 +8,6 @@ import com.amazon.ion.IonSequence
 import com.amazon.ion.IonSexp
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
-import com.amazon.ionsql.errors.ErrorHandler
 import com.amazon.ionsql.syntax.IonSqlParser
 import com.amazon.ionsql.syntax.Parser
 import com.amazon.ionsql.syntax.Token
@@ -46,6 +45,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
         this(ion, IonSqlParser(ion), userFuncs)
 
 
+    /** An [ExprValue] which is the result of an expression evaluated in an [Environment].  */
     private interface ExprThunk {
         fun eval(env: Environment): ExprValue
     }
@@ -116,11 +116,8 @@ class EvaluatingCompiler(private val ion: IonSystem,
     private val normalPathWildcard = ion.singleValue("(*)").seal()
     private val unpivotPathWildcard = ion.singleValue("(* unpivot)").seal()
 
-    private val missingValue = object : ExprValue by ion.newNull().seal().exprValue() {
-        override val type = ExprValueType.MISSING
-        override fun toString(): String = stringify()
-    }
-    private val nullValue = ion.newNull().seal().exprValue()
+    private val missingValue = missingExprValue(ion)
+    private val nullValue = nullExprValue(ion)
 
     private fun IonValue.determinePathWildcard(): PathWildcardKind = when (this) {
         normalPathWildcard -> PathWildcardKind.NORMAL
@@ -600,7 +597,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                         err("SELECT ... must have at least one expression")
                     }
                     val selectNames =
-                        extractAliases(selectForm.asSequence().drop(1)).map { it.asName }
+                        extractAliases(selectForm.asSequence().drop(1)).map { it.asName.exprValue() }
 
                     // nested aggregates within aggregates are not allowed
                     val cEnvInner = cEnv.copy(
@@ -902,9 +899,9 @@ class EvaluatingCompiler(private val ion: IonSystem,
     /** Provides SELECT <list> */
     private fun projectSelectList(env: Environment,
                                   exprs: List<ExprThunk>,
-                                  aliases: List<String>): ExprValue {
+                                  aliases: List<ExprValue>): ExprValue {
         val seq = exprs.asSequence().mapIndexed { col, expr ->
-            val name = aliases[col].exprValue()
+            val name = aliases[col]
             val value = expr.eval(env)
             value.namedValue(name)
         }
@@ -1130,17 +1127,17 @@ class EvaluatingCompiler(private val ion: IonSystem,
         return parent.nest(bindings)
     }
 
-    private fun Boolean.exprValue(): ExprValue = ion.newBool(this).seal().exprValue()
+    private fun Boolean.exprValue(): ExprValue = booleanExprValue(this, ion)
 
     private fun Number.exprValue(): ExprValue = when (this) {
-        is Int -> ion.newInt(this)
-        is Long -> ion.newInt(this)
-        is Double -> ion.newFloat(this)
-        is BigDecimal -> ion.newDecimal(this)
+        is Int -> integerExprValue(this, ion)
+        is Long -> integerExprValue(this, ion)
+        is Double -> floatExprValue(this, ion)
+        is BigDecimal -> decimalExprValue(this, ion)
         else -> err("Cannot convert number to expression value: $this")
-    }.seal().exprValue()
+    }
 
-    private fun String.exprValue(): ExprValue = ion.newString(this).seal().exprValue()
+    private fun String.exprValue(): ExprValue = stringExprValue(this, ion)
 
     private operator fun ExprValue.get(member: ExprValue): ExprValue = when {
         member.type == ExprValueType.INT -> {

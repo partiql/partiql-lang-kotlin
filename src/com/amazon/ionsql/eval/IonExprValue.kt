@@ -14,10 +14,10 @@ class IonExprValue(override val ionValue: IonValue) : BaseExprValue() {
     private val ion = ionValue.system
 
     private val namedFacet: Named? = when {
-        ionValue.fieldName != null -> ion.newString(ionValue.fieldName).seal().exprValue().asNamed()
+        ionValue.fieldName != null -> stringExprValue(ionValue.fieldName, ion).asNamed()
         ionValue.type != IonType.DATAGRAM
             && ionValue.container != null
-            && ionValue.ordinal >= 0 -> ion.newInt(ionValue.ordinal).seal().exprValue().asNamed()
+            && ionValue.ordinal >= 0 -> integerExprValue(ionValue.ordinal, ion).asNamed()
         else -> null
     }
 
