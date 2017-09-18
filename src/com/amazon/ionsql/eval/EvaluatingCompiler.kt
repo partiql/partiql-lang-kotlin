@@ -36,7 +36,6 @@ class EvaluatingCompiler(private val ion: IonSystem,
                          private val parser: Parser,
                          private val userFunctions: @JvmSuppressWildcards Map<String, ExprFunction>) : Compiler {
 
-
     constructor(ion: IonSystem) :
         this(ion, IonSqlParser(ion), emptyMap())
 
@@ -1044,6 +1043,10 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
     private val functions = builtinFunctions + userFunctions
 
+    val functionSignatures: List<FunctionSignature> by lazy {
+        functions.map { (name, _) -> UntypedFunctionSignature(name) }
+    }
+
     private inner class Accumulator(var current: Number? = 0L,
                                     private val nextFunc: (Number?, ExprValue) -> Number) : ExprAggregator {
         override fun next(value: ExprValue) {
@@ -1298,6 +1301,4 @@ class EvaluatingCompiler(private val ion: IonSystem,
             override fun eval(globals: Bindings): ExprValue = eval(ast, globals)
         }
     }
-
 }
-
