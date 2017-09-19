@@ -8,6 +8,8 @@ import com.amazon.ion.IonSequence
 import com.amazon.ion.IonSexp
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
+import com.amazon.ionsql.eval.binding.Alias
+import com.amazon.ionsql.eval.binding.localsBinder
 import com.amazon.ionsql.syntax.IonSqlParser
 import com.amazon.ionsql.syntax.Parser
 import com.amazon.ionsql.syntax.Token
@@ -62,7 +64,6 @@ class EvaluatingCompiler(private val ion: IonSystem,
         OUTER
     }
 
-    private data class Alias(val asName: String, val atName: String?)
 
     private data class FromSource(val alias: Alias,
                                   val expr: ExprThunk,
@@ -481,7 +482,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
         },
         "path" to { cEnv, ast ->
             if (ast.size < 3) {
-                err("Path arity to low: $ast")
+                err("Path arity too low: $ast")
             }
 
             var currExpr = ast[1].compile(cEnv)
@@ -940,7 +941,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
      */
     private fun compileQueryWithoutProjection(cEnv: CompilationEnvironment, ast: IonSexp): (Environment) -> Sequence<FromProductionThunks> {
         val fromSources = ast[2][1].compileFromClauseSources(cEnv)
-        val fromNames = fromSources.map { it.alias }
+        val localsBinder = fromSources.map { it.alias }.localsBinder(missingValue)
 
         var whereExpr: ExprThunk? = null
         var limitExpr: ExprThunk? = null
@@ -1008,7 +1009,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 .asSequence()
                 .map { joinedValues ->
                     // bind the joined value to the bindings for the filter/project
-                    FromProductionThunks(joinedValues, joinedValues.bind(fromEnv, fromNames))
+                    FromProductionThunks(joinedValues, fromEnv.nest(localsBinder.bindLocals(joinedValues)))
                 }
 
             if (whereExpr != null) {
@@ -1094,41 +1095,6 @@ class EvaluatingCompiler(private val ion: IonSystem,
             }
         }
     )
-
-    private fun List<ExprValue>.bind(parent: Environment, aliases: List<Alias>): Environment {
-        val locals = map { it.bindings }
-
-        val bindings = Bindings.over { name ->
-            val found = locals.asSequence()
-                .mapIndexed { col, _ ->
-                    when (name) {
-                        // the alias binds to the value itself
-                        aliases[col].asName -> this[col]
-                        // the alias binds to the name of the value
-                        aliases[col].atName -> this[col].name ?: missingValue
-                        else -> null
-                    }
-                }
-                .filter { it != null }
-                .toList()
-            when (found.size) {
-                // nothing found at our scope, attempt to look at the attributes in our variables
-                // TODO fix dynamic scoping to be in line with SQL++ rules
-                0 -> {
-                    locals.asSequence()
-                        .map { it[name] }
-                        .filter { it != null }
-                        .firstOrNull()
-                }
-                // found exactly one thing, success
-                1 -> found.head!!
-                // multiple things with the same name is a conflict
-                else -> err("$name is ambigious: ${found.map { it?.ionValue }}")
-            }
-        }
-
-        return parent.nest(bindings)
-    }
 
     private fun Boolean.exprValue(): ExprValue = booleanExprValue(this, ion)
 

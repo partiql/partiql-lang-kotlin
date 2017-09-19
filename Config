@@ -24,6 +24,7 @@ package.IonSQLSandbox = {
         1.0 = {
             junit = 4.12;
             JUnitParams = 1.0.5;
+            KotlinTest = 1.1.x;
         };
     };
 
