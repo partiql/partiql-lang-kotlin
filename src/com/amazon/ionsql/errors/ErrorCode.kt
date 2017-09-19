@@ -7,10 +7,13 @@ private val LOC_TOKEN = LOCATION + (TOKEN_INFO)
 private val LOC_TOKEN_STR = LOCATION + (setOf(Property.TOKEN_STRING))
 
 
+/** Helper function to reduce syntactical overhead of accessing property values as strings. */
+private fun PropertyValueMap.getAsString(key: Property, defaultValue: String) =
+        this[key]?.stringValue() ?: defaultValue
+
 /** Each [ErrorCode] contains an immutable set of [Property].
  *  These are the properties used as keys in [PropertyValueMap] created at each error location.
  */
-
 enum class ErrorCode(private val category: ErrorCategory,
                      private val properties: Set<Property>,
                      private val messagePrefix: String) {
@@ -55,6 +58,16 @@ enum class ErrorCode(private val category: ErrorCategory,
         override fun detailMessageSuffix(errorContext: PropertyValueMap?): String =
             errorContext?.get(Property.EXPECTED_TOKEN_TYPE)?.tokenTypeValue()?.toString() ?: UNKNOWN +
                 "found ${getTokenType(errorContext)}"
+    },
+
+    PARSE_EXPECTED_2_TOKEN_TYPES(
+        ErrorCategory.PARSER,
+        LOC_TOKEN + setOf(Property.EXPECTED_TOKEN_TYPE_1_OF_2, Property.EXPECTED_TOKEN_TYPE_2_OF_2),
+        "unexpected token") {
+        override fun detailMessageSuffix(errorContext: PropertyValueMap?): String =
+                "expected ${errorContext?.getAsString(Property.EXPECTED_TOKEN_TYPE_1_OF_2, UNKNOWN)}" +
+                " or ${errorContext?.getAsString(Property.EXPECTED_TOKEN_TYPE_2_OF_2, UNKNOWN)}" +
+                " but found ${getTokenType(errorContext)}"
     },
 
     PARSE_EXPECTED_NUMBER(
@@ -164,6 +177,16 @@ enum class ErrorCode(private val category: ErrorCategory,
         LOC_TOKEN,
         "expected left parenthesis"),
 
+    PARSE_EXPECTED_LEFT_PAREN_BUILTIN_FUNCTION_CALL(
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "expected left parenthesis"),
+
+    PARSE_EXPECTED_ARGUMENT_DELIMITER(
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "expected argument delimiter"),
+
     PARSE_CAST_ARITY(
         ErrorCategory.PARSER,
         LOC_TOKEN + setOf(Property.CAST_TO, Property.EXPECTED_ARITY_MIN, Property.EXPECTED_ARITY_MAX),
@@ -221,8 +244,6 @@ enum class ErrorCode(private val category: ErrorCategory,
         "expected identifier for AT name"),
     ;
 
-
-
     protected fun getTokenString(errorContext: PropertyValueMap?): String =
         errorContext?.get(Property.TOKEN_STRING)?.stringValue() ?: UNKNOWN
 
@@ -259,6 +280,5 @@ enum class ErrorCode(private val category: ErrorCategory,
 
 
     fun getProperties(): Set<Property> = properties
-
 
 }

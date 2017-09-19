@@ -48,14 +48,14 @@ class IonSqlParserTest : Base() {
 
     @Test
     fun structLiteral() = assertExpression(
-        """(struct
-             (lit "x") (id a)
-             (lit "y") (lit 5)
-             (lit "z") (+ (id b) (lit 6))
-           )
-        """,
-        "{'x':a, 'y':5, 'z':(b + 6)}"
-    )
+                """(struct
+                     (lit "x") (id a)
+                     (lit "y") (lit 5)
+                     (lit "z") (+ (id b) (lit 6))
+                   )
+                """,
+                "{'x':a, 'y':5, 'z':(b + 6)}"
+            )
 
     @Test
     fun nestedEmptyListLiteral() = assertExpression(
@@ -77,9 +77,46 @@ class IonSqlParserTest : Base() {
 
     @Test
     fun callEmpty() = assertExpression(
-        "(call foobar)",
-        "foobar()"
+            "(call foobar)",
+            "foobar()"
     )
+
+    @Test
+    fun callOneArgument() = assertExpression(
+            "(call foobar (lit 1))",
+            "foobar(1)"
+    )
+
+    @Test
+    fun callTwoArgument() = assertExpression(
+            "(call foobar (lit 1) (lit 2))",
+            "foobar(1, 2)"
+    )
+
+    @Test
+    fun callSubstringSql92Syntax() = assertExpression(
+            "(call substring (lit \"test\") (lit 100))",
+            "substring('test' from 100)"
+    )
+
+    @Test
+    fun callSubstringSql92SyntaxWithLength() = assertExpression(
+            "(call substring (lit \"test\") (lit 100) (lit 50))",
+            "substring('test' from 100 for 50)"
+    )
+
+    @Test
+    fun callSubstringNormalSyntax() = assertExpression(
+            "(call substring (lit \"test\") (lit 100))",
+            "substring('test', 100)"
+    )
+
+    @Test
+    fun callSubstringNormalSyntaxWithLength() = assertExpression(
+            "(call substring (lit \"test\") (lit 100) (lit 50))",
+            "substring('test', 100, 50)"
+    )
+
 
     @Test
     fun unaryMinusCall() = assertExpression(

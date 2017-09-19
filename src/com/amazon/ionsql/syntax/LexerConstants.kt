@@ -323,6 +323,7 @@ internal val FUNCTION_NAME_KEYWORDS = setOf(
 
     // string functions
     // POSITION, SUBSTRING, TRIM, EXTRACT, TRANSLATE, CONVERT have special syntax
+    "substring",
     "char_length",
     "character_length",
     "octet_length",

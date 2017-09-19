@@ -45,6 +45,8 @@ enum class Property(val propertyName: String, val propertyType: PropertyType) {
     KEYWORD("keyword", STRING_CLASS),
     TOKEN_TYPE("token_type", TOKEN_CLASS),
     EXPECTED_TOKEN_TYPE("expected_token_type", TOKEN_CLASS),
+    EXPECTED_TOKEN_TYPE_1_OF_2("expected_token_type_1_of_2", TOKEN_CLASS),
+    EXPECTED_TOKEN_TYPE_2_OF_2("expected_token_type_2_of_2", TOKEN_CLASS),
     TOKEN_VALUE("token_value", ION_VALUE_CLASS),
     EXPECTED_ARITY_MIN("arity_min", INTEGER_CLASS),
     EXPECTED_ARITY_MAX("arity_max", INTEGER_CLASS)

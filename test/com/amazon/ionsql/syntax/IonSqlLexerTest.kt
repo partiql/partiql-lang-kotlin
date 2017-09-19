@@ -52,6 +52,14 @@ class IonSqlLexerTest : Base() {
     )
 
     @Test
+    fun keywordsThatHaveTheirOwnTokenTypes() = assertTokens(
+        "AS AT FOR",
+            token(AS, "as", 1, 1),
+            token(AT, "at", 1, 4),
+            token(FOR, "for", 1, 7)
+    )
+
+    @Test
     fun whitespaceAndIdentifiers() = assertTokens(
         "ab\r\n_bc_  \r\r \$cd\$\n\r\tde1",
         token(IDENTIFIER, "ab", 1, 1),
@@ -217,6 +225,12 @@ class IonSqlLexerTest : Base() {
         token(KEYWORD, "cross", 3, 1),
         token(KEYWORD, "inner_join", 3, 7),
         token(KEYWORD, "join", 3, 18)
+    )
+
+    @Test
+    fun functionKeywordNames() = assertTokens(
+            "SUBSTRING",
+            token(KEYWORD, "substring", 1, 1)
     )
 
     @Test

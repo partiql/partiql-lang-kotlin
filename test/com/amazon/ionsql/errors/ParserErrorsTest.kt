@@ -13,21 +13,17 @@ class ParserErrorsTest : ErrorsBase() {
 
     private fun checkInputTrowingParserException(input: String,
                                                  errorCode: ErrorCode,
-                                                 expectErrorContextValues: Map<Property, Any>,
-                                                 strict: Boolean = true) {
+                                                 expectErrorContextValues: Map<Property, Any>) {
         try {
             parser.parse(input)
             fail("Expected ParserException but there was no Exception")
         } catch (pex: ParserException) {
-            checkErrorAndErrorContext(errorCode, pex, expectErrorContextValues, strict)
+            checkErrorAndErrorContext(errorCode, pex, expectErrorContextValues)
         } catch (ex: Exception) {
             fail("Expected ParserException but a different exception was thrown \n\t  $ex")
         }
 
     }
-
-
-
 
     @Test
     fun expectedKeyword() {
@@ -201,10 +197,11 @@ class ParserErrorsTest : ErrorsBase() {
     }
 
     @Test
-    fun expectedTokeType() {
+    fun expectedTokenType() {
         checkInputTrowingParserException("(1 + 2",
             ErrorCode.PARSE_EXPECTED_TOKEN_TYPE,
             mapOf(
+                Property.EXPECTED_TOKEN_TYPE to TokenType.RIGHT_PAREN,
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 7L,
                 Property.TOKEN_TYPE to TokenType.EOF,
@@ -295,4 +292,93 @@ class ParserErrorsTest : ErrorsBase() {
                 Property.TOKEN_VALUE to ion.newBool(true)))
 
     }
+
+    @Test
+    fun substringMissingLeftParen() {
+                                        //12345678901234567890123456789
+        checkInputTrowingParserException("select substring from 'asdf' for 1) FROM foo",
+                ErrorCode.PARSE_EXPECTED_LEFT_PAREN_BUILTIN_FUNCTION_CALL,
+                mapOf(
+                    Property.LINE_NUMBER to 1L,
+                    Property.COLUMN_NUMBER to 18L,
+                    Property.TOKEN_TYPE to TokenType.KEYWORD,
+                    Property.TOKEN_VALUE to ion.newSymbol("from")))
+
+    }
+
+    @Test
+    fun substringMissingFromOrComma() {
+                                        //12345678901234567890123456789
+        checkInputTrowingParserException("select substring('str' 1) from foo",
+                ErrorCode.PARSE_EXPECTED_ARGUMENT_DELIMITER,
+                mapOf(
+                    Property.LINE_NUMBER to 1L,
+                    Property.COLUMN_NUMBER to 24L,
+                    Property.TOKEN_TYPE to TokenType.LITERAL,
+                    Property.TOKEN_VALUE to ion.newInt(1)))
+
+    }
+
+    @Test
+    fun substringSql92WithoutLengthMissingRightParen() {
+                                        //123456789012345678901234567890123456789
+        checkInputTrowingParserException("select substring('str' from 1 from foo ",
+                ErrorCode.PARSE_EXPECTED_2_TOKEN_TYPES,
+                mapOf(
+                    Property.LINE_NUMBER to 1L,
+                    Property.EXPECTED_TOKEN_TYPE_1_OF_2 to TokenType.FOR,
+                    Property.EXPECTED_TOKEN_TYPE_2_OF_2 to TokenType.RIGHT_PAREN,
+                    Property.COLUMN_NUMBER to 31L,
+                    Property.TOKEN_TYPE to TokenType.KEYWORD,
+                    Property.TOKEN_VALUE to ion.newSymbol("from")))
+
+
+    }
+
+    @Test
+    fun substringSql92WithLengthMissingRightParen() {
+                                        //123456789012345678901234567890123456789
+        checkInputTrowingParserException("select substring('str' from 1 for 1 from foo ",
+                ErrorCode.PARSE_EXPECTED_TOKEN_TYPE,
+                mapOf(
+                    Property.LINE_NUMBER to 1L,
+                    Property.COLUMN_NUMBER to 37L,
+                    Property.TOKEN_TYPE to TokenType.KEYWORD,
+                    Property.EXPECTED_TOKEN_TYPE to TokenType.RIGHT_PAREN,
+                    Property.TOKEN_VALUE to ion.newSymbol("from")))
+
+
+    }
+
+    @Test
+    fun substringWithoutLengthMissingRightParen() {
+                                        //123456789012345678901234567890123456789
+        checkInputTrowingParserException("select substring('str', 1 from foo ",
+                ErrorCode.PARSE_EXPECTED_2_TOKEN_TYPES,
+                mapOf(
+                        Property.LINE_NUMBER to 1L,
+                        Property.COLUMN_NUMBER to 27L,
+                        Property.TOKEN_TYPE to TokenType.KEYWORD,
+                        Property.EXPECTED_TOKEN_TYPE_1_OF_2 to TokenType.COMMA,
+                        Property.EXPECTED_TOKEN_TYPE_2_OF_2 to TokenType.RIGHT_PAREN,
+                        Property.TOKEN_VALUE to ion.newSymbol("from")))
+
+
+    }
+
+    @Test
+    fun substringMissingRightParen() {
+                                        //123456789012345678901234567890123456789
+        checkInputTrowingParserException("select substring('str', 1, 1 from foo ",
+                ErrorCode.PARSE_EXPECTED_TOKEN_TYPE,
+                mapOf(
+                        Property.LINE_NUMBER to 1L,
+                        Property.COLUMN_NUMBER to 30L,
+                        Property.TOKEN_TYPE to TokenType.KEYWORD,
+                        Property.EXPECTED_TOKEN_TYPE to TokenType.RIGHT_PAREN,
+                        Property.TOKEN_VALUE to ion.newSymbol("from")))
+
+
+    }
+
 }

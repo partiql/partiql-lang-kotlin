@@ -10,6 +10,7 @@ import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
 import com.amazon.ionsql.eval.binding.Alias
 import com.amazon.ionsql.eval.binding.localsBinder
+import com.amazon.ionsql.eval.builtins.BuiltinFunctionFactory
 import com.amazon.ionsql.syntax.IonSqlParser
 import com.amazon.ionsql.syntax.Parser
 import com.amazon.ionsql.syntax.Token
@@ -1030,17 +1031,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
     // TODO hoist built-ins outside of this implementation--requires some decoupling from IonSystem
 
     /** Dispatch table for built-in functions. */
-    private val builtinFunctions: Map<String, ExprFunction> = mapOf(
-        "exists" to ExprFunction.over { _, args ->
-            when (args.size) {
-                1 -> {
-                    args[0].asSequence().any().exprValue()
-                }
-                else -> err("Expected a single argument for exists: ${args.size}")
-            }
-        }
-        // TODO finish implementing "standard" functions
-    )
+    private val builtinFunctions: Map<String, ExprFunction> = BuiltinFunctionFactory(ion).createFunctionMap()
 
     private val functions = builtinFunctions + userFunctions
 
@@ -1259,8 +1250,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
         }
     }
 
-    /** Compiles the given source expression into a bound [Expression]. */
-    override fun compile(source: String): Expression {
+    /** Compiles the given source expression into a bound [Expression]. */    override fun compile(source: String): Expression {
         val ast = parser.parse(source)
 
         return object : Expression {

@@ -1,3 +1,6 @@
+
+
+
 # IonSQL++ Sandbox
 This package is a basic implementation of Ion SQL++, a generalized extended SQL language
 that uses the Ion type system natively, but is designed to be used over sparse, hierarchical
@@ -440,9 +443,74 @@ Mochi,dog
 Lilikoi,unicorn
 ```
 
+## Builtin Functions
+
+### EXISTS
+
+Indicates if the specified `IonSequence` is empty.  Always return `false` if the value specified is not a 
+sequence.
+
+ - `EXISTS(<sequence>)`
+
+Where:
+
+ - `<sequence>` is an expression
+ 
+#### Examples
+
+`<sequence>` is an empty sequence:
+
+    EXISTS([])
+
+Returns: `false`
+
+`<sequence>` is an `IonSequence` containing 3 values:
+
+    EXISTS([1, 2, 3])
+
+Returns: `true`
+
+`<sequence>` is not a sequence:
+
+    EXISTS(1)
+ 
+Returns: `false`
+
+
+### SUBSTRING
+
+Extracts part of a string.  
+
+ - `SUBSTRING(<str> FROM <start pos> [FOR <length>])`
+ - `SUBSTRING(<str>, <start pos> [, <length>])`
+ 
+Where:
+
+ - `<str>` is the string containing the part to be extracted.
+ - `<start pos>` is the 1-based position of the first character to be extracted.
+ - `<length>` is the length of the part to be extracted. 
+
+Returns `NULL` if any arugment is null, or `MISSING` if any argument is missing.
+
+#### Examples
+
+    SUBSTRING('abcdefghi' from 3 for 4)
+
+Returns: `'cdef'`
+
+    SUBSTRING('abcdefghi', -1, 4)
+    
+Returns: `'ab'`
+
+## Helpful Links
+
+ - [Hyperlinked SQL-92 BNF](https://ronsavage.github.io/SQL/sql-92.bnf.html) - this is much easier to navigate than the official ISO standard!
+ - [sqlfiddle.com](http://sqlfiddle.com/) - Use this to experiment with SQL as implemented by Postgres, MySQL, Oracle, MS SQL Server and SQLite. 
+
 ## TODO
 
 * Implement more the "standard" functions.
 * Implement aggregation, sort, grouping.
   
 [ionjava]: https://code.amazon.com/packages/IonJava
+

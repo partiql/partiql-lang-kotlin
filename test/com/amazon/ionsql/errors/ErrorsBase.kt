@@ -16,11 +16,11 @@ open class ErrorsBase : Base() {
      * @param strict if `true` [expectedValues] must contain exactly all keys and values as the exception's errorContext,
      *        if `false` [expectedValues] must contain a **subset** of keys and their values as the exception's errorContext.
      */
-    protected fun <T : IonSqlException> checkErrorAndErrorContext(errorCode: ErrorCode, ex: T, expectedValues: Map<Property, Any>, strict: Boolean) {
+    protected fun <T : IonSqlException> checkErrorAndErrorContext(errorCode: ErrorCode, ex: T, expectedValues: Map<Property, Any>) {
         assertEquals(errorCode, ex.errorCode)
         val errorContext = ex.errorContext
         correctContextKeys(errorCode, errorContext)
-        correctContextValues(errorCode, errorContext, expectedValues, strict)
+        correctContextValues(errorCode, errorContext, expectedValues)
     }
 
     /**
@@ -44,10 +44,16 @@ open class ErrorsBase : Base() {
      *        if `false` [expected] must contain a **subset** of keys and their values as the exception's errorContext.
      *
      */
-    protected fun correctContextValues(errorCode: ErrorCode, errorContext: PropertyValueMap?, expected: Map<Property, Any>, strict: Boolean) {
-        if (strict)
-            assertTrue("Strict mode requires expected param to contain all Properties for the error code",
+    protected fun correctContextValues(errorCode: ErrorCode, errorContext: PropertyValueMap?, expected: Map<Property, Any>) {
+
+        assertTrue("Expected parameter must contain all Properties for the error code",
                 errorCode.getProperties().containsAll(expected.keys))
+
+
+        val unexpectedProperties = errorCode.getProperties().filter { p -> !expected.containsKey(p) }
+        if(unexpectedProperties.any()) {
+            fail("Unexpected properties found in error code: ${unexpectedProperties.joinToString(", ")}")
+        }
 
         expected.forEach { entry ->
             assertTrue("Error Context does not contain ${entry.key}", errorContext!!.hasProperty(entry.key))
@@ -59,12 +65,13 @@ open class ErrorsBase : Base() {
                 CAST_TO,
                 KEYWORD -> assertEquals("$entry", entry.value, errorContext[entry.key]?.stringValue())
                 TOKEN_TYPE,
+                EXPECTED_TOKEN_TYPE_1_OF_2,
+                EXPECTED_TOKEN_TYPE_2_OF_2,
                 EXPECTED_TOKEN_TYPE -> assertEquals("$entry", entry.value, errorContext[entry.key]?.tokenTypeValue())
                 TOKEN_VALUE -> assertEquals("$entry", entry.value, errorContext[entry.key]?.ionValue())
                 EXPECTED_ARITY_MIN,
                 EXPECTED_ARITY_MAX -> assertEquals("$entry", entry.value, errorContext[entry.key]?.integerValue())
             }
-
         }
     }
 

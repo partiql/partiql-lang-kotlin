@@ -481,6 +481,11 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
                                         tokenType = MISSING
                                         ion.newNull()
                                     }
+                                    lower == "for" -> {
+                                        // used as an argument delimiter for substring
+                                        tokenType = FOR
+                                        ion.newSymbol(lower)
+                                    }
                                     lower in BOOLEAN_KEYWORDS -> {
                                         // literal boolean
                                         tokenType = LITERAL

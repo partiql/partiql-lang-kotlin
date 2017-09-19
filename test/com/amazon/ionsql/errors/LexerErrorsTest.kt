@@ -17,13 +17,12 @@ class LexerErrorsTest : ErrorsBase() {
 
     private fun checkInputTrowingLexerException(input: String,
                                                 errorCode: ErrorCode,
-                                                expectErrorContextValues: Map<Property, Any>,
-                                                strict: Boolean = true) {
+                                                expectErrorContextValues: Map<Property, Any>) {
         try {
             lexer.tokenize(input)
             fail("Expected LexerException but there was no Exception")
         } catch (lex: LexerException) {
-            checkErrorAndErrorContext(errorCode, lex, expectErrorContextValues, strict)
+            checkErrorAndErrorContext(errorCode, lex, expectErrorContextValues)
         } catch (ex: Exception) {
             fail("Expected LexerException but a different exception was thrown \n\t  $ex")
         }

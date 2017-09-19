@@ -25,6 +25,7 @@ enum class TokenType {
     COLON,
     // keywords that get their own token type
     AS,
+    FOR,
     AT,
     MISSING,
     NULL,

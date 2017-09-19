@@ -44,36 +44,6 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 }
             }
         }
-
-        private fun Token?.err(message: String, errorCode: ErrorCode, errorContext: PropertyValueMap = PropertyValueMap()): Nothing {
-            when (this) {
-                null -> throw ParserException(errorCode = errorCode, errorContext = errorContext)
-                else -> {
-                    val pvmap = populateLineAndColumn(errorContext, this.position)
-                    pvmap[TOKEN_TYPE] = type
-                    value?.let { pvmap[TOKEN_VALUE] = it }
-                    throw ParserException(message, errorCode, pvmap)
-                }
-            }
-
-        }
-
-        private fun List<Token>.err(message: String, errorCode: ErrorCode, errorContext: PropertyValueMap = PropertyValueMap()): Nothing =
-            head.err(message, errorCode, errorContext)
-
-        private fun List<Token>.atomFromHead(parseType: ParseType = ATOM): ParseNode =
-            ParseNode(parseType, head, emptyList(), tail)
-
-        private fun List<Token>.tailExpectedKeyword(keyword: String): List<Token> {
-            when (head?.keywordText) {
-                keyword -> return tail
-                else -> {
-                    val pvmap = PropertyValueMap()
-                    pvmap[Property.KEYWORD] = keyword.toUpperCase()
-                    err("Expected ${keyword.toUpperCase()} keyword", PARSE_EXPECTED_KEYWORD, pvmap)
-                }
-            }
-        }
     }
 
     private val lexer = IonSqlLexer(ion)
@@ -136,21 +106,28 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                                   val children: List<ParseNode>,
                                   val remaining: List<Token>) {
         /** Derives a [ParseNode] transforming the list of remaining tokens. */
-        fun derive(tokensHandler: List<Token>.() -> List<Token>): ParseNode =
+        private fun derive(tokensHandler: List<Token>.() -> List<Token>): ParseNode =
             copy(remaining = tokensHandler(remaining))
 
-        fun deriveExpected(vararg types: TokenType): ParseNode = derive {
-            var rem = this
-            for (type in types) {
-                if (type != rem.head?.type) {
-                    val pvmap = PropertyValueMap()
-                    pvmap[EXPECTED_TOKEN_TYPE] = type
-                    rem.err("Expected $type", PARSE_EXPECTED_TOKEN_TYPE, pvmap)
-                }
-                rem = rem.tail
+        fun deriveExpected(expectedType: TokenType): ParseNode = derive {
+            if (expectedType != this.head?.type) {
+                val pvmap = PropertyValueMap()
+                pvmap[EXPECTED_TOKEN_TYPE] = expectedType
+                this.err("Expected $type", PARSE_EXPECTED_TOKEN_TYPE, pvmap)
             }
-            rem
+            this.tail
         }
+
+        fun deriveExpected(expectedType1: TokenType, expectedType2: TokenType): Pair<ParseNode, Token> =
+             if (expectedType1 != this.remaining.head?.type && expectedType2 != this.remaining.head?.type) {
+                val pvmap = PropertyValueMap()
+                pvmap[EXPECTED_TOKEN_TYPE_1_OF_2] = expectedType1
+                pvmap[EXPECTED_TOKEN_TYPE_2_OF_2] = expectedType2
+                this.remaining.err("Expected $type", PARSE_EXPECTED_2_TOKEN_TYPES, pvmap)
+            } else {
+                Pair(copy(remaining = this.remaining.tail), this.remaining.head!!)
+            }
+
 
         fun deriveExpectedKeyword(keyword: String): ParseNode = derive { tailExpectedKeyword(keyword) }
 
@@ -552,15 +529,17 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             "case" -> when (tail.head?.keywordText) {
                 "when" -> tail.parseCase(isSimple = false)
                 else -> tail.parseCase(isSimple = true)
-            }.deriveExpected()
+            }
             "cast" -> tail.parseCast()
             "select" -> tail.parseSelect()
             "pivot" -> tail.parsePivot()
-        // table value constructor--which aliases to bag constructor in SQL++ with very
-        // specific syntax
+            // table value constructor--which aliases to bag constructor in SQL++ with very
+            // specific syntax
             "values" -> tail.parseTableValues().copy(type = BAG)
+            "substring" -> tail.parseSubstring(head!!)
             in FUNCTION_NAME_KEYWORDS -> when (tail.head?.type) {
-                LEFT_PAREN -> tail.tail.parseFunctionCall(head!!)
+                LEFT_PAREN ->
+                    tail.tail.parseFunctionCall(head!!)
                 else -> err("Unexpected keyword", PARSE_UNEXPECTED_KEYWORD)
             }
             else -> err("Unexpected keyword", PARSE_UNEXPECTED_KEYWORD)
@@ -570,7 +549,6 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 aliasSupportType = NONE,
                 mode = NORMAL_ARG_LIST
             ).deriveExpected(RIGHT_PAREN)
-
             when (group.children.size) {
                 0 -> tail.err("Expression group cannot be empty", PARSE_EXPECTED_EXPRESSION)
             // expression grouping
@@ -865,6 +843,51 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         return call
     }
 
+    /** Parses substring
+     * Syntax is either SUBSTRING(<str> FROM <start position> [FOR <string length>])
+     * or SUBSTRING(<str>, <start position> [, <string length>])
+     */
+    private fun List<Token>.parseSubstring(name: Token): ParseNode {
+        var rem = this
+
+        if (rem.head?.type != LEFT_PAREN) {
+            err("Expected $LEFT_PAREN", PARSE_EXPECTED_LEFT_PAREN_BUILTIN_FUNCTION_CALL)
+        }
+
+        var stringExpr = tail.parseExpression()
+        rem = stringExpr.remaining
+        var parseSql92Syntax = false
+
+        stringExpr = when {
+            rem.head!!.keywordText == "from" -> {
+                parseSql92Syntax = true
+                stringExpr.deriveExpectedKeyword("from")
+            }
+            rem.head!!.type == COMMA -> stringExpr.deriveExpected(COMMA)
+            else -> rem.err("Expected $KEYWORD 'from' OR $COMMA", PARSE_EXPECTED_ARGUMENT_DELIMITER)
+        }
+
+        val (positionExpr: ParseNode, expectedToken: Token) = stringExpr.remaining.parseExpression()
+                .deriveExpected(if(parseSql92Syntax) FOR else COMMA, RIGHT_PAREN)
+
+        if (expectedToken.type == RIGHT_PAREN) {
+            return ParseNode(
+                ParseType.CALL,
+                name,
+                listOf(stringExpr, positionExpr),
+                positionExpr.remaining
+            )
+        }
+
+        rem = positionExpr.remaining
+        val lengthExpr = rem.parseExpression().deriveExpected(RIGHT_PAREN)
+        return ParseNode(ParseType.CALL,
+                name,
+                listOf(stringExpr, positionExpr, lengthExpr),
+                lengthExpr.remaining)
+
+    }
+
     private fun List<Token>.parseListLiteral(): ParseNode =
         parseArgList(
             aliasSupportType = NONE,
@@ -889,7 +912,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             type = STRUCT
         ).deriveExpected(RIGHT_CURLY)
 
-    private fun List<Token>.parseTableValues(): ParseNode =
+    private fun List<Token>. parseTableValues(): ParseNode =
         parseCommaList {
             var rem = this
             if (rem.head?.type != LEFT_PAREN) {
@@ -1049,5 +1072,4 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         }
         return node.toSexp().apply { makeReadOnly() }
     }
-
 }
