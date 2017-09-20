@@ -7,6 +7,16 @@ import com.amazon.ionsql.util.*
 
 class BuiltinFunctionFactory(private val ion: IonSystem) {
 
+
+    fun createFunctionMap() : Map<String, ExprFunction> =  mapOf(
+            "upper" to this.upper(),
+            "lower" to this.lower(),
+            "exists" to this.exists(),
+            "substring" to this.substring(),
+            "char_length" to this.char_length(),
+            "character_length" to this.char_length()
+    )
+
     fun exists(): ExprFunction =
             over { _, args ->
                 when (args.size) {
@@ -90,25 +100,32 @@ class BuiltinFunctionFactory(private val ion: IonSystem) {
             validateArugments(args)
 
             when {
-                args.isAnyMissing() ->
-                    return missingExprValue(ion)
-                args.isAnyNull() ->
-                    return nullExprValue(ion)
+                args.isAnyMissing() -> return missingExprValue(ion)
+                args.isAnyNull() -> return nullExprValue(ion)
             }
 
             val str = args[0].stringValue()
+            val codePointCount = str.codePointCount(0, str.length)
+
             var startPosition = args[1].numberValue().toInt()
-            var endPosition = if (args.count() == 2) str.length else startPosition + args[2].numberValue().toInt() - 1
+            var endPosition = if (args.count() == 2)
+                codePointCount
+            else
+                startPosition + args[2].numberValue().toInt() - 1
 
             //Clamp start and end indexes to values that won't make java's substring barf
-            startPosition = if(startPosition < 1) 1 else startPosition
-            endPosition = if(endPosition >= str.length) str.length else endPosition
+            startPosition = if (startPosition < 1) 1 else startPosition
+            endPosition = if (endPosition >= codePointCount) codePointCount else endPosition
 
-            if(endPosition < startPosition)
+            if (endPosition < startPosition)
                 err("Invalid start position or length arguments to substring function.")
 
-            return str.substring(startPosition - 1, endPosition).exprValue(ion)
+            val byteIndexStart = str.offsetByCodePoints(0, startPosition - 1)
+            val byteIndexEnd = str.offsetByCodePoints(0, endPosition)
+
+            return str.substring(byteIndexStart, byteIndexEnd).exprValue(ion)
         }
+
 
         private fun validateArugments(args: List<ExprValue>) {
             when {
@@ -122,9 +139,59 @@ class BuiltinFunctionFactory(private val ion: IonSystem) {
         }
     }
 
-    fun createFunctionMap() : Map<String, ExprFunction> =  mapOf(
-        "exists" to this.exists(),
-        "substring" to this.substring()
-    )
+    fun char_length(): ExprFunction = object : OneArgExprFunction() {
+        override val functionName: String = "char_length"
+
+        override fun call(arg: ExprValue): ExprValue {
+            val s:String = arg.stringValue()
+            return s.codePointCount(0, s.length).exprValue(ion)
+        }
+    }
+
+    fun upper(): ExprFunction = object : OneArgExprFunction() {
+        override val functionName: String = "upper"
+
+        override fun call(arg: ExprValue): ExprValue {
+            return arg.stringValue().toUpperCase().exprValue(ion)
+        }
+    }
+
+    fun lower(): ExprFunction = object : OneArgExprFunction() {
+        override val functionName: String = "lower"
+
+        override fun call(arg: ExprValue): ExprValue {
+            return arg.stringValue().toLowerCase().exprValue(ion)
+        }
+    }
+
+    /**
+     * This base class can be used by simple functions taking only a single argument.
+     * Provides default behaviors:
+     *  - Validates that only one argument has been passed.
+     *  - If that argument is null, returns null.
+     *  - If that argument is missing, returns missing.
+     */
+    private abstract inner class OneArgExprFunction : ExprFunction {
+        abstract val functionName: String
+
+        abstract fun call(arg: ExprValue): ExprValue
+
+        override fun call(env: Environment, args: List<ExprValue>): ExprValue {
+            validateArguments(args)
+            when {
+                args.isAnyNull() -> return nullExprValue(ion)
+                args.isAnyMissing() -> return missingExprValue(ion)
+            }
+
+            return call(args[0])
+        }
+
+        protected fun validateArguments(args: List<ExprValue>) {
+            when {
+                args.count() != 1 -> err("Expected 1 argument for ${functionName} instead of ${args.size}")
+            }
+        }
+    }
 }
+
 

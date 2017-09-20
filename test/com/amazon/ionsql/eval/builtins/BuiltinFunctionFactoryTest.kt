@@ -97,7 +97,4 @@ class BuiltinFunctionFactoryTest {
                         ion.newNull().exprValue()))
         Assert.assertEquals(ion.newNull(), partOfString.ionValue)
     }
-
-
-    //TODO:  mysterious error condition in spec
 }

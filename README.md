@@ -445,38 +445,62 @@ Lilikoi,unicorn
 
 ## Builtin Functions
 
+### CHAR_LENGTH, CHARACTER_LENGTH
+
+Counts the number of characters in the specified string, where 'character' is defined as a single unicode codepoint.
+
+Note: `CHAR_LENGTH` and `CHARACTER_LENGTH` have the same syntax and functionality.
+  
+    CHAR_LENGTH(<str>)
+    CHARACTER_LENGTH(<str>)
+ 
+ Returns:
+  
+ - `NULL` if `<str>` is `NULL` 
+ - `MISSING` if `<str>` is `MISSING`.  
+ - Otherwise, returns the number of characters in `<str>`.
+  
+#### Examples
+
+    CHAR_LENGTH('') -- Returns 0 
+    CHAR_LENGTH('abcdefg') -- Returns 7
+    CHAR_LENGTH('😁😞😸😸') -- Returns 4 (non-BMP unicode characters)
+    CHAR_LENGTH('eࠫ') -- Returns 2 because 'eࠫ' is two codepoints: the letter 'e' and combining character U+032B
+
 ### EXISTS
 
 Indicates if the specified `IonSequence` is empty.  Always return `false` if the value specified is not a 
 sequence.
 
  - `EXISTS(<sequence>)`
-
-Where:
-
- - `<sequence>` is an expression
  
 #### Examples
 
 `<sequence>` is an empty sequence:
 
-    EXISTS([])
-
-Returns: `false`
+    EXISTS([]) -- Returns false
 
 `<sequence>` is an `IonSequence` containing 3 values:
 
-    EXISTS([1, 2, 3])
-
-Returns: `true`
+    EXISTS([1, 2, 3]) -- Returns true
 
 `<sequence>` is not a sequence:
 
-    EXISTS(1)
- 
-Returns: `false`
+    EXISTS(1) -- Returns false
 
+### LOWER 
 
+Converts uppercase letters in the specified string to lowercase, leaving non-uppercase characters unchanged.
+This operation currently relies on the default locale as defined by Java's official 
+[String.toLowerCase()](https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#toLowerCase()) documentation.
+See [IONSQL-110](https://i.amazon.com/issues/IONSQL-110), which will allow IonSQL++ to have client-specifiable locales.
+
+    LOWER(<str>)
+
+Examples:
+
+    LOWER('AbCdEfG!@#$') -- Returns 'abcdefg!@#$'
+    
 ### SUBSTRING
 
 Extracts part of a string.  
@@ -487,21 +511,29 @@ Extracts part of a string.
 Where:
 
  - `<str>` is the string containing the part to be extracted.
- - `<start pos>` is the 1-based position of the first character to be extracted.
- - `<length>` is the length of the part to be extracted. 
+ - `<start pos>` is the 1-based position of the first character (unicode codepoint) to be extracted.
+ - `<length>` is the count of characters (unicode codepoints) of the part to be extracted. 
 
 Returns `NULL` if any arugment is null, or `MISSING` if any argument is missing.
 
 #### Examples
 
-    SUBSTRING('abcdefghi' from 3 for 4)
+    SUBSTRING('abcdefghi' from 3 for 4) -- Returns 'cdef'
+    SUBSTRING('abcdefghi', -1, 4) -- Returns 'ab'
 
-Returns: `'cdef'`
+### UPPER 
 
-    SUBSTRING('abcdefghi', -1, 4)
+Converts lowercase letters in the specified string to uppercase, leaving non-lowercase characters unchanged. This 
+operation currently relies on the default locale as defined by Java's official 
+[String.toUpperCase()](https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#toUpperCase()) documentation.
+See [IONSQL-110](https://i.amazon.com/issues/IONSQL-110), which will allow IonSQL++ to have client-specifiable locales.
+
+    UPPER(<str>)
+
+Examples:
+
+    UPPER('AbCdEfG!@#$') -- Returns 'ABCDEFG!@#$'
     
-Returns: `'ab'`
-
 ## Helpful Links
 
  - [Hyperlinked SQL-92 BNF](https://ronsavage.github.io/SQL/sql-92.bnf.html) - this is much easier to navigate than the official ISO standard!
@@ -509,7 +541,7 @@ Returns: `'ab'`
 
 ## TODO
 
-* Implement more the "standard" functions.
+* Implement more of the "standard" functions.
 * Implement aggregation, sort, grouping.
   
 [ionjava]: https://code.amazon.com/packages/IonJava
