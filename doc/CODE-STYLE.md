@@ -1,12 +1,13 @@
 # Introduction
+This guide serves as style guide, code conventions and idioms for [Kotlin](https://kotlinlang.org/) for the [IonTeam](https://w.amazon.com/index.php/Ion). This document uses [Kotlin official coding conventions](http://kotlinlang.org/docs/reference/coding-conventions.html) document as base, if it's not specified here use that as a reference. 
 
-This guide serves as style guide, code conventions and idioms for [Kotlin](https://kotlinlang.org/) for the [IonTeam](https://w.amazon.com/index.php/Ion). This document uses [Kotlin official coding conventions](http://kotlinlang.org/docs/reference/coding-conventions.html) document as base, if it's not specified here use that as a reference
+If you use Intellij you can import the code-style settings [here](./intellij_code_style.xml)  
 
 # Packages
 Maintain directory structure and package names consistent, e.g. foo.bar should be in foo/bar folder. Keeping both consistent makes easier to find any resource, e.g. class or function, that is part of the package and naturally groups them all
 
 # Imports
-Use fully qualified imports to avoid name clashing and use alphabetical order to simplify git merges
+Use `*` imports to avoid polluting the import list and alphabetical order to simplify git merges
 
 # Control Flow
 use `when` instead of `if else if` when possible, e.g.
@@ -76,6 +77,7 @@ fun <T> List<T>.forAll(predicate: (T) -> Boolean): Boolean = // (...)
 // good: Only seen by the IonSQL++ module itself   
 internal fun <T> List<T>.forAll(predicate: (T) -> Boolean): Boolean = // (...)
 ```
+
 **Note**: this is not as much an issue for Java clients as extensions are exposed by a something similar to `public static PackageName.forAll(...)`. It's still exposing internal API externally creating more opportunity for bad coupling with clients
 
 Consider `inline` for extensions. Doing so can lead to better performance as skips a method call and avoids the Java interoperability issue of exposing `static` APIs.
@@ -104,18 +106,17 @@ val numbers = IntRange(1, 100).filter {
     }
 }
 
-// good: a name helps to understand the filter intent  
-fun isPrime(n: Int): Boolean {
-    // (...)
-}
+// good
+val isPrime = { n: Int -> /* (...) */ }
+val numbers = IntRange(1, 100).filter(isPrime)
+
+// better: a name helps to understand the filter intent  
+fun isPrime(n: Int): Boolean { /* (...) */ }
 val numbers = IntRange(1, 100).filter(::isPrime)
 
-
-// also good
-val isPrime = { n: Int ->
-    // (...)
-}
-val numbers = IntRange(1, 100).filter(isPrime)
+// best, extension functions for this particular example fits well   
+internal fun Int.isPrime(): Boolean { /* (...) */ }
+val numbers = IntRange(1, 100).filter { it.isPrime() }
 ```
 
 # Visibility Modifiers
@@ -125,4 +126,17 @@ Be mindful of what should be exposed to clients and what should be internal to t
 
 # Java Interop
 
-**TODO**
+Use `@JvmFiled` for public companion objects `val`s. Doing so will expose them in a java like style, e.g.:
+```kotlin
+class Foo {
+    companion object {
+        val BAD = "bad"
+        @JvmField val GOOD = "good"
+    }
+}
+
+// usage in Java
+Foo.Companion.BAD
+Foo.GOOD
+```
+
