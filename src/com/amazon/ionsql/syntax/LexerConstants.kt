@@ -7,7 +7,7 @@ package com.amazon.ionsql.syntax
 import com.amazon.ionsql.syntax.TokenType.*
 
 /** All SQL-92 keywords. */
-internal val SQL92_KEYWORDS = setOf(
+@JvmField internal val SQL92_KEYWORDS = setOf(
     "absolute",
     "action",
     "add",
@@ -238,7 +238,7 @@ internal val SQL92_KEYWORDS = setOf(
 )
 
 /** Ion SQL++ additional keywords. */
-internal val IONSQL_KEYWORDS = setOf(
+@JvmField internal val IONSQL_KEYWORDS = setOf(
     "missing",
     "pivot",
     "unpivot",
@@ -265,10 +265,10 @@ internal val IONSQL_KEYWORDS = setOf(
 )
 
 /** All Keywords. */
-internal val KEYWORDS = SQL92_KEYWORDS union IONSQL_KEYWORDS
+@JvmField internal val KEYWORDS = SQL92_KEYWORDS union IONSQL_KEYWORDS
 
 /** Keywords that are aliases for type keywords. */
-internal val TYPE_ALIASES = mapOf(
+@JvmField internal val TYPE_ALIASES = mapOf(
     "varchar"   to "character_varying",
     "char"      to "character",
     "dec"       to "decimal",
@@ -277,14 +277,14 @@ internal val TYPE_ALIASES = mapOf(
 )
 
 /** Keywords that are purely aliases to other keywords. */
-internal val KEYWORD_ALIASES = TYPE_ALIASES
+@JvmField internal val KEYWORD_ALIASES = TYPE_ALIASES
 
 /**
  * Indicates the keywords (and pseudo keywords) the indicate types.
  * Some of these types (e.g. VARCHAR) requires a parameters, but many implementations
  * don't require that.
  */
-internal val TYPE_NAME_ARITY_MAP = mapOf(
+@JvmField internal val TYPE_NAME_ARITY_MAP = mapOf(
     "missing"           to 0..0, // IonSQL++
     "null"              to 0..0, // Ion
     "boolean"           to 0..0, // Ion & SQL-99
@@ -311,7 +311,7 @@ internal val TYPE_NAME_ARITY_MAP = mapOf(
 )
 
 /** Keywords that are normal function names. */
-internal val FUNCTION_NAME_KEYWORDS = setOf(
+@JvmField internal val FUNCTION_NAME_KEYWORDS = setOf(
     "exists",
 
     // aggregate functions
@@ -337,7 +337,7 @@ internal val FUNCTION_NAME_KEYWORDS = setOf(
 )
 
 /** Aggregates functions. */
-internal val STANDARD_AGGREGATE_FUNCTIONS = setOf(
+@JvmField val STANDARD_AGGREGATE_FUNCTIONS = setOf(
     "count",
     "avg",
     "max",
@@ -345,21 +345,21 @@ internal val STANDARD_AGGREGATE_FUNCTIONS = setOf(
     "sum"
 )
 
-internal val BOOLEAN_KEYWORDS = setOf("true", "false")
+@JvmField internal val BOOLEAN_KEYWORDS = setOf("true", "false")
 
 /** Operator renames for the AST. */
-internal val OPERATOR_ALIASES = mapOf(
+@JvmField internal val OPERATOR_ALIASES = mapOf(
     "!=" to "<>"
 )
 
 /** Operators that parse as infix, but have special parsing rules. */
-internal val SPECIAL_INFIX_OPERATORS = setOf(
+@JvmField internal val SPECIAL_INFIX_OPERATORS = setOf(
     "between", "not_between",
     "like", "not_like"        // optionally a ternary operator when `ESCAPE` is present
 )
 
 /** Binary operators with verbatim lexical token equivalents. */
-internal val SINGLE_LEXEME_BINARY_OPERATORS = setOf(
+@JvmField internal val SINGLE_LEXEME_BINARY_OPERATORS = setOf(
     "+", "-", "/", "%", "*",
     "<", "<=", ">", ">=", "=", "<>",
     "||",
@@ -369,7 +369,7 @@ internal val SINGLE_LEXEME_BINARY_OPERATORS = setOf(
 )
 
 /** Tokens comprising multiple lexemes (**happens before** keyword aliasing). */
-internal val MULTI_LEXEME_TOKEN_MAP = mapOf(
+@JvmField internal val MULTI_LEXEME_TOKEN_MAP = mapOf(
     listOf("not", "in")                 to ("not_in" to OPERATOR),
     listOf("is", "not")                 to ("is_not" to OPERATOR),
     listOf("not", "between")            to ("not_between" to OPERATOR),
@@ -390,38 +390,38 @@ internal val MULTI_LEXEME_TOKEN_MAP = mapOf(
     listOf("full", "outer", "join")     to ("outer_join" to KEYWORD)
 )
 
-internal val MULTI_LEXEME_MIN_LENGTH = MULTI_LEXEME_TOKEN_MAP.keys.map { it.size }.min()!!
-internal val MULTI_LEXEME_MAX_LENGTH = MULTI_LEXEME_TOKEN_MAP.keys.map { it.size }.max()!!
+@JvmField internal val MULTI_LEXEME_MIN_LENGTH = MULTI_LEXEME_TOKEN_MAP.keys.map { it.size }.min()!!
+@JvmField internal val MULTI_LEXEME_MAX_LENGTH = MULTI_LEXEME_TOKEN_MAP.keys.map { it.size }.max()!!
 
-internal val MULTI_LEXEME_BINARY_OPERATORS =
+@JvmField internal val MULTI_LEXEME_BINARY_OPERATORS =
     MULTI_LEXEME_TOKEN_MAP.values.filter {
         it.second == TokenType.OPERATOR && it.first !in SPECIAL_INFIX_OPERATORS
     }.map { it.first }
 
 /** Binary operators. */
-internal val BINARY_OPERATORS =
+@JvmField internal val BINARY_OPERATORS =
     SINGLE_LEXEME_BINARY_OPERATORS + MULTI_LEXEME_BINARY_OPERATORS
 
 /** Unary operators. */
-internal val UNARY_OPERATORS = setOf(
+@JvmField internal val UNARY_OPERATORS = setOf(
     "+", "-", "not"
 )
 
 /** All operators with special parsing rules. */
-internal val SPECIAL_OPERATORS = SPECIAL_INFIX_OPERATORS + setOf(
+@JvmField internal val SPECIAL_OPERATORS = SPECIAL_INFIX_OPERATORS + setOf(
     "@"
 )
 
-internal val ALL_SINGLE_LEXEME_OPERATORS =
+@JvmField internal val ALL_SINGLE_LEXEME_OPERATORS =
     SINGLE_LEXEME_BINARY_OPERATORS + UNARY_OPERATORS + SPECIAL_OPERATORS
-internal val ALL_OPERATORS =
+@JvmField internal val ALL_OPERATORS =
     BINARY_OPERATORS + UNARY_OPERATORS + SPECIAL_OPERATORS
 
 /**
  * Precedence rank integer is ascending with higher precedance and is in terms of the
  * un-aliased names of the operators.
  */
-internal val INFIX_OPERATOR_PRECEDENCE = mapOf(
+@JvmField internal val INFIX_OPERATOR_PRECEDENCE = mapOf(
     // set operator group
     "intersect"     to 5,
     "intersect_all" to 5,
@@ -470,24 +470,24 @@ internal val INFIX_OPERATOR_PRECEDENCE = mapOf(
 
 private fun allCase(chars: String) = chars.toLowerCase() + chars.toUpperCase()
 
-internal val SIGN_CHARS = "+-"
+const internal val SIGN_CHARS = "+-"
 
-internal val NON_ZERO_DIGIT_CHARS = "123456789"
-internal val DIGIT_CHARS = "0" + NON_ZERO_DIGIT_CHARS
+const internal val NON_ZERO_DIGIT_CHARS = "123456789"
+const internal val DIGIT_CHARS = "0" + NON_ZERO_DIGIT_CHARS
 
-internal val E_NOTATION_CHARS = allCase("E")
+@JvmField internal val E_NOTATION_CHARS = allCase("E")
 
-internal val NON_OVERLOADED_OPERATOR_CHARS = "^%=@+"
-internal val OPERATOR_CHARS = NON_OVERLOADED_OPERATOR_CHARS + "-*/<>|!"
+const internal val NON_OVERLOADED_OPERATOR_CHARS = "^%=@+"
+const internal val OPERATOR_CHARS = NON_OVERLOADED_OPERATOR_CHARS + "-*/<>|!"
 
-internal val ALPHA_CHARS = allCase("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-internal val IDENT_START_CHARS = "_\$" + ALPHA_CHARS
-internal val IDENT_CONTINUE_CHARS = IDENT_START_CHARS + DIGIT_CHARS
+@JvmField internal val ALPHA_CHARS = allCase("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+@JvmField internal val IDENT_START_CHARS = "_\$" + ALPHA_CHARS
+@JvmField internal val IDENT_CONTINUE_CHARS = IDENT_START_CHARS + DIGIT_CHARS
 
-internal val NL_WHITESPACE_CHARS = "\u000D\u000A"                 // CR, LF
-internal val NON_NL_WHITESPACE_CHARS = "\u0009\u000B\u000C\u0020" // TAB, VT, FF, SPACE
-internal val ALL_WHITESPACE_CHARS = NL_WHITESPACE_CHARS + NON_NL_WHITESPACE_CHARS
+const internal val NL_WHITESPACE_CHARS = "\u000D\u000A"                 // CR, LF
+const internal val NON_NL_WHITESPACE_CHARS = "\u0009\u000B\u000C\u0020" // TAB, VT, FF, SPACE
+const internal val ALL_WHITESPACE_CHARS = NL_WHITESPACE_CHARS + NON_NL_WHITESPACE_CHARS
 
-internal val DOUBLE_QUOTE_CHARS = "\""
-internal val SINGLE_QUOTE_CHARS = "'"
-internal val BACKTICK_CHARS = "`"
+const internal val DOUBLE_QUOTE_CHARS = "\""
+const internal val SINGLE_QUOTE_CHARS = "'"
+const internal val BACKTICK_CHARS = "`"
