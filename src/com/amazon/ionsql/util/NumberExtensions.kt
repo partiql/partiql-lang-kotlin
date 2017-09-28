@@ -4,9 +4,8 @@
 
 package com.amazon.ionsql.util
 
-import com.amazon.ion.IonSystem
-import com.amazon.ion.IonValue
-import java.math.BigDecimal
+import com.amazon.ion.*
+import java.math.*
 
 private val RANKS = mapOf(
     Long::class.javaObjectType        to 1,
@@ -99,7 +98,7 @@ operator fun Number.div(other: Number): Number {
     return when (first) {
         is Long -> first / second as Long
         is Double -> first / second as Double
-        is BigDecimal -> first.divide(second as BigDecimal)
+        is BigDecimal -> first.divide(second as BigDecimal, MathContext.DECIMAL128) // TODO should this be configurable?
         else -> throw IllegalStateException()
     }
 }

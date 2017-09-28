@@ -4,8 +4,9 @@
 
 package com.amazon.ionsql.eval
 
-import com.amazon.ionsql.syntax.ParserException
-import org.junit.Test
+import com.amazon.ionsql.syntax.*
+import org.junit.*
+import java.math.*
 
 class EvaluatingCompilerTest : EvaluatorBase() {
 
@@ -150,6 +151,12 @@ class EvaluatingCompilerTest : EvaluatorBase() {
 
     @Test
     fun subIntFloatDecimal() = assertEval("i - f - d", "-4.0", globalNumbers)
+
+    @Test
+    fun repeatingDecimal() = assertEval("4.0/3.0", "1.333333333333333333333333333333333")
+
+    @Test
+    fun bigDecimals() = assertEval("${Long.MAX_VALUE}.0 + 100.0", "9223372036854775907.0")
 
     @Test
     fun mulFloatIntInt() = assertEval("f * 2 * 4", "16e0", globalNumbers)
