@@ -256,9 +256,6 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     @Test
     fun intIsNotSmallInt() = assertEval("50000 IS NOT SMALLINT", "false")
 
-    @Test(expected = EvaluationException::class)
-    fun notOnNonBooleanThrows() = voidEval("not i")
-
     @Test
     fun notTrue() = assertEval("not true", "false")
 
@@ -1067,33 +1064,10 @@ class EvaluatingCompilerTest : EvaluatorBase() {
         """
     )
 
-    @Test(expected = EvaluationException::class)
-    fun betweenIncompatiblePredicate() = voidEval(
-        """
-          SELECT VALUE x
-          FROM << 'APPLE', 'ZOE', 'YOYO' >> AS x
-          WHERE x BETWEEN 'A' AND 2
-        """
-    )
-
-    @Test(expected = EvaluationException::class)
-    fun notBetweenIncompatiblePredicate() = voidEval(
-        """
-          SELECT VALUE x
-          FROM << 'APPLE', 'ZOE', 'YOYO' >> AS x
-          WHERE x NOT BETWEEN 1 AND 'Y'
-        """
-    )
-
     @Test
     fun correlatedJoinWithShadowedAttributes() = assertEval(
         """SELECT VALUE v FROM `[{v:5}]` AS item, @item.v AS v""",
         """[5]"""
-    )
-
-    @Test(expected = EvaluationException::class)
-    fun shadowedVariables() = voidEval(
-        """SELECT VALUE a FROM `[{v:5}]` AS item, @item.v AS a, @item.v AS a"""
     )
 
     @Test
@@ -1145,9 +1119,6 @@ class EvaluatingCompilerTest : EvaluatorBase() {
         globalListOfNumbers
     )
 
-    @Test(expected = EvaluationException::class)
-    fun topLevelCountStar() = voidEval("""COUNT(*)""")
-
     @Test
     fun selectValueAggregate() = assertEval(
         // SELECT VALUE does not do legacy SQL aggregation
@@ -1155,9 +1126,6 @@ class EvaluatingCompilerTest : EvaluatorBase() {
         """[20.0, 20.0]""",
         globalListOfNumbers
     )
-
-    @Test(expected = EvaluationException::class)
-    fun selectValueCountStar() = voidEval("""SELECT VALUE COUNT(*) FROM numbers""", globalListOfNumbers)
 
     @Test
     fun selectListCountStar() = assertEval(
@@ -1196,8 +1164,4 @@ class EvaluatingCompilerTest : EvaluatorBase() {
         ]""",
             globalListOfNumbers
         )
-
-    @Test(expected = EvaluationException::class)
-    fun selectListNestedAggregateCall() =
-        voidEval("""SELECT SUM(AVG(n)) FROM <<numbers, numbers>> AS n""", globalListOfNumbers)
 }

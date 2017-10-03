@@ -80,19 +80,19 @@ internal fun ExprValue.unpivot(ion: IonSystem): ExprValue = when {
 }
 
 fun ExprValue.booleanValue(): Boolean =
-    scalar.booleanValue() ?: err("Expected non-null boolean: $ionValue")
+    scalar.booleanValue() ?: errNoContext("Expected non-null boolean: $ionValue")
 
 fun ExprValue.numberValue(): Number =
-    scalar.numberValue() ?: err("Expected non-null number: $ionValue")
+    scalar.numberValue() ?: errNoContext("Expected non-null number: $ionValue")
 
 fun ExprValue.timestampValue(): Timestamp =
-    scalar.timestampValue() ?: err("Expected non-null timestamp: $ionValue")
+    scalar.timestampValue() ?: errNoContext("Expected non-null timestamp: $ionValue")
 
 fun ExprValue.stringValue(): String =
-    scalar.stringValue() ?: err("Expected non-null string: $ionValue")
+    scalar.stringValue() ?: errNoContext("Expected non-null string: $ionValue")
 
 fun ExprValue.bytesValue(): ByteArray =
-    scalar.bytesValue() ?: err("Expected non-null LOB: $ionValue")
+    scalar.bytesValue() ?: errNoContext("Expected non-null LOB: $ionValue")
 
 /**
  * Implements the `FROM` range operation.
@@ -139,7 +139,7 @@ operator fun ExprValue.compareTo(other: ExprValue): Int {
         type.isNull || other.type.isNull ->
             throw EvaluationException("Null value cannot be compared: $this, $other")
         type.isDirectlyComparableTo(other.type) -> DEFAULT_COMPARATOR.compare(this, other)
-        else -> err("Cannot compare values: $this, $other")
+        else -> errNoContext("Cannot compare values: $this, $other")
     }
 }
 
@@ -184,7 +184,7 @@ private val ION_TEXT_STRING_CAST_TYPES = setOf(BOOL, TIMESTAMP)
  * @param ion The ion system to synthesize values with.
  * @param type The target type to cast this value to.
  */
-fun ExprValue.cast(ion: IonSystem, targetType: ExprValueType): ExprValue {
+fun ExprValue.cast(ion: IonSystem, targetType: ExprValueType, metadata: NodeMetadata?): ExprValue {
     // TODO refactor this out appropriately (probably we need to refactor as a sort of mixin)
     fun boolTrue() = ion.newBool(true).seal().exprValue()
     fun boolFalse() = ion.newBool(false).seal().exprValue()
@@ -194,7 +194,7 @@ fun ExprValue.cast(ion: IonSystem, targetType: ExprValueType): ExprValue {
     fun String.exprValue(type: ExprValueType) = when (type) {
         STRING -> ion.newString(this)
         SYMBOL -> ion.newSymbol(this)
-        else -> err("Invalid type for textual conversion: $type")
+        else -> err("Invalid type for textual conversion: $type", metadata?.toErrorContext())
     }.seal().exprValue()
 
     when {
@@ -250,5 +250,5 @@ fun ExprValue.cast(ion: IonSystem, targetType: ExprValueType): ExprValue {
     }
 
     // incompatible types
-    err("Cannot convert $type to $targetType")
+    err("Cannot convert $type to $targetType", metadata?.toErrorContext())
 }

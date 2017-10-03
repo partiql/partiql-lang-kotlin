@@ -28,7 +28,7 @@ sealed class StaticType(val name: String) {
         @JvmStatic
         fun unionOf(name: String, types: Set<StaticType>): StaticType =
             when (types.size) {
-                0 -> err("types can not be empty")
+                0 -> errNoContext("types can not be empty")
                 else -> TaggedUnion(name, types)
             }
 

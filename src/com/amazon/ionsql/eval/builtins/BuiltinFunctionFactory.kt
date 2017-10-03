@@ -23,7 +23,7 @@ class BuiltinFunctionFactory(private val ion: IonSystem) {
                     1 -> {
                         args[0].asSequence().any().exprValue(ion)
                     }
-                    else -> err("Expected a single argument for exists but found: ${args.size}")
+                    else -> errNoContext("Expected a single argument for exists but found: ${args.size}")
                 }
             }
 
@@ -97,7 +97,7 @@ class BuiltinFunctionFactory(private val ion: IonSystem) {
      */
     fun substring(): ExprFunction = object : ExprFunction {
         override fun call(env: Environment, args: List<ExprValue>): ExprValue {
-            validateArugments(args)
+            validateArguments(args)
 
             when {
                 args.isAnyMissing() -> return missingExprValue(ion)
@@ -118,7 +118,7 @@ class BuiltinFunctionFactory(private val ion: IonSystem) {
             endPosition = if (endPosition >= codePointCount) codePointCount else endPosition
 
             if (endPosition < startPosition)
-                err("Invalid start position or length arguments to substring function.")
+                errNoContext("Invalid start position or length arguments to substring function.")
 
             val byteIndexStart = str.offsetByCodePoints(0, startPosition - 1)
             val byteIndexEnd = str.offsetByCodePoints(0, endPosition)
@@ -127,14 +127,14 @@ class BuiltinFunctionFactory(private val ion: IonSystem) {
         }
 
 
-        private fun validateArugments(args: List<ExprValue>) {
+        private fun validateArguments(args: List<ExprValue>) {
             when {
                 args.count() != 2 && args.count() != 3 ->
-                    err("Expected 2 or 3 arguments for substring instead of ${args.size}")
+                    errNoContext("Expected 2 or 3 arguments for substring instead of ${args.size}")
                 !args[1].ionValue.isNullValue && !args[1].ionValue.isNumeric ->
-                    err("Argument 2 of substring was not numeric")
+                    errNoContext("Argument 2 of substring was not numeric")
                 args.count() > 2 && !args[2].ionValue.isNullValue && !args[2].ionValue.isNumeric ->
-                    err("Argument 3 of substring was not numeric")
+                    errNoContext("Argument 3 of substring was not numeric")
             }
         }
     }
@@ -188,7 +188,7 @@ class BuiltinFunctionFactory(private val ion: IonSystem) {
 
         protected fun validateArguments(args: List<ExprValue>) {
             when {
-                args.count() != 1 -> err("Expected 1 argument for ${functionName} instead of ${args.size}")
+                args.count() != 1 -> errNoContext("Expected 1 argument for $functionName instead of ${args.size}")
             }
         }
     }

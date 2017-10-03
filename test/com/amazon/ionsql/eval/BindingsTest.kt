@@ -94,7 +94,7 @@ private fun oldLocalsBinder(locals: List<ExprValue>, aliases: List<Alias>, missi
         // found exactly one thing, success
             1 -> found.head!!
         // multiple things with the same name is a conflict
-            else -> err("$name is ambigious: ${found.map { it?.ionValue }}")
+            else -> errNoContext("$name is ambigious: ${found.map { it?.ionValue }}")
         }
     }
 }

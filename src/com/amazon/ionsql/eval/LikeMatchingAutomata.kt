@@ -66,12 +66,11 @@ private open class DFAState(val nfaStates: MutableSet<NFAState>,
                     var start: Boolean = nfaStates.filter { it.isStartState }.isNotEmpty()
 ) : IDFAState {
 
-
     fun addTransition(transition: Alphabet, target: DFAState) {
-        if (transition == Alphabet.Epsilon) err("DFA cannot have epsilon transitions: $transition, $target")
+        if (transition == Alphabet.Epsilon) errNoContext("DFA cannot have epsilon transitions: $transition, $target")
         when (outgoing.containsKey(transition)) {
             true -> if (target != outgoing[transition])
-                err("DFA cannot have a transition that maps to different targets : $transition -> $target AND $transition  -> $outgoing.get(transition)")
+                errNoContext("DFA cannot have a transition that maps to different targets : $transition -> $target AND $transition  -> $outgoing.get(transition)")
             false -> outgoing.put(transition, target)
         }
     }
@@ -395,12 +394,12 @@ private fun buildDFA(dfaAlphabet: Set<Alphabet>,
     delta.forEach { nfaStateSetToDfaState.put(it.key.first, DFAState(it.key.first.toMutableSet(), HashMap())) }
     delta.forEach { (nfaSet, alpha), target ->
         val targetDfa: DFAState = nfaStateSetToDfaState[target].let { it } ?: DFADeadState as DFAState
-        nfaStateSetToDfaState[nfaSet]?.addTransition(alpha, targetDfa) ?: err("DFA state for $nfaSet does not exist")
+        nfaStateSetToDfaState[nfaSet]?.addTransition(alpha, targetDfa) ?: errNoContext("DFA state for $nfaSet does not exist")
     }
 
     val dfaStartState = nfaStateSetToDfaState.values.filter { it.start }
     if (dfaStartState.size == 1) return dfaStartState.first()
-    else err("DFA has more that 1 start state : $dfaStartState")
+    else errNoContext("DFA has more that 1 start state : $dfaStartState")
 }
 
 /**
@@ -416,7 +415,7 @@ private fun updateDelta(delta: MutableMap<Pair<Set<NFAState>, Alphabet>, Set<NFA
     deltaUpdates.forEach {
         if (delta.containsKey(it.first)) {
             if (delta[it.first] != it.second) {
-                err("construction of DFA attempted to add the same transition with two distinct targets: $it.first, $it.second")
+                errNoContext("construction of DFA attempted to add the same transition with two distinct targets: $it.first, $it.second")
             }
         } else {
             delta.put(it.first, it.second)
@@ -464,5 +463,5 @@ private fun alphabetToNFAStateAcc(letter: Alphabet, newState: NFAState, acc: Mut
             acc.add(newState)
             acc
         }
-        is Alphabet.Epsilon -> err("Found epsilon letter while processing pattern chars")
+        is Alphabet.Epsilon -> errNoContext("Found epsilon letter while processing pattern chars")
     }

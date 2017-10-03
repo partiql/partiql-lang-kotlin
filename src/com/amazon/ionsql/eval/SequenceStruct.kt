@@ -38,7 +38,7 @@ class SequenceStruct(private val ion: IonSystem,
         val bindList = ArrayList<ExprValue>()
         val bindNames = ArrayList<String>()
         sequence.forEach {
-            val name = it.name?.stringValue() ?: err("Expected non-null name for lazy struct")
+            val name = it.name?.stringValue() ?: errNoContext("Expected non-null name for lazy struct")
             bindMap.putIfAbsent(name, it)
             if (isOrdered) {
                 bindList.add(it)

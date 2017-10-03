@@ -1,9 +1,6 @@
 package com.amazon.ionsql.eval.binding
 
-import com.amazon.ionsql.eval.Bindings
-import com.amazon.ionsql.eval.ExprValue
-import com.amazon.ionsql.eval.err
-import com.amazon.ionsql.eval.name
+import com.amazon.ionsql.eval.*
 
 /**
  * Creates a list of bindings from a list of locals.
@@ -56,7 +53,7 @@ fun List<Alias>.localsBinder(missingValue: ExprValue): LocalsBinder {
                 when (binders.size) {
                     // The 0 case is fulfilled by withDefault
                     1 -> binders[0].func
-                    else -> { locals -> err("$name is ambiguous: ${binders.map { it.func(locals).ionValue }}") }
+                    else -> { locals -> errNoContext("$name is ambiguous: ${binders.map { it.func(locals).ionValue }}") }
                 }
             }
             .withDefault(::dynamicLocalsBinder)

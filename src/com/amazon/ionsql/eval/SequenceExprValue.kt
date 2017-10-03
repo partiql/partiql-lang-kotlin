@@ -29,7 +29,7 @@ class SequenceExprValue(private val ion: IonSystem,
 
     init {
         if (!type.isSequence) {
-            err("Cannot bind non-sequence type to sequence: $type")
+            errNoContext("Cannot bind non-sequence type to sequence: $type")
         }
     }
 
