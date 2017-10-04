@@ -1,9 +1,10 @@
 package com.amazon.ionsql.errors
 
+import com.amazon.ionsql.*
 import com.amazon.ionsql.syntax.*
 import org.junit.Test
 
-class LexerErrorsTest : ErrorsBase() {
+class LexerErrorsTest : Base() {
 
     val lexer = IonSqlLexer(ion)
 
@@ -15,7 +16,7 @@ class LexerErrorsTest : ErrorsBase() {
             else -> "'${String(Character.toChars(codePoint))}' [U+${Integer.toHexString(codePoint)}]"
         }
 
-    private fun checkInputTrowingLexerException(input: String,
+    private fun checkInputThrowingLexerException(input: String,
                                                 errorCode: ErrorCode,
                                                 expectErrorContextValues: Map<Property, Any>) {
         try {
@@ -31,7 +32,7 @@ class LexerErrorsTest : ErrorsBase() {
 
     @Test
     fun testInvalidChar() {
-        checkInputTrowingLexerException("?",
+        checkInputThrowingLexerException("?",
             ErrorCode.LEXER_INVALID_CHAR,
             mapOf(
                 Property.LINE_NUMBER to 1L,
@@ -41,7 +42,7 @@ class LexerErrorsTest : ErrorsBase() {
 
     @Test
     fun testInvalidOperator() {
-        checkInputTrowingLexerException("10 ^ 4",
+        checkInputThrowingLexerException("10 ^ 4",
             ErrorCode.LEXER_INVALID_OPERATOR,
             mapOf(
                 Property.LINE_NUMBER to 1L,

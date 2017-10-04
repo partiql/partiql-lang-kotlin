@@ -1,8 +1,7 @@
 package com.amazon.ionsql.eval.builtins
 
-import com.amazon.ionsql.eval.EvaluationException
-import com.amazon.ionsql.eval.EvaluatorBase
-import org.junit.Test
+import com.amazon.ionsql.eval.*
+import org.junit.*
 
 class BuiltinFunctionsTest : EvaluatorBase() {
 
@@ -98,6 +97,4 @@ class BuiltinFunctionsTest : EvaluatorBase() {
     @Test fun lower_5() = assertEval("lower('123\$%(*&')", "\"123\$%(*&\"")
     @Test fun lower_6() = assertEval("lower('ȴȵ💩Z💋')", "\"ȴȵ💩z💋\"")
     @Test fun lower_7() = assertEval("lower('話家身圧費谷料村能計税金')", "\"話家身圧費谷料村能計税金\"")
-
-
 }

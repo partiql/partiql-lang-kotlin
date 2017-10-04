@@ -247,6 +247,11 @@ enum class ErrorCode(private val category: ErrorCategory,
         ErrorCategory.PARSER,
         LOC_TOKEN,
         "expected identifier for AT name"),
+
+    EVALUATOR_INVALID_TIMESTAMP_FORMAT_STRING(
+        ErrorCategory.EVALUATOR,
+        LOCATION + setOf(Property.TIMESTAMP_FORMAT_PATTERN),
+        "invalid timestamp format string")
     ;
 
     protected fun getTokenString(errorContext: PropertyValueMap?): String =

@@ -520,6 +520,90 @@ Returns `NULL` if any arugment is null, or `MISSING` if any argument is missing.
 
     SUBSTRING('abcdefghi' from 3 for 4) -- Returns 'cdef'
     SUBSTRING('abcdefghi', -1, 4)       -- Returns 'ab'
+    
+    
+### TO_STRING
+
+ - `TO_STRING(<timestamp>, <format string>)`
+
+Formats an Ion timestamp as a pretty string.
+
+Note:  There is an issue requiring this function name to be [specified in lowercase](https://issues.amazon.com/issues/IONSQL-120).
+
+#### Examples
+
+    TO_STRING(`1969-07-20T20:18Z`,  'MMMM d, y')                    --Returns "July 20, 1969"
+    TO_STRING(`1969-07-20T20:18Z`, 'MMM d, yyyy')                   --Returns "Jul 20, 1969"
+    TO_STRING(`1969-07-20T20:18Z`, 'M-d-yy')                        --Returns "7-20-69"
+    TO_STRING(`1969-07-20T20:18Z`, 'MM-d-y')                        --Returns "07-20-1969"
+    TO_STRING(`1969-07-20T20:18Z`, 'MMMM d, y h:m a')               --Returns "July 20, 1969 8:18 PM"
+    TO_STRING(`1969-07-20T20:18Z`, 'y-MM-dd''T''H:m:ssX')           --Returns "1969-07-20T20:18:00Z"
+    TO_STRING(`1969-07-20T20:18+08:00Z`, 'y-MM-dd''T''H:m:ssX')     --Returns "1969-07-20T20:18:00Z"
+    TO_STRING(`1969-07-20T20:18+08:00`, 'y-MM-dd''T''H:m:ssXXXX')   --Returns "1969-07-20T20:18:00+0800"
+    TO_STRING(`1969-07-20T20:18+08:00`, 'y-MM-dd''T''H:m:ssXXXXX')  --Returns "1969-07-20T20:18:00+08:00"
+
+Format symbols:
+       
+    Symbol          Example         Description
+    ------          -------         ----------------------------------------------------------------------------
+    yy              69              2-digit year
+    y or yyyy       1969            4-digit year
+    
+    M               1               Month of year             
+    MM              01              Zero padded month of year
+    MMM             Jan             Abbreviated month year name
+    MMMM            January         Full month of year name
+    MMMMM           J               Month of year letter
+    
+    d               2               Day of month (1-31)
+    dd              02              Zero padded day of month (01-31)
+    
+    a               AM              AM or PM of day
+    
+    h               3               Hour of day (1-12)
+    hh              03              Zero padded hour of day (01-12)
+    
+    H               3               Hour of day (0-23)
+    HH              03              Zero padded hour of day (00-23)
+    
+    m               4               Minute of hour (0-59)               
+    mm              04              Zero padded minute of hour (00-59)
+    
+    s               5               Second of minute (0-59)
+    ss              05              Zero padded second of minute (00-59)
+    
+    S               0               Fraction of second (precision: 0.1, range: 0.0-0.9) 
+    SS              06              Fraction of second (precision: 0.01, range: 0.0-0.99) 
+    SSS             060             Fraction of second (precision: 0.001, range: 0.0-0.999) 
+    ...             ...             ...
+    SSSSSSSSS       060000000       Fraction of second (maximum precision: 1 nanosecond, range: 0.0-0.999999999)
+    
+    n               60000000        Nano of second
+    
+    X               +07 or Z        Offset in hours or "Z" if the offset is 0 
+    XX or XXXX      +0700 or Z      Offset in hours and minutes or "Z" if the offset is 0  
+    XXX or XXXXX    +07:00 or Z     Offset in hours and minutes or "Z" if the offset is 0
+    
+    x               +07             Offset in hours
+    xx or xxxx      +0700           Offset in hours and minutes
+    xxx or xxxxx    +07:00          Offset in hours and minutes
+
+### TRIM
+ 
+Trims leading and/or trailing characters from a String. If the characters to be trimmed are not specified it defaults
+to `' '`. 
+
+    TRIM([[LEADING|TRAILING|BOTH <characters to remove>] FROM] <str>) 
+
+#### Examples
+
+    TRIM('       foobar         ') -- returns 'foobar'
+    TRIM('      \tfoobar\t         ') -- returns '\tfoobar\t'
+    TRIM(LEADING FROM '       foobar         ') -- returns 'foobar         '
+    TRIM(TRAILING FROM '       foobar         ') -- returns '       foobar'
+    TRIM(BOTH FROM '       foobar         ') -- returns 'foobar'
+    TRIM(BOTH '😁' FROM '😁😁foobar😁😁') -- returns 'foobar'
+    TRIM(BOTH '12' FROM '1112211foobar22211122') -- returns 'foobar' 
 
 ### UPPER 
 
@@ -530,25 +614,9 @@ See [IONSQL-110](https://i.amazon.com/issues/IONSQL-110), which will allow IonSQ
 
     UPPER(<str>)
 
-#### Examples:
+#### Examples
 
     UPPER('AbCdEfG!@#$') -- Returns 'ABCDEFG!@#$'
-
-### TRIM 
-Trims leading and/or trailing characters from a String. If the characters to be trimmed are not specified it defaults
-to `' '`. 
-
-    TRIM([[LEADING|TRAILING|BOTH <characters to remove>] FROM] <str>) 
-
-#### EXAMPLES
-
-    TRIM('       foobar         ') -- returns 'foobar'
-    TRIM('      \tfoobar\t         ') -- returns '\tfoobar\t'
-    TRIM(LEADING FROM '       foobar         ') -- returns 'foobar         '
-    TRIM(TRAILING FROM '       foobar         ') -- returns '       foobar'
-    TRIM(BOTH FROM '       foobar         ') -- returns 'foobar'
-    TRIM(BOTH '😁' FROM '😁😁foobar😁😁') -- returns 'foobar'
-    TRIM(BOTH '12' FROM '1112211foobar22211122') -- returns 'foobar' 
     
 ## Helpful Links
 

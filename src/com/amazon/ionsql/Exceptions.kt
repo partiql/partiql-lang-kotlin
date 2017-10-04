@@ -70,8 +70,6 @@ open class IonSqlException(override var message: String,
     fun generateMessage(): String =
     "${errorCategory(errorCode)}: ${errorLocation(errorContext)}: ${errorMessage(errorCode, errorContext)}"
 
-
-
     private fun errorMessage(errorCode: ErrorCode?, propertyValueMap: PropertyValueMap?): String  =
             errorCode?.getErrorMessage(propertyValueMap) ?: UNKNOWN
 

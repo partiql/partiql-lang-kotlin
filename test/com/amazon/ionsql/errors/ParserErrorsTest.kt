@@ -1,13 +1,15 @@
 package com.amazon.ionsql.errors
+import com.amazon.ionsql.*
+import com.amazon.ionsql.syntax.IonSqlParser
+import com.amazon.ionsql.syntax.ParserException
+import com.amazon.ionsql.syntax.TokenType
+import org.junit.Test
 
-import com.amazon.ionsql.syntax.*
-import org.junit.*
-
-class ParserErrorsTest : ErrorsBase() {
+class ParserErrorsTest : Base() {
 
     private val parser = IonSqlParser(ion)
 
-    private fun checkInputTrowingParserException(input: String,
+    private fun checkInputThrowingParserException(input: String,
                                                  errorCode: ErrorCode,
                                                  expectErrorContextValues: Map<Property, Any>) {
         try {
@@ -23,7 +25,7 @@ class ParserErrorsTest : ErrorsBase() {
 
     @Test
     fun expectedKeyword() {
-        checkInputTrowingParserException("5 BETWEEN 1  10",
+        checkInputThrowingParserException("5 BETWEEN 1  10",
             ErrorCode.PARSE_EXPECTED_KEYWORD,
             mapOf(
                 Property.LINE_NUMBER to 1L,
@@ -35,7 +37,7 @@ class ParserErrorsTest : ErrorsBase() {
 
     @Test
     fun expectedTypeName() {
-        checkInputTrowingParserException("NULL is `null`",
+        checkInputThrowingParserException("NULL is `null`",
             ErrorCode.PARSE_EXPECTED_TYPE_NAME,
             mapOf(
                 Property.LINE_NUMBER to 1L,
@@ -47,7 +49,7 @@ class ParserErrorsTest : ErrorsBase() {
 
     @Test
     fun expectedIdentAfterAT() {
-        checkInputTrowingParserException("@",
+        checkInputThrowingParserException("@",
             ErrorCode.PARSE_MISSING_IDENT_AFTER_AT,
             mapOf(
                 Property.LINE_NUMBER to 1L,
@@ -59,7 +61,7 @@ class ParserErrorsTest : ErrorsBase() {
 
     @Test
     fun expectedExpectedTypeName() {
-        checkInputTrowingParserException("a is 'missing'",
+        checkInputThrowingParserException("a is 'missing'",
             ErrorCode.PARSE_EXPECTED_TYPE_NAME,
             mapOf(
                 Property.LINE_NUMBER to 1L,
@@ -71,7 +73,7 @@ class ParserErrorsTest : ErrorsBase() {
 
     @Test
     fun expectedUnexpectedToken() {
-        checkInputTrowingParserException("SELECT ord, val FROM table1 AT ord AS val",
+        checkInputThrowingParserException("SELECT ord, val FROM table1 AT ord AS val",
             ErrorCode.PARSE_UNEXPECTED_TOKEN,
             mapOf(
                 Property.LINE_NUMBER to 1L,
@@ -83,7 +85,7 @@ class ParserErrorsTest : ErrorsBase() {
 
     @Test
     fun expectedUnexpectedKeyword() {
-        checkInputTrowingParserException("SELECT FROM table1",
+        checkInputThrowingParserException("SELECT FROM table1",
             ErrorCode.PARSE_UNEXPECTED_KEYWORD,
             mapOf(
                 Property.LINE_NUMBER to 1L,
@@ -95,7 +97,7 @@ class ParserErrorsTest : ErrorsBase() {
 
     @Test
     fun expectedInvalidPathComponent() {
-        checkInputTrowingParserException("x...a",
+        checkInputThrowingParserException("x...a",
             ErrorCode.PARSE_INVALID_PATH_COMPONENT,
             mapOf(
                 Property.LINE_NUMBER to 1L,
@@ -107,7 +109,7 @@ class ParserErrorsTest : ErrorsBase() {
 
     @Test
     fun expectedCastArity() {
-        checkInputTrowingParserException("CAST(5 AS INTEGER(10))",
+        checkInputThrowingParserException("CAST(5 AS INTEGER(10))",
             ErrorCode.PARSE_CAST_ARITY,
             mapOf(
                 Property.LINE_NUMBER to 1L,
@@ -122,7 +124,7 @@ class ParserErrorsTest : ErrorsBase() {
 
     @Test
     fun expectedInvalidTypeParameter() {
-        checkInputTrowingParserException("CAST(5 AS VARCHAR(a))",
+        checkInputThrowingParserException("CAST(5 AS VARCHAR(a))",
             ErrorCode.PARSE_INVALID_TYPE_PARAM,
             mapOf(
                 Property.LINE_NUMBER to 1L,
@@ -134,7 +136,7 @@ class ParserErrorsTest : ErrorsBase() {
 
     @Test
     fun expectedExpectedWhenClause() {
-        checkInputTrowingParserException("CASE name ELSE 1 END",
+        checkInputThrowingParserException("CASE name ELSE 1 END",
             ErrorCode.PARSE_EXPECTED_WHEN_CLAUSE,
             mapOf(
                 Property.LINE_NUMBER to 1L,
@@ -146,7 +148,7 @@ class ParserErrorsTest : ErrorsBase() {
 
     @Test
     fun expectedUnexpectedOperator() {
-        checkInputTrowingParserException("SELECT a, b FROM data WHERE LIKE a b",
+        checkInputThrowingParserException("SELECT a, b FROM data WHERE LIKE a b",
             ErrorCode.PARSE_UNEXPECTED_OPERATOR,
             mapOf(
                 Property.LINE_NUMBER to 1L,
@@ -158,7 +160,7 @@ class ParserErrorsTest : ErrorsBase() {
 
     @Test
     fun expectedExpression() {
-        checkInputTrowingParserException("SELECT a, b FROM data WHERE a LIKE b ESCAPE",
+        checkInputThrowingParserException("SELECT a, b FROM data WHERE a LIKE b ESCAPE",
             ErrorCode.PARSE_EXPECTED_EXPRESSION,
             mapOf(
                 Property.LINE_NUMBER to 1L,
@@ -170,7 +172,7 @@ class ParserErrorsTest : ErrorsBase() {
 
     @Test
     fun expectedExpressionTernaryOperator() {
-        checkInputTrowingParserException("SELECT a, b FROM data WHERE a LIKE",
+        checkInputThrowingParserException("SELECT a, b FROM data WHERE a LIKE",
             ErrorCode.PARSE_EXPECTED_EXPRESSION,
             mapOf(
                 Property.LINE_NUMBER to 1L,
@@ -182,7 +184,7 @@ class ParserErrorsTest : ErrorsBase() {
 
     @Test
     fun expectedTokenType() {
-        checkInputTrowingParserException("(1 + 2",
+        checkInputThrowingParserException("(1 + 2",
             ErrorCode.PARSE_EXPECTED_TOKEN_TYPE,
             mapOf(
                 Property.EXPECTED_TOKEN_TYPE to TokenType.RIGHT_PAREN,
@@ -195,7 +197,7 @@ class ParserErrorsTest : ErrorsBase() {
 
     @Test
     fun expectedCastMissingLeftParen() {
-        checkInputTrowingParserException("CAST 5 as integer",
+        checkInputThrowingParserException("CAST 5 as integer",
             ErrorCode.PARSE_EXPECTED_LEFT_PAREN_AFTER_CAST,
             mapOf(
                 Property.LINE_NUMBER to 1L,
@@ -207,7 +209,7 @@ class ParserErrorsTest : ErrorsBase() {
 
     @Test
     fun expectedLeftParenValueConstructor() {
-        checkInputTrowingParserException("values 1,2)",
+        checkInputThrowingParserException("values 1,2)",
             ErrorCode.PARSE_EXPECTED_LEFT_PAREN_VALUE_CONSTRUCTOR,
             mapOf(
                 Property.LINE_NUMBER to 1L,
@@ -219,7 +221,7 @@ class ParserErrorsTest : ErrorsBase() {
 
     @Test
     fun expectedUnexpectedTerm() {
-        checkInputTrowingParserException("select () from data",
+        checkInputThrowingParserException("select () from data",
             ErrorCode.PARSE_UNEXPECTED_TERM,
             mapOf(
                 Property.LINE_NUMBER to 1L,
@@ -231,7 +233,7 @@ class ParserErrorsTest : ErrorsBase() {
 
     @Test
     fun expectedSelectMissingFrom() {
-        checkInputTrowingParserException("select a  data",
+        checkInputThrowingParserException("select a  data",
             ErrorCode.PARSE_SELECT_MISSING_FROM,
             mapOf(
                 Property.LINE_NUMBER to 1L,
@@ -243,18 +245,17 @@ class ParserErrorsTest : ErrorsBase() {
 
     @Test
     fun expectedUnsupportedLiteralsGroupBy() {
-        checkInputTrowingParserException("select a from data group by 1",
+        checkInputThrowingParserException("select a from data group by 1",
                                          ErrorCode.PARSE_UNSUPPORTED_LITERALS_GROUPBY,
                                          mapOf(Property.LINE_NUMBER to 1L,
                                                Property.COLUMN_NUMBER to 29L,
                                                Property.TOKEN_TYPE to TokenType.LITERAL,
                                                Property.TOKEN_VALUE to ion.newInt(1)))
-
     }
 
     @Test
     fun expectedIdentForAlias() {
-        checkInputTrowingParserException("select a as true from data",
+        checkInputThrowingParserException("select a as true from data",
             ErrorCode.PARSE_EXPECTED_IDENT_FOR_ALIAS,
             mapOf(
                 Property.LINE_NUMBER to 1L,
@@ -266,7 +267,7 @@ class ParserErrorsTest : ErrorsBase() {
 
     @Test
     fun expectedIdentForAt() {
-        checkInputTrowingParserException("select a from data at true",
+        checkInputThrowingParserException("select a from data at true",
             ErrorCode.PARSE_EXPECTED_IDENT_FOR_AT,
             mapOf(
                 Property.LINE_NUMBER to 1L,
@@ -279,7 +280,7 @@ class ParserErrorsTest : ErrorsBase() {
     @Test
     fun substringMissingLeftParen() {
                                         //12345678901234567890123456789
-        checkInputTrowingParserException("select substring from 'asdf' for 1) FROM foo",
+        checkInputThrowingParserException("select substring from 'asdf' for 1) FROM foo",
                 ErrorCode.PARSE_EXPECTED_LEFT_PAREN_BUILTIN_FUNCTION_CALL,
                 mapOf(
                     Property.LINE_NUMBER to 1L,
@@ -291,7 +292,7 @@ class ParserErrorsTest : ErrorsBase() {
     @Test
     fun substringMissingFromOrComma() {
                                         //12345678901234567890123456789
-        checkInputTrowingParserException("select substring('str' 1) from foo",
+        checkInputThrowingParserException("select substring('str' 1) from foo",
                 ErrorCode.PARSE_EXPECTED_ARGUMENT_DELIMITER,
                 mapOf(
                     Property.LINE_NUMBER to 1L,
@@ -303,7 +304,7 @@ class ParserErrorsTest : ErrorsBase() {
     @Test
     fun substringSql92WithoutLengthMissingRightParen() {
                                         //123456789012345678901234567890123456789
-        checkInputTrowingParserException("select substring('str' from 1 from foo ",
+        checkInputThrowingParserException("select substring('str' from 1 from foo ",
                 ErrorCode.PARSE_EXPECTED_2_TOKEN_TYPES,
                 mapOf(
                     Property.LINE_NUMBER to 1L,
@@ -317,7 +318,7 @@ class ParserErrorsTest : ErrorsBase() {
     @Test
     fun substringSql92WithLengthMissingRightParen() {
                                         //123456789012345678901234567890123456789
-        checkInputTrowingParserException("select substring('str' from 1 for 1 from foo ",
+        checkInputThrowingParserException("select substring('str' from 1 for 1 from foo ",
                 ErrorCode.PARSE_EXPECTED_TOKEN_TYPE,
                 mapOf(
                     Property.LINE_NUMBER to 1L,
@@ -330,7 +331,7 @@ class ParserErrorsTest : ErrorsBase() {
     @Test
     fun substringWithoutLengthMissingRightParen() {
                                         //123456789012345678901234567890123456789
-        checkInputTrowingParserException("select substring('str', 1 from foo ",
+        checkInputThrowingParserException("select substring('str', 1 from foo ",
                 ErrorCode.PARSE_EXPECTED_2_TOKEN_TYPES,
                 mapOf(
                         Property.LINE_NUMBER to 1L,
@@ -344,7 +345,7 @@ class ParserErrorsTest : ErrorsBase() {
     @Test
     fun substringMissingRightParen() {
                                         //123456789012345678901234567890123456789
-        checkInputTrowingParserException("select substring('str', 1, 1 from foo ",
+        checkInputThrowingParserException("select substring('str', 1, 1 from foo ",
                 ErrorCode.PARSE_EXPECTED_TOKEN_TYPE,
                 mapOf(
                         Property.LINE_NUMBER to 1L,
@@ -357,7 +358,7 @@ class ParserErrorsTest : ErrorsBase() {
 
     @Test
     fun callTrimNoLeftParen() {
-        checkInputTrowingParserException("trim ' ')",
+        checkInputThrowingParserException("trim ' ')",
                                          ErrorCode.PARSE_EXPECTED_LEFT_PAREN_BUILTIN_FUNCTION_CALL,
                                          mapOf(
                                              Property.LINE_NUMBER to 1L,
@@ -368,7 +369,7 @@ class ParserErrorsTest : ErrorsBase() {
 
     @Test
     fun callTrimNoRightParen() {
-        checkInputTrowingParserException("trim (' '",
+        checkInputThrowingParserException("trim (' '",
                                          ErrorCode.PARSE_EXPECTED_RIGHT_PAREN_BUILTIN_FUNCTION_CALL,
                                          mapOf(
                                              Property.LINE_NUMBER to 1L,
@@ -379,7 +380,7 @@ class ParserErrorsTest : ErrorsBase() {
 
     @Test
     fun callTrimFourArguments() {
-        checkInputTrowingParserException("trim(both ' ' from 'test' 2)",
+        checkInputThrowingParserException("trim(both ' ' from 'test' 2)",
                                          ErrorCode.PARSE_EXPECTED_RIGHT_PAREN_BUILTIN_FUNCTION_CALL,
                                          mapOf(
                                              Property.LINE_NUMBER to 1L,
@@ -390,7 +391,7 @@ class ParserErrorsTest : ErrorsBase() {
 
     @Test
     fun callTrimSpecificationWithoutFrom() {
-        checkInputTrowingParserException("trim(both 'test')",
+        checkInputThrowingParserException("trim(both 'test')",
                                          ErrorCode.PARSE_EXPECTED_KEYWORD,
                                          mapOf(
                                              Property.LINE_NUMBER to 1L,
@@ -402,7 +403,7 @@ class ParserErrorsTest : ErrorsBase() {
 
     @Test
     fun callTrimSpecificationAndRemoveWithoutFrom() {
-        checkInputTrowingParserException("trim(both '' 'test')",
+        checkInputThrowingParserException("trim(both '' 'test')",
                                          ErrorCode.PARSE_EXPECTED_KEYWORD,
                                          mapOf(
                                              Property.LINE_NUMBER to 1L,
@@ -414,7 +415,7 @@ class ParserErrorsTest : ErrorsBase() {
 
     @Test
     fun callTrimWithoutString() {
-        checkInputTrowingParserException("trim(from)",
+        checkInputThrowingParserException("trim(from)",
                                          ErrorCode.PARSE_UNEXPECTED_TERM,
                                          mapOf(
                                              Property.LINE_NUMBER to 1L,

@@ -34,3 +34,8 @@ internal fun err(message: String, errorContext: PropertyValueMap?): Nothing = wh
     else -> throw EvaluationException(message, errorContext = errorContext)
 }
 
+/** Shorthand for throwing evaluation with error code and context. */
+internal fun err(message: String, errorCode: ErrorCode, errorContext: PropertyValueMap?): Nothing =
+    throw EvaluationException(message, errorCode = errorCode, errorContext = errorContext)
+
+

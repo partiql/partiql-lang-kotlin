@@ -49,9 +49,8 @@ enum class Property(val propertyName: String, val propertyType: PropertyType) {
     EXPECTED_TOKEN_TYPE_2_OF_2("expected_token_type_2_of_2", TOKEN_CLASS),
     TOKEN_VALUE("token_value", ION_VALUE_CLASS),
     EXPECTED_ARITY_MIN("arity_min", INTEGER_CLASS),
-    EXPECTED_ARITY_MAX("arity_max", INTEGER_CLASS)
-
-
+    EXPECTED_ARITY_MAX("arity_max", INTEGER_CLASS),
+    TIMESTAMP_FORMAT_PATTERN("timestamp_format_pattern", STRING_CLASS)
 }
 
 /**

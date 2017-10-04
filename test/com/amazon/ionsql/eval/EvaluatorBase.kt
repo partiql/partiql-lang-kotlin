@@ -104,4 +104,17 @@ abstract class EvaluatorBase : Base() {
             }
         }
     }
+
+    protected fun checkInputThrowingEvaluationException(input: String,
+                                                        errorCode: ErrorCode,
+                                                        expectErrorContextValues: Map<Property, Any>) {
+        try {
+            voidEval(input)
+            fail("Expected EvaluationException but there was no Exception")
+        } catch (pex: EvaluationException) {
+            checkErrorAndErrorContext(errorCode, pex, expectErrorContextValues)
+        } catch (ex: Exception) {
+            fail("Expected EvaluationException but a different exception was thrown \n\t  $ex")
+        }
+    }
 }

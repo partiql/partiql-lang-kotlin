@@ -2,7 +2,6 @@ package com.amazon.ionsql.eval.builtins
 
 import com.amazon.ion.*
 import com.amazon.ionsql.eval.*
-import com.amazon.ionsql.eval.ExprFunction.Companion.over
 import com.amazon.ionsql.util.*
 
 internal class BuiltinFunctionFactory(private val ion: IonSystem) {
@@ -13,9 +12,10 @@ internal class BuiltinFunctionFactory(private val ion: IonSystem) {
                                                                "substring" to this.substring(),
                                                                "char_length" to this.char_length(),
                                                                "character_length" to this.char_length(),
-                                                               "trim" to TrimExprFunction(ion))
+                                                               "trim" to TrimExprFunction(ion),
+                                                               "to_string" to ToStringExprFunction(ion))
 
-    fun exists(): ExprFunction = over { _, args ->
+    fun exists(): ExprFunction = ExprFunction.over { _, args ->
         when (args.size) {
             1    -> {
                 args[0].asSequence().any().exprValue(ion)
@@ -189,5 +189,4 @@ internal class BuiltinFunctionFactory(private val ion: IonSystem) {
         }
     }
 }
-
 
