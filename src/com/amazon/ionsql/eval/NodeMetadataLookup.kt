@@ -16,12 +16,27 @@ import com.amazon.ionsql.util.*
 data class NodeMetadata(val line: Long, val column: Long) {
     constructor(struct: IonStruct) : this(struct["line"].longValue(), struct["column"].longValue())
 
-    fun toErrorContext(): PropertyValueMap {
-        val errorContext = PropertyValueMap()
-        errorContext[Property.LINE_NUMBER] = this.line
-        errorContext[Property.COLUMN_NUMBER] = this.column
+    /**
+     * Fill existing errorContext with information present in metadata if that information is not present in the error
+     * context already
+     *
+     * @param errorContext to be filled
+     * @return passed in errorContext
+     */
+    fun fillErrorContext(errorContext: PropertyValueMap): PropertyValueMap {
+        if (errorContext[Property.LINE_NUMBER] == null && errorContext[Property.COLUMN_NUMBER] == null) {
+            errorContext[Property.LINE_NUMBER] = this.line
+            errorContext[Property.COLUMN_NUMBER] = this.column
+        }
 
         return errorContext
+    }
+
+    /**
+     * creates and fills a new error context with this metadata information
+     */
+    fun toErrorContext(): PropertyValueMap? {
+        return fillErrorContext(PropertyValueMap())
     }
 }
 
@@ -114,10 +129,7 @@ internal class NodeMetadataLookup private constructor() {
  *     })
  * ```
  */
-private fun IonValue.isMetaNode() = this is IonSexp &&
-                                    this.size == 3 &&
-                                    this[0] is IonSymbol &&
-                                    this[0].stringValue() == "meta"
+private fun IonValue.isMetaNode() = this is IonSexp && this.size == 3 && this[0] is IonSymbol && this[0].stringValue() == "meta"
 
 /**
  * Extension to add a map (IonContainer) -> IonContainer. Not in global to scope as there is an IonContainer.map due to

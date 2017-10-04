@@ -5,8 +5,8 @@
 package com.amazon.ionsql.eval
 
 import com.amazon.ionsql.syntax.*
+import org.assertj.core.api.Assertions.*
 import org.junit.*
-import java.math.*
 
 class EvaluatingCompilerTest : EvaluatorBase() {
 

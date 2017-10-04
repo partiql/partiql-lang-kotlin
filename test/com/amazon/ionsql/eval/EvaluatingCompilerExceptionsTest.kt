@@ -1,7 +1,9 @@
 package com.amazon.ionsql.eval
 
 import com.amazon.ionsql.errors.*
+import org.assertj.core.api.Assertions.*
 import org.junit.*
+import org.junit.Assert
 import kotlin.reflect.*
 
 class EvaluatingCompilerExceptionsTest : EvaluatorBase() {
@@ -29,13 +31,9 @@ class EvaluatingCompilerExceptionsTest : EvaluatorBase() {
             Assert.fail("didn't throw")
         }
         catch (e: EvaluationException) {
-
             assertEquals("Wrong message", message, e.message)
 
-            if (cause != null) {
-                val actual = e.cause!!.javaClass
-                assertTrue("cause is not of type '$cause', but of type $actual", actual == cause.java)
-            }
+            if (cause != null) assertThat(e).hasRootCauseExactlyInstanceOf(cause.java)
 
             assertEquals("wrong line number", metadata.line, e.errorContext!![Property.LINE_NUMBER]!!.longValue())
             assertEquals("wrong column number",
@@ -119,7 +117,32 @@ class EvaluatingCompilerExceptionsTest : EvaluatorBase() {
     }
 
     @Test
-    fun addingWrongTypes() = assertThrows("Expected number: \"a\"", NodeMetadata(1, 17)) {
+    fun addingWrongTypes() = assertThrows("Expected number: \"a\"", NodeMetadata(1, 11)) {
         voidEval("1 + 2 + 4 + 'a' + 5")
+    }
+
+
+    @Test
+    fun badCast() = assertThrows("Internal error, For input string: \"a\"", NodeMetadata(1, 18),
+                                 cause = NumberFormatException::class) {
+        voidEval("CAST('a' as int) > 0")
+    }
+
+    @Test
+    fun badCastInSelect() = assertThrows("Internal error, For input string: \"a\"", NodeMetadata(1, 91),
+                                 cause = NumberFormatException::class) {
+        voidEval("SELECT *  FROM `[{_1: a, _2: 1}, {_1: a, _2: 'a'}, {_1: a, _2: 3}]` WHERE CAST(_2 as INT) > 0")
+    }
+
+    @Test
+    fun divideByZero() = assertThrows("Internal error, / by zero", NodeMetadata(1, 3),
+                                         cause = ArithmeticException::class) {
+        voidEval("1 / 0")
+    }
+
+    @Test
+    fun divideByZeroInSelect() = assertThrows("Internal error, / by zero", NodeMetadata(1, 76),
+                                         cause = ArithmeticException::class) {
+        voidEval("SELECT *  FROM `[{_1: a, _2: 1}, {_1: a, _2: 2}, {_1: a, _2: 3}]` WHERE _2 / 0 > 0")
     }
 }

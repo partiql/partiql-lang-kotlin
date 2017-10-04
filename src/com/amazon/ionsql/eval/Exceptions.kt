@@ -11,7 +11,14 @@ import com.amazon.ionsql.errors.*
 open class EvaluationException(message: String,
                                errorCode: ErrorCode? = null,
                                errorContext: PropertyValueMap? = null,
-                               cause: Throwable? = null) : IonSqlException(message, errorCode, errorContext, cause)
+                               cause: Throwable? = null) : IonSqlException(message, errorCode, errorContext, cause) {
+    constructor(cause: Throwable,
+                errorCode: ErrorCode? = null,
+                errorContext: PropertyValueMap? = null) : this(message = cause.message ?: "<NO MESSAGE>",
+                                                               errorCode = errorCode,
+                                                               errorContext = errorContext,
+                                                               cause = cause)
+}
 
 ///** Shorthand for throwing evaluation errors. */
 //internal fun err(message: String): Nothing = throw EvaluationException(message)

@@ -8,6 +8,7 @@ import com.amazon.ion.IonSequence
 import com.amazon.ion.IonSexp
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
+import com.amazon.ionsql.errors.*
 import com.amazon.ionsql.eval.binding.Alias
 import com.amazon.ionsql.eval.binding.localsBinder
 import com.amazon.ionsql.eval.builtins.BuiltinFunctionFactory
@@ -46,25 +47,32 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 userFuncs: @JvmSuppressWildcards Map<String, ExprFunction>):
         this(ion, IonSqlParser(ion), userFuncs)
 
-
     /** An [ExprValue] which is the result of an expression evaluated in an [Environment].  */
-    private interface ExprThunk {
-        fun eval(env: Environment): ExprValue
-    }
-
-    private fun exprThunk(metadata: NodeMetadata?, thunk: (Environment) -> ExprValue) = object : ExprThunk {
-        // TODO make this memoize the result when valid and possible
-        override fun eval(env: Environment): ExprValue {
+    private abstract class ExprThunk(private val metadata: NodeMetadata?) {
+        fun eval(env: Environment): ExprValue {
             try {
-                return thunk(env)
-            }
-            catch (e: Exception)
-            {
-                // FIXME catching and rethrowing to propagate error context while avoid a backward incompatible
-                // change in [ExprFunction]
-                throw EvaluationException(e.message ?: "", errorContext = metadata?.toErrorContext(), cause = e)
+                return innerEval(env)
+            } catch (e: EvaluationException) {
+                when {
+                    e.errorContext == null -> throw EvaluationException(errorContext = metadata?.toErrorContext(), cause = e)
+                    else -> {
+                        metadata?.fillErrorContext(e.errorContext)
+
+                        throw e
+                    }
+                }
+            } catch (e: Exception) {
+                val message = e.message ?: "<NO MESSAGE>"
+                throw EvaluationException("Internal error, $message", errorContext = metadata?.toErrorContext(), cause = e)
             }
         }
+
+        protected abstract fun innerEval(env: Environment): ExprValue
+    }
+
+    private fun exprThunk(metadata: NodeMetadata?, thunk: (Environment) -> ExprValue) = object : ExprThunk(metadata) {
+        // TODO make this memoize the result when valid and possible
+        override fun innerEval(env: Environment) = thunk(env)
     }
 
     /** Specifies the expansion for joins. */
@@ -1268,14 +1276,8 @@ class EvaluatingCompiler(private val ion: IonSystem,
                     current = globals,
                     registers = RegisterBank(registerCount)
                 )
-                try {
-                    return expr.eval(env)
-                } catch (e: EvaluationException) {
-                    throw e
-                } catch (e: Exception) {
-                    val message = e.message ?: "<NO MESSAGE>"
-                    throw EvaluationException("Internal error, $message", cause = e)
-                }
+
+                return expr.eval(env)
             }
         }
     }
