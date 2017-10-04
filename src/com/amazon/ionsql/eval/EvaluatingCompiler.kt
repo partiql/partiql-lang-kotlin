@@ -136,6 +136,27 @@ class EvaluatingCompiler(private val ion: IonSystem,
         else -> PathWildcardKind.NONE
     }
 
+    /**
+     * Flattens a tree of an associative operation to a list of terms.
+     *
+     * Example:
+     *
+     *     (or (or (or a b) c) (or d (and (and e f) (or g h))))   # Original
+     *     (or a b c d (and (and e f) (or g h))))                 # One call to this method
+     *     (or a b c d (and e f (or g h)))                        # Recursive visitation
+     *
+     */
+    private fun IonValue.flattenAssociativeOp(): Sequence<IonValue> {
+        val opName = this[0].stringValue()
+
+        return this.asSequence().drop(1).flatMap { child ->
+            when {
+                child[0].stringValue() == opName -> child.flattenAssociativeOp()
+                else -> sequenceOf(child)
+            }
+        }
+    }
+
     private fun IonValue.extractAsName(id: Int, cEnv: CompilationEnvironment) = when (this[0].text(cEnv)) {
         "as", "id" -> this[1].text(cEnv)
         "path" -> {
@@ -394,10 +415,9 @@ class EvaluatingCompiler(private val ion: IonSystem,
         "or" to { cEnv, ast ->
             when (ast.size) {
                 3 -> {
-                    val left = ast[1].compile(cEnv)
-                    val right = ast[2].compile(cEnv)
+                    val terms = ast.flattenAssociativeOp().map { it.compile(cEnv) }.toList()
                     exprThunk(cEnv.metadataLookup[ast]) { env ->
-                        (left.eval(env).booleanValue() || right.eval(env).booleanValue()).exprValue()
+                        terms.any{ it.eval(env).booleanValue() }.exprValue()
                     }
                 }
                 else -> err("Arity incorrect for 'or': $ast", cEnv.metadataLookup[ast]?.toErrorContext())
@@ -406,10 +426,9 @@ class EvaluatingCompiler(private val ion: IonSystem,
         "and" to { cEnv, ast ->
             when (ast.size) {
                 3 -> {
-                    val left = ast[1].compile(cEnv)
-                    val right = ast[2].compile(cEnv)
+                    val terms = ast.flattenAssociativeOp().map { it.compile(cEnv) }.toList()
                     exprThunk(cEnv.metadataLookup[ast]) { env ->
-                        (left.eval(env).booleanValue() && right.eval(env).booleanValue()).exprValue()
+                        terms.none{ ! it.eval(env).booleanValue() }.exprValue()
                     }
                 }
                 else -> err("Arity incorrect for 'and': $ast", cEnv.metadataLookup[ast]?.toErrorContext())
