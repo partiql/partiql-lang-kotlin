@@ -1101,7 +1101,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
         is Long -> integerExprValue(this, ion)
         is Double -> floatExprValue(this, ion)
         is BigDecimal -> decimalExprValue(this, ion)
-        else -> err("Cannot convert number to expression value: $this", null) // FIXME
+        else -> errNoContext("Cannot convert number to expression value: $this")
     }
 
     private fun String.exprValue(): ExprValue = stringExprValue(this, ion)
