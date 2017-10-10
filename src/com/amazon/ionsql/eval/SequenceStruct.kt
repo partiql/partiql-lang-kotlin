@@ -13,12 +13,13 @@ import java.util.*
  */
 class SequenceStruct(private val ion: IonSystem,
                      private val isOrdered: Boolean,
-                     private val sequence: Sequence<ExprValue>) : BaseExprValue() {
+                     sequence: Sequence<ExprValue>) : BaseExprValue() {
+    private val nonMissingSeq = sequence.filter { it.type != ExprValueType.MISSING }
     override val type = ExprValueType.STRUCT
 
     override val ionValue by lazy {
         ion.newEmptyStruct().apply {
-            sequence.forEach {
+            nonMissingSeq.forEach {
                 val nameVal = it.name
                 if (nameVal != null && nameVal.type.isText) {
                     val name = nameVal.stringValue()
@@ -37,7 +38,7 @@ class SequenceStruct(private val ion: IonSystem,
         val bindMap = HashMap<String, ExprValue>()
         val bindList = ArrayList<ExprValue>()
         val bindNames = ArrayList<String>()
-        sequence.forEach {
+        nonMissingSeq.forEach {
             val name = it.name?.stringValue() ?: errNoContext("Expected non-null name for lazy struct")
             bindMap.putIfAbsent(name, it)
             if (isOrdered) {
@@ -78,5 +79,5 @@ class SequenceStruct(private val ion: IonSystem,
         else -> null
     }
 
-    override fun iterator() = sequence.iterator()
+    override fun iterator() = nonMissingSeq.iterator()
 }

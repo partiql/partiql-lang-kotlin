@@ -288,6 +288,15 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     fun pathDotOnly() = assertEval("a.b.c.d.e", "5", globalStruct)
 
     @Test
+    fun pathDotMissingAttribute() = assertEval("a.z IS MISSING", "true", globalStruct)
+
+    @Test
+    fun pathMissingDotName() = assertEval("(MISSING).a IS MISSING", "true")
+
+    @Test
+    fun pathNullDotName() = assertEval("(NULL).a IS MISSING", "true")
+
+    @Test
     fun pathIndexing() = assertEval("stores[0].books[2].title", "\"C\"", stores)
 
     @Test
@@ -319,7 +328,6 @@ class EvaluatingCompilerTest : EvaluatorBase() {
 
     @Test
     fun pathUnpivotWildcard() = assertEval("friends.kumo.likes.*.type", """["dog", "human"]""", friends)
-
 
     @Test
     fun pathDoubleWildCard() = assertEval(
@@ -642,7 +650,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
         """SELECT s.id AS id, b.title AS title FROM stores AS s LEFT JOIN @s.books AS b WHERE b IS NULL""",
         """
           [
-            {id: "7", title: null}
+            {id: "7"}
           ]
         """,
         stores
@@ -657,10 +665,10 @@ class EvaluatingCompilerTest : EvaluatorBase() {
         """,
         """
           [
-            {id: "5", title: null},
+            {id: "5"},
             {id: "6", title: "E"},
             {id: "6", title: "F"},
-            {id: "7", title: null}
+            {id: "7"}
           ]
         """,
         stores
@@ -1164,4 +1172,16 @@ class EvaluatingCompilerTest : EvaluatorBase() {
         ]""",
             globalListOfNumbers
         )
+
+    @Test
+    fun selectListWithMissing() = assertEval(
+        """SELECT a.x AS x, a.y AS y FROM `[{x:5}, {y:6}]` AS a""",
+        """[{x:5}, {y:6}]"""
+    )
+
+    @Test
+    fun selectValueStructConstructorWithMissing() = assertEval(
+        """SELECT VALUE {'x': a.x, 'y': a.y} FROM `[{x:5}, {y:6}]` AS a""",
+        """[{x:5}, {y:6}]"""
+    )
 }

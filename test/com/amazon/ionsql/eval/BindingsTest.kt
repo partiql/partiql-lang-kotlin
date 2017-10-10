@@ -44,10 +44,9 @@ class BindingsTest : Base() {
         val oldLocals = oldLocalsBinder(exprValues, aliases, missingExprValue(ion))
 
         listOf("s", "t", "z", "a", "b", "c", "d")
-                .forEach { key ->
-                    println("$key = ${locals[key]}")
-                    assertEquals(oldLocals[key]?.ionValue, locals[key]?.ionValue)
-                }
+            .forEach { key ->
+                assertEquals(oldLocals[key]?.ionValue, locals[key]?.ionValue)
+            }
     }
 
     @Test
