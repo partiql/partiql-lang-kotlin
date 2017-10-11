@@ -486,6 +486,11 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
                                         tokenType = FOR
                                         ion.newSymbol(lower)
                                     }
+                                    lower in TRIM_SPECIFICATION_KEYWORDS -> {
+                                        // used to determine the type of trim
+                                        tokenType = TRIM_SPECIFICATION
+                                        ion.newString(lower)
+                                    }
                                     lower in BOOLEAN_KEYWORDS -> {
                                         // literal boolean
                                         tokenType = LITERAL

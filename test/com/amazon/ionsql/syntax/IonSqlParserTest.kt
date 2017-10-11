@@ -4,18 +4,18 @@
 
 package com.amazon.ionsql.syntax
 
-import com.amazon.ion.IonSexp
-import com.amazon.ionsql.Base
-import com.amazon.ionsql.util.filterMetaNodes
-import org.junit.Test
+import com.amazon.ion.*
+import com.amazon.ionsql.*
+import com.amazon.ionsql.util.*
+import org.junit.*
 
 class IonSqlParserTest : Base() {
-    val parser = IonSqlParser(ion)
+    private val parser = IonSqlParser(ion)
 
-    fun parse(source: String): IonSexp = parser.parse(source)
+    private fun parse(source: String): IonSexp = parser.parse(source)
 
 
-    fun assertExpression(expectedText: String, source: String) {
+    private fun assertExpression(expectedText: String, source: String) {
         val actual = parse(source).filterMetaNodes()
         val expected = literal(expectedText)
 
@@ -116,6 +116,31 @@ class IonSqlParserTest : Base() {
             "(call substring (lit \"test\") (lit 100) (lit 50))",
             "substring('test', 100, 50)"
     )
+
+    @Test(expected = ParserException::class)
+    fun callTrimZeroArguments() {
+         parse("trim()")
+    }
+
+    @Test
+    fun callTrimSingleArgument() = assertExpression("(call trim (lit \"test\"))",
+                                                    "trim('test')")
+
+    @Test
+    fun callTrimSingleArgumentWithFrom() = assertExpression("(call trim (lit \"test\"))",
+                                                            "trim(from 'test')")
+
+    @Test
+    fun callTrimTwoArgumentsUsingBoth() = assertExpression("(call trim (lit \"both\") (lit \"test\"))",
+                                                           "trim(both from 'test')")
+
+    @Test
+    fun callTrimTwoArgumentsUsingLeading() = assertExpression("(call trim (lit \"leading\") (lit \"test\"))",
+                                                              "trim(leading from 'test')")
+
+    @Test
+    fun callTrimTwoArgumentsUsingTrailing() = assertExpression("(call trim (lit \"trailing\") (lit \"test\"))",
+                                                               "trim(trailing from 'test')")
 
 
     @Test

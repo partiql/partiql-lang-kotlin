@@ -6,6 +6,8 @@ package com.amazon.ionsql.syntax
 
 import com.amazon.ionsql.syntax.TokenType.*
 
+@JvmField internal val TRIM_SPECIFICATION_KEYWORDS = setOf("both", "leading", "trailing")
+
 /** All SQL-92 keywords. */
 @JvmField internal val SQL92_KEYWORDS = setOf(
     "absolute",
@@ -27,7 +29,6 @@ import com.amazon.ionsql.syntax.TokenType.*
     "between",
     "bit",
     "bit_length",
-    "both",
     "by",
     "cascade",
     "cascaded",
@@ -128,7 +129,6 @@ import com.amazon.ionsql.syntax.TokenType.*
     "key",
     "language",
     "last",
-    "leading",
     "left",
     "level",
     "like",
@@ -208,7 +208,6 @@ import com.amazon.ionsql.syntax.TokenType.*
     "timezone_hour",
     "timezone_minute",
     "to",
-    "trailing",
     "transaction",
     "translate",
     "translation",
@@ -235,7 +234,8 @@ import com.amazon.ionsql.syntax.TokenType.*
     "write",
     "year",
     "zone"
-)
+).union(TRIM_SPECIFICATION_KEYWORDS)
+
 
 /** Ion SQL++ additional keywords. */
 @JvmField internal val IONSQL_KEYWORDS = setOf(
@@ -266,6 +266,8 @@ import com.amazon.ionsql.syntax.TokenType.*
 
 /** All Keywords. */
 @JvmField internal val KEYWORDS = SQL92_KEYWORDS union IONSQL_KEYWORDS
+
+
 
 /** Keywords that are aliases for type keywords. */
 @JvmField internal val TYPE_ALIASES = mapOf(

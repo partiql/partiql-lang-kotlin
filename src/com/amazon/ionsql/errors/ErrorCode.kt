@@ -182,6 +182,11 @@ enum class ErrorCode(private val category: ErrorCategory,
         LOC_TOKEN,
         "expected left parenthesis"),
 
+    PARSE_EXPECTED_RIGHT_PAREN_BUILTIN_FUNCTION_CALL(
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "expected right parenthesis"),
+
     PARSE_EXPECTED_ARGUMENT_DELIMITER(
         ErrorCategory.PARSER,
         LOC_TOKEN,

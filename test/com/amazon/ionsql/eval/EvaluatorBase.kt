@@ -4,10 +4,14 @@
 
 package com.amazon.ionsql.eval
 
-import com.amazon.ionsql.Base
-import com.amazon.ionsql.util.exprValue
+import com.amazon.ionsql.*
+import com.amazon.ionsql.errors.*
+import com.amazon.ionsql.util.*
+import org.junit.*
+import kotlin.reflect.*
 
 abstract class EvaluatorBase : Base() {
+
     /**
      * creates a [ExprValue] from the IonValue represented by this String. Assumes the string represents a single
      * IonValue
@@ -76,5 +80,28 @@ abstract class EvaluatorBase : Base() {
     protected fun evalWithBindings(source: String, bindings: Bindings = Bindings.empty()): ExprValue {
         return evaluator.compile(source)
                         .eval(bindings)
+    }
+
+    /**
+     *  Asserts that [f] throws an [IonSqlException] with the specified message, line and column number
+     */
+    protected fun assertThrows(message: String,
+                             metadata: NodeMetadata,
+                             cause: KClass<out Throwable>? = null,
+                             f: () -> Unit) {
+        try {
+            f()
+            Assert.fail("didn't throw")
+        }
+        catch (e: IonSqlException) {
+            softAssert {
+                assertThat(e.message).`as`("error message").isEqualTo(message)
+
+                if (cause != null) assertThat(e).hasRootCauseExactlyInstanceOf(cause.java)
+
+                assertThat(e.errorContext!![Property.LINE_NUMBER]!!.longValue()).`as`("line number").isEqualTo(metadata.line)
+                assertThat(e.errorContext!![Property.COLUMN_NUMBER]!!.longValue()).`as`("column number").isEqualTo(metadata.column)
+            }
+        }
     }
 }

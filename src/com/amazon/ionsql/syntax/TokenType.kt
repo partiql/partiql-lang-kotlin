@@ -29,5 +29,7 @@ enum class TokenType {
     AT,
     MISSING,
     NULL,
+    // function specific
+    TRIM_SPECIFICATION,
     EOF // End of Stream token.
 }

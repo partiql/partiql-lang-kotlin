@@ -1,15 +1,11 @@
 package com.amazon.ionsql.errors
 
-import com.amazon.ionsql.syntax.IonSqlParser
-import com.amazon.ionsql.syntax.ParserException
-import com.amazon.ionsql.syntax.TokenType
-import org.junit.Test
+import com.amazon.ionsql.syntax.*
+import org.junit.*
 
 class ParserErrorsTest : ErrorsBase() {
 
     private val parser = IonSqlParser(ion)
-
-
 
     private fun checkInputTrowingParserException(input: String,
                                                  errorCode: ErrorCode,
@@ -149,18 +145,6 @@ class ParserErrorsTest : ErrorsBase() {
     }
 
     @Test
-    fun expectedUnsupportedLiuteralsGroupBy() {
-        checkInputTrowingParserException("SELECT a FROM data GROUP BY 1",
-            ErrorCode.PARSE_UNSUPPORTED_LITERALS_GROUPBY,
-            mapOf(
-                Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 29L,
-                Property.TOKEN_TYPE to TokenType.LITERAL,
-                Property.TOKEN_VALUE to ion.newInt(1)))
-
-    }
-
-    @Test
     fun expectedUnexpectedOperator() {
         checkInputTrowingParserException("SELECT a, b FROM data WHERE LIKE a b",
             ErrorCode.PARSE_UNEXPECTED_OPERATOR,
@@ -260,12 +244,11 @@ class ParserErrorsTest : ErrorsBase() {
     @Test
     fun expectedUnsupportedLiteralsGroupBy() {
         checkInputTrowingParserException("select a from data group by 1",
-            ErrorCode.PARSE_UNSUPPORTED_LITERALS_GROUPBY,
-            mapOf(
-                Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 29L,
-                Property.TOKEN_TYPE to TokenType.LITERAL,
-                Property.TOKEN_VALUE to ion.newInt(1)))
+                                         ErrorCode.PARSE_UNSUPPORTED_LITERALS_GROUPBY,
+                                         mapOf(Property.LINE_NUMBER to 1L,
+                                               Property.COLUMN_NUMBER to 29L,
+                                               Property.TOKEN_TYPE to TokenType.LITERAL,
+                                               Property.TOKEN_VALUE to ion.newInt(1)))
 
     }
 
@@ -303,7 +286,6 @@ class ParserErrorsTest : ErrorsBase() {
                     Property.COLUMN_NUMBER to 18L,
                     Property.TOKEN_TYPE to TokenType.KEYWORD,
                     Property.TOKEN_VALUE to ion.newSymbol("from")))
-
     }
 
     @Test
@@ -316,7 +298,6 @@ class ParserErrorsTest : ErrorsBase() {
                     Property.COLUMN_NUMBER to 24L,
                     Property.TOKEN_TYPE to TokenType.LITERAL,
                     Property.TOKEN_VALUE to ion.newInt(1)))
-
     }
 
     @Test
@@ -331,8 +312,6 @@ class ParserErrorsTest : ErrorsBase() {
                     Property.COLUMN_NUMBER to 31L,
                     Property.TOKEN_TYPE to TokenType.KEYWORD,
                     Property.TOKEN_VALUE to ion.newSymbol("from")))
-
-
     }
 
     @Test
@@ -346,8 +325,6 @@ class ParserErrorsTest : ErrorsBase() {
                     Property.TOKEN_TYPE to TokenType.KEYWORD,
                     Property.EXPECTED_TOKEN_TYPE to TokenType.RIGHT_PAREN,
                     Property.TOKEN_VALUE to ion.newSymbol("from")))
-
-
     }
 
     @Test
@@ -362,8 +339,6 @@ class ParserErrorsTest : ErrorsBase() {
                         Property.EXPECTED_TOKEN_TYPE_1_OF_2 to TokenType.COMMA,
                         Property.EXPECTED_TOKEN_TYPE_2_OF_2 to TokenType.RIGHT_PAREN,
                         Property.TOKEN_VALUE to ion.newSymbol("from")))
-
-
     }
 
     @Test
@@ -378,7 +353,74 @@ class ParserErrorsTest : ErrorsBase() {
                         Property.EXPECTED_TOKEN_TYPE to TokenType.RIGHT_PAREN,
                         Property.TOKEN_VALUE to ion.newSymbol("from")))
 
+    }
 
+    @Test
+    fun callTrimNoLeftParen() {
+        checkInputTrowingParserException("trim ' ')",
+                                         ErrorCode.PARSE_EXPECTED_LEFT_PAREN_BUILTIN_FUNCTION_CALL,
+                                         mapOf(
+                                             Property.LINE_NUMBER to 1L,
+                                             Property.COLUMN_NUMBER to 6L,
+                                             Property.TOKEN_TYPE to TokenType.LITERAL,
+                                             Property.TOKEN_VALUE to ion.newString(" ")))
+    }
+
+    @Test
+    fun callTrimNoRightParen() {
+        checkInputTrowingParserException("trim (' '",
+                                         ErrorCode.PARSE_EXPECTED_RIGHT_PAREN_BUILTIN_FUNCTION_CALL,
+                                         mapOf(
+                                             Property.LINE_NUMBER to 1L,
+                                             Property.COLUMN_NUMBER to 10L,
+                                             Property.TOKEN_TYPE to TokenType.EOF,
+                                             Property.TOKEN_VALUE to ion.newSymbol("EOF")))
+    }
+
+    @Test
+    fun callTrimFourArguments() {
+        checkInputTrowingParserException("trim(both ' ' from 'test' 2)",
+                                         ErrorCode.PARSE_EXPECTED_RIGHT_PAREN_BUILTIN_FUNCTION_CALL,
+                                         mapOf(
+                                             Property.LINE_NUMBER to 1L,
+                                             Property.COLUMN_NUMBER to 27L,
+                                             Property.TOKEN_TYPE to TokenType.LITERAL,
+                                             Property.TOKEN_VALUE to ion.newInt(2)))
+    }
+
+    @Test
+    fun callTrimSpecificationWithoutFrom() {
+        checkInputTrowingParserException("trim(both 'test')",
+                                         ErrorCode.PARSE_EXPECTED_KEYWORD,
+                                         mapOf(
+                                             Property.LINE_NUMBER to 1L,
+                                             Property.COLUMN_NUMBER to 17L,
+                                             Property.KEYWORD to "FROM",
+                                             Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
+                                             Property.TOKEN_VALUE to ion.newSymbol(")")))
+    }
+
+    @Test
+    fun callTrimSpecificationAndRemoveWithoutFrom() {
+        checkInputTrowingParserException("trim(both '' 'test')",
+                                         ErrorCode.PARSE_EXPECTED_KEYWORD,
+                                         mapOf(
+                                             Property.LINE_NUMBER to 1L,
+                                             Property.COLUMN_NUMBER to 14L,
+                                             Property.TOKEN_TYPE to TokenType.LITERAL,
+                                             Property.KEYWORD to "FROM",
+                                             Property.TOKEN_VALUE to ion.newString("test")))
+    }
+
+    @Test
+    fun callTrimWithoutString() {
+        checkInputTrowingParserException("trim(from)",
+                                         ErrorCode.PARSE_UNEXPECTED_TERM,
+                                         mapOf(
+                                             Property.LINE_NUMBER to 1L,
+                                             Property.COLUMN_NUMBER to 10L,
+                                             Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
+                                             Property.TOKEN_VALUE to ion.newSymbol(")")))
     }
 
 }

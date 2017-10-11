@@ -1,10 +1,6 @@
 package com.amazon.ionsql.eval
 
-import com.amazon.ionsql.errors.*
-import org.assertj.core.api.Assertions.*
 import org.junit.*
-import org.junit.Assert
-import kotlin.reflect.*
 
 class EvaluatingCompilerExceptionsTest : EvaluatorBase() {
     private val globalListOfNumbers = mapOf("numbers" to "[1, 2.0, 3e0, 4, 5d0]")
@@ -22,30 +18,10 @@ class EvaluatingCompilerExceptionsTest : EvaluatorBase() {
         ]
         """)
 
-    private fun assertThrows(message: String,
-                             metadata: NodeMetadata,
-                             cause: KClass<out Throwable>? = null,
-                             f: () -> Unit) {
-        try {
-            f()
-            Assert.fail("didn't throw")
-        }
-        catch (e: EvaluationException) {
-            assertEquals("Wrong message", message, e.message)
-
-            if (cause != null) assertThat(e).hasRootCauseExactlyInstanceOf(cause.java)
-
-            assertEquals("wrong line number", metadata.line, e.errorContext!![Property.LINE_NUMBER]!!.longValue())
-            assertEquals("wrong column number",
-                         metadata.column,
-                         e.errorContext!![Property.COLUMN_NUMBER]!!.longValue())
-        }
-    }
-
     @Test
-    fun notOnOne() = assertThrows("Expected boolean: 1",
-                                  NodeMetadata(1, 1),
-                                  cause = IllegalArgumentException::class) { voidEval("not 1") }
+    fun notOnOne() = assertThrows("Expected boolean: 1", NodeMetadata(1, 1), cause = IllegalArgumentException::class) {
+        voidEval("not 1")
+    }
 
     @Test
     fun betweenIncompatiblePredicate() = assertThrows("Cannot compare values: \"APPLE\", 2", NodeMetadata(4, 19)) {
@@ -145,4 +121,6 @@ class EvaluatingCompilerExceptionsTest : EvaluatorBase() {
                                          cause = ArithmeticException::class) {
         voidEval("SELECT *  FROM `[{_1: a, _2: 1}, {_1: a, _2: 2}, {_1: a, _2: 3}]` WHERE _2 / 0 > 0")
     }
+
+
 }

@@ -98,4 +98,6 @@ class BuiltinFunctionsTest : EvaluatorBase() {
     @Test fun lower_5() = assertEval("lower('123\$%(*&')", "\"123\$%(*&\"")
     @Test fun lower_6() = assertEval("lower('ȴȵ💩Z💋')", "\"ȴȵ💩z💋\"")
     @Test fun lower_7() = assertEval("lower('話家身圧費谷料村能計税金')", "\"話家身圧費谷料村能計税金\"")
+
+
 }

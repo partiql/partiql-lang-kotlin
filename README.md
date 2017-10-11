@@ -519,7 +519,7 @@ Returns `NULL` if any arugment is null, or `MISSING` if any argument is missing.
 #### Examples
 
     SUBSTRING('abcdefghi' from 3 for 4) -- Returns 'cdef'
-    SUBSTRING('abcdefghi', -1, 4) -- Returns 'ab'
+    SUBSTRING('abcdefghi', -1, 4)       -- Returns 'ab'
 
 ### UPPER 
 
@@ -530,9 +530,25 @@ See [IONSQL-110](https://i.amazon.com/issues/IONSQL-110), which will allow IonSQ
 
     UPPER(<str>)
 
-Examples:
+#### Examples:
 
     UPPER('AbCdEfG!@#$') -- Returns 'ABCDEFG!@#$'
+
+### TRIM 
+Trims leading and/or trailing characters from a String. If the characters to be trimmed are not specified it defaults
+to `' '`. 
+
+    TRIM([[LEADING|TRAILING|BOTH <characters to remove>] FROM] <str>) 
+
+#### EXAMPLES
+
+    TRIM('       foobar         ') -- returns 'foobar'
+    TRIM('      \tfoobar\t         ') -- returns '\tfoobar\t'
+    TRIM(LEADING FROM '       foobar         ') -- returns 'foobar         '
+    TRIM(TRAILING FROM '       foobar         ') -- returns '       foobar'
+    TRIM(BOTH FROM '       foobar         ') -- returns 'foobar'
+    TRIM(BOTH '😁' FROM '😁😁foobar😁😁') -- returns 'foobar'
+    TRIM(BOTH '12' FROM '1112211foobar22211122') -- returns 'foobar' 
     
 ## Helpful Links
 

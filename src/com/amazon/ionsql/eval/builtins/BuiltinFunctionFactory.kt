@@ -1,31 +1,28 @@
 package com.amazon.ionsql.eval.builtins
 
-import com.amazon.ion.IonSystem
+import com.amazon.ion.*
 import com.amazon.ionsql.eval.*
 import com.amazon.ionsql.eval.ExprFunction.Companion.over
 import com.amazon.ionsql.util.*
 
-class BuiltinFunctionFactory(private val ion: IonSystem) {
+internal class BuiltinFunctionFactory(private val ion: IonSystem) {
 
+    fun createFunctionMap(): Map<String, ExprFunction> = mapOf("upper" to this.upper(),
+                                                               "lower" to this.lower(),
+                                                               "exists" to this.exists(),
+                                                               "substring" to this.substring(),
+                                                               "char_length" to this.char_length(),
+                                                               "character_length" to this.char_length(),
+                                                               "trim" to TrimExprFunction(ion))
 
-    fun createFunctionMap() : Map<String, ExprFunction> =  mapOf(
-            "upper" to this.upper(),
-            "lower" to this.lower(),
-            "exists" to this.exists(),
-            "substring" to this.substring(),
-            "char_length" to this.char_length(),
-            "character_length" to this.char_length()
-    )
-
-    fun exists(): ExprFunction =
-            over { _, args ->
-                when (args.size) {
-                    1 -> {
-                        args[0].asSequence().any().exprValue(ion)
-                    }
-                    else -> errNoContext("Expected a single argument for exists but found: ${args.size}")
-                }
+    fun exists(): ExprFunction = over { _, args ->
+        when (args.size) {
+            1    -> {
+                args[0].asSequence().any().exprValue(ion)
             }
+            else -> errNoContext("Expected a single argument for exists but found: ${args.size}")
+        }
+    }
 
     /*
         From the SQL-92 spec, page 135:
@@ -125,7 +122,6 @@ class BuiltinFunctionFactory(private val ion: IonSystem) {
 
             return str.substring(byteIndexStart, byteIndexEnd).exprValue(ion)
         }
-
 
         private fun validateArguments(args: List<ExprValue>) {
             when {

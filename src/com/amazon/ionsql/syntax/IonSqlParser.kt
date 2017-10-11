@@ -4,10 +4,7 @@
 
 package com.amazon.ionsql.syntax
 
-import com.amazon.ion.IonSequence
-import com.amazon.ion.IonSexp
-import com.amazon.ion.IonSystem
-import com.amazon.ion.IonValue
+import com.amazon.ion.*
 import com.amazon.ionsql.errors.*
 import com.amazon.ionsql.errors.ErrorCode.*
 import com.amazon.ionsql.errors.Property.*
@@ -128,7 +125,6 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 Pair(copy(remaining = this.remaining.tail), this.remaining.head!!)
             }
 
-
         fun deriveExpectedKeyword(keyword: String): ParseNode = derive { tailExpectedKeyword(keyword) }
 
         val isNumericLiteral = type == ATOM && when (token?.type) {
@@ -163,7 +159,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         val node = this
         val astNode = when (type) {
             ATOM -> when (token?.type) {
-                LITERAL, NULL -> sexp {
+                LITERAL, NULL, TRIM_SPECIFICATION -> sexp {
                     addSymbol("lit")
                     addClone(token.value!!)
                 }
@@ -537,6 +533,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             // specific syntax
             "values" -> tail.parseTableValues().copy(type = BAG)
             "substring" -> tail.parseSubstring(head!!)
+            "trim" -> tail.parseTrim(head!!)
             in FUNCTION_NAME_KEYWORDS -> when (tail.head?.type) {
                 LEFT_PAREN ->
                     tail.tail.parseFunctionCall(head!!)
@@ -573,7 +570,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             LEFT_PAREN -> tail.tail.parseFunctionCall(head!!)
             else -> atomFromHead()
         }
-        LITERAL, NULL, MISSING -> atomFromHead()
+        LITERAL, NULL, MISSING, TRIM_SPECIFICATION -> atomFromHead()
         else -> err("Unexpected term", PARSE_UNEXPECTED_TERM)
     }
 
@@ -843,7 +840,9 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         return call
     }
 
-    /** Parses substring
+    /**
+     * Parses substring
+     *
      * Syntax is either SUBSTRING(<str> FROM <start position> [FOR <string length>])
      * or SUBSTRING(<str>, <start position> [, <string length>])
      */
@@ -851,7 +850,9 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         var rem = this
 
         if (rem.head?.type != LEFT_PAREN) {
-            err("Expected $LEFT_PAREN", PARSE_EXPECTED_LEFT_PAREN_BUILTIN_FUNCTION_CALL)
+            val pvmap = PropertyValueMap()
+            pvmap[EXPECTED_TOKEN_TYPE] = LEFT_PAREN
+            rem.err("Expected $LEFT_PAREN", PARSE_EXPECTED_LEFT_PAREN_BUILTIN_FUNCTION_CALL, pvmap)
         }
 
         var stringExpr = tail.parseExpression()
@@ -886,6 +887,53 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 listOf(stringExpr, positionExpr, lengthExpr),
                 lengthExpr.remaining)
 
+    }
+
+    /**
+     * Parses trim
+     *
+     * Syntax is TRIM([[ specification ] [to trim characters] FROM] <trim source>).
+     */
+    private fun List<Token>.parseTrim(name: Token): ParseNode {
+        if (head?.type != LEFT_PAREN) err("Expected $LEFT_PAREN",
+                                          PARSE_EXPECTED_LEFT_PAREN_BUILTIN_FUNCTION_CALL)
+
+        var rem = tail
+        val arguments = mutableListOf<ParseNode>()
+
+        val hasSpecification = when(rem.head?.type) {
+            TRIM_SPECIFICATION -> {
+                val specificationNode = rem.parseExpression()
+                arguments.add(specificationNode)
+                rem = specificationNode.remaining
+
+                true
+            }
+            else -> false
+        }
+
+        if(hasSpecification && rem.head?.keywordText != "from") {
+            val toRemoveNode = rem.parseExpression().deriveExpectedKeyword("from")
+            arguments.add(toRemoveNode)
+
+            rem = toRemoveNode.remaining
+        }
+
+        // without a specification from keyword is optional
+        if(rem.head?.keywordText == "from") {
+            rem = rem.tail
+        }
+
+        // stringNode is required
+        val stringNode = rem.parseExpression()
+        arguments.add(stringNode)
+        rem = stringNode.remaining
+
+        if(rem.head?.type != RIGHT_PAREN) {
+            rem.err("Expected $RIGHT_PAREN", PARSE_EXPECTED_RIGHT_PAREN_BUILTIN_FUNCTION_CALL)
+        }
+
+        return ParseNode(ParseType.CALL, name, arguments, rem.tail)
     }
 
     private fun List<Token>.parseListLiteral(): ParseNode =

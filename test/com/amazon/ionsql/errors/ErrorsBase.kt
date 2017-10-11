@@ -3,6 +3,7 @@ package com.amazon.ionsql.errors
 import com.amazon.ionsql.Base
 import com.amazon.ionsql.IonSqlException
 import com.amazon.ionsql.errors.Property.*
+import com.amazon.ionsql.util.*
 
 open class ErrorsBase : Base() {
 
@@ -46,7 +47,7 @@ open class ErrorsBase : Base() {
      */
     protected fun correctContextValues(errorCode: ErrorCode, errorContext: PropertyValueMap?, expected: Map<Property, Any>) {
 
-        assertTrue("Expected parameter must contain all Properties for the error code",
+        assertTrue("Expected parameter must contain all Properties for the error code, missing: ${expected.keys - errorCode.getProperties()}",
                 errorCode.getProperties().containsAll(expected.keys))
 
 
