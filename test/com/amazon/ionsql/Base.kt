@@ -25,6 +25,7 @@ abstract class Base : Assert() {
 
     inner class AssertExprValue(val exprValue: ExprValue,
                                 val bindingsTransform: Bindings.() -> Bindings = { this }) {
+
         fun assertBindings(predicate: Bindings.() -> Boolean) =
             assertTrue(
                 exprValue.bindings.bindingsTransform().predicate()

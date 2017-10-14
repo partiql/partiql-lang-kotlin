@@ -5,7 +5,6 @@
 package com.amazon.ionsql.eval
 
 import com.amazon.ionsql.syntax.*
-import org.assertj.core.api.Assertions.*
 import org.junit.*
 
 class EvaluatingCompilerTest : EvaluatorBase() {
@@ -101,35 +100,35 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     fun literal() = assertEval("5", "5")
 
     @Test
-    fun identifier() = assertEval("i", "1", globalNumbers)
+    fun identifier() = assertEval("i", "1", globalNumbers.toSession())
 
     @Test
-    fun lexicalScope() = assertEval("@i", "1", globalNumbers)
+    fun lexicalScope() = assertEval("@i", "1", globalNumbers.toSession())
 
     @Test
     fun functionCall() = assertEval("exists(select * from [1])", "true")
 
     @Test
-    fun grouping() = assertEval("((i))", "1", globalNumbers)
+    fun grouping() = assertEval("((i))", "1", globalNumbers.toSession())
 
     @Test
-    fun listLiteral() = assertEval("[i, f, d]", "[1, 2e0, 3d0]", globalNumbers)
+    fun listLiteral() = assertEval("[i, f, d]", "[1, 2e0, 3d0]", globalNumbers.toSession())
 
     @Test
-    fun rowValueConstructor() = assertEval("(i, f, d)", "[1, 2e0, 3d0]", globalNumbers)
+    fun rowValueConstructor() = assertEval("(i, f, d)", "[1, 2e0, 3d0]", globalNumbers.toSession())
 
     @Test
-    fun structLiteral() = assertEval("{'a':i, 'b':f, 'c':d, 'd': 1}", "{a:1, b:2e0, c:3d0, d:1}", globalStruct + globalNumbers) {
+    fun structLiteral() = assertEval("{'a':i, 'b':f, 'c':d, 'd': 1}", "{a:1, b:2e0, c:3d0, d:1}", (globalStruct + globalNumbers).toSession()) {
         // struct literals provide ordered names
         val bindNames = exprValue.orderedNames!!
         assertEquals(listOf("a", "b", "c", "d"), bindNames)
     }
 
     @Test
-    fun bagLiteral() = assertEval("<<i, f, d>>", "[1, 2e0, 3d0]", globalNumbers)
+    fun bagLiteral() = assertEval("<<i, f, d>>", "[1, 2e0, 3d0]", globalNumbers.toSession())
 
     @Test
-    fun tableValueConstructor() = assertEval("VALUES (i), (f, d)", "[[1], [2e0, 3d0]]", globalNumbers)
+    fun tableValueConstructor() = assertEval("VALUES (i), (f, d)", "[[1], [2e0, 3d0]]", globalNumbers.toSession())
 
     @Test
     fun emptyListLiteral() = assertEval("[]", "[]")
@@ -141,16 +140,16 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     fun emptyBagLiteral() = assertEval("<<>>", "[]")
 
     @Test
-    fun unaryPlus() = assertEval("+i", "1", globalNumbers)
+    fun unaryPlus() = assertEval("+i", "1", globalNumbers.toSession())
 
     @Test
-    fun unaryMinus() = assertEval("-f", "-2e0", globalNumbers)
+    fun unaryMinus() = assertEval("-f", "-2e0", globalNumbers.toSession())
 
     @Test
-    fun addIntFloat() = assertEval("i + f", "3e0", globalNumbers)
+    fun addIntFloat() = assertEval("i + f", "3e0", globalNumbers.toSession())
 
     @Test
-    fun subIntFloatDecimal() = assertEval("i - f - d", "-4.0", globalNumbers)
+    fun subIntFloatDecimal() = assertEval("i - f - d", "-4.0", globalNumbers.toSession())
 
     @Test
     fun repeatingDecimal() = assertEval("4.0/3.0", "1.333333333333333333333333333333333")
@@ -159,10 +158,10 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     fun bigDecimals() = assertEval("${Long.MAX_VALUE}.0 + 100.0", "9223372036854775907.0")
 
     @Test
-    fun mulFloatIntInt() = assertEval("f * 2 * 4", "16e0", globalNumbers)
+    fun mulFloatIntInt() = assertEval("f * 2 * 4", "16e0", globalNumbers.toSession())
 
     @Test
-    fun divDecimalInt() = assertEval("d / 2", "1.5", globalNumbers)
+    fun divDecimalInt() = assertEval("d / 2", "1.5", globalNumbers.toSession())
 
     @Test
     fun modIntInt() = assertEval("3 % 2", "1")
@@ -275,20 +274,20 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     fun orFalseFalse() = assertEval("false or false", "false")
 
     @Test
-    fun comparisonsConjuctTrue() = assertEval("i < f and f < d", "true", globalNumbers)
+    fun comparisonsConjuctTrue() = assertEval("i < f and f < d", "true", globalNumbers.toSession())
 
     @Test
     fun comparisonsDisjunctFalse() = assertEval(
         "i < f and (f > d or i > d)",
         "false",
-        globalNumbers
+        globalNumbers.toSession()
     )
 
     @Test
-    fun pathDotOnly() = assertEval("a.b.c.d.e", "5", globalStruct)
+    fun pathDotOnly() = assertEval("a.b.c.d.e", "5", globalStruct.toSession())
 
     @Test
-    fun pathDotMissingAttribute() = assertEval("a.z IS MISSING", "true", globalStruct)
+    fun pathDotMissingAttribute() = assertEval("a.z IS MISSING", "true", globalStruct.toSession())
 
     @Test
     fun pathMissingDotName() = assertEval("(MISSING).a IS MISSING", "true")
@@ -297,7 +296,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     fun pathNullDotName() = assertEval("(NULL).a IS MISSING", "true")
 
     @Test
-    fun pathIndexing() = assertEval("stores[0].books[2].title", "\"C\"", stores)
+    fun pathIndexing() = assertEval("stores[0].books[2].title", "\"C\"", stores.toSession())
 
     @Test
     fun pathIndexListLiteral() = assertEval("[1, 2, 3][1]", "2")
@@ -324,37 +323,37 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     }
 
     @Test
-    fun pathWildcard() = assertEval("stores[0].books[*].title", """["A", "B", "C", "D"]""", stores)
+    fun pathWildcard() = assertEval("stores[0].books[*].title", """["A", "B", "C", "D"]""", stores.toSession())
 
     @Test
-    fun pathUnpivotWildcard() = assertEval("friends.kumo.likes.*.type", """["dog", "human"]""", friends)
+    fun pathUnpivotWildcard() = assertEval("friends.kumo.likes.*.type", """["dog", "human"]""", friends.toSession())
 
     @Test
     fun pathDoubleWildCard() = assertEval(
         "stores[*].books[*].title",
         """["A", "B", "C", "D", "A", "E", "F"]""",
-        stores
+        stores.toSession()
     )
 
     @Test
     fun pathDoubleUnpivotWildCard() = assertEval(
         "friends.*.likes.*.type",
         """["dog", "human", "dog", "cat"]""",
-        friends
+        friends.toSession()
     )
 
     @Test
     fun pathWildCardOverScalar() = assertEval(
         "s[*]",
         """["hello"]""",
-        globalHello
+        globalHello.toSession()
     )
 
     @Test
     fun pathUnpivotWildCardOverScalar() = assertEval(
         "s.*",
         """["hello"]""",
-        globalHello
+        globalHello.toSession()
     )
 
     @Test
@@ -401,21 +400,21 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     fun pathWildCardOverStructMultiple() = assertEval(
         "a[*][*][*][*]",
         """[{b:{c:{d:{e:5, f:6}}}}]""",
-        globalStruct
+        globalStruct.toSession()
     )
 
     @Test
     fun pathUnpivotWildCardOverStructMultiple() = assertEval(
         "a.*.*.*.*",
         """[5, 6]""",
-        globalStruct
+        globalStruct.toSession()
     )
 
     @Test
     fun selectPathUnpivotWildCardOverStructMultiple() = assertEval(
         "SELECT name, val FROM a.*.*.*.* AS val AT name",
         """[{name: "e", val: 5}, {name: "f", val: 6}]""",
-        globalStruct
+        globalStruct.toSession()
     )
 
     @Test
@@ -494,7 +493,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             {name: "Lilikoi", type: "unicorn"},
           ]
         """,
-        animals
+        animals.toSession()
     ) {
         // SELECT * from schema-less Ion provides no ordered names
         exprValue.forEach {
@@ -507,7 +506,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     fun implicitAliasSelectSingleSource() = assertEval(
         """SELECT id FROM stores""",
         """[{id:"5"}, {id:"6"}, {id:"7"}]""",
-        stores
+        stores.toSession()
     ) {
         // SELECT list provides ordered names facet
         exprValue.forEach {
@@ -520,14 +519,14 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     fun selectIndexStruct() = assertEval(
         """SELECT VALUE x[0] FROM (SELECT s.id FROM stores AS s) AS x""",
         """["5", "6", "7"]""",
-        stores
+        stores.toSession()
     )
 
     @Test
     fun selectValues() = assertEval(
         """SELECT VALUE id FROM stores""",
         """["5", "6", "7"]""",
-        stores
+        stores.toSession()
     )
 
     @Test
@@ -535,7 +534,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
         // Note that i, f, d, and s are defined in the global environment
         """SELECT f, d, s FROM i AS f, f AS d, @f AS s WHERE f = 1 AND d = 2e0 and s = 1""",
         """[{f: 1, d: 2e0, s: 1}]""",
-        globalNumbers
+        globalNumbers.toSession()
     )
 
     @Test
@@ -548,14 +547,14 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             {title:"F", price: 10.0, categories:["history"]},
           ]
         """,
-        stores
+        stores.toSession()
     )
 
     @Test
     fun explicitAliasSelectSingleSource() = assertEval(
         """SELECT id AS name FROM stores""",
         """[{name:"5"}, {name:"6"}, {name:"7"}]""",
-        stores
+        stores.toSession()
     )
 
     @Test
@@ -568,14 +567,14 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             {name:"F", price: 10.0},
           ]
         """,
-        stores
+        stores.toSession()
     )
 
     @Test
     fun explicitAliasSelectSingleSourceWithWhere() = assertEval(
         """SELECT id AS name FROM stores WHERE id = '5' """,
         """[{name:"5"}]""",
-        stores
+        stores.toSession()
     )
 
     @Test
@@ -596,7 +595,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             {name: "Lilikoi", type: "unicorn", id: "unicorn", is_magic: true},
           ]
         """,
-        animals + animalTypes
+        (animals + animalTypes).toSession()
     )
 
     @Test
@@ -607,7 +606,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             {name: "Kumo", type: "dog"}
           ]
         """,
-        animals
+        animals.toSession()
     )
 
     @Test
@@ -616,7 +615,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
         """
           []
         """,
-        animals
+        animals.toSession()
     )
     @Test
     fun selectJoin() = assertEval(
@@ -628,7 +627,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             {name: "Lilikoi", type: "unicorn", id: "unicorn", is_magic: true},
           ]
         """,
-        animals + animalTypes
+        (animals + animalTypes).toSession()
     )
 
     @Test
@@ -642,7 +641,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             {id: "6", title: "F"},
           ]
         """,
-        stores
+        stores.toSession()
     )
 
     @Test
@@ -653,7 +652,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             {id: "7"}
           ]
         """,
-        stores
+        stores.toSession()
     )
 
     @Test
@@ -671,7 +670,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             {id: "7"}
           ]
         """,
-        stores
+        stores.toSession()
     )
 
     @Test
@@ -693,7 +692,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             [3, 2, null],
           ]
         """,
-        globalStruct + globalNumbers
+        (globalStruct + globalNumbers).toSession()
     )
 
     @Test
@@ -707,7 +706,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             {id: "7", title: "hello"},
           ]
         """,
-        stores + globalHello
+        (stores + globalHello).toSession()
     )
 
     @Test
@@ -725,7 +724,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             {n1: "b", n2: "c", n3: "d", n4: "f", val: 6}
           ]
         """,
-        globalStruct
+        globalStruct.toSession()
     )
 
     @Test
@@ -751,7 +750,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             {col: "is_magic", val: true},
           ]
         """,
-        animals + animalTypes
+        (animals + animalTypes).toSession()
     )
 
     @Test
@@ -770,7 +769,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             {col: "is_magic", val: false},
           ]
         """,
-        animals + animalTypes
+        (animals + animalTypes).toSession()
     )
 
     @Test
@@ -785,7 +784,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             Lilikoi: "unicorn",
           }
         """,
-        animals
+        animals.toSession()
     )
 
     @Test
@@ -800,7 +799,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             name: "Lilikoi",
           }
         """,
-        animals
+        animals.toSession()
     )
 
     @Test
@@ -811,7 +810,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
         """
           {}
         """,
-        animals
+        animals.toSession()
     )
 
     @Test
@@ -829,7 +828,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             new_e: 5,
           }
         """,
-        globalStruct
+        globalStruct.toSession()
     )
 
     @Test
@@ -851,7 +850,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             }
           ]
         """,
-        stores
+        stores.toSession()
     )
 
     @Test
@@ -864,7 +863,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             "A", "B", "A"
           ]
         """,
-        stores
+        stores.toSession()
     )
 
     @Test
@@ -877,7 +876,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             "C", "D", "E", "F"
           ]
         """,
-        stores
+        stores.toSession()
     )
 
     @Test
@@ -891,7 +890,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             "A", "A"
           ]
         """,
-        stores
+        stores.toSession()
     )
 
     @Test
@@ -905,7 +904,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             "B", "C", "D", "E", "F"
           ]
         """,
-        stores
+        stores.toSession()
     )
 
     @Test
@@ -919,7 +918,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             "B", "E"
           ]
         """,
-        stores
+        stores.toSession()
     )
 
     @Test
@@ -933,7 +932,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             "A", "C", "D", "A", "F"
           ]
         """,
-        stores
+        stores.toSession()
     )
 
     @Test
@@ -953,7 +952,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             "TWO", "THREE", "?"
           ]
         """,
-        globalNumbers
+        globalNumbers.toSession()
     )
 
     @Test
@@ -972,7 +971,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             "TWO", "THREE", null
           ]
         """,
-        globalNumbers
+        globalNumbers.toSession()
     )
 
     @Test
@@ -992,7 +991,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             "< ONE", "TWO", "?", ">= THREE < 100", "?"
           ]
         """,
-        globalNumbers
+        globalNumbers.toSession()
     )
 
     @Test
@@ -1011,7 +1010,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             "< ONE", "TWO", null, ">= THREE < 100", null
           ]
         """,
-        globalNumbers
+        globalNumbers.toSession()
     )
 
     @Test
@@ -1026,7 +1025,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             2e0, 3d0
           ]
         """,
-        globalNumbers
+        globalNumbers.toSession()
     )
 
     @Test
@@ -1041,7 +1040,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             -1.0000, 1, 100d0
           ]
         """,
-        globalNumbers
+        globalNumbers.toSession()
     )
 
     @Test
@@ -1089,42 +1088,42 @@ class EvaluatingCompilerTest : EvaluatorBase() {
         // 'a' is a global variable
         """SELECT VALUE b FROM `[{b:5}]` AS a, a.b AS b""",
         """[{c:{d:{e:5, f:6}}}]""",
-        globalStruct
+        globalStruct.toSession()
     )
 
     @Test
     fun topLevelCount() = assertEval(
         """COUNT(numbers)""",
         """5""",
-        globalListOfNumbers
+        globalListOfNumbers.toSession()
     )
 
     @Test
     fun topLevelSum() = assertEval(
         """SUM(numbers)""",
         """15.0""",
-        globalListOfNumbers
+        globalListOfNumbers.toSession()
     )
 
     @Test
     fun topLevelMin() = assertEval(
         """MIN(numbers)""",
         """1""",
-        globalListOfNumbers
+        globalListOfNumbers.toSession()
     )
 
     @Test
     fun topLevelMax() = assertEval(
         """MAX(numbers)""",
         """5d0""",
-        globalListOfNumbers
+        globalListOfNumbers.toSession()
     )
 
     @Test
     fun topLevelAvg() = assertEval(
         """AVG(numbers)""",
         """3.0""",
-        globalListOfNumbers
+        globalListOfNumbers.toSession()
     )
 
     @Test
@@ -1132,28 +1131,28 @@ class EvaluatingCompilerTest : EvaluatorBase() {
         // SELECT VALUE does not do legacy SQL aggregation
         """SELECT VALUE COUNT(v) + SUM(v) FROM <<numbers, numbers>> AS v""",
         """[20.0, 20.0]""",
-        globalListOfNumbers
+        globalListOfNumbers.toSession()
     )
 
     @Test
     fun selectListCountStar() = assertEval(
         """SELECT COUNT(*) AS c FROM <<numbers, numbers>> AS v""",
         """[{c:2}]""",
-        globalListOfNumbers
+        globalListOfNumbers.toSession()
     )
 
     @Test
     fun selectListCountVariable() = assertEval(
         """SELECT COUNT(v) AS c FROM <<numbers, numbers>> AS v""",
         """[{c:2}]""",
-        globalListOfNumbers
+        globalListOfNumbers.toSession()
     )
 
     @Test
     fun selectListMultipleAggregates() = assertEval(
         """SELECT COUNT(*) AS c, AVG(v * 2) + SUM(v + v) AS result FROM numbers AS v""",
         """[{c:5, result:36.0}]""",
-        globalListOfNumbers
+        globalListOfNumbers.toSession()
     )
 
     @Test
@@ -1170,7 +1169,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             [{result:33.}],
             [{result:35.}],
         ]""",
-            globalListOfNumbers
+            globalListOfNumbers.toSession()
         )
 
     @Test

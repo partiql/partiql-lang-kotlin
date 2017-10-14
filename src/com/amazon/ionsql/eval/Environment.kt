@@ -7,15 +7,15 @@ package com.amazon.ionsql.eval
 /**
  * The environment for execution.
  *
- * @param globals The global bindings.
  * @param locals The current local bindings.
  * @param current The current bindings to use for evaluation which is generally
  *                `globals` or `locals` depending on the context.
+ * @param session the evaluation session
  * @param registers The compiler specific *register* slots.
  */
-data class Environment(internal val globals: Bindings,
-                       internal val locals: Bindings,
+data class Environment(internal val locals: Bindings,
                        val current: Bindings = locals,
+                       val session: EvaluationSession,
                        val registers: RegisterBank) {
 
     internal enum class CurrentMode {
@@ -28,7 +28,7 @@ data class Environment(internal val globals: Bindings,
         val derivedLocals = newLocals.delegate(locals)
         val newCurrent = when (currentMode) {
             CurrentMode.LOCALS -> derivedLocals
-            CurrentMode.GLOBALS_THEN_LOCALS -> globals.delegate(derivedLocals)
+            CurrentMode.GLOBALS_THEN_LOCALS -> session.globals.delegate(derivedLocals)
         }
         return copy(locals = derivedLocals, current = newCurrent)
     }
@@ -37,5 +37,5 @@ data class Environment(internal val globals: Bindings,
     internal fun flipToLocals(): Environment = copy(current = locals)
 
     /** Constructs a copy of this environment with the [globals] being the current bindings. */
-    internal fun flipToGlobalsFirst(): Environment = copy(current = globals.delegate(locals))
+    internal fun flipToGlobalsFirst(): Environment = copy(current = session.globals.delegate(locals))
 }

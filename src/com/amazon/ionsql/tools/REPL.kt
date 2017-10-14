@@ -144,7 +144,7 @@ fun main(args: Array<String>) {
     val globals = when {
         args.isNotEmpty() -> {
             val configSource = File(args[0]).readText(charset("UTF-8"))
-            val config = evaluator.compile(configSource).eval(Bindings.empty())
+            val config = evaluator.compile(configSource).eval(EvaluationSession.default())
             config.bindings
         }
         else -> Bindings.empty()
@@ -180,7 +180,7 @@ fun main(args: Array<String>) {
                             "!!" -> ION.newEmptyList().apply {
                                 add(parser.parse(source).clone())
                             }.exprValue()
-                            else -> evaluator.compile(source).eval(locals)
+                            else -> evaluator.compile(source).eval(EvaluationSession.build { globals(locals) })
                         }
 
                         print(BAR_1)

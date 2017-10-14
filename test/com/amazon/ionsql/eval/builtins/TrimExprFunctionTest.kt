@@ -18,7 +18,9 @@ class TrimExprFunctionTest {
     }
 
     private val ion = IonSystemBuilder.standard().build()
-    private val env = Environment(Bindings.empty(), Bindings.empty(), Bindings.empty(), RegisterBank(0))
+    private val env = Environment(locals = Bindings.empty(),
+                                  session = EvaluationSession.default(),
+                                  registers =  RegisterBank(0))
 
     private val subject = TrimExprFunction(ion)
 

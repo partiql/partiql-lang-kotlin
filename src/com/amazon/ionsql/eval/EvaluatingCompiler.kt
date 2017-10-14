@@ -8,7 +8,6 @@ import com.amazon.ion.IonSequence
 import com.amazon.ion.IonSexp
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
-import com.amazon.ionsql.errors.*
 import com.amazon.ionsql.eval.binding.Alias
 import com.amazon.ionsql.eval.binding.localsBinder
 import com.amazon.ionsql.eval.builtins.BuiltinFunctionFactory
@@ -43,8 +42,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
     constructor(ion: IonSystem) :
         this(ion, IonSqlParser(ion), emptyMap())
 
-    constructor(ion: IonSystem,
-                userFuncs: @JvmSuppressWildcards Map<String, ExprFunction>):
+    constructor(ion: IonSystem, userFuncs: @JvmSuppressWildcards Map<String, ExprFunction>):
         this(ion, IonSqlParser(ion), userFuncs)
 
     /** An [ExprValue] which is the result of an expression evaluated in an [Environment].  */
@@ -1257,7 +1255,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
     // TODO support meta-nodes properly for error reporting
 
     /** Evaluates an unbound syntax tree against a global set of bindings. */
-    fun eval(ast: IonSexp, globals: Bindings): ExprValue = compile(ast).eval(globals)
+    fun eval(ast: IonSexp, session: EvaluationSession): ExprValue = compile(ast).eval(session)
 
     /** Compiles a syntax tree to an [Expression]. */
     fun compile(ast: IonSexp): Expression {
@@ -1269,11 +1267,12 @@ class EvaluatingCompiler(private val ion: IonSystem,
         val registerCount = cEnv.regCounter.get()
 
         return object : Expression {
-            override fun eval(globals: Bindings): ExprValue {
+            override fun eval(session: EvaluationSession): ExprValue {
+
                 val env = Environment(
-                    globals = globals,
-                    locals = globals,
-                    current = globals,
+                    session = session,
+                    locals = session.globals,
+                    current = session.globals,
                     registers = RegisterBank(registerCount)
                 )
 
@@ -1282,11 +1281,14 @@ class EvaluatingCompiler(private val ion: IonSystem,
         }
     }
 
-    /** Compiles the given source expression into a bound [Expression]. */    override fun compile(source: String): Expression {
+    /**
+     * Compiles the given source expression into a bound [Expression].
+     */
+    override fun compile(source: String): Expression {
         val ast = parser.parse(source)
 
         return object : Expression {
-            override fun eval(globals: Bindings): ExprValue = eval(ast, globals)
+            override fun eval(session: EvaluationSession): ExprValue = eval(ast, session)
         }
     }
 }

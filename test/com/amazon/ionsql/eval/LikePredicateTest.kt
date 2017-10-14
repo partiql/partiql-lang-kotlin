@@ -16,7 +16,7 @@ class LikePredicateTest : EvaluatorBase() {
           {name: "Lilikoi", type: "unicorn"},
         ]
         """
-    )
+    ).toSession()
 
     @Test
     fun noEscapeAllArgsLiteralsMatches() =

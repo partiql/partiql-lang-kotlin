@@ -1,5 +1,6 @@
 package com.amazon.ionsql.eval.builtins
 
+import com.amazon.ion.*
 import com.amazon.ionsql.eval.*
 import org.junit.*
 
@@ -97,4 +98,20 @@ class BuiltinFunctionsTest : EvaluatorBase() {
     @Test fun lower_5() = assertEval("lower('123\$%(*&')", "\"123\$%(*&\"")
     @Test fun lower_6() = assertEval("lower('ȴȵ💩Z💋')", "\"ȴȵ💩z💋\"")
     @Test fun lower_7() = assertEval("lower('話家身圧費谷料村能計税金')", "\"話家身圧費谷料村能計税金\"")
+
+    @Test fun utcnow1() = assertEval("utcnow()",
+                                     "1970-01-01T00:00:00.000Z",
+                                     session = EvaluationSession.build { now(Timestamp.forMillis(0, 0)) })
+
+    @Test fun utcnow2() = assertEval("utcnow()",
+                                     "1970-01-01T00:00:01.000Z",
+                                     session = EvaluationSession.build { now(Timestamp.forMillis(1_000, 0)) })
+
+    @Test fun utcnowWithDifferentOffset() {
+        val fiveMinutesInMillis = 5L * 60 * 1_000
+        val now = Timestamp.forMillis(fiveMinutesInMillis, 1) // 1970-01-01T00:06:01.000+00:01
+        val session = EvaluationSession.build { now(now) }
+
+        assertEval("utcnow()", "1970-01-01T00:05:00.000Z", session = session)
+    }
 }

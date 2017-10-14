@@ -618,6 +618,17 @@ See [IONSQL-110](https://i.amazon.com/issues/IONSQL-110), which will allow IonSQ
 
     UPPER('AbCdEfG!@#$') -- Returns 'ABCDEFG!@#$'
     
+### UTCNOW 
+
+returns the current time timestamp in UTC. Current time is defined by the `now` value in the `EvaluationSession` so it's 
+consistent across an evaluation. The client can specify its own `now` value when creating the session    
+
+    UTCNOW()
+
+Examples:
+
+    UTCNOW() -- Returns 2017-10-13T16:02:11.123Z
+    
 ## Helpful Links
 
  - [Hyperlinked SQL-92 BNF](https://ronsavage.github.io/SQL/sql-92.bnf.html) - this is much easier to navigate than the official ISO standard!

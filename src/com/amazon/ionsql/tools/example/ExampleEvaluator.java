@@ -80,8 +80,9 @@ public class ExampleEvaluator {
         String source = args[0];
         Expression expr = evaluator.compile(source);
         ExprValue results = expr.eval(
-            // provide a mapping to the to standard input
-            (name) -> "stdin".equals(name) ? data : null
+            EvaluationSession.builder()
+                .globals((name) -> "stdin".equals(name) ? data : null) // provide a mapping to the to standard input
+                .build()
         );
 
         for (ExprValue result : results) {

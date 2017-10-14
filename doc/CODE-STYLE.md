@@ -140,3 +140,17 @@ Foo.Companion.BAD
 Foo.GOOD
 ```
 
+Use `@JvmOverloads` in functions with default parameters to generate the java overloaded version of the method. 
+By default java will only have access to the full method signature, e.g.:  
+```kotlin
+@JvmOverloads fun good(arg1: Int, arg2: Int = 1) = arg1 + arg2
+fun bad(arg1: Int, arg2: Int = 1) = arg1 + arg2   
+```  
+in Java the following function signatures will be accessible:
+```java
+public Integer good(final Integer arg1, final Integer arg2) { return arg1 + arg2; }
+public Integer good(final Integer arg1) { return good(arg1, 1); }
+public Integer bad(final Integer arg1, final Integer arg2) { return arg1 + arg2; }
+```
+
+Avoid using default arguments in interface methods, prefer overloading it instead. It's not possible to use `@JvmOverloads` in interface methods to generate the overloads to Java from an interface so you have to do it by hand to maintain symmetric interface for Java and Kotlin.  

@@ -18,7 +18,9 @@ abstract class EvaluatorBase : Base() {
      */
     private fun String.toExprValue(): ExprValue = literal(this).exprValue()
 
-    private fun Map<String, String>.toBindings(): Bindings = Bindings.over { key -> this[key]?.toExprValue() }
+    protected fun Map<String, String>.toBindings(): Bindings = Bindings.over { key -> this[key]?.toExprValue() }
+
+    protected fun Map<String, String>.toSession() = EvaluationSession.build { globals(this@toSession.toBindings()) }
 
     val evaluator = EvaluatingCompiler(ion)
 
@@ -28,27 +30,7 @@ abstract class EvaluatorBase : Base() {
 
     fun voidEval(source: String, bindings: Bindings = Bindings.empty()) {
         // force materialization
-        evalWithBindings(source, bindings).ionValue
-    }
-
-    /**
-     * Assert that the evaluation of source is the same as expected given a binding map
-     *
-     * @param source query source to be tested
-     * @param expected expected result
-     * @param bindingsMap map with all bindings used for evaluation, assumes the map values are string representations of
-     *                 single IonValue's
-     * @param block function literal with receiver used to plug in custom assertions
-     */
-    protected fun assertEval(source: String,
-                             expected: String,
-                             bindingsMap: Map<String, String>,
-                             block: AssertExprValue.() -> Unit = { }) {
-
-        assertEval(source,
-                   expected,
-                   bindingsMap.toBindings(),
-                   block)
+        evalWithBindings(source).ionValue
     }
 
     /**
@@ -56,16 +38,16 @@ abstract class EvaluatorBase : Base() {
      *
      * @param source query source to be tested
      * @param expected expected result
-     * @param bindings [Bindings] used for evaluation
+     * @param session [EvaluationSession] used for evaluation
      * @param block function literal with receiver used to plug in custom assertions
      */
     protected fun assertEval(source: String,
                              expected: String,
-                             bindings: Bindings = Bindings.empty(),
+                             session: EvaluationSession = EvaluationSession.default(),
                              block: AssertExprValue.() -> Unit = { }) {
 
         val expectedIon = literal(expected)
-        val exprValue = evalWithBindings(source, bindings)
+        val exprValue = evalWithBindings(source, session)
 
         AssertExprValue(exprValue).apply { assertIonValue(expectedIon) }
                                   .run(block)
@@ -75,12 +57,11 @@ abstract class EvaluatorBase : Base() {
      * Evaluates a source query given a [Bindings]
      *
      * @param source query source to be evaluated
-     * @param bindings [Bindings] used for evaluation
+     * @param session [EvaluationSession] used for evaluation
      */
-    protected fun evalWithBindings(source: String, bindings: Bindings = Bindings.empty()): ExprValue {
-        return evaluator.compile(source)
-                        .eval(bindings)
-    }
+    protected fun evalWithBindings(source: String,
+                                   session: EvaluationSession = EvaluationSession.default()): ExprValue =
+        evaluator.compile(source).eval(session)
 
     /**
      *  Asserts that [f] throws an [IonSqlException] with the specified message, line and column number

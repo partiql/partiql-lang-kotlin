@@ -122,5 +122,8 @@ class EvaluatingCompilerExceptionsTest : EvaluatorBase() {
         voidEval("SELECT *  FROM `[{_1: a, _2: 1}, {_1: a, _2: 2}, {_1: a, _2: 3}]` WHERE _2 / 0 > 0")
     }
 
-
+    @Test
+    fun utcnowWithArgument() = assertThrows("utcnow() takes no arguments", NodeMetadata(1, 1)) {
+        voidEval("utcnow(1)")
+    }
 }

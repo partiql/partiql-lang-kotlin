@@ -13,7 +13,8 @@ internal class BuiltinFunctionFactory(private val ion: IonSystem) {
                                                                "char_length" to this.char_length(),
                                                                "character_length" to this.char_length(),
                                                                "trim" to TrimExprFunction(ion),
-                                                               "to_string" to ToStringExprFunction(ion))
+                                                               "to_string" to ToStringExprFunction(ion),
+                                                               "utcnow" to this.utcNow())
 
     fun exists(): ExprFunction = ExprFunction.over { _, args ->
         when (args.size) {
@@ -158,6 +159,12 @@ internal class BuiltinFunctionFactory(private val ion: IonSystem) {
         override fun call(arg: ExprValue): ExprValue {
             return arg.stringValue().toLowerCase().exprValue(ion)
         }
+    }
+
+    fun utcNow(): ExprFunction = ExprFunction.over { env, args ->
+        if(args.isNotEmpty()) errNoContext("utcnow() takes no arguments")
+
+        ion.newTimestamp(env.session.now).exprValue()
     }
 
     /**
