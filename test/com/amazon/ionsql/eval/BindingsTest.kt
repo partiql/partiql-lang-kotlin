@@ -72,9 +72,9 @@ private fun oldLocalsBinder(locals: List<ExprValue>, aliases: List<Alias>, missi
         val found = localBindings.asSequence()
                 .mapIndexed { col, _ ->
                     when (name) {
-                    // the alias binds to the value itself
+                        // the alias binds to the value itself
                         aliases[col].asName -> locals[col]
-                    // the alias binds to the name of the value
+                        // the alias binds to the name of the value
                         aliases[col].atName -> locals[col].name ?: missingValue
                         else -> null
                     }
@@ -82,18 +82,18 @@ private fun oldLocalsBinder(locals: List<ExprValue>, aliases: List<Alias>, missi
                 .filter { it != null }
                 .toList()
         when (found.size) {
-        // nothing found at our scope, attempt to look at the attributes in our variables
-        // TODO fix dynamic scoping to be in line with SQL++ rules
+            // nothing found at our scope, attempt to look at the attributes in our variables
+            // TODO fix dynamic scoping to be in line with SQL++ rules
             0 -> {
                 localBindings.asSequence()
                         .map { it[name] }
                         .filter { it != null }
                         .firstOrNull()
             }
-        // found exactly one thing, success
+            // found exactly one thing, success
             1 -> found.head!!
-        // multiple things with the same name is a conflict
-            else -> errNoContext("$name is ambigious: ${found.map { it?.ionValue }}")
+            // multiple things with the same name is a conflict
+            else -> errNoContext("$name is ambigious: ${found.map { it?.ionValue }}", internal = false)
         }
     }
 }

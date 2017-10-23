@@ -1,7 +1,9 @@
 package com.amazon.ionsql.eval.builtins
 
 import com.amazon.ionsql.eval.*
+import com.amazon.ionsql.syntax.*
 import org.junit.*
+
 
 class TrimEvaluationTest : EvaluatorBase() {
 
@@ -83,37 +85,6 @@ class TrimEvaluationTest : EvaluatorBase() {
                 <<' 1'>> AS el
             """, "[{trimmed:\"ab\"}]")
 
-
-    @Test
-    fun trimNoArgs() = assertThrows("Unexpected term", NodeMetadata(1, 6)) {
-        voidEval("trim()")
-    }
-
-    @Test
-    fun trimOnlyFrom() = assertThrows("Unexpected term", NodeMetadata(1, 10)) {
-        voidEval("trim(from)")
-    }
-
-    @Test
-    fun trimSpecificationMissingFrom() = assertThrows("Expected FROM keyword", NodeMetadata(1, 17)) {
-        voidEval("trim(trailing '')")
-    }
-
-    @Test
-    fun trimAllButString() = assertThrows("Unexpected term", NodeMetadata(1, 22)) {
-        voidEval("trim(trailing '' from)")
-    }
-
-    @Test
-    fun trimSpecificationAndFromMissingString() = assertThrows("Unexpected term", NodeMetadata(1, 19)) {
-        voidEval("trim(trailing from)")
-    }
-
-    @Test
-    fun trimExtraArgument() = assertThrows("Expected RIGHT_PAREN", NodeMetadata(1, 26)) {
-        voidEval("trim(trailing '' from '' 1)")
-    }
-
     @Test
     fun trimWrongToRemoveType() = assertThrows("Expected text: 1", NodeMetadata(1, 1)) {
         voidEval("trim(trailing 1 from '')")
@@ -127,10 +98,5 @@ class TrimEvaluationTest : EvaluatorBase() {
     @Test
     fun trimWrongStringType2() = assertThrows("Expected text: true", NodeMetadata(1, 1)) {
         voidEval("trim(trailing from true)")
-    }
-
-    @Test
-    fun trimWrongSpecification() = assertThrows("Expected RIGHT_PAREN", NodeMetadata(1, 13)) {
-        voidEval("trim(foobar from '')")
     }
 }

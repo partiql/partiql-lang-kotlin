@@ -7,6 +7,7 @@ package com.amazon.ionsql.eval
 import com.amazon.ionsql.*
 import com.amazon.ionsql.errors.*
 import com.amazon.ionsql.util.*
+import org.assertj.core.api.Assertions.*
 import org.junit.*
 import kotlin.reflect.*
 
@@ -64,19 +65,21 @@ abstract class EvaluatorBase : Base() {
         evaluator.compile(source).eval(session)
 
     /**
-     *  Asserts that [f] throws an [IonSqlException] with the specified message, line and column number
+     *  Asserts that [func] throws an [IonSqlException] with the specified message, line and column number
      */
     protected fun assertThrows(message: String,
-                             metadata: NodeMetadata,
-                             cause: KClass<out Throwable>? = null,
-                             f: () -> Unit) {
+                               metadata: NodeMetadata,
+                               internal: Boolean = false,
+                               cause: KClass<out Throwable>? = null,
+                               func: () -> Unit) {
         try {
-            f()
+            func()
             Assert.fail("didn't throw")
         }
-        catch (e: IonSqlException) {
+        catch (e: EvaluationException) {
             softAssert {
                 assertThat(e.message).`as`("error message").isEqualTo(message)
+                assertThat(e.internal).isEqualTo(internal)
 
                 if (cause != null) assertThat(e).hasRootCauseExactlyInstanceOf(cause.java)
 

@@ -97,28 +97,37 @@ class EvaluatingCompilerExceptionsTest : EvaluatorBase() {
         voidEval("1 + 2 + 4 + 'a' + 5")
     }
 
-
     @Test
-    fun badCast() = assertThrows("Internal error, For input string: \"a\"", NodeMetadata(1, 18),
+    fun badCastToInt() = assertThrows("can't convert 'a' to INT", NodeMetadata(1, 18),
                                  cause = NumberFormatException::class) {
         voidEval("CAST('a' as int) > 0")
     }
 
     @Test
-    fun badCastInSelect() = assertThrows("Internal error, For input string: \"a\"", NodeMetadata(1, 91),
+    fun badCastInSelectToInt() = assertThrows("can't convert 'a' to INT", NodeMetadata(1, 91),
                                  cause = NumberFormatException::class) {
         voidEval("SELECT *  FROM `[{_1: a, _2: 1}, {_1: a, _2: 'a'}, {_1: a, _2: 3}]` WHERE CAST(_2 as INT) > 0")
     }
 
     @Test
-    fun divideByZero() = assertThrows("Internal error, / by zero", NodeMetadata(1, 3),
-                                         cause = ArithmeticException::class) {
+    fun badCastToDecimal() = assertThrows("can't convert 'a' to DECIMAL", NodeMetadata(1, 22),
+                                      cause = NumberFormatException::class) {
+        voidEval("CAST('a' as DECIMAL) > 0")
+    }
+
+    @Test
+    fun badCastToTimestamp() = assertThrows("can't convert '2010-01-01T10' to TIMESTAMP", NodeMetadata(1, 36),
+                                            cause = IllegalArgumentException::class) {
+        voidEval("CAST('2010-01-01T10' as TIMESTAMP) > 0")
+    }
+
+    @Test
+    fun divideByZero() = assertThrows("/ by zero", NodeMetadata(1, 3)) {
         voidEval("1 / 0")
     }
 
     @Test
-    fun divideByZeroInSelect() = assertThrows("Internal error, / by zero", NodeMetadata(1, 76),
-                                         cause = ArithmeticException::class) {
+    fun divideByZeroInSelect() = assertThrows("/ by zero", NodeMetadata(1, 76)) {
         voidEval("SELECT *  FROM `[{_1: a, _2: 1}, {_1: a, _2: 2}, {_1: a, _2: 3}]` WHERE _2 / 0 > 0")
     }
 

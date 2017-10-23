@@ -53,7 +53,7 @@ fun List<Alias>.localsBinder(missingValue: ExprValue): LocalsBinder {
                 when (binders.size) {
                     // The 0 case is fulfilled by withDefault
                     1 -> binders[0].func
-                    else -> { locals -> errNoContext("$name is ambiguous: ${binders.map { it.func(locals).ionValue }}") }
+                    else -> { locals -> errNoContext("$name is ambiguous: ${binders.map { it.func(locals).ionValue }}", internal = false) }
                 }
             }
             .withDefault(::dynamicLocalsBinder)

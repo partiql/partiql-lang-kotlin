@@ -21,12 +21,12 @@ class IonExprValue(override val ionValue: IonValue) : BaseExprValue() {
         else -> null
     }
 
-    private fun <T> wrappingIllegalArgument(func: () -> T): T {
+    private fun <T> wrappingIllegalArgumentException(func: () -> T): T {
         try {
             return func()
         }
         catch (e: IllegalArgumentException) {
-            throw EvaluationException(cause = e)
+            throw EvaluationException(cause = e, internal = false)
         }
     }
 
@@ -37,11 +37,11 @@ class IonExprValue(override val ionValue: IonValue) : BaseExprValue() {
 
     override val scalar: Scalar by lazy {
         object : Scalar() {
-            override fun booleanValue(): Boolean? = wrappingIllegalArgument { ionValue.booleanValue() }
-            override fun numberValue(): Number? = wrappingIllegalArgument { ionValue.numberValue() }
-            override fun timestampValue(): Timestamp? = wrappingIllegalArgument { ionValue.timestampValue() }
-            override fun stringValue(): String? = wrappingIllegalArgument { ionValue.stringValue() }
-            override fun bytesValue(): ByteArray? = wrappingIllegalArgument { ionValue.bytesValue() }
+            override fun booleanValue(): Boolean? = wrappingIllegalArgumentException { ionValue.booleanValue() }
+            override fun numberValue(): Number? = wrappingIllegalArgumentException { ionValue.numberValue() }
+            override fun timestampValue(): Timestamp? = wrappingIllegalArgumentException { ionValue.timestampValue() }
+            override fun stringValue(): String? = wrappingIllegalArgumentException { ionValue.stringValue() }
+            override fun bytesValue(): ByteArray? = wrappingIllegalArgumentException { ionValue.bytesValue() }
         }
     }
 

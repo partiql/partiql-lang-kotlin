@@ -146,6 +146,6 @@ enum class ExprValueType(val typeNames: List<String>,
         )
 
         fun fromTypeName(name: String): ExprValueType = LEX_TYPE_MAP[name]
-            ?: throw EvaluationException("No such value type for $name")
+            ?: throw EvaluationException("No such value type for $name", internal = true)
     }
 }

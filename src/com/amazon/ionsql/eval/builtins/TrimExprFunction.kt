@@ -86,7 +86,7 @@ internal class TrimExprFunction(private val ion: IonSystem) : ExprFunction {
             2    -> Triple(TrimSpecification.from(args[0]), DEFAULT_TO_REMOVE, args[1].codePoints())
             3    -> Triple(TrimSpecification.from(args[0]), args[1].codePoints(), args[2].codePoints())
 
-            else -> errNoContext("Trim takes between 1 and 3 arguments, received: ${args.size}")
+            else -> errNoContext("Trim takes between 1 and 3 arguments, received: ${args.size}", internal = false)
         }
     }
 }
@@ -99,7 +99,7 @@ private enum class TrimSpecification {
             "both"     -> BOTH
             "leading"  -> LEADING
             "trailing" -> TRAILING
-            else       -> errNoContext("'${arg.stringValue()}' is an unknown trim specification, valid vales: ${TrimSpecification.values().joinToString()}")
+            else       -> errNoContext("'${arg.stringValue()}' is an unknown trim specification, valid vales: ${TrimSpecification.values().joinToString()}", internal = false)
         }
     }
 

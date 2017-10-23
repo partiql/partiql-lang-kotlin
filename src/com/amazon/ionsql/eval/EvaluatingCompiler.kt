@@ -4,20 +4,14 @@
 
 package com.amazon.ionsql.eval
 
-import com.amazon.ion.IonSequence
-import com.amazon.ion.IonSexp
-import com.amazon.ion.IonSystem
-import com.amazon.ion.IonValue
-import com.amazon.ionsql.eval.binding.Alias
-import com.amazon.ionsql.eval.binding.localsBinder
-import com.amazon.ionsql.eval.builtins.BuiltinFunctionFactory
-import com.amazon.ionsql.syntax.IonSqlParser
-import com.amazon.ionsql.syntax.Parser
-import com.amazon.ionsql.syntax.Token
+import com.amazon.ion.*
+import com.amazon.ionsql.eval.binding.*
+import com.amazon.ionsql.eval.builtins.*
+import com.amazon.ionsql.syntax.*
 import com.amazon.ionsql.util.*
-import java.math.BigDecimal
+import java.math.*
 import java.util.*
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.*
 
 /**
  * A basic implementation of the [Compiler] that parses Ion SQL [Token] instances
@@ -52,7 +46,9 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 return innerEval(env)
             } catch (e: EvaluationException) {
                 when {
-                    e.errorContext == null -> throw EvaluationException(errorContext = metadata?.toErrorContext(), cause = e)
+                    e.errorContext == null -> throw EvaluationException(errorContext = metadata?.toErrorContext(),
+                                                                        cause = e,
+                                                                        internal = e.internal)
                     else -> {
                         metadata?.fillErrorContext(e.errorContext)
 
@@ -61,7 +57,10 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 }
             } catch (e: Exception) {
                 val message = e.message ?: "<NO MESSAGE>"
-                throw EvaluationException("Internal error, $message", errorContext = metadata?.toErrorContext(), cause = e)
+                throw EvaluationException("Internal error, $message",
+                                          errorContext = metadata?.toErrorContext(),
+                                          cause = e,
+                                          internal = true)
             }
         }
 
@@ -206,7 +205,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 val expr = ast[2].compile(cEnv)
                 exprThunk(cEnv.metadataLookup[ast[2]]) { env -> expr.eval(env) }
             }
-            else -> err("Bad alias: $ast", cEnv.metadataLookup[ast]?.toErrorContext())
+            else -> err("Bad alias: $ast", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
         }
     }
 
@@ -227,7 +226,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                     }.exprValue()
                 }
             }
-            else -> err("Arity incorrect for 'is'/'is_not': $ast", cEnv.metadataLookup[ast]?.toErrorContext())
+            else -> err("Arity incorrect for 'is'/'is_not': $ast", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
         }
 
     }
@@ -287,7 +286,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
         },
         "id" to { cEnv, ast ->
             val name = ast[1].text(cEnv)
-            exprThunk(cEnv.metadataLookup[ast]) { env -> env.current[name] ?: err("No such binding: $name", cEnv.metadataLookup[ast]?.toErrorContext()) }
+            exprThunk(cEnv.metadataLookup[ast]) { env -> env.current[name] ?: err("No such binding: $name", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false) }
         },
         "@" to { cEnv, ast ->
             val expr = ast[1].compile(cEnv)
@@ -301,7 +300,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
         },
         "cast" to { cEnv, ast ->
             if (ast.size != 3) {
-                err("cast requires two arguments", cEnv.metadataLookup[ast]?.toErrorContext())
+                err("cast requires two arguments", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
             }
 
             val sourceExpr = ast[1].compile(cEnv)
@@ -321,7 +320,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
         },
         "struct" to bindOp(minArity = 0, maxArity = Integer.MAX_VALUE) { _, args ->
             if (args.size % 2 != 0) {
-                errNoContext("struct requires even number of parameters")
+                errNoContext("struct requires even number of parameters", internal = false)
             }
 
             val seq = (0 until args.size).step(2)
@@ -371,7 +370,14 @@ class EvaluatingCompiler(private val ion: IonSystem,
             (args[0].numberValue() * args[1].numberValue()).exprValue()
         },
         "/" to bindOp { _, args ->
-            (args[0].numberValue() / args[1].numberValue()).exprValue()
+            val denominator = args[1].numberValue();
+            if(denominator.isZero()) errNoContext("/ by zero", internal = false)
+            try {
+                (args[0].numberValue() / denominator).exprValue()
+            }
+            catch (e: ArithmeticException) {
+                throw EvaluationException(cause = e, internal = true)
+            }
         },
         "%" to bindOp { _, args ->
             (args[0].numberValue() % args[1].numberValue()).exprValue()
@@ -426,7 +432,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                         terms.any{ it.eval(env).booleanValue() }.exprValue()
                     }
                 }
-                else -> err("Arity incorrect for 'or': $ast", cEnv.metadataLookup[ast]?.toErrorContext())
+                else -> err("Arity incorrect for 'or': $ast", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
             }
         },
         "and" to { cEnv, ast ->
@@ -437,7 +443,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                         terms.none{ ! it.eval(env).booleanValue() }.exprValue()
                     }
                 }
-                else -> err("Arity incorrect for 'and': $ast", cEnv.metadataLookup[ast]?.toErrorContext())
+                else -> err("Arity incorrect for 'and': $ast", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
             }
         },
         "is" to isHandler,
@@ -449,7 +455,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
         },
         "simple_case" to { cEnv, ast ->
             if (ast.size < 3) {
-                err("Arity incorrect for simple case: $ast", cEnv.metadataLookup[ast]?.toErrorContext())
+                err("Arity incorrect for simple case: $ast", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
             }
 
             val targetExpr = ast[1].compile(cEnv)
@@ -469,16 +475,16 @@ class EvaluatingCompiler(private val ion: IonSystem,
                                 resultExpr
                             )
                         }
-                        else -> err("Arity incorrect for 'when': $it", cEnv.metadataLookup[it]?.toErrorContext())
+                        else -> err("Arity incorrect for 'when': $it", cEnv.metadataLookup[it]?.toErrorContext(), internal = false)
                     }
                     "else" -> when (it.size) {
                         2 -> {
                             val elseExpr = it[1].compile(cEnv)
                             ConditionThunks({ true }, elseExpr)
                         }
-                        else -> err("Arity incorrect for 'else': $it", cEnv.metadataLookup[it]?.toErrorContext())
+                        else -> err("Arity incorrect for 'else': $it", cEnv.metadataLookup[it]?.toErrorContext(), internal = false)
                     }
-                    else -> err("Unexpected syntax in simple case: ${it[0]}", cEnv.metadataLookup[it[0]]?.toErrorContext())
+                    else -> err("Unexpected syntax in simple case: ${it[0]}", cEnv.metadataLookup[it[0]]?.toErrorContext(), internal = false)
                 }
             }
 
@@ -486,7 +492,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
         },
         "searched_case" to { cEnv, ast ->
             if (ast.size < 2) {
-                err("Arity incorrect for searched case: $ast", cEnv.metadataLookup[ast]?.toErrorContext())
+                err("Arity incorrect for searched case: $ast", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
             }
 
             // go through the cases and else and evaluate them
@@ -502,16 +508,16 @@ class EvaluatingCompiler(private val ion: IonSystem,
                                 resultExpr
                             )
                         }
-                        else -> err("Arity incorrect for 'when': $it", cEnv.metadataLookup[it]?.toErrorContext())
+                        else -> err("Arity incorrect for 'when': $it", cEnv.metadataLookup[it]?.toErrorContext(), internal = false)
                     }
                     "else" -> when (it.size) {
                         2 -> {
                             val elseExpr = it[1].compile(cEnv)
                             ConditionThunks({ true }, elseExpr)
                         }
-                        else -> err("Arity incorrect for 'else': $it", cEnv.metadataLookup[it]?.toErrorContext())
+                        else -> err("Arity incorrect for 'else': $it", cEnv.metadataLookup[it]?.toErrorContext(), internal = false)
                     }
-                    else -> err("Unexpected syntax in search case: ${it[0]}", cEnv.metadataLookup[it[0]]?.toErrorContext())
+                    else -> err("Unexpected syntax in search case: ${it[0]}", cEnv.metadataLookup[it[0]]?.toErrorContext(), internal = false)
                 }
             }
 
@@ -519,7 +525,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
         },
         "path" to { cEnv, ast ->
             if (ast.size < 3) {
-                err("Path arity too low: $ast", cEnv.metadataLookup[ast]?.toErrorContext())
+                err("Path arity too low: $ast", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
             }
 
             var currExpr = ast[1].compile(cEnv)
@@ -593,26 +599,26 @@ class EvaluatingCompiler(private val ion: IonSystem,
         "at" to aliasHandler,
         "unpivot" to { cEnv, ast ->
             if (ast.size != 2) {
-                err("UNPIVOT form must have one expression", cEnv.metadataLookup[ast]?.toErrorContext())
+                err("UNPIVOT form must have one expression", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
             }
             val expr = ast[1].compile(cEnv)
             exprThunk(cEnv.metadataLookup[ast]) { env -> expr.eval(env).unpivot(ion) }
         },
         "select" to { cEnv, ast ->
             if (ast.size < 3) {
-                err("Bad arity on SELECT form $ast: ${ast.size}", cEnv.metadataLookup[ast]?.toErrorContext())
+                err("Bad arity on SELECT form $ast: ${ast.size}", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
             }
 
             val projectForm = ast[1]
             if (projectForm !is IonSequence || projectForm.isEmpty) {
-                err("SELECT projection node must be non-empty sequence: $projectForm", cEnv.metadataLookup[ast]?.toErrorContext())
+                err("SELECT projection node must be non-empty sequence: $projectForm", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
             }
             if (projectForm[0].text(cEnv) != "project") {
-                err("SELECT projection is not supported ${projectForm[0].text(cEnv)}", cEnv.metadataLookup[ast]?.toErrorContext())
+                err("SELECT projection is not supported ${projectForm[0].text(cEnv)}", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
             }
             val selectForm = projectForm[1]
             if (selectForm !is IonSequence || selectForm.isEmpty) {
-                err("SELECT projection must be non-empty sequence: $selectForm", cEnv.metadataLookup[ast]?.toErrorContext())
+                err("SELECT projection must be non-empty sequence: $selectForm", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
             }
 
             // the captured list of legacy SQL style aggregates
@@ -621,7 +627,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
             val selectFunc: (List<ExprValue>, Environment) -> ExprValue = when (selectForm[0].text(cEnv)) {
                 "*" -> {
                     if (selectForm.size != 1) {
-                        err("SELECT * must be a singleton list", cEnv.metadataLookup[ast]?.toErrorContext())
+                        err("SELECT * must be a singleton list", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
                     }
                     // FIXME select * doesn't project ordered tuples
                     // TODO this should work for very specific cases...
@@ -629,7 +635,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 }
                 "list" -> {
                     if (selectForm.size < 2) {
-                        err("SELECT ... must have at least one expression", cEnv.metadataLookup[ast]?.toErrorContext())
+                        err("SELECT ... must have at least one expression", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
                     }
                     val selectNames =
                         extractAliases(selectForm.asSequence().drop(1), cEnv).map { it.asName.exprValue() }
@@ -661,13 +667,13 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 }
                 "value" -> {
                     if (selectForm.size != 2) {
-                        err("SELECT VALUE must have a single expression", cEnv.metadataLookup[ast]?.toErrorContext())
+                        err("SELECT VALUE must have a single expression", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
                     }
                     val expr = selectForm[1].compile(cEnv);
 
                     { _, env -> expr.eval(env) }
                 }
-                else -> err("Invalid node in SELECT: $selectForm", cEnv.metadataLookup[ast]?.toErrorContext())
+                else -> err("Invalid node in SELECT: $selectForm", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
             }
 
             val sourceThunk = compileQueryWithoutProjection(cEnv, ast)
@@ -717,14 +723,14 @@ class EvaluatingCompiler(private val ion: IonSystem,
         },
         "pivot" to { cEnv, ast ->
             if (ast.size < 3) {
-                err("Bad arity on PIVOT form $ast: ${ast.size}", cEnv.metadataLookup[ast]?.toErrorContext())
+                err("Bad arity on PIVOT form $ast: ${ast.size}", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
             }
 
             val memberForm = ast[1]
             if (memberForm !is IonSequence
                 || memberForm.size != 3
                 || memberForm[0].text(cEnv) != "member") {
-                err("PIVOT member node must be of the form (member <name> <value>): $memberForm", cEnv.metadataLookup[memberForm]?.toErrorContext())
+                err("PIVOT member node must be of the form (member <name> <value>): $memberForm", cEnv.metadataLookup[memberForm]?.toErrorContext(), internal = false)
             }
             val nameExpr = memberForm[1].compile(cEnv)
             val valueExpr = memberForm[2].compile(cEnv)
@@ -856,7 +862,9 @@ class EvaluatingCompiler(private val ion: IonSystem,
      * and the size of the search pattern excluding uses of the escape character
      */
     private fun checkPattern(pattern: IonValue, escape: IonValue?, cEnv: CompilationEnvironment): Triple<String, Int?, Int> {
-        val patternString = pattern.stringValue()?.let { it } ?: err("Must provide a non-null value for PATTERN in a LIKE predicate: $pattern", cEnv.metadataLookup[pattern]?.toErrorContext())
+        val patternString = pattern.stringValue()?.let { it } ?: err("Must provide a non-null value for PATTERN in a LIKE predicate: $pattern",
+                                                                     cEnv.metadataLookup[pattern]?.toErrorContext(),
+                                                                     internal = false)
         escape?.let {
             val escapeChar = checkEscapeChar(escape, cEnv).codePointAt(0)  // escape is a string of length 1
             val validEscapedChars = setOf('_'.toInt(), '%'.toInt(), escapeChar)
@@ -866,9 +874,9 @@ class EvaluatingCompiler(private val ion: IonSystem,
             while (iter.hasNext()) {
                 val current = iter.next()
                 if (current == escapeChar) {
-                    if (!iter.hasNext()) err("Invalid escape sequence : $patternString", cEnv.metadataLookup[pattern]?.toErrorContext())
+                    if (!iter.hasNext()) err("Invalid escape sequence : $patternString", cEnv.metadataLookup[pattern]?.toErrorContext(), internal = false)
                     else {
-                        if (!validEscapedChars.contains(iter.next())) err("Invalid escape sequence : $patternString", cEnv.metadataLookup[pattern]?.toErrorContext())
+                        if (!validEscapedChars.contains(iter.next())) err("Invalid escape sequence : $patternString", cEnv.metadataLookup[pattern]?.toErrorContext(), internal = false)
                     }
                 }
                 count++
@@ -892,10 +900,12 @@ class EvaluatingCompiler(private val ion: IonSystem,
      * @return the escape character as a [String] or throws an exception when the input is invalid
      */
     private fun checkEscapeChar(escape: IonValue, cEnv: CompilationEnvironment): String {
-        val escapeChar = escape.stringValue()?.let { it } ?: err("Must provide a value when using ESCAPE in a LIKE predicate: $escape", cEnv.metadataLookup[escape]?.toErrorContext())
+        val escapeChar = escape.stringValue()?.let { it } ?: err("Must provide a value when using ESCAPE in a LIKE predicate: $escape",
+                                                                 cEnv.metadataLookup[escape]?.toErrorContext(),
+                                                                 internal = false)
         when (escapeChar) {
-            "" -> err("Cannot use empty character as ESCAPE character in a LIKE predicate: $escape", cEnv.metadataLookup[escape]?.toErrorContext())
-            else -> if (escapeChar.trim().length != 1) err("Escape character must have size 1 : $escapeChar", cEnv.metadataLookup[escape]?.toErrorContext())
+            "" -> err("Cannot use empty character as ESCAPE character in a LIKE predicate: $escape", cEnv.metadataLookup[escape]?.toErrorContext(), internal = false)
+            else -> if (escapeChar.trim().length != 1) err("Escape character must have size 1 : $escapeChar", cEnv.metadataLookup[escape]?.toErrorContext(), internal = false)
         }
         return escapeChar
     }
@@ -962,7 +972,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
             "inner_join" -> joinSources(JoinExpansion.INNER)
             "left_join" -> joinSources(JoinExpansion.OUTER)
             // TODO support this--will require reworking the left fold product approach
-            "right_join", "outer_join" -> err("RIGHT and FULL JOIN not supported", cEnv.metadataLookup[sourceAst[0]]?.toErrorContext())
+            "right_join", "outer_join" -> err("RIGHT and FULL JOIN not supported", cEnv.metadataLookup[sourceAst[0]]?.toErrorContext(), internal = false)
             // base case, a singleton with no special expansion
             else -> listOf(sourceAst.toFromSource(0, JoinExpansion.INNER, null))
         }
@@ -982,7 +992,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
             when (clause[0].text(cEnv)) {
                 "where" -> whereExpr = clause[1].compile(cEnv)
                 "limit" -> limitExpr = clause[1].compile(cEnv)
-                else -> err("Unknown clause in SELECT: $clause", cEnv.metadataLookup[clause]?.toErrorContext())
+                else -> err("Unknown clause in SELECT: $clause", cEnv.metadataLookup[clause]?.toErrorContext(), internal = false)
             }
         }
 
@@ -1126,7 +1136,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
         is Long -> integerExprValue(this, ion)
         is Double -> floatExprValue(this, ion)
         is BigDecimal -> decimalExprValue(this, ion)
-        else -> errNoContext("Cannot convert number to expression value: $this")
+        else -> errNoContext("Cannot convert number to expression value: $this", internal = true)
     }
 
     private fun String.exprValue(): ExprValue = stringExprValue(this, ion)
@@ -1141,15 +1151,15 @@ class EvaluatingCompiler(private val ion: IonSystem,
             // delegate to bindings logic as the scope of lookup by name
             bindings[name] ?: missingValue
         }
-        else -> err("Cannot convert index to int/string: $member", metadata?.toErrorContext())
+        else -> err("Cannot convert index to int/string: $member", metadata?.toErrorContext(), internal = true)
     }
 
-    private fun IonValue.text(cEnv: CompilationEnvironment) = stringValue() ?: err("Expected non-null string: $this", cEnv.metadataLookup[this]?.toErrorContext())
+    private fun IonValue.text(cEnv: CompilationEnvironment) = stringValue() ?: err("Expected non-null string: $this", cEnv.metadataLookup[this]?.toErrorContext(), internal = false)
 
     private fun IonSexp.compileCall(cEnv: CompilationEnvironment, startIndex: Int): ExprThunk {
         val funcValue = this[startIndex]
         val name = funcValue.text(cEnv)
-        val func = functions[name] ?: err("No such function: $name", cEnv.metadataLookup[funcValue]?.toErrorContext())
+        val func = functions[name] ?: err("No such function: $name", cEnv.metadataLookup[funcValue]?.toErrorContext(), internal = false)
         val argIndex = startIndex + 1
         return compileFunc(cEnv, argIndex, func)
     }
@@ -1165,7 +1175,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
             "call_agg" -> this[3].compile(cEnv)
             // for wild cards we don't need to materialize anything (i.e. count all the things)
             "call_agg_wildcard" -> exprThunk(cEnv.metadataLookup[this]) { _ -> nullValue }
-            else -> err("Invalid aggregate node: $this", cEnv.metadataLookup[this[0]]?.toErrorContext())
+            else -> err("Invalid aggregate node: $this", cEnv.metadataLookup[this[0]]?.toErrorContext(), internal = false)
         }
 
         return Aggregate(aggFactory, inputExpr, cEnv.regCounter.getAndIncrement())
@@ -1188,20 +1198,20 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 val qualifier = this[2].text(cEnv)
                 if (qualifier != "all") {
                     // TODO support DISTINCT aggregates
-                    err("DISTINCT aggregate function call not supported", cEnv.metadataLookup[this[2]]?.toErrorContext())
+                    err("DISTINCT aggregate function call not supported", cEnv.metadataLookup[this[2]]?.toErrorContext(), internal = false)
                 }
                 4
             }
             "call_agg_wildcard" -> 2
-            else -> err("Invalid aggregate node: $this", cEnv.metadataLookup[this]?.toErrorContext())
+            else -> err("Invalid aggregate node: $this", cEnv.metadataLookup[this]?.toErrorContext(), internal = false)
         }
         val name = this[1].text(cEnv)
 
         if (size != expectedSize) {
-            err("Aggregate function call node must have arity of $expectedSize", cEnv.metadataLookup[this[1]]?.toErrorContext())
+            err("Aggregate function call node must have arity of $expectedSize", cEnv.metadataLookup[this[1]]?.toErrorContext(), internal = false)
         }
 
-        val aggFactory = builtinAggregates[name] ?: err("No such aggregate function: $name", cEnv.metadataLookup[this[1]]?.toErrorContext())
+        val aggFactory = builtinAggregates[name] ?: err("No such aggregate function: $name", cEnv.metadataLookup[this[1]]?.toErrorContext(), internal = false)
 
         return aggFactory
     }
@@ -1226,13 +1236,19 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
     private fun IonValue.compile(cEnv: CompilationEnvironment): ExprThunk = when(this) {
         is IonSexp -> {
+            // FIXME
+            // Errors bellow should all be `internal = false` as the AST is an input for the Evaluator. However for our
+            // current use cases it makes more sense to mark some as `internal = true`. This needs to be handled better
+            // by propagating the proper error codes where the client will have more information to decide what should
+            // it consider internal and external
+
             val name = this[0].stringValue() ?:
-                       err("AST node does not start with non-null string: $this", cEnv.metadataLookup[this[0]]?.toErrorContext())
+                       err("AST node does not start with non-null string: $this", cEnv.metadataLookup[this[0]]?.toErrorContext(), internal = true)
             val handler = cEnv.table[name] ?:
-                          err("No such syntax handler for $name", cEnv.metadataLookup[this[0]]?.toErrorContext())
+                          err("No such syntax handler for $name", cEnv.metadataLookup[this[0]]?.toErrorContext(), internal = false)
             handler(cEnv, this)
         }
-        else -> err("AST node is not s-expression: $this", cEnv.metadataLookup[this]?.toErrorContext())
+        else -> err("AST node is not s-expression: $this", cEnv.metadataLookup[this]?.toErrorContext(), internal = true)
     }
 
     private fun bindOp(minArity: Int = 2,
@@ -1247,8 +1263,8 @@ class EvaluatingCompiler(private val ion: IonSystem,
     private fun checkArity(ast: IonSexp, minArity: Int, maxArity: Int, metadata: NodeMetadata?) {
         val arity = ast.size - 1
         when {
-            arity < minArity -> err("Not enough arguments: $ast", metadata?.toErrorContext())
-            arity > maxArity -> err("Too many arguments: $ast", metadata?.toErrorContext())
+            arity < minArity -> err("Not enough arguments: $ast", metadata?.toErrorContext(), internal = false)
+            arity > maxArity -> err("Too many arguments: $ast", metadata?.toErrorContext(), internal = false)
         }
     }
 

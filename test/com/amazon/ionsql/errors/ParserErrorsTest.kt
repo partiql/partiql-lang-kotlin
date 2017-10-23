@@ -424,4 +424,60 @@ class ParserErrorsTest : Base() {
                                              Property.TOKEN_VALUE to ion.newSymbol(")")))
     }
 
+    @Test
+    fun callTrimNoArgs() {
+        checkInputThrowingParserException("trim()",
+                                          ErrorCode.PARSE_UNEXPECTED_TERM,
+                                          mapOf(
+                                              Property.LINE_NUMBER to 1L,
+                                              Property.COLUMN_NUMBER to 6L,
+                                              Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
+                                              Property.TOKEN_VALUE to ion.newSymbol(")")))
+    }
+
+    @Test
+    fun callTrimSpecificationMissingFrom() {
+        checkInputThrowingParserException("trim(trailing '')",
+                                          ErrorCode.PARSE_EXPECTED_KEYWORD,
+                                          mapOf(
+                                              Property.LINE_NUMBER to 1L,
+                                              Property.COLUMN_NUMBER to 17L,
+                                              Property.KEYWORD to "FROM",
+                                              Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
+                                              Property.TOKEN_VALUE to ion.newSymbol(")")))
+    }
+
+    @Test
+    fun callTrimAllButString() {
+        checkInputThrowingParserException("trim(trailing '' from)",
+                                          ErrorCode.PARSE_UNEXPECTED_TERM,
+                                          mapOf(
+                                              Property.LINE_NUMBER to 1L,
+                                              Property.COLUMN_NUMBER to 22L,
+                                              Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
+                                              Property.TOKEN_VALUE to ion.newSymbol(")")))
+    }
+
+    @Test
+    fun callTrimSpecificationAndFromMissingString() {
+        checkInputThrowingParserException("trim(trailing from)",
+                                          ErrorCode.PARSE_UNEXPECTED_TERM,
+                                          mapOf(
+                                              Property.LINE_NUMBER to 1L,
+                                              Property.COLUMN_NUMBER to 19L,
+                                              Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
+                                              Property.TOKEN_VALUE to ion.newSymbol(")")))
+    }
+
+    @Test
+    fun callTrimWrongSpecification() {
+        checkInputThrowingParserException("trim(foobar from '')",
+                                          ErrorCode.PARSE_EXPECTED_RIGHT_PAREN_BUILTIN_FUNCTION_CALL,
+                                          mapOf(
+                                              Property.LINE_NUMBER to 1L,
+                                              Property.COLUMN_NUMBER to 13L,
+                                              Property.TOKEN_TYPE to TokenType.KEYWORD,
+                                              Property.TOKEN_VALUE to ion.newSymbol("from")))
+    }
+
 }

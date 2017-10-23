@@ -41,18 +41,20 @@ class ToStringExprFunction(private val ion: IonSystem) : ExprFunction {
 
     private fun validateArguments(args: List<ExprValue>) {
         when {
-            args.count() != 2                 -> errNoContext("Expected 2 arguments for to_string instead of ${args.size}.")
-            args[0].ionValue !is IonTimestamp -> errNoContext("First argument of to_string is not a timestamp.")
-            args[1].ionValue !is IonText      -> errNoContext("Second argument of to_string is not a string.")
+            args.count() != 2                 -> errNoContext("Expected 2 arguments for to_string instead of ${args.size}.", internal = false)
+            args[0].ionValue !is IonTimestamp -> errNoContext("First argument of to_string is not a timestamp.", internal = false)
+            args[1].ionValue !is IonText      -> errNoContext("Second argument of to_string is not a string.", internal = false)
         }
     }
 
     private fun errInvalidFormatPattern(pattern: String, cause: Exception): Nothing {
         val pvmap = PropertyValueMap()
         pvmap[Property.TIMESTAMP_FORMAT_PATTERN] = pattern
-        throw EvaluationException(
-            "Invalid DateTime format pattern",
-            ErrorCode.EVALUATOR_INVALID_TIMESTAMP_FORMAT_STRING,
-            pvmap, cause)
+
+        throw EvaluationException("Invalid DateTime format pattern",
+                                 ErrorCode.EVALUATOR_INVALID_TIMESTAMP_FORMAT_STRING,
+                                 pvmap,
+                                 cause,
+                                 internal = false)
     }
 }

@@ -21,7 +21,7 @@ internal class BuiltinFunctionFactory(private val ion: IonSystem) {
             1    -> {
                 args[0].asSequence().any().exprValue(ion)
             }
-            else -> errNoContext("Expected a single argument for exists but found: ${args.size}")
+            else -> errNoContext("Expected a single argument for exists but found: ${args.size}", internal = false)
         }
     }
 
@@ -116,7 +116,7 @@ internal class BuiltinFunctionFactory(private val ion: IonSystem) {
             endPosition = if (endPosition >= codePointCount) codePointCount else endPosition
 
             if (endPosition < startPosition)
-                errNoContext("Invalid start position or length arguments to substring function.")
+                errNoContext("Invalid start position or length arguments to substring function.", internal = false)
 
             val byteIndexStart = str.offsetByCodePoints(0, startPosition - 1)
             val byteIndexEnd = str.offsetByCodePoints(0, endPosition)
@@ -127,11 +127,11 @@ internal class BuiltinFunctionFactory(private val ion: IonSystem) {
         private fun validateArguments(args: List<ExprValue>) {
             when {
                 args.count() != 2 && args.count() != 3 ->
-                    errNoContext("Expected 2 or 3 arguments for substring instead of ${args.size}")
+                    errNoContext("Expected 2 or 3 arguments for substring instead of ${args.size}", internal = false)
                 !args[1].ionValue.isNullValue && !args[1].ionValue.isNumeric ->
-                    errNoContext("Argument 2 of substring was not numeric")
+                    errNoContext("Argument 2 of substring was not numeric", internal = false)
                 args.count() > 2 && !args[2].ionValue.isNullValue && !args[2].ionValue.isNumeric ->
-                    errNoContext("Argument 3 of substring was not numeric")
+                    errNoContext("Argument 3 of substring was not numeric", internal = false)
             }
         }
     }
@@ -162,7 +162,7 @@ internal class BuiltinFunctionFactory(private val ion: IonSystem) {
     }
 
     fun utcNow(): ExprFunction = ExprFunction.over { env, args ->
-        if(args.isNotEmpty()) errNoContext("utcnow() takes no arguments")
+        if(args.isNotEmpty()) errNoContext("utcnow() takes no arguments", internal = false)
 
         ion.newTimestamp(env.session.now).exprValue()
     }
@@ -191,7 +191,7 @@ internal class BuiltinFunctionFactory(private val ion: IonSystem) {
 
         protected fun validateArguments(args: List<ExprValue>) {
             when {
-                args.count() != 1 -> errNoContext("Expected 1 argument for $functionName instead of ${args.size}")
+                args.count() != 1 -> errNoContext("Expected 1 argument for $functionName instead of ${args.size}", internal = false)
             }
         }
     }

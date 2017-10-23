@@ -4,7 +4,7 @@
 
 package com.amazon.ionsql.eval
 
-import org.junit.Test
+import org.junit.*
 
 class LikePredicateTest : EvaluatorBase() {
 
@@ -521,4 +521,28 @@ class LikePredicateTest : EvaluatorBase() {
           ]
         """
         )
+
+    @Test
+    fun emptyStringAsEscape() = assertThrows("Cannot use empty character as ESCAPE character in a LIKE predicate: \"\"",
+                                      NodeMetadata(1, 51)) {
+        voidEval("SELECT * FROM <<>> AS a WHERE '%' LIKE '%' ESCAPE ''")
+    }
+
+    @Test
+    fun moreThanOneCharacterEscape() = assertThrows("Escape character must have size 1 : []",
+                                      NodeMetadata(1, 51)) {
+        voidEval("SELECT * FROM <<>> AS a WHERE '%' LIKE '%' ESCAPE '[]'")
+    }
+
+    @Test
+    fun escapeByItself() = assertThrows("Invalid escape sequence : [",
+                                      NodeMetadata(1, 44)) {
+        voidEval("SELECT * FROM <<>> AS a WHERE 'aaaaa' LIKE '[' ESCAPE '['")
+    }
+
+    @Test
+    fun escapeWithoutWildcard() = assertThrows("Invalid escape sequence : [a",
+                                      NodeMetadata(1, 44)) {
+        voidEval("SELECT * FROM <<>> AS a WHERE 'aaaaa' LIKE '[a' ESCAPE '['")
+    }
 }

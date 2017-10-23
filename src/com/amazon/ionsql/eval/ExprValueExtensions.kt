@@ -80,19 +80,19 @@ internal fun ExprValue.unpivot(ion: IonSystem): ExprValue = when {
 }
 
 fun ExprValue.booleanValue(): Boolean =
-    scalar.booleanValue() ?: errNoContext("Expected non-null boolean: $ionValue")
+    scalar.booleanValue() ?: errNoContext("Expected non-null boolean: $ionValue", internal = false)
 
 fun ExprValue.numberValue(): Number =
-    scalar.numberValue() ?: errNoContext("Expected non-null number: $ionValue")
+    scalar.numberValue() ?: errNoContext("Expected non-null number: $ionValue", internal = false)
 
 fun ExprValue.timestampValue(): Timestamp =
-    scalar.timestampValue() ?: errNoContext("Expected non-null timestamp: $ionValue")
+    scalar.timestampValue() ?: errNoContext("Expected non-null timestamp: $ionValue", internal = false)
 
 fun ExprValue.stringValue(): String =
-    scalar.stringValue() ?: errNoContext("Expected non-null string: $ionValue")
+    scalar.stringValue() ?: errNoContext("Expected non-null string: $ionValue", internal = false)
 
 fun ExprValue.bytesValue(): ByteArray =
-    scalar.bytesValue() ?: errNoContext("Expected non-null LOB: $ionValue")
+    scalar.bytesValue() ?: errNoContext("Expected non-null LOB: $ionValue", internal = false)
 
 /**
  * Implements the `FROM` range operation.
@@ -137,9 +137,9 @@ fun ExprValue.exprEquals(other: ExprValue): Boolean = DEFAULT_COMPARATOR.compare
 operator fun ExprValue.compareTo(other: ExprValue): Int {
     return when {
         type.isNull || other.type.isNull ->
-            throw EvaluationException("Null value cannot be compared: $this, $other")
+            throw EvaluationException("Null value cannot be compared: $this, $other", internal = false)
         type.isDirectlyComparableTo(other.type) -> DEFAULT_COMPARATOR.compare(this, other)
-        else -> errNoContext("Cannot compare values: $this, $other")
+        else -> errNoContext("Cannot compare values: $this, $other", internal = false)
     }
 }
 
@@ -194,7 +194,7 @@ fun ExprValue.cast(ion: IonSystem, targetType: ExprValueType, metadata: NodeMeta
     fun String.exprValue(type: ExprValueType) = when (type) {
         STRING -> ion.newString(this)
         SYMBOL -> ion.newSymbol(this)
-        else -> err("Invalid type for textual conversion: $type", metadata?.toErrorContext())
+        else -> err("Invalid type for textual conversion: $type", metadata?.toErrorContext(), internal = false)
     }.seal().exprValue()
 
     when {
@@ -214,7 +214,15 @@ fun ExprValue.cast(ion: IonSystem, targetType: ExprValueType, metadata: NodeMeta
                 INT -> when {
                     type == BOOL -> return if (booleanValue()) 1L.exprValue() else 0L.exprValue()
                     type.isNumber -> return numberValue().toLong().exprValue()
-                    type.isText -> return stringValue().toLong().exprValue()
+                    type.isText -> try {
+                        return stringValue().toLong().exprValue()
+                    }
+                    catch (e: NumberFormatException)
+                    {
+                        throw EvaluationException(message = "can't convert '${stringValue()}' to INT",
+                                                  cause = e,
+                                                  internal = false)
+                    }
                 }
                 FLOAT -> when {
                     type == BOOL -> return if (booleanValue()) 1.0.exprValue() else 0.0.exprValue()
@@ -224,10 +232,26 @@ fun ExprValue.cast(ion: IonSystem, targetType: ExprValueType, metadata: NodeMeta
                 DECIMAL -> when {
                     type == BOOL -> return if (booleanValue()) BigDecimal.ONE.exprValue() else BigDecimal.ZERO.exprValue()
                     type.isNumber -> return numberValue().coerce(BigDecimal::class.java).exprValue()
-                    type.isText -> return BigDecimal(stringValue()).exprValue()
+                    type.isText -> try {
+                        return BigDecimal(stringValue()).exprValue()
+                    }
+                    catch (e: NumberFormatException)
+                    {
+                        throw EvaluationException(message = "can't convert '${stringValue()}' to DECIMAL",
+                                                  cause = e,
+                                                  internal = false)
+                    }
                 }
                 TIMESTAMP -> when {
-                    type.isText -> return ion.newTimestamp(Timestamp.valueOf(stringValue())).seal().exprValue()
+                    type.isText -> try {
+                        return ion.newTimestamp(Timestamp.valueOf(stringValue())).seal().exprValue()
+                    }
+                    catch (e: IllegalArgumentException)
+                    {
+                        throw EvaluationException(message = "can't convert '${stringValue()}' to TIMESTAMP",
+                                                  cause = e,
+                                                  internal = false)
+                    }
                 }
                 STRING, SYMBOL -> when {
                     type.isNumber -> return numberValue().toString().exprValue(targetType)
@@ -250,5 +274,5 @@ fun ExprValue.cast(ion: IonSystem, targetType: ExprValueType, metadata: NodeMeta
     }
 
     // incompatible types
-    err("Cannot convert $type to $targetType", metadata?.toErrorContext())
+    err("Cannot convert $type to $targetType", metadata?.toErrorContext(), internal = false)
 }

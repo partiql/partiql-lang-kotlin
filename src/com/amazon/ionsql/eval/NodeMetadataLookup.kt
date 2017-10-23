@@ -143,5 +143,5 @@ private fun IonContainer.map(transform: (IonValue) -> IonValue): IonContainer = 
         acc.add(it.fieldNameSymbol, transform(it))
         acc
     })
-    else              -> errNoContext("unknown container type $this")
+    else              -> errNoContext("unknown container type $this", internal = true)
 }

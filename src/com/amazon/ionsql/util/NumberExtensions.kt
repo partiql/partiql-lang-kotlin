@@ -28,6 +28,13 @@ private val CONVERTERS = mapOf<Class<*>, (Number) -> Number>(
     }
 )
 
+internal fun Number.isZero() = when(this) {
+    is Long -> this == 0L
+    is Double -> this == 0.0
+    is BigDecimal -> this == BigDecimal.ZERO
+    else -> throw IllegalStateException()
+}
+
 /** Provides a narrowing or widening operator on supported numbers. */
 fun Number.coerce(type: Class<out Number>): Number {
     val conv = CONVERTERS[type] ?: throw IllegalArgumentException("No converter for $type")
