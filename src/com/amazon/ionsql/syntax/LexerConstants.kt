@@ -420,10 +420,10 @@ import com.amazon.ionsql.syntax.TokenType.*
     BINARY_OPERATORS + UNARY_OPERATORS + SPECIAL_OPERATORS
 
 /**
- * Precedence rank integer is ascending with higher precedance and is in terms of the
+ * Precedence rank integer is ascending with higher precedence and is in terms of the
  * un-aliased names of the operators.
  */
-@JvmField internal val INFIX_OPERATOR_PRECEDENCE = mapOf(
+@JvmField internal val OPERATOR_PRECEDENCE = mapOf(
     // set operator group
     "intersect"     to 5,
     "intersect_all" to 5,
@@ -435,34 +435,35 @@ import com.amazon.ionsql.syntax.TokenType.*
     // logical group
     "or"            to 10,
     "and"           to 20,
+    "not"           to 30,
 
     // equality group (TODO add other morphemes of equality/non-equality)
-    "="             to 30,
-    "<>"            to 30,
-    "is"            to 30,
-    "is_not"        to 30,
-    "in"            to 30,
-    "not_in"        to 30,
+    "="             to 40,
+    "<>"            to 40,
+    "is"            to 40,
+    "is_not"        to 40,
+    "in"            to 40,
+    "not_in"        to 40,
 
     // comparison group
-    "<"             to 40,
-    "<="            to 40,
-    ">"             to 40,
-    ">="            to 40,
-    "between"       to 40, // note that this **must** be above 'AND'
-    "not_between"   to 40, // note that this **must** be above 'AND'
-    "like"          to 40,
-    "not_like"      to 40,
+    "<"             to 50,
+    "<="            to 50,
+    ">"             to 50,
+    ">="            to 50,
+    "between"       to 50, // note that this **must** be above 'AND'
+    "not_between"   to 50, // note that this **must** be above 'AND'
+    "like"          to 50,
+    "not_like"      to 50,
 
     // the addition group
-    "+"             to 50,
-    "-"             to 50,
-    "||"            to 50,
+    "+"             to 60,
+    "-"             to 60,
+    "||"            to 60,
 
     // multiply group (TODO add exponentiation)
-    "*"             to 60,
-    "/"             to 60,
-    "%"             to 60
+    "*"             to 70,
+    "/"             to 70,
+    "%"             to 70
 )
 
 //

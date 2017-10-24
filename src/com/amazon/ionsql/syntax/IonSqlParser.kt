@@ -428,16 +428,13 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
     private fun List<Token>.parseUnaryTerm(): ParseNode =
         when (head?.isUnaryOperator) {
             true -> {
-                val term = tail.parseUnaryTerm()
+                val op = head!!
 
-                var expr = ParseNode(
-                    UNARY,
-                    head,
-                    listOf(term),
-                    term.remaining
-                )
+                val term = tail.parseUnaryTerm()
+                var expr: ParseNode? = null
+
                 // constant fold unary plus/minus into constant literals
-                when (head?.keywordText) {
+                when (op.keywordText) {
                     "+" -> when {
                         term.isNumericLiteral -> {
                             // unary plus is a NO-OP
@@ -447,19 +444,19 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                     "-" -> when {
                         term.isNumericLiteral -> {
                             val num = -term.numberValue()
-                            expr = ParseNode(
-                                ATOM,
-                                term.token!!.copy(
-                                    value = num.ionValue(ion)
-                                ),
-                                emptyList(),
-                                term.remaining
-                            )
+                            expr = ParseNode(ATOM,
+                                             term.token!!.copy(value = num.ionValue(ion)),
+                                             emptyList(),
+                                             term.remaining)
                         }
+                    }
+                    "not" -> {
+                        val children = tail.parseExpression(op.prefixPrecedence)
+                        expr = ParseNode(UNARY, op, listOf(children), children.remaining)
                     }
                 }
 
-                expr
+                expr ?: ParseNode(UNARY, op, listOf(term), term.remaining)
             }
             else -> parsePathTerm()
         }

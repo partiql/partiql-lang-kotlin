@@ -4,23 +4,9 @@
 
 package com.amazon.ionsql.syntax
 
-import com.amazon.ion.*
-import com.amazon.ionsql.*
-import com.amazon.ionsql.util.*
 import org.junit.*
 
-class IonSqlParserTest : Base() {
-    private val parser = IonSqlParser(ion)
-
-    private fun parse(source: String): IonSexp = parser.parse(source)
-
-
-    private fun assertExpression(expectedText: String, source: String) {
-        val actual = parse(source).filterMetaNodes()
-        val expected = literal(expectedText)
-
-        assertEquals(expected, actual)
-    }
+class IonSqlParserTest : IonSqlParserBase() {
 
     @Test
     fun lit() = assertExpression(
@@ -142,7 +128,6 @@ class IonSqlParserTest : Base() {
     fun callTrimTwoArgumentsUsingTrailing() = assertExpression("(call trim (lit \"trailing\") (lit \"test\"))",
                                                                "trim(trailing from 'test')")
 
-
     @Test
     fun unaryMinusCall() = assertExpression(
         "(- (call baz))",
@@ -159,60 +144,6 @@ class IonSqlParserTest : Base() {
     fun unaryPlusMinusIdentNoSpaces() = assertExpression(
         "(+ (- (call baz)))",
         "+-baz()"
-    )
-
-    @Test
-    fun binaryOperatorsWithPrecedence() = assertExpression(
-        """(and
-             (+
-               (id a)
-               (id b)
-             )
-             (||
-               (-
-                 (*
-                   (/ (id c) (id d))
-                   (id e)
-                 )
-                 (id f)
-               )
-               (id g)
-             )
-           )
-        """,
-        "a + b and c / d * e - f || g"
-    )
-
-    @Test
-    fun mixedAddMinusAndUnaryPlusMinus() = assertExpression(
-        """(and
-             (+
-               (id a)
-               (lit -5.)
-             )
-             (-
-               (id c)
-               (lit 7.0)
-             )
-           )
-        """,
-        "(a+-5e0) and (c-+7.0)"
-    )
-
-    @Test
-    fun mixedMultiplyComparisonAndUnaryPlusMinus() = assertExpression(
-        """(and
-             (*
-               (id d)
-               (lit 9)
-             )
-             (>=
-               (id e)
-               (+ (- (+ (id foo))))
-             )
-           )
-        """,
-        "d*-+-9 and e>=+-+foo"
     )
 
     @Test
@@ -1240,5 +1171,4 @@ class IonSqlParserTest : Base() {
     fun likeEscapeNotIncorrectOrder() {
         parse("SELECT a, b FROM data WHERE NOT a LIKE b ECSAPE '\\'")
     }
-
 }

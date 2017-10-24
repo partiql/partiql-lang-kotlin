@@ -44,9 +44,15 @@ data class Token(val type: TokenType,
             else -> false
         }
 
+    val prefixPrecedence: Int
+        get() = when {
+            isUnaryOperator -> OPERATOR_PRECEDENCE[text] ?: 0
+            else -> 0
+        }
+
     val infixPrecedence: Int
         get() = when {
-            isBinaryOperator || isSpecialOperator -> INFIX_OPERATOR_PRECEDENCE[text] ?: 0
+            isBinaryOperator || isSpecialOperator -> OPERATOR_PRECEDENCE[text] ?: 0
             else -> 0
         }
 }
