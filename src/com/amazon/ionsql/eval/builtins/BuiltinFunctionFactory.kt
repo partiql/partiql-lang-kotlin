@@ -14,6 +14,7 @@ internal class BuiltinFunctionFactory(private val ion: IonSystem) {
                                                                "character_length" to this.char_length(),
                                                                "trim" to TrimExprFunction(ion),
                                                                "to_string" to ToStringExprFunction(ion),
+                                                               "to_timestamp" to ToTimestampExprFunction(ion),
                                                                "utcnow" to this.utcNow())
 
     fun exists(): ExprFunction = ExprFunction.over { _, args ->

@@ -524,7 +524,7 @@ Returns `NULL` if any arugment is null, or `MISSING` if any argument is missing.
     
 ### TO_STRING
 
- - `TO_STRING(<timestamp>, <format string>)`
+ - `TO_STRING(<timestamp>, <format pattern>)`
 
 Formats an Ion timestamp as a pretty string.
 
@@ -547,7 +547,8 @@ Format symbols:
     Symbol          Example         Description
     ------          -------         ----------------------------------------------------------------------------
     yy              69              2-digit year
-    y or yyyy       1969            4-digit year
+    y               1969            4-digit year
+    yyyy            1969            Zero padded 4-digit year
     
     M               1               Month of year             
     MM              01              Zero padded month of year
@@ -587,6 +588,66 @@ Format symbols:
     x               +07             Offset in hours
     xx or xxxx      +0700           Offset in hours and minutes
     xxx or xxxxx    +07:00          Offset in hours and minutes
+
+### TO_TIMESTAMP
+
+Converts a string to a timestamp using an optional format pattern to specify non-standard date formats.
+
+    TO_TIMESTAMP(<string> [, <format pattern>])
+    
+If the `<format pattern>` argument is omitted, `<string>` is assumed to be in the format of a 
+[standard Ion timestamp](https://amzn.github.io/ion-docs/spec.html#timestamp).  This is the only recommended 
+way to parse an Ion timestamp using this function.
+
+The `<format pattern>` argument supports the same format symbols as the `to_string` argument of the same name.  
+
+Zero padding is optional when using a single format symbol (e.g. `y`, `M`, `d`, `H`, `h`, `m`, `s`) but required
+for their zero padded variants (e.g. `yyyy`, `MM`, `dd`, `HH`, `hh`, `mm`, `ss`).
+
+Special treatment is given to 2-digit years (format symbol `yy`).  1900 is added to values greater than or equal to 70
+and 2000 is added to values less than 70.
+
+Month names and AM/PM specifiers are case-insensitive.  
+
+#### Examples
+
+Single argument parsing an Ion timestamp:
+
+    TO_TIMESTAMP('2007T')
+    TO_TIMESTAMP('2007-02-23T12:14:33.079-08:00')
+    
+Two arguments parsing a custom date format:
+
+    TO_TIMESTAMP('2016', 'y')  --Returns `2016T`
+    TO_TIMESTAMP('2016', 'yyyy')  --Returns `2016T`
+    TO_TIMESTAMP('02-2016', 'MM-yyyy')  --Returns `2016-02T`
+    TO_TIMESTAMP('Feb 2016', 'MMM yyyy')  --Returns `2016-02T`
+    TO_TIMESTAMP('Febrary 2016', 'MMMM yyyy')  --Returns `2016-02T`
+
+Notes:
+
+[All SIM items for IonSQL++'s `TO_TIMESTAMP` function](https://i.amazon.com/issues/search?q=status%3A(Open)+(TO_TIMESTAMP)+containingFolder%3A(0efa7b8c-5170-4de7-a8e7-d0975778a686)&sort=lastUpdatedConversationDate+desc&selectedDocument=0b5e3cc3-40bc-40cf-854b-977f4ae4e08d).
+
+Internally, this is implemented with Java 8's `java.time` package.  There are a few differences between Ion's 
+timestamp and the `java.time` package that create a few hypothetically infrequently encountered caveats that do not 
+really have good workarounds at this time.    
+
+- The Ion specification allows for explicitly signifying an unknown timestamp with a negative zero offset 
+(i.e. the `-00:00` at the end of `2007-02-23T20:14:33.079-00:00`) but Java 8's `DateTimeFormatter` doesn't recognize 
+this. **Hence, unknown offsets specified in this manner will be parsed as if they had an offset of `+00:00`, i.e. UTC.** 
+To avoid this issue when parsing Ion formatted timestamps, use the single argument variant of `TO_TIMESTAMP`.  There 
+is no workaround for custom format patterns at this time.
+- `DateTimeFormatter` is capable of parsing UTC offsets to the precision of seconds, but Ion Timestamp's precision for 
+offsets is minutes. TimestampParser currently handles this by throwing an exception when an attempt is made to parse a 
+timestamp with an offset that does does not land on a minute boundary.  For example, parsing this timestamp would 
+throw an exception:  `May 5, 2017 8:52pm +08:00:01` while `May 5, 2017 8:52pm +08:00:00` would not. 
+- Ion Java's Timestamp allows specification of offsets up to +/- 23:59, while an exception is thrown by 
+`DateTimeFormatter` for any attempt to parse an offset greater than +/- 18:00.  For example, attempting to parse: 
+`May 5, 2017 8:52pm +18:01` would cause and exception to be thrown.  (Note: the Ion specification does 
+indicate minimum and maximum allowable values for offsets.) In practice this will not be an issue for systems that do 
+not abuse the offset portion of Timestamp because real-life offsets do not exceed +/- 12h.  
+
+
 
 ### TRIM
  

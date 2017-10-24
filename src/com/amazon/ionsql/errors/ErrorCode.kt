@@ -248,10 +248,32 @@ enum class ErrorCode(private val category: ErrorCategory,
         LOC_TOKEN,
         "expected identifier for AT name"),
 
-    EVALUATOR_INVALID_TIMESTAMP_FORMAT_STRING(
+    //Evaluator errors
+
+    EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL(
+        ErrorCategory.EVALUATOR,
+        LOCATION,
+        "Incorrect number of arguments to function call"),
+
+    EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.TIMESTAMP_FORMAT_PATTERN),
-        "invalid timestamp format string")
+        "invalid timestamp format pattern"),
+
+    EVALUATOR_ION_TIMESTAMP_PARSE_FAILURE(
+        ErrorCategory.EVALUATOR,
+        LOCATION,
+        "Failed to parse Ion timestamp"),
+
+    EVALUATOR_CUSTOM_TIMESTAMP_PARSE_FAILURE(
+        ErrorCategory.EVALUATOR,
+        LOCATION+ setOf(Property.TIMESTAMP_FORMAT_PATTERN),
+        "Failed to parse custom timestamp using the specified format pattern"),
+
+    EVALUATOR_PRECISION_LOSS_WHEN_PARSING_TIMESTAMP(
+        ErrorCategory.EVALUATOR,
+        LOCATION,
+        "loss of precision when parsing timestamp")
     ;
 
     protected fun getTokenString(errorContext: PropertyValueMap?): String =

@@ -50,9 +50,8 @@ class ToStringExprFunction(private val ion: IonSystem) : ExprFunction {
     private fun errInvalidFormatPattern(pattern: String, cause: Exception): Nothing {
         val pvmap = PropertyValueMap()
         pvmap[Property.TIMESTAMP_FORMAT_PATTERN] = pattern
-
         throw EvaluationException("Invalid DateTime format pattern",
-                                 ErrorCode.EVALUATOR_INVALID_TIMESTAMP_FORMAT_STRING,
+                                 ErrorCode.EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN,
                                  pvmap,
                                  cause,
                                  internal = false)

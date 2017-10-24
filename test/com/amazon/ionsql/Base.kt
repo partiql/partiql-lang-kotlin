@@ -25,7 +25,6 @@ abstract class Base : Assert() {
 
     inner class AssertExprValue(val exprValue: ExprValue,
                                 val bindingsTransform: Bindings.() -> Bindings = { this }) {
-
         fun assertBindings(predicate: Bindings.() -> Boolean) =
             assertTrue(
                 exprValue.bindings.bindingsTransform().predicate()
@@ -101,6 +100,7 @@ abstract class Base : Assert() {
                 TOKEN_STRING,
                 CAST_TO,
                 KEYWORD,
+                TIMESTAMP_STRING,
                 TIMESTAMP_FORMAT_PATTERN -> assertEquals("$entry", entry.value, errorContext[entry.key]?.stringValue())
                 TOKEN_TYPE,
                 EXPECTED_TOKEN_TYPE_1_OF_2,

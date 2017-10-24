@@ -25,6 +25,8 @@ enum class ErrorCategory(val message: String) {
 
 
 
+
+
 /** Each possible value that can be reported as part of an error has a
  * [Property]. [Property] is used as a key in [PropertyValueMap].
  *
@@ -50,7 +52,8 @@ enum class Property(val propertyName: String, val propertyType: PropertyType) {
     TOKEN_VALUE("token_value", ION_VALUE_CLASS),
     EXPECTED_ARITY_MIN("arity_min", INTEGER_CLASS),
     EXPECTED_ARITY_MAX("arity_max", INTEGER_CLASS),
-    TIMESTAMP_FORMAT_PATTERN("timestamp_format_pattern", STRING_CLASS)
+    TIMESTAMP_FORMAT_PATTERN("timestamp_format_pattern", STRING_CLASS),
+    TIMESTAMP_STRING("timestamp_string", STRING_CLASS)
 }
 
 /**
@@ -98,8 +101,6 @@ enum class PropertyType(private val type: Class<*>){
  *
  */
 class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumMap(Property::class.java)) {
-
-
     /**
      * Given a [Property]  retrieve the value mapped to [p] in this map.
      *

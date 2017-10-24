@@ -13,8 +13,9 @@ class ToStringExprFunctionTest : EvaluatorBase() {
     @Test fun to_string4() = assertEval("to_string(`0001-03-09`, 'M/d/y')", "\"3/9/1\"")
     @Test fun to_string5() = assertEval("to_string(`9999-03-09`, 'MM/dd/yyyy')", "\"03/09/9999\"")
     @Test fun to_string6() = assertEval("to_string(`9999-03-09`, 'M/d/y')", "\"3/9/9999\"")
-    @Test fun to_string7() = assertEval("to_string(`9999-03-09`, null)", "null")
-    @Test fun to_string8() = assertEval("to_string(null, 'M/d/y')", "null")
+    @Test fun to_string7() = assertEval("to_string(`0001-03-09`, 'y')", "\"1\"")
+    @Test fun to_string8() = assertEval("to_string(`9999-03-09`, null)", "null")
+    @Test fun to_string9() = assertEval("to_string(null, 'M/d/y')", "null")
 
     @Test fun to_string_common_1() = assertEval("to_string(`1969-07-20T20:18Z`, 'MMMM d, y')", "\"July 20, 1969\"")
     @Test fun to_string_common_2() = assertEval("to_string(`1969-07-20T20:18Z`, 'MMM d, yyyy')", "\"Jul 20, 1969\"")
@@ -31,7 +32,7 @@ class ToStringExprFunctionTest : EvaluatorBase() {
     fun to_string_invalid_symbol1() {
         checkInputThrowingEvaluationException(
             "to_string(`2017-01-01`, 'b')", //Symbol 'b' is unknown to Java's DateTimeFormatter
-            ErrorCode.EVALUATOR_INVALID_TIMESTAMP_FORMAT_STRING,
+            ErrorCode.EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN,
             mapOf(Property.LINE_NUMBER to 1L,
                   Property.COLUMN_NUMBER to 1L,
                   Property.TIMESTAMP_FORMAT_PATTERN to "b"))
@@ -42,7 +43,7 @@ class ToStringExprFunctionTest : EvaluatorBase() {
         checkInputThrowingEvaluationException(
             //Symbol 'z' is known to Java's DateTimeFormatter but is not handled by TimestampTemporalAccessor
             "to_string(`2017-01-01`, 'Y')",
-            ErrorCode.EVALUATOR_INVALID_TIMESTAMP_FORMAT_STRING,
+            ErrorCode.EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN,
             mapOf(Property.LINE_NUMBER to 1L,
                   Property.COLUMN_NUMBER to 1L,
                   Property.TIMESTAMP_FORMAT_PATTERN to "Y"))
@@ -54,7 +55,7 @@ class ToStringExprFunctionTest : EvaluatorBase() {
             //Symbol 'VV' is known to Java's DateTimeFormatter but is not handled by TimestampTemporalAccessor
             //*and* causes a different exception to be thrown by DateTimeFormatter.format() than 'z'
             "to_string(`2017-01-01`, 'VV')",
-            ErrorCode.EVALUATOR_INVALID_TIMESTAMP_FORMAT_STRING,
+            ErrorCode.EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN,
             mapOf(Property.LINE_NUMBER to 1L,
                   Property.COLUMN_NUMBER to 1L,
                   Property.TIMESTAMP_FORMAT_PATTERN to "VV"))
