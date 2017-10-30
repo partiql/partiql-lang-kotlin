@@ -103,11 +103,6 @@ class IonSqlParserTest : IonSqlParserBase() {
             "substring('test', 100, 50)"
     )
 
-    @Test(expected = ParserException::class)
-    fun callTrimZeroArguments() {
-         parse("trim()")
-    }
-
     @Test
     fun callTrimSingleArgument() = assertExpression("(call trim (lit \"test\"))",
                                                     "trim('test')")
@@ -127,6 +122,7 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun callTrimTwoArgumentsUsingTrailing() = assertExpression("(call trim (lit \"trailing\") (lit \"test\"))",
                                                                "trim(trailing from 'test')")
+
 
     @Test
     fun unaryMinusCall() = assertExpression(
@@ -186,16 +182,6 @@ class IonSqlParserTest : IonSqlParserBase() {
         "@a.b"
     )
 
-    @Test(expected = ParserException::class)
-    fun atOperatorOnNonIdentifier() {
-        parse("@(a)")
-    }
-
-    @Test(expected = ParserException::class)
-    fun atOperatorDoubleOnIdentifier() {
-        parse("@ @a")
-    }
-
     @Test
     fun nullIsNull() = assertExpression(
         "(is (lit null) (type 'null'))",
@@ -214,21 +200,6 @@ class IonSqlParserTest : IonSqlParserBase() {
         "f() IS VARCHAR(200)"
     )
 
-    @Test(expected = ParserException::class)
-    fun nullIsNullIonLiteral() {
-        parse("NULL is `null`")
-    }
-
-    @Test(expected = ParserException::class)
-    fun idIsStringLiteral() {
-        parse("a is 'missing'")
-    }
-
-    @Test(expected = ParserException::class)
-    fun idIsGroupMissing() {
-        parse("a is (missing)")
-    }
-
     @Test
     fun nullIsNotNull() = assertExpression(
         "(is_not (lit null) (type 'null'))",
@@ -246,21 +217,6 @@ class IonSqlParserTest : IonSqlParserBase() {
         "(is_not (call f) (type character_varying 200))",
         "f() IS NOT VARCHAR(200)"
     )
-
-    @Test(expected = ParserException::class)
-    fun nullIsNotNullIonLiteral() {
-        parse("NULL is not `null`")
-    }
-
-    @Test(expected = ParserException::class)
-    fun idIsNotStringLiteral() {
-        parse("a is not 'missing'")
-    }
-
-    @Test(expected = ParserException::class)
-    fun idIsNotGroupMissing() {
-        parse("a is not (missing)")
-    }
 
     @Test
     fun callWithMultiple() = assertExpression(
@@ -303,11 +259,6 @@ class IonSqlParserTest : IonSqlParserBase() {
         "(select (project (list (id ord) (id val))) (from (at ord (as val (id table1)))))",
         "SELECT ord, val FROM table1 AS val AT ord"
     )
-
-    @Test(expected = ParserException::class)
-    fun selectWithFromAtAndAs() {
-        parse("SELECT ord, val FROM table1 AT ord AS val")
-    }
 
     @Test
     fun selectWithFromUnpivot() = assertExpression(
@@ -388,11 +339,6 @@ class IonSqlParserTest : IonSqlParserBase() {
         "(select (project (list (id a))) (from (id stuff)) (where (is (id b) (type missing))))",
         "SELECT a FROM stuff WHERE b IS MISSING"
     )
-
-    @Test(expected = ParserException::class)
-    fun selectNothing() {
-        parse("SELECT FROM table1")
-    }
 
     @Test
     fun selectMultipleWithMultipleFromSimpleWhere() = assertExpression(
@@ -560,26 +506,6 @@ class IonSqlParserTest : IonSqlParserBase() {
         "SELECT sum(a) + count(*), AVG(b), MIN(c), MAX(d + e) FROM foo"
     )
 
-    @Test(expected = ParserException::class)
-    fun aggregateWithNoArgs() {
-        parse("SUM()")
-    }
-
-    @Test(expected = ParserException::class)
-    fun aggregateWithTooManyArgs() {
-        parse("SUM(a, b)")
-    }
-
-    @Test(expected = ParserException::class)
-    fun aggregateWithWildcardOnNonCount() {
-        parse("SUM(*)")
-    }
-
-    @Test(expected = ParserException::class)
-    fun aggregateWithWildcardOnNonCountNonAggregate() {
-        parse("F(*)")
-    }
-
     @Test
     fun dot() = assertExpression(
         """(path (id a) (lit "b"))""",
@@ -603,11 +529,6 @@ class IonSqlParserTest : IonSqlParserBase() {
         """(path (id x) (lit "a") (*) (lit "b"))""",
         "x.a[*].b"
     )
-
-    @Test(expected = ParserException::class)
-    fun tooManyDots() {
-        parse("x...a")
-    }
 
     @Test
     fun bracket() = assertExpression(
@@ -724,26 +645,6 @@ class IonSqlParserTest : IonSqlParserBase() {
         "CAST(5 + a AS VARCHAR(1))"
     )
 
-    @Test(expected = ParserException::class)
-    fun castTooManyArgs() {
-        parse("CAST(5 AS INTEGER(10))")
-    }
-
-    @Test(expected = ParserException::class)
-    fun castNonLiteralArg() {
-        parse("CAST(5 AS VARCHAR(a))")
-    }
-
-    @Test(expected = ParserException::class)
-    fun castNegativeArg() {
-        parse("CAST(5 AS VARCHAR(-1))")
-    }
-
-    @Test(expected = ParserException::class)
-    fun castNonTypArg() {
-        parse("CAST(5 AS SELECT)")
-    }
-
     @Test
     fun searchedCaseSingleNoElse() = assertExpression(
         """(searched_case
@@ -834,21 +735,6 @@ class IonSqlParserTest : IonSqlParserBase() {
         """,
         "CASE name WHEN 'zoe' THEN 1 WHEN 'kumo' THEN 2 WHEN 'mary' THEN 3 ELSE 0 END"
     )
-
-    @Test(expected = ParserException::class)
-    fun caseOnlyEnd() {
-        parse("CASE END")
-    }
-
-    @Test(expected = ParserException::class)
-    fun searchedCaseNoWhenWithElse() {
-        parse("CASE ELSE 1 END")
-    }
-
-    @Test(expected = ParserException::class)
-    fun simpleCaseNoWhenWithElse() {
-        parse("CASE name ELSE 1 END")
-    }
 
     @Test
     fun rowValueConstructorWithSimpleExpressions() = assertExpression(
@@ -944,31 +830,6 @@ class IonSqlParserTest : IonSqlParserBase() {
         "SELECT g FROM data GROUP PARTIAL BY a AS x, b + c AS y, foo(d) AS z GROUP AS g"
     )
 
-    @Test(expected = ParserException::class)
-    fun groupByOrdinal() {
-        parse("SELECT a FROM data GROUP BY 1")
-    }
-
-    @Test(expected = ParserException::class)
-    fun groupByOutOfBoundsOrdinal() {
-        parse("SELECT a FROM data GROUP BY 2")
-    }
-
-    @Test(expected = ParserException::class)
-    fun groupByBadOrdinal() {
-        parse("SELECT a FROM data GROUP BY -1")
-    }
-
-    @Test(expected = ParserException::class)
-    fun groupByStringConstantOrdinal() {
-        parse("SELECT a FROM data GROUP BY 'a'")
-    }
-
-    @Test(expected = ParserException::class)
-    fun leftOvers() {
-        parse("5 5")
-    }
-
     @Test
     fun havingMinimal() = assertExpression(
         """
@@ -1032,12 +893,6 @@ class IonSqlParserTest : IonSqlParserBase() {
         """,
         "PIVOT g AT ('prefix:' || c) FROM data WHERE a = b GROUP BY c, d GROUP AS g HAVING d > 6"
     )
-
-    @Test(expected = ParserException::class)
-    fun pivotNoAt() {
-        parse("PIVOT v FROM data")
-    }
-
 
     /*
     From SQL92 https://www.contrib.andrew.cmu.edu/~shadow/sql/sql1992.txt
@@ -1136,39 +991,4 @@ class IonSqlParserTest : IonSqlParserBase() {
         "(select (project (list (id a) (id b))) (from (id data)) (where (not (like (id a) (id b) (lit \"[\")))))",
         "SELECT a, b FROM data WHERE NOT (a LIKE b ESCAPE '[')"
     )
-
-    @Test(expected = ParserException::class)
-    fun likeColNameLikeColNameEscapeTypo() {
-        parse("SELECT a, b FROM data WHERE a LIKE b ECSAPE '\\'")
-    }
-
-    @Test(expected = ParserException::class)
-    fun likeWrongOrderOfArgs() {
-        parse("SELECT a, b FROM data WHERE LIKE a b")
-    }
-
-    @Test(expected = ParserException::class)
-    fun likeMissingEscapeValue() {
-        parse("SELECT a, b FROM data WHERE a LIKE b ESCAPE")
-    }
-
-    @Test(expected = ParserException::class)
-    fun likeMissingPattern() {
-        parse("SELECT a, b FROM data WHERE a LIKE")
-    }
-
-    @Test(expected = ParserException::class)
-    fun likeEscapeIncorrectOrder() {
-        parse("SELECT a, b FROM data WHERE ECSAPE '\\' a LIKE b ")
-    }
-
-    @Test(expected = ParserException::class)
-    fun likeEscapeAsSecondArgument() {
-        parse("SELECT a, b FROM data WHERE a LIKE ECSAPE '\\' b ")
-    }
-
-    @Test(expected = ParserException::class)
-    fun likeEscapeNotIncorrectOrder() {
-        parse("SELECT a, b FROM data WHERE NOT a LIKE b ECSAPE '\\'")
-    }
 }
