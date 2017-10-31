@@ -8,6 +8,13 @@ import com.amazon.ionsql.syntax.TokenType.*
 
 @JvmField internal val TRIM_SPECIFICATION_KEYWORDS = setOf("both", "leading", "trailing")
 
+internal enum class DatePart {
+    YEAR, MONTH, DAY, HOUR, MINUTE, SECOND
+}
+
+internal val DATE_PART_KEYWORDS: Set<String> = DatePart.values()
+    .map { it.toString().toLowerCase() }.toSet()
+
 /** All SQL-92 keywords. */
 @JvmField internal val SQL92_KEYWORDS = setOf(
     "absolute",
@@ -63,7 +70,6 @@ import com.amazon.ionsql.syntax.TokenType.*
     "current_user",
     "cursor",
     "date",
-    "day",
     "deallocate",
     "dec",
     "decimal",
@@ -108,7 +114,6 @@ import com.amazon.ionsql.syntax.TokenType.*
     "grant",
     "group",
     "having",
-    "hour",
     "identity",
     "immediate",
     "in",
@@ -137,9 +142,7 @@ import com.amazon.ionsql.syntax.TokenType.*
     "match",
     "max",
     "min",
-    "minute",
     "module",
-    "month",
     "names",
     "national",
     "natural",
@@ -183,7 +186,6 @@ import com.amazon.ionsql.syntax.TokenType.*
     "rows",
     "schema",
     "scroll",
-    "second",
     "section",
     "select",
     "session",
@@ -232,10 +234,10 @@ import com.amazon.ionsql.syntax.TokenType.*
     "with",
     "work",
     "write",
-    "year",
     "zone"
-).union(TRIM_SPECIFICATION_KEYWORDS)
-
+)
+    .union(TRIM_SPECIFICATION_KEYWORDS)
+    .union(DATE_PART_KEYWORDS)
 
 /** Ion SQL++ additional keywords. */
 @JvmField internal val IONSQL_KEYWORDS = setOf(
@@ -261,13 +263,14 @@ import com.amazon.ionsql.syntax.TokenType.*
     "struct",
     "list",
     "sexp",
-    "bag"
+    "bag",
+
+    // functions with special syntax
+    "date_add"
 )
 
 /** All Keywords. */
 @JvmField internal val KEYWORDS = SQL92_KEYWORDS union IONSQL_KEYWORDS
-
-
 
 /** Keywords that are aliases for type keywords. */
 @JvmField internal val TYPE_ALIASES = mapOf(

@@ -159,7 +159,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         val node = this
         val astNode = when (type) {
             ATOM -> when (token?.type) {
-                LITERAL, NULL, TRIM_SPECIFICATION -> sexp {
+                LITERAL, NULL, TRIM_SPECIFICATION, DATE_PART -> sexp {
                     addSymbol("lit")
                     addClone(token.value!!)
                 }
@@ -518,6 +518,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             }
             else -> err("Unexpected operator", PARSE_UNEXPECTED_OPERATOR)
         }
+
         KEYWORD -> when (head?.keywordText) {
             "case" -> when (tail.head?.keywordText) {
                 "when" -> tail.parseCase(isSimple = false)
@@ -531,6 +532,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             "values" -> tail.parseTableValues().copy(type = BAG)
             "substring" -> tail.parseSubstring(head!!)
             "trim" -> tail.parseTrim(head!!)
+            "date_add" -> tail.parseDateAdd(head!!)
             in FUNCTION_NAME_KEYWORDS -> when (tail.head?.type) {
                 LEFT_PAREN ->
                     tail.tail.parseFunctionCall(head!!)
@@ -567,7 +569,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             LEFT_PAREN -> tail.tail.parseFunctionCall(head!!)
             else -> atomFromHead()
         }
-        LITERAL, NULL, MISSING, TRIM_SPECIFICATION -> atomFromHead()
+        LITERAL, NULL, MISSING, TRIM_SPECIFICATION, DATE_PART -> atomFromHead()
         else -> err("Unexpected term", PARSE_UNEXPECTED_TERM)
     }
 
@@ -804,7 +806,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
 
         // TODO IONSQL-93 support DISTINCT/ALL syntax
 
-        var call =  when (head?.type) {
+        val call =  when (head?.type) {
             RIGHT_PAREN -> ParseNode(callType, name, emptyList(), tail)
             STAR -> {
                 // support for special form COUNT(*)
@@ -931,6 +933,35 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         }
 
         return ParseNode(ParseType.CALL, name, arguments, rem.tail)
+    }
+
+    /**
+     * Parses date_add
+     *
+     * Syntax is DATE_ADD(<date_part>, <interval>, <timestamp>).
+     */
+    private fun List<Token>.parseDateAdd(name: Token): ParseNode {
+        if (head?.type != LEFT_PAREN) err("Expected $LEFT_PAREN",
+                                          PARSE_EXPECTED_LEFT_PAREN_BUILTIN_FUNCTION_CALL)
+
+        var rem= tail
+
+        return when (rem.head?.type) {
+            DATE_PART -> {
+
+                val datePart = rem.parseExpression().deriveExpected(COMMA)
+                rem = datePart.remaining
+
+                val parseNode = rem.parseArgList(aliasSupportType = NONE, mode = NORMAL_ARG_LIST).deriveExpected(
+                    RIGHT_PAREN)
+
+                val arguments = mutableListOf(datePart)
+                arguments.addAll(parseNode.children)
+
+                ParseNode(ParseType.CALL, name, arguments, parseNode.remaining)
+            }
+            else      -> rem.head.err("Expected one of: $DATE_PART_KEYWORDS", PARSE_EXPECTED_DATE_PART)
+        }
     }
 
     private fun List<Token>.parseListLiteral(): ParseNode =

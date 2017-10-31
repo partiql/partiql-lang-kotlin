@@ -987,8 +987,44 @@ class IonSqlParserTest : IonSqlParserBase() {
     )
 
     @Test
-    fun likeNotEquivalentWithEscape() = assertExpression(
-        "(select (project (list (id a) (id b))) (from (id data)) (where (not (like (id a) (id b) (lit \"[\")))))",
-        "SELECT a, b FROM data WHERE NOT (a LIKE b ESCAPE '[')"
+    fun callDateAddYear() = assertExpression(
+        "(call date_add (lit \"year\") (id a) (id b))",
+        "date_add(year, a, b)"
+    )
+
+    @Test
+    fun callDateAddMonth() = assertExpression(
+        "(call date_add (lit \"month\") (id a) (id b))",
+        "date_add(month, a, b)"
+    )
+
+    @Test
+    fun callDateAddDay() = assertExpression(
+        "(call date_add (lit \"day\") (id a) (id b))",
+        "date_add(day, a, b)"
+    )
+
+    @Test
+    fun callDateAddHour() = assertExpression(
+        "(call date_add (lit \"hour\") (id a) (id b))",
+        "date_add(hour, a, b)"
+    )
+
+    @Test
+    fun callDateAddMinute() = assertExpression(
+        "(call date_add (lit \"minute\") (id a) (id b))",
+        "date_add(minute, a, b)"
+    )
+
+    @Test
+    fun callDateAddSecond() = assertExpression(
+        "(call date_add (lit \"second\") (id a) (id b))",
+        "date_add(second, a, b)"
+    )
+
+    @Test // invalid evaluation, but valid parsing
+    fun callDateAddTwoArguments() = assertExpression(
+        "(call date_add (lit \"second\") (id a))",
+        "date_add(second, a)"
     )
 }

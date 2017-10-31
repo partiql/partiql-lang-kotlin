@@ -31,5 +31,6 @@ enum class TokenType {
     NULL,
     // function specific
     TRIM_SPECIFICATION,
+    DATE_PART,
     EOF // End of Stream token.
 }

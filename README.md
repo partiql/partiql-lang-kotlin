@@ -467,6 +467,21 @@ Note: `CHAR_LENGTH` and `CHARACTER_LENGTH` have the same syntax and functionalit
     CHAR_LENGTH('😁😞😸😸') -- Returns 4 (non-BMP unicode characters)
     CHAR_LENGTH('eࠫ') -- Returns 2 because 'eࠫ' is two codepoints: the letter 'e' and combining character U+032B
 
+### DATE_ADD
+
+Increments date part by specified quantity for timestamp. Subtractions can be done by using a negative quantity
+    
+    DATE_ADD(<date part>, <quantity>, <timestamp>)
+    
+Where date part is one of the following keywords: `year, month, day, hour, minute, second` 
+
+#### Examples
+
+    DATE_ADD(year, 5, `2010-01-01T`) -> 2015-01-01T
+    DATE_ADD(month, 1, `2010T`) -> 2010T
+    DATE_ADD(month, 13, `2010T`) -> 2011T 
+    DATE_ADD(day, -1, `2017-01-10T`) -> 2017-01-09T
+
 ### EXISTS
 
 Indicates if the specified `IonSequence` is empty.  Always return `false` if the value specified is not a 

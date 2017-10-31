@@ -1,5 +1,7 @@
 package com.amazon.ionsql.errors
 
+import com.amazon.ionsql.syntax.*
+
 /** Property Set constants used in [ErrorCode] */
 private val LOCATION = setOf(Property.LINE_NUMBER, Property.COLUMN_NUMBER)
 private val TOKEN_INFO = setOf(Property.TOKEN_TYPE, Property.TOKEN_VALUE)
@@ -102,6 +104,11 @@ enum class ErrorCode(private val category: ErrorCategory,
         ErrorCategory.PARSER,
         LOC_TOKEN,
         "expected MEMBER node"),
+
+    PARSE_EXPECTED_DATE_PART(
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "expected one of: [${DATE_PART_KEYWORDS.joinToString()}]"),
 
     PARSE_UNSUPPORTED_SELECT(
         ErrorCategory.PARSER,
