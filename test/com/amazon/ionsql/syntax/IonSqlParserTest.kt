@@ -1032,4 +1032,38 @@ class IonSqlParserTest : IonSqlParserBase() {
     fun caseInsensitiveFunctionName() = assertExpression(
         "(call my_function (id a))",
         "mY_fUnCtIoN(a)")
+
+    @Test // invalid evaluation, but valid parsing
+    fun callDateAddTimezoneHour() = assertExpression(
+        "(call date_add (lit \"timezone_hour\") (id a) (id b))",
+        "date_add(timezone_hour, a, b)")
+
+    @Test // invalid evaluation, but valid parsing
+    fun callDateAddTimezoneMinute() = assertExpression(
+        "(call date_add (lit \"timezone_minute\") (id a) (id b))",
+        "date_add(timezone_minute, a, b)")
+
+    @Test
+    fun callExtractYear() = assertExpression("(call extract (lit \"year\") (id a))",
+                                             "extract(year from a)")
+
+    @Test
+    fun callExtractMonth() = assertExpression("(call extract (lit \"month\") (id a))",
+                                              "extract(month from a)")
+
+    @Test
+    fun callExtractDay() = assertExpression("(call extract (lit \"day\") (id a))",
+                                            "extract(day from a)")
+
+    @Test
+    fun callExtractHour() = assertExpression("(call extract (lit \"hour\") (id a))",
+                                             "extract(hour from a)")
+
+    @Test
+    fun callExtractMinute() = assertExpression("(call extract (lit \"minute\") (id a))",
+                                               "extract(minute from a)")
+
+    @Test
+    fun callExtractSecond() = assertExpression("(call extract (lit \"second\") (id a))",
+                                               "extract(second from a)")
 }

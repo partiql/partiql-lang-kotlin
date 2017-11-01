@@ -533,6 +533,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             "substring" -> tail.parseSubstring(head!!)
             "trim" -> tail.parseTrim(head!!)
             "date_add" -> tail.parseDateAdd(head!!)
+            "extract" -> tail.parseExtract(head!!)
             in FUNCTION_NAME_KEYWORDS -> when (tail.head?.type) {
                 LEFT_PAREN ->
                     tail.tail.parseFunctionCall(head!!)
@@ -944,7 +945,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         if (head?.type != LEFT_PAREN) err("Expected $LEFT_PAREN",
                                           PARSE_EXPECTED_LEFT_PAREN_BUILTIN_FUNCTION_CALL)
 
-        var rem= tail
+        var rem = tail
 
         return when (rem.head?.type) {
             DATE_PART -> {
@@ -959,6 +960,30 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 arguments.addAll(parseNode.children)
 
                 ParseNode(ParseType.CALL, name, arguments, parseNode.remaining)
+            }
+            else      -> rem.head.err("Expected one of: $DATE_PART_KEYWORDS", PARSE_EXPECTED_DATE_PART)
+        }
+    }
+
+    /**
+     * Parses extract
+     *
+     * Syntax is EXTRACT(<date_part> FROM <timestamp>).
+     */
+    private fun List<Token>.parseExtract(name: Token): ParseNode {
+        if (head?.type != LEFT_PAREN) err("Expected $LEFT_PAREN",
+                                          PARSE_EXPECTED_LEFT_PAREN_BUILTIN_FUNCTION_CALL)
+
+        var rem = tail
+
+        return when (rem.head?.type) {
+            DATE_PART -> {
+                val datePart = rem.parseExpression().deriveExpectedKeyword("from")
+                rem = datePart.remaining
+
+                val timestamp = rem.parseExpression().deriveExpected(RIGHT_PAREN)
+
+                ParseNode(ParseType.CALL, name, listOf(datePart, timestamp), timestamp.remaining)
             }
             else      -> rem.head.err("Expected one of: $DATE_PART_KEYWORDS", PARSE_EXPECTED_DATE_PART)
         }

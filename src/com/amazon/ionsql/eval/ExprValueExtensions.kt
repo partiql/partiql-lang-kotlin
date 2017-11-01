@@ -7,6 +7,7 @@ package com.amazon.ionsql.eval
 import com.amazon.ion.*
 import com.amazon.ionsql.errors.*
 import com.amazon.ionsql.eval.ExprValueType.*
+import com.amazon.ionsql.syntax.*
 import com.amazon.ionsql.util.*
 import java.math.*
 
@@ -93,6 +94,18 @@ fun ExprValue.stringValue(): String =
 
 fun ExprValue.bytesValue(): ByteArray =
     scalar.bytesValue() ?: errNoContext("Expected non-null LOB: $ionValue", internal = false)
+
+internal fun ExprValue.datePartValue(): DatePart =
+    try {
+        DatePart.valueOf(this.stringValue().toUpperCase())
+    }
+    catch (e : IllegalArgumentException)  {
+        throw EvaluationException(cause = e,
+                                  message = "invalid date part, valid values: [${DATE_PART_KEYWORDS.joinToString()}]",
+                                  internal = false)
+    }
+
+internal fun ExprValue.intValue(): Int = this.numberValue().toInt()
 
 /**
  * Implements the `FROM` range operation.

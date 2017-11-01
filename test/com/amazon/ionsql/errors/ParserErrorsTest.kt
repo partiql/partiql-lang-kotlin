@@ -831,7 +831,7 @@ class ParserErrorsTest : Base() {
     @Test
     fun pivotNoAt() {
         checkInputThrowingParserException("PIVOT v FROM data",
-                                          ErrorCode.PARSE_EXPECTED_KEYWORD ,
+                                          ErrorCode.PARSE_EXPECTED_KEYWORD,
                                           mapOf(Property.LINE_NUMBER to 1L,
                                                 Property.COLUMN_NUMBER to 9L,
                                                 Property.TOKEN_TYPE to TokenType.KEYWORD,
@@ -842,7 +842,7 @@ class ParserErrorsTest : Base() {
     @Test
     fun callDateAddDatePartWrongPosition() {
         checkInputThrowingParserException("date_add(a, b, year)",
-                                          ErrorCode.PARSE_EXPECTED_DATE_PART ,
+                                          ErrorCode.PARSE_EXPECTED_DATE_PART,
                                           mapOf(Property.LINE_NUMBER to 1L,
                                                 Property.COLUMN_NUMBER to 10L,
                                                 Property.TOKEN_TYPE to TokenType.IDENTIFIER,
@@ -863,7 +863,7 @@ class ParserErrorsTest : Base() {
     @Test
     fun callDateAddNoDatePart() {
         checkInputThrowingParserException("date_add(b, c)",
-                                          ErrorCode.PARSE_EXPECTED_DATE_PART ,
+                                          ErrorCode.PARSE_EXPECTED_DATE_PART,
                                           mapOf(Property.LINE_NUMBER to 1L,
                                                 Property.COLUMN_NUMBER to 10L,
                                                 Property.TOKEN_TYPE to TokenType.IDENTIFIER,
@@ -873,10 +873,83 @@ class ParserErrorsTest : Base() {
     @Test
     fun callDateAddInvalidDatePart() {
         checkInputThrowingParserException("date_add(foobar, b, c)",
-                                          ErrorCode.PARSE_EXPECTED_DATE_PART ,
+                                          ErrorCode.PARSE_EXPECTED_DATE_PART,
                                           mapOf(Property.LINE_NUMBER to 1L,
                                                 Property.COLUMN_NUMBER to 10L,
                                                 Property.TOKEN_TYPE to TokenType.IDENTIFIER,
                                                 Property.TOKEN_VALUE to ion.newSymbol("foobar")))
+    }
+
+    @Test
+    fun callExtractInvalidDatePart() {
+        checkInputThrowingParserException("extract(foobar from b)",
+                                          ErrorCode.PARSE_EXPECTED_DATE_PART,
+                                          mapOf(Property.LINE_NUMBER to 1L,
+                                                Property.COLUMN_NUMBER to 9L,
+                                                Property.TOKEN_TYPE to TokenType.IDENTIFIER,
+                                                Property.TOKEN_VALUE to ion.newSymbol("foobar")))
+    }
+
+    @Test
+    fun callExtractMissingFrom() {
+        checkInputThrowingParserException("extract(year b)",
+                                          ErrorCode.PARSE_EXPECTED_KEYWORD,
+                                          mapOf(Property.LINE_NUMBER to 1L,
+                                                Property.COLUMN_NUMBER to 14L,
+                                                Property.KEYWORD to "FROM",
+                                                Property.TOKEN_TYPE to TokenType.IDENTIFIER,
+                                                Property.TOKEN_VALUE to ion.newSymbol("b")))
+    }
+
+    @Test
+    fun callExtractMissingFromWithComma() {
+        checkInputThrowingParserException("extract(year, b)",
+                                          ErrorCode.PARSE_EXPECTED_KEYWORD,
+                                          mapOf(Property.LINE_NUMBER to 1L,
+                                                Property.COLUMN_NUMBER to 13L,
+                                                Property.KEYWORD to "FROM",
+                                                Property.TOKEN_TYPE to TokenType.COMMA,
+                                                Property.TOKEN_VALUE to ion.newSymbol(",")))
+    }
+
+    @Test
+    fun callExtractMissingSecondArgument() {
+        checkInputThrowingParserException("extract(year from)",
+                                          ErrorCode.PARSE_UNEXPECTED_TERM,
+                                          mapOf(Property.LINE_NUMBER to 1L,
+                                                Property.COLUMN_NUMBER to 18L,
+                                                Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
+                                                Property.TOKEN_VALUE to ion.newSymbol(")")))
+    }
+
+    @Test
+    fun callExtractMissingDatePart() {
+        checkInputThrowingParserException("extract(from b)",
+                                          ErrorCode.PARSE_EXPECTED_DATE_PART,
+                                          mapOf(Property.LINE_NUMBER to 1L,
+                                                Property.COLUMN_NUMBER to 9L,
+                                                Property.TOKEN_TYPE to TokenType.KEYWORD,
+                                                Property.TOKEN_VALUE to ion.newSymbol("from")))
+    }
+
+    @Test
+    fun callExtractOnlySecondArgument() {
+        checkInputThrowingParserException("extract(b)",
+                                          ErrorCode.PARSE_EXPECTED_DATE_PART,
+                                          mapOf(Property.LINE_NUMBER to 1L,
+                                                Property.COLUMN_NUMBER to 9L,
+                                                Property.TOKEN_TYPE to TokenType.IDENTIFIER,
+                                                Property.TOKEN_VALUE to ion.newSymbol("b")))
+    }
+
+    @Test
+    fun callExtractOnlyDatePart() {
+        checkInputThrowingParserException("extract(year)",
+                                          ErrorCode.PARSE_EXPECTED_KEYWORD,
+                                          mapOf(Property.LINE_NUMBER to 1L,
+                                                Property.COLUMN_NUMBER to 13L,
+                                                Property.KEYWORD to "FROM",
+                                                Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
+                                                Property.TOKEN_VALUE to ion.newSymbol(")")))
     }
 }

@@ -3,6 +3,7 @@ package com.amazon.ionsql.eval.builtins
 import com.amazon.ion.*
 import com.amazon.ionsql.*
 import com.amazon.ionsql.eval.*
+import com.amazon.ionsql.syntax.*
 import com.amazon.ionsql.util.*
 import junitparams.*
 import org.assertj.core.api.Assertions.*
@@ -46,6 +47,13 @@ class DateAddExprFunctionTest : Base() {
     }
 
     @Test
+    fun nonExistingDatePart() {
+        assertThatThrownBy { callDateAdd("foobar", 1, Timestamp.valueOf("2017T")) }
+            .hasMessage("invalid date part, valid values: [year, month, day, hour, minute, second, timezone_hour, timezone_minute]")
+            .isExactlyInstanceOf(EvaluationException::class.java)
+    }
+
+    @Test
     fun wrongTypeOfSecondArgument() {
         assertThatThrownBy { callDateAdd("year", "a", Timestamp.valueOf("2017T")) }
             .hasMessage("Expected number: \"a\"")
@@ -56,6 +64,17 @@ class DateAddExprFunctionTest : Base() {
     fun wrongTypeOfThirdArgument() {
         assertThatThrownBy { callDateAdd("year", 1, "foo") }
             .hasMessage("Expected timestamp: \"foo\"")
+            .isExactlyInstanceOf(EvaluationException::class.java)
+    }
+
+    fun parametersForInvalidDatePart() = listOf(DatePart.TIMEZONE_HOUR,
+                                                DatePart.TIMEZONE_MINUTE).map { it.toString().toLowerCase() }
+
+    @Test
+    @Parameters
+    fun invalidDatePart(datePart: String) {
+        assertThatThrownBy { callDateAdd(datePart, 1, Timestamp.valueOf("2017T")) }
+            .hasMessage("invalid date part for date_add: $datePart")
             .isExactlyInstanceOf(EvaluationException::class.java)
     }
 

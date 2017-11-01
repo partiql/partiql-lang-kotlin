@@ -471,10 +471,12 @@ Note: `CHAR_LENGTH` and `CHARACTER_LENGTH` have the same syntax and functionalit
   
 #### Examples
 
-    CHAR_LENGTH('') -- Returns 0 
-    CHAR_LENGTH('abcdefg') -- Returns 7
-    CHAR_LENGTH('😁😞😸😸') -- Returns 4 (non-BMP unicode characters)
-    CHAR_LENGTH('eࠫ') -- Returns 2 because 'eࠫ' is two codepoints: the letter 'e' and combining character U+032B
+```sql  
+CHAR_LENGTH('') -- Returns 0 
+CHAR_LENGTH('abcdefg') -- Returns 7
+CHAR_LENGTH('😁😞😸😸') -- Returns 4 (non-BMP unicode characters)
+CHAR_LENGTH('eࠫ') -- Returns 2 because 'eࠫ' is two codepoints: the letter 'e' and combining character U+032B
+```
 
 ### DATE_ADD
 
@@ -486,10 +488,12 @@ Where date part is one of the following keywords: `year, month, day, hour, minut
 
 #### Examples
 
-    DATE_ADD(year, 5, `2010-01-01T`) -> 2015-01-01T
-    DATE_ADD(month, 1, `2010T`) -> 2010T
-    DATE_ADD(month, 13, `2010T`) -> 2011T 
-    DATE_ADD(day, -1, `2017-01-10T`) -> 2017-01-09T
+```sql  
+DATE_ADD(year, 5, `2010-01-01T`) -- 2015-01-01T
+DATE_ADD(month, 1, `2010T`) -- 2010T
+DATE_ADD(month, 13, `2010T`) -- 2011T 
+DATE_ADD(day, -1, `2017-01-10T`) -- 2017-01-09T
+```
 
 ### EXISTS
 
@@ -512,6 +516,27 @@ sequence.
 
     EXISTS(1) -- Returns false
 
+### EXTRACT
+
+Extracts a date part from a timestamp. 
+    
+    EXTRACT(<date part> FROM <timestamp>)
+    
+Where date part is one of the following keywords: `year, month, day, hour, minute, second, timestamp_hour, timestamp_minute`. 
+Note that the allowed date parts for `EXTRACT` is not the same as `DATE_ADD` 
+
+#### Examples
+    
+```sql
+EXTRACT(YEAR FROM `2010-01-01T`) -- 2010
+EXTRACT(MONTH FROM `2010T`) -- null as `2010T` doesn't have a `month` part 
+EXTRACT(MONTH FROM `2010-10T`) -- 10 
+EXTRACT(TIMESTAMP_HOUR FROM `2010-01-01T15:20:30+10:20`) -- 10
+EXTRACT(TIMESTAMP_HOUR FROM `2010-01-01T15:20:30-10:20`) -- -10
+EXTRACT(TIMESTAMP_MINUTE FROM `2010-01-01T15:20:30+10:20`) -- 20
+EXTRACT(TIMESTAMP_MINUTE FROM `2010-01-01T15:20:30-10:20`) -- -20
+```
+
 ### LOWER 
 
 Converts uppercase letters in the specified string to lowercase, leaving non-uppercase characters unchanged.
@@ -519,11 +544,13 @@ This operation currently relies on the default locale as defined by Java's offic
 [String.toLowerCase()](https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#toLowerCase()) documentation.
 See [IONSQL-110](https://i.amazon.com/issues/IONSQL-110), which will allow IonSQL++ to have client-specifiable locales.
 
+
     LOWER(<str>)
 
 Examples:
-
+```sql
     LOWER('AbCdEfG!@#$') -- Returns 'abcdefg!@#$'
+```
     
 ### SUBSTRING
 
@@ -541,10 +568,10 @@ Where:
 Returns `NULL` if any arugment is null, or `MISSING` if any argument is missing.
 
 #### Examples
-
-    SUBSTRING('abcdefghi' from 3 for 4) -- Returns 'cdef'
-    SUBSTRING('abcdefghi', -1, 4)       -- Returns 'ab'
-    
+```sql
+SUBSTRING('abcdefghi' from 3 for 4) -- Returns 'cdef'
+SUBSTRING('abcdefghi', -1, 4)       -- Returns 'ab'
+```
     
 ### TO_STRING
 
@@ -555,17 +582,17 @@ Formats an Ion timestamp as a pretty string.
 Note:  There is an issue requiring this function name to be [specified in lowercase](https://issues.amazon.com/issues/IONSQL-120).
 
 #### Examples
-
-    TO_STRING(`1969-07-20T20:18Z`,  'MMMM d, y')                    --Returns "July 20, 1969"
-    TO_STRING(`1969-07-20T20:18Z`, 'MMM d, yyyy')                   --Returns "Jul 20, 1969"
-    TO_STRING(`1969-07-20T20:18Z`, 'M-d-yy')                        --Returns "7-20-69"
-    TO_STRING(`1969-07-20T20:18Z`, 'MM-d-y')                        --Returns "07-20-1969"
-    TO_STRING(`1969-07-20T20:18Z`, 'MMMM d, y h:m a')               --Returns "July 20, 1969 8:18 PM"
-    TO_STRING(`1969-07-20T20:18Z`, 'y-MM-dd''T''H:m:ssX')           --Returns "1969-07-20T20:18:00Z"
-    TO_STRING(`1969-07-20T20:18+08:00Z`, 'y-MM-dd''T''H:m:ssX')     --Returns "1969-07-20T20:18:00Z"
-    TO_STRING(`1969-07-20T20:18+08:00`, 'y-MM-dd''T''H:m:ssXXXX')   --Returns "1969-07-20T20:18:00+0800"
-    TO_STRING(`1969-07-20T20:18+08:00`, 'y-MM-dd''T''H:m:ssXXXXX')  --Returns "1969-07-20T20:18:00+08:00"
-
+```sql
+TO_STRING(`1969-07-20T20:18Z`,  'MMMM d, y')                    --Returns "July 20, 1969"
+TO_STRING(`1969-07-20T20:18Z`, 'MMM d, yyyy')                   --Returns "Jul 20, 1969"
+TO_STRING(`1969-07-20T20:18Z`, 'M-d-yy')                        --Returns "7-20-69"
+TO_STRING(`1969-07-20T20:18Z`, 'MM-d-y')                        --Returns "07-20-1969"
+TO_STRING(`1969-07-20T20:18Z`, 'MMMM d, y h:m a')               --Returns "July 20, 1969 8:18 PM"
+TO_STRING(`1969-07-20T20:18Z`, 'y-MM-dd''T''H:m:ssX')           --Returns "1969-07-20T20:18:00Z"
+TO_STRING(`1969-07-20T20:18+08:00Z`, 'y-MM-dd''T''H:m:ssX')     --Returns "1969-07-20T20:18:00Z"
+TO_STRING(`1969-07-20T20:18+08:00`, 'y-MM-dd''T''H:m:ssXXXX')   --Returns "1969-07-20T20:18:00+0800"
+TO_STRING(`1969-07-20T20:18+08:00`, 'y-MM-dd''T''H:m:ssXXXXX')  --Returns "1969-07-20T20:18:00+08:00"
+```
 Format symbols:
        
     Symbol          Example         Description
@@ -612,7 +639,7 @@ Format symbols:
     x               +07             Offset in hours
     xx or xxxx      +0700           Offset in hours and minutes
     xxx or xxxxx    +07:00          Offset in hours and minutes
-
+     
 ### TO_TIMESTAMP
 
 Converts a string to a timestamp using an optional format pattern to specify non-standard date formats.
@@ -636,18 +663,18 @@ Month names and AM/PM specifiers are case-insensitive.
 #### Examples
 
 Single argument parsing an Ion timestamp:
-
-    TO_TIMESTAMP('2007T')
-    TO_TIMESTAMP('2007-02-23T12:14:33.079-08:00')
-    
+```sql
+TO_TIMESTAMP('2007T')
+TO_TIMESTAMP('2007-02-23T12:14:33.079-08:00')
+```
 Two arguments parsing a custom date format:
-
-    TO_TIMESTAMP('2016', 'y')  --Returns `2016T`
-    TO_TIMESTAMP('2016', 'yyyy')  --Returns `2016T`
-    TO_TIMESTAMP('02-2016', 'MM-yyyy')  --Returns `2016-02T`
-    TO_TIMESTAMP('Feb 2016', 'MMM yyyy')  --Returns `2016-02T`
-    TO_TIMESTAMP('Febrary 2016', 'MMMM yyyy')  --Returns `2016-02T`
-
+```sql
+TO_TIMESTAMP('2016', 'y')  --Returns `2016T`
+TO_TIMESTAMP('2016', 'yyyy')  --Returns `2016T`
+TO_TIMESTAMP('02-2016', 'MM-yyyy')  --Returns `2016-02T`
+TO_TIMESTAMP('Feb 2016', 'MMM yyyy')  --Returns `2016-02T`
+TO_TIMESTAMP('Febrary 2016', 'MMMM yyyy')  --Returns `2016-02T`
+```
 Notes:
 
 [All SIM items for IonSQL++'s `TO_TIMESTAMP` function](https://i.amazon.com/issues/search?q=status%3A(Open)+(TO_TIMESTAMP)+containingFolder%3A(0efa7b8c-5170-4de7-a8e7-d0975778a686)&sort=lastUpdatedConversationDate+desc&selectedDocument=0b5e3cc3-40bc-40cf-854b-977f4ae4e08d).
@@ -672,7 +699,6 @@ indicate minimum and maximum allowable values for offsets.) In practice this wil
 not abuse the offset portion of Timestamp because real-life offsets do not exceed +/- 12h.  
 
 
-
 ### TRIM
  
 Trims leading and/or trailing characters from a String. If the characters to be trimmed are not specified it defaults
@@ -681,15 +707,15 @@ to `' '`.
     TRIM([[LEADING|TRAILING|BOTH <characters to remove>] FROM] <str>) 
 
 #### Examples
-
-    TRIM('       foobar         ') -- returns 'foobar'
-    TRIM('      \tfoobar\t         ') -- returns '\tfoobar\t'
-    TRIM(LEADING FROM '       foobar         ') -- returns 'foobar         '
-    TRIM(TRAILING FROM '       foobar         ') -- returns '       foobar'
-    TRIM(BOTH FROM '       foobar         ') -- returns 'foobar'
-    TRIM(BOTH '😁' FROM '😁😁foobar😁😁') -- returns 'foobar'
-    TRIM(BOTH '12' FROM '1112211foobar22211122') -- returns 'foobar' 
-
+```sql
+TRIM('       foobar         ') -- returns 'foobar'
+TRIM('      \tfoobar\t         ') -- returns '\tfoobar\t'
+TRIM(LEADING FROM '       foobar         ') -- returns 'foobar         '
+TRIM(TRAILING FROM '       foobar         ') -- returns '       foobar'
+TRIM(BOTH FROM '       foobar         ') -- returns 'foobar'
+TRIM(BOTH '😁' FROM '😁😁foobar😁😁') -- returns 'foobar'
+TRIM(BOTH '12' FROM '1112211foobar22211122') -- returns 'foobar' 
+```
 ### UPPER 
 
 Converts lowercase letters in the specified string to uppercase, leaving non-lowercase characters unchanged. This 
@@ -700,9 +726,9 @@ See [IONSQL-110](https://i.amazon.com/issues/IONSQL-110), which will allow IonSQ
     UPPER(<str>)
 
 #### Examples
-
-    UPPER('AbCdEfG!@#$') -- Returns 'ABCDEFG!@#$'
-    
+```sql
+UPPER('AbCdEfG!@#$') -- Returns 'ABCDEFG!@#$'
+```    
 ### UTCNOW 
 
 returns the current time timestamp in UTC. Current time is defined by the `now` value in the `EvaluationSession` so it's 
@@ -711,9 +737,10 @@ consistent across an evaluation. The client can specify its own `now` value when
     UTCNOW()
 
 Examples:
+```sql
+UTCNOW() -- Returns 2017-10-13T16:02:11.123Z
+```
 
-    UTCNOW() -- Returns 2017-10-13T16:02:11.123Z
-    
 ## Helpful Links
 
  - [Hyperlinked SQL-92 BNF](https://ronsavage.github.io/SQL/sql-92.bnf.html) - this is much easier to navigate than the official ISO standard!

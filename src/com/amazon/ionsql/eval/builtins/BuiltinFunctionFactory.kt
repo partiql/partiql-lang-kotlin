@@ -10,6 +10,7 @@ internal class BuiltinFunctionFactory(private val ion: IonSystem) {
                                                                "lower" to this.lower(),
                                                                "date_add" to DateAddExprFunction(ion),
                                                                "exists" to this.exists(),
+                                                               "extract" to ExtractExprFunction(ion),
                                                                "substring" to this.substring(),
                                                                "char_length" to this.char_length(),
                                                                "character_length" to this.char_length(),
