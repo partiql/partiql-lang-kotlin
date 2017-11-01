@@ -840,47 +840,6 @@ class ParserErrorsTest : Base() {
     }
 
     @Test
-    fun callDateAddDatePartWrongPosition() {
-        checkInputThrowingParserException("date_add(a, b, year)",
-                                          ErrorCode.PARSE_EXPECTED_DATE_PART,
-                                          mapOf(Property.LINE_NUMBER to 1L,
-                                                Property.COLUMN_NUMBER to 10L,
-                                                Property.TOKEN_TYPE to TokenType.IDENTIFIER,
-                                                Property.TOKEN_VALUE to ion.newSymbol("a")))
-    }
-
-    @Test
-    fun callDateAddOnlyDatePart() {
-        checkInputThrowingParserException("date_add(year)",
-                                          ErrorCode.PARSE_EXPECTED_TOKEN_TYPE,
-                                          mapOf(Property.LINE_NUMBER to 1L,
-                                                Property.COLUMN_NUMBER to 14L,
-                                                Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
-                                                Property.EXPECTED_TOKEN_TYPE to TokenType.COMMA,
-                                                Property.TOKEN_VALUE to ion.newSymbol(")")))
-    }
-
-    @Test
-    fun callDateAddNoDatePart() {
-        checkInputThrowingParserException("date_add(b, c)",
-                                          ErrorCode.PARSE_EXPECTED_DATE_PART,
-                                          mapOf(Property.LINE_NUMBER to 1L,
-                                                Property.COLUMN_NUMBER to 10L,
-                                                Property.TOKEN_TYPE to TokenType.IDENTIFIER,
-                                                Property.TOKEN_VALUE to ion.newSymbol("b")))
-    }
-
-    @Test
-    fun callDateAddInvalidDatePart() {
-        checkInputThrowingParserException("date_add(foobar, b, c)",
-                                          ErrorCode.PARSE_EXPECTED_DATE_PART,
-                                          mapOf(Property.LINE_NUMBER to 1L,
-                                                Property.COLUMN_NUMBER to 10L,
-                                                Property.TOKEN_TYPE to TokenType.IDENTIFIER,
-                                                Property.TOKEN_VALUE to ion.newSymbol("foobar")))
-    }
-
-    @Test
     fun callExtractInvalidDatePart() {
         checkInputThrowingParserException("extract(foobar from b)",
                                           ErrorCode.PARSE_EXPECTED_DATE_PART,

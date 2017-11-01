@@ -9,6 +9,7 @@ internal class BuiltinFunctionFactory(private val ion: IonSystem) {
     fun createFunctionMap(): Map<String, ExprFunction> = mapOf("upper" to this.upper(),
                                                                "lower" to this.lower(),
                                                                "date_add" to DateAddExprFunction(ion),
+                                                               "date_diff" to DateDiffExprFunction(ion),
                                                                "exists" to this.exists(),
                                                                "extract" to ExtractExprFunction(ion),
                                                                "substring" to this.substring(),

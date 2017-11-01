@@ -495,6 +495,24 @@ DATE_ADD(month, 13, `2010T`) -- 2011T
 DATE_ADD(day, -1, `2017-01-10T`) -- 2017-01-09T
 ```
 
+### DATE_DIFF
+
+Difference in date parts between two timestamps. If the first timestamp is later than the second the result is negative.
+    
+    DATE_DIFF(<date part>, <timestamp>, <timestamp>)
+    
+Where date part is one of the following keywords: `year, month, day, hour, minute, second` 
+
+#### Examples
+
+```sql  
+DATE_DIFF(year, `2010-01-01T`, `2011-01-01T`) -- 1
+DATE_DIFF(year, `2010T`, `2010-05T`) -- 4. 2010T is interpreted as 2010-01-01T00:00:00.000Z for operations
+DATE_DIFF(month, `2010T`, `2011T`) -- 12
+DATE_DIFF(day, `2010-01-01T23:00T`, `2010-01-02T01:00T`) -- 0. With a time component timestamps need to be at least 24h apart to be 1 day apart 
+```
+
+
 ### EXISTS
 
 Indicates if the specified `IonSequence` is empty.  Always return `false` if the value specified is not a 

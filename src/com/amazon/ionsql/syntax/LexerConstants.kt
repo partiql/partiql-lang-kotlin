@@ -263,10 +263,7 @@ internal val DATE_PART_KEYWORDS: Set<String> = DatePart.values()
     "struct",
     "list",
     "sexp",
-    "bag",
-
-    // functions with special syntax
-    "date_add"
+    "bag"
 )
 
 /** All Keywords. */

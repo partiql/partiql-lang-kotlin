@@ -532,7 +532,6 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             "values" -> tail.parseTableValues().copy(type = BAG)
             "substring" -> tail.parseSubstring(head!!)
             "trim" -> tail.parseTrim(head!!)
-            "date_add" -> tail.parseDateAdd(head!!)
             "extract" -> tail.parseExtract(head!!)
             in FUNCTION_NAME_KEYWORDS -> when (tail.head?.type) {
                 LEFT_PAREN ->
@@ -934,35 +933,6 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         }
 
         return ParseNode(ParseType.CALL, name, arguments, rem.tail)
-    }
-
-    /**
-     * Parses date_add
-     *
-     * Syntax is DATE_ADD(<date_part>, <interval>, <timestamp>).
-     */
-    private fun List<Token>.parseDateAdd(name: Token): ParseNode {
-        if (head?.type != LEFT_PAREN) err("Expected $LEFT_PAREN",
-                                          PARSE_EXPECTED_LEFT_PAREN_BUILTIN_FUNCTION_CALL)
-
-        var rem = tail
-
-        return when (rem.head?.type) {
-            DATE_PART -> {
-
-                val datePart = rem.parseExpression().deriveExpected(COMMA)
-                rem = datePart.remaining
-
-                val parseNode = rem.parseArgList(aliasSupportType = NONE, mode = NORMAL_ARG_LIST).deriveExpected(
-                    RIGHT_PAREN)
-
-                val arguments = mutableListOf(datePart)
-                arguments.addAll(parseNode.children)
-
-                ParseNode(ParseType.CALL, name, arguments, parseNode.remaining)
-            }
-            else      -> rem.head.err("Expected one of: $DATE_PART_KEYWORDS", PARSE_EXPECTED_DATE_PART)
-        }
     }
 
     /**
