@@ -453,6 +453,16 @@ class ParserErrorsTest : Base() {
     }
 
     @Test
+    fun callTrimZeroArguments() {
+        checkInputThrowingParserException("trim()",
+                                          ErrorCode.PARSE_UNEXPECTED_TERM,
+                                          mapOf(Property.LINE_NUMBER to 1L,
+                                                Property.COLUMN_NUMBER to 6L,
+                                                Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
+                                                Property.TOKEN_VALUE to ion.newSymbol(")")))
+    }
+
+    @Test
     fun callTrimAllButString() {
         checkInputThrowingParserException("trim(trailing '' from)",
                                           ErrorCode.PARSE_UNEXPECTED_TERM,
@@ -464,6 +474,17 @@ class ParserErrorsTest : Base() {
     }
 
     @Test
+    fun callTwoArgumentsNoFrom() {
+        checkInputThrowingParserException("trim(' ' '   1   ')",
+                                          ErrorCode.PARSE_EXPECTED_RIGHT_PAREN_BUILTIN_FUNCTION_CALL,
+                                          mapOf(
+                                              Property.LINE_NUMBER to 1L,
+                                              Property.COLUMN_NUMBER to 10L,
+                                              Property.TOKEN_TYPE to TokenType.LITERAL,
+                                              Property.TOKEN_VALUE to ion.newString("   1   ")))
+    }
+
+    @Test
     fun callTrimSpecificationAndFromMissingString() {
         checkInputThrowingParserException("trim(trailing from)",
                                           ErrorCode.PARSE_UNEXPECTED_TERM,
@@ -472,17 +493,6 @@ class ParserErrorsTest : Base() {
                                               Property.COLUMN_NUMBER to 19L,
                                               Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
                                               Property.TOKEN_VALUE to ion.newSymbol(")")))
-    }
-
-    @Test
-    fun callTrimWrongSpecification() {
-        checkInputThrowingParserException("trim(foobar from '')",
-                                          ErrorCode.PARSE_EXPECTED_RIGHT_PAREN_BUILTIN_FUNCTION_CALL,
-                                          mapOf(
-                                              Property.LINE_NUMBER to 1L,
-                                              Property.COLUMN_NUMBER to 13L,
-                                              Property.TOKEN_TYPE to TokenType.KEYWORD,
-                                              Property.TOKEN_VALUE to ion.newSymbol("from")))
     }
 
     @Test
@@ -749,16 +759,6 @@ class ParserErrorsTest : Base() {
     }
 
     @Test
-    fun callTrimZeroArguments() {
-        checkInputThrowingParserException("trim()",
-                                          ErrorCode.PARSE_UNEXPECTED_TERM,
-                                          mapOf(Property.LINE_NUMBER to 1L,
-                                                Property.COLUMN_NUMBER to 6L,
-                                                Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
-                                                Property.TOKEN_VALUE to ion.newSymbol(")")))
-    }
-
-    @Test
     fun atOperatorOnNonIdentifier() {
         checkInputThrowingParserException("@(a)",
                                           ErrorCode.PARSE_MISSING_IDENT_AFTER_AT,
@@ -831,7 +831,7 @@ class ParserErrorsTest : Base() {
     @Test
     fun pivotNoAt() {
         checkInputThrowingParserException("PIVOT v FROM data",
-                                          ErrorCode.PARSE_EXPECTED_KEYWORD ,
+                                          ErrorCode.PARSE_EXPECTED_KEYWORD,
                                           mapOf(Property.LINE_NUMBER to 1L,
                                                 Property.COLUMN_NUMBER to 9L,
                                                 Property.TOKEN_TYPE to TokenType.KEYWORD,
@@ -840,43 +840,75 @@ class ParserErrorsTest : Base() {
     }
 
     @Test
-    fun callDateAddDatePartWrongPosition() {
-        checkInputThrowingParserException("date_add(a, b, year)",
-                                          ErrorCode.PARSE_EXPECTED_DATE_PART ,
+    fun callExtractInvalidDatePart() {
+        checkInputThrowingParserException("extract(foobar from b)",
+                                          ErrorCode.PARSE_EXPECTED_DATE_PART,
                                           mapOf(Property.LINE_NUMBER to 1L,
-                                                Property.COLUMN_NUMBER to 10L,
+                                                Property.COLUMN_NUMBER to 9L,
                                                 Property.TOKEN_TYPE to TokenType.IDENTIFIER,
-                                                Property.TOKEN_VALUE to ion.newSymbol("a")))
+                                                Property.TOKEN_VALUE to ion.newSymbol("foobar")))
     }
 
     @Test
-    fun callDateAddOnlyDatePart() {
-        checkInputThrowingParserException("date_add(year)",
-                                          ErrorCode.PARSE_EXPECTED_TOKEN_TYPE,
+    fun callExtractMissingFrom() {
+        checkInputThrowingParserException("extract(year b)",
+                                          ErrorCode.PARSE_EXPECTED_KEYWORD,
                                           mapOf(Property.LINE_NUMBER to 1L,
                                                 Property.COLUMN_NUMBER to 14L,
-                                                Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
-                                                Property.EXPECTED_TOKEN_TYPE to TokenType.COMMA,
-                                                Property.TOKEN_VALUE to ion.newSymbol(")")))
-    }
-
-    @Test
-    fun callDateAddNoDatePart() {
-        checkInputThrowingParserException("date_add(b, c)",
-                                          ErrorCode.PARSE_EXPECTED_DATE_PART ,
-                                          mapOf(Property.LINE_NUMBER to 1L,
-                                                Property.COLUMN_NUMBER to 10L,
+                                                Property.KEYWORD to "FROM",
                                                 Property.TOKEN_TYPE to TokenType.IDENTIFIER,
                                                 Property.TOKEN_VALUE to ion.newSymbol("b")))
     }
 
     @Test
-    fun callDateAddInvalidDatePart() {
-        checkInputThrowingParserException("date_add(foobar, b, c)",
-                                          ErrorCode.PARSE_EXPECTED_DATE_PART ,
+    fun callExtractMissingFromWithComma() {
+        checkInputThrowingParserException("extract(year, b)",
+                                          ErrorCode.PARSE_EXPECTED_KEYWORD,
                                           mapOf(Property.LINE_NUMBER to 1L,
-                                                Property.COLUMN_NUMBER to 10L,
+                                                Property.COLUMN_NUMBER to 13L,
+                                                Property.KEYWORD to "FROM",
+                                                Property.TOKEN_TYPE to TokenType.COMMA,
+                                                Property.TOKEN_VALUE to ion.newSymbol(",")))
+    }
+
+    @Test
+    fun callExtractMissingSecondArgument() {
+        checkInputThrowingParserException("extract(year from)",
+                                          ErrorCode.PARSE_UNEXPECTED_TERM,
+                                          mapOf(Property.LINE_NUMBER to 1L,
+                                                Property.COLUMN_NUMBER to 18L,
+                                                Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
+                                                Property.TOKEN_VALUE to ion.newSymbol(")")))
+    }
+
+    @Test
+    fun callExtractMissingDatePart() {
+        checkInputThrowingParserException("extract(from b)",
+                                          ErrorCode.PARSE_EXPECTED_DATE_PART,
+                                          mapOf(Property.LINE_NUMBER to 1L,
+                                                Property.COLUMN_NUMBER to 9L,
+                                                Property.TOKEN_TYPE to TokenType.KEYWORD,
+                                                Property.TOKEN_VALUE to ion.newSymbol("from")))
+    }
+
+    @Test
+    fun callExtractOnlySecondArgument() {
+        checkInputThrowingParserException("extract(b)",
+                                          ErrorCode.PARSE_EXPECTED_DATE_PART,
+                                          mapOf(Property.LINE_NUMBER to 1L,
+                                                Property.COLUMN_NUMBER to 9L,
                                                 Property.TOKEN_TYPE to TokenType.IDENTIFIER,
-                                                Property.TOKEN_VALUE to ion.newSymbol("foobar")))
+                                                Property.TOKEN_VALUE to ion.newSymbol("b")))
+    }
+
+    @Test
+    fun callExtractOnlyDatePart() {
+        checkInputThrowingParserException("extract(year)",
+                                          ErrorCode.PARSE_EXPECTED_KEYWORD,
+                                          mapOf(Property.LINE_NUMBER to 1L,
+                                                Property.COLUMN_NUMBER to 13L,
+                                                Property.KEYWORD to "FROM",
+                                                Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
+                                                Property.TOKEN_VALUE to ion.newSymbol(")")))
     }
 }

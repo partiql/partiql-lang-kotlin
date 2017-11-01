@@ -38,6 +38,13 @@ data class NodeMetadata(val line: Long, val column: Long) {
     fun toErrorContext(): PropertyValueMap? {
         return fillErrorContext(PropertyValueMap())
     }
+
+    /**
+     * Adds line and column number to the given [PropertyValueMap]
+     */
+    fun toErrorContext(properties: PropertyValueMap): PropertyValueMap {
+        return fillErrorContext(properties)
+    }
 }
 
 /**

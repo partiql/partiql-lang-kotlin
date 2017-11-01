@@ -532,7 +532,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             "values" -> tail.parseTableValues().copy(type = BAG)
             "substring" -> tail.parseSubstring(head!!)
             "trim" -> tail.parseTrim(head!!)
-            "date_add" -> tail.parseDateAdd(head!!)
+            "extract" -> tail.parseExtract(head!!)
             in FUNCTION_NAME_KEYWORDS -> when (tail.head?.type) {
                 LEFT_PAREN ->
                     tail.tail.parseFunctionCall(head!!)
@@ -894,39 +894,51 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
      * Syntax is TRIM([[ specification ] [to trim characters] FROM] <trim source>).
      */
     private fun List<Token>.parseTrim(name: Token): ParseNode {
-        if (head?.type != LEFT_PAREN) err("Expected $LEFT_PAREN",
-                                          PARSE_EXPECTED_LEFT_PAREN_BUILTIN_FUNCTION_CALL)
+        if (head?.type != LEFT_PAREN) err("Expected $LEFT_PAREN", PARSE_EXPECTED_LEFT_PAREN_BUILTIN_FUNCTION_CALL)
 
         var rem = tail
         val arguments = mutableListOf<ParseNode>()
 
+        fun parseArgument(block: (ParseNode) -> ParseNode = { it }): List<Token> {
+            val node = block(rem.parseExpression())
+            arguments.add(node)
+
+            return node.remaining
+        }
+
         val hasSpecification = when(rem.head?.type) {
             TRIM_SPECIFICATION -> {
-                val specificationNode = rem.parseExpression()
-                arguments.add(specificationNode)
-                rem = specificationNode.remaining
+                rem = parseArgument()
 
                 true
             }
             else -> false
         }
 
-        if(hasSpecification && rem.head?.keywordText != "from") {
-            val toRemoveNode = rem.parseExpression().deriveExpectedKeyword("from")
-            arguments.add(toRemoveNode)
+        if (hasSpecification) { // trim(spec [toRemove] from target)
+            rem = when (rem.head?.keywordText) {
+                "from" -> rem.tail
+                else   -> parseArgument { it.deriveExpectedKeyword("from") }
+            }
 
-            rem = toRemoveNode.remaining
+            rem = parseArgument()
         }
+        else {
+            if(rem.head?.keywordText == "from") { // trim(from target)
+                rem = rem.tail // skips from
 
-        // without a specification from keyword is optional
-        if(rem.head?.keywordText == "from") {
-            rem = rem.tail
+                rem = parseArgument()
+            }
+            else { // trim([toRemove from] target)
+                rem = parseArgument()
+
+                if(rem.head?.keywordText == "from") {
+                    rem = rem.tail // skips from
+
+                    rem = parseArgument()
+                }
+            }
         }
-
-        // stringNode is required
-        val stringNode = rem.parseExpression()
-        arguments.add(stringNode)
-        rem = stringNode.remaining
 
         if(rem.head?.type != RIGHT_PAREN) {
             rem.err("Expected $RIGHT_PAREN", PARSE_EXPECTED_RIGHT_PAREN_BUILTIN_FUNCTION_CALL)
@@ -936,29 +948,24 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
     }
 
     /**
-     * Parses date_add
+     * Parses extract
      *
-     * Syntax is DATE_ADD(<date_part>, <interval>, <timestamp>).
+     * Syntax is EXTRACT(<date_part> FROM <timestamp>).
      */
-    private fun List<Token>.parseDateAdd(name: Token): ParseNode {
+    private fun List<Token>.parseExtract(name: Token): ParseNode {
         if (head?.type != LEFT_PAREN) err("Expected $LEFT_PAREN",
                                           PARSE_EXPECTED_LEFT_PAREN_BUILTIN_FUNCTION_CALL)
 
-        var rem= tail
+        var rem = tail
 
         return when (rem.head?.type) {
             DATE_PART -> {
-
-                val datePart = rem.parseExpression().deriveExpected(COMMA)
+                val datePart = rem.parseExpression().deriveExpectedKeyword("from")
                 rem = datePart.remaining
 
-                val parseNode = rem.parseArgList(aliasSupportType = NONE, mode = NORMAL_ARG_LIST).deriveExpected(
-                    RIGHT_PAREN)
+                val timestamp = rem.parseExpression().deriveExpected(RIGHT_PAREN)
 
-                val arguments = mutableListOf(datePart)
-                arguments.addAll(parseNode.children)
-
-                ParseNode(ParseType.CALL, name, arguments, parseNode.remaining)
+                ParseNode(ParseType.CALL, name, listOf(datePart, timestamp), timestamp.remaining)
             }
             else      -> rem.head.err("Expected one of: $DATE_PART_KEYWORDS", PARSE_EXPECTED_DATE_PART)
         }

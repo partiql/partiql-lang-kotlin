@@ -33,6 +33,18 @@ class TrimExprFunctionTest {
     fun twoArguments() = assertEquals("string   ", callTrim("leading", "   string   "))
 
     @Test
+    fun twoArguments2() = assertEquals("string", callTrim("12", "1212string1212"))
+
+    @Test
+    fun twoArgumentsBoth() = assertEquals("", callTrim("both", "      "))
+
+    @Test
+    fun twoArgumentsLeading() = assertEquals("", callTrim("leading", "      "))
+
+    @Test
+    fun twoArgumentsTrailing() = assertEquals("", callTrim("trailing", "      "))
+
+    @Test
     fun threeArguments() = assertEquals("string", callTrim("both", "a", "aaaaaaaaaastringaaaaaaa"))
 
     @Test
@@ -50,18 +62,10 @@ class TrimExprFunctionTest {
     }
 
     @Test
-    fun invalidSpecification() {
-        assertThatThrownBy { callTrim("invalid", "string") }
-            .isExactlyInstanceOf(EvaluationException::class.java)
-            .hasMessageContaining("'invalid' is an unknown trim specification, valid vales: both, leading, trailing")
-    }
-
-    @Test
     fun wrongSpecificationType() {
         assertThatThrownBy { assertEquals("string", callTrim(1, "string")) }
             .isExactlyInstanceOf(EvaluationException::class.java)
-            .hasRootCauseExactlyInstanceOf(IllegalArgumentException::class.java)
-            .hasMessageContaining("Expected text: 1")
+            .hasMessageContaining("with two arguments trim's first argument must be either the specification or a 'to remove' string")
     }
 
     @Test

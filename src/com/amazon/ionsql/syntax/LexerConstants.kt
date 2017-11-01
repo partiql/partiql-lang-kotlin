@@ -9,7 +9,7 @@ import com.amazon.ionsql.syntax.TokenType.*
 @JvmField internal val TRIM_SPECIFICATION_KEYWORDS = setOf("both", "leading", "trailing")
 
 internal enum class DatePart {
-    YEAR, MONTH, DAY, HOUR, MINUTE, SECOND
+    YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, TIMEZONE_HOUR, TIMEZONE_MINUTE
 }
 
 internal val DATE_PART_KEYWORDS: Set<String> = DatePart.values()
@@ -263,10 +263,7 @@ internal val DATE_PART_KEYWORDS: Set<String> = DatePart.values()
     "struct",
     "list",
     "sexp",
-    "bag",
-
-    // functions with special syntax
-    "date_add"
+    "bag"
 )
 
 /** All Keywords. */

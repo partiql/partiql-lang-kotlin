@@ -107,9 +107,11 @@ class IonSqlParserTest : IonSqlParserBase() {
     fun callTrimSingleArgument() = assertExpression("(call trim (lit \"test\"))",
                                                     "trim('test')")
 
+
+
     @Test
-    fun callTrimSingleArgumentWithFrom() = assertExpression("(call trim (lit \"test\"))",
-                                                            "trim(from 'test')")
+    fun callTrimTwoArgumentsDefaultSpecification() = assertExpression("(call trim (lit \" \") (lit \"test\"))",
+                                                                      "trim(' ' from 'test')")
 
     @Test
     fun callTrimTwoArgumentsUsingBoth() = assertExpression("(call trim (lit \"both\") (lit \"test\"))",
@@ -927,7 +929,6 @@ class IonSqlParserTest : IonSqlParserBase() {
         "SELECT * FROM data as a WHERE a.name LIKE b.pattern"
     )
 
-
     @Test
     fun likeColNameLikeColNamePqth() = assertExpression(
         """
@@ -935,6 +936,7 @@ class IonSqlParserTest : IonSqlParserBase() {
         """,
         "SELECT * FROM data as a WHERE a.name LIKE b.pattern"
     )
+
     @Test
     fun likeColNameLikeStringEscape() = assertExpression(
         """
@@ -976,6 +978,7 @@ class IonSqlParserTest : IonSqlParserBase() {
 
 
     )
+
     /*
     From SQL92 Spec
      3) "M NOT LIKE P" is equivalent to "NOT (M LIKE P)".
@@ -985,6 +988,46 @@ class IonSqlParserTest : IonSqlParserBase() {
         "(select (project (list (id a) (id b))) (from (id data)) (where (not (like (id a) (id b)))))",
         "SELECT a, b FROM data WHERE NOT (a LIKE b)"
     )
+
+    @Test
+    fun datePartYear() = assertExpression(
+        "(lit \"year\")",
+        "year")
+
+    @Test
+    fun datePartMonth() = assertExpression(
+        "(lit \"month\")",
+        "month")
+
+    @Test
+    fun datePartDay() = assertExpression(
+        "(lit \"day\")",
+        "day")
+
+    @Test
+    fun datePartHour() = assertExpression(
+        "(lit \"hour\")",
+        "hour")
+
+    @Test
+    fun datePartMinutes() = assertExpression(
+        "(lit \"minute\")",
+        "minute")
+
+    @Test
+    fun datePartSeconds() = assertExpression(
+        "(lit \"second\")",
+        "second")
+
+    @Test
+    fun datePartTimestampHour() = assertExpression(
+        "(lit \"timezone_hour\")",
+        "timezone_hour")
+
+    @Test
+    fun datePartTimezoneMinute() = assertExpression(
+        "(lit \"timezone_minute\")",
+        "timezone_minute")
 
     @Test
     fun callDateAddYear() = assertExpression(
@@ -1028,8 +1071,50 @@ class IonSqlParserTest : IonSqlParserBase() {
         "date_add(second, a)"
     )
 
+    @Test // invalid evaluation, but valid parsing
+    fun callDateAddTimezoneHour() = assertExpression(
+        "(call date_add (lit \"timezone_hour\") (id a) (id b))",
+        "date_add(timezone_hour, a, b)")
+
+    @Test // invalid evaluation, but valid parsing
+    fun callDateAddTimezoneMinute() = assertExpression(
+        "(call date_add (lit \"timezone_minute\") (id a) (id b))",
+        "date_add(timezone_minute, a, b)")
+
     @Test
     fun caseInsensitiveFunctionName() = assertExpression(
         "(call my_function (id a))",
         "mY_fUnCtIoN(a)")
+
+    @Test
+    fun callExtractYear() = assertExpression("(call extract (lit \"year\") (id a))",
+                                             "extract(year from a)")
+
+    @Test
+    fun callExtractMonth() = assertExpression("(call extract (lit \"month\") (id a))",
+                                              "extract(month from a)")
+
+    @Test
+    fun callExtractDay() = assertExpression("(call extract (lit \"day\") (id a))",
+                                            "extract(day from a)")
+
+    @Test
+    fun callExtractHour() = assertExpression("(call extract (lit \"hour\") (id a))",
+                                             "extract(hour from a)")
+
+    @Test
+    fun callExtractMinute() = assertExpression("(call extract (lit \"minute\") (id a))",
+                                               "extract(minute from a)")
+
+    @Test
+    fun callExtractSecond() = assertExpression("(call extract (lit \"second\") (id a))",
+                                               "extract(second from a)")
+
+    @Test
+    fun callExtractTimezoneHour() = assertExpression("(call extract (lit \"timezone_hour\") (id a))",
+                                               "extract(timezone_hour from a)")
+
+    @Test
+    fun callExtractTimezoneMinute() = assertExpression("(call extract (lit \"timezone_minute\") (id a))",
+                                               "extract(timezone_minute from a)")
 }

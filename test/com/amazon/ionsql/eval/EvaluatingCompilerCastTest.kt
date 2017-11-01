@@ -12,7 +12,7 @@ import junitparams.naming.TestCaseName
 import org.junit.Test
 
 class EvaluatingCompilerCastTest : EvaluatorBase() {
-    val allTypeNames = ExprValueType.values().flatMap { it.sqlTextNames }
+    private val allTypeNames = ExprValueType.values().flatMap { it.sqlTextNames }
 
     fun parametersForCastMissing() = allTypeNames
     @Test
@@ -69,39 +69,39 @@ class EvaluatingCompilerCastTest : EvaluatorBase() {
                 case("`0e0`",                   "false"),
                 case("1.1",                     "true"),
                 // timestamp
-                case("`2007-10-10T`",           EVALUATOR_INVALID_CAST),
+                case("`2007-10-10T`",           EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // text
                 case("'hello'",                 "false"),
                 case("'TrUe'",                  "true"),
                 case("""`"FALSE"`""",           "false"),
                 case("""`'true'`""",            "true"),
                 // lob
-                case("""`{{""}}`""",            EVALUATOR_INVALID_CAST),
-                case("""`{{"goodbye"}}`""",     EVALUATOR_INVALID_CAST),
-                case("""`{{"false"}}`""",       EVALUATOR_INVALID_CAST),
-                case("""`{{"true"}}`""",        EVALUATOR_INVALID_CAST),
-                case("`{{}}`",                  EVALUATOR_INVALID_CAST),
-                case("`{{Z29vZGJ5ZQ==}}`",      EVALUATOR_INVALID_CAST), // goodbye
-                case("`{{ZmFsc2U=}}`",          EVALUATOR_INVALID_CAST), // false
-                case("`{{dHJ1ZQ==}}`",          EVALUATOR_INVALID_CAST), // true
+                case("""`{{""}}`""",            EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`{{"goodbye"}}`""",     EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`{{"false"}}`""",       EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`{{"true"}}`""",        EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`{{}}`",                  EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`{{Z29vZGJ5ZQ==}}`",      EVALUATOR_INVALID_CAST_NO_LOCATION), // goodbye
+                case("`{{ZmFsc2U=}}`",          EVALUATOR_INVALID_CAST_NO_LOCATION), // false
+                case("`{{dHJ1ZQ==}}`",          EVALUATOR_INVALID_CAST_NO_LOCATION), // true
                 // list
-                case("`[]`",                    EVALUATOR_INVALID_CAST),
-                case("`[true]`",                EVALUATOR_INVALID_CAST),
-                case("`[false]`",               EVALUATOR_INVALID_CAST),
-                case("`[true, false]`",         EVALUATOR_INVALID_CAST),
+                case("`[]`",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`[true]`",                EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`[false]`",               EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`[true, false]`",         EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // sexp
-                case("`()`",                    EVALUATOR_INVALID_CAST),
-                case("`(true)`",                EVALUATOR_INVALID_CAST),
-                case("`(false)`",               EVALUATOR_INVALID_CAST),
+                case("`()`",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`(true)`",                EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`(false)`",               EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // struct
-                case("`{}`",                    EVALUATOR_INVALID_CAST),
-                case("{}",                      EVALUATOR_INVALID_CAST),
-                case("`{a:true}`",              EVALUATOR_INVALID_CAST),
-                case("{'b':true}",              EVALUATOR_INVALID_CAST),
+                case("`{}`",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("{}",                      EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`{a:true}`",              EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("{'b':true}",              EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // bag
-                case("<<>>",                    EVALUATOR_INVALID_CAST),
-                case("<<true>>",                EVALUATOR_INVALID_CAST),
-                case("<<false>>",               EVALUATOR_INVALID_CAST)
+                case("<<>>",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("<<true>>",                EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("<<false>>",               EVALUATOR_INVALID_CAST_NO_LOCATION)
             ).types(BOOL.sqlTextNames),
             listOf(
                 // booleans
@@ -115,40 +115,40 @@ class EvaluatingCompilerCastTest : EvaluatorBase() {
                 case("-20.1",                   "-20"),
                 case("-20.9",                   "-20"),
                 // timestamp
-                case("`2007-10-10T`",           EVALUATOR_INVALID_CAST),
+                case("`2007-10-10T`",           EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // text
-                case("'hello'",                 EVALUATOR_CAST_FAILED),
-                case("'1234A'",                 EVALUATOR_CAST_FAILED), // Invalid ION value
+                case("'hello'",                 EVALUATOR_CAST_FAILED_NO_LOCATION),
+                case("'1234A'",                 EVALUATOR_CAST_FAILED_NO_LOCATION), // Invalid ION value
                 case("'-20'",                   "-20"),
                 case("""`"1000"`""",            "1000"),
-                case("""`'2e100'`""",           EVALUATOR_CAST_FAILED),
-                case("""`'2d100'`""",           EVALUATOR_CAST_FAILED),
+                case("""`'2e100'`""",           EVALUATOR_CAST_FAILED_NO_LOCATION),
+                case("""`'2d100'`""",           EVALUATOR_CAST_FAILED_NO_LOCATION),
                 // lob
-                case("""`{{""}}`""",            EVALUATOR_INVALID_CAST),
-                case("""`{{"0"}}`""",           EVALUATOR_INVALID_CAST),
-                case("""`{{"1.0"}}`""",         EVALUATOR_INVALID_CAST),
-                case("""`{{"2e10"}}`""",        EVALUATOR_INVALID_CAST),
-                case("`{{}}`",                  EVALUATOR_INVALID_CAST),
-                case("`{{MA==}}`",              EVALUATOR_INVALID_CAST), // 0
-                case("`{{MS4w}}`",              EVALUATOR_INVALID_CAST), // 1.0
-                case("`{{MmUxMA==}}`",          EVALUATOR_INVALID_CAST), // 2e10
+                case("""`{{""}}`""",            EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`{{"0"}}`""",           EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`{{"1.0"}}`""",         EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`{{"2e10"}}`""",        EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`{{}}`",                  EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`{{MA==}}`",              EVALUATOR_INVALID_CAST_NO_LOCATION), // 0
+                case("`{{MS4w}}`",              EVALUATOR_INVALID_CAST_NO_LOCATION), // 1.0
+                case("`{{MmUxMA==}}`",          EVALUATOR_INVALID_CAST_NO_LOCATION), // 2e10
                 // list
-                case("`[]`",                    EVALUATOR_INVALID_CAST),
-                case("`[1]`",                   EVALUATOR_INVALID_CAST),
-                case("`[-2, 0]`",               EVALUATOR_INVALID_CAST),
+                case("`[]`",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`[1]`",                   EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`[-2, 0]`",               EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // sexp
-                case("`()`",                    EVALUATOR_INVALID_CAST),
-                case("`(1)`",                   EVALUATOR_INVALID_CAST),
-                case("`(0)`",                   EVALUATOR_INVALID_CAST),
+                case("`()`",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`(1)`",                   EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`(0)`",                   EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // struct
-                case("`{}`",                    EVALUATOR_INVALID_CAST),
-                case("{}",                      EVALUATOR_INVALID_CAST),
-                case("`{a:12}`",                EVALUATOR_INVALID_CAST),
-                case("{'b':-4}",                EVALUATOR_INVALID_CAST),
+                case("`{}`",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("{}",                      EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`{a:12}`",                EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("{'b':-4}",                EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // bag
-                case("<<>>",                    EVALUATOR_INVALID_CAST),
-                case("<<14>>",                  EVALUATOR_INVALID_CAST),
-                case("<<20>>",                  EVALUATOR_INVALID_CAST)
+                case("<<>>",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("<<14>>",                  EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("<<20>>",                  EVALUATOR_INVALID_CAST_NO_LOCATION)
             ).types(INT.sqlTextNames),
             listOf(
                 // booleans
@@ -160,39 +160,39 @@ class EvaluatingCompilerCastTest : EvaluatorBase() {
                 case("1.1",                     "1.1e0"),
                 case("-20.1",                   "-20.1e0"),
                 // timestamp
-                case("`2007-10-10T`",           EVALUATOR_INVALID_CAST),
+                case("`2007-10-10T`",           EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // text
-                case("'hello'",                 EVALUATOR_CAST_FAILED),
+                case("'hello'",                 EVALUATOR_CAST_FAILED_NO_LOCATION),
                 case("'-20'",                   "-20e0"),
                 case("""`"1000"`""",            "1000e0"),
                 case("""`'2e100'`""",           "2e100"),
-                case("""`'2d100'`""",           EVALUATOR_CAST_FAILED),
+                case("""`'2d100'`""",           EVALUATOR_CAST_FAILED_NO_LOCATION),
                 // lob
-                case("""`{{""}}`""",            EVALUATOR_INVALID_CAST),
-                case("""`{{"0"}}`""",           EVALUATOR_INVALID_CAST),
-                case("""`{{"1.0"}}`""",         EVALUATOR_INVALID_CAST),
-                case("""`{{"2e10"}}`""",        EVALUATOR_INVALID_CAST),
-                case("`{{}}`",                  EVALUATOR_INVALID_CAST),
-                case("`{{MA==}}`",              EVALUATOR_INVALID_CAST), // 0
-                case("`{{MS4w}}`",              EVALUATOR_INVALID_CAST), // 1.0
-                case("`{{MmUxMA==}}`",          EVALUATOR_INVALID_CAST), // 2e10
+                case("""`{{""}}`""",            EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`{{"0"}}`""",           EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`{{"1.0"}}`""",         EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`{{"2e10"}}`""",        EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`{{}}`",                  EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`{{MA==}}`",              EVALUATOR_INVALID_CAST_NO_LOCATION), // 0
+                case("`{{MS4w}}`",              EVALUATOR_INVALID_CAST_NO_LOCATION), // 1.0
+                case("`{{MmUxMA==}}`",          EVALUATOR_INVALID_CAST_NO_LOCATION), // 2e10
                 // list
-                case("`[]`",                    EVALUATOR_INVALID_CAST),
-                case("`[1e0]`",                 EVALUATOR_INVALID_CAST),
-                case("`[-2e0, 0e0]`",           EVALUATOR_INVALID_CAST),
+                case("`[]`",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`[1e0]`",                 EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`[-2e0, 0e0]`",           EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // sexp
-                case("`()`",                    EVALUATOR_INVALID_CAST),
-                case("`(1e0)`",                 EVALUATOR_INVALID_CAST),
-                case("`(0e0)`",                 EVALUATOR_INVALID_CAST),
+                case("`()`",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`(1e0)`",                 EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`(0e0)`",                 EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // struct
-                case("`{}`",                    EVALUATOR_INVALID_CAST),
-                case("{}",                      EVALUATOR_INVALID_CAST),
-                case("`{a:12e0}`",              EVALUATOR_INVALID_CAST),
-                case("{'b':`-4e0`}",            EVALUATOR_INVALID_CAST),
+                case("`{}`",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("{}",                      EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`{a:12e0}`",              EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("{'b':`-4e0`}",            EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // bag
-                case("<<>>",                    EVALUATOR_INVALID_CAST),
-                case("<<`14e0`>>",              EVALUATOR_INVALID_CAST),
-                case("<<`20e0`>>",              EVALUATOR_INVALID_CAST)
+                case("<<>>",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("<<`14e0`>>",              EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("<<`20e0`>>",              EVALUATOR_INVALID_CAST_NO_LOCATION)
             ).types(FLOAT.sqlTextNames),
             listOf(
                 // booleans
@@ -205,68 +205,68 @@ class EvaluatingCompilerCastTest : EvaluatorBase() {
                 case("1.1",                     "1.1d0"),
                 case("-20.1",                   "-20.1d0"),
                 // timestamp
-                case("`2007-10-10T`",           EVALUATOR_INVALID_CAST),
+                case("`2007-10-10T`",           EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // text
-                case("'hello'",                 EVALUATOR_CAST_FAILED),
+                case("'hello'",                 EVALUATOR_CAST_FAILED_NO_LOCATION),
                 case("'-20'",                   "-20d0"),
                 case("""`"1000"`""",            "1000d0"),
                 case("""`'2e100'`""",           "2d100"),
-                case("""`'2d100'`""",           EVALUATOR_CAST_FAILED),
+                case("""`'2d100'`""",           EVALUATOR_CAST_FAILED_NO_LOCATION),
                 // lob
-                case("""`{{""}}`""",            EVALUATOR_INVALID_CAST),
-                case("""`{{"0"}}`""",           EVALUATOR_INVALID_CAST),
-                case("""`{{"1.0"}}`""",         EVALUATOR_INVALID_CAST),
-                case("""`{{"2e10"}}`""",        EVALUATOR_INVALID_CAST),
-                case("`{{}}`",                  EVALUATOR_INVALID_CAST),
-                case("`{{MA==}}`",              EVALUATOR_INVALID_CAST), // 0
-                case("`{{MS4w}}`",              EVALUATOR_INVALID_CAST), // 1.0
-                case("`{{MmUxMA==}}`",          EVALUATOR_INVALID_CAST), // 2e10
+                case("""`{{""}}`""",            EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`{{"0"}}`""",           EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`{{"1.0"}}`""",         EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`{{"2e10"}}`""",        EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`{{}}`",                  EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`{{MA==}}`",              EVALUATOR_INVALID_CAST_NO_LOCATION), // 0
+                case("`{{MS4w}}`",              EVALUATOR_INVALID_CAST_NO_LOCATION), // 1.0
+                case("`{{MmUxMA==}}`",          EVALUATOR_INVALID_CAST_NO_LOCATION), // 2e10
                 // list
-                case("`[]`",                    EVALUATOR_INVALID_CAST),
-                case("`[1d0]`",                 EVALUATOR_INVALID_CAST),
-                case("`[-2d0, 0d0]`",           EVALUATOR_INVALID_CAST),
+                case("`[]`",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`[1d0]`",                 EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`[-2d0, 0d0]`",           EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // sexp
-                case("`()`",                    EVALUATOR_INVALID_CAST),
-                case("`(1d0)`",                 EVALUATOR_INVALID_CAST),
-                case("`(0d0)`",                 EVALUATOR_INVALID_CAST),
+                case("`()`",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`(1d0)`",                 EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`(0d0)`",                 EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // struct
-                case("`{}`",                    EVALUATOR_INVALID_CAST),
-                case("{}",                      EVALUATOR_INVALID_CAST),
-                case("`{a:12d0}`",              EVALUATOR_INVALID_CAST),
-                case("{'b':`-4d0`}",            EVALUATOR_INVALID_CAST),
+                case("`{}`",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("{}",                      EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`{a:12d0}`",              EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("{'b':`-4d0`}",            EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // bag
-                case("<<>>",                    EVALUATOR_INVALID_CAST),
-                case("<<`14d0`>>",              EVALUATOR_INVALID_CAST),
-                case("<<`20d0`>>",              EVALUATOR_INVALID_CAST)
+                case("<<>>",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("<<`14d0`>>",              EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("<<`20d0`>>",              EVALUATOR_INVALID_CAST_NO_LOCATION)
             ).types(DECIMAL.sqlTextNames),
             listOf(
                 // booleans
-                case("TRUE AND FALSE",          EVALUATOR_INVALID_CAST),
-                case("`true`",                  EVALUATOR_INVALID_CAST),
+                case("TRUE AND FALSE",          EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`true`",                  EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // numbers
-                case("5",                       EVALUATOR_INVALID_CAST),
-                case("`0e0`",                   EVALUATOR_INVALID_CAST),
-                case("1.1",                     EVALUATOR_INVALID_CAST),
-                case("-20.1",                   EVALUATOR_INVALID_CAST),
+                case("5",                       EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`0e0`",                   EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("1.1",                     EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("-20.1",                   EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // timestamp
                 case("`2007-10-10T`",           "2007-10-10T"),
                 // text
-                case("'hello'",                 EVALUATOR_CAST_FAILED),
+                case("'hello'",                 EVALUATOR_CAST_FAILED_NO_LOCATION),
                 case("'2016-03-01T01:12:12Z'",  "2016-03-01T01:12:12Z"),
                 case("""`"2001-01-01"`""",      "2001-01-01T"),
                 case("""`'2000T'`""",           "2000T"),
                 case("""`'1999-04T'`""",        "1999-04T"),
                 // lob
-                case("""`{{""}}`""",            EVALUATOR_INVALID_CAST),
-                case("`{{}}`",                  EVALUATOR_INVALID_CAST),
+                case("""`{{""}}`""",            EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`{{}}`",                  EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // list
-                case("`[]`",                    EVALUATOR_INVALID_CAST),
+                case("`[]`",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // sexp
-                case("`()`",                    EVALUATOR_INVALID_CAST),
+                case("`()`",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // struct
-                case("`{}`",                    EVALUATOR_INVALID_CAST),
+                case("`{}`",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // bag
-                case("<<>>",                    EVALUATOR_INVALID_CAST)
+                case("<<>>",                    EVALUATOR_INVALID_CAST_NO_LOCATION)
             ).types(TIMESTAMP.sqlTextNames),
             listOf(
                 // booleans
@@ -286,31 +286,31 @@ class EvaluatingCompilerCastTest : EvaluatorBase() {
                 case("""`'2e100'`""",           "'2e100'"),
                 case("""`'2d100'`""",           "'2d100'"),
                 // lob
-                case("""`{{""}}`""",            EVALUATOR_INVALID_CAST),
-                case("""`{{"0"}}`""",           EVALUATOR_INVALID_CAST),
-                case("""`{{"1.0"}}`""",         EVALUATOR_INVALID_CAST),
-                case("""`{{"2e10"}}`""",        EVALUATOR_INVALID_CAST),
-                case("`{{}}`",                  EVALUATOR_INVALID_CAST),
-                case("`{{MA==}}`",              EVALUATOR_INVALID_CAST),  // 0
-                case("`{{MS4w}}`",              EVALUATOR_INVALID_CAST),  // 1.0
-                case("`{{MmUxMA==}}`",          EVALUATOR_INVALID_CAST),  // 2e10
+                case("""`{{""}}`""",            EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`{{"0"}}`""",           EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`{{"1.0"}}`""",         EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`{{"2e10"}}`""",        EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`{{}}`",                  EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`{{MA==}}`",              EVALUATOR_INVALID_CAST_NO_LOCATION),  // 0
+                case("`{{MS4w}}`",              EVALUATOR_INVALID_CAST_NO_LOCATION),  // 1.0
+                case("`{{MmUxMA==}}`",          EVALUATOR_INVALID_CAST_NO_LOCATION),  // 2e10
                 // list
-                case("`[]`",                    EVALUATOR_INVALID_CAST),
-                case("['hello']",               EVALUATOR_INVALID_CAST),
-                case("`[-2d0, 0d0]`",           EVALUATOR_INVALID_CAST),
+                case("`[]`",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("['hello']",               EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`[-2d0, 0d0]`",           EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // sexp
-                case("`()`",                    EVALUATOR_INVALID_CAST),
-                case("`(1d0)`",                 EVALUATOR_INVALID_CAST),
-                case("`(0d0)`",                 EVALUATOR_INVALID_CAST),
+                case("`()`",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`(1d0)`",                 EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`(0d0)`",                 EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // struct
-                case("`{}`",                    EVALUATOR_INVALID_CAST),
-                case("{}",                      EVALUATOR_INVALID_CAST),
-                case("`{a:12d0}`",              EVALUATOR_INVALID_CAST),
-                case("{'b':`-4d0`}",            EVALUATOR_INVALID_CAST),
+                case("`{}`",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("{}",                      EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`{a:12d0}`",              EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("{'b':`-4d0`}",            EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // bag
-                case("<<>>",                    EVALUATOR_INVALID_CAST),
-                case("<<`14d0`>>",              EVALUATOR_INVALID_CAST),
-                case("<<`20d0`>>",              EVALUATOR_INVALID_CAST)
+                case("<<>>",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("<<`14d0`>>",              EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("<<`20d0`>>",              EVALUATOR_INVALID_CAST_NO_LOCATION)
             ).types(SYMBOL.sqlTextNames),
             listOf(
                 // booleans
@@ -330,50 +330,50 @@ class EvaluatingCompilerCastTest : EvaluatorBase() {
                 case("""`'2e100'`""",           "\"2e100\""),
                 case("""`'2d100'`""",           "\"2d100\""),
                 // lob
-                case("""`{{""}}`""",            EVALUATOR_INVALID_CAST),
-                case("""`{{"0"}}`""",           EVALUATOR_INVALID_CAST),
-                case("""`{{"1.0"}}`""",         EVALUATOR_INVALID_CAST),
-                case("""`{{"2e10"}}`""",        EVALUATOR_INVALID_CAST),
-                case("`{{}}`",                  EVALUATOR_INVALID_CAST),
-                case("`{{MA==}}`",              EVALUATOR_INVALID_CAST),  // 0
-                case("`{{MS4w}}`",              EVALUATOR_INVALID_CAST),  // 1.0
-                case("`{{MmUxMA==}}`",          EVALUATOR_INVALID_CAST),  // 2e10
+                case("""`{{""}}`""",            EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`{{"0"}}`""",           EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`{{"1.0"}}`""",         EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`{{"2e10"}}`""",        EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`{{}}`",                  EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`{{MA==}}`",              EVALUATOR_INVALID_CAST_NO_LOCATION),  // 0
+                case("`{{MS4w}}`",              EVALUATOR_INVALID_CAST_NO_LOCATION),  // 1.0
+                case("`{{MmUxMA==}}`",          EVALUATOR_INVALID_CAST_NO_LOCATION),  // 2e10
                 // list
-                case("`[]`",                    EVALUATOR_INVALID_CAST),
-                case("['hello']",               EVALUATOR_INVALID_CAST),
-                case("`[-2d0, 0d0]`",           EVALUATOR_INVALID_CAST),
+                case("`[]`",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("['hello']",               EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`[-2d0, 0d0]`",           EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // sexp
-                case("`()`",                    EVALUATOR_INVALID_CAST),
-                case("`(1d0)`",                 EVALUATOR_INVALID_CAST),
-                case("`(0d0)`",                 EVALUATOR_INVALID_CAST),
+                case("`()`",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`(1d0)`",                 EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`(0d0)`",                 EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // struct
-                case("`{}`",                    EVALUATOR_INVALID_CAST),
-                case("{}",                      EVALUATOR_INVALID_CAST),
-                case("`{a:12d0}`",              EVALUATOR_INVALID_CAST),
-                case("{'b':`-4d0`}",            EVALUATOR_INVALID_CAST),
+                case("`{}`",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("{}",                      EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`{a:12d0}`",              EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("{'b':`-4d0`}",            EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // bag
-                case("<<>>",                    EVALUATOR_INVALID_CAST),
-                case("<<`14d0`>>",              EVALUATOR_INVALID_CAST),
-                case("<<'a', <<'hello'>>>>",    EVALUATOR_INVALID_CAST),
-                case("<<`20d0`>>",              EVALUATOR_INVALID_CAST)
+                case("<<>>",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("<<`14d0`>>",              EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("<<'a', <<'hello'>>>>",    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("<<`20d0`>>",              EVALUATOR_INVALID_CAST_NO_LOCATION)
             ).types(STRING.sqlTextNames),
             listOf(
                 // booleans
-                case("TRUE AND FALSE",          EVALUATOR_INVALID_CAST),
-                case("`true`",                  EVALUATOR_INVALID_CAST),
+                case("TRUE AND FALSE",          EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`true`",                  EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // numbers
-                case("5",                       EVALUATOR_INVALID_CAST),
-                case("`0e0`",                   EVALUATOR_INVALID_CAST),
-                case("1.1",                     EVALUATOR_INVALID_CAST),
-                case("-20.1",                   EVALUATOR_INVALID_CAST),
+                case("5",                       EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`0e0`",                   EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("1.1",                     EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("-20.1",                   EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // timestamp
-                case("`2007-10-10T`",           EVALUATOR_INVALID_CAST),
+                case("`2007-10-10T`",           EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // text
-                case("'hello'",                 EVALUATOR_INVALID_CAST),
-                case("'-20'",                   EVALUATOR_INVALID_CAST),
-                case("""`"1000"`""",            EVALUATOR_INVALID_CAST),
-                case("""`'2e100'`""",           EVALUATOR_INVALID_CAST),
-                case("""`'2d100'`""",           EVALUATOR_INVALID_CAST),
+                case("'hello'",                 EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("'-20'",                   EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`"1000"`""",            EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`'2e100'`""",           EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`'2d100'`""",           EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // lob
                 case("""`{{""}}`""",            """{{""}}"""),
                 case("""`{{"0"}}`""",           """{{"0"}}"""),
@@ -384,40 +384,40 @@ class EvaluatingCompilerCastTest : EvaluatorBase() {
                 case("`{{MS4w}}`",              """{{"1.0"}}"""),
                 case("`{{MmUxMA==}}`",          """{{"2e10"}}"""),
                 // list
-                case("`[]`",                    EVALUATOR_INVALID_CAST),
-                case("['hello']",               EVALUATOR_INVALID_CAST),
-                case("`[-2d0, 0d0]`",           EVALUATOR_INVALID_CAST),
+                case("`[]`",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("['hello']",               EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`[-2d0, 0d0]`",           EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // sexp
-                case("`()`",                    EVALUATOR_INVALID_CAST),
-                case("`(1d0)`",                 EVALUATOR_INVALID_CAST),
-                case("`(0d0)`",                 EVALUATOR_INVALID_CAST),
+                case("`()`",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`(1d0)`",                 EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`(0d0)`",                 EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // struct
-                case("`{}`",                    EVALUATOR_INVALID_CAST),
-                case("{}",                      EVALUATOR_INVALID_CAST),
-                case("`{a:12d0}`",              EVALUATOR_INVALID_CAST),
-                case("{'b':`-4d0`}",            EVALUATOR_INVALID_CAST),
+                case("`{}`",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("{}",                      EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`{a:12d0}`",              EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("{'b':`-4d0`}",            EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // bag
-                case("<<>>",                    EVALUATOR_INVALID_CAST),
-                case("<<`14d0`>>",              EVALUATOR_INVALID_CAST),
-                case("<<`20d0`>>",              EVALUATOR_INVALID_CAST)
+                case("<<>>",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("<<`14d0`>>",              EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("<<`20d0`>>",              EVALUATOR_INVALID_CAST_NO_LOCATION)
             ).types(CLOB.sqlTextNames),
             listOf(
                 // booleans
-                case("TRUE AND FALSE",          EVALUATOR_INVALID_CAST),
-                case("`true`",                  EVALUATOR_INVALID_CAST),
+                case("TRUE AND FALSE",          EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`true`",                  EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // numbers
-                case("5",                       EVALUATOR_INVALID_CAST),
-                case("`0e0`",                   EVALUATOR_INVALID_CAST),
-                case("1.1",                     EVALUATOR_INVALID_CAST),
-                case("-20.1",                   EVALUATOR_INVALID_CAST),
+                case("5",                       EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`0e0`",                   EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("1.1",                     EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("-20.1",                   EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // timestamp
-                case("`2007-10-10T`",           EVALUATOR_INVALID_CAST),
+                case("`2007-10-10T`",           EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // text
-                case("'hello'",                 EVALUATOR_INVALID_CAST),
-                case("'-20'",                   EVALUATOR_INVALID_CAST),
-                case("""`"1000"`""",            EVALUATOR_INVALID_CAST),
-                case("""`'2e100'`""",           EVALUATOR_INVALID_CAST),
-                case("""`'2d100'`""",           EVALUATOR_INVALID_CAST),
+                case("'hello'",                 EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("'-20'",                   EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`"1000"`""",            EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`'2e100'`""",           EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`'2d100'`""",           EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // lob
                 case("""`{{""}}`""",            """{{}}"""),
                 case("""`{{"0"}}`""",           """{{MA==}}"""),
@@ -428,49 +428,49 @@ class EvaluatingCompilerCastTest : EvaluatorBase() {
                 case("`{{MS4w}}`",              """{{MS4w}}"""),     // 1.0
                 case("`{{MmUxMA==}}`",          """{{MmUxMA==}}"""), // 2e10
                 // list
-                case("`[]`",                    EVALUATOR_INVALID_CAST),
-                case("['hello']",               EVALUATOR_INVALID_CAST),
-                case("`[-2d0, 0d0]`",           EVALUATOR_INVALID_CAST),
+                case("`[]`",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("['hello']",               EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`[-2d0, 0d0]`",           EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // sexp
-                case("`()`",                    EVALUATOR_INVALID_CAST),
-                case("`(1d0)`",                 EVALUATOR_INVALID_CAST),
-                case("`(0d0)`",                 EVALUATOR_INVALID_CAST),
+                case("`()`",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`(1d0)`",                 EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`(0d0)`",                 EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // struct
-                case("`{}`",                    EVALUATOR_INVALID_CAST),
-                case("{}",                      EVALUATOR_INVALID_CAST),
-                case("`{a:12d0}`",              EVALUATOR_INVALID_CAST),
-                case("{'b':`-4d0`}",            EVALUATOR_INVALID_CAST),
+                case("`{}`",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("{}",                      EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`{a:12d0}`",              EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("{'b':`-4d0`}",            EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // bag
-                case("<<>>",                    EVALUATOR_INVALID_CAST),
-                case("<<`14d0`>>",              EVALUATOR_INVALID_CAST),
-                case("<<`20d0`>>",              EVALUATOR_INVALID_CAST)
+                case("<<>>",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("<<`14d0`>>",              EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("<<`20d0`>>",              EVALUATOR_INVALID_CAST_NO_LOCATION)
             ).types(BLOB.sqlTextNames),
             listOf(
                 // booleans
-                case("TRUE AND FALSE",          EVALUATOR_INVALID_CAST),
-                case("`true`",                  EVALUATOR_INVALID_CAST),
+                case("TRUE AND FALSE",          EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`true`",                  EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // numbers
-                case("5",                       EVALUATOR_INVALID_CAST),
-                case("`0e0`",                   EVALUATOR_INVALID_CAST),
-                case("1.1",                     EVALUATOR_INVALID_CAST),
-                case("-20.1",                   EVALUATOR_INVALID_CAST),
+                case("5",                       EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`0e0`",                   EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("1.1",                     EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("-20.1",                   EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // timestamp
-                case("`2007-10-10T`",           EVALUATOR_INVALID_CAST),
+                case("`2007-10-10T`",           EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // text
-                case("'hello'",                 EVALUATOR_INVALID_CAST),
-                case("'-20'",                   EVALUATOR_INVALID_CAST),
-                case("""`"1000"`""",            EVALUATOR_INVALID_CAST),
-                case("""`'2e100'`""",           EVALUATOR_INVALID_CAST),
-                case("""`'2d100'`""",           EVALUATOR_INVALID_CAST),
+                case("'hello'",                 EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("'-20'",                   EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`"1000"`""",            EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`'2e100'`""",           EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`'2d100'`""",           EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // lob
-                case("""`{{""}}`""",            EVALUATOR_INVALID_CAST),
-                case("""`{{"0"}}`""",           EVALUATOR_INVALID_CAST),
-                case("""`{{"1.0"}}`""",         EVALUATOR_INVALID_CAST),
-                case("""`{{"2e10"}}`""",        EVALUATOR_INVALID_CAST),
-                case("`{{}}`",                  EVALUATOR_INVALID_CAST),
-                case("`{{MA==}}`",              EVALUATOR_INVALID_CAST), // 0
-                case("`{{MS4w}}`",              EVALUATOR_INVALID_CAST), // 1.0
-                case("`{{MmUxMA==}}`",          EVALUATOR_INVALID_CAST), // 2e10
+                case("""`{{""}}`""",            EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`{{"0"}}`""",           EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`{{"1.0"}}`""",         EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`{{"2e10"}}`""",        EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`{{}}`",                  EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`{{MA==}}`",              EVALUATOR_INVALID_CAST_NO_LOCATION), // 0
+                case("`{{MS4w}}`",              EVALUATOR_INVALID_CAST_NO_LOCATION), // 1.0
+                case("`{{MmUxMA==}}`",          EVALUATOR_INVALID_CAST_NO_LOCATION), // 2e10
                 // list
                 case("`[]`",                    "[]"),
                 case("['hello']",               "[\"hello\"]"),
@@ -480,10 +480,10 @@ class EvaluatingCompilerCastTest : EvaluatorBase() {
                 case("`(1d0)`",                 "[1d0]"),
                 case("`(0d0)`",                 "[0d0]"),
                 // struct
-                case("`{}`",                    EVALUATOR_INVALID_CAST),
-                case("{}",                      EVALUATOR_INVALID_CAST),
-                case("`{a:12d0}`",              EVALUATOR_INVALID_CAST),
-                case("{'b':`-4d0`}",            EVALUATOR_INVALID_CAST),
+                case("`{}`",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("{}",                      EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`{a:12d0}`",              EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("{'b':`-4d0`}",            EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // bag
                 case("<<>>",                    "[]"),      // TODO bag verification
                 case("<<`14d0`>>",              "[14d0]"),  // TODO bag verification
@@ -491,30 +491,30 @@ class EvaluatingCompilerCastTest : EvaluatorBase() {
             ).types(LIST.sqlTextNames),
             listOf(
                 // booleans
-                case("TRUE AND FALSE",          EVALUATOR_INVALID_CAST),
-                case("`true`",                  EVALUATOR_INVALID_CAST),
+                case("TRUE AND FALSE",          EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`true`",                  EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // numbers
-                case("5",                       EVALUATOR_INVALID_CAST),
-                case("`0e0`",                   EVALUATOR_INVALID_CAST),
-                case("1.1",                     EVALUATOR_INVALID_CAST),
-                case("-20.1",                   EVALUATOR_INVALID_CAST),
+                case("5",                       EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`0e0`",                   EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("1.1",                     EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("-20.1",                   EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // timestamp
-                case("`2007-10-10T`",           EVALUATOR_INVALID_CAST),
+                case("`2007-10-10T`",           EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // text
-                case("'hello'",                 EVALUATOR_INVALID_CAST),
-                case("'-20'",                   EVALUATOR_INVALID_CAST),
-                case("""`"1000"`""",            EVALUATOR_INVALID_CAST),
-                case("""`'2e100'`""",           EVALUATOR_INVALID_CAST),
-                case("""`'2d100'`""",           EVALUATOR_INVALID_CAST),
+                case("'hello'",                 EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("'-20'",                   EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`"1000"`""",            EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`'2e100'`""",           EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`'2d100'`""",           EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // lob
-                case("""`{{""}}`""",            EVALUATOR_INVALID_CAST),
-                case("""`{{"0"}}`""",           EVALUATOR_INVALID_CAST),
-                case("""`{{"1.0"}}`""",         EVALUATOR_INVALID_CAST),
-                case("""`{{"2e10"}}`""",        EVALUATOR_INVALID_CAST),
-                case("`{{}}`",                  EVALUATOR_INVALID_CAST),
-                case("`{{MA==}}`",              EVALUATOR_INVALID_CAST), // 0
-                case("`{{MS4w}}`",              EVALUATOR_INVALID_CAST), // 1.0
-                case("`{{MmUxMA==}}`",          EVALUATOR_INVALID_CAST), // 2e10
+                case("""`{{""}}`""",            EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`{{"0"}}`""",           EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`{{"1.0"}}`""",         EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`{{"2e10"}}`""",        EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`{{}}`",                  EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`{{MA==}}`",              EVALUATOR_INVALID_CAST_NO_LOCATION), // 0
+                case("`{{MS4w}}`",              EVALUATOR_INVALID_CAST_NO_LOCATION), // 1.0
+                case("`{{MmUxMA==}}`",          EVALUATOR_INVALID_CAST_NO_LOCATION), // 2e10
                 // list
                 case("`[]`",                    "()"),
                 case("['hello']",               "(\"hello\")"),
@@ -524,10 +524,10 @@ class EvaluatingCompilerCastTest : EvaluatorBase() {
                 case("`(1d0)`",                 "(1d0)"),
                 case("`(0d0)`",                 "(0d0)"),
                 // struct
-                case("`{}`",                    EVALUATOR_INVALID_CAST),
-                case("{}",                      EVALUATOR_INVALID_CAST),
-                case("`{a:12d0}`",              EVALUATOR_INVALID_CAST),
-                case("{'b':`-4d0`}",            EVALUATOR_INVALID_CAST),
+                case("`{}`",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("{}",                      EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`{a:12d0}`",              EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("{'b':`-4d0`}",            EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // bag
                 case("<<>>",                    "()"),
                 case("<<`14d0`>>",              "(14d0)"),
@@ -535,74 +535,74 @@ class EvaluatingCompilerCastTest : EvaluatorBase() {
             ).types(SEXP.sqlTextNames),
             listOf(
                 // booleans
-                case("TRUE AND FALSE",          EVALUATOR_INVALID_CAST),
-                case("`true`",                  EVALUATOR_INVALID_CAST),
+                case("TRUE AND FALSE",          EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`true`",                  EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // numbers
-                case("5",                       EVALUATOR_INVALID_CAST),
-                case("`0e0`",                   EVALUATOR_INVALID_CAST),
-                case("1.1",                     EVALUATOR_INVALID_CAST),
-                case("-20.1",                   EVALUATOR_INVALID_CAST),
+                case("5",                       EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`0e0`",                   EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("1.1",                     EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("-20.1",                   EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // timestamp
-                case("`2007-10-10T`",           EVALUATOR_INVALID_CAST),
+                case("`2007-10-10T`",           EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // text
-                case("'hello'",                 EVALUATOR_INVALID_CAST),
-                case("'-20'",                   EVALUATOR_INVALID_CAST),
-                case("""`"1000"`""",            EVALUATOR_INVALID_CAST),
-                case("""`'2e100'`""",           EVALUATOR_INVALID_CAST),
-                case("""`'2d100'`""",           EVALUATOR_INVALID_CAST),
+                case("'hello'",                 EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("'-20'",                   EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`"1000"`""",            EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`'2e100'`""",           EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`'2d100'`""",           EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // lob
-                case("""`{{""}}`""",            EVALUATOR_INVALID_CAST),
-                case("""`{{"0"}}`""",           EVALUATOR_INVALID_CAST),
-                case("""`{{"1.0"}}`""",         EVALUATOR_INVALID_CAST),
-                case("""`{{"2e10"}}`""",        EVALUATOR_INVALID_CAST),
-                case("`{{}}`",                  EVALUATOR_INVALID_CAST),
-                case("`{{MA==}}`",              EVALUATOR_INVALID_CAST), // 0
-                case("`{{MS4w}}`",              EVALUATOR_INVALID_CAST), // 1.0
-                case("`{{MmUxMA==}}`",          EVALUATOR_INVALID_CAST), // 2e10
+                case("""`{{""}}`""",            EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`{{"0"}}`""",           EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`{{"1.0"}}`""",         EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`{{"2e10"}}`""",        EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`{{}}`",                  EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`{{MA==}}`",              EVALUATOR_INVALID_CAST_NO_LOCATION), // 0
+                case("`{{MS4w}}`",              EVALUATOR_INVALID_CAST_NO_LOCATION), // 1.0
+                case("`{{MmUxMA==}}`",          EVALUATOR_INVALID_CAST_NO_LOCATION), // 2e10
                 // list
-                case("`[]`",                    EVALUATOR_INVALID_CAST),
-                case("['hello']",               EVALUATOR_INVALID_CAST),
-                case("`[-2d0, 0d0]`",           EVALUATOR_INVALID_CAST),
+                case("`[]`",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("['hello']",               EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`[-2d0, 0d0]`",           EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // sexp
-                case("`()`",                    EVALUATOR_INVALID_CAST),
-                case("`(1d0)`",                 EVALUATOR_INVALID_CAST),
-                case("`(0d0)`",                 EVALUATOR_INVALID_CAST),
+                case("`()`",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`(1d0)`",                 EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`(0d0)`",                 EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // struct
                 case("`{}`",                    "{}"),
                 case("{}",                      "{}"),
                 case("`{a:12d0}`",              "{a:12d0}"),
                 case("{'b':`-4d0`}",            "{b:-4d0}"),
                 // bag
-                case("<<>>",                    EVALUATOR_INVALID_CAST),
-                case("<<`14d0`>>",              EVALUATOR_INVALID_CAST),
-                case("<<`20d0`>>",              EVALUATOR_INVALID_CAST)
+                case("<<>>",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("<<`14d0`>>",              EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("<<`20d0`>>",              EVALUATOR_INVALID_CAST_NO_LOCATION)
             ).types(STRUCT.sqlTextNames),
             listOf(
                 // booleans
-                case("TRUE AND FALSE",          EVALUATOR_INVALID_CAST),
-                case("`true`",                  EVALUATOR_INVALID_CAST),
+                case("TRUE AND FALSE",          EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`true`",                  EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // numbers
-                case("5",                       EVALUATOR_INVALID_CAST),
-                case("`0e0`",                   EVALUATOR_INVALID_CAST),
-                case("1.1",                     EVALUATOR_INVALID_CAST),
-                case("-20.1",                   EVALUATOR_INVALID_CAST),
+                case("5",                       EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`0e0`",                   EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("1.1",                     EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("-20.1",                   EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // timestamp
-                case("`2007-10-10T`",           EVALUATOR_INVALID_CAST),
+                case("`2007-10-10T`",           EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // text
-                case("'hello'",                 EVALUATOR_INVALID_CAST),
-                case("'-20'",                   EVALUATOR_INVALID_CAST),
-                case("""`"1000"`""",            EVALUATOR_INVALID_CAST),
-                case("""`'2e100'`""",           EVALUATOR_INVALID_CAST),
-                case("""`'2d100'`""",           EVALUATOR_INVALID_CAST),
+                case("'hello'",                 EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("'-20'",                   EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`"1000"`""",            EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`'2e100'`""",           EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`'2d100'`""",           EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // lob
-                case("""`{{""}}`""",            EVALUATOR_INVALID_CAST),
-                case("""`{{"0"}}`""",           EVALUATOR_INVALID_CAST),
-                case("""`{{"1.0"}}`""",         EVALUATOR_INVALID_CAST),
-                case("""`{{"2e10"}}`""",        EVALUATOR_INVALID_CAST),
-                case("`{{}}`",                  EVALUATOR_INVALID_CAST),
-                case("`{{MA==}}`",              EVALUATOR_INVALID_CAST), // 0
-                case("`{{MS4w}}`",              EVALUATOR_INVALID_CAST), // 1.0
-                case("`{{MmUxMA==}}`",          EVALUATOR_INVALID_CAST), // 2e10
+                case("""`{{""}}`""",            EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`{{"0"}}`""",           EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`{{"1.0"}}`""",         EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("""`{{"2e10"}}`""",        EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`{{}}`",                  EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`{{MA==}}`",              EVALUATOR_INVALID_CAST_NO_LOCATION), // 0
+                case("`{{MS4w}}`",              EVALUATOR_INVALID_CAST_NO_LOCATION), // 1.0
+                case("`{{MmUxMA==}}`",          EVALUATOR_INVALID_CAST_NO_LOCATION), // 2e10
                 // list
                 case("`[]`",                    "[]"),          // TODO bag verification
                 case("['hello']",               "[\"hello\"]"), // TODO bag verification
@@ -612,10 +612,10 @@ class EvaluatingCompilerCastTest : EvaluatorBase() {
                 case("`(1d0)`",                 "[1d0]"),       // TODO bag verification
                 case("`(0d0)`",                 "[0d0]"),       // TODO bag verification
                 // struct
-                case("`{}`",                    EVALUATOR_INVALID_CAST),
-                case("{}",                      EVALUATOR_INVALID_CAST),
-                case("`{a:12d0}`",              EVALUATOR_INVALID_CAST),
-                case("{'b':`-4d0`}",            EVALUATOR_INVALID_CAST),
+                case("`{}`",                    EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("{}",                      EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("`{a:12d0}`",              EVALUATOR_INVALID_CAST_NO_LOCATION),
+                case("{'b':`-4d0`}",            EVALUATOR_INVALID_CAST_NO_LOCATION),
                 // bag
                 case("<<>>",                    "[]"),          // TODO bag verification
                 case("<<`14d0`>>",              "[14d0]"),      // TODO bag verification

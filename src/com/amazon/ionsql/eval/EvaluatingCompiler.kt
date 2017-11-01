@@ -6,12 +6,15 @@ package com.amazon.ionsql.eval
 
 import com.amazon.ion.*
 import com.amazon.ionsql.errors.*
+import com.amazon.ionsql.eval.EvaluatingCompiler.UnknownsPropagationPolicy.*
+import com.amazon.ionsql.eval.ExprValueType.*
 import com.amazon.ionsql.eval.binding.*
 import com.amazon.ionsql.eval.builtins.*
 import com.amazon.ionsql.syntax.*
 import com.amazon.ionsql.util.*
 import java.math.*
 import java.util.*
+import java.util.Collections.*
 import java.util.concurrent.atomic.*
 
 /**
@@ -146,6 +149,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
     private val missingValue = missingExprValue(ion)
     private val nullValue = nullExprValue(ion)
+    private val intOneValue = integerExprValue(1, ion)
 
     private fun IonValue.determinePathWildcard(): PathWildcardKind = when (this) {
         normalPathWildcard -> PathWildcardKind.NORMAL
@@ -232,13 +236,14 @@ class EvaluatingCompiler(private val ion: IonSystem,
                     val instance = instanceExpr.eval(env)
                     when {
                     // MISSING is NULL
-                        instance.type == ExprValueType.MISSING
-                            && targetType == ExprValueType.NULL -> true
-                        else -> instance.type == targetType
+                        instance.type == MISSING && targetType == NULL -> true
+                        else                                           -> instance.type == targetType
                     }.exprValue()
                 }
             }
-            else -> err("Arity incorrect for 'is'/'is_not': $ast", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
+            else -> err("Arity incorrect for 'is'/'is_not': $ast",
+                        cEnv.metadataLookup[ast]?.toErrorContext(),
+                        internal = false)
         }
 
     }
@@ -344,160 +349,140 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 err("cast requires two arguments", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
             }
 
-            val sourceExpr = ast[1].compile(cEnv)
-            // TODO honor type parameters
-            val targetTypeName = ast[2][1].text(cEnv)
-            val targetType = ExprValueType.fromTypeName(targetTypeName)
-            exprThunk(cEnv.metadataLookup[ast]) { env -> sourceExpr.eval(env).cast(ion, targetType, cEnv.metadataLookup[ast]) }
-        },
-        "list" to bindOp(minArity = 0, maxArity = Integer.MAX_VALUE) { _, args ->
-            SequenceExprValue(
-                ion,
-                ExprValueType.LIST,
-                args.asSequence().mapIndexed { i, arg ->
-                    arg.namedValue(i.exprValue())
-                }
-            )
-        },
-        "struct" to bindOp(minArity = 0, maxArity = Integer.MAX_VALUE) { _, args ->
-            if (args.size % 2 != 0) {
-                errNoContext("struct requires even number of parameters", internal = false)
-            }
+        val sourceExpr = ast[1].compile(cEnv)
+        // TODO honor type parameters
+        val targetTypeName = ast[2][1].text(cEnv)
+        val targetType = ExprValueType.fromTypeName(targetTypeName)
+        exprThunk(cEnv.metadataLookup[ast]) { env ->
+            sourceExpr.eval(env).cast(ion, targetType, cEnv.metadataLookup[ast])
+        }
+    }, "list" to bindOp(minArity = 0, maxArity = Integer.MAX_VALUE, policy = NONE) { _, args ->
+        SequenceExprValue(ion, LIST, args.asSequence().mapIndexed { i, arg ->
+            arg.namedValue(i.exprValue())
+        })
+    }, "struct" to bindOp(minArity = 0, maxArity = Integer.MAX_VALUE, policy = NONE) { _, args ->
+        if (args.size % 2 != 0) {
+            errNoContext("struct requires even number of parameters", internal = false)
+        }
 
-            val seq = (0 until args.size).step(2)
-                .asSequence()
-                .map {
-                    args[it] to args[it + 1]
-                }
-                .filter { (name, _) ->
-                    name.type.isText
-                }
-                .map { (name, value) ->
-                    value.namedValue(name)
-                }
-            SequenceStruct(ion, isOrdered = true, sequence = seq)
-        },
-        "bag" to bindOp(minArity = 0, maxArity = Integer.MAX_VALUE) { _, args ->
-            SequenceExprValue(
-                ion,
-                args.asSequence().map {
-                    // make sure we don't expose any underlying value name/ordinal
-                    it.unnamedValue()
-                }
-            )
-        },
-        "||" to bindOp { _, args ->
-            (args[0].stringValue() + args[1].stringValue()).exprValue()
-        },
-        "+" to bindOp(minArity = 1, maxArity = 2) { _, args ->
-            when (args.size) {
-                1 -> {
-                    // force interpretation as a number, and do nothing
-                    args[0].numberValue()
-                    args[0]
-                }
-                else -> (args[0].numberValue() + args[1].numberValue()).exprValue()
+        val seq = (0 until args.size).step(2).asSequence().map {
+            args[it] to args[it + 1]
+        }.filter { (name, _) ->
+            name.type.isText
+        }.map { (name, value) ->
+            value.namedValue(name)
+        }
+        SequenceStruct(ion, isOrdered = true, sequence = seq)
+    }, "bag" to bindOp(minArity = 0, maxArity = Integer.MAX_VALUE, policy = NONE) { _, args ->
+        SequenceExprValue(ion, args.asSequence().map {
+            // make sure we don't expose any underlying value name/ordinal
+            it.unnamedValue()
+        })
+    }, "||" to bindOp { _, args ->
+        (args[0].stringValue() + args[1].stringValue()).exprValue()
+    }, "+" to bindOp(minArity = 1, maxArity = 2) { _, args ->
+        when (args.size) {
+            1    -> {
+                // force interpretation as a number, and do nothing
+                args[0].numberValue()
+                args[0]
             }
-        },
-        "-" to bindOp(minArity = 1, maxArity = 2) { _, args ->
-            when (args.size) {
-                1 -> {
-                    -args[0].numberValue()
-                }
-                else -> args[0].numberValue() - args[1].numberValue()
-            }.exprValue()
-        },
-        "*" to bindOp { _, args ->
-            (args[0].numberValue() * args[1].numberValue()).exprValue()
-        },
-        "/" to bindOp { _, args ->
-            val denominator = args[1].numberValue();
-            if(denominator.isZero()) errNoContext("/ by zero", internal = false)
-            try {
-                (args[0].numberValue() / denominator).exprValue()
+            else -> (args[0].numberValue() + args[1].numberValue()).exprValue()
+        }
+    }, "-" to bindOp(minArity = 1, maxArity = 2) { _, args ->
+        when (args.size) {
+            1    -> {
+                -args[0].numberValue()
             }
-            catch (e: ArithmeticException) {
-                throw EvaluationException(cause = e, internal = true)
-            }
-        },
-        "%" to bindOp { _, args ->
-            (args[0].numberValue() % args[1].numberValue()).exprValue()
-        },
-        "<" to bindOp { _, args ->
-            (args[0] < args[1]).exprValue()
-        },
-        "<=" to bindOp { _, args ->
-            (args[0] <= args[1]).exprValue()
-        },
-        ">" to bindOp { _, args ->
-            (args[0] > args[1]).exprValue()
-        },
-        ">=" to bindOp { _, args ->
-            (args[0] >= args[1]).exprValue()
-        },
-        "=" to bindOp { _, args ->
-            args[0].exprEquals(args[1]).exprValue()
-        },
-        "<>" to bindOp { _, args ->
-            (!args[0].exprEquals(args[1])).exprValue()
-        },
-        "between" to bindOp(minArity = 3, maxArity = 3) { _, args ->
-            (args[0] >= args[1] && args[0] <= args[2]).exprValue()
-        },
-        "not_between" to bindOp(minArity = 3, maxArity = 3) { _, args ->
-            (!(args[0] >= args[1] && args[0] <= args[2])).exprValue()
-        },
-        "like" to { cEnv, ast ->
-            compileLike(cEnv, ast)
-        },
-        "not_like" to { cEnv, ast ->
-            val likeExprThunk = compileLike(cEnv, ast)
-            exprThunk(cEnv.metadataLookup[ast]) { env -> (!likeExprThunk.eval(env).booleanValue()).exprValue() }
-        },
-        "in" to bindOp { _, args ->
-            val needle = args[0]
-            args[1].asSequence().any { needle.exprEquals(it) }.exprValue()
-        },
-        "not_in" to bindOp { _, args ->
-            val needle = args[0]
-            (!args[1].asSequence().any { needle.exprEquals(it) }).exprValue()
-        },
-        "not" to bindOp(minArity = 1, maxArity = 1) { _, args ->
-            (!args[0].booleanValue()).exprValue()
-        },
-        "or" to { cEnv, ast ->
-            when (ast.size) {
-                3 -> {
-                    val terms = ast.flattenAssociativeOp().map { it.compile(cEnv) }.toList()
-                    exprThunk(cEnv.metadataLookup[ast]) { env ->
-                        terms.any{ it.eval(env).booleanValue() }.exprValue()
+            else -> args[0].numberValue() - args[1].numberValue()
+        }.exprValue()
+    }, "*" to bindOp { _, args ->
+        (args[0].numberValue() * args[1].numberValue()).exprValue()
+    }, "/" to bindOp { _, args ->
+        val denominator = args[1].numberValue();
+        if (denominator.isZero()) errNoContext("/ by zero", internal = false)
+        try {
+            (args[0].numberValue() / denominator).exprValue()
+        }
+        catch (e: ArithmeticException) {
+            throw EvaluationException(cause = e, internal = true)
+        }
+    }, "%" to bindOp { _, args ->
+        (args[0].numberValue() % args[1].numberValue()).exprValue()
+    }, "<" to bindOp { _, args ->
+        (args[0] < args[1]).exprValue()
+    }, "<=" to bindOp { _, args ->
+        (args[0] <= args[1]).exprValue()
+    }, ">" to bindOp { _, args ->
+        (args[0] > args[1]).exprValue()
+    }, ">=" to bindOp { _, args ->
+        (args[0] >= args[1]).exprValue()
+    }, "=" to bindOp { _, args ->
+        args[0].exprEquals(args[1]).exprValue()
+    }, "<>" to bindOp { _, args ->
+        (!args[0].exprEquals(args[1])).exprValue()
+    }, "between" to bindOp(minArity = 3, maxArity = 3) { _, args ->
+        (args[0] >= args[1] && args[0] <= args[2]).exprValue()
+    }, "not_between" to bindOp(minArity = 3, maxArity = 3) { _, args ->
+        (!(args[0] >= args[1] && args[0] <= args[2])).exprValue()
+    }, "like" to { cEnv, ast ->
+        compileLike(cEnv, ast)
+    }, "not_like" to { cEnv, ast ->
+        val likeExprThunk = compileLike(cEnv, ast)
+        exprThunk(cEnv.metadataLookup[ast]) { env -> (!likeExprThunk.eval(env).booleanValue()).exprValue() }
+    }, "in" to bindOp { _, args ->
+        val needle = args[0]
+        args[1].asSequence().any { needle.exprEquals(it) }.exprValue()
+    }, "not_in" to bindOp { _, args ->
+        val needle = args[0]
+        (!args[1].asSequence().any { needle.exprEquals(it) }).exprValue()
+    }, "not" to bindOp(minArity = 1, maxArity = 1) { _, args ->
+        (!args[0].booleanValue()).exprValue()
+    }, "or" to { cEnv, ast ->
+        when (ast.size) {
+            3    -> {
+                val terms: List<ExprThunk> = ast.flattenAssociativeOp().map { it.compile(cEnv) }.toList()
+                exprThunk(cEnv.metadataLookup[ast]) { env ->
+                    val operands = terms.map { it.eval(env) }.filter { !it.isUnknown() }
+                    when (operands.size) {
+                        0    -> nullValue
+                        else -> operands.any { it.booleanValue() }.exprValue()
+
                     }
                 }
-                else -> err("Arity incorrect for 'or': $ast", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
             }
-        },
-        "and" to { cEnv, ast ->
-            when (ast.size) {
-                3 -> {
-                    val terms = ast.flattenAssociativeOp().map { it.compile(cEnv) }.toList()
-                    exprThunk(cEnv.metadataLookup[ast]) { env ->
-                        terms.none{ ! it.eval(env).booleanValue() }.exprValue()
+            else -> err("Arity incorrect for 'or': $ast", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
+        }
+    }, "and" to { cEnv, ast ->
+        when (ast.size) {
+            3    -> {
+                val terms = ast.flattenAssociativeOp().map { it.compile(cEnv) }.toList()
+                exprThunk(cEnv.metadataLookup[ast]) { env ->
+                    val (hasFalse, hasUnknown) = terms.fold(Pair(false,false)) { (hasFalse, hasUnknown), expr ->
+                        val operand = expr.eval(env)
+
+                        Pair(hasFalse || (operand.type == BOOL && !operand.booleanValue()),
+                             hasUnknown || operand.isUnknown())
+                    }
+
+                    when {
+                        hasFalse  -> booleanExprValue(false, ion)
+                        hasUnknown -> nullValue
+                        else -> booleanExprValue(true, ion)
                     }
                 }
-                else -> err("Arity incorrect for 'and': $ast", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
             }
-        },
-        "is" to isHandler,
-        "is_not" to { cEnv, ast ->
-            val isExpr = isHandler(cEnv, ast)
-            exprThunk(cEnv.metadataLookup[ast]) { env ->
-                (!isExpr.eval(env).booleanValue()).exprValue()
-            }
-        },
-        "simple_case" to { cEnv, ast ->
-            if (ast.size < 3) {
-                err("Arity incorrect for simple case: $ast", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
-            }
+            else -> err("Arity incorrect for 'and': $ast", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
+        }
+    }, "is" to isHandler, "is_not" to { cEnv, ast ->
+        val isExpr = isHandler(cEnv, ast)
+        exprThunk(cEnv.metadataLookup[ast]) { env ->
+            (!isExpr.eval(env).booleanValue()).exprValue()
+        }
+    }, "simple_case" to { cEnv, ast ->
+        if (ast.size < 3) {
+            err("Arity incorrect for simple case: $ast", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
+        }
 
             val targetExpr = ast[1].compile(cEnv)
             val matchExprs = ast.drop(2).map {
@@ -820,22 +805,52 @@ class EvaluatingCompiler(private val ion: IonSystem,
             ast.tail.forAll(IonValue::isAstLiteral) -> {
                 // value, pattern and optional escape character are literals, compile regular expression to DFA and run
                 // DFA
-                val ionVals = ast.tail.map { it[1] }
-                val dfaInput = ionVals[0]
-                val dfa = fromLiteralsToDfa(ionVals.tail, cEnv)
-                val matches = dfa.run(dfaInput.stringValue()).exprValue()
-                exprThunk(cEnv.metadataLookup[ast]) { _ -> matches }
+                val ionVals: List<IonValue> = ast.tail.map { it[1] }
+                when {
+                    ionVals.any { !it.isText && !it.isNullValue } ->
+                        err("LIKE expression must be given non-null strings as input",
+                            ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
+                            cEnv.metadataLookup[ast]?.toErrorContext(PropertyValueMap().also {
+                                it[Property.LIKE_VALUE] = ionVals[0].toString()
+                                it[Property.LIKE_PATTERN] = ionVals[1].toString()
+                                if (ionVals.size == 3) it[Property.LIKE_ESCAPE] = ionVals[2].toString()
+                            }),
+                            internal = false)
+                    ionVals.any {it.isNullValue } -> exprThunk(cEnv.metadataLookup[ast]) { _ -> nullValue } // SQL Spec p.215
+                    else -> {
+                        val dfaInput = ionVals[0]
+                        val dfa = fromLiteralsToDfa(ionVals.tail, cEnv)
+                        val matches = dfa.run(dfaInput.stringValue()).exprValue()
+                        exprThunk(cEnv.metadataLookup[ast]) { _ -> matches }
+                    }
+                }
             }
 
             ast.tail.tail.forAll(IonValue::isAstLiteral) -> {
                 // pattern and escape are literals, but value to match against is not
                 val ionVals = ast.tail.tail.map { it[1] }
-                val compiledDfaInput = ast[1].compile(cEnv)
-                val dfa = fromLiteralsToDfa(ionVals, cEnv)
+                when {
+                    ionVals.any { !it.isText && !it.isNullValue}    ->
+                        err("LIKE expression must be given non-null strings as input",
+                            ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
+                            cEnv.metadataLookup[ast]?.toErrorContext(PropertyValueMap().also {
+                                it[Property.LIKE_PATTERN] = ionVals[0].toString()
+                                if (ionVals.size == 2) it[Property.LIKE_ESCAPE] = ionVals[1].toString()
+                            }),
+                            internal = false)
+                    ionVals.any {it.isNullValue } -> exprThunk(cEnv.metadataLookup[ast]) { _ -> nullValue }
+                    else                            -> {
+                        val compiledDfaInput = ast[1].compile(cEnv)
+                        val dfa = fromLiteralsToDfa(ionVals, cEnv)
 
-                exprThunk(cEnv.metadataLookup[ast]) { env ->
-                    val value = compiledDfaInput.eval(env).ionValue
-                    dfa.run(value.stringValue()).exprValue()
+                        exprThunk(cEnv.metadataLookup[ast]) { env ->
+                            val value = compiledDfaInput.eval(env)
+                            when (value.isUnknown()) {
+                                true -> nullValue
+                                false -> dfa.run(value.stringValue()).exprValue()
+                            }
+                        }
+                    }
                 }
             }
             else -> {
@@ -849,12 +864,28 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 }
 
                 exprThunk(cEnv.metadataLookup[ast]) { env ->
-                    val value = compiledVal.eval(env).ionValue
-                    val pattern = compiledPattern.eval(env).ionValue
-                    val escape: IonValue? = compiledEscape?.eval(env)?.ionValue
-                    val (patternString: String, escapeChar: Int?, patternSize) = checkPattern(pattern, escape, cEnv)
-                    val dfa: IDFAState = buildDfaFromPattern(patternString, escapeChar, patternSize)
-                    dfa.run(value.stringValue()).exprValue()
+                    val value = compiledVal.eval(env)
+                    val pattern = compiledPattern.eval(env)
+                    val escape = compiledEscape?.eval(env)
+                    when {
+                        (value.isUnknown() || pattern.isUnknown() || (escape?.isUnknown() ?: false))             -> nullValue
+                        (!value.type.isText || !pattern.type.isText || (escape?.let {!it.type.isText} ?: false)) ->
+                            err("LIKE expression must be given non-null strings as input",
+                                ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
+                                cEnv.metadataLookup[ast]?.toErrorContext(PropertyValueMap().also {
+                                    it[Property.LIKE_VALUE] = value.toString()
+                                    it[Property.LIKE_PATTERN] = pattern.toString()
+                                    escape?.let{ escape -> it[Property.LIKE_ESCAPE] = escape.toString() }
+
+                                }),
+                                internal = false)
+                        else -> {
+                            val (patternString: String, escapeChar: Int?, patternSize) = checkPattern(pattern.ionValue, escape?.ionValue, cEnv)
+                            val dfa: IDFAState = buildDfaFromPattern(patternString, escapeChar, patternSize)
+                            dfa.run(value.stringValue()).exprValue()
+                        }
+                    }
+
                 }
             }
         }
@@ -1098,7 +1129,11 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
             if (whereExpr != null) {
                 seq = seq.filter { (_, env) ->
-                    whereExpr!!.eval(env).booleanValue()
+                    val whereClauseResult: ExprValue = whereExpr!!.eval(env)
+                    when (whereClauseResult.isUnknown()) {
+                        true  -> false // Unknowns behave as `false` in WHERE context (see Issue IONSQL-162)
+                        false  -> whereClauseResult.booleanValue()
+                    }
                 }
             }
 
@@ -1123,12 +1158,19 @@ class EvaluatingCompiler(private val ion: IonSystem,
     }
 
     private inner class Accumulator(var current: Number? = 0L,
-                                    private val nextFunc: (Number?, ExprValue) -> Number) : ExprAggregator {
+                                         protected val nextFunc: (Number?, ExprValue) -> Number) : ExprAggregator {
+
         override fun next(value: ExprValue) {
-            current = nextFunc(current, value)
+
+            current = when (value.isUnknown()) {
+                false -> nextFunc(current, value)
+                true  -> current
+            }
         }
-        override fun compute() = current!!.exprValue()
+
+        override fun compute() = current?.let { it.exprValue() } ?: nullValue
     }
+
 
     private fun comparisonAccumulator(cmpFunc: (Number, Number) -> Boolean): (Number?, ExprValue) -> Number = { curr, next ->
         val nextNum = next.numberValue()
@@ -1144,31 +1186,31 @@ class EvaluatingCompiler(private val ion: IonSystem,
     // TODO consolidate this definition with LexerConstants and allow users to provide their own aggregates
 
     /** Dispatch table for built-in aggregate functions. */
-    private val builtinAggregates: Map<String, ExprAggregatorFactory> = mapOf(
-        "count" to ExprAggregatorFactory.over {
-            Accumulator { curr, _ -> curr!! + 1L }
-        },
-        "sum" to ExprAggregatorFactory.over {
-            Accumulator { curr, next -> curr!! + next.numberValue() }
-        },
-        "min" to ExprAggregatorFactory.over {
-            Accumulator(null, comparisonAccumulator { left, right -> left < right })
-        },
-        "max" to ExprAggregatorFactory.over {
-            Accumulator(null, comparisonAccumulator { left, right -> left > right })
-        },
-        "avg" to ExprAggregatorFactory.over {
-            object : ExprAggregator {
-                var sum: Number = 0L
-                var count = 0L
-                override fun next(value: ExprValue) {
-                    sum += value.numberValue()
-                    count++
+    private val builtinAggregates: Map<String, ExprAggregatorFactory> = mapOf("count" to ExprAggregatorFactory.over {
+        Accumulator(0L, { curr, _ -> curr!! + 1L })
+    }, "sum" to ExprAggregatorFactory.over {
+        Accumulator(null) { curr, next -> curr?.let { it + next.numberValue() } ?: next.numberValue() }
+    }, "min" to ExprAggregatorFactory.over {
+        Accumulator(null, comparisonAccumulator { left, right -> left < right })
+    }, "max" to ExprAggregatorFactory.over {
+        Accumulator(null, comparisonAccumulator { left, right -> left > right })
+    }, "avg" to ExprAggregatorFactory.over {
+        object : ExprAggregator {
+            var sum: Number? = null
+            var count = 0L
+            override fun next(value: ExprValue) {
+                when (value.type) {
+                    NULL, MISSING -> {
+                    }
+                    else          -> {
+                        sum = sum?.let { it + value.numberValue() } ?: value.numberValue()
+                        count++
+                    }
                 }
-                override fun compute() = (sum / count).exprValue()
             }
+            override fun compute() = sum?.let { (it / bigDecimalOf(count)).exprValue() } ?: nullValue
         }
-    )
+    })
 
     private fun Boolean.exprValue(): ExprValue = booleanExprValue(this, ion)
 
@@ -1184,7 +1226,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
     private fun String.exprValue(): ExprValue = stringExprValue(this, ion)
 
     private fun ExprValue.get(member: ExprValue, metadata: NodeMetadata?): ExprValue = when {
-        member.type == ExprValueType.INT -> {
+        member.type == INT -> {
             val index = member.numberValue().toInt()
             ordinalBindings[index] ?: missingValue
         }
@@ -1214,10 +1256,13 @@ class EvaluatingCompiler(private val ion: IonSystem,
     private fun IonSexp.compileAggregateWithinSelectList(cEnv: CompilationEnvironment): Aggregate {
         val aggFactory = loadAggregateFactory(cEnv)
         val inputExpr = when (this[0].text(cEnv)) {
-            "call_agg" -> this[3].compile(cEnv)
-            // for wild cards we don't need to materialize anything (i.e. count all the things)
-            "call_agg_wildcard" -> exprThunk(cEnv.metadataLookup[this]) { _ -> nullValue }
-            else -> err("Invalid aggregate node: $this", cEnv.metadataLookup[this[0]]?.toErrorContext(), internal = false)
+            "call_agg"          -> this[3].compile(cEnv)
+        // for wild cards we don't need to materialize anything (i.e. count all the things)
+        // Do *not* use missing on null values as they will break the behaviour of count(*)
+            "call_agg_wildcard" -> exprThunk(cEnv.metadataLookup[this]) { _ -> intOneValue }
+            else                -> err("Invalid aggregate node: $this",
+                                       cEnv.metadataLookup[this[0]]?.toErrorContext(),
+                                       internal = false)
         }
 
         return Aggregate(aggFactory, inputExpr, cEnv.regCounter.getAndIncrement())
@@ -1267,12 +1312,21 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
     private fun IonSexp.compileFunc(cEnv: CompilationEnvironment,
                                     argStartIndex: Int,
-                                    func: ExprFunction): ExprThunk {
+                                    func: ExprFunction,
+                                    policy: UnknownsPropagationPolicy = UnknownsPropagationPolicy.NONE): ExprThunk {
+
         val argThunks = compileArgs(cEnv, argStartIndex)
 
-        return exprThunk(cEnv.metadataLookup[this]) { env ->
-            val args = argThunks.map { it.eval(env) }
-            func.call(env, args)
+        when (policy) {
+            UnknownsPropagationPolicy.NONE -> return exprThunk(cEnv.metadataLookup[this]) { env ->
+                val args = argThunks.map { it.eval(env) }
+                func.call(env, args)
+                }
+            UnknownsPropagationPolicy.PROPAGATE -> return exprThunk(cEnv.metadataLookup[this]) { env ->
+                val args = argThunks.map { it.eval(env) }
+                if (args.any { it.isUnknown() }) nullValue
+                else func.call(env, args)
+            }
         }
     }
 
@@ -1290,15 +1344,28 @@ class EvaluatingCompiler(private val ion: IonSystem,
                           err("No such syntax handler for $name", cEnv.metadataLookup[this[0]]?.toErrorContext(), internal = false)
             handler(cEnv, this)
         }
-        else -> err("AST node is not s-expression: $this", cEnv.metadataLookup[this]?.toErrorContext(), internal = true)
+        else       -> err("AST node is not s-expression: $this",
+                          cEnv.metadataLookup[this]?.toErrorContext(),
+                          internal = true)
+    }
+
+    /**
+     * Captures the propagation policy for IonSQL expressions when passed an unknown value
+     *
+     * - `NONE` means no policy, unknowns remain untouched, e.g., constructors for lists
+     * - `PROPAGATE` for operators and expressions follow the spec on what the evaluation should propagate
+     */
+    public enum class UnknownsPropagationPolicy {
+        NONE, PROPAGATE
     }
 
     private fun bindOp(minArity: Int = 2,
                        maxArity: Int = 2,
+                       policy: UnknownsPropagationPolicy = PROPAGATE,
                        op: (Environment, List<ExprValue>) -> ExprValue): (CompilationEnvironment, IonSexp) -> ExprThunk {
         return { cEnv, ast ->
             checkArity(ast, minArity, maxArity, cEnv.metadataLookup[ast])
-            ast.compileFunc(cEnv, 1, ExprFunction.over(op))
+            ast.compileFunc(cEnv, 1, ExprFunction.over(op), policy)
         }
     }
 

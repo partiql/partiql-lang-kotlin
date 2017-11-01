@@ -1139,6 +1139,11 @@ class EvaluatingCompilerTest : EvaluatorBase() {
         globalListOfNumbers.toSession()
     )
 
+    @Test // https://issues.amazon.com/issues/IONSQL-164
+    fun topLevelAvgOnlyInt() = assertEval(
+        """AVG([2,2,2,4])""",
+        """2.5""")
+
     @Test
     fun selectValueAggregate() = assertEval(
         // SELECT VALUE does not do legacy SQL aggregation
@@ -1226,4 +1231,11 @@ class EvaluatingCompilerTest : EvaluatorBase() {
         assertEval("SELECT t.a, t.undefined_field FROM `[{a:100, b:200}]` as t", "[{a:100}]",
                    compileOptions = CompileOptions.builder { undefinedVariable = UndefinedVariableBehavior.ERROR })
     }
+
+    @Test // https://issues.amazon.com/IONSQL-173
+    fun ordinalAccessWithNegativeIndex() = assertEval("SELECT temp[-2] FROM <<[1,2,3,4]>> AS temp", "[{}]")
+
+    @Test // https://issues.amazon.com/IONSQL-173
+    fun ordinalAccessWithNegativeIndexAndBindings()  = assertEval("SELECT temp[-2] FROM temp", "[{}]",
+                                                                  mapOf("temp" to "[[1,2,3,4]]").toSession())
 }

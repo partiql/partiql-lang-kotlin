@@ -4,8 +4,7 @@
 
 package com.amazon.ionsql.eval
 
-import com.amazon.ion.IonSystem
-import com.amazon.ion.IonValue
+import com.amazon.ion.*
 import com.amazon.ionsql.util.*
 import com.amazon.ionsql.eval.ExprValueType.*
 
@@ -53,7 +52,11 @@ class SequenceExprValue(private val ion: IonSystem,
                 // materialize the sequence as a backing list
                 val list = toList()
                 OrdinalBindings.over {
-                    list[it]
+                    when {
+                        it < 0 -> null
+                        it >= list.size -> null
+                        else -> list[it]
+                    }
                 }
             }
         }

@@ -9,7 +9,9 @@ internal class BuiltinFunctionFactory(private val ion: IonSystem) {
     fun createFunctionMap(): Map<String, ExprFunction> = mapOf("upper" to this.upper(),
                                                                "lower" to this.lower(),
                                                                "date_add" to DateAddExprFunction(ion),
+                                                               "date_diff" to DateDiffExprFunction(ion),
                                                                "exists" to this.exists(),
+                                                               "extract" to ExtractExprFunction(ion),
                                                                "substring" to this.substring(),
                                                                "char_length" to this.char_length(),
                                                                "character_length" to this.char_length(),
@@ -66,32 +68,32 @@ internal class BuiltinFunctionFactory(private val ion: IonSystem) {
         Pseudocode:
             func substring():
                 # Section 1-a
-                C = <string to be sliced>
-                LC = LENGTH(C)
-                S = <start position>
+                str = <string to be sliced>
+                strLength = LENGTH(str)
+                startPos = <start position>
 
                 # Section 1-b
-                L = <length of slice, optional>
-                if L is specified:
-                    E = S + L
+                sliceLength = <length of slice, optional>
+                if sliceLength is specified:
+                    endPos = startPos + sliceLength
                 else:
-                    E = greater_of(LC + 1, S)
+                    endPos = greater_of(strLength + 1, startPos)
 
                 # Section 1-c:
-                if C, S, or L is null:
+                if str, startPos, or (sliceLength is specified and is null):
                     return null
 
                 # Section 1-d
-                if E < S:
+                if endPos < startPos:
                     throw exception
 
                 # Section 1-e-i
-                if S > LC or E < 1:
+                if startPos > strLength or endPos < 1:
                     return ''
                 else:
                     # Section 1-e-ii
-                    S1 = greater_of(S, 1)
-                    E1 = lesser_of(E, LC + 1)
+                    S1 = greater_of(startPos, 1)
+                    E1 = lesser_of(endPos, strLength + 1)
                     L1 = E1 - S1
                     return java's substring(C, S1, E1)
      */
@@ -114,7 +116,12 @@ internal class BuiltinFunctionFactory(private val ion: IonSystem) {
                 startPosition + args[2].numberValue().toInt() - 1
 
             //Clamp start and end indexes to values that won't make java's substring barf
-            startPosition = if (startPosition < 1) 1 else startPosition
+            startPosition = when {
+                startPosition < 1               -> 1
+                startPosition > codePointCount  -> return "".exprValue(ion)
+                else -> startPosition
+            }
+
             endPosition = if (endPosition >= codePointCount) codePointCount else endPosition
 
             if (endPosition < startPosition)
