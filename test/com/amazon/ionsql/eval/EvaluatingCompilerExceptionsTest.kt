@@ -127,6 +127,11 @@ class EvaluatingCompilerExceptionsTest : EvaluatorBase() {
     }
 
     @Test
+    fun divideByZeroDecimal() = assertThrows("/ by zero", NodeMetadata(1, 5)) {
+        voidEval("1.0 / 0.0")
+    }
+
+    @Test
     fun divideByZeroInSelect() = assertThrows("/ by zero", NodeMetadata(1, 76)) {
         voidEval("SELECT *  FROM `[{_1: a, _2: 1}, {_1: a, _2: 2}, {_1: a, _2: 3}]` WHERE _2 / 0 > 0")
     }

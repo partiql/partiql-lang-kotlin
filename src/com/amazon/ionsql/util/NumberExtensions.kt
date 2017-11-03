@@ -31,7 +31,9 @@ private val CONVERTERS = mapOf<Class<*>, (Number) -> Number>(
 internal fun Number.isZero() = when(this) {
     is Long -> this == 0L
     is Double -> this == 0.0
-    is BigDecimal -> this == BigDecimal.ZERO
+    // using compareTo instead of equals because equality also checks same scale
+    // so BigDecimal("0.0") != BigDecimal.ZERO
+    is BigDecimal -> BigDecimal.ZERO.compareTo(this) == 0
     else -> throw IllegalStateException()
 }
 
