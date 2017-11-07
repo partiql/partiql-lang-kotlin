@@ -231,7 +231,7 @@ fun ExprValue.cast(ion: IonSystem, targetType: ExprValueType, metadata: NodeMeta
                     type == BOOL -> return if (booleanValue()) BigDecimal.ONE.exprValue() else BigDecimal.ZERO.exprValue()
                     type.isNumber -> return numberValue().coerce(BigDecimal::class.java).exprValue()
                     type.isText -> try {
-                        return BigDecimal(stringValue()).exprValue()
+                        return bigDecimalOf(stringValue()).exprValue()
                     }
                     catch (e: NumberFormatException)
                     {

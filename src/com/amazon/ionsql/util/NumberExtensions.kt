@@ -7,6 +7,23 @@ package com.amazon.ionsql.util
 import com.amazon.ion.*
 import java.math.*
 
+private val MATH_CONTEXT = MathContext(38, RoundingMode.HALF_EVEN) // TODO should this be configurable?
+
+/**
+ * Factory function to create a [BigDecimal] using correct precision, use it in favor of native BigDecimal constructors
+ * and factory methods
+ */
+internal fun bigDecimalOf(num: Number, mc: MathContext = MATH_CONTEXT): BigDecimal = when (num) {
+    is Int        -> BigDecimal(num, mc)
+    is Long       -> BigDecimal(num, mc)
+    is BigInteger -> BigDecimal(num, mc)
+    is Double     -> BigDecimal(num, mc)
+    is BigDecimal -> num
+    else          -> throw IllegalArgumentException("Unsupported number type: $num, ${num.javaClass}")
+}
+
+internal fun bigDecimalOf(text: String, mc: MathContext = MATH_CONTEXT): BigDecimal = BigDecimal(text, mc)
+
 private val CONVERSION_MAP = mapOf<Set<Class<*>>, Class<out Number>>(
     setOf(Long::class.javaObjectType, Long::class.javaObjectType) to Long::class.javaObjectType,
     setOf(Long::class.javaObjectType, BigInteger::class.javaObjectType) to BigInteger::class.javaObjectType,
@@ -22,6 +39,7 @@ private val CONVERSION_MAP = mapOf<Set<Class<*>>, Class<out Number>>(
 
     setOf(BigDecimal::class.javaObjectType, BigDecimal::class.javaObjectType) to BigDecimal::class.javaObjectType)
 
+
 private val CONVERTERS = mapOf<Class<*>, (Number) -> Number>(
     Long::class.javaObjectType      to Number::toLong,
     BigInteger::class.java          to { num ->
@@ -36,15 +54,16 @@ private val CONVERTERS = mapOf<Class<*>, (Number) -> Number>(
     Double::class.javaObjectType    to Number::toDouble,
     BigDecimal::class.java to { num ->
         when (num) {
-            is Long       -> BigDecimal.valueOf(num)
-            is BigInteger -> BigDecimal(num)
-            is Double     -> BigDecimal.valueOf(num)
-            is BigDecimal -> num
-            else          -> throw IllegalArgumentException("Unsupported number for decimal conversion: $num")
+            is Long -> bigDecimalOf(num)
+            is BigInteger -> bigDecimalOf(num)
+            is Double -> bigDecimalOf(num)
+            is BigDecimal -> bigDecimalOf(num)
+            else -> throw IllegalArgumentException(
+                "Unsupported number for decimal conversion: $num"
+            )
         }
     }
 )
-
 
 internal fun Number.isZero() = when(this) {
     // using compareTo instead of equals for BigDecimal and BigInteger because equality also checks same scale
@@ -146,7 +165,7 @@ operator fun Number.plus(other: Number): Number {
         is Long -> first.nonOverflowingPlus(second as Long)
         is BigInteger -> first.add(second as BigInteger)
         is Double -> first + second as Double
-        is BigDecimal -> first.add(second as BigDecimal)
+        is BigDecimal -> first.add(second as BigDecimal, MATH_CONTEXT)
         else -> throw IllegalStateException()
     }
 }
@@ -157,7 +176,7 @@ operator fun Number.minus(other: Number): Number {
         is Long -> first.nonOverflowingMinus(second as Long)
         is BigInteger -> first.subtract(second as BigInteger)
         is Double -> first - second as Double
-        is BigDecimal -> first.subtract(second as BigDecimal)
+        is BigDecimal -> first.subtract(second as BigDecimal, MATH_CONTEXT)
         else -> throw IllegalStateException()
     }
 }
@@ -168,7 +187,7 @@ operator fun Number.times(other: Number): Number {
         is Long -> first.nonOverflowingTimes(second as Long)
         is BigInteger -> first.multiply(second as BigInteger)
         is Double -> first * second as Double
-        is BigDecimal -> first.multiply(second as BigDecimal)
+        is BigDecimal -> first.multiply(second as BigDecimal, MATH_CONTEXT)
         else -> throw IllegalStateException()
     }
 }
@@ -179,7 +198,7 @@ operator fun Number.div(other: Number): Number {
         is Long -> first / second as Long
         is BigInteger -> first.divide(second as BigInteger)
         is Double -> first / second as Double
-        is BigDecimal -> first.divide(second as BigDecimal, MathContext.DECIMAL128) // TODO should this be configurable?
+        is BigDecimal -> first.divide(second as BigDecimal, MATH_CONTEXT)
         else -> throw IllegalStateException()
     }
 }
@@ -187,10 +206,10 @@ operator fun Number.div(other: Number): Number {
 operator fun Number.rem(other: Number): Number {
     val (first, second) = coerceNumbers(this, other)
     return when (first) {
-        is Long -> first % second as Long 
+        is Long -> first % second as Long
         is BigInteger -> first.remainder(second as BigInteger)
         is Double -> first % second as Double
-        is BigDecimal -> first.remainder(second as BigDecimal)
+        is BigDecimal -> first.remainder(second as BigDecimal, MATH_CONTEXT)
         else -> throw IllegalStateException()
     }
 }

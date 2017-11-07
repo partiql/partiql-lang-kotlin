@@ -443,6 +443,15 @@ Mochi,dog
 Lilikoi,unicorn
 ```
 
+## Data Types
+
+### Decimal
+IonSQL++ decimals are based on [Ion decimals] but with a maximum precision of 38 digits, numbers outside this precision 
+range will be rounded using a round [half even strategy]. Examples: 
+
+    1.00000000000000000000000000000000000000000001 -> 1.0000000000000000000000000000000000000
+    1.99999999999999999999999999999999999999999999 -> 2.0000000000000000000000000000000000000 
+
 ## Builtin Functions
 
 ### CHAR_LENGTH, CHARACTER_LENGTH
@@ -716,4 +725,5 @@ Examples:
 * Implement aggregation, sort, grouping.
   
 [ionjava]: https://code.amazon.com/packages/IonJava
-
+[Ion decimals]: http://amzn.github.io/ion-docs/decimal.html
+[half even strategy]: https://docs.oracle.com/javase/7/docs/api/java/math/RoundingMode.html#HALF_EVEN

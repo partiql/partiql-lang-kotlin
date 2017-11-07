@@ -9,8 +9,8 @@ import org.junit.Test
 import java.math.BigDecimal
 
 class NumbersTest : Base() {
-    fun dec(text: String): BigDecimal = BigDecimal(text)
-    fun dec(value: Double): BigDecimal = BigDecimal.valueOf(value)
+    fun dec(text: String): BigDecimal = bigDecimalOf(text)
+    fun dec(value: Double): BigDecimal = bigDecimalOf(value)
 
     fun assertCoerce(num1: Number, num2: Number, expected1: Number, expected2: Number) {
         val (actual1, actual2) = coerceNumbers(num1, num2)

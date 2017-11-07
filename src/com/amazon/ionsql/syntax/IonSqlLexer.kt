@@ -512,7 +512,7 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
                             LITERAL -> when (curr.lexType) {
                                 SQ_STRING -> ion.newString(text)
                                 INTEGER -> ion.newInt(BigInteger(text, 10))
-                                DECIMAL -> ion.newDecimal(BigDecimal(text))
+                                DECIMAL -> ion.newDecimal(bigDecimalOf(text))
                                 ION_LITERAL -> ion.singleValue(text)
                                 else -> errInvalidLiteral(text)
                             }

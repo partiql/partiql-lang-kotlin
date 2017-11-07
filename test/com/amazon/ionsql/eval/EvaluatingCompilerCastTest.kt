@@ -190,8 +190,8 @@ class EvaluatingCompilerCastTest : EvaluatorBase() {
                 case("`true`",                  "1d0"),
                 // numbers
                 case("5",                       "5d0"),
-                case("`0e0`",                   "0d-1"), // TODO formalize this behavior
-                case("`1e0`",                   "1.0"),  // TODO formalize this behavior
+                case("`0e0`",                   "0."),  // TODO formalize this behavior
+                case("`1e0`",                   "1."),  // TODO formalize this behavior
                 case("1.1",                     "1.1d0"),
                 case("-20.1",                   "-20.1d0"),
                 // timestamp

@@ -149,10 +149,24 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     fun addIntFloat() = assertEval("i + f", "3e0", globalNumbers.toSession())
 
     @Test
-    fun subIntFloatDecimal() = assertEval("i - f - d", "-4.0", globalNumbers.toSession())
+    fun subIntFloatDecimal() = assertEval("i - f - d", "-4.", globalNumbers.toSession())
 
     @Test
-    fun repeatingDecimal() = assertEval("4.0/3.0", "1.333333333333333333333333333333333")
+    fun repeatingDecimal() = assertEval("4.0000/3.0", "1.3333333333333333333333333333333333333")
+
+    @Test
+    fun repeatingDecimalHigherPrecision() = assertEval("4.000000000000000000000000000000000000/3.0",
+                                                       "1.3333333333333333333333333333333333333")
+    @Test
+    fun decimalRoundUp() = assertEval("1.9999999999999999999999999999999999999999999999",
+                                      "2.0000000000000000000000000000000000000")
+
+    @Test
+    fun decimalRoundDown() = assertEval("1.00000000000000000000000000000000000000000001",
+                                        "1.0000000000000000000000000000000000000")
+
+    @Test
+    fun subtractionOutOfAllowedPrecision() = assertEval("1e100 - 1e-100", "10000000000000000000000000000000000000d63")
 
     @Test
     fun bigDecimals() = assertEval("${Long.MAX_VALUE}.0 + 100.0", "9223372036854775907.0")
@@ -223,7 +237,6 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     fun symbolCaseEquality() = assertEval(
         """ 'A' = 'a' """,
         "false")
-
 
     @Test
     fun notEqualIntFloat() = assertEval("1 != `2e0`", "true")
@@ -1165,7 +1178,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
             """[
             [{result:27.}],
             [{result:29.0}],
-            [{result:31.0}],
+            [{result:31.}],
             [{result:33.}],
             [{result:35.}],
         ]""",
