@@ -13,16 +13,21 @@ internal class DateAddExprFunction(val ion: IonSystem) : ExprFunction {
     override fun call(env: Environment, args: List<ExprValue>): ExprValue {
         val (timePart, interval, timestamp) = extractArguments(args)
 
-        val addedTimestamp = when (timePart) {
-            DatePart.YEAR        -> timestamp.addYear(interval)
-            DatePart.MONTH       -> timestamp.addMonth(interval)
-            DatePart.DAY         -> timestamp.addDay(interval)
-            DatePart.HOUR        -> timestamp.addHour(interval)
-            DatePart.MINUTE      -> timestamp.addMinute(interval)
-            DatePart.SECOND      -> timestamp.addSecond(interval)
-        }
+        try {
+            val addedTimestamp = when (timePart) {
+                DatePart.YEAR        -> timestamp.addYear(interval)
+                DatePart.MONTH       -> timestamp.addMonth(interval)
+                DatePart.DAY         -> timestamp.addDay(interval)
+                DatePart.HOUR        -> timestamp.addHour(interval)
+                DatePart.MINUTE      -> timestamp.addMinute(interval)
+                DatePart.SECOND      -> timestamp.addSecond(interval)
+            }
 
-        return ion.newTimestamp(addedTimestamp).exprValue()
+            return ion.newTimestamp(addedTimestamp).exprValue()
+        } catch (e: IllegalArgumentException) {
+            // illegal argument exception are thrown when the resulting timestamp go out of supported timestamp boundaries
+            throw EvaluationException(e, internal = false)
+        }
     }
 
     private fun extractArguments(args: List<ExprValue>): Triple<DatePart, Int, Timestamp> {

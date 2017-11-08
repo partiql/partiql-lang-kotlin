@@ -46,4 +46,26 @@ class DateAddEvaluationTest : EvaluatorBase() {
     fun wrongArgumentTypes() = assertThrows("No such binding: foobar", NodeMetadata(1, 16)) {
         voidEval("date_add(year, \"foobar\", 1)")
     }
+
+    @Test // regression for IONSQL-142
+    fun addingYearOutsideOfTimestampBoundaries() = assertThrows("Year 12017 must be between 1 and 9999 inclusive", NodeMetadata(1, 1)) {
+        voidEval("date_add(year, 10000, `2017-06-27T`)")
+    }
+
+    @Test // regression for IONSQL-142
+    @Ignore("IONJAVA-533")
+    fun addingNegativeYearOutsideOfTimestampBoundaries() = assertThrows("Year -8000 must be between 1 and 9999 inclusive", NodeMetadata(1, 1)) {
+        voidEval("date_add(year, -10000, `2000-06-27T`)")
+    }
+
+    @Test // regression for IONSQL-142
+    fun addingMonthsOutsideOfTimestampBoundaries() = assertThrows("Year 12017 must be between 1 and 9999 inclusive", NodeMetadata(1, 1)) {
+        voidEval("date_add(month, 10000*12, `2017-06-27T`)")
+    }
+
+    @Test // regression for IONSQL-142
+    @Ignore("IONJAVA-533")
+    fun addingNegativeMonthsOutsideOfTimestampBoundaries() = assertThrows("Year -8000 must be between 1 and 9999 inclusive", NodeMetadata(1, 1)) {
+        voidEval("date_add(month, -10000*12, `2000-06-27T`)")
+    }
 }
