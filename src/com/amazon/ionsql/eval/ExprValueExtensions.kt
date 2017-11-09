@@ -4,11 +4,10 @@
 
 package com.amazon.ionsql.eval
 
-import com.amazon.ion.IonSystem
-import com.amazon.ion.Timestamp
+import com.amazon.ion.*
 import com.amazon.ionsql.eval.ExprValueType.*
 import com.amazon.ionsql.util.*
-import java.math.BigDecimal
+import java.math.*
 
 /**
  * Wraps the given [ExprValue] with a delegate that provides the [OrderedBindNames] facet.
@@ -213,15 +212,14 @@ fun ExprValue.cast(ion: IonSystem, targetType: ExprValueType, metadata: NodeMeta
                 }
                 INT -> when {
                     type == BOOL -> return if (booleanValue()) 1L.exprValue() else 0L.exprValue()
-                    type.isNumber -> return numberValue().toLong().exprValue()
-                    type.isText -> try {
-                        return stringValue().toLong().exprValue()
-                    }
-                    catch (e: NumberFormatException)
-                    {
-                        throw EvaluationException(message = "can't convert '${stringValue()}' to INT",
-                                                  cause = e,
-                                                  internal = false)
+                    type.isNumber -> return numberValue().coerce(BigInteger::class.java).exprValue()
+                    type.isText -> {
+                        val value = ion.singleValue(stringValue())
+                        return when(value.type) {
+                            IonType.INT -> value.exprValue()
+                            else        -> throw EvaluationException(message = "can't convert '${stringValue()}' to INT",
+                                                                     internal = false)
+                        }
                     }
                 }
                 FLOAT -> when {

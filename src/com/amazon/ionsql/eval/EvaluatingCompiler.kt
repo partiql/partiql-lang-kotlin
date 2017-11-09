@@ -1134,6 +1134,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
     private fun Number.exprValue(): ExprValue = when (this) {
         is Int -> integerExprValue(this, ion)
         is Long -> integerExprValue(this, ion)
+        is BigInteger -> integerExprValue(this, ion)
         is Double -> floatExprValue(this, ion)
         is BigDecimal -> decimalExprValue(this, ion)
         else -> errNoContext("Cannot convert number to expression value: $this", internal = true)

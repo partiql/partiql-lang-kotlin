@@ -5,9 +5,8 @@
 package com.amazon.ionsql.util
 
 import com.amazon.ion.*
-import com.amazon.ionsql.eval.ExprValue
-import com.amazon.ionsql.eval.IonExprValue
-import java.math.BigInteger
+import com.amazon.ionsql.eval.*
+import java.math.*
 
 private fun err(message: String): Nothing = throw IllegalArgumentException(message)
 
@@ -45,13 +44,18 @@ fun IonValue.asSequence(): Sequence<IonValue> = when (this) {
     else -> err("Expected container: $this")
 }
 
+private fun IonInt.javaValue(): Number = when (integerSize) {
+    IntegerSize.BIG_INTEGER -> bigIntegerValue()
+    else                    -> longValue()
+}
+
 fun IonValue.numberValue(): Number = when {
     isNullValue -> err("Expected non-null number: $this")
-    else -> when (this) {
-        is IonInt -> longValue()
-        is IonFloat -> doubleValue()
+    else        -> when (this) {
+        is IonInt     -> javaValue()
+        is IonFloat   -> doubleValue()
         is IonDecimal -> bigDecimalValue()
-        else -> err("Expected number: $this")
+        else          -> err("Expected number: $this")
     }
 }
 

@@ -3,7 +3,7 @@ package com.amazon.ionsql.eval
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
 import com.amazon.ionsql.util.seal
-import java.math.BigDecimal
+import java.math.*
 
 /** Basic implementation for scalar [ExprValue]. */
 private class ScalarExprValue(
@@ -40,6 +40,11 @@ fun integerExprValue(value: Int, ion: IonSystem): ExprValue {
 }
 
 fun integerExprValue(value: Long, ion: IonSystem): ExprValue {
+    val scalar = object: Scalar() { override fun numberValue(): Number = value }
+    return ScalarExprValue(ExprValueType.INT, scalar) { ion.newInt(value) }
+}
+
+fun integerExprValue(value: BigInteger, ion: IonSystem): ExprValue {
     val scalar = object: Scalar() { override fun numberValue(): Number = value }
     return ScalarExprValue(ExprValueType.INT, scalar) { ion.newInt(value) }
 }

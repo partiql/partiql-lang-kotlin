@@ -98,14 +98,12 @@ class EvaluatingCompilerExceptionsTest : EvaluatorBase() {
     }
 
     @Test
-    fun badCastToInt() = assertThrows("can't convert 'a' to INT", NodeMetadata(1, 18),
-                                 cause = NumberFormatException::class) {
+    fun badCastToInt() = assertThrows("can't convert 'a' to INT", NodeMetadata(1, 18)) {
         voidEval("CAST('a' as int) > 0")
     }
 
     @Test
-    fun badCastInSelectToInt() = assertThrows("can't convert 'a' to INT", NodeMetadata(1, 91),
-                                 cause = NumberFormatException::class) {
+    fun badCastInSelectToInt() = assertThrows("can't convert 'a' to INT", NodeMetadata(1, 91)) {
         voidEval("SELECT *  FROM `[{_1: a, _2: 1}, {_1: a, _2: 'a'}, {_1: a, _2: 3}]` WHERE CAST(_2 as INT) > 0")
     }
 
