@@ -31,7 +31,7 @@ import java.time.temporal.*
 internal class TimestampParser {
 
     internal enum class FormatPatternPrecision {
-        UNKNOWN, YEAR, MONTH, DAY, MINUTE, SECOND, FRACTION;
+        UNKNOWN, YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, FRACTION;
     }
 
     internal data class FormatPatternInfo(val precision: FormatPatternPrecision, val has2DigitYear: Boolean) {
@@ -51,6 +51,7 @@ internal class TimestampParser {
                 var hasFraction = false
                 var hasSecond = false
                 var hasMinute = false
+                var hasHour = false
                 var hasDay = false
                 var hasMonth = false
                 var yearCount = 0
@@ -62,6 +63,7 @@ internal class TimestampParser {
                         c == 'S' || c == 'n'                  -> hasFraction = true
                         c == 's'                              -> hasSecond = true
                         c == 'm'                              -> hasMinute = true
+                        c == 'H' || c == 'h'                  -> hasHour = true
                         c == 'd'                              -> hasDay = true
                         c == 'M'                              -> hasMonth = true
                         c == 'y'                              -> yearCount++
@@ -78,6 +80,8 @@ internal class TimestampParser {
                             FormatPatternPrecision.SECOND
                         hasMinute ->
                             FormatPatternPrecision.MINUTE
+                        hasHour ->
+                            FormatPatternPrecision.HOUR
                         hasDay ->
                             FormatPatternPrecision.DAY
                         hasMonth ->
@@ -176,6 +180,14 @@ internal class TimestampParser {
                                             accessor.get(ChronoField.DAY_OF_MONTH),
                                             accessor.get(ChronoField.HOUR_OF_DAY),
                                             accessor.get(ChronoField.MINUTE_OF_HOUR),
+                                            accessor.getLocalOffset())
+                    }
+                     FormatPatternPrecision.HOUR -> {
+                        Timestamp.forMinute(year,
+                                            accessor.get(ChronoField.MONTH_OF_YEAR),
+                                            accessor.get(ChronoField.DAY_OF_MONTH),
+                                            accessor.get(ChronoField.HOUR_OF_DAY),
+                                            0, //Ion Timestamp has no HOUR precision -- default minutes to 0
                                             accessor.getLocalOffset())
                     }
                     FormatPatternPrecision.DAY -> {

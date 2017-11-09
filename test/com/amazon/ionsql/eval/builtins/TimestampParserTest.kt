@@ -158,11 +158,11 @@ class TimestampParserTest {
             ParseTimestampTestCase("y M dd", "2007 6 05", Timestamp.valueOf("2007-06-05T")),
 
             //Hour
-            //Hour must also be specified with minutes at least. Both of them follow same rules above where a
-            //single symbol specifies that zero padding is optional and 2 symbols requires it.
-            ParseTimestampTestCase("y M d H m", "2007 6 5 9 8", Timestamp.valueOf("2007-06-05T09:08-00:00")),
-            ParseTimestampTestCase("y M d H m", "2007 6 5 09 8", Timestamp.valueOf("2007-06-05T09:08-00:00")),
-            ParseTimestampTestCase("y M d HH m", "2007 6 5 09 8", Timestamp.valueOf("2007-06-05T09:08-00:00")),
+            ParseTimestampTestCase("y M d H", "2007 6 5 9", Timestamp.valueOf("2007-06-05T09:00-00:00")),
+            ParseTimestampTestCase("y M d h a", "2007 6 5 9 am", Timestamp.valueOf("2007-06-05T09:00-00:00")),
+            ParseTimestampTestCase("y M d h a", "2007 6 5 9 pm", Timestamp.valueOf("2007-06-05T21:00-00:00")),
+            ParseTimestampTestCase("y M d H", "2007 6 5 09", Timestamp.valueOf("2007-06-05T09:00-00:00")),
+            ParseTimestampTestCase("y M d HH", "2007 6 5 09", Timestamp.valueOf("2007-06-05T09:00-00:00")),
 
             //Minute (same rules with 1 "m" vs "mm")
             ParseTimestampTestCase("y M d H m", "2007 6 5 9 8", Timestamp.valueOf("2007-06-05T09:08-00:00")),
