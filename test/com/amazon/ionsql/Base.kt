@@ -54,11 +54,14 @@ abstract class Base : Assert() {
      * @param ex actual exception thrown by test
      * @param expectedValues expected values for errorContext
      */
-    protected fun <T : IonSqlException> checkErrorAndErrorContext(errorCode: ErrorCode, ex: T, expectedValues: Map<Property, Any>) {
+    protected fun <T : IonSqlException> checkErrorAndErrorContext(errorCode: ErrorCode?, ex: T, expectedValues: Map<Property, Any>) {
         assertEquals(errorCode, ex.errorCode)
         val errorContext = ex.errorContext
-        correctContextKeys(errorCode, errorContext)
-        correctContextValues(errorCode, errorContext, expectedValues)
+
+        if(errorCode != null) {
+            correctContextKeys(errorCode, errorContext)
+            correctContextValues(errorCode, errorContext, expectedValues)
+        }
     }
 
     /**
@@ -101,7 +104,8 @@ abstract class Base : Assert() {
                 CAST_TO,
                 KEYWORD,
                 TIMESTAMP_STRING,
-                TIMESTAMP_FORMAT_PATTERN -> assertEquals("$entry", entry.value, errorContext[entry.key]?.stringValue())
+                TIMESTAMP_FORMAT_PATTERN,
+                BINDING_NAME -> assertEquals("$entry", entry.value, errorContext[entry.key]?.stringValue())
                 TOKEN_TYPE,
                 EXPECTED_TOKEN_TYPE_1_OF_2,
                 EXPECTED_TOKEN_TYPE_2_OF_2,

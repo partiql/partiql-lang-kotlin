@@ -53,7 +53,8 @@ enum class Property(val propertyName: String, val propertyType: PropertyType) {
     EXPECTED_ARITY_MIN("arity_min", INTEGER_CLASS),
     EXPECTED_ARITY_MAX("arity_max", INTEGER_CLASS),
     TIMESTAMP_FORMAT_PATTERN("timestamp_format_pattern", STRING_CLASS),
-    TIMESTAMP_STRING("timestamp_string", STRING_CLASS)
+    TIMESTAMP_STRING("timestamp_string", STRING_CLASS),
+    BINDING_NAME("binding_name", STRING_CLASS)
 }
 
 /**

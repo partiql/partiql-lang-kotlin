@@ -257,6 +257,11 @@ enum class ErrorCode(private val category: ErrorCategory,
 
     //Evaluator errors
 
+    EVALUATOR_BINDING_DOES_NOT_EXIST(
+        ErrorCategory.EVALUATOR,
+        LOCATION + setOf(Property.BINDING_NAME),
+        "Binding does not exist"),
+
     EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL(
         ErrorCategory.EVALUATOR,
         LOCATION,

@@ -5,6 +5,7 @@
 package com.amazon.ionsql.eval
 
 import com.amazon.ion.*
+import com.amazon.ionsql.errors.*
 import com.amazon.ionsql.eval.binding.*
 import com.amazon.ionsql.eval.builtins.*
 import com.amazon.ionsql.syntax.*
@@ -31,13 +32,20 @@ import java.util.concurrent.atomic.*
  */
 class EvaluatingCompiler(private val ion: IonSystem,
                          private val parser: Parser,
-                         private val userFunctions: @JvmSuppressWildcards Map<String, ExprFunction>) : Compiler {
+                         private val userFunctions: @JvmSuppressWildcards Map<String, ExprFunction>,
+                         private val compileOptions: CompileOptions = CompileOptions.default()) : Compiler {
 
     constructor(ion: IonSystem) :
-        this(ion, IonSqlParser(ion), emptyMap())
+        this(ion, IonSqlParser(ion), emptyMap(), CompileOptions.default())
 
-    constructor(ion: IonSystem, userFuncs: @JvmSuppressWildcards Map<String, ExprFunction>):
-        this(ion, IonSqlParser(ion), userFuncs)
+    constructor(ion: IonSystem, compileOptions: CompileOptions) :
+        this(ion, IonSqlParser(ion), emptyMap(), compileOptions)
+
+    constructor(ion: IonSystem, parser: Parser, userFunctions: @JvmSuppressWildcards Map<String, ExprFunction>) :
+        this(ion, parser, userFunctions, CompileOptions.default())
+
+    constructor(ion: IonSystem, userFuncs: @JvmSuppressWildcards Map<String, ExprFunction>) :
+        this(ion, IonSqlParser(ion), userFuncs, CompileOptions.default())
 
     /** An [ExprValue] which is the result of an expression evaluated in an [Environment].  */
     private abstract class ExprThunk(private val metadata: NodeMetadata?) {
@@ -286,7 +294,24 @@ class EvaluatingCompiler(private val ion: IonSystem,
         },
         "id" to { cEnv, ast ->
             val name = ast[1].text(cEnv)
-            exprThunk(cEnv.metadataLookup[ast]) { env -> env.current[name] ?: err("No such binding: $name", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false) }
+            when(compileOptions.undefinedVariable) {
+                UndefinedVariableBehavior.ERROR   -> {
+                    exprThunk(cEnv.metadataLookup[ast]) { env ->
+                        env.current[name] ?: throw EvaluationException(
+                            "No such binding: $name",
+                            ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
+                            cEnv.metadataLookup[ast]?.fillErrorContext(PropertyValueMap().also {
+                                it[Property.BINDING_NAME] = name
+                            }),
+                            internal = false)
+                    }
+                }
+                UndefinedVariableBehavior.MISSING -> {
+                    exprThunk(cEnv.metadataLookup[ast]) { env ->
+                        env.current[name] ?: this.missingValue
+                    }
+                }
+            }
         },
         "@" to { cEnv, ast ->
             val expr = ast[1].compile(cEnv)

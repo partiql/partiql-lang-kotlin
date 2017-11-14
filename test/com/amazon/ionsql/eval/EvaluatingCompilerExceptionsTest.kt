@@ -1,5 +1,6 @@
 package com.amazon.ionsql.eval
 
+import com.amazon.ionsql.errors.*
 import org.junit.*
 
 class EvaluatingCompilerExceptionsTest : EvaluatorBase() {
@@ -53,19 +54,30 @@ class EvaluatingCompilerExceptionsTest : EvaluatorBase() {
 
     @Test
     fun selectValueCountStar() = assertThrows("No such syntax handler for call_agg_wildcard", NodeMetadata(1, 14)) {
-        voidEval("""SELECT VALUE COUNT(*) FROM numbers""", globalListOfNumbers)
+        voidEval("""SELECT VALUE COUNT(*) FROM numbers""")
     }
 
     @Test
     fun selectListNestedAggregateCall() = assertThrows("No such syntax handler for call_agg", NodeMetadata(1, 12)) {
-        voidEval("""SELECT SUM(AVG(n)) FROM <<numbers, numbers>> AS n""", globalListOfNumbers)
+        voidEval("""SELECT SUM(AVG(n)) FROM <<numbers, numbers>> AS n""")
     }
 
-
-    @Test
-    fun badAlias() = assertThrows("No such binding: y", NodeMetadata(1, 14)) {
-        voidEval("SELECT VALUE y FROM << 'el1' >> AS x")
+    private val BAD_ALIAS_SQL = "SELECT VALUE y FROM << 'el1' >> AS x"
+    @Test fun badAlias() {
+        //Note that the current default for CompileOptions.undefinedVariable is UndefinedVariableBehavior.ERROR
+        checkInputThrowingEvaluationException(
+            BAD_ALIAS_SQL,
+            ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 14L,
+                Property.BINDING_NAME to "y"))
     }
+
+    @Test fun missingAlias() =
+        //Same SQL as previous test--but DO NOT throw exception this time because of UndefinedVariableBehavior.MISSING
+        assertEval(BAD_ALIAS_SQL, "[null]",
+                   compileOptions = CompileOptions.builder { undefinedVariable(UndefinedVariableBehavior.MISSING) })
 
     @Test
     fun wrongArityExists() = assertThrows("Expected a single argument for exists but found: 0", NodeMetadata(1, 1)) {
@@ -79,12 +91,12 @@ class EvaluatingCompilerExceptionsTest : EvaluatorBase() {
 
     @Test
     fun rightJoin() = assertThrows("RIGHT and FULL JOIN not supported", NodeMetadata(1, 28)) {
-        voidEval("SELECT * FROM animals AS a RIGHT JOIN animal_types AS a_type WHERE a.type = a_type.id", animals)
+        voidEval("SELECT * FROM animals AS a RIGHT JOIN animal_types AS a_type WHERE a.type = a_type.id")
     }
 
     @Test
     fun outerJoin() = assertThrows("RIGHT and FULL JOIN not supported", NodeMetadata(1, 28)) {
-        voidEval("SELECT * FROM animals AS a OUTER JOIN animal_types AS a_type WHERE a.type = a_type.id", animals)
+        voidEval("SELECT * FROM animals AS a OUTER JOIN animal_types AS a_type WHERE a.type = a_type.id")
     }
 
     @Test
