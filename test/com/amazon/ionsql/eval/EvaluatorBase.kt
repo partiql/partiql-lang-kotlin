@@ -84,7 +84,7 @@ abstract class EvaluatorBase : Base() {
      *  Asserts that [func] throws an [IonSqlException] with the specified message, line and column number
      */
     protected fun assertThrows(message: String,
-                               metadata: NodeMetadata,
+                               metadata: NodeMetadata? = null,
                                internal: Boolean = false,
                                cause: KClass<out Throwable>? = null,
                                func: () -> Unit) {
@@ -99,8 +99,13 @@ abstract class EvaluatorBase : Base() {
 
                 if (cause != null) assertThat(e).hasRootCauseExactlyInstanceOf(cause.java)
 
-                assertThat(e.errorContext!![Property.LINE_NUMBER]!!.longValue()).`as`("line number").isEqualTo(metadata.line)
-                assertThat(e.errorContext!![Property.COLUMN_NUMBER]!!.longValue()).`as`("column number").isEqualTo(metadata.column)
+                if(metadata != null){
+                    assertThat(e.errorContext!![Property.LINE_NUMBER]!!.longValue()).`as`("line number").isEqualTo(metadata.line)
+                    assertThat(e.errorContext!![Property.COLUMN_NUMBER]!!.longValue()).`as`("column number").isEqualTo(metadata.column)
+                }
+                else {
+                    assertThat(e.errorContext).isNull()
+                }
             }
         }
     }

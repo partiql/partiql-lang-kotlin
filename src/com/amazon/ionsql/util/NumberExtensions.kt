@@ -5,6 +5,7 @@
 package com.amazon.ionsql.util
 
 import com.amazon.ion.*
+import com.amazon.ionsql.eval.*
 import java.math.*
 
 private val MATH_CONTEXT = MathContext(38, RoundingMode.HALF_EVEN) // TODO should this be configurable?
@@ -16,7 +17,6 @@ private val MATH_CONTEXT = MathContext(38, RoundingMode.HALF_EVEN) // TODO shoul
 internal fun bigDecimalOf(num: Number, mc: MathContext = MATH_CONTEXT): BigDecimal = when (num) {
     is Int        -> BigDecimal(num, mc)
     is Long       -> BigDecimal(num, mc)
-    is BigInteger -> BigDecimal(num, mc)
     is Double     -> BigDecimal(num, mc)
     is BigDecimal -> num
     else          -> throw IllegalArgumentException("Unsupported number type: $num, ${num.javaClass}")
@@ -26,13 +26,8 @@ internal fun bigDecimalOf(text: String, mc: MathContext = MATH_CONTEXT): BigDeci
 
 private val CONVERSION_MAP = mapOf<Set<Class<*>>, Class<out Number>>(
     setOf(Long::class.javaObjectType, Long::class.javaObjectType) to Long::class.javaObjectType,
-    setOf(Long::class.javaObjectType, BigInteger::class.javaObjectType) to BigInteger::class.javaObjectType,
     setOf(Long::class.javaObjectType, Double::class.javaObjectType) to Double::class.javaObjectType,
     setOf(Long::class.javaObjectType, BigDecimal::class.javaObjectType) to BigDecimal::class.javaObjectType,
-
-    setOf(BigInteger::class.javaObjectType, BigInteger::class.javaObjectType) to BigInteger::class.javaObjectType,
-    setOf(BigInteger::class.javaObjectType, Double::class.javaObjectType) to BigDecimal::class.javaObjectType,
-    setOf(BigInteger::class.javaObjectType, BigDecimal::class.javaObjectType) to BigDecimal::class.javaObjectType,
 
     setOf(Double::class.javaObjectType, Double::class.javaObjectType) to Double::class.javaObjectType,
     setOf(Double::class.javaObjectType, BigDecimal::class.javaObjectType) to BigDecimal::class.javaObjectType,
@@ -42,20 +37,10 @@ private val CONVERSION_MAP = mapOf<Set<Class<*>>, Class<out Number>>(
 
 private val CONVERTERS = mapOf<Class<*>, (Number) -> Number>(
     Long::class.javaObjectType      to Number::toLong,
-    BigInteger::class.java          to { num ->
-        when(num) {
-            is Long       -> BigInteger.valueOf(num)
-            is BigInteger -> num
-            is Double     -> BigInteger.valueOf(num.toLong())
-            is BigDecimal -> num.toBigInteger()
-            else          -> throw IllegalArgumentException("Unsupported number for decimal conversion: $num")
-        }
-    },
     Double::class.javaObjectType    to Number::toDouble,
     BigDecimal::class.java to { num ->
         when (num) {
             is Long -> bigDecimalOf(num)
-            is BigInteger -> bigDecimalOf(num)
             is Double -> bigDecimalOf(num)
             is BigDecimal -> bigDecimalOf(num)
             else -> throw IllegalArgumentException(
@@ -66,10 +51,9 @@ private val CONVERTERS = mapOf<Class<*>, (Number) -> Number>(
 )
 
 internal fun Number.isZero() = when(this) {
-    // using compareTo instead of equals for BigDecimal and BigInteger because equality also checks same scale
+    // using compareTo instead of equals for BigDecimal because equality also checks same scale
 
     is Long -> this == 0L
-    is BigInteger -> this.compareTo(BigInteger.ZERO) == 0
     is Double -> this == 0.0
     is BigDecimal -> BigDecimal.ZERO.compareTo(this) == 0
     else -> throw IllegalStateException()
@@ -112,32 +96,32 @@ operator fun Number.unaryMinus(): Number {
     }
 }
 
-private fun Long.nonOverflowingPlus(other: Long): Number {
+private fun Long.checkOverflowPlus(other: Long): Number {
     // uses to XOR to check if
     // this and other are >= 0 then if result < 0 means overflow
-    // this and other are < 0 then if result > 0 means overflow
+    // this and other are < 0 then if result > 0 means underflow
     // if this and other have different signs then no overflow can happen
 
     val result: Long = this + other
     val overflows = ((this xor other) >= 0) and ((this xor result) < 0)
     return when (overflows) {
         false -> result
-        else  -> BigInteger.valueOf(this).add(BigInteger.valueOf(other))
+        else  -> errIntOverflow()
     }
 }
 
-private fun Long.nonOverflowingMinus(other: Long): Number {
+private fun Long.checkOverflowMinus(other: Long): Number {
     // uses XOR for a similar logic than plus
 
     val result: Long = this - other
     val overflows = ((this xor other) < 0) and ((this xor result) < 0)
     return when (overflows) {
         false -> result
-        else  -> BigInteger.valueOf(this).minus(BigInteger.valueOf(other))
+        else  -> errIntOverflow()
     }
 }
 
-private fun Long.nonOverflowingTimes(other: Long): Number {
+private fun Long.checkOverflowTimes(other: Long): Number {
     fun Long.numberOfLeadingZeros() = java.lang.Long.numberOfLeadingZeros(this)
 
     // Hacker's Delight, Section 2-12
@@ -150,20 +134,29 @@ private fun Long.nonOverflowingTimes(other: Long): Number {
     val result = this * other
     val longSize = java.lang.Long.SIZE
 
-    if((leadingZeros >= longSize) &&
-       ((this >= 0) or (other != Long.MIN_VALUE)) &&
-       (this == 0L || result / this == other)){
+    if ((leadingZeros >= longSize) &&
+        ((this >= 0) or (other != Long.MIN_VALUE)) &&
+        (this == 0L || result / this == other)) {
         return result
     }
 
-    return BigInteger.valueOf(this).times(BigInteger.valueOf(other))
+    errIntOverflow()
+}
+
+private fun Long.checkOverflowDivision(other: Long): Number {
+    // division can only underflow Long.MIN_VALUE / -1
+    // because abs(Long.MIN_VALUE) == abs(Long.MAX_VALUE) + 1
+    if(this == Long.MIN_VALUE && other == -1L){
+        errIntOverflow()
+    }
+
+    return this / other
 }
 
 operator fun Number.plus(other: Number): Number {
     val (first, second) = coerceNumbers(this, other)
     return when (first) {
-        is Long -> first.nonOverflowingPlus(second as Long)
-        is BigInteger -> first.add(second as BigInteger)
+        is Long -> first.checkOverflowPlus(second as Long)
         is Double -> first + second as Double
         is BigDecimal -> first.add(second as BigDecimal, MATH_CONTEXT)
         else -> throw IllegalStateException()
@@ -173,8 +166,7 @@ operator fun Number.plus(other: Number): Number {
 operator fun Number.minus(other: Number): Number {
     val (first, second) = coerceNumbers(this, other)
     return when (first) {
-        is Long -> first.nonOverflowingMinus(second as Long)
-        is BigInteger -> first.subtract(second as BigInteger)
+        is Long -> first.checkOverflowMinus(second as Long)
         is Double -> first - second as Double
         is BigDecimal -> first.subtract(second as BigDecimal, MATH_CONTEXT)
         else -> throw IllegalStateException()
@@ -184,8 +176,7 @@ operator fun Number.minus(other: Number): Number {
 operator fun Number.times(other: Number): Number {
     val (first, second) = coerceNumbers(this, other)
     return when (first) {
-        is Long -> first.nonOverflowingTimes(second as Long)
-        is BigInteger -> first.multiply(second as BigInteger)
+        is Long -> first.checkOverflowTimes(second as Long)
         is Double -> first * second as Double
         is BigDecimal -> first.multiply(second as BigDecimal, MATH_CONTEXT)
         else -> throw IllegalStateException()
@@ -195,8 +186,7 @@ operator fun Number.times(other: Number): Number {
 operator fun Number.div(other: Number): Number {
     val (first, second) = coerceNumbers(this, other)
     return when (first) {
-        is Long -> first / second as Long
-        is BigInteger -> first.divide(second as BigInteger)
+        is Long -> first.checkOverflowDivision(second as Long)
         is Double -> first / second as Double
         is BigDecimal -> first.divide(second as BigDecimal, MATH_CONTEXT)
         else -> throw IllegalStateException()
@@ -207,7 +197,6 @@ operator fun Number.rem(other: Number): Number {
     val (first, second) = coerceNumbers(this, other)
     return when (first) {
         is Long -> first % second as Long
-        is BigInteger -> first.remainder(second as BigInteger)
         is Double -> first % second as Double
         is BigDecimal -> first.remainder(second as BigDecimal, MATH_CONTEXT)
         else -> throw IllegalStateException()
@@ -218,7 +207,6 @@ operator fun Number.compareTo(other: Number): Int {
     val (first, second) = coerceNumbers(this, other)
     return when (first) {
         is Long -> first.compareTo(second as Long)
-        is BigInteger -> first.compareTo(second as BigInteger)
         is Double -> first.compareTo(second as Double)
         is BigDecimal -> first.compareTo(second as BigDecimal)
         else -> throw IllegalStateException()

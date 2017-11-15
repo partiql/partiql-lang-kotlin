@@ -42,3 +42,10 @@ internal fun errNoContext(message: String, internal: Boolean): Nothing = err(mes
 /** Shorthand for throwing evaluation with context. */
 internal fun err(message: String, errorContext: PropertyValueMap?, internal: Boolean): Nothing =
     throw EvaluationException(message, errorContext = errorContext, internal = internal)
+
+internal fun errIntOverflow(errorContext: PropertyValueMap? = null): Nothing {
+    throw EvaluationException(message = "Int overflow or underflow",
+                              errorCode = ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
+                              errorContext = errorContext,
+                              internal = false)
+}

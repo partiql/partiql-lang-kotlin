@@ -59,22 +59,6 @@ fun IonValue.numberValue(): Number = when {
     }
 }
 
-private val MAX_INT = Int.MAX_VALUE.toLong()
-private val MIN_INT = Int.MIN_VALUE.toLong()
-
-fun IonValue.intValue(): Int {
-    val number = numberValue()
-    if (number > MAX_INT || number < MIN_INT) {
-        err("Number out of integer range: $number")
-    }
-    return when (number) {
-        is Int -> number
-        is Long -> number.toInt()
-        is BigInteger -> number.intValueExact()
-        else -> err("Number is not an integer: $number")
-    }
-}
-
 fun IonValue.longValue(): Long {
     val number = numberValue()
     return when (number) {

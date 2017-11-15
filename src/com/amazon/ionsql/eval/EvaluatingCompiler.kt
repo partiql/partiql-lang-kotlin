@@ -55,6 +55,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
             } catch (e: EvaluationException) {
                 when {
                     e.errorContext == null -> throw EvaluationException(errorContext = metadata?.toErrorContext(),
+                                                                        errorCode = e.errorCode,
                                                                         cause = e,
                                                                         internal = e.internal)
                     else -> {
@@ -289,7 +290,19 @@ class EvaluatingCompiler(private val ion: IonSystem,
             exprThunk(cEnv.metadataLookup[ast]) { missingValue }
         },
         "lit" to { cEnv, ast ->
-            val literal = ast[1].exprValue()
+            val ionValue = ast[1]
+            val literal = when(ionValue) {
+                is IonInt -> {
+                    // FIXME move this check to the parser
+                    if(ionValue.integerSize == IntegerSize.BIG_INTEGER) {
+                        errIntOverflow(cEnv.metadataLookup[ast]?.toErrorContext())
+                    }
+
+                    ionValue.exprValue()
+                }
+                else -> ionValue.exprValue()
+            }
+
             exprThunk(cEnv.metadataLookup[ast]) { literal }
         },
         "id" to { cEnv, ast ->

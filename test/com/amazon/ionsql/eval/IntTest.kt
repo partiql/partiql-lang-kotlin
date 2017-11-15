@@ -23,8 +23,8 @@ class IntTest : EvaluatorBase() {
     private val closeToMaxLong = (Long.MAX_VALUE - 1)
     private val closeToMinLong = (Long.MIN_VALUE + 1)
 
-    private val bigInt = BigInteger.valueOf(Long.MAX_VALUE).add(BigInteger.ONE)
-    private val negativeBigInt = BigInteger.valueOf(Long.MIN_VALUE).minus(BigInteger.ONE)
+    private val bigInt = BigInteger.valueOf(Long.MAX_VALUE).times(BigInteger.valueOf(2))
+    private val negativeBigInt = BigInteger.valueOf(Long.MIN_VALUE).times(BigInteger.valueOf(2))
 
     @Test
     @Parameters
@@ -37,136 +37,138 @@ class IntTest : EvaluatorBase() {
 
         (1..20).map { RANDOM.nextInt() }.mapTo(parameters, transform)
         (1..20).map { RANDOM.nextLong() }.mapTo(parameters, transform)
-        (1..20).map { i ->
-            when (i % 2 == 0) {
-                true  -> bigInt.add(BigInteger.valueOf(RANDOM.nextLong()))
-                false -> negativeBigInt.minus(BigInteger.valueOf(RANDOM.nextLong()))
-            }
-        }.mapTo(parameters, transform)
 
         // defined manually
         parameters.add("$closeToMaxLong" to "$closeToMaxLong")
         parameters.add("$closeToMinLong" to "$closeToMinLong")
-        parameters.add("$bigInt" to "$bigInt")
-        parameters.add("$negativeBigInt" to "$negativeBigInt")
         parameters.add("`0x00ffFFffFFffFFff`" to "72057594037927935")
 
         return parameters
     }
 
     @Test
+    fun bigInt() = assertThrows("Int overflow or underflow", NodeMetadata(1,1)) { voidEval("$bigInt") }
+
+    @Test
+    fun negativeBigInt() = assertThrows("Int overflow or underflow", NodeMetadata(1,2)) { voidEval("$negativeBigInt") }
+
+    @Test
     @Parameters
     fun plus(pair: Pair<String, String>) = assertPair(pair)
 
     fun parametersForPlus(): List<Pair<String, String>> {
-        val transform: (Triple<BigInteger, BigInteger, BigInteger>) -> Pair<String, String> =
+        val transform: (Triple<Long, Long, Long>) -> Pair<String, String> =
             { (left, right, result) -> "$left + $right" to "$result" }
 
         val parameters = mutableListOf<Pair<String, String>>()
 
         (1..20).map {
-            val left = BigInteger.valueOf(RANDOM.nextLong())
-            val right = BigInteger.valueOf(RANDOM.nextLong())
+            // generating an integer to ensure addition won't overflow
+            val left = RANDOM.nextInt().toLong()
+            val right = RANDOM.nextInt().toLong()
 
-            Triple(left, right, left.add(right))
+            Triple(left, right, left + right)
         }.mapTo(parameters, transform)
-
-        (1..20).map {
-            val left = BigInteger.valueOf(RANDOM.nextLong()).add(bigInt)
-            val right = BigInteger.valueOf(RANDOM.nextLong()).add(bigInt)
-
-            Triple(left, right, left.add(right))
-        }.mapTo(parameters, transform)
-
-        // defined manually
-
-        parameters.add("$closeToMaxLong + $closeToMaxLong" to "18446744073709551612")
-        parameters.add("$closeToMaxLong + 123" to "9223372036854775929")
-        parameters.add("$bigInt + 555" to "9223372036854776363")
-        parameters.add("`0x00ffFFffFFffFFff` + `0x00ffFFffFFffFFff`" to "144115188075855870")
 
         return parameters
     }
+
+    @Test
+    fun plusOverflow() = assertThrows("Int overflow or underflow", NodeMetadata(1,21)) { voidEval("$closeToMaxLong + $closeToMaxLong") }
 
     @Test
     @Parameters
     fun minus(pair: Pair<String, String>) = assertPair(pair)
 
     fun parametersForMinus(): List<Pair<String, String>> {
-        val transform: (Triple<BigInteger, BigInteger, BigInteger>) -> Pair<String, String> =
+        val transform: (Triple<Long, Long, Long>) -> Pair<String, String> =
             { (left, right, result) -> "$left - $right" to "$result" }
 
         val parameters = mutableListOf<Pair<String, String>>()
 
         (1..20).map {
-            val left = BigInteger.valueOf(RANDOM.nextLong())
-            val right = BigInteger.valueOf(RANDOM.nextLong())
+            // generating an integer to ensure addition won't overflow
+            val left = RANDOM.nextInt().toLong()
+            val right = RANDOM.nextInt().toLong()
 
-            Triple(left, right, left.subtract(right))
+            Triple(left, right, left - right)
         }.mapTo(parameters, transform)
-
-        (1..20).map {
-            val left = BigInteger.valueOf(RANDOM.nextLong()).add(negativeBigInt)
-            val right = BigInteger.valueOf(RANDOM.nextLong()).add(bigInt)
-
-            Triple(left, right, left.subtract(right))
-        }.mapTo(parameters, transform)
-
-        // defined manually
-
-        parameters.add("-$closeToMaxLong - $closeToMaxLong" to "-18446744073709551612")
-        parameters.add("$closeToMinLong - 123" to "-9223372036854775930")
-        parameters.add("$negativeBigInt - 555" to "-9223372036854776364")
-        parameters.add("-`0x00ffFFffFFffFFff` - `0x00ffFFffFFffFFff`" to "-144115188075855870")
 
         return parameters
     }
+
+    @Test
+    fun minusUnderflow() = assertThrows("Int overflow or underflow", NodeMetadata(1,22)) { voidEval("$closeToMinLong - $closeToMaxLong") }
 
     @Test
     @Parameters
     fun times(pair: Pair<String, String>) = assertPair(pair)
 
     fun parametersForTimes(): List<Pair<String, String>> {
-        val transform: (Triple<BigInteger, BigInteger, BigInteger>) -> Pair<String, String> =
+        val transform: (Triple<Long, Long, Long>) -> Pair<String, String> =
             { (left, right, result) -> "$left * $right" to "$result" }
 
         val parameters = mutableListOf<Pair<String, String>>()
 
-        (1..20).map {
-            val left = BigInteger.valueOf(RANDOM.nextLong())
-            val right = BigInteger.valueOf(RANDOM.nextLong())
+        (1..40).map { i ->
+            var left =  RANDOM.nextInt(1_000).toLong()
+            if(i % 2 == 0) left = -left
 
-            Triple(left, right, left.multiply(right))
+            val right = RANDOM.nextInt(1_000).toLong()
+
+            Triple(left, right, left * right)
         }.mapTo(parameters, transform)
 
-        (1..20).map {
-            val left = BigInteger.valueOf(RANDOM.nextLong()).add(negativeBigInt)
-            val right = BigInteger.valueOf(RANDOM.nextLong()).add(bigInt)
-
-            Triple(left, right, left.multiply(right))
-        }.mapTo(parameters, transform)
-
-        // defined manually
-
-        parameters.add("$closeToMaxLong * $closeToMaxLong" to "85070591730234615828950163710522949636")
-        parameters.add("$closeToMinLong * $closeToMaxLong" to "-85070591730234615838173535747377725442")
-        parameters.add("$negativeBigInt * 555" to "-5118971480454400573995")
-        parameters.add("`0x00ffFFffFFffFFff` * `0x00ffFFffFFffFFff`" to "5192296858534827484415308253364225")
+        parameters.add("${Long.MAX_VALUE} * -1" to "-${Long.MAX_VALUE}")
 
         return parameters
     }
 
     @Test
+    fun timesOverflow() = assertThrows("Int overflow or underflow", NodeMetadata(1,21)) { voidEval("$closeToMaxLong * 2") }
+
+    @Test
+    fun timesUnderflow() = assertThrows("Int overflow or underflow", NodeMetadata(1,22)) { voidEval("${Long.MIN_VALUE} * -1") }
+
+    @Test
     @Parameters
-    fun cast(pair: Pair<String, String>) = assertPair(pair)
+    fun division(pair: Pair<String, String>) = assertPair(pair)
 
-    private val oneFollowedBy300Zeros = "1${(1..300).fold("") { acc, _ -> acc + "0" }}"
+    fun parametersForDivision(): List<Pair<String, String>> {
+        val transform: (Triple<Long, Long, Long>) -> Pair<String, String> =
+            { (left, right, result) -> "$left / $right" to "$result" }
 
-    fun parametersForCast() = listOf("cast($bigInt as int)" to "$bigInt",
-                                     "cast('$bigInt' as int)" to "$bigInt",
-                                     "cast($negativeBigInt as int)" to "$negativeBigInt",
-                                     "cast('$negativeBigInt' as int)" to "$negativeBigInt",
-                                     "cast(1e300 as int)" to oneFollowedBy300Zeros)
+        val parameters = mutableListOf<Pair<String, String>>()
+
+        (1..40).map { i ->
+            var left =  RANDOM.nextInt(1_000).toLong()
+            if(i % 2 == 0) left = -left
+
+            val right = RANDOM.nextInt(1_000).toLong()
+
+            Triple(left, right, left / right)
+        }.mapTo(parameters, transform)
+
+        parameters.add("${Long.MAX_VALUE} / -1" to "-${Long.MAX_VALUE}")
+
+        return parameters
+    }
+
+    @Test
+    fun divisionUnderflow() = assertThrows("Int overflow or underflow", NodeMetadata(1,22)) { voidEval("${Long.MIN_VALUE} / -1") }
+
+    @Test
+    fun castBigInt() = assertThrows("Int overflow or underflow") {
+        voidEval("cast('$bigInt' as int)")
+    }
+
+    @Test
+    fun castNegativeBigInt() = assertThrows("Int overflow or underflow") {
+        voidEval("cast('$negativeBigInt' as int)")
+    }
+
+    @Test
+    fun castHugeFloat() = assertEval("cast(1e30 as int)", "5076944270305263616")
 
     private fun assertPair(pair: Pair<String, String>) {
         val (query, expected) = pair

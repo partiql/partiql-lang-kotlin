@@ -212,12 +212,19 @@ fun ExprValue.cast(ion: IonSystem, targetType: ExprValueType, metadata: NodeMeta
                 }
                 INT -> when {
                     type == BOOL -> return if (booleanValue()) 1L.exprValue() else 0L.exprValue()
-                    type.isNumber -> return numberValue().coerce(BigInteger::class.java).exprValue()
+                    type.isNumber -> return numberValue().toLong().exprValue()
                     type.isText -> {
                         val value = ion.singleValue(stringValue())
                         return when(value.type) {
-                            IonType.INT -> value.exprValue()
+                            IonType.INT -> {
+                                value as IonInt
+                                when(value.integerSize){
+                                    IntegerSize.BIG_INTEGER -> errIntOverflow(metadata?.toErrorContext())
+                                    else -> value.longValue().exprValue()
+                                }
+                            }
                             else        -> throw EvaluationException(message = "can't convert '${stringValue()}' to INT",
+                                                                     errorContext = metadata?.toErrorContext(),
                                                                      internal = false)
                         }
                     }

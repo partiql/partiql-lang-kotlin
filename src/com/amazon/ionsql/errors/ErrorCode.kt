@@ -285,7 +285,12 @@ enum class ErrorCode(private val category: ErrorCategory,
     EVALUATOR_PRECISION_LOSS_WHEN_PARSING_TIMESTAMP(
         ErrorCategory.EVALUATOR,
         LOCATION,
-        "loss of precision when parsing timestamp")
+        "loss of precision when parsing timestamp"),
+
+    EVALUATOR_INTEGER_OVERFLOW(
+        ErrorCategory.EVALUATOR,
+        LOCATION,
+        "Int overflow or underflow"),
     ;
 
     protected fun getTokenString(errorContext: PropertyValueMap?): String =
