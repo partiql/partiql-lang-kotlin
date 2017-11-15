@@ -85,7 +85,7 @@ class EvaluatingCompilerExceptionsTest : EvaluatorBase() {
     }
 
     @Test
-    fun unknownFunction() = assertThrows("No such function: unknownFunction", NodeMetadata(1, 1)) {
+    fun unknownFunction() = assertThrows("No such function: unknownfunction", NodeMetadata(1, 1)) {
         voidEval("unknownFunction()")
     }
 

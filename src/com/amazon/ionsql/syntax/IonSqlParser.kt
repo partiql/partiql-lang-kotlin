@@ -279,7 +279,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             }
             CALL, CALL_AGG, CALL_AGG_WILDCARD -> sexp {
                 addSymbol(node.type.identifier)
-                addSymbol(token?.text!!)
+                addSymbol(token?.text!!.toLowerCase())
                 if (node.type == CALL_AGG) {
                     // TODO IONSQL-93 support DISTINCT node modifier
                     addSymbol("all")

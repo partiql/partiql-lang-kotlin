@@ -1027,4 +1027,9 @@ class IonSqlParserTest : IonSqlParserBase() {
         "(call date_add (lit \"second\") (id a))",
         "date_add(second, a)"
     )
+
+    @Test
+    fun caseInsensitiveFunctionName() = assertExpression(
+        "(call my_function (id a))",
+        "mY_fUnCtIoN(a)")
 }
