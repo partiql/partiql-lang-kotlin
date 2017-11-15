@@ -2,6 +2,7 @@ package com.amazon.ionsql.errors
 
 import com.amazon.ionsql.*
 import com.amazon.ionsql.syntax.*
+import com.amazon.ionsql.util.*
 import org.junit.Test
 
 class LexerErrorsTest : Base() {
@@ -23,7 +24,9 @@ class LexerErrorsTest : Base() {
             lexer.tokenize(input)
             fail("Expected LexerException but there was no Exception")
         } catch (lex: LexerException) {
-            checkErrorAndErrorContext(errorCode, lex, expectErrorContextValues)
+            softAssert {
+                checkErrorAndErrorContext(errorCode, lex, expectErrorContextValues)
+            }
         } catch (ex: Exception) {
             fail("Expected LexerException but a different exception was thrown \n\t  $ex")
         }

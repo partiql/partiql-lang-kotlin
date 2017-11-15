@@ -262,6 +262,16 @@ enum class ErrorCode(private val category: ErrorCategory,
         LOCATION + setOf(Property.BINDING_NAME),
         "Binding does not exist"),
 
+    EVALUATOR_INVALID_CAST(
+        ErrorCategory.EVALUATOR,
+        LOCATION + setOf(Property.CAST_TO, Property.CAST_FROM),
+        "Cannot cast between the specified types"),
+
+    EVALUATOR_CAST_FAILED(
+        ErrorCategory.EVALUATOR,
+        LOCATION + setOf(Property.CAST_TO, Property.CAST_FROM),
+        "Attempt to convert from one data type to another failed"),
+
     EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL(
         ErrorCategory.EVALUATOR,
         LOCATION,

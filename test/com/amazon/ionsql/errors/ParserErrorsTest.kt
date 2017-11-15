@@ -3,6 +3,7 @@ import com.amazon.ionsql.*
 import com.amazon.ionsql.syntax.IonSqlParser
 import com.amazon.ionsql.syntax.ParserException
 import com.amazon.ionsql.syntax.TokenType
+import com.amazon.ionsql.util.*
 import org.junit.*
 
 class ParserErrorsTest : Base() {
@@ -10,17 +11,21 @@ class ParserErrorsTest : Base() {
     private val parser = IonSqlParser(ion)
 
     private fun checkInputThrowingParserException(input: String,
-                                                 errorCode: ErrorCode,
-                                                 expectErrorContextValues: Map<Property, Any>) {
-        try {
-            parser.parse(input)
-            fail("Expected ParserException but there was no Exception")
-        } catch (pex: ParserException) {
-            checkErrorAndErrorContext(errorCode, pex, expectErrorContextValues)
-        } catch (ex: Exception) {
-            fail("Expected ParserException but a different exception was thrown \n\t  $ex")
-        }
+                                                  errorCode: ErrorCode,
+                                                  expectErrorContextValues: Map<Property, Any>) {
 
+        softAssert {
+            try {
+                parser.parse(input)
+                fail("Expected ParserException but there was no Exception")
+            }
+            catch (pex: ParserException) {
+                checkErrorAndErrorContext(errorCode, pex, expectErrorContextValues)
+            }
+            catch (ex: Exception) {
+                fail("Expected ParserException but a different exception was thrown \n\t  $ex")
+            }
+        }
     }
 
     @Test

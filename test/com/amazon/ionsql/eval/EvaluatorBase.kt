@@ -7,7 +7,7 @@ package com.amazon.ionsql.eval
 import com.amazon.ionsql.*
 import com.amazon.ionsql.errors.*
 import com.amazon.ionsql.util.*
-import org.junit.*
+import org.junit.Assert
 import kotlin.reflect.*
 
 abstract class EvaluatorBase : Base() {
@@ -46,8 +46,7 @@ abstract class EvaluatorBase : Base() {
         val expectedIon = literal(expected)
         val exprValue = eval(source, compileOptions, session)
 
-        AssertExprValue(exprValue).apply { assertIonValue(expectedIon) }
-            .run(block)
+        AssertExprValue(exprValue).apply { assertIonValue(expectedIon) }.run(block)
     }
 
     /**
@@ -60,8 +59,8 @@ abstract class EvaluatorBase : Base() {
      * @param block function literal with receiver used to plug in custom assertions
      */
     protected fun assertEvalIsMissing(source: String,
-                             session: EvaluationSession = EvaluationSession.default(),
-                             compileOptions: CompileOptions = CompileOptions.default()) {
+                                      session: EvaluationSession = EvaluationSession.default(),
+                                      compileOptions: CompileOptions = CompileOptions.default()) {
 
         val exprValue = eval(source, compileOptions, session)
         assertEquals(ExprValueType.MISSING, exprValue.type)
@@ -80,6 +79,7 @@ abstract class EvaluatorBase : Base() {
         val e = EvaluatingCompiler(ion, compileOptions = compileOptions)
         return e.compile(source).eval(session)
     }
+
     /**
      *  Asserts that [func] throws an [IonSqlException] with the specified message, line and column number
      */
@@ -99,7 +99,7 @@ abstract class EvaluatorBase : Base() {
 
                 if (cause != null) assertThat(e).hasRootCauseExactlyInstanceOf(cause.java)
 
-                if(metadata != null){
+                if(metadata != null) {
                     assertThat(e.errorContext!![Property.LINE_NUMBER]!!.longValue()).`as`("line number").isEqualTo(metadata.line)
                     assertThat(e.errorContext!![Property.COLUMN_NUMBER]!!.longValue()).`as`("column number").isEqualTo(metadata.column)
                 }
@@ -111,15 +111,24 @@ abstract class EvaluatorBase : Base() {
     }
 
     protected fun checkInputThrowingEvaluationException(input: String,
-                                                        errorCode: ErrorCode,
-                                                        expectErrorContextValues: Map<Property, Any>) {
-        try {
-            voidEval(input)
-            fail("Expected EvaluationException but there was no Exception")
-        } catch (pex: EvaluationException) {
-            checkErrorAndErrorContext(errorCode, pex, expectErrorContextValues)
-        } catch (ex: Exception) {
-            fail("Expected EvaluationException but a different exception was thrown \n\t  $ex")
+                                                        errorCode: ErrorCode? = null,
+                                                        expectErrorContextValues: Map<Property, Any>,
+                                                        cause: KClass<out Throwable>? = null) {
+        softAssert {
+            try {
+                voidEval(input)
+                fail("Expected EvaluationException but there was no Exception")
+            }
+            catch (e: EvaluationException) {
+                if (cause != null) assertThat(e).hasRootCauseExactlyInstanceOf(cause.java)
+                checkErrorAndErrorContext(errorCode, e, expectErrorContextValues)
+            }
+            catch (e: Exception) {
+                fail("Expected EvaluationException but a different exception was thrown \n\t  $e")
+            }
         }
     }
+
+    protected fun SourceLocationProperties(lineNum: Long, colNum: Long) =
+        mapOf(Property.LINE_NUMBER to lineNum, Property.COLUMN_NUMBER to colNum)
 }

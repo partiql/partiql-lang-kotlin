@@ -24,9 +24,6 @@ enum class ErrorCategory(val message: String) {
 }
 
 
-
-
-
 /** Each possible value that can be reported as part of an error has a
  * [Property]. [Property] is used as a key in [PropertyValueMap].
  *
@@ -44,6 +41,7 @@ enum class Property(val propertyName: String, val propertyType: PropertyType) {
     COLUMN_NUMBER("column_no", LONG_CLASS),
     TOKEN_STRING("token_string", STRING_CLASS),
     CAST_TO("cast_to", STRING_CLASS),
+    CAST_FROM("cast_from", STRING_CLASS),
     KEYWORD("keyword", STRING_CLASS),
     TOKEN_TYPE("token_type", TOKEN_CLASS),
     EXPECTED_TOKEN_TYPE("expected_token_type", TOKEN_CLASS),
@@ -68,7 +66,16 @@ abstract class PropertyValue(val type: PropertyType) {
     open fun tokenTypeValue(): TokenType = throw IllegalArgumentException("Property value is of type $type and not TokenType")
     open fun integerValue(): Int = throw IllegalArgumentException("Property value is of type $type and not Integer")
     open fun ionValue(): IonValue = throw IllegalArgumentException("Property value is of type $type and not IonValue")
-}
+
+    override fun toString() : String =
+        when(type) {
+            PropertyType.LONG_CLASS      -> longValue().toString()
+            PropertyType.STRING_CLASS    -> stringValue()
+            PropertyType.INTEGER_CLASS   -> integerValue().toString()
+            PropertyType.TOKEN_CLASS     -> tokenTypeValue().toString()
+            PropertyType.ION_VALUE_CLASS -> ionValue().toPrettyString()
+        }
+    }
 
 
 /**
@@ -83,7 +90,7 @@ enum class PropertyType(private val type: Class<*>){
     TOKEN_CLASS(TokenType::class.javaObjectType),
     ION_VALUE_CLASS(IonValue::class.javaObjectType);
 
-    public fun getType() = type
+    fun getType() = type
 }
 
 /**

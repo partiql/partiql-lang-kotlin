@@ -54,10 +54,13 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 return innerEval(env)
             } catch (e: EvaluationException) {
                 when {
-                    e.errorContext == null -> throw EvaluationException(errorContext = metadata?.toErrorContext(),
-                                                                        errorCode = e.errorCode,
-                                                                        cause = e,
-                                                                        internal = e.internal)
+                    e.errorContext == null ->
+                        throw EvaluationException(
+                            message = e.message,
+                            errorCode = e.errorCode,
+                            errorContext = metadata?.toErrorContext(),
+                            cause = e,
+                            internal = e.internal)
                     else -> {
                         metadata?.fillErrorContext(e.errorContext)
 

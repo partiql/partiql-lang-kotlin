@@ -4,20 +4,6 @@ import com.amazon.ionsql.errors.*
 import org.junit.*
 
 class EvaluatingCompilerExceptionsTest : EvaluatorBase() {
-    private val globalListOfNumbers = mapOf("numbers" to "[1, 2.0, 3e0, 4, 5d0]")
-    private val animals = mapOf("animals" to """
-        [
-          {name: "Kumo", type: "dog"},
-          {name: "Mochi", type: "dog"},
-          {name: "Lilikoi", type: "unicorn"},
-        ]
-        """, "animal_types" to """
-        [
-          {id: "dog", is_magic: false},
-          {id: "cat", is_magic: false},
-          {id: "unicorn", is_magic: true},
-        ]
-        """)
 
     @Test
     fun notOnOne() = assertThrows("Expected boolean: 1", NodeMetadata(1, 1), cause = IllegalArgumentException::class) {
@@ -110,26 +96,31 @@ class EvaluatingCompilerExceptionsTest : EvaluatorBase() {
     }
 
     @Test
-    fun badCastToInt() = assertThrows("can't convert 'a' to INT", NodeMetadata(1, 18)) {
-        voidEval("CAST('a' as int) > 0")
-    }
+    fun badCastToInt() = checkInputThrowingEvaluationException(
+        "CAST('a' as int) > 0",
+        ErrorCode.EVALUATOR_CAST_FAILED,
+        SourceLocationProperties(1, 18) + mapOf(Property.CAST_FROM to "STRING", Property.CAST_TO to "INT"))
 
     @Test
-    fun badCastInSelectToInt() = assertThrows("can't convert 'a' to INT", NodeMetadata(1, 91)) {
-        voidEval("SELECT *  FROM `[{_1: a, _2: 1}, {_1: a, _2: 'a'}, {_1: a, _2: 3}]` WHERE CAST(_2 as INT) > 0")
-    }
+    fun badCastInSelectToInt() = checkInputThrowingEvaluationException(
+        "SELECT *  FROM `[{_1: a, _2: 1}, {_1: a, _2: 'a'}, {_1: a, _2: 3}]` WHERE CAST(_2 as INT) > 0",
+        ErrorCode.EVALUATOR_CAST_FAILED,
+        SourceLocationProperties(1, 91) + mapOf(Property.CAST_FROM to "SYMBOL", Property.CAST_TO to "INT"))
 
     @Test
-    fun badCastToDecimal() = assertThrows("can't convert 'a' to DECIMAL", NodeMetadata(1, 22),
-                                      cause = NumberFormatException::class) {
-        voidEval("CAST('a' as DECIMAL) > 0")
-    }
+    fun badCastToDecimal() = checkInputThrowingEvaluationException(
+        "CAST('a' as DECIMAL) > 0",
+        ErrorCode.EVALUATOR_CAST_FAILED,
+        SourceLocationProperties(1, 22) + mapOf(Property.CAST_FROM to "STRING", Property.CAST_TO to "DECIMAL"),
+        NumberFormatException::class)
 
     @Test
-    fun badCastToTimestamp() = assertThrows("can't convert '2010-01-01T10' to TIMESTAMP", NodeMetadata(1, 36),
-                                            cause = IllegalArgumentException::class) {
-        voidEval("CAST('2010-01-01T10' as TIMESTAMP) > 0")
-    }
+    fun badCastToTimestamp() = checkInputThrowingEvaluationException(
+        "CAST('2010-01-01T10' as TIMESTAMP) > 0",
+        ErrorCode.EVALUATOR_CAST_FAILED,
+        SourceLocationProperties(1, 36) + mapOf(Property.CAST_FROM to "STRING", Property.CAST_TO to "TIMESTAMP"),
+        IllegalArgumentException::class)
+
 
     @Test
     fun divideByZero() = assertThrows("/ by zero", NodeMetadata(1, 3)) {

@@ -15,6 +15,7 @@ import java.util.*
 
 import com.amazon.ionsql.errors.Property.*
 import com.amazon.ionsql.eval.*
+import org.assertj.core.api.*
 
 
 @RunWith(JUnitParamsRunner::class)
@@ -54,7 +55,7 @@ abstract class Base : Assert() {
      * @param ex actual exception thrown by test
      * @param expectedValues expected values for errorContext
      */
-    protected fun <T : IonSqlException> checkErrorAndErrorContext(errorCode: ErrorCode?, ex: T, expectedValues: Map<Property, Any>) {
+    protected fun <T : IonSqlException> SoftAssertions.checkErrorAndErrorContext(errorCode: ErrorCode?, ex: T, expectedValues: Map<Property, Any>) {
         assertEquals(errorCode, ex.errorCode)
         val errorContext = ex.errorContext
 
@@ -70,8 +71,12 @@ abstract class Base : Assert() {
      * @param errorCode for the exception thrown by the test
      * @param errorContext errorContext that was part of the exception thrown by the test
      */
-    protected fun correctContextKeys(errorCode: ErrorCode, errorContext: PropertyValueMap?): Unit =
-        errorCode.getProperties().forEach { assertTrue("Error Context does not contain $it", errorContext!!.hasProperty(it)) }
+    private fun SoftAssertions.correctContextKeys(errorCode: ErrorCode, errorContext: PropertyValueMap?): Unit =
+        errorCode.getProperties().forEach {
+            assertThat(errorContext!!.hasProperty(it))
+                .withFailMessage("Error Context does not contain $it")
+                .isTrue
+        }
 
 
     /**
@@ -82,37 +87,53 @@ abstract class Base : Assert() {
      * @param errorContext errorContext that was part of the exception thrown by the test
      * @param expected expected values for errorContext
      */
-    protected fun correctContextValues(errorCode: ErrorCode, errorContext: PropertyValueMap?, expected: Map<Property, Any>) {
+    private fun SoftAssertions.correctContextValues(errorCode: ErrorCode, errorContext: PropertyValueMap?, expected: Map<Property, Any>) {
 
-        assertTrue("Expected parameter must contain all Properties for the error code",
-                   errorCode.getProperties().containsAll(expected.keys))
-
+        assertThat(errorCode.getProperties().containsAll(expected.keys))
+            .withFailMessage("Actual errorCode must contain these properties: " +
+                             "${expected.keys.joinToString(", ")} but contained only: " +
+                             errorCode.getProperties().joinToString(", "))
+            .isTrue
 
         val unexpectedProperties = errorCode.getProperties().filter { p -> !expected.containsKey(p) }
         if(unexpectedProperties.any()) {
             fail("Unexpected properties found in error code: ${unexpectedProperties.joinToString(", ")}")
         }
 
-
+        if(errorContext == null) return
         expected.forEach { entry ->
-            assertTrue("Error Context does not contain ${entry.key}", errorContext!!.hasProperty(entry.key))
+            val actualPropertyValue: PropertyValue? = errorContext[entry.key]
+            assertThat(errorContext.hasProperty(entry.key))
+                .withFailMessage("Error Context does not contain ${entry.key}")
+                .isTrue
+
+            val message by lazy {
+                "Expected property ${entry.key} to have value '${entry.value}' " +
+                "but found value '${actualPropertyValue.toString()}'"
+            }
 
             when (entry.key) {
                 LINE_NUMBER,
-                COLUMN_NUMBER -> assertEquals("$entry", entry.value, errorContext[entry.key]?.longValue())
+                COLUMN_NUMBER
+                    -> assertThat(actualPropertyValue?.longValue()).withFailMessage(message).isEqualTo(entry.value)
                 TOKEN_STRING,
                 CAST_TO,
+                CAST_FROM,
                 KEYWORD,
                 TIMESTAMP_STRING,
                 TIMESTAMP_FORMAT_PATTERN,
-                BINDING_NAME -> assertEquals("$entry", entry.value, errorContext[entry.key]?.stringValue())
+                BINDING_NAME
+                    -> assertThat(actualPropertyValue?.stringValue()).withFailMessage(message).isEqualTo(entry.value)
                 TOKEN_TYPE,
                 EXPECTED_TOKEN_TYPE_1_OF_2,
                 EXPECTED_TOKEN_TYPE_2_OF_2,
-                EXPECTED_TOKEN_TYPE -> assertEquals("$entry", entry.value, errorContext[entry.key]?.tokenTypeValue())
-                TOKEN_VALUE -> assertEquals("$entry", entry.value, errorContext[entry.key]?.ionValue())
+                EXPECTED_TOKEN_TYPE
+                    -> assertThat(actualPropertyValue?.tokenTypeValue()).withFailMessage(message).isEqualTo(entry.value)
+                TOKEN_VALUE
+                    -> assertThat(errorContext[entry.key]?.ionValue()).withFailMessage(message).isEqualTo(entry.value)
                 EXPECTED_ARITY_MIN,
-                EXPECTED_ARITY_MAX -> assertEquals("$entry", entry.value, errorContext[entry.key]?.integerValue())
+                EXPECTED_ARITY_MAX
+                    -> assertThat(actualPropertyValue?.integerValue()).withFailMessage(message).isEqualTo(entry.value)
             }
         }
     }
