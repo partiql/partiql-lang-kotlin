@@ -220,21 +220,20 @@ fun ExprValue.cast(ion: IonSystem, targetType: ExprValueType, metadata: NodeMeta
                     type == BOOL -> return if (booleanValue()) 1L.exprValue() else 0L.exprValue()
                     type.isNumber -> return numberValue().toLong().exprValue()
                     type.isText -> {
-                        val value = ion.singleValue(stringValue())
-                        return when(value.type) {
-                             IonType.INT -> {
-                                value as IonInt
-                                when(value.integerSize){
-                                    IntegerSize.BIG_INTEGER -> errIntOverflow(metadata?.toErrorContext())
-                                    else -> value.longValue().exprValue()
-                                }
-                            }
-                            else ->
-                                throw EvaluationException(
-                                     message = "can't convert string value to INT",
-                                     errorCode = ErrorCode.EVALUATOR_CAST_FAILED,
-                                     errorContext = castExceptionContext(),
-                                     internal = false)
+                        val value: IonInt
+                        try {
+                            value = ion.singleValue(stringValue()) as IonInt // Note: Can throw on invalid ION
+                        } catch (e : Exception) {
+                            throw EvaluationException(
+                                    message = "can't convert string value to INT",
+                                    errorCode = ErrorCode.EVALUATOR_CAST_FAILED,
+                                    errorContext = castExceptionContext(),
+                                    internal = false)
+                        }
+
+                        return when (value.integerSize) {
+                            IntegerSize.BIG_INTEGER -> errIntOverflow(metadata?.toErrorContext())
+                            else -> value.longValue().exprValue()
                         }
                     }
                 }

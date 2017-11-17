@@ -118,6 +118,7 @@ class EvaluatingCompilerCastTest : EvaluatorBase() {
                 case("`2007-10-10T`",           EVALUATOR_INVALID_CAST),
                 // text
                 case("'hello'",                 EVALUATOR_CAST_FAILED),
+                case("'1234A'",                 EVALUATOR_CAST_FAILED), // Invalid ION value
                 case("'-20'",                   "-20"),
                 case("""`"1000"`""",            "1000"),
                 case("""`'2e100'`""",           EVALUATOR_CAST_FAILED),
