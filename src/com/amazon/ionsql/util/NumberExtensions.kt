@@ -22,7 +22,7 @@ internal fun bigDecimalOf(num: Number, mc: MathContext = MATH_CONTEXT): BigDecim
     else          -> throw IllegalArgumentException("Unsupported number type: $num, ${num.javaClass}")
 }
 
-internal fun bigDecimalOf(text: String, mc: MathContext = MATH_CONTEXT): BigDecimal = BigDecimal(text, mc)
+internal fun bigDecimalOf(text: String, mc: MathContext = MATH_CONTEXT): BigDecimal = BigDecimal(text.trim(), mc)
 
 private val CONVERSION_MAP = mapOf<Set<Class<*>>, Class<out Number>>(
     setOf(Long::class.javaObjectType, Long::class.javaObjectType) to Long::class.javaObjectType,
