@@ -453,6 +453,16 @@ class ParserErrorsTest : Base() {
     }
 
     @Test
+    fun callTrimZeroArguments() {
+        checkInputThrowingParserException("trim()",
+                                          ErrorCode.PARSE_UNEXPECTED_TERM,
+                                          mapOf(Property.LINE_NUMBER to 1L,
+                                                Property.COLUMN_NUMBER to 6L,
+                                                Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
+                                                Property.TOKEN_VALUE to ion.newSymbol(")")))
+    }
+
+    @Test
     fun callTrimAllButString() {
         checkInputThrowingParserException("trim(trailing '' from)",
                                           ErrorCode.PARSE_UNEXPECTED_TERM,
@@ -464,6 +474,17 @@ class ParserErrorsTest : Base() {
     }
 
     @Test
+    fun callTwoArgumentsNoFrom() {
+        checkInputThrowingParserException("trim(' ' '   1   ')",
+                                          ErrorCode.PARSE_EXPECTED_RIGHT_PAREN_BUILTIN_FUNCTION_CALL,
+                                          mapOf(
+                                              Property.LINE_NUMBER to 1L,
+                                              Property.COLUMN_NUMBER to 10L,
+                                              Property.TOKEN_TYPE to TokenType.LITERAL,
+                                              Property.TOKEN_VALUE to ion.newString("   1   ")))
+    }
+
+    @Test
     fun callTrimSpecificationAndFromMissingString() {
         checkInputThrowingParserException("trim(trailing from)",
                                           ErrorCode.PARSE_UNEXPECTED_TERM,
@@ -472,17 +493,6 @@ class ParserErrorsTest : Base() {
                                               Property.COLUMN_NUMBER to 19L,
                                               Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
                                               Property.TOKEN_VALUE to ion.newSymbol(")")))
-    }
-
-    @Test
-    fun callTrimWrongSpecification() {
-        checkInputThrowingParserException("trim(foobar from '')",
-                                          ErrorCode.PARSE_EXPECTED_RIGHT_PAREN_BUILTIN_FUNCTION_CALL,
-                                          mapOf(
-                                              Property.LINE_NUMBER to 1L,
-                                              Property.COLUMN_NUMBER to 13L,
-                                              Property.TOKEN_TYPE to TokenType.KEYWORD,
-                                              Property.TOKEN_VALUE to ion.newSymbol("from")))
     }
 
     @Test
@@ -746,16 +756,6 @@ class ParserErrorsTest : Base() {
                                                 Property.COLUMN_NUMBER to 36L,
                                                 Property.TOKEN_TYPE to TokenType.KEYWORD,
                                                 Property.TOKEN_VALUE to ion.newSymbol("escape")))
-    }
-
-    @Test
-    fun callTrimZeroArguments() {
-        checkInputThrowingParserException("trim()",
-                                          ErrorCode.PARSE_UNEXPECTED_TERM,
-                                          mapOf(Property.LINE_NUMBER to 1L,
-                                                Property.COLUMN_NUMBER to 6L,
-                                                Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
-                                                Property.TOKEN_VALUE to ion.newSymbol(")")))
     }
 
     @Test

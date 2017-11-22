@@ -108,4 +108,13 @@ class TrimEvaluationTest : EvaluatorBase() {
     fun trimWrongStringType2() = assertThrows("Expected text: true", NodeMetadata(1, 1)) {
         voidEval("trim(trailing from true)")
     }
+
+    @Test // regression for https://issues.amazon.com/IONSQL-159
+    fun trimDefaultSpecification1() = assertEval("trim('12' from '1212b1212')", "\"b\"")
+
+    @Test // regression for https://issues.amazon.com/IONSQL-159
+    fun trimDefaultSpecification2() = assertEval("trim('12' from '1212b')", "\"b\"")
+
+    @Test // regression for https://issues.amazon.com/IONSQL-159
+    fun trimDefaultSpecification3() = assertEval("trim('12' from 'b1212')", "\"b\"")
 }

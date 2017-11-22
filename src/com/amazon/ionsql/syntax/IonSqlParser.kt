@@ -894,39 +894,51 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
      * Syntax is TRIM([[ specification ] [to trim characters] FROM] <trim source>).
      */
     private fun List<Token>.parseTrim(name: Token): ParseNode {
-        if (head?.type != LEFT_PAREN) err("Expected $LEFT_PAREN",
-                                          PARSE_EXPECTED_LEFT_PAREN_BUILTIN_FUNCTION_CALL)
+        if (head?.type != LEFT_PAREN) err("Expected $LEFT_PAREN", PARSE_EXPECTED_LEFT_PAREN_BUILTIN_FUNCTION_CALL)
 
         var rem = tail
         val arguments = mutableListOf<ParseNode>()
 
+        fun parseArgument(block: (ParseNode) -> ParseNode = { it }): List<Token> {
+            val node = block(rem.parseExpression())
+            arguments.add(node)
+
+            return node.remaining
+        }
+
         val hasSpecification = when(rem.head?.type) {
             TRIM_SPECIFICATION -> {
-                val specificationNode = rem.parseExpression()
-                arguments.add(specificationNode)
-                rem = specificationNode.remaining
+                rem = parseArgument()
 
                 true
             }
             else -> false
         }
 
-        if(hasSpecification && rem.head?.keywordText != "from") {
-            val toRemoveNode = rem.parseExpression().deriveExpectedKeyword("from")
-            arguments.add(toRemoveNode)
+        if (hasSpecification) { // trim(spec [toRemove] from target)
+            rem = when (rem.head?.keywordText) {
+                "from" -> rem.tail
+                else   -> parseArgument { it.deriveExpectedKeyword("from") }
+            }
 
-            rem = toRemoveNode.remaining
+            rem = parseArgument()
         }
+        else {
+            if(rem.head?.keywordText == "from") { // trim(from target)
+                rem = rem.tail // skips from
 
-        // without a specification from keyword is optional
-        if(rem.head?.keywordText == "from") {
-            rem = rem.tail
+                rem = parseArgument()
+            }
+            else { // trim([toRemove from] target)
+                rem = parseArgument()
+
+                if(rem.head?.keywordText == "from") {
+                    rem = rem.tail // skips from
+
+                    rem = parseArgument()
+                }
+            }
         }
-
-        // stringNode is required
-        val stringNode = rem.parseExpression()
-        arguments.add(stringNode)
-        rem = stringNode.remaining
 
         if(rem.head?.type != RIGHT_PAREN) {
             rem.err("Expected $RIGHT_PAREN", PARSE_EXPECTED_RIGHT_PAREN_BUILTIN_FUNCTION_CALL)

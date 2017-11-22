@@ -2,6 +2,7 @@ package com.amazon.ionsql.eval.builtins
 
 import com.amazon.ion.*
 import com.amazon.ionsql.eval.*
+import com.amazon.ionsql.eval.builtins.TrimSpecification.*
 import com.amazon.ionsql.util.*
 
 /**
@@ -35,7 +36,7 @@ import com.amazon.ionsql.util.*
  */
 internal class TrimExprFunction(private val ion: IonSystem) : ExprFunction {
     private val DEFAULT_TO_REMOVE = " ".codePoints().toArray()
-    private val DEFAULT_SPECIFICATION = TrimSpecification.BOTH
+    private val DEFAULT_SPECIFICATION = BOTH
 
     private fun IntArray.leadingTrimOffset(toRemove: IntArray): Int {
         var offset = 0
@@ -73,9 +74,9 @@ internal class TrimExprFunction(private val ion: IonSystem) : ExprFunction {
         val (type, toRemove, string) = extractArguments(args)
 
         return when (type) {
-            TrimSpecification.BOTH     -> string.trim(toRemove).exprValue(ion)
-            TrimSpecification.LEADING  -> string.leadingTrim(toRemove).exprValue(ion)
-            TrimSpecification.TRAILING -> string.trailingTrim(toRemove).exprValue(ion)
+            BOTH, NONE -> string.trim(toRemove).exprValue(ion)
+            LEADING    -> string.leadingTrim(toRemove).exprValue(ion)
+            TRAILING   -> string.trailingTrim(toRemove).exprValue(ion)
         }
     }
 
@@ -84,8 +85,33 @@ internal class TrimExprFunction(private val ion: IonSystem) : ExprFunction {
     private fun extractArguments(args: List<ExprValue>): Triple<TrimSpecification, IntArray, IntArray> {
         return when (args.size) {
             1    -> Triple(DEFAULT_SPECIFICATION, DEFAULT_TO_REMOVE, args[0].codePoints())
-            2    -> Triple(TrimSpecification.from(args[0]), DEFAULT_TO_REMOVE, args[1].codePoints())
-            3    -> Triple(TrimSpecification.from(args[0]), args[1].codePoints(), args[2].codePoints())
+            2    -> {
+
+                if(args[0].type != ExprValueType.STRING){
+                    errNoContext("with two arguments trim's first argument must be either the " +
+                                 "specification or a 'to remove' string",
+                                 internal = false)
+                }
+
+                val specification = TrimSpecification.from(args[0])
+                val toRemove = when(specification) {
+                    NONE -> args[0].codePoints()
+                    else -> DEFAULT_TO_REMOVE
+                }
+
+                Triple(specification, toRemove, args[1].codePoints())
+            }
+            3    -> {
+                val specification = TrimSpecification.from(args[0])
+                if(specification == NONE) {
+                    errNoContext("'${args[0].stringValue()}' is an unknown trim specification, " +
+                                 "valid vales: ${TrimSpecification.validValues}",
+                                 internal = false)
+                }
+
+
+                Triple(specification, args[1].codePoints(), args[2].codePoints())
+            }
 
             else -> errNoContext("Trim takes between 1 and 3 arguments, received: ${args.size}", internal = false)
         }
@@ -93,15 +119,19 @@ internal class TrimExprFunction(private val ion: IonSystem) : ExprFunction {
 }
 
 private enum class TrimSpecification {
-    BOTH, LEADING, TRAILING;
+    BOTH, LEADING, TRAILING, NONE;
 
     companion object {
         fun from(arg: ExprValue) = when (arg.stringValue()) {
             "both"     -> BOTH
             "leading"  -> LEADING
             "trailing" -> TRAILING
-            else       -> errNoContext("'${arg.stringValue()}' is an unknown trim specification, valid vales: ${TrimSpecification.values().joinToString()}", internal = false)
+            else       -> NONE
         }
+
+        val validValues = TrimSpecification.values()
+            .filter { it == NONE }
+            .joinToString()
     }
 
     override fun toString(): String {

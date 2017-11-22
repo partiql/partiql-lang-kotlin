@@ -107,9 +107,11 @@ class IonSqlParserTest : IonSqlParserBase() {
     fun callTrimSingleArgument() = assertExpression("(call trim (lit \"test\"))",
                                                     "trim('test')")
 
+
+
     @Test
-    fun callTrimSingleArgumentWithFrom() = assertExpression("(call trim (lit \"test\"))",
-                                                            "trim(from 'test')")
+    fun callTrimTwoArgumentsDefaultSpecification() = assertExpression("(call trim (lit \" \") (lit \"test\"))",
+                                                                      "trim(' ' from 'test')")
 
     @Test
     fun callTrimTwoArgumentsUsingBoth() = assertExpression("(call trim (lit \"both\") (lit \"test\"))",
