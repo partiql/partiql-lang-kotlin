@@ -62,10 +62,11 @@ internal class TrimExprFunction(private val ion: IonSystem) : ExprFunction {
     private fun IntArray.trailingTrim(toRemove: IntArray) = String(this, 0, this.size - this.trailingTrimOffSet(toRemove))
 
     private fun IntArray.trim(toRemove: IntArray): String {
-        val leadingOffset= this.leadingTrimOffset(toRemove)
+        val leadingOffset = this.leadingTrimOffset(toRemove)
         val trailingOffset = this.trailingTrimOffSet(toRemove)
+        val length = Math.max(0, this.size - trailingOffset - leadingOffset)
 
-        return String(this, leadingOffset, this.size - trailingOffset - leadingOffset)
+        return String(this, leadingOffset, length)
     }
 
     override fun call(env: Environment, args: List<ExprValue>): ExprValue {

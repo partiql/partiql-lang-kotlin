@@ -64,6 +64,15 @@ class TrimEvaluationTest : EvaluatorBase() {
     @Test
     fun trimMultiple3() = assertEval("trim(both ' -=' from 'string ==- = -=- - ----------  ')", "\"string\"")
 
+    @Test // regression for https://issues.amazon.com/IONSQL-160
+    fun trimMultiple4() = assertEval("trim(both ' ' from '            ')", "\"\"")
+
+    @Test // regression for https://issues.amazon.com/IONSQL-160
+    fun trimMultiple5() = assertEval("trim(leading ' ' from '            ')", "\"\"")
+
+    @Test // regression for https://issues.amazon.com/IONSQL-160
+    fun trimMultiple6() = assertEval("trim(trailing ' ' from '            ')", "\"\"")
+
     @Test
     fun trimEmoji1() = assertEval("trim(both '💩' from  '💩💩💩💩💩💩💩💩💩💩😁😞😸😸💩💩💩💩💩💩💩💩💩💩💩💩💩💩')",
                                   "\"😁😞😸😸\"")

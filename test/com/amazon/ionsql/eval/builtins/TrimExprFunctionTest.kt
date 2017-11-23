@@ -33,6 +33,15 @@ class TrimExprFunctionTest {
     fun twoArguments() = assertEquals("string   ", callTrim("leading", "   string   "))
 
     @Test
+    fun twoArgumentsBoth() = assertEquals("", callTrim("both", "      "))
+
+    @Test
+    fun twoArgumentsLeading() = assertEquals("", callTrim("leading", "      "))
+
+    @Test
+    fun twoArgumentsTrailing() = assertEquals("", callTrim("trailing", "      "))
+
+    @Test
     fun threeArguments() = assertEquals("string", callTrim("both", "a", "aaaaaaaaaastringaaaaaaa"))
 
     @Test
