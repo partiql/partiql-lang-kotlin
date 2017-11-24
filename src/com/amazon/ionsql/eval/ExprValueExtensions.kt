@@ -232,14 +232,22 @@ fun ExprValue.cast(ion: IonSystem, targetType: ExprValueType, metadata: NodeMeta
                 INT -> when {
                     type == BOOL -> return if (booleanValue()) 1L.exprValue() else 0L.exprValue()
                     type.isNumber -> return numberValue().toLong().exprValue()
-                    type.isText -> try {
-                        return stringValue().trim().toLong().exprValue()
-                    } catch (e : NumberFormatException) {
-                        throw EvaluationException(
-                                message = "can't convert string value to INT",
-                                errorCode = ErrorCode.EVALUATOR_CAST_FAILED,
-                                errorContext = castExceptionContext(),
-                                internal = false)
+                    type.isText -> {
+                        val value: IonInt
+                        try {
+                            value = ion.singleValue(stringValue()) as IonInt // Note: Can throw on invalid ION
+                        } catch (e : Exception) {
+                            throw EvaluationException(
+                                    message = "can't convert string value to INT",
+                                    errorCode = ErrorCode.EVALUATOR_CAST_FAILED,
+                                    errorContext = castExceptionContext(),
+                                    internal = false)
+                        }
+
+                        return when (value.integerSize) {
+                            IntegerSize.BIG_INTEGER -> errIntOverflow(metadata?.toErrorContext())
+                            else -> value.longValue().exprValue()
+                        }
                     }
                 }
                 FLOAT -> when {
@@ -247,7 +255,7 @@ fun ExprValue.cast(ion: IonSystem, targetType: ExprValueType, metadata: NodeMeta
                     type.isNumber -> return numberValue().toDouble().exprValue()
                     type.isText ->
                         try {
-                            return stringValue().trim().toDouble().exprValue()
+                            return stringValue().toDouble().exprValue()
                         } catch(e: NumberFormatException) {
                             throw EvaluationException(message = "can't convert string value to FLOAT",
                                                       cause = e,
@@ -260,7 +268,7 @@ fun ExprValue.cast(ion: IonSystem, targetType: ExprValueType, metadata: NodeMeta
                     type == BOOL -> return if (booleanValue()) BigDecimal.ONE.exprValue() else BigDecimal.ZERO.exprValue()
                     type.isNumber -> return numberValue().coerce(BigDecimal::class.java).exprValue()
                     type.isText -> try {
-                        return bigDecimalOf(stringValue()).exprValue() // trim happens in bigDecimalOf
+                        return bigDecimalOf(stringValue()).exprValue()
                     }
                     catch (e: NumberFormatException)
                     {

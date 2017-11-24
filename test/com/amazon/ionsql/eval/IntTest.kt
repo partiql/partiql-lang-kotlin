@@ -158,23 +158,13 @@ class IntTest : EvaluatorBase() {
     fun divisionUnderflow() = assertThrows("Int overflow or underflow", NodeMetadata(1,22)) { voidEval("${Long.MIN_VALUE} / -1") }
 
     @Test
-    fun castBigInt() = assertThrows("can't convert string value to INT") {
+    fun castBigInt() = assertThrows("Int overflow or underflow") {
         voidEval("cast('$bigInt' as int)")
     }
 
     @Test
-    fun castNegativeBigInt() = assertThrows("can't convert string value to INT") {
+    fun castNegativeBigInt() = assertThrows("Int overflow or underflow") {
         voidEval("cast('$negativeBigInt' as int)")
-    }
-
-    @Test // supported by Ion, but not IonSQL++ yet
-    fun castHexadecimal() = assertThrows("can't convert string value to INT") {
-        voidEval("cast('0xf' as int)")
-    }
-
-    @Test // supported by Ion, but not IonSQL++ yet
-    fun castBinary() = assertThrows("can't convert string value to INT") {
-        voidEval("cast('0b101' as int)")
     }
 
     @Test
