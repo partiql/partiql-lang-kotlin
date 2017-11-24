@@ -109,7 +109,6 @@ class EvaluatingCompilerCastTest : EvaluatorBase() {
                 case("`true`",                  "1"),
                 // numbers
                 case("5",                       "5"),
-                case(" 5 ",                     "5"),
                 case("`0e0`",                   "0"),
                 case("1.1",                     "1"),
                 case("1.9",                     "1"),
@@ -157,7 +156,6 @@ class EvaluatingCompilerCastTest : EvaluatorBase() {
                 case("`true`",                  "1e0"),
                 // numbers
                 case("5",                       "5e0"),
-                case(" 5 ",                     "5e0"),
                 case("`0e0`",                   "0e0"),
                 case("1.1",                     "1.1e0"),
                 case("-20.1",                   "-20.1e0"),
@@ -202,7 +200,6 @@ class EvaluatingCompilerCastTest : EvaluatorBase() {
                 case("`true`",                  "1d0"),
                 // numbers
                 case("5",                       "5d0"),
-                case(" 5 ",                     "5d0"),
                 case("`0e0`",                   "0."),  // TODO formalize this behavior
                 case("`1e0`",                   "1."),  // TODO formalize this behavior
                 case("1.1",                     "1.1d0"),
