@@ -59,7 +59,13 @@ class IonExprValue(override val ionValue: IonValue) : BaseExprValue() {
     override val ordinalBindings by lazy {
         OrdinalBindings.over { index ->
             when (ionValue) {
-                is IonSequence -> ionValue[index]?.exprValue()
+                is IonSequence -> {
+                    when {
+                        index < 0 -> null
+                        index >= ionValue.size -> null
+                        else -> ionValue[index]?.exprValue()
+                    }
+                }
                 else -> null
             }
         }

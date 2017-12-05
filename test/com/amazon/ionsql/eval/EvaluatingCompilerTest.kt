@@ -1231,4 +1231,11 @@ class EvaluatingCompilerTest : EvaluatorBase() {
         assertEval("SELECT t.a, t.undefined_field FROM `[{a:100, b:200}]` as t", "[{a:100}]",
                    compileOptions = CompileOptions.builder { undefinedVariable = UndefinedVariableBehavior.ERROR })
     }
+
+    @Test // https://issues.amazon.com/IONSQL-173
+    fun ordinalAccessWithNegativeIndex() = assertEval("SELECT temp[-2] FROM <<[1,2,3,4]>> AS temp", "[{}]")
+
+    @Test // https://issues.amazon.com/IONSQL-173
+    fun ordinalAccessWithNegativeIndexAndBindings()  = assertEval("SELECT temp[-2] FROM temp", "[{}]",
+                                                                  mapOf("temp" to "[[1,2,3,4]]").toSession())
 }
