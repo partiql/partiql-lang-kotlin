@@ -1165,7 +1165,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                     sum += value.numberValue()
                     count++
                 }
-                override fun compute() = (sum / count).exprValue()
+                override fun compute() = (sum / bigDecimalOf(count)).exprValue()
             }
         }
     )

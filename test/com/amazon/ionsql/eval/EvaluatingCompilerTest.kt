@@ -1139,6 +1139,11 @@ class EvaluatingCompilerTest : EvaluatorBase() {
         globalListOfNumbers.toSession()
     )
 
+    @Test // https://issues.amazon.com/issues/IONSQL-164
+    fun topLevelAvgOnlyInt() = assertEval(
+        """AVG([2,2,2,4])""",
+        """2.5""")
+
     @Test
     fun selectValueAggregate() = assertEval(
         // SELECT VALUE does not do legacy SQL aggregation
