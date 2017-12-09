@@ -222,7 +222,7 @@ fun ExprValue.cast(ion: IonSystem, targetType: ExprValueType, metadata: NodeMeta
         throw EvaluationException(message = message,
                                   errorCode = errorCode,
                                   errorContext = errorContext,
-                                  internal = false,
+                                  internal = internal,
                                   cause = cause)
     }
 
