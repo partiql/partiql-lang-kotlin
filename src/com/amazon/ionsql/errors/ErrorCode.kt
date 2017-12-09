@@ -265,12 +265,38 @@ enum class ErrorCode(private val category: ErrorCategory,
     EVALUATOR_INVALID_CAST(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.CAST_TO, Property.CAST_FROM),
-        "Cannot cast between the specified types"),
+        ""){
+            override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+                "Cannot convert ${errorContext?.get(Property.CAST_FROM)?.stringValue() ?: UNKNOWN} " +
+                "to ${errorContext?.get(Property.CAST_TO)?.stringValue() ?: UNKNOWN}"
+        },
+
+    EVALUATOR_INVALID_CAST_NO_LOCATION(
+        ErrorCategory.EVALUATOR,
+        setOf(Property.CAST_TO, Property.CAST_FROM),
+        ""){
+            override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+                "Cannot convert ${errorContext?.get(Property.CAST_FROM)?.stringValue() ?: UNKNOWN} " +
+                "to ${errorContext?.get(Property.CAST_TO)?.stringValue() ?: UNKNOWN}"
+        },
 
     EVALUATOR_CAST_FAILED(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.CAST_TO, Property.CAST_FROM),
-        "Attempt to convert from one data type to another failed"),
+        ""){
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "Failed to convert ${errorContext?.get(Property.CAST_FROM)?.stringValue() ?: UNKNOWN} " +
+            "to ${errorContext?.get(Property.CAST_TO)?.stringValue() ?: UNKNOWN}"
+        },
+
+    EVALUATOR_CAST_FAILED_NO_LOCATION(
+        ErrorCategory.EVALUATOR,
+        setOf(Property.CAST_TO, Property.CAST_FROM),
+        ""){
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "Failed to convert ${errorContext?.get(Property.CAST_FROM)?.stringValue() ?: UNKNOWN} " +
+            "to ${errorContext?.get(Property.CAST_TO)?.stringValue() ?: UNKNOWN}"
+        },
 
     EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL(
         ErrorCategory.EVALUATOR,

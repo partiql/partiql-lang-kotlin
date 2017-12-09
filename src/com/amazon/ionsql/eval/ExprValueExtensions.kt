@@ -195,14 +195,36 @@ private val ION_TEXT_STRING_CAST_TYPES = setOf(BOOL, TIMESTAMP)
  * [ExprValueType.isNumber], and *LOB types* is defined by [ExprValueType.isLob]
  *
  * @param ion The ion system to synthesize values with.
- * @param type The target type to cast this value to.
+ * @param targetType The target type to cast this value to.
  */
 fun ExprValue.cast(ion: IonSystem, targetType: ExprValueType, metadata: NodeMetadata?): ExprValue {
-    fun castExceptionContext() = metadata?.fillErrorContext(
-        PropertyValueMap().also {
+    fun castExceptionContext(): PropertyValueMap {
+        val errorContext = PropertyValueMap().also {
             it[Property.CAST_FROM] = this.type.toString()
             it[Property.CAST_TO] = targetType.toString()
-        })
+        }
+
+        metadata?.fillErrorContext(errorContext)
+
+        return errorContext
+    }
+
+    fun castFailedErr(message: String, internal: Boolean = false, cause: Throwable? = null): Nothing {
+        val errorContext = castExceptionContext()
+
+        val errorCode = if (metadata == null) {
+            ErrorCode.EVALUATOR_CAST_FAILED_NO_LOCATION
+        }
+        else {
+            ErrorCode.EVALUATOR_CAST_FAILED
+        }
+
+        throw EvaluationException(message = message,
+                                  errorCode = errorCode,
+                                  errorContext = errorContext,
+                                  internal = false,
+                                  cause = cause)
+    }
 
     fun Number.exprValue() = ionValue(ion).seal().exprValue()
 
@@ -210,8 +232,7 @@ fun ExprValue.cast(ion: IonSystem, targetType: ExprValueType, metadata: NodeMeta
         STRING -> ion.newString(this)
         SYMBOL -> ion.newSymbol(this)
 
-        else -> err("Invalid type for textual conversion: $type (this code should be unreachable)",
-                    castExceptionContext(),  internal = true)
+        else -> castFailedErr("Invalid type for textual conversion: $type (this code should be unreachable)", internal = true)
 
     }.seal().exprValue()
 
@@ -237,11 +258,7 @@ fun ExprValue.cast(ion: IonSystem, targetType: ExprValueType, metadata: NodeMeta
                         try {
                             value = ion.singleValue(stringValue()) as IonInt // Note: Can throw on invalid ION
                         } catch (e : Exception) {
-                            throw EvaluationException(
-                                    message = "can't convert string value to INT",
-                                    errorCode = ErrorCode.EVALUATOR_CAST_FAILED,
-                                    errorContext = castExceptionContext(),
-                                    internal = false)
+                            castFailedErr("can't convert string value to INT", internal = false, cause = e)
                         }
 
                         return when (value.integerSize) {
@@ -257,11 +274,7 @@ fun ExprValue.cast(ion: IonSystem, targetType: ExprValueType, metadata: NodeMeta
                         try {
                             return stringValue().toDouble().exprValue()
                         } catch(e: NumberFormatException) {
-                            throw EvaluationException(message = "can't convert string value to FLOAT",
-                                                      cause = e,
-                                                      errorCode = ErrorCode.EVALUATOR_CAST_FAILED,
-                                                      errorContext = castExceptionContext(),
-                                                      internal = false)
+                            castFailedErr("can't convert string value to FLOAT", internal = false, cause = e)
                         }
                 }
                 DECIMAL -> when {
@@ -272,11 +285,7 @@ fun ExprValue.cast(ion: IonSystem, targetType: ExprValueType, metadata: NodeMeta
                     }
                     catch (e: NumberFormatException)
                     {
-                        throw EvaluationException(message = "can't convert string value to DECIMAL",
-                                                  cause = e,
-                                                  errorCode = ErrorCode.EVALUATOR_CAST_FAILED,
-                                                  errorContext = castExceptionContext(),
-                                                  internal = false)
+                        castFailedErr("can't convert string value to DECIMAL", internal = false, cause = e)
                     }
                 }
                 TIMESTAMP -> when {
@@ -285,11 +294,7 @@ fun ExprValue.cast(ion: IonSystem, targetType: ExprValueType, metadata: NodeMeta
                     }
                     catch (e: IllegalArgumentException)
                     {
-                        throw EvaluationException(message = "can't convert string value to TIMESTAMP",
-                                                  cause = e,
-                                                  errorCode = ErrorCode.EVALUATOR_CAST_FAILED,
-                                                  errorContext = castExceptionContext(),
-                                                  internal = false)
+                        castFailedErr("can't convert string value to TIMESTAMP", internal = false, cause = e)
                     }
                 }
                 STRING, SYMBOL -> when {
@@ -312,8 +317,13 @@ fun ExprValue.cast(ion: IonSystem, targetType: ExprValueType, metadata: NodeMeta
         }
     }
 
+    val errorCode = if (metadata == null) {
+        ErrorCode.EVALUATOR_INVALID_CAST_NO_LOCATION
+    }
+    else {
+        ErrorCode.EVALUATOR_INVALID_CAST
+    }
+
     // incompatible types
-    err("Cannot convert $type to $targetType",
-        ErrorCode.EVALUATOR_INVALID_CAST,
-        castExceptionContext(), internal = false)
+    err("Cannot convert $type to $targetType", errorCode, castExceptionContext(), internal = false)
 }

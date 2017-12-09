@@ -121,6 +121,18 @@ class EvaluatingCompilerExceptionsTest : EvaluatorBase() {
         SourceLocationProperties(1, 36) + mapOf(Property.CAST_FROM to "STRING", Property.CAST_TO to "TIMESTAMP"),
         IllegalArgumentException::class)
 
+    @Test // https://i.amazon.com/issues/IONSQL-163
+    fun failedCastWithoutLocation() = checkInputThrowingEvaluationException("SELECT CAST('foo' as INT) FROM <<1>>",
+                                                                            ErrorCode.EVALUATOR_CAST_FAILED_NO_LOCATION,
+                                                                            mapOf(Property.CAST_FROM to "STRING",
+                                                                                  Property.CAST_TO to "INT"),
+                                                                            ClassCastException::class)
+
+    @Test // https://i.amazon.com/issues/IONSQL-163
+    fun invalidCastWithoutLocation() = checkInputThrowingEvaluationException("SELECT CAST(`2010T` as INT) FROM <<1>>",
+                                                                             ErrorCode.EVALUATOR_INVALID_CAST_NO_LOCATION,
+                                                                             mapOf(Property.CAST_FROM to "TIMESTAMP",
+                                                                                   Property.CAST_TO to "INT"))
 
     @Test
     fun divideByZero() = assertThrows("/ by zero", NodeMetadata(1, 3)) {
