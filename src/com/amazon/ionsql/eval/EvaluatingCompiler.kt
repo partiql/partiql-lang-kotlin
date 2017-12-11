@@ -443,11 +443,16 @@ class EvaluatingCompiler(private val ion: IonSystem,
             3    -> {
                 val terms: List<ExprThunk> = ast.flattenAssociativeOp().map { it.compile(cEnv) }.toList()
                 exprThunk(cEnv.metadataLookup[ast]) { env ->
-                    val operands = terms.map { it.eval(env) }.filter { !it.isUnknown() }
-                    when (operands.size) {
-                        0    -> nullValue
-                        else -> operands.any { it.booleanValue() }.exprValue()
 
+                    var (hasTrue, hasUnknown) = shortCircuitingFold(terms, env){
+                        operand -> (operand.type == BOOL) && operand.booleanValue()
+                    }
+
+
+                    when {
+                        hasTrue -> booleanExprValue(true, ion)
+                        hasUnknown -> nullValue
+                        else -> booleanExprValue(false, ion)
                     }
                 }
             }
@@ -456,19 +461,17 @@ class EvaluatingCompiler(private val ion: IonSystem,
     }, "and" to { cEnv, ast ->
         when (ast.size) {
             3    -> {
-                val terms = ast.flattenAssociativeOp().map { it.compile(cEnv) }.toList()
+                val terms: List<ExprThunk> = ast.flattenAssociativeOp().map { it.compile(cEnv) }.toList()
                 exprThunk(cEnv.metadataLookup[ast]) { env ->
-                    val (hasFalse, hasUnknown) = terms.fold(Pair(false,false)) { (hasFalse, hasUnknown), expr ->
-                        val operand = expr.eval(env)
 
-                        Pair(hasFalse || (operand.type == BOOL && !operand.booleanValue()),
-                             hasUnknown || operand.isUnknown())
+                    var (hasFalse, hasUnknown) = shortCircuitingFold(terms, env){
+                        operand -> (operand.type == BOOL) && !operand.booleanValue()
                     }
 
                     when {
-                        hasFalse  -> booleanExprValue(false, ion)
+                        hasFalse   -> booleanExprValue(false, ion)
                         hasUnknown -> nullValue
-                        else -> booleanExprValue(true, ion)
+                        else       -> booleanExprValue(true, ion)
                     }
                 }
             }
@@ -779,6 +782,25 @@ class EvaluatingCompiler(private val ion: IonSystem,
             }
         }
     )
+
+    /**
+     * Helper used to evaluate a list of arguments to a boolean expression. The evaluation short circuits
+     * when true (for or) false (for and) appears as an operand.
+     *
+     * Evaluate each [term] under [env] and apply [update] function on each iteration to update as to whether
+     * we have seen a value that should shortcircuit.
+     */
+    private fun shortCircuitingFold(terms: List<ExprThunk>, env: Environment, update: (ExprValue) -> Boolean): Pair<Boolean, Boolean> {
+        var seenShortcircuitValue = false
+        var hasUnknown = false
+        for (operandExpression in terms) {
+            if (seenShortcircuitValue) break
+            val operand: ExprValue = operandExpression.eval(env)
+            seenShortcircuitValue = seenShortcircuitValue || update(operand)
+            hasUnknown = hasUnknown || operand.isUnknown()
+        }
+        return Pair(seenShortcircuitValue, hasUnknown)
+    }
 
     /**
      * Given an AST node that represents a `LIKE` predicate return an [ExprThunk] that evaluates a `LIKE` predicate.

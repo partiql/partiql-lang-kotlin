@@ -305,13 +305,30 @@ class UnknownValTest : EvaluatorBase() {
 
     @Test
     fun orWithUnknownOperands() = assertEval("SELECT  i.x or i.y FROM boolsWithUnknowns as i",
-                                             "[{_1:true},{_1:true},{_1:false},{_1:true},{_1:true},{_1:false},{_1:false},{_1:true},{_1:null},{_1:true},{_1:false},{_1:true},{_1:false},{_1:null},{_1:null},{_1:null}]",
+                                             "[{_1:true},{_1:true},{_1:false},{_1:true},{_1:true},{_1:null},{_1:null},{_1:true},{_1:null},{_1:true},{_1:null},{_1:true},{_1:null},{_1:null},{_1:null},{_1:null}]",
                                              boolsWithUnknowns.toSession())
 
     @Test
     fun andWithUnknownOperands() = assertEval("SELECT  i.x and i.y FROM boolsWithUnknowns as i",
                                             "[{_1:true},{_1:false},{_1:false},{_1:false},{_1:null},{_1:false},{_1:false},{_1:null},{_1:null},{_1:null},{_1:false},{_1:null},{_1:false},{_1:null},{_1:null},{_1:null}]",
                                             boolsWithUnknowns.toSession())
+
+    @Test
+    fun andShortCircuits() = assertEval("SELECT s.x FROM [{'x': '1.1'},{'x': '2'},{'x': '3'},{'x': '4'},{'x': '5'}] as s WHERE FALSE AND CAST(s.x as INT)",
+                                              "[]",
+                                              boolsWithUnknowns.toSession())
+
+    @Test
+    fun andWithNullDoesNotShortCircuits() = assertThrows("can't convert string value to INT", NodeMetadata(1,92)) {
+        voidEval("SELECT s.x FROM [{'x': '1.1'},{'x': '2'},{'x': '3'},{'x': '4'},{'x': '5'}] as s WHERE NULL AND CAST(s.x as INT)")
+    }
+
+
+
+    @Test
+    fun andWithMissingDoesNotShortCircuits() = assertThrows("can't convert string value to INT", NodeMetadata(1,95)) {
+        voidEval("SELECT s.x FROM [{'x': '1.1'},{'x': '2'},{'x': '3'},{'x': '4'},{'x': '5'}] as s WHERE MISSING AND CAST(s.x as INT)")
+    }
 
 }
 
