@@ -155,7 +155,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
 
     private fun IonSequence.addClone(value: IonValue) = add(value.clone())
 
-    internal fun ParseNode.toSexp(): IonSexp {
+    private fun ParseNode.toSexp(): IonSexp {
         val node = this
         val astNode = when (type) {
             ATOM -> when (token?.type) {
@@ -349,6 +349,9 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         }
     }
 
+    // keywords that IN (<expr>) evaluate more like grouping than a singleton in value list
+    private val IN_OP_NORMAL_EVAL_KEYWORDS = setOf("select", "values")
+
     /**
      * Parses the given token list.
      *
@@ -371,18 +374,31 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 break
             }
 
+            fun parseRightExpr() = if (rem.size < 3) {
+                rem.err(
+                    "Missing right-hand side expression of infix operator",
+                    PARSE_EXPECTED_EXPRESSION
+                )
+            } else {
+                rem.tail.parseExpression(
+                    precedence = op.infixPrecedence
+                )
+            }
+
             val right = when (op.keywordText) {
-            // IS/IS NOT requires a type
+                // IS/IS NOT requires a type
                 "is", "is_not" -> rem.tail.parseType()
-                else -> {
-                    if (rem.size < 3) {
-                        rem.err("Missing right-hand side expression of infix operator", PARSE_EXPECTED_EXPRESSION)
-                    } else {
-                        rem.tail.parseExpression(
-                            precedence = op.infixPrecedence
-                        )
-                    }
+                // IN has context sensitive parsing rules around parenthesis
+                "in", "not_in" -> when {
+                    rem.tail.head?.type == LEFT_PAREN
+                            && rem.tail.tail.head?.keywordText !in IN_OP_NORMAL_EVAL_KEYWORDS ->
+                        rem.tail.tail.parseArgList(
+                            aliasSupportType = NONE,
+                            mode = NORMAL_ARG_LIST
+                        ).deriveExpected(RIGHT_PAREN).copy(LIST)
+                    else -> parseRightExpr()
                 }
+                else -> parseRightExpr()
             }
             rem = right.remaining
 

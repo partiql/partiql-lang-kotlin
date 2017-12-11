@@ -52,6 +52,10 @@ class EvaluatingCompilerTest : EvaluatorBase() {
         """
     )
 
+    private val storesAndPrices = stores + mapOf(
+        "prices" to """[5, 2e0]"""
+    )
+
     private val animals = mapOf(
         "animals" to """
         [
@@ -880,6 +884,67 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     )
 
     @Test
+    fun inPredicateSingleItem() = assertEval(
+        """
+          SELECT VALUE b.title FROM stores[*].books[*] AS b WHERE b.price IN (5)
+        """,
+        """
+          [
+            "A", "A"
+          ]
+        """,
+        stores.toSession()
+    )
+
+    @Test
+    fun inPredicateSingleExpr() = assertEval(
+        """
+          SELECT VALUE b.title FROM stores[*].books[*] AS b WHERE b.price IN 5
+        """,
+        """
+          []
+        """,
+        stores.toSession()
+    )
+
+    @Test
+    fun inPredicateSingleItemListVar() = assertEval(
+        """
+          SELECT VALUE b.title FROM stores[*].books[*] AS b WHERE b.price IN (prices)
+        """,
+        """
+          []
+        """,
+        storesAndPrices.toSession()
+    )
+
+    @Test
+    fun inPredicateSingleListVar() = assertEval(
+        """
+          SELECT VALUE b.title FROM stores[*].books[*] AS b WHERE b.price IN prices
+        """,
+        """
+          [
+            "A", "B", "A"
+          ]
+        """,
+        storesAndPrices.toSession()
+    )
+
+    @Test
+    fun inPredicateSubQuerySelectValue() = assertEval(
+        """
+          SELECT VALUE b.title FROM stores[*].books[*] AS b WHERE b.price IN (SELECT VALUE p FROM prices AS p)
+        """,
+        """
+          [
+            "A", "B", "A"
+          ]
+        """,
+        storesAndPrices.toSession()
+    )
+
+    @Test
     fun notInPredicate() = assertEval(
         """
           SELECT VALUE b.title FROM stores[*].books[*] AS b WHERE b.price NOT IN (5, `2e0`)
@@ -890,6 +955,71 @@ class EvaluatingCompilerTest : EvaluatorBase() {
           ]
         """,
         stores.toSession()
+    )
+
+    @Test
+    fun notInPredicateSingleItem() = assertEval(
+        """
+          SELECT VALUE b.title FROM stores[*].books[*] AS b WHERE b.price NOT IN (5)
+        """,
+        """
+          [
+            "B", "C", "D", "E", "F"
+          ]
+        """,
+        stores.toSession()
+    )
+
+    @Test
+    fun notInPredicateSingleExpr() = assertEval(
+        """
+          SELECT VALUE b.title FROM stores[*].books[*] AS b WHERE b.price NOT IN 5
+        """,
+        """
+          [
+            "A", "B", "C", "D", "A", "E", "F"
+          ]
+        """,
+        stores.toSession()
+    )
+
+    @Test
+    fun notInPredicateSingleItemListVar() = assertEval(
+        """
+          SELECT VALUE b.title FROM stores[*].books[*] AS b WHERE b.price NOT IN (prices)
+        """,
+        """
+          [
+            "A", "B", "C", "D", "A", "E", "F"
+          ]
+        """,
+        storesAndPrices.toSession()
+    )
+
+    @Test
+    fun notInPredicateSingleListVar() = assertEval(
+        """
+          SELECT VALUE b.title FROM stores[*].books[*] AS b WHERE b.price NOT IN prices
+        """,
+        """
+          [
+            "C", "D", "E", "F"
+          ]
+        """,
+        storesAndPrices.toSession()
+    )
+
+    @Test
+    fun notInPredicateSubQuerySelectValue() = assertEval(
+        """
+          SELECT VALUE b.title FROM stores[*].books[*] AS b WHERE b.price NOT IN (SELECT VALUE p FROM prices AS p)
+        """,
+        """
+          [
+            "C", "D", "E", "F"
+          ]
+        """,
+        storesAndPrices.toSession()
     )
 
     @Test
