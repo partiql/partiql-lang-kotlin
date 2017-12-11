@@ -4,10 +4,7 @@
 
 package com.amazon.ionsql.eval.bench;
 
-import com.amazon.ionsql.eval.EvaluatingCompiler;
-import com.amazon.ionsql.eval.ExprValue;
-import com.amazon.ionsql.eval.ExprValueType;
-import com.amazon.ionsql.eval.Expression;
+import com.amazon.ionsql.eval.*;
 import com.amazon.ionsql.eval.io.DelimitedValues;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Level;
@@ -102,7 +99,10 @@ public class CsvBench extends Base {
     public void process(Blackhole bh) {
         Expression expr = compiler.compile(queryMode.query);
         ExprValue value = expr.eval(
-            (name) -> "data".equals(name) ? source() : null
+            EvaluationSession
+                .builder()
+                .globals((name) -> "data".equals(name) ? source() : null)
+                .build()
         );
         materialize(value, bh);
     }
