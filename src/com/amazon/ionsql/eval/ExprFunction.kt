@@ -4,6 +4,9 @@
 
 package com.amazon.ionsql.eval
 
+import com.amazon.ionsql.eval.EvaluatingCompiler.*
+import com.amazon.ionsql.eval.EvaluatingCompiler.UnknownsPropagationPolicy.*
+
 /**
  * Represents a function that can be invoked from within an [EvaluatingCompiler]
  * compiled [Expression].

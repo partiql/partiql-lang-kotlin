@@ -327,3 +327,9 @@ fun ExprValue.cast(ion: IonSystem, targetType: ExprValueType, metadata: NodeMeta
     // incompatible types
     err("Cannot convert $type to $targetType", errorCode, castExceptionContext(), internal = false)
 }
+
+
+/**
+ * An Unknown value is one of `MISSING` or `NULL`
+ */
+internal fun ExprValue.isUnknown() : Boolean = this.type.isNull
