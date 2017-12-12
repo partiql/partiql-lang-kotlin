@@ -52,7 +52,10 @@ enum class Property(val propertyName: String, val propertyType: PropertyType) {
     EXPECTED_ARITY_MAX("arity_max", INTEGER_CLASS),
     TIMESTAMP_FORMAT_PATTERN("timestamp_format_pattern", STRING_CLASS),
     TIMESTAMP_STRING("timestamp_string", STRING_CLASS),
-    BINDING_NAME("binding_name", STRING_CLASS)
+    BINDING_NAME("binding_name", STRING_CLASS),
+    LIKE_VALUE("value_to_match", STRING_CLASS),
+    LIKE_PATTERN("pattern", STRING_CLASS),
+    LIKE_ESCAPE("escape_char", STRING_CLASS)
 }
 
 /**

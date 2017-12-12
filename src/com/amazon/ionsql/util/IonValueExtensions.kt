@@ -110,6 +110,12 @@ val IonValue.isNonNullText: Boolean
 val IonValue.ordinal: Int
     get() = container.indexOf(this)
 
+val IonValue.isText: Boolean
+    get() = when (this) {
+        is IonText -> true
+        else -> false
+}
+
 fun IonValue.exprValue(): ExprValue = IonExprValue(this)
 
 /** Creates a new [IonSexp] from an AST [IonSexp] that strips out meta nodes. */
