@@ -28,17 +28,35 @@ class DateAddEvaluationTest : EvaluatorBase() {
     fun dateAddSecond() = assertEval("date_add(second, 1, `2017-01-10T05:30:55Z`)", "2017-01-10T05:30:56Z")
 
     @Test
+    fun dateAddNull01() = assertEval("date_add(null, 1, `2017-01-10T05:30:55Z`)", "null")
+
+    @Test
+    fun dateAddNull02() = assertEval("date_add(second, null, `2017-01-10T05:30:55Z`)", "null")
+
+    @Test
+    fun dateAddNull03() = assertEval("date_add(second, 1, null)", "null")
+
+    @Test
+    fun dateAddMissing01() = assertEval("date_add(missing, 1, `2017-01-10T05:30:55Z`)", "null")
+
+    @Test
+    fun dateAddMissing02() = assertEval("date_add(second, missing, `2017-01-10T05:30:55Z`)", "null")
+
+    @Test
+    fun dateAddMissing03() = assertEval("date_add(second, 1, missing)", "null")
+
+    @Test
     fun dateAddWithBindings() = assertEval("date_add(second, a, b)", "2017-01-10T05:30:56Z", mapOf(
         "a" to "1",
         "b" to "2017-01-10T05:30:55Z").toSession())
 
     @Test
-    fun lessArguments() = assertThrows("date_add takes 3 arguments, received: 2", NodeMetadata(1, 1)) {
+    fun lessArguments() = assertThrows("date_add takes exactly 3 arguments, received: 2", NodeMetadata(1, 1)) {
         voidEval("date_add(year, 1)")
     }
 
     @Test
-    fun moreArguments() = assertThrows("date_add takes 3 arguments, received: 4", NodeMetadata(1, 1)) {
+    fun moreArguments() = assertThrows("date_add takes exactly 3 arguments, received: 4", NodeMetadata(1, 1)) {
         voidEval("date_add(year, 1, `2017T`, 1)")
     }
 

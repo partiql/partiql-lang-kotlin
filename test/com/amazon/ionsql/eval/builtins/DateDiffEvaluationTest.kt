@@ -28,6 +28,18 @@ class DateDiffEvaluationTest : EvaluatorBase() {
     fun dateDiffSecond() = assertEval("date_diff(second, `2016-01-10T05:30:55Z`, `2017-01-10T05:30:55Z`)", "31622400")
 
     @Test
+    fun dateDiffNull01() = assertEval("date_diff(second, null, `2017-01-10T05:30:55Z`)", "null")
+
+    @Test
+    fun dateDiffNull02() = assertEval("date_diff(second, `2016-01-10T05:30:55Z`, null)", "null")
+
+    @Test
+    fun dateDiffMissing01() = assertEval("date_diff(second, missing, `2017-01-10T05:30:55Z`)", "null")
+
+    @Test
+    fun dateDiffMissing02() = assertEval("date_diff(second, `2016-01-10T05:30:55Z`, missing)", "null")
+
+    @Test
     fun dateDiffWithBindings() = assertEval("date_diff(year, a, b)",
                                            "1",
                                            mapOf("a" to "2016-01-10T05:30:55Z",

@@ -29,13 +29,13 @@ class DateAddExprFunctionTest : Base() {
     @Test
     fun lessArguments() {
         assertThatThrownBy { callDateAdd("year", 1) }
-            .hasMessage("date_add takes 3 arguments, received: 2")
+            .hasMessage("date_add takes exactly 3 arguments, received: 2")
             .isExactlyInstanceOf(EvaluationException::class.java)
     }
 
     @Test fun moreArguments() {
         assertThatThrownBy { callDateAdd("year", 1, Timestamp.valueOf("2017T"), 2) }
-            .hasMessage("date_add takes 3 arguments, received: 4")
+            .hasMessage("date_add takes exactly 3 arguments, received: 4")
             .isExactlyInstanceOf(EvaluationException::class.java)
     }
 

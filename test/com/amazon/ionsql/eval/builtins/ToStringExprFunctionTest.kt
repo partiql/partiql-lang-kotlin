@@ -16,6 +16,8 @@ class ToStringExprFunctionTest : EvaluatorBase() {
     @Test fun to_string7() = assertEval("to_string(`0001-03-09`, 'y')", "\"1\"")
     @Test fun to_string8() = assertEval("to_string(`9999-03-09`, null)", "null")
     @Test fun to_string9() = assertEval("to_string(null, 'M/d/y')", "null")
+    @Test fun to_string10() = assertEval("to_string(`9999-03-09`, missing)", "null")
+    @Test fun to_string11() = assertEval("to_string(missing, 'M/d/y')", "null")
 
     @Test fun to_string_common_1() = assertEval("to_string(`1969-07-20T20:18Z`, 'MMMM d, y')", "\"July 20, 1969\"")
     @Test fun to_string_common_2() = assertEval("to_string(`1969-07-20T20:18Z`, 'MMM d, yyyy')", "\"Jul 20, 1969\"")

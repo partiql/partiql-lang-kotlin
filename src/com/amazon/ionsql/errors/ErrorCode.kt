@@ -308,7 +308,7 @@ enum class ErrorCode(private val category: ErrorCategory,
 
     EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL(
         ErrorCategory.EVALUATOR,
-        LOCATION,
+        LOCATION + setOf(Property.EXPECTED_ARITY_MIN, Property.EXPECTED_ARITY_MAX),
         "Incorrect number of arguments to function call"),
 
     EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN(

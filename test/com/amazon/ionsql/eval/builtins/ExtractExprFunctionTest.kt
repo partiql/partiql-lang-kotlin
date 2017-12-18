@@ -34,13 +34,13 @@ class ExtractExprFunctionTest : Base() {
     @Test
     fun lessArguments() {
         Assertions.assertThatThrownBy { callExtract("year") }
-            .hasMessage("extract takes 2 arguments, received: 1")
+            .hasMessage("extract takes exactly 2 arguments, received: 1")
             .isExactlyInstanceOf(EvaluationException::class.java)
     }
 
     @Test fun moreArguments() {
         Assertions.assertThatThrownBy { callExtract("year", 1, 1) }
-            .hasMessage("extract takes 2 arguments, received: 3")
+            .hasMessage("extract takes exactly 2 arguments, received: 3")
             .isExactlyInstanceOf(EvaluationException::class.java)
     }
 

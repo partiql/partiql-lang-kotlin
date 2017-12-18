@@ -9,13 +9,8 @@ import java.time.*
 import java.time.format.*
 import java.time.temporal.*
 
-class ToStringExprFunction(private val ion: IonSystem) : ExprFunction {
-    override fun call(env: Environment, args: List<ExprValue>): ExprValue {
-        when {
-            args.isAnyMissing() -> return missingExprValue(ion)
-            args.isAnyNull()    -> return nullExprValue(ion)
-        }
-
+class ToStringExprFunction(ion: IonSystem) : NullPropagatingExprFunction("to_string", 2, ion) {
+    override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
         validateArguments(args)
 
         val pattern = args[1].ionValue.stringValue()!!
@@ -41,7 +36,6 @@ class ToStringExprFunction(private val ion: IonSystem) : ExprFunction {
 
     private fun validateArguments(args: List<ExprValue>) {
         when {
-            args.count() != 2                 -> errNoContext("Expected 2 arguments for to_string instead of ${args.size}.", internal = false)
             args[0].ionValue !is IonTimestamp -> errNoContext("First argument of to_string is not a timestamp.", internal = false)
             args[1].ionValue !is IonText      -> errNoContext("Second argument of to_string is not a string.", internal = false)
         }

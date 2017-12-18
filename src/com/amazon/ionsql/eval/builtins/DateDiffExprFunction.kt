@@ -21,7 +21,7 @@ import java.time.*
  * - date_diff(day, `2010-01-01T`, `2010-01-02T`) results in 1
  * - date_diff(day, `2010-01-01T23:00Z`, `2010-01-02T01:00Z`) results in 0 as they are only 2h apart
  */
-internal class DateDiffExprFunction(val ion: IonSystem) : ExprFunction {
+internal class DateDiffExprFunction(ion: IonSystem) : NullPropagatingExprFunction("date_diff", 3, ion) {
 
     // Since we don't have a date part for `milliseconds` we can safely set the OffsetDateTime to 0 as it won't
     // affect any of the possible calculations.
@@ -55,8 +55,10 @@ internal class DateDiffExprFunction(val ion: IonSystem) : ExprFunction {
     private fun secondsSince(left: OffsetDateTime, right: OffsetDateTime): Number =
         Duration.between(left, right).toMillis() / 1_000
 
-    override fun call(env: Environment, args: List<ExprValue>): ExprValue {
-        val (datePart, left, right) = extractArguments(args)
+    override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
+        val datePart = args[0].datePartValue()
+        val left = args[1].timestampValue()
+        val right = args[2].timestampValue()
 
         val leftAsJava = left.toJava()
         val rightAsJava = right.toJava()
@@ -73,12 +75,5 @@ internal class DateDiffExprFunction(val ion: IonSystem) : ExprFunction {
         }
 
         return ion.newInt(difference).exprValue()
-    }
-
-    private fun extractArguments(args: List<ExprValue>): Triple<DatePart, Timestamp, Timestamp> {
-        return when (args.size) {
-            3    -> Triple(args[0].datePartValue(), args[1].timestampValue(), args[2].timestampValue())
-            else -> errNoContext("date_diff takes 3 arguments, received: ${args.size}", internal = false)
-        }
     }
 }

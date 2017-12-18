@@ -51,14 +51,14 @@ class TrimExprFunctionTest {
     fun zeroArguments() {
         assertThatThrownBy { callTrim() }
             .isExactlyInstanceOf(EvaluationException::class.java)
-            .hasMessageContaining("Trim takes between 1 and 3 arguments, received: 0")
+            .hasMessageContaining("trim takes between 1 and 3 arguments, received: 0")
     }
 
     @Test
     fun moreThanThreeArguments() {
         assertThatThrownBy { callTrim("both", "a", "aaaaaaaaaastringaaaaaaa", "a") }
             .isExactlyInstanceOf(EvaluationException::class.java)
-            .hasMessageContaining("Trim takes between 1 and 3 arguments, received: 4")
+            .hasMessageContaining("trim takes between 1 and 3 arguments, received: 4")
     }
 
     @Test

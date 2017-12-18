@@ -13,8 +13,8 @@ internal class BuiltinFunctionFactory(private val ion: IonSystem) {
                                                                "exists" to this.exists(),
                                                                "extract" to ExtractExprFunction(ion),
                                                                "substring" to this.substring(),
-                                                               "char_length" to this.char_length(),
-                                                               "character_length" to this.char_length(),
+                                                               "char_length" to this.charLength(),
+                                                               "character_length" to this.charLength(),
                                                                "trim" to TrimExprFunction(ion),
                                                                "to_string" to ToStringExprFunction(ion),
                                                                "to_timestamp" to ToTimestampExprFunction(ion),
@@ -97,14 +97,9 @@ internal class BuiltinFunctionFactory(private val ion: IonSystem) {
                     L1 = E1 - S1
                     return java's substring(C, S1, E1)
      */
-    fun substring(): ExprFunction = object : ExprFunction {
-        override fun call(env: Environment, args: List<ExprValue>): ExprValue {
+    fun substring(): ExprFunction = object : NullPropagatingExprFunction("substring", (2..3), ion) {
+        override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
             validateArguments(args)
-
-            when {
-                args.isAnyMissing() -> return missingExprValue(ion)
-                args.isAnyNull() -> return nullExprValue(ion)
-            }
 
             val str = args[0].stringValue()
             val codePointCount = str.codePointCount(0, str.length)
@@ -135,39 +130,25 @@ internal class BuiltinFunctionFactory(private val ion: IonSystem) {
 
         private fun validateArguments(args: List<ExprValue>) {
             when {
-                args.count() != 2 && args.count() != 3 ->
-                    errNoContext("Expected 2 or 3 arguments for substring instead of ${args.size}", internal = false)
-                !args[1].ionValue.isNullValue && !args[1].ionValue.isNumeric ->
+                !args[1].ionValue.isNumeric ->
                     errNoContext("Argument 2 of substring was not numeric", internal = false)
-                args.count() > 2 && !args[2].ionValue.isNullValue && !args[2].ionValue.isNumeric ->
+                args.size > 2 && !args[2].ionValue.isNumeric ->
                     errNoContext("Argument 3 of substring was not numeric", internal = false)
             }
         }
     }
 
-    fun char_length(): ExprFunction = object : OneArgExprFunction() {
-        override val functionName: String = "char_length"
-
-        override fun call(arg: ExprValue): ExprValue {
-            val s:String = arg.stringValue()
-            return s.codePointCount(0, s.length).exprValue(ion)
-        }
+    private fun charLength(): ExprFunction = makeOneArgExprFunction("char_length") { _, arg ->
+        val s = arg.stringValue()
+        s.codePointCount(0, s.length).exprValue(ion)
     }
 
-    fun upper(): ExprFunction = object : OneArgExprFunction() {
-        override val functionName: String = "upper"
-
-        override fun call(arg: ExprValue): ExprValue {
-            return arg.stringValue().toUpperCase().exprValue(ion)
-        }
+    private fun upper(): ExprFunction = makeOneArgExprFunction("upper") { _, arg ->
+        arg.stringValue().toUpperCase().exprValue(ion)
     }
 
-    fun lower(): ExprFunction = object : OneArgExprFunction() {
-        override val functionName: String = "lower"
-
-        override fun call(arg: ExprValue): ExprValue {
-            return arg.stringValue().toLowerCase().exprValue(ion)
-        }
+    private fun lower(): ExprFunction = makeOneArgExprFunction("lower") { _, arg ->
+        arg.stringValue().toLowerCase().exprValue(ion)
     }
 
     fun utcNow(): ExprFunction = ExprFunction.over { env, args ->
@@ -177,32 +158,15 @@ internal class BuiltinFunctionFactory(private val ion: IonSystem) {
     }
 
     /**
-     * This base class can be used by simple functions taking only a single argument.
+     * This function can be used to create simple functions taking only a single argument with null/missing propagation
+     *
      * Provides default behaviors:
      *  - Validates that only one argument has been passed.
      *  - If that argument is null, returns null.
      *  - If that argument is missing, returns missing.
      */
-    private abstract inner class OneArgExprFunction : ExprFunction {
-        abstract val functionName: String
-
-        abstract fun call(arg: ExprValue): ExprValue
-
-        override fun call(env: Environment, args: List<ExprValue>): ExprValue {
-            validateArguments(args)
-            when {
-                args.isAnyNull() -> return nullExprValue(ion)
-                args.isAnyMissing() -> return missingExprValue(ion)
-            }
-
-            return call(args[0])
-        }
-
-        protected fun validateArguments(args: List<ExprValue>) {
-            when {
-                args.count() != 1 -> errNoContext("Expected 1 argument for $functionName instead of ${args.size}", internal = false)
-            }
-        }
+    private fun makeOneArgExprFunction(name: String, func: (Environment, ExprValue) -> ExprValue) =
+        object : NullPropagatingExprFunction(name, 1, ion) {
+            override fun eval(env: Environment, args: List<ExprValue>): ExprValue = func(env, args[0])
     }
 }
-

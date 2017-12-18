@@ -26,13 +26,20 @@ class ToTimestampExprFunctionTest : EvaluatorBase() {
     @Test fun to_timestamp_null_arg_3() = assertEval("to_timestamp('07-20-1969', null)", "null")
     @Test fun to_timestamp_null_arg_4() = assertEval("to_timestamp(null, null)", "null")
 
+    @Test fun to_timestamp_missing_arg_1() = assertEval("to_timestamp(missing)", "null")
+    @Test fun to_timestamp_missing_arg_2() = assertEval("to_timestamp(missing, 'M-d-yyyy')", "null")
+    @Test fun to_timestamp_missing_arg_3() = assertEval("to_timestamp('07-20-1969', missing)", "null")
+    @Test fun to_timestamp_missing_arg_4() = assertEval("to_timestamp(null, null)", "null")
+
     @Test
     fun to_timestamp_too_few_args() {
         checkInputThrowingEvaluationException(
             "to_timestamp()",
             ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL,
             mapOf(Property.LINE_NUMBER to 1L,
-                  Property.COLUMN_NUMBER to 1L))
+                  Property.COLUMN_NUMBER to 1L,
+                  Property.EXPECTED_ARITY_MIN to 1,
+                  Property.EXPECTED_ARITY_MAX to 2))
     }
 
     @Test
@@ -41,7 +48,9 @@ class ToTimestampExprFunctionTest : EvaluatorBase() {
             "to_timestamp('one', 'two', 'three')",
             ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL,
             mapOf(Property.LINE_NUMBER to 1L,
-                  Property.COLUMN_NUMBER to 1L))
+                  Property.COLUMN_NUMBER to 1L,
+                  Property.EXPECTED_ARITY_MIN to 1,
+                  Property.EXPECTED_ARITY_MAX to 2))
     }
 
     @Test

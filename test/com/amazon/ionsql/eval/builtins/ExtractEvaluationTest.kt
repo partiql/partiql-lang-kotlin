@@ -34,6 +34,12 @@ class ExtractEvaluationTest : EvaluatorBase() {
     fun extractTimezoneMinute() = assertEval("extract(timezone_minute from `2017-01-10T05:30:55+11:30`)", "30")
 
     @Test
+    fun extractFromNull() = assertEval("extract(timezone_minute from null)", "null")
+
+    @Test
+    fun extractFromMissing() = assertEval("extract(timezone_minute from missing)", "null")
+
+    @Test
     fun extractTimezoneHourNegativeOffset() =
         assertEval("extract(timezone_hour from `2017-01-10T05:30:55-11:30`)", "-11")
 

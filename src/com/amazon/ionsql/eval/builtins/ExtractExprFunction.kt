@@ -6,7 +6,7 @@ import com.amazon.ionsql.eval.*
 import com.amazon.ionsql.syntax.*
 import com.amazon.ionsql.util.*
 
-internal class ExtractExprFunction(val ion: IonSystem) : ExprFunction {
+internal class ExtractExprFunction(ion: IonSystem) : NullPropagatingExprFunction("extract", 2, ion) {
     private val SECONDS_PER_MINUTE = 60
 
     // IonJava Timestamp.localOffset is the offset in minutes, e.g.: `+01:00 = 60` and `-1:20 = -80`
@@ -31,8 +31,9 @@ internal class ExtractExprFunction(val ion: IonSystem) : ExprFunction {
         return precisionPos < datePartPos
     }
 
-    override fun call(env: Environment, args: List<ExprValue>): ExprValue {
-        val (datePart, timestamp) = extractArguments(args)
+    override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
+        val datePart = args[0].datePartValue()
+        val timestamp = args[1].timestampValue()
 
         if(timestamp.hasInsufficientPrecisionFor(datePart)){
             return nullExprValue(ion)
@@ -50,13 +51,6 @@ internal class ExtractExprFunction(val ion: IonSystem) : ExprFunction {
         }
 
         return extracted.exprValue(ion)
-    }
-
-    private fun extractArguments(args: List<ExprValue>): Pair<DatePart, Timestamp> {
-        return when (args.size) {
-            2    -> Pair(args[0].datePartValue(), args[1].timestampValue())
-            else -> errNoContext("extract takes 2 arguments, received: ${args.size}", internal = false)
-        }
     }
 }
 
