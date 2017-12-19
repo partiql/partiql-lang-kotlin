@@ -40,4 +40,17 @@ class IonSqlExceptionTest : Base() {
 
         assertEquals("$prefix Unexpected token\n\tLexer Error: at line 20, column 10: invalid character at, c\n", ex.toString())
     }
+
+    @Test // IONSQL-180
+    fun toStringDoesNotAccumulateMessageText() {
+        val errorContext = PropertyValueMap()
+        errorContext[COLUMN_NUMBER] = 10L
+        errorContext[LINE_NUMBER] = 20L
+        errorContext[TOKEN_STRING] = "c"
+
+        val ex = IonSqlException("Unexpected token", ErrorCode.LEXER_INVALID_CHAR, errorContext)
+
+        assertEquals("$prefix Unexpected token\n\tLexer Error: at line 20, column 10: invalid character at, c\n", ex.toString())
+        assertEquals("$prefix Unexpected token\n\tLexer Error: at line 20, column 10: invalid character at, c\n", ex.toString())
+    }
 }

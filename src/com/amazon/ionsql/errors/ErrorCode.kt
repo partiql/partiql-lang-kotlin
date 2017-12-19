@@ -11,7 +11,7 @@ private val LOC_TOKEN_STR = LOCATION + (setOf(Property.TOKEN_STRING))
 
 /** Helper function to reduce syntactical overhead of accessing property values as strings. */
 private fun PropertyValueMap.getAsString(key: Property, defaultValue: String) =
-        this[key]?.stringValue() ?: defaultValue
+        this[key]?.toString() ?: defaultValue
 
 /** Each [ErrorCode] contains an immutable set of [Property].
  *  These are the properties used as keys in [PropertyValueMap] created at each error location.
