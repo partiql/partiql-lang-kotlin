@@ -4,7 +4,8 @@
 
 package com.amazon.ionsql.syntax
 
-import com.amazon.ion.IonSystem
+import com.amazon.ion.*
+import com.amazon.ionsql.*
 import com.amazon.ionsql.errors.*
 import com.amazon.ionsql.errors.ErrorCode.*
 import com.amazon.ionsql.errors.Property.*
@@ -420,6 +421,10 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
             fun errInvalidLiteral(literal: String): Nothing =
                 throw LexerException(errorCode = LEXER_INVALID_LITERAL, errorContext = makePropertyBag(literal, tracker))
 
+            fun errInvalidIonLiteral(literal: String, cause: IonException): Nothing =
+                throw LexerException(errorCode = LEXER_INVALID_ION_LITERAL,
+                                     errorContext = makePropertyBag(literal, tracker),
+                                     cause = cause)
 
             tracker.advance(cp)
 
@@ -513,7 +518,15 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
                                 SQ_STRING -> ion.newString(text)
                                 INTEGER -> ion.newInt(BigInteger(text, 10))
                                 DECIMAL -> ion.newDecimal(bigDecimalOf(text))
-                                ION_LITERAL -> ion.singleValue(text)
+                                ION_LITERAL -> try {
+                                    // anything wrapped by `` is considered as an ion literal, including invalid
+                                    // ion so we need to handle the exception here for proper error reporting
+                                    ion.singleValue(text)
+                                }
+                                catch (e: IonException)
+                                {
+                                    errInvalidIonLiteral(text, e)
+                                }
                                 else -> errInvalidLiteral(text)
                             }
                             else -> ion.newSymbol(text)

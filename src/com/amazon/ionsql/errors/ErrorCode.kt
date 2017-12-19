@@ -45,6 +45,14 @@ enum class ErrorCode(private val category: ErrorCategory,
             getTokenString(errorContext)
     },
 
+    LEXER_INVALID_ION_LITERAL(
+        ErrorCategory.LEXER,
+        LOC_TOKEN_STR,
+        "invalid ion literal at") {
+        override fun detailMessageSuffix(errorContext: PropertyValueMap?): String =
+            getTokenString(errorContext)
+    },
+
     PARSE_EXPECTED_KEYWORD(
         ErrorCategory.PARSER,
         LOC_TOKEN + setOf(Property.KEYWORD),

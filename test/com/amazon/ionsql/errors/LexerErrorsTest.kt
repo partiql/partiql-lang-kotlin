@@ -7,8 +7,7 @@ import org.junit.Test
 
 class LexerErrorsTest : Base() {
 
-    val lexer = IonSqlLexer(ion)
-
+    private val lexer = IonSqlLexer(ion)
 
     private fun representation(codePoint: Int): String =
         when {
@@ -53,4 +52,13 @@ class LexerErrorsTest : Base() {
                 Property.TOKEN_STRING to "^"))
     }
 
+    @Test
+    fun testInvalidIonLiteral() {
+        checkInputThrowingLexerException("`{I am not a list}`",
+                                         ErrorCode.LEXER_INVALID_ION_LITERAL,
+                                         mapOf(
+                                             Property.LINE_NUMBER to 1L,
+                                             Property.COLUMN_NUMBER to 20L,
+                                             Property.TOKEN_STRING to "{I am not a list}"))
+    }
  }
