@@ -1335,31 +1335,31 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     @Test
     fun undefinedUnqualifiedVariableWithUndefinedVariableBehaviorMissing() {
         assertEvalIsMissing("undefined_variable",
-                   compileOptions = CompileOptions.builder { undefinedVariable = UndefinedVariableBehavior.MISSING })
+                   compileOptions = CompileOptions.build { undefinedVariable(UndefinedVariableBehavior.MISSING) })
     }
 
     @Test
     fun undefinedUnqualifiedVariableIsNullExprWithUndefinedVariableBehaviorMissing() {
         assertEval("undefined_variable IS NULL", "true",
-                   compileOptions = CompileOptions.builder { undefinedVariable = UndefinedVariableBehavior.MISSING })
+                   compileOptions = CompileOptions.build { undefinedVariable(UndefinedVariableBehavior.MISSING) })
     }
     @Test
     fun undefinedUnqualifiedVariableIsMissingExprWithUndefinedVariableBehaviorMissing() {
         assertEval("undefined_variable IS MISSING", "true",
-                   compileOptions = CompileOptions.builder { undefinedVariable = UndefinedVariableBehavior.MISSING })
+                   compileOptions = CompileOptions.build { undefinedVariable(UndefinedVariableBehavior.MISSING) })
     }
 
     @Test
     fun undefinedUnqualifiedVariableInSelectWithUndefinedVariableBehaviorMissing() {
         assertEval("SELECT a, undefined_variable FROM `[{a:100, b:200}]`", "[{a:100}]",
-                   compileOptions = CompileOptions.builder { undefinedVariable = UndefinedVariableBehavior.MISSING })
+                   compileOptions = CompileOptions.build { undefinedVariable(UndefinedVariableBehavior.MISSING) })
     }
 
     @Test
     fun undefinedQualifieVariabledWithUndefinedVariableBehaviorError() {
         //Demonstrate that UndefinedVariableBehavior.ERROR does not affect qualified field names.
         assertEval("SELECT t.a, t.undefined_field FROM `[{a:100, b:200}]` as t", "[{a:100}]",
-                   compileOptions = CompileOptions.builder { undefinedVariable = UndefinedVariableBehavior.ERROR })
+                   compileOptions = CompileOptions.build { undefinedVariable(UndefinedVariableBehavior.ERROR) })
     }
 
     @Test // https://issues.amazon.com/IONSQL-173

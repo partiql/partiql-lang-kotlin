@@ -63,7 +63,7 @@ class EvaluatingCompilerExceptionsTest : EvaluatorBase() {
     @Test fun missingAlias() =
         //Same SQL as previous test--but DO NOT throw exception this time because of UndefinedVariableBehavior.MISSING
         assertEval(BAD_ALIAS_SQL, "[null]",
-                   compileOptions = CompileOptions.builder { undefinedVariable(UndefinedVariableBehavior.MISSING) })
+                   compileOptions = CompileOptions.build { undefinedVariable(UndefinedVariableBehavior.MISSING) })
 
     @Test
     fun wrongArityExists() = assertThrows("Expected a single argument for exists but found: 0", NodeMetadata(1, 1)) {
