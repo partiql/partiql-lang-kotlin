@@ -5,7 +5,6 @@
 package com.amazon.ionsql.syntax
 
 import com.amazon.ion.*
-import com.amazon.ionsql.*
 import com.amazon.ionsql.errors.*
 import com.amazon.ionsql.errors.ErrorCode.*
 import com.amazon.ionsql.errors.Property.*
@@ -14,7 +13,6 @@ import com.amazon.ionsql.syntax.IonSqlLexer.StateType.*
 import com.amazon.ionsql.syntax.TokenType.*
 import com.amazon.ionsql.syntax.TokenType.KEYWORD
 import com.amazon.ionsql.util.*
-import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.*
 
@@ -210,6 +208,7 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
             delta(":", START_AND_TERMINAL, COLON)
             delta(",", START_AND_TERMINAL, COMMA)
             delta("*", START_AND_TERMINAL, STAR)
+            delta(";", START_AND_TERMINAL, SEMICOLON)
 
             delta(NON_OVERLOADED_OPERATOR_CHARS, START_AND_TERMINAL, OPERATOR)
 
@@ -430,7 +429,7 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
 
             // retrieve the next state
             val next = when (cp) {
-                EOF -> EOF_STATE
+                EOF  -> EOF_STATE
                 else -> curr[cp]
             }
 

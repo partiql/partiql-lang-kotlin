@@ -4,6 +4,7 @@
 
 package com.amazon.ionsql.syntax
 
+import com.amazon.ionsql.util.*
 import org.junit.*
 
 class IonSqlParserTest : IonSqlParserBase() {
@@ -1117,4 +1118,33 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun callExtractTimezoneMinute() = assertExpression("(call extract (lit \"timezone_minute\") (id a))",
                                                "extract(timezone_minute from a)")
+
+    @Test
+    fun semicolonAtEndOfQuery() = assertExpression("(select (project (*)) (from (bag (lit 1))))",
+                                                   "SELECT * FROM <<1>>;")
+
+    @Test
+    fun semicolonAtEndOfQueryHasNoEffect() {
+        val query = "SELECT * FROM <<1>>"
+        val withSemicolon = parse("$query;").filterMetaNodes()
+        val withoutSemicolon = parse(query).filterMetaNodes()
+
+        assertEquals(withoutSemicolon, withSemicolon)
+    }
+
+    @Test
+    fun semicolonAtEndOfLiteralHasNoEffect() {
+        val withSemicolon = parse("1;").filterMetaNodes()
+        val withoutSemicolon = parse("1").filterMetaNodes()
+
+        assertEquals(withoutSemicolon, withSemicolon)
+    }
+
+    @Test
+    fun semicolonAtEndOfExpressionHasNoEffect() {
+        val withSemicolon = parse("(1+1);").filterMetaNodes()
+        val withoutSemicolon = parse("(1+1)").filterMetaNodes()
+
+        assertEquals(withoutSemicolon, withSemicolon)
+    }
 }

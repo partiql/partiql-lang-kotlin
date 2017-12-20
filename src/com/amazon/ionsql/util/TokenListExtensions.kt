@@ -6,14 +6,16 @@ import com.amazon.ionsql.errors.PropertyValueMap
 import com.amazon.ionsql.syntax.*
 
 /**
- * Predicate to check if the list of [Token]'s only contains a [ParseNode] with [Token.Type] [Token.EOF]
+ * Predicate to check if the list of [Token]'s only contains a end of statement with
+ * a [TokenType.EOF] or a [TokenType.SEMICOLON] followed by a [TokenType.EOF]
  *
  * @receiver List<Token> the current list of tokens being processed by the parser
- * @return true if the list has size 1 and the only element in the list is EOF
- *
+ * @return true if the list has size 1 and the only element in the list is EOF or if the list has size 2 and contains
+ *  [TokenType.SEMICOLON] and [TokenType.EOF] in order
  */
-internal fun List<Token>.onlyEof() =
-    this.size == 1 && this[0].type == TokenType.EOF
+internal fun List<Token>.onlyEndOfStatement() =
+    (size == 1 && this[0].type == TokenType.EOF) ||
+    (size == 2 && this[0].type == TokenType.SEMICOLON && this[1].type == TokenType.EOF)
 
 /**
  * Given an error context ([PropertyValueMap]) and a source position ([SourcePosition]) populate the given

@@ -407,7 +407,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 else -> when (op.keywordText) {
                     "between", "not_between" -> {
                         val rest = rem.tailExpectedKeyword("and")
-                        if (rest.onlyEof()) {
+                        if (rest.onlyEndOfStatement()) {
                             rem.head.err("Expected expression after AND", PARSE_EXPECTED_EXPRESSION)
                         } else {
                             rem = rest
@@ -422,7 +422,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                         when {
                             rem.head?.keywordText == "escape" -> {
                                 val rest = rem.tailExpectedKeyword("escape")
-                                if (rest.onlyEof()) {
+                                if (rest.onlyEndOfStatement()) {
                                     rem.head.err("Expected expression after ESCAPE", PARSE_EXPECTED_EXPRESSION)
                                 } else {
                                     rem = rest
@@ -1168,8 +1168,12 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
     override fun parse(source: String): IonSexp {
         val node = lexer.tokenize(source).parseExpression()
         val rem = node.remaining
-        if (!rem.onlyEof()) {
-            rem.err("Unexpected token after expression", PARSE_UNEXPECTED_TOKEN)
+        if (!rem.onlyEndOfStatement()) {
+            when(rem.head?.type ) {
+                SEMICOLON -> rem.tail.err("Unexpected token after semicolon. IonSQL does not allow more than one query",
+                                          PARSE_UNEXPECTED_TOKEN)
+                else      -> rem.err("Unexpected token after expression", PARSE_UNEXPECTED_TOKEN)
+            }
         }
         return node.toSexp().apply { makeReadOnly() }
     }

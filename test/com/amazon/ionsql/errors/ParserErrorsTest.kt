@@ -913,4 +913,35 @@ class ParserErrorsTest : Base() {
                                                 Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
                                                 Property.TOKEN_VALUE to ion.newSymbol(")")))
     }
+
+    @Test
+    fun tokensAfterSemicolon() {
+        checkInputThrowingParserException("1;1",
+                                          ErrorCode.PARSE_UNEXPECTED_TOKEN,
+                                          mapOf(Property.LINE_NUMBER to 1L,
+                                                Property.COLUMN_NUMBER to 3L,
+                                                Property.TOKEN_TYPE to TokenType.LITERAL,
+                                                Property.TOKEN_VALUE to ion.newInt(1)))
+    }
+
+    @Test
+    fun validQueriesSeparatedBySemicolon() {
+        checkInputThrowingParserException("SELECT * FROM <<1>>;SELECT * FROM <<1>>",
+                                          ErrorCode.PARSE_UNEXPECTED_TOKEN,
+                                          mapOf(Property.LINE_NUMBER to 1L,
+                                                Property.COLUMN_NUMBER to 21L,
+                                                Property.TOKEN_TYPE to TokenType.KEYWORD,
+                                                Property.TOKEN_VALUE to ion.newSymbol("select")))
+    }
+
+    @Test
+    fun semicolonInsideExpression() {
+        checkInputThrowingParserException("(1;)",
+                                          ErrorCode.PARSE_EXPECTED_TOKEN_TYPE,
+                                          mapOf(Property.LINE_NUMBER to 1L,
+                                                Property.COLUMN_NUMBER to 3L,
+                                                Property.EXPECTED_TOKEN_TYPE to TokenType.RIGHT_PAREN,
+                                                Property.TOKEN_TYPE to TokenType.SEMICOLON,
+                                                Property.TOKEN_VALUE to ion.newSymbol(";")))
+    }
 }

@@ -23,6 +23,7 @@ enum class TokenType {
     STAR,
     COMMA,
     COLON,
+    SEMICOLON,
     // keywords that get their own token type
     AS,
     FOR,

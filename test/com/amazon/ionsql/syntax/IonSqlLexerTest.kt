@@ -36,7 +36,7 @@ class IonSqlLexerTest : Base() {
 
     @Test
     fun punctuation() = assertTokens(
-        "()[]{}:,.*<<>>",
+        "()[]{}:,.*<<>>;",
         token(LEFT_PAREN, "'('", 1, 1),
         token(RIGHT_PAREN, "')'", 1, 2),
         token(LEFT_BRACKET, "'['", 1, 3),
@@ -48,7 +48,8 @@ class IonSqlLexerTest : Base() {
         token(DOT, "'.'", 1, 9),
         token(STAR, "'*'", 1, 10),
         token(LEFT_DOUBLE_ANGLE_BRACKET, "'<<'", 1, 11),
-        token(RIGHT_DOUBLE_ANGLE_BRACKET, "'>>'", 1, 13)
+        token(RIGHT_DOUBLE_ANGLE_BRACKET, "'>>'", 1, 13),
+        token(SEMICOLON, "';'", 1, 15)
     )
 
     @Test
