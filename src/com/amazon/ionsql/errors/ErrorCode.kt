@@ -318,6 +318,16 @@ enum class ErrorCode(private val category: ErrorCategory,
         LOCATION + setOf(Property.EXPECTED_ARITY_MIN, Property.EXPECTED_ARITY_MAX),
         "Incorrect number of arguments to function call"),
 
+    EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL(
+        ErrorCategory.EVALUATOR,
+        LOCATION + setOf(Property.EXPECTED_ARGUMENT_TYPES, Property.ACTUAL_ARGUMENT_TYPES, Property.FUNCTION_NAME),
+        "Incorrect type of arguments to function call") {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "Invalid argument types for ${errorContext?.get(Property.FUNCTION_NAME) ?: UNKNOWN}, " +
+            "expected: ${errorContext?.get(Property.EXPECTED_ARGUMENT_TYPES) ?: UNKNOWN} " +
+            "got: ${errorContext?.get(Property.ACTUAL_ARGUMENT_TYPES) ?: UNKNOWN}"
+    },
+
     EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.TIMESTAMP_FORMAT_PATTERN),
