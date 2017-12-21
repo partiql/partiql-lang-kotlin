@@ -29,7 +29,6 @@ class LexerErrorsTest : Base() {
         } catch (ex: Exception) {
             fail("Expected LexerException but a different exception was thrown \n\t  $ex")
         }
-
     }
 
     @Test

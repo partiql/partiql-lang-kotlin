@@ -4,7 +4,7 @@
 
 package com.amazon.ionsql.util
 
-import com.amazon.ionsql.Base
+import com.amazon.ionsql.*
 import org.junit.Test
 
 open class CollectionsProductTest() : Base() {

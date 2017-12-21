@@ -107,6 +107,11 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     fun identifier() = assertEval("i", "1", globalNumbers.toSession())
 
     @Test
+    fun identifierCaseMismatch() = assertEval("I", "1", globalNumbers.toSession())
+
+    @Test
+    fun quotedIdentifier() = assertEval("\"i\"", "1", globalNumbers.toSession())
+    @Test
     fun lexicalScope() = assertEval("@i", "1", globalNumbers.toSession())
 
     @Test

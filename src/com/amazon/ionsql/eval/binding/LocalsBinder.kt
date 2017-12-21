@@ -1,6 +1,8 @@
 package com.amazon.ionsql.eval.binding
 
+import com.amazon.ionsql.errors.*
 import com.amazon.ionsql.eval.*
+import com.amazon.ionsql.util.*
 
 /**
  * Creates a list of bindings from a list of locals.
@@ -9,11 +11,11 @@ import com.amazon.ionsql.eval.*
  */
 abstract class LocalsBinder {
     fun bindLocals(locals: List<ExprValue>) : Bindings {
-        return Bindings.over { name -> binderForName(name)(locals) }
+        return Bindings.over { bindingName -> binderForName(bindingName)(locals) }
     }
 
     /** This method is the backbone of [bindLocals] and should be used when optimizing lookups. */
-    abstract fun binderForName(name: String): (List<ExprValue>) -> ExprValue?
+    abstract fun binderForName(bindingName: BindingName): (List<ExprValue>) -> ExprValue?
 }
 
 
@@ -36,13 +38,12 @@ fun List<Alias>.localsBinder(missingValue: ExprValue): LocalsBinder {
 
     // For each 'as' and 'at' alias, create a locals accessor => { name: binding_accessor }
     data class Binder(val name: String, val func: (List<ExprValue>) -> ExprValue)
-    val localBindings = this.mapIndexed { index, alias -> sequenceOf(
+    val localBindings: Map<String, (List<ExprValue>) -> ExprValue?> = this.mapIndexed { index, alias -> sequenceOf(
                 // the alias binds to the value itself
                 Binder(alias.asName) { it[index] },
                 // the alias binds to the name of the value
                 if (alias.atName == null) null
-                else Binder(alias.atName) { it[index].name ?: missingValue }
-            )}
+                else Binder(alias.atName) { it[index].name ?: missingValue })}
             .asSequence()
             .flatten()
             .filterNotNull()
@@ -53,13 +54,18 @@ fun List<Alias>.localsBinder(missingValue: ExprValue): LocalsBinder {
                 when (binders.size) {
                     // The 0 case is fulfilled by withDefault
                     1 -> binders[0].func
-                    else -> { locals -> errNoContext("$name is ambiguous: ${binders.map { it.func(locals).ionValue }}", internal = false) }
+                    else -> { locals -> err(
+                        "$name is ambiguous: ${binders.map { it.func(locals).ionValue }}",
+                        errorCode = ErrorCode.EVALUATOR_AMBIGUOUS_BINDING,
+                        errorContext = PropertyValueMap().apply { set(Property.BINDING_NAME, name) },
+                        internal = false)
+                    }
                 }
             }
-            .withDefault(::dynamicLocalsBinder)
 
     return object: LocalsBinder() {
-        override fun binderForName(name: String): (List<ExprValue>) -> ExprValue? = localBindings.getValue(name)
+        override fun binderForName(bindingName: BindingName): (List<ExprValue>) -> ExprValue? =
+            localBindings.get(bindingName) ?: dynamicLocalsBinder(bindingName)
     }
 }
 
@@ -67,10 +73,10 @@ fun List<Alias>.localsBinder(missingValue: ExprValue): LocalsBinder {
  * Nothing found at our scope, attempt to look at the attributes in our variables
  * TODO fix dynamic scoping to be in line with SQL++ rules
  */
-private fun dynamicLocalsBinder(name: String): (List<ExprValue>) -> ExprValue? {
+private fun dynamicLocalsBinder(bindingName: BindingName): (List<ExprValue>) -> ExprValue? {
     return { locals ->
         locals.asSequence()
-                .map { it.bindings[name] }
+                .map { it.bindings[bindingName] }
                 .filterNotNull()
                 .firstOrNull()
     }

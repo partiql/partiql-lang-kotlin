@@ -5,7 +5,7 @@
 package com.amazon.ionsql.eval
 
 import com.amazon.ion.IonSystem
-import com.amazon.ionsql.util.seal
+import com.amazon.ionsql.util.*
 import java.util.*
 
 /**
@@ -47,7 +47,7 @@ class SequenceStruct(private val ion: IonSystem,
             }
         }
 
-        val bindings = Bindings.over { bindMap[it] }
+        val bindings = Bindings.over { bindingName -> bindMap.get(bindingName) }
         val ordinalBindings = OrdinalBindings.over {
             when {
                 it < 0 -> null

@@ -46,12 +46,12 @@ class IonExprValue(override val ionValue: IonValue) : BaseExprValue() {
     }
 
     override val bindings by lazy {
-        Bindings.over { name ->
+        Bindings.over { bindingName ->
             // All struct fields get surfaced as top-level names
             // TODO deal with SQL++ syntax rules about this (i.e. only works with schema)
             when (ionValue) {
-                is IonStruct -> ionValue[name]?.exprValue()
-                else -> null
+                is IonStruct -> ionValue.get(bindingName)?.exprValue()
+                else         -> null
             }
         }
     }

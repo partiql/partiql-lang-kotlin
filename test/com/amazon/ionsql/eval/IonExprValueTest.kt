@@ -6,7 +6,7 @@ package com.amazon.ionsql.eval
 
 import com.amazon.ion.IonContainer
 import com.amazon.ion.IonValue
-import com.amazon.ionsql.Base
+import com.amazon.ionsql.*
 import com.amazon.ionsql.util.get
 import org.junit.Test
 import java.math.BigDecimal

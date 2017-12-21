@@ -16,29 +16,35 @@ class IonSqlParserTest : IonSqlParserBase() {
     )
 
     @Test
-    fun id() = assertExpression(
-        "(id kumo)",
+    fun id_case_insensitive() = assertExpression(
+        "(id kumo case_insensitive)",
         "kumo"
     )
 
     @Test
+    fun id_case_sensitive() = assertExpression(
+        "(id kumo case_sensitive)",
+        "\"kumo\""
+    )
+
+    @Test
     fun listLiteral() = assertExpression(
-        "(list (id a) (lit 5) (+ (id b) (lit 6)))",
+        "(list (id a case_insensitive) (lit 5) (+ (id b case_insensitive) (lit 6)))",
         "[a, 5, (b + 6)]"
     )
 
     @Test
     fun bagLiteral() = assertExpression(
-        "(bag (id a) (lit 5) (+ (id b) (lit 6)))",
+        "(bag (id a case_insensitive) (lit 5) (+ (id b case_insensitive) (lit 6)))",
         "<<a, 5, (b + 6)>>"
     )
 
     @Test
     fun structLiteral() = assertExpression(
                 """(struct
-                     (lit "x") (id a)
+                     (lit "x") (id a case_insensitive)
                      (lit "y") (lit 5)
-                     (lit "z") (+ (id b) (lit 6))
+                     (lit "z") (+ (id b case_insensitive) (lit 6))
                    )
                 """,
                 "{'x':a, 'y':5, 'z':(b + 6)}"
@@ -175,13 +181,13 @@ class IonSqlParserTest : IonSqlParserBase() {
 
     @Test
     fun atOperatorOnIdentifier() = assertExpression(
-        """(@ (id a))""",
+        """(@ (id a case_insensitive))""",
         "@a"
     )
 
     @Test
     fun atOperatorOnPath() = assertExpression(
-        """(path (@ (id a)) (lit "b"))""",
+        """(path (@ (id a case_insensitive)) (case_insensitive (lit "b")))""",
         "@a.b"
     )
 
@@ -223,43 +229,43 @@ class IonSqlParserTest : IonSqlParserBase() {
 
     @Test
     fun callWithMultiple() = assertExpression(
-        "(call foobar (lit 5) (lit 6) (id a))",
+        "(call foobar (lit 5) (lit 6) (id a case_insensitive))",
         "foobar(5, 6, a)"
     )
 
     @Test
     fun selectWithSingleFrom() = assertExpression(
-        "(select (project (list (id a))) (from (id table1)))",
+        "(select (project (list (id a case_insensitive))) (from (id table1 case_insensitive)))",
         "SELECT a FROM table1"
     )
 
     @Test
     fun selectAllWithSingleFrom() = assertExpression(
-        "(select (project (list (id a))) (from (id table1)))",
+        "(select (project (list (id a case_insensitive))) (from (id table1 case_insensitive)))",
         "SELECT ALL a FROM table1"
     )
 
     @Test
     fun selectDistinctWithSingleFrom() = assertExpression(
-        "(select (project_distinct (list (id a))) (from (id table1)))",
+        "(select (project_distinct (list (id a case_insensitive))) (from (id table1 case_insensitive)))",
         "SELECT DISTINCT a FROM table1"
     )
 
     @Test
     fun selectStar() = assertExpression(
-        "(select (project (*)) (from (id table1)))",
+        "(select (project (*)) (from (id table1 case_insensitive)))",
         "SELECT * FROM table1"
     )
 
     @Test
     fun selectWithFromAt() = assertExpression(
-        "(select (project (list (id ord))) (from (at ord (id table1))))",
+        "(select (project (list (id ord case_insensitive))) (from (at ord (id table1 case_insensitive))))",
         "SELECT ord FROM table1 AT ord"
     )
 
     @Test
     fun selectWithFromAsAndAt() = assertExpression(
-        "(select (project (list (id ord) (id val))) (from (at ord (as val (id table1)))))",
+        "(select (project (list (id ord case_insensitive) (id val case_insensitive))) (from (at ord (as val (id table1 case_insensitive)))))",
         "SELECT ord, val FROM table1 AS val AT ord"
     )
 
@@ -268,7 +274,7 @@ class IonSqlParserTest : IonSqlParserBase() {
         """
         (select
           (project (*))
-          (from (unpivot (id item)))
+          (from (unpivot (id item case_insensitive)))
         )
         """,
         "SELECT * FROM UNPIVOT item"
@@ -278,8 +284,8 @@ class IonSqlParserTest : IonSqlParserBase() {
     fun selectWithFromUnpivotWithAt() = assertExpression(
         """
         (select
-          (project (list (id ord)))
-          (from (at name (unpivot (id item))))
+          (project (list (id ord case_insensitive)))
+          (from (at name (unpivot (id item case_insensitive))))
         )
         """,
         "SELECT ord FROM UNPIVOT item AT name"
@@ -289,8 +295,8 @@ class IonSqlParserTest : IonSqlParserBase() {
     fun selectWithFromUnpivotWithAs() = assertExpression(
         """
         (select
-          (project (list (id ord)))
-          (from (as val (unpivot (id item))))
+          (project (list (id ord case_insensitive)))
+          (from (as val (unpivot (id item case_insensitive))))
         )
         """,
         "SELECT ord FROM UNPIVOT item AS val"
@@ -300,8 +306,8 @@ class IonSqlParserTest : IonSqlParserBase() {
     fun selectWithFromUnpivotWithAsAndAt() = assertExpression(
         """
         (select
-          (project (list (id ord)))
-          (from (at name (as val (unpivot (id item)))))
+          (project (list (id ord case_insensitive)))
+          (from (at name (as val (unpivot (id item case_insensitive)))))
         )
         """,
         "SELECT ord FROM UNPIVOT item AS val AT name"
@@ -309,46 +315,46 @@ class IonSqlParserTest : IonSqlParserBase() {
 
     @Test
     fun selectAllStar() = assertExpression(
-        "(select (project (*)) (from (id table1)))",
+        "(select (project (*)) (from (id table1 case_insensitive)))",
         "SELECT ALL * FROM table1"
     )
 
     @Test
     fun selectDistinctStar() = assertExpression(
-        "(select (project_distinct (*)) (from (id table1)))",
+        "(select (project_distinct (*)) (from (id table1 case_insensitive)))",
         "SELECT DISTINCT * FROM table1"
     )
 
     @Test
     fun selectValues() = assertExpression(
-        "(select (project (value (id v))) (from (as v (id table1))))",
+        "(select (project (value (id v case_insensitive))) (from (as v (id table1 case_insensitive))))",
         "SELECT VALUE v FROM table1 AS v"
     )
 
     @Test
     fun selectAllValues() = assertExpression(
-        "(select (project (value (id v))) (from (as v (id table1))))",
+        "(select (project (value (id v case_insensitive))) (from (as v (id table1 case_insensitive))))",
         "SELECT ALL VALUE v FROM table1 AS v"
     )
 
     @Test
     fun selectDistinctValues() = assertExpression(
-        "(select (project_distinct (value (id v))) (from (as v (id table1))))",
+        "(select (project_distinct (value (id v case_insensitive))) (from (as v (id table1 case_insensitive))))",
         "SELECT DISTINCT VALUE v FROM table1 AS v"
     )
 
     @Test
     fun selectWithMissing() = assertExpression(
-        "(select (project (list (id a))) (from (id stuff)) (where (is (id b) (type missing))))",
+        "(select (project (list (id a case_insensitive))) (from (id stuff case_insensitive)) (where (is (id b case_insensitive) (type missing))))",
         "SELECT a FROM stuff WHERE b IS MISSING"
     )
 
     @Test
     fun selectMultipleWithMultipleFromSimpleWhere() = assertExpression(
         """(select
-             (project (list (id a) (id b)))
-             (from (inner_join (as t1 (id table1)) (id table2)))
-             (where (call f (id t1)))
+             (project (list (id a case_insensitive) (id b case_insensitive)))
+             (from (inner_join (as t1 (id table1 case_insensitive)) (id table2 case_insensitive)))
+             (where (call f (id t1 case_insensitive)))
            )
         """,
         "SELECT a, b FROM table1 as t1, table2 WHERE f(t1)"
@@ -357,9 +363,9 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun selectMultipleWithMultipleFromSimpleWhereNoAsAlias() = assertExpression(
         """(select
-             (project (list (as a1 (id a)) (as b1 (id b))))
-             (from (inner_join (as t1 (id table1)) (id table2)))
-             (where (call f (id t1)))
+             (project (list (as a1 (id a case_insensitive)) (as b1 (id b case_insensitive))))
+             (from (inner_join (as t1 (id table1 case_insensitive)) (id table2 case_insensitive)))
+             (where (call f (id t1 case_insensitive)))
            )
         """,
         "SELECT a a1, b b1 FROM table1 t1, table2 WHERE f(t1)"
@@ -368,9 +374,9 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun selectCorrelatedJoin() = assertExpression(
         """(select
-             (project (list (id a) (id b)))
-             (from (inner_join (as s (id stuff)) (@ (id s))))
-             (where (call f (id s)))
+             (project (list (id a case_insensitive) (id b case_insensitive)))
+             (from (inner_join (as s (id stuff case_insensitive)) (@ (id s case_insensitive))))
+             (where (call f (id s case_insensitive)))
            )
         """,
         "SELECT a, b FROM stuff s, @s WHERE f(s)"
@@ -379,9 +385,9 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun selectCorrelatedExplicitInnerJoin() = assertExpression(
         """(select
-             (project (list (id a) (id b)))
-             (from (inner_join (as s (id stuff)) (@ (id s))))
-             (where (call f (id s)))
+             (project (list (id a case_insensitive) (id b case_insensitive)))
+             (from (inner_join (as s (id stuff case_insensitive)) (@ (id s case_insensitive))))
+             (where (call f (id s case_insensitive)))
            )
         """,
         "SELECT a, b FROM stuff s INNER JOIN @s WHERE f(s)"
@@ -390,9 +396,9 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun selectCorrelatedExplicitCrossJoin() = assertExpression(
         """(select
-             (project (list (id a) (id b)))
-             (from (inner_join (as s (id stuff)) (@ (id s))))
-             (where (call f (id s)))
+             (project (list (id a case_insensitive) (id b case_insensitive)))
+             (from (inner_join (as s (id stuff case_insensitive)) (@ (id s case_insensitive))))
+             (where (call f (id s case_insensitive)))
            )
         """,
         "SELECT a, b FROM stuff s CROSS JOIN @s WHERE f(s)"
@@ -401,9 +407,9 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun selectCorrelatedExplicitLeftJoin() = assertExpression(
         """(select
-             (project (list (id a) (id b)))
-             (from (left_join (as s (id stuff)) (@ (id s))))
-             (where (call f (id s)))
+             (project (list (id a case_insensitive) (id b case_insensitive)))
+             (from (left_join (as s (id stuff case_insensitive)) (@ (id s case_insensitive))))
+             (where (call f (id s case_insensitive)))
            )
         """,
         "SELECT a, b FROM stuff s LEFT JOIN @s WHERE f(s)"
@@ -412,12 +418,12 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun selectCorrelatedLeftOuterJoinOn() = assertExpression(
         """(select
-             (project (list (id a) (id b)))
+             (project (list (id a case_insensitive) (id b case_insensitive)))
              (from
                (left_join
-                 (as s (id stuff))
-                 (@ (id s))
-                 (call f (id s))
+                 (as s (id stuff case_insensitive))
+                 (@ (id s case_insensitive))
+                 (call f (id s case_insensitive))
                )
              )
            )
@@ -428,11 +434,11 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun selectRightJoin() = assertExpression(
         """(select
-             (project (list (id a) (id b)))
+             (project (list (id a case_insensitive) (id b case_insensitive)))
              (from
                (right_join
-                 (as s (id stuff))
-                 (as f (id foo))
+                 (as s (id stuff case_insensitive))
+                 (as f (id foo case_insensitive))
                )
              )
            )
@@ -443,12 +449,12 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun selectFullOuterJoinOn() = assertExpression(
         """(select
-             (project (list (id a) (id b)))
+             (project (list (id a case_insensitive) (id b case_insensitive)))
              (from
                (outer_join
-                 (as s (id stuff))
-                 (as f (id foo))
-                 (= (id s) (id f))
+                 (as s (id stuff case_insensitive))
+                 (as f (id foo case_insensitive))
+                 (= (id s case_insensitive) (id f case_insensitive))
                )
              )
            )
@@ -459,25 +465,25 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun selectJoins() = assertExpression(
         """(select
-             (project (list (id x)))
+             (project (list (id x case_insensitive)))
              (from
                (outer_join
                  (right_join
                    (left_join
                      (inner_join
                        (inner_join
-                         (id a)
-                         (id b)
+                         (id a case_insensitive)
+                         (id b case_insensitive)
                        )
-                       (id c)
+                       (id c case_insensitive)
                      )
-                     (id d)
-                     (id e)
+                     (id d case_insensitive)
+                     (id e case_insensitive)
                    )
-                   (id f)
+                   (id f case_insensitive)
                  )
-                 (id g)
-                 (id h)
+                 (id g case_insensitive)
+                 (id h case_insensitive)
                )
              )
            )
@@ -487,7 +493,7 @@ class IonSqlParserTest : IonSqlParserBase() {
 
     @Test
     fun aggregateFunctionCall() = assertExpression(
-        """(call_agg count all (id a))""",
+        """(call_agg count all (id a case_insensitive))""",
         "COUNT(a)"
     )
 
@@ -497,45 +503,57 @@ class IonSqlParserTest : IonSqlParserBase() {
         (select
           (project
             (list
-              (+ (call_agg sum all (id a)) (call_agg_wildcard count))
-              (call_agg avg all (id b))
-              (call_agg min all (id c))
-              (call_agg max all (+ (id d) (id e)))
+              (+ (call_agg sum all (id a case_insensitive)) (call_agg_wildcard count))
+              (call_agg avg all (id b case_insensitive))
+              (call_agg min all (id c case_insensitive))
+              (call_agg max all (+ (id d case_insensitive) (id e case_insensitive)))
             )
           )
-          (from (id foo))
+          (from (id foo case_insensitive))
         )
         """,
         "SELECT sum(a) + count(*), AVG(b), MIN(c), MAX(d + e) FROM foo"
     )
 
     @Test
-    fun dot() = assertExpression(
-        """(path (id a) (lit "b"))""",
+    fun dot_case_insensitive_component() = assertExpression(
+        """(path (id a case_insensitive) (case_insensitive (lit "b")))""",
         "a.b"
     )
 
     @Test
+    fun dot_case_sensitive() = assertExpression(
+        """(path (id a case_sensitive) (case_sensitive (lit "b")))""",
+        """ "a"."b" """
+    )
+
+    @Test
+    fun dot_case_sensitive_component() = assertExpression(
+        """(path (id a case_insensitive) (case_sensitive (lit "b")))""",
+        "a.\"b\""
+    )
+
+    @Test
     fun groupDot() = assertExpression(
-        """(path (id a) (lit "b"))""",
+        """(path (id a case_insensitive) (case_insensitive (lit "b")))""",
         "(a).b"
     )
 
     @Test
     fun dotStar() = assertExpression(
-        """(path (call foo (id x) (id y)) (lit "a") (* unpivot) (lit "b"))""",
+        """(path (call foo (id x case_insensitive) (id y case_insensitive)) (case_insensitive (lit "a")) (* unpivot) (case_insensitive (lit "b")))""",
         "foo(x, y).a.*.b"
     )
 
     @Test
     fun dotAndBracketStar() = assertExpression(
-        """(path (id x) (lit "a") (*) (lit "b"))""",
+        """(path (id x case_insensitive) (case_insensitive (lit "a")) (*) (case_insensitive (lit "b")))""",
         "x.a[*].b"
     )
 
     @Test
     fun bracket() = assertExpression(
-        """(path (id a) (lit 5) (lit "b") (+ (id a) (lit 3)))""",
+        """(path (id a case_insensitive) (lit 5) (lit "b") (+ (id a case_insensitive) (lit 3)))""",
         """a[5]['b'][(a + 3)]"""
     )
 
@@ -544,20 +562,20 @@ class IonSqlParserTest : IonSqlParserBase() {
         """(select
              (project
                (list
-                 (as a (path (call process (id t)) (lit "a") (lit 0)))
-                 (as b (path (id t2) (lit "b")))
+                 (as a (path (call process (id t case_insensitive)) (case_insensitive (lit "a")) (lit 0)))
+                 (as b (path (id t2 case_insensitive) (case_insensitive (lit "b"))))
                )
              )
              (from
                (inner_join
-                 (as t (path (id t1) (lit "a")))
-                 (path (id t2) (lit "x") (* unpivot) (lit "b"))
+                 (as t (path (id t1 case_insensitive) (case_insensitive (lit "a"))))
+                 (path (id t2 case_insensitive) (case_insensitive (lit "x")) (* unpivot) (case_insensitive (lit "b")))
                )
              )
              (where
                (and
-                 (call test (path (id t2) (lit "name")) (path (id t1) (lit "name")))
-                 (= (path (id t1) (lit "id")) (path (id t2) (lit "id")))
+                 (call test (path (id t2 case_insensitive) (case_insensitive (lit "name"))) (path (id t1 case_insensitive) (case_insensitive (lit "name"))))
+                 (= (path (id t1 case_insensitive) (case_insensitive (lit "id"))) (path (id t2 case_insensitive) (case_insensitive (lit "id"))))
                )
              )
            )
@@ -576,9 +594,9 @@ class IonSqlParserTest : IonSqlParserBase() {
                (path
                  (select
                    (project (*))
-                   (from (id x))
+                   (from (id x case_insensitive))
                  )
-                 (lit "a")
+                 (case_insensitive (lit "a"))
                )
              )
            )
@@ -594,10 +612,10 @@ class IonSqlParserTest : IonSqlParserBase() {
                (path
                  (select
                    (project (*))
-                   (from (id x))
-                   (where (id b))
+                   (from (id x case_insensitive))
+                   (where (id b case_insensitive))
                  )
-                 (lit "a")
+                 (case_insensitive (lit "a"))
                )
              )
            )
@@ -609,7 +627,7 @@ class IonSqlParserTest : IonSqlParserBase() {
     fun selectLimit() = assertExpression(
         """(select
              (project (*))
-             (from (id a))
+             (from (id a case_insensitive))
              (limit (lit 10))
            )
         """,
@@ -620,8 +638,8 @@ class IonSqlParserTest : IonSqlParserBase() {
     fun selectWhereLimit() = assertExpression(
         """(select
              (project (*))
-             (from (id a))
-             (where (= (id a) (lit 5)))
+             (from (id a case_insensitive))
+             (where (= (id a case_insensitive) (lit 5)))
              (limit (lit 10))
            )
         """,
@@ -641,7 +659,7 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun castArg() = assertExpression(
         """(cast
-             (+ (lit 5) (id a))
+             (+ (lit 5) (id a case_insensitive))
              (type character_varying 1)
            )
         """,
@@ -652,7 +670,7 @@ class IonSqlParserTest : IonSqlParserBase() {
     fun searchedCaseSingleNoElse() = assertExpression(
         """(searched_case
              (when
-               (= (id name) (lit "zoe"))
+               (= (id name case_insensitive) (lit "zoe"))
                (lit 1)
              )
            )
@@ -664,7 +682,7 @@ class IonSqlParserTest : IonSqlParserBase() {
     fun searchedCaseSingleWithElse() = assertExpression(
         """(searched_case
              (when
-               (= (id name) (lit "zoe"))
+               (= (id name case_insensitive) (lit "zoe"))
                (lit 1)
              )
              (else (lit 0))
@@ -677,11 +695,11 @@ class IonSqlParserTest : IonSqlParserBase() {
     fun searchedCaseMultiWithElse() = assertExpression(
         """(searched_case
              (when
-               (= (id name) (lit "zoe"))
+               (= (id name case_insensitive) (lit "zoe"))
                (lit 1)
              )
              (when
-               (> (id name) (lit "kumo"))
+               (> (id name case_insensitive) (lit "kumo"))
                (lit 2)
              )
              (else (lit 0))
@@ -693,7 +711,7 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun simpleCaseSingleNoElse() = assertExpression(
         """(simple_case
-             (id name)
+             (id name case_insensitive)
              (when
                (lit "zoe")
                (lit 1)
@@ -706,7 +724,7 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun simpleCaseSingleWithElse() = assertExpression(
         """(simple_case
-             (id name)
+             (id name case_insensitive)
              (when
                (lit "zoe")
                (lit 1)
@@ -720,7 +738,7 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun simpleCaseMultiWithElse() = assertExpression(
         """(simple_case
-             (id name)
+             (id name case_insensitive)
              (when
                (lit "zoe")
                (lit 1)
@@ -766,7 +784,7 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun inOperatorWithImplicitValues() = assertExpression(
         """(in
-             (id a)
+             (id a case_insensitive)
              (list (lit 1) (lit 2) (lit 3) (lit 4))
            )
         """,
@@ -776,7 +794,7 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun notInOperatorWithImplicitValues() = assertExpression(
         """(not_in
-             (id a)
+             (id a case_insensitive)
              (list (lit 1) (lit 2) (lit 3) (lit 4))
            )
         """,
@@ -786,7 +804,7 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun inOperatorWithImplicitValuesRowConstructor() = assertExpression(
         """(in
-             (list (id a) (id b))
+             (list (id a case_insensitive) (id b case_insensitive))
              (list (list (lit 1) (lit 2)) (list (lit 3) (lit 4)))
            )
         """,
@@ -796,9 +814,9 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun groupBySingleId() = assertExpression(
         """(select
-             (project (list (id a)))
-             (from (id data))
-             (group (by (id a)))
+             (project (list (id a case_insensitive)))
+             (from (id data case_insensitive))
+             (group (by (id a case_insensitive)))
            )
         """,
         "SELECT a FROM data GROUP BY a"
@@ -807,9 +825,9 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun groupBySingleExpr() = assertExpression(
         """(select
-             (project (list (+ (id a) (id b))))
-             (from (id data))
-             (group (by (+ (id a) (id b))))
+             (project (list (+ (id a case_insensitive) (id b case_insensitive))))
+             (from (id data case_insensitive))
+             (group (by (+ (id a case_insensitive) (id b case_insensitive))))
            )
         """,
         "SELECT a + b FROM data GROUP BY a + b"
@@ -818,13 +836,13 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun groupPartialByMultiAliasedAndGroupAliased() = assertExpression(
         """(select
-             (project (list (id g)))
-             (from (id data))
+             (project (list (id g case_insensitive)))
+             (from (id data case_insensitive))
              (group_partial
                (by
-                 (as x (id a))
-                 (as y (+ (id b) (id c)))
-                 (as z (call foo (id d)))
+                 (as x (id a case_insensitive))
+                 (as y (+ (id b case_insensitive) (id c case_insensitive)))
+                 (as z (call foo (id d case_insensitive)))
                )
                (name g)
              )
@@ -837,9 +855,9 @@ class IonSqlParserTest : IonSqlParserBase() {
     fun havingMinimal() = assertExpression(
         """
           (select
-            (project (list (id a)))
-            (from (id data))
-            (having (= (id a) (id b)))
+            (project (list (id a case_insensitive)))
+            (from (id data case_insensitive))
+            (having (= (id a case_insensitive) (id b case_insensitive)))
           )
         """,
         "SELECT a FROM data HAVING a = b"
@@ -849,10 +867,10 @@ class IonSqlParserTest : IonSqlParserBase() {
     fun havingWithWhere() = assertExpression(
         """
           (select
-            (project (list (id a)))
-            (from (id data))
-            (where (= (id a) (id b)))
-            (having (= (id c) (id d)))
+            (project (list (id a case_insensitive)))
+            (from (id data case_insensitive))
+            (where (= (id a case_insensitive) (id b case_insensitive)))
+            (having (= (id c case_insensitive) (id d case_insensitive)))
           )
         """,
         "SELECT a FROM data WHERE a = b HAVING c = d"
@@ -862,11 +880,11 @@ class IonSqlParserTest : IonSqlParserBase() {
     fun havingWithWhereAndGroupBy() = assertExpression(
         """
           (select
-            (project (list (id g)))
-            (from (id data))
-            (where (= (id a) (id b)))
-            (group (by (id c) (id d)) (name g))
-            (having (> (id d) (lit 6)))
+            (project (list (id g case_insensitive)))
+            (from (id data case_insensitive))
+            (where (= (id a case_insensitive) (id b case_insensitive)))
+            (group (by (id c case_insensitive) (id d case_insensitive)) (name g))
+            (having (> (id d case_insensitive) (lit 6)))
           )
         """,
         "SELECT g FROM data WHERE a = b GROUP BY c, d GROUP AS g HAVING d > 6"
@@ -876,8 +894,8 @@ class IonSqlParserTest : IonSqlParserBase() {
     fun pivotWithOnlyFrom() = assertExpression(
         """
           (pivot
-            (member (id n) (id v))
-            (from (id data))
+            (member (id n case_insensitive) (id v case_insensitive))
+            (from (id data case_insensitive))
           )
         """,
         "PIVOT v AT n FROM data"
@@ -887,11 +905,11 @@ class IonSqlParserTest : IonSqlParserBase() {
     fun pivotHavingWithWhereAndGroupBy() = assertExpression(
         """
           (pivot
-            (member (|| (lit "prefix:") (id c)) (id g))
-            (from (id data))
-            (where (= (id a) (id b)))
-            (group (by (id c) (id d)) (name g))
-            (having (> (id d) (lit 6)))
+            (member (|| (lit "prefix:") (id c case_insensitive)) (id g case_insensitive))
+            (from (id data case_insensitive))
+            (where (= (id a case_insensitive) (id b case_insensitive)))
+            (group (by (id c case_insensitive) (id d case_insensitive)) (name g))
+            (having (> (id d case_insensitive) (lit 6)))
           )
         """,
         "PIVOT g AT ('prefix:' || c) FROM data WHERE a = b GROUP BY c, d GROUP AS g HAVING d > 6"
@@ -909,7 +927,7 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun likeColNameLikeString() = assertExpression(
         """
-        (select (project (list (id a))) (from (id data)) (where (like (id a) (lit "_AAA%"))))
+        (select (project (list (id a case_insensitive))) (from (id data case_insensitive)) (where (like (id a case_insensitive) (lit "_AAA%"))))
         """,
         "SELECT a FROM data WHERE a LIKE '_AAA%'"
     )
@@ -917,7 +935,7 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun likeColNameLikeColName() = assertExpression(
         """
-        (select (project (list (id a) (id b))) (from (id data)) (where (like (id a) (id b))))
+        (select (project (list (id a case_insensitive) (id b case_insensitive))) (from (id data case_insensitive)) (where (like (id a case_insensitive) (id b case_insensitive))))
         """,
         "SELECT a, b FROM data WHERE a LIKE b"
     )
@@ -925,7 +943,7 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun likeColNameLikeColNameDot() = assertExpression(
         """
-        (select (project (*)) (from (as a (id data))) (where (like (path (id a) (lit "name")) (path (id b) (lit "pattern")))))
+        (select (project (*)) (from (as a (id data case_insensitive))) (where (like (path (id a case_insensitive) (case_insensitive (lit "name"))) (path (id b case_insensitive) (case_insensitive (lit "pattern"))))))
         """,
         "SELECT * FROM data as a WHERE a.name LIKE b.pattern"
     )
@@ -933,7 +951,7 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun likeColNameLikeColNamePqth() = assertExpression(
         """
-        (select (project (*)) (from (as a (id data))) (where (like (path (id a) (lit "name")) (path (id b) (lit "pattern")))))
+        (select (project (*)) (from (as a (id data case_insensitive))) (where (like (path (id a case_insensitive) (case_insensitive (lit "name"))) (path (id b case_insensitive) (case_insensitive (lit "pattern"))))))
         """,
         "SELECT * FROM data as a WHERE a.name LIKE b.pattern"
     )
@@ -941,7 +959,7 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun likeColNameLikeStringEscape() = assertExpression(
         """
-        (select (project (list (id a))) (from (id data)) (where (like (id a) (lit "_AAA%") (lit "["))))
+        (select (project (list (id a case_insensitive))) (from (id data case_insensitive)) (where (like (id a case_insensitive) (lit "_AAA%") (lit "["))))
         """,
         "SELECT a FROM data WHERE a LIKE '_AAA%' ESCAPE '[' "
     )
@@ -949,7 +967,7 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun notLikeColNameLikeString() = assertExpression(
         """
-        (select (project (list (id a))) (from (id data)) (where (not_like (id a) (lit "_AAA%"))))
+        (select (project (list (id a case_insensitive))) (from (id data case_insensitive)) (where (not_like (id a case_insensitive) (lit "_AAA%"))))
         """,
         "SELECT a FROM data WHERE a NOT LIKE '_AAA%'"
     )
@@ -957,7 +975,7 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun likeColNameLikeColNameEscape() = assertExpression(
         """
-        (select (project (list (id a) (id b))) (from (id data)) (where (like (id a) (id b) (lit "\\"))))
+        (select (project (list (id a case_insensitive) (id b case_insensitive))) (from (id data case_insensitive)) (where (like (id a case_insensitive) (id b case_insensitive) (lit "\\"))))
         """, //  escape \ inside a Kotlin/Java String
         "SELECT a, b FROM data WHERE a LIKE b ESCAPE '\\'" // escape \ inside a Kotlin/Java String
     )
@@ -965,7 +983,7 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun likeColNameLikeColNameEscapeNonLit() = assertExpression(
         """
-        (select (project (list (id a) (id b))) (from (id data)) (where (like (id a) (id b) (id c))))
+        (select (project (list (id a case_insensitive) (id b case_insensitive))) (from (id data case_insensitive)) (where (like (id a case_insensitive) (id b case_insensitive) (id c case_insensitive))))
         """, //  escape \ inside a Kotlin/Java String
         "SELECT a, b FROM data WHERE a LIKE b ESCAPE c"
     )
@@ -973,7 +991,7 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun likeColNameLikeColNameEscapePath() = assertExpression(
         """
-        (select (project (list (id a) (id b))) (from (as x (id data))) (where (like (id a) (id b) (path (id x) (lit "c")))))
+        (select (project (list (id a case_insensitive) (id b case_insensitive))) (from (as x (id data case_insensitive))) (where (like (id a case_insensitive) (id b case_insensitive) (path (id x case_insensitive) (case_insensitive (lit "c"))))))
         """, //  escape \ inside a Kotlin/Java String
         "SELECT a, b FROM data as x WHERE a LIKE b ESCAPE x.c"
 
@@ -986,7 +1004,7 @@ class IonSqlParserTest : IonSqlParserBase() {
      */
     @Test
     fun likeNotEquivalent() = assertExpression(
-        "(select (project (list (id a) (id b))) (from (id data)) (where (not (like (id a) (id b)))))",
+        "(select (project (list (id a case_insensitive) (id b case_insensitive))) (from (id data case_insensitive)) (where (not (like (id a case_insensitive) (id b case_insensitive)))))",
         "SELECT a, b FROM data WHERE NOT (a LIKE b)"
     )
 
@@ -1032,91 +1050,91 @@ class IonSqlParserTest : IonSqlParserBase() {
 
     @Test
     fun callDateAddYear() = assertExpression(
-        "(call date_add (lit \"year\") (id a) (id b))",
+        "(call date_add (lit \"year\") (id a case_insensitive) (id b case_insensitive))",
         "date_add(year, a, b)"
     )
 
     @Test
     fun callDateAddMonth() = assertExpression(
-        "(call date_add (lit \"month\") (id a) (id b))",
+        "(call date_add (lit \"month\") (id a case_insensitive) (id b case_insensitive))",
         "date_add(month, a, b)"
     )
 
     @Test
     fun callDateAddDay() = assertExpression(
-        "(call date_add (lit \"day\") (id a) (id b))",
+        "(call date_add (lit \"day\") (id a case_insensitive) (id b case_insensitive))",
         "date_add(day, a, b)"
     )
 
     @Test
     fun callDateAddHour() = assertExpression(
-        "(call date_add (lit \"hour\") (id a) (id b))",
+        "(call date_add (lit \"hour\") (id a case_insensitive) (id b case_insensitive))",
         "date_add(hour, a, b)"
     )
 
     @Test
     fun callDateAddMinute() = assertExpression(
-        "(call date_add (lit \"minute\") (id a) (id b))",
+        "(call date_add (lit \"minute\") (id a case_insensitive) (id b case_insensitive))",
         "date_add(minute, a, b)"
     )
 
     @Test
     fun callDateAddSecond() = assertExpression(
-        "(call date_add (lit \"second\") (id a) (id b))",
+        "(call date_add (lit \"second\") (id a case_insensitive) (id b case_insensitive))",
         "date_add(second, a, b)"
     )
 
     @Test // invalid evaluation, but valid parsing
     fun callDateAddTwoArguments() = assertExpression(
-        "(call date_add (lit \"second\") (id a))",
+        "(call date_add (lit \"second\") (id a case_insensitive))",
         "date_add(second, a)"
     )
 
     @Test // invalid evaluation, but valid parsing
     fun callDateAddTimezoneHour() = assertExpression(
-        "(call date_add (lit \"timezone_hour\") (id a) (id b))",
+        "(call date_add (lit \"timezone_hour\") (id a case_insensitive) (id b case_insensitive))",
         "date_add(timezone_hour, a, b)")
 
     @Test // invalid evaluation, but valid parsing
     fun callDateAddTimezoneMinute() = assertExpression(
-        "(call date_add (lit \"timezone_minute\") (id a) (id b))",
+        "(call date_add (lit \"timezone_minute\") (id a case_insensitive) (id b case_insensitive))",
         "date_add(timezone_minute, a, b)")
 
     @Test
     fun caseInsensitiveFunctionName() = assertExpression(
-        "(call my_function (id a))",
+        "(call my_function (id a case_insensitive))",
         "mY_fUnCtIoN(a)")
 
     @Test
-    fun callExtractYear() = assertExpression("(call extract (lit \"year\") (id a))",
+    fun callExtractYear() = assertExpression("(call extract (lit \"year\") (id a case_insensitive))",
                                              "extract(year from a)")
 
     @Test
-    fun callExtractMonth() = assertExpression("(call extract (lit \"month\") (id a))",
+    fun callExtractMonth() = assertExpression("(call extract (lit \"month\") (id a case_insensitive))",
                                               "extract(month from a)")
 
     @Test
-    fun callExtractDay() = assertExpression("(call extract (lit \"day\") (id a))",
+    fun callExtractDay() = assertExpression("(call extract (lit \"day\") (id a case_insensitive))",
                                             "extract(day from a)")
 
     @Test
-    fun callExtractHour() = assertExpression("(call extract (lit \"hour\") (id a))",
+    fun callExtractHour() = assertExpression("(call extract (lit \"hour\") (id a case_insensitive))",
                                              "extract(hour from a)")
 
     @Test
-    fun callExtractMinute() = assertExpression("(call extract (lit \"minute\") (id a))",
+    fun callExtractMinute() = assertExpression("(call extract (lit \"minute\") (id a case_insensitive))",
                                                "extract(minute from a)")
 
     @Test
-    fun callExtractSecond() = assertExpression("(call extract (lit \"second\") (id a))",
+    fun callExtractSecond() = assertExpression("(call extract (lit \"second\") (id a case_insensitive))",
                                                "extract(second from a)")
 
     @Test
-    fun callExtractTimezoneHour() = assertExpression("(call extract (lit \"timezone_hour\") (id a))",
+    fun callExtractTimezoneHour() = assertExpression("(call extract (lit \"timezone_hour\") (id a case_insensitive))",
                                                "extract(timezone_hour from a)")
 
     @Test
-    fun callExtractTimezoneMinute() = assertExpression("(call extract (lit \"timezone_minute\") (id a))",
+    fun callExtractTimezoneMinute() = assertExpression("(call extract (lit \"timezone_minute\") (id a case_insensitive))",
                                                "extract(timezone_minute from a)")
 
     @Test

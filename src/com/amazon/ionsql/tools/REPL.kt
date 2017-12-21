@@ -170,10 +170,10 @@ fun main(args: Array<String>) {
                         // capture the result in a non-mutable binding
                         // and construct an environment for evaluation over it
                         val previousResult = result
-                        val locals = Bindings.over {
-                            when (it) {
+                        val locals = Bindings.over { bindingName ->
+                            when (bindingName.name) {
                                 "_" -> previousResult
-                                else -> globals[it]
+                                else -> globals[bindingName]
                             }
                         }
                         result = when (line) {

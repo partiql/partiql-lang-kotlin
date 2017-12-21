@@ -1,7 +1,6 @@
 package com.amazon.ionsql.errors
 
-import com.amazon.ionsql.Base
-import com.amazon.ionsql.IonSqlException
+import com.amazon.ionsql.*
 import com.amazon.ionsql.errors.Property.*
 import org.junit.Test
 

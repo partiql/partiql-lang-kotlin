@@ -13,8 +13,7 @@ import com.amazon.ionsql.syntax.IonSqlLexer.StateType.*
 import com.amazon.ionsql.syntax.TokenType.*
 import com.amazon.ionsql.syntax.TokenType.KEYWORD
 import com.amazon.ionsql.util.*
-import java.math.BigInteger
-import java.util.*
+import java.math.*
 
 
 /**
@@ -291,7 +290,7 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
             }
 
             deltaQuote(SINGLE_QUOTE_CHARS, LITERAL, SQ_STRING)
-            deltaQuote(DOUBLE_QUOTE_CHARS, IDENTIFIER, DQ_STRING)
+            deltaQuote(DOUBLE_QUOTE_CHARS, QUOTED_IDENTIFIER, DQ_STRING)
 
             // Ion literals - very partial lexing of Ion to support nested back-tick
             // in Ion strings/symbols/comments

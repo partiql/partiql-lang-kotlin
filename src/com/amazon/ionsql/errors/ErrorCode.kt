@@ -353,6 +353,14 @@ enum class ErrorCode(private val category: ErrorCategory,
         LOCATION,
         "Int overflow or underflow"),
 
+    EVALUATOR_AMBIGUOUS_BINDING(
+        ErrorCategory.EVALUATOR,
+        LOCATION + setOf(Property.BINDING_NAME, Property.BINDING_NAME_MATCHES),
+        "Binding name was ambiguous") {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "Binding name was '${errorContext?.get(Property.BINDING_NAME)}'"
+    },
+
     EVALUATOR_LIKE_INVALID_INPUTS(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.LIKE_VALUE, Property.LIKE_PATTERN, Property.LIKE_ESCAPE),
@@ -362,9 +370,7 @@ enum class ErrorCode(private val category: ErrorCategory,
             "value = ${errorContext?.get(Property.LIKE_VALUE)?.stringValue() ?: UNKNOWN}" + "," +
             "pattern =  ${errorContext?.get(Property.LIKE_PATTERN)?.stringValue() ?: UNKNOWN}" + "," +
             "escape char = ${errorContext?.get(Property.LIKE_ESCAPE)?.stringValue() ?: "none given"}"
-
-    }
-    ;
+    };
 
     protected fun getTokenString(errorContext: PropertyValueMap?): String =
         errorContext?.get(Property.TOKEN_STRING)?.stringValue() ?: UNKNOWN

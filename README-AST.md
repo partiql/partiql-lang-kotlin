@@ -12,7 +12,7 @@ Where `name` is the AST node name, which can be one of:
 
 * `(lit <ION VALUE>)` - a verbatim (quoted) Ion value.
 * `(missing)` - The literal `MISSING` value.
-* `(id <NAME SYMBOL>)` - an identifier.
+* `(id <NAME SYMBOL> [case_sensitive | case_insensitive])` - a quoted or unquoted identifier.
 * `(<OPERATOR SYMBOL> ...)` - A binary or unary operator.
 * `(select ...)` - A `SELECT-FROM-WHERE` expression.
 * `(pivot ...)` - Convert a collection into a tuple/struct.
@@ -87,11 +87,24 @@ In the second case where an escape expression is provided `LIKE` translates to a
 * `(like <NODE EXPR1> <NODE EXPR2> <NODE EXPR3>)`
 * `(not_like <NODE EXPR1> <NODE EXPR2> <NODE EXPR3>)`
 
+## Identifiers
+
+The `id` node may include as its last element a `case_sensitive` or `case_insensitive` symbol to indicate if the 
+binding is to be looked up with consideration of the identifier case or not.  If not specified, default is  
+`case_sensitive`.  
 
 ## Path Component Expressions
+
 In addition to any normal expression, a path component can be the special form `(*)` which
 is the wildcard that is syntactically equivalent to the path component `[*]` and
-`(* unpivot)` which is syntactically equivalent to the path component `.*`. 
+`(* unpivot)` which is syntactically equivalent to the path component `.*`.
+
+Path component expressions that evaluate to a string value may be enclosed within a `case_sensitive` or 
+`case_insensitive` annotating s-exp to indicate if the binding is to be looked up considering identifier case.  If not 
+enclosed in such an s-exp, the default is case-sensitive.  
+
+For example, `foo.bar` is represented as: `(path (id foo) (case_insensitive (lit "bar")))` while `foo['bar']` may be 
+represented as: `(path (id foo) (lit 'bar'))` or `(path (id foo) (case_sensitive (lit 'bar')))`.
 
 ## `SELECT` Expressions
 The first position of the `select` node is the projection node which is marked by

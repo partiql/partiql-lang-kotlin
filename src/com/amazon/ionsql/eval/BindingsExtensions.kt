@@ -12,10 +12,10 @@ package com.amazon.ionsql.eval
  */
 fun Bindings.blacklist(vararg names: String): Bindings {
     val blacklisted = names.toSet()
-    return Bindings.over {
-        when (it) {
+    return Bindings.over { bindingName ->
+        when (bindingName.name) {
             in blacklisted -> null
-            else -> get(it)
+            else -> get(bindingName)
         }
     }
 }
@@ -29,7 +29,7 @@ fun Bindings.blacklist(vararg names: String): Bindings {
  *
  * @param fallback The bindings to delegate to when lookup fails to find a name.
  */
-fun Bindings.delegate(fallback: Bindings): Bindings = Bindings.over {
-    val binding = this[it]
-    binding ?: fallback[it]
+fun Bindings.delegate(fallback: Bindings): Bindings = Bindings.over { bindingName ->
+    val binding = this[bindingName]
+    binding ?: fallback[bindingName]
 }

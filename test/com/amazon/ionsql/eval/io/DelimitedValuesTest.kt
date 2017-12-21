@@ -4,7 +4,7 @@
 
 package com.amazon.ionsql.eval.io
 
-import com.amazon.ionsql.Base
+import com.amazon.ionsql.*
 import com.amazon.ionsql.eval.ExprValue
 import com.amazon.ionsql.eval.ExprValueType
 import com.amazon.ionsql.eval.SequenceExprValue

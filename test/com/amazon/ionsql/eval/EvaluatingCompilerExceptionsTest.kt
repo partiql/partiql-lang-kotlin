@@ -99,26 +99,26 @@ class EvaluatingCompilerExceptionsTest : EvaluatorBase() {
     fun badCastToInt() = checkInputThrowingEvaluationException(
         "CAST('a' as int) > 0",
         ErrorCode.EVALUATOR_CAST_FAILED,
-        SourceLocationProperties(1, 18) + mapOf(Property.CAST_FROM to "STRING", Property.CAST_TO to "INT"))
+        sourceLocationProperties(1, 18) + mapOf(Property.CAST_FROM to "STRING", Property.CAST_TO to "INT"))
 
     @Test
     fun badCastInSelectToInt() = checkInputThrowingEvaluationException(
         "SELECT *  FROM `[{_1: a, _2: 1}, {_1: a, _2: 'a'}, {_1: a, _2: 3}]` WHERE CAST(_2 as INT) > 0",
         ErrorCode.EVALUATOR_CAST_FAILED,
-        SourceLocationProperties(1, 91) + mapOf(Property.CAST_FROM to "SYMBOL", Property.CAST_TO to "INT"))
+        sourceLocationProperties(1, 91) + mapOf(Property.CAST_FROM to "SYMBOL", Property.CAST_TO to "INT"))
 
     @Test
     fun badCastToDecimal() = checkInputThrowingEvaluationException(
         "CAST('a' as DECIMAL) > 0",
         ErrorCode.EVALUATOR_CAST_FAILED,
-        SourceLocationProperties(1, 22) + mapOf(Property.CAST_FROM to "STRING", Property.CAST_TO to "DECIMAL"),
+        sourceLocationProperties(1, 22) + mapOf(Property.CAST_FROM to "STRING", Property.CAST_TO to "DECIMAL"),
         NumberFormatException::class)
 
     @Test
     fun badCastToTimestamp() = checkInputThrowingEvaluationException(
         "CAST('2010-01-01T10' as TIMESTAMP) > 0",
         ErrorCode.EVALUATOR_CAST_FAILED,
-        SourceLocationProperties(1, 36) + mapOf(Property.CAST_FROM to "STRING", Property.CAST_TO to "TIMESTAMP"),
+        sourceLocationProperties(1, 36) + mapOf(Property.CAST_FROM to "STRING", Property.CAST_TO to "TIMESTAMP"),
         IllegalArgumentException::class)
 
     @Test // https://i.amazon.com/issues/IONSQL-163
