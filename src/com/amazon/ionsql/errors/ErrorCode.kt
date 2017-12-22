@@ -149,8 +149,15 @@ enum class ErrorCode(private val category: ErrorCategory,
 
     PARSE_INVALID_PATH_COMPONENT(
         ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "invalid Path component"),
+        LOC_TOKEN + setOf(Property.TOKEN_TYPE, Property.TOKEN_VALUE),
+        "invalid Path component") {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String {
+            return "Invalid path component, expecting either an ${TokenType.IDENTIFIER} or ${TokenType.STAR}, " +
+                   "got: ${errorContext?.get(Property.TOKEN_TYPE) ?: UNKNOWN} " +
+                   "with value: ${errorContext?.get(Property.TOKEN_VALUE) ?: UNKNOWN}"
+
+        }
+    },
 
     PARSE_MISSING_IDENT_AFTER_AT(
         ErrorCategory.PARSER,

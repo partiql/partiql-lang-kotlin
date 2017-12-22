@@ -106,9 +106,21 @@ class ParserErrorsTest : Base() {
             ErrorCode.PARSE_INVALID_PATH_COMPONENT,
             mapOf(
                 Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 1L,
-                Property.TOKEN_TYPE to TokenType.IDENTIFIER,
-                Property.TOKEN_VALUE to ion.newSymbol("x")))
+                Property.COLUMN_NUMBER to 3L,
+                Property.TOKEN_TYPE to TokenType.DOT,
+                Property.TOKEN_VALUE to ion.newSymbol(".")))
+
+    }
+
+    @Test // https://i.amazon.com/issues/IONSQL-166
+    fun expectedInvalidPathComponentForKeyword() {
+        checkInputThrowingParserException("""SELECT foo.id, foo.table FROM `[{id: 1, table: "foos"}]` AS foo""",
+                                          ErrorCode.PARSE_INVALID_PATH_COMPONENT,
+                                          mapOf(
+                                              Property.LINE_NUMBER to 1L,
+                                              Property.COLUMN_NUMBER to 20L,
+                                              Property.TOKEN_TYPE to TokenType.KEYWORD,
+                                              Property.TOKEN_VALUE to ion.newSymbol("table")))
 
     }
 
@@ -563,16 +575,6 @@ class ParserErrorsTest : Base() {
                                                 Property.COLUMN_NUMBER to 3L,
                                                 Property.TOKEN_TYPE to TokenType.STAR,
                                                 Property.TOKEN_VALUE to ion.newSymbol("*")))
-    }
-
-    @Test
-    fun tooManyDots() {
-        checkInputThrowingParserException("x...a",
-                                          ErrorCode.PARSE_INVALID_PATH_COMPONENT,
-                                          mapOf(Property.LINE_NUMBER to 1L,
-                                                Property.COLUMN_NUMBER to 1L,
-                                                Property.TOKEN_TYPE to TokenType.IDENTIFIER,
-                                                Property.TOKEN_VALUE to ion.newSymbol("x")))
     }
 
     @Test

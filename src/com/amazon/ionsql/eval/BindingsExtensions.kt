@@ -7,7 +7,7 @@ package com.amazon.ionsql.eval
 /**
  * Wraps a binding with a set of names that should not be resolved to anything.
  *
- * @param bindings The bindings to delegate over.
+ * @receiver The [Bindings] to delegate over.
  * @param names, the blacklisted names
  */
 fun Bindings.blacklist(vararg names: String): Bindings {

@@ -497,7 +497,9 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                         STAR -> path.add(
                             ParseNode(PATH_WILDCARD_UNPIVOT, rem.head, emptyList(), rem.tail)
                         )
-                        else -> err("Invalid path dot component", PARSE_INVALID_PATH_COMPONENT)
+                        else -> {
+                            rem.err("Invalid path dot component", PARSE_INVALID_PATH_COMPONENT)
+                        }
                     }
                     rem = rem.tail
                 }
