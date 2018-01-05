@@ -6,11 +6,17 @@ live for consumption. There are three main release process:
 * Backward incompatible release
 * Patching for a bug fix
 
+## Mainline and Release versions
+`mainline` branch versions use a `-dev` to differentiate them from released versions. This way if `mainline` is 
+accidentally built into `live` it won't affect any customers    
+
 ## New backward compatible features
 
 ### Update version
-In mainline branch update `version.info` by bumping the Minor version and commit this change with the following message: 
-`Updating version from <previous> to <current>`.   
+* In `mainline` branch update `version.info` by bumping the Minor version 
+* Remove the `-dev` suffix from `Config` and `build.xml` 
+* Commit this change with the following message: `Updating version from <previous> to <current>`.
+   
 
 ### Merge into release branch
 Merge `mainline` `HEAD` into the `release` branch squashing all commits in a single merge commit: 
@@ -21,7 +27,7 @@ $ git commit
 ``` 
 
 When running `git commit` you will be prompted to edit the commit message, change the message to: 
-`Release <semantic version> ()brazil version: <brazil version>), changes:`, 
+`Release <semantic version> (brazil version: <brazil version>), changes:`, 
 Example: `Release 1.123.0 (brazil version: 1.x), changes:`.
 
 Keep the body of the message as is, it contains all commit messages from mainline squashed together and serves as a 
@@ -46,8 +52,13 @@ Push the release branch by running `git push origin release`.
 Doing so will trigger [IonSQLSandbox-release][release pipeline] which will take care of pushing the release branch into 
 live. Keep an eye on it to see if the there is any issue with the build
 
-### Push mainline
-Push the update version change into `mainline`, `git push origin mainline`. This should be the only change in mainline
+### Merge and push mainline
+* Merge `release` back into `mainline`, this is done to sync both branches making future releases easier. 
+* Add the `-dev` version suffix back to `Config` and `build.xml` 
+* Commit these changes and push it into `mainline`, `git push origin mainline`. This and the `version.info` change 
+should be the only changes in `mainline`
+
+**Note** take care to keep the `-dev` suffix in `mainline` only
 
 ### Communicate the new release
 Send an e-mail to *ionsql-interest@amazon.com* to communicate the new release, include a link to the release notes.
@@ -61,17 +72,18 @@ Go through the process of updating https://sapp.amazon.com/IonSqlpp/, [documenta
 
 
 
+
+
 ## Backward incompatible release
 Same process as a non backward compatible change, follow the same steps as above if they are not specified bellow
 
 ### Update version
-Update the **Major** version in the following places: 
+Update the **Major** version in the following places, removing the `-dev` suffix: 
 * `version.info` 
 * Brazil `Config` file
 * `build.xml` project name
 
-Commit these changes with the following message: `Updating version from <previous> to <current>`. Push this change into 
-mainline, `git push origin mainline`  
+Commit these changes with the following message: `Updating version from <previous> to <current>`. 
 
 ### Update Brazil release guidance 
 After pushing the new release into live update the [release guidance][ionsql release] by: 
