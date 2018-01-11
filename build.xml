@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<project name="IonSQLSandbox-2.x-dev" basedir="." default="release" xmlns:ht="happytrails">
+<project name="IonSQLSandbox-2.x_dev" basedir="." default="release" xmlns:ht="happytrails">
   <property name="tests.dir" location="${basedir}/test" />
   <property name="findbugs.failOnError" value="false" />
   <property name="checkstyle.failOnError" value="false" />

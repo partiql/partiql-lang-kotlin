@@ -1,13 +1,13 @@
 # -*-perl-*-
 
 package.IonSQLSandbox = {
-    interfaces = (2.x-dev);
+    interfaces = (2.x_dev);
     deploy = {
         generic = true;
     };
 
     dependencies = {
-        2.x-dev = {
+        2.x_dev = {
             IonJava = 1.0;
 
             KotlinStdlib = 1.2.x;
@@ -16,13 +16,13 @@ package.IonSQLSandbox = {
     };
 
     runtime-dependencies = {
-        2.x-dev = {
+        2.x_dev = {
             # JDK8 = 1.0;
         };
     };
 
     test-dependencies = {
-        2.x-dev = {
+        2.x_dev = {
             junit = 4.12;
             JUnitParams = 1.0.5;
 
@@ -40,7 +40,7 @@ package.IonSQLSandbox = {
     build-system = happytrails;
 
     build-tools = {
-        2.x-dev = {
+        2.x_dev = {
             JDK8 = 1.0;
 
             HappierTrails = 3.3;
@@ -56,6 +56,6 @@ package.IonSQLSandbox = {
     # For more information on how to declare targets for HappyTrails packages
     # see: https://w.amazon.com/?BrazilBuildSystem/HappyTrails/GettingStarted
     targets = {
-        IonSQLSandbox-2.x-dev = { type = javalibrary; };
+        IonSQLSandbox-2.x_dev = { type = javalibrary; };
     };
 };
