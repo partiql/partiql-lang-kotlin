@@ -1,7 +1,7 @@
 # Ion SQL++ Parser, Compiler, and Evaluator Design
 This document provides the high-level design overview of the Ion SQL++ parser and evaluator. The high-level pipeline of compilation is illustrated as follows:
 
-![Parser and Compiler Diagram](doc/img/parser-compiler.png)
+![Parser and Compiler Diagram](img/parser-compiler.png)
 
 * The **lexer** is a hybrid direct/table driven lexical analyzer for Ion SQL++ lexemes that produce high-level tokens.
   * SQL is very keyword heavy, so having our own lexer implementation allows us to more easily normalize things like keywords that consist of multiple lexemes (e.g. `CHARACTER VARYING`)
@@ -52,11 +52,11 @@ It can be seen that the above example leverages lexical closures (lambdas) to bu
 ## Evaluation Strategy
 Evaluation is done by first compiling source text of an Ion SQL++ expression into an instance of `Expression` which provides the entry point to evaluation:
 
-![Parser/Compiler/Expression Class Diagram](doc/img/compiler-class.png)
+![Parser/Compiler/Expression Class Diagram](img/compiler-class.png)
 
 At the core of all evaluation is an interface, `ExprValue`, that represents all values:
 
-![ExprValue Class Diagram](doc/img/expr-value-class.png)
+![ExprValue Class Diagram](img/expr-value-class.png)
 
 This interface enables any application embedding the evaluator to control and provide data used for evaluation. The other benefit of this approach is that an interface allows for *lazy* evaluation.  That is, the evaluator can return an `ExprValue` that has not been fully evaluated.  This approach allows for the streaming of values when possible.
 

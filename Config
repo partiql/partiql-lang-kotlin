@@ -9,7 +9,6 @@ package.IonSQLSandbox = {
     dependencies = {
         2.x_dev = {
             IonJava = 1.0;
-
             KotlinStdlib = 1.2.x;
             KotlinReflect = 1.2.x;
         };

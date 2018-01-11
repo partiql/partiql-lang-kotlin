@@ -1,4 +1,25 @@
-# Built-in Functions
+
+# IonSQL++ User Guide 
+
+## Introduction 
+
+This is the IonSQL++ implementation's user guide. The goal of this
+document is to provide to users of IonSQL++ information on the features
+implemented and any deviation from the IonSQL++ specification.
+
+
+
+## Data Types
+
+### Decimal
+IonSQL++ decimals are based on [Ion decimals] but with a maximum precision of 38 digits, numbers outside this precision 
+range will be rounded using a round [half even strategy]. Examples: 
+
+    1.00000000000000000000000000000000000000000001 -> 1.0000000000000000000000000000000000000
+    1.99999999999999999999999999999999999999999999 -> 2.0000000000000000000000000000000000000 
+
+## Builtin Functions
+
 This document provides documentations for all built-in functions available with the reference implementation including 
 their syntax and examples 
 
@@ -330,3 +351,10 @@ consistent across an evaluation. The client can specify its own `now` value when
 ```sql
 UTCNOW() -- Returns the current time, e.g. 2017-10-13T16:02:11.123Z
 ```
+See [doc/Functions.md](doc/Functions.md) for the 
+available built in functions and their documentation 
+
+# References 
+[ionjava]: https://code.amazon.com/packages/IonJava
+[Ion decimals]: http://amzn.github.io/ion-docs/decimal.html
+[half even strategy]: https://docs.oracle.com/javase/7/docs/api/java/math/RoundingMode.html#HALF_EVEN/
