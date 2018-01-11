@@ -363,4 +363,9 @@ class IonSqlLexerTest : Base() {
     fun invalidNumber() {
         tokenize("1E++0")
     }
+
+    @Test(expected = LexerException::class)
+    fun numberWithExponentTooLarge() {
+        tokenize("1E2147483648") // exponent is represented by an int, this is bigger than 2^31-1 so doesn't fit
+    }
 }

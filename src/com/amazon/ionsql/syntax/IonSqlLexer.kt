@@ -514,19 +514,23 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
                                 }
                             }
                             LITERAL -> when (curr.lexType) {
-                                SQ_STRING -> ion.newString(text)
-                                INTEGER -> ion.newInt(BigInteger(text, 10))
-                                DECIMAL -> ion.newDecimal(bigDecimalOf(text))
+                                SQ_STRING   -> ion.newString(text)
+                                INTEGER     -> ion.newInt(BigInteger(text, 10))
+                                DECIMAL     -> try {
+                                    ion.newDecimal(bigDecimalOf(text))
+                                }
+                                catch (e: NumberFormatException) {
+                                    errInvalidLiteral(text)
+                                }
                                 ION_LITERAL -> try {
                                     // anything wrapped by `` is considered as an ion literal, including invalid
                                     // ion so we need to handle the exception here for proper error reporting
                                     ion.singleValue(text)
                                 }
-                                catch (e: IonException)
-                                {
+                                catch (e: IonException) {
                                     errInvalidIonLiteral(text, e)
                                 }
-                                else -> errInvalidLiteral(text)
+                                else        -> errInvalidLiteral(text)
                             }
                             else -> ion.newSymbol(text)
                         }.seal()
