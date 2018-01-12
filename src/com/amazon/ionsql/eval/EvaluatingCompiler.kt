@@ -36,19 +36,19 @@ import java.util.concurrent.atomic.*
 class EvaluatingCompiler(private val ion: IonSystem,
                          private val parser: Parser,
                          private val userFunctions: @JvmSuppressWildcards Map<String, ExprFunction>,
-                         private val compileOptions: CompileOptions = CompileOptions.default()) : Compiler {
+                         private val compileOptions: CompileOptions = CompileOptions.standard()) : Compiler {
 
     constructor(ion: IonSystem) :
-        this(ion, IonSqlParser(ion), emptyMap(), CompileOptions.default())
+        this(ion, IonSqlParser(ion), emptyMap(), CompileOptions.standard())
 
     constructor(ion: IonSystem, compileOptions: CompileOptions) :
         this(ion, IonSqlParser(ion), emptyMap(), compileOptions)
 
     constructor(ion: IonSystem, parser: Parser, userFunctions: @JvmSuppressWildcards Map<String, ExprFunction>) :
-        this(ion, parser, userFunctions, CompileOptions.default())
+        this(ion, parser, userFunctions, CompileOptions.standard())
 
     constructor(ion: IonSystem, userFuncs: @JvmSuppressWildcards Map<String, ExprFunction>) :
-        this(ion, IonSqlParser(ion), userFuncs, CompileOptions.default())
+        this(ion, IonSqlParser(ion), userFuncs, CompileOptions.standard())
 
     /** An [ExprValue] which is the result of an expression evaluated in an [Environment].  */
     private abstract class ExprThunk(private val metadata: NodeMetadata?) {

@@ -13,7 +13,7 @@ class SizeExprFunctionTest {
     private val subject = SizeExprFunction(ion)
 
     private val env = Environment(locals = Bindings.empty(),
-                                  session = EvaluationSession.default(),
+                                  session = EvaluationSession.standard(),
                                   registers = RegisterBank(0))
 
     private fun callSize(vararg arg: ExprValue) = subject.call(env, arg.toList()).scalar.numberValue()

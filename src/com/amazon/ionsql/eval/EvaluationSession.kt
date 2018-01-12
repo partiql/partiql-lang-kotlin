@@ -24,10 +24,10 @@ class EvaluationSession private constructor(val globals: Bindings,
         fun build(block: Builder.() -> Unit) = Builder().apply(block).build()
 
         /**
-         * Builds a [EvaluationSession] using default values for all fields
+         * Builds a [EvaluationSession] using standard values for all fields
          */
         @JvmStatic
-        fun default() = builder().build()
+        fun standard() = builder().build()
     }
 
     class Builder {

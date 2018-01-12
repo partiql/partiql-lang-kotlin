@@ -25,7 +25,7 @@ class EvaluationSessionTest {
     }
 
     @Test
-    fun default() = assertDefault { EvaluationSession.default() }
+    fun default() = assertDefault { EvaluationSession.standard() }
 
     @Test
     fun emptyKotlinStyleBuilder() = assertDefault { EvaluationSession.build {} }

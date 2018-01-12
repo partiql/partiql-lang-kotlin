@@ -9,7 +9,7 @@ class CompileOptionsTest {
     }
 
     @Test
-    fun default() = assertDefault(CompileOptions.default())
+    fun default() = assertDefault(CompileOptions.standard())
 
     @Test
     fun emptyKotlinBuilder() = assertDefault(CompileOptions.build {})

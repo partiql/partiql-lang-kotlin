@@ -31,10 +31,10 @@ class CompileOptions private constructor(val undefinedVariable: UndefinedVariabl
         fun build(block: Builder.() -> Unit) = Builder().apply(block).build()
 
         /**
-         * Creates a [CompileOptions] instance with default values.
+         * Creates a [CompileOptions] instance with the standard values.
          */
         @JvmStatic
-        fun default() = Builder().build()
+        fun standard() = Builder().build()
     }
 
     /**

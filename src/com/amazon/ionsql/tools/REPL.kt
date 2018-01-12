@@ -144,7 +144,7 @@ fun main(args: Array<String>) {
     val globals = when {
         args.isNotEmpty() -> {
             val configSource = File(args[0]).readText(charset("UTF-8"))
-            val config = evaluator.compile(configSource).eval(EvaluationSession.default())
+            val config = evaluator.compile(configSource).eval(EvaluationSession.standard())
             config.bindings
         }
         else -> Bindings.empty()

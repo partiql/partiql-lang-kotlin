@@ -18,7 +18,7 @@ class ExtractExprFunctionTest : Base() {
     }
 
     private val env = Environment(locals = Bindings.empty(),
-                                  session = EvaluationSession.default(),
+                                  session = EvaluationSession.standard(),
                                   registers = RegisterBank(0))
 
     private val subject = ExtractExprFunction(ion)

@@ -22,7 +22,7 @@ abstract class EvaluatorBase : Base() {
 
     protected fun Map<String, String>.toSession() = EvaluationSession.build { globals(this@toSession.toBindings()) }
 
-    fun voidEval(source: String, compileOptions: CompileOptions = CompileOptions.default()) {
+    fun voidEval(source: String, compileOptions: CompileOptions = CompileOptions.standard()) {
 
         // force materialization
         eval(source, compileOptions).ionValue
@@ -39,8 +39,8 @@ abstract class EvaluatorBase : Base() {
      */
     protected fun assertEval(source: String,
                              expected: String,
-                             session: EvaluationSession = EvaluationSession.default(),
-                             compileOptions: CompileOptions = CompileOptions.default(),
+                             session: EvaluationSession = EvaluationSession.standard(),
+                             compileOptions: CompileOptions = CompileOptions.standard(),
                              block: AssertExprValue.() -> Unit = { }) {
 
         val expectedIon = literal(expected)
@@ -59,8 +59,8 @@ abstract class EvaluatorBase : Base() {
      * @param block function literal with receiver used to plug in custom assertions
      */
     protected fun assertEvalIsMissing(source: String,
-                                      session: EvaluationSession = EvaluationSession.default(),
-                                      compileOptions: CompileOptions = CompileOptions.default()) {
+                                      session: EvaluationSession = EvaluationSession.standard(),
+                                      compileOptions: CompileOptions = CompileOptions.standard()) {
 
         val exprValue = eval(source, compileOptions, session)
         assertEquals(ExprValueType.MISSING, exprValue.type)
@@ -74,7 +74,7 @@ abstract class EvaluatorBase : Base() {
      */
     protected fun eval(source: String,
                        compileOptions: CompileOptions,
-                       session: EvaluationSession = EvaluationSession.default()): ExprValue {
+                       session: EvaluationSession = EvaluationSession.standard()): ExprValue {
 
         val e = EvaluatingCompiler(ion, compileOptions = compileOptions)
         return e.compile(source).eval(session)
