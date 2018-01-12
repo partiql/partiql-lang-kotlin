@@ -252,7 +252,7 @@ fun ExprValue.cast(ion: IonSystem, targetType: ExprValueType, metadata: NodeMeta
                 }
                 INT -> when {
                     type == BOOL -> return if (booleanValue()) 1L.exprValue() else 0L.exprValue()
-                    type.isNumber -> return numberValue().toLong().exprValue()
+                    type.isNumber -> return numberValue().toLongFailingOverflow(metadata).exprValue()
                     type.isText -> {
                         val value: IonInt
                         try {
@@ -326,6 +326,14 @@ fun ExprValue.cast(ion: IonSystem, targetType: ExprValueType, metadata: NodeMeta
 
     // incompatible types
     err("Cannot convert $type to $targetType", errorCode, castExceptionContext(), internal = false)
+}
+
+private fun Number.toLongFailingOverflow(metadata: NodeMetadata?): Long {
+    if(Long.MIN_VALUE > this || Long.MAX_VALUE < this) {
+        errIntOverflow(metadata?.toErrorContext())
+    }
+
+    return this.toLong()
 }
 
 

@@ -155,7 +155,9 @@ class IntTest : EvaluatorBase() {
     }
 
     @Test
-    fun divisionUnderflow() = assertThrows("Int overflow or underflow", NodeMetadata(1,22)) { voidEval("${Long.MIN_VALUE} / -1") }
+    fun divisionUnderflow() = assertThrows("Int overflow or underflow", NodeMetadata(1,22)) {
+        voidEval("${Long.MIN_VALUE} / -1")
+    }
 
     @Test
     fun castBigInt() = assertThrows("Int overflow or underflow") {
@@ -168,7 +170,20 @@ class IntTest : EvaluatorBase() {
     }
 
     @Test
-    fun castHugeFloat() = assertEval("cast(1e30 as int)", "5076944270305263616")
+    fun castSmallDecimalExact() = assertEval("cast(5e0 as int)", "5")
+
+    @Test
+    fun castSmallDecimal() = assertEval("cast(5.2 as int)", "5")
+
+    @Test
+    fun castHugeDecimal() = assertThrows("Int overflow or underflow") {
+        voidEval("cast(1e2147483609 as int)")
+    }
+
+    @Test
+    fun castHugeNegativeDecimal() = assertThrows("Int overflow or underflow") {
+        voidEval("cast(-1e2147483609 as int)")
+    }
 
     private fun assertPair(pair: Pair<String, String>) {
         val (query, expected) = pair
