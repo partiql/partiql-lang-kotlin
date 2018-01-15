@@ -1,0 +1,179 @@
+<h1 id="release-process">Release Process</h1>
+<p>This file documents the steps to be taken for a release of IonSQL++ within Amazon. For general information on releases and the versioning scheme used by IonSQL++ see <a href="Releases.md">Releases</a></p>
+<h1 id="minor-and-bugfix-releases">Minor and Bugfix Releases</h1>
+<p>Both minor and bugfix releases imply that there are <strong>no backward incompatible changes</strong>, as such the process for both release types is shared.</p>
+<ol type="1">
+<li>Check that <code>mainline</code> builds
+<ol type="1">
+<li>Create a new <code>brazil</code> workspace
+<ul>
+<li><code>brazil ws --create --name IonSQLReleaseMainline --versionSet IonSQLSandbox/development</code></li>
+</ul></li>
+<li>Checkout the <code>mainline</code> branch
+<ul>
+<li><code>git checkout mainline</code></li>
+</ul></li>
+<li>Build
+<ul>
+<li><code>cd IonSQLReleaseMainline/src/IonSQLSandbox/; brazil-build release</code></li>
+</ul></li>
+</ol></li>
+<li>Check that <code>release</code> builds
+<ol type="1">
+<li>Create a new <code>brazil</code> workspace
+<ul>
+<li><code>brazil ws --create --name IonSQLRelease --versionSet IonSQLSandbox/release</code></li>
+</ul></li>
+<li>Checkout the <code>release</code> branch
+<ul>
+<li><code>git checkout release</code></li>
+</ul></li>
+<li>Build
+<ul>
+<li><code>cd IonSQLReleaseMainline/src/IonSQLSandbox/; brazil-build release</code></li>
+</ul></li>
+</ol></li>
+<li>Get the number of <code>git</code> commits that <code>mainline</code> is ahead of <code>release</code>. We will refer to this number as <code>&lt;N&gt;</code> below.
+<ul>
+<li><code>git log --pretty=format:&quot;%h&quot;  mainline ^release  | wc -l</code></li>
+</ul></li>
+<li>Merge <code>mainline</code> onto <code>release</code> and include all commit messages from <code>mainline</code>
+<ul>
+<li><code>git merge --no-ff --log=&lt;N&gt; mainline</code></li>
+<li><strong>Prepend</strong> to the git merge message the new <em>Semantic Version</em>(SV) for the package. Leave the rest of the merge message’s content <strong>intanct</strong></li>
+</ul></li>
+<li>Build the code again
+<ul>
+<li><code>brazil-build clean; brazil-build release</code></li>
+</ul></li>
+<li>Create a new <code>git</code> tag with the new SV version
+<ul>
+<li><code>git tag -a v1.4 -m &quot;version 1.4&quot;</code></li>
+</ul></li>
+<li>Push your merge commit
+<ul>
+<li><code>git push</code></li>
+</ul></li>
+<li>Push your new tag
+<ul>
+<li><code>git push origin v1.4</code></li>
+</ul></li>
+<li>Monitor the release pipeline and ensure that all steps complete successfuly.
+<ul>
+<li><a href="https://pipelines.amazon.com/pipelines/IonSQLSandbox-release">IonSQLSandbox Release Pipeline</a></li>
+<li>The pipeline’s last step will build <code>release</code> into the <code>live</code> version set</li>
+</ul></li>
+<li>Send an email to <code>ionsql-interest@amazon.com</code> announcing the new release
+<ol type="1">
+<li>Pick the appropriate email template from <a href="EmailTemplates">ReleaseEmailTemplates</a></li>
+<li>Fill in the template’s placeholders</li>
+<li>Send the email out to <code>ionsql-interest@amazon.com</code></li>
+</ol></li>
+</ol>
+<h1 id="major-releases">Major releases</h1>
+<p>A Major release implies that there <strong>are backwards incompatible</strong> changes that will break existing clients, as such must perform extra steps for the release process <strong>and</strong> provide extra documentation.</p>
+<p>In this section we will use</p>
+<ul>
+<li><code>old</code> to refer to the current version that is currently in <code>live</code>, and,</li>
+<li><code>new</code> to refer to the new version we are about to release to <code>live</code>.</li>
+</ul>
+<p>Before starting the release process make sure you have the following information</p>
+<ol type="1">
+<li>The date that the team will <strong>end</strong> support for the <code>old</code> version
+<ul>
+<li>Make sure you have a date (day, month, year), be specific!</li>
+</ul></li>
+<li>Actions that existing clients must take in order to move from <code>old</code> to <code>new</code> <strong>must</strong> be documented in a separate <code>.md</code> file under <a href="UpgradeInstructions" class="uri">UpgradeInstructions</a>
+<ul>
+<li>Code changes needed to consume the <code>new</code> version (including <code>Config</code> changes)</li>
+<li>API changes that they should be aware of
+<ul>
+<li>new APIs/Tupes</li>
+<li>removed APIs/Types</li>
+<li>modified APIs (new/default/removed args, updated return values etc.)</li>
+</ul></li>
+</ul></li>
+</ol>
+<p>The first 9 steps of a Major release are the same as for the Minor and Bugfix releases (up to but not including the last step that prepares and sends out an email)</p>
+<p>Once you have the new version build to live</p>
+<ol type="1">
+<li>Update Vendor Guidance for <code>old</code> and <code>new</code>
+<ol type="1">
+<li>Go to <a href="https://code.amazon.com/packages/IonSQLSandbox/releases">Vendor Guidance</a></li>
+<li>Mark the <code>old</code> release as <code>NEWER VERSION AVAILABLE</code></li>
+<li>Mark the <code>new</code> release as <code>RECOMMENDED</code></li>
+</ol></li>
+<li>Create calendar events for deprecation and send to the team
+<ol type="1">
+<li>Create a calendar event on the day we are going to deprecate the <code>old</code> version
+<ul>
+<li>On deprecation day
+<ol type="1">
+<li>Go to Vendor Guidance and mark the <code>old</code> version as <code>DEPRECATED</code></li>
+</ol></li>
+</ul></li>
+<li>Create a calendar event 1 month before deprecating the <code>old</code> version to send out a reminder</li>
+</ol></li>
+<li>Create a <code>.md</code> file under <a href="UpgradeInstructions" class="uri">UpgradeInstructions</a>
+<ol type="1">
+<li>See the <a href="UpgradeInstructions/README.md">Readme</a> on naming conventions</li>
+<li>Include all breaking changes and instructions on how to consume the new version in this <code>.md</code> file</li>
+</ol></li>
+<li>Send an email to <code>ionsql-interest@amazon.com</code> announcing the new release
+<ol type="1">
+<li>Pick the appropriate email template from <a href="EmailTemplates">ReleaseEmailTemplates</a></li>
+<li>Fill in the template’s placeholders</li>
+<li>Send the email out to <code>ionsql-interest@amazon.com</code></li>
+</ol></li>
+</ol>
+<h1 id="hot-fixes">Hot Fixes</h1>
+<p>In the case when</p>
+<ul>
+<li><code>mainline</code> has changes that are <strong>not</strong> ready for release, and,</li>
+<li>there is an issue/bug with the currently released IonSQL++ version, and,</li>
+<li>we have a code change that we want to apply immediately in order to fix the issue/bug</li>
+</ul>
+<p>we create a <em>hot fix</em>.</p>
+<ol type="1">
+<li>Create a <strong>new</strong> branch from <code>release</code>. The name of the branch typically has the word <code>hotfix</code>.
+<ul>
+<li><code>git checkout -b hotfix-shortcircuiteval</code></li>
+</ul></li>
+<li>Create the fix in your branch, review and commit to your branch.</li>
+<li>Merge from your hotfix branch to <code>release</code>
+<ul>
+<li><code>git checkout release</code></li>
+<li><code>git merge -no-ff --log=1 hotfix-shortcircuiteval</code></li>
+</ul></li>
+<li>Build the code on <code>release</code> in your workspace
+<ul>
+<li><code>brazil-build clean; brazil-build release</code></li>
+</ul></li>
+<li>Create a new <code>git</code> tag
+<ul>
+<li><code>git tag -a v1.4.1 -m &quot;hotfix 1.4.1&quot;</code></li>
+</ul></li>
+<li>Push your merge commit
+<ul>
+<li><code>git push</code></li>
+</ul></li>
+<li>Push your new tag
+<ul>
+<li><code>git push origin v1.4</code><br />
+</li>
+</ul></li>
+<li>Merge from <code>release</code> back to <code>mainline</code>. This ensures we do not lose the fix in with the next release and updates <code>mainline</code> to include the merge event from <code>release</code>.
+<ul>
+<li><code>git checkout mainline</code></li>
+<li><code>git merge --no-ff --log=1 release</code></li>
+</ul></li>
+<li>Ensure that <code>mainline</code> builds
+<ul>
+<li><code>brazil-build clean; brazil-build release</code></li>
+</ul></li>
+<li>CR, and then commit and push to <code>mainline</code>
+<ul>
+<li><code>git commit</code></li>
+<li><code>git push</code></li>
+</ul></li>
+</ol>
