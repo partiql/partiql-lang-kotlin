@@ -15,6 +15,7 @@ enum class TokenType {
     LEFT_DOUBLE_ANGLE_BRACKET,
     RIGHT_DOUBLE_ANGLE_BRACKET,
     IDENTIFIER,
+    QUOTED_IDENTIFIER,
     OPERATOR,
     KEYWORD,
     LITERAL,
@@ -23,6 +24,7 @@ enum class TokenType {
     STAR,
     COMMA,
     COLON,
+    SEMICOLON,
     // keywords that get their own token type
     AS,
     FOR,
@@ -33,4 +35,7 @@ enum class TokenType {
     TRIM_SPECIFICATION,
     DATE_PART,
     EOF // End of Stream token.
+    ;
+    fun isIdentifier() = this == TokenType.IDENTIFIER || this == TokenType.QUOTED_IDENTIFIER
 }
+

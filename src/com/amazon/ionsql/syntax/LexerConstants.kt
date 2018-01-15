@@ -333,6 +333,9 @@ internal val DATE_PART_KEYWORDS: Set<String> = DatePart.values()
     "upper",
     "lower",
 
+    // IonSQL functions
+    "size",
+
     // conditionals
     "nullif",
     "coalesce"

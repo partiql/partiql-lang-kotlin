@@ -36,22 +36,23 @@ import java.util.concurrent.atomic.*
 class EvaluatingCompiler(private val ion: IonSystem,
                          private val parser: Parser,
                          private val userFunctions: @JvmSuppressWildcards Map<String, ExprFunction>,
-                         private val compileOptions: CompileOptions = CompileOptions.default()) : Compiler {
+                         private val compileOptions: CompileOptions = CompileOptions.standard()) : Compiler {
 
     constructor(ion: IonSystem) :
-        this(ion, IonSqlParser(ion), emptyMap(), CompileOptions.default())
+        this(ion, IonSqlParser(ion), emptyMap(), CompileOptions.standard())
 
     constructor(ion: IonSystem, compileOptions: CompileOptions) :
         this(ion, IonSqlParser(ion), emptyMap(), compileOptions)
 
     constructor(ion: IonSystem, parser: Parser, userFunctions: @JvmSuppressWildcards Map<String, ExprFunction>) :
-        this(ion, parser, userFunctions, CompileOptions.default())
+        this(ion, parser, userFunctions, CompileOptions.standard())
 
     constructor(ion: IonSystem, userFuncs: @JvmSuppressWildcards Map<String, ExprFunction>) :
-        this(ion, IonSqlParser(ion), userFuncs, CompileOptions.default())
+        this(ion, IonSqlParser(ion), userFuncs, CompileOptions.standard())
 
     /** An [ExprValue] which is the result of an expression evaluated in an [Environment].  */
-    private abstract class ExprThunk(private val metadata: NodeMetadata?) {
+    private abstract class ExprThunk(private val metadata: NodeMetadata? = null) {
+
         fun eval(env: Environment): ExprValue {
             try {
                 return innerEval(env)
@@ -184,12 +185,17 @@ class EvaluatingCompiler(private val ion: IonSystem,
             var name = syntheticColumnName(id)
             val lastExpr = this[lastIndex]
             when (lastExpr[0].text(cEnv)) {
+                "case_sensitive", "case_insensitive" -> {
+                    val valueNode = lastExpr[1]
+                    val literal = valueNode[1]
+                    if (literal.isNonNullText) {
+                        name = literal.text(cEnv)
+                    }
+                }
                 "lit" -> {
                     val literal = lastExpr[1]
-                    when {
-                        literal.isNonNullText -> {
-                            name = literal.text(cEnv)
-                        }
+                    if (literal.isNonNullText) {
+                        name = literal.text(cEnv)
                     }
                 }
             }
@@ -314,22 +320,32 @@ class EvaluatingCompiler(private val ion: IonSystem,
             exprThunk(cEnv.metadataLookup[ast]) { literal }
         },
         "id" to { cEnv, ast ->
+            checkArity(ast, 1, 2, cEnv.metadataLookup[ast])
             val name = ast[1].text(cEnv)
-            when(compileOptions.undefinedVariable) {
+            val bindingCase = when {
+                ast.size > 2 -> BindingCase.fromIonValue(ast[2])
+                else         -> BindingCase.SENSITIVE
+            }
+
+            when (compileOptions.undefinedVariable) {
                 UndefinedVariableBehavior.ERROR   -> {
+                    val bindingName = BindingName(name, bindingCase)
                     exprThunk(cEnv.metadataLookup[ast]) { env ->
-                        env.current[name] ?: throw EvaluationException(
+                        env.current[bindingName] ?: throw EvaluationException(
                             "No such binding: $name",
                             ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
-                            cEnv.metadataLookup[ast]?.fillErrorContext(PropertyValueMap().also {
-                                it[Property.BINDING_NAME] = name
-                            }),
-                            internal = false)
+                            cEnv.metadataLookup[ast]?.fillErrorContext(
+                                PropertyValueMap().also {
+                                    it[Property.BINDING_NAME] = name
+                                }
+                            ),
+                            internal = false
+                        )
                     }
                 }
                 UndefinedVariableBehavior.MISSING -> {
                     exprThunk(cEnv.metadataLookup[ast]) { env ->
-                        env.current[name] ?: this.missingValue
+                        env.current[BindingName(name, bindingCase)] ?: this.missingValue
                     }
                 }
             }
@@ -571,11 +587,12 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 }
 
                 val targetExpr = currExpr
-                val indexExpr = raw.compile(cEnv)
+                val (indexExpr, bindingCase) = compileIndexExpr(raw, cEnv)
+
                 currExpr = exprThunk(cEnv.metadataLookup[raw]) { env ->
                     val target = targetExpr.eval(env)
                     val index = indexExpr.eval(env)
-                    target.get(index, cEnv.metadataLookup[raw])
+                    target.get(index, bindingCase, cEnv.metadataLookup[raw])
                 }
                 idx++
             }
@@ -587,18 +604,18 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 val wildcardKind = raw.determinePathWildcard()
                 components.add(
                     when (wildcardKind) {
-                        // treat the entire value as a sequence
+                    // treat the entire value as a sequence
                         PathWildcardKind.NORMAL -> { _, exprVal ->
                             exprVal.rangeOver().asSequence()
                         }
-                        // treat the entire value as a sequence
+                    // treat the entire value as a sequence
                         PathWildcardKind.UNPIVOT -> { _, exprVal ->
                             exprVal.unpivot(ion).asSequence()
                         }
-                        // "index" into the value lazily
+                    // "index" into the value lazily
                         PathWildcardKind.NONE -> {
-                            val indexExpr = raw.compile(cEnv);
-                            { env, exprVal -> sequenceOf(exprVal.get(indexExpr.eval(env), cEnv.metadataLookup[raw])) }
+                            val (indexExpr, bindingCase) = compileIndexExpr(raw, cEnv);
+                            { env, exprVal -> sequenceOf(exprVal.get(indexExpr.eval(env), bindingCase, cEnv.metadataLookup[raw])) }
                         }
                     }
                 )
@@ -782,6 +799,26 @@ class EvaluatingCompiler(private val ion: IonSystem,
             }
         }
     )
+
+
+    private fun compileIndexExpr(ast: IonValue, cEnv: CompilationEnvironment) : Pair<ExprThunk, BindingCase> {
+        var useAst = ast
+        //If modified by a (case_sensitive...) or (case_insensitive...) node, store the case sensitivity and
+        //extract the child node, otherwise, the default is BindingCase.SENSITIVE.
+        val bindingCase = when {
+            ast[0].stringValue()!!.startsWith("case_") -> {
+                useAst = ast[1]
+                BindingCase.fromIonValue(ast[0])
+            }
+            else -> BindingCase.SENSITIVE
+        }
+        return Pair(
+            when(ast[0].stringValue()) {
+                "lit" -> exprThunk(cEnv.metadataLookup[useAst]) { _ -> useAst[1].exprValue() }
+                else -> useAst.compile(cEnv)
+            },
+            bindingCase)
+    }
 
     /**
      * Helper used to evaluate a list of arguments to a boolean expression. The evaluation short circuits
@@ -1102,11 +1139,14 @@ class EvaluatingCompiler(private val ion: IonSystem,
                         val nextBindEnv = { env: Environment ->
                             val childEnv = bindEnv(env)
                             childEnv.nest(
-                                Bindings.over {
-                                    when (it) {
-                                        alias.asName -> value
-                                        alias.atName -> value.name ?: missingValue
-                                        else -> null
+                                Bindings.over { bindingName ->
+                                    when {
+                                        bindingName.isEquivalentTo(alias.asName) ->
+                                            value
+                                        bindingName.isEquivalentTo(alias.atName) ->
+                                            value.name ?: missingValue
+                                        else ->
+                                            null
                                     }
                                 },
                                 Environment.CurrentMode.GLOBALS_THEN_LOCALS
@@ -1247,7 +1287,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
     private fun String.exprValue(): ExprValue = stringExprValue(this, ion)
 
-    private fun ExprValue.get(member: ExprValue, metadata: NodeMetadata?): ExprValue = when {
+    private fun ExprValue.get(member: ExprValue, case: BindingCase, metadata: NodeMetadata?): ExprValue = when {
         member.type == INT -> {
             val index = member.numberValue().toInt()
             ordinalBindings[index] ?: missingValue
@@ -1255,7 +1295,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
         member.type.isText -> {
             val name = member.stringValue()
             // delegate to bindings logic as the scope of lookup by name
-            bindings[name] ?: missingValue
+            bindings[BindingName(name, case)] ?: missingValue
         }
         else -> err("Cannot convert index to int/string: $member", metadata?.toErrorContext(), internal = true)
     }

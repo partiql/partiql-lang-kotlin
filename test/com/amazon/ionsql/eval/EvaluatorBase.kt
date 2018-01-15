@@ -6,6 +6,7 @@ package com.amazon.ionsql.eval
 
 import com.amazon.ionsql.*
 import com.amazon.ionsql.errors.*
+import com.amazon.ionsql.syntax.*
 import com.amazon.ionsql.util.*
 import org.junit.Assert
 import kotlin.reflect.*
@@ -18,14 +19,13 @@ abstract class EvaluatorBase : Base() {
      */
     private fun String.toExprValue(): ExprValue = literal(this).exprValue()
 
-    protected fun Map<String, String>.toBindings(): Bindings = Bindings.over { key -> this[key]?.toExprValue() }
+    protected fun Map<String, String>.toBindings(): Bindings = Bindings.over { lookup -> this[lookup]?.toExprValue() }
 
     protected fun Map<String, String>.toSession() = EvaluationSession.build { globals(this@toSession.toBindings()) }
 
-    fun voidEval(source: String, compileOptions: CompileOptions = CompileOptions.default()) {
-
+    fun voidEval(source: String, compileOptions: CompileOptions = CompileOptions.standard(), session: EvaluationSession = EvaluationSession.standard()) {
         // force materialization
-        eval(source, compileOptions).ionValue
+        eval(source, compileOptions, session).ionValue
     }
 
     /**
@@ -39,8 +39,8 @@ abstract class EvaluatorBase : Base() {
      */
     protected fun assertEval(source: String,
                              expected: String,
-                             session: EvaluationSession = EvaluationSession.default(),
-                             compileOptions: CompileOptions = CompileOptions.default(),
+                             session: EvaluationSession = EvaluationSession.standard(),
+                             compileOptions: CompileOptions = CompileOptions.standard(),
                              block: AssertExprValue.() -> Unit = { }) {
 
         val expectedIon = literal(expected)
@@ -59,8 +59,8 @@ abstract class EvaluatorBase : Base() {
      * @param block function literal with receiver used to plug in custom assertions
      */
     protected fun assertEvalIsMissing(source: String,
-                                      session: EvaluationSession = EvaluationSession.default(),
-                                      compileOptions: CompileOptions = CompileOptions.default()) {
+                                      session: EvaluationSession = EvaluationSession.standard(),
+                                      compileOptions: CompileOptions = CompileOptions.standard()) {
 
         val exprValue = eval(source, compileOptions, session)
         assertEquals(ExprValueType.MISSING, exprValue.type)
@@ -74,10 +74,12 @@ abstract class EvaluatorBase : Base() {
      */
     protected fun eval(source: String,
                        compileOptions: CompileOptions,
-                       session: EvaluationSession = EvaluationSession.default()): ExprValue {
+                       session: EvaluationSession = EvaluationSession.standard()): ExprValue {
 
         val e = EvaluatingCompiler(ion, compileOptions = compileOptions)
-        return e.compile(source).eval(session)
+        val p = IonSqlParser(ion)
+        val ast = p.parse(source)
+        return e.compile(ast).eval(session)
     }
 
     /**
@@ -114,9 +116,21 @@ abstract class EvaluatorBase : Base() {
                                                         errorCode: ErrorCode? = null,
                                                         expectErrorContextValues: Map<Property, Any>,
                                                         cause: KClass<out Throwable>? = null) {
+        checkInputThrowingEvaluationException(
+            input,
+            EvaluationSession.standard(),
+            errorCode,
+            expectErrorContextValues,
+            cause)
+    }
+    protected fun checkInputThrowingEvaluationException(input: String,
+                                                        session: EvaluationSession,
+                                                        errorCode: ErrorCode? = null,
+                                                        expectErrorContextValues: Map<Property, Any>,
+                                                        cause: KClass<out Throwable>? = null) {
         softAssert {
             try {
-                voidEval(input)
+                voidEval(input, session = session)
                 fail("Expected EvaluationException but there was no Exception")
             }
             catch (e: EvaluationException) {
@@ -129,6 +143,6 @@ abstract class EvaluatorBase : Base() {
         }
     }
 
-    protected fun SourceLocationProperties(lineNum: Long, colNum: Long) =
+    protected fun sourceLocationProperties(lineNum: Long, colNum: Long) =
         mapOf(Property.LINE_NUMBER to lineNum, Property.COLUMN_NUMBER to colNum)
 }

@@ -146,7 +146,7 @@ object DelimitedValues {
             }
 
             names.map {
-                val col = row.bindings[it]?.ionValue ?: nullValue
+                val col = row.bindings[BindingName(it, BindingCase.SENSITIVE)]?.ionValue ?: nullValue
                 col.csvStringValue()
             }.joinTo(output, delimiter)
             output.write(newline)

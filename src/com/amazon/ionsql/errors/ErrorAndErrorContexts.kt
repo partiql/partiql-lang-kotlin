@@ -6,11 +6,11 @@ package com.amazon.ionsql.errors
 
 import com.amazon.ion.IonValue
 import com.amazon.ionsql.errors.PropertyType.*
-import com.amazon.ionsql.syntax.TokenType
+import com.amazon.ionsql.syntax.*
 import java.util.*
 
-
 internal const val UNKNOWN: String = "<UNKNOWN>"
+
 
 /**
  * Categories for errors. Should map to stages in the Compiler and Evaluator.
@@ -53,9 +53,13 @@ enum class Property(val propertyName: String, val propertyType: PropertyType) {
     TIMESTAMP_FORMAT_PATTERN("timestamp_format_pattern", STRING_CLASS),
     TIMESTAMP_STRING("timestamp_string", STRING_CLASS),
     BINDING_NAME("binding_name", STRING_CLASS),
+    BINDING_NAME_MATCHES("binding_name_matches", STRING_CLASS),
     LIKE_VALUE("value_to_match", STRING_CLASS),
     LIKE_PATTERN("pattern", STRING_CLASS),
-    LIKE_ESCAPE("escape_char", STRING_CLASS)
+    LIKE_ESCAPE("escape_char", STRING_CLASS),
+    FUNCTION_NAME("function_name", STRING_CLASS),
+    EXPECTED_ARGUMENT_TYPES("expected_types", STRING_CLASS),
+    ACTUAL_ARGUMENT_TYPES("actual_types", STRING_CLASS)
 }
 
 /**

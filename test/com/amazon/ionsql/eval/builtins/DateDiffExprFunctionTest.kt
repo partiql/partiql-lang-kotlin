@@ -18,7 +18,7 @@ class DateDiffExprFunctionTest : Base() {
     }
 
     private val env = Environment(locals = Bindings.empty(),
-                                  session = EvaluationSession.default(),
+                                  session = EvaluationSession.standard(),
                                   registers = RegisterBank(0))
 
     private val subject = DateDiffExprFunction(ion)
@@ -28,14 +28,14 @@ class DateDiffExprFunctionTest : Base() {
     @Test
     fun lessArguments() {
         assertThatThrownBy { callDateDiff("year") }
-            .hasMessage("date_diff takes 3 arguments, received: 1")
+            .hasMessage("date_diff takes exactly 3 arguments, received: 1")
             .isExactlyInstanceOf(EvaluationException::class.java)
     }
 
     @Test
     fun moreArguments() {
         assertThatThrownBy { callDateDiff("year", Timestamp.valueOf("2017T"), Timestamp.valueOf("2017T"), 1) }
-            .hasMessage("date_diff takes 3 arguments, received: 4")
+            .hasMessage("date_diff takes exactly 3 arguments, received: 4")
             .isExactlyInstanceOf(EvaluationException::class.java)
     }
 

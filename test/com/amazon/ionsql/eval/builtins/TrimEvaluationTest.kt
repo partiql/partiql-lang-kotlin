@@ -117,4 +117,34 @@ class TrimEvaluationTest : EvaluatorBase() {
 
     @Test // regression for https://issues.amazon.com/IONSQL-159
     fun trimDefaultSpecification3() = assertEval("trim('12' from 'b1212')", "\"b\"")
+
+    @Test
+    fun trimNull01() = assertEval("trim(both null from '')", "null")
+
+    @Test
+    fun trimNull02() = assertEval("trim(both '' from null)", "null")
+
+    @Test
+    fun trimNull03() = assertEval("trim(null from '')", "null")
+
+    @Test
+    fun trimNull04() = assertEval("trim('' from null)", "null")
+
+    @Test
+    fun trimNull05() = assertEval("trim(null)", "null")
+
+    @Test
+    fun trimMissing01() = assertEval("trim(both missing from '')", "null")
+
+    @Test
+    fun trimMissing02() = assertEval("trim(both '' from missing)", "null")
+
+    @Test
+    fun trimMissing03() = assertEval("trim(missing from '')", "null")
+
+    @Test
+    fun trimMissing04() = assertEval("trim('' from missing)", "null")
+
+    @Test
+    fun trimMissing05() = assertEval("trim(missing)", "null")
 }

@@ -107,6 +107,11 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     fun identifier() = assertEval("i", "1", globalNumbers.toSession())
 
     @Test
+    fun identifierCaseMismatch() = assertEval("I", "1", globalNumbers.toSession())
+
+    @Test
+    fun quotedIdentifier() = assertEval("\"i\"", "1", globalNumbers.toSession())
+    @Test
     fun lexicalScope() = assertEval("@i", "1", globalNumbers.toSession())
 
     @Test
@@ -1335,31 +1340,31 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     @Test
     fun undefinedUnqualifiedVariableWithUndefinedVariableBehaviorMissing() {
         assertEvalIsMissing("undefined_variable",
-                   compileOptions = CompileOptions.builder { undefinedVariable = UndefinedVariableBehavior.MISSING })
+                   compileOptions = CompileOptions.build { undefinedVariable(UndefinedVariableBehavior.MISSING) })
     }
 
     @Test
     fun undefinedUnqualifiedVariableIsNullExprWithUndefinedVariableBehaviorMissing() {
         assertEval("undefined_variable IS NULL", "true",
-                   compileOptions = CompileOptions.builder { undefinedVariable = UndefinedVariableBehavior.MISSING })
+                   compileOptions = CompileOptions.build { undefinedVariable(UndefinedVariableBehavior.MISSING) })
     }
     @Test
     fun undefinedUnqualifiedVariableIsMissingExprWithUndefinedVariableBehaviorMissing() {
         assertEval("undefined_variable IS MISSING", "true",
-                   compileOptions = CompileOptions.builder { undefinedVariable = UndefinedVariableBehavior.MISSING })
+                   compileOptions = CompileOptions.build { undefinedVariable(UndefinedVariableBehavior.MISSING) })
     }
 
     @Test
     fun undefinedUnqualifiedVariableInSelectWithUndefinedVariableBehaviorMissing() {
         assertEval("SELECT a, undefined_variable FROM `[{a:100, b:200}]`", "[{a:100}]",
-                   compileOptions = CompileOptions.builder { undefinedVariable = UndefinedVariableBehavior.MISSING })
+                   compileOptions = CompileOptions.build { undefinedVariable(UndefinedVariableBehavior.MISSING) })
     }
 
     @Test
-    fun undefinedQualifieVariabledWithUndefinedVariableBehaviorError() {
-        //Demonstrate that UndefinedVariableBehavior.ERROR does not affect qualified field names.
+    fun undefinedQualifiedVariableWithUndefinedVariableBehaviorError() {
+        // Demonstrates that UndefinedVariableBehavior.ERROR does not affect qualified field names.
         assertEval("SELECT t.a, t.undefined_field FROM `[{a:100, b:200}]` as t", "[{a:100}]",
-                   compileOptions = CompileOptions.builder { undefinedVariable = UndefinedVariableBehavior.ERROR })
+                   compileOptions = CompileOptions.build { undefinedVariable(UndefinedVariableBehavior.ERROR) })
     }
 
     @Test // https://issues.amazon.com/IONSQL-173
@@ -1368,4 +1373,10 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     @Test // https://issues.amazon.com/IONSQL-173
     fun ordinalAccessWithNegativeIndexAndBindings()  = assertEval("SELECT temp[-2] FROM temp", "[{}]",
                                                                   mapOf("temp" to "[[1,2,3,4]]").toSession())
+
+    @Test // https://i.amazon.com/issues/IONSQL-174
+    fun semicolonAtEndOfLiteral() = assertEval("1;", "1")
+
+    @Test // https://i.amazon.com/issues/IONSQL-174
+    fun semicolonAtEndOfExpression() = assertEval("SELECT * FROM <<1>>;", "[{_1: 1}]")
 }

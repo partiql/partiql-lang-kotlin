@@ -5,9 +5,11 @@ import com.amazon.ionsql.eval.*
 import com.amazon.ionsql.syntax.*
 import com.amazon.ionsql.util.*
 
-internal class DateAddExprFunction(val ion: IonSystem) : ExprFunction {
-    override fun call(env: Environment, args: List<ExprValue>): ExprValue {
-        val (datePart, interval, timestamp) = extractArguments(args)
+internal class DateAddExprFunction(ion: IonSystem) : NullPropagatingExprFunction("date_add", 3, ion) {
+    override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
+        val datePart = args[0].datePartValue()
+        val interval = args[1].intValue()
+        val timestamp = args[2].timestampValue()
 
         try {
             val addedTimestamp = when (datePart) {
@@ -25,13 +27,6 @@ internal class DateAddExprFunction(val ion: IonSystem) : ExprFunction {
         } catch (e: IllegalArgumentException) {
             // illegal argument exception are thrown when the resulting timestamp go out of supported timestamp boundaries
             throw EvaluationException(e, internal = false)
-        }
-    }
-
-    private fun extractArguments(args: List<ExprValue>): Triple<DatePart, Int, Timestamp> {
-        return when (args.size) {
-            3    -> Triple(args[0].datePartValue(), args[1].intValue(), args[2].timestampValue())
-            else -> errNoContext("date_add takes 3 arguments, received: ${args.size}", internal = false)
         }
     }
 }

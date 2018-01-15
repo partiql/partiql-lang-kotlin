@@ -13,7 +13,7 @@ import com.amazon.ionsql.syntax.TokenType.*
  */
 data class Token(val type: TokenType,
                  val value: IonValue? = null,
-                 val position: SourcePosition? = null) {
+                 val position: SourcePosition) {
     val text: String?
         get() = value?.stringValue()
 

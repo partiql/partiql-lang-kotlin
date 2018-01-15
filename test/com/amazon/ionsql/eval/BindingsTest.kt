@@ -4,7 +4,7 @@
 
 package com.amazon.ionsql.eval
 
-import com.amazon.ionsql.Base
+import com.amazon.ionsql.*
 import com.amazon.ionsql.eval.binding.Alias
 import com.amazon.ionsql.eval.binding.localsBinder
 import com.amazon.ionsql.util.*
@@ -45,7 +45,8 @@ class BindingsTest : Base() {
 
         listOf("s", "t", "z", "a", "b", "c", "d")
             .forEach { key ->
-                assertEquals(oldLocals[key]?.ionValue, locals[key]?.ionValue)
+                assertEquals(oldLocals[BindingName(key, BindingCase.SENSITIVE)]?.ionValue,
+                             locals[BindingName(key, BindingCase.SENSITIVE)]?.ionValue)
             }
     }
 
@@ -58,9 +59,9 @@ class BindingsTest : Base() {
         val locals = aliases.localsBinder(missingExprValue(ion)).bindLocals(exprValues)
         val oldLocals = oldLocalsBinder(exprValues, aliases, missingExprValue(ion))
 
-        assertFails("binding 's' should be a collision and throw") { locals["s"] }
-        assertFails("binding 's' should be a collision and throw") { oldLocals["s"] }
-        assertEquals(oldLocals["t"], locals["t"])
+        assertFails("binding 's' should be a collision and throw") { locals[BindingName("s", BindingCase.SENSITIVE)] }
+        assertFails("binding 's' should be a collision and throw") { oldLocals[BindingName("s", BindingCase.SENSITIVE)] }
+        assertEquals(oldLocals[BindingName("t", BindingCase.SENSITIVE)], locals[BindingName("t", BindingCase.SENSITIVE)])
     }
 }
 
@@ -68,10 +69,10 @@ class BindingsTest : Base() {
 private fun oldLocalsBinder(locals: List<ExprValue>, aliases: List<Alias>, missingValue: ExprValue): Bindings {
     val localBindings = locals.map { it.bindings }
 
-    return Bindings.over { name ->
+    return Bindings.over { bindingName ->
         val found = localBindings.asSequence()
                 .mapIndexed { col, _ ->
-                    when (name) {
+                    when (bindingName.name) {
                         // the alias binds to the value itself
                         aliases[col].asName -> locals[col]
                         // the alias binds to the name of the value
@@ -86,14 +87,14 @@ private fun oldLocalsBinder(locals: List<ExprValue>, aliases: List<Alias>, missi
             // TODO fix dynamic scoping to be in line with SQL++ rules
             0 -> {
                 localBindings.asSequence()
-                        .map { it[name] }
+                        .map { it[bindingName] }
                         .filter { it != null }
                         .firstOrNull()
             }
             // found exactly one thing, success
             1 -> found.head!!
             // multiple things with the same name is a conflict
-            else -> errNoContext("$name is ambigious: ${found.map { it?.ionValue }}", internal = false)
+            else -> errNoContext("${bindingName.name} is ambiguous: ${found.map { it?.ionValue }}", internal = false)
         }
     }
 }

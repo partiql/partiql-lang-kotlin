@@ -11,6 +11,7 @@ import com.amazon.ionsql.errors.Property.*
 /**
  * General exception class for Ion SQL.
  *
+ * See [IONSQL-207](https://issues.amazon.com/issues/IONSQL-207)
  *
  * Three configurations for an [IonSqlException]
  *
@@ -83,14 +84,23 @@ open class IonSqlException(override var message: String,
     private fun errorCategory(errorCode: ErrorCode?): String =
        errorCode?.errorCategory() ?: UNKNOWN
 
+    // See [IONSQL-207](https://issues.amazon.com/issues/IONSQL-207)
     override fun toString(): String {
-        if (this.message.isNotBlank()) {
-            this.message = "${this.message}\n\t${generateMessage()}\n"
-        } else {
-            this.message = "${generateMessage()}\n"
+        when (this.message.isNotBlank()) {
+            true -> {
+                val msg = this.message
+                this.message = "${this.message}\n\t${generateMessage()}\n"
+                val result = super.toString()
+                this.message = msg
+                return result
+            }
+            else -> {
+                this.message = "${generateMessage()}\n"
+                val result = super.toString()
+                this.message = ""
+                return result
+            }
         }
-        return super.toString()
     }
-
-
 }
+

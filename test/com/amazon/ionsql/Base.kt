@@ -32,10 +32,10 @@ abstract class Base : Assert() {
             )
 
         fun assertBinding(name: String, predicate: ExprValue.() -> Boolean) = assertBindings {
-            get(name)?.predicate() ?: false
+            get(BindingName(name, BindingCase.SENSITIVE))?.predicate() ?: false
         }
 
-        fun assertNoBinding(name: String) = assertBindings { get(name) == null }
+        fun assertNoBinding(name: String) = assertBindings { get(BindingName(name, BindingCase.INSENSITIVE)) == null }
 
         fun assertIonValue(expected: IonValue) {
             assertEquals(expected, exprValue.ionValue)
@@ -76,6 +76,7 @@ abstract class Base : Assert() {
             assertThat(errorContext!!.hasProperty(it))
                 .withFailMessage("Error Context does not contain $it")
                 .isTrue
+
         }
 
 
@@ -122,7 +123,10 @@ abstract class Base : Assert() {
                 KEYWORD,
                 TIMESTAMP_STRING,
                 TIMESTAMP_FORMAT_PATTERN,
-                BINDING_NAME
+                BINDING_NAME,
+                LIKE_ESCAPE,
+                LIKE_PATTERN,
+                LIKE_VALUE
                     -> assertThat(actualPropertyValue?.stringValue()).withFailMessage(message).isEqualTo(entry.value)
                 TOKEN_TYPE,
                 EXPECTED_TOKEN_TYPE_1_OF_2,

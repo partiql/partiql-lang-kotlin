@@ -21,11 +21,11 @@ val <T> List<T>.tail: List<T>
     }
 
 
-/* Returns true if any ExprValue in the Iterable is null. */
-fun Iterable<ExprValue>.isAnyNull() = this.any { value -> value.type == ExprValueType.NULL }
+/** Returns true if any ExprValue in the Iterable is null. */
+fun Iterable<ExprValue>.isAnyNull() = any { it.type == ExprValueType.NULL }
 
 /** Returns true if any ExprValue in the Iterable is missing. */
-fun Iterable<ExprValue>.isAnyMissing() = this.any { value -> value.type == ExprValueType.MISSING }
+fun Iterable<ExprValue>.isAnyMissing() = any { it.type == ExprValueType.MISSING }
 
 /**
  * Given a predicate function, return `true` if all members of the list satisfy the predicate, return false otherwise.

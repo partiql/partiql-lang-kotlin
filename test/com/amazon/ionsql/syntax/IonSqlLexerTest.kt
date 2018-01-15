@@ -4,7 +4,7 @@
 
 package com.amazon.ionsql.syntax
 
-import com.amazon.ionsql.Base
+import com.amazon.ionsql.*
 import com.amazon.ionsql.syntax.TokenType.*
 import org.junit.Test
 import java.util.*
@@ -36,7 +36,7 @@ class IonSqlLexerTest : Base() {
 
     @Test
     fun punctuation() = assertTokens(
-        "()[]{}:,.*<<>>",
+        "()[]{}:,.*<<>>;",
         token(LEFT_PAREN, "'('", 1, 1),
         token(RIGHT_PAREN, "')'", 1, 2),
         token(LEFT_BRACKET, "'['", 1, 3),
@@ -48,7 +48,8 @@ class IonSqlLexerTest : Base() {
         token(DOT, "'.'", 1, 9),
         token(STAR, "'*'", 1, 10),
         token(LEFT_DOUBLE_ANGLE_BRACKET, "'<<'", 1, 11),
-        token(RIGHT_DOUBLE_ANGLE_BRACKET, "'>>'", 1, 13)
+        token(RIGHT_DOUBLE_ANGLE_BRACKET, "'>>'", 1, 13),
+        token(SEMICOLON, "';'", 1, 15)
     )
 
     @Test
@@ -66,6 +67,14 @@ class IonSqlLexerTest : Base() {
         token(IDENTIFIER, "_bc_", 2, 1),
         token(IDENTIFIER, "\$cd\$", 4, 2),
         token(IDENTIFIER, "de1", 6, 2)
+    )
+    @Test
+    fun whitespaceAndQuotedIdentifiers() = assertTokens(
+        "\"ab\"\r\n\"_bc_\"  \r\r \"\$cd\$\"\n\r\t\"de1\"",
+        token(QUOTED_IDENTIFIER, "ab", 1, 1),
+        token(QUOTED_IDENTIFIER, "_bc_", 2, 1),
+        token(QUOTED_IDENTIFIER, "\$cd\$", 4, 2),
+        token(QUOTED_IDENTIFIER, "de1", 6, 2)
     )
 
     @Test
@@ -163,8 +172,8 @@ class IonSqlLexerTest : Base() {
     @Test
     fun quotedIdentifiers() = assertTokens(
         "\"1e0\" \"{\"\"a\"\":5}\"",
-        token(IDENTIFIER, "'1e0'", 1, 1),
-        token(IDENTIFIER, "'{\"a\":5}'", 1, 7)
+        token(QUOTED_IDENTIFIER, "'1e0'", 1, 1),
+        token(QUOTED_IDENTIFIER, "'{\"a\":5}'", 1, 7)
     )
 
     @Test
@@ -361,5 +370,10 @@ class IonSqlLexerTest : Base() {
     @Test(expected = LexerException::class)
     fun invalidNumber() {
         tokenize("1E++0")
+    }
+
+    @Test(expected = LexerException::class)
+    fun numberWithExponentTooLarge() {
+        tokenize("1E2147483648") // exponent is represented by an int, this is bigger than 2^31-1 so doesn't fit
     }
 }

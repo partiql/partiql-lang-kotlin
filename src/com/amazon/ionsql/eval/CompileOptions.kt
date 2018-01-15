@@ -20,23 +20,28 @@ class CompileOptions private constructor(val undefinedVariable: UndefinedVariabl
     companion object {
 
         /**
-         * Creates a builder that will choose the default values for any unspecified options.
+         * Creates a java style builder that will choose the default values for any unspecified options.
          */
         @JvmStatic
-        fun builder(block: Builder.() -> Unit) = Builder().apply(block).build()
+        fun builder() = Builder()
 
         /**
-         * Creates a [CompileOptions] instance with default values.
+         * Kotlin style builder that will choose the default values for any unspecified options.
+         */
+        fun build(block: Builder.() -> Unit) = Builder().apply(block).build()
+
+        /**
+         * Creates a [CompileOptions] instance with the standard values.
          */
         @JvmStatic
-        fun default() = Builder().build()
+        fun standard() = Builder().build()
     }
 
     /**
      * Builds a [CompileOptions] instance.
      */
     class Builder {
-        var undefinedVariable: UndefinedVariableBehavior = UndefinedVariableBehavior.ERROR
+        private var undefinedVariable: UndefinedVariableBehavior = UndefinedVariableBehavior.ERROR
 
         fun undefinedVariable(value: UndefinedVariableBehavior): Builder {
             undefinedVariable = value

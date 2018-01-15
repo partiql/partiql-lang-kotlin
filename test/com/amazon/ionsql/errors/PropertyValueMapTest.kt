@@ -1,6 +1,6 @@
 package com.amazon.ionsql.errors
 
-import com.amazon.ionsql.Base
+import com.amazon.ionsql.*
 import com.amazon.ionsql.errors.Property.*
 import com.amazon.ionsql.syntax.TokenType
 import org.junit.Before

@@ -11,7 +11,7 @@ private val LOC_TOKEN_STR = LOCATION + (setOf(Property.TOKEN_STRING))
 
 /** Helper function to reduce syntactical overhead of accessing property values as strings. */
 private fun PropertyValueMap.getAsString(key: Property, defaultValue: String) =
-        this[key]?.stringValue() ?: defaultValue
+        this[key]?.toString() ?: defaultValue
 
 /** Each [ErrorCode] contains an immutable set of [Property].
  *  These are the properties used as keys in [PropertyValueMap] created at each error location.
@@ -41,6 +41,14 @@ enum class ErrorCode(private val category: ErrorCategory,
         ErrorCategory.LEXER,
         LOC_TOKEN_STR,
         "invalid literal at") {
+        override fun detailMessageSuffix(errorContext: PropertyValueMap?): String =
+            getTokenString(errorContext)
+    },
+
+    LEXER_INVALID_ION_LITERAL(
+        ErrorCategory.LEXER,
+        LOC_TOKEN_STR,
+        "invalid ion literal at") {
         override fun detailMessageSuffix(errorContext: PropertyValueMap?): String =
             getTokenString(errorContext)
     },
@@ -141,8 +149,15 @@ enum class ErrorCode(private val category: ErrorCategory,
 
     PARSE_INVALID_PATH_COMPONENT(
         ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "invalid Path component"),
+        LOC_TOKEN + setOf(Property.TOKEN_TYPE, Property.TOKEN_VALUE),
+        "invalid Path component") {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String {
+            return "Invalid path component, expecting either an ${TokenType.IDENTIFIER} or ${TokenType.STAR}, " +
+                   "got: ${errorContext?.get(Property.TOKEN_TYPE) ?: UNKNOWN} " +
+                   "with value: ${errorContext?.get(Property.TOKEN_VALUE) ?: UNKNOWN}"
+
+        }
+    },
 
     PARSE_MISSING_IDENT_AFTER_AT(
         ErrorCategory.PARSER,
@@ -300,8 +315,18 @@ enum class ErrorCode(private val category: ErrorCategory,
 
     EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL(
         ErrorCategory.EVALUATOR,
-        LOCATION,
+        LOCATION + setOf(Property.EXPECTED_ARITY_MIN, Property.EXPECTED_ARITY_MAX),
         "Incorrect number of arguments to function call"),
+
+    EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL(
+        ErrorCategory.EVALUATOR,
+        LOCATION + setOf(Property.EXPECTED_ARGUMENT_TYPES, Property.ACTUAL_ARGUMENT_TYPES, Property.FUNCTION_NAME),
+        "Incorrect type of arguments to function call") {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "Invalid argument types for ${errorContext?.get(Property.FUNCTION_NAME) ?: UNKNOWN}, " +
+            "expected: ${errorContext?.get(Property.EXPECTED_ARGUMENT_TYPES) ?: UNKNOWN} " +
+            "got: ${errorContext?.get(Property.ACTUAL_ARGUMENT_TYPES) ?: UNKNOWN}"
+    },
 
     EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN(
         ErrorCategory.EVALUATOR,
@@ -328,6 +353,14 @@ enum class ErrorCode(private val category: ErrorCategory,
         LOCATION,
         "Int overflow or underflow"),
 
+    EVALUATOR_AMBIGUOUS_BINDING(
+        ErrorCategory.EVALUATOR,
+        LOCATION + setOf(Property.BINDING_NAME, Property.BINDING_NAME_MATCHES),
+        "Binding name was ambiguous") {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "Binding name was '${errorContext?.get(Property.BINDING_NAME)}'"
+    },
+
     EVALUATOR_LIKE_INVALID_INPUTS(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.LIKE_VALUE, Property.LIKE_PATTERN, Property.LIKE_ESCAPE),
@@ -337,9 +370,7 @@ enum class ErrorCode(private val category: ErrorCategory,
             "value = ${errorContext?.get(Property.LIKE_VALUE)?.stringValue() ?: UNKNOWN}" + "," +
             "pattern =  ${errorContext?.get(Property.LIKE_PATTERN)?.stringValue() ?: UNKNOWN}" + "," +
             "escape char = ${errorContext?.get(Property.LIKE_ESCAPE)?.stringValue() ?: "none given"}"
-
-    }
-    ;
+    };
 
     protected fun getTokenString(errorContext: PropertyValueMap?): String =
         errorContext?.get(Property.TOKEN_STRING)?.stringValue() ?: UNKNOWN

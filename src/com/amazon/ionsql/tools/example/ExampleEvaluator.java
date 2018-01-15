@@ -7,13 +7,19 @@ package com.amazon.ionsql.tools.example;
 import com.amazon.ion.IonSystem;
 import com.amazon.ion.IonValue;
 import com.amazon.ion.system.IonSystemBuilder;
-import com.amazon.ionsql.eval.*;
-import kotlin.sequences.Sequence;
-import kotlin.sequences.SequencesKt;
-
+import com.amazon.ionsql.eval.EvaluatingCompiler;
+import com.amazon.ionsql.eval.EvaluationSession;
+import com.amazon.ionsql.eval.ExprFunction;
+import com.amazon.ionsql.eval.ExprValue;
+import com.amazon.ionsql.eval.Expression;
+import com.amazon.ionsql.eval.IonExprValue;
+import com.amazon.ionsql.eval.SequenceExprValue;
+import com.amazon.ionsql.util.BindingHelper;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import kotlin.sequences.Sequence;
+import kotlin.sequences.SequencesKt;
 
 /**
  * An example embedding of the Ion SQL interpreter using Java.
@@ -79,9 +85,15 @@ public class ExampleEvaluator {
 
         String source = args[0];
         Expression expr = evaluator.compile(source);
+
+        Map<String, ExprValue> globalVariables = new HashMap<>();
+        globalVariables.put("stdin", data);
+
         ExprValue results = expr.eval(
             EvaluationSession.builder()
-                .globals((name) -> "stdin".equals(name) ? data : null) // provide a mapping to the to standard input
+                //NOTE:  BindingHelp0er.bindingNameLookup(...) will throw the appropriate exception
+                //in the event of an ambiguous case-insensitive binding match.
+                .globals((bindingName) -> BindingHelper.lookupBinding(globalVariables, bindingName))
                 .build()
         );
 

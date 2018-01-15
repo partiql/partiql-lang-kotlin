@@ -8,6 +8,7 @@ import com.amazon.ion.*
 import com.amazon.ionsql.errors.*
 import com.amazon.ionsql.errors.ErrorCode.*
 import com.amazon.ionsql.errors.Property.*
+import com.amazon.ionsql.eval.*
 import com.amazon.ionsql.syntax.IonSqlParser.AliasSupportType.*
 import com.amazon.ionsql.syntax.IonSqlParser.ArgListMode.*
 import com.amazon.ionsql.syntax.IonSqlParser.ParseType.*
@@ -59,6 +60,8 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
 
     internal enum class ParseType(val isJoin: Boolean = false) {
         ATOM,
+        CASE_SENSITIVE_ATOM,
+        CASE_INSENSITIVE_ATOM,
         PATH_WILDCARD,
         PATH_WILDCARD_UNPIVOT,
         SELECT_LIST,
@@ -166,11 +169,35 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 MISSING -> sexp {
                     addSymbol("missing")
                 }
+                QUOTED_IDENTIFIER -> sexp {
+                    addSymbol("id")
+                    addSymbol(token.text!!)
+                    add(BindingCase.SENSITIVE.toSymbol(ion))
+                }
                 IDENTIFIER -> sexp {
                     addSymbol("id")
                     addSymbol(token.text!!)
+                    add(BindingCase.INSENSITIVE.toSymbol(ion))
                 }
                 else -> unsupported("Unsupported atom token", PARSE_UNSUPPORTED_TOKEN)
+            }
+            CASE_INSENSITIVE_ATOM -> {
+                sexp {
+                    addSymbol("case_insensitive")
+                    add(wrapInMetaNode(token?.position, sexp {
+                        addSymbol("lit")
+                        addClone(token?.value!!)
+                    }))
+                }
+            }
+            CASE_SENSITIVE_ATOM -> {
+                sexp {
+                    addSymbol("case_sensitive")
+                    add(wrapInMetaNode(token?.position, sexp {
+                        addSymbol("lit")
+                        addClone(token?.value!!)
+                    }))
+                }
             }
             CAST, PATH, LIST, BAG, UNPIVOT, MEMBER,
             INNER_JOIN, LEFT_JOIN, RIGHT_JOIN, OUTER_JOIN -> sexp {
@@ -336,6 +363,11 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
 
         // wrap the meta node as appropriate
         val sourcePos = token?.position
+        return wrapInMetaNode(sourcePos, astNode)
+    }
+
+    private fun wrapInMetaNode(
+        sourcePos: SourcePosition?, astNode: IonSexp): IonSexp {
         return when (sourcePos) {
             null -> astNode
             else -> sexp {
@@ -407,7 +439,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 else -> when (op.keywordText) {
                     "between", "not_between" -> {
                         val rest = rem.tailExpectedKeyword("and")
-                        if (rest.onlyEof()) {
+                        if (rest.onlyEndOfStatement()) {
                             rem.head.err("Expected expression after AND", PARSE_EXPECTED_EXPRESSION)
                         } else {
                             rem = rest
@@ -422,7 +454,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                         when {
                             rem.head?.keywordText == "escape" -> {
                                 val rest = rem.tailExpectedKeyword("escape")
-                                if (rest.onlyEof()) {
+                                if (rest.onlyEndOfStatement()) {
                                     rem.head.err("Expected expression after ESCAPE", PARSE_EXPECTED_EXPRESSION)
                                 } else {
                                     rem = rest
@@ -487,17 +519,21 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                 DOT -> {
                     // consume first dot
                     rem = rem.tail
-
                     when (rem.head?.type) {
-                        IDENTIFIER -> {
-                            // re-write the identifier as a literal string element
-                            val token = Token(LITERAL, ion.newString(rem.head?.text!!))
-                            path.add(ParseNode(ATOM, token, emptyList(), rem.tail))
+                        IDENTIFIER        -> {
+                            val litToken = Token(LITERAL, ion.newString(rem.head?.text!!), rem.head!!.position)
+                            path.add(ParseNode(CASE_INSENSITIVE_ATOM, litToken, emptyList(), rem.tail))
                         }
-                        STAR -> path.add(
-                            ParseNode(PATH_WILDCARD_UNPIVOT, rem.head, emptyList(), rem.tail)
-                        )
-                        else -> err("Invalid path dot component", PARSE_INVALID_PATH_COMPONENT)
+                        QUOTED_IDENTIFIER -> {
+                            val litToken = Token(LITERAL, ion.newString(rem.head?.text!!), rem.head!!.position)
+                            path.add(ParseNode(CASE_SENSITIVE_ATOM, litToken, emptyList(), rem.tail))
+                        }
+                        STAR              -> {
+                            path.add(ParseNode(PATH_WILDCARD_UNPIVOT, rem.head, emptyList(), rem.tail))
+                        }
+                        else              -> {
+                            rem.err("Invalid path dot component", PARSE_INVALID_PATH_COMPONENT)
+                        }
                     }
                     rem = rem.tail
                 }
@@ -524,7 +560,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         OPERATOR -> when (head?.keywordText) {
         // the lexical scope operator is **only** allowed with identifiers
             "@" -> when (tail.head?.type) {
-                IDENTIFIER -> ParseNode(
+                IDENTIFIER, QUOTED_IDENTIFIER -> ParseNode(
                     UNARY,
                     head,
                     listOf(tail.atomFromHead()),
@@ -581,7 +617,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             RIGHT_CURLY -> ParseNode(STRUCT, null, emptyList(), tail.tail)
             else -> tail.parseStructLiteral()
         }
-        IDENTIFIER -> when (tail.head?.type) {
+        IDENTIFIER, QUOTED_IDENTIFIER -> when (tail.head?.type) {
             LEFT_PAREN -> tail.tail.parseFunctionCall(head!!)
             else -> atomFromHead()
         }
@@ -789,7 +825,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             if (rem.head?.keywordText == "group") {
                 rem = rem.tail.tailExpectedKeyword("as")
 
-                if (rem.head?.type != IDENTIFIER) {
+                if (rem.head?.type?.isIdentifier() != true) {
                     rem.err("Expected identifier for GROUP name", PARSE_EXPECTED_IDENT_FOR_GROUP_NAME)
                 }
                 groupChildren.add(rem.atomFromHead())
@@ -1083,12 +1119,12 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
 
             val aliasTokenType = rem.head?.type
             if (aliasSupportType.supportsAs
-                && (aliasTokenType == AS || aliasTokenType == IDENTIFIER)) {
+                && (aliasTokenType == AS || aliasTokenType?.isIdentifier() == true)) {
                 if (aliasTokenType == AS) {
                     rem = rem.tail
                 }
                 val name = rem.head
-                if (name == null || name.type != IDENTIFIER) {
+                if (name == null || !name.type.isIdentifier()) {
                     rem.err("Expected identifier for alias", PARSE_EXPECTED_IDENT_FOR_ALIAS)
                 }
                 rem = rem.tail
@@ -1098,7 +1134,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             if (aliasSupportType.supportsAt && rem.head?.type == AT) {
                 rem = rem.tail
                 val name = rem.head
-                if (name?.type != IDENTIFIER) {
+                if (name?.type?.isIdentifier() != true) {
                     rem.err("Expected identifier for AT-name", PARSE_EXPECTED_IDENT_FOR_AT)
                 }
                 rem = rem.tail
@@ -1166,8 +1202,12 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
     override fun parse(source: String): IonSexp {
         val node = lexer.tokenize(source).parseExpression()
         val rem = node.remaining
-        if (!rem.onlyEof()) {
-            rem.err("Unexpected token after expression", PARSE_UNEXPECTED_TOKEN)
+        if (!rem.onlyEndOfStatement()) {
+            when(rem.head?.type ) {
+                SEMICOLON -> rem.tail.err("Unexpected token after semicolon. IonSQL does not allow more than one query",
+                                          PARSE_UNEXPECTED_TOKEN)
+                else      -> rem.err("Unexpected token after expression", PARSE_UNEXPECTED_TOKEN)
+            }
         }
         return node.toSexp().apply { makeReadOnly() }
     }

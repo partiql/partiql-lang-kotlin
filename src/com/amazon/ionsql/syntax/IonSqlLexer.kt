@@ -4,7 +4,7 @@
 
 package com.amazon.ionsql.syntax
 
-import com.amazon.ion.IonSystem
+import com.amazon.ion.*
 import com.amazon.ionsql.errors.*
 import com.amazon.ionsql.errors.ErrorCode.*
 import com.amazon.ionsql.errors.Property.*
@@ -13,9 +13,7 @@ import com.amazon.ionsql.syntax.IonSqlLexer.StateType.*
 import com.amazon.ionsql.syntax.TokenType.*
 import com.amazon.ionsql.syntax.TokenType.KEYWORD
 import com.amazon.ionsql.util.*
-import java.math.BigDecimal
-import java.math.BigInteger
-import java.util.*
+import java.math.*
 
 
 /**
@@ -209,6 +207,7 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
             delta(":", START_AND_TERMINAL, COLON)
             delta(",", START_AND_TERMINAL, COMMA)
             delta("*", START_AND_TERMINAL, STAR)
+            delta(";", START_AND_TERMINAL, SEMICOLON)
 
             delta(NON_OVERLOADED_OPERATOR_CHARS, START_AND_TERMINAL, OPERATOR)
 
@@ -291,7 +290,7 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
             }
 
             deltaQuote(SINGLE_QUOTE_CHARS, LITERAL, SQ_STRING)
-            deltaQuote(DOUBLE_QUOTE_CHARS, IDENTIFIER, DQ_STRING)
+            deltaQuote(DOUBLE_QUOTE_CHARS, QUOTED_IDENTIFIER, DQ_STRING)
 
             // Ion literals - very partial lexing of Ion to support nested back-tick
             // in Ion strings/symbols/comments
@@ -420,12 +419,16 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
             fun errInvalidLiteral(literal: String): Nothing =
                 throw LexerException(errorCode = LEXER_INVALID_LITERAL, errorContext = makePropertyBag(literal, tracker))
 
+            fun errInvalidIonLiteral(literal: String, cause: IonException): Nothing =
+                throw LexerException(errorCode = LEXER_INVALID_ION_LITERAL,
+                                     errorContext = makePropertyBag(literal, tracker),
+                                     cause = cause)
 
             tracker.advance(cp)
 
             // retrieve the next state
             val next = when (cp) {
-                EOF -> EOF_STATE
+                EOF  -> EOF_STATE
                 else -> curr[cp]
             }
 
@@ -510,11 +513,23 @@ class IonSqlLexer(private val ion: IonSystem) : Lexer {
                                 }
                             }
                             LITERAL -> when (curr.lexType) {
-                                SQ_STRING -> ion.newString(text)
-                                INTEGER -> ion.newInt(BigInteger(text, 10))
-                                DECIMAL -> ion.newDecimal(bigDecimalOf(text))
-                                ION_LITERAL -> ion.singleValue(text)
-                                else -> errInvalidLiteral(text)
+                                SQ_STRING   -> ion.newString(text)
+                                INTEGER     -> ion.newInt(BigInteger(text, 10))
+                                DECIMAL     -> try {
+                                    ion.newDecimal(bigDecimalOf(text))
+                                }
+                                catch (e: NumberFormatException) {
+                                    errInvalidLiteral(text)
+                                }
+                                ION_LITERAL -> try {
+                                    // anything wrapped by `` is considered as an ion literal, including invalid
+                                    // ion so we need to handle the exception here for proper error reporting
+                                    ion.singleValue(text)
+                                }
+                                catch (e: IonException) {
+                                    errInvalidIonLiteral(text, e)
+                                }
+                                else        -> errInvalidLiteral(text)
                             }
                             else -> ion.newSymbol(text)
                         }.seal()

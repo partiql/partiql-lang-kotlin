@@ -34,7 +34,7 @@ import com.amazon.ionsql.util.*
  *  * `<trim character> ::= <character value expression>`
  *  * `<trim source> ::= <character value expression>`
  */
-internal class TrimExprFunction(private val ion: IonSystem) : ExprFunction {
+internal class TrimExprFunction(ion: IonSystem) : NullPropagatingExprFunction("trim", 1..3, ion) {
     private val DEFAULT_TO_REMOVE = " ".codePoints().toArray()
     private val DEFAULT_SPECIFICATION = BOTH
 
@@ -70,7 +70,7 @@ internal class TrimExprFunction(private val ion: IonSystem) : ExprFunction {
         return String(this, leadingOffset, length)
     }
 
-    override fun call(env: Environment, args: List<ExprValue>): ExprValue {
+    override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
         val (type, toRemove, string) = extractArguments(args)
 
         return when (type) {
@@ -113,7 +113,8 @@ internal class TrimExprFunction(private val ion: IonSystem) : ExprFunction {
                 Triple(specification, args[1].codePoints(), args[2].codePoints())
             }
 
-            else -> errNoContext("Trim takes between 1 and 3 arguments, received: ${args.size}", internal = false)
+            // arity is checked by NullPropagatingExprFunction
+            else -> errNoContext("invalid trim arguments, should be unreachable", internal = true)
         }
     }
 }

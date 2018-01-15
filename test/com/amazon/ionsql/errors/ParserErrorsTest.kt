@@ -106,9 +106,21 @@ class ParserErrorsTest : Base() {
             ErrorCode.PARSE_INVALID_PATH_COMPONENT,
             mapOf(
                 Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 1L,
-                Property.TOKEN_TYPE to TokenType.IDENTIFIER,
-                Property.TOKEN_VALUE to ion.newSymbol("x")))
+                Property.COLUMN_NUMBER to 3L,
+                Property.TOKEN_TYPE to TokenType.DOT,
+                Property.TOKEN_VALUE to ion.newSymbol(".")))
+
+    }
+
+    @Test // https://i.amazon.com/issues/IONSQL-166
+    fun expectedInvalidPathComponentForKeyword() {
+        checkInputThrowingParserException("""SELECT foo.id, foo.table FROM `[{id: 1, table: "foos"}]` AS foo""",
+                                          ErrorCode.PARSE_INVALID_PATH_COMPONENT,
+                                          mapOf(
+                                              Property.LINE_NUMBER to 1L,
+                                              Property.COLUMN_NUMBER to 20L,
+                                              Property.TOKEN_TYPE to TokenType.KEYWORD,
+                                              Property.TOKEN_VALUE to ion.newSymbol("table")))
 
     }
 
@@ -566,16 +578,6 @@ class ParserErrorsTest : Base() {
     }
 
     @Test
-    fun tooManyDots() {
-        checkInputThrowingParserException("x...a",
-                                          ErrorCode.PARSE_INVALID_PATH_COMPONENT,
-                                          mapOf(Property.LINE_NUMBER to 1L,
-                                                Property.COLUMN_NUMBER to 1L,
-                                                Property.TOKEN_TYPE to TokenType.IDENTIFIER,
-                                                Property.TOKEN_VALUE to ion.newSymbol("x")))
-    }
-
-    @Test
     fun castTooManyArgs() {
         checkInputThrowingParserException("CAST(5 AS INTEGER(10))",
                                           ErrorCode.PARSE_CAST_ARITY,
@@ -910,5 +912,36 @@ class ParserErrorsTest : Base() {
                                                 Property.KEYWORD to "FROM",
                                                 Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
                                                 Property.TOKEN_VALUE to ion.newSymbol(")")))
+    }
+
+    @Test
+    fun tokensAfterSemicolon() {
+        checkInputThrowingParserException("1;1",
+                                          ErrorCode.PARSE_UNEXPECTED_TOKEN,
+                                          mapOf(Property.LINE_NUMBER to 1L,
+                                                Property.COLUMN_NUMBER to 3L,
+                                                Property.TOKEN_TYPE to TokenType.LITERAL,
+                                                Property.TOKEN_VALUE to ion.newInt(1)))
+    }
+
+    @Test
+    fun validQueriesSeparatedBySemicolon() {
+        checkInputThrowingParserException("SELECT * FROM <<1>>;SELECT * FROM <<1>>",
+                                          ErrorCode.PARSE_UNEXPECTED_TOKEN,
+                                          mapOf(Property.LINE_NUMBER to 1L,
+                                                Property.COLUMN_NUMBER to 21L,
+                                                Property.TOKEN_TYPE to TokenType.KEYWORD,
+                                                Property.TOKEN_VALUE to ion.newSymbol("select")))
+    }
+
+    @Test
+    fun semicolonInsideExpression() {
+        checkInputThrowingParserException("(1;)",
+                                          ErrorCode.PARSE_EXPECTED_TOKEN_TYPE,
+                                          mapOf(Property.LINE_NUMBER to 1L,
+                                                Property.COLUMN_NUMBER to 3L,
+                                                Property.EXPECTED_TOKEN_TYPE to TokenType.RIGHT_PAREN,
+                                                Property.TOKEN_TYPE to TokenType.SEMICOLON,
+                                                Property.TOKEN_VALUE to ion.newSymbol(";")))
     }
 }

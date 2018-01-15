@@ -9,13 +9,8 @@ import com.amazon.ionsql.util.*
 /**
  * IonSQL++ function to convert a formatted string into an Ion Timestamp.
  */
-class ToTimestampExprFunction(private val ion: IonSystem) : ExprFunction {
-    override fun call(env: Environment, args: List<ExprValue>): ExprValue {
-        when {
-            args.isAnyMissing() -> return missingExprValue(ion)
-            args.isAnyNull()    -> return nullExprValue(ion)
-        }
-
+class ToTimestampExprFunction(ion: IonSystem) : NullPropagatingExprFunction("to_timestamp", 1..2, ion) {
+    override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
         validateArguments(args)
 
         return ion.newTimestamp(when (args.count()) {
@@ -33,16 +28,10 @@ class ToTimestampExprFunction(private val ion: IonSystem) : ExprFunction {
 
     private fun validateArguments(args: List<ExprValue>) {
         when {
-            args.count() >= 1 && args[0].ionValue !is IonString ->
+            args[0].ionValue !is IonString ->
                 errNoContext("First argument of to_timestamp is not a string.", internal = false)
-            args.count() == 2 && args[1].ionValue !is IonString ->
+            args.size == 2 && args[1].ionValue !is IonString ->
                 errNoContext("Second argument of to_timestamp is not a string.", internal = false)
-            args.count() > 2 || args.count() == 0 ->
-                throw EvaluationException(
-                    "Expected 1 or 2 arguments for to_string instead of ${args.size}.",
-                    ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL,
-                    PropertyValueMap(),
-                    internal = false)
         }
     }
 }
