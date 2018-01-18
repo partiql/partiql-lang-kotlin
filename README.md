@@ -1,3 +1,15 @@
+# Contents 
+
+1. [Overview](#ionsql-sandbox)
+    1. [Getting Started](#getting-started)
+1. [Documentation](#documentation)
+    1. [User Documentation](#user-documentation)
+    1. [Developer Documentation](#developer-documentation)
+1. [Communication](#communication)
+    1. [Tickets](#tickets)
+    1. [Issues](#issues)
+1. [Helpful Links](#helpful-links)
+
 
 # IonSQL++ Sandbox
 This package is a basic implementation of Ion SQL++, a generalized extended SQL language
@@ -20,32 +32,34 @@ $ brazil-build single-jar
 
 Once this is done the REPL can be used to experiment with Ion SQL.
 
-## Documentation 
+# Documentation 
 
 Documentation is available as * `.md` files inside this git repo. 
 
-### User Documentation 
+## User Documentation 
 
 Documentation related to IonSQL++ features, built in functions and the
 Read Evaluate Print Loop (REPL), or command line, is under [docs/user](docs/user). 
 
 
-### Developer Documentation 
+## Developer Documentation 
 
 Documentation related to IonSQL++ developement, including design documentation, release process and contribution guide, 
  is under [doc/dev](doc/dev). 
 
 
-## Communication 
+# Communication 
 
-### IonSQL++ news and announcements
+## IonSQL++ news and announcements
 
 Subscribe to [ionsql-interest@](https://email-list.corp.amazon.com/email-list/expand-list/ionsql-interest)
 for important updates and news about upcoming releases.
 
-### Issues/Tickets
+## Tickets
 
 For reaching our on-call for a SEV-2 issue please use [Software / Ion / IonSQL](https://tt.amazon.com/quicklink/Q000802791).
+
+## Issues
 
 For non-SEV-2 issues, feature requests, or, general help, please use 
 
@@ -57,7 +71,7 @@ For non-SEV-2 issues, feature requests, or, general help, please use
  * [File a Feature Request](https://issues.amazon.com/issues/create?template=8c984b68-9765-41c9-939c-e69d67e4691f)
  * [Ask a question on IonSQL](https://sage.amazon.com/questions/ask?tags=IonSQL General Question)
 
-## Helpful Links
+# Helpful Links
 
  - [IonSQL++ Specification (working draft)](https://drive.corp.amazon.com/view/Ion%20SQL++/Ion%20SQL++%20Formal%20reference%20evolving%20draft.pdf)
  - [A Walkthrough of IonSQL++ (Video)](https://broadcast.amazon.com/videos/52396)
