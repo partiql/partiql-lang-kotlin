@@ -35,6 +35,28 @@ Read Evaluate Print Loop (REPL), or command line, is under [docs/user](docs/user
 Documentation related to IonSQL++ developement, including design documentation, release process and contribution guide, 
  is under [doc/dev](doc/dev). 
 
+
+## Communication 
+
+### IonSQL++ news and announcements
+
+Subscribe to [ionsql-interest@](https://email-list.corp.amazon.com/email-list/expand-list/ionsql-interest)
+for important updates and news about upcoming releases.
+
+### Issues/Tickets
+
+For reaching our on-call for a SEV-2 issue please use [Software / Ion / IonSQL](https://tt.amazon.com/quicklink/Q000802791 CTI Software / Ion / IonSQL).
+
+For non-SEV-2 issues, feature requests, or, general help, please use 
+
+* [Search our SIM Queue](https://tiny.amazon.com/25bxnndy/IonSQLIssues Ion SQL++ SIM Queue)
+  * [File a Bug Issue](https://issues.amazon.com/issues/create?template=964bf8dc-67c5-4ab6-9dc8-cf8db3258226 Bugs)
+    * [Parser Issue](https://issues.amazon.com/issues/create?template=6663e63b-ccce-4b77-ac78-8655acee3ad1 Create Ion SQL++ Parser Issue)
+    * [Evaluator Issue](https://issues.amazon.com/issues/create?template=e9dc99bc-776b-4022-b63c-f85bf95813cf Create Ion SQL++ Evaluator Issue)
+    * [Web Demo Issue (experimental)](https://issues.amazon.com/issues/create?template=02c4067e-4389-47e1-8d3c-b965ed59c053 Create Ion SQL++ Web Demo Issue)
+ * [File a Feature Request](https://issues.amazon.com/issues/create?template=8c984b68-9765-41c9-939c-e69d67e4691f Features)
+ * [Ask a question on IonSQL](https://sage.amazon.com/questions/ask?tags=IonSQL General Question)
+
 ## Helpful Links
 
  - [IonSQL++ Specification (working draft)](https://drive.corp.amazon.com/view/Ion%20SQL++/Ion%20SQL++%20Formal%20reference%20evolving%20draft.pdf)
