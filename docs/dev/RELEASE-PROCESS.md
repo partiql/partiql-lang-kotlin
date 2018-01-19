@@ -49,6 +49,8 @@ We will refer to this number as `<N>` below.
       **intact**
 1. Build the code again
     * `brazil-build clean; brazil-build release`
+1. Verify that the REPL works
+    * REPL jar is located in `build/lib/ionsql-sandbox-single.jar`.
 1. Create a new `git` tag with the new SV version
     * `git tag -a v<SV> -m "version <SV>"` where `<SV>` is the new semantic version of `IonSQLSandbox`
 1. Push your merge commit
@@ -138,6 +140,8 @@ We will refer to this number as `<N>` below.
       **intact**
 1. Build the code again
     * `brazil-build clean; brazil-build release`
+1. Verify that the REPL works
+    * REPL jar is located in `build/lib/ionsql-sandbox-single.jar`.
 1. Create a new `git` tag with the new SV version
     * `git tag -a v<SV> -m "version <SV>"` where `<SV>` is the new semantic version of `IonSQLSandbox`
 1. Push your merge commit
