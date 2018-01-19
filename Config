@@ -47,7 +47,7 @@ package.IonSQLSandbox = {
             Kotlin = 1.2.x;
             KotlinTrails = 1.2.x;
 
-            JarJar = 1.x;
+            SuperJarAntTargets = 1.1;
         };
     };
 
