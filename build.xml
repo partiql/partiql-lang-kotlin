@@ -96,16 +96,13 @@
   </target>
 
   <!-- Fat JAR build -->
-  <target name="single-jar" depends="standard-release">
-    <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask" classpath="${bp:tool.classpath}"/>
-    <jarjar destfile="${lib.dir}/ionsql-sandbox-single.jar">
-      <fileset dir="${classes.dir}"/>
-      <zipfileset src="${bp:[KotlinRuntime]pkg.lib}/kotlin-stdlib.jar"/>
-      <zipfileset src="${bp:[KotlinReflect]pkg.lib}/kotlin-reflect.jar"/>
-      <zipfileset src="${bp:[IonJava]pkg.lib}/IonJava.jar"/>
-      <manifest>
-        <attribute name="Main-Class" value="com.amazon.ionsql.tools.REPL"/>
-      </manifest>
-    </jarjar>
-  </target>
+  <ht:import file="superjar.xml"/>
+   <target name="single-jar" depends="compile-jar">
+     <superjar
+             destfile="${lib.dir}/ionsql-sandbox-single.jar"
+             classpath="${bp:run.classpath}:${bp:package-build-root}/lib/${ant.project.name}.jar"
+             main-class="com.amazon.ionsql.tools.REPL" />
+   </target>
+
+   <target name="release" depends="standard-release,single-jar" />
 </project>
