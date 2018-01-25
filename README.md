@@ -55,6 +55,18 @@ Documentation related to IonSQL++ developement, including design documentation, 
 Subscribe to [ionsql-interest@](https://email-list.corp.amazon.com/email-list/expand-list/ionsql-interest)
 for important updates and news about upcoming releases.
 
+## Onboarding 
+
+If your team is evaluating or interested in integrating with IonSQL we would love to hear from you. Please send an e-mail to 
+[jonswd](mailto:jonwsd@amazon.com) with the following info
+
+* Who you are, what is your team
+* What is your use case
+* Why did you choose IonSQL++
+* Who are your customers
+
+This information help us guide our backlog toward the needs of our clients
+
 ## Tickets
 
 For reaching our on-call for a SEV-2 issue please use [Software / Ion / IonSQL](https://tt.amazon.com/quicklink/Q000802791).
