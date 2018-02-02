@@ -5,13 +5,13 @@ within Amazon.  For general information on releases and the versioning
 scheme used by IonSQL++ see [Releases](Releases.md)
 
 
-# Minor and Bugfix Releases
+## Minor and Bugfix Releases
 
 Both minor and bugfix releases imply that there are **no backward
 incompatible changes**, as such the process for both release types
 is shared.
 
-## Release Process Steps
+### Release Process Steps
 
 1. Check that `mainline` builds  
     1. Create a new `brazil` workspace
@@ -73,7 +73,7 @@ We will refer to this number as `<N>` below.
     1. Add a file to [ReleaseNotes](ReleaseNotes) with the e-mail content as a `.md` file, see
     [Readme](ReleaseNotes/README.md) on naming conventions
 
-# Major releases
+## Major releases
 
 A Major release implies that there **are backwards incompatible** changes
 that will break existing clients, as such we must
@@ -97,7 +97,7 @@ under [UpgradeInstructions](UpgradeInstructions)
         * removed APIs/Types where `<SV>` is the semantic version of `IonSQLSandbox`
         * modified APIs (new/default/removed args, updated return values etc.)
 
-## Release Process Steps
+### Release Process Steps
 
 1. Check that `mainline` builds  
     1. Create a new `brazil` workspace
@@ -174,7 +174,7 @@ We will refer to this number as `<N>` below.
     [Readme](ReleaseNotes/README.md) on naming conventions
 
 
-# Hot Fixes
+## Hot Fixes
 
 In the case when
 

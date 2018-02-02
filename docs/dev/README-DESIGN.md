@@ -1,4 +1,4 @@
-# Ion SQL++ Parser, Compiler, and Evaluator Design
+## Ion SQL++ Parser, Compiler, and Evaluator Design
 This document provides the high-level design overview of the Ion SQL++ parser and evaluator. The high-level pipeline of compilation is illustrated as follows:
 
 ![Parser and Compiler Diagram](img/parser-compiler.png)
@@ -10,7 +10,7 @@ This document provides the high-level design overview of the Ion SQL++ parser an
 * The **semantic analyzer** is a placeholder for general purpose semantic analysis.  This is not yet implemented, but important optimizations such as determining which paths/columns are relevant for a given query will be done by this phase.  Decoupling of the parser from the compiler, means that any application can do their own validation and processing of the AST.
 * The **compiler** converts the AST nodes into [context threaded][context-threading] code.
 
-## Context Threading Example
+### Context Threading Example
 Context threaded code is used as the interpreter strategy to align the *virtual program counter* with the JVM's *program counter*.  This is done by *threading* the operations of the AST nodes into a tree of indirect subroutine calls.  Specifically, on the JVM, this is modeled as a series of lambdas bound to a simple functional interface.
 
 We can illustrate this technique with a simple integer evaluator.  Consider the following interface that represents an evaluation:
@@ -49,7 +49,7 @@ public static void main(String[] args) throws Exception {
 
 It can be seen that the above example leverages lexical closures (lambdas) to build an object graph of state to represent the actual interpretation, the actual dispatch leverages the native call stack differs from straight compiled code in that each "opcode" is a virtual call.
 
-## Evaluation Strategy
+### Evaluation Strategy
 Evaluation is done by first compiling source text of an Ion SQL++ expression into an instance of `Expression` which provides the entry point to evaluation:
 
 ![Parser/Compiler/Expression Class Diagram](img/compiler-class.png)
@@ -64,7 +64,7 @@ All `ExprValue` implementations indicate what type of value they are and impleme
 
 Modeling relations (collections) as `Iterable`/`Iterator` allows the evaluator to compose the relational operators (e.g. projection, filter, joins) as lazy `Iterators` that are composed with one another.  This functional pipeline is very similar to what is done in full query engines and is also similar to how [Java 8 streams][java-streams] work.
 
-### Lazy Evaluation Example
+#### Lazy Evaluation Example
 We can use our simple integer evaluator example to demonstrate how the Ion SQL++ evaluator lazily evaluates.  Let's change this example to add a functional interface as the integer value (i.e. a **[thunk][thunk]** representing an integer).
 
 ```java

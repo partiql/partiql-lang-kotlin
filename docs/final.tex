@@ -1,0 +1,10 @@
+\usepackage{fontspec}
+\newfontfamily{\defaultfont}{DejaVu Sans}
+\newfontfamily{\emoticonfont}{DejaVu Sans}
+\newfontfamily{\combiningdiagriticalmarks}{DejaVu Sans}
+
+\usepackage[Emoticons,CombiningDiacriticalMarks]{ucharclasses} %% emoji glyphs not found in free monospace fonts 
+\setDefaultTransitions{\defaultfont}{}
+\setTransitionTo{Emoticons}{\emoticonfont}
+\setTransitionTo{CombiningDiacriticalMarks}{\combiningdiagriticalmarks}
+\setmonofont{DejaVu Sans Mono}
