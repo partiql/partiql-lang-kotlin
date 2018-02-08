@@ -25,7 +25,8 @@ abstract class Base : Assert() {
     fun literal(text: String): IonValue = ion.singleValue(text)
 
     inner class AssertExprValue(val exprValue: ExprValue,
-                                val bindingsTransform: Bindings.() -> Bindings = { this }) {
+                                val bindingsTransform: Bindings.() -> Bindings = { this },
+                                val message: String? = null) {
         fun assertBindings(predicate: Bindings.() -> Boolean) =
             assertTrue(
                 exprValue.bindings.bindingsTransform().predicate()
@@ -38,7 +39,7 @@ abstract class Base : Assert() {
         fun assertNoBinding(name: String) = assertBindings { get(BindingName(name, BindingCase.INSENSITIVE)) == null }
 
         fun assertIonValue(expected: IonValue) {
-            assertEquals(expected, exprValue.ionValue)
+            assertEquals(message, expected, exprValue.ionValue)
         }
 
         fun assertIterator(expected: Collection<IonValue>) {

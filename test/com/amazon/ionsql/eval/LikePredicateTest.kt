@@ -4,7 +4,12 @@
 
 package com.amazon.ionsql.eval
 
-import org.junit.*
+import com.amazon.ionsql.IonSqlException
+import com.amazon.ionsql.errors.ErrorCode
+import com.amazon.ionsql.util.softAssert
+import org.assertj.core.api.SoftAssertions
+import org.junit.Test
+import kotlin.test.assertFailsWith
 
 class LikePredicateTest : EvaluatorBase() {
 
@@ -56,6 +61,55 @@ class LikePredicateTest : EvaluatorBase() {
                                                       "[]",
                                                       animals)
 
+    @Test
+    fun typeIsChecked() {
+        // Specify the types we'll test
+        data class ParamType(val precedence : Int)
+        val NULL = ParamType(1)
+        val INT = ParamType(2) // will throw error
+        val STR = ParamType(3)
+
+        // references are deferred to runtime and take a separate compile path than literals
+        data class Param(val param : String, val type : ParamType, val escParam : String = param)
+        val types = listOf(
+            Param("null", NULL),
+            Param("a._null_", NULL),
+            Param("123", INT),
+            Param("a.num", INT),
+            Param("'string'", STR, "'\\'"),
+            Param("a.str", STR, "a.esc")
+        )
+
+        // Run the test with the given parameters
+        fun runTest(whereClause : String, softly : SoftAssertions, vararg types : Param) {
+            val input = """[{num: 1, str: "string", esc: "\\"}]"""
+            val session = mapOf("Object" to input).toSession()
+            val query = "Select * From Object a Where " + whereClause
+
+            softly.assertThatCode {
+                when (types.map{ it.type }.minBy{ it.precedence }) {
+                    NULL -> assertEval(query, "[]", session)
+                    INT -> {
+                        val ex = assertFailsWith<IonSqlException>(message = query) {
+                            eval(query, session = session).toList()
+                        }
+                        assertEquals(query, ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS, ex.errorCode)
+                    }
+                    STR -> assertEval(query, input, session)
+                }
+            }.`as`(query).doesNotThrowAnyException()
+        }
+
+        softAssert {
+            // Try each combination of types as input to the test
+            for (value in types) for (pattern in types) {
+                runTest("${value.param} LIKE ${pattern.param}", this, value, pattern)
+                for (escape in types) {
+                    runTest("${value.param} LIKE ${pattern.param} ESCAPE ${escape.escParam}", this, value, pattern, escape)
+                }
+            }
+        }
+    }
 
     @Test
     fun noEscapeAllArgsLiteralsMatches() = assertEval("""SELECT * FROM animals as a WHERE 'Kumo' LIKE 'Kumo' """, """
