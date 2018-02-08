@@ -27,36 +27,41 @@ fun String.isBindingNameEquivalent(other: String, case: BindingCase): Boolean =
 fun String.caseInsensitiveEquivalent(name: String) =
     equals(name, ignoreCase = true)
 
+internal data class BindingMatch<out V>(val name: String, val value: V)
 
 /**
  * Provides a common interface for performing case-sensitive or case-insensitive lookups against a delegated
  * collection.
  */
-internal interface BindingExtractor<V> {
+internal interface BindingExtractor<out V> {
     /**
-     * Return all case-insensitive matches for the specified case-insensitive [name] or an empty list of Pair<String, V>
-     * if no matches are found.  The `first` property of each pair is the matched name, and the `second` property is
-     * the value.
+     * Return all case-insensitive matches for the specified case-insensitive [name] or an empty list if no matches are
+     * found.
+     *
+     * The `first` property of each pair is the matched name, and the `second` property is the value.
      */
-    fun getAllCaseInsensitive(name: String): List<Pair<String, V>>
+    fun getAllCaseInsensitive(name: String): List<BindingMatch<V>>
+
     /**
-     * Returns a single match for the specified case-sensitive [name] or `null` if no binding is found.
-     * */
-    fun getCaseSensitive(name: String): V?
+     * Returns all case-sensitive matches for the specified case-sensitive [name] or an empty list if no match is found
+     *
+     * The `first` property of each pair is the matched name, and the `second` property is the value.
+     */
+    fun getAllCaseSensitive(name: String): List<BindingMatch<V>>
 }
 
-private fun <T> getBoundValue(bindingName: BindingName, extractor: BindingExtractor<T>): T? = when (bindingName.bindingCase) {
-    BindingCase.SENSITIVE   -> extractor.getCaseSensitive(bindingName.name)
-    BindingCase.INSENSITIVE -> {
-        val matching = extractor.getAllCaseInsensitive(bindingName.name)
-        when(matching.size) {
-            0 -> null
-            1 -> matching.first().second
-            else -> errAmbiguousBinding(bindingName.name, matching.map { it.first })
-        }
+private fun <T> getBoundValue(bindingName: BindingName, extractor: BindingExtractor<T>): T? {
+    val bindingMatches = when (bindingName.bindingCase) {
+        BindingCase.SENSITIVE   -> extractor.getAllCaseSensitive(bindingName.name)
+        BindingCase.INSENSITIVE -> extractor.getAllCaseInsensitive(bindingName.name)
+    }
+
+    return when(bindingMatches.size) {
+        0 -> null
+        1 -> bindingMatches.first().value
+        else -> errAmbiguousBinding(bindingName.name, bindingMatches.map { it.name })
     }
 }
-
 
 /**
  * Looks up a binding from an [IonStruct], respecting the [BindingName]'s case sensitivity.
@@ -70,8 +75,12 @@ operator fun IonStruct.get(bindingName: BindingName): IonValue? =
         object: BindingExtractor<IonValue> {
             override fun getAllCaseInsensitive(name: String) =
                 this@get.filter { it.fieldName.caseInsensitiveEquivalent(name) }
-                    .map { Pair(it.fieldName, it) }
-            override fun getCaseSensitive(name: String): IonValue? = this@get[name]
+                         .map { BindingMatch(it.fieldName, it) }
+
+            // Ion Structs can have the same field name multiple times
+            override fun getAllCaseSensitive(name: String) =
+                this@get.filter { it.fieldName == name }
+                        .map { BindingMatch(it.fieldName, it) }
         })
 
 /**
@@ -80,13 +89,21 @@ operator fun IonStruct.get(bindingName: BindingName): IonValue? =
  * is case insensitive.
  * @returns `null` if the binding was not found.
  */
+// FIXME Create a proper type that implements Map for this
 operator fun <V> Map<String, V>.get(bindingName: BindingName): V? =
     getBoundValue(
         bindingName,
         object: BindingExtractor<V> {
+
             override fun getAllCaseInsensitive(name: String) =
-                this@get.entries.filter { it.key.caseInsensitiveEquivalent(name) }.map { Pair(it.key, it.value) }
-            override fun getCaseSensitive(name: String): V? = this@get[name]
+                this@get.entries.filter { it.key.caseInsensitiveEquivalent(name) }
+                                .map { BindingMatch(it.key, it.value) }
+
+            override fun getAllCaseSensitive(name: String) = if(this@get[name] == null) {
+                listOf()
+            } else {
+                listOf(BindingMatch(name, this@get[name]!!))
+            }
         })
 
 /**

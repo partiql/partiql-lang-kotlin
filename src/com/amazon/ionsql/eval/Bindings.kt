@@ -60,7 +60,7 @@ interface Bindings {
     /**
      * Looks up a name within the environment.
      *
-     * @param name The binding to look up.
+     * @param bindingName The binding to look up.
      *
      * @return The value mapped to the binding, or `null` if no such binding exists.
      * @throws [EvaluationException] If multiple bindings matching the specified [BindingName] are found.

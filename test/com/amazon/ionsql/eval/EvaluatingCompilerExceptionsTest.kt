@@ -153,4 +153,16 @@ class EvaluatingCompilerExceptionsTest : EvaluatorBase() {
     fun utcnowWithArgument() = assertThrows("utcnow() takes no arguments", NodeMetadata(1, 1)) {
         voidEval("utcnow(1)")
     }
+
+    @Test // https://i.amazon.com/issues/IONSQL-272
+    fun ambiguousFieldOnStructCaseSensitiveLookup() = checkInputThrowingEvaluationException(
+        """ select "repeated" from `[{repeated:1, repeated:2}]` """,
+        ErrorCode.EVALUATOR_AMBIGUOUS_BINDING,
+        sourceLocationProperties(1, 9) + mapOf(Property.BINDING_NAME to "repeated", Property.BINDING_NAME_MATCHES to "repeated, repeated"))
+
+    @Test // https://i.amazon.com/issues/IONSQL-272
+    fun ambiguousFieldOnStructCaseInsensitiveLookup() = checkInputThrowingEvaluationException(
+        """ select repeated from `[{repeated:1, repeated:2}]` """,
+        ErrorCode.EVALUATOR_AMBIGUOUS_BINDING,
+        sourceLocationProperties(1, 9) + mapOf(Property.BINDING_NAME to "repeated", Property.BINDING_NAME_MATCHES to "repeated, REPEATED"))
 }
