@@ -51,9 +51,16 @@ class EvaluatingCompiler(private val ion: IonSystem,
         this(ion, IonSqlParser(ion), userFuncs, CompileOptions.standard())
 
     /** An [ExprValue] which is the result of an expression evaluated in an [Environment].  */
-    private abstract class ExprThunk(private val metadata: NodeMetadata? = null) {
+    private interface ExprThunk {
+        fun eval(env: Environment): ExprValue
+    }
+    /** The value of [eval] doesn't depend on the environment (i.e. is available at compile time) */
+    private class ConstantExprThunk(val value: ExprValue) : ExprThunk {
+        override fun eval(env: Environment) = value;
+    }
 
-        fun eval(env: Environment): ExprValue {
+    private abstract class RuntimeExprThunk(private val metadata: NodeMetadata? = null) : ExprThunk {
+        override fun eval(env: Environment): ExprValue {
             try {
                 return innerEval(env)
             } catch (e: EvaluationException) {
@@ -83,7 +90,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
         protected abstract fun innerEval(env: Environment): ExprValue
     }
 
-    private fun exprThunk(metadata: NodeMetadata?, thunk: (Environment) -> ExprValue) = object : ExprThunk(metadata) {
+    private fun exprThunk(metadata: NodeMetadata?, thunk: (Environment) -> ExprValue) = object : RuntimeExprThunk(metadata) {
         // TODO make this memoize the result when valid and possible
         override fun innerEval(env: Environment) = thunk(env)
     }
@@ -301,7 +308,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
     /** Dispatch table for AST "op-codes" to thunks.  */
     private val syntaxTable = compilationTableOf(
         "missing" to { cEnv, ast ->
-            exprThunk(cEnv.metadataLookup[ast]) { missingValue }
+            ConstantExprThunk(missingValue)
         },
         "lit" to { cEnv, ast ->
             val ionValue = ast[1]
@@ -317,7 +324,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                 else -> ionValue.exprValue()
             }
 
-            exprThunk(cEnv.metadataLookup[ast]) { literal }
+            ConstantExprThunk(literal)
         },
         "id" to { cEnv, ast ->
             checkArity(ast, 1, 2, cEnv.metadataLookup[ast])
@@ -860,112 +867,61 @@ class EvaluatingCompiler(private val ion: IonSystem,
         checkArity(ast, 2, 3, cEnv.metadataLookup[ast])
         checkArgsAreIonSexps(ast)
 
-        return when {
-            ast.tail.forAll(IonValue::isAstLiteral) -> {
-                // value, pattern and optional escape character are literals, compile regular expression to DFA and run
-                // DFA
-                val ionVals: List<IonValue> = ast.tail.map { it[1] }
-                when {
-                    ionVals.any { !it.isText && !it.isNullValue } ->
-                        err("LIKE expression must be given non-null strings as input",
-                            ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
-                            cEnv.metadataLookup[ast]?.toErrorContext(PropertyValueMap().also {
-                                it[Property.LIKE_VALUE] = ionVals[0].toString()
-                                it[Property.LIKE_PATTERN] = ionVals[1].toString()
-                                if (ionVals.size == 3) it[Property.LIKE_ESCAPE] = ionVals[2].toString()
-                            }),
-                            internal = false)
-                    ionVals.any {it.isNullValue } -> exprThunk(cEnv.metadataLookup[ast]) { _ -> nullValue } // SQL Spec p.215
-                    else -> {
-                        val dfaInput = ionVals[0]
-                        val dfa = fromLiteralsToDfa(ionVals.tail, cEnv)
-                        val matches = dfa.run(dfaInput.stringValue()).exprValue()
-                        exprThunk(cEnv.metadataLookup[ast]) { _ -> matches }
-                    }
-                }
-            }
-
-            ast.tail.tail.forAll(IonValue::isAstLiteral) -> {
-                // pattern and escape are literals, but value to match against is not
-                val ionVals = ast.tail.tail.map { it[1] }
-                when {
-                    ionVals.any { !it.isText && !it.isNullValue}    ->
-                        err("LIKE expression must be given non-null strings as input",
-                            ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
-                            cEnv.metadataLookup[ast]?.toErrorContext(PropertyValueMap().also {
-                                it[Property.LIKE_PATTERN] = ionVals[0].toString()
-                                if (ionVals.size == 2) it[Property.LIKE_ESCAPE] = ionVals[1].toString()
-                            }),
-                            internal = false)
-                    ionVals.any {it.isNullValue } -> exprThunk(cEnv.metadataLookup[ast]) { _ -> nullValue }
-                    else                            -> {
-                        val compiledDfaInput = ast[1].compile(cEnv)
-                        val dfa = fromLiteralsToDfa(ionVals, cEnv)
-
-                        exprThunk(cEnv.metadataLookup[ast]) { env ->
-                            val value = compiledDfaInput.eval(env)
-                            when (value.isUnknown()) {
-                                true -> nullValue
-                                false -> dfa.run(value.stringValue()).exprValue()
-                            }
-                        }
-                    }
-                }
-            }
-            else -> {
-                // pattern and/or escape are not literals, delay compilation of regular expression to DFA till evaluation
-                val compiledVal = ast[1].compile(cEnv)
-                val compiledPattern = ast[2].compile(cEnv)
-                val compiledEscape = if (ast.size == 4) {
-                    ast[3].compile(cEnv)
-                } else {
-                    null
-                }
-
-                exprThunk(cEnv.metadataLookup[ast]) { env ->
-                    val value = compiledVal.eval(env)
-                    val pattern = compiledPattern.eval(env)
-                    val escape = compiledEscape?.eval(env)
-                    when {
-                        (value.isUnknown() || pattern.isUnknown() || (escape?.isUnknown() ?: false))             -> nullValue
-                        (!value.type.isText || !pattern.type.isText || (escape?.let {!it.type.isText} ?: false)) ->
-                            err("LIKE expression must be given non-null strings as input",
-                                ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
-                                cEnv.metadataLookup[ast]?.toErrorContext(PropertyValueMap().also {
-                                    it[Property.LIKE_VALUE] = value.toString()
-                                    it[Property.LIKE_PATTERN] = pattern.toString()
-                                    escape?.let{ escape -> it[Property.LIKE_ESCAPE] = escape.toString() }
-
-                                }),
-                                internal = false)
-                        else -> {
-                            val (patternString: String, escapeChar: Int?, patternSize) = checkPattern(pattern.ionValue, escape?.ionValue, cEnv)
-                            val dfa: IDFAState = buildDfaFromPattern(patternString, escapeChar, patternSize)
-                            dfa.run(value.stringValue()).exprValue()
-                        }
-                    }
-
+        // Note that the return value is a nullable and deferred.
+        // This is so that null short-circuits can be supported.
+        // The effective type is Either<Null, Either<Error, IDFA>>
+        fun getDfa(pattern: ExprValue, escape: ExprValue?) : (() -> IDFAState)? {
+            val dfaArgs = listOf(pattern, escape).filterNotNull()
+            when {
+                dfaArgs.any { it.type.isNull } -> return null
+                dfaArgs.any { ! it.type.isText } -> return { err("LIKE expression must be given non-null strings as input",
+                        ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
+                        cEnv.metadataLookup[ast]?.toErrorContext(PropertyValueMap().also {
+                            it[Property.LIKE_PATTERN] = pattern.ionValue.toString()
+                            if (escape != null) it[Property.LIKE_ESCAPE] = escape.ionValue.toString()
+                        }),
+                        internal = false)}
+                else -> {
+                    val (patternString: String, escapeChar: Int?, patternSize) = checkPattern(pattern.ionValue, escape?.ionValue, cEnv)
+                    val dfa = buildDfaFromPattern(patternString, escapeChar, patternSize)
+                    return { dfa }
                 }
             }
         }
-    }
 
-    /**
-     * Given a list of literals (Ion values) that are part of a `LIKE` predicate build and return the DFA
-     *
-     * @param ionVals list of literals (Ion values) that comprise of the `LIKE`'s pattern and  optionally escape character
-     * @return DFA for the pattern and optional escape character
-     */
-    private fun fromLiteralsToDfa(ionVals: List<IonValue>, cEnv: CompilationEnvironment): IDFAState {
-        val pattern = ionVals[0]
-        var escape: IonValue? = null
-        if (ionVals.size == 2) {
-            escape = ionVals[1]
-
+        /** See getDfa for more info on the DFA's odd type. */
+        fun runDfa(value : ExprValue, dfa : (() -> IDFAState)?) : ExprValue {
+            return when {
+                dfa == null || value.type.isNull -> nullValue
+                ! value.type.isText -> err("LIKE expression must be given non-null strings as input",
+                        ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
+                        cEnv.metadataLookup[ast]?.toErrorContext(PropertyValueMap().also {
+                            it[Property.LIKE_VALUE] = value.ionValue.toString()
+                        }),
+                        internal = false)
+                else -> dfa().run(value.stringValue()).exprValue()
+            }
         }
-        val (patternString: String, escapeChar: Int?, patternSize) = checkPattern(pattern, escape, cEnv)
-        val dfa: IDFAState = buildDfaFromPattern(patternString, escapeChar, patternSize)
-        return dfa
+
+        // pattern and/or escape are not literals, delay compilation of regular expression to DFA till evaluation
+        val cArgument = ast[1].compile(cEnv)
+        val cPattern = ast[2].compile(cEnv)
+        val cEscape = ast.getOrNull(3)?.compile(cEnv)
+
+
+        if (cPattern is ConstantExprThunk && cEscape is ConstantExprThunk?) {
+            val dfa = getDfa(cPattern.value, cEscape?.value)
+
+            if (cArgument is ConstantExprThunk) {
+                return ConstantExprThunk(runDfa(cArgument.value, dfa))
+            } else {
+                return exprThunk(cEnv.metadataLookup[ast]) { env -> runDfa(cArgument.eval(env), dfa) }
+            }
+        } else {
+            return exprThunk(cEnv.metadataLookup[ast]) { env ->
+                runDfa(cArgument.eval(env), getDfa(cPattern.eval(env), cEscape?.eval(env)))
+            }
+        }
     }
 
     /**
