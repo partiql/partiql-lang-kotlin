@@ -162,7 +162,7 @@ class EvaluatingCompilerExceptionsTest : EvaluatorBase() {
 
     @Test // https://i.amazon.com/issues/IONSQL-272
     fun ambiguousFieldOnStructCaseInsensitiveLookup() = checkInputThrowingEvaluationException(
-        """ select repeated from `[{repeated:1, repeated:2}]` """,
+        """ select REPEATED from `[{repeated:1, repeated:2}]` """,
         ErrorCode.EVALUATOR_AMBIGUOUS_BINDING,
-        sourceLocationProperties(1, 9) + mapOf(Property.BINDING_NAME to "repeated", Property.BINDING_NAME_MATCHES to "repeated, REPEATED"))
+        sourceLocationProperties(1, 9) + mapOf(Property.BINDING_NAME to "REPEATED", Property.BINDING_NAME_MATCHES to "repeated, repeated"))
 }
