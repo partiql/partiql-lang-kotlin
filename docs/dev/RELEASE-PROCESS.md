@@ -13,6 +13,17 @@ is shared.
 
 ### Release Process Steps
 
+1. Verify that API changes between `release` and `mainline` are all backward compatible
+    1. Create a new `brazil` workspace
+        * `brazil ws --create --name IonSQLReleaseBackwardCompability --versionSet IonSQLSandbox/development`
+    1. Checkout `IonSQLSandbox`
+        * `brazil ws --use --package IonSQLSandbox`
+    1. Checkout the `mainline` branch
+        * `git checkout mainline`
+    1. Run `api-compliance-between` command to generate the J-API report. 
+        *   `./bin/api-compliance-between release mainline`
+    1. Look at the report located in `compat_reports/IonSQLSandbox/X_to_Y/compat_report.html`. If there are any backward
+    incompatible changes follow the **major release** process  
 1. Check that `mainline` builds  
     1. Create a new `brazil` workspace
         * `brazil ws --create --name IonSQLReleaseMainline --versionSet IonSQLSandbox/development`
@@ -99,6 +110,17 @@ under [UpgradeInstructions](UpgradeInstructions)
 
 ### Release Process Steps
 
+1. Generate the api compliance report between`release` and `mainline` to verify all backward incompatible changes
+    1. Create a new `brazil` workspace
+        * `brazil ws --create --name IonSQLReleaseBackwardCompability --versionSet IonSQLSandbox/development`
+    1. Checkout `IonSQLSandbox`
+        * `brazil ws --use --package IonSQLSandbox`
+    1. Checkout the `mainline` branch
+        * `git checkout mainline`
+    1. Run `api-compliance-between` command to generate the J-API report. 
+        *   `./bin/api-compliance-between release mainline`
+    1. Look at the report located in `compat_reports/IonSQLSandbox/X_to_Y/compat_report.html`. This report will be used
+    to write the Upgrade Instructions 
 1. Check that `mainline` builds  
     1. Create a new `brazil` workspace
         * `brazil ws --create --name IonSQLReleaseMainline --versionSet IonSQLSandbox/development`
