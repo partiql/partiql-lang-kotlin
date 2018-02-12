@@ -3,6 +3,7 @@ package com.amazon.ionsql.eval.builtins
 import com.amazon.ion.*
 import com.amazon.ionsql.eval.*
 import com.amazon.ionsql.util.*
+import java.lang.Integer.*
 
 /**
  * Built in function to return the substring of an existing string. This function
@@ -73,43 +74,57 @@ import com.amazon.ionsql.util.*
  *              L1 = E1 - S1
  *              return java's substring(C, S1, E1)
  */
-class SubstringExprFunction(ion: IonSystem): NullPropagatingExprFunction("substring", (2..3), ion) {
+internal class SubstringExprFunction(ion: IonSystem): NullPropagatingExprFunction("substring", (2..3), ion) {
     override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
-        validateArguments(args)
+        val (target, startPosition, quantity) = extractArguments(args)
 
-        val str = args[0].stringValue()
-        val codePointCount = str.codePointCount(0, str.length)
-
-        var startPosition = args[1].numberValue().toInt()
-        var endPosition = if (args.count() == 2)
-            codePointCount
-        else
-            startPosition + args[2].numberValue().toInt() - 1
-
-        //Clamp start and end indexes to values that won't make java's substring barf
-        startPosition = when {
-            startPosition < 1               -> 1
-            startPosition > codePointCount  -> return "".exprValue(ion)
-            else -> startPosition
+        val codePointCount = target.codePointCount(0, target.length)
+        if(startPosition > codePointCount) {
+            return "".exprValue(ion)
         }
 
-        endPosition = if (endPosition >= codePointCount) codePointCount else endPosition
+        // startPosition starts at 1
+        // calculate this before adjusting start position to account for negative startPosition
+        val endPosition = when (quantity) {
+            null -> codePointCount
+            else -> min(codePointCount, startPosition + quantity - 1)
+        }
 
-        if (endPosition < startPosition)
-            errNoContext("Invalid start position or length arguments to substring function.", internal = false)
+        // Clamp start indexes to values that make sense for java substring
+        val adjustedStartPosition =  max(0, startPosition - 1)
 
-        val byteIndexStart = str.offsetByCodePoints(0, startPosition - 1)
-        val byteIndexEnd = str.offsetByCodePoints(0, endPosition)
+        if (endPosition < adjustedStartPosition) {
+            return "".exprValue(ion)
+        }
 
-        return str.substring(byteIndexStart, byteIndexEnd).exprValue(ion)
+        val byteIndexStart = target.offsetByCodePoints(0, adjustedStartPosition)
+        val byteIndexEnd = target.offsetByCodePoints(0, endPosition)
+
+        return target.substring(byteIndexStart, byteIndexEnd).exprValue(ion)
     }
 
-    private fun validateArguments(args: List<ExprValue>) {
+    private fun extractArguments(args: List<ExprValue>): Triple<String, Int, Int?> {
+        // type check
         when {
-            args[1].type != ExprValueType.INT                  -> errNoContext("Argument 2 of substring was not INT.",
-                                                                               internal = false)
-            args.size > 2 && args[2].type != ExprValueType.INT -> errNoContext("Argument 3 of substring was not INT.",
-                                                                               internal = false)
+            args[0].type != ExprValueType.STRING                -> errNoContext("Argument 1 of substring was not STRING.",
+                                                                                internal = false)
+            args[1].type != ExprValueType.INT                   -> errNoContext("Argument 2 of substring was not INT.",
+                                                                                internal = false)
+            args.size == 3 && args[2].type != ExprValueType.INT -> errNoContext("Argument 3 of substring was not INT.",
+                                                                                internal = false)
         }
+
+        val target = args[0].stringValue()
+        val startPosition = args[1].intValue()
+        val quantity = when (args.size) {
+            3    -> args[2].intValue()
+            else -> null
+        }
+
+        if (quantity != null && quantity < 0) {
+            errNoContext("Argument 3 of substring has to be greater than 0.", internal = false)
+        }
+
+        return Triple(target, startPosition, quantity)
     }
 }

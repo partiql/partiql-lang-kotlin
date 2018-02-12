@@ -46,7 +46,7 @@ class SubstringExprFunctionTest {
         execSubstring("abcdefg", 3, -1)
         fail("didn't throw")
     } catch (e: EvaluationException) {
-        assertEquals("Invalid start position or length arguments to substring function.", e.message)
+        assertEquals("Argument 3 of substring has to be greater than 0.", e.message)
         assertEquals(false, e.internal)
     }
 
@@ -109,6 +109,48 @@ class SubstringExprFunctionTest {
                                           ion.newInt(3).exprValue(),
                                           ion.newNull().exprValue()))
         assertEquals(ion.newNull(), partOfString.ionValue)
+    }
+
+    @Test
+    fun emptyStringTwoArgumentsNegativeStart() {
+        val actual = execSubstring("", -1)
+        assertEquals("", actual)
+    }
+
+    @Test
+    fun emptyStringTwoArgumentsZeroStart() {
+        val actual = execSubstring("", 0)
+        assertEquals("", actual)
+    }
+
+    @Test
+    fun emptyStringTwoArgumentsPositiveStart() {
+        val actual = execSubstring("", 99)
+        assertEquals("", actual)
+    }
+
+    @Test
+    fun emptyStringThreeArgumentsNegativeStart() {
+        val actual = execSubstring("", -1, 999)
+        assertEquals("", actual)
+    }
+
+    @Test
+    fun emptyStringThreeArgumentsZeroStart() {
+        val actual = execSubstring("", 0, 999)
+        assertEquals("", actual)
+    }
+
+    @Test
+    fun emptyStringThreeArgumentsInsufficientQuantityStart() {
+        val actual = execSubstring("", -4, 1)
+        assertEquals("", actual)
+    }
+
+    @Test
+    fun nonEmptyStringThreeArgumentsInsufficientQuantityStart() {
+        val actual = execSubstring("1", -4, 1)
+        assertEquals("", actual)
     }
 
 }
