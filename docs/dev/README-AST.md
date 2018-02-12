@@ -99,12 +99,23 @@ In addition to any normal expression, a path component can be the special form `
 is the wildcard that is syntactically equivalent to the path component `[*]` and
 `(* unpivot)` which is syntactically equivalent to the path component `.*`.
 
-Path component expressions that evaluate to a string value may be enclosed within a `case_sensitive` or 
+Only quoted and unquoted identifiers that are used as path component expressions are enclosed within a `case_sensitive` or 
 `case_insensitive` annotating s-exp to indicate if the binding is to be looked up considering identifier case.  If not 
 enclosed in such an s-exp, the default is case-sensitive.  
 
-For example, `foo.bar` is represented as: `(path (id foo) (case_insensitive (lit "bar")))` while `foo['bar']` may be 
-represented as: `(path (id foo) (lit 'bar'))` or `(path (id foo) (case_sensitive (lit 'bar')))`.
+Examples:
+
+| Expresssion | AST Representation | Explanation |
+| ----------- | ------------------ | ----------- |
+| `foo.bar` | `(path (id foo case_insensitive) (case_insensitive (lit "bar")))` | Case insensitive lookup of up field `bar` within `foo`. | 
+| `foo."bar"` | `(path (id foo case_insensitive) (case_sensitive (lit "bar")))` | Case sensitive lookup of up field `bar` within `foo`. |
+| `foo['bar']` | `(path (id foo case_insensitive) (lit "bar"))` | Case sensitive lookup of up field `bar` within `foo`. |
+| `foo[bar]` | `(path (id foo case_insensitive) (id bar case_insensitive))` | If `bar` is a string, case sensitive lookup of the field identified by variable `bar` within `foo`.  If `bar` is an integer, lookup of the value at index `bar`. |
+| `foo[1]` | `(path (id foo case_insensitive) (lit 1))` | Lookup of the value at index `1` within `bar`. |
+
+Note that in the last three cases above, the path component expressions (`(lit "bar")`, `(id bar case_insensitive)` 
+and `(lit 1)`) are not wrapped in a `case_[in]sensitive` node because they are expressions that have values.  When the 
+value of the path component expression is a string, lookup will be case sensitiive.
 
 ### `SELECT` Expressions
 The first position of the `select` node is the projection node which is marked by

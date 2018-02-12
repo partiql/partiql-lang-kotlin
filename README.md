@@ -89,7 +89,7 @@ For non-SEV-2 issues, feature requests, or, general help, please use
  - [A Walkthrough of IonSQL++ (Video)](https://broadcast.amazon.com/videos/52396)
  - [IonSQL++ in the Browser](https://sapp.amazon.com/IonSqlpp/)
      * **WARNING** the Browser version of IonSQL++ is **experimental** and not always up-to-date with the latest release. 
-       If you want to test the beahviour of IonSQL++ **use the REPL** provided with this package. 
+       If you want to test the behavior of IonSQL++ **use the REPL** provided with this package. 
  - [Hyperlinked SQL-92 BNF](https://ronsavage.github.io/SQL/sql-92.bnf.html) - this is much easier to navigate than the official ISO standard!
  - [sqlfiddle.com](http://sqlfiddle.com/) - Use this to experiment with SQL as implemented by Postgres, MySQL, Oracle, MS SQL Server and SQLite. 
 
