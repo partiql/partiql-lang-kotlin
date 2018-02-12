@@ -86,8 +86,13 @@ class EvaluatingCompilerExceptionsTest : EvaluatorBase() {
     }
 
     @Test
-    fun substringWrongType() = assertThrows("Argument 2 of substring was not numeric", NodeMetadata(1, 1)) {
+    fun substringWrongTypeSecondArgument() = assertThrows("Argument 2 of substring was not INT.", NodeMetadata(1, 1)) {
         voidEval("substring('abcdefghi' from '1')")
+    }
+
+    @Test
+    fun substringWrongTypeThirdArgument() = assertThrows("Argument 3 of substring was not INT.", NodeMetadata(1, 1)) {
+        voidEval("substring('abcdefghi' from 1 for '1')")
     }
 
     @Test
