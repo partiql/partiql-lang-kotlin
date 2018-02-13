@@ -61,7 +61,7 @@ abstract class NullPropagatingExprFunction(val name: String,
         else -> "$name takes between ${arity.first} and ${arity.last} arguments, received: $argSize"
     }
 
-    private fun checkArity(args: List<ExprValue>) {
+    protected fun checkArity(args: List<ExprValue>) {
         if (!arity.contains(args.size)) {
             val errorContext = PropertyValueMap()
             errorContext[Property.EXPECTED_ARITY_MIN] = arity.first

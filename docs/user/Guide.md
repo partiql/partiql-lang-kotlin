@@ -121,7 +121,10 @@ Extracts a date part from a timestamp.
     EXTRACT(<date part> FROM <timestamp>)
     
 Where date part is one of the following keywords: `year, month, day, hour, minute, second, timestamp_hour, timestamp_minute`. 
-Note that the allowed date parts for `EXTRACT` is not the same as `DATE_ADD` 
+Note that the allowed date parts for `EXTRACT` is not the same as `DATE_ADD`
+
+**Note**: Extract does not propagate null for it's first parameter, the date part. From the SQL92 spec only the date 
+part keywords are allowed as first argument   
 
 #### Examples
     

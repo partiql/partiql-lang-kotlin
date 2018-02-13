@@ -78,8 +78,7 @@ internal class DateAddExprFunction(ion: IonSystem) : NullPropagatingExprFunction
             }
 
             return ion.newTimestamp(addedTimestamp).exprValue()
-        }
-        catch (e: IllegalArgumentException) {
+        } catch (e: IllegalArgumentException) {
             // illegal argument exception are thrown when the resulting timestamp go out of supported timestamp boundaries
             throw EvaluationException(e, internal = false)
         }
