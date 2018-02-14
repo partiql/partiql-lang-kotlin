@@ -121,7 +121,6 @@ value of the path component expression is a string, lookup will be case sensitii
 The first position of the `select` node is the projection node which is marked by
 `(project <PROJECT-EXPR>)` or `(project_distinct <PROJECT-EXPR>)` which must be one of:
 
-* `(*)` - Tuple wildcard projection, mapping to `SELECT * ...`
 * `(list <ITEM EXPR>...)` - Projection tuple-list, the expression node could have
   column names defined with an `(as ...)` node.
 * `(value <VALUE EXPR>)` - Projects a direct value.
@@ -135,6 +134,28 @@ All other nodes are optional and not positionally defined.  Possible nodes:
 * `(group ...)` or `(group_partial ...)` - The `GROUP BY` or `GROUP PARTIAL BY` clause.
 * `(having <CONDITIONAL EXPR>)` - The `HAVING` clause filter expression.
 * `(limit <EXPR>)` - The `LIMIT` clause expression. 
+
+### `SELECT *, alias.*`
+
+Wildcard projection such as `SELECT *` or `SELECT alias.*` is reperesented with the `(project_all [<EXPR>])` node).
+
+Examples:
+
+| Query | AST Representation | 
+| ----- | ------------------ |
+| `SELECT * FROM foo` | `(select (project (list (project_all))) (from (id foo case_insensitive)))` | 
+| `SELECT foo.* FROM foo` | `(select (project (list (project_all (id foo case_insensitive)))) (from (id foo case_insensitive)))` |
+| `SELECT foo.bar.* FROM foo` | `(select (project (list (project_all (path (id foo case_insensitive) (case_insensitive (lit "bar")))))) (from (id foo case_insensitive)))` |
+
+Note that the IonSQL++ reference parser does not allow a single `*` without dot notation to be used in 
+combination with other expressions.  For example, the following are prevented: 
+
+```sql
+    SELECT *, * FROM foo
+    SELECT *, 1 + 1 as c FROM foo
+    SELECT *, colunm_a FROM foo
+    SELECT *, bar.* FROM foo, bar
+```
 
 #### `FROM` Clause
 The single `<SOURCE EXPR>` in this clause is as follows:

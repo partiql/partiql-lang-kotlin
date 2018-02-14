@@ -270,6 +270,22 @@ enum class ErrorCode(private val category: ErrorCategory,
         LOC_TOKEN,
         "expected identifier for AT name"),
 
+    PARSE_INVALID_CONTEXT_FOR_WILDCARD_IN_SELECT_LIST(
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "Invalid use of * in select list"),
+
+    //SQB = SQuare Bracket
+    PARSE_CANNOT_MIX_SQB_AND_WILDCARD_IN_SELECT_LIST(
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "Cannot mix [] and * in the same expression in a select list"),
+
+    PARSE_ASTERISK_IS_NOT_ALONE_IN_SELECT_LIST(
+        ErrorCategory.PARSER,
+        LOCATION,
+        "Other expressions may not be present in the select list when '*' is used without dot notation."),
+
     //Evaluator errors
 
     EVALUATOR_BINDING_DOES_NOT_EXIST(
@@ -432,6 +448,8 @@ enum class ErrorCode(private val category: ErrorCategory,
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "Binding name was '${errorContext?.get(Property.BINDING_NAME)}'"
     },
+
+
 
     EVALUATOR_LIKE_INVALID_INPUTS(
         ErrorCategory.EVALUATOR,

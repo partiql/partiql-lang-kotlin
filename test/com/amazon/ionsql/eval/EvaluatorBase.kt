@@ -147,7 +147,4 @@ abstract class EvaluatorBase : Base() {
             }
         }
     }
-
-    protected fun sourceLocationProperties(lineNum: Long, colNum: Long) =
-        mapOf(Property.LINE_NUMBER to lineNum, Property.COLUMN_NUMBER to colNum)
 }

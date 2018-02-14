@@ -171,7 +171,11 @@ abstract class Base : Assert() {
                 EXPECTED_ARITY_MIN,
                 EXPECTED_ARITY_MAX
                     -> assertThat(actualPropertyValue?.integerValue()).withFailMessage(message).isEqualTo(entry.value)
+
             }
         }
     }
+
+    protected fun sourceLocationProperties(lineNum: Long, colNum: Long) =
+        mapOf(Property.LINE_NUMBER to lineNum, Property.COLUMN_NUMBER to colNum)
 }

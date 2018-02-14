@@ -944,4 +944,41 @@ class ParserErrorsTest : Base() {
                                                 Property.TOKEN_TYPE to TokenType.SEMICOLON,
                                                 Property.TOKEN_VALUE to ion.newSymbol(";")))
     }
+
+
+    @Test
+    fun selectStarStar() = checkInputThrowingParserException(
+        "SELECT *, * FROM <<1>>",
+        ErrorCode.PARSE_ASTERISK_IS_NOT_ALONE_IN_SELECT_LIST,
+        sourceLocationProperties(1, 8))
+
+
+    @Test
+    fun selectStarAliasDotStar() = checkInputThrowingParserException(
+        "SELECT *, foo.* FROM <<{ a: 1 }>> as foo",
+        ErrorCode.PARSE_ASTERISK_IS_NOT_ALONE_IN_SELECT_LIST,
+        sourceLocationProperties(1, 8))
+
+
+    @Test
+    fun selectAliasDotStarStar() = checkInputThrowingParserException(
+        "SELECT foo.*, * FROM <<{ a: 1 }>> as foo",
+        ErrorCode.PARSE_ASTERISK_IS_NOT_ALONE_IN_SELECT_LIST,
+        sourceLocationProperties(1, 15))
+
+
+    @Test
+    fun selectExpressionStar() = checkInputThrowingParserException(
+        "SELECT 1, * FROM <<{ a: 1 }>>",
+        ErrorCode.PARSE_ASTERISK_IS_NOT_ALONE_IN_SELECT_LIST,
+        sourceLocationProperties(1, 11))
+
+
+    @Test
+    fun selectStarExpression() = checkInputThrowingParserException(
+        "SELECT *, 1 FROM <<{ a: 1 }>>",
+        ErrorCode.PARSE_ASTERISK_IS_NOT_ALONE_IN_SELECT_LIST,
+        sourceLocationProperties(1, 8))
+
+
 }

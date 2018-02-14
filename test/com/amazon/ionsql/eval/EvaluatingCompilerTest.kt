@@ -516,13 +516,7 @@ class EvaluatingCompilerTest : EvaluatorBase() {
           ]
         """,
         animals.toSession()
-    ) {
-        // SELECT * from schema-less Ion provides no ordered names
-        exprValue.forEach {
-            assertNull(it.orderedNames)
-        }
-    }
-
+    )
 
     @Test
     fun implicitAliasSelectSingleSource() = assertEval(
@@ -862,13 +856,13 @@ class EvaluatingCompilerTest : EvaluatorBase() {
     @Test
     fun properAliasFromPathInSelect() = assertEval(
         """
-          SELECT s.id, s.books[*].title FROM stores AS s WHERE s.id = '5'
+          SELECT s.id, s.books[1].title FROM stores AS s WHERE s.id = '5'
         """,
         """
           [
             {
               id: "5",
-              title: ["A", "B", "C", "D"]
+              title: "B"
             }
           ]
         """,

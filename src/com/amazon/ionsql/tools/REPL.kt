@@ -178,6 +178,9 @@ fun main(args: Array<String>) {
                         }
                         result = when (line) {
                             "!!" -> ION.newEmptyList().apply {
+                                add(parser.parse(source).clone().filterMetaNodes())
+                            }.exprValue()
+                            "!?" -> ION.newEmptyList().apply {
                                 add(parser.parse(source).clone())
                             }.exprValue()
                             else -> evaluator.compile(source).eval(EvaluationSession.build { globals(locals) })

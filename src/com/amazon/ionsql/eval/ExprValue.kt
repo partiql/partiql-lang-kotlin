@@ -44,5 +44,5 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
      *
      * If this value has no children, then it should return the empty iterator.
      */
-    operator override fun iterator(): Iterator<ExprValue>
+    override operator fun iterator(): Iterator<ExprValue>
 }
