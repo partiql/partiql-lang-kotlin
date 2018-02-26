@@ -71,8 +71,7 @@ class DateAddEvaluationTest : EvaluatorBase() {
     }
 
     @Test // regression for IONSQL-142
-    @Ignore("IONJAVA-533")
-    fun addingNegativeYearOutsideOfTimestampBoundaries() = assertThrows("Year -8000 must be between 1 and 9999 inclusive", NodeMetadata(1, 1)) {
+    fun addingNegativeYearOutsideOfTimestampBoundaries() = assertThrows("Year -8001 must be between 1 and 9999 inclusive", NodeMetadata(1, 1)) {
         voidEval("date_add(year, -10000, `2000-06-27T`)")
     }
 
@@ -82,8 +81,7 @@ class DateAddEvaluationTest : EvaluatorBase() {
     }
 
     @Test // regression for IONSQL-142
-    @Ignore("IONJAVA-533")
-    fun addingNegativeMonthsOutsideOfTimestampBoundaries() = assertThrows("Year -8000 must be between 1 and 9999 inclusive", NodeMetadata(1, 1)) {
+    fun addingNegativeMonthsOutsideOfTimestampBoundaries() = assertThrows("Year -8001 must be between 1 and 9999 inclusive", NodeMetadata(1, 1)) {
         voidEval("date_add(month, -10000*12, `2000-06-27T`)")
     }
 }

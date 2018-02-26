@@ -1379,4 +1379,10 @@ class EvaluatingCompilerTest : EvaluatorBase() {
 
     @Test // https://i.amazon.com/issues/IONSQL-174
     fun semicolonAtEndOfExpression() = assertEval("SELECT * FROM <<1>>;", "[{_1: 1}]")
+
+    @Test // https://i.amazon.com/issues/IONSQL-277
+    fun emptySymbol() = assertEval(""" SELECT "" FROM `{'': 1}` """, "[{'': 1}]")
+
+    @Test // https://i.amazon.com/issues/IONSQL-277
+    fun emptySymbolInGlobals() = assertEval(""" SELECT * FROM "" """, "[{_1: 1}]", mapOf("" to "1").toSession())
 }
