@@ -17,6 +17,7 @@ fun propertyValueMapOf(vararg properties: Pair<Property, Any>): PropertyValueMap
             is String    -> pvm[it.first] = it.second as String
             is TokenType -> pvm[it.first] = it.second as TokenType
             is IonValue  -> pvm[it.first] = it.second as IonValue
+            is Enum<*>   -> pvm[it.first] = it.second.toString()
             else         -> throw IllegalArgumentException("Cannot convert ${it.second.javaClass.name} to PropertyValue")
         }
     }

@@ -1,91 +1,186 @@
 package com.amazon.ionsql.eval.builtins.timestamp
 
+import com.amazon.ionsql.util.*
 import junitparams.*
 import org.junit.*
 import org.junit.runner.*
 import kotlin.test.*
 
-// to reduce test verbosity
-private typealias p = PatternAstNode
-private typealias t = TextAstNode
-
 @RunWith(JUnitParamsRunner::class)
-class TimestampFormatPatternParserTest {
+internal class TimestampFormatPatternParserTest {
 
-    fun parametersForParse(): List<Pair<String, List<AstNode>>> = listOf(
-        "y" to listOf(p("y", PatternType.YEAR, TimestampPrecision.YEAR)),
-        "yy" to listOf(p("yy", PatternType.TWO_DIGIT_YEAR, TimestampPrecision.YEAR)),
-        "yyyy" to listOf(p("yyyy", PatternType.FOUR_DIGIT_YEAR, TimestampPrecision.YEAR)),
-        "M" to listOf(p("M", PatternType.MONTH, TimestampPrecision.MONTH)),
-        "MM" to listOf(p("MM", PatternType.TWO_DIGIT_MONTH, TimestampPrecision.MONTH)),
-        "d" to listOf(p("d", PatternType.DAY, TimestampPrecision.DAY)),
-        "dd" to listOf(p("dd", PatternType.TWO_DIGIT_DAY, TimestampPrecision.DAY)),
-        "H" to listOf(p("H", PatternType.TWENTY_FOUR_HOUR, TimestampPrecision.HOUR)),
-        "HH" to listOf(p("HH", PatternType.TWO_DIGIT_TWENTY_FOUR_HOUR, TimestampPrecision.HOUR)),
-        "h" to listOf(p("h", PatternType.TWELVE_HOUR, TimestampPrecision.HOUR)),
-        "hh" to listOf(p("hh", PatternType.TWO_DIGIT_TWELVE_HOUR, TimestampPrecision.HOUR)),
-        "a" to listOf(p("a", PatternType.AM_PM, TimestampPrecision.AM_PM)),
-        "m" to listOf(p("m", PatternType.MINUTE, TimestampPrecision.MINUTE)),
-        "mm" to listOf(p("mm", PatternType.TWO_DIGIT_MINUTE, TimestampPrecision.MINUTE)),
-        "s" to listOf(p("s", PatternType.SECOND, TimestampPrecision.SECOND)),
-        "ss" to listOf(p("ss", PatternType.TWO_DIGIT_SECOND, TimestampPrecision.SECOND)),
-        "S" to listOf(p("S", PatternType.ONE_DIGIT_FRACTION_OF_SECOND, TimestampPrecision.FRACTION_OF_SECOND)),
-        "SS" to listOf(p("SS", PatternType.TWO_DIGIT_FRACTION_OF_SECOND, TimestampPrecision.FRACTION_OF_SECOND)),
-        "SSS" to listOf(p("SSS", PatternType.THREE_DIGIT_FRACTION_OF_SECOND, TimestampPrecision.FRACTION_OF_SECOND)),
-        "x" to listOf(p("x", PatternType.TWO_DIGIT_OFFSET, TimestampPrecision.OFFSET)),
-        "xx" to listOf(p("xx", PatternType.FOUR_DIGIT_OFFSET, TimestampPrecision.OFFSET)),
-        "xxxx" to listOf(p("xxxx", PatternType.FOUR_DIGIT_OFFSET, TimestampPrecision.OFFSET)),
-        "xxx" to listOf(p("xxx", PatternType.FIVE_DIGIT_OFFSET, TimestampPrecision.OFFSET)),
-        "xxxxx" to listOf(p("xxxxx", PatternType.FIVE_DIGIT_OFFSET, TimestampPrecision.OFFSET)),
-        "X" to listOf(p("X", PatternType.TWO_DIGIT_Z_OFFSET, TimestampPrecision.OFFSET)),
-        "XX" to listOf(p("XX", PatternType.FOUR_DIGIT_Z_OFFSET, TimestampPrecision.OFFSET)),
-        "XXXX" to listOf(p("XXXX", PatternType.FOUR_DIGIT_Z_OFFSET, TimestampPrecision.OFFSET)),
-        "XXX" to listOf(p("XXX", PatternType.FIVE_DIGIT_Z_OFFSET, TimestampPrecision.OFFSET)),
-        "XXXXX" to listOf(p("XXXXX", PatternType.FIVE_DIGIT_Z_OFFSET, TimestampPrecision.OFFSET)),
+    fun parametersForParse(): List<Pair<String, List<FormatItem>>> = listOf(
+        "y" to listOf(YearPatternSymbol(YearFormat.FOUR_DIGIT)),
+        "yy" to listOf(YearPatternSymbol(YearFormat.TWO_DIGIT)),
+        "yyyy" to listOf(YearPatternSymbol(YearFormat.FOUR_DIGIT_ZERO_PADDED)),
+
+        "M" to listOf(MonthPatternSymbol(MonthFormat.MONTH_NUMBER)),
+        "MM" to listOf(MonthPatternSymbol(MonthFormat.MONTH_NUMBER_ZERO_PADDED)),
+        "MMM" to listOf(MonthPatternSymbol(MonthFormat.ABBREVIATED_MONTH_NAME)),
+        "MMMM" to listOf(MonthPatternSymbol(MonthFormat.FULL_MONTH_NAME)),
+        "MMMMM" to listOf(MonthPatternSymbol(MonthFormat.FIRST_LETTER_OF_MONTH_NAME)),
+
+        "d" to listOf(DayOfMonthPatternSymbol(TimestampFieldFormat.NUMBER)),
+        "dd" to listOf(DayOfMonthPatternSymbol(TimestampFieldFormat.ZERO_PADDED_NUMBER)),
+
+        "h" to listOf(HourOfDayPatternSymbol(HourOfDayFormatFieldFormat.NUMBER_12_HOUR)),
+        "hh" to listOf(HourOfDayPatternSymbol(HourOfDayFormatFieldFormat.ZERO_PADDED_NUMBER_12_HOUR)),
+        "H" to listOf(HourOfDayPatternSymbol(HourOfDayFormatFieldFormat.NUMBER_24_HOUR)),
+        "HH" to listOf(HourOfDayPatternSymbol(HourOfDayFormatFieldFormat.ZERO_PADDED_NUMBER_24_HOUR)),
+
+        "a" to listOf(AmPmPatternSymbol()),
+
+        "m" to listOf(MinuteOfHourPatternSymbol(TimestampFieldFormat.NUMBER)),
+        "mm" to listOf(MinuteOfHourPatternSymbol(TimestampFieldFormat.ZERO_PADDED_NUMBER)),
+
+        "s" to listOf(SecondOfMinutePatternPatternSymbol(TimestampFieldFormat.NUMBER)),
+        "ss" to listOf(SecondOfMinutePatternPatternSymbol( TimestampFieldFormat.ZERO_PADDED_NUMBER)),
+
+        "x" to listOf(OffsetPatternSymbol(OffsetFieldFormat.ZERO_PADDED_HOUR)),
+
+        "xx" to listOf(OffsetPatternSymbol(OffsetFieldFormat.ZERO_PADDED_HOUR_MINUTE)),
+        "xxxx" to listOf(OffsetPatternSymbol(OffsetFieldFormat.ZERO_PADDED_HOUR_MINUTE)),
+
+        "xxx" to listOf(OffsetPatternSymbol(OffsetFieldFormat.ZERO_PADDED_HOUR_COLON_MINUTE)),
+        "xxxxx" to listOf(OffsetPatternSymbol(OffsetFieldFormat.ZERO_PADDED_HOUR_COLON_MINUTE)),
+
+        "X" to listOf(OffsetPatternSymbol(OffsetFieldFormat.ZERO_PADDED_HOUR_OR_Z)),
+
+        "XX" to listOf(OffsetPatternSymbol(OffsetFieldFormat.ZERO_PADDED_HOUR_MINUTE_OR_Z)),
+        "XXXX" to listOf(OffsetPatternSymbol(OffsetFieldFormat.ZERO_PADDED_HOUR_MINUTE_OR_Z)),
+
+        "XXX" to listOf(OffsetPatternSymbol(OffsetFieldFormat.ZERO_PADDED_HOUR_COLON_MINUTE_OR_Z)),
+        "XXXXX" to listOf(OffsetPatternSymbol(OffsetFieldFormat.ZERO_PADDED_HOUR_COLON_MINUTE_OR_Z)),
+
+        "n" to listOf(NanoOfSecondPatternSymbol()),
+
+        "S" to listOf(FractionOfSecondPatternSymbol(1)),
+        "SS" to listOf(FractionOfSecondPatternSymbol(2)),
+        "SSS" to listOf(FractionOfSecondPatternSymbol(3)),
+        "SSSS" to listOf(FractionOfSecondPatternSymbol(4)),
+        "SSSSS" to listOf(FractionOfSecondPatternSymbol(5)),
+        "SSSSSS" to listOf(FractionOfSecondPatternSymbol(6)),
+        "SSSSSSS" to listOf(FractionOfSecondPatternSymbol(7)),
+        "SSSSSSSS" to listOf(FractionOfSecondPatternSymbol(8)),
+        "SSSSSSSSS" to listOf(FractionOfSecondPatternSymbol(9)),
+        "SSSSSSSSSS" to listOf(FractionOfSecondPatternSymbol(10)),
+        "SSSSSSSSSSS" to listOf(FractionOfSecondPatternSymbol(11)),
+        "SSSSSSSSSSSS" to listOf(FractionOfSecondPatternSymbol(12)),
+        "SSSSSSSSSSSSS" to listOf(FractionOfSecondPatternSymbol(13)),
+        "SSSSSSSSSSSSSS" to listOf(FractionOfSecondPatternSymbol(14)),
+        "SSSSSSSSSSSSSSS" to listOf(FractionOfSecondPatternSymbol(15)),
+        "SSSSSSSSSSSSSSSS" to listOf(FractionOfSecondPatternSymbol(16)),
 
         "yyyy-MM-dd'T'HH:mm:ss.SSSXXXXX" to listOf(
-            p("yyyy", PatternType.FOUR_DIGIT_YEAR, TimestampPrecision.YEAR),
-            t("-"),
-            p("MM", PatternType.TWO_DIGIT_MONTH, TimestampPrecision.MONTH),
-            t("-"),
-            p("dd", PatternType.TWO_DIGIT_DAY, TimestampPrecision.DAY),
-            t("'T'"),
-            p("HH", PatternType.TWO_DIGIT_TWENTY_FOUR_HOUR, TimestampPrecision.HOUR),
-            t(":"),
-            p("mm", PatternType.TWO_DIGIT_MINUTE, TimestampPrecision.MINUTE),
-            t(":"),
-            p("ss", PatternType.TWO_DIGIT_SECOND, TimestampPrecision.SECOND),
-            t("."),
-            p("SSS", PatternType.THREE_DIGIT_FRACTION_OF_SECOND, TimestampPrecision.FRACTION_OF_SECOND),
-            p("XXXXX", PatternType.FIVE_DIGIT_Z_OFFSET, TimestampPrecision.OFFSET)),
+            YearPatternSymbol(YearFormat.FOUR_DIGIT_ZERO_PADDED),
+            TextItem("-"),
+            MonthPatternSymbol(MonthFormat.MONTH_NUMBER_ZERO_PADDED),
+            TextItem("-"),
+            DayOfMonthPatternSymbol(TimestampFieldFormat.ZERO_PADDED_NUMBER),
+            TextItem("'T'"),
+            HourOfDayPatternSymbol(HourOfDayFormatFieldFormat.ZERO_PADDED_NUMBER_24_HOUR),
+            TextItem(":"),
+            MinuteOfHourPatternSymbol(TimestampFieldFormat.ZERO_PADDED_NUMBER),
+            TextItem(":"),
+            SecondOfMinutePatternPatternSymbol(TimestampFieldFormat.ZERO_PADDED_NUMBER),
+            TextItem("."),
+            FractionOfSecondPatternSymbol(3),
+            OffsetPatternSymbol(OffsetFieldFormat.ZERO_PADDED_HOUR_COLON_MINUTE_OR_Z)),
 
         "yyyyMMddHHmmssSSSXXXXX" to listOf(
-            p("yyyy", PatternType.FOUR_DIGIT_YEAR, TimestampPrecision.YEAR),
-            p("MM", PatternType.TWO_DIGIT_MONTH, TimestampPrecision.MONTH),
-            p("dd", PatternType.TWO_DIGIT_DAY, TimestampPrecision.DAY),
-            p("HH", PatternType.TWO_DIGIT_TWENTY_FOUR_HOUR, TimestampPrecision.HOUR),
-            p("mm", PatternType.TWO_DIGIT_MINUTE, TimestampPrecision.MINUTE),
-            p("ss", PatternType.TWO_DIGIT_SECOND, TimestampPrecision.SECOND),
-            p("SSS", PatternType.THREE_DIGIT_FRACTION_OF_SECOND, TimestampPrecision.FRACTION_OF_SECOND),
-            p("XXXXX", PatternType.FIVE_DIGIT_Z_OFFSET, TimestampPrecision.OFFSET)))
+            YearPatternSymbol(YearFormat.FOUR_DIGIT_ZERO_PADDED),
+            MonthPatternSymbol(MonthFormat.MONTH_NUMBER_ZERO_PADDED),
+            DayOfMonthPatternSymbol(TimestampFieldFormat.ZERO_PADDED_NUMBER),
+            HourOfDayPatternSymbol(HourOfDayFormatFieldFormat.ZERO_PADDED_NUMBER_24_HOUR),
+            MinuteOfHourPatternSymbol(TimestampFieldFormat.ZERO_PADDED_NUMBER),
+            SecondOfMinutePatternPatternSymbol(TimestampFieldFormat.ZERO_PADDED_NUMBER),
+            FractionOfSecondPatternSymbol(3),
+            OffsetPatternSymbol(OffsetFieldFormat.ZERO_PADDED_HOUR_COLON_MINUTE_OR_Z))
+    )
 
     @Test
     @Parameters
-    fun parse(pair: Pair<String, List<AstNode>>) {
-        val tokens = TimestampFormatPatternLexer().tokenize(pair.first)
-        val actual = TimestampFormatPatternParser().parse(tokens)
-        assertEquals(pair.second, actual)
+    fun parse(pair: Pair<String, List<FormatItem>>) {
+        val formatPattern = FormatPattern.fromString(pair.first)
+        assertEquals(pair.second, formatPattern.formatItems)
     }
 
-    @Test(expected = IllegalArgumentException::class)
-    fun noPatterns() {
-        val tokens = TimestampFormatPatternLexer().tokenize("'some text' /-,:.")
-        TimestampFormatPatternParser().parse(tokens)
+
+    @Test
+    fun mostPreciseField() {
+        //NOTE: we can't parameterize this unless we want to expose TimestampParser.FormatPatternPrecision as public.
+        softAssert {
+            for((pattern, expectedResult, expectedHas2DigitYear) in parametersForExaminePatternTest) {
+                val result = FormatPattern.fromString(pattern)
+                assertThat(result.leastSignificantField)
+                    .withFailMessage("Pattern '${pattern}' was used, '${expectedResult}' was expected but result was '${result.leastSignificantField}'")
+                    .isEqualTo(expectedResult)
+                assertThat(result.has2DigitYear)
+                    .withFailMessage("has2DigitYear expected: ${expectedHas2DigitYear} but was ${result.has2DigitYear}, pattern was: '${pattern}'")
+                    .isEqualTo(expectedHas2DigitYear)
+            }
+        }
     }
 
-    @Test(expected = IllegalArgumentException::class)
-    fun badPattern() {
-        val tokens = TimestampFormatPatternLexer().tokenize("yyyyy")
-        TimestampFormatPatternParser().parse(tokens)
-    }
+
+    private data class MostPreciseFieldTestCase(
+        val pattern: String,
+        val expectedResult: TimestampField,
+        val expectedHas2DigitYear: Boolean = false)
+
+    private val parametersForExaminePatternTest = listOf(
+
+        MostPreciseFieldTestCase("y", TimestampField.YEAR),
+        MostPreciseFieldTestCase("yy", TimestampField.YEAR, expectedHas2DigitYear = true),
+        MostPreciseFieldTestCase("yyy", TimestampField.YEAR),
+        MostPreciseFieldTestCase("yyyy", TimestampField.YEAR),
+        MostPreciseFieldTestCase("y M", TimestampField.MONTH_OF_YEAR),
+        MostPreciseFieldTestCase("y M d", TimestampField.DAY_OF_MONTH),
+        MostPreciseFieldTestCase("y M d s", TimestampField.SECOND_OF_MINUTE),
+
+        MostPreciseFieldTestCase("M d, y", TimestampField.DAY_OF_MONTH),
+
+        //Delimited with "/"
+        MostPreciseFieldTestCase("y/M", TimestampField.MONTH_OF_YEAR),
+        MostPreciseFieldTestCase("y/M/d", TimestampField.DAY_OF_MONTH),
+        MostPreciseFieldTestCase("y/M/d/s", TimestampField.SECOND_OF_MINUTE),
+
+        //delimited with "-"
+        MostPreciseFieldTestCase("y-M", TimestampField.MONTH_OF_YEAR),
+        MostPreciseFieldTestCase("yy-M", TimestampField.MONTH_OF_YEAR, expectedHas2DigitYear = true),
+        MostPreciseFieldTestCase("y-M-d", TimestampField.DAY_OF_MONTH),
+        MostPreciseFieldTestCase("y-M-d-s", TimestampField.SECOND_OF_MINUTE),
+
+        //delimited with "':'"
+        MostPreciseFieldTestCase("y:M", TimestampField.MONTH_OF_YEAR),
+        MostPreciseFieldTestCase("yy:M", TimestampField.MONTH_OF_YEAR, expectedHas2DigitYear = true),
+        MostPreciseFieldTestCase("y:M:d", TimestampField.DAY_OF_MONTH),
+        MostPreciseFieldTestCase("y:M:d:s", TimestampField.SECOND_OF_MINUTE),
+
+        //delimited with "'1'"
+        MostPreciseFieldTestCase("'1'y'1'", TimestampField.YEAR),
+        MostPreciseFieldTestCase("'1'yy'1'", TimestampField.YEAR, expectedHas2DigitYear = true),
+        MostPreciseFieldTestCase("'1'y'1'M'1'", TimestampField.MONTH_OF_YEAR),
+        MostPreciseFieldTestCase("'1'y'1'M'1'd'1'", TimestampField.DAY_OF_MONTH),
+        MostPreciseFieldTestCase("'1'y'1'M'1'd'1's'1'", TimestampField.SECOND_OF_MINUTE),
+
+        //delimited with "'😸'"
+        MostPreciseFieldTestCase("'😸'y'😸'", TimestampField.YEAR),
+        MostPreciseFieldTestCase("'😸'yy'😸'", TimestampField.YEAR, expectedHas2DigitYear = true),
+        MostPreciseFieldTestCase("'😸'y'😸'M'😸'", TimestampField.MONTH_OF_YEAR),
+        MostPreciseFieldTestCase("'😸'y'😸'M'😸'd'😸'", TimestampField.DAY_OF_MONTH),
+        MostPreciseFieldTestCase("'😸'y'😸'M'😸'd'😸's'😸'", TimestampField.SECOND_OF_MINUTE),
+
+        //delimited with "'話家'"
+        MostPreciseFieldTestCase("'話家'y'話家'", TimestampField.YEAR),
+        MostPreciseFieldTestCase("'話家'yy'話家'", TimestampField.YEAR, expectedHas2DigitYear = true),
+        MostPreciseFieldTestCase("'話家'y'話家'M'話家'", TimestampField.MONTH_OF_YEAR),
+        MostPreciseFieldTestCase("'話家'y'話家'M'話家'd'話家'", TimestampField.DAY_OF_MONTH),
+        MostPreciseFieldTestCase("'話家'y'話家'M'話家'd'話家's'話家'", TimestampField.SECOND_OF_MINUTE),
+
+        //Valid symbols within quotes should not influence the result
+        MostPreciseFieldTestCase("y'M d s'", TimestampField.YEAR),
+        MostPreciseFieldTestCase("y'y'", TimestampField.YEAR))
+
+
 }

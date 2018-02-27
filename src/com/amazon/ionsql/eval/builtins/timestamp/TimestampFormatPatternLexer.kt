@@ -1,10 +1,12 @@
 package com.amazon.ionsql.eval.builtins.timestamp
 
+import com.amazon.ionsql.errors.*
+import com.amazon.ionsql.eval.*
 import com.amazon.ionsql.util.*
 
 private const val NON_ESCAPED_TEXT = " /-,:."
 private const val SINGLE_QUOTE_CP = '\''.toInt()
-private const val PATTERN = "yMdahHmsSXx"
+private const val PATTERN = "yMdahHmsSXxn"
 
 // max code point range
 // i.e. result of (NON_ESCAPED_TEXT + "'" + PATTERN).codePoints().max() + 1
@@ -158,7 +160,7 @@ internal class TimestampFormatPatternLexer {
 
                     }
 
-                    override fun nextFor(cp: Int): State = when (cp) {
+                        override fun nextFor(cp: Int): State = when (cp) {
                         codePoint -> repeatingState
                         else      -> INITIAL_STATE.nextFor(cp)
                     }
@@ -180,6 +182,10 @@ internal class TimestampFormatPatternLexer {
         val tokens = mutableListOf<Token>()
         val buffer = StringBuilder()
 
+        if(source.isEmpty()) {
+            return listOf()
+        }
+
         fun flushToken(tokenType: TokenType) {
             tokens.add(Token(tokenType, buffer.toString()))
             buffer.reset()
@@ -193,7 +199,12 @@ internal class TimestampFormatPatternLexer {
             val next = current.nextFor(cp)
 
             if (next.stateType == StateType.ERROR) {
-                throw IllegalArgumentException("Invalid token '${Character.toChars(cp)}'.")
+                throw EvaluationException(
+                    message = "Invalid token in timestamp format pattern",
+                    errorCode = ErrorCode.EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_TOKEN,
+                    errorContext = propertyValueMapOf(Property.TIMESTAMP_FORMAT_PATTERN to source),
+                    internal = false
+                )
             }
 
             if (tokenEnd(current, next)) {
@@ -205,7 +216,12 @@ internal class TimestampFormatPatternLexer {
         }
 
         if (!current.stateType.endsToken) {
-            throw IllegalArgumentException("Unterminated tokens")
+            throw EvaluationException(
+                message = "Unterminated token in timestamp format pattern",
+                errorCode = ErrorCode.EVALUATOR_UNTERMINATED_TIMESTAMP_FORMAT_PATTERN_TOKEN,
+                errorContext = propertyValueMapOf(Property.TIMESTAMP_FORMAT_PATTERN to source),
+                internal = false
+            )
         }
 
         flushToken(current.tokenType!!)

@@ -218,8 +218,8 @@ Format symbols:
     MM              01              Zero padded month of year
     MMM             Jan             Abbreviated month year name
     MMMM            January         Full month of year name
-    MMMMM           J               Month of year letter
-    
+    MMMMM           J               Month of year first letter (NOTE: not valid for use with to_timestamp function)
+
     d               2               Day of month (1-31)
     dd              02              Zero padded day of month (01-31)
     

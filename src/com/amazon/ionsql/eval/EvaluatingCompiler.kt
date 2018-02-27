@@ -307,7 +307,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
     /** Dispatch table for AST "op-codes" to thunks.  */
     private val syntaxTable = compilationTableOf(
-        "missing" to { cEnv, ast ->
+        "missing" to { _, _ ->
             ConstantExprThunk(missingValue)
         },
         "lit" to { cEnv, ast ->

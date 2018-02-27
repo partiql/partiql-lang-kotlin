@@ -1,93 +1,80 @@
 package com.amazon.ionsql.eval.builtins.timestamp
 
-// TODO javadoc on all things
+import com.amazon.ionsql.errors.*
+import com.amazon.ionsql.eval.*
+import com.amazon.ionsql.util.*
 
-// in order from lower to highest precision
-internal enum class TimestampPrecision {
-    YEAR, MONTH, DAY, HOUR, AM_PM, MINUTE, SECOND, FRACTION_OF_SECOND, OFFSET
-}
-
-internal enum class PatternType {
-    YEAR,
-    TWO_DIGIT_YEAR,
-    FOUR_DIGIT_YEAR,
-    MONTH,
-    TWO_DIGIT_MONTH,
-    DAY,
-    TWO_DIGIT_DAY,
-    TWELVE_HOUR,
-    TWO_DIGIT_TWELVE_HOUR,
-    TWENTY_FOUR_HOUR,
-    TWO_DIGIT_TWENTY_FOUR_HOUR,
-    AM_PM,
-    MINUTE,
-    TWO_DIGIT_MINUTE,
-    SECOND,
-    TWO_DIGIT_SECOND,
-    ONE_DIGIT_FRACTION_OF_SECOND,
-    TWO_DIGIT_FRACTION_OF_SECOND,
-    THREE_DIGIT_FRACTION_OF_SECOND,
-    TWO_DIGIT_OFFSET,
-    FOUR_DIGIT_OFFSET,
-    FIVE_DIGIT_OFFSET,
-    TWO_DIGIT_Z_OFFSET,
-    FOUR_DIGIT_Z_OFFSET,
-    FIVE_DIGIT_Z_OFFSET
-}
-
-sealed class AstNode {
-    abstract val raw: String
-}
-
-internal data class TextAstNode(override val raw: String) : AstNode()
-internal data class PatternAstNode(override val raw: String, val type: PatternType, val precision: TimestampPrecision) : AstNode()
 
 internal class TimestampFormatPatternParser {
-    fun parse(tokens: List<Token>): List<AstNode> {
+
+    fun parse(formatPatternString: String): FormatPattern {
+        val lexer = TimestampFormatPatternLexer()
+        val tokens = lexer.tokenize(formatPatternString)
+
         var patternCounter = 0
-        val ast = tokens.map { token ->
+        val formatItems = tokens.map { token ->
             when (token.tokenType) {
-                TokenType.TEXT    -> TextAstNode(token.value)
-                TokenType.PATTERN -> {
+                TokenType.TEXT -> TextItem(token.value)
+                TokenType.PATTERN                           -> {
                     patternCounter += 1
                     parsePattern(token.value)
                 }
             }
         }
 
-        if(patternCounter == 0) {
-            throw IllegalArgumentException("At least one pattern is required")
-        }
-
-        return ast
+        return FormatPattern(formatPatternString, formatItems)
     }
 
-    private fun parsePattern(raw: String): AstNode = when (raw) {
-        "y"            -> PatternAstNode(raw, PatternType.YEAR, TimestampPrecision.YEAR)
-        "yy"           -> PatternAstNode(raw, PatternType.TWO_DIGIT_YEAR, TimestampPrecision.YEAR)
-        "yyyy"         -> PatternAstNode(raw, PatternType.FOUR_DIGIT_YEAR, TimestampPrecision.YEAR)
-        "M"            -> PatternAstNode(raw, PatternType.MONTH, TimestampPrecision.MONTH)
-        "MM"           -> PatternAstNode(raw, PatternType.TWO_DIGIT_MONTH, TimestampPrecision.MONTH)
-        "d"            -> PatternAstNode(raw, PatternType.DAY, TimestampPrecision.DAY)
-        "dd"           -> PatternAstNode(raw, PatternType.TWO_DIGIT_DAY, TimestampPrecision.DAY)
-        "H"            -> PatternAstNode(raw, PatternType.TWENTY_FOUR_HOUR, TimestampPrecision.HOUR)
-        "HH"           -> PatternAstNode(raw, PatternType.TWO_DIGIT_TWENTY_FOUR_HOUR, TimestampPrecision.HOUR)
-        "h"            -> PatternAstNode(raw, PatternType.TWELVE_HOUR, TimestampPrecision.HOUR)
-        "hh"           -> PatternAstNode(raw, PatternType.TWO_DIGIT_TWELVE_HOUR, TimestampPrecision.HOUR)
-        "a"            -> PatternAstNode(raw, PatternType.AM_PM, TimestampPrecision.AM_PM)
-        "m"            -> PatternAstNode(raw, PatternType.MINUTE, TimestampPrecision.MINUTE)
-        "mm"           -> PatternAstNode(raw, PatternType.TWO_DIGIT_MINUTE, TimestampPrecision.MINUTE)
-        "s"            -> PatternAstNode(raw, PatternType.SECOND, TimestampPrecision.SECOND)
-        "ss"           -> PatternAstNode(raw, PatternType.TWO_DIGIT_SECOND, TimestampPrecision.SECOND)
-        "S"            -> PatternAstNode(raw, PatternType.ONE_DIGIT_FRACTION_OF_SECOND, TimestampPrecision.FRACTION_OF_SECOND)
-        "SS"           -> PatternAstNode(raw, PatternType.TWO_DIGIT_FRACTION_OF_SECOND, TimestampPrecision.FRACTION_OF_SECOND)
-        "SSS"          -> PatternAstNode(raw, PatternType.THREE_DIGIT_FRACTION_OF_SECOND, TimestampPrecision.FRACTION_OF_SECOND)
-        "x"            -> PatternAstNode(raw, PatternType.TWO_DIGIT_OFFSET, TimestampPrecision.OFFSET)
-        "xx", "xxxx"   -> PatternAstNode(raw, PatternType.FOUR_DIGIT_OFFSET, TimestampPrecision.OFFSET)
-        "xxx", "xxxxx" -> PatternAstNode(raw, PatternType.FIVE_DIGIT_OFFSET, TimestampPrecision.OFFSET)
-        "X"            -> PatternAstNode(raw, PatternType.TWO_DIGIT_Z_OFFSET, TimestampPrecision.OFFSET)
-        "XX", "XXXX"   -> PatternAstNode(raw, PatternType.FOUR_DIGIT_Z_OFFSET, TimestampPrecision.OFFSET)
-        "XXX", "XXXXX" -> PatternAstNode(raw, PatternType.FIVE_DIGIT_Z_OFFSET, TimestampPrecision.OFFSET)
-        else           -> throw IllegalArgumentException("Unknown pattern $raw")
+    private fun parsePattern(raw: String): FormatItem = when (raw) {
+        // Possible optimization here:  create singleton instances corresponding to each of the branches and return
+        // those instead of creating new instances.  This could work because all of the objects here are immutable.
+        // This reduces the amount of garbage created during execution of this method.
+        "y"            -> YearPatternSymbol(YearFormat.FOUR_DIGIT)
+        "yy"           -> YearPatternSymbol(YearFormat.TWO_DIGIT)
+        "yyy", "yyyy"  -> YearPatternSymbol(YearFormat.FOUR_DIGIT_ZERO_PADDED)
+
+        "M"            -> MonthPatternSymbol(MonthFormat.MONTH_NUMBER)
+        "MM"           -> MonthPatternSymbol(MonthFormat.MONTH_NUMBER_ZERO_PADDED)
+        "MMM"          -> MonthPatternSymbol(MonthFormat.ABBREVIATED_MONTH_NAME)
+        "MMMM"         -> MonthPatternSymbol(MonthFormat.FULL_MONTH_NAME)
+        "MMMMM"        -> MonthPatternSymbol(MonthFormat.FIRST_LETTER_OF_MONTH_NAME)
+
+        "d"            -> DayOfMonthPatternSymbol(TimestampFieldFormat.NUMBER)
+        "dd"           -> DayOfMonthPatternSymbol(TimestampFieldFormat.ZERO_PADDED_NUMBER)
+
+        "H"            -> HourOfDayPatternSymbol(HourOfDayFormatFieldFormat.NUMBER_24_HOUR)
+        "HH"           -> HourOfDayPatternSymbol(HourOfDayFormatFieldFormat.ZERO_PADDED_NUMBER_24_HOUR)
+        "h"            -> HourOfDayPatternSymbol(HourOfDayFormatFieldFormat.NUMBER_12_HOUR)
+        "hh"           -> HourOfDayPatternSymbol(HourOfDayFormatFieldFormat.ZERO_PADDED_NUMBER_12_HOUR)
+
+        "a"            -> AmPmPatternSymbol()
+
+        "m"            -> MinuteOfHourPatternSymbol(TimestampFieldFormat.NUMBER)
+        "mm"           -> MinuteOfHourPatternSymbol(TimestampFieldFormat.ZERO_PADDED_NUMBER)
+
+        "s"            -> SecondOfMinutePatternPatternSymbol(TimestampFieldFormat.NUMBER)
+        "ss"           -> SecondOfMinutePatternPatternSymbol(TimestampFieldFormat.ZERO_PADDED_NUMBER)
+
+        "n"            -> NanoOfSecondPatternSymbol()
+
+        "X"            -> OffsetPatternSymbol(OffsetFieldFormat.ZERO_PADDED_HOUR_OR_Z)
+        "XX", "XXXX"   -> OffsetPatternSymbol(OffsetFieldFormat.ZERO_PADDED_HOUR_MINUTE_OR_Z)
+        "XXX", "XXXXX" -> OffsetPatternSymbol(OffsetFieldFormat.ZERO_PADDED_HOUR_COLON_MINUTE_OR_Z)
+
+        "x"            -> OffsetPatternSymbol(OffsetFieldFormat.ZERO_PADDED_HOUR)
+        "xx", "xxxx"   -> OffsetPatternSymbol(OffsetFieldFormat.ZERO_PADDED_HOUR_MINUTE)
+        "xxx", "xxxxx" -> OffsetPatternSymbol(OffsetFieldFormat.ZERO_PADDED_HOUR_COLON_MINUTE)
+
+        else           ->
+            //Note: the lexer *should* only return tokens that are full of capital S's so the precision is the length.
+            if (raw.first() == 'S')
+                FractionOfSecondPatternSymbol(raw.length)
+            else
+                throw EvaluationException(
+                    message = "Invalid symbol in timestamp format pattern",
+                    errorCode = ErrorCode.EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_SYMBOL,
+                    errorContext = propertyValueMapOf(Property.TIMESTAMP_FORMAT_PATTERN to raw),
+                    internal = false
+                )
     }
 }

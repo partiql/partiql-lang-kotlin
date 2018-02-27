@@ -66,17 +66,18 @@ class ToTimestampExprFunctionTest : EvaluatorBase() {
     fun to_timestamp_empty_format_pattern() {
         checkInputThrowingEvaluationException(
             "to_timestamp('doesnt matter', '')",
-            ErrorCode.EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN,
+            ErrorCode.EVALUATOR_INCOMPLETE_TIMESTAMP_FORMAT_PATTERN,
             mapOf(Property.LINE_NUMBER to 1L,
                   Property.COLUMN_NUMBER to 1L,
-                  Property.TIMESTAMP_FORMAT_PATTERN to ""))
+                  Property.TIMESTAMP_FORMAT_PATTERN to "",
+                  Property.TIMESTAMP_FORMAT_PATTERN_FIELDS to "YEAR"))
    }
 
     @Test
     fun to_timestamp_invalid_format_pattern() {
         checkInputThrowingEvaluationException(
             "to_timestamp('doesnt matter', 'asdfasdfasdf')",
-            ErrorCode.EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN,
+            ErrorCode.EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_TOKEN,
             mapOf(Property.LINE_NUMBER to 1L,
                   Property.COLUMN_NUMBER to 1L,
                   Property.TIMESTAMP_FORMAT_PATTERN to "asdfasdfasdf"))

@@ -1,5 +1,6 @@
 package com.amazon.ionsql.eval.builtins.timestamp
 
+import com.amazon.ionsql.eval.*
 import org.junit.*
 import org.junit.Assert.*
 
@@ -105,18 +106,13 @@ class TimestampFormatPatternLexerTest {
                                                     pattern("SSS"),
                                                     pattern("X"))
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test(expected = EvaluationException::class)
     fun openQuotes() {
         TimestampFormatPatternLexer().tokenize("y'TT")
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test(expected = EvaluationException::class)
     fun unknownCharacters() {
         TimestampFormatPatternLexer().tokenize("yyyyP")
-    }
-
-    @Test(expected = IllegalArgumentException::class)
-    fun emptyString() {
-        TimestampFormatPatternLexer().tokenize("")
     }
 }
