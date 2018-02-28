@@ -50,6 +50,27 @@ CHAR_LENGTH('😁😞😸😸') -- Returns 4 (non-BMP unicode characters)
 CHAR_LENGTH('eࠫ') -- Returns 2 because 'eࠫ' is two codepoints: the letter 'e' and combining character U+032B
 ```
 
+### COALESCE
+
+Evaluates the arguments in order and returns the first non unknown, i.e. first non `null` or `missing`. This function 
+does **not** propagate `null` and `missing`.
+
+    COALESCE(<expression>, [expression...])
+
+#### Examples
+
+```sql  
+COALESCE(1) -- 1
+COALESCE(null) -- null
+COALESCE(null, null) -- null
+COALESCE(missing) -- null
+COALESCE(missing, missing) -- null
+COALESCE(1, null) -- 1
+COALESCE(null, null, 1) -- 1
+COALESCE(null, 'string') -- 'string'
+COALESCE(missing, 1) -- 1
+```
+
 ### DATE_ADD
 
 Increments date part by specified quantity for timestamp. Subtractions can be done by using a negative quantity
@@ -167,6 +188,28 @@ SIZE(<<'foo', 'bar'>>) -- returns 2
 SIZE(`{foo: bar}`) -- returns 1
 SIZE(`[{foo: 1}, {foo: 2}]`) -- returns 2
 SIZE(12) -- throws an exception
+```
+
+### NULLIF
+
+Returns null if both specified expressions are equal, otherwise returns the first argument. Equality here is defined as 
+the `=` operator in IonSQL, i.e. `a` and `b` are considered equal by `NULLIF` if `a = b` is true 
+
+This function does **not** propagate `null` and `missing`.
+
+    NULLIF(expression1, expression2) 
+
+#### Examples
+
+```sql  
+NULLIF(1, 1) -- null
+NULLIF(1, 2) -- 1
+NULLIF(1.0, 1) -- null
+NULLIF(1, '1') -- 1
+NULLIF([1], [1]) -- null
+NULLIF(1, NULL) -- 1
+NULLIF(null, null) -- null
+NULLIF(missing, null) -- null
 ```
     
 ### SUBSTRING
