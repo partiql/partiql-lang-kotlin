@@ -4,12 +4,17 @@
 
 package com.amazon.ionsql.eval
 
-import com.amazon.ionsql.*
-import com.amazon.ionsql.errors.*
-import com.amazon.ionsql.syntax.*
-import com.amazon.ionsql.util.*
+import com.amazon.ionsql.Base
+import com.amazon.ionsql.IonSqlException
+import com.amazon.ionsql.errors.ErrorCode
+import com.amazon.ionsql.errors.Property
+import com.amazon.ionsql.syntax.IonSqlParser
+import com.amazon.ionsql.util.exprValue
+import com.amazon.ionsql.util.get
+import com.amazon.ionsql.util.softAssert
+import com.amazon.ionsql.util.to
 import org.junit.Assert
-import kotlin.reflect.*
+import kotlin.reflect.KClass
 
 abstract class EvaluatorBase : Base() {
 
@@ -46,7 +51,7 @@ abstract class EvaluatorBase : Base() {
         val expectedIon = literal(expected)
         val exprValue = eval(source, compileOptions, session)
 
-        AssertExprValue(exprValue).apply { assertIonValue(expectedIon) }.run(block)
+        AssertExprValue(exprValue, message = source).apply { assertIonValue(expectedIon) }.run(block)
     }
 
     /**
@@ -73,7 +78,7 @@ abstract class EvaluatorBase : Base() {
      * @param session [EvaluationSession] used for evaluation
      */
     protected fun eval(source: String,
-                       compileOptions: CompileOptions,
+                       compileOptions: CompileOptions = CompileOptions.standard(),
                        session: EvaluationSession = EvaluationSession.standard()): ExprValue {
 
         val e = EvaluatingCompiler(ion, compileOptions = compileOptions)
@@ -142,7 +147,4 @@ abstract class EvaluatorBase : Base() {
             }
         }
     }
-
-    protected fun sourceLocationProperties(lineNum: Long, colNum: Long) =
-        mapOf(Property.LINE_NUMBER to lineNum, Property.COLUMN_NUMBER to colNum)
 }

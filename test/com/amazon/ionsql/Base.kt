@@ -15,7 +15,9 @@ import java.util.*
 
 import com.amazon.ionsql.errors.Property.*
 import com.amazon.ionsql.eval.*
+import com.amazon.ionsql.util.*
 import org.assertj.core.api.*
+import kotlin.reflect.*
 
 
 @RunWith(JUnitParamsRunner::class)
@@ -25,7 +27,8 @@ abstract class Base : Assert() {
     fun literal(text: String): IonValue = ion.singleValue(text)
 
     inner class AssertExprValue(val exprValue: ExprValue,
-                                val bindingsTransform: Bindings.() -> Bindings = { this }) {
+                                val bindingsTransform: Bindings.() -> Bindings = { this },
+                                val message: String? = null) {
         fun assertBindings(predicate: Bindings.() -> Boolean) =
             assertTrue(
                 exprValue.bindings.bindingsTransform().predicate()
@@ -38,7 +41,7 @@ abstract class Base : Assert() {
         fun assertNoBinding(name: String) = assertBindings { get(BindingName(name, BindingCase.INSENSITIVE)) == null }
 
         fun assertIonValue(expected: IonValue) {
-            assertEquals(expected, exprValue.ionValue)
+            assertEquals(message, expected, exprValue.ionValue)
         }
 
         fun assertIterator(expected: Collection<IonValue>) {
@@ -55,8 +58,12 @@ abstract class Base : Assert() {
      * @param ex actual exception thrown by test
      * @param expectedValues expected values for errorContext
      */
-    protected fun <T : IonSqlException> SoftAssertions.checkErrorAndErrorContext(errorCode: ErrorCode?, ex: T, expectedValues: Map<Property, Any>) {
-        assertEquals(errorCode, ex.errorCode)
+    fun <T : IonSqlException> SoftAssertions.checkErrorAndErrorContext(errorCode: ErrorCode?, ex: T, expectedValues: Map<Property, Any>) {
+        if(ex.errorCode == null && errorCode != null) {
+            fail("Expected an error code but exception error code was null, message was: ${ex.message}")
+        } else {
+            this.assertThat(ex.errorCode).isEqualTo(errorCode)
+        }
         val errorContext = ex.errorContext
 
         if(errorCode != null) {
@@ -79,7 +86,28 @@ abstract class Base : Assert() {
 
         }
 
-
+    /**
+     * Asserts that the specified [block] throws an [EvaluationException] and its [errorCode] and
+     * [expectErrorContextValues] match the expected values.
+     */
+    protected fun assertThrowsEvaluationException(errorCode: ErrorCode? = null,
+                                                  expectErrorContextValues: Map<Property, Any>,
+                                                  cause: KClass<out Throwable>? = null,
+                                                  block: () -> Unit) {
+        softAssert {
+            try {
+                block()
+                fail("Expected EvaluationException but there was no Exception")
+            }
+            catch (e: EvaluationException) {
+                if (cause != null) assertThat(e).hasRootCauseExactlyInstanceOf(cause.java)
+                checkErrorAndErrorContext(errorCode, e, expectErrorContextValues)
+            }
+            catch (e: Exception) {
+                fail("Expected EvaluationException but a different exception was thrown \n\t  $e")
+            }
+        }
+    }
     /**
      * Check that for the given [errorCode], [errorContext] thrown by the test, it contains all the [expected] values
      * specified by the test.
@@ -126,7 +154,12 @@ abstract class Base : Assert() {
                 BINDING_NAME,
                 LIKE_ESCAPE,
                 LIKE_PATTERN,
-                LIKE_VALUE
+                LIKE_VALUE,
+                BINDING_NAME_MATCHES,
+                FUNCTION_NAME,
+                TIMESTAMP_FORMAT_PATTERN_FIELDS,
+                EXPECTED_ARGUMENT_TYPES,
+                ACTUAL_ARGUMENT_TYPES
                     -> assertThat(actualPropertyValue?.stringValue()).withFailMessage(message).isEqualTo(entry.value)
                 TOKEN_TYPE,
                 EXPECTED_TOKEN_TYPE_1_OF_2,
@@ -138,7 +171,11 @@ abstract class Base : Assert() {
                 EXPECTED_ARITY_MIN,
                 EXPECTED_ARITY_MAX
                     -> assertThat(actualPropertyValue?.integerValue()).withFailMessage(message).isEqualTo(entry.value)
+
             }
         }
     }
+
+    protected fun sourceLocationProperties(lineNum: Long, colNum: Long) =
+        mapOf(Property.LINE_NUMBER to lineNum, Property.COLUMN_NUMBER to colNum)
 }

@@ -270,6 +270,22 @@ enum class ErrorCode(private val category: ErrorCategory,
         LOC_TOKEN,
         "expected identifier for AT name"),
 
+    PARSE_INVALID_CONTEXT_FOR_WILDCARD_IN_SELECT_LIST(
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "Invalid use of * in select list"),
+
+    //SQB = SQuare Bracket
+    PARSE_CANNOT_MIX_SQB_AND_WILDCARD_IN_SELECT_LIST(
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "Cannot mix [] and * in the same expression in a select list"),
+
+    PARSE_ASTERISK_IS_NOT_ALONE_IN_SELECT_LIST(
+        ErrorCategory.PARSER,
+        LOCATION,
+        "Other expressions may not be present in the select list when '*' is used without dot notation."),
+
     //Evaluator errors
 
     EVALUATOR_BINDING_DOES_NOT_EXIST(
@@ -328,10 +344,82 @@ enum class ErrorCode(private val category: ErrorCategory,
             "got: ${errorContext?.get(Property.ACTUAL_ARGUMENT_TYPES) ?: UNKNOWN}"
     },
 
+    /**
+     * This is a generic error thrown whenever Java's [DateTimeFormatter] throws an exception when attempting to
+     * parse a timestamp.  Ideally, this doesn't happen and the invalidity is detected by
+     * [com.amazon.ionsql.eval.builtins.timestamp.FormatPattern] instead.  This needs to stick around until we
+     * replace [DateTimeFormatter].
+     * TODO:  remove this after replacing [DateTimeFormatter].
+     */
     EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.TIMESTAMP_FORMAT_PATTERN),
-        "invalid timestamp format pattern"),
+        "") {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "Invalid timestamp format pattern: '${errorContext?.get(Property.TIMESTAMP_FORMAT_PATTERN)}'."
+    },
+
+    EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_TOKEN(
+        ErrorCategory.EVALUATOR,
+        LOCATION + setOf(Property.TIMESTAMP_FORMAT_PATTERN),
+        "") {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "Timestamp format pattern contains invalid token: '${errorContext?.get(Property.TIMESTAMP_FORMAT_PATTERN)}'."
+    },
+
+    EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_SYMBOL(
+        ErrorCategory.EVALUATOR,
+        LOCATION + setOf(Property.TIMESTAMP_FORMAT_PATTERN),
+        "") {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "Timestamp format pattern contains invalid symbol: '${errorContext?.get(Property.TIMESTAMP_FORMAT_PATTERN)}'."
+    },
+
+    EVALUATOR_UNTERMINATED_TIMESTAMP_FORMAT_PATTERN_TOKEN(
+        ErrorCategory.EVALUATOR,
+        LOCATION + setOf(Property.TIMESTAMP_FORMAT_PATTERN),
+        "") {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "Timestamp format pattern contains unterminated token: '${errorContext?.get(Property.TIMESTAMP_FORMAT_PATTERN)}'."
+    },
+
+
+    EVALUATOR_INCOMPLETE_TIMESTAMP_FORMAT_PATTERN(
+        ErrorCategory.EVALUATOR,
+        LOCATION + setOf(Property.TIMESTAMP_FORMAT_PATTERN, Property.TIMESTAMP_FORMAT_PATTERN_FIELDS),
+        "") {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "Timestamp format pattern '${errorContext?.get(Property.TIMESTAMP_FORMAT_PATTERN)}' " +
+            "requires additional fields '${errorContext?.get(Property.TIMESTAMP_FORMAT_PATTERN_FIELDS)}'."
+    },
+
+    EVALUATOR_TIMESTAMP_FORMAT_PATTERN_DUPLICATE_FIELDS(
+        ErrorCategory.EVALUATOR,
+        LOCATION + setOf(Property.TIMESTAMP_FORMAT_PATTERN, Property.TIMESTAMP_FORMAT_PATTERN_FIELDS),
+        "") {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "The format pattern '${errorContext?.get(Property.TIMESTAMP_FORMAT_PATTERN)}' contains multiple format " +
+            "specifiers representing the timestamp field '${errorContext?.get(Property.TIMESTAMP_FORMAT_PATTERN_FIELDS)}'."
+    },
+
+    EVALUATOR_TIMESTAMP_FORMAT_PATTERN_HOUR_CLOCK_AM_PM_MISMATCH(
+        ErrorCategory.EVALUATOR,
+        LOCATION + setOf(Property.TIMESTAMP_FORMAT_PATTERN),
+        "") {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "The format pattern '${errorContext?.get(Property.TIMESTAMP_FORMAT_PATTERN)}' contains a 12-hour hour of " +
+            "day format symbol but doesn't also contain an AM/PM field, or it contains a 24-hour hour of day format " +
+            "specifier and contains an AM/PM field."
+    },
+
+    EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_SYMBOL_FOR_PARSING(
+        ErrorCategory.EVALUATOR,
+        LOCATION + setOf(Property.TIMESTAMP_FORMAT_PATTERN),
+        "") {
+            override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+                "The format pattern '${errorContext?.get(Property.TIMESTAMP_FORMAT_PATTERN)}' contains a valid format " +
+                "symbol that cannot be applied to timestamp parsing."
+    },
 
     EVALUATOR_ION_TIMESTAMP_PARSE_FAILURE(
         ErrorCategory.EVALUATOR,
@@ -360,6 +448,8 @@ enum class ErrorCode(private val category: ErrorCategory,
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "Binding name was '${errorContext?.get(Property.BINDING_NAME)}'"
     },
+
+
 
     EVALUATOR_LIKE_INVALID_INPUTS(
         ErrorCategory.EVALUATOR,

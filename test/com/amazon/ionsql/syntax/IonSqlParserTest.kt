@@ -4,6 +4,7 @@
 
 package com.amazon.ionsql.syntax
 
+import com.amazon.ionsql.errors.*
 import com.amazon.ionsql.util.*
 import org.junit.*
 
@@ -253,9 +254,22 @@ class IonSqlParserTest : IonSqlParserBase() {
 
     @Test
     fun selectStar() = assertExpression(
-        "(select (project (*)) (from (id table1 case_insensitive)))",
+        "(select (project (list (project_all))) (from (id table1 case_insensitive)))",
         "SELECT * FROM table1"
     )
+
+    @Test
+    fun selectAliasDotStar() = assertExpression(
+        "(select (project (list (project_all (id t case_insensitive)))) (from (as t (id table1 case_insensitive))))",
+        "SELECT t.* FROM table1 AS t"
+    )
+
+    @Test
+    fun selectAliasAliasDotStar() = assertExpression(
+        "(select (project (list (project_all (path (id a case_insensitive) (case_insensitive (lit \"b\")))))) (from (as t (id table1 case_insensitive))))",
+        "SELECT a.b.* FROM table1 AS t"
+    )
+
 
     @Test
     fun selectWithFromAt() = assertExpression(
@@ -273,7 +287,7 @@ class IonSqlParserTest : IonSqlParserBase() {
     fun selectWithFromUnpivot() = assertExpression(
         """
         (select
-          (project (*))
+          (project (list (project_all)))
           (from (unpivot (id item case_insensitive)))
         )
         """,
@@ -315,13 +329,13 @@ class IonSqlParserTest : IonSqlParserBase() {
 
     @Test
     fun selectAllStar() = assertExpression(
-        "(select (project (*)) (from (id table1 case_insensitive)))",
+        "(select (project (list (project_all))) (from (id table1 case_insensitive)))",
         "SELECT ALL * FROM table1"
     )
 
     @Test
     fun selectDistinctStar() = assertExpression(
-        "(select (project_distinct (*)) (from (id table1 case_insensitive)))",
+        "(select (project_distinct (list (project_all))) (from (id table1 case_insensitive)))",
         "SELECT DISTINCT * FROM table1"
     )
 
@@ -589,11 +603,11 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun nestedSelectNoWhere() = assertExpression(
         """(select
-             (project (*))
+             (project (list (project_all)))
              (from
                (path
                  (select
-                   (project (*))
+                   (project (list (project_all)))
                    (from (id x case_insensitive))
                  )
                  (case_insensitive (lit "a"))
@@ -607,11 +621,11 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun nestedSelect() = assertExpression(
         """(select
-             (project (*))
+             (project (list (project_all)))
              (from
                (path
                  (select
-                   (project (*))
+                   (project (list (project_all)))
                    (from (id x case_insensitive))
                    (where (id b case_insensitive))
                  )
@@ -626,7 +640,7 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun selectLimit() = assertExpression(
         """(select
-             (project (*))
+             (project (list (project_all)))
              (from (id a case_insensitive))
              (limit (lit 10))
            )
@@ -637,7 +651,7 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun selectWhereLimit() = assertExpression(
         """(select
-             (project (*))
+             (project (list (project_all)))
              (from (id a case_insensitive))
              (where (= (id a case_insensitive) (lit 5)))
              (limit (lit 10))
@@ -943,7 +957,7 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun likeColNameLikeColNameDot() = assertExpression(
         """
-        (select (project (*)) (from (as a (id data case_insensitive))) (where (like (path (id a case_insensitive) (case_insensitive (lit "name"))) (path (id b case_insensitive) (case_insensitive (lit "pattern"))))))
+        (select (project (list (project_all))) (from (as a (id data case_insensitive))) (where (like (path (id a case_insensitive) (case_insensitive (lit "name"))) (path (id b case_insensitive) (case_insensitive (lit "pattern"))))))
         """,
         "SELECT * FROM data as a WHERE a.name LIKE b.pattern"
     )
@@ -951,7 +965,7 @@ class IonSqlParserTest : IonSqlParserBase() {
     @Test
     fun likeColNameLikeColNamePqth() = assertExpression(
         """
-        (select (project (*)) (from (as a (id data case_insensitive))) (where (like (path (id a case_insensitive) (case_insensitive (lit "name"))) (path (id b case_insensitive) (case_insensitive (lit "pattern"))))))
+        (select (project (list (project_all))) (from (as a (id data case_insensitive))) (where (like (path (id a case_insensitive) (case_insensitive (lit "name"))) (path (id b case_insensitive) (case_insensitive (lit "pattern"))))))
         """,
         "SELECT * FROM data as a WHERE a.name LIKE b.pattern"
     )
@@ -1138,7 +1152,7 @@ class IonSqlParserTest : IonSqlParserBase() {
                                                "extract(timezone_minute from a)")
 
     @Test
-    fun semicolonAtEndOfQuery() = assertExpression("(select (project (*)) (from (bag (lit 1))))",
+    fun semicolonAtEndOfQuery() = assertExpression("(select (project (list (project_all))) (from (bag (lit 1))))",
                                                    "SELECT * FROM <<1>>;")
 
     @Test

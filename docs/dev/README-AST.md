@@ -1,4 +1,4 @@
-# Ion SQL AST
+## Ion SQL AST
 The `IonSqlParser` implementation generates an AST representation in Ion based on
 s-expressions.
 
@@ -35,7 +35,7 @@ Where `name` is the AST node name, which can be one of:
 * `(meta <NODE EXPR> <STRUCT>)` - Metadata about an enclosing AST node, from a semantic perspective
   this is a *no-op*, but can provide diagnostic context such as line/column position.
 
-## Operators
+### Operators
 Currently, the following unary operators are defined in the form `(<OPNAME> <VALUE EXPR>)`:
 
 * `+` - Unary plus.
@@ -57,7 +57,7 @@ The following additional operators are defined:
 * `(between <VALUE EXPR> <START EXPR> <END EXPR>)` - Interval containment.
 * `(not_between <VALUE EXPR> <START EXPR> <END EXPR>)` - Interval non-containment.
 
-## Aggregate Functions
+### Aggregate Functions
 For `(call_agg ...)`, the `<QUANTIFIER SYMBOL>` is one of `all` or `distinct`.
 In most contexts, `(call_agg ...)` evaluates similar to `(call ...)` with the
 exception that the input arguments are generally collections.  Within the `SELECT` list and
@@ -67,7 +67,7 @@ as per SQL rules.
 
 `(call_agg_wildcard ...)` is a special form that captures the legacy syntax form of `COUNT(*)`
 
-## LIKE operator
+### LIKE operator
 
 The `LIKE` operator can be a binary or ternary operator depending on the input. The grammar 
 allows for 
@@ -87,30 +87,40 @@ In the second case where an escape expression is provided `LIKE` translates to a
 * `(like <NODE EXPR1> <NODE EXPR2> <NODE EXPR3>)`
 * `(not_like <NODE EXPR1> <NODE EXPR2> <NODE EXPR3>)`
 
-## Identifiers
+### Identifiers
 
 The `id` node may include as its last element a `case_sensitive` or `case_insensitive` symbol to indicate if the 
 binding is to be looked up with consideration of the identifier case or not.  If not specified, default is  
 `case_sensitive`.  
 
-## Path Component Expressions
+### Path Component Expressions
 
 In addition to any normal expression, a path component can be the special form `(*)` which
 is the wildcard that is syntactically equivalent to the path component `[*]` and
 `(* unpivot)` which is syntactically equivalent to the path component `.*`.
 
-Path component expressions that evaluate to a string value may be enclosed within a `case_sensitive` or 
+Only quoted and unquoted identifiers that are used as path component expressions are enclosed within a `case_sensitive` or 
 `case_insensitive` annotating s-exp to indicate if the binding is to be looked up considering identifier case.  If not 
 enclosed in such an s-exp, the default is case-sensitive.  
 
-For example, `foo.bar` is represented as: `(path (id foo) (case_insensitive (lit "bar")))` while `foo['bar']` may be 
-represented as: `(path (id foo) (lit 'bar'))` or `(path (id foo) (case_sensitive (lit 'bar')))`.
+Examples:
 
-## `SELECT` Expressions
+| Expresssion | AST Representation | Explanation |
+| ----------- | ------------------ | ----------- |
+| `foo.bar` | `(path (id foo case_insensitive) (case_insensitive (lit "bar")))` | Case insensitive lookup of up field `bar` within `foo`. | 
+| `foo."bar"` | `(path (id foo case_insensitive) (case_sensitive (lit "bar")))` | Case sensitive lookup of up field `bar` within `foo`. |
+| `foo['bar']` | `(path (id foo case_insensitive) (lit "bar"))` | Case sensitive lookup of up field `bar` within `foo`. |
+| `foo[bar]` | `(path (id foo case_insensitive) (id bar case_insensitive))` | If `bar` is a string, case sensitive lookup of the field identified by variable `bar` within `foo`.  If `bar` is an integer, lookup of the value at index `bar`. |
+| `foo[1]` | `(path (id foo case_insensitive) (lit 1))` | Lookup of the value at index `1` within `bar`. |
+
+Note that in the last three cases above, the path component expressions (`(lit "bar")`, `(id bar case_insensitive)` 
+and `(lit 1)`) are not wrapped in a `case_[in]sensitive` node because they are expressions that have values.  When the 
+value of the path component expression is a string, lookup will be case sensitiive.
+
+### `SELECT` Expressions
 The first position of the `select` node is the projection node which is marked by
 `(project <PROJECT-EXPR>)` or `(project_distinct <PROJECT-EXPR>)` which must be one of:
 
-* `(*)` - Tuple wildcard projection, mapping to `SELECT * ...`
 * `(list <ITEM EXPR>...)` - Projection tuple-list, the expression node could have
   column names defined with an `(as ...)` node.
 * `(value <VALUE EXPR>)` - Projects a direct value.
@@ -125,7 +135,29 @@ All other nodes are optional and not positionally defined.  Possible nodes:
 * `(having <CONDITIONAL EXPR>)` - The `HAVING` clause filter expression.
 * `(limit <EXPR>)` - The `LIMIT` clause expression. 
 
-### `FROM` Clause
+### `SELECT *, alias.*`
+
+Wildcard projection such as `SELECT *` or `SELECT alias.*` is reperesented with the `(project_all [<EXPR>])` node).
+
+Examples:
+
+| Query | AST Representation | 
+| ----- | ------------------ |
+| `SELECT * FROM foo` | `(select (project (list (project_all))) (from (id foo case_insensitive)))` | 
+| `SELECT foo.* FROM foo` | `(select (project (list (project_all (id foo case_insensitive)))) (from (id foo case_insensitive)))` |
+| `SELECT foo.bar.* FROM foo` | `(select (project (list (project_all (path (id foo case_insensitive) (case_insensitive (lit "bar")))))) (from (id foo case_insensitive)))` |
+
+Note that the IonSQL++ reference parser does not allow a single `*` without dot notation to be used in 
+combination with other expressions.  For example, the following are prevented: 
+
+```sql
+    SELECT *, * FROM foo
+    SELECT *, 1 + 1 as c FROM foo
+    SELECT *, colunm_a FROM foo
+    SELECT *, bar.* FROM foo, bar
+```
+
+#### `FROM` Clause
 The single `<SOURCE EXPR>` in this clause is as follows:
 
 * Any top-level expression, where the source can be aliased with the `(as ...)` node.
@@ -158,7 +190,7 @@ For example, the clause `FROM a, b CROSS JOIN c LEFT JOIN d ON x = y` would be t
 )
 ```
 
-### `GROUP BY` Clause
+#### `GROUP BY` Clause
 The `(group ...)` and `(group_partial ...)` clause have one mandatory element:
 
 * `(by <VALUE EXPR>...)` - the expressions to group by.  Each clause may be wrapped in an
@@ -178,7 +210,7 @@ For example, the clause `GROUP PARTIAL BY age GROUP AS age_group`:
 )
 ```
 
-## `PIVOT` Expressions
+### `PIVOT` Expressions
 The `(pivot ...)` is very similar to the `(select ...)` form with the only difference that the 
 first element is **not** a `(project ...)` node.  Instead, the first node is a
 `(member <NAME EXPR> <VALUE EXPR>)` form, where `<NAME EXPR>` is the computed
@@ -196,7 +228,7 @@ For example, the expression `PIVOT value AT name FROM data`, translates to:
 )
 ```
 
-## `CAST` Expressions
+### `CAST` Expressions
 The first position of a `cast` node is the value expression node to be casted.  The
 second position is a `type` node which consists of a name and integral parameters for said
 type specification.
@@ -210,7 +242,7 @@ Example:
 )
 ```
 
-## `CASE` Expressions
+### `CASE` Expressions
 There are two supported forms of `CASE` expressions, the first is the `simple_case` which is
 similar to `switch` in C-like languages, and the second is `searched_case` which is
 more like a sequence of `if`/`else if`/`else` branches.
@@ -280,7 +312,7 @@ Another example, for `CASE WHEN name = 'zoe' THEN 1 WHEN name = 'kumo' THEN 2 EL
 ```
 
 
-## Meta Nodes
+### Meta Nodes
 Meta nodes are no-ops from a semantic perspective.  They provide meta-data about node the
 encapsulate.  Meta nodes have a single child node at the first position and a single struct
 providing the contextual metadata.  These nodes can appear anywhere, and currently provide
@@ -302,5 +334,5 @@ Example:
 
 The above would indicate the the integer literal `5` was located at line 1, column 1.
 
-## TODO
+### TODO
 * Support `ORDER BY`.

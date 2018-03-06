@@ -333,8 +333,19 @@ private fun Number.toLongFailingOverflow(metadata: NodeMetadata?): Long {
         errIntOverflow(metadata?.toErrorContext())
     }
 
-    return this.toLong()
+    return when {
+        // BigDecimal.toLong inflates the internal BigInteger to the scale before converting it to a long.
+        // For example to convert 1e-6000 it needs to create a BigInteger with value equal to
+        // `unscaledNumber^(10^abs(scale))` to them drop it and return 0L. The BigInteger creation is very
+        // expensive and completely wasted
+        //
+        // The division to integral skips all that, see benchmarks in
+        // https://code.amazon.com/packages/IonSqlBenchmarks/commits/257d4842fbd4b8f1481467fb99aa48029ba03a77
+        this is BigDecimal -> this.divideToIntegralValue(BigDecimal.ONE).toLong()
+        else                                     -> this.toLong()
+    }
 }
+
 
 
 /**

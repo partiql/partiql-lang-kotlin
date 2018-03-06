@@ -144,7 +144,7 @@ class IntTest : EvaluatorBase() {
             var left =  RANDOM.nextInt(1_000).toLong()
             if(i % 2 == 0) left = -left
 
-            val right = RANDOM.nextInt(1_000).toLong()
+            val right = RANDOM.nextInt(1_000).toLong() + 1 // to avoid being 0
 
             Triple(left, right, left / right)
         }.mapTo(parameters, transform)
@@ -184,6 +184,12 @@ class IntTest : EvaluatorBase() {
     fun castHugeNegativeDecimal() = assertThrows("Int overflow or underflow") {
         voidEval("cast(-1e2147483609 as int)")
     }
+
+    @Test
+    fun castAlmostZeroDecimal() = assertEval("cast(1e-2147483609 as int)", "0")
+
+    @Test
+    fun castAlmostOneDecimal() = assertEval("cast((1.0 + 1e-2147483609) as int)", "1")
 
     private fun assertPair(pair: Pair<String, String>) {
         val (query, expected) = pair

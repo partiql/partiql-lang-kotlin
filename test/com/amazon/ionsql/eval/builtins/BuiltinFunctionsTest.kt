@@ -28,10 +28,16 @@ class BuiltinFunctionsTest : EvaluatorBase() {
     //Even though it is visually merged with the preceding letter when displayed, it still counts as a distinct codepoint.
     @Test fun substringOldSyntaxUnicode_4() = assertEval("substring('abcde\u0832fgh' from 3 for 6)", "\"cde\u0832fg\"")
 
-    @Test(expected = EvaluationException::class)
-    fun substringOldSyntaxError_1() = assertEval("substring(123456789 from 1 for 3)", "\"123\"")
-    @Test(expected = EvaluationException::class)
-    fun substringOldSyntaxError_2() = assertEval("substring('abcdefghi' from 1 for -1)", "\"a\"")
+    @Test
+    fun substringOldSyntaxError_1() = checkInputThrowingEvaluationException("substring(123456789 from 1 for 3)", expectErrorContextValues = mapOf())
+    @Test
+    fun substringOldSyntaxError_2() = checkInputThrowingEvaluationException("substring('abcdefghi' from 1 for -1)", expectErrorContextValues = mapOf())
+    @Test
+    fun substringOldSyntaxError_3() = checkInputThrowingEvaluationException("substring('abcdefghi' from 1.0)", expectErrorContextValues = mapOf())
+    @Test
+    fun substringOldSyntaxError_4() = checkInputThrowingEvaluationException("substring('abcdefghi' from 1.0 for 1)", expectErrorContextValues = mapOf())
+    @Test
+    fun substringOldSyntaxError_5() = checkInputThrowingEvaluationException("substring('abcdefghi' from 1 for 1.0)", expectErrorContextValues = mapOf())
 
     @Test fun substringOldSyntaxNullArg_1() = assertEval("substring(null from 1)", "null")
     @Test fun substringOldSyntaxNullArg_2() = assertEval("substring('abc' from null)", "null")
@@ -64,10 +70,16 @@ class BuiltinFunctionsTest : EvaluatorBase() {
     @Test fun substringNewSyntaxUnicode_3() = assertEval("substring('話家身圧費谷料村能計税金', -3, 6)", "\"話家\"")
     @Test fun substringNewSyntaxUnicode_4() = assertEval("substring('abcde\u0832fgh', 3, 6)", "\"cde\u0832fg\"")
 
-    @Test(expected = EvaluationException::class)
-    fun substringNewSyntaxError_1() = assertEval("substring(123456789, 1, 3)", "\"123\"")
-    @Test(expected = EvaluationException::class)
-    fun substringNewSyntaxError_2() = assertEval("substring('abcdefghi', 1, -1)", "\"a\"")
+    @Test
+    fun substringNewSyntaxError_1() = checkInputThrowingEvaluationException("substring(123456789, 1, 3)", expectErrorContextValues = mapOf())
+    @Test
+    fun substringNewSyntaxError_2() = checkInputThrowingEvaluationException("substring('abcdefghi', 1, -1)", expectErrorContextValues = mapOf())
+    @Test
+    fun substringNewSyntaxError_3() = checkInputThrowingEvaluationException("substring('abcdefghi', 1.0)", expectErrorContextValues = mapOf())
+    @Test
+    fun substringNewSyntaxError_4() = checkInputThrowingEvaluationException("substring('abcdefghi', 1.0, 1)", expectErrorContextValues = mapOf())
+    @Test
+    fun substringNewSyntaxError_5() = checkInputThrowingEvaluationException("substring('abcdefghi', 1, 1.0)", expectErrorContextValues = mapOf())
 
     @Test fun substringNewSyntaxNullArg_1() = assertEval("substring(null, 1)", "null")
     @Test fun substringNewSyntaxNullArg_2() = assertEval("substring('abc', null)", "null")

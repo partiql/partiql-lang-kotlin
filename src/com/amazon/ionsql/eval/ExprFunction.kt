@@ -40,9 +40,9 @@ interface ExprFunction {
  * @param arity function arity
  * @param ion current Ion system
  */
-abstract class NullPropagatingExprFunction(val name: String,
-                                           val arity: IntRange,
-                                           val ion: IonSystem) : ExprFunction {
+abstract class NullPropagatingExprFunction(override val name: String,
+                                           override val arity: IntRange,
+                                           val ion: IonSystem) : ArityCheckingTrait, ExprFunction {
     constructor(name: String, arity: Int, ion: IonSystem) : this(name, (arity..arity), ion)
 
     override fun call(env: Environment, args: List<ExprValue>): ExprValue {
@@ -55,13 +55,23 @@ abstract class NullPropagatingExprFunction(val name: String,
         }
     }
 
+    abstract fun eval(env: Environment, args: List<ExprValue>): ExprValue
+}
+
+/**
+ * "Trait" that provides [checkArity] function to validate a function arity
+ */
+internal interface ArityCheckingTrait {
+    val name: String
+    val arity: IntRange
+
     private fun arityErrorMessage(argSize: Int) = when {
-        arity.first == 1 && arity.last == 1-> "$name takes a single argument, received: $argSize"
-        arity.first == arity.last -> "$name takes exactly ${arity.first} arguments, received: $argSize"
-        else -> "$name takes between ${arity.first} and ${arity.last} arguments, received: $argSize"
+        arity.first == 1 && arity.last == 1 -> "$name takes a single argument, received: $argSize"
+        arity.first == arity.last           -> "$name takes exactly ${arity.first} arguments, received: $argSize"
+        else                                -> "$name takes between ${arity.first} and ${arity.last} arguments, received: $argSize"
     }
 
-    private fun checkArity(args: List<ExprValue>) {
+    fun checkArity(args: List<ExprValue>) {
         if (!arity.contains(args.size)) {
             val errorContext = PropertyValueMap()
             errorContext[Property.EXPECTED_ARITY_MIN] = arity.first
@@ -73,6 +83,4 @@ abstract class NullPropagatingExprFunction(val name: String,
                                       internal = false)
         }
     }
-
-    abstract fun eval(env: Environment, args: List<ExprValue>): ExprValue
 }

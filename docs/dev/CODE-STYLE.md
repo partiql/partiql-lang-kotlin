@@ -124,6 +124,28 @@ Be mindful of what should be exposed to clients and what should be internal to t
 
 **TODO** example
 
+In particular, instance dispatched extension methods should always be private, e.g.:
+
+```kotlin
+class SomeClass {
+    //...
+    
+    fun A.fooOperation() {  // <-- this is a no-no because it is public.
+        //...
+    }
+    
+    
+    protected fun A.barOperation() {  // <-- this is a no-no because it is protected.
+        //...
+    }
+    
+    private fun A.batOperation() { // <-- this is ok because it is private.
+        //...
+    }
+    //...
+}
+```
+
 # Java Interop
 
 Use `@JvmFiled` for public companion objects `val`s. Doing so will expose them in a java like style, e.g.:

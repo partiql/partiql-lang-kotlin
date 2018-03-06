@@ -8,6 +8,14 @@
   <import file="${happytrails.root}/happytrails.xml"/>
   <ht:import file="happier-kotlin-trails.xml"/>
 
+  <!-- Custom build targets --> 
+
+  <!-- Warnings as errors --> 
+  <target name="werr">
+      <property name="sources.kotlinc.extra.args" value="-Werror"/>
+      <antcall target="release" inheritAll="true"/>  <!-- call default target -->
+  </target>
+
   <!-- JMH infrastructure -->
   <property name="bench.cli.args"   value="" />
   <property name="bench.data.key"   value="IonSQLSandbox-bench-data.zip" />

@@ -86,8 +86,13 @@ class EvaluatingCompilerExceptionsTest : EvaluatorBase() {
     }
 
     @Test
-    fun substringWrongType() = assertThrows("Argument 2 of substring was not numeric", NodeMetadata(1, 1)) {
+    fun substringWrongTypeSecondArgument() = assertThrows("Argument 2 of substring was not INT.", NodeMetadata(1, 1)) {
         voidEval("substring('abcdefghi' from '1')")
+    }
+
+    @Test
+    fun substringWrongTypeThirdArgument() = assertThrows("Argument 3 of substring was not INT.", NodeMetadata(1, 1)) {
+        voidEval("substring('abcdefghi' from 1 for '1')")
     }
 
     @Test
@@ -153,4 +158,16 @@ class EvaluatingCompilerExceptionsTest : EvaluatorBase() {
     fun utcnowWithArgument() = assertThrows("utcnow() takes no arguments", NodeMetadata(1, 1)) {
         voidEval("utcnow(1)")
     }
+
+    @Test // https://i.amazon.com/issues/IONSQL-272
+    fun ambiguousFieldOnStructCaseSensitiveLookup() = checkInputThrowingEvaluationException(
+        """ select "repeated" from `[{repeated:1, repeated:2}]` """,
+        ErrorCode.EVALUATOR_AMBIGUOUS_BINDING,
+        sourceLocationProperties(1, 9) + mapOf(Property.BINDING_NAME to "repeated", Property.BINDING_NAME_MATCHES to "repeated, repeated"))
+
+    @Test // https://i.amazon.com/issues/IONSQL-272
+    fun ambiguousFieldOnStructCaseInsensitiveLookup() = checkInputThrowingEvaluationException(
+        """ select REPEATED from `[{repeated:1, repeated:2}]` """,
+        ErrorCode.EVALUATOR_AMBIGUOUS_BINDING,
+        sourceLocationProperties(1, 9) + mapOf(Property.BINDING_NAME to "REPEATED", Property.BINDING_NAME_MATCHES to "repeated, repeated"))
 }

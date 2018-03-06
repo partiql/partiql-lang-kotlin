@@ -62,6 +62,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         ATOM,
         CASE_SENSITIVE_ATOM,
         CASE_INSENSITIVE_ATOM,
+        PROJECT_ALL,           // Wildcard, i.e. the * in `SELECT * FROM f` and a.b.c.* in `SELECT a.b.c.* FROM f`
         PATH_WILDCARD,
         PATH_WILDCARD_UNPIVOT,
         SELECT_LIST,
@@ -85,6 +86,8 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         AS_ALIAS,
         AT_ALIAS,
         PATH,
+        PATH_DOT,
+        PATH_SQB, // SQB = SQuare Bracket
         UNARY,
         BINARY,
         TERNARY,
@@ -142,10 +145,10 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             remaining.err(message, errorCode, errorContext)
     }
 
-    inline private fun sexp(builder: IonSexp.() -> Unit): IonSexp =
+    private inline fun sexp(builder: IonSexp.() -> Unit): IonSexp =
         ion.newEmptySexp().apply(builder)
 
-    inline private fun IonSexp.addSexp(builder: IonSexp.() -> Unit) =
+    private inline fun IonSexp.addSexp(builder: IonSexp.() -> Unit) =
         add().newEmptySexp().apply(builder)
 
     private fun IonSexp.addChildNodes(parent: ParseNode) {
@@ -199,12 +202,15 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                     }))
                 }
             }
+            PATH_DOT, PATH_SQB -> {
+                node.children.first().toSexp()
+            }
             CAST, PATH, LIST, BAG, UNPIVOT, MEMBER,
             INNER_JOIN, LEFT_JOIN, RIGHT_JOIN, OUTER_JOIN -> sexp {
                 addSymbol(node.type.identifier)
                 addChildNodes(node)
             }
-            STRUCT -> sexp {
+            STRUCT                               -> sexp {
                 addSymbol("struct")
                 // unfold the MEMBER nodes
                 for (child in children) {
@@ -221,11 +227,15 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                     addSymbol("unpivot")
                 }
             }
-            UNARY, BINARY, TERNARY -> sexp {
+            UNARY, BINARY, TERNARY               -> sexp {
                 addSymbol(token?.text!!)
                 addChildNodes(node)
             }
-            PIVOT, SELECT_LIST, SELECT_VALUE -> sexp {
+            PROJECT_ALL                          -> sexp {
+                addSymbol("project_all")
+                addChildNodes(node)
+            }
+            PIVOT, SELECT_LIST, SELECT_VALUE     -> sexp {
                 when (node.type) {
                     PIVOT -> {
                         addSymbol("pivot")
@@ -246,10 +256,7 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
 
                             addSexp {
                                 addSymbol(when (node.type) {
-                                    SELECT_LIST -> when {
-                                        projection.children.isEmpty() -> "*"
-                                        else -> "list"
-                                    }
+                                    SELECT_LIST -> "list"
                                     SELECT_VALUE -> "value"
                                     else -> unsupported("Unsupported SELECT type", PARSE_UNSUPPORTED_SELECT)
                                 })
@@ -517,33 +524,36 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         while (hasPath) {
             when (rem.head?.type) {
                 DOT -> {
+                    val dotToken = rem.head!!
                     // consume first dot
                     rem = rem.tail
-                    when (rem.head?.type) {
+                    val pathPart = when (rem.head?.type) {
                         IDENTIFIER        -> {
                             val litToken = Token(LITERAL, ion.newString(rem.head?.text!!), rem.head!!.position)
-                            path.add(ParseNode(CASE_INSENSITIVE_ATOM, litToken, emptyList(), rem.tail))
+                            ParseNode(CASE_INSENSITIVE_ATOM, litToken, emptyList(), rem.tail)
                         }
                         QUOTED_IDENTIFIER -> {
                             val litToken = Token(LITERAL, ion.newString(rem.head?.text!!), rem.head!!.position)
-                            path.add(ParseNode(CASE_SENSITIVE_ATOM, litToken, emptyList(), rem.tail))
+                            ParseNode(CASE_SENSITIVE_ATOM, litToken, emptyList(), rem.tail)
                         }
                         STAR              -> {
-                            path.add(ParseNode(PATH_WILDCARD_UNPIVOT, rem.head, emptyList(), rem.tail))
+                            ParseNode(PATH_WILDCARD_UNPIVOT, rem.head, emptyList(), rem.tail)
                         }
                         else              -> {
                             rem.err("Invalid path dot component", PARSE_INVALID_PATH_COMPONENT)
                         }
                     }
+                    path.add(ParseNode(PATH_DOT, dotToken, listOf(pathPart), rem))
                     rem = rem.tail
                 }
                 LEFT_BRACKET -> {
+                    val leftBracketToken = rem.head!!
                     rem = rem.tail
                     val expr = when (rem.head?.type) {
                         STAR -> ParseNode(PATH_WILDCARD, rem.head, emptyList(), rem.tail)
                         else -> rem.parseExpression()
                     }.deriveExpected(RIGHT_BRACKET)
-                    path.add(expr)
+                    path.add(ParseNode(PATH_SQB, leftBracketToken, listOf(expr), rem.tail))
                     rem = expr.remaining
                 }
                 else -> hasPath = false
@@ -719,7 +729,8 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
         rem = value.remaining
         val name = rem.parseExpression()
         rem = name.remaining
-        return parseSelectAfterProjection(PIVOT, ParseNode(MEMBER, null, listOf(name, value), rem))
+        val selectAfterProjection = parseSelectAfterProjection(PIVOT,ParseNode(MEMBER, null, listOf(name, value), rem))
+        return selectAfterProjection
     }
 
     private fun List<Token>.parseSelect(): ParseNode {
@@ -737,24 +748,24 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             else -> false
         }
 
-
         var type = SELECT_LIST
         var projection = when {
-            rem.head?.type == STAR -> {
-                // special form for * is empty arg-list
-                ParseNode(ARG_LIST, null, emptyList(), rem.tail)
-            }
             rem.head?.keywordText == "value" -> {
                 type = SELECT_VALUE
                 rem.tail.parseExpression()
             }
             else -> {
-                val list = rem.parseArgList(
-                    aliasSupportType = AS_ONLY,
-                    mode = NORMAL_ARG_LIST
-                )
+                val list = rem.parseSelectList()
                 if (list.children.isEmpty()) {
                     rem.err("Cannot have empty SELECT list", PARSE_EMPTY_SELECT)
+                }
+
+                val asterisk = list.children.firstOrNull { it.type == ParseType.PROJECT_ALL && it.children.isEmpty() }
+                if(asterisk != null
+                   && list.children.size > 1) {
+                    asterisk.token.err(
+                        "Other expressions may not be present in the select list when '*' is used without dot notation.",
+                        ErrorCode.PARSE_ASTERISK_IS_NOT_ALONE_IN_SELECT_LIST)
                 }
 
                 list
@@ -764,7 +775,123 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
             projection = ParseNode(DISTINCT, null, listOf(projection), projection.remaining)
         }
 
-        return parseSelectAfterProjection(type, projection)
+        val parseSelectAfterProjection = parseSelectAfterProjection(type, projection)
+        return parseSelectAfterProjection
+    }
+
+    /**
+     * Inspects a path expression to determine if should be treated as a regular [ParseType.PATH] expression or
+     * converted to a [ParseType.PROJECT_ALL].
+     *
+     * Examples of expressions that are converted to [ParseType.PROJECT_ALL] are:
+     *
+     * ```sql
+     *      SELECT * FROM foo
+     *      SELECT foo.* FROM foo
+     *      SELECT f.* FROM foo as f
+     *      SELECT foo.bar.* FROM foo
+     *      SELECT f.bar.* FROM foo as f
+     * ```
+     * Also validates that the expression is valid for select list context.  It does this by making
+     * sure that expressions looking like the following do not appear:
+     *
+     * ```sql
+     *      SELECT foo[*] FROM foo
+     *      SELECT f.*.bar FROM foo as f
+     *      SELECT foo[1].* FROM foo
+     *      SELECT foo.*.bar FROM foo
+     * ```
+     *
+     * If no conversion is needed, returns the original `pathNode`.
+     * If conversion is needed, clones the original `pathNode`, changing the `type` to `PROJECT_ALL`,
+     * removes the trailing `PATH_WILDCARD_UNPIVOT` and returns.
+     */
+    private fun inspectPathExpression(pathNode: ParseNode): ParseNode {
+        fun flattenParseNode(node: ParseNode): List<ParseNode> {
+            fun doFlatten(n: ParseNode, l: MutableList<ParseNode>) {
+                l.add(n)
+                n.children.forEach { doFlatten(it,l ) }
+            }
+            val list = mutableListOf<ParseNode>()
+            doFlatten(node, list)
+            return list
+        }
+
+        val flattened = flattenParseNode(pathNode).drop(2)
+
+        //Is invalid if contains PATH_WILDCARD (i.e. to `[*]`}
+        flattened.firstOrNull { it.type == PATH_WILDCARD }
+            ?.token
+            ?.err("Invalid use of * in select list", ErrorCode.PARSE_INVALID_CONTEXT_FOR_WILDCARD_IN_SELECT_LIST)
+
+        //Is invalid if contains PATH_WILDCARD_UNPIVOT (i.e. * as part of a dotted expression) anywhere except at the end.
+        //i.e. f.*.b is invalid but f.b.* is not.
+        flattened.dropLast(1).firstOrNull { it.type == PATH_WILDCARD_UNPIVOT }
+            ?.token
+            ?.err("Invalid use of * in select list", ErrorCode.PARSE_INVALID_CONTEXT_FOR_WILDCARD_IN_SELECT_LIST)
+
+        //If the last path component expression is a *, then the PathType is a wildcard and we need to do one
+        //additional check.
+        if(flattened.last().type == ParseType.PATH_WILDCARD_UNPIVOT) {
+
+            //Is invalid if contains a square bracket anywhere and a wildcard at the end.
+            //i.e f[1].* is invalid
+            flattened.firstOrNull { it.type == PATH_SQB }
+                ?.token
+                ?.err("Cannot use [] and * together in SELECT list expression", ErrorCode.PARSE_CANNOT_MIX_SQB_AND_WILDCARD_IN_SELECT_LIST)
+
+            val pathPart = pathNode.copy(children = pathNode.children.dropLast(1))
+
+            return ParseNode(
+                type = PROJECT_ALL,
+                token = null,
+                children = listOf(if (pathPart.children.size == 1) pathPart.children[0] else pathPart),
+                remaining = pathNode.remaining)
+        }
+        return pathNode
+    }
+
+
+    private fun List<Token>.parseSelectList(): ParseNode {
+        return parseCommaList {
+            if (this.head?.type == STAR) {
+                ParseNode(PROJECT_ALL, this.head, listOf(), this.tail)
+            }
+            else {
+                val expr = parseExpression().let {
+                    when (it.type) {
+                        PATH -> inspectPathExpression(it)
+                        else -> it
+                    }
+                }
+
+                var rem = expr.remaining
+                val aliasName = when {
+                    rem.head?.type == AS                    -> {
+                        rem = rem.tail
+                        val name = rem.head
+                        if (name == null || !name.type.isIdentifier()) {
+                            rem.err("Expected identifier for alias", PARSE_EXPECTED_IDENT_FOR_ALIAS)
+                        }
+                        rem = rem.tail
+                        name
+                    }
+                    rem.head?.type?.isIdentifier() ?: false -> {
+                        val name = rem.head
+                        rem = rem.tail
+                        name
+                    }
+                    else                                    -> null
+                }
+
+                if (aliasName != null) {
+                    ParseNode(AS_ALIAS, aliasName, listOf(expr), rem)
+                }
+                else {
+                    expr
+                }
+            }
+        }
     }
 
     private fun parseSelectAfterProjection(selectType: ParseType, projection: ParseNode): ParseNode {
@@ -1158,7 +1285,6 @@ class IonSqlParser(private val ion: IonSystem) : Parser {
                     remaining = rem
                 )
             }
-
             child
         }
     }
