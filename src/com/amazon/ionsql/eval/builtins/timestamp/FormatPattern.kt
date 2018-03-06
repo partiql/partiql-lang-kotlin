@@ -5,7 +5,6 @@ import com.amazon.ionsql.eval.*
 import com.amazon.ionsql.util.*
 
 import com.amazon.ionsql.eval.builtins.timestamp.TimestampField.*
-import sun.plugin.dom.exception.*
 
 /**
  * Represents a parsed timestamp format pattern.
@@ -177,7 +176,7 @@ internal class FormatPattern(val formatPatternString: String, val formatItems: L
             FRACTION_OF_SECOND -> errIfMissingTimestampFields(YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE)
 
             OFFSET, AM_PM      -> {
-                throw InvalidStateException("OFFSET, AM_PM should never be the least significant field!")
+                throw IllegalStateException("OFFSET, AM_PM should never be the least significant field!")
             }
         }
     }
