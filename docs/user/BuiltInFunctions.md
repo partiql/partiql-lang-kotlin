@@ -22,6 +22,211 @@ CHAR_LENGTH(null)    -- `null`
 CHAR_LENGTH(missing) -- `null` (also returns `null`)
 ```
 
+### CAST 
+
+Given a value and a target data type, attempt to coerce the value to the target data type. 
+
+Signature 
+: `CAST: Any DataType -> DataType` 
+
+Where `DataType` is one of 
+
+* `missing`
+* `null`
+* `integer`
+* `boolean`
+* `float`
+* `decimal`
+* `timestamp`
+* `symbol`
+* `string`
+* `list`
+* `struct`
+* `bag`
+
+
+Header
+: `CAST(exp AS dt)` 
+
+Purpose
+: Given an expression, `exp` and the data type name, `dt`, evaluate `expr` to a value, `v` and alter the data type of `v` to `DT(dt)`. If the conversion 
+cannot be made the implementation signals an error. 
+
+
+The runtime support for casts is 
+
+* Casting to `null` from 
+    * `null` is a no-op
+    * `missing` returns `null`
+    * else error 
+* Casting to `missing` from [^IONSQL-304]
+    * `missing` is a no-op
+    * `null` returns `missing`
+    * else error 
+* Casting to `integer` from
+    * Integer: is a no-op
+    * Boolean: `true` returns 1, `false` returns 0
+    * String or Symbol: attempt to parse the content as an Integer and return the Integer, else error. 
+    * Float or Decimal: gets narrowed to Integer 
+    * else error 
+* Casting to `boolean` from
+    * Boolean is a no-op
+    * Integer or Decimal or Float: if `v` is a representation of the number `0` (e.g., `0` or `-0` or `0e0` or `0d0` et.) then `false` else `true`
+    * String or Symbol: `true` unless `v` matches--ignoring character case--the Ion string `"false"` or matches--ignoring character case-- the Ion symbol `'false'` then return `false` 
+    * else error 
+* Casting to `float` from
+    * Float is a no-op
+    * Boolean: `false` return `0.0`, `true` returns `1.0`
+    * Integer or Decimal: convert to Float and return 
+    * String or Symbol: attempt to parse as Float and return the Float value, else error 
+    * else error 
+* Casting to `decimal` from
+    * Decimal is a no-op
+    * Boolean: return `1d0` if `true`, `0d0` if `false`
+    * String or Symbol: attemp to parse as Decimal and return Decimal value, else error
+    * else error 
+* Casting to `timestamp` from
+    * Timestamp is a no-op
+    * String or Symbol: attemp to parse as Timestamp and return the Timestamp value, else error 
+    * else error
+* Casting to `symbol` from
+    * Symbol is a no-op
+    * Integer or Float or Decimal: narrow to Integer and return the value as a Symbol, i.e, a Symbol with the same sequence of digits as characters 
+    * String: return the String as a Symbol, i.e., represent the same sequence of characters as a Symbol
+    * Boolean: return `'true'` for `true` and `'false'` for `false`
+    * Timestamp: return the Symbol representation of the Timestamp, i.e., represent the same sequence of digits and characters as a Symbol
+    * else error 
+* Casting to `string` from
+    * String is a no-op
+    * Integer or Float or Decimal: narrow to Integer and return the value as a String, i.e, a String with the same sequence of digits as characters
+    * Symbol: return the String as a Symbol, i.e., represent the same sequence of characters as a String
+    * Boolean: return `"true"` for `true` and `"false"` for `false`
+    * Timestamp: return the String representation of the Timestamp, i.e., represent the same sequence of digits and characters as a String
+    * else error 
+* Casting to `list` from
+    * List is a no-op
+    * Bag: return a list with the same elements. The order of the elements in the resulting list is unspecified. 
+    * else error 
+* Casting to `struct` from
+    * Struct is a no-op
+    * else error 
+* Casting to `bag` from
+    * Bag is a no-op
+    * List: return a list with the same elements. The order of the elements in the resulting bag is unspecified. 
+
+
+[^IONSQL-304]: [IONSQL-304](https://issues.amazon.com/issues/IONSQL-304)
+
+
+Examples
+:
+
+```sql
+-- Unknowns propagation 
+CAST(null    AS null)    -- null 
+CAST(missing AS null)    -- null 
+CAST(missing AS missing) -- null
+CAST(null    AS missing) -- null
+CAST(null    AS boolean) -- null (null AS any data type name result to null)
+CAST(missing AS boolean) -- null (missing AS any data type name result to null)
+
+-- any value that is not an unknown cannot be cast to `null` or `missing`
+CAST(true AS null)    -- error 
+CAST(true AS missing) -- error
+CAST(1    AS null)    -- error
+CAST(1    AS missing) -- error
+
+-- AS boolean 
+CAST(true      AS boolean) -- true no-op
+CAST(0         AS boolean) -- false
+CAST(1         AS boolean) -- true
+CAST(`1e0`     AS boolean) -- true (float)
+CAST(`1d0`     AS boolean) -- true (decimal)
+CAST('a'       AS boolean) -- false
+CAST('true'    AS boolean) -- true (IonSQL string 'true')
+CAST(`'true'`  AS boolean) -- true (Ion symbol `'true'`)
+CAST(`'false'` AS boolean) -- false (Ion symbol `'false'`)
+
+-- AS integer
+CAST(true   AS integer) -- 1
+CAST(false  AS integer) -- 0
+CAST(1      AS integer) -- 1
+CAST(`1d0`  AS integer) -- 1
+CAST(`1d3`  AS integer) -- 1000
+CAST(1.00   AS integer) -- 1
+CAST('12'   AS integer) -- 12
+CAST('aa'   AS integer) -- error
+CAST(`'22'` AS integer) -- 22
+CAST(`'x'`  AS integer) -- error
+
+-- AS flaot
+CAST(true   AS float) -- 1e0
+CAST(false  AS float) -- 0e0
+CAST(1      AS float) -- 1e0
+CAST(`1d0`  AS float) -- 1e0
+CAST(`1d3`  AS float) -- 1000e0
+CAST(1.00   AS float) -- 1e0
+CAST('12'   AS float) -- 12e0
+CAST('aa'   AS float) -- error
+CAST(`'22'` AS float) -- 22e0
+CAST(`'x'`  AS float) -- error
+
+-- AS decimal
+CAST(true   AS decimal) -- 1.
+CAST(false  AS decimal) -- 0.
+CAST(1      AS decimal) -- 1.
+CAST(`1d0`  AS decimal) -- 1. (REPL printer serialized to 1.)
+CAST(`1d3`  AS decimal) -- 1d3
+CAST(1.00   AS decimal) -- 1.00
+CAST('12'   AS decimal) -- 12.
+CAST('aa'   AS decimal) -- error
+CAST(`'22'` AS decimal) -- 22.
+CAST(`'x'`  AS decimal) -- error
+
+-- AS timestamp
+CAST(`2001T`                      AS timestamp) -- 2001T
+CAST('2001-01-01T'                AS timestamp) -- 2001-01-01
+CAST(`'2010-01-01T00:00:00.000Z'` AS timestamp) -- 2010-01-01T00:00:00.000Z
+CAST(true                         AS timestamp) -- error
+CAST(2001                         AS timestamp) -- error
+
+-- AS symbol 
+CAST(`'xx'`                     AS symbol) -- xx (`'xx'` is an Ion symbol)
+CAST('xx'                       AS symbol) -- xx ('xx' is a string)
+CAST(42                         AS symbol) -- '42'
+CAST(`1e0`                      AS symbol) -- '1'
+CAST(`1d0`                      AS symbol) -- '1'
+CAST(true                       AS symbol) -- 'true'
+CAST(false                      AS symbol) -- 'false'
+CAST(`2001T`                    AS symbol) -- '2001T'
+CAST(`2001-01-01T00:00:00.000Z` AS symbol) -- '2001-01-01T00:00:00.000Z`
+
+-- AS string 
+CAST(`'xx'`                     AS string) -- "xx" (`'xx'` is an Ion symbol)
+CAST('xx'                       AS string) -- "xx" ('xx' is a string)
+CAST(42                         AS string) -- "42"
+CAST(`1e0`                      AS string) -- "1.0"
+CAST(`1d0`                      AS string) -- "1"
+CAST(true                       AS string) -- "true"
+CAST(false                      AS string) -- "false"
+CAST(`2001T`                    AS string) -- "2001T"
+CAST(`2001-01-01T00:00:00.000Z` AS string) -- "2001-01-01T00:00:00.000Z"
+
+-- AS struct 
+CAST(`{ a: 1 }` AS struct) -- { a:1 }
+CAST(true       AS struct) -- err
+
+-- AS list
+CAST(`[1, 2, 3]`        AS list) -- [ 1, 2, 3 ] (REPL does not diplay the parens and commas)
+CAST(<<'a', { 'b':2 }>> AS list) -- [ a, { 'b':2 } ] (REPL does not diplay the parens and commas)
+CAST({ 'b':2 }          AS list) -- error
+
+-- AS bag
+CAST([1,2,3]      AS bag) -- <<1,2,3>> (REPL does not display << >> and commas)
+CAST([1,[2],3]    AS bag) -- <<1,[2],3>> (REPL does not display << >> and commas)
+CAST(<<'a', 'b'>> AS bag) -- <<'a', 'b'>> (REPL does not display << >> and commas)
+```
+
 ### CHAR_LENGTH, CHARACTER_LENGTH
 
 
@@ -190,176 +395,261 @@ EXISTS(missing)     -- false
 
 ### EXTRACT
 
-Extracts a date part from a timestamp. 
-    
-    EXTRACT(<date part> FROM <timestamp>)
-    
-Where date part is one of the following keywords: `year, month, day, hour, minute, second, timestamp_hour, timestamp_minute`. 
-Note that the allowed date parts for `EXTRACT` is not the same as `DATE_ADD`
+Given a date part and a timestamp returns then timestamp's date part value. 
 
-**Note**: Extract does not propagate null for it's first parameter, the date part. From the SQL92 spec only the date 
-part keywords are allowed as first argument   
+Signature
+: `EXTRACT: ExtractDatePart Timestamp -> Integer`
 
-#### Examples
-    
+where `ExtractDatePart` is one of 
+
+* `year`
+* `month`
+* `day`
+* `hour`
+* `minute`
+* `second`
+* `timezone_hour`
+* `timezone_minute`
+
+*Note* that `ExtractDatePart` **differs** from `DatePart` in [DATE_ADD](#date_add). 
+
+Header
+: `EXTRACT(edp FROM t)`
+
+Purpose 
+: Given a date part, `edp`, and a timestamp `t` return `t`'s value for `edp`. 
+This function allows for `t` to be unknown (`null` or `missing`) but **not** `edp`.
+If `t` is unknown the function returns `null`. 
+
+
+Examples
+: 
+
 ```sql
-EXTRACT(YEAR FROM `2010-01-01T`) -- 2010
-EXTRACT(MONTH FROM `2010T`) -- null as `2010T` doesn't have a `month` part 
-EXTRACT(MONTH FROM `2010-10T`) -- 10 
-EXTRACT(TIMESTAMP_HOUR FROM `2010-01-01T15:20:30+10:20`) -- 10
-EXTRACT(TIMESTAMP_HOUR FROM `2010-01-01T15:20:30-10:20`) -- -10
-EXTRACT(TIMESTAMP_MINUTE FROM `2010-01-01T15:20:30+10:20`) -- 20
-EXTRACT(TIMESTAMP_MINUTE FROM `2010-01-01T15:20:30-10:20`) -- -20
+EXTRACT(YEAR FROM `2010-01-01T`)                           -- 2010
+EXTRACT(MONTH FROM `2010T`)                                -- 1 (equivalent to 2010-01-01T00:00:00.000Z)
+EXTRACT(MONTH FROM `2010-10T`)                             -- 10
+EXTRACT(HOUR FROM `2017-01-02T03:04:05+07:08`)             -- 3
+EXTRACT(MINUTE FROM `2017-01-02T03:04:05+07:08`)           -- 4
+EXTRACT(TIMEZONE_HOUR FROM `2017-01-02T03:04:05+07:08`)    -- 7
+EXTRACT(TIMEZONE_MINUTE FROM `2017-01-02T03:04:05+07:08`)  -- 8
 ```
 
 ### LOWER 
 
-Converts uppercase letters in the specified string to lowercase, leaving non-uppercase characters unchanged.
-This operation currently relies on the default locale as defined by Java's official 
+Given a string convert all upper case characters to lower case characters. 
+
+Signature
+: `LOWER: String -> String`
+
+Header
+: `LOWER(s)`
+
+Purpose
+: Given a string, `s`, alter every upper case character in `s` to lower case. Any non-upper cased characters 
+remain unchanged. This operation does rely on the locale specified by the runtime configuration. 
+The implementation, currently, relies on Java's 
 [String.toLowerCase()](https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#toLowerCase()) documentation.
-See [IONSQL-110](https://i.amazon.com/issues/IONSQL-110), which will allow IonSQL++ to have client-specifiable locales.
 
-    LOWER(<str>)
-
-#### Examples
+Examples
+: 
 
 ```sql
-LOWER('AbCdEfG!@#$') -- Returns 'abcdefg!@#$'
+LOWER('AbCdEfG!@#$') -- 'abcdefg!@#$'
 ```
 
 ### SIZE   
-Returns the quantity of elements in a container, i.e a `BAG`, `STRUCT` or `LIST`, as an `INT`. Throws an exception for 
-any other argument type
 
-    SIZE(<container>)
-      
-#### Examples
+Given any container data type (i.e., list, structure or bag) return the number of elements in the container. 
+
+Signature
+: `SIZE: Container -> Integer`
+
+Header
+: `SIZE(c)`
+
+Purpose 
+: Given a container, `c`, return the number of elements in the container. 
+If the input to `SIZE` is not a container 
+the implementation throws an error. 
+
+Examples
+: 
 
 ```sql
-SIZE(`[1,2,3]`) -- returns 3
-SIZE(<<'foo', 'bar'>>) -- returns 2
-SIZE(`{foo: bar}`) -- returns 1
-SIZE(`[{foo: 1}, {foo: 2}]`) -- returns 2
-SIZE(12) -- throws an exception
+SIZE(`[]`)                   -- 0
+SIZE(`[null]`)               -- 1
+SIZE(`[1,2,3]`)              -- 3
+SIZE(<<'foo', 'bar'>>)       -- 2
+SIZE(`{foo: bar}`)           -- 1 (number of key-value pairs)
+SIZE(`[{foo: 1}, {foo: 2}]`) -- 2
+SIZE(12)                     -- error
 ```
 
 ### NULLIF
 
-Returns null if both specified expressions are equal, otherwise returns the first argument. Equality here is defined as 
-the `=` operator in IonSQL, i.e. `a` and `b` are considered equal by `NULLIF` if `a = b` is true 
+Given two expressions return `null` if the two expressions evaluate to the same value, else, returns the result of evaluating 
+the first expression 
 
-This function does **not** propagate `null` and `missing`.
+Signature 
+: `NULLIF: Any Any -> Any`
 
-    NULLIF(expression1, expression2) 
+Header
+: `NULLIF(e1, e2)`
 
-#### Examples
+Purpose
+: Given two expression, `e1` and `e2`, evaluate both expression to get `v1` and `v2` respectively, and return `null` if and only if 
+`v1` equals `v2`, else, return `v1`. 
+The implementation of `NULLIF` uses `=` for equality, i.e., `v1` and `v2` are considered equal by `NULLIF` if and only if `v1 = v2` is true. 
+
+
+*Note*, `NULLIF` does **not** propagate unknowns (`null` and `missing`).
+
+Examples
+: 
 
 ```sql  
-NULLIF(1, 1) -- null
-NULLIF(1, 2) -- 1
-NULLIF(1.0, 1) -- null
-NULLIF(1, '1') -- 1
-NULLIF([1], [1]) -- null
-NULLIF(1, NULL) -- 1
-NULLIF(null, null) -- null
-NULLIF(missing, null) -- null
+NULLIF(1, 1)             -- null
+NULLIF(1, 2)             -- 1
+NULLIF(1.0, 1)           -- null
+NULLIF(1, '1')           -- 1
+NULLIF([1], [1])         -- null
+NULLIF(1, NULL)          -- 1
+NULLIF(NULL, 1)          -- null
+NULLIF(null, null)       -- null
+NULLIF(missing, null)    -- null
+NULLIF(missing, missing) -- null
 ```
     
 ### SUBSTRING
 
-Extracts part of a string.  
+Given a string, a start index and optionally a length, returns the
+substring from the start index up to the end of the string, or, up to
+the length provided.
 
- - `SUBSTRING(<str> FROM <start pos> [FOR <length>])`
- - `SUBSTRING(<str>, <start pos> [, <length>])`
- 
-Where:
+Signature 
+: `SUBSTRING: String Integer [ NNegInteger ] -> String` 
 
- - `<str>` is the string containing the part to be extracted.
- - `<start pos>` is the 1-based position of the first character (unicode codepoint) to be extracted.
- - `<length>` is the count of characters (unicode codepoints) of the part to be extracted. 
+Where `NNegInteger` is a non-negative integer, i.e., 0 or greater. 
 
-#### Examples
+Header
+: `SUBSTRING(str, start [ , length ])` 
+
+`SUBSTRING(str FROM start [ FOR  length ])` 
+
+Purpose 
+: Given a string, `str`, a start position, `start` and optionally a length, `length`, 
+extract the characters (code points) starting at index `start` and ending at (`start` + `length`) - 1. 
+If `length` is omitted, then proceed till the end of `str`. 
+
+The first character of `str` has index 1. 
+
+Examples
+: 
+
 ```sql
-SUBSTRING('abcdefghi' from 3 for 4) -- Returns 'cdef'
-SUBSTRING('abcdefghi', -1, 4)       -- Returns 'ab'
+SUBSTRING("123456789", 0)      -- "123456789"
+SUBSTRING("123456789", 1)      -- "123456789"
+SUBSTRING("123456789", 2)      -- "23456789"
+SUBSTRING("123456789", -4)     -- "123456789"
+SUBSTRING("123456789", 0, 999) -- "123456789" 
+SUBSTRING("123456789", 0, 2)   -- "1"
+SUBSTRING("123456789", 1, 999) -- "123456789"
+SUBSTRING("123456789", 1, 2)   -- "12"
+SUBSTRING("1", 1, 0)           -- ""
+SUBSTRING("1", 1, 0)           -- ""
+SUBSTRING("1", -4, 0)          -- ""
+SUBSTRING("1234", 10, 10)      -- ""
 ```
     
 ### TO_STRING
 
-    `TO_STRING(<timestamp>, <format pattern>)`
+Given a timestamp and a format pattern return a string representation of the timestamp in the given format. 
 
-Formats an Ion timestamp as a pretty string.
+Signature
+: `TO_STRING: Timestamp TimeFormatPattern -> String`
 
-#### Examples
+Where `TimeFormatPattern` is a String with the following special character interpretations 
+
+ | Format           | Example     | Description
+ |:-----------------|:------------|:--------------------------------------------------------------------------------
+ | `yy`             | 69          | 2-digit year
+ | `y`              | 1969        | 4-digit year
+ | `yyyy`           | 1969        | Zero padded 4-digit year
+ | `M`              | 1           | Month of year
+ | `MM`             | 01          | Zero padded month of year
+ | `MMM`            | Jan         | Abbreviated month year name
+ | `MMMM`           | January     | Full month of year name
+ | `MMMMM`          | J           | Month of year first letter (NOTE: not valid for use with to_timestamp function)
+ | `d`              | 2           | Day of month (1-31)
+ | `dd`             | 02          | Zero padded day of month (01-31)
+ | `a`              | AM          | AM or PM of day
+ | `h`              | 3           | Hour of day (1-12)
+ | `hh`             | 03          | Zero padded hour of day (01-12)
+ | `H`              | 3           | Hour of day (0-23)
+ | `HH`             | 03          | Zero padded hour of day (00-23)
+ | `m`              | 4           | Minute of hour (0-59)
+ | `mm`             | 04          | Zero padded minute of hour (00-59)
+ | `s`              | 5           | Second of minute (0-59)
+ | `ss`             | 05          | Zero padded second of minute (00-59)
+ | `S`              | 0           | Fraction of second (precision: 0.1, range: 0.0-0.9)
+ | `SS`             | 06          | Fraction of second (precision: 0.01, range: 0.0-0.99)
+ | `SSS`            | 060         | Fraction of second (precision: 0.001, range: 0.0-0.999)
+ | ...              | ...         | ...
+ | `SSSSSSSSS`      | 060000000   | Fraction of second (maximum precision: 1 nanosecond, range: 0.0-0.999999999)
+ | `n`              | 60000000    | Nano of second
+ | `X`              | +07 or Z    | Offset in hours or "Z" if the offset is 0
+ | `XX` or `XXXX`   | +0700 or Z  | Offset in hours and minutes or "Z" if the offset is 0
+ | `XXX` or `XXXXX` | +07:00 or Z | Offset in hours and minutes or "Z" if the offset is 0
+ | `x`              | +07         | Offset in hours
+ | `xx` or `xxxx`   | +0700       | Offset in hours and minutes
+ | `xxx` or `xxxxx` | +07:00      | Offset in hours and minutes
+ 
+
+
+Header
+: `TO_STRING(t,f)` 
+
+Purpose
+: Given a timestamp, `t`, and a format pattern, `f`, as a String, return a string representation of `t`
+ in format `f`.
+
+Examples
+: 
+
 ```sql
-TO_STRING(`1969-07-20T20:18Z`,  'MMMM d, y')                    --Returns "July 20, 1969"
-TO_STRING(`1969-07-20T20:18Z`, 'MMM d, yyyy')                   --Returns "Jul 20, 1969"
-TO_STRING(`1969-07-20T20:18Z`, 'M-d-yy')                        --Returns "7-20-69"
-TO_STRING(`1969-07-20T20:18Z`, 'MM-d-y')                        --Returns "07-20-1969"
-TO_STRING(`1969-07-20T20:18Z`, 'MMMM d, y h:m a')               --Returns "July 20, 1969 8:18 PM"
-TO_STRING(`1969-07-20T20:18Z`, 'y-MM-dd''T''H:m:ssX')           --Returns "1969-07-20T20:18:00Z"
-TO_STRING(`1969-07-20T20:18+08:00Z`, 'y-MM-dd''T''H:m:ssX')     --Returns "1969-07-20T20:18:00Z"
-TO_STRING(`1969-07-20T20:18+08:00`, 'y-MM-dd''T''H:m:ssXXXX')   --Returns "1969-07-20T20:18:00+0800"
-TO_STRING(`1969-07-20T20:18+08:00`, 'y-MM-dd''T''H:m:ssXXXXX')  --Returns "1969-07-20T20:18:00+08:00"
+TO_STRING(`1969-07-20T20:18Z`,  'MMMM d, y')                    -- "July 20, 1969"
+TO_STRING(`1969-07-20T20:18Z`, 'MMM d, yyyy')                   -- "Jul 20, 1969"
+TO_STRING(`1969-07-20T20:18Z`, 'M-d-yy')                        -- "7-20-69"
+TO_STRING(`1969-07-20T20:18Z`, 'MM-d-y')                        -- "07-20-1969"
+TO_STRING(`1969-07-20T20:18Z`, 'MMMM d, y h:m a')               -- "July 20, 1969 8:18 PM"
+TO_STRING(`1969-07-20T20:18Z`, 'y-MM-dd''T''H:m:ssX')           -- "1969-07-20T20:18:00Z"
+TO_STRING(`1969-07-20T20:18+08:00Z`, 'y-MM-dd''T''H:m:ssX')     -- "1969-07-20T20:18:00Z"
+TO_STRING(`1969-07-20T20:18+08:00`, 'y-MM-dd''T''H:m:ssXXXX')   -- "1969-07-20T20:18:00+0800"
+TO_STRING(`1969-07-20T20:18+08:00`, 'y-MM-dd''T''H:m:ssXXXXX')  -- "1969-07-20T20:18:00+08:00"
 ```
-Format symbols:
        
-    Symbol          Example         Description
-    ------          -------         ----------------------------------------------------------------------------
-    yy              69              2-digit year
-    y               1969            4-digit year
-    yyyy            1969            Zero padded 4-digit year
     
-    M               1               Month of year             
-    MM              01              Zero padded month of year
-    MMM             Jan             Abbreviated month year name
-    MMMM            January         Full month of year name
-    MMMMM           J               Month of year first letter (NOTE: not valid for use with to_timestamp function)
-
-    d               2               Day of month (1-31)
-    dd              02              Zero padded day of month (01-31)
-    
-    a               AM              AM or PM of day
-    
-    h               3               Hour of day (1-12)
-    hh              03              Zero padded hour of day (01-12)
-    
-    H               3               Hour of day (0-23)
-    HH              03              Zero padded hour of day (00-23)
-    
-    m               4               Minute of hour (0-59)               
-    mm              04              Zero padded minute of hour (00-59)
-    
-    s               5               Second of minute (0-59)
-    ss              05              Zero padded second of minute (00-59)
-    
-    S               0               Fraction of second (precision: 0.1, range: 0.0-0.9) 
-    SS              06              Fraction of second (precision: 0.01, range: 0.0-0.99) 
-    SSS             060             Fraction of second (precision: 0.001, range: 0.0-0.999) 
-    ...             ...             ...
-    SSSSSSSSS       060000000       Fraction of second (maximum precision: 1 nanosecond, range: 0.0-0.999999999)
-    
-    n               60000000        Nano of second
-    
-    X               +07 or Z        Offset in hours or "Z" if the offset is 0 
-    XX or XXXX      +0700 or Z      Offset in hours and minutes or "Z" if the offset is 0  
-    XXX or XXXXX    +07:00 or Z     Offset in hours and minutes or "Z" if the offset is 0
-    
-    x               +07             Offset in hours
-    xx or xxxx      +0700           Offset in hours and minutes
-    xxx or xxxxx    +07:00          Offset in hours and minutes
-     
 ### TO_TIMESTAMP
 
-Converts a string to a timestamp using an optional format pattern to specify non-standard date formats.
+Given a string convert it to a timestamp. This is the inverse operation of [`TO_STRING`](#to_string)
 
-    TO_TIMESTAMP(<string> [, <format pattern>])
-    
+
+Signature 
+: `TO_TIMESTAMP: String [ TimeFormatPattern ] -> Timestamp`
+
+See definition of `TimeFormatPattern` in [TO_STRING](#to_string). 
+
+Header 
+: `TO_TIMESTAMP(str[ , f ])` 
+
+Purpose 
+: Given a string, `str`, and an optional format pattern, `f`, as a String return a timestamp 
+whose values are extracted from `str` using `f`. 
+
 If the `<format pattern>` argument is omitted, `<string>` is assumed to be in the format of a 
 [standard Ion timestamp](https://amzn.github.io/ion-docs/spec.html#timestamp).  This is the only recommended 
 way to parse an Ion timestamp using this function.
-
-The `<format pattern>` argument supports the same format symbols as the `to_string` argument of the same name.  
 
 Zero padding is optional when using a single format symbol (e.g. `y`, `M`, `d`, `H`, `h`, `m`, `s`) but required
 for their zero padded variants (e.g. `yyyy`, `MM`, `dd`, `HH`, `hh`, `mm`, `ss`).
@@ -369,20 +659,18 @@ and 2000 is added to values less than 70.
 
 Month names and AM/PM specifiers are case-insensitive.  
 
-#### Examples
+Examples
+: 
 
 Single argument parsing an Ion timestamp:
 ```sql
-TO_TIMESTAMP('2007T')
-TO_TIMESTAMP('2007-02-23T12:14:33.079-08:00')
-```
-Two arguments parsing a custom date format:
-```sql
-TO_TIMESTAMP('2016', 'y')  --Returns `2016T`
-TO_TIMESTAMP('2016', 'yyyy')  --Returns `2016T`
-TO_TIMESTAMP('02-2016', 'MM-yyyy')  --Returns `2016-02T`
-TO_TIMESTAMP('Feb 2016', 'MMM yyyy')  --Returns `2016-02T`
-TO_TIMESTAMP('Febrary 2016', 'MMMM yyyy')  --Returns `2016-02T`
+TO_TIMESTAMP('2007T')                         -- `2007T`
+TO_TIMESTAMP('2007-02-23T12:14:33.079-08:00') -- `2007-02-23T12:14:33.079-08:00`
+TO_TIMESTAMP('2016', 'y')                     -- `2016T`
+TO_TIMESTAMP('2016', 'yyyy')                  -- `2016T`
+TO_TIMESTAMP('02-2016', 'MM-yyyy')            -- `2016-02T`
+TO_TIMESTAMP('Feb 2016', 'MMM yyyy')          -- `2016-02T`
+TO_TIMESTAMP('Febrary 2016', 'MMMM yyyy')     -- `2016-02T`
 ```
 Notes:
 
@@ -410,43 +698,72 @@ not abuse the offset portion of Timestamp because real-life offsets do not excee
 
 ### TRIM
  
-Trims leading and/or trailing characters from a String. If the characters to be trimmed are not specified it defaults
-to `' '`. 
+Trims leading and/or trailing characters from a String. 
 
-    TRIM([[LEADING|TRAILING|BOTH <characters to remove>] FROM] <str>) 
 
-#### Examples
+Signature
+: `TRIM: [ String ] String -> String` 
+
+Header
+: `TRIM([[LEADING|TRAILING|BOTH r] FROM] str)`
+
+Purpose
+: Given a string, `str`, and an optional *set* of characters to remove, `r`, specified as a string, return the string 
+with any character from `r` found at the beginning or end of `str` removed. 
+
+If `r` is not provided it defaults to `' '`. 
+
+Examples
+: 
+
 ```sql
-TRIM('       foobar         ') -- returns 'foobar'
-TRIM('      \tfoobar\t         ') -- returns '\tfoobar\t'
-TRIM(LEADING FROM '       foobar         ') -- returns 'foobar         '
-TRIM(TRAILING FROM '       foobar         ') -- returns '       foobar'
-TRIM(BOTH FROM '       foobar         ') -- returns 'foobar'
-TRIM(BOTH '😁' FROM '😁😁foobar😁😁') -- returns 'foobar'
-TRIM(BOTH '12' FROM '1112211foobar22211122') -- returns 'foobar' 
+TRIM('       foobar         ')               -- 'foobar'
+TRIM('      \tfoobar\t         ')            -- '\tfoobar\t'
+TRIM(LEADING FROM '       foobar         ')  -- 'foobar         '
+TRIM(TRAILING FROM '       foobar         ') -- '       foobar'
+TRIM(BOTH FROM '       foobar         ')     -- 'foobar'
+TRIM(BOTH '😁' FROM '😁😁foobar😁😁')         -- 'foobar'
+TRIM(BOTH '12' FROM '1112211foobar22211122') -- 'foobar'
 ```
 ### UPPER 
 
-Converts lowercase letters in the specified string to uppercase, leaving non-lowercase characters unchanged. This 
-operation currently relies on the default locale as defined by Java's official 
-[String.toUpperCase()](https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#toUpperCase()) documentation.
-See [IONSQL-110](https://i.amazon.com/issues/IONSQL-110), which will allow IonSQL++ to have client-specifiable locales.
+Given a string convert all lower case characters to upper case characters.
 
-    UPPER(<str>)
+Signature
+: `UPPER: String -> String`
 
-#### Examples
+Header
+: `UPPER(str)` 
+
+Purpose
+: Given a string, `str`, alter every upper case character is `str` to lower case. Any non-lower cases characters remain 
+unchanged.  This operation does rely on the locale specified by the runtime configuration. 
+The implementation, currently, relies on Java's 
+[String.toLowerCase()](https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#toLowerCase()) documentation.
+
+Examples
+: 
+
 ```sql
-UPPER('AbCdEfG!@#$') -- Returns 'ABCDEFG!@#$'
+UPPER('AbCdEfG!@#$') -- 'ABCDEFG!@#$'
 ```    
 
 ### UTCNOW 
 
-returns the current time timestamp in UTC. Current time is defined by the `now` value in the `EvaluationSession` so it's 
-consistent across an evaluation. The client can specify its own `now` value when creating the session    
+Returns the current time in UTC as a timestamp. 
 
-    UTCNOW()
+Signature
+: `UTCNOW:  -> Timestamp`
 
-#### Examples
+Header
+: `UTCNOW()`
+
+Purpose
+: Return the current time in UTC as a timestamp 
+
+Examples
+: 
+
 ```sql
-UTCNOW() -- Returns the current time, e.g. 2017-10-13T16:02:11.123Z
+UTCNOW() -- 2017-10-13T16:02:11.123Z 
 ```
