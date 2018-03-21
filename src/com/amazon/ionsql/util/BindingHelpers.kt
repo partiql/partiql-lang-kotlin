@@ -69,6 +69,7 @@ private fun <T> getBoundValue(bindingName: BindingName, extractor: BindingExtrac
  * is case insensitive.
  * @returns `null` if the binding was not found.
  */
+@Deprecated("Use IonStructBindings instead, which is faster for most purposes.")
 operator fun IonStruct.get(bindingName: BindingName): IonValue? =
     getBoundValue(
         bindingName,
@@ -132,6 +133,7 @@ abstract class BindingHelper private constructor() {
          * @returns `null` if the binding was not found.
          */
         @JvmStatic
+        @Deprecated("Use IonStructBindings instead, which is faster for most purposes.")
         fun lookupBinding(container: IonStruct, bindingName: BindingName): IonValue? =
             container.get(bindingName)
 

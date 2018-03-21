@@ -10,7 +10,8 @@ RELEASENOTES        := $(addprefix $(CURDIR)/, ReleaseNotes)
 
 export EXTRASUPPORTFILES = $(IMAGES) $(EMAILTEMPLATES) $(UPGRADEINSTRUCTIONS) $(RELEASENOTES)
 
-all: html pdf epub   # allows `make` to work in this dir
+all:  # default target
+	@$(MAKE) -C ../ -f common.mk all
     
 
 %: force

@@ -56,6 +56,9 @@ PDFOPTIONS += $(TEXTEMPLATE)
 PDFOPTIONS += $(TEXLISTINGS)
 PDFOPTIONS += $(RESOURCEPATH)
 
+BIBOPTIONS := --filter pandoc-citeproc
+
+MARKDOWNOPTIONS := -f markdown+tex_math_single_backslash
 
 EPUBOPTIONS = # TBD
 
@@ -65,16 +68,16 @@ all: html pdf epub
 
 # generate tex output and stop. useful for debugging issues with PDF 
 tex: outputdirs haspandoc hasxetex
-	$(PANDOC) $(SRC) $(PDFOPTIONS)  -o $(OUTPUTPATH)/$(TARGET).tex
+	$(PANDOC) $(SRC) $(PDFOPTIONS) $(BIBOPTIONS)  -o $(OUTPUTPATH)/$(TARGET).tex
 
 pdf: outputdirs haspandoc hasxetex
-	$(PANDOC) $(SRC) $(PDFOPTIONS)  -o $(OUTPUTPATH)/$(TARGET).pdf
+	$(PANDOC) $(SRC) $(PDFOPTIONS) $(BIBOPTIONS)  -o $(OUTPUTPATH)/$(TARGET).pdf
 
 epub: outputdirs haspandoc 
-	$(PANDOC) $(SRC) $(EPUBOPTIONS) -o $(OUTPUTPATH)/$(TARGET).epub
+	$(PANDOC) $(SRC) $(EPUBOPTIONS) $(BIBOPTIONS) -o $(OUTPUTPATH)/$(TARGET).epub
 
 html: outputdirs haspandoc
-	$(PANDOC) $(SRC) $(HTMLOPTIONS) -o $(OUTPUTPATH)/$(TARGET).html
+	$(PANDOC) $(SRC) $(HTMLOPTIONS) $(MARKDOWNOPTIONS) $(BIBOPTIONS) -o $(OUTPUTPATH)/$(TARGET).html
 	cp -r $(SUPPORTFILES) $(OUTPUTPATH)/.
 
 

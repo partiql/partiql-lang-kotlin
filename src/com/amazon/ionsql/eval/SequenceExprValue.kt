@@ -40,7 +40,12 @@ class SequenceExprValue(private val ion: IonSystem,
                     SEXP -> ion.newEmptySexp()
                     else -> throw IllegalStateException("Invalid type: $type")
                 }
-            ) { it.ionValue.clone() }
+            ) {
+                if(it is SequenceStruct)
+                    it.createMutableValue()
+                else
+                    it.ionValue.clone()
+            }
             .seal()
     }
 

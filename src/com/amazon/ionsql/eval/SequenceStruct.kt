@@ -4,7 +4,7 @@
 
 package com.amazon.ionsql.eval
 
-import com.amazon.ion.IonSystem
+import com.amazon.ion.*
 import com.amazon.ionsql.util.*
 import java.util.*
 
@@ -14,11 +14,22 @@ import java.util.*
 class SequenceStruct(private val ion: IonSystem,
                      private val isOrdered: Boolean,
                      sequence: Sequence<ExprValue>) : BaseExprValue() {
-    private val nonMissingSeq = sequence.filter { it.type != ExprValueType.MISSING }
+    private val nonMissingSeq by lazy { sequence.filter { it.type != ExprValueType.MISSING }.toList() }
     override val type = ExprValueType.STRUCT
 
     override val ionValue by lazy {
-        ion.newEmptyStruct().apply {
+        createMutableValue().seal()
+    }
+
+    /**
+     * [SequenceExprValue] may call this function to get a mutable instance of the IonValue that it can add
+     * directly to its lazily constructed list.  This is a performance optimization--otherwise the value would be
+     * cloned twice: once by this class's implementation of [ionValue], and again before adding the value to its list.
+     *
+     * Note: it is not possible to add a sealed (non-mutuable) [IonValue] as a child of a container.
+     */
+    fun createMutableValue(): IonStruct {
+        return ion.newEmptyStruct().apply {
             nonMissingSeq.forEach {
                 val nameVal = it.name
                 if (nameVal != null && nameVal.type.isText) {
@@ -26,8 +37,9 @@ class SequenceStruct(private val ion: IonSystem,
                     add(name, it.ionValue.clone())
                 }
             }
-        }.seal()
+        }
     }
+
 
     /** The backing data structured for operations that require materialization. */
     private data class Materialized(val bindings: Bindings,

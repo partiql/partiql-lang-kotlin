@@ -5,8 +5,9 @@ export SRC    := $(addprefix $(CURDIR)/, $(shell cat outline.txt)) # order of md
 
 export EXTRASUPPORTFILES := # empty for now 
 
-all: html pdf epub   # allows `make` to work in this dir
-    
+all:  # default target
+	@$(MAKE) -C ../ -f common.mk all
+
 
 %: force
 	@$(MAKE) -C ../ -f common.mk $@

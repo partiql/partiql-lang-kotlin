@@ -33,14 +33,6 @@ is shared.
         * `git checkout mainline`
     1. Build
         * `cd IonSQLReleaseMainline/src/IonSQLSandbox/; brazil-build release`
-    1. Remove `_dev` suffix from the package version in `mainline`
-        1. Open `Config` and search for `_dev`. For each occurrence update the Brazil package version to the appropriate
-        Brazil package release number.
-            * From `2.x_dev` to `2.x`
-        1. Open `build.xml` and search for `_dev`. For each occurrence update the Brazil package version to the appropriate
-        Brazil package release number.
-            * From `IonSQLSandbox-2.x_dev` to IonSQLSandbox-2.x`
-        1. Commit and send a quick CR
 1. Check that `release` builds  
     1. Create a new `brazil` workspace
         * `brazil ws --create --name IonSQLRelease --versionSet IonSQLSandbox/release`
@@ -58,6 +50,15 @@ We will refer to this number as `<N>` below.
     * **Prepend** to the git merge message the new _Semantic Version_(SV)
       for the package. Leave the rest of the merge message's content
       **intact**
+1. Remove `_dev` suffix from the package version in `release`
+   1. Open `Config` and search for `_dev`. For each occurrence update the Brazil package version to the appropriate
+      Brazil package release number.
+          * From `2.x_dev` to `2.x`
+      1. Open `build.xml` and search for `_dev`. For each occurrence update the Brazil package version to the appropriate
+      Brazil package release number.
+          * From `IonSQLSandbox-2.x_dev` to `IonSQLSandbox-2.x`
+  1. Amend the merge commit to include these changes (avoids commit history noise):
+      * `git commit --amend --no-edit`
 1. Build the code again
     * `brazil-build clean; brazil-build release`
 1. Verify that the REPL works
@@ -71,11 +72,6 @@ We will refer to this number as `<N>` below.
 1. Monitor the release pipeline and ensure that all steps complete successfuly.
     * [IonSQLSandbox Release Pipeline](https://pipelines.amazon.com/pipelines/IonSQLSandbox-release)
     * The pipeline's last step will build `release` into the `live` version set
-1. Update `mainline` to add the `_dev` suffix
-    1. Go back to your `mainline` code from step 1
-    1. Add `_dev` suffix to the exact same places in `Config`. See your CR that you created that removed the suffix.
-    1. Add `_dev`suffix to the exact same paces in `build.xml`. See your CR that you created that removed the suffix.
-    1. Commit and send out a quick CR
 1. Send an email to `ionsql-interest@amazon.com` announcing the new release
     1. Pick the appropriate email template from [ReleaseEmailTemplates](EmailTemplates)
     1. Fill in the template's placeholders
@@ -133,13 +129,6 @@ under [UpgradeInstructions](UpgradeInstructions)
     1. Create a `.md` file under [UpgradeInstructions](UpgradeInstructions)
         1. See the [Readme](UpgradeInstructions/README.md) on naming conventions
         1. Include all breaking changes and instructions on how to consume the new version in this `.md` file
-    1. Remove `_dev` suffix from the package version in `mainline`
-        1. Open `Config` and search for `_dev`. For each occurrence update the Brazil package version to the appropriate
-        Brazil package release number.
-            * From `3.x_dev` to `3.x`
-        1. Open `build.xml` and search for `_dev`. For each occurrence update the Brazil package version to the appropriate
-        Brazil package release number.
-            * From `IonSQLSandbox-3.x_dev` to IonSQLSandbox-3.x`
     1. Commit and send a CR that includes
         1. The Upgrade Instructions in the `.md` file
         1. The changes to `Config` and `build.xml`
@@ -160,6 +149,15 @@ We will refer to this number as `<N>` below.
     * **Prepend** to the git merge message the new _Semantic Version_(SV)
       for the package. Leave the rest of the merge message's content
       **intact**
+1. Remove `_dev` suffix from the package version in `release`
+   1. Open `Config` and search for `_dev`. For each occurrence update the Brazil package version to the appropriate
+      Brazil package release number.
+          * From `2.x_dev` to `2.x`
+      1. Open `build.xml` and search for `_dev`. For each occurrence update the Brazil package version to the appropriate
+      Brazil package release number.
+          * From `IonSQLSandbox-2.x_dev` to `IonSQLSandbox-2.x`
+  1. Amend the merge commit to include these changes (avoids commit history noise):
+      * `git commit --amend --no-edit`
 1. Build the code again
     * `brazil-build clean; brazil-build release`
 1. Verify that the REPL works
@@ -173,11 +171,6 @@ We will refer to this number as `<N>` below.
 1. Monitor the release pipeline and ensure that all steps complete successfuly.
     * [IonSQLSandbox Release Pipeline](https://pipelines.amazon.com/pipelines/IonSQLSandbox-release)
     * The pipeline's last step will build `release` into the `live` version set
-1. Update `mainline` to add the `_dev` suffix
-    1. Go back to your `mainline` code from step 1
-    1. Add `_dev` suffix to the exact same places in `Config`. See your CR that you created that removed the suffix.
-    1. Add `_dev`suffix to the exact same paces in `build.xml`. See your CR that you created that removed the suffix.
-    1. Commit and send out a quick CR
 1. Update Vendor Guidance for `old` and `new`
     1. Go to [Vendor Guidance](https://code.amazon.com/packages/IonSQLSandbox/releases)
     1. Mark the `old` release as `NEWER VERSION AVAILABLE`
@@ -194,7 +187,6 @@ We will refer to this number as `<N>` below.
 1. Add the e-mail sent to release notes
     1. Add a file to [ReleaseNotes](ReleaseNotes) with the e-mail content as a `.md` file, see
     [Readme](ReleaseNotes/README.md) on naming conventions
-
 
 ## Hot Fixes
 

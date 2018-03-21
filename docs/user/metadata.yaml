@@ -6,5 +6,8 @@ colorlinks: true
 titlepage: true
 fontfamily: "dejavu"
 mainfont: "DejaVu Sans"
+csl: ieee.csl
+bibliography: refs.bib
+link-citations: true
 ---
 

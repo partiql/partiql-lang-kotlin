@@ -1,6 +1,8 @@
 metadata.yaml
 Preface.md
+FAQ.md
 REPL.md
 Tutorial.md
 Guide.md
-FAQ.md
+BuiltInFunctions.md
+References.md
