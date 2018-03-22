@@ -6,7 +6,6 @@ package com.amazon.ionsql.eval
 
 import com.amazon.ionsql.IonSqlException
 import junitparams.Parameters
-import junitparams.naming.TestCaseName
 import org.junit.Test
 import java.util.*
 import com.amazon.ionsql.eval.NaturalExprValueComparators.*
@@ -128,7 +127,25 @@ class NaturalExprValueComparatorsTest : EvaluatorBase() {
             "[true]"
         ),
         listOf(
+            "[true, true]"
+        ),
+        listOf(
             "[true, 100]"
+        ),
+        listOf(
+            "[[1]]"
+        ),
+        listOf(
+            "[[1, 1]]"
+        ),
+        listOf(
+            "[[1, 2]]"
+        ),
+        listOf(
+            "[[2, 1]]"
+        ),
+        listOf(
+            "[[[1]]]"
         ),
         listOf(
             "`a::b::c::()`"
@@ -143,6 +160,12 @@ class NaturalExprValueComparatorsTest : EvaluatorBase() {
         ),
         listOf(
             "`(2012T 1 2 3)`"
+        ),
+        listOf(
+            "`([])`"
+        ),
+        listOf(
+            "`([] [])`"
         ),
         listOf(
             "{}",
@@ -169,16 +192,60 @@ class NaturalExprValueComparatorsTest : EvaluatorBase() {
             "{'d': 3, 'e': 2}"
         ),
         listOf(
+            "{ 'm': [1, 1], 'n': [1, 1]}"
+        ),
+        listOf(
+            "{ 'm': [1, 1], 'n': [1, 2]}"
+        ),
+        listOf(
+            "{ 'm': [1, 1], 'n': [2, 2]}"
+        ),
+        listOf(
+            "{ 'm': [1, 2], 'n': [2, 2]}"
+        ),
+        listOf(
+            "{ 'm': [2, 2], 'n': [2, 2]}"
+        ),
+        listOf(
+            "{ 'm': <<1, 1>>, 'n': []}"
+        ),
+        listOf(
+            "{ 'm': <<1, 1>>, 'n': <<>>}"
+        ),
+        listOf(
+            "{'x': 1, 'y': 2}"
+        ),
+        listOf(
+            "{'x': 1, 'y': 2, 'z': 1}"
+        ),
+        listOf(
             "<<>>"
         ),
         listOf(
+            //The ordered values are: true, true, 1
             "<<1, true, true>>"
         ),
         listOf(
+            //The ordered values are: true, true, 1, 1, 1
             "<<true, 1, 1.0, `1e0`, true>>"
         ),
         listOf(
             "<<1>>"
+        ),
+        listOf(
+            "<<1, 1>>"
+        ),
+        listOf(
+            "<< [] >>"
+        ),
+        listOf(
+            "<< {}, [] >>"
+        ),
+        listOf(
+            "<< {} >>"
+        ),
+        listOf(
+            "<< <<>> >>"
         ),
         listOf(
             "<< <<>>, <<>> >>"
@@ -221,6 +288,7 @@ class NaturalExprValueComparatorsTest : EvaluatorBase() {
         fun shuffleCase(description: String,
                         comparator: Comparator<ExprValue>,
                         expectedSource: List<List<String>>): CompareCase {
+
             val expected = expectedSource.eval()
             val unordered = expected.flatShuffle()
 
@@ -243,7 +311,6 @@ class NaturalExprValueComparatorsTest : EvaluatorBase() {
 
     @Test
     @Parameters
-    @TestCaseName("{0}")
     fun shuffleAndSort(case: CompareCase) {
         val ordered = case.unordered.toMutableList().apply {
             Collections.sort(this, case.comparator)
