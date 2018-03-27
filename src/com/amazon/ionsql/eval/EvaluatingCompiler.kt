@@ -16,6 +16,7 @@ import java.math.*
 import java.util.*
 import java.util.Collections.*
 import java.util.concurrent.atomic.*
+import kotlin.math.*
 
 /** An [ExprValue] which is the result of an expression evaluated in an [Environment].  */
 private interface ExprThunk {
@@ -710,85 +711,26 @@ class EvaluatingCompiler(private val ion: IonSystem,
         val aggregates: MutableList<Aggregate> = mutableListOf()
 
         val fromSources = ast[2][1].compileFromClauseSources(cEnv)
+
         val selectFunc: (List<ExprValue>, Environment) -> ExprValue = when (selectForm[0].text(cEnv)) {
             "list" -> {
                 if (selectForm.size < 2) {
                     err("SELECT ... must have at least one expression", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
                 }
-                val cEnvOuter = createSelectListNestedEnv(cEnv, aggregates, ast)
 
-                val projectionElements: List<ProjectionElement> =
-                    selectForm.drop(1).mapIndexed { idx, selectExpr: IonValue ->
-                        if(selectExpr !is IonSequence || selectExpr.size == 0) {
-                            err("SELECT list expression must be a non-empty sequence: ${selectExpr}", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
-                        }
-                        if(selectExpr[0].stringValue() == "project_all") {
-                            if(selectExpr.size == 1) {
-                                MultipleProjectionElement(
-                                    fromSources.map {
-                                         exprThunk(cEnv.metadataLookup[selectExpr]) {
-                                             env -> env.current[BindingName(it.alias.asName, BindingCase.SENSITIVE)]
-                                                    // The error condition below should never happen because the alias we use
-                                                    // is derived from the FROM clause and should therefore always be defined...
-                                                    ?: err("project_all element '${it.alias.asName}' wss not resolved.",
-                                                           cEnv.metadataLookup[ast]?.toErrorContext(), internal = true)
-                                         }
-                                    })
-                            } else {
-                                var currExpr = selectExpr[1].compile(cEnv)
-                                // extract all the non-asterisk paths
-                                for(componentIndex in 2 until selectExpr.size) {
-                                    val raw = selectExpr[componentIndex]
-                                    val metadata = cEnv.metadataLookup[raw]
-
-                                    val targetExpr = currExpr
-                                    val (indexExpr, bindingCase) = compileIndexExpr(raw, cEnv)
-
-                                    currExpr = exprThunk(metadata) { env ->
-                                        val target = targetExpr.eval(env)
-                                        val index = indexExpr.eval(env)
-                                        target.get(index, bindingCase, metadata)
-                                    }
-                                }
-                                MultipleProjectionElement(listOf(currExpr))
-                            }
-                        } else {
-                            val alias = extractAlias(idx, selectExpr, cEnv)
-                            SingleProjectionElement(stringExprValue(alias.asName, ion), selectExpr.compile(cEnvOuter))
-                        }
-                    };
-
-                { _, env ->
-                    val columns = mutableListOf<ExprValue>()
-                    for(element in projectionElements) {
-                        when(element) {
-                            is SingleProjectionElement   -> {
-                                val eval = element.exprThunk.eval(env)
-                                columns.add(eval.namedValue(element.name))
-                            }
-                            is MultipleProjectionElement -> {
-                                for(exprThunk in element.exprThunks) {
-                                    val value = exprThunk.eval(env)
-                                    if(value.type == MISSING) continue
-
-                                    val children = value.asSequence()
-                                    if(!children.any()) {
-                                        val name = syntheticColumnName(columns.size).exprValue()
-                                        columns.add(value.namedValue(name))
-                                    } else {
-                                        for (childValue in value.filter { it.type != MISSING }) {
-                                            val namedFacet = childValue.asFacet(Named::class.java)
-                                            val name = namedFacet?.name
-                                                       ?: syntheticColumnName(columns.size).exprValue()
-                                            columns.add(childValue.namedValue(name))
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    SequenceStruct(ion, isOrdered = true, sequence = columns.asSequence())
+                // dokka can't infer the type here and throws when generating documentation so we need to make the
+                // thunk type explicit
+                val thunk: (List<ExprValue>, Environment) -> ExprValue = if(isSelectStar(selectForm, cEnv)) {
+                    { joinedValues, _ -> projectAllInto(joinedValues) }
                 }
+                else {
+                    val cEnvOuter = createSelectListNestedEnv(cEnv, aggregates, ast)
+                    val projectionElements: List<ProjectionElement> = extractProjectionElements(selectForm, cEnv, cEnvOuter);
+
+                    { _, env -> projectAllElements(projectionElements, env) }
+                }
+
+                thunk
             }
             "value" -> {
                 if (selectForm.size != 2) {
@@ -878,6 +820,96 @@ class EvaluatingCompiler(private val ion: IonSystem,
             // TODO support ordered names (when ORDER BY)
             SequenceStruct(ion, isOrdered = false, sequence = seq)
         }
+    }
+
+    private fun projectAllElements(projectionElements: List<ProjectionElement>, env: Environment): ExprValue {
+        val columns = mutableListOf<ExprValue>()
+        for(element in projectionElements) {
+            when(element) {
+                is SingleProjectionElement   -> {
+                    val eval = element.exprThunk.eval(env)
+                    columns.add(eval.namedValue(element.name))
+                }
+                is MultipleProjectionElement -> {
+                    for(exprThunk in element.exprThunks) {
+                        val value = exprThunk.eval(env)
+                        if(value.type == MISSING) continue
+
+                        val children = value.asSequence()
+                        if(!children.any()) {
+                            val name = syntheticColumnName(columns.size).exprValue()
+                            columns.add(value.namedValue(name))
+                        } else {
+                            for (childValue in value.filter { it.type != MISSING }) {
+                                val namedFacet = childValue.asFacet(Named::class.java)
+                                val name = namedFacet?.name ?: syntheticColumnName(columns.size).exprValue()
+                                columns.add(childValue.namedValue(name))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return SequenceStruct(ion, isOrdered = true, sequence = columns.asSequence())
+    }
+
+    private fun extractProjectionElements(selectForm: IonSequence,
+                                          cEnv: CompilationEnvironment,
+                                          cEnvOuter: CompilationEnvironment): List<ProjectionElement> {
+        return selectForm.drop(1).mapIndexed { idx, selectExpr: IonValue ->
+            if (selectExpr !is IonSequence || selectExpr.size == 0) {
+                err("SELECT list expression must be a non-empty sequence: $selectExpr",
+                    cEnv.metadataLookup[selectForm]?.toErrorContext(),
+                    internal = false)
+            }
+
+            if (selectExpr[0].stringValue() == "project_all") {
+                var currExpr = selectExpr[1].compile(cEnv)
+                // extract all the non-asterisk paths
+                for (componentIndex in 2 until selectExpr.size) {
+                    val raw = selectExpr[componentIndex]
+
+                    val targetExpr = currExpr
+                    val (indexExpr, bindingCase) = compileIndexExpr(raw, cEnv)
+
+                    currExpr = exprThunk(cEnv.metadataLookup[raw]) { env ->
+                        val target = targetExpr.eval(env)
+                        val index = indexExpr.eval(env)
+                        target.get(index, bindingCase, cEnv.metadataLookup[raw])
+                    }
+                }
+                MultipleProjectionElement(listOf(currExpr))
+            }
+            else {
+                val alias = extractAlias(idx, selectExpr, cEnv)
+                SingleProjectionElement(stringExprValue(alias.asName, ion), selectExpr.compile(cEnvOuter))
+            }
+        }
+    }
+
+    private fun isSelectStar(selectForm: IonSequence, cEnv: CompilationEnvironment): Boolean {
+        // SELECT * is represented as (list (project_all))
+        return selectForm[1] is IonSequence &&
+               selectForm[1].size == 1 &&
+               selectForm[1][0].text(cEnv) == "project_all"
+    }
+
+    private fun projectAllInto(joinedValues: List<ExprValue>): ExprValue {
+        val seq = joinedValues
+            .asSequence()
+            .mapIndexed { col, joinValue ->
+                when (joinValue.type) {
+                    ExprValueType.STRUCT -> joinValue
+                    else -> {
+                        // construct an artificial tuple for SELECT *
+                        val name = syntheticColumnName(col).exprValue()
+                        listOf(joinValue.namedValue(name))
+                    }
+                }
+            }.flatMap { it.asSequence() }
+
+        return SequenceStruct(ion, isOrdered = false, sequence = seq)
     }
 
     private fun createSelectListNestedEnv(
