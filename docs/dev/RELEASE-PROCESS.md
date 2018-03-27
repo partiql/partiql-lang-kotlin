@@ -54,9 +54,11 @@ We will refer to this number as `<N>` below.
    1. Open `Config` and search for `_dev`. For each occurrence update the Brazil package version to the appropriate
       Brazil package release number.
           * From `2.x_dev` to `2.x`
-      1. Open `build.xml` and search for `_dev`. For each occurrence update the Brazil package version to the appropriate
+   1. `git add Config`
+   1. Open `build.xml` and search for `_dev`. For each occurrence update the Brazil package version to the appropriate
       Brazil package release number.
           * From `IonSQLSandbox-2.x_dev` to `IonSQLSandbox-2.x`
+   1. `git add build.xml`
   1. Amend the merge commit to include these changes (avoids commit history noise):
       * `git commit --amend --no-edit`
 1. Build the code again
