@@ -249,8 +249,8 @@ class EvaluatingCompiler(private val ion: IonSystem,
     }
 
 
-    private val aliasHandler = { cEnv: CompilationEnvironment, ast: IonSexp ->
-        when (ast.size) {
+    private fun aliasHandler(cEnv: CompilationEnvironment, ast: IonSexp) : ExprThunk {
+        return when (ast.size) {
             3 -> {
                 // TODO we should make the compiler elide this completely
                 // NO-OP for evaluation--handled separately by compilation
@@ -261,8 +261,8 @@ class EvaluatingCompiler(private val ion: IonSystem,
         }
     }
 
-    private val isHandler = { cEnv: CompilationEnvironment, ast: IonSexp ->
-        when (ast.size) {
+    private fun isHandler(cEnv: CompilationEnvironment, ast: IonSexp): ExprThunk {
+        return when (ast.size) {
             3 -> {
                 val instanceExpr = ast[1].compile(cEnv)
                 // TODO consider the type parameters
@@ -281,7 +281,6 @@ class EvaluatingCompiler(private val ion: IonSystem,
                         cEnv.metadataLookup[ast]?.toErrorContext(),
                         internal = false)
         }
-
     }
 
     /** The compilation dispatch table for the AST. */
@@ -523,7 +522,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
             }
             else -> err("Arity incorrect for 'and': $ast", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
         }
-    }, "is" to isHandler, "is_not" to { cEnv, ast ->
+    }, "is" to ::isHandler, "is_not" to { cEnv, ast ->
         val isExpr = isHandler(cEnv, ast)
         exprThunk(cEnv.metadataLookup[ast]) { env ->
             (!isExpr.eval(env).booleanValue()).exprValue()
@@ -598,41 +597,49 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
             matchExprs.compile(cEnv.metadataLookup[ast])
         },
-        "path" to { cEnv, ast ->
-            if (ast.size < 3) {
-                err("Path arity too low: $ast", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
+        "path" to ::pathHandler,
+        "as" to ::aliasHandler,
+        "at" to ::aliasHandler,
+        "unpivot" to ::unpivotHandler,
+        "select" to ::selectHandler,
+        "pivot" to ::pivotHandler
+    )
+
+    private fun pathHandler(cEnv: CompilationEnvironment, ast: IonSexp): ExprThunk {
+        if (ast.size < 3) {
+            err("Path arity too low: $ast", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
+        }
+
+        var currExpr = ast[1].compile(cEnv)
+        var firstWildcardKind = PathWildcardKind.NONE
+
+        // extract all the non-wildcard paths
+        var idx = 2
+        while (idx < ast.size) {
+            val raw = ast[idx]
+            firstWildcardKind = raw.determinePathWildcard()
+            if (firstWildcardKind.isWildcard) {
+                // need special processing for the rest of the path
+                break
             }
 
-            var currExpr = ast[1].compile(cEnv)
-            var firstWildcardKind = PathWildcardKind.NONE
+            val targetExpr = currExpr
+            val (indexExpr, bindingCase) = compileIndexExpr(raw, cEnv)
 
-            // extract all the non-wildcard paths
-            var idx = 2
-            while (idx < ast.size) {
-                val raw = ast[idx]
-                firstWildcardKind = raw.determinePathWildcard()
-                if (firstWildcardKind.isWildcard) {
-                    // need special processing for the rest of the path
-                    break
-                }
-
-                val targetExpr = currExpr
-                val (indexExpr, bindingCase) = compileIndexExpr(raw, cEnv)
-
-                currExpr = exprThunk(cEnv.metadataLookup[raw]) { env ->
-                    val target = targetExpr.eval(env)
-                    val index = indexExpr.eval(env)
-                    target.get(index, bindingCase, cEnv.metadataLookup[raw])
-                }
-                idx++
+            currExpr = exprThunk(cEnv.metadataLookup[raw]) { env ->
+                val target = targetExpr.eval(env)
+                val index = indexExpr.eval(env)
+                target.get(index, bindingCase, cEnv.metadataLookup[raw])
             }
+            idx++
+        }
 
-            // we are either done or we have wild-card paths and beyond
-            val components = ArrayList<(Environment, ExprValue) -> Sequence<ExprValue>>()
-            while (idx < ast.size) {
-                val raw = ast[idx]
-                val wildcardKind = raw.determinePathWildcard()
-                components.add(
+        // we are either done or we have wild-card paths and beyond
+        val components = ArrayList<(Environment, ExprValue) -> Sequence<ExprValue>>()
+        while (idx < ast.size) {
+            val raw = ast[idx]
+            val wildcardKind = raw.determinePathWildcard()
+            components.add(
                     when (wildcardKind) {
                     // treat the entire value as a sequence
                         PathWildcardKind.NORMAL -> { _, exprVal ->
@@ -648,227 +655,227 @@ class EvaluatingCompiler(private val ion: IonSystem,
                             { env, exprVal -> sequenceOf(exprVal.get(indexExpr.eval(env), bindingCase, cEnv.metadataLookup[raw])) }
                         }
                     }
-                )
-                idx++
-            }
+            )
+            idx++
+        }
 
-            when (firstWildcardKind) {
-                PathWildcardKind.NONE -> currExpr
-                else -> {
-                    if (firstWildcardKind == PathWildcardKind.UNPIVOT) {
-                        val targetExpr = currExpr
-                        currExpr = exprThunk(cEnv.metadataLookup[ast]) { env -> targetExpr.eval(env).unpivot(ion) }
-                    }
-
-                    exprThunk(cEnv.metadataLookup[ast]) { env ->
-                        var seq = sequenceOf(currExpr.eval(env))
-                        for (component in components) {
-                            seq = seq.flatMap { component(env, it) }
-                        }
-
-                        SequenceExprValue(ion, seq)
-                    }
+        return when (firstWildcardKind) {
+            PathWildcardKind.NONE -> currExpr
+            else -> {
+                if (firstWildcardKind == PathWildcardKind.UNPIVOT) {
+                    val targetExpr = currExpr
+                    currExpr = exprThunk(cEnv.metadataLookup[ast]) { env -> targetExpr.eval(env).unpivot(ion) }
                 }
-            }
-        },
-        "as" to aliasHandler,
-        "at" to aliasHandler,
-        "unpivot" to { cEnv, ast ->
-            if (ast.size != 2) {
-                err("UNPIVOT form must have one expression", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
-            }
-            val expr = ast[1].compile(cEnv)
-            exprThunk(cEnv.metadataLookup[ast]) { env -> expr.eval(env).unpivot(ion) }
-        },
-        "select" to { cEnv, ast ->
-            if (ast.size < 3) {
-                err("Bad arity on SELECT form $ast: ${ast.size}", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
-            }
 
-            val projectForm = ast[1]
-            if (projectForm !is IonSequence || projectForm.isEmpty) {
-                err("SELECT projection node must be non-empty sequence: $projectForm", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
-            }
-            if (projectForm[0].text(cEnv) != "project") {
-                err("SELECT projection is not supported ${projectForm[0].text(cEnv)}", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
-            }
-            val selectForm = projectForm[1]
-            if (selectForm !is IonSequence || selectForm.isEmpty) {
-                err("SELECT projection must be non-empty sequence: $selectForm", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
-            }
-
-            // the captured list of legacy SQL style aggregates
-            val aggregates: MutableList<Aggregate> = mutableListOf()
-
-            val fromSources = ast[2][1].compileFromClauseSources(cEnv)
-            val selectFunc: (List<ExprValue>, Environment) -> ExprValue = when (selectForm[0].text(cEnv)) {
-                "list" -> {
-                    if (selectForm.size < 2) {
-                        err("SELECT ... must have at least one expression", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
+                exprThunk(cEnv.metadataLookup[ast]) { env ->
+                    var seq = sequenceOf(currExpr.eval(env))
+                    for (component in components) {
+                        seq = seq.flatMap { component(env, it) }
                     }
-                    val cEnvOuter = createSelectListNestedEnv(cEnv, aggregates, ast)
 
-                    val projectionElements: List<ProjectionElement> =
-                        selectForm.drop(1).mapIndexed { idx, selectExpr: IonValue ->
-                            if(selectExpr !is IonSequence || selectExpr.size == 0) {
-                                err("SELECT list expression must be a non-empty sequence: ${selectExpr}", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
-                            }
-                            if(selectExpr[0].stringValue() == "project_all") {
-                                if(selectExpr.size == 1) {
-                                    MultipleProjectionElement(
-                                        fromSources.map {
-                                             exprThunk(cEnv.metadataLookup[selectExpr]) {
-                                                 env -> env.current[BindingName(it.alias.asName, BindingCase.SENSITIVE)]
-                                                        // The error condition below should never happen because the alias we use
-                                                        // is derived from the FROM clause and should therefore always be defined...
-                                                        ?: err("project_all element '${it.alias.asName}' wss not resolved.",
-                                                               cEnv.metadataLookup[ast]?.toErrorContext(), internal = true)
-                                             }
-                                        })
-                                } else {
-                                    var currExpr = selectExpr[1].compile(cEnv)
-                                    // extract all the non-asterisk paths
-                                    for(componentIndex in 2 until selectExpr.size) {
-                                        val raw = selectExpr[componentIndex]
-
-                                        val targetExpr = currExpr
-                                        val (indexExpr, bindingCase) = compileIndexExpr(raw, cEnv)
-
-                                        currExpr = exprThunk(cEnv.metadataLookup[raw]) { env ->
-                                            val target = targetExpr.eval(env)
-                                            val index = indexExpr.eval(env)
-                                            target.get(index, bindingCase, cEnv.metadataLookup[raw])
-                                        }
-                                    }
-                                    MultipleProjectionElement(listOf(currExpr))
-                                }
-                            } else {
-                                val alias = extractAlias(idx, selectExpr, cEnv)
-                                SingleProjectionElement(alias.asName, selectExpr.compile(cEnvOuter))
-                            }
-                        };
-
-                    { _, env ->
-                        val columns = mutableListOf<ExprValue>()
-                        for(element in projectionElements) {
-                            when(element) {
-                                is SingleProjectionElement   -> {
-                                    val eval = element.exprThunk.eval(env)
-                                    columns.add(eval.namedValue(ion.newString(element.name).exprValue()))
-                                }
-                                is MultipleProjectionElement -> {
-                                    for(exprThunk in element.exprThunks) {
-                                        val value = exprThunk.eval(env)
-                                        if(value.type == MISSING) continue
-
-                                        val children = value.asSequence()
-                                        if(!children.any()) {
-                                            val name = syntheticColumnName(columns.size).exprValue()
-                                            columns.add(value.namedValue(name))
-                                        } else {
-                                            for (childValue in value.filter { it.type != MISSING }) {
-                                                val namedFacet = childValue.asFacet(Named::class.java)
-                                                val name = namedFacet?.name
-                                                           ?: syntheticColumnName(columns.size).exprValue()
-                                                columns.add(childValue.namedValue(name))
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        SequenceStruct(ion, isOrdered = true, sequence = columns.asSequence())
-                    }
+                    SequenceExprValue(ion, seq)
                 }
-                "value" -> {
-                    if (selectForm.size != 2) {
-                        err("SELECT VALUE must have a single expression", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
-                    }
-                    val expr = selectForm[1].compile(cEnv);
-
-                    { _, env -> expr.eval(env) }
-                }
-                else -> err("Invalid node in SELECT: $selectForm", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
-            }
-
-            val sourceThunk = compileQueryWithoutProjection(cEnv, ast, fromSources)
-            when {
-                // generate a singleton with the aggregates
-                aggregates.isNotEmpty() -> exprThunk(cEnv.metadataLookup[ast]) { env ->
-                    SequenceExprValue(
-                        ion,
-                        listOf(nullValue).asSequence()
-                            .map {
-                                // set up aggregate registers
-                                val aggregators = aggregates.map {
-                                    val aggregator = it.aggregatorFactory.create()
-                                    env.registers[it.registerId] = aggregator
-                                    aggregator
-                                }
-
-                                // map/filter the source table into the inner-expressions
-                                // and accumulate into the aggregators
-                                sourceThunk(env).forEach { (_, projectEnv) ->
-                                    aggregators.forEachIndexed { i, aggregator ->
-                                        val inputExpr = aggregates[i].inputExpr
-                                        aggregator.next(inputExpr.eval(projectEnv))
-                                    }
-                                }
-
-                                // generate the final aggregate projection
-                                // XXX this only happens for SELECT list so we can use a dummy list
-                                selectFunc(emptyList(), env)
-                            }
-                    )
-                }
-                // do normal map/filter
-                else -> exprThunk(cEnv.metadataLookup[ast]) { env ->
-                    SequenceExprValue(
-                        ion,
-                        sourceThunk(env).map { (joinedValues, projectEnv) ->
-                            selectFunc(joinedValues, projectEnv)
-                        }.map {
-                            // TODO make this expose the ordinal for ordered sequences
-                            // make sure we don't expose the underlying value's name out of a SELECT
-                            it.unnamedValue()
-                        }
-                    )
-                }
-            }
-        },
-        "pivot" to { cEnv, ast ->
-            if (ast.size < 3) {
-                err("Bad arity on PIVOT form $ast: ${ast.size}", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
-            }
-
-            val memberForm = ast[1]
-            if (memberForm !is IonSequence
-                || memberForm.size != 3
-                || memberForm[0].text(cEnv) != "member") {
-                err("PIVOT member node must be of the form (member <name> <value>): $memberForm", cEnv.metadataLookup[memberForm]?.toErrorContext(), internal = false)
-            }
-            val nameExpr = memberForm[1].compile(cEnv)
-            val valueExpr = memberForm[2].compile(cEnv)
-            val fromSources = ast[2][1].compileFromClauseSources(cEnv)
-            val sourceThunk = compileQueryWithoutProjection(cEnv, ast, fromSources)
-
-            exprThunk(cEnv.metadataLookup[ast]) { env ->
-                val seq = sourceThunk(env)
-                    .asSequence()
-                    .map { (_, env) ->
-                        Pair(nameExpr.eval(env), valueExpr.eval(env))
-                    }
-                    .filter { (name, _) ->
-                        name.type.isText
-                    }
-                    .map { (name, value) ->
-                        value.namedValue(name)
-                    }
-                // TODO support ordered names (when ORDER BY)
-                SequenceStruct(ion, isOrdered = false, sequence = seq)
             }
         }
-    )
+    }
+
+    private fun unpivotHandler(cEnv: CompilationEnvironment, ast: IonSexp): ExprThunk {
+        if (ast.size != 2) {
+            err("UNPIVOT form must have one expression", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
+        }
+        val expr = ast[1].compile(cEnv)
+        return exprThunk(cEnv.metadataLookup[ast]) { env -> expr.eval(env).unpivot(ion) }
+    }
+
+    private fun selectHandler(cEnv: CompilationEnvironment, ast: IonSexp): ExprThunk {
+        if (ast.size < 3) {
+            err("Bad arity on SELECT form $ast: ${ast.size}", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
+        }
+
+        val projectForm = ast[1]
+        if (projectForm !is IonSequence || projectForm.isEmpty) {
+            err("SELECT projection node must be non-empty sequence: $projectForm", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
+        }
+        if (projectForm[0].text(cEnv) != "project") {
+            err("SELECT projection is not supported ${projectForm[0].text(cEnv)}", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
+        }
+        val selectForm = projectForm[1]
+        if (selectForm !is IonSequence || selectForm.isEmpty) {
+            err("SELECT projection must be non-empty sequence: $selectForm", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
+        }
+
+        // the captured list of legacy SQL style aggregates
+        val aggregates: MutableList<Aggregate> = mutableListOf()
+
+        val fromSources = ast[2][1].compileFromClauseSources(cEnv)
+        val selectFunc: (List<ExprValue>, Environment) -> ExprValue = when (selectForm[0].text(cEnv)) {
+            "list" -> {
+                if (selectForm.size < 2) {
+                    err("SELECT ... must have at least one expression", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
+                }
+                val cEnvOuter = createSelectListNestedEnv(cEnv, aggregates, ast)
+
+                val projectionElements: List<ProjectionElement> =
+                    selectForm.drop(1).mapIndexed { idx, selectExpr: IonValue ->
+                        if(selectExpr !is IonSequence || selectExpr.size == 0) {
+                            err("SELECT list expression must be a non-empty sequence: ${selectExpr}", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
+                        }
+                        if(selectExpr[0].stringValue() == "project_all") {
+                            if(selectExpr.size == 1) {
+                                MultipleProjectionElement(
+                                    fromSources.map {
+                                         exprThunk(cEnv.metadataLookup[selectExpr]) {
+                                             env -> env.current[BindingName(it.alias.asName, BindingCase.SENSITIVE)]
+                                                    // The error condition below should never happen because the alias we use
+                                                    // is derived from the FROM clause and should therefore always be defined...
+                                                    ?: err("project_all element '${it.alias.asName}' wss not resolved.",
+                                                           cEnv.metadataLookup[ast]?.toErrorContext(), internal = true)
+                                         }
+                                    })
+                            } else {
+                                var currExpr = selectExpr[1].compile(cEnv)
+                                // extract all the non-asterisk paths
+                                for(componentIndex in 2 until selectExpr.size) {
+                                    val raw = selectExpr[componentIndex]
+
+                                    val targetExpr = currExpr
+                                    val (indexExpr, bindingCase) = compileIndexExpr(raw, cEnv)
+
+                                    currExpr = exprThunk(cEnv.metadataLookup[raw]) { env ->
+                                        val target = targetExpr.eval(env)
+                                        val index = indexExpr.eval(env)
+                                        target.get(index, bindingCase, cEnv.metadataLookup[raw])
+                                    }
+                                }
+                                MultipleProjectionElement(listOf(currExpr))
+                            }
+                        } else {
+                            val alias = extractAlias(idx, selectExpr, cEnv)
+                            SingleProjectionElement(alias.asName, selectExpr.compile(cEnvOuter))
+                        }
+                    };
+
+                { _, env ->
+                    val columns = mutableListOf<ExprValue>()
+                    for(element in projectionElements) {
+                        when(element) {
+                            is SingleProjectionElement   -> {
+                                val eval = element.exprThunk.eval(env)
+                                columns.add(eval.namedValue(ion.newString(element.name).exprValue()))
+                            }
+                            is MultipleProjectionElement -> {
+                                for(exprThunk in element.exprThunks) {
+                                    val value = exprThunk.eval(env)
+                                    if(value.type == MISSING) continue
+
+                                    val children = value.asSequence()
+                                    if(!children.any()) {
+                                        val name = syntheticColumnName(columns.size).exprValue()
+                                        columns.add(value.namedValue(name))
+                                    } else {
+                                        for (childValue in value.filter { it.type != MISSING }) {
+                                            val namedFacet = childValue.asFacet(Named::class.java)
+                                            val name = namedFacet?.name
+                                                       ?: syntheticColumnName(columns.size).exprValue()
+                                            columns.add(childValue.namedValue(name))
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    SequenceStruct(ion, isOrdered = true, sequence = columns.asSequence())
+                }
+            }
+            "value" -> {
+                if (selectForm.size != 2) {
+                    err("SELECT VALUE must have a single expression", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
+                }
+                val expr = selectForm[1].compile(cEnv);
+
+                { _, env -> expr.eval(env) }
+            }
+            else -> err("Invalid node in SELECT: $selectForm", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
+        }
+
+        val sourceThunk = compileQueryWithoutProjection(cEnv, ast, fromSources)
+        return when {
+            // generate a singleton with the aggregates
+            aggregates.isNotEmpty() -> exprThunk(cEnv.metadataLookup[ast]) { env ->
+                SequenceExprValue(
+                    ion,
+                    listOf(nullValue).asSequence()
+                        .map {
+                            // set up aggregate registers
+                            val aggregators = aggregates.map {
+                                val aggregator = it.aggregatorFactory.create()
+                                env.registers[it.registerId] = aggregator
+                                aggregator
+                            }
+
+                            // map/filter the source table into the inner-expressions
+                            // and accumulate into the aggregators
+                            sourceThunk(env).forEach { (_, projectEnv) ->
+                                aggregators.forEachIndexed { i, aggregator ->
+                                    val inputExpr = aggregates[i].inputExpr
+                                    aggregator.next(inputExpr.eval(projectEnv))
+                                }
+                            }
+
+                            // generate the final aggregate projection
+                            // XXX this only happens for SELECT list so we can use a dummy list
+                            selectFunc(emptyList(), env)
+                        }
+                )
+            }
+            // do normal map/filter
+            else -> exprThunk(cEnv.metadataLookup[ast]) { env ->
+                SequenceExprValue(
+                    ion,
+                    sourceThunk(env).map { (joinedValues, projectEnv) ->
+                        selectFunc(joinedValues, projectEnv)
+                    }.map {
+                        // TODO make this expose the ordinal for ordered sequences
+                        // make sure we don't expose the underlying value's name out of a SELECT
+                        it.unnamedValue()
+                    }
+                )
+            }
+        }
+    }
+
+    private fun pivotHandler(cEnv: CompilationEnvironment, ast: IonSexp): ExprThunk {
+        if (ast.size < 3) {
+            err("Bad arity on PIVOT form $ast: ${ast.size}", cEnv.metadataLookup[ast]?.toErrorContext(), internal = false)
+        }
+
+        val memberForm = ast[1]
+        if (memberForm !is IonSequence
+            || memberForm.size != 3
+            || memberForm[0].text(cEnv) != "member") {
+            err("PIVOT member node must be of the form (member <name> <value>): $memberForm", cEnv.metadataLookup[memberForm]?.toErrorContext(), internal = false)
+        }
+        val nameExpr = memberForm[1].compile(cEnv)
+        val valueExpr = memberForm[2].compile(cEnv)
+        val fromSources = ast[2][1].compileFromClauseSources(cEnv)
+        val sourceThunk = compileQueryWithoutProjection(cEnv, ast, fromSources)
+
+        return exprThunk(cEnv.metadataLookup[ast]) { env ->
+            val seq = sourceThunk(env)
+                .asSequence()
+                .map { (_, env) ->
+                    Pair(nameExpr.eval(env), valueExpr.eval(env))
+                }
+                .filter { (name, _) ->
+                    name.type.isText
+                }
+                .map { (name, value) ->
+                    value.namedValue(name)
+                }
+            // TODO support ordered names (when ORDER BY)
+            SequenceStruct(ion, isOrdered = false, sequence = seq)
+        }
+    }
 
     private fun createSelectListNestedEnv(
         cEnv: CompilationEnvironment, aggregates: MutableList<Aggregate>, ast: IonSexp): CompilationEnvironment {
