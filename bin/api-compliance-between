@@ -20,7 +20,7 @@ command_exists() {
 compile_and_copy() {
   CI=$1
   git checkout $CI
-  brazil-build compile-jar
+  brazil-build single-jar
   cp build/lib/ionsql-sandbox-single.jar $TEMP_DIR/$CI.jar
 }
 
