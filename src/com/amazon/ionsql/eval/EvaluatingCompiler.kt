@@ -70,7 +70,7 @@ private sealed class ProjectionElement
  * - `name` is "value"
  * - `exprThunk` is compiled expression `a + b`
  */
-private class SingleProjectionElement(val name: String, val exprThunk: ExprThunk) : ProjectionElement()
+private class SingleProjectionElement(val name: ExprValue, val exprThunk: ExprThunk) : ProjectionElement()
 
 /**
  * Represents a wildcard ((project_all) node) expression to be projected into the final result.
@@ -617,6 +617,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
         var idx = 2
         while (idx < ast.size) {
             val raw = ast[idx]
+            val metadata = cEnv.metadataLookup[raw]
             firstWildcardKind = raw.determinePathWildcard()
             if (firstWildcardKind.isWildcard) {
                 // need special processing for the rest of the path
@@ -629,7 +630,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
             currExpr = exprThunk(cEnv.metadataLookup[raw]) { env ->
                 val target = targetExpr.eval(env)
                 val index = indexExpr.eval(env)
-                target.get(index, bindingCase, cEnv.metadataLookup[raw])
+                target.get(index, bindingCase, metadata)
             }
             idx++
         }
@@ -638,6 +639,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
         val components = ArrayList<(Environment, ExprValue) -> Sequence<ExprValue>>()
         while (idx < ast.size) {
             val raw = ast[idx]
+            val metadata = cEnv.metadataLookup[raw]
             val wildcardKind = raw.determinePathWildcard()
             components.add(
                     when (wildcardKind) {
@@ -652,7 +654,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                     // "index" into the value lazily
                         PathWildcardKind.NONE -> {
                             val (indexExpr, bindingCase) = compileIndexExpr(raw, cEnv);
-                            { env, exprVal -> sequenceOf(exprVal.get(indexExpr.eval(env), bindingCase, cEnv.metadataLookup[raw])) }
+                            { env, exprVal -> sequenceOf(exprVal.get(indexExpr.eval(env), bindingCase, metadata)) }
                         }
                     }
             )
@@ -737,21 +739,22 @@ class EvaluatingCompiler(private val ion: IonSystem,
                                 // extract all the non-asterisk paths
                                 for(componentIndex in 2 until selectExpr.size) {
                                     val raw = selectExpr[componentIndex]
+                                    val metadata = cEnv.metadataLookup[raw]
 
                                     val targetExpr = currExpr
                                     val (indexExpr, bindingCase) = compileIndexExpr(raw, cEnv)
 
-                                    currExpr = exprThunk(cEnv.metadataLookup[raw]) { env ->
+                                    currExpr = exprThunk(metadata) { env ->
                                         val target = targetExpr.eval(env)
                                         val index = indexExpr.eval(env)
-                                        target.get(index, bindingCase, cEnv.metadataLookup[raw])
+                                        target.get(index, bindingCase, metadata)
                                     }
                                 }
                                 MultipleProjectionElement(listOf(currExpr))
                             }
                         } else {
                             val alias = extractAlias(idx, selectExpr, cEnv)
-                            SingleProjectionElement(alias.asName, selectExpr.compile(cEnvOuter))
+                            SingleProjectionElement(stringExprValue(alias.asName, ion), selectExpr.compile(cEnvOuter))
                         }
                     };
 
@@ -761,7 +764,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
                         when(element) {
                             is SingleProjectionElement   -> {
                                 val eval = element.exprThunk.eval(env)
-                                columns.add(eval.namedValue(ion.newString(element.name).exprValue()))
+                                columns.add(eval.namedValue(element.name))
                             }
                             is MultipleProjectionElement -> {
                                 for(exprThunk in element.exprThunks) {
