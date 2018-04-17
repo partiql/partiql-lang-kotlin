@@ -1,6 +1,7 @@
 package com.amazon.ionsql.eval
 
 import com.amazon.ionsql.errors.*
+import com.amazon.ionsql.util.*
 import org.junit.*
 
 class EvaluatingCompilerExceptionsTest : EvaluatorBase() {
@@ -171,9 +172,15 @@ class EvaluatingCompilerExceptionsTest : EvaluatorBase() {
         ErrorCode.EVALUATOR_AMBIGUOUS_BINDING,
         sourceLocationProperties(1, 9) + mapOf(Property.BINDING_NAME to "REPEATED", Property.BINDING_NAME_MATCHES to "repeated, repeated"))
 
-    @Test //https://i.amazon.com/issues/IONSQL-327
+    @Test // https://i.amazon.com/issues/IONSQL-327
     fun negativeLimitValueThrowsNonInternalException() = checkInputThrowingEvaluationException(
         """ select * from <<1>> limit -1 """,
         ErrorCode.EVALUATOR_NEGATIVE_LIMIT,
         sourceLocationProperties(1, 29))
+
+    @Test // https://i.amazon.com/issues/IONSQL-331
+    fun invalidEscapeSequenceInLike() = checkInputThrowingEvaluationException(
+        """ '' like '^1' escape '^' """,
+        ErrorCode.EVALUATOR_LIKE_PATTERN_INVALID_ESCAPE_SEQUENCE,
+        sourceLocationProperties(1, 10) + mapOf(Property.LIKE_ESCAPE to "^", Property.LIKE_PATTERN to "^1"))
 }

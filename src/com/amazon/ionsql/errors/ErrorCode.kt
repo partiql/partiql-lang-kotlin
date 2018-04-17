@@ -449,16 +449,24 @@ enum class ErrorCode(private val category: ErrorCategory,
             "Binding name was '${errorContext?.get(Property.BINDING_NAME)}'"
     },
 
-
-
     EVALUATOR_LIKE_INVALID_INPUTS(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.LIKE_VALUE, Property.LIKE_PATTERN, Property.LIKE_ESCAPE),
         "Invalid argument given to LIKE expression"){
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
-            "Given :" +
-            "value = ${errorContext?.get(Property.LIKE_VALUE)?.stringValue() ?: UNKNOWN}" + "," +
-            "pattern =  ${errorContext?.get(Property.LIKE_PATTERN)?.stringValue() ?: UNKNOWN}" + "," +
+            "Given: " +
+            "value = ${errorContext?.get(Property.LIKE_VALUE)?.stringValue() ?: UNKNOWN}, " +
+            "pattern =  ${errorContext?.get(Property.LIKE_PATTERN)?.stringValue() ?: UNKNOWN}, " +
+            "escape char = ${errorContext?.get(Property.LIKE_ESCAPE)?.stringValue() ?: "none given"}"
+    },
+
+    EVALUATOR_LIKE_PATTERN_INVALID_ESCAPE_SEQUENCE(
+        ErrorCategory.EVALUATOR,
+        LOCATION + setOf(Property.LIKE_PATTERN, Property.LIKE_ESCAPE),
+        "Pattern contains an invalid or malformed escape sequence"){
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "Given: " +
+            "pattern =  ${errorContext?.get(Property.LIKE_PATTERN)?.stringValue() ?: UNKNOWN}, " +
             "escape char = ${errorContext?.get(Property.LIKE_ESCAPE)?.stringValue() ?: "none given"}"
     },
 
