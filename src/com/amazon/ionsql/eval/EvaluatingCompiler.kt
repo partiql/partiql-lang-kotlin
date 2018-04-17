@@ -1174,10 +1174,14 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
         var whereExpr: ExprThunk? = null
         var limitExpr: ExprThunk? = null
+        var limitMetadata: NodeMetadata? = null
         for (clause in ast.drop(3)) {
             when (clause[0].text(cEnv)) {
                 "where" -> whereExpr = clause[1].compile(cEnv)
-                "limit" -> limitExpr = clause[1].compile(cEnv)
+                "limit" -> {
+                    limitMetadata = cEnv.metadataLookup[clause[1]]
+                    limitExpr = clause[1].compile(cEnv)
+                }
                 else -> err("Unknown clause in SELECT: $clause", cEnv.metadataLookup[clause]?.toErrorContext(), internal = false)
             }
         }
@@ -1256,7 +1260,16 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
             if (limitExpr != null) {
                 // TODO determine if this needs to be scoped over projection
-                seq = seq.take(limitExpr!!.eval(rootEnv).numberValue().toInt())
+                val limitValue = limitExpr!!.eval(rootEnv).numberValue().toInt()
+
+                //https://i.amazon.com/issues/IONSQL-327
+                if(limitValue < 0) {
+                    err("negative LIMIT",
+                        ErrorCode.EVALUATOR_NEGATIVE_LIMIT,
+                        limitMetadata?.toErrorContext()
+                        , internal = false)
+                }
+                seq = seq.take(limitValue)
             }
 
             seq

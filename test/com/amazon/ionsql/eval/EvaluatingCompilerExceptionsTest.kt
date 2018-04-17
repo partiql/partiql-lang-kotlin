@@ -170,4 +170,10 @@ class EvaluatingCompilerExceptionsTest : EvaluatorBase() {
         """ select REPEATED from `[{repeated:1, repeated:2}]` """,
         ErrorCode.EVALUATOR_AMBIGUOUS_BINDING,
         sourceLocationProperties(1, 9) + mapOf(Property.BINDING_NAME to "REPEATED", Property.BINDING_NAME_MATCHES to "repeated, repeated"))
+
+    @Test //https://i.amazon.com/issues/IONSQL-327
+    fun negativeLimitValueThrowsNonInternalException() = checkInputThrowingEvaluationException(
+        """ select * from <<1>> limit -1 """,
+        ErrorCode.EVALUATOR_NEGATIVE_LIMIT,
+        sourceLocationProperties(1, 29))
 }

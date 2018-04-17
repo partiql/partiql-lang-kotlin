@@ -460,7 +460,14 @@ enum class ErrorCode(private val category: ErrorCategory,
             "value = ${errorContext?.get(Property.LIKE_VALUE)?.stringValue() ?: UNKNOWN}" + "," +
             "pattern =  ${errorContext?.get(Property.LIKE_PATTERN)?.stringValue() ?: UNKNOWN}" + "," +
             "escape char = ${errorContext?.get(Property.LIKE_ESCAPE)?.stringValue() ?: "none given"}"
-    };
+    },
+
+    EVALUATOR_NEGATIVE_LIMIT(
+        ErrorCategory.EVALUATOR,
+        LOCATION,
+        "LIMIT must not be negative")
+    ;
+
 
     protected fun getTokenString(errorContext: PropertyValueMap?): String =
         errorContext?.get(Property.TOKEN_STRING)?.stringValue() ?: UNKNOWN
