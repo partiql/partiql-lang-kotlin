@@ -50,15 +50,12 @@ fun List<Alias>.localsBinder(missingValue: ExprValue): LocalsBinder {
                 .filterNotNull()
                 // There may be multiple accessors per name.
                 // Squash the accessor list to either the sole element or an error function
-                .groupBy { keyMangler(it.name) }
+                .groupBy { keyMangler(it.name)  }
                 .mapValues { (name, binders) ->
                     when (binders.size) {
                         1 -> binders[0].func
-                        else -> { locals -> err(
-                            "$name is ambiguous: ${binders.map { it.func(locals).ionValue }}",
-                            errorCode = ErrorCode.EVALUATOR_AMBIGUOUS_BINDING,
-                            errorContext = PropertyValueMap().apply { set(Property.BINDING_NAME, name) },
-                            internal = false)
+                        else -> { _ ->
+                            errAmbiguousBinding(name, binders.map { it.name })
                         }
                     }
                 }
