@@ -30,7 +30,7 @@ class EvaluatingCompilerExceptionsTest : EvaluatorBase() {
     }
 
     @Test
-    fun shadowedVariables() = assertThrows("a is ambiguous: [5, 5]", NodeMetadata(1, 14)) {
+    fun shadowedVariables() = assertThrows("Case insensitive binding name matched more than one identifier", NodeMetadata(1, 14)) {
         voidEval("""SELECT VALUE a FROM `[{v:5}]` AS item, @item.v AS a, @item.v AS a""")
     }
 
