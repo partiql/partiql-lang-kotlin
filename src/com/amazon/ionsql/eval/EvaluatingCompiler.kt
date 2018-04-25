@@ -16,7 +16,6 @@ import java.math.*
 import java.util.*
 import java.util.Collections.*
 import java.util.concurrent.atomic.*
-import kotlin.math.*
 
 /** An [ExprValue] which is the result of an expression evaluated in an [Environment].  */
 private interface ExprThunk {
@@ -1081,22 +1080,37 @@ class EvaluatingCompiler(private val ion: IonSystem,
                                                                      cEnv.metadataLookup[pattern]?.toErrorContext(),
                                                                      internal = false)
         escape?.let {
-            val escapeChar = checkEscapeChar(escape, cEnv).codePointAt(0)  // escape is a string of length 1
-            val validEscapedChars = setOf('_'.toInt(), '%'.toInt(), escapeChar)
+            val escapeCharString = checkEscapeChar(escape, cEnv)
+            val escapeCharCodePoint = escapeCharString.codePointAt(0)  // escape is a string of length 1
+            val validEscapedChars = setOf('_'.toInt(), '%'.toInt(), escapeCharCodePoint)
             val iter = patternString.codePointSequence().iterator()
             var count = 0
 
+            fun throwInvalidEscape(): Nothing =
+                err("Invalid escape sequence : $patternString",
+                    ErrorCode.EVALUATOR_LIKE_PATTERN_INVALID_ESCAPE_SEQUENCE,
+                    cEnv.metadataLookup[pattern]?.toErrorContext()?.apply {
+                        set(Property.LIKE_PATTERN, patternString)
+                        set(Property.LIKE_ESCAPE, escapeCharString)
+                    },
+                    internal = false)
+
+
             while (iter.hasNext()) {
                 val current = iter.next()
-                if (current == escapeChar) {
-                    if (!iter.hasNext()) err("Invalid escape sequence : $patternString", cEnv.metadataLookup[pattern]?.toErrorContext(), internal = false)
+                if (current == escapeCharCodePoint) {
+                    if (!iter.hasNext()) {
+                        throwInvalidEscape()
+                    }
                     else {
-                        if (!validEscapedChars.contains(iter.next())) err("Invalid escape sequence : $patternString", cEnv.metadataLookup[pattern]?.toErrorContext(), internal = false)
+                        if (!validEscapedChars.contains(iter.next())) {
+                            throwInvalidEscape()
+                        }
                     }
                 }
                 count++
             }
-            return Triple(patternString, escapeChar, count)
+            return Triple(patternString, escapeCharCodePoint, count)
         }
         return Triple(patternString, null, patternString.length)
     }
@@ -1174,10 +1188,14 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
         var whereExpr: ExprThunk? = null
         var limitExpr: ExprThunk? = null
+        var limitMetadata: NodeMetadata? = null
         for (clause in ast.drop(3)) {
             when (clause[0].text(cEnv)) {
                 "where" -> whereExpr = clause[1].compile(cEnv)
-                "limit" -> limitExpr = clause[1].compile(cEnv)
+                "limit" -> {
+                    limitMetadata = cEnv.metadataLookup[clause[1]]
+                    limitExpr = clause[1].compile(cEnv)
+                }
                 else -> err("Unknown clause in SELECT: $clause", cEnv.metadataLookup[clause]?.toErrorContext(), internal = false)
             }
         }
@@ -1246,7 +1264,7 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
             if (whereExpr != null) {
                 seq = seq.filter { (_, env) ->
-                    val whereClauseResult: ExprValue = whereExpr!!.eval(env)
+                    val whereClauseResult: ExprValue = whereExpr.eval(env)
                     when (whereClauseResult.isUnknown()) {
                         true  -> false // Unknowns behave as `false` in WHERE context (see Issue IONSQL-162)
                         false  -> whereClauseResult.booleanValue()
@@ -1256,7 +1274,16 @@ class EvaluatingCompiler(private val ion: IonSystem,
 
             if (limitExpr != null) {
                 // TODO determine if this needs to be scoped over projection
-                seq = seq.take(limitExpr!!.eval(rootEnv).numberValue().toInt())
+                val limitValue = limitExpr.eval(rootEnv).numberValue().toInt()
+
+                //https://i.amazon.com/issues/IONSQL-327
+                if(limitValue < 0) {
+                    err("negative LIMIT",
+                        ErrorCode.EVALUATOR_NEGATIVE_LIMIT,
+                        limitMetadata?.toErrorContext(),
+                        internal = false)
+                }
+                seq = seq.take(limitValue)
             }
 
             seq

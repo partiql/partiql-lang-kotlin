@@ -1,6 +1,7 @@
 package com.amazon.ionsql.eval
 
 import com.amazon.ionsql.errors.*
+import com.amazon.ionsql.util.*
 import org.junit.*
 
 class EvaluatingCompilerExceptionsTest : EvaluatorBase() {
@@ -29,7 +30,7 @@ class EvaluatingCompilerExceptionsTest : EvaluatorBase() {
     }
 
     @Test
-    fun shadowedVariables() = assertThrows("a is ambiguous: [5, 5]", NodeMetadata(1, 14)) {
+    fun shadowedVariables() = assertThrows("Case insensitive binding name matched more than one identifier", NodeMetadata(1, 14)) {
         voidEval("""SELECT VALUE a FROM `[{v:5}]` AS item, @item.v AS a, @item.v AS a""")
     }
 
@@ -170,4 +171,16 @@ class EvaluatingCompilerExceptionsTest : EvaluatorBase() {
         """ select REPEATED from `[{repeated:1, repeated:2}]` """,
         ErrorCode.EVALUATOR_AMBIGUOUS_BINDING,
         sourceLocationProperties(1, 9) + mapOf(Property.BINDING_NAME to "REPEATED", Property.BINDING_NAME_MATCHES to "repeated, repeated"))
+
+    @Test // https://i.amazon.com/issues/IONSQL-327
+    fun negativeLimitValueThrowsNonInternalException() = checkInputThrowingEvaluationException(
+        """ select * from <<1>> limit -1 """,
+        ErrorCode.EVALUATOR_NEGATIVE_LIMIT,
+        sourceLocationProperties(1, 29))
+
+    @Test // https://i.amazon.com/issues/IONSQL-331
+    fun invalidEscapeSequenceInLike() = checkInputThrowingEvaluationException(
+        """ '' like '^1' escape '^' """,
+        ErrorCode.EVALUATOR_LIKE_PATTERN_INVALID_ESCAPE_SEQUENCE,
+        sourceLocationProperties(1, 10) + mapOf(Property.LIKE_ESCAPE to "^", Property.LIKE_PATTERN to "^1"))
 }

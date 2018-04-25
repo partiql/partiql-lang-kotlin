@@ -37,47 +37,53 @@ data class Alias(val asName: String, val atName: String?)
 fun List<Alias>.localsBinder(missingValue: ExprValue): LocalsBinder {
 
     // For each 'as' and 'at' alias, create a locals accessor => { name: binding_accessor }
-    data class Binder(val name: String, val func: (List<ExprValue>) -> ExprValue)
-    val localBindings: Map<String, (List<ExprValue>) -> ExprValue?> = this.mapIndexed { index, alias -> sequenceOf(
-                // the alias binds to the value itself
-                Binder(alias.asName) { it[index] },
-                // the alias binds to the name of the value
-                if (alias.atName == null) null
-                else Binder(alias.atName) { it[index].name ?: missingValue })}
-            .asSequence()
-            .flatten()
-            .filterNotNull()
-            // There may be multiple accessors per name.
-            // Squash the accessor list to either the sole element or an error function
-            .groupBy { it.name }
-            .mapValues { (name, binders) ->
-                when (binders.size) {
-                    // The 0 case is fulfilled by withDefault
-                    1 -> binders[0].func
-                    else -> { locals -> err(
-                        "$name is ambiguous: ${binders.map { it.func(locals).ionValue }}",
-                        errorCode = ErrorCode.EVALUATOR_AMBIGUOUS_BINDING,
-                        errorContext = PropertyValueMap().apply { set(Property.BINDING_NAME, name) },
-                        internal = false)
+    fun compileBindings(keyMangler: (String) -> String = { it }): Map<String, (List<ExprValue>) -> ExprValue?> {
+        data class Binder(val name: String, val func: (List<ExprValue>) -> ExprValue)
+        return this.mapIndexed { index, alias -> sequenceOf(
+                    // the alias binds to the value itself
+                    Binder(alias.asName) { it[index] },
+                    // the alias binds to the name of the value
+                    if (alias.atName == null) null
+                    else Binder(alias.atName) { it[index].name ?: missingValue })}
+                .asSequence()
+                .flatten()
+                .filterNotNull()
+                // There may be multiple accessors per name.
+                // Squash the accessor list to either the sole element or an error function
+                .groupBy { keyMangler(it.name)  }
+                .mapValues { (name, binders) ->
+                    when (binders.size) {
+                        1 -> binders[0].func
+                        else -> { _ ->
+                            errAmbiguousBinding(name, binders.map { it.name })
+                        }
                     }
                 }
-            }
-
-    return object: LocalsBinder() {
-        override fun binderForName(bindingName: BindingName): (List<ExprValue>) -> ExprValue? =
-            localBindings.get(bindingName) ?: dynamicLocalsBinder(bindingName)
     }
-}
 
-/**
- * Nothing found at our scope, attempt to look at the attributes in our variables
- * TODO fix dynamic scoping to be in line with SQL++ rules
- */
-private fun dynamicLocalsBinder(bindingName: BindingName): (List<ExprValue>) -> ExprValue? {
-    return { locals ->
-        locals.asSequence()
-                .map { it.bindings[bindingName] }
-                .filterNotNull()
-                .firstOrNull()
+    /**
+     * Nothing found at our scope, attempt to look at the attributes in our variables
+     * TODO fix dynamic scoping to be in line with SQL++ rules
+     */
+    val dynamicLocalsBinder: (BindingName) -> (List<ExprValue>) -> ExprValue? = when (this.count()) {
+        0 -> { _ -> { _ -> null } }
+        1 -> { name -> { locals -> locals.first().bindings[name] } }
+        else -> { name -> { locals -> locals.asSequence()
+                    .map { it.bindings[name] }
+                    .filterNotNull()
+                    .firstOrNull()
+        }}
+    }
+
+    // Compile case-[in]sensitive bindings and return the accessor
+    return object: LocalsBinder() {
+        val caseSensitiveBindings = compileBindings()
+        val caseInsensitiveBindings = compileBindings { it.toLowerCase() }
+        override fun binderForName(bindingName: BindingName): (List<ExprValue>) -> ExprValue? {
+            return when (bindingName.bindingCase) {
+                BindingCase.INSENSITIVE -> caseInsensitiveBindings[bindingName.name.toLowerCase()]
+                BindingCase.SENSITIVE -> caseSensitiveBindings[bindingName.name]
+            } ?: dynamicLocalsBinder(bindingName)
+        }
     }
 }

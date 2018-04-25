@@ -255,8 +255,10 @@ fun ExprValue.cast(ion: IonSystem, targetType: ExprValueType, metadata: NodeMeta
                     type.isNumber -> return numberValue().toLongFailingOverflow(metadata).exprValue()
                     type.isText -> {
                         val value: IonInt
+
                         try {
-                            value = ion.singleValue(stringValue()) as IonInt // Note: Can throw on invalid ION
+                            val normalized = stringValue().normalizeForCastToInt()
+                            value = ion.singleValue(normalized) as IonInt // Note: Can throw on invalid ION
                         } catch (e : Exception) {
                             castFailedErr("can't convert string value to INT", internal = false, cause = e)
                         }
@@ -327,6 +329,61 @@ fun ExprValue.cast(ion: IonSystem, targetType: ExprValueType, metadata: NodeMeta
     // incompatible types
     err("Cannot convert $type to $targetType", errorCode, castExceptionContext(), internal = false)
 }
+
+/**
+ * Remove leading spaces in decimal notation and the plus sign
+ *
+ * Examples:
+ * - `"00001".normalizeForIntCast() == "1"`
+ * - `"-00001".normalizeForIntCast() == "-1"`
+ * - `"0x00001".normalizeForIntCast() == "0x00001"`
+ * - `"+0x00001".normalizeForIntCast() == "0x00001"`
+ * - `"000a".normalizeForIntCast() == "a"`
+ */
+private fun String.normalizeForCastToInt(): String {
+    fun Char.isSign() = this == '-' || this == '+'
+    fun Char.isHexOrBase2Marker(): Boolean {
+        val c = this.toLowerCase()
+
+        return c == 'x' || c == 'b'
+    }
+
+    fun String.possiblyHexOrBase2() = (length >= 2 && this[1].isHexOrBase2Marker()) ||
+                                      (length >= 3 && this[0].isSign() && this[2].isHexOrBase2Marker())
+
+    return when {
+        length == 0          -> this
+        possiblyHexOrBase2() -> {
+            if (this[0] == '+') {
+                this.drop(1)
+            }
+            else {
+                this
+            }
+        }
+        else                 -> {
+            val (isNegative, startIndex) = when (this[0]) {
+                '-'  -> Pair(true, 1)
+                '+'  -> Pair(false, 1)
+                else -> Pair(false, 0)
+            }
+
+            var toDrop = startIndex
+            while (toDrop < length && this[toDrop] == '0') {
+                toDrop += 1
+            }
+
+            when {
+                toDrop == length          -> "0"  // string is all zeros
+                toDrop == 0               -> this
+                toDrop == 1 && isNegative -> this
+                toDrop > 1 && isNegative  -> '-' + this.drop(toDrop)
+                else                      -> this.drop(toDrop)
+            }
+        }
+    }
+}
+
 
 private fun Number.toLongFailingOverflow(metadata: NodeMetadata?): Long {
     if(Long.MIN_VALUE > this || Long.MAX_VALUE < this) {
