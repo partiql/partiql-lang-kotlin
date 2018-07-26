@@ -107,7 +107,7 @@
   <ht:import file="superjar.xml"/>
    <target name="single-jar" depends="compile-jar">
      <superjar
-             destfile="${lib.dir}/ionsql-sandbox-single.jar"
+             destfile="${bp:package-build-root}/private/ionsql-sandbox-single.jar"
              classpath="${bp:run.classpath}:${bp:package-build-root}/lib/${ant.project.name}.jar"
              main-class="com.amazon.ionsql.tools.REPL" />
    </target>
