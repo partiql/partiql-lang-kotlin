@@ -1,0 +1,122 @@
+/*
+ * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ *  You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *      http://aws.amazon.com/apache2.0/
+ *
+ *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ *  language governing permissions and limitations under the License.
+ */
+
+
+for::{
+    template:[
+        test::{
+             name: "concatenation with non-nulls" ,
+             sql: "{ `concatenated_literals`: '${left}' || '${right}', `concatenated_variables`:  env_left || env_right }",
+             environment: { env_left: $left, env_right: $right },
+             expected: result::{ concatenated_literals: $result, concatenated_variables: $result }
+          },
+    ],
+    variableSets: [
+        { left: "",         right:"",           result: ""              },
+        { left: "left",     right:"",           result: "left"          },
+        { left: "",         right:"right",      result: "right"         },
+        { left: "a",        right:"b",          result: "ab"            },
+        { left: "hello",    right:"world",      result: "helloworld"    },
+
+        // right is a unicode combining diacritical mark, result appears a single character even though its actually 2
+        { left: "o",        right: "\u0300",    result: "ò"             },
+
+        {
+            left: "話家身圧費谷",
+            right:"料村能計税金",
+            result: "話家身圧費谷料村能計税金"
+        },
+        {
+            left: "ЁЂЃЄЅІЇЈЉЊЋЌЍЎЏАБВГДЕЖЗИЙКЛМНОПРС",
+            right:"ТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюя",
+            result: "ЁЂЃЄЅІЇЈЉЊЋЌЍЎЏАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюя"
+        },
+        {
+            left: "𝐪𝐮𝐢𝐜𝐤 𝐛𝐫𝐨𝐰𝐧 𝐟𝐨𝐱 ",
+            right:"𝐣𝐮𝐦𝐩𝐬 𝐨𝐯𝐞𝐫",
+            result: "𝐪𝐮𝐢𝐜𝐤 𝐛𝐫𝐨𝐰𝐧 𝐟𝐨𝐱 𝐣𝐮𝐦𝐩𝐬 𝐨𝐯𝐞𝐫"
+        },
+        {
+            left: "( ͡° ͜ʖ ͡°)┬─┬ノ",
+            right:"( º _ ºノ)",
+            result: "( ͡° ͜ʖ ͡°)┬─┬ノ( º _ ºノ)"
+        },
+        {
+            left: "😍",
+            right:"😍",
+            result: "😍😍"
+        },
+        {
+            left: "💩💩",
+            right:"💩💩",
+            result: "💩💩💩💩"
+        },
+    ]
+}
+
+for::{
+    template:[
+        test::{
+             name: "concatenation with null values" ,
+             sql: "${left} || ${right}",
+             expected: $expected
+          },
+    ],
+    variableSets: [
+        { left: "NULL",         right:"NULL",       expected: result::null },
+        { left: "MISSING",      right:"MISSING",    expected: result::null },
+
+        { left: "''",          right:"NULL",        expected: result::null },
+        { left: "NULL",         right:"''",         expected: result::null },
+
+        { left: "''",          right:"MISSING",     expected: result::null },
+        { left: "MISSING",         right:"''",      expected: result::null },
+
+        { left: "'a'",          right:"NULL",       expected: result::null },
+        { left: "NULL",         right:"'b'",        expected: result::null },
+
+        { left: "'a'",          right:"MISSING",    expected: result::null },
+        { left: "MISSING",      right:"'b'",        expected: result::null },
+    ]
+}
+
+for::{
+    template:[
+        test::{
+            name: "concatenation with non-string values" ,
+            sql: "${left} || ${right}",
+            expected: error::{
+                code: "null",   // should not be null: https://github.com/partiql/partiql-lang-kotlin/issues/27
+                properties: {
+                    LINE_NUMBER:1,
+                    COLUMN_NUMBER:$expected_column
+                }
+            }
+          },
+    ],
+    variableSets: [
+        { left: "'a'",      right:"1",      expected_column: 5 },
+        { left: "1",        right:"'a'",    expected_column: 3 },
+
+        { left: "'a'",      right:"true",   expected_column: 5 },
+        { left: "true",     right:"'a'",    expected_column: 6 },
+
+        { left: "'a'",      right:"1.1",    expected_column: 5 },
+        { left: "1.1",      right:"'a'",    expected_column: 5 },
+
+        { left: "1",        right:"1",      expected_column: 3 },
+        { left: "false",    right:"true",   expected_column: 7 },
+        { left: "1.2",      right:"1.1",    expected_column: 5 },
+    ]
+}

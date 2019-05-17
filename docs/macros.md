@@ -1,0 +1,4 @@
+
+
+\newcommand{\SqlName}{PartiQL }
+

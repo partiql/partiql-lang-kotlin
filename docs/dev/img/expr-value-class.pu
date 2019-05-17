@@ -1,0 +1,54 @@
+@startuml
+interface Iterable<ExprValue> {
+  +iterator(): Iterator<ExprValue>
+}
+
+interface ExprValue {
+  +type: ExprValueType
+  +scalar: Scalar
+  +bindings: Bindings
+  +ordinalBindings: OrdinalBindings
+}
+
+enum ExprValueType {
+  MISSING
+  NULL
+  BOOL
+  INT
+  FLOAT
+  DECIMAL
+  TIMESTAMP
+  SYMBOL
+  STRING
+  CLOB
+  BLOB
+  LIST
+  SEXP
+  STRUCT
+  BAG
+}
+
+interface Scalar {
+  +booleanValue(): boolean
+  +numberValue(): Number
+  +timestampValue(): Timestamp
+  +stringValue(): String
+  +bytesValue(): byte[]
+}
+
+interface Bindings {
+  get(name: String): ExprValue
+}
+
+interface OrdinalBindings {
+  get(ordinal: int): ExprValue
+}
+
+ExprValue --|> Iterable
+
+ExprValue ..> ExprValueType
+ExprValue ..> Scalar
+ExprValue ..> Bindings
+ExprValue ..> OrdinalBindings
+
+@enduml

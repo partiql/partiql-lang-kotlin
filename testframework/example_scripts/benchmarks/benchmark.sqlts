@@ -1,0 +1,42 @@
+/*
+ * Copyright 2017 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *     http://aws.amazon.com/apache2.0/
+ *
+ * or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
+ */
+
+benchmark::{
+    name:"simple benchmark",
+    sql: "1 + 1",
+    expected: result::2
+}
+
+
+benchmark::{
+    name:"simple count benchmark",
+    sql: "select * from <<1, 2>>",
+    expected_count: 2
+}
+
+
+for::{
+    template: [
+        benchmark::{
+            name:"templated benchmark",
+            sql: "select * from ${bag}",
+            expected_count: $expected
+        }
+    ],
+    variableSets: [
+        { bag: "<<1, 2>>", expected: 2 },
+        { bag: "<<1, 2, 3>>", expected: 3 },
+    ]
+}

@@ -1,0 +1,335 @@
+/*
+ * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ *  You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *      http://aws.amazon.com/apache2.0/
+ *
+ *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ *  language governing permissions and limitations under the License.
+ */
+
+
+// valid cases ----------------------------------------------------------------------------------------------
+for::{
+    template: [
+        test::{
+            name: "date_diff valid cases",
+            sql: "date_diff(${time_part}, `${left}`, `${right}`)",
+            expected: $result
+        }
+    ],
+    variableSets: [
+        // same dates ---------------------------------------------------------------------------------------------
+        { result: result::0, time_part: "year",   left: "2017T", right: "2017T" },
+        { result: result::0, time_part: "month",  left: "2017T", right: "2017T" },
+        { result: result::0, time_part: "day",    left: "2017T", right: "2017T" },
+        { result: result::0, time_part: "hour",   left: "2017T", right: "2017T" },
+        { result: result::0, time_part: "minute", left: "2017T", right: "2017T" },
+        { result: result::0, time_part: "second", left: "2017T", right: "2017T" },
+
+        { result: result::0, time_part: "year",   left: "2017-01T", right: "2017-01T" },
+        { result: result::0, time_part: "month",  left: "2017-01T", right: "2017-01T" },
+        { result: result::0, time_part: "day",    left: "2017-01T", right: "2017-01T" },
+        { result: result::0, time_part: "hour",   left: "2017-01T", right: "2017-01T" },
+        { result: result::0, time_part: "minute", left: "2017-01T", right: "2017-01T" },
+        { result: result::0, time_part: "second", left: "2017-01T", right: "2017-01T" },
+
+        { result: result::0, time_part: "year",   left: "2017-01-02T", right: "2017-01-02T" },
+        { result: result::0, time_part: "month",  left: "2017-01-02T", right: "2017-01-02T" },
+        { result: result::0, time_part: "day",    left: "2017-01-02T", right: "2017-01-02T" },
+        { result: result::0, time_part: "hour",   left: "2017-01-02T", right: "2017-01-02T" },
+        { result: result::0, time_part: "minute", left: "2017-01-02T", right: "2017-01-02T" },
+        { result: result::0, time_part: "second", left: "2017-01-02T", right: "2017-01-02T" },
+
+        { result: result::0, time_part: "year",   left: "2017-01-02T03:04Z", right: "2017-01-02T03:04Z" },
+        { result: result::0, time_part: "month",  left: "2017-01-02T03:04Z", right: "2017-01-02T03:04Z" },
+        { result: result::0, time_part: "day",    left: "2017-01-02T03:04Z", right: "2017-01-02T03:04Z" },
+        { result: result::0, time_part: "hour",   left: "2017-01-02T03:04Z", right: "2017-01-02T03:04Z" },
+        { result: result::0, time_part: "minute", left: "2017-01-02T03:04Z", right: "2017-01-02T03:04Z" },
+        { result: result::0, time_part: "second", left: "2017-01-02T03:04Z", right: "2017-01-02T03:04Z" },
+
+        { result: result::0, time_part: "year",   left: "2017-01-02T03:04:05Z", right: "2017-01-02T03:04:05Z" },
+        { result: result::0, time_part: "month",  left: "2017-01-02T03:04:05Z", right: "2017-01-02T03:04:05Z" },
+        { result: result::0, time_part: "day",    left: "2017-01-02T03:04:05Z", right: "2017-01-02T03:04:05Z" },
+        { result: result::0, time_part: "hour",   left: "2017-01-02T03:04:05Z", right: "2017-01-02T03:04:05Z" },
+        { result: result::0, time_part: "minute", left: "2017-01-02T03:04:05Z", right: "2017-01-02T03:04:05Z" },
+        { result: result::0, time_part: "second", left: "2017-01-02T03:04:05Z", right: "2017-01-02T03:04:05Z" },
+
+        { result: result::0, time_part: "year",   left: "2017-01-02T03:04:05.007Z", right: "2017-01-02T03:04:05.007Z" },
+        { result: result::0, time_part: "month",  left: "2017-01-02T03:04:05.007Z", right: "2017-01-02T03:04:05.007Z" },
+        { result: result::0, time_part: "day",    left: "2017-01-02T03:04:05.007Z", right: "2017-01-02T03:04:05.007Z" },
+        { result: result::0, time_part: "hour",   left: "2017-01-02T03:04:05.007Z", right: "2017-01-02T03:04:05.007Z" },
+        { result: result::0, time_part: "minute", left: "2017-01-02T03:04:05.007Z", right: "2017-01-02T03:04:05.007Z" },
+        { result: result::0, time_part: "second", left: "2017-01-02T03:04:05.007Z", right: "2017-01-02T03:04:05.007Z" },
+
+        { result: result::0, time_part: "year",   left: "2017-01-02T03:04:05.007+08:09", right: "2017-01-02T03:04:05.007+08:09" },
+        { result: result::0, time_part: "month",  left: "2017-01-02T03:04:05.007+08:09", right: "2017-01-02T03:04:05.007+08:09" },
+        { result: result::0, time_part: "day",    left: "2017-01-02T03:04:05.007+08:09", right: "2017-01-02T03:04:05.007+08:09" },
+        { result: result::0, time_part: "hour",   left: "2017-01-02T03:04:05.007+08:09", right: "2017-01-02T03:04:05.007+08:09" },
+        { result: result::0, time_part: "minute", left: "2017-01-02T03:04:05.007+08:09", right: "2017-01-02T03:04:05.007+08:09" },
+        { result: result::0, time_part: "second", left: "2017-01-02T03:04:05.007+08:09", right: "2017-01-02T03:04:05.007+08:09" },
+
+        // later - earlier ----------------------------------------------------------------------------------------
+        { result: result::1,        time_part: "year",   left: "2017T", right: "2018T" },
+        { result: result::12,       time_part: "month",  left: "2017T", right: "2018T" },
+        { result: result::365,      time_part: "day",    left: "2017T", right: "2018T" },
+        { result: result::8760,     time_part: "hour",   left: "2017T", right: "2018T" },
+        { result: result::525600,   time_part: "minute", left: "2017T", right: "2018T" },
+        { result: result::31536000, time_part: "second", left: "2017T", right: "2018T" },
+
+        { result: result::0,       time_part: "year",   left: "2017-01T", right: "2017-02T" },
+        { result: result::1,       time_part: "month",  left: "2017-01T", right: "2017-02T" },
+        { result: result::31,      time_part: "day",    left: "2017-01T", right: "2017-02T" },
+        { result: result::744,     time_part: "hour",   left: "2017-01T", right: "2017-02T" },
+        { result: result::44640,   time_part: "minute", left: "2017-01T", right: "2017-02T" },
+        { result: result::2678400, time_part: "second", left: "2017-01T", right: "2017-02T" },
+
+        { result: result::0,     time_part: "year",   left: "2017-01-02T", right: "2017-01-03T" },
+        { result: result::0,     time_part: "month",  left: "2017-01-02T", right: "2017-01-03T" },
+        { result: result::1,     time_part: "day",    left: "2017-01-02T", right: "2017-01-03T" },
+        { result: result::24,    time_part: "hour",   left: "2017-01-02T", right: "2017-01-03T" },
+        { result: result::1440,  time_part: "minute", left: "2017-01-02T", right: "2017-01-03T" },
+        { result: result::86400, time_part: "second", left: "2017-01-02T", right: "2017-01-03T" },
+
+        { result: result::0,    time_part: "year",   left: "2017-01-02T03:04Z", right: "2017-01-02T04:04Z" },
+        { result: result::0,    time_part: "month",  left: "2017-01-02T03:04Z", right: "2017-01-02T04:04Z" },
+        { result: result::0,    time_part: "day",    left: "2017-01-02T03:04Z", right: "2017-01-02T04:04Z" },
+        { result: result::1,    time_part: "hour",   left: "2017-01-02T03:04Z", right: "2017-01-02T04:04Z" },
+        { result: result::60,   time_part: "minute", left: "2017-01-02T03:04Z", right: "2017-01-02T04:04Z" },
+        { result: result::3600, time_part: "second", left: "2017-01-02T03:04Z", right: "2017-01-02T04:04Z" },
+
+        { result: result::0,  time_part: "year",   left: "2017-01-02T03:04Z", right: "2017-01-02T03:05Z" },
+        { result: result::0,  time_part: "month",  left: "2017-01-02T03:04Z", right: "2017-01-02T03:05Z" },
+        { result: result::0,  time_part: "day",    left: "2017-01-02T03:04Z", right: "2017-01-02T03:05Z" },
+        { result: result::0,  time_part: "hour",   left: "2017-01-02T03:04Z", right: "2017-01-02T03:05Z" },
+        { result: result::1,  time_part: "minute", left: "2017-01-02T03:04Z", right: "2017-01-02T03:05Z" },
+        { result: result::60, time_part: "second", left: "2017-01-02T03:04Z", right: "2017-01-02T03:05Z" },
+
+        { result: result::0, time_part: "year",   left: "2017-01-02T03:04:05Z", right: "2017-01-02T03:04:06Z" },
+        { result: result::0, time_part: "month",  left: "2017-01-02T03:04:05Z", right: "2017-01-02T03:04:06Z" },
+        { result: result::0, time_part: "day",    left: "2017-01-02T03:04:05Z", right: "2017-01-02T03:04:06Z" },
+        { result: result::0, time_part: "hour",   left: "2017-01-02T03:04:05Z", right: "2017-01-02T03:04:06Z" },
+        { result: result::0, time_part: "minute", left: "2017-01-02T03:04:05Z", right: "2017-01-02T03:04:06Z" },
+        { result: result::1, time_part: "second", left: "2017-01-02T03:04:05Z", right: "2017-01-02T03:04:06Z" },
+
+        { result: result::0, time_part: "year",   left: "2017-01-02T03:04:05.007Z", right: "2017-01-02T03:04:05.008Z" },
+        { result: result::0, time_part: "month",  left: "2017-01-02T03:04:05.007Z", right: "2017-01-02T03:04:05.008Z" },
+        { result: result::0, time_part: "day",    left: "2017-01-02T03:04:05.007Z", right: "2017-01-02T03:04:05.008Z" },
+        { result: result::0, time_part: "hour",   left: "2017-01-02T03:04:05.007Z", right: "2017-01-02T03:04:05.008Z" },
+        { result: result::0, time_part: "minute", left: "2017-01-02T03:04:05.007Z", right: "2017-01-02T03:04:05.008Z" },
+        { result: result::0, time_part: "second", left: "2017-01-02T03:04:05.007Z", right: "2017-01-02T03:04:05.008Z" },
+
+        // earlier - later ----------------------------------------------------------------------------------------
+        {result: result::-1,        time_part: "year",   left: "2018T", right: "2017T" },
+        {result: result::-12,       time_part: "month",  left: "2018T", right: "2017T" },
+        {result: result::-365,      time_part: "day",    left: "2018T", right: "2017T" },
+        {result: result::-8760,     time_part: "hour",   left: "2018T", right: "2017T" },
+        {result: result::-525600,   time_part: "minute", left: "2018T", right: "2017T" },
+        {result: result::-31536000, time_part: "second", left: "2018T", right: "2017T" },
+
+        {result: result::0,        time_part: "year",   left: "2017-02T", right: "2017-01T" },
+        {result: result::-1,       time_part: "month",  left: "2017-02T", right: "2017-01T" },
+        {result: result::-31,      time_part: "day",    left: "2017-02T", right: "2017-01T" },
+        {result: result::-744,     time_part: "hour",   left: "2017-02T", right: "2017-01T" },
+        {result: result::-44640,   time_part: "minute", left: "2017-02T", right: "2017-01T" },
+        {result: result::-2678400, time_part: "second", left: "2017-02T", right: "2017-01T" },
+
+        {result: result::0,      time_part: "year",   left: "2017-01-03T", right: "2017-01-02T" },
+        {result: result::0,      time_part: "month",  left: "2017-01-03T", right: "2017-01-02T" },
+        {result: result::-1,     time_part: "day",    left: "2017-01-03T", right: "2017-01-02T" },
+        {result: result::-24,    time_part: "hour",   left: "2017-01-03T", right: "2017-01-02T" },
+        {result: result::-1440,  time_part: "minute", left: "2017-01-03T", right: "2017-01-02T" },
+        {result: result::-86400, time_part: "second", left: "2017-01-03T", right: "2017-01-02T" },
+
+        {result: result::0,     time_part: "year",   left: "2017-01-02T04:04Z", right: "2017-01-02T03:04Z" },
+        {result: result::0,     time_part: "month",  left: "2017-01-02T04:04Z", right: "2017-01-02T03:04Z" },
+        {result: result::0,     time_part: "day",    left: "2017-01-02T04:04Z", right: "2017-01-02T03:04Z" },
+        {result: result::-1,    time_part: "hour",   left: "2017-01-02T04:04Z", right: "2017-01-02T03:04Z" },
+        {result: result::-60,   time_part: "minute", left: "2017-01-02T04:04Z", right: "2017-01-02T03:04Z" },
+        {result: result::-3600, time_part: "second", left: "2017-01-02T04:04Z", right: "2017-01-02T03:04Z" },
+
+        {result: result::0,   time_part: "year",   left: "2017-01-02T03:05Z", right: "2017-01-02T03:04Z" },
+        {result: result::0,   time_part: "month",  left: "2017-01-02T03:05Z", right: "2017-01-02T03:04Z" },
+        {result: result::0,   time_part: "day",    left: "2017-01-02T03:05Z", right: "2017-01-02T03:04Z" },
+        {result: result::0,   time_part: "hour",   left: "2017-01-02T03:05Z", right: "2017-01-02T03:04Z" },
+        {result: result::-1,  time_part: "minute", left: "2017-01-02T03:05Z", right: "2017-01-02T03:04Z" },
+        {result: result::-60, time_part: "second", left: "2017-01-02T03:05Z", right: "2017-01-02T03:04Z" },
+
+        {result: result::0,  time_part: "year",   left: "2017-01-02T03:04:06Z", right: "2017-01-02T03:04:05Z" },
+        {result: result::0,  time_part: "month",  left: "2017-01-02T03:04:06Z", right: "2017-01-02T03:04:05Z" },
+        {result: result::0,  time_part: "day",    left: "2017-01-02T03:04:06Z", right: "2017-01-02T03:04:05Z" },
+        {result: result::0,  time_part: "hour",   left: "2017-01-02T03:04:06Z", right: "2017-01-02T03:04:05Z" },
+        {result: result::0,  time_part: "minute", left: "2017-01-02T03:04:06Z", right: "2017-01-02T03:04:05Z" },
+        {result: result::-1, time_part: "second", left: "2017-01-02T03:04:06Z", right: "2017-01-02T03:04:05Z" },
+
+        {result: result::0, time_part: "year",   left: "2017-01-02T03:04:05.008Z", right: "2017-01-02T03:04:05.007Z" },
+        {result: result::0, time_part: "month",  left: "2017-01-02T03:04:05.008Z", right: "2017-01-02T03:04:05.007Z" },
+        {result: result::0, time_part: "day",    left: "2017-01-02T03:04:05.008Z", right: "2017-01-02T03:04:05.007Z" },
+        {result: result::0, time_part: "hour",   left: "2017-01-02T03:04:05.008Z", right: "2017-01-02T03:04:05.007Z" },
+        {result: result::0, time_part: "minute", left: "2017-01-02T03:04:05.008Z", right: "2017-01-02T03:04:05.007Z" },
+        {result: result::0, time_part: "second", left: "2017-01-02T03:04:05.008Z", right: "2017-01-02T03:04:05.007Z" },
+
+        // on different local offsets -----------------------------------------------------------------------------
+        {result: result::0, time_part: "year", left: "2017-01-02T03:04+01:02", right: "2017-01-02T03:04+00:00" },
+        {result: result::0, time_part: "month", left: "2017-01-02T03:04+00:02", right: "2017-01-02T03:04+00:00" },
+        {result: result::0, time_part: "day", left: "2017-01-02T01:00+10:00", right: "2017-01-02T01:00+00:00" },
+        {result: result::1, time_part: "hour", left: "2017-01-02T03:04+01:02", right: "2017-01-02T03:04+00:00" },
+        {result: result::2, time_part: "minute", left: "2017-01-02T03:04+00:02", right: "2017-01-02T03:04+00:00" },
+
+        // different precisions -----------------------------------------------------------------------------------
+        // year
+        { result: result::1, time_part: "month",  left: "2017T", right: "2017-02T" },
+        { result: result::1, time_part: "day",    left: "2017T", right: "2017-01-02T" },
+        { result: result::1, time_part: "hour",   left: "2017T", right: "2017-01-01T01:00Z" },
+        { result: result::1, time_part: "minute", left: "2017T", right: "2017-01-01T00:01Z" },
+        { result: result::1, time_part: "second", left: "2017T", right: "2017-01-01T00:00:01Z" },
+
+        // month
+        { result: result::1, time_part: "day",    left: "2017-01T", right: "2017-01-02T" },
+        { result: result::1, time_part: "hour",   left: "2017-01T", right: "2017-01-01T01:00Z" },
+        { result: result::1, time_part: "minute", left: "2017-01T", right: "2017-01-01T00:01Z" },
+        { result: result::1, time_part: "second", left: "2017-01T", right: "2017-01-01T00:00:01Z" },
+
+        // day
+        { result: result::1, time_part: "hour",   left: "2017-01-01T", right: "2017-01-01T01:00Z" },
+        { result: result::1, time_part: "minute", left: "2017-01-01T", right: "2017-01-01T00:01Z" },
+        { result: result::1, time_part: "second", left: "2017-01-01T", right: "2017-01-01T00:00:01Z" },
+
+        // minute
+        { result: result::1, time_part: "second", left: "2017-01-01T00:00Z", right: "2017-01-01T00:00:01Z" },
+
+        // leap year ----------------------------------------------------------------------------------------------
+        { result: result::366,      time_part: "day",    left: "2016-01-01T", right: "2017-01-01T" },
+        { result: result::8784,     time_part: "hour",   left: "2016-01-01T", right: "2017-01-01T" },
+        { result: result::527040,   time_part: "minute", left: "2016-01-01T", right: "2017-01-01T" },
+        { result: result::31622400, time_part: "second", left: "2016-01-01T", right: "2017-01-01T" },
+
+        // Days in a month ----------------------------------------------------------------------------------------
+        { result: result::31, time_part: "day", left: "2017-01-01T", right: "2017-02-01T" }, // January
+        { result: result::28, time_part: "day", left: "2017-02-01T", right: "2017-03-01T" }, // February
+        { result: result::29, time_part: "day", left: "2016-02-01T", right: "2016-03-01T" }, // February leap year
+        { result: result::31, time_part: "day", left: "2017-03-01T", right: "2017-04-01T" }, // March
+        { result: result::30, time_part: "day", left: "2017-04-01T", right: "2017-05-01T" }, // April
+        { result: result::31, time_part: "day", left: "2017-05-01T", right: "2017-06-01T" }, // May
+        { result: result::30, time_part: "day", left: "2017-06-01T", right: "2017-07-01T" }, // June
+        { result: result::31, time_part: "day", left: "2017-07-01T", right: "2017-08-01T" }, // July
+        { result: result::31, time_part: "day", left: "2017-08-01T", right: "2017-09-01T" }, // August
+        { result: result::30, time_part: "day", left: "2017-09-01T", right: "2017-10-01T" }, // September
+        { result: result::31, time_part: "day", left: "2017-10-01T", right: "2017-11-01T" }, // October
+        { result: result::30, time_part: "day", left: "2017-11-01T", right: "2017-12-01T" }, // November
+        { result: result::31, time_part: "day", left: "2017-12-01T", right: "2018-01-01T" }  // December
+    ]
+}
+
+// null propagation -----------------------------------------------------------------------------------------------
+for::{
+    template: [
+        test::{
+            name: "date_diff null and missing propagation",
+            sql: "date_diff(${time_part}, ${left}, ${right})",
+            expected: $result
+        }
+    ],
+
+    variableSets: [
+        { result: result::null, time_part: "null", left: "`2017T`", right: "`2017T`" },
+        { result: result::null, time_part: "year", left: "null",    right: "`2017T`" },
+        { result: result::null, time_part: "year", left: "`2017T`", right: "null" },
+
+        { result: result::null, time_part: "missing", left: "`2017T`", right: "`2017T`" },
+        { result: result::null, time_part: "year",    left: "missing", right: "`2017T`" },
+        { result: result::null, time_part: "year",    left: "`2017T`", right: "missing" },
+
+        { result: result::null, time_part: "null", left: "missing", right: "`2017T`" },
+        { result: result::null, time_part: "null", left: "`2017T`", right: "missing" },
+
+        { result: result::null, time_part: "missing", left: "null", right: "`2017T`" },
+        { result: result::null, time_part: "year",    left: "null", right: "missing" },
+
+        { result: result::null, time_part: "missing", left: "`2017T`", right: "null" },
+        { result: result::null, time_part: "year",    left: "missing", right: "null" },
+
+        { result: result::null, time_part: "missing", left: "missing", right: "missing" },
+        { result: result::null, time_part: "null",    left: "null",    right: "null" },
+    ]
+}
+
+// wrong number of arguments --------------------------------------------------------------------------------------
+for::{
+    template: [
+        test::{
+            name: "date_diff wrong number of arguments",
+            sql: "${sql}",
+            expected: error::{
+                code: EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL,
+                properties: {
+                    LINE_NUMBER: 1,
+                    COLUMN_NUMBER: 1,
+                    EXPECTED_ARITY_MIN: 3,
+                    EXPECTED_ARITY_MAX: 3
+                }
+            }
+        }
+    ],
+    variableSets: [
+        { sql: "date_diff()" },
+        { sql: "date_diff(year)" },
+        { sql: "date_diff(year, `2017T`)" },
+        { sql: "date_diff(year, `2017T`, `2017T`, `2017T`)" },
+        { sql: "date_diff(year, `2017T`, `2017T`, 1)" },
+    ]
+}
+
+// wrong type of arguments ----------------------------------------------------------------------------------------
+for::{
+    template: [
+        test::{
+            name: "date_diff wrong type of arguments",
+            sql: "date_diff(${time_part}, ${left}, ${right})",
+            expected: error::{
+                code: "null",
+                properties: {
+                    LINE_NUMBER: 1,
+                    COLUMN_NUMBER: 1,
+                }
+            }
+        }
+    ],
+    variableSets: [
+        { time_part: "1",    left: "`2017T`", right: "`2017T`" },
+        { time_part: "year", left: "1",       right: "`2017T`" },
+        { time_part: "year", left: "`2017T`", right: "1" },
+    ]
+}
+
+// invalid arguments ----------------------------------------------------------------------------------------------
+for::{
+    template: [
+        test::{
+            name: "date_diff invalid arguments",
+            sql: "date_diff(${time_part}, `2001T`, `1986T`)",
+            expected: error::{
+                code: "null",
+                properties: {
+                    LINE_NUMBER: 1,
+                    COLUMN_NUMBER: 1,
+                }
+            }
+        }
+    ],
+    variableSets: [
+          // completely invalid
+          { time_part: "'foobar'" },
+          { time_part: 1 },
+          { time_part: [] },
+
+          // valid for other functions
+          { time_part: "timezone_hour" },
+          { time_part: "timezone_minute" },
+      ]
+}
+

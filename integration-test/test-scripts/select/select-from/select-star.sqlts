@@ -1,0 +1,193 @@
+/*
+ * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ *  You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *      http://aws.amazon.com/apache2.0/
+ *
+ *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ *  language governing permissions and limitations under the License.
+ */
+
+
+set_default_environment::{
+    personnel: [
+        { first_name: "Jean Luc", last_name: "Picard" },
+    ],
+    ships: [
+        { name: "Enterprise", registry: "NCC-1701-D" }
+    ],
+    ranks: {
+        commander: { first_name: "William", last_name: "Riker" }
+    }
+}
+
+test::{
+    name: "* with no aliases on a single table (personnel)",
+    sql: "SELECT * FROM personnel",
+    expected: result::(bag {
+        first_name: "Jean Luc", last_name: "Picard"
+    })
+}
+
+test::{
+    name: "* with no aliases on a single table (ships)",
+    sql: "SELECT * FROM ships",
+    expected: result::(bag {
+        name: "Enterprise", registry: "NCC-1701-D"
+    }),
+}
+
+test::{
+    name: "* with multiple tables",
+    sql: "SELECT * FROM personnel, ships",
+    expected: result::(bag {
+        first_name: "Jean Luc", last_name: "Picard", name: "Enterprise", registry: "NCC-1701-D"
+    })
+}
+
+test::{
+    name: "alias.* on a single table (personnel)",
+    sql: "SELECT p.* FROM personnel AS p",
+    expected: result::(bag {
+        first_name: "Jean Luc", last_name: "Picard"
+    })
+}
+
+test::{
+    name: "alias.* on a single table (ships)",
+    sql: "SELECT s.* FROM ships AS s",
+    expected: result::(bag {
+        name: "Enterprise", registry: "NCC-1701-D"
+    })
+}
+
+test::{
+    name: "alias.* with multiple tables",
+    sql: "SELECT p.*, s.* FROM ships AS s, personnel AS p",
+    expected: result::(bag {
+        first_name: "Jean Luc", last_name: "Picard",
+        name: "Enterprise", registry: "NCC-1701-D"
+    }),
+}
+
+test::{
+    name: "Two alias.* on a single table",
+    sql: "SELECT s.*, s.* FROM ships AS s",
+    expected: result::(bag {
+          name: "Enterprise", registry: "NCC-1701-D",
+          name: "Enterprise", registry: "NCC-1701-D"
+    })
+}
+
+test::{
+    name: "Doubled alias.* with multiple tables",
+    sql: "SELECT p.*, p.*, s.*, s.* FROM ships AS s, personnel AS p",
+    expected: result::(bag {
+        first_name: "Jean Luc", last_name: "Picard",
+        name: "Enterprise", registry: "NCC-1701-D",
+        first_name: "Jean Luc", last_name: "Picard",
+        name: "Enterprise", registry: "NCC-1701-D"
+    })
+}
+
+test::{
+    name: "alias1.alias2.*",
+    sql: "SELECT r.commander.* FROM ranks as r",
+    expected: result::(bag {
+        first_name: "William",
+        last_name: "Riker"
+    })
+}
+
+test::{
+    name: "foo[*] is disallowed",
+    sql: "SELECT foo[*] FROM foo",
+    expected: error::{
+        code: PARSE_INVALID_CONTEXT_FOR_WILDCARD_IN_SELECT_LIST,
+        properties: { LINE_NUMBER:1, COLUMN_NUMBER: 12, TOKEN_TYPE:"STAR", TOKEN_VALUE:'*'}
+    }
+}
+
+test::{
+    name: "foo.*.bar is disallowed",
+    sql: "SELECT foo.*.bar FROM foo",
+    expected: error::{
+        code: PARSE_INVALID_CONTEXT_FOR_WILDCARD_IN_SELECT_LIST,
+        properties: { LINE_NUMBER:1, COLUMN_NUMBER: 12, TOKEN_TYPE:"STAR", TOKEN_VALUE:'*' }
+    }
+}
+
+test::{
+    name: "foo['a'].* is disallowed",
+    sql: "SELECT foo['a'].* FROM foo",
+    expected: error::{
+        code: PARSE_CANNOT_MIX_SQB_AND_WILDCARD_IN_SELECT_LIST,
+        properties: { LINE_NUMBER:1, COLUMN_NUMBER: 11, TOKEN_TYPE:"LEFT_BRACKET", TOKEN_VALUE:'[' }
+    }
+}
+
+test::{
+    name: "foo[a].* is disallowed",
+    sql: "SELECT foo[a].* FROM foo",
+    expected: error::{
+        code: PARSE_CANNOT_MIX_SQB_AND_WILDCARD_IN_SELECT_LIST,
+        properties: { LINE_NUMBER:1, COLUMN_NUMBER: 11, TOKEN_TYPE:"LEFT_BRACKET", TOKEN_VALUE:'[' }
+    }
+}
+test::{
+    name: "foo[1].* is disallowed",
+    sql: "SELECT foo[1].* FROM foo",
+    expected: error::{
+        code: PARSE_CANNOT_MIX_SQB_AND_WILDCARD_IN_SELECT_LIST,
+        properties: { LINE_NUMBER:1, COLUMN_NUMBER: 11, TOKEN_TYPE:"LEFT_BRACKET", TOKEN_VALUE:'[' }
+    }
+}
+
+test::{
+    name: "disallowed uses of *, *",
+    sql: "SELECT *, * FROM <<1>>",
+    expected: error::{
+        code: PARSE_ASTERISK_IS_NOT_ALONE_IN_SELECT_LIST,
+        properties: { LINE_NUMBER:1, COLUMN_NUMBER: 8, TOKEN_TYPE: "STAR", TOKEN_VALUE: '*' }
+    }
+}
+
+test::{
+    name: "disallowed uses of *, alias.*",
+    sql: "SELECT *, foo.* FROM <<{ a: 1 }>> as foo",
+    expected: error::{
+        code: PARSE_ASTERISK_IS_NOT_ALONE_IN_SELECT_LIST,
+        properties: { LINE_NUMBER:1, COLUMN_NUMBER: 8, TOKEN_TYPE: "STAR", TOKEN_VALUE: '*'  }
+    }
+}
+
+test::{
+    name: "disallowed uses of alias.*, *",
+    sql: "SELECT foo.*, * FROM <<{ a: 1 }>> as foo",
+    expected: error::{
+        code: PARSE_ASTERISK_IS_NOT_ALONE_IN_SELECT_LIST,
+        properties: { LINE_NUMBER:1, COLUMN_NUMBER: 15, TOKEN_TYPE: "STAR", TOKEN_VALUE: '*'  }
+    }
+}
+
+test::{
+    name: "disallowed uses of <expr>, *",
+    sql: "SELECT 1, * FROM <<{ a: 1 }>>",
+    expected: error::{
+        code: PARSE_ASTERISK_IS_NOT_ALONE_IN_SELECT_LIST,
+        properties: { LINE_NUMBER:1, COLUMN_NUMBER: 11, TOKEN_TYPE: "STAR", TOKEN_VALUE: '*'  }
+    }
+}
+
+test::{
+    name: "disallowed uses of *, <expr>",
+    sql: "SELECT *, 1 FROM <<{ a: 1 }>>",
+    expected: error::{
+        code: PARSE_ASTERISK_IS_NOT_ALONE_IN_SELECT_LIST,
+        properties: { LINE_NUMBER:1, COLUMN_NUMBER: 8, TOKEN_TYPE: "STAR", TOKEN_VALUE: '*'  }
+    }
+}
