@@ -1,0 +1,79 @@
+/*
+ * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ *  You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *      http://aws.amazon.com/apache2.0/
+ *
+ *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ *  language governing permissions and limitations under the License.
+ */
+
+// valid cases ----------------------------------------------------------------------------------------------------
+for::{
+    template: [
+        test::{
+            name: "exists valid cases",
+            sql: "exists(${param})",
+            expected: $result
+        }
+    ],
+    variableSets: [
+        // base types
+        { param: "1",       result: result::false },
+        { param: "1e0",     result: result::false },
+        { param: "1.0",     result: result::false },
+        { param: "''",      result: result::false },
+        { param: "`2017T`", result: result::false },
+
+        // null and missing
+        { param: "null",    result: result::false },
+        { param: "missing", result: result::false },
+
+        // empty sequences
+        { param: "`[]`", result: result::false },
+        { param: "`()`", result: result::false },
+        { param: "`{}`", result: result::false },
+        { param: "<<>>", result: result::false },
+
+        // not empty sequences
+        { param: "`[1]`",    result: result::true },
+        { param: "`(1)`",    result: result::true },
+        { param: "`{a: 1}`", result: result::true },
+        { param: "<<1>>",    result: result::true },
+
+        // sequences with null or missing as the only element
+        { param: "`[null]`",       result: result::true },
+        { param: "`[missing]`",    result: result::true },
+        { param: "`(null)`",       result: result::true },
+        { param: "`(missing)`",    result: result::true },
+        { param: "`{a: null}`",    result: result::true },
+        { param: "`{a: missing}`", result: result::true },
+        { param: "<<null>>",     result: result::true },
+        { param: "<<missing>>",  result: result::true },
+    ]
+}
+
+// wrong number of arguments --------------------------------------------------------------------------------------
+for::{
+    template: [
+        test::{
+            name: "exists wrong number of arguments",
+            sql: "${sql}",
+            expected: error::{
+                code: "null",
+                properties: {
+                    LINE_NUMBER: 1,
+                    COLUMN_NUMBER: 1,
+                }
+            }
+        }
+    ],
+    variableSets: [
+        { sql: "exists()" },
+        { sql: "exists(`[]`, 1)" }
+    ]
+}

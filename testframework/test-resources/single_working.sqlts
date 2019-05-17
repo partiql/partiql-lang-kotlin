@@ -1,0 +1,6 @@
+
+test::{
+    name:"addition",
+    sql: "1 + 1",
+    expected: result::2
+}

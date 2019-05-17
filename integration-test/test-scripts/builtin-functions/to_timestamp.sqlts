@@ -1,0 +1,508 @@
+/*
+ * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ *  You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *      http://aws.amazon.com/apache2.0/
+ *
+ *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ *  language governing permissions and limitations under the License.
+ */
+
+// valid cases ----------------------------------------------------------------------------------------------------
+for::{
+    template: [
+        test::{
+            name: "to_timestamp valid cases",
+            sql: "to_timestamp('${string}', '${pattern}')",
+            expected: $result
+        }
+    ],
+    variableSets: [
+        { string: "1",    pattern: "y", result: result::0001T },
+        { string: "10",   pattern: "y", result: result::0010T },
+        { string: "100",  pattern: "y", result: result::0100T },
+        { string: "1000", pattern: "y", result: result::1000T },
+        { string: "9999", pattern: "y", result: result::9999T },
+
+        { string: "01",  pattern: "yy", result: result::2001T },
+        { string: "10",  pattern: "yy", result: result::2010T },
+        { string: "69",  pattern: "yy", result: result::2069T },
+        { string: "70",  pattern: "yy", result: result::1970T },
+        { string: "99",  pattern: "yy", result: result::1999T },
+
+        { string: "0001",  pattern: "yyyy", result: result::0001T },
+        { string: "0010",  pattern: "yyyy", result: result::0010T },
+        { string: "0069",  pattern: "yyyy", result: result::0069T },
+        { string: "1970",  pattern: "yyyy", result: result::1970T },
+        { string: "1999",  pattern: "yyyy", result: result::1999T },
+        { string: "9999",  pattern: "yyyy", result: result::9999T },
+
+        { string: "1 1",  pattern: "y M", result: result::0001-01T },
+        { string: "1 01", pattern: "y M", result: result::0001-01T },
+        { string: "1 10", pattern: "y M", result: result::0001-10T },
+        { string: "1 12", pattern: "y M", result: result::0001-12T },
+
+        { string: "1 01", pattern: "y MM", result: result::0001-01T },
+        { string: "1 10", pattern: "y MM", result: result::0001-10T },
+        { string: "1 12", pattern: "y MM", result: result::0001-12T },
+
+        { string: "1 Jan", pattern: "y MMM", result: result::0001-01T },
+        { string: "1 Feb", pattern: "y MMM", result: result::0001-02T },
+        { string: "1 Mar", pattern: "y MMM", result: result::0001-03T },
+        { string: "1 Apr", pattern: "y MMM", result: result::0001-04T },
+        { string: "1 May", pattern: "y MMM", result: result::0001-05T },
+        { string: "1 Jun", pattern: "y MMM", result: result::0001-06T },
+        { string: "1 Jul", pattern: "y MMM", result: result::0001-07T },
+        { string: "1 Aug", pattern: "y MMM", result: result::0001-08T },
+        { string: "1 Sep", pattern: "y MMM", result: result::0001-09T },
+        { string: "1 Oct", pattern: "y MMM", result: result::0001-10T },
+        { string: "1 Nov", pattern: "y MMM", result: result::0001-11T },
+        { string: "1 Dec", pattern: "y MMM", result: result::0001-12T },
+
+        { string: "1 January",   pattern: "y MMMM", result: result::0001-01T },
+        { string: "1 February",  pattern: "y MMMM", result: result::0001-02T },
+        { string: "1 March",     pattern: "y MMMM", result: result::0001-03T },
+        { string: "1 April",     pattern: "y MMMM", result: result::0001-04T },
+        { string: "1 May",       pattern: "y MMMM", result: result::0001-05T },
+        { string: "1 June",      pattern: "y MMMM", result: result::0001-06T },
+        { string: "1 July",      pattern: "y MMMM", result: result::0001-07T },
+        { string: "1 August",    pattern: "y MMMM", result: result::0001-08T },
+        { string: "1 September", pattern: "y MMMM", result: result::0001-09T },
+        { string: "1 October",   pattern: "y MMMM", result: result::0001-10T },
+        { string: "1 November",  pattern: "y MMMM", result: result::0001-11T },
+        { string: "1 December",  pattern: "y MMMM", result: result::0001-12T },
+
+        { string: "1 1 1",  pattern: "y M d", result: result::0001-01-01T },
+        { string: "1 1 01", pattern: "y M d", result: result::0001-01-01T },
+        { string: "1 1 31", pattern: "y M d", result: result::0001-01-31T },
+
+        { string: "1 1 01", pattern: "y M dd",  result: result::0001-01-01T },
+        { string: "1 1 31", pattern: "y M dd", result: result::0001-01-31T },
+
+        { string: "1 1 1 0 0",   pattern: "y M d H m", result: result::0001-01-01T00:00-00:00 },
+        { string: "1 1 1 00 00", pattern: "y M d H m", result: result::0001-01-01T00:00-00:00 },
+        { string: "1 1 1 23 59", pattern: "y M d H m", result: result::0001-01-01T23:59-00:00 },
+
+        //Hour is not a valid precision, but when minutes are omitted the minutes should default to 00
+        { string: "1 1 1 0",   pattern: "y M d H", result: result::0001-01-01T00:00-00:00 },
+        { string: "1 1 1 00", pattern: "y M d H", result: result::0001-01-01T00:00-00:00 },
+        { string: "1 1 1 23", pattern: "y M d H", result: result::0001-01-01T23:00-00:00 },
+
+        { string: "1 1 1 00 0",  pattern: "y M d HH m", result: result::0001-01-01T00:00-00:00 },
+        { string: "1 1 1 23 59", pattern: "y M d HH m", result: result::0001-01-01T23:59-00:00 },
+
+        { string: "1 1 1 0 00",  pattern: "y M d H mm", result: result::0001-01-01T00:00-00:00 },
+        { string: "1 1 1 23 59", pattern: "y M d H mm", result: result::0001-01-01T23:59-00:00 },
+
+        { string: "1 1 1 1 0 AM",   pattern: "y M d h m a", result: result::0001-01-01T01:00-00:00 },
+        { string: "1 1 1 01 00 AM", pattern: "y M d h m a", result: result::0001-01-01T01:00-00:00 },
+        { string: "1 1 1 11 59 PM", pattern: "y M d h m a", result: result::0001-01-01T23:59-00:00 },
+
+        { string: "1 1 1 01 0 AM",  pattern: "y M d hh m a", result: result::0001-01-01T01:00-00:00 },
+        { string: "1 1 1 11 59 PM", pattern: "y M d hh m a", result: result::0001-01-01T23:59-00:00 },
+
+        { string: "1 1 1 0 0 0",  pattern: "y M d H m s", result: result::0001-01-01T00:00:00-00:00 },
+        { string: "1 1 1 0 0 1",  pattern: "y M d H m s", result: result::0001-01-01T00:00:01-00:00 },
+        { string: "1 1 1 0 0 01", pattern: "y M d H m s", result: result::0001-01-01T00:00:01-00:00 },
+        { string: "1 1 1 0 0 59", pattern: "y M d H m s", result: result::0001-01-01T00:00:59-00:00 },
+
+        { string: "1 1 1 0 0 00", pattern: "y M d H m ss", result: result::0001-01-01T00:00:00-00:00 },
+        { string: "1 1 1 0 0 01", pattern: "y M d H m ss", result: result::0001-01-01T00:00:01-00:00 },
+        { string: "1 1 1 0 0 59", pattern: "y M d H m ss", result: result::0001-01-01T00:00:59-00:00 },
+
+        { string: "1 1 1 0 0 0 0", pattern: "y M d H m s S", result: result::0001-01-01T00:00:00-00:00 },
+        { string: "1 1 1 0 0 0 1", pattern: "y M d H m s S", result: result::0001-01-01T00:00:00.1-00:00 },
+        { string: "1 1 1 0 0 0 9", pattern: "y M d H m s S", result: result::0001-01-01T00:00:00.9-00:00 },
+
+        { string: "1 1 1 0 0 0 00", pattern: "y M d H m s SS", result: result::0001-01-01T00:00:00-00:00 },
+        { string: "1 1 1 0 0 0 01", pattern: "y M d H m s SS", result: result::0001-01-01T00:00:00.01-00:00 },
+        { string: "1 1 1 0 0 0 10", pattern: "y M d H m s SS", result: result::0001-01-01T00:00:00.1-00:00 },
+        { string: "1 1 1 0 0 0 99", pattern: "y M d H m s SS", result: result::0001-01-01T00:00:00.99-00:00 },
+
+        { string: "1 1 1 0 0 0 0",           pattern: "y M d H m s n", result: result::0001-01-01T00:00:00-00:00 },
+        { string: "1 1 1 0 0 0 1",           pattern: "y M d H m s n", result: result::0001-01-01T00:00:00.000000001-00:00 },
+        { string: "1 1 1 0 0 0 00000000001", pattern: "y M d H m s n", result: result::0001-01-01T00:00:00.000000001-00:00 },
+        { string: "1 1 1 0 0 0 999999999",   pattern: "y M d H m s n", result: result::0001-01-01T00:00:00.999999999-00:00 },
+
+
+        { string: "2 1 1 0 0 Z",   pattern: "y M d H m X", result: result::0002-01-01T00:00Z },
+        { string: "2 1 1 0 0 +01", pattern: "y M d H m X", result: result::0002-01-01T00:00+01:00 },
+        { string: "2 1 1 0 0 -01", pattern: "y M d H m X", result: result::0002-01-01T00:00-01:00 },
+        { string: "2 1 1 0 0 +10", pattern: "y M d H m X", result: result::0002-01-01T00:00+10:00 },
+        { string: "2 1 1 0 0 -10", pattern: "y M d H m X", result: result::0002-01-01T00:00-10:00 },
+//         { string: "2 1 1 0 0 +23", pattern: "y M d H m X", result: result::0002-01-01T00:00+23:00 }, FIXME https://github.com/partiql/partiql-lang-kotlin/issues/31
+//         { string: "2 1 1 0 0 -23", pattern: "y M d H m X", result: result::0002-01-01T00:00-23:00 }, FIXME https://github.com/partiql/partiql-lang-kotlin/issues/31
+
+        { string: "2 1 1 0 0 Z",     pattern: "y M d H m XX", result: result::0002-01-01T00:00Z },
+        { string: "2 1 1 0 0 +0100", pattern: "y M d H m XX", result: result::0002-01-01T00:00+01:00 },
+        { string: "2 1 1 0 0 -0100", pattern: "y M d H m XX", result: result::0002-01-01T00:00-01:00 },
+        { string: "2 1 1 0 0 +0159", pattern: "y M d H m XX", result: result::0002-01-01T00:00+01:59 },
+        { string: "2 1 1 0 0 -0159", pattern: "y M d H m XX", result: result::0002-01-01T00:00-01:59 },
+        { string: "2 1 1 0 0 +1000", pattern: "y M d H m XX", result: result::0002-01-01T00:00+10:00 },
+        { string: "2 1 1 0 0 -1000", pattern: "y M d H m XX", result: result::0002-01-01T00:00-10:00 },
+//         { string: "2 1 1 0 0 +2300", pattern: "y M d H m XX", result: result::0002-01-01T00:00+23:00 }, FIXME https://github.com/partiql/partiql-lang-kotlin/issues/31
+//         { string: "2 1 1 0 0 -2300", pattern: "y M d H m XX", result: result::0002-01-01T00:00-23:00 }, FIXME https://github.com/partiql/partiql-lang-kotlin/issues/31
+
+        { string: "2 1 1 0 0 Z",      pattern: "y M d H m XXX", result: result::0002-01-01T00:00Z },
+        { string: "2 1 1 0 0 +01:00", pattern: "y M d H m XXX", result: result::0002-01-01T00:00+01:00 },
+        { string: "2 1 1 0 0 -01:00", pattern: "y M d H m XXX", result: result::0002-01-01T00:00-01:00 },
+        { string: "2 1 1 0 0 +01:59", pattern: "y M d H m XXX", result: result::0002-01-01T00:00+01:59 },
+        { string: "2 1 1 0 0 -01:59", pattern: "y M d H m XXX", result: result::0002-01-01T00:00-01:59 },
+        { string: "2 1 1 0 0 +10:00", pattern: "y M d H m XXX", result: result::0002-01-01T00:00+10:00 },
+        { string: "2 1 1 0 0 -10:00", pattern: "y M d H m XXX", result: result::0002-01-01T00:00-10:00 },
+//         { string: "2 1 1 0 0 +23:00", pattern: "y M d H m XXX", result: result::0002-01-01T00:00+23:00 }, FIXME https://github.com/partiql/partiql-lang-kotlin/issues/31
+//         { string: "2 1 1 0 0 -23:00", pattern: "y M d H m XXX", result: result::0002-01-01T00:00-23:00 }, FIXME https://github.com/partiql/partiql-lang-kotlin/issues/31
+
+        { string: "2 1 1 0 0 +01", pattern: "y M d H m x", result: result::0002-01-01T00:00+01:00 },
+        { string: "2 1 1 0 0 +01", pattern: "y M d H m x", result: result::0002-01-01T00:00+01:00 },
+        { string: "2 1 1 0 0 -01", pattern: "y M d H m x", result: result::0002-01-01T00:00-01:00 },
+        { string: "2 1 1 0 0 +10", pattern: "y M d H m x", result: result::0002-01-01T00:00+10:00 },
+        { string: "2 1 1 0 0 -10", pattern: "y M d H m x", result: result::0002-01-01T00:00-10:00 },
+//         { string: "2 1 1 0 0 +23", pattern: "y M d H m x", result: result::0002-01-01T00:00+23:00 }, FIXME https://github.com/partiql/partiql-lang-kotlin/issues/31
+//         { string: "2 1 1 0 0 -23", pattern: "y M d H m x", result: result::0002-01-01T00:00-23:00 }, FIXME https://github.com/partiql/partiql-lang-kotlin/issues/31
+
+        { string: "2 1 1 0 0 +0100", pattern: "y M d H m xx", result: result::0002-01-01T00:00+01:00 },
+        { string: "2 1 1 0 0 -0100", pattern: "y M d H m xx", result: result::0002-01-01T00:00-01:00 },
+        { string: "2 1 1 0 0 +0159", pattern: "y M d H m xx", result: result::0002-01-01T00:00+01:59 },
+        { string: "2 1 1 0 0 -0159", pattern: "y M d H m xx", result: result::0002-01-01T00:00-01:59 },
+        { string: "2 1 1 0 0 +1000", pattern: "y M d H m xx", result: result::0002-01-01T00:00+10:00 },
+        { string: "2 1 1 0 0 -1000", pattern: "y M d H m xx", result: result::0002-01-01T00:00-10:00 },
+//         { string: "2 1 1 0 0 +2300", pattern: "y M d H m xx", result: result::0002-01-01T00:00+23:00 }, FIXME https://github.com/partiql/partiql-lang-kotlin/issues/31
+//         { string: "2 1 1 0 0 -2300", pattern: "y M d H m xx", result: result::0002-01-01T00:00-23:00 }, FIXME https://github.com/partiql/partiql-lang-kotlin/issues/31
+
+        { string: "2 1 1 0 0 +01:00", pattern: "y M d H m xxx", result: result::0002-01-01T00:00+01:00 },
+        { string: "2 1 1 0 0 -01:00", pattern: "y M d H m xxx", result: result::0002-01-01T00:00-01:00 },
+        { string: "2 1 1 0 0 +01:59", pattern: "y M d H m xxx", result: result::0002-01-01T00:00+01:59 },
+        { string: "2 1 1 0 0 -01:59", pattern: "y M d H m xxx", result: result::0002-01-01T00:00-01:59 },
+        { string: "2 1 1 0 0 +10:00", pattern: "y M d H m xxx", result: result::0002-01-01T00:00+10:00 },
+        { string: "2 1 1 0 0 -10:00", pattern: "y M d H m xxx", result: result::0002-01-01T00:00-10:00 },
+//         { string: "2 1 1 0 0 +23:00", pattern: "y M d H m xxx", result: result::0002-01-01T00:00+23:00 }, FIXME https://github.com/partiql/partiql-lang-kotlin/issues/31
+//         { string: "2 1 1 0 0 -23:00", pattern: "y M d H m xxx", result: result::0002-01-01T00:00-23:00 }, FIXME https://github.com/partiql/partiql-lang-kotlin/issues/31
+    ]
+}
+
+// null propagation -----------------------------------------------------------------------------------------------
+test::{
+    name: "to_timestamp single argument null propagation",
+    sql: "to_timestamp(null)",
+    expected: result::null
+}
+
+test::{
+    name: "to_timestamp single argument missing propagation",
+    sql: "to_timestamp(missing)",
+    expected: result::null
+}
+
+
+for::{
+    template: [
+        test::{
+            name: "to_timestamp null and missing propagation",
+            sql: "to_timestamp(${string}, ${pattern})",
+            expected: $result
+        }
+    ],
+    variableSets: [
+        { string: "null", pattern: "'y'",  result: result::null },
+        { string: "''",   pattern: "null", result: result::null },
+        { string: "null", pattern: "null", result: result::null },
+
+        { string: "missing", pattern: "'y'",     result: result::null },
+        { string: "''",      pattern: "missing", result: result::null },
+        { string: "missing", pattern: "missing", result: result::null },
+
+        { string: "null",    pattern: "missing", result: result::null },
+        { string: "missing", pattern: "null",    result: result::null },
+    ]
+}
+
+// wrong number of arguments --------------------------------------------------------------------------------------
+for::{
+    template: [
+        test::{
+            name: "to_timestamp wrong number of arguments",
+            sql: $sql,
+            expected: error::{
+                code: EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL,
+                properties: {
+                    LINE_NUMBER:1,
+                    COLUMN_NUMBER:1,
+                    EXPECTED_ARITY_MIN:1,
+                    EXPECTED_ARITY_MAX:2
+                }
+            }
+        }
+    ],
+    variableSets: [
+        { sql: "to_timestamp()" },
+        { sql: "to_timestamp('', 'y', '')" },
+        { sql: "to_timestamp('', 'y', 1)" },
+    ]
+}
+
+// wrong type of arguments ----------------------------------------------------------------------------------------
+for::{
+    template: [
+        test::{
+            name: "to_timestamp wrong type of arguments",
+            sql: $sql,
+            expected: error::{
+                code: "null",
+                properties: {
+                    LINE_NUMBER:1,
+                    COLUMN_NUMBER:1,
+                }
+            }
+        }
+    ],
+    variableSets: [
+        { sql: "to_timestamp(1, 'y')" },
+        { sql: "to_timestamp('', 1)" },
+        { sql: "to_timestamp(1)" },
+    ]
+}
+
+// invalid pattern ----------------------------------------------------------------------------------------------
+for::{
+    template: [
+        test::{
+            name: "to_timestamp invalid pattern",
+            sql: "to_timestamp('doesnt matter', '${pattern}')",
+            expected: error::{
+                code: $code,
+                properties: {
+                    LINE_NUMBER:1,
+                    COLUMN_NUMBER:1,
+                    TIMESTAMP_FORMAT_PATTERN: $pattern
+                }
+            }
+        }
+    ],
+    variableSets: [
+        // valid patterns for the backing impl, but not for PartiQL
+        { pattern: "L", code: EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_TOKEN },
+        { pattern: "O", code: EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_TOKEN },
+        { pattern: "G", code: EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_TOKEN },
+        { pattern: "u", code: EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_TOKEN },
+        { pattern: "Q", code: EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_TOKEN },
+        { pattern: "q", code: EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_TOKEN },
+        { pattern: "w", code: EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_TOKEN },
+        { pattern: "W", code: EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_TOKEN },
+        { pattern: "E", code: EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_TOKEN },
+        { pattern: "e", code: EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_TOKEN },
+        { pattern: "c", code: EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_TOKEN },
+        { pattern: "F", code: EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_TOKEN },
+        { pattern: "k", code: EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_TOKEN },
+        { pattern: "K", code: EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_TOKEN },
+        { pattern: "A", code: EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_TOKEN },
+        { pattern: "V", code: EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_TOKEN },
+        { pattern: "z", code: EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_TOKEN },
+        { pattern: "p", code: EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_TOKEN },
+
+        // completely invalid
+        { pattern: "foobar", code: EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_TOKEN },
+
+        // MMMMM is valid for to_string(), but not to_timestamp()
+        { pattern: "y MMMMM", code: EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_SYMBOL_FOR_PARSING }
+    ]
+}
+
+
+// incomplete format pattern ------------------------------------------------------------------------------------
+for::{
+    template: [
+        test::{
+            name: "to_timestamp invalid pattern",
+            sql: "to_timestamp('doesnt matter', '${pattern}')",
+            expected: error::{
+                code: EVALUATOR_INCOMPLETE_TIMESTAMP_FORMAT_PATTERN,
+                properties: {
+                    LINE_NUMBER:1,
+                    COLUMN_NUMBER:1,
+                    TIMESTAMP_FORMAT_PATTERN: $pattern,
+                    TIMESTAMP_FORMAT_PATTERN_FIELDS: $fields
+                }
+            }
+        }
+    ],
+    variableSets: [
+        // patterns that need other patterns to be valid. In short any higher precision pattern needs the lower
+        // precision to be valid or it won't be possible to construct the timestamp
+        { pattern: "M",                 fields: "YEAR" },
+        { pattern: "dd",                fields: "YEAR, MONTH_OF_YEAR" },
+        { pattern: "h",                 fields: "YEAR, MONTH_OF_YEAR, DAY_OF_MONTH" },
+        { pattern: "hh",                fields: "YEAR, MONTH_OF_YEAR, DAY_OF_MONTH" },
+
+        // The least significant field required for format patterns containing an offset or AM/PM is HOUR.
+        // Note that HOUR is not a valid Ion timestamp precision but if omitted from the format pattern
+        // the precision of the parsed timestamps will still be MINUTE with a default value of 0 for the
+        // MINUTE field.
+        { pattern: "X",                 fields: "YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY" },
+        { pattern: "XX",                fields: "YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY" },
+        { pattern: "XXX",               fields: "YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY" },
+        { pattern: "x",                 fields: "YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY" },
+        { pattern: "xx",                fields: "YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY" },
+        { pattern: "xxx",               fields: "YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY" },
+        
+        { pattern: "y X",               fields: "MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY" },
+        { pattern: "y M X",             fields: "DAY_OF_MONTH, HOUR_OF_DAY" },
+        { pattern: "y M d X",           fields: "HOUR_OF_DAY" },
+
+        { pattern: "y a",               fields: "MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY" },
+        { pattern: "y M a",             fields: "DAY_OF_MONTH, HOUR_OF_DAY" },
+        { pattern: "y M d a",           fields: "HOUR_OF_DAY" },
+    ]
+}
+// Invalid string -----------------------------------------------------------------------------------------------
+for::{
+    template: [
+        test::{
+            name: "to_timestamp invalid string",
+            sql: "to_timestamp('${string}', '${pattern}')",
+            expected: error::{
+                code: EVALUATOR_CUSTOM_TIMESTAMP_PARSE_FAILURE,
+                properties: {
+                    LINE_NUMBER:1,
+                    COLUMN_NUMBER:1,
+                    TIMESTAMP_FORMAT_PATTERN: $pattern
+                }
+            }
+        }
+    ],
+    variableSets: [
+        // patterns are valid, but value is nonsense
+        { string: "some text", pattern: "y"},
+        { string: "some text", pattern: "yy"},
+        { string: "some text", pattern: "yyyy"},
+        { string: "some text", pattern: "y M"},
+        { string: "some text", pattern: "y MM"},
+        { string: "some text", pattern: "y MMM"},
+        { string: "some text", pattern: "y MMMM"},
+        { string: "some text", pattern: "y M d"},
+        { string: "some text", pattern: "y M dd"},
+        { string: "some text", pattern: "y M d h m a"},
+        { string: "some text", pattern: "y M d hh m a"},
+        { string: "some text", pattern: "y M d H m"},
+        { string: "some text", pattern: "y M d H mm"},
+        { string: "some text", pattern: "y M d H m s"},
+        { string: "some text", pattern: "y M d H m ss"},
+        { string: "some text", pattern: "y M d H m s S"},
+        { string: "some text", pattern: "y M d H m s SSS"},
+        { string: "some text", pattern: "y M d H m s n"},
+        { string: "some text", pattern: "y M d H m s X"},
+        { string: "some text", pattern: "y M d H m s XX"},
+        { string: "some text", pattern: "y M d H m s XXX"},
+        { string: "some text", pattern: "y M d H m s x"},
+        { string: "some text", pattern: "y M d H m s xx"},
+        { string: "some text", pattern: "y M d H m s xxx"},
+
+        // wrong strings
+        { string: "-1",    pattern: "y"},    // invalid year
+        { string: "0",     pattern: "y"},    // invalid year
+        { string: "10000", pattern: "y"},    // invalid year
+        { string: "9",     pattern: "yy"},   // insufficient padding
+        { string: "010",   pattern: "yy"},   // too much padding
+        { string: "010",   pattern: "yyyy"}, // insufficient padding
+        { string: "00010", pattern: "yyyy"}, // too much padding
+
+        { string: "10",          pattern: "y M"},     // missing month
+        { string: "10 -1",       pattern: "y M"},     // invalid month
+        { string: "10 13",       pattern: "y M"},     // invalid month
+        { string: "10 1",        pattern: "y MM"},    // insufficient padding
+        { string: "10 001",      pattern: "y MM"},    // too much padding
+        { string: "10 1",        pattern: "y MMM"},   // wrong type for pattern
+        { string: "10 Fub",      pattern: "y MMM"},   // invalid month abbreviation
+        { string: "10 1",        pattern: "y MMMM"},  // wrong type for pattern
+        { string: "10 Fubruary", pattern: "y MMMM"},  // invalid month
+
+        { string: "10 1",     pattern: "y M d"},  // missing day
+        { string: "10 1 40",  pattern: "y M d"},  // invalid day
+        { string: "10 1 -1",  pattern: "y M d"},  // invalid day
+        { string: "10 1 1",   pattern: "y M dd"}, // insufficient padding
+        { string: "10 1 001", pattern: "y M dd"}, // too much padding
+
+        { string: "10 1 1",       pattern: "y M d H m"},  // missing hour and minute
+        { string: "10 1 1 -1 1",  pattern: "y M d H m"},  // invalid hour
+        { string: "10 1 1 25 1",  pattern: "y M d H m"},  // invalid hour
+        { string: "10 1 1 1 1",   pattern: "y M d HH m"}, // insufficient padding
+        { string: "10 1 1 001 1", pattern: "y M d HH m"}, // too much padding
+
+        { string: "10 1 1 1",     pattern: "y M d H m"},  // missing minute
+        { string: "10 1 1 1 -1",  pattern: "y M d H m"},  // invalid minute
+        { string: "10 1 1 1 61",  pattern: "y M d H m"},  // invalid minute
+        { string: "10 1 1 1 1",   pattern: "y M d H mm"}, // insufficient padding
+        { string: "10 1 1 1 001", pattern: "y M d H mm"}, // too much padding
+
+        { string: "10 1 1 AM",       pattern: "y M d h m a"},  // missing hour and minute
+        { string: "10 1 1 -1 1 AM",  pattern: "y M d h m a"},  // invalid hour
+        { string: "10 1 1 13 1 AM",  pattern: "y M d h m a"},  // invalid hour
+        { string: "10 1 1 1 1 AM",   pattern: "y M d hh m a"}, // insufficient padding
+        { string: "10 1 1 001 1 AM", pattern: "y M d hh m a"}, // too much padding
+
+        { string: "10 1 1 1 1",     pattern: "y M d H m s"},   // missing second
+        { string: "10 1 1 1 1 -1",  pattern: "y M d H m s"},   // invalid second
+        { string: "10 1 1 25 1 61", pattern: "y M d H m s"},   // invalid second
+        { string: "10 1 1 1 1 1",   pattern: "y M d HH m ss"}, // insufficient padding
+        { string: "10 1 1 1 1 001", pattern: "y M d HH m ss"}, // too much padding
+
+        { string: "10 1 1 1 1",         pattern: "y M d H m s S"},  // missing fraction of second
+        { string: "10 1 1 1 1 1 -0.1",  pattern: "y M d H m s S"},  // invalid fraction
+        { string: "10 1 1 1 1 1 1.0",   pattern: "y M d H m s S"},  // invalid fraction
+        { string: "10 1 1 1 1 1 0.1",   pattern: "y M d H m s SS"}, // insufficient padding
+        { string: "10 1 1 1 1 1 0.001", pattern: "y M d H m s SS"}, // too much padding
+
+        { string: "10 1 1 1 1",              pattern: "y M d H m s n"}, // missing nano of second
+        { string: "10 1 1 1 1 1 -1",         pattern: "y M d H m s n"}, // invalid nano
+        { string: "10 1 1 1 1 1 1000000000", pattern: "y M d H m s n"}, // invalid nano
+
+        { string: "10 1 1 1 1 +24",         pattern: "y M d H m X"}, // invalid offset
+        { string: "10 1 1 1 1 -24",         pattern: "y M d H m X"}, // invalid offset
+        { string: "10 1 1 1 1 05",          pattern: "y M d H m X"}, // missing sign
+        { string: "10 1 1 1 1 +1",          pattern: "y M d H m X"}, // insufficient padding
+        { string: "10 1 1 1 1 +1000000",    pattern: "y M d H m X"}, // too much padding
+        { string: "10 1 1 1 1 -1",          pattern: "y M d H m X"}, // insufficient padding
+
+        { string: "10 1 1 1 1 Z",           pattern: "y M d H m x"}, // Z is only supported by capital X
+        { string: "10 1 1 1 1 +24",         pattern: "y M d H m x"}, // invalid offset
+        { string: "10 1 1 1 1 -24",         pattern: "y M d H m x"}, // invalid offset
+        { string: "10 1 1 1 1 05",          pattern: "y M d H m x"}, // missing sign
+        { string: "10 1 1 1 1 +1",          pattern: "y M d H m x"}, // insufficient padding
+        { string: "10 1 1 1 1 +1000000",    pattern: "y M d H m x"}, // too much padding
+        { string: "10 1 1 1 1 -1",          pattern: "y M d H m x"}, // insufficient padding
+
+        { string: "10 1 1 1 1 +2400",  pattern: "y M d H m XX"}, // invalid offset
+        { string: "10 1 1 1 1 -2400",  pattern: "y M d H m XX"}, // invalid offset
+        { string: "10 1 1 1 1 0500",   pattern: "y M d H m XX"}, // missing sign
+        { string: "10 1 1 1 1 +100",   pattern: "y M d H m XX"}, // insufficient padding
+        { string: "10 1 1 1 1 -100",   pattern: "y M d H m XX"}, // insufficient padding
+        { string: "10 1 1 1 1 -10000", pattern: "y M d H m XX"}, // too much padding
+
+        { string: "10 1 1 1 1 Z",      pattern: "y M d H m xx"}, // Z is only supported by capital X
+        { string: "10 1 1 1 1 +2400",  pattern: "y M d H m xx"}, // invalid offset
+        { string: "10 1 1 1 1 -2400",  pattern: "y M d H m xx"}, // invalid offset
+        { string: "10 1 1 1 1 0500",   pattern: "y M d H m xx"}, // missing sign
+        { string: "10 1 1 1 1 +100",   pattern: "y M d H m xx"}, // insufficient padding
+        { string: "10 1 1 1 1 -100",   pattern: "y M d H m xx"}, // insufficient padding
+        { string: "10 1 1 1 1 -10000", pattern: "y M d H m xx"}, // too much padding
+
+        { string: "10 1 1 1 1 +24:00",  pattern: "y M d H m XXX"}, // invalid offset
+        { string: "10 1 1 1 1 -24:00",  pattern: "y M d H m XXX"}, // invalid offset
+        { string: "10 1 1 1 1 05:00",   pattern: "y M d H m XXX"}, // missing sign
+        { string: "10 1 1 1 1 +1:00",   pattern: "y M d H m XXX"}, // insufficient padding
+        { string: "10 1 1 1 1 -1:00",   pattern: "y M d H m XXX"}, // insufficient padding
+        { string: "10 1 1 1 1 -001:00", pattern: "y M d H m XXX"}, // too much padding
+
+        { string: "10 1 1 1 1 Z",       pattern: "y M d H m xxx"}, // Z is only supported by capital X
+        { string: "10 1 1 1 1 +24:00",  pattern: "y M d H m xxx"}, // invalid offset
+        { string: "10 1 1 1 1 -24:00",  pattern: "y M d H m xxx"}, // invalid offset
+        { string: "10 1 1 1 1 05:00",   pattern: "y M d H m xxx"}, // missing sign
+        { string: "10 1 1 1 1 +1:00",   pattern: "y M d H m xxx"}, // insufficient padding
+        { string: "10 1 1 1 1 -1:00",   pattern: "y M d H m xxx"}, // insufficient padding
+        { string: "10 1 1 1 1 -001:00", pattern: "y M d H m xxx"}, // too much padding    
+    ]
+}

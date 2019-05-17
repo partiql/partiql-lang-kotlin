@@ -1,0 +1,30 @@
+@startuml
+interface Compiler {
+  +compile(source: String): Expression
+}
+
+interface Expression {
+  +eval(globals: Bindings): ExprValue
+}
+
+Compiler ..> Expression
+
+interface Parser {
+  +parse(source: String): IonSexp
+}
+
+interface Lexer {
+  +tokenize(source: String): List<Token>
+}
+
+SqlParser --|> Parser
+SqlParser --o Lexer
+
+SqlLexer --|> Lexer
+
+class EvaluatingCompiler
+
+EvaluatingCompiler --|> Compiler
+EvaluatingCompiler --o Parser
+
+@enduml

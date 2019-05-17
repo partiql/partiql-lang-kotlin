@@ -1,0 +1,669 @@
+/*
+ * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ *  You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *      http://aws.amazon.com/apache2.0/
+ *
+ *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ *  language governing permissions and limitations under the License.
+ */
+
+
+set_default_environment::{
+
+    simple_1_col_1_group: [
+        { col1: 1 },
+        { col1: 1 }
+    ],
+
+    simple_1_col_2_groups: [
+        { col1: 1 },
+        { col1: 1 },
+        { col1: 2 },
+        { col1: 2 }
+    ],
+
+    simple_2_col_1_group: [
+        { col1: 1, col2: 2 },
+        { col1: 1, col2: 2 }
+    ],
+
+    sales_report: [
+        { fiscal_year: 2000T, rep: "Bob", total_sales: 1.0 },
+        { fiscal_year: 2000T, rep: "Jon", total_sales: 2.0 },
+        { fiscal_year: 2000T, rep: "Meg", total_sales: 3.0 },
+
+        { fiscal_year: 2001T, rep: "Bob", total_sales: 10.0 },
+        { fiscal_year: 2001T, rep: "Jon", total_sales: 20.0 },
+        { fiscal_year: 2001T, rep: "Meg", total_sales: 30.0 },
+
+        { fiscal_year: 2002T, rep: "Bob", total_sales: 100.0 },
+        { fiscal_year: 2002T, rep: "Jon", total_sales: 200.0 },
+        { fiscal_year: 2002T, rep: "Meg", total_sales: 300.0 },
+    ],
+
+    regional_sales_report: [
+        { fiscal_year: 2000T, region: "US", rep: "Bob", total_sales: 1.0 },
+        { fiscal_year: 2000T, region: "US", rep: "Jon", total_sales: 2.0 },
+        { fiscal_year: 2000T, region: "US", rep: "Meg", total_sales: 3.0 },
+
+        { fiscal_year: 2001T, region: "US", rep: "Bob", total_sales: 10.0 },
+        { fiscal_year: 2001T, region: "US", rep: "Jon", total_sales: 20.0 },
+        { fiscal_year: 2001T, region: "US", rep: "Meg", total_sales: 30.0 },
+
+        { fiscal_year: 2002T, region: "US", rep: "Bob", total_sales: 100.0 },
+        { fiscal_year: 2002T, region: "US", rep: "Jon", total_sales: 200.0 },
+        { fiscal_year: 2002T, region: "US", rep: "Meg", total_sales: 300.0 },
+
+        { fiscal_year: 2000T, region: "EU", rep: "Axl", total_sales: 4.0 },
+        { fiscal_year: 2000T, region: "EU", rep: "Sam", total_sales: 5.0 },
+        { fiscal_year: 2000T, region: "EU", rep: "Nya", total_sales: 6.0 },
+
+        { fiscal_year: 2001T, region: "EU", rep: "Axl", total_sales: 40.0 },
+        { fiscal_year: 2001T, region: "EU", rep: "Sam", total_sales: 50.0 },
+        { fiscal_year: 2001T, region: "EU", rep: "Nya", total_sales: 60.0 },
+
+        { fiscal_year: 2002T, region: "EU", rep: "Axl", total_sales: 400.0 },
+        { fiscal_year: 2002T, region: "EU", rep: "Sam", total_sales: 500.0 },
+        { fiscal_year: 2002T, region: "EU", rep: "Nya", total_sales: 600.0 },
+    ],
+
+
+    simple_sensor_data: [
+        {
+            station: 1,
+            sensor_readings: [ 1.1, 1.2, 1.3 ]
+        },
+        {
+            station: 2,
+            sensor_readings: [ 2.1, 2.2, 2.3 ]
+        },
+        {
+            station: 3,
+            sensor_readings: [ 3.1, 3.2, 3.3 ]
+        },
+    ],
+}
+
+test::{
+    name: "group by - 1 columm",
+    sql: '''
+        SELECT col1
+        FROM simple_1_col_1_group
+        GROUP BY col1
+    ''',
+    expected: result::(bag
+        { col1: 1 }
+    )
+}
+
+test::{
+    name: "group by with group as that isn't in select list - 1 columm",
+    sql: '''
+        SELECT col1
+        FROM simple_1_col_1_group
+        GROUP BY col1 GROUP AS g
+    ''',
+    expected: result::(bag
+        { col1: 1 }
+    )
+}
+
+test::{
+    name: "group by with group as - 1 columm",
+    sql: '''
+        SELECT col1, g
+        FROM simple_1_col_1_group
+        GROUP BY col1 GROUP AS g
+    ''',
+    expected: result::(bag
+        {
+            col1:1,
+            g: (bag
+                { simple_1_col_1_group:{ col1:1 } }
+                { simple_1_col_1_group:{ col1:1 } }
+            )
+        }
+    )
+}
+
+
+test::{
+    name: "group by - 2 columms",
+    sql: '''
+        SELECT col1, col2
+        FROM simple_2_col_1_group
+        GROUP BY col1, col2
+    ''',
+    expected: result::(bag { col1: 1, col2: 2 } )
+}
+
+test::{
+    name: "group by with group as variable that is not selected - 1 column",
+    sql: '''
+        SELECT col1
+        FROM simple_1_col_1_group
+        GROUP BY col1 GROUP AS g
+    ''',
+    expected: result::(bag { col1: 1 } )
+}
+
+test::{
+    name: "aliased from source group by with group as - 1 column",
+    sql: '''
+        SELECT col1, g
+        FROM simple_1_col_1_group AS src
+        GROUP BY col1 GROUP AS g
+    ''',
+    expected: result::(bag
+        {
+            col1: 1,
+            g: (bag
+                { src: { col1: 1 } }
+                { src: { col1: 1 } }
+            )
+        }
+    )
+}
+
+test::{
+    name: "group by with group as - 2 columns",
+    sql: '''
+        SELECT col1, col2, g
+        FROM simple_2_col_1_group
+        GROUP BY col1, col2 GROUP AS g
+    ''',
+    expected: result::(bag
+        {
+            col1: 1,
+            col2: 2,
+            g: (bag
+                { simple_2_col_1_group: { col1: 1, col2: 2 } }
+                { simple_2_col_1_group: { col1: 1, col2: 2 } }
+            )
+        }
+    )
+}
+
+test::{
+    name: "aliased from source group by with group as - 2 columns",
+    sql: '''
+        SELECT col1, col2, g
+        FROM simple_2_col_1_group AS src
+        GROUP BY col1, col2 GROUP AS g
+    ''',
+    expected: result::(bag
+        {
+            col1: 1,
+            col2: 2,
+            g: (bag
+                { src: { col1: 1, col2: 2 } }
+                { src: { col1: 1, col2: 2 } }
+            )
+        }
+    )
+}
+
+test::{
+    name: "group by with count(*) - 1 column",
+    sql: '''
+        SELECT
+            col1,
+            COUNT(*) as c
+        FROM simple_1_col_1_group
+        GROUP BY col1
+    ''',
+    expected: result::(bag
+        { col1: 1, c: 2 }
+    )
+}
+
+test::{
+    name: "group by with COUNT(*) - 2 columns",
+    sql: '''
+        SELECT
+            col1,
+            col2,
+            COUNT(*) as c
+        FROM simple_2_col_1_group
+        GROUP BY col1, col2
+    ''',
+    expected: result::(bag { col1: 1, col2: 2, c: 2 } )
+}
+
+test::{
+    name: "group by with MIN() - 1 column",
+    sql: '''
+        SELECT
+            rep,
+            MIN(total_sales) as m
+        FROM sales_report
+        GROUP BY rep
+    ''',
+    expected: result::(bag
+        { rep: "Bob", m: 1.0 }
+        { rep: "Jon", m: 2.0 }
+        { rep: "Meg", m: 3.0 }
+    )
+}
+
+test::{
+    name: "simple group by with MAX() - 1 column",
+    sql: '''
+        SELECT
+            rep,
+            MAX(total_sales) as m
+        FROM sales_report
+        GROUP BY rep
+    ''',
+    expected: result::(bag
+        { rep: "Bob", m: 100.0 }
+        { rep: "Jon", m: 200.0 }
+        { rep: "Meg", m: 300.0 }
+    )}
+
+test::{
+    name: "simple group by with MIN() - 2 column",
+    sql: '''
+        SELECT
+            fiscal_year,
+            region,
+            MIN(total_sales) as m
+        FROM regional_sales_report
+        GROUP BY "fiscal_year", region
+    ''',
+    expected: result::(bag
+        { fiscal_year:2000T, region:"US", m:1.0 }
+        { fiscal_year:2001T, region:"US", m:10.0 }
+        { fiscal_year:2002T, region:"US", m:100.0 }
+        { fiscal_year:2000T, region:"EU", m:4.0 }
+        { fiscal_year:2001T, region:"EU", m:40.0 }
+        { fiscal_year:2002T, region:"EU", m:400.0 }
+    )
+}
+
+test::{
+    name: "simple group by with MAX() - 2 column",
+    sql: '''
+        SELECT
+            fiscal_year,
+            region,
+            MAX(total_sales) as m
+        FROM regional_sales_report
+        GROUP BY fiscal_year, region
+    ''',
+    expected: result::(bag
+        { fiscal_year:2000T, region:"US", m:3.0 }
+        { fiscal_year:2001T, region:"US", m:30.0 }
+        { fiscal_year:2002T, region:"US", m:300.0 }
+        { fiscal_year:2000T, region:"EU", m:6.0 }
+        { fiscal_year:2001T, region:"EU", m:60.0 }
+        { fiscal_year:2002T, region:"EU", m:600.0 }
+    )
+}
+
+test::{
+    name: "group by with SUM() - 1 column",
+    sql: '''
+        SELECT
+            fiscal_year,
+            SUM(total_sales) as total
+        FROM sales_report
+        GROUP BY fiscal_year
+    ''',
+    expected: result::(bag
+        { fiscal_year: 2000T, total: 6.0 }
+        { fiscal_year: 2001T, total: 60.0 }
+        { fiscal_year: 2002T, total: 600.0 }
+    )
+}
+
+test::{
+    name: "group by with SUM() - 2 column",
+    sql: '''
+        SELECT
+            fiscal_year,
+            region,
+            SUM(total_sales) as total
+        FROM regional_sales_report
+        GROUP BY fiscal_year, region
+    ''',
+    expected: result::(bag
+        { fiscal_year: 2000T, region: "US", total: 6 }
+        { fiscal_year: 2001T, region: "US", total: 60 }
+        { fiscal_year: 2002T, region: "US", total: 600 }
+
+        { fiscal_year: 2000T, region: "EU", total: 15 }
+        { fiscal_year: 2001T, region: "EU", total: 150 }
+        { fiscal_year: 2002T, region: "EU", total: 1500 }
+    )
+}
+
+test::{
+    name: "group by with group as (sales_report.fiscal_year)",
+    sql: '''
+        SELECT fiscal_year, g
+        FROM sales_report
+        GROUP BY fiscal_year GROUP AS g
+    ''',
+    expected: result::(bag
+        {
+            fiscal_year: 2000T,
+            g: (bag
+                { sales_report: { fiscal_year: 2000T, rep: "Bob", total_sales: 1.0 } }
+                { sales_report: { fiscal_year: 2000T, rep: "Jon", total_sales: 2.0 } }
+                { sales_report: { fiscal_year: 2000T, rep: "Meg", total_sales: 3.0 } }
+            )
+        }
+        {
+            fiscal_year: 2001T,
+            g: (bag
+                { sales_report: { fiscal_year: 2001T, rep: "Bob", total_sales: 10.0 } }
+                { sales_report: { fiscal_year: 2001T, rep: "Jon", total_sales: 20.0 } }
+                { sales_report: { fiscal_year: 2001T, rep: "Meg", total_sales: 30.0 } }
+            )
+        }
+        {
+            fiscal_year: 2002T,
+            g: (bag
+                { sales_report: { fiscal_year: 2002T, rep: "Bob", total_sales: 100.0 } }
+                { sales_report: { fiscal_year: 2002T, rep: "Jon", total_sales: 200.0 } }
+                { sales_report: { fiscal_year: 2002T, rep: "Meg", total_sales: 300.0 } }
+            )
+        }
+    )
+}
+
+test::{
+    name: "group by with where",
+    sql: '''
+        SELECT
+            rep,
+            SUM(total_sales) as total
+        FROM sales_report
+        WHERE fiscal_year >= `2001T`
+        GROUP BY rep
+    ''',
+    expected: result::(bag
+        { rep: "Bob", total: 110.0 }
+        { rep: "Jon", total: 220.0 }
+        { rep: "Meg", total: 330.0 }
+    )
+}
+
+test::{
+    name: "group by with group as and where",
+    sql: '''
+        SELECT rep, g
+        FROM sales_report
+        WHERE fiscal_year >= `2001T`
+        GROUP BY rep GROUP AS g
+    ''',
+    expected: result::(bag
+        {
+            rep: "Bob",
+            g: (bag
+                { sales_report: { fiscal_year: 2001T, rep: "Bob", total_sales: 10.0 } }
+                { sales_report: { fiscal_year: 2002T, rep: "Bob", total_sales: 100.0 } }
+            )
+        }
+        {
+            rep: "Jon",
+            g: (bag
+                { sales_report: { fiscal_year: 2001T, rep: "Jon", total_sales: 20.0 } }
+                { sales_report: { fiscal_year: 2002T, rep: "Jon", total_sales: 200.0 } }
+            )
+        }
+        {
+            rep: "Meg",
+            g: (bag
+                { sales_report: { fiscal_year: 2001T, rep: "Meg", total_sales: 30.0 } }
+                { sales_report: { fiscal_year: 2002T, rep: "Meg", total_sales: 300.0 } }
+            )
+        }
+    )
+}
+
+test::{
+    name: "group by with having and aggregate",
+    sql: '''
+        SELECT rep
+        FROM sales_report
+        GROUP BY rep
+        HAVING SUM(total_sales) > 300
+    ''',
+    expected: result::(bag
+        { rep: "Meg" }
+    )
+}
+
+test::{
+    name: "group by with having expression",
+    sql: '''
+        SELECT
+            sales_person,
+            SUM(total_sales) as total
+        FROM sales_report
+        GROUP BY rep as sales_person
+        HAVING sales_person IN ('Jon', 'Meg')
+    ''',
+    expected: result::(bag
+        { sales_person: "Jon", total: 222.0 }
+        { sales_person: "Meg", total: 333.0 }
+    )
+}
+
+//*****************************************
+//  Variable scope
+//*****************************************
+
+test::{
+    name: "group by with aliased group expression and having",
+    sql: '''
+        SELECT modified
+        FROM sales_report
+        GROUP BY rep || '_modified' as modified
+        HAVING modified = 'Meg_modified'
+    ''',
+    expected: result::(bag
+        { modified: "Meg_modified" }
+    )
+}
+
+test::{
+    name: "GROUP BY bindings shadow FROM clause bindings",
+    sql: '''
+        SELECT shadow_me
+        FROM sales_report AS shadow_me
+        GROUP BY shadow_me.rep || '_shadowed' AS shadow_me
+    ''',
+    expected: result::(bag
+        { shadow_me: "Bob_shadowed" }
+        { shadow_me: "Jon_shadowed" }
+        { shadow_me: "Meg_shadowed" }
+    )
+}
+
+test::{
+    name: "GROUP BY bindings shadow global variables",
+    sql: '''
+        SELECT sales_report
+        FROM sales_report AS origin
+        GROUP BY origin.rep || '_shadowed' as sales_report
+    ''',
+    expected: result::(bag
+            { sales_report: "Bob_shadowed" }
+            { sales_report: "Jon_shadowed" }
+            { sales_report: "Meg_shadowed" }
+        )
+}
+
+test::{
+    name: "group by with shadowing aliased group expression",
+    sql: '''
+        SELECT rep
+        FROM sales_report
+        GROUP BY rep || '_modified' as rep --Note: "rep" shadows sales_report.rep
+        HAVING rep = 'Meg_modified'
+    ''',
+    expected: result::(bag
+        { rep: "Meg_modified" }
+    )
+}
+
+test::{
+    name: "GROUP BY without GROUP AS and select list references table alias and column",
+    sql: '''
+        SELECT origin.col1
+        FROM simple_1_col_1_group AS origin
+        GROUP BY origin.col1
+    ''',
+    expected: result::(bag
+        { col1: 1 }
+    )
+}
+
+test::{
+    name: "GROUP BY with GROUP AS and select list references table alias and column",
+    sql: '''
+        SELECT origin.col1
+        FROM simple_1_col_1_group as origin
+        GROUP BY origin.col1 GROUP AS grp
+    ''',
+    expected: result::(bag
+        { col1: 1 }
+    )
+}
+
+
+//***********************************
+// SELECT * with GROUP BY, etc
+//***********************************
+
+test::{
+    name: "SELECT * with GROUP BY",
+    sql: '''
+        SELECT *
+        FROM simple_1_col_1_group
+        GROUP BY col1
+    ''',
+    expected: result::(bag
+        { col1: 1 }
+    )
+}
+
+test::{
+    name: "SELECT * with GROUP BY and GROUP AS",
+    sql: '''
+        SELECT *
+        FROM simple_1_col_1_group
+        GROUP BY col1 GROUP AS grp
+    ''',
+    // The values mapped to the result should be all of the bindings introduced by the `GROUP BY` clause
+    expected: result::( bag
+        {
+          col1: 1,
+          grp: (bag
+            { simple_1_col_1_group: { col1:1 } }
+            { simple_1_col_1_group: { col1:1 } }
+          )
+        }
+      )
+}
+
+//***********************************
+// Error conditions
+//***********************************
+
+test::{
+    name: "having without group by",
+    sql: '''
+        SELECT
+            rep,
+            SUM(total_sales) as total
+        FROM sales_report
+        HAVING rep = "Meg"
+    ''',
+    expected: error::{
+        code: SEMANTIC_HAVING_USED_WITHOUT_GROUP_BY,
+        // Note: the metas for this error should originate from the top-level Select ExprNode, which doesn't
+        // currently get an instance [SourceLocationMeta].  See https://github.com/partiql/partiql-lang-kotlin/issues/29
+        // for more information
+        properties: { }
+    }
+}
+test::{
+    name: "GROUP BY binding referenced in FROM clause",
+    sql: '''
+        SELECT *
+        FROM sales_report, gb_binding
+        WHERE fiscal_year >= `2001T`
+        GROUP BY rep AS gb_binding
+    ''',
+    expected: error::{
+         code: EVALUATOR_BINDING_DOES_NOT_EXIST,
+         properties: {
+             LINE_NUMBER: 3,
+             COLUMN_NUMBER: 28,
+             BINDING_NAME: "gb_binding"
+         }
+    }
+}
+
+test::{
+    name: "GROUP BY binding referenced in WHERE clause",
+    sql: '''
+        SELECT *
+        FROM sales_report, gb_binding
+        WHERE gb_binding = 1
+        GROUP BY rep AS gb_binding
+    ''',
+    expected: error::{
+         code: EVALUATOR_BINDING_DOES_NOT_EXIST,
+         properties: {
+             LINE_NUMBER: 3,
+             COLUMN_NUMBER: 28,
+             BINDING_NAME: "gb_binding"
+         }
+    }
+}
+
+test::{
+    name: "GROUP AS binding referenced in FROM clause",
+    sql: '''
+        SELECT *
+        FROM sales_report, gba_binding
+        WHERE fiscal_year >= `2001T`
+        GROUP BY rep GROUP AS gba_binding
+    ''',
+    expected: error::{
+         code: EVALUATOR_BINDING_DOES_NOT_EXIST,
+         properties: {
+             LINE_NUMBER: 3,
+             COLUMN_NUMBER: 28,
+             BINDING_NAME: "gba_binding"
+         }
+    }
+}
+
+test::{
+    name: "GROUP AS binding referenced in WHERE clause",
+    sql: '''
+        SELECT *
+        FROM sales_report, gba_binding
+        WHERE gba_binding = 1
+        GROUP BY rep GROUP AS gba_binding
+    ''',
+    expected: error::{
+         code: EVALUATOR_BINDING_DOES_NOT_EXIST,
+         properties: {
+             LINE_NUMBER: 3,
+             COLUMN_NUMBER: 28,
+             BINDING_NAME: "gba_binding"
+         }
+    }
+}

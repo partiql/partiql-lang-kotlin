@@ -1,0 +1,526 @@
+/*
+ * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ *  You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *      http://aws.amazon.com/apache2.0/
+ *
+ *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ *  language governing permissions and limitations under the License.
+ */
+
+
+// valid cases for each individual supported pattern --------------------------------------------------------------
+for::{
+    template: [
+        test::{
+            name: "to_string valid valid cases for each individual supported pattern",
+            sql: "to_string(`${timestamp}`, '${pattern}')",
+            expected: $result
+        }
+    ],
+    variableSets: [
+
+        // y: year
+        {  timestamp: "0001T",                         pattern: "y", result: result::"1" },
+        {  timestamp: "9999T",                         pattern: "y", result: result::"9999" },
+        {  timestamp: "0986T",                         pattern: "y", result: result::"986" },
+        {  timestamp: "0986-01T",                      pattern: "y", result: result::"986" },
+        {  timestamp: "0986-01-02T",                   pattern: "y", result: result::"986" },
+        {  timestamp: "0986-01-02T10:01Z",             pattern: "y", result: result::"986" },
+        {  timestamp: "0986-01-02T10:01+01:00",        pattern: "y", result: result::"986" },
+        {  timestamp: "0986-01-02T10:01:55Z",          pattern: "y", result: result::"986" },
+        {  timestamp: "0986-01-02T10:01:55+01:00",     pattern: "y", result: result::"986" },
+        {  timestamp: "0986-01-02T10:01:55.004Z",      pattern: "y", result: result::"986" },
+        {  timestamp: "0986-01-02T10:01:55.004+01:00", pattern: "y", result: result::"986" },
+
+        // yy: Zero padded 2-digit year
+        {  timestamp: "0001T",                         pattern: "yy", result: result::"01" },
+        {  timestamp: "9999T",                         pattern: "yy", result: result::"99" },
+        {  timestamp: "1986T",                         pattern: "yy", result: result::"86" },
+        {  timestamp: "1986-01T",                      pattern: "yy", result: result::"86" },
+        {  timestamp: "1986-01-02",                    pattern: "yy", result: result::"86" },
+        {  timestamp: "1986-01-02T10:01Z",             pattern: "yy", result: result::"86" },
+        {  timestamp: "1986-01-02T10:01+01:00",        pattern: "yy", result: result::"86" },
+        {  timestamp: "1986-01-02T10:01:55Z",          pattern: "yy", result: result::"86" },
+        {  timestamp: "1986-01-02T10:01:55+01:00",     pattern: "yy", result: result::"86" },
+        {  timestamp: "1986-01-02T10:01:55.004Z",      pattern: "yy", result: result::"86" },
+        {  timestamp: "1986-01-02T10:01:55.004+01:00", pattern: "yy", result: result::"86" },
+
+        // yyyy: Zero padded 4-digit year
+        {  timestamp: "0986T",                         pattern: "yyyy", result: result::"0986" },
+        {  timestamp: "0986-01T",                      pattern: "yyyy", result: result::"0986" },
+        {  timestamp: "0986-01-02T",                   pattern: "yyyy", result: result::"0986" },
+        {  timestamp: "0986-01-02T10:01Z",             pattern: "yyyy", result: result::"0986" },
+        {  timestamp: "0986-01-02T10:01+01:00",        pattern: "yyyy", result: result::"0986" },
+        {  timestamp: "0986-01-02T10:01:55Z",          pattern: "yyyy", result: result::"0986" },
+        {  timestamp: "0986-01-02T10:01:55+01:00",     pattern: "yyyy", result: result::"0986" },
+        {  timestamp: "0986-01-02T10:01:55.004Z",      pattern: "yyyy", result: result::"0986" },
+        {  timestamp: "0986-01-02T10:01:55.004+01:00", pattern: "yyyy", result: result::"0986" },
+
+        // M: Month of year
+        {  timestamp: "0986T",                         pattern: "M", result: result::"1" },
+        {  timestamp: "0986-01T",                      pattern: "M", result: result::"1" },
+        {  timestamp: "0986-02-02T",                   pattern: "M", result: result::"2" },
+        {  timestamp: "0986-03-02T10:01Z",             pattern: "M", result: result::"3" },
+        {  timestamp: "0986-04-02T10:01+01:00",        pattern: "M", result: result::"4" },
+        {  timestamp: "0986-05-02T10:01:55Z",          pattern: "M", result: result::"5" },
+        {  timestamp: "0986-06-02T10:01:55+01:00",     pattern: "M", result: result::"6" },
+        {  timestamp: "0986-07-02T10:01:55.004Z",      pattern: "M", result: result::"7" },
+        {  timestamp: "0986-10-02T10:01:55.004+01:00", pattern: "M", result: result::"10" },
+
+        // MM: Zero padded month of year
+        {  timestamp: "0986T",                         pattern: "MM", result: result::"01" },
+        {  timestamp: "0986-01T",                      pattern: "MM", result: result::"01" },
+        {  timestamp: "0986-02-02T",                   pattern: "MM", result: result::"02" },
+        {  timestamp: "0986-03-02T10:01Z",             pattern: "MM", result: result::"03" },
+        {  timestamp: "0986-04-02T10:01+01:00",        pattern: "MM", result: result::"04" },
+        {  timestamp: "0986-05-02T10:01:55Z",          pattern: "MM", result: result::"05" },
+        {  timestamp: "0986-06-02T10:01:55+01:00",     pattern: "MM", result: result::"06" },
+        {  timestamp: "0986-07-02T10:01:55.004Z",      pattern: "MM", result: result::"07" },
+        {  timestamp: "0986-10-02T10:01:55.004+01:00", pattern: "MM", result: result::"10" },
+
+        // MM: Zero padded month of year
+        {  timestamp: "0986T",                         pattern: "MM", result: result::"01" },
+        {  timestamp: "0986-01T",                      pattern: "MM", result: result::"01" },
+        {  timestamp: "0986-01-02T",                   pattern: "MM", result: result::"01" },
+        {  timestamp: "0986-01-02T10:01Z",             pattern: "MM", result: result::"01" },
+        {  timestamp: "0986-01-02T10:01+01:00",        pattern: "MM", result: result::"01" },
+        {  timestamp: "0986-01-02T10:01:55Z",          pattern: "MM", result: result::"01" },
+        {  timestamp: "0986-01-02T10:01:55+01:00",     pattern: "MM", result: result::"01" },
+        {  timestamp: "0986-01-02T10:01:55.004Z",      pattern: "MM", result: result::"01" },
+        {  timestamp: "0986-01-02T10:01:55.004+01:00", pattern: "MM", result: result::"01" },
+
+        // MMM: Abbreviated month year name
+        {  timestamp: "0986T",                         pattern: "MMM", result: result::"Jan" },
+        {  timestamp: "0986-01-02T",                   pattern: "MMM", result: result::"Jan" },
+        {  timestamp: "0986-01-02T10:01Z",             pattern: "MMM", result: result::"Jan" },
+        {  timestamp: "0986-01-02T10:01+01:00",        pattern: "MMM", result: result::"Jan" },
+        {  timestamp: "0986-01-02T10:01:55Z",          pattern: "MMM", result: result::"Jan" },
+        {  timestamp: "0986-01-02T10:01:55+01:00",     pattern: "MMM", result: result::"Jan" },
+        {  timestamp: "0986-01-02T10:01:55.004Z",      pattern: "MMM", result: result::"Jan" },
+        {  timestamp: "0986-01-02T10:01:55.004+01:00", pattern: "MMM", result: result::"Jan" },
+        {  timestamp: "0986-01T",                      pattern: "MMM", result: result::"Jan" },
+        {  timestamp: "0986-02T",                      pattern: "MMM", result: result::"Feb" },
+        {  timestamp: "0986-03T",                      pattern: "MMM", result: result::"Mar" },
+        {  timestamp: "0986-04T",                      pattern: "MMM", result: result::"Apr" },
+        {  timestamp: "0986-05T",                      pattern: "MMM", result: result::"May" },
+        {  timestamp: "0986-06T",                      pattern: "MMM", result: result::"Jun" },
+        {  timestamp: "0986-07T",                      pattern: "MMM", result: result::"Jul" },
+        {  timestamp: "0986-08T",                      pattern: "MMM", result: result::"Aug" },
+        {  timestamp: "0986-09T",                      pattern: "MMM", result: result::"Sep" },
+        {  timestamp: "0986-10T",                      pattern: "MMM", result: result::"Oct" },
+        {  timestamp: "0986-11T",                      pattern: "MMM", result: result::"Nov" },
+        {  timestamp: "0986-12T",                      pattern: "MMM", result: result::"Dec" },
+
+        // MMMM: Full month of year name
+        {  timestamp: "0986T",                         pattern: "MMMM", result: result::"January" },
+        {  timestamp: "0986-01-02T",                   pattern: "MMMM", result: result::"January" },
+        {  timestamp: "0986-01-02T10:01Z",             pattern: "MMMM", result: result::"January" },
+        {  timestamp: "0986-01-02T10:01+01:00",        pattern: "MMMM", result: result::"January" },
+        {  timestamp: "0986-01-02T10:01:55Z",          pattern: "MMMM", result: result::"January" },
+        {  timestamp: "0986-01-02T10:01:55+01:00",     pattern: "MMMM", result: result::"January" },
+        {  timestamp: "0986-01-02T10:01:55.004Z",      pattern: "MMMM", result: result::"January" },
+        {  timestamp: "0986-01-02T10:01:55.004+01:00", pattern: "MMMM", result: result::"January" },
+        {  timestamp: "0986-01T",                      pattern: "MMMM", result: result::"January" },
+        {  timestamp: "0986-02T",                      pattern: "MMMM", result: result::"February" },
+        {  timestamp: "0986-03T",                      pattern: "MMMM", result: result::"March" },
+        {  timestamp: "0986-04T",                      pattern: "MMMM", result: result::"April" },
+        {  timestamp: "0986-05T",                      pattern: "MMMM", result: result::"May" },
+        {  timestamp: "0986-06T",                      pattern: "MMMM", result: result::"June" },
+        {  timestamp: "0986-07T",                      pattern: "MMMM", result: result::"July" },
+        {  timestamp: "0986-08T",                      pattern: "MMMM", result: result::"August" },
+        {  timestamp: "0986-09T",                      pattern: "MMMM", result: result::"September" },
+        {  timestamp: "0986-10T",                      pattern: "MMMM", result: result::"October" },
+        {  timestamp: "0986-11T",                      pattern: "MMMM", result: result::"November" },
+        {  timestamp: "0986-12T",                      pattern: "MMMM", result: result::"December" },
+
+        // MMMMM: Month of year letter
+        {  timestamp: "0986T",                         pattern: "MMMMM", result: result::"J" },
+        {  timestamp: "0986-01-02T",                   pattern: "MMMMM", result: result::"J" },
+        {  timestamp: "0986-01-02T10:01Z",             pattern: "MMMMM", result: result::"J" },
+        {  timestamp: "0986-01-02T10:01+01:00",        pattern: "MMMMM", result: result::"J" },
+        {  timestamp: "0986-01-02T10:01:55Z",          pattern: "MMMMM", result: result::"J" },
+        {  timestamp: "0986-01-02T10:01:55+01:00",     pattern: "MMMMM", result: result::"J" },
+        {  timestamp: "0986-01-02T10:01:55.004Z",      pattern: "MMMMM", result: result::"J" },
+        {  timestamp: "0986-01-02T10:01:55.004+01:00", pattern: "MMMMM", result: result::"J" },
+        {  timestamp: "0986-01T",                      pattern: "MMMMM", result: result::"J" },
+        {  timestamp: "0986-02T",                      pattern: "MMMMM", result: result::"F" },
+        {  timestamp: "0986-03T",                      pattern: "MMMMM", result: result::"M" },
+        {  timestamp: "0986-04T",                      pattern: "MMMMM", result: result::"A" },
+        {  timestamp: "0986-05T",                      pattern: "MMMMM", result: result::"M" },
+        {  timestamp: "0986-06T",                      pattern: "MMMMM", result: result::"J" },
+        {  timestamp: "0986-07T",                      pattern: "MMMMM", result: result::"J" },
+        {  timestamp: "0986-08T",                      pattern: "MMMMM", result: result::"A" },
+        {  timestamp: "0986-09T",                      pattern: "MMMMM", result: result::"S" },
+        {  timestamp: "0986-10T",                      pattern: "MMMMM", result: result::"O" },
+        {  timestamp: "0986-11T",                      pattern: "MMMMM", result: result::"N" },
+        {  timestamp: "0986-12T",                      pattern: "MMMMM", result: result::"D" },
+
+        // d: Day of month (1-31)
+        {  timestamp: "0986T",                         pattern: "d", result: result::"1" },
+        {  timestamp: "0986-01T",                      pattern: "d", result: result::"1" },
+        {  timestamp: "0986-01-02T",                   pattern: "d", result: result::"2" },
+        {  timestamp: "0986-01-02T10:01Z",             pattern: "d", result: result::"2" },
+        {  timestamp: "0986-01-12T10:01+01:00",        pattern: "d", result: result::"12" },
+        {  timestamp: "0986-01-20T10:01:55Z",          pattern: "d", result: result::"20" },
+        {  timestamp: "0986-01-31T10:01:55+01:00",     pattern: "d", result: result::"31" },
+        {  timestamp: "0986-01-02T10:01:55.004Z",      pattern: "d", result: result::"2" },
+        {  timestamp: "0986-01-02T10:01:55.004+01:00", pattern: "d", result: result::"2" },
+
+        // dd: Zero padded day of month (01-31)
+        {  timestamp: "0986T",                         pattern: "dd", result: result::"01" },
+        {  timestamp: "0986-01T",                      pattern: "dd", result: result::"01" },
+        {  timestamp: "0986-01-02T",                   pattern: "dd", result: result::"02" },
+        {  timestamp: "0986-01-02T10:01Z",             pattern: "dd", result: result::"02" },
+        {  timestamp: "0986-01-12T10:01+01:00",        pattern: "dd", result: result::"12" },
+        {  timestamp: "0986-01-20T10:01:55Z",          pattern: "dd", result: result::"20" },
+        {  timestamp: "0986-01-31T10:01:55+01:00",     pattern: "dd", result: result::"31" },
+        {  timestamp: "0986-01-02T10:01:55.004Z",      pattern: "dd", result: result::"02" },
+        {  timestamp: "0986-01-02T10:01:55.004+01:00", pattern: "dd", result: result::"02" },
+
+        // a: AM or PM of day
+        {  timestamp: "0986T",                         pattern: "a", result: result::"AM" },
+        {  timestamp: "0986-01T",                      pattern: "a", result: result::"AM" },
+        {  timestamp: "0986-01-02T",                   pattern: "a", result: result::"AM" },
+        {  timestamp: "0986-01-02T10:01Z",             pattern: "a", result: result::"AM" },
+        {  timestamp: "0986-01-12T10:01+01:00",        pattern: "a", result: result::"AM" },
+        {  timestamp: "0986-01-20T10:01:55Z",          pattern: "a", result: result::"AM" },
+        {  timestamp: "0986-01-31T10:01:55+01:00",     pattern: "a", result: result::"AM" },
+        {  timestamp: "0986-01-02T20:01:55.004Z",      pattern: "a", result: result::"PM" },
+        {  timestamp: "0986-01-02T18:01:55.004+01:00", pattern: "a", result: result::"PM" },
+
+        // h: Hour of day (1-12)
+        {  timestamp: "0986T",                         pattern: "h", result: result::"12" },
+        {  timestamp: "0986-01T",                      pattern: "h", result: result::"12" },
+        {  timestamp: "0986-01-02T",                   pattern: "h", result: result::"12" },
+        {  timestamp: "0986-01-02T10:01Z",             pattern: "h", result: result::"10" },
+        {  timestamp: "0986-01-12T10:01+01:00",        pattern: "h", result: result::"10" },
+        {  timestamp: "0986-01-20T10:01:55Z",          pattern: "h", result: result::"10" },
+        {  timestamp: "0986-01-31T05:01:55+01:00",     pattern: "h", result: result::"5" },
+        {  timestamp: "0986-01-02T20:01:55.004Z",      pattern: "h", result: result::"8" },
+        {  timestamp: "0986-01-02T18:01:55.004+01:00", pattern: "h", result: result::"6" },
+
+        // hh: Zero padded hour of day (01-12)
+        {  timestamp: "0986T",                         pattern: "hh", result: result::"12" },
+        {  timestamp: "0986-01T",                      pattern: "hh", result: result::"12" },
+        {  timestamp: "0986-01-02T",                   pattern: "hh", result: result::"12" },
+        {  timestamp: "0986-01-02T10:01Z",             pattern: "hh", result: result::"10" },
+        {  timestamp: "0986-01-12T10:01+01:00",        pattern: "hh", result: result::"10" },
+        {  timestamp: "0986-01-20T10:01:55Z",          pattern: "hh", result: result::"10" },
+        {  timestamp: "0986-01-31T05:01:55+01:00",     pattern: "hh", result: result::"05" },
+        {  timestamp: "0986-01-02T20:01:55.004Z",      pattern: "hh", result: result::"08" },
+        {  timestamp: "0986-01-02T18:01:55.004+01:00", pattern: "hh", result: result::"06" },
+
+        // H: Hour of day (0-23)
+        {  timestamp: "0986T",                         pattern: "H", result: result::"0" },
+        {  timestamp: "0986-01T",                      pattern: "H", result: result::"0" },
+        {  timestamp: "0986-01-02T",                   pattern: "H", result: result::"0" },
+        {  timestamp: "0986-01-02T10:01Z",             pattern: "H", result: result::"10" },
+        {  timestamp: "0986-01-12T10:01+01:00",        pattern: "H", result: result::"10" },
+        {  timestamp: "0986-01-20T10:01:55Z",          pattern: "H", result: result::"10" },
+        {  timestamp: "0986-01-31T05:01:55+01:00",     pattern: "H", result: result::"5" },
+        {  timestamp: "0986-01-02T20:01:55.004Z",      pattern: "H", result: result::"20" },
+        {  timestamp: "0986-01-02T18:01:55.004+01:00", pattern: "H", result: result::"18" },
+
+        // HH: Zero padded hour of day (00-23)
+        {  timestamp: "0986T",                         pattern: "HH", result: result::"00" },
+        {  timestamp: "0986-01T",                      pattern: "HH", result: result::"00" },
+        {  timestamp: "0986-01-02T",                   pattern: "HH", result: result::"00" },
+        {  timestamp: "0986-01-02T10:01Z",             pattern: "HH", result: result::"10" },
+        {  timestamp: "0986-01-12T10:01+01:00",        pattern: "HH", result: result::"10" },
+        {  timestamp: "0986-01-20T10:01:55Z",          pattern: "HH", result: result::"10" },
+        {  timestamp: "0986-01-31T05:01:55+01:00",     pattern: "HH", result: result::"05" },
+        {  timestamp: "0986-01-02T20:01:55.004Z",      pattern: "HH", result: result::"20" },
+        {  timestamp: "0986-01-02T18:01:55.004+01:00", pattern: "HH", result: result::"18" },
+
+        // m: Minute of hour (0-59)
+        {  timestamp: "0986T",                         pattern: "m", result: result::"0" },
+        {  timestamp: "0986-01T",                      pattern: "m", result: result::"0" },
+        {  timestamp: "0986-01-02T",                   pattern: "m", result: result::"0" },
+        {  timestamp: "0986-01-02T10:01Z",             pattern: "m", result: result::"1" },
+        {  timestamp: "0986-01-12T10:01+01:00",        pattern: "m", result: result::"1" },
+        {  timestamp: "0986-01-20T10:10:55Z",          pattern: "m", result: result::"10" },
+        {  timestamp: "0986-01-31T05:05:55+01:00",     pattern: "m", result: result::"5" },
+        {  timestamp: "0986-01-02T20:01:55.004Z",      pattern: "m", result: result::"1" },
+        {  timestamp: "0986-01-02T18:01:55.004+01:00", pattern: "m", result: result::"1" },
+
+        // mm: Zero padded minute of hour (00-59)
+        {  timestamp: "0986T",                         pattern: "mm", result: result::"00" },
+        {  timestamp: "0986-01T",                      pattern: "mm", result: result::"00" },
+        {  timestamp: "0986-01-02T",                   pattern: "mm", result: result::"00" },
+        {  timestamp: "0986-01-02T10:01Z",             pattern: "mm", result: result::"01" },
+        {  timestamp: "0986-01-12T10:01+01:00",        pattern: "mm", result: result::"01" },
+        {  timestamp: "0986-01-20T10:10:55Z",          pattern: "mm", result: result::"10" },
+        {  timestamp: "0986-01-31T05:05:55+01:00",     pattern: "mm", result: result::"05" },
+        {  timestamp: "0986-01-02T20:01:55.004Z",      pattern: "mm", result: result::"01" },
+        {  timestamp: "0986-01-02T18:01:55.004+01:00", pattern: "mm", result: result::"01" },
+
+        // s: Second of minute (0-59)
+        {  timestamp: "0986T",                         pattern: "s", result: result::"0" },
+        {  timestamp: "0986-01T",                      pattern: "s", result: result::"0" },
+        {  timestamp: "0986-01-02T",                   pattern: "s", result: result::"0" },
+        {  timestamp: "0986-01-02T10:01Z",             pattern: "s", result: result::"0" },
+        {  timestamp: "0986-01-12T10:01+01:00",        pattern: "s", result: result::"0" },
+        {  timestamp: "0986-01-20T10:10:55Z",          pattern: "s", result: result::"55" },
+        {  timestamp: "0986-01-31T05:05:05+01:00",     pattern: "s", result: result::"5" },
+        {  timestamp: "0986-01-02T20:01:55.004Z",      pattern: "s", result: result::"55" },
+        {  timestamp: "0986-01-02T18:01:55.004+01:00", pattern: "s", result: result::"55" },
+
+        // ss: Zero padded second of minute (00-59)
+        {  timestamp: "0986T",                         pattern: "ss", result: result::"00" },
+        {  timestamp: "0986-01T",                      pattern: "ss", result: result::"00" },
+        {  timestamp: "0986-01-02T",                   pattern: "ss", result: result::"00" },
+        {  timestamp: "0986-01-02T10:01Z",             pattern: "ss", result: result::"00" },
+        {  timestamp: "0986-01-12T10:01+01:00",        pattern: "ss", result: result::"00" },
+        {  timestamp: "0986-01-20T10:10:55Z",          pattern: "ss", result: result::"55" },
+        {  timestamp: "0986-01-31T05:05:05+01:00",     pattern: "ss", result: result::"05" },
+        {  timestamp: "0986-01-02T20:01:55.004Z",      pattern: "ss", result: result::"55" },
+        {  timestamp: "0986-01-02T18:01:55.004+01:00", pattern: "ss", result: result::"55" },
+
+        // S+: Fraction of second. Number of S is the precision, e.g. S for [0.1, 0.9] and SS for [0.01, 0.99]
+        {  timestamp: "0986T",                         pattern: "S",   result: result::"0" },
+        {  timestamp: "0986-01T",                      pattern: "S",   result: result::"0" },
+        {  timestamp: "0986-01-02T",                   pattern: "S",   result: result::"0" },
+        {  timestamp: "0986-01-02T10:01Z",             pattern: "S",   result: result::"0" },
+        {  timestamp: "0986-01-12T10:01+01:00",        pattern: "S",   result: result::"0" },
+        {  timestamp: "0986-01-20T10:10:55Z",          pattern: "S",   result: result::"0" },
+        {  timestamp: "0986-01-31T05:05:05+01:00",     pattern: "S",   result: result::"0" },
+        {  timestamp: "0986-01-02T20:01:55.100Z",      pattern: "S",   result: result::"1" },
+        {  timestamp: "0986-01-02T18:01:55.100+01:00", pattern: "SS",  result: result::"10" },
+        {  timestamp: "0986-01-02T18:01:55.004+01:00", pattern: "SS",  result: result::"00" },
+        {  timestamp: "0986-01-02T18:01:55.004+01:00", pattern: "SSS", result: result::"004" },
+
+        // n: Nano of second
+        {  timestamp: "0986T",                         pattern: "n", result: result::"0" },
+        {  timestamp: "0986-01T",                      pattern: "n", result: result::"0" },
+        {  timestamp: "0986-01-02T",                   pattern: "n", result: result::"0" },
+        {  timestamp: "0986-01-02T10:01Z",             pattern: "n", result: result::"0" },
+        {  timestamp: "0986-01-12T10:01+01:00",        pattern: "n", result: result::"0" },
+        {  timestamp: "0986-01-20T10:10:55Z",          pattern: "n", result: result::"0" },
+        {  timestamp: "0986-01-31T05:05:05+01:00",     pattern: "n", result: result::"0" },
+        {  timestamp: "0986-01-02T20:01:55.004Z",      pattern: "n", result: result::"4000000" },
+        {  timestamp: "0986-01-02T18:01:55.004+01:00", pattern: "n", result: result::"4000000" },
+
+        // X: Offset in hours or "Z" if the offset is 0
+        {  timestamp: "0986T",                         pattern: "X", result: result::"Z" },
+        {  timestamp: "0986-01T",                      pattern: "X", result: result::"Z" },
+        {  timestamp: "0986-01-02T",                   pattern: "X", result: result::"Z" },
+        {  timestamp: "0986-01-02T10:01Z",             pattern: "X", result: result::"Z" },
+        {  timestamp: "0986-01-02T10:01Z",             pattern: "X", result: result::"Z" },
+        {  timestamp: "0986-01-12T10:01+01:00",        pattern: "X", result: result::"+01" },
+        {  timestamp: "0986-01-20T10:10:55Z",          pattern: "X", result: result::"Z" },
+        {  timestamp: "0986-01-31T05:05:05+01:00",     pattern: "X", result: result::"+01" },
+        {  timestamp: "0986-01-02T20:01:55.004Z",      pattern: "X", result: result::"Z" },
+        {  timestamp: "0986-01-02T18:01:55.004+01:00", pattern: "X", result: result::"+01" },
+
+        // XX or XXXX: Offset in hours and minutes with XXXX pattern or "Z" if the offset is 0
+        {  timestamp: "0986T",                         pattern: "XX",   result: result::"Z" },
+        {  timestamp: "0986-01T",                      pattern: "XX",   result: result::"Z" },
+        {  timestamp: "0986-01-02T",                   pattern: "XX",   result: result::"Z" },
+        {  timestamp: "0986-01-02T10:01Z",             pattern: "XX",   result: result::"Z" },
+        {  timestamp: "0986-01-02T10:01Z",             pattern: "XX",   result: result::"Z" },
+        {  timestamp: "0986-01-12T10:01+01:00",        pattern: "XXXX", result: result::"+0100" },
+        {  timestamp: "0986-01-20T10:10:55Z",          pattern: "XX",   result: result::"Z" },
+        {  timestamp: "0986-01-31T05:05:05+01:00",     pattern: "XX",   result: result::"+0100" },
+        {  timestamp: "0986-01-02T20:01:55.004Z",      pattern: "XX",   result: result::"Z" },
+        {  timestamp: "0986-01-02T18:01:55.004+01:10", pattern: "XX",   result: result::"+0110" },
+
+        // XXX or XXXXX: Offset in hours and minutes with XX:XX pattern or "Z" if the offset is 0
+        {  timestamp: "0986T",                         pattern: "XXX",   result: result::"Z" },
+        {  timestamp: "0986-01T",                      pattern: "XXX",   result: result::"Z" },
+        {  timestamp: "0986-01-02T",                   pattern: "XXX",   result: result::"Z" },
+        {  timestamp: "0986-01-02T10:01Z",             pattern: "XXX",   result: result::"Z" },
+        {  timestamp: "0986-01-02T10:01Z",             pattern: "XXX",   result: result::"Z" },
+        {  timestamp: "0986-01-12T10:01+01:00",        pattern: "XXXXX", result: result::"+01:00" },
+        {  timestamp: "0986-01-20T10:10:55Z",          pattern: "XXX",   result: result::"Z" },
+        {  timestamp: "0986-01-31T05:05:05+01:00",     pattern: "XXX",   result: result::"+01:00" },
+        {  timestamp: "0986-01-02T20:01:55.004Z",      pattern: "XXX",   result: result::"Z" },
+        {  timestamp: "0986-01-02T18:01:55.004+01:10", pattern: "XXX",   result: result::"+01:10" },
+
+        // x: Offset in hours
+        {  timestamp: "0986T",                         pattern: "x", result: result::"+00" },
+        {  timestamp: "0986-01T",                      pattern: "x", result: result::"+00" },
+        {  timestamp: "0986-01-02T",                   pattern: "x", result: result::"+00" },
+        {  timestamp: "0986-01-02T10:01Z",             pattern: "x", result: result::"+00" },
+        {  timestamp: "0986-01-02T10:01Z",             pattern: "x", result: result::"+00" },
+        {  timestamp: "0986-01-12T10:01+01:00",        pattern: "x", result: result::"+01" },
+        {  timestamp: "0986-01-20T10:10:55Z",          pattern: "x", result: result::"+00" },
+        {  timestamp: "0986-01-31T05:05:05+01:00",     pattern: "x", result: result::"+01" },
+        {  timestamp: "0986-01-02T20:01:55.004Z",      pattern: "x", result: result::"+00" },
+        {  timestamp: "0986-01-02T18:01:55.004+01:00", pattern: "x", result: result::"+01" },
+
+        // xx or xxxx: Offset in hours and minutes with XXXX pattern
+        {  timestamp: "0986T",                         pattern: "xx",   result: result::"+0000" },
+        {  timestamp: "0986-01T",                      pattern: "xx",   result: result::"+0000" },
+        {  timestamp: "0986-01-02T",                   pattern: "xx",   result: result::"+0000" },
+        {  timestamp: "0986-01-02T10:01Z",             pattern: "xx",   result: result::"+0000" },
+        {  timestamp: "0986-01-02T10:01Z",             pattern: "xx",   result: result::"+0000" },
+        {  timestamp: "0986-01-12T10:01+01:00",        pattern: "xxxx", result: result::"+0100" },
+        {  timestamp: "0986-01-20T10:10:55Z",          pattern: "xx",   result: result::"+0000" },
+        {  timestamp: "0986-01-31T05:05:05+01:00",     pattern: "xx",   result: result::"+0100" },
+        {  timestamp: "0986-01-02T20:01:55.004Z",      pattern: "xx",   result: result::"+0000" },
+        {  timestamp: "0986-01-02T18:01:55.004+01:10", pattern: "xx",   result: result::"+0110" },
+
+        // xxx or xxxxx: Offset in hours and minutes with XX:XX pattern
+        {  timestamp: "0986T",                         pattern: "xxx",   result: result::"+00:00" },
+        {  timestamp: "0986-01T",                      pattern: "xxx",   result: result::"+00:00" },
+        {  timestamp: "0986-01-02T",                   pattern: "xxx",   result: result::"+00:00" },
+        {  timestamp: "0986-01-02T10:01Z",             pattern: "xxx",   result: result::"+00:00" },
+        {  timestamp: "0986-01-02T10:01Z",             pattern: "xxx",   result: result::"+00:00" },
+        {  timestamp: "0986-01-12T10:01+01:00",        pattern: "xxxxx", result: result::"+01:00" },
+        {  timestamp: "0986-01-20T10:10:55Z",          pattern: "xxx",   result: result::"+00:00" },
+        {  timestamp: "0986-01-31T05:05:05+01:00",     pattern: "xxx",   result: result::"+01:00" },
+        {  timestamp: "0986-01-02T20:01:55.004Z",      pattern: "xxx",   result: result::"+00:00" },
+        {  timestamp: "0986-01-02T18:01:55.004+01:10", pattern: "xxx",   result: result::"+01:10" }
+    ]
+}
+
+// null and missing propagation -----------------------------------------------------------------------------------
+for::{
+    template: [
+        test::{
+            name: "to_string null and missing propagation",
+            sql: "to_string(${timestamp}, ${pattern})",
+            expected: $result
+        }
+    ],
+    variableSets: [
+
+        {  timestamp: "null",    pattern: "'y'",     result: result::null },
+        {  timestamp: "`2000T`", pattern: "null",    result: result::null },
+        {  timestamp: "null",    pattern: "null",    result: result::null },
+        {  timestamp: "missing", pattern: "null",    result: result::null },
+        {  timestamp: "null",    pattern: "missing", result: result::null },
+        {  timestamp: "missing", pattern: "'y'",     result: result::null },
+        {  timestamp: "`2000T`", pattern: "missing", result: result::null },
+        {  timestamp: "missing", pattern: "missing", result: result::null }
+    ]
+}
+
+// invalid pattern ------------------------------------------------------------------------------------------------
+for::{
+    template: [
+        test::{
+            name: "to_string invalid pattern",
+            sql: "to_string(`2000T`, '${pattern}')",
+            expected: error::{
+                code: "EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN",
+                properties: {
+                    LINE_NUMBER: 1,
+                    COLUMN_NUMBER: $cn,
+                    TIMESTAMP_FORMAT_PATTERN: $pattern
+                }
+            }
+        }
+    ],
+
+    variableSets: [
+        // { pattern: "yyy",           cn: 1 }, https://github.com/partiql/partiql-lang-kotlin/issues/26
+        { pattern: "not_a_pattern", cn: 1 },
+
+        // below are valid patterns for the backing impl, but we wish to explicitly forbid them to reduce
+        // the complexity of having to replace the backing impl at a later date.
+
+        // { pattern: "L", cn: 1  }, https://github.com/partiql/partiql-lang-kotlin/issues/26
+        // { pattern: "O", cn: 1  }, https://github.com/partiql/partiql-lang-kotlin/issues/26
+        { pattern: "G", cn: 1  },
+        { pattern: "u", cn: 1  },
+        { pattern: "Q", cn: 1  },
+        { pattern: "q", cn: 1  },
+        { pattern: "w", cn: 1  },
+        { pattern: "W", cn: 1  },
+        { pattern: "E", cn: 1  },
+        { pattern: "e", cn: 1  },
+        { pattern: "c", cn: 1  },
+        { pattern: "F", cn: 1  },
+        { pattern: "k", cn: 1  },
+        { pattern: "K", cn: 1  },
+        { pattern: "A", cn: 1  },
+        { pattern: "V", cn: 1  },
+        { pattern: "z", cn: 1  },
+        { pattern: "p", cn: 1  },
+    ]
+}
+
+// wrong types ----------------------------------------------------------------------------------------------------
+for::{
+    template: [
+        test::{
+            name: "to_string wrong types",
+            sql: "to_string(${timestamp}, ${pattern})",
+            expected: error::{
+                code: "null",
+                properties: {
+                    LINE_NUMBER:1,
+                    COLUMN_NUMBER:1
+                }
+            }
+        }
+    ],
+
+    variableSets: [
+        { timestamp: "`1986`", pattern: "'y'" }, // timestamp var is an Int
+        { timestamp: "'some string'", pattern: "'y'" },
+        { timestamp: "1", pattern: "'y'" },
+        { timestamp: "`2017T`", pattern: "1" },
+    ]
+}
+
+// multiple symbols -----------------------------------------------------------------------------------------------
+for::{
+    template : [
+        test::{
+            name : "to_string multiple symbols",
+            sql : "to_string(`${timestamp}`, '${pattern}')",
+            expected : $result
+        }
+    ],
+    variableSets : [
+        { timestamp: "0500-03-09",             pattern: "MM/dd/yyyy",              result: result::"03/09/0500" },
+        { timestamp: "0500-03-09",             pattern: "M/d/y",                   result: result::"3/9/500" },
+        { timestamp: "0001-03-09",             pattern: "MM/dd/yyyy",              result: result::"03/09/0001" },
+        { timestamp: "0001-03-09",             pattern: "M/d/y",                   result: result::"3/9/1" },
+        { timestamp: "9999-03-09",             pattern: "MM/dd/yyyy",              result: result::"03/09/9999" },
+        { timestamp: "9999-03-09",             pattern: "M/d/y",                   result: result::"3/9/9999" },
+        { timestamp: "1969-07-20T20:18Z",      pattern: "MMMM d, y",               result: result::"July 20, 1969" },
+        { timestamp: "1969-07-20T20:18Z",      pattern: "MMM d, yyyy",             result: result::"Jul 20, 1969" },
+        { timestamp: "1969-07-20T20:18Z",      pattern: "M-d-yy",                  result: result::"7-20-69" },
+        { timestamp: "1969-07-20T20:18Z",      pattern: "MM-d-y",                  result: result::"07-20-1969" },
+        { timestamp: "1969-07-20T20:18Z",      pattern: "MMMM d, y h:m a",         result: result::"July 20, 1969 8:18 PM" },
+        { timestamp: "1969-07-20T20:18Z",      pattern: "y-MM-dd''T''H:m:ssX",     result: result::"1969-07-20T20:18:00Z" },
+        { timestamp: "1969-07-20T20:18+08:00", pattern: "y-MM-dd''T''H:m:ssX",     result: result::"1969-07-20T20:18:00+08" },
+        { timestamp: "1969-07-20T20:18+08:00", pattern: "y-MM-dd''T''H:m:ssXXXX",  result: result::"1969-07-20T20:18:00+0800" },
+        { timestamp: "1969-07-20T20:18+08:00", pattern: "y-MM-dd''T''H:m:ssXXXXX", result: result::"1969-07-20T20:18:00+08:00" },
+    ]
+}
+
+// wrong number of arguments --------------------------------------------------------------------------------------
+for::{
+    template: [
+        test::{
+            name: "to_string wrong number of arguments",
+            sql: "${sql}",
+            expected: error::{
+                code: EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL,
+                properties: {
+                    LINE_NUMBER:1,
+                    COLUMN_NUMBER:1,
+                    EXPECTED_ARITY_MIN:2,
+                    EXPECTED_ARITY_MAX:2
+                }
+            }
+        }
+    ],
+    variableSets: [
+        { sql: "to_string()" },
+        { sql: "to_string(`2017T`)" },
+        { sql: "to_string(`2017T`, 'y', 1)" },
+        { sql: "to_string(`2017T`, 'y', 'y')" },
+    ]
+}
+
+

@@ -1,0 +1,96 @@
+/*
+ * Copyright 2017 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *     http://aws.amazon.com/apache2.0/
+ *
+ * or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
+ */
+
+test::{
+    name:"Default behavior",
+    sql: "undefined_variable",
+    expected: error:: {
+        code: "EVALUATOR_BINDING_DOES_NOT_EXIST",
+        properties: {
+          LINE_NUMBER:1,
+          COLUMN_NUMBER:1,
+          BINDING_NAME:"undefined_variable"
+        }
+    }
+}
+
+test::{
+    name:"Test specific compile options",
+    sql: "undefined_variable",
+    compile_options: {
+        undefinedVariable: "MISSING"
+    },
+    expected: missing::null,
+}
+
+test::{
+    name:"Test specific compile options do not effect the default compile options",
+    sql: "undefined_variable",
+    expected: error:: {
+        code: "EVALUATOR_BINDING_DOES_NOT_EXIST",
+        properties: {
+          LINE_NUMBER:1,
+          COLUMN_NUMBER:1,
+          BINDING_NAME:"undefined_variable"
+        }
+    }
+}
+
+set_default_compile_options::{
+    undefinedVariable: "MISSING"
+}
+
+test::{
+    name:"The default compile options have changed",
+    sql: "undefined_variable",
+    expected: missing::null,
+}
+
+test::{
+    name:"We can still specify test-specific compilation options",
+    sql: "undefined_variable",
+    compile_options: {
+        undefinedVariable: "ERROR"
+    },
+    expected: error:: {
+        code: "EVALUATOR_BINDING_DOES_NOT_EXIST",
+        properties: {
+          LINE_NUMBER:1,
+          COLUMN_NUMBER:1,
+          BINDING_NAME:"undefined_variable"
+        }
+    }
+}
+
+test::{
+    name:"The default compile option remain unchanged again",
+    sql: "undefined_variable",
+    expected: missing::null,
+}
+
+set_default_compile_options::{}
+
+test::{
+    name: "empty set_compile_options command resets to defaults",
+    sql: "undefined_variable",
+    expected: error:: {
+        code: "EVALUATOR_BINDING_DOES_NOT_EXIST",
+        properties: {
+          LINE_NUMBER:1,
+          COLUMN_NUMBER:1,
+          BINDING_NAME:"undefined_variable"
+        }
+    }
+}

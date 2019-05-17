@@ -1,0 +1,25 @@
+
+ test::{
+     name: "",
+     sql: "bar",
+     expected: result::[{ foo: 1 }]
+ }
+
+ test::{
+     name: "foo",
+     sql: "",
+     expected: result::[{ foo: 1 }]
+ }
+
+ test::{
+     name: "foO",
+     sql: "bar"
+ }
+
+ set_default_environment::["crew.ion", "crew.ion"]
+
+ include::"included_errors.isqlts"
+
+ set_default_environment::"foo.ion"
+
+ set_default_environment::["bar.ion", "bat.ion"]

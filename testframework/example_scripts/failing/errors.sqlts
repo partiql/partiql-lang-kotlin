@@ -1,0 +1,10 @@
+
+set_default_session::{
+    uklfjsdf:foo
+}
+
+test::{
+    name: "foo",
+    sql: "1",
+    expected: result::2
+}

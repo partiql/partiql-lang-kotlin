@@ -1,0 +1,8 @@
+build
+/gradle-build
+*.iml
+*.swp
+*.~
+~$*
+.gradle
+out/

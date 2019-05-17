@@ -1,0 +1,70 @@
+/*
+ * Copyright 2017 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *     http://aws.amazon.com/apache2.0/
+ *
+ * or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
+ */
+
+include::"included_example.isqlts"
+
+test::{
+        name:"addition",
+        sql: "1 + 1",
+        expected: result::2
+}
+
+test::{
+    name: "how to encode an s-expression in the expected field",
+    sql: "`(a (b c))`",
+    expected: result::(sexp a (sexp b c))
+}
+
+test::{
+    name:"select from inline environment",
+    sql: "SELECT * FROM people",
+    environment:{
+        people: { first_name: "Bob", last_name: "Jones" }
+    },
+    expected: result:: (bag {first_name: "Bob", last_name: "Jones"})
+}
+
+set_default_environment::{
+    people: [
+       { first_name: "David", last_name: "Lurton" }
+    ]
+}
+
+test::{
+    name:"select from default environment",
+    sql: "SELECT * FROM people",
+    expected: result:: (bag  {first_name: "David", last_name: "Lurton"})
+}
+
+test::{
+        name:"select from inline environment after setting default",
+        sql: "SELECT * FROM people",
+        environment:{
+            people: { first_name: "Bob", last_name: "Jones" }
+        },
+        expected: result:: (bag  {first_name: "Bob", last_name: "Jones"})
+}
+
+set_default_environment::["../data/crew.ion"]
+
+test::{
+    name:"select from environment from file",
+    sql: "SELECT * FROM crew WHERE rank = 9",
+    expected: result:: (bag {first_name: "Jean Luc", last_name: "Picard", rank: 9})
+}
+
+
+
+
