@@ -14,10 +14,22 @@ application {
 // Allows the CLI to receive input from the keyboard when invoked using `./gradlew :cli:run`
 tasks['run'].standardInput = System.in
 
+jar {
+    manifest {
+        attributes("Implementation-Title": project.name,
+                "Implementation-Version": version,
+                "Main-Class": "org.partiql.cli.Main")
+    }
+    
+    // includes all compile dependencies in the jar
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+}
+
+
 dependencies {
-    implementation project(":lang")
-    implementation 'net.sf.jopt-simple:jopt-simple:[5.0,6.0)'
-    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+    compile project(":lang")
+    compile 'net.sf.jopt-simple:jopt-simple:[5.0,6.0)'
+    compile 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
 
     testImplementation 'org.jetbrains.kotlin:kotlin-test'
     testImplementation 'pl.pragmatists:JUnitParams:[1.0.0,1.1.0)'
