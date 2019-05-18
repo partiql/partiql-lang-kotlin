@@ -82,8 +82,6 @@ sealed class ExecuteSqlCommand : ScriptCommand() {
     abstract val expectation: Expectation?
 }
 
-//A better name for this would have been just "Test" (to be consistent with the other `ScriptCommand` inheritors)
-// however brazil thinks this class is a unit test if it has a "Test" suffix. :(
 class TestCommand(
     override val location: ScriptLocation = ScriptLocation.NotSet,
     override val name: String?,
