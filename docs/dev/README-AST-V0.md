@@ -3,7 +3,7 @@ be deprecated in favor of version 1.
  
 ## Ion SQL AST
 
-The `IonSqlParser` implementation generates an AST representation in Ion based on
+The `SqlParser` implementation generates an AST representation in Ion based on
 s-expressions.
 
 The general format is as follows:
