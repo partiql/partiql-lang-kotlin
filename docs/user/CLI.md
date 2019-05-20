@@ -38,7 +38,7 @@ The CLI is built during the main Gradle build.  To build it separately execute:
 ./gradlew :cli:build
 ```
 
-After building, distributable jars are located in the `tools/sqlcli/build/distributions` directory (realtive to the 
+After building, distributable jars are located in the `cli/build/distributions` directory (realtive to the 
 project root).
 
 Be sure to include the correct relative path to `gradlew` if you are not in the project root.
@@ -80,8 +80,8 @@ sql> SELECT id FROM `[{id: 5, name:"bill"}, {id: 6, name:"bob"}]` WHERE name = '
   id:6
 }
 ---
-
-OK!
+Result type was BAG and contained 1 items
+OK! (130 ms)
 ```
 
 The result of previous expression is stored in the variable named `_`, so you can then run subsequent
@@ -95,8 +95,8 @@ sql> SELECT id + 4 AS name FROM _
   name:10
 }
 ---
-
-OK!
+Result type was BAG and contained 1 items
+OK! (20 ms)
 ```
 
 Press control-D to exit the REPL.
@@ -131,6 +131,8 @@ sql> 1 + 1
   )
 )
 ---
+Result type was SEXP
+OK! (32 ms)
 ```
 
 To view the AST with metadata information of an SQL statement, type one and press enter only *once*, 
@@ -216,6 +218,8 @@ sql> 1 + 1
   )
 )
 ---
+Result type was SEXP
+OK! (5 ms)
 ```
 
 ## Initial Environment
@@ -245,7 +249,7 @@ Could be loaded into the REPL with `animals` and `types` bound list of `struct` 
 The REPL could be started up with:
 
 ```
-$ ./gradlew :tools:sqlcli:run -q --console=plain --args='-e config.sql'
+$ ./gradlew :cli:run -q --console=plain --args='-e config.sql'
 ```
 
 (Note that shell expansions such as `~` do not work within the value of the `args` argument.)
@@ -278,8 +282,8 @@ sql> SELECT name, type, is_magic FROM animals, types WHERE type = id
   is_magic:true
 }
 ------
-
-OK!
+Result type was BAG and contained 3 items
+OK! (64 ms)
 ```
 
 # Working with Structure
@@ -287,8 +291,8 @@ OK!
 Let's consider the following initial environment:
 
 ```
-{
-  'stores':`[
+`{
+  'stores':[
     {
      id: "5",
      books: [
@@ -306,8 +310,8 @@ Let's consider the following initial environment:
        {title:"F", price: 10.0, categories:["history"]},
      ]
     }
-  ]`
-}
+  ]
+}`
 ```
 
 If we wanted to find all books *as their own rows* with a price greater than `7` we can use paths on the `FROM` for this:
@@ -339,8 +343,8 @@ sql> SELECT * FROM stores[*].books[*] AS b WHERE b.price > 7
   ]
 }
 ------
-
-OK!
+Result type was BAG and contained 3 items
+OK! (70 ms)
 ```
 
 If you wanted to also de-normalize the store ID and title into the above rows:
@@ -362,8 +366,8 @@ sql> SELECT s.id AS store, b.title AS title FROM stores AS s, @s.books AS b WHER
   title:"F"
 }
 ------
-
-OK!
+Result type was BAG and contained 3 items
+OK! (32 ms)
 ```
 
 We can also use sub-queries with paths to predicate on sub-structure without changing the
@@ -406,12 +410,13 @@ sql> SELECT * FROM stores AS s
   ]
 }
 ------
-
-OK!
+Result type was BAG and contained 1 items
+OK! (52 ms)
 ```
 
 # Reading/Writing Files
-The REPL provides the `read_file` function to stream data from a file. For example:
+The REPL provides the `read_file` function to stream data from a file. The files needs to be placed in the folder `cli`. 
+For example:
 
 ```
 sql> SELECT city FROM read_file('data.ion') AS c, `["HI", "NY"]` AS s WHERE c.state = s
@@ -424,8 +429,8 @@ sql> SELECT city FROM read_file('data.ion') AS c, `["HI", "NY"]` AS s WHERE c.st
   city:"Rochester"
 }
 ------
-
-OK!
+Result type was BAG and contained 3 items
+OK! (45 ms)
 ```
 
 The REPL also has the capability to write files with the `write_file` function:
@@ -436,17 +441,17 @@ sql> write_file('out.ion', SELECT * FROM _)
 ==='
 true
 ------
-
-OK!
+Result type was BOOL
+OK! (20 ms)
 ```
 
 Functions and expressions can be used in the *global configuration* as well.  Consider
 the following `config.ion`:
 
 ```
-{
+`{
   'data': read_file('data.ion')
-}
+}`
 ```
 
 The `data` variable will now be bound to file containing Ion:
@@ -472,8 +477,8 @@ sql> SELECT * FROM data
   state:"NY"
 }
 ------
-
-OK!
+Result type was BAG and contained 3 items
+OK! (75 ms)
 ```
 
 # TSV/CSV Data
@@ -507,8 +512,8 @@ sql> read_file('simple.tsv', `{type:"tsv"}`)
   _2:"99.99"
 }
 ---- 
-
-OK! 
+Result type was BAG and contained 3 items
+OK! (83 ms)
 ```
 
 The options `struct` can also define if the first row for delimited data should be the
@@ -534,8 +539,8 @@ sql> read_file('simple.tsv', `{type:"tsv", header:true}`)
   price:"99.99"
 }
 ---- 
-
-OK!
+Result type was BAG and contained 3 items
+OK! (87 ms)
 ```
 
 Auto conversion can also be specified numeric and timestamps in delimited data.
@@ -560,8 +565,8 @@ sql> read_file('simple.tsv', `{type:"tsv", header:true, conversion:"auto"}`)
   price:99.99
 }
 ---- 
-
-OK!
+Result type was BAG and contained 3 items
+OK! (96 ms)
 ```
 
 Writing TSV/CSV data can be done by specifying the optional `struct` argument to specify output
@@ -574,6 +579,8 @@ sql> write_file('out.csv', `{type:"csv"}`, SELECT name, type FROM animals)
 ===' 
 true
 ----
+Result type was BOOL
+OK! (41 ms)
 ```
 
 This would produce the following file:
@@ -594,6 +601,8 @@ sql> write_file('out.csv', `{type:"csv", header:true}`, SELECT name, type FROM a
 ===' 
 true
 ----
+Result type was BOOL
+OK! (39 ms)
 ```
 
 Which would produce the following file:
