@@ -35,7 +35,7 @@ Option                                               Description
 The CLI is built during the main Gradle build.  To build it separately execute:
 
 ```
-./gradlew :tools:sqlcli:build
+./gradlew :cli:build
 ```
 
 After building, distributable jars are located in the `tools/sqlcli/build/distributions` directory (realtive to the 
@@ -48,7 +48,7 @@ Be sure to include the correct relative path to `gradlew` if you are not in the 
 The following command will build any dependencies before starting the CLI.
 
 ```
-./gradlew :tools:sqlcli:run -q --args="<command line arguments>"
+./gradlew :cli:run -q --args="<command line arguments>"
 ```
 
 # REPL
@@ -56,7 +56,7 @@ The following command will build any dependencies before starting the CLI.
 To start an interactive read, eval, print loop (REPL) execute:
 
 ```
-rlwrap ./gradlew :tools:sqlcli:run --console=plain
+rlwrap ./gradlew :cli:run --console=plain
 ```
 
 [rlwrap](https://github.com/hanslub42/rlwrap) provides command history support.  It allows 
