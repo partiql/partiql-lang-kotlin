@@ -1,12 +1,12 @@
-
 package org.partiql.examples
 
-import org.junit.*
 import org.junit.Assert.*
 import com.amazon.ion.system.*
+import org.partiql.examples.util.Example
 import org.partiql.lang.ast.*
 import org.partiql.lang.ast.passes.*
 import org.partiql.lang.syntax.*
+import java.io.PrintStream
 
 
 /**
@@ -29,32 +29,28 @@ private class InvalidAstException(message: String) : RuntimeException(message)
 
 
 /** A couple of tests for [PreventJoinVisitor]. */
-class CustomSemanticCheckExampleTest {
+class PreventJoinVisitorExample(out: PrintStream) : Example(out) {
     private val ion = IonSystemBuilder.standard().build()
     private val parser = SqlParser(ion)
     private val astWalker = AstWalker(PreventJoinVisitor())
 
-    private fun checkForJoins(sql: String) {
+    private fun hasJoins(sql: String): Boolean = try {
         val ast = parser.parseExprNode(sql)
         astWalker.walk(ast)
+        false
+    } catch (e: InvalidAstException) {
+        true
     }
 
     /** Ensures no exception is thrown when the query doesn't contain a JOIN. */
-    @Test
-    fun testWithoutJoin() {
-        checkForJoins("SELECT foo FROM bar")
-    }
+    override fun run() {
+        val queryWithoutJoi = "SELECT foo FROM bar"
+        print("PartiQL query without JOINs:", queryWithoutJoi)
+        print("Has joins:", hasJoins(queryWithoutJoi).toString())
 
-    /** Ensures an exception is thrown when the query does contain a JOIN. */
-    @Test
-    fun testWithJoin() {
-        try {
-            checkForJoins("SELECT foo FROM bar CROSS JOIN bat")
-            fail("Exception was not thrown")
-        }
-        catch(e: InvalidAstException) {
-            //Do nothing -- this is the expected outcome
-        }
+        val queryWithJoin = "SELECT foo FROM bar CROSS JOIN bat"
+        print("PartiQL query with JOINs:", queryWithJoin)
+        print("Has joins:", hasJoins(queryWithJoin).toString())
     }
 }
 

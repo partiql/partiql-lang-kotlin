@@ -13,6 +13,8 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 
+import org.jetbrains.annotations.NotNull;
+import org.partiql.examples.util.Example;
 import org.partiql.lang.CompilerPipeline;
 import org.partiql.lang.eval.Bindings;
 import org.partiql.lang.eval.EvaluationSession;
@@ -20,19 +22,27 @@ import org.partiql.lang.eval.ExprValue;
 import org.partiql.lang.eval.Expression;
 
 import java.io.IOException;
+import java.io.PrintStream;
 
-public class S3Example {
-    public static void main(String... args) {
+public class S3Example extends Example {
+
+    public S3Example(@NotNull PrintStream out) {
+        super(out);
+    }
+
+    @Override
+    public void run() {
+        // Setup this variables before running the example:
+        final String bucket_name = "";
+        final String key_name = "";
+        final String region = "";
+        
         /*
-            S3 bucket contain JSON lines formatted data, example:
+            Upload the data bellow to your S3 bucket
             {"id": "1", "name": "person_1", "age": 32, "address": "555 1st street, Seattle", "tags": []}
             {"id": "2", "name": "person_2", "age": 24}
             {"id": "3", "name": "person_3", "age": 25, "address": {"number": 555, "street": "1st street", "city": "Seattle"}, "tags": ["premium_user"]}
          */
-
-        final String bucket_name = "";
-        final String key_name = "";
-        final String region = "";
 
         final AmazonS3 s3 = AmazonS3Client.builder().withRegion(region).build();
 
@@ -84,9 +94,7 @@ public class S3Example {
             // result as JSON bellow
             // [{"name":"person_2"},{"name":"person_3","address":{"number":555,"street":"1st street","city":"Seattle"}}]
         } catch (IOException e) {
-            System.err.println(e.getMessage());
-            e.printStackTrace();
-            System.exit(1);
+            throw new RuntimeException(e);
         }
     }
 }

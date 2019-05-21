@@ -1,19 +1,11 @@
 package org.partiql.examples;
 
-import com.amazon.ion.IonDatagram;
-import com.amazon.ion.IonReader;
 import com.amazon.ion.IonStruct;
 import com.amazon.ion.IonSystem;
 import com.amazon.ion.IonValue;
-import com.amazon.ion.IonWriter;
-import com.amazon.ion.system.IonReaderBuilder;
 import com.amazon.ion.system.IonSystemBuilder;
-import com.amazon.ion.system.IonTextWriterBuilder;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import org.jetbrains.annotations.NotNull;
+import org.partiql.examples.util.Example;
 import org.partiql.lang.CompilerPipeline;
 import org.partiql.lang.eval.BaseExprValue;
 import org.partiql.lang.eval.Bindings;
@@ -23,9 +15,8 @@ import org.partiql.lang.eval.ExprValueExtensionsKt;
 import org.partiql.lang.eval.ExprValueFactory;
 import org.partiql.lang.eval.ExprValueType;
 import org.partiql.lang.eval.Expression;
-import org.partiql.lang.eval.Named;
 
-import java.io.IOException;
+import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -33,7 +24,12 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class CSVJavaExample {
+public class CSVJavaExample extends Example {
+
+    public CSVJavaExample(@NotNull PrintStream out) {
+        super(out);
+    }
+
     /**
      * ExprValue represents values in the context of a PartiQL Expression.
      */
@@ -96,10 +92,13 @@ public class CSVJavaExample {
         }
     }
 
-    public static void main(String... args) {
+    @Override
+    public void run() {
         final String CSV = "person_1,32,tag_1" +
                 "\nperson_1,27,tag_1" +
                 "\nperson_2,24,tag_1,tag_2";
+
+        print("CSV Data:", CSV);
 
         // Initializes the ion system used by PartiQL
         final IonSystem ion = IonSystemBuilder.standard().build();
@@ -108,9 +107,11 @@ public class CSVJavaExample {
         // and value factories
         final CompilerPipeline pipeline = CompilerPipeline.standard(ion);
 
+        final String query = "SELECT * FROM myCsvDocument csv WHERE CAST(csv._1 AS INT) < 30";
+        print("PartiQL query:", query);
+
         // Compiles the query, the resulting expression can be re-used to query multiple data sets
-        final Expression selectAndFilter = pipeline.compile(
-                "SELECT * FROM myCsvDocument csv WHERE CAST(csv._1 AS INT) < 30");
+        final Expression selectAndFilter = pipeline.compile(query);
 
         final EvaluationSession session = EvaluationSession.builder()
                 .globals(
@@ -123,7 +124,7 @@ public class CSVJavaExample {
                 ).build();
 
         final ExprValue selectAndFilterResult = selectAndFilter.eval(session);
-        System.out.println(selectAndFilterResult);
+        print("PartiQL query result:", selectAndFilterResult.toString());
         // result bellow
         // <<{_0:"person_1",_1:"27",_2:"tag_1"},{_0:"person_2",_1:"24",_2:"tag_1",_3:"tag_2"}>>
     }
