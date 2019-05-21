@@ -4,9 +4,11 @@ import org.junit.*
 import org.junit.Assert.*
 import com.amazon.ion.*
 import com.amazon.ion.system.*
+import org.partiql.examples.util.Example
 import org.partiql.lang.*
 import org.partiql.lang.eval.*
 import org.partiql.lang.util.*
+import java.io.PrintStream
 
 /**
  * Demonstrates how to implement a custom [ExprValue] type.  Custom implementations of [ExprValue] such as this one
@@ -59,7 +61,7 @@ private class CsvRowExprValue(private val valueFactory: ExprValueFactory, privat
         get() = bindingsInstance
 }
 
-class CsvExprValueExampleTest {
+class CsvExprValueExample(out: PrintStream) : Example(out) {
 
     private val ion = IonSystemBuilder.standard().build()
     private val valueFactory = ExprValueFactory.standard(ion)
@@ -73,8 +75,8 @@ class CsvExprValueExampleTest {
         return e.eval(session)
     }
 
-    @Test
-    fun selectFromCsvFileTest() {
+    override fun run() {
+        print("CSV file:", EXAMPLE_CSV_FILE_CONTENTS)
 
         val globals = Bindings.buildLazyBindings {
             addBinding("csv_data") {
@@ -92,17 +94,10 @@ class CsvExprValueExampleTest {
             }
         }
 
-        val result = eval("SELECT _1, _2, _3 FROM csv_data", EvaluationSession.build { globals(globals) })
+        val query = "SELECT _1, _2, _3 FROM csv_data"
+        print("PartiQL query:", query)
 
-        val expectedResult = eval(
-            """<<
-            { '_1': 'Cat', '_2': 'Hobbes', '_3': 'M' },
-            { '_1': 'Cat', '_2': 'Nibbler', '_3': 'F' },
-            { '_1': 'Dog', '_2': 'Fido', '_3': 'M' }
-            >>""")
-
-        assertEquals(
-            "The actual result must match the expected result",
-            DEFAULT_COMPARATOR.compare(expectedResult, result), 0)
+        val result = eval(query, EvaluationSession.build { globals(globals) })
+        print("result:", result.toString())
     }
 }
