@@ -1,0 +1,10 @@
+#!/bin/sh
+
+BASEDIR=`dirname "$0" 2>/dev/null`
+
+JAVA=java
+if test -n "$JAVA_HOME"; then
+    JAVA="$JAVA_HOME/bin/java"
+fi
+
+$JAVA -jar $BASEDIR/partiql-cli.jar
