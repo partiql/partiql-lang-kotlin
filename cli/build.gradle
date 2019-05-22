@@ -21,8 +21,8 @@ jar {
                 "Main-Class": "org.partiql.cli.Main")
     }
     
-    // includes all compile dependencies in the jar
-    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    // includes all runtime dependencies in the jar
+    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
 }
 
 
