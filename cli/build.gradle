@@ -15,6 +15,8 @@ application {
 tasks['run'].standardInput = System.in
 
 jar {
+    dependsOn ':lang:jar'
+    
     archiveName = 'partiql-cli.jar'
     
     manifest {

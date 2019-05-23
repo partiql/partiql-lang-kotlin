@@ -59,7 +59,7 @@ tasks.register('javadocJar', Jar) {
 publishing {
     publications {
         create('maven', MavenPublication) {
-            artifactId = 'ion-sql'
+            artifactId = 'partiql-lang-kotlin'
 
             from(components['java'])
             artifact(tasks['sourcesJar'])
