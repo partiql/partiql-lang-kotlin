@@ -15,6 +15,8 @@ application {
 tasks['run'].standardInput = System.in
 
 jar {
+    dependsOn ':lang:jar'
+    
     archiveName = 'partiql-cli.jar'
     
     manifest {
@@ -37,6 +39,8 @@ task packageCli(type: Zip) {
     from('build/libs') {
         include '*.jar'
     }
+    
+    into 'partiql-cli'
     
     baseName = 'partiql-cli'
 }
