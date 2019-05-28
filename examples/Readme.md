@@ -23,7 +23,7 @@ List of Examples:
     * CsvExprValueExample: how to create an `ExprValue` for a custom data format, in this case CSV  
     * CustomFunctionsExample: how to create and register user defined functions (UDF)
     * EvaluationWithBindings: query evaluation with global bindings
-    * EvaluationWithBindings: query evaluation with global bindings that are lazily evaluated
+    * EvaluationWithLazyBindings: query evaluation with global bindings that are lazily evaluated
     * ParserErrorExample: inspecting errors thrown by the `Parser`
     * ParserExample: how to parse a query and serialize the query AST
     * PartialEvaluationRewriter: simple rewriter example that partially evaluates simple operations like `1+1`
@@ -31,6 +31,7 @@ List of Examples:
     * SimpleExpressionEvaluation: how to run a simple query
 * Java:
     * CSVJavaExample: similar to CsvExprValueExample but implemented in Java
-    * S3Example: running queries from data stored in a S3 bucket. To run this example is necessary to create a S3 
-    bucket, upload a file and change the example code to point to that bucket. Look at the code for more details. 
+    * S3Example: running queries from data stored in a S3 bucket. To run this example it is necessary to create a S3 
+    bucket, upload a file and change the example code to point to that bucket. Please look at the source code of 
+    S3Example and its documentation on how to adapt the test for your needs. 
  
