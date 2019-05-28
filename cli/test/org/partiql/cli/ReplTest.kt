@@ -91,4 +91,26 @@ class ReplTest {
             """,
             actual)
     }
+
+    @Test
+    fun addToGlobalEnvAndQuery() {
+        val repl = makeRepl("""
+            |!add_to_global_env {'myTable': <<{'a':1}, {'a': 2}>>}
+            |
+            |SELECT * FROM myTable
+            |
+        """.trimMargin())
+        val actual = repl.runAndOutput()
+        assertIon("{a:1} {a:2}", actual)
+    }
+
+    @Test
+    fun listCommands() {
+        val repl = makeRepl("!list_commands")
+        val actual = repl.runAndOutput().split("\n").map { it.trim() }
+
+        // we only assert the lines that have the command output to ignore the prompt and OK message
+        assertEquals("!add_to_global_env: adds a value to the global environment, similar to '-e'", actual[1])
+        assertEquals("!list_commands: print this message", actual[2])
+    }
 }
