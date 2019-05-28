@@ -1,6 +1,4 @@
----
-title: PartiQL Tutorial
----
+# Introduction 
 
 PartiQL provides SQL-compatible unified query access across multiple
 data stores containing structured data that is supported by SQL, in

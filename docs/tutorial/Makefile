@@ -1,7 +1,7 @@
 
 
 export TARGET := tutorial
-export SRC    := $(addprefix $(CURDIR)/,tutorial.md)
+export SRC    := $(addprefix $(CURDIR)/, $(shell cat outline.txt))
 
 export EXTRASUPPORTFILES := # empty for now 
 
