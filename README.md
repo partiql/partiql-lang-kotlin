@@ -45,7 +45,7 @@ Gradle build.
 ### Examples 
 
 See the [examples](examples) project in this repository for examples covering
-use of the {productName} interpreter in your project.
+use of the PartiQL interpreter in your project.
 
 ## Contributing
 

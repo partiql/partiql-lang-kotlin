@@ -2,12 +2,14 @@ package org.partiql.examples
 
 import org.junit.*
 import com.amazon.ion.system.*
+import org.partiql.examples.util.Example
 import org.partiql.lang.*
 import org.partiql.lang.eval.*
+import java.io.PrintStream
 import kotlin.test.*
 
 /** A simple fibonacci calculator. */
-private fun calcFib(n: Long): Long = when(n) {
+private fun calcFib(n: Long): Long = when (n) {
     0L -> 0L
     1L -> 1L
     else -> calcFib(n - 1L) + calcFib(n - 2L)
@@ -33,7 +35,7 @@ class FibScalarExprFunc(valueFactory: ExprValueFactory) : NullPropagatingExprFun
         // of the correct type, so each function must still be responsible for that.
 
         val argN = args.first()
-        if(argN.type != ExprValueType.INT) {
+        if (argN.type != ExprValueType.INT) {
             // The exception thrown is not flagged as an internal error message because
             // it is caused by user input (either by the query or by the data).
             throw EvaluationException("Argument to $name was not an integer", internal = false)
@@ -57,7 +59,7 @@ class FibListExprFunc(valueFactory: ExprValueFactory) : NullPropagatingExprFunct
     override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
 
         val argN = args.first()
-        if(argN.type != ExprValueType.INT) {
+        if (argN.type != ExprValueType.INT) {
             throw EvaluationException("Argument to $name was not an integer", internal = false)
         }
 
@@ -81,7 +83,7 @@ class FibListExprFunc(valueFactory: ExprValueFactory) : NullPropagatingExprFunct
  * The important parts of this are how [CustomFunctionsTest.compiler] is instantiated and
  * the two custom functions: [FibScalarExprFunc] and [FibListExprFunc] are implemented.
  */
-class CustomFunctionsTest {
+class CustomFunctionsExample(out: PrintStream) : Example(out) {
 
     private val ion = IonSystemBuilder.standard().build()
 
@@ -96,48 +98,33 @@ class CustomFunctionsTest {
 
     /** Evaluates the given [query] with as standard [EvaluationSession]. */
     private fun eval(query: String): ExprValue {
-       val e = pipeline.compile(query)
-       return e.eval(EvaluationSession.standard())
+        val e = pipeline.compile(query)
+        return e.eval(EvaluationSession.standard())
     }
 
-    @Test
-    fun testFibScalar() {
-        runTest("fib_scalar(NULL)", "NULL")
-        runTest("fib_scalar(MISSING)", "MISSING")
-        runTest("fib_scalar(0)", "0")
-        runTest("fib_scalar(1)", "1")
-        runTest("fib_scalar(2)", "1")
-        runTest("fib_scalar(3)", "2")
-        runTest("fib_scalar(4)", "3")
-        runTest("fib_scalar(5)", "5")
-        runTest("fib_scalar(6)", "8")
-        runTest("fib_scalar(7)", "13")
-        runTest("fib_scalar(8)", "21")
-    }
-
-    @Test
-    fun testFibList() {
-        runTest("fib_list(NULL)", "NULL")
-        runTest("fib_list(MISSING)", "MISSING")
-        runTest("fib_list(0)", "[{ 'n': 0 }]")
-        runTest("fib_list(1)", "[{ 'n': 0 }, { 'n': 1 }]")
-        runTest("fib_list(2)", "[{ 'n': 0 }, { 'n': 1 }, { 'n': 1 }]")
-        runTest("fib_list(3)", "[{ 'n': 0 }, { 'n': 1 }, { 'n': 1 }, { 'n': 2 }]")
-        runTest("fib_list(4)", "[{ 'n': 0 }, { 'n': 1 }, { 'n': 1 }, { 'n': 2 }, { 'n': 3 }]")
-        runTest("fib_list(5)", "[{ 'n': 0 }, { 'n': 1 }, { 'n': 1 }, { 'n': 2 }, { 'n': 3 }, { 'n': 5 }]")
-        runTest("fib_list(6)", "[{ 'n': 0 }, { 'n': 1 }, { 'n': 1 }, { 'n': 2 }, { 'n': 3 }, { 'n': 5 }, { 'n': 8 }]")
-        runTest("fib_list(7)", "[{ 'n': 0 }, { 'n': 1 }, { 'n': 1 }, { 'n': 2 }, { 'n': 3 }, { 'n': 5 }, { 'n': 8 }, { 'n': 13 }]")
-        runTest("fib_list(8)", "[{ 'n': 0 }, { 'n': 1 }, { 'n': 1 }, { 'n': 2 }, { 'n': 3 }, { 'n': 5 }, { 'n': 8 }, { 'n': 13 }, { 'n': 21 }]")
-    }
-
-    fun runTest(query: String, expectedResult: String) {
-        val expectedExprValue = eval(expectedResult)
-        val actualExprValue = eval(query)
-
-        // [DEFAULT_COMPARATOR] is an implementation of [kotlin.Comparator<ExprValue>] that
-        // can be used to compare instances of [ExprValue] according to the same rules used
-        // by [EvaluatingCompiler].
-        assertEquals(0, DEFAULT_COMPARATOR.compare(expectedExprValue, actualExprValue),
-                     "The query's result must match the expected value")
+    override fun run() {
+        listOf(
+                "fib_scalar(NULL)",
+                "fib_scalar(MISSING)",
+                "fib_scalar(0)",
+                "fib_scalar(1)",
+                "fib_scalar(2)",
+                "fib_scalar(3)",
+                "fib_scalar(4)",
+                "fib_scalar(5)",
+                "fib_scalar(6)",
+                "fib_scalar(7)",
+                "fib_scalar(8)",
+                "fib_list(NULL)",
+                "fib_list(MISSING)",
+                "fib_list(0)",
+                "fib_list(1)",
+                "fib_list(2)",
+                "fib_list(3)",
+                "fib_list(4)",
+                "fib_list(5)",
+                "fib_list(6)",
+                "fib_list(7)",
+                "fib_list(8)").forEach { query -> print(query, eval(query).toString()) }
     }
 }
