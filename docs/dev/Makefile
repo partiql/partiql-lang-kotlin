@@ -7,7 +7,7 @@ UPGRADEINSTRUCTIONS := $(addprefix $(CURDIR)/, UpgradeInstructions)
 RELEASENOTES        := $(addprefix $(CURDIR)/, ReleaseNotes)
 
 
-export EXTRASUPPORTFILES = $(IMAGES) $(EMAILTEMPLATES) $(UPGRADEINSTRUCTIONS) $(RELEASENOTES)
+export EXTRASUPPORTFILES = $(IMAGES) # $(EMAILTEMPLATES) $(UPGRADEINSTRUCTIONS) $(RELEASENOTES)
 
 all:  # default target
 	@$(MAKE) -C ../ -f common.mk all
