@@ -88,7 +88,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
 
         private fun listCommands(source: String) {
             output.println("")
-            output.println("""|!add_to_global_env: adds a value to the global environment, similar to '-e' 
+            output.println("""|!add_to_global_env: adds a value to the global environment
                               |!list_commands: print this message""".trimMargin())
         }
     }

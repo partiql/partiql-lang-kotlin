@@ -110,7 +110,7 @@ class ReplTest {
         val actual = repl.runAndOutput().split("\n").map { it.trim() }
 
         // we only assert the lines that have the command output to ignore the prompt and OK message
-        assertEquals("!add_to_global_env: adds a value to the global environment, similar to '-e'", actual[1])
+        assertEquals("!add_to_global_env: adds a value to the global environment", actual[1])
         assertEquals("!list_commands: print this message", actual[2])
     }
 }
