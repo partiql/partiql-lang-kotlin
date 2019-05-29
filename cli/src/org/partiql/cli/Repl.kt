@@ -29,10 +29,14 @@ private const val PROMPT_1 = "PartiQL> "
 private const val PROMPT_2 = "   | "
 private const val BAR_1 = "===' "
 private const val BAR_2 = "--- "
+private const val WELCOME_MSG = "Welcome to the PartiQL REPL!" // TODO: extract version from gradle.build and append to message 
 
 private enum class ReplState {
-    /** Initial state, ready to accept new input. */
-    INITIAL, 
+    /** Initial state, first state as soon as you start the REPL */
+    INIT,
+
+    /** Ready to accept new input. */
+    READY,
     
     /** Reading a PartiQL query. Transitions to execute when one of the execution tokens is found. */
     READ_PARTIQL,
@@ -121,9 +125,11 @@ internal class Repl(private val valueFactory: ExprValueFactory,
     // Repl running state
     private val buffer = StringBuilder()
     private var globals = initialGlobal
-    private var state = INITIAL
+    private var state = INIT
     private var previousResult = valueFactory.nullValue
     private var line: String? = null
+
+    private fun printWelcomeMessage() = output.println(WELCOME_MSG)
 
     private fun printPrompt() = when {
         buffer.isEmpty() -> output.print(PROMPT_1)
@@ -152,7 +158,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
         return if (line == null) {
             FINAL
         } else {
-            INITIAL
+            READY
         }
     }
 
@@ -197,7 +203,11 @@ internal class Repl(private val valueFactory: ExprValueFactory,
     override fun run() {
         while (state != FINAL) {
             state = when (state) {
-                INITIAL                    -> {
+                INIT                     -> {
+                    printWelcomeMessage()
+                    READY
+                }
+                READY                    -> {
                     line = readLine()
                     when {
                         arrayOf("!!", "!?", "", null).any { it == line } -> EXECUTE_PARTIQL
