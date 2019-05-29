@@ -133,8 +133,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
         
         return if (line == null) {
             FINAL
-        }
-        else {
+        } else {
             INITIAL
         }
     }
