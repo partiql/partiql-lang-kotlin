@@ -31,12 +31,28 @@ private const val BAR_1 = "===' "
 private const val BAR_2 = "--- "
 
 private enum class ReplState {
-    INITIAL, READ_PARTI_QL,
+    /** Initial state, ready to accept new input. */
+    INITIAL, 
+    
+    /** Reading a PartiQL query. Transitions to execute when one of the execution tokens is found. */
+    READ_PARTI_QL,
 
-    EXECUTE_PARTI_QL, PARSE_PARTI_QL, PARSE_PARTI_QL_WITH_FILTER,
+    /** Ready to execute a PartiQL query. */
+    EXECUTE_PARTI_QL,
 
-    READ_REPL_COMMAND, EXECUTE_REPL_COMMAND,
+    /** Ready to parse a PartiQL query and display the full AST. */
+    PARSE_PARTI_QL,
 
+    /** Ready to parse a PartiQL query and display AST with meta nodes filtered out. */
+    PARSE_PARTI_QL_WITH_FILTER,
+
+    /** Reading a REPL command. Transitions to execute when one of the execution tokens is found. */
+    READ_REPL_COMMAND,
+
+    /** Ready to parse a REPL command. */
+    EXECUTE_REPL_COMMAND,
+
+    /** Final state, nothing left to execute ready to terminate. */
     FINAL
 }
 
