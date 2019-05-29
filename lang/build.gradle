@@ -22,7 +22,7 @@ plugins {
     id 'maven-publish'
 }
 
-version = '1.0.0'
+version = '0.1.0'
 group = 'org.partiql.lang'
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
