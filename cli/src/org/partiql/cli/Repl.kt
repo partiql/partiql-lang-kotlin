@@ -52,7 +52,9 @@ internal class Repl(private val valueFactory: ExprValueFactory,
     
     private inner class ReplCommands {
         operator fun get(commandName: String): (String) -> Unit =
-            commands[commandName] ?: throw IllegalArgumentException("REPL command: '$commandName' not found!")
+            commands[commandName] ?: 
+                throw IllegalArgumentException("REPL command: '$commandName' not found! " +
+                                               "use '!list_commands' to see all available commands")
         
         private val commands: Map<String, (String) -> Unit> = mapOf(
             "add_to_global_env" to ::addToGlobalEnv,
