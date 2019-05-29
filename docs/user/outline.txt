@@ -2,6 +2,7 @@ metadata.yaml
 ../macros.md
 Preface.md
 FAQ.md
+GettingStarted.md
 CLI.md
 Tutorial.md
 Guide.md
