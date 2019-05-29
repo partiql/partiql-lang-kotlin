@@ -327,6 +327,7 @@ And you can write both `JOIN` and `UNNEST` as well
 | FROM hr.employeesNest AS e,       | FROM hr.employeesNest AS e JOIN   |
 |      e.projects AS p              |      UNNEST(e.projects) AS p      |
 | WHERE p.name LIKE '%security%'    | WHERE p.name LIKE '%security%'    |
+| ```                               | ```
 +-----------------------------------+-----------------------------------+
 
 Unnesting data with LEFT JOIN always preserves parent information
