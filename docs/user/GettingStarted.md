@@ -84,6 +84,11 @@ PartiQL>
 
 Congratulations! You succesfuly installed and run the \SqlName REPL.
 The \SqlName REPL is now waiting for more input. To exit the \SqlName
+REPL press 
+
+* `Control+D` in OSX or Unix 
+* `Control+Z` on Windows 
+
 REPL press `Control+D` or close the terminal/command
 prompt window.  
 
