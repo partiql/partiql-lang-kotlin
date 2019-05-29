@@ -39,6 +39,7 @@ Run (double click) on `particl.bat`. This should open a command line
 prompt and start the \SqlName REPL. The \SqlName REPL prompt should look like this 
 
 ```
+Welcome to the PartiQL REPL!
 PartiQL> 
 ```
 
@@ -49,7 +50,8 @@ PartiQL>
 enter. This should start the \SqlName REPL and should look like this
 
 ```
-PartiQL> 
+Welcome to the PartiQL REPL!
+PartiQL>
 ```
 
 ## Testing the \SqlName REPL 
