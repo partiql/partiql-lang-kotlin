@@ -35,16 +35,16 @@ private enum class ReplState {
     INITIAL, 
     
     /** Reading a PartiQL query. Transitions to execute when one of the execution tokens is found. */
-    READ_PARTI_QL,
+    READ_PARTIQL,
 
     /** Ready to execute a PartiQL query. */
-    EXECUTE_PARTI_QL,
+    EXECUTE_PARTIQL,
 
     /** Ready to parse a PartiQL query and display the full AST. */
-    PARSE_PARTI_QL,
+    PARSE_PARTIQL,
 
     /** Ready to parse a PartiQL query and display AST with meta nodes filtered out. */
-    PARSE_PARTI_QL_WITH_FILTER,
+    PARSE_PARTIQL_WITH_FILTER,
 
     /** Reading a REPL command. Transitions to execute when one of the execution tokens is found. */
     READ_REPL_COMMAND,
@@ -200,20 +200,20 @@ internal class Repl(private val valueFactory: ExprValueFactory,
                 INITIAL                    -> {
                     line = readLine()
                     when {
-                        arrayOf("!!", "!?", "", null).any { it == line } -> EXECUTE_PARTI_QL
+                        arrayOf("!!", "!?", "", null).any { it == line } -> EXECUTE_PARTIQL
                         line!!.startsWith("!")                           -> READ_REPL_COMMAND
-                        else                                             -> READ_PARTI_QL
+                        else                                             -> READ_PARTIQL
                     }
                 }
 
-                READ_PARTI_QL              -> {
+                READ_PARTIQL              -> {
                     buffer.appendln(line)
                     line = readLine()
                     when (line) {
-                        "", null -> EXECUTE_PARTI_QL
-                        "!!"     -> PARSE_PARTI_QL_WITH_FILTER
-                        "!?"     -> PARSE_PARTI_QL
-                        else     -> READ_PARTI_QL
+                        "", null -> EXECUTE_PARTIQL
+                        "!!"     -> PARSE_PARTIQL_WITH_FILTER
+                        "!?"     -> PARSE_PARTIQL
+                        else     -> READ_PARTIQL
                     }
                 }
 
@@ -226,9 +226,9 @@ internal class Repl(private val valueFactory: ExprValueFactory,
                     }
                 }
 
-                EXECUTE_PARTI_QL           -> executePartiQL()
-                PARSE_PARTI_QL             -> parsePartiQL()
-                PARSE_PARTI_QL_WITH_FILTER -> parsePartiQLWithFilters()
+                EXECUTE_PARTIQL           -> executePartiQL()
+                PARSE_PARTIQL             -> parsePartiQL()
+                PARSE_PARTIQL_WITH_FILTER -> parsePartiQLWithFilters()
                 EXECUTE_REPL_COMMAND       -> executeReplCommand()
 
                 // shouldn't really happen
