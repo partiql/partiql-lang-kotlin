@@ -76,6 +76,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
     }
     
     private fun executeReplCommand() = executeTemplate { source ->
+        // TODO make a real parser for this. partiql-lang-kotlin/issues/63
         val splitIndex = source.indexOfFirst { it == ' ' }.let {
             if (it == -1) {
                 source.length
