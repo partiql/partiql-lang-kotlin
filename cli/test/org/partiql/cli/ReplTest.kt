@@ -21,96 +21,427 @@ import org.junit.*
 import org.junit.Assert.*
 import org.partiql.lang.*
 import java.io.*
+import java.lang.StringBuilder
+import java.util.concurrent.*
+import kotlin.concurrent.*
+
+const val SLEEP_TIME = 5L
+
+class RequiredFlushOutputStream : OutputStream() {
+    private val backingOS = ByteArrayOutputStream()
+    private var availableSize = 0
+
+    override fun write(b: Int) {
+        backingOS.write(b)
+    }
+
+    fun size() = availableSize
+
+    fun reset() {
+        availableSize = 0
+        backingOS.reset()
+    }
+
+    override fun flush() {
+        availableSize = backingOS.size()
+    }
+
+    override fun write(b: ByteArray?) {
+        backingOS.write(b)
+    }
+
+    override fun write(b: ByteArray?, off: Int, len: Int) {
+        backingOS.write(b, off, len)
+    }
+
+    override fun close() {
+        backingOS.close()
+    }
+
+    override fun toString() = backingOS.toString("UTF-8")
+}
+
+private class ReplTester(bindings: Bindings = Bindings.EMPTY) {
+    val ion = IonSystemBuilder.standard().build()
+    val parser: Parser = SqlParser(ion)
+    val compiler = CompilerPipeline.build(ion) { sqlParser(parser) }
+    val valueFactory = ExprValueFactory.standard(ion)
+
+    private val input = PipedInputStream()
+    private val inputPipe = PipedOutputStream(input)
+    private val output = RequiredFlushOutputStream()
+
+    private val zeroTimer = object : Timer {
+        override fun <T> timeIt(block: () -> T): Long {
+            block()
+            return 0
+        }
+    }
+
+    private val repl = Repl(valueFactory, input, output, parser, compiler, bindings, zeroTimer)
+
+    private val actualReplPrompt = StringBuilder()
+
+    private val outputPhaser = Phaser()
+
+    private val replThread = thread(start = false) { repl.run() }
+    private val outputCollectorThread = thread(start = false) {
+        outputPhaser.register()
+
+        while (replThread.isAlive || output.size() > 0) {
+            Thread.sleep(SLEEP_TIME)
+            if (output.size() > 0) {
+                actualReplPrompt.append(output.toString())
+                output.reset()
+                outputPhaser.arrive()
+            }
+        }
+
+        outputPhaser.arriveAndDeregister()
+    }
+
+    fun assertReplPrompt(expectedPromptText: String) {
+        outputPhaser.register()
+
+
+        replThread.start()
+        outputCollectorThread.start()
+
+        // wait for the output thread to register
+        while (outputPhaser.registeredParties != 2) {
+            Thread.sleep(SLEEP_TIME)
+        }
+
+        // wait for the REPL to print the initial message and prompt 
+        outputPhaser.arriveAndAwaitAdvance()
+
+        val inputLines = extractInputLines(expectedPromptText)
+        inputLines.forEach { line ->
+            actualReplPrompt.append(line)
+
+            inputPipe.write(line.toByteArray(Charsets.UTF_8))
+            // flush to repl input
+            inputPipe.flush()
+
+            // wait for output to be written before inputting more 
+            outputPhaser.arriveAndAwaitAdvance()
+        }
+
+        // nothing more to write
+        inputPipe.close()
+
+        // make sure output was written 
+        outputPhaser.arriveAndAwaitAdvance()
+
+        assertEquals(expectedPromptText, actualReplPrompt.toString())
+    }
+
+    private fun extractInputLines(expectedPromptText: String): List<String> = 
+        expectedPromptText.split("\n")
+            .filter { line ->
+                line.startsWith(PROMPT_2) || (line.startsWith(PROMPT_1) && line != PROMPT_1)
+            }
+            .map { it.removePrefix(PROMPT_1) }
+            .map { it.removePrefix(PROMPT_2) }
+            .map { line -> "$line\n" } // add back the \n removed in the split
+
+}
 
 class ReplTest {
-    private val ion = IonSystemBuilder.standard().build()
-    private val valueFactory = ExprValueFactory.standard(ion)
-    
-    private val output = ByteArrayOutputStream()
-    private val parser: Parser = SqlParser(ion)
-    private val compiler = CompilerPipeline.build(ion) {
-        sqlParser(parser)
-    }
-
-    private val regex = Regex("===' \n" + "(.*?)\n" + "---", RegexOption.DOT_MATCHES_ALL)
-
-    private fun makeRepl(input: String, bindings: Bindings = Bindings.EMPTY) =
-        Repl(valueFactory, input.byteInputStream(Charsets.UTF_8), output, parser, compiler, bindings)
-
-    private fun Repl.runAndOutput(): String {
-        run()
-        return output.toString(Charsets.UTF_8.name())
-    }
-
-    private fun assertIon(expected: String, actualRepl: String) {
-        val actualClean = regex.findAll(actualRepl).map { it.groups[1]!!.value }.joinToString(" ")
-        assertEquals(ion.loader.load(expected), ion.loader.load(actualClean))
-    }
 
     @Test
     fun singleQuery() {
-        val repl = makeRepl("1 + 1\n")
-        val actual = repl.runAndOutput()
-        assertIon("2", actual)
+        ReplTester().assertReplPrompt("""
+            #Welcome to the PartiQL REPL!
+            #PartiQL> 1+1
+            #   | 
+            #===' 
+            #2
+            #--- 
+            #Result type was INT
+            #OK! (0 ms)
+            #PartiQL> 
+        """.trimMargin("#"))
     }
 
     @Test
     fun multipleQuery() {
-        val repl = makeRepl("1 + 1\n\n 2 + 2\n")
-        val actual = repl.runAndOutput()
-        assertIon("2 4", actual)
+        ReplTester().assertReplPrompt("""
+            #Welcome to the PartiQL REPL!
+            #PartiQL> 1 + 1
+            #   | 
+            #===' 
+            #2
+            #--- 
+            #Result type was INT
+            #OK! (0 ms)
+            #PartiQL> 2 + 2
+            #   | 
+            #===' 
+            #4
+            #--- 
+            #Result type was INT
+            #OK! (0 ms)
+            #PartiQL> 
+        """.trimMargin("#"))
+
     }
 
     @Test
     fun astWithoutMetas() {
-        val repl = makeRepl("1 + 1\n!!")
-        val actual = repl.runAndOutput()
-        assertIon("(ast (version 1) (root (+ (lit 1) (lit 1))))", actual)
+        ReplTester().assertReplPrompt("""
+            #Welcome to the PartiQL REPL!
+            #PartiQL> 1 + 1
+            #   | !!
+            #===' 
+            #(
+            #  ast
+            #  (
+            #    version
+            #    1
+            #  )
+            #  (
+            #    root
+            #    (
+            #      +
+            #      (
+            #        lit
+            #        1
+            #      )
+            #      (
+            #        lit
+            #        1
+            #      )
+            #    )
+            #  )
+            #)
+            #--- 
+            #Result type was SEXP
+            #OK! (0 ms)
+            #PartiQL> 
+        """.trimMargin("#"))
     }
 
     @Test
     fun astWithMetas() {
-        val repl = makeRepl("1 + 1\n!?")
-        val actual = repl.runAndOutput()
-        //Note: ${'$'} is the only way to escape $ in a multiline string
-        assertIon(
-            """
-                (ast
-                    (version 1)
-                    (root
-                        (term
-                            (exp
-                                (+
-                                    (term
-                                        (exp (lit 1))
-                                        (meta (${'$'}source_location ({line_num:1,char_offset:1}))))
-                                    (term
-                                        (exp (lit 1))
-                                        (meta (${'$'}source_location ({line_num:1,char_offset:5}))))))
-                            (meta (${'$'}source_location ({line_num:1,char_offset:3}))))))
-            """,
-            actual)
+        ReplTester().assertReplPrompt("""
+            #Welcome to the PartiQL REPL!
+            #PartiQL> 1 + 1
+            #   | !?
+            #===' 
+            #(
+            #  ast
+            #  (
+            #    version
+            #    1
+            #  )
+            #  (
+            #    root
+            #    (
+            #      term
+            #      (
+            #        exp
+            #        (
+            #          +
+            #          (
+            #            term
+            #            (
+            #              exp
+            #              (
+            #                lit
+            #                1
+            #              )
+            #            )
+            #            (
+            #              meta
+            #              (
+            #                ${'$'}source_location
+            #                (
+            #                  {
+            #                    line_num:1,
+            #                    char_offset:1
+            #                  }
+            #                )
+            #              )
+            #            )
+            #          )
+            #          (
+            #            term
+            #            (
+            #              exp
+            #              (
+            #                lit
+            #                1
+            #              )
+            #            )
+            #            (
+            #              meta
+            #              (
+            #                ${'$'}source_location
+            #                (
+            #                  {
+            #                    line_num:1,
+            #                    char_offset:5
+            #                  }
+            #                )
+            #              )
+            #            )
+            #          )
+            #        )
+            #      )
+            #      (
+            #        meta
+            #        (
+            #          ${'$'}source_location
+            #          (
+            #            {
+            #              line_num:1,
+            #              char_offset:3
+            #            }
+            #          )
+            #        )
+            #      )
+            #    )
+            #  )
+            #)
+            #--- 
+            #Result type was SEXP
+            #OK! (0 ms)
+            #PartiQL> 
+        """.trimMargin("#"))
     }
 
     @Test
     fun addToGlobalEnvAndQuery() {
-        val repl = makeRepl("""
-            |!add_to_global_env {'myTable': <<{'a':1}, {'a': 2}>>}
-            |
-            |SELECT * FROM myTable
-            |
-        """.trimMargin())
-        val actual = repl.runAndOutput()
-        assertIon("{a:1} {a:2}", actual)
+        ReplTester().assertReplPrompt("""
+            #Welcome to the PartiQL REPL!
+            #PartiQL> !add_to_global_env {'myTable': <<{'a':1}, {'a': 2}>>}
+            #   | 
+            #===' 
+            #{
+            #  myTable:[
+            #    {
+            #      a:1
+            #    },
+            #    {
+            #      a:2
+            #    }
+            #  ]
+            #}
+            #--- 
+            #Result type was STRUCT
+            #OK! (0 ms)
+            #PartiQL> SELECT * FROM myTable
+            #   | 
+            #===' 
+            #{
+            #  a:1
+            #}
+            #{
+            #  a:2
+            #}
+            #--- 
+            #Result type was BAG and contained 2 items
+            #OK! (0 ms)
+            #PartiQL> 
+        """.trimMargin("#"))
+    }
+
+    @Test
+    fun dumpInitialEnv() {
+        val replTester = ReplTester()
+        val initialBindings = replTester.compiler
+            .compile("{'foo': [1,2,3]}")
+            .eval(EvaluationSession.standard())
+            .bindings
+        
+        ReplTester(initialBindings).assertReplPrompt("""
+            #Welcome to the PartiQL REPL!
+            #PartiQL> !dump_global_env
+            #   | 
+            #===' 
+            #{
+            #  foo:[
+            #    1,
+            #    2,
+            #    3
+            #  ]
+            #}
+            #--- 
+            #Result type was STRUCT
+            #OK! (0 ms)
+            #PartiQL> 
+        """.trimMargin("#"))
+    }
+
+    @Test
+    fun dumpEmptyInitialEnv() {
+        ReplTester().assertReplPrompt("""
+            #Welcome to the PartiQL REPL!
+            #PartiQL> !dump_global_env
+            #   | 
+            #===' 
+            #{
+            #}
+            #--- 
+            #Result type was STRUCT
+            #OK! (0 ms)
+            #PartiQL> 
+        """.trimMargin("#"))
+    }
+
+    @Test
+    fun dumpEnvAfterAltering() {
+        ReplTester().assertReplPrompt("""
+            #Welcome to the PartiQL REPL!
+            #PartiQL> !add_to_global_env {'myTable': <<{'a':1}, {'a': 2}>>}
+            #   | 
+            #===' 
+            #{
+            #  myTable:[
+            #    {
+            #      a:1
+            #    },
+            #    {
+            #      a:2
+            #    }
+            #  ]
+            #}
+            #--- 
+            #Result type was STRUCT
+            #OK! (0 ms)
+            #PartiQL> !dump_global_env
+            #   | 
+            #===' 
+            #{
+            #  myTable:[
+            #    {
+            #      a:1
+            #    },
+            #    {
+            #      a:2
+            #    }
+            #  ]
+            #}
+            #--- 
+            #Result type was STRUCT
+            #OK! (0 ms)
+            #PartiQL> 
+        """.trimMargin("#"))
     }
 
     @Test
     fun listCommands() {
-        val repl = makeRepl("!list_commands")
-        val actual = repl.runAndOutput().split("\n").map { it.trim() }
-
-        // we only assert the lines that have the command output to ignore the prompt and OK message
-        assertEquals("!add_to_global_env: adds a value to the global environment", actual[2])
-        assertEquals("!list_commands: print this message", actual[3])
+        ReplTester().assertReplPrompt("""
+            #Welcome to the PartiQL REPL!
+            #PartiQL> !list_commands
+            #   | 
+            #
+            #!add_to_global_env: adds a value to the global environment
+            #!dump_global_env: displays the current global environment
+            #!list_commands: print this message
+            #OK! (0 ms)
+            #PartiQL> 
+        """.trimMargin("#"))
     }
 }

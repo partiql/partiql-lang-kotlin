@@ -24,12 +24,13 @@ import org.partiql.lang.util.*
 import java.io.*
 import java.lang.IllegalArgumentException
 import java.text.*
+import java.util.concurrent.*
 
-private const val PROMPT_1 = "PartiQL> "
-private const val PROMPT_2 = "   | "
-private const val BAR_1 = "===' "
-private const val BAR_2 = "--- "
-private const val WELCOME_MSG = "Welcome to the PartiQL REPL!" // TODO: extract version from gradle.build and append to message 
+internal const val PROMPT_1 = "PartiQL> "
+internal const val PROMPT_2 = "   | "
+internal const val BAR_1 = "===' "
+internal const val BAR_2 = "--- "
+internal const val WELCOME_MSG = "Welcome to the PartiQL REPL!" // TODO: extract version from gradle.build and append to message 
 
 private enum class ReplState {
     /** Initial state, first state as soon as you start the REPL */
@@ -60,6 +61,45 @@ private enum class ReplState {
     FINAL
 }
 
+private class GlobalBinding(private val valueFactory: ExprValueFactory) {
+
+    private val knownNames = mutableSetOf<String>()
+    var bindings = Bindings.EMPTY
+        private set
+
+    fun add(bindings: Bindings): GlobalBinding {
+        when (bindings) {
+            is MapBindings -> {
+                knownNames.addAll(bindings.bindingMap.originalCaseMap.keys)
+                this.bindings = bindings.delegate(this.bindings)
+            }
+            Bindings.EMPTY -> {
+            } // nothing to do 
+            else           -> throw IllegalArgumentException("Invalid binding type for global environment: $bindings")
+        }
+
+        return this
+    }
+
+    fun asExprValue(): ExprValue {
+        val values: Sequence<ExprValue> = knownNames.map { bindings[BindingName(it, BindingCase.SENSITIVE)] }
+            .filterNotNull()
+            .asSequence()
+        
+        return valueFactory.newStruct(values, StructOrdering.UNORDERED)
+    }
+}
+
+interface Timer {
+    fun <T> timeIt(block: () -> T): Long {
+        val start = System.nanoTime()
+        block()
+        val end = System.nanoTime()
+
+        return TimeUnit.MILLISECONDS.convert(end - start, TimeUnit.NANOSECONDS)
+    }
+}
+
 /**
  * TODO builder, kdoc
  */
@@ -68,42 +108,50 @@ internal class Repl(private val valueFactory: ExprValueFactory,
                     private val output: OutputStream,
                     private val parser: Parser,
                     private val compiler: CompilerPipeline,
-                    private val initialGlobal: Bindings) : SqlCommand() {
-    
-    private inner class ReplCommands {
-        operator fun get(commandName: String): (String) -> Unit =
-            commands[commandName] ?: 
-                throw IllegalArgumentException("REPL command: '$commandName' not found! " +
-                                               "use '!list_commands' to see all available commands")
-        
-        private val commands: Map<String, (String) -> Unit> = mapOf(
-            "add_to_global_env" to ::addToGlobalEnv,
-            "list_commands" to ::listCommands
-        )
+                    private val initialGlobal: Bindings,
+                    private val timer: Timer = object: Timer{}) : SqlCommand() {
 
-        private fun addToGlobalEnv(source: String) {
-            if(source == "") {
+    private inner class ReplCommands {
+        operator fun get(commandName: String): (String) -> ExprValue? = 
+            commands[commandName] ?: 
+                throw IllegalArgumentException("REPL command: '$commandName' not found! " + 
+                                               "use '!list_commands' to see all available commands")
+
+        private val commands: Map<String, (String) -> ExprValue?> = mapOf("add_to_global_env" to ::addToGlobalEnv,
+                                                                    "dump_global_env" to ::dumpGlobalEnv,
+                                                                    "list_commands" to ::listCommands)
+
+        private fun addToGlobalEnv(source: String): ExprValue? {
+            if (source == "") {
                 throw IllegalArgumentException("add_to_global_env requires 1 parameter")
             }
 
-            val result = compiler.compile(source).eval(EvaluationSession.build { globals(globals) })
-            globals = result.bindings.delegate(globals)
+            val locals = Bindings.buildLazyBindings { addBinding("_") { previousResult } }.delegate(globals.bindings)
+            val result = compiler.compile(source).eval(EvaluationSession.build { globals(locals) })
+            globals.add(result.bindings)
+
+            return result
         }
 
-        private fun listCommands(source: String) {
+        private fun dumpGlobalEnv(source: String): ExprValue? = globals.asExprValue()
+
+        private fun listCommands(source: String): ExprValue? {
             output.println("")
-            output.println("""|!add_to_global_env: adds a value to the global environment
-                              |!list_commands: print this message""".trimMargin())
+            output.println("""
+                |!add_to_global_env: adds a value to the global environment
+                |!dump_global_env: displays the current global environment
+                |!list_commands: print this message
+            """.trimMargin())
+            return null
         }
     }
-    
+
     private fun executeReplCommand() = executeTemplate { source ->
         // TODO make a real parser for this. partiql-lang-kotlin/issues/63
         val splitIndex = source.indexOfFirst { it == ' ' }.let {
             if (it == -1) {
                 source.length
-            }
-            else {
+            } else {
                 it
             }
         }
@@ -124,37 +172,55 @@ internal class Repl(private val valueFactory: ExprValueFactory,
 
     // Repl running state
     private val buffer = StringBuilder()
-    private var globals = initialGlobal
+    private var globals = GlobalBinding(valueFactory).add(initialGlobal)
     private var state = INIT
     private var previousResult = valueFactory.nullValue
     private var line: String? = null
 
     private fun printWelcomeMessage() = output.println(WELCOME_MSG)
-
-    private fun printPrompt() = when {
-        buffer.isEmpty() -> output.print(PROMPT_1)
-        else             -> output.print(PROMPT_2)
+    
+    private fun printPrompt() { 
+        when {
+            buffer.isEmpty() -> output.print(PROMPT_1)
+            else             -> output.print(PROMPT_2)
+        }
+        output.flush()
     }
 
-    private fun readLine(): String?{
+    private fun readLine(): String? {
         printPrompt()
         return bufferedReader.readLine()?.trim()
     }
 
-    private fun executeTemplate(f: (String) -> Unit): ReplState {
+    private fun executeTemplate(f: (String) -> ExprValue?): ReplState {
         try {
             val source = buffer.toString().trim()
             buffer.setLength(0)
 
-            val totalMs = timeIt { f(source) }
+            val totalMs = timer.timeIt {
+                val result = f(source)
+                if (result != null) {
+                    output.print(BAR_1)
+                    val itemCount = writeResult(result, writer)
+                    output.println("\n$BAR_2")
+                    output.print("Result type was ${result.type}")
+                    if (result.type.isRangedFrom) {
+                        val formatted = NumberFormat.getIntegerInstance().format(itemCount)
+                        output.print(" and contained $formatted items")
+                    }
+                    output.print("\n")
+
+                    previousResult = result
+                }
+            }
             output.println("OK! ($totalMs ms)")
             output.flush()
         }
         catch (e: Exception) {
-            e.printStackTrace(System.out)
+            e.printStackTrace(PrintStream(output))
             output.println("ERROR!")
         }
-        
+
         return if (line == null) {
             FINAL
         } else {
@@ -162,42 +228,32 @@ internal class Repl(private val valueFactory: ExprValueFactory,
         }
     }
 
-    private fun partiQLTemplate(f: (String) -> ExprValue) = executeTemplate { source ->
+    private fun executePartiQL() = executeTemplate { source ->
         if (source != "") {
-            // capture the result in a immutable binding and construct an environment for evaluation over it
-            val result = f(source)
-            
-            output.print(BAR_1)
-            val itemCount = writeResult(result, writer)
-            output.println("\n$BAR_2")
+            val locals = Bindings.buildLazyBindings { addBinding("_") { previousResult } }.delegate(globals.bindings)
 
-            output.print("Result type was ${result.type}")
-
-            if (result.type.isRangedFrom) {
-                val formatted = NumberFormat.getIntegerInstance().format(itemCount)
-                output.print(" and contained $formatted items")
-            }
-
-            output.println("")
-
-            previousResult = result
+            compiler.compile(source).eval(EvaluationSession.build { globals(locals) })
+        } else {
+            null
         }
     }
 
-    private fun executePartiQL() = partiQLTemplate { source ->
-        val locals = Bindings.buildLazyBindings { addBinding("_") { previousResult } }.delegate(globals)
-
-        compiler.compile(source).eval(EvaluationSession.build { globals(locals) })
+    private fun parsePartiQL() = executeTemplate { source ->
+        if (source != "") {
+            val serializedAst = AstSerializer.serialize(parser.parseExprNode(source), valueFactory.ion)
+            valueFactory.newFromIonValue(serializedAst)
+        } else {
+            null
+        }
     }
 
-    private fun parsePartiQL() = partiQLTemplate { source ->
-        val serializedAst = AstSerializer.serialize(parser.parseExprNode(source), valueFactory.ion)
-        valueFactory.newFromIonValue(serializedAst)
-    }
-
-    private fun parsePartiQLWithFilters() = partiQLTemplate { source ->
-        val serializedAst = AstSerializer.serialize(parser.parseExprNode(source), valueFactory.ion)
-        valueFactory.newFromIonValue(serializedAst.filterTermNodes())
+    private fun parsePartiQLWithFilters() = executeTemplate { source ->
+        if (source != "") {
+            val serializedAst = AstSerializer.serialize(parser.parseExprNode(source), valueFactory.ion)
+            valueFactory.newFromIonValue(serializedAst.filterTermNodes())
+        } else {
+            null
+        }
     }
 
     override fun run() {
@@ -210,9 +266,10 @@ internal class Repl(private val valueFactory: ExprValueFactory,
                 READY                    -> {
                     line = readLine()
                     when {
-                        arrayOf("!!", "!?", "", null).any { it == line } -> EXECUTE_PARTIQL
-                        line!!.startsWith("!")                           -> READ_REPL_COMMAND
-                        else                                             -> READ_PARTIQL
+                        line == null                               -> FINAL
+                        arrayOf("!!", "!?", "").any { it == line } -> EXECUTE_PARTIQL
+                        line!!.startsWith("!")                     -> READ_REPL_COMMAND
+                        else                                       -> READ_PARTIQL
                     }
                 }
 
@@ -220,29 +277,31 @@ internal class Repl(private val valueFactory: ExprValueFactory,
                     buffer.appendln(line)
                     line = readLine()
                     when (line) {
-                        "", null -> EXECUTE_PARTIQL
+                        null     -> FINAL
+                        ""       -> EXECUTE_PARTIQL
                         "!!"     -> PARSE_PARTIQL_WITH_FILTER
                         "!?"     -> PARSE_PARTIQL
                         else     -> READ_PARTIQL
                     }
                 }
 
-                READ_REPL_COMMAND          -> {
+                READ_REPL_COMMAND         -> {
                     buffer.appendln(line)
                     line = readLine()
                     when (line) {
-                        "", null -> EXECUTE_REPL_COMMAND
-                        else     -> READ_REPL_COMMAND
+                        null -> FINAL
+                        ""   -> EXECUTE_REPL_COMMAND
+                        else -> READ_REPL_COMMAND
                     }
                 }
 
                 EXECUTE_PARTIQL           -> executePartiQL()
                 PARSE_PARTIQL             -> parsePartiQL()
                 PARSE_PARTIQL_WITH_FILTER -> parsePartiQLWithFilters()
-                EXECUTE_REPL_COMMAND       -> executeReplCommand()
+                EXECUTE_REPL_COMMAND      -> executeReplCommand()
 
                 // shouldn't really happen
-                FINAL                      -> FINAL
+                FINAL                     -> FINAL
             }
         }
     }
