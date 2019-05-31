@@ -1,0 +1,9 @@
+<<
+{ 'date': date(4/1/2019), 'symbol': 'amzn', 'price': 1900},
+{ 'date': date(4/1/2019), 'symbol': 'goog', 'price': 1120},
+{ 'date': date(4/1/2019), 'symbol': 'fb', 'price': 180 },
+{ 'date': date(4/2/2019), 'symbol': 'amzn', 'price': 1902},
+{ 'date': date(4/2/2019), 'symbol': 'goog', 'price': 1119},
+{ 'date': date(4/2/2019), 'symbol': 'fb', 'price': 183 }
+>>
+

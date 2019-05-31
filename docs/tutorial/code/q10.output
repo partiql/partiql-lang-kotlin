@@ -1,0 +1,5 @@
+<<
+{ 'id': 3, 'name': 'Bob Smith' }  // no title in this tuple
+{ 'id': 4, 'name': 'Susan Smith', 'outputTitle': 'DEV MGR' }
+{ 'id': 6, 'name': 'Jane Smith',  'outputTitle': 'SOFTWARE ENG 2'}
+>>
