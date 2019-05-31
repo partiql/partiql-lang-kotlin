@@ -1,0 +1,11 @@
+# README
+
+The docx file was the original text. The `partiql-tutorial-pandoc.md` is the output of 
+
+```
+pandoc -s "PartiQL-Tutorial-DRAFT.docx" -t markdown -o partiql-tutorial-pandoc.md
+```
+
+The `tutorial.md` file starts as a copy of `partiql-tutorial-pandoc.md`. 
+
+
