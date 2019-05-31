@@ -357,7 +357,7 @@ class ReplTest {
         
         ReplTester(initialBindings).assertReplPrompt("""
             #Welcome to the PartiQL REPL!
-            #PartiQL> !dump_global_env
+            #PartiQL> !global_env
             #   | 
             #===' 
             #{
@@ -378,7 +378,7 @@ class ReplTest {
     fun dumpEmptyInitialEnv() {
         ReplTester().assertReplPrompt("""
             #Welcome to the PartiQL REPL!
-            #PartiQL> !dump_global_env
+            #PartiQL> !global_env
             #   | 
             #===' 
             #{
@@ -410,7 +410,7 @@ class ReplTest {
             #--- 
             #Result type was STRUCT
             #OK! (0 ms)
-            #PartiQL> !dump_global_env
+            #PartiQL> !global_env
             #   | 
             #===' 
             #{
@@ -438,7 +438,7 @@ class ReplTest {
             #   | 
             #
             #!add_to_global_env: adds a value to the global environment
-            #!dump_global_env: displays the current global environment
+            #!global_env: displays the current global environment
             #!list_commands: print this message
             #OK! (0 ms)
             #PartiQL> 

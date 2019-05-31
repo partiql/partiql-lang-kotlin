@@ -118,8 +118,8 @@ internal class Repl(private val valueFactory: ExprValueFactory,
                                                "use '!list_commands' to see all available commands")
 
         private val commands: Map<String, (String) -> ExprValue?> = mapOf("add_to_global_env" to ::addToGlobalEnv,
-                                                                    "dump_global_env" to ::dumpGlobalEnv,
-                                                                    "list_commands" to ::listCommands)
+                                                                          "global_env" to ::globalEnv,
+                                                                          "list_commands" to ::listCommands)
 
         private fun addToGlobalEnv(source: String): ExprValue? {
             if (source == "") {
@@ -133,20 +133,20 @@ internal class Repl(private val valueFactory: ExprValueFactory,
             return result
         }
 
-        private fun dumpGlobalEnv(source: String): ExprValue? = globals.asExprValue()
+        private fun globalEnv(source: String): ExprValue? = globals.asExprValue()
 
         private fun listCommands(source: String): ExprValue? {
             output.println("")
             output.println("""
                 |!add_to_global_env: adds a value to the global environment
-                |!dump_global_env: displays the current global environment
+                |!global_env: displays the current global environment
                 |!list_commands: print this message
             """.trimMargin())
             return null
         }
     }
 
-    private fun executeReplCommand() = executeTemplate { source ->
+    private fun executeReplCommand(): ReplState = executeTemplate { source ->
         // TODO make a real parser for this. partiql-lang-kotlin/issues/63
         val splitIndex = source.indexOfFirst { it == ' ' }.let {
             if (it == -1) {
@@ -228,7 +228,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
         }
     }
 
-    private fun executePartiQL() = executeTemplate { source ->
+    private fun executePartiQL(): ReplState = executeTemplate { source ->
         if (source != "") {
             val locals = Bindings.buildLazyBindings { addBinding("_") { previousResult } }.delegate(globals.bindings)
 
@@ -238,7 +238,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
         }
     }
 
-    private fun parsePartiQL() = executeTemplate { source ->
+    private fun parsePartiQL(): ReplState = executeTemplate { source ->
         if (source != "") {
             val serializedAst = AstSerializer.serialize(parser.parseExprNode(source), valueFactory.ion)
             valueFactory.newFromIonValue(serializedAst)
@@ -247,7 +247,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
         }
     }
 
-    private fun parsePartiQLWithFilters() = executeTemplate { source ->
+    private fun parsePartiQLWithFilters(): ReplState = executeTemplate { source ->
         if (source != "") {
             val serializedAst = AstSerializer.serialize(parser.parseExprNode(source), valueFactory.ion)
             valueFactory.newFromIonValue(serializedAst.filterTermNodes())
