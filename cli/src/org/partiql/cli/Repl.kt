@@ -14,6 +14,7 @@
 
 package org.partiql.cli
 
+import com.amazon.ion.*
 import com.amazon.ion.system.*
 import org.partiql.cli.ReplState.*
 import org.partiql.lang.*
@@ -146,7 +147,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
         }
     }
 
-    private fun executeReplCommand(): ReplState = executeTemplate { source ->
+    private fun executeReplCommand(): ReplState = executeTemplate(valuePrettyPrinter) { source ->
         // TODO make a real parser for this. partiql-lang-kotlin/issues/63
         val splitIndex = source.indexOfFirst { it == ' ' }.let {
             if (it == -1) {
@@ -165,7 +166,15 @@ internal class Repl(private val valueFactory: ExprValueFactory,
     private val commands = ReplCommands()
 
     private val bufferedReader = input.bufferedReader(Charsets.UTF_8)
-    private val writer = IonTextWriterBuilder.pretty().build(output)
+    private val valuePrettyPrinter = NonConfigurableExprValuePrettyPrinter(output) // for PartiQL values
+    private val astPrettyPrinter = object : ExprValuePrettyPrinter {
+        val ionWriter = IonTextWriterBuilder.pretty().build(output) // for the AST
+        
+        override fun prettyPrint(value: ExprValue) {
+            value.ionValue.writeTo(ionWriter)
+            ionWriter.flush()
+        }
+    } 
 
     private fun OutputStream.print(s: String) = write(s.toByteArray(Charsets.UTF_8))
     private fun OutputStream.println(s: String) = print("$s\n")
@@ -192,7 +201,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
         return bufferedReader.readLine()?.trim()
     }
 
-    private fun executeTemplate(f: (String) -> ExprValue?): ReplState {
+    private fun executeTemplate(prettyPrinter: ExprValuePrettyPrinter, f: (String) -> ExprValue?): ReplState {
         try {
             val source = buffer.toString().trim()
             buffer.setLength(0)
@@ -200,15 +209,10 @@ internal class Repl(private val valueFactory: ExprValueFactory,
             val totalMs = timer.timeIt {
                 val result = f(source)
                 if (result != null) {
-                    output.print(BAR_1)
-                    val itemCount = writeResult(result, writer)
+                    output.println(BAR_1)
+                    prettyPrinter.prettyPrint(result)
+                    
                     output.println("\n$BAR_2")
-                    output.print("Result type was ${result.type}")
-                    if (result.type.isRangedFrom) {
-                        val formatted = NumberFormat.getIntegerInstance().format(itemCount)
-                        output.print(" and contained $formatted items")
-                    }
-                    output.print("\n")
 
                     previousResult = result
                 }
@@ -228,7 +232,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
         }
     }
 
-    private fun executePartiQL(): ReplState = executeTemplate { source ->
+    private fun executePartiQL(): ReplState = executeTemplate(valuePrettyPrinter) { source ->
         if (source != "") {
             val locals = Bindings.buildLazyBindings { addBinding("_") { previousResult } }.delegate(globals.bindings)
 
@@ -238,7 +242,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
         }
     }
 
-    private fun parsePartiQL(): ReplState = executeTemplate { source ->
+    private fun parsePartiQL(): ReplState = executeTemplate(astPrettyPrinter) { source ->
         if (source != "") {
             val serializedAst = AstSerializer.serialize(parser.parseExprNode(source), valueFactory.ion)
             valueFactory.newFromIonValue(serializedAst)
@@ -247,7 +251,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
         }
     }
 
-    private fun parsePartiQLWithFilters(): ReplState = executeTemplate { source ->
+    private fun parsePartiQLWithFilters(): ReplState = executeTemplate(astPrettyPrinter) { source ->
         if (source != "") {
             val serializedAst = AstSerializer.serialize(parser.parseExprNode(source), valueFactory.ion)
             valueFactory.newFromIonValue(serializedAst.filterTermNodes())

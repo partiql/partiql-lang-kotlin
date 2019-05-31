@@ -158,7 +158,6 @@ class ReplTest {
             #===' 
             #2
             #--- 
-            #Result type was INT
             #OK! (0 ms)
             #PartiQL> 
         """.trimMargin("#"))
@@ -173,14 +172,12 @@ class ReplTest {
             #===' 
             #2
             #--- 
-            #Result type was INT
             #OK! (0 ms)
             #PartiQL> 2 + 2
             #   | 
             #===' 
             #4
             #--- 
-            #Result type was INT
             #OK! (0 ms)
             #PartiQL> 
         """.trimMargin("#"))
@@ -194,6 +191,7 @@ class ReplTest {
             #PartiQL> 1 + 1
             #   | !!
             #===' 
+            #
             #(
             #  ast
             #  (
@@ -216,7 +214,6 @@ class ReplTest {
             #  )
             #)
             #--- 
-            #Result type was SEXP
             #OK! (0 ms)
             #PartiQL> 
         """.trimMargin("#"))
@@ -229,6 +226,7 @@ class ReplTest {
             #PartiQL> 1 + 1
             #   | !?
             #===' 
+            #
             #(
             #  ast
             #  (
@@ -305,7 +303,6 @@ class ReplTest {
             #  )
             #)
             #--- 
-            #Result type was SEXP
             #OK! (0 ms)
             #PartiQL> 
         """.trimMargin("#"))
@@ -319,29 +316,29 @@ class ReplTest {
             #   | 
             #===' 
             #{
-            #  myTable:[
+            #  'myTable': <<
             #    {
-            #      a:1
+            #      'a': 1
             #    },
             #    {
-            #      a:2
+            #      'a': 2
             #    }
-            #  ]
+            #  >>
             #}
             #--- 
-            #Result type was STRUCT
             #OK! (0 ms)
             #PartiQL> SELECT * FROM myTable
             #   | 
             #===' 
-            #{
-            #  a:1
-            #}
-            #{
-            #  a:2
-            #}
+            #<<
+            #  {
+            #    'a': 1
+            #  },
+            #  {
+            #    'a': 2
+            #  }
+            #>>
             #--- 
-            #Result type was BAG and contained 2 items
             #OK! (0 ms)
             #PartiQL> 
         """.trimMargin("#"))
@@ -361,14 +358,13 @@ class ReplTest {
             #   | 
             #===' 
             #{
-            #  foo:[
+            #  'foo': [
             #    1,
             #    2,
             #    3
             #  ]
             #}
             #--- 
-            #Result type was STRUCT
             #OK! (0 ms)
             #PartiQL> 
         """.trimMargin("#"))
@@ -381,10 +377,8 @@ class ReplTest {
             #PartiQL> !global_env
             #   | 
             #===' 
-            #{
-            #}
+            #{}
             #--- 
-            #Result type was STRUCT
             #OK! (0 ms)
             #PartiQL> 
         """.trimMargin("#"))
@@ -398,33 +392,31 @@ class ReplTest {
             #   | 
             #===' 
             #{
-            #  myTable:[
+            #  'myTable': <<
             #    {
-            #      a:1
+            #      'a': 1
             #    },
             #    {
-            #      a:2
+            #      'a': 2
             #    }
-            #  ]
+            #  >>
             #}
             #--- 
-            #Result type was STRUCT
             #OK! (0 ms)
             #PartiQL> !global_env
             #   | 
             #===' 
             #{
-            #  myTable:[
+            #  'myTable': <<
             #    {
-            #      a:1
+            #      'a': 1
             #    },
             #    {
-            #      a:2
+            #      'a': 2
             #    }
-            #  ]
+            #  >>
             #}
             #--- 
-            #Result type was STRUCT
             #OK! (0 ms)
             #PartiQL> 
         """.trimMargin("#"))
