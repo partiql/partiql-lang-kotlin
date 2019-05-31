@@ -1,8 +1,8 @@
 
-# \SqlName AST
+# PartiQL AST
 
-By AST in this document we refer to the data structure used to represent an \SqlName query. 
-This is also the version of the AST provided to clients that consume the \SqlName AST. 
+By AST in this document we refer to the data structure used to represent an PartiQL query. 
+This is also the version of the AST provided to clients that consume the PartiQL AST. 
 
 ## Notation
 
@@ -91,9 +91,9 @@ SEXP      ::= `(` ION_VALUE ... `)`
 In the case of `SEXP` we refer to the name immediately following the `SEXP` 's open parenthesis as its **tag**.
 For example the `SEXP` `(lit 2)` is tagged with the symbol `lit`.
 
-## \SqlName AST data definition 
+## PartiQL AST data definition 
 
-Starting with version 1 of the \SqlName AST, each AST must be wrapped in an `ast` node:
+Starting with version 1 of the PartiQL AST, each AST must be wrapped in an `ast` node:
 
 ```
 (ast (version 1)
@@ -103,7 +103,7 @@ Starting with version 1 of the \SqlName AST, each AST must be wrapped in an `ast
 If the top-most node of the AST does not have the tag `ast` then we assume that it is a 
 [legacy version 0 AST](README-AST-V0.md).
 
-Within `(root ...)` we represent a valid \SqlName expression as a tree (`SEXP`) of **optionally** wrapped nodes called 
+Within `(root ...)` we represent a valid PartiQL expression as a tree (`SEXP`) of **optionally** wrapped nodes called 
 **term**s.
 
 ```
@@ -113,15 +113,15 @@ TERM ::= `(` `term` `(` `exp` EXP `)`
 
 The wrapper `term` contains 2 sub `SEXP` 
 
-* the \SqlName expression or expression fragment being wrapped tagged with `exp` 
-* the meta information for the \SqlName expression or expression fragment tagged with `meta`
+* the PartiQL expression or expression fragment being wrapped tagged with `exp` 
+* the meta information for the PartiQL expression or expression fragment tagged with `meta`
 
 The `meta` child node of `term` is optional but usually holds information on the location of the expression 
 in the original query. The definition of `META` is purposely left open to allow for the addition of meta 
-information on the AST by consumers of the \SqlName such as query rewriters.
+information on the AST by consumers of the PartiQL such as query rewriters.
 
-The \SqlName implementation shall use the `$` prefix for all of its meta node tags.  A naming convention such
-as reverse domain name notation should be used for meta node tags introduced by consumers of the \SqlName AST
+The PartiQL implementation shall use the `$` prefix for all of its meta node tags.  A naming convention such
+as reverse domain name notation should be used for meta node tags introduced by consumers of the PartiQL AST
 to avoid naming conflicts.
 
 ```
@@ -154,7 +154,7 @@ The `term` wrapper is optional and so the previous example can be stripped down 
     (lit customerId)
 ```
 
-### \SqlName AST "Grammar" 
+### PartiQL AST "Grammar" 
 
 ```
 EXP ::= 

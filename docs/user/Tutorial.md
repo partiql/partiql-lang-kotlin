@@ -1,3 +1,3 @@
-# \SqlName Tutorial 
+# PartiQL Tutorial 
 
 TBD

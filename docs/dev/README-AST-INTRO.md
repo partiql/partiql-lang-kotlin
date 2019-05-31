@@ -2,7 +2,7 @@
 
 It seems the term "AST" is often extended to mean more things than just "Abstract Syntax Tree" and our use of the term
 is no different. A better term might have been "Abstract Semantic Tree" because our AST was defined with the goal of
-modeling the intent of the \SqlName source and *not* the exact syntax. Thus, the original SQL from which an AST was
+modeling the intent of the PartiQL source and *not* the exact syntax. Thus, the original SQL from which an AST was
 constituted cannot be derived, however the *semantics* of that SQL are guaranteed to be preserved. One example that
 demonstrates this is the fact that we model a `CROSS JOIN` in the same way that we model an `INNER JOIN` with a
 condition of `TRUE`. Semantically, these have the exact same function and so they also have the same representation in
@@ -11,7 +11,7 @@ the AST.
 ## It *is* Actually a Tree
 
 Language implementations often use the term "Abstract Syntax Tree" to refer to a data structure that is actually a
-graph. Our implementation for \SqlName's AST is a tree and *not* a graph. It contains no cycles and each node can only
+graph. Our implementation for PartiQL's AST is a tree and *not* a graph. It contains no cycles and each node can only
 reference its children.
 
 ##  It's Immutable
@@ -26,11 +26,11 @@ The AST employs a number of patterns and utilizes certain features of Kotlin to 
 Without any introduction, the reasoning behind these patterns may not be completely apparent at first glance. What
 follows is an is an attempt to document those patterns and features.
 
-### Inheritance Mirrors The \SqlName Grammar
+### Inheritance Mirrors The PartiQL Grammar
 
 The top-most type of the AST is `org.partiql.lang.ast.ExprNode`. Most of the classes of the AST derive
 from this class. Most child nodes are also of type `ExprNode`. However, there are several cases where the types of child
-nodes that are allowed are constrained (or extended) by \SqlName's grammar. For example, not every type of `ExprNode`
+nodes that are allowed are constrained (or extended) by PartiQL's grammar. For example, not every type of `ExprNode`
 can exist as components of a path expression (i.e. `a.b.c`). Additionally, some path components are allowed that do not
 make sense outside of the context of a path expression (i.e. `a.*.b` and `a[*].b`). If *all* nodes of the AST inherited
 from `ExprNode` it would be easy to accidentally construct ASTs which are structurally invalid. Thus, each grammar
