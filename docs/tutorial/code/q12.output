@@ -1,0 +1,14 @@
+<<
+{ 
+    'employeeName': 'Bob Smith', 
+    'firstProjectName': 'AWS Redshift Spectrum querying' 
+},
+{ 
+    'employeeName': 'Susan Smith' 
+},
+{ 
+    'employeeName': 'Jane Smith', 
+    'firstProjectName': 'AWS Redshift security' 
+}
+>>
+
