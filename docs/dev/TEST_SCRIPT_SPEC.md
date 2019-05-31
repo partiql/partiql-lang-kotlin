@@ -5,15 +5,15 @@
 
 - `driver` A program which executes `commands` in a `test script` and sends `commands` to a `car` to execute the tests 
 contained within.
-- `car` A program with an embedded implementation of \SqlName that accepts `commands` from the `driver` for the purpose
-of testing \SqlName.
+- `car` A program with an embedded implementation of PartiQL that accepts `commands` from the `driver` for the purpose
+of testing PartiQL.
 - `test script` A file containing zero or more `commands`.
 - `command` An element of a `test script` which specifies an action to be taken such as execute SQL and verify the 
 result, or set defaults for `compile options` and `environment`.  `Commands` do not exist outside of `test scripts`.
 - `command validation rule` A rule used by the `driver` to determine if a `command` is valid and can be executed.
     - If any `command` in a `test script` fails validation, the `driver` reports an error and no tests are executed.
 - `test` A command that specifies:
-    - \SqlName query to be executed
+    - PartiQL query to be executed
     - A snippet of Ion which is the expected result which may be:
         - Ion
         - An error code and expected property value (line, column, etc).
@@ -21,7 +21,7 @@ result, or set defaults for `compile options` and `environment`.  `Commands` do 
 SQL of each test.
 - `default environment` An element of each `test script`'s runtime state which is an environment to be used by tests 
 that do not explicitly specify an environment.
-- `compile options` A collection of key/value pairs specifying options that affect how \SqlName is compiled.
+- `compile options` A collection of key/value pairs specifying options that affect how PartiQL is compiled.
 - `default compile options` An element of a test script's runtime state which specifies the `compile options` that are 
 used by tests that do not explicitly define their compile options. 
 - `session` A collection of key/value pairs used for the interpreter's evaluation session, specifying values such as 
@@ -46,8 +46,8 @@ failures are reported.
 
 Is a program that:
 
-- Is implementation specific, i.e. one will be implemented for each \SqlName implementation.
-- Accepts commands from the driver and executes them for a given \SqlName implementation.
+- Is implementation specific, i.e. one will be implemented for each PartiQL implementation.
+- Accepts commands from the driver and executes them for a given PartiQL implementation.
 - Returns the commands results or error details to the driver for verification.
 
 ## Test Scripts
@@ -73,8 +73,8 @@ At runtime, test scripts do not have a notion of a "scope".  They have mutable g
 | Global State Element | Command to Change | Defaults |
 -----------------------|----------------|----------------|
 | default environment | `set_default_environment` | An empty environment. |
-| default compile options | `set_default_compile_options` | The \SqlName implementation's default compile options. |
-| session | `set_default_session` | The \SqlName implementation's default session values, except `utcnow` must be `2000-01-01T00:00:00+00:00` |
+| default compile options | `set_default_compile_options` | The PartiQL implementation's default compile options. |
+| session | `set_default_session` | The PartiQL implementation's default session values, except `utcnow` must be `2000-01-01T00:00:00+00:00` |
 
 Before beginning execution of a test script, the driver must set the global runtime state to the above 
 defaults.  Once changed with any `set_*` command, new global state will be present during execution of any test 
@@ -122,7 +122,7 @@ again, causing an an infinite loop.
 
 Sets the default compile options used by tests which do not specify compile options of their own.  Any unspecified
 compile options will be set to their default values.  The compile options will be used when compiling the SQL of any
-test that does not specify its own compilation options. The default values are determined by the \SqlName
+test that does not specify its own compilation options. The default values are determined by the PartiQL
 implementation.  If no `set_compile_options` command is present, all tests not specifying their own compilation options
 will execute with the default compile options.
 
@@ -220,7 +220,7 @@ are left unspecified will be set to their default values.
  
 #### `test`
 
-Executes the specified \SqlName query against the specified environment with the specified compile options and verifies the
+Executes the specified PartiQL query against the specified environment with the specified compile options and verifies the
 expected result or expected error.
  
 If no environment is specified, the default environment (set by the `set_default_environment` command) is used.
@@ -242,10 +242,10 @@ If no compile options are specified, the default compile options are used (set b
 ```
 
 When the Ion value paired with the `expected` field has a `result::` annotation, the test must be considered failed  
-if the result of evaluating `sql` doesn't match `expected` exactly, as defined by \SqlName's data equality rules 
-(section 6.0.2 of the \SqlName specification).  
+if the result of evaluating `sql` doesn't match `expected` exactly, as defined by PartiQL's data equality rules 
+(section 6.0.2 of the PartiQL specification).  
 
-There is a 1:1 correlation between types of `\SqlName` and Ion with a single exception:  \SqlName 
+There is a 1:1 correlation between types of `PartiQL` and Ion with a single exception:  PartiQL 
 additionally defines a bag type--which differs from a list only in that the order of the items in the bag are undefined.
 The implications of this is that when two bags are compared, the order of the elements do not matter.  More 
 specifically: two bags are the equivalent if every element that appears `n` times in the first bag also appears `n` 
@@ -262,7 +262,7 @@ Given that Ion does not have `<<` and `>>` notation to indicate a literal bag th
     }
 ```
 
-| `expected` Field Example | \SqlName Equivalent | Description 
+| `expected` Field Example | PartiQL Equivalent | Description 
 ---|---|---
 | `[(bag 1 2 3)]` | `[<<1, 2, 3>]` | A list containing a bag of three integers. |
 | `(bag { foo: (bag 1 2 3) })` | `<<{ 'foo': <<1, 2, 3>> >>` | A bag containing a struct with field `foo` that is also a bag. |
@@ -337,7 +337,7 @@ The `expected` field is either annotated with `result` or `error`:
 
 #### `benchmark`
 
-Executes the set of benchmarks for the specified \SqlName query against the specified environment with the specified compile 
+Executes the set of benchmarks for the specified PartiQL query against the specified environment with the specified compile 
 options and aggregates the benchmark results or error 
 
 `benchmark` command specification is based on the `test` command specification. The differences are: 
@@ -480,7 +480,7 @@ within the `driver`.  `for` command variables may be used to specify environment
 
 ##### Known issues:
 
-- [\SqlName Test suite: support annotated variable references for test expectation](https://github.com/partiql/partiql-lang-kotlin/issues/24)
+- [PartiQL Test suite: support annotated variable references for test expectation](https://github.com/partiql/partiql-lang-kotlin/issues/24)
 
 ## A Complete Example
 

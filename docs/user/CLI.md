@@ -1,4 +1,4 @@
-# \SqlName CLI
+# PartiQL CLI
 
 ```
 PartiQL CLI
@@ -224,7 +224,7 @@ OK! (5 ms)
 
 ## Initial Environment
 
-The initial environment for the REPL can be setup with a configuration file, which should be an \SqlName file with a 
+The initial environment for the REPL can be setup with a configuration file, which should be an PartiQL file with a 
 single `struct` containing the initial *global environment*.
 
 For example a file named `config.sql`, containing the following:

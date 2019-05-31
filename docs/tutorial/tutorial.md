@@ -1,3 +1,6 @@
+
+!include user/GettingStarted.md
+
 # Introduction 
 
 PartiQL provides SQL-compatible unified query access across multiple

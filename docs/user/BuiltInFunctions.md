@@ -140,7 +140,7 @@ CAST(1         AS boolean) -- true
 CAST(`1e0`     AS boolean) -- true (float)
 CAST(`1d0`     AS boolean) -- true (decimal)
 CAST('a'       AS boolean) -- false
-CAST('true'    AS boolean) -- true (\SqlName string 'true')
+CAST('true'    AS boolean) -- true (PartiQL string 'true')
 CAST(`'true'`  AS boolean) -- true (Ion symbol `'true'`)
 CAST(`'false'` AS boolean) -- false (Ion symbol `'false'`)
 
@@ -358,7 +358,7 @@ DATE_DIFF(day, `2010-01-01T23:00T`, `2010-01-02T01:00T`) -- 0 (need to be at lea
 
 ### EXISTS
 
-Given an \SqlName value returns `true` if and only if the value is a non-empty sequence, returns `false` otherwise. 
+Given an PartiQL value returns `true` if and only if the value is a non-empty sequence, returns `false` otherwise. 
 
 Signature
 : `EXISTS: Any -> Boolean`
@@ -367,7 +367,7 @@ Header
 : `EXISTS(val)`
 
 Purpose 
-: Given an \SqlName value, `val`, returns `true` if and only if `val` is a non-empty sequence, returns `false` otherwise. 
+: Given an PartiQL value, `val`, returns `true` if and only if `val` is a non-empty sequence, returns `false` otherwise. 
 This function does **not** propagate `null` and `missing`.  
 
 
@@ -671,7 +671,7 @@ TO_TIMESTAMP('Febrary 2016', 'MMMM yyyy')     -- `2016-02T`
 ```
 Notes:
 
-[All SIM items for \SqlName's `TO_TIMESTAMP` function](https://i.amazon.com/issues/search?q=status%3A(Open)+(TO_TIMESTAMP)+containingFolder%3A(0efa7b8c-5170-4de7-a8e7-d0975778a686)&sort=lastUpdatedConversationDate+desc&selectedDocument=0b5e3cc3-40bc-40cf-854b-977f4ae4e08d).
+[All SIM items for PartiQL's `TO_TIMESTAMP` function](https://i.amazon.com/issues/search?q=status%3A(Open)+(TO_TIMESTAMP)+containingFolder%3A(0efa7b8c-5170-4de7-a8e7-d0975778a686)&sort=lastUpdatedConversationDate+desc&selectedDocument=0b5e3cc3-40bc-40cf-854b-977f4ae4e08d).
 
 Internally, this is implemented with Java 8's `java.time` package.  There are a few differences between Ion's 
 timestamp and the `java.time` package that create a few hypothetically infrequently encountered caveats that do not 

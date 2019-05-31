@@ -4,7 +4,7 @@
 of `ktlint`.**
 
 This document serves as style guide and includes code conventions and idioms for [Kotlin](https://kotlinlang.org/) 
-in the \SqlName project.
+in the PartiQL project.
  
 We use [Kotlin official coding conventions](http://kotlinlang.org/docs/reference/coding-conventions.html) document as 
 a base. If it's not specified here use that as a reference. 

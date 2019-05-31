@@ -4,9 +4,9 @@
 
  *This document is an early draft, contributions welcome!*
 
-## What is \SqlName 
+## What is PartiQL 
 
- \SqlName is an implementation of
+ PartiQL is an implementation of
  [SQL++](http://db.ucsd.edu/wp-content/uploads/pdfs/375.pdf) based upon
  [Ion's](http://amzn.github.io/ion-docs/) type system. PartiQL is based on SQL92
  and provides support for working with schemaless hierarchical data. 

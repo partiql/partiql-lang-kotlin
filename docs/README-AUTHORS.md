@@ -6,6 +6,9 @@ You will need to install the following software
 * Make 
 * Pandoc 
     * https://pandoc.org/installing.html
+* Pandoc Filters 
+    * [pandoc-include](https://github.com/DCsunset/pandoc-include). Include other md files 
+    * [pandoc-include-code](https://github.com/owickstrom/pandoc-include-code). Include files from inside md code blocks. 
 * texlive 
     * https://www.tug.org/texlive/
 
