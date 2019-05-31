@@ -131,7 +131,7 @@ interface Bindings {
  * If an ambiguous binding match is found during a case-insensitive lookup, [errAmbiguousBinding]
  * is invoked to report the error to the customer.
  */
-private class BindingMap<T>(val originalCaseMap: Map<String, T>) {
+public class BindingMap<T>(val originalCaseMap: Map<String, T>) {
     val loweredCaseMap: Map<String, List<Map.Entry<String, T>>> by lazy {
         originalCaseMap.entries.groupBy { it.key.toLowerCase() }
     }
@@ -152,7 +152,7 @@ private class BindingMap<T>(val originalCaseMap: Map<String, T>) {
 }
 
 /** A [Bindings] implementation that is backed by a [Map<String, ExprValue?>]. */
-private class MapBindings(backingMap: Map<String, ExprValue>) : Bindings {
+public class MapBindings(backingMap: Map<String, ExprValue>) : Bindings {
     val bindingMap = BindingMap(backingMap)
 
     override fun get(bindingName: BindingName): ExprValue? = bindingMap.lookup(bindingName)
