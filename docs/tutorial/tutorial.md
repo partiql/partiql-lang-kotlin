@@ -30,10 +30,7 @@ and data stores that are not SQL.
 For starters, the following SQL query over the table `hr.employees` is
 also an PartiQL query.
 
-```sql
-SELECT e.id, e.name AS employeeName, e.title AS title
-FROM hr.employees e
-WHERE e.title = 'Dev Mgr'
+```{.sql include=tutorial/code/q1.sql}
 ```
 
 As we know from SQL, when this query operates on the table `hr.employees`
@@ -67,13 +64,7 @@ data set abstraction.
 For example, the table `hr.employees` is denoted in the PartiQL data
 model as this dataset
 
-```
-{ hr.employees: <<
-    { 'id': 3, 'name': 'Bob Smith',   'title': null }, // a tuple is denoted by { ... } in the PartiQL data model
-    { 'id': 4, 'name': 'Susan Smith', 'title': 'Dev Mgr' },
-    { 'id': 6, 'name': 'Jane Smith',  'title': 'Software Eng 2'},
-    >>
-} 
+```{include=tutorial/code/q1.env}
 ```
 The delimiters `<<` ... `>>` denote that, in this case, the data
 set is an *unordered collection* (also known as *bag*), as is the case
@@ -85,10 +76,7 @@ JSON objects will likely be abstracted by a PartiQL-supporting
 implementation into the identical PartiQL abstraction with the
 `hr.employees` table.
 
-```
-{ "id": 3, "name": "Bob Smith",   "title": null }
-{ "id": 4, "name": "Susan Smith", "title": "Dev Mgr" }
-{ "id": 6, "name": "Jane Smith",  "title": "Software Eng 2"}
+```{include=tutorial/code/q1.output}
 ```
 **Remark:** You will keep noticing the similarity of the PartiQL
 notation with the JSON notation. Notice also the subtle differences: In
@@ -104,10 +92,8 @@ smarter things in order to evaluate your PartiQL queries efficiently.
 
 Back to our PartiQL query
 
-```sql
-SELECT e.id, e.name AS employeeName, e.title AS title
-FROM hr.employees e
-WHERE e.title = 'Dev Mgr'
+
+```{.sql include=tutorial/code/q1.sql}
 ```
 
 the result remains the same, no matter whether the `hr.employees` were
@@ -159,27 +145,7 @@ Nested Collections
 
 Let's now add the nested attribute `projects` into the data set.
 
-```
-hr.employeesNest: <<
-{ 'id': 3, 
-  'name': 'Bob Smith', 
-  'title': null, 
-  'projects': [ { 'name': 'AWS Redshift Spectrum querying' },
-                { 'name': 'AWS Redshift security' },
-                { 'name': 'AWS Aurora security' }
-  ]
-},
-{ 'id': 4, 
-  'name': 'Susan Smith', 
-  'title': 'Dev Mgr', 
-  'projects': [] 
-},
-{ 'id': 6, 
-  'name': 'Jane Smith', 
-  'title': 'Software Eng 2', 
-  'projects': [ { 'name': 'AWS Redshift security' } ] 
-}
->>
+```{include=tutorial/code/q2.env}
 ```
 
 Notice that the value of `'projects'` is an array: arrays are denoted
@@ -195,22 +161,12 @@ the string `'security'` and outputs them along with the name of the
 `'security'` project. Notice that the query has just one extension
 over standard SQL -- the `e.projects AS p` part.
 
-```sql
-SELECT e.name AS employeeName, 
-       p.name AS projectName
-FROM hr.employeesNest AS e, 
-     e.projects AS p
-WHERE p.name LIKE '%security%'
+```{.sql include=tutorial/code/q2.sql}
 ```
 
 The output is
 
-```
-<<
-{ 'employeeName': 'Bob Smith',  'projectName': 'AWS Redshift security' },
-{ 'employeeName': 'Bob Smith',  'projectName': 'AWS Aurora security' },
-{ 'employeeName': 'Jane Smith', 'projectName': 'AWS Redshift security'},
->>
+```{include=tutorial/code/q2.output}
 ```
 
 The extension over SQL is the FROM clause item `e.projects AS p`.
@@ -341,39 +297,7 @@ tuples the entire employee and project information from
 `hr.employeesNest`. The query result we want is this bag of tuples
 with attributes `id`, `employeeName`, `title` and `projectName`:
 
-```
-<<
-{ 
-    'id': 3, 
-    'employeeName': 'Bob Smith', 
-    'title': null, 
-    'projectName': 'AWS Redshift Spectrum querying' 
-},
-{ 
-    'id': 3, 
-    'employeeName': 'Bob Smith', 
-    'title': null, 
-    'projectName': 'AWS Redshift security' 
-},
-{ 
-    'id': 3, 
-    'employeeName': 'Bob Smith', 
-    'title': null, 
-    'projectName': 'AWS Aurora security' 
-},
-{ 
-    'id': 4, 
-    'name': 'Susan Smith', 
-    'title': 'Dev Mgr', 
-    'projectName': null 
-},
-{ 
-    'id': 6, 
-    'name': 'Jane Smith', 
-    'title': 'Software Eng 2',
-    'projectName': 'AWS Redshift security' 
-}
->>
+```{include=tutorial/code/q3.output}
 ```
 
 Notice that there is a `'Susan Smith'` tuple in the result, despite the
@@ -381,12 +305,7 @@ fact that Susan had no project. Susan's `projectName` is `null`.
 This result is achieved by combining employees and projects using the
 `LEFT JOIN` operator, as follows:
 
-```sql
-SELECT e.id AS id, 
-       e.name AS employeeName, 
-       e.title AS title, 
-       p.name AS projectName
-FROM hr.employeesNest AS e LEFT JOIN e.projects AS p
+```{.sql include=tutorial/code/q3.sql}
 ```
 
 The semantics of this query can be thought of as
@@ -443,7 +362,8 @@ the employees with more than one security project with this query:
 
 ```sql
 SELECT e.name AS employeeName
-FROM hr.employeesNest e, e.projects AS p
+FROM hr.employeesNest e, 
+     e.projects AS p
 WHERE p.name LIKE '%security%'
 GROUP BY e.id, e.name
 HAVING COUNT(*) > 1
@@ -455,23 +375,12 @@ Use Case: Subqueries that aggregate over nested collections
 Next, let's find how many querying projects (that is, projects whose
 name contains the word 'querying') each employee has.
 
-```sql
-SELECT e.name AS employeeName, 
-       ( SELECT COUNT(*)
-         FROM e.projects AS p
-         WHERE p.name LIKE '%querying%'
-       ) AS queryProjectsNum
-FROM hr.employeesNest e
+```{.sql include=tutorial/code/q4.sql}
 ```
 
 Its output is
 
-```
-<<
-{ 'employeeName': 'Bob Smith', 'queryProjectsNum': 1 },
-{ 'employeeName': 'Susan Smith', 'queryProjectsNum': 0 },
-{ 'employeeName': 'Jane Smith', 'queryProjectsNum': 0 },
->>
+```{include=tutorial/code/q4.output}
 ```
 
 Notice, this query also outputs Susan Smith and Jane Smith, who have no
@@ -494,53 +403,18 @@ A value may also be a tuple -- also called object and struct in many
 models and formats. For example, the project value in the following
 tuples is always a tuple with project name and project org.
 
-```
-hr.employeesWithTuples: <<
-
-{ 
-    'id': 3, 
-    'name': 'Bob Smith', 
-    'title': null, 
-    'project': { '
-        name': 'AWS Redshift Spectrum querying', 
-        'org': 'AWS' 
-    } 
-},
-{
-    'id': 6, 
-    'name': 'Jane Smith', 
-    'title': 'Software Eng 2', 
-    'project': { 
-        'name': 'AWS Redshift security', 
-        'org': 'AWS' 
-    }
-}
->>
+```{include=tutorial/code/q5.env}
 ```
 
 PartiQL's multistep paths enable navigating within tuples. For example,
 the following query finds AWS projects and outputs the project name and
 employee name.
 
-```sql
-SELECT e.name AS employeeName, 
-       e.project.name AS projectName
-FROM hr.employeesWithTuples e
-WHERE e.project.org = 'AWS'
+```{.sql include=tutorial/code/q5.sql}
 ```
 The result is
 
-```
-<<
-{ 
-    'employeeName': 'Bob Smith', 
-    'projectName': 'AWS Redshift Spectrum querying' 
-},
-{ 
-    'employeeName': 'Jane Smith', 
-    'projectName': 'AWS Redshift security' 
-}
->>
+```{include=tutorial/code/q5.output}
 ```
 Unnesting Arbitrary Forms of Nested Collections: Arrays of Scalars, Arrays of Arrays and more
 ---------------------------------------------------------------------------------------------
@@ -559,31 +433,7 @@ The list of projects associated with each employee in
 `hr.employeesNest` could have been simply a list of project name
 strings. Replacing the nested tuples with plain strings leads to:
 
-```
-hr.employeesNestScalars: <<
-{ 
-    'id': 3, 
-    'name': 'Bob Smith', 
-    'title': null, 
-    'projects': [ 
-        'AWS Redshift Spectrum querying',
-    'AWS Redshift security',
-    'AWS Aurora security'
-    ]
-},
-{ 
-    'id': 4, 
-    'name': 'Susan Smith', 
-    'title': 'Dev Mgr', 
-    'projects': []
-},
-{ 
-    'id': 6, 
-    'name': 'Jane Smith', 
-    'title': 'Software Eng 2', 
-    'projects': [ 'AWS Redshift security' ]
-}
->>
+```{include=tutorial/code/q6.env}
 ```
 
 Let us repeat the previous use cases on the revised employee data.
@@ -592,12 +442,7 @@ The following query finds the names of employees who work on projects
 that contain the string `'security'` and outputs them along with the name
 of the 'security' project.
 
-```sql
-SELECT e.name AS employeeName, 
-       p AS projectName
-FROM hr.employeesNestScalars AS e, 
-     e.projects AS p
-WHERE p LIKE '%security%'
+```{.sql include=tutorial/code/q6.sql}
 ```
 
 The variable `p` ranges (again) over the content of `e.projects`. In
@@ -615,63 +460,18 @@ query can be thought of as executing the following snippet.
 Arrays may also contain arrays, directly, without intervening tuples, as
 in this data set.
 
-```
-matrices: <<
-{ 
-    'id': 3, 
-    'matrix': [ 
-        [2, 4, 6],
-        [1, 3, 5, 7],
-        [9, 0]
-        ]
-},
-{ 
-    'id': 4, 
-    'matrix': [ 
-        [5, 8],
-        [ ],
-    ]
-}
->>
+```{include=tutorial/code/q7.env}
 ```
 
 The following query finds every even number and outputs the even number
 and the `id` of the tuple where it was found.
 
-```sql
-SELECT t.id AS id, 
-       x AS even
-FROM matrices AS t, 
-     t.matrix AS y,
-     y AS x
-WHERE x % 2 = 0
+```{.sql include=tutorial/code/q7.sql}
 ```
 
 The output is
 
-```
-<< 
-{ 
-    'id':3,
-    'even':2
-},
-{ 
-    'id':3, 
-    'even':4 
-},
-{ 
-    'id':3,
-    'even':6
-},
-{
-    'id':3, 
-    'even':0
-},
-{ 
-    'id':4,
-    'even':8
-} 
->>
+```{include=tutorial/code/q7.output}
 ```
 
 A way to think what this function computes would be:
@@ -790,6 +590,7 @@ hr.employeesMixed1: <<
 }
 >>
 ```
+
 Thus we see that data may have heterogeneities -- regardless of whether
 they are described by a schema or not. PartiQL tackles heterogeneous
 data, in ways that we will see in the next use cases and feature
@@ -817,12 +618,7 @@ attribute from the tuple. That is, we can represent the fact that Bob
 Smith has no title by simply having no `title` attribute in the Bob
 Smith tuple:
 
-```
-hr.employeesWithMissing: <<
-{ 'id': 3, 'name': 'Bob Smith' } // no title in this tuple
-{ 'id': 4, 'name': 'Susan Smith', 'title': 'Dev Mgr' }
-{ 'id': 6, 'name': 'Jane Smith', 'title': 'Software Eng 2'}
->>
+```{include=tutorial/code/q8.env}
 ```
 PartiQL does not argue about when to use `null`s and when to use
 "missing". Myriads of datasets already use one of the two or both.
@@ -839,12 +635,7 @@ Accessing and Processing Missing Attributes: The MISSING Value
 Consider again this PartiQL query, which happens to also be an SQL
 query.
 
-```sql
-SELECT e.id, 
-       e.name AS employeeName, 
-       e.title AS title
-FROM hr.employeeWithMissing AS e
-WHERE e.title = 'Dev Mgr'
+```{.sql include=tutorial/code/q8.sql}
 ```
 
 What will happen when the query goes over the Bob Smith tuple, which has
@@ -866,13 +657,7 @@ to `MISSING` when `e` binds to `{ 'id': 3, 'name': 'Bob Smith' }`
 and, as usual in SQL, the `WHERE` clause fails when it does not
 evaluate to `true`. Thus the output will be
 
-```
-<<
-
-{ 'id': 4, 'employeeName': 'Susan Smith', 'title': 'Dev Mgr' },
-{ 'id': 6, 'employeeName': 'Jane Smith',  'title': 'Software Eng 2'}
-
->>
+```{include=tutorial/code/q8.output}
 ```
 
 ### Propagating MISSING in Result Tuples
@@ -880,45 +665,27 @@ evaluate to `true`. Thus the output will be
 What would happen if a missing attribute or, more generally, an
 expression returning `MISSING` appears in the `SELECT`?
 
-```sql
-SELECT e.id, 
-       e.name AS employeeName,
-       e.title AS outputTitle
-FROM hr.employeeWithMissing AS e
+```{.sql include=tutorial/code/q9.sql}
 ```
 
 The query will output one tuple for each employee. When it outputs the
 Bob Smith tuple, the `e.title` will evaluate to `MISSING` and then
 the output tuple will not even have an `outputTitle` attribute.
 
-```
-<<
-{ 'id': 3, 'name': 'Bob Smith' }  // no outputTitle in this tuple
-{ 'id': 4, 'name': 'Susan Smith', 'outputTitle': 'Dev Mgr' }
-{ 'id': 6, 'name': 'Jane Smith',  'outputTitle': 'Software Eng 2'}
->>
+```{include=tutorial/code/q9.output}
 ```
 
 The same treatment of `MISSING` would happen if, say, we had this
 query that converts titles to capital letters:
 
-```sql
-SELECT e.id, 
-       e.name AS employeeName, 
-       UPPER(e.title) AS outputTitle
-FROM hr.employeeWithMissing AS e
+```{.sql include=tutorial/code/q10.sql}
 ```
 
 Again, the `e.title` will evaluate to `MISSING` for `'Bob Smith'`, the
 `UPPER(e.title)` is then `UPPER(MISSING)` and also evaluates to `MISSING`.
 Thus the result will be
 
-```
-<<
-{ 'id': 3, 'name': 'Bob Smith' }  // no title in this tuple
-{ 'id': 4, 'name': 'Susan Smith', 'outputTitle': 'DEV MGR' }
-{ 'id': 6, 'name': 'Jane Smith',  'outputTitle': 'SOFTWARE ENG 2'}
->>
+```{include=tutorial/code/q10.output}
 ```
 
 Variables can range over Data with Different Types
@@ -939,41 +706,13 @@ the following twist in the `employeesNest` data set. Some of the
 elements of the `projects` array are plain strings and some are
 tuples. Even the employee tuples do not always have the same attributes.
 
-```
-hr.employeesMixed2: <<
-{ 
-    'id': 3, 
-    'name': 'Bob Smith', 
-    'title': null, 
-    'projects': [ 
-        { 'name': 'AWS Redshift Spectrum querying' },
-        'AWS Redshift security',
-        { 'name': 'AWS Aurora security' }
-    ]
-},
-{ 
-    'id': 4, 
-    'name': 'Susan Smith', 
-    'title': 'Dev Mgr', 
-    'projects': []
-},
-{ 
-    'id': 6, 
-    'name': 'Jane Smith', 
-    'projects': [ 'AWS Redshift security'] 
-}
->>
+```{include=tutorial/code/q11.env}
 ```
 
 This query on `hr.employeesMixed2` produces employee name -- employee
 project pairs.
 
-```sql
-SELECT e.name AS employeeName,
-       CASE WHEN isTuple(p) THEN p.name 
-       ELSE p END AS projectName
-FROM hr.employeesMixed2 AS e,
-     e.projects AS p
+```{.sql include=tutorial/code/q11.sql}
 ```
 
 Notice the function `isTuple(p)`, which is one of the many type
@@ -1133,59 +872,18 @@ elements in their arrays.
 
 Let's consider again the dataset `hr.employeesNest`.
 
-```
-hr.employeesNest: <<
-
-{ 
-    'id': 3, 
-    'name': 'Bob Smith', 
-    'title': null, 
-    'projects': [ 
-        { 'name': 'AWS Redshift Spectrum querying' },
-        { 'name': 'AWS Redshift security' },
-        { 'name': 'AWS Aurora security' }
-    ]
-},
-{ 
-    'id': 4, 
-    'name': 'Susan Smith', 
-    'title': 'Dev Mgr', 
-    'projects': []
-},
-{ 
-    'id': 6, 
-    'name': 'Jane Smith', 
-    'title': 'Software Eng 2', 
-    'projects': [ { 'name': 'AWS Redshift security' } ]
-}
->>
+```{include=tutorial/code/q12.env}
 ```
 
 The `projects` attribute was an array of tuples; that is, each tuple
 has an ordinal associated with it. The following query returns each
 employee name, along with the first project of the employee.
 
-```sql
-SELECT e.name AS employeeName, 
-       e.projects[0].name AS firstProjectName
-FROM hr.employeesNest AS e
+```{.sql include=tutorial/code/q12.sql}
 ```
 outputs
 
-```
-<<
-{ 
-    'employeeName': 'Bob Smith', 
-    'firstProjectName': 'AWS Redshift Spectrum querying' 
-},
-{ 
-    'employeeName': 'Susan Smith' 
-},
-{ 
-    'employeeName': 'Jane Smith', 
-    'firstProjectName': 'AWS Redshift security' 
-}
->>
+```{include=tutorial/code/q12.output}
 ```
 
 Multistep Paths
@@ -1220,37 +918,14 @@ second and so on. The following query finds the names of each employee
 involved in a security project, the security project and its order in
 the `projects` array.
 
-```sql
-SELECT e.name AS employeeName, 
-       p.name AS projectName, 
-       o AS projectPriority
-FROM hr.employeeNest AS e, 
-     e.projects AS p AT o
-WHERE p.name LIKE '%security%'
+```{.sql include=tutorial/code/q13.sql}
 ```
 
 Notice the new feature: `AT o`. While `p` ranges over the elements
 of the array `e.projects`, the variable `o` takes as value the
 ordinal number of the element in the array. The query result is
 
-```
-<<
-{ 
-    'employeename': 'Bob Smith', 
-    'projectName': 'AWS Redshift security',
-    'projectPriority': 1 \
-},
-{ 
-    'employeename': 'Bob Smith', 
-    'projectName': 'AWS Aurora security',
-    'projectPriority': 2 
-},
-{ 
-    'employeename': 'Jane Smith', 
-    'projectName': 'AWS Redshift security',
-    'projectPriority': 0 
-}
->>
+```{include=tutorial/code/q13.output}
 ```
 
 Pivoting & Unpivoting
@@ -1265,35 +940,17 @@ Unpivoting Tuples
 Consider this dataset that provides the closing prices of multiple
 ticker symbols.
 
-```
-closingPrices: <<
-{ 'date': date(4/1/2019), 'amzn': 1900, 'goog': 1120, 'fb': 180 },
-{ 'date': date(4/2/2019), 'amzn': 1902, 'goog': 1119, 'fb': 183 }
->>
+```{include=tutorial/code/q14.env}
 ```
 
 The following query unpivots the stock ticker/price pairs.
 
-```sql
-SELECT c.date AS date, 
-       symbol AS symbol, 
-       price AS price
-FROM closingPrices c, 
-     UNPIVOT c AS price AT symbol
-WHERE NOT symbol = 'date'
+```{.sql include=tutorial/code/q14.sql}
 ```
 
 The result is
 
-```
-<<
-{ 'date': date(4/1/2019), 'symbol': 'amzn', 'price': 1900},
-{ 'date': date(4/1/2019), 'symbol': 'goog', 'price': 1120},
-{ 'date': date(4/1/2019), 'symbol': 'fb', 'price': 180 },
-{ 'date': date(4/2/2019), 'symbol': 'amzn', 'price': 1902},
-{ 'date': date(4/2/2019), 'symbol': 'goog', 'price': 1119},
-{ 'date': date(4/2/2019), 'symbol': 'fb', 'price': 183 }
->>
+```{include=tutorial/code/q14.output}
 ```
 
 Unpivoting tuples enables the use of attribute names as if they were
@@ -1322,22 +979,17 @@ Pivoting into Tuples
 Pivoting turns a collection into a tuple. For example, consider the
 collection
 
-```
-todaysStockPrices: <<
-{ 'symbol': 'amzn', 'price': 1900},
-{ 'symbol': 'goog', 'price': 1120},
-{ 'symbol': 'fb', 'price': 180 }
->>
+```{include=tutorial/code/q15.env}
 ```
 
-Then the following `PIVOT` query produces the tuple
+Then the following `PIVOT` query 
 
+```{.sql include=tutorial/code/q15.sql}
 ```
-{ 'amzn': 1900, 'goog': 1120, 'fb': 180 }
-```
-```sql
-PIVOT sp.price AS sp.symbol
-FROM todaysStockPrices sp
+
+produces the tuple
+
+```{include=tutorial/code/q15.output}
 ```
 
 Notice that the `PIVOT` query looks like a `SELECT-FROM-WHERE-...`
@@ -1355,41 +1007,19 @@ Nested Results with `GROUP BY` ... `GROUP AS`.)
 Let us generalize the previous case of pivoting. We have a table of
 stock prices
 
-```
-stockPrices:<<
-{ 'date': date(4/1/2019), 'symbol': 'amzn', 'price': 1900},
-{ 'date': date(4/1/2019), 'symbol': 'goog', 'price': 1120},
-{ 'date': date(4/1/2019), 'symbol': 'fb', 'price': 180 },
-{ 'date': date(4/2/2019), 'symbol': 'amzn', 'price': 1902},
-{ 'date': date(4/2/2019), 'symbol': 'goog', 'price': 1119},
-{ 'date': date(4/2/2019), 'symbol': 'fb', 'price': 183 }
->>
+```{include=tutorial/code/q16.env}
 ```
 
 and we want to pivot it into a collection of tuples, where each tuple
 has all the `symbol:price` pairs for a date, as follows
 
-```
-<<
-{ 
-    'date': date(4/1/2019), 
-    'prices': {'amzn': 1900, 'goog': 1120, 'fb': 180} 
-},
-{ 
-    'date': date(4/2/2019), 
-    'prices': {'amzn': 1902, 'goog': 1119, 'fb': 183} 
-}
->>
+```{include=tutorial/code/q16.output}
 ```
 
 The following query first creates one group datesPrices for each date.
 Then the `PIVOT` subquery pivots the group into the tuple prices.
 
-```sql
-SELECT sp.date AS date,
-       ( PIVOT dp.price AS dp.symbol FROM datesPrices dp) AS prices
-FROM StockPrices sp
-GROUP BY sp.date AS datesPrices
+```{.sql include=tutorial/code/q16.sql}
 ```
 
 For example, the datesPrices collection, output from `GROUP AS` for
@@ -1415,31 +1045,7 @@ Creating Nested Results with `SELECT VALUE` Queries
 
 Let's consider again the dataset `hr.employeesNestScalars`:
 
-```
-hr.employeesNestScalars: <<
-{ 
-    'id': 3, 
-    'name': 'Bob Smith', 
-    'title': null, 
-    'projects': [ 
-        'AWS Redshift Spectrum querying',
-    'AWS Redshift security',
-    'AWS Aurora security'
-    ]
-},
-{ 
-    'id': 4, 
-    'name': 'Susan Smith', 
-    'title': 'Dev Mgr', 
-    'projects': []
-},
-{ 
-    'id': 6, 
-    'name': 'Jane Smith', 
-    'title': 'Software Eng 2', 
-    'projects': [ 'AWS Redshift security' ] 
-}
->>
+```{include=tutorial/code/q17.env}
 ```
 
 The following query outputs each tuple of `hr.employeesNestScalars`,
@@ -1447,43 +1053,12 @@ except that instead of all projects each tuple has only the security
 projects of the employee. The important new feature here is the
 `SELECT VALUE <expression>`.
 
-```sql
-SELECT e.id AS id, 
-       e.name AS name, 
-       e.title AS title,
-       ( SELECT VALUE p
-         FROM e.projects AS p
-         WHERE p LIKE '%security%'
-       ) AS securityProjects
-FROM hr.employeesNestScalar AS e
+```{.sql include=tutorial/code/q17.sql}
 ```
 
 The result is
 
-```
-<<
-{ 
-    'id': 3, 
-    'name': 'Bob Smith', 
-    'title': null, 
-    'projects': << 
-        'AWS Redshift security',
-        'AWS Aurora security'
-        >>
-},
-{ 
-    'id': 4, 
-    'name': 'Susan Smith', 
-    'title': 'Dev Mgr', 
-    'projects': << >> 
-},
-{ 
-    'id': 6, 
-    'name': 'Jane Smith', 
-    'title': 'Software Eng 2', 
-    'projects': << 'AWS Redshift security' >>
-}
->>
+```{include=tutorial/code/q17.output}
 ```
 
 A `SELECT VALUE <expression>` query (or subquery, as in this
@@ -1513,31 +1088,12 @@ The following query outputs each security project found in
 `hr.employeesNestScalars` along with the list of employee names that
 work on the project.
 
-```sql
-SELECT p AS projectName,
-       ( SELECT VALUE v.e.name 
-         FROM perProjectGroup AS v 
-         ORDER BY v.e.name ) AS employees
-FROM hr.employeesNestScalars AS e JOIN e.projects AS p ON p LIKE '%security%'
-GROUP BY p GROUP AS perProjectGroup
+```{.sql include=tutorial/code/q18.sql}
 ```
 
 The result is
 
-```
-<<
-{
-    'projectName': 'AWS Redshift security', 
-    'employees': [ 
-        'Bob Smith',
-        'Jane Smith' 
-    ] 
-},
-{ 
-    'projectName': 'AWS Aurora security', 
-    'employees': [ 'Bob Smith' ]
-}
->>
+```{include=tutorial/code/q18.output}
 ```
 
 The `GROUP AS` generalizes SQL's `GROUP BY` by making the formulated

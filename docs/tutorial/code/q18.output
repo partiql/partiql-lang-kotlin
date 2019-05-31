@@ -1,0 +1,14 @@
+<<
+{
+    'projectName': 'AWS Redshift security', 
+    'employees': [ 
+        'Bob Smith',
+        'Jane Smith' 
+    ] 
+},
+{ 
+    'projectName': 'AWS Aurora security', 
+    'employees': [ 'Bob Smith' ]
+}
+>>
+
