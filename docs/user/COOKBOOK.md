@@ -1,6 +1,6 @@
 # Code Examples 
 
-Code examples on how to use the \SqlName library inside your code base. Please consult the `kdoc` for more 
+Code examples on how to use the PartiQL library inside your code base. Please consult the `kdoc` for more 
 information on individual classes and interfaces.
 
 ## Java

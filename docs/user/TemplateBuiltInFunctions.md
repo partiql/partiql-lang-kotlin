@@ -1,5 +1,5 @@
 
-This is the template for writing documentations for an \SqlName built-in function. 
+This is the template for writing documentations for an PartiQL built-in function. 
 
 The template uses Pandoc's definition lists feature https://pandoc.org/MANUAL.html#definition-lists
 

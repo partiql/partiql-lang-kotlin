@@ -1,20 +1,20 @@
 # Getting Started 
 
-\SqlName provides an interactive shell, or Read Eval Print Loop (REPL),
-that allows users to write and evaluate \SqlName queries. 
+PartiQL provides an interactive shell, or Read Eval Print Loop (REPL),
+that allows users to write and evaluate PartiQL queries. 
 
 ## Prerequisites 
 
-\SqlName requires the Java Runtime (JVM) to be installed on your machine.
+PartiQL requires the Java Runtime (JVM) to be installed on your machine.
 You can obtain the *latest* version of the Java Runtime from either  
 
 1. [OpenJDK](https://openjdk.java.net/install/), and [OpenJDK for Windows](https://developers.redhat.com/products/openjdk)  
 1. [Oracle](https://www.oracle.com/technetwork/java/javase/downloads/index.html)
 
-## Download the \SqlName REPL 
+## Download the PartiQL REPL 
  
 Each [release](https://github.com/partiql/partiql-lang-kotlin/releases)
-of \SqlName comes with an archive that contains the \SqlName REPL as a
+of PartiQL comes with an archive that contains the PartiQL REPL as a
 zip file.
 
 1. [Download](https://github.com/partiql/partiql-lang-kotlin/releases/download/v0.1.0-alpha/partiql-cli-0.1.0.zip)
@@ -31,12 +31,12 @@ the latest `partiql-cli` zip archive to your machine.
 │   └── tutorial.pdf
 ```
 
-## Running the \SqlName REPL 
+## Running the PartiQL REPL 
 
 ### Windows 
 
 Run (double click) on `particl.bat`. This should open a command line
-prompt and start the \SqlName REPL. The \SqlName REPL prompt should look like this 
+prompt and start the PartiQL REPL. The PartiQL REPL prompt should look like this 
 
 ```
 Welcome to the PartiQL REPL!
@@ -47,16 +47,16 @@ PartiQL>
 
 1. Open a terminal and navigate to the `partiql-cli` folder we created when we extracted `partiql-cli.zip`. 
 1. Run the executable `partiql` file, by typing `./partiql` and hit
-enter. This should start the \SqlName REPL and should look like this
+enter. This should start the PartiQL REPL and should look like this
 
 ```
 Welcome to the PartiQL REPL!
 PartiQL>
 ```
 
-## Testing the \SqlName REPL 
+## Testing the PartiQL REPL 
 
-Let's write a simple query to verify that our \SqlName REPL is working. At the `PartiQL>` prompt type 
+Let's write a simple query to verify that our PartiQL REPL is working. At the `PartiQL>` prompt type 
 
 ```
 PartiQL> SELECT * FROM [1,2,3]
@@ -84,8 +84,8 @@ PartiQL>
 
 ```
 
-Congratulations! You succesfuly installed and run the \SqlName REPL.
-The \SqlName REPL is now waiting for more input. To exit the \SqlName
+Congratulations! You succesfuly installed and run the PartiQL REPL.
+The PartiQL REPL is now waiting for more input. To exit the PartiQL
 REPL press 
 
 * `Control+D` in OSX or Unix 

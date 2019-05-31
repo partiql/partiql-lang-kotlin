@@ -1,1 +1,1 @@
-# \SqlName Design Overview
+# PartiQL Design Overview

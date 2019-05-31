@@ -1,8 +1,8 @@
 # Evaluation Exceptions
 
 During evaluation the interpreter can only throw `EvaluationException`s. They fall into two categories: 
-* ​Direct exceptions thrown by the evaluation of an \SqlName query, for example `No such binding: <binding name>`
-* Wrapped exceptions that originate out of evaluation an \SqlName query, for example: `/ by zero` an `ArithmeticException` 
+* ​Direct exceptions thrown by the evaluation of an PartiQL query, for example `No such binding: <binding name>`
+* Wrapped exceptions that originate out of evaluation an PartiQL query, for example: `/ by zero` an `ArithmeticException` 
   thrown by Java when dividing a number by zero. One important thing to note is that only `T extends java.lang.Exception` 
   are wrapped by an `EvaluationException`. `T extends java.lang.Errors`, e.g. `OutOfMemoryError`, are not `Exception`s 
   and therefore not wrapped.

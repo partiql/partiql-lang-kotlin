@@ -1,11 +1,11 @@
-## \SqlName Parser, Compiler, and Evaluator Design
-This document provides the high-level design overview of the \SqlName parser and evaluator. The high-level pipeline of compilation is illustrated as follows:
+## PartiQL Parser, Compiler, and Evaluator Design
+This document provides the high-level design overview of the PartiQL parser and evaluator. The high-level pipeline of compilation is illustrated as follows:
 
 ![Parser and Compiler Diagram](img/parser-compiler.png)
 
-* The **lexer** is a hybrid direct/table driven lexical analyzer for \SqlName lexemes that produce high-level tokens.
+* The **lexer** is a hybrid direct/table driven lexical analyzer for PartiQL lexemes that produce high-level tokens.
   * SQL is very keyword heavy, so having our own lexer implementation allows us to more easily normalize things like keywords that consist of multiple lexemes (e.g. `CHARACTER VARYING`)
-* The **parser** is a basic [recursive decent parser][recursive-descent] for the \SqlName language that produces an AST as an Ion S-expression.
+* The **parser** is a basic [recursive decent parser][recursive-descent] for the PartiQL language that produces an AST as an Ion S-expression.
   * For infix operator parsing, the parser is implemented as a Top-Down Operator Precedence (TDOP) [Pratt parser][pratt-parser].
 * The **semantic analyzer** is a placeholder for general purpose semantic analysis.  This is not yet implemented, but important optimizations such as determining which paths/columns are relevant for a given query will be done by this phase.  Decoupling of the parser from the compiler, means that any application can do their own validation and processing of the AST.
 * The **compiler** converts the AST nodes into [context threaded][context-threading] code.
@@ -50,7 +50,7 @@ public static void main(String[] args) throws Exception {
 It can be seen that the above example leverages lexical closures (lambdas) to build an object graph of state to represent the actual interpretation, the actual dispatch leverages the native call stack differs from straight compiled code in that each "opcode" is a virtual call.
 
 ### Evaluation Strategy
-Evaluation is done by first compiling source text of an \SqlName expression into an instance of `Expression` which provides the entry point to evaluation:
+Evaluation is done by first compiling source text of an PartiQL expression into an instance of `Expression` which provides the entry point to evaluation:
 
 ![Parser/Compiler/Expression Class Diagram](img/compiler-class.png)
 
@@ -65,7 +65,7 @@ All `ExprValue` implementations indicate what type of value they are and impleme
 Modeling relations (collections) as `Iterable`/`Iterator` allows the evaluator to compose the relational operators (e.g. projection, filter, joins) as lazy `Iterators` that are composed with one another.  This functional pipeline is very similar to what is done in full query engines and is also similar to how [Java 8 streams][java-streams] work.
 
 #### Lazy Evaluation Example
-We can use our simple integer evaluator example to demonstrate how the \SqlName evaluator lazily evaluates.  Let's change this example to add a functional interface as the integer value (i.e. a **[thunk][thunk]** representing an integer).
+We can use our simple integer evaluator example to demonstrate how the PartiQL evaluator lazily evaluates.  Let's change this example to add a functional interface as the integer value (i.e. a **[thunk][thunk]** representing an integer).
 
 ```java
 interface IntValue {
@@ -109,7 +109,7 @@ public static void main(String[] args) throws Exception {
 }
 ```
 
-Note that now, all values require an additional virtual dispatch to get the underlying value.  `ExprValue` can be thought of as a thunk for all of the types of values in \SqlName.
+Note that now, all values require an additional virtual dispatch to get the underlying value.  `ExprValue` can be thought of as a thunk for all of the types of values in PartiQL.
 
 [recursive-descent]: https://en.wikipedia.org/wiki/Recursive_descent_parser
 [pratt-parser]: http://eli.thegreenplace.net/2010/01/02/top-down-operator-precedence-parsing

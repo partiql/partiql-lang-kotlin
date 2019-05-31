@@ -140,7 +140,7 @@ CAST(1         AS boolean) -- true
 CAST(`1e0`     AS boolean) -- true (float)
 CAST(`1d0`     AS boolean) -- true (decimal)
 CAST('a'       AS boolean) -- false
-CAST('true'    AS boolean) -- true (\SqlName string 'true')
+CAST('true'    AS boolean) -- true (PartiQL string 'true')
 CAST(`'true'`  AS boolean) -- true (Ion symbol `'true'`)
 CAST(`'false'` AS boolean) -- false (Ion symbol `'false'`)
 
@@ -358,7 +358,7 @@ DATE_DIFF(day, `2010-01-01T23:00T`, `2010-01-02T01:00T`) -- 0 (need to be at lea
 
 ### EXISTS
 
-Given an \SqlName value returns `true` if and only if the value is a non-empty sequence, returns `false` otherwise. 
+Given an PartiQL value returns `true` if and only if the value is a non-empty sequence, returns `false` otherwise. 
 
 Signature
 : `EXISTS: Any -> Boolean`
@@ -367,7 +367,7 @@ Header
 : `EXISTS(val)`
 
 Purpose 
-: Given an \SqlName value, `val`, returns `true` if and only if `val` is a non-empty sequence, returns `false` otherwise. 
+: Given an PartiQL value, `val`, returns `true` if and only if `val` is a non-empty sequence, returns `false` otherwise. 
 This function does **not** propagate `null` and `missing`.  
 
 
