@@ -18,7 +18,7 @@ import com.amazon.ion.*
 import org.partiql.lang.*
 import org.partiql.lang.eval.*
 import org.partiql.cli.OutputFormat.*
-import java.io.*
+import java.io.*    
 
 /**
  * TODO builder, kdoc
@@ -29,21 +29,29 @@ internal class Cli(private val valueFactory: ExprValueFactory,
                    private val format: OutputFormat,
                    private val compilerPipeline: CompilerPipeline,
                    private val globals: Bindings,
-                   private val query: String) : SqlCommand() {
+                   private val query: String) : PartiQLCommand {
     override fun run() {
-        val inputExprValue = valueFactory.newBag(valueFactory.ion.iterate(input).asSequence().map { valueFactory.newFromIonValue(it) })
+        val inputIonValue = valueFactory.ion.iterate(input).asSequence().map { valueFactory.newFromIonValue(it) }
+        val inputExprValue = valueFactory.newBag(inputIonValue)
 
-        val bindings = Bindings.buildLazyBindings {
+        val bindings = Bindings.buildLazyBindings { 
             addBinding("input_data") { inputExprValue }
         }.delegate(globals)
 
-        val writer = when (format) {
-            TEXT   -> valueFactory.ion.newTextWriter(output)
-            BINARY -> valueFactory.ion.newBinaryWriter(output)
-        }
-
         val result = compilerPipeline.compile(query).eval(EvaluationSession.build { globals(bindings) })
-
-        writer.use { writeResult(result, it) }
+        
+        when(format) {
+            ION_TEXT   -> valueFactory.ion.newTextWriter(output).use { printIon(it, result) }
+            ION_BINARY -> valueFactory.ion.newBinaryWriter(output).use { printIon(it, result) }
+            PARTIQL    -> NonConfigurableExprValuePrettyPrinter(output).prettyPrint(result)
+        }
+    }
+    
+    private fun printIon(ionWriter: IonWriter, value: ExprValue) {
+        when(value.type) {
+            // writes top level bags as a datagram
+            ExprValueType.BAG -> value.iterator().forEach { v -> v.ionValue.writeTo(ionWriter) }
+            else              -> value.ionValue.writeTo(ionWriter) 
+        }
     }
 }

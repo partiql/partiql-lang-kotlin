@@ -37,7 +37,7 @@ class CliTest {
             valueFactory,
             input.byteInputStream(Charsets.UTF_8),
             output,
-            OutputFormat.TEXT,
+            OutputFormat.ION_TEXT,
             compilerPipeline,
             bindings,
             query)
@@ -67,7 +67,7 @@ class CliTest {
         val subject = makeCli("SELECT * FROM input_data", "{a: 1}{a: 2}{a: 3}")
         val actual = subject.runAndOutput()
 
-        assertAsIon("{a: 1}{a: 2}{a: 3}", actual)
+        assertAsIon("{a: 1} {a: 2} {a: 3}", actual)
     }
 
     @Test
