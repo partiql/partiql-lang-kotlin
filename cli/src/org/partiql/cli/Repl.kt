@@ -14,7 +14,6 @@
 
 package org.partiql.cli
 
-import com.amazon.ion.*
 import com.amazon.ion.system.*
 import org.partiql.cli.ReplState.*
 import org.partiql.lang.*
@@ -24,7 +23,6 @@ import org.partiql.lang.syntax.*
 import org.partiql.lang.util.*
 import java.io.*
 import java.lang.IllegalArgumentException
-import java.text.*
 import java.util.concurrent.*
 
 internal const val PROMPT_1 = "PartiQL> "
@@ -110,7 +108,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
                     private val parser: Parser,
                     private val compiler: CompilerPipeline,
                     private val initialGlobal: Bindings,
-                    private val timer: Timer = object: Timer{}) : SqlCommand() {
+                    private val timer: Timer = object: Timer{}) : PartiQLCommand {
 
     private inner class ReplCommands {
         operator fun get(commandName: String): (String) -> ExprValue? = 

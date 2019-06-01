@@ -43,19 +43,17 @@ private val formatter = object : BuiltinHelpFormatter(120, 2) {
               |
               |Examples:
               |To run in REPL mode simply execute the executable without any arguments:
-              |     sqlcli
+              |     partiql
               |
-              |In non-interactive mode input data is bound to a global variable named "input_data", in the example below
-              |/logs/log.ion is bound to "input_data":
-              |     sqlcli --query="SELECT * FROM input_data" --input=/logs/log.ion
-              |In non-interactive mode input data is bound to "input_data", in the example below the /logs/log.ion is bound to "input_data":
-              |     sqlcli --query="SELECT * FROM input_data" --input=/logs/log.ion
+              |In non-interactive mode we use Ion as the format for input data which is bound to a global variable 
+              |named "input_data", in the example below /logs/log.ion is bound to "input_data":
+              |     partiql --query="SELECT * FROM input_data" --input=/logs/log.ion
               |
-              |To output binary ion:
-              |     sqlcli --query="SELECT * FROM input_data" --output-format=BINARY --input=/logs/log.ion
+              |The cli can output using PartiQL syntax or Ion using the --output-format option, e.g. to output binary ion:
+              |     partiql --query="SELECT * FROM input_data" --output-format=ION_BINARY --input=/logs/log.ion
               |
               |To pipe input data in via stdin:
-              |     cat /logs/log.10n | sqlcli --query="SELECT * FROM input_data" --format=BINARY > output.10n
+              |     cat /logs/log.ion | sqlcli --query="SELECT * FROM input_data" --format=ION_BINARY > output.10n
               |
               |${super.format(options)}
         """.trimMargin()
@@ -63,7 +61,7 @@ private val formatter = object : BuiltinHelpFormatter(120, 2) {
 }
 
 enum class OutputFormat {
-    TEXT, BINARY
+    ION_TEXT, ION_BINARY, PARTIQL
 }
 
 // opt parser options
@@ -94,7 +92,7 @@ private val outputFormatOpt = optParser.acceptsAll(listOf("output-format", "of")
     .withRequiredArg()
     .ofType(OutputFormat::class.java)
     .describedAs("(${OutputFormat.values().joinToString("|")})")
-    .defaultsTo(OutputFormat.TEXT)
+    .defaultsTo(OutputFormat.PARTIQL)
 
 /**
  * Runs PartiQL CLI.
@@ -109,7 +107,7 @@ private val outputFormatOpt = optParser.acceptsAll(listOf("output-format", "of")
  *      * -q --query: PartiQL query
  *      * -i --input: input file, default STDIN
  *      * -o --output: output file, default STDOUT
- *      * -of --output-format: output format, TEXT (default) or BINARY
+ *      * -of --output-format: output format, ION_TEXT, ION_BINARY and PARTIQL (default)
  */
 fun main(args: Array<String>) = try {
     optParser.formatHelpWith(formatter)
