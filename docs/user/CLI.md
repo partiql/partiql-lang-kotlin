@@ -6,28 +6,27 @@ Command line interface for executing PartiQL queries. Can be run in an interacti
 
 Examples:
 To run in REPL mode simply execute the executable without any arguments:
-     sqlcli
+     partiql
 
-In non-interactive mode input data is bound to a global variable named "input_data", in the example below
-/logs/log.ion is bound to "input_data":
-     sqlcli --query="SELECT * FROM input_data" --input=/logs/log.ion
-In non-interactive mode input data is bound to "input_data", in the example below the /logs/log.ion is bound to "input_data":
-     sqlcli --query="SELECT * FROM input_data" --input=/logs/log.ion
+In non-interactive mode we use Ion as the format for input data which is bound to a global variable
+named "input_data", in the example below /logs/log.ion is bound to "input_data":
+     partiql --query="SELECT * FROM input_data" --input=/logs/log.ion
 
-To output binary ion:
-     sqlcli --query="SELECT * FROM input_data" --output-format=BINARY --input=/logs/log.ion
+The cli can output using PartiQL syntax or Ion using the --output-format option, e.g. to output binary ion:
+     partiql --query="SELECT * FROM input_data" --output-format=ION_BINARY --input=/logs/log.ion
 
 To pipe input data in via stdin:
-     cat /logs/log.10n | sqlcli --query="SELECT * FROM input_data" --format=BINARY > output.10n
+     cat /logs/log.ion | sqlcli --query="SELECT * FROM input_data" --format=ION_BINARY > output.10n
 
-Option                                               Description
-------                                               -----------
--e, --environment <File>                             initial global environment (optional)
--h, --help                                           prints this help
--i, --input <File>                                   input file, requires the query option (default: stdin)
--o, --output <File>                                  output file, requires the query option (default: stdout)
---of, --output-format <OutputFormat: (TEXT|BINARY)>  output format, requires the query option (default: TEXT)
--q, --query <String>                                 PartiQL query, triggers non interactive mode
+Option                                Description
+------                                -----------
+-e, --environment <File>              initial global environment (optional)
+-h, --help                            prints this help
+-i, --input <File>                    input file, requires the query option (default: stdin)
+-o, --output <File>                   output file, requires the query option (default: stdout)
+--of, --output-format <OutputFormat:  output format, requires the query option (default: PARTIQL)
+  (ION_TEXT|ION_BINARY|PARTIQL)>
+-q, --query <String>                  PartiQL query, triggers non interactive mode
 ```
 
 # Building the CLI 
@@ -38,7 +37,7 @@ The CLI is built during the main Gradle build.  To build it separately execute:
 ./gradlew :cli:build
 ```
 
-After building, distributable jars are located in the `cli/build/distributions` directory (realtive to the 
+After building, distributable jars are located in the `cli/build/distributions` directory (relative to the 
 project root).
 
 Be sure to include the correct relative path to `gradlew` if you are not in the project root.
@@ -60,43 +59,46 @@ rlwrap ./gradlew :cli:run --console=plain
 ```
 
 [rlwrap](https://github.com/hanslub42/rlwrap) provides command history support.  It allows 
-the use of the up and down arrow keys to cycle through recently executed commands and remebers commands entered into 
+the use of the up and down arrow keys to cycle through recently executed commands and remembers commands entered into 
 previous sessions. `rlwrap` is available as an optional package in all major Linux distributions and in 
 [Homebrew](https://brew.sh/) on MacOS.  `rlwrap` is not required but is highly recommended. 
 
 You will see a prompt that looks as follows:
 
 ```
-sql> 
+Welcome to the PartiQL REPL!
+PartiQL> 
 ```
 
 At this point you can type in SQL and press enter *twice* to execute it:
 
 ```
-sql> SELECT id FROM `[{id: 5, name:"bill"}, {id: 6, name:"bob"}]` WHERE name = 'bob'
-   | 
+PartiQL> SELECT id FROM `[{id: 5, name:"bill"}, {id: 6, name:"bob"}]` WHERE name = 'bob'
+   |
 ==='
-{
-  id:6
-}
+<<
+  {
+    'id': 6
+  }
+>>
 ---
-Result type was BAG and contained 1 items
-OK! (130 ms)
+OK! (282 ms)
 ```
 
 The result of previous expression is stored in the variable named `_`, so you can then run subsequent
 expressions based on the last one.
 
 ```
-sql> SELECT id + 4 AS name FROM _
-   | 
+PartiQL> SELECT id + 4 AS name FROM _
+   |
 ==='
-{
-  name:10
-}
+<<
+  {
+    'name': 10
+  }
+>>
 ---
-Result type was BAG and contained 1 items
-OK! (20 ms)
+OK! (16 ms)
 ```
 
 Press control-D to exit the REPL.
@@ -106,9 +108,10 @@ Press control-D to exit the REPL.
 To view the AST of an SQL statement, type one and press enter only *once*, then type `!!` and press enter:
 
 ```
-sql> 1 + 1
+PartiQL> 1 + 1
    | !!
 ==='
+
 (
   ast
   (
@@ -131,17 +134,17 @@ sql> 1 + 1
   )
 )
 ---
-Result type was SEXP
-OK! (32 ms)
+OK! (23 ms)
 ```
 
 To view the AST with metadata information of an SQL statement, type one and press enter only *once*, 
 then type `!?` and press enter:
 
 ```
-sql> 1 + 1
+PartiQL> 1 + 1
    | !?
 ==='
+
 (
   ast
   (
@@ -218,8 +221,7 @@ sql> 1 + 1
   )
 )
 ---
-Result type was SEXP
-OK! (5 ms)
+OK! (1 ms)
 ```
 
 ## Initial Environment
@@ -231,16 +233,16 @@ For example a file named `config.sql`, containing the following:
 
 ```
 {
-  'animals':`[
-    {name: "Kumo", type: "dog"},
-    {name: "Mochi", type: "dog"},
-    {name: "Lilikoi", type: "unicorn"},
-  ]`,
-  'types':`[
-    {id: "dog", is_magic: false},
-    {id: "cat", is_magic: false},
-    {id: "unicorn", is_magic: true},
-  ]`,
+  'animals':[
+    {'name': 'Kumo', 'type': 'dog'},
+    {'name': 'Mochi', 'type': 'dog'},
+    {'name': 'Lilikoi', 'type': 'unicorn'}
+  ],
+  'types':[
+    {'id': 'dog', 'is_magic': false},
+    {'id': 'cat', 'is_magic': false},
+    {'id': 'unicorn', 'is_magic': true}
+  ]
 }
 ```
 
@@ -263,111 +265,190 @@ $ ./bin/sqlcli -e config.sql
 Expressions can then use the environment defined by `config.sql`:
 
 ```
-sql> SELECT name, type, is_magic FROM animals, types WHERE type = id
-   | 
+PartiQL> SELECT name, type, is_magic FROM animals, types WHERE type = id
+   |
+==='
+<<
+  {
+    'name': 'Kumo',
+    'type': 'dog',
+    'is_magic': false
+  },
+  {
+    'name': 'Mochi',
+    'type': 'dog',
+    'is_magic': false
+  },
+  {
+    'name': 'Lilikoi',
+    'type': 'unicorn',
+    'is_magic': true
+  }
+>>
+---
+OK! (55 ms)
+```
+
+To see the current REPL environment you can use `!global_env`, for example for the file above: 
+
+```
+PartiQL> !global_env
+   |
 ==='
 {
-  name:"Kumo",
-  type:"dog",
-  is_magic:false
+  'types': [
+    {
+      'id': 'dog',
+      'is_magic': false
+    },
+    {
+      'id': 'cat',
+      'is_magic': false
+    },
+    {
+      'id': 'unicorn',
+      'is_magic': true
+    }
+  ],
+  'animals': [
+    {
+      'name': 'Kumo',
+      'type': 'dog'
+    },
+    {
+      'name': 'Mochi',
+      'type': 'dog'
+    },
+    {
+      'name': 'Lilikoi',
+      'type': 'unicorn'
+    }
+  ]
 }
-{
-  name:"Mochi",
-  type:"dog",
-  is_magic:false
-}
-{
-  name:"Lilikoi",
-  type:"unicorn",
-  is_magic:true
-}
-------
-Result type was BAG and contained 3 items
-OK! (64 ms)
+---
+OK! (2 ms)
+``` 
+
+You can also add new values to the global environment or replace existing values using `!add_to_global_env`. The 
+example bellow replaces the value bound to `types`
+
 ```
+PartiQL> !add_to_global_env {'types': []}
+   |
+==='
+{
+  'types': []
+}
+---
+OK! (1 ms)
+PartiQL> !global_env
+   |
+==='
+{
+  'types': [],
+  'animals': [
+    {
+      'name': 'Kumo',
+      'type': 'dog'
+    },
+    {
+      'name': 'Mochi',
+      'type': 'dog'
+    },
+    {
+      'name': 'Lilikoi',
+      'type': 'unicorn'
+    }
+  ]
+}
+---
+OK! (0 ms)
+``` 
 
 # Working with Structure
 
 Let's consider the following initial environment:
 
 ```
-`{
+{
   'stores':[
     {
-     id: "5",
-     books: [
-       {title:"A", price: 5.0, categories:["sci-fi", "action"]},
-       {title:"B", price: 2.0, categories:["sci-fi", "comedy"]},
-       {title:"C", price: 7.0, categories:["action", "suspense"]},
-       {title:"D", price: 9.0, categories:["suspense"]},
+     'id': 5,
+     'books': [
+       {'title':'A', 'price': 5.0, 'categories':['sci-fi', 'action']},
+       {'title':'B', 'price': 2.0, 'categories':['sci-fi', 'comedy']},
+       {'title':'C', 'price': 7.0, 'categories':['action', 'suspense']},
+       {'title':'D', 'price': 9.0, 'categories':['suspense']}
      ]
     },
     {
-     id: "6",
-     books: [
-       {title:"A", price: 5.0, categories:["sci-fi", "action"]},
-       {title:"E", price: 9.5, categories:["fantasy", "comedy"]},
-       {title:"F", price: 10.0, categories:["history"]},
+     'id': 6,
+     'books': [
+       {'title':'A', 'price': 5.0, 'categories':['sci-fi', 'action']},
+       {'title':'E', 'price': 9.5, 'categories':['fantasy', 'comedy']},
+       {'title':'F', 'price': 10.0, 'categories':['history']}
      ]
     }
   ]
-}`
+}
 ```
 
 If we wanted to find all books *as their own rows* with a price greater than `7` we can use paths on the `FROM` for this:
 
 ```
-sql> SELECT * FROM stores[*].books[*] AS b WHERE b.price > 7
-   | 
+PartiQL> SELECT * FROM stores[*].books[*] AS b WHERE b.price > 7
+   |
 ==='
-{
-  title:"D",
-  price:9.0,
-  categories:[
-    "suspense"
-  ]
-}
-{
-  title:"E",
-  price:9.5,
-  categories:[
-    "fantasy",
-    "comedy"
-  ]
-}
-{
-  title:"F",
-  price:10.0,
-  categories:[
-    "history"
-  ]
-}
-------
-Result type was BAG and contained 3 items
-OK! (70 ms)
+<<
+  {
+    'title': 'D',
+    'price': 9.0,
+    'categories': [
+      'suspense'
+    ]
+  },
+  {
+    'title': 'E',
+    'price': 9.5,
+    'categories': [
+      'fantasy',
+      'comedy'
+    ]
+  },
+  {
+    'title': 'F',
+    'price': 10.0,
+    'categories': [
+      'history'
+    ]
+  }
+>>
+---
+OK! (28 ms)
 ```
 
 If you wanted to also de-normalize the store ID and title into the above rows:
 
 ```
-sql> SELECT s.id AS store, b.title AS title FROM stores AS s, @s.books AS b WHERE b.price > 7
-   | 
+PartiQL> SELECT s.id AS store, b.title AS title FROM stores AS s, @s.books AS b WHERE b.price > 7
+   |
 ==='
-{
-  store:"5",
-  title:"D"
-}
-{
-  store:"6",
-  title:"E"
-}
-{
-  store:"6",
-  title:"F"
-}
-------
-Result type was BAG and contained 3 items
-OK! (32 ms)
+<<
+  {
+    'store': 5,
+    'title': 'D'
+  },
+  {
+    'store': 6,
+    'title': 'E'
+  },
+  {
+    'store': 6,
+    'title': 'F'
+  }
+>>
+---
+OK! (30 ms)
 ```
 
 We can also use sub-queries with paths to predicate on sub-structure without changing the
@@ -375,43 +456,44 @@ cardinality. So if we wanted to find all stores with books having prices greater
 `9.5`
 
 ```
-sql> SELECT * FROM stores AS s
+PartiQL> SELECT * FROM stores AS s
    | WHERE EXISTS(
-   |   SELECT * FROM @s.books AS b WHERE b.price > 9.5
+   |    SELECT * FROM @s.books AS b WHERE b.price > 9.5
    | )
-   | 
+   |
 ==='
-{
-  id:"6",
-  books:[
-    {
-      title:"A",
-      price:5.0,
-      categories:[
-        "sci-fi",
-        "action"
-      ]
-    },
-    {
-      title:"E",
-      price:9.5,
-      categories:[
-        "fantasy",
-        "comedy"
-      ]
-    },
-    {
-      title:"F",
-      price:10.0,
-      categories:[
-        "history"
-      ]
-    }
-  ]
-}
-------
-Result type was BAG and contained 1 items
-OK! (52 ms)
+<<
+  {
+    'id': 6,
+    'books': [
+      {
+        'title': 'A',
+        'price': 5.0,
+        'categories': [
+          'sci-fi',
+          'action'
+        ]
+      },
+      {
+        'title': 'E',
+        'price': 9.5,
+        'categories': [
+          'fantasy',
+          'comedy'
+        ]
+      },
+      {
+        'title': 'F',
+        'price': 10.0,
+        'categories': [
+          'history'
+        ]
+      }
+    ]
+  }
+>>
+---
+OK! (5 ms)
 ```
 
 # Reading/Writing Files
@@ -419,29 +501,29 @@ The REPL provides the `read_file` function to stream data from a file. The files
 For example:
 
 ```
-sql> SELECT city FROM read_file('data.ion') AS c, `["HI", "NY"]` AS s WHERE c.state = s
+PartiQL> SELECT city FROM read_file('data.ion') AS c, `["HI", "NY"]` AS s WHERE c.state = s
    | 
 ==='
-{
-  city:"Honolulu"
-}
-{
-  city:"Rochester"
-}
+<<
+  {
+    'city': 'Honolulu'
+  },
+  {
+    'city': 'Rochester'
+  }
+>>
 ------
-Result type was BAG and contained 3 items
 OK! (45 ms)
 ```
 
 The REPL also has the capability to write files with the `write_file` function:
 
 ```
-sql> write_file('out.ion', SELECT * FROM _)
+PartiQL> write_file('out.ion', SELECT * FROM _)
    | 
 ==='
 true
 ------
-Result type was BOOL
 OK! (20 ms)
 ```
 
@@ -449,35 +531,36 @@ Functions and expressions can be used in the *global configuration* as well.  Co
 the following `config.ion`:
 
 ```
-`{
+{
   'data': read_file('data.ion')
-}`
+}
 ```
 
 The `data` variable will now be bound to file containing Ion:
 
 ```
-sql> SELECT * FROM data
+PartiQL> SELECT * FROM data
    | 
 ==='
-{
-  city:"Seattle",
-  state:"WA"
-}
-{
-  city:"Bellevue",
-  state:"WA"
-}
-{
-  city:"Honolulu",
-  state:"HI"
-}
-{
-  city:"Rochester",
-  state:"NY"
-}
+<<
+    {
+      'city: ;Seattle;,
+      'state: 'WA;
+    },
+    {
+      'city: 'Bellevue',
+      'state: 'WA'
+    },
+    {
+      'city: 'Honolulu',
+      'state: 'HI'
+    },
+    {
+      'city: 'Rochester',
+      'state: 'NY'
+    }
+>>
 ------
-Result type was BAG and contained 3 items
 OK! (75 ms)
 ```
 
@@ -488,31 +571,32 @@ Parsing delimited files can be specified with the `type` field with a string `ts
 to parse tab or comma separated values respectively.
 
 ```
-sql> read_file('simple.tsv', `{type:"tsv"}`)
+PartiQL> read_file('simple.tsv', {'type':'tsv'})
    | 
 ===' 
-{
-  _0:"title",
-  _1:"category",
-  _2:"price"
-}
-{
-  _0:"harry potter",
-  _1:"book",
-  _2:"7.99"
-}
-{
-  _0:"dot",
-  _1:"electronics",
-  _2:"49.99"
-}
-{
-  _0:"echo",
-  _1:"electronics",
-  _2:"99.99"
-}
+<<
+    {
+      _0:'title',
+      _1:'category',
+      _2:'price'
+    },
+    {
+      _0:'harry potter',
+      _1:'book',
+      _2:'7.99'
+    },
+    {
+      _0:'dot',
+      _1:'electronics',
+      _2:'49.99'
+    },
+    {
+      _0:'echo',
+      _1:'electronics',
+      _2:'99.99'
+    }
+>>
 ---- 
-Result type was BAG and contained 3 items
 OK! (83 ms)
 ```
 
@@ -520,52 +604,54 @@ The options `struct` can also define if the first row for delimited data should 
 column names with the `header` field.
 
 ```
-sql> read_file('simple.tsv', `{type:"tsv", header:true}`)
+PartiQL> read_file('simple.tsv', {'type': 'tsv', 'header': true})
    | 
 ===' 
-{
-  title:"harry potter",
-  category:"book",
-  price:"7.99"
-}
-{
-  title:"dot",
-  category:"electronics",
-  price:"49.99"
-}
-{
-  title:"echo",
-  category:"electronics",
-  price:"99.99"
-}
+<<
+    {
+      'title': 'harry potter',
+      'category': 'book',
+      'price': '7.99'
+    },
+    {
+      'title': 'dot',
+      'category': 'electronics',
+      'price': '49.99'
+    },
+    {
+      'title': 'echo',
+      'category': 'electronics',
+      'price': '99.99'
+    }
+>>
 ---- 
-Result type was BAG and contained 3 items
 OK! (87 ms)
 ```
 
 Auto conversion can also be specified numeric and timestamps in delimited data.
 
 ```
-sql> read_file('simple.tsv', `{type:"tsv", header:true, conversion:"auto"}`)
+PartiQL> read_file('simple.tsv', {'type':'tsv', 'header':true, 'conversion':'auto'})
    | 
 ===' 
-{
-  title:"harry potter",
-  category:"book",
-  price:7.99
-}
-{
-  title:"dot",
-  category:"electronics",
-  price:49.99
-}
-{
-  title:"echo",
-  category:"electronics",
-  price:99.99
-}
+<<
+    {
+      'title':' harry potter',
+      'category': 'book',
+      'price': 7.99
+    },
+    {
+      'title: 'dot',
+      'category': 'electronics',
+      'price': 49.99
+    },
+    {
+      'title: 'echo',
+      'category': 'electronics',
+      'price': 99.99
+    }
+>>
 ---- 
-Result type was BAG and contained 3 items
 OK! (96 ms)
 ```
 
@@ -574,12 +660,11 @@ format to the `write_file` function.  Similar to the `read_file` function, the `
 can be used to specify `tsv`, `csv`, or `ion` output.
 
 ```
-sql> write_file('out.csv', `{type:"csv"}`, SELECT name, type FROM animals)
+PartiQL> write_file('out.csv', {'type':'csv'}, SELECT name, type FROM animals)
    | 
 ===' 
 true
 ----
-Result type was BOOL
 OK! (41 ms)
 ```
 
@@ -596,12 +681,11 @@ The options `struct` can also specify a `header` Boolean field to indicate wheth
 TSV/CSV should have a header row.
 
 ```
-sql> write_file('out.csv', `{type:"csv", header:true}`, SELECT name, type FROM animals)
+PartiQL> write_file('out.csv', {'type':'csv', 'header':true}, SELECT name, type FROM animals)
    | 
 ===' 
 true
 ----
-Result type was BOOL
 OK! (39 ms)
 ```
 

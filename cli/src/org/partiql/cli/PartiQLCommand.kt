@@ -14,20 +14,6 @@
 
 package org.partiql.cli
 
-import com.amazon.ion.*
-import org.partiql.lang.eval.*
-
-internal abstract class SqlCommand {
-    abstract fun run()
-
-
-    protected fun writeResult(result: ExprValue, writer: IonWriter): Int {
-        var itemCount = 0
-        result.rangeOver().forEach {
-            it.ionValue.writeTo(writer)
-            itemCount++
-        }
-        writer.flush()
-        return itemCount
-    }
+interface PartiQLCommand {
+    fun run()
 }
