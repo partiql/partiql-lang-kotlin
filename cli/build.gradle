@@ -7,43 +7,28 @@ version = "0.1.0"
 
 application {
     mainClassName = "org.partiql.cli.Main"
+    applicationName = 'partiql' // startup script name
 }
+
+// distribution configuration, brought in by `application` plugin
+distributions {
+    main {
+        baseName = 'partiql-cli' // archive name
+        contents {
+            from 'archive'  // include contents of archive dir into the final zip/tar
+        }
+    }
+}
+
+
+
+
 
 (tasks.findByName("distTar") as Tar).compression = Compression.GZIP
 
 // Allows the CLI to receive input from the keyboard when invoked using `./gradlew :cli:run`
 tasks['run'].standardInput = System.in
 
-jar {
-    dependsOn ':lang:jar'
-    
-    archiveName = 'partiql-cli.jar'
-    
-    manifest {
-        attributes("Implementation-Title": project.name,
-                "Implementation-Version": version,
-                "Main-Class": "org.partiql.cli.Main")
-    }
-    
-    // includes all runtime dependencies in the jar
-    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
-}
-
-task packageCli(type: Zip) {
-    dependsOn ':cli:jar'
-    
-    from ('archive') {
-        include '*' 
-    }
-    
-    from('build/libs') {
-        include '*.jar'
-    }
-    
-    into 'partiql-cli'
-    
-    baseName = 'partiql-cli'
-}
 
 dependencies {
     implementation project(":lang")
