@@ -22,6 +22,7 @@ OUTPUTDIRNAME       := webapp
 OUTPUTPATH          := $(ROOTDIR)/$(OUTPUTDIRNAME)
 USERSL              := $(ROOTDIR)/user/$(OUTPUTDIRNAME)
 DEVSL               := $(ROOTDIR)/dev/$(OUTPUTDIRNAME)
+TUTORIALSL          := $(ROOTDIR)/tutorial/$(OUTPUTDIRNAME)
 
 
 ####
@@ -83,7 +84,7 @@ html: outputdirs haspandoc
 	cp -r $(SUPPORTFILES) $(OUTPUTPATH)/.
 
 
-outputdirs: $(OUTPUTPATH) $(USERSL) $(DEVSL)
+outputdirs: $(OUTPUTPATH) $(USERSL) $(DEVSL) $(TUTORIALSL)
 
 $(OUTPUTPATH): 
 	mkdir -p $(OUTPUTPATH)
@@ -93,6 +94,9 @@ $(USERSL): $(OUTPUTPATH)
 
 $(DEVSL): $(OUTPUTPATH)
 	ln -s $(OUTPUTPATH) $(DEVSL)
+
+$(TUTORIALSL): $(OUTPUTPATH)
+	ln -s $(OUTPUTPATH) $(TUTORIALSL)
 
 .PHONY: clean haspandoc hassapp outputdirs
 
