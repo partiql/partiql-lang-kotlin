@@ -1,6 +1,6 @@
 SELECT e.id, 
        e.name AS employeeName, 
        e.title AS title
-FROM hr.employeesWithMissing AS e
+FROM hr.employees e
 WHERE e.title = 'Dev Mgr'
 

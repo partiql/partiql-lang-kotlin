@@ -637,7 +637,7 @@ $endif$
 \chead{}
 \rhead{$date$}
 \lfoot{$for(author)$$author$$sep$, $endfor$}
-\cfoot{Amazon Confidential}
+\cfoot{}
 \rfoot{\thepage}
 \renewcommand{\headrulewidth}{0.4pt}
 \renewcommand{\footrulewidth}{0.4pt}
