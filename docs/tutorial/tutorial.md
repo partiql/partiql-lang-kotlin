@@ -4,36 +4,38 @@
 # Introduction 
 
 PartiQL provides SQL-compatible unified query access across multiple
-data stores containing structured data that is supported by SQL, in
-addition to semi-structured and nested data. PartiQL separates
-the syntax and semantics of a query from the underlying format of the
-data or the data source that is being accessed. It enables users to
-interact with data with or without regular schema.
+data stores containing structured, semi-structured and nested data that
+is supported by SQL.  PartiQL separates the syntax and semantics of a
+query from the underlying data source and/or data format of the data.
+It enables users to interact with data with[^schema] or without
+regular schema.
 
-This tutorial teaches to SQL users the PartiQL extensions to SQL. The
+[^schema]: The implementation currently only supports data without
+schema. Schema support is forthcoming.
+
+This tutorial aims to teach SQL users the PartiQL extensions to SQL. The
 tutorial is primarily driven by "how to" examples.
 
 For the reader who is interested in the full detail and formal
 specification of PartiQL, we recommend the 2-tiered PartiQL formal
 specification: The formal specification first describes the *PartiQL
 core*, which is a short and concise functional programming language.
-Then the specification layers syntactic sugar structures on the PartiQL
-core. The syntactic sugar structures enable SQL compatibility.
+Then the specification layers SQL compatibility through syntactic sugar
+that shows how SQL features can be translated to semantically equivalent
+core PartiQL expressions. These translations presented as syntactic sugar
+enable SQL compatibility.
 
-PartiQL Queries are SQL compatible and operate on many underlying storage formats
-=================================================================================
 
-PartiQL is backwards compatible with SQL-92. We will see what
+
+# PartiQL Queries are SQL compatible 
+
+PartiQL is backwards compatible with SQL-92[^SQL92-Spec]. We will see what
 compatibility means when it is used to query data found in data formats
 and data stores that are not SQL.
 
-For starters, the following SQL query over the table `hr.employees` is
-also an PartiQL query.
+[^SQL92-Spec]:[SQL-92](http://www.contrib.andrew.cmu.edu/~shadow/sql/sql1992.txt)
 
-```{.sql include=tutorial/code/q1.sql}
-```
-
-As we know from SQL, when this query operates on the table `hr.employees`
+For starters, given the table `hr.employees`
 
   Id             name          title
   -------------- ------------- ----------------
@@ -41,43 +43,68 @@ As we know from SQL, when this query operates on the table `hr.employees`
   4              Susan Smith   Dev Mgr
   6              Jane Smith    Software Eng 2
 
-it will deliver the result
+
+the following SQL query 
+
+```{.sql include=tutorial/code/q1.sql}
+```
+
+is also a valid PartiQL query.  As we know from SQL, when this query
+operates on the table `hr.employees` it will return the result
 
   Id   employeeName   title
   ---- -------------- ---------
   4    Susan Smith    Dev Mgr
 
-PartiQL data model: Abstraction of many underlying data storage formats
------------------------------------------------------------------------
+## PartiQL data model: Abstraction of many underlying data storage formats
 
 PartiQL implementations operate not just on SQL tables but also on data
 that may have nesting, union types, different attributes across
 different tuples and many other features that we often find in today's
-nested and/or semistructured formats, like JSON, Parquet, etc.
+nested and/or semi-structured formats, like JSON, Parquet, etc.
 
 To capture this generality, PartiQL is based on a logical type system:
-the PartiQL data model. Each PartiQL implementation maps data formats,
-like JSON and Parquet, into a PartiQL data set. That is, a data set that
-follows the PartiQL data model. PartiQL queries work on the PartiQL
-data set abstraction.
+the *PartiQL data model*. Each PartiQL implementation maps data formats,
+like JSON, Parquet etc., into a PartiQL data set that follows the PartiQL
+data model. PartiQL queries work on the PartiQL data set abstraction.
 
 For example, the table `hr.employees` is denoted in the PartiQL data
 model as this dataset
 
 ```{include=tutorial/code/q1.env}
 ```
-The delimiters `<<` ... `>>` denote that, in this case, the data
-set is an *unordered collection* (also known as *bag*), as is the case
+Notice that the `employees` is nested within `hr`.  
+The delimiters `<<` ... `>>` denote that the data
+is an *unordered collection* (also known as *bag*), as is the case
 with SQL's tables. That is, there is no order between the three tuples.
+Single line comments start with `--` and end at the end of the line. 
 
 A very different kind of data source may lead to the same PartiQL
 dataset. For example, a set of JSON files that contain the following
-JSON objects will likely be abstracted by a PartiQL-supporting
+JSON objects 
+
+```
+{ 
+    "hr" : { 
+        "employees": [
+            { "id": 3, "name": "Bob Smith",   "title": null },
+            { "id": 4, "name": "Susan Smith", "title": "Dev Mgr" },
+            { "id": 6, "name": "Jane Smith",  "title": "Software Eng 2"}
+        ]
+    }
+}
+
+```
+
+will likely[^JSONdata] be abstracted by a PartiQL-supporting
 implementation into the identical PartiQL abstraction with the
 `hr.employees` table.
 
-```{include=tutorial/code/q1.output}
-```
+[^JSONdata]: The JSON value attached to `employee` is an *ordered*
+list. PartiQL implementations may provide their own mappings from popular
+data formats, e.g., CSV, TSV, JSON, Ion etc., to the PartiQL data model and/or allow clients
+to implements their own mappings.
+
 **Remark:** You will keep noticing the similarity of the PartiQL
 notation with the JSON notation. Notice also the subtle differences: In
 the interest of SQL compatibility, a PartiQL literal is quoted, while
@@ -96,6 +123,11 @@ Back to our PartiQL query
 ```{.sql include=tutorial/code/q1.sql}
 ```
 
+evaluates in PartiQL and returns 
+
+```{include=tutorial/code/q1.output} 
+```
+
 the result remains the same, no matter whether the `hr.employees` were
 the SQL table or the JSON file. All that is needed is that a catalog
 associates the *name* `hr.employees` with the PartiQL abstraction of
@@ -109,52 +141,46 @@ perfect sense, regardless of what exactly was the storage format behind
 
 ### Learn more
 
--   I see that the datasets are named, using names, such as
-    `hr.employees`. What are the conventions on naming? The convention
-    generalizes SQL: A name is generally a dotted sequence of 1 to any
-    identifiers or double-quoted strings. E.g., `"some data set"`,
-    `theFirstDB."the first table"`.
+-   **PartiQL data sets look very much like JSON.**
 
--   PartiQL data sets look very much like JSON. What are the
-    differences? Indeed, PartiQL adopts the tuple/object and array
+    What are the differences? Indeed, PartiQL adopts the tuple/object and array
     notation of JSON. However, the PartiQL string literals are denoted
     by single quotes. Importantly, the scalar types of PartiQL are the
     ones of SQL and not just strings, numbers and booleans, as in JSON.
 
--   Do implementations need to have a catalog? If queries refer to
+-   **Do implementations need to have a catalog?**
+
+    If queries refer to
     names, a catalog logically validates whether the name exists or not.
     However, we will also see PartiQL queries that refer to no names.
 
-Querying Nested Data
-====================
+# Querying Nested Data
 
-SQL-92 had only tables that had tuples that had scalar values. But a key
+
+SQL-92 only has tables that have tuples that contain scalar values. A key
 feature of many modern formats is nested data. That is, attributes whose
 values may be themselves tables (i.e., collections of tuples), or may be
-arrays of scalars, or arrays of arrays and many other combinations. We
-present next PartiQL features (that is, SQL extensions) that allow you
-to work with nested data.
+arrays of scalars, or arrays of arrays and many other combinations. We next
+present PartiQL's features (SQL extensions) that allow us to work with nested data.
 
-We also have sections named "Use Case". The "Use Case" sections do not
-introduce additional features. They merely show you how to combine the
-few novel PartiQL features with standard features of SQL in order to
+We also include sections titled "Use Case". Such "Use Case" sections do not
+introduce additional features. They merely show how to combine the
+few novel PartiQL features with standard SQL features in order to
 solve a large number of problems.
 
-Nested Collections
-------------------
+## Nested Collections
 
 Let's now add the nested attribute `projects` into the data set.
 
 ```{include=tutorial/code/q2.env}
 ```
 
-Notice that the value of `'projects'` is an array: arrays are denoted
-by `[ ... ]`. This particular array happens to be an array of
-tuples. We will see that arrays may be arrays of anything, not just
-arrays of tuples.
+Notice that the value of `'projects'` is an array. Arrays are denoted by
+`[ ... ]` with array elements separated by `,`. In our example the array
+happens to be an array of tuples. We will see that arrays may be arrays
+of anything, not just arrays of tuples.
 
-Unnesting a Nested Collection
------------------------------
+### Unnesting a Nested Collection
 
 The query finds the names of employees who work on projects that contain
 the string `'security'` and outputs them along with the name of the
@@ -164,20 +190,20 @@ over standard SQL -- the `e.projects AS p` part.
 ```{.sql include=tutorial/code/q2.sql}
 ```
 
-The output is
+The output of our query is
 
 ```{include=tutorial/code/q2.output}
 ```
 
-The extension over SQL is the FROM clause item `e.projects AS p`.
+The extension over SQL is the `FROM` clause item `e.projects AS p`.
 Standard SQL would attempt to find a schema named `e` with a table
 `projects` and since in our example there isn't an `e.projects`
 table, the query would fail. In contrast, PartiQL will dereference
 `e.projects` to the attribute `projects` of `e`.
 
-Once we allow this extension, the semantics are alike SQL's: The alias
-(also called *variable* in PartiQL) `e` matches to each employee, in
-turn. For each employee, the variable/alias `p` matches to each
+Once we allow this extension, the semantics are alike SQL's. The alias
+(also called *variable* in PartiQL) `e` gets bound to each employee, in
+turn. For each employee, the variable `p` gets bound to each
 project of the employee, in turn. Thus the query's meaning, alike SQL,
 is
 
@@ -190,29 +216,35 @@ Notice that our query involved variables that were ranging over nested
 collections (`p` in the example), along with variables that were
 ranging over tables (`e` in the example), as standard SQL aliases do.
 All variables, no matter what they range over, can be used wherever in
-the `FROM`, `WHERE`, `SELECT` clauses as we'll see in examples that come
-up.
+the `FROM`, `WHERE`, `SELECT` clauses as we will see in the examples that follow.
 
-### Learn more: 
+### Learn more
 
--   Can I only unnest arrays of tuples? No, anything can be unnested.
+-   **Can I only unnest arrays of tuples?**
+
+    No, anything can be unnested.
     For example, arrays of scalars, etc.
 
--   Does `e.projects AS p` have to appear in the same `FROM` clause
-    that defines `e`? No. For example, see below the use cases that
+-   **Does `e.projects AS p` have to appear in the same `FROM` clause
+    that defines `e`?** 
+    
+    No. For example, see below the use cases that
     involve subqueries. There, the `e` and `p` are defined in
     separate `FROM` clauses.
 
--   How could I force `e.projects` to refer to the nested attribute
+-   **How could I force `e.projects` to refer to the nested attribute
     `projects` even if there were a schema named `e` with a table
-    `projects`? Use the syntax `@e.projects`. Recall, in the
+    `projects`?** 
+   
+     Use the syntax `@e.projects`. Recall, in the
     absence of the `@`, in the interest of SQL compatibility, PartiQL
     will first attempt to dereference the `e.projects` against the
     catalog.
 
--   SQL allows me to avoid writing an explicit alias `e` when I write,
-    say, `e.name`. Can I avoid writing the `e` in PartiQL also? SQL
-    allows us to avoid writing aliases (variables) when the schema of
+-   **SQL allows me to avoid writing an explicit alias `e` when I write,
+    say, `e.name`. Can I avoid writing the `e` in PartiQL as well?**
+   
+    SQL allows us to avoid writing aliases (variables) when the schema of
     the tables allows correct dereferencing. PartiQL does the same.
     However, recall, a schema is not necessary for a PartiQL data set.
     Indeed, our example has not assumed a schema. Then , in the absence
@@ -235,31 +267,17 @@ up.
     Nevertheless, for clarity we recommend that you always use aliases
     (variables) and this is what this tutorial does.
 
--   If there is a schema, can I avoid writing the alias `p`? No. The
-    `p` has to be written in order to denote the iteration over the
+-   **If there is a schema, can I avoid writing the alias `p`?**
+
+    No. The `p` has to be written in order to denote the iteration over the
     projects.
 
-Alternate syntax for Unnesting Nested Collections
--------------------------------------------------
+### Unnesting Nested Collections Using `JOIN`
 
 In this section, we simply present an alternate way to express and think
-about unnesting collections. In the spirit of some prior query
-languages, PartiQL also allows you to optionally use the keyword
-`UNNEST` in the `FROM` clause. The two queries below have identical
-meaning, regardless of whether `UNNEST` is used or not, assuming there
-is no schema `e` with table `projects`.
+about unnesting collections. 
 
-+-----------------------------------+-----------------------------------+
-| ```sql                            | ```sql                            | 
-| SELECT e.name AS employeeName,    | SELECT e.name AS employeeName,    |
-|        p.name AS projectName      |        p.name AS projectName      |
-| FROM hr.employeesNest AS e,       | FROM hr.employeesNest AS e,       |
-|      e.projects AS p              |       UNNEST(e.projects) AS p     |
-| WHERE p.name LIKE '%security%'    | WHERE p.name LIKE '%security%'    |
-| ```                               | ```                               | 
-+-----------------------------------+-----------------------------------+
-
-In the same spirit, one may think that the `FROM` clause of the
+One may think that the `FROM` clause of the
 example executes, in a sense, a `JOIN` between employees and projects.
 Except that unlike a conventional SQL join that would require an **`ON`
 condition**, the employees-projects join condition is implicit in the
@@ -277,22 +295,11 @@ That is, the following two queries are equivalent.
 | ```                               | ```                               | 
 +-----------------------------------+-----------------------------------+
 
-And you can write both `JOIN` and `UNNEST` as well
 
-+-----------------------------------+-----------------------------------+
-| ```sql                            | ```sql                            | 
-| SELECT e.name AS employeeName,    | SELECT e.name AS employeeName,    |
-|        p.name AS projectName      |        p.name AS projectName      |
-| FROM hr.employeesNest AS e,       | FROM hr.employeesNest AS e JOIN   |
-|      e.projects AS p              |      UNNEST(e.projects) AS p      |
-| WHERE p.name LIKE '%security%'    | WHERE p.name LIKE '%security%'    |
-| ```                               | ```
-+-----------------------------------+-----------------------------------+
+### Unnesting data with LEFT JOIN always preserves parent information
 
-Unnesting data with LEFT JOIN always preserves parent information
------------------------------------------------------------------
 
-Assume that you want a query that outputs as a conventional bag of
+Assume that we want to write a query that returns as a bag of
 tuples the entire employee and project information from
 `hr.employeesNest`. The query result we want is this bag of tuples
 with attributes `id`, `employeeName`, `title` and `projectName`:
@@ -301,8 +308,8 @@ with attributes `id`, `employeeName`, `title` and `projectName`:
 ```
 
 Notice that there is a `'Susan Smith'` tuple in the result, despite the
-fact that Susan had no project. Susan's `projectName` is `null`.
-This result is achieved by combining employees and projects using the
+fact that Susan has no project. Susan's `projectName` is `null`.
+We can obtain this result by combining employees and projects using the
 `LEFT JOIN` operator, as follows:
 
 ```{.sql include=tutorial/code/q3.sql}
@@ -319,46 +326,55 @@ The semantics of this query can be thought of as
 |             output `e.id AS id`, `e.name AS employeeName`, `e.title AS title`
 |             and output a `null AS projectName`
 
-Use Case: Checking whether a nested collection satisfies a condition 
----------------------------------------------------------------------
+### Use Case: Checking whether a nested collection satisfies a condition 
 
 The following use cases employ the unnesting features, which we have
-already explained, in new use cases. A lesson that emerges is that you
-can use variables (aliases) that range over nested data as if they were
-standard SQL aliases. This realization will give you the power to solve
+already discussed, in new use cases. A lesson that emerges is that we
+can use variables (SQL aliases) that range over nested data as if they were
+standard SQL aliases. This realization gives us the power to solve
 a great number of use cases just be combining the unnesting features
-with features you already know from standard SQL.
+with features we already know from standard SQL.
 
-In the first use case we want a query that outputs the names of the
+In our first use case we want a query that returns the names of the
 employees that are involved in a project that contains the word
-`security`. The solution employs SQL's "`EXISTS` (subquery)"
+`'security`. The solution employs SQL's "`EXISTS` (subquery)"
 feature, along with unnesting:
 
 ```sql
 SELECT e.name AS employeeName
-FROM hr.employeesNest e
+FROM hr.employeesNest AS e
 WHERE EXISTS ( SELECT *
                FROM e.projects AS p
                WHERE p.name LIKE '%security%')
 ```
 
-In the second use case we want a query that outputs the names of the
-employees that have more than one security projects.
+returns 
 
-```sql
-SELECT e.name AS employeeName
-FROM hr.employeesNest e
-WHERE ( SELECT COUNT(*)
-        FROM e.projects AS p
-        WHERE p.name LIKE '%security%') > 1
+```
+<<
+  {
+    'employeeName': 'Bob Smith'
+  },
+  {
+    'employeeName': 'Jane Smith'
+  }
+>>
+--- 
+OK! (14 ms)
+
 ```
 
-Notice that if we were aware of a key for employees (e.g., an attribute
-that is guaranteed to have a unique value for each employee) we could
-have also found the requested employees by utilizing a combination of
-`GROUP BY` and `HAVING`. In our example, let's assume that the
+
+In the second use case we want a query that outputs the names of the
+employees that have more than one security projects and 
+we are aware of a key for employees (e.g., an attribute
+that is guaranteed to have a unique value for each employee).
+We can find the requested employees by utilizing a combination of
+`GROUP BY` and `HAVING`. [^subquerybug] In our example, let's assume that the
 `id` attribute is a primary key for the employees. Then we could find
 the employees with more than one security project with this query:
+
+[^subquerybug]: We could also have used the `>` operator with the subquery's result, but a current [issue](https://github.com/partiql/partiql-lang-kotlin/issues/81) with the implementation currently prevents us from doing so. 
 
 ```sql
 SELECT e.name AS employeeName
@@ -369,25 +385,27 @@ GROUP BY e.id, e.name
 HAVING COUNT(*) > 1
 ```
 
-Use Case: Subqueries that aggregate over nested collections
------------------------------------------------------------
+which returns 
+
+```
+<<
+  {
+    'employeeName': 'Bob Smith'
+  }
+>>
+--- 
+OK! (28 ms)
+
+```
+
+### Use Case: Subqueries that aggregate over nested collections
+
 
 Next, let's find how many querying projects (that is, projects whose
-name contains the word 'querying') each employee has.
+name contains the word 'querying') each employee has.[^subquerybug]
 
-```{.sql include=tutorial/code/q4.sql}
-```
-
-Its output is
-
-```{include=tutorial/code/q4.output}
-```
-
-Notice, this query also outputs Susan Smith and Jane Smith, who have no
-querying projects.
-
-If we know that `id` is a key for employees, we could have also solved
-the problem as follows
+Making the same asssumption as before, that `id` is a key for employees, we can solve 
+the problem with the query 
 
 ```sql
 SELECT e.name AS employeeName, 
@@ -396,8 +414,32 @@ FROM hr.employeesNest e LEFT JOIN e.projects AS p ON p.name LIKE '%querying%'
 GROUP BY e.id, e.name
 ```
 
-Nested Tuple Values and Multi-Step Paths
-----------------------------------------
+that returns 
+
+```
+<<
+  {
+    'employeeName': 'Bob Smith',
+    'queryProjectsNum': 1
+  },
+  {
+    'employeeName': 'Susan Smith',
+    'queryProjectsNum': 0
+  },
+  {
+    'employeeName': 'Jane Smith',
+    'queryProjectsNum': 0
+  }
+>>
+--- 
+OK! (22 ms)
+```
+
+Notice, this query's result includes Susan Smith and Jane Smith, who have no
+querying projects.
+
+
+## Nested Tuple Values and Multi-Step Paths
 
 A value may also be a tuple -- also called object and struct in many
 models and formats. For example, the project value in the following
@@ -416,8 +458,7 @@ The result is
 
 ```{include=tutorial/code/q5.output}
 ```
-Unnesting Arbitrary Forms of Nested Collections: Arrays of Scalars, Arrays of Arrays and more
----------------------------------------------------------------------------------------------
+## Unnesting Arbitrary Forms of Nested Collections
 
 The previous examples have shown nested attributes that were arrays of
 tuples. It need not be the case that the nested attributes are
@@ -431,7 +472,7 @@ features, which we have already seen, are sufficient.
 
 The list of projects associated with each employee in
 `hr.employeesNest` could have been simply a list of project name
-strings. Replacing the nested tuples with plain strings leads to:
+strings. Replacing the nested tuples with plain strings gives us
 
 ```{include=tutorial/code/q6.env}
 ```
@@ -443,6 +484,10 @@ that contain the string `'security'` and outputs them along with the name
 of the 'security' project.
 
 ```{.sql include=tutorial/code/q6.sql}
+```
+The preceding query returns 
+
+```{include=tutorial/code/q6.output}
 ```
 
 The variable `p` ranges (again) over the content of `e.projects`. In
@@ -458,7 +503,7 @@ query can be thought of as executing the following snippet.
 ### Use Case: Unnesting Arrays of Arrays
 
 Arrays may also contain arrays, directly, without intervening tuples, as
-in this data set.
+in the `matrices` data set.
 
 ```{include=tutorial/code/q7.env}
 ```
@@ -469,12 +514,12 @@ and the `id` of the tuple where it was found.
 ```{.sql include=tutorial/code/q7.sql}
 ```
 
-The output is
+The preceding query returns 
 
 ```{include=tutorial/code/q7.output}
 ```
 
-A way to think what this function computes would be:
+Informally the query's evaluation can be thought of as 
 
 | foreach tuple `t` from `matrices`
 |     foreach array `y` from `t.matrix`
@@ -483,38 +528,34 @@ A way to think what this function computes would be:
 |                 output `t.id AS id` and `x AS even`
 
 
-Literals
-========
+# Literals
 
-The literals of the PartiQL query language correspond to the types in
+Literals of the PartiQL query language correspond to the types in
 the PartiQL data model:
 
--   scalars, including the `null` which follow the SQL syntax when
+-   scalars, including `null` which follow the SQL syntax when
     applicable. For example:
 
     -   `5`
 
     -   `'foo'`
 
--   tuples, denoted by  `{...}` (also known as structs and objects in
+-   tuples, denoted by  `{...}` with tuple elements separated by `,` (also known as structs and/or objects in
     many formats and other data models)
 
     -   `{ 'id' : 3, 'arr': [1, 2] }`
 
--   arrays, denoted by `[...]`
+-   arrays, denoted by `[...]` with array elements separated by `,`
 
     -   `[ 1, 'foo' ]`
 
--   bags, denoted by `<< ... >>`
+-   bags, denoted by `<< ... >>` with bag elements separated by a `,`
 
     -   `<< 1, 'foo'>>`
 
-The PartiQL model, and correspondingly the literals, will be expanded
-with maps.
-
 Notice that in the spirit of the PartiQL data model, literals compose
 freely and any kind of literal may appear within any tuple, array and
-bag literal. Eg
+bag literal, eg.,
 
 ```
 { 
@@ -522,36 +563,38 @@ bag literal. Eg
     'matrix': [ 
         [2, 4, 6],
         'NA'
-        ]
+    ]
 }
 ```
 
-Querying Heterogenous and Schemaless Data
-=========================================
+# Querying Heterogeneous and Schemaless Data
+
 
 Many formats do not require a schema that describes the data -- that is
 *schemaless data*. In such cases it is possible to have various
 "heterogeneities" in the data:
 
--   One tuple may have an attribute x while another tuple may not have
+-   One tuple may have an attribute `x` while another tuple may not have
     this attribute
 
--   In one tuple of a collection an attribute x may be of type, say,
+-   In one tuple of a collection an attribute `x` may be of type, e.g.,
     string, while in another tuple of the same collection the same
-    attribute x may be another type -- say, array.
+    attribute `x` may be of a different type -- e.g, array.
 
--   The elements of a collection (be it a bag or array) need not have
-    the same type. For example, the first element may be a string, the
+-   The elements of a collection (be it a bag or array) can be heterogeneous (not have
+    the same type). For example, the first element may be a string, the
     second one may be an integer and the third one an array.
 
--   Generally, any irregularity is possible as we can bundle
+-   Generally, any composition is possible as we can bundle
     heterogeneous elements in arrays and bags.
 
 Heterogeneities are not particular to schemaless. Schemas may allow for
 heterogeneity in the types of the data. For example, one of the Hive
-data types is the union type, which allows a value to belong to any of a
-list of types. In the following schema the `projects` attribute may be
+data types is the union type,[^HiveUnionType] which allows a value to belong to any one of a
+list of types. For example, in the following schema the `projects` attribute may be
 either a string or an array of strings
+
+[^HiveUnionType]: [Hive Union Type](https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Types#LanguageManualTypes-UnionTypesunionUnionTypes)
 
 ```sql
 CREATE TABLE employeesMixed(
@@ -565,30 +608,34 @@ CREATE TABLE employeesMixed(
 A collection of PartiQL tuples that follows this schema could be
 
 ```
-hr.employeesMixed1: <<
 { 
-    'id': 3, 
-    'name': 'Bob Smith', 
-    'title': null, 
-    'projects': [ 
-        'AWS Redshift Spectrum querying',
-        'AWS Redshift security',
-        'AWS Aurora security'
-    ]
-},
-{ 
-    'id': 4, 
-    'name': 'Susan Smith', 
-    'title': 'Dev Mgr', 
-    'projects': [] 
-},
-{ 
-    'id': 6, 
-    'name': 'Jane Smith', 
-    'title': 'Software Eng 2', 
-    'projects': 'AWS Redshift security' 
+    'hr': { 
+        'employeesMixed1': <<
+            { 
+                'id': 3, 
+                    'name': 'Bob Smith', 
+                    'title': null, 
+                    'projects': [ 
+                        'AWS Redshift Spectrum querying',
+                    'AWS Redshift security',
+                    'AWS Aurora security'
+                    ]
+            },
+            { 
+                'id': 4, 
+                'name': 'Susan Smith', 
+                'title': 'Dev Mgr', 
+                'projects': [] 
+            },
+            { 
+                'id': 6, 
+                'name': 'Jane Smith', 
+                'title': 'Software Eng 2', 
+                'projects': 'AWS Redshift security' 
+            }
+        >>
+    }
 }
->>
 ```
 
 Thus we see that data may have heterogeneities -- regardless of whether
@@ -596,41 +643,46 @@ they are described by a schema or not. PartiQL tackles heterogeneous
 data, in ways that we will see in the next use cases and feature
 presentations.
 
-Tuples with Missing Attributes
-------------------------------
+## Tuples with Missing Attributes
 
 Let's go back to the `hr.employees` table (that is, bag of tuples).
 Bob Smith has no title and, as is typical in SQL, the lack of title is
 modeled with the `null` value.
 
 ```
-hr.employees: <<
-{ 'id': 3, 'name': 'Bob Smith',   'title': null }
-{ 'id': 4, 'name': 'Susan Smith', 'title': 'Dev Mgr' }
-{ 'id': 6, 'name': 'Jane Smith',  'title': 'Software Eng 2'}
->>
+{ 
+    'hr': { 
+        'employees': <<
+            { 'id': 3, 'name': 'Bob Smith',   'title': null }
+            { 'id': 4, 'name': 'Susan Smith', 'title': 'Dev Mgr' }
+            { 'id': 6, 'name': 'Jane Smith',  'title': 'Software Eng 2'}
+        >>
+    }
+}
 ```
 
-Nowadays, many semistructured formats allow the users to represent
-"missing" information in two ways. The first way is by use of the
-`null`, as we see above. The second kind is the plain absence of the
-attribute from the tuple. That is, we can represent the fact that Bob
-Smith has no title by simply having no `title` attribute in the Bob
-Smith tuple:
+Nowadays, many semi-structured formats allow users to represent
+"missing" information in two ways. 
+
+1. The first way is by use of `null`.
+1. The second kind is the plain absence of the attribute from the
+tuple. 
+
+That is, we can represent the fact that Bob Smith has no title
+by simply having no `title` attribute in the `'Bob Smith'` tuple:
 
 ```{include=tutorial/code/q8.env}
 ```
 PartiQL does not argue about when to use `null`s and when to use
 "missing". Myriads of datasets already use one of the two or both.
-However, PartiQL enables the queries to distinguish when they access a
-null Vs when they access a missing attribute. PartiQL also enables
-queries to create results that have both nulls and missing attributes.
-Indeed, it makes it very easy to propagate source data nulls as query
-result nulls and source data missing attributes into result missing
+However, PartiQL enables queries to distinguish when they access a
+`null` Vs when they access a missing attribute. PartiQL also enables
+queries to create results that have both `null`s and missing attributes.
+Indeed, it makes it very easy to propagate source data `null`s as query
+result `null`s and source data missing attributes into result missing
 attributes.
 
-Accessing and Processing Missing Attributes: The MISSING Value
---------------------------------------------------------------
+## Accessing and Processing Missing Attributes: The MISSING Value
 
 Consider again this PartiQL query, which happens to also be an SQL
 query.
@@ -648,10 +700,11 @@ result of the expression `{ 'id': 3, 'name': 'Bob Smith' }.path` ?
 PartiQL says that it is the special value `MISSING`. `MISSING`
 behaves very similar to `null`.
 
+
 ### Evaluating Functions and Conditions with MISSING
 
-If a function (including infix functions like the `=`) inputs a
-`MISSING` the result is also `MISSING`. In the case of the example,
+If a function (including infix functions like `=`) inputs a
+`MISSING` the function's result is also `MISSING`. In the case of the example,
 this means that the `WHERE` clause `e.title='Dev Mgr'` will evaluate
 to `MISSING` when `e` binds to `{ 'id': 3, 'name': 'Bob Smith' }`
 and, as usual in SQL, the `WHERE` clause fails when it does not
@@ -688,14 +741,15 @@ Thus the result will be
 ```{include=tutorial/code/q10.output}
 ```
 
-Variables can range over Data with Different Types
---------------------------------------------------
+## Variables can range over Data with Different Types
 
-A PartiQL variable (also called *alias* in SQL) may bind to data of
+A PartiQL variable (called *alias* in SQL) can bind to data of
 different types during a query's evaluation. This is unlike SQL where
 the variables always bind to tuples. It is even different from what
-happened in Use Case: Arrays of Scalars and what happened in Use Case:
-Arrays of Arrays. In the first use case, the PartiQL variable `p`
+happened in [Use Case: Unnesting Arrays of Scalars](#use-case-unnesting-arrays-of-scalars) and
+what happened in [Use Case: Unnesting Arrays of Arrays](#use-case-unnesting-arrays-of-arrays). 
+
+In the first use case, the PartiQL variable `p`
 happened to always bind to a string (given the particular sample data of
 the example). In the second use case, the PartiQL variable `y` was
 always bound to an array (again, given the particular sample data of the
@@ -715,13 +769,12 @@ project pairs.
 ```{.sql include=tutorial/code/q11.sql}
 ```
 
-Notice the function `isTuple(p)`, which is one of the many type
-introspection functions of PartiQL. For each type *X* of the PartiQL
-type system there is a corresponding introspection function is*X*.
+Notice the sub-expression `(p IS TUPLE)`. The `IS` operator can be used
+to check a value against it's type at evaluation time.
 Notice also that the variable `p` binds to different types.
 
-In general, the `FROM` clause of a query makes its variables (aliases)
-to bind to data. The variables need not bind to data that have the same
+In general, the `FROM` clause of a query binds its variables (aliases)
+to data. The variables need not bind to data that have the same
 types. Each binding is fed to the `SELECT` clause, which evaluates its
 expressions.
 
@@ -810,61 +863,14 @@ and the corresponding tuple output by the `SELECT` clause.
 |```                    | ```                   | ``` 
 +-----------------------+-----------------------+-----------------------+
 
-Automatic Type Coercion: FROM clause that ranges over a Non-Collection
-----------------------------------------------------------------------
+# Accessing Array Elements by Order
 
-In the interest of avoiding explicit type introspections, PartiQL has
-introduced a small list of automatic type coercions. In order to get
-benefit of these automatic coercions the query processor should operate
-in *relaxed* mode -- as opposed to the *strict* mode.
-
-A common case where automatic coercion becomes handy is when the FROM
-clause needs to range over a collection that may occasionally not be a
-collection.
-
-Let's consider again the dataset `hr.employeeMixed1` where the
-attribute `projects` is sometimes a collection (an array, in
-particular) and sometimes it is just a string. The following query
-retrieves the names of the employees that are involved in a security
-project, along with the name of the security project.
-
-```sql
-SELECT e.name AS employeeName, 
-       p AS projectName
-FROM hr.employeeMixed1 AS e, 
-     e.projects AS p
-WHERE p LIKE '%security%'
-```
-
-When this query evaluates over the sample data, at some point the
-variable `e` will bind to the Jane Smith tuple. Then the
-`e.projects` will be the string `'AWS Redshift security'`. Thus, the
-`e.projects` is not a collection in this case. Nevertheless, PartiQL
-in relaxed mode will treat `'AWS Redshift security'` as if it were a
-collection with only one element -- the string `'AWS Redshift security'`.
-Thus, the variable `p` will bind to `'AWS Redshift security'`.
-
-Current AWS PartiQL processors offer either only the strict mode
-(Redshift Spectrum) or only the relaxed (QLDB). The following equivalent
-query with explicit coercions can operate in strict mode.
-
-```sql
-SELECT e.name AS employeeName, 
-       p AS projectName
-FROM hr.employeeMixed1 AS e,
-     CASE WHEN isArray(e.projects) THEN e.projects 
-     ELSE [e.projects] END AS p
-WHERE p LIKE '%security%'
-```
-
-Accessing Array Elements by Order
-=================================
 
 SQL allows us to order the output of a query using the `ORDER BY`
 clause. However, the SQL data model does not recognize order in the
 input data. In contrast, many of the new data formats feature arrays;
 the array's elements have an order. We may want to find an array element
-according to its order. Or we may want to find the positions of certain
+according to its order, or, we may want to find the positions of certain
 elements in their arrays.
 
 `<Array> [<number>]`
@@ -875,19 +881,18 @@ Let's consider again the dataset `hr.employeesNest`.
 ```{include=tutorial/code/q12.env}
 ```
 
-The `projects` attribute was an array of tuples; that is, each tuple
+The `projects` attribute is an array of tuples; that is, each tuple
 has an ordinal associated with it. The following query returns each
 employee name, along with the first project of the employee.
 
 ```{.sql include=tutorial/code/q12.sql}
 ```
-outputs
+The query returns 
 
 ```{include=tutorial/code/q12.output}
 ```
 
-Multistep Paths
----------------
+## Multistep Paths
 
 Technically, the structure `[<number>]` is a kind of path step.
 For example, notice the 4-step path `e.projects[0].name`. When `e`
@@ -908,8 +913,7 @@ Spectrum querying'}`. Finally, evaluating the `.name` step on
 `e.projects[0]` (that is, evaluating `e.projects[0].name`) leads
 to `'AWS Redshift Spectrum querying'`.
 
-Finding the Order of Each Element in an Array
----------------------------------------------
+## Finding the Order of Each Element in an Array
 
 Let's assume that the order of each employee's projects in the
 `projects` attribute of `hr.employeesNest` matters. The first
@@ -923,19 +927,17 @@ the `projects` array.
 
 Notice the new feature: `AT o`. While `p` ranges over the elements
 of the array `e.projects`, the variable `o` takes as value the
-ordinal number of the element in the array. The query result is
+ordinal number of the element in the array. The query returns
 
 ```{include=tutorial/code/q13.output}
 ```
 
-Pivoting & Unpivoting
-=====================
+# Pivoting & Unpivoting
 
 Many queries need to range over and collect the attribute name/value
 pairs of tuples or the key/value pairs of maps.
 
-Unpivoting Tuples
------------------
+## Unpivoting Tuples
 
 Consider this dataset that provides the closing prices of multiple
 ticker symbols.
@@ -947,8 +949,12 @@ The following query unpivots the stock ticker/price pairs.
 
 ```{.sql include=tutorial/code/q14.sql}
 ```
+Notice the use of `"` in this query. The double quotes allow us to
+disambiquate from `date` the keyword and `"date"` the identifier. Also
+double quote specify case sensitivity for attribute lookups.
 
-The result is
+
+The query returns 
 
 ```{include=tutorial/code/q14.output}
 ```
@@ -958,23 +964,36 @@ data. For example, it becomes easy to compute the average price for each
 symbol as
 
 ```sql
-SELECT symbol AS symbol, 
+SELECT sym AS "symbol", 
        AVG(price) AS avgPrice
 FROM closingPrices c, 
-     UNPIVOT c AS price AT symbol
-WHERE NOT symbol = 'date'
-GROUP BY symbol
+     UNPIVOT c AS price AT sym
+WHERE NOT sym = 'date'
+GROUP BY sym
 ```
 
-Unpivoting Maps
----------------
+which returns 
 
-Since maps will be a generalization of tuples that have key-value pairs
-(instead of attribute-value pairs) pam unpivoting will work identical to
-tuple unpivoting.
+```
+<<
+  {
+    'symbol': 'amzn',
+    'avgPrice': 1901
+  },
+  {
+    'symbol': 'fb',
+    'avgPrice': 181.5
+  },
+  {
+    'symbol': 'goog',
+    'avgPrice': 1119.5
+  }
+>>
+--- 
+OK! (31 ms)
+```
 
-Pivoting into Tuples
---------------------
+## Pivoting into Tuples
 
 Pivoting turns a collection into a tuple. For example, consider the
 collection
@@ -994,12 +1013,11 @@ produces the tuple
 
 Notice that the `PIVOT` query looks like a `SELECT-FROM-WHERE-...`
 query except that instead of a `SELECT` clause it has a `PIVOT
-<value expression> AS <attribute expression>`. Note also that the
+<value expression> AT <attribute expression>`. Note also that the
 `PIVOT` query does not return a singleton collection of tuples: Rather
 it literally returns a tuple value.
 
-Use Case: Pivoting Subqueries
------------------------------
+## Use Case: Pivoting Subqueries
 
 (This example also uses the grouping features of PartiQL, Creating
 Nested Results with `GROUP BY` ... `GROUP AS`.)
@@ -1022,26 +1040,41 @@ Then the `PIVOT` subquery pivots the group into the tuple prices.
 ```{.sql include=tutorial/code/q16.sql}
 ```
 
-For example, the datesPrices collection, output from `GROUP AS` for
+For example, the `datesPrices` collection, returned from `GROUP AS` for
 `sp.date = date(4/1/2019)` is
 
 ```
-<<
-
-{ 'date': date(4/1/2019), 'symbol': 'amzn', 'price': 1900},
-{ 'date': date(4/1/2019), 'symbol': 'goog', 'price': 1120},
-{ 'date': date(4/1/2019), 'symbol': 'fb', 'price': 180 },
->>
+    'datesPrices': <<
+      {
+        'sp': {
+          'date': '4/1/2019',
+          'symbol': 'amzn',
+          'price': 1900
+        }
+      },
+      {
+        'sp': {
+          'date': '4/1/2019',
+          'symbol': 'goog',
+          'price': 1120
+        }
+      },
+      {
+        'sp': {
+          'date': '4/1/2019',
+          'symbol': 'fb',
+          'price': 180
+        }
+      }
+    >>
 ```
 
-Creating Nested and Non-SQL Results
-===================================
+# Creating Nested and Non-SQL Results
 
 PartiQL allows queries that create nested results as well as queries
 that create heterogeneous results.
 
-Creating Nested Results with `SELECT VALUE` Queries
------------------------------------------------------
+## Creating Nested Results with `SELECT VALUE` Queries
 
 Let's consider again the dataset `hr.employeesNestScalars`:
 
@@ -1066,21 +1099,20 @@ example) returns a collection of whatever the `<expression>`
 evaluates to.
 
 Notice the difference from SQL's `SELECT`, which always produces
-tuples. If an SQL `SELECT` appears as a subquery, then the context of
+tuples. If a SQL `SELECT` appears as a subquery, then the context of
 the subquery designates whether the subquery's result should be coerced
 into a scalar (e.g., when `5 = <subquery>`), coerced into a
 collection of scalars (e.g., when `5 IN <subquery>`), etc. None of
 this applies to `SELECT VALUE`, which produces a collection and this
 collection is not coerced.
 
-Creating Nested Results with `GROUP BY ... GROUP AS`
-------------------------------------------------------
+## Creating Nested Results with `GROUP BY ... GROUP AS`
 
 Another pattern of creating nested results in PartiQL is via the `GROUP
 AS` extension to SQL's `GROUP BY`. This pattern is more efficient and
-more intuitive than the use of nested `SEELCT VALUE` queries when the
+more intuitive than the use of nested `SELECT VALUE` queries when the
 required nesting is not following the nesting of the input. (The example
-in "Creating Nested Results with `SELECT VALUE` Queries" is one where
+in [Creating Nested Results with `SELECT VALUE` Queries](#creating-nested-results-with-select-value-queries) is one where
 the nesting in the output follows the nesting of the input and, thus, an
 intuitive solution does not involve `GROUP BY`.)
 
