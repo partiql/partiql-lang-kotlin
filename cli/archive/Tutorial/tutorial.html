@@ -1,0 +1,1776 @@
+<!DOCTYPE html>
+<html  dir="ltr">
+
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>PartiQL Tutorial</title>
+        <link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon">
+        <link rel="apple-touch-icon-precomposed" href="images/apple-touch-icon.png">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/2.26.4/css/uikit.gradient.css">
+
+        <link rel="stylesheet" href="style.css">
+        <link href="https://vjs.zencdn.net/5.4.4/video-js.css" rel="stylesheet" />
+        <script src="https://code.jquery.com/jquery-2.2.1.min.js"></script>
+        <script src="uikit.js"></script>
+        <script src="scripts.js"></script>
+        <script src="jquery.sticky-kit.js "></script>
+
+        <meta name="generator" content="pandoc-uikit" />
+                <meta name="author" content="Ion Team" />
+                        <title>PartiQL Tutorial</title>
+        <style type="text/css">code{white-space: pre;}</style>
+                        <style type="text/css">
+            a.sourceLine { display: inline-block; line-height: 1.25; }
+            a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+            a.sourceLine:empty { height: 1.2em; }
+            .sourceCode { overflow: visible; }
+            code.sourceCode { white-space: pre; position: relative; }
+            div.sourceCode { margin: 1em 0; }
+            pre.sourceCode { margin: 0; }
+            @media screen {
+            div.sourceCode { overflow: auto; }
+            }
+            @media print {
+            code.sourceCode { white-space: pre-wrap; }
+            a.sourceLine { text-indent: -1em; padding-left: 1em; }
+            }
+            pre.numberSource a.sourceLine
+              { position: relative; left: -4em; }
+            pre.numberSource a.sourceLine::before
+              { content: attr(title);
+                position: relative; left: -1em; text-align: right; vertical-align: baseline;
+                border: none; pointer-events: all; display: inline-block;
+                -webkit-touch-callout: none; -webkit-user-select: none;
+                -khtml-user-select: none; -moz-user-select: none;
+                -ms-user-select: none; user-select: none;
+                padding: 0 4px; width: 4em;
+                color: #aaaaaa;
+              }
+            pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+            div.sourceCode
+              {  }
+            @media screen {
+            a.sourceLine::before { text-decoration: underline; }
+            }
+            code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+            code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+            code span.at { color: #7d9029; } /* Attribute */
+            code span.bn { color: #40a070; } /* BaseN */
+            code span.bu { } /* BuiltIn */
+            code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+            code span.ch { color: #4070a0; } /* Char */
+            code span.cn { color: #880000; } /* Constant */
+            code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+            code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+            code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+            code span.dt { color: #902000; } /* DataType */
+            code span.dv { color: #40a070; } /* DecVal */
+            code span.er { color: #ff0000; font-weight: bold; } /* Error */
+            code span.ex { } /* Extension */
+            code span.fl { color: #40a070; } /* Float */
+            code span.fu { color: #06287e; } /* Function */
+            code span.im { } /* Import */
+            code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+            code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+            code span.op { color: #666666; } /* Operator */
+            code span.ot { color: #007020; } /* Other */
+            code span.pp { color: #bc7a00; } /* Preprocessor */
+            code span.sc { color: #4070a0; } /* SpecialChar */
+            code span.ss { color: #bb6688; } /* SpecialString */
+            code span.st { color: #4070a0; } /* String */
+            code span.va { color: #19177c; } /* Variable */
+            code span.vs { color: #4070a0; } /* VerbatimString */
+            code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+        </style>
+                        <link rel="stylesheet" href="style.css" />
+                                              </head>
+
+    <body>
+
+
+        <div class="uk-container uk-container-center uk-margin-top uk-margin-large-bottom">
+
+                        <div class="uk-grid" data-uk-grid-margin>
+                <div class="uk-width-1-1">
+                    <h1 class="uk-heading-large">PartiQL Tutorial</h1>
+                                        <h3 class="uk-text-large">2019/06/03 (00:00:32) git@62fd1f7</p></h3>
+                                                            <p class="uk-text-large">Ion Team</p>
+                                    </div>
+            </div>
+            
+            <div class="uk-grid" data-uk-grid-margin >          
+                <div class="uk-width-medium-1-4">
+                    <div class="uk-overflow-container" data-uk-sticky="{top:25,media: 768}">
+                        <div class="uk-panel uk-panel-box menu-begin" >
+
+                                                        <ul>
+                            <li><a href="#getting-started">Getting Started</a><ul>
+                            <li><a href="#prerequisites">Prerequisites</a></li>
+                            <li><a href="#download-the-partiql-repl">Download the PartiQL REPL</a></li>
+                            <li><a href="#running-the-partiql-repl">Running the PartiQL REPL</a><ul>
+                            <li><a href="#windows">Windows</a></li>
+                            <li><a href="#osx-mac-and-unix">OSX (Mac) and Unix</a></li>
+                            </ul></li>
+                            <li><a href="#testing-the-partiql-repl">Testing the PartiQL REPL</a></li>
+                            </ul></li>
+                            <li><a href="#introduction">Introduction</a></li>
+                            <li><a href="#partiql-queries-are-sql-compatible">PartiQL Queries are SQL compatible</a><ul>
+                            <li><a href="#partiql-data-model-abstraction-of-many-underlying-data-storage-formats">PartiQL data model: Abstraction of many underlying data storage formats</a><ul>
+                            <li><a href="#learn-more">Learn more</a></li>
+                            </ul></li>
+                            </ul></li>
+                            <li><a href="#querying-nested-data">Querying Nested Data</a><ul>
+                            <li><a href="#nested-collections">Nested Collections</a><ul>
+                            <li><a href="#unnesting-a-nested-collection">Unnesting a Nested Collection</a></li>
+                            <li><a href="#learn-more-1">Learn more</a></li>
+                            <li><a href="#unnesting-nested-collections-using-join">Unnesting Nested Collections Using <code>JOIN</code></a></li>
+                            <li><a href="#unnesting-data-with-left-join-always-preserves-parent-information">Unnesting data with LEFT JOIN always preserves parent information</a></li>
+                            <li><a href="#use-case-checking-whether-a-nested-collection-satisfies-a-condition">Use Case: Checking whether a nested collection satisfies a condition</a></li>
+                            <li><a href="#use-case-subqueries-that-aggregate-over-nested-collections">Use Case: Subqueries that aggregate over nested collections</a></li>
+                            </ul></li>
+                            <li><a href="#nested-tuple-values-and-multi-step-paths">Nested Tuple Values and Multi-Step Paths</a></li>
+                            <li><a href="#unnesting-arbitrary-forms-of-nested-collections">Unnesting Arbitrary Forms of Nested Collections</a><ul>
+                            <li><a href="#use-case-unnesting-arrays-of-scalars">Use Case: Unnesting Arrays of Scalars</a></li>
+                            <li><a href="#use-case-unnesting-arrays-of-arrays">Use Case: Unnesting Arrays of Arrays</a></li>
+                            </ul></li>
+                            </ul></li>
+                            <li><a href="#literals">Literals</a></li>
+                            <li><a href="#querying-heterogeneous-and-schemaless-data">Querying Heterogeneous and Schemaless Data</a><ul>
+                            <li><a href="#tuples-with-missing-attributes">Tuples with Missing Attributes</a></li>
+                            <li><a href="#accessing-and-processing-missing-attributes-the-missing-value">Accessing and Processing Missing Attributes: The MISSING Value</a><ul>
+                            <li><a href="#evaluating-functions-and-conditions-with-missing">Evaluating Functions and Conditions with MISSING</a></li>
+                            <li><a href="#propagating-missing-in-result-tuples">Propagating MISSING in Result Tuples</a></li>
+                            </ul></li>
+                            <li><a href="#variables-can-range-over-data-with-different-types">Variables can range over Data with Different Types</a></li>
+                            </ul></li>
+                            <li><a href="#accessing-array-elements-by-order">Accessing Array Elements by Order</a><ul>
+                            <li><a href="#array-number"><code>&lt;Array&gt; [&lt;number&gt;]</code></a></li>
+                            <li><a href="#multistep-paths">Multistep Paths</a></li>
+                            <li><a href="#finding-the-order-of-each-element-in-an-array">Finding the Order of Each Element in an Array</a></li>
+                            </ul></li>
+                            <li><a href="#pivoting-unpivoting">Pivoting &amp; Unpivoting</a><ul>
+                            <li><a href="#unpivoting-tuples">Unpivoting Tuples</a></li>
+                            <li><a href="#pivoting-into-tuples">Pivoting into Tuples</a></li>
+                            <li><a href="#use-case-pivoting-subqueries">Use Case: Pivoting Subqueries</a></li>
+                            </ul></li>
+                            <li><a href="#creating-nested-and-non-sql-results">Creating Nested and Non-SQL Results</a><ul>
+                            <li><a href="#creating-nested-results-with-select-value-queries">Creating Nested Results with <code>SELECT VALUE</code> Queries</a></li>
+                            <li><a href="#creating-nested-results-with-group-by-...-group-as">Creating Nested Results with <code>GROUP BY ... GROUP AS</code></a></li>
+                            </ul></li>
+                            </ul>
+                            
+                        </div>
+                    </div>
+                </div>
+
+                <div class="uk-width-medium-3-4">
+<h1 id="getting-started">Getting Started</h1>
+<p>PartiQL provides an interactive shell, or Read Eval Print Loop (REPL), that allows users to write and evaluate PartiQL queries.</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<p>PartiQL requires the Java Runtime (JVM) to be installed on your machine. You can obtain the <em>latest</em> version of the Java Runtime from either</p>
+<ol type="1">
+<li><a href="https://openjdk.java.net/install/">OpenJDK</a>, and <a href="https://developers.redhat.com/products/openjdk">OpenJDK for Windows</a><br />
+</li>
+<li><a href="https://www.oracle.com/technetwork/java/javase/downloads/index.html">Oracle</a></li>
+</ol>
+<h2 id="download-the-partiql-repl">Download the PartiQL REPL</h2>
+<p>Each <a href="https://github.com/partiql/partiql-lang-kotlin/releases">release</a> of PartiQL comes with an archive that contains the PartiQL REPL as a zip file.</p>
+<ol type="1">
+<li><a href="https://github.com/partiql/partiql-lang-kotlin/releases/download/v0.1.0-alpha/partiql-cli-0.1.0.zip">Download</a> the latest <code>partiql-cli</code> zip archive to your machine.</li>
+<li>Expand (unzip) the archive on your machine. Expanding the archive yields the following folder structure</li>
+</ol>
+<pre><code>├── partiql-cli
+│   ├── bin
+│   │   ├── partiql
+│   │   └── partiql.bat
+│   ├── lib
+│   │   └── ... 
+│   ├── README.md
+│   └── Tutorial
+│       ├── code
+│       │   └── ... 
+│       ├── tutorial.html
+│       └── tutorial.pdf</code></pre>
+<p>We have used ellipsis <code>...</code> to elide files/directories.</p>
+<p>The root folder <code>partiql-cli</code> contains a <code>README.md</code> file and 3 subfolders</p>
+<ol type="1">
+<li>The folder <code>bin</code> contains startup scripts <code>partiql</code> for OSX (Mac) and Unix systems and <code>partiql.bat</code> for Windows systems. Execute these files to start the REPL</li>
+<li>The folder <code>lib</code> contains all the necessary java libraries needed to run PartiQL.</li>
+<li>The folder <code>Tutorial</code> contains the tutorial in <code>pdf</code> and <code>html</code> form. The subfolder <code>code</code> contains 3 types of files
+<ol type="1">
+<li>Data files with the extension <code>.env</code>. These files contains PartiQL data that we can query</li>
+<li>PartiQL query files with the extension <code>.sql</code>. These files contain the PartiQL queries used in the tutorial.</li>
+<li>Sample query output files with the extension <code>.out</code>. These files contain sample output from running the tutorial queries on the appropriate data.</li>
+</ol></li>
+</ol>
+<h2 id="running-the-partiql-repl">Running the PartiQL REPL</h2>
+<h3 id="windows">Windows</h3>
+<p>Run (double click) on <code>particl.bat</code>. This should open a command line prompt and start the PartiQL REPL. The PartiQL REPL prompt should look like this</p>
+<pre><code>Welcome to the PartiQL REPL!
+PartiQL&gt; </code></pre>
+<h3 id="osx-mac-and-unix">OSX (Mac) and Unix</h3>
+<ol type="1">
+<li>Open a terminal and navigate to the <code>partiql-cli</code> folder we created when we extracted <code>partiql-cli.zip</code>.</li>
+<li>Run the executable <code>partiql</code> file, by typing <code>./partiql</code> and hit enter. This should start the PartiQL REPL and should look like this</li>
+</ol>
+<pre><code>Welcome to the PartiQL REPL!
+PartiQL&gt;</code></pre>
+<h2 id="testing-the-partiql-repl">Testing the PartiQL REPL</h2>
+<p>Let’s write a simple query to verify that our PartiQL REPL is working. At the <code>PartiQL&gt;</code> prompt type</p>
+<pre><code>PartiQL&gt; SELECT * FROM [1,2,3]</code></pre>
+<p>and press <code>ENTER</code> <em>twice</em>. The output should look similar to</p>
+<pre><code>PartiQL&gt; SELECT * FROM [1,2,3]
+   | 
+===&#39; 
+&lt;&lt;
+  {
+    &#39;_1&#39;: 1
+  },
+  {
+    &#39;_1&#39;: 2
+  },
+  {
+    &#39;_1&#39;: 3
+  }
+&gt;&gt;
+--- 
+OK! (86 ms)
+PartiQL&gt; </code></pre>
+<blockquote>
+<p><strong>INFO</strong></p>
+<p>An easy way to load the necessary data into the REPL while reading our Tutorial is to pass one of the <code>.env</code> files to the REPL on invocation, e.g. on Unix or OSX while on inside <code>partiql-cli</code> folder,</p>
+<pre><code>./bin/partiql  -e code/q1.env</code></pre>
+<p>You can then see what is loaded in the REPL’s global environment using the <strong>special</strong> REPL command <code>!global_env</code>, e.g.,</p>
+<pre><code>Welcome to the PartiQL REPL!
+PartiQL&gt; !global_env
+   | 
+===&#39; 
+{
+  &#39;hr&#39;: {
+    &#39;employees&#39;: &lt;&lt;
+      {
+        &#39;id&#39;: 3,
+        &#39;name&#39;: &#39;Bob Smith&#39;,
+        &#39;title&#39;: NULL
+      },
+      {
+        &#39;id&#39;: 4,
+        &#39;name&#39;: &#39;Susan Smith&#39;,
+        &#39;title&#39;: &#39;Dev Mgr&#39;
+      },
+      {
+        &#39;id&#39;: 6,
+        &#39;name&#39;: &#39;Jane Smith&#39;,
+        &#39;title&#39;: &#39;Software Eng 2&#39;
+      }
+    &gt;&gt;
+  }
+}
+--- 
+OK! (6 ms)
+</code></pre>
+</blockquote>
+<p>Congratulations! You succesfuly installed and run the PartiQL REPL. The PartiQL REPL is now waiting for more input.</p>
+<p>To exit the PartiQL REPL press</p>
+<ul>
+<li><code>Control+D</code> in OSX or Unix</li>
+<li><code>Control+Z</code> on Windows</li>
+</ul>
+<p>or close the terminal/command prompt window.</p>
+<h1 id="introduction">Introduction</h1>
+<p>PartiQL provides SQL-compatible unified query access across multiple data stores containing structured, semi-structured and nested data that is supported by SQL. PartiQL separates the syntax and semantics of a query from the underlying data source and/or data format of the data. It enables users to interact with data with<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> or without regular schema.</p>
+<p>This tutorial aims to teach SQL users the PartiQL extensions to SQL. The tutorial is primarily driven by “how to” examples.</p>
+<p>For the reader who is interested in the full detail and formal specification of PartiQL, we recommend the 2-tiered PartiQL formal specification: The formal specification first describes the <em>PartiQL core</em>, which is a short and concise functional programming language. Then the specification layers SQL compatibility through syntactic sugar that shows how SQL features can be translated to semantically equivalent core PartiQL expressions. These translations presented as syntactic sugar enable SQL compatibility.</p>
+<h1 id="partiql-queries-are-sql-compatible">PartiQL Queries are SQL compatible</h1>
+<p>PartiQL is backwards compatible with SQL-92<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>. We will see what compatibility means when it is used to query data found in data formats and data stores that are not SQL.</p>
+<p>For starters, given the table <code>hr.employees</code></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Id</th>
+<th style="text-align: left;">name</th>
+<th style="text-align: left;">title</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">Bob Smith</td>
+<td style="text-align: left;">null</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">Susan Smith</td>
+<td style="text-align: left;">Dev Mgr</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">6</td>
+<td style="text-align: left;">Jane Smith</td>
+<td style="text-align: left;">Software Eng 2</td>
+</tr>
+</tbody>
+</table>
+<p>the following SQL query</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb8-1" title="1"><span class="kw">SELECT</span> e.<span class="kw">id</span>, </a>
+<a class="sourceLine" id="cb8-2" title="2">       e.name <span class="kw">AS</span> employeeName, </a>
+<a class="sourceLine" id="cb8-3" title="3">       e.title <span class="kw">AS</span> title</a>
+<a class="sourceLine" id="cb8-4" title="4"><span class="kw">FROM</span> hr.employees e</a>
+<a class="sourceLine" id="cb8-5" title="5"><span class="kw">WHERE</span> e.title <span class="op">=</span> <span class="st">&#39;Dev Mgr&#39;</span></a>
+<a class="sourceLine" id="cb8-6" title="6"></a></code></pre></div>
+<p>is also a valid PartiQL query. As we know from SQL, when this query operates on the table <code>hr.employees</code> it will return the result</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Id</th>
+<th style="text-align: left;">employeeName</th>
+<th style="text-align: left;">title</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">Susan Smith</td>
+<td style="text-align: left;">Dev Mgr</td>
+</tr>
+</tbody>
+</table>
+<h2 id="partiql-data-model-abstraction-of-many-underlying-data-storage-formats">PartiQL data model: Abstraction of many underlying data storage formats</h2>
+<p>PartiQL implementations operate not just on SQL tables but also on data that may have nesting, union types, different attributes across different tuples and many other features that we often find in today’s nested and/or semi-structured formats, like JSON, Parquet, etc.</p>
+<p>To capture this generality, PartiQL is based on a logical type system: the <em>PartiQL data model</em>. Each PartiQL implementation maps data formats, like JSON, Parquet etc., into a PartiQL data set that follows the PartiQL data model. PartiQL queries work on the PartiQL data set abstraction.</p>
+<p>For example, the table <code>hr.employees</code> is denoted in the PartiQL data model as this dataset</p>
+<pre><code>{ 
+    &#39;hr&#39;: { 
+        &#39;employees&#39;: &lt;&lt;
+            { &#39;id&#39;: 3, &#39;name&#39;: &#39;Bob Smith&#39;,   &#39;title&#39;: null }, -- a tuple is denoted by { ... } in the PartiQL data model
+            { &#39;id&#39;: 4, &#39;name&#39;: &#39;Susan Smith&#39;, &#39;title&#39;: &#39;Dev Mgr&#39; },
+            { &#39;id&#39;: 6, &#39;name&#39;: &#39;Jane Smith&#39;,  &#39;title&#39;: &#39;Software Eng 2&#39;}
+        &gt;&gt;
+    }
+} 
+</code></pre>
+<p>Notice that the <code>employees</code> is nested within <code>hr</code>.<br />
+The delimiters <code>&lt;&lt;</code> … <code>&gt;&gt;</code> denote that the data is an <em>unordered collection</em> (also known as <em>bag</em>), as is the case with SQL’s tables. That is, there is no order between the three tuples. Single line comments start with <code>--</code> and end at the end of the line.</p>
+<p>A very different kind of data source may lead to the same PartiQL dataset. For example, a set of JSON files that contain the following JSON objects</p>
+<pre><code>{ 
+    &quot;hr&quot; : { 
+        &quot;employees&quot;: [
+            { &quot;id&quot;: 3, &quot;name&quot;: &quot;Bob Smith&quot;,   &quot;title&quot;: null },
+            { &quot;id&quot;: 4, &quot;name&quot;: &quot;Susan Smith&quot;, &quot;title&quot;: &quot;Dev Mgr&quot; },
+            { &quot;id&quot;: 6, &quot;name&quot;: &quot;Jane Smith&quot;,  &quot;title&quot;: &quot;Software Eng 2&quot;}
+        ]
+    }
+}
+</code></pre>
+<p>will likely<a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> be abstracted by a PartiQL-supporting implementation into the identical PartiQL abstraction with the <code>hr.employees</code> table.</p>
+<p><strong>Remark:</strong> You will keep noticing the similarity of the PartiQL notation with the JSON notation. Notice also the subtle differences: In the interest of SQL compatibility, a PartiQL literal is quoted, while JSON literals are double-quoted.</p>
+<p><strong>Remark:</strong> You may conceptually think that a deserializer inputs JSON and outputs the PartiQL data set. But do not assume that the query processing of a PartiQL implementation will have to actually parse and abstract into PartiQL each and every bit of the underlying data storage. For example, AWS services like Redshift Spectrum and QLDB do much smarter things in order to evaluate your PartiQL queries efficiently.</p>
+<p>Back to our PartiQL query</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb11-1" title="1"><span class="kw">SELECT</span> e.<span class="kw">id</span>, </a>
+<a class="sourceLine" id="cb11-2" title="2">       e.name <span class="kw">AS</span> employeeName, </a>
+<a class="sourceLine" id="cb11-3" title="3">       e.title <span class="kw">AS</span> title</a>
+<a class="sourceLine" id="cb11-4" title="4"><span class="kw">FROM</span> hr.employees e</a>
+<a class="sourceLine" id="cb11-5" title="5"><span class="kw">WHERE</span> e.title <span class="op">=</span> <span class="st">&#39;Dev Mgr&#39;</span></a>
+<a class="sourceLine" id="cb11-6" title="6"></a></code></pre></div>
+<p>evaluates in PartiQL and returns</p>
+<pre><code>&lt;&lt;
+  {
+    &#39;id&#39;: 4,
+    &#39;employeeName&#39;: &#39;Susan Smith&#39;,
+    &#39;title&#39;: &#39;Dev Mgr&#39;
+  }
+&gt;&gt;
+--- 
+OK! (16 ms)
+
+</code></pre>
+<p>the result remains the same, no matter whether the <code>hr.employees</code> were the SQL table or the JSON file. All that is needed is that a catalog associates the <em>name</em> <code>hr.employees</code> with the PartiQL abstraction of the JSON data.</p>
+<p>In the same spirit, the same PartiQL abstraction may come from a CVS file or a Parquet file, a format that has gained big traction, thanks to the efficient way in which it stores data. Again, the same query makes perfect sense, regardless of what exactly was the storage format behind <code>hr.employees</code>.</p>
+<h3 id="learn-more">Learn more</h3>
+<ul>
+<li><p><strong>PartiQL data sets look very much like JSON.</strong></p>
+<p>What are the differences? Indeed, PartiQL adopts the tuple/object and array notation of JSON. However, the PartiQL string literals are denoted by single quotes. Importantly, the scalar types of PartiQL are the ones of SQL and not just strings, numbers and booleans, as in JSON.</p></li>
+<li><p><strong>Do implementations need to have a catalog?</strong></p>
+<p>If queries refer to names, a catalog logically validates whether the name exists or not. However, we will also see PartiQL queries that refer to no names.</p></li>
+</ul>
+<h1 id="querying-nested-data">Querying Nested Data</h1>
+<p>SQL-92 only has tables that have tuples that contain scalar values. A key feature of many modern formats is nested data. That is, attributes whose values may be themselves tables (i.e., collections of tuples), or may be arrays of scalars, or arrays of arrays and many other combinations. We next present PartiQL’s features (SQL extensions) that allow us to work with nested data.</p>
+<p>We also include sections titled “Use Case”. Such “Use Case” sections do not introduce additional features. They merely show how to combine the few novel PartiQL features with standard SQL features in order to solve a large number of problems.</p>
+<h2 id="nested-collections">Nested Collections</h2>
+<p>Let’s now add the nested attribute <code>projects</code> into the data set.</p>
+<pre><code>{ 
+  &#39;hr&#39;: { 
+      &#39;employeesNest&#39;: &lt;&lt;
+         { 
+          &#39;id&#39;: 3, 
+          &#39;name&#39;: &#39;Bob Smith&#39;, 
+          &#39;title&#39;: null, 
+          &#39;projects&#39;: [ { &#39;name&#39;: &#39;AWS Redshift Spectrum querying&#39; },
+                        { &#39;name&#39;: &#39;AWS Redshift security&#39; },
+                        { &#39;name&#39;: &#39;AWS Aurora security&#39; }
+                      ]
+          },
+          { 
+              &#39;id&#39;: 4, 
+              &#39;name&#39;: &#39;Susan Smith&#39;, 
+              &#39;title&#39;: &#39;Dev Mgr&#39;, 
+              &#39;projects&#39;: [] 
+          },
+          { 
+              &#39;id&#39;: 6, 
+              &#39;name&#39;: &#39;Jane Smith&#39;, 
+              &#39;title&#39;: &#39;Software Eng 2&#39;, 
+              &#39;projects&#39;: [ { &#39;name&#39;: &#39;AWS Redshift security&#39; } ] 
+          }
+      &gt;&gt;
+    }
+}
+</code></pre>
+<p>Notice that the value of <code>'projects'</code> is an array. Arrays are denoted by <code>[ ... ]</code> with array elements separated by <code>,</code>. In our example the array happens to be an array of tuples. We will see that arrays may be arrays of anything, not just arrays of tuples.</p>
+<h3 id="unnesting-a-nested-collection">Unnesting a Nested Collection</h3>
+<p>The query finds the names of employees who work on projects that contain the string <code>'security'</code> and outputs them along with the name of the <code>'security'</code> project. Notice that the query has just one extension over standard SQL – the <code>e.projects AS p</code> part.</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb14-1" title="1"><span class="kw">SELECT</span> e.name <span class="kw">AS</span> employeeName, </a>
+<a class="sourceLine" id="cb14-2" title="2">       p.name <span class="kw">AS</span> projectName</a>
+<a class="sourceLine" id="cb14-3" title="3"><span class="kw">FROM</span> hr.employeesNest <span class="kw">AS</span> e, </a>
+<a class="sourceLine" id="cb14-4" title="4">     e.projects <span class="kw">AS</span> p</a>
+<a class="sourceLine" id="cb14-5" title="5"><span class="kw">WHERE</span> p.name <span class="kw">LIKE</span> <span class="st">&#39;%security%&#39;</span></a></code></pre></div>
+<p>The output of our query is</p>
+<pre><code>&lt;&lt;
+  {
+    &#39;employeeName&#39;: &#39;Bob Smith&#39;,
+    &#39;projectName&#39;: &#39;AWS Redshift security&#39;
+  },
+  {
+    &#39;employeeName&#39;: &#39;Bob Smith&#39;,
+    &#39;projectName&#39;: &#39;AWS Aurora security&#39;
+  },
+  {
+    &#39;employeeName&#39;: &#39;Jane Smith&#39;,
+    &#39;projectName&#39;: &#39;AWS Redshift security&#39;
+  }
+&gt;&gt;
+--- 
+OK! (51 ms)
+</code></pre>
+<p>The extension over SQL is the <code>FROM</code> clause item <code>e.projects AS p</code>. Standard SQL would attempt to find a schema named <code>e</code> with a table <code>projects</code> and since in our example there isn’t an <code>e.projects</code> table, the query would fail. In contrast, PartiQL will dereference <code>e.projects</code> to the attribute <code>projects</code> of <code>e</code>.</p>
+<p>Once we allow this extension, the semantics are alike SQL’s. The alias (also called <em>variable</em> in PartiQL) <code>e</code> gets bound to each employee, in turn. For each employee, the variable <code>p</code> gets bound to each project of the employee, in turn. Thus the query’s meaning, alike SQL, is</p>
+<div class="line-block">foreach employee tuple <code>e</code> from <code>hr.employeesNest</code><br />
+    foreach project tuple <code>p</code> from <code>e.projects</code><br />
+        if <code>p.name LIKE '%security%'</code><br />
+        output <code>e.name AS employeeName, p.name AS projectName</code></div>
+<p>Notice that our query involved variables that were ranging over nested collections (<code>p</code> in the example), along with variables that were ranging over tables (<code>e</code> in the example), as standard SQL aliases do. All variables, no matter what they range over, can be used wherever in the <code>FROM</code>, <code>WHERE</code>, <code>SELECT</code> clauses as we will see in the examples that follow.</p>
+<h3 id="learn-more-1">Learn more</h3>
+<ul>
+<li><p><strong>Can I only unnest arrays of tuples?</strong></p>
+<p>No, anything can be unnested. For example, arrays of scalars, etc.</p></li>
+<li><p><strong>Does <code>e.projects AS p</code> have to appear in the same <code>FROM</code> clause that defines <code>e</code>?</strong></p>
+<p>No. For example, see below the use cases that involve subqueries. There, the <code>e</code> and <code>p</code> are defined in separate <code>FROM</code> clauses.</p></li>
+<li><p><strong>How could I force <code>e.projects</code> to refer to the nested attribute <code>projects</code> even if there were a schema named <code>e</code> with a table <code>projects</code>?</strong></p>
+<p>Use the syntax <code>@e.projects</code>. Recall, in the absence of the <code>@</code>, in the interest of SQL compatibility, PartiQL will first attempt to dereference the <code>e.projects</code> against the catalog.</p></li>
+<li><p><strong>SQL allows me to avoid writing an explicit alias <code>e</code> when I write, say, <code>e.name</code>. Can I avoid writing the <code>e</code> in PartiQL as well?</strong></p>
+<p>SQL allows us to avoid writing aliases (variables) when the schema of the tables allows correct dereferencing. PartiQL does the same. However, recall, a schema is not necessary for a PartiQL data set. Indeed, our example has not assumed a schema. Then , in the absence of a schema, you cannot omit the aliases (variables). For example, if you write just <code>name</code> and there is no schema, PartiQL cannot tell whether you mean employee name or project name. Thus you need to explicitly write the alias (variable).</p>
+<p>There is one exception to this rule: If your query has a single item in its <code>FROM</code> clause, you can omit the alias (variable). Eg, you can write</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb16-1" title="1"><span class="kw">SELECT</span> name <span class="kw">FROM</span> hr.employeesNest</a></code></pre></div>
+<p>In this case it is apparent that <code>name</code> may only be an employee name and thus PartiQL allows you to not provide an alias (variable).</p>
+<p>Nevertheless, for clarity we recommend that you always use aliases (variables) and this is what this tutorial does.</p></li>
+<li><p><strong>If there is a schema, can I avoid writing the alias <code>p</code>?</strong></p>
+<p>No. The <code>p</code> has to be written in order to denote the iteration over the projects.</p></li>
+</ul>
+<h3 id="unnesting-nested-collections-using-join">Unnesting Nested Collections Using <code>JOIN</code></h3>
+<p>In this section, we simply present an alternate way to express and think about unnesting collections.</p>
+<p>One may think that the <code>FROM</code> clause of the example executes, in a sense, a <code>JOIN</code> between employees and projects. Except that unlike a conventional SQL join that would require an <strong><code>ON</code> condition</strong>, the employees-projects join condition is implicit in the nesting of the projects data into the employee data. If it helps you to think in terms of <code>JOIN</code>, you may replace the comma with <code>JOIN</code>. That is, the following two queries are equivalent.</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<tbody>
+<tr class="odd">
+<td><div class="sourceCode" id="cb17"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb17-1" title="1"><span class="kw">SELECT</span> e.name <span class="kw">AS</span> employeeName,</a>
+<a class="sourceLine" id="cb17-2" title="2">       p.name <span class="kw">AS</span> projectName</a>
+<a class="sourceLine" id="cb17-3" title="3"><span class="kw">FROM</span> hr.employeesNest <span class="kw">AS</span> e,</a>
+<a class="sourceLine" id="cb17-4" title="4">     e.projects <span class="kw">AS</span> p</a>
+<a class="sourceLine" id="cb17-5" title="5"><span class="kw">WHERE</span> p.name <span class="kw">LIKE</span> <span class="st">&#39;%security%&#39;</span></a></code></pre></div></td>
+<td><div class="sourceCode" id="cb18"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb18-1" title="1"><span class="kw">SELECT</span> e.name <span class="kw">AS</span> employeeName,</a>
+<a class="sourceLine" id="cb18-2" title="2">       p.name <span class="kw">AS</span> projectName</a>
+<a class="sourceLine" id="cb18-3" title="3"><span class="kw">FROM</span> hr.employeesNest <span class="kw">AS</span> e <span class="kw">JOIN</span></a>
+<a class="sourceLine" id="cb18-4" title="4">    e.projects <span class="kw">AS</span> p</a>
+<a class="sourceLine" id="cb18-5" title="5"><span class="kw">WHERE</span> p.name <span class="kw">LIKE</span> <span class="st">&#39;%security%&#39;</span></a></code></pre></div></td>
+</tr>
+</tbody>
+</table>
+<h3 id="unnesting-data-with-left-join-always-preserves-parent-information">Unnesting data with LEFT JOIN always preserves parent information</h3>
+<p>Assume that we want to write a query that returns as a bag of tuples the entire employee and project information from <code>hr.employeesNest</code>. The query result we want is this bag of tuples with attributes <code>id</code>, <code>employeeName</code>, <code>title</code> and <code>projectName</code>:</p>
+<pre><code>&lt;&lt;
+  {
+    &#39;id&#39;: 3,
+    &#39;employeeName&#39;: &#39;Bob Smith&#39;,
+    &#39;title&#39;: NULL,
+    &#39;projectName&#39;: &#39;AWS Redshift Spectrum querying&#39;
+  },
+  {
+    &#39;id&#39;: 3,
+    &#39;employeeName&#39;: &#39;Bob Smith&#39;,
+    &#39;title&#39;: NULL,
+    &#39;projectName&#39;: &#39;AWS Redshift security&#39;
+  },
+  {
+    &#39;id&#39;: 3,
+    &#39;employeeName&#39;: &#39;Bob Smith&#39;,
+    &#39;title&#39;: NULL,
+    &#39;projectName&#39;: &#39;AWS Aurora security&#39;
+  },
+  {
+    &#39;id&#39;: 4,
+    &#39;employeeName&#39;: &#39;Susan Smith&#39;,
+    &#39;title&#39;: &#39;Dev Mgr&#39;
+  },
+  {
+    &#39;id&#39;: 6,
+    &#39;employeeName&#39;: &#39;Jane Smith&#39;,
+    &#39;title&#39;: &#39;Software Eng 2&#39;,
+    &#39;projectName&#39;: &#39;AWS Redshift security&#39;
+  }
+&gt;&gt;
+--- 
+OK! (6 ms)
+
+</code></pre>
+<p>Notice that there is a <code>'Susan Smith'</code> tuple in the result, despite the fact that Susan has no project. Susan’s <code>projectName</code> is <code>null</code>. We can obtain this result by combining employees and projects using the <code>LEFT JOIN</code> operator, as follows:</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb20-1" title="1"><span class="kw">SELECT</span> e.<span class="kw">id</span> <span class="kw">AS</span> <span class="kw">id</span>, </a>
+<a class="sourceLine" id="cb20-2" title="2">       e.name <span class="kw">AS</span> employeeName, </a>
+<a class="sourceLine" id="cb20-3" title="3">       e.title <span class="kw">AS</span> title, </a>
+<a class="sourceLine" id="cb20-4" title="4">       p.name <span class="kw">AS</span> projectName</a>
+<a class="sourceLine" id="cb20-5" title="5"><span class="kw">FROM</span> hr.employeesNest <span class="kw">AS</span> e <span class="kw">LEFT</span> <span class="kw">JOIN</span> e.projects <span class="kw">AS</span> p</a>
+<a class="sourceLine" id="cb20-6" title="6"></a></code></pre></div>
+<p>The semantics of this query can be thought of as</p>
+<div class="line-block">foreach employee tuple <code>e</code> from <code>hr.employeesNest</code><br />
+    if the <code>e.projects</code> is an empty collection then <em>// this part is special about LEFT JOINs</em><br />
+        output <code>e.id AS id</code>, <code>e.name AS employeeName</code>, <code>e.title AS title</code><br />
+        and output a <code>null AS projectName</code><br />
+    else <em>// the following part is identical to plain (inner) JOINs</em><br />
+        foreach project tuple <code>p</code> from <code>e.projects</code><br />
+            output <code>e.id AS id</code>, <code>e.name AS employeeName</code>, <code>e.title AS title</code><br />
+            and output a <code>null AS projectName</code></div>
+<h3 id="use-case-checking-whether-a-nested-collection-satisfies-a-condition">Use Case: Checking whether a nested collection satisfies a condition</h3>
+<p>The following use cases employ the unnesting features, which we have already discussed, in new use cases. A lesson that emerges is that we can use variables (SQL aliases) that range over nested data as if they were standard SQL aliases. This realization gives us the power to solve a great number of use cases just be combining the unnesting features with features we already know from standard SQL.</p>
+<p>In our first use case we want a query that returns the names of the employees that are involved in a project that contains the word <code>'security</code>. The solution employs SQL’s “<code>EXISTS</code> (subquery)” feature, along with unnesting:</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb21-1" title="1"><span class="kw">SELECT</span> e.name <span class="kw">AS</span> employeeName</a>
+<a class="sourceLine" id="cb21-2" title="2"><span class="kw">FROM</span> hr.employeesNest <span class="kw">AS</span> e</a>
+<a class="sourceLine" id="cb21-3" title="3"><span class="kw">WHERE</span> <span class="kw">EXISTS</span> ( <span class="kw">SELECT</span> <span class="op">*</span></a>
+<a class="sourceLine" id="cb21-4" title="4">               <span class="kw">FROM</span> e.projects <span class="kw">AS</span> p</a>
+<a class="sourceLine" id="cb21-5" title="5">               <span class="kw">WHERE</span> p.name <span class="kw">LIKE</span> <span class="st">&#39;%security%&#39;</span>)</a></code></pre></div>
+<p>returns</p>
+<pre><code>&lt;&lt;
+  {
+    &#39;employeeName&#39;: &#39;Bob Smith&#39;
+  },
+  {
+    &#39;employeeName&#39;: &#39;Jane Smith&#39;
+  }
+&gt;&gt;
+--- 
+OK! (14 ms)
+</code></pre>
+<p>In the second use case we want a query that outputs the names of the employees that have more than one security projects and we are aware of a key for employees (e.g., an attribute that is guaranteed to have a unique value for each employee). We can find the requested employees by utilizing a combination of <code>GROUP BY</code> and <code>HAVING</code>.<a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> In our example, let’s assume that the <code>id</code> attribute is a primary key for the employees. Then we could find the employees with more than one security project with this query:</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb23-1" title="1"><span class="kw">SELECT</span> e.name <span class="kw">AS</span> employeeName</a>
+<a class="sourceLine" id="cb23-2" title="2"><span class="kw">FROM</span> hr.employeesNest e, </a>
+<a class="sourceLine" id="cb23-3" title="3">     e.projects <span class="kw">AS</span> p</a>
+<a class="sourceLine" id="cb23-4" title="4"><span class="kw">WHERE</span> p.name <span class="kw">LIKE</span> <span class="st">&#39;%security%&#39;</span></a>
+<a class="sourceLine" id="cb23-5" title="5"><span class="kw">GROUP</span> <span class="kw">BY</span> e.<span class="kw">id</span>, e.name</a>
+<a class="sourceLine" id="cb23-6" title="6"><span class="kw">HAVING</span> <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="op">&gt;</span> <span class="dv">1</span></a></code></pre></div>
+<p>which returns</p>
+<pre><code>&lt;&lt;
+  {
+    &#39;employeeName&#39;: &#39;Bob Smith&#39;
+  }
+&gt;&gt;
+--- 
+OK! (28 ms)
+</code></pre>
+<h3 id="use-case-subqueries-that-aggregate-over-nested-collections">Use Case: Subqueries that aggregate over nested collections</h3>
+<p>Next, let’s find how many querying projects (that is, projects whose name contains the word ‘querying’) each employee has.<a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a></p>
+<p>Making the same asssumption as before, that <code>id</code> is a key for employees, we can solve the problem with the query</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb25-1" title="1"><span class="kw">SELECT</span> e.name <span class="kw">AS</span> employeeName, </a>
+<a class="sourceLine" id="cb25-2" title="2">       <span class="fu">COUNT</span>(p.name) <span class="kw">AS</span> queryProjectsNum</a>
+<a class="sourceLine" id="cb25-3" title="3"><span class="kw">FROM</span> hr.employeesNest e <span class="kw">LEFT</span> <span class="kw">JOIN</span> e.projects <span class="kw">AS</span> p <span class="kw">ON</span> p.name <span class="kw">LIKE</span> <span class="st">&#39;%querying%&#39;</span></a>
+<a class="sourceLine" id="cb25-4" title="4"><span class="kw">GROUP</span> <span class="kw">BY</span> e.<span class="kw">id</span>, e.name</a></code></pre></div>
+<p>that returns</p>
+<pre><code>&lt;&lt;
+  {
+    &#39;employeeName&#39;: &#39;Bob Smith&#39;,
+    &#39;queryProjectsNum&#39;: 1
+  },
+  {
+    &#39;employeeName&#39;: &#39;Susan Smith&#39;,
+    &#39;queryProjectsNum&#39;: 0
+  },
+  {
+    &#39;employeeName&#39;: &#39;Jane Smith&#39;,
+    &#39;queryProjectsNum&#39;: 0
+  }
+&gt;&gt;
+--- 
+OK! (22 ms)</code></pre>
+<p>Notice, this query’s result includes Susan Smith and Jane Smith, who have no querying projects.</p>
+<h2 id="nested-tuple-values-and-multi-step-paths">Nested Tuple Values and Multi-Step Paths</h2>
+<p>A value may also be a tuple – also called object and struct in many models and formats. For example, the project value in the following tuples is always a tuple with project name and project org.</p>
+<pre><code>{ 
+    &#39;hr&#39;: { 
+        &#39;employeesWithTuples&#39;: &lt;&lt; 
+            { 
+                &#39;id&#39;: 3, 
+                &#39;name&#39;: &#39;Bob Smith&#39;, 
+                &#39;title&#39;: null, 
+                &#39;project&#39;: { 
+                    &#39;name&#39;: &#39;AWS Redshift Spectrum querying&#39;, 
+                    &#39;org&#39;: &#39;AWS&#39; 
+                }
+            },
+            {
+                &#39;id&#39;: 6, 
+                &#39;name&#39;: &#39;Jane Smith&#39;, 
+                &#39;title&#39;: &#39;Software Eng 2&#39;, 
+                &#39;project&#39;: { 
+                    &#39;name&#39;: &#39;AWS Redshift security&#39;, 
+                    &#39;org&#39;: &#39;AWS&#39; 
+                }
+            }
+         &gt;&gt;
+    }
+} 
+
+</code></pre>
+<p>PartiQL’s multistep paths enable navigating within tuples. For example, the following query finds AWS projects and outputs the project name and employee name.</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb28-1" title="1"><span class="kw">SELECT</span> e.name <span class="kw">AS</span> employeeName, </a>
+<a class="sourceLine" id="cb28-2" title="2">       e.project.name <span class="kw">AS</span> projectName</a>
+<a class="sourceLine" id="cb28-3" title="3"><span class="kw">FROM</span> hr.employeesWithTuples e</a>
+<a class="sourceLine" id="cb28-4" title="4"><span class="kw">WHERE</span> e.project.org <span class="op">=</span> <span class="st">&#39;AWS&#39;</span></a>
+<a class="sourceLine" id="cb28-5" title="5"></a></code></pre></div>
+<p>The result is</p>
+<pre><code>&lt;&lt;
+  {
+    &#39;employeeName&#39;: &#39;Bob Smith&#39;,
+    &#39;projectName&#39;: &#39;AWS Redshift Spectrum querying&#39;
+  },
+  {
+    &#39;employeeName&#39;: &#39;Jane Smith&#39;,
+    &#39;projectName&#39;: &#39;AWS Redshift security&#39;
+  }
+&gt;&gt;
+--- 
+OK! (25 ms)
+
+</code></pre>
+<h2 id="unnesting-arbitrary-forms-of-nested-collections">Unnesting Arbitrary Forms of Nested Collections</h2>
+<p>The previous examples have shown nested attributes that were arrays of tuples. It need not be the case that the nested attributes are collections of tuples. They may just as well be arrays of scalars, arrays of arrays, and more. In general any combination of data that one can create by composing scalars, tuples and arrays. You need not learn a different set of query language features for each case. The unnesting features, which we have already seen, are sufficient.</p>
+<h3 id="use-case-unnesting-arrays-of-scalars">Use Case: Unnesting Arrays of Scalars</h3>
+<p>The list of projects associated with each employee in <code>hr.employeesNest</code> could have been simply a list of project name strings. Replacing the nested tuples with plain strings gives us</p>
+<pre><code>{ 
+    &#39;hr&#39;: { 
+        &#39;employeesNestScalars&#39;: &lt;&lt;
+            { 
+                &#39;id&#39;: 3, 
+                &#39;name&#39;: &#39;Bob Smith&#39;, 
+                &#39;title&#39;: null, 
+                &#39;projects&#39;: [ 
+                    &#39;AWS Redshift Spectrum querying&#39;,
+                    &#39;AWS Redshift security&#39;,
+                    &#39;AWS Aurora security&#39;
+                ]
+            },
+            { 
+                &#39;id&#39;: 4, 
+                &#39;name&#39;: &#39;Susan Smith&#39;, 
+                &#39;title&#39;: &#39;Dev Mgr&#39;, 
+                &#39;projects&#39;: []
+            },
+            { 
+                &#39;id&#39;: 6, 
+                &#39;name&#39;: &#39;Jane Smith&#39;, 
+                &#39;title&#39;: &#39;Software Eng 2&#39;, 
+                &#39;projects&#39;: [ &#39;AWS Redshift security&#39; ]
+            }
+        &gt;&gt;
+    } 
+}
+</code></pre>
+<p>Let us repeat the previous use cases on the revised employee data.</p>
+<p>The following query finds the names of employees who work on projects that contain the string <code>'security'</code> and outputs them along with the name of the ‘security’ project.</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb31-1" title="1"><span class="kw">SELECT</span> e.name <span class="kw">AS</span> employeeName, </a>
+<a class="sourceLine" id="cb31-2" title="2">       p <span class="kw">AS</span> projectName</a>
+<a class="sourceLine" id="cb31-3" title="3"><span class="kw">FROM</span> hr.employeesNestScalars <span class="kw">AS</span> e, </a>
+<a class="sourceLine" id="cb31-4" title="4">     e.projects <span class="kw">AS</span> p</a>
+<a class="sourceLine" id="cb31-5" title="5"><span class="kw">WHERE</span> p <span class="kw">LIKE</span> <span class="st">&#39;%security%&#39;</span></a>
+<a class="sourceLine" id="cb31-6" title="6"></a></code></pre></div>
+<p>The preceding query returns</p>
+<pre><code>&lt;&lt;
+  {
+    &#39;employeeName&#39;: &#39;Bob Smith&#39;,
+    &#39;projectName&#39;: &#39;AWS Redshift security&#39;
+  },
+  {
+    &#39;employeeName&#39;: &#39;Bob Smith&#39;,
+    &#39;projectName&#39;: &#39;AWS Aurora security&#39;
+  },
+  {
+    &#39;employeeName&#39;: &#39;Jane Smith&#39;,
+    &#39;projectName&#39;: &#39;AWS Redshift security&#39;
+  }
+&gt;&gt;
+--- 
+OK! (28 ms)
+
+</code></pre>
+<p>The variable <code>p</code> ranges (again) over the content of <code>e.projects</code>. In this case, since <code>e.projects</code> has strings (as opposed to tuples), the variable <code>p</code> binds each time to a project name string. Thus, this query can be thought of as executing the following snippet.</p>
+<div class="line-block">foreach employee tuple <code>e</code> from <code>hr.employeesNestScalars</code><br />
+    foreach project <code>p</code> from <code>e.projects</code><br />
+        if the string <code>p</code> matches <code>'%security%'</code><br />
+        output <code>e.name AS employeeName</code> and the string <code>p AS projectName</code></div>
+<h3 id="use-case-unnesting-arrays-of-arrays">Use Case: Unnesting Arrays of Arrays</h3>
+<p>Arrays may also contain arrays, directly, without intervening tuples, as in the <code>matrices</code> data set.</p>
+<pre><code>{ 
+    &#39;matrices&#39;: &lt;&lt;
+        { 
+            &#39;id&#39;: 3, 
+            &#39;matrix&#39;: [ 
+                [2, 4, 6],
+                [1, 3, 5, 7],
+                [9, 0]
+            ]
+        },
+        { 
+            &#39;id&#39;: 4, 
+            &#39;matrix&#39;: [ 
+                [5, 8],
+                [ ]
+            ]
+            
+        }
+    &gt;&gt;
+}
+</code></pre>
+<p>The following query finds every even number and outputs the even number and the <code>id</code> of the tuple where it was found.</p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb34-1" title="1"><span class="kw">SELECT</span> t.<span class="kw">id</span> <span class="kw">AS</span> <span class="kw">id</span>, </a>
+<a class="sourceLine" id="cb34-2" title="2">       x <span class="kw">AS</span> even</a>
+<a class="sourceLine" id="cb34-3" title="3"><span class="kw">FROM</span> matrices <span class="kw">AS</span> t, </a>
+<a class="sourceLine" id="cb34-4" title="4">     t.matrix <span class="kw">AS</span> y,</a>
+<a class="sourceLine" id="cb34-5" title="5">     y <span class="kw">AS</span> x</a>
+<a class="sourceLine" id="cb34-6" title="6"><span class="kw">WHERE</span> x % <span class="dv">2</span> <span class="op">=</span> <span class="dv">0</span></a>
+<a class="sourceLine" id="cb34-7" title="7"></a></code></pre></div>
+<p>The preceding query returns</p>
+<pre><code>&lt;&lt;
+  {
+    &#39;id&#39;: 3,
+    &#39;even&#39;: 2
+  },
+  {
+    &#39;id&#39;: 3,
+    &#39;even&#39;: 4
+  },
+  {
+    &#39;id&#39;: 3,
+    &#39;even&#39;: 6
+  },
+  {
+    &#39;id&#39;: 3,
+    &#39;even&#39;: 0
+  },
+  {
+    &#39;id&#39;: 4,
+    &#39;even&#39;: 8
+  }
+&gt;&gt;
+--- 
+OK! (59 ms)
+</code></pre>
+<p>Informally the query’s evaluation can be thought of as</p>
+<div class="line-block">foreach tuple <code>t</code> from <code>matrices</code><br />
+    foreach array <code>y</code> from <code>t.matrix</code><br />
+        foreach number <code>x</code> from <code>y</code><br />
+            if <code>x</code> is even then<br />
+                output <code>t.id AS id</code> and <code>x AS even</code></div>
+<h1 id="literals">Literals</h1>
+<p>Literals of the PartiQL query language correspond to the types in the PartiQL data model:</p>
+<ul>
+<li><p>scalars, including <code>null</code> which follow the SQL syntax when applicable. For example:</p>
+<ul>
+<li><p><code>5</code></p></li>
+<li><p><code>'foo'</code></p></li>
+</ul></li>
+<li><p>tuples, denoted by <code>{...}</code> with tuple elements separated by <code>,</code> (also known as structs and/or objects in many formats and other data models)</p>
+<ul>
+<li><code>{ 'id' : 3, 'arr': [1, 2] }</code></li>
+</ul></li>
+<li><p>arrays, denoted by <code>[...]</code> with array elements separated by <code>,</code></p>
+<ul>
+<li><code>[ 1, 'foo' ]</code></li>
+</ul></li>
+<li><p>bags, denoted by <code>&lt;&lt; ... &gt;&gt;</code> with bag elements separated by a <code>,</code></p>
+<ul>
+<li><code>&lt;&lt; 1, 'foo'&gt;&gt;</code></li>
+</ul></li>
+</ul>
+<p>Notice that in the spirit of the PartiQL data model, literals compose freely and any kind of literal may appear within any tuple, array and bag literal, eg.,</p>
+<pre><code>{ 
+    &#39;id&#39;: 3, 
+    &#39;matrix&#39;: [ 
+        [2, 4, 6],
+        &#39;NA&#39;
+    ]
+}</code></pre>
+<h1 id="querying-heterogeneous-and-schemaless-data">Querying Heterogeneous and Schemaless Data</h1>
+<p>Many formats do not require a schema that describes the data – that is <em>schemaless data</em>. In such cases it is possible to have various “heterogeneities” in the data:</p>
+<ul>
+<li><p>One tuple may have an attribute <code>x</code> while another tuple may not have this attribute</p></li>
+<li><p>In one tuple of a collection an attribute <code>x</code> may be of type, e.g., string, while in another tuple of the same collection the same attribute <code>x</code> may be of a different type – e.g, array.</p></li>
+<li><p>The elements of a collection (be it a bag or array) can be heterogeneous (not have the same type). For example, the first element may be a string, the second one may be an integer and the third one an array.</p></li>
+<li><p>Generally, any composition is possible as we can bundle heterogeneous elements in arrays and bags.</p></li>
+</ul>
+<p>Heterogeneities are not particular to schemaless. Schemas may allow for heterogeneity in the types of the data. For example, one of the Hive data types is the union type,<a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> which allows a value to belong to any one of a list of types. For example, in the following schema the <code>projects</code> attribute may be either a string or an array of strings</p>
+<div class="sourceCode" id="cb37"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb37-1" title="1"><span class="kw">CREATE</span> <span class="kw">TABLE</span> employeesMixed(</a>
+<a class="sourceLine" id="cb37-2" title="2">        <span class="kw">id</span>: <span class="dt">INT</span>,</a>
+<a class="sourceLine" id="cb37-3" title="3">        name: STRING,</a>
+<a class="sourceLine" id="cb37-4" title="4">        title: STRING,</a>
+<a class="sourceLine" id="cb37-5" title="5">        projects: UNIONTYPE<span class="op">&lt;</span>STRING, <span class="dt">ARRAY</span><span class="op">&lt;</span>STRING<span class="op">&gt;&gt;</span></a>
+<a class="sourceLine" id="cb37-6" title="6">);</a></code></pre></div>
+<p>A collection of PartiQL tuples that follows this schema could be</p>
+<pre><code>{ 
+    &#39;hr&#39;: { 
+        &#39;employeesMixed1&#39;: &lt;&lt;
+            { 
+                &#39;id&#39;: 3, 
+                    &#39;name&#39;: &#39;Bob Smith&#39;, 
+                    &#39;title&#39;: null, 
+                    &#39;projects&#39;: [ 
+                        &#39;AWS Redshift Spectrum querying&#39;,
+                    &#39;AWS Redshift security&#39;,
+                    &#39;AWS Aurora security&#39;
+                    ]
+            },
+            { 
+                &#39;id&#39;: 4, 
+                &#39;name&#39;: &#39;Susan Smith&#39;, 
+                &#39;title&#39;: &#39;Dev Mgr&#39;, 
+                &#39;projects&#39;: [] 
+            },
+            { 
+                &#39;id&#39;: 6, 
+                &#39;name&#39;: &#39;Jane Smith&#39;, 
+                &#39;title&#39;: &#39;Software Eng 2&#39;, 
+                &#39;projects&#39;: &#39;AWS Redshift security&#39; 
+            }
+        &gt;&gt;
+    }
+}</code></pre>
+<p>Thus we see that data may have heterogeneities – regardless of whether they are described by a schema or not. PartiQL tackles heterogeneous data, in ways that we will see in the next use cases and feature presentations.</p>
+<h2 id="tuples-with-missing-attributes">Tuples with Missing Attributes</h2>
+<p>Let’s go back to the <code>hr.employees</code> table (that is, bag of tuples). Bob Smith has no title and, as is typical in SQL, the lack of title is modeled with the <code>null</code> value.</p>
+<pre><code>{ 
+    &#39;hr&#39;: { 
+        &#39;employees&#39;: &lt;&lt;
+            { &#39;id&#39;: 3, &#39;name&#39;: &#39;Bob Smith&#39;,   &#39;title&#39;: null }
+            { &#39;id&#39;: 4, &#39;name&#39;: &#39;Susan Smith&#39;, &#39;title&#39;: &#39;Dev Mgr&#39; }
+            { &#39;id&#39;: 6, &#39;name&#39;: &#39;Jane Smith&#39;,  &#39;title&#39;: &#39;Software Eng 2&#39;}
+        &gt;&gt;
+    }
+}</code></pre>
+<p>Nowadays, many semi-structured formats allow users to represent “missing” information in two ways.</p>
+<ol type="1">
+<li>The first way is by use of <code>null</code>.</li>
+<li>The second kind is the plain absence of the attribute from the tuple.</li>
+</ol>
+<p>That is, we can represent the fact that Bob Smith has no title by simply having no <code>title</code> attribute in the <code>'Bob Smith'</code> tuple:</p>
+<pre><code>{ 
+    &#39;hr&#39;: {
+        &#39;employeesWithMissing&#39;: &lt;&lt;
+            { &#39;id&#39;: 3, &#39;name&#39;: &#39;Bob Smith&#39; }, -- no title in this tuple
+            { &#39;id&#39;: 4, &#39;name&#39;: &#39;Susan Smith&#39;, &#39;title&#39;: &#39;Dev Mgr&#39; },
+            { &#39;id&#39;: 6, &#39;name&#39;: &#39;Jane Smith&#39;, &#39;title&#39;: &#39;Software Eng 2&#39;}
+        &gt;&gt;
+    }
+} 
+
+</code></pre>
+<p>PartiQL does not argue about when to use <code>null</code>s and when to use “missing”. Myriads of datasets already use one of the two or both. However, PartiQL enables queries to distinguish when they access a <code>null</code> Vs when they access a missing attribute. PartiQL also enables queries to create results that have both <code>null</code>s and missing attributes. Indeed, it makes it very easy to propagate source data <code>null</code>s as query result <code>null</code>s and source data missing attributes into result missing attributes.</p>
+<h2 id="accessing-and-processing-missing-attributes-the-missing-value">Accessing and Processing Missing Attributes: The MISSING Value</h2>
+<p>Consider again this PartiQL query, which happens to also be an SQL query.</p>
+<div class="sourceCode" id="cb41"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb41-1" title="1"><span class="kw">SELECT</span> e.<span class="kw">id</span>, </a>
+<a class="sourceLine" id="cb41-2" title="2">       e.name <span class="kw">AS</span> employeeName, </a>
+<a class="sourceLine" id="cb41-3" title="3">       e.title <span class="kw">AS</span> title</a>
+<a class="sourceLine" id="cb41-4" title="4"><span class="kw">FROM</span> hr.employeesWithMissing <span class="kw">AS</span> e</a>
+<a class="sourceLine" id="cb41-5" title="5"><span class="kw">WHERE</span> e.title <span class="op">=</span> <span class="st">&#39;Dev Mgr&#39;</span></a>
+<a class="sourceLine" id="cb41-6" title="6"></a></code></pre></div>
+<p>What will happen when the query goes over the Bob Smith tuple, which has no <code>title</code>?</p>
+<p>The first step to answering this question is understanding the result of the path <code>e.title</code> when the alias (variable) <code>e</code> binds to the tuple <code>{ 'id': 3, 'name': 'Bob Smith' }</code>. In more basic terms, what is the result of the expression <code>{ 'id': 3, 'name': 'Bob Smith' }.path</code> ? PartiQL says that it is the special value <code>MISSING</code>. <code>MISSING</code> behaves very similar to <code>null</code>.</p>
+<h3 id="evaluating-functions-and-conditions-with-missing">Evaluating Functions and Conditions with MISSING</h3>
+<p>If a function (including infix functions like <code>=</code>) inputs a <code>MISSING</code> the function’s result is also <code>MISSING</code>. In the case of the example, this means that the <code>WHERE</code> clause <code>e.title='Dev Mgr'</code> will evaluate to <code>MISSING</code> when <code>e</code> binds to <code>{ 'id': 3, 'name': 'Bob Smith' }</code> and, as usual in SQL, the <code>WHERE</code> clause fails when it does not evaluate to <code>true</code>. Thus the output will be</p>
+<pre><code>&lt;&lt;
+  {
+    &#39;id&#39;: 4,
+    &#39;employeeName&#39;: &#39;Susan Smith&#39;,
+    &#39;title&#39;: &#39;Dev Mgr&#39;
+  }
+&gt;&gt;
+--- 
+OK! (17 ms)
+
+</code></pre>
+<h3 id="propagating-missing-in-result-tuples">Propagating MISSING in Result Tuples</h3>
+<p>What would happen if a missing attribute or, more generally, an expression returning <code>MISSING</code> appears in the <code>SELECT</code>?</p>
+<div class="sourceCode" id="cb43"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb43-1" title="1"><span class="kw">SELECT</span> e.<span class="kw">id</span>, </a>
+<a class="sourceLine" id="cb43-2" title="2">       e.name <span class="kw">AS</span> employeeName,</a>
+<a class="sourceLine" id="cb43-3" title="3">       e.title <span class="kw">AS</span> outputTitle</a>
+<a class="sourceLine" id="cb43-4" title="4"><span class="kw">FROM</span> hr.employeesWithMissing <span class="kw">AS</span> e</a></code></pre></div>
+<p>The query will output one tuple for each employee. When it outputs the Bob Smith tuple, the <code>e.title</code> will evaluate to <code>MISSING</code> and then the output tuple will not even have an <code>outputTitle</code> attribute.</p>
+<pre><code>&lt;&lt;
+  {
+    &#39;id&#39;: 3,
+    &#39;employeeName&#39;: &#39;Bob Smith&#39;
+  },
+  {
+    &#39;id&#39;: 4,
+    &#39;employeeName&#39;: &#39;Susan Smith&#39;,
+    &#39;outputTitle&#39;: &#39;Dev Mgr&#39;
+  },
+  {
+    &#39;id&#39;: 6,
+    &#39;employeeName&#39;: &#39;Jane Smith&#39;,
+    &#39;outputTitle&#39;: &#39;Software Eng 2&#39;
+  }
+&gt;&gt;
+--- 
+OK! (10 ms)
+</code></pre>
+<p>The same treatment of <code>MISSING</code> would happen if, say, we had this query that converts titles to capital letters:</p>
+<div class="sourceCode" id="cb45"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb45-1" title="1"><span class="kw">SELECT</span> e.<span class="kw">id</span>, </a>
+<a class="sourceLine" id="cb45-2" title="2">       e.name <span class="kw">AS</span> employeeName, </a>
+<a class="sourceLine" id="cb45-3" title="3">       <span class="fu">UPPER</span>(e.title) <span class="kw">AS</span> outputTitle</a>
+<a class="sourceLine" id="cb45-4" title="4"><span class="kw">FROM</span> hr.employeesWithMissing <span class="kw">AS</span> e</a>
+<a class="sourceLine" id="cb45-5" title="5"></a></code></pre></div>
+<p>Again, the <code>e.title</code> will evaluate to <code>MISSING</code> for <code>'Bob Smith'</code>, the <code>UPPER(e.title)</code> is then <code>UPPER(MISSING)</code> and also evaluates to <code>MISSING</code>. Thus the result will be</p>
+<pre><code>&lt;&lt;
+  {
+    &#39;id&#39;: 3,
+    &#39;employeeName&#39;: &#39;Bob Smith&#39;,
+    &#39;outputTitle&#39;: NULL
+  },
+  {
+    &#39;id&#39;: 4,
+    &#39;employeeName&#39;: &#39;Susan Smith&#39;,
+    &#39;outputTitle&#39;: &#39;DEV MGR&#39;
+  },
+  {
+    &#39;id&#39;: 6,
+    &#39;employeeName&#39;: &#39;Jane Smith&#39;,
+    &#39;outputTitle&#39;: &#39;SOFTWARE ENG 2&#39;
+  }
+&gt;&gt;
+--- 
+OK! (20 ms)
+</code></pre>
+<h2 id="variables-can-range-over-data-with-different-types">Variables can range over Data with Different Types</h2>
+<p>A PartiQL variable (called <em>alias</em> in SQL) can bind to data of different types during a query’s evaluation. This is unlike SQL where the variables always bind to tuples. It is even different from what happened in <a href="#use-case-unnesting-arrays-of-scalars">Use Case: Unnesting Arrays of Scalars</a> and what happened in <a href="#use-case-unnesting-arrays-of-arrays">Use Case: Unnesting Arrays of Arrays</a>.</p>
+<p>In the first use case, the PartiQL variable <code>p</code> happened to always bind to a string (given the particular sample data of the example). In the second use case, the PartiQL variable <code>y</code> was always bound to an array (again, given the particular sample data of the example).</p>
+<p>To make the case for variables that bind to different types, consider the following twist in the <code>employeesNest</code> data set. Some of the elements of the <code>projects</code> array are plain strings and some are tuples. Even the employee tuples do not always have the same attributes.</p>
+<pre><code>{ 
+    &#39;hr&#39;: { 
+        &#39;employeesMixed2&#39;: &lt;&lt;
+            { 
+                &#39;id&#39;: 3, 
+                &#39;name&#39;: &#39;Bob Smith&#39;, 
+                &#39;title&#39;: null, 
+                &#39;projects&#39;: [ 
+                    { &#39;name&#39;: &#39;AWS Redshift Spectrum querying&#39; },
+                    &#39;AWS Redshift security&#39;,
+                    { &#39;name&#39;: &#39;AWS Aurora security&#39; }
+                ]
+            },
+            { 
+                &#39;id&#39;: 4, 
+                &#39;name&#39;: &#39;Susan Smith&#39;, 
+                &#39;title&#39;: &#39;Dev Mgr&#39;, 
+                &#39;projects&#39;: []
+            },
+            { 
+                &#39;id&#39;: 6, 
+                &#39;name&#39;: &#39;Jane Smith&#39;, 
+                &#39;projects&#39;: [ &#39;AWS Redshift security&#39;] 
+            }
+        &gt;&gt;
+    }
+}
+</code></pre>
+<p>This query on <code>hr.employeesMixed2</code> produces employee name – employee project pairs.</p>
+<div class="sourceCode" id="cb48"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb48-1" title="1"><span class="kw">SELECT</span> e.name <span class="kw">AS</span> employeeName,</a>
+<a class="sourceLine" id="cb48-2" title="2">       <span class="cf">CASE</span> <span class="cf">WHEN</span> (p <span class="kw">IS</span> TUPLE) <span class="cf">THEN</span> p.name </a>
+<a class="sourceLine" id="cb48-3" title="3">       <span class="cf">ELSE</span> p <span class="cf">END</span> <span class="kw">AS</span> projectName</a>
+<a class="sourceLine" id="cb48-4" title="4"><span class="kw">FROM</span> hr.employeesMixed2 <span class="kw">AS</span> e,</a>
+<a class="sourceLine" id="cb48-5" title="5">     e.projects <span class="kw">AS</span> p</a></code></pre></div>
+<p>Notice the sub-expression <code>(p IS TUPLE)</code>. The <code>IS</code> operator can be used to check a value against it’s type at evaluation time. Notice also that the variable <code>p</code> binds to different types.</p>
+<p>In general, the <code>FROM</code> clause of a query binds its variables (aliases) to data. The variables need not bind to data that have the same types. Each binding is fed to the <code>SELECT</code> clause, which evaluates its expressions.</p>
+<p>This table shows each variables’ binding produced by the <code>FROM</code> clause and the corresponding tuple output by the <code>SELECT</code> clause.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Variable <code>e</code></th>
+<th>Variable <code>p</code></th>
+<th>Result tuple</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><pre><code>{ &#39;id&#39;: 3,
+
+&#39;name&#39;: &#39;Bob Smith&#39;,
+
+&#39;title&#39;: null,
+
+&#39;projects&#39;:  [ {
+&#39;name&#39;: &#39;AWS Redshift
+Spectrum querying&#39; },
+
+&#39;AWS Redshift
+security&#39;,
+
+{ &#39;name&#39;: &#39;AWS Aurora
+security&#39; }
+
+ ]
+
+}</code></pre></td>
+<td><pre><code>{ &#39;name&#39;: &#39;AWS
+Redshift Spectrum
+querying&#39; }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</code></pre></td>
+<td><pre><code>{
+
+&#39;employeeName&#39;: &#39;Bob
+Smith&#39;,
+
+&#39;projectName&#39;: &#39;AWS
+Redshift Spectrum
+querying&#39;
+
+}
+
+
+
+
+
+
+
+
+</code></pre></td>
+</tr>
+<tr class="even">
+<td><pre><code>{ &#39;id&#39;: 3,
+
+&#39;name&#39;: &#39;Bob Smith&#39;,
+
+&#39;title&#39;: null,
+
+&#39;projects&#39;:  [ {
+&#39;name&#39;: &#39;AWS Redshift
+Spectrum querying&#39; },
+
+&#39;AWS Redshift
+security&#39;,
+
+{ &#39;name&#39;: &#39;AWS Aurora
+security&#39; }
+
+ ]
+
+}</code></pre></td>
+<td><pre><code>&#39;AWS Redshift
+security&#39;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</code></pre></td>
+<td><pre><code>{
+
+&#39;employeeName&#39;: &#39;Bob
+Smith&#39;,
+
+&#39;projectName&#39;: &#39;AWS
+Redshift security&#39;
+
+}
+
+
+
+
+
+
+
+
+
+</code></pre></td>
+</tr>
+<tr class="odd">
+<td><pre><code>{ &#39;id&#39;: 3,
+
+&#39;name&#39;: &#39;Bob Smith&#39;,
+
+&#39;title&#39;: null,
+
+&#39;projects&#39;: \[ {
+&#39;name&#39;: &#39;AWS Redshift
+Spectrum querying&#39; },
+
+&#39;AWS Redshift
+security&#39;,
+
+{ &#39;name&#39;: &#39;AWS Aurora
+security&#39; }
+
+\]
+
+}</code></pre></td>
+<td><pre><code>{ &#39;name&#39;: &#39;AWS Aurora
+security&#39; }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</code></pre></td>
+<td><pre><code>{
+
+&#39;employeeName&#39;: &#39;Bob
+Smith&#39;,
+
+&#39;projectName&#39;: &#39;AWS
+Aurora security&#39;
+
+}
+
+
+
+
+
+
+
+
+
+</code></pre></td>
+</tr>
+<tr class="even">
+<td><pre><code>{ &#39;id&#39;: 6,
+
+&#39;name&#39;: &#39;Jane Smith&#39;,
+
+&#39;projects&#39;: \[ &#39;AWS
+Redshift security&#39; \]
+
+}
+</code></pre></td>
+<td><pre><code>  &#39;AWS Redshift
+security&#39;
+
+
+
+
+
+
+</code></pre></td>
+<td><pre><code>{
+
+  &#39;employeeName&#39;:
+&#39;Jane Smith&#39;,
+
+  &#39;projectName&#39;: &#39;AWS
+Redshift security&#39;
+
+}</code></pre></td>
+</tr>
+</tbody>
+</table>
+<h1 id="accessing-array-elements-by-order">Accessing Array Elements by Order</h1>
+<p>SQL allows us to order the output of a query using the <code>ORDER BY</code> clause. However, the SQL data model does not recognize order in the input data. In contrast, many of the new data formats feature arrays; the array’s elements have an order. We may want to find an array element according to its order, or, we may want to find the positions of certain elements in their arrays.</p>
+<h2 id="array-number"><code>&lt;Array&gt; [&lt;number&gt;]</code></h2>
+<p>Let’s consider again the dataset <code>hr.employeesNest</code>.</p>
+<pre><code>{ 
+  &#39;hr&#39;: { 
+      &#39;employeesNest&#39;: &lt;&lt;
+         { 
+          &#39;id&#39;: 3, 
+          &#39;name&#39;: &#39;Bob Smith&#39;, 
+          &#39;title&#39;: null, 
+          &#39;projects&#39;: [ { &#39;name&#39;: &#39;AWS Redshift Spectrum querying&#39; },
+                        { &#39;name&#39;: &#39;AWS Redshift security&#39; },
+                        { &#39;name&#39;: &#39;AWS Aurora security&#39; }
+                      ]
+          },
+          { 
+              &#39;id&#39;: 4, 
+              &#39;name&#39;: &#39;Susan Smith&#39;, 
+              &#39;title&#39;: &#39;Dev Mgr&#39;, 
+              &#39;projects&#39;: [] 
+          },
+          { 
+              &#39;id&#39;: 6, 
+              &#39;name&#39;: &#39;Jane Smith&#39;, 
+              &#39;title&#39;: &#39;Software Eng 2&#39;, 
+              &#39;projects&#39;: [ { &#39;name&#39;: &#39;AWS Redshift security&#39; } ] 
+          }
+      &gt;&gt;
+    }
+}
+</code></pre>
+<p>The <code>projects</code> attribute is an array of tuples; that is, each tuple has an ordinal associated with it. The following query returns each employee name, along with the first project of the employee.</p>
+<div class="sourceCode" id="cb62"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb62-1" title="1"><span class="kw">SELECT</span> e.name <span class="kw">AS</span> employeeName, </a>
+<a class="sourceLine" id="cb62-2" title="2">       e.projects[<span class="dv">0</span>].name <span class="kw">AS</span> firstProjectName</a>
+<a class="sourceLine" id="cb62-3" title="3"><span class="kw">FROM</span> hr.employeesNest <span class="kw">AS</span> e</a></code></pre></div>
+<p>The query returns</p>
+<pre><code>&lt;&lt;
+  {
+    &#39;employeeName&#39;: &#39;Bob Smith&#39;,
+    &#39;firstProjectName&#39;: &#39;AWS Redshift Spectrum querying&#39;
+  },
+  {
+    &#39;employeeName&#39;: &#39;Susan Smith&#39;
+  },
+  {
+    &#39;employeeName&#39;: &#39;Jane Smith&#39;,
+    &#39;firstProjectName&#39;: &#39;AWS Redshift security&#39;
+  }
+&gt;&gt;
+--- 
+OK! (51 ms)
+
+</code></pre>
+<h2 id="multistep-paths">Multistep Paths</h2>
+<p>Technically, the structure <code>[&lt;number&gt;]</code> is a kind of path step. For example, notice the 4-step path <code>e.projects[0].name</code>. When <code>e</code> is bound to the first tuple of <code>hr.employeesNest</code>, then the path <code>e.projects</code> results into the array</p>
+<pre><code>[ 
+    { &#39;name&#39;: &#39;AWS Redshift Spectrum querying&#39; },
+    { &#39;name&#39;: &#39;AWS Redshift security&#39; },
+    { &#39;name&#39;: &#39;AWS Aurora security&#39; }
+]</code></pre>
+<p>Consequently applying the <code>[0]</code> step on <code>e.projects</code> (that is, evaluating <code>e.projects[0]</code>) leads to <code>{'name': 'AWS Redshift Spectrum querying'}</code>. Finally, evaluating the <code>.name</code> step on <code>e.projects[0]</code> (that is, evaluating <code>e.projects[0].name</code>) leads to <code>'AWS Redshift Spectrum querying'</code>.</p>
+<h2 id="finding-the-order-of-each-element-in-an-array">Finding the Order of Each Element in an Array</h2>
+<p>Let’s assume that the order of each employee’s projects in the <code>projects</code> attribute of <code>hr.employeesNest</code> matters. The first project is the employee’s highest priority project, followed by the second and so on. The following query finds the names of each employee involved in a security project, the security project and its order in the <code>projects</code> array.</p>
+<div class="sourceCode" id="cb65"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb65-1" title="1"><span class="kw">SELECT</span> e.name <span class="kw">AS</span> employeeName, </a>
+<a class="sourceLine" id="cb65-2" title="2">       p.name <span class="kw">AS</span> projectName, </a>
+<a class="sourceLine" id="cb65-3" title="3">       o <span class="kw">AS</span> projectPriority</a>
+<a class="sourceLine" id="cb65-4" title="4"><span class="kw">FROM</span> hr.employeesNest <span class="kw">AS</span> e, </a>
+<a class="sourceLine" id="cb65-5" title="5">     e.projects <span class="kw">AS</span> p <span class="kw">AT</span> o</a>
+<a class="sourceLine" id="cb65-6" title="6"><span class="kw">WHERE</span> p.name <span class="kw">LIKE</span> <span class="st">&#39;%security%&#39;</span></a>
+<a class="sourceLine" id="cb65-7" title="7"></a></code></pre></div>
+<p>Notice the new feature: <code>AT o</code>. While <code>p</code> ranges over the elements of the array <code>e.projects</code>, the variable <code>o</code> takes as value the ordinal number of the element in the array. The query returns</p>
+<pre><code>&lt;&lt;
+  {
+    &#39;employeeName&#39;: &#39;Bob Smith&#39;,
+    &#39;projectName&#39;: &#39;AWS Redshift security&#39;,
+    &#39;projectPriority&#39;: 1
+  },
+  {
+    &#39;employeeName&#39;: &#39;Bob Smith&#39;,
+    &#39;projectName&#39;: &#39;AWS Aurora security&#39;,
+    &#39;projectPriority&#39;: 2
+  },
+  {
+    &#39;employeeName&#39;: &#39;Jane Smith&#39;,
+    &#39;projectName&#39;: &#39;AWS Redshift security&#39;,
+    &#39;projectPriority&#39;: 0
+  }
+&gt;&gt;
+--- 
+OK! (12 ms)
+
+</code></pre>
+<h1 id="pivoting-unpivoting">Pivoting &amp; Unpivoting</h1>
+<p>Many queries need to range over and collect the attribute name/value pairs of tuples or the key/value pairs of maps.</p>
+<h2 id="unpivoting-tuples">Unpivoting Tuples</h2>
+<p>Consider this dataset that provides the closing prices of multiple ticker symbols.</p>
+<pre><code>{ 
+    &#39;closingPrices&#39;: &lt;&lt;
+        { &#39;date&#39;: &#39;4/1/2019&#39;, &#39;amzn&#39;: 1900, &#39;goog&#39;: 1120, &#39;fb&#39;: 180 },
+        { &#39;date&#39;: &#39;4/2/2019&#39;, &#39;amzn&#39;: 1902, &#39;goog&#39;: 1119, &#39;fb&#39;: 183 }
+    &gt;&gt;
+} 
+
+</code></pre>
+<p>The following query unpivots the stock ticker/price pairs.</p>
+<div class="sourceCode" id="cb68"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb68-1" title="1"><span class="kw">SELECT</span> c.<span class="ot">&quot;date&quot;</span> <span class="kw">AS</span> <span class="ot">&quot;date&quot;</span>, </a>
+<a class="sourceLine" id="cb68-2" title="2">       sym <span class="kw">AS</span> <span class="ot">&quot;symbol&quot;</span>, </a>
+<a class="sourceLine" id="cb68-3" title="3">       price <span class="kw">AS</span> price</a>
+<a class="sourceLine" id="cb68-4" title="4"><span class="kw">FROM</span> closingPrices <span class="kw">AS</span> c, </a>
+<a class="sourceLine" id="cb68-5" title="5">     UNPIVOT c <span class="kw">AS</span> price <span class="kw">AT</span> sym</a>
+<a class="sourceLine" id="cb68-6" title="6"><span class="kw">WHERE</span> <span class="kw">NOT</span> sym <span class="op">=</span> <span class="st">&#39;date&#39;</span></a>
+<a class="sourceLine" id="cb68-7" title="7"></a></code></pre></div>
+<p>Notice the use of <code>"</code> in this query. The double quotes allow us to disambiquate from <code>date</code> the keyword and <code>"date"</code> the identifier. Also double quote specify case sensitivity for attribute lookups.</p>
+<p>The query returns</p>
+<pre><code>&lt;&lt;
+  {
+    &#39;date&#39;: &#39;4/1/2019&#39;,
+    &#39;symbol&#39;: &#39;amzn&#39;,
+    &#39;price&#39;: 1900
+  },
+  {
+    &#39;date&#39;: &#39;4/1/2019&#39;,
+    &#39;symbol&#39;: &#39;goog&#39;,
+    &#39;price&#39;: 1120
+  },
+  {
+    &#39;date&#39;: &#39;4/1/2019&#39;,
+    &#39;symbol&#39;: &#39;fb&#39;,
+    &#39;price&#39;: 180
+  },
+  {
+    &#39;date&#39;: &#39;4/2/2019&#39;,
+    &#39;symbol&#39;: &#39;amzn&#39;,
+    &#39;price&#39;: 1902
+  },
+  {
+    &#39;date&#39;: &#39;4/2/2019&#39;,
+    &#39;symbol&#39;: &#39;goog&#39;,
+    &#39;price&#39;: 1119
+  },
+  {
+    &#39;date&#39;: &#39;4/2/2019&#39;,
+    &#39;symbol&#39;: &#39;fb&#39;,
+    &#39;price&#39;: 183
+  }
+&gt;&gt;
+--- 
+OK! (18 ms)
+
+</code></pre>
+<p>Unpivoting tuples enables the use of attribute names as if they were data. For example, it becomes easy to compute the average price for each symbol as</p>
+<div class="sourceCode" id="cb70"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb70-1" title="1"><span class="kw">SELECT</span> sym <span class="kw">AS</span> <span class="ot">&quot;symbol&quot;</span>, </a>
+<a class="sourceLine" id="cb70-2" title="2">       <span class="fu">AVG</span>(price) <span class="kw">AS</span> avgPrice</a>
+<a class="sourceLine" id="cb70-3" title="3"><span class="kw">FROM</span> closingPrices c, </a>
+<a class="sourceLine" id="cb70-4" title="4">     UNPIVOT c <span class="kw">AS</span> price <span class="kw">AT</span> sym</a>
+<a class="sourceLine" id="cb70-5" title="5"><span class="kw">WHERE</span> <span class="kw">NOT</span> sym <span class="op">=</span> <span class="st">&#39;date&#39;</span></a>
+<a class="sourceLine" id="cb70-6" title="6"><span class="kw">GROUP</span> <span class="kw">BY</span> sym</a></code></pre></div>
+<p>which returns</p>
+<pre><code>&lt;&lt;
+  {
+    &#39;symbol&#39;: &#39;amzn&#39;,
+    &#39;avgPrice&#39;: 1901
+  },
+  {
+    &#39;symbol&#39;: &#39;fb&#39;,
+    &#39;avgPrice&#39;: 181.5
+  },
+  {
+    &#39;symbol&#39;: &#39;goog&#39;,
+    &#39;avgPrice&#39;: 1119.5
+  }
+&gt;&gt;
+--- 
+OK! (31 ms)</code></pre>
+<h2 id="pivoting-into-tuples">Pivoting into Tuples</h2>
+<p>Pivoting turns a collection into a tuple. For example, consider the collection</p>
+<pre><code>{ 
+    &#39;todaysStockPrices&#39;: &lt;&lt;
+        { &#39;symbol&#39;: &#39;amzn&#39;, &#39;price&#39;: 1900},
+        { &#39;symbol&#39;: &#39;goog&#39;, &#39;price&#39;: 1120},
+        { &#39;symbol&#39;: &#39;fb&#39;, &#39;price&#39;: 180 }
+    &gt;&gt;
+} 
+</code></pre>
+<p>Then the following <code>PIVOT</code> query</p>
+<div class="sourceCode" id="cb73"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb73-1" title="1">PIVOT sp.price <span class="kw">AT</span> sp.<span class="ot">&quot;symbol&quot;</span></a>
+<a class="sourceLine" id="cb73-2" title="2"><span class="kw">FROM</span> todaysStockPrices sp</a></code></pre></div>
+<p>produces the tuple</p>
+<pre><code>{
+  &#39;amzn&#39;: 1900,
+  &#39;goog&#39;: 1120,
+  &#39;fb&#39;: 180
+}
+--- 
+OK! (43 ms)
+
+</code></pre>
+<p>Notice that the <code>PIVOT</code> query looks like a <code>SELECT-FROM-WHERE-...</code> query except that instead of a <code>SELECT</code> clause it has a <code>PIVOT &lt;value expression&gt; AT &lt;attribute expression&gt;</code>. Note also that the <code>PIVOT</code> query does not return a singleton collection of tuples: Rather it literally returns a tuple value.</p>
+<h2 id="use-case-pivoting-subqueries">Use Case: Pivoting Subqueries</h2>
+<p>(This example also uses the grouping features of PartiQL, Creating Nested Results with <code>GROUP BY</code> … <code>GROUP AS</code>.)</p>
+<p>Let us generalize the previous case of pivoting. We have a table of stock prices</p>
+<pre><code>{ 
+    &#39;stockPrices&#39;:&lt;&lt;
+        { &#39;date&#39;: &#39;4/1/2019&#39;, &#39;symbol&#39;: &#39;amzn&#39;, &#39;price&#39;: 1900},
+        { &#39;date&#39;: &#39;4/1/2019&#39;, &#39;symbol&#39;: &#39;goog&#39;, &#39;price&#39;: 1120},
+        { &#39;date&#39;: &#39;4/1/2019&#39;, &#39;symbol&#39;: &#39;fb&#39;,   &#39;price&#39;: 180 },
+        { &#39;date&#39;: &#39;4/2/2019&#39;, &#39;symbol&#39;: &#39;amzn&#39;, &#39;price&#39;: 1902},
+        { &#39;date&#39;: &#39;4/2/2019&#39;, &#39;symbol&#39;: &#39;goog&#39;, &#39;price&#39;: 1119},
+        { &#39;date&#39;: &#39;4/2/2019&#39;, &#39;symbol&#39;: &#39;fb&#39;,   &#39;price&#39;: 183 }
+    &gt;&gt;
+} 
+
+</code></pre>
+<p>and we want to pivot it into a collection of tuples, where each tuple has all the <code>symbol:price</code> pairs for a date, as follows</p>
+<pre><code>&lt;&lt;
+{ 
+    &#39;date&#39;: date(4/1/2019), 
+    &#39;prices&#39;: {&#39;amzn&#39;: 1900, &#39;goog&#39;: 1120, &#39;fb&#39;: 180} 
+},
+{ 
+    &#39;date&#39;: date(4/2/2019), 
+    &#39;prices&#39;: {&#39;amzn&#39;: 1902, &#39;goog&#39;: 1119, &#39;fb&#39;: 183} 
+}
+&gt;&gt;
+</code></pre>
+<p>The following query first creates one group datesPrices for each date. Then the <code>PIVOT</code> subquery pivots the group into the tuple prices.</p>
+<div class="sourceCode" id="cb77"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb77-1" title="1"><span class="kw">SELECT</span> sp.<span class="ot">&quot;date&quot;</span> <span class="kw">AS</span> <span class="ot">&quot;date&quot;</span>, </a>
+<a class="sourceLine" id="cb77-2" title="2">       (PIVOT dp.sp.price <span class="kw">AT</span> dp.sp.<span class="ot">&quot;symbol&quot;</span> </a>
+<a class="sourceLine" id="cb77-3" title="3">        <span class="kw">FROM</span> datesPrices <span class="kw">as</span> dp ) <span class="kw">AS</span> prices</a>
+<a class="sourceLine" id="cb77-4" title="4"><span class="kw">FROM</span> StockPrices <span class="kw">AS</span> sp <span class="kw">GROUP</span> <span class="kw">BY</span> sp.<span class="ot">&quot;date&quot;</span> <span class="kw">GROUP</span> <span class="kw">AS</span> datesPrices</a></code></pre></div>
+<p>For example, the <code>datesPrices</code> collection, returned from <code>GROUP AS</code> for <code>sp.date = date(4/1/2019)</code> is</p>
+<pre><code>    &#39;datesPrices&#39;: &lt;&lt;
+      {
+        &#39;sp&#39;: {
+          &#39;date&#39;: &#39;4/1/2019&#39;,
+          &#39;symbol&#39;: &#39;amzn&#39;,
+          &#39;price&#39;: 1900
+        }
+      },
+      {
+        &#39;sp&#39;: {
+          &#39;date&#39;: &#39;4/1/2019&#39;,
+          &#39;symbol&#39;: &#39;goog&#39;,
+          &#39;price&#39;: 1120
+        }
+      },
+      {
+        &#39;sp&#39;: {
+          &#39;date&#39;: &#39;4/1/2019&#39;,
+          &#39;symbol&#39;: &#39;fb&#39;,
+          &#39;price&#39;: 180
+        }
+      }
+    &gt;&gt;</code></pre>
+<h1 id="creating-nested-and-non-sql-results">Creating Nested and Non-SQL Results</h1>
+<p>PartiQL allows queries that create nested results as well as queries that create heterogeneous results.</p>
+<h2 id="creating-nested-results-with-select-value-queries">Creating Nested Results with <code>SELECT VALUE</code> Queries</h2>
+<p>Let’s consider again the dataset <code>hr.employeesNestScalars</code>:</p>
+<pre><code>{ 
+    &#39;hr&#39;: { 
+        &#39;employeesNestScalars&#39;: &lt;&lt;
+            { 
+                &#39;id&#39;: 3, 
+                &#39;name&#39;: &#39;Bob Smith&#39;, 
+                &#39;title&#39;: null, 
+                &#39;projects&#39;: [ 
+                    &#39;AWS Redshift Spectrum querying&#39;,
+                    &#39;AWS Redshift security&#39;,
+                    &#39;AWS Aurora security&#39;
+                ]
+            },
+            { 
+                &#39;id&#39;: 4, 
+                &#39;name&#39;: &#39;Susan Smith&#39;, 
+                &#39;title&#39;: &#39;Dev Mgr&#39;, 
+                &#39;projects&#39;: []
+            },
+            { 
+                &#39;id&#39;: 6, 
+                &#39;name&#39;: &#39;Jane Smith&#39;, 
+                &#39;title&#39;: &#39;Software Eng 2&#39;, 
+                &#39;projects&#39;: [ &#39;AWS Redshift security&#39; ]
+            }
+        &gt;&gt;
+    } 
+}
+</code></pre>
+<p>The following query outputs each tuple of <code>hr.employeesNestScalars</code>, except that instead of all projects each tuple has only the security projects of the employee. The important new feature here is the <code>SELECT VALUE &lt;expression&gt;</code>.</p>
+<div class="sourceCode" id="cb80"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb80-1" title="1"><span class="kw">SELECT</span> e.<span class="kw">id</span> <span class="kw">AS</span> <span class="kw">id</span>, </a>
+<a class="sourceLine" id="cb80-2" title="2">       e.name <span class="kw">AS</span> name, </a>
+<a class="sourceLine" id="cb80-3" title="3">       e.title <span class="kw">AS</span> title,</a>
+<a class="sourceLine" id="cb80-4" title="4">       ( <span class="kw">SELECT</span> <span class="fu">VALUE</span> p</a>
+<a class="sourceLine" id="cb80-5" title="5">         <span class="kw">FROM</span> e.projects <span class="kw">AS</span> p</a>
+<a class="sourceLine" id="cb80-6" title="6">         <span class="kw">WHERE</span> p <span class="kw">LIKE</span> <span class="st">&#39;%security%&#39;</span></a>
+<a class="sourceLine" id="cb80-7" title="7">       ) <span class="kw">AS</span> securityProjects</a>
+<a class="sourceLine" id="cb80-8" title="8"><span class="kw">FROM</span> hr.employeesNestScalars <span class="kw">AS</span> e</a></code></pre></div>
+<p>The result is</p>
+<pre><code>&lt;&lt;
+  {
+    &#39;id&#39;: 3,
+    &#39;name&#39;: &#39;Bob Smith&#39;,
+    &#39;title&#39;: NULL,
+    &#39;securityProjects&#39;: &lt;&lt;
+      &#39;AWS Redshift security&#39;,
+      &#39;AWS Aurora security&#39;
+    &gt;&gt;
+  },
+  {
+    &#39;id&#39;: 4,
+    &#39;name&#39;: &#39;Susan Smith&#39;,
+    &#39;title&#39;: &#39;Dev Mgr&#39;,
+    &#39;securityProjects&#39;: &lt;&lt;&gt;&gt;
+  },
+  {
+    &#39;id&#39;: 6,
+    &#39;name&#39;: &#39;Jane Smith&#39;,
+    &#39;title&#39;: &#39;Software Eng 2&#39;,
+    &#39;securityProjects&#39;: &lt;&lt;
+      &#39;AWS Redshift security&#39;
+    &gt;&gt;
+  }
+&gt;&gt;
+--- 
+OK! (35 ms)
+
+</code></pre>
+<p>A <code>SELECT VALUE &lt;expression&gt;</code> query (or subquery, as in this example) returns a collection of whatever the <code>&lt;expression&gt;</code> evaluates to.</p>
+<p>Notice the difference from SQL’s <code>SELECT</code>, which always produces tuples. If a SQL <code>SELECT</code> appears as a subquery, then the context of the subquery designates whether the subquery’s result should be coerced into a scalar (e.g., when <code>5 = &lt;subquery&gt;</code>), coerced into a collection of scalars (e.g., when <code>5 IN &lt;subquery&gt;</code>), etc. None of this applies to <code>SELECT VALUE</code>, which produces a collection and this collection is not coerced.</p>
+<h2 id="creating-nested-results-with-group-by-...-group-as">Creating Nested Results with <code>GROUP BY ... GROUP AS</code></h2>
+<p>Another pattern of creating nested results in PartiQL is via the <code>GROUP AS</code> extension to SQL’s <code>GROUP BY</code>. This pattern is more efficient and more intuitive than the use of nested <code>SELECT VALUE</code> queries when the required nesting is not following the nesting of the input. (The example in <a href="#creating-nested-results-with-select-value-queries">Creating Nested Results with <code>SELECT VALUE</code> Queries</a> is one where the nesting in the output follows the nesting of the input and, thus, an intuitive solution does not involve <code>GROUP BY</code>.)</p>
+<p>The following query outputs each security project found in <code>hr.employeesNestScalars</code> along with the list of employee names that work on the project.</p>
+<div class="sourceCode" id="cb82"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb82-1" title="1"><span class="kw">SELECT</span> p <span class="kw">AS</span> projectName,</a>
+<a class="sourceLine" id="cb82-2" title="2">       ( <span class="kw">SELECT</span> <span class="fu">VALUE</span> v.e.name </a>
+<a class="sourceLine" id="cb82-3" title="3">         <span class="kw">FROM</span> perProjectGroup <span class="kw">AS</span> v ) <span class="kw">AS</span> employees</a>
+<a class="sourceLine" id="cb82-4" title="4"><span class="kw">FROM</span> hr.employeesNestScalars <span class="kw">AS</span> e <span class="kw">JOIN</span> e.projects <span class="kw">AS</span> p <span class="kw">ON</span> p <span class="kw">LIKE</span> <span class="st">&#39;%security%&#39;</span></a>
+<a class="sourceLine" id="cb82-5" title="5"><span class="kw">GROUP</span> <span class="kw">BY</span> p <span class="kw">GROUP</span> <span class="kw">AS</span> perProjectGroup</a>
+<a class="sourceLine" id="cb82-6" title="6"></a></code></pre></div>
+<p>The result is</p>
+<pre><code>&lt;&lt;
+  {
+    &#39;projectName&#39;: &#39;AWS Aurora security&#39;,
+    &#39;employees&#39;: &lt;&lt;
+      &#39;Bob Smith&#39;
+    &gt;&gt;
+  },
+  {
+    &#39;projectName&#39;: &#39;AWS Redshift security&#39;,
+    &#39;employees&#39;: &lt;&lt;
+      &#39;Bob Smith&#39;,
+      &#39;Jane Smith&#39;
+    &gt;&gt;
+  }
+&gt;&gt;
+--- 
+OK! (24 ms)
+
+</code></pre>
+<p>The <code>GROUP AS</code> generalizes SQL’s <code>GROUP BY</code> by making the formulated groups available in their entirety to the query’s <code>SELECT</code> and <code>HAVING</code> clauses. Contrast with SQL’s <code>GROUP BY</code>, where the <code>SELECT</code> and <code>HAVING</code> clauses can have aggregate functions over grouped columns but they cannot get access to the individual values of the grouped columns.</p>
+<p>To better understand the workings of <code>GROUP BY ... GROUP AS</code> it is best to think of PartiQL queries as a pipeline of clauses, starting with the <code>FROM</code>, continuing with the <code>GROUP BY</code> and finishing with the <code>SELECT</code>. Each clause is a function that inputs data and outputs data. In that sense, the <code>GROUP BY ... GROUP AS</code> is a function that inputs the result of the <code>FROM</code> and outputs its result to the <code>SELECT</code>.</p>
+<p>The following query (conceptually) produces the output of the <code>FROM</code> clause.</p>
+<div class="sourceCode" id="cb84"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb84-1" title="1"><span class="kw">SELECT</span> e <span class="kw">AS</span> e, p <span class="kw">AS</span> p</a>
+<a class="sourceLine" id="cb84-2" title="2"><span class="kw">FROM</span> hr.employeesNestScalars <span class="kw">AS</span> e <span class="kw">JOIN</span> e.projects <span class="kw">AS</span> p <span class="kw">ON</span> p <span class="kw">LIKE</span> <span class="st">&#39;%security%&#39;</span></a></code></pre></div>
+<p>We see that the <code>FROM</code> delivers the collection of tuples consisting of an employee <code>e</code> and a project <code>p</code> that were output by the <code>FROM</code> clause, i.e., the <code>LEFT JOIN</code>. This is alike SQL’s <code>FROM</code> semantics.</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Variable <code>e</code></th>
+<th>Variable <code>p</code></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><pre><code> { &#39;id&#39;: 3,
+
+ &#39;name&#39;: &#39;Bob Smith&#39;,
+
+ &#39;title&#39;: null,
+
+ &#39;projects&#39;:  [ &#39;AWS Redshift
+ Spectrum querying&#39;,
+
+ &#39;AWS Redshift security&#39;,
+
+ &#39;AWS Aurora security&#39;
+
+  ]
+
+ }</code></pre></td>
+<td><pre><code>  &#39;AWS Redshift security&#39;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</code></pre></td>
+</tr>
+<tr class="even">
+<td><pre><code>{ &#39;id&#39;: 3,
+
+&#39;name&#39;: &#39;Bob Smith&#39;,
+
+&#39;title&#39;: null,
+
+&#39;projects&#39;:  [ &#39;AWS Redshift
+Spectrum querying&#39;,
+
+&#39;AWS Redshift security&#39;,
+
+&#39;AWS Aurora security&#39;
+
+ ]
+
+}</code></pre></td>
+<td><pre><code>  &#39;AWS Aurora security&#39;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</code></pre></td>
+</tr>
+<tr class="odd">
+<td><pre><code>{ &#39;id&#39;: 6,
+
+&#39;name&#39;: &#39;Jane Smith&#39;,
+
+&#39;title&#39;: &#39;Software Eng 2&#39;,
+
+&#39;projects&#39;:  [ &#39;AWS Redshift
+security&#39;  ]
+
+}</code></pre></td>
+<td><pre><code>&#39;AWS Redshift security&#39;
+
+
+
+
+
+
+
+
+</code></pre></td>
+</tr>
+</tbody>
+</table>
+<p>Then the <code>GROUP BY ... GROUP AS ...</code> can be thought of as outputting a table that has one column for each group-by expression (i.e., each security project <code>p</code>) and a last column <code>perProjectGroup</code> whose value (conceptually) is the collection of employee/project <code>e</code>/<code>p</code> tuples that correspond to the group-by expression <code>p</code>. Thus the <code>GROUP BY ... GROUP AS ...</code> output is the table</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th><code>p</code></th>
+<th><code>perProjectGroup</code></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><pre><code>&#39;AWS Redshift security&#39;
+
+
+
+
+
+
+
+
+
+</code></pre></td>
+<td><pre><code>&lt;&lt;
+
+{ e: { &#39;id&#39;: 3, &#39;name&#39;: &#39;Bob
+Smith&#39;, ... }, p: &#39;AWS Redshift
+security&#39; },
+
+{ e: { &#39;id&#39;: 6, &#39;name&#39;: &#39;Jane
+Smith&#39;, ... }, p: &#39;AWS Redshift
+security&#39; }
+
+&gt;&gt;</code></pre></td>
+</tr>
+<tr class="even">
+<td><pre><code>&#39;AWS Aurora security&#39;
+
+
+
+
+
+</code></pre></td>
+<td><pre><code>&lt;&lt;
+
+{ e: { &#39;id&#39;: 3, &#39;name&#39;: &#39;Bob
+Smith&#39;, ...}, p: &#39;AWS Aurora
+security&#39; },
+
+&gt;&gt;</code></pre></td>
+</tr>
+</tbody>
+</table>
+<p>Finally the <code>SELECT</code> clause inputs the above and outputs the query result.</p>
+<section class="footnotes" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1" role="doc-endnote"><p>The implementation currently only supports data without schema. Schema support is forthcoming.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩</a></p></li>
+<li id="fn2" role="doc-endnote"><p><a href="http://www.contrib.andrew.cmu.edu/~shadow/sql/sql1992.txt">SQL-92</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩</a></p></li>
+<li id="fn3" role="doc-endnote"><p>The JSON value attached to <code>employee</code> is an <em>ordered</em> list. PartiQL implementations may provide their own mappings from popular data formats, e.g., CSV, TSV, JSON, Ion etc., to the PartiQL data model and/or allow clients to implements their own mappings.<a href="#fnref3" class="footnote-back" role="doc-backlink">↩</a></p></li>
+<li id="fn4" role="doc-endnote"><p>We could also have used the <code>&gt;</code> operator with the subquery’s result, but a current <a href="https://github.com/partiql/partiql-lang-kotlin/issues/81">issue</a> with the implementation currently prevents us from doing so.<a href="#fnref4" class="footnote-back" role="doc-backlink">↩</a></p></li>
+<li id="fn5" role="doc-endnote"><p>We could also have used the <code>&gt;</code> operator with the subquery’s result, but a current <a href="https://github.com/partiql/partiql-lang-kotlin/issues/81">issue</a> with the implementation currently prevents us from doing so.<a href="#fnref5" class="footnote-back" role="doc-backlink">↩</a></p></li>
+<li id="fn6" role="doc-endnote"><p><a href="https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Types#LanguageManualTypes-UnionTypesunionUnionTypes">Hive Union Type</a><a href="#fnref6" class="footnote-back" role="doc-backlink">↩</a></p></li>
+</ol>
+</section>                    
+                </div>
+            </div>
+            <script src="https://vjs.zencdn.net/5.4.4/video.js"></script>
+        </div>
+    </body>
+</html>

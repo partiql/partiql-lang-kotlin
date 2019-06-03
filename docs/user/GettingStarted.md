@@ -23,13 +23,38 @@ the latest `partiql-cli` zip archive to your machine.
 
 ```
 ├── partiql-cli
-│   ├── partiql
-│   ├── partiql.bat
-│   ├── partiql-cli.jar
-│   └── README.md
-│   └── tutorial.html
-│   └── tutorial.pdf
+│   ├── bin
+│   │   ├── partiql
+│   │   └── partiql.bat
+│   ├── lib
+│   │   └── ... 
+│   ├── README.md
+│   └── Tutorial
+│       ├── code
+│       │   └── ... 
+│       ├── tutorial.html
+│       └── tutorial.pdf
 ```
+
+We have used ellipsis `...` to elide files/directories. 
+
+The root folder `partiql-cli` contains a `README.md` file and 3 subfolders 
+
+1. The folder `bin` contains startup scripts `partiql` for OSX (Mac) and
+Unix systems and `partiql.bat` for Windows systems. Execute these files
+to start the REPL
+1. The folder `lib` contains all the necessary java libraries needed to run PartiQL. 
+1. The folder `Tutorial` contains the tutorial in `pdf` and `html` form. The subfolder `code` contains 3 types of files 
+    1. Data files with the extension `.env`. These files contains PartiQL
+    data that we can query
+    1. PartiQL query files with the extension `.sql`. These files contain
+    the PartiQL queries used in the tutorial.
+    1. Sample query output files with the extension `.out`. These files
+    contain sample output from running the tutorial queries on the
+    appropriate data.
+
+
+
 
 ## Running the PartiQL REPL 
 
@@ -68,29 +93,74 @@ and press `ENTER` *twice*. The output should look similar to
 PartiQL> SELECT * FROM [1,2,3]
    | 
 ===' 
-{
-  _1:1
-}
-{
-  _1:2
-}
-{
-  _1:3
-}
+<<
+  {
+    '_1': 1
+  },
+  {
+    '_1': 2
+  },
+  {
+    '_1': 3
+  }
+>>
 --- 
-Result type was BAG and contained 3 items
-OK! (100 ms)
+OK! (86 ms)
 PartiQL> 
-
 ```
 
+>
+> **INFO** 
+>
+> An easy way to load the necessary data into the REPL while reading our Tutorial is to pass one of the `.env` files 
+> to the REPL on invocation, e.g. on Unix or OSX while on inside `partiql-cli` folder, 
+> ```
+> ./bin/partiql  -e code/q1.env
+> ```
+> 
+> You can then see what is loaded in the REPL's global environment using the **special** REPL command `!global_env`, e.g., 
+> 
+> ```
+> Welcome to the PartiQL REPL!
+> PartiQL> !global_env
+>    | 
+> ===' 
+> {
+>   'hr': {
+>     'employees': <<
+>       {
+>         'id': 3,
+>         'name': 'Bob Smith',
+>         'title': NULL
+>       },
+>       {
+>         'id': 4,
+>         'name': 'Susan Smith',
+>         'title': 'Dev Mgr'
+>       },
+>       {
+>         'id': 6,
+>         'name': 'Jane Smith',
+>         'title': 'Software Eng 2'
+>       }
+>     >>
+>   }
+> }
+> --- 
+> OK! (6 ms)
+> 
+> ```
+> 
+
+
+
 Congratulations! You succesfuly installed and run the PartiQL REPL.
-The PartiQL REPL is now waiting for more input. To exit the PartiQL
-REPL press 
+The PartiQL REPL is now waiting for more input. 
+
+To exit the PartiQL REPL press 
 
 * `Control+D` in OSX or Unix 
 * `Control+Z` on Windows 
 
-REPL press `Control+D` or close the terminal/command
-prompt window.  
+or close the terminal/command prompt window.
 
