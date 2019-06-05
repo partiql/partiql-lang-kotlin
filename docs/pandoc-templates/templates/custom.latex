@@ -572,7 +572,7 @@ $endif$
 $if(listings)$
 \lstdefinestyle{eisvogel_listing_style}{
   language         = java,
-  numbers          = left,
+  %% numbers          = left,
   backgroundcolor  = \color{listing-background},
   basicstyle       = \color{listing-text-color}\small\ttfamily{}\linespread{1.15}, % print whole listing small
   xleftmargin      = 2.7em,

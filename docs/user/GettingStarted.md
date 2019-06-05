@@ -11,6 +11,9 @@ You can obtain the *latest* version of the Java Runtime from either
 1. [OpenJDK](https://openjdk.java.net/install/), and [OpenJDK for Windows](https://developers.redhat.com/products/openjdk)  
 1. [Oracle](https://www.oracle.com/technetwork/java/javase/downloads/index.html)
 
+[Follow the instructions on how to set](https://docs.oracle.com/cd/E19182-01/820-7851/inst_cli_jdk_javahome_t/) 
+`JAVA_HOME` to the path where your Java Runtime is installed. 
+
 ## Download the PartiQL REPL 
  
 Each [release](https://github.com/partiql/partiql-lang-kotlin/releases)
@@ -112,15 +115,19 @@ PartiQL>
 >
 > **INFO** 
 >
-> An easy way to load the necessary data into the REPL while reading our Tutorial is to pass one of the `.env` files 
-> to the REPL on invocation, e.g. on Unix or OSX while on inside `partiql-cli` folder, 
-> ```
-> ./bin/partiql  -e code/q1.env
-> ```
-> 
-> You can then see what is loaded in the REPL's global environment using the **special** REPL command `!global_env`, e.g., 
+> An easy way to load the necessary data into the REPL 
+> is use the `-e` switch when starting the REPL
+> and providing the name of a file that contains your data.
+>
 > 
 > ```
+> ./bin/partiql  -e Tutorial/code/q1.env
+> ```
+>
+> You can then see what is loaded in the REPL's global environment using
+> the **special** REPL command `!global_env`, e.g., 
+> 
+> ``` 
 > Welcome to the PartiQL REPL!
 > PartiQL> !global_env
 >    | 
@@ -152,15 +159,13 @@ PartiQL>
 > ```
 > 
 
-
-
 Congratulations! You succesfuly installed and run the PartiQL REPL.
 The PartiQL REPL is now waiting for more input. 
 
 To exit the PartiQL REPL press 
 
 * `Control+D` in OSX or Unix 
-* `Control+Z` on Windows 
+* `Control+C` on Windows 
 
 or close the terminal/command prompt window.
 
