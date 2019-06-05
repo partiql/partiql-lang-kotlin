@@ -25,7 +25,24 @@ that shows how SQL features can be translated to semantically equivalent
 core PartiQL expressions. These translations presented as syntactic sugar
 enable SQL compatibility.
 
-
+>
+> **INFO** 
+>
+> For convenience we have provided the file `tutorial-all-data.env`
+> in the folder `Tutorial/code/`. You will also find separate `.env`
+> files in the same folder
+> for each query in the tutorial. 
+> 
+> For example, running 
+> 
+> ```
+> ./bin/partiql  -e Tutorial/code/tutorial-all-data.env
+> ```
+>  
+> will load all the data used in the tutorial in the REPL. This will
+> allow you to copy-paste queries from the tutorial into the REPL and try
+> them out.
+> 
 
 # PartiQL Queries are SQL compatible 
 
