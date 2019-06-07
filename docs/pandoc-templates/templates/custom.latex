@@ -607,8 +607,8 @@ $if(listings)$
   {ç}{{\c c}}1 {Ç}{{\c C}}1 {ø}{{\o}}1 {å}{{\r a}}1 {Å}{{\r A}}1
   {€}{{\EUR}}1 {£}{{\pounds}}1 {«}{{\guillemotleft}}1
   {»}{{\guillemotright}}1 {ñ}{{\~n}}1 {Ñ}{{\~N}}1 {¿}{{?`}}1
-  {…}{{\ldots}}1 {≥}{{>=}}1 {≤}{{<=}}1 {„}{{\glqq}}1 {“}{{\grqq}}1
-  {”}{{''}}1
+  {…}{{\ldots}}1 {≥}{{>=}}1 {≤}{{<=}}1 {„}{{\glqq}}1 {"}{{\textquotedbl}}1
+  {"}{{\textquotedbl}}1
 }
 \lstset{style=eisvogel_listing_style}
 
@@ -635,9 +635,9 @@ $endif$
 \fancyfoot{}
 \lhead{$title$}
 \chead{}
-\rhead{$date$}
+\rhead{}
 \lfoot{$for(author)$$author$$sep$, $endfor$}
-\cfoot{}
+\cfoot{ \copyright 2019 Amazon.com, Inc. or its affiliates.}
 \rfoot{\thepage}
 \renewcommand{\headrulewidth}{0.4pt}
 \renewcommand{\footrulewidth}{0.4pt}
@@ -677,12 +677,13 @@ $if(subtitle)$
 $endif$
 \vskip 2em
 \noindent
-{\Large \textsf{\MakeUppercase{$for(author)$$author$$sep$, $endfor$}}
+{\Large \textsf{$for(author)$$author$$sep$, $endfor$}}
 \vfill
-}
 
-\textsf{$date$}
-    }
+    \textsf{\copyright 2019 Amazon.com, Inc. or its affiliates.}
+%%\textsf{$date$}
+    %%}
+ }
 \end{flushleft}
 \end{titlepage}
 \restoregeometry
