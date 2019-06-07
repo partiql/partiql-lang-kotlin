@@ -4,9 +4,9 @@
 # Introduction 
 
 PartiQL provides SQL-compatible unified query access across multiple
-data stores containing structured, semi-structured and nested data that
-is supported by SQL.  PartiQL separates the syntax and semantics of a
-query from the underlying data source and/or data format of the data.
+data stores containing structured, semi-structured and nested data.
+PartiQL separates the syntax and semantics of a
+query from the underlying data source and data format.
 It enables users to interact with data with[^schema] or without
 regular schema.
 
@@ -25,30 +25,13 @@ that shows how SQL features can be translated to semantically equivalent
 core PartiQL expressions. These translations presented as syntactic sugar
 enable SQL compatibility.
 
->
-> **INFO** 
->
-> For convenience we have provided the file `tutorial-all-data.env`
-> in the folder `Tutorial/code/`. You will also find separate `.env`
-> files in the same folder
-> for each query in the tutorial. 
-> 
-> For example, running 
-> 
-> ```
-> ./bin/partiql  -e Tutorial/code/tutorial-all-data.env
-> ```
->  
-> will load all the data used in the tutorial in the REPL. This will
-> allow you to copy-paste queries from the tutorial into the REPL and try
-> them out.
-> 
+
 
 # PartiQL Queries are SQL compatible 
 
 PartiQL is backwards compatible with SQL-92[^SQL92-Spec]. We will see what
 compatibility means when it is used to query data found in data formats
-and data stores that are not SQL.
+and data stores.
 
 [^SQL92-Spec]:[SQL-92](http://www.contrib.andrew.cmu.edu/~shadow/sql/sql1992.txt)
 
@@ -73,12 +56,31 @@ operates on the table `hr.employees` it will return the result
   ---- -------------- ---------
   4    Susan Smith    Dev Mgr
 
+>
+> **INFO** 
+>
+> For convenience we have provided the file `tutorial-all-data.env`
+> in the folder `Tutorial/code/`. You will also find separate `.env`
+> files in the same folder
+> for each query in the tutorial. 
+> 
+> For example, running 
+> 
+> ```
+> ./bin/partiql  -e Tutorial/code/tutorial-all-data.env
+> ```
+>  
+> will load all the data used in the tutorial in the REPL. This will
+> allow you to copy-paste queries from the tutorial into the REPL and try
+> them out.
+> 
+
 ## PartiQL data model: Abstraction of many underlying data storage formats
 
-PartiQL implementations operate not just on SQL tables but also on data
+PartiQL operate not just on SQL tables but also on data
 that may have nesting, union types, different attributes across
-different tuples and many other features that we often find in today's
-nested and/or semi-structured formats, like JSON, Parquet, etc.
+different tuples, and many other features that we often find in today's
+nested and/or semi-structured formats, like JSON, Ion, Parquet, etc.
 
 To capture this generality, PartiQL is based on a logical type system:
 the *PartiQL data model*. Each PartiQL implementation maps data formats,
@@ -93,8 +95,8 @@ model as this dataset
 Notice that the `employees` is nested within `hr`.  
 The delimiters `<<` ... `>>` denote that the data
 is an *unordered collection* (also known as *bag*), as is the case
-with SQL's tables. That is, there is no order between the three tuples.
-Single line comments start with `--` and end at the end of the line. 
+with SQL tables. That is, there is no order between the three tuples.
+Single-line comments start with `--` and end at the end of the line. 
 
 A very different kind of data source may lead to the same PartiQL
 dataset. For example, a set of JSON files that contain the following
@@ -124,33 +126,31 @@ to implements their own mappings.
 
 **Remark:** You will keep noticing the similarity of the PartiQL
 notation with the JSON notation. Notice also the subtle differences: In
-the interest of SQL compatibility, a PartiQL literal is quoted, while
+the interest of SQL compatibility, a PartiQL literal is single-quoted, while
 JSON literals are double-quoted.
 
 **Remark:** You may conceptually think that a deserializer inputs JSON
 and outputs the PartiQL data set. But do not assume that the query
 processing of a PartiQL implementation will have to actually parse and
 abstract into PartiQL each and every bit of the underlying data storage.
-For example, AWS services like Redshift Spectrum and QLDB do much
-smarter things in order to evaluate your PartiQL queries efficiently.
 
-Back to our PartiQL query
+Back to our query
 
 
 ```{.sql include=tutorial/code/q1.sql}
 ```
 
-evaluates in PartiQL and returns 
+Instead of a SQL result set, evaluating the query in PartiQL produces:
 
 ```{include=tutorial/code/q1.output} 
 ```
 
-the result remains the same, no matter whether the `hr.employees` were
-the SQL table or the JSON file. All that is needed is that a catalog
-associates the *name* `hr.employees` with the PartiQL abstraction of
-the JSON data.
+the result remains the same, no matter whether `hr.employees` is a 
+SQL table or a JSON file. All that is needed is an 
+association between the *name* `hr.employees` and the PartiQL abstraction of
+the data.
 
-In the same spirit, the same PartiQL abstraction may come from a CVS
+In the same spirit, the same PartiQL abstraction may come from a CSV
 file or a Parquet file, a format that has gained big traction, thanks to
 the efficient way in which it stores data. Again, the same query makes
 perfect sense, regardless of what exactly was the storage format behind
@@ -162,8 +162,8 @@ perfect sense, regardless of what exactly was the storage format behind
 
     What are the differences? Indeed, PartiQL adopts the tuple/object and array
     notation of JSON. However, the PartiQL string literals are denoted
-    by single quotes. Importantly, the scalar types of PartiQL are the
-    ones of SQL and not just strings, numbers and booleans, as in JSON.
+    by single quotes. Importantly, the scalar types of PartiQL are those 
+    of SQL, not just strings, numbers and booleans, as in JSON.
 
 -   **Do implementations need to have a catalog?**
 
@@ -176,9 +176,10 @@ perfect sense, regardless of what exactly was the storage format behind
 
 SQL-92 only has tables that have tuples that contain scalar values. A key
 feature of many modern formats is nested data. That is, attributes whose
-values may be themselves tables (i.e., collections of tuples), or may be
-arrays of scalars, or arrays of arrays and many other combinations. We next
-present PartiQL's features (SQL extensions) that allow us to work with nested data.
+values may themselves be tables (i.e., collections of tuples), or may be
+arrays of scalars, or arrays of arrays and many other combinations. Let's
+take a closer look at PartiQL's features (SQL extensions) that allow us
+to work with nested data.
 
 We also include sections titled "Use Case". Such "Use Case" sections do not
 introduce additional features. They merely show how to combine the
@@ -193,16 +194,16 @@ Let's now add the nested attribute `projects` into the data set.
 ```
 
 Notice that the value of `'projects'` is an array. Arrays are denoted by
-`[ ... ]` with array elements separated by `,`. In our example the array
+`[ ... ]` with array elements separated by commas. In our example the array
 happens to be an array of tuples. We will see that arrays may be arrays
 of anything, not just arrays of tuples.
 
 ### Unnesting a Nested Collection
 
-The query finds the names of employees who work on projects that contain
+The following query finds the names of employees who work on projects that contain
 the string `'security'` and outputs them along with the name of the
 `'security'` project. Notice that the query has just one extension
-over standard SQL -- the `e.projects AS p` part.
+over standard SQL --- the `e.projects AS p` part.
 
 ```{.sql include=tutorial/code/q2.sql}
 ```
@@ -215,19 +216,19 @@ The output of our query is
 The extension over SQL is the `FROM` clause item `e.projects AS p`.
 Standard SQL would attempt to find a schema named `e` with a table
 `projects` and since in our example there isn't an `e.projects`
-table, the query would fail. In contrast, PartiQL will dereference
-`e.projects` to the attribute `projects` of `e`.
+table, the query would fail. In contrast, PartiQL recognizes
+`e.projects` to refer to the `projects` attribute of `e`.
 
 Once we allow this extension, the semantics are alike SQL's. The alias
 (also called *variable* in PartiQL) `e` gets bound to each employee, in
 turn. For each employee, the variable `p` gets bound to each
-project of the employee, in turn. Thus the query's meaning, alike SQL,
+project of the employee, in turn. Thus the query's meaning, like SQL,
 is
 
 | foreach employee tuple `e` from `hr.employeesNest`
 |     foreach project tuple `p` from `e.projects`
 |         if `p.name LIKE '%security%'`
-|         output `e.name AS employeeName, p.name AS projectName`
+|           output `e.name AS employeeName, p.name AS projectName`
 
 Notice that our query involved variables that were ranging over nested
 collections (`p` in the example), along with variables that were
@@ -264,7 +265,7 @@ the `FROM`, `WHERE`, `SELECT` clauses as we will see in the examples that follow
     SQL allows us to avoid writing aliases (variables) when the schema of
     the tables allows correct dereferencing. PartiQL does the same.
     However, recall, a schema is not necessary for a PartiQL data set.
-    Indeed, our example has not assumed a schema. Then , in the absence
+    Indeed, our example has not assumed a schema. In the absence
     of a schema, you cannot omit the aliases (variables). For example,
     if you write just `name` and there is no schema, PartiQL cannot
     tell whether you mean employee name or project name. Thus you need
@@ -307,7 +308,7 @@ That is, the following two queries are equivalent.
 | SELECT e.name AS employeeName,    | SELECT e.name AS employeeName,    |
 |        p.name AS projectName      |        p.name AS projectName      |
 | FROM hr.employeesNest AS e,       | FROM hr.employeesNest AS e JOIN   |
-|      e.projects AS p              |     e.projects AS p               |
+|      e.projects AS p              |      e.projects AS p              |
 | WHERE p.name LIKE '%security%'    | WHERE p.name LIKE '%security%'    |
 | ```                               | ```                               | 
 +-----------------------------------+-----------------------------------+
@@ -341,7 +342,6 @@ The semantics of this query can be thought of as
 |     else *// the following part is identical to plain (inner) JOINs*
 |         foreach project tuple `p` from `e.projects`
 |             output `e.id AS id`, `e.name AS employeeName`, `e.title AS title`
-|             and output a `null AS projectName`
 
 ### Use Case: Checking whether a nested collection satisfies a condition 
 
@@ -349,12 +349,12 @@ The following use cases employ the unnesting features, which we have
 already discussed, in new use cases. A lesson that emerges is that we
 can use variables (SQL aliases) that range over nested data as if they were
 standard SQL aliases. This realization gives us the power to solve
-a great number of use cases just be combining the unnesting features
+a great number of use cases just by combining the unnesting features
 with features we already know from standard SQL.
 
 In our first use case we want a query that returns the names of the
 employees that are involved in a project that contains the word
-`'security`. The solution employs SQL's "`EXISTS` (subquery)"
+`'security'`. The solution employs SQL's "`EXISTS` (subquery)"
 feature, along with unnesting:
 
 ```sql
@@ -383,7 +383,7 @@ OK! (14 ms)
 
 
 In the second use case we want a query that outputs the names of the
-employees that have more than one security projects and 
+employees that have more than one security project and 
 we are aware of a key for employees (e.g., an attribute
 that is guaranteed to have a unique value for each employee).
 We can find the requested employees by utilizing a combination of
@@ -452,7 +452,7 @@ that returns
 OK! (22 ms)
 ```
 
-Notice, this query's result includes Susan Smith and Jane Smith, who have no
+Notice this query's result includes Susan Smith and Jane Smith, who have no
 querying projects.
 
 
@@ -480,7 +480,7 @@ The result is
 The previous examples have shown nested attributes that were arrays of
 tuples. It need not be the case that the nested attributes are
 collections of tuples. They may just as well be arrays of scalars,
-arrays of arrays, and more. In general any combination of data that one
+arrays of arrays, or any combination of data that one
 can create by composing scalars, tuples and arrays. You need not learn a
 different set of query language features for each case. The unnesting
 features, which we have already seen, are sufficient.
@@ -515,7 +515,7 @@ query can be thought of as executing the following snippet.
 | foreach employee tuple `e` from `hr.employeesNestScalars`
 |     foreach project `p` from `e.projects`
 |         if the string `p` matches `'%security%'`
-|         output `e.name AS employeeName` and the string `p AS projectName`
+|           output `e.name AS employeeName` and the string `p AS projectName`
 
 ### Use Case: Unnesting Arrays of Arrays
 
@@ -594,7 +594,7 @@ Many formats do not require a schema that describes the data -- that is
 -   One tuple may have an attribute `x` while another tuple may not have
     this attribute
 
--   In one tuple of a collection an attribute `x` may be of type, e.g.,
+-   In one tuple of the collection an attribute `x` may be of one type, e.g.,
     string, while in another tuple of the same collection the same
     attribute `x` may be of a different type -- e.g, array.
 
@@ -608,7 +608,7 @@ Many formats do not require a schema that describes the data -- that is
 Heterogeneities are not particular to schemaless. Schemas may allow for
 heterogeneity in the types of the data. For example, one of the Hive
 data types is the union type,[^HiveUnionType] which allows a value to belong to any one of a
-list of types. For example, in the following schema the `projects` attribute may be
+list of types. Consider the following schema whose `projects` attribute may be
 either a string or an array of strings
 
 [^HiveUnionType]: [Hive Union Type](https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Types#LanguageManualTypes-UnionTypesunionUnionTypes)
@@ -630,13 +630,13 @@ A collection of PartiQL tuples that follows this schema could be
         'employeesMixed1': <<
             { 
                 'id': 3, 
-                    'name': 'Bob Smith', 
-                    'title': null, 
-                    'projects': [ 
-                        'AWS Redshift Spectrum querying',
+                'name': 'Bob Smith', 
+                'title': null, 
+                'projects': [ 
+                    'AWS Redshift Spectrum querying',
                     'AWS Redshift security',
                     'AWS Aurora security'
-                    ]
+                ]
             },
             { 
                 'id': 4, 
@@ -655,9 +655,9 @@ A collection of PartiQL tuples that follows this schema could be
 }
 ```
 
-Thus we see that data may have heterogeneities -- regardless of whether
+Thus we see that data may have heterogeneities --- regardless of whether
 they are described by a schema or not. PartiQL tackles heterogeneous
-data, in ways that we will see in the next use cases and feature
+data in ways that we will see in the next use cases and feature
 presentations.
 
 ## Tuples with Missing Attributes
@@ -692,12 +692,12 @@ by simply having no `title` attribute in the `'Bob Smith'` tuple:
 ```
 PartiQL does not argue about when to use `null`s and when to use
 "missing". Myriads of datasets already use one of the two or both.
-However, PartiQL enables queries to distinguish when they access a
-`null` Vs when they access a missing attribute. PartiQL also enables
-queries to create results that have both `null`s and missing attributes.
-Indeed, it makes it very easy to propagate source data `null`s as query
-result `null`s and source data missing attributes into result missing
-attributes.
+However, PartiQL enables queries to distinguish between null and
+missing values, and also enables query results that have nulls and
+missing values.  Indeed, PartiQL makes it very easy to propagate source
+data nulls as query result nulls and source data missing attributes into
+result missing attributes.
+
 
 ## Accessing and Processing Missing Attributes: The MISSING Value
 
@@ -713,7 +713,7 @@ no `title`?
 The first step to answering this question is understanding the result of
 the path `e.title` when the alias (variable) `e` binds to the tuple
 `{ 'id': 3, 'name': 'Bob Smith' }`. In more basic terms, what is the
-result of the expression `{ 'id': 3, 'name': 'Bob Smith' }.path` ?
+result of the expression `{ 'id': 3, 'name': 'Bob Smith' }.title` ?
 PartiQL says that it is the special value `MISSING`. `MISSING`
 behaves very similar to `null`.
 
@@ -721,9 +721,9 @@ behaves very similar to `null`.
 ### Evaluating Functions and Conditions with MISSING
 
 If a function (including infix functions like `=`) inputs a
-`MISSING` the function's result is also `MISSING`. In the case of the example,
+`MISSING` the function's result is `NULL`. In the case of the example,
 this means that the `WHERE` clause `e.title='Dev Mgr'` will evaluate
-to `MISSING` when `e` binds to `{ 'id': 3, 'name': 'Bob Smith' }`
+to `NULL` when `e` binds to `{ 'id': 3, 'name': 'Bob Smith' }`
 and, as usual in SQL, the `WHERE` clause fails when it does not
 evaluate to `true`. Thus the output will be
 
@@ -739,8 +739,8 @@ expression returning `MISSING` appears in the `SELECT`?
 ```
 
 The query will output one tuple for each employee. When it outputs the
-Bob Smith tuple, the `e.title` will evaluate to `MISSING` and then
-the output tuple will not even have an `outputTitle` attribute.
+Bob Smith tuple, the `e.title` will evaluate to `NULL` and then
+the output tuple will not have an `outputTitle` attribute.
 
 ```{include=tutorial/code/q9.output}
 ```
@@ -752,8 +752,8 @@ query that converts titles to capital letters:
 ```
 
 Again, the `e.title` will evaluate to `MISSING` for `'Bob Smith'`, the
-`UPPER(e.title)` is then `UPPER(MISSING)` and also evaluates to `MISSING`.
-Thus the result will be
+`UPPER(e.title)` is then `UPPER(MISSING)` and also evaluates to `NULL`.
+Thus the result will be:
 
 ```{include=tutorial/code/q10.output}
 ```
@@ -787,7 +787,7 @@ project pairs.
 ```
 
 Notice the sub-expression `(p IS TUPLE)`. The `IS` operator can be used
-to check a value against it's type at evaluation time.
+to check a value against its type at evaluation time.
 Notice also that the variable `p` binds to different types.
 
 In general, the `FROM` clause of a query binds its variables (aliases)
@@ -886,8 +886,8 @@ and the corresponding tuple output by the `SELECT` clause.
 SQL allows us to order the output of a query using the `ORDER BY`
 clause. However, the SQL data model does not recognize order in the
 input data. In contrast, many of the new data formats feature arrays;
-the array's elements have an order. We may want to find an array element
-according to its order, or, we may want to find the positions of certain
+the arrays' elements have an order. We may want to find an array element
+by its index or, we may want to find the positions of certain
 elements in their arrays.
 
 `<Array> [<number>]`
@@ -930,21 +930,19 @@ Spectrum querying'}`. Finally, evaluating the `.name` step on
 `e.projects[0]` (that is, evaluating `e.projects[0].name`) leads
 to `'AWS Redshift Spectrum querying'`.
 
-## Finding the Order of Each Element in an Array
+## Finding the Index of Each Element in an Array
 
-Let's assume that the order of each employee's projects in the
-`projects` attribute of `hr.employeesNest` matters. The first
-project is the employee's highest priority project, followed by the
-second and so on. The following query finds the names of each employee
-involved in a security project, the security project and its order in
+Let's assume that each employees' projects are sorted in priority order.
+The following query finds the names of each employee
+involved in a security project, the security project, and, its index in
 the `projects` array.
 
 ```{.sql include=tutorial/code/q13.sql}
 ```
 
 Notice the new feature: `AT o`. While `p` ranges over the elements
-of the array `e.projects`, the variable `o` takes as value the
-ordinal number of the element in the array. The query returns
+of the array `e.projects`, the variable `o` is assigned tot he index of
+the element in the array. The query returns: 
 
 ```{include=tutorial/code/q13.output}
 ```
@@ -967,8 +965,8 @@ The following query unpivots the stock ticker/price pairs.
 ```{.sql include=tutorial/code/q14.sql}
 ```
 Notice the use of `"` in this query. The double quotes allow us to
-disambiquate from `date` the keyword and `"date"` the identifier. Also
-double quote specify case sensitivity for attribute lookups.
+disambiguate from `date` the keyword and `"date"` the identifier. 
+Double quotes can also specify case sensitivity for attribute lookups.
 
 
 The query returns 
@@ -1031,13 +1029,13 @@ produces the tuple
 Notice that the `PIVOT` query looks like a `SELECT-FROM-WHERE-...`
 query except that instead of a `SELECT` clause it has a `PIVOT
 <value expression> AT <attribute expression>`. Note also that the
-`PIVOT` query does not return a singleton collection of tuples: Rather
+`PIVOT` query does not return a collection of tuples: rather
 it literally returns a tuple value.
 
 ## Use Case: Pivoting Subqueries
 
-(This example also uses the grouping features of PartiQL, Creating
-Nested Results with `GROUP BY` ... `GROUP AS`.)
+(This example also uses the grouping features of PartiQL, [Creating
+Nested Results with `GROUP BY` ... `GROUP AS`](#creating-nested-results-with-group-by-...-group-as).)
 
 Let us generalize the previous case of pivoting. We have a table of
 stock prices
@@ -1130,7 +1128,7 @@ AS` extension to SQL's `GROUP BY`. This pattern is more efficient and
 more intuitive than the use of nested `SELECT VALUE` queries when the
 required nesting is not following the nesting of the input. (The example
 in [Creating Nested Results with `SELECT VALUE` Queries](#creating-nested-results-with-select-value-queries) is one where
-the nesting in the output follows the nesting of the input and, thus, an
+the nesting in the output follows the nesting of the input and thus, an
 intuitive solution does not involve `GROUP BY`.)
 
 The following query outputs each security project found in
@@ -1169,59 +1167,41 @@ FROM hr.employeesNestScalars AS e JOIN e.projects AS p ON p LIKE '%security%'
 
 We see that the `FROM` delivers the collection of tuples consisting of
 an employee `e` and a project `p` that were output by the `FROM`
-clause, i.e., the `LEFT JOIN`. This is alike SQL's `FROM` semantics.
+clause, i.e., the `LEFT JOIN`. This is like SQL's `FROM` semantics.
 
 +-----------------------------------+-----------------------------------+
 | Variable `e`                      | Variable `p`                      |
 +===================================+===================================+
 |```                                | ```                               | 
 | { 'id': 3,                        |   'AWS Redshift security'         |
-|                                   |                                   |
 | 'name': 'Bob Smith',              |                                   |
-|                                   |                                   |
 | 'title': null,                    |                                   |
-|                                   |                                   |
 | 'projects':  [ 'AWS Redshift      |                                   |
 | Spectrum querying',               |                                   |
-|                                   |                                   |
 | 'AWS Redshift security',          |                                   |
-|                                   |                                   |
 | 'AWS Aurora security'             |                                   |
-|                                   |                                   |
 |  ]                                |                                   |
-|                                   |                                   |
 | }                                 |                                   |
 | ```                               | ```                               | 
 +-----------------------------------+-----------------------------------+
 | ```                               | ```                               | 
 | { 'id': 3,                        |   'AWS Aurora security'           |
-|                                   |                                   |
 | 'name': 'Bob Smith',              |                                   |
-|                                   |                                   |
 | 'title': null,                    |                                   |
-|                                   |                                   |
 | 'projects':  [ 'AWS Redshift      |                                   |
 | Spectrum querying',               |                                   |
-|                                   |                                   |
 | 'AWS Redshift security',          |                                   |
-|                                   |                                   |
 | 'AWS Aurora security'             |                                   |
-|                                   |                                   |
 |  ]                                |                                   |
-|                                   |                                   |
 | }                                 |                                   |
 | ```                               | ```                               | 
 +-----------------------------------+-----------------------------------+
 | ```                               | ```                               | 
 | { 'id': 6,                        | 'AWS Redshift security'           |
-|                                   |                                   |
 | 'name': 'Jane Smith',             |                                   |
-|                                   |                                   |
 | 'title': 'Software Eng 2',        |                                   |
-|                                   |                                   |
 | 'projects':  [ 'AWS Redshift      |                                   |
 | security'  ]                      |                                   |
-|                                   |                                   |
 | }                                 |                                   |
 | ```                               | ```                               | 
 +-----------------------------------+-----------------------------------+
@@ -1238,7 +1218,6 @@ tuples that correspond to the group-by expression `p`. Thus the
 +===================================+===================================+
 | ```                               | ```                               | 
 | 'AWS Redshift security'           | <<                              |
-|                                   |                                   |
 |                                   | { e: { 'id': 3, 'name': 'Bob      |
 |                                   | Smith', ... }, p: 'AWS Redshift   |
 |                                   | security' },                      |
@@ -1246,17 +1225,14 @@ tuples that correspond to the group-by expression `p`. Thus the
 |                                   | { e: { 'id': 6, 'name': 'Jane     |
 |                                   | Smith', ... }, p: 'AWS Redshift   |
 |                                   | security' }                       |
-|                                   |                                   |
 |                                   | >>                              |
 | ```                               | ```                               | 
 +-----------------------------------+-----------------------------------+
 | ```                               | ```                               | 
 | 'AWS Aurora security'             | <<                              |
-|                                   |                                   |
 |                                   | { e: { 'id': 3, 'name': 'Bob      |
 |                                   | Smith', ...}, p: 'AWS Aurora      |
 |                                   | security' },                      |
-|                                   |                                   |
 |                                   | >>                              |
 | ```                               | ```                               | 
 +-----------------------------------+-----------------------------------+

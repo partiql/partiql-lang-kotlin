@@ -1,0 +1,22 @@
+Thank you for downloading PartiQL!
+
+This archive containsg
+
+1. Startup scripts to run PartiQL (command line and REPL) in the `bin` folderg
+1. All libraries necessary to run PartiQL under the `lib` folderg
+1. The PartiQL tutorial and accompanying data and queries under the `Tutorial` folder.
+
+We recommend reading through the tutorial first. The tutorial
+provides a walk-through on how to run the PartiQL REPL and provides
+examples of data, queries and use cases on some of PartiQL's unique
+features to get you started.
+
+We are always happy to hear from you[1] and collaborate with you[2]
+on evolving and improving PartiQL, and as always have fun along the way.
+
+Best,
+
+The PartiQL Team
+
+[1](https://github.com/partiql/partiql-lang-kotlin/issues)
+[2](https://github.com/partiql/partiql-lang-kotlin/blob/master/CONTRIBUTING.md)
