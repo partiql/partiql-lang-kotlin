@@ -20,7 +20,7 @@ Each release of PartiQL comes with an archive that contains the PartiQL REPL as 
 zip file.
 
 1. [Download](https://github.com/partiql/partiql-lang-kotlin/releases).
-You may have to click on `Assets` to see the zip and tqz archives.
+You may have to click on `Assets` to see the zip and tgz archives.
 the latest `partiql-cli`[^zipname] zip archive to your machine.
 1. Expand (unzip) the archive on your machine. Expanding the archive yields the following folder structure:
 
