@@ -1243,11 +1243,11 @@ result.
 
 # Find Out More About PartiQL 
 
-The [PartiQL website](https://partiql.github.io) contains more information
-about PartiQL, its implementations as well as news and updates. 
+The [PartiQL website](https://partiql.github.io) contains news, updates,
+documentation, and more information about PartiQL implementations.
 
 We are always happy to [receive your
 feedback](https://github.com/partiql/partiql-lang-kotlin/issues)
-as well [work with
+as well as [work with
 you](https://github.com/partiql/partiql-lang-kotlin/blob/master/CONTRIBUTING.md)
 on PartiQL.
