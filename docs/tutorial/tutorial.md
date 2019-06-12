@@ -1239,3 +1239,15 @@ tuples that correspond to the group-by expression `p`. Thus the
 
 Finally the `SELECT` clause inputs the above and outputs the query
 result.
+
+
+# Find Out More About PartiQL 
+
+The [PartiQL website](https://partiql.github.io) contains news, updates,
+documentation, and more information about PartiQL implementations.
+
+We are always happy to [receive your
+feedback](https://github.com/partiql/partiql-lang-kotlin/issues)
+as well as [work with
+you](https://github.com/partiql/partiql-lang-kotlin/blob/master/CONTRIBUTING.md)
+on PartiQL.

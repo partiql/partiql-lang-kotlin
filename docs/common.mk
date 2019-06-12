@@ -83,6 +83,10 @@ html: outputdirs haspandoc
 	$(PANDOC) $(SRC) $(HTMLOPTIONS) $(MARKDOWNOPTIONS) $(PANDOCFILTERS) $(BIBOPTIONS) -o $(OUTPUTPATH)/$(TARGET).html
 	cp -r $(SUPPORTFILES) $(OUTPUTPATH)/.
 
+# generate md file 
+md: outputdirs haspandoc
+	$(PANDOC) $(SRC) $(MARKDOWNOPTIONS) $(PANDOCFILTERS) $(BIBOPTIONS) -o $(OUTPUTPATH)/$(TARGET).text
+
 
 outputdirs: $(OUTPUTPATH) $(USERSL) $(DEVSL) $(TUTORIALSL)
 
