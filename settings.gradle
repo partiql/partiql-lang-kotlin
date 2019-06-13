@@ -15,5 +15,5 @@
 
 rootProject.name = 'PartiQL'
 
-include('lang', 'cli', 'testframework', 'examples')
+include('lang', 'cli', 'testframework', 'examples', 'testscript')
 
