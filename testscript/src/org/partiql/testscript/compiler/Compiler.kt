@@ -1,12 +1,15 @@
 package org.partiql.testscript.compiler
 
+import com.amazon.ion.IonSexp
 import com.amazon.ion.IonStruct
+import com.amazon.ion.IonSymbol
 import com.amazon.ion.IonSystem
 import org.partiql.testscript.*
 import org.partiql.testscript.Failure
 import org.partiql.testscript.Result
 import org.partiql.testscript.Success
 import org.partiql.testscript.parser.ast.*
+import java.lang.IllegalArgumentException
 
 private val SUCCESS = Success(Unit)
 
@@ -34,7 +37,7 @@ private class CompileEnvironment(var testEnvironment: IonStruct) {
 }
 
 /**
- * PTS Compiler 
+ * PTS Compiler
  */
 class Compiler(val ion: IonSystem) {
     fun compile(ast: List<ModuleNode>): List<TestScriptExpression> {
@@ -91,7 +94,7 @@ class Compiler(val ion: IonSystem) {
                 description = node.description,
                 statement = node.statement,
                 environment = node.environment ?: cenv.testEnvironment,
-                expected = node.expected,
+                expected = makeExpectedResult(node.expected),
                 scriptLocation = node.scriptLocation)
 
         val expressions = cenv.expressions
@@ -100,6 +103,16 @@ class Compiler(val ion: IonSystem) {
         } else {
             expressions[node.id] = testExpression
             SUCCESS
+        }
+    }
+
+    // sexp was validated by the parser 
+    private fun makeExpectedResult(sexp: IonSexp): ExpectedResult {
+        val tag = (sexp[0] as IonSymbol).stringValue()
+        return when (tag) {
+            "success" -> ExpectedSuccess(sexp[1])
+            "error" -> ExpectedError
+            else -> throw IllegalArgumentException("Invalid expected s-exp tag: $tag")
         }
     }
 
@@ -135,7 +148,7 @@ class Compiler(val ion: IonSystem) {
 
         return results.foldToResult { SUCCESS }
     }
-    
+
     private fun compileSkipList(cenv: CompileEnvironment, node: SkipListNode): Result<Unit> {
         val expressions = cenv.expressions
         val matchers = node.patterns.map { it.toPatternRegex() }
@@ -166,4 +179,4 @@ class Compiler(val ion: IonSystem) {
 }
 
 // TODO decide if we want to only support '.'and '*' or full regex
-fun String.toPatternRegex(): Regex = this.toRegex()
+private fun String.toPatternRegex(): Regex = this.toRegex()

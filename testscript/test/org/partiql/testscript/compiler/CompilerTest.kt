@@ -14,8 +14,7 @@ class CompilerTest {
 
     private val parser = Parser(ion)
     private val compiler = Compiler(ion)
-
-    private fun String.toSexp() = ion.singleValue(this) as IonSexp
+    
     private fun String.toStruct() = ion.singleValue(this) as IonStruct
 
     private fun assertCompile(vararg scripts: String, expected: List<TestScriptExpression>) {
@@ -53,7 +52,7 @@ class CompilerTest {
                             description = null,
                             statement = "SELECT * FROM <<1,2,3>>",
                             environment = ion.newEmptyStruct(),
-                            expected = "(success 1)".toSexp(),
+                            expected = ExpectedSuccess(ion.newInt(1)),
                             scriptLocation = ScriptLocation("input[0]", 1)
                     )))
 
@@ -78,14 +77,14 @@ class CompilerTest {
                             description = null,
                             statement = "SELECT * FROM <<1,2,3>>",
                             environment = ion.newEmptyStruct(),
-                            expected = "(success 1)".toSexp(),
+                            expected = ExpectedSuccess(ion.newInt(1)),
                             scriptLocation = ScriptLocation("input[0]", 1)),
                     TestExpression(
                             id = "test2",
                             description = "second test",
                             statement = "SELECT * FROM {}",
                             environment = ion.newEmptyStruct(),
-                            expected = "(success 2)".toSexp(),
+                            expected = ExpectedSuccess(ion.newInt(2)),
                             scriptLocation = ScriptLocation("input[0]", 7)
                     )))
 
@@ -123,7 +122,7 @@ class CompilerTest {
                             description = null,
                             statement = "SELECT * FROM <<1,2,3>>",
                             environment = "{a: 12}".toStruct(),
-                            expected = "(success 1)".toSexp(),
+                            expected = ExpectedSuccess(ion.newInt(1)),
                             scriptLocation = ScriptLocation("input[0]", 1)
                     )))
 
@@ -143,7 +142,7 @@ class CompilerTest {
                             description = null,
                             statement = "SELECT * FROM <<1,2,3>>",
                             environment = "{a: 12}".toStruct(),
-                            expected = "(success 1)".toSexp(),
+                            expected = ExpectedSuccess(ion.newInt(1)),
                             scriptLocation = ScriptLocation("input[0]", 3)
                     )))
 
@@ -169,7 +168,7 @@ class CompilerTest {
                             description = null,
                             statement = "SELECT * FROM <<1,2,3>>",
                             environment = emptyStruct,
-                            expected = "(success 1)".toSexp(),
+                            expected = ExpectedSuccess(ion.newInt(1)),
                             scriptLocation = ScriptLocation("input[0]", 1)
                     ),
                     TestExpression(
@@ -177,7 +176,7 @@ class CompilerTest {
                             description = null,
                             statement = "SELECT * FROM <<1,2,3>>",
                             environment = "{a: 12}".toStruct(),
-                            expected = "(success 1)".toSexp(),
+                            expected = ExpectedSuccess(ion.newInt(1)),
                             scriptLocation = ScriptLocation("input[0]", 9)
                     )))
 
@@ -206,7 +205,7 @@ class CompilerTest {
                             description = null,
                             statement = "SELECT * FROM <<1,2,3>>",
                             environment = "{a: 12}".toStruct(),
-                            expected = "(success 1)".toSexp(),
+                            expected = ExpectedSuccess(ion.newInt(1)),
                             scriptLocation = ScriptLocation("input[0]", 3)
                     ),
                     TestExpression(
@@ -214,7 +213,7 @@ class CompilerTest {
                             description = null,
                             statement = "SELECT * FROM <<1,2,3>>",
                             environment = emptyStruct,
-                            expected = "(success 1)".toSexp(),
+                            expected = ExpectedSuccess(ion.newInt(1)),
                             scriptLocation = ScriptLocation("input[1]", 1)
                     )))
 
@@ -235,7 +234,7 @@ class CompilerTest {
                             description = null,
                             statement = "SELECT * FROM <<1,2,3>>",
                             environment = "{foo: 20}".toStruct(),
-                            expected = "(success 1)".toSexp(),
+                            expected = ExpectedSuccess(ion.newInt(1)),
                             scriptLocation = ScriptLocation("input[0]", 3)
                     )))
 
@@ -257,7 +256,7 @@ class CompilerTest {
                                     description = null,
                                     statement = "SELECT * FROM <<1,2,3>>",
                                     environment = emptyStruct,
-                                    expected = "(success 1)".toSexp(),
+                                    expected = ExpectedSuccess(ion.newInt(1)),
                                     scriptLocation = ScriptLocation("input[0]", 1)
                             ),
                             scriptLocation = ScriptLocation("input[0]", 7))))
@@ -284,7 +283,7 @@ class CompilerTest {
                             description = null,
                             statement = "SELECT * FROM <<1,2,3>>",
                             environment = emptyStruct,
-                            expected = "(success 1)".toSexp(),
+                            expected = ExpectedSuccess(ion.newInt(1)),
                             scriptLocation = ScriptLocation("input[0]", 7)),
 
                     SkippedTestExpression(
@@ -294,7 +293,7 @@ class CompilerTest {
                                     description = null,
                                     statement = "SELECT * FROM <<1,2,3>>",
                                     environment = emptyStruct,
-                                    expected = "(success 1)".toSexp(),
+                                    expected = ExpectedSuccess(ion.newInt(1)),
                                     scriptLocation = ScriptLocation("input[0]", 1)
                             ),
                             scriptLocation = ScriptLocation("input[0]", 13))))
@@ -323,7 +322,7 @@ class CompilerTest {
                                     description = null,
                                     statement = "SELECT * FROM 1",
                                     environment = emptyStruct,
-                                    expected = "(success 1)".toSexp(),
+                                    expected = ExpectedSuccess(ion.newInt(1)),
                                     scriptLocation = ScriptLocation("input[0]", 1)),
                             scriptLocation = ScriptLocation("input[0]", 13)),
 
@@ -334,7 +333,7 @@ class CompilerTest {
                                     description = null,
                                     statement = "SELECT * FROM 2",
                                     environment = emptyStruct,
-                                    expected = "(success 2)".toSexp(),
+                                    expected = ExpectedSuccess(ion.newInt(2)),
                                     scriptLocation = ScriptLocation("input[0]", 7)
                             ),
                             scriptLocation = ScriptLocation("input[0]", 13))))
@@ -357,7 +356,7 @@ class CompilerTest {
                                     description = null,
                                     statement = "SELECT * FROM 1",
                                     environment = emptyStruct,
-                                    expected = "(success 1)".toSexp(),
+                                    expected = ExpectedSuccess(ion.newInt(1)),
                                     scriptLocation = ScriptLocation("input[0]", 3)),
                             scriptLocation = ScriptLocation("input[0]", 1))))
 
@@ -379,7 +378,7 @@ class CompilerTest {
                                     description = null,
                                     statement = "SELECT * FROM 1",
                                     environment = emptyStruct,
-                                    expected = "(success 1)".toSexp(),
+                                    expected = ExpectedSuccess(ion.newInt(1)),
                                     scriptLocation = ScriptLocation("input[0]", 3)),
                             scriptLocation = ScriptLocation("input[0]", 1))))
 
@@ -406,7 +405,7 @@ class CompilerTest {
                                     description = null,
                                     statement = "SELECT * FROM 1",
                                     environment = emptyStruct,
-                                    expected = "(success 1)".toSexp(),
+                                    expected = ExpectedSuccess(ion.newInt(1)),
                                     scriptLocation = ScriptLocation("input[0]", 1)),
                             scriptLocation = ScriptLocation("input[0]", 7))))
 
@@ -432,7 +431,7 @@ class CompilerTest {
                                     description = null,
                                     statement = "SELECT * FROM 1",
                                     environment = emptyStruct,
-                                    expected = "(success 1)".toSexp(),
+                                    expected = ExpectedSuccess(ion.newInt(1)),
                                     scriptLocation = ScriptLocation("input[0]", 6)),
                             scriptLocation = ScriptLocation("input[0]", 1))))
 
@@ -459,7 +458,7 @@ class CompilerTest {
                                     description = null,
                                     statement = "SELECT * FROM 1",
                                     environment = emptyStruct,
-                                    expected = "(success 1)".toSexp(),
+                                    expected = ExpectedSuccess(ion.newInt(1)),
                                     scriptLocation = ScriptLocation("input[0]", 8)),
                             scriptLocation = ScriptLocation("input[0]", 1))))
 
@@ -491,7 +490,7 @@ class CompilerTest {
                                     description = null,
                                     statement = "SELECT * FROM 1",
                                     environment = emptyStruct,
-                                    expected = "(success 1)".toSexp(),
+                                    expected = ExpectedSuccess(ion.newInt(1)),
                                     scriptLocation = ScriptLocation("input[0]", 13)),
                             scriptLocation = ScriptLocation("input[0]", 1))))
 
@@ -535,7 +534,7 @@ class CompilerTest {
                                     description = null,
                                     statement = "SELECT * FROM 1",
                                     environment = emptyStruct,
-                                    expected = "(success 1)".toSexp(),
+                                    expected = ExpectedSuccess(ion.newInt(1)),
                                     scriptLocation = ScriptLocation("input[0]", 6)),
                             scriptLocation = ScriptLocation("input[0]", 1)),
                     AppendedTestExpression(
@@ -546,7 +545,7 @@ class CompilerTest {
                                     description = null,
                                     statement = "SELECT * FROM 2",
                                     environment = emptyStruct,
-                                    expected = "(success 2)".toSexp(),
+                                    expected = ExpectedSuccess(ion.newInt(2)),
                                     scriptLocation = ScriptLocation("input[0]", 12)),
                             scriptLocation = ScriptLocation("input[0]", 1))))
 
