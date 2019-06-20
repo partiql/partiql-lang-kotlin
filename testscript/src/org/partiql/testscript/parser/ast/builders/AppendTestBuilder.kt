@@ -16,7 +16,7 @@ internal class AppendTestBuilder(location: ScriptLocation) : StructBuilder<Appen
         val pattern = fieldMap.remove("pattern")
         val additionalData = fieldMap.remove("additional_data")
 
-        fieldMap.forEach { (k, v) -> errors.add(UnexpectedFieldError("$path.$k", v.scriptLocation)) }
+        validateUnexpectedFields()
 
         validateRequired("$path.pattern", pattern)
         validateType("$path.pattern", pattern, IonType.STRING)

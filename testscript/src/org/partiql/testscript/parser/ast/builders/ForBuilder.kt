@@ -251,7 +251,7 @@ private class TestTemplateBuilder(path: String, location: ScriptLocation) :
         val description = fieldMap.remove("description") 
         val environment = fieldMap.remove("environment")
 
-        fieldMap.forEach { (k, v) -> errors.add(UnexpectedFieldError("for.$k", v.scriptLocation)) }
+        validateUnexpectedFields()
         
         validateRequired("$path.id", id)
         validateType("$path.id", id, IonType.SYMBOL)

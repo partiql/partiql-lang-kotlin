@@ -17,6 +17,8 @@ internal abstract class BaseBuilder<T>(val location: ScriptLocation) {
         }
     }
     
+    
+    
     abstract fun build(): Result<T>
 }
 
@@ -27,6 +29,13 @@ internal abstract class StructBuilder<T>(val path: String, location: ScriptLocat
         if (field != null && field.ionValue.type != expected) {
             errors.add(UnexpectedIonTypeError(label, expected, field.ionValue.type, field.scriptLocation))
         }
+    }
+
+    /**
+     * Must run after extracting known fields
+     */
+    protected fun validateUnexpectedFields() {
+        fieldMap.forEach { (k, v) -> errors.add(UnexpectedFieldError("$path.$k", v.scriptLocation)) }
     }
 
     fun setValue(name: String, value: IonValueWithLocation) {

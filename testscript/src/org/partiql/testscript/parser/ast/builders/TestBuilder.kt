@@ -51,7 +51,7 @@ internal class TestBuilder(path: String, location: ScriptLocation) : StructBuild
         val environment = fieldMap.remove("environment")
         val expected = fieldMap.remove("expected")
 
-        fieldMap.forEach { (k, v) -> errors.add(UnexpectedFieldError("$path.$k", v.scriptLocation)) }
+        validateUnexpectedFields()
 
         validateRequired("$path.id", id)
         validateType("$path.id", id, IonType.SYMBOL)
