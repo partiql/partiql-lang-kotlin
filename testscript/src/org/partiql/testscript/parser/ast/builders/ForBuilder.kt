@@ -3,7 +3,7 @@ package org.partiql.testscript.parser.ast.builders
 import com.amazon.ion.*
 import org.partiql.testscript.extensions.UndefinedVariableInterpolationException
 import org.partiql.testscript.extensions.interpolate
-import org.partiql.testscript.extensions.times
+import org.partiql.testscript.extensions.crossProduct
 import org.partiql.testscript.extensions.toIonText
 import org.partiql.testscript.parser.*
 import org.partiql.testscript.parser.EmptyError
@@ -201,7 +201,7 @@ internal class ForBuilder(private val ion: IonSystem, private val location: Scri
                 .forEach { errors.addAll(it.errors) }
 
         val testNodes = mutableListOf<TestNode>()
-        validTemplates.times(validVariableSets).forEach {
+        validTemplates.crossProduct(validVariableSets).forEach {
             val template = (it.first as Success).value
             val variableSet = (it.second as Success).value
 

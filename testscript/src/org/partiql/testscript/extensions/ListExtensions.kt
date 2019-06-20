@@ -1,6 +1,6 @@
 package org.partiql.testscript.extensions
 
-fun <A, B> List<A>.times(other: List<B>): List<Pair<A, B>> {
+internal fun <A, B> List<A>.crossProduct(other: List<B>): List<Pair<A, B>> {
     val r = mutableListOf<Pair<A, B>>()
     for (thisEl in this) {
         for(otherEl in other) {
