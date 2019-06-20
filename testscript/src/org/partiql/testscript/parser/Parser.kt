@@ -21,7 +21,7 @@ class Parser(private val ion: IonSystem) {
         val errors = mutableListOf<ParserError>()
 
         for (input in ionDocuments) {
-            val result = IonInputReader(input, ion).use { parseModule(it) }
+            val result = IonInputReader(input.name, ion, ion.newReader(input)).use { parseModule(it) }
 
             when (result) {
                 is Error -> errors.addAll(result.errors)

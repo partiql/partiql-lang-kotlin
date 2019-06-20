@@ -9,11 +9,9 @@ internal data class IonValueWithLocation(val ionValue: IonValue, val scriptLocat
 /**
  * A decorated IonReader specialized for the [Parser]
  */
-internal class IonInputReader(private val input: NamedInputStream,
+internal class IonInputReader(val inputName: String,
                               private val ion: IonSystem,
-                              private val reader: IonReader = ion.newReader(input)) : IonReader by reader {
-
-    val inputName = input.name
+                              private val reader: IonReader) : IonReader by reader {
 
     /**
      * SpanProvider does not provide accurate line numbers for structs, see https://github.com/amzn/ion-java/issues/226
@@ -36,7 +34,7 @@ internal class IonInputReader(private val input: NamedInputStream,
             -1
         }
 
-        return ScriptLocation(input.name, lineNumber)
+        return ScriptLocation(inputName, lineNumber)
     }
 
     fun ionValueWithLocation(): IonValueWithLocation {
