@@ -5,7 +5,7 @@ import com.amazon.ion.IonStruct
 import org.junit.jupiter.api.Test
 import org.partiql.testscript.parser.ast.TestNode
 
-class ParserMacroTests : BaseParseTests() {
+class ParserForTests : BaseParseTests() {
 
     @Test
     fun forWithSingleTestAndVariable() = assertParse("""
@@ -27,9 +27,7 @@ class ParserMacroTests : BaseParseTests() {
                     statement = "1 + 1",
                     environment = null,
                     expected = BaseParseTests.ion.singleValue("(success 2)") as IonSexp,
-                    scriptLocation = ScriptLocation(
-                            "input[0]",
-                            11))))
+                    scriptLocation = ScriptLocation("input[0]", 11))))
 
     @Test
     fun forWithMultipleTestsAndMultipleVariables() = assertParse("""
@@ -61,73 +59,58 @@ class ParserMacroTests : BaseParseTests() {
             expected = singleModulesList(TestNode(id = "testTemplate1\$\${description:\"description 1\",value:1,table:[1],result:1,environment:{foo:1},expected:(success 10)}",
                     description = "test: description 1",
                     statement = "1 + 1",
-                    environment = BaseParseTests.ion.singleValue(
-                            "{myTable: [1]}") as IonStruct,
-                    expected = BaseParseTests.ion.singleValue(
-                            "(success 1)") as IonSexp,
-                    scriptLocation = ScriptLocation(
-                            "input[0]",
-                            22)),
+                    environment = BaseParseTests.ion.singleValue("{myTable: [1]}") as IonStruct,
+                    expected = BaseParseTests.ion.singleValue("(success 1)") as IonSexp,
+                    scriptLocation = ScriptLocation("input[0]", 22)),
 
                     TestNode(id = "testTemplate1\$\${description:\"description 2\",value:2,table:[2],result:2,environment:{foo:2},expected:(success 20)}",
                             description = "test: description 2",
                             statement = "1 + 2",
-                            environment = BaseParseTests.ion.singleValue(
-                                    "{myTable: [2]}") as IonStruct,
-                            expected = BaseParseTests.ion.singleValue(
-                                    "(success 2)") as IonSexp,
-                            scriptLocation = ScriptLocation(
-                                    "input[0]",
-                                    23)),
+                            environment = BaseParseTests.ion.singleValue("{myTable: [2]}") as IonStruct,
+                            expected = BaseParseTests.ion.singleValue("(success 2)") as IonSexp,
+                            scriptLocation = ScriptLocation("input[0]", 23)),
 
                     TestNode(id = "testTemplate2\$\${description:\"description 1\",value:1,table:[1],result:1,environment:{foo:1},expected:(success 10)}",
                             description = "description 1",
                             statement = "1",
-                            environment = ion.singleValue(
-                                    "{foo: 1}") as IonStruct,
-                            expected = ion.singleValue(
-                                    "(success 10)") as IonSexp,
-                            scriptLocation = ScriptLocation(
-                                    "input[0]",
-                                    22)),
+                            environment = ion.singleValue("{foo: 1}") as IonStruct,
+                            expected = ion.singleValue("(success 10)") as IonSexp,
+                            scriptLocation = ScriptLocation("input[0]", 22)),
 
                     TestNode(id = "testTemplate2\$\${description:\"description 2\",value:2,table:[2],result:2,environment:{foo:2},expected:(success 20)}",
                             description = "description 2",
                             statement = "2",
-                            environment = BaseParseTests.ion.singleValue(
-                                    "{foo: 2}") as IonStruct,
-                            expected = BaseParseTests.ion.singleValue(
-                                    "(success 20)") as IonSexp,
-                            scriptLocation = ScriptLocation(
-                                    "input[0]",
-                                    23))))
+                            environment = BaseParseTests.ion.singleValue("{foo: 2}") as IonStruct,
+                            expected = BaseParseTests.ion.singleValue("(success 20)") as IonSexp,
+                            scriptLocation = ScriptLocation("input[0]", 23))))
 
     @Test
-    fun forWrongType() =
-            assertParseError(input = """ for::"should be a struct" """,
+    fun forWrongType() = assertParseError(
+                    input = """ for::"should be a struct" """,
                     expectedErrorMessage = """ 
-                |Errors found when parsing test scripts:
-                |    input[0]:1 - Wrong type for for. Expected STRUCT, got STRING
-            """.trimMargin())
+                        |Errors found when parsing test scripts:
+                        |    input[0]:1 - Wrong type for for. Expected STRUCT, got STRING
+                    """.trimMargin())
 
     @Test
-    fun forWrongTemplateType() =
-            assertParseError(input = """
-                |for::{ 
-                |  template: "should be a list",
-                |  
-                |  variable_sets: [
-                |    { value: 1, expected: (success 2) }
-                |  ] 
-                |}
-                |""".trimMargin(),
+    fun forWrongTemplateType() = assertParseError(
+                    input = """
+                        |for::{ 
+                        |  template: "should be a list",
+                        |  
+                        |  variable_sets: [
+                        |    { value: 1, expected: (success 2) }
+                        |  ] 
+                        |}
+                        |""".trimMargin(),
                     expectedErrorMessage = """ 
-                |Errors found when parsing test scripts:
-                |    input[0]:2 - Wrong type for for.template. Expected LIST, got STRING
-                """.trimMargin())
+                        |Errors found when parsing test scripts:
+                        |    input[0]:2 - Wrong type for for.template. Expected LIST, got STRING
+                        """.trimMargin())
 
     @Test
-    fun forEmptyTemplate() = assertParseError(input = """
+    fun forEmptyTemplate() = assertParseError(
+            input = """
                 |for::{ 
                 |  template: [],
                 |  
@@ -141,7 +124,8 @@ class ParserMacroTests : BaseParseTests() {
                 """.trimMargin())
 
     @Test
-    fun forTestTemplateWrongType() = assertParseError(input = """
+    fun forTestTemplateWrongType() = assertParseError(
+            input = """
                 |for::{ 
                 |  template: [
                 |    test::"should be a struct"
@@ -158,7 +142,8 @@ class ParserMacroTests : BaseParseTests() {
                 """.trimMargin())
 
     @Test
-    fun forTestTemplateWrongIdType() = assertParseError(input = """
+    fun forTestTemplateWrongIdType() = assertParseError(
+            input = """
                 |for::{ 
                 |  template: [
                 |    test::{
@@ -179,7 +164,8 @@ class ParserMacroTests : BaseParseTests() {
                 """.trimMargin())
 
     @Test
-    fun forTestTemplateMissingId() = assertParseError(input = """
+    fun forTestTemplateMissingId() = assertParseError(
+            input = """
                 |for::{ 
                 |  template: [
                 |    test::{
@@ -199,7 +185,8 @@ class ParserMacroTests : BaseParseTests() {
                 """.trimMargin())
 
     @Test
-    fun forTestTemplateWrongDescriptionType() = assertParseError(input = """
+    fun forTestTemplateWrongDescriptionType() = assertParseError(
+            input = """
                 |for::{ 
                 |  template: [
                 |    test::{
@@ -221,7 +208,8 @@ class ParserMacroTests : BaseParseTests() {
                 """.trimMargin())
 
     @Test
-    fun forTestTemplateWrongStatementType() = assertParseError(input = """
+    fun forTestTemplateWrongStatementType() = assertParseError(
+            input = """
                 |for::{ 
                 |  template: [
                 |    test::{
@@ -242,7 +230,8 @@ class ParserMacroTests : BaseParseTests() {
                 """.trimMargin())
 
     @Test
-    fun forTestTemplateMissingStatement() = assertParseError(input = """
+    fun forTestTemplateMissingStatement() = assertParseError(
+            input = """
                 |for::{ 
                 |  template: [
                 |    test::{
@@ -262,7 +251,8 @@ class ParserMacroTests : BaseParseTests() {
                 """.trimMargin())
 
     @Test
-    fun forTestTemplateWrongEnvironmentType() = assertParseError(input = """
+    fun forTestTemplateWrongEnvironmentType() = assertParseError(
+            input = """
                 |for::{ 
                 |  template: [
                 |    test::{
@@ -283,7 +273,8 @@ class ParserMacroTests : BaseParseTests() {
                 """.trimMargin())
 
     @Test
-    fun forTestTemplateWrongExpectedType() = assertParseError(input = """
+    fun forTestTemplateWrongExpectedType() = assertParseError(
+            input = """
                 |for::{ 
                 |  template: [
                 |    test::{
@@ -303,7 +294,8 @@ class ParserMacroTests : BaseParseTests() {
                 """.trimMargin())
 
     @Test
-    fun forTestTemplateMissingExpected() = assertParseError(input = """
+    fun forTestTemplateMissingExpected() = assertParseError(
+            input = """
                 |for::{ 
                 |  template: [
                 |    test::{
@@ -323,7 +315,8 @@ class ParserMacroTests : BaseParseTests() {
                 """.trimMargin())
 
     @Test
-    fun forMissingTemplate() = assertParseError(input = """
+    fun forMissingTemplate() = assertParseError(
+            input = """
                 |for::{
                 |  variable_sets: [
                 |    { value: 1, expected: (success 2) }
@@ -336,7 +329,8 @@ class ParserMacroTests : BaseParseTests() {
                 """.trimMargin())
 
     @Test
-    fun forWrongVariableSetType() = assertParseError(input = """
+    fun forWrongVariableSetType() = assertParseError(
+            input = """
                 |for::{ 
                 |  template: [
                 |    test::{
@@ -355,7 +349,8 @@ class ParserMacroTests : BaseParseTests() {
                 """.trimMargin())
 
     @Test
-    fun forMissingVariableSet() = assertParseError(input = """
+    fun forMissingVariableSet() = assertParseError(
+            input = """
                 |for::{ 
                 |  template: [
                 |    test::{
@@ -372,7 +367,8 @@ class ParserMacroTests : BaseParseTests() {
                 """.trimMargin())
 
     @Test
-    fun forWrongVariableSetElementType() = assertParseError(input = """
+    fun forWrongVariableSetElementType() = assertParseError(
+            input = """
                 |for::{ 
                 |  template: [
                 |    test::{
@@ -393,7 +389,8 @@ class ParserMacroTests : BaseParseTests() {
                 """.trimMargin())
 
     @Test
-    fun forEmptyVariableSet() = assertParseError(input = """
+    fun forEmptyVariableSet() = assertParseError(
+            input = """
                 |for::{ 
                 |  template: [
                 |    test::{
@@ -412,7 +409,8 @@ class ParserMacroTests : BaseParseTests() {
                 """.trimMargin())
 
     @Test
-    fun forUnknownField() = assertParseError(input = """
+    fun forUnknownField() = assertParseError(
+            input = """
                 |for::{ 
                 |  template: [
                 |    test::{
@@ -435,7 +433,8 @@ class ParserMacroTests : BaseParseTests() {
                 """.trimMargin())
 
     @Test
-    fun forUnknownVariable() = assertParseError(input = """
+    fun forUnknownVariable() = assertParseError(
+            input = """
                 |for::{ 
                 |  template: [
                 |    test::{
@@ -456,7 +455,8 @@ class ParserMacroTests : BaseParseTests() {
                 """.trimMargin())
 
     @Test
-    fun forInvalidExpectedVariable() = assertParseError(input = """
+    fun forInvalidExpectedVariable() = assertParseError(
+            input = """
                 |for::{ 
                 |  template: [
                 |    test::{
@@ -475,6 +475,4 @@ class ParserMacroTests : BaseParseTests() {
                 |Errors found when parsing test scripts:
                 |    input[0]:11 - for.template.expected success must have two elements, e.g. (success (bag {a: 1}))
                 """.trimMargin())
-
-
 }
