@@ -5,8 +5,6 @@ import org.junit.runner.Description
 import org.junit.runner.Runner
 import org.junit.runner.notification.RunNotifier
 import org.partiql.testscript.parser.Parser
-import org.partiql.testscript.evaluator.Evaluator
-import org.partiql.testscript.evaluator.PtsEquality
 import org.partiql.testscript.evaluator.TestFailure
 import org.partiql.testscript.evaluator.TestResultSuccess
 import org.partiql.testscript.parser.NamedInputStream
