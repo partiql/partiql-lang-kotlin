@@ -23,7 +23,7 @@ internal abstract class TestScriptError {
 
 /**
  * Folds an iterable of results into a single [Result]. When there is at least a single failure it merges all 
- * errors into a single Failure. When there a no failures uses `block` to aggregate the successes values
+ * errors into a single Failure otherwise it uses `block` to aggregate the success values
  * 
  * @param block lambda executed to group all successes into a single result. 
  */

@@ -11,8 +11,21 @@ import org.partiql.testscript.Success
 import org.partiql.testscript.parser.ast.*
 import java.lang.IllegalArgumentException
 
+/**
+ * Since compile functions don't produce a result but mutate the current compilation environment we use a 
+ * singleton success value to indicate that the compile function completed successfully.   
+ */
 private val SUCCESS = Success(Unit)
 
+/**
+ * Encapsulates the current compile environment which is comprised of: 
+ * * The current test environment, which can be mutated by a [SetDefaultEnvironmentNode] and must be reset at each new 
+ * [ModuleNode]
+ * * The compiled [TestScriptExpression]'s
+ * * Deferred compiled lambdas that must be executed after the whole AST is processed. These are lambdas that make 
+ * references to other [TestScriptExpression]'s so we execute them at the end to ensure the referred 
+ * [TestScriptExpression] was generated 
+ */
 private class CompileEnvironment(var testEnvironment: IonStruct) {
     private val skipListDeferred = mutableListOf<() -> Result<Unit>>()
     private val appendDeferred = mutableListOf<() -> Result<Unit>>()
@@ -37,30 +50,30 @@ private class CompileEnvironment(var testEnvironment: IonStruct) {
 }
 
 /**
- * PTS Compiler
+ * PTS Compiler.
  */
 class Compiler(val ion: IonSystem) {
     fun compile(ast: List<ModuleNode>): List<TestScriptExpression> {
 
-        val cenv = CompileEnvironment(ion.newEmptyStruct())
+        val compileEnvironment = CompileEnvironment(ion.newEmptyStruct())
 
         val results = ast.flatMap { module ->
-            // reinitialize the testEnvironment to empty at each new module
-            // when the PTS compile environment gets more complex we should 
+            // reinitialize the testEnvironment to empty at each new module.
+            // When the PTS compile environment gets more complex we should 
             // replace this by a nested compile environment 
-            cenv.testEnvironment = ion.newEmptyStruct()
+            compileEnvironment.testEnvironment = ion.newEmptyStruct()
 
             module.nodes.map { node ->
                 when (node) {
-                    is SetDefaultEnvironmentNode -> compileSetDefaultEnvironmentNode(cenv, node)
-                    is TestNode -> compileTestNode(cenv, node)
+                    is SetDefaultEnvironmentNode -> compileSetDefaultEnvironmentNode(compileEnvironment, node)
+                    is TestNode -> compileTestNode(compileEnvironment, node)
 
                     // we defer the compilation of the node types bellow since they 
                     // operate on top of compiled test nodes that can be defined in 
                     // another PTS file. This way the PTS file processing order does 
                     // not matter 
-                    is SkipListNode -> cenv.deferSkipList { compileSkipList(cenv, node) }
-                    is AppendTestNode -> cenv.deferAppendTest { compileAppendTest(cenv, node) }
+                    is SkipListNode -> compileEnvironment.deferSkipList { compileSkipList(compileEnvironment, node) }
+                    is AppendTestNode -> compileEnvironment.deferAppendTest { compileAppendTest(compileEnvironment, node) }
 
                     // we may support nesting modules if we need to have a robust 
                     // include or need more refined scoping rules for testIds 
@@ -69,9 +82,11 @@ class Compiler(val ion: IonSystem) {
             }
         }
 
-        val deferredResults = cenv.invokeDeferred()
+        val deferredResults = compileEnvironment.invokeDeferred()
 
-        val errors = results.union(deferredResults).filterIsInstance<Failure<Unit>>().flatMap { it.errors }
+        val errors = results.union(deferredResults)
+                .filterIsInstance<Failure<Unit>>()
+                .flatMap { it.errors }
 
         if (errors.isNotEmpty()) {
             val formattedErrors = errors.joinToString(separator = "\n") { "    $it" }
@@ -79,25 +94,34 @@ class Compiler(val ion: IonSystem) {
             throw CompilerException("Errors found when compiling test scripts:\n$formattedErrors")
         }
 
-        return cenv.expressions.values.toList()
+        return compileEnvironment.expressions.values.toList()
     }
 
-    private fun compileSetDefaultEnvironmentNode(cenv: CompileEnvironment, node: SetDefaultEnvironmentNode): Result<Unit> {
-        cenv.testEnvironment = node.environment
+    /**
+     * Changes the current test environment affecting subsequent AST nodes until a new Module is started.
+     */
+    private fun compileSetDefaultEnvironmentNode(
+            compileEnvironment: CompileEnvironment, 
+            node: SetDefaultEnvironmentNode): Result<Unit> {
+        
+        compileEnvironment.testEnvironment = node.environment
 
         return SUCCESS
     }
 
-    private fun compileTestNode(cenv: CompileEnvironment, node: TestNode): Result<Unit> {
+    /**
+     * Generates and register a [TestExpression] into the compile environment. 
+     */
+    private fun compileTestNode(compileEnvironment: CompileEnvironment, node: TestNode): Result<Unit> {
         val testExpression = TestExpression(
                 id = node.id,
                 description = node.description,
                 statement = node.statement,
-                environment = node.environment ?: cenv.testEnvironment,
+                environment = node.environment ?: compileEnvironment.testEnvironment,
                 expected = makeExpectedResult(node.expected),
                 scriptLocation = node.scriptLocation)
 
-        val expressions = cenv.expressions
+        val expressions = compileEnvironment.expressions
         return if (expressions.containsKey(node.id)) {
             Failure(TestIdNotUniqueError(node.id, node.scriptLocation, expressions[node.id]!!.scriptLocation))
         } else {
@@ -116,8 +140,11 @@ class Compiler(val ion: IonSystem) {
         }
     }
 
-    private fun compileAppendTest(cenv: CompileEnvironment, node: AppendTestNode): Result<Unit> {
-        val expressions = cenv.expressions
+    /**
+     * Defers the generation and registering of a [AppendedTestExpression] since it must reference a [TestExpression]  
+     */
+    private fun compileAppendTest(compileEnvironment: CompileEnvironment, node: AppendTestNode): Result<Unit> {
+        val expressions = compileEnvironment.expressions
         val matcher = node.pattern.toPatternRegex()
 
         val matched = expressions.filter { (testId, _) -> matcher.matches(testId) }
@@ -129,7 +156,7 @@ class Compiler(val ion: IonSystem) {
         val results = matched.values.map { original ->
             when (original) {
                 is TestExpression -> {
-                    cenv.expressions[original.id] = AppendedTestExpression(
+                    compileEnvironment.expressions[original.id] = AppendedTestExpression(
                             original.id,
                             original,
                             node.additionalData,
@@ -149,8 +176,11 @@ class Compiler(val ion: IonSystem) {
         return results.foldToResult { SUCCESS }
     }
 
-    private fun compileSkipList(cenv: CompileEnvironment, node: SkipListNode): Result<Unit> {
-        val expressions = cenv.expressions
+    /**
+     * Defers the generation and registering of a [SkippedTestExpression] since it must reference a [TestExpression]
+     */
+    private fun compileSkipList(compileEnvironment: CompileEnvironment, node: SkipListNode): Result<Unit> {
+        val expressions = compileEnvironment.expressions
         val matchers = node.patterns.map { it.toPatternRegex() }
 
         expressions.filter { (testId, _) -> matchers.any { it.matches(testId) } }
@@ -178,5 +208,5 @@ class Compiler(val ion: IonSystem) {
     }
 }
 
-// TODO decide if we want to only support '.'and '*' or full regex
+// TODO decide if we want to only support '.'and '*' or full regex.
 private fun String.toPatternRegex(): Regex = this.toRegex()

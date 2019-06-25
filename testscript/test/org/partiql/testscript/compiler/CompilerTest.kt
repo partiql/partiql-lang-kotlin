@@ -1,6 +1,5 @@
 package org.partiql.testscript.compiler
 
-import com.amazon.ion.IonSexp
 import com.amazon.ion.IonStruct
 import com.amazon.ion.system.IonSystemBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -9,6 +8,12 @@ import org.junit.jupiter.api.assertThrows
 import org.partiql.testscript.parser.*
 
 class CompilerTest {
+
+    /*
+     * We use `#` instead of `$` in test fixtures because escaping `$` in a kotlin
+     * multiline string is messy, e.g. `"""${"$"}"""` results in `"$"`
+     */
+    
     private val ion = IonSystemBuilder.standard().build()
     private val emptyStruct = ion.newEmptyStruct().apply { makeReadOnly() }
 

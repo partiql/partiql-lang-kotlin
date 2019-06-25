@@ -7,6 +7,11 @@ import org.partiql.testscript.parser.ast.TestNode
 
 class ParserMacroTests : BaseParseTests() {
 
+    /*
+     * We use `#` instead of `$` in test fixtures because escaping `$` in a kotlin
+     * multiline string is messy, e.g. `"""${"$"}"""` results in `"$"`
+     */
+    
     @Test
     fun forWithSingleTestAndVariable() = assertParse("""
             |for::{ 

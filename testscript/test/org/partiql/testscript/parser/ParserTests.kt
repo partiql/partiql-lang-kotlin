@@ -7,6 +7,11 @@ import java.nio.charset.Charset
 
 class ParserTests : BaseParseTests() {
 
+    /*
+     * We use `#` instead of `$` in test fixtures because escaping `$` in a kotlin
+     * multiline string is messy, e.g. `"""${"$"}"""` results in `"$"`
+     */
+    
     @Test
     fun singleFullTest() = assertParse("""
             |test::{
