@@ -13,9 +13,7 @@ data class PtsError(val scriptLocation: ScriptLocation, val message: String) : C
 }
 
 abstract class PtsException(val errors: List<PtsError>) : RuntimeException() {
-    private val formattedErrors = errors.sorted().joinToString("\n") { "    $it" }
-
-    override val message: String = "Errors found when parsing test scripts:\n$formattedErrors"
+    protected val formattedErrors = errors.sorted().joinToString("\n") { "    $it" }
 }
 
 

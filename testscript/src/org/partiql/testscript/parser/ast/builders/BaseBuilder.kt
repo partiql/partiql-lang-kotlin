@@ -1,6 +1,7 @@
 package org.partiql.testscript.parser.ast.builders
 
 import com.amazon.ion.IonType
+import org.partiql.testscript.Result
 import org.partiql.testscript.parser.*
 import org.partiql.testscript.parser.DuplicatedFieldError
 import org.partiql.testscript.parser.IonValueWithLocation

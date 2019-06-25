@@ -3,10 +3,10 @@ package org.partiql.testscript.parser.ast.builders
 import com.amazon.ion.IonString
 import com.amazon.ion.IonStruct
 import com.amazon.ion.IonType
-import org.partiql.testscript.parser.Error
-import org.partiql.testscript.parser.Result
+import org.partiql.testscript.Failure
+import org.partiql.testscript.Result
 import org.partiql.testscript.parser.ScriptLocation
-import org.partiql.testscript.parser.Success
+import org.partiql.testscript.Success
 import org.partiql.testscript.parser.UnexpectedFieldError
 import org.partiql.testscript.parser.ast.AppendTestNode
 
@@ -30,7 +30,7 @@ internal class AppendTestBuilder(location: ScriptLocation) : StructBuilder<Appen
                     additionalData = additionalData!!.ionValue as IonStruct,
                     scriptLocation = location))
         } else {
-            Error(errors)
+            Failure(errors)
         }
     }
 }

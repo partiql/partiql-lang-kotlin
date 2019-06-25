@@ -7,6 +7,11 @@ import java.nio.charset.Charset
 
 class ParserTests : BaseParseTests() {
 
+    /*
+     * We use `#` instead of `$` in test fixtures because escaping `$` in a kotlin
+     * multiline string is messy, e.g. `"""${"$"}"""` results in `"$"`
+     */
+    
     @Test
     fun singleFullTest() = assertParse("""
             |test::{
@@ -41,12 +46,10 @@ class ParserTests : BaseParseTests() {
                             1))))
 
     @Test
-    fun singleSetDefaultEnvironmentNode() {
-        val inputText = "set_default_environment::{ foo: [1,2,3,4,5] }"
-        assertParse(inputText,
-                expected = singleModulesList(SetDefaultEnvironmentNode(ion.singleValue(inputText) as IonStruct,
-                        ScriptLocation("input[0]", 1))))
-    }
+    fun singleSetDefaultEnvironmentNode() = assertParse("set_default_environment::{ foo: [1,2,3,4,5] }",
+            expected = singleModulesList(
+                    SetDefaultEnvironmentNode(ion.singleValue("{ foo: [1,2,3,4,5] }") as IonStruct,
+                            ScriptLocation("input[0]", 1))))
 
     @Test
     fun singleSkipList() = assertParse("""skip_list::[ "test_1", "test_2" ]""",
@@ -95,7 +98,7 @@ class ParserTests : BaseParseTests() {
         |  ]
         |}
         """.trimMargin(),
-            expected = singleModulesList(SetDefaultEnvironmentNode(ion.singleValue("set_default_environment::{ foo: [1,2,3,4,5] }") as IonStruct,
+            expected = singleModulesList(SetDefaultEnvironmentNode(ion.singleValue("{ foo: [1,2,3,4,5] }") as IonStruct,
                     ScriptLocation("input[0]",
                             1)),
 
@@ -126,16 +129,14 @@ class ParserTests : BaseParseTests() {
     @Test
     fun multipleDocuments() = assertParse("set_default_environment::{ foo: [1] }",
             "set_default_environment::{ foo: [2] }",
-            expected = listOf(ModuleNode(listOf(SetDefaultEnvironmentNode(ion.singleValue(
-                    "set_default_environment::{ foo: [1] }") as IonStruct,
-                    ScriptLocation("input[0]",
-                            1))),
+            expected = listOf(ModuleNode(listOf(SetDefaultEnvironmentNode(
+                    ion.singleValue("{ foo: [1] }") as IonStruct,
+                    ScriptLocation("input[0]", 1))),
                     ScriptLocation("input[0]", 0)),
 
                     ModuleNode(listOf(SetDefaultEnvironmentNode(ion.singleValue(
-                            "set_default_environment::{ foo: [2] }") as IonStruct,
-                            ScriptLocation("input[1]",
-                                    1))),
+                            "{ foo: [2] }") as IonStruct,
+                            ScriptLocation("input[1]", 1))),
                             ScriptLocation("input[1]", 0))))
 
     @Test
@@ -457,5 +458,5 @@ class ParserTests : BaseParseTests() {
                 |Errors found when parsing test scripts:
                 |    input[0]:4 - Unexpected field: append_test.shouldNotBeHere
             """.trimMargin())
-    
+
 }
