@@ -1,36 +1,35 @@
 # PartiQL Test Script (PTS) 
 
-PTS is a DSL to describe the expected behavior of a PartiQL implementation. It defines a core `test` function that 
+PartiQL Test Script (PTS) is a DSL to describe the expected behavior of a PartiQL implementation. It defines a `test` function that 
 encapsulates: 
 * a PartiQL statement
 * an environment used to evaluate the statement
 * the evaluation's expected result. 
  
-All other functions defined in PTS are used to either reduce repetition or modify a test by ignoring it or appending 
-additional metadata necessary to execute the test
+All other functions defined in PTS are used to either reduce repetition, ignore a test, or add information 
+necessary to execute a test..
 
-A PTS file is an Ion document where each top level value represents a PTS function or macro.
+A PTS file is an Ion document in which each top level value represents a PTS function or macro.
 
 ## Functions
 
 ### test
 
-Represents a single PartiQL example, syntax:
+Represents a single PartiQL test, syntax:
 
 ```ion
 test::{
-    id: (Symbol, required - test unique identifier)
-    description: (String, optional - test description),
-    statement: (String, required - PartiQL statement),
-    environment: (Struct, optional - PartiQL environment to evaluate the statement.),
-    expected: (S-exp, required - expected result of the statement execution express as Ion)
+    id: <symbol, required - test unique identifier>
+    description: <string, optional - test description>,
+    statement: <string, required - PartiQL statement>,
+    environment: <struct, optional - PartiQL environment to evaluate the statement>,
+    expected: <S-exp, required - expected result of the statement execution expressed as Ion>
 }
 ```
 
-Expected is an s-expression where the first symbol determines what type of result is expected:
-
-* `(success <result>)`: statement is successful and <result> is the ion representation of evaluating the PartiQL 
-statement
+`expected` is an S-expression where the first symbol indicates whether the statement is expected to complete 
+successfully or produce an error:
+* `(success <result>)`: statement is successful and <result> is the Ion representation of evaluating the statement
 * `(error)`: statement results in an error
 
 ### set_default_environment
@@ -38,17 +37,18 @@ statement
 Changes the default environment for the current file. The initial default environment is the empty environment.
 
 ```ion
-set_default_environment::(Struct, required - new default environment)
+set_default_environment::<struct, required - new default environment>
 ```
 
 ### for
 
-A macro that expands into other functions by interpolating the template with variables in the variable set.
+A `for` function contains a `template` and `variableSet`. Each `test` in the template is performed once for 
+each `variableSet` by substituting a `variableSet`'s name/value pairs into corresponding placeholders in a `test`.
 
 ```ion
 for::{
-    template: (List of tests, required - list of templated PTS functions to be interpolated),
-    variableSets: (List of structs, required - list of variables used to interpolate the template),
+    template: <list of tests, required - list of templated PTS functions to be interpolated>,
+    variableSets: <list of structs, required - list of variables used to interpolate the template>,
 }
 ```
 
@@ -84,7 +84,7 @@ test::{
 }
 ```
 
-id field is not expanded but auto generated based on the following rule: `<base_id>$$<variable_set_value>`. 
+id field is not expanded but auto generated based on the following rule: `<id>$$<variable_set_value>`. 
 
 ### skip_list
 
@@ -92,22 +92,20 @@ A skip list is used to skip tests. It's recommended that this list be defined pe
 
 ```ion
 skip_list::[
-    (String, required - a pattern that matches one or more test ids)
+    <string, required - zero or more strings, each containing a regular expression that matches one or more test ids>
 ]
 ```
-
-Pattern is a regular expression.
 
 ### append_test
 
 Appends a test with additional information. This should be used to provide additional metadata that a PartiQL 
-implementation may need to run a test. For example a DDL dependent PartiQL implementation can use append_test to add a 
-DDL statement that must be ran before running the test statement.
+implementation may need to run a test. For example, PartiQL implementation that requires DDL can use `append_test` 
+to add a DDL statement that must be run before executing the test statement.
 
 ```ion
 append_test::{
-    pattern: (String, required - a pattern that matches one or more test ids)
-    additional_data: (Struct, required - struct containing all extra information)
+    pattern: <string, required - a pattern that matches one or more test ids>
+    additional_data: <struct, required - struct containing all extra information>
 }
 ```
 
@@ -169,20 +167,38 @@ append_test::{
 }
 ```
 
+## Expected Data model
+
+We avoid using PartiQL syntax to specify the expected results and environment as it would create a dependency between 
+PTS and a PartiQL implementation. 
+
+Instead we use Ion since PartiQL type system is based on the its type system. Most PartiQL types have 1:1 mapping into
+and Ion type apart from `MISSING` and `BAG`. To represent those we use the following convention:   
+
+| PartiQL Value | Ion Value     |
+|---------------|---------------|
+| <<1,2,3>>     | (bag 1 2 3)   |
+| missing       | missing::null |
+
+Comparison is mostly deferred to Ion definition of equality. The exceptions, again, are bags and missing types: 
+1. Bags are unordered lists so two bags are equal if they have the same size and all elements on bag A are contained 
+in bag B.
+1. For missing values it is only considered equal if the both have the missing annotation.
+
 ## Interpreter
 
 The PTS interpreter has three stages: parsing, compilation and evaluation.
 
 ### Parsing
 
-The Parser parses PTS files using an ion parsing library and generates an AST representing all scripts. 
+The Parser parses PTS files using an Ion parsing library and generates an AST representing all scripts. 
 Macros are expanded during the parsing phase and generate the corresponding expanded nodes.
 
 TODO: Link code and API when they are merged
 
 ### Compilation
 
-The Compiler is to compile the AST into `TestExpression`s using the current compilation environment which is scoped to a 
+The Compiler compiles the AST into `TestExpression`s using the current compilation environment which is scoped to a 
 PTS file script, i.e. the compilation environment resets at the beginning of each file.
 
 A `TestExpression` represents the execution of a single test.
@@ -203,7 +219,7 @@ Evaluator evaluates `TestExpressions` into `TestResults` which represent the tes
 implementation must provide it's own Evaluator implementation.
 
 The evaluator interface allows an equality function to be provided to the evaluator implementation. PTS provides an 
-official equality function that must be used by the evaluator when onboarding with PTS consensus testing framework
+official equality function that must be used by the evaluator when onboarding with PTS consensus testing framework.
 
 Proposed Interfaces: TODO Link code and API when they are merged https://github.com/partiql/partiql-lang-kotlin/issues/87 
 
@@ -226,21 +242,4 @@ abstract class Evaluator<T>(val equality: Equality<T>) {
 }
 ```
 
-## Expected Data model
-
-We avoid using PartiQL syntax to specify the expected results and environment as it would create a dependency between 
-PTS and a PartiQL implementation. 
-
-Instead we use Ion since PartiQL type system is based on the its type system. Most PartiQL types have 1:1 mapping into
-and Ion type apart from `MISSING` and `BAG`. To represent those we use the following convention:   
-
-| PartiQL Value | Ion Value     |
-|---------------|---------------|
-| <<1,2,3>>     | (bag 1 2 3)   |
-| missing       | missing::null |
-
-Comparison is mostly deferred to Ion definition of equality. The exceptions, again, are bags and missing types: 
-1. Bags are unordered lists so two bags are equal if they have the same size and all elements on bag A are contained 
-in bag B.
-1. For missing values it is only considered equal if the both have the missing annotation.
 
