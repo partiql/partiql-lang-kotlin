@@ -30,9 +30,7 @@ class Parser(private val ion: IonSystem) {
         }
 
         if (errors.isNotEmpty()) {
-            val formattedErrors = errors.joinToString(separator = "\n") { "    $it" }
-
-            throw ParserException("Errors found when parsing test scripts:\n$formattedErrors")
+            throw ParserException(errors.map { it.toPtsError() })
         }
 
         return modules

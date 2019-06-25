@@ -1,9 +1,12 @@
 package org.partiql.testscript.parser
 
 import com.amazon.ion.IonType
+import org.partiql.testscript.PtsError
 
 internal sealed class ParserError(private val message: String, private val scriptLocation: ScriptLocation) {
     override fun toString(): String = "$scriptLocation - $message"
+    
+    fun toPtsError(): PtsError = PtsError(scriptLocation, message)
 }
 
 internal class EmptyError(valuePath: String, scriptLocation: ScriptLocation) :

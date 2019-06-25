@@ -193,9 +193,9 @@ class ParserTests : BaseParseTests() {
             """.trimMargin(),
                     expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
+                |    input[0]:1 - Missing required field: test.expected
                 |    input[0]:1 - Missing required field: test.id
                 |    input[0]:1 - Missing required field: test.statement
-                |    input[0]:1 - Missing required field: test.expected
             """.trimMargin())
 
     @Test
