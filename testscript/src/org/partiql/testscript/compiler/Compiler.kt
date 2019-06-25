@@ -89,9 +89,7 @@ class Compiler(val ion: IonSystem) {
                 .flatMap { it.errors }
 
         if (errors.isNotEmpty()) {
-            val formattedErrors = errors.joinToString(separator = "\n") { "    $it" }
-
-            throw CompilerException("Errors found when compiling test scripts:\n$formattedErrors")
+            throw CompilerException(errors.map { it.toPtsError() })
         }
 
         return compileEnvironment.expressions.values.toList()

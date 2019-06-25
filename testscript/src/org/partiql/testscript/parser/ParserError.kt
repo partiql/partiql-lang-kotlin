@@ -2,12 +2,11 @@ package org.partiql.testscript.parser
 
 import com.amazon.ion.IonType
 import org.partiql.testscript.PtsError
+import org.partiql.testscript.TestScriptError
 
-internal sealed class ParserError(private val message: String, private val scriptLocation: ScriptLocation) {
-    override fun toString(): String = "$scriptLocation - $message"
-    
-    fun toPtsError(): PtsError = PtsError(scriptLocation, message)
-}
+internal sealed class ParserError(
+        override val errorMessage: String,
+        override val scriptLocation: ScriptLocation) : TestScriptError()
 
 internal class EmptyError(valuePath: String, scriptLocation: ScriptLocation) :
         ParserError("Field must have at least one element: $valuePath", scriptLocation)
@@ -31,15 +30,15 @@ internal class UnexpectedIonTypeError(
         expected: IonType,
         actual: IonType,
         scriptLocation: ScriptLocation) :
-            ParserError("Wrong type for $valuePath. Expected $expected, got $actual", scriptLocation)
+        ParserError("Wrong type for $valuePath. Expected $expected, got $actual", scriptLocation)
 
-internal class InvalidTemplateValueError(valuePath: String, scriptLocation: ScriptLocation) : 
+internal class InvalidTemplateValueError(valuePath: String, scriptLocation: ScriptLocation) :
         ParserError(
-                "Invalid template value for field: $valuePath. Must start with '$' when it's a SYMBOL", 
-                scriptLocation) 
+                "Invalid template value for field: $valuePath. Must start with '$' when it's a SYMBOL",
+                scriptLocation)
 
-internal class UnexpectedFieldError(valuePath: String, scriptLocation: ScriptLocation) : 
-        ParserError("Unexpected field: $valuePath", scriptLocation) 
+internal class UnexpectedFieldError(valuePath: String, scriptLocation: ScriptLocation) :
+        ParserError("Unexpected field: $valuePath", scriptLocation)
 
 internal class MissingTemplateVariableError(variable: String, scriptLocation: ScriptLocation) :
         ParserError("Missing template variable: $variable", scriptLocation)

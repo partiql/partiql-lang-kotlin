@@ -19,6 +19,8 @@ internal abstract class TestScriptError {
     protected abstract val errorMessage: String
 
     final override fun toString(): String = "$scriptLocation - $errorMessage"
+
+    fun toPtsError(): PtsError = PtsError(scriptLocation, errorMessage)
 }
 
 /**
