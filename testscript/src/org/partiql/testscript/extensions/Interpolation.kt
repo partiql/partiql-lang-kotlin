@@ -2,7 +2,7 @@ package org.partiql.testscript.extensions
 
 import com.amazon.ion.*
 
-class UndefinedVariableInterpolationException(val variableName: String) : RuntimeException()
+internal class UndefinedVariableInterpolationException(val variableName: String) : RuntimeException()
 
 private val regex = "\\$(\\w+)".toRegex()
 

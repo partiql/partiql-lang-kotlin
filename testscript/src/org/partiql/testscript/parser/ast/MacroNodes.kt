@@ -1,6 +1,7 @@
 package org.partiql.testscript.parser.ast
 
-import com.amazon.ion.*
+import com.amazon.ion.IonStruct
+import com.amazon.ion.IonValue
 import org.partiql.testscript.parser.ScriptLocation
 
 internal data class VariableSet(val variables: IonStruct, val scriptLocation: ScriptLocation)

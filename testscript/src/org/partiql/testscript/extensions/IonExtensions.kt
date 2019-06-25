@@ -1,6 +1,6 @@
 package org.partiql.testscript.extensions
 
-import com.amazon.ion.*
+import com.amazon.ion.IonValue
 
 internal fun IonValue.toIonText(): String {
     val sb = StringBuilder() 

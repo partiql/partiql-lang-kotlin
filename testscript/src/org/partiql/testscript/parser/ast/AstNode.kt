@@ -1,6 +1,7 @@
 package org.partiql.testscript.parser.ast
 
-import com.amazon.ion.*
+import com.amazon.ion.IonSexp
+import com.amazon.ion.IonStruct
 import org.partiql.testscript.parser.ScriptLocation
 
 sealed class AstNode {

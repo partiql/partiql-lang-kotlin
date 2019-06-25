@@ -1,9 +1,9 @@
 package org.partiql.testscript.parser
 
-import com.amazon.ion.*
-import org.junit.jupiter.api.*
+import com.amazon.ion.IonSexp
+import com.amazon.ion.IonStruct
+import org.junit.jupiter.api.Test
 import org.partiql.testscript.parser.ast.*
-import java.nio.charset.Charset
 
 class ParserTests : BaseParseTests() {
 

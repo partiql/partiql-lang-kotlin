@@ -10,6 +10,9 @@ dependencies {
     implementation "com.amazon.ion:ion-java:[1.4.0,)"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     
+    // for the junit runner we vend
+    implementation "junit:junit:4.12"
+    
     // test dependencies
     testImplementation "org.junit.jupiter:junit-jupiter-api:5.3.1"
     testImplementation "org.junit.jupiter:junit-jupiter-params:5.3.1"
