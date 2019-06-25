@@ -3,13 +3,13 @@ package org.partiql.testscript.parser.ast.builders
 import com.amazon.ion.*
 import org.partiql.testscript.parser.*
 import org.partiql.testscript.parser.EmptyError
-import org.partiql.testscript.parser.Error
+import org.partiql.testscript.Failure
 import org.partiql.testscript.parser.InvalidExpectedErrorSizeError
 import org.partiql.testscript.parser.InvalidExpectedSuccessSizeError
 import org.partiql.testscript.parser.InvalidExpectedTagError
 import org.partiql.testscript.parser.IonValueWithLocation
-import org.partiql.testscript.parser.Result
-import org.partiql.testscript.parser.Success
+import org.partiql.testscript.Result
+import org.partiql.testscript.Success
 import org.partiql.testscript.parser.UnexpectedFieldError
 import org.partiql.testscript.parser.UnexpectedIonTypeError
 import org.partiql.testscript.parser.ast.TestNode
@@ -74,7 +74,7 @@ internal class TestBuilder(path: String, location: ScriptLocation) : StructBuild
                     expected = expected!!.ionValue as IonSexp,
                     scriptLocation = location))
         } else {
-            Error(errors)
+            Failure(errors)
         }
     }
 }
