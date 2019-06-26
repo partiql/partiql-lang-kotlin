@@ -12,5 +12,5 @@ public interface PtsEquality {
         return DefaultPtsEquality.INSTANCE;
     } 
 
-    boolean isEqual(final IonValue left, final IonValue right); 
+    boolean areEqual(final IonValue left, final IonValue right); 
 }

@@ -5,81 +5,88 @@ import com.amazon.ion.IonType.*
 import java.lang.IllegalArgumentException
 
 /**
- * Default definition of Equality for PartiQL.  
+ * Default definition of Equality for PartiQL PTS. Although similar to PartiQL equivalency definition there are 
+ * some differences as PartiQL `=` operator coerces types and for PTS two values are equivalent if and only if 
+ * they are of the same type.
  */
 internal object DefaultPtsEquality : PtsEquality {
-    override fun isEqual(left: IonValue?, right: IonValue?): Boolean = when {
-        left == null && right == null -> true
-        left == null && right != null -> false
-        left != null && right == null -> false
-        else -> left!!.ptsEqual(right!!)
-    }
-
-    private fun IonValue.ptsEqual(other: IonValue): Boolean {
-        if (type != other.type) {
+    override fun areEqual(left: IonValue, right: IonValue): Boolean {
+        if (left.type != right.type) {
             return false
         }
 
-        return when (type!!) {
+        return when (left.type!!) {
             NULL -> {
-                if(isMissing()) {
-                    other.isMissing()
-                }
-                else {
-                    other.isNullValue
+                if (left.isMissing() || right.isMissing()) {
+                    left.isMissing() && right.isMissing()
+                } else {
+                    right.isNullValue
                 }
             }
-            BOOL, INT, FLOAT, SYMBOL, STRING, CLOB, BLOB -> this == other
+            BOOL, INT, FLOAT, SYMBOL, STRING, CLOB, BLOB -> left == right
             DECIMAL -> {
-                val thisDecimal = this as IonDecimal
-                val otherDecimal = other as IonDecimal
+                val leftDecimal = left as IonDecimal
+                val rightDecimal = right as IonDecimal
 
                 // we use compareTo to ignore differences in scale since 
                 // for PartiQL 1.0 == 1.00 while that's not true for Ion
-                thisDecimal.bigDecimalValue().compareTo(otherDecimal.bigDecimalValue()) == 0
+                leftDecimal.bigDecimalValue().compareTo(rightDecimal.bigDecimalValue()) == 0
             }
             TIMESTAMP -> {
-                val thisTimestamp = this as IonTimestamp
-                val otherTimestamp = other as IonTimestamp
-                
-                thisTimestamp.millis == otherTimestamp.millis
+                val leftTimestamp = left as IonTimestamp
+                val rightTimestamp = right as IonTimestamp
+
+                leftTimestamp.timestampValue().compareTo(rightTimestamp.timestampValue()) == 0
             }
-            LIST -> (this as IonList).ptsSequenceEqual(other as IonList)
+            LIST -> ptsSequenceEquals(left as IonList, right as IonList)
             SEXP -> {
-                val thisSexp = this as IonSexp
-                val otherSexp = other as IonSexp
-                
-                if (this.isBag() || otherSexp.isBag()) {
-                    this.ptsBagEquals(otherSexp)
+                val leftSexp = left as IonSexp
+                val rightSexp = right as IonSexp
+
+                if (leftSexp.isBag() || rightSexp.isBag()) {
+                    ptsBagEquals(leftSexp, rightSexp)
                 } else {
-                    thisSexp.ptsSequenceEqual(otherSexp)
+                    ptsSequenceEquals(leftSexp, rightSexp)
                 }
             }
             STRUCT -> {
-                val thisStruct = this as IonStruct
-                val otherStruct = other as IonStruct
+                val leftStruct = left as IonStruct
+                val rightStruct = right as IonStruct
 
-                thisStruct.size() == otherStruct.size() && thisStruct.all { it == otherStruct[it.fieldName] }
+                leftStruct.size() == rightStruct.size() && leftStruct.all { it == rightStruct[it.fieldName] }
             }
             DATAGRAM -> throw IllegalArgumentException("DATAGRAM are not a valid type in PTS")
         }
     }
-
+        
     private fun IonSexp.isBag(): Boolean =
             this.size > 1
                     && this[0].type == SYMBOL
                     && (this[0] as IonSymbol).stringValue() == "bag"
 
-    private fun IonSequence.ptsSequenceEqual(other: IonSequence): Boolean =
-            this.size == other.size &&
-                    this.asSequence()
-                            .mapIndexed { index, thisElement -> index to thisElement }
-                            .all { (index, thisElement) -> thisElement.ptsEqual(other[index]) }
+    private fun ptsSequenceEquals(left: IonSequence, right: IonSequence): Boolean =
+            left.size == right.size &&
+                    left.asSequence()
+                            .mapIndexed { index, leftElement -> index to leftElement }
+                            .all { (index, leftElement) -> areEqual(leftElement, right[index]) }
 
-    private fun IonSexp.ptsBagEquals(other: IonSexp): Boolean =
-            this.size == other.size && this.all { thisElement ->
-                other.any { it.ptsEqual(thisElement) }
+    // bags can contain repeated elements so they are equal if and only if: 
+    // * Same size
+    // * All elements in one are contained in the other at the same quantities 
+    private fun ptsBagEquals(left: IonSexp, right: IonSexp): Boolean =
+            when {
+                left.size != right.size -> false
+                left.isBag() && right.isBag() -> {
+                    left.all { leftEl ->
+                        val leftQtd = left.count { areEqual(leftEl, it) }
+                        val rightQtd = right.count { areEqual(leftEl, it) }
+
+                        leftQtd == rightQtd
+                    }
+                }
+                else -> false
             }
+
 
     private fun IonValue.isMissing(): Boolean = this.isNullValue
             && this.hasTypeAnnotation("missing")

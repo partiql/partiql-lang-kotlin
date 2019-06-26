@@ -2,6 +2,7 @@ package org.partiql.testscript.compiler
 
 import com.amazon.ion.IonStruct
 import com.amazon.ion.IonValue
+import org.partiql.testscript.extensions.toIonText
 import org.partiql.testscript.parser.ScriptLocation
 import java.lang.StringBuilder
 
@@ -48,12 +49,7 @@ sealed class ExpectedResult
  * A success expectation with the statement result represented as an IonValue
  */
 data class ExpectedSuccess(val expected: IonValue) : ExpectedResult() {
-    override fun toString(): String {
-        val sb = StringBuilder()
-        expected.system.newTextWriter(sb).use { expected.writeTo(it) }
-        
-        return sb.toString()
-    }
+    override fun toString(): String = expected.toIonText()
 }
 
 /**

@@ -56,7 +56,7 @@ class PartiQlPtsEvaluator(equality: PtsEquality) : Evaluator(equality) {
             when (val expected = test.expected) {
                 is ExpectedError -> TestFailure(test, actualResult.toIonText(), EXPECTED_ERROR_NOT_THROWN)
                 is ExpectedSuccess -> {
-                    if (equality.isEqual(expected.expected, actualResult)) {
+                    if (equality.areEqual(expected.expected, actualResult)) {
                         TestResultSuccess(test)
                     } else {
                         TestFailure(test, actualResult.toIonText(), ACTUAL_DIFFERENT_THAN_EXPECTED)
