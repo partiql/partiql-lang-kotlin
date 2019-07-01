@@ -1,12 +1,10 @@
 package org.partiql.testscript.parser
 
-import com.amazon.ion.system.*
-import org.junit.jupiter.api.Assertions
+import com.amazon.ion.system.IonSystemBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.assertThrows
 import org.partiql.testscript.parser.ast.AstNode
 import org.partiql.testscript.parser.ast.ModuleNode
-import java.nio.charset.*
 
 abstract class BaseParseTests {
     companion object {

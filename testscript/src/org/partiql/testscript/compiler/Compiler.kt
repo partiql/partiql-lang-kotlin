@@ -4,12 +4,11 @@ import com.amazon.ion.IonSexp
 import com.amazon.ion.IonStruct
 import com.amazon.ion.IonSymbol
 import com.amazon.ion.IonSystem
-import org.partiql.testscript.*
 import org.partiql.testscript.Failure
 import org.partiql.testscript.Result
 import org.partiql.testscript.Success
+import org.partiql.testscript.foldToResult
 import org.partiql.testscript.parser.ast.*
-import java.lang.IllegalArgumentException
 
 /**
  * Since compile functions don't produce a result but mutate the current compilation environment we use a 

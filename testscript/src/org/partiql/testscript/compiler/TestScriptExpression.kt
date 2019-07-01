@@ -2,7 +2,9 @@ package org.partiql.testscript.compiler
 
 import com.amazon.ion.IonStruct
 import com.amazon.ion.IonValue
+import org.partiql.testscript.extensions.toIonText
 import org.partiql.testscript.parser.ScriptLocation
+import java.lang.StringBuilder
 
 /**
  * Top level PTS compiled expression  
@@ -46,9 +48,13 @@ sealed class ExpectedResult
 /**
  * A success expectation with the statement result represented as an IonValue
  */
-data class ExpectedSuccess(val expected: IonValue) : ExpectedResult()
+data class ExpectedSuccess(val expected: IonValue) : ExpectedResult() {
+    override fun toString(): String = expected.toIonText()
+}
 
 /**
  * Singleton for expected errors  
  */
-object ExpectedError : ExpectedResult() 
+object ExpectedError : ExpectedResult() {
+    override fun toString(): String = "ERROR"
+} 

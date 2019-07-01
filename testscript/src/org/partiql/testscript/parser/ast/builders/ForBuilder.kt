@@ -1,26 +1,18 @@
 package org.partiql.testscript.parser.ast.builders
 
 import com.amazon.ion.*
+import org.partiql.testscript.Failure
+import org.partiql.testscript.Result
+import org.partiql.testscript.Success
+import org.partiql.testscript.TestScriptError
 import org.partiql.testscript.extensions.UndefinedVariableInterpolationException
 import org.partiql.testscript.extensions.interpolate
 import org.partiql.testscript.extensions.crossProduct
 import org.partiql.testscript.extensions.toIonText
 import org.partiql.testscript.parser.*
-import org.partiql.testscript.parser.EmptyError
-import org.partiql.testscript.Failure
-import org.partiql.testscript.parser.InvalidTemplateValueError
-import org.partiql.testscript.parser.IonInputReader
-import org.partiql.testscript.parser.IonValueWithLocation
-import org.partiql.testscript.parser.MissingRequiredError
-import org.partiql.testscript.parser.MissingTemplateVariableError
-import org.partiql.testscript.Result
-import org.partiql.testscript.Success
-import org.partiql.testscript.TestScriptError
-import org.partiql.testscript.parser.ast.TestTemplate
-import org.partiql.testscript.parser.UnexpectedFieldError
-import org.partiql.testscript.parser.UnexpectedIonTypeError
-import org.partiql.testscript.parser.ast.VariableSet
 import org.partiql.testscript.parser.ast.TestNode
+import org.partiql.testscript.parser.ast.TestTemplate
+import org.partiql.testscript.parser.ast.VariableSet
 
 internal class ForBuilder(private val ion: IonSystem, private val location: ScriptLocation) {
     private var templates: MutableList<Result<TestTemplate>>? = null

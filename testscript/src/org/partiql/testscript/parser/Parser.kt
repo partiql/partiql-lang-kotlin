@@ -1,6 +1,8 @@
 package org.partiql.testscript.parser
 
-import com.amazon.ion.*
+import com.amazon.ion.IonStruct
+import com.amazon.ion.IonSystem
+import com.amazon.ion.IonType
 import org.partiql.testscript.Failure
 import org.partiql.testscript.Result
 import org.partiql.testscript.Success

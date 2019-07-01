@@ -2,7 +2,6 @@ package org.partiql.testscript.compiler
 
 import org.partiql.testscript.TestScriptError
 import org.partiql.testscript.parser.ScriptLocation
-import org.partiql.testscript.parser.ast.TestNode
 
 internal sealed class CompilerErrors(
         override val errorMessage: String,
