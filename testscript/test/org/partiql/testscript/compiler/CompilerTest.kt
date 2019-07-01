@@ -5,7 +5,9 @@ import com.amazon.ion.system.IonSystemBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.partiql.testscript.parser.*
+import org.partiql.testscript.parser.Parser
+import org.partiql.testscript.parser.ScriptLocation
+import org.partiql.testscript.parser.createInput
 
 class CompilerTest {
 

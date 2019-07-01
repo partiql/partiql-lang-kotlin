@@ -5,8 +5,8 @@ import com.amazon.ion.IonStruct
 import com.amazon.ion.IonType
 import org.partiql.testscript.Failure
 import org.partiql.testscript.Result
-import org.partiql.testscript.parser.ScriptLocation
 import org.partiql.testscript.Success
+import org.partiql.testscript.parser.ScriptLocation
 import org.partiql.testscript.parser.UnexpectedFieldError
 import org.partiql.testscript.parser.ast.AppendTestNode
 
