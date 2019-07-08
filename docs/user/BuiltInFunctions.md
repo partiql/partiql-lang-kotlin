@@ -671,7 +671,7 @@ TO_TIMESTAMP('Febrary 2016', 'MMMM yyyy')     -- `2016-02T`
 ```
 Notes:
 
-[All SIM items for PartiQL's `TO_TIMESTAMP` function](https://i.amazon.com/issues/search?q=status%3A(Open)+(TO_TIMESTAMP)+containingFolder%3A(0efa7b8c-5170-4de7-a8e7-d0975778a686)&sort=lastUpdatedConversationDate+desc&selectedDocument=0b5e3cc3-40bc-40cf-854b-977f4ae4e08d).
+[All issues for PartiQL's `TO_TIMESTAMP` function](https://github.com/partiql/partiql-lang-kotlin/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+TO_TIMESTAMP+).
 
 Internally, this is implemented with Java 8's `java.time` package.  There are a few differences between Ion's 
 timestamp and the `java.time` package that create a few hypothetically infrequently encountered caveats that do not 
