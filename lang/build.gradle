@@ -19,6 +19,8 @@ plugins {
     id 'java-library'
     // https://docs.gradle.org/5.0/userguide/publishing_maven.html#header
     id 'maven-publish'
+    id 'org.jetbrains.kotlin.jvm'
+    id 'io.gitlab.arturbosch.detekt'
 }
 
 version = '0.1.0'

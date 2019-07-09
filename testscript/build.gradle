@@ -1,3 +1,8 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm'
+    id 'io.gitlab.arturbosch.detekt'
+}
+
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     implementation "com.amazon.ion:ion-java:[1.4.0,)"
