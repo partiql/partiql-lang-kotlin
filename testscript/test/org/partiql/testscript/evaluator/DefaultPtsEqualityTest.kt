@@ -114,6 +114,7 @@ internal class DefaultPtsEqualityTest {
 
                 // struct 
                 listOf("{}"),
+                listOf("{foo: 1.0}", "{foo: 1.00}"),
                 listOf("{foo: 1, bar: {}}"),
                 listOf("{foo: 1, bar: 2}", "{bar: 2, foo: 1}"),
                 listOf("{foo: [1,2, (a {bar: baz})], bar: {}}")

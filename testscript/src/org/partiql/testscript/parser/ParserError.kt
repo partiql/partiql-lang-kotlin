@@ -27,10 +27,16 @@ internal class MissingRequiredError(valuePath: String, scriptLocation: ScriptLoc
 
 internal class UnexpectedIonTypeError(
         valuePath: String,
-        expected: IonType,
+        expected: List<IonType>,
         actual: IonType,
         scriptLocation: ScriptLocation) :
-        ParserError("Wrong type for $valuePath. Expected $expected, got $actual", scriptLocation)
+        ParserError("Wrong type for $valuePath. Expected $expected, got $actual", scriptLocation) {
+    
+    constructor(valuePath: String,
+                expected: IonType,
+                actual: IonType,
+                scriptLocation: ScriptLocation) : this(valuePath, listOf(expected), actual, scriptLocation)
+}
 
 internal class InvalidTemplateValueError(valuePath: String, scriptLocation: ScriptLocation) :
         ParserError(

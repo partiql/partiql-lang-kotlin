@@ -26,7 +26,7 @@ class ParserTests : BaseParseTests() {
                     statement = "SELECT * FROM myTable",
                     environment = ion.singleValue("{myTable: [{a: 1}]}") as IonStruct,
                     expected = ion.singleValue("(success (bag {a: 1}))") as IonSexp,
-                    scriptLocation = ScriptLocation("input[0]",
+                    scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts",
                             1))))
 
     @Test
@@ -42,19 +42,25 @@ class ParserTests : BaseParseTests() {
                     environment = null,
                     expected = ion.singleValue("(success (bag {a: 1}))") as IonSexp,
                     scriptLocation = ScriptLocation(
-                            "input[0]",
+                            "$inputBasePath/input[0].sqlts",
                             1))))
 
     @Test
     fun singleSetDefaultEnvironmentNode() = assertParse("set_default_environment::{ foo: [1,2,3,4,5] }",
             expected = singleModulesList(
-                    SetDefaultEnvironmentNode(ion.singleValue("{ foo: [1,2,3,4,5] }") as IonStruct,
-                            ScriptLocation("input[0]", 1))))
+                    InlineSetDefaultEnvironmentNode(ion.singleValue("{ foo: [1,2,3,4,5] }") as IonStruct,
+                            ScriptLocation("$inputBasePath/input[0].sqlts", 1))))
+
+    @Test
+    fun singleSetDefaultEnvironmentFromFileNode() = assertParse("set_default_environment::\"some_file.ion\"",
+            expected = singleModulesList(
+                    FileSetDefaultEnvironmentNode("some_file.ion",
+                            ScriptLocation("$inputBasePath/input[0].sqlts", 1))))
 
     @Test
     fun singleSkipList() = assertParse("""skip_list::[ "test_1", "test_2" ]""",
             expected = singleModulesList(SkipListNode(listOf("test_1", "test_2"),
-                    ScriptLocation("input[0]", 1))))
+                    ScriptLocation("$inputBasePath/input[0].sqlts", 1))))
 
     @Test
     fun singleAppendTest() = assertParse("""
@@ -64,7 +70,7 @@ class ParserTests : BaseParseTests() {
             |}""".trimMargin(),
             expected = singleModulesList(AppendTestNode(pattern = "test.*",
                     additionalData = ion.singleValue("{ foo: 1, bar: {} }") as IonStruct,
-                    scriptLocation = ScriptLocation("input[0]",
+                    scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts",
                             1))))
 
     @Test
@@ -98,8 +104,8 @@ class ParserTests : BaseParseTests() {
         |  ]
         |}
         """.trimMargin(),
-            expected = singleModulesList(SetDefaultEnvironmentNode(ion.singleValue("{ foo: [1,2,3,4,5] }") as IonStruct,
-                    ScriptLocation("input[0]",
+            expected = singleModulesList(InlineSetDefaultEnvironmentNode(ion.singleValue("{ foo: [1,2,3,4,5] }") as IonStruct,
+                    ScriptLocation("$inputBasePath/input[0].sqlts",
                             1)),
 
                     TestNode(id = "test_1",
@@ -107,15 +113,15 @@ class ParserTests : BaseParseTests() {
                             statement = "SELECT * FROM myTable",
                             environment = null,
                             expected = ion.singleValue("(success (bag {a: 1}))") as IonSexp,
-                            scriptLocation = ScriptLocation("input[0]",
+                            scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts",
                                     3)),
 
                     SkipListNode(listOf("test_1"),
-                            ScriptLocation("input[0]", 9)),
+                            ScriptLocation("$inputBasePath/input[0].sqlts", 9)),
 
                     AppendTestNode(pattern = "test.*",
                             additionalData = ion.singleValue("{ foo: 1, bar: {} }") as IonStruct,
-                            scriptLocation = ScriptLocation("input[0]",
+                            scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts",
                                     11)),
 
                     TestNode(id = "testTemplate\$\${value:1,expected:(success 2)}",
@@ -123,21 +129,21 @@ class ParserTests : BaseParseTests() {
                             statement = "1 + 1",
                             environment = null,
                             expected = ion.singleValue("(success 2)") as IonSexp,
-                            scriptLocation = ScriptLocation("input[0]",
+                            scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts",
                                     26))))
 
     @Test
     fun multipleDocuments() = assertParse("set_default_environment::{ foo: [1] }",
             "set_default_environment::{ foo: [2] }",
-            expected = listOf(ModuleNode(listOf(SetDefaultEnvironmentNode(
+            expected = listOf(ModuleNode(listOf(InlineSetDefaultEnvironmentNode(
                     ion.singleValue("{ foo: [1] }") as IonStruct,
-                    ScriptLocation("input[0]", 1))),
-                    ScriptLocation("input[0]", 0)),
+                    ScriptLocation("$inputBasePath/input[0].sqlts", 1))),
+                    ScriptLocation("$inputBasePath/input[0].sqlts", 0)),
 
-                    ModuleNode(listOf(SetDefaultEnvironmentNode(ion.singleValue(
+                    ModuleNode(listOf(InlineSetDefaultEnvironmentNode(ion.singleValue(
                             "{ foo: [2] }") as IonStruct,
-                            ScriptLocation("input[1]", 1))),
-                            ScriptLocation("input[1]", 0))))
+                            ScriptLocation("$inputBasePath/input[1].sqlts", 1))),
+                            ScriptLocation("$inputBasePath/input[1].sqlts", 0))))
 
     @Test
     fun testMissingId() =
@@ -151,7 +157,7 @@ class ParserTests : BaseParseTests() {
             """.trimMargin(),
                     expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
-                |    input[0]:1 - Missing required field: test.id
+                |    $inputBasePath/input[0].sqlts:1 - Missing required field: test.id
             """.trimMargin())
 
     @Test
@@ -166,7 +172,7 @@ class ParserTests : BaseParseTests() {
             """.trimMargin(),
                     expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
-                |    input[0]:1 - Missing required field: test.statement
+                |    $inputBasePath/input[0].sqlts:1 - Missing required field: test.statement
             """.trimMargin())
 
     @Test
@@ -181,7 +187,7 @@ class ParserTests : BaseParseTests() {
             """.trimMargin(),
                     expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
-                |    input[0]:1 - Missing required field: test.expected
+                |    $inputBasePath/input[0].sqlts:1 - Missing required field: test.expected
             """.trimMargin())
 
     @Test
@@ -194,9 +200,9 @@ class ParserTests : BaseParseTests() {
             """.trimMargin(),
                     expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
-                |    input[0]:1 - Missing required field: test.expected
-                |    input[0]:1 - Missing required field: test.id
-                |    input[0]:1 - Missing required field: test.statement
+                |    $inputBasePath/input[0].sqlts:1 - Missing required field: test.expected
+                |    $inputBasePath/input[0].sqlts:1 - Missing required field: test.id
+                |    $inputBasePath/input[0].sqlts:1 - Missing required field: test.statement
             """.trimMargin())
 
     @Test
@@ -204,7 +210,7 @@ class ParserTests : BaseParseTests() {
             assertParseError(input = """test::"should be a struct" """,
                     expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
-                |    input[0]:1 - Wrong type for test. Expected STRUCT, got STRING
+                |    $inputBasePath/input[0].sqlts:1 - Wrong type for test. Expected [STRUCT], got STRING
             """.trimMargin())
 
     @Test
@@ -220,7 +226,7 @@ class ParserTests : BaseParseTests() {
             """.trimMargin(),
                     expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
-                |    input[0]:2 - Wrong type for test.id. Expected SYMBOL, got STRING
+                |    $inputBasePath/input[0].sqlts:2 - Wrong type for test.id. Expected [SYMBOL], got STRING
             """.trimMargin())
 
     @Test
@@ -236,7 +242,7 @@ class ParserTests : BaseParseTests() {
             """.trimMargin(),
                     expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
-                |    input[0]:3 - Wrong type for test.description. Expected STRING, got SYMBOL
+                |    $inputBasePath/input[0].sqlts:3 - Wrong type for test.description. Expected [STRING], got SYMBOL
             """.trimMargin())
 
     @Test
@@ -252,7 +258,7 @@ class ParserTests : BaseParseTests() {
             """.trimMargin(),
                     expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
-                |    input[0]:4 - Wrong type for test.statement. Expected STRING, got SYMBOL
+                |    $inputBasePath/input[0].sqlts:4 - Wrong type for test.statement. Expected [STRING], got SYMBOL
             """.trimMargin())
 
     @Test
@@ -268,7 +274,7 @@ class ParserTests : BaseParseTests() {
             """.trimMargin(),
                     expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
-                |    input[0]:5 - Wrong type for test.environment. Expected STRUCT, got STRING
+                |    $inputBasePath/input[0].sqlts:5 - Wrong type for test.environment. Expected [STRUCT], got STRING
             """.trimMargin())
 
     @Test
@@ -284,7 +290,7 @@ class ParserTests : BaseParseTests() {
             """.trimMargin(),
                     expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
-                |    input[0]:6 - Wrong type for test.expected. Expected SEXP, got STRING
+                |    $inputBasePath/input[0].sqlts:6 - Wrong type for test.expected. Expected [SEXP], got STRING
             """.trimMargin())
 
     @Test
@@ -301,7 +307,7 @@ class ParserTests : BaseParseTests() {
             """.trimMargin(),
                     expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
-                |    input[0]:7 - Unexpected field: test.shouldNotBeHere
+                |    $inputBasePath/input[0].sqlts:7 - Unexpected field: test.shouldNotBeHere
             """.trimMargin())
 
     @Test
@@ -317,7 +323,7 @@ class ParserTests : BaseParseTests() {
             """.trimMargin(),
                     expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
-                |    input[0]:6 - Invalid test.expected tag, must be either 'success' or 'error' got 'invalid'
+                |    $inputBasePath/input[0].sqlts:6 - Invalid test.expected tag, must be either 'success' or 'error' got 'invalid'
             """.trimMargin())
 
     @Test
@@ -333,7 +339,7 @@ class ParserTests : BaseParseTests() {
             """.trimMargin(),
                     expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
-                |    input[0]:6 - test.expected error can only have a single element, e.g. (error)
+                |    $inputBasePath/input[0].sqlts:6 - test.expected error can only have a single element, e.g. (error)
             """.trimMargin())
 
     @Test
@@ -349,7 +355,7 @@ class ParserTests : BaseParseTests() {
             """.trimMargin(),
                     expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
-                |    input[0]:6 - test.expected success must have two elements, e.g. (success (bag {a: 1}))
+                |    $inputBasePath/input[0].sqlts:6 - test.expected success must have two elements, e.g. (success (bag {a: 1}))
             """.trimMargin())
 
     @Test
@@ -365,15 +371,15 @@ class ParserTests : BaseParseTests() {
             """.trimMargin(),
                     expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
-                |    input[0]:6 - test.expected success must have two elements, e.g. (success (bag {a: 1}))
+                |    $inputBasePath/input[0].sqlts:6 - test.expected success must have two elements, e.g. (success (bag {a: 1}))
             """.trimMargin())
 
     @Test
     fun setDefaultEnvironmentWrongType() =
-            assertParseError(input = """ set_default_environment::"should be a struct" """,
+            assertParseError(input = """ set_default_environment::'should be a struct or string' """,
                     expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
-                |    input[0]:1 - Wrong type for set_default_environment. Expected STRUCT, got STRING
+                |    $inputBasePath/input[0].sqlts:1 - Wrong type for set_default_environment. Expected [STRUCT, STRING], got SYMBOL
             """.trimMargin())
 
     @Test
@@ -381,7 +387,7 @@ class ParserTests : BaseParseTests() {
             assertParseError(input = """ skip_list::"should be a list" """,
                     expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
-                |    input[0]:1 - Wrong type for skip_list. Expected LIST, got STRING
+                |    $inputBasePath/input[0].sqlts:1 - Wrong type for skip_list. Expected [LIST], got STRING
             """.trimMargin())
 
     @Test
@@ -389,7 +395,7 @@ class ParserTests : BaseParseTests() {
             assertParseError(input = """ skip_list::["test_1", 'should be a string'] """,
                     expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
-                |    input[0]:1 - Wrong type for skip_list[1]. Expected STRING, got SYMBOL
+                |    $inputBasePath/input[0].sqlts:1 - Wrong type for skip_list[1]. Expected [STRING], got SYMBOL
             """.trimMargin())
 
     @Test
@@ -397,7 +403,7 @@ class ParserTests : BaseParseTests() {
             assertParseError(input = """ append_test::"should be a struct" """,
                     expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
-                |    input[0]:1 - Wrong type for append_test. Expected STRUCT, got STRING
+                |    $inputBasePath/input[0].sqlts:1 - Wrong type for append_test. Expected [STRUCT], got STRING
             """.trimMargin())
 
     @Test
@@ -408,7 +414,7 @@ class ParserTests : BaseParseTests() {
                 |} """.trimMargin(),
                     expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
-                |    input[0]:1 - Missing required field: append_test.pattern
+                |    $inputBasePath/input[0].sqlts:1 - Missing required field: append_test.pattern
             """.trimMargin())
 
     @Test
@@ -419,7 +425,7 @@ class ParserTests : BaseParseTests() {
                 |} """.trimMargin(),
                     expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
-                |    input[0]:1 - Missing required field: append_test.additional_data
+                |    $inputBasePath/input[0].sqlts:1 - Missing required field: append_test.additional_data
             """.trimMargin())
 
     @Test
@@ -431,7 +437,7 @@ class ParserTests : BaseParseTests() {
                 |} """.trimMargin(),
                     expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
-                |    input[0]:2 - Wrong type for append_test.pattern. Expected STRING, got SYMBOL
+                |    $inputBasePath/input[0].sqlts:2 - Wrong type for append_test.pattern. Expected [STRING], got SYMBOL
             """.trimMargin())
 
     @Test
@@ -443,7 +449,7 @@ class ParserTests : BaseParseTests() {
                 |} """.trimMargin(),
                     expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
-                |    input[0]:3 - Wrong type for append_test.additional_data. Expected STRUCT, got STRING
+                |    $inputBasePath/input[0].sqlts:3 - Wrong type for append_test.additional_data. Expected [STRUCT], got STRING
             """.trimMargin())
 
     @Test
@@ -456,7 +462,7 @@ class ParserTests : BaseParseTests() {
                 |} """.trimMargin(),
                     expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
-                |    input[0]:4 - Unexpected field: append_test.shouldNotBeHere
+                |    $inputBasePath/input[0].sqlts:4 - Unexpected field: append_test.shouldNotBeHere
             """.trimMargin())
 
 }

@@ -1,10 +1,11 @@
 package org.partiql.testscript.extensions
 
 import com.amazon.ion.*
+import com.amazon.ion.IonType.*
 
 internal class UndefinedVariableInterpolationException(val variableName: String) : RuntimeException()
 
-private val regex = "\\$(\\w+)".toRegex()
+private val regex = "\\$([\\w{}]+)".toRegex()
 
 internal fun IonValue.interpolate(variables: IonStruct): IonValue =
         when (this) {
@@ -17,7 +18,7 @@ internal fun IonValue.interpolate(variables: IonStruct): IonValue =
                 } else {
                     this
                 }
-                
+
                 ionValue.clone()
             }
 
@@ -37,36 +38,31 @@ internal fun IonValue.interpolate(variables: IonStruct): IonValue =
 
         }
 
-private fun String.interpolate(struct: IonStruct): String {
-    val buffer = StringBuilder()
-    var lastOffset = 0
-
-    regex.findAll(this).forEach { match ->
-        val beforeVariableReference = this.substring(lastOffset, match.range.start)
-        buffer.append(beforeVariableReference)
-
-        val identifier = match.groups[1]!!.value
-        val value = struct[identifier] ?: throw UndefinedVariableInterpolationException(identifier)
-
-        val replaceValue = when (value) {
-            is IonText -> value.stringValue()
-            else -> value.toIonText()
-        }
-        buffer.append(replaceValue)
-
-        lastOffset = match.range.endInclusive + 1
-    }
-
-    val trailingText = this.substring(lastOffset)
-    buffer.append(trailingText)
-
-    return buffer.toString()
-}
-
-
 private fun IonSequence.foldInterpolating(target: IonSequence, variables: IonStruct) =
         this.fold(target) { acc, el ->
             val interpolated = el.interpolate(variables)
             acc.add(interpolated)
             acc
         }
+
+private fun String.interpolate(variables: IonStruct): String {
+    val matches = regex.findAll(this).map { it.groups[1]!!.value }
+
+    return matches.fold(this) { interpolated, match ->
+
+        val variableName = if (match.startsWith("{")) {
+            match.trim { c -> c == '{' || c == '}' || c.isWhitespace() }
+        } else {
+            match
+        }
+
+        val replacement = variables[variableName]?.stringfy() 
+                ?: throw UndefinedVariableInterpolationException(variableName)
+        interpolated.replace("\$$match", replacement)
+    }
+}
+
+private fun IonValue.stringfy(): String = when(this) {
+    is IonText -> this.stringValue() // to remove the extra "
+    else -> this.toIonText()
+}

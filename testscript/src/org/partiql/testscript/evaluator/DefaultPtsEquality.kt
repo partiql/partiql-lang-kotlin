@@ -15,6 +15,11 @@ internal object DefaultPtsEquality : PtsEquality {
             return false
         }
 
+        // typed nulls
+        if(!left.isMissing() && !right.isMissing() && (left.isNullValue || right.isNullValue)) {
+            return left.isNullValue && right.isNullValue
+        }
+        
         return when (left.type!!) {
             NULL -> {
                 if (left.isMissing() || right.isMissing()) {
@@ -53,7 +58,11 @@ internal object DefaultPtsEquality : PtsEquality {
                 val leftStruct = left as IonStruct
                 val rightStruct = right as IonStruct
 
-                leftStruct.size() == rightStruct.size() && leftStruct.all { it == rightStruct[it.fieldName] }
+                leftStruct.size() == rightStruct.size() && leftStruct.all { leftElement -> 
+                    val rightElement = rightStruct[leftElement.fieldName]
+                    
+                    rightElement != null && areEqual(leftElement, rightElement) 
+                }
             }
             DATAGRAM -> throw IllegalArgumentException("DATAGRAM are not a valid type in PTS")
         }

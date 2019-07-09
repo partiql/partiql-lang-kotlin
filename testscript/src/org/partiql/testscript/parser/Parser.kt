@@ -1,8 +1,6 @@
 package org.partiql.testscript.parser
 
-import com.amazon.ion.IonStruct
-import com.amazon.ion.IonSystem
-import com.amazon.ion.IonType
+import com.amazon.ion.*
 import org.partiql.testscript.Failure
 import org.partiql.testscript.Result
 import org.partiql.testscript.Success
@@ -27,11 +25,15 @@ class Parser(private val ion: IonSystem) {
         val errors = mutableListOf<TestScriptError>()
 
         for (input in ionDocuments) {
-            val result = IonInputReader(input.name, ion, ion.newReader(input)).use { parseModule(it) }
+            try {
+                val result = IonInputReader(input.name, ion, ion.newReader(input)).use { parseModule(it) }
 
-            when (result) {
-                is Failure -> errors.addAll(result.errors)
-                is Success -> modules.add(result.value)
+                when (result) {
+                    is Failure -> errors.addAll(result.errors)
+                    is Success -> modules.add(result.value)
+                }    
+            } catch (e: IonException) {
+                throw ParserIonException(input.name, e)
             }
         }
 
@@ -85,18 +87,29 @@ class Parser(private val ion: IonSystem) {
     }
 
     private fun parseSetDefaultEnvironment(reader: IonInputReader): Result<SetDefaultEnvironmentNode> {
-        return if (reader.type != IonType.STRUCT) {
-            Failure(UnexpectedIonTypeError(
-                    "set_default_environment",
-                    IonType.STRUCT,
-                    reader.type,
-                    reader.currentScriptLocation()))
-        } else {
-            val value = reader.ionValueWithLocation()
-            
-            // remove the set_default_environment annotation
-            value.ionValue.clearTypeAnnotations() 
-            Success(SetDefaultEnvironmentNode(value.ionValue as IonStruct, value.scriptLocation))
+        return when(reader.type) {
+            IonType.STRUCT -> {
+                val value = reader.ionValueWithLocation()
+
+                // remove the set_default_environment annotation
+                value.ionValue.clearTypeAnnotations()
+                Success(InlineSetDefaultEnvironmentNode(value.ionValue as IonStruct, value.scriptLocation)) 
+            }
+
+            IonType.STRING -> {
+                val value = reader.ionValueWithLocation()
+
+                Success(FileSetDefaultEnvironmentNode(
+                        (value.ionValue as IonString).stringValue(), 
+                        value.scriptLocation))
+            }
+            else -> {
+                Failure(UnexpectedIonTypeError(
+                        "set_default_environment",
+                        listOf(IonType.STRUCT, IonType.STRING),
+                        reader.type,
+                        reader.currentScriptLocation()))
+            }
         }
     }
 
