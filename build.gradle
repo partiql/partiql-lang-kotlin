@@ -12,6 +12,11 @@
  *  language governing permissions and limitations under the License.
  */
 
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.3.11' apply false
+    // https://arturbosch.github.io/detekt/groovydsl.html
+    id "io.gitlab.arturbosch.detekt" version "1.0.0-RC16" apply false
+}
 
 allprojects {
     repositories {
@@ -26,6 +31,25 @@ subprojects {
 }
 
 buildDir = new File(rootProject.projectDir, "gradle-build/" + project.name)
+
+configure(subprojects.findAll { it.name != 'example' }) {
+
+    apply plugin: 'org.jetbrains.kotlin.jvm'
+    apply plugin: 'io.gitlab.arturbosch.detekt'
+
+    detekt {
+        input = files("src/")
+        parallel = true                                       // Builds the AST in parallel. Rules are always executed in parallel. Can lead to speedups in larger projects. `false` by default.
+        debug = false                                         // Adds debug output during task execution. `false` by default.
+        ignoreFailures = true                                 // If set to `true` the build does not fail when the maxIssues count was reached. Defaults to `false`.
+        reports {
+            html {
+                enabled = true                                // Enable/Disable HTML report (default: true)
+                destination = file("build/reports/detekt/detekt.html") // Path where HTML report will be stored (default: `build/reports/detekt/detekt.html`)
+            }
+        }
+    }
+}
 
     
 subprojects {

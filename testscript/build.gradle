@@ -1,14 +1,5 @@
-plugins {
-    id "org.jetbrains.kotlin.jvm" version "1.3.31"
-    // https://arturbosch.github.io/detekt/groovydsl.html
-    id "io.gitlab.arturbosch.detekt" version "1.0.0-RC16"
-}
-
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-}
-
-dependencies {
     implementation "com.amazon.ion:ion-java:[1.4.0,)"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     
@@ -32,15 +23,3 @@ compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
 
-detekt {
-    input = files("src/")
-    parallel = true                                       // Builds the AST in parallel. Rules are always executed in parallel. Can lead to speedups in larger projects. `false` by default.
-    debug = false                                         // Adds debug output during task execution. `false` by default.
-    ignoreFailures = true                                 // If set to `true` the build does not fail when the maxIssues count was reached. Defaults to `false`.
-    reports {
-        html {
-            enabled = true                                // Enable/Disable HTML report (default: true)
-            destination = file("build/reports/detekt/detekt.html") // Path where HTML report will be stored (default: `build/reports/detekt/detekt.html`)
-        }
-    }
-}
