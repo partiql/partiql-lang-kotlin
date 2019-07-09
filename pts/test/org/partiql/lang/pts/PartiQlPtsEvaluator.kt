@@ -33,12 +33,11 @@ class PartiQlPtsEvaluator(equality: PtsEquality) : Evaluator(equality) {
             }
 
     private fun runTest(test: TestExpression): TestResult = try {
-        val ionStruct = test.environment
+        // recreate the environment struct using the evaluator ion system
+        val ionStruct = ion.newValue(ion.newReader(test.environment).apply { next() }) as IonStruct
         
-        val reader = ion.newReader(ionStruct)
-        reader.next()
         
-        val globals = compilerPipeline.valueFactory.newFromIonValue(ion.newValue(reader) as IonStruct).bindings
+        val globals = compilerPipeline.valueFactory.newFromIonValue(ionStruct).bindings
         val session = EvaluationSession.build { globals(globals) }
         val expression = compilerPipeline.compile(test.statement)
         val actualResult = expression.eval(session).toPtsIon()
@@ -75,7 +74,7 @@ class PartiQlPtsEvaluator(equality: PtsEquality) : Evaluator(equality) {
             LIST -> this.foldToIonSequence(ion.newEmptyList())
             SEXP -> this.foldToIonSequence(ion.newEmptySexp())
             STRUCT -> this.fold(ion.newEmptyStruct()) { struct, el ->
-                struct.apply { put(el.asNamed().name.stringValue(), el.toPtsIon()) }
+                struct.apply { add(el.name!!.stringValue(), el.toPtsIon()) }
             }
             BAG -> {
                 val bag = ion.newEmptySexp().apply { add(ion.newSymbol("bag")) }
