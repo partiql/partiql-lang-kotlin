@@ -1,0 +1,45 @@
+/*
+ * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the 'License').
+ *  You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *      http://aws.amazon.com/apache2.0/
+ *
+ *  or in the 'license' file accompanying this file. This file is distributed on an 'AS IS' BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ *  language governing permissions and limitations under the License.
+ */
+
+// Documentation for using Gradle with Kotlin is here: https://kotlinlang.org/docs/reference/using-gradle.html
+
+plugins {
+    id 'org.jetbrains.kotlin.jvm'
+    id 'io.gitlab.arturbosch.detekt'
+}
+
+version = '0.1.0'
+group = 'org.partiql.lang'
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
+dependencies {
+    // run-time dependencies
+    // TODO:  don't expose Kotlin stdlib as part of the API.  This is currently needed because parts of the
+    // interpreter's API use kotlin.sequences.Sequence<ExprValue>.  Once that has been removed, we can change
+    // 'api' below to 'implementation' to effect this.
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+
+    // test-time dependencies
+    testImplementation 'org.jetbrains.kotlin:kotlin-reflect'
+    testImplementation 'org.jetbrains.kotlin:kotlin-test'
+    testImplementation 'pl.pragmatists:JUnitParams:[1.0.0,1.1.0)'
+    testImplementation 'org.assertj:assertj-core:[3.11.0,3.12.0)'
+    testImplementation project(':lang')
+    testImplementation project(':testscript')
+}
