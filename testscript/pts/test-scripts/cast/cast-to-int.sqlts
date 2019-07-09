@@ -1,0 +1,184 @@
+/*
+ * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ *  You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *      http://aws.amazon.com/apache2.0/
+ *
+ *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ *  language governing permissions and limitations under the License.
+ */
+
+// valid cases ----------------------------------------------------------------------------------------------------
+for::{
+    template: [
+        test::{
+            id: 'cast to int valid cases',
+            statement: "cast(${value} as INT)",
+            expected: (success $result)
+        }
+    ],
+
+    variable_sets: [
+        // boolean
+        { value: "true", result: 1 },
+        { value: "false", result: 0 },
+
+        // int
+        { value: "1",  result: 1 },
+        { value: "0",  result: 0 },
+        { value: "-1", result: -1 },
+        { value: "9223372036854775807",  result: 9223372036854775807 }, // max
+        { value: "-9223372036854775808", result: -9223372036854775808 }, // min
+
+        // float
+        { value: "`1.5e0`",  result: 1 },
+        { value: "`1.9e0`",  result: 1 },
+        { value: "`1.1e0`",  result: 1 },
+        { value: "`0.1e0`",  result: 0 },
+        { value: "`0.5e0`",  result: 0 },
+        { value: "`0.9e0`",  result: 0 },
+        { value: "`-1.1e0`", result: -1 },
+        { value: "`-1.5e0`", result: -1 },
+        { value: "`-1.9e0`", result: -1 },
+        { value: "`9223372036854775807e0`",  result: 9223372036854775807 }, // max
+        { value: "`-9223372036854775808e0`", result: -9223372036854775808 }, // min
+
+        // decimal
+        { value: "1.5",  result: 1 },
+        { value: "1.9",  result: 1 },
+        { value: "1.1",  result: 1 },
+        { value: "0.1",  result: 0 },
+        { value: "0.5",  result: 0 },
+        { value: "0.9",  result: 0 },
+        { value: "-1.1", result: -1 },
+        { value: "-1.5", result: -1 },
+        { value: "-1.9", result: -1 },
+        { value: "9223372036854775807.0",  result: 9223372036854775807 }, // max
+        { value: "-9223372036854775808.0", result: -9223372036854775808 }, // min
+
+        // text
+        { value: "'1'",   result: 1 },
+        { value: "'01'",  result: 1 },
+        { value: "'+1'",  result: 1 },
+        { value: "'+01'", result: 1 },
+        { value: "'-1'",  result: -1 },
+        { value: "'-01'", result: -1 },
+
+        { value: "'0'",   result: 0 },
+        { value: "'00'",  result: 0 },
+        { value: "'+0'",  result: 0 },
+        { value: "'+00'", result: 0 },
+        { value: "'-0'",  result: 0 },
+        { value: "'-00'", result: 0 },
+
+        { value: "'0b10'",   result: 2 },
+        { value: "'0B10'",   result: 2 },
+        { value: "'0b010'",  result: 2 },
+        { value: "'+0b10'",  result: 2 },
+        { value: "'+0b010'", result: 2 },
+        { value: "'-0b10'",  result: -2 },
+        { value: "'-0b010'", result: -2 },
+
+        { value: "'0xA'",   result: 10 },
+        { value: "'0XA'",   result: 10 },
+        { value: "'0x0A'",  result: 10 },
+        { value: "'+0xA'",  result: 10 },
+        { value: "'+0x0A'", result: 10 },
+        { value: "'-0xA'",  result: -10 },
+        { value: "'-0x0A'", result: -10 },
+
+        { value: ''' `"100"` ''', result: 100 },
+    ]
+}
+
+// failed cast -----------------------------------------------------------------------------------------------------
+// failed cast means that the cast itself is allowed but that the specific value prevented the cast from succeeding.
+for::{
+    template: [
+        test::{
+            id: 'cast to int invalid values',
+            statement: "cast(${value} as INT)",
+            expected: (error)
+        }
+    ],
+
+    variable_sets: [
+        // text
+        { value: "'hello'",   target: "STRING" },
+        { value: "'123456A'", target: "STRING" },
+        { value: "'00xA'",    target: "STRING" },
+        { value: "'00b10'",   target: "STRING" },
+        { value: "'2e10'",    target: "STRING" },
+    ]
+}
+
+// overflow / underflow---------------------------------------------------------------------------------------------
+for::{
+    template: [
+        test::{
+            id: 'cast to int overflow / underflow',
+            statement: "cast(${value} as INT)",
+            expected: (error)
+        }
+    ],
+
+    variable_sets: [
+        // float
+        { value: "`2e100`",  target: "FLOAT" }, // overflow
+        { value: "`-2e100`", target: "FLOAT" }, // underflow
+
+        // decimal
+        { value: "2e100",  target: "DECIMAL" }, // overflow
+        { value: "-2e100", target: "DECIMAL" }, // underflow
+
+        // text
+        { value: "'92233720368547758070'",  target: "STRING" }, // overflow
+        { value: "'-92233720368547758070'", target: "STRING" }, // underflow
+    ]
+}
+
+
+// invalid cast target-----------------------------------------------------------------------------------------------
+for::{
+    template: [
+        test::{
+            id: 'cast to int invalid target type',
+            statement: "cast(${value} as INT)",
+            expected: (error)
+        }
+    ],
+
+    variable_sets: [
+        // timestamp
+        { value: "`2017T`", target: "TIMESTAMP" },
+
+        // lob
+        { value: ''' `{{""}}` ''',  target: "CLOB" },
+        { value: ''' `{{"1"}}` ''', target: "CLOB" },
+        { value: "`{{}}`",          target: "BLOB" },
+
+        // list
+        { value: "[1, 2]", target: "LIST" },
+        { value: "[1]",    target: "LIST" },
+        { value: "[]",     target: "LIST" },
+
+        // sexp
+        { value: "`(1 2)`", target: "SEXP" },
+        { value: "`(1)`",   target: "SEXP" },
+        { value: "`()`",    target: "SEXP" },
+
+        // struct
+        { value: "{'a': 1}",    target: "STRUCT" },
+        { value: "{'a': '12'}", target: "STRUCT" },
+        { value: "{}",          target: "STRUCT" },
+
+        // bag
+        { value: "<<1, 2>>", target: "BAG" },
+        { value: "<<1>>",    target: "BAG" },
+        { value: "<<>>",     target: "BAG" },
+    ]
+}

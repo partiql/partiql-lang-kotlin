@@ -1,0 +1,220 @@
+/*
+ * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ *  You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *      http://aws.amazon.com/apache2.0/
+ *
+ *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ *  language governing permissions and limitations under the License.
+ */
+
+// valid cases ----------------------------------------------------------------------------------------------
+for::{
+    template: [
+        test::{
+            id: 'date_add valid cases',
+            statement: "date_add(${time_part}, ${quantity}, `${timestamp}`)",
+            expected: $result
+        }
+    ],
+    variable_sets: [
+        { time_part: year,        quantity: 1, timestamp: "2017T", result: (success 2018T ) },
+        { time_part: month,       quantity: 1, timestamp: "2017T", result: (success 2017-02T ) },
+        { time_part: day,         quantity: 1, timestamp: "2017T", result: (success 2017-01-02T ) },
+        { time_part: hour,        quantity: 1, timestamp: "2017T", result: (success 2017-01-01T01:00-00:00 ) },
+        { time_part: minute,      quantity: 1, timestamp: "2017T", result: (success 2017-01-01T00:01-00:00 ) },
+        { time_part: second,      quantity: 1, timestamp: "2017T", result: (success 2017-01-01T00:00:01-00:00 ) },
+
+        { time_part: year,        quantity: 1, timestamp: "2017-01T", result: (success 2018-01T ) },
+        { time_part: month,       quantity: 1, timestamp: "2017-01T", result: (success 2017-02T ) },
+        { time_part: day,         quantity: 1, timestamp: "2017-01T", result: (success 2017-01-02T ) },
+        { time_part: hour,        quantity: 1, timestamp: "2017-01T", result: (success 2017-01-01T01:00-00:00 ) },
+        { time_part: minute,      quantity: 1, timestamp: "2017-01T", result: (success 2017-01-01T00:01-00:00 ) },
+        { time_part: second,      quantity: 1, timestamp: "2017-01T", result: (success 2017-01-01T00:00:01-00:00 ) },
+
+        { time_part: year,        quantity: 1, timestamp: "2017-01-02T", result: (success 2018-01-02T ) },
+        { time_part: month,       quantity: 1, timestamp: "2017-01-02T", result: (success 2017-02-02T ) },
+        { time_part: day,         quantity: 1, timestamp: "2017-01-02T", result: (success 2017-01-03T ) },
+        { time_part: hour,        quantity: 1, timestamp: "2017-01-02T", result: (success 2017-01-02T01:00-00:00 ) },
+        { time_part: minute,      quantity: 1, timestamp: "2017-01-02T", result: (success 2017-01-02T00:01-00:00 ) },
+        { time_part: second,      quantity: 1, timestamp: "2017-01-02T", result: (success 2017-01-02T00:00:01-00:00 ) },
+
+        { time_part: year,        quantity: 1, timestamp: "2017-01-02T03:04Z", result: (success 2018-01-02T03:04Z ) },
+        { time_part: month,       quantity: 1, timestamp: "2017-01-02T03:04Z", result: (success 2017-02-02T03:04Z ) },
+        { time_part: day,         quantity: 1, timestamp: "2017-01-02T03:04Z", result: (success 2017-01-03T03:04Z ) },
+        { time_part: hour,        quantity: 1, timestamp: "2017-01-02T03:04Z", result: (success 2017-01-02T04:04Z ) },
+        { time_part: minute,      quantity: 1, timestamp: "2017-01-02T03:04Z", result: (success 2017-01-02T03:05Z ) },
+        { time_part: second,      quantity: 1, timestamp: "2017-01-02T03:04Z", result: (success 2017-01-02T03:04:01Z ) },
+
+        { time_part: year,        quantity: 1, timestamp: "2017-01-02T03:04:05Z", result: (success 2018-01-02T03:04:05Z ) },
+        { time_part: month,       quantity: 1, timestamp: "2017-01-02T03:04:05Z", result: (success 2017-02-02T03:04:05Z ) },
+        { time_part: day,         quantity: 1, timestamp: "2017-01-02T03:04:05Z", result: (success 2017-01-03T03:04:05Z ) },
+        { time_part: hour,        quantity: 1, timestamp: "2017-01-02T03:04:05Z", result: (success 2017-01-02T04:04:05Z ) },
+        { time_part: minute,      quantity: 1, timestamp: "2017-01-02T03:04:05Z", result: (success 2017-01-02T03:05:05Z ) },
+        { time_part: second,      quantity: 1, timestamp: "2017-01-02T03:04:05Z", result: (success 2017-01-02T03:04:06Z ) },
+
+        { time_part: year,        quantity: 1, timestamp: "2017-01-02T03:04:05.006Z", result: (success 2018-01-02T03:04:05.006Z ) },
+        { time_part: month,       quantity: 1, timestamp: "2017-01-02T03:04:05.006Z", result: (success 2017-02-02T03:04:05.006Z ) },
+        { time_part: day,         quantity: 1, timestamp: "2017-01-02T03:04:05.006Z", result: (success 2017-01-03T03:04:05.006Z ) },
+        { time_part: hour,        quantity: 1, timestamp: "2017-01-02T03:04:05.006Z", result: (success 2017-01-02T04:04:05.006Z ) },
+        { time_part: minute,      quantity: 1, timestamp: "2017-01-02T03:04:05.006Z", result: (success 2017-01-02T03:05:05.006Z ) },
+        { time_part: second,      quantity: 1, timestamp: "2017-01-02T03:04:05.006Z", result: (success 2017-01-02T03:04:06.006Z ) },
+
+        // add enough to flip a year. Skipping milliseconds as it overflows Long
+        { time_part: month,  quantity: 12,       timestamp: "2017T", result: (success 2018-01T ) },
+        { time_part: day,    quantity: 420,      timestamp: "2017T", result: (success 2018-02-25 ) },
+        { time_part: hour,   quantity: 10080,    timestamp: "2017T", result: (success 2018-02-25T00:00-00:00 ) },
+        { time_part: minute, quantity: 604800,   timestamp: "2017T", result: (success 2018-02-25T00:00-00:00 ) },
+        { time_part: second, quantity: 36288000, timestamp: "2017T", result: (success 2018-02-25T00:00:00-00:00 ) },
+
+        // add enough to flip a month. Skipping milliseconds as it overflows Long
+        { time_part: day,    quantity: 35,      timestamp: "2017-01T", result: (success 2017-02-05 ) },
+        { time_part: hour,   quantity: 840,     timestamp: "2017-01T", result: (success 2017-02-05T00:00-00:00 ) },
+        { time_part: minute, quantity: 50400,   timestamp: "2017-01T", result: (success 2017-02-05T00:00-00:00 ) },
+        { time_part: second, quantity: 3024000, timestamp: "2017-01T", result: (success 2017-02-05T00:00:00-00:00 ) },
+
+        // add enough to flip a day
+        { time_part: hour,        quantity: 24,    timestamp: "2017-02-03T", result: (success 2017-02-04T00:00-00:00 ) },
+        { time_part: minute,      quantity: 1440,  timestamp: "2017-02-03T", result: (success 2017-02-04T00:00-00:00 ) },
+        { time_part: second,      quantity: 86400, timestamp: "2017-02-03T", result: (success 2017-02-04T00:00:00-00:00 ) },
+
+        // add enough to flip the hour
+        { time_part: minute,      quantity: 60,   timestamp: "2017-02-04T05:06Z", result: (success 2017-02-04T06:06Z ) },
+        { time_part: second,      quantity: 3600, timestamp: "2017-02-04T05:06Z", result: (success 2017-02-04T06:06:00Z ) },
+
+        // add enough to flip the minute
+        { time_part: second,      quantity: 60, timestamp: "2017-02-04T05:06Z", result: (success 2017-02-04T05:07:00Z ) },
+
+        // subtract 1 at different precision levels
+        { time_part: year,        quantity: -1, timestamp: "2017T", result: (success 2016T ) },
+        { time_part: month,       quantity: -1, timestamp: "2017T", result: (success 2016-12T ) },
+        { time_part: day,         quantity: -1, timestamp: "2017T", result: (success 2016-12-31 ) },
+        { time_part: hour,        quantity: -1, timestamp: "2017T", result: (success 2016-12-31T23:00-00:00 ) },
+        { time_part: minute,      quantity: -1, timestamp: "2017T", result: (success 2016-12-31T23:59-00:00 ) },
+        { time_part: second,      quantity: -1, timestamp: "2017T", result: (success 2016-12-31T23:59:59-00:00 ) },
+
+        { time_part: year,        quantity: -1, timestamp: "2017-02T", result: (success 2016-02T ) },
+        { time_part: month,       quantity: -1, timestamp: "2017-02T", result: (success 2017-01T ) },
+        { time_part: day,         quantity: -1, timestamp: "2017-02T", result: (success 2017-01-31T ) },
+        { time_part: hour,        quantity: -1, timestamp: "2017-02T", result: (success 2017-01-31T23:00-00:00 ) },
+        { time_part: minute,      quantity: -1, timestamp: "2017-02T", result: (success 2017-01-31T23:59-00:00 ) },
+        { time_part: second,      quantity: -1, timestamp: "2017-02T", result: (success 2017-01-31T23:59:59-00:00 ) },
+
+        { time_part: year,        quantity: -1, timestamp: "2017-02-03T", result: (success 2016-02-03T ) },
+        { time_part: month,       quantity: -1, timestamp: "2017-02-03T", result: (success 2017-01-03T ) },
+        { time_part: day,         quantity: -1, timestamp: "2017-02-03T", result: (success 2017-02-02T ) },
+        { time_part: hour,        quantity: -1, timestamp: "2017-02-03T", result: (success 2017-02-02T23:00-00:00 ) },
+        { time_part: minute,      quantity: -1, timestamp: "2017-02-03T", result: (success 2017-02-02T23:59-00:00 ) },
+        { time_part: second,      quantity: -1, timestamp: "2017-02-03T", result: (success 2017-02-02T23:59:59-00:00 ) },
+
+        { time_part: year,        quantity: -1, timestamp: "2017-02-03T04:05Z", result: (success 2016-02-03T04:05Z ) },
+        { time_part: month,       quantity: -1, timestamp: "2017-02-03T04:05Z", result: (success 2017-01-03T04:05Z ) },
+        { time_part: day,         quantity: -1, timestamp: "2017-02-03T04:05Z", result: (success 2017-02-02T04:05Z ) },
+        { time_part: hour,        quantity: -1, timestamp: "2017-02-03T04:05Z", result: (success 2017-02-03T03:05Z ) },
+        { time_part: minute,      quantity: -1, timestamp: "2017-02-03T04:05Z", result: (success 2017-02-03T04:04Z ) },
+        { time_part: second,      quantity: -1, timestamp: "2017-02-03T04:05Z", result: (success 2017-02-03T04:04:59Z ) },
+
+        { time_part: year,        quantity: -1, timestamp: "2017-02-03T04:05:06Z", result: (success 2016-02-03T04:05:06Z ) },
+        { time_part: month,       quantity: -1, timestamp: "2017-02-03T04:05:06Z", result: (success 2017-01-03T04:05:06Z ) },
+        { time_part: day,         quantity: -1, timestamp: "2017-02-03T04:05:06Z", result: (success 2017-02-02T04:05:06Z ) },
+        { time_part: hour,        quantity: -1, timestamp: "2017-02-03T04:05:06Z", result: (success 2017-02-03T03:05:06Z ) },
+        { time_part: minute,      quantity: -1, timestamp: "2017-02-03T04:05:06Z", result: (success 2017-02-03T04:04:06Z ) },
+        { time_part: second,      quantity: -1, timestamp: "2017-02-03T04:05:06Z", result: (success 2017-02-03T04:05:05Z ) },
+
+        { time_part: year,        quantity: -1, timestamp: "2017-02-03T04:05:06.007Z", result: (success 2016-02-03T04:05:06.007Z ) },
+        { time_part: month,       quantity: -1, timestamp: "2017-02-03T04:05:06.007Z", result: (success 2017-01-03T04:05:06.007Z ) },
+        { time_part: day,         quantity: -1, timestamp: "2017-02-03T04:05:06.007Z", result: (success 2017-02-02T04:05:06.007Z ) },
+        { time_part: hour,        quantity: -1, timestamp: "2017-02-03T04:05:06.007Z", result: (success 2017-02-03T03:05:06.007Z ) },
+        { time_part: minute,      quantity: -1, timestamp: "2017-02-03T04:05:06.007Z", result: (success 2017-02-03T04:04:06.007Z ) },
+        { time_part: second,      quantity: -1, timestamp: "2017-02-03T04:05:06.007Z", result: (success 2017-02-03T04:05:05.007Z ) },
+    ]
+}
+
+// null and missing propagation -----------------------------------------------------------------------------------
+for::{
+    template: [
+        test::{
+            id: 'date_add null and missing propagation',
+            statement: "date_add(${time_part}, ${quantity}, ${timestamp})",
+            expected: $result
+        }
+    ],
+
+    variable_sets: [
+        {  time_part: "null",    quantity: 1,         timestamp: "`2017T`", result: (success null ) },
+        {  time_part: year,      quantity: "null",    timestamp: "`2017T`", result: (success null ) },
+        {  time_part: year,      quantity: 1,         timestamp: "null",    result: (success null ) },
+        {  time_part: "missing", quantity: 1,         timestamp: "`2017T`", result: (success null ) },
+        {  time_part: year,      quantity: "missing", timestamp: "`2017T`", result: (success null ) },
+        {  time_part: year,      quantity: 1,         timestamp: "missing", result: (success null ) },
+        {  time_part: "null",    quantity: "missing", timestamp: "`2017T`", result: (success null ) },
+        {  time_part: "null",    quantity: 1,         timestamp: "missing", result: (success null ) },
+        {  time_part: "missing", quantity: "null",    timestamp: "`2017T`", result: (success null ) },
+        {  time_part: year,      quantity: "null",    timestamp: "missing", result: (success null ) },
+        {  time_part: "missing", quantity: 1,         timestamp: "null",    result: (success null ) },
+        {  time_part: year,      quantity: "missing", timestamp: "null",    result: (success null ) },
+        {  time_part: "null",    quantity: "null",    timestamp: "null",    result: (success null ) },
+        {  time_part: "missing", quantity: "missing", timestamp: "missing", result: (success null ) },
+    ]
+}
+
+// invalid quantity ----------------------------------------------------------------------------------------------
+for::{
+    template: [
+        test::{
+            id: 'date_add invalid quantity',
+            statement: "date_add(${time_part}, ${quantity}, `9999-12-31T23:59:59Z`)", // max timestamp value at second resolution
+            expected: (error)
+        }
+    ],
+
+    variable_sets: [
+        { time_part: "year", quantity: 9999 },
+        { time_part: "second", quantity: 1 },
+        { time_part: "year", quantity: -10000 }, // min timestamp year value is 0001T
+    ]
+}
+
+// invalid time part ----------------------------------------------------------------------------------------------
+for::{
+    template: [
+        test::{
+            id: 'date_add invalid time part',
+            statement: "date_add(${time_part}, 1, `1986T`)",
+            expected: (error)
+        }
+    ],
+
+    variable_sets: [
+        // completely invalid
+        { time_part: "'foobar'" },
+        { time_part: 1 },
+        { time_part: [] },
+
+        // valid for other functions
+        { time_part: "timezone_hour" },
+        { time_part: "timezone_minute" },
+    ]
+}
+
+// wrong number of arguments --------------------------------------------------------------------------------------
+for::{
+    template: [
+        test::{
+            id: 'date_add wrong number of arguments',
+            statement: "${sql}",
+            expected: (error)
+        }
+    ],
+    variable_sets: [
+        { sql: "date_add()" },
+        { sql: "date_add(year)" },
+        { sql: "date_add(year, 1)" },
+        { sql: "date_add(year, 1, `2017T`, 1)" },
+        { sql: "date_add(year, 1, `2017T`, `2017T`)" }
+    ]
+}

@@ -1,0 +1,326 @@
+/*
+ * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ *  You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *      http://aws.amazon.com/apache2.0/
+ *
+ *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ *  language governing permissions and limitations under the License.
+ */
+
+ ////
+// Tests for pattern matching using LIKE 
+////
+
+////
+// Common Data 
+////
+
+set_default_environment::{
+    course: [
+        { 
+          sid: "S1", 
+          grade: "90%" 
+        },
+        { 
+          sid: "S2", 
+          grade: "80%" 
+        },
+
+    ],
+}
+
+
+
+for::{ 
+    template: [ 
+        test::{ 
+            id: 'null value on any of the 3 inputs returns false',
+            statement: '''
+                 SELECT * FROM course AS d 
+                 WHERE ${likeExpr} 
+                ''', 
+            expected: (success (bag))
+        }
+    ], 
+
+    variable_sets: [
+        {likeExpr: " null  LIKE null ESCAPE null " } ,
+        {likeExpr: " d.sid LIKE null ESCAPE null " } ,
+        {likeExpr: " null  LIKE 'S1' ESCAPE null " } ,
+        {likeExpr: " null  LIKE null ESCAPE '['  " } ,
+
+        {likeExpr: " null  LIKE 'S1' ESCAPE '['  " } ,
+        {likeExpr: " d.sid LIKE null ESCAPE '['  " } ,
+        {likeExpr: " d.sid LIKE 'S1' ESCAPE null " } ,
+
+        {likeExpr: " null  LIKE null " } ,
+        {likeExpr: " d.sid LIKE null " } ,
+        {likeExpr: " null  LIKE 'S1' " } ,
+    ]
+} 
+
+
+for::{ 
+    template: [ 
+        test::{ 
+            id: 'empty string value on any of the 2 inputs (text and/or pattern)',
+            statement: '''
+                SELECT * FROM course AS d 
+                WHERE ${likeExpr} 
+                ''', 
+            expected: (success $result)
+        }
+    ], 
+
+    variable_sets: [
+        {likeExpr: " ''    LIKE null " , result: (bag)} ,
+        {likeExpr: " null  LIKE ''   " , result: (bag)} ,
+        {likeExpr: " d.sid LIKE ''   " , result: (bag)} ,
+        {likeExpr: " ''    LIKE 'S1' " , result: (bag)} ,
+        {likeExpr: " ''    LIKE '_'  " , result: (bag)} ,
+        {likeExpr: " ''    LIKE '%' "  , 
+         result:   (bag
+                       { 
+                           sid: "S1", 
+                           grade: "90%" 
+                       }
+                       { 
+                           sid: "S2", 
+                           grade: "80%" 
+                       }
+                   )
+        } ,
+        {likeExpr: " ''    LIKE '' "   ,  // SQL92 pp. 216 case 5)a)
+         result:   (bag
+                       { 
+                           sid: "S1", 
+                           grade: "90%" 
+                       }
+                       { 
+                           sid: "S2", 
+                           grade: "80%" 
+                       }
+                   )
+        } ,
+    ]
+}
+
+
+for::{ 
+    template: [ 
+        test::{ 
+            id: 'non-empty strings for text and pattern that match',
+            statement: '''
+                SELECT * FROM `[true]`
+                WHERE ${text} LIKE ${pattern}
+                ''', 
+            expected: (success (bag {_1: true}))
+        }
+    ], 
+
+    variable_sets: [
+        // https://github.com/partiql/partiql-lang-kotlin/issues/32 {text: " '😍' ", pattern: " '😍' " } ,
+        {text:  " '_'         "  , pattern:  " '_'          "  } , // pattern is special character 
+        {text:  " '_'         "  , pattern:  " '%'          "  } , // pattern is special character 
+        {text:  " '%'         "  , pattern:  " '_'          "  } , // pattern is special character 
+        {text:  " '%'         "  , pattern:  " '%'          "  } , // pattern is special character 
+        {text:  " 'A'         "  , pattern:  " 'A'          "  } , 
+        {text:  " '\\'        "  , pattern:  " '\\'         "  } , 
+        {text:  " '$$'        "  , pattern:  " '$$'         "  } , 
+        {text:  " 'ABC'       "  , pattern:  " '_BC'        "  } , 
+        {text:  " 'ABC'       "  , pattern:  " 'A_C'        "  } , 
+        {text:  " 'ABC'       "  , pattern:  " 'AB_'        "  } , 
+        {text:  " 'ABC'       "  , pattern:  " '___'        "  } , 
+        {text:  " 'ABC'       "  , pattern:  " 'A__'        "  } , 
+        {text:  " 'ABC'       "  , pattern:  " '__C'        "  } , 
+
+        {text:  " 'ABC'       "  , pattern:  " '%'          "  } , 
+        {text:  " 'ABC'       "  , pattern:  " '%%%%'       "  } , 
+        {text:  " 'ABC'       "  , pattern:  " '%ABC'       "  } , 
+        {text:  " 'ABC'       "  , pattern:  " '%BC'        "  } , 
+        {text:  " 'ABC'       "  , pattern:  " '%C'         "  } , 
+
+        {text:  " 'ABC'       "  , pattern:  " 'ABC%'       "  } , 
+        {text:  " 'ABC'       "  , pattern:  " 'AB%'        "  } , 
+        {text:  " 'ABC'       "  , pattern:  " 'A%'         "  } , 
+        {text:  " 'ABC'       "  , pattern:  " 'A%%%'       "  } , 
+
+        {text:  " 'ABC'       "  , pattern:  " 'A%C'        "  } , 
+        {text:  " 'AAaBBbCCc' "  , pattern:  " 'A%c'        "  } , 
+        {text:  " 'AAaBBbCCc' "  , pattern:  " 'A%%c'       "  } , 
+        {text:  " 'AAaBBbCCc' "  , pattern:  " 'A%B%c'      "  } , 
+        {text:  " 'AAaBBbCCc' "  , pattern:  " 'A%%B%%c'    "  } , 
+        {text:  " 'AAaBBbCCc' "  , pattern:  " 'A%A%c'      "  } , 
+        {text:  " 'AAaBBbCCc' "  , pattern:  " 'A%%%A%%%%c' "  } , 
+        {text:  " 'AAaBBbCCc' "  , pattern:  " 'A%Aa%c'     "  } , 
+        {text:  " 'AAaBBbCCc' "  , pattern:  " 'A%%'        "  } , 
+        {text:  " 'AAaBBbCCc' "  , pattern:  " '%B%C%'      "  } , 
+        {text:  " 'AAaBBbCCc' "  , pattern:  " '%B%C%%'     "  } , 
+        {text:  " 'AAaBBbCCc' "  , pattern:  " '%bC%'       "  } , 
+        {text:  " 'AAaBBbCCc' "  , pattern:  " '%b%C%'      "  } , 
+
+        {text:  " 'ABC'       "  , pattern:  " '%_%_%_%'    "  } , 
+        {text:  " 'ABC'       "  , pattern:  " '_%_%_%'     "  } , 
+        {text:  " 'ABC'       "  , pattern:  " '%_%_%_'     "  } , 
+        {text:  " 'ABC'       "  , pattern:  " '_%_%_'      "  } , 
+        {text:  " 'ABC'       "  , pattern:  " '_%%_%%%_'   "  } , 
+        {text:  " 'ABC'       "  , pattern:  " '_%%B%%%_'   "  } , 
+        {text:  " 'AAaBBbCCc' "  , pattern:  " '%__b%C_%'   "  } , 
+    ]
+}
+
+for::{ 
+    template: [ 
+        test::{ 
+            id: 'non-empty strings for text and pattern that DO NOT match',
+            statement: '''
+                SELECT * FROM `[true]`
+                WHERE ${text} LIKE ${pattern}
+                ''', 
+            expected: (success (bag))
+        }
+    ], 
+
+    variable_sets: [
+        // https://github.com/partiql/partiql-lang-kotlin/issues/32 {text: " '💩' ", pattern: " '😍' "},
+
+        {text: " 'A'         " , pattern: " 'a'          " },
+        {text: " '\\'        " , pattern: " '\/'         " },
+        {text: " '$$'        " , pattern: " '^$$'        " },
+        {text: " 'ABC'       " , pattern: " '_AC'        " },
+        {text: " 'ABC'       " , pattern: " 'A_B'        " },
+        {text: " 'ABC'       " , pattern: " 'AB_C'       " },
+        {text: " 'ABC'       " , pattern: " '_ABC'       " },
+        {text: " 'ABC'       " , pattern: " 'ABC_'       " },
+        {text: " 'ABC'       " , pattern: " '__'         " },
+        {text: " 'ABC'       " , pattern: " '____'       " },
+
+        {text: " 'ABC'       " , pattern: " 'B%'         " },
+        {text: " 'ABC'       " , pattern: " '%B'         " },
+        {text: " 'ABC'       " , pattern: " '%BCD'       " },
+        {text: " 'ABC'       " , pattern: " 'B%C'        " },
+
+        {text: " 'AAaBBbCCc' " , pattern: " 'A%Xc'       " },
+        {text: " 'AAaBBbCCc' " , pattern: " 'AX%c'       " },
+        {text: " 'AAaBBbCCc' " , pattern: " 'A%X%c'      " },
+        {text: " 'AAaBBbCCc' " , pattern: " 'A%%X%%c'    " },
+        {text: " 'AAaBBbCCc' " , pattern: " 'A%%%X%%%%c' " },
+        {text: " 'AAaBBbCCc' " , pattern: " 'A%Aba%c'    " },
+        {text: " 'AAaBBbCCc' " , pattern: " 'X%%'        " },
+        {text: " 'ABC'       " , pattern: " '%_%_%_%_%'  " },
+
+    ]
+}
+
+
+for::{ 
+    template: [ 
+        test::{ 
+            id: 'like-expression with ESCAPE specified that match',
+            statement: '''
+                SELECT * FROM `[true]`
+                WHERE ${text} LIKE ${pattern} ESCAPE '[' 
+                ''', 
+            expected: (success (bag {_1: true}))
+        }
+    ], 
+
+    variable_sets: [
+
+        {text: " '_'          " , pattern: " '[_'            " },// pattern is actual character _
+        {text: " '%'          " , pattern: " '[%'            " },// pattern is actual character %
+        {text: " '100%'       " , pattern: " '100[%'         " },
+        {text: " '100%'       " , pattern: " '%[%'           " },
+        {text: " '100%'       " , pattern: " '1__[%'         " },
+        {text: " '100%'       " , pattern: " '1%[%'          " },
+        {text: " '11%22%33%'  " , pattern: " '1%[%2%[%3%[%'  " },
+        {text: " '11%22%33%'  " , pattern: " '1_[%2%[%3_[%'  " },
+        {text: " '11%22%33%'  " , pattern: " '%[%%[%%[%'     " },
+        {text: " '11%22%33%'  " , pattern: " '__[%__[%__[%'  " },
+        {text: " '1_000_000%' " , pattern: " '1[_000[_000[%' " },
+        {text: " '1_000_000%' " , pattern: " '_[_000[_000[%' " },
+        {text: " '1_000_000%' " , pattern: " '%[_000[_000[%' " },
+        {text: " '1_000_000%' " , pattern: " '%[_0_0[_000[%' " },
+        {text: " '1_000_000%' " , pattern: " '%[_0%0[_000[%' " },
+        {text: " '1_000_000%' " , pattern: " '%[_0%0[__%_[%' " },
+        {text: " '100%'       " , pattern: " '1_%'           " },// does not use escape char
+
+    ]
+}
+
+
+
+for::{ 
+    template: [ 
+        test::{ 
+            id: 'like-expression with ESCAPE specified that DO NOT match',
+            statement: '''
+                SELECT * FROM `[true]`
+                WHERE ${text} LIKE ${pattern} ESCAPE '[' 
+                ''', 
+            expected: (success (bag))
+        }
+    ], 
+
+    variable_sets: [
+
+        {text: " '_'    " , pattern: " '[_[_'   " },
+        {text: " '_'    " , pattern: " '_[_'    " },
+        {text: " '%'    " , pattern: " '[%[%'   " },
+        {text: " '100%' " , pattern: " '1000[%' " },
+        {text: " '100%' " , pattern: " '[%100'  " },
+        {text: " '100%' " , pattern: " '1_[%_'  " },
+        {text: " '100%' " , pattern: " '1%_[%1' " },
+
+    ]
+}
+
+
+////
+// Illegal inputs
+////
+
+test::{
+    id: 'Incorrect type for text',
+    statement: '''
+        SELECT * FROM `[true]` 
+        WHERE 1 LIKE '1'
+        ''',
+    expected: (error)
+}
+
+
+test::{
+    id: 'Incorrect type for pattern',
+    statement: '''
+        SELECT * FROM `[true]` 
+        WHERE 'a' LIKE 2 
+        ''',
+    expected: (error)
+}
+
+
+
+test::{
+    id: 'Incorrect type for Escape',
+    statement: '''
+        SELECT * FROM `[true]` 
+        WHERE 'a' LIKE 'a' ESCAPE 3
+        ''',
+    expected: (error)
+}
+
+
+test::{
+    id: 'More than one character given for ESCAPE',
+    statement: '''
+        SELECT * FROM `[true]` 
+        WHERE 'a' LIKE 'a' ESCAPE 'aa'
+        ''',
+    expected: (error)
+}
