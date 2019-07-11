@@ -1,6 +1,9 @@
 package org.partiql.testscript.parser
 
+import java.io.File
 import java.nio.charset.Charset
+
+val inputBasePath = "${File(".").absolutePath.removeSuffix("/.")}/test/resources"
 
 /**
  * Creates the input and replaces `#` by `$`. We use `#` in the test fixtures because escaping `$` in a kotlin
@@ -9,6 +12,6 @@ import java.nio.charset.Charset
 fun createInput(vararg ionDocuments: String): List<NamedInputStream> =
         ionDocuments.mapIndexed { index, doc ->
             NamedInputStream(
-                    "input[$index]",
+                    "$inputBasePath/input[$index].sqlts",
                     doc.replace("#", "$").byteInputStream(Charset.forName("UTF-8")))
         }

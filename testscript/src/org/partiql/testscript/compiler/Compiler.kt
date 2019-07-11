@@ -1,29 +1,27 @@
 package org.partiql.testscript.compiler
 
-import com.amazon.ion.IonSexp
-import com.amazon.ion.IonStruct
-import com.amazon.ion.IonSymbol
-import com.amazon.ion.IonSystem
+import com.amazon.ion.*
 import org.partiql.testscript.Failure
 import org.partiql.testscript.Result
 import org.partiql.testscript.Success
 import org.partiql.testscript.foldToResult
 import org.partiql.testscript.parser.ast.*
+import java.io.File
 
 /**
- * Since compile functions don't produce a result but mutate the current compilation environment we use a 
- * singleton success value to indicate that the compile function completed successfully.   
+ * Since compile functions don't produce a result but mutate the current compilation environment we use a
+ * singleton success value to indicate that the compile function completed successfully.
  */
 private val SUCCESS = Success(Unit)
 
 /**
- * Encapsulates the current compile environment which is comprised of: 
- * * The current test environment, which can be mutated by a [SetDefaultEnvironmentNode] and must be reset at each new 
+ * Encapsulates the current compile environment which is comprised of:
+ * * The current test environment, which can be mutated by a [SetDefaultEnvironmentNode] and must be reset at each new
  * [ModuleNode]
  * * The compiled [TestScriptExpression]'s
- * * Deferred compiled lambdas that must be executed after the whole AST is processed. These are lambdas that make 
- * references to other [TestScriptExpression]'s so we execute them at the end to ensure the referred 
- * [TestScriptExpression] was generated 
+ * * Deferred compiled lambdas that must be executed after the whole AST is processed. These are lambdas that make
+ * references to other [TestScriptExpression]'s so we execute them at the end to ensure the referred
+ * [TestScriptExpression] was generated
  */
 private class CompileEnvironment(var testEnvironment: IonStruct) {
     private val skipListDeferred = mutableListOf<() -> Result<Unit>>()
@@ -98,16 +96,43 @@ class Compiler(val ion: IonSystem) {
      * Changes the current test environment affecting subsequent AST nodes until a new Module is started.
      */
     private fun compileSetDefaultEnvironmentNode(
-            compileEnvironment: CompileEnvironment, 
-            node: SetDefaultEnvironmentNode): Result<Unit> {
-        
-        compileEnvironment.testEnvironment = node.environment
+            compileEnvironment: CompileEnvironment,
+            node: SetDefaultEnvironmentNode): Result<Unit> = when (node) {
+        is InlineSetDefaultEnvironmentNode -> {
+            compileEnvironment.testEnvironment = node.environment
 
-        return SUCCESS
+            SUCCESS
+        }
+        is FileSetDefaultEnvironmentNode -> {
+            val dirPath = File(node.scriptLocation.inputName).parent
+            val file = File("$dirPath/${node.environmentRelativeFilePath}")
+            
+            val lazyDatagram = lazy(LazyThreadSafetyMode.NONE) { ion.loader.load(file) }
+
+            when {
+                !file.exists() -> {
+                    Failure(FileSetDefaultEnvironmentNotExists(file.absolutePath, node.scriptLocation))
+                }
+                lazyDatagram.value.size != 1 -> {
+                    Failure(FileSetDefaultEnvironmentNotSingleValue(file.absolutePath, node.scriptLocation))
+                }
+                lazyDatagram.value[0].type != IonType.STRUCT -> {
+                    Failure(FileSetDefaultEnvironmentNotStruct(
+                            file.absolutePath,
+                            lazyDatagram.value[0].type,
+                            node.scriptLocation))
+                }
+                else -> {
+                    compileEnvironment.testEnvironment = lazyDatagram.value[0] as IonStruct
+                    SUCCESS
+                }
+            }
+        }
     }
 
+
     /**
-     * Generates and register a [TestExpression] into the compile environment. 
+     * Generates and register a [TestExpression] into the compile environment.
      */
     private fun compileTestNode(compileEnvironment: CompileEnvironment, node: TestNode): Result<Unit> {
         val testExpression = TestExpression(
@@ -138,7 +163,7 @@ class Compiler(val ion: IonSystem) {
     }
 
     /**
-     * Defers the generation and registering of a [AppendedTestExpression] since it must reference a [TestExpression]  
+     * Defers the generation and registering of a [AppendedTestExpression] since it must reference a [TestExpression]
      */
     private fun compileAppendTest(compileEnvironment: CompileEnvironment, node: AppendTestNode): Result<Unit> {
         val expressions = compileEnvironment.expressions

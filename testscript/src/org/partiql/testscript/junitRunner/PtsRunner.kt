@@ -12,13 +12,11 @@ import java.io.File
 import java.io.FileInputStream
 import org.junit.runner.notification.Failure
 import org.partiql.testscript.compiler.*
+import org.partiql.testscript.extensions.listRecursive
+import org.partiql.testscript.extensions.ptsFileFilter
 import java.io.FileFilter
 import java.lang.AssertionError
 import java.lang.IllegalArgumentException
-
-private val ptsFileFilter = FileFilter { file ->
-    (file.isFile && file.name.endsWith(".sqlts")) || file.isDirectory
-}
 
 /**
  * A Junit4 runner that integrates PTS tests into JUnit.
@@ -39,7 +37,7 @@ class PtsRunner(private val testClass: Class<*>) : Runner() {
     private val ionDocs = testInstance.ptsFilePaths
             .asSequence()
             .map { File(it) }
-            .map { listRecursive(it) }
+            .map { it.listRecursive(ptsFileFilter) }
             .flatMap { it.asSequence() }
             .map { NamedInputStream(it.absolutePath, FileInputStream(it)) }
             .toList()
@@ -51,7 +49,9 @@ class PtsRunner(private val testClass: Class<*>) : Runner() {
         val testResults = evaluator.evaluate(testExpressions)
 
         testResults.forEach {
-            val testDescription = Description.createTestDescription(testClass, it.test.id)
+            val testDescription = Description.createTestDescription(
+                    testClass, 
+                    "${it.test.scriptLocation} ${it.test.id}")
 
             notifier.fireTestStarted(testDescription)
 
@@ -86,12 +86,5 @@ class PtsRunner(private val testClass: Class<*>) : Runner() {
         is TestExpression -> this.expected
         is SkippedTestExpression -> this.original.expected
         is AppendedTestExpression -> this.original.expected
-    }
-
-    private fun listRecursive(file: File): List<File> = when {
-        !file.exists() -> throw IllegalArgumentException("'${file.path}' not found")
-        file.isDirectory -> file.listFiles(ptsFileFilter).flatMap { listRecursive(file) }
-        file.isFile -> listOf(file)
-        else -> throw IllegalArgumentException("couldn't read '${file.path}'. It's neither a file nor a directory")
     }
 }

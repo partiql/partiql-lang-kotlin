@@ -1,6 +1,7 @@
 package org.partiql.testscript
 
 import org.partiql.testscript.parser.ScriptLocation
+import java.lang.Exception
 
 private val ptsErrorComparator = Comparator.comparing<PtsError, String> { it.scriptLocation.inputName }
         .thenBy { it.scriptLocation.lineNum }
@@ -12,7 +13,7 @@ data class PtsError(val scriptLocation: ScriptLocation, val message: String) : C
     override fun toString(): String = "$scriptLocation - $message"
 }
 
-abstract class PtsException(val errors: List<PtsError>) : RuntimeException() {
+abstract class PtsException(val errors: List<PtsError> = listOf(), exception: Exception? = null) : RuntimeException(exception) {
     protected val formattedErrors = errors.sorted().joinToString("\n") { "    $it" }
 }
 

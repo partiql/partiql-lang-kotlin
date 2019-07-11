@@ -1,0 +1,94 @@
+/*
+ * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ *  You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *      http://aws.amazon.com/apache2.0/
+ *
+ *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ *  language governing permissions and limitations under the License.
+ */
+
+
+for::{
+    template: [
+        test::{
+            id: 'null pass through',
+            statement: $sql,
+            expected: (success $result)
+        },
+    ],
+    variable_sets: [
+        { sql: "`null.null`",       result: null.null       },
+        { sql: "`null.bool`",       result: null.bool       },
+        { sql: "`null.int`",        result: null.int        },
+        { sql: "`null.decimal`",    result: null.decimal    },
+        { sql: "`null.string`",     result: null.string     },
+        { sql: "`null.symbol`",     result: null.symbol     },
+        { sql: "`null.clob`",       result: null.clob       },
+        { sql: "`null.blob`",       result: null.blob       },
+        { sql: "`null.list`",       result: null.list       },
+        { sql: "`null.struct`",     result: null.struct     },
+        { sql: "`null.sexp`",       result: null.sexp       },
+    ]
+}
+
+for::{
+    template: [
+        test::{
+            id: 'null comparison',
+            statement: $sql,
+            expected: (success $result)
+        },
+    ],
+    variable_sets: [
+        { sql: "NULL",                      result: null   },
+        { sql: "MISSING",                   result: missing::null  },
+        { sql: "NULL IS NULL",              result: true   },
+        { sql: "MISSING IS NULL",           result: true   },
+        { sql: "NULL IS MISSING",           result: false  },
+        { sql: "MISSING IS MISSING",        result: true   },
+        { sql: "`null.null` IS NULL",       result: true   },
+        { sql: "`null.bool` IS NULL",       result: true   },
+        { sql: "`null.int` IS NULL",        result: true   },
+        { sql: "`null.decimal` IS NULL",    result: true   },
+        { sql: "`null.string` IS NULL",     result: true   },
+        { sql: "`null.symbol` IS NULL",     result: true   },
+        { sql: "`null.clob` IS NULL",       result: true   },
+        { sql: "`null.blob` IS NULL",       result: true   },
+        { sql: "`null.list` IS NULL",       result: true   },
+        { sql: "`null.struct` IS NULL",     result: true   },
+        { sql: "`null.sexp` IS NULL",       result: true   },
+
+        { sql: "NULL = NULL",              result: null   },
+        { sql: "MISSING = NULL",           result: null   },
+        { sql: "NULL = MISSING",           result: null   },
+        { sql: "`null.null` = NULL",       result: null   },
+        { sql: "`null.bool` = NULL",       result: null   },
+        { sql: "`null.int` = NULL",        result: null   },
+        { sql: "`null.decimal` = NULL",    result: null   },
+        { sql: "`null.string` = NULL",     result: null   },
+        { sql: "`null.symbol` = NULL",     result: null   },
+        { sql: "`null.clob` = NULL",       result: null   },
+        { sql: "`null.blob` = NULL",       result: null   },
+        { sql: "`null.list` = NULL",       result: null   },
+        { sql: "`null.struct` = NULL",     result: null   },
+        { sql: "`null.sexp` = NULL",       result: null   },
+         
+        { sql: "`null.null` = MISSING",    result: null   },
+        { sql: "`null.bool` = MISSING",    result: null   },
+        { sql: "`null.int` = MISSING",     result: null   },
+        { sql: "`null.decimal` = MISSING", result: null   },
+        { sql: "`null.string` = MISSING",  result: null   },
+        { sql: "`null.symbol` = MISSING",  result: null   },
+        { sql: "`null.clob` = MISSING",    result: null   },
+        { sql: "`null.blob` = MISSING",    result: null   },
+        { sql: "`null.list` = MISSING",    result: null   },
+        { sql: "`null.struct` = MISSING",  result: null   },
+        { sql: "`null.sexp` = MISSING",    result: null   },
+
+    ]
+}

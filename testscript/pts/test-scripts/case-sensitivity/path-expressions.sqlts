@@ -1,0 +1,141 @@
+/*
+ * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ *  You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *      http://aws.amazon.com/apache2.0/
+ *
+ *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ *  language governing permissions and limitations under the License.
+ */
+
+
+set_default_environment::{
+    test_struct: {
+        unambiguous_field: "this is unambiguous_field",
+
+        ambiguous_field: "this is ambiguous_field (lowercase)",
+        AMBIGUOUS_FIELD: "this is AMBIGUOUS_FIELD (uppercase)",
+
+        unambiguous_lookup_field: "this is unambiguous_lookup_field",
+        ambiguous_lookup_field: "this is ambiguous_lookup_field (lowercase)",
+        AMBIGUOUS_LOOKUP_FIELD: "this is AMBIGUOUS_LOOKUP_FIELD (uppercase)",
+    },
+
+    unambiguous_variable: "unambiguous_lookup_field",
+    ambiguous_case_variable: "ambiguous_lookup_field",
+    AMBIGUOUS_CASE_VARIABLE: "AMBIGUOUS_LOOKUP_FIELD",
+
+    table1: [ { f: "this is from table1" } ],
+    table2: [ { f: "this is from table2" } ],
+}
+
+test::{
+    id: 'dotted path expression with unquoted identifiers accesses field unambiguous_field (lowercase)',
+    statement: "test_struct.unambiguous_field",
+    expected: (success "this is unambiguous_field")
+}
+
+test::{
+    id: 'dotted path expression with unquoted identifiers accesses field UNAMBIGUOUS_FIELD (uppercase)',
+    statement: "test_struct.UNAMBIGUOUS_FIELD",
+    expected: (success "this is unambiguous_field")
+}
+
+test::{
+    id: 'dotted path expression with quoted field name accesses field unambiguous_field (lowercase)',
+    statement: ''' test_struct."unambiguous_field" ''',
+    expected: (success "this is unambiguous_field")
+}
+
+test::{
+    id: 'dotted path expression with quoted field name accesses field UNAMBIGUOUS_FIELD (uppercase)',
+    statement: ''' test_struct."UNAMBIGUOUS_FIELD" ''',
+    expected: (success missing::null)
+}
+
+test::{
+    id: 'dotted path expression with quoted field name accesses field ambiguous_field (lowercase)',
+    statement: ''' test_struct."ambiguous_field" ''',
+    expected: (success "this is ambiguous_field (lowercase)")
+}
+
+test::{
+    id: 'dotted path expression with quoted field name accesses field AMBIGUOUS_FIELD (uppercase)',
+    statement: ''' test_struct."AMBIGUOUS_FIELD" ''',
+    expected: (success "this is AMBIGUOUS_FIELD (uppercase)")
+}
+
+test::{
+    id: 'subscript with variable in lowercase',
+    statement: ''' test_struct[unambiguous_variable] ''',
+    expected: (success "this is unambiguous_lookup_field")
+}
+
+test::{
+    id: 'subscript with variable in uppercase',
+    statement: ''' test_struct[UNAMBIGUOUS_VARIABLE] ''',
+    expected: (success "this is unambiguous_lookup_field")
+}
+
+test::{
+    id: 'subscript with variable in mixed case',
+    statement: ''' test_struct[uNaMbiGuOuS_VaRiAbLE] ''',
+    expected: (success "this is unambiguous_lookup_field")
+}
+
+test::{
+    id: 'subscript with literal string in lowercase',
+    statement: ''' test_struct['ambiguous_lookup_field'] ''',
+    expected: (success "this is ambiguous_lookup_field (lowercase)")
+}
+
+test::{
+    id: 'subscript with literal string in uppercase',
+    statement: ''' test_struct['AMBIGUOUS_LOOKUP_FIELD'] ''',
+    expected: (success "this is AMBIGUOUS_LOOKUP_FIELD (uppercase)")
+}
+
+test::{
+    id: 'subscript with non-existent variable in lowercase',
+    statement: ''' test_struct[unambiguous_field] ''',
+    expected: (error)
+}
+
+test::{
+    id: 'subscript with non-existent variable in uppercase',
+    statement: ''' test_struct[TEST_FIELD] ''',
+    expected: (error)
+}
+
+test::{
+    id: 'path expression with table alias in uppercase',
+    statement: "SELECT AN_ALIAS.f FROM table1 as an_alias",
+    expected: (success (bag { f:"this is from table1" } ))
+}
+test::{
+    id: 'path expression with table alias in lowercase',
+    statement: "SELECT an_alias.f FROM table1 as AN_ALIAS",
+    expected: (success (bag { f:"this is from table1" } ))
+}
+
+test::{
+    id: 'path expression with ambiguous table alias (lowercase)',
+    statement: "SELECT an_alias.f FROM table1 AS an_alias, table2 AS AN_ALIAS",
+    expected: (error)
+}
+
+test::{
+    id: 'path expression with mbiguous table alias (lowercase)',
+    statement: '''SELECT "an_alias".f FROM table1 AS an_alias, table2 AS AN_ALIAS''',
+    expected: (success (bag { f:"this is from table1" } ))
+}
+
+test::{
+    id: 'path expression with ambiguous table alias (uppercase)',
+    statement: '''SELECT "AN_ALIAS".f FROM table1 AS an_alias, table2 AS AN_ALIAS''',
+    expected: (success (bag { f:"this is from table2" } ))
+}

@@ -8,6 +8,7 @@ import org.junit.jupiter.api.assertThrows
 import org.partiql.testscript.parser.Parser
 import org.partiql.testscript.parser.ScriptLocation
 import org.partiql.testscript.parser.createInput
+import org.partiql.testscript.parser.inputBasePath
 
 class CompilerTest {
 
@@ -60,7 +61,7 @@ class CompilerTest {
                             statement = "SELECT * FROM <<1,2,3>>",
                             environment = ion.newEmptyStruct(),
                             expected = ExpectedSuccess(ion.newInt(1)),
-                            scriptLocation = ScriptLocation("input[0]", 1)
+                            scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 1)
                     )))
 
     @Test
@@ -85,14 +86,14 @@ class CompilerTest {
                             statement = "SELECT * FROM <<1,2,3>>",
                             environment = ion.newEmptyStruct(),
                             expected = ExpectedSuccess(ion.newInt(1)),
-                            scriptLocation = ScriptLocation("input[0]", 1)),
+                            scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 1)),
                     TestExpression(
                             id = "test2",
                             description = "second test",
                             statement = "SELECT * FROM {}",
                             environment = ion.newEmptyStruct(),
                             expected = ExpectedSuccess(ion.newInt(2)),
-                            scriptLocation = ScriptLocation("input[0]", 7)
+                            scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 7)
                     )))
 
     @Test
@@ -111,7 +112,7 @@ class CompilerTest {
             """.trimMargin(),
             expectedErrorMessage = """
                 |Errors found when compiling test scripts:
-                |    input[0]:7 - testId: test1 not unique also found in: input[0]:1
+                |    $inputBasePath/input[0].sqlts:7 - testId: test1 not unique also found in: $inputBasePath/input[0].sqlts:1
             """.trimMargin())
 
     @Test
@@ -130,7 +131,7 @@ class CompilerTest {
                             statement = "SELECT * FROM <<1,2,3>>",
                             environment = "{a: 12}".toStruct(),
                             expected = ExpectedSuccess(ion.newInt(1)),
-                            scriptLocation = ScriptLocation("input[0]", 1)
+                            scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 1)
                     )))
 
     @Test
@@ -150,8 +151,52 @@ class CompilerTest {
                             statement = "SELECT * FROM <<1,2,3>>",
                             environment = "{a: 12}".toStruct(),
                             expected = ExpectedSuccess(ion.newInt(1)),
-                            scriptLocation = ScriptLocation("input[0]", 3)
+                            scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 3)
                     )))
+
+    @Test
+    fun setDefaultFromFileTest() = assertCompile("""
+                |set_default_environment::"environment.ion"
+                |       
+                |test::{
+                |   id: test1,
+                |   statement: "SELECT * FROM <<1,2,3>>",
+                |   expected: (success 1)
+                |}
+            """.trimMargin(),
+            expected = listOf(
+                    TestExpression(
+                            id = "test1",
+                            description = null,
+                            statement = "SELECT * FROM <<1,2,3>>",
+                            environment = "{b: 99}".toStruct(),
+                            expected = ExpectedSuccess(ion.newInt(1)),
+                            scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 3)
+                    )))
+
+    @Test
+    fun setDefaultFromFileNotExistsTest() = assertCompileError("""
+                |set_default_environment::"dont_exist.ion"
+            """.trimMargin(), """
+                |Errors found when compiling test scripts:
+                |    $inputBasePath/input[0].sqlts:1 - Environment file $inputBasePath/dont_exist.ion does not exist
+            """.trimMargin())
+
+    @Test
+    fun setDefaultFromFileMultipleValuesTest() = assertCompileError("""
+                |set_default_environment::"multiple_values.ion"
+            """.trimMargin(), """
+                |Errors found when compiling test scripts:
+                |    $inputBasePath/input[0].sqlts:1 - Environment file $inputBasePath/multiple_values.ion is not a single value
+            """.trimMargin())
+
+    @Test
+    fun setDefaultFromFileNotStructTest() = assertCompileError("""
+                |set_default_environment::"not_struct.ion"
+            """.trimMargin(), """
+                |Errors found when compiling test scripts:
+                |    $inputBasePath/input[0].sqlts:1 - Environment file $inputBasePath/not_struct.ion does not contain a STRUCT but a STRING
+            """.trimMargin())
 
     @Test
     fun setDefaultOnlyAffectsSubsequentTests() = assertCompile("""
@@ -176,7 +221,7 @@ class CompilerTest {
                             statement = "SELECT * FROM <<1,2,3>>",
                             environment = emptyStruct,
                             expected = ExpectedSuccess(ion.newInt(1)),
-                            scriptLocation = ScriptLocation("input[0]", 1)
+                            scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 1)
                     ),
                     TestExpression(
                             id = "test2",
@@ -184,7 +229,7 @@ class CompilerTest {
                             statement = "SELECT * FROM <<1,2,3>>",
                             environment = "{a: 12}".toStruct(),
                             expected = ExpectedSuccess(ion.newInt(1)),
-                            scriptLocation = ScriptLocation("input[0]", 9)
+                            scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 9)
                     )))
 
     @Test
@@ -213,7 +258,7 @@ class CompilerTest {
                             statement = "SELECT * FROM <<1,2,3>>",
                             environment = "{a: 12}".toStruct(),
                             expected = ExpectedSuccess(ion.newInt(1)),
-                            scriptLocation = ScriptLocation("input[0]", 3)
+                            scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 3)
                     ),
                     TestExpression(
                             id = "test2",
@@ -221,7 +266,7 @@ class CompilerTest {
                             statement = "SELECT * FROM <<1,2,3>>",
                             environment = emptyStruct,
                             expected = ExpectedSuccess(ion.newInt(1)),
-                            scriptLocation = ScriptLocation("input[1]", 1)
+                            scriptLocation = ScriptLocation("$inputBasePath/input[1].sqlts", 1)
                     )))
 
     @Test
@@ -242,7 +287,7 @@ class CompilerTest {
                             statement = "SELECT * FROM <<1,2,3>>",
                             environment = "{foo: 20}".toStruct(),
                             expected = ExpectedSuccess(ion.newInt(1)),
-                            scriptLocation = ScriptLocation("input[0]", 3)
+                            scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 3)
                     )))
 
     @Test
@@ -264,9 +309,9 @@ class CompilerTest {
                                     statement = "SELECT * FROM <<1,2,3>>",
                                     environment = emptyStruct,
                                     expected = ExpectedSuccess(ion.newInt(1)),
-                                    scriptLocation = ScriptLocation("input[0]", 1)
+                                    scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 1)
                             ),
-                            scriptLocation = ScriptLocation("input[0]", 7))))
+                            scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 7))))
 
     @Test
     fun skipListMultipleTestsSkipSingle() = assertCompile("""
@@ -291,7 +336,7 @@ class CompilerTest {
                             statement = "SELECT * FROM <<1,2,3>>",
                             environment = emptyStruct,
                             expected = ExpectedSuccess(ion.newInt(1)),
-                            scriptLocation = ScriptLocation("input[0]", 7)),
+                            scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 7)),
 
                     SkippedTestExpression(
                             id = "test1",
@@ -301,9 +346,9 @@ class CompilerTest {
                                     statement = "SELECT * FROM <<1,2,3>>",
                                     environment = emptyStruct,
                                     expected = ExpectedSuccess(ion.newInt(1)),
-                                    scriptLocation = ScriptLocation("input[0]", 1)
+                                    scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 1)
                             ),
-                            scriptLocation = ScriptLocation("input[0]", 13))))
+                            scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 13))))
 
     @Test
     fun skipListMultipleTestsSkipAll() = assertCompile("""
@@ -330,8 +375,8 @@ class CompilerTest {
                                     statement = "SELECT * FROM 1",
                                     environment = emptyStruct,
                                     expected = ExpectedSuccess(ion.newInt(1)),
-                                    scriptLocation = ScriptLocation("input[0]", 1)),
-                            scriptLocation = ScriptLocation("input[0]", 13)),
+                                    scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 1)),
+                            scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 13)),
 
                     SkippedTestExpression(
                             id = "test2",
@@ -341,9 +386,9 @@ class CompilerTest {
                                     statement = "SELECT * FROM 2",
                                     environment = emptyStruct,
                                     expected = ExpectedSuccess(ion.newInt(2)),
-                                    scriptLocation = ScriptLocation("input[0]", 7)
+                                    scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 7)
                             ),
-                            scriptLocation = ScriptLocation("input[0]", 13))))
+                            scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 13))))
 
     @Test
     fun skipListBeforeTest() = assertCompile("""
@@ -364,8 +409,8 @@ class CompilerTest {
                                     statement = "SELECT * FROM 1",
                                     environment = emptyStruct,
                                     expected = ExpectedSuccess(ion.newInt(1)),
-                                    scriptLocation = ScriptLocation("input[0]", 3)),
-                            scriptLocation = ScriptLocation("input[0]", 1))))
+                                    scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 3)),
+                            scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 1))))
 
     @Test
     fun skipListSameTestMultipleTimes() = assertCompile("""
@@ -386,8 +431,8 @@ class CompilerTest {
                                     statement = "SELECT * FROM 1",
                                     environment = emptyStruct,
                                     expected = ExpectedSuccess(ion.newInt(1)),
-                                    scriptLocation = ScriptLocation("input[0]", 3)),
-                            scriptLocation = ScriptLocation("input[0]", 1))))
+                                    scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 3)),
+                            scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 1))))
 
 
     @Test
@@ -413,8 +458,8 @@ class CompilerTest {
                                     statement = "SELECT * FROM 1",
                                     environment = emptyStruct,
                                     expected = ExpectedSuccess(ion.newInt(1)),
-                                    scriptLocation = ScriptLocation("input[0]", 1)),
-                            scriptLocation = ScriptLocation("input[0]", 7))))
+                                    scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 1)),
+                            scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 7))))
 
     @Test
     fun appendTestBeforeTest() = assertCompile("""
@@ -439,8 +484,8 @@ class CompilerTest {
                                     statement = "SELECT * FROM 1",
                                     environment = emptyStruct,
                                     expected = ExpectedSuccess(ion.newInt(1)),
-                                    scriptLocation = ScriptLocation("input[0]", 6)),
-                            scriptLocation = ScriptLocation("input[0]", 1))))
+                                    scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 6)),
+                            scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 1))))
 
     @Test
     fun appendAndSkippedTest() = assertCompile("""
@@ -466,8 +511,8 @@ class CompilerTest {
                                     statement = "SELECT * FROM 1",
                                     environment = emptyStruct,
                                     expected = ExpectedSuccess(ion.newInt(1)),
-                                    scriptLocation = ScriptLocation("input[0]", 8)),
-                            scriptLocation = ScriptLocation("input[0]", 1))))
+                                    scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 8)),
+                            scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 1))))
 
     @Test
     fun appendSkippedTestMultipleTimes() = assertCompile("""
@@ -498,8 +543,8 @@ class CompilerTest {
                                     statement = "SELECT * FROM 1",
                                     environment = emptyStruct,
                                     expected = ExpectedSuccess(ion.newInt(1)),
-                                    scriptLocation = ScriptLocation("input[0]", 13)),
-                            scriptLocation = ScriptLocation("input[0]", 1))))
+                                    scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 13)),
+                            scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 1))))
 
     @Test
     fun appendTestNoTestMatches() = assertCompileError("""
@@ -510,7 +555,7 @@ class CompilerTest {
             """.trimMargin(),
             expectedErrorMessage = """
                 |Errors found when compiling test scripts:
-                |    input[0]:1 - No testId matched the pattern: test1
+                |    $inputBasePath/input[0].sqlts:1 - No testId matched the pattern: test1
             """.trimMargin())
 
     @Test
@@ -542,8 +587,8 @@ class CompilerTest {
                                     statement = "SELECT * FROM 1",
                                     environment = emptyStruct,
                                     expected = ExpectedSuccess(ion.newInt(1)),
-                                    scriptLocation = ScriptLocation("input[0]", 6)),
-                            scriptLocation = ScriptLocation("input[0]", 1)),
+                                    scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 6)),
+                            scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 1)),
                     AppendedTestExpression(
                             id = "test2",
                             additionalData = "{ foo: bar }".toStruct(),
@@ -553,8 +598,8 @@ class CompilerTest {
                                     statement = "SELECT * FROM 2",
                                     environment = emptyStruct,
                                     expected = ExpectedSuccess(ion.newInt(2)),
-                                    scriptLocation = ScriptLocation("input[0]", 12)),
-                            scriptLocation = ScriptLocation("input[0]", 1))))
+                                    scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 12)),
+                            scriptLocation = ScriptLocation("$inputBasePath/input[0].sqlts", 1))))
 
     @Test
     fun appendAppendedTest() = assertCompileError("""
@@ -576,6 +621,6 @@ class CompilerTest {
             """.trimMargin(),
             expectedErrorMessage = """
                 |Errors found when compiling test scripts:
-                |    input[0]:12 - testId: test1 was already appended on input[0]:7
+                |    $inputBasePath/input[0].sqlts:12 - testId: test1 was already appended on $inputBasePath/input[0].sqlts:7
             """.trimMargin())
 }

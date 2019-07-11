@@ -37,18 +37,22 @@ successfully or produce an error:
 Changes the default environment for the current file. The initial default environment is the empty environment.
 
 ```ion
-set_default_environment::<struct, required - new default environment>
+set_default_environment::<struct|string, required - new default environment>
 ```
+
+When `set_default_environment` is a `string` it denotes the relative file path to an ion file that contains 
+the environment.  
 
 ### for
 
-A `for` function contains a `template` and `variableSet`. Each `test` in the template is performed once for 
-each `variableSet` by substituting a `variableSet`'s name/value pairs into corresponding placeholders in a `test`.
+A `for` function contains a `template` and `variable_set`. Each `test` in the template is performed once for 
+each `variable_set` by substituting a `variable_set`'s name/value pairs into corresponding placeholders in 
+the template.
 
 ```ion
 for::{
-    template: <list of tests, required - list of templated PTS functions to be interpolated>,
-    variableSets: <list of structs, required - list of variables used to interpolate the template>,
+    template: <list of tests, required - list of templated PTS tests to be interpolated>,
+    variable_sets: <list of structs, required - list of variables used to interpolate the template>,
 }
 ```
 
@@ -64,7 +68,7 @@ for::{
             expected: (success $expected)
         }
     ],
-    variableSets: [
+    variable_sets: [
         { value: 1, expected: 2 },
         { value: 10, expected: 11 },
     ]

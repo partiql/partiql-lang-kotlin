@@ -17,8 +17,13 @@ data class TestNode(val id: String,
                     val expected: IonSexp,
                     override val scriptLocation: ScriptLocation) : AstNode()
 
-data class SetDefaultEnvironmentNode(val environment: IonStruct,
-                                     override val scriptLocation: ScriptLocation) : AstNode()
+sealed class SetDefaultEnvironmentNode : AstNode()
+
+data class FileSetDefaultEnvironmentNode(val environmentRelativeFilePath: String,
+                                         override val scriptLocation: ScriptLocation) : SetDefaultEnvironmentNode()
+
+data class InlineSetDefaultEnvironmentNode(val environment: IonStruct,
+                                           override val scriptLocation: ScriptLocation) : SetDefaultEnvironmentNode()
 
 data class SkipListNode(val patterns: List<String>, override val scriptLocation: ScriptLocation) : AstNode()
 

@@ -1,0 +1,415 @@
+/*
+ * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ *  You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *      http://aws.amazon.com/apache2.0/
+ *
+ *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ *  language governing permissions and limitations under the License.
+ */
+
+/*
+ * Integers of PartiQL here deviate from the Ion specification because they are limited to 64-bit integers.
+ * However, the Ion specification allows for integers of arbitrary size.
+ */
+set_default_environment::{
+    max_int: 9223372036854775807,
+    min_int: -9223372036854775808,
+    one_tenth_of_max_int: 922337203685477580,
+    one_tenth_of_min_int: -922337203685477580
+}
+
+test::{
+    id: 'negative zero equality',
+    statement: "0 = 0 AND 0 = -0 AND -0 = 0 AND -0 = -0",
+    expected: (success true)
+}
+
+for::{
+    template: [ test::{ id: 'int pass-through', statement: $sql, expected: (success $result) } ],
+    variable_sets: [
+        { sql: "1", result: 1 },
+        { sql: "-1", result: -1 },
+
+        //max 64-bit integer literal
+        { sql: "9223372036854775807",   result: 9223372036854775807     },
+
+        //min 64-bit integer literal
+        { sql: "-9223372036854775808",  result: -9223372036854775808    },
+    ]
+}
+
+for::{
+    template: [ test::{ id: 'int arithmetic', statement: $sql, expected: (success $result) } ],
+    variable_sets: [
+        //Both values positive
+        { sql: "1 + 1", result: 2 },
+        { sql: "1 * 1", result: 1 },
+        { sql: "1 / 1", result: 1 },
+        { sql: "1 - 1", result: 0 },
+
+        { sql: "1 + 2", result: 3 },
+        { sql: "1 * 2", result: 2 },
+        { sql: "1 / 2", result: 0 },
+        { sql: "1 - 2", result: -1 },
+
+        { sql: "10 % 1", result: 0 },
+        { sql: "10 % 2", result: 0 },
+        { sql: "10 % 3", result: 1 },
+        { sql: "10 % 4", result: 2 },
+        { sql: "10 % 6", result: 4 },
+        { sql: "10 % 7", result: 3 },
+        { sql: "10 % 8", result: 2 },
+        { sql: "10 % 9", result: 1 },
+        { sql: "10 % 10", result: 0 },
+        { sql: "10 % 11", result: 10 },
+
+        //Negative lvalue
+        { sql: "-1 + 1", result: 0 },
+        { sql: "-1 * 1", result: -1 },
+        { sql: "-1 / 1", result: -1 },
+        { sql: "-1 - 1", result: -2 },
+
+        { sql: "-1 + 2", result: 1 },
+        { sql: "-1 * 2", result: -2 },
+        { sql: "-1 / 2", result: 0 },
+
+
+        { sql: "-10 % 1", result: 0 },
+        { sql: "-10 % 2", result: 0 },
+        { sql: "-10 % 3", result: -1 },
+        { sql: "-10 % 4", result: -2 },
+        { sql: "-10 % 6", result: -4 },
+        { sql: "-10 % 7", result: -3 },
+        { sql: "-10 % 8", result: -2 },
+        { sql: "-10 % 9", result: -1 },
+        { sql: "-10 % 10", result: 0 },
+        { sql: "-10 % 11", result: -10 },
+
+        //Negative rvalue
+        { sql: "1 + -1", result: 0 },
+        { sql: "1 * -1", result: -1 },
+        { sql: "1 / -1", result: -1 },
+        { sql: "1 - -1", result: 2 },
+
+        { sql: "1 + -2", result: -1 },
+        { sql: "1 * -2", result: -2 },
+        { sql: "1 / -2", result: 0 },
+
+        //Note:  positive result when divisor is negative.
+        //See https://en.wikipedia.org/wiki/Modulo_operation
+        { sql: "10 % -1", result: 0 },
+        { sql: "10 % -2", result: 0 },
+        { sql: "10 % -3", result: 1 },
+        { sql: "10 % -4", result: 2 },
+        { sql: "10 % -6", result: 4 },
+        { sql: "10 % -7", result: 3 },
+        { sql: "10 % -8", result: 2 },
+        { sql: "10 % -9", result: 1 },
+        { sql: "10 % -10", result: 0 },
+        { sql: "10 % -11", result: 10 },
+    ]
+}
+
+for::{
+    template: [ test::{ id: 'int boundary arithmetic', statement: $sql, expected: (success $result) } ],
+    variable_sets: [
+        // Result of arithmetic is max_int
+        { sql: "(max_int - 1) + 1", result: 9223372036854775807 },
+
+        // Result of arithmetic is min_int
+        { sql: "(min_int + 1) - 1", result: -9223372036854775808 },
+    ]
+}
+
+for::{
+    template: [ test::{ id: 'int overflow and underflow conditions', statement: $sql, expected: (error) } ],
+    variable_sets: [
+
+        //attempt to evaluate a literal one higher than the max 64 bit integer
+        { sql: "9223372036854775808",},
+
+        //attempt to evaluate a literal one lower than the min 64 bit integer
+        { sql: "-9223372036854775809",},
+
+        //add exceeds maximum value
+        { sql: "max_int + 1",},
+
+        //add exceeds minmum value
+        { sql: "min_int + -1",},
+
+        //subtract exceeds minimum value
+        { sql: "min_int - 1",},
+        //subtract exceeds maxium value
+        { sql: "max_int - -1",},
+
+        //multiply exceeds maximum value
+        { sql: "one_tenth_of_max_int * 11",},
+        
+        //multiply exceeds minimum value
+        { sql: "one_tenth_of_min_int * -11",},
+
+        //division exceeds maximum value
+        { sql: "min_int / - 1",}
+    ]
+}
+
+for::{
+    template: [ test::{ id: 'divide by zero', statement: $sql, expected: (error) } ],
+    variable_sets: [
+        { sql: "1 / 0", },
+        { sql: "1 % 0" },
+    ]
+}
+
+for::{
+    template: [
+        test::{
+            id: 'equality operator binary relations',
+            statement: '''{
+                'is_reflexive':         (x = x) = (x = x),
+                'is_antisymmetric':     (x = y) = (y = x),
+                'is_transitive':        (x = y) = (y = z) and (x = y) = (x = z)
+            }''',
+            environment: { x: $x, y: $y, z: $z },
+            expected: (success {
+                is_reflexive:       true,
+                is_antisymmetric:   true,
+                is_transitive:      true
+            }),
+        },
+    ],
+
+    variable_sets: [
+        { x: 1, y: 1, z: 1 },
+        { x: 1, y: 2, z: 3 },
+        { x: 3, y: 2, z: 1 },
+
+        { x: -1, y: -1, z: -1 },
+        { x: -1, y: -2, z: -3 },
+        { x: -3, y: -2, z: -1 },
+
+        { x: -1, y: 2, z: 3 },
+        { x: -3, y: 2, z: 1 },
+
+        { x: 1, y: 2, z: -3 },
+        { x: 3, y: 2, z: -1 },
+    ]
+}
+
+for::{
+    template: [
+        test::{
+            id: 'greater than and less than operator binary relations',
+            statement: '''{
+                'gt_is_reflexive':      (x > x) = (x > x),
+                'gt_is_antisymmetric':  (x > y) = (y > x),
+                'gt_is_transitive':     (x > y) = (y > z) and (x > y) = (x > z),
+
+                'lt_is_reflexive':      (x < x) = (x < x),
+                'lt_is_antisymmetric':  (x < y) = (y < x),
+                'lt_is_transitive':     (x < y) = (y < z) and (x < y) = (x < z)
+            }''',
+            environment: { x: $x, y: $y, z: $z },
+            expected: (success {
+                gt_is_reflexive:        true,
+                gt_is_antisymmetric:    false,
+                gt_is_transitive:       true,
+
+                lt_is_reflexive:        true,
+                lt_is_antisymmetric:    false,
+                lt_is_transitive:       true
+            }),
+        },
+    ],
+
+    variable_sets: [
+        //Ascending order
+        { x: -3, y: -2, z: -1 },
+        { x: -2, y: -1, z: 0 },
+        { x: -1, y: 0, z: 1 },
+        { x: 0, y: 1, z: 2 },
+        { x: 1, y: 2, z: 3 },
+
+        //Descending order
+        { x: 3, y: 2, z: 1 },
+        { x: 2, y: 1, z: -0 },
+        { x: 1, y: -0, z: -1 },
+        { x: -0, y: -1, z: -2 },
+        { x: -1, y: -2, z: -3 },
+    ]
+}
+
+//TODO:  test like above but for >= and <=
+
+for::{
+    template: [
+        test::{
+            id: 'equal and not equal',
+            statement: $sql,
+            expected: (success $result),
+        }
+    ],
+    variable_sets: [
+        //Special cases...  Ion specification treats 0 and -0 the same.
+        { sql: "0 = -0", result: true },
+        { sql: "-0 = 0", result: true },
+
+        { sql: "0 = 0", result: true },
+        { sql: "-0 = -0", result: true },
+
+        { sql: "1 = 0", result: false },
+        { sql: "1 = -0", result: false },
+
+        { sql: "1 = 1", result: true },
+        { sql: "-1 = -1", result: true },
+
+        { sql: "max_int = max_int", result: true },
+        { sql: "max_int = min_int", result: false },
+        { sql: "min_int = max_int", result: false },
+        { sql: "min_int = min_int", result: true },
+
+        { sql: "0 <> 0", result: false },
+        { sql: "0 <> -0", result: false },
+        { sql: "-0 <> 0", result: false },
+        { sql: "-0 <> -0", result: false },
+
+        { sql: "1 <> 0", result: true },
+        { sql: "1 <> -0", result: true },
+
+        { sql: "max_int <> max_int", result: false },
+        { sql: "max_int <> min_int", result: true },
+        { sql: "min_int <> max_int", result: true },
+        { sql: "min_int <> min_int", result: false },
+    ]
+}
+
+for::{
+    template: [ test::{ id: 'comparison operators', statement: $sql, expected: (success $result) } ],
+    variable_sets: [
+        //Greater than 0
+        { sql: "1 > 0", result: true },
+        { sql: "1 > 1", result: false },
+        { sql: "0 > 1", result: false },
+        { sql: "0 > 0", result: false },
+
+        //Less than 0
+        { sql: "1 < 0", result: false },
+        { sql: "1 < 1", result: false },
+        { sql: "0 < 1", result: true },
+        { sql: "0 < 0", result: false },
+
+        //Greater than -0
+        { sql: "1   >   -0",  result: true },
+        { sql: "-0  >   1",   result: false },
+        { sql: "-0  >   -0",  result: false },
+
+        //Less than -0
+        { sql: "1   <   -0",  result: false },
+        { sql: "-0  <   1",   result: true },
+        { sql: "-0  <   -0",  result: false },
+
+        //Greater than min_int
+        { sql: "1       > min_int",     result: true },
+        { sql: "min_int > 1",           result: false },
+        { sql: "min_int > min_int",     result: false },
+
+        //Less than min_int
+        { sql: "1       < min_int",     result: false },
+        { sql: "min_int < 1",           result: true },
+        { sql: "min_int < 0",           result: true },
+        { sql: "min_int < -0",          result: true },
+
+        //Greater than max_int
+        { sql: "1       < max_int",     result: true },
+        { sql: "max_int < 1",           result: false },
+        { sql: "max_int < 0",           result: false },
+        { sql: "max_int < -0",          result: false },
+
+
+        //Greater or equal to 0
+        { sql: "1 >= 0", result: true },
+        { sql: "1 >= 1", result: true },
+        { sql: "0 >= 1", result: false },
+        { sql: "0 >= 0", result: true },
+
+        //Less than or equal 0
+        { sql: "1 <= 0", result: false },
+        { sql: "1 <= 1", result: true },
+        { sql: "0 <= 1", result: true },
+        { sql: "0 <= 0", result: true },
+
+        //Greater than or equal -0
+        { sql: "1   >=   -0",  result: true },
+        { sql: "-0  >=   1",   result: false },
+        { sql: "-0  >=   -0",  result: true },
+        { sql: "0   >=   -0",  result: true },
+        { sql: "-0  >=   0",   result: true },
+
+        //Less than or equal -0
+        { sql: "1   <=   -0",  result: false },
+        { sql: "-0  <=   1",   result: true },
+        { sql: "-0  <=   -0",  result: true },
+        { sql: "0   <=   -0",  result: true },
+        { sql: "-0  <=   0",   result: true },
+
+        //Greater than or equal min_int
+        { sql: "1       >= min_int",     result: true },
+        { sql: "min_int >= 1",           result: false },
+        { sql: "min_int >= min_int",     result: true },
+        { sql: "min_int >= 0",           result: false },
+        { sql: "min_int >= -0",          result: false },
+
+        //Less than or equal min_int
+        { sql: "1       <= min_int",     result: false },
+        { sql: "min_int <= 1",           result: true },
+        { sql: "min_int <= 0",           result: true },
+        { sql: "min_int <= -0",          result: true },
+
+        //Greater than or equal max_int
+        { sql: "1       <= max_int",     result: true },
+        { sql: "max_int <= 1",           result: false },
+        { sql: "max_int <= 0",           result: false },
+        { sql: "max_int <= -0",          result: false },
+    ]
+}
+
+for::{
+    template: [ test::{ id: 'leading zeros', statement: $sql, expected: (success $result) } ],
+    variable_sets: [
+                //Leading zeros test
+        { sql: "01", result: 1 },
+        { sql: "001", result: 1 },
+        { sql: "0001", result: 1 },
+        { sql: "00001", result: 1 },
+        { sql: "000001", result: 1 },
+        { sql: "0000001", result: 1 },
+        { sql: "00000001", result: 1 },
+        { sql: "000000001", result: 1 },
+        { sql: "0000000001", result: 1 },
+        { sql: "00000000001", result: 1 },
+        { sql: "000000000001", result: 1 },
+        { sql: "0000000000001", result: 1 },
+        { sql: "00000000000001", result: 1 },
+        { sql: "000000000000001", result: 1 },
+        { sql: "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001", result: 1 },
+
+        { sql: "-01", result: -1 },
+        { sql: "-001", result: -1 },
+        { sql: "-0001", result: -1 },
+        { sql: "-00001", result: -1 },
+        { sql: "-000001", result: -1 },
+        { sql: "-0000001", result: -1 },
+        { sql: "-00000001", result: -1 },
+        { sql: "-000000001", result: -1 },
+        { sql: "-0000000001", result: -1 },
+        { sql: "-00000000001", result: -1 },
+        { sql: "-000000000001", result: -1 },
+        { sql: "-0000000000001", result: -1 },
+        { sql: "-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001", result: -1 },
+    ]
+}
