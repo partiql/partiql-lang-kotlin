@@ -40,8 +40,7 @@ internal fun IonValue.interpolate(variables: IonStruct): IonValue =
 
 private fun IonSequence.foldInterpolating(target: IonSequence, variables: IonStruct) =
         this.fold(target) { acc, el ->
-            val interpolated = el.interpolate(variables)
-            acc.add(interpolated)
+            acc.add(el.interpolate(variables))
             acc
         }
 
