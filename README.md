@@ -1,10 +1,9 @@
 # PartiQL Lang Kotlin
 
-PartiQL is an implementation of [SQL++](http://db.ucsd.edu/wp-content/uploads/pdfs/375.pdf) that uses Amazon 
-[Ion](http://amzn.github.io/ion-docs/) as its underlying type system.  SQL++/PartiQL is based on SQL92 and has 
-added support for working with schemaless hierarchical data.  The support for hierarchical data is different from that 
-of most SQL implementations in that support is directly built into syntax of the language instead of having been 
-"tacked on" with a set of functions.
+This is a Kotlin implementation of [PartiQL specification](https://partiql.org/assets/PartiQL-Specification.pdf).
+PartiQL is based on SQL92 and has added support for working with schemaless hierarchical data. 
+PartiQL’s extensions to SQL are easy to understand, treat nested data as first class citizens and
+compose seamlessly with each other and SQL.
 
 This repository contains an embeddable reference interpreter, test framework, and tests for PartiQL in Kotlin.
 
