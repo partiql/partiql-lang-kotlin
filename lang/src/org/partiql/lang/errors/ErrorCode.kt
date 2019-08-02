@@ -380,6 +380,11 @@ enum class ErrorCode(private val category: ErrorCategory,
             "got: ${errorContext?.get(Property.ACTUAL_ARGUMENT_TYPES) ?: UNKNOWN}"
     },
 
+    EVALUATOR_CONCAT_FAILED_DUE_TO_INCOMPATIBLE_TYPE(
+        ErrorCategory.EVALUATOR,
+        LOCATION + setOf(Property.EXPECTED_ARGUMENT_TYPES, Property.ACTUAL_ARGUMENT_TYPES, Property.FUNCTION_NAME),
+        ""),
+
     /**
      * This is a generic error thrown whenever Java's [DateTimeFormatter] throws an exception when attempting to
      * parse a timestamp.  Ideally, this doesn't happen and the invalidity is detected by
