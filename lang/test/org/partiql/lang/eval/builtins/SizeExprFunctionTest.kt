@@ -21,7 +21,7 @@ import org.partiql.lang.errors.*
 import org.partiql.lang.eval.*
 import org.partiql.lang.util.*
 
-class SizeExprFunctionTest : EvaluatorTestBase() {
+class SizeExprFunctionTest : TestBase() {
     private val subject = SizeExprFunction(valueFactory)
 
     private val env = Environment.standard()
@@ -84,18 +84,6 @@ class SizeExprFunctionTest : EvaluatorTestBase() {
             assertThat(errorContext[Property.EXPECTED_ARGUMENT_TYPES]?.stringValue()).isEqualTo("LIST or BAG or STRUCT")
             assertThat(errorContext[Property.ACTUAL_ARGUMENT_TYPES]?.stringValue()).isEqualTo("INT")
             assertThat(errorContext[Property.FUNCTION_NAME]?.stringValue()).isEqualTo("size")
-        }
-    }
-
-    @Test
-    fun concatFailed() = try {
-        voidEval("'hi' || 1")
-        fail("didn't throw")
-    }
-    catch (e: EvaluationException) {
-        softAssert {
-            assertThat(e.message).isEqualTo("Expected text: 1")
-            assertThat(e.errorCode).isEqualTo(ErrorCode.EVALUATOR_CONCAT_FAILED_DUE_TO_INCOMPATIBLE_TYPE)
         }
     }
 
