@@ -941,7 +941,7 @@ the `projects` array.
 ```
 
 Notice the new feature: `AT o`. While `p` ranges over the elements
-of the array `e.projects`, the variable `o` is assigned tot he index of
+of the array `e.projects`, the variable `o` is assigned to the index of
 the element in the array. The query returns: 
 
 ```{include=tutorial/code/q13.output}
