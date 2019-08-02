@@ -30,7 +30,7 @@ class WriteFileTest {
     private fun String.exprValue() = valueFactory.newFromIonValue(ion.singleValue(this))
     private fun readFile(path: String) = File(dirPath(path)).readText()
 
-    private fun dirPath(fname: String = "") = "/tmp/sqlclitest/$fname"
+    private fun dirPath(fname: String = "") = "/tmp/partiqltest/$fname"
 
     @Before
     fun setUp() {
