@@ -53,7 +53,7 @@ private val formatter = object : BuiltinHelpFormatter(120, 2) {
               |     partiql --query="SELECT * FROM input_data" --output-format=ION_BINARY --input=/logs/log.ion
               |
               |To pipe input data in via stdin:
-              |     cat /logs/log.ion | sqlcli --query="SELECT * FROM input_data" --format=ION_BINARY > output.10n
+              |     cat /logs/log.ion | partiql --query="SELECT * FROM input_data" --format=ION_BINARY > output.10n
               |
               |${super.format(options)}
         """.trimMargin()

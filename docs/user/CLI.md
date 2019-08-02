@@ -16,7 +16,7 @@ The cli can output using PartiQL syntax or Ion using the --output-format option,
      partiql --query="SELECT * FROM input_data" --output-format=ION_BINARY --input=/logs/log.ion
 
 To pipe input data in via stdin:
-     cat /logs/log.ion | sqlcli --query="SELECT * FROM input_data" --format=ION_BINARY > output.10n
+     cat /logs/log.ion | partiql --query="SELECT * FROM input_data" --format=ION_BINARY > output.10n
 
 Option                                Description
 ------                                -----------
@@ -259,7 +259,7 @@ $ ./gradlew :cli:run -q --console=plain --args='-e config.sql'
 Or if you have extracted one of the compressed archives:
 
 ```
-$ ./bin/sqlcli -e config.sql
+$ ./bin/partiql -e config.sql
 ```
 
 Expressions can then use the environment defined by `config.sql`:
