@@ -16,24 +16,24 @@ IonValue myTable = ion.newLoader()
         "{name: \"tim\",  age: 30}\n" +
         "{name: \"mary\", age: 19}\n");
 
-EvaluatingCompiler compiler = new EvaluatingCompiler(ion);
-Expression expression = compiler.compile("SELECT t.name FROM myTable AS t WHERE t.age > 20");
+CompilerPipeline pipeline = CompilerPipeline.standard(ion);
 
-ExprValue boundValue = new IonExprValue(myTable);
+Expression expression = pipeline.compile("SELECT t.name FROM myTable AS t WHERE t.age > 20");
+
+ExprValue boundValue = pipeline.getValueFactory().newFromIonValue(myTable);
 Bindings myGlobalBindings = bindingName -> {
     ExprValue exprValue;
-    if(BindingCase.SENSITIVE.equals(bindingName.getBindingCase())) {
+    if (BindingCase.SENSITIVE.equals(bindingName.getBindingCase())) {
         exprValue = "myTable".equals(bindingName.getName()) ? boundValue : null;
-    }
-    else {
+    } else {
         exprValue = "myTable".equalsIgnoreCase(bindingName.getName()) ? boundValue : null;
     }
     
     return exprValue;
-}; 
+};
 
 EvaluationSession session = EvaluationSession.builder()
-    .globals(myGlobalBindings)
+    .globals(Bindings.lazyBindingsBuilder().addBinding("myTable", () -> boundValue).build())
     .build();
 
 ExprValue exprValue = expression.eval(session);
@@ -42,7 +42,7 @@ IonValue queryResultAsIon = exprValue.getIonValue();
 
 ## Kotlin
 ```kotlin
-val ion: IonSystem = IonSystemBuilder.standard().build()
+val ion = IonSystemBuilder.standard().build()
 
 val myTable: IonValue = ion.newLoader().load("""
         {name: "zoe",  age: 12}
@@ -53,18 +53,13 @@ val myTable: IonValue = ion.newLoader().load("""
         {name: "mary", age: 19}
     """)
 
-val compiler = EvaluatingCompiler(ion)
-val expression = compiler.compile("SELECT t.name FROM myTable AS t WHERE t.age > 20")
+val pipeline = CompilerPipeline.standard(ion)
+val expression = pipeline.compile("SELECT t.name FROM myTable AS t WHERE t.age > 20")
 
-val boundValue: ExprValue = IonExprValue(myTable)
-val session = EvaluationSession.build {
-    globals(Bindings.over { bindingName ->
-        when (bindingName.bindingCase) {
-            BindingCase.SENSITIVE   -> if (bindingName.name == "myTable") boundValue else null 
-            BindingCase.INSENSITIVE -> if (bindingName.name.equals("myTable", ignoreCase = false)) boundValue else null
-        }
-    })
-}
+val boundValue = pipeline.valueFactory.newFromIonValue(myTable)
+val session = EvaluationSession.builder()
+    .globals(Bindings.buildLazyBindings { addBinding("myTable") { boundValue } })
+    .build()
 
 val exprValue = expression.eval(session)
 val queryResultAsIon = exprValue.ionValue
