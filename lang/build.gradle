@@ -19,12 +19,11 @@ plugins {
     id 'java-library'
     // https://docs.gradle.org/5.0/userguide/publishing_maven.html#header
     id 'maven-publish'
+    id 'org.jetbrains.dokka' version '0.9.18'
     id 'org.jetbrains.kotlin.jvm'
     id 'io.gitlab.arturbosch.detekt'
-    id "signing"
+    id 'signing'
 }
-
-
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
     kotlinOptions {
@@ -50,14 +49,20 @@ dependencies {
     testImplementation project(':testscript')
 }
 
-tasks.register('sourcesJar', Jar) {
-    from(sourceSets.main.allJava)
-    classifier = 'sources'
+dokka {
+    outputFormat = "html"
+    outputDirectory = "$buildDir/javadoc"
+    //todo: includes = ["path/to/module.md"]
 }
 
-tasks.register('javadocJar', Jar) {
-    from(tasks.javadoc)
-    classifier = 'javadoc'
+task sourcesJar(type: Jar) {
+    from "src"
+    classifier = "sources"
+}
+
+task javadocJar(type: Jar) {
+    from dokka
+    classifier = "javadoc"
 }
 
 publishing {
@@ -71,9 +76,9 @@ publishing {
             artifact javadocJar
 
             pom {
-                name = "PartiQL-Lang-Kotlin"
+                name = "PartiQL Lang Kotlin"
                 packaging = "jar"
-                url = "https://github.com/amzn/ion-schema-kotlin"
+                url = "https://partiql.org/"
                 description = "An implementation of PartiQL for the JVM written in Kotlin."
                 scm {
                     connection = "scm:git@github.com:partiql/partiql-lang-kotlin.git"
@@ -89,7 +94,7 @@ publishing {
                 developers {
                     developer {
                         name = "Amazon Ion Team"
-                        email = "partiql-community@amazon.com"
+                        email = "ion-team@amazon.com"
                         organization = "PartiQL"
                         organizationUrl = "https://github.com/partiql"
                     }
@@ -108,24 +113,13 @@ publishing {
     }
 }
 
-// The below enables developers and CI servers who do not have the GPG keys needed for signing to build locally,
-// while also signing release builds.
-// Signatures are only required when publishing to maven central anyway. We may need a more sophisticated means of
-// determining if we should sign the build artifacts someday, but this should suffice for now.
-if(!version.endsWith("SNAPSHOT")) {
-    println("""
-*******************************************************************************
-Note: 
+signing {
+    // Allow publishing to maven local even if we don't have the signing keys
+    // This works because when not required, the signing task will be skipped
+    // if signing.keyId, signing.password, signing.secretKeyRingFile, etc are
+    // not present in gradle.properties.
+    required { !gradle.taskGraph.hasTask(":lang:publishToMavenLocal") }
 
-The build artifacts will be signed because this is NOT a SNAPSHOT version. 
-Signing will fail if you have not configured a ~/.gradle/gradle.properties 
-file with the correct values.  
-*******************************************************************************
-""")
-
-    signing {
-        sign publishing.publications.maven
-    }
+    sign publishing.publications.maven
 }
-
 
