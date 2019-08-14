@@ -21,10 +21,11 @@ plugins {
     id 'maven-publish'
     id 'org.jetbrains.kotlin.jvm'
     id 'io.gitlab.arturbosch.detekt'
+
+    id "signing"
 }
 
-version = '0.1.0'
-group = 'org.partiql.lang'
+
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
     kotlinOptions {
@@ -62,16 +63,70 @@ tasks.register('javadocJar', Jar) {
 
 publishing {
     publications {
-        create('maven', MavenPublication) {
-            artifactId = 'partiql-lang-kotlin'
+        maven(MavenPublication) {
+            // group id and version are set in the root build.gradle for all projects.
+            artifactId = "partiql-lang-kotlin"
 
-            from(components['java'])
-            artifact(tasks['sourcesJar'])
-            artifact(tasks['javadocJar'])
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+
+            pom {
+                name = "PartiQL-Lang-Kotlin"
+                packaging = "jar"
+                url = "https://github.com/amzn/ion-schema-kotlin"
+                description = "An implementation of PartiQL for the JVM written in Kotlin."
+                scm {
+                    connection = "scm:git@github.com:partiql/partiql-lang-kotlin.git"
+                    developerConnection = "scm:git@github.com:partiql/partiql-lang-kotlin.git"
+                    url = "git@github.com:partiql/partiql-lang-kotlin.git"
+                }
+                licenses {
+                    license {
+                        name = "The Apache License, Version 2.0"
+                        url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                    }
+                }
+                developers {
+                    developer {
+                        name = "Amazon Ion Team"
+                        email = "partiql-community@amazon.com"
+                        organization = "PartiQL"
+                        organizationUrl = "https://github.com/partiql"
+                    }
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            url "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+            credentials {
+                username ossrhUsername
+                password ossrhPassword
+            }
         }
     }
 }
 
+// The below enables developers and CI servers who do not have the GPG keys needed for signing to build locally,
+// while also signing release builds.
+// Signatures are only required when publishing to maven central anyway. We may need a more sophisticated means of
+// determining if we should sign the build artifacts someday, but this should suffice for now.
+if(!version.endsWith("SNAPSHOT")) {
+    println("""
+*******************************************************************************
+Note: 
 
+The build artifacts will be signed because this is NOT a SNAPSHOT version. 
+Signing will fail if you have not configured a ~/.gradle/gradle.properties 
+file with the correct values.  
+*******************************************************************************
+""")
+
+    signing {
+        sign publishing.publications.maven
+    }
+}
 
 
