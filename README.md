@@ -1,7 +1,7 @@
 # PartiQL Lang Kotlin
 
 This is a Kotlin implementation of the [PartiQL specification](https://partiql.org/assets/PartiQL-Specification.pdf).
-PartiQL is based on SQL92 and has added support for working with schemaless hierarchical data. 
+PartiQL is based on SQL-92 and has added support for working with schemaless hierarchical data. 
 PartiQL’s extensions to SQL are easy to understand, treat nested data as first class citizens and
 compose seamlessly with each other and SQL.
 
@@ -17,7 +17,7 @@ PartiQL should be considered to be in "preview" status. It has been in use withi
 
 ## Using In Your Project
 
-This project is published to [Maven Central](https://search.maven.org/).
+This project is published to [Maven Central](https://search.maven.org/artifact/org.partiql/partiql-lang-kotlin/0.1.0/jar).
 
 | Group ID | Artifact ID | Recommended Version |
 |----------|-------------|---------------------| 
