@@ -27,7 +27,7 @@ allprojects {
 
 subprojects {
     group = 'org.partiql'
-    version = '0.1.0-SNAPSHOT'
+    version = '0.1.0'
 }
 
 buildDir = new File(rootProject.projectDir, "gradle-build/" + project.name)
