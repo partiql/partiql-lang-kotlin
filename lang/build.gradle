@@ -19,12 +19,11 @@ plugins {
     id 'java-library'
     // https://docs.gradle.org/5.0/userguide/publishing_maven.html#header
     id 'maven-publish'
+    id 'org.jetbrains.dokka' version '0.9.18'
     id 'org.jetbrains.kotlin.jvm'
     id 'io.gitlab.arturbosch.detekt'
+    id 'signing'
 }
-
-version = '0.1.0'
-group = 'org.partiql.lang'
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
     kotlinOptions {
@@ -50,28 +49,77 @@ dependencies {
     testImplementation project(':testscript')
 }
 
-tasks.register('sourcesJar', Jar) {
-    from(sourceSets.main.allJava)
-    classifier = 'sources'
+dokka {
+    outputFormat = "html"
+    outputDirectory = "$buildDir/javadoc"
+    //todo: includes = ["path/to/module.md"]
 }
 
-tasks.register('javadocJar', Jar) {
-    from(tasks.javadoc)
-    classifier = 'javadoc'
+task sourcesJar(type: Jar) {
+    from "src"
+    classifier = "sources"
+}
+
+task javadocJar(type: Jar) {
+    from dokka
+    classifier = "javadoc"
 }
 
 publishing {
     publications {
-        create('maven', MavenPublication) {
-            artifactId = 'partiql-lang-kotlin'
+        maven(MavenPublication) {
+            // group id and version are set in the root build.gradle for all projects.
+            artifactId = "partiql-lang-kotlin"
 
-            from(components['java'])
-            artifact(tasks['sourcesJar'])
-            artifact(tasks['javadocJar'])
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+
+            pom {
+                name = "PartiQL Lang Kotlin"
+                packaging = "jar"
+                url = "https://partiql.org/"
+                description = "An implementation of PartiQL for the JVM written in Kotlin."
+                scm {
+                    connection = "scm:git@github.com:partiql/partiql-lang-kotlin.git"
+                    developerConnection = "scm:git@github.com:partiql/partiql-lang-kotlin.git"
+                    url = "git@github.com:partiql/partiql-lang-kotlin.git"
+                }
+                licenses {
+                    license {
+                        name = "The Apache License, Version 2.0"
+                        url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                    }
+                }
+                developers {
+                    developer {
+                        name = "Amazon Ion Team"
+                        email = "ion-team@amazon.com"
+                        organization = "PartiQL"
+                        organizationUrl = "https://github.com/partiql"
+                    }
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            url "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+            credentials {
+                username ossrhUsername
+                password ossrhPassword
+            }
         }
     }
 }
 
+signing {
+    // Allow publishing to maven local even if we don't have the signing keys
+    // This works because when not required, the signing task will be skipped
+    // if signing.keyId, signing.password, signing.secretKeyRingFile, etc are
+    // not present in gradle.properties.
+    required { !gradle.taskGraph.hasTask(":lang:publishToMavenLocal") }
 
-
+    sign publishing.publications.maven
+}
 

@@ -25,9 +25,9 @@ allprojects {
     }
 }
 
-
 subprojects {
-    version = '0.1.0'
+    group = 'org.partiql'
+    version = '0.1.0-SNAPSHOT'
 }
 
 buildDir = new File(rootProject.projectDir, "gradle-build/" + project.name)
@@ -48,7 +48,6 @@ configure(subprojects.findAll { it.name != 'example' }) {
         }
     }
 }
-
 
 subprojects {
     plugins.withId('java', { _ ->
