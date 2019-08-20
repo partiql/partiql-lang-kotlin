@@ -13,7 +13,10 @@ The easiest way to get started with PartiQL is to clone this repository locally,
 
 ## Status
 
-PartiQL should be considered to be in "preview" status. It has been in use within a number of Amazon internal systems and an AWS product for over one year. The behavior of the language itself is mostly stable however the public API of the interpreter is slated to undergo significant improvements in the near term. (See the GitHub issues list for details.)a
+PartiQL should be considered to be in "preview" status. It has been in use within a number of Amazon internal 
+systems and an AWS product for over one year. The behavior of the language itself is mostly stable however 
+the public API of the interpreter is slated to undergo significant improvements in the near term. (See the 
+GitHub issues list for details.)
 
 ## Using In Your Project
 
@@ -34,7 +37,7 @@ For Maven builds, add this to your `pom.xml`:
 </dependency>
 ```
 
-For Gradle builds, add this to your `build.gradle`:
+For Gradle 5 and later, add this to your `build.gradle`:
 
 ```
 repositories {
