@@ -10,15 +10,43 @@ This repository contains an embeddable reference interpreter, test framework, an
 The easiest way to get started with PartiQL is to clone this repository locally, build, then 
 [run the REPL](./docs/user/CLI.md).
 
+
 ## Status
 
-PartiQL should be considered to be in "preview" status.  It has been in use within a number of Amazon
-internal systems and an AWS product for over one year.  The behavior of the language itself is mostly stable 
-however the public API of the interpreter is slated to undergo significant improvements in the near term.
-(See the GitHub issues list for details.)
+PartiQL should be considered to be in "preview" status: while the behavior of the language itself is stable,  the public API of the interpreter is slated to undergo significant improvements in the near term.  (See the GitHub issues list for details.)
 
-After the public API has been improved it will be released to Maven Central and will be available for general
-production use.
+## Using In Your Project
+
+This project is published to [Maven Central](https://search.maven.org/).
+
+| Group ID | Artifact ID | Recommended Version |
+|----------|-------------|---------------------| 
+| `org.partiql` | `partiql-lang-kotlin` | `0.1.0`
+
+
+For Maven builds, add this to your `pom.xml`:
+
+```
+<dependency>
+  <groupId>org.partiql</groupId>
+  <artifactId>partiql-lang-kotlin</artifactId>
+  <version>{version}</version>
+</dependency>
+```
+
+For Gradle builds, add this to your `build.gradle`:
+
+```
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation "org.partiql:partiql-lang-kotlin:{version}"
+}
+```
+
+Be sure to replace `{version}` with the desired version.
 
 ## Building
 
