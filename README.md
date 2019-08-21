@@ -1,9 +1,13 @@
+
+
 # PartiQL Lang Kotlin
 
 This is a Kotlin implementation of the [PartiQL specification](https://partiql.org/assets/PartiQL-Specification.pdf).
-PartiQL is based on SQL92 and has added support for working with schemaless hierarchical data. 
+PartiQL is based on SQL-92 and has added support for working with schemaless hierarchical data. 
 PartiQL’s extensions to SQL are easy to understand, treat nested data as first class citizens and
 compose seamlessly with each other and SQL.
+
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.partiql/partiql-lang-kotlin/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.partiql/partiql-lang-kotlin)
 
 This repository contains an embeddable reference interpreter, test framework, and tests for PartiQL in Kotlin.
 
@@ -12,13 +16,43 @@ The easiest way to get started with PartiQL is to clone this repository locally,
 
 ## Status
 
-PartiQL should be considered to be in "preview" status.  It has been in use within a number of Amazon
-internal systems and an AWS product for over one year.  The behavior of the language itself is mostly stable 
-however the public API of the interpreter is slated to undergo significant improvements in the near term.
-(See the GitHub issues list for details.)
+PartiQL should be considered to be in "preview" status. It has been in use within a number of Amazon internal 
+systems and an AWS product for over one year. The behavior of the language itself is mostly stable however 
+the public API of the interpreter is slated to undergo significant improvements in the near term. (See the 
+GitHub issues list for details.)
 
-After the public API has been improved it will be released to Maven Central and will be available for general
-production use.
+## Using In Your Project
+
+This project is published to [Maven Central](https://search.maven.org/artifact/org.partiql/partiql-lang-kotlin/0.1.0/jar).
+
+| Group ID | Artifact ID | Recommended Version |
+|----------|-------------|---------------------| 
+| `org.partiql` | `partiql-lang-kotlin` | `0.1.0`
+
+
+For Maven builds, add this to your `pom.xml`:
+
+```
+<dependency>
+  <groupId>org.partiql</groupId>
+  <artifactId>partiql-lang-kotlin</artifactId>
+  <version>{version}</version>
+</dependency>
+```
+
+For Gradle 5 and later, add this to your `build.gradle`:
+
+```
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation "org.partiql:partiql-lang-kotlin:{version}"
+}
+```
+
+Be sure to replace `{version}` with the desired version.
 
 ## Building
 
