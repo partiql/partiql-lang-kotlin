@@ -1,4 +1,3 @@
-![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.partiql/partiql-lang-kotlin/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.partiql/partiql-lang-kotlin)
 
 
 # PartiQL Lang Kotlin
@@ -8,11 +7,12 @@ PartiQL is based on SQL-92 and has added support for working with schemaless hie
 PartiQL’s extensions to SQL are easy to understand, treat nested data as first class citizens and
 compose seamlessly with each other and SQL.
 
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.partiql/partiql-lang-kotlin/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.partiql/partiql-lang-kotlin)
+
 This repository contains an embeddable reference interpreter, test framework, and tests for PartiQL in Kotlin.
 
 The easiest way to get started with PartiQL is to clone this repository locally, build, then 
 [run the REPL](./docs/user/CLI.md).
-
 
 ## Status
 
