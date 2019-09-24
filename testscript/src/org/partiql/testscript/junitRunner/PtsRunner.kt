@@ -43,35 +43,41 @@ class PtsRunner(private val testClass: Class<*>) : Runner() {
             .toList()
 
     private val ast = parser.parse(ionDocs)
-    private val testExpressions = compiler.compile(ast) 
+    private val testExpressions = compiler.compile(ast)
 
-    override fun run(notifier: RunNotifier) = try {
-        val testResults = evaluator.evaluate(testExpressions)
-
-        testResults.forEach {
-            val testDescription = Description.createTestDescription(
-                    testClass, 
+    override fun run(notifier: RunNotifier) {
+        testExpressions.forEach { testExp ->
+            val testResults = evaluator.evaluate(listOf(testExp))
+            testResults.forEach {
+                val testDescription = Description.createTestDescription(
+                    testClass,
                     "${it.test.scriptLocation} ${it.test.id}")
 
-            notifier.fireTestStarted(testDescription)
+                notifier.fireTestStarted(testDescription)
+                try {
 
-            when (it) {
-                is TestResultSuccess -> notifier.fireTestFinished(testDescription)
-                is TestFailure -> {
-                    val errorMessage = """
-                        |Test failed: ${it.test.scriptLocation} - ${it.test.id} 
-                        |Expected: ${it.test.expectedMessage()}
-                        |  Actual: ${it.actualResult} 
-                    """.trimMargin()
+                    when (it) {
+                        is TestResultSuccess -> { /* intentionally blank */
+                        }
+                        is TestFailure -> {
+                            val errorMessage = """
+                            |Test failed: ${it.test.scriptLocation} - ${it.test.id} 
+                            |Expected: ${it.test.expectedMessage()}
+                            |  Actual: ${it.actualResult} 
+                        """.trimMargin()
 
-                    notifier.fireTestFailure(Failure(testDescription, AssertionError(errorMessage)))
+                            notifier.fireTestFailure(Failure(testDescription, AssertionError(errorMessage)))
+                        }
+                    }
+                }
+                catch (e: Exception) {
+                    notifier.fireTestFailure(Failure(description, e))
+                }
+                finally {
+                    notifier.fireTestFinished(testDescription)
                 }
             }
         }
-    } catch (e: Exception) {
-        notifier.fireTestFailure(Failure(description, e))
-
-        throw e
     }
 
     override fun getDescription(): Description {

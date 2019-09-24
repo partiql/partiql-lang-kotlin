@@ -1,0 +1,7 @@
+
+test::{
+    id: 'substring valid cases 2 arguments with FROM syntax',
+    statement: "substring('foo', 1)",
+    expected: (success "oo")
+}
+
