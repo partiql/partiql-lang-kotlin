@@ -382,8 +382,12 @@ enum class ErrorCode(private val category: ErrorCategory,
 
     EVALUATOR_CONCAT_FAILED_DUE_TO_INCOMPATIBLE_TYPE(
         ErrorCategory.EVALUATOR,
-        LOCATION + setOf(Property.EXPECTED_ARGUMENT_TYPES, Property.ACTUAL_ARGUMENT_TYPES, Property.FUNCTION_NAME),
-        ""),
+        LOCATION + setOf(Property.ACTUAL_ARGUMENT_TYPES),
+        "Incorrect type of arguments for operator '||'") {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String = 
+            "Incorrect type of arguments for operator '||', expected STRING or SYMBOL got " +
+            "${errorContext?.get(Property.ACTUAL_ARGUMENT_TYPES)}" 
+    },
 
     /**
      * This is a generic error thrown whenever Java's [DateTimeFormatter] throws an exception when attempting to

@@ -15,24 +15,48 @@
 package org.partiql.lang.eval.builtins
 
 import org.junit.*
-import com.amazon.ion.*
-import org.partiql.lang.*
 import org.partiql.lang.errors.*
+import org.partiql.lang.errors.ErrorCode.*
+import org.partiql.lang.errors.Property.*
 import org.partiql.lang.eval.*
-import org.partiql.lang.util.*
+import org.partiql.lang.eval.ExprValueType.*
 
 class ConcatEvaluationTest : EvaluatorTestBase() {
-    private val env = Environment.standard()
+    private val argumentTypeMap = mapOf(ACTUAL_ARGUMENT_TYPES to listOf(STRING, SYMBOL).toString())
 
     @Test
-    fun concatFailed() = try {
-        voidEval("'hi' || 1")
-        fail("didn't throw")
-    }
-    catch (e: EvaluationException) {
-        softAssert {
-            assertThat(e.message).isEqualTo("Expected text: 1")
-            assertThat(e.errorCode).isEqualTo(ErrorCode.EVALUATOR_CONCAT_FAILED_DUE_TO_INCOMPATIBLE_TYPE)
-        }
-    }
+    fun concatWrongLeftType() = 
+        checkInputThrowingEvaluationException("1 || 'a'",
+                                              EVALUATOR_CONCAT_FAILED_DUE_TO_INCOMPATIBLE_TYPE,
+                                              sourceLocationProperties(1, 3) +
+                                              mapOf(ACTUAL_ARGUMENT_TYPES to listOf(INT, STRING).toString()))
+
+    @Test
+    fun concatWrongRightType() =
+        checkInputThrowingEvaluationException("'a' || 1",
+                                              EVALUATOR_CONCAT_FAILED_DUE_TO_INCOMPATIBLE_TYPE,
+                                              sourceLocationProperties(1, 5) +
+                                              mapOf(ACTUAL_ARGUMENT_TYPES to listOf(STRING, INT).toString()))
+
+    @Test
+    fun concatWrongBothTypes() =
+        checkInputThrowingEvaluationException("{} || `2010T`",
+                                              EVALUATOR_CONCAT_FAILED_DUE_TO_INCOMPATIBLE_TYPE,
+                                              sourceLocationProperties(1, 4) +
+                                              mapOf(ACTUAL_ARGUMENT_TYPES to listOf(STRUCT, TIMESTAMP).toString()))
+
+    @Test
+    fun strings() = assertEval("'a' || 'b'", "\"ab\"")
+
+    @Test
+    fun symbols() = assertEval("`'a'` || `'b'`", "\"ab\"")
+
+    @Test
+    fun stringAndSymbols() = assertEval("'a' || `'b'`", "\"ab\"")
+
+    @Test
+    fun nullAndString() = assertEval("null || 'b'", "null")
+
+    @Test
+    fun missingAndString() = assertEval("missing || 'b'", "null")
 }
