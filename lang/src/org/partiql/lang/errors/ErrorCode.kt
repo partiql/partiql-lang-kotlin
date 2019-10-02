@@ -14,6 +14,7 @@
 
 package org.partiql.lang.errors
 
+import org.partiql.lang.eval.*
 import org.partiql.lang.syntax.*
 
 /** Property Set constants used in [ErrorCode] */
@@ -384,9 +385,10 @@ enum class ErrorCode(private val category: ErrorCategory,
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.ACTUAL_ARGUMENT_TYPES),
         "Incorrect type of arguments for operator '||'") {
-        override fun getErrorMessage(errorContext: PropertyValueMap?): String = 
-            "Incorrect type of arguments for operator '||', expected STRING or SYMBOL got " +
-            "${errorContext?.get(Property.ACTUAL_ARGUMENT_TYPES)}" 
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "Incorrect type of arguments for operator '||', " +
+            "expected one of ${ExprValueType.values().filter { it.isText }} " +
+            "got ${errorContext?.get(Property.ACTUAL_ARGUMENT_TYPES)}" 
     },
 
     /**

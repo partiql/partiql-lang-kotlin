@@ -518,13 +518,12 @@ internal class EvaluatingCompiler(
     private fun compileNAryStringConcat(
         argThunks: List<ThunkEnv>,
         metas: MetaContainer): ThunkEnv {
-        val validTypes = setOf(STRING, SYMBOL)
         
         return thunkFold(valueFactory.nullValue, metas, argThunks) { lValue, rValue ->
             val lType = lValue.type
             val rType = rValue.type
             
-            if(validTypes.containsAll(listOf(lType, rType))) {
+            if(lType.isText && rType.isText) {
                 // null/missing propagation is handled before getting here
                 (lValue.stringValue() + rValue.stringValue()).exprValue()    
             }
