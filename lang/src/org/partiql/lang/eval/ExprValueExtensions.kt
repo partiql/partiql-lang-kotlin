@@ -77,7 +77,7 @@ fun ExprValue.numberValue(): Number =
 fun ExprValue.timestampValue(): Timestamp =
     scalar.timestampValue() ?: errNoContext("Expected timestamp: $ionValue", internal = false)
 
-fun ExprValue.stringValue(): String =
+fun ExprValue.stringValue(): String = 
     scalar.stringValue() ?: errNoContext("Expected text: $ionValue", internal = false)
 
 fun ExprValue.bytesValue(): ByteArray =

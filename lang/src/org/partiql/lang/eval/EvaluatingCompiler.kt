@@ -19,7 +19,9 @@ import com.amazon.ion.*
 import org.partiql.lang.ast.*
 import org.partiql.lang.ast.passes.*
 import org.partiql.lang.errors.*
+import org.partiql.lang.eval.ExprValueType.*
 import org.partiql.lang.eval.binding.*
+import org.partiql.lang.eval.isUnknown
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.*
 import java.math.*
@@ -516,8 +518,24 @@ internal class EvaluatingCompiler(
     private fun compileNAryStringConcat(
         argThunks: List<ThunkEnv>,
         metas: MetaContainer): ThunkEnv {
+        
         return thunkFold(valueFactory.nullValue, metas, argThunks) { lValue, rValue ->
-            (lValue.stringValue() + rValue.stringValue()).exprValue()
+            val lType = lValue.type
+            val rType = rValue.type
+            
+            if(lType.isText && rType.isText) {
+                // null/missing propagation is handled before getting here
+                (lValue.stringValue() + rValue.stringValue()).exprValue()    
+            }
+            else {
+                err(
+                    "Wrong argument type for ||",
+                    ErrorCode.EVALUATOR_CONCAT_FAILED_DUE_TO_INCOMPATIBLE_TYPE,
+                    errorContextFrom(metas).also { 
+                        it[Property.ACTUAL_ARGUMENT_TYPES] = listOf(lType, rType).toString()
+                    },
+                    internal = false)
+            }
         }
     }
 

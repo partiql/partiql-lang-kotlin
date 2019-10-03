@@ -14,6 +14,7 @@
 
 package org.partiql.lang.errors
 
+import org.partiql.lang.eval.*
 import org.partiql.lang.syntax.*
 
 /** Property Set constants used in [ErrorCode] */
@@ -378,6 +379,16 @@ enum class ErrorCode(private val category: ErrorCategory,
             "Invalid argument types for ${errorContext?.get(Property.FUNCTION_NAME) ?: UNKNOWN}, " +
             "expected: ${errorContext?.get(Property.EXPECTED_ARGUMENT_TYPES) ?: UNKNOWN} " +
             "got: ${errorContext?.get(Property.ACTUAL_ARGUMENT_TYPES) ?: UNKNOWN}"
+    },
+
+    EVALUATOR_CONCAT_FAILED_DUE_TO_INCOMPATIBLE_TYPE(
+        ErrorCategory.EVALUATOR,
+        LOCATION + setOf(Property.ACTUAL_ARGUMENT_TYPES),
+        "Incorrect type of arguments for operator '||'") {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "Incorrect type of arguments for operator '||', " +
+            "expected one of ${ExprValueType.values().filter { it.isText }} " +
+            "got ${errorContext?.get(Property.ACTUAL_ARGUMENT_TYPES)}" 
     },
 
     /**
