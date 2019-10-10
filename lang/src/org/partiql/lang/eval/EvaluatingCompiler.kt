@@ -181,8 +181,7 @@ internal class EvaluatingCompiler(
             rewriter.rewriteExprNode(intermediateAst)
         }
 
-        val walker = AstWalker(AstSanityVisitor())
-        walker.walk(rewrittenAst)
+        AstSanityValidator.validate(rewrittenAst)
 
         val thunk = nestCompilationContext(ExpressionContext.NORMAL) {
             compileExprNode(rewrittenAst)

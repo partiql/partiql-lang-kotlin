@@ -16,7 +16,6 @@ package org.partiql.lang.ast.passes
 
 import org.partiql.lang.ast.*
 
-
 /**
  * Used in conjunction with [AstWalker], implementors of this interface can easily inspect an AST.
  *
@@ -28,8 +27,8 @@ import org.partiql.lang.ast.*
  *
  *  One `visit*` function is included for each base type in the AST.
  */
+@Deprecated("Use AstNode#iterator() or AstNode#children()")
 interface AstVisitor {
-
     /**
      * Invoked by [AstWalker] for every instance of [ExprNode] encountered.
      *
@@ -91,6 +90,7 @@ interface AstVisitor {
  * implementations to java.  (Or at least that feature is currently
  * experimental.)
  */
+@Deprecated("Use AstNode#iterator() or AstNode#children()")
 open class AstVisitorBase : AstVisitor {
         override fun visitExprNode(expr: ExprNode) {
             // Default implementation does nothing.

@@ -185,7 +185,7 @@ data class Typed(
     val type: DataType,
     override val metas: MetaContainer
 ) : ExprNode() {
-    override val children: List<AstNode> = listOf(expr)
+    override val children: List<AstNode> = listOf(expr, type)
 }
 
 //********************************
@@ -284,7 +284,9 @@ data class Select(
 data class SymbolicName(
     val name: String,
     override val metas: MetaContainer
-) : HasMetas
+) : AstNode(), HasMetas {
+    override val children: List<AstNode> = listOf()
+}
 
 /**
  * A path component can be:
@@ -424,7 +426,13 @@ data class SelectListItemStar(override val metas: MetaContainer) : SelectListIte
  *   Note: a `CROSS JOIN` is modeled as an `INNER JOIN` with a condition of `true`.
  *   Note: `FromSource`s that are separated by commas are modeled as an INNER JOIN with a condition of `true`.
  */
-sealed class FromSource : AstNode()
+sealed class FromSource : AstNode() {
+    fun metas(): MetaContainer = when(this) {
+        is FromSourceExpr    -> this.expr.metas
+        is FromSourceJoin    -> this.metas
+        is FromSourceUnpivot -> this.expr.metas
+    }
+}
 
 /** Represents `<expr> [AS <correlation>]` within a FROM clause. */
 data class FromSourceExpr(
@@ -464,13 +472,6 @@ data class FromSourceUnpivot(
     
     override val children: List<AstNode> = listOf(expr)
 }
-
-fun FromSource.metas() =
-    when(this) {
-        is FromSourceExpr    -> this.expr.metas
-        is FromSourceJoin    -> this.metas
-        is FromSourceUnpivot -> this.expr.metas
-    }
 
 /** For `GROUP [ PARTIAL ] BY <item>... [ GROUP AS <gropuName> ]`. */
 data class GroupBy(
@@ -534,7 +535,9 @@ data class DataType(
     val sqlDataType: SqlDataType,
     val args: List<Long>,
     override val metas: MetaContainer
-) : HasMetas
+) : AstNode(), HasMetas {
+    override val children: List<AstNode> = listOf()
+}
 
 //********************************
 // Node attributes

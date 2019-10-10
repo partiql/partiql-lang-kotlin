@@ -30,12 +30,14 @@ import kotlin.test.*
 @RunWith(JUnitParamsRunner::class)
 class AstWalkerTests {
 
+    // these tests are duplicated on AstNodeTest but kept here until we delete AstWalker
+    
     companion object {
 
         /** A dummy visitor that simply appends the type name of each node to a StringBuilder to that
          * a "trace" of every node can be recorded. */
         class TestVisitor : AstVisitor {
-            val walkTrace = StringBuilder()
+            private val walkTrace = StringBuilder()
 
             override fun visitExprNode(expr: ExprNode) {
                 appendNodeType(expr)
