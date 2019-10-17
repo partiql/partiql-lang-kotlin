@@ -19,11 +19,9 @@ import org.partiql.lang.ast.*
 import org.partiql.lang.errors.*
 import org.junit.*
 
-// these tests are duplicated on AstSanityValidator but kept here until we delete AstSanityVisitor 
-class AstSanityVisitorTests : TestBase() {
+class AstSanityValidatorTests : TestBase() {
     private val dummyMetas = metaContainerOf()
 
-    private val visitor = AstSanityVisitor()
     private fun litInt(value: Int) = Literal(ion.newInt(value), dummyMetas)
 
     @Test
@@ -34,14 +32,14 @@ class AstSanityVisitorTests : TestBase() {
                 listOf(litInt(1), litInt(2)),
                 dummyMetas)
 
-        assertThrowsSqlException(ErrorCode.SEMANTIC_INCORRECT_NODE_ARITY) { visitor.visitExprNode(expr) }
+        assertThrowsSqlException(ErrorCode.SEMANTIC_INCORRECT_NODE_ARITY) { AstSanityValidator.validate(expr) }
     }
 
     @Test
     fun dataTypeArity_incorrect() {
         // Can't use the parser to more easily construct an AST here because it will never give us invalid arity.
         val dataType = DataType(SqlDataType.FLOAT, listOf(1, 2), dummyMetas)
-        assertThrowsSqlException(ErrorCode.SEMANTIC_INCORRECT_NODE_ARITY) { visitor.visitDataType(dataType) }
+        assertThrowsSqlException(ErrorCode.SEMANTIC_INCORRECT_NODE_ARITY) { AstSanityValidator.validate(dataType) }
     }
 
     @Test
@@ -54,7 +52,7 @@ class AstSanityVisitorTests : TestBase() {
                     SelectListItemStar(dummyMetas),
                     SelectListItemStar(dummyMetas)))
 
-        assertThrowsSqlException(ErrorCode.SEMANTIC_ASTERISK_USED_WITH_OTHER_ITEMS) { visitor.visitSelectProjection(projection) }
+        assertThrowsSqlException(ErrorCode.SEMANTIC_ASTERISK_USED_WITH_OTHER_ITEMS) { AstSanityValidator.validate(projection) }
     }
 
     @Test
@@ -67,14 +65,14 @@ class AstSanityVisitorTests : TestBase() {
             dummyMetas)
 
         assertThrowsSqlException(ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET) {
-            visitor.visitExprNode(callAgg)
+            AstSanityValidator.validate(callAgg)
         }
     }
 
     @Test
     fun groupPartial() {
         assertThrowsSqlException(ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET) {
-            visitor.visitExprNode(
+            AstSanityValidator.validate(
                 Select(setQuantifier = SetQuantifier.ALL,
                        projection = SelectProjectionValue(litInt(1)),
                        from = FromSourceExpr(litInt(1), null),
@@ -89,7 +87,7 @@ class AstSanityVisitorTests : TestBase() {
     @Test
     fun pivotWithGroupBy() {
         assertThrowsSqlException(ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET) {
-            visitor.visitExprNode(
+            AstSanityValidator.validate(
                 Select(setQuantifier = SetQuantifier.ALL,
                        projection = SelectProjectionPivot(litInt(1), litInt(1)),
                        from = FromSourceExpr(litInt(1), null),
@@ -105,7 +103,7 @@ class AstSanityVisitorTests : TestBase() {
     @Test
     fun havingWithoutGroupByGroupByIsNull() {
         assertThrowsSqlException(ErrorCode.SEMANTIC_HAVING_USED_WITHOUT_GROUP_BY) {
-            visitor.visitExprNode(
+            AstSanityValidator.validate(
                 Select(setQuantifier = SetQuantifier.ALL,
                        projection = SelectProjectionValue(litInt(1)),
                        from = FromSourceExpr(litInt(1), null),
@@ -121,7 +119,7 @@ class AstSanityVisitorTests : TestBase() {
     @Test
     fun havingWithoutGroupByNoGroupByItems() {
         assertThrowsSqlException(ErrorCode.SEMANTIC_HAVING_USED_WITHOUT_GROUP_BY) {
-            visitor.visitExprNode(
+            AstSanityValidator.validate(
                 Select(setQuantifier = SetQuantifier.ALL,
                        projection = SelectProjectionValue(litInt(1)),
                        from = FromSourceExpr(litInt(1), null),
@@ -138,7 +136,7 @@ class AstSanityVisitorTests : TestBase() {
     fun literalIntOverflow() {
         val literalInt = Literal(ion.singleValue("${Long.MAX_VALUE}0"), dummyMetas)
         assertThrowsSqlException(ErrorCode.EVALUATOR_INTEGER_OVERFLOW) {
-            visitor.visitExprNode(literalInt)
+            AstSanityValidator.validate(literalInt)
         }
     }
 }

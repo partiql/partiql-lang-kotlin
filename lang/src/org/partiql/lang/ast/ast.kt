@@ -19,11 +19,32 @@ import org.partiql.lang.util.*
 import java.util.*
 
 /**
+ * Base type for all AST nodes.  
+ */
+sealed class AstNode : Iterable<AstNode> {
+
+    /**
+     * returns all the children nodes.
+     */
+    abstract val children: List<AstNode>
+
+    /**
+     * Depth first iterator over all nodes.
+     */
+    override operator fun iterator(): Iterator<AstNode> {
+        fun depthFirstSequence(node: AstNode): Sequence<AstNode> =
+            sequenceOf(node) + node.children.asSequence().flatMap { depthFirstSequence(it) }
+        
+        return depthFirstSequence(this).iterator();
+    }
+}
+
+/**
  * The only nodes that inherit directly from ExprNode should just be generic expressions that can be used any
  * place a value is allowed.
  */
-sealed class ExprNode : HasMetas {
-
+sealed class ExprNode : AstNode(), HasMetas {
+    
     fun copy(newMetas: MetaContainer? = null): ExprNode {
         // This looks like duplication but really isn't: each branch executes a different compiler-generated `copy` function.
         val metas = newMetas ?: this.metas
@@ -83,12 +104,18 @@ data class Literal(
     init {
         ionValue.clone().makeReadOnly()
     }
+
+    override val children: List<AstNode> = listOf()
 }
+
 
 /** Represents the literal value `MISSING`. */
 data class LiteralMissing(
     override val metas: MetaContainer
-) : ExprNode()
+) : ExprNode() {
+    
+    override val children: List<AstNode> = listOf()
+}
 
 /**
  * A variable reference, which contains a [SymbolicName] and the [CaseSensitivity] that should be used to determine when
@@ -123,6 +150,8 @@ data class VariableReference(
                 case,
                 scopeQualifier,
                 metas))
+
+    override val children: List<AstNode> = listOf()
 }
 
 /**
@@ -133,7 +162,9 @@ data class NAry(
     val op: NAryOp,
     val args: List<ExprNode>,
     override val metas: MetaContainer
-) : ExprNode()
+) : ExprNode() {
+    override val children: List<AstNode> = args
+}
 
 /**
  * Represents a call to an aggregate function.
@@ -143,7 +174,9 @@ data class CallAgg(
     val setQuantifier: SetQuantifier,
     val arg: ExprNode,
     override val metas: MetaContainer
-) : ExprNode()
+) : ExprNode() {
+    override val children: List<AstNode> = listOf(funcExpr, arg)
+}
 
 /** Represents a "typed expression", i.e. `CAST` and `IS`. */
 data class Typed(
@@ -151,7 +184,9 @@ data class Typed(
     val expr: ExprNode,
     val type: DataType,
     override val metas: MetaContainer
-) : ExprNode()
+) : ExprNode() {
+    override val children: List<AstNode> = listOf(expr, type)
+}
 
 //********************************
 // Path expressions
@@ -162,7 +197,9 @@ data class Path(
     val root: ExprNode,
     val components: List<PathComponent>,
     override val metas: MetaContainer
-) : ExprNode()
+) : ExprNode() {
+    override val children: List<AstNode> = listOf(root) + components
+}
 
 //********************************
 // Simple CASE
@@ -173,14 +210,18 @@ data class SimpleCase(
     val valueExpr: ExprNode,
     val whenClauses: List<SimpleCaseWhen>,
     val elseExpr: ExprNode?,
-    override val metas: MetaContainer) : ExprNode()
+    override val metas: MetaContainer) : ExprNode() {
+    override val children: List<AstNode> = listOf(valueExpr) + whenClauses + listOfNotNull(elseExpr)
+}
 
 
 /** Represents a case of a [SimpleCase]. */
 data class SimpleCaseWhen(
     val valueExpr: ExprNode,
     val thenExpr: ExprNode
-)
+) : AstNode() {
+    override val children: List<AstNode> = listOf(valueExpr, thenExpr)
+}
 
 //********************************
 // Searched CASE
@@ -191,13 +232,17 @@ data class SearchedCase(
     val whenClauses: List<SearchedCaseWhen>,
     val elseExpr: ExprNode?,
     override val metas: MetaContainer
-) : ExprNode()
+) : ExprNode() {
+    override val children: List<AstNode> = whenClauses + listOfNotNull(elseExpr)
+}
 
 /** Represents a case of a [SearchedCase]. */
 data class SearchedCaseWhen(
     val condition: ExprNode,
     val thenExpr: ExprNode
-)
+) : AstNode() {
+    override val children: List<AstNode> = listOf(condition, thenExpr)
+}
 
 //********************************
 // Select Expression
@@ -215,7 +260,9 @@ data class Select(
     val having: ExprNode? = null,
     val limit: ExprNode? = null,
     override val metas: MetaContainer
-) : ExprNode()
+) : ExprNode() {
+    override val children: List<AstNode> = listOfNotNull(projection, from, where, groupBy, having, limit)
+}
 
 /**
  * SymbolicName does have a semantic meaning and primarily exists so that any identifier in the query may
@@ -237,7 +284,9 @@ data class Select(
 data class SymbolicName(
     val name: String,
     override val metas: MetaContainer
-) : HasMetas
+) : AstNode(), HasMetas {
+    override val children: List<AstNode> = listOf()
+}
 
 /**
  * A path component can be:
@@ -248,7 +297,7 @@ data class SymbolicName(
  * The [PathComponent] base class is used to constrain the types of child nodes that are allowed
  * in a [Path] expression.
  */
-sealed class PathComponent
+sealed class PathComponent : AstNode()
 
 /**
  * Represents a path component that is an expression, i.e. '''['bar']''' in '''foo['bar']'''.
@@ -297,32 +346,46 @@ data class PathComponentExpr(val expr: ExprNode, val case: CaseSensitivity) : Pa
     override fun hashCode(): Int =
         Arrays.hashCode(arrayOf(getStringValueIfCaseInsensitiveLiteral(this)?.toLowerCase() ?: expr, case))
 
+    override val children: List<AstNode> = listOf(expr)
 }
 
 /** Represents an unpivot path component, i.e. `*` in `foo.*.bar` */
-data class PathComponentUnpivot(override val metas: MetaContainer) : PathComponent(), HasMetas
+data class PathComponentUnpivot(override val metas: MetaContainer) : PathComponent(), HasMetas {
+    override val children: List<AstNode> = listOf()
+}
 
 /** Represents a wildcard path component, i.e. `[*]` in `foo[*].bar`. */
-data class PathComponentWildcard(override val metas: MetaContainer) : PathComponent(), HasMetas
+data class PathComponentWildcard(override val metas: MetaContainer) : PathComponent(), HasMetas {
+    override val children: List<AstNode> = listOf()
+}
 
 
-sealed class SelectProjection
+sealed class SelectProjection : AstNode()
 
 /** For `SELECT <SelectListItem> [, <SelectListItem>]...` and `SELECT *` cases */
 data class SelectProjectionList(
     val items: List<SelectListItem>
-) : SelectProjection()
+) : SelectProjection() {
+    
+    override val children: List<AstNode> = items 
+}
 
 /** For `SELECT VALUE <expr>` */
 data class SelectProjectionValue(
     val expr: ExprNode
-) : SelectProjection()
+) : SelectProjection() {
+    
+    override val children: List<AstNode> = listOf(expr)
+}
 
 /** For `PIVOT <expr> AS <asName> AT <atName>` */
 data class SelectProjectionPivot(
     val valueExpr: ExprNode,
     val nameExpr: ExprNode
-) : SelectProjection()
+) : SelectProjection() {
+    
+    override val children: List<AstNode> = listOf(valueExpr, nameExpr)
+}
 
 /**
  * A [SelectListItem] node can be:
@@ -334,19 +397,26 @@ data class SelectProjectionPivot(
  * This is intentionally not a subtype of [ExprNode] because things like the select-all expression (`*`) and
  * expressions with aliases are not allowed any place an [ExprNode] is allowed.
  */
-sealed class SelectListItem
+sealed class SelectListItem : AstNode()
 
 /** Represents `<expr> [AS alias]` in a select list.*/
 data class SelectListItemExpr(
     val expr: ExprNode,
     val asName: SymbolicName? = null
-) : SelectListItem()
+) : SelectListItem() {
+    
+    override val children: List<AstNode> = listOf(expr)
+}
 
 /** Represents `<expr>.*` in a select list. */
-data class SelectListItemProjectAll(val expr: ExprNode) : SelectListItem()
+data class SelectListItemProjectAll(val expr: ExprNode) : SelectListItem() {
+    override val children: List<AstNode> = listOf(expr)
+}
 
 /** Represents an `*` that is not part of a path expression in a select list, i.e. `SELECT * FROM foo`.  */
-data class SelectListItemStar(override val metas: MetaContainer) : SelectListItem(), HasMetas
+data class SelectListItemStar(override val metas: MetaContainer) : SelectListItem(), HasMetas {
+    override val children: List<AstNode> = listOf()
+}
 
 /**
  * A [FromSource] node can be:
@@ -356,14 +426,22 @@ data class SelectListItemStar(override val metas: MetaContainer) : SelectListIte
  *   Note: a `CROSS JOIN` is modeled as an `INNER JOIN` with a condition of `true`.
  *   Note: `FromSource`s that are separated by commas are modeled as an INNER JOIN with a condition of `true`.
  */
-sealed class FromSource
+sealed class FromSource : AstNode() {
+    fun metas(): MetaContainer = when(this) {
+        is FromSourceExpr    -> this.expr.metas
+        is FromSourceJoin    -> this.metas
+        is FromSourceUnpivot -> this.expr.metas
+    }
+}
 
 /** Represents `<expr> [AS <correlation>]` within a FROM clause. */
 data class FromSourceExpr(
     val expr: ExprNode,
     val asName: SymbolicName? = null,
     val atName: SymbolicName? = null
-) : FromSource()
+) : FromSource() {
+    override val children: List<AstNode> = listOf(expr)
+}
 
 /** Represents `<leftRef> [INNER | OUTER | LEFT | RIGHT] JOIN <rightRef> ON <condition>`. */
 data class FromSourceJoin(
@@ -372,7 +450,10 @@ data class FromSourceJoin(
     val rightRef: FromSource,
     val condition: ExprNode,
     override val metas: MetaContainer
-) : FromSource(), HasMetas
+) : FromSource(), HasMetas {
+    
+    override val children: List<AstNode> = listOf(leftRef, rightRef, condition)
+}
 
 /** Represents `SELECT ... FROM UNPIVOT <fromSource> [AS <asName>] [AT <atName>]`.
  *
@@ -387,26 +468,26 @@ data class FromSourceUnpivot(
     val asName: SymbolicName?,
     val atName: SymbolicName?,
     override val metas: MetaContainer
-) : FromSource(), HasMetas
-
-fun FromSource.metas() =
-    when(this) {
-        is FromSourceExpr    -> this.expr.metas
-        is FromSourceJoin    -> this.metas
-        is FromSourceUnpivot -> this.expr.metas
-    }
+) : FromSource(), HasMetas {
+    
+    override val children: List<AstNode> = listOf(expr)
+}
 
 /** For `GROUP [ PARTIAL ] BY <item>... [ GROUP AS <gropuName> ]`. */
 data class GroupBy(
     val grouping: GroupingStrategy,
     val groupByItems: List<GroupByItem>,
     val groupName: SymbolicName? = null
-)
+): AstNode() {
+    override val children: List<AstNode> = groupByItems
+}
 
 data class GroupByItem(
     val expr: ExprNode,
     val asName: SymbolicName? = null
-)
+): AstNode() {
+    override val children: List<AstNode> = listOf(expr)
+}
 
 //********************************
 // Constructors
@@ -416,13 +497,17 @@ data class GroupByItem(
 data class StructField(
     val name: ExprNode,
     val expr: ExprNode
-)
+): AstNode() {
+    override val children: List<AstNode> = listOf(name, expr)
+}
 
 /** Represents a struct constructor. */
 data class Struct(
     val fields: List<StructField>,
     override val metas: MetaContainer
-) : ExprNode()
+) : ExprNode() {
+    override val children: List<AstNode> = fields
+}
 
 /**
  * Represents a list constructor.
@@ -431,13 +516,17 @@ data class Struct(
 data class ListExprNode(
     val values: List<ExprNode>,
     override val metas: MetaContainer
-) : ExprNode()
+) : ExprNode() {
+    override val children: List<AstNode> = values
+}
 
 /** Represents a bag constructor. */
 data class Bag(
     val bag: List<ExprNode>,
     override val metas: MetaContainer
-) : ExprNode()
+) : ExprNode() {
+    override val children: List<AstNode> = bag
+}
 
 /**
  * Represents a data type reference such as `INT` or `VARCHAR(50)`.
@@ -446,7 +535,9 @@ data class DataType(
     val sqlDataType: SqlDataType,
     val args: List<Long>,
     override val metas: MetaContainer
-) : HasMetas
+) : AstNode(), HasMetas {
+    override val children: List<AstNode> = listOf()
+}
 
 //********************************
 // Node attributes
