@@ -12,7 +12,7 @@ class EvaluationWithBindingsTest : BaseExampleTest() {
         |global variables:
         |    user_name => userName
         |result
-        |    "Hello, Homer Simpson"
+        |    'Hello, Homer Simpson'
         |
     """.trimMargin()
 }

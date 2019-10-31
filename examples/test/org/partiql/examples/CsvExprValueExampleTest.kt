@@ -14,7 +14,23 @@ class CsvExprValueExampleTest : BaseExampleTest() {
         |PartiQL query:
         |    SELECT _1, _2, _3 FROM csv_data
         |result:
-        |    <<{_1:"Cat",_2:"Nibbler",_3:"F"},{_1:"Cat",_2:"Hobbes",_3:"M"},{_1:"Dog",_2:"Fido",_3:"M"}>>
+        |    <<
+        |      {
+        |        '_1': 'Cat',
+        |        '_2': 'Nibbler',
+        |        '_3': 'F'
+        |      },
+        |      {
+        |        '_1': 'Cat',
+        |        '_2': 'Hobbes',
+        |        '_3': 'M'
+        |      },
+        |      {
+        |        '_1': 'Dog',
+        |        '_2': 'Fido',
+        |        '_3': 'M'
+        |      }
+        |    >>
         |
     """.trimMargin()
 }

@@ -12,7 +12,11 @@ class EvaluationWithLazyBindingsTest : BaseExampleTest() {
         |global variables:
         |    pets => [ { name: "Nibbler", age: 2 }, { name: "Hobbes", age: 6 } ]
         |result:
-        |    <<{kitten_id:"Hobbes"}>>
+        |    <<
+        |      {
+        |        'kitten_id': 'Hobbes'
+        |      }
+        |    >>
         |
     """.trimMargin()
 }

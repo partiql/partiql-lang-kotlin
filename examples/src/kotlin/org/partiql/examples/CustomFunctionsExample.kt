@@ -125,6 +125,6 @@ class CustomFunctionsExample(out: PrintStream) : Example(out) {
                 "fib_list(5)",
                 "fib_list(6)",
                 "fib_list(7)",
-                "fib_list(8)").forEach { query -> print(query, eval(query).toString()) }
+                "fib_list(8)").forEach { query -> print(query, eval(query)) }
     }
 }
