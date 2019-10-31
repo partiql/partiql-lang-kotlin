@@ -61,6 +61,13 @@ tasks.register('javadocJar', Jar) {
 }
 
 publishing {
+
+    repositories {
+        maven {
+            url = "https://aws.oss.sonatype.org"
+        } 
+    } 
+
     publications {
         create('maven', MavenPublication) {
             artifactId = 'partiql-lang-kotlin'
