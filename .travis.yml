@@ -5,7 +5,11 @@ jdk:
   - openjdk11
 
 script: ./gradlew build
- 
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
+
+
 ## See: https://docs.travis-ci.com/user/languages/java/#caching
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock

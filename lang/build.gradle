@@ -23,6 +23,7 @@ plugins {
     id 'org.jetbrains.kotlin.jvm'
     id 'io.gitlab.arturbosch.detekt'
     id 'signing'
+    id 'jacoco'
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
@@ -37,6 +38,8 @@ dependencies {
     // interpreter's API use kotlin.sequences.Sequence<ExprValue>.  Once that has been removed, we can change
     // 'api' below to 'implementation' to effect this.
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+
+
     api 'com.amazon.ion:ion-java:[1.4.0,)'
 
     // test-time dependencies
@@ -123,3 +126,25 @@ signing {
     sign publishing.publications.maven
 }
 
+jacoco {
+    // You may modify the Jacoco version here
+    toolVersion = "0.8.5"
+}
+
+test {
+  //  useJUnitPlatform()
+    jacoco {
+        destinationFile = file("${buildDir}/jacoco/test.exec")
+    }
+}
+
+test.finalizedBy(jacocoTestReport)
+
+jacocoTestReport {
+    // Adjust the output of the test report
+    reports {
+        html.enabled true
+        xml.enabled true
+        csv.enabled false
+    }
+}
