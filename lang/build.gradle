@@ -23,7 +23,6 @@ plugins {
     id 'org.jetbrains.kotlin.jvm'
     id 'io.gitlab.arturbosch.detekt'
     id 'signing'
-    id 'jacoco'
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
@@ -126,25 +125,11 @@ signing {
     sign publishing.publications.maven
 }
 
-jacoco {
-    // You may modify the Jacoco version here
-    toolVersion = "0.8.5"
-}
-
-test {
-  //  useJUnitPlatform()
-    jacoco {
-        destinationFile = file("${buildDir}/jacoco/test.exec")
-    }
-}
-
-test.finalizedBy(jacocoTestReport)
-
 jacocoTestReport {
-    // Adjust the output of the test report
     reports {
-        html.enabled true
         xml.enabled true
+        html.enabled true
         csv.enabled false
+        html.destination file("${buildDir}/reports/jacoco/html")
     }
 }
