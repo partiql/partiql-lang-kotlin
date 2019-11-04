@@ -37,6 +37,8 @@ dependencies {
     // interpreter's API use kotlin.sequences.Sequence<ExprValue>.  Once that has been removed, we can change
     // 'api' below to 'implementation' to effect this.
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+
+
     api 'com.amazon.ion:ion-java:[1.4.0,)'
 
     // test-time dependencies
@@ -123,3 +125,11 @@ signing {
     sign publishing.publications.maven
 }
 
+jacocoTestReport {
+    reports {
+        xml.enabled true
+        html.enabled true
+        csv.enabled false
+        html.destination file("${buildDir}/reports/jacoco/html")
+    }
+}
