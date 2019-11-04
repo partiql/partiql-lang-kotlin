@@ -31,14 +31,13 @@ allprojects {
         mavenCentral()
         jcenter()    // needed for detekt
     }
+
+
 }
 
 subprojects {
     group = 'org.partiql'
     version = '0.1.1-SNAPSHOT'
-
-
-
 }
 
 buildDir = new File(rootProject.projectDir, "gradle-build/" + project.name)
@@ -72,6 +71,9 @@ subprojects {
             test.resources.srcDirs = ["test-resources"]
         }
 
+        test {
+            finalizedBy jacocoTestReport
+        }
         
 
     })
@@ -80,6 +82,10 @@ subprojects {
         sourceSets {
             main.kotlin.srcDirs = ["src"]
             test.kotlin.srcDirs = ["test"]
+        }
+
+        test {
+            finalizedBy jacocoTestReport
         }
     })
 

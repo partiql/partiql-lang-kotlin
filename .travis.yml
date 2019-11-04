@@ -9,6 +9,17 @@ script: ./gradlew build
 after_success:
   - bash <(curl -s https://codecov.io/bash)
 
+jobs:
+  include:
+    stage: report generation
+    jdk: openjdk11
+    script: ./gradlew build 
+    after_success:
+      - bash <(curl -s https://codecov.io/bash) -s cli/build/reports  -F CLI 
+      - bash <(curl -s https://codecov.io/bash) -s lang/build/reports -F LANG 
+      - bash <(curl -s https://codecov.io/bash) -s pts/build/reports -F PTS
+      - bash <(curl -s https://codecov.io/bash) -s testscript/build/reports -F TEST_SCRIPT
+      - bash <(curl -s https://codecov.io/bash) -s examples/build/reports -F EXAMPLES
 
 ## See: https://docs.travis-ci.com/user/languages/java/#caching
 before_cache:
