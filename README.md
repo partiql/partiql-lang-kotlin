@@ -1,13 +1,17 @@
 
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.partiql/partiql-lang-kotlin/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.partiql/partiql-lang-kotlin)
+[![Build Status](https://travis-ci.org/partiql/partiql-lang-kotlin.svg?branch=master)](https://travis-ci.org/partiql/partiql-lang-kotlin)
+[![codecov](https://codecov.io/gh/partiql/partiql-lang-kotlin/branch/master/graph/badge.svg)](https://codecov.io/gh/partiql/partiql-lang-kotlin)
 
-# PartiQL Lang Kotlin
+
+
+# PartiQL Lang Kotlin 
 
 This is a Kotlin implementation of the [PartiQL specification](https://partiql.org/assets/PartiQL-Specification.pdf).
 PartiQL is based on SQL-92 and has added support for working with schemaless hierarchical data. 
 PartiQL’s extensions to SQL are easy to understand, treat nested data as first class citizens and
 compose seamlessly with each other and SQL.
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.partiql/partiql-lang-kotlin/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.partiql/partiql-lang-kotlin)
 
 This repository contains an embeddable reference interpreter, test framework, and tests for PartiQL in Kotlin.
 
