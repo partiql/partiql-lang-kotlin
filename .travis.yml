@@ -4,13 +4,13 @@ jdk:
   - openjdk9
   - openjdk11
 
-script: ./gradlew build
+script: travis_wait ./gradlew build # JDK8 tests take a little more than 10 minutes, travis_wait extends TTL to 20minutes 
 
 jobs:
   include:
     stage: report generation
     jdk: openjdk11
-    script: ./gradlew build 
+    script: travis_wait ./gradlew build 
     after_success:
       - bash <(curl -s https://codecov.io/bash) -s cli/build/reports  -F CLI 
       - bash <(curl -s https://codecov.io/bash) -s lang/build/reports -F LANG 
