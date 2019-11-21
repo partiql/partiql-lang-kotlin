@@ -35,6 +35,6 @@ class EvaluationWithLazyBindings(out: PrintStream) : Example(out) {
 
         // Evaluate the query using the session.
         val result = e.eval(session)
-        print("result:", result.toString())
+        print("result:", result)
     }
 }

@@ -15,10 +15,11 @@
 package org.partiql.cli
 
 import com.amazon.ion.*
+import com.amazon.ion.system.*
+import org.partiql.cli.OutputFormat.*
 import org.partiql.lang.*
 import org.partiql.lang.eval.*
-import org.partiql.cli.OutputFormat.*
-import java.io.*    
+import java.io.*
 
 /**
  * TODO builder, kdoc
@@ -30,28 +31,30 @@ internal class Cli(private val valueFactory: ExprValueFactory,
                    private val compilerPipeline: CompilerPipeline,
                    private val globals: Bindings,
                    private val query: String) : PartiQLCommand {
+
     override fun run() {
-        val inputIonValue = valueFactory.ion.iterate(input).asSequence().map { valueFactory.newFromIonValue(it) }
-        val inputExprValue = valueFactory.newBag(inputIonValue)
+        IonReaderBuilder.standard().build(input).use { reader ->
+            val inputIonValue = valueFactory.ion.iterate(reader).asSequence().map { valueFactory.newFromIonValue(it) }
+            val inputExprValue = valueFactory.newBag(inputIonValue)
+            val bindings = Bindings.buildLazyBindings {
+                addBinding("input_data") { inputExprValue }
+            }.delegate(globals)
 
-        val bindings = Bindings.buildLazyBindings { 
-            addBinding("input_data") { inputExprValue }
-        }.delegate(globals)
+            val result = compilerPipeline.compile(query).eval(EvaluationSession.build { globals(bindings) })
 
-        val result = compilerPipeline.compile(query).eval(EvaluationSession.build { globals(bindings) })
-        
-        when(format) {
-            ION_TEXT   -> valueFactory.ion.newTextWriter(output).use { printIon(it, result) }
-            ION_BINARY -> valueFactory.ion.newBinaryWriter(output).use { printIon(it, result) }
-            PARTIQL    -> NonConfigurableExprValuePrettyPrinter(output).prettyPrint(result)
+            when (format) {
+                ION_TEXT   -> valueFactory.ion.newTextWriter(output).use { printIon(it, result) }
+                ION_BINARY -> valueFactory.ion.newBinaryWriter(output).use { printIon(it, result) }
+                PARTIQL    -> OutputStreamWriter(output).write(result.toString())
+            }
         }
     }
-    
+
     private fun printIon(ionWriter: IonWriter, value: ExprValue) {
-        when(value.type) {
+        when (value.type) {
             // writes top level bags as a datagram
             ExprValueType.BAG -> value.iterator().forEach { v -> v.ionValue.writeTo(ionWriter) }
-            else              -> value.ionValue.writeTo(ionWriter) 
+            else              -> value.ionValue.writeTo(ionWriter)
         }
     }
 }

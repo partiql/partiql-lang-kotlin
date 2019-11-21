@@ -98,6 +98,6 @@ class CsvExprValueExample(out: PrintStream) : Example(out) {
         print("PartiQL query:", query)
 
         val result = eval(query, EvaluationSession.build { globals(globals) })
-        print("result:", result.toString())
+        print("result:", result)
     }
 }

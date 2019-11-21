@@ -26,7 +26,7 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
     }
 
     @Test
-    fun betweenIncompatiblePredicate() = assertThrows("Cannot compare values: \"APPLE\", 2", NodeMetadata(4, 19)) {
+    fun betweenIncompatiblePredicate() = assertThrows("Cannot compare values: 'APPLE', 2", NodeMetadata(4, 19)) {
         voidEval("""
           SELECT VALUE x
           FROM << 'APPLE', 'ZOE', 'YOYO' >> AS x
@@ -35,7 +35,7 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
     }
 
     @Test
-    fun notBetweenIncompatiblePredicate() = assertThrows("Cannot compare values: \"APPLE\", 1", NodeMetadata(4, 19)) {
+    fun notBetweenIncompatiblePredicate() = assertThrows("Cannot compare values: 'APPLE', 1", NodeMetadata(4, 19)) {
         voidEval("""
           SELECT VALUE x
           FROM << 'APPLE', 'ZOE', 'YOYO' >> AS x

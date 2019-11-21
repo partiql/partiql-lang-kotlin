@@ -22,7 +22,6 @@ import org.partiql.lang.eval.*
 import org.partiql.lang.syntax.*
 import org.partiql.lang.util.*
 import java.io.*
-import java.lang.IllegalArgumentException
 import java.util.concurrent.*
 
 internal const val PROMPT_1 = "PartiQL> "
@@ -37,7 +36,7 @@ private enum class ReplState {
 
     /** Ready to accept new input. */
     READY,
-    
+
     /** Reading a PartiQL query. Transitions to execute when one of the execution tokens is found. */
     READ_PARTIQL,
 
@@ -81,10 +80,10 @@ private class GlobalBinding(private val valueFactory: ExprValueFactory) {
     }
 
     fun asExprValue(): ExprValue {
-        val values: Sequence<ExprValue> = knownNames.map { bindings[BindingName(it, BindingCase.SENSITIVE)] }
-            .filterNotNull()
-            .asSequence()
-        
+        val values: Sequence<ExprValue> = knownNames.map {
+            bindings[BindingName(it, BindingCase.SENSITIVE)]
+        }.filterNotNull().asSequence()
+
         return valueFactory.newStruct(values, StructOrdering.UNORDERED)
     }
 }
@@ -103,18 +102,18 @@ interface Timer {
  * TODO builder, kdoc
  */
 internal class Repl(private val valueFactory: ExprValueFactory,
-                    private val input: InputStream,
-                    private val output: OutputStream,
+                    input: InputStream,
+                    output: OutputStream,
                     private val parser: Parser,
                     private val compiler: CompilerPipeline,
-                    private val initialGlobal: Bindings,
-                    private val timer: Timer = object: Timer{}) : PartiQLCommand {
+                    initialGlobal: Bindings,
+                    private val timer: Timer = object : Timer {}) : PartiQLCommand {
+
+    private val outputWriter = OutputStreamWriter(output, "UTF-8")
 
     private inner class ReplCommands {
-        operator fun get(commandName: String): (String) -> ExprValue? = 
-            commands[commandName] ?: 
-                throw IllegalArgumentException("REPL command: '$commandName' not found! " + 
-                                               "use '!list_commands' to see all available commands")
+        operator fun get(commandName: String): (String) -> ExprValue? = commands[commandName]
+                                                                        ?: throw IllegalArgumentException("REPL command: '$commandName' not found! " + "use '!list_commands' to see all available commands")
 
         private val commands: Map<String, (String) -> ExprValue?> = mapOf("add_to_global_env" to ::addToGlobalEnv,
                                                                           "global_env" to ::globalEnv,
@@ -135,11 +134,12 @@ internal class Repl(private val valueFactory: ExprValueFactory,
         private fun globalEnv(source: String): ExprValue? = globals.asExprValue()
 
         private fun listCommands(source: String): ExprValue? {
-            output.println("")
-            output.println("""
+            outputWriter.write("\n")
+            outputWriter.write("""
                 |!add_to_global_env: adds a value to the global environment
                 |!global_env: displays the current global environment
                 |!list_commands: print this message
+                |
             """.trimMargin())
             return null
         }
@@ -150,7 +150,8 @@ internal class Repl(private val valueFactory: ExprValueFactory,
         val splitIndex = source.indexOfFirst { it == ' ' }.let {
             if (it == -1) {
                 source.length
-            } else {
+            }
+            else {
                 it
             }
         }
@@ -160,22 +161,19 @@ internal class Repl(private val valueFactory: ExprValueFactory,
 
         commands[replCommandName].invoke(cmdSource)
     }
-    
+
     private val commands = ReplCommands()
 
     private val bufferedReader = input.bufferedReader(Charsets.UTF_8)
-    private val valuePrettyPrinter = NonConfigurableExprValuePrettyPrinter(output) // for PartiQL values
-    private val astPrettyPrinter = object : ExprValuePrettyPrinter {
-        val ionWriter = IonTextWriterBuilder.pretty().build(output) // for the AST
+    private val valuePrettyPrinter = ConfigurableExprValueFormatter.pretty
+    private val astPrettyPrinter = object : ExprValueFormatter {
+        val writer = IonTextWriterBuilder.pretty().build(outputWriter)
         
-        override fun prettyPrint(value: ExprValue) {
-            value.ionValue.writeTo(ionWriter)
-            ionWriter.flush()
+        override fun formatTo(value: ExprValue, out: Appendable) {
+            value.ionValue.writeTo(writer)
+            writer.flush()
         }
-    } 
-
-    private fun OutputStream.print(s: String) = write(s.toByteArray(Charsets.UTF_8))
-    private fun OutputStream.println(s: String) = print("$s\n")
+    }
 
     // Repl running state
     private val buffer = StringBuilder()
@@ -184,14 +182,17 @@ internal class Repl(private val valueFactory: ExprValueFactory,
     private var previousResult = valueFactory.nullValue
     private var line: String? = null
 
-    private fun printWelcomeMessage() = output.println(WELCOME_MSG)
-    
-    private fun printPrompt() { 
+    private fun printWelcomeMessage() {
+        outputWriter.write(WELCOME_MSG)
+        outputWriter.write("\n")
+    }
+
+    private fun printPrompt() {
         when {
-            buffer.isEmpty() -> output.print(PROMPT_1)
-            else             -> output.print(PROMPT_2)
+            buffer.isEmpty() -> outputWriter.write(PROMPT_1)
+            else             -> outputWriter.write(PROMPT_2)
         }
-        output.flush()
+        outputWriter.flush()
     }
 
     private fun readLine(): String? {
@@ -199,7 +200,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
         return bufferedReader.readLine()?.trim()
     }
 
-    private fun executeTemplate(prettyPrinter: ExprValuePrettyPrinter, f: (String) -> ExprValue?): ReplState {
+    private fun executeTemplate(formatter: ExprValueFormatter, f: (String) -> ExprValue?): ReplState {
         try {
             val source = buffer.toString().trim()
             buffer.setLength(0)
@@ -207,25 +208,32 @@ internal class Repl(private val valueFactory: ExprValueFactory,
             val totalMs = timer.timeIt {
                 val result = f(source)
                 if (result != null) {
-                    output.println(BAR_1)
-                    prettyPrinter.prettyPrint(result)
+                    outputWriter.write(BAR_1)
+                    outputWriter.write("\n")
                     
-                    output.println("\n$BAR_2")
+                    formatter.formatTo(result, outputWriter)
+                    outputWriter.write("\n")
+
+                    outputWriter.write(BAR_2)
+                    outputWriter.write("\n")
 
                     previousResult = result
                 }
             }
-            output.println("OK! ($totalMs ms)")
-            output.flush()
+            outputWriter.write("OK! ($totalMs ms)")
+            outputWriter.write("\n")
+            outputWriter.flush()
         }
         catch (e: Exception) {
-            e.printStackTrace(PrintStream(output))
-            output.println("ERROR!")
+            e.printStackTrace(PrintWriter(outputWriter))
+            outputWriter.write("ERROR!")
+            outputWriter.write("\n")
         }
 
         return if (line == null) {
             FINAL
-        } else {
+        }
+        else {
             READY
         }
     }
@@ -235,7 +243,8 @@ internal class Repl(private val valueFactory: ExprValueFactory,
             val locals = Bindings.buildLazyBindings { addBinding("_") { previousResult } }.delegate(globals.bindings)
 
             compiler.compile(source).eval(EvaluationSession.build { globals(locals) })
-        } else {
+        }
+        else {
             null
         }
     }
@@ -244,7 +253,8 @@ internal class Repl(private val valueFactory: ExprValueFactory,
         if (source != "") {
             val serializedAst = AstSerializer.serialize(parser.parseExprNode(source), valueFactory.ion)
             valueFactory.newFromIonValue(serializedAst)
-        } else {
+        }
+        else {
             null
         }
     }
@@ -253,7 +263,8 @@ internal class Repl(private val valueFactory: ExprValueFactory,
         if (source != "") {
             val serializedAst = AstSerializer.serialize(parser.parseExprNode(source), valueFactory.ion)
             valueFactory.newFromIonValue(serializedAst.filterTermNodes())
-        } else {
+        }
+        else {
             null
         }
     }
@@ -261,11 +272,11 @@ internal class Repl(private val valueFactory: ExprValueFactory,
     override fun run() {
         while (state != FINAL) {
             state = when (state) {
-                INIT                     -> {
+                INIT                      -> {
                     printWelcomeMessage()
                     READY
                 }
-                READY                    -> {
+                READY                     -> {
                     line = readLine()
                     when {
                         line == null                               -> FINAL
@@ -279,11 +290,11 @@ internal class Repl(private val valueFactory: ExprValueFactory,
                     buffer.appendln(line)
                     line = readLine()
                     when (line) {
-                        null     -> FINAL
-                        ""       -> EXECUTE_PARTIQL
-                        "!!"     -> PARSE_PARTIQL_WITH_FILTER
-                        "!?"     -> PARSE_PARTIQL
-                        else     -> READ_PARTIQL
+                        null -> FINAL
+                        ""   -> EXECUTE_PARTIQL
+                        "!!" -> PARSE_PARTIQL_WITH_FILTER
+                        "!?" -> PARSE_PARTIQL
+                        else -> READ_PARTIQL
                     }
                 }
 

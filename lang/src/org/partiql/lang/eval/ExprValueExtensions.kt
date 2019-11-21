@@ -107,22 +107,9 @@ fun ExprValue.rangeOver(): Iterable<ExprValue> = when {
     else -> listOf(this.unnamedValue())
 }
 
-
 /** A very simple string representation--to be used for diagnostic purposes only. */
-fun ExprValue.stringify(): String = when (type) {
-    MISSING -> "MISSING"
-    BAG -> StringBuilder().apply {
-        append("<<")
-        this@stringify.forEachIndexed { i, e ->
-            if (i > 0) {
-                append(",")
-            }
-            append(e)
-        }
-        append(">>")
-    }.toString()
-    else -> ionValue.toString()
-}
+fun ExprValue.stringify(): String =
+    ConfigurableExprValueFormatter.standard.format(this)
 
 val DEFAULT_COMPARATOR = NaturalExprValueComparators.NULLS_FIRST
 
