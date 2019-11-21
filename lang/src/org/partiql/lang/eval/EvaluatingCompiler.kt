@@ -1268,8 +1268,11 @@ internal class EvaluatingCompiler(
                                 // make sure we operate with lexical scoping
                                 val filterEnv = bindEnv(rootEnv).flipToLocals()
                                 val filterResult = filter(filterEnv)
-                                if (filterResult.isUnknown()) { false }
-                                else { filterResult.booleanValue() }
+                                if (filterResult.isUnknown()) {
+                                    false
+                                } else {
+                                    filterResult.booleanValue()
+                                }
                             }
                             .iterator()
                     }
