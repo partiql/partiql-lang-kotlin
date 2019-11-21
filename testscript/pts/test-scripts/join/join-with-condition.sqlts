@@ -1,0 +1,101 @@
+/*
+ * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ *  You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *      http://aws.amazon.com/apache2.0/
+ *
+ *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ *  language governing permissions and limitations under the License.
+ */
+
+set_default_environment::{
+
+    table1: [
+        { id: 1, val: 'a'},
+        { id: 2, val: 'b'},
+        { id: 3, val: 'c'},
+    ],
+
+    table1_null_id: [
+        { id: 1, val: 'a'},
+        { id: null, val: 'b'},
+        { id: 3, val: 'c'},
+    ],
+
+    table1_null_row: [
+        null
+    ],
+
+    table1_null: null
+}
+
+test::{
+    id: 'join on column - all column values non-null',
+    statement: '''
+        SELECT t1.id AS id,
+               t1.val AS val1,
+               t2.val AS val2
+        FROM table1 AS t1 JOIN table1 AS t2 ON t1.id = t2.id
+    ''',
+    expected: (success (bag {id:1,val1:'a',val2:'a'}
+                            {id:2,val1:'b',val2:'b'}
+                            {id:3,val1:'c',val2:'c'} ))
+}
+
+test::{
+    id: 'join on column - some column values are null',
+    statement: '''
+        SELECT t1.id AS id,
+               t1.val AS val1,
+               t2.val AS val2
+        FROM table1 AS t1 JOIN  table1_null_id AS t2 ON t1.id = t2.id
+    ''',
+    expected: (success (bag {id:1,val1:'a',val2:'a'}
+                            {id:3,val1:'c',val2:'c'} ))
+}
+
+test::{
+    id: 'join on column - 1 table contains 1 row with the value null',
+    statement: '''
+        SELECT t1.id AS id,
+               t1.val AS val1,
+               t2.val AS val2
+        FROM table1 AS t1 JOIN  table1_null_row AS t2 ON t1.id = t2.id
+    ''',
+    expected: (success (bag ))
+}
+
+test::{
+    id: 'join on column - ON conidition = true ',
+    statement: '''
+        SELECT t1.id AS id,
+               t1.val AS val1,
+               t2.val AS val2
+        FROM table1 AS t1 JOIN table1 AS t2 ON true
+    ''',                                            // what `JOIN t, p` expands into
+    expected: (success (bag {id:1,val1:'a',val2:'a'}
+                            {id:1,val1:'a',val2:'b'}
+                            {id:1,val1:'a',val2:'c'}
+                            {id:2,val1:'b',val2:'a'}
+                            {id:2,val1:'b',val2:'b'}
+                            {id:2,val1:'b',val2:'c'}
+                            {id:3,val1:'c',val2:'a'}
+                            {id:3,val1:'c',val2:'b'}
+                            {id:3,val1:'c',val2:'c'}))
+
+}
+
+test::{
+    id: 'join on column - ON condition = false',
+    statement: '''
+        SELECT t1.id AS id,
+               t1.val AS val1,
+               t2.val AS val2
+        FROM table1 AS t1 JOIN table1 AS t2 ON false
+    ''',                                           // empty result set
+    expected: (success (bag ))
+}
