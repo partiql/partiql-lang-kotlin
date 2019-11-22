@@ -4,7 +4,6 @@ plugins {
     id 'application'
 }
 
-version = "0.1.0"
 
 application {
     mainClassName = "org.partiql.cli.Main"
