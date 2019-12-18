@@ -23,6 +23,7 @@ import org.partiql.cli.functions.*
 import joptsimple.*
 import org.partiql.lang.*
 import java.io.*
+import kotlin.system.exitProcess
 
 // TODO how can a user pass the catalog here?
 private val ion = IonSystemBuilder.standard().build()
@@ -142,12 +143,12 @@ fun main(args: Array<String>) = try {
 catch (e: OptionException) {
     System.err.println("${e.message}\n")
     optParser.printHelpOn(System.err)
-    System.exit(1)
+    exitProcess(1)
 
 }
 catch (e: Exception) {
-    System.err.println("${e.message}\n")
-    System.exit(1)
+    e.printStackTrace(System.err)
+    exitProcess(1)
 }
 
 private fun runRepl(environment: Bindings) {
