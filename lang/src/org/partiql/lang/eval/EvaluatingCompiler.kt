@@ -446,9 +446,7 @@ internal class EvaluatingCompiler(
             rightArg is ListExprNode && rightArg.values.all { it is Literal } -> {
                 val inSet = rightArg.values
                     .map { it as Literal }
-                    .fold(TreeSet<ExprValue>(DEFAULT_COMPARATOR)) { set, el ->
-                        set.also { it.add(valueFactory.newFromIonValue(el.ionValue)) }
-                    }
+                    .mapTo(TreeSet<ExprValue>(DEFAULT_COMPARATOR)) { valueFactory.newFromIonValue(it.ionValue) }
 
                 thunkEnv(metas) { env ->
                     val value = leftArg(env)
