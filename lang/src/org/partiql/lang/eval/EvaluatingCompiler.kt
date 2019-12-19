@@ -452,7 +452,8 @@ internal class EvaluatingCompiler(
 
                 thunkEnv(metas) { env ->
                     val value = leftArg(env)
-                    inSet.any { it.exprEquals(value) }.exprValue()
+                    // we can use contains as exprEquals uses the DEFAULT_COMPARATOR
+                    inSet.contains(value).exprValue()
                 }
             }
             
