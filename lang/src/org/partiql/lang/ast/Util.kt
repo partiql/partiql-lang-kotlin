@@ -16,6 +16,7 @@
 package org.partiql.lang.ast
 
 import com.amazon.ion.*
+import org.partiql.lang.ast.SetQuantifier.*
 import org.partiql.lang.errors.*
 
 fun PropertyValueMap.addSourceLocation(metas: MetaContainer): PropertyValueMap {
@@ -31,22 +32,20 @@ fun PropertyValueMap.addSourceLocation(metas: MetaContainer): PropertyValueMap {
  * used in a select list.
  */
 fun createCountStar(ion: IonSystem, metas: MetaContainer): CallAgg {
-    val srcLocationMetaOnly = metas.find(SourceLocationMeta.TAG).let {
-        // The [VariableReference] and [Literal] below should only get the [SourceLocationMeta] if present,
-        // not any other metas.
-        when {
-            it != null -> metaContainerOf(it)
-            else       -> metaContainerOf()
-        }
-    }
+    // The [VariableReference] and [Literal] below should only get the [SourceLocationMeta] if present,
+    // not any other metas.
+    val srcLocationMetaOnly = metas.find(SourceLocationMeta.TAG)
+                                  ?.let { metaContainerOf(it) } ?: metaContainerOf()
+    
+    // optimize count(*) to count(1). 
     return CallAgg(
         funcExpr = VariableReference(
             id = "COUNT",
             case = CaseSensitivity.INSENSITIVE,
             scopeQualifier = ScopeQualifier.UNQUALIFIED,
             metas = srcLocationMetaOnly),
-        setQuantifier = SetQuantifier.ALL,
-        arg = Literal(ion.newInt(1), srcLocationMetaOnly),
+        setQuantifier = ALL,
+        arg = Literal(ion.newInt(1), srcLocationMetaOnly), 
         metas = metas.add(IsCountStarMeta.instance)
     )
 }

@@ -994,5 +994,35 @@ class ParserErrorsTest : TestBase() {
         ErrorCode.PARSE_ASTERISK_IS_NOT_ALONE_IN_SELECT_LIST,
         sourceLocationProperties(1, 8))
 
+    @Test
+    fun countDistinctStar() {
+        checkInputThrowingParserException("COUNT(DISTINCT *)",
+                                          ErrorCode.PARSE_UNSUPPORTED_CALL_WITH_STAR,
+                                          mapOf(Property.LINE_NUMBER to 1L,
+                                                Property.COLUMN_NUMBER to 7L,
+                                                Property.TOKEN_TYPE to TokenType.KEYWORD,
+                                                Property.TOKEN_VALUE to ion.newSymbol("distinct")))
+    }
+
+    @Test
+    fun countAllStar() {
+        checkInputThrowingParserException("COUNT(ALL *)",
+                                          ErrorCode.PARSE_UNSUPPORTED_CALL_WITH_STAR,
+                                          mapOf(Property.LINE_NUMBER to 1L,
+                                                Property.COLUMN_NUMBER to 7L,
+                                                Property.TOKEN_TYPE to TokenType.KEYWORD,
+                                                Property.TOKEN_VALUE to ion.newSymbol("all")))
+    }
+
+    @Test
+    fun countExpressionStar() {
+        checkInputThrowingParserException("COUNT(a, *)",
+                                          ErrorCode.PARSE_UNEXPECTED_TERM,
+                                          mapOf(Property.LINE_NUMBER to 1L,
+                                                Property.COLUMN_NUMBER to 10L,
+                                                Property.TOKEN_TYPE to TokenType.STAR,
+                                                Property.TOKEN_VALUE to ion.newSymbol("*")))
+    }
+
 
 }

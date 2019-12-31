@@ -125,6 +125,9 @@ private fun IonWriterContext.writeCallAgg(expr: CallAgg) {
         metas.hasMeta(IsCountStarMeta.TAG) -> {
             symbol("call_agg_wildcard")
             symbol("count")
+            if(setQuantifier == SetQuantifier.DISTINCT) {
+                symbol(setQuantifier.toString().toLowerCase())
+            }
         }
         else -> {
             symbol("call_agg")

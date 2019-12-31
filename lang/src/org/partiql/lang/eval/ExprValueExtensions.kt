@@ -21,6 +21,8 @@ import org.partiql.lang.eval.ExprValueType.*
 import org.partiql.lang.syntax.*
 import org.partiql.lang.util.*
 import java.math.*
+import java.util.*
+import kotlin.Comparator
 
 /**
  * Wraps the given [ExprValue] with a delegate that provides the [OrderedBindNames] facet.
@@ -377,8 +379,6 @@ private fun Number.toLongFailingOverflow(locationMeta: SourceLocationMeta?): Lon
     }
 }
 
-
-
 /**
  * An Unknown value is one of `MISSING` or `NULL`
  */
@@ -387,3 +387,17 @@ internal fun ExprValue.isUnknown() : Boolean = this.type.isUnknown
  * The opposite of [isUnknown].
  */
 internal fun ExprValue.isNotUnknown() : Boolean = !this.type.isUnknown
+
+/**
+ * Creates a filter for unique ExprValues consistent with exprEquals. This filter is stateful keeping track of 
+ * seen [ExprValue]s.
+ * 
+ * This filter is **stateful**!
+ * 
+ * @return false if the value was seen before 
+ */
+internal fun uniqueExprValueFilter(): (ExprValue) -> Boolean {
+    val seen = TreeSet<ExprValue>(DEFAULT_COMPARATOR)
+    
+    return { exprValue -> seen.add(exprValue) }
+}

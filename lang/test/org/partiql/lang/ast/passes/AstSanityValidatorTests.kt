@@ -56,20 +56,6 @@ class AstSanityValidatorTests : TestBase() {
     }
 
     @Test
-    fun countDistinct() {
-        // Can't use the parser to more easily construct an AST because it doens't support COUNT(DISTINCT <expr>) yet.
-        val callAgg = CallAgg(
-            VariableReference("foo", CaseSensitivity.INSENSITIVE, ScopeQualifier.UNQUALIFIED, dummyMetas),
-            SetQuantifier.DISTINCT,
-            Literal(ion.newInt(1), dummyMetas),
-            dummyMetas)
-
-        assertThrowsSqlException(ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET) {
-            AstSanityValidator.validate(callAgg)
-        }
-    }
-
-    @Test
     fun groupPartial() {
         assertThrowsSqlException(ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET) {
             AstSanityValidator.validate(

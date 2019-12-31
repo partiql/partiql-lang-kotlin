@@ -13,8 +13,19 @@
  */
  
 test::{
-    id: 'addition',
-    statement: "1 + 1",
-    expected: (success 2)
+    id: 'top level count',
+    statement: "COUNT([1,1,1,2])",
+    expected: (success 4)
+}
+  
+test::{
+    id: 'top level count all',
+    statement: "COUNT(ALL [1,1,1,2])",
+    expected: (success 4)
 }
 
+test::{
+    id: 'top level count distinct',
+    statement: "COUNT(DISTINCT [1,1,1,2])",
+    expected: (success 2)
+}

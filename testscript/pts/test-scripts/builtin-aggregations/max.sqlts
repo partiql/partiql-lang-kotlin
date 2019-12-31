@@ -13,8 +13,19 @@
  */
  
 test::{
-    id: 'addition',
-    statement: "1 + 1",
+    id: 'top level max',
+    statement: "MAX([1,1,1,2])",
+    expected: (success 2)
+}
+  
+test::{
+    id: 'top level max all',
+    statement: "MAX(ALL [1,1,1,2])",
     expected: (success 2)
 }
 
+test::{
+    id: 'top level max distinct',
+    statement: "max(DISTINCT [1,1,1,2])",
+    expected: (success 2)
+}

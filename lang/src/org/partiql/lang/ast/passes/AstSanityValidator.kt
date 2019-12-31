@@ -52,16 +52,6 @@ object AstSanityValidator {
                     val (op, args, _: MetaContainer) = node
                     checkArity(op.symbol, op.arityRange, args.size, node.metas)
                 }
-                is CallAgg -> {
-                    val (_, setQuantifier, _, metas: MetaContainer) = node
-                    if (setQuantifier == SetQuantifier.DISTINCT) {
-                        err("DISTINCT aggregate function calls not supported",
-                            ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
-                            errorContextFrom(metas).also {
-                                it[Property.FEATURE_NAME] = "DISTINCT aggregate function calls"
-                            }, internal = false)
-                    }
-                }
                 is Select -> {
                     val (_, projection, _, _, groupBy, having, _, metas) = node
 

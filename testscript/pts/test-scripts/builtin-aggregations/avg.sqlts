@@ -13,8 +13,19 @@
  */
  
 test::{
-    id: 'addition',
-    statement: "1 + 1",
-    expected: (success 2)
+    id: 'top level avg',
+    statement: "AVG([1,1,1,2])",
+    expected: (success 1.25)
+}
+  
+test::{
+    id: 'top level avg all',
+    statement: "AVG(ALL [1,1,1,2])",
+    expected: (success 1.25)
 }
 
+test::{
+    id: 'top level avg distinct',
+    statement: "AVG(DISTINCT [1,1,1,2])",
+    expected: (success 1.5)
+}

@@ -13,8 +13,19 @@
  */
  
 test::{
-    id: 'addition',
-    statement: "1 + 1",
-    expected: (success 2)
+    id: 'top level min',
+    statement: "MIN([1,1,1,2])",
+    expected: (success 1)
+}
+  
+test::{
+    id: 'top level min all',
+    statement: "MIN(ALL [1,1,1,2])",
+    expected: (success 1)
 }
 
+test::{
+    id: 'top level min distinct',
+    statement: "MIN(DISTINCT [1,1,1,2])",
+    expected: (success 1)
+}

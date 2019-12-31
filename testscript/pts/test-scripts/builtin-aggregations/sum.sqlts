@@ -12,9 +12,20 @@
  *  language governing permissions and limitations under the License.
  */
  
+ test::{
+     id: 'top level sum',
+     statement: "SUM([1,1,1,2])",
+     expected: (success 5)
+ }
+ 
 test::{
-    id: 'addition',
-    statement: "1 + 1",
-    expected: (success 2)
+    id: 'top level sum all',
+    statement: "SUM(ALL [1,1,1,2])",
+    expected: (success 5)
 }
 
+test::{
+    id: 'top level sum distinct',
+    statement: "SUM(DISTINCT [1,1,1, 2])",
+    expected: (success 3)
+}

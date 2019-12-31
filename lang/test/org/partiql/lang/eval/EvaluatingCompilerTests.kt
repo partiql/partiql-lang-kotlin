@@ -1287,8 +1287,21 @@ class EvaluatingCompilerTests : EvaluatorTestBase() {
     )
 
     @Test
+    fun topLevelCountDistinct() = assertEval(
+        """COUNT(DISTINCT [1,1,1,1,2])""",
+        """2"""
+    )
+
+    @Test
     fun topLevelCount() = assertEval(
         """COUNT(numbers)""",
+        """5""",
+        globalListOfNumbers.toSession()
+    )
+
+    @Test
+    fun topLevelAllCount() = assertEval(
+        """COUNT(ALL numbers)""",
         """5""",
         globalListOfNumbers.toSession()
     )
@@ -1299,6 +1312,19 @@ class EvaluatingCompilerTests : EvaluatorTestBase() {
         """15.0""",
         globalListOfNumbers.toSession()
     )
+    
+    @Test
+    fun topLevelAllSum() = assertEval(
+        """SUM(ALL numbers)""",
+        """15.0""",
+        globalListOfNumbers.toSession()
+    )
+
+    @Test
+    fun topLevelDistinctSum() = assertEval(
+        """SUM(DISTINCT [1,1,1,1,1,1,1,2])""",
+        """3"""
+    )
 
     @Test
     fun topLevelMin() = assertEval(
@@ -1308,8 +1334,36 @@ class EvaluatingCompilerTests : EvaluatorTestBase() {
     )
 
     @Test
+    fun topLevelDistinctMin() = assertEval(
+        """MIN(DISTINCT numbers)""",
+        """1""",
+        globalListOfNumbers.toSession()
+    )
+
+    @Test
+    fun topLevelAllMin() = assertEval(
+        """MIN(ALL numbers)""",
+        """1""",
+        globalListOfNumbers.toSession()
+    ) 
+
+    @Test
     fun topLevelMax() = assertEval(
         """MAX(numbers)""",
+        """5d0""",
+        globalListOfNumbers.toSession()
+    )
+    
+    @Test
+    fun topLevelDistinctMax() = assertEval(
+        """MAX(DISTINCT numbers)""",
+        """5d0""",
+        globalListOfNumbers.toSession()
+    )
+
+    @Test
+    fun topLevelAllMax() = assertEval(
+        """MAX(ALL numbers)""",
         """5d0""",
         globalListOfNumbers.toSession()
     )
@@ -1319,6 +1373,12 @@ class EvaluatingCompilerTests : EvaluatorTestBase() {
         """AVG(numbers)""",
         """3.0""",
         globalListOfNumbers.toSession()
+    )
+
+    @Test
+    fun topLevelDistinctAvg() = assertEval(
+        """AVG(DISTINCT [1,1,1,1,1,3])""",
+        """2."""
     )
 
     @Test // AVG of integers should be of type DECIMAL.
@@ -1475,4 +1535,68 @@ class EvaluatingCompilerTests : EvaluatorTestBase() {
                      listOf("a", "b"),
                      result.first().orderedNames)
     }
+
+    @Test
+    fun selectDistinct() = assertEval(
+        """SELECT DISTINCT t.a FROM `[{a: 1}, {a: 2}, {a: 1}]` t""",
+        """
+          [{a: 1}, {a: 2}]
+        """)
+
+    @Test
+    fun selectDistinctWithAggregate() = assertEval(
+        """SELECT SUM(DISTINCT t.a) AS a FROM `[{a:10}, {a:1}, {a:10}, {a:3}]` t""",
+        "[{a:14}]")
+
+    @Test
+    fun selectDistinctSubQuery() = assertEval(
+        """SELECT * FROM (SELECT DISTINCT t.a FROM `[{a: 1}, {a: 2}, {a: 1}]` t)""", 
+        """[{a:1},{a:2}]""")
+    
+    @Test
+    fun selectDistinctWithGroupBy() = assertEval(
+        """
+            SELECT t.a, COUNT(DISTINCT t.b) AS c 
+            FROM `[{a:1, b:10}, {a:1, b:10}, {a:1, b:20}, {a:2, b:10}, {a:2, b:10}]` t
+            GROUP by t.a
+        """,
+        """[{a:1, c:2}, {a:2, c:1}]""")
+
+    @Test
+    fun selectDistinctWithJoin() = assertEval(
+        """
+            SELECT DISTINCT *  
+            FROM 
+                `[1, 1, 1, 1, 2]` t1,
+                `[2, 2, 2, 2, 1]` t2
+        """,
+        """
+          [{_1:1,_2:2}, {_1:1, _2:1}, {_1:2,_2:2}, {_1:2,_2:1}]
+        """)
+
+    @Test
+    fun selectDistinctStar() = assertEval(
+        """
+            SELECT DISTINCT * 
+            FROM [
+                1, 1, 2, 
+                [1], [1], [1, 2], 
+                <<>>, <<>>, 
+                MISSING, NULL, NULL, MISSING, 
+                {'a':1}, {'a':1}, {'a':2}]
+        """,
+        """
+          [{_1:1},{_1:2},{_1:[1]},{_1:[1,2]},{_1:[]},{},{_1:null},{a:1},{a:2}]
+        """)
+
+    @Test
+    fun selectDistinctValue() = assertEval(
+        """
+            SELECT DISTINCT VALUE t 
+            FROM [1,2,3,1,1,1,1,1] t
+                
+        """,
+        """
+          [1,2,3]
+        """)
 }
