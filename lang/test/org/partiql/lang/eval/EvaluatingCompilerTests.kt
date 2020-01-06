@@ -1552,6 +1552,11 @@ class EvaluatingCompilerTests : EvaluatorTestBase() {
     fun selectDistinctSubQuery() = assertEval(
         """SELECT * FROM (SELECT DISTINCT t.a FROM `[{a: 1}, {a: 2}, {a: 1}]` t)""", 
         """[{a:1},{a:2}]""")
+
+    @Test
+    fun selectDistinctWithSubQuery() = assertEval(
+        """SELECT DISTINCT * FROM (SELECT t.a FROM `[{a: 1}, {a: 2}, {a: 1}]` t)""",
+        """[{a:1},{a:2}]""")
     
     @Test
     fun selectDistinctWithGroupBy() = assertEval(
