@@ -1559,13 +1559,22 @@ class EvaluatingCompilerTests : EvaluatorTestBase() {
         """[{a:1},{a:2}]""")
     
     @Test
-    fun selectDistinctWithGroupBy() = assertEval(
+    fun selectDistinctAggregationWithGroupBy() = assertEval(
         """
             SELECT t.a, COUNT(DISTINCT t.b) AS c 
             FROM `[{a:1, b:10}, {a:1, b:10}, {a:1, b:20}, {a:2, b:10}, {a:2, b:10}]` t
             GROUP by t.a
         """,
         """[{a:1, c:2}, {a:2, c:1}]""")
+
+    @Test
+    fun selectDistinctWithGroupBy() = assertEval(
+        """
+            SELECT DISTINCT t.a, COUNT(t.b) AS c 
+            FROM `[{a:1, b:10}, {a:1, b:10}, {a:1, b:20}, {a:2, b:10}, {a:2, b:10}]` t
+            GROUP by t.a
+        """,
+        """[{a:1, c:3}, {a:2, c:2}]""")
 
     @Test
     fun selectDistinctWithJoin() = assertEval(
@@ -1603,5 +1612,27 @@ class EvaluatingCompilerTests : EvaluatorTestBase() {
         """,
         """
           [1,2,3]
+        """)
+
+    @Test
+    fun selectDistinctExpressionAndWhere() = assertEval(
+        """
+            SELECT DISTINCT (t.a + t.b) as c 
+            FROM `[{a: 1, b: 1}, {a: 2, b: 0}, {a: 0, b: 2}, {a: 2, b: 2}, {a: 0, b: 99}]` t
+            WHERE t.a > 0
+        """,
+        """
+          [{c: 2}, {c: 4}]
+        """)
+
+    @Test
+    fun selectDistinctExpression() = assertEval(
+        """
+            SELECT DISTINCT (t.a || t.b) as c 
+            FROM `[{a: "1", b: "1"}, {a: "11", b: ""}, {a: "", b: "11"}, {a: "2", b: "2"}]` t
+                
+        """,
+        """
+          [{c:"11"},{c:"22"}]
         """)
 }
