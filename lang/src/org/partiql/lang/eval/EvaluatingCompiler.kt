@@ -149,7 +149,7 @@ internal class EvaluatingCompiler(
         
         val allFilter: (ExprValue) -> Boolean = { _ -> true }
         
-        // each distinct ExprAggregator must get its own uniqueExprValueFilter()
+        // each distinct ExprAggregator must get its own createUniqueExprValueFilter()
 
         mapOf(
             Pair("count", SetQuantifier.ALL) to ExprAggregatorFactory.over { 
@@ -157,7 +157,7 @@ internal class EvaluatingCompiler(
             },
             
             Pair("count", SetQuantifier.DISTINCT) to ExprAggregatorFactory.over { 
-                Accumulator(0L, countAccFunc, uniqueExprValueFilter()) 
+                Accumulator(0L, countAccFunc, createUniqueExprValueFilter()) 
             },
 
             Pair("sum", SetQuantifier.ALL) to ExprAggregatorFactory.over {
@@ -165,7 +165,7 @@ internal class EvaluatingCompiler(
             },
 
             Pair("sum", SetQuantifier.DISTINCT) to ExprAggregatorFactory.over {
-                Accumulator(null, sumAccFunc, uniqueExprValueFilter())
+                Accumulator(null, sumAccFunc, createUniqueExprValueFilter())
             },
 
             Pair("avg", SetQuantifier.ALL) to ExprAggregatorFactory.over {
@@ -173,7 +173,7 @@ internal class EvaluatingCompiler(
             },
 
             Pair("avg", SetQuantifier.DISTINCT) to ExprAggregatorFactory.over {
-                avgAggregateGenerator(uniqueExprValueFilter())
+                avgAggregateGenerator(createUniqueExprValueFilter())
             },
 
             Pair("max", SetQuantifier.ALL) to ExprAggregatorFactory.over {
@@ -181,7 +181,7 @@ internal class EvaluatingCompiler(
             },
 
             Pair("max", SetQuantifier.DISTINCT) to ExprAggregatorFactory.over {
-                Accumulator(null, maxAccFunc, uniqueExprValueFilter())
+                Accumulator(null, maxAccFunc, createUniqueExprValueFilter())
             },
 
             Pair("min", SetQuantifier.ALL) to ExprAggregatorFactory.over {
@@ -189,7 +189,7 @@ internal class EvaluatingCompiler(
             },
 
             Pair("min", SetQuantifier.DISTINCT) to ExprAggregatorFactory.over {
-                Accumulator(null, minAccFunc, uniqueExprValueFilter())
+                Accumulator(null, minAccFunc, createUniqueExprValueFilter())
             }
         )
     }()
@@ -817,7 +817,7 @@ internal class EvaluatingCompiler(
 
                             val quantifiedRows = when(setQuantifier) {
                                 // wrap the ExprValue to use ExprValue.equals as the equality  
-                                SetQuantifier.DISTINCT -> projectedRows.filter(uniqueExprValueFilter())
+                                SetQuantifier.DISTINCT -> projectedRows.filter(createUniqueExprValueFilter())
                                 SetQuantifier.ALL -> projectedRows
                             }
 

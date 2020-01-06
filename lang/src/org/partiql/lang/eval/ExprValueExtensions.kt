@@ -396,7 +396,7 @@ internal fun ExprValue.isNotUnknown() : Boolean = !this.type.isUnknown
  * 
  * @return false if the value was seen before 
  */
-internal fun uniqueExprValueFilter(): (ExprValue) -> Boolean {
+internal fun createUniqueExprValueFilter(): (ExprValue) -> Boolean {
     val seen = TreeSet<ExprValue>(DEFAULT_COMPARATOR)
     
     return { exprValue -> seen.add(exprValue) }
