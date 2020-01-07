@@ -19,7 +19,7 @@ import org.partiql.lang.errors.*
 import org.partiql.lang.eval.*
 
 internal fun errAmbiguousBinding(bindingName: String, matchingNames: List<String>): Nothing {
-    err("Case insensitive binding name matched more than one identifier",
+    err("Multiple matches were found for the specified identifier",
         ErrorCode.EVALUATOR_AMBIGUOUS_BINDING,
         propertyValueMapOf(Property.BINDING_NAME to bindingName,
                            Property.BINDING_NAME_MATCHES to matchingNames.joinToString(", ")),

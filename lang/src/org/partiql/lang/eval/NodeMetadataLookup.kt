@@ -118,19 +118,19 @@ class NodeMetadataLookup private constructor() {
          */
         private fun IonValue.extractMetaNodeInto(lookup: NodeMetadataLookup,
                                                  currentMetadata: NodeMetadata? = null): IonValue = when {
-            this.isMetaNode()    -> {
+            this.isMetaNode() -> {
                 // found a new meta node, use it as current
                 val metaNode = NodeMetadata(this[2] as IonStruct)
 
                 this[1].extractMetaNodeInto(lookup, metaNode)
             }
             this is IonContainer -> {
-                val container = this.map { it.extractMetaNodeInto(lookup, currentMetadata) }
+                val container: IonContainer = this.map { it.extractMetaNodeInto(lookup, currentMetadata) }
 
                 lookup[container] = currentMetadata
                 container
             }
-            else                 -> {
+            else -> {
                 val value = this.clone()
 
                 lookup[value] = currentMetadata
@@ -159,12 +159,23 @@ private fun IonValue.isMetaNode() = this is IonSexp && this.size == 3 && this[0]
  * [Iterable]
  */
 private fun IonContainer.map(transform: (IonValue) -> IonValue): IonContainer = when {
-    this.isNullValue  -> this.clone()
-    this is IonSexp   -> this.mapTo(this.system.newEmptySexp()) { transform(it) }
-    this is IonList   -> this.mapTo(this.system.newEmptyList()) { transform(it) }
-    this is IonStruct -> this.fold(this.system.newEmptyStruct(), { acc, it ->
-        acc.add(it.fieldNameSymbol, transform(it))
-        acc
-    })
-    else              -> errNoContext("unknown container type $this", internal = true)
+    this.isNullValue -> this.clone()
+    this is IonSexp -> {
+        val emptySexp = this.system.newEmptySexp()
+        emptySexp.setTypeAnnotationSymbols(*this.typeAnnotationSymbols)
+        this.mapTo(emptySexp) { transform(it) }
+    }
+    this is IonList -> {
+        val emptyList = this.system.newEmptyList()
+        emptyList.setTypeAnnotationSymbols(*this.typeAnnotationSymbols)
+        this.mapTo(emptyList) { transform(it) }
+    }
+    this is IonStruct -> {
+        val emptyStruct = this.system.newEmptyStruct()
+        emptyStruct.setTypeAnnotationSymbols(*this.typeAnnotationSymbols)
+        this.fold(emptyStruct) { acc, it ->
+            acc.add(it.fieldNameSymbol, transform(it))
+            acc
+        }}
+    else -> errNoContext("unknown container type $this", internal = true)
 }

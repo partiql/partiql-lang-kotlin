@@ -53,21 +53,21 @@ class GroupByPathExpressionRewriter(
         }
 
         /**
-         * Collects all of the aliases defined by the specified [FromSource] and its children.A
+         * Collects all of the aliases defined by the specified [FromSource] and its children.
          * This is why this rewrite must occur after [FromSourceAliasRewriter].
          */
         fun collectAliases(fromSource: FromSource): List<String> =
             when (fromSource) {
                 is FromSourceExpr    ->
                     listOf(
-                        fromSource.asName?.name
-                        ?: errNoContext("FromSourceItem.asName must be specified for this rewrite to work", internal = true))
+                        fromSource.variables.asName?.name
+                        ?: errNoContext("FromSourceItem.variables.asName must be specified for this rewrite to work", internal = true))
 
                 is FromSourceJoin    ->
                     collectAliases(fromSource.leftRef) + collectAliases(fromSource.rightRef)
 
                 is FromSourceUnpivot ->
-                    listOfNotNull(fromSource.asName?.name, fromSource.atName?.name)
+                    listOfNotNull(fromSource.variables.asName?.name, fromSource.variables.atName?.name)
             }
     }
 

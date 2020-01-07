@@ -15,6 +15,7 @@
 package org.partiql.lang.syntax
 
 import org.junit.*
+import org.partiql.lang.ast.*
 
 /**
  * Originally just meant to test the parser, this class now tests several different things because
@@ -72,6 +73,46 @@ class SqlParserTest : SqlParserTestBase() {
     )
 
     @Test
+    fun listFunction() = assertExpression(
+        "(list (id a case_insensitive) (lit 5))",
+        "list(a, 5)",
+        "(term (exp (list (term (exp (id a case_insensitive))) (term (exp (lit 5))))))"
+    )
+
+    @Test
+    fun listFunctionlWithBinary() = assertExpression(
+        "(list (id a case_insensitive) (lit 5) (+ (id b case_insensitive) (lit 6)))",
+        "LIST(a, 5, (b + 6))",
+        """(term (exp (list (term (exp (id a case_insensitive)))
+                            (term (exp (lit 5)))
+                            (term (exp (+ (term (exp (id b case_insensitive)))
+                                          (term (exp (lit 6)))
+                            )))
+           )))
+        """
+    )
+
+    @Test
+    fun sexpFunction() = assertExpression(
+        "(sexp (id a case_insensitive) (lit 5))",
+        "sexp(a, 5)",
+        "(term (exp (sexp (term (exp (id a case_insensitive))) (term (exp (lit 5))))))"
+    )
+
+    @Test
+    fun sexpFunctionWithBinary() = assertExpression(
+        "(sexp (id a case_insensitive) (lit 5) (+ (id b case_insensitive) (lit 6)))",
+        "SEXP(a, 5, (b + 6))",
+        """(term (exp (sexp (term (exp (id a case_insensitive)))
+                            (term (exp (lit 5)))
+                            (term (exp (+ (term (exp (id b case_insensitive)))
+                                          (term (exp (lit 6)))
+                            )))
+           )))
+        """
+    )
+
+    @Test
     fun bagLiteral() = assertExpression(
         "(bag (id a case_insensitive) (lit 5))",
         "<<a, 5>>",
@@ -82,6 +123,26 @@ class SqlParserTest : SqlParserTestBase() {
     fun bagLiteralWithBinary() = assertExpression(
         "(bag (id a case_insensitive) (lit 5) (+ (id b case_insensitive) (lit 6)))",
         "<<a, 5, (b + 6)>>",
+        """(term (exp (bag (term (exp (id a case_insensitive)))
+                           (term (exp (lit 5)))
+                           (term (exp (+ (term (exp (id b case_insensitive)))
+                                         (term (exp (lit 6)))
+                           )))
+           )))
+        """
+    )
+
+    @Test
+    fun bagFunction() = assertExpression(
+        "(bag (id a case_insensitive) (lit 5))",
+        "bag(a, 5)",
+        "(term (exp (bag (term (exp (id a case_insensitive))) (term (exp (lit 5))))))"
+    )
+
+    @Test
+    fun bagFunctionWithBinary() = assertExpression(
+        "(bag (id a case_insensitive) (lit 5) (+ (id b case_insensitive) (lit 6)))",
+        "BAG(a, 5, (b + 6))",
         """(term (exp (bag (term (exp (id a case_insensitive)))
                            (term (exp (lit 5)))
                            (term (exp (+ (term (exp (id b case_insensitive)))
@@ -1581,11 +1642,15 @@ class SqlParserTest : SqlParserTestBase() {
         """
     )
 
+    @Test
+    fun parameterExpression() = assertExpression(
+            "(parameter 1)",
+            "?",
+            "(term (exp (parameter 1)))")
 
     //****************************************
     // SELECT
     //****************************************
-
     @Test
     fun selectWithSingleFrom() = assertExpression(
         "(select (project (list (id a case_insensitive))) (from (id table1 case_insensitive)))",
@@ -1780,6 +1845,120 @@ class SqlParserTest : SqlParserTestBase() {
 
         """
     )
+
+
+    @Test
+    fun selectWithFromIdBy() = assertExpression(
+        "(select (project (list (project_all))) (from (by uid (id table1 case_insensitive))))",
+        "SELECT * FROM table1 BY uid",
+        """
+         (term
+            (exp
+                (select
+                    (project
+                        (list
+                            (term
+                                (exp
+                                    (star)))))
+                    (from
+                        (term
+                            (exp
+                                (by
+                                uid
+                                   (term
+                                      (exp
+                                          (id table1 case_insensitive))))))))))
+        """
+    )
+
+    @Test
+    fun selectWithFromAtIdBy() = assertExpression(
+        "(select (project (list (project_all))) (from (by uid (at ord (id table1 case_insensitive)))))",
+        "SELECT * FROM table1 AT ord BY uid",
+        """
+        (term
+            (exp
+                (select
+                    (project
+                        (list
+                            (term
+                                (exp
+                                    (star)))))
+                    (from
+                        (term
+                            (exp
+                                (by
+                                    uid
+                                    (term
+                                        (exp
+                                            (at
+                                                ord
+                                                (term
+                                                    (exp
+                                                        (id table1 case_insensitive)))))))))))))
+        """
+    )
+
+    @Test
+    fun selectWithFromAsIdBy() = assertExpression(
+        "(select (project (list (project_all))) (from (by uid (as t (id table1 case_insensitive)))))",
+        "SELECT * FROM table1 AS t BY uid",
+        """
+        (term
+            (exp
+                (select
+                    (project
+                        (list
+                            (term
+                                (exp
+                                    (star)))))
+                    (from
+                        (term
+                            (exp
+                                (by
+                                    uid
+                                    (term
+                                        (exp
+                                            (as
+                                                t
+                                                (term
+                                                    (exp
+                                                        (id table1 case_insensitive)))))))))))))
+        """
+    )
+
+    @Test
+    fun selectWithFromAsAndAtIdBy() = assertExpression(
+        "(select (project (list (project_all))) (from (by uid (at ord (as val (id table1 case_insensitive))))))",
+        "SELECT * FROM table1 AS val AT ord BY uid",
+        """
+        (term
+            (exp
+                (select
+                    (project
+                        (list
+                            (term
+                                (exp
+                                    (star)))))
+                    (from
+                        (term
+                            (exp
+                                    (by
+                                        uid
+                                        (term
+                                            (exp
+                                            (at
+                                                ord
+                                                (term
+                                                    (exp
+                                                        (as
+                                                            val
+                                                            (term
+                                                                (exp
+                                                                    (id table1 case_insensitive))))))))))))))))
+        """
+    )
+
 
     @Test
     fun selectWithFromUnpivot() = assertExpression(
@@ -2194,7 +2373,7 @@ class SqlParserTest : SqlParserTestBase() {
              (where (call f (id s case_insensitive)))
            )
         """,
-        "SELECT a, b FROM stuff s INNER JOIN @s WHERE f(s)",
+        "SELECT a, b FROM stuff s INNER CROSS JOIN @s WHERE f(s)",
         """
         (term
             (exp
@@ -2288,7 +2467,7 @@ class SqlParserTest : SqlParserTestBase() {
              (where (call f (id s case_insensitive)))
            )
         """,
-        "SELECT a, b FROM stuff s LEFT JOIN @s WHERE f(s)",
+        "SELECT a, b FROM stuff s LEFT CROSS JOIN @s WHERE f(s)",
         """
         (term
             (exp
@@ -2390,7 +2569,7 @@ class SqlParserTest : SqlParserTestBase() {
              )
            )
         """,
-        "SELECT a, b FROM stuff s RIGHT JOIN foo f",
+        "SELECT a, b FROM stuff s RIGHT CROSS JOIN foo f",
         """
         (term
             (exp
@@ -2506,7 +2685,7 @@ class SqlParserTest : SqlParserTestBase() {
              )
            )
         """,
-        "SELECT x FROM a, b CROSS JOIN c LEFT JOIN d ON e RIGHT OUTER JOIN f OUTER JOIN g ON h",
+        "SELECT x FROM a, b CROSS JOIN c LEFT JOIN d ON e RIGHT OUTER CROSS JOIN f OUTER JOIN g ON h",
         """
         (term
             (exp
@@ -2586,7 +2765,7 @@ class SqlParserTest : SqlParserTestBase() {
              )
            )
         """,
-        "SELECT x FROM a INNER JOIN b CROSS JOIN c LEFT JOIN d ON e RIGHT OUTER JOIN f OUTER JOIN g ON h",
+        "SELECT x FROM a INNER CROSS JOIN b CROSS JOIN c LEFT JOIN d ON e RIGHT OUTER CROSS JOIN f OUTER JOIN g ON h",
         """
         (term
             (exp
@@ -3146,6 +3325,139 @@ class SqlParserTest : SqlParserTestBase() {
         """
     )
 
+    @Test
+    fun selectWithParametersAndLiterals() = assertExpression(
+        """
+        (select
+            (project
+                (list
+                    (parameter
+                        1)
+                    (path
+                        (id f case_insensitive)
+                        (case_insensitive
+                            (lit "a")))))
+            (from
+                (as
+                    f
+                    (id foo case_insensitive)))
+            (where
+                (and
+                    (and
+                        (=
+                            (path
+                                (id f case_insensitive)
+                                (case_insensitive
+                                    (lit "bar")))
+                            (parameter
+                                2))
+                        (=
+                            (path
+                                (id f case_insensitive)
+                                (case_insensitive
+                                    (lit "spam")))
+                            (lit "eggs")))
+                    (=
+                        (path
+                            (id f case_insensitive)
+                            (case_insensitive
+                                (lit "baz")))
+                        (parameter
+                            3)))))
+        """,
+        "SELECT ?, f.a from foo f where f.bar = ? and f.spam = 'eggs' and f.baz = ?",
+        """
+        (term
+            (exp
+                (select
+                    (project
+                        (list
+                            (term
+                                (exp
+                                    (parameter
+                                        1)))
+                            (term
+                                (exp
+                                    (path
+                                        (term
+                                            (exp
+                                                (id f case_insensitive)))
+                                        (path_element
+                                            (term
+                                                (exp
+                                                    (lit "a")))
+                                            case_insensitive))))))
+                    (from
+                        (term
+                            (exp
+                                (as
+                                    f
+                                    (term
+                                        (exp
+                                            (id foo case_insensitive)))))))
+                    (where
+                        (term
+                            (exp
+                                (and
+                                    (term
+                                        (exp
+                                            (and
+                                                (term
+                                                    (exp
+                                                        (=
+                                                            (term
+                                                                (exp
+                                                                    (path
+                                                                        (term
+                                                                            (exp
+                                                                                (id f case_insensitive)))
+                                                                        (path_element
+                                                                            (term
+                                                                                (exp
+                                                                                    (lit "bar")))
+                                                                            case_insensitive))))
+                                                            (term
+                                                                (exp
+                                                                    (parameter
+                                                                        2))))))
+                                                (term
+                                                    (exp
+                                                        (=
+                                                            (term
+                                                                (exp
+                                                                    (path
+                                                                        (term
+                                                                            (exp
+                                                                                (id f case_insensitive)))
+                                                                        (path_element
+                                                                            (term
+                                                                                (exp
+                                                                                    (lit "spam")))
+                                                                            case_insensitive))))
+                                                            (term
+                                                                (exp
+                                                                    (lit "eggs")))))))))
+                                    (term
+                                        (exp
+                                            (=
+                                                (term
+                                                    (exp
+                                                        (path
+                                                            (term
+                                                                (exp
+                                                                    (id f case_insensitive)))
+                                                            (path_element
+                                                                (term
+                                                                    (exp
+                                                                        (lit "baz")))
+                                                                case_insensitive))))
+                                                (term
+                                                    (exp
+                                                        (parameter
+                                                            3)))))))))))))
+        """
+    )
+
     //****************************************
     // GROUP BY and GROUP PARTIAL BY
     //****************************************
@@ -3537,6 +3849,1078 @@ class SqlParserTest : SqlParserTestBase() {
     )
 
     //****************************************
+    // DML
+    //****************************************
+
+    @Test
+    fun fromInsertValuesDml() = assertExpression(
+        expectedSexpAstV0String = """
+          (dml
+            (insert
+              (id foo case_insensitive)
+              (bag
+                (list (lit 1) (lit 2))
+                (list (lit 3) (lit 4))
+              )
+            )
+            (from (id x case_insensitive))
+          )
+        """,
+        source = "FROM x INSERT INTO foo VALUES (1, 2), (3, 4)",
+        expectedSexpAstV1String = """
+          (term (exp (dml
+            (insert
+              (term (exp (id foo case_insensitive)))
+              (term (exp (bag
+                (term (exp (list (term (exp (lit 1))) (term (exp (lit 2))))))
+                (term (exp (list (term (exp (lit 3))) (term (exp (lit 4))))))
+              )))
+            )
+            (from (term (exp (id x case_insensitive))))
+          )))
+        """
+    )
+
+    @Test
+    fun fromInsertValueAtDml() = assertExpression(
+        expectedSexpAstV0String = """
+          (dml
+              (insert_value
+                (id foo case_insensitive)
+                (lit 1)
+                (id bar case_insensitive)
+              )
+              (from (id x case_insensitive))
+          )
+        """,
+        source = "FROM x INSERT INTO foo VALUE 1 AT bar",
+        expectedSexpAstV1String = """
+          (term (exp (dml
+            (insert_value
+              (term (exp (id foo case_insensitive)))
+              (term (exp (lit 1)))
+              (term (exp (id bar case_insensitive)))
+            )
+            (from (term (exp (id x case_insensitive))))
+          )))
+        """)
+
+    @Test
+    fun fromInsertValueDml() = assertExpression(
+        expectedSexpAstV0String = """
+          (dml
+              (insert_value
+                (id foo case_insensitive)
+                (lit 1)
+              )
+              (from (id x case_insensitive))
+          )
+        """,
+        source = "FROM x INSERT INTO foo VALUE 1",
+        expectedSexpAstV1String = """
+          (term (exp (dml
+            (insert_value
+              (term (exp (id foo case_insensitive)))
+              (term (exp (lit 1)))
+            )
+            (from (term (exp (id x case_insensitive))))
+          )))
+        """)
+
+    @Test
+    fun fromInsertQueryDml() = assertExpression(
+        expectedSexpAstV0String = """
+          (dml
+            (insert
+              (id foo case_insensitive)
+              (select
+                (project (list (id y case_insensitive)))
+                (from (id bar case_insensitive))
+              )
+            )
+            (from (id x case_insensitive))
+          )
+        """,
+        source = "FROM x INSERT INTO foo SELECT y FROM bar",
+        expectedSexpAstV1String = """
+          (term (exp (dml
+            (insert
+              (term (exp (id foo case_insensitive)))
+              (term (exp (select
+                (project (list (term (exp (id y case_insensitive)))))
+                (from (term (exp (id bar case_insensitive))))
+              )))
+            )
+            (from (term (exp (id x case_insensitive))))
+          )))
+        """
+    )
+
+    @Test
+    fun insertValueDml() = assertExpression(
+        expectedSexpAstV0String = """
+          (dml
+              (insert_value
+                (id foo case_insensitive)
+                (lit 1)
+              )
+          )
+        """,
+        source = "INSERT INTO foo VALUE 1",
+        expectedSexpAstV1String = """
+          (term (exp (dml
+              (insert_value
+                (term (exp (id foo case_insensitive)))
+                (term (exp (lit 1)))
+              )
+          )))
+        """
+    )
+
+    @Test
+    fun insertValuesDml() = assertExpression(
+        expectedSexpAstV0String = """
+          (dml
+              (insert
+                (id foo case_insensitive)
+                (bag
+                  (list (lit 1) (lit 2))
+                  (list (lit 3) (lit 4))
+                )
+              )
+          )
+        """,
+        source = "INSERT INTO foo VALUES (1, 2), (3, 4)",
+        expectedSexpAstV1String = """
+          (term (exp (dml
+              (insert
+                (term (exp (id foo case_insensitive)))
+                (term (exp (bag
+                  (term (exp (list (term (exp (lit 1))) (term (exp (lit 2))))))
+                  (term (exp (list (term (exp (lit 3))) (term (exp (lit 4))))))
+                )))
+              )
+          )))
+        """
+    )
+
+    @Test
+    fun insertValueAtDml() = assertExpression(
+        expectedSexpAstV0String = """
+          (dml
+              (insert_value
+                (id foo case_insensitive)
+                (lit 1)
+                (id bar case_insensitive)
+              )
+          )
+        """,
+        source = "INSERT INTO foo VALUE 1 AT bar",
+        expectedSexpAstV1String = """
+          (term (exp (dml
+            (insert_value
+                (term (exp (id foo case_insensitive)))
+                (term (exp (lit 1)))
+                (term (exp (id bar case_insensitive)))))))
+        """)
+
+    @Test
+    fun insertQueryDml() = assertExpression(
+        expectedSexpAstV0String = """
+          (dml
+              (insert
+                (id foo case_insensitive)
+                (select
+                  (project (list (id y case_insensitive)))
+                  (from (id bar case_insensitive))
+                )
+              )
+          )
+        """,
+        source = "INSERT INTO foo SELECT y FROM bar",
+        expectedSexpAstV1String = """
+          (term (exp (dml
+              (insert
+                (term (exp (id foo case_insensitive)))
+                (term (exp (select
+                  (project (list (term (exp (id y case_insensitive)))))
+                  (from (term (exp (id bar case_insensitive))))
+                )))
+              )
+          )))
+        """
+    )
+
+    @Test
+    fun fromSetSingleDml() = assertExpression(
+        expectedSexpAstV0String = """
+          (dml
+            (set
+              (assignment
+                (id k case_insensitive)
+                (lit 5)
+              )
+            )
+            (from (id x case_insensitive))
+            (where (= (id a case_insensitive) (id b case_insensitive)))
+          )
+        """,
+        source = "FROM x WHERE a = b SET k = 5",
+        expectedSexpAstV1String = """
+          (term (exp (dml
+            (set
+              (assignment
+                (term (exp (id k case_insensitive)))
+                (term (exp (lit 5)))
+              )
+            )
+            (from (term (exp (id x case_insensitive))))
+            (where
+              (term (exp (=
+                (term (exp (id a case_insensitive)))
+                (term (exp (id b case_insensitive)))
+              )))
+            )
+          )))
+        """
+    )
+
+    @Test
+    fun fromSetSinglePathFieldDml() = assertExpression(
+        expectedSexpAstV0String = """
+          (dml
+            (set
+              (assignment
+                (path (id k case_insensitive) (case_insensitive (lit "m")))
+                (lit 5)
+              )
+            )
+            (from (id x case_insensitive))
+            (where (= (id a case_insensitive) (id b case_insensitive)))
+          )
+        """,
+        source = "FROM x WHERE a = b SET k.m = 5",
+        expectedSexpAstV1String = """
+          (term (exp (dml
+            (set
+              (assignment
+               (term (exp (path (term (exp (id k case_insensitive))) (path_element (term (exp (lit "m"))) case_insensitive))))
+                (term (exp (lit 5)))
+              )
+            )
+            (from (term (exp (id x case_insensitive))))
+            (where
+              (term (exp (=
+                (term (exp (id a case_insensitive)))
+                (term (exp (id b case_insensitive)))
+              )))
+            )
+          )))
+        """
+    )
+
+    @Test
+    fun fromSetSinglePathStringIndexDml() = assertExpression(
+        expectedSexpAstV0String = """
+          (dml
+            (set
+              (assignment
+                (path (id k case_insensitive) (case_sensitive (lit "m")))
+                (lit 5)
+              )
+            )
+            (from (id x case_insensitive))
+            (where (= (id a case_insensitive) (id b case_insensitive)))
+          )
+        """,
+        source = "FROM x WHERE a = b SET k['m'] = 5",
+        expectedSexpAstV1String = """
+          (term (exp (dml
+            (set
+              (assignment
+               (term (exp (path (term (exp (id k case_insensitive))) (path_element (term (exp (lit "m"))) case_sensitive))))
+                (term (exp (lit 5)))
+              )
+            )
+            (from (term (exp (id x case_insensitive))))
+            (where
+              (term (exp (=
+                (term (exp (id a case_insensitive)))
+                (term (exp (id b case_insensitive)))
+              )))
+            )
+          )))
+        """
+    )
+
+
+
+    @Test
+    fun fromSetSinglePathOrdinalDml() = assertExpression(
+        expectedSexpAstV0String = """
+          (dml
+            (set
+              (assignment
+                (path (id k case_insensitive) (lit 3))
+                (lit 5)
+              )
+            )
+            (from (id x case_insensitive))
+            (where (= (id a case_insensitive) (id b case_insensitive)))
+          )
+        """,
+        source = "FROM x WHERE a = b SET k[3] = 5",
+        expectedSexpAstV1String = """
+          (term (exp (dml
+            (set
+              (assignment
+               (term (exp (path (term (exp (id k case_insensitive))) (path_element (term (exp (lit 3))) case_sensitive))))
+                (term (exp (lit 5)))
+              )
+            )
+            (from (term (exp (id x case_insensitive))))
+            (where
+              (term (exp (=
+                (term (exp (id a case_insensitive)))
+                (term (exp (id b case_insensitive)))
+              )))
+            )
+          )))
+        """
+    )
+
+    @Test
+    fun fromSetMultiDml() = assertExpression(
+        expectedSexpAstV0String = """
+          (dml
+            (set
+              (assignment
+                (id k case_insensitive)
+                (lit 5)
+              )
+              (assignment
+                (id m case_insensitive)
+                (lit 6)
+              )
+            )
+            (from (id x case_insensitive))
+            (where (= (id a case_insensitive) (id b case_insensitive)))
+          )
+        """,
+        source = "FROM x WHERE a = b SET k = 5, m = 6",
+        expectedSexpAstV1String = """
+          (term (exp (dml
+            (set
+              (assignment
+                (term (exp (id k case_insensitive)))
+                (term (exp (lit 5)))
+              )
+              (assignment
+                (term (exp (id m case_insensitive)))
+                (term (exp (lit 6)))
+              )
+            )
+            (from (term (exp (id x case_insensitive))))
+            (where
+              (term (exp (=
+                (term (exp (id a case_insensitive)))
+                (term (exp (id b case_insensitive)))
+              )))
+            )
+          )))
+        """
+    )
+
+    @Test
+    fun setSingleDml() = assertExpression(
+        expectedSexpAstV0String = """
+          (dml
+              (set
+                (assignment
+                  (id k case_insensitive)
+                  (lit 5)
+                )
+              )
+          )
+        """,
+        source = "SET k = 5",
+        expectedSexpAstV1String = """
+          (term (exp (dml
+              (set(assignment
+                (term (exp (id k case_insensitive)))
+                (term (exp (lit 5)))
+              ))
+          )))
+        """
+    )
+
+    @Test
+    fun setSingleDmlWithQuotedIdentifierAtHead() = assertExpression(
+        expectedSexpAstV0String = """
+          (dml
+              (set
+                (assignment
+                  (id k case_sensitive)
+                  (lit 5)
+                )
+              )
+          )
+        """,
+        source = "SET \"k\" = 5",
+        expectedSexpAstV1String = """
+          (term (exp (dml
+              (set(assignment
+                (term (exp (id k case_sensitive)))
+                (term (exp (lit 5)))
+              ))
+          )))
+        """
+    )
+
+    @Test
+    fun setMultiDml() = assertExpression(
+        expectedSexpAstV0String = """
+          (dml
+              (set
+                (assignment
+                  (id k case_insensitive)
+                  (lit 5)
+                )
+                (assignment
+                  (id m case_insensitive)
+                  (lit 6)
+                )
+              )
+          )
+        """,
+        source = "SET k = 5, m = 6",
+        expectedSexpAstV1String = """
+          (term (exp (dml
+              (set
+                (assignment
+                  (term (exp (id k case_insensitive)))
+                  (term (exp (lit 5)))
+                )
+                (assignment
+                  (term (exp (id m case_insensitive)))
+                  (term (exp (lit 6)))
+                )
+              )
+          )))
+        """
+    )
+
+    @Test
+    fun fromRemoveDml() = assertExpression(
+        expectedSexpAstV0String = """
+          (dml
+            (remove
+              (id y case_insensitive)
+            )
+            (from (id x case_insensitive))
+            (where (= (id a case_insensitive) (id b case_insensitive)))
+          )
+        """,
+        source = "FROM x WHERE a = b REMOVE y",
+        expectedSexpAstV1String = """
+          (term (exp (dml
+            (remove
+              (term (exp (id y case_insensitive)))
+            )
+            (from (term (exp (id x case_insensitive))))
+            (where
+              (term (exp (=
+                (term (exp (id a case_insensitive)))
+                (term (exp (id b case_insensitive)))
+              )))
+            )
+          )))
+        """
+    )
+
+    @Test
+    fun removeDml() = assertExpression(
+        expectedSexpAstV0String = """
+          (dml
+              (remove
+                (id y case_insensitive)
+              )
+          )
+        """,
+        source = "REMOVE y",
+        expectedSexpAstV1String = """
+          (term (exp (dml
+              (remove
+                (term (exp (id y case_insensitive)))
+              )
+          )))
+        """
+    )
+
+    @Test
+    fun removeDmlPath() = assertExpression(
+        expectedSexpAstV0String = """
+          (dml
+              (remove
+                (path
+                  (id a case_insensitive)
+                  (case_insensitive (lit "b"))
+                  (case_sensitive (lit "c"))
+                  (lit 2)
+                )
+              )
+          )
+        """,
+        source = "REMOVE a.b['c'][2]",
+        expectedSexpAstV1String = """
+          (term (exp (dml
+              (remove
+                (term (exp (path
+                  (term (exp (id a case_insensitive)))
+                  (path_element (term (exp (lit "b"))) case_insensitive)
+                  (path_element (term (exp (lit "c"))) case_sensitive)
+                  (path_element (term (exp (lit 2))) case_sensitive)
+                )))
+              )
+          )))
+        """
+    )
+
+    @Test
+    fun updateDml() = assertExpression(
+        expectedSexpAstV0String = """
+          (dml
+            (set
+              (assignment
+                (id k case_insensitive)
+                (lit 5)
+              )
+              (assignment
+                (id m case_insensitive)
+                (lit 6)
+              )
+            )
+            (from (as y (id x case_insensitive)))
+            (where (= (id a case_insensitive) (id b case_insensitive)))
+          )
+        """,
+        source = "UPDATE x AS y SET k = 5, m = 6 WHERE a = b",
+        expectedSexpAstV1String = """
+          (term (exp (dml
+            (set
+              (assignment
+                (term (exp (id k case_insensitive)))
+                (term (exp (lit 5)))
+              )
+              (assignment
+                (term (exp (id m case_insensitive)))
+                (term (exp (lit 6)))
+              )
+            )
+            (from (term (exp (as y (term (exp (id x case_insensitive)))))))
+            (where
+              (term (exp (=
+                (term (exp (id a case_insensitive)))
+                (term (exp (id b case_insensitive)))
+              )))
+            )
+          )))
+        """
+    )
+
+    @Test
+    fun updateWithInsert() = assertExpression(
+        expectedSexpAstV0String = """
+          (dml
+            (insert
+              (id k case_insensitive)
+              (bag
+                (lit 1)))
+            (from
+              (as
+                y
+                (id x case_insensitive)))
+            (where
+              (=
+                (id a case_insensitive)
+                (id b case_insensitive))))
+        """,
+        source = "UPDATE x AS y INSERT INTO k << 1 >> WHERE a = b",
+        expectedSexpAstV1String = """
+          (term (exp (dml
+            (insert
+              (term (exp (id k case_insensitive)))
+              (term (exp (bag (term (exp (lit 1))))))
+            )
+            (from (term (exp (as y (term (exp (id x case_insensitive)))))))
+            (where
+              (term (exp (=
+                (term (exp (id a case_insensitive)))
+                (term (exp (id b case_insensitive)))
+              )))
+            )
+          )))
+        """
+    )
+
+    @Test
+    fun updateWithInsertValueAt() = assertExpression(
+        expectedSexpAstV0String = """
+          (dml
+            (insert_value
+              (id k case_insensitive)
+              (lit 1)
+              (lit "j"))
+            (from
+              (as
+                y
+                (id x case_insensitive)))
+            (where
+              (=
+                (id a case_insensitive)
+                (id b case_insensitive))))
+        """,
+        source = "UPDATE x AS y INSERT INTO k VALUE 1 AT 'j' WHERE a = b",
+        expectedSexpAstV1String = """
+          (term (exp (dml
+            (insert_value
+              (term (exp (id k case_insensitive)))
+              (term (exp (lit 1)))
+              (term (exp (lit "j"))))
+            (from (term (exp (as y (term (exp (id x case_insensitive)))))))
+            (where
+              (term (exp (=
+                (term (exp (id a case_insensitive)))
+                (term (exp (id b case_insensitive)))
+              )))
+            )
+          )))
+        """
+    )
+
+    @Test
+    fun updateWithRemove() = assertExpression(
+        expectedSexpAstV0String = """
+          (dml
+            (remove
+              (path
+                (id y case_insensitive)
+                (case_insensitive (lit "a"))))
+            (from (as y (id x case_insensitive)))
+            (where (= (id a case_insensitive) (id b case_insensitive)))
+          )
+        """,
+        source = "UPDATE x AS y REMOVE y.a WHERE a = b",
+        expectedSexpAstV1String = """
+          (term (exp (dml
+            (remove
+              (term (exp
+                  (path (term (exp (id y case_insensitive))) (path_element (term (exp (lit "a"))) case_insensitive)))))
+            (from (term (exp (as y (term (exp (id x case_insensitive)))))))
+            (where
+              (term (exp (=
+                (term (exp (id a case_insensitive)))
+                (term (exp (id b case_insensitive)))
+              )))
+            )
+          )))
+        """
+    )
+
+    @Test
+    fun updateDmlWithImplicitAs() = assertExpression(
+        expectedSexpAstV0String = """
+          (dml
+            (set
+              (assignment
+                (path (id z case_insensitive) (case_insensitive (lit "kingdom")))
+                (lit "Fungi")))
+            (from
+              (as z (id zoo case_insensitive))))
+        """,
+        source = "UPDATE zoo z SET z.kingdom = 'Fungi'",
+        expectedSexpAstV1String = """
+        (term (exp (dml
+          (set
+            (assignment
+              (term (exp (path
+                (term (exp (id z case_insensitive)))
+                (path_element (term (exp (lit "kingdom"))) case_insensitive))))
+                (term (exp (lit "Fungi")))))
+            (from
+                (term (exp (as z (term (exp (id zoo case_insensitive))))))))))
+        """
+    )
+
+    @Test
+    fun updateDmlWithAt() = assertExpression(
+        expectedSexpAstV0String = """
+          (dml
+            (set
+              (assignment
+                (path (id z case_insensitive) (case_insensitive (lit "kingdom")))
+                (lit "Fungi")))
+            (from
+              (at z_ord (id zoo case_insensitive))))
+        """,
+        source = "UPDATE zoo AT z_ord SET z.kingdom = 'Fungi'",
+        expectedSexpAstV1String = """
+        (term (exp (dml
+          (set
+            (assignment
+              (term (exp (path
+                (term (exp (id z case_insensitive)))
+                (path_element (term (exp (lit "kingdom"))) case_insensitive))))
+                (term (exp (lit "Fungi")))))
+            (from
+                (term (exp (at z_ord (term (exp (id zoo case_insensitive))))))))))
+        """
+    )
+
+    @Test
+    fun updateDmlWithBy() = assertExpression(
+        expectedSexpAstV0String = """
+          (dml
+            (set
+              (assignment
+                (path (id z case_insensitive) (case_insensitive (lit "kingdom")))
+                (lit "Fungi")))
+            (from
+              (by z_id (id zoo case_insensitive))))
+        """,
+        source = "UPDATE zoo BY z_id SET z.kingdom = 'Fungi'",
+        expectedSexpAstV1String = """
+        (term (exp (dml
+          (set
+            (assignment
+              (term (exp (path
+                (term (exp (id z case_insensitive)))
+                (path_element (term (exp (lit "kingdom"))) case_insensitive))))
+                (term (exp (lit "Fungi")))))
+            (from
+                (term (exp (by z_id (term (exp (id zoo case_insensitive))))))))))
+        """
+    )
+
+
+    @Test
+    fun updateDmlWithAtAndBy() = assertExpression(
+        expectedSexpAstV0String = """
+          (dml
+            (set
+              (assignment
+                (path (id z case_insensitive) (case_insensitive (lit "kingdom")))
+                (lit "Fungi")))
+            (from
+              (by z_id (at z_ord (id zoo case_insensitive)))))
+        """,
+        source = "UPDATE zoo AT z_ord BY z_id SET z.kingdom = 'Fungi'",
+        expectedSexpAstV1String = """
+        (term (exp (dml
+          (set
+            (assignment
+              (term (exp (path
+                (term (exp (id z case_insensitive)))
+                (path_element (term (exp (lit "kingdom"))) case_insensitive))))
+                (term (exp (lit "Fungi")))))
+            (from
+                (term (exp (by z_id (term (exp (at z_ord (term (exp (id zoo case_insensitive)))))))))))))
+        """
+    )
+
+
+    @Test
+    fun updateWhereDml() = assertExpression(
+        expectedSexpAstV0String = """
+          (dml
+            (set
+              (assignment
+                (id k case_insensitive)
+                (lit 5)
+              )
+              (assignment
+                (id m case_insensitive)
+                (lit 6)
+              )
+            )
+            (from (id x case_insensitive))
+            (where (= (id a case_insensitive) (id b case_insensitive)))
+          )
+        """,
+        source = "UPDATE x SET k = 5, m = 6 WHERE a = b",
+        expectedSexpAstV1String = """
+          (term (exp (dml
+            (set
+              (assignment
+                (term (exp (id k case_insensitive)))
+                (term (exp (lit 5)))
+              )
+              (assignment
+                (term (exp (id m case_insensitive)))
+                (term (exp (lit 6)))
+              )
+            )
+            (from (term (exp (id x case_insensitive))))
+            (where
+              (term (exp (=
+                (term (exp (id a case_insensitive)))
+                (term (exp (id b case_insensitive)))
+              )))
+            )
+          )))
+        """
+    )
+
+    @Test
+    fun deleteDml() = assertExpression(
+        expectedSexpAstV0String = """
+          (dml
+              (delete)
+              (from (id y case_insensitive))
+          )
+        """,
+        source = "DELETE FROM y",
+        expectedSexpAstV1String = """
+          (term (exp (dml
+              (delete)
+              (from (term (exp (id y case_insensitive))))
+          )))
+        """
+    )
+
+    @Test
+    fun deleteDmlAliased() = assertExpression(
+        expectedSexpAstV0String = """
+          (dml
+              (delete)
+              (from (as y (id x case_insensitive)))
+          )
+        """,
+        source = "DELETE FROM x AS y",
+        expectedSexpAstV1String = """
+          (term (exp (dml
+              (delete)
+              (from (term (exp (as y (term (exp (id x case_insensitive)))))))
+          )))
+        """
+    )
+
+    @Test
+    fun canParseADeleteQueryWithAPositionClause() = assertExpression(
+            expectedSexpAstV0String = """
+                (dml
+                    (delete)
+                    (from
+                        (at
+                            y
+                            (id x case_insensitive))))""".trimIndent(),
+            source = "DELETE FROM x AT y",
+            expectedSexpAstV1String = """
+                (term
+                    (exp
+                        (dml
+                            (delete)
+                            (from
+                                (term
+                                    (exp
+                                        (at
+                                            y
+                                            (term
+                                                (exp
+                                                    (id x case_insensitive))))))))))"""
+    )
+
+    @Test
+    fun canParseADeleteQueryWithAliasAndPositionClause() = assertExpression(
+            expectedSexpAstV0String = """
+                (dml
+                    (delete)
+                    (from
+                        (at
+                            z
+                            (as
+                                y
+                                (id x case_insensitive)))))""",
+            source = "DELETE FROM x AS y AT z",
+            expectedSexpAstV1String = """
+                (term
+                    (exp
+                        (dml
+                            (delete)
+                            (from
+                                (term
+                                    (exp
+                                        (at
+                                            z
+                                            (term
+                                                (exp
+                                                    (as
+                                                        y
+                                                        (term
+                                                            (exp
+                                                                (id x case_insensitive)))))))))))))"""
+    )
+
+    @Test
+    fun canParseADeleteQueryWithPath() = assertExpression(
+            expectedSexpAstV0String = """
+                (dml
+                    (delete)
+                    (from
+                        (path
+                            (id x case_insensitive)
+                            (case_insensitive
+                                (lit "n")))))""".trimIndent(),
+            source = "DELETE FROM x.n",
+            expectedSexpAstV1String = """
+                (term
+                    (exp
+                        (dml
+                            (delete)
+                            (from
+                                (term
+                                    (exp
+                                        (path
+                                            (term
+                                                (exp
+                                                    (id x case_insensitive)))
+                                            (path_element
+                                                (term
+                                                    (exp
+                                                        (lit "n")))
+                                                case_insensitive))))))))"""
+    )
+
+    @Test
+    fun canParseADeleteQueryWithNestedPath() = assertExpression(
+            expectedSexpAstV0String = """
+                (dml
+                    (delete)
+                    (from
+                        (path
+                            (id x case_insensitive)
+                            (case_insensitive
+                                (lit "n"))
+                            (case_insensitive
+                                (lit "m")))))""".trimIndent(),
+            source = "DELETE FROM x.n.m",
+            expectedSexpAstV1String = """
+                (term
+                    (exp
+                        (dml
+                            (delete)
+                            (from
+                                (term
+                                    (exp
+                                        (path
+                                            (term
+                                                (exp
+                                                    (id x case_insensitive)))
+                                            (path_element
+                                                (term
+                                                    (exp
+                                                        (lit "n")))
+                                                case_insensitive)
+                                            (path_element
+                                                (term
+                                                    (exp
+                                                        (lit "m")))
+                                                case_insensitive))))))))"""
+    )
+
+    @Test
+    fun canParseADeleteQueryWithNestedPathAndAlias() = assertExpression(
+            expectedSexpAstV0String = """
+                (dml
+                    (delete)
+                    (from
+                        (as
+                            y
+                            (path
+                                (id x case_insensitive)
+                                (case_insensitive
+                                    (lit "n"))
+                                (case_insensitive
+                                    (lit "m"))))))""".trimIndent(),
+            source = "DELETE FROM x.n.m AS y",
+            expectedSexpAstV1String = """
+                (term
+                    (exp
+                        (dml
+                            (delete)
+                            (from
+                                (term
+                                    (exp
+                                        (as
+                                            y
+                                            (term
+                                                (exp
+                                                    (path
+                                                        (term
+                                                            (exp
+                                                                (id x case_insensitive)))
+                                                        (path_element
+                                                            (term
+                                                                (exp
+                                                                    (lit "n")))
+                                                            case_insensitive)
+                                                        (path_element
+                                                            (term
+                                                                (exp
+                                                                    (lit "m")))
+                                                            case_insensitive)))))))))))"""
+    )
+
+    @Test
+    fun canParseADeleteQueryWithNestedPathAndAliasAndPosition() = assertExpression(
+            expectedSexpAstV0String = """
+                (dml
+                    (delete)
+                    (from
+                        (at
+                            z
+                            (as
+                                y
+                                (path
+                                    (id x case_insensitive)
+                                    (case_insensitive
+                                        (lit "n"))
+                                    (case_insensitive
+                                        (lit "m")))))))""".trimIndent(),
+            source = "DELETE FROM x.n.m AS y AT z",
+            expectedSexpAstV1String = """
+                (term
+                    (exp
+                        (dml
+                            (delete)
+                            (from
+                                (term
+                                    (exp
+                                        (at
+                                            z
+                                            (term
+                                                (exp
+                                                    (as
+                                                        y
+                                                        (term
+                                                            (exp
+                                                                (path
+                                                                    (term
+                                                                        (exp
+                                                                            (id x case_insensitive)))
+                                                                    (path_element
+                                                                        (term
+                                                                            (exp
+                                                                                (lit "n")))
+                                                                        case_insensitive)
+                                                                    (path_element
+                                                                        (term
+                                                                            (exp
+                                                                                (lit "m")))
+                                                                        case_insensitive))))))))))))))"""
+    )
+
+    //****************************************
     // semicolon at end of sqlUnderTest
     //****************************************
     @Test
@@ -3560,6 +4944,13 @@ class SqlParserTest : SqlParserTestBase() {
                                         (exp
                                             (lit 1))))))))))
         """)
+
+    @Test
+    fun rootSelectNodeHasSourceLocation() {
+        val ast = parse("select 1 from dogs")
+
+        assertEquals(SourceLocationMeta(1L, 1L), ast.metas.sourceLocation)
+    }
 
     @Test
     fun semicolonAtEndOfQueryHasNoEffect() {

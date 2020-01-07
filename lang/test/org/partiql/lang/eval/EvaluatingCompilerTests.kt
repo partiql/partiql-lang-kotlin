@@ -14,9 +14,8 @@
 
 package org.partiql.lang.eval
 
-import org.partiql.lang.syntax.*
-import org.junit.*
-
+import org.junit.Test
+import org.partiql.lang.syntax.ParserException
 
 class EvaluatingCompilerTests : EvaluatorTestBase() {
 
@@ -608,6 +607,16 @@ class EvaluatingCompilerTests : EvaluatorTestBase() {
     )
 
     @Test
+    fun parameters() = assertEval(
+        """SELECT ? as b1, f.bar FROM foo f WHERE f.bar = ?""",
+        """[{b1:"spam",bar:"baz"}]""",
+        EvaluationSession.build {
+            globals(mapOf("foo" to """[{"bar": "baz"}, {"bar": "blargh"}]""").toBindings())
+            parameters(listOf("spam", "baz").map { valueFactory.newString(it) })
+        }
+    )
+
+    @Test
     fun selectStarSingleSourceHoisted() = assertEval(
         """SELECT * FROM stores[*].books[*] AS b WHERE b.price >= 9.0""",
         """
@@ -716,7 +725,7 @@ class EvaluatingCompilerTests : EvaluatorTestBase() {
 
     @Test
     fun selectCorrelatedLeftJoin() = assertEval(
-        """SELECT s.id AS id, b.title AS title FROM stores AS s LEFT JOIN @s.books AS b WHERE b IS NULL""",
+        """SELECT s.id AS id, b.title AS title FROM stores AS s LEFT CROSS JOIN @s.books AS b WHERE b IS NULL""",
         """
           [
             {id: "7"}

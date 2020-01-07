@@ -74,7 +74,7 @@ class IonWriterContext(val writer: IonWriter) {
         string(str)
     }
 
-    fun symbol(str: String) {
+    fun symbol(str: String?) {
         writer.writeSymbol(str)
     }
 

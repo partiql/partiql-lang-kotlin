@@ -256,6 +256,8 @@ internal val DATE_PART_KEYWORDS: Set<String> = DatePart.values()
     "unpivot",
     "limit",
     "tuple",
+    "remove",
+    "index",
 
     // Ion type names
 
@@ -348,7 +350,12 @@ internal val DATE_PART_KEYWORDS: Set<String> = DatePart.values()
 
     // conditionals
     "nullif",
-    "coalesce"
+    "coalesce",
+
+    // sexp/list/bag constructors as functions
+    "sexp",
+    "list",
+    "bag"
 )
 
 /** Aggregates functions. */
@@ -359,6 +366,8 @@ internal val DATE_PART_KEYWORDS: Set<String> = DatePart.values()
     "min",
     "sum"
 )
+
+@JvmField internal val BASE_DML_KEYWORDS  = setOf("insert_into", "set", "remove")
 
 @JvmField internal val BOOLEAN_KEYWORDS = setOf("true", "false")
 
@@ -394,15 +403,27 @@ internal val DATE_PART_KEYWORDS: Set<String> = DatePart.values()
     listOf("character", "varying")      to ("character_varying" to KEYWORD),
     listOf("double", "precision")       to ("double_precision" to KEYWORD),
     listOf("not", "like")               to ("not_like" to OPERATOR),
-    listOf("cross", "join")             to ("inner_join" to KEYWORD),
+    listOf("cross", "join")             to ("cross_join" to KEYWORD),
     listOf("inner", "join")             to ("inner_join" to KEYWORD),
+    listOf("inner", "cross", "join")    to ("cross_join" to KEYWORD),
     listOf("left", "join")              to ("left_join" to KEYWORD),
     listOf("left", "outer", "join")     to ("left_join" to KEYWORD),
+    listOf("left", "cross", "join")     to ("left_cross_join" to KEYWORD),
+    listOf("left", "outer",
+           "cross", "join")             to ("left_cross_join" to KEYWORD),
     listOf("right", "join")             to ("right_join" to KEYWORD),
     listOf("right", "outer", "join")    to ("right_join" to KEYWORD),
+    listOf("right", "cross", "join")    to ("right_cross_join" to KEYWORD),
+    listOf("right", "outer",
+           "cross", "join")             to ("right_cross_join" to KEYWORD),
     listOf("full", "join")              to ("outer_join" to KEYWORD),
     listOf("outer", "join")             to ("outer_join" to KEYWORD),
-    listOf("full", "outer", "join")     to ("outer_join" to KEYWORD)
+    listOf("full", "outer", "join")     to ("outer_join" to KEYWORD),
+    listOf("full", "cross", "join")     to ("outer_cross_join" to KEYWORD),
+    listOf("outer", "cross", "join")    to ("outer_cross_join" to KEYWORD),
+    listOf("full", "outer",
+           "cross", "join")             to ("outer_cross_join" to KEYWORD),
+    listOf("insert", "into")            to ("insert_into" to KEYWORD)
 )
 
 @JvmField internal val MULTI_LEXEME_MIN_LENGTH = MULTI_LEXEME_TOKEN_MAP.keys.map { it.size }.min()!!

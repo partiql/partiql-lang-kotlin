@@ -26,14 +26,14 @@ import java.util.*
  * @param groups The map of [Group]s that is currently being built during query execution.
  */
 data class Environment(
-    internal val locals: Bindings,
-    val current: Bindings = locals,
+    internal val locals: Bindings<ExprValue>,
+    val current: Bindings<ExprValue> = locals,
     val session: EvaluationSession,
     val groups: MutableMap<ExprValue, Group> = createGroupMap(),
     val currentGroup: Group? = null) {
 
     companion object {
-        fun standard() = Environment(locals = Bindings.EMPTY, session = EvaluationSession.standard())
+        fun standard() = Environment(locals = Bindings.empty(), session = EvaluationSession.standard())
 
         private fun createGroupMap() = TreeMap<ExprValue, Group>(DEFAULT_COMPARATOR)
     }
@@ -45,7 +45,7 @@ data class Environment(
 
     /** Constructs a new nested environment with the locals being the [current] bindings. */
     internal fun nest(
-        newLocals: Bindings,
+        newLocals: Bindings<ExprValue>,
         currentMode: CurrentMode = CurrentMode.LOCALS,
         newGroup: Group? = currentGroup): Environment {
 

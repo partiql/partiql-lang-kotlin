@@ -82,10 +82,10 @@ class PartialEvaluationRewriterExample(out: PrintStream) : Example(out) {
             addPreprocessingStep { exprNode, stepContext ->
                 val rewriter = PartialEvaluationRewriter(ion, stepContext.compileOptions)
 
-                print("Original AST:", AstSerializer.serialize(exprNode, ion).toString())
+                print("Original AST:", AstSerializer.serialize(exprNode, AstVersion.V1, ion).toString())
 
                 val rewrittenAst = rewriter.rewriteExprNode(exprNode)
-                print("Rewritten AST:", AstSerializer.serialize(rewrittenAst, ion).toString())
+                print("Rewritten AST:", AstSerializer.serialize(rewrittenAst, AstVersion.V1, ion).toString())
 
                 rewrittenAst
             }

@@ -21,9 +21,11 @@ import org.partiql.lang.ast.passes.*
 import org.partiql.lang.errors.*
 import org.partiql.lang.eval.binding.*
 import org.partiql.lang.syntax.SqlParser
+import org.partiql.lang.syntax.*
 import org.partiql.lang.util.*
 import java.math.*
 import java.util.*
+import kotlin.collections.*
 
 /**
  * A basic compiler that converts an instance of [ExprNode] to an [Expression].
@@ -45,7 +47,6 @@ import java.util.*
  * @param ion The ion system to use for synthesizing Ion values.
  * @param functions A map of functions keyed by function name that will be available during compilation.
  * @param compileOptions Various options that effect how the source code is compiled.
- *
  */
 internal class EvaluatingCompiler(
     private val valueFactory: ExprValueFactory,
@@ -198,23 +199,7 @@ internal class EvaluatingCompiler(
      * Compiles an [ExprNode] tree to an [Expression].
      */
     fun compile(originalAst: ExprNode): Expression {
-
-        val rewriters: List<AstRewriter> = listOf(
-            // These rewriters do not depend on each other and can be executed in any order.
-            SelectListItemAliasRewriter(),
-            FromSourceAliasRewriter(),
-            GroupByItemAliasRewriter(),
-            AggregateSupportRewriter(),
-
-            // [GroupByPathExpressionRewriter] requires:
-            //   - the synthetic from source aliases added by [FromSourceAliasRewriter]
-            //   - The synthetic group by item aliases added by [GroupByItemAliasRewriter]
-            GroupByPathExpressionRewriter()
-        )
-
-        val rewrittenAst = rewriters.fold(originalAst) { intermediateAst, rewriter ->
-            rewriter.rewriteExprNode(intermediateAst)
-        }
+        val rewrittenAst = compileOptions.rewritingMode.createRewriter().rewriteExprNode(originalAst)
 
         AstSanityValidator.validate(rewrittenAst)
 
@@ -272,18 +257,31 @@ internal class EvaluatingCompiler(
             is SearchedCase      -> compileSearchedCase(expr)
             is Path              -> compilePath(expr)
             is Struct            -> compileStruct(expr)
-            is ListExprNode      -> compileListExprNode(expr)
-            is Bag               -> compileBag(expr)
+            is Seq               -> compileSeq(expr)
             is Select            -> compileSelect(expr)
             is CallAgg           -> compileCallAgg(expr)
+            is Parameter         -> compileParameter(expr)
+            is DataManipulation  -> err(
+                "DML operations are not supported yet",
+                ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
+                errorContextFrom(expr.metas).also {
+                    it[Property.FEATURE_NAME] = "DataManipulation.${expr.dmlOperation.name}"
+                }, internal = false
+            )
         }
     }
 
     private fun compileNAry(expr: NAry): ThunkEnv {
+
         val (op, args, metas: MetaContainer) = expr
-        
+
+        val optimizedThunk = compileOptimizedNAry(expr)
+        if(optimizedThunk != null) {
+            return optimizedThunk
+        }
+
         fun argThunks() = args.map { compileExprNode(it) }
-        
+
         return when (op) {
             NAryOp.ADD           -> compileNAryAdd(argThunks(), metas)
             NAryOp.SUB           -> compileNArySub(argThunks(), metas)
@@ -298,7 +296,7 @@ internal class EvaluatingCompiler(
             NAryOp.GTE           -> compileNAryGte(argThunks(), metas)
             NAryOp.BETWEEN       -> compileNAryBetween(argThunks(), metas)
             NAryOp.LIKE          -> compileNAryLike(args, argThunks(), metas)
-            NAryOp.IN            -> compileNAryIn(args, metas) 
+            NAryOp.IN            -> compileNAryIn(args, metas)
             NAryOp.NOT           -> compileNAryNot(argThunks(), metas)
             NAryOp.AND           -> compileNAryAnd(argThunks(), metas)
             NAryOp.OR            -> compileNAryOr(argThunks(), metas)
@@ -319,6 +317,44 @@ internal class EvaluatingCompiler(
                     }, internal = false)
             }
         }
+    }
+
+    /**
+     * Inspects [expr] to see if it can be compiled as an optimized thunk and returns the optimized thunk if so.
+     * Otherwise, returns [null].
+     *
+     * Currently only optimizes [NAryOp.IN] when it has only two arguments and the second argument is a [Seq]
+     * consisting of only literal expressions.  In this case, it will return a thunk which uses a [TreeSet<ExprValue>]
+     * to quickly determine if the first argument exists within the second.  This is significant improvement when a
+     * large number of literal values exists in the [Seq].
+     */
+    private fun compileOptimizedNAry(
+        expr: NAry
+    ): ThunkEnv? {
+        val (op, args, metas: MetaContainer) = expr
+
+        when {
+            op == NAryOp.IN && args.size == 2 -> {
+                val targetExpr = args[0]
+                val collectionExpr = args[1]
+                if (collectionExpr is Seq) {
+                    val targetThunk = compileExprNode(targetExpr)
+
+                    if (collectionExpr.values.all { it is Literal }) {
+                        val values = TreeSet(DEFAULT_COMPARATOR)
+                        values.addAll(
+                            collectionExpr.values.map { it as Literal }
+                                .map { valueFactory.newFromIonValue(it.ionValue) })
+
+                        return thunkEnv(metas) { env ->
+                            val targetValue = targetThunk(env)
+                            valueFactory.newBoolean(values.contains(targetValue))
+                        }
+                    }
+                }
+            }
+        }
+        return null
     }
 
     private fun compileNAryAdd(
@@ -477,10 +513,10 @@ internal class EvaluatingCompiler(
         metas: MetaContainer): ThunkEnv {
         val leftArg = compileExprNode(args[0])
         val rightArg = args[1]
-        
+
         return when {
             // When the right arg is a list of literals we use a Set to speed up the predicate
-            rightArg is ListExprNode && rightArg.values.all { it is Literal } -> {
+            rightArg is Seq && rightArg.type == SeqType.LIST && rightArg.values.all { it is Literal } -> {
                 val inSet = rightArg.values
                     .map { it as Literal }
                     .mapTo(TreeSet<ExprValue>(DEFAULT_COMPARATOR)) { valueFactory.newFromIonValue(it.ionValue) }
@@ -491,7 +527,7 @@ internal class EvaluatingCompiler(
                     inSet.contains(value).exprValue()
                 }
             }
-            
+
             else -> {
                 val rightArgThunk = compileExprNode(rightArg)
 
@@ -503,7 +539,7 @@ internal class EvaluatingCompiler(
             }
         }
     }
-    
+
     private fun compileNAryNot(
         argThunks: List<ThunkEnv>,
         metas: MetaContainer): ThunkEnv {
@@ -573,20 +609,20 @@ internal class EvaluatingCompiler(
     private fun compileNAryStringConcat(
         argThunks: List<ThunkEnv>,
         metas: MetaContainer): ThunkEnv {
-        
+
         return thunkFold(valueFactory.nullValue, metas, argThunks) { lValue, rValue ->
             val lType = lValue.type
             val rType = rValue.type
-            
+
             if(lType.isText && rType.isText) {
                 // null/missing propagation is handled before getting here
-                (lValue.stringValue() + rValue.stringValue()).exprValue()    
+                (lValue.stringValue() + rValue.stringValue()).exprValue()
             }
             else {
                 err(
                     "Wrong argument type for ||",
                     ErrorCode.EVALUATOR_CONCAT_FAILED_DUE_TO_INCOMPATIBLE_TYPE,
-                    errorContextFrom(metas).also { 
+                    errorContextFrom(metas).also {
                         it[Property.ACTUAL_ARGUMENT_TYPES] = listOf(lType, rType).toString()
                     },
                     internal = false)
@@ -679,6 +715,27 @@ internal class EvaluatingCompiler(
         }
     }
 
+    private fun compileParameter(expr: Parameter): ThunkEnv {
+        val (ordinal, metas: MetaContainer) = expr
+        val index = ordinal - 1
+
+        return { env ->
+            val params = env.session.parameters
+            if (params.size <= index) {
+                throw EvaluationException(
+                        "Unbound parameter for ordinal: ${ordinal}",
+                        ErrorCode.EVALUATOR_UNBOUND_PARAMETER,
+                        errorContextFrom(metas).also {
+                            it[Property.EXPECTED_PARAMETER_ORDINAL] = ordinal
+                            it[Property.BOUND_PARAMETER_COUNT] = params.size
+                        }
+                )
+            }
+
+            params[index]
+        }
+    }
+
     private fun compileTyped(expr: Typed): ThunkEnv {
         val (op, exp, dataType, metas: MetaContainer) = expr
         val expThunk = compileExprNode(exp)
@@ -768,26 +825,34 @@ internal class EvaluatingCompiler(
         }
     }
 
-    private fun compileListExprNode(expr: ListExprNode): ThunkEnv {
-        val (items, metas: MetaContainer) = expr
-        val itemThunks = items.map { compileExprNode(it) }
+    private fun compileSeq(expr: Seq): ThunkEnv {
+        val (seqType, items, metas: MetaContainer) = expr
+        val itemThunks = items.map { compileExprNode(it) }.asSequence()
 
-        return thunkEnv(metas) { env ->
-            valueFactory.newList(
-                itemThunks.mapIndexed { i, itemThunk -> itemThunk(env).namedValue(i.exprValue()) }.asSequence())
+        val type = when (seqType) {
+            SeqType.SEXP -> ExprValueType.SEXP
+            SeqType.LIST -> ExprValueType.LIST
+            SeqType.BAG  -> ExprValueType.BAG
         }
-    }
 
-    private fun compileBag(expr: Bag): ThunkEnv {
-        val (items, metas: MetaContainer) = expr
-        val itemThunks = items.map { compileExprNode(it) }
-
-        return thunkEnv(metas) { env ->
-            valueFactory.newBag(
-                itemThunks.asSequence().map { itemThunk ->
+        val makeItemThunkSequence = when (type) {
+            ExprValueType.BAG -> { env: Environment ->
+                itemThunks.map { itemThunk ->
                     // call to unnamedValue() makes sure we don't expose any underlying value name/ordinal
                     itemThunk(env).unnamedValue()
-                })
+                }
+            }
+            else -> { env: Environment ->
+                itemThunks.mapIndexed { i, itemThunk -> itemThunk(env).namedValue(i.exprValue()) }
+            }
+        }
+
+        return thunkEnv(metas) { env ->
+            // todo:  use valueFactory.newSequence() instead.
+            SequenceExprValue(
+                valueFactory.ion,
+                type,
+                makeItemThunkSequence(env))
         }
     }
 
@@ -983,79 +1048,54 @@ internal class EvaluatingCompiler(
                 is SelectProjectionList  -> {
                     val (items) = projection
                     nestCompilationContext(ExpressionContext.SELECT_LIST) {
-                        val projectionThunk: ThunkEnvValue<List<ExprValue>> = when {
-                            items.size == 1 && items.first() is SelectListItemStar -> {
-                                val groupBindingName = groupBy?.groupName?.name?.let {
-                                    BindingName(it, BindingCase.SENSITIVE)
+                        val projectionThunk: ThunkEnvValue<List<ExprValue>> =
+                            when {
+                                items.filterIsInstance<SelectListItemStar>().any() -> {
+                                    errNoContext("Encountered a SelectListItemStar--did SelectStarRewriter execute?",
+                                        internal = true)
                                 }
+                                else -> {
+                                    val projectionElements =
+                                        compileSelectListToProjectionElements(projection)
 
-                                thunkEnvValue(metas) { env, joinedValues ->
-                                    val seq = joinedValues.asSequence()
-                                        .mapIndexed { col, joinValue ->
-                                            when (joinValue.type) {
-                                                ExprValueType.STRUCT -> joinValue
-                                                else                 -> {
-                                                    // construct an artificial tuple for SELECT *
-                                                    val name = syntheticColumnName(col).exprValue()
-                                                    listOf(joinValue.namedValue(name))
+                                    val ordering = if (projection.items.none { it is SelectListItemProjectAll })
+                                        StructOrdering.ORDERED
+                                    else
+                                        StructOrdering.UNORDERED
+
+                                    thunkEnvValue(metas) { env, _ ->
+                                        val columns = mutableListOf<ExprValue>()
+                                        for (element in projectionElements) {
+                                            when (element) {
+                                                is SingleProjectionElement -> {
+                                                    val eval = element.thunk(env)
+                                                    columns.add(eval.namedValue(element.name))
                                                 }
-                                            }
-                                        }.flatMap { it.asSequence() }
-                                        .toMutableList()
+                                                is MultipleProjectionElement -> {
+                                                    for (projThunk in element.thunks) {
+                                                        val value = projThunk(env)
+                                                        if (value.type == ExprValueType.MISSING) continue
 
-                                    groupBindingName?.run {
-                                        seq.add(
-                                            env.current[groupBindingName]?.namedValue(groupBindingName.name.exprValue())
-                                            ?: errNoContext(
-                                                "Could not find group variable '${groupBindingName.name}'",
-                                                internal = true))
-                                    }
-
-                                    createStructExprValue(seq.asSequence(), StructOrdering.UNORDERED)
-                                }
-                            }
-                            else                                                       -> {
-                                val projectionElements =
-                                    compileSelectListToProjectionElements(projection, fromSourceThunks)
-
-                                val ordering = if(projection.items.none { it is SelectListItemProjectAll })
-                                    StructOrdering.ORDERED
-                                else
-                                    StructOrdering.UNORDERED
-
-                                thunkEnvValue(metas) { env, _ ->
-                                    val columns = mutableListOf<ExprValue>()
-                                    for (element in projectionElements) {
-                                        when (element) {
-                                            is SingleProjectionElement   -> {
-                                                val eval = element.thunk(env)
-                                                columns.add(eval.namedValue(element.name))
-                                            }
-                                            is MultipleProjectionElement -> {
-                                                for (exprThunk in element.thunks) {
-                                                    val value = exprThunk(env)
-                                                    if (value.type == ExprValueType.MISSING) continue
-
-                                                    val children = value.asSequence()
-                                                    if (!children.any()) {
-                                                        val name = syntheticColumnName(columns.size).exprValue()
-                                                        columns.add(value.namedValue(name))
-                                                    } else {
-                                                        for (childValue in value.filter { it.type != ExprValueType.MISSING }) {
-                                                            val namedFacet = childValue.asFacet(Named::class.java)
-                                                            val name = namedFacet?.name
-                                                                       ?: syntheticColumnName(columns.size).exprValue()
-                                                            columns.add(childValue.namedValue(name))
+                                                        val children = value.asSequence()
+                                                        if (!children.any()) {
+                                                            val name = syntheticColumnName(columns.size).exprValue()
+                                                            columns.add(value.namedValue(name))
+                                                        } else {
+                                                            for (childValue in value.filter { it.type != ExprValueType.MISSING }) {
+                                                                val namedFacet = childValue.asFacet(Named::class.java)
+                                                                val name = namedFacet?.name
+                                                                           ?: syntheticColumnName(columns.size).exprValue()
+                                                                columns.add(childValue.namedValue(name))
+                                                            }
                                                         }
                                                     }
                                                 }
                                             }
                                         }
+                                        createStructExprValue(columns.asSequence(), ordering)
                                     }
-                                    createStructExprValue(columns.asSequence(), ordering)
                                 }
                             }
-                        }
                         getQueryThunk(projectionThunk)
                     } // nestCompilationContext(ExpressionContext.SELECT_LIST)
                 } // is SelectProjectionList
@@ -1095,7 +1135,7 @@ internal class EvaluatingCompiler(
     private fun createGetGroupEnvClosure(groupAsName: SymbolicName?): (Environment, Group) -> Environment =
         when {
             groupAsName != null -> { groupByEnv, currentGroup ->
-                val groupAsBindings = Bindings.buildLazyBindings {
+                val groupAsBindings = Bindings.buildLazyBindings<ExprValue> {
                     addBinding(groupAsName.name) {
                         valueFactory.newBag(currentGroup.groupValues.asSequence())
                     }
@@ -1200,17 +1240,27 @@ internal class EvaluatingCompiler(
         val metas = fromSource.metas()
 
         when (fromSource) {
-            is FromSourceExpr    -> case {
-                val (expr, asName, atName) = fromSource
+            is FromSourceLet -> case {
+                val thunk = when (fromSource) {
+                    is FromSourceExpr -> {
+                        compileExprNode(fromSource.expr)
+                    }
+                    is FromSourceUnpivot -> {
+                        val valueThunk = compileExprNode(fromSource.expr)
+                        thunkEnv(metas) { env -> valueThunk(env).unpivot() }
+                    }
+                }
                 sources.add(
                     CompiledFromSource(
-                        Alias(
-                            asName?.name ?: err("FromSourceExpr.asName was null",
-                                                errorContextFrom(expr.metas), internal = true),
-                            atName?.name),
-                        compileExprNode(expr),
-                        joinExpansion,
-                        conditionThunk))
+                        alias = Alias(
+                            asName = fromSource.variables.asName?.name ?:
+                                     err("FromSourceExpr.variables.asName was null",
+                                         errorContextFrom(fromSource.expr.metas), internal = true),
+                            atName = fromSource.variables.atName?.name,
+                            byName = fromSource.variables.byName?.name),
+                        thunk = thunk,
+                        joinExpansion = joinExpansion,
+                        filter = conditionThunk))
             }
             is FromSourceJoin    -> case {
 
@@ -1246,19 +1296,7 @@ internal class EvaluatingCompiler(
                 compileFromSources(right, sources, joinExpansionInner, conditionThunkInner)
 
             }
-            is FromSourceUnpivot -> case {
-                val (expr, asName, atName) = fromSource
-                val valueThunk = compileExprNode(expr)
-                sources.add(
-                    CompiledFromSource(
-                        Alias(
-                            asName?.name ?: err("FromSourceUnpivot.asName was null",
-                                                errorContextFrom(expr.metas), internal = true),
-                            atName?.name),
-                        thunkEnv(metas) { env -> valueThunk(env).unpivot() },
-                        joinExpansion,
-                        conditionThunk))
-            }
+
         }.toUnit()
 
         return sources
@@ -1293,6 +1331,10 @@ internal class EvaluatingCompiler(
                                     if(alias.atName != null)
                                         addBinding(alias.atName) {
                                             value.name ?: valueFactory.missingValue
+                                        }
+                                    if(alias.byName != null)
+                                        addBinding(alias.byName) {
+                                            value.address ?: valueFactory.missingValue
                                         }
                                 },
                                 Environment.CurrentMode.GLOBALS_THEN_LOCALS)
@@ -1349,14 +1391,41 @@ internal class EvaluatingCompiler(
                 }
             }
             if (limitThunk != null) {
-                // TODO determine if this needs to be scoped over projection
-                val limitValue = limitThunk(rootEnv).numberValue().toInt()
+                val limitExprValue = limitThunk(rootEnv)
+                if(limitExprValue.type != ExprValueType.INT) {
+                    err("LIMIT value was not an integer",
+                        ErrorCode.EVALUATOR_NON_INT_LIMIT_VALUE,
+                        errorContextFrom(limitLocationMeta).also {
+                            it[Property.ACTUAL_TYPE] = limitExprValue.type.toString()
+                        },
+                        internal = false)
+                }
+
+                // `Number.toLong()` (used below) does *not* cause an overflow exception if the underlying [Number]
+                // implementation (i.e. Decimal or BigInteger) exceeds the range that can be represented by Longs.
+                // This can cause very confusing behavior if the user specifies a LIMIT value that exceeds
+                // Long.MAX_VALUE, because no results will be returned from their query.  That no overflow exception
+                // is thrown is not a problem as long as PartiQL's restriction of integer values to +/- 2^63 remains.
+                // We throw an exception here if the value exceeds the supported range (say if we change that
+                // restriction or if a custom [ExprValue] is provided which exceeds that value).
+                val limitIonValue = limitExprValue.ionValue as IonInt
+                if(limitIonValue.integerSize == IntegerSize.BIG_INTEGER) {
+                    err("IntegerSize.BIG_INTEGER not supported for LIMIT values",
+                        errorContextFrom(limitLocationMeta),
+                        internal = true)
+                }
+
+                val limitValue = limitExprValue.numberValue().toLong()
+
                 if (limitValue < 0) {
                     err("negative LIMIT",
                         ErrorCode.EVALUATOR_NEGATIVE_LIMIT,
                         errorContextFrom(limitLocationMeta),
                         internal = false)
                 }
+
+                // we can't use the Kotlin's Sequence<T>.take(n) for this since it accepts only an integer.
+                // this references [Sequence<T>.take(count: Long): Sequence<T>] defined in [org.partiql.util].
                 seq = seq.take(limitValue)
             }
             seq
@@ -1364,12 +1433,14 @@ internal class EvaluatingCompiler(
     }
 
     private fun compileSelectListToProjectionElements(
-        selectList: SelectProjectionList,
-        compiledFromSources: List<CompiledFromSource>
+        selectList: SelectProjectionList
     ): List<ProjectionElement> =
         selectList.items.mapIndexed { idx, it ->
             when (it) {
-                is SelectListItemStar       -> MultipleProjectionElement(compiledFromSources.map { it.thunk })
+                is SelectListItemStar       -> {
+                    errNoContext("Encountered a SelectListItemStar--did SelectStarRewriter execute?",
+                        internal = true)
+                }
                 is SelectListItemExpr       -> {
                     val (itemExpr, asName) = it
                     val alias = asName?.name ?: itemExpr.extractColumnAlias(idx)
@@ -1729,6 +1800,17 @@ internal class EvaluatingCompiler(
         return escapeChar
     }
 
+    private fun compileDdl(node: ExprNode): ThunkEnv {
+        return { _ ->
+            err(
+                    "DDL operations are not supported yet",
+                    ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
+                    errorContextFrom(node.metas).also {
+                        it[Property.FEATURE_NAME] = "DDL Operations"
+                    }, internal = false
+            )
+        }
+    }
 
     /** A special wrapper for `UNPIVOT` values as a BAG. */
     private class UnpivotedExprValue(private val values: Iterable<ExprValue>) : BaseExprValue() {
@@ -1820,15 +1902,6 @@ private class CompilationContext(val expressionContext: ExpressionContext)
     fun createNested(expressionContext: ExpressionContext) =
         CompilationContext(expressionContext)
 }
-/**
- * Converts a [CaseSensitivity] to a [BindingCase].  (These are kept as separate enums
- * to prevent the AST and parser from being dependent on the evaluator.)
- */
-private fun CaseSensitivity.toBindingCase() =
-    when(this) {
-        CaseSensitivity.INSENSITIVE -> BindingCase.INSENSITIVE
-        CaseSensitivity.SENSITIVE   -> BindingCase.SENSITIVE
-    }
 
 /**
  * Represents an element in a select list that is to be projected into the final result.

@@ -39,7 +39,7 @@ interface AstVisitor {
     }
 
     /**
-     * Invoked by [AstWalker] for every instance of [SelectListItem] encountered.
+     * Invoked by [AstWalker] for every instance of [SelectProjection] encountered.
      *
      * If the node has children, this is invoked before the children are walked.
      */
@@ -82,6 +82,15 @@ interface AstVisitor {
     fun visitDataType(dataType: DataType) {
         // Default implementation does nothing.
     }
+
+    /**
+     * Invoked by [AstWalker] for every instance of [DataManipulationOperation].
+     *
+     * The operation's children are visited after this method is invoked.
+     */
+    fun visitDataManipulationOperation(dmlOp: DataManipulationOperation) {
+        // Default implementation does nothing.
+    }
 }
 
 /**
@@ -92,27 +101,31 @@ interface AstVisitor {
  */
 @Deprecated("Use AstNode#iterator() or AstNode#children()")
 open class AstVisitorBase : AstVisitor {
-        override fun visitExprNode(expr: ExprNode) {
-            // Default implementation does nothing.
-        }
+    override fun visitExprNode(expr: ExprNode) {
+        // Default implementation does nothing.
+    }
 
-        override fun visitSelectProjection(projection: SelectProjection) {
-            // Default implementation does nothing.
-        }
+    override fun visitSelectProjection(projection: SelectProjection) {
+        // Default implementation does nothing.
+    }
 
-        override fun visitSelectListItem(selectListItem: SelectListItem) {
-            // Default implementation does nothing.
-        }
+    override fun visitSelectListItem(selectListItem: SelectListItem) {
+        // Default implementation does nothing.
+    }
 
-        override fun visitFromSource(fromSource: FromSource) {
-            // Default implementation does nothing.
-        }
+    override fun visitFromSource(fromSource: FromSource) {
+        // Default implementation does nothing.
+    }
 
-        override fun visitPathComponent(pathComponent: PathComponent) {
-            // Default implementation does nothing.
-        }
+    override fun visitPathComponent(pathComponent: PathComponent) {
+        // Default implementation does nothing.
+    }
 
-        override fun visitDataType(dataType: DataType) {
-            // Default implementation does nothing.
-        }
+    override fun visitDataType(dataType: DataType) {
+        // Default implementation does nothing.
+    }
+
+    override fun visitDataManipulationOperation(dmlOp: DataManipulationOperation) {
+        // Default implementation does nothing.
+    }
 }

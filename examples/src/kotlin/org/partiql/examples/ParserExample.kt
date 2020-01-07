@@ -38,7 +38,7 @@ class ParserExample(out: PrintStream) : Example(out) {
         // Convert the ExprNode AST to the Ion s-expression form.
         // AstSerializer always serializes to the latest version of the s-expression format.
         // the serialized format is documented at `docs/dev/README-AST-V1.md`
-        val serializedAst = AstSerializer.serialize(originalAst, ion)
+        val serializedAst = AstSerializer.serialize(originalAst, AstVersion.V1, ion)
         print("Serialized AST", serializedAst.toPrettyString())
 
         // Re-constitute the serialized AST.  The deserializer will convert from any supported

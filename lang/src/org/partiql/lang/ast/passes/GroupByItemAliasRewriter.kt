@@ -39,7 +39,7 @@ class GroupByItemAliasRewriter(val nestLevel: Int = 0) : AstRewriterBase() {
 
                 GroupByItem(
                     rewriteExprNode(it.expr),
-                    alias.copy(metas = alias.metas.add(UniqueNameMeta("\$group_by_${nestLevel}_item_$index"))))
+                    alias.copy(metas = alias.metas.add(UniqueNameMeta("\$__partiql__group_by_${nestLevel}_item_$index"))))
             },
             groupName = groupBy.groupName?.let { rewriteSymbolicName(it) }
         )

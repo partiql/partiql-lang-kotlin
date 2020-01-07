@@ -61,7 +61,7 @@ class RequiredFlushOutputStream : OutputStream() {
     override fun toString() = backingOS.toString("UTF-8")
 }
 
-private class ReplTester(bindings: Bindings = Bindings.EMPTY) {
+private class ReplTester(bindings: Bindings<ExprValue> = Bindings.empty()) {
     val ion = IonSystemBuilder.standard().build()
     val parser: Parser = SqlParser(ion)
     val compiler = CompilerPipeline.build(ion) { sqlParser(parser) }
@@ -112,7 +112,7 @@ private class ReplTester(bindings: Bindings = Bindings.EMPTY) {
             Thread.sleep(SLEEP_TIME)
         }
 
-        // wait for the REPL to print the initial message and prompt 
+        // wait for the REPL to print the initial message and prompt
         outputPhaser.arriveAndAwaitAdvance()
 
         val inputLines = extractInputLines(expectedPromptText)
@@ -123,20 +123,20 @@ private class ReplTester(bindings: Bindings = Bindings.EMPTY) {
             // flush to repl input
             inputPipe.flush()
 
-            // wait for output to be written before inputting more 
+            // wait for output to be written before inputting more
             outputPhaser.arriveAndAwaitAdvance()
         }
 
         // nothing more to write
         inputPipe.close()
 
-        // make sure output was written 
+        // make sure output was written
         outputPhaser.arriveAndAwaitAdvance()
 
         assertEquals(expectedPromptText, actualReplPrompt.toString())
     }
 
-    private fun extractInputLines(expectedPromptText: String): List<String> = 
+    private fun extractInputLines(expectedPromptText: String): List<String> =
         expectedPromptText.split("\n")
             .filter { line ->
                 line.startsWith(PROMPT_2) || (line.startsWith(PROMPT_1) && line != PROMPT_1)
@@ -351,7 +351,7 @@ class ReplTest {
             .compile("{'foo': [1,2,3]}")
             .eval(EvaluationSession.standard())
             .bindings
-        
+
         ReplTester(initialBindings).assertReplPrompt("""
             #Welcome to the PartiQL REPL!
             #PartiQL> !global_env

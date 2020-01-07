@@ -77,7 +77,7 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
 
     @Test
     fun simpleJoin() = assertEval(
-        """SELECT * FROM `[{a: 1}, {a: 2}]` AS t1 INNER JOIN `[{b: 1, c: "one" }, {b: 2, c: "two" }]`""",
+        """SELECT * FROM `[{a: 1}, {a: 2}]` AS t1 INNER CROSS JOIN `[{b: 1, c: "one" }, {b: 2, c: "two" }]`""",
         """[
             {a:1,b:1,c:"one"},
             {a:1,b:2,c:"two"},

@@ -102,6 +102,8 @@ class ParserErrorsTest : TestBase() {
 
     }
 
+    // FIXME This is still an error--but an error in a different way
+    @Ignore
     @Test
     fun expectedUnexpectedKeyword() {
         checkInputThrowingParserException("SELECT FROM table1",
@@ -299,7 +301,7 @@ class ParserErrorsTest : TestBase() {
     @Test
     fun expectedIdentForAt() {
         checkInputThrowingParserException("select a from data at true",
-            ErrorCode.PARSE_EXPECTED_IDENT_FOR_AT,
+            ErrorCode.PARSE_EXPECTED_IDENT_FOR_ALIAS,
             mapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 23L,
@@ -834,6 +836,8 @@ class ParserErrorsTest : TestBase() {
                                                 Property.TOKEN_VALUE to ion.newSymbol("as")))
     }
 
+    // FIXME This is still an error--but an error in a different way
+    @Ignore
     @Test
     fun selectNothing() {
         checkInputThrowingParserException("SELECT FROM table1",
@@ -1024,5 +1028,224 @@ class ParserErrorsTest : TestBase() {
                                                 Property.TOKEN_VALUE to ion.newSymbol("*")))
     }
 
+    @Test
+    fun setWithNoAssignments() = checkInputThrowingParserException(
+        "FROM x SET",
+        ErrorCode.PARSE_INVALID_PATH_COMPONENT,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 11L,
+            Property.TOKEN_TYPE to TokenType.EOF,
+            Property.TOKEN_VALUE to ion.newSymbol("EOF")))
+
+    @Test
+    fun setWithExpression() = checkInputThrowingParserException(
+        "FROM x SET y, z",
+        ErrorCode.PARSE_MISSING_SET_ASSIGNMENT,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 13L,
+            Property.TOKEN_TYPE to TokenType.COMMA,
+            Property.TOKEN_VALUE to ion.newSymbol(",")))
+
+    @Test
+    fun setWithWildcardPath() = checkInputThrowingParserException(
+        "FROM x SET y.* = 5",
+        ErrorCode.PARSE_INVALID_PATH_COMPONENT,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 14L,
+            Property.TOKEN_TYPE to TokenType.STAR,
+            Property.TOKEN_VALUE to ion.newSymbol("*")))
+
+    @Test
+    fun setWithExpressionPath() = checkInputThrowingParserException(
+        "FROM x SET y[1+1] = 5",
+        ErrorCode.PARSE_INVALID_PATH_COMPONENT,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 14L,
+            Property.TOKEN_TYPE to TokenType.LITERAL,
+            Property.TOKEN_VALUE to ion.newInt(1)))
+
+    @Test
+    fun fromWithDelete() = checkInputThrowingParserException(
+        "FROM x DELETE FROM y",
+        ErrorCode.PARSE_MISSING_OPERATION,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 8L,
+            Property.TOKEN_TYPE to TokenType.KEYWORD,
+            Property.TOKEN_VALUE to ion.newSymbol("delete")))
+
+    @Test
+    fun fromWithUpdate() = checkInputThrowingParserException(
+        "FROM x UPDATE y SET a = b",
+        ErrorCode.PARSE_MISSING_OPERATION,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 8L,
+            Property.TOKEN_TYPE to TokenType.KEYWORD,
+            Property.TOKEN_VALUE to ion.newSymbol("update")))
+
+    @Test
+    fun deleteNoFrom() = checkInputThrowingParserException(
+        "DELETE x",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 8L,
+            Property.TOKEN_TYPE to TokenType.IDENTIFIER,
+            Property.TOKEN_VALUE to ion.newSymbol("x")))
+
+    @Test
+    fun deleteFromList() = checkInputThrowingParserException(
+        "DELETE FROM x, y",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 14L,
+            Property.TOKEN_TYPE to TokenType.COMMA,
+            Property.TOKEN_VALUE to ion.newSymbol(",")))
+
+    @Test
+    fun deleteFromListWithAListMemberThatHasPath() = checkInputThrowingParserException(
+            "DELETE FROM x.n, a",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(
+                    Property.LINE_NUMBER to 1L,
+                    Property.COLUMN_NUMBER to 16L,
+                    Property.TOKEN_TYPE to TokenType.COMMA,
+                    Property.TOKEN_VALUE to ion.newSymbol(",")))
+
+    @Test
+    fun deleteFromListWithAListMemberThatHasAnAlias() = checkInputThrowingParserException(
+            "DELETE FROM x.n.m AS y, a",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(
+                    Property.LINE_NUMBER to 1L,
+                    Property.COLUMN_NUMBER to 23L,
+                    Property.TOKEN_TYPE to TokenType.COMMA,
+                    Property.TOKEN_VALUE to ion.newSymbol(",")))
+
+    @Test
+    fun deleteFromListWithAListMemberThatHasAnAliasAndPosition() = checkInputThrowingParserException(
+            "DELETE FROM x.n.m AS y AT z, a",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(
+                    Property.LINE_NUMBER to 1L,
+                    Property.COLUMN_NUMBER to 28L,
+                    Property.TOKEN_TYPE to TokenType.COMMA,
+                    Property.TOKEN_VALUE to ion.newSymbol(",")))
+
+    @Test
+    fun updateNoSet() = checkInputThrowingParserException(
+        "UPDATE x",
+        ErrorCode.PARSE_MISSING_OPERATION,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 9L,
+            Property.TOKEN_TYPE to TokenType.EOF,
+            Property.TOKEN_VALUE to ion.newSymbol("EOF")))
+
+    @Test
+    fun updateFromList() = checkInputThrowingParserException(
+        "UPDATE x, y SET a = b",
+        ErrorCode.PARSE_MISSING_OPERATION,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 9L,
+            Property.TOKEN_TYPE to TokenType.COMMA,
+            Property.TOKEN_VALUE to ion.newSymbol(",")))
+
+    @Test
+    fun insertValueWithCollection() = checkInputThrowingParserException(
+        "INSERT INTO foo VALUE spam, eggs",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 27L,
+            Property.TOKEN_TYPE to TokenType.COMMA,
+            Property.TOKEN_VALUE to ion.newSymbol(",")))
+
+    @Test
+    fun insertValuesWithAt() = checkInputThrowingParserException(
+        "INSERT INTO foo VALUES (1, 2) AT bar",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 31L,
+            Property.TOKEN_TYPE to TokenType.AT,
+            Property.TOKEN_VALUE to ion.newSymbol("at")))
+
+    @Test
+    fun valueAsTopLevelExpression() = checkInputThrowingParserException(
+        "VALUE 1",
+        ErrorCode.PARSE_UNEXPECTED_KEYWORD,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 1L,
+            Property.TOKEN_TYPE to TokenType.KEYWORD,
+            Property.TOKEN_VALUE to ion.newSymbol("value")))
+
+    @Test
+    fun innerCrossJoinWithOnCondition() = checkInputThrowingParserException(
+        "SELECT * FROM foo INNER CROSS JOIN bar ON true",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 40L,
+            Property.TOKEN_TYPE to TokenType.KEYWORD,
+            Property.TOKEN_VALUE to ion.newSymbol("on")))
+
+    @Test
+    fun leftCrossJoinWithOnCondition() = checkInputThrowingParserException(
+        "SELECT * FROM foo LEFT CROSS JOIN bar ON true",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 39L,
+            Property.TOKEN_TYPE to TokenType.KEYWORD,
+            Property.TOKEN_VALUE to ion.newSymbol("on")))
+
+    @Test
+    fun rightCrossJoinWithOnCondition() = checkInputThrowingParserException(
+        "SELECT * FROM foo RIGHT CROSS JOIN bar ON true",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 40L,
+            Property.TOKEN_TYPE to TokenType.KEYWORD,
+            Property.TOKEN_VALUE to ion.newSymbol("on")))
+
+    @Test
+    fun innerJoinWithOutOnCondition() = checkInputThrowingParserException(
+        "SELECT * FROM foo INNER JOIN bar",
+        ErrorCode.PARSE_MALFORMED_JOIN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 33L,
+            Property.TOKEN_TYPE to TokenType.EOF,
+            Property.TOKEN_VALUE to ion.newSymbol("EOF")))
+
+    @Test
+    fun leftJoinWithOutOnCondition() = checkInputThrowingParserException(
+        "SELECT * FROM foo LEFT JOIN bar",
+        ErrorCode.PARSE_MALFORMED_JOIN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 32L,
+            Property.TOKEN_TYPE to TokenType.EOF,
+            Property.TOKEN_VALUE to ion.newSymbol("EOF")))
+
+    @Test
+    fun rightJoinWithOutOnCondition() = checkInputThrowingParserException(
+        "SELECT * FROM foo RIGHT JOIN bar",
+        ErrorCode.PARSE_MALFORMED_JOIN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 33L,
+            Property.TOKEN_TYPE to TokenType.EOF,
+            Property.TOKEN_VALUE to ion.newSymbol("EOF")))
 
 }

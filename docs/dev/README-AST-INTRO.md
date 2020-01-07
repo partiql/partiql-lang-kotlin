@@ -14,7 +14,7 @@ Language implementations often use the term "Abstract Syntax Tree" to refer to a
 graph. Our implementation for PartiQL's AST is a tree and *not* a graph. It contains no cycles and each node can only
 reference its children.
 
-##  It's Immutable
+## It's Immutable
 
 No mechanism has been provided to mutate an instance of the AST after it has been instantiated.  Modifications to an
 existing tree must use cloning re-writes--for instance, a visitor pattern that returns a modified version of the input
@@ -48,9 +48,12 @@ The base classes are:
 - `org.partiql.lang.ast.SelectListItem`, for expressions that may appear between `SELECT` ... `FROM`.
 - `org.partiql.lang.ast.FromSource`, for expressions that are data sources in a `FROM` clause.
 - `org.partiql.lang.ast.PathComponent`, for the components of a path expression.
-- `org.partiql.lang.ast.SelectProjection`, - indicates the type of projection used by a
+- `org.partiql.lang.ast.SelectProjection`, for the type of projection used by a
 `SELECT`,`SELECT VALUE` or `PIVOT` query. This isn't directly related to the grammar but is convenient to represent
 in this manner.
+- `org.partiql.lang.ast.DataManipulation`, for data manipulation expressions that may optionally be wrapped with
+ `FROM ... WHERE ...`.
+- `org.partiql.lang.DmlOperation`, for the data manipulation operation itself (e.g. `INSERT INTO ...`)
 
 All base classes of the AST are [sealed](https://kotlinlang.org/docs/reference/sealed-classes.html) classes.
 
