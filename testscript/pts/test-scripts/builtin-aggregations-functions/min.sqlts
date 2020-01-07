@@ -12,20 +12,66 @@
  *  language governing permissions and limitations under the License.
  */
  
-test::{
-    id: 'top level min',
-    statement: "MIN([1,1,1,2])",
-    expected: (success 1)
-}
-  
-test::{
-    id: 'top level min all',
-    statement: "MIN(ALL [1,1,1,2])",
-    expected: (success 1)
+set_default_environment::{
+     data: [1, 1, 1, 2],
 }
 
-test::{
-    id: 'top level min distinct',
-    statement: "MIN(DISTINCT [1,1,1,2])",
-    expected: (success 1)
+for::{
+    template: [
+        test::{
+            id: 'min top level',
+            statement: "$agg",
+            expected: $result
+        },
+    ],
+    variable_sets: [
+        { agg: 'MIN(data)',          result: (success 1) },
+        { agg: 'MIN(ALL data)',      result: (error) }, // not allowed top level
+        { agg: 'MIN(DISTINCT data)', result: (error) }, // not allowed top level
+    ]
+}
+
+for::{
+    template: [
+        test::{
+            id: 'min select',
+            statement: "SELECT $agg AS a FROM data d",
+            expected: (success (bag {a: $result}))
+        },
+    ],
+    variable_sets: [
+        { agg: 'MIN(d)',          result: 1 },
+        { agg: 'MIN(ALL d)',      result: 1 },
+        { agg: 'MIN(DISTINCT d)', result: 1 },
+    ]
+}
+
+for::{
+    template: [ 
+        test::{
+            id: 'min group by',
+            statement: '''
+                SELECT t.a, $agg as c 
+                FROM <<
+                    {'a': 'f1', 'b': 1},
+                    {'a': 'f1', 'b': 1},
+                    {'a': 'f1', 'b': 1},
+                    {'a': 'f1', 'b': 2},
+                    
+                    {'a': 'f2', 'b': 2},
+                    {'a': 'f2', 'b': 4}
+                >> AS t
+                GROUP BY t.a
+            ''',
+            
+            expected: (success (bag 
+                {a: "f1", c: $expectedF1} 
+                {a: "f2", c: $expectedF2}))
+        },
+    ],
+    variable_sets: [
+        { agg: 'MIN(t.b)',          expectedF1: 1, expectedF2: 2 },
+        { agg: 'MIN(ALL t.b)',      expectedF1: 1, expectedF2: 2 },
+        { agg: 'MIN(DISTINCT t.b)', expectedF1: 1, expectedF2: 2 },
+    ]
 }

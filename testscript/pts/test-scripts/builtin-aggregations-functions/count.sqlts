@@ -12,20 +12,76 @@
  *  language governing permissions and limitations under the License.
  */
  
-test::{
-    id: 'top level count',
-    statement: "COUNT([1,1,1,2])",
-    expected: (success 4)
-}
-  
-test::{
-    id: 'top level count all',
-    statement: "COUNT(ALL [1,1,1,2])",
-    expected: (success 4)
+set_default_environment::{
+     data: [1, 1, 1, 2],
 }
 
-test::{
-    id: 'top level count distinct',
-    statement: "COUNT(DISTINCT [1,1,1,2])",
-    expected: (success 2)
+for::{
+    template: [
+        test::{
+            id: 'count top level',
+            statement: "$agg",
+            expected: $result
+        },
+    ],
+    variable_sets: [
+        { agg: 'COUNT(data)',          result: (success 4) },
+        { agg: 'COUNT(ALL data)',      result: (error) }, // not allowed top level
+        { agg: 'COUNT(DISTINCT data)', result: (error) }, // not allowed top level
+    ]
 }
+
+for::{
+    template: [
+        test::{
+            id: 'count select',
+            statement: "SELECT $agg AS a FROM data d",
+            expected: (success (bag {a: $result}))
+        },
+    ],
+    variable_sets: [
+        { agg: 'COUNT(d)',          result: 4 },
+        { agg: 'COUNT(ALL d)',      result: 4 },
+        { agg: 'COUNT(DISTINCT d)', result: 2 },
+    ]
+}
+
+for::{
+    template: [ 
+        test::{
+            id: 'count group by',
+            statement: '''
+                SELECT t.a, $agg as c 
+                FROM <<
+                    {'a': 'f1', 'b': 1},
+                    {'a': 'f1', 'b': 1},
+                    {'a': 'f1', 'b': 1},
+                    {'a': 'f1', 'b': 2},
+                    
+                    {'a': 'f2', 'b': 2},
+                    {'a': 'f2', 'b': 4}
+                >> AS t
+                GROUP BY t.a
+            ''',
+            
+            expected: (success (bag 
+                {a: "f1", c: $expectedF1} 
+                {a: "f2", c: $expectedF2}))
+        },
+    ],
+    variable_sets: [
+        { agg: 'COUNT(t.b)',          expectedF1: 4, expectedF2: 2 },
+        { agg: 'COUNT(ALL t.b)',      expectedF1: 4, expectedF2: 2 },
+        { agg: 'COUNT(DISTINCT t.b)', expectedF1: 2, expectedF2: 2 },
+    ]
+}
+
+
+
+
+
+
+
+
+
+
