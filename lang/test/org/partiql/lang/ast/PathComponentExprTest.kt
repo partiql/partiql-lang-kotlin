@@ -24,9 +24,8 @@ import kotlin.test.*
 @RunWith(JUnitParamsRunner::class)
 class PathComponentExprTest {
     private val ion: IonSystem = IonSystemBuilder.standard().build()
-    private val emptyMetas = metaContainerOf()
-    private fun litString(str: String) = Literal(ion.newString(str), emptyMetas)
-    private fun litInt(value: Int) = Literal(ion.newInt(value), emptyMetas)
+    private fun litString(str: String) = Literal(ion.newString(str), emptyMetaContainer)
+    private fun litInt(value: Int) = Literal(ion.newInt(value), emptyMetaContainer)
 
     private val oneSensitive = PathComponentExpr(litInt(1), CaseSensitivity.SENSITIVE)
     private val oneInsensitive = oneSensitive.copy(case = CaseSensitivity.INSENSITIVE)

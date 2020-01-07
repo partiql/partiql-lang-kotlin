@@ -40,7 +40,7 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
      *
      * This is generally used to access a component of a value by name.
      */
-    val bindings: Bindings
+    val bindings: Bindings<ExprValue>
 
     /**
      * Returns the [OrdinalBindings] over this value.

@@ -32,7 +32,7 @@ class CliTest {
         output.reset()
     }
 
-    private fun makeCli(query: String, input: String, bindings: Bindings = Bindings.EMPTY) =
+    private fun makeCli(query: String, input: String, bindings: Bindings<ExprValue> = Bindings.empty()) =
         Cli(
             valueFactory,
             input.byteInputStream(Charsets.UTF_8),

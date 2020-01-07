@@ -355,7 +355,7 @@ internal class IonExprValue(private val valueFactory: ExprValueFactory, override
             IonStructBindings(valueFactory, ionValue)
         }
         else {
-            Bindings.EMPTY
+            Bindings.empty<ExprValue>()
         }
     }
 

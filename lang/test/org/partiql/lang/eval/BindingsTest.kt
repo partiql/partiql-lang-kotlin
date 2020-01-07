@@ -21,10 +21,10 @@ import org.partiql.lang.util.*
 
 class BindingsTest : TestBase() {
 
-    fun bind(text: String): Bindings = valueFactory.newFromIonText(text).bindings
+    fun bind(text: String): Bindings<ExprValue> = valueFactory.newFromIonText(text).bindings
 
     fun over(text: String,
-             bindingsTransform: Bindings.() -> Bindings,
+             bindingsTransform: Bindings<ExprValue>.() -> Bindings<ExprValue>,
              block: AssertExprValue.() -> Unit) =
         AssertExprValue(
             valueFactory.newFromIonText(text),
@@ -44,7 +44,7 @@ class BindingsTest : TestBase() {
         var bAtEvaluateCount = 0
         var BaTEvaluateCount = 0
 
-        val testBindings = Bindings.buildLazyBindings {
+        val testBindings = Bindings.buildLazyBindings<ExprValue> {
             addBinding("foo") {
                 fooEvaluateCount++
                 valueFactory.newInt(10)

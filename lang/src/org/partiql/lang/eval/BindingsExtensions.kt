@@ -23,9 +23,9 @@ package org.partiql.lang.eval
  *
  * @param fallback The bindings to delegate to when lookup fails to find a name.
  */
-fun Bindings.delegate(fallback: Bindings): Bindings =
-    object : Bindings {
-        override fun get(bindingName: BindingName): ExprValue? {
+fun <T> Bindings<T>.delegate(fallback: Bindings<T>): Bindings<T> =
+    object : Bindings<T> {
+        override fun get(bindingName: BindingName): T? {
             val binding = this@delegate[bindingName]
             return binding ?: fallback[bindingName]
         }
@@ -37,11 +37,11 @@ fun Bindings.delegate(fallback: Bindings): Bindings =
  * @receiver The [Bindings] to delegate over.
  * @param names, the blacklisted names
  */
-fun Bindings.blacklist(vararg names: String) = object: Bindings {
+fun <T> Bindings<T>.blacklist(vararg names: String) = object: Bindings<T> {
     val blacklisted = names.toSet()
     val loweredBlacklisted = names.map { it.toLowerCase() }.toSet()
 
-    override fun get(bindingName: BindingName): ExprValue? {
+    override fun get(bindingName: BindingName): T? {
         val isBlacklisted = when (bindingName.bindingCase) {
             BindingCase.SENSITIVE   -> blacklisted.contains(bindingName.name)
             BindingCase.INSENSITIVE -> loweredBlacklisted.contains(bindingName.loweredName)

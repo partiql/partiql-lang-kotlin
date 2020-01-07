@@ -17,7 +17,6 @@ package org.partiql.lang.syntax
 import com.amazon.ion.*
 import org.partiql.lang.*
 import org.partiql.lang.ast.*
-import org.partiql.lang.ast.passes.V0AstSerializer
 import org.partiql.lang.util.*
 
 abstract class SqlParserTestBase : TestBase() {
@@ -38,7 +37,7 @@ abstract class SqlParserTestBase : TestBase() {
 
         // Serialize to V0 s-exp and assert that it matches the expected v0 s-exp AST
         val expectedSexpAstV0 = ion.singleValue(expectedSexpAstV0String)
-        val sexpAstV0 = V0AstSerializer.serialize(parsedExprNode, ion)
+        val sexpAstV0 = AstSerializer.serialize(parsedExprNode, AstVersion.V0, ion)
 
         val sexpAstV0WithoutMetas = sexpAstV0.filterMetaNodes()
         assertSexpEquals(expectedSexpAstV0, sexpAstV0WithoutMetas, "V0 AST, $source")
@@ -51,7 +50,7 @@ abstract class SqlParserTestBase : TestBase() {
 
             // Serialize the ExprNodes originating from the query to s-exp AS v1 and assert that they match
             val expectedSexpAstV1 = ion.singleValue(expectedSexpAstV1String)
-            val sexpAstV1 = AstSerializer.serialize(parsedExprNode, ion)
+            val sexpAstV1 = AstSerializer.serialize(parsedExprNode, AstVersion.V1, ion)
 
             //Our expected s-exp v1 values do not have the versioning wrapper so remove it
             assertEquals("ast", sexpAstV1.tagText)

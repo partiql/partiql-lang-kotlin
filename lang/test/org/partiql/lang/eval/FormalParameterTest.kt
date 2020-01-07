@@ -14,13 +14,16 @@
 
 package org.partiql.lang.eval
 
+import org.partiql.lang.types.SingleFormalParameter
+import org.partiql.lang.types.StaticType
+import org.partiql.lang.types.VarargFormalParameter
 import org.junit.Assert.*
 import org.junit.Test
 
 class FormalParameterTest {
     @Test
-    fun paramToString() = assertEquals("Bool", SingleFormalParameter(StaticType.BOOL).toString())
+    fun paramToString() = assertEquals("BOOL", SingleFormalParameter(StaticType.BOOL).toString())
 
     @Test
-    fun varargToString() = assertEquals("Bool...", VarargFormalParameter(StaticType.BOOL).toString())
+    fun varargToString() = assertEquals("BOOL...", VarargFormalParameter(StaticType.BOOL).toString())
 }

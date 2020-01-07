@@ -14,21 +14,17 @@
 
 package org.partiql.lang.eval
 
-import org.junit.*
-import org.junit.Assert.assertEquals
-
-class UntypedFunctionSignatureTest {
-
-    private val subject = UntypedFunctionSignature("funName")
-
-    @Test
-    fun toStringTest() = assertEquals("funName(Any...): Any",
-                                      subject.toString())
-
-    @Test
-    fun values() {
-        assertEquals("funName", subject.name)
-        assertEquals(listOf(VarargFormalParameter(StaticType.ANY)), subject.formalParameters)
-        assertEquals(StaticType.ANY, subject.returnType)
-    }
+/**
+ * Facet for a value to indicate that it has an application-defined "address" for this value.
+ *
+ * The "address" should be a value which is unique such as a UUID.
+ *
+ * An application should not provide this facet if it does not provide a value which uniquely identifies the
+ * value in the underlying data source.
+ */
+interface Addressed {
+    /**
+     * The address of this value.
+     */
+    val address: ExprValue
 }

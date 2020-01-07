@@ -115,7 +115,7 @@ public class CSVJavaExample extends Example {
 
         final EvaluationSession session = EvaluationSession.builder()
                 .globals(
-                        Bindings.lazyBindingsBuilder().addBinding("myCsvDocument", () -> {
+                        Bindings.<ExprValue>lazyBindingsBuilder().addBinding("myCsvDocument", () -> {
                             List<CsvRowExprValue> csvValues = Arrays.stream(CSV.split("\n"))
                                     .map(csvLine -> new CsvRowExprValue(pipeline.getValueFactory(), csvLine))
                                     .collect(Collectors.toList());

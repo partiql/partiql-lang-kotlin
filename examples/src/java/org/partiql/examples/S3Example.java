@@ -79,7 +79,7 @@ public class S3Example extends Example {
                     // We implement the Bindings interface using a lambda. Bindings are used to map names into values,
                     // in this case we are binding the data from the S3 bucket into the "myS3Document" name
                     .globals(
-                            Bindings.lazyBindingsBuilder()
+                            Bindings.<ExprValue>lazyBindingsBuilder()
                                     .addBinding("myS3Document", () -> pipeline.getValueFactory().newFromIonValue(values))
                                     .build()
                     )

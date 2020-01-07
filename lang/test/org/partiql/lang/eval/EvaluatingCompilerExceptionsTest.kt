@@ -44,7 +44,7 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
     }
 
     @Test
-    fun shadowedVariables() = assertThrows("Case insensitive binding name matched more than one identifier", NodeMetadata(1, 14)) {
+    fun shadowedVariables() = assertThrows("Multiple matches were found for the specified identifier", NodeMetadata(1, 14)) {
         voidEval("""SELECT VALUE a FROM `[{v:5}]` AS item, @item.v AS a, @item.v AS a""")
     }
 
@@ -92,12 +92,12 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
 
     @Test
     fun rightJoin() = assertThrows("RIGHT and FULL JOIN not supported", NodeMetadata(1, 28)) {
-        voidEval("SELECT * FROM animals AS a RIGHT JOIN animal_types AS a_type WHERE a.type = a_type.id")
+        voidEval("SELECT * FROM animals AS a RIGHT CROSS JOIN animal_types AS a_type WHERE a.type = a_type.id")
     }
 
     @Test
     fun outerJoin() = assertThrows("RIGHT and FULL JOIN not supported", NodeMetadata(1, 28)) {
-        voidEval("SELECT * FROM animals AS a OUTER JOIN animal_types AS a_type WHERE a.type = a_type.id")
+        voidEval("SELECT * FROM animals AS a OUTER CROSS JOIN animal_types AS a_type WHERE a.type = a_type.id")
     }
 
     @Test
@@ -174,14 +174,14 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
         sourceLocationProperties(1, 9) + mapOf(Property.BINDING_NAME to "REPEATED", Property.BINDING_NAME_MATCHES to "repeated, repeated"))
 
     @Test
-    fun negativeLimitValueThrowsNonInternalException() = checkInputThrowingEvaluationException(
-        """ select * from <<1>> limit -1 """,
-        ErrorCode.EVALUATOR_NEGATIVE_LIMIT,
-        sourceLocationProperties(1, 29))
-
-    @Test
     fun invalidEscapeSequenceInLike() = checkInputThrowingEvaluationException(
         """ '' like '^1' escape '^' """,
         ErrorCode.EVALUATOR_LIKE_PATTERN_INVALID_ESCAPE_SEQUENCE,
         sourceLocationProperties(1, 10) + mapOf(Property.LIKE_ESCAPE to "^", Property.LIKE_PATTERN to "^1"))
+
+    @Test
+    fun unboundParameters() = checkInputThrowingEvaluationException(
+        """SELECT ? FROM <<1>>""",
+        ErrorCode.EVALUATOR_UNBOUND_PARAMETER,
+        sourceLocationProperties(1, 8) + mapOf(Property.EXPECTED_PARAMETER_ORDINAL to 1, Property.BOUND_PARAMETER_COUNT to 0))
 }

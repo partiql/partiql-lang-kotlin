@@ -23,8 +23,8 @@ import org.partiql.lang.util.*
  * Think of this as a factory which precomputes the name-bindings map for a list of locals.
  */
 abstract class LocalsBinder {
-    fun bindLocals(locals: List<ExprValue>) : Bindings {
-        return object : Bindings {
+    fun bindLocals(locals: List<ExprValue>) : Bindings<ExprValue> {
+        return object : Bindings<ExprValue> {
             override fun get(bindingName: BindingName): ExprValue? = binderForName(bindingName)(locals)
         }
     }
@@ -33,8 +33,8 @@ abstract class LocalsBinder {
     abstract fun binderForName(bindingName: BindingName): (List<ExprValue>) -> ExprValue?
 }
 
-/** Sources can be aliased to names with 'AS' and 'AT' */
-data class Alias(val asName: String, val atName: String?)
+/** Sources can be aliased to names with 'AS', 'AT' or 'BY' */
+data class Alias(val asName: String, val atName: String?, val byName: String?)
 
 /**
  * Returns a [LocalsBinder] for the bindings specified in the [Alias] ('AS' and optionally 'AT').
@@ -53,13 +53,20 @@ fun List<Alias>.localsBinder(missingValue: ExprValue): LocalsBinder {
     // For each 'as' and 'at' alias, create a locals accessor => { name: binding_accessor }
     fun compileBindings(keyMangler: (String) -> String = { it }): Map<String, (List<ExprValue>) -> ExprValue?> {
         data class Binder(val name: String, val func: (List<ExprValue>) -> ExprValue)
-        return this.mapIndexed { index, alias -> sequenceOf(
-            // the alias binds to the value itself
-            Binder(alias.asName) { it[index] },
-            // the alias binds to the name of the value
-            if (alias.atName == null) null
-            else Binder(alias.atName) { it[index].name ?: missingValue })}
-            .asSequence()
+        return this.mapIndexed { index, alias ->
+            sequenceOf(
+                // the alias binds to the value itself
+                Binder(alias.asName) { it[index] },
+                // the alias binds to the name of the value
+                when {
+                    alias.atName == null -> null
+                    else                 -> Binder(alias.atName) { it[index].name ?: missingValue }
+                },
+                when {
+                    alias.byName == null -> null
+                    else                 -> Binder(alias.byName) { it[index].address ?: missingValue }
+                })
+            }.asSequence()
             .flatten()
             .filterNotNull()
             // There may be multiple accessors per name.

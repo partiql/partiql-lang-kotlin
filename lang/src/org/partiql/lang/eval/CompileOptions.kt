@@ -14,6 +14,10 @@
 
 package org.partiql.lang.eval
 
+import org.partiql.lang.ast.passes.AstRewriter
+import org.partiql.lang.ast.passes.IDENTITY_REWRITER
+import org.partiql.lang.ast.passes.basicRewriters
+
 
 /**
  * Defines the behavior when a non-existent variable is referenced.
@@ -37,11 +41,29 @@ enum class ProjectionIterationBehavior {
 }
 
 /**
+ * Controls the behavior of intrinsic AST rewriting with [EvaluatingCompiler.compile].
+ *
+ * Most users will want [DEFAULT], which does the built-in rewriting for them, while
+ * users wanting full control of the rewriting process should use [NONE].
+ */
+enum class RewritingMode {
+    DEFAULT {
+        override fun createRewriter() = basicRewriters()
+    },
+    NONE {
+        override fun createRewriter() = IDENTITY_REWRITER
+    };
+
+    internal abstract fun createRewriter(): AstRewriter
+}
+
+/**
  * Specifies options that effect the behavior of the PartiQL compiler.
  */
 data class CompileOptions private constructor (
         val undefinedVariable: UndefinedVariableBehavior,
-        val projectionIteration: ProjectionIterationBehavior = ProjectionIterationBehavior.FILTER_MISSING
+        val projectionIteration: ProjectionIterationBehavior = ProjectionIterationBehavior.FILTER_MISSING,
+        val rewritingMode: RewritingMode = RewritingMode.DEFAULT
 ) {
 
     companion object {
@@ -72,6 +94,7 @@ data class CompileOptions private constructor (
 
         fun undefinedVariable(value: UndefinedVariableBehavior) = set { copy(undefinedVariable = value) }
         fun projectionIteration(value: ProjectionIterationBehavior) = set { copy(projectionIteration = value) }
+        fun rewriterMode(value: RewritingMode) = set { copy(rewritingMode = value) }
 
         private inline fun set(block: CompileOptions.() -> CompileOptions) : Builder {
             options = block(options)

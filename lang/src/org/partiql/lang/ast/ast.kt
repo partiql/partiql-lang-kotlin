@@ -19,7 +19,7 @@ import org.partiql.lang.util.*
 import java.util.*
 
 /**
- * Base type for all AST nodes.  
+ * Base type for all AST nodes.
  */
 sealed class AstNode : Iterable<AstNode> {
 
@@ -34,7 +34,7 @@ sealed class AstNode : Iterable<AstNode> {
     override operator fun iterator(): Iterator<AstNode> {
         fun depthFirstSequence(node: AstNode): Sequence<AstNode> =
             sequenceOf(node) + node.children.asSequence().flatMap { depthFirstSequence(it) }
-        
+
         return depthFirstSequence(this).iterator();
     }
 }
@@ -44,7 +44,7 @@ sealed class AstNode : Iterable<AstNode> {
  * place a value is allowed.
  */
 sealed class ExprNode : AstNode(), HasMetas {
-    
+
     fun copy(newMetas: MetaContainer? = null): ExprNode {
         // This looks like duplication but really isn't: each branch executes a different compiler-generated `copy` function.
         val metas = newMetas ?: this.metas
@@ -76,25 +76,24 @@ sealed class ExprNode : AstNode(), HasMetas {
             is SearchedCase      -> {
                 copy(metas = metas)
             }
-            is Select            -> {
+            is Select -> {
                 copy(metas = metas)
             }
-            is Struct            -> {
+            is Struct -> {
                 copy(metas = metas)
             }
-            is ListExprNode      -> {
+            is Seq               -> {
                 copy(metas = metas)
             }
-            is Bag               -> {
+            is DataManipulation  -> {
+                copy(metas = metas)
+            }
+            is Parameter       -> {
                 copy(metas = metas)
             }
         }
     }
 }
-
-//********************************
-// Basic arithmetic expressions.
-//********************************
 
 /** Represents a literal value.  */
 data class Literal(
@@ -113,7 +112,7 @@ data class Literal(
 data class LiteralMissing(
     override val metas: MetaContainer
 ) : ExprNode() {
-    
+
     override val children: List<AstNode> = listOf()
 }
 
@@ -151,6 +150,17 @@ data class VariableReference(
                 scopeQualifier,
                 metas))
 
+    override val children: List<AstNode> = listOf()
+}
+
+/**
+ * Represents a dynamic parameter with ordinal position for a variable to be provided
+ * by the evaluation environment.
+ */
+data class Parameter(
+        val position: Int,
+        override val metas: MetaContainer
+) : ExprNode() {
     override val children: List<AstNode> = listOf()
 }
 
@@ -245,6 +255,62 @@ data class SearchedCaseWhen(
 }
 
 //********************************
+// Data Manipulation Expressions
+//********************************
+
+sealed class DataManipulationOperation(val name: String) : AstNode()
+
+/** Represents `FROM <fromSource> WHERE <whereExpr> <dataManipulationOperation> */
+data class DataManipulation(
+    val dmlOperation: DataManipulationOperation,
+    val from: FromSource? = null,
+    val where: ExprNode? = null,
+    override val metas: MetaContainer
+) : ExprNode() {
+    override val children: List<AstNode> =
+        dmlOperation.children + listOfNotNull(from, where, dmlOperation)
+}
+
+/** Represents `INSERT INTO <lvalueExpr> <valuesExpr>` */
+data class InsertOp(val lvalue: ExprNode, val values: ExprNode
+) : DataManipulationOperation(name = "insert") {
+    override val children: List<AstNode> = listOf(lvalue, values)
+}
+
+
+/** Represents `INSERT INTO <lvalueExpr> VALUE <valueExpr> [AT <position>]` */
+data class InsertValueOp(val lvalue: ExprNode, val value: ExprNode, val position: ExprNode?
+): DataManipulationOperation(name = "insert_value") {
+    override val children: List<AstNode> = listOfNotNull(lvalue, value, position)
+}
+
+
+data class Assignment(val lvalue: ExprNode, val rvalue: ExprNode) : AstNode() {
+    override val children: List<AstNode> = listOf(lvalue, rvalue)
+
+}
+
+/**
+ * Represents `SET <lvalueExpr> = <rvalueExpr>...`
+ */
+data class AssignmentOp(val assignments: List<Assignment>) : DataManipulationOperation(name = "set") {
+    override val children: List<AstNode> get() = assignments
+}
+
+
+/** Represents `REMOVE <lvalueExpr>` */
+data class RemoveOp(val lvalue: ExprNode) : DataManipulationOperation(name = "remove") {
+    override val children: List<AstNode> get() = listOf(lvalue)
+}
+
+
+/** Represents a legacy SQL `DELETE` whose target is implicit (over the `FROM`/`WHERE` clause) */
+object DeleteOp : DataManipulationOperation(name = "delete") {
+    override val children: List<AstNode> get() = emptyList()
+}
+fun DeleteOp() = DeleteOp
+
+//********************************
 // Select Expression
 //********************************
 
@@ -265,6 +331,38 @@ data class Select(
 }
 
 /**
+ * Simple descriptor of the type of schema object.
+ */
+enum class SchemaObjectType(val typeName: String) {
+    TABLE("table")
+}
+
+sealed class SchemaObjectDefinition : AstNode()
+
+/**
+ * Very basic table definition, just a name, at least for now.
+ *
+ * TODO: add ability to represent schema/type definition of table.
+ */
+data class TableDefinition(private val sentinel: Unit?) : SchemaObjectDefinition() {
+    // XXX Kotlin data classes require a parameter constructor--this is a placeholder
+    // TODO:  where are the metas?
+    constructor() : this(null)
+
+    override val children: List<AstNode> get() = emptyList()
+}
+
+/**
+ * Describes an index.
+ *
+ * @param   target The target schema object for this index.
+ * @param   keys The expressions that extract the keys from the target to be applied to the index.
+ */
+data class IndexDefinition(val target: String, val keys: List<ExprNode>) : SchemaObjectDefinition() {
+    override val children: List<AstNode> get() = keys
+}
+
+/**
  * SymbolicName does have a semantic meaning and primarily exists so that any identifier in the query may
  * have `Meta` associated with it that is independent of the parent node which imbues its meaning.
  *
@@ -276,7 +374,7 @@ data class Select(
  *            1        2
  * ```
  *
- * `1 + 1 AS bar` (#1) becomes a `SelectListItemExpr` with `1 + 1` as its expression and `bar` (#2) as its `asAlias`.
+ * `1 + 1 AS bar` (#1) becomes a `SelectListItemExpr` with `1 + 1` as its expression and `bar` (#2) as its `asName`.
  * It would be ideal to point users to the location of bar specifically in the case of errors related to the alias
  * and to the location of the expression for errors related to the expression. Having SymbolicName allows for
  * this.
@@ -366,15 +464,15 @@ sealed class SelectProjection : AstNode()
 data class SelectProjectionList(
     val items: List<SelectListItem>
 ) : SelectProjection() {
-    
-    override val children: List<AstNode> = items 
+
+    override val children: List<AstNode> = items
 }
 
 /** For `SELECT VALUE <expr>` */
 data class SelectProjectionValue(
     val expr: ExprNode
 ) : SelectProjection() {
-    
+
     override val children: List<AstNode> = listOf(expr)
 }
 
@@ -383,7 +481,7 @@ data class SelectProjectionPivot(
     val valueExpr: ExprNode,
     val nameExpr: ExprNode
 ) : SelectProjection() {
-    
+
     override val children: List<AstNode> = listOf(valueExpr, nameExpr)
 }
 
@@ -404,7 +502,7 @@ data class SelectListItemExpr(
     val expr: ExprNode,
     val asName: SymbolicName? = null
 ) : SelectListItem() {
-    
+
     override val children: List<AstNode> = listOf(expr)
 }
 
@@ -434,15 +532,6 @@ sealed class FromSource : AstNode() {
     }
 }
 
-/** Represents `<expr> [AS <correlation>]` within a FROM clause. */
-data class FromSourceExpr(
-    val expr: ExprNode,
-    val asName: SymbolicName? = null,
-    val atName: SymbolicName? = null
-) : FromSource() {
-    override val children: List<AstNode> = listOf(expr)
-}
-
 /** Represents `<leftRef> [INNER | OUTER | LEFT | RIGHT] JOIN <rightRef> ON <condition>`. */
 data class FromSourceJoin(
     val joinOp: JoinOp,
@@ -451,8 +540,36 @@ data class FromSourceJoin(
     val condition: ExprNode,
     override val metas: MetaContainer
 ) : FromSource(), HasMetas {
-    
+
     override val children: List<AstNode> = listOf(leftRef, rightRef, condition)
+}
+
+data class LetVariables(
+    val asName: SymbolicName? = null,
+    val atName: SymbolicName? = null,
+    val byName: SymbolicName? = null
+) {
+    val isAnySpecified get() = asName != null || atName != null || byName != null
+}
+
+/** A base class for the two `FromSource` variants that can introduce `AS`, `AT` or `BY` bindings. */
+sealed class FromSourceLet : FromSource() {
+    abstract val expr: ExprNode
+    abstract val variables: LetVariables
+
+    fun copy(newVariables: LetVariables): FromSourceLet =
+        when(this) {
+            is FromSourceExpr    -> this.copy(variables = newVariables)
+            is FromSourceUnpivot -> this.copy(variables = newVariables)
+        }
+}
+
+/** Represents `<expr> [AS <correlation>]` within a FROM clause. */
+data class FromSourceExpr(
+    override val expr: ExprNode,
+    override val variables: LetVariables
+) : FromSourceLet() {
+    override val children: List<AstNode> get() = listOf(expr)
 }
 
 /** Represents `SELECT ... FROM UNPIVOT <fromSource> [AS <asName>] [AT <atName>]`.
@@ -464,12 +581,10 @@ data class FromSourceJoin(
  * as meta nodes.)
  */
 data class FromSourceUnpivot(
-    val expr: ExprNode,
-    val asName: SymbolicName?,
-    val atName: SymbolicName?,
+    override val expr: ExprNode,
+    override val variables: LetVariables,
     override val metas: MetaContainer
-) : FromSource(), HasMetas {
-    
+) : FromSourceLet(), HasMetas {
     override val children: List<AstNode> = listOf(expr)
 }
 
@@ -509,23 +624,21 @@ data class Struct(
     override val children: List<AstNode> = fields
 }
 
+enum class SeqType(val typeName: String) {
+    LIST("list"),
+    SEXP("sexp"),
+    BAG("bag")
+}
+
 /**
- * Represents a list constructor.
- * Note: `ExprNode` suffix in name disambiguates from [kotlin.collections.List].
+ * Represents a sequence constructor for `list`, `s-expression`, and `bag`.
  */
-data class ListExprNode(
+data class Seq(
+    val type: SeqType,
     val values: List<ExprNode>,
     override val metas: MetaContainer
 ) : ExprNode() {
-    override val children: List<AstNode> = values
-}
-
-/** Represents a bag constructor. */
-data class Bag(
-    val bag: List<ExprNode>,
-    override val metas: MetaContainer
-) : ExprNode() {
-    override val children: List<AstNode> = bag
+    override val children: List<AstNode> get() = values
 }
 
 /**

@@ -40,7 +40,7 @@ fun createCountStar(ion: IonSystem, metas: MetaContainer): CallAgg {
     // optimize count(*) to count(1). 
     return CallAgg(
         funcExpr = VariableReference(
-            id = "COUNT",
+            id = "count",
             case = CaseSensitivity.INSENSITIVE,
             scopeQualifier = ScopeQualifier.UNQUALIFIED,
             metas = srcLocationMetaOnly),

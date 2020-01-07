@@ -18,7 +18,6 @@ import org.junit.*
 import kotlin.test.*
 
 class VariableReferenceTest {
-    private val emptyMetas = metaContainerOf()
 
     /**
      * Asserts that [vr1] and [vr2] are equal according to .equals and that they have the same hash code.
@@ -35,7 +34,7 @@ class VariableReferenceTest {
         Assert.assertTrue(!vr1.equals(vr2))
     }
 
-    val sensitiveFoo = VariableReference("foo", CaseSensitivity.SENSITIVE, ScopeQualifier.UNQUALIFIED, emptyMetas)
+    val sensitiveFoo = VariableReference("foo", CaseSensitivity.SENSITIVE, ScopeQualifier.UNQUALIFIED, emptyMetaContainer)
     val insensitiveFoo = sensitiveFoo.copy(case = CaseSensitivity.INSENSITIVE)
 
     @Test
