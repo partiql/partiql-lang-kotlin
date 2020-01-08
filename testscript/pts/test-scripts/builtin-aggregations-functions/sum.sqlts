@@ -26,8 +26,8 @@ for::{
     ],
     variable_sets: [
         { agg: 'SUM(data)',          result: (success 5) },
-        { agg: 'SUM(ALL data)',      result: (error) }, // not allowed top level
-        { agg: 'SUM(DISTINCT data)', result: (error) }, // not allowed top level
+        { agg: 'SUM(ALL data)',      result: (success 5) }, 
+        { agg: 'SUM(DISTINCT data)', result: (success 3) }, 
     ]
 }
 

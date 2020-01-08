@@ -26,8 +26,8 @@ for::{
     ],
     variable_sets: [
         { agg: 'MIN(data)',          result: (success 1) },
-        { agg: 'MIN(ALL data)',      result: (error) }, // not allowed top level
-        { agg: 'MIN(DISTINCT data)', result: (error) }, // not allowed top level
+        { agg: 'MIN(ALL data)',      result: (success 1) }, 
+        { agg: 'MIN(DISTINCT data)', result: (success 1) }, 
     ]
 }
 

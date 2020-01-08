@@ -26,8 +26,8 @@ for::{
     ],
     variable_sets: [
         { agg: 'COUNT(data)',          result: (success 4) },
-        { agg: 'COUNT(ALL data)',      result: (error) }, // not allowed top level
-        { agg: 'COUNT(DISTINCT data)', result: (error) }, // not allowed top level
+        { agg: 'COUNT(ALL data)',      result: (success 4) },
+        { agg: 'COUNT(DISTINCT data)', result: (success 2) }, 
     ]
 }
 

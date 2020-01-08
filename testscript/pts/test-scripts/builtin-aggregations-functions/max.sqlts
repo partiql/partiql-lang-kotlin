@@ -26,8 +26,8 @@ for::{
     ],
     variable_sets: [
         { agg: 'MAX(data)',          result: (success 2) },
-        { agg: 'MAX(ALL data)',      result: (error) }, // not allowed top level
-        { agg: 'MAX(DISTINCT data)', result: (error) }, // not allowed top level
+        { agg: 'MAX(ALL data)',      result: (success 2) }, 
+        { agg: 'MAX(DISTINCT data)', result: (success 2) }, 
     ]
 }
 

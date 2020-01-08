@@ -26,8 +26,8 @@ for::{
     ],
     variable_sets: [
         { agg: 'AVG(data)',          result: (success 1.25) },
-        { agg: 'AVG(ALL data)',      result: (error) }, // not allowed top level
-        { agg: 'AVG(DISTINCT data)', result: (error) }, // not allowed top level
+        { agg: 'AVG(ALL data)',      result: (success 1.25) },
+        { agg: 'AVG(DISTINCT data)', result: (success 1.5) }, 
     ]
 }
 
