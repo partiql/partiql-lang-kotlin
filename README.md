@@ -27,7 +27,7 @@ GitHub issues list for details.)
 
 ## Using In Your Project
 
-This project is published to [Maven Central](https://search.maven.org/artifact/org.partiql/partiql-lang-kotlin/0.1.0/jar).
+This project is published to [Maven Central](https://search.maven.org/artifact/org.partiql/partiql-lang-kotlin).
 
 | Group ID | Artifact ID | Recommended Version |
 |----------|-------------|---------------------| 
