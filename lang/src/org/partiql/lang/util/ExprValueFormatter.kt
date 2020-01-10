@@ -107,7 +107,10 @@ class ConfigurableExprValueFormatter(private val config: Configuration) : ExprVa
         private fun prettyPrintIonLiteral(value: ExprValue) {
             val ionValue = value.ionValue
             out.append("`")
-            IonTextWriterBuilder.standard().build(out).use { writer -> ionValue.writeTo(writer) }
+
+            // We intentionally do *not* want to call [IonWriter.close()] on the [IonWriter] here because
+            // that will also call 'out.close()`, which is bad because we probably have more stuff to write!
+            ionValue.writeTo(IonTextWriterBuilder.standard().build(out))
             out.append("`")
         }
 

@@ -19,9 +19,7 @@ import com.amazon.ion.*
 import org.partiql.lang.ast.*
 import org.partiql.lang.ast.passes.*
 import org.partiql.lang.errors.*
-import org.partiql.lang.eval.ExprValueType.*
 import org.partiql.lang.eval.binding.*
-import org.partiql.lang.eval.isUnknown
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.*
 import java.math.*
@@ -246,28 +244,29 @@ internal class EvaluatingCompiler(
 
     private fun compileNAry(expr: NAry): ThunkEnv {
         val (op, args, metas: MetaContainer) = expr
-        val argThunks = args.map { compileExprNode(it) }
-
+        
+        fun argThunks() = args.map { compileExprNode(it) }
+        
         return when (op) {
-            NAryOp.ADD           -> compileNAryAdd(argThunks, metas)
-            NAryOp.SUB           -> compileNArySub(argThunks, metas)
-            NAryOp.MUL           -> compileNaryMul(argThunks, metas)
-            NAryOp.DIV           -> compileNAryDiv(argThunks, metas)
-            NAryOp.MOD           -> compileNAryMod(argThunks, metas)
-            NAryOp.EQ            -> compileNAryEq(argThunks, metas)
-            NAryOp.NE            -> compileNAryNe(argThunks, metas)
-            NAryOp.LT            -> compileNaryLt(argThunks, metas)
-            NAryOp.LTE           -> compileNAryLte(argThunks, metas)
-            NAryOp.GT            -> compileNAryGt(argThunks, metas)
-            NAryOp.GTE           -> compileNAryGte(argThunks, metas)
-            NAryOp.BETWEEN       -> compileNAryBetween(argThunks, metas)
-            NAryOp.LIKE          -> compileNAryLike(args, argThunks, metas)
-            NAryOp.IN            -> compileNAryIn(argThunks, metas)
-            NAryOp.NOT           -> compileNAryNot(argThunks, metas)
-            NAryOp.AND           -> compileNAryAnd(argThunks, metas)
-            NAryOp.OR            -> compileNAryOr(argThunks, metas)
-            NAryOp.STRING_CONCAT -> compileNAryStringConcat(argThunks, metas)
-            NAryOp.CALL          -> compileNAryCall(args, argThunks, metas)
+            NAryOp.ADD           -> compileNAryAdd(argThunks(), metas)
+            NAryOp.SUB           -> compileNArySub(argThunks(), metas)
+            NAryOp.MUL           -> compileNaryMul(argThunks(), metas)
+            NAryOp.DIV           -> compileNAryDiv(argThunks(), metas)
+            NAryOp.MOD           -> compileNAryMod(argThunks(), metas)
+            NAryOp.EQ            -> compileNAryEq(argThunks(), metas)
+            NAryOp.NE            -> compileNAryNe(argThunks(), metas)
+            NAryOp.LT            -> compileNaryLt(argThunks(), metas)
+            NAryOp.LTE           -> compileNAryLte(argThunks(), metas)
+            NAryOp.GT            -> compileNAryGt(argThunks(), metas)
+            NAryOp.GTE           -> compileNAryGte(argThunks(), metas)
+            NAryOp.BETWEEN       -> compileNAryBetween(argThunks(), metas)
+            NAryOp.LIKE          -> compileNAryLike(args, argThunks(), metas)
+            NAryOp.IN            -> compileNAryIn(args, metas) 
+            NAryOp.NOT           -> compileNAryNot(argThunks(), metas)
+            NAryOp.AND           -> compileNAryAnd(argThunks(), metas)
+            NAryOp.OR            -> compileNAryOr(argThunks(), metas)
+            NAryOp.STRING_CONCAT -> compileNAryStringConcat(argThunks(), metas)
+            NAryOp.CALL          -> compileNAryCall(args, argThunks(), metas)
 
             NAryOp.INTERSECT,
             NAryOp.INTERSECT_ALL,
@@ -437,17 +436,37 @@ internal class EvaluatingCompiler(
     }
 
     private fun compileNAryIn(
-        argThunks: List<ThunkEnv>,
+        args: List<ExprNode>,
         metas: MetaContainer): ThunkEnv {
-        val needleThunk = argThunks[0]
-        val haystackThunk = argThunks[1]
-        return thunkEnv(metas) { env ->
-            val needle = needleThunk(env)
-            val haystack = haystackThunk(env)
-            haystack.any { it.exprEquals(needle) }.exprValue()
+        val leftArg = compileExprNode(args[0])
+        val rightArg = args[1]
+        
+        return when {
+            // When the right arg is a list of literals we use a Set to speed up the predicate
+            rightArg is ListExprNode && rightArg.values.all { it is Literal } -> {
+                val inSet = rightArg.values
+                    .map { it as Literal }
+                    .mapTo(TreeSet<ExprValue>(DEFAULT_COMPARATOR)) { valueFactory.newFromIonValue(it.ionValue) }
+
+                thunkEnv(metas) { env ->
+                    val value = leftArg(env)
+                    // we can use contains as exprEquals uses the DEFAULT_COMPARATOR
+                    inSet.contains(value).exprValue()
+                }
+            }
+            
+            else -> {
+                val rightArgThunk = compileExprNode(rightArg)
+
+                thunkEnv(metas) { env ->
+                    val value = leftArg(env)
+                    val rigthArgExprValue = rightArgThunk(env)
+                    rigthArgExprValue.any { it.exprEquals(value) }.exprValue()
+                }
+            }
         }
     }
-
+    
     private fun compileNAryNot(
         argThunks: List<ThunkEnv>,
         metas: MetaContainer): ThunkEnv {
