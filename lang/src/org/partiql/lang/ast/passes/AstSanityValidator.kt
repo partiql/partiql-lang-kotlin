@@ -52,6 +52,15 @@ object AstSanityValidator {
                     val (op, args, _: MetaContainer) = node
                     checkArity(op.symbol, op.arityRange, args.size, node.metas)
                 }
+                is CallAgg -> {
+                    val (_, setQuantifier, _, metas: MetaContainer) = node
+                    if (setQuantifier == SetQuantifier.DISTINCT && metas.hasMeta(IsCountStarMeta.TAG)) {
+                        err("COUNT(DISTINCT *) is not supported",
+                            ErrorCode.EVALUATOR_COUNT_DISTINCT_STAR,
+                            errorContextFrom(metas), 
+                            internal = false)
+                    }
+                }
                 is Select -> {
                     val (_, projection, _, _, groupBy, having, _, metas) = node
 

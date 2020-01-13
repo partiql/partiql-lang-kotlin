@@ -105,10 +105,7 @@ class V0AstSerializer(private val writerContext: IonWriterContext) {
                         val (funcExpr, setQuantifier, arg, metas: MetaContainer) = expr
                         if(metas.hasMeta(IsCountStarMeta.TAG)) {
                             symbol("call_agg_wildcard")
-                            symbol("count")
-                            if(setQuantifier == SetQuantifier.DISTINCT) {
-                                symbol(setQuantifier.toString().toLowerCase())
-                            }
+                            symbol("count")                            
                         } else {
                             symbol("call_agg")
                             symbol(funcExpr.getFuncName())
