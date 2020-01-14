@@ -71,6 +71,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
         UNPIVOT,
         CALL,
         CALL_AGG,
+        CALL_DISTINCT_AGG,
         CALL_AGG_WILDCARD,
         ARG_LIST,
         AS_ALIAS,
@@ -310,6 +311,15 @@ class SqlParser(private val ion: IonSystem) : Parser {
                         metas = metaContainerOf())
 
                 CallAgg(funcExpr, SetQuantifier.ALL, children.first().toExprNode(), metas)
+            }
+            CALL_DISTINCT_AGG -> {
+                val funcExpr =
+                    VariableReference(
+                        token?.text!!.toLowerCase(),
+                        CaseSensitivity.INSENSITIVE,
+                        metas = metaContainerOf())
+
+                CallAgg(funcExpr, SetQuantifier.DISTINCT, children.first().toExprNode(), metas)
             }
             CALL_AGG_WILDCARD -> {
                 if(token!!.type != KEYWORD || token.keywordText != "count") {
@@ -1241,46 +1251,90 @@ class SqlParser(private val ion: IonSystem) : Parser {
     }
 
     private fun List<Token>.parseFunctionCall(name: Token): ParseNode {
-        val nameText = name.text!!
-        var callType = when {
-            // TODO make this injectable
-            nameText in STANDARD_AGGREGATE_FUNCTIONS -> CALL_AGG
-            else -> CALL
-        }
-
-        // TODO https://github.com/partiql/partiql-lang-kotlin/issues/38 support DISTINCT/ALL syntax
-
-        val call =  when (head?.type) {
+        fun parseCallArguments(callName: String, args: List<Token>, callType: ParseType): ParseNode = when(args.head?.type) {
+            STAR -> err("$callName(*) is not allowed", PARSE_UNSUPPORTED_CALL_WITH_STAR)
             RIGHT_PAREN -> ParseNode(callType, name, emptyList(), tail)
-            STAR -> {
-                // support for special form COUNT(*)
-                callType = CALL_AGG_WILDCARD
-                if (nameText != "count") {
-                    err("$nameText(*) is not allowed", PARSE_UNSUPPORTED_CALL_WITH_STAR)
-                }
-                ParseNode(
-                    callType,
-                    name,
-                    emptyList(),
-                    tail
-                ).deriveExpected(RIGHT_PAREN)
-            }
             else -> {
-                parseArgList(
-                    aliasSupportType = NONE,
-                    mode = NORMAL_ARG_LIST
-                ).copy(
-                    type = callType,
-                    token = name
-                ).deriveExpected(RIGHT_PAREN)
+                args.parseArgList(aliasSupportType = NONE, mode = NORMAL_ARG_LIST)
+                    .copy(type = callType, token = name)
+                    .deriveExpected(RIGHT_PAREN)
             }
         }
 
-        if (callType == CALL_AGG && call.children.size != 1) {
-            err("Aggregate functions are always unary", PARSE_NON_UNARY_AGREGATE_FUNCTION_CALL)
-        }
+        val callName = name.text!!
+        val memoizedTail by lazy { tail }
+        val keywordText = head?.keywordText
+        
+        return when (callName) {
+            "count" -> {
+                when {
+                    head?.type == RIGHT_PAREN -> {
+                        err("Aggregate functions are always unary", PARSE_NON_UNARY_AGREGATE_FUNCTION_CALL)
+                    }
+                    
+                    // COUNT(*)
+                    head?.type == STAR -> {
+                        ParseNode(CALL_AGG_WILDCARD, name, emptyList(), tail).deriveExpected(RIGHT_PAREN)
+                    }
+                    
+                    head?.type == KEYWORD && keywordText == "distinct" -> {
+                        when(memoizedTail.head?.type) {
+                            // COUNT(DISTINCT *)
+                            STAR -> {
+                                err("COUNT(DISTINCT *) is not supported", PARSE_UNSUPPORTED_CALL_WITH_STAR)
+                            }
 
-        return call
+                            // COUNT(DISTINCT expression)
+                            else -> {
+                                memoizedTail.parseArgList(aliasSupportType = NONE, mode = NORMAL_ARG_LIST)
+                                    .copy(type = CALL_DISTINCT_AGG, token = name)
+                                    .deriveExpected(RIGHT_PAREN)
+                            }
+                        }
+                    }
+                    
+                    head?.type == KEYWORD && keywordText == "all" -> {
+                        when(memoizedTail.head?.type) {
+                            STAR -> err("COUNT(ALL *) is not supported", PARSE_UNSUPPORTED_CALL_WITH_STAR)
+                            
+                            // COUNT(ALL expression)
+                            else -> {
+                                memoizedTail.parseArgList(aliasSupportType = NONE, mode = NORMAL_ARG_LIST)
+                                    .copy(type = CALL_AGG, token = name)
+                                    .deriveExpected(RIGHT_PAREN)
+                            }
+                        }
+                    }
+
+                    else -> parseArgList(aliasSupportType = NONE, mode = NORMAL_ARG_LIST)
+                        .copy(type = CALL_AGG, token = name)
+                        .deriveExpected(RIGHT_PAREN)
+                }
+            }
+            in STANDARD_AGGREGATE_FUNCTIONS -> {
+
+                val call = when {
+                    head?.type == KEYWORD && head?.keywordText == "distinct" -> {
+                        parseCallArguments(callName, tail, CALL_DISTINCT_AGG)
+                    }
+                    head?.type == KEYWORD && head?.keywordText == "all" -> {
+                        parseCallArguments(callName, tail, CALL_AGG)
+                    }
+                    else -> {
+                        parseCallArguments(callName, this, CALL_AGG)
+                    }
+                }
+
+                if (call.children.size != 1) {
+                    err("Aggregate functions are always unary", PARSE_NON_UNARY_AGREGATE_FUNCTION_CALL)
+                }
+
+                call
+            }
+
+            // normal function
+            else -> parseCallArguments(callName, this, CALL)
+        }
     }
 
     /**

@@ -11,10 +11,32 @@
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
  *  language governing permissions and limitations under the License.
  */
- 
-test::{
-    id: 'addition',
-    statement: "1 + 1",
-    expected: (success 2)
+
+set_default_environment::{
+    myTable: [
+        { a: 1, b: 1 },
+        { a: 2 },
+        { a: 1 },
+        { a: 1 },
+        { a: 1 },
+    ]
 }
 
+test::{
+    id: 'distinct star single table',
+    statement: "SELECT DISTINCT * FROM myTable",
+    expected: (success (bag 
+        { a: 1, b: 1 }
+        { a: 2 }
+        { a: 1 }
+    ))
+}
+
+test::{
+    id: 'distinct column single table',
+    statement: "SELECT DISTINCT a FROM myTable",
+    expected: (success (bag 
+        { a: 1 }
+        { a: 2 }
+    ))
+}

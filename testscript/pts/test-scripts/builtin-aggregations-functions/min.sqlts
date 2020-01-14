@@ -1,0 +1,77 @@
+/*
+ * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ *  You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *      http://aws.amazon.com/apache2.0/
+ *
+ *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ *  language governing permissions and limitations under the License.
+ */
+ 
+set_default_environment::{
+     data: [1, 1, 1, 2],
+}
+
+for::{
+    template: [
+        test::{
+            id: 'min top level',
+            statement: "$agg",
+            expected: $result
+        },
+    ],
+    variable_sets: [
+        { agg: 'MIN(data)',          result: (success 1) },
+        { agg: 'MIN(ALL data)',      result: (success 1) }, 
+        { agg: 'MIN(DISTINCT data)', result: (success 1) }, 
+    ]
+}
+
+for::{
+    template: [
+        test::{
+            id: 'min select',
+            statement: "SELECT $agg AS a FROM data d",
+            expected: (success (bag {a: $result}))
+        },
+    ],
+    variable_sets: [
+        { agg: 'MIN(d)',          result: 1 },
+        { agg: 'MIN(ALL d)',      result: 1 },
+        { agg: 'MIN(DISTINCT d)', result: 1 },
+    ]
+}
+
+for::{
+    template: [ 
+        test::{
+            id: 'min group by',
+            statement: '''
+                SELECT t.a, $agg as c 
+                FROM <<
+                    {'a': 'f1', 'b': 1},
+                    {'a': 'f1', 'b': 1},
+                    {'a': 'f1', 'b': 1},
+                    {'a': 'f1', 'b': 2},
+                    
+                    {'a': 'f2', 'b': 2},
+                    {'a': 'f2', 'b': 4}
+                >> AS t
+                GROUP BY t.a
+            ''',
+            
+            expected: (success (bag 
+                {a: "f1", c: $expectedF1} 
+                {a: "f2", c: $expectedF2}))
+        },
+    ],
+    variable_sets: [
+        { agg: 'MIN(t.b)',          expectedF1: 1, expectedF2: 2 },
+        { agg: 'MIN(ALL t.b)',      expectedF1: 1, expectedF2: 2 },
+        { agg: 'MIN(DISTINCT t.b)', expectedF1: 1, expectedF2: 2 },
+    ]
+}

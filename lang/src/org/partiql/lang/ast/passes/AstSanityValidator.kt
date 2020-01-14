@@ -54,12 +54,11 @@ object AstSanityValidator {
                 }
                 is CallAgg -> {
                     val (_, setQuantifier, _, metas: MetaContainer) = node
-                    if (setQuantifier == SetQuantifier.DISTINCT) {
-                        err("DISTINCT aggregate function calls not supported",
-                            ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
-                            errorContextFrom(metas).also {
-                                it[Property.FEATURE_NAME] = "DISTINCT aggregate function calls"
-                            }, internal = false)
+                    if (setQuantifier == SetQuantifier.DISTINCT && metas.hasMeta(IsCountStarMeta.TAG)) {
+                        err("COUNT(DISTINCT *) is not supported",
+                            ErrorCode.EVALUATOR_COUNT_DISTINCT_STAR,
+                            errorContextFrom(metas), 
+                            internal = false)
                     }
                 }
                 is Select -> {
