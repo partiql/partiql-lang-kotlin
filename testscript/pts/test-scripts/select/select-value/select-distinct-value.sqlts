@@ -11,10 +11,14 @@
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
  *  language governing permissions and limitations under the License.
  */
- 
+
+set_default_environment::{
+    myList: [1, 1, 1, 1, 1, 1, 1, 2],
+}
+
 test::{
-    id: 'addition',
-    statement: "1 + 1",
-    expected: (success 2)
+    id: 'distinct value single table',
+    statement: "SELECT DISTINCT VALUE l FROM myList l",
+    expected: (success (bag 1 2))
 }
 

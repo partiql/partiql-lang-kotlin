@@ -316,7 +316,14 @@ enum class ErrorCode(private val category: ErrorCategory,
             "Feature '${errorContext?.get(Property.FEATURE_NAME)?.stringValue() ?: UNKNOWN}' not supported yet"
         },
 
-
+    EVALUATOR_COUNT_DISTINCT_STAR(
+        ErrorCategory.EVALUATOR,
+        LOCATION,
+        "") {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "COUNT(DISTINCT *) is not supported"
+    },
+    
     EVALUATOR_BINDING_DOES_NOT_EXIST(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.BINDING_NAME),

@@ -477,10 +477,33 @@ class SqlParserTest : SqlParserTestBase() {
 
     @Test
     fun aggregateFunctionCall() = assertExpression(
+        """(call_agg sum all (id a case_insensitive))""",
+        "SUM(a)",
+        "(term (exp (call_agg sum all (term (exp (id a case_insensitive))))))")
+
+    @Test
+    fun aggregateDistinctFunctionCall() = assertExpression(
+        """(call_agg sum distinct (id a case_insensitive))""",
+        "SUM(DISTINCT a)",
+        "(term (exp (call_agg sum distinct (term (exp (id a case_insensitive))))))")
+
+    @Test
+    fun countStarFunctionCall() = assertExpression(
+        """(call_agg_wildcard count)""",
+        "COUNT(*)",
+        "(term (exp (call_agg_wildcard count)))")
+    
+    @Test
+    fun countFunctionCall() = assertExpression(
         """(call_agg count all (id a case_insensitive))""",
         "COUNT(a)",
-        "(term (exp (call_agg count all (term (exp (id a case_insensitive))))))"
-    )
+        "(term (exp (call_agg count all (term (exp (id a case_insensitive))))))")
+
+    @Test
+    fun countDistinctFunctionCall() = assertExpression(
+        """(call_agg count distinct (id a case_insensitive))""",
+        "COUNT(DISTINCT a)",
+        "(term (exp (call_agg count distinct (term (exp (id a case_insensitive))))))")
 
     //****************************************
     // path expression

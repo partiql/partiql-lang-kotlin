@@ -19,9 +19,7 @@ import com.amazon.ion.*
 import org.partiql.lang.ast.*
 import org.partiql.lang.ast.passes.*
 import org.partiql.lang.errors.*
-import org.partiql.lang.eval.ExprValueType.*
 import org.partiql.lang.eval.binding.*
-import org.partiql.lang.eval.isUnknown
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.*
 import java.math.*
@@ -102,15 +100,15 @@ internal class EvaluatingCompiler(
      */
     private inner class Accumulator(
         var current: Number? = 0L,
-        val nextFunc: (Number?, ExprValue) -> Number
+        val nextFunc: (Number?, ExprValue) -> Number,
+        val valueFilter: (ExprValue) -> Boolean = { _ -> true}
     ) : ExprAggregator {
 
         override fun next(value: ExprValue) {
-
-            current = when (value.isUnknown()) {
-                false -> nextFunc(current, value)
-                true  -> current
-            }
+            // skip the accumulation function if the value is unknown or if the value is filtered out
+            if (value.isNotUnknown() && valueFilter.invoke(value)) {
+                current = nextFunc(current, value)
+            } 
         }
 
         override fun compute() = current?.exprValue() ?: valueFactory.nullValue
@@ -120,7 +118,7 @@ internal class EvaluatingCompiler(
         val nextNum = next.numberValue()
         when (curr) {
             null -> nextNum
-            else -> when {
+            else -> when { 
                 cmpFunc(nextNum, curr) -> nextNum
                 else                   -> curr
             }
@@ -128,36 +126,73 @@ internal class EvaluatingCompiler(
     }
 
     /** Dispatch table for built-in aggregate functions. */
-    private val builtinAggregates: Map<String, ExprAggregatorFactory> = mapOf(
-        "count" to ExprAggregatorFactory.over {
-            Accumulator(0L, { curr, _ -> curr!! + 1L })
-        },
-        "sum" to ExprAggregatorFactory.over {
-            Accumulator(null) { curr, next -> curr?.let { it + next.numberValue() } ?: next.numberValue() }
-        },
-        "min" to ExprAggregatorFactory.over {
-            Accumulator(null, comparisonAccumulator { left, right -> left < right })
-        },
-        "max" to ExprAggregatorFactory.over {
-            Accumulator(null, comparisonAccumulator { left, right -> left > right })
-        },
-        "avg" to ExprAggregatorFactory.over {
-        object : ExprAggregator {
-            var sum: Number? = null
-            var count = 0L
-            override fun next(value: ExprValue) {
-                when (value.type) {
-                    ExprValueType.NULL, ExprValueType.MISSING -> {
-                    }
-                    else                                      -> {
+    private val builtinAggregates: Map<Pair<String, SetQuantifier>, ExprAggregatorFactory> = {
+        val countAccFunc: (Number?, ExprValue) -> Number = { curr, _ -> curr!! + 1L }
+        val sumAccFunc: (Number?, ExprValue) -> Number = { curr, next -> curr?.let { it + next.numberValue() } ?: next.numberValue() }
+        val minAccFunc = comparisonAccumulator { left, right -> left < right }
+        val maxAccFunc = comparisonAccumulator { left, right -> left > right }
+
+        val avgAggregateGenerator = { filter: (ExprValue) -> Boolean ->
+            object : ExprAggregator {
+                var sum: Number? = null
+                var count = 0L
+                
+                override fun next(value: ExprValue) {
+                    if(value.isNotUnknown() && filter.invoke(value)) {
                         sum = sum?.let { it + value.numberValue() } ?: value.numberValue()
                         count++
                     }
                 }
+                override fun compute() = sum?.let { (it / bigDecimalOf(count)).exprValue() } ?: valueFactory.nullValue
             }
-            override fun compute() = sum?.let { (it / bigDecimalOf(count)).exprValue() } ?: valueFactory.nullValue
         }
-    })
+        
+        val allFilter: (ExprValue) -> Boolean = { _ -> true }
+        
+        // each distinct ExprAggregator must get its own createUniqueExprValueFilter()
+
+        mapOf(
+            Pair("count", SetQuantifier.ALL) to ExprAggregatorFactory.over { 
+                Accumulator(0L, countAccFunc, allFilter) 
+            },
+            
+            Pair("count", SetQuantifier.DISTINCT) to ExprAggregatorFactory.over { 
+                Accumulator(0L, countAccFunc, createUniqueExprValueFilter()) 
+            },
+
+            Pair("sum", SetQuantifier.ALL) to ExprAggregatorFactory.over {
+                Accumulator(null, sumAccFunc, allFilter)
+            },
+
+            Pair("sum", SetQuantifier.DISTINCT) to ExprAggregatorFactory.over {
+                Accumulator(null, sumAccFunc, createUniqueExprValueFilter())
+            },
+
+            Pair("avg", SetQuantifier.ALL) to ExprAggregatorFactory.over {
+                avgAggregateGenerator(allFilter)
+            },
+
+            Pair("avg", SetQuantifier.DISTINCT) to ExprAggregatorFactory.over {
+                avgAggregateGenerator(createUniqueExprValueFilter())
+            },
+
+            Pair("max", SetQuantifier.ALL) to ExprAggregatorFactory.over {
+                Accumulator(null, maxAccFunc, allFilter)
+            },
+
+            Pair("max", SetQuantifier.DISTINCT) to ExprAggregatorFactory.over {
+                Accumulator(null, maxAccFunc, createUniqueExprValueFilter())
+            },
+
+            Pair("min", SetQuantifier.ALL) to ExprAggregatorFactory.over {
+                Accumulator(null, minAccFunc, allFilter)
+            },
+
+            Pair("min", SetQuantifier.DISTINCT) to ExprAggregatorFactory.over {
+                Accumulator(null, minAccFunc, createUniqueExprValueFilter())
+            }
+        )
+    }()
 
     /**
      * Compiles an [ExprNode] tree to an [Expression].
@@ -246,28 +281,29 @@ internal class EvaluatingCompiler(
 
     private fun compileNAry(expr: NAry): ThunkEnv {
         val (op, args, metas: MetaContainer) = expr
-        val argThunks = args.map { compileExprNode(it) }
-
+        
+        fun argThunks() = args.map { compileExprNode(it) }
+        
         return when (op) {
-            NAryOp.ADD           -> compileNAryAdd(argThunks, metas)
-            NAryOp.SUB           -> compileNArySub(argThunks, metas)
-            NAryOp.MUL           -> compileNaryMul(argThunks, metas)
-            NAryOp.DIV           -> compileNAryDiv(argThunks, metas)
-            NAryOp.MOD           -> compileNAryMod(argThunks, metas)
-            NAryOp.EQ            -> compileNAryEq(argThunks, metas)
-            NAryOp.NE            -> compileNAryNe(argThunks, metas)
-            NAryOp.LT            -> compileNaryLt(argThunks, metas)
-            NAryOp.LTE           -> compileNAryLte(argThunks, metas)
-            NAryOp.GT            -> compileNAryGt(argThunks, metas)
-            NAryOp.GTE           -> compileNAryGte(argThunks, metas)
-            NAryOp.BETWEEN       -> compileNAryBetween(argThunks, metas)
-            NAryOp.LIKE          -> compileNAryLike(args, argThunks, metas)
-            NAryOp.IN            -> compileNAryIn(argThunks, metas)
-            NAryOp.NOT           -> compileNAryNot(argThunks, metas)
-            NAryOp.AND           -> compileNAryAnd(argThunks, metas)
-            NAryOp.OR            -> compileNAryOr(argThunks, metas)
-            NAryOp.STRING_CONCAT -> compileNAryStringConcat(argThunks, metas)
-            NAryOp.CALL          -> compileNAryCall(args, argThunks, metas)
+            NAryOp.ADD           -> compileNAryAdd(argThunks(), metas)
+            NAryOp.SUB           -> compileNArySub(argThunks(), metas)
+            NAryOp.MUL           -> compileNaryMul(argThunks(), metas)
+            NAryOp.DIV           -> compileNAryDiv(argThunks(), metas)
+            NAryOp.MOD           -> compileNAryMod(argThunks(), metas)
+            NAryOp.EQ            -> compileNAryEq(argThunks(), metas)
+            NAryOp.NE            -> compileNAryNe(argThunks(), metas)
+            NAryOp.LT            -> compileNaryLt(argThunks(), metas)
+            NAryOp.LTE           -> compileNAryLte(argThunks(), metas)
+            NAryOp.GT            -> compileNAryGt(argThunks(), metas)
+            NAryOp.GTE           -> compileNAryGte(argThunks(), metas)
+            NAryOp.BETWEEN       -> compileNAryBetween(argThunks(), metas)
+            NAryOp.LIKE          -> compileNAryLike(args, argThunks(), metas)
+            NAryOp.IN            -> compileNAryIn(args, metas) 
+            NAryOp.NOT           -> compileNAryNot(argThunks(), metas)
+            NAryOp.AND           -> compileNAryAnd(argThunks(), metas)
+            NAryOp.OR            -> compileNAryOr(argThunks(), metas)
+            NAryOp.STRING_CONCAT -> compileNAryStringConcat(argThunks(), metas)
+            NAryOp.CALL          -> compileNAryCall(args, argThunks(), metas)
 
             NAryOp.INTERSECT,
             NAryOp.INTERSECT_ALL,
@@ -437,17 +473,37 @@ internal class EvaluatingCompiler(
     }
 
     private fun compileNAryIn(
-        argThunks: List<ThunkEnv>,
+        args: List<ExprNode>,
         metas: MetaContainer): ThunkEnv {
-        val needleThunk = argThunks[0]
-        val haystackThunk = argThunks[1]
-        return thunkEnv(metas) { env ->
-            val needle = needleThunk(env)
-            val haystack = haystackThunk(env)
-            haystack.any { it.exprEquals(needle) }.exprValue()
+        val leftArg = compileExprNode(args[0])
+        val rightArg = args[1]
+        
+        return when {
+            // When the right arg is a list of literals we use a Set to speed up the predicate
+            rightArg is ListExprNode && rightArg.values.all { it is Literal } -> {
+                val inSet = rightArg.values
+                    .map { it as Literal }
+                    .mapTo(TreeSet<ExprValue>(DEFAULT_COMPARATOR)) { valueFactory.newFromIonValue(it.ionValue) }
+
+                thunkEnv(metas) { env ->
+                    val value = leftArg(env)
+                    // we can use contains as exprEquals uses the DEFAULT_COMPARATOR
+                    inSet.contains(value).exprValue()
+                }
+            }
+            
+            else -> {
+                val rightArgThunk = compileExprNode(rightArg)
+
+                thunkEnv(metas) { env ->
+                    val value = leftArg(env)
+                    val rigthArgExprValue = rightArgThunk(env)
+                    rigthArgExprValue.any { it.exprEquals(value) }.exprValue()
+                }
+            }
         }
     }
-
+    
     private fun compileNAryNot(
         argThunks: List<ThunkEnv>,
         metas: MetaContainer): ThunkEnv {
@@ -738,7 +794,7 @@ internal class EvaluatingCompiler(
     private fun compileSelect(selectExpr: Select): ThunkEnv {
 
         return nestCompilationContext(ExpressionContext.NORMAL) {
-            val (_, projection, from, _, groupBy, having, _, metas: MetaContainer) = selectExpr
+            val (setQuantifier, projection, from, _, groupBy, having, _, metas: MetaContainer) = selectExpr
 
             val fromSourceThunks = compileFromSources(from)
             val sourceThunks = compileQueryWithoutProjection(selectExpr, fromSourceThunks)
@@ -754,14 +810,22 @@ internal class EvaluatingCompiler(
                     groupByItems.isEmpty() && !hasAggregateCallSites ->
                         // Grouping is not needed -- simply project the results from the FROM clause directly.
                         thunkEnv(metas) { env ->
-                            valueFactory.newBag(
-                                sourceThunks(env).map { (joinedValues: List<ExprValue>, projectEnv: Environment) ->
-                                    selectProjectionThunk(projectEnv, joinedValues)
-                                }.map {
-                                    // TODO make this expose the ordinal for ordered sequences
-                                    // make sure we don't expose the underlying value's name out of a SELECT
-                                    it.unnamedValue()
-                                })
+                            
+                            val projectedRows = sourceThunks(env).map { (joinedValues, projectEnv) ->
+                                selectProjectionThunk(projectEnv, joinedValues)
+                            }
+
+                            val quantifiedRows = when(setQuantifier) {
+                                // wrap the ExprValue to use ExprValue.equals as the equality  
+                                SetQuantifier.DISTINCT -> projectedRows.filter(createUniqueExprValueFilter())
+                                SetQuantifier.ALL -> projectedRows
+                            }
+
+                            valueFactory.newBag(quantifiedRows.map {
+                                // TODO make this expose the ordinal for ordered sequences
+                                // make sure we don't expose the underlying value's name out of a SELECT
+                                it.unnamedValue()
+                            })
                         }
                     else                                             -> {
                         // Grouping is needed
@@ -772,7 +836,7 @@ internal class EvaluatingCompiler(
                         val compiledAggregates = aggregateListMeta?.aggregateCallSites?.map { it ->
                             val funcName = (it.funcExpr as VariableReference).id
                             CompiledAggregate(
-                                factory = getAggregatorFactory(funcName, it.metas),
+                                factory = getAggregatorFactory(funcName, it.setQuantifier, it.metas),
                                 argThunk = compileExprNode(it.arg))
                         }
 
@@ -1081,65 +1145,49 @@ internal class EvaluatingCompiler(
             err("COUNT(*) is not allowed in this context", errorContextFrom(metas), internal = false)
         }
 
-        val funcVarRef = funcExpr as VariableReference  //AstSantityVisitor ensures this cast will succeed
-        return when(setQuantifier) {
-            SetQuantifier.DISTINCT -> {
-                err("DISTINCT set quantifier within aggregate call site not supported yet",
-                    ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
-                    errorContextFrom(metas).also {
-                        it[Property.FEATURE_NAME] = "DISTINCT set quantifier within aggregate call site"
-                    },
+        val funcVarRef = funcExpr as VariableReference  // AstSanityValidator ensures this cast will succeed
+        
+        val aggFactory = getAggregatorFactory(funcVarRef.id.toLowerCase(), setQuantifier, metas)
+        
+        val argThunk = nestCompilationContext(ExpressionContext.AGG_ARG) {
+            compileExprNode(argExpr)
+        }
+
+        return when (currentCompilationContext.expressionContext) {
+            ExpressionContext.AGG_ARG     -> {
+                err("The arguments of an aggregate function cannot contain aggregate functions",
+                    errorContextFrom(metas),
                     internal = false)
             }
-            SetQuantifier.ALL      -> {
-                val aggFactory = getAggregatorFactory(funcVarRef.id.toLowerCase(), metas)
-
-                val argThunk = nestCompilationContext(ExpressionContext.AGG_ARG) {
-                    compileExprNode(argExpr)
+            ExpressionContext.NORMAL      ->
+                thunkEnv(metas) { env ->
+                    val aggregator = aggFactory.create()
+                    val argValue = argThunk(env)
+                    argValue.forEach { aggregator.next(it) }
+                    aggregator.compute()
                 }
+            ExpressionContext.SELECT_LIST -> {
+                val registerIdMeta = metas.find(AggregateRegisterIdMeta.TAG) as AggregateRegisterIdMeta
+                val registerId = registerIdMeta.registerId
+                thunkEnv(metas) { env ->
+                    // Note: env.currentGroup must be set by caller.
+                    val registers = env.currentGroup?.registers ?: err("No current group or current group has no registers",
+                                                                        errorContextFrom(metas),
+                                                                        internal = true)
 
-                return when (currentCompilationContext.expressionContext) {
-                    ExpressionContext.AGG_ARG     -> {
-                        err("The arguments of an aggregate function cannot contain aggregate functions",
-                            errorContextFrom(metas),
-                            internal = false)
-                    }
-                    ExpressionContext.NORMAL      ->
-                        thunkEnv(metas) { env ->
-                            val aggregator = aggFactory.create()
-                            val argValue = argThunk(env)
-                            argValue.forEach { aggregator.next(it) }
-                            aggregator.compute()
-                        }
-                    ExpressionContext.SELECT_LIST -> {
-                        val registerIdMeta = metas.find(AggregateRegisterIdMeta.TAG) as AggregateRegisterIdMeta
-                        val registerId = registerIdMeta.registerId
-                        thunkEnv(metas) { env ->
-
-                            //Note: env.currentGroup must be set by caller.
-                            val registers = env.currentGroup?.registers ?: err("No current group or current group has no registers",
-                                                                                errorContextFrom(metas),
-                                                                                internal = true)
-
-                            registers[registerId].aggregator.compute()
-                        }
-                    }
+                    registers[registerId].aggregator.compute()
                 }
             }
         }
     }
 
-     fun getAggregatorFactory(
-        funcName: String,
-        metas: MetaContainer
-    ): ExprAggregatorFactory {
-        val aggFactory = builtinAggregates[funcName.toLowerCase()] ?: err(
-            "No such function: ${funcName}",
-            ErrorCode.EVALUATOR_NO_SUCH_FUNCTION,
-            errorContextFrom(metas).also {
-                it[Property.FUNCTION_NAME] = funcName
-            }, internal = false)
-        return aggFactory
+     fun getAggregatorFactory(funcName: String, setQuantifier: SetQuantifier, metas: MetaContainer): ExprAggregatorFactory {
+         val key = funcName.toLowerCase() to setQuantifier
+         
+        return  builtinAggregates[key] ?: err("No such function: $funcName", 
+                                              ErrorCode.EVALUATOR_NO_SUCH_FUNCTION, 
+                                              errorContextFrom(metas).also { it[Property.FUNCTION_NAME] = funcName }, 
+                                              internal = false)
     }
 
     private fun compileFromSources(
