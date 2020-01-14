@@ -36,7 +36,7 @@ dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
 
     testImplementation 'org.jetbrains.kotlin:kotlin-test'
-    testImplementation 'pl.pragmatists:JUnitParams:[1.0.0,1.1.0)'
+    testImplementation 'pl.pragmatists:JUnitParams:1.1.1'
 }
 
 jacocoTestReport {
