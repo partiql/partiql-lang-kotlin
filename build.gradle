@@ -68,6 +68,10 @@ configure(subprojects.findAll { it.name != 'example' }) {
 
 subprojects {
 
+    tasks.withType(Test) {
+        maxHeapSize = "4g"
+    }
+
 
     plugins.withId('java', { _ ->
 
