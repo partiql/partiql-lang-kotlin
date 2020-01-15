@@ -20,7 +20,17 @@ class SelectStarRewriterTests : RewriterTestBase() {
                 FROM foo AS f
             """,
             """
-                SELECT 
+                SELECT "f".* 
+                FROM foo AS f
+            """
+        ),
+        RewriterTestCase(
+            """
+                SELECT DISTINCT * 
+                FROM foo AS f
+            """,
+            """
+                SELECT DISTINCT 
                     "f".* 
                 FROM foo AS f
             """

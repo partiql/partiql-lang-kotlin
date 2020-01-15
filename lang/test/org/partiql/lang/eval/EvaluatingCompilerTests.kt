@@ -14,6 +14,7 @@
 
 package org.partiql.lang.eval
 
+import org.junit.Ignore
 import org.junit.Test
 import org.partiql.lang.syntax.ParserException
 
@@ -1598,18 +1599,75 @@ class EvaluatingCompilerTests : EvaluatorTestBase() {
         """)
 
     @Test
-    fun selectDistinctStar() = assertEval(
+    @Ignore("https://github.com/partiql/partiql-lang-kotlin/issues/169")
+    fun selectDistinctStarMixed() = assertEval(
         """
             SELECT DISTINCT * 
             FROM [
                 1, 1, 2, 
-                [1], [1], [1, 2], 
-                <<>>, <<>>, 
+                [1], [1], [1, 2],
+                <<>>, <<>>,
                 MISSING, NULL, NULL, MISSING, 
                 {'a':1}, {'a':1}, {'a':2}]
         """,
         """
-          [{_1:1},{_1:2},{_1:[1]},{_1:[1,2]},{_1:[]},{},{_1:null},{a:1},{a:2}]
+          [{_1:1},{_1:2},{},{_1:null},{a:1},{a:2}]
+        """)
+
+    @Test
+    fun selectDistinctStarScalars() = assertEval(
+        """
+            SELECT DISTINCT * FROM [1, 1, 2]
+        """,
+        """
+          [{_1:1},{_1:2}]
+        """)
+
+    @Test
+    fun selectDistinctStarStructs() = assertEval(
+        """
+            SELECT DISTINCT * FROM [ {'a':1}, {'a':1}, {'a':2} ]
+        """,
+        """
+          [{a:1},{a:2}]
+        """)
+
+    @Test
+    fun selectDistinctStarUnknowns() = assertEval(
+        """
+            SELECT DISTINCT * FROM [MISSING, NULL, NULL, MISSING]
+        """,
+        """
+          [{}, {_1: null}]
+        """)
+
+    @Test
+    @Ignore("https://github.com/partiql/partiql-lang-kotlin/issues/169")
+    fun selectDistinctStarBags() = assertEval(
+        """
+            SELECT DISTINCT * FROM [ <<>>, <<>>, <<1>>, <<1>>, <<1, 2>>, <<2, 1>>, <<3, 4>>]
+        """,
+        """
+            [{_1:[]}, {_1: [1]}]
+        """)
+
+    @Test
+    @Ignore("https://github.com/partiql/partiql-lang-kotlin/issues/169")
+    fun selectDistinctStarLists() = assertEval(
+        """
+            SELECT DISTINCT * FROM [[1], [1], [1, 2]]
+        """,
+        """
+            [{_1:[1]}, {_1: [1, 2]}]
+        """)
+
+    @Test
+    fun selectDistinctStarIntegers() = assertEval(
+        """
+            SELECT DISTINCT * FROM [ 1, 1, 2 ]
+        """,
+        """
+          [{_1:1},{_1:2}]
         """)
 
     @Test
