@@ -330,7 +330,7 @@ OK! (2 ms)
 ``` 
 
 You can also add new values to the global environment or replace existing values using `!add_to_global_env`. The 
-example bellow replaces the value bound to `types`
+example below replaces the value bound to `types`
 
 ```
 PartiQL> !add_to_global_env {'types': []}
