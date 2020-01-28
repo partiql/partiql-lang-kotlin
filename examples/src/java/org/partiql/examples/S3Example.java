@@ -38,7 +38,7 @@ public class S3Example extends Example {
         final String region = "";
         
         /*
-            Upload the data bellow to your S3 bucket
+            Upload the data below to your S3 bucket
             {"id": "1", "name": "person_1", "age": 32, "address": "555 1st street, Seattle", "tags": []}
             {"id": "2", "name": "person_2", "age": 24}
             {"id": "3", "name": "person_3", "age": 25, "address": {"number": 555, "street": "1st street", "city": "Seattle"}, "tags": ["premium_user"]}
@@ -91,7 +91,7 @@ public class S3Example extends Example {
             // Uses ion-java to dump the result as JSON. It's possible to build your own writer and dump the ExprValue
             // as any format you want.
             selectAndFilterResult.getIonValue().writeTo(resultWriter);
-            // result as JSON bellow
+            // result as JSON below
             // [{"name":"person_2"},{"name":"person_3","address":{"number":555,"street":"1st street","city":"Seattle"}}]
         } catch (IOException e) {
             throw new RuntimeException(e);

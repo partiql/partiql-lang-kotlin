@@ -125,7 +125,7 @@ public class CSVJavaExample extends Example {
 
         final ExprValue selectAndFilterResult = selectAndFilter.eval(session);
         print("PartiQL query result:", selectAndFilterResult);
-        // result bellow
+        // result below
         // <<{_0:"person_1",_1:"27",_2:"tag_1"},{_0:"person_2",_1:"24",_2:"tag_1",_3:"tag_2"}>>
     }
 }
