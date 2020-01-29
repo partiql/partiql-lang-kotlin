@@ -1,5 +1,4 @@
 metadata.yaml
-../macros.md
 Preface.md
 Contribute.md
 Design.md

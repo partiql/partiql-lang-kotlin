@@ -6,9 +6,12 @@ You will need to install the following software
 * Make 
 * Pandoc 
     * https://pandoc.org/installing.html
+      * use the latest [`cabal`](https://www.haskell.org/cabal/#install-upgrade) installation for your system. 
 * Pandoc Filters 
     * [pandoc-include](https://github.com/DCsunset/pandoc-include). Include other md files 
     * [pandoc-include-code](https://github.com/owickstrom/pandoc-include-code). Include files from inside md code blocks. 
+    * [pandoc-citeproc](https://hackage.haskell.org/package/pandoc-citeproc). Adds citations. 
+      * use `cabal install pandoc-citeproc` to install 
 * texlive 
     * https://www.tug.org/texlive/
 
