@@ -218,6 +218,7 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
             delta(",", START_AND_TERMINAL, COMMA)
             delta("*", START_AND_TERMINAL, STAR)
             delta(";", START_AND_TERMINAL, SEMICOLON)
+            delta("?", START_AND_TERMINAL, QUESTION_MARK)
 
             delta(NON_OVERLOADED_OPERATOR_CHARS, START_AND_TERMINAL, OPERATOR)
 
@@ -413,6 +414,7 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
 
         val tokens = ArrayList<Token>()
         val tracker = PositionTracker()
+        var parameterCt = 0
         var currPos = tracker.position
         var curr: State = INITIAL_STATE
         val buffer = StringBuilder()
@@ -484,6 +486,11 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
                                         tokenType = AT
                                         ion.newSymbol(lower)
                                     }
+                                    lower == "by" -> {
+                                        // BY token
+                                        tokenType = BY
+                                        ion.newSymbol(lower)
+                                    }
                                     lower == "null" -> {
                                         // literal null
                                         tokenType = NULL
@@ -540,6 +547,9 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
                                     errInvalidIonLiteral(text, e)
                                 }
                                 else        -> errInvalidLiteral(text)
+                            }
+                            QUESTION_MARK -> {
+                                ion.newInt(++parameterCt)
                             }
                             else -> ion.newSymbol(text)
                         }.seal()

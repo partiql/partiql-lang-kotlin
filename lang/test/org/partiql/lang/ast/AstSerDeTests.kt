@@ -41,7 +41,7 @@ class AstSerDeTests : TestBase() {
     @Parameters
     fun serDeMetas(testExprNode: ExprNode) {
         //Serialize and then deserialize testExprNode and assert the result matches
-        val deserializedExprNode = deserializer.deserialize(AstSerializer.serialize(testExprNode, ion))
+        val deserializedExprNode = deserializer.deserialize(AstSerializer.serialize(testExprNode, AstVersion.V1, ion))
         assertEquals(testExprNode, deserializedExprNode)
     }
 
@@ -62,7 +62,7 @@ class AstSerDeTests : TestBase() {
 
         val originalSexp = ion.singleValue(sexpWithUnknownMetas) as IonSexp
         val ast = deserializer.deserialize(originalSexp)
-        val serializedSexp = AstSerializer.serialize(ast, ion)
+        val serializedSexp = AstSerializer.serialize(ast, AstVersion.V1, ion)
         assertSexpEquals(originalSexp, serializedSexp)
     }
 }

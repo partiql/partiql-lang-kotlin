@@ -61,6 +61,8 @@ enum class Property(val propertyName: String, val propertyType: PropertyType) {
     EXPECTED_ARITY_MIN("arity_min", INTEGER_CLASS),
     EXPECTED_ARITY_MAX("arity_max", INTEGER_CLASS),
     ACTUAL_ARITY("actual_arity", INTEGER_CLASS),
+    EXPECTED_PARAMETER_ORDINAL("expected_parameter_ordinal", INTEGER_CLASS),
+    BOUND_PARAMETER_COUNT("bound_parameter_count", INTEGER_CLASS),
     TIMESTAMP_FORMAT_PATTERN("timestamp_format_pattern", STRING_CLASS),
     TIMESTAMP_FORMAT_PATTERN_FIELDS("timestamp_format_pattern_fields", STRING_CLASS),
     TIMESTAMP_STRING("timestamp_string", STRING_CLASS),
@@ -73,6 +75,7 @@ enum class Property(val propertyName: String, val propertyType: PropertyType) {
     EXPECTED_ARGUMENT_TYPES("expected_types", STRING_CLASS),
     ACTUAL_ARGUMENT_TYPES("actual_types", STRING_CLASS),
     FEATURE_NAME("FEATURE_NAME", STRING_CLASS),
+    ACTUAL_TYPE("ACTUAL_TYPE", STRING_CLASS)
 }
 
 /**

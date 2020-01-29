@@ -183,7 +183,7 @@ class BuiltinFunctionsTest : EvaluatorTestBase() {
     fun utcNowPassedInSession() {
         val now = Timestamp.forMillis(10, 0)
 
-        val env = Environment(locals = Bindings.EMPTY,
+        val env = Environment(locals = Bindings.empty(),
                               session = EvaluationSession.build { now(now) })
 
         val actual = createUtcNow(valueFactory).call(env, listOf()).ionValue.timestampValue()
@@ -200,7 +200,7 @@ class BuiltinFunctionsTest : EvaluatorTestBase() {
 
         val now = Timestamp.forMillis(utcMillis, localOffset) // 1970-01-10T00:05:00.000+00:05
 
-        val env = Environment(locals = Bindings.EMPTY,
+        val env = Environment(locals = Bindings.empty(),
                               session = EvaluationSession.build { now(now) })
 
         val actual = createUtcNow(valueFactory).call(env, listOf()).timestampValue()

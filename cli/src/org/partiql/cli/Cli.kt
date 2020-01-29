@@ -29,14 +29,14 @@ internal class Cli(private val valueFactory: ExprValueFactory,
                    private val output: OutputStream,
                    private val format: OutputFormat,
                    private val compilerPipeline: CompilerPipeline,
-                   private val globals: Bindings,
+                   private val globals: Bindings<ExprValue>,
                    private val query: String) : PartiQLCommand {
 
     override fun run() {
         IonReaderBuilder.standard().build(input).use { reader ->
             val inputIonValue = valueFactory.ion.iterate(reader).asSequence().map { valueFactory.newFromIonValue(it) }
             val inputExprValue = valueFactory.newBag(inputIonValue)
-            val bindings = Bindings.buildLazyBindings {
+            val bindings = Bindings.buildLazyBindings<ExprValue> {
                 addBinding("input_data") { inputExprValue }
             }.delegate(globals)
 

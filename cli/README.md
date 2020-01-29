@@ -1,4 +1,4 @@
-# PartiQL CLI
+ # PartiQL CLI
 
 Command line interface for executing PartiQL queries.
 

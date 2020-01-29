@@ -65,7 +65,7 @@ class Compiler(val ion: IonSystem) {
                     is SetDefaultEnvironmentNode -> compileSetDefaultEnvironmentNode(compileEnvironment, node)
                     is TestNode -> compileTestNode(compileEnvironment, node)
 
-                    // we defer the compilation of the node types bellow since they 
+                    // we defer the compilation of the node types below since they
                     // operate on top of compiled test nodes that can be defined in 
                     // another PTS file. This way the PTS file processing order does 
                     // not matter 

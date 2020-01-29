@@ -170,6 +170,9 @@ private data class MetaContainerImpl internal constructor(private val metas: Tre
 /** Constructs a container with the specified metas. */
 fun metaContainerOf(vararg metas: Meta): MetaContainer = metaContainerOf(metas.asIterable())
 
+/** Empty meta container. */
+val emptyMetaContainer: MetaContainer = metaContainerOf()
+
 /**
  * Constructs a container with the elements found within [metas].
  */

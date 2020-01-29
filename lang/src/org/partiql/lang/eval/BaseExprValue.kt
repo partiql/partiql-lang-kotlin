@@ -24,8 +24,8 @@ abstract class BaseExprValue : ExprValue {
 
     override val scalar: Scalar
         get() = Scalar.EMPTY
-    override val bindings: Bindings
-        get() = Bindings.EMPTY
+    override val bindings: Bindings<ExprValue>
+        get() = Bindings.empty()
     override val ordinalBindings: OrdinalBindings
         get() = OrdinalBindings.EMPTY
 

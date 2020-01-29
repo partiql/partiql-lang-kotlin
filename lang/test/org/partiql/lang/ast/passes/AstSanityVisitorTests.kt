@@ -63,11 +63,11 @@ class AstSanityVisitorTests : TestBase() {
             visitor.visitExprNode(
                 Select(setQuantifier = SetQuantifier.ALL,
                        projection = SelectProjectionValue(litInt(1)),
-                       from = FromSourceExpr(litInt(1), null),
+                       from = FromSourceExpr(litInt(1), LetVariables()),
                        groupBy = GroupBy(
                            GroupingStrategy.PARTIAL, //<-- GroupingStrategy.PARTIAL is not yet supported
                            groupByItems = listOf()),
-                        metas = dummyMetas)
+                       metas = dummyMetas)
 
             )
         }
@@ -78,11 +78,11 @@ class AstSanityVisitorTests : TestBase() {
             visitor.visitExprNode(
                 Select(setQuantifier = SetQuantifier.ALL,
                        projection = SelectProjectionPivot(litInt(1), litInt(1)),
-                       from = FromSourceExpr(litInt(1), null),
+                       from = FromSourceExpr(litInt(1), LetVariables()),
                        groupBy = GroupBy(
                            GroupingStrategy.FULL,
                            groupByItems = listOf()),
-                        metas = dummyMetas)
+                       metas = dummyMetas)
 
             )
         }
@@ -94,7 +94,7 @@ class AstSanityVisitorTests : TestBase() {
             visitor.visitExprNode(
                 Select(setQuantifier = SetQuantifier.ALL,
                        projection = SelectProjectionValue(litInt(1)),
-                       from = FromSourceExpr(litInt(1), null),
+                       from = FromSourceExpr(litInt(1), LetVariables()),
                        // The error should occur when `groupBy` is null but `having` is not
                        groupBy = null,
                        having = litInt(1),
@@ -110,7 +110,7 @@ class AstSanityVisitorTests : TestBase() {
             visitor.visitExprNode(
                 Select(setQuantifier = SetQuantifier.ALL,
                        projection = SelectProjectionValue(litInt(1)),
-                       from = FromSourceExpr(litInt(1), null),
+                       from = FromSourceExpr(litInt(1), LetVariables()),
                        // The error should occur when `groupBy.groupByItems` is empty and `having` is not null
                        groupBy = GroupBy(GroupingStrategy.FULL, listOf()),
                        having = litInt(1),

@@ -192,7 +192,7 @@ test::{
     {
       name: "ee",
       n:42,
-      _2:null
+      _3:null
     }
   ))
 }
@@ -244,7 +244,7 @@ test::{
       name: "ee",
       s2_n:42,
       s2_2:2,
-      _2:null
+      _4:null
     }
   ))
 }

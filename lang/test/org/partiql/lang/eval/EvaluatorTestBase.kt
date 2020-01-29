@@ -16,7 +16,6 @@ package org.partiql.lang.eval
 
 import org.partiql.lang.*
 import org.partiql.lang.ast.*
-import org.partiql.lang.ast.passes.V0AstSerializer
 import org.partiql.lang.errors.*
 import org.partiql.lang.syntax.*
 import org.partiql.lang.util.*
@@ -32,7 +31,7 @@ abstract class EvaluatorTestBase : TestBase() {
      */
     private fun String.toExprValue(): ExprValue = valueFactory.newFromIonText(this)
 
-    protected fun Map<String, String>.toBindings(): Bindings =
+    protected fun Map<String, String>.toBindings(): Bindings<ExprValue> =
         Bindings.ofMap(mapValues { it.value.toExprValue() })
 
     protected fun Map<String, String>.toSession() = EvaluationSession.build { globals(this@toSession.toBindings()) }
@@ -73,7 +72,8 @@ abstract class EvaluatorTestBase : TestBase() {
         // Also send the serializer through V0 and V1 sexp ASTs and evaluate them again
         // to be sure they still work after being deserialized
         val deserializer = AstDeserializerBuilder(ion).build()
-        val sexpV0 = V0AstSerializer.serialize(originalExprNode, ion)
+        @Suppress("DEPRECATION")
+        val sexpV0 = AstSerializer.serialize(originalExprNode, AstVersion.V0, ion)
         val exprNodeV0 = deserializer.deserialize(sexpV0)
         assertEquals(originalExprNode, exprNodeV0, "ExprNode deserialized from s-exp V0 AST must match the ExprNode returned by the parser")
         val exprValueV0 = eval(exprNodeV0, compileOptions, session)
@@ -81,7 +81,7 @@ abstract class EvaluatorTestBase : TestBase() {
                         message = "Evaluated '$source' with evaluator (AST originated from deserialized V0 s-exp AST)")
             .apply { assertIonValue(expectedIon) }.run(block)
 
-        val sexpV1 = AstSerializer.serialize(originalExprNode, ion)
+        val sexpV1 = AstSerializer.serialize(originalExprNode, AstVersion.V1, ion)
         val exprNodeV1 = deserializer.deserialize(sexpV1)
         assertEquals(originalExprNode, exprNodeV0, "ExprNode deserialized from s-exp V1 AST must match the ExprNode returned by the parser")
         val exprValueV1 = eval(exprNodeV1, compileOptions, session)
@@ -120,13 +120,13 @@ abstract class EvaluatorTestBase : TestBase() {
 
         // Also send the serializer through V0 and V1 sexp ASTs and evaluate them again
         // to be sure they still work after being deserialized
-        val sexpV0 = V0AstSerializer.serialize(originalExprNode, ion)
+        val sexpV0 = AstSerializer.serialize(originalExprNode, AstVersion.V1, ion)
         val exprNodeV0 = deserializer.deserialize(sexpV0)
         assertEquals(exprNodeV0, exprNodeV0, "ExprNode deserialized from s-exp V0 AST must match the ExprNode returned by the parser")
         val exprValueV0 = eval(originalExprNode, compileOptions, session)
         assertEquals(ExprValueType.MISSING, exprValueV0.type, "Evaluating AST created from deseriailzed V0 s-exp AST must result in missing")
 
-        val sexpV1 = AstSerializer.serialize(originalExprNode, ion)
+        val sexpV1 = AstSerializer.serialize(originalExprNode, AstVersion.V0, ion)
         val exprNodeV1 = deserializer.deserialize(sexpV1)
         assertEquals(exprNodeV1, exprNodeV1)
         val exprValueV1 = eval(originalExprNode, compileOptions, session)

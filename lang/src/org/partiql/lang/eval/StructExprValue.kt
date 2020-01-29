@@ -60,7 +60,7 @@ internal open class StructExprValue(
     }
 
     /** The backing data structured for operations that require materialization. */
-    private data class Materialized(val bindings: Bindings,
+    private data class Materialized(val bindings: Bindings<ExprValue>,
                                     val ordinalBindings: OrdinalBindings,
                                     val orderedBindNames: OrderedBindNames?)
 
@@ -89,7 +89,7 @@ internal open class StructExprValue(
         Materialized(bindings, ordinalBindings, orderedBindNames)
     }
 
-    override val bindings: Bindings
+    override val bindings: Bindings<ExprValue>
         get() = materialized.bindings
 
     override val ordinalBindings: OrdinalBindings

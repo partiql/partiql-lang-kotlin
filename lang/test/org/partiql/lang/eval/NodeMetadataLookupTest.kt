@@ -185,4 +185,25 @@ class NodeMetadataLookupTest : TestBase() {
             assertMetadata(NodeMetadata(21, 22), str["b"]) // b:2
         }
     }
+
+    @Test
+    fun withStructPreservesAnnotations() {
+        val astWithMeta = """
+            ((meta (lit [f::[a::b::{x:c::1,y:2,z:e::a}]]) {line:1,column:23}))
+        """.sexp()
+
+        val (ast, lookup) = NodeMetadataLookup.extractMetaNode(astWithMeta)
+
+        with(lookup) {
+            assertEquals("((lit [f::[a::b::{x:c::1,y:2,z:e::a}]]))", ast.toString())
+            assertMetadata(null, ast)
+
+            assertEquals("(lit [f::[a::b::{x:c::1,y:2,z:e::a}]])", ast[0].toString())
+            assertMetadata(NodeMetadata(1, 23), ast[0])
+
+            val sexp = ast[0] as com.amazon.ion.IonSexp
+            val str = ((sexp[1] as com.amazon.ion.IonList)[0] as com.amazon.ion.IonList)[0] as com.amazon.ion.IonStruct
+            assertNotNull(str.typeAnnotationSymbols)
+        }
+    }
 }

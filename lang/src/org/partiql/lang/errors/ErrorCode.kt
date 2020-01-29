@@ -260,6 +260,16 @@ enum class ErrorCode(private val category: ErrorCategory,
         LOC_TOKEN,
         "missing FROM after SELECT list"),
 
+    PARSE_MISSING_OPERATION(
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "expected DML or SELECT operation after FROM"),
+
+    PARSE_MISSING_SET_ASSIGNMENT(
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "expected assignment for SET"),
+
     PARSE_EXPECTED_IDENT_FOR_GROUP_NAME(
         ErrorCategory.PARSER,
         LOC_TOKEN,
@@ -323,11 +333,16 @@ enum class ErrorCode(private val category: ErrorCategory,
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "COUNT(DISTINCT *) is not supported"
     },
-    
+
     EVALUATOR_BINDING_DOES_NOT_EXIST(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.BINDING_NAME),
         "Binding does not exist"),
+
+    EVALUATOR_UNBOUND_PARAMETER(
+        ErrorCategory.EVALUATOR,
+        LOCATION + setOf(Property.EXPECTED_PARAMETER_ORDINAL, Property.BOUND_PARAMETER_COUNT),
+        "No parameter bound for position!"),
 
     EVALUATOR_INVALID_CAST(
         ErrorCategory.EVALUATOR,
@@ -523,10 +538,43 @@ enum class ErrorCode(private val category: ErrorCategory,
             "pattern =  ${errorContext?.get(Property.LIKE_PATTERN)?.stringValue() ?: UNKNOWN}, " +
             "escape char = ${errorContext?.get(Property.LIKE_ESCAPE)?.stringValue() ?: "none given"}"
     },
+
+    EVALUATOR_NON_INT_LIMIT_VALUE (
+        ErrorCategory.EVALUATOR,
+        LOCATION + setOf(Property.ACTUAL_TYPE),
+        "") {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "LIMIT value must be an integer but found ${errorContext.getProperty(Property.ACTUAL_TYPE)}}"
+    },
+
     EVALUATOR_NEGATIVE_LIMIT(
         ErrorCategory.EVALUATOR,
         LOCATION,
         "LIMIT must not be negative"),
+
+    SEMANTIC_ILLEGAL_GLOBAL_VARIABLE_ACCESS(
+        ErrorCategory.SEMANTIC,
+        LOCATION + setOf(Property.BINDING_NAME),
+         "") {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "Global variable access is illegal in this context, variable name: '${errorContext.getProperty(Property.BINDING_NAME)}'"
+    },
+
+    SEMANTIC_UNBOUND_BINDING(
+        ErrorCategory.SEMANTIC,
+        LOCATION + setOf(Property.BINDING_NAME),
+         "") {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "No such variable named '${errorContext.getProperty(Property.BINDING_NAME)}'"
+    },
+
+    SEMANTIC_AMBIGUOUS_BINDING(
+        ErrorCategory.SEMANTIC,
+        LOCATION + setOf(Property.BINDING_NAME),
+        "") {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "A variable named '${errorContext.getProperty(Property.BINDING_NAME)}' was already defined in this scope"
+    },
 
     /**
      * Indicates incorrectness surrounding arity of [NAry] and [DataType] nodes.
@@ -550,9 +598,6 @@ enum class ErrorCode(private val category: ErrorCategory,
         ErrorCategory.EVALUATOR,
         LOCATION,
         "`*` may not be used with other items in a select list");
-
-
-
 
     protected fun getTokenString(errorContext: PropertyValueMap?): String =
         errorContext?.get(Property.TOKEN_STRING)?.stringValue() ?: UNKNOWN

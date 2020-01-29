@@ -69,6 +69,9 @@ fun ExprValue.unnamedValue(): ExprValue = when (asFacet(Named::class.java)) {
 val ExprValue.name: ExprValue?
     get() = asFacet(Named::class.java)?.name
 
+val ExprValue.address: ExprValue?
+    get() = asFacet(Addressed::class.java)?.address
+
 
 fun ExprValue.booleanValue(): Boolean =
     scalar.booleanValue() ?: errNoContext("Expected boolean: $ionValue", internal = false)

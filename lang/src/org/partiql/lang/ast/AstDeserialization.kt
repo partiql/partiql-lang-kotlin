@@ -94,7 +94,7 @@ private class TagDefinition(val tagText: String, val validationRules: Map<AstVer
  */
 private enum class NodeTag(val definition: TagDefinition) {
 
-    //Valid expressions:
+    // Valid expressions:
     META(
         TagDefinition(
             "meta",
@@ -109,17 +109,20 @@ private enum class NodeTag(val definition: TagDefinition) {
     ID(TagDefinition("id", 2, 2)),
     SELECT(TagDefinition("select", 2, 5)),
     PIVOT(TagDefinition("pivot", 2, 5)),
+    DATA_MANIPULATION(TagDefinition("dml", 1, 3)),
     PATH(TagDefinition("path", 2, Int.MAX_VALUE)),
     CALL_AGG(TagDefinition("call_agg", 3, 3)),
     CALL_AGG_WILDCARD(TagDefinition("call_agg_wildcard", 1, 1)),
     STRUCT(TagDefinition("struct", 0, Int.MAX_VALUE)),
     LIST(TagDefinition("list", 0, Int.MAX_VALUE)),
     BAG(TagDefinition("bag", 0, Int.MAX_VALUE)),
+    SEXP(TagDefinition("sexp", 0, Int.MAX_VALUE)),
     UNPIVOT(TagDefinition("unpivot", 1, 1)),
     SIMPLE_CASE(TagDefinition("simple_case", 0, Int.MAX_VALUE)),
     SEARCHED_CASE(TagDefinition("searched_case", 1, Int.MAX_VALUE)),
     WHEN(TagDefinition("when", 1, 2)),
     ELSE(TagDefinition("else", 1)),
+    PARAMETER(TagDefinition("parameter", 1)),
 
     NARY_NOT(TagDefinition("not", 1, Int.MAX_VALUE)),
     NARY_ADD(TagDefinition("+", 1, Int.MAX_VALUE)),
@@ -165,17 +168,31 @@ private enum class NodeTag(val definition: TagDefinition) {
     // Valid within select or path...
     STAR(TagDefinition("star", AstVersion.V1, 0, 1)),
 
-    //Only valid within (select ...)
+    // Only valid within (create ...)
+    TABLE(TagDefinition("table", 0, 0)),
+    INDEX(TagDefinition("index", 2, 2)),
+    KEYS(TagDefinition("keys", 1, Int.MAX_VALUE)),
+
+    // Only valid within (dml ...)
+    INSERT(TagDefinition("insert", 2, 2)),
+    INSERT_VALUE(TagDefinition("insert_value", 2, 3)),
+    SET(TagDefinition("set", 1, Int.MAX_VALUE)),
+    REMOVE(TagDefinition("remove", 1, 1)),
+    DELETE(TagDefinition("delete", 0, 0)),
+    ASSIGNMENT(TagDefinition("assignment", 2 , 2)),
+
+    // Only valid within (select ...)
     PROJECT(TagDefinition("project", 1)),
     PROJECT_ALL(TagDefinition("project_all", AstVersion.V0, 0, 1)),
     PATH_PROJECT_ALL(TagDefinition("path_project_all", AstVersion.V1, 1)),
     PROJECT_DISTINCT(TagDefinition("project_distinct", 1)),
     VALUE(TagDefinition("value", 1)),
 
-    //Only valid within (select ...) or (pivot ...)
+    // Only valid within (select ...) or (pivot ...) or (dml ...)
     FROM(TagDefinition("from", 1)),
     WHERE(TagDefinition("where", 1)),
-    //Only valid within select
+
+    // Only valid within select
     HAVING(TagDefinition("having", 1)),
     LIMIT(TagDefinition("limit", 1)),
     GROUP(TagDefinition("group", 1, 2)),
@@ -183,7 +200,7 @@ private enum class NodeTag(val definition: TagDefinition) {
     NAME(TagDefinition("name", 1)),
     GROUP_PARTIAL(TagDefinition("group_partial", 2)),
 
-    //Only valid within PIVOT
+    // Only valid within PIVOT
     MEMBER(TagDefinition("member", 2)),
 
     // Mixed context:  select list alias or from source alias
@@ -221,6 +238,7 @@ private enum class NodeTag(val definition: TagDefinition) {
 class AstDeserializerBuilder(val ion: IonSystem) {
     private val metaDeserializers = mutableMapOf(
         SourceLocationMeta.deserializer.tag to SourceLocationMeta.deserializer,
+        StaticTypeMeta.deserializer.tag to StaticTypeMeta.deserializer,
         LegacyLogicalNotMeta.deserializer.tag to LegacyLogicalNotMeta.deserializer,
         IsImplictJoinMeta.deserializer.tag to IsImplictJoinMeta.deserializer,
         IsCountStarMeta.deserializer.tag to IsCountStarMeta.deserializer)
@@ -270,10 +288,6 @@ private class AstDeserializerImpl(
 
     companion object {
         private val DEFAULT_AST_VERSION = AstVersion.V0
-
-        /** A memoized empty meta instance used by default for all new nodes unless a meta node exists. */
-        private val emptyMetas = metaContainerOf()
-
     }
 
     private val IonSexp.nodeTag: NodeTag
@@ -364,7 +378,7 @@ private class AstDeserializerImpl(
                     }
                 //Expression not wrapped in `meta` and therefore has no metas, pass empty MetaContainer to [deserializeNode].
                     else   -> {
-                        deserializeNode(targetSexp, emptyMetas)
+                        deserializeNode(targetSexp, emptyMetaContainer)
                     }
                 }
             AstVersion.V1 ->
@@ -379,14 +393,14 @@ private class AstDeserializerImpl(
                                                 ?.args
                                                 ?.toList()
                                                 ?.let { deserializeMetaContainer(it) }
-                                            ?: emptyMetas
+                                            ?: emptyMetaContainer
 
                         deserializeNode(expSexp, metaContainer)
                     }
                 // Expression not wrapped in `term` and therefore has no metas, pass empty MetaContainer to
                 // [deserializeNode].
                     else   -> {
-                        deserializeNode(targetSexp, emptyMetas)
+                        deserializeNode(targetSexp, emptyMetaContainer)
                     }
                 }
         }
@@ -423,12 +437,14 @@ private class AstDeserializerImpl(
                 NodeTag.SCOPE_QUALIFIER    -> deserializeScopeQualifier(targetArgs, metas)
                 NodeTag.SELECT             -> deserializeSelect(target, metas)
                 NodeTag.PIVOT              -> deserializeSelect(target, metas)
+                NodeTag.DATA_MANIPULATION  -> deserializeDataManipulation(target, metas)
                 NodeTag.PATH               -> deserializePath(target)
                 NodeTag.CALL_AGG           -> deserializeCallAgg(targetArgs, metas)
                 NodeTag.CALL_AGG_WILDCARD  -> deserializeCallAggWildcard(targetArgs, metas)
                 NodeTag.STRUCT             -> deserializeStruct(targetArgs, metas)
-                NodeTag.LIST               -> deserializeList(targetArgs, metas)
-                NodeTag.BAG                -> deserializeBag(targetArgs, metas)
+                NodeTag.PARAMETER          -> Parameter(target[1].asIonInt().intValue(), metas)
+                NodeTag.LIST, NodeTag.BAG, NodeTag.SEXP
+                                           -> deserializeSeq(nodeTag, targetArgs, metas)
                 NodeTag.SIMPLE_CASE        -> deserializeSimpleCase(target, metas)
                 NodeTag.SEARCHED_CASE      -> deserializeSearchedCase(target, metas)
                 NodeTag.NARY_NOT           -> deserializeNAryNot(targetArgs, metas)
@@ -469,6 +485,15 @@ private class AstDeserializerImpl(
                 NodeTag.EXP,
 
                 // These can't be directly deserialized to ExprNode instances.
+                NodeTag.INDEX,
+                NodeTag.TABLE,
+                NodeTag.KEYS,
+                NodeTag.INSERT_VALUE,
+                NodeTag.INSERT,
+                NodeTag.ASSIGNMENT,
+                NodeTag.REMOVE,
+                NodeTag.SET,
+                NodeTag.DELETE,
                 NodeTag.PROJECT,
                 NodeTag.PROJECT_DISTINCT,
                 NodeTag.PROJECT_ALL,
@@ -525,7 +550,7 @@ private class AstDeserializerImpl(
             VariableReference(
                 targetArgs[0].asIonSymbol().stringValue(),
                 CaseSensitivity.INSENSITIVE,
-                ScopeQualifier.UNQUALIFIED, emptyMetas),
+                ScopeQualifier.UNQUALIFIED, emptyMetaContainer),
             SetQuantifier.valueOf(targetArgs[1].asIonSymbol().toString().toUpperCase()),
             deserializeExprNode(targetArgs[2].asIonSexp()), metas)
 
@@ -554,15 +579,12 @@ private class AstDeserializerImpl(
         return Struct(pairs.toList(), metas)
     }
 
-    private fun deserializeList(
-        targetArgs: List<IonValue>,
-        metas: MetaContainer
-    ) = ListExprNode(targetArgs.deserializeAllExprNodes(), metas)
-
-    private fun deserializeBag(
-        targetArgs: List<IonValue>,
-        metas: MetaContainer
-    ) = Bag(targetArgs.deserializeAllExprNodes(), metas)
+    private fun deserializeSeq(nodeTag: NodeTag, targetArgs: List<IonValue>, metas: MetaContainer): Seq {
+        val tagText = nodeTag.definition.tagText
+        val type = SeqType.values().firstOrNull { it.typeName == tagText }
+            ?: err("Invalid node for deserialzing sequence: $tagText")
+        return Seq(type, targetArgs.deserializeAllExprNodes(), metas)
+    }
 
     private fun deserializeNAryNot(
         targetArgs: List<IonValue>,
@@ -683,7 +705,7 @@ private class AstDeserializerImpl(
             targetArgs[0].asIonSymbol().stringValue(),
             CaseSensitivity.INSENSITIVE,
             ScopeQualifier.UNQUALIFIED,
-            emptyMetas)
+            emptyMetaContainer)
 
         val argExprNodes = targetArgs.drop(1).deserializeAllExprNodes()
         return NAry(NAryOp.CALL, listOf(functionReference) + argExprNodes, metas)
@@ -750,6 +772,50 @@ private class AstDeserializerImpl(
         deserializeExprNode(targetArgs[0].asIonSexp()),
         deserializeDataType(targetArgs[1]),
         metas)
+
+    private fun deserializeDataManipulation(target: IonSexp, metas: MetaContainer): ExprNode {
+        val args = target.args.toListOfIonSexp()
+        val dmlOp = deserializeDataManipulationOperation(args[0])
+        val children = args.drop(1).toListOfIonSexp().map { Pair(it.nodeTag, it) }.toMap()
+        val from = children[NodeTag.FROM]?.let {
+            deserializeFromSource(it.args.first().asIonSexp())
+        }
+        val where = children[NodeTag.WHERE]?.let {
+            deserializeExprNode(it.args.first().asIonSexp())
+        }
+        if (from == null && where != null) {
+            err("WHERE cannot be specified without FROM in DML node")
+        }
+        return DataManipulation(dmlOp, from, where, metas)
+    }
+
+    private fun deserializeDataManipulationOperation(target: IonSexp): DataManipulationOperation {
+        val args = target.args.toListOfIonSexp()
+        return when (target.nodeTag) {
+            NodeTag.INSERT -> {
+                InsertOp(deserializeExprNode(args[0]), deserializeExprNode(args[1]))
+            }
+            NodeTag.INSERT_VALUE -> {
+                InsertValueOp(deserializeExprNode(args[0]), deserializeExprNode(args[1]),
+                    args.getOrNull(2)?.let { deserializeExprNode(it) })
+            }
+            NodeTag.SET -> AssignmentOp(deserializeSetAssignments(args))
+            NodeTag.REMOVE -> RemoveOp(deserializeExprNode(args[0]))
+            NodeTag.DELETE -> DeleteOp()
+            else -> errInvalidContext(target.nodeTag)
+        }
+    }
+
+    private fun deserializeSetAssignments(targets: List<IonSexp>): List<Assignment> =
+        targets
+            .toListOfIonSexp()
+            .map {
+                if (it.nodeTag != NodeTag.ASSIGNMENT) {
+                    errInvalidContext(it.nodeTag)
+                }
+                val assignArgs = it.args.toListOfIonSexp()
+                Assignment(deserializeExprNode(assignArgs[0]), deserializeExprNode(assignArgs[1]))
+            }
 
     private fun deserializeSelect(target: IonSexp, metas: MetaContainer): ExprNode {
         val children = target.args.toListOfIonSexp().map { Pair(it.nodeTag, it) }.toMap()
@@ -862,91 +928,73 @@ private class AstDeserializerImpl(
         return SelectProjectionList(selectListItems)
     }
 
+
     /**
-     * On first invocation the [asName] and [atName] parameters should be null.
+     * On first invocation all the properties of [variables] will be null
      *
-     * If `(at anAlias ...)` is encountered in [fromSexp], we dispatch to the `deserializeFromSourceAt` method, which
-     * extracts the alias and mutually recurses back into `deserializeFromSource` providing the alias constructed
-     * from the argument of `(at anAlias ...)` as the [atAlias] argument.
+     * If we encounter `at`, `as` or `by` we copy [variables], specifying the symbolic name of the binding and recurse.
      *
-     * The same happens for `(as anAlias...)` and the [asAlias] argument.
+     * If we encounter `unpivot` we deserialize a `FromSourceUnpivot`.
      *
-     * An exception is thrown:
+     * If we encounter one of the JOIN tags, we attempt to deserialize a `FromSourceJoin`
      *
-     * - The as/at pair are nested thusly:  `(as foo (at bar ...))` (the nesting must be `(at foo (as bar ...))`)
-     * - If either `as` or `at` is encountered twice.
-     *
-     * If [fromSexp]'s tag is not `as` or `at` then an `unpivot` or join expression is deserialized as appropriate.
+     * If we encounter anything else we attempt to deserialize `FromSourceExpr'
      */
     private fun deserializeFromSource(
-        fromSexp: IonSexp,
-        asName: SymbolicName? = null,
-        atName: SymbolicName? = null
-    ): FromSource = deserializeMetaOrTerm(fromSexp) { target, metas ->
-        val targetArgs = target.args
-        when (target.nodeTag) {
-            NodeTag.AT         -> deserializeFromSourceAt(asName, atName, targetArgs, metas)
-            NodeTag.AS         -> deserializeFromSourceAs(asName, targetArgs, atName, metas)
-            NodeTag.UNPIVOT    -> deserializeFromSourceUnpivot(targetArgs, asName, atName, metas)
-            NodeTag.INNER_JOIN,
-            NodeTag.LEFT_JOIN,
-            NodeTag.RIGHT_JOIN,
-            NodeTag.OUTER_JOIN -> deserializeFromSourceJoin(atName, asName, target, targetArgs, metas)
-            else               -> deserializeFromSourcExpr(target, metas, asName, atName)
+        termOrFromSource: IonSexp,
+        variables: LetVariables = LetVariables(asName = null, atName = null, byName = null)
+    ): FromSource =
+        deserializeMetaOrTerm(termOrFromSource) { target, metas ->
+            val targetArgs = target.args
+            when (target.nodeTag) {
+                NodeTag.AT -> {
+                    if (variables.atName != null) error("'at' previously encountered in this from source")
+                    deserializeFromSource(
+                        target[2].asIonSexp(),
+                        variables.copy(atName = SymbolicName(target.args[0].asIonSymbol().stringValue(), metas)))
+                }
+                NodeTag.AS -> {
+                    if (variables.asName != null) error("'as' previously encountered in this from source")
+                    deserializeFromSource(
+                        target[2].asIonSexp(),
+                        variables.copy(asName = SymbolicName(target.args[0].asIonSymbol().stringValue(), metas)))
+                }
+                NodeTag.BY -> {
+                    if (variables.byName != null) error("'by' previously encountered in this from source")
+                    deserializeFromSource(
+                        target[2].asIonSexp(),
+                        variables.copy(byName = SymbolicName(target.args[0].asIonSymbol().stringValue(), metas)))
+                }
+                NodeTag.UNPIVOT    -> {
+                    deserializeFromSourceUnpivot(targetArgs, variables, metas)
+                }
+                NodeTag.INNER_JOIN,
+                NodeTag.LEFT_JOIN,
+                NodeTag.RIGHT_JOIN,
+                NodeTag.OUTER_JOIN -> {
+                    if(variables.isAnySpecified) error("join from sources cannot have 'at', 'as' or 'by' names.")
+                    deserializeFromSourceJoin(target, targetArgs, metas)
+                }
+                else -> {
+                    deserializeFromSourceExpr(target, variables, metas)
+                }
+            }
         }
-    }
-
-    private fun deserializeFromSourceAt(
-        asName: SymbolicName?,
-        atName: SymbolicName?,
-        targetArgs: List<IonValue>,
-        metas: MetaContainer
-    ): FromSource {
-        if (asName != null) {
-            err("When used together, 'as' must wrap 'at', i.e.:  (at ... (as ...))")
-        }
-        if (atName != null) {
-            err("this from source was previously wrapped in an (at ...) s-exp.")
-        }
-        val actualAtName = SymbolicName(targetArgs[0].asIonSymbol().stringValue(), metas)
-        return deserializeFromSource(targetArgs[1].asIonSexp(), asName, actualAtName)
-    }
-
-    private fun deserializeFromSourceAs(
-        asName: SymbolicName?,
-        targetArgs: List<IonValue>,
-        atName: SymbolicName?,
-        metas: MetaContainer
-    ): FromSource {
-        if (asName != null) {
-            err("this from source was previously wrapped in an (as ...) s-exp.")
-        }
-        val actualAsName = SymbolicName(targetArgs[0].asIonSymbol().stringValue(), metas)
-        return deserializeFromSource(targetArgs[1].asIonSexp(), actualAsName, atName)
-    }
 
     private fun deserializeFromSourceUnpivot(
         targetArgs: List<IonValue>,
-        asName: SymbolicName?,
-        atName: SymbolicName?,
+        variables: LetVariables,
         metas: MetaContainer
     ): FromSourceUnpivot {
         val expr = deserializeExprNode(targetArgs[0].asIonSexp())
-        return FromSourceUnpivot(expr, asName, atName, metas)
+        return FromSourceUnpivot(expr, variables, metas)
     }
 
     private fun deserializeFromSourceJoin(
-        atName: SymbolicName?,
-        asName: SymbolicName?,
         target: IonSexp,
         targetArgs: List<IonValue>,
         metas: MetaContainer
     ): FromSourceJoin {
-
-        if (atName != null || asName != null) {
-            err("${target.nodeTag.definition.tagText} is not allowed within (as ...) or (at ...)")
-        }
-
         val joinOp = when (target.nodeTag) {
             NodeTag.INNER_JOIN -> JoinOp.INNER
             NodeTag.LEFT_JOIN  -> JoinOp.LEFT
@@ -962,7 +1010,7 @@ private class AstDeserializerImpl(
         val (condition, metasMaybeWithImplicitJoin) = when {
             target.arity > 2 -> Pair(deserializeExprNode(targetArgs[2].asIonSexp()), metas)
             else             -> Pair(
-                Literal(ion.newBool(true), emptyMetas),
+                Literal(ion.newBool(true), emptyMetaContainer),
                 metas + metaContainerOf(IsImplictJoinMeta.instance))
         }
 
@@ -974,16 +1022,14 @@ private class AstDeserializerImpl(
             metasMaybeWithImplicitJoin)
     }
 
-    private fun deserializeFromSourcExpr(
+    private fun deserializeFromSourceExpr(
         target: IonSexp,
-        metas: MetaContainer,
-        asName: SymbolicName?,
-        atName: SymbolicName?
+        variables: LetVariables,
+        metas: MetaContainer
     ): FromSourceExpr {
         return FromSourceExpr(
             expr = deserializeExprNode(target).copy(metas),
-            asName = asName,
-            atName = atName)
+            variables = variables)
     }
 
     private fun deserializeGroupByItem(target: IonSexp): GroupByItem =

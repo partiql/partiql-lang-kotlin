@@ -8,6 +8,8 @@ import org.junit.Assert.*
 import org.junit.runner.*
 import org.partiql.lang.syntax.*
 
+// TODO:  add tests for DDL & DML ExprNodes.
+
 @RunWith(JUnitParamsRunner::class)
 class AstNodeTest {
     // This test builds some invalid AST nodes but since we are focusing on testing AstNode interface we only care
@@ -80,7 +82,7 @@ class AstNodeTest {
             "NAry|Literal|Literal"),
         IteratorTestCase(
             "[1, 2]",
-            "ListExprNode|Literal|Literal"),
+            "Seq|Literal|Literal"),
         IteratorTestCase(
             "{ 'fooField': 1 }",
             "Struct|StructField|Literal|Literal"),
@@ -119,6 +121,9 @@ class AstNodeTest {
             "SELECT * FROM foo, bar",
             "Select|SelectProjectionList|SelectListItemStar|FromSourceJoin|FromSourceExpr|VariableReference|FromSourceExpr|VariableReference|Literal"),
         IteratorTestCase(
+            "SELECT * FROM foo WHERE bar",
+            "Select|SelectProjectionList|SelectListItemStar|FromSourceExpr|VariableReference|VariableReference"),
+        IteratorTestCase(
             "SELECT * FROM foo INNER JOIN bar ON condition",
             "Select|SelectProjectionList|SelectListItemStar|FromSourceJoin|FromSourceExpr|VariableReference|FromSourceExpr|VariableReference|VariableReference"),
         IteratorTestCase(
@@ -130,6 +135,18 @@ class AstNodeTest {
         IteratorTestCase(
             "PIVOT 1 AT 2 FROM 3",
             "Select|SelectProjectionPivot|Literal|Literal|FromSourceExpr|Literal"),
+        IteratorTestCase(
+            "INSERT INTO foo VALUES (1)",
+            "DataManipulation|VariableReference|Seq|Seq|Literal|InsertOp|VariableReference|Seq|Seq|Literal"),
+        IteratorTestCase(
+            "UPDATE foo SET x.y = bar WHERE n",
+            "DataManipulation|Assignment|Path|VariableReference|PathComponentExpr|Literal|VariableReference|FromSourceExpr|VariableReference|VariableReference|AssignmentOp|Assignment|Path|VariableReference|PathComponentExpr|Literal|VariableReference"),
+        IteratorTestCase(
+            "FROM x IN Y REMOVE p",
+            "DataManipulation|VariableReference|FromSourceExpr|NAry|VariableReference|VariableReference|RemoveOp|VariableReference"),
+        IteratorTestCase(
+            "DELETE FROM foo WHERE bar",
+            "DataManipulation|FromSourceExpr|VariableReference|VariableReference|DeleteOp"),
 
         IteratorTestCase("MISSING", "LiteralMissing"))
 
@@ -249,7 +266,7 @@ class AstNodeTest {
     @Test
     fun selectChildren() {
         val projection = SelectProjectionValue(literal("1"))
-        val from = FromSourceExpr(literal("2"))
+        val from = FromSourceExpr(literal("2"), LetVariables())
 
         assertEquals(listOf(projection, from),
                      Select(SetQuantifier.ALL, projection, from, null, null, null, null, emptyMeta).children)
@@ -258,7 +275,7 @@ class AstNodeTest {
     @Test
     fun selectWithAllChildren() {
         val projection = SelectProjectionValue(literal("1"))
-        val from = FromSourceExpr(literal("2"))
+        val from = FromSourceExpr(literal("2"), LetVariables())
         val where = literal("3")
         val groupBy = GroupBy(GroupingStrategy.FULL, listOf())
         val having = literal("4")
@@ -326,13 +343,13 @@ class AstNodeTest {
     fun fromSourceExprChildren() {
         val child = literal("1")
 
-        assertEquals(listOf(child), FromSourceExpr(child).children)
+        assertEquals(listOf(child), FromSourceExpr(child, LetVariables()).children)
     }
 
     @Test
     fun fromSourceJoinChildren() {
-        val child1 = FromSourceExpr(literal("1"))
-        val child2 = FromSourceExpr(literal("2"))
+        val child1 = FromSourceExpr(literal("1"), LetVariables())
+        val child2 = FromSourceExpr(literal("2"), LetVariables())
         val child3 = literal("3")
 
         assertEquals(listOf(child1, child2, child3),
@@ -343,7 +360,7 @@ class AstNodeTest {
     fun fromSourceUnpivotChildren() {
         val child = literal("1")
 
-        assertEquals(listOf(child), FromSourceUnpivot(child, null, null, emptyMeta).children)
+        assertEquals(listOf(child), FromSourceUnpivot(child, LetVariables(), emptyMeta).children)
     }
 
     @Test
@@ -378,19 +395,11 @@ class AstNodeTest {
     }
 
     @Test
-    fun listExprNodeChildren() {
+    fun seqExprNodeChildren() {
         val child1 = literal("2")
         val child2 = literal("2")
 
-        assertEquals(listOf(child1, child2), ListExprNode(listOf(child1, child2), emptyMeta).children)
-    }
-
-    @Test
-    fun bagChildren() {
-        val child1 = literal("2")
-        val child2 = literal("2")
-
-        assertEquals(listOf(child1, child2), Bag(listOf(child1, child2), emptyMeta).children)
+        assertEquals(listOf(child1, child2), Seq(SeqType.LIST, listOf(child1, child2), emptyMeta).children)
     }
 
     @Test

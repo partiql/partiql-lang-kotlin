@@ -25,47 +25,24 @@ import org.partiql.lang.eval.*
  *
  * If provided with a query that has all of the from source aliases already specified, an exact clone is returned.
  */
+//TODO:  consider renaming this class (and inner class) since we've introduced the [LetVariables] class.
 class FromSourceAliasRewriter : AstRewriterBase() {
 
     private class InnerFromSourceAliasRewriter : AstRewriterBase() {
         private var fromSourceCounter = 0
-        private fun extractSourceLocationMetaContainer(metas: MetaContainer): MetaContainer {
-            val found = metas.find(SourceLocationMeta.TAG) ?: return metaContainerOf()
-            return metaContainerOf(found)
-        }
 
-        override fun rewriteFromSourceExpr(fromSource: FromSourceExpr): FromSourceExpr {
-            // Note: yes this function is identical to [rewriteFromSourceUnpivot]. This is because [FromSourceExpr]
-            // and [FromSourceUnpivot] have almost the same properties with the difference being that [FromSourceUnpivot]
-            // has an additional `metas` property while [FromSourceExpr] does not.  We considered merging these
-            // two types so that this duplication isn't needed but have determined not to do so at this time and attempts
-            // to deduplicate through other means were rather convoluted, creating more problems than they solved.
-            // https://github.com/partiql/partiql-lang-kotlin/issues/39
-
+        override fun rewriteFromSourceLet(fromSourceLet: FromSourceLet): FromSourceLet {
             val thisFromSourceIndex = fromSourceCounter++
-            val newExpr = super.rewriteExprNode(fromSource.expr)
-            return when {
-                fromSource.asName != null -> fromSource.copy(expr = newExpr)
-                else                      -> {
-                    val fromSourceAlias = fromSource.expr.extractColumnAlias(thisFromSourceIndex)
-                    val asName = SymbolicName(fromSourceAlias,
-                                              extractSourceLocationMetaContainer(fromSource.expr.metas))
-                    fromSource.copy(expr = newExpr, asName = asName)
-                }
-            }
-        }
-
-        override fun rewriteFromSourceUnpivot(fromSource: FromSourceUnpivot): FromSourceUnpivot {
-            val thisFromSourceIndex = fromSourceCounter++
-            val newExpr = super.rewriteExprNode(fromSource.expr)
-            return when {
-                fromSource.asName != null -> fromSource.copy(expr = newExpr)
-                else                      -> {
-                    val fromSourceAlias = fromSource.expr.extractColumnAlias(thisFromSourceIndex)
-                    val asName = SymbolicName(fromSourceAlias,
-                                              extractSourceLocationMetaContainer(fromSource.expr.metas))
-                    fromSource.copy(expr = newExpr, asName = asName)
-                }
+            val newFromSource = super.rewriteFromSourceLet(fromSourceLet)
+            return if (newFromSource.variables.asName != null) {
+                newFromSource
+            } else {
+                val fromSourceAlias = fromSourceLet.expr.extractColumnAlias(thisFromSourceIndex)
+                val asAlias = SymbolicName(
+                    fromSourceAlias,
+                    fromSourceLet.expr.metas.sourceLocationContainer
+                )
+                newFromSource.copy(newVariables = newFromSource.variables.copy(asName = asAlias))
             }
         }
 

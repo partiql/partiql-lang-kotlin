@@ -130,7 +130,7 @@ fun main(args: Array<String>) = try {
             val config = compilerPipeline.compile(configSource).eval(EvaluationSession.standard())
             config.bindings
         }
-        else                          -> Bindings.EMPTY
+        else                          -> Bindings.empty()
     }
 
     if (optionSet.has(queryOpt)) {
@@ -151,11 +151,11 @@ catch (e: Exception) {
     exitProcess(1)
 }
 
-private fun runRepl(environment: Bindings) {
+private fun runRepl(environment: Bindings<ExprValue>) {
     Repl(valueFactory, System.`in`, System.out, parser, compilerPipeline, environment).run()
 }
 
-private fun runCli(environment: Bindings, optionSet: OptionSet) {
+private fun runCli(environment: Bindings<ExprValue>, optionSet: OptionSet) {
     val input = if (optionSet.has(inputFileOpt)) {
         FileInputStream(optionSet.valueOf(inputFileOpt))
     }

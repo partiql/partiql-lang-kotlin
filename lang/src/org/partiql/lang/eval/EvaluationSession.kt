@@ -20,10 +20,12 @@ import com.amazon.ion.*
  * Evaluation Session. Holds user defined constants used during evaluation. Each value has a default value that can
  * be overridden by the client
  *
- * @param globals The global bindings. Defaults to [Bindings.empty]
- * @param now Timestamp to consider as the current time, used by functions like `utcnow()` and `now()`. Defaults to [Timestamp.nowZ]
+ * @property globals The global bindings. Defaults to [Bindings.empty]
+ * @property parameters List of parameters to be substituted for positional placeholders
+ * @property now Timestamp to consider as the current time, used by functions like `utcnow()` and `now()`. Defaults to [Timestamp.nowZ]
  */
-class EvaluationSession private constructor(val globals: Bindings,
+class EvaluationSession private constructor(val globals: Bindings<ExprValue>,
+                                            val parameters: List<ExprValue>,
                                             val now: Timestamp) {
     companion object {
         /**
@@ -54,13 +56,20 @@ class EvaluationSession private constructor(val globals: Bindings,
             return this
         }
 
-        private var globals: Bindings = Bindings.EMPTY
-        fun globals(value: Bindings): Builder {
+        private var globals: Bindings<ExprValue> = Bindings.empty()
+        fun globals(value: Bindings<ExprValue>): Builder {
             globals = value
             return this
         }
 
+        private var parameters: List<ExprValue> = listOf()
+        fun parameters(value: List<ExprValue>): Builder {
+            parameters = value
+            return this
+        }
+
         fun build(): EvaluationSession = EvaluationSession(now = now ?: Timestamp.nowZ(),
+                                                           parameters = parameters,
                                                            globals = globals)
     }
 }

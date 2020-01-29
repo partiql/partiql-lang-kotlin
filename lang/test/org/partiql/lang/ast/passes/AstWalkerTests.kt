@@ -68,6 +68,10 @@ class AstWalkerTests {
                 walkTrace.append("|")
             }
 
+            override fun visitDataManipulationOperation(dmlOp: DataManipulationOperation) {
+                appendNodeType(dmlOp)
+            }
+
             val trace: String get() = walkTrace.toString()
         }
     }
@@ -101,7 +105,7 @@ class AstWalkerTests {
             "NAry|Literal|Literal|"),
         WalkerTestCase(
             "[1, 2]",
-            "ListExprNode|Literal|Literal|"),
+            "Seq|Literal|Literal|"),
         WalkerTestCase(
             "{ 'fooField': 1 }",
             "Struct|Literal|Literal|"),
@@ -151,6 +155,9 @@ class AstWalkerTests {
         WalkerTestCase(
             "PIVOT 1 AT 2 FROM 3",
             "Select|SelectProjectionPivot|Literal|Literal|FromSourceExpr|Literal|"),
+        WalkerTestCase(
+            "?",
+            "Parameter|"),
 
         WalkerTestCase("MISSING", "LiteralMissing|")
     )

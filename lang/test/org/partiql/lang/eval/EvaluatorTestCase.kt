@@ -36,7 +36,11 @@ data class EvaluatorTestCase(
      */
     val compOptions: CompOptions = CompOptions.STANDARD) {
 
-    constructor(query: String, expectedSql: String, compOptions: CompOptions) : this(null, query, expectedSql, compOptions)
+    constructor(
+        query: String,
+        expectedSql: String,
+        compOptions: CompOptions = CompOptions.STANDARD
+    ) : this(null, query, expectedSql, compOptions)
 
     /** This will show up in the IDE's test runner. */
     override fun toString() = when {

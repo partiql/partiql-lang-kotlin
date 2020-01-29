@@ -61,6 +61,12 @@ internal fun Token?.err(message: String, errorCode: ErrorCode, errorContext: Pro
     }
 }
 
+internal fun Token?.errExpectedTokenType(expectedType: TokenType): Nothing {
+    val pvmap = PropertyValueMap()
+    pvmap[Property.EXPECTED_TOKEN_TYPE] = expectedType
+    err("Expected $expectedType", ErrorCode.PARSE_EXPECTED_TOKEN_TYPE, pvmap)
+}
+
 internal fun List<Token>.atomFromHead(parseType: SqlParser.ParseType = SqlParser.ParseType.ATOM): SqlParser.ParseNode =
         SqlParser.ParseNode(parseType, head, emptyList(), tail)
 
@@ -77,5 +83,11 @@ internal fun List<Token>.tailExpectedKeyword(keyword: String): List<Token> {
         }
     }
 }
+
+internal fun List<Token>.tailExpectedToken(tokenType: TokenType): List<Token> =
+    when (head?.type) {
+        tokenType -> tail
+        else      -> head.errExpectedTokenType(tokenType)
+    }
 
 

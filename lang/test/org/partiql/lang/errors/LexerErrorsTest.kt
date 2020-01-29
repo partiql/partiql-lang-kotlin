@@ -47,12 +47,12 @@ class LexerErrorsTest : TestBase() {
 
     @Test
     fun testInvalidChar() {
-        checkInputThrowingLexerException("?",
+        checkInputThrowingLexerException("©",
             ErrorCode.LEXER_INVALID_CHAR,
             mapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 1L,
-                Property.TOKEN_STRING to representation("?".codePointAt(0))))
+                Property.TOKEN_STRING to representation("©".codePointAt(0))))
     }
 
     @Test

@@ -28,7 +28,7 @@ internal const val PROMPT_1 = "PartiQL> "
 internal const val PROMPT_2 = "   | "
 internal const val BAR_1 = "===' "
 internal const val BAR_2 = "--- "
-internal const val WELCOME_MSG = "Welcome to the PartiQL REPL!" // TODO: extract version from gradle.build and append to message 
+internal const val WELCOME_MSG = "Welcome to the PartiQL REPL!" // TODO: extract version from gradle.build and append to message
 
 private enum class ReplState {
     /** Initial state, first state as soon as you start the REPL */
@@ -61,18 +61,20 @@ private enum class ReplState {
 
 private class GlobalBinding(private val valueFactory: ExprValueFactory) {
 
+
+
     private val knownNames = mutableSetOf<String>()
-    var bindings = Bindings.EMPTY
+    var bindings = Bindings.empty<ExprValue>()
         private set
 
-    fun add(bindings: Bindings): GlobalBinding {
+    fun add(bindings: Bindings<ExprValue>): GlobalBinding {
         when (bindings) {
             is MapBindings -> {
-                knownNames.addAll(bindings.bindingMap.originalCaseMap.keys)
+                knownNames.addAll(bindings.originalCaseMap.keys)
                 this.bindings = bindings.delegate(this.bindings)
             }
-            Bindings.EMPTY -> {
-            } // nothing to do 
+            Bindings.empty<ExprValue>() -> {
+            } // nothing to do
             else           -> throw IllegalArgumentException("Invalid binding type for global environment: $bindings")
         }
 
@@ -106,8 +108,9 @@ internal class Repl(private val valueFactory: ExprValueFactory,
                     output: OutputStream,
                     private val parser: Parser,
                     private val compiler: CompilerPipeline,
-                    initialGlobal: Bindings,
-                    private val timer: Timer = object : Timer {}) : PartiQLCommand {
+                    initialGlobal: Bindings<ExprValue>,
+                    private val timer: Timer = object : Timer {}
+) : PartiQLCommand {
 
     private val outputWriter = OutputStreamWriter(output, "UTF-8")
 
@@ -124,16 +127,16 @@ internal class Repl(private val valueFactory: ExprValueFactory,
                 throw IllegalArgumentException("add_to_global_env requires 1 parameter")
             }
 
-            val locals = Bindings.buildLazyBindings { addBinding("_") { previousResult } }.delegate(globals.bindings)
+            val locals = Bindings.buildLazyBindings<ExprValue> { addBinding("_") { previousResult } }.delegate(globals.bindings)
             val result = compiler.compile(source).eval(EvaluationSession.build { globals(locals) })
             globals.add(result.bindings)
 
             return result
         }
 
-        private fun globalEnv(source: String): ExprValue? = globals.asExprValue()
+        private fun globalEnv(@Suppress("UNUSED_PARAMETER") source: String): ExprValue? = globals.asExprValue()
 
-        private fun listCommands(source: String): ExprValue? {
+        private fun listCommands(@Suppress("UNUSED_PARAMETER") source: String): ExprValue? {
             outputWriter.write("\n")
             outputWriter.write("""
                 |!add_to_global_env: adds a value to the global environment
@@ -168,7 +171,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
     private val valuePrettyPrinter = ConfigurableExprValueFormatter.pretty
     private val astPrettyPrinter = object : ExprValueFormatter {
         val writer = IonTextWriterBuilder.pretty().build(outputWriter)
-        
+
         override fun formatTo(value: ExprValue, out: Appendable) {
             value.ionValue.writeTo(writer)
             writer.flush()
@@ -210,7 +213,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
                 if (result != null) {
                     outputWriter.write(BAR_1)
                     outputWriter.write("\n")
-                    
+
                     formatter.formatTo(result, outputWriter)
                     outputWriter.write("\n")
 
@@ -240,7 +243,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
 
     private fun executePartiQL(): ReplState = executeTemplate(valuePrettyPrinter) { source ->
         if (source != "") {
-            val locals = Bindings.buildLazyBindings { addBinding("_") { previousResult } }.delegate(globals.bindings)
+            val locals = Bindings.buildLazyBindings<ExprValue> { addBinding("_") { previousResult } }.delegate(globals.bindings)
 
             compiler.compile(source).eval(EvaluationSession.build { globals(locals) })
         }
@@ -251,7 +254,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
 
     private fun parsePartiQL(): ReplState = executeTemplate(astPrettyPrinter) { source ->
         if (source != "") {
-            val serializedAst = AstSerializer.serialize(parser.parseExprNode(source), valueFactory.ion)
+            val serializedAst = AstSerializer.serialize(parser.parseExprNode(source), AstVersion.V1, valueFactory.ion)
             valueFactory.newFromIonValue(serializedAst)
         }
         else {
@@ -261,7 +264,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
 
     private fun parsePartiQLWithFilters(): ReplState = executeTemplate(astPrettyPrinter) { source ->
         if (source != "") {
-            val serializedAst = AstSerializer.serialize(parser.parseExprNode(source), valueFactory.ion)
+            val serializedAst = AstSerializer.serialize(parser.parseExprNode(source), AstVersion.V1, valueFactory.ion)
             valueFactory.newFromIonValue(serializedAst.filterTermNodes())
         }
         else {

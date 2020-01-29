@@ -27,7 +27,7 @@ import org.partiql.lang.util.*
  *
  * Important: this class is critical to performance for many queries.  Change with caution.
  */
-internal class IonStructBindings(private val valueFactory: ExprValueFactory, private val myStruct: IonStruct) : Bindings {
+internal class IonStructBindings(private val valueFactory: ExprValueFactory, private val myStruct: IonStruct) : Bindings<ExprValue> {
 
     private val caseInsensitiveFieldMap by lazy {
         HashMap<String, ArrayList<IonValue>>().apply {

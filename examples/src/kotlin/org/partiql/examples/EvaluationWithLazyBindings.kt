@@ -19,7 +19,7 @@ class EvaluationWithLazyBindings(out: PrintStream) : Example(out) {
 
         // The global bindings
         val ionText = """[ { name: "Nibbler", age: 2 }, { name: "Hobbes", age: 6 } ]"""
-        val globalVariables = Bindings.buildLazyBindings {
+        val globalVariables = Bindings.buildLazyBindings<ExprValue> {
             addBinding("pets") {
                 // The first time "pets" is encountered during query evaluation this closure will be
                 // invoked to obtain its value, which will then be cached for later use.

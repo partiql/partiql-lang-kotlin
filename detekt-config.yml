@@ -1,0 +1,9 @@
+console-reports:
+  active: false
+  exclude:
+  #  - 'ProjectStatisticsReport'
+  #  - 'ComplexityReport'
+  #  - 'NotificationReport'
+  #  - 'FindingsReport'
+  #  - 'FileBasedFindingsReport'
+  #  - 'BuildFailureReport'

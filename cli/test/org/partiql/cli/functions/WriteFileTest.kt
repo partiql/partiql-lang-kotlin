@@ -24,7 +24,7 @@ class WriteFileTest {
     private val ion = IonSystemBuilder.standard().build()
     private val valueFactory = ExprValueFactory.standard(ion)
     private val function = WriteFile(valueFactory)
-    private val env = Environment(locals = Bindings.EMPTY,
+    private val env = Environment(locals = Bindings.empty(),
                                   session = EvaluationSession.standard())
 
     private fun String.exprValue() = valueFactory.newFromIonValue(ion.singleValue(this))

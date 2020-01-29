@@ -40,6 +40,31 @@ fun Iterable<ExprValue>.isAnyNull() = any { it.type == ExprValueType.NULL }
 /** Returns true if any ExprValue in the Iterable is missing. */
 fun Iterable<ExprValue>.isAnyMissing() = any { it.type == ExprValueType.MISSING }
 
+
+/**
+ * This should function the same as Kotlin's [Sequence<T>.take(n: Int)] function but takes
+ * a long value instead.
+ */
+internal fun <T> Sequence<T>.take(count: Long): Sequence<T> {
+    val wrappedSeq = this
+    return object : Sequence<T> {
+        var remaining = count
+
+        override fun iterator(): Iterator<T> = object : Iterator<T> {
+            val wrappedIterator = wrappedSeq.iterator()
+
+            override fun hasNext(): Boolean = wrappedIterator.hasNext() && remaining > 0
+
+            override fun next(): T {
+                val nextValue = wrappedIterator.next()
+                remaining--
+                return nextValue
+            }
+        }
+    }
+}
+
+
 /**
  * Given a predicate function, return `true` if all members of the list satisfy the predicate, return false otherwise.
  * In the case that an empty list is given, the result is `true`.

@@ -57,7 +57,7 @@ private class CsvRowExprValue(private val valueFactory: ExprValueFactory, privat
         Bindings.ofMap(rowValues)
     }
 
-    override val bindings: Bindings
+    override val bindings: Bindings<ExprValue>
         get() = bindingsInstance
 }
 
@@ -78,7 +78,7 @@ class CsvExprValueExample(out: PrintStream) : Example(out) {
     override fun run() {
         print("CSV file:", EXAMPLE_CSV_FILE_CONTENTS)
 
-        val globals = Bindings.buildLazyBindings {
+        val globals = Bindings.buildLazyBindings<ExprValue> {
             addBinding("csv_data") {
                 // The first time "csv_data" is encountered during query evaluation this closure will be
                 // invoked to obtain its value, which will then be cached for later use.

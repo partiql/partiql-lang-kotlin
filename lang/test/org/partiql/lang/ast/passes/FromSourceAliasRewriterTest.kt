@@ -138,7 +138,12 @@ class FromSourceAliasRewriterTest : RewriterTestBase() {
             "SELECT * FROM UNPIVOT (SELECT * FROM <<c>> AS _1, <<d>> AS _2) AS _1, <<a>> AS _2, <<b>> AS _3"),
         RewriterTestCase(
             "SELECT * FROM UNPIVOT (SELECT * FROM <<c>>, <<d>>) AS z, <<a>>, <<b>>",
-            "SELECT * FROM UNPIVOT (SELECT * FROM <<c>> AS _1, <<d>> AS _2) AS z, <<a>> AS _2, <<b>> AS _3")
-        )
+            "SELECT * FROM UNPIVOT (SELECT * FROM <<c>> AS _1, <<d>> AS _2) AS z, <<a>> AS _2, <<b>> AS _3"),
+
+        // DML
+        RewriterTestCase(
+            "FROM dogs INSERT INTO collies VALUE ?",
+            "FROM dogs AS dogs INSERT INTO collies VALUE ?")
+    )
 
 }

@@ -35,10 +35,12 @@ enum class TokenType {
     COMMA,
     COLON,
     SEMICOLON,
+    QUESTION_MARK,
     // keywords that get their own token type
     AS,
     FOR,
     AT,
+    BY,
     MISSING,
     NULL,
     // function specific

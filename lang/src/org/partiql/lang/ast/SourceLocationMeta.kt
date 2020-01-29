@@ -51,3 +51,10 @@ data class SourceLocationMeta(val lineNum: Long, val charOffset: Long) : Meta {
 
 val MetaContainer.sourceLocation: SourceLocationMeta? get() = find(SourceLocationMeta.TAG) as SourceLocationMeta?
 
+// TODO generalize this better against MetaContainer
+
+/** Retrieves the source locations as a container. */
+val MetaContainer.sourceLocationContainer: MetaContainer
+    get() = sourceLocation?.let {
+        metaContainerOf(it)
+    } ?: emptyMetaContainer

@@ -34,6 +34,6 @@ internal class GroupKeyExprValue(ion: IonSystem, sequence: Sequence<ExprValue>, 
         }
     }
 
-    override val bindings: Bindings
+    override val bindings: Bindings<ExprValue>
         get() = keyBindings
 }

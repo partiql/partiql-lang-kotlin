@@ -21,7 +21,7 @@ import kotlin.test.*
 
 class EvaluationSessionTest {
     private fun assertDefault(block: () -> EvaluationSession) {
-        assertEquals(Bindings.EMPTY, block.invoke().globals)
+        assertEquals(Bindings.empty(), block.invoke().globals)
         assertNow(block)
     }
 
@@ -49,7 +49,7 @@ class EvaluationSessionTest {
 
     @Test
     fun settingGlobals() {
-        val globals = Bindings.EMPTY
+        val globals = Bindings.empty<ExprValue>()
         val block: () -> EvaluationSession = { EvaluationSession.build { globals(globals) }}
 
         assertEquals(globals, block.invoke().globals)
@@ -61,7 +61,7 @@ class EvaluationSessionTest {
         val now = Timestamp.forMillis(10, 0)
         val session =  EvaluationSession.build { now(now) }
 
-        assertEquals(Bindings.EMPTY, session.globals)
+        assertEquals(Bindings.empty(), session.globals)
         assertEquals(now, session.now)
     }
 
@@ -72,7 +72,7 @@ class EvaluationSessionTest {
 
         val session =  EvaluationSession.build { now(now) }
 
-        assertEquals(Bindings.EMPTY, session.globals)
+        assertEquals(Bindings.empty(), session.globals)
         assertEquals(utcNow, session.now)
     }
 }

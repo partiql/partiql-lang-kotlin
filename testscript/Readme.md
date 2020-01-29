@@ -118,7 +118,7 @@ regular expression.
 
 **Examples**:
 
-For the example bellow we have two PartiQL implementations: the reference implementation and an implementation that 
+For the example below we have two PartiQL implementations: the reference implementation and an implementation that 
 requires a DDL. 
 
 Core PTS
@@ -176,18 +176,18 @@ append_test::{
 We avoid using PartiQL syntax to specify the expected results and environment as it would create a dependency between 
 PTS and a PartiQL implementation. 
 
-Instead we use Ion since PartiQL type system is based on the its type system. Most PartiQL types have 1:1 mapping into
-and Ion type apart from `MISSING` and `BAG`. To represent those we use the following convention:   
+Instead we use Ion since the PartiQL type system is based on the Ion type system. Most PartiQL types have 1:1 mapping 
+into Ion types except for `MISSING` and `BAG`. To represent those we use the following convention:   
 
 | PartiQL Value | Ion Value     |
 |---------------|---------------|
 | <<1,2,3>>     | (bag 1 2 3)   |
 | missing       | missing::null |
 
-Comparison is mostly deferred to Ion definition of equality. The exceptions, again, are bags and missing types: 
-1. Bags are unordered lists so two bags are equal if they have the same size and all elements on bag A are contained 
-in bag B.
-1. For missing values it is only considered equal if the both have the missing annotation.
+Comparison is mostly deferred to Ion definition of equality. The exceptions, again, are `BAG`s and `MISSING` types: 
+1. `BAG`s are unordered lists so two `BAG`s are equal if they have the same size and all elements on `BAG` A are contained 
+in `BAG` B.
+1. `MISSING` values are only considered equal if they both have the `MISSING` annotation.
 
 ## Interpreter
 

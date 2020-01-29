@@ -29,7 +29,6 @@ import org.partiql.lang.util.*
 import org.assertj.core.api.*
 import com.amazon.ion.*
 import kotlin.reflect.*
-import kotlin.test.*
 
 
 @RunWith(JUnitParamsRunner::class)
@@ -49,9 +48,9 @@ abstract class TestBase : Assert() {
     }
 
     inner class AssertExprValue(val exprValue: ExprValue,
-                                val bindingsTransform: Bindings.() -> Bindings = { this },
+                                val bindingsTransform: Bindings<ExprValue>.() -> Bindings<ExprValue> = { this },
                                 val message: String? = null) {
-        fun assertBindings(predicate: Bindings.() -> Boolean) =
+        fun assertBindings(predicate: Bindings<ExprValue>.() -> Boolean) =
             assertTrue(
                 exprValue.bindings.bindingsTransform().predicate()
             )
@@ -76,9 +75,9 @@ abstract class TestBase : Assert() {
 
     protected fun assertRewrite(originalSql: String, exprNode: ExprNode) {
         val clonedAst = defaultRewriter.rewriteExprNode(exprNode)
-        assertEquals(exprNode, clonedAst,
-            "AST returned from default AstRewriterBase should match the original AST.\n" +
-            "AST originating from the query: $originalSql\n")
+        assertEquals(
+            "AST returned from default AstRewriterBase should match the original AST. SQL was: $originalSql",
+            exprNode, clonedAst)
     }
 
     protected fun assertSexpEquals(
@@ -202,39 +201,19 @@ abstract class TestBase : Assert() {
                 "but found value '${actualPropertyValue.toString()}'"
             }
 
-            when (entry.key) {
-                LINE_NUMBER,
-                COLUMN_NUMBER
-                    -> assertThat(actualPropertyValue?.longValue()).withFailMessage(message).isEqualTo(entry.value)
-                TOKEN_STRING,
-                CAST_TO,
-                CAST_FROM,
-                KEYWORD,
-                TIMESTAMP_STRING,
-                TIMESTAMP_FORMAT_PATTERN,
-                BINDING_NAME,
-                LIKE_ESCAPE,
-                LIKE_PATTERN,
-                LIKE_VALUE,
-                BINDING_NAME_MATCHES,
-                FUNCTION_NAME,
-                TIMESTAMP_FORMAT_PATTERN_FIELDS,
-                EXPECTED_ARGUMENT_TYPES,
-                ACTUAL_ARGUMENT_TYPES,
-                FEATURE_NAME
-                    -> assertThat(actualPropertyValue?.stringValue()).withFailMessage(message).isEqualTo(entry.value)
-                TOKEN_TYPE,
-                EXPECTED_TOKEN_TYPE_1_OF_2,
-                EXPECTED_TOKEN_TYPE_2_OF_2,
-                EXPECTED_TOKEN_TYPE
-                    -> assertThat(actualPropertyValue?.tokenTypeValue()).withFailMessage(message).isEqualTo(entry.value)
-                TOKEN_VALUE
-                    -> assertThat(errorContext[entry.key]?.ionValue()).withFailMessage(message).isEqualTo(entry.value)
-                EXPECTED_ARITY_MIN,
-                EXPECTED_ARITY_MAX,
-                ACTUAL_ARITY
-                    -> assertThat(actualPropertyValue?.integerValue()).withFailMessage(message).isEqualTo(entry.value)
+            val propertyValue: Any? = actualPropertyValue?.run {
+                when (entry.key.propertyType) {
+                    PropertyType.LONG_CLASS      -> longValue()
+                    PropertyType.STRING_CLASS    -> stringValue()
+                    PropertyType.INTEGER_CLASS   -> integerValue()
+                    PropertyType.TOKEN_CLASS     -> tokenTypeValue()
+                    PropertyType.ION_VALUE_CLASS -> ionValue()
+                }
             }
+
+            assertThat(propertyValue)
+                .withFailMessage(message)
+                .isEqualTo(entry.value)
         }
     }
 
