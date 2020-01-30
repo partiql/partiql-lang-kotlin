@@ -392,7 +392,10 @@ Let's consider the following initial environment:
   ]
 }
 ```
-
+Set the environment as below
+```
+PartiQL> !add_to_global_env { 'stores':[ { 'id': 5, 'books': [ {'title':'A', 'price': 5.0, 'categories':['sci-fi', 'action']}, {'title':'B', 'price': 2.0, 'categories':['sci-fi', 'comedy']}, {'title':'C', 'price': 7.0, 'categories':['action', 'suspense']}, {'title':'D', 'price': 9.0, 'categories':['suspense']} ] }, { 'id': 6, 'books': [ {'title':'A', 'price': 5.0, 'categories':['sci-fi', 'action']}, {'title':'E', 'price': 9.5, 'categories':['fantasy', 'comedy']}, {'title':'F', 'price': 10.0, 'categories':['history']} ] } ] }
+```
 If we wanted to find all books *as their own rows* with a price greater than `7` we can use paths on the `FROM` for this:
 
 ```
@@ -500,6 +503,16 @@ OK! (5 ms)
 The REPL provides the `read_file` function to stream data from a file. The files needs to be placed in the folder `cli`. 
 For example:
 
+Create a file called `data.ion` in the `cli` folder with the following contents
+```
+{ 'city': 'Seattle', 'state': 'WA' }
+{ 'city': 'Bellevue', 'state': 'WA' }
+{ 'city': 'Honolulu', 'state': 'HI' }
+{ 'city': 'Rochester', 'state': 'NY' }
+```
+
+Select the cities that are in `HI` and `NY` states
+
 ```
 PartiQL> SELECT city FROM read_file('data.ion') AS c, `["HI", "NY"]` AS s WHERE c.state = s
    | 
@@ -525,6 +538,15 @@ PartiQL> write_file('out.ion', SELECT * FROM _)
 true
 ------
 OK! (20 ms)
+```
+A file called `out.ion` will be created in the `cli` directory with the following contents
+```
+{
+  city:Honolulu
+}
+{
+  city:Rochester
+}
 ```
 
 Functions and expressions can be used in the *global configuration* as well.  Consider
@@ -570,8 +592,16 @@ The `read_file` function supports an optional struct argument to add additional 
 Parsing delimited files can be specified with the `type` field with a string `tsv` or `csv`
 to parse tab or comma separated values respectively.
 
+Create a file called `simple.csv` in the `cli` directory with the following contents
 ```
-PartiQL> read_file('simple.tsv', {'type':'tsv'})
+title,category,price
+harry potter,book,7.99
+dot,electronics,49.99
+echo,electronics,99.99
+```
+
+```
+PartiQL> read_file('simple.csv', {'type':'csv'})
    | 
 ===' 
 <<
@@ -604,7 +634,7 @@ The options `struct` can also define if the first row for delimited data should 
 column names with the `header` field.
 
 ```
-PartiQL> read_file('simple.tsv', {'type': 'tsv', 'header': true})
+PartiQL> read_file('simple.csv', {'type': 'csv', 'header': true})
    | 
 ===' 
 <<
@@ -631,7 +661,7 @@ OK! (87 ms)
 Auto conversion can also be specified numeric and timestamps in delimited data.
 
 ```
-PartiQL> read_file('simple.tsv', {'type':'tsv', 'header':true, 'conversion':'auto'})
+PartiQL> read_file('simple.csv', {'type':'csv', 'header':true, 'conversion':'auto'})
    | 
 ===' 
 <<
@@ -660,7 +690,7 @@ format to the `write_file` function.  Similar to the `read_file` function, the `
 can be used to specify `tsv`, `csv`, or `ion` output.
 
 ```
-PartiQL> write_file('out.csv', {'type':'csv'}, SELECT name, type FROM animals)
+PartiQL> write_file('out.tsv', {'type':'tsv'}, SELECT name, type FROM animals)
    | 
 ===' 
 true
@@ -671,17 +701,17 @@ OK! (41 ms)
 This would produce the following file:
 
 ```
-$ cat out.csv
-Kumo,dog
-Mochi,dog
-Lilikoi,unicorn
+$ cat out.tsv
+Kumo	dog
+Mochi	dog
+Lilikoi	unicorn
 ```
 
 The options `struct` can also specify a `header` Boolean field to indicate whether the output
 TSV/CSV should have a header row.
 
 ```
-PartiQL> write_file('out.csv', {'type':'csv', 'header':true}, SELECT name, type FROM animals)
+PartiQL> write_file('out.tsv', {'type':'tsv', 'header':true}, SELECT name, type FROM animals)
    | 
 ===' 
 true
@@ -692,9 +722,9 @@ OK! (39 ms)
 Which would produce the following file:
 
 ```
-$ cat out.csv 
-name,type
-Kumo,dog
-Mochi,dog
-Lilikoi,unicorn
+$ cat out.tsv
+name	type
+Kumo	dog
+Mochi	dog
+Lilikoi	unicorn
 ```
