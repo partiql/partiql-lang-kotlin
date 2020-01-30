@@ -11,16 +11,6 @@ table {
     min-width: 100%
 }
 
-.video-js {
-    min-width:100%; 
-    max-width:100%;
-    max-height: 100%;
-}
-
-.vjs-fullscreen {
-    padding-top: 0px
-}
-
 ::-webkit-scrollbar {
   width: 12px;  /* for vertical scrollbars */
   height: 12px; /* for horizontal scrollbars */
