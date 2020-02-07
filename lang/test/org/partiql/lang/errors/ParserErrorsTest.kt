@@ -102,17 +102,15 @@ class ParserErrorsTest : TestBase() {
 
     }
 
-    // FIXME This is still an error--but an error in a different way
-    @Ignore
     @Test
-    fun expectedUnexpectedKeyword() {
+    fun expectedMissingOperation() {
         checkInputThrowingParserException("SELECT FROM table1",
-            ErrorCode.PARSE_UNEXPECTED_KEYWORD,
+            ErrorCode.PARSE_MISSING_OPERATION,
             mapOf(
                 Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 8L,
-                Property.TOKEN_TYPE to TokenType.KEYWORD,
-                Property.TOKEN_VALUE to ion.newSymbol("from")))
+                Property.COLUMN_NUMBER to 19L,
+                Property.TOKEN_TYPE to TokenType.EOF,
+                Property.TOKEN_VALUE to ion.newSymbol("EOF")))
 
     }
 
