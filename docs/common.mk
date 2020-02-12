@@ -13,7 +13,7 @@ XELATEX := $(shell command -v xelatex 2> /dev/null)
 ####
 ## Templates, target dir and files needed for output formats (html)
 ####
-PANDOC_TEMPLATE_DIR := $(ROOTDIR)/pandoc-templates
+PANDOC_TEMPLATE_DIR := $(ROOTDIR)/pandoc-templates/
 CSSFILES            := $(shell find $(PANDOC_TEMPLATE_DIR) -name *.css)
 JSFILES             := $(shell find $(PANDOC_TEMPLATE_DIR) -name *.js)
 SUPPORTFILES        := $(CSSFILES) $(JSFILES)
