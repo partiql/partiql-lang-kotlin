@@ -66,7 +66,7 @@ fun IonValue.numberValue(): Number = when {
     else        -> when (this) {
         is IonInt     -> javaValue()
         is IonFloat   -> doubleValue()
-        is IonDecimal -> bigDecimalValue()
+        is IonDecimal -> decimalValue()
         else          -> err("Expected number: $this")
     }
 }
@@ -89,11 +89,9 @@ fun IonValue.doubleValue(): Double = when {
 
 fun IonValue.bigDecimalValue(): BigDecimal = when {
     isNullValue        -> err("Expected non-null decimal: $this")
-    this is IonDecimal -> bigDecimalValue()
+    this is IonDecimal -> decimalValue()
     else               -> err("Expected decimal: $this")
 }
-
-
 
 fun IonValue.booleanValue(): Boolean = when (this) {
     is IonBool -> booleanValue()
@@ -119,7 +117,7 @@ fun IonValue.numberValueOrNull(): Number? =
     when (this) {
         is IonInt     -> javaValue()
         is IonFloat   -> doubleValue()
-        is IonDecimal -> bigDecimalValue()
+        is IonDecimal -> decimalValue()
         else          -> null
     }
 
