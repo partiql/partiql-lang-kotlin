@@ -43,10 +43,7 @@ class ConfigurableExprValueFormatter(private val config: Configuration) : ExprVa
 
                 BOOL                                       -> out.append(value.scalar.booleanValue().toString())
 
-                INT, DECIMAL                               -> {
-                    //out.append(value.ionValue.toString(IonTextWriterBuilder.standard()))
-                    out.append(value.scalar.numberValue().toString())
-                }
+                INT, DECIMAL                               -> out.append(value.scalar.numberValue().toString())
 
                 STRING                                     -> out.append("'${value.scalar.stringValue()}'")
 
@@ -124,5 +121,3 @@ class ConfigurableExprValueFormatter(private val config: Configuration) : ExprVa
         }
     }
 }
-
-
