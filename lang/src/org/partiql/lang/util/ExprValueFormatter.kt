@@ -70,7 +70,7 @@ class ConfigurableExprValueFormatter(private val config: Configuration) : ExprVa
             val iterator = value.iterator()
 
             if (iterator.hasNext()) {
-                out.append(openingMarker).append(config.containerValueSeparator) 
+                out.append(openingMarker).append(config.containerValueSeparator)
 
                 currentIndentation += 1
 
@@ -86,7 +86,7 @@ class ConfigurableExprValueFormatter(private val config: Configuration) : ExprVa
                     else {
                         out.append(config.containerValueSeparator)
                     }
-                    
+
                     writeIndentation()
                     prettyPrintElement(v)
                 }
@@ -121,5 +121,3 @@ class ConfigurableExprValueFormatter(private val config: Configuration) : ExprVa
         }
     }
 }
-
-
