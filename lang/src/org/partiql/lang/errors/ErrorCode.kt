@@ -552,6 +552,16 @@ enum class ErrorCode(private val category: ErrorCategory,
         LOCATION,
         "LIMIT must not be negative"),
 
+    EVALUATOR_DIVIDE_BY_ZERO(
+        ErrorCategory.EVALUATOR,
+        LOCATION,
+        "/ by zero"),
+
+    EVALUATOR_MODULO_BY_ZERO(
+        ErrorCategory.EVALUATOR,
+        LOCATION,
+        "% by zero"),
+
     SEMANTIC_ILLEGAL_GLOBAL_VARIABLE_ACCESS(
         ErrorCategory.SEMANTIC,
         LOCATION + setOf(Property.BINDING_NAME),
