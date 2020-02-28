@@ -180,7 +180,7 @@ enum class NaturalExprValueComparators(private val nullOrder: NullOrder) : Compa
                     lVal.isPosInf && rVal.isPosInf -> return EQUAL
                     lVal.isPosInf -> return MORE
                     rVal.isPosInf -> return LESS
-                    lVal.isZero() && rVal.isZero() -> return 0 // for negative zero
+                    lVal.isZero() && rVal.isZero() -> return EQUAL // for negative zero
                     else -> return lVal.compareTo(rVal)
                 }
             }
