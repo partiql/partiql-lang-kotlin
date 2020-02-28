@@ -65,7 +65,7 @@ internal fun Number.isZero() = when(this) {
     // using compareTo instead of equals for BigDecimal because equality also checks same scale
 
     is Long -> this == 0L
-    is Double -> this == 0.0
+    is Double -> this == 0.0 || this == -0.0 
     is BigDecimal -> BigDecimal.ZERO.compareTo(this) == 0
     else -> throw IllegalStateException()
 }
