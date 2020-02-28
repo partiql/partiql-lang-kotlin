@@ -67,7 +67,8 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
             "`0e0`",
             "`-0e0`",
             "`0d10000`",
-            "0"
+            "0",
+            "-0"
         ),
         listOf(
             "5e9",
