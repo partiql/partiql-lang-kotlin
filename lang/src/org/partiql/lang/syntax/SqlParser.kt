@@ -718,9 +718,6 @@ class SqlParser(private val ion: IonSystem) : Parser {
         if(type != TYPE) {
             errMalformedParseTree("Expected ParseType.TYPE instead of $type")
         }
-        if(children.size > 1) {
-            errMalformedParseTree("Apparently DataType needs multiple lengths, sizes, etc")
-        }
         val sqlDataType = SqlDataType.forTypeName(token!!.keywordText!!)
         if(sqlDataType == null) {
             errMalformedParseTree("Invalid DataType: ${token.keywordText!!}")
