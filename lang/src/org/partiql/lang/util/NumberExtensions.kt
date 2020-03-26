@@ -25,11 +25,12 @@ private val MATH_CONTEXT = MathContext(38, RoundingMode.HALF_EVEN) // TODO shoul
  * and factory methods
  */
 internal fun bigDecimalOf(num: Number, mc: MathContext = MATH_CONTEXT): BigDecimal = when (num) {
-    is Int        -> BigDecimal(num, mc)
-    is Long       -> BigDecimal(num, mc)
-    is Double     -> BigDecimal(num, mc)
-    is BigDecimal -> num
-    else          -> throw IllegalArgumentException("Unsupported number type: $num, ${num.javaClass}")
+    Decimal.NEGATIVE_ZERO -> num as Decimal
+    is Int                -> BigDecimal(num, mc)
+    is Long               -> BigDecimal(num, mc)
+    is Double             -> BigDecimal(num, mc)
+    is BigDecimal         -> num
+    else                  -> throw IllegalArgumentException("Unsupported number type: $num, ${num.javaClass}")
 }
 
 internal fun bigDecimalOf(text: String, mc: MathContext = MATH_CONTEXT): BigDecimal = BigDecimal(text.trim(), mc)
@@ -64,7 +65,7 @@ internal fun Number.isZero() = when(this) {
     // using compareTo instead of equals for BigDecimal because equality also checks same scale
 
     is Long -> this == 0L
-    is Double -> this == 0.0
+    is Double -> this == 0.0 || this == -0.0 
     is BigDecimal -> BigDecimal.ZERO.compareTo(this) == 0
     else -> throw IllegalStateException()
 }
@@ -82,7 +83,13 @@ fun Number.coerce(type: Class<out Number>): Number {
  * This is only supported on limited types needed by the expression system.
  */
 fun coerceNumbers(first: Number, second: Number): Pair<Number, Number> {
-    val type = CONVERSION_MAP[setOf(first.javaClass, second.javaClass)] ?:
+    fun typeFor(n: Number): Class<*> = if(n is Decimal) {
+        BigDecimal::class.javaObjectType
+    } else {
+        n.javaClass
+    }
+
+    val type = CONVERSION_MAP[setOf(typeFor(first), typeFor(second))] ?:
                throw IllegalArgumentException("No coercion support for ${first to second}")
 
     return Pair(first.coerce(type), second.coerce(type))
@@ -101,7 +108,11 @@ operator fun Number.unaryMinus(): Number {
         is Long -> -this
         is BigInteger -> this.negate()
         is Double -> -this
-        is BigDecimal -> this.negate()
+        is BigDecimal -> if(this.isZero()) {
+                Decimal.negativeZero(this.scale())
+            } else {
+                this.negate()
+            }
         else -> throw IllegalStateException()
     }
 }

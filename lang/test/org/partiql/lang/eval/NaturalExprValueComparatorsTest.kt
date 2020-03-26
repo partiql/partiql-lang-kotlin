@@ -24,15 +24,16 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
     // the lists below represent the expected ordering of values
     // grouped by lists of equivalent values.
 
-    private val basicExprs = listOf(
-        listOf(
-            // reminder, annotations don't affect order
-            "null",
-            "missing",
-            "`a::null`",
-            "`null.int`",
-            "`null.struct`"
-        ),
+    private val nullExprs = listOf(
+        // reminder, annotations don't affect order
+        "null",
+        "missing",
+        "`a::null`",
+        "`null.int`",
+        "`null.struct`"
+    )
+    
+    private val nonNullExpr = listOf(
         listOf(
             "false",
             "`b::false`"
@@ -64,8 +65,10 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
             "-0.0",
             "`-0.0000000000`",
             "`0e0`",
+            "`-0e0`",
             "`0d10000`",
-            "0"
+            "0",
+            "-0"
         ),
         listOf(
             "5e9",
@@ -262,6 +265,8 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
         )
     )
 
+    private val basicExprs = listOf(nullExprs) + nonNullExpr
+    
     private fun <T> List<List<T>>.flatten() = this.flatMap { it }
     private fun List<List<String>>.eval() = map {
         it.map {
@@ -338,5 +343,48 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
             }
         }
         assertFalse("Too many elements", orderedIter.hasNext())
+    }
+
+    // value pairs for each equality set
+    fun parametersForNonNullEqualityTests(): List<Pair<String, String>> = nonNullExpr.map { equivalentExprs ->
+        val pairs = mutableListOf<Pair<String, String>>()
+
+        equivalentExprs.forEachIndexed { index, expr ->
+            pairs.add(expr to expr)
+            equivalentExprs.subList(index, equivalentExprs.size).forEach {
+                pairs.add(expr to it)
+            }
+        }
+
+        pairs
+    }.flatten()
+
+    @Test
+    @Parameters
+    fun nonNullEqualityTests(equivalentPair: Pair<String, String>) {
+        val (left, right) = equivalentPair
+
+        assertEval("$left = $right", "true")
+    }
+
+    // null to non null pairs
+    fun parametersForNullEqualityTests(): List<Pair<String, String>> = nonNullExpr.map { equivalentExprs ->
+        val pairs = mutableListOf<Pair<String, String>>()
+
+        nullExprs.forEach { ne ->
+            equivalentExprs.forEach { expr ->
+                pairs.add(ne to expr)
+            }
+        }
+
+        pairs
+    }.flatten()
+
+    @Test
+    @Parameters
+    fun nullEqualityTests(equivalentPair: Pair<String, String>) {
+        val (left, right) = equivalentPair
+
+        assertEval("$left = $right", "null")
     }
 }

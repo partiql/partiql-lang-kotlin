@@ -6,6 +6,7 @@ import org.junit.*
 import org.junit.runner.*
 import org.partiql.lang.*
 import org.partiql.lang.eval.*
+import org.partiql.lang.syntax.*
 import kotlin.test.*
 
 
@@ -13,13 +14,15 @@ import kotlin.test.*
 class ConfigurableExprValueFormatterTest {
 
     private val ion = IonSystemBuilder.standard().build()
-    private val compiler = CompilerPipeline.standard(ion)
+    private val lexer = SqlLexer(ion)
+    private val parser = SqlParser(ion)
+    private val compiler = CompilerPipeline.builder(ion).sqlParser(parser).build()
 
     private val pretty = ConfigurableExprValueFormatter.pretty
     private val standard = ConfigurableExprValueFormatter.standard
 
     private fun evalQuery(q: String) = compiler.compile(q).eval(EvaluationSession.standard())
-    
+
     private fun format(v: ExprValue, formatter: ConfigurableExprValueFormatter): String {
         val sb = StringBuilder()
         formatter.formatTo(v, sb)
@@ -27,10 +30,10 @@ class ConfigurableExprValueFormatterTest {
     }
 
     fun unknownExamples() = arrayOf(
-        "missing" to "MISSING", 
+        "missing" to "MISSING",
         "MISSING" to "MISSING",
-        "null" to "NULL", 
-        "NULL" to "NULL", 
+        "null" to "NULL",
+        "NULL" to "NULL",
         "`null`" to "NULL").map { listOf(it.first, it.second) }
 
     private fun baseExamples() = arrayOf(
@@ -44,10 +47,12 @@ class ConfigurableExprValueFormatterTest {
         "`1`" to "1",
 
         // Decimal
+        "`-0.0`" to "-0.0",
+        "-0.0" to "-0.0",
         "1.0" to "1.0",
         "`1.0`" to "1.0",
 
-        // String 
+        // String
         "'some text'" to "'some text'",
         "`\"some text\"`" to "'some text'",
 
@@ -182,17 +187,17 @@ class ConfigurableExprValueFormatterTest {
         assertEquals(expected, actual)
         assertEquals(value.type, evalQuery(actual).type)
     }
-    
+
     @Test
     @Parameters(method = "unknownExamples")
-    fun testPrettyUnknown(expression: String, expected: String) 
+    fun testPrettyUnknown(expression: String, expected: String)
         = assertFormatterForUnknown(expression, expected, pretty)
 
     @Test
     @Parameters(method = "unknownExamples")
     fun testStandardUnknown(expression: String, expected: String)
         = assertFormatterForUnknown(expression, expected, standard)
-    
+
     @Test
     @Parameters(method = "prettyExamples")
     fun testPretty(expression: String, expected: String) =

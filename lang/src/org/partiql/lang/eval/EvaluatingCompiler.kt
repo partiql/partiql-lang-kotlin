@@ -421,7 +421,7 @@ internal class EvaluatingCompiler(
         return thunkFold(valueFactory.nullValue, metas, argThunks) { lValue, rValue ->
             val denominator = rValue.numberValue()
             if (denominator.isZero()) {
-                errNoContext("/ by zero", internal = false)
+                err("/ by zero", ErrorCode.EVALUATOR_DIVIDE_BY_ZERO, null, false)
             }
             try {
                 (lValue.numberValue() / denominator).exprValue()
@@ -438,7 +438,14 @@ internal class EvaluatingCompiler(
         return thunkFold(
             valueFactory.nullValue,
             metas,
-            argThunks) { lValue, rValue -> (lValue.numberValue() % rValue.numberValue()).exprValue() }
+            argThunks) { lValue, rValue ->
+            val denominator = rValue.numberValue()
+            if (denominator.isZero()) {
+                err("% by zero", ErrorCode.EVALUATOR_MODULO_BY_ZERO, null, false)
+            }
+            
+            (lValue.numberValue() % denominator).exprValue() 
+        }
     }
 
     private fun compileNAryEq(

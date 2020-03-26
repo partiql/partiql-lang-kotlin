@@ -45,7 +45,7 @@ internal class Cli(private val valueFactory: ExprValueFactory,
             when (format) {
                 ION_TEXT   -> valueFactory.ion.newTextWriter(output).use { printIon(it, result) }
                 ION_BINARY -> valueFactory.ion.newBinaryWriter(output).use { printIon(it, result) }
-                PARTIQL    -> OutputStreamWriter(output).write(result.toString())
+                PARTIQL    -> OutputStreamWriter(output).use { it.write(result.toString()) }
             }
         }
     }

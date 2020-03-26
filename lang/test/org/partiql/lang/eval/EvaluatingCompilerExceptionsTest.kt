@@ -142,14 +142,28 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
         IllegalArgumentException::class)
 
     @Test
-    fun divideByZero() = assertThrows("/ by zero", NodeMetadata(1, 3)) {
-        voidEval("1 / 0")
-    }
+    fun divideByZero() = checkInputThrowingEvaluationException(
+        "1 / 0",
+        ErrorCode.EVALUATOR_DIVIDE_BY_ZERO,
+        sourceLocationProperties(1, 3)) 
 
     @Test
-    fun divideByZeroDecimal() = assertThrows("/ by zero", NodeMetadata(1, 5)) {
-        voidEval("1.0 / 0.0")
-    }
+    fun divideByZeroDecimal() = checkInputThrowingEvaluationException(
+        "1.0 / 0.0",
+        ErrorCode.EVALUATOR_DIVIDE_BY_ZERO,
+        sourceLocationProperties(1, 5))
+
+    @Test
+    fun moduloByZero() = checkInputThrowingEvaluationException(
+        "1 % 0",
+        ErrorCode.EVALUATOR_MODULO_BY_ZERO,
+        sourceLocationProperties(1, 3))
+
+    @Test
+    fun moduloByZeroDecimal() = checkInputThrowingEvaluationException(
+        "1.0 % 0.0",
+        ErrorCode.EVALUATOR_MODULO_BY_ZERO,
+        sourceLocationProperties(1, 5))
 
     @Test
     fun divideByZeroInSelect() = assertThrows("/ by zero", NodeMetadata(1, 76)) {

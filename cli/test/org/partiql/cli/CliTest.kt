@@ -32,12 +32,14 @@ class CliTest {
         output.reset()
     }
 
-    private fun makeCli(query: String, input: String, bindings: Bindings<ExprValue> = Bindings.empty()) =
+    private fun makeCli(query: String,
+                        input: String, bindings: Bindings<ExprValue> = Bindings.empty(),
+                        outputFormat: OutputFormat = OutputFormat.ION_TEXT) =
         Cli(
             valueFactory,
             input.byteInputStream(Charsets.UTF_8),
             output,
-            OutputFormat.ION_TEXT,
+            outputFormat,
             compilerPipeline,
             bindings,
             query)
@@ -101,5 +103,13 @@ class CliTest {
         val actual = subject.runAndOutput()
 
         assertAsIon("{a: 1}", actual)
+    }
+
+    @Test
+    fun withPartiQLOutput() {
+        val subject = makeCli("SELECT * FROM input_data", "{a: 1}", outputFormat = OutputFormat.PARTIQL)
+        val actual = subject.runAndOutput()
+
+        assertEquals("<<{'a': 1}>>", actual)
     }
 }
