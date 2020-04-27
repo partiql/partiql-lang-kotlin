@@ -164,12 +164,15 @@ class SqlLexerTest : TestBase() {
 
     @Test
     fun quotedIon() = assertTokens(
-        "`1e0` `{a:5}` `/*`*/\"`\"` `//`\n'''`'''`",
+        "`1e0` `{a:5}` `/*`*/\"`\"` `//`\n'''`'''` `{{ +AB//A== }}` `{{ \"not a comment //\" }}`",
         token(LITERAL, "1e0", 1, 1),
         token(LITERAL, "{a:5}", 1, 7),
         token(LITERAL, "\"`\"", 1, 15),
-        token(LITERAL, "\"`\"", 1, 26)
+        token(LITERAL, "\"`\"", 1, 26),
+        token(LITERAL, "{{ +AB//A== }}", 2, 10),
+        token(LITERAL, "{{ \"not a comment //\" }}", 2, 27)
     )
+
 
     @Test
     fun quotedStrings() = assertTokens(
