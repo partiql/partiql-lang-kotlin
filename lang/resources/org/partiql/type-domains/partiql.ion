@@ -1,0 +1,307 @@
+/*
+    The PartiQL AST.
+
+    Within the partiql_ast type domain, the most fundamental of the data types is the `statement` sum type.  Start
+    there and work your way to the other types.
+*/
+(define partiql_ast
+    (domain
+        // `statement` encompasses within it all possible PartiQL statements and expressions.
+        //  Note that DDL and DML statements are not expressions and cannot be used in the context where an expression
+        //  is required.  (For example, `1 + (DROP TABLE foo)`)
+        (sum statement
+            // any expression that can be used in a context that requires a result.
+            (query expr)
+
+            // Data manipulation operations cannot be composed with other `expr` nodes, although they may
+            // contain `expr` nodes themselves.
+            // TODO:  The `dml` variant and `dml_op` sum type closely mirrors the historical `V0` AST. The disadvantage
+            // of this approach is that different DML operations allow or require different combinations of FROM source
+            // and WHERE predicate. For instance, DELETE requires FROM source while REMOVE does not. It may be
+            // necessary to check the validity of these nodes during compilation or another phase.  In the future, we
+            // should consider changing the modeling of these so such validity checks are not needed.
+            (dml
+                (operation dml_op)
+                (from (? from_source))
+                (where (? expr)))
+
+            // Data definition operations also cannot be composed with other `expr` nodes.
+            (ddl ddl_op))
+
+        // The expressions that can result in values.
+        (sum expr
+            // The literal missing value.
+            (missing)
+
+            // A literal value.  Can be a literal in the PartiQL syntax or a back-tick quoted Ion literal.
+            // Also represents a literal NULL value (i.e. `(lit null)`.)
+            (lit ion)
+
+            // A variable reference
+            (id symbol case_sensitivity scope_qualifier)
+
+            // A parameter, i.e. `?`
+            (parameter int)
+
+            // Unary operators
+            (not expr)
+            (pos expr) // +
+            (neg expr) // -
+
+            // Applies to all variants with a single (* expr 2) element below: https://github.com/partiql/partiql-lang-kotlin/issues/241
+            // Arithmetic operators
+            (plus (* expr 2))
+            (minus (* expr 2))
+            (times (* expr 2))
+            (divide (* expr 2))
+            (modulo (* expr 2))
+            (concat (* expr 2))
+
+            // Logical operators
+            (and (* expr 2))
+            (or (* expr 2))
+
+            // Comparison operators
+            (eq (* expr 2))
+            (ne (* expr 2))
+            (gt (* expr 2))
+            (gte (* expr 2))
+            (lt (* expr 2))
+            (lte (* expr 2))
+            (like expr expr (? expr))
+            (between expr expr expr)
+            // The PartiQL `IN` operator cannot be named `in` since that is a Kotlin keyword.
+            (in_collection (* expr 2))
+            // The PartiQL `IS` operator  cannot be named `is` since that is a Kotlin keyword.
+            (is_type expr type)
+
+            // CASE <expr> [ WHEN <expr> THEN <expr> ]... [ ELSE <expr> ] END
+            (simple_case expr expr_pair_list (? expr))
+
+            // CASE [ WHEN <expr> THEN <expr> ]... [ ELSE <expr> ] END
+            (searched_case expr_pair_list (? expr))
+
+            // Constructors
+            (struct (* expr_pair 0))
+            // https://github.com/partiql/partiql-lang-kotlin/issues/239
+            (bag (* expr 0))
+            (list (* expr 0))
+            (sexp (* expr 0))
+
+            // Set operators
+            (union set_quantifier (* expr 2))
+            (except set_quantifier (* expr 2))
+            (intersect set_quantifier (* expr 2))
+
+            // Other expression types
+            (path expr (* path_step 1))
+            (call symbol (* expr 1))
+            (call_agg set_quantifier symbol expr)
+            (cast expr type)
+
+            // `SELECT` and its parts.
+            (select
+                (setq (? set_quantifier))
+                (project projection)
+                (from from_source)
+                (where (? expr))
+                (group (? group_by))
+                (having (? expr))
+                (limit (? expr))))
+        // end of sum expr
+
+        // A "step" within a path expression; that is the components of the expression following the root.
+        (sum path_step
+            // `someRoot[<expr>]`, or `someRoot.someField` which is equivalent to `someRoot['someField']`.
+            (path_expr expr case_sensitivity)
+            // `someRoot.[*]`]
+            (path_wildcard)
+            // `someRoot.*`
+            (path_unpivot))
+
+        // Indicates the type of projection in a SFW query.
+        (sum projection
+            // SELECT *
+            (project_star)
+            // SELECT <project_item>... (SQL-92 style select list with optional AS aliases or <expr>.*)
+            (project_list (* project_item 1))
+            // PIVOT <id> AT <id>
+            (project_pivot expr expr)
+            // SELECT VALUE <expr>
+            (project_value expr))
+
+        // An item to be projected in a `SELECT`-list.
+        (sum project_item
+            // For `.*` in SELECT list
+            (project_all expr)
+            // For `<expr> [AS <id>]`
+            (project_expr expr (? symbol)))
+
+        // Models the FROM clause of an SFW query
+        // Note that modeling `scan` and `unpivot` separately is effectively re-introducing the same problem described
+        // here: https://github.com/partiql/partiql-lang-kotlin/issues/39 . We should consider removing both the `scan`
+        // and `unpivot` nodes and replacing them with `from_let` node that has an element indicating if it is a `scan
+        // or from ``and add another element to scan to indicate if this `scan` or `unpivot`. Something along the lines of:
+        // https://github.com/partiql/partiql-lang-kotlin/issues/242
+        //     (sum from_let_type (scan) (unpivot))
+        //     (sum from_source
+        //          (from_let expr from_let_type (? symbol) (? symbol) (? symbol))
+        //          (join ...))
+        (sum from_source
+            // <expr> [AS <id>] [AT <id>] [BY <id>]
+            (scan expr (? symbol) (? symbol) (? symbol))
+
+            // UNPIVOT <expr> [AS <id>] [AT <id>] [BY <id>]
+            (unpivot expr (? symbol) (? symbol) (? symbol))
+
+            // <from_source> JOIN [INNER | LEFT | RIGHT | FULL] <from_source> ON <expr>
+            (join join_type from_source from_source (? expr)))
+
+        // Indicates the logical type of join.
+        (sum join_type (inner) (left) (right) (full))
+
+        // A generic pair of expressions.  Used in the `struct`, `searched_case` and `simple_case` expr variants above.
+        (product expr_pair expr expr)
+
+        // A list of expr_pair. Used in the `struct`, `searched_case` and `simple_case` expr variants above.
+        (product expr_pair_list (* expr_pair 0))
+
+        // GROUP BY <grouping_strategy> <group_key_list>... [AS <symbol>]
+        (product group_by
+            grouping_strategy
+            // Note that `group_key_list` is a separate type instead of a variadic element because of the
+            // PIG limitation that product types cannot have both optional and variadic elements.
+            group_key_list
+            (? symbol))  // `GROUP AS` alias
+
+        // Desired grouping qualifier:  ALL or PARTIAL.  Note: the `group_` prefix is needed to avoid naming clashes.
+        (sum grouping_strategy
+            (group_full)
+            (group_partial))
+
+        // <group_key>[, <group_key>]...
+        (product group_key_list (* group_key 1))
+
+        // <expr> [AS <symbol>]
+        (product group_key expr (? symbol))
+
+        // Indicates if variable lookup should be case-sensitive or not.
+        (sum case_sensitivity (case_sensitive) (case_insensitive))
+
+        // Indicates scope search order when resolving variables.  Has no effect except within `FROM` sources.
+        (sum scope_qualifier
+            // Use the default search order.
+            (unqualified)
+            // Skip the globals first check within FROM sources and resolve starting with the local scope.
+            (locals_first))
+
+        // Indicates if a set should be reduced to its distinct elements or not.
+        (sum set_quantifier (all) (distinct))
+
+        // A Data Manipulation Operation.
+        // TODO:  domain of `expr` is too broad for several elements below: https://github.com/partiql/partiql-lang-kotlin/issues/243
+        (sum dml_op
+
+            // `INSERT INTO <expr> <expr>`
+            (insert expr expr)
+
+            // `INSERT INTO <expr> VALUE <expr> [AT <expr>]`
+            (insert_value expr expr (? expr))
+
+            // `SET <assignment>...`
+            (set (* assignment 1))
+
+            // `REMOVE <expr>`
+            (remove expr)
+
+            // DELETE
+            (delete))
+
+        // A data definition operation.
+        (sum ddl_op
+            // `CREATE TABLE <symbol>`
+            (create_table symbol)
+
+            // `DROP TABLE <identifier>`
+            (drop_table identifier)
+
+            // `CREATE INDEX ON <identifier> (<expr> [, <expr>]...)`
+            // TODO: add optional table name
+            (create_index identifier (* expr 1))
+
+            // DROP INDEX <identifier> ON <identifier>
+            // In Statement, first <identifier> represents keys, second represents table
+            (drop_index (table identifier) (keys identifier)))
+
+        // `identifier` can be used for names that need to be looked up with a notion of case-sensitivity.
+
+        // For both `create_index` and `create_table`, there is no notion of case-sensitivity
+        // for table identifiers since they are *defining* new identifiers.  However, for `drop_index` and
+        // `drop_table` *do* have the notion of case sensitivity since they are referring to existing names.
+        // Identifiers with case-sensitivity is already modeled with the `id` variant of `expr`,
+        // but there is no way to specify to PIG that we want to only allow a single variant of a sum as
+        // an element of a type.  (Even though in the Kotlin code each varaint is its own type.)  Hence, we
+        // define an `identifier` type above which can be used without opening up an element's domain to all of
+        // `expr`.
+        (product identifier symbol case_sensitivity)
+
+        // Represents `<expr> = <expr>` in a DML SET operation.  Note that in this case, `=` is representing
+        // an assignment operation and *not* the equality operator.
+        (product assignment expr expr)
+
+        // Represents all possible PartiQL data types. (`_type` suffixes below prevent naming clashes.)
+        (sum type
+
+            // SQL-92 types
+            // `NULL`
+            (null_type)
+
+            // `BOOL`
+            (boolean_type)
+
+            // `SMALLINT`
+            (smallint_type)
+
+            // `INT`
+            (integer_type)
+
+            // `FLOAT`
+            (float_type (? int))
+
+            // `REAL`
+            (real_type)
+
+            // `DOUBLE_PRECISION`
+            (double_precision_type)
+
+            // `DEICMAL[(<int> [, int])]`.  Elements are precision then scale.
+            (decimal_type (? int) (? int))
+
+            // `NUMERIC[(<int> [, int])]`.  Elements are precision then scale.
+            (numeric_type (? int) (? int))
+
+            // `TIMESTAMP`
+            (timestamp_type)
+
+            // `CHAR(<int>)`
+            (character_type (? int))
+
+            // `VARCHAR`
+            (character_varying_type (? int))
+
+            // PartiQL types.
+            (missing_type)
+            (string_type)
+            (symbol_type)
+            (blob_type)
+            (clob_type)
+            (struct_type)
+            (tuple_type)
+            (list_type)
+            (sexp_type)
+            (bag_type))
+
+    ) // end of domain
+) // end of define
+
+

@@ -190,42 +190,27 @@ val IonValue.isText: Boolean
     }
 
 /** Creates a new [IonSexp] from a legacy AST [IonSexp] that strips out meta nodes. */
-fun IonSexp.filterMetaNodes(): IonSexp = system.newEmptySexp().apply {
+fun IonSexp.filterMetaNodes(): IonValue {
     var target = this@filterMetaNodes
 
     while (target[0].stringValue() == "meta") {
-        target = target[1].asIonSexp()
-    }
-    val isLiteral = target[0].stringValue() == "lit"
-    for (child in target) {
-        add(
-            when {
-                !isLiteral && child is IonSexp -> child.filterMetaNodes()
-                else                           -> child.clone()
-            }
-        )
-    }
-}
-
-/** Creates a new [IonSexp] from an AST [IonSexp] that has no term nodes. */
-fun IonSexp.filterTermNodes(): IonSexp = system.newEmptySexp().apply {
-    val target = when (this@filterTermNodes.tagText) {
-        "term" -> this@filterTermNodes
-            .drop(1)                                        // Ignore the tag
-            .filterIsInstance<IonSexp>()                    // Serves mainly to downcast to IonSexp
-            .first { metaChild -> metaChild.tagText == "exp" }  // Get the first child with tag "exp"
-            .drop(1)                                        // Ignore the "exp" tag
-            .first() as IonSexp                             // Grab the first argument
-        else   -> this@filterTermNodes
+        val tmpTarget = target[1]
+        if(tmpTarget !is IonSexp) {
+            return tmpTarget.clone()
+        }
+        target = tmpTarget.asIonSexp()
     }
 
-    target.forEach { arg ->
-        add(
-            when (arg) {
-                is IonSexp -> arg.filterTermNodes()
-                else       -> arg.clone()
-            }
-        )
+    return system.newEmptySexp().apply {
+        val isLiteral = target[0].stringValue() == "lit"
+        for (child in target) {
+            add(
+                when {
+                    !isLiteral && child is IonSexp -> child.filterMetaNodes()
+                    else                           -> child.clone()
+                }
+            )
+        }
     }
 }
 

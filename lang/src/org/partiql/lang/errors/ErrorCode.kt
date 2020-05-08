@@ -317,7 +317,7 @@ enum class ErrorCode(private val category: ErrorCategory,
         "Other expressions may not be present in the select list when '*' is used without dot notation."),
 
     //Evaluator errors
-
+    // TODO:  replace uses of this with UNIMPLEMENTED_FEATURE
     EVALUATOR_FEATURE_NOT_SUPPORTED_YET(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.FEATURE_NAME),
@@ -410,7 +410,7 @@ enum class ErrorCode(private val category: ErrorCategory,
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "Incorrect type of arguments for operator '||', " +
             "expected one of ${ExprValueType.values().filter { it.isText }} " +
-            "got ${errorContext?.get(Property.ACTUAL_ARGUMENT_TYPES)}" 
+            "got ${errorContext?.get(Property.ACTUAL_ARGUMENT_TYPES)}"
     },
 
     /**
@@ -607,7 +607,16 @@ enum class ErrorCode(private val category: ErrorCategory,
     SEMANTIC_ASTERISK_USED_WITH_OTHER_ITEMS(
         ErrorCategory.EVALUATOR,
         LOCATION,
-        "`*` may not be used with other items in a select list");
+        "`*` may not be used with other items in a select list"),
+
+    // Generic errors
+    UNIMPLEMENTED_FEATURE(
+        ErrorCategory.SEMANTIC,
+        LOCATION + setOf(Property.FEATURE_NAME),
+        "") {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "Feature '${errorContext?.get(Property.FEATURE_NAME)?.stringValue() ?: UNKNOWN}' not implemented yet"
+    };
 
     protected fun getTokenString(errorContext: PropertyValueMap?): String =
         errorContext?.get(Property.TOKEN_STRING)?.stringValue() ?: UNKNOWN

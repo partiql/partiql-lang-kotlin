@@ -8,6 +8,7 @@ import junitparams.Parameters
 import org.junit.Test
 import org.partiql.lang.ast.CallAgg
 import org.partiql.lang.ast.CaseSensitivity
+import org.partiql.lang.ast.CreateIndex
 import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.Literal
 import org.partiql.lang.ast.MetaContainer
@@ -26,6 +27,10 @@ import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.ast.staticType
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
+import org.partiql.lang.errors.Property.BINDING_NAME
+import org.partiql.lang.errors.Property.COLUMN_NUMBER
+import org.partiql.lang.errors.Property.FEATURE_NAME
+import org.partiql.lang.errors.Property.LINE_NUMBER
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.types.StaticType
 import java.io.PrintWriter
@@ -173,7 +178,10 @@ class StaticTypeRewriterTests : RewriterTestBase() {
             //2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT a FROM b",
             emptyMap(),
-            expectErrName(code = ErrorCode.SEMANTIC_UNBOUND_BINDING, name = "b", line = 1, col = 15)
+            expectErr(ErrorCode.SEMANTIC_UNBOUND_BINDING,
+                BINDING_NAME to "b",
+                LINE_NUMBER to 1L,
+                COLUMN_NUMBER to 15L)
         ),
         STRTestCase(
             //        1         2         3         4         5         6         7         8
@@ -181,14 +189,20 @@ class StaticTypeRewriterTests : RewriterTestBase() {
             "SELECT a FROM b,c",
             mapOf("B" to StaticType.ANY,
                   "C" to StaticType.ANY),
-            expectErrName(code = ErrorCode.SEMANTIC_UNBOUND_BINDING, name = "a", line = 1, col = 8)
+            expectErr(ErrorCode.SEMANTIC_UNBOUND_BINDING,
+                BINDING_NAME to "a",
+                LINE_NUMBER to 1L,
+                COLUMN_NUMBER to 8L)
         ),
         STRTestCase(
             //        1         2         3         4         5         6         7         8
             //2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT a FROM \"b\"",
             mapOf("B" to StaticType.ANY),
-            expectErrName(code = ErrorCode.SEMANTIC_UNBOUND_BINDING, name = "b", line = 1, col = 15)
+            expectErr(ErrorCode.SEMANTIC_UNBOUND_BINDING,
+                BINDING_NAME to "b",
+                LINE_NUMBER to 1L,
+                COLUMN_NUMBER to 15L)
         ),
         STRTestCase(
             //        1         2         3         4         5         6         7         8
@@ -196,7 +210,10 @@ class StaticTypeRewriterTests : RewriterTestBase() {
             "SELECT a FROM b, c",
             mapOf("B" to StaticType.ANY,
                   "C" to StaticType.ANY),
-            expectErrName(code = ErrorCode.SEMANTIC_UNBOUND_BINDING, name = "a", line = 1, col = 8)
+            expectErr(ErrorCode.SEMANTIC_UNBOUND_BINDING,
+                BINDING_NAME to "a",
+                LINE_NUMBER to 1L,
+                COLUMN_NUMBER to 8L)
         ),
         // variable scoping within SELECT should resolve implicit lexical alias over global
         STRTestCase(
@@ -228,7 +245,10 @@ class StaticTypeRewriterTests : RewriterTestBase() {
             //2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT * FROM b AS b, b AS B",
             mapOf("B" to StaticType.ANY),
-            expectErrName(code = ErrorCode.SEMANTIC_AMBIGUOUS_BINDING, name = "B", line = 1, col = 28)
+            expectErr(ErrorCode.SEMANTIC_AMBIGUOUS_BINDING,
+                BINDING_NAME to "B",
+                LINE_NUMBER to 1L,
+                COLUMN_NUMBER to 28L)
         ),
         // ambiguous binding introduced in FROM clause (AS binding given same name as AT binding)
         STRTestCase(
@@ -236,7 +256,10 @@ class StaticTypeRewriterTests : RewriterTestBase() {
             //2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT * FROM b AS b AT b",
             mapOf("B" to StaticType.ANY),
-            expectErrName(code = ErrorCode.SEMANTIC_AMBIGUOUS_BINDING, name = "b", line = 1, col = 20)
+            expectErr(ErrorCode.SEMANTIC_AMBIGUOUS_BINDING,
+                BINDING_NAME to "b",
+                LINE_NUMBER to 1L,
+                COLUMN_NUMBER to 20L)
         ),
         // ambiguous binding introduced in FROM clause (AS binding given same name as BY binding)
         STRTestCase(
@@ -244,7 +267,10 @@ class StaticTypeRewriterTests : RewriterTestBase() {
             //2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT * FROM b AS b BY b",
             mapOf("B" to StaticType.ANY),
-            expectErrName(code = ErrorCode.SEMANTIC_AMBIGUOUS_BINDING, name = "b", line = 1, col = 20)
+            expectErr(ErrorCode.SEMANTIC_AMBIGUOUS_BINDING,
+                BINDING_NAME to "b",
+                LINE_NUMBER to 1L,
+                COLUMN_NUMBER to 20L)
         ),
         // ambiguous binding introduced in FROM clause (AT binding given same name as BY binding)
         STRTestCase(
@@ -252,7 +278,10 @@ class StaticTypeRewriterTests : RewriterTestBase() {
             //2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT * FROM b AS x AT b BY b",
             mapOf("B" to StaticType.ANY),
-            expectErrName(code = ErrorCode.SEMANTIC_AMBIGUOUS_BINDING, name = "b", line = 1, col = 30)
+            expectErr(ErrorCode.SEMANTIC_AMBIGUOUS_BINDING,
+                BINDING_NAME to "b",
+                LINE_NUMBER to 1L,
+                COLUMN_NUMBER to 30L)
         ),
         // join should not allow implicit attribute without schema
         STRTestCase(
@@ -260,7 +289,10 @@ class StaticTypeRewriterTests : RewriterTestBase() {
             //2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT a FROM b AS x, B AS y",
             mapOf("B" to StaticType.ANY),
-            expectErrName(code = ErrorCode.SEMANTIC_UNBOUND_BINDING, name = "a", line = 1, col = 8)
+            expectErr(ErrorCode.SEMANTIC_UNBOUND_BINDING,
+                BINDING_NAME to "a",
+                LINE_NUMBER to 1L,
+                COLUMN_NUMBER to 8L)
         ),
         // nested query should not allow implicit attribute as variable without schema
         STRTestCase(
@@ -268,7 +300,10 @@ class StaticTypeRewriterTests : RewriterTestBase() {
             //2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT a FROM b AS x WHERE EXISTS (SELECT y FROM x)",
             mapOf("B" to StaticType.ANY),
-            expectErrName(code = ErrorCode.SEMANTIC_UNBOUND_BINDING, name = "y", line = 1, col = 43)
+            expectErr(ErrorCode.SEMANTIC_UNBOUND_BINDING,
+                BINDING_NAME to "y",
+                LINE_NUMBER to 1L,
+                COLUMN_NUMBER to 43L)
         ),
 
         // local variable with same name as global should not shadow global in from source
@@ -297,6 +332,14 @@ class StaticTypeRewriterTests : RewriterTestBase() {
                 VarExpectation("b", 1, 15, StaticType.BAG, ScopeQualifier.UNQUALIFIED),
                 VarExpectation("b", 1, 24, StaticType.ANY, ScopeQualifier.LEXICAL)
             )
+        ),
+        // Group By should not be allowed
+        STRTestCase(
+            //        1         2         3         4         5         6         7         8
+            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            "SELECT * FROM b as x GROUP BY x.name",
+            mapOf("b" to StaticType.ANY),
+            expectErr(ErrorCode.UNIMPLEMENTED_FEATURE, FEATURE_NAME to "GROUP BY")
         )
     )
 
@@ -402,7 +445,10 @@ class StaticTypeRewriterTests : RewriterTestBase() {
             //2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "FROM y SET doesntmatter = 1",
             mapOf(),
-            expectErrName(code = ErrorCode.SEMANTIC_UNBOUND_BINDING, name = "y", line = 1, col = 6)
+            expectErr(ErrorCode.SEMANTIC_UNBOUND_BINDING,
+                BINDING_NAME to "y",
+                LINE_NUMBER to 1L,
+                COLUMN_NUMBER to 6L)
         ),
         STRTestCase(
             //        1         2         3         4         5         6         7         8
@@ -426,6 +472,34 @@ class StaticTypeRewriterTests : RewriterTestBase() {
         )
     )
 
+
+    @Test
+    @Parameters
+    fun ddlTest(tc: STRTestCase) = runSTRTest(tc)
+
+    fun parametersForDdlTest() = listOf(
+        // Regression test:  do not attempt to resolve any variables for a DROP INDEX statement.
+        // DropIndex incorrectly models the index identifier as a [VariableReference]
+        // and this test ensures we don't treat [identifier] as if it were a normal variable.
+        STRTestCase(
+            //        1         2         3         4         5         6         7         8
+            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            "DROP INDEX IDX_foo ON SomeTable",
+            mapOf(),
+            expectVariableReferences()
+        ),
+        // Regression test:  do not attempt to resolve any variables for a CREATE INDEX statement.
+        // CreateIndex incorrectly models the index identifier as a [List<ExprNode>]
+        // and this test ensures we don't treat [keys] as if it were a normal variable.
+        STRTestCase(
+            //        1         2         3         4         5         6         7         8
+            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            "CREATE INDEX ON SomeTable (SomeColumn)",
+            mapOf(),
+            expectVariableReferences()
+        )
+    )
+
     @Test
     @Parameters
     fun constraints(tc: STRTestCase) = runSTRTest(tc)
@@ -443,7 +517,10 @@ class StaticTypeRewriterTests : RewriterTestBase() {
                 "A" to StaticType.BAG,
                 "C" to StaticType.BAG
             ),
-            expectErrName(code = ErrorCode.SEMANTIC_ILLEGAL_GLOBAL_VARIABLE_ACCESS, name = "a", line = 1, col = 8),
+            expectErr(ErrorCode.SEMANTIC_ILLEGAL_GLOBAL_VARIABLE_ACCESS,
+                BINDING_NAME to "a",
+                LINE_NUMBER to 1L,
+                COLUMN_NUMBER to 8L),
             setOf(StaticTypeRewriterConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM)
         ),
         STRTestCase(
@@ -455,7 +532,10 @@ class StaticTypeRewriterTests : RewriterTestBase() {
                 "a" to StaticType.BAG,
                 "b" to StaticType.BAG
             ),
-            expectErrName(ErrorCode.SEMANTIC_ILLEGAL_GLOBAL_VARIABLE_ACCESS, "b", 1, 38),
+            expectErr(ErrorCode.SEMANTIC_ILLEGAL_GLOBAL_VARIABLE_ACCESS,
+                BINDING_NAME to "b",
+                LINE_NUMBER to 1L,
+                COLUMN_NUMBER to 38L),
             setOf(StaticTypeRewriterConstraints.PREVENT_GLOBALS_IN_NESTED_QUERIES)
         ),
         STRTestCase(
@@ -511,7 +591,10 @@ class StaticTypeRewriterTests : RewriterTestBase() {
                 "B" to StaticType.BAG,
                 "C" to StaticType.BAG
             ),
-            expectErrName(ErrorCode.SEMANTIC_ILLEGAL_GLOBAL_VARIABLE_ACCESS, "c", 1, 29),
+            expectErr(ErrorCode.SEMANTIC_ILLEGAL_GLOBAL_VARIABLE_ACCESS,
+                BINDING_NAME to "c",
+                LINE_NUMBER to 1L,
+                COLUMN_NUMBER to 29L),
             setOf(StaticTypeRewriterConstraints.PREVENT_GLOBALS_IN_NESTED_QUERIES)
         ),
         STRTestCase(
@@ -523,7 +606,10 @@ class StaticTypeRewriterTests : RewriterTestBase() {
                 "B" to StaticType.BAG,
                 "C" to StaticType.BAG
             ),
-            expectErrName(ErrorCode.SEMANTIC_ILLEGAL_GLOBAL_VARIABLE_ACCESS, "c", 1, 36),
+            expectErr(ErrorCode.SEMANTIC_ILLEGAL_GLOBAL_VARIABLE_ACCESS,
+                BINDING_NAME to "c",
+                LINE_NUMBER to 1L,
+                COLUMN_NUMBER to 36L),
             setOf(StaticTypeRewriterConstraints.PREVENT_GLOBALS_IN_NESTED_QUERIES)
         ),
         STRTestCase(
@@ -622,22 +708,17 @@ class StaticTypeRewriterTests : RewriterTestBase() {
         data class Error(val testCase: STRTestCase, val error: SemanticException) : ResolveTestResult()
     }
 
-    private fun expectErrName(code: ErrorCode, name: String, line: Long, col: Long): (ResolveTestResult) -> Unit = {
+    private fun expectErr(code: ErrorCode, vararg properties: Pair<Property, Any>): (ResolveTestResult) -> Unit = {
         when (it) {
             is ResolveTestResult.Value -> fail("Expected id error for: ${it.testCase.originalSql}")
             is ResolveTestResult.Error -> {
-                assertEquals("Error code in error doesn't match",
-                             code, it.error.errorCode
-                )
-                assertEquals(
-                    "Name in error doesn't match",
-                    name, it.error.errorContext?.get(Property.BINDING_NAME)?.stringValue())
-                assertEquals(
-                    "Line in error doesn't match",
-                    line, it.error.errorContext?.get(Property.LINE_NUMBER)?.longValue())
-                assertEquals(
-                    "Column in error doesn't match",
-                    col, it.error.errorContext?.get(Property.COLUMN_NUMBER)?.longValue())
+                assertEquals("Error code in error doesn't match", code, it.error.errorCode)
+                properties.forEach { (property, expectedValue) ->
+                    assertEquals(
+                        "${property.propertyName} in error doesn't match",
+                        expectedValue, it.error.errorContext?.get(property)?.value)
+
+                }
             }
         }
     }
@@ -708,7 +789,10 @@ class StaticTypeRewriterTests : RewriterTestBase() {
                                     this.walkExprNode(expr.arg)
                                     return
                                 }
-
+                                expr is CreateIndex -> {
+                                    // Ignore variable references within CREATE INDEX.
+                                    return
+                                }
                             }
                             // For everything else, rely on the super AstWalker.
                             super.walkExprNode(expr)
