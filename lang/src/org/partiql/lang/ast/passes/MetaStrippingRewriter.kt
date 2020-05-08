@@ -15,6 +15,7 @@
 package org.partiql.lang.ast.passes
 
 import org.partiql.lang.ast.*
+import org.partiql.lang.domains.partiql_ast
 
 class MetaStrippingRewriter : AstRewriterBase() {
     companion object {

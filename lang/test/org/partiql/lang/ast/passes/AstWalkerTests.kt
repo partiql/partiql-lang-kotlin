@@ -156,6 +156,9 @@ class AstWalkerTests {
             "PIVOT 1 AT 2 FROM 3",
             "Select|SelectProjectionPivot|Literal|Literal|FromSourceExpr|Literal|"),
         WalkerTestCase(
+            "CREATE TABLE FOO",
+            "CreateTable|"),
+        WalkerTestCase(
             "?",
             "Parameter|"),
 

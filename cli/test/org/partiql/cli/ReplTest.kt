@@ -193,24 +193,14 @@ class ReplTest {
             #===' 
             #
             #(
-            #  ast
+            #  plus
             #  (
-            #    version
+            #    lit
             #    1
             #  )
             #  (
-            #    root
-            #    (
-            #      +
-            #      (
-            #        lit
-            #        1
-            #      )
-            #      (
-            #        lit
-            #        1
-            #      )
-            #    )
+            #    lit
+            #    1
             #  )
             #)
             #--- 
@@ -228,79 +218,36 @@ class ReplTest {
             #===' 
             #
             #(
-            #  ast
+            #  meta
             #  (
-            #    version
-            #    1
-            #  )
-            #  (
-            #    root
+            #    plus
             #    (
-            #      term
+            #      meta
             #      (
-            #        exp
-            #        (
-            #          +
-            #          (
-            #            term
-            #            (
-            #              exp
-            #              (
-            #                lit
-            #                1
-            #              )
-            #            )
-            #            (
-            #              meta
-            #              (
-            #                ${'$'}source_location
-            #                (
-            #                  {
-            #                    line_num:1,
-            #                    char_offset:1
-            #                  }
-            #                )
-            #              )
-            #            )
-            #          )
-            #          (
-            #            term
-            #            (
-            #              exp
-            #              (
-            #                lit
-            #                1
-            #              )
-            #            )
-            #            (
-            #              meta
-            #              (
-            #                ${'$'}source_location
-            #                (
-            #                  {
-            #                    line_num:1,
-            #                    char_offset:5
-            #                  }
-            #                )
-            #              )
-            #            )
-            #          )
-            #        )
+            #        lit
+            #        1
             #      )
+            #      {
+            #        line:1,
+            #        column:1
+            #      }
+            #    )
+            #    (
+            #      meta
             #      (
-            #        meta
-            #        (
-            #          ${'$'}source_location
-            #          (
-            #            {
-            #              line_num:1,
-            #              char_offset:3
-            #            }
-            #          )
-            #        )
+            #        lit
+            #        1
             #      )
+            #      {
+            #        line:1,
+            #        column:5
+            #      }
             #    )
             #  )
+            #  {
+            #    line:1,
+            #    column:3
+            #  }
             #)
             #--- 
             #OK! (0 ms)

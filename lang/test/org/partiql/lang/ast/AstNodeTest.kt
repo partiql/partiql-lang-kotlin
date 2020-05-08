@@ -147,6 +147,12 @@ class AstNodeTest {
         IteratorTestCase(
             "DELETE FROM foo WHERE bar",
             "DataManipulation|FromSourceExpr|VariableReference|VariableReference|DeleteOp"),
+        IteratorTestCase(
+            "CREATE TABLE foo",
+            "CreateTable"),
+        IteratorTestCase(
+            "DROP TABLE foo",
+            "DropTable"),
 
         IteratorTestCase("MISSING", "LiteralMissing"))
 

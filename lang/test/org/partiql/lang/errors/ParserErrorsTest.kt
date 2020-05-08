@@ -1001,31 +1001,31 @@ class ParserErrorsTest : TestBase() {
     @Test
     fun countDistinctStar() {
         checkInputThrowingParserException("COUNT(DISTINCT *)",
-                                          ErrorCode.PARSE_UNSUPPORTED_CALL_WITH_STAR,
-                                          mapOf(Property.LINE_NUMBER to 1L,
-                                                Property.COLUMN_NUMBER to 7L,
-                                                Property.TOKEN_TYPE to TokenType.KEYWORD,
-                                                Property.TOKEN_VALUE to ion.newSymbol("distinct")))
+            ErrorCode.PARSE_UNSUPPORTED_CALL_WITH_STAR,
+            mapOf(Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 7L,
+                Property.TOKEN_TYPE to TokenType.KEYWORD,
+                Property.TOKEN_VALUE to ion.newSymbol("distinct")))
     }
 
     @Test
     fun countAllStar() {
         checkInputThrowingParserException("COUNT(ALL *)",
-                                          ErrorCode.PARSE_UNSUPPORTED_CALL_WITH_STAR,
-                                          mapOf(Property.LINE_NUMBER to 1L,
-                                                Property.COLUMN_NUMBER to 7L,
-                                                Property.TOKEN_TYPE to TokenType.KEYWORD,
-                                                Property.TOKEN_VALUE to ion.newSymbol("all")))
+            ErrorCode.PARSE_UNSUPPORTED_CALL_WITH_STAR,
+            mapOf(Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 7L,
+                Property.TOKEN_TYPE to TokenType.KEYWORD,
+                Property.TOKEN_VALUE to ion.newSymbol("all")))
     }
 
     @Test
     fun countExpressionStar() {
         checkInputThrowingParserException("COUNT(a, *)",
-                                          ErrorCode.PARSE_UNEXPECTED_TERM,
-                                          mapOf(Property.LINE_NUMBER to 1L,
-                                                Property.COLUMN_NUMBER to 10L,
-                                                Property.TOKEN_TYPE to TokenType.STAR,
-                                                Property.TOKEN_VALUE to ion.newSymbol("*")))
+            ErrorCode.PARSE_UNEXPECTED_TERM,
+            mapOf(Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 10L,
+                Property.TOKEN_TYPE to TokenType.STAR,
+                Property.TOKEN_VALUE to ion.newSymbol("*")))
     }
 
     @Test
@@ -1157,6 +1157,196 @@ class ParserErrorsTest : TestBase() {
             Property.COLUMN_NUMBER to 9L,
             Property.TOKEN_TYPE to TokenType.COMMA,
             Property.TOKEN_VALUE to ion.newSymbol(",")))
+
+    @Test
+    fun createTableWithKeyword() = checkInputThrowingParserException(
+        "CREATE TABLE SELECT",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 14L,
+            Property.TOKEN_TYPE to TokenType.KEYWORD,
+            Property.TOKEN_VALUE to ion.newSymbol("select")))
+
+    @Test
+    fun createForUnsupportedObject() = checkInputThrowingParserException(
+        "CREATE VIEW FOO",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 8L,
+            Property.TOKEN_TYPE to TokenType.KEYWORD,
+            Property.TOKEN_VALUE to ion.newSymbol("view")))
+
+    @Test
+    fun createTableWithNoIdentifier() = checkInputThrowingParserException(
+        "CREATE TABLE",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 13L,
+            Property.TOKEN_TYPE to TokenType.EOF,
+            Property.TOKEN_VALUE to ion.newSymbol("EOF")))
+
+    @Test
+    fun createTableWithOperatorAfterIdentifier() = checkInputThrowingParserException(
+        "CREATE TABLE foo-bar",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 17L,
+            Property.TOKEN_TYPE to TokenType.OPERATOR,
+            Property.TOKEN_VALUE to ion.newSymbol("-")))
+
+    @Test
+    fun dropTableWithOperatorAfterIdentifier() = checkInputThrowingParserException(
+        "DROP TABLE foo+bar",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 15L,
+            Property.TOKEN_TYPE to TokenType.OPERATOR,
+            Property.TOKEN_VALUE to ion.newSymbol("+")))
+
+    @Test
+    fun createIndexWithoutAnythingElse() = checkInputThrowingParserException(
+        "CREATE INDEX",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 13L,
+            Property.TOKEN_TYPE to TokenType.EOF,
+            Property.TOKEN_VALUE to ion.newSymbol("EOF")))
+
+    @Test
+    fun createIndexWithName() = checkInputThrowingParserException(
+        "CREATE INDEX foo_index ON foo (bar)",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 14L,
+            Property.TOKEN_TYPE to TokenType.IDENTIFIER,
+            Property.TOKEN_VALUE to ion.newSymbol("foo_index")))
+
+    @Test
+    fun createIndexNoNameNoTarget() = checkInputThrowingParserException(
+        "CREATE INDEX ON (bar)",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 17L,
+            Property.TOKEN_TYPE to TokenType.LEFT_PAREN,
+            Property.TOKEN_VALUE to ion.newSymbol("(")))
+
+    @Test
+    fun createIndexNoNameNoKeyParenthesis() = checkInputThrowingParserException(
+        "CREATE INDEX ON foo bar",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 21L,
+            Property.TOKEN_TYPE to TokenType.IDENTIFIER,
+            Property.TOKEN_VALUE to ion.newSymbol("bar")))
+
+    @Test
+    fun createIndexNoNameKeyExpression() = checkInputThrowingParserException(
+        "CREATE INDEX ON foo (1+1)",
+        ErrorCode.PARSE_INVALID_PATH_COMPONENT,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 22L,
+            Property.TOKEN_TYPE to TokenType.LITERAL,
+            Property.TOKEN_VALUE to ion.newInt(1)))
+
+    @Test
+    fun createIndexWithOperatorAtTail() = checkInputThrowingParserException(
+        "CREATE INDEX ON foo (bar) + 1",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 27L,
+            Property.TOKEN_TYPE to TokenType.OPERATOR,
+            Property.TOKEN_VALUE to ion.newSymbol("+")))
+
+    @Test
+    fun createIndexNoNameKeyWildcardPath() = checkInputThrowingParserException(
+        "CREATE INDEX ON foo (a.*)",
+        ErrorCode.PARSE_INVALID_PATH_COMPONENT,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 24L,
+            Property.TOKEN_TYPE to TokenType.STAR,
+            Property.TOKEN_VALUE to ion.newSymbol("*")))
+
+    @Test
+    fun createIndexNoNameKeyExpressionPath() = checkInputThrowingParserException(
+        "CREATE INDEX ON foo (a[1+1])",
+        ErrorCode.PARSE_INVALID_PATH_COMPONENT,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 24L,
+            Property.TOKEN_TYPE to TokenType.LITERAL,
+            Property.TOKEN_VALUE to ion.newInt(1)))
+
+    @Test
+    fun dropIndexWithoutAnythingElse() = checkInputThrowingParserException(
+        "DROP INDEX",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 11L,
+            Property.TOKEN_TYPE to TokenType.EOF,
+            Property.TOKEN_VALUE to ion.newSymbol("EOF")))
+
+    @Test
+    fun dropIndexNoIdentifierNoTarget() = checkInputThrowingParserException(
+        "DROP INDEX ON",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 12L,
+            Property.TOKEN_TYPE to TokenType.KEYWORD,
+            Property.TOKEN_VALUE to ion.newSymbol("on")))
+
+    @Test
+    fun dropIndexMissingOnKeyWord() = checkInputThrowingParserException(
+        "DROP INDEX bar foo",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 16L,
+            Property.TOKEN_TYPE to TokenType.IDENTIFIER,
+            Property.TOKEN_VALUE to ion.newSymbol("foo")))
+
+    @Test
+    fun dropIndexWithExpression() = checkInputThrowingParserException(
+        "DROP INDEX (1+1) on foo",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 12L,
+            Property.TOKEN_TYPE to TokenType.LEFT_PAREN,
+            Property.TOKEN_VALUE to ion.newSymbol("(")))
+    @Test
+    fun dropIndexWithParenthesisAtTail() = checkInputThrowingParserException(
+        "DROP INDEX goo ON foo (bar)",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 23L,
+            Property.TOKEN_TYPE to TokenType.LEFT_PAREN,
+            Property.TOKEN_VALUE to ion.newSymbol("(")))
+
+    @Test
+    fun dropIndexWithOperatorAtTail() = checkInputThrowingParserException(
+        "DROP INDEX bar ON foo + 1",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 23L,
+            Property.TOKEN_TYPE to TokenType.OPERATOR,
+            Property.TOKEN_VALUE to ion.newSymbol("+")))
+
 
     @Test
     fun insertValueWithCollection() = checkInputThrowingParserException(

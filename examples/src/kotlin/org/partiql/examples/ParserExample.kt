@@ -1,12 +1,9 @@
 package org.partiql.examples
 
-import org.junit.*
 import kotlin.test.*
-import com.amazon.ion.*
 import com.amazon.ion.system.*
 import org.partiql.examples.util.Example
 import org.partiql.lang.ast.*
-import org.partiql.lang.errors.*
 import org.partiql.lang.syntax.*
 import java.io.PrintStream
 
@@ -37,13 +34,13 @@ class ParserExample(out: PrintStream) : Example(out) {
 
         // Convert the ExprNode AST to the Ion s-expression form.
         // AstSerializer always serializes to the latest version of the s-expression format.
-        // the serialized format is documented at `docs/dev/README-AST-V1.md`
-        val serializedAst = AstSerializer.serialize(originalAst, AstVersion.V1, ion)
+        // the serialized format is documented at `docs/dev/README-AST-V0.md`
+        val serializedAst = AstSerializer.serialize(originalAst, AstVersion.V2, ion)
         print("Serialized AST", serializedAst.toPrettyString())
 
         // Re-constitute the serialized AST.  The deserializer will convert from any supported
         // version of the s-expression form to an instance of [ExprNode].
-        val deserializedAst = deserializer.deserialize(serializedAst)
+        val deserializedAst = deserializer.deserialize(serializedAst, AstVersion.V2)
 
         // Verify that we have the correct AST.
         assertEquals(originalAst, deserializedAst)

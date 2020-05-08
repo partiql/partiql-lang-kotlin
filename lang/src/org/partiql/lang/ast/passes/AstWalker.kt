@@ -20,7 +20,6 @@ import org.partiql.lang.util.*
 /**
  * Contains the logic necessary to walk every node in the AST and invokes methods of [AstVisitor] along the way.
  */
-@Deprecated("Use AstNode#iterator() or AstNode#children()")
 open class AstWalker(private val visitor: AstVisitor) {
 
     fun walk(exprNode: ExprNode) {
@@ -110,6 +109,13 @@ open class AstWalker(private val visitor: AstVisitor) {
                     }
                     walkExprNode(where)
                 }
+                is CreateIndex -> case {
+                    val (_, keys, _: MetaContainer) = expr
+                    for (key in keys) {
+                        walkExprNode(key)
+                    }
+                }
+                is CreateTable, is DropTable, is DropIndex -> case { }
             }.toUnit()
         }
     }

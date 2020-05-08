@@ -1322,7 +1322,7 @@ class EvaluatingCompilerTests : EvaluatorTestBase() {
         """15.0""",
         globalListOfNumbers.toSession()
     )
-    
+
     @Test
     fun topLevelAllSum() = assertEval(
         """SUM(ALL numbers)""",
@@ -1355,7 +1355,7 @@ class EvaluatingCompilerTests : EvaluatorTestBase() {
         """MIN(ALL numbers)""",
         """1""",
         globalListOfNumbers.toSession()
-    ) 
+    )
 
     @Test
     fun topLevelMax() = assertEval(
@@ -1363,7 +1363,7 @@ class EvaluatingCompilerTests : EvaluatorTestBase() {
         """5d0""",
         globalListOfNumbers.toSession()
     )
-    
+
     @Test
     fun topLevelDistinctMax() = assertEval(
         """MAX(DISTINCT numbers)""",
@@ -1560,14 +1560,14 @@ class EvaluatingCompilerTests : EvaluatorTestBase() {
 
     @Test
     fun selectDistinctSubQuery() = assertEval(
-        """SELECT * FROM (SELECT DISTINCT t.a FROM `[{a: 1}, {a: 2}, {a: 1}]` t)""", 
+        """SELECT * FROM (SELECT DISTINCT t.a FROM `[{a: 1}, {a: 2}, {a: 1}]` t)""",
         """[{a:1},{a:2}]""")
 
     @Test
     fun selectDistinctWithSubQuery() = assertEval(
         """SELECT DISTINCT * FROM (SELECT t.a FROM `[{a: 1}, {a: 2}, {a: 1}]` t)""",
         """[{a:1},{a:2}]""")
-    
+
     @Test
     fun selectDistinctAggregationWithGroupBy() = assertEval(
         """
@@ -1702,4 +1702,23 @@ class EvaluatingCompilerTests : EvaluatorTestBase() {
         """
           [{c:"11"},{c:"22"}]
         """)
+
+    @Test
+    fun projectOfListOfList() = assertEvalExprValue("SELECT * FROM [ [1,2] ] as foo", "<<{'_1': [1,2] }>>")
+
+    @Test
+    fun projectOfBagOfBag() = assertEvalExprValue("SELECT * FROM << <<1,2>> >> as foo", "<<{'_1': <<1,2>> }>>")
+
+    @Test
+    fun projectOfListOfBag() = assertEvalExprValue("SELECT * FROM [ <<1,2>> ] as foo", "<<{'_1': <<1,2>> }>>")
+
+    @Test
+    fun projectOfBagOfList() = assertEvalExprValue("SELECT * FROM << [1,2] >> as foo", "<<{'_1': [1,2] }>>")
+
+    @Test
+    fun projectOfSexp() = assertEvalExprValue("SELECT * FROM `(1 2)` as foo", "<<{'_1': `(1 2)` }>>")
+
+    @Test
+    fun projectOfUnpivotPath()= assertEvalExprValue("SELECT * FROM <<{'name': 'Marrowstone Brewing'}, {'name': 'Tesla'}>>.*",
+        "<<{'_1': <<{'name': 'Marrowstone Brewing'}, {'name': 'Tesla'}>>}>>")
 }

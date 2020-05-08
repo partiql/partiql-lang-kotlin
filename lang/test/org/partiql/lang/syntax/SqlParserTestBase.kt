@@ -14,113 +14,163 @@
 
 package org.partiql.lang.syntax
 
-import com.amazon.ion.*
-import org.partiql.lang.*
-import org.partiql.lang.ast.*
-import org.partiql.lang.util.*
+import com.amazon.ionelement.api.IonElement
+import com.amazon.ionelement.api.toIonElement
+import com.amazon.ion.IonSexp
+import org.partiql.lang.TestBase
+import org.partiql.lang.ast.AstDeserializerBuilder
+import org.partiql.lang.ast.AstSerializer
+import org.partiql.lang.ast.AstVersion
+import org.partiql.lang.ast.ExprNode
+import org.partiql.lang.ast.passes.MetaStrippingRewriter
+import org.partiql.lang.ast.toAstStatement
+import org.partiql.lang.ast.toExprNode
+import org.partiql.lang.domains.partiql_ast
+import org.partiql.lang.util.asIonSexp
+import org.partiql.lang.util.filterMetaNodes
+import org.partiql.pig.runtime.MalformedDomainDataException
 
 abstract class SqlParserTestBase : TestBase() {
     protected val parser = SqlParser(ion)
 
     protected fun parse(source: String): ExprNode = parser.parseExprNode(source)
 
-
-    protected fun assertExpression(expectedLegacyAstStr: String, source: String) {
-        assertExpression(expectedLegacyAstStr, source, null)
+    protected fun assertExpression(
+        source: String,
+        expectedSexpAstV0String: String,
+        skipPig: Boolean = true,
+        pigBuilder: partiql_ast.builder.() -> partiql_ast.partiql_ast_node
+    ) {
+        val expectedPartiQlAst = partiql_ast.build { pigBuilder() }
+        assertExpression(source, expectedSexpAstV0String, expectedPartiQlAst.toIonElement().toString(), skipPig)
     }
 
-    protected fun assertExpression(expectedSexpAstV0String: String, source: String, expectedSexpAstV1String: String?) {
-        val deserializer = AstDeserializerBuilder(ion).build()
-
+    protected fun assertExpression(
+        source: String,
+        expectedSexpAstV0String: String,
+        expectedSexpAstV2String: String = expectedSexpAstV0String,
+        skipPig: Boolean = true
+    ) {
         // Convert the query to ExprNode
         val parsedExprNode = parse(source)
 
-        // Serialize to V0 s-exp and assert that it matches the expected v0 s-exp AST
-        val expectedSexpAstV0 = ion.singleValue(expectedSexpAstV0String)
-        val sexpAstV0 = AstSerializer.serialize(parsedExprNode, AstVersion.V0, ion)
+        val v0SexpAst = loadIonSexp(expectedSexpAstV0String)
+        serializeAssert(AstVersion.V0, parsedExprNode, v0SexpAst, source)
 
-        val sexpAstV0WithoutMetas = sexpAstV0.filterMetaNodes()
-        assertSexpEquals(expectedSexpAstV0, sexpAstV0WithoutMetas, "V0 AST, $source")
+        val v2SexpAst = loadIonSexp(expectedSexpAstV2String)
+        serializeAssert(AstVersion.V2, parsedExprNode, v2SexpAst, source)
 
-        // Deserialize the v0 ast and assert that it matches the parsed ExprNode
-        val deserializedExprNodeFromSexpV0 = deserializer.deserialize(sexpAstV0)
-        assertEquals("Parsed ExprNodes must match deserialized s-exp V0 AST", parsedExprNode, deserializedExprNodeFromSexpV0)
+        pigDomainAssert(parsedExprNode, v2SexpAst.toIonElement(), skipPig)
 
-        if (expectedSexpAstV1String != null) {
-
-            // Serialize the ExprNodes originating from the query to s-exp AS v1 and assert that they match
-            val expectedSexpAstV1 = ion.singleValue(expectedSexpAstV1String)
-            val sexpAstV1 = AstSerializer.serialize(parsedExprNode, AstVersion.V1, ion)
-
-            //Our expected s-exp v1 values do not have the versioning wrapper so remove it
-            assertEquals("ast", sexpAstV1.tagText)
-            assertEquals(2, sexpAstV1.arity)
-            assertEquals(1L, (sexpAstV1.tail
-                .filterIsInstance<IonSexp>()
-                .first { it.tagText == "version" }.tail.head as IonInt).longValue())
-
-            val rootSexp = (sexpAstV1.args.find { (it as IonSexp).tagText == "root" } as IonSexp).tail.head as IonSexp
-
-            // Our expected s-exp v1 values are wrapped in terms but do not have the `meta` node, so remove those
-            val actualSexpAstV1 = rootSexp.filterTermMetas()
-
-            // Finally, make sure the expected v1 s-exp matches the actual deserialized v1 s-exp
-            assertSexpEquals(expectedSexpAstV1, actualSexpAstV1, "V1 AST, $source")
-
-
-            // Deserialize the v1 ast and assert that it matches the parsed exprNode
-            val deserializedExprNodeFromSexpV1 = deserializer.deserialize(sexpAstV1)
-            assertEquals("Parsed ExprNodes must match deserialized s-exp V1 AST", parsedExprNode, deserializedExprNodeFromSexpV1)
-
-
-            // As a final check, assert that the ExprNodes deserialized from the serialized v0
-            // and v1 s-exp ASTs are equivalent
-            assertEquals("ExprNode instances deserialized from s-exp V0 and V1 must match",
-                         deserializedExprNodeFromSexpV0, deserializedExprNodeFromSexpV1)
-
-            assertRewrite(source, parsedExprNode)
-        }
+        pigExprNodeTransformAsserts(parsedExprNode)
     }
 
-}
+    private fun serializeAssert(astVersion: AstVersion, parsedExprNode: ExprNode, expectedSexpAst: IonSexp, source: String) {
 
-/**
- * Given:
- * ```
- * (term
- *    (exp
- *      (not
- *        (term
- *          (exp lit 1)
- *          (meta ...))
- *    (meta ...))
- *  ```
- *
- *  Returns an s-exp without the meta nodes, i.e.:
- *
- *  ```
- * (term
- *    (exp
- *      (not
- *        (term
- *          (exp lit 1))))
- *  ```
- */
-private fun IonSexp.filterTermMetas(): IonSexp {
-    val newSexp = system.newSexp()
-    forEach { child ->
-        if(child is IonSexp) {
-            val tag = child[0]
-            if (tag is IonSymbol && tag.stringValue() == "meta") {
-                //Skip this node
-            }
-            else {
-                newSexp.add(child.filterTermMetas())
-            }
+        val actualSexpAstWithoutMetas = AstSerializer.serialize(parsedExprNode, astVersion, ion).filterMetaNodes() as IonSexp
+
+        val deserializer = AstDeserializerBuilder(ion).build()
+        assertSexpEquals(expectedSexpAst, actualSexpAstWithoutMetas, "$astVersion AST, $source")
+
+        val deserializedExprNodeFromSexp = deserializer.deserialize(expectedSexpAst, astVersion)
+
+        assertEquals(
+            "Parsed ExprNodes must match deserialized s-exp $astVersion AST",
+            parsedExprNode.stripMetas(),
+            deserializedExprNodeFromSexp.stripMetas())
+    }
+
+    private fun pigDomainAssert(parsedExprNode: ExprNode, expectedSexpAst: IonElement, skipPigTransformerTests: Boolean) {
+
+        // Serialize ExprNode to V2 IonValue
+        val sexpAst = AstSerializer.serialize(parsedExprNode, AstVersion.V2, ion).filterMetaNodes() as IonSexp
+
+        // Convert the V2 IonValue to IonElement
+        val parsedV2Element = sexpAst.toIonElement()
+
+        if (skipPigTransformerTests) {
+            assertPigTransformerFails(parsedV2Element)
         } else {
-            newSexp.add(child.clone())
+            assertRoundTripIonElementToPartiQlAst(parsedV2Element, expectedSexpAst)
+        }
+
+        // Run the parsedExprNode through the conversion to PIG domain instance for all tests
+        // to detect conditions which will cause the conversion to throw an exception.
+        val statement = parsedExprNode.toAstStatement()
+
+        // If !skipPigTransformerTests, we can skip the following additional checks.
+        if(!skipPigTransformerTests) {
+            assertRoundTripPartiQlAstToExprNode(statement, expectedSexpAst, parsedExprNode)
         }
     }
-    return newSexp
-}
 
+    private fun assertRoundTripPartiQlAstToExprNode(statement: partiql_ast.statement, expectedSexpAst: IonElement, parsedExprNode: ExprNode) {
+        // Run additional checks on the resulting partiql_ast instance
+
+        // None of our test cases are wrapped in (query <expr>), so extract <expr> from that out
+        val element = when (statement) {
+            is partiql_ast.statement.query -> statement.expr0.toIonElement()
+            is partiql_ast.statement.dml,
+            is partiql_ast.statement.ddl -> statement.toIonElement()
+        }
+        assertEquals(expectedSexpAst, element)
+
+        // Convert the the IonElement back to the partiql_ast instance and assert equivalence
+        val transformedPig = partiql_ast.transform(statement.toIonElement()) as partiql_ast.statement
+        assertEquals(statement, transformedPig)
+
+        // Convert from the PIG instance back to ExprNode and assert the result is the same as parsedExprNode.
+        val exprNode2 = MetaStrippingRewriter.stripMetas(transformedPig.toExprNode(ion))
+        assertEquals(MetaStrippingRewriter.stripMetas(parsedExprNode), exprNode2)
+    }
+
+    private fun assertRoundTripIonElementToPartiQlAst(parsedV2Element: IonElement, expectedSexpAst: IonElement) {
+        // #1 We can transform the parsed V2 element.
+        val transformedParsedV2Element = partiql_ast.transform(parsedV2Element)
+
+        // #2 We can transform the expected V2 element.
+        val transformedExpectedV2Element = partiql_ast.transform(expectedSexpAst)
+
+        // #3 The results of both transformations match.
+        assertEquals(transformedExpectedV2Element, transformedParsedV2Element)
+
+        // #4 Re-transforming the parsed V2 element matches the expected AST
+        val reserializedV2Ast = transformedParsedV2Element.toIonElement()
+        assertEquals(expectedSexpAst, reserializedV2Ast)
+
+        // #5 Re-serializing the expected V2 element matches the expected AST.
+        // Note:  because of #3 above, no need for #5.
+    }
+
+    private fun assertPigTransformerFails(parsedV2Element: IonElement) {
+
+        // TODO: remove this method once V2 is fully complete.
+        // Migration to PIG domain partially completed--expect failure.
+        // (If the test starts succeeding suddenly, we want to know so we can mark the expected test to succeed!)
+        // Doing so will also cause the additional assertions above to execute.
+        try {
+            partiql_ast.transform(parsedV2Element)
+            fail("Transform to PIG domain unexpectedly succeeded! :)")
+        } catch (ex: MalformedDomainDataException) {
+            // OK!
+        }
+    }
+
+    /**
+     * Strips metas from the [parsedExprNode] so they are not included in equivalence checks
+     * (it is a known fact that conversion from partiql_ast and ExprNode can be lossy) and
+     * round-trip the resulting [parsedExprNode] AST through [toAstStatement] and [toExprNode].
+     *
+     * Verify that the result matches the original without metas.
+     */
+    private fun pigExprNodeTransformAsserts(parsedExprNode: ExprNode) {
+        val parsedExprNodeNoMetas = MetaStrippingRewriter.stripMetas(parsedExprNode)
+        val statement = parsedExprNodeNoMetas.toAstStatement()
+        val exprNode2 = statement.toExprNode(ion)
+        assertEquals(parsedExprNodeNoMetas, exprNode2)
+    }
+
+    private fun loadIonSexp(expectedSexpAst: String) = ion.singleValue(expectedSexpAst).asIonSexp()
+    private fun ExprNode.stripMetas() = MetaStrippingRewriter.stripMetas(this)
+
+}

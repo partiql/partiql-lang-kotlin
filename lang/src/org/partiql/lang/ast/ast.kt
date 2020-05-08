@@ -88,6 +88,18 @@ sealed class ExprNode : AstNode(), HasMetas {
             is DataManipulation  -> {
                 copy(metas = metas)
             }
+            is CreateTable       -> {
+                copy(metas = metas)
+            }
+            is CreateIndex       -> {
+                copy(metas = metas)
+            }
+            is DropTable         -> {
+                copy(metas = metas)
+            }
+            is DropIndex         -> {
+                copy(metas = metas)
+            }
             is Parameter       -> {
                 copy(metas = metas)
             }
@@ -330,36 +342,69 @@ data class Select(
     override val children: List<AstNode> = listOfNotNull(projection, from, where, groupBy, having, limit)
 }
 
-/**
- * Simple descriptor of the type of schema object.
- */
-enum class SchemaObjectType(val typeName: String) {
-    TABLE("table")
-}
+//********************************
+// DDL Expressions
+//********************************
 
-sealed class SchemaObjectDefinition : AstNode()
+// TODO determine if we should encapsulate DDL as a separate space from ExprNode...
 
 /**
- * Very basic table definition, just a name, at least for now.
+ * Represents a `CREATE TABLE...` statement.
  *
- * TODO: add ability to represent schema/type definition of table.
+ * @param tableName the name of the table to be created
  */
-data class TableDefinition(private val sentinel: Unit?) : SchemaObjectDefinition() {
-    // XXX Kotlin data classes require a parameter constructor--this is a placeholder
-    // TODO:  where are the metas?
-    constructor() : this(null)
-
+data class CreateTable(
+    val tableName: String,
+    override val metas: MetaContainer
+) : ExprNode() {
     override val children: List<AstNode> get() = emptyList()
 }
 
 /**
- * Describes an index.
+ * Represents a `CREATE INDEX...` statement.
  *
- * @param   target The target schema object for this index.
- * @param   keys The expressions that extract the keys from the target to be applied to the index.
+ * TODO:  [keys] should not be modeled as a [List<ExprNode>] since these are not actually
+ * expressions.  It actually a reference to an index key, which doesn't have
+ * the same semantics--for instance it does not exist in any scope and should not be resolved
+ * like a variable does.  We should create a new [AstNode] named `Identifier` which has `id` and
+ * `case` properties.
+ *
+ * @param tableName the name of the table which the index will be created
+ * @param keys The expressions that extract the keys from the target to be applied to the index.
  */
-data class IndexDefinition(val target: String, val keys: List<ExprNode>) : SchemaObjectDefinition() {
+data class CreateIndex(
+    val tableName: String,
+    val keys: List<ExprNode>,
+    override val metas: MetaContainer
+) : ExprNode() {
     override val children: List<AstNode> get() = keys
+}
+
+/**
+ * Represents a `DROP TABLE...` statement.
+ */
+data class DropTable(
+    val tableName: String,
+    override val metas: MetaContainer
+) : ExprNode() {
+    override val children: List<AstNode> get() = emptyList()
+}
+
+/**
+ * Represents a `DROP INDEX $index_identifier ON $table_name` statement.
+ *
+ * TODO:  [identifier] should not be modeled as a [VariableReference] since it is not actually
+ * a reference to a variable.  It actually a reference to an index identifier, which doesn't have
+ * the same semantics--for instance identifier only exists within a scope that is limited to its
+ * table and should not be resolved in the same way a variable does.  We should create a new
+ * [AstNode] named `Identifier` which has `id` and `case` properties.
+ */
+data class DropIndex(
+    val tableName: String,
+    val identifier: VariableReference,
+    override val metas: MetaContainer
+) : ExprNode() {
+    override val children: List<AstNode> get() = emptyList()
 }
 
 /**
@@ -478,11 +523,11 @@ data class SelectProjectionValue(
 
 /** For `PIVOT <expr> AS <asName> AT <atName>` */
 data class SelectProjectionPivot(
-    val valueExpr: ExprNode,
-    val nameExpr: ExprNode
+    val nameExpr: ExprNode,
+    val valueExpr: ExprNode
 ) : SelectProjection() {
 
-    override val children: List<AstNode> = listOf(valueExpr, nameExpr)
+    override val children: List<AstNode> = listOf(nameExpr, valueExpr)
 }
 
 /**
@@ -683,40 +728,42 @@ enum class SetQuantifier {
  * [minArity] and [maxArity] are to be used during AST validation.
  * [symbol] is used to look up an [NAryOp] instance from the token text and must be unique among
  * all instances of [NAryOp].
+ * [textName] is the user-friendly name of this operation. It's used to indicate
+ * operator in an AST with version [AstVersion.V2] or above.
  */
-enum class NAryOp(val arityRange: IntRange, val symbol: String) {
+enum class NAryOp(val arityRange: IntRange, val symbol: String, val textName: String = symbol) {
     /** Add, but when arity is 1 then this just returns the value of its argument. */
-    ADD(1..Int.MAX_VALUE, "+"),
+    ADD(1..Int.MAX_VALUE, "+", "plus"),
 
     /** Subtract, but when when arity is 1, then this is assumed to be 0 - <arg1>. */
-    SUB(1..Int.MAX_VALUE, "-"),
+    SUB(1..Int.MAX_VALUE, "-", "minus"),
 
     /** Multiply */
-    MUL(2..Int.MAX_VALUE, "*"),
+    MUL(2..Int.MAX_VALUE, "*", "times"),
 
     /** Divide */
-    DIV(2..Int.MAX_VALUE, "/"),
+    DIV(2..Int.MAX_VALUE, "/", "divide"),
 
     /** Modulus */
-    MOD(2..Int.MAX_VALUE, "%"),
+    MOD(2..Int.MAX_VALUE, "%", "modulo"),
 
     /** Equivalent */
-    EQ(2..Int.MAX_VALUE, "="),
+    EQ(2..Int.MAX_VALUE, "=", "eq"),
 
     /** Less-than */
-    LT(2..Int.MAX_VALUE, "<"),
+    LT(2..Int.MAX_VALUE, "<", "lt"),
 
     /** Less-than-or-equal.*/
-    LTE(2..Int.MAX_VALUE, "<="),
+    LTE(2..Int.MAX_VALUE, "<=", "lte"),
 
     /** Greater-than. */
-    GT(2..Int.MAX_VALUE, ">"),
+    GT(2..Int.MAX_VALUE, ">", "gt"),
 
     /** Greater-than-or-equal. */
-    GTE(2..Int.MAX_VALUE, ">="),
+    GTE(2..Int.MAX_VALUE, ">=", "gte"),
 
     /** Not Equals. */
-    NE(2..Int.MAX_VALUE, "<>"),
+    NE(2..Int.MAX_VALUE, "<>", "ne"),
 
     /** Like. */
     LIKE(2..3, "like"),
@@ -725,7 +772,7 @@ enum class NAryOp(val arityRange: IntRange, val symbol: String) {
     BETWEEN(3..3, "between"),
 
     /** IN expression, i.e. `<expr1> IN <containerExpr> ` */
-    IN(2..Int.MAX_VALUE, "in"),
+    IN(2..Int.MAX_VALUE, "in", "in_collection"),
 
     /** Logical not */
     NOT(1..1, "not"),
@@ -737,7 +784,7 @@ enum class NAryOp(val arityRange: IntRange, val symbol: String) {
     OR(2..Int.MAX_VALUE, "or"),
 
     /** String concatenation. */
-    STRING_CONCAT(2..Int.MAX_VALUE, "||"),
+    STRING_CONCAT(2..Int.MAX_VALUE, "||", "concat"),
 
     /** A function call. */
     CALL(0..Int.MAX_VALUE, "call"),
@@ -753,8 +800,7 @@ enum class NAryOp(val arityRange: IntRange, val symbol: String) {
     EXCEPT(2..Int.MAX_VALUE, "except"),
     EXCEPT_ALL(2..Int.MAX_VALUE, "except_all"),
     UNION(2..Int.MAX_VALUE, "union"),
-    UNION_ALL(2..Int.MAX_VALUE, "union_all"),
-    CONCAT(2..Int.MAX_VALUE, "concat");
+    UNION_ALL(2..Int.MAX_VALUE, "union_all");
 
     companion object {
         /** Map of [NAryOp] keyed by the operation's text. */
@@ -785,7 +831,10 @@ enum class JoinOp {
     /** A RIGHT OUTER JOIN. */
     RIGHT,
 
-    /** A FULL OUTER JOIN. */
+    /**
+     * A FULL OUTER JOIN.
+     * TODO/NOTE:  this really should be named "full" instead of "outer".
+     */
     OUTER
 }
 
@@ -844,5 +893,3 @@ enum class SqlDataType(val typeName: String, val arityRange: IntRange) {
         fun forTypeName(typeName: String): SqlDataType? = DATA_TYPE_NAME_TO_TYPE_LOOKUP[typeName]
     }
 }
-
-

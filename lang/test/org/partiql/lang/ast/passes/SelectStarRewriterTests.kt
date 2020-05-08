@@ -5,7 +5,6 @@ import org.junit.Test
 
 class SelectStarRewriterTests : RewriterTestBase() {
 
-
     // SelectStar rewriter depends on UniqueNameMetas injected by GroupByItemAliasRewriter.
     private val rewriters = PipelinedRewriter(GroupByItemAliasRewriter(), SelectStarRewriter())
 

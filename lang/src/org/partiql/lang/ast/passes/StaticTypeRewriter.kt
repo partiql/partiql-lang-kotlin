@@ -4,7 +4,7 @@
 
 package org.partiql.lang.ast.passes
 
-import com.amazon.ion.IonSystem
+import com.amazon.ion.*
 import org.partiql.lang.ast.*
 import org.partiql.lang.errors.*
 import org.partiql.lang.eval.*
@@ -161,6 +161,18 @@ class StaticTypeRewriter(private val ion: IonSystem,
             propertyValueMapOf(
                 Property.BINDING_NAME to name
             ).addSourceLocation(metas)
+        )
+
+        private fun errUnimplementedFeature(name: String, metas: MetaContainer? = null): Nothing = throw SemanticException(
+            "Feature not implemented yet",
+            ErrorCode.UNIMPLEMENTED_FEATURE,
+            propertyValueMapOf(
+                Property.FEATURE_NAME to name
+            ).also {
+                if (metas != null) {
+                    it.addSourceLocation(metas)
+                }
+            }
         )
 
         private fun addLocal(name: String, type: StaticType, metas: MetaContainer) {
@@ -364,6 +376,9 @@ class StaticTypeRewriter(private val ion: IonSystem,
 
         // TODO support PIVOT
         // TODO support GROUP BY
+        override fun rewriteGroupBy(groupBy: GroupBy): Nothing {
+            errUnimplementedFeature("GROUP BY")
+        }
 
         override fun rewriteSelect(selectExpr: Select): ExprNode {
             // a SELECT introduces a new scope, we evaluate the each from source
@@ -379,6 +394,31 @@ class StaticTypeRewriter(private val ion: IonSystem,
             return Rewriter(currentEnv, currentScopeDepth + 1)
         }
 
+
+        /**
+         * This function differs from the the overridden function only in that it does not attempt to resolve
+         * [CreateIndex.keys], which would be a problem because they contain [VariableReference]s yet the keys are
+         * scoped to the table and do not follow traditional lexical scoping rules.  This indicates that
+         * [CreateIndex.keys] is incorrectly modeled as a [List<ExprNode>].
+         */
+        override fun rewriteCreateIndex(node: CreateIndex): CreateIndex  =
+            CreateIndex(
+                node.tableName,
+                node.keys,
+                rewriteMetas(node))
+
+        /**
+         * This function differs from the the overridden function only in that it does not attempt to resolve
+         * [DropIndex.identifier], which would be a problem because index names are scoped to the table and do not
+         * follow traditional lexical scoping rules.  This is not something the [StaticTypeRewriter] is currently
+         * plumbed to deal with and also indicates that [DropIndex.identifier] is incorrectly modeled as a
+         * [VariableReference].
+         */
+        override fun rewriteDropIndex(node: DropIndex): DropIndex =
+            DropIndex(
+                node.tableName,
+                node.identifier,
+                rewriteMetas(node))
     }
 
     override fun rewriteExprNode(node: ExprNode): ExprNode =

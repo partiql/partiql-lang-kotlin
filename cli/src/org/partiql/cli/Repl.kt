@@ -18,6 +18,7 @@ import com.amazon.ion.system.*
 import org.partiql.cli.ReplState.*
 import org.partiql.lang.*
 import org.partiql.lang.ast.*
+import org.partiql.lang.ast.passes.MetaStrippingRewriter
 import org.partiql.lang.eval.*
 import org.partiql.lang.syntax.*
 import org.partiql.lang.util.*
@@ -254,7 +255,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
 
     private fun parsePartiQL(): ReplState = executeTemplate(astPrettyPrinter) { source ->
         if (source != "") {
-            val serializedAst = AstSerializer.serialize(parser.parseExprNode(source), AstVersion.V1, valueFactory.ion)
+            val serializedAst = AstSerializer.serialize(parser.parseExprNode(source), AstVersion.V2, valueFactory.ion)
             valueFactory.newFromIonValue(serializedAst)
         }
         else {
@@ -264,8 +265,9 @@ internal class Repl(private val valueFactory: ExprValueFactory,
 
     private fun parsePartiQLWithFilters(): ReplState = executeTemplate(astPrettyPrinter) { source ->
         if (source != "") {
-            val serializedAst = AstSerializer.serialize(parser.parseExprNode(source), AstVersion.V1, valueFactory.ion)
-            valueFactory.newFromIonValue(serializedAst.filterTermNodes())
+            val strippedMetaExprNode = MetaStrippingRewriter.stripMetas(parser.parseExprNode(source))
+            val serializedAst = AstSerializer.serialize(strippedMetaExprNode, AstVersion.V2, valueFactory.ion)
+            valueFactory.newFromIonValue(serializedAst)
         }
         else {
             null
