@@ -21,7 +21,6 @@ import org.partiql.lang.ast.passes.*
 import org.partiql.lang.errors.*
 import org.partiql.lang.eval.binding.*
 import org.partiql.lang.syntax.SqlParser
-import org.partiql.lang.syntax.*
 import org.partiql.lang.util.*
 import java.math.*
 import java.util.*
@@ -1088,7 +1087,13 @@ internal class EvaluatingCompiler(
                                                             val name = syntheticColumnName(columns.size).exprValue()
                                                             columns.add(value.namedValue(name))
                                                         } else {
-                                                            for (childValue in value.filter { it.type != ExprValueType.MISSING }) {
+                                                            val valuesToProject = when(compileOptions.projectionIteration) {
+                                                                ProjectionIterationBehavior.FILTER_MISSING -> {
+                                                                    value.filter { it.type != ExprValueType.MISSING }
+                                                                }
+                                                                ProjectionIterationBehavior.UNFILTERED -> value
+                                                            }
+                                                            for (childValue in valuesToProject) {
                                                                 val namedFacet = childValue.asFacet(Named::class.java)
                                                                 val name = namedFacet?.name
                                                                            ?: syntheticColumnName(columns.size).exprValue()
