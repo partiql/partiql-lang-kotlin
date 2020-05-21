@@ -41,6 +41,8 @@ private enum class ReplState {
     /** Reading a PartiQL query. Transitions to execute when one of the execution tokens is found. */
     READ_PARTIQL,
 
+    LAST_PARTIQL_LINE,
+
     /** Ready to execute a PartiQL query. */
     EXECUTE_PARTIQL,
 
@@ -281,12 +283,14 @@ internal class Repl(private val valueFactory: ExprValueFactory,
                     printWelcomeMessage()
                     READY
                 }
+
                 READY                     -> {
                     line = readLine()
                     when {
                         line == null                               -> FINAL
                         arrayOf("!!", "!?", "").any { it == line } -> EXECUTE_PARTIQL
                         line!!.startsWith("!")                     -> READ_REPL_COMMAND
+                        line!!.endsWith(";")                       -> LAST_PARTIQL_LINE
                         else                                       -> READ_PARTIQL
                     }
                 }
@@ -294,13 +298,19 @@ internal class Repl(private val valueFactory: ExprValueFactory,
                 READ_PARTIQL              -> {
                     buffer.appendln(line)
                     line = readLine()
-                    when (line) {
-                        null -> FINAL
-                        ""   -> EXECUTE_PARTIQL
-                        "!!" -> PARSE_PARTIQL_WITH_FILTER
-                        "!?" -> PARSE_PARTIQL
-                        else -> READ_PARTIQL
+                    when {
+                        line == null         -> FINAL
+                        line == ""           -> EXECUTE_PARTIQL
+                        line!!.endsWith(";") -> LAST_PARTIQL_LINE
+                        line == "!!"         -> PARSE_PARTIQL_WITH_FILTER
+                        line == "!?"         -> PARSE_PARTIQL
+                        else                 -> READ_PARTIQL
                     }
+                }
+
+                LAST_PARTIQL_LINE         -> {
+                    buffer.appendln(line)
+                    EXECUTE_PARTIQL
                 }
 
                 READ_REPL_COMMAND         -> {
