@@ -41,6 +41,7 @@ private enum class ReplState {
     /** Reading a PartiQL query. Transitions to execute when one of the execution tokens is found. */
     READ_PARTIQL,
 
+    /** Read a trailing semi-colon. Add the current line to the buffer and transition to execute. */
     LAST_PARTIQL_LINE,
 
     /** Ready to execute a PartiQL query. */
