@@ -164,6 +164,19 @@ class ReplTest {
     }
 
     @Test
+    fun querySemiColon() {
+        ReplTester().assertReplPrompt("""
+            #Welcome to the PartiQL REPL!
+            #PartiQL> 1+1;
+            #===' 
+            #2
+            #--- 
+            #OK! (0 ms)
+            #PartiQL> 
+        """.trimMargin("#"))
+    }
+
+    @Test
     fun multipleQuery() {
         ReplTester().assertReplPrompt("""
             #Welcome to the PartiQL REPL!
