@@ -136,6 +136,14 @@ abstract class EvaluatorTestBase : TestBase() {
         assertRewrite(source, originalExprNode)
     }
 
+    protected fun assertExprEquals(expected: ExprValue, actual: ExprValue) {
+        if(!expected.exprEquals(actual)) {
+            println("Expected ionValue: ${ConfigurableExprValueFormatter.pretty.format(expected)} ")
+            println("Actual ionValue  : ${ConfigurableExprValueFormatter.pretty.format(actual)} ")
+            fail("Expected and actual ExprValue instances are not equivalent")
+        }
+    }
+
     protected fun assertExprEquals(expected: ExprValue, actual: ExprValue, message: String) {
         if(!expected.exprEquals(actual)) {
             println(message)
@@ -145,6 +153,31 @@ abstract class EvaluatorTestBase : TestBase() {
             fail("Expected and actual ExprValue instances are not equivalent")
         }
     }
+    /**
+     * Evaluates [expected] and [source] and asserts that the resulting [ExprValue]s
+     * are equivalent using PartiQL's equivalence rules. This differs from `assertEval`
+     * in that the [ExprValue]s are not converted to Ion before comparison.
+     * This function should be used for any result involving `BAG` and `MISSING`
+     * since Ion has no representation for these values.
+     *
+     * @param source query source to be tested
+     * @param expected expected result
+     * @param session [EvaluationSession] used for evaluation
+     * @param block function literal with receiver used to plug in custom assertions
+     */
+    protected fun assertEvalExprValue(source: String,
+                             expected: String,
+                             session: EvaluationSession = EvaluationSession.standard(),
+                             compileOptions: CompileOptions = CompileOptions.standard()) {
+        val parser = SqlParser(ion)
+        val originalExprNode = parser.parseExprNode(source)
+        val expectedExprNode = parser.parseExprNode(expected)
+
+        val originalExprValue = eval(originalExprNode, compileOptions, session)
+        val expectedExprValue = eval(expectedExprNode, compileOptions, session)
+        assertExprEquals(expectedExprValue, originalExprValue)
+    }
+
 
 
     /**
