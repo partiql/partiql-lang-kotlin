@@ -14,8 +14,10 @@
 
 package org.partiql.lang.eval
 
+import com.amazon.ion.system.IonSystemBuilder
 import org.junit.Ignore
 import org.junit.Test
+import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.syntax.ParserException
 
 class EvaluatingCompilerTests : EvaluatorTestBase() {
@@ -1490,6 +1492,26 @@ class EvaluatingCompilerTests : EvaluatorTestBase() {
         val actual = eval(query, compileOptions = options).iterator().next()
         assertEquals("100, MISSING, 200", actual.iterator().asSequence().joinToString(separator = ", "))
     }
+
+    @Test
+    fun projectionIterationBehaviorUnfiltered_select_list() =
+        assertEvalExprValue(
+            source = "select a from <<{'a': MISSING}>>",
+            expected = "<<{'a': MISSING}>>",
+            compileOptions = CompileOptions.build {
+                projectionIteration(ProjectionIterationBehavior.UNFILTERED)
+            }
+        )
+
+    @Test
+    fun projectionIterationBehaviorUnfiltered_select_star() =
+        assertEvalExprValue(
+            source = "select * from <<{'a': MISSING}>>",
+            expected = "<<{'a': MISSING}>>",
+            compileOptions = CompileOptions.build {
+                projectionIteration(ProjectionIterationBehavior.UNFILTERED)
+            }
+        )
 
     @Test
     fun undefinedQualifiedVariableWithUndefinedVariableBehaviorError() {
