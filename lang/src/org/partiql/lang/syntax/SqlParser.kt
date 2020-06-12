@@ -107,6 +107,10 @@ class SqlParser(private val ion: IonSystem) : Parser {
         DELETE,
         ASSIGNMENT,
         FROM,
+        CREATE_TABLE,
+        DROP_TABLE,
+        DROP_INDEX,
+        CREATE_INDEX,
         PARAMETER;
 
         val identifier = name.toLowerCase()
@@ -592,6 +596,24 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     limit = limitExpr,
                     metas = metas)
             }
+            CREATE_TABLE -> {
+                val name = children.first().token!!.text!!
+                CreateTable(name, metas = metas)
+            }
+            DROP_TABLE -> {
+                val name = children.first().token!!.text!!
+                DropTable(name, metas = metas)
+            }
+            CREATE_INDEX -> {
+                val tableName = children[0].token!!.text!!
+                val keys = children[1].children.map { it.toExprNode() }
+                CreateIndex(tableName, keys, metas = metas)
+            }
+            DROP_INDEX -> {
+                val identifier = children[0].toExprNode() as VariableReference
+                val tableName = children[1].token!!.text!!
+                DropIndex(tableName, identifier, metas = metas)
+            }
             else -> unsupported("Unsupported syntax for $type", PARSE_UNSUPPORTED_SYNTAX)
         }
     }
@@ -951,6 +973,8 @@ class SqlParser(private val ion: IonSystem) : Parser {
             }
             "cast" -> tail.parseCast()
             "select" -> tail.parseSelect()
+            "create" -> tail.parseCreate()
+            "drop" -> tail.parseDrop()
             "pivot" -> tail.parsePivot()
             "from" -> tail.parseFrom()
             // table value constructor--which aliases to bag constructor in PartiQL with very
@@ -1285,6 +1309,121 @@ class SqlParser(private val ion: IonSystem) : Parser {
         }
     }
 
+    private fun List<Token>.parseCreate(): ParseNode = when (head?.keywordText) {
+        "table" -> tail.parseCreateTable()
+        "index" -> tail.parseCreateIndex()
+        else -> head.err("Unexpected token following CREATE", ErrorCode.PARSE_UNEXPECTED_TOKEN)
+    }.apply {
+        expectEof("CREATE")
+    }
+
+    private fun List<Token>.parseDrop(): ParseNode = when (head?.keywordText) {
+        "table" -> tail.parseDropTable()
+        "index" -> tail.parseDropIndex()
+        else -> head.err("Unexpected token following DROP", ErrorCode.PARSE_UNEXPECTED_TOKEN)
+    }.apply {
+        expectEof("DROP")
+    }
+
+    /**
+     * This is currently parsing only the most naïve `CREATE TABLE <name>` statement.
+     *
+     * TODO: provide for definition of table schema.
+     */
+    private fun List<Token>.parseCreateTable(): ParseNode {
+        val identifier = when (head?.type) {
+            QUOTED_IDENTIFIER, IDENTIFIER -> {
+                atomFromHead()
+            }
+            else -> {
+                err("Expected identifier!", ErrorCode.PARSE_UNEXPECTED_TOKEN)
+            }
+        }
+        return ParseNode(CREATE_TABLE, null, listOf(identifier), identifier.remaining)
+    }
+
+    private fun List<Token>.parseDropIndex(): ParseNode {
+        var rem = this
+
+        val identifier = when (rem.head?.type) {
+            IDENTIFIER, QUOTED_IDENTIFIER -> {
+                atomFromHead()
+            }
+            else -> {
+                rem.err("Expected identifier!", PARSE_UNEXPECTED_TOKEN)
+            }
+        }
+        rem = rem.tail
+
+        if (rem.head?.keywordText != "on") {
+            rem.err("Expected ON", PARSE_UNEXPECTED_TOKEN)
+        }
+        rem = rem.tail
+
+        val target = when (rem.head?.type) {
+            QUOTED_IDENTIFIER, IDENTIFIER -> {
+                rem.atomFromHead()
+            }
+            else -> {
+                rem.err("Table target must be an identifier", PARSE_UNEXPECTED_TOKEN)
+            }
+        }
+        rem = rem.tail
+
+        return ParseNode(DROP_INDEX, null, listOf(identifier, target), rem)
+    }
+
+    /**
+     * This is currently parsing only the most naïve `DROP TABLE <name>` statement.
+     */
+    private fun List<Token>.parseDropTable(): ParseNode {
+        val identifier = when (head?.type) {
+            QUOTED_IDENTIFIER, IDENTIFIER -> {
+                atomFromHead()
+            }
+            else -> {
+                err("Expected identifier!", ErrorCode.PARSE_UNEXPECTED_TOKEN)
+            }
+        }
+
+        return ParseNode(DROP_TABLE, null, listOf(identifier), identifier.remaining)
+    }
+
+    /**
+     * Parses a basic `CREATE INDEX ON <name> <path>, ...`
+     */
+    private fun List<Token>.parseCreateIndex(): ParseNode {
+        var rem = this
+
+        // TODO support UNIQUE modifier
+        // TODO support naming the index
+
+        if (rem.head?.keywordText != "on") {
+            err("Expected ON", ErrorCode.PARSE_UNEXPECTED_TOKEN)
+        }
+        rem = rem.tail
+
+        val target = when (rem.head?.type) {
+            QUOTED_IDENTIFIER, IDENTIFIER -> {
+                rem.atomFromHead()
+            }
+            else -> {
+                rem.err("Index target must be an identifier", ErrorCode.PARSE_UNEXPECTED_TOKEN)
+            }
+        }
+        rem = target.remaining
+
+        if (rem.head?.type != LEFT_PAREN) {
+            rem.err("Expected parenthesis for keys", ErrorCode.PARSE_UNEXPECTED_TOKEN)
+        }
+        // TODO support full expressions here... only simple paths for now
+        val keys = rem.tail.parseArgList(NONE, SIMPLE_PATH_ARG_LIST).deriveExpected(RIGHT_PAREN)
+        rem = keys.remaining
+
+        // TODO support other syntax options
+        return ParseNode(CREATE_INDEX, null, listOf(target, keys), rem)
+    }
+
     /**
      * Inspects a path expression to determine if should be treated as a regular [ParseType.PATH] expression or
      * converted to a [ParseType.PROJECT_ALL].
@@ -1471,19 +1610,19 @@ class SqlParser(private val ion: IonSystem) : Parser {
         val callName = name.text!!
         val memoizedTail by lazy { tail }
         val keywordText = head?.keywordText
-        
+
         return when (callName) {
             "count" -> {
                 when {
                     head?.type == RIGHT_PAREN -> {
                         err("Aggregate functions are always unary", PARSE_NON_UNARY_AGREGATE_FUNCTION_CALL)
                     }
-                    
+
                     // COUNT(*)
                     head?.type == STAR -> {
                         ParseNode(CALL_AGG_WILDCARD, name, emptyList(), tail).deriveExpected(RIGHT_PAREN)
                     }
-                    
+
                     head?.type == KEYWORD && keywordText == "distinct" -> {
                         when(memoizedTail.head?.type) {
                             // COUNT(DISTINCT *)
@@ -1499,11 +1638,11 @@ class SqlParser(private val ion: IonSystem) : Parser {
                             }
                         }
                     }
-                    
+
                     head?.type == KEYWORD && keywordText == "all" -> {
                         when(memoizedTail.head?.type) {
                             STAR -> err("COUNT(ALL *) is not supported", PARSE_UNSUPPORTED_CALL_WITH_STAR)
-                            
+
                             // COUNT(ALL expression)
                             else -> {
                                 memoizedTail.parseArgList(aliasSupportType = NONE, mode = NORMAL_ARG_LIST)
@@ -1758,7 +1897,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
                             val actualChild = rem.tail.parseExpression()
                             ParseNode(
                                 UNPIVOT,
-                                null,
+                                rem.head,
                                 listOf(actualChild),
                                 actualChild.remaining
                             )

@@ -73,7 +73,7 @@ abstract class TestBase : Assert() {
     }
 
 
-    protected fun assertRewrite(originalSql: String, exprNode: ExprNode) {
+    protected fun assertBaseRewrite(originalSql: String, exprNode: ExprNode) {
         val clonedAst = defaultRewriter.rewriteExprNode(exprNode)
         assertEquals(
             "AST returned from default AstRewriterBase should match the original AST. SQL was: $originalSql",

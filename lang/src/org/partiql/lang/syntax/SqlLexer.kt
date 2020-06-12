@@ -361,6 +361,15 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
                     }
                 }
 
+                delta("{", INCOMPLETE) {
+                    delta("{", INCOMPLETE) {
+                        selfRepeatingDelegate(INCOMPLETE)
+                        delta("}", INCOMPLETE) {
+                            delta("}", INCOMPLETE, delegate = quoteState)
+                        }
+                    }
+                }
+
                 delta(BACKTICK_CHARS, TERMINAL, LITERAL, ION_LITERAL, replacement = REPLACE_NOTHING, delegate = initialState)
             }
 

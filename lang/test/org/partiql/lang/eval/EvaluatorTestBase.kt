@@ -20,6 +20,7 @@ import org.partiql.lang.errors.*
 import org.partiql.lang.syntax.*
 import org.partiql.lang.util.*
 import org.junit.*
+import org.partiql.lang.ast.passes.MetaStrippingRewriter
 import kotlin.reflect.*
 import kotlin.test.*
 
@@ -46,7 +47,7 @@ abstract class EvaluatorTestBase : TestBase() {
      * [EvaluationSession] and [CompileOptions].
      *
      * This function also passes the [ExprNode] AST returned from the parser through (de)serialization steps through
-     * s-exp AST versions V0 and V1 and ensures that the deserialized forms of that are equivalent to each other.
+     * s-exp AST versions V0 and V2 and ensures that the deserialized forms of that are equivalent to each other.
      *
      * @param source query source to be tested
      * @param expected expected result
@@ -60,39 +61,33 @@ abstract class EvaluatorTestBase : TestBase() {
                              block: AssertExprValue.() -> Unit = { }) {
 
         val expectedIon = ion.singleValue(expected)
-
         val parser = SqlParser(ion)
         val originalExprNode = parser.parseExprNode(source)
+        val deserializer = AstDeserializerBuilder(ion).build()
+
+        fun evalAndAssert(exprNodeToEvaluate: ExprNode, message: String) {
+            val result = eval(exprNodeToEvaluate, compileOptions, session)
+            AssertExprValue(result, message = "Evaluated '$source' with evaluator ($message)")
+                .apply { assertIonValue(expectedIon) }.run(block)
+        }
+
+        fun serializeRoundTripEvalAndAssert(astVersion: AstVersion) {
+            val sexpAST = AstSerializer.serialize(originalExprNode, astVersion, ion)
+            val deserializedExprNode = deserializer.deserialize(sexpAST, astVersion)
+            assertEquals(originalExprNode, deserializedExprNode, "ExprNode deserialized from s-exp $astVersion AST must match the ExprNode returned by the parser")
+
+            // This step should only fail if there is a bug in the equality check that causes two
+            // dissimilar ASTs to be considered equal.
+            evalAndAssert(deserializedExprNode, "AST was round-tripped through $astVersion (de)serialization")
+        }
 
         // Evaluate the ExprNodes originally obtained from the parser
-        val exprValue = eval(originalExprNode, compileOptions, session)
-        AssertExprValue(exprValue, message = "Evaluated '$source' with evaluator (AST originated from parser)")
-            .apply { assertIonValue(expectedIon) }.run(block)
+        evalAndAssert(originalExprNode, "AST originated from parser")
 
-        // Also send the serializer through V0 and V1 sexp ASTs and evaluate them again
-        // to be sure they still work after being deserialized
-        val deserializer = AstDeserializerBuilder(ion).build()
-        @Suppress("DEPRECATION")
-        val sexpV0 = AstSerializer.serialize(originalExprNode, AstVersion.V0, ion)
-        val exprNodeV0 = deserializer.deserialize(sexpV0)
-        assertEquals(originalExprNode, exprNodeV0, "ExprNode deserialized from s-exp V0 AST must match the ExprNode returned by the parser")
-        val exprValueV0 = eval(exprNodeV0, compileOptions, session)
-        AssertExprValue(exprValueV0,
-                        message = "Evaluated '$source' with evaluator (AST originated from deserialized V0 s-exp AST)")
-            .apply { assertIonValue(expectedIon) }.run(block)
+        // round-trip and evaluate each of the [AstVersion]s.
+        AstVersion.values().forEach { serializeRoundTripEvalAndAssert(it) }
 
-        val sexpV1 = AstSerializer.serialize(originalExprNode, AstVersion.V1, ion)
-        val exprNodeV1 = deserializer.deserialize(sexpV1)
-        assertEquals(originalExprNode, exprNodeV0, "ExprNode deserialized from s-exp V1 AST must match the ExprNode returned by the parser")
-        val exprValueV1 = eval(exprNodeV1, compileOptions, session)
-        assertEquals(originalExprNode, exprNodeV0)
-        AssertExprValue(exprValueV1,
-                        message = "Evaluated '$source' with evaluator (AST originated from deserialized V1 s-exp AST)")
-            .apply { assertIonValue(expectedIon) }.run(block)
-
-        assertEquals(exprNodeV0, exprNodeV1, "ExprNodes originating from deserialized V0 and V1 ASTs must match")
-
-        assertRewrite(source, originalExprNode)
+        assertBaseRewrite(source, originalExprNode)
     }
 
     /**
@@ -115,37 +110,72 @@ abstract class EvaluatorTestBase : TestBase() {
 
         // Evaluate the ExprNodes originally obtained from the parser
 
-        val originalExprValue = eval(originalExprNode, compileOptions, session)
-        assertEquals(ExprValueType.MISSING, originalExprValue.type, "AST originated from parser")
+        fun evalAndAssertIsMissing(exprNodeToEvaluate: ExprNode, message: String) {
+            val result = eval(exprNodeToEvaluate, compileOptions, session)
+            assertEquals(ExprValueType.MISSING, result.type, message)
+        }
 
-        // Also send the serializer through V0 and V1 sexp ASTs and evaluate them again
+        // Also send the serializer through V0 and V2 sexp ASTs and evaluate them again
         // to be sure they still work after being deserialized
-        val sexpV0 = AstSerializer.serialize(originalExprNode, AstVersion.V1, ion)
-        val exprNodeV0 = deserializer.deserialize(sexpV0)
-        assertEquals(exprNodeV0, exprNodeV0, "ExprNode deserialized from s-exp V0 AST must match the ExprNode returned by the parser")
-        val exprValueV0 = eval(originalExprNode, compileOptions, session)
-        assertEquals(ExprValueType.MISSING, exprValueV0.type, "Evaluating AST created from deseriailzed V0 s-exp AST must result in missing")
+        fun serializeRoundTripEvalAndAssertIsMissing(astVersion: AstVersion) {
+            val sexp = AstSerializer.serialize(originalExprNode, astVersion, ion)
+            val sexpAST = deserializer.deserialize(sexp, astVersion)
+            assertEquals(originalExprNode, sexpAST, "ExprNode deserialized from s-exp $astVersion AST must match the ExprNode returned by the parser")
 
-        val sexpV1 = AstSerializer.serialize(originalExprNode, AstVersion.V0, ion)
-        val exprNodeV1 = deserializer.deserialize(sexpV1)
-        assertEquals(exprNodeV1, exprNodeV1)
-        val exprValueV1 = eval(originalExprNode, compileOptions, session)
-        assertEquals(ExprValueType.MISSING, exprValueV1.type, "Evaluating AST created from deseriailzed V1 s-exp AST must result in missing")
-        assertEquals(exprNodeV0, exprNodeV1, "ExprNodes originating from deserialized V0 and V1 ASTs must match")
+            // This step should only fail if there is a bug in the equality check that causes two
+            // dissimilar ASTs to be considered equal.
+            val result = eval(sexpAST, compileOptions, session)
+            assertEquals(ExprValueType.MISSING, result.type, "Evaluating AST created from deseriailzed $astVersion s-exp AST must result in missing")
+        }
 
-        assertRewrite(source, originalExprNode)
+        evalAndAssertIsMissing(originalExprNode, "AST originated from parser")
+        AstVersion.values().forEach { serializeRoundTripEvalAndAssertIsMissing(it) }
+
+        assertBaseRewrite(source, originalExprNode)
     }
 
-    protected fun assertExprEquals(expected: ExprValue, actual: ExprValue, message: String) {
-        if(!expected.exprEquals(actual)) {
-            println(message)
-            println("Expected ionValue: ${expected.ionValue}")
-            println("Actual ionValue  : ${actual.ionValue}")
+    protected fun assertExprNodeToPIGRoundTrip(exprNode: ExprNode) {
+        val roundTrippedExprNode = MetaStrippingRewriter.stripMetas(exprNode).toAstStatement().toExprNode(ion)
 
+        assertEquals(
+            MetaStrippingRewriter.stripMetas(exprNode),
+            roundTrippedExprNode,
+            "ExprNode resulting from round trip to partiql_ast and back should be equivalent.")
+    }
+
+
+    protected fun assertExprEquals(expected: ExprValue, actual: ExprValue) {
+        if(!expected.exprEquals(actual)) {
+            println("Expected ionValue: ${ConfigurableExprValueFormatter.pretty.format(expected)} ")
+            println("Actual ionValue  : ${ConfigurableExprValueFormatter.pretty.format(actual)} ")
             fail("Expected and actual ExprValue instances are not equivalent")
         }
     }
 
+    /**
+     * Evaluates [expected] and [source] and asserts that the resulting [ExprValue]s
+     * are equivalent using PartiQL's equivalence rules. This differs from `assertEval`
+     * in that the [ExprValue]s are not converted to Ion before comparison.
+     * This function should be used for any result involving `BAG` and `MISSING`
+     * since Ion has no representation for these values.
+     *
+     * @param source query source to be tested
+     * @param expected expected result
+     * @param session [EvaluationSession] used for evaluation
+     * @param block function literal with receiver used to plug in custom assertions
+     */
+    protected fun assertEvalExprValue(source: String,
+                             expected: String,
+                             session: EvaluationSession = EvaluationSession.standard(),
+                             compileOptions: CompileOptions = CompileOptions.standard()) {
+        val parser = SqlParser(ion)
+        val originalExprNode = parser.parseExprNode(source)
+        val expectedExprNode = parser.parseExprNode(expected)
+
+        val originalExprValue = eval(originalExprNode, compileOptions, session)
+        val expectedExprValue = eval(expectedExprNode, compileOptions, session)
+        assertExprEquals(expectedExprValue, originalExprValue)
+    }
 
     /**
      * Evaluates a source query given a [EvaluationSession]
@@ -172,6 +202,10 @@ abstract class EvaluatorTestBase : TestBase() {
     protected fun eval(exprNode: ExprNode,
                        compileOptions: CompileOptions = CompileOptions.standard(),
                        session: EvaluationSession = EvaluationSession.standard()): ExprValue {
+
+        // "Sneak" in this little assertion to test that every ExprNode AST that passes through
+        // this function can be round-tripped to `partiql_ast` and back.
+        assertExprNodeToPIGRoundTrip(exprNode)
 
         val pipeline = CompilerPipeline.build(ion) { compileOptions(compileOptions) }
         return pipeline.compile(exprNode).eval(session)

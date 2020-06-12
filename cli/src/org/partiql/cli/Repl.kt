@@ -18,6 +18,7 @@ import com.amazon.ion.system.*
 import org.partiql.cli.ReplState.*
 import org.partiql.lang.*
 import org.partiql.lang.ast.*
+import org.partiql.lang.ast.passes.MetaStrippingRewriter
 import org.partiql.lang.eval.*
 import org.partiql.lang.syntax.*
 import org.partiql.lang.util.*
@@ -39,6 +40,9 @@ private enum class ReplState {
 
     /** Reading a PartiQL query. Transitions to execute when one of the execution tokens is found. */
     READ_PARTIQL,
+
+    /** Read a trailing semi-colon. Add the current line to the buffer and transition to execute. */
+    LAST_PARTIQL_LINE,
 
     /** Ready to execute a PartiQL query. */
     EXECUTE_PARTIQL,
@@ -254,7 +258,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
 
     private fun parsePartiQL(): ReplState = executeTemplate(astPrettyPrinter) { source ->
         if (source != "") {
-            val serializedAst = AstSerializer.serialize(parser.parseExprNode(source), AstVersion.V1, valueFactory.ion)
+            val serializedAst = AstSerializer.serialize(parser.parseExprNode(source), AstVersion.V2, valueFactory.ion)
             valueFactory.newFromIonValue(serializedAst)
         }
         else {
@@ -264,8 +268,9 @@ internal class Repl(private val valueFactory: ExprValueFactory,
 
     private fun parsePartiQLWithFilters(): ReplState = executeTemplate(astPrettyPrinter) { source ->
         if (source != "") {
-            val serializedAst = AstSerializer.serialize(parser.parseExprNode(source), AstVersion.V1, valueFactory.ion)
-            valueFactory.newFromIonValue(serializedAst.filterTermNodes())
+            val strippedMetaExprNode = MetaStrippingRewriter.stripMetas(parser.parseExprNode(source))
+            val serializedAst = AstSerializer.serialize(strippedMetaExprNode, AstVersion.V2, valueFactory.ion)
+            valueFactory.newFromIonValue(serializedAst)
         }
         else {
             null
@@ -279,12 +284,14 @@ internal class Repl(private val valueFactory: ExprValueFactory,
                     printWelcomeMessage()
                     READY
                 }
+
                 READY                     -> {
                     line = readLine()
                     when {
                         line == null                               -> FINAL
                         arrayOf("!!", "!?", "").any { it == line } -> EXECUTE_PARTIQL
                         line!!.startsWith("!")                     -> READ_REPL_COMMAND
+                        line!!.endsWith(";")                       -> LAST_PARTIQL_LINE
                         else                                       -> READ_PARTIQL
                     }
                 }
@@ -292,13 +299,19 @@ internal class Repl(private val valueFactory: ExprValueFactory,
                 READ_PARTIQL              -> {
                     buffer.appendln(line)
                     line = readLine()
-                    when (line) {
-                        null -> FINAL
-                        ""   -> EXECUTE_PARTIQL
-                        "!!" -> PARSE_PARTIQL_WITH_FILTER
-                        "!?" -> PARSE_PARTIQL
-                        else -> READ_PARTIQL
+                    when {
+                        line == null         -> FINAL
+                        line == ""           -> EXECUTE_PARTIQL
+                        line!!.endsWith(";") -> LAST_PARTIQL_LINE
+                        line == "!!"         -> PARSE_PARTIQL_WITH_FILTER
+                        line == "!?"         -> PARSE_PARTIQL
+                        else                 -> READ_PARTIQL
                     }
+                }
+
+                LAST_PARTIQL_LINE         -> {
+                    buffer.appendln(line)
+                    EXECUTE_PARTIQL
                 }
 
                 READ_REPL_COMMAND         -> {

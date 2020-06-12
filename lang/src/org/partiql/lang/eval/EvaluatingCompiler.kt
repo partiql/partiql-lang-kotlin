@@ -21,7 +21,6 @@ import org.partiql.lang.ast.passes.*
 import org.partiql.lang.errors.*
 import org.partiql.lang.eval.binding.*
 import org.partiql.lang.syntax.SqlParser
-import org.partiql.lang.syntax.*
 import org.partiql.lang.util.*
 import java.math.*
 import java.util.*
@@ -109,7 +108,7 @@ internal class EvaluatingCompiler(
             // skip the accumulation function if the value is unknown or if the value is filtered out
             if (value.isNotUnknown() && valueFilter.invoke(value)) {
                 current = nextFunc(current, value)
-            } 
+            }
         }
 
         override fun compute() = current?.exprValue() ?: valueFactory.nullValue
@@ -119,7 +118,7 @@ internal class EvaluatingCompiler(
         val nextNum = next.numberValue()
         when (curr) {
             null -> nextNum
-            else -> when { 
+            else -> when {
                 cmpFunc(nextNum, curr) -> nextNum
                 else                   -> curr
             }
@@ -137,7 +136,7 @@ internal class EvaluatingCompiler(
             object : ExprAggregator {
                 var sum: Number? = null
                 var count = 0L
-                
+
                 override fun next(value: ExprValue) {
                     if(value.isNotUnknown() && filter.invoke(value)) {
                         sum = sum?.let { it + value.numberValue() } ?: value.numberValue()
@@ -147,18 +146,18 @@ internal class EvaluatingCompiler(
                 override fun compute() = sum?.let { (it / bigDecimalOf(count)).exprValue() } ?: valueFactory.nullValue
             }
         }
-        
+
         val allFilter: (ExprValue) -> Boolean = { _ -> true }
-        
+
         // each distinct ExprAggregator must get its own createUniqueExprValueFilter()
 
         mapOf(
-            Pair("count", SetQuantifier.ALL) to ExprAggregatorFactory.over { 
-                Accumulator(0L, countAccFunc, allFilter) 
+            Pair("count", SetQuantifier.ALL) to ExprAggregatorFactory.over {
+                Accumulator(0L, countAccFunc, allFilter)
             },
-            
-            Pair("count", SetQuantifier.DISTINCT) to ExprAggregatorFactory.over { 
-                Accumulator(0L, countAccFunc, createUniqueExprValueFilter()) 
+
+            Pair("count", SetQuantifier.DISTINCT) to ExprAggregatorFactory.over {
+                Accumulator(0L, countAccFunc, createUniqueExprValueFilter())
             },
 
             Pair("sum", SetQuantifier.ALL) to ExprAggregatorFactory.over {
@@ -232,11 +231,11 @@ internal class EvaluatingCompiler(
     }
 
     /**
-     * Evaluates a V0 or V1 s-exp based AST against a global set of bindings.
+     * Evaluates a V0 or V2 s-exp based AST against a global set of bindings.
      */
     @Deprecated("Please use CompilerPipeline.compile(ExprNode).eval(EvaluationSession) instead.")
     fun eval(ast: IonSexp, session: EvaluationSession): ExprValue {
-        val exprNode = AstDeserializerBuilder(valueFactory.ion).build().deserialize(ast)
+        val exprNode = AstDeserializerBuilder(valueFactory.ion).build().deserialize(ast, AstVersion.V0)
         return compile(exprNode).eval(session)
     }
 
@@ -268,6 +267,10 @@ internal class EvaluatingCompiler(
                     it[Property.FEATURE_NAME] = "DataManipulation.${expr.dmlOperation.name}"
                 }, internal = false
             )
+            is CreateTable,
+            is CreateIndex,
+            is DropIndex,
+            is DropTable -> compileDdl(expr)
         }
     }
 
@@ -308,8 +311,7 @@ internal class EvaluatingCompiler(
             NAryOp.EXCEPT,
             NAryOp.EXCEPT_ALL,
             NAryOp.UNION,
-            NAryOp.UNION_ALL,
-            NAryOp.CONCAT        -> {
+            NAryOp.UNION_ALL     -> {
                 err("NAryOp.$op is not yet supported",
                     ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
                     errorContextFrom(metas).also {
@@ -443,8 +445,8 @@ internal class EvaluatingCompiler(
             if (denominator.isZero()) {
                 err("% by zero", ErrorCode.EVALUATOR_MODULO_BY_ZERO, null, false)
             }
-            
-            (lValue.numberValue() % denominator).exprValue() 
+
+            (lValue.numberValue() % denominator).exprValue()
         }
     }
 
@@ -882,13 +884,13 @@ internal class EvaluatingCompiler(
                     groupByItems.isEmpty() && !hasAggregateCallSites ->
                         // Grouping is not needed -- simply project the results from the FROM clause directly.
                         thunkEnv(metas) { env ->
-                            
+
                             val projectedRows = sourceThunks(env).map { (joinedValues, projectEnv) ->
                                 selectProjectionThunk(projectEnv, joinedValues)
                             }
 
                             val quantifiedRows = when(setQuantifier) {
-                                // wrap the ExprValue to use ExprValue.equals as the equality  
+                                // wrap the ExprValue to use ExprValue.equals as the equality
                                 SetQuantifier.DISTINCT -> projectedRows.filter(createUniqueExprValueFilter())
                                 SetQuantifier.ALL -> projectedRows
                             }
@@ -1084,11 +1086,17 @@ internal class EvaluatingCompiler(
                                                         if (value.type == ExprValueType.MISSING) continue
 
                                                         val children = value.asSequence()
-                                                        if (!children.any()) {
+                                                        if (!children.any() || value.type.isSequence) {
                                                             val name = syntheticColumnName(columns.size).exprValue()
                                                             columns.add(value.namedValue(name))
                                                         } else {
-                                                            for (childValue in value.filter { it.type != ExprValueType.MISSING }) {
+                                                            val valuesToProject = when(compileOptions.projectionIteration) {
+                                                                ProjectionIterationBehavior.FILTER_MISSING -> {
+                                                                    value.filter { it.type != ExprValueType.MISSING }
+                                                                }
+                                                                ProjectionIterationBehavior.UNFILTERED -> value
+                                                            }
+                                                            for (childValue in valuesToProject) {
                                                                 val namedFacet = childValue.asFacet(Named::class.java)
                                                                 val name = namedFacet?.name
                                                                            ?: syntheticColumnName(columns.size).exprValue()
@@ -1193,9 +1201,9 @@ internal class EvaluatingCompiler(
         }
 
         val funcVarRef = funcExpr as VariableReference  // AstSanityValidator ensures this cast will succeed
-        
+
         val aggFactory = getAggregatorFactory(funcVarRef.id.toLowerCase(), setQuantifier, metas)
-        
+
         val argThunk = nestCompilationContext(ExpressionContext.AGG_ARG) {
             compileExprNode(argExpr)
         }
@@ -1230,10 +1238,10 @@ internal class EvaluatingCompiler(
 
      fun getAggregatorFactory(funcName: String, setQuantifier: SetQuantifier, metas: MetaContainer): ExprAggregatorFactory {
          val key = funcName.toLowerCase() to setQuantifier
-         
-        return  builtinAggregates[key] ?: err("No such function: $funcName", 
-                                              ErrorCode.EVALUATOR_NO_SUCH_FUNCTION, 
-                                              errorContextFrom(metas).also { it[Property.FUNCTION_NAME] = funcName }, 
+
+        return  builtinAggregates[key] ?: err("No such function: $funcName",
+                                              ErrorCode.EVALUATOR_NO_SUCH_FUNCTION,
+                                              errorContextFrom(metas).also { it[Property.FUNCTION_NAME] = funcName },
                                               internal = false)
     }
 
@@ -1326,7 +1334,7 @@ internal class EvaluatingCompiler(
             val fromEnv = rootEnv.flipToGlobalsFirst()
             // compute the join over the data sources
             var seq = compiledSources
-                .foldLeftProduct({ env: Environment -> env }) { bindEnv, source: CompiledFromSource ->
+                .foldLeftProduct({ env: Environment -> env }) { bindEnv: (Environment) -> Environment, source: CompiledFromSource ->
                     fun correlatedBind(value: ExprValue): Pair<(Environment) -> Environment, ExprValue> {
                         // add the correlated binding environment thunk
                         val alias = source.alias

@@ -73,7 +73,7 @@ class EvaluatingCompilerSelectStarTests : EvaluatorTestBase() {
         runTestCase(
             EvaluatorTestCase(
                 query = "select f.* from << { 'bar': 1 }, 10, << 11, 12 >> >> as f",
-                expectedSql = """<< { 'bar': 1 } ,{ '_1': 10 }, { '_1': 11, '_2': 12 } >>"""),
+                expectedSql = """<< { 'bar': 1 } ,{ '_1': 10 }, { '_1': <<11, 12>> } >>"""),
                 session = EvaluationSession.standard())
     }
 

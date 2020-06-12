@@ -45,6 +45,10 @@ open class AstRewriterBase : AstRewriter {
             is Select            -> rewriteSelect(node)
             is Parameter         -> rewriteParameter(node)
             is DataManipulation  -> rewriteDataManipulation(node)
+            is CreateTable       -> rewriteCreateTable(node)
+            is CreateIndex       -> rewriteCreateIndex(node)
+            is DropTable         -> rewriteDropTable(node)
+            is DropIndex         -> rewriteDropIndex(node)
         }
 
     open fun rewriteMetas(itemWithMetas: HasMetas): MetaContainer = itemWithMetas.metas
@@ -188,8 +192,8 @@ open class AstRewriterBase : AstRewriter {
 
     open fun rewriteSelectProjectionPivot(projection: SelectProjectionPivot): SelectProjection =
         SelectProjectionPivot(
-            rewriteExprNode(projection.valueExpr),
-            rewriteExprNode(projection.nameExpr))
+            rewriteExprNode(projection.nameExpr),
+            rewriteExprNode(projection.valueExpr))
 
     open fun rewriteSelectListItem(item: SelectListItem): SelectListItem =
         when(item) {
@@ -217,9 +221,11 @@ open class AstRewriterBase : AstRewriter {
             is PathComponentExpr     -> rewritePathComponentExpr(pathComponent)
         }
 
-    open fun rewritePathComponentUnpivot(pathComponent: PathComponent): PathComponent = pathComponent
+    open fun rewritePathComponentUnpivot(pathComponent: PathComponentUnpivot): PathComponent =
+        PathComponentUnpivot(rewriteMetas(pathComponent))
 
-    open fun rewritePathComponentWildcard(pathComponent: PathComponent): PathComponent = pathComponent
+    open fun rewritePathComponentWildcard(pathComponent: PathComponentWildcard): PathComponent =
+        PathComponentWildcard(rewriteMetas(pathComponent))
 
     open fun rewritePathComponentExpr(pathComponent: PathComponentExpr): PathComponent =
         PathComponentExpr(rewriteExprNode(pathComponent.expr), pathComponent.case)
@@ -365,5 +371,22 @@ open class AstRewriterBase : AstRewriter {
             rewriteExprNode(node.lvalue),
             rewriteExprNode(node.rvalue))
 
-    open fun rewriteSchemaObjectDefinition(definition: SchemaObjectDefinition): SchemaObjectDefinition = definition
+    open fun rewriteCreateTable(node: CreateTable): CreateTable =
+        CreateTable(node.tableName, rewriteMetas(node))
+
+    open fun rewriteCreateIndex(node: CreateIndex): CreateIndex =
+        CreateIndex(
+            node.tableName,
+            node.keys.map { rewriteExprNode(it) },
+            rewriteMetas(node))
+
+    open fun rewriteDropTable(node: DropTable): DropTable =
+        DropTable(node.tableName, rewriteMetas(node))
+
+    open fun rewriteDropIndex(node: DropIndex): DropIndex =
+        DropIndex(
+            node.tableName,
+            rewriteVariableReference(node.identifier) as VariableReference,
+            rewriteMetas(node))
+
 }

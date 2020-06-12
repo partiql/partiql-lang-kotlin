@@ -90,15 +90,22 @@ abstract class PropertyValue(val type: PropertyType) {
     open fun integerValue(): Int = throw IllegalArgumentException("Property value is of type $type and not Integer")
     open fun ionValue(): IonValue = throw IllegalArgumentException("Property value is of type $type and not IonValue")
 
-    override fun toString() : String =
-        when(type) {
-            PropertyType.LONG_CLASS      -> longValue().toString()
-            PropertyType.STRING_CLASS    -> stringValue()
-            PropertyType.INTEGER_CLASS   -> integerValue().toString()
-            PropertyType.TOKEN_CLASS     -> tokenTypeValue().toString()
-            PropertyType.ION_VALUE_CLASS -> ionValue().toPrettyString()
+    val value: Any
+        get() = when (type) {
+            LONG_CLASS      -> longValue()
+            STRING_CLASS    -> stringValue()
+            INTEGER_CLASS   -> integerValue()
+            TOKEN_CLASS     -> tokenTypeValue()
+            ION_VALUE_CLASS -> ionValue()
         }
-    }
+
+    override fun toString(): String =
+        when (type) {
+            ION_VALUE_CLASS -> (value as IonValue).toPrettyString()
+            else -> value.toString()
+        }
+}
+
 
 
 /**
