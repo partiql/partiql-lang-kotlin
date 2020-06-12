@@ -7,4 +7,9 @@ jobs:
   build_via_pandoc:
     runs-on: ubuntu-18.04
     steps: 
+      - uses: actions/checkout@v2
       - uses: docker://therapon/pandoc2:1.0
+      - uses: actions/upload-artifact@v2
+        with: 
+          name: see.txt
+          path: output.txt
