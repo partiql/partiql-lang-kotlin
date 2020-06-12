@@ -1,0 +1,10 @@
+
+name: Documentation
+
+on: push
+
+jobs: 
+  build_via_pandoc:
+    runs-on: ubuntu-18.04
+    steps: 
+      - uses: docker://therapon/pandoc2:1.0
