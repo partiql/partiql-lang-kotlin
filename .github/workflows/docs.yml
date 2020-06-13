@@ -9,7 +9,7 @@ jobs:
     steps: 
       - name: Checkout 
         uses: actions/checkout@v2
-      - name: Docker
+      - name: Build`
         uses: docker://therapon/pandoc2:2.0
         with:
           entrypoint: ./docker-entrypoint.sh
@@ -18,4 +18,4 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: gh-pages # The branch the action should deploy to.
-          FOLDER: webapp # The folder the action should deploy.
+          FOLDER: docs/webapp # The folder the action should deploy.
