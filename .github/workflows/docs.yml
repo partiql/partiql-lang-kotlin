@@ -10,7 +10,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: docker://therapon/pandoc2:1.0
         with:
-          entrypoint: docker-entrypoint.sh
+          entrypoint: ./docker-entrypoint.sh
       - uses: actions/upload-artifact@v2
         with: 
           name: see.txt
