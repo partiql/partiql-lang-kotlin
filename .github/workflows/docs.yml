@@ -10,7 +10,7 @@ jobs:
       - name: Checkout 
         uses: actions/checkout@v2
       - name: Build`
-        uses: docker://therapon/pandoc2:2.0
+        uses: docker://partiqlteam/pandoc:1.0
         with:
           entrypoint: ./docker-entrypoint.sh
       - name: Deploy 
