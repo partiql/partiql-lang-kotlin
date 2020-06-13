@@ -7,11 +7,15 @@ jobs:
   build_via_pandoc:
     runs-on: ubuntu-18.04
     steps: 
-      - uses: actions/checkout@v2
-      - uses: docker://therapon/pandoc2:1.0
+      - name: Checkout 
+        uses: actions/checkout@v2
+      - name: Docker
+        uses: docker://therapon/pandoc2:2.0
         with:
           entrypoint: ./docker-entrypoint.sh
-      - uses: actions/upload-artifact@v2
-        with: 
-          name: see.txt
-          path: output.txt
+      - name: Deploy 
+        uses: JamesIves/github-pages-deploy-action@releases/v3
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: gh-pages # The branch the action should deploy to.
+          FOLDER: webapp # The folder the action should deploy.
