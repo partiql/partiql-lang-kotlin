@@ -1,0 +1,23 @@
+
+# Build documentation and uploads it to the workflows artifact 
+# kept for 90 days. See https://help.github.com/en/actions/configuring-and-managing-workflows/persisting-workflow-data-using-artifacts
+#
+name: Build Documentation
+
+on: [pull_request]
+
+jobs: 
+  build_via_pandoc:
+    runs-on: ubuntu-18.04
+    steps: 
+      - name: Checkout 
+        uses: actions/checkout@v2
+      - name: Build
+        uses: docker://partiqlteam/pandoc:1.0
+        with:
+          entrypoint: ./docker-entrypoint.sh
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: webapp
+          path: docs/webapp/ 
