@@ -1,7 +1,7 @@
 # Attribution 
 
 The Docker image uses Ubuntu and installs extra Haskell and Python tools and libraries referred to
-as pacakges. 
+as packages. 
 
 The source and license of each Python installed package is located in the Docker image at 
 
