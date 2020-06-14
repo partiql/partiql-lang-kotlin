@@ -9,9 +9,9 @@
 name: Release Documentation
 
 on: 
-  release:
-    types:
-      - publish
+  push:
+    tags:
+      - '*'
 
 jobs: 
   build_via_pandoc:
