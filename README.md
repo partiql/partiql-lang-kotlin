@@ -5,24 +5,24 @@
 
 
 
-# PartiQL Lang Kotlin 
+# PartiQL Lang Kotlin
 
 This is a Kotlin implementation of the [PartiQL specification](https://partiql.org/assets/PartiQL-Specification.pdf).
-PartiQL is based on SQL-92 and has added support for working with schemaless hierarchical data. 
+PartiQL is based on SQL-92 and has added support for working with schemaless hierarchical data.
 PartiQL’s extensions to SQL are easy to understand, treat nested data as first class citizens and
 compose seamlessly with each other and SQL.
 
 
 This repository contains an embeddable reference interpreter, test framework, and tests for PartiQL in Kotlin.
 
-The easiest way to get started with PartiQL is to clone this repository locally, build, then 
+The easiest way to get started with PartiQL is to clone this repository locally, build, then
 [run the REPL](./docs/user/CLI.md).
 
 ## Status
 
-PartiQL should be considered to be in "preview" status. It has been in use within a number of Amazon internal 
-systems and an AWS product for over one year. The behavior of the language itself is mostly stable however 
-the public API of the interpreter is slated to undergo significant improvements in the near term. (See the 
+PartiQL should be considered to be in "preview" status. It has been in use within a number of Amazon internal
+systems and an AWS product for over one year. The behavior of the language itself is mostly stable however
+the public API of the interpreter is slated to undergo significant improvements in the near term. (See the
 GitHub issues list for details.)
 
 ## Using In Your Project
@@ -30,7 +30,7 @@ GitHub issues list for details.)
 This project is published to [Maven Central](https://search.maven.org/artifact/org.partiql/partiql-lang-kotlin).
 
 | Group ID | Artifact ID | Recommended Version |
-|----------|-------------|---------------------| 
+|----------|-------------|---------------------|
 | `org.partiql` | `partiql-lang-kotlin` | `0.2.0`
 
 
@@ -68,6 +68,10 @@ $./gradlew build
 
 This will build the reference interpreter and test framework, then run all unit and integration tests.
 
+### Building the documentation
+
+[Instructions on how to build PartiQL's documentation](docs/Docker/README.md)
+
 ## Directory Structure
 
 - `docs/user` documentation for developers embedding the interpreter in an application.
@@ -79,7 +83,7 @@ This will build the reference interpreter and test framework, then run all unit 
 Gradle build.
 - `integration-test/test-scripts-ignored` contains test scripts which cannot be executed during the Gradle build.
 
-### Examples 
+### Examples
 
 See the [examples](examples) project in this repository for examples covering
 use of the PartiQL interpreter in your project.
