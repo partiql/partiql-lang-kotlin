@@ -112,7 +112,7 @@ PartiQL> SELECT * FROM [1,2,3]
   }
 >>
 --- 
-OK! (86 ms)
+OK! (2 ms)
 PartiQL> 
 ```
 
