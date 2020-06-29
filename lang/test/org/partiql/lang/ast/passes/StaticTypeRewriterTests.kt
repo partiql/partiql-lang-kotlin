@@ -59,7 +59,17 @@ class StaticTypeRewriterTests : RewriterTestBase() {
     @Test
     @Parameters
     fun sfwTest(tc: STRTestCase) = runSTRTest(tc)
-
+    
+    
+    // In the test cases below there exists comments consisting of a bunch of numbers.  They can be 
+    // used to quickly determine the column number of the text immediately beneath it.  For example, 
+    // it's easy to see the token "fiftyFive" starts at character 55:
+    //        1         2         3         4         5         6         7         8
+    //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+    //                                                     fiftyFive
+    // The first line is the 10's place of the column number, while the second line is the 1's place.
+    // This helps to speed up the finding of the column number when it is used as part of the 
+    // expectation.
     fun parametersForSfwTest() = listOf(
         STRTestCase(
             "b",
