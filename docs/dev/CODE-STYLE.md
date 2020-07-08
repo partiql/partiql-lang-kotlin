@@ -1,7 +1,7 @@
 # Introduction
 
-**Note that this document is [subject to change](https://github.com/partiql/partiql-lang-kotlin/issues/43) as required by the use 
-of `ktlint`.**
+**Note that this document is [subject to change](https://github.com/partiql/partiql-lang-kotlin/issues/43) as required
+ by the use of `ktlint`.**
 
 This document serves as style guide and includes code conventions and idioms for [Kotlin](https://kotlinlang.org/) 
 in the PartiQL project.
@@ -12,13 +12,17 @@ a base. If it's not specified here use that as a reference.
 If you use Intellij you can import the code-style settings [here](./intellij_code_style.xml)  
 
 # Packages
+
 Maintain directory structure and package names consistent, e.g. foo.bar should be in foo/bar folder. Keeping both 
 consistent makes easier to find any resource, e.g. class or function, that is part of the package and naturally groups 
 them all.
 
 # Imports
 
-Use `*` imports to avoid polluting the import list and alphabetical order to simplify git merges.
+~~Use `*` imports to avoid polluting the import list and alphabetical order to simplify git merges.~~
+
+Do not use `*` imports any longer.  When modifying a file, if any `*` imports exist, replace them with single
+class imports. 
 
 # Control Flow
 
@@ -109,7 +113,7 @@ inside that package for an example.
 Name big lambda expressions by transforming them in `val` or functions. example:
 
 ```kotlin
-// bad: hard to tell what what it's being filtered
+// bad: hard to tell what what is being filtered
 val numbers = IntRange(1, 100).filter {
     if (it <= 0) false
     else if (it <= 3) true
