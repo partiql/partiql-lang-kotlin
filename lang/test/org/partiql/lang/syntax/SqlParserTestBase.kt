@@ -17,6 +17,7 @@ package org.partiql.lang.syntax
 import com.amazon.ionelement.api.IonElement
 import com.amazon.ionelement.api.toIonElement
 import com.amazon.ion.IonSexp
+import com.amazon.ionelement.api.SexpElement
 import org.partiql.lang.TestBase
 import org.partiql.lang.ast.AstDeserializerBuilder
 import org.partiql.lang.ast.AstSerializer
@@ -60,7 +61,7 @@ abstract class SqlParserTestBase : TestBase() {
         val v2SexpAst = loadIonSexp(expectedSexpAstV2String)
         serializeAssert(AstVersion.V2, parsedExprNode, v2SexpAst, source)
 
-        pigDomainAssert(parsedExprNode, v2SexpAst.toIonElement(), skipPig)
+        pigDomainAssert(parsedExprNode, v2SexpAst.toIonElement().asSexp(), skipPig)
 
         pigExprNodeTransformAsserts(parsedExprNode)
     }
@@ -80,13 +81,13 @@ abstract class SqlParserTestBase : TestBase() {
             deserializedExprNodeFromSexp.stripMetas())
     }
 
-    private fun pigDomainAssert(parsedExprNode: ExprNode, expectedSexpAst: IonElement, skipPigTransformerTests: Boolean) {
+    private fun pigDomainAssert(parsedExprNode: ExprNode, expectedSexpAst: SexpElement, skipPigTransformerTests: Boolean) {
 
         // Serialize ExprNode to V2 IonValue
         val sexpAst = AstSerializer.serialize(parsedExprNode, AstVersion.V2, ion).filterMetaNodes() as IonSexp
 
         // Convert the V2 IonValue to IonElement
-        val parsedV2Element = sexpAst.toIonElement()
+        val parsedV2Element = sexpAst.toIonElement().asSexp()
 
         if (skipPigTransformerTests) {
             assertPigTransformerFails(parsedV2Element)
@@ -124,7 +125,7 @@ abstract class SqlParserTestBase : TestBase() {
         assertEquals(MetaStrippingRewriter.stripMetas(parsedExprNode), exprNode2)
     }
 
-    private fun assertRoundTripIonElementToPartiQlAst(parsedV2Element: IonElement, expectedSexpAst: IonElement) {
+    private fun assertRoundTripIonElementToPartiQlAst(parsedV2Element: SexpElement, expectedSexpAst: SexpElement) {
         // #1 We can transform the parsed V2 element.
         val transformedParsedV2Element = partiql_ast.transform(parsedV2Element)
 
@@ -142,7 +143,7 @@ abstract class SqlParserTestBase : TestBase() {
         // Note:  because of #3 above, no need for #5.
     }
 
-    private fun assertPigTransformerFails(parsedV2Element: IonElement) {
+    private fun assertPigTransformerFails(parsedV2Element: SexpElement) {
 
         // TODO: remove this method once V2 is fully complete.
         // Migration to PIG domain partially completed--expect failure.

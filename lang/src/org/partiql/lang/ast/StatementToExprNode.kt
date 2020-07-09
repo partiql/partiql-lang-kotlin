@@ -57,7 +57,8 @@ private class StatementTransformer(val ion: IonSystem) {
         val metas = this.metas.toPartiQlMetaContainer()
         return when (this) {
             is expr.missing -> LiteralMissing(metas)
-            is expr.lit -> Literal(ion0.toIonValue(ion), metas)
+            // https://github.com/amzn/ion-element-kotlin/issues/35, .asAnyElement() is unfortunately needed for now
+            is expr.lit -> Literal(ion0.asAnyElement().toIonValue(ion), metas)
             is expr.id -> VariableReference(symbol0.text, case_sensitivity1.toCaseSensitivity(), scope_qualifier2.toScopeQualifier(), metas)
             is expr.parameter -> Parameter(int0.value.toInt(), metas)
             is expr.not -> NAry(NAryOp.NOT, listOf(expr0.toExprNode()), metas)
