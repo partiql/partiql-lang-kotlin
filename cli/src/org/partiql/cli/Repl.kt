@@ -227,7 +227,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
                     previousResult = result
                 }
             }
-            outputWriter.write("OK! ($totalMs ms)")
+            outputWriter.write("OK!")
             outputWriter.write("\n")
             outputWriter.flush()
         }
