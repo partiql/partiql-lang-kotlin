@@ -158,7 +158,7 @@ class ReplTest {
             #===' 
             #2
             #--- 
-            #OK! (0 ms)
+            #OK!
             #PartiQL> 
         """.trimMargin("#"))
     }
@@ -171,7 +171,7 @@ class ReplTest {
             #===' 
             #2
             #--- 
-            #OK! (0 ms)
+            #OK!
             #PartiQL> 
         """.trimMargin("#"))
     }
@@ -185,13 +185,13 @@ class ReplTest {
             #===' 
             #2
             #--- 
-            #OK! (0 ms)
+            #OK!
             #PartiQL> 2 + 2
             #   | 
             #===' 
             #4
             #--- 
-            #OK! (0 ms)
+            #OK!
             #PartiQL> 
         """.trimMargin("#"))
 
@@ -217,7 +217,7 @@ class ReplTest {
             #  )
             #)
             #--- 
-            #OK! (0 ms)
+            #OK!
             #PartiQL> 
         """.trimMargin("#"))
     }
@@ -263,7 +263,7 @@ class ReplTest {
             #  }
             #)
             #--- 
-            #OK! (0 ms)
+            #OK!
             #PartiQL> 
         """.trimMargin("#"))
     }
@@ -286,7 +286,7 @@ class ReplTest {
             #  >>
             #}
             #--- 
-            #OK! (0 ms)
+            #OK!
             #PartiQL> SELECT * FROM myTable
             #   | 
             #===' 
@@ -299,7 +299,7 @@ class ReplTest {
             #  }
             #>>
             #--- 
-            #OK! (0 ms)
+            #OK!
             #PartiQL> 
         """.trimMargin("#"))
     }
@@ -325,7 +325,7 @@ class ReplTest {
             #  ]
             #}
             #--- 
-            #OK! (0 ms)
+            #OK!
             #PartiQL> 
         """.trimMargin("#"))
     }
@@ -339,7 +339,7 @@ class ReplTest {
             #===' 
             #{}
             #--- 
-            #OK! (0 ms)
+            #OK!
             #PartiQL> 
         """.trimMargin("#"))
     }
@@ -362,7 +362,7 @@ class ReplTest {
             #  >>
             #}
             #--- 
-            #OK! (0 ms)
+            #OK!
             #PartiQL> !global_env
             #   | 
             #===' 
@@ -377,7 +377,7 @@ class ReplTest {
             #  >>
             #}
             #--- 
-            #OK! (0 ms)
+            #OK!
             #PartiQL> 
         """.trimMargin("#"))
     }
@@ -392,7 +392,7 @@ class ReplTest {
             #!add_to_global_env: adds a value to the global environment
             #!global_env: displays the current global environment
             #!list_commands: print this message
-            #OK! (0 ms)
+            #OK!
             #PartiQL> 
         """.trimMargin("#"))
     }

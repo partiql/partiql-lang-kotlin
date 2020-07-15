@@ -112,7 +112,7 @@ PartiQL> SELECT * FROM [1,2,3]
   }
 >>
 --- 
-OK! (2 ms)
+OK!
 PartiQL> 
 ```
 
@@ -168,6 +168,6 @@ PartiQL> !global_env
   }
 }
 --- 
-OK! (6 ms)
+OK!
 
 ```

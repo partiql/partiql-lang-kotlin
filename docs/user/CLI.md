@@ -82,7 +82,7 @@ PartiQL> SELECT id FROM `[{id: 5, name:"bill"}, {id: 6, name:"bob"}]` WHERE name
   }
 >>
 ---
-OK! (282 ms)
+OK!
 ```
 
 The result of previous expression is stored in the variable named `_`, so you can then run subsequent
@@ -98,7 +98,7 @@ PartiQL> SELECT id + 4 AS name FROM _
   }
 >>
 ---
-OK! (16 ms)
+OK!
 ```
 
 Press control-D to exit the REPL.
@@ -134,7 +134,7 @@ PartiQL> 1 + 1
   )
 )
 ---
-OK! (23 ms)
+OK!
 ```
 
 To view the AST with metadata information of an SQL statement, type one and press enter only *once*, 
@@ -221,7 +221,7 @@ PartiQL> 1 + 1
   )
 )
 ---
-OK! (1 ms)
+OK!
 ```
 
 ## Initial Environment
@@ -286,7 +286,7 @@ PartiQL> SELECT name, type, is_magic FROM animals, types WHERE type = id
   }
 >>
 ---
-OK! (55 ms)
+OK!
 ```
 
 To see the current REPL environment you can use `!global_env`, for example for the file above: 
@@ -326,7 +326,7 @@ PartiQL> !global_env
   ]
 }
 ---
-OK! (2 ms)
+OK!
 ``` 
 
 You can also add new values to the global environment or replace existing values using `!add_to_global_env`. The 
@@ -340,7 +340,7 @@ PartiQL> !add_to_global_env {'types': []}
   'types': []
 }
 ---
-OK! (1 ms)
+OK!
 PartiQL> !global_env
    |
 ==='
@@ -362,7 +362,7 @@ PartiQL> !global_env
   ]
 }
 ---
-OK! (0 ms)
+OK!
 ``` 
 
 # Working with Structure
@@ -427,7 +427,7 @@ PartiQL> SELECT * FROM stores[*].books[*] AS b WHERE b.price > 7
   }
 >>
 ---
-OK! (28 ms)
+OK!
 ```
 
 If you wanted to also de-normalize the store ID and title into the above rows:
@@ -451,7 +451,7 @@ PartiQL> SELECT s.id AS store, b.title AS title FROM stores AS s, @s.books AS b 
   }
 >>
 ---
-OK! (30 ms)
+OK!
 ```
 
 We can also use sub-queries with paths to predicate on sub-structure without changing the
@@ -496,7 +496,7 @@ PartiQL> SELECT * FROM stores AS s
   }
 >>
 ---
-OK! (5 ms)
+OK!
 ```
 
 # Reading/Writing Files
@@ -526,7 +526,7 @@ PartiQL> SELECT city FROM read_file('data.ion') AS c, `["HI", "NY"]` AS s WHERE 
   }
 >>
 ------
-OK! (45 ms)
+OK!
 ```
 
 The REPL also has the capability to write files with the `write_file` function:
@@ -537,7 +537,7 @@ PartiQL> write_file('out.ion', SELECT * FROM _)
 ==='
 true
 ------
-OK! (20 ms)
+OK!
 ```
 A file called `out.ion` will be created in the `cli` directory with the following contents
 ```
@@ -583,7 +583,7 @@ PartiQL> SELECT * FROM data
     }
 >>
 ------
-OK! (75 ms)
+OK!
 ```
 
 # TSV/CSV Data
@@ -627,7 +627,7 @@ PartiQL> read_file('simple.csv', {'type':'csv'})
     }
 >>
 ---- 
-OK! (83 ms)
+OK!
 ```
 
 The options `struct` can also define if the first row for delimited data should be the
@@ -655,7 +655,7 @@ PartiQL> read_file('simple.csv', {'type': 'csv', 'header': true})
     }
 >>
 ---- 
-OK! (87 ms)
+OK!
 ```
 
 Auto conversion can also be specified numeric and timestamps in delimited data.
@@ -682,7 +682,7 @@ PartiQL> read_file('simple.csv', {'type':'csv', 'header':true, 'conversion':'aut
     }
 >>
 ---- 
-OK! (96 ms)
+OK!
 ```
 
 Writing TSV/CSV data can be done by specifying the optional `struct` argument to specify output
@@ -695,7 +695,7 @@ PartiQL> write_file('out.tsv', {'type':'tsv'}, SELECT name, type FROM animals)
 ===' 
 true
 ----
-OK! (41 ms)
+OK!
 ```
 
 This would produce the following file:
@@ -716,7 +716,7 @@ PartiQL> write_file('out.tsv', {'type':'tsv', 'header':true}, SELECT name, type 
 ===' 
 true
 ----
-OK! (39 ms)
+OK!
 ```
 
 Which would produce the following file:
