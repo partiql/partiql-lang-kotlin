@@ -1,17 +1,17 @@
 package org.partiql.lang.syntax
 
 import org.junit.Test
-import org.partiql.lang.domains.partiql_ast
+import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.id
 
 class SqlParserJoinTest : SqlParserTestBase() {
-    private val projectX = partiql_ast.build { project_list(project_expr(id("x"))) }
+    private val projectX = PartiqlAst.build { projectList(projectExpr(id("x"))) }
 
-    private fun partiql_ast.builder.selectWithOneJoin(
-        joinType: partiql_ast.join_type,
-        joinPredicate: partiql_ast.expr?,
-        wherePredicate: partiql_ast.expr? = null
-    ): partiql_ast.expr =
+    private fun PartiqlAst.builder.selectWithOneJoin(
+        joinType: PartiqlAst.JoinType,
+        joinPredicate: PartiqlAst.Expr?,
+        wherePredicate: PartiqlAst.Expr? = null
+    ): PartiqlAst.Expr =
         select(
             project = projectX,
             from = join(
@@ -22,7 +22,7 @@ class SqlParserJoinTest : SqlParserTestBase() {
             where = wherePredicate)
 
 
-    private fun partiql_ast.builder.selectWithFromSource(fromSource: partiql_ast.from_source): partiql_ast.expr =
+    private fun PartiqlAst.builder.selectWithFromSource(fromSource: PartiqlAst.FromSource): PartiqlAst.Expr =
         select(project = projectX, from = fromSource)
 
     @Test
@@ -38,7 +38,7 @@ class SqlParserJoinTest : SqlParserTestBase() {
         skipPig = false
     ) {
         selectWithOneJoin(
-            joinType = partiql_ast.join_type.right(),
+            joinType = PartiqlAst.JoinType.Right(),
             joinPredicate = null)
     }
 
@@ -60,7 +60,7 @@ class SqlParserJoinTest : SqlParserTestBase() {
             joinPredicate = eq(id("s"), id("f")))
     }
 
-    private val deeplyNestedJoins = partiql_ast.build {
+    private val deeplyNestedJoins = PartiqlAst.build {
         join(
             full(),
             join(

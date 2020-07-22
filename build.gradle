@@ -28,6 +28,7 @@ allprojects {
     }
 
     repositories {
+        mavenLocal()
         mavenCentral()
         jcenter()    // needed for detekt
     }

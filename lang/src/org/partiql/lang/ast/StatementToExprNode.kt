@@ -2,36 +2,36 @@ package org.partiql.lang.ast
 
 import com.amazon.ionelement.api.toIonValue
 import com.amazon.ion.IonSystem
-import org.partiql.lang.domains.partiql_ast.case_sensitivity
-import org.partiql.lang.domains.partiql_ast.ddl_op
-import org.partiql.lang.domains.partiql_ast.dml_op
-import org.partiql.lang.domains.partiql_ast.expr
-import org.partiql.lang.domains.partiql_ast.from_source
-import org.partiql.lang.domains.partiql_ast.group_by
-import org.partiql.lang.domains.partiql_ast.grouping_strategy
-import org.partiql.lang.domains.partiql_ast.join_type
-import org.partiql.lang.domains.partiql_ast.path_step
-import org.partiql.lang.domains.partiql_ast.project_item
-import org.partiql.lang.domains.partiql_ast.projection
-import org.partiql.lang.domains.partiql_ast.scope_qualifier
-import org.partiql.lang.domains.partiql_ast.set_quantifier
-import org.partiql.lang.domains.partiql_ast.statement
-import org.partiql.lang.domains.partiql_ast.type
+import org.partiql.lang.domains.PartiqlAst.CaseSensitivity
+import org.partiql.lang.domains.PartiqlAst.DdlOp
+import org.partiql.lang.domains.PartiqlAst.DmlOp
+import org.partiql.lang.domains.PartiqlAst.Expr
+import org.partiql.lang.domains.PartiqlAst.FromSource
+import org.partiql.lang.domains.PartiqlAst.GroupBy
+import org.partiql.lang.domains.PartiqlAst.GroupingStrategy
+import org.partiql.lang.domains.PartiqlAst.JoinType
+import org.partiql.lang.domains.PartiqlAst.PathStep
+import org.partiql.lang.domains.PartiqlAst.ProjectItem
+import org.partiql.lang.domains.PartiqlAst.Projection
+import org.partiql.lang.domains.PartiqlAst.ScopeQualifier
+import org.partiql.lang.domains.PartiqlAst.SetQuantifier
+import org.partiql.lang.domains.PartiqlAst.Statement
+import org.partiql.lang.domains.PartiqlAst.Type
 import org.partiql.pig.runtime.SymbolPrimitive
 
 internal typealias PartiQlMetaContainer = org.partiql.lang.ast.MetaContainer
 internal typealias ElectrolyteMetaContainer = com.amazon.ionelement.api.MetaContainer
 
 /** Converts a [partiql_ast.statement] to an [ExprNode], preserving all metas where possible. */
-fun statement.toExprNode(ion: IonSystem): ExprNode =
+fun Statement.toExprNode(ion: IonSystem): ExprNode =
     StatementTransformer(ion).transform(this)
 
 private class StatementTransformer(val ion: IonSystem) {
-    fun transform(stmt: statement): ExprNode =
+    fun transform(stmt: Statement): ExprNode =
         when (stmt) {
-            is statement.query -> stmt.toExprNode()
-            is statement.dml -> stmt.toExprNode()
-            is statement.ddl -> stmt.toExprNode()
+            is Statement.Query -> stmt.toExprNode()
+            is Statement.Dml -> stmt.toExprNode()
+            is Statement.Ddl -> stmt.toExprNode()
         }
 
     private fun ElectrolyteMetaContainer.toPartiQlMetaContainer(): PartiQlMetaContainer {
@@ -46,125 +46,125 @@ private class StatementTransformer(val ion: IonSystem) {
         return org.partiql.lang.ast.metaContainerOf(nonLocationMetas)
     }
 
-    private fun statement.query.toExprNode(): ExprNode {
-        return this.expr0.toExprNode()
+    private fun Statement.Query.toExprNode(): ExprNode {
+        return this.expr.toExprNode()
     }
 
-    private fun List<expr>.toExprNodeList(): List<ExprNode> =
+    private fun List<Expr>.toExprNodeList(): List<ExprNode> =
         this.map { it.toExprNode() }
 
-    private fun expr.toExprNode(): ExprNode {
+    private fun Expr.toExprNode(): ExprNode {
         val metas = this.metas.toPartiQlMetaContainer()
         return when (this) {
-            is expr.missing -> LiteralMissing(metas)
+            is Expr.Missing -> LiteralMissing(metas)
             // https://github.com/amzn/ion-element-kotlin/issues/35, .asAnyElement() is unfortunately needed for now
-            is expr.lit -> Literal(ion0.asAnyElement().toIonValue(ion), metas)
-            is expr.id -> VariableReference(symbol0.text, case_sensitivity1.toCaseSensitivity(), scope_qualifier2.toScopeQualifier(), metas)
-            is expr.parameter -> Parameter(int0.value.toInt(), metas)
-            is expr.not -> NAry(NAryOp.NOT, listOf(expr0.toExprNode()), metas)
-            is expr.pos -> expr0.toExprNode()
-            is expr.neg -> NAry(NAryOp.SUB, listOf(expr0.toExprNode()), metas)
-            is expr.plus -> NAry(NAryOp.ADD, expr0.toExprNodeList(), metas)
-            is expr.minus -> NAry(NAryOp.SUB, expr0.toExprNodeList(), metas)
-            is expr.times -> NAry(NAryOp.MUL, expr0.toExprNodeList(), metas)
-            is expr.divide -> NAry(NAryOp.DIV, expr0.toExprNodeList(), metas)
-            is expr.modulo -> NAry(NAryOp.MOD, expr0.toExprNodeList(), metas)
-            is expr.concat -> NAry(NAryOp.STRING_CONCAT, expr0.toExprNodeList(), metas)
-            is expr.and -> NAry(NAryOp.AND, expr0.toExprNodeList(), metas)
-            is expr.or -> NAry(NAryOp.OR, expr0.toExprNodeList(), metas)
-            is expr.eq -> NAry(NAryOp.EQ, expr0.toExprNodeList(), metas)
-            is expr.ne -> NAry(NAryOp.NE, expr0.toExprNodeList(), metas)
-            is expr.gt -> NAry(NAryOp.GT, expr0.toExprNodeList(), metas)
-            is expr.gte -> NAry(NAryOp.GTE, expr0.toExprNodeList(), metas)
-            is expr.lt -> NAry(NAryOp.LT, expr0.toExprNodeList(), metas)
-            is expr.lte -> NAry(NAryOp.LTE, expr0.toExprNodeList(), metas)
+            is Expr.Lit -> Literal(value.asAnyElement().toIonValue(ion), metas)
+            is Expr.Id -> VariableReference(name.text, case.toCaseSensitivity(), qualifier.toScopeQualifier(), metas)
+            is Expr.Parameter -> Parameter(index.value.toInt(), metas)
+            is Expr.Not -> NAry(NAryOp.NOT, listOf(expr.toExprNode()), metas)
+            is Expr.Pos -> expr.toExprNode()
+            is Expr.Neg -> NAry(NAryOp.SUB, listOf(expr.toExprNode()), metas)
+            is Expr.Plus -> NAry(NAryOp.ADD, operands.toExprNodeList(), metas)
+            is Expr.Minus -> NAry(NAryOp.SUB, operands.toExprNodeList(), metas)
+            is Expr.Times -> NAry(NAryOp.MUL, operands.toExprNodeList(), metas)
+            is Expr.Divide -> NAry(NAryOp.DIV, operands.toExprNodeList(), metas)
+            is Expr.Modulo -> NAry(NAryOp.MOD, operands.toExprNodeList(), metas)
+            is Expr.Concat -> NAry(NAryOp.STRING_CONCAT, operands.toExprNodeList(), metas)
+            is Expr.And -> NAry(NAryOp.AND, operands.toExprNodeList(), metas)
+            is Expr.Or -> NAry(NAryOp.OR, operands.toExprNodeList(), metas)
+            is Expr.Eq -> NAry(NAryOp.EQ, operands.toExprNodeList(), metas)
+            is Expr.Ne -> NAry(NAryOp.NE, operands.toExprNodeList(), metas)
+            is Expr.Gt -> NAry(NAryOp.GT, operands.toExprNodeList(), metas)
+            is Expr.Gte -> NAry(NAryOp.GTE, operands.toExprNodeList(), metas)
+            is Expr.Lt -> NAry(NAryOp.LT, operands.toExprNodeList(), metas)
+            is Expr.Lte -> NAry(NAryOp.LTE, operands.toExprNodeList(), metas)
 
-            is expr.union ->
+            is Expr.Union ->
                 NAry(
-                    when(set_quantifier0) {
-                        is set_quantifier.distinct -> NAryOp.UNION
-                        is set_quantifier.all -> NAryOp.UNION_ALL
+                    when(setq) {
+                        is SetQuantifier.Distinct -> NAryOp.UNION
+                        is SetQuantifier.All -> NAryOp.UNION_ALL
                     },
-                    expr1.toExprNodeList(),
+                    operands.toExprNodeList(),
                     metas)
-            is expr.intersect ->
+            is Expr.Intersect ->
                 NAry(
-                    when(set_quantifier0) {
-                        is set_quantifier.distinct -> NAryOp.INTERSECT
-                        is set_quantifier.all -> NAryOp.INTERSECT_ALL
+                    when(setq) {
+                        is SetQuantifier.Distinct -> NAryOp.INTERSECT
+                        is SetQuantifier.All -> NAryOp.INTERSECT_ALL
                     },
-                    expr1.toExprNodeList(),
+                    operands.toExprNodeList(),
                     metas)
-            is expr.except  ->
+            is Expr.Except  ->
                 NAry(
-                    when(set_quantifier0) {
-                        is set_quantifier.distinct -> NAryOp.EXCEPT
-                        is set_quantifier.all -> NAryOp.EXCEPT_ALL
+                    when(setq) {
+                        is SetQuantifier.Distinct -> NAryOp.EXCEPT
+                        is SetQuantifier.All -> NAryOp.EXCEPT_ALL
                     },
-                    expr1.toExprNodeList(),
+                    operands.toExprNodeList(),
                     metas)
 
 
-            is expr.like -> NAry(NAryOp.LIKE, listOfNotNull(expr0.toExprNode(), expr1.toExprNode(), expr2?.toExprNode()), metas)
-            is expr.between -> NAry(NAryOp.BETWEEN, listOf(expr0.toExprNode(), expr1.toExprNode(), expr2.toExprNode()), metas)
-            is expr.in_collection -> NAry(NAryOp.IN, expr0.toExprNodeList(), metas)
-            is expr.is_type -> Typed(TypedOp.IS, expr0.toExprNode(), type1.toExprNodeType(), metas)
-            is expr.cast -> Typed(TypedOp.CAST, expr0.toExprNode(), type1.toExprNodeType(), metas)
+            is Expr.Like -> NAry(NAryOp.LIKE, listOfNotNull(value.toExprNode(), pattern.toExprNode(), escape?.toExprNode()), metas)
+            is Expr.Between -> NAry(NAryOp.BETWEEN, listOf(value.toExprNode(), from.toExprNode(), to.toExprNode()), metas)
+            is Expr.InCollection -> NAry(NAryOp.IN, operands.toExprNodeList(), metas)
+            is Expr.IsType -> Typed(TypedOp.IS, value.toExprNode(), type.toExprNodeType(), metas)
+            is Expr.Cast -> Typed(TypedOp.CAST, value.toExprNode(), asType.toExprNodeType(), metas)
 
-            is expr.simple_case ->
+            is Expr.SimpleCase ->
                 SimpleCase(
-                    expr0.toExprNode(),
-                    expr_pair_list1.expr_pair0.map { SimpleCaseWhen(it.expr0.toExprNode(), it.expr1.toExprNode()) },
-                    this.expr2?.toExprNode(),
+                    expr.toExprNode(),
+                    cases.pairs.map { SimpleCaseWhen(it.first.toExprNode(), it.second.toExprNode()) },
+                    default?.toExprNode(),
                     metas)
-            is expr.searched_case ->
+            is Expr.SearchedCase ->
                 SearchedCase(
-                    expr_pair_list0.expr_pair0.map { SearchedCaseWhen(it.expr0.toExprNode(), it.expr1.toExprNode()) },
-                    this.expr1?.toExprNode(),
+                    cases.pairs.map { SearchedCaseWhen(it.first.toExprNode(), it.second.toExprNode()) },
+                    this.default?.toExprNode(),
                     metas)
-            is expr.struct -> Struct(expr_pair0.map { StructField(it.expr0.toExprNode(), it.expr1.toExprNode()) }, metas)
-            is expr.bag -> Seq(SeqType.BAG, expr0.toExprNodeList(), metas)
-            is expr.list -> Seq(SeqType.LIST, expr0.toExprNodeList(), metas)
-            is expr.sexp -> Seq(SeqType.SEXP, expr0.toExprNodeList(), metas)
-            is expr.path ->
+            is Expr.Struct -> Struct(this.fields.map { StructField(it.first.toExprNode(), it.second.toExprNode()) }, metas)
+            is Expr.Bag -> Seq(SeqType.BAG, values.toExprNodeList(), metas)
+            is Expr.List -> Seq(SeqType.LIST, values.toExprNodeList(), metas)
+            is Expr.Sexp -> Seq(SeqType.SEXP, values.toExprNodeList(), metas)
+            is Expr.Path ->
                 Path(
-                    expr0.toExprNode(),
-                    path_step1.map {
+                    root.toExprNode(),
+                    steps.map {
                         val componentMetas = it.metas.toPartiQlMetaContainer()
                         when (it) {
-                            is path_step.path_expr ->
+                            is PathStep.PathExpr ->
                                 PathComponentExpr(
-                                    it.expr0.toExprNode(),
-                                    it.case_sensitivity1.toCaseSensitivity())
-                            is path_step.path_unpivot -> PathComponentUnpivot(componentMetas)
-                            is path_step.path_wildcard -> PathComponentWildcard(componentMetas)
+                                    it.index.toExprNode(),
+                                    it.case.toCaseSensitivity())
+                            is PathStep.PathUnpivot -> PathComponentUnpivot(componentMetas)
+                            is PathStep.PathWildcard -> PathComponentWildcard(componentMetas)
                         }
                     },
                     metas)
-            is expr.call ->
+            is Expr.Call ->
                 NAry(
                     NAryOp.CALL,
                     listOf(
                         VariableReference(
-                            symbol0.text,
-                            CaseSensitivity.INSENSITIVE,
-                            ScopeQualifier.UNQUALIFIED,
+                            funcName.text,
+                            org.partiql.lang.ast.CaseSensitivity.INSENSITIVE,
+                            org.partiql.lang.ast.ScopeQualifier.UNQUALIFIED,
                             emptyMetaContainer)
-                    ) + expr1.map { it.toExprNode() },
+                    ) + args.map { it.toExprNode() },
                     metas)
-            is expr.call_agg ->
+            is Expr.CallAgg ->
                 CallAgg(
                     VariableReference(
-                        symbol1.text,
-                        CaseSensitivity.INSENSITIVE,
-                        ScopeQualifier.UNQUALIFIED,
+                        funcName.text,
+                        org.partiql.lang.ast.CaseSensitivity.INSENSITIVE,
+                        org.partiql.lang.ast.ScopeQualifier.UNQUALIFIED,
                         emptyMetaContainer),
-                    set_quantifier0.toSetQuantifier(),
-                    expr2.toExprNode(),
+                    setq.toSetQuantifier(),
+                    arg.toExprNode(),
                     metas)
-            is expr.select ->
+            is Expr.Select ->
                 Select(
-                    setQuantifier = setq?.toSetQuantifier() ?: SetQuantifier.ALL,
+                    setQuantifier = setq?.toSetQuantifier() ?: org.partiql.lang.ast.SetQuantifier.ALL,
                     projection = project.toSelectProjection(),
                     from = from.toFromSource(),
                     where = where?.toExprNode(),
@@ -176,156 +176,156 @@ private class StatementTransformer(val ion: IonSystem) {
         }
     }
 
-    private fun projection.toSelectProjection(): SelectProjection {
+    private fun Projection.toSelectProjection(): SelectProjection {
         val metas = this.metas.toPartiQlMetaContainer()
         return when (this) {
-            is projection.project_star -> SelectProjectionList(listOf(SelectListItemStar(metas)))
-            is projection.project_value -> SelectProjectionValue(this.expr0.toExprNode())
-            is projection.project_pivot -> SelectProjectionPivot(this.expr0.toExprNode(), this.expr1.toExprNode())
-            is projection.project_list ->
+            is Projection.ProjectStar -> SelectProjectionList(listOf(SelectListItemStar(metas)))
+            is Projection.ProjectValue -> SelectProjectionValue(this.value.toExprNode())
+            is Projection.ProjectPivot -> SelectProjectionPivot(this.value.toExprNode(), this.key.toExprNode())
+            is Projection.ProjectList ->
                 SelectProjectionList(
-                    this.project_item0.map {
+                    this.projectItems.map {
                         when (it) {
-                            is project_item.project_all -> SelectListItemProjectAll(it.expr0.toExprNode())
-                            is project_item.project_expr ->
+                            is ProjectItem.ProjectAll -> SelectListItemProjectAll(it.expr.toExprNode())
+                            is ProjectItem.ProjectExpr ->
                                 SelectListItemExpr(
-                                    it.expr0.toExprNode(),
-                                    it.symbol1?.toSymbolicName())
+                                    it.expr.toExprNode(),
+                                    it.asAlias?.toSymbolicName())
                         }
                     })
         }
     }
 
-    private fun from_source.toFromSource(): FromSource {
+    private fun FromSource.toFromSource(): org.partiql.lang.ast.FromSource {
         val metas = this.metas.toPartiQlMetaContainer()
         return when (this) {
-            is from_source.scan ->
+            is FromSource.Scan ->
                 FromSourceExpr(
-                    expr = expr0.toExprNode(),
+                    expr = expr.toExprNode(),
                     variables = LetVariables(
-                        asName = symbol1?.toSymbolicName(),
-                        atName = symbol2?.toSymbolicName(),
-                        byName = symbol3?.toSymbolicName()))
-            is from_source.unpivot ->
+                        asName = asAlias?.toSymbolicName(),
+                        atName = atAlias?.toSymbolicName(),
+                        byName = byAlias?.toSymbolicName()))
+            is FromSource.Unpivot ->
                 FromSourceUnpivot(
-                    expr = expr0.toExprNode(),
+                    expr = expr.toExprNode(),
                     variables = LetVariables(
-                        asName = symbol1?.toSymbolicName(),
-                        atName = symbol2?.toSymbolicName(),
-                        byName = symbol3?.toSymbolicName()),
+                        asName = asAlias?.toSymbolicName(),
+                        atName = atAlias?.toSymbolicName(),
+                        byName = byAlias?.toSymbolicName()),
                     metas = metas)
-            is from_source.join ->
+            is FromSource.Join ->
                 FromSourceJoin(
-                    joinOp = join_type0.toJoinOp(),
-                    leftRef = from_source1.toFromSource(),
-                    rightRef = from_source2.toFromSource(),
-                    condition = expr3?.toExprNode() ?: Literal(ion.newBool(true), emptyMetaContainer),
+                    joinOp = type.toJoinOp(),
+                    leftRef = left.toFromSource(),
+                    rightRef = right.toFromSource(),
+                    condition = predicate?.toExprNode() ?: Literal(ion.newBool(true), emptyMetaContainer),
                     metas = metas)
         }
     }
 
-    private fun join_type.toJoinOp(): JoinOp =
+    private fun JoinType.toJoinOp(): JoinOp =
         when (this) {
-            is join_type.inner -> JoinOp.INNER
-            is join_type.left -> JoinOp.LEFT
-            is join_type.right -> JoinOp.RIGHT
-            is join_type.full -> JoinOp.OUTER
+            is JoinType.Inner -> JoinOp.INNER
+            is JoinType.Left -> JoinOp.LEFT
+            is JoinType.Right -> JoinOp.RIGHT
+            is JoinType.Full -> JoinOp.OUTER
         }
 
     private fun SymbolPrimitive?.toSymbolicName() = this?.let { SymbolicName(it.text, it.metas.toPartiQlMetaContainer()) }
 
-    private fun group_by.toGroupBy(): GroupBy =
+    private fun GroupBy.toGroupBy(): org.partiql.lang.ast.GroupBy =
         GroupBy(
-            grouping = grouping_strategy0.toGroupingStrategy(),
-            groupByItems = group_key_list1.group_key0.map {
+            grouping = strategy.toGroupingStrategy(),
+            groupByItems = groupKeys.groupKeys.map {
                 GroupByItem(
-                    it.expr0.toExprNode(),
-                    it.symbol1?.toSymbolicName())
+                    it.expr.toExprNode(),
+                    it.asAlias?.toSymbolicName())
             },
-            groupName = symbol2?.toSymbolicName())
+            groupName = groupAsAlias?.toSymbolicName())
 
-    private fun grouping_strategy.toGroupingStrategy(): GroupingStrategy =
+    private fun GroupingStrategy.toGroupingStrategy(): org.partiql.lang.ast.GroupingStrategy =
         when(this) {
-            is grouping_strategy.group_full-> GroupingStrategy.FULL
-            is grouping_strategy.group_partial -> GroupingStrategy.PARTIAL
+            is GroupingStrategy.GroupFull-> org.partiql.lang.ast.GroupingStrategy.FULL
+            is GroupingStrategy.GroupPartial -> org.partiql.lang.ast.GroupingStrategy.PARTIAL
         }
 
-    private fun type.toExprNodeType(): DataType {
+    private fun Type.toExprNodeType(): DataType {
         val metas = this.metas.toPartiQlMetaContainer()
 
         return when (this) {
-            is type.null_type -> DataType(SqlDataType.NULL, listOf(), metas)
-            is type.missing_type -> DataType(SqlDataType.MISSING, listOf(), metas)
-            is type.boolean_type -> DataType(SqlDataType.BOOLEAN, listOf(), metas)
-            is type.integer_type -> DataType(SqlDataType.INTEGER, listOf(), metas)
-            is type.smallint_type -> DataType(SqlDataType.SMALLINT, listOf(), metas)
-            is type.float_type -> DataType(SqlDataType.FLOAT, listOfNotNull(int0?.value), metas)
-            is type.real_type -> DataType(SqlDataType.REAL, listOf(), metas)
-            is type.double_precision_type -> DataType(SqlDataType.DOUBLE_PRECISION, listOf(), metas)
-            is type.decimal_type -> DataType(SqlDataType.DECIMAL, listOfNotNull(int0?.value, int1?.value), metas)
-            is type.numeric_type -> DataType(SqlDataType.NUMERIC, listOfNotNull(int0?.value, int1?.value), metas)
-            is type.timestamp_type -> DataType(SqlDataType.TIMESTAMP, listOf(), metas)
-            is type.character_type -> DataType(SqlDataType.CHARACTER, listOfNotNull(int0?.value), metas)
-            is type.character_varying_type -> DataType(SqlDataType.CHARACTER_VARYING, listOfNotNull(int0?.value), metas)
-            is type.string_type -> DataType(SqlDataType.STRING, listOf(), metas)
-            is type.symbol_type -> DataType(SqlDataType.SYMBOL, listOf(), metas)
-            is type.blob_type -> DataType(SqlDataType.BLOB, listOf(), metas)
-            is type.clob_type -> DataType(SqlDataType.CLOB, listOf(), metas)
-            is type.struct_type -> DataType(SqlDataType.STRUCT, listOf(), metas)
-            is type.tuple_type -> DataType(SqlDataType.TUPLE, listOf(), metas)
-            is type.list_type -> DataType(SqlDataType.LIST, listOf(), metas)
-            is type.sexp_type -> DataType(SqlDataType.SEXP, listOf(), metas)
-            is type.bag_type -> DataType(SqlDataType.BAG, listOf(), metas)
+            is Type.NullType -> DataType(SqlDataType.NULL, listOf(), metas)
+            is Type.MissingType -> DataType(SqlDataType.MISSING, listOf(), metas)
+            is Type.BooleanType -> DataType(SqlDataType.BOOLEAN, listOf(), metas)
+            is Type.IntegerType -> DataType(SqlDataType.INTEGER, listOf(), metas)
+            is Type.SmallintType -> DataType(SqlDataType.SMALLINT, listOf(), metas)
+            is Type.FloatType -> DataType(SqlDataType.FLOAT, listOfNotNull(precision?.value), metas)
+            is Type.RealType -> DataType(SqlDataType.REAL, listOf(), metas)
+            is Type.DoublePrecisionType -> DataType(SqlDataType.DOUBLE_PRECISION, listOf(), metas)
+            is Type.DecimalType -> DataType(SqlDataType.DECIMAL, listOfNotNull(precision?.value, scale?.value), metas)
+            is Type.NumericType -> DataType(SqlDataType.NUMERIC, listOfNotNull(precision?.value, scale?.value), metas)
+            is Type.TimestampType -> DataType(SqlDataType.TIMESTAMP, listOf(), metas)
+            is Type.CharacterType -> DataType(SqlDataType.CHARACTER, listOfNotNull(length?.value), metas)
+            is Type.CharacterVaryingType -> DataType(SqlDataType.CHARACTER_VARYING, listOfNotNull(length?.value), metas)
+            is Type.StringType -> DataType(SqlDataType.STRING, listOf(), metas)
+            is Type.SymbolType -> DataType(SqlDataType.SYMBOL, listOf(), metas)
+            is Type.BlobType -> DataType(SqlDataType.BLOB, listOf(), metas)
+            is Type.ClobType -> DataType(SqlDataType.CLOB, listOf(), metas)
+            is Type.StructType -> DataType(SqlDataType.STRUCT, listOf(), metas)
+            is Type.TupleType -> DataType(SqlDataType.TUPLE, listOf(), metas)
+            is Type.ListType -> DataType(SqlDataType.LIST, listOf(), metas)
+            is Type.SexpType -> DataType(SqlDataType.SEXP, listOf(), metas)
+            is Type.BagType -> DataType(SqlDataType.BAG, listOf(), metas)
         }
     }
 
-    private fun set_quantifier.toSetQuantifier(): SetQuantifier =
+    private fun SetQuantifier.toSetQuantifier(): org.partiql.lang.ast.SetQuantifier =
         when (this) {
-            is set_quantifier.all -> SetQuantifier.ALL
-            is set_quantifier.distinct -> SetQuantifier.DISTINCT
+            is SetQuantifier.All -> org.partiql.lang.ast.SetQuantifier.ALL
+            is SetQuantifier.Distinct -> org.partiql.lang.ast.SetQuantifier.DISTINCT
         }
 
-    private fun scope_qualifier.toScopeQualifier(): ScopeQualifier =
+    private fun ScopeQualifier.toScopeQualifier(): org.partiql.lang.ast.ScopeQualifier =
         when (this) {
-            is scope_qualifier.unqualified -> ScopeQualifier.UNQUALIFIED
-            is scope_qualifier.locals_first -> ScopeQualifier.LEXICAL
+            is ScopeQualifier.Unqualified -> org.partiql.lang.ast.ScopeQualifier.UNQUALIFIED
+            is ScopeQualifier.LocalsFirst -> org.partiql.lang.ast.ScopeQualifier.LEXICAL
         }
 
-    private fun case_sensitivity.toCaseSensitivity(): CaseSensitivity =
+    private fun CaseSensitivity.toCaseSensitivity(): org.partiql.lang.ast.CaseSensitivity =
         when (this) {
-            is case_sensitivity.case_sensitive -> CaseSensitivity.SENSITIVE
-            is case_sensitivity.case_insensitive -> CaseSensitivity.INSENSITIVE
+            is CaseSensitivity.CaseSensitive -> org.partiql.lang.ast.CaseSensitivity.SENSITIVE
+            is CaseSensitivity.CaseInsensitive -> org.partiql.lang.ast.CaseSensitivity.INSENSITIVE
         }
 
-    private fun statement.dml.toExprNode(): ExprNode {
+    private fun Statement.Dml.toExprNode(): ExprNode {
         val fromSource = this.from?.toFromSource()
         val where = this.where?.toExprNode()
         val op = this.operation
         val dmlOp = when (op) {
-            is dml_op.insert -> InsertOp(op.expr0.toExprNode(), op.expr1.toExprNode())
-            is dml_op.insert_value -> InsertValueOp(op.expr0.toExprNode(), op.expr1.toExprNode(), op.expr2?.toExprNode())
-            is dml_op.set -> AssignmentOp(op.assignment0.map { Assignment(it.expr0.toExprNode(), it.expr1.toExprNode()) })
-            is dml_op.remove -> RemoveOp(op.expr0.toExprNode())
-            is dml_op.delete -> DeleteOp()
+            is DmlOp.Insert -> InsertOp(op.target.toExprNode(), op.values.toExprNode())
+            is DmlOp.InsertValue -> InsertValueOp(op.target.toExprNode(), op.values.toExprNode(), op.index?.toExprNode())
+            is DmlOp.Set -> AssignmentOp(op.assignments.map { Assignment(it.target.toExprNode(), it.value.toExprNode()) })
+            is DmlOp.Remove -> RemoveOp(op.target.toExprNode())
+            is DmlOp.Delete -> DeleteOp()
         }
 
         return DataManipulation(dmlOp, fromSource, where, this.metas.toPartiQlMetaContainer())
     }
 
-    private fun statement.ddl.toExprNode(): ExprNode {
-        val op = this.ddl_op0
+    private fun Statement.Ddl.toExprNode(): ExprNode {
+        val op = this.op
         val metas = this.metas.toPartiQlMetaContainer()
         return when(op) {
-            is ddl_op.create_table -> CreateTable(op.symbol0.text, metas)
-            is ddl_op.drop_table -> DropTable(op.identifier0.symbol0.text, metas)
-            is ddl_op.create_index -> CreateIndex(op.identifier0.symbol0.text, op.expr1.map { it.toExprNode() }, metas)
-            is ddl_op.drop_index ->
+            is DdlOp.CreateTable -> CreateTable(op.tableName.text, metas)
+            is DdlOp.DropTable -> DropTable(op.tableName.name.text, metas)
+            is DdlOp.CreateIndex -> CreateIndex(op.indexName.name.text, op.fields.map { it.toExprNode() }, metas)
+            is DdlOp.DropIndex ->
                 DropIndex(
-                    tableName = op.table.symbol0.text,
+                    tableName = op.table.name.text,
                     identifier = VariableReference(
-                        id = op.keys.symbol0.text,
-                        case = op.keys.case_sensitivity1.toCaseSensitivity(),
-                        scopeQualifier = ScopeQualifier.UNQUALIFIED,
+                        id = op.keys.name.text,
+                        case = op.keys.case.toCaseSensitivity(),
+                        scopeQualifier = org.partiql.lang.ast.ScopeQualifier.UNQUALIFIED,
                         metas = emptyMetaContainer
                     ),
                     metas = metas)

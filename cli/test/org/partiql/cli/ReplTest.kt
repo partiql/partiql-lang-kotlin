@@ -241,8 +241,8 @@ class ReplTest {
             #        1
             #      )
             #      {
-            #        line:1,
-            #        column:1
+            #        line: 1,
+            #        column: 1
             #      }
             #    )
             #    (
@@ -252,14 +252,14 @@ class ReplTest {
             #        1
             #      )
             #      {
-            #        line:1,
-            #        column:5
+            #        line: 1,
+            #        column: 5
             #      }
             #    )
             #  )
             #  {
-            #    line:1,
-            #    column:3
+            #    line: 1,
+            #    column: 3
             #  }
             #)
             #--- 

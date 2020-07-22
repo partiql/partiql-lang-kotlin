@@ -11,7 +11,7 @@
         //  is required.  (For example, `1 + (DROP TABLE foo)`)
         (sum statement
             // any expression that can be used in a context that requires a result.
-            (query expr)
+            (query expr::expr)
 
             // Data manipulation operations cannot be composed with other `expr` nodes, although they may
             // contain `expr` nodes themselves.
@@ -21,12 +21,12 @@
             // necessary to check the validity of these nodes during compilation or another phase.  In the future, we
             // should consider changing the modeling of these so such validity checks are not needed.
             (dml
-                (operation dml_op)
-                (from (? from_source))
-                (where (? expr)))
+                (operation op::dml_op)
+                (from from::(? from_source))
+                (where where::(? expr)))
 
             // Data definition operations also cannot be composed with other `expr` nodes.
-            (ddl ddl_op))
+            (ddl op::ddl_op))
 
         // The expressions that can result in values.
         (sum expr
@@ -35,69 +35,69 @@
 
             // A literal value.  Can be a literal in the PartiQL syntax or a back-tick quoted Ion literal.
             // Also represents a literal NULL value (i.e. `(lit null)`.)
-            (lit ion)
+            (lit value::ion)
 
             // A variable reference
-            (id symbol case_sensitivity scope_qualifier)
+            (id name::symbol case::case_sensitivity qualifier::scope_qualifier)
 
             // A parameter, i.e. `?`
-            (parameter int)
+            (parameter index::int)
 
             // Unary operators
-            (not expr)
-            (pos expr) // +
-            (neg expr) // -
+            (not expr::expr)
+            (pos expr::expr) // +
+            (neg expr::expr) // -
 
             // Applies to all variants with a single (* expr 2) element below: https://github.com/partiql/partiql-lang-kotlin/issues/241
             // Arithmetic operators
-            (plus (* expr 2))
-            (minus (* expr 2))
-            (times (* expr 2))
-            (divide (* expr 2))
-            (modulo (* expr 2))
-            (concat (* expr 2))
+            (plus operands::(* expr 2))
+            (minus operands::(* expr 2))
+            (times operands::(* expr 2))
+            (divide operands::(* expr 2))
+            (modulo operands::(* expr 2))
+            (concat operands::(* expr 2))
 
             // Logical operators
-            (and (* expr 2))
-            (or (* expr 2))
+            (and operands::(* expr 2))
+            (or operands::(* expr 2))
 
             // Comparison operators
-            (eq (* expr 2))
-            (ne (* expr 2))
-            (gt (* expr 2))
-            (gte (* expr 2))
-            (lt (* expr 2))
-            (lte (* expr 2))
-            (like expr expr (? expr))
-            (between expr expr expr)
+            (eq operands::(* expr 2))
+            (ne operands::(* expr 2))
+            (gt operands::(* expr 2))
+            (gte operands::(* expr 2))
+            (lt operands::(* expr 2))
+            (lte operands::(* expr 2))
+            (like value::expr pattern::expr escape::(? expr))
+            (between value::expr from::expr to::expr)
             // The PartiQL `IN` operator cannot be named `in` since that is a Kotlin keyword.
-            (in_collection (* expr 2))
+            (in_collection operands::(* expr 2))
             // The PartiQL `IS` operator  cannot be named `is` since that is a Kotlin keyword.
-            (is_type expr type)
+            (is_type value::expr type::type)
 
             // CASE <expr> [ WHEN <expr> THEN <expr> ]... [ ELSE <expr> ] END
-            (simple_case expr expr_pair_list (? expr))
+            (simple_case expr::expr cases::expr_pair_list default::(? expr))
 
             // CASE [ WHEN <expr> THEN <expr> ]... [ ELSE <expr> ] END
-            (searched_case expr_pair_list (? expr))
+            (searched_case cases::expr_pair_list default::(? expr))
 
             // Constructors
-            (struct (* expr_pair 0))
+            (struct fields::(* expr_pair 0))
             // https://github.com/partiql/partiql-lang-kotlin/issues/239
-            (bag (* expr 0))
-            (list (* expr 0))
-            (sexp (* expr 0))
+            (bag values::(* expr 0))
+            (list values::(* expr 0))
+            (sexp values::(* expr 0))
 
             // Set operators
-            (union set_quantifier (* expr 2))
-            (except set_quantifier (* expr 2))
-            (intersect set_quantifier (* expr 2))
+            (union setq::set_quantifier operands::(* expr 2))
+            (except setq::set_quantifier operands::(* expr 2))
+            (intersect setq::set_quantifier operands::(* expr 2))
 
             // Other expression types
-            (path expr (* path_step 1))
-            (call symbol (* expr 1))
-            (call_agg set_quantifier symbol expr)
-            (cast expr type)
+            (path root::expr steps::(* path_step 1))
+            (call func_name::symbol args::(* expr 1))
+            (call_agg setq::set_quantifier func_name::symbol arg::expr)
+            (cast value::expr as_type::type)
 
             // `SELECT` and its parts.
             (select
@@ -113,7 +113,7 @@
         // A "step" within a path expression; that is the components of the expression following the root.
         (sum path_step
             // `someRoot[<expr>]`, or `someRoot.someField` which is equivalent to `someRoot['someField']`.
-            (path_expr expr case_sensitivity)
+            (path_expr index::expr case::case_sensitivity)
             // `someRoot.[*]`]
             (path_wildcard)
             // `someRoot.*`
@@ -124,18 +124,18 @@
             // SELECT *
             (project_star)
             // SELECT <project_item>... (SQL-92 style select list with optional AS aliases or <expr>.*)
-            (project_list (* project_item 1))
+            (project_list project_items::(* project_item 1))
             // PIVOT <id> AT <id>
-            (project_pivot expr expr)
+            (project_pivot value::expr key::expr)
             // SELECT VALUE <expr>
-            (project_value expr))
+            (project_value value::expr))
 
         // An item to be projected in a `SELECT`-list.
         (sum project_item
             // For `.*` in SELECT list
-            (project_all expr)
+            (project_all expr::expr)
             // For `<expr> [AS <id>]`
-            (project_expr expr (? symbol)))
+            (project_expr expr::expr as_alias::(? symbol)))
 
         // Models the FROM clause of an SFW query
         // Note that modeling `scan` and `unpivot` separately is effectively re-introducing the same problem described
@@ -149,30 +149,30 @@
         //          (join ...))
         (sum from_source
             // <expr> [AS <id>] [AT <id>] [BY <id>]
-            (scan expr (? symbol) (? symbol) (? symbol))
+            (scan expr::expr as_alias::(? symbol) at_alias::(? symbol) by_alias::(? symbol))
 
             // UNPIVOT <expr> [AS <id>] [AT <id>] [BY <id>]
-            (unpivot expr (? symbol) (? symbol) (? symbol))
+            (unpivot expr::expr as_alias::(? symbol) at_alias::(? symbol) by_alias::(? symbol))
 
             // <from_source> JOIN [INNER | LEFT | RIGHT | FULL] <from_source> ON <expr>
-            (join join_type from_source from_source (? expr)))
+            (join type::join_type left::from_source right::from_source predicate::(? expr)))
 
         // Indicates the logical type of join.
         (sum join_type (inner) (left) (right) (full))
 
         // A generic pair of expressions.  Used in the `struct`, `searched_case` and `simple_case` expr variants above.
-        (product expr_pair expr expr)
+        (product expr_pair first::expr second::expr)
 
         // A list of expr_pair. Used in the `struct`, `searched_case` and `simple_case` expr variants above.
-        (product expr_pair_list (* expr_pair 0))
+        (product expr_pair_list pairs::(* expr_pair 0))
 
         // GROUP BY <grouping_strategy> <group_key_list>... [AS <symbol>]
         (product group_by
-            grouping_strategy
+            strategy::grouping_strategy
             // Note that `group_key_list` is a separate type instead of a variadic element because of the
             // PIG limitation that product types cannot have both optional and variadic elements.
-            group_key_list
-            (? symbol))  // `GROUP AS` alias
+            group_keys::group_key_list
+            group_as_alias::(? symbol))  // `GROUP AS` alias
 
         // Desired grouping qualifier:  ALL or PARTIAL.  Note: the `group_` prefix is needed to avoid naming clashes.
         (sum grouping_strategy
@@ -180,10 +180,10 @@
             (group_partial))
 
         // <group_key>[, <group_key>]...
-        (product group_key_list (* group_key 1))
+        (product group_key_list group_keys::(* group_key 1))
 
         // <expr> [AS <symbol>]
-        (product group_key expr (? symbol))
+        (product group_key expr::expr as_alias::(? symbol))
 
         // Indicates if variable lookup should be case-sensitive or not.
         (sum case_sensitivity (case_sensitive) (case_insensitive))
@@ -203,16 +203,16 @@
         (sum dml_op
 
             // `INSERT INTO <expr> <expr>`
-            (insert expr expr)
+            (insert target::expr values::expr)
 
             // `INSERT INTO <expr> VALUE <expr> [AT <expr>]`
-            (insert_value expr expr (? expr))
+            (insert_value target::expr values::expr index::(? expr))
 
             // `SET <assignment>...`
-            (set (* assignment 1))
+            (set assignments::(* assignment 1))
 
             // `REMOVE <expr>`
-            (remove expr)
+            (remove target::expr)
 
             // DELETE
             (delete))
@@ -220,18 +220,20 @@
         // A data definition operation.
         (sum ddl_op
             // `CREATE TABLE <symbol>`
-            (create_table symbol)
+            (create_table table_name::symbol)
 
             // `DROP TABLE <identifier>`
-            (drop_table identifier)
+            (drop_table table_name::identifier)
 
             // `CREATE INDEX ON <identifier> (<expr> [, <expr>]...)`
             // TODO: add optional table name
-            (create_index identifier (* expr 1))
+            (create_index index_name::identifier fields::(* expr 1))
 
             // DROP INDEX <identifier> ON <identifier>
             // In Statement, first <identifier> represents keys, second represents table
-            (drop_index (table identifier) (keys identifier)))
+            (drop_index
+                (table identifier)
+                (keys identifier)))
 
         // `identifier` can be used for names that need to be looked up with a notion of case-sensitivity.
 
@@ -243,11 +245,11 @@
         // an element of a type.  (Even though in the Kotlin code each varaint is its own type.)  Hence, we
         // define an `identifier` type above which can be used without opening up an element's domain to all of
         // `expr`.
-        (product identifier symbol case_sensitivity)
+        (product identifier name::symbol case::case_sensitivity)
 
         // Represents `<expr> = <expr>` in a DML SET operation.  Note that in this case, `=` is representing
         // an assignment operation and *not* the equality operator.
-        (product assignment expr expr)
+        (product assignment target::expr value::expr)
 
         // Represents all possible PartiQL data types. (`_type` suffixes below prevent naming clashes.)
         (sum type
@@ -266,7 +268,7 @@
             (integer_type)
 
             // `FLOAT`
-            (float_type (? int))
+            (float_type precision::(? int))
 
             // `REAL`
             (real_type)
@@ -275,19 +277,19 @@
             (double_precision_type)
 
             // `DEICMAL[(<int> [, int])]`.  Elements are precision then scale.
-            (decimal_type (? int) (? int))
+            (decimal_type precision::(? int) scale::(? int))
 
             // `NUMERIC[(<int> [, int])]`.  Elements are precision then scale.
-            (numeric_type (? int) (? int))
+            (numeric_type precision::(? int) scale::(? int))
 
             // `TIMESTAMP`
             (timestamp_type)
 
             // `CHAR(<int>)`
-            (character_type (? int))
+            (character_type length::(? int))
 
             // `VARCHAR`
-            (character_varying_type (? int))
+            (character_varying_type length::(? int))
 
             // PartiQL types.
             (missing_type)

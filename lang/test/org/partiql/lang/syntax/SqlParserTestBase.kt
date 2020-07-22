@@ -26,7 +26,7 @@ import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.passes.MetaStrippingRewriter
 import org.partiql.lang.ast.toAstStatement
 import org.partiql.lang.ast.toExprNode
-import org.partiql.lang.domains.partiql_ast
+import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.util.asIonSexp
 import org.partiql.lang.util.filterMetaNodes
 import org.partiql.pig.runtime.MalformedDomainDataException
@@ -40,9 +40,9 @@ abstract class SqlParserTestBase : TestBase() {
         source: String,
         expectedSexpAstV0String: String,
         skipPig: Boolean = true,
-        pigBuilder: partiql_ast.builder.() -> partiql_ast.partiql_ast_node
+        pigBuilder: PartiqlAst.builder.() -> PartiqlAst.PartiqlAstNode
     ) {
-        val expectedPartiQlAst = partiql_ast.build { pigBuilder() }
+        val expectedPartiQlAst = PartiqlAst.build { pigBuilder() }
         assertExpression(source, expectedSexpAstV0String, expectedPartiQlAst.toIonElement().toString(), skipPig)
     }
 
@@ -105,19 +105,19 @@ abstract class SqlParserTestBase : TestBase() {
         }
     }
 
-    private fun assertRoundTripPartiQlAstToExprNode(statement: partiql_ast.statement, expectedSexpAst: IonElement, parsedExprNode: ExprNode) {
-        // Run additional checks on the resulting partiql_ast instance
+    private fun assertRoundTripPartiQlAstToExprNode(statement: PartiqlAst.Statement, expectedSexpAst: IonElement, parsedExprNode: ExprNode) {
+        // Run additional checks on the resulting PartiqlAst instance
 
         // None of our test cases are wrapped in (query <expr>), so extract <expr> from that out
         val element = when (statement) {
-            is partiql_ast.statement.query -> statement.expr0.toIonElement()
-            is partiql_ast.statement.dml,
-            is partiql_ast.statement.ddl -> statement.toIonElement()
+            is PartiqlAst.Statement.Query -> statement.expr.toIonElement()
+            is PartiqlAst.Statement.Dml,
+            is PartiqlAst.Statement.Ddl -> statement.toIonElement()
         }
         assertEquals(expectedSexpAst, element)
 
-        // Convert the the IonElement back to the partiql_ast instance and assert equivalence
-        val transformedPig = partiql_ast.transform(statement.toIonElement()) as partiql_ast.statement
+        // Convert the the IonElement back to the PartiqlAst instance and assert equivalence
+        val transformedPig = PartiqlAst.transform(statement.toIonElement()) as PartiqlAst.Statement
         assertEquals(statement, transformedPig)
 
         // Convert from the PIG instance back to ExprNode and assert the result is the same as parsedExprNode.
@@ -127,10 +127,10 @@ abstract class SqlParserTestBase : TestBase() {
 
     private fun assertRoundTripIonElementToPartiQlAst(parsedV2Element: SexpElement, expectedSexpAst: SexpElement) {
         // #1 We can transform the parsed V2 element.
-        val transformedParsedV2Element = partiql_ast.transform(parsedV2Element)
+        val transformedParsedV2Element = PartiqlAst.transform(parsedV2Element)
 
         // #2 We can transform the expected V2 element.
-        val transformedExpectedV2Element = partiql_ast.transform(expectedSexpAst)
+        val transformedExpectedV2Element = PartiqlAst.transform(expectedSexpAst)
 
         // #3 The results of both transformations match.
         assertEquals(transformedExpectedV2Element, transformedParsedV2Element)
@@ -150,7 +150,7 @@ abstract class SqlParserTestBase : TestBase() {
         // (If the test starts succeeding suddenly, we want to know so we can mark the expected test to succeed!)
         // Doing so will also cause the additional assertions above to execute.
         try {
-            partiql_ast.transform(parsedV2Element)
+            PartiqlAst.transform(parsedV2Element)
             fail("Transform to PIG domain unexpectedly succeeded! :)")
         } catch (ex: MalformedDomainDataException) {
             // OK!
@@ -159,7 +159,7 @@ abstract class SqlParserTestBase : TestBase() {
 
     /**
      * Strips metas from the [parsedExprNode] so they are not included in equivalence checks
-     * (it is a known fact that conversion from partiql_ast and ExprNode can be lossy) and
+     * (it is a known fact that conversion from PartiqlAst and ExprNode can be lossy) and
      * round-trip the resulting [parsedExprNode] AST through [toAstStatement] and [toExprNode].
      *
      * Verify that the result matches the original without metas.
