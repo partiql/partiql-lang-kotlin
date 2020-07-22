@@ -212,20 +212,18 @@ internal class Repl(private val valueFactory: ExprValueFactory,
             val source = buffer.toString().trim()
             buffer.setLength(0)
 
-            val totalMs = timer.timeIt {
-                val result = f(source)
-                if (result != null) {
-                    outputWriter.write(BAR_1)
-                    outputWriter.write("\n")
+            val result = f(source)
+            if (result != null) {
+                outputWriter.write(BAR_1)
+                outputWriter.write("\n")
 
-                    formatter.formatTo(result, outputWriter)
-                    outputWriter.write("\n")
+                formatter.formatTo(result, outputWriter)
+                outputWriter.write("\n")
 
-                    outputWriter.write(BAR_2)
-                    outputWriter.write("\n")
+                outputWriter.write(BAR_2)
+                outputWriter.write("\n")
 
-                    previousResult = result
-                }
+                previousResult = result
             }
             outputWriter.write("OK!")
             outputWriter.write("\n")
