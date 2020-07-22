@@ -159,8 +159,7 @@ abstract class SqlParserTestBase : TestBase() {
 
     /**
      * Strips metas from the [parsedExprNode] so they are not included in equivalence checks
-     * (it is a known fact that conversion from PartiqlAst and ExprNode can be lossy) and
-     * round-trip the resulting [parsedExprNode] AST through [toAstStatement] and [toExprNode].
+     * and round-trip the resulting [parsedExprNode] AST through [toAstStatement] and [toExprNode].
      *
      * Verify that the result matches the original without metas.
      */
