@@ -14,8 +14,19 @@
 
 package org.partiql.lang.eval
 
-import com.amazon.ion.*
-import org.partiql.lang.ast.*
+import com.amazon.ion.IonString
+import com.amazon.ionelement.api.MetaContainer
+import com.amazon.ionelement.api.StringElement
+import com.amazon.ionelement.api.emptyMetaContainer
+import org.partiql.lang.ast.ExprNode
+import org.partiql.lang.ast.Literal
+import org.partiql.lang.ast.Path
+import org.partiql.lang.ast.PathComponentExpr
+import org.partiql.lang.ast.SourceLocationMeta
+import org.partiql.lang.ast.VariableReference
+import org.partiql.lang.domains.PartiqlAst
+import org.partiql.pig.runtime.SymbolPrimitive
+import org.partiql.lang.ast.MetaContainer as LegacyMetaContainer
 
 
 /**
@@ -27,7 +38,7 @@ import org.partiql.lang.ast.*
 fun ExprNode.extractColumnAlias(idx: Int): String =
     when (this) {
     is VariableReference -> {
-        val (name, _, _, _: MetaContainer) = this
+        val (name, _, _, _: LegacyMetaContainer) = this
         name
     }
     is Path              -> {
@@ -41,7 +52,7 @@ fun ExprNode.extractColumnAlias(idx: Int): String =
  * column index prefixed with `_`.
  */
 fun Path.extractColumnAlias(idx: Int): String {
-    val (_, components, _: MetaContainer) = this
+    val (_, components, _: LegacyMetaContainer) = this
     val nameOrigin = components.last()
     return when (nameOrigin) {
         is PathComponentExpr -> {
@@ -54,4 +65,47 @@ fun Path.extractColumnAlias(idx: Int): String {
         else                 -> syntheticColumnName(idx)
     }
 }
+
+// DL TODO:  move the below to a separate file perhaps in a better location(s)?
+// Make these internal or private?
+fun MetaContainer.sourceLocationOnly(): MetaContainer {
+    return when(val srcLoc = this[SourceLocationMeta.TAG] as? SourceLocationMeta) {
+        null -> emptyMetaContainer()
+        else -> com.amazon.ionelement.api.metaContainerOf(SourceLocationMeta.TAG to srcLoc)
+    }
+}
+
+/**
+ * Determines an appropriate column name for the given [ExprNode].
+ * If [this] is a [VariableReference], returns the name of the variable.
+ * If [this] is a [Path], invokes [Path.extractColumnAlias] to determine the alias.
+ * Otherwise, returns the column index prefixed with `_`.
+ */
+fun PartiqlAst.Expr.extractColumnAlias(idx: Int): SymbolPrimitive =
+    when (this) {
+        is PartiqlAst.Expr.Id -> SymbolPrimitive(name.text, name.metas)
+        is PartiqlAst.Expr.Path -> this.extractColumnAlias(idx)
+        else -> SymbolPrimitive(syntheticColumnName(idx), this.metas.sourceLocationOnly())
+    }
+
+/**
+ * Returns the name of the last component if it is a string literal, otherwise returns the
+ * column index prefixed with `_`.
+ */
+fun PartiqlAst.Expr.Path.extractColumnAlias(idx: Int): SymbolPrimitive =
+    SymbolPrimitive(
+        when (val nameOrigin = this.steps.last()) {
+            is PartiqlAst.PathStep.PathExpr -> {
+                val maybeLiteral = nameOrigin.index
+                when {
+                    maybeLiteral is PartiqlAst.Expr.Lit && maybeLiteral.value is StringElement -> {
+                        maybeLiteral.value.textValue
+                    }
+                    else -> syntheticColumnName(idx)
+                }
+            }
+            else -> syntheticColumnName(idx)
+        },
+        this.metas.sourceLocationOnly())
+
 

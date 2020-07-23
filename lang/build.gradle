@@ -60,9 +60,6 @@ dependencies {
 task generatePigDomains {
     group = "code generation"
 
-    // TODO: in the future, utilize the API created as part of this ticket:
-    // https://github.com/partiql/partiql-ir-generator/issues/5
-
     def typeUniverse = new File(projectDir, "resources/org/partiql/type-domains/partiql.ion")
     def outputFile = new File(projectDir, "src/org/partiql/lang/domains/partiql-domains.kt")
     def targetLanguage = new TargetLanguage.Kotlin("org.partiql.lang.domains")
@@ -77,6 +74,7 @@ task generatePigDomains {
             org.partiql.pig.MainKt.generateCode(cmd)
         } catch(PigException e) {
             System.err.println("Failed to generate PIG domains: ${e.error}")
+            // This exception tells gradle that the task failed and so the build should fail
             throw new TaskExecutionException(generatePigDomains, e)
         }
     }

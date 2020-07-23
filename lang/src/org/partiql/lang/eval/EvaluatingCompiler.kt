@@ -198,7 +198,7 @@ internal class EvaluatingCompiler(
      * Compiles an [ExprNode] tree to an [Expression].
      */
     fun compile(originalAst: ExprNode): Expression {
-        val rewrittenAst = compileOptions.rewritingMode.createRewriter().rewriteExprNode(originalAst)
+        val rewrittenAst = compileOptions.rewritingMode.createRewriter(valueFactory.ion).rewriteExprNode(originalAst)
 
         AstSanityValidator.validate(rewrittenAst)
 
