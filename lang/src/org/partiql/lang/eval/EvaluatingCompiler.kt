@@ -429,6 +429,8 @@ internal class EvaluatingCompiler(
                 (lValue.numberValue() / denominator).exprValue()
             }
             catch (e: ArithmeticException) {
+                // Setting the internal flag as true as it is not clear what
+                // ArithmeticException may be thrown by the above
                 throw EvaluationException(cause = e, internal = true)
             }
         }
@@ -737,7 +739,8 @@ internal class EvaluatingCompiler(
                         errorContextFrom(metas).also {
                             it[Property.EXPECTED_PARAMETER_ORDINAL] = ordinal
                             it[Property.BOUND_PARAMETER_COUNT] = params.size
-                        }
+                        },
+                        internal = false
                 )
             }
 
