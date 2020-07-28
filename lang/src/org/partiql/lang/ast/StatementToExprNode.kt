@@ -1,7 +1,7 @@
 package org.partiql.lang.ast
 
-import com.amazon.ionelement.api.toIonValue
 import com.amazon.ion.IonSystem
+import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.domains.PartiqlAst.CaseSensitivity
 import org.partiql.lang.domains.PartiqlAst.DdlOp
 import org.partiql.lang.domains.PartiqlAst.DmlOp
@@ -303,7 +303,7 @@ private class StatementTransformer(val ion: IonSystem) {
         val op = this.operation
         val dmlOp = when (op) {
             is DmlOp.Insert -> InsertOp(op.target.toExprNode(), op.values.toExprNode())
-            is DmlOp.InsertValue -> InsertValueOp(op.target.toExprNode(), op.values.toExprNode(), op.index?.toExprNode())
+            is DmlOp.InsertValue -> InsertValueOp(op.target.toExprNode(), op.value.toExprNode(), op.index?.toExprNode())
             is DmlOp.Set -> AssignmentOp(op.assignments.map { Assignment(it.target.toExprNode(), it.value.toExprNode()) })
             is DmlOp.Remove -> RemoveOp(op.target.toExprNode())
             is DmlOp.Delete -> DeleteOp()

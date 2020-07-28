@@ -14,10 +14,10 @@
 
 package org.partiql.lang.syntax
 
-import com.amazon.ionelement.api.IonElement
-import com.amazon.ionelement.api.toIonElement
 import com.amazon.ion.IonSexp
+import com.amazon.ionelement.api.IonElement
 import com.amazon.ionelement.api.SexpElement
+import com.amazon.ionelement.api.toIonElement
 import org.partiql.lang.TestBase
 import org.partiql.lang.ast.AstDeserializerBuilder
 import org.partiql.lang.ast.AstSerializer
@@ -40,7 +40,7 @@ abstract class SqlParserTestBase : TestBase() {
         source: String,
         expectedSexpAstV0String: String,
         skipPig: Boolean = true,
-        pigBuilder: PartiqlAst.builder.() -> PartiqlAst.PartiqlAstNode
+        pigBuilder: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode
     ) {
         val expectedPartiQlAst = PartiqlAst.build { pigBuilder() }
         assertExpression(source, expectedSexpAstV0String, expectedPartiQlAst.toIonElement().toString(), skipPig)

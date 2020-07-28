@@ -7,7 +7,7 @@ import org.partiql.lang.domains.id
 class SqlParserJoinTest : SqlParserTestBase() {
     private val projectX = PartiqlAst.build { projectList(projectExpr(id("x"))) }
 
-    private fun PartiqlAst.builder.selectWithOneJoin(
+    private fun PartiqlAst.Builder.selectWithOneJoin(
         joinType: PartiqlAst.JoinType,
         joinPredicate: PartiqlAst.Expr?,
         wherePredicate: PartiqlAst.Expr? = null
@@ -22,7 +22,7 @@ class SqlParserJoinTest : SqlParserTestBase() {
             where = wherePredicate)
 
 
-    private fun PartiqlAst.builder.selectWithFromSource(fromSource: PartiqlAst.FromSource): PartiqlAst.Expr =
+    private fun PartiqlAst.Builder.selectWithFromSource(fromSource: PartiqlAst.FromSource): PartiqlAst.Expr =
         select(project = projectX, from = fromSource)
 
     @Test

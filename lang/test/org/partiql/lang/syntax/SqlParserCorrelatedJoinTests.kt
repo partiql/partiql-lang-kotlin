@@ -1,14 +1,14 @@
 package org.partiql.lang.syntax
 
 import org.junit.Test
-import org.partiql.lang.domains.id
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.id
 
 class SqlParserCorrelatedJoinTests : SqlParserTestBase() {
-    private fun PartiqlAst.builder.callFWithS() =
+    private fun PartiqlAst.Builder.callFWithS() =
         call("f", id("s", caseInsensitive(), unqualified()))
 
-    private fun PartiqlAst.builder.selectWithCorrelatedJoin(
+    private fun PartiqlAst.Builder.selectWithCorrelatedJoin(
         joinType: PartiqlAst.JoinType,
         joinPredicate: PartiqlAst.Expr?,
         wherePredicate: PartiqlAst.Expr? = null
