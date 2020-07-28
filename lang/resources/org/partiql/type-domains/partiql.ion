@@ -206,7 +206,7 @@
             (insert target::expr values::expr)
 
             // `INSERT INTO <expr> VALUE <expr> [AT <expr>]`
-            (insert_value target::expr values::expr index::(? expr))
+            (insert_value target::expr value::expr index::(? expr))
 
             // `SET <assignment>...`
             (set assignments::(* assignment 1))
