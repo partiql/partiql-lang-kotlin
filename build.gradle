@@ -71,6 +71,10 @@ subprojects {
 
     tasks.withType(Test) {
         maxHeapSize = "4g"
+        testLogging {
+            events "failed"
+            exceptionFormat "full"
+        }
     }
 
 
