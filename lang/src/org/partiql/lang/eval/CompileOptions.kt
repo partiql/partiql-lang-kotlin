@@ -14,7 +14,6 @@
 
 package org.partiql.lang.eval
 
-import com.amazon.ion.IonSystem
 import org.partiql.lang.ast.passes.AstRewriter
 import org.partiql.lang.ast.passes.IDENTITY_REWRITER
 import org.partiql.lang.ast.passes.basicRewriters
@@ -49,13 +48,13 @@ enum class ProjectionIterationBehavior {
  */
 enum class RewritingMode {
     DEFAULT {
-        override fun createRewriter(ion: IonSystem) = basicRewriters(ion)
+        override fun createRewriter() = basicRewriters()
     },
     NONE {
-        override fun createRewriter(ion: IonSystem) = IDENTITY_REWRITER
+        override fun createRewriter() = IDENTITY_REWRITER
     };
 
-    internal abstract fun createRewriter(ion: IonSystem): AstRewriter
+    internal abstract fun createRewriter(): AstRewriter
 }
 
 /**

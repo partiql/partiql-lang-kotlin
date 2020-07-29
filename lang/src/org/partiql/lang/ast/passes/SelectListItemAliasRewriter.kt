@@ -14,15 +14,8 @@
 
 package org.partiql.lang.ast.passes
 
-import org.partiql.lang.ast.SelectListItemExpr
-import org.partiql.lang.ast.SelectListItemProjectAll
-import org.partiql.lang.ast.SelectListItemStar
-import org.partiql.lang.ast.SelectProjection
-import org.partiql.lang.ast.SelectProjectionList
-import org.partiql.lang.ast.SymbolicName
-import org.partiql.lang.eval.extractColumnAlias
-
-// DL TODO: delete this file.
+import org.partiql.lang.ast.*
+import org.partiql.lang.eval.*
 
 /**
  * Specifies any previously unspecified select list item aliases.
@@ -69,4 +62,3 @@ class SelectListItemAliasRewriter : AstRewriterBase() {
             }
         )
 }
-
