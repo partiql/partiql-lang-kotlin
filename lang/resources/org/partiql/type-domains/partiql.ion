@@ -171,7 +171,7 @@
             strategy::grouping_strategy
             // Note that `group_key_list` is a separate type instead of a variadic element because of the
             // PIG limitation that product types cannot have both optional and variadic elements.
-            group_keys::group_key_list
+            key_list::group_key_list
             group_as_alias::(? symbol))  // `GROUP AS` alias
 
         // Desired grouping qualifier:  ALL or PARTIAL.  Note: the `group_` prefix is needed to avoid naming clashes.
@@ -180,7 +180,7 @@
             (group_partial))
 
         // <group_key>[, <group_key>]...
-        (product group_key_list group_keys::(* group_key 1))
+        (product group_key_list keys::(* group_key 1))
 
         // <expr> [AS <symbol>]
         (product group_key expr::expr as_alias::(? symbol))

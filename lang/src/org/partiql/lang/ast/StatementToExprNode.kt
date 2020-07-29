@@ -237,7 +237,7 @@ private class StatementTransformer(val ion: IonSystem) {
     private fun GroupBy.toGroupBy(): org.partiql.lang.ast.GroupBy =
         GroupBy(
             grouping = strategy.toGroupingStrategy(),
-            groupByItems = groupKeys.groupKeys.map {
+            groupByItems = keyList.keys.map {
                 GroupByItem(
                     it.expr.toExprNode(),
                     it.asAlias?.toSymbolicName())
