@@ -2,7 +2,7 @@ package org.partiql.lang.ast
 
 import com.amazon.ionelement.api.toIonElement
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.pig.runtime.SymbolPrimitive
+import org.partiql.pig.runtime.asPrimitive
 
 /** Converts an [ExprNode] to a [PartiqlAst.statement]. */
 fun ExprNode.toAstStatement(): PartiqlAst.Statement {
@@ -73,7 +73,7 @@ fun ExprNode.toAstExpr(): PartiqlAst.Expr {
                     NAryOp.GTE -> gte(args, metas)
                     NAryOp.NE -> ne(args, metas)
                     NAryOp.LIKE -> like(args[0], args[1], if (args.size >= 3) args[2] else null, metas)
-                    NAryOp.BETWEEN -> between(args[0], args[1], args[2], metas)
+                    NAryOp.BETWEEN -> between(args[0], args[1], args[2])
                     NAryOp.NOT -> not(args[0], metas)
                     NAryOp.IN -> inCollection(args, metas)
                     NAryOp.AND -> and(args, metas)
@@ -157,12 +157,10 @@ private fun GroupBy.toAstGroupSpec(): PartiqlAst.GroupBy =
     PartiqlAst.build {
         groupBy_(
             this@toAstGroupSpec.grouping.toAstGroupStrategy(),
-            groupKeyList(this@toAstGroupSpec.groupByItems.map { groupKey_(it.expr.toAstExpr(), it.asName?.toSymbolPrimitive()) }),
-            this@toAstGroupSpec.groupName?.toSymbolPrimitive())
+            groupKeyList(this@toAstGroupSpec.groupByItems.map { groupKey_(it.expr.toAstExpr(), it.asName?.name?.asPrimitive()) }),
+            this@toAstGroupSpec.groupName?.name?.asPrimitive())
     }
 
-private fun SymbolicName.toSymbolPrimitive() =
-    SymbolPrimitive(this.name, this.metas.toElectrolyteMetaContainer())
 
 private fun GroupingStrategy.toAstGroupStrategy(): PartiqlAst.GroupingStrategy =
     PartiqlAst.build {
@@ -232,12 +230,11 @@ private fun FromSource.toAstFromSource(): PartiqlAst.FromSource {
     val metas = thiz.metas().toElectrolyteMetaContainer()
     return PartiqlAst.build {
         when (thiz) {
-            is FromSourceExpr -> scan_(
-                expr = thiz.expr.toAstExpr(),
-                asAlias = thiz.variables.asName?.toSymbolPrimitive(),
-                atAlias = thiz.variables.atName?.toSymbolPrimitive(),
-                byAlias = thiz.variables.byName?.toSymbolPrimitive(),
-                metas = metas)
+            is FromSourceExpr -> scan(
+                thiz.expr.toAstExpr(),
+                thiz.variables.asName?.name,
+                thiz.variables.atName?.name,
+                thiz.variables.byName?.name)
             is FromSourceJoin -> {
                 val jt = when (thiz.joinOp) {
                     JoinOp.INNER -> inner()
@@ -246,18 +243,17 @@ private fun FromSource.toAstFromSource(): PartiqlAst.FromSource {
                     JoinOp.OUTER -> full()
                 }
                 join(
-                    type = jt,
-                    left = thiz.leftRef.toAstFromSource(),
-                    right = thiz.rightRef.toAstFromSource(),
-                    predicate = if (thiz.metas.hasMeta(IsImplictJoinMeta.TAG)) null else thiz.condition.toAstExpr(),
+                    jt,
+                    thiz.leftRef.toAstFromSource(),
+                    thiz.rightRef.toAstFromSource(),
+                    if (thiz.metas.hasMeta(IsImplictJoinMeta.TAG)) null else thiz.condition.toAstExpr(),
                     metas = metas)
             }
-            is FromSourceUnpivot -> unpivot_(
-                expr = thiz.expr.toAstExpr(),
-                asAlias = thiz.variables.asName?.toSymbolPrimitive(),
-                atAlias = thiz.variables.atName?.toSymbolPrimitive(),
-                byAlias = thiz.variables.byName?.toSymbolPrimitive(),
-                metas = metas)
+            is FromSourceUnpivot -> unpivot(
+                thiz.expr.toAstExpr(),
+                thiz.variables.asName?.name,
+                thiz.variables.atName?.name,
+                thiz.variables.byName?.name)
         }
     }
 }

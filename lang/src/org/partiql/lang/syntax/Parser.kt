@@ -14,9 +14,8 @@
 
 package org.partiql.lang.syntax
 
-import com.amazon.ion.IonSexp
-import org.partiql.lang.ast.ExprNode
-import org.partiql.lang.domains.PartiqlAst
+import com.amazon.ion.*
+import org.partiql.lang.ast.*
 
 /**
  * Parses a list of [Token] into an [IonSexp] based AST.
@@ -24,13 +23,8 @@ import org.partiql.lang.domains.PartiqlAst
  * Implementations must be thread-safe.
  */
 interface Parser {
-    fun parseStatement(source: String): PartiqlAst.Statement
-
-    @Deprecated("Please use parseStatement() instead.")
     fun parseExprNode(source: String): ExprNode
 
-    @Deprecated("Please use parseStatement() instead.")
+    @Deprecated("Please use parseExprNode() instead--the return value can be deserialized to backward-compatible IonSexp.")
     fun parse(source: String): IonSexp
-
-
 }
