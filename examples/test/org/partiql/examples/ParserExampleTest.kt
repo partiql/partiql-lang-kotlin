@@ -34,8 +34,8 @@ Serialized AST
                   )
                 )
                 {
-                  line: 1,
-                  column: 8
+                  line:1,
+                  column:8
                 }
               )
               null
@@ -59,8 +59,8 @@ Serialized AST
                 )
               )
               {
-                line: 1,
-                column: 26
+                line:1,
+                column:26
               }
             )
             null
@@ -87,8 +87,8 @@ Serialized AST
                   )
                 )
                 {
-                  line: 1,
-                  column: 45
+                  line:1,
+                  column:45
                 }
               )
               (
@@ -98,21 +98,21 @@ Serialized AST
                   10
                 )
                 {
-                  line: 1,
-                  column: 60
+                  line:1,
+                  column:60
                 }
               )
             )
             {
-              line: 1,
-              column: 58
+              line:1,
+              column:58
             }
           )
         )
       )
       {
-        line: 1,
-        column: 1
+        line:1,
+        column:1
       }
     )
 """
