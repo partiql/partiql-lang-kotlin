@@ -34,7 +34,8 @@ class ToTimestampExprFunction(valueFactory: ExprValueFactory) : NullPropagatingE
                 throw EvaluationException("Timestamp was not a valid ion timestamp",
                                           ErrorCode.EVALUATOR_ION_TIMESTAMP_PARSE_FAILURE,
                                           PropertyValueMap(),
-                                          ex)
+                                          ex,
+                                          true)
             }
             else -> TimestampParser.parseTimestamp(args[0].ionValue.stringValue()!!, args[1].ionValue.stringValue()!!)
         })

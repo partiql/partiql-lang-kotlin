@@ -26,15 +26,6 @@ open class EvaluationException(message: String,
                                cause: Throwable? = null,
                                val internal: Boolean) : SqlException(message, errorCode, errorContext, cause) {
 
-    // not adding as a default value for `internal` so it's backward compatible with Java clients
-    constructor(message: String,
-                errorCode: ErrorCode? = null,
-                errorContext: PropertyValueMap? = null,
-                cause: Throwable? = null) : this(message = message,
-                                                 errorCode = errorCode,
-                                                 errorContext = errorContext,
-                                                 internal = true,
-                                                 cause = cause)
 
     constructor(cause: Throwable,
                 errorCode: ErrorCode? = null,

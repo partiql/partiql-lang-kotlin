@@ -194,7 +194,7 @@ fun ExprValue.cast(
         return errorContext
     }
 
-    fun castFailedErr(message: String, internal: Boolean = false, cause: Throwable? = null): Nothing {
+    fun castFailedErr(message: String, internal: Boolean, cause: Throwable? = null): Nothing {
         val errorContext = castExceptionContext()
 
         val errorCode = if (locationMeta == null) {
