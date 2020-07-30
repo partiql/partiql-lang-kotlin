@@ -80,7 +80,7 @@ private class ReplTester(bindings: Bindings<ExprValue> = Bindings.empty()) {
 
     private val repl = Repl(valueFactory, input, output, parser, compiler, bindings, zeroTimer)
 
-    private val actualReplPrompt = StringBuilder()
+    private val actualReplPrompt = StringBuffer()
 
     private val outputPhaser = Phaser()
 
