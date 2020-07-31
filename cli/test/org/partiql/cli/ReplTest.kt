@@ -21,7 +21,6 @@ import org.junit.*
 import org.junit.Assert.*
 import org.partiql.lang.*
 import java.io.*
-import java.lang.StringBuilder
 import java.util.concurrent.*
 import kotlin.concurrent.*
 
@@ -147,6 +146,7 @@ private class ReplTester(bindings: Bindings<ExprValue> = Bindings.empty()) {
 
 }
 
+@Ignore("https://github.com/partiql/partiql-lang-kotlin/issues/266")
 class ReplTest {
 
     @Test
