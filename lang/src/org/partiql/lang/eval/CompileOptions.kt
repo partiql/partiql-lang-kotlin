@@ -14,6 +14,7 @@
 
 package org.partiql.lang.eval
 
+import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.passes.AstRewriter
 import org.partiql.lang.ast.passes.IDENTITY_REWRITER
 import org.partiql.lang.ast.passes.basicRewriters
@@ -57,13 +58,19 @@ enum class RewritingMode {
     internal abstract fun createRewriter(): AstRewriter
 }
 
+class ThunkOptions(
+    val handleException: (Throwable, SourceLocationMeta?) -> Nothing = defaultExceptionHandler // <-- the default has the same behavior we currently have.
+)
+
+
 /**
  * Specifies options that effect the behavior of the PartiQL compiler.
  */
 data class CompileOptions private constructor (
         val undefinedVariable: UndefinedVariableBehavior,
         val projectionIteration: ProjectionIterationBehavior = ProjectionIterationBehavior.FILTER_MISSING,
-        val rewritingMode: RewritingMode = RewritingMode.DEFAULT
+        val rewritingMode: RewritingMode = RewritingMode.DEFAULT,
+        val thunkOptions: ThunkOptions = ThunkOptions()
 ) {
 
     companion object {

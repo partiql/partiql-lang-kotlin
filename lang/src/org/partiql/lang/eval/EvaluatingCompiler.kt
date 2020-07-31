@@ -52,6 +52,7 @@ internal class EvaluatingCompiler(
     private val functions: Map<String, ExprFunction>,
     private val compileOptions: CompileOptions = CompileOptions.standard()
 ) {
+    private val thunkFactory = ThunkFactory(compileOptions.thunkOptions)
     private val compilationContextStack = Stack<CompilationContext>()
 
     private val currentCompilationContext: CompilationContext
@@ -327,9 +328,9 @@ internal class EvaluatingCompiler(
      *
      * Currently only optimizes [NAryOp.IN] when it has only two arguments and the second argument is a [Seq]
      * consisting of only literal expressions.  In this case, it will return a thunk which uses a [TreeSet<ExprValue>]
-     * to quickly determine if the first argument exists within the second.  This is significant improvement when a
-     * large number of literal values exists in the [Seq].
-     */
+     * to quickly determine if the first argument exists within the second.  This
+     is significant improvement when a
+     * large number of literal values exists in the [Seq]. */
     private fun compileOptimizedNAry(
         expr: NAry
     ): ThunkEnv? {
@@ -348,7 +349,7 @@ internal class EvaluatingCompiler(
                             collectionExpr.values.map { it as Literal }
                                 .map { valueFactory.newFromIonValue(it.ionValue) })
 
-                        return thunkEnv(metas) { env ->
+                        return thunkFactory.thunkEnv(metas) { env ->
                             val targetValue = targetThunk(env)
                             valueFactory.newBoolean(values.contains(targetValue))
                         }
@@ -366,7 +367,7 @@ internal class EvaluatingCompiler(
         //Unary +
             1    -> {
                 val firstThunk = argThunks[0]
-                thunkEnv(metas) { env ->
+                thunkFactory.thunkEnv(metas) { env ->
                     val value = firstThunk(env)
                     when {
                         value.type.isUnknown -> valueFactory.nullValue
@@ -380,7 +381,7 @@ internal class EvaluatingCompiler(
                 }
             }
         //N-ary +
-            else -> thunkFold(valueFactory.nullValue, metas, argThunks) { lValue, rValue ->
+            else -> thunkFactory.thunkFold(valueFactory.nullValue, metas, argThunks) { lValue, rValue ->
                 (lValue.numberValue() + rValue.numberValue()).exprValue()
             }
         }
@@ -393,7 +394,7 @@ internal class EvaluatingCompiler(
         //Unary -
             1    -> {
                 val firstThunk = argThunks[0]
-                thunkEnv(metas) { env ->
+                thunkFactory.thunkEnv(metas) { env ->
                     val value = firstThunk(env)
                     when {
                         value.type.isUnknown -> valueFactory.nullValue
@@ -402,7 +403,7 @@ internal class EvaluatingCompiler(
                 }
             }
         //N-ary -
-            else -> thunkFold(valueFactory.nullValue, metas, argThunks) { lValue, rValue ->
+            else -> thunkFactory.thunkFold(valueFactory.nullValue, metas, argThunks) { lValue, rValue ->
                 (lValue.numberValue() - rValue.numberValue()).exprValue()
             }
         }
@@ -411,7 +412,7 @@ internal class EvaluatingCompiler(
     private fun compileNaryMul(
         argThunks: List<ThunkEnv>,
         metas: MetaContainer): ThunkEnv {
-        return thunkFold(
+        return thunkFactory.thunkFold(
             valueFactory.nullValue,
             metas,
             argThunks) { lValue, rValue -> (lValue.numberValue() * rValue.numberValue()).exprValue() }
@@ -420,7 +421,7 @@ internal class EvaluatingCompiler(
     private fun compileNAryDiv(
         argThunks: List<ThunkEnv>,
         metas: MetaContainer): ThunkEnv {
-        return thunkFold(valueFactory.nullValue, metas, argThunks) { lValue, rValue ->
+        return thunkFactory.thunkFold(valueFactory.nullValue, metas, argThunks) { lValue, rValue ->
             val denominator = rValue.numberValue()
             if (denominator.isZero()) {
                 err("/ by zero", ErrorCode.EVALUATOR_DIVIDE_BY_ZERO, null, false)
@@ -439,7 +440,7 @@ internal class EvaluatingCompiler(
     private fun compileNAryMod(
         argThunks: List<ThunkEnv>,
         metas: MetaContainer): ThunkEnv {
-        return thunkFold(
+        return thunkFactory.thunkFold(
             valueFactory.nullValue,
             metas,
             argThunks) { lValue, rValue ->
@@ -455,7 +456,7 @@ internal class EvaluatingCompiler(
     private fun compileNAryEq(
         argThunks: List<ThunkEnv>,
         metas: MetaContainer): ThunkEnv {
-        return thunkAndMap(
+        return thunkFactory.thunkAndMap(
             valueFactory,
             metas,
             argThunks) { lValue, rValue -> (lValue.exprEquals(rValue)) }
@@ -464,7 +465,7 @@ internal class EvaluatingCompiler(
     private fun compileNAryNe(
         argThunks: List<ThunkEnv>,
         metas: MetaContainer): ThunkEnv {
-        return thunkFold(valueFactory.nullValue, metas, argThunks) { lValue, rValue ->
+        return thunkFactory.thunkFold(valueFactory.nullValue, metas, argThunks) { lValue, rValue ->
             ((!lValue.exprEquals(
                 rValue)).exprValue())
         }
@@ -473,7 +474,7 @@ internal class EvaluatingCompiler(
     private fun compileNaryLt(
         argThunks: List<ThunkEnv>,
         metas: MetaContainer): ThunkEnv {
-        return thunkAndMap(
+        return thunkFactory.thunkAndMap(
             valueFactory,
             metas,
             argThunks) { lValue, rValue -> lValue < rValue }
@@ -482,7 +483,7 @@ internal class EvaluatingCompiler(
     private fun compileNAryLte(
         argThunks: List<ThunkEnv>,
         metas: MetaContainer): ThunkEnv {
-        return thunkAndMap(
+        return thunkFactory.thunkAndMap(
             valueFactory,
             metas,
             argThunks) { lValue, rValue -> lValue <= rValue }
@@ -491,7 +492,7 @@ internal class EvaluatingCompiler(
     private fun compileNAryGt(
         argThunks: List<ThunkEnv>,
         metas: MetaContainer): ThunkEnv {
-        return thunkAndMap(
+        return thunkFactory.thunkAndMap(
             valueFactory,
             metas,
             argThunks) { lValue, rValue -> lValue > rValue }
@@ -500,7 +501,7 @@ internal class EvaluatingCompiler(
     private fun compileNAryGte(
         argThunks: List<ThunkEnv>,
         metas: MetaContainer): ThunkEnv {
-        return thunkAndMap(
+        return thunkFactory.thunkAndMap(
             valueFactory,
             metas,
             argThunks) { lValue, rValue -> lValue >= rValue }
@@ -513,7 +514,7 @@ internal class EvaluatingCompiler(
         val fromThunk = argThunks[1]
         val toThunk = argThunks[2]
 
-        return thunkEnv(metas) { env ->
+        return thunkFactory.thunkEnv(metas) { env ->
             val value = valueThunk(env)
             (value >= fromThunk(env) && value <= toThunk(env)).exprValue()
         }
@@ -532,7 +533,7 @@ internal class EvaluatingCompiler(
                     .map { it as Literal }
                     .mapTo(TreeSet<ExprValue>(DEFAULT_COMPARATOR)) { valueFactory.newFromIonValue(it.ionValue) }
 
-                thunkEnv(metas) { env ->
+                thunkFactory.thunkEnv(metas) { env ->
                     val value = leftArg(env)
                     // we can use contains as exprEquals uses the DEFAULT_COMPARATOR
                     inSet.contains(value).exprValue()
@@ -542,7 +543,7 @@ internal class EvaluatingCompiler(
             else -> {
                 val rightArgThunk = compileExprNode(rightArg)
 
-                thunkEnv(metas) { env ->
+                thunkFactory.thunkEnv(metas) { env ->
                     val value = leftArg(env)
                     val rigthArgExprValue = rightArgThunk(env)
                     rigthArgExprValue.any { it.exprEquals(value) }.exprValue()
@@ -555,7 +556,7 @@ internal class EvaluatingCompiler(
         argThunks: List<ThunkEnv>,
         metas: MetaContainer): ThunkEnv {
         val arg = argThunks[0]
-        return thunkEnv(metas) { env ->
+        return thunkFactory.thunkEnv(metas) { env ->
             val value = arg(env)
             when {
                 value.type.isUnknown -> valueFactory.nullValue
@@ -567,7 +568,7 @@ internal class EvaluatingCompiler(
     private fun compileNAryAnd(
         argThunks: List<ThunkEnv>,
         metas: MetaContainer): ThunkEnv {
-        return thunkEnv(metas) thunk@{ env ->
+        return thunkFactory.thunkEnv(metas) thunkFactory.thunk@{ env ->
             var hasUnknowns = false
             argThunks.forEach { currThunk ->
                 val currValue = currThunk(env)
@@ -580,7 +581,7 @@ internal class EvaluatingCompiler(
                 when {
                     currValue.isUnknown()     -> hasUnknowns = true
                 //Short circuit only if we encounter a known false value.
-                    !currValue.booleanValue() -> return@thunk valueFactory.newBoolean(false)
+                    !currValue.booleanValue() -> return@thunkFactory.thunk valueFactory.newBoolean(false)
                 }
             }
 
@@ -594,7 +595,7 @@ internal class EvaluatingCompiler(
     private fun compileNAryOr(
         argThunks: List<ThunkEnv>,
         metas: MetaContainer): ThunkEnv {
-        return thunkEnv(metas) thunk@{ env ->
+        return thunkFactory.thunkEnv(metas) thunkFactory.thunk@{ env ->
             var hasUnknowns = false
             argThunks.forEach { currThunk ->
                 val currValue = currThunk(env)
@@ -606,7 +607,7 @@ internal class EvaluatingCompiler(
                 // (strange but true)
                 when {
                     currValue.isUnknown()    -> hasUnknowns = true
-                    currValue.booleanValue() -> return@thunk valueFactory.newBoolean(true)
+                    currValue.booleanValue() -> return@thunkFactory.thunk valueFactory.newBoolean(true)
                 }
             }
 
@@ -621,7 +622,7 @@ internal class EvaluatingCompiler(
         argThunks: List<ThunkEnv>,
         metas: MetaContainer): ThunkEnv {
 
-        return thunkFold(valueFactory.nullValue, metas, argThunks) { lValue, rValue ->
+        return thunkFactory.thunkFold(valueFactory.nullValue, metas, argThunks) { lValue, rValue ->
             val lType = lValue.type
             val rType = rValue.type
 
@@ -664,7 +665,7 @@ internal class EvaluatingCompiler(
             },
             internal = false)
 
-        return thunkEnv(metas) { env ->
+        return thunkFactory.thunkEnv(metas) { env ->
             val funcArgValues = funcArgThunks.map { it(env) }
             func.call(env, funcArgValues)
         }
@@ -673,12 +674,12 @@ internal class EvaluatingCompiler(
     private fun compileLiteral(expr: Literal): ThunkEnv {
         val (ionValue, metas: MetaContainer) = expr
         val value = valueFactory.newFromIonValue(ionValue)
-        return thunkEnv(metas) { value }
+        return thunkFactory.thunkEnv(metas) { value }
     }
 
     private fun compileLiteralMissing(expr: LiteralMissing): ThunkEnv {
         val (metas) = expr
-        return thunkEnv(metas) { _ -> valueFactory.missingValue }
+        return thunkFactory.thunkEnv(metas) { _ -> valueFactory.missingValue }
     }
 
     private fun compileVariableReference(expr: VariableReference): ThunkEnv {
@@ -691,7 +692,7 @@ internal class EvaluatingCompiler(
                 val bindingName = BindingName(id, case.toBindingCase())
                 val evalVariableReference = when (compileOptions.undefinedVariable) {
                     UndefinedVariableBehavior.ERROR   ->
-                        thunkEnv(metas) { env ->
+                        thunkFactory.thunkEnv(metas) { env ->
                             env.current[bindingName] ?: throw EvaluationException(
                                 "No such binding: ${bindingName.name}",
                                 ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
@@ -699,14 +700,14 @@ internal class EvaluatingCompiler(
                                 internal = false)
                         }
                     UndefinedVariableBehavior.MISSING ->
-                        thunkEnv(metas) { env ->
+                        thunkFactory.thunkEnv(metas) { env ->
                             env.current[bindingName] ?: valueFactory.missingValue
                         }
                 }
 
                 when (lookupStrategy) {
                     ScopeQualifier.UNQUALIFIED -> evalVariableReference
-                    ScopeQualifier.LEXICAL     -> thunkEnv(metas) { env ->
+                    ScopeQualifier.LEXICAL     -> thunkFactory.thunkEnv(metas) { env ->
                         evalVariableReference(env.flipToLocals())
                     }
                 }
@@ -714,7 +715,7 @@ internal class EvaluatingCompiler(
             else -> {
                 val bindingName = BindingName(uniqueNameMeta.uniqueName, BindingCase.SENSITIVE)
 
-                thunkEnv(metas) { env ->
+                thunkFactory.thunkEnv(metas) { env ->
                     // Unique identifiers are generated by the compiler and should always resolve.  If they
                     // don't for some reason we have a bug.
                     env.current[bindingName] ?: err(
@@ -757,11 +758,11 @@ internal class EvaluatingCompiler(
             TypedOp.IS   -> {
                 val (sqlDataType, _, _: MetaContainer) = dataType
                 when (sqlDataType) {
-                    SqlDataType.NULL -> thunkEnv(metas) { env ->
+                    SqlDataType.NULL -> thunkFactory.thunkEnv(metas) { env ->
                         val expValue = expThunk(env)
                         (expValue.type == ExprValueType.MISSING || expValue.type == ExprValueType.NULL).exprValue()
                     }
-                    else             -> thunkEnv(metas) { env ->
+                    else             -> thunkFactory.thunkEnv(metas) { env ->
                         val expValue = expThunk(env)
                         (expValue.type == exprValueType).exprValue()
                     }
