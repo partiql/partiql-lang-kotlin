@@ -91,7 +91,9 @@ private class ReplTester(bindings: Bindings<ExprValue> = Bindings.empty()) {
         while (replThread.isAlive || output.size() > 0) {
             Thread.sleep(SLEEP_TIME)
             if (output.size() > 0) {
-                actualReplPrompt.append(output.toString())
+                synchronized(actualReplPrompt) {
+                    actualReplPrompt.append(output.toString())
+                }
                 output.reset()
                 outputPhaser.arrive()
             }
@@ -117,7 +119,9 @@ private class ReplTester(bindings: Bindings<ExprValue> = Bindings.empty()) {
 
         val inputLines = extractInputLines(expectedPromptText)
         inputLines.forEach { line ->
-            actualReplPrompt.append(line)
+            synchronized(actualReplPrompt) {
+                actualReplPrompt.append(line)
+            }
 
             inputPipe.write(line.toByteArray(Charsets.UTF_8))
             // flush to repl input
