@@ -58,11 +58,6 @@ enum class RewritingMode {
     internal abstract fun createRewriter(): AstRewriter
 }
 
-class ThunkOptions(
-    val handleException: (Throwable, SourceLocationMeta?) -> Nothing = defaultExceptionHandler // <-- the default has the same behavior we currently have.
-)
-
-
 /**
  * Specifies options that effect the behavior of the PartiQL compiler.
  */
@@ -102,7 +97,7 @@ data class CompileOptions private constructor (
         fun undefinedVariable(value: UndefinedVariableBehavior) = set { copy(undefinedVariable = value) }
         fun projectionIteration(value: ProjectionIterationBehavior) = set { copy(projectionIteration = value) }
         fun rewriterMode(value: RewritingMode) = set { copy(rewritingMode = value) }
-
+        fun thunkOptions(value: (Throwable, SourceLocationMeta?) -> Nothing) = set { copy(thunkOptions = ThunkOptions(value))}
         private inline fun set(block: CompileOptions.() -> CompileOptions) : Builder {
             options = block(options)
             return this

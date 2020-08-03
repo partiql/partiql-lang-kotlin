@@ -37,6 +37,17 @@ typealias ThunkEnv = (Environment) -> ExprValue
  */
 typealias ThunkEnvValue<T> = (Environment, T) -> ExprValue
 
+/**
+ * A thunk excepting a configurable exception handler (([Throwable], [SourceLocationMeta]?) -> [Nothing])
+ *
+ * The default exception handler wraps any [Throwable] exception and throws [EvaluationException]
+ *
+ * This name was chosen because it is a thunk which accepts exception handler options as its arguments.
+ */
+class ThunkOptions(
+        val handleException: (Throwable, SourceLocationMeta?) -> Nothing = defaultExceptionHandler // <-- the default has the same behavior we currently have.
+)
+
 val defaultExceptionHandler: (Throwable, SourceLocationMeta?) -> Nothing = { e, sourceLocation ->
     val message = e.message ?: "<NO MESSAGE>"
     throw EvaluationException(
@@ -46,6 +57,11 @@ val defaultExceptionHandler: (Throwable, SourceLocationMeta?) -> Nothing = { e, 
         internal = true)
 }
 
+/**
+ * Contains all the thunk methods.
+ *
+ * Accepts [ThunkOptions] as an argument.
+ */
 class ThunkFactory(val thunkOptions: ThunkOptions) {
 
     /**
