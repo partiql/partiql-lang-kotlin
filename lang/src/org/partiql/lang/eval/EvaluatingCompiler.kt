@@ -329,7 +329,8 @@ internal class EvaluatingCompiler(
      * Currently only optimizes [NAryOp.IN] when it has only two arguments and the second argument is a [Seq]
      * consisting of only literal expressions.  In this case, it will return a thunk which uses a [TreeSet<ExprValue>]
      * to quickly determine if the first argument exists within the second.  This is significant improvement when a
-     * large number of literal values exists in the [Seq]. */
+     * large number of literal values exists in the [Seq].
+     */
     private fun compileOptimizedNAry(
         expr: NAry
     ): ThunkEnv? {
