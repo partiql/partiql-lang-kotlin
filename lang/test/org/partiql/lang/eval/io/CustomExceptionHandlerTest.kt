@@ -30,10 +30,10 @@ class CustomExceptionHandlerTest {
         val compilerPipeline = CompilerPipeline.build(ion) {
             addFunction(AlwaysThrowsFunc())
             compileOptions(CompileOptions.build {
-                thunkOptions(fun(e: Throwable, s: SourceLocationMeta?): Nothing {
+                thunkOptions { throwable, sourceLocationMeta ->
                     customHandlerWasInvoked = true
                     throw IllegalStateException()
-                })
+                }
             })
         }
 
@@ -48,4 +48,29 @@ class CustomExceptionHandlerTest {
         }
     }
 
+    @Test
+    fun verifyCustomExceptionHandlerForJavaBuilder() {
+        var customHandlerWasInvoked = false
+
+        val ion = IonSystemBuilder.standard().build()
+        val compilerPipeline = CompilerPipeline.builder(ion)
+                .addFunction(AlwaysThrowsFunc())
+                .compileOptions(CompileOptions.builder()
+                        .thunkOptions { throwable, sourceLocationMeta ->
+                            customHandlerWasInvoked = true
+                            throw IllegalStateException()
+                        }
+                        .build())
+                .build()
+
+        val expression = compilerPipeline.compile("alwaysthrows()")
+
+        try {
+            expression.eval(EvaluationSession.standard())
+            throw IllegalStateException()
+            fail("IllegalStateException was not thrown.")
+        } catch (e: IllegalStateException) {
+            assertTrue(customHandlerWasInvoked, "Custom handler must be invoked")
+        }
+    }
 }
