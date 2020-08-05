@@ -1,28 +1,28 @@
 package org.partiql.lang.syntax
 
 import org.junit.Test
+import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.id
-import org.partiql.lang.domains.partiql_ast
 
 class SqlParserCorrelatedJoinTests : SqlParserTestBase() {
-    private fun partiql_ast.builder.callFWithS() =
-        call("f", id("s", case_insensitive(), unqualified()))
+    private fun PartiqlAst.Builder.callFWithS() =
+        call("f", id("s", caseInsensitive(), unqualified()))
 
-    private fun partiql_ast.builder.selectWithCorrelatedJoin(
-        joinType: partiql_ast.join_type,
-        joinPredicate: partiql_ast.expr?,
-        wherePredicate: partiql_ast.expr? = null
-    ): partiql_ast.expr =
-        select(
-            project = project_list(
-                project_expr(id("a")),
-                project_expr(id("b"))),
-            from = join(
-                joinType,
-                scan(id("stuff"), "s"),
-                scan(id("s", case_insensitive(), locals_first())),
-                joinPredicate),
-            where = wherePredicate)
+    private fun PartiqlAst.Builder.selectWithCorrelatedJoin(
+        joinType: PartiqlAst.JoinType,
+        joinPredicate: PartiqlAst.Expr?,
+        wherePredicate: PartiqlAst.Expr? = null
+    ): PartiqlAst.Expr =
+            select(
+                project = projectList(
+                    projectExpr(id("a")),
+                    projectExpr(id("b"))),
+                from = join(
+                    joinType,
+                    scan(id("stuff"), "s"),
+                    scan(id("s", caseInsensitive(), localsFirst())),
+                    joinPredicate),
+                where = wherePredicate)
 
     @Test
     fun selectCorrelatedExplicitCrossJoin() = assertExpression(
@@ -36,7 +36,7 @@ class SqlParserCorrelatedJoinTests : SqlParserTestBase() {
         skipPig = false
     ) {
         selectWithCorrelatedJoin(
-            joinType = partiql_ast.join_type.inner(),
+            joinType = PartiqlAst.JoinType.Inner(),
             joinPredicate = null,
             wherePredicate = callFWithS())
     }
@@ -53,7 +53,7 @@ class SqlParserCorrelatedJoinTests : SqlParserTestBase() {
         skipPig = false
     ) {
         selectWithCorrelatedJoin(
-            joinType = partiql_ast.join_type.left(),
+            joinType = PartiqlAst.JoinType.Left(),
             joinPredicate = null,
             wherePredicate = callFWithS())
     }
@@ -75,7 +75,7 @@ class SqlParserCorrelatedJoinTests : SqlParserTestBase() {
         skipPig = false
     ) {
         selectWithCorrelatedJoin(
-            joinType = partiql_ast.join_type.left(),
+            joinType = PartiqlAst.JoinType.Left(),
             joinPredicate = callFWithS())
     }
 
@@ -92,7 +92,7 @@ class SqlParserCorrelatedJoinTests : SqlParserTestBase() {
         skipPig = false
     ) {
         selectWithCorrelatedJoin(
-            joinType = partiql_ast.join_type.inner(),
+            joinType = PartiqlAst.JoinType.Inner(),
             joinPredicate = null,
             wherePredicate = callFWithS())
     }
@@ -109,7 +109,7 @@ class SqlParserCorrelatedJoinTests : SqlParserTestBase() {
         skipPig = false
     ) {
         selectWithCorrelatedJoin(
-            joinType = partiql_ast.join_type.inner(),
+            joinType = PartiqlAst.JoinType.Inner(),
             joinPredicate = null,
             wherePredicate = callFWithS())
     }
