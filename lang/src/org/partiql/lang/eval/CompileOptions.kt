@@ -65,7 +65,7 @@ data class CompileOptions private constructor (
         val undefinedVariable: UndefinedVariableBehavior,
         val projectionIteration: ProjectionIterationBehavior = ProjectionIterationBehavior.FILTER_MISSING,
         val rewritingMode: RewritingMode = RewritingMode.DEFAULT,
-        val thunkOptions: ThunkOptions = ThunkOptions()
+        val thunkOptions: ThunkOptions = ThunkOptions.build{}
 ) {
 
     companion object {
@@ -97,7 +97,7 @@ data class CompileOptions private constructor (
         fun undefinedVariable(value: UndefinedVariableBehavior) = set { copy(undefinedVariable = value) }
         fun projectionIteration(value: ProjectionIterationBehavior) = set { copy(projectionIteration = value) }
         fun rewriterMode(value: RewritingMode) = set { copy(rewritingMode = value) }
-        fun thunkOptions(value: (Throwable, SourceLocationMeta?) -> Nothing) = set { copy(thunkOptions = ThunkOptions(value))}
+        fun thunkOptions(value: ThunkOptions) = set { copy(thunkOptions = value)}
         private inline fun set(block: CompileOptions.() -> CompileOptions) : Builder {
             options = block(options)
             return this

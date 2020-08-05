@@ -30,10 +30,12 @@ class CustomExceptionHandlerTest {
         val compilerPipeline = CompilerPipeline.build(ion) {
             addFunction(AlwaysThrowsFunc())
             compileOptions(CompileOptions.build {
-                thunkOptions { throwable, sourceLocationMeta ->
-                    customHandlerWasInvoked = true
-                    throw IllegalStateException()
-                }
+                thunkOptions(ThunkOptions.build {
+                    handleException { throwable, sourceLocationMeta ->
+                        customHandlerWasInvoked = true
+                        throw IllegalStateException()
+                    }
+                })
             })
         }
 
@@ -56,10 +58,12 @@ class CustomExceptionHandlerTest {
         val compilerPipeline = CompilerPipeline.builder(ion)
                 .addFunction(AlwaysThrowsFunc())
                 .compileOptions(CompileOptions.builder()
-                        .thunkOptions { throwable, sourceLocationMeta ->
-                            customHandlerWasInvoked = true
-                            throw IllegalStateException()
-                        }
+                        .thunkOptions(ThunkOptions.builder()
+                                .handleException { throwable, sourceLocationMeta ->
+                                    customHandlerWasInvoked = true
+                                    throw IllegalStateException()
+                                }
+                                .build())
                         .build())
                 .build()
 

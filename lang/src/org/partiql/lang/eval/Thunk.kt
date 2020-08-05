@@ -38,17 +38,54 @@ typealias ThunkEnv = (Environment) -> ExprValue
 typealias ThunkEnvValue<T> = (Environment, T) -> ExprValue
 
 /**
- * A thunk excepting a configurable exception handler (([Throwable], [SourceLocationMeta]?) -> [Nothing])
+ * A type alias for an exception handler
+ */
+typealias ThunkExceptionHandler = (Throwable, SourceLocationMeta?) -> Nothing
+
+/**
+ * Options for thunk construction. Takes an argument of type [ThunkExceptionHandler]
  *
  * The default exception handler wraps any [Throwable] exception and throws [EvaluationException]
- *
- * This name was chosen because it is a thunk which accepts exception handler options as its arguments.
  */
-class ThunkOptions(
-        val handleException: (Throwable, SourceLocationMeta?) -> Nothing = defaultExceptionHandler // <-- the default has the same behavior we currently have.
-)
+data class ThunkOptions private constructor(
+        val handleException: ThunkExceptionHandler = defaultExceptionHandler // <-- the default has the same behavior we currently have.
+) {
+    companion object {
 
-val defaultExceptionHandler: (Throwable, SourceLocationMeta?) -> Nothing = { e, sourceLocation ->
+        /**
+         * Creates a java style builder that will choose the default values for any unspecified options.
+         */
+        @JvmStatic
+        fun builder() = Builder()
+
+        /**
+         * Kotlin style builder that will choose the default values for any unspecified options.
+         */
+        fun build(block: Builder.() -> Unit) = Builder().apply(block).build()
+
+        /**
+         * Creates a [ThunkOptions] instance with the standard values.
+         */
+        @JvmStatic
+        fun standard() = Builder().build()
+    }
+
+    /**
+     * Builds a [ThunkOptions] instance.
+     */
+    class Builder {
+        private var options = ThunkOptions()
+        fun handleException(value: ThunkExceptionHandler) = set { copy(handleException = value)}
+        private inline fun set(block: ThunkOptions.() -> ThunkOptions) : Builder {
+            options = block(options)
+            return this
+        }
+
+        fun build() = options
+    }
+}
+
+internal val defaultExceptionHandler: ThunkExceptionHandler = { e, sourceLocation ->
     val message = e.message ?: "<NO MESSAGE>"
     throw EvaluationException(
         "Internal error, $message",
@@ -58,9 +95,7 @@ val defaultExceptionHandler: (Throwable, SourceLocationMeta?) -> Nothing = { e, 
 }
 
 /**
- * Contains all the thunk methods.
- *
- * Accepts [ThunkOptions] as an argument.
+ * Provides methods for constructing new thunks according to the specified [ThunkOptions].
  */
 class ThunkFactory(val thunkOptions: ThunkOptions) {
 
