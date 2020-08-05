@@ -18,6 +18,7 @@ package org.partiql.lang.eval
 import com.amazon.ion.*
 import org.partiql.lang.ast.*
 import org.partiql.lang.ast.passes.*
+import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.*
 import org.partiql.lang.eval.binding.*
 import org.partiql.lang.syntax.SqlParser
@@ -60,11 +61,11 @@ internal class EvaluatingCompiler(
 
     //Note: please don't make this inline -- it messes up [EvaluationException] stack traces and
     //isn't a huge benefit because this is only used at SQL-compile time anyway.
-    private fun <R> nestCompilationContext(expressionContext: ExpressionContext, block: () -> R): R {
+    private fun <R> nestCompilationContext(expressionContext: ExpressionContext, fromSourceNames: Set<String>, block: () -> R): R {
         compilationContextStack.push(
             when {
-                compilationContextStack.empty() -> CompilationContext(expressionContext)
-                else                            -> compilationContextStack.peek().createNested(expressionContext)
+                compilationContextStack.empty() -> CompilationContext(expressionContext, fromSourceNames)
+                else                            -> compilationContextStack.peek().createNested(expressionContext, fromSourceNames)
             })
 
         try {
@@ -202,7 +203,7 @@ internal class EvaluatingCompiler(
 
         AstSanityValidator.validate(rewrittenAst)
 
-        val thunk = nestCompilationContext(ExpressionContext.NORMAL) {
+        val thunk = nestCompilationContext(ExpressionContext.NORMAL, emptySet()) {
             compileExprNode(rewrittenAst)
         }
 
@@ -692,11 +693,25 @@ internal class EvaluatingCompiler(
                 val evalVariableReference = when (compileOptions.undefinedVariable) {
                     UndefinedVariableBehavior.ERROR   ->
                         thunkEnv(metas) { env ->
-                            env.current[bindingName] ?: throw EvaluationException(
-                                "No such binding: ${bindingName.name}",
-                                ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
-                                errorContextFrom(metas).also { it[Property.BINDING_NAME] = bindingName.name },
-                                internal = false)
+                            val value = env.current[bindingName]
+                            if(value == null) {
+
+                                val isFromSourceVariable = currentCompilationContext.fromSourceNames.contains(bindingName.name)
+                                if (!isFromSourceVariable) {
+                                    throw EvaluationException(
+                                        "No such binding: ${bindingName.name}",
+                                        ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
+                                        errorContextFrom(metas).also { it[Property.BINDING_NAME] = bindingName.name },
+                                        internal = false)
+                                } else {
+                                    throw EvaluationException(
+                                        "No such binding: ${bindingName.name}",
+                                        ErrorCode.EVALUATOR_BINDING_NOT_INCLUDED_IN_GROUP_BY,
+                                        errorContextFrom(metas).also { it[Property.BINDING_NAME] = bindingName.name },
+                                        internal = false)
+                                }
+                            }
+                            value
                         }
                     UndefinedVariableBehavior.MISSING ->
                         thunkEnv(metas) { env ->
@@ -870,7 +885,22 @@ internal class EvaluatingCompiler(
 
     private fun compileSelect(selectExpr: Select): ThunkEnv {
 
-        return nestCompilationContext(ExpressionContext.NORMAL) {
+        val fold = object : PartiqlAst.VisitorFold<Set<String>>() {
+            override fun visitFromSourceScan(node: PartiqlAst.FromSource.Scan, accumulator: Set<String>): Set<String> {
+                val aliases = listOfNotNull(node.asAlias?.text, node.atAlias?.text, node.byAlias?.text)
+                return accumulator + aliases.toSet()
+            }
+
+            override fun walkExprSelect(node: PartiqlAst.Expr.Select, accumulator: Set<String>): Set<String> {
+                return accumulator
+            }
+        }
+
+        val pigGeneratedAst = selectExpr.toAstExpr() as PartiqlAst.Expr.Select
+        val allFromSourceAliases = fold.walkFromSource(pigGeneratedAst.from, emptySet())
+
+
+        return nestCompilationContext(ExpressionContext.NORMAL, emptySet()) {
             val (setQuantifier, projection, from, _, groupBy, having, _, metas: MetaContainer) = selectExpr
 
             val fromSourceThunks = compileFromSources(from)
@@ -1059,7 +1089,7 @@ internal class EvaluatingCompiler(
                 }
                 is SelectProjectionList  -> {
                     val (items) = projection
-                    nestCompilationContext(ExpressionContext.SELECT_LIST) {
+                    nestCompilationContext(ExpressionContext.SELECT_LIST, allFromSourceAliases) {
                         val projectionThunk: ThunkEnvValue<List<ExprValue>> =
                             when {
                                 items.filterIsInstance<SelectListItemStar>().any() -> {
@@ -1207,7 +1237,7 @@ internal class EvaluatingCompiler(
 
         val aggFactory = getAggregatorFactory(funcVarRef.id.toLowerCase(), setQuantifier, metas)
 
-        val argThunk = nestCompilationContext(ExpressionContext.AGG_ARG) {
+        val argThunk = nestCompilationContext(ExpressionContext.AGG_ARG, emptySet()) {
             compileExprNode(argExpr)
         }
 
@@ -1915,10 +1945,10 @@ private enum class ExpressionContext {
  *
  * @param expressionContext Indicates what part of the grammar is currently being compiled.
  */
-private class CompilationContext(val expressionContext: ExpressionContext)
+private class CompilationContext(val expressionContext: ExpressionContext, val fromSourceNames: Set<String>)
 {
-    fun createNested(expressionContext: ExpressionContext) =
-        CompilationContext(expressionContext)
+    fun createNested(expressionContext: ExpressionContext, fromSourceNames: Set<String>) =
+        CompilationContext(expressionContext, fromSourceNames)
 }
 
 /**

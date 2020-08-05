@@ -337,7 +337,18 @@ enum class ErrorCode(private val category: ErrorCategory,
     EVALUATOR_BINDING_DOES_NOT_EXIST(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.BINDING_NAME),
-        "Binding does not exist"),
+        "Binding does not exist") {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "Binding '${errorContext?.get(Property.BINDING_NAME)?.stringValue() ?: UNKNOWN}' does not exist"
+    },
+
+    EVALUATOR_BINDING_NOT_INCLUDED_IN_GROUP_BY(
+        ErrorCategory.EVALUATOR,
+        LOCATION + setOf(Property.BINDING_NAME),
+        "Binding not included in group by") {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "Binding '${errorContext?.get(Property.BINDING_NAME)?.stringValue() ?: UNKNOWN}' not included in GROUP BY"
+    },
 
     EVALUATOR_UNBOUND_PARAMETER(
         ErrorCategory.EVALUATOR,
