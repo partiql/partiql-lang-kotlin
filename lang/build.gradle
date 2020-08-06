@@ -1,5 +1,7 @@
+
 import org.partiql.pig.cmdline.Command
 import org.partiql.pig.cmdline.TargetLanguage
+import org.partiql.pig.errors.PigException
 
 /*
  * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
@@ -43,7 +45,7 @@ dependencies {
 
     api 'com.amazon.ion:ion-java:[1.4.0,)'
     api 'com.amazon.ion:ion-element:0.2.0'
-    implementation 'org.partiql:partiql-ir-generator-runtime:0.2.0'
+    api 'org.partiql:partiql-ir-generator-runtime:0.3.0'
 
     // test-time dependencies
     testImplementation 'org.jetbrains.kotlin:kotlin-reflect'
@@ -71,7 +73,12 @@ task generatePigDomains {
     // the input file has changed or the output file is missing.
 
     doLast {
-        org.partiql.pig.MainKt.generateCode(cmd)
+        try {
+            org.partiql.pig.MainKt.generateCode(cmd)
+        } catch(PigException e) {
+            System.err.println("Failed to generate PIG domains: ${e.error}")
+            throw new TaskExecutionException(generatePigDomains, e)
+        }
     }
 }
 

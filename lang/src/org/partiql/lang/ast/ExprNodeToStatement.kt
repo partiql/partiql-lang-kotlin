@@ -1,19 +1,16 @@
 package org.partiql.lang.ast
 
 import com.amazon.ionelement.api.toIonElement
-import org.partiql.lang.domains.partiql_ast
-import org.partiql.lang.domains.partiql_ast.group_by
-import org.partiql.lang.domains.partiql_ast.grouping_strategy
-import org.partiql.lang.domains.partiql_ast.set_quantifier
+import org.partiql.lang.domains.PartiqlAst
 import org.partiql.pig.runtime.asPrimitive
 
-/** Converts an [ExprNode] to a [partiql_ast.statement]. */
-fun ExprNode.toAstStatement(): partiql_ast.statement {
+/** Converts an [ExprNode] to a [PartiqlAst.statement]. */
+fun ExprNode.toAstStatement(): PartiqlAst.Statement {
     val node = this
     return when(node) {
         is Literal, is LiteralMissing, is VariableReference, is Parameter, is NAry, is CallAgg,
         is Typed, is Path, is SimpleCase, is SearchedCase, is Select, is Struct,
-        is Seq -> partiql_ast.build { query(toAstExpr()) }
+        is Seq -> PartiqlAst.build { query(toAstExpr()) }
 
         is DataManipulation -> node.toAstDml()
 
@@ -25,37 +22,37 @@ fun ExprNode.toAstStatement(): partiql_ast.statement {
 private fun PartiQlMetaContainer.toElectrolyteMetaContainer(): ElectrolyteMetaContainer =
     com.amazon.ionelement.api.metaContainerOf(map { it.tag to it })
 
-private fun ExprNode.toAstDdl(): partiql_ast.statement {
+private fun ExprNode.toAstDdl(): PartiqlAst.Statement {
     val thiz = this
     val metas = metas.toElectrolyteMetaContainer()
 
-    return partiql_ast.build {
+    return PartiqlAst.build {
         when(thiz) {
             is Literal, is LiteralMissing, is VariableReference, is Parameter, is NAry, is CallAgg, is Typed,
             is Path, is SimpleCase, is SearchedCase, is Select, is Struct, is Seq,
-            is DataManipulation -> error("Can't convert ${thiz.javaClass} to partiql_ast.ddl")
+            is DataManipulation -> error("Can't convert ${thiz.javaClass} to PartiqlAst.ddl")
 
-            is CreateTable -> ddl(create_table(thiz.tableName), metas)
-            is CreateIndex -> ddl(create_index(identifier(thiz.tableName, case_sensitive()), thiz.keys.map { it.toAstExpr() }), metas)
+            is CreateTable -> ddl(createTable(thiz.tableName), metas)
+            is CreateIndex -> ddl(createIndex(identifier(thiz.tableName, caseSensitive()), thiz.keys.map { it.toAstExpr() }), metas)
             is DropIndex ->
                 ddl(
-                    drop_index(
+                    dropIndex(
                         // case-sensitivity of table names cannot be represented with ExprNode.
-                        identifier(thiz.tableName, case_sensitive()),
+                        identifier(thiz.tableName, caseSensitive()),
                         identifier(thiz.identifier.id, thiz.identifier.case.toAstCaseSensitivity())),
                     metas)
             is DropTable ->
                 // case-sensitivity of table names cannot be represented with ExprNode.
-                ddl(drop_table(identifier(thiz.tableName, case_sensitive())), metas)
+                ddl(dropTable(identifier(thiz.tableName, caseSensitive())), metas)
         }
     }
 }
 
-fun ExprNode.toAstExpr(): partiql_ast.expr {
+fun ExprNode.toAstExpr(): PartiqlAst.Expr {
     val node = this
     val metas = this.metas.toElectrolyteMetaContainer()
 
-    return partiql_ast.build {
+    return PartiqlAst.build {
         when (node) {
             is Literal -> lit(node.ionValue.toIonElement(), metas)
             is LiteralMissing -> missing(metas)
@@ -78,48 +75,48 @@ fun ExprNode.toAstExpr(): partiql_ast.expr {
                     NAryOp.LIKE -> like(args[0], args[1], if (args.size >= 3) args[2] else null, metas)
                     NAryOp.BETWEEN -> between(args[0], args[1], args[2])
                     NAryOp.NOT -> not(args[0], metas)
-                    NAryOp.IN -> in_collection(args, metas)
+                    NAryOp.IN -> inCollection(args, metas)
                     NAryOp.AND -> and(args, metas)
                     NAryOp.OR -> or(args, metas)
                     NAryOp.STRING_CONCAT -> concat(args, metas)
                     NAryOp.CALL -> {
-                        val idArg = args.first() as? partiql_ast.expr.id
+                        val idArg = args.first() as? PartiqlAst.Expr.Id
                             ?: error("First argument of call should be a VariableReference")
-                        // the above error message says "VariableReference" and not partiql_ast.expr.id because it would
+                        // the above error message says "VariableReference" and not PartiqlAst.expr.id because it would
                         // have been converted from a VariableReference when [args] was being built.
 
                         // TODO:  we are losing case-sensitivity of the function name here.  Do we care?
-                        call(idArg.symbol0.text, args.drop(1), metas)
+                        call(idArg.name.text, args.drop(1), metas)
                     }
-                    NAryOp.INTERSECT -> intersect(set_quantifier.distinct(), args, metas)
-                    NAryOp.INTERSECT_ALL -> intersect(set_quantifier.all(), args, metas)
-                    NAryOp.EXCEPT -> except(set_quantifier.distinct(), args, metas)
-                    NAryOp.EXCEPT_ALL -> except(set_quantifier.all(), args, metas)
-                    NAryOp.UNION -> union(set_quantifier.distinct(), args, metas)
-                    NAryOp.UNION_ALL -> union(set_quantifier.all(), args, metas)
+                    NAryOp.INTERSECT -> intersect(distinct(), args, metas)
+                    NAryOp.INTERSECT_ALL -> intersect(all(), args, metas)
+                    NAryOp.EXCEPT -> except(distinct(), args, metas)
+                    NAryOp.EXCEPT_ALL -> except(all(), args, metas)
+                    NAryOp.UNION -> union(distinct(), args, metas)
+                    NAryOp.UNION_ALL -> union(all(), args, metas)
                 }
             }
             is CallAgg -> {
                 val symbol1 = (node.funcExpr as? VariableReference)?.id
                     ?: error("Expected CallAgg.funcExpr to be a VariableReference")
                 // TODO:  we are losing case-sensitivity of the function name here.  Do we care?
-                call_agg(node.setQuantifier.toAstSetQuantifier(), symbol1, node.arg.toAstExpr(), metas)
+                callAgg(node.setQuantifier.toAstSetQuantifier(), symbol1, node.arg.toAstExpr(), metas)
             }
             is Typed ->
                 when(node.op) {
                     TypedOp.CAST -> cast(node.expr.toAstExpr(), node.type.toAstType(), metas)
-                    TypedOp.IS -> is_type(node.expr.toAstExpr(), node.type.toAstType(), metas)
+                    TypedOp.IS -> isType(node.expr.toAstExpr(), node.type.toAstType(), metas)
                 }
             is Path -> path(node.root.toAstExpr(), node.components.map { it.toAstPathStep() }, metas)
             is SimpleCase ->
-                simple_case(
+                simpleCase(
                     node.valueExpr.toAstExpr(),
-                    expr_pair_list(node.whenClauses.map { expr_pair(it.valueExpr.toAstExpr(), it.thenExpr.toAstExpr()) }),
+                    exprPairList(node.whenClauses.map { exprPair(it.valueExpr.toAstExpr(), it.thenExpr.toAstExpr()) }),
                     node.elseExpr?.toAstExpr(),
                     metas)
             is SearchedCase ->
-                searched_case(
-                    expr_pair_list(node.whenClauses.map { expr_pair(it.condition.toAstExpr(), it.thenExpr.toAstExpr()) }),
+                searchedCase(
+                    exprPairList(node.whenClauses.map { exprPair(it.condition.toAstExpr(), it.thenExpr.toAstExpr()) }),
                     node.elseExpr?.toAstExpr(),
                     metas)
             is Select ->
@@ -131,7 +128,7 @@ fun ExprNode.toAstExpr(): partiql_ast.expr {
                     setq = node.setQuantifier.let {
                         when (it) {
                             SetQuantifier.ALL -> null
-                            SetQuantifier.DISTINCT -> set_quantifier.distinct()
+                            SetQuantifier.DISTINCT -> distinct()
                         }
                     },
                     project = node.projection.toAstSelectProject(),
@@ -141,7 +138,7 @@ fun ExprNode.toAstExpr(): partiql_ast.expr {
                     having = node.having?.toAstExpr(),
                     limit = node.limit?.toAstExpr(),
                     metas = metas)
-            is Struct -> struct(node.fields.map { expr_pair(it.name.toAstExpr(), it.expr.toAstExpr()) })
+            is Struct -> struct(node.fields.map { exprPair(it.name.toAstExpr(), it.expr.toAstExpr()) })
             is Seq ->
                 when(node.type) {
                     SeqType.LIST -> list(node.values.map { it.toAstExpr() })
@@ -151,47 +148,51 @@ fun ExprNode.toAstExpr(): partiql_ast.expr {
 
             // These are handled by `toAstDml()`
             is DataManipulation, is CreateTable, is CreateIndex, is DropTable, is DropIndex ->
-                error("Can't transform ${node.javaClass} to a partiql_ast.expr }")
+                error("Can't transform ${node.javaClass} to a PartiqlAst.expr }")
         }
     }
 }
 
-private fun GroupBy.toAstGroupSpec(): group_by =
-    group_by(
-        this.grouping.toAstGroupStrategy(),
-        partiql_ast.group_key_list(this.groupByItems.map { partiql_ast.group_key(it.expr.toAstExpr(), it.asName?.name?.asPrimitive()) }),
-        this.groupName?.name?.asPrimitive())
-
-
-private fun GroupingStrategy.toAstGroupStrategy(): grouping_strategy =
-    when(this) {
-        GroupingStrategy.FULL -> grouping_strategy.group_full()
-        GroupingStrategy.PARTIAL -> grouping_strategy.group_partial()
+private fun GroupBy.toAstGroupSpec(): PartiqlAst.GroupBy =
+    PartiqlAst.build {
+        groupBy_(
+            this@toAstGroupSpec.grouping.toAstGroupStrategy(),
+            groupKeyList(this@toAstGroupSpec.groupByItems.map { groupKey_(it.expr.toAstExpr(), it.asName?.name?.asPrimitive()) }),
+            this@toAstGroupSpec.groupName?.name?.asPrimitive())
     }
 
-private fun CaseSensitivity.toAstCaseSensitivity(): partiql_ast.case_sensitivity {
+
+private fun GroupingStrategy.toAstGroupStrategy(): PartiqlAst.GroupingStrategy =
+    PartiqlAst.build {
+        when (this@toAstGroupStrategy) {
+            GroupingStrategy.FULL -> groupFull()
+            GroupingStrategy.PARTIAL -> groupPartial()
+        }
+    }
+
+private fun CaseSensitivity.toAstCaseSensitivity(): PartiqlAst.CaseSensitivity {
     val thiz = this
-    return partiql_ast.build {
+    return PartiqlAst.build {
         when (thiz) {
-            CaseSensitivity.SENSITIVE -> case_sensitive()
-            CaseSensitivity.INSENSITIVE -> case_insensitive()
+            CaseSensitivity.SENSITIVE -> caseSensitive()
+            CaseSensitivity.INSENSITIVE -> caseInsensitive()
         }
     }
 }
 
-private fun ScopeQualifier.toAstScopeQualifier(): partiql_ast.scope_qualifier {
+private fun ScopeQualifier.toAstScopeQualifier(): PartiqlAst.ScopeQualifier {
     val thiz = this
-    return partiql_ast.build {
+    return PartiqlAst.build {
         when (thiz) {
-            ScopeQualifier.LEXICAL -> locals_first()
+            ScopeQualifier.LEXICAL -> localsFirst()
             ScopeQualifier.UNQUALIFIED -> unqualified()
         }
     }
 }
 
-private fun SetQuantifier.toAstSetQuantifier(): partiql_ast.set_quantifier {
+private fun SetQuantifier.toAstSetQuantifier(): PartiqlAst.SetQuantifier {
     val thiz = this
-    return partiql_ast.build {
+    return PartiqlAst.build {
         when (thiz) {
             SetQuantifier.ALL -> all()
             SetQuantifier.DISTINCT -> distinct()
@@ -199,35 +200,35 @@ private fun SetQuantifier.toAstSetQuantifier(): partiql_ast.set_quantifier {
     }
 }
 
-private fun SelectProjection.toAstSelectProject(): partiql_ast.projection {
+private fun SelectProjection.toAstSelectProject(): PartiqlAst.Projection {
     val thiz = this
-    return partiql_ast.build {
+    return PartiqlAst.build {
         when(thiz) {
-            is SelectProjectionValue -> project_value(thiz.expr.toAstExpr())
+            is SelectProjectionValue -> projectValue(thiz.expr.toAstExpr())
             is SelectProjectionList -> {
                 if(thiz.items.any { it is SelectListItemStar }) {
                     if(thiz.items.size > 1) error("More than one select item when SELECT * was present.")
-                    project_star()
+                    projectStar()
                 }
                 else
-                    project_list(
+                    projectList(
                         thiz.items.map {
                             when(it) {
-                                is SelectListItemExpr -> project_expr(it.expr.toAstExpr(), it.asName?.name)
-                                is SelectListItemProjectAll -> project_all(it.expr.toAstExpr())
+                                is SelectListItemExpr -> projectExpr(it.expr.toAstExpr(), it.asName?.name)
+                                is SelectListItemProjectAll -> projectAll(it.expr.toAstExpr())
                                 is SelectListItemStar -> error("this should happen due to `when` branch above.")
                             }
                         })
             }
-            is SelectProjectionPivot -> project_pivot(thiz.nameExpr.toAstExpr(), thiz.valueExpr.toAstExpr())
+            is SelectProjectionPivot -> projectPivot(thiz.nameExpr.toAstExpr(), thiz.valueExpr.toAstExpr())
         }
     }
 }
 
-private fun FromSource.toAstFromSource(): partiql_ast.from_source {
+private fun FromSource.toAstFromSource(): PartiqlAst.FromSource {
     val thiz = this
     val metas = thiz.metas().toElectrolyteMetaContainer()
-    return partiql_ast.build {
+    return PartiqlAst.build {
         when (thiz) {
             is FromSourceExpr -> scan(
                 thiz.expr.toAstExpr(),
@@ -257,20 +258,20 @@ private fun FromSource.toAstFromSource(): partiql_ast.from_source {
     }
 }
 
-private fun PathComponent.toAstPathStep(): partiql_ast.path_step {
+private fun PathComponent.toAstPathStep(): PartiqlAst.PathStep {
     val thiz = this
-    return partiql_ast.build {
+    return PartiqlAst.build {
         when (thiz) {
-            is PathComponentExpr -> path_expr(thiz.expr.toAstExpr(), thiz.case.toAstCaseSensitivity())
-            is PathComponentUnpivot -> path_unpivot(thiz.metas.toElectrolyteMetaContainer())
-            is PathComponentWildcard -> path_wildcard(thiz.metas.toElectrolyteMetaContainer())
+            is PathComponentExpr -> pathExpr(thiz.expr.toAstExpr(), thiz.case.toAstCaseSensitivity())
+            is PathComponentUnpivot -> pathUnpivot(thiz.metas.toElectrolyteMetaContainer())
+            is PathComponentWildcard -> pathWildcard(thiz.metas.toElectrolyteMetaContainer())
         }
     }
 }
 
-private fun DataManipulation.toAstDml(): partiql_ast.statement {
+private fun DataManipulation.toAstDml(): PartiqlAst.Statement {
     val thiz = this
-    return partiql_ast.build {
+    return PartiqlAst.build {
         val dmlOp = thiz.dmlOperation
         val dmlOp2 = when (dmlOp) {
             is InsertOp ->
@@ -278,7 +279,7 @@ private fun DataManipulation.toAstDml(): partiql_ast.statement {
                     dmlOp.lvalue.toAstExpr(),
                     dmlOp.values.toAstExpr())
             is InsertValueOp ->
-                insert_value(
+                insertValue(
                     dmlOp.lvalue.toAstExpr(),
                     dmlOp.value.toAstExpr(),
                     dmlOp.position?.toAstExpr(),
@@ -303,34 +304,34 @@ private fun DataManipulation.toAstDml(): partiql_ast.statement {
 }
 
 
-private fun DataType.toAstType(): partiql_ast.type {
+private fun DataType.toAstType(): PartiqlAst.Type {
     val thiz = this
     val arg1 = thiz.args.getOrNull(0)?.toLong()
     val arg2 = thiz.args.getOrNull(1)?.toLong()
-    return partiql_ast.build {
+    return PartiqlAst.build {
         when(thiz.sqlDataType) {
-            SqlDataType.MISSING -> missing_type()
-            SqlDataType.NULL -> null_type()
-            SqlDataType.BOOLEAN -> boolean_type()
-            SqlDataType.SMALLINT -> smallint_type()
-            SqlDataType.INTEGER -> integer_type()
-            SqlDataType.FLOAT -> float_type(arg1)
-            SqlDataType.REAL -> real_type()
-            SqlDataType.DOUBLE_PRECISION -> double_precision_type()
-            SqlDataType.DECIMAL -> decimal_type(arg1, arg2)
-            SqlDataType.NUMERIC -> numeric_type(arg1, arg2)
-            SqlDataType.TIMESTAMP -> timestamp_type()
-            SqlDataType.CHARACTER -> character_type(arg1)
-            SqlDataType.CHARACTER_VARYING -> character_varying_type(arg1)
-            SqlDataType.STRING -> string_type()
-            SqlDataType.SYMBOL -> symbol_type()
-            SqlDataType.CLOB -> clob_type()
-            SqlDataType.BLOB -> blob_type()
-            SqlDataType.STRUCT -> struct_type()
-            SqlDataType.TUPLE -> tuple_type()
-            SqlDataType.LIST -> list_type()
-            SqlDataType.SEXP -> sexp_type()
-            SqlDataType.BAG -> bag_type()
+            SqlDataType.MISSING -> missingType()
+            SqlDataType.NULL -> nullType()
+            SqlDataType.BOOLEAN -> booleanType()
+            SqlDataType.SMALLINT -> smallintType()
+            SqlDataType.INTEGER -> integerType()
+            SqlDataType.FLOAT -> floatType(arg1)
+            SqlDataType.REAL -> realType()
+            SqlDataType.DOUBLE_PRECISION -> doublePrecisionType()
+            SqlDataType.DECIMAL -> decimalType(arg1, arg2)
+            SqlDataType.NUMERIC -> numericType(arg1, arg2)
+            SqlDataType.TIMESTAMP -> timestampType()
+            SqlDataType.CHARACTER -> characterType(arg1)
+            SqlDataType.CHARACTER_VARYING -> characterVaryingType(arg1)
+            SqlDataType.STRING -> stringType()
+            SqlDataType.SYMBOL -> symbolType()
+            SqlDataType.CLOB -> clobType()
+            SqlDataType.BLOB -> blobType()
+            SqlDataType.STRUCT -> structType()
+            SqlDataType.TUPLE -> tupleType()
+            SqlDataType.LIST -> listType()
+            SqlDataType.SEXP -> sexpType()
+            SqlDataType.BAG -> bagType()
         }
     }
 }
