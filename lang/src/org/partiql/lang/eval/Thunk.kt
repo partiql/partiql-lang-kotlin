@@ -38,7 +38,7 @@ typealias ThunkEnv = (Environment) -> ExprValue
 typealias ThunkEnvValue<T> = (Environment, T) -> ExprValue
 
 /**
- * A type alias for an exception handler
+ * A type alias for an exception handler.
  */
 typealias ThunkExceptionHandler = (Throwable, SourceLocationMeta?) -> Nothing
 
@@ -48,7 +48,7 @@ typealias ThunkExceptionHandler = (Throwable, SourceLocationMeta?) -> Nothing
  * The default exception handler wraps any [Throwable] exception and throws [EvaluationException]
  */
 data class ThunkOptions private constructor(
-        val handleException: ThunkExceptionHandler = defaultExceptionHandler // <-- the default has the same behavior we currently have.
+        val handleException: ThunkExceptionHandler = defaultExceptionHandler
 ) {
     companion object {
 

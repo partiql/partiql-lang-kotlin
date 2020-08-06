@@ -65,7 +65,7 @@ data class CompileOptions private constructor (
         val undefinedVariable: UndefinedVariableBehavior,
         val projectionIteration: ProjectionIterationBehavior = ProjectionIterationBehavior.FILTER_MISSING,
         val rewritingMode: RewritingMode = RewritingMode.DEFAULT,
-        val thunkOptions: ThunkOptions = ThunkOptions.build{}
+        val thunkOptions: ThunkOptions = ThunkOptions.standard()
 ) {
 
     companion object {
