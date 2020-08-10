@@ -64,7 +64,7 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
         "books" to """[
             { 'title': 'The unbearable lightness of being', 'author': 'Milan Kundera', 'price' : [12, 11, 9.99]},
             { 'title': 'How to travel with a salmon', 'author': 'Umberto Eco', 'price' : [10, 5.99]},
-            { 'title': 'And the ass saw the angel', 'author': 'Nick Cave', 'price' : [8, 5.99]}
+            { 'title': 'And the donkey saw the angel', 'author': 'Nick Cave', 'price' : [8, 5.99]}
         ]""",
         "customers" to """[
             { customerId: 123, firstName: "John", lastName: "Smith", age: 23},
@@ -957,92 +957,137 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
     fun missingGroupByTest() {
         checkInputThrowingEvaluationException(
             "SELECT MAX(@v2), @v2 FROM `[1, 2.0, 3e0, 4, 5d0]` AS v2",
-            session,
             ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
             mapOf(
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 19L,
                     Property.BINDING_NAME to "v2"
-            ),
-            null)
+            ))
     }
 
     @Test
     fun missingGroupBySFWTest() {
         checkInputThrowingEvaluationException(
             """
-            SELECT x.title, MIN(money) as price
+            SELECT x.title, MIN(money)
             FROM books AS x, x.price AS money
-            WHERE author like '%Milan%'
-            """.trimIndent(),
+            WHERE author = 'Milan Kundera'
+            """,
             session,
             ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
             mapOf(
-                    Property.LINE_NUMBER to 1L,
-                    Property.COLUMN_NUMBER to 8L,
+                    Property.LINE_NUMBER to 2L,
+                    Property.COLUMN_NUMBER to 20L,
                     Property.BINDING_NAME to "x"
-            ),
-            null)
+            ))
+    }
+
+    @Test
+    fun missingGroupByCaseInsensitiveTest() {
+        checkInputThrowingEvaluationException(
+            """
+            SELECT O.customerId, MAX(o.cost)
+            FROM orders as o
+            """,
+            session,
+            ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
+            mapOf(
+                    Property.LINE_NUMBER to 2L,
+                    Property.COLUMN_NUMBER to 20L,
+                    Property.BINDING_NAME to "O"
+            ))
+    }
+
+    @Test
+    fun missingGroupByCaseSensitiveTest() {
+        checkInputThrowingEvaluationException(
+            """
+            SELECT "O".customerId, MAX(o.cost)
+            FROM orders as o
+            """,
+            session,
+            ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
+            mapOf(
+                    Property.LINE_NUMBER to 2L,
+                    Property.COLUMN_NUMBER to 20L,
+                    Property.BINDING_NAME to "O"
+            ))
     }
 
     @Test
     fun missingGroupByJoinTest() {
         checkInputThrowingEvaluationException(
             """
-            SELECT MAX(o.cost), c.firstName 
-            FROM customers AS c 
+            SELECT MAX(o.cost), c.firstName
+            FROM customers AS c
             INNER JOIN orders AS o ON c.customerId = o.customerId
-            """.trimIndent(),
+            """,
             session,
             ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
             mapOf(
-                    Property.LINE_NUMBER to 1L,
-                    Property.COLUMN_NUMBER to 21L,
+                    Property.LINE_NUMBER to 2L,
+                    Property.COLUMN_NUMBER to 33L,
                     Property.BINDING_NAME to "c"
-            ),
-            null)
+            ))
     }
 
     @Test
     fun missingGroupByHavingTest() {
         checkInputThrowingEvaluationException(
             """
-            SELECT MAX(o.cost) as total_cost, o.sellerId AS seller_id
+            SELECT MAX(o.cost), o.sellerId
             FROM orders AS o
-            GROUP BY o.customerId 
+            GROUP BY o.customerId
             HAVING COUNT(1) > 1
-            """.trimIndent(),
+            """,
             session,
             ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
             mapOf(
-                    Property.LINE_NUMBER to 1L,
-                    Property.COLUMN_NUMBER to 35L,
+                    Property.LINE_NUMBER to 2L,
+                    Property.COLUMN_NUMBER to 33L,
                     Property.BINDING_NAME to "o"
-            ),
-            null)
+            ))
     }
 
     @Test
     fun missingGroupByOuterQueryTest() {
         checkInputThrowingEvaluationException(
             """
-            SELECT AVG(o.cost) AS avg_cost, o.customerId AS customer_id
+            SELECT AVG(o.cost), o.customerId
             FROM orders AS o
             WHERE
 	            o.customerId IN(
-                    SELECT VALUE o.customerId 
-                    FROM orders AS o 
-                    WHERE o.customerId > 123 
+                    SELECT VALUE o.customerId
+                    FROM orders AS o
                     GROUP BY o.customerId
-            )
-            """.trimIndent(),
+                )
+            """,
             session,
             ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
             mapOf(
-                    Property.LINE_NUMBER to 1L,
+                    Property.LINE_NUMBER to 2L,
                     Property.COLUMN_NUMBER to 33L,
                     Property.BINDING_NAME to "o"
-            ),
-            null)
+            ))
+    }
+
+    @Test
+    fun missingGroupByInnerQueryTest() {
+        checkInputThrowingEvaluationException(
+            """
+            SELECT MIN(o.numOrders)
+            FROM(
+                SELECT o.customerId, COUNT(1) AS numOrders
+                FROM orders AS o
+            ) as o
+            GROUP BY o.customerId
+            """,
+            session,
+            ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
+            mapOf(
+                    Property.LINE_NUMBER to 4L,
+                    Property.COLUMN_NUMBER to 24L,
+                    Property.BINDING_NAME to "o"
+            ))
     }
 }

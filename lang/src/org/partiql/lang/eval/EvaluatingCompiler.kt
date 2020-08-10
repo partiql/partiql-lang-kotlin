@@ -684,9 +684,14 @@ internal class EvaluatingCompiler(
         return thunkEnv(metas) { _ -> valueFactory.missingValue }
     }
 
+    private fun isFromSourceVariable(bindingName: BindingName, fromSourceNames: Set<String>): Boolean {
+        val bindingInSourcesCaseInsensitive = fromSourceNames.any { it.toLowerCase() == bindingName.name.toLowerCase() }
+        return (bindingName.bindingCase == BindingCase.INSENSITIVE && bindingInSourcesCaseInsensitive)
+            || (bindingName.bindingCase == BindingCase.SENSITIVE && fromSourceNames.contains(bindingName.name))
+    }
+
     private fun compileVariableReference(expr: VariableReference): ThunkEnv {
         val (id, case, lookupStrategy, metas: MetaContainer) = expr
-
         val uniqueNameMeta = expr.metas.find(UniqueNameMeta.TAG) as? UniqueNameMeta
 
         val fromSourceNames = currentCompilationContext.fromSourceNames
@@ -697,24 +702,24 @@ internal class EvaluatingCompiler(
                 val evalVariableReference = when (compileOptions.undefinedVariable) {
                     UndefinedVariableBehavior.ERROR   ->
                         thunkEnv(metas) { env ->
-                            val value = env.current[bindingName]
-                            if(value == null) {
-                                val isFromSourceVariable = fromSourceNames.contains(bindingName.name)
-                                if (!isFromSourceVariable) {
-                                    throw EvaluationException(
-                                        "No such binding: ${bindingName.name}",
-                                        ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
-                                        errorContextFrom(metas).also { it[Property.BINDING_NAME] = bindingName.name },
-                                        internal = false)
-                                } else {
-                                    throw EvaluationException(
-                                        "Variable not in GROUP BY or aggregation function: ${bindingName.name}",
-                                        ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
-                                        errorContextFrom(metas).also { it[Property.BINDING_NAME] = bindingName.name },
-                                        internal = false)
+                            when(val value = env.current[bindingName]) {
+                                null -> {
+                                    if (isFromSourceVariable(bindingName, fromSourceNames)) {
+                                        throw EvaluationException(
+                                                "Variable not in GROUP BY or aggregation function: ${bindingName.name}",
+                                                ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
+                                                errorContextFrom(metas).also { it[Property.BINDING_NAME] = bindingName.name },
+                                                internal = false)
+                                    } else {
+                                        throw EvaluationException(
+                                                "No such binding: ${bindingName.name}",
+                                                ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
+                                                errorContextFrom(metas).also { it[Property.BINDING_NAME] = bindingName.name },
+                                                internal = false)
+                                    }
                                 }
+                                else -> value
                             }
-                            value
                         }
                     UndefinedVariableBehavior.MISSING ->
                         thunkEnv(metas) { env ->
