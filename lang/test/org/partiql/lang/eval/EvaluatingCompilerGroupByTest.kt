@@ -60,6 +60,28 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
         ]""",
         "widgets_b" to """[
             { categoryId: 2, name: "Thingy" }
+        ]""",
+        "books" to """[
+            { 'title': 'The unbearable lightness of being', 'author': 'Milan Kundera', 'price' : [12, 11, 9.99]},
+            { 'title': 'How to travel with a salmon', 'author': 'Umberto Eco', 'price' : [10, 5.99]},
+            { 'title': 'And the ass saw the angel', 'author': 'Nick Cave', 'price' : [8, 5.99]}
+        ]""",
+        "customers" to """[
+            { customerId: 123, firstName: "John", lastName: "Smith", age: 23},
+            { customerId: 456, firstName: "Rob", lastName: "Jones", age: 45},
+            { customerId: 789, firstName: "Emma", lastName: "Miller", age: 67}
+        ]""",
+        "orders" to """[
+            { customerId: 123, sellerId: 1, productId: 11111, cost: 1 },
+            { customerId: 123, sellerId: 2, productId: 22222, cost: 2 },
+            { customerId: 123, sellerId: 1, productId: 33333, cost: 3 },
+            { customerId: 456, sellerId: 2, productId: 44444, cost: 4 },
+            { customerId: 456, sellerId: 1, productId: 55555, cost: 5 },
+            { customerId: 456, sellerId: 2, productId: 66666, cost: 6 },
+            { customerId: 789, sellerId: 1, productId: 77777, cost: 7 },
+            { customerId: 789, sellerId: 2, productId: 88888, cost: 8 },
+            { customerId: 789, sellerId: 1, productId: 99999, cost: 9 },
+            { customerId: 100, sellerId: 2, productId: 10000, cost: 10 }
         ]""").toSession()
 
     companion object {
@@ -704,7 +726,6 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             "SELECT VALUE with nested aggregates",
             "SELECT VALUE (SELECT SUM(outerFromSource.col1) AS the_sum FROM <<1>>) FROM simple_1_col_1_group as outerFromSource",
             "<< << { 'the_sum': 1 } >>,  << { 'the_sum': 1 } >> >>")
-
     )
 
     @Test
@@ -932,4 +953,96 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             null)
     }
 
+    @Test
+    fun missingGroupByTest() {
+        checkInputThrowingEvaluationException(
+            "SELECT MAX(@v2), @v2 FROM `[1, 2.0, 3e0, 4, 5d0]` AS v2",
+            session,
+            ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
+            mapOf(
+                    Property.LINE_NUMBER to 1L,
+                    Property.COLUMN_NUMBER to 19L,
+                    Property.BINDING_NAME to "v2"
+            ),
+            null)
+    }
+
+    @Test
+    fun missingGroupBySFWTest() {
+        checkInputThrowingEvaluationException(
+            """
+            SELECT x.title, MIN(money) as price
+            FROM books AS x, x.price AS money
+            WHERE author like '%Milan%'
+            """.trimIndent(),
+            session,
+            ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
+            mapOf(
+                    Property.LINE_NUMBER to 1L,
+                    Property.COLUMN_NUMBER to 8L,
+                    Property.BINDING_NAME to "x"
+            ),
+            null)
+    }
+
+    @Test
+    fun missingGroupByJoinTest() {
+        checkInputThrowingEvaluationException(
+            """
+            SELECT MAX(o.cost), c.firstName 
+            FROM customers AS c 
+            INNER JOIN orders AS o ON c.customerId = o.customerId
+            """.trimIndent(),
+            session,
+            ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
+            mapOf(
+                    Property.LINE_NUMBER to 1L,
+                    Property.COLUMN_NUMBER to 21L,
+                    Property.BINDING_NAME to "c"
+            ),
+            null)
+    }
+
+    @Test
+    fun missingGroupByHavingTest() {
+        checkInputThrowingEvaluationException(
+            """
+            SELECT MAX(o.cost) as total_cost, o.sellerId AS seller_id
+            FROM orders AS o
+            GROUP BY o.customerId 
+            HAVING COUNT(1) > 1
+            """.trimIndent(),
+            session,
+            ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
+            mapOf(
+                    Property.LINE_NUMBER to 1L,
+                    Property.COLUMN_NUMBER to 35L,
+                    Property.BINDING_NAME to "o"
+            ),
+            null)
+    }
+
+    @Test
+    fun missingGroupByOuterQueryTest() {
+        checkInputThrowingEvaluationException(
+            """
+            SELECT AVG(o.cost) AS avg_cost, o.customerId AS customer_id
+            FROM orders AS o
+            WHERE
+	            o.customerId IN(
+                    SELECT VALUE o.customerId 
+                    FROM orders AS o 
+                    WHERE o.customerId > 123 
+                    GROUP BY o.customerId
+            )
+            """.trimIndent(),
+            session,
+            ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
+            mapOf(
+                    Property.LINE_NUMBER to 1L,
+                    Property.COLUMN_NUMBER to 33L,
+                    Property.BINDING_NAME to "o"
+            ),
+            null)
+    }
 }

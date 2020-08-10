@@ -61,11 +61,13 @@ internal class EvaluatingCompiler(
 
     //Note: please don't make this inline -- it messes up [EvaluationException] stack traces and
     //isn't a huge benefit because this is only used at SQL-compile time anyway.
-    private fun <R> nestCompilationContext(expressionContext: ExpressionContext, fromSourceNames: Set<String>, block: () -> R): R {
+    private fun <R> nestCompilationContext(expressionContext: ExpressionContext,
+                                           fromSourceNames: Set<String>, block: () -> R): R {
         compilationContextStack.push(
             when {
                 compilationContextStack.empty() -> CompilationContext(expressionContext, fromSourceNames)
-                else                            -> compilationContextStack.peek().createNested(expressionContext, fromSourceNames)
+                else                            -> compilationContextStack.peek().createNested(expressionContext,
+                                                                                               fromSourceNames)
             })
 
         try {
@@ -687,6 +689,8 @@ internal class EvaluatingCompiler(
 
         val uniqueNameMeta = expr.metas.find(UniqueNameMeta.TAG) as? UniqueNameMeta
 
+        val fromSourceNames = currentCompilationContext.fromSourceNames
+
         return when(uniqueNameMeta) {
             null -> {
                 val bindingName = BindingName(id, case.toBindingCase())
@@ -695,8 +699,7 @@ internal class EvaluatingCompiler(
                         thunkEnv(metas) { env ->
                             val value = env.current[bindingName]
                             if(value == null) {
-
-                                val isFromSourceVariable = currentCompilationContext.fromSourceNames.contains(bindingName.name)
+                                val isFromSourceVariable = fromSourceNames.contains(bindingName.name)
                                 if (!isFromSourceVariable) {
                                     throw EvaluationException(
                                         "No such binding: ${bindingName.name}",
@@ -705,8 +708,8 @@ internal class EvaluatingCompiler(
                                         internal = false)
                                 } else {
                                     throw EvaluationException(
-                                        "No such binding: ${bindingName.name}",
-                                        ErrorCode.EVALUATOR_BINDING_NOT_INCLUDED_IN_GROUP_BY,
+                                        "Variable not in GROUP BY or aggregation function: ${bindingName.name}",
+                                        ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
                                         errorContextFrom(metas).also { it[Property.BINDING_NAME] = bindingName.name },
                                         internal = false)
                                 }
@@ -884,7 +887,7 @@ internal class EvaluatingCompiler(
     }
 
     private fun compileSelect(selectExpr: Select): ThunkEnv {
-
+        // Get all the FROM source aliases for binding error checks
         val fold = object : PartiqlAst.VisitorFold<Set<String>>() {
             override fun visitFromSourceScan(node: PartiqlAst.FromSource.Scan, accumulator: Set<String>): Set<String> {
                 val aliases = listOfNotNull(node.asAlias?.text, node.atAlias?.text, node.byAlias?.text)
@@ -895,10 +898,8 @@ internal class EvaluatingCompiler(
                 return accumulator
             }
         }
-
         val pigGeneratedAst = selectExpr.toAstExpr() as PartiqlAst.Expr.Select
         val allFromSourceAliases = fold.walkFromSource(pigGeneratedAst.from, emptySet())
-
 
         return nestCompilationContext(ExpressionContext.NORMAL, emptySet()) {
             val (setQuantifier, projection, from, _, groupBy, having, _, metas: MetaContainer) = selectExpr
@@ -1944,6 +1945,7 @@ private enum class ExpressionContext {
  * Tracks state used by the compiler while compiling.
  *
  * @param expressionContext Indicates what part of the grammar is currently being compiled.
+ * @param fromSourceNames Set of all FROM source aliases for binding error checks.
  */
 private class CompilationContext(val expressionContext: ExpressionContext, val fromSourceNames: Set<String>)
 {
