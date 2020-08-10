@@ -962,7 +962,8 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 19L,
                     Property.BINDING_NAME to "v2"
-            ))
+            )
+        )
     }
 
     @Test
@@ -979,7 +980,8 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                     Property.LINE_NUMBER to 2L,
                     Property.COLUMN_NUMBER to 20L,
                     Property.BINDING_NAME to "x"
-            ))
+            )
+        )
     }
 
     @Test
@@ -995,7 +997,8 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                     Property.LINE_NUMBER to 2L,
                     Property.COLUMN_NUMBER to 20L,
                     Property.BINDING_NAME to "O"
-            ))
+            )
+        )
     }
 
     @Test
@@ -1011,7 +1014,8 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                     Property.LINE_NUMBER to 2L,
                     Property.COLUMN_NUMBER to 20L,
                     Property.BINDING_NAME to "O"
-            ))
+            )
+        )
     }
 
     @Test
@@ -1028,7 +1032,8 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                     Property.LINE_NUMBER to 2L,
                     Property.COLUMN_NUMBER to 33L,
                     Property.BINDING_NAME to "c"
-            ))
+            )
+        )
     }
 
     @Test
@@ -1046,7 +1051,8 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                     Property.LINE_NUMBER to 2L,
                     Property.COLUMN_NUMBER to 33L,
                     Property.BINDING_NAME to "o"
-            ))
+            )
+        )
     }
 
     @Test
@@ -1068,7 +1074,8 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                     Property.LINE_NUMBER to 2L,
                     Property.COLUMN_NUMBER to 33L,
                     Property.BINDING_NAME to "o"
-            ))
+            )
+        )
     }
 
     @Test
@@ -1088,6 +1095,7 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                     Property.LINE_NUMBER to 4L,
                     Property.COLUMN_NUMBER to 24L,
                     Property.BINDING_NAME to "o"
-            ))
+            )
+        )
     }
 }
