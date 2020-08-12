@@ -967,6 +967,19 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
     }
 
     @Test
+    fun missingGroupByCausedByHavingTest() {
+        checkInputThrowingEvaluationException(
+            "SELECT * FROM << {'a': 1 } >> AS f GROUP BY f.a HAVING f.id = 1",
+            ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
+            mapOf(
+                    Property.LINE_NUMBER to 1L,
+                    Property.COLUMN_NUMBER to 56L,
+                    Property.BINDING_NAME to "f"
+            )
+        )
+    }
+
+    @Test
     fun missingGroupBySFWTest() {
         checkInputThrowingEvaluationException(
             """
