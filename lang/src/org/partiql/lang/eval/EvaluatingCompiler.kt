@@ -888,11 +888,13 @@ internal class EvaluatingCompiler(
     private fun compileSelect(selectExpr: Select): ThunkEnv {
         // Get all the FROM source aliases for binding error checks
         val fold = object : PartiqlAst.VisitorFold<Set<String>>() {
+            /** Store all the visited FROM source aliases in the accumulator */
             override fun visitFromSourceScan(node: PartiqlAst.FromSource.Scan, accumulator: Set<String>): Set<String> {
                 val aliases = listOfNotNull(node.asAlias?.text, node.atAlias?.text, node.byAlias?.text)
                 return accumulator + aliases.toSet()
             }
 
+            /** Visitor only checking and storing the FROM source aliases which are stored in the accumulator */
             override fun walkExprSelect(node: PartiqlAst.Expr.Select, accumulator: Set<String>): Set<String> {
                 return accumulator
             }
@@ -1068,23 +1070,27 @@ internal class EvaluatingCompiler(
             when (projection) {
                 is SelectProjectionValue -> {
                     val (valueExpr) = projection
-                    val valueThunk = compileExprNode(valueExpr)
-                    getQueryThunk(thunkEnvValue(metas) { env, _ -> valueThunk(env) })
+                    nestCompilationContext(ExpressionContext.NORMAL, allFromSourceAliases) {
+                        val valueThunk = compileExprNode(valueExpr)
+                        getQueryThunk(thunkEnvValue(metas) { env, _ -> valueThunk(env) })
+                    }
                 }
                 is SelectProjectionPivot -> {
                     val (asExpr, atExpr) = projection
-                    val asThunk = compileExprNode(asExpr)
-                    val atThunk = compileExprNode(atExpr)
+                    nestCompilationContext(ExpressionContext.NORMAL, allFromSourceAliases) {
+                        val asThunk = compileExprNode(asExpr)
+                        val atThunk = compileExprNode(atExpr)
 
-                    thunkEnv(metas) { env ->
-                        val sourceValue = sourceThunks(env)
-                        val seq = sourceValue
-                            .asSequence()
-                            .map { (_, env) -> Pair(asThunk(env), atThunk(env)) }
-                            .filter { (name, _) -> name.type.isText }
-                            .map { (name, value) -> value.namedValue(name) }
+                        thunkEnv(metas) { env ->
+                            val sourceValue = sourceThunks(env)
+                            val seq = sourceValue
+                                    .asSequence()
+                                    .map { (_, env) -> Pair(asThunk(env), atThunk(env)) }
+                                    .filter { (name, _) -> name.type.isText }
+                                    .map { (name, value) -> value.namedValue(name) }
 
-                        createStructExprValue(seq, StructOrdering.UNORDERED)
+                            createStructExprValue(seq, StructOrdering.UNORDERED)
+                        }
                     }
                 }
                 is SelectProjectionList  -> {

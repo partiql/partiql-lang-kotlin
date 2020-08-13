@@ -61,11 +61,6 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
         "widgets_b" to """[
             { categoryId: 2, name: "Thingy" }
         ]""",
-        "books" to """[
-            { 'title': 'The unbearable lightness of being', 'author': 'Milan Kundera', 'price' : [12, 11, 9.99]},
-            { 'title': 'How to travel with a salmon', 'author': 'Umberto Eco', 'price' : [10, 5.99]},
-            { 'title': 'And the donkey saw the angel', 'author': 'Nick Cave', 'price' : [8, 5.99]}
-        ]""",
         "customers" to """[
             { customerId: 123, firstName: "John", lastName: "Smith", age: 23},
             { customerId: 456, firstName: "Rob", lastName: "Jones", age: 45},
@@ -980,19 +975,14 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
     }
 
     @Test
-    fun missingGroupBySFWTest() {
+    fun missingGroupBySelectValueTest() {
         checkInputThrowingEvaluationException(
-            """
-            SELECT x.title, MIN(money)
-            FROM books AS x, x.price AS money
-            WHERE author = 'Milan Kundera'
-            """,
-            session,
+            "SELECT VALUE f.id FROM << {'a': 'b' } >> AS f GROUP BY f.a",
             ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
             mapOf(
-                    Property.LINE_NUMBER to 2L,
-                    Property.COLUMN_NUMBER to 20L,
-                    Property.BINDING_NAME to "x"
+                    Property.LINE_NUMBER to 1L,
+                    Property.COLUMN_NUMBER to 14L,
+                    Property.BINDING_NAME to "f"
             )
         )
     }
