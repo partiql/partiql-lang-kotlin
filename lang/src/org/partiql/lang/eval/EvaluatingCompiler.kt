@@ -894,7 +894,7 @@ internal class EvaluatingCompiler(
                 return accumulator + aliases.toSet()
             }
 
-            /** Visitor only checking and storing the FROM source aliases which are stored in the accumulator */
+            /** Prevents visitor from recursing into nested select statements */
             override fun walkExprSelect(node: PartiqlAst.Expr.Select, accumulator: Set<String>): Set<String> {
                 return accumulator
             }
