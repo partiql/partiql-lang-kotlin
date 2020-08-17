@@ -14,6 +14,7 @@
 
 package org.partiql.lang.eval
 
+import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.passes.AstRewriter
 import org.partiql.lang.ast.passes.IDENTITY_REWRITER
 import org.partiql.lang.ast.passes.basicRewriters
@@ -63,7 +64,8 @@ enum class RewritingMode {
 data class CompileOptions private constructor (
         val undefinedVariable: UndefinedVariableBehavior,
         val projectionIteration: ProjectionIterationBehavior = ProjectionIterationBehavior.FILTER_MISSING,
-        val rewritingMode: RewritingMode = RewritingMode.DEFAULT
+        val rewritingMode: RewritingMode = RewritingMode.DEFAULT,
+        val thunkOptions: ThunkOptions = ThunkOptions.standard()
 ) {
 
     companion object {
@@ -95,7 +97,7 @@ data class CompileOptions private constructor (
         fun undefinedVariable(value: UndefinedVariableBehavior) = set { copy(undefinedVariable = value) }
         fun projectionIteration(value: ProjectionIterationBehavior) = set { copy(projectionIteration = value) }
         fun rewriterMode(value: RewritingMode) = set { copy(rewritingMode = value) }
-
+        fun thunkOptions(value: ThunkOptions) = set { copy(thunkOptions = value)}
         private inline fun set(block: CompileOptions.() -> CompileOptions) : Builder {
             options = block(options)
             return this
