@@ -60,6 +60,23 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
         ]""",
         "widgets_b" to """[
             { categoryId: 2, name: "Thingy" }
+        ]""",
+        "customers" to """[
+            { customerId: 123, firstName: "John", lastName: "Smith", age: 23},
+            { customerId: 456, firstName: "Rob", lastName: "Jones", age: 45},
+            { customerId: 789, firstName: "Emma", lastName: "Miller", age: 67}
+        ]""",
+        "orders" to """[
+            { customerId: 123, sellerId: 1, productId: 11111, cost: 1 },
+            { customerId: 123, sellerId: 2, productId: 22222, cost: 2 },
+            { customerId: 123, sellerId: 1, productId: 33333, cost: 3 },
+            { customerId: 456, sellerId: 2, productId: 44444, cost: 4 },
+            { customerId: 456, sellerId: 1, productId: 55555, cost: 5 },
+            { customerId: 456, sellerId: 2, productId: 66666, cost: 6 },
+            { customerId: 789, sellerId: 1, productId: 77777, cost: 7 },
+            { customerId: 789, sellerId: 2, productId: 88888, cost: 8 },
+            { customerId: 789, sellerId: 1, productId: 99999, cost: 9 },
+            { customerId: 100, sellerId: 2, productId: 10000, cost: 10 }
         ]""").toSession()
 
     companion object {
@@ -704,7 +721,6 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             "SELECT VALUE with nested aggregates",
             "SELECT VALUE (SELECT SUM(outerFromSource.col1) AS the_sum FROM <<1>>) FROM simple_1_col_1_group as outerFromSource",
             "<< << { 'the_sum': 1 } >>,  << { 'the_sum': 1 } >> >>")
-
     )
 
     @Test
@@ -932,4 +948,157 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             null)
     }
 
+    @Test
+    fun missingGroupByTest() {
+        checkInputThrowingEvaluationException(
+            "SELECT MAX(@v2), @v2 FROM `[1, 2.0, 3e0, 4, 5d0]` AS v2",
+            ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
+            mapOf(
+                    Property.LINE_NUMBER to 1L,
+                    Property.COLUMN_NUMBER to 19L,
+                    Property.BINDING_NAME to "v2"
+            )
+        )
+    }
+
+    @Test
+    fun missingGroupByCausedByHavingTest() {
+        checkInputThrowingEvaluationException(
+            "SELECT * FROM << {'a': 1 } >> AS f GROUP BY f.a HAVING f.id = 1",
+            ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
+            mapOf(
+                    Property.LINE_NUMBER to 1L,
+                    Property.COLUMN_NUMBER to 56L,
+                    Property.BINDING_NAME to "f"
+            )
+        )
+    }
+
+    @Test
+    fun missingGroupBySelectValueTest() {
+        checkInputThrowingEvaluationException(
+            "SELECT VALUE f.id FROM << {'a': 'b' } >> AS f GROUP BY f.a",
+            ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
+            mapOf(
+                    Property.LINE_NUMBER to 1L,
+                    Property.COLUMN_NUMBER to 14L,
+                    Property.BINDING_NAME to "f"
+            )
+        )
+    }
+
+    @Test
+    fun missingGroupByCaseInsensitiveTest() {
+        checkInputThrowingEvaluationException(
+            """
+            SELECT O.customerId, MAX(o.cost)
+            FROM orders as o
+            """,
+            session,
+            ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
+            mapOf(
+                    Property.LINE_NUMBER to 2L,
+                    Property.COLUMN_NUMBER to 20L,
+                    Property.BINDING_NAME to "O"
+            )
+        )
+    }
+
+    @Test
+    fun missingGroupByCaseSensitiveTest() {
+        checkInputThrowingEvaluationException(
+            """
+            SELECT "O".customerId, MAX(o.cost)
+            FROM orders as o
+            """,
+            session,
+            ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
+            mapOf(
+                    Property.LINE_NUMBER to 2L,
+                    Property.COLUMN_NUMBER to 20L,
+                    Property.BINDING_NAME to "O"
+            )
+        )
+    }
+
+    @Test
+    fun missingGroupByJoinTest() {
+        checkInputThrowingEvaluationException(
+            """
+            SELECT MAX(o.cost), c.firstName
+            FROM customers AS c
+            INNER JOIN orders AS o ON c.customerId = o.customerId
+            """,
+            session,
+            ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
+            mapOf(
+                    Property.LINE_NUMBER to 2L,
+                    Property.COLUMN_NUMBER to 33L,
+                    Property.BINDING_NAME to "c"
+            )
+        )
+    }
+
+    @Test
+    fun missingGroupByHavingTest() {
+        checkInputThrowingEvaluationException(
+            """
+            SELECT MAX(o.cost), o.sellerId
+            FROM orders AS o
+            GROUP BY o.customerId
+            HAVING COUNT(1) > 1
+            """,
+            session,
+            ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
+            mapOf(
+                    Property.LINE_NUMBER to 2L,
+                    Property.COLUMN_NUMBER to 33L,
+                    Property.BINDING_NAME to "o"
+            )
+        )
+    }
+
+    @Test
+    fun missingGroupByOuterQueryTest() {
+        checkInputThrowingEvaluationException(
+            """
+            SELECT AVG(o.cost), o.customerId
+            FROM orders AS o
+            WHERE
+	            o.customerId IN(
+                    SELECT VALUE o.customerId
+                    FROM orders AS o
+                    GROUP BY o.customerId
+                )
+            """,
+            session,
+            ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
+            mapOf(
+                    Property.LINE_NUMBER to 2L,
+                    Property.COLUMN_NUMBER to 33L,
+                    Property.BINDING_NAME to "o"
+            )
+        )
+    }
+
+    @Test
+    fun missingGroupByInnerQueryTest() {
+        checkInputThrowingEvaluationException(
+            """
+            SELECT MIN(o.numOrders)
+            FROM(
+                SELECT o.customerId, COUNT(1) AS numOrders
+                FROM orders AS o
+            ) as o
+            GROUP BY o.customerId
+            """,
+            session,
+            ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
+            mapOf(
+                    Property.LINE_NUMBER to 4L,
+                    Property.COLUMN_NUMBER to 24L,
+                    Property.BINDING_NAME to "o"
+            )
+        )
+    }
 }
