@@ -34,8 +34,7 @@ class SqlParserJoinTest : SqlParserTestBase() {
            (right_join
              (as s (id stuff case_insensitive))
              (as f (id foo case_insensitive)))))
-        """,
-        skipPig = false
+        """
     ) {
         selectWithOneJoin(
             joinType = PartiqlAst.JoinType.Right(),
@@ -52,8 +51,7 @@ class SqlParserJoinTest : SqlParserTestBase() {
                  (as s (id stuff case_insensitive))
                  (as f (id foo case_insensitive))
                   (= (id s case_insensitive) (id f case_insensitive)))))
-        """,
-        skipPig = false
+        """
     ) {
         selectWithOneJoin(
             joinType = full(),
@@ -103,8 +101,7 @@ class SqlParserJoinTest : SqlParserTestBase() {
                    (id f case_insensitive))
                  (id g case_insensitive)
                  (id h case_insensitive))))
-        """,
-        skipPig = false
+        """
     ) {
         selectWithFromSource(deeplyNestedJoins)
     }
@@ -128,8 +125,7 @@ class SqlParserJoinTest : SqlParserTestBase() {
                    (id f case_insensitive))
                  (id g case_insensitive)
                  (id h case_insensitive))))
-        """,
-        skipPig = false
+        """
     ) {
         selectWithFromSource(deeplyNestedJoins)
     }

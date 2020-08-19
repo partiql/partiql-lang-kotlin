@@ -15,6 +15,7 @@
 package org.partiql.cli
 
 import com.amazon.ion.system.*
+import com.amazon.ionelement.api.toIonValue
 import org.partiql.cli.ReplState.*
 import org.partiql.lang.*
 import org.partiql.lang.ast.*
@@ -22,6 +23,7 @@ import org.partiql.lang.ast.passes.MetaStrippingRewriter
 import org.partiql.lang.eval.*
 import org.partiql.lang.syntax.*
 import org.partiql.lang.util.*
+import org.partiql.pig.runtime.toIonElement
 import java.io.*
 import java.util.concurrent.*
 
@@ -256,8 +258,9 @@ internal class Repl(private val valueFactory: ExprValueFactory,
 
     private fun parsePartiQL(): ReplState = executeTemplate(astPrettyPrinter) { source ->
         if (source != "") {
-            val serializedAst = AstSerializer.serialize(parser.parseExprNode(source), AstVersion.V2, valueFactory.ion)
-            valueFactory.newFromIonValue(serializedAst)
+            val astStatementSexp = parser.parseAstStatement(source).toIonElement()
+            val astStatmentIonValue = astStatementSexp.asAnyElement().asSexp().toIonElement().asAnyElement().toIonValue(valueFactory.ion)
+            valueFactory.newFromIonValue(astStatmentIonValue)
         }
         else {
             null
@@ -267,8 +270,9 @@ internal class Repl(private val valueFactory: ExprValueFactory,
     private fun parsePartiQLWithFilters(): ReplState = executeTemplate(astPrettyPrinter) { source ->
         if (source != "") {
             val strippedMetaExprNode = MetaStrippingRewriter.stripMetas(parser.parseExprNode(source))
-            val serializedAst = AstSerializer.serialize(strippedMetaExprNode, AstVersion.V2, valueFactory.ion)
-            valueFactory.newFromIonValue(serializedAst)
+            val astStatementSexp = strippedMetaExprNode.toAstStatement().toIonElement()
+            val astStatmentIonValue = astStatementSexp.asAnyElement().asSexp().toIonElement().asAnyElement().toIonValue(valueFactory.ion)
+            valueFactory.newFromIonValue(astStatmentIonValue)
         }
         else {
             null

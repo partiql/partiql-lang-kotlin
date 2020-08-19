@@ -12,7 +12,7 @@ class ParserExampleTest : BaseExampleTest() {
 Serialized AST
     
     (
-      meta
+      query
       (
         select
         (
@@ -22,21 +22,14 @@ Serialized AST
             (
               project_expr
               (
-                meta
+                id
+                exampleField
                 (
-                  id
-                  exampleField
-                  (
-                    case_insensitive
-                  )
-                  (
-                    unqualified
-                  )
+                  case_insensitive
                 )
-                {
-                  line:1,
-                  column:8
-                }
+                (
+                  unqualified
+                )
               )
               null
             )
@@ -47,21 +40,14 @@ Serialized AST
           (
             scan
             (
-              meta
+              id
+              exampleTable
               (
-                id
-                exampleTable
-                (
-                  case_insensitive
-                )
-                (
-                  unqualified
-                )
+                case_insensitive
               )
-              {
-                line:1,
-                column:26
-              }
+              (
+                unqualified
+              )
             )
             null
             null
@@ -71,49 +57,24 @@ Serialized AST
         (
           where
           (
-            meta
+            gt
             (
-              gt
+              id
+              anotherField
               (
-                meta
-                (
-                  id
-                  anotherField
-                  (
-                    case_insensitive
-                  )
-                  (
-                    unqualified
-                  )
-                )
-                {
-                  line:1,
-                  column:45
-                }
+                case_insensitive
               )
               (
-                meta
-                (
-                  lit
-                  10
-                )
-                {
-                  line:1,
-                  column:60
-                }
+                unqualified
               )
             )
-            {
-              line:1,
-              column:58
-            }
+            (
+              lit
+              10
+            )
           )
         )
       )
-      {
-        line:1,
-        column:1
-      }
     )
 """
 }

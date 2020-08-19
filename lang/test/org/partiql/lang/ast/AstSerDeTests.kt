@@ -24,9 +24,6 @@ import org.junit.*
  */
 class AstSerDeTests : TestBase() {
 
-    private val deserializer = AstDeserializerBuilder(ion)
-        .build()
-
     fun parametersForSerDeMetas() = listOf(
         Literal(ion.newInt(1), metaContainerOf(SourceLocationMeta(1, 1)))
     )
@@ -34,8 +31,8 @@ class AstSerDeTests : TestBase() {
     @Test
     @Parameters
     fun serDeMetas(testExprNode: ExprNode) {
-        //Serialize and then deserialize testExprNode and assert the result matches
-        val deserializedExprNode = deserializer.deserialize(AstSerializer.serialize(testExprNode, AstVersion.V2, ion), AstVersion.V2)
-        assertEquals(testExprNode, deserializedExprNode)
+        // Convert testExprNode to PartiqlAst.Statement and back to ExprNode and assert the result matches
+        val exprToAstToExpr = testExprNode.toAstStatement().toExprNode(ion)
+        assertEquals(testExprNode, exprToAstToExpr)
     }
 }

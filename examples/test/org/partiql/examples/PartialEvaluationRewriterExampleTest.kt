@@ -8,9 +8,9 @@ class PartialEvaluationRewriterExampleTest : BaseExampleTest() {
 
     override val expected = """
         |Original AST:
-        |    (meta (plus (meta (lit 1) {line:1,column:1}) (meta (lit 1) {line:1,column:5})) {line:1,column:3})
+        |    (query (plus (lit 1) (lit 1)))
         |Rewritten AST:
-        |    (meta (lit 2) {line:1,column:3})
+        |    (query (lit 2))
         |
     """.trimMargin()
 }
