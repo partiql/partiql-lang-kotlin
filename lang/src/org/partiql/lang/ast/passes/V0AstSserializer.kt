@@ -11,9 +11,9 @@ import org.partiql.lang.ast.ExprNode
  * This class is intended for backward compatibility.  It can serialize any [ExprNode] instance to a V0 s-expression
  * based AST.
  *
- * Instead of this class, please use [AstSerializer] instead.
+ * Instead of this class, please use PartiqlAst instead.
  */
-@Deprecated("Please use AstSerializer class instead")
+@Deprecated("Please use PartiqlAst class instead")
 class V0AstSerializer {
 
     companion object {
