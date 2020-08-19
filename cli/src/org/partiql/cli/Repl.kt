@@ -23,7 +23,6 @@ import org.partiql.lang.ast.passes.MetaStrippingRewriter
 import org.partiql.lang.eval.*
 import org.partiql.lang.syntax.*
 import org.partiql.lang.util.*
-import org.partiql.pig.runtime.toIonElement
 import java.io.*
 import java.util.concurrent.*
 
@@ -259,7 +258,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
     private fun parsePartiQL(): ReplState = executeTemplate(astPrettyPrinter) { source ->
         if (source != "") {
             val astStatementSexp = parser.parseAstStatement(source).toIonElement()
-            val astStatmentIonValue = astStatementSexp.asAnyElement().asSexp().toIonElement().asAnyElement().toIonValue(valueFactory.ion)
+            val astStatmentIonValue = astStatementSexp.asAnyElement().toIonValue(valueFactory.ion)
             valueFactory.newFromIonValue(astStatmentIonValue)
         }
         else {
@@ -271,7 +270,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
         if (source != "") {
             val strippedMetaExprNode = MetaStrippingRewriter.stripMetas(parser.parseExprNode(source))
             val astStatementSexp = strippedMetaExprNode.toAstStatement().toIonElement()
-            val astStatmentIonValue = astStatementSexp.asAnyElement().asSexp().toIonElement().asAnyElement().toIonValue(valueFactory.ion)
+            val astStatmentIonValue = astStatementSexp.asAnyElement().toIonValue(valueFactory.ion)
             valueFactory.newFromIonValue(astStatmentIonValue)
         }
         else {
