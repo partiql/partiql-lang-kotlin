@@ -82,9 +82,10 @@ abstract class SqlParserTestBase : TestBase() {
     }
 
     /**
-     * Extract the <expr> from the PartiqlAst statement
+     * Converts the given PartiqlAst.Statement into an IonElement. If the given [statement] is a query, extracts
+     * just the expr component to be compatible with the SqlParser tests.
      */
-    private fun extractExpr(statement: PartiqlAst.Statement) : SexpElement {
+    private fun unwrapQuery(statement: PartiqlAst.Statement) : SexpElement {
        return when (statement) {
             is PartiqlAst.Statement.Query -> statement.expr.toIonElement()
             is PartiqlAst.Statement.Dml,
@@ -92,9 +93,14 @@ abstract class SqlParserTestBase : TestBase() {
         }
     }
 
+    /**
+     * Performs checks similar to that of [serializeAssert]. First checks that parsing the [source] query string to
+     * a [PartiqlAst] and to an IonValue Sexp equals the [expectedSexpAst]. Next checks that converting this IonValue
+     * Sexp to an ExprNode equals the [parsedExprNode].
+     */
     private fun partiqlAssert(parsedExprNode: ExprNode, expectedSexpAst: IonSexp, source: String) {
         val actualSexpAstStatment = parseToAst(source)
-        val actualSexpQuery = extractExpr(actualSexpAstStatment)
+        val actualSexpQuery = unwrapQuery(actualSexpAstStatment)
         val actualSexpAst = actualSexpQuery.toIonElement().asAnyElement().toIonValue(ion)
 
         assertSexpEquals(expectedSexpAst, actualSexpAst, "AST, $source")
@@ -102,7 +108,7 @@ abstract class SqlParserTestBase : TestBase() {
         val exprNodeFromSexp = actualSexpAstStatment.toExprNode(ion)
 
         assertEquals(
-            "Parsed ExprNodes must match AST",
+            "Parsed ExprNodes must match the expected PartiqlAst",
             parsedExprNode.stripMetas(),
             exprNodeFromSexp.stripMetas())
     }
@@ -112,7 +118,7 @@ abstract class SqlParserTestBase : TestBase() {
         val statement = parsedExprNode.toAstStatement()
 
         // Test cases are missing (query <expr>) wrapping, so extract <expr>
-        val parsedElement = extractExpr(statement)
+        val parsedElement = unwrapQuery(statement)
 
         assertRoundTripIonElementToPartiQlAst(parsedElement, expectedSexpAst)
 
@@ -125,7 +131,7 @@ abstract class SqlParserTestBase : TestBase() {
         // Run additional checks on the resulting PartiqlAst instance
 
         // None of our test cases are wrapped in (query <expr>), so extract <expr> from that out
-        val element = extractExpr(statement)
+        val element = unwrapQuery(statement)
         assertEquals(expectedSexpAst, element)
 
         // Convert the the IonElement back to the PartiqlAst instance and assert equivalence

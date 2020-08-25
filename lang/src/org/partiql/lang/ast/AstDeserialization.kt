@@ -138,7 +138,7 @@ private enum class NodeTag(val definition: TagDefinition) {
     NARY_NE(TagDefinition("<>", AstVersion.V0, 2, Int.MAX_VALUE)),
     NARY_AND(TagDefinition("and", 2, Int.MAX_VALUE)),
     NARY_OR(TagDefinition("or", 2, Int.MAX_VALUE)),
-    NARY_LIKE(TagDefinition("like", mapOf(AstVersion.V0 to SexpValidationRules(2, Int.MAX_VALUE)))),
+    NARY_LIKE(TagDefinition("like", AstVersion.V0, 2, Int.MAX_VALUE)),
     NARY_NOT_LIKE(TagDefinition("not_like", AstVersion.V0, 2, Int.MAX_VALUE)),
     NARY_BETWEEN(TagDefinition("between", 3, Int.MAX_VALUE)),
     NARY_NOT_BETWEEN(TagDefinition("not_between", AstVersion.V0, 3, Int.MAX_VALUE)),

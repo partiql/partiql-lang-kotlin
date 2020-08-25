@@ -2,7 +2,6 @@ package org.partiql.examples
 
 import kotlin.test.*
 import com.amazon.ion.system.*
-import com.amazon.ionelement.api.toIonValue
 import org.partiql.examples.util.Example
 import org.partiql.lang.ast.*
 import org.partiql.lang.domains.PartiqlAst
@@ -34,9 +33,13 @@ class ParserExample(out: PrintStream) : Example(out) {
         // Convert the ExprNode AST to the Ion s-expression form.
         val serializedAst = originalAst.toAstStatement()
 
+        // Create an IonWriter for printing of the PartiqlAst
+        val partiqlAstString = StringBuilder()
+        val ionWriter = IonTextWriterBuilder.minimal().withPrettyPrinting().build(partiqlAstString)
+
         // Now we can convert the Ion s-expression form into an Ion value to pretty print
-        val prettySerializedAst = serializedAst.toIonElement().asAnyElement().toIonValue(ion).toPrettyString()
-        print("Serialized AST", prettySerializedAst)
+        serializedAst.toIonElement().writeTo(ionWriter)
+        print("Serialized AST", partiqlAstString.toString())
 
         // Re-constitute the serialized AST.  The toExprNode will convert from any supported
         // version of the s-expression form to an instance of [ExprNode].
