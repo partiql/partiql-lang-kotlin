@@ -1527,7 +1527,8 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
         val fromList = rem.tail.parseArgList(
             aliasSupportType = AS_AT_BY,
-            mode = FROM_CLAUSE_ARG_LIST
+            mode = FROM_CLAUSE_ARG_LIST,
+            precedence = OperatorPrecedenceGroups.SELECT.precedence
         )
 
         rem = fromList.remaining
@@ -1535,7 +1536,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
         fun parseOptionalSingleExpressionClause(type: ParseType) {
             if (rem.head?.keywordText == type.identifier) {
-                val expr = rem.tail.parseExpression()
+                val expr = rem.tail.parseExpression(OperatorPrecedenceGroups.SELECT.precedence)
                 rem = expr.remaining
                 children.add(ParseNode(type, null, listOf(expr), rem))
             }
@@ -1559,7 +1560,8 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
             val groupKey = rem.parseArgList(
                 aliasSupportType = AS_ONLY,
-                mode = NORMAL_ARG_LIST
+                mode = NORMAL_ARG_LIST,
+                precedence = OperatorPrecedenceGroups.SELECT.precedence
             )
             groupKey.children.forEach {
                 // TODO support ordinal case
@@ -1875,8 +1877,11 @@ class SqlParser(private val ion: IonSystem) : Parser {
         }
     }
 
-    private fun List<Token>.parseArgList(aliasSupportType: AliasSupportType,
-                                         mode: ArgListMode): ParseNode {
+    private fun List<Token>.parseArgList(
+            aliasSupportType: AliasSupportType,
+            mode: ArgListMode,
+            precedence: Int = -1
+    ): ParseNode {
         val parseDelim = when (mode) {
             FROM_CLAUSE_ARG_LIST -> parseJoinDelim
             else -> parseCommaDelim
@@ -1886,15 +1891,15 @@ class SqlParser(private val ion: IonSystem) : Parser {
             var rem = this
             var child = when (mode) {
                 STRUCT_LITERAL_ARG_LIST -> {
-                    val field = rem.parseExpression().deriveExpected(COLON)
+                    val field = rem.parseExpression(precedence).deriveExpected(COLON)
                     rem = field.remaining
-                    val value = rem.parseExpression()
+                    val value = rem.parseExpression(precedence)
                     ParseNode(MEMBER, null, listOf(field, value), value.remaining)
                 }
                 FROM_CLAUSE_ARG_LIST -> {
                     when (rem.head?.keywordText) {
                         "unpivot" -> {
-                            val actualChild = rem.tail.parseExpression()
+                            val actualChild = rem.tail.parseExpression(precedence)
                             ParseNode(
                                 UNPIVOT,
                                 rem.head,
@@ -1902,7 +1907,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
                                 actualChild.remaining
                             )
                         }
-                        else -> rem.parseExpression()
+                        else -> rem.parseExpression(precedence)
                     }
                 }
                 SIMPLE_PATH_ARG_LIST -> rem.parsePathTerm(PathMode.SIMPLE_PATH)
@@ -1913,10 +1918,10 @@ class SqlParser(private val ion: IonSystem) : Parser {
                         rem.err("Expected '='", PARSE_MISSING_SET_ASSIGNMENT)
                     }
                     rem = rem.tail
-                    val rvalue = rem.parseExpression()
+                    val rvalue = rem.parseExpression(precedence)
                     ParseNode(ASSIGNMENT, null, listOf(lvalue, rvalue), rvalue.remaining)
                 }
-                NORMAL_ARG_LIST -> rem.parseExpression()
+                NORMAL_ARG_LIST -> rem.parseExpression(precedence)
             }
             rem = child.remaining
 
@@ -1949,7 +1954,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
                         rem.err("Expected 'ON'", PARSE_MALFORMED_JOIN)
                     }
 
-                    val onClause = rem.tail.parseExpression()
+                    val onClause = rem.tail.parseExpression(precedence)
                     rem = onClause.remaining
                     operands.add(onClause)
 
