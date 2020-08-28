@@ -32,8 +32,7 @@ class SqlParserCorrelatedJoinTests : SqlParserTestBase() {
              (from (inner_join (as s (id stuff case_insensitive)) (@ (id s case_insensitive))))
              (where (call f (id s case_insensitive)))
            )
-        """,
-        skipPig = false
+        """
     ) {
         selectWithCorrelatedJoin(
             joinType = PartiqlAst.JoinType.Inner(),
@@ -49,8 +48,7 @@ class SqlParserCorrelatedJoinTests : SqlParserTestBase() {
              (from (left_join (as s (id stuff case_insensitive)) (@ (id s case_insensitive))))
              (where (call f (id s case_insensitive)))
            )
-        """,
-        skipPig = false
+        """
     ) {
         selectWithCorrelatedJoin(
             joinType = PartiqlAst.JoinType.Left(),
@@ -71,8 +69,7 @@ class SqlParserCorrelatedJoinTests : SqlParserTestBase() {
                )
              )
            )
-        """,
-        skipPig = false
+        """
     ) {
         selectWithCorrelatedJoin(
             joinType = PartiqlAst.JoinType.Left(),
@@ -88,8 +85,7 @@ class SqlParserCorrelatedJoinTests : SqlParserTestBase() {
              (from (inner_join (as s (id stuff case_insensitive)) (@ (id s case_insensitive))))
              (where (call f (id s case_insensitive)))
            )
-        """,
-        skipPig = false
+        """
     ) {
         selectWithCorrelatedJoin(
             joinType = PartiqlAst.JoinType.Inner(),
@@ -105,8 +101,7 @@ class SqlParserCorrelatedJoinTests : SqlParserTestBase() {
              (from (inner_join (as s (id stuff case_insensitive)) (@ (id s case_insensitive))))
              (where (call f (id s case_insensitive)))
            )
-        """,
-        skipPig = false
+        """
     ) {
         selectWithCorrelatedJoin(
             joinType = PartiqlAst.JoinType.Inner(),

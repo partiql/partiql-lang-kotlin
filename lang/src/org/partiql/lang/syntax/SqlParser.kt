@@ -16,6 +16,7 @@ package org.partiql.lang.syntax
 
 import com.amazon.ion.*
 import org.partiql.lang.ast.*
+import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.ErrorCode.*
 import org.partiql.lang.errors.Property
@@ -2059,6 +2060,11 @@ class SqlParser(private val ion: IonSystem) : Parser {
         }
         return node.toExprNode()
     }
+
+    /**
+     * Parse given source node as a PartiqlAst.Statement
+     */
+    override fun parseAstStatement(source: String): PartiqlAst.Statement = parseExprNode(source).toAstStatement()
 
     override fun parse(source: String): IonSexp =
         AstSerializer.serialize(parseExprNode(source), AstVersion.V0, ion)

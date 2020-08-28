@@ -235,7 +235,7 @@ internal class EvaluatingCompiler(
     }
 
     /**
-     * Evaluates a V0 or V2 s-exp based AST against a global set of bindings.
+     * Evaluates a V0 s-exp based AST against a global set of bindings.
      */
     @Deprecated("Please use CompilerPipeline.compile(ExprNode).eval(EvaluationSession) instead.")
     fun eval(ast: IonSexp, session: EvaluationSession): ExprValue {

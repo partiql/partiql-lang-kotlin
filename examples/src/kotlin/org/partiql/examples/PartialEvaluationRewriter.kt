@@ -1,7 +1,5 @@
 package org.partiql.examples
 
-import org.junit.*
-import org.junit.Assert.*
 import com.amazon.ion.*
 import com.amazon.ion.system.*
 import org.partiql.examples.util.Example
@@ -82,12 +80,14 @@ class PartialEvaluationRewriterExample(out: PrintStream) : Example(out) {
             addPreprocessingStep { exprNode, stepContext ->
                 val rewriter = PartialEvaluationRewriter(ion, stepContext.compileOptions)
 
-                print("Original AST:", AstSerializer.serialize(exprNode, AstVersion.V2, ion).toString())
+                val originalAst = exprNode.toAstStatement()
+                print("Original AST:", originalAst.toString())
 
-                val rewrittenAst = rewriter.rewriteExprNode(exprNode)
-                print("Rewritten AST:", AstSerializer.serialize(rewrittenAst, AstVersion.V2, ion).toString())
+                val rewrittenExprNode = rewriter.rewriteExprNode(exprNode)
+                val rewrittedAst = rewrittenExprNode.toAstStatement()
+                print("Rewritten AST:", rewrittedAst.toString())
 
-                rewrittenAst
+                rewrittenExprNode
             }
         }
 

@@ -18,6 +18,7 @@ import com.amazon.ion.IonSexp
 import com.amazon.ionelement.api.IonElement
 import com.amazon.ionelement.api.SexpElement
 import com.amazon.ionelement.api.toIonElement
+import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.TestBase
 import org.partiql.lang.ast.AstDeserializerBuilder
 import org.partiql.lang.ast.AstSerializer
@@ -29,28 +30,27 @@ import org.partiql.lang.ast.toExprNode
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.util.asIonSexp
 import org.partiql.lang.util.filterMetaNodes
-import org.partiql.pig.runtime.MalformedDomainDataException
+import org.partiql.pig.runtime.toIonElement
 
 abstract class SqlParserTestBase : TestBase() {
     protected val parser = SqlParser(ion)
 
     protected fun parse(source: String): ExprNode = parser.parseExprNode(source)
+    protected fun parseToAst(source: String): PartiqlAst.Statement = parser.parseAstStatement(source)
 
     protected fun assertExpression(
         source: String,
         expectedSexpAstV0String: String,
-        skipPig: Boolean = true,
         pigBuilder: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode
     ) {
         val expectedPartiQlAst = PartiqlAst.build { pigBuilder() }
-        assertExpression(source, expectedSexpAstV0String, expectedPartiQlAst.toIonElement().toString(), skipPig)
+        assertExpression(source, expectedSexpAstV0String, expectedPartiQlAst.toIonElement().toString())
     }
 
     protected fun assertExpression(
         source: String,
         expectedSexpAstV0String: String,
-        expectedSexpAstV2String: String = expectedSexpAstV0String,
-        skipPig: Boolean = true
+        expectedPartiqlAstString: String = expectedSexpAstV0String
     ) {
         // Convert the query to ExprNode
         val parsedExprNode = parse(source)
@@ -58,10 +58,10 @@ abstract class SqlParserTestBase : TestBase() {
         val v0SexpAst = loadIonSexp(expectedSexpAstV0String)
         serializeAssert(AstVersion.V0, parsedExprNode, v0SexpAst, source)
 
-        val v2SexpAst = loadIonSexp(expectedSexpAstV2String)
-        serializeAssert(AstVersion.V2, parsedExprNode, v2SexpAst, source)
+        val partiqlAst = loadIonSexp(expectedPartiqlAstString)
+        partiqlAssert(parsedExprNode, partiqlAst, source)
 
-        pigDomainAssert(parsedExprNode, v2SexpAst.toIonElement().asSexp(), skipPig)
+        pigDomainAssert(parsedExprNode, partiqlAst.toIonElement().asSexp())
 
         pigExprNodeTransformAsserts(parsedExprNode)
     }
@@ -81,39 +81,57 @@ abstract class SqlParserTestBase : TestBase() {
             deserializedExprNodeFromSexp.stripMetas())
     }
 
-    private fun pigDomainAssert(parsedExprNode: ExprNode, expectedSexpAst: SexpElement, skipPigTransformerTests: Boolean) {
-
-        // Serialize ExprNode to V2 IonValue
-        val sexpAst = AstSerializer.serialize(parsedExprNode, AstVersion.V2, ion).filterMetaNodes() as IonSexp
-
-        // Convert the V2 IonValue to IonElement
-        val parsedV2Element = sexpAst.toIonElement().asSexp()
-
-        if (skipPigTransformerTests) {
-            assertPigTransformerFails(parsedV2Element)
-        } else {
-            assertRoundTripIonElementToPartiQlAst(parsedV2Element, expectedSexpAst)
+    /**
+     * Converts the given PartiqlAst.Statement into an IonElement. If the given [statement] is a query, extracts
+     * just the expr component to be compatible with the SqlParser tests.
+     */
+    private fun unwrapQuery(statement: PartiqlAst.Statement) : SexpElement {
+       return when (statement) {
+            is PartiqlAst.Statement.Query -> statement.expr.toIonElement()
+            is PartiqlAst.Statement.Dml,
+            is PartiqlAst.Statement.Ddl -> statement.toIonElement()
         }
+    }
+
+    /**
+     * Performs checks similar to that of [serializeAssert]. First checks that parsing the [source] query string to
+     * a [PartiqlAst] and to an IonValue Sexp equals the [expectedSexpAst]. Next checks that converting this IonValue
+     * Sexp to an ExprNode equals the [parsedExprNode].
+     */
+    private fun partiqlAssert(parsedExprNode: ExprNode, expectedSexpAst: IonSexp, source: String) {
+        val actualSexpAstStatment = parseToAst(source)
+        val actualSexpQuery = unwrapQuery(actualSexpAstStatment)
+        val actualSexpAst = actualSexpQuery.toIonElement().asAnyElement().toIonValue(ion)
+
+        assertSexpEquals(expectedSexpAst, actualSexpAst, "AST, $source")
+
+        val exprNodeFromSexp = actualSexpAstStatment.toExprNode(ion)
+
+        assertEquals(
+            "Parsed ExprNodes must match the expected PartiqlAst",
+            parsedExprNode.stripMetas(),
+            exprNodeFromSexp.stripMetas())
+    }
+
+    private fun pigDomainAssert(parsedExprNode: ExprNode, expectedSexpAst: SexpElement) {
+        // Convert ExprNode into a PartiqlAst statement
+        val statement = parsedExprNode.toAstStatement()
+
+        // Test cases are missing (query <expr>) wrapping, so extract <expr>
+        val parsedElement = unwrapQuery(statement)
+
+        assertRoundTripIonElementToPartiQlAst(parsedElement, expectedSexpAst)
 
         // Run the parsedExprNode through the conversion to PIG domain instance for all tests
         // to detect conditions which will cause the conversion to throw an exception.
-        val statement = parsedExprNode.toAstStatement()
-
-        // If !skipPigTransformerTests, we can skip the following additional checks.
-        if(!skipPigTransformerTests) {
-            assertRoundTripPartiQlAstToExprNode(statement, expectedSexpAst, parsedExprNode)
-        }
+        assertRoundTripPartiQlAstToExprNode(statement, expectedSexpAst, parsedExprNode)
     }
 
     private fun assertRoundTripPartiQlAstToExprNode(statement: PartiqlAst.Statement, expectedSexpAst: IonElement, parsedExprNode: ExprNode) {
         // Run additional checks on the resulting PartiqlAst instance
 
         // None of our test cases are wrapped in (query <expr>), so extract <expr> from that out
-        val element = when (statement) {
-            is PartiqlAst.Statement.Query -> statement.expr.toIonElement()
-            is PartiqlAst.Statement.Dml,
-            is PartiqlAst.Statement.Ddl -> statement.toIonElement()
-        }
+        val element = unwrapQuery(statement)
         assertEquals(expectedSexpAst, element)
 
         // Convert the the IonElement back to the PartiqlAst instance and assert equivalence
@@ -125,36 +143,22 @@ abstract class SqlParserTestBase : TestBase() {
         assertEquals(MetaStrippingRewriter.stripMetas(parsedExprNode), exprNode2)
     }
 
-    private fun assertRoundTripIonElementToPartiQlAst(parsedV2Element: SexpElement, expectedSexpAst: SexpElement) {
-        // #1 We can transform the parsed V2 element.
-        val transformedParsedV2Element = PartiqlAst.transform(parsedV2Element)
+    private fun assertRoundTripIonElementToPartiQlAst(parsedElement: SexpElement, expectedSexpAst: SexpElement) {
+        // #1 We can transform the parsed PartiqlAst element.
+        val transformedParsedElement = PartiqlAst.transform(parsedElement)
 
-        // #2 We can transform the expected V2 element.
-        val transformedExpectedV2Element = PartiqlAst.transform(expectedSexpAst)
+        // #2 We can transform the expected PartiqlAst element.
+        val transformedExpectedElement = PartiqlAst.transform(expectedSexpAst)
 
         // #3 The results of both transformations match.
-        assertEquals(transformedExpectedV2Element, transformedParsedV2Element)
+        assertEquals(transformedExpectedElement, transformedParsedElement)
 
-        // #4 Re-transforming the parsed V2 element matches the expected AST
-        val reserializedV2Ast = transformedParsedV2Element.toIonElement()
-        assertEquals(expectedSexpAst, reserializedV2Ast)
+        // #4 Re-transforming the parsed PartiqlAst element and check if it matches the expected AST.
+        val reserializedAst = transformedParsedElement.toIonElement()
+        assertEquals(expectedSexpAst, reserializedAst)
 
-        // #5 Re-serializing the expected V2 element matches the expected AST.
+        // #5 Re-serializing the expected PartiqlAst element matches the expected AST.
         // Note:  because of #3 above, no need for #5.
-    }
-
-    private fun assertPigTransformerFails(parsedV2Element: SexpElement) {
-
-        // TODO: remove this method once V2 is fully complete.
-        // Migration to PIG domain partially completed--expect failure.
-        // (If the test starts succeeding suddenly, we want to know so we can mark the expected test to succeed!)
-        // Doing so will also cause the additional assertions above to execute.
-        try {
-            PartiqlAst.transform(parsedV2Element)
-            fail("Transform to PIG domain unexpectedly succeeded! :)")
-        } catch (ex: MalformedDomainDataException) {
-            // OK!
-        }
     }
 
     /**

@@ -15,6 +15,7 @@
 package org.partiql.cli
 
 import com.amazon.ion.system.*
+import com.amazon.ionelement.api.toIonValue
 import org.partiql.cli.ReplState.*
 import org.partiql.lang.*
 import org.partiql.lang.ast.*
@@ -46,9 +47,6 @@ private enum class ReplState {
 
     /** Ready to execute a PartiQL query. */
     EXECUTE_PARTIQL,
-
-    /** Ready to parse a PartiQL query and display the full AST. */
-    PARSE_PARTIQL,
 
     /** Ready to parse a PartiQL query and display AST with meta nodes filtered out. */
     PARSE_PARTIQL_WITH_FILTER,
@@ -254,21 +252,11 @@ internal class Repl(private val valueFactory: ExprValueFactory,
         }
     }
 
-    private fun parsePartiQL(): ReplState = executeTemplate(astPrettyPrinter) { source ->
-        if (source != "") {
-            val serializedAst = AstSerializer.serialize(parser.parseExprNode(source), AstVersion.V2, valueFactory.ion)
-            valueFactory.newFromIonValue(serializedAst)
-        }
-        else {
-            null
-        }
-    }
-
     private fun parsePartiQLWithFilters(): ReplState = executeTemplate(astPrettyPrinter) { source ->
         if (source != "") {
-            val strippedMetaExprNode = MetaStrippingRewriter.stripMetas(parser.parseExprNode(source))
-            val serializedAst = AstSerializer.serialize(strippedMetaExprNode, AstVersion.V2, valueFactory.ion)
-            valueFactory.newFromIonValue(serializedAst)
+            val astStatementSexp = parser.parseAstStatement(source).toIonElement()
+            val astStatmentIonValue = astStatementSexp.asAnyElement().toIonValue(valueFactory.ion)
+            valueFactory.newFromIonValue(astStatmentIonValue)
         }
         else {
             null
@@ -302,7 +290,6 @@ internal class Repl(private val valueFactory: ExprValueFactory,
                         line == ""           -> EXECUTE_PARTIQL
                         line!!.endsWith(";") -> LAST_PARTIQL_LINE
                         line == "!!"         -> PARSE_PARTIQL_WITH_FILTER
-                        line == "!?"         -> PARSE_PARTIQL
                         else                 -> READ_PARTIQL
                     }
                 }
@@ -323,7 +310,6 @@ internal class Repl(private val valueFactory: ExprValueFactory,
                 }
 
                 EXECUTE_PARTIQL           -> executePartiQL()
-                PARSE_PARTIQL             -> parsePartiQL()
                 PARSE_PARTIQL_WITH_FILTER -> parsePartiQLWithFilters()
                 EXECUTE_REPL_COMMAND      -> executeReplCommand()
 

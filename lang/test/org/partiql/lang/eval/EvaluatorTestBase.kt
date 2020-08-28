@@ -47,7 +47,7 @@ abstract class EvaluatorTestBase : TestBase() {
      * [EvaluationSession] and [CompileOptions].
      *
      * This function also passes the [ExprNode] AST returned from the parser through (de)serialization steps through
-     * s-exp AST versions V0 and V2 and ensures that the deserialized forms of that are equivalent to each other.
+     * s-exp AST version V0 and ensures that the deserialized forms of that are equivalent to each other.
      *
      * @param source query source to be tested
      * @param expected expected result
@@ -115,7 +115,7 @@ abstract class EvaluatorTestBase : TestBase() {
             assertEquals(ExprValueType.MISSING, result.type, message)
         }
 
-        // Also send the serializer through V0 and V2 sexp ASTs and evaluate them again
+        // Also send the serializer through V0 sexp AST and evaluate them again
         // to be sure they still work after being deserialized
         fun serializeRoundTripEvalAndAssertIsMissing(astVersion: AstVersion) {
             val sexp = AstSerializer.serialize(originalExprNode, astVersion, ion)
