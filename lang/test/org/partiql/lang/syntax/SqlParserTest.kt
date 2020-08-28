@@ -2976,7 +2976,7 @@ class SqlParserTest : SqlParserTestBase() {
     )
 
     @Test
-    fun union_select_precedence() = assertExpression(
+    fun unionSelectPrecedence() = assertExpression(
             "SELECT * FROM foo UNION SELECT * FROM bar",
             """
         (union
@@ -3014,8 +3014,7 @@ class SqlParserTest : SqlParserTestBase() {
                         null
                         null
                         null))))
-        """,
-            skipPig = false
+        """
     )
 
     @Test
