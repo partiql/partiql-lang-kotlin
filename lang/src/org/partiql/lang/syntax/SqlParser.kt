@@ -1878,6 +1878,11 @@ class SqlParser(private val ion: IonSystem) : Parser {
         }
     }
 
+    private fun isJoinType(token : Token?) : Boolean {
+        val joinTypes = arrayOf("join", "cross_join", "inner_join", "left_join", "left_cross_join", "right_join", "right_cross_join", "outer_join", "outer_cross_join")
+        return joinTypes.contains(token?.keywordText)
+    }
+
     private fun List<Token>.parseArgList(
             aliasSupportType: AliasSupportType,
             mode: ArgListMode,
@@ -1887,6 +1892,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
             FROM_CLAUSE_ARG_LIST -> parseJoinDelim
             else -> parseCommaDelim
         }
+        var headIsLeftParen = 0
 
         return parseDelimitedList(parseDelim) { delim ->
             var rem = this
@@ -1898,17 +1904,38 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     ParseNode(MEMBER, null, listOf(field, value), value.remaining)
                 }
                 FROM_CLAUSE_ARG_LIST -> {
-                    when (rem.head?.keywordText) {
-                        "unpivot" -> {
-                            val actualChild = rem.tail.parseExpression(precedence)
-                            ParseNode(
-                                UNPIVOT,
-                                rem.head,
-                                listOf(actualChild),
-                                actualChild.remaining
-                            )
+                    when {
+                        rem.head?.type == LEFT_PAREN && rem.tail.head?.type == IDENTIFIER -> {
+                            headIsLeftParen++
+                            rem = rem.tail
+                            var actualChild : ParseNode
+                            if(isJoinType(rem.tail.head)) {
+                                actualChild = rem.parseArgList(AS_AT_BY, FROM_CLAUSE_ARG_LIST)
+                                rem = actualChild.remaining
+                            }
+                            else {
+                                actualChild = rem.parseExpression(precedence)
+                            }
+                            if(rem.head?.type == RIGHT_PAREN) {
+                                actualChild = actualChild.deriveExpected(RIGHT_PAREN)
+                                headIsLeftParen--
+                            }
+                            actualChild
                         }
-                        else -> rem.parseExpression(precedence)
+                        else -> when (rem.head?.keywordText) {
+                            "unpivot" -> {
+                                val actualChild = rem.tail.parseExpression(precedence)
+                                ParseNode(
+                                        UNPIVOT,
+                                        rem.head,
+                                        listOf(actualChild),
+                                        actualChild.remaining
+                                )
+                            }
+                            else -> {
+                                rem.parseExpression(precedence)
+                            }
+                        }
                     }
                 }
                 SIMPLE_PATH_ARG_LIST -> rem.parsePathTerm(PathMode.SIMPLE_PATH)
@@ -1955,7 +1982,13 @@ class SqlParser(private val ion: IonSystem) : Parser {
                         rem.err("Expected 'ON'", PARSE_MALFORMED_JOIN)
                     }
 
-                    val onClause = rem.tail.parseExpression(precedence)
+                    val onClause : ParseNode
+                    if(headIsLeftParen > 0) {
+                        onClause = rem.tail.parseExpression(precedence).deriveExpected(RIGHT_PAREN)
+                        headIsLeftParen--
+                    }
+                    else
+                        onClause = rem.tail.parseExpression(precedence)
                     rem = onClause.remaining
                     operands.add(onClause)
 
