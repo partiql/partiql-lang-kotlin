@@ -14,8 +14,10 @@
 
 package org.partiql.lang.errors
 
-import org.partiql.lang.eval.*
-import org.partiql.lang.syntax.*
+import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.syntax.DATE_PART_KEYWORDS
+import org.partiql.lang.syntax.TokenType
+
 
 /** Property Set constants used in [ErrorCode] */
 private val LOCATION = setOf(Property.LINE_NUMBER, Property.COLUMN_NUMBER)
@@ -337,7 +339,19 @@ enum class ErrorCode(private val category: ErrorCategory,
     EVALUATOR_BINDING_DOES_NOT_EXIST(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.BINDING_NAME),
-        "Binding does not exist"),
+        "Binding does not exist") {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "Binding '${errorContext?.get(Property.BINDING_NAME)?.stringValue() ?: UNKNOWN}' does not exist"
+    },
+
+    EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY(
+        ErrorCategory.EVALUATOR,
+        LOCATION + setOf(Property.BINDING_NAME),
+        "") {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "Variable '${errorContext?.get(Property.BINDING_NAME)?.stringValue() ?: UNKNOWN}' " +
+            "must appear in the GROUP BY clause or be used in an aggregation function"
+    },
 
     EVALUATOR_UNBOUND_PARAMETER(
         ErrorCategory.EVALUATOR,

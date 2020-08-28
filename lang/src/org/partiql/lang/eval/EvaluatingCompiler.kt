@@ -18,6 +18,7 @@ package org.partiql.lang.eval
 import com.amazon.ion.*
 import org.partiql.lang.ast.*
 import org.partiql.lang.ast.passes.*
+import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.*
 import org.partiql.lang.eval.binding.*
 import org.partiql.lang.syntax.SqlParser
@@ -61,11 +62,13 @@ internal class EvaluatingCompiler(
 
     //Note: please don't make this inline -- it messes up [EvaluationException] stack traces and
     //isn't a huge benefit because this is only used at SQL-compile time anyway.
-    private fun <R> nestCompilationContext(expressionContext: ExpressionContext, block: () -> R): R {
+    private fun <R> nestCompilationContext(expressionContext: ExpressionContext,
+                                           fromSourceNames: Set<String>, block: () -> R): R {
         compilationContextStack.push(
             when {
-                compilationContextStack.empty() -> CompilationContext(expressionContext)
-                else                            -> compilationContextStack.peek().createNested(expressionContext)
+                compilationContextStack.empty() -> CompilationContext(expressionContext, fromSourceNames)
+                else                            -> compilationContextStack.peek().createNested(expressionContext,
+                                                                                               fromSourceNames)
             })
 
         try {
@@ -203,7 +206,7 @@ internal class EvaluatingCompiler(
 
         AstSanityValidator.validate(rewrittenAst)
 
-        val thunk = nestCompilationContext(ExpressionContext.NORMAL) {
+        val thunk = nestCompilationContext(ExpressionContext.NORMAL, emptySet()) {
             compileExprNode(rewrittenAst)
         }
 
@@ -684,8 +687,9 @@ internal class EvaluatingCompiler(
 
     private fun compileVariableReference(expr: VariableReference): ThunkEnv {
         val (id, case, lookupStrategy, metas: MetaContainer) = expr
-
         val uniqueNameMeta = expr.metas.find(UniqueNameMeta.TAG) as? UniqueNameMeta
+
+        val fromSourceNames = currentCompilationContext.fromSourceNames
 
         return when(uniqueNameMeta) {
             null -> {
@@ -693,11 +697,24 @@ internal class EvaluatingCompiler(
                 val evalVariableReference = when (compileOptions.undefinedVariable) {
                     UndefinedVariableBehavior.ERROR   ->
                         thunkFactory.thunkEnv(metas) { env ->
-                            env.current[bindingName] ?: throw EvaluationException(
-                                "No such binding: ${bindingName.name}",
-                                ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
-                                errorContextFrom(metas).also { it[Property.BINDING_NAME] = bindingName.name },
-                                internal = false)
+                            when(val value = env.current[bindingName]) {
+                                null -> {
+                                    if (fromSourceNames.any { bindingName.isEquivalentTo(it) }) {
+                                        throw EvaluationException(
+                                                "Variable not in GROUP BY or aggregation function: ${bindingName.name}",
+                                                ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
+                                                errorContextFrom(metas).also { it[Property.BINDING_NAME] = bindingName.name },
+                                                internal = false)
+                                    } else {
+                                        throw EvaluationException(
+                                                "No such binding: ${bindingName.name}",
+                                                ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
+                                                errorContextFrom(metas).also { it[Property.BINDING_NAME] = bindingName.name },
+                                                internal = false)
+                                    }
+                                }
+                                else -> value
+                            }
                         }
                     UndefinedVariableBehavior.MISSING ->
                         thunkFactory.thunkEnv(metas) { env ->
@@ -870,8 +887,23 @@ internal class EvaluatingCompiler(
     }
 
     private fun compileSelect(selectExpr: Select): ThunkEnv {
+        // Get all the FROM source aliases for binding error checks
+        val fold = object : PartiqlAst.VisitorFold<Set<String>>() {
+            /** Store all the visited FROM source aliases in the accumulator */
+            override fun visitFromSourceScan(node: PartiqlAst.FromSource.Scan, accumulator: Set<String>): Set<String> {
+                val aliases = listOfNotNull(node.asAlias?.text, node.atAlias?.text, node.byAlias?.text)
+                return accumulator + aliases.toSet()
+            }
 
-        return nestCompilationContext(ExpressionContext.NORMAL) {
+            /** Prevents visitor from recursing into nested select statements */
+            override fun walkExprSelect(node: PartiqlAst.Expr.Select, accumulator: Set<String>): Set<String> {
+                return accumulator
+            }
+        }
+        val pigGeneratedAst = selectExpr.toAstExpr() as PartiqlAst.Expr.Select
+        val allFromSourceAliases = fold.walkFromSource(pigGeneratedAst.from, emptySet())
+
+        return nestCompilationContext(ExpressionContext.NORMAL, emptySet()) {
             val (setQuantifier, projection, from, _, groupBy, having, _, metas: MetaContainer) = selectExpr
 
             val fromSourceThunks = compileFromSources(from)
@@ -1039,28 +1071,31 @@ internal class EvaluatingCompiler(
             when (projection) {
                 is SelectProjectionValue -> {
                     val (valueExpr) = projection
-                    val valueThunk = compileExprNode(valueExpr)
-                    getQueryThunk(thunkFactory.thunkEnvValue(metas) { env, _ -> valueThunk(env) })
+                    nestCompilationContext(ExpressionContext.NORMAL, allFromSourceAliases) {
+                        val valueThunk = compileExprNode(valueExpr)
+                        getQueryThunk(thunkFactory.thunkEnvValue(metas) { env, _ -> valueThunk(env) })
+                    }
                 }
                 is SelectProjectionPivot -> {
                     val (asExpr, atExpr) = projection
-                    val asThunk = compileExprNode(asExpr)
-                    val atThunk = compileExprNode(atExpr)
+                    nestCompilationContext(ExpressionContext.NORMAL, allFromSourceAliases) {
+                        val asThunk = compileExprNode(asExpr)
+                        val atThunk = compileExprNode(atExpr)
+                        thunkFactory.thunkEnv(metas) { env ->
+                            val sourceValue = sourceThunks(env)
+                            val seq = sourceValue
+                                    .asSequence()
+                                    .map { (_, env) -> Pair(asThunk(env), atThunk(env)) }
+                                    .filter { (name, _) -> name.type.isText }
+                                    .map { (name, value) -> value.namedValue(name) }
 
-                    thunkFactory.thunkEnv(metas) { env ->
-                        val sourceValue = sourceThunks(env)
-                        val seq = sourceValue
-                            .asSequence()
-                            .map { (_, env) -> Pair(asThunk(env), atThunk(env)) }
-                            .filter { (name, _) -> name.type.isText }
-                            .map { (name, value) -> value.namedValue(name) }
-
-                        createStructExprValue(seq, StructOrdering.UNORDERED)
+                            createStructExprValue(seq, StructOrdering.UNORDERED)
+                        }
                     }
                 }
                 is SelectProjectionList  -> {
                     val (items) = projection
-                    nestCompilationContext(ExpressionContext.SELECT_LIST) {
+                    nestCompilationContext(ExpressionContext.SELECT_LIST, allFromSourceAliases) {
                         val projectionThunk: ThunkEnvValue<List<ExprValue>> =
                             when {
                                 items.filterIsInstance<SelectListItemStar>().any() -> {
@@ -1208,7 +1243,7 @@ internal class EvaluatingCompiler(
 
         val aggFactory = getAggregatorFactory(funcVarRef.id.toLowerCase(), setQuantifier, metas)
 
-        val argThunk = nestCompilationContext(ExpressionContext.AGG_ARG) {
+        val argThunk = nestCompilationContext(ExpressionContext.AGG_ARG, emptySet()) {
             compileExprNode(argExpr)
         }
 
@@ -1915,11 +1950,12 @@ private enum class ExpressionContext {
  * Tracks state used by the compiler while compiling.
  *
  * @param expressionContext Indicates what part of the grammar is currently being compiled.
+ * @param fromSourceNames Set of all FROM source aliases for binding error checks.
  */
-private class CompilationContext(val expressionContext: ExpressionContext)
+private class CompilationContext(val expressionContext: ExpressionContext, val fromSourceNames: Set<String>)
 {
-    fun createNested(expressionContext: ExpressionContext) =
-        CompilationContext(expressionContext)
+    fun createNested(expressionContext: ExpressionContext, fromSourceNames: Set<String>) =
+        CompilationContext(expressionContext, fromSourceNames)
 }
 
 /**

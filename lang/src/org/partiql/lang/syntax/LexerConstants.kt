@@ -454,50 +454,65 @@ internal val DATE_PART_KEYWORDS: Set<String> = DatePart.values()
     BINARY_OPERATORS + UNARY_OPERATORS + SPECIAL_OPERATORS
 
 /**
+ * Operator precedence groups
+ */
+enum class OperatorPrecedenceGroups(val precedence: Int) {
+    SET(5),
+    SELECT(6),
+    LOGICAL_OR(10),
+    LOGICAL_AND(20),
+    LOGICAL_NOT(30),
+    EQUITY(40),
+    COMPARISON(50),
+    ADDITION(60),
+    MULTIPLY(70)
+}
+
+/**
  * Precedence rank integer is ascending with higher precedence and is in terms of the
  * un-aliased names of the operators.
  */
 @JvmField internal val OPERATOR_PRECEDENCE = mapOf(
     // set operator group
-    "intersect"     to 5,
-    "intersect_all" to 5,
-    "except"        to 5,
-    "except_all"    to 5,
-    "union"         to 5,
-    "union_all"     to 5,
+    "intersect"     to OperatorPrecedenceGroups.SET.precedence,
+    "intersect_all" to OperatorPrecedenceGroups.SET.precedence,
+    "except"        to OperatorPrecedenceGroups.SET.precedence,
+    "except_all"    to OperatorPrecedenceGroups.SET.precedence,
+    "union"         to OperatorPrecedenceGroups.SET.precedence,
+    "union_all"     to OperatorPrecedenceGroups.SET.precedence,
 
     // logical group
-    "or"            to 10,
-    "and"           to 20,
-    "not"           to 30,
+    "or"            to OperatorPrecedenceGroups.LOGICAL_OR.precedence,
+    "and"           to OperatorPrecedenceGroups.LOGICAL_AND.precedence,
+    "not"           to OperatorPrecedenceGroups.LOGICAL_NOT.precedence,
 
     // equality group (TODO add other morphemes of equality/non-equality)
-    "="             to 40,
-    "<>"            to 40,
-    "is"            to 40,
-    "is_not"        to 40,
-    "in"            to 40,
-    "not_in"        to 40,
+    "="             to OperatorPrecedenceGroups.EQUITY.precedence,
+    "<>"            to OperatorPrecedenceGroups.EQUITY.precedence,
+    "is"            to OperatorPrecedenceGroups.EQUITY.precedence,
+    "is_not"        to OperatorPrecedenceGroups.EQUITY.precedence,
+    "in"            to OperatorPrecedenceGroups.EQUITY.precedence,
+    "not_in"        to OperatorPrecedenceGroups.EQUITY.precedence,
 
     // comparison group
-    "<"             to 50,
-    "<="            to 50,
-    ">"             to 50,
-    ">="            to 50,
-    "between"       to 50, // note that this **must** be above 'AND'
-    "not_between"   to 50, // note that this **must** be above 'AND'
-    "like"          to 50,
-    "not_like"      to 50,
+    "<"             to OperatorPrecedenceGroups.COMPARISON.precedence,
+    "<="            to OperatorPrecedenceGroups.COMPARISON.precedence,
+    ">"             to OperatorPrecedenceGroups.COMPARISON.precedence,
+    ">="            to OperatorPrecedenceGroups.COMPARISON.precedence,
+    "between"       to OperatorPrecedenceGroups.COMPARISON.precedence, // note that this **must** be above 'AND'
+    "not_between"   to OperatorPrecedenceGroups.COMPARISON.precedence, // note that this **must** be above 'AND'
+    "like"          to OperatorPrecedenceGroups.COMPARISON.precedence,
+    "not_like"      to OperatorPrecedenceGroups.COMPARISON.precedence,
 
     // the addition group
-    "+"             to 60,
-    "-"             to 60,
-    "||"            to 60,
+    "+"             to OperatorPrecedenceGroups.ADDITION.precedence,
+    "-"             to OperatorPrecedenceGroups.ADDITION.precedence,
+    "||"            to OperatorPrecedenceGroups.ADDITION.precedence,
 
     // multiply group (TODO add exponentiation)
-    "*"             to 70,
-    "/"             to 70,
-    "%"             to 70
+    "*"             to OperatorPrecedenceGroups.MULTIPLY.precedence,
+    "/"             to OperatorPrecedenceGroups.MULTIPLY.precedence,
+    "%"             to OperatorPrecedenceGroups.MULTIPLY.precedence
 )
 
 //
