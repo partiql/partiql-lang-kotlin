@@ -58,6 +58,168 @@ class SqlParserJoinTest : SqlParserTestBase() {
             joinPredicate = eq(id("s"), id("f")))
     }
 
+    @Test
+    fun selectSingleJoinParensTest() = assertExpression(
+        "SELECT x FROM (A INNER JOIN B ON A = B)",
+        """(select
+            (project
+                (list
+                    (id x case_insensitive)))
+            (from
+                (inner_join
+                    (id A case_insensitive)
+                    (id B case_insensitive)
+                    (=
+                        (id A case_insensitive)
+                        (id B case_insensitive)))))
+        """
+    ) {
+        select(
+            project = projectX,
+            from = join(
+                inner(),
+                scan(id("A")),
+                scan(id("B")),
+                eq(id("A"), id("B"))),
+            where = null)
+    }
+
+    @Test
+    fun selectSingleJoinMultiParensTest() = assertExpression(
+        "SELECT x FROM (((A INNER JOIN B ON A = B)))",
+        """(select
+            (project
+                (list
+                    (id x case_insensitive)))
+            (from
+                (inner_join
+                    (id A case_insensitive)
+                    (id B case_insensitive)
+                    (=
+                        (id A case_insensitive)
+                        (id B case_insensitive)))))
+        """
+    ) {
+        select(
+            project = projectX,
+            from = join(
+                inner(),
+                scan(id("A")),
+                scan(id("B")),
+                eq(id("A"), id("B"))),
+            where = null)
+    }
+
+    @Test
+    fun selectTwoJoinsNaturalOrderParensTest() = assertExpression(
+        "SELECT x FROM (A INNER JOIN B ON A = B) INNER JOIN C ON B = C",
+        """(select
+            (project
+                (list
+                    (id x case_insensitive)))
+            (from
+                (inner_join
+                    (inner_join
+                        (id A case_insensitive)
+                        (id B case_insensitive)
+                        (=
+                            (id A case_insensitive)
+                            (id B case_insensitive)))
+                    (id C case_insensitive)
+                    (=
+                        (id B case_insensitive)
+                        (id C case_insensitive)))))
+        """
+    ) {
+        select(
+            project = projectX,
+            from = join(
+                inner(),
+                join(inner(),
+                    scan(id("A")),
+                    scan(id("B")),
+                    eq(id("A"), id("B"))),
+                scan(id("C")),
+                eq(id("B"), id("C"))),
+            where = null)
+    }
+
+    @Test
+    fun selectTwoJoinsSpecifiedOrderParensTest() = assertExpression(
+        "SELECT x FROM A INNER JOIN (B INNER JOIN C ON B = C) ON A = B",
+        """(select
+            (project
+                (list
+                    (id x case_insensitive)))
+            (from
+                (inner_join
+                    (inner_join
+                        (id B case_insensitive)
+                        (id C case_insensitive)
+                        (=
+                            (id B case_insensitive)
+                            (id C case_insensitive)))
+                    (id A case_insensitive)
+                    (=
+                        (id A case_insensitive)
+                        (id B case_insensitive)))))
+        """
+    ) {
+        select(
+            project = projectX,
+            from = join(
+                inner(),
+                join(inner(),
+                    scan(id("B")),
+                    scan(id("C")),
+                    eq(id("B"), id("C"))),
+                scan(id("A")),
+                eq(id("A"), id("B"))),
+            where = null)
+    }
+
+    @Test
+    fun selectThreeJoinsSpecifiedOrderParensTest() = assertExpression(
+        "SELECT x FROM A INNER JOIN (B INNER JOIN (C INNER JOIN D ON C = D) ON B = C) ON A = B",
+        """(select
+            (project
+                (list
+                    (id x case_insensitive)))
+            (from
+                (inner_join
+                    (inner_join
+                        (inner_join
+                            (id C case_insensitive)
+                            (id D case_insensitive)
+                            (=
+                                (id C case_insensitive)
+                                (id D case_insensitive)))
+                        (id B case_insensitive)
+                        (=
+                            (id B case_insensitive)
+                            (id C case_insensitive)))
+                    (id A case_insensitive)
+                    (=
+                        (id A case_insensitive)
+                        (id B case_insensitive)))))
+        """
+    ) {
+        select(
+            project = projectX,
+            from = join(
+                inner(),
+                join(inner(),
+                    join(inner(),
+                        scan(id("C")),
+                        scan(id("D")),
+                        eq(id("C"), id("D"))),
+                    scan(id("B")),
+                    eq(id("B"), id("C"))),
+                scan(id("A")),
+                eq(id("A"), id("B"))),
+            where = null)
+    }
+
     private val deeplyNestedJoins = PartiqlAst.build {
         join(
             full(),
