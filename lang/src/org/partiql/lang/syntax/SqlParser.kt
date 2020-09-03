@@ -684,13 +684,13 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
     private fun ParseNode.toFromSourceExpr(): FromSource {
         val head = this
-        if (head?.type == FROM_SOURCE_JOIN) {
+        if (head.type == FROM_SOURCE_JOIN) {
             if (head.children.size != 3) {
                 head.errMalformedParseTree("JOIN operation for ${head} is missing a clause")
             }
 
             val joinTokenType = head.token?.keywordText
-            val joinOp = when(joinTokenType) {
+            val joinOp = when (joinTokenType) {
                 "inner_join", "join", "cross_join" -> JoinOp.INNER
                 "left_join", "left_cross_join" -> JoinOp.LEFT
                 "right_join", "right_cross_join" -> JoinOp.RIGHT
@@ -704,10 +704,13 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     }
                 }
             }
-            val isImplicitJoin = head.token?.type == COMMA || listOf("cross_join", "left_cross_join", "right_cross_join", "outer_cross_join").contains(joinTokenType)
+            val isImplicitJoin = head.token.type == COMMA || when (joinTokenType) {
+                "cross_join", "left_cross_join", "right_cross_join", "outer_cross_join" -> true
+                else -> false
+            }
             val condition = if (isImplicitJoin) Literal(trueValue, metaContainerOf()) else head.children[2].toExprNode()
 
-            val fromSourceJoin = FromSourceJoin(joinOp,
+            return FromSourceJoin(joinOp,
                     head.children[0].toFromSourceExpr(),
                     head.children[1].toFromSource(),
                     condition,
@@ -718,11 +721,8 @@ class SqlParser(private val ion: IonSystem) : Parser {
                         }
                     }
             )
-            return fromSourceJoin
         }
-        else {
-            return head.toFromSource()
-        }
+        return head.toFromSource()
     }
 
 
@@ -1926,37 +1926,25 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
     private fun List<Token>.parseFromSource(precedence: Int = -1, parseRemaining: Boolean = true): ParseNode {
         var rem = this
-        var child = when {
-            rem.head?.type == LEFT_PAREN && rem.tail.head?.type == IDENTIFIER -> {
-                // Starts w/ left paren and an identifier
-                rem = rem.tail
-                var actualChild = rem.parseFromSource(precedence)
-                rem = actualChild.remaining
-
-                if(rem.head?.type == RIGHT_PAREN) {
-                    actualChild = actualChild.deriveExpected(RIGHT_PAREN)
-                }
-                actualChild
+        var child = when (rem.head?.keywordText) {
+            "unpivot" -> {
+                val actualChild = rem.tail.parseExpression(precedence)
+                ParseNode(
+                        UNPIVOT,
+                        rem.head,
+                        listOf(actualChild),
+                        actualChild.remaining
+                )
             }
-            else -> when (rem.head?.keywordText) {
-                "unpivot" -> {
-                    val actualChild = rem.tail.parseExpression(precedence)
-                    ParseNode(
-                            UNPIVOT,
-                            rem.head,
-                            listOf(actualChild),
-                            actualChild.remaining
-                    )
+            else -> {
+                val isSubqueryOrLiteral = rem.tail.head?.type == LITERAL || rem.tail.head?.keywordText == "select"
+                if (rem.head?.type == LEFT_PAREN && !isSubqueryOrLiteral) {
+                    // Starts with a left paren and is not a subquery or literal, so parse as a from source
+                    rem = rem.tail
+                    rem.parseFromSource(precedence).deriveExpected(RIGHT_PAREN)
                 }
-                else -> {
-                    if (rem.head?.type == LEFT_PAREN && rem.tail.head?.type != LITERAL && rem.tail.head?.keywordText != "select") {
-                        rem = rem.tail
-                        val actualChild = rem.parseFromSource(precedence).deriveExpected(RIGHT_PAREN)
-                        actualChild
-                    }
-                    else {
-                        rem.parseExpression(precedence)
-                    }
+                else {
+                    rem.parseExpression(precedence)
                 }
             }
         }
@@ -1978,18 +1966,22 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
         var delim = rem.parseJoinDelim()
         if (parseRemaining) {
-            while (delim?.type?.isJoin == true) {  // may need to loop over entire if statement as there could be a mix of implicit and explicit joins
+            while (delim?.type?.isJoin == true) {
                 val isCrossJoin = delim.token?.keywordText?.contains("cross") ?: false
                 val hasOnClause = delim.token?.type == KEYWORD && !isCrossJoin
+                var children : List<ParseNode>
 
                 rem = rem.tail
 
                 if (hasOnClause) {
-                    if (rem.head?.type == LEFT_PAREN) {     // maybe do a while here?. What's returned is the rightRef and should be w/in most inner FSJ
-                        val isSubquery = rem.tail.head?.type == LITERAL || rem.tail.head?.keywordText == "select"
+                    // Explicit join
+                    if (rem.head?.type == LEFT_PAREN) {
+                        // Starts with a left paren. Could indicate subquery/literal or indicate higher precedence
+                        val isSubqueryOrLiteral = rem.tail.head?.type == LITERAL || rem.tail.head?.keywordText == "select"
                         val parenClause = rem.parseFromSource(precedence, true)
                         rem = parenClause.remaining
 
+                        // check for an ON-clause
                         if (rem.head?.keywordText != "on") {
                             rem.err("Expected 'ON'", PARSE_MALFORMED_JOIN)
                         }
@@ -1997,18 +1989,20 @@ class SqlParser(private val ion: IonSystem) : Parser {
                         val onClause = rem.tail.parseExpression(precedence)
 
                         rem = onClause.remaining
-                        if (!isSubquery) {
-                            left = ParseNode(FROM_SOURCE_JOIN, delim.token, listOf(parenClause, left, onClause), rem)
+                        if (!isSubqueryOrLiteral) {
+                            children = listOf(parenClause, left, onClause)
                         }
 
                         else {
-                            left = ParseNode(FROM_SOURCE_JOIN, delim.token, listOf(left, parenClause, onClause), rem)
+                            children = listOf(left, parenClause, onClause)
                         }
                     }
 
                     else {
-                        val rightRef = rem.parseFromSource(precedence, false)   // not sure if parseRemaining matters here?
+                        // Rest is just the right side of the clause
+                        val rightRef = rem.parseFromSource(precedence, false)
                         rem = rightRef.remaining
+
                         // check for an ON-clause
                         if (rem.head?.keywordText != "on") {
                             rem.err("Expected 'ON'", PARSE_MALFORMED_JOIN)
@@ -2018,15 +2012,17 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
                         rem = onClause.remaining
 
-                        left = ParseNode(FROM_SOURCE_JOIN, delim.token, listOf(left, rightRef, onClause), rem)
+                        children = listOf(left, rightRef, onClause)
                     }
                 }
 
-                else {      // For implicit joins
+                else {
+                    // For implicit joins
                     val rightRef = rem.parseFromSource(precedence, false)
                     rem = rightRef.remaining
-                    left = ParseNode(FROM_SOURCE_JOIN, delim.token, listOf(left, rightRef, delim), rem)
+                    children = listOf(left, rightRef, delim)
                 }
+                left = ParseNode(FROM_SOURCE_JOIN, delim.token, children, rem)
                 delim = rem.parseJoinDelim()
             }
             return left
