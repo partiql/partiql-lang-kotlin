@@ -459,10 +459,14 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
                 val operation = children[0].toExprNode()
                 val fromSource = children[1].also {
-                    if (it.type != ARG_LIST) {
-                        errMalformedParseTree("Invalid second child of FROM expression")
+                    if(it.type != FROM_SOURCE_EXPR) {
+                        errMalformedParseTree("Invalid second child of FROM")
                     }
-                }.children.toFromSource()
+
+                    if(it.children.size != 1) {
+                        errMalformedParseTree("Invalid FROM clause children length")
+                    }
+                }.children[0].toFromSourceExpr()
 
                 val where = children.firstOrNull { it.type == WHERE }?.let { it.children[0].toExprNode() }
 
@@ -1177,10 +1181,8 @@ class SqlParser(private val ion: IonSystem) : Parser {
     private fun List<Token>.parseFrom(): ParseNode {
         var rem = this
         val children = ArrayList<ParseNode>()
-        val fromList = rem.parseArgList(
-            aliasSupportType = AS_AT_BY,
-            mode = FROM_CLAUSE_ARG_LIST
-        )
+        val fromList = rem.parseFromSourceList()
+
         rem = fromList.remaining
 
         rem.parseOptionalWhere()?.let {
@@ -1270,7 +1272,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
             }
         }
 
-        children.add(ParseNode(ARG_LIST, null, listOf(source), rem))
+        children.add(ParseNode(FROM_SOURCE_EXPR, null, listOf(source), rem))
 
         val operation = rem.parseDmlOp().also {
             rem = it.remaining
