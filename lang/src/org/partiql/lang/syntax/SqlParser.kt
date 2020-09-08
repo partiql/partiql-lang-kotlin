@@ -459,14 +459,14 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
                 val operation = children[0].toExprNode()
                 val fromSource = children[1].also {
-                    if(it.type != FROM_SOURCE_EXPR) {
+                    if (it.type != FROM_SOURCE_EXPR) {
                         errMalformedParseTree("Invalid second child of FROM")
                     }
 
-                    if(it.children.size != 1) {
+                    if (it.children.size != 1) {
                         errMalformedParseTree("Invalid FROM clause children length")
                     }
-                }.children[0].toFromSourceExpr()
+                }.children[0].toFromSource()
 
                 val where = children.firstOrNull { it.type == WHERE }?.let { it.children[0].toExprNode() }
 
@@ -544,15 +544,15 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     }
                 }
 
-                if(fromList.type != FROM_SOURCE_EXPR) {
+                if (fromList.type != FROM_SOURCE_EXPR) {
                     errMalformedParseTree("Invalid second child of SELECT_LIST")
                 }
 
-                if(fromList.children.size != 1) {
+                if (fromList.children.size != 1) {
                     errMalformedParseTree("Invalid FROM clause children length")
                 }
 
-                val fromSource = fromList.children[0].toFromSourceExpr()
+                val fromSource = fromList.children[0].toFromSource()
 
                 val whereExpr = unconsumedChildren.firstOrNull { it.type == WHERE }?.let {
                     unconsumedChildren.remove(it)
@@ -686,11 +686,11 @@ class SqlParser(private val ion: IonSystem) : Parser {
         }
     }
 
-    private fun ParseNode.toFromSourceExpr(): FromSource {
+    private fun ParseNode.toFromSource(): FromSource {
         val head = this
         if (head.type == FROM_SOURCE_JOIN) {
             if (head.children.size != 3) {
-                head.errMalformedParseTree("JOIN operation for ${head} is missing a clause")
+                head.errMalformedParseTree("Incorrect number of clauses provided to JOIN")
             }
 
             val joinTokenType = head.token?.keywordText
@@ -715,8 +715,8 @@ class SqlParser(private val ion: IonSystem) : Parser {
             val condition = if (isImplicitJoin) Literal(trueValue, metaContainerOf()) else head.children[2].toExprNode()
 
             return FromSourceJoin(joinOp,
-                    head.children[0].toFromSourceExpr(),
-                    head.children[1].toFromSource(),
+                    head.children[0].toFromSource(),
+                    head.children[1].unwrapAliasesAndUnpivot(),
                     condition,
                     token.toSourceLocationMetaContainer().let {
                     when {
@@ -726,12 +726,12 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     }
             )
         }
-        return head.toFromSource()
+        return head.unwrapAliasesAndUnpivot()
     }
 
 
     private fun List<ParseNode>.toFromSource(): FromSource {
-        val left = this[0].toFromSource()
+        val left = this[0].unwrapAliasesAndUnpivot()
         if(size == 1) {
             return left
         }
@@ -739,7 +739,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
         return this.toFromSourceWithJoin(1, left)
     }
 
-    private fun ParseNode.toFromSource(): FromSource {
+    private fun ParseNode.unwrapAliasesAndUnpivot(): FromSource {
         val (aliases, unwrappedParseNode) = unwrapAliases()
         return when(unwrappedParseNode.type) {
             UNPIVOT -> {
@@ -764,7 +764,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
             else -> { this[currentIndex].errMalformedParseTree("Unsupported syntax for ${this[currentIndex].type}") }
         }
 
-        val right = this[currentIndex].children[0].toFromSource()
+        val right = this[currentIndex].children[0].unwrapAliasesAndUnpivot()
         val (isImplicitJoin, condition) = when {
             this[currentIndex].children.size > 1 -> Pair(false, this[currentIndex].children[1].toExprNode())
             else                                 -> Pair(true, Literal(trueValue, metaContainerOf()))
