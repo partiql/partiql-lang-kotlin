@@ -18,6 +18,20 @@ import org.partiql.lang.util.codePointSequence
 import java.util.ArrayList
 import java.util.HashSet
 
+@Suppress("UNCHECKED_CAST")
+private fun <T> Iterable<T>.fastToMutableHashSet(): MutableSet<T> =
+    when(this) {
+        // `HashSet<T>.clone()` is faster than constructing a new HashSet<T> and calling .addAll()
+        is HashSet<T> -> this.clone() as HashSet<T>
+        else -> HashSet<T>().also { it.addAll(this) }
+    }
+
+private infix fun <T> Iterable<T>.fastUnion(other: Iterable<T>): MutableSet<T> {
+    val set = this.fastToMutableHashSet()
+    set.addAll(other)
+    return set
+}
+
 
 /**
  * Enumeration of Alphabet letters which can be one of
@@ -38,7 +52,7 @@ private sealed class Alphabet {
  * Represents the dead DFA State.
  * This state is terminal-- has no outgoing transitions and it is neither a start State nor a Final state
  */
-val  DFADeadState : IDFAState =  DFAState(mutableSetOf(), mutableMapOf())
+val  DFADeadState : IDFAState =  DFAState(HashSet(), HashMap())
 
 // Represents the DFA of the empty pattern
 val DFAEmptyPattern = object :IDFAState {
@@ -90,8 +104,8 @@ interface IDFAState {
  */
 private open class DFAState(val nfaStates: MutableSet<NFAState>,
                     val outgoing: MutableMap<Alphabet, DFAState>,
-                    var accepting: Boolean = nfaStates.filter { it.isAccepting }.isNotEmpty(),
-                    var start: Boolean = nfaStates.filter { it.isStartState }.isNotEmpty()
+                    var accepting: Boolean = nfaStates.any { it.isAccepting },
+                    var start: Boolean = nfaStates.any { it.isStartState }
 ) : IDFAState {
 
     fun addTransition(transition: Alphabet, target: DFAState) {
@@ -111,8 +125,7 @@ private open class DFAState(val nfaStates: MutableSet<NFAState>,
 
     override fun isAccepting(): Boolean = accepting
 
-
-    /**
+     /**
      * Given a character, take a step in our DFA starting with `this` state and possible transitions that match [codePoint].
      *
      * @param codePoint character to match against possible valid transitions
@@ -157,6 +170,8 @@ private open class DFAState(val nfaStates: MutableSet<NFAState>,
     }
 }
 
+
+
 /**
  * Represents a state in an NFA where
  *
@@ -168,15 +183,15 @@ private open class DFAState(val nfaStates: MutableSet<NFAState>,
 private class NFAState(val stateNumber: Int,
                val isAccepting: Boolean,
                val isStartState: Boolean,
-               val outgoing: MutableMap<Alphabet, MutableSet<NFAState>> = mutableMapOf<Alphabet, MutableSet<NFAState>>()) {
+               val outgoing: MutableMap<Alphabet, MutableSet<NFAState>> = HashMap()) {
 
     fun get(transition: Alphabet): Set<NFAState> =
-        outgoing[transition]?.let { it } ?: setOf<NFAState>()
+        outgoing[transition] ?: hashSetOf()
 
     fun addTransition(label: Alphabet, target: NFAState) {
         when (outgoing.containsKey(label)) {
-            true -> outgoing[label]?.add(target) ?: mutableSetOf(target)
-            false -> outgoing.put(label, mutableSetOf(target))
+            true -> outgoing[label]?.add(target) ?: HashSet<NFAState>().apply { add(target) }
+            false -> outgoing[label] = HashSet<NFAState>().apply { add(target) }
         }
     }
 
@@ -195,16 +210,10 @@ private class NFAState(val stateNumber: Int,
             is Alphabet.Epsilon -> epsilonClosure()
             is Alphabet.AnyOneChar,
             is Alphabet.AnyZeroOrMoreChars -> {
-                val startSet = epsilonClosure().union(get(alpha))
-                startSet.fold(get(alpha)) { acc, nfaState -> acc.union(nfaState.epsilonClosure()) }
+                val startSet = epsilonClosure().fastUnion(get(alpha))
+                startSet.fold(get(alpha)) { acc, nfaState -> acc.fastUnion(nfaState.epsilonClosure()) }
             }
         }
-
-    /**
-     * Convineance method for 1-character closure when given a [Char].
-     */
-    fun getOutgoingStates(letter: Char): Set<NFAState> =
-        closure(letter.toInt())
 
     /**
      * Given a character return the set of NFA States that are the character-closure for `this` node.
@@ -231,7 +240,7 @@ private class NFAState(val stateNumber: Int,
      * @return set of NFA States reachable from `this` state by 1 non-epsilon transition.
      */
     fun getNonEpsilonTransitionTargets(codePoint: Int): Set<NFAState> =
-        get(Alphabet.Letter(codePoint)).union(get(Alphabet.AnyOneChar))
+        get(Alphabet.Letter(codePoint)).fastUnion(get(Alphabet.AnyOneChar))
 
 
     /**
@@ -249,9 +258,9 @@ private class NFAState(val stateNumber: Int,
     fun closure(codePoint: Int): Set<NFAState> {
         val reachableThroughEpsilon = epsilonClosure()
         val reachableThroughNonEpsilon = getNonEpsilonTransitionTargets(codePoint).let {
-            it.fold(it.toSet(), { acc, state -> acc.union(state.epsilonClosure()) })
+            it.fold(it, { acc, state -> acc.fastUnion(state.epsilonClosure()) })
         }
-        return reachableThroughEpsilon.union(reachableThroughNonEpsilon)
+        return reachableThroughEpsilon.fastUnion(reachableThroughNonEpsilon)
     }
 
 
@@ -264,7 +273,7 @@ private class NFAState(val stateNumber: Int,
     fun epsilonClosure(): Set<NFAState> =
         get(Alphabet.Epsilon).let {
             it.fold(it, { acc, state ->
-                acc.union(state.epsilonClosure())
+                acc.fastUnion(state.epsilonClosure())
             })
         }
 }
@@ -286,13 +295,12 @@ private class NFAState(val stateNumber: Int,
 fun buildDfaFromPattern(pattern: String, escape: Int?, patternSize: Int): IDFAState {
     escape?.let {
         val patternAsNfaLetters = patternToSequenceOfNfaLetters(pattern, it)
-        val dfaAlpha = patternAsNfaLetters.map(nfaLettersToDfaAlphabet()).toSet()
+        val dfaAlpha = patternAsNfaLetters.map(nfaLettersToDfaAlphabet()).toHashSet()
         return nfaToDfa(dfaAlpha, buildNfa(patternAsNfaLetters, patternSize))
     }
     val patternAsNfaLetters = patternToSequenceOfNfaLetters(pattern)
-    val dfaAlpha = patternAsNfaLetters.map(nfaLettersToDfaAlphabet()).toSet()
+    val dfaAlpha = patternAsNfaLetters.map(nfaLettersToDfaAlphabet()).toHashSet()
     return nfaToDfa(dfaAlpha, buildNfa(patternAsNfaLetters, patternSize))
-
 }
 
 /**
@@ -302,7 +310,7 @@ fun buildDfaFromPattern(pattern: String, escape: Int?, patternSize: Int): IDFASt
  * @param pattern search pattern
  * @param escapeChar escape character
  *
- * @return sequence of lketters in the NFA's alphabet that correspond to the characters in the pattern
+ * @return sequence of letters in the NFA's alphabet that correspond to the characters in the pattern
  */
 private fun patternToSequenceOfNfaLetters(pattern: String, escapeChar: Int): Sequence<Alphabet> {
     val codePointIter = pattern.codePointSequence().iterator()
@@ -330,7 +338,6 @@ private fun patternToSequenceOfNfaLetters(pattern: String): Sequence<Alphabet> =
     pattern.codePointSequence().map {
         codePointToAlphabetLetter(it)
     }
-
 
 /**
  * Given a character, return its corresponding Alphabet Letter
@@ -370,7 +377,7 @@ private fun nfaLettersToDfaAlphabet(): (Alphabet) -> Alphabet {
  * @return DFA that simulates the NFA with start state [nfa]
  */
 private fun nfaToDfa(alphabet: Set<Alphabet>, nfa: NFAState) =
-    buildDFA(alphabet, mutableMapOf(), setOf(nfa.epsilonClosure().union(setOf(nfa))))
+    buildDFA(alphabet, HashMap(), hashSetOf(nfa.epsilonClosure().fastUnion(hashSetOf(nfa))))
 
 
 /**
@@ -389,7 +396,7 @@ private fun buildDFA(dfaAlphabet: Set<Alphabet>,
              delta: MutableMap<Pair<Set<NFAState>, Alphabet>, Set<NFAState>>,
              todo: Set<Set<NFAState>>): DFAState {
 
-    var unprocessed = todo.toMutableSet()
+    var unprocessed = todo.fastToMutableHashSet()
     val processed = HashSet<Set<NFAState>>()
     while (unprocessed.isNotEmpty()) {
         val nfaStates = unprocessed.first()
@@ -401,8 +408,10 @@ private fun buildDFA(dfaAlphabet: Set<Alphabet>,
         val deltaUpdates: List<Pair<Pair<Set<NFAState>, Alphabet>, Set<NFAState>>> =
             dfaAlphabet.map {
                 Pair(Pair(nfaStates, it),
-                    nfaStates.fold(setOf<NFAState>()) { acc, state ->
-                        acc.union(state.getOutgoingStates(it))
+                    HashSet<NFAState>().apply {
+                        nfaStates.forEach { state ->
+                            addAll(state.getOutgoingStates(it))
+                        }
                     })
             }
         processed.add(nfaStates)
@@ -411,15 +420,13 @@ private fun buildDFA(dfaAlphabet: Set<Alphabet>,
             it.second
         }.filter { s ->
             s.isNotEmpty() && !processed.contains(s)
-        }.toMutableSet()
-        unprocessed = unprocessed.union(newStates).toMutableSet()
+        }.fastToMutableHashSet()
+        unprocessed = unprocessed.fastUnion(newStates)
     }
 
     val nfaStateSetToDfaState = HashMap<Set<NFAState>, DFAState>()
 
-
-
-    delta.forEach { nfaStateSetToDfaState.put(it.key.first, DFAState(it.key.first.toMutableSet(), HashMap())) }
+    delta.forEach { nfaStateSetToDfaState[it.key.first] = DFAState(it.key.first.fastToMutableHashSet(), HashMap()) }
     delta.forEach { (nfaSet, alpha), target ->
         val targetDfa: DFAState = nfaStateSetToDfaState[target].let { it } ?: DFADeadState as DFAState
         nfaStateSetToDfaState[nfaSet]?.addTransition(alpha, targetDfa) ?: errNoContext("DFA state for $nfaSet does not exist", internal = true)
