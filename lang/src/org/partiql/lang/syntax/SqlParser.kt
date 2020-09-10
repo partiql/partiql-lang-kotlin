@@ -46,7 +46,6 @@ class SqlParser(private val ion: IonSystem) : Parser {
     internal enum class ArgListMode {
         NORMAL_ARG_LIST,
         STRUCT_LITERAL_ARG_LIST,
-        FROM_CLAUSE_ARG_LIST,
         SIMPLE_PATH_ARG_LIST,
         SET_CLAUSE_ARG_LIST
     }
@@ -108,7 +107,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
         DELETE,
         ASSIGNMENT,
         FROM,
-        FROM_SOURCE_EXPR,
+        FROM_CLAUSE,
         FROM_SOURCE_JOIN,
         CREATE_TABLE,
         DROP_TABLE,
@@ -459,7 +458,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
                 val operation = children[0].toExprNode()
                 val fromSource = children[1].also {
-                    if (it.type != FROM_SOURCE_EXPR) {
+                    if (it.type != FROM_CLAUSE) {
                         errMalformedParseTree("Invalid second child of FROM")
                     }
 
@@ -544,7 +543,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     }
                 }
 
-                if (fromList.type != FROM_SOURCE_EXPR) {
+                if (fromList.type != FROM_CLAUSE) {
                     errMalformedParseTree("Invalid second child of SELECT_LIST")
                 }
 
@@ -689,7 +688,8 @@ class SqlParser(private val ion: IonSystem) : Parser {
     private fun ParseNode.toFromSource(): FromSource {
         val head = this
         if (head.type == FROM_SOURCE_JOIN) {
-            if (head.children.size != 3) {
+            val isCrossJoin = head.token?.keywordText?.contains("cross") ?: false
+            if (!isCrossJoin && head.children.size != 3) {
                 head.errMalformedParseTree("Incorrect number of clauses provided to JOIN")
             }
 
@@ -700,19 +700,11 @@ class SqlParser(private val ion: IonSystem) : Parser {
                 "right_join", "right_cross_join" -> JoinOp.RIGHT
                 "outer_join", "outer_cross_join" -> JoinOp.OUTER
                 else -> {
-                    if (head.token?.type == COMMA) {
-                        JoinOp.INNER
-                    }
-                    else {
-                        head.errMalformedParseTree("Unsupported syntax for ${head.type}")
-                    }
+                    head.errMalformedParseTree("Unsupported syntax for ${head.type}")
                 }
             }
-            val isImplicitJoin = head.token.type == COMMA || when (joinTokenType) {
-                "cross_join", "left_cross_join", "right_cross_join", "outer_cross_join" -> true
-                else -> false
-            }
-            val condition = if (isImplicitJoin) Literal(trueValue, metaContainerOf()) else head.children[2].toExprNode()
+
+            val condition = if (isCrossJoin) Literal(trueValue, metaContainerOf()) else head.children[2].toExprNode()
 
             return FromSourceJoin(joinOp,
                     head.children[0].toFromSource(),
@@ -720,23 +712,13 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     condition,
                     token.toSourceLocationMetaContainer().let {
                     when {
-                            isImplicitJoin -> it.add(IsImplictJoinMeta.instance)
-                            else           -> it
+                            isCrossJoin -> it.add(IsImplictJoinMeta.instance)
+                            else        -> it
                         }
                     }
             )
         }
         return head.unwrapAliasesAndUnpivot()
-    }
-
-
-    private fun List<ParseNode>.toFromSource(): FromSource {
-        val left = this[0].unwrapAliasesAndUnpivot()
-        if(size == 1) {
-            return left
-        }
-
-        return this.toFromSourceWithJoin(1, left)
     }
 
     private fun ParseNode.unwrapAliasesAndUnpivot(): FromSource {
@@ -752,42 +734,6 @@ class SqlParser(private val ion: IonSystem) : Parser {
             else    -> {
                 FromSourceExpr(unwrappedParseNode.toExprNode(), aliases)
             }
-        }
-    }
-
-    private fun List<ParseNode>.toFromSourceWithJoin(currentIndex: Int, left: FromSource): FromSource {
-        val joinOp = when(this[currentIndex].type) {
-            INNER_JOIN -> JoinOp.INNER
-            LEFT_JOIN -> JoinOp.LEFT
-            RIGHT_JOIN -> JoinOp.RIGHT
-            OUTER_JOIN -> JoinOp.OUTER
-            else -> { this[currentIndex].errMalformedParseTree("Unsupported syntax for ${this[currentIndex].type}") }
-        }
-
-        val right = this[currentIndex].children[0].unwrapAliasesAndUnpivot()
-        val (isImplicitJoin, condition) = when {
-            this[currentIndex].children.size > 1 -> Pair(false, this[currentIndex].children[1].toExprNode())
-            else                                 -> Pair(true, Literal(trueValue, metaContainerOf()))
-        }
-
-        val fromSourceJoin = FromSourceJoin(
-            joinOp,
-            left,
-            right,
-            condition,
-            this[currentIndex].token.toSourceLocationMetaContainer().let {
-                when {
-                    isImplicitJoin -> it.add(IsImplictJoinMeta.instance)
-                    else           -> it
-                }
-            })
-
-
-        val nextIndex = currentIndex + 1
-        return if(size - 1 < nextIndex) {
-            fromSourceJoin
-        } else {
-            this.toFromSourceWithJoin(nextIndex, fromSourceJoin)
         }
     }
 
@@ -1272,7 +1218,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
             }
         }
 
-        children.add(ParseNode(FROM_SOURCE_EXPR, null, listOf(source), rem))
+        children.add(ParseNode(FROM_CLAUSE, null, listOf(source), rem))
 
         val operation = rem.parseDmlOp().also {
             rem = it.remaining
@@ -1972,6 +1918,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
                 val isCrossJoin = delim.token?.keywordText?.contains("cross") ?: false
                 val hasOnClause = delim.token?.type == KEYWORD && !isCrossJoin
                 var children : List<ParseNode>
+                var joinToken : Token? = delim.token
 
                 rem = rem.tail
 
@@ -2022,9 +1969,15 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     // For implicit joins
                     val rightRef = rem.parseFromSource(precedence, false)
                     rem = rightRef.remaining
-                    children = listOf(left, rightRef, delim)
+                    children = listOf(left, rightRef)
+                    if (delim.token?.type == COMMA) {
+                        joinToken = delim.token?.copy(
+                            type = KEYWORD,
+                            value = ion.newString("cross_join")
+                        )
+                    }
                 }
-                left = ParseNode(FROM_SOURCE_JOIN, delim.token, children, rem)
+                left = ParseNode(FROM_SOURCE_JOIN, joinToken, children, rem)
                 delim = rem.parseJoinDelim()
             }
             return left
@@ -2038,7 +1991,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
         val child = rem.parseFromSource(precedence)
         rem = child.remaining
 
-        return ParseNode(FROM_SOURCE_EXPR, null, listOf(child), rem)
+        return ParseNode(FROM_CLAUSE, null, listOf(child), rem)
     }
 
     private fun List<Token>.parseArgList(
@@ -2046,10 +1999,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
             mode: ArgListMode,
             precedence: Int = -1
     ): ParseNode {
-        val parseDelim = when (mode) {
-            FROM_CLAUSE_ARG_LIST -> parseJoinDelim
-            else -> parseCommaDelim
-        }
+        val parseDelim = parseCommaDelim
 
         return parseDelimitedList(parseDelim) { delim ->
             var rem = this
@@ -2059,20 +2009,6 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     rem = field.remaining
                     val value = rem.parseExpression(precedence)
                     ParseNode(MEMBER, null, listOf(field, value), value.remaining)
-                }
-                FROM_CLAUSE_ARG_LIST -> {
-                    when (rem.head?.keywordText) {
-                        "unpivot" -> {
-                            val actualChild = rem.tail.parseExpression(precedence)
-                            ParseNode(
-                                UNPIVOT,
-                                rem.head,
-                                listOf(actualChild),
-                                actualChild.remaining
-                            )
-                        }
-                        else -> rem.parseExpression(precedence)
-                    }
                 }
                 SIMPLE_PATH_ARG_LIST -> rem.parsePathTerm(PathMode.SIMPLE_PATH)
                 SET_CLAUSE_ARG_LIST -> {
@@ -2105,30 +2041,6 @@ class SqlParser(private val ion: IonSystem) : Parser {
                 child = rem.parseOptionalByAlias(child).also {
                     rem = it.remaining
                 }
-            }
-
-            if (delim?.type?.isJoin == true) {
-                val operands = mutableListOf(child)
-                val isCrossJoin = delim.token?.keywordText?.contains("cross") ?: false
-                val hasOnClause = delim.token?.type == KEYWORD && !isCrossJoin
-
-                if (hasOnClause) {
-                    // check for an ON-clause
-                    if (rem.head?.keywordText != "on") {
-                        rem.err("Expected 'ON'", PARSE_MALFORMED_JOIN)
-                    }
-
-                    val onClause = rem.tail.parseExpression(precedence)
-                    rem = onClause.remaining
-                    operands.add(onClause)
-
-                }
-
-                // wrap the join node based on the infix delimiter
-                child = delim.copy(
-                    children = operands,
-                    remaining = rem
-                )
             }
             child
         }
