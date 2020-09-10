@@ -1973,7 +1973,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     if (delim.token?.type == COMMA) {
                         joinToken = delim.token?.copy(
                             type = KEYWORD,
-                            value = ion.newString("cross_join")
+                            value = ion.newSymbol("cross_join")
                         )
                     }
                 }

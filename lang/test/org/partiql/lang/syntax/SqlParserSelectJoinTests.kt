@@ -1,5 +1,7 @@
 package org.partiql.lang.syntax
 
+import com.amazon.ionelement.api.ionBool
+import com.amazon.ionelement.api.ionInt
 import org.junit.Test
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.id
@@ -217,6 +219,65 @@ class SqlParserJoinTest : SqlParserTestBase() {
                     eq(id("B"), id("C"))),
                 scan(id("A")),
                 eq(id("A"), id("B"))),
+            where = null)
+    }
+
+    @Test
+    fun selectLiteralWrappedInParensTest() = assertExpression(
+        "SELECT x FROM A INNER JOIN (1) ON true",
+        """(select
+            (project
+                (list
+                    (id x case_insensitive)))
+            (from
+                (inner_join
+                    (id A case_insensitive)
+                    (lit 1)
+                    (lit true))))
+        """
+    ) {
+        select(
+            project = projectX,
+            from = join(
+                inner(),
+                scan(id("A")),
+                scan(lit(ionInt(1))),
+                lit(ionBool(true))),
+            where = null)
+    }
+
+    @Test
+    fun selectSubqueryWrappedInParensTest() = assertExpression(
+        "SELECT x FROM A INNER JOIN (SELECT x FROM 1) ON true",
+        """(select
+            (project
+                (list
+                    (id x case_insensitive)))
+            (from
+                (inner_join
+                    (id A case_insensitive)
+                    (select
+                        (project
+                            (list
+                                (id x case_insensitive)))
+                        (from
+                            (lit 1)))
+                    (lit true))))
+        """
+    ) {
+        select(
+            project = projectX,
+            from = join(
+                inner(),
+                scan(id("A")),
+                scan(
+                    select(
+                        project = projectX,
+                        from = scan(lit(ionInt(1))),
+                        where = null
+                    )
+                ),
+                lit(ionBool(true))),
             where = null)
     }
 
