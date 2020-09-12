@@ -103,11 +103,17 @@
             (select
                 (setq (? set_quantifier))
                 (project projection)
+                (project_let (? let))
                 (from from_source)
+                (from_let (? let))
                 (where (? expr))
+                (where_let (? let))
                 (group (? group_by))
+                (group_let (? let))
                 (having (? expr))
-                (limit (? expr))))
+                (having_let (? let))
+                (limit (? expr))
+                (limit_let (? let))))
         // end of sum expr
 
         // A "step" within a path expression; that is the components of the expression following the root.
@@ -136,6 +142,12 @@
             (project_all expr::expr)
             // For `<expr> [AS <id>]`
             (project_expr expr::expr as_alias::(? symbol)))
+
+        // A list of LET bindings
+        (product let let_bindings::(* let_binding 1))
+
+        // A LET binding
+        (product let_binding expr::expr name::symbol)
 
         // Models the FROM clause of an SFW query
         // Note that modeling `scan` and `unpivot` separately is effectively re-introducing the same problem described
