@@ -18,6 +18,7 @@ import org.partiql.lang.util.codePointSequence
 import java.util.ArrayList
 import java.util.HashSet
 
+
 @Suppress("UNCHECKED_CAST")
 private fun <T> Iterable<T>.fastToMutableHashSet(): MutableSet<T> =
     when(this) {
@@ -102,10 +103,11 @@ interface IDFAState {
  * - [accepting] true if this is a Final state, false otherwise
  * - [start] true if this is a Start state, false otherwise
  */
-private open class DFAState(val nfaStates: MutableSet<NFAState>,
-                    val outgoing: MutableMap<Alphabet, DFAState>,
-                    var accepting: Boolean = nfaStates.any { it.isAccepting },
-                    var start: Boolean = nfaStates.any { it.isStartState }
+private open class DFAState(
+    val nfaStates: MutableSet<NFAState>,
+    val outgoing: MutableMap<Alphabet, DFAState>,
+    var accepting: Boolean = nfaStates.any { it.isAccepting },
+    var start: Boolean = nfaStates.any { it.isStartState }
 ) : IDFAState {
 
     fun addTransition(transition: Alphabet, target: DFAState) {
@@ -180,10 +182,11 @@ private open class DFAState(val nfaStates: MutableSet<NFAState>,
  * - [isStartState] true when this State is a Start state, false othewise
  * - [outgoing] map of alphabet letter to NFA State
  */
-private class NFAState(val stateNumber: Int,
-               val isAccepting: Boolean,
-               val isStartState: Boolean,
-               val outgoing: MutableMap<Alphabet, MutableSet<NFAState>> = HashMap()) {
+private class NFAState(
+    val stateNumber: Int,
+    val isAccepting: Boolean,
+    val isStartState: Boolean,
+    val outgoing: MutableMap<Alphabet, MutableSet<NFAState>> = HashMap()) {
 
     fun get(transition: Alphabet): Set<NFAState> =
         outgoing[transition] ?: hashSetOf()
@@ -392,9 +395,10 @@ private fun nfaToDfa(alphabet: Set<Alphabet>, nfa: NFAState) =
  *
  * @return DFA that simulates the NFA
  */
-private fun buildDFA(dfaAlphabet: Set<Alphabet>,
-             delta: MutableMap<Pair<Set<NFAState>, Alphabet>, Set<NFAState>>,
-             todo: Set<Set<NFAState>>): DFAState {
+private fun buildDFA(
+    dfaAlphabet: Set<Alphabet>,
+    delta: MutableMap<Pair<Set<NFAState>, Alphabet>, Set<NFAState>>,
+    todo: Set<Set<NFAState>>): DFAState {
 
     var unprocessed = todo.fastToMutableHashSet()
     val processed = HashSet<Set<NFAState>>()
@@ -411,6 +415,10 @@ private fun buildDFA(dfaAlphabet: Set<Alphabet>,
                     HashSet<NFAState>().apply {
                         nfaStates.forEach { state ->
                             addAll(state.getOutgoingStates(it))
+
+                            if (Thread.interrupted()) {
+                                throw InterruptedException()
+                            }
                         }
                     })
             }
@@ -445,8 +453,9 @@ private fun buildDFA(dfaAlphabet: Set<Alphabet>,
  *
  * @return update [delta] that incorporates changes in [deltaUpdates]
  */
-private fun updateDelta(delta: MutableMap<Pair<Set<NFAState>, Alphabet>, Set<NFAState>>,
-                deltaUpdates: List<Pair<Pair<Set<NFAState>, Alphabet>, Set<NFAState>>>) {
+private fun updateDelta(
+    delta: MutableMap<Pair<Set<NFAState>, Alphabet>, Set<NFAState>>,
+    deltaUpdates: List<Pair<Pair<Set<NFAState>, Alphabet>, Set<NFAState>>>) {
     deltaUpdates.forEach {
         if (delta.containsKey(it.first)) {
             if (delta[it.first] != it.second) {
@@ -470,7 +479,7 @@ private fun updateDelta(delta: MutableMap<Pair<Set<NFAState>, Alphabet>, Set<NFA
  *
  */
 private fun buildNfa(letters: Sequence<Alphabet>, patternSize: Int): NFAState =
-    letters.foldIndexed(mutableListOf(NFAState(-1, 0 == patternSize , true)), { index, acc, transition ->
+    letters.foldIndexed(mutableListOf(NFAState(-1, 0 == patternSize, true)), { index, acc, transition ->
         alphabetToNFAStateAcc(transition, NFAState(index, index == (patternSize - 1), false), acc)
     }).first()
 
