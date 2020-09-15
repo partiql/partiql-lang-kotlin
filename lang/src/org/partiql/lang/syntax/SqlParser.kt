@@ -704,7 +704,10 @@ class SqlParser(private val ion: IonSystem) : Parser {
                 }
             }
 
-            val condition = if (isCrossJoin) Literal(trueValue, metaContainerOf()) else head.children[2].toExprNode()
+            val condition = when {
+                isCrossJoin -> Literal(trueValue, metaContainerOf())
+                else -> head.children[2].toExprNode()
+            }
 
             return FromSourceJoin(joinOp,
                     head.children[0].toFromSource(),
