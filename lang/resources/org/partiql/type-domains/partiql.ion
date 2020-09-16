@@ -100,6 +100,8 @@
             (cast value::expr as_type::type)
 
             // `SELECT` and its parts.
+            // Once variadic record element support is added (https://github.com/partiql/partiql-ir-generator/issues/44),
+            // the let clauses may be modeled directly using let_binding.
             (select
                 (setq (? set_quantifier))
                 (project projection)
