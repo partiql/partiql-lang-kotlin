@@ -1930,7 +1930,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     if (rem.head?.type == LEFT_PAREN) {
                         // Starts with a left paren. Could indicate subquery/literal or indicate higher precedence
                         val isSubqueryOrLiteral = rem.tail.head?.type == LITERAL || rem.tail.head?.keywordText == "select"
-                        val parenClause = rem.parseFromSource(precedence, true)
+                        val parenClause = rem.parseFromSource(precedence, parseRemaining = true)
                         rem = parenClause.remaining
 
                         // check for an ON-clause
@@ -1952,7 +1952,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
                     else {
                         // Rest is just the right side of the clause
-                        val rightRef = rem.parseFromSource(precedence, false)
+                        val rightRef = rem.parseFromSource(precedence, parseRemaining = false)
                         rem = rightRef.remaining
 
                         // check for an ON-clause
@@ -1970,7 +1970,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
                 else {
                     // For implicit joins
-                    val rightRef = rem.parseFromSource(precedence, false)
+                    val rightRef = rem.parseFromSource(precedence, parseRemaining = false)
                     rem = rightRef.remaining
                     children = listOf(left, rightRef)
                     if (delim.token?.type == COMMA) {
@@ -1990,11 +1990,8 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
 
     private fun List<Token>.parseFromSourceList(precedence: Int = -1): ParseNode {
-        var rem = this
-        val child = rem.parseFromSource(precedence)
-        rem = child.remaining
-
-        return ParseNode(FROM_CLAUSE, null, listOf(child), rem)
+        val child = this.parseFromSource(precedence)
+        return ParseNode(FROM_CLAUSE, null, listOf(child), child.remaining)
     }
 
     private fun List<Token>.parseArgList(
