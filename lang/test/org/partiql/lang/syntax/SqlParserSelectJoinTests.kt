@@ -1,5 +1,7 @@
 package org.partiql.lang.syntax
 
+import com.amazon.ionelement.api.ionBool
+import com.amazon.ionelement.api.ionInt
 import org.junit.Test
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.id
@@ -56,6 +58,227 @@ class SqlParserJoinTest : SqlParserTestBase() {
         selectWithOneJoin(
             joinType = full(),
             joinPredicate = eq(id("s"), id("f")))
+    }
+
+    @Test
+    fun selectSingleJoinParensTest() = assertExpression(
+        "SELECT x FROM (A INNER JOIN B ON A = B)",
+        """(select
+            (project
+                (list
+                    (id x case_insensitive)))
+            (from
+                (inner_join
+                    (id A case_insensitive)
+                    (id B case_insensitive)
+                    (=
+                        (id A case_insensitive)
+                        (id B case_insensitive)))))
+        """
+    ) {
+        select(
+            project = projectX,
+            from = join(
+                inner(),
+                scan(id("A")),
+                scan(id("B")),
+                eq(id("A"), id("B"))),
+            where = null)
+    }
+
+    @Test
+    fun selectSingleJoinMultiParensTest() = assertExpression(
+        "SELECT x FROM (((A INNER JOIN B ON A = B)))",
+        """(select
+            (project
+                (list
+                    (id x case_insensitive)))
+            (from
+                (inner_join
+                    (id A case_insensitive)
+                    (id B case_insensitive)
+                    (=
+                        (id A case_insensitive)
+                        (id B case_insensitive)))))
+        """
+    ) {
+        select(
+            project = projectX,
+            from = join(
+                inner(),
+                scan(id("A")),
+                scan(id("B")),
+                eq(id("A"), id("B"))),
+            where = null)
+    }
+
+    @Test
+    fun selectTwoJoinsNaturalOrderParensTest() = assertExpression(
+        "SELECT x FROM (A INNER JOIN B ON A = B) INNER JOIN C ON B = C",
+        """(select
+            (project
+                (list
+                    (id x case_insensitive)))
+            (from
+                (inner_join
+                    (inner_join
+                        (id A case_insensitive)
+                        (id B case_insensitive)
+                        (=
+                            (id A case_insensitive)
+                            (id B case_insensitive)))
+                    (id C case_insensitive)
+                    (=
+                        (id B case_insensitive)
+                        (id C case_insensitive)))))
+        """
+    ) {
+        select(
+            project = projectX,
+            from = join(
+                inner(),
+                join(inner(),
+                    scan(id("A")),
+                    scan(id("B")),
+                    eq(id("A"), id("B"))),
+                scan(id("C")),
+                eq(id("B"), id("C"))),
+            where = null)
+    }
+
+    @Test
+    fun selectTwoJoinsSpecifiedOrderParensTest() = assertExpression(
+        "SELECT x FROM A INNER JOIN (B INNER JOIN C ON B = C) ON A = B",
+        """(select
+            (project
+                (list
+                    (id x case_insensitive)))
+            (from
+                (inner_join
+                    (inner_join
+                        (id B case_insensitive)
+                        (id C case_insensitive)
+                        (=
+                            (id B case_insensitive)
+                            (id C case_insensitive)))
+                    (id A case_insensitive)
+                    (=
+                        (id A case_insensitive)
+                        (id B case_insensitive)))))
+        """
+    ) {
+        select(
+            project = projectX,
+            from = join(
+                inner(),
+                join(inner(),
+                    scan(id("B")),
+                    scan(id("C")),
+                    eq(id("B"), id("C"))),
+                scan(id("A")),
+                eq(id("A"), id("B"))),
+            where = null)
+    }
+
+    @Test
+    fun selectThreeJoinsSpecifiedOrderParensTest() = assertExpression(
+        "SELECT x FROM A INNER JOIN (B INNER JOIN (C INNER JOIN D ON C = D) ON B = C) ON A = B",
+        """(select
+            (project
+                (list
+                    (id x case_insensitive)))
+            (from
+                (inner_join
+                    (inner_join
+                        (inner_join
+                            (id C case_insensitive)
+                            (id D case_insensitive)
+                            (=
+                                (id C case_insensitive)
+                                (id D case_insensitive)))
+                        (id B case_insensitive)
+                        (=
+                            (id B case_insensitive)
+                            (id C case_insensitive)))
+                    (id A case_insensitive)
+                    (=
+                        (id A case_insensitive)
+                        (id B case_insensitive)))))
+        """
+    ) {
+        select(
+            project = projectX,
+            from = join(
+                inner(),
+                join(inner(),
+                    join(inner(),
+                        scan(id("C")),
+                        scan(id("D")),
+                        eq(id("C"), id("D"))),
+                    scan(id("B")),
+                    eq(id("B"), id("C"))),
+                scan(id("A")),
+                eq(id("A"), id("B"))),
+            where = null)
+    }
+
+    @Test
+    fun selectLiteralWrappedInParensTest() = assertExpression(
+        "SELECT x FROM A INNER JOIN (1) ON true",
+        """(select
+            (project
+                (list
+                    (id x case_insensitive)))
+            (from
+                (inner_join
+                    (id A case_insensitive)
+                    (lit 1)
+                    (lit true))))
+        """
+    ) {
+        select(
+            project = projectX,
+            from = join(
+                inner(),
+                scan(id("A")),
+                scan(lit(ionInt(1))),
+                lit(ionBool(true))),
+            where = null)
+    }
+
+    @Test
+    fun selectSubqueryWrappedInParensTest() = assertExpression(
+        "SELECT x FROM A INNER JOIN (SELECT x FROM 1) ON true",
+        """(select
+            (project
+                (list
+                    (id x case_insensitive)))
+            (from
+                (inner_join
+                    (id A case_insensitive)
+                    (select
+                        (project
+                            (list
+                                (id x case_insensitive)))
+                        (from
+                            (lit 1)))
+                    (lit true))))
+        """
+    ) {
+        select(
+            project = projectX,
+            from = join(
+                inner(),
+                scan(id("A")),
+                scan(
+                    select(
+                        project = projectX,
+                        from = scan(lit(ionInt(1))),
+                        where = null
+                    )
+                ),
+                lit(ionBool(true))),
+            where = null)
     }
 
     private val deeplyNestedJoins = PartiqlAst.build {

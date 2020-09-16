@@ -1438,4 +1438,14 @@ class ParserErrorsTest : TestBase() {
             Property.TOKEN_TYPE to TokenType.EOF,
             Property.TOKEN_VALUE to ion.newSymbol("EOF")))
 
+    @Test
+    fun parenJoinWithoutOnClause() = checkInputThrowingParserException(
+        "SELECT * FROM foo INNER JOIN (bar INNER JOIN baz ON true)",
+        ErrorCode.PARSE_MALFORMED_JOIN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 58L,
+            Property.TOKEN_TYPE to TokenType.EOF,
+            Property.TOKEN_VALUE to ion.newSymbol("EOF")))
+
 }
