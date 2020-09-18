@@ -904,7 +904,7 @@ internal class EvaluatingCompiler(
         val allFromSourceAliases = fold.walkFromSource(pigGeneratedAst.from, emptySet())
 
         return nestCompilationContext(ExpressionContext.NORMAL, emptySet()) {
-            val (setQuantifier, projection, from, _, groupBy, having, _, metas: MetaContainer) = selectExpr
+            val (setQuantifier, projection, from, fromLet, _, groupBy, having, _, metas: MetaContainer) = selectExpr
 
             val fromSourceThunks = compileFromSources(from)
             val sourceThunks = compileQueryWithoutProjection(selectExpr, fromSourceThunks)

@@ -275,20 +275,21 @@ class AstNodeTest {
         val from = FromSourceExpr(literal("2"), LetVariables())
 
         assertEquals(listOf(projection, from),
-                     Select(SetQuantifier.ALL, projection, from, null, null, null, null, emptyMeta).children)
+                     Select(SetQuantifier.ALL, projection, from, null, null, null, null, null, emptyMeta).children)
     }
 
     @Test
     fun selectWithAllChildren() {
         val projection = SelectProjectionValue(literal("1"))
         val from = FromSourceExpr(literal("2"), LetVariables())
+        val fromLet = LetSource(emptyList())
         val where = literal("3")
         val groupBy = GroupBy(GroupingStrategy.FULL, listOf())
         val having = literal("4")
         val limit = literal("5")
 
-        assertEquals(listOf(projection, from, where, groupBy, having, limit),
-                     Select(SetQuantifier.ALL, projection, from, where, groupBy, having, limit, emptyMeta).children)
+        assertEquals(listOf(projection, from, fromLet, where, groupBy, having, limit),
+                     Select(SetQuantifier.ALL, projection, from, fromLet, where, groupBy, having, limit, emptyMeta).children)
     }
 
     @Test

@@ -202,7 +202,7 @@ private class AstSerializerImpl(val astVersion: AstVersion, val ion: IonSystem):
     }
 
     private fun IonWriterContext.writeSelect(expr: Select) {
-        val (setQuantifier, projection, from, where, groupBy, having, limit, _: MetaContainer) = expr
+        val (setQuantifier, projection, from, fromLet, where, groupBy, having, limit, _: MetaContainer) = expr
 
         writeSelectProjection(projection, setQuantifier)
 
