@@ -110,7 +110,7 @@
                 (where (? expr))
                 (group (? group_by))
                 (having (? expr))
-                (limit (? expr))
+                (limit (? expr))))
         // end of sum expr
 
         // A "step" within a path expression; that is the components of the expression following the root.
