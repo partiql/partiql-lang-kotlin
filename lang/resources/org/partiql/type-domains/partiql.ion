@@ -105,17 +105,12 @@
             (select
                 (setq (? set_quantifier))
                 (project projection)
-                (project_let (? let))
                 (from from_source)
                 (from_let (? let))
                 (where (? expr))
-                (where_let (? let))
                 (group (? group_by))
-                (group_let (? let))
                 (having (? expr))
-                (having_let (? let))
                 (limit (? expr))
-                (limit_let (? let))))
         // end of sum expr
 
         // A "step" within a path expression; that is the components of the expression following the root.
