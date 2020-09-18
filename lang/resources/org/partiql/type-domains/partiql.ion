@@ -100,10 +100,13 @@
             (cast value::expr as_type::type)
 
             // `SELECT` and its parts.
+            // Once variadic record element support is added (https://github.com/partiql/partiql-ir-generator/issues/44),
+            // the let clauses may be modeled directly using let_binding.
             (select
                 (setq (? set_quantifier))
                 (project projection)
                 (from from_source)
+                (from_let (? let))
                 (where (? expr))
                 (group (? group_by))
                 (having (? expr))
@@ -136,6 +139,12 @@
             (project_all expr::expr)
             // For `<expr> [AS <id>]`
             (project_expr expr::expr as_alias::(? symbol)))
+
+        // A list of LET bindings
+        (product let let_bindings::(* let_binding 1))
+
+        // A LET binding
+        (product let_binding expr::expr name::symbol)
 
         // Models the FROM clause of an SFW query
         // Note that modeling `scan` and `unpivot` separately is effectively re-introducing the same problem described
