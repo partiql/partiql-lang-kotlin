@@ -204,6 +204,10 @@ private class AstSerializerImpl(val astVersion: AstVersion, val ion: IonSystem):
     private fun IonWriterContext.writeSelect(expr: Select) {
         val (setQuantifier, projection, from, fromLet, where, groupBy, having, limit, _: MetaContainer) = expr
 
+        if (fromLet != null) {
+            throw UnsupportedOperationException("LET clause is not supported by the V0 AST")
+        }
+
         writeSelectProjection(projection, setQuantifier)
 
         sexp {
