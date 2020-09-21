@@ -12,8 +12,6 @@ internal sealed class PatternPart {
 private val ANY_CHARS = '%'.toInt()
 private val ANY_ONE_CHAR = '_'.toInt()
 
-// TODO: merge multiple consecutive % together?
-// TODO: does the % in '%_' actually mean anything?
 internal fun parsePattern(pattern: String, escapeChar: Int?): List<PatternPart> {
     val codepoints = pattern.codePoints().toList().listIterator()
     val parts = ArrayList<PatternPart>()
@@ -30,11 +28,11 @@ internal fun parsePattern(pattern: String, escapeChar: Int?): List<PatternPart> 
                 // stop building if we encounter end of input
                 do {
                     val cc = codepoints.next()
-                    // stop building and back up one if we encounter `%` or `_` characters not precdeed by
-                    // the escape character
+                    // If [escapeChar] is encountered, just add the next codepoint to the buffer.]
                     if(escapeChar != null && cc == escapeChar) {
                         buffer.add(codepoints.next())
                     } else {
+                        // stop building and back up one if we encounter `%` or `_` characters
                         if (cc == ANY_ONE_CHAR || cc == ANY_CHARS) {
                             codepoints.previous()
                             break

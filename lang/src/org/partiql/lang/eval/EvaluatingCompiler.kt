@@ -1665,10 +1665,8 @@ internal class EvaluatingCompiler(
         val escapeLocationMeta = escapeExpr?.metas?.sourceLocationMeta
 
 
-        // TODO:  re-evaluate the below comment.
         // Note that the return value is a nullable and deferred.
         // This is so that null short-circuits can be supported.
-        // The effective type is Either<Null, Either<Error, IDFA>>
         fun getPatternParts(pattern: ExprValue, escape: ExprValue?): (() -> List<PatternPart>)? {
             val dfaArgs = listOfNotNull(pattern, escape)
             when {
@@ -1683,12 +1681,11 @@ internal class EvaluatingCompiler(
                         internal = false)
                 }
                 else                              -> {
-                    val (patternString: String, escapeChar: Int?, patternSize) =
+                    val (patternString: String, escapeChar: Int?) =
                         checkPattern(pattern.ionValue, patternLocationMeta, escape?.ionValue, escapeLocationMeta)
 
                     val patternParts = when {
                         patternString.isEmpty() -> emptyList()
-                        // TODO: include escapeChar
                         else -> parsePattern(patternString, escapeChar)
                     }
 
@@ -1792,10 +1789,9 @@ internal class EvaluatingCompiler(
         patternLocationMeta: SourceLocationMeta?,
         escape: IonValue?,
         escapeLocationMeta: SourceLocationMeta?
-    ): Triple<String, Int?, Int> {
-        // TODO: don't bother calculating size anymore.
+    ): Pair<String, Int?> {
 
-        val patternString = pattern.stringValue()?.let { it }
+        val patternString = pattern.stringValue()
                             ?: err("Must provide a non-null value for PATTERN in a LIKE predicate: $pattern",
                                    errorContextFrom(patternLocationMeta),
                                    internal = false)
@@ -1805,7 +1801,6 @@ internal class EvaluatingCompiler(
             val escapeCharCodePoint = escapeCharString.codePointAt(0)  // escape is a string of length 1
             val validEscapedChars = setOf('_'.toInt(), '%'.toInt(), escapeCharCodePoint)
             val iter = patternString.codePointSequence().iterator()
-            var count = 0
 
             while (iter.hasNext()) {
                 val current = iter.next()
@@ -1818,11 +1813,10 @@ internal class EvaluatingCompiler(
                        },
                        internal = false)
                 }
-                count++
             }
-            return Triple(patternString, escapeCharCodePoint, count)
+            return Pair(patternString, escapeCharCodePoint)
         }
-        return Triple(patternString, null, patternString.length)
+        return Pair(patternString, null)
     }
 
     /**
