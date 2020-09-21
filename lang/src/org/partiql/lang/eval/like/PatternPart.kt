@@ -52,15 +52,12 @@ internal fun parsePattern(pattern: String, escapeChar: Int?): List<PatternPart> 
     return parts
 }
 
-private fun <T> List<T>.isLast(idx: Int) = this.size - 1 == idx
-private fun IntArray.isLast(idx: Int) = this.size - 1 == idx
-
 internal fun executePattern(parts: List<PatternPart>, str: String): Boolean {
     return executePattern(
-        CheckpointIteratorImpl(parts), CheckointCodepointIterator(str))
+        CheckpointIteratorImpl(parts), CodepointCheckpointIterator(str))
 }
 
-private fun executePattern(partsItr: CheckpointIterator<PatternPart>, charsItr: CheckointCodepointIterator): Boolean {
+private fun executePattern(partsItr: CheckpointIterator<PatternPart>, charsItr: CodepointCheckpointIterator): Boolean {
     while (partsItr.hasNext()) {
         if(!executeOnePart(partsItr, charsItr))
             return false
@@ -68,7 +65,7 @@ private fun executePattern(partsItr: CheckpointIterator<PatternPart>, charsItr: 
     return !charsItr.hasNext()
 }
 
-private fun executeOnePart(partsItr: CheckpointIterator<PatternPart>, charsItr: CheckointCodepointIterator): Boolean {
+private fun executeOnePart(partsItr: CheckpointIterator<PatternPart>, charsItr: CodepointCheckpointIterator): Boolean {
     when (val currentPart = partsItr.next()) {
         is PatternPart.AnyOneChar -> {
             if(!charsItr.hasNext())
@@ -78,6 +75,7 @@ private fun executeOnePart(partsItr: CheckpointIterator<PatternPart>, charsItr: 
             return true
         }
         is PatternPart.ExactChars -> {
+            // Consume characters as long
             currentPart.codepoints.forEach {
                 if (!charsItr.hasNext() || charsItr.next() != it) {
                     return false
@@ -93,23 +91,29 @@ private fun executeOnePart(partsItr: CheckpointIterator<PatternPart>, charsItr: 
             }
 
             while (true) {
-                partsItr.checkpoint()
-                charsItr.checkpoint()
+                // Mark checkpoints on our iterators that so we can store the current position
+                // of them later if the next pattern part doesn't match. We will keep doing this
+                // until the next pattern part matches.
+                partsItr.saveCheckpoint()
+                charsItr.saveCheckpoint()
 
-                val nextPatternMatches = executePattern(partsItr, charsItr)
-                partsItr.restore()
-                charsItr.restore()
-
-                if (nextPatternMatches) {
-                    // TODO:  we can pop the index stack instead of restoring it here to avoid having to
-                    // re-run the patternpart during the next call to executeOnePart
+                if (executePattern(partsItr, charsItr)) {
+                    // Discard the checkpoint saved above.  We don't technically need to do this
+                    // but it prevents the *next* pattern part from executing needlessly.
+                    partsItr.discardCheckpoint()
+                    charsItr.discardCheckpoint()
                     return true
+                } else {
+                    // The next pattern did not match, restore the iterator positions for the next iteration
+                    partsItr.restoreCheckpoint()
+                    charsItr.restoreCheckpoint()
                 }
 
-                charsItr.next()
                 if (!charsItr.hasNext()) {
                     return false
                 }
+
+                charsItr.next()
             }
         }
     }

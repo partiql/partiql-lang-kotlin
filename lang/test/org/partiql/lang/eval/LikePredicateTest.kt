@@ -628,28 +628,4 @@ class LikePredicateTest : EvaluatorTestBase() {
                                                    NodeMetadata(1, 56)) {
         voidEval("SELECT * FROM `[{name:1, type:\"a\"}]` as a WHERE a.name LIKE a.type ")
     }
-
-
-    @Test
-    fun interruptedThreadThrowsInterruptedException() {
-        // '%!!!!....%' should take a very long time to compile until we make some major refactorings
-        // of the LIKE pattern matching implementations.
-        val heavyPayload = "foo like '%${"!".repeat(5000)}%'"
-
-        var wasInterrupted = false
-
-        val someThread = thread {
-            try {
-                CompilerPipeline.standard(ion).compile(heavyPayload)
-            } catch(_: InterruptedException) {
-                wasInterrupted = true
-            }
-        }
-
-        someThread.interrupt()
-        someThread.join(5000)
-
-        assertTrue("Thread should have been interrupted!", wasInterrupted)
-    }
-
 }
