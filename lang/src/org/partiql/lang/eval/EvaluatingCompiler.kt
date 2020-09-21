@@ -21,6 +21,9 @@ import org.partiql.lang.ast.passes.*
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.*
 import org.partiql.lang.eval.binding.*
+import org.partiql.lang.eval.like.PatternPart
+import org.partiql.lang.eval.like.executePattern
+import org.partiql.lang.eval.like.parsePattern
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.*
 import java.math.*
@@ -1661,10 +1664,12 @@ internal class EvaluatingCompiler(
         val patternLocationMeta = patternExpr.metas.sourceLocationMeta
         val escapeLocationMeta = escapeExpr?.metas?.sourceLocationMeta
 
+
+        // TODO:  re-evaluate the below comment.
         // Note that the return value is a nullable and deferred.
         // This is so that null short-circuits can be supported.
         // The effective type is Either<Null, Either<Error, IDFA>>
-        fun getDfa(pattern: ExprValue, escape: ExprValue?): (() -> IDFAState)? {
+        fun getPatternParts(pattern: ExprValue, escape: ExprValue?): (() -> List<PatternPart>)? {
             val dfaArgs = listOfNotNull(pattern, escape)
             when {
                 dfaArgs.any { it.type.isUnknown } -> return null
@@ -1681,27 +1686,29 @@ internal class EvaluatingCompiler(
                     val (patternString: String, escapeChar: Int?, patternSize) =
                         checkPattern(pattern.ionValue, patternLocationMeta, escape?.ionValue, escapeLocationMeta)
 
-                    val dfa =
-                        if (patternString.isEmpty()) DFAEmptyPattern
-                        else buildDfaFromPattern(patternString, escapeChar, patternSize)
+                    val patternParts = when {
+                        patternString.isEmpty() -> emptyList()
+                        // TODO: include escapeChar
+                        else -> parsePattern(patternString, escapeChar)
+                    }
 
-                    return { dfa }
+                    return  { patternParts }
                 }
             }
         }
 
         /** See getDfa for more info on the DFA's odd type. */
-        fun runDfa(value: ExprValue, dfa: (() -> IDFAState)?): ExprValue {
+        fun runPatternParts(value: ExprValue, dfa: (() -> List<PatternPart>)?): ExprValue {
             return when {
                 dfa == null || value.type.isUnknown -> valueFactory.nullValue
-                !value.type.isText                  -> err(
+                !value.type.isText -> err(
                     "LIKE expression must be given non-null strings as input",
                     ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
                     errorContextFrom(operatorMetas).also {
                         it[Property.LIKE_VALUE] = value.ionValue.toString()
                     },
                     internal = false)
-                else                                -> dfa().run(value.stringValue()).exprValue()
+                else -> valueFactory.newBoolean(executePattern(dfa(), value.stringValue()))
             }
         }
 
@@ -1712,19 +1719,19 @@ internal class EvaluatingCompiler(
 
         return when {
             patternExpr is Literal && (escapeExpr == null || escapeExpr is Literal) -> {
-                val dfa = getDfa(
+                val patternParts = getPatternParts(
                     valueFactory.newFromIonValue(patternExpr.ionValue),
                     (escapeExpr as? Literal)?.ionValue?.let { valueFactory.newFromIonValue(it) })
 
                 // If valueExpr is also a literal then we can evaluate this at compile time and return a constant.
                 if (valueExpr is Literal) {
-                    val resultValue = runDfa(valueFactory.newFromIonValue(valueExpr.ionValue), dfa)
+                    val resultValue = runPatternParts(valueFactory.newFromIonValue(valueExpr.ionValue), patternParts)
                     return thunkFactory.thunkEnv(operatorMetas) { resultValue }
                 }
                 else {
                     thunkFactory.thunkEnv(operatorMetas) { env ->
                         val value = valueThunk(env)
-                        runDfa(value, dfa)
+                        runPatternParts(value, patternParts)
                     }
                 }
             }
@@ -1736,8 +1743,8 @@ internal class EvaluatingCompiler(
                         thunkFactory.thunkEnv(operatorMetas) { env ->
                             val value = valueThunk(env)
                             val pattern = patternThunk(env)
-                            val dfa = getDfa(pattern, null)
-                            runDfa(value, dfa)
+                            val dfa = getPatternParts(pattern, null)
+                            runPatternParts(value, dfa)
                         }
                     }
                     else -> {
@@ -1747,8 +1754,8 @@ internal class EvaluatingCompiler(
                             val value = valueThunk(env)
                             val pattern = patternThunk(env)
                             val escape = escapeThunk(env)
-                            val dfa = getDfa(pattern, escape)
-                            runDfa(value, dfa)
+                            val dfa = getPatternParts(pattern, escape)
+                            runPatternParts(value, dfa)
                         }
                     }
                 }
@@ -1786,6 +1793,8 @@ internal class EvaluatingCompiler(
         escape: IonValue?,
         escapeLocationMeta: SourceLocationMeta?
     ): Triple<String, Int?, Int> {
+        // TODO: don't bother calculating size anymore.
+
         val patternString = pattern.stringValue()?.let { it }
                             ?: err("Must provide a non-null value for PATTERN in a LIKE predicate: $pattern",
                                    errorContextFrom(patternLocationMeta),
