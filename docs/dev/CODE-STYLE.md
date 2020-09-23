@@ -88,13 +88,14 @@ fun calculateArea(shape: Shape): Double {
 
 # Avoid use of `!!`
 
-Where possible, use of `!!` should be avoided.  Most of the time, this is only impossible when calling 
-Java code.  If a variable is nullable, we can rely on [Kotlin's null safety](https://kotlinlang.org/docs/reference/null-safety.html#checking-for-null-in-conditions). i.e.:
+Where possible the use of `!!` should be avoided.  Most of the time this is only impossible when 
+dealing with values returned from Java code.  If a variable is nullable, we can rely on 
+[Kotlin's null safety](https://kotlinlang.org/docs/reference/null-safety.html#checking-for-null-in-conditions).
 
 #### Good
 
 ```Kotlin
-val foo Widget? = ...
+val foo: Widget? = ...
 if(foo != null) {
    // foo is guaranteed to not be null here!
    foo.activate()
@@ -104,10 +105,31 @@ if(foo != null) {
 #### Bad
 
 ```Kotlin
-val foo Widget? = ...
+val foo: Widget? = ...
 // Foo is not guaranteed to be null!
 foo!!.activate()
 ```
+
+### Exceptions
+
+When it is impossible to avoid use of `!!`, use of `!!` should occur as early as possible in
+the given code path.
+
+#### Good
+
+```Kotlin
+val foo = SomeJavaClass.someFunction()!!  //<--the earliest time `!!` can be used
+foo.dance()
+foo.shout()
+```
+
+#### Bad
+
+```Kotlin
+val foo = SomeJavaClass.someFunction()
+foo!!.dance()
+```
+
 
 # Kotlin Extension Functions
 
