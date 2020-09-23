@@ -239,14 +239,13 @@ private class StatementTransformer(val ion: IonSystem) {
             this.letBindings.map {
                 LetBinding(
                     it.expr.toExprNode(),
-                    it.name.toSymbolicName()!!
-                    //SymbolicName(it.name.text, it.metas.toPartiQlMetaContainer())
+                    it.name.toSymbolicName()
                 )
             }
         )
     }
 
-    private fun SymbolPrimitive?.toSymbolicName() = this?.let { SymbolicName(it.text, it.metas.toPartiQlMetaContainer()) }
+    private fun SymbolPrimitive.toSymbolicName() = SymbolicName(this.text, this.metas.toPartiQlMetaContainer())
 
     private fun GroupBy.toGroupBy(): org.partiql.lang.ast.GroupBy =
         GroupBy(

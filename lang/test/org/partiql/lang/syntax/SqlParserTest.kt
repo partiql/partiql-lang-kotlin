@@ -3108,11 +3108,7 @@ class SqlParserTest : SqlParserTestBase() {
         select(
             project = projectX,
             from = scan(id("table1")),
-            fromLet = let(
-                letBinding(
-                    lit(ionInt(1)),
-                    "A")
-            )
+            fromLet = let(letBinding(lit(ionInt(1)), "A"))
         )
     }
 
@@ -3121,14 +3117,7 @@ class SqlParserTest : SqlParserTestBase() {
         select(
             project = projectX,
             from = scan(id("table1")),
-            fromLet = let(
-                letBinding(
-                    lit(ionInt(1)),
-                    "A"),
-                letBinding(
-                    lit(ionInt(2)),
-                    "B")
-            )
+            fromLet = let(letBinding(lit(ionInt(1)), "A"), letBinding(lit(ionInt(2)), "B"))
         )
     }
 
@@ -3137,11 +3126,7 @@ class SqlParserTest : SqlParserTestBase() {
         select(
             project = projectX,
             from = scan(id("table1")),
-            fromLet = let(
-                letBinding(
-                    id("table1"),
-                    "A")
-            )
+            fromLet = let(letBinding(id("table1"), "A"))
         )
     }
 
@@ -3150,11 +3135,7 @@ class SqlParserTest : SqlParserTestBase() {
         select(
             project = projectX,
             from = scan(id("table1")),
-            fromLet = let(
-                letBinding(
-                    call("foo", emptyList()),
-                    "A")
-            )
+            fromLet = let(letBinding(call("foo", emptyList()), "A"))
         )
     }
 
@@ -3164,14 +3145,7 @@ class SqlParserTest : SqlParserTestBase() {
         select(
             project = projectX,
             from = scan(id("table1")),
-            fromLet = let(
-                letBinding(
-                    call("foo", listOf(
-                            lit(ionInt(42)),
-                            lit(ionString("bar")))
-                        ),
-                    "A")
-            )
+            fromLet = let(letBinding(call("foo", listOf(lit(ionInt(42)), lit(ionString("bar")))), "A"))
         )
     }
 
@@ -3181,11 +3155,7 @@ class SqlParserTest : SqlParserTestBase() {
         select(
             project = projectX,
             from = scan(id("table1")),
-            fromLet = let(
-                letBinding(
-                    call("foo", listOf(id("table1"))),
-                    "A")
-            )
+            fromLet = let(letBinding(call("foo", listOf(id("table1"))), "A"))
         )
     }
 }
