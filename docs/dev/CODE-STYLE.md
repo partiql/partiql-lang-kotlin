@@ -106,7 +106,7 @@ if(foo != null) {
 
 ```Kotlin
 val foo: Widget? = ...
-// Foo is not guaranteed to be null!
+// Foo is not guaranteed to be non-null!
 foo!!.activate()
 ```
 
