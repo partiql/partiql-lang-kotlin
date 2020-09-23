@@ -86,6 +86,29 @@ fun calculateArea(shape: Shape): Double {
 }
 ```
 
+# Avoid use of `!!`
+
+Where possible, use of `!!` should be avoided.  Most of the time, this is only impossible when calling 
+Java code.  If a variable is nullable, we can rely on [Kotlin's null safety](https://kotlinlang.org/docs/reference/null-safety.html#checking-for-null-in-conditions). i.e.:
+
+#### Good
+
+```Kotlin
+val foo Widget? = ...
+if(foo != null) {
+   // foo is guaranteed to not be null here!
+   foo.activate()
+}
+```
+
+#### Bad
+
+```Kotlin
+val foo Widget? = ...
+// Foo is not guaranteed to be null!
+foo!!.activate()
+```
+
 # Kotlin Extension Functions
 
 We should limit the scope of helper extensions to avoid polluting clients and avoid clashes.
