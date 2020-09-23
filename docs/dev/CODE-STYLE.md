@@ -97,9 +97,12 @@ dealing with values returned from Java code.  If a variable is nullable, we can 
 ```Kotlin
 val foo: Widget? = ...
 if(foo != null) {
-   // foo is guaranteed to not be null here!
+   // Kotlin knows that foo is guaranteed to not be null here and will not complain
    foo.activate()
 }
+
+// Kotlin knows that foo *might* be null here and will issue a compile error!
+foo.activate() 
 ```
 
 #### Bad
