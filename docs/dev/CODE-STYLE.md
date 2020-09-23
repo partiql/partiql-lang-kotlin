@@ -120,7 +120,6 @@ the given code path.
 ```Kotlin
 val foo = SomeJavaClass.someFunction()!!  //<--the earliest time `!!` can be used
 foo.dance()
-foo.shout()
 ```
 
 #### Bad
