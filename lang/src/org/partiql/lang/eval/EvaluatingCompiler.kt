@@ -20,6 +20,9 @@ import org.partiql.lang.ast.*
 import org.partiql.lang.ast.passes.*
 import org.partiql.lang.errors.*
 import org.partiql.lang.eval.binding.*
+import org.partiql.lang.eval.like.PatternPart
+import org.partiql.lang.eval.like.executePattern
+import org.partiql.lang.eval.like.parsePattern
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.*
 import java.math.*
@@ -108,7 +111,7 @@ internal class EvaluatingCompiler(
             // skip the accumulation function if the value is unknown or if the value is filtered out
             if (value.isNotUnknown() && valueFilter.invoke(value)) {
                 current = nextFunc(current, value)
-            } 
+            }
         }
 
         override fun compute() = current?.exprValue() ?: valueFactory.nullValue
@@ -118,7 +121,7 @@ internal class EvaluatingCompiler(
         val nextNum = next.numberValue()
         when (curr) {
             null -> nextNum
-            else -> when { 
+            else -> when {
                 cmpFunc(nextNum, curr) -> nextNum
                 else                   -> curr
             }
@@ -136,7 +139,7 @@ internal class EvaluatingCompiler(
             object : ExprAggregator {
                 var sum: Number? = null
                 var count = 0L
-                
+
                 override fun next(value: ExprValue) {
                     if(value.isNotUnknown() && filter.invoke(value)) {
                         sum = sum?.let { it + value.numberValue() } ?: value.numberValue()
@@ -146,18 +149,18 @@ internal class EvaluatingCompiler(
                 override fun compute() = sum?.let { (it / bigDecimalOf(count)).exprValue() } ?: valueFactory.nullValue
             }
         }
-        
+
         val allFilter: (ExprValue) -> Boolean = { _ -> true }
-        
+
         // each distinct ExprAggregator must get its own createUniqueExprValueFilter()
 
         mapOf(
-            Pair("count", SetQuantifier.ALL) to ExprAggregatorFactory.over { 
-                Accumulator(0L, countAccFunc, allFilter) 
+            Pair("count", SetQuantifier.ALL) to ExprAggregatorFactory.over {
+                Accumulator(0L, countAccFunc, allFilter)
             },
-            
-            Pair("count", SetQuantifier.DISTINCT) to ExprAggregatorFactory.over { 
-                Accumulator(0L, countAccFunc, createUniqueExprValueFilter()) 
+
+            Pair("count", SetQuantifier.DISTINCT) to ExprAggregatorFactory.over {
+                Accumulator(0L, countAccFunc, createUniqueExprValueFilter())
             },
 
             Pair("sum", SetQuantifier.ALL) to ExprAggregatorFactory.over {
@@ -442,8 +445,8 @@ internal class EvaluatingCompiler(
             if (denominator.isZero()) {
                 err("% by zero", ErrorCode.EVALUATOR_MODULO_BY_ZERO, null, false)
             }
-            
-            (lValue.numberValue() % denominator).exprValue() 
+
+            (lValue.numberValue() % denominator).exprValue()
         }
     }
 
@@ -881,13 +884,13 @@ internal class EvaluatingCompiler(
                     groupByItems.isEmpty() && !hasAggregateCallSites ->
                         // Grouping is not needed -- simply project the results from the FROM clause directly.
                         thunkEnv(metas) { env ->
-                            
+
                             val projectedRows = sourceThunks(env).map { (joinedValues, projectEnv) ->
                                 selectProjectionThunk(projectEnv, joinedValues)
                             }
 
                             val quantifiedRows = when(setQuantifier) {
-                                // wrap the ExprValue to use ExprValue.equals as the equality  
+                                // wrap the ExprValue to use ExprValue.equals as the equality
                                 SetQuantifier.DISTINCT -> projectedRows.filter(createUniqueExprValueFilter())
                                 SetQuantifier.ALL -> projectedRows
                             }
@@ -1198,9 +1201,9 @@ internal class EvaluatingCompiler(
         }
 
         val funcVarRef = funcExpr as VariableReference  // AstSanityValidator ensures this cast will succeed
-        
+
         val aggFactory = getAggregatorFactory(funcVarRef.id.toLowerCase(), setQuantifier, metas)
-        
+
         val argThunk = nestCompilationContext(ExpressionContext.AGG_ARG) {
             compileExprNode(argExpr)
         }
@@ -1235,10 +1238,10 @@ internal class EvaluatingCompiler(
 
      fun getAggregatorFactory(funcName: String, setQuantifier: SetQuantifier, metas: MetaContainer): ExprAggregatorFactory {
          val key = funcName.toLowerCase() to setQuantifier
-         
-        return  builtinAggregates[key] ?: err("No such function: $funcName", 
-                                              ErrorCode.EVALUATOR_NO_SUCH_FUNCTION, 
-                                              errorContextFrom(metas).also { it[Property.FUNCTION_NAME] = funcName }, 
+
+        return  builtinAggregates[key] ?: err("No such function: $funcName",
+                                              ErrorCode.EVALUATOR_NO_SUCH_FUNCTION,
+                                              errorContextFrom(metas).also { it[Property.FUNCTION_NAME] = funcName },
                                               internal = false)
     }
 
@@ -1598,9 +1601,9 @@ internal class EvaluatingCompiler(
      *
      * Three cases
      *
-     * 1. All arguments are literals, then compile and run the DFA
-     * 1. Search pattern and escape pattern are literals, compile the DFA. Running the DFA is deferred to evaluation time.
-     * 1. Pattern or escape (or both) are *not* literals, compile and running of DFA deferred to evaluation time.
+     * 1. All arguments are literals, then compile and run the pattern
+     * 1. Search pattern and escape pattern are literals, compile the pattern. Running the pattern deferred to evaluation time.
+     * 1. Pattern or escape (or both) are *not* literals, compile and running of pattern deferred to evaluation time.
      *
      * ```
      * <valueExpr> LIKE <patternExpr> [ESCAPE <escapeExpr>]
@@ -1619,14 +1622,14 @@ internal class EvaluatingCompiler(
         val patternLocationMeta = patternExpr.metas.sourceLocationMeta
         val escapeLocationMeta = escapeExpr?.metas?.sourceLocationMeta
 
+
         // Note that the return value is a nullable and deferred.
         // This is so that null short-circuits can be supported.
-        // The effective type is Either<Null, Either<Error, IDFA>>
-        fun getDfa(pattern: ExprValue, escape: ExprValue?): (() -> IDFAState)? {
-            val dfaArgs = listOfNotNull(pattern, escape)
+        fun getPatternParts(pattern: ExprValue, escape: ExprValue?): (() -> List<PatternPart>)? {
+            val patternArgs = listOfNotNull(pattern, escape)
             when {
-                dfaArgs.any { it.type.isUnknown } -> return null
-                dfaArgs.any { !it.type.isText }   -> return {
+                patternArgs.any { it.type.isUnknown } -> return null
+                patternArgs.any { !it.type.isText }   -> return {
                     err("LIKE expression must be given non-null strings as input",
                         ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
                         errorContextFrom(operatorMetas).also {
@@ -1636,53 +1639,53 @@ internal class EvaluatingCompiler(
                         internal = false)
                 }
                 else                              -> {
-                    val (patternString: String, escapeChar: Int?, patternSize) =
+                    val (patternString: String, escapeChar: Int?) =
                         checkPattern(pattern.ionValue, patternLocationMeta, escape?.ionValue, escapeLocationMeta)
 
-                    val dfa =
-                        if (patternString.isEmpty()) DFAEmptyPattern
-                        else buildDfaFromPattern(patternString, escapeChar, patternSize)
+                    val patternParts = when {
+                        patternString.isEmpty() -> emptyList()
+                        else -> parsePattern(patternString, escapeChar)
+                    }
 
-                    return { dfa }
+                    return  { patternParts }
                 }
             }
         }
 
-        /** See getDfa for more info on the DFA's odd type. */
-        fun runDfa(value: ExprValue, dfa: (() -> IDFAState)?): ExprValue {
+        fun runPatternParts(value: ExprValue, patternParts: (() -> List<PatternPart>)?): ExprValue {
             return when {
-                dfa == null || value.type.isUnknown -> valueFactory.nullValue
-                !value.type.isText                  -> err(
+                patternParts == null || value.type.isUnknown -> valueFactory.nullValue
+                !value.type.isText -> err(
                     "LIKE expression must be given non-null strings as input",
                     ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
                     errorContextFrom(operatorMetas).also {
                         it[Property.LIKE_VALUE] = value.ionValue.toString()
                     },
                     internal = false)
-                else                                -> dfa().run(value.stringValue()).exprValue()
+                else -> valueFactory.newBoolean(executePattern(patternParts(), value.stringValue()))
             }
         }
 
         val valueThunk = argThunks[0]
 
-        // If the pattern and escape expressions are literals then we can can compile the DFA now and
-        // re-use it with every execution.  Otherwise we must re-compile the DFA every time.
+        // If the pattern and escape expressions are literals then we can can compile the pattern now and
+        // re-use it with every execution.  Otherwise we must re-compile the pattern every time.
 
         return when {
             patternExpr is Literal && (escapeExpr == null || escapeExpr is Literal) -> {
-                val dfa = getDfa(
+                val patternParts = getPatternParts(
                     valueFactory.newFromIonValue(patternExpr.ionValue),
                     (escapeExpr as? Literal)?.ionValue?.let { valueFactory.newFromIonValue(it) })
 
                 // If valueExpr is also a literal then we can evaluate this at compile time and return a constant.
                 if (valueExpr is Literal) {
-                    val resultValue = runDfa(valueFactory.newFromIonValue(valueExpr.ionValue), dfa)
+                    val resultValue = runPatternParts(valueFactory.newFromIonValue(valueExpr.ionValue), patternParts)
                     return thunkEnv(operatorMetas) { resultValue }
                 }
                 else {
                     thunkEnv(operatorMetas) { env ->
                         val value = valueThunk(env)
-                        runDfa(value, dfa)
+                        runPatternParts(value, patternParts)
                     }
                 }
             }
@@ -1690,23 +1693,23 @@ internal class EvaluatingCompiler(
                 val patternThunk = argThunks[1]
                 when {
                     argThunks.size == 2 -> {
-                        //thunk that re-compiles the DFA every evaluation without a custom escape sequence
+                        //thunk that re-compiles the pattern every evaluation without a custom escape sequence
                         thunkEnv(operatorMetas) { env ->
                             val value = valueThunk(env)
                             val pattern = patternThunk(env)
-                            val dfa = getDfa(pattern, null)
-                            runDfa(value, dfa)
+                            val pps = getPatternParts(pattern, null)
+                            runPatternParts(value, pps)
                         }
                     }
                     else -> {
-                        //thunk that re-compiles the DFA every evaluation but *with* a custom escape sequence
+                        //thunk that re-compiles the pattern every evaluation but *with* a custom escape sequence
                         val escapeThunk = argThunks[2]
                         thunkEnv(operatorMetas) { env ->
                             val value = valueThunk(env)
                             val pattern = patternThunk(env)
                             val escape = escapeThunk(env)
-                            val dfa = getDfa(pattern, escape)
-                            runDfa(value, dfa)
+                            val pps = getPatternParts(pattern, escape)
+                            runPatternParts(value, pps)
                         }
                     }
                 }
@@ -1743,8 +1746,9 @@ internal class EvaluatingCompiler(
         patternLocationMeta: SourceLocationMeta?,
         escape: IonValue?,
         escapeLocationMeta: SourceLocationMeta?
-    ): Triple<String, Int?, Int> {
-        val patternString = pattern.stringValue()?.let { it }
+    ): Pair<String, Int?> {
+
+        val patternString = pattern.stringValue()
                             ?: err("Must provide a non-null value for PATTERN in a LIKE predicate: $pattern",
                                    errorContextFrom(patternLocationMeta),
                                    internal = false)
@@ -1754,7 +1758,6 @@ internal class EvaluatingCompiler(
             val escapeCharCodePoint = escapeCharString.codePointAt(0)  // escape is a string of length 1
             val validEscapedChars = setOf('_'.toInt(), '%'.toInt(), escapeCharCodePoint)
             val iter = patternString.codePointSequence().iterator()
-            var count = 0
 
             while (iter.hasNext()) {
                 val current = iter.next()
@@ -1767,11 +1770,10 @@ internal class EvaluatingCompiler(
                        },
                        internal = false)
                 }
-                count++
             }
-            return Triple(patternString, escapeCharCodePoint, count)
+            return Pair(patternString, escapeCharCodePoint)
         }
-        return Triple(patternString, null, patternString.length)
+        return Pair(patternString, null)
     }
 
     /**
