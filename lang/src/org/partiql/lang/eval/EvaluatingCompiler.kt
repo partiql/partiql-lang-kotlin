@@ -1643,9 +1643,9 @@ internal class EvaluatingCompiler(
      *
      * Three cases
      *
-     * 1. All arguments are literals, then compile and run the DFA
-     * 1. Search pattern and escape pattern are literals, compile the DFA. Running the DFA is deferred to evaluation time.
-     * 1. Pattern or escape (or both) are *not* literals, compile and running of DFA deferred to evaluation time.
+     * 1. All arguments are literals, then compile and run the pattern
+     * 1. Search pattern and escape pattern are literals, compile the pattern. Running the pattern deferred to evaluation time.
+     * 1. Pattern or escape (or both) are *not* literals, compile and running of pattern deferred to evaluation time.
      *
      * ```
      * <valueExpr> LIKE <patternExpr> [ESCAPE <escapeExpr>]
@@ -1668,10 +1668,10 @@ internal class EvaluatingCompiler(
         // Note that the return value is a nullable and deferred.
         // This is so that null short-circuits can be supported.
         fun getPatternParts(pattern: ExprValue, escape: ExprValue?): (() -> List<PatternPart>)? {
-            val dfaArgs = listOfNotNull(pattern, escape)
+            val patternArgs = listOfNotNull(pattern, escape)
             when {
-                dfaArgs.any { it.type.isUnknown } -> return null
-                dfaArgs.any { !it.type.isText }   -> return {
+                patternArgs.any { it.type.isUnknown } -> return null
+                patternArgs.any { !it.type.isText }   -> return {
                     err("LIKE expression must be given non-null strings as input",
                         ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
                         errorContextFrom(operatorMetas).also {
@@ -1694,10 +1694,9 @@ internal class EvaluatingCompiler(
             }
         }
 
-        /** See getDfa for more info on the DFA's odd type. */
-        fun runPatternParts(value: ExprValue, dfa: (() -> List<PatternPart>)?): ExprValue {
+        fun runPatternParts(value: ExprValue, patternParts: (() -> List<PatternPart>)?): ExprValue {
             return when {
-                dfa == null || value.type.isUnknown -> valueFactory.nullValue
+                patternParts == null || value.type.isUnknown -> valueFactory.nullValue
                 !value.type.isText -> err(
                     "LIKE expression must be given non-null strings as input",
                     ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
@@ -1705,14 +1704,14 @@ internal class EvaluatingCompiler(
                         it[Property.LIKE_VALUE] = value.ionValue.toString()
                     },
                     internal = false)
-                else -> valueFactory.newBoolean(executePattern(dfa(), value.stringValue()))
+                else -> valueFactory.newBoolean(executePattern(patternParts(), value.stringValue()))
             }
         }
 
         val valueThunk = argThunks[0]
 
-        // If the pattern and escape expressions are literals then we can can compile the DFA now and
-        // re-use it with every execution.  Otherwise we must re-compile the DFA every time.
+        // If the pattern and escape expressions are literals then we can can compile the pattern now and
+        // re-use it with every execution.  Otherwise we must re-compile the pattern every time.
 
         return when {
             patternExpr is Literal && (escapeExpr == null || escapeExpr is Literal) -> {
@@ -1736,23 +1735,23 @@ internal class EvaluatingCompiler(
                 val patternThunk = argThunks[1]
                 when {
                     argThunks.size == 2 -> {
-                        //thunk that re-compiles the DFA every evaluation without a custom escape sequence
+                        //thunk that re-compiles the pattern every evaluation without a custom escape sequence
                         thunkFactory.thunkEnv(operatorMetas) { env ->
                             val value = valueThunk(env)
                             val pattern = patternThunk(env)
-                            val dfa = getPatternParts(pattern, null)
-                            runPatternParts(value, dfa)
+                            val pps = getPatternParts(pattern, null)
+                            runPatternParts(value, pps)
                         }
                     }
                     else -> {
-                        //thunk that re-compiles the DFA every evaluation but *with* a custom escape sequence
+                        //thunk that re-compiles the pattern every evaluation but *with* a custom escape sequence
                         val escapeThunk = argThunks[2]
                         thunkFactory.thunkEnv(operatorMetas) { env ->
                             val value = valueThunk(env)
                             val pattern = patternThunk(env)
                             val escape = escapeThunk(env)
-                            val dfa = getPatternParts(pattern, escape)
-                            runPatternParts(value, dfa)
+                            val pps = getPatternParts(pattern, escape)
+                            runPatternParts(value, pps)
                         }
                     }
                 }

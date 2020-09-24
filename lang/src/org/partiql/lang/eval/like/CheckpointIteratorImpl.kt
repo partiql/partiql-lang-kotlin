@@ -4,7 +4,7 @@ import java.util.Stack
 
 
 /** An implementation of [CheckpointIterator] which is backed by a [List]. */
-class CheckpointIteratorImpl<T>(private val backingList: List<T>) : CheckpointIterator<T> {
+internal class CheckpointIteratorImpl<T>(private val backingList: List<T>) : CheckpointIterator<T> {
     private val checkpointStack = Stack<Int>()
     private var idx = -1
 

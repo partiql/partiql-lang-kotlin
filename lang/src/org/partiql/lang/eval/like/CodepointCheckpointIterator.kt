@@ -3,7 +3,7 @@ package org.partiql.lang.eval.like
 import java.util.Stack
 
 /** An implementation of [CheckpointIterator] that iterates over the unicode codepoints within a string. */
-class CodepointCheckpointIterator(private val str: String) : CheckpointIterator<Int> {
+internal class CodepointCheckpointIterator(private val str: String) : CheckpointIterator<Int> {
     private val checkpointStack = Stack<Int>()
     private val codepointCount = str.codePointCount(0, str.length)
     private var idx = -1

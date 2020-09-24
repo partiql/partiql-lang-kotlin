@@ -5,6 +5,7 @@ import junitparams.Parameters
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
+import kotlin.test.assertEquals
 
 @RunWith(JUnitParamsRunner::class)
 class PatternPartTests {
@@ -114,5 +115,28 @@ class PatternPartTests {
         val actualMatches = executePattern(pat, tc.input)
 
         Assert.assertEquals(tc.shouldMatch, actualMatches)
+    }
+
+    @Test
+    fun patternParserTest() {
+        // the parser should consider multiple consecutive % to be the same as one
+        val patParts = parsePattern("%%a%%%_%%% %%", escapeChar = null)
+        assertEquals(
+            listOf(
+                PatternPart.ZeroOrMoreOfAnyChar,
+                PatternPart.ExactChars("a".codePoints().toArray()),
+                PatternPart.ZeroOrMoreOfAnyChar,
+                PatternPart.AnyOneChar,
+                PatternPart.ZeroOrMoreOfAnyChar,
+                PatternPart.ExactChars(" ".codePoints().toArray()),
+                PatternPart.ZeroOrMoreOfAnyChar
+            ),
+            patParts)
+    }
+
+    @Test
+    fun stressTest() {
+        // makes absolutely certain we do not stack overflow on too many consecutive `%` characters
+        assertEquals(true, executePattern(parsePattern("%".repeat(10000) + "a", escapeChar = null), "aaaa"))
     }
 }
