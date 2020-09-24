@@ -2,7 +2,7 @@ package org.partiql.lang.eval.like
 
 /**
  * Extends [Iterator<T>] with the ability to save the current position and restore it later,
- * thereby allowing an a kind of infinite lookahead.
+ * thereby allowing a kind of infinite lookahead.
  */
 internal interface CheckpointIterator<T> : Iterator<T> {
 

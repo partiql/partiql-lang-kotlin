@@ -19,7 +19,6 @@ import org.partiql.lang.errors.*
 import org.partiql.lang.util.*
 import org.assertj.core.api.*
 import org.junit.*
-import kotlin.concurrent.thread
 import kotlin.test.*
 
 class LikePredicateTest : EvaluatorTestBase() {

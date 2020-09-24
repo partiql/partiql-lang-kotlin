@@ -109,9 +109,10 @@ private fun executeOnePart(partsItr: CheckpointIterator<PatternPart>, charsItr: 
             }
 
             while (true) {
-                // Mark checkpoints on our iterators that so we can store the current position
-                // of them later if the next pattern part doesn't match. We will keep doing this
-                // until the next pattern part matches.
+                // Mark checkpoints on our iterators so that we can store the current position
+                // of them later if the if the remaining pattern parts don't match. We will keep
+                // doing this and and advancing the current character position until the
+                // remaining pattern parts match. If we reach the end of the string, then there is no match.
                 partsItr.saveCheckpoint()
                 charsItr.saveCheckpoint()
 
