@@ -149,6 +149,7 @@ open class AstRewriterBase : AstRewriter {
      */
     protected open fun innerRewriteSelect(selectExpr: Select): Select {
         val from = rewriteFromSource(selectExpr.from)
+        val fromLet = selectExpr.fromLet?.let { rewriteLetSource(it) }
         val where = selectExpr.where?.let { rewriteSelectWhere(it) }
         val groupBy = selectExpr.groupBy?.let { rewriteGroupBy(it) }
         val having = selectExpr.having?.let { rewriteSelectHaving(it) }
@@ -160,6 +161,7 @@ open class AstRewriterBase : AstRewriter {
             setQuantifier = selectExpr.setQuantifier,
             projection = projection,
             from = from,
+            fromLet = fromLet,
             where = where,
             groupBy = groupBy,
             having = having,
@@ -247,6 +249,12 @@ open class AstRewriterBase : AstRewriter {
             variables.asName?.let { rewriteSymbolicName(it) },
             variables.atName?.let { rewriteSymbolicName(it) },
             variables.byName?.let { rewriteSymbolicName(it) })
+
+    open fun rewriteLetSource(letSource: LetSource) =
+        LetSource(letSource.bindings.map { rewriteLetBinding(it) })
+
+    open fun rewriteLetBinding(letBinding: LetBinding): LetBinding =
+        LetBinding(rewriteExprNode(letBinding.expr), rewriteSymbolicName(letBinding.name))
 
     /**
      * This is called by the methods responsible for rewriting instances of the [FromSourceLet]

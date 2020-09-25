@@ -907,7 +907,10 @@ internal class EvaluatingCompiler(
             val (setQuantifier, projection, from, fromLet, _, groupBy, having, _, metas: MetaContainer) = selectExpr
 
             val fromSourceThunks = compileFromSources(from)
-            val sourceThunks = compileQueryWithoutProjection(selectExpr, fromSourceThunks)
+
+            val letSourceThunks = if (fromLet != null) compileLetSources(fromLet) else null
+
+            val sourceThunks = compileQueryWithoutProjection(selectExpr, fromSourceThunks, letSourceThunks)
 
             // Returns a thunk that invokes [sourceThunks], and invokes [projectionThunk] to perform the projection.
             fun getQueryThunk(selectProjectionThunk: ThunkEnvValue<List<ExprValue>>): ThunkEnv {
@@ -1355,16 +1358,36 @@ internal class EvaluatingCompiler(
 
         return sources
     }
+
+    private fun compileLetSources(letSource: LetSource): List<CompiledLetSource> {
+        val sources = ArrayList<CompiledLetSource>()
+        letSource.bindings.forEach {
+            val thunk = compileExprNode(it.expr)
+            sources.add(
+                CompiledLetSource(
+                    name = Alias(
+                        asName = it.name.name,
+                        atName = null,
+                        byName = null),
+                    thunk = thunk
+                )
+            )
+        }
+        return sources
+    }
+
     /**
      * Compiles the clauses of the SELECT or PIVOT into a thunk that does not generate
      * the final projection.
      */
     private fun compileQueryWithoutProjection(
         ast: Select,
-        compiledSources: List<CompiledFromSource>
+        compiledSources: List<CompiledFromSource>,
+        compiledLetSources: List<CompiledLetSource>?
     ): (Environment) -> Sequence<FromProduction> {
 
         val localsBinder = compiledSources.map { it.alias }.localsBinder(valueFactory.missingValue)
+        val localsLetBinder = compiledLetSources?.map { it.name }?.localsBinder(valueFactory.missingValue)
         val whereThunk = ast.where?.let { compileExprNode(it) }
         val limitThunk = ast.limit?.let { compileExprNode(it) }
         val limitLocationMeta = ast.limit?.metas?.sourceLocationMeta
@@ -1435,6 +1458,47 @@ internal class EvaluatingCompiler(
                     // bind the joined value to the bindings for the filter/project
                     FromProduction(joinedValues, fromEnv.nest(localsBinder.bindLocals(joinedValues)))
                 }
+            var seq2 = compiledLetSources
+                ?.foldLeftProduct({ env: Environment -> env }) { bindEnv: (Environment) -> Environment, source: CompiledLetSource ->
+                    fun correlatedBind(value: ExprValue): Pair<(Environment) -> Environment, ExprValue> {
+                        // add the correlated binding environment thunk
+                        val alias = source.name
+                        val nextBindEnv = { env: Environment ->
+                            val childEnv = bindEnv(env)
+                            childEnv.nest(
+                                Bindings.buildLazyBindings {
+                                    addBinding(alias.asName) { value }
+                                },
+                                Environment.CurrentMode.GLOBALS_THEN_LOCALS)
+                        }
+                        return Pair(nextBindEnv, value)
+                    }
+
+                    var iter = source.thunk(bindEnv(fromEnv))
+                        .rangeOver()
+                        .asSequence()
+                        .map { correlatedBind(it) }
+                        .iterator()
+
+                    iter
+                }
+                ?.asSequence()
+                ?.map { joinedValues ->
+                    // bind the joined value to the bindings for the filter/project
+                    if (localsLetBinder != null)
+                        FromProduction(joinedValues, fromEnv.nest(localsLetBinder.bindLocals(joinedValues)))
+                    else
+                        FromProduction(joinedValues, fromEnv)
+                }
+            if (compiledLetSources != null) {
+                seq = seq
+                    .map {
+                        compiledLetSources
+                            .fold(it.env) { letSource : Environment ->
+                                
+                            }
+                    }
+            }
             if (whereThunk != null) {
                 seq = seq.filter { (_, env) ->
                     val whereClauseResult = whereThunk(env)
@@ -1928,6 +1992,10 @@ private enum class JoinExpansion {
     /** Expansion mode for LEFT/RIGHT/FULL JOIN. */
     OUTER
 }
+
+private data class CompiledLetSource(
+    val name: Alias,
+    val thunk: ThunkEnv)
 
 private enum class ExpressionContext {
     /**
