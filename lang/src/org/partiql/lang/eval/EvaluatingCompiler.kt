@@ -1363,15 +1363,7 @@ internal class EvaluatingCompiler(
         val sources = ArrayList<CompiledLetSource>()
         letSource.bindings.forEach {
             val thunk = compileExprNode(it.expr)
-            sources.add(
-                CompiledLetSource(
-                    name = Alias(
-                        asName = it.name.name,
-                        atName = null,
-                        byName = null),
-                    thunk = thunk
-                )
-            )
+            sources.add(CompiledLetSource(name = it.name.name, thunk = thunk))
         }
         return sources
     }
@@ -1387,7 +1379,6 @@ internal class EvaluatingCompiler(
     ): (Environment) -> Sequence<FromProduction> {
 
         val localsBinder = compiledSources.map { it.alias }.localsBinder(valueFactory.missingValue)
-        val localsLetBinder = compiledLetSources?.map { it.name }?.localsBinder(valueFactory.missingValue)
         val whereThunk = ast.where?.let { compileExprNode(it) }
         val limitThunk = ast.limit?.let { compileExprNode(it) }
         val limitLocationMeta = ast.limit?.metas?.sourceLocationMeta
@@ -1458,46 +1449,24 @@ internal class EvaluatingCompiler(
                     // bind the joined value to the bindings for the filter/project
                     FromProduction(joinedValues, fromEnv.nest(localsBinder.bindLocals(joinedValues)))
                 }
-            var seq2 = compiledLetSources
-                ?.foldLeftProduct({ env: Environment -> env }) { bindEnv: (Environment) -> Environment, source: CompiledLetSource ->
-                    fun correlatedBind(value: ExprValue): Pair<(Environment) -> Environment, ExprValue> {
-                        // add the correlated binding environment thunk
-                        val alias = source.name
-                        val nextBindEnv = { env: Environment ->
-                            val childEnv = bindEnv(env)
-                            childEnv.nest(
-                                Bindings.buildLazyBindings {
-                                    addBinding(alias.asName) { value }
-                                },
-                                Environment.CurrentMode.GLOBALS_THEN_LOCALS)
-                        }
-                        return Pair(nextBindEnv, value)
-                    }
 
-                    var iter = source.thunk(bindEnv(fromEnv))
-                        .rangeOver()
-                        .asSequence()
-                        .map { correlatedBind(it) }
-                        .iterator()
-
-                    iter
-                }
-                ?.asSequence()
-                ?.map { joinedValues ->
-                    // bind the joined value to the bindings for the filter/project
-                    if (localsLetBinder != null)
-                        FromProduction(joinedValues, fromEnv.nest(localsLetBinder.bindLocals(joinedValues)))
-                    else
-                        FromProduction(joinedValues, fromEnv)
-                }
             if (compiledLetSources != null) {
-                seq = seq
-                    .map {
-                        compiledLetSources
-                            .fold(it.env) { letSource : Environment ->
-                                
+                seq = seq.map { fromProduction: FromProduction ->
+                    val parentEnv = fromProduction.env
+
+                    val letEnv: Environment = compiledLetSources.fold(parentEnv) { acc: Environment, curr: CompiledLetSource ->
+                        val letValue = curr.thunk(acc)
+                        val binding = Bindings.over { bindingName: BindingName ->
+                            when {
+                                bindingName.isEquivalentTo(curr.name) -> letValue
+                                else -> null
                             }
+
+                        }
+                        acc.nest(newLocals = binding)
                     }
+                    fromProduction.copy(env = letEnv)
+                }
             }
             if (whereThunk != null) {
                 seq = seq.filter { (_, env) ->
@@ -1994,7 +1963,7 @@ private enum class JoinExpansion {
 }
 
 private data class CompiledLetSource(
-    val name: Alias,
+    val name: String,
     val thunk: ThunkEnv)
 
 private enum class ExpressionContext {

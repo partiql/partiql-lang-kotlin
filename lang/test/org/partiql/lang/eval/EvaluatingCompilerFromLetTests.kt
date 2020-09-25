@@ -34,14 +34,19 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
 
     // Valid test cases:
 
-    @Ignore
+    //@Ignore
     @Test
     fun `LET variable available in WHERE clause`() =
         assertEval(
             "SELECT 1 FROM A LET 1 AS X WHERE X = 1",
-            "<< { '_1': 1 } >>",
+            "[{ _1: 1 }]",
             session
         )
+    @Test
+    fun asdfsd() {
+        println(eval("SELECT x FROM [1] LET 1 AS X WHERE X = 1"))
+    }
+
 
     @Ignore
     @Test
