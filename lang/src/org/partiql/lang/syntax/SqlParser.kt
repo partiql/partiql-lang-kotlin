@@ -1851,7 +1851,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
         rem = child.remaining
 
         if (rem.head?.type != AS) {
-            rem.head.err("Expected AS following LET expr", PARSE_EXPECTED_AS_FOR_LET)
+            rem.head.err("Expected $AS following $LET expr", PARSE_EXPECTED_AS_FOR_LET)
         }
 
         rem = rem.tail
@@ -1869,7 +1869,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
             child = rem.parseExpression()
             rem = child.remaining
             if (rem.head?.type != AS) {
-                rem.head.err("Expected AS following LET expr", PARSE_EXPECTED_AS_FOR_LET)
+                rem.head.err("Expected $AS following $LET expr", PARSE_EXPECTED_AS_FOR_LET)
             }
 
             rem = rem.tail
