@@ -14,10 +14,14 @@
 
 package org.partiql.lang.syntax
 
+import com.amazon.ionelement.api.ionInt
+import com.amazon.ionelement.api.ionString
 import org.junit.Test
 import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.sourceLocation
+import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.id
 
 /**
  * Originally just meant to test the parser, this class now tests several different things because
@@ -3091,5 +3095,67 @@ class SqlParserTest : SqlParserTestBase() {
         val withoutSemicolon = parse("(1+1)")
 
         assertEquals(withoutSemicolon, withSemicolon)
+    }
+
+    //****************************************
+    // LET clause parsing
+    //****************************************
+
+    private val projectX = PartiqlAst.build { projectList(projectExpr(id("x"))) }
+
+    @Test
+    fun selectFromLetTest() = assertExpression("SELECT x FROM table1 LET 1 AS A") {
+        select(
+            project = projectX,
+            from = scan(id("table1")),
+            fromLet = let(letBinding(lit(ionInt(1)), "A"))
+        )
+    }
+
+    @Test
+    fun selectFromLetTwoBindingsTest() = assertExpression("SELECT x FROM table1 LET 1 AS A, 2 AS B") {
+        select(
+            project = projectX,
+            from = scan(id("table1")),
+            fromLet = let(letBinding(lit(ionInt(1)), "A"), letBinding(lit(ionInt(2)), "B"))
+        )
+    }
+
+    @Test
+    fun selectFromLetTableBindingTest() = assertExpression("SELECT x FROM table1 LET table1 AS A") {
+        select(
+            project = projectX,
+            from = scan(id("table1")),
+            fromLet = let(letBinding(id("table1"), "A"))
+        )
+    }
+
+    @Test
+    fun selectFromLetFunctionBindingTest() = assertExpression("SELECT x FROM table1 LET foo() AS A") {
+        select(
+            project = projectX,
+            from = scan(id("table1")),
+            fromLet = let(letBinding(call("foo", emptyList()), "A"))
+        )
+    }
+
+    @Test
+    fun selectFromLetFunctionWithLiteralsTest() = assertExpression(
+        "SELECT x FROM table1 LET foo(42, 'bar') AS A") {
+        select(
+            project = projectX,
+            from = scan(id("table1")),
+            fromLet = let(letBinding(call("foo", listOf(lit(ionInt(42)), lit(ionString("bar")))), "A"))
+        )
+    }
+
+    @Test
+    fun selectFromLetFunctionWithVariablesTest() = assertExpression(
+        "SELECT x FROM table1 LET foo(table1) AS A") {
+        select(
+            project = projectX,
+            from = scan(id("table1")),
+            fromLet = let(letBinding(call("foo", listOf(id("table1"))), "A"))
+        )
     }
 }

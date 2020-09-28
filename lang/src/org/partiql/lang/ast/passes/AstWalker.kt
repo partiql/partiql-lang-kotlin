@@ -87,7 +87,7 @@ open class AstWalker(private val visitor: AstVisitor) {
                     }
                 }
                 is Select       -> case {
-                    val (_, projection, from, where, groupBy, having, limit, _: MetaContainer) = expr
+                    val (_, projection, from, fromLet, where, groupBy, having, limit, _: MetaContainer) = expr
                     walkSelectProjection(projection)
                     walkFromSource(from)
                     walkExprNode(where)
