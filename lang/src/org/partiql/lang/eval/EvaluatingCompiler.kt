@@ -1478,7 +1478,14 @@ internal class EvaluatingCompiler(
                 }
             }
             if (limitThunk != null) {
-                val limitExprValue = limitThunk(rootEnv)
+                val env = seq.firstOrNull()?.env
+                val limitExprValue: ExprValue
+                if (env != null) {
+                    limitExprValue = limitThunk(env)
+                }
+                else {
+                    limitExprValue = limitThunk(rootEnv)
+                }
                 if(limitExprValue.type != ExprValueType.INT) {
                     err("LIMIT value was not an integer",
                         ErrorCode.EVALUATOR_NON_INT_LIMIT_VALUE,
