@@ -147,6 +147,20 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
     }
 
     @Test
+    fun `LET clause binding definition dependent on later binding` () {
+        checkInputThrowingEvaluationException(
+            "SELECT X FROM A LET 1 AS X, Y AS Z, 3 AS Y",
+            session,
+            ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
+            mapOf(
+                    Property.LINE_NUMBER to 1L,
+                    Property.COLUMN_NUMBER to 29L,
+                    Property.BINDING_NAME to "Y"
+            )
+        )
+    }
+
+    @Test
     fun `LET clause inner query binding not available in outer query` () {
         checkInputThrowingEvaluationException(
             "SELECT X FROM (SELECT VALUE X FROM A LET 1 AS X)",
