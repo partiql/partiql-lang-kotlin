@@ -887,12 +887,17 @@ internal class EvaluatingCompiler(
     }
 
     private fun compileSelect(selectExpr: Select): ThunkEnv {
-        // Get all the FROM source aliases for binding error checks
+        // Get all the FROM source aliases and LET bindings for binding error checks
         val fold = object : PartiqlAst.VisitorFold<Set<String>>() {
             /** Store all the visited FROM source aliases in the accumulator */
             override fun visitFromSourceScan(node: PartiqlAst.FromSource.Scan, accumulator: Set<String>): Set<String> {
                 val aliases = listOfNotNull(node.asAlias?.text, node.atAlias?.text, node.byAlias?.text)
                 return accumulator + aliases.toSet()
+            }
+
+            override fun visitLetBinding(node: PartiqlAst.LetBinding, accumulator: Set<String>): Set<String> {
+                val aliases = listOfNotNull(node.name.text)
+                return accumulator + aliases
             }
 
             /** Prevents visitor from recursing into nested select statements */
@@ -901,7 +906,11 @@ internal class EvaluatingCompiler(
             }
         }
         val pigGeneratedAst = selectExpr.toAstExpr() as PartiqlAst.Expr.Select
-        val allFromSourceAliases = fold.walkFromSource(pigGeneratedAst.from, emptySet())
+        val allFromSourceAliases = fold.walkFromSource(pigGeneratedAst.from, emptySet()).toMutableSet()
+        if (pigGeneratedAst.fromLet != null) {
+            val letBindingNames = fold.walkLet(pigGeneratedAst.fromLet, emptySet())
+            allFromSourceAliases += letBindingNames
+        }
 
         return nestCompilationContext(ExpressionContext.NORMAL, emptySet()) {
             val (setQuantifier, projection, from, fromLet, _, groupBy, having, _, metas: MetaContainer) = selectExpr
@@ -1449,21 +1458,20 @@ internal class EvaluatingCompiler(
                     // bind the joined value to the bindings for the filter/project
                     FromProduction(joinedValues, fromEnv.nest(localsBinder.bindLocals(joinedValues)))
                 }
-
+            // Nest LET bindings in the FROM environment
             if (compiledLetSources != null) {
-                seq = seq.map { fromProduction: FromProduction ->
+                seq = seq.map { fromProduction ->
                     val parentEnv = fromProduction.env
 
-                    val letEnv: Environment = compiledLetSources.fold(parentEnv) { acc: Environment, curr: CompiledLetSource ->
-                        val letValue = curr.thunk(acc)
-                        val binding = Bindings.over { bindingName: BindingName ->
+                    val letEnv: Environment = compiledLetSources.fold(parentEnv) { accEnvironment, curLetSource ->
+                        val letValue = curLetSource.thunk(accEnvironment)
+                        val binding = Bindings.over { bindingName ->
                             when {
-                                bindingName.isEquivalentTo(curr.name) -> letValue
+                                bindingName.isEquivalentTo(curLetSource.name) -> letValue
                                 else -> null
                             }
-
                         }
-                        acc.nest(newLocals = binding)
+                        accEnvironment.nest(newLocals = binding)
                     }
                     fromProduction.copy(env = letEnv)
                 }
@@ -1478,14 +1486,7 @@ internal class EvaluatingCompiler(
                 }
             }
             if (limitThunk != null) {
-                val env = seq.firstOrNull()?.env
-                val limitExprValue: ExprValue
-                if (env != null) {
-                    limitExprValue = limitThunk(env)
-                }
-                else {
-                    limitExprValue = limitThunk(rootEnv)
-                }
+                val limitExprValue = limitThunk(rootEnv)
                 if(limitExprValue.type != ExprValueType.INT) {
                     err("LIMIT value was not an integer",
                         ErrorCode.EVALUATOR_NON_INT_LIMIT_VALUE,
