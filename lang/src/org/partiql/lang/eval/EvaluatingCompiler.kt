@@ -917,7 +917,10 @@ internal class EvaluatingCompiler(
 
             val fromSourceThunks = compileFromSources(from)
 
-            val letSourceThunks = if (fromLet != null) compileLetSources(fromLet) else null
+            val letSourceThunks = when(fromLet) {
+                null -> null
+                else -> compileLetSources(fromLet)
+            }
 
             val sourceThunks = compileQueryWithoutProjection(selectExpr, fromSourceThunks, letSourceThunks)
 
