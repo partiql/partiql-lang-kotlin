@@ -140,12 +140,13 @@ open class AstRewriterBase : AstRewriter {
      * The traversal order is in the SQL semantic order--that is:
      *
      * 1. `FROM`
-     * 2. `WHERE`
-     * 3. `GROUP BY`
-     * 4. `HAVING`
-     * 5. *projection*
-     * 6. `ORDER BY` (to be implemented)
-     * 7. `LIMIT`
+     * 2. `LET`
+     * 3. `WHERE`
+     * 4. `GROUP BY`
+     * 5. `HAVING`
+     * 6. *projection*
+     * 7. `ORDER BY` (to be implemented)
+     * 8. `LIMIT`
      */
     protected open fun innerRewriteSelect(selectExpr: Select): Select {
         val from = rewriteFromSource(selectExpr.from)
