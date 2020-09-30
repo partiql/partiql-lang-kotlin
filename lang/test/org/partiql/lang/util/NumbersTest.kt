@@ -14,6 +14,7 @@
 
 package org.partiql.lang.util
 
+import com.amazon.ion.Decimal
 import org.partiql.lang.*
 import org.junit.Test
 import java.math.BigDecimal
@@ -77,4 +78,12 @@ class NumbersTest : TestBase() {
     @Test fun cmpBigDecimalLess() = assertTrue((1L as Number).compareTo(dec("2")) < 0)
     @Test fun cmpBigDecimalEquals() = assertEquals(0, (dec("1") as Number).compareTo(1L))
     @Test fun cmpBigDecimalMore() = assertTrue((2L as Number).compareTo(dec("1")) > 0)
+
+    @Test
+    fun bigDecimalOf() {
+        assertEquals(bigDecimalOf(Decimal.NEGATIVE_ZERO), Decimal.NEGATIVE_ZERO)
+        assertEquals(bigDecimalOf(BigDecimal.ZERO), BigDecimal.ZERO)
+        assertEquals(bigDecimalOf(0L), BigDecimal.ZERO)
+        assertEquals(bigDecimalOf(1), BigDecimal.ONE)
+    }
 }
