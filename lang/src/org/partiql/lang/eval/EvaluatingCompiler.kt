@@ -889,6 +889,49 @@ internal class EvaluatingCompiler(
         }
     }
 
+    private fun compileLimit(limitClause: ExprNode, env: Environment) : Long {
+        val limitThunk = compileExprNode(limitClause)
+        val limitLocationMeta = limitClause.metas.sourceLocationMeta
+        val limitExprValue = limitThunk(env)
+
+        if(limitExprValue.type != ExprValueType.INT) {
+            err("LIMIT value was not an integer",
+                ErrorCode.EVALUATOR_NON_INT_LIMIT_VALUE,
+                errorContextFrom(limitLocationMeta).also {
+                    it[Property.ACTUAL_TYPE] = limitExprValue.type.toString()
+                },
+                internal = false)
+        }
+
+        // `Number.toLong()` (used below) does *not* cause an overflow exception if the underlying [Number]
+        // implementation (i.e. Decimal or BigInteger) exceeds the range that can be represented by Longs.
+        // This can cause very confusing behavior if the user specifies a LIMIT value that exceeds
+        // Long.MAX_VALUE, because no results will be returned from their query.  That no overflow exception
+        // is thrown is not a problem as long as PartiQL's restriction of integer values to +/- 2^63 remains.
+        // We throw an exception here if the value exceeds the supported range (say if we change that
+        // restriction or if a custom [ExprValue] is provided which exceeds that value).
+        val limitIonValue = limitExprValue.ionValue as IonInt
+        if(limitIonValue.integerSize == IntegerSize.BIG_INTEGER) {
+            err("IntegerSize.BIG_INTEGER not supported for LIMIT values",
+                errorContextFrom(limitLocationMeta),
+                internal = true)
+        }
+
+        val limitValue = limitExprValue.numberValue().toLong()
+
+        if (limitValue < 0) {
+            err("negative LIMIT",
+                ErrorCode.EVALUATOR_NEGATIVE_LIMIT,
+                errorContextFrom(limitLocationMeta),
+                internal = false)
+        }
+
+        // we can't use the Kotlin's Sequence<T>.take(n) for this since it accepts only an integer.
+        // this references [Sequence<T>.take(count: Long): Sequence<T>] defined in [org.partiql.util].
+        return limitValue
+    }
+
+
     private fun compileSelect(selectExpr: Select): ThunkEnv {
         // Get all the FROM source aliases for binding error checks
         val fold = object : PartiqlAst.VisitorFold<Set<String>>() {
@@ -907,7 +950,7 @@ internal class EvaluatingCompiler(
         val allFromSourceAliases = fold.walkFromSource(pigGeneratedAst.from, emptySet())
 
         return nestCompilationContext(ExpressionContext.NORMAL, emptySet()) {
-            val (setQuantifier, projection, from, _, groupBy, having, _, metas: MetaContainer) = selectExpr
+            val (setQuantifier, projection, from, _, groupBy, having, limit, metas: MetaContainer) = selectExpr
 
             val fromSourceThunks = compileFromSources(from)
             val sourceThunks = compileQueryWithoutProjection(selectExpr, fromSourceThunks)
@@ -928,10 +971,14 @@ internal class EvaluatingCompiler(
                                 selectProjectionThunk(projectEnv, joinedValues)
                             }
 
-                            val quantifiedRows = when(setQuantifier) {
+                            var quantifiedRows = when(setQuantifier) {
                                 // wrap the ExprValue to use ExprValue.equals as the equality
                                 SetQuantifier.DISTINCT -> projectedRows.filter(createUniqueExprValueFilter())
                                 SetQuantifier.ALL -> projectedRows
+                            }
+
+                            if (limit != null) {
+                                quantifiedRows = quantifiedRows.take(compileLimit(limit, env))
                             }
 
                             valueFactory.newBag(quantifiedRows.map {
@@ -974,13 +1021,16 @@ internal class EvaluatingCompiler(
                                 // Create a closure that groups all the rows in the FROM source into a single group.
                                 thunkFactory.thunkEnv(metas) { env ->
                                     // Evaluate the FROM clause
-                                    val fromProductions: Sequence<FromProduction> = sourceThunks(env)
+                                    var fromProductions: Sequence<FromProduction> = sourceThunks(env)
                                     val registers = createRegisterBank()
 
                                     // note: the group key can be anything here because we only ever have a single
                                     // group when aggregates are used without GROUP BY expression
                                     val syntheticGroup = Group(valueFactory.nullValue, registers)
 
+                                    if (limit != null) {
+                                        fromProductions = fromProductions.take(compileLimit(limit, env))
+                                    }
                                     // iterate over the values from the FROM clause and populate our
                                     // aggregate register values.
                                     fromProductions.forEach { fromProduction ->
@@ -1054,12 +1104,16 @@ internal class EvaluatingCompiler(
                                     }
 
                                     // generate the final group by projection
-                                    val projectedRows = env.groups.mapNotNull { g ->
+                                    var projectedRows = env.groups.mapNotNull { g ->
                                         val groupByEnv = getGroupEnv(env, g.value)
                                         filterHavingAndProject(groupByEnv, g.value)
+                                    }.asSequence()
+
+                                    if (limit != null) {
+                                        projectedRows = projectedRows.take(compileLimit(limit, env))
                                     }
 
-                                    valueFactory.newBag(projectedRows.asSequence())
+                                    valueFactory.newBag(projectedRows)
                                 }
                             }
                         }
@@ -1085,9 +1139,13 @@ internal class EvaluatingCompiler(
                         val asThunk = compileExprNode(asExpr)
                         val atThunk = compileExprNode(atExpr)
                         thunkFactory.thunkEnv(metas) { env ->
-                            val sourceValue = sourceThunks(env)
+                            var sourceValue = sourceThunks(env).asSequence()
+
+                            if (limit != null) {
+                                sourceValue = sourceValue.take(compileLimit(limit, env))
+                            }
+
                             val seq = sourceValue
-                                    .asSequence()
                                     .map { (_, env) -> Pair(asThunk(env), atThunk(env)) }
                                     .filter { (name, _) -> name.type.isText }
                                     .map { (name, value) -> value.namedValue(name) }
@@ -1369,8 +1427,6 @@ internal class EvaluatingCompiler(
 
         val localsBinder = compiledSources.map { it.alias }.localsBinder(valueFactory.missingValue)
         val whereThunk = ast.where?.let { compileExprNode(it) }
-        val limitThunk = ast.limit?.let { compileExprNode(it) }
-        val limitLocationMeta = ast.limit?.metas?.sourceLocationMeta
 
         return { rootEnv ->
             val fromEnv = rootEnv.flipToGlobalsFirst()
@@ -1446,44 +1502,6 @@ internal class EvaluatingCompiler(
                         false -> whereClauseResult.booleanValue()
                     }
                 }
-            }
-            if (limitThunk != null) {
-                val limitExprValue = limitThunk(rootEnv)
-                if(limitExprValue.type != ExprValueType.INT) {
-                    err("LIMIT value was not an integer",
-                        ErrorCode.EVALUATOR_NON_INT_LIMIT_VALUE,
-                        errorContextFrom(limitLocationMeta).also {
-                            it[Property.ACTUAL_TYPE] = limitExprValue.type.toString()
-                        },
-                        internal = false)
-                }
-
-                // `Number.toLong()` (used below) does *not* cause an overflow exception if the underlying [Number]
-                // implementation (i.e. Decimal or BigInteger) exceeds the range that can be represented by Longs.
-                // This can cause very confusing behavior if the user specifies a LIMIT value that exceeds
-                // Long.MAX_VALUE, because no results will be returned from their query.  That no overflow exception
-                // is thrown is not a problem as long as PartiQL's restriction of integer values to +/- 2^63 remains.
-                // We throw an exception here if the value exceeds the supported range (say if we change that
-                // restriction or if a custom [ExprValue] is provided which exceeds that value).
-                val limitIonValue = limitExprValue.ionValue as IonInt
-                if(limitIonValue.integerSize == IntegerSize.BIG_INTEGER) {
-                    err("IntegerSize.BIG_INTEGER not supported for LIMIT values",
-                        errorContextFrom(limitLocationMeta),
-                        internal = true)
-                }
-
-                val limitValue = limitExprValue.numberValue().toLong()
-
-                if (limitValue < 0) {
-                    err("negative LIMIT",
-                        ErrorCode.EVALUATOR_NEGATIVE_LIMIT,
-                        errorContextFrom(limitLocationMeta),
-                        internal = false)
-                }
-
-                // we can't use the Kotlin's Sequence<T>.take(n) for this since it accepts only an integer.
-                // this references [Sequence<T>.take(count: Long): Sequence<T>] defined in [org.partiql.util].
-                seq = seq.take(limitValue)
             }
             seq
         }
