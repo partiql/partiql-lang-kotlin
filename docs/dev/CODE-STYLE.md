@@ -107,8 +107,8 @@ val sources = letSource.bindings.map {
 
 This is equivalent to the prior example but:
 
-- Uses less code
-- This is clearer, easier to read and reason about.
+- Is less verbose
+- Is clearer, easier to read and reason about.
 
 ## Exceptions
 
