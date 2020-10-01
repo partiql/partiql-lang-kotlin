@@ -19,6 +19,7 @@ import org.partiql.lang.ast.*
 import org.partiql.lang.syntax.*
 import junitparams.*
 import org.junit.*
+import org.junit.Test
 import org.junit.runner.*
 import kotlin.test.*
 

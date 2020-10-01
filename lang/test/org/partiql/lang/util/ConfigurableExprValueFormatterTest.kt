@@ -3,6 +3,7 @@ package org.partiql.lang.util
 import com.amazon.ion.system.*
 import junitparams.*
 import org.junit.*
+import org.junit.Test
 import org.junit.runner.*
 import org.partiql.lang.*
 import org.partiql.lang.eval.*

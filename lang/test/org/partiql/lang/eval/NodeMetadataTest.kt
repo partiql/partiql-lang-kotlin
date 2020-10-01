@@ -19,6 +19,7 @@ import org.partiql.lang.util.*
 import junitparams.*
 import org.assertj.core.api.Assertions.*
 import org.junit.*
+import org.junit.Test
 import org.junit.runner.*
 import kotlin.test.*
 
