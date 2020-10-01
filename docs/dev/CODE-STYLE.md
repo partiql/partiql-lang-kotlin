@@ -86,6 +86,37 @@ fun calculateArea(shape: Shape): Double {
 }
 ```
 
+# Avoid Mutable Data Structures
+
+## Bad
+
+```Kotlin
+val sources = ArrayList<CompiledLetSource>() // [sources] is mutable!
+letSource.bindings.forEach {
+    sources.add(CompiledLetSource(name = it.name.name, thunk = compileExprNode(it.expr)))
+}
+return sources
+```    
+
+## Good
+
+
+```Kotlin
+val sources = letSource.bindings.map {
+    CompiledLetSource(name = it.name.name, thunk = compileExprNode(it.expr)))
+}
+```
+
+This is equivalent to the prior example but:
+
+- Uses less code
+- This is clearer, easier to read and reason about.
+
+## Exceptions
+
+In rare cases the use of mutable data strucutres is simpler or more performant than immutable.
+In such scenarios, the use of mutable data structures is allowed.
+
 # Avoid use of `!!`
 
 Where possible the use of `!!` should be avoided.  Most of the time this is only impossible when 
