@@ -23,6 +23,5 @@ abstract class ArgumentsProviderBase : ArgumentsProvider {
     override fun provideArguments(extensionContext: ExtensionContext): Stream<out Arguments>? {
         return getParameters().map { Arguments.of(it) }.stream()
     }
-
 }
 

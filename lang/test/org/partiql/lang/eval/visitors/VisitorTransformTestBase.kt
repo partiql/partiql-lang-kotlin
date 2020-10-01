@@ -24,11 +24,10 @@ abstract class VisitorTransformTestBase : SqlParserTestBase() {
     data class TransformTestCase(val originalSql: String, val expectedSql: String)
 
     /**
-     * Similar to [runTest], but executes the rewriter again a second time on the result of the first rewrite
-     * and ensures that the second result is the same as the first.  This ensures that the second
-     * pass of the rewrite is idempotent.
+     * Similar to [runTest], but executes the transform again a second time on the result of the first transform
+     * and ensures that the second result is the same as the first.  This ensures that the transform is idempotent.
      */
-    protected fun runTestForIdempotentRewriter(tc: TransformTestCase, transform: PartiqlAst.VisitorTransform) {
+    protected fun runTestForIdempotentTransform(tc: TransformTestCase, transform: PartiqlAst.VisitorTransform) {
         val originalAst = assertDoesNotThrow("Parsing TransformTestCase.originalSql") {
             super.parser.parseExprNode(tc.originalSql).toAstStatement()
         }
@@ -38,7 +37,7 @@ abstract class VisitorTransformTestBase : SqlParserTestBase() {
 
         val actualAst = transform.transformStatement(originalAst)
 
-        assertEquals("The expected AST must match the rewritten AST", expectedAst, originalAst)
+        assertEquals("The expected AST must match the rewritten AST", expectedAst, actualAst)
 
         // Idempotent transforms should have the same result if the result of the first pass is passed into a
         // second pass.
@@ -51,11 +50,8 @@ abstract class VisitorTransformTestBase : SqlParserTestBase() {
 
 
     /**
-     * Parses [TransformTestCase.originalSql], then runs the specified rewriters on the AST.
-     * Parses [TransformTestCase.expectedSql], and asserts the rewritten AST is equivalent to the expected AST.
-     *
-     * Before equivalence is checked, strips both trees of all meta nodes meta nodes are taken into account during
-     * the equivalence check.
+     * Parses [TransformTestCase.originalSql], then runs the specified transformers on the AST.
+     * Parses [TransformTestCase.expectedSql], and asserts the transformed AST is equivalent to the expected AST.
      */
     protected fun runTest(tc: TransformTestCase, transformers: List<PartiqlAst.VisitorTransform>) {
         val originalAst = assertDoesNotThrow("Parsing TransformTestCase.originalSql") {

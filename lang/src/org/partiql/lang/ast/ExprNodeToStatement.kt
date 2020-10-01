@@ -2,6 +2,7 @@ package org.partiql.lang.ast
 
 import com.amazon.ionelement.api.toIonElement
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.pig.runtime.SymbolPrimitive
 import org.partiql.pig.runtime.asPrimitive
 
 /** Converts an [ExprNode] to a [PartiqlAst.statement]. */
@@ -19,12 +20,12 @@ fun ExprNode.toAstStatement(): PartiqlAst.Statement {
     }
 }
 
-private fun PartiQlMetaContainer.toElectrolyteMetaContainer(): ElectrolyteMetaContainer =
+internal fun org.partiql.lang.ast.MetaContainer.toIonElementMetaContainer(): IonElementMetaContainer =
     com.amazon.ionelement.api.metaContainerOf(map { it.tag to it })
 
 private fun ExprNode.toAstDdl(): PartiqlAst.Statement {
     val thiz = this
-    val metas = metas.toElectrolyteMetaContainer()
+    val metas = metas.toIonElementMetaContainer()
 
     return PartiqlAst.build {
         when(thiz) {
@@ -50,7 +51,7 @@ private fun ExprNode.toAstDdl(): PartiqlAst.Statement {
 
 fun ExprNode.toAstExpr(): PartiqlAst.Expr {
     val node = this
-    val metas = this.metas.toElectrolyteMetaContainer()
+    val metas = this.metas.toIonElementMetaContainer()
 
     return PartiqlAst.build {
         when (node) {
@@ -73,7 +74,7 @@ fun ExprNode.toAstExpr(): PartiqlAst.Expr {
                     NAryOp.GTE -> gte(args, metas)
                     NAryOp.NE -> ne(args, metas)
                     NAryOp.LIKE -> like(args[0], args[1], if (args.size >= 3) args[2] else null, metas)
-                    NAryOp.BETWEEN -> between(args[0], args[1], args[2])
+                    NAryOp.BETWEEN -> between(args[0], args[1], args[2], metas)
                     NAryOp.NOT -> not(args[0], metas)
                     NAryOp.IN -> inCollection(args, metas)
                     NAryOp.AND -> and(args, metas)
@@ -214,7 +215,7 @@ private fun SelectProjection.toAstSelectProject(): PartiqlAst.Projection {
                     projectList(
                         thiz.items.map {
                             when(it) {
-                                is SelectListItemExpr -> projectExpr(it.expr.toAstExpr(), it.asName?.name)
+                                is SelectListItemExpr -> projectExpr_(it.expr.toAstExpr(), it.asName?.toPrimitive())
                                 is SelectListItemProjectAll -> projectAll(it.expr.toAstExpr())
                                 is SelectListItemStar -> error("this should happen due to `when` branch above.")
                             }
@@ -227,14 +228,14 @@ private fun SelectProjection.toAstSelectProject(): PartiqlAst.Projection {
 
 private fun FromSource.toAstFromSource(): PartiqlAst.FromSource {
     val thiz = this
-    val metas = thiz.metas().toElectrolyteMetaContainer()
+    val metas = thiz.metas().toIonElementMetaContainer()
     return PartiqlAst.build {
         when (thiz) {
-            is FromSourceExpr -> scan(
+            is FromSourceExpr -> scan_(
                 thiz.expr.toAstExpr(),
-                thiz.variables.asName?.name,
-                thiz.variables.atName?.name,
-                thiz.variables.byName?.name)
+                thiz.variables.asName?.toPrimitive(),
+                thiz.variables.atName?.toPrimitive(),
+                thiz.variables.byName?.toPrimitive())
             is FromSourceJoin -> {
                 val jt = when (thiz.joinOp) {
                     JoinOp.INNER -> inner()
@@ -249,11 +250,11 @@ private fun FromSource.toAstFromSource(): PartiqlAst.FromSource {
                     if (thiz.metas.hasMeta(IsImplictJoinMeta.TAG)) null else thiz.condition.toAstExpr(),
                     metas = metas)
             }
-            is FromSourceUnpivot -> unpivot(
+            is FromSourceUnpivot -> unpivot_(
                 thiz.expr.toAstExpr(),
-                thiz.variables.asName?.name,
-                thiz.variables.atName?.name,
-                thiz.variables.byName?.name)
+                thiz.variables.asName?.toPrimitive(),
+                thiz.variables.atName?.toPrimitive(),
+                thiz.variables.byName?.toPrimitive())
         }
     }
 }
@@ -263,8 +264,8 @@ private fun PathComponent.toAstPathStep(): PartiqlAst.PathStep {
     return PartiqlAst.build {
         when (thiz) {
             is PathComponentExpr -> pathExpr(thiz.expr.toAstExpr(), thiz.case.toAstCaseSensitivity())
-            is PathComponentUnpivot -> pathUnpivot(thiz.metas.toElectrolyteMetaContainer())
-            is PathComponentWildcard -> pathWildcard(thiz.metas.toElectrolyteMetaContainer())
+            is PathComponentUnpivot -> pathUnpivot(thiz.metas.toIonElementMetaContainer())
+            is PathComponentWildcard -> pathWildcard(thiz.metas.toIonElementMetaContainer())
         }
     }
 }
@@ -283,7 +284,7 @@ private fun DataManipulation.toAstDml(): PartiqlAst.Statement {
                     dmlOp.lvalue.toAstExpr(),
                     dmlOp.value.toAstExpr(),
                     dmlOp.position?.toAstExpr(),
-                    thiz.metas.toElectrolyteMetaContainer())
+                    thiz.metas.toIonElementMetaContainer())
             is AssignmentOp ->
                 set(
                     dmlOp.assignments.map {
@@ -299,7 +300,7 @@ private fun DataManipulation.toAstDml(): PartiqlAst.Statement {
             dmlOp2,
             thiz.from?.toAstFromSource(),
             thiz.where?.toAstExpr(),
-            thiz.metas.toElectrolyteMetaContainer())
+            thiz.metas.toIonElementMetaContainer())
     }
 }
 
@@ -335,3 +336,7 @@ private fun DataType.toAstType(): PartiqlAst.Type {
         }
     }
 }
+
+
+private fun SymbolicName.toPrimitive(): SymbolPrimitive =
+    SymbolPrimitive(this.name, this.metas.toIonElementMetaContainer())

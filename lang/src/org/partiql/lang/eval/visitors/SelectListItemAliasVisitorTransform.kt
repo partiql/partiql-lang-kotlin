@@ -1,12 +1,7 @@
 package org.partiql.lang.eval.visitors
 
-import com.amazon.ionelement.api.SymbolElement
-import org.partiql.lang.ast.SelectListItemExpr
-import org.partiql.lang.ast.SelectListItemProjectAll
-import org.partiql.lang.ast.SelectListItemStar
-import org.partiql.lang.ast.SelectProjection
-import org.partiql.lang.ast.SelectProjectionList
-import org.partiql.lang.ast.SymbolicName
+import org.partiql.lang.domains.extractSourceLocation
+
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.extractColumnAlias
 import org.partiql.pig.runtime.SymbolPrimitive
@@ -40,9 +35,6 @@ import org.partiql.pig.runtime.SymbolPrimitive
  * ```
  */
 class SelectListItemAliasVisitorTransform : PartiqlAst.VisitorTransform() {
-    override fun transformExprSelect_project(node: PartiqlAst.Expr.Select): PartiqlAst.Projection {
-        return super.transformExprSelect_project(node)
-    }
 
     override fun transformProjectionProjectList(node: PartiqlAst.Projection.ProjectList): PartiqlAst.Projection {
         return PartiqlAst.build {
@@ -52,7 +44,13 @@ class SelectListItemAliasVisitorTransform : PartiqlAst.VisitorTransform() {
                         is PartiqlAst.ProjectItem.ProjectExpr ->
                             when (it.asAlias) {
                                 //  Synthesize a column name if one was not specified in the query.
-                                null -> projectExpr(it.expr, it.expr.extractColumnAlias(idx))
+                                null -> projectExpr_(
+                                    expr = it.expr,
+                                    asAlias = SymbolPrimitive(
+                                        text = it.expr.extractColumnAlias(idx),
+                                        metas = node.extractSourceLocation()
+                                    )
+                                )
                                 else -> it
                             }
                         else -> it
