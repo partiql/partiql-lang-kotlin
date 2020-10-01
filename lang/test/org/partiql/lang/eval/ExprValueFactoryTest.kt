@@ -19,6 +19,7 @@ import org.junit.*
 import org.junit.runner.*
 import com.amazon.ion.*
 import com.amazon.ion.system.*
+import org.junit.Test
 import java.math.*
 import kotlin.test.*
 
