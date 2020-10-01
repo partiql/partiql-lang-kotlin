@@ -95,7 +95,6 @@ val sources = ArrayList<CompiledLetSource>() // [sources] is mutable!
 letSource.bindings.forEach {
     sources.add(CompiledLetSource(name = it.name.name, thunk = compileExprNode(it.expr)))
 }
-return sources
 ```    
 
 ## Good
