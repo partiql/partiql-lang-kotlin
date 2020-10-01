@@ -17,7 +17,7 @@ package org.partiql.lang.ast
 import com.amazon.ion.*
 import com.amazon.ion.system.*
 import junitparams.*
-import org.junit.*
+import org.junit.Test
 import org.junit.runner.*
 import kotlin.test.*
 
