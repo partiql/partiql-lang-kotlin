@@ -49,7 +49,6 @@ dependencies {
 
     // test-time dependencies
     testImplementation 'org.jetbrains.kotlin:kotlin-reflect'
-//    testImplementation 'org.jetbrains.kotlin:kotlin-test'
     testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
     testImplementation 'pl.pragmatists:JUnitParams:[1.0.0,1.1.0)'
     testImplementation 'org.assertj:assertj-core:[3.11.0,3.12.0)'
