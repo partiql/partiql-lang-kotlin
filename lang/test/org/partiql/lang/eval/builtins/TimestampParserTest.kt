@@ -20,6 +20,7 @@ import org.partiql.lang.eval.*
 import junitparams.*
 import junitparams.naming.*
 import org.junit.*
+import org.junit.Test
 import org.junit.runner.*
 import java.lang.reflect.*
 import java.time.format.*

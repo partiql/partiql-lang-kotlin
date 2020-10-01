@@ -18,6 +18,7 @@ import com.amazon.ion.*
 import com.amazon.ion.system.*
 import org.partiql.lang.ast.*
 import org.junit.*
+import org.junit.Test
 import kotlin.test.*
 
 class SubstitutionRewriterTest {

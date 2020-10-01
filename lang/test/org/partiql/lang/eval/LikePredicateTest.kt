@@ -19,6 +19,7 @@ import org.partiql.lang.errors.*
 import org.partiql.lang.util.*
 import org.assertj.core.api.*
 import org.junit.*
+import org.junit.Test
 import kotlin.test.*
 
 class LikePredicateTest : EvaluatorTestBase() {
@@ -627,7 +628,4 @@ class LikePredicateTest : EvaluatorTestBase() {
                                                    NodeMetadata(1, 56)) {
         voidEval("SELECT * FROM `[{name:1, type:\"a\"}]` as a WHERE a.name LIKE a.type ")
     }
-
-
-
 }
