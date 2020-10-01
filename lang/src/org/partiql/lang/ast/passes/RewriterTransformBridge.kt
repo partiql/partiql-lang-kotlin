@@ -11,7 +11,7 @@ import org.partiql.lang.domains.PartiqlAst
  * runs the specified [PartiqlAst.VisitorTransform] on it, converts the result back to [ExprNode].
  *
  * This is only to be used on the `visitor-transforms` feature branch and will be removed once all of the
- * functions of the [AstRewriterBase] implementations have been migrated to [PartiqlAst.VisitorTransform].
+ * [AstRewriterBase] implementations have been migrated to [PartiqlAst.VisitorTransform].
  */
 internal class RewriterTransformBridge(
     private val transform: PartiqlAst.VisitorTransform,
