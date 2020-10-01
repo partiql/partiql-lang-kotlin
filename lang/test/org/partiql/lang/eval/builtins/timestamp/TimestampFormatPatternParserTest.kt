@@ -17,6 +17,7 @@ package org.partiql.lang.eval.builtins.timestamp
 import org.partiql.lang.util.*
 import junitparams.*
 import org.junit.*
+import org.junit.Test
 import org.junit.runner.*
 import kotlin.test.*
 
