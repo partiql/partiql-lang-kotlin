@@ -99,7 +99,6 @@ letSource.bindings.forEach {
 
 ## Good
 
-
 ```Kotlin
 val sources = letSource.bindings.map {
     CompiledLetSource(name = it.name.name, thunk = compileExprNode(it.expr)))
