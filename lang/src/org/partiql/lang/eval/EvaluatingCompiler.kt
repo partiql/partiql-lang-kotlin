@@ -909,21 +909,15 @@ internal class EvaluatingCompiler(
             }
         }
         val pigGeneratedAst = selectExpr.toAstExpr() as PartiqlAst.Expr.Select
-        val allFromSourceAliases = fold.walkFromSource(pigGeneratedAst.from, emptySet()).toMutableSet()
-        if (pigGeneratedAst.fromLet != null) {
-            val letBindingNames = fold.walkLet(pigGeneratedAst.fromLet, emptySet())
-            allFromSourceAliases += letBindingNames
-        }
+        val allFromSourceAliases = fold.walkFromSource(pigGeneratedAst.from, emptySet())
+            .union(pigGeneratedAst.fromLet?.let { fold.walkLet(pigGeneratedAst.fromLet, emptySet()) } ?: emptySet())
 
         return nestCompilationContext(ExpressionContext.NORMAL, emptySet()) {
             val (setQuantifier, projection, from, fromLet, _, groupBy, having, _, metas: MetaContainer) = selectExpr
 
             val fromSourceThunks = compileFromSources(from)
 
-            val letSourceThunks = when(fromLet) {
-                null -> null
-                else -> compileLetSources(fromLet)
-            }
+            val letSourceThunks = fromLet?.let { compileLetSources(it) }
 
             val sourceThunks = compileQueryWithoutProjection(selectExpr, fromSourceThunks, letSourceThunks)
 
@@ -1374,14 +1368,10 @@ internal class EvaluatingCompiler(
         return sources
     }
 
-    private fun compileLetSources(letSource: LetSource): List<CompiledLetSource> {
-        val sources = ArrayList<CompiledLetSource>()
-        letSource.bindings.forEach {
-            val thunk = compileExprNode(it.expr)
-            sources.add(CompiledLetSource(name = it.name.name, thunk = thunk))
+    private fun compileLetSources(letSource: LetSource): List<CompiledLetSource> =
+        letSource.bindings.map {
+            CompiledLetSource(name = it.name.name, thunk = compileExprNode(it.expr))
         }
-        return sources
-    }
 
     /**
      * Compiles the clauses of the SELECT or PIVOT into a thunk that does not generate

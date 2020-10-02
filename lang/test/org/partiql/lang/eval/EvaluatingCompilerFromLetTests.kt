@@ -1,8 +1,11 @@
 package org.partiql.lang.eval
 
 import org.junit.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
+import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.to
 
 class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
@@ -13,206 +16,134 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
                     { name: 'foobar', region: 'EU' },
                     { name: 'foobarbaz', region: 'NA' } ]""").toSession()
 
-    // Valid test cases
-    @Test
-    fun `LET clause binding in WHERE` () {
-        runTestCase(
+    class ArgsProviderValid : ArgumentsProviderBase() {
+        override fun getParameters(): List<Any> = listOf(
+            // LET used in WHERE
             EvaluatorTestCase(
-                query = "SELECT * FROM A LET 1 AS X WHERE X = 1",
-                expectedSql = """<< {'id': 1} >>"""),
-                session = session)
+                "SELECT * FROM A LET 1 AS X WHERE X = 1",
+                """<< {'id': 1} >>"""),
+            // LET used in SELECT
+            EvaluatorTestCase(
+                "SELECT X FROM A LET 1 AS X",
+                """<< {'X': 1} >>"""),
+            // LET used in GROUP BY
+            EvaluatorTestCase(
+                "SELECT * FROM C LET region AS X GROUP BY X",
+                """<< {'X': `EU`}, {'X': `NA`} >>"""),
+            // LET used in projection after GROUP BY
+            EvaluatorTestCase(
+                "SELECT foo FROM B LET 100 AS foo GROUP BY B.id, foo",
+                """<< {'foo': 100}, {'foo': 100} >>"""),
+            // LET used in HAVING after GROUP BY
+            EvaluatorTestCase(
+                "SELECT B.id FROM B LET 100 AS foo GROUP BY B.id, foo HAVING B.id > foo",
+                """<< {'id': 200} >>"""),
+            // LET shadowed binding
+            EvaluatorTestCase(
+                "SELECT X FROM A LET 1 AS X, 2 AS X",
+                """<< {'X': 2} >>"""),
+            // LET shadowing FROM binding
+            EvaluatorTestCase(
+                "SELECT * FROM A LET 100 AS A",
+                """<< {'_1': 100} >>"""),
+            // LET using other variables
+            EvaluatorTestCase(
+                "SELECT X, Y FROM A LET 1 AS X, X + 1 AS Y",
+                """<< {'X': 1, 'Y': 2} >>"""),
+            // LET recursive binding
+            EvaluatorTestCase(
+                "SELECT X FROM A LET 1 AS X, X AS X",
+                """<< {'X': 1} >>"""),
+            // LET calling function
+            EvaluatorTestCase(
+                "SELECT X FROM A LET upper('foo') AS X",
+                """<< {'X': 'FOO'} >>"""),
+            // LET calling function on each row
+            EvaluatorTestCase(
+                "SELECT nameLength FROM C LET char_length(C.name) AS nameLength",
+                """<< {'nameLength': 3}, {'nameLength': 6}, {'nameLength': 9} >>"""),
+            // LET calling function with GROUP BY and aggregation
+            EvaluatorTestCase(
+                "SELECT C.region, MAX(nameLength) AS maxLen FROM C LET char_length(C.name) AS nameLength GROUP BY C.region",
+                """<< {'region': `EU`, 'maxLen': 6}, {'region': `NA`, 'maxLen': 9} >>"""),
+            // LET outer query has correct value
+            EvaluatorTestCase(
+                "SELECT X FROM (SELECT VALUE X FROM A LET 1 AS X) LET 2 AS X",
+                """<< {'X': 2} >>""")
+        )
     }
 
-    @Test
-    fun `LET clause binding in SELECT` () {
-        runTestCase(
-            EvaluatorTestCase(
-                query = "SELECT X FROM A LET 1 AS X",
-                expectedSql = """<< {'X': 1} >>"""),
-                session = session)
-    }
+    @ParameterizedTest
+    @ArgumentsSource(ArgsProviderValid::class)
+    fun validTests(tc: EvaluatorTestCase) = runTestCase(tc, session)
 
-    @Test
-    fun `LET clause binding in GROUP BY` () {
-        runTestCase(
-            EvaluatorTestCase(
-                query = "SELECT * FROM C LET region AS X GROUP BY X",
-                expectedSql = """<< {'X': `EU`}, {'X': `NA`} >>"""),
-                session = session)
-    }
-
-    @Test
-    fun `LET clause binding in projection after GROUP BY` () {
-        runTestCase(
-            EvaluatorTestCase(
-                query = "SELECT foo FROM B LET 100 AS foo GROUP BY B.id, foo",
-                expectedSql = """<< {'foo': 100}, {'foo': 100} >>"""),
-                session = session)
-    }
-
-    @Test
-    fun `LET clause binding in HAVING after GROUP BY` () {
-        runTestCase(
-            EvaluatorTestCase(
-                query = "SELECT B.id FROM B LET 100 AS foo GROUP BY B.id, foo HAVING B.id > foo",
-                expectedSql = """<< {'id': 200} >>"""),
-                session = session)
-    }
-
-    @Test
-    fun `LET clause shadowed bindings` () {
-        runTestCase(
-            EvaluatorTestCase(
-                query = "SELECT X FROM A LET 1 AS X, 2 AS X",
-                expectedSql = """<< {'X': 2} >>"""),
-                session = session)
-    }
-
-    @Test
-    fun `LET clause binding shadowing FROM binding` () {
-        runTestCase(
-            EvaluatorTestCase(
-                query = "SELECT * FROM A LET 100 AS A",
-                expectedSql = """<< {'_1': 100} >>"""),
-                session = session)
-    }
-
-    @Test
-    fun `LET clause using other variables` () {
-        runTestCase(
-            EvaluatorTestCase(
-                query = "SELECT X, Y FROM A LET 1 AS X, X + 1 AS Y",
-                expectedSql = """<< {'X': 1, 'Y': 2} >>"""),
-                session = session)
-    }
-
-    @Test
-    fun `LET clause recursive binding` () {
-        runTestCase(
-            EvaluatorTestCase(
-                query = "SELECT X FROM A LET 1 AS X, X AS X",
-                expectedSql = """<< {'X': 1} >>"""),
-                session = session)
-    }
-
-    @Test
-    fun `LET clause calling function` () {
-        runTestCase(
-            EvaluatorTestCase(
-                query = "SELECT X FROM A LET upper('foo') AS X",
-                expectedSql = """<< {'X': 'FOO'} >>"""),
-                session = session)
-    }
-
-    @Test
-    fun `LET clause calling function on each row` () {
-        runTestCase(
-            EvaluatorTestCase(
-                query = "SELECT nameLength FROM C LET char_length(C.name) AS nameLength",
-                expectedSql = """<< {'nameLength': 3}, {'nameLength': 6}, {'nameLength': 9} >>"""),
-                session = session)
-    }
-
-    @Test
-    fun `LET clause calling function with GROUP BY and aggregation` () {
-        runTestCase(
-            EvaluatorTestCase(
-                query = "SELECT C.region, MAX(nameLength) AS maxLen FROM C LET char_length(C.name) AS nameLength GROUP BY C.region",
-                expectedSql = """<< {'region': `EU`, 'maxLen': 6}, {'region': `NA`, 'maxLen': 9} >>"""),
-                session = session)
-    }
-
-    @Test
-    fun `LET clause outer query has correct value` () {
-        runTestCase(
-            EvaluatorTestCase(
-                query = "SELECT X FROM (SELECT VALUE X FROM A LET 1 AS X) LET 2 AS X",
-                expectedSql = """<< {'X': 2} >>"""),
-                session = session)
-    }
-
-    // Error test cases
-    @Test
-    fun `LET clause unbound variable` () {
-        checkInputThrowingEvaluationException(
-            "SELECT X FROM A LET Y AS X",
-            session,
-            ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
-            mapOf(
-                    Property.LINE_NUMBER to 1L,
-                    Property.COLUMN_NUMBER to 21L,
-                    Property.BINDING_NAME to "Y"
+    class ArgsProviderError : ArgumentsProviderBase() {
+        override fun getParameters(): List<Any> = listOf(
+            // LET unbound variable
+            EvaluatorErrorTestCase(
+                "SELECT X FROM A LET Y AS X",
+                ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
+                mapOf(
+                        Property.LINE_NUMBER to 1L,
+                        Property.COLUMN_NUMBER to 21L,
+                        Property.BINDING_NAME to "Y"
+                )
+            ),
+            // LET binding definition dependent on later binding
+            EvaluatorErrorTestCase(
+                "SELECT X FROM A LET 1 AS X, Y AS Z, 3 AS Y",
+                ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
+                mapOf(
+                        Property.LINE_NUMBER to 1L,
+                        Property.COLUMN_NUMBER to 29L,
+                        Property.BINDING_NAME to "Y"
+                )
+            ),
+            // LET inner query binding not available in outer query
+            EvaluatorErrorTestCase(
+                "SELECT X FROM A LET Y AS X",
+                "SELECT X FROM (SELECT VALUE X FROM A LET 1 AS X)",
+                ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
+                mapOf(
+                        Property.LINE_NUMBER to 1L,
+                        Property.COLUMN_NUMBER to 8L,
+                        Property.BINDING_NAME to "X"
+                )
+            ),
+            // LET binding in subquery not in outer LET query
+            EvaluatorErrorTestCase(
+                "SELECT Z FROM A LET (SELECT 1 FROM A LET 1 AS X) AS Y, X AS Z",
+                ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
+                mapOf(
+                        Property.LINE_NUMBER to 1L,
+                        Property.COLUMN_NUMBER to 56L,
+                        Property.BINDING_NAME to "X"
+                )
+            ),
+            // LET binding referenced in HAVING not in GROUP BY
+            EvaluatorErrorTestCase(
+                "SELECT B.id FROM B LET 100 AS foo GROUP BY B.id HAVING B.id > foo",
+                ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
+                mapOf(
+                        Property.LINE_NUMBER to 1L,
+                        Property.COLUMN_NUMBER to 63L,
+                        Property.BINDING_NAME to "foo"
+                )
+            ),
+            // LET binding referenced in projection not in GROUP BY
+            EvaluatorErrorTestCase(
+                "SELECT foo FROM B LET 100 AS foo GROUP BY B.id",
+                ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
+                mapOf(
+                        Property.LINE_NUMBER to 1L,
+                        Property.COLUMN_NUMBER to 8L,
+                        Property.BINDING_NAME to "foo"
+                )
             )
         )
     }
 
-    @Test
-    fun `LET clause binding definition dependent on later binding` () {
-        checkInputThrowingEvaluationException(
-            "SELECT X FROM A LET 1 AS X, Y AS Z, 3 AS Y",
-            session,
-            ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
-            mapOf(
-                    Property.LINE_NUMBER to 1L,
-                    Property.COLUMN_NUMBER to 29L,
-                    Property.BINDING_NAME to "Y"
-            )
-        )
-    }
-
-    @Test
-    fun `LET clause inner query binding not available in outer query` () {
-        checkInputThrowingEvaluationException(
-            "SELECT X FROM (SELECT VALUE X FROM A LET 1 AS X)",
-            session,
-            ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
-            mapOf(
-                    Property.LINE_NUMBER to 1L,
-                    Property.COLUMN_NUMBER to 8L,
-                    Property.BINDING_NAME to "X"
-            )
-        )
-    }
-
-    @Test
-    fun `LET clause binding in subquery not in outer LET query` () {
-        checkInputThrowingEvaluationException(
-            "SELECT Z FROM A LET (SELECT 1 FROM A LET 1 AS X) AS Y, X AS Z",
-            session,
-            ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
-            mapOf(
-                    Property.LINE_NUMBER to 1L,
-                    Property.COLUMN_NUMBER to 56L,
-                    Property.BINDING_NAME to "X"
-            )
-        )
-    }
-
-    @Test
-    fun `LET clause binding referenced in HAVING not in GROUP BY`() {
-        checkInputThrowingEvaluationException(
-            "SELECT B.id FROM B LET 100 AS foo GROUP BY B.id HAVING B.id > foo",
-            session,
-            ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
-            mapOf(
-                    Property.LINE_NUMBER to 1L,
-                    Property.COLUMN_NUMBER to 63L,
-                    Property.BINDING_NAME to "foo"
-            )
-        )
-    }
-
-    @Test
-    fun `LET clause binding referenced in projection not in GROUP BY`() {
-        checkInputThrowingEvaluationException(
-            "SELECT foo FROM B LET 100 AS foo GROUP BY B.id",
-            session,
-            ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
-            mapOf(
-                    Property.LINE_NUMBER to 1L,
-                    Property.COLUMN_NUMBER to 8L,
-                    Property.BINDING_NAME to "foo"
-            )
-        )
-    }
+    @ParameterizedTest
+    @ArgumentsSource(ArgsProviderError::class)
+    fun errorTests(tc: EvaluatorErrorTestCase) = checkInputThrowingEvaluationException(tc, session)
 }
