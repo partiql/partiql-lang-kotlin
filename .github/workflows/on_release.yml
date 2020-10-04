@@ -8,10 +8,9 @@
 # https://partiql.github.io/partiql-lang-kotlin/tutorial.pdf
 name: Release Documentation
 
-on: 
-  push:
-    tags:
-      - '*'
+on:
+  release:
+    types: [published,prereleased]
 
 jobs: 
   build_via_pandoc:
