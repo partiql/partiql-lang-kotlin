@@ -889,9 +889,7 @@ internal class EvaluatingCompiler(
         }
     }
 
-    private fun compileLimit(limitClause: ExprNode, env: Environment) : Long {
-        val limitThunk = compileExprNode(limitClause)
-        val limitLocationMeta = limitClause.metas.sourceLocationMeta
+    private fun evalLimit(limitThunk: ThunkEnv, env: Environment, limitLocationMeta: SourceLocationMeta?): Long {
         val limitExprValue = limitThunk(env)
 
         if(limitExprValue.type != ExprValueType.INT) {
@@ -954,6 +952,8 @@ internal class EvaluatingCompiler(
 
             val fromSourceThunks = compileFromSources(from)
             val sourceThunks = compileQueryWithoutProjection(selectExpr, fromSourceThunks)
+            val limitThunk = limit?.let { compileExprNode(limit) }
+            val limitLocationMeta = limit?.metas?.sourceLocationMeta
 
             // Returns a thunk that invokes [sourceThunks], and invokes [projectionThunk] to perform the projection.
             fun getQueryThunk(selectProjectionThunk: ThunkEnvValue<List<ExprValue>>): ThunkEnv {
@@ -971,14 +971,15 @@ internal class EvaluatingCompiler(
                                 selectProjectionThunk(projectEnv, joinedValues)
                             }
 
-                            var quantifiedRows = when(setQuantifier) {
+                            val quantifiedRows = when(setQuantifier) {
                                 // wrap the ExprValue to use ExprValue.equals as the equality
                                 SetQuantifier.DISTINCT -> projectedRows.filter(createUniqueExprValueFilter())
                                 SetQuantifier.ALL -> projectedRows
-                            }
-
-                            if (limit != null) {
-                                quantifiedRows = quantifiedRows.take(compileLimit(limit, env))
+                            }.let { rows ->
+                                when (limitThunk) {
+                                    null -> rows
+                                    else -> rows.take(evalLimit(limitThunk, env, limitLocationMeta))
+                                }
                             }
 
                             valueFactory.newBag(quantifiedRows.map {
@@ -1021,16 +1022,18 @@ internal class EvaluatingCompiler(
                                 // Create a closure that groups all the rows in the FROM source into a single group.
                                 thunkFactory.thunkEnv(metas) { env ->
                                     // Evaluate the FROM clause
-                                    var fromProductions: Sequence<FromProduction> = sourceThunks(env)
+                                    val fromProductions: Sequence<FromProduction> = sourceThunks(env).let { rows ->
+                                        when (limitThunk) {
+                                            null -> rows
+                                            else -> rows.take(evalLimit(limitThunk, env, limitLocationMeta))
+                                        }
+                                    }
                                     val registers = createRegisterBank()
 
                                     // note: the group key can be anything here because we only ever have a single
                                     // group when aggregates are used without GROUP BY expression
                                     val syntheticGroup = Group(valueFactory.nullValue, registers)
 
-                                    if (limit != null) {
-                                        fromProductions = fromProductions.take(compileLimit(limit, env))
-                                    }
                                     // iterate over the values from the FROM clause and populate our
                                     // aggregate register values.
                                     fromProductions.forEach { fromProduction ->
@@ -1104,13 +1107,14 @@ internal class EvaluatingCompiler(
                                     }
 
                                     // generate the final group by projection
-                                    var projectedRows = env.groups.mapNotNull { g ->
+                                    val projectedRows = env.groups.mapNotNull { g ->
                                         val groupByEnv = getGroupEnv(env, g.value)
                                         filterHavingAndProject(groupByEnv, g.value)
-                                    }.asSequence()
-
-                                    if (limit != null) {
-                                        projectedRows = projectedRows.take(compileLimit(limit, env))
+                                    }.asSequence().let { rows ->
+                                        when (limitThunk) {
+                                            null -> rows
+                                            else -> rows.take(evalLimit(limitThunk, env, limitLocationMeta))
+                                        }
                                     }
 
                                     valueFactory.newBag(projectedRows)
@@ -1139,10 +1143,11 @@ internal class EvaluatingCompiler(
                         val asThunk = compileExprNode(asExpr)
                         val atThunk = compileExprNode(atExpr)
                         thunkFactory.thunkEnv(metas) { env ->
-                            var sourceValue = sourceThunks(env).asSequence()
-
-                            if (limit != null) {
-                                sourceValue = sourceValue.take(compileLimit(limit, env))
+                            val sourceValue = sourceThunks(env).asSequence().let { rows ->
+                                when (limitThunk) {
+                                    null -> rows
+                                    else -> rows.take(evalLimit(limitThunk, env, limitLocationMeta))
+                                }
                             }
 
                             val seq = sourceValue
