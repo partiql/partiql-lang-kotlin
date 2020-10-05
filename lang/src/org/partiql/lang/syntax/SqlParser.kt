@@ -737,7 +737,6 @@ class SqlParser(private val ion: IonSystem) : Parser {
     }
 
     private fun ParseNode.toLetBinding(): LetBinding {
-        val metas = token.toSourceLocationMetaContainer()
         val (asAliasSymbol, parseNode) = unwrapAsAlias()
         if (asAliasSymbol == null) {
             this.errMalformedParseTree("Unsupported syntax for ${this.type}")
