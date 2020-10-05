@@ -16,9 +16,10 @@ package org.partiql.lang.ast.passes
 
 import org.partiql.lang.ast.*
 import org.partiql.lang.eval.*
+import org.partiql.lang.eval.visitors.FromSourceAliasVisitorTransform
 
 /**
- * This rewrite must execute after [GroupByItemAliasRewriter] and [FromSourceAliasRewriter].
+ * This rewrite must execute after [GroupByItemAliasRewriter] and [FromSourceAliasVisitorTransform].
  */
 class GroupByPathExpressionRewriter(
     parentSubstitutions: Map<ExprNode, SubstitutionPair> = mapOf())
@@ -54,7 +55,7 @@ class GroupByPathExpressionRewriter(
 
         /**
          * Collects all of the aliases defined by the specified [FromSource] and its children.
-         * This is why this rewrite must occur after [FromSourceAliasRewriter].
+         * This is why this rewrite must occur after [FromSourceAliasVisitorTransform].
          */
         fun collectAliases(fromSource: FromSource): List<String> =
             when (fromSource) {
