@@ -1009,7 +1009,6 @@ class SqlParser(private val ion: IonSystem) : Parser {
             "substring" -> tail.parseSubstring(head!!)
             "trim" -> tail.parseTrim(head!!)
             "extract" -> tail.parseExtract(head!!)
-            "let" -> tail.parseLet()
             in FUNCTION_NAME_KEYWORDS -> when (tail.head?.type) {
                 LEFT_PAREN ->
                     tail.tail.parseFunctionCall(head!!)
