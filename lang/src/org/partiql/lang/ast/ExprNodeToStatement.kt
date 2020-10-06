@@ -20,7 +20,7 @@ fun ExprNode.toAstStatement(): PartiqlAst.Statement {
     }
 }
 
-internal fun org.partiql.lang.ast.MetaContainer.toIonElementMetaContainer(): IonElementMetaContainer =
+internal fun PartiQlMetaContainer.toIonElementMetaContainer(): IonElementMetaContainer =
     com.amazon.ionelement.api.metaContainerOf(map { it.tag to it })
 
 private fun ExprNode.toAstDdl(): PartiqlAst.Statement {

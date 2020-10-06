@@ -19,6 +19,7 @@ import org.partiql.lang.ast.toAstStatement
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.syntax.SqlParserTestBase
 
+/** Provides some basic functionality for parameterized testing implementation of [PartiqlAst.VisitorTransform]. */
 abstract class VisitorTransformTestBase : SqlParserTestBase() {
 
     data class TransformTestCase(val originalSql: String, val expectedSql: String)

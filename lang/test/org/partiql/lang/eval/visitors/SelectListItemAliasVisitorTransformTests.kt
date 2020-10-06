@@ -94,6 +94,22 @@ class SelectListItemAliasVisitorTransformTests : VisitorTransformTestBase() {
                 FROM foo
                 """
             ),
+            TransformTestCase(
+                """
+                SELECT 
+                    x.m.a,
+                    x.n.B,
+                    x.o.c
+                FROM foo
+                """,
+                """
+                SELECT 
+                    x.m.a AS a,
+                    x.n.B AS B,
+                    x.o.c AS c 
+                FROM foo
+                """
+            ),
             // Other expressions resulting in synthetic names.
             TransformTestCase(
                 """
@@ -152,6 +168,20 @@ class SelectListItemAliasVisitorTransformTests : VisitorTransformTestBase() {
                 SELECT 
                     x + 100 AS _1,
                     y + 101 AS _2
+                FROM foo
+                """
+            ),
+            TransformTestCase(
+                """
+                SELECT 
+                    (SELECT n FROM p),
+                    (SELECT q FROM r) AS o
+                FROM foo
+                """,
+                """
+                SELECT 
+                    (SELECT n FROM p) _1,
+                    (SELECT q FROM r) AS o
                 FROM foo
                 """
             )
