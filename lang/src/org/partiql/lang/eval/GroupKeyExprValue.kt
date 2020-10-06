@@ -15,13 +15,14 @@
 package org.partiql.lang.eval
 
 import com.amazon.ion.*
+import org.partiql.lang.eval.visitors.GroupByItemAliasVisitorTransform
 
 
 /**
  * This is a special [ExprValue] just for group keys.
  *
  * It derives from [StructExprValue] and adds a second set of bindings for the "unique name" assigned to
- * group by expressions.  See [org.partiql.lang.ast.passes.GroupByItemAliasRewriter] and other uses of
+ * group by expressions.  See [GroupByItemAliasVisitorTransform] and other uses of
  * [org.partiql.lang.ast.UniqueNameMeta].
  */
 internal class GroupKeyExprValue(ion: IonSystem, sequence: Sequence<ExprValue>, private val uniqueNames: Map<String, ExprValue>)

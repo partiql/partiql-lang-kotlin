@@ -21,7 +21,7 @@ import org.partiql.lang.eval.visitors.GroupByItemAliasVisitorTransform
 class GroupByPathExpressionRewriterTest  : RewriterTestBase() {
 
 
-    // We need [GroupByItemAliasRewriter] below because it adds metas which are essential to the operation of
+    // We need [GroupByItemAliasVisitorTransform] below because it adds metas which are essential to the operation of
     // [GroupByPathExpressionRewriter].
     @Test
     @Parameters

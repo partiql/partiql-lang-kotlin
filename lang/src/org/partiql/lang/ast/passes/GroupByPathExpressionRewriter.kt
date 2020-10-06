@@ -16,9 +16,10 @@ package org.partiql.lang.ast.passes
 
 import org.partiql.lang.ast.*
 import org.partiql.lang.eval.*
+import org.partiql.lang.eval.visitors.GroupByItemAliasVisitorTransform
 
 /**
- * This rewrite must execute after [GroupByItemAliasRewriter] and [FromSourceAliasRewriter].
+ * This rewrite must execute after [GroupByItemAliasVisitorTransform] and [FromSourceAliasRewriter].
  */
 class GroupByPathExpressionRewriter(
     parentSubstitutions: Map<ExprNode, SubstitutionPair> = mapOf())
@@ -34,7 +35,7 @@ class GroupByPathExpressionRewriter(
         fun canBeSubstituted(gbi: GroupByItem): Boolean {
             val (expr, asName) = gbi
 
-            //(This is the reason this rewrite needs to execute after [GroupByItemAliasRewriter].)
+            //(This is the reason this rewrite needs to execute after [GroupByItemAliasVisitorTransform].)
             return when {
                 asName == null                                 -> throw IllegalStateException("GroupByItem.asName must be specified for this rewrite to work")
                 !asName.metas.hasMeta(IsSyntheticNameMeta.TAG) ->
