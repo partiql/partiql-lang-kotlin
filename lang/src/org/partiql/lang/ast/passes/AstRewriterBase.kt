@@ -140,15 +140,17 @@ open class AstRewriterBase : AstRewriter {
      * The traversal order is in the SQL semantic order--that is:
      *
      * 1. `FROM`
-     * 2. `WHERE`
-     * 3. `GROUP BY`
-     * 4. `HAVING`
-     * 5. *projection*
-     * 6. `ORDER BY` (to be implemented)
-     * 7. `LIMIT`
+     * 2. `LET`
+     * 3. `WHERE`
+     * 4. `GROUP BY`
+     * 5. `HAVING`
+     * 6. *projection*
+     * 7. `ORDER BY` (to be implemented)
+     * 8. `LIMIT`
      */
     protected open fun innerRewriteSelect(selectExpr: Select): Select {
         val from = rewriteFromSource(selectExpr.from)
+        val fromLet = selectExpr.fromLet?.let { rewriteLetSource(it) }
         val where = selectExpr.where?.let { rewriteSelectWhere(it) }
         val groupBy = selectExpr.groupBy?.let { rewriteGroupBy(it) }
         val having = selectExpr.having?.let { rewriteSelectHaving(it) }
@@ -160,6 +162,7 @@ open class AstRewriterBase : AstRewriter {
             setQuantifier = selectExpr.setQuantifier,
             projection = projection,
             from = from,
+            fromLet = fromLet,
             where = where,
             groupBy = groupBy,
             having = having,
@@ -247,6 +250,12 @@ open class AstRewriterBase : AstRewriter {
             variables.asName?.let { rewriteSymbolicName(it) },
             variables.atName?.let { rewriteSymbolicName(it) },
             variables.byName?.let { rewriteSymbolicName(it) })
+
+    open fun rewriteLetSource(letSource: LetSource) =
+        LetSource(letSource.bindings.map { rewriteLetBinding(it) })
+
+    open fun rewriteLetBinding(letBinding: LetBinding): LetBinding =
+        LetBinding(rewriteExprNode(letBinding.expr), rewriteSymbolicName(letBinding.name))
 
     /**
      * This is called by the methods responsible for rewriting instances of the [FromSourceLet]

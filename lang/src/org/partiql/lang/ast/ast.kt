@@ -333,13 +333,14 @@ data class Select(
     val setQuantifier: SetQuantifier = SetQuantifier.ALL,
     val projection: SelectProjection,
     val from: FromSource,
+    val fromLet: LetSource? = null,
     val where: ExprNode? = null,
     val groupBy: GroupBy? = null,
     val having: ExprNode? = null,
     val limit: ExprNode? = null,
     override val metas: MetaContainer
 ) : ExprNode() {
-    override val children: List<AstNode> = listOfNotNull(projection, from, where, groupBy, having, limit)
+    override val children: List<AstNode> = listOfNotNull(projection, from, fromLet, where, groupBy, having, limit)
 }
 
 //********************************
@@ -630,6 +631,25 @@ data class FromSourceUnpivot(
     override val variables: LetVariables,
     override val metas: MetaContainer
 ) : FromSourceLet(), HasMetas {
+    override val children: List<AstNode> = listOf(expr)
+}
+
+//********************************
+// LET clause
+//********************************
+
+/** Represents a list of LetBindings */
+data class LetSource(
+    val bindings: List<LetBinding>
+) : AstNode() {
+    override val children: List<AstNode> = bindings
+}
+
+/** Represents `<expr> AS <name>` */
+data class LetBinding(
+    val expr: ExprNode,
+    val name: SymbolicName
+) : AstNode() {
     override val children: List<AstNode> = listOf(expr)
 }
 

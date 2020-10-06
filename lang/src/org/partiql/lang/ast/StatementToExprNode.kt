@@ -10,6 +10,7 @@ import org.partiql.lang.domains.PartiqlAst.FromSource
 import org.partiql.lang.domains.PartiqlAst.GroupBy
 import org.partiql.lang.domains.PartiqlAst.GroupingStrategy
 import org.partiql.lang.domains.PartiqlAst.JoinType
+import org.partiql.lang.domains.PartiqlAst.Let
 import org.partiql.lang.domains.PartiqlAst.PathStep
 import org.partiql.lang.domains.PartiqlAst.ProjectItem
 import org.partiql.lang.domains.PartiqlAst.Projection
@@ -167,6 +168,7 @@ private class StatementTransformer(val ion: IonSystem) {
                     setQuantifier = setq?.toSetQuantifier() ?: org.partiql.lang.ast.SetQuantifier.ALL,
                     projection = project.toSelectProjection(),
                     from = from.toFromSource(),
+                    fromLet = fromLet?.toLetSource(),
                     where = where?.toExprNode(),
                     groupBy = group?.toGroupBy(),
                     having = having?.toExprNode(),
@@ -232,7 +234,18 @@ private class StatementTransformer(val ion: IonSystem) {
             is JoinType.Full -> JoinOp.OUTER
         }
 
-    private fun SymbolPrimitive?.toSymbolicName() = this?.let { SymbolicName(it.text, it.metas.toPartiQlMetaContainer()) }
+    private fun Let.toLetSource(): LetSource {
+        return LetSource(
+            this.letBindings.map {
+                LetBinding(
+                    it.expr.toExprNode(),
+                    it.name.toSymbolicName()
+                )
+            }
+        )
+    }
+
+    private fun SymbolPrimitive.toSymbolicName() = SymbolicName(this.text, this.metas.toPartiQlMetaContainer())
 
     private fun GroupBy.toGroupBy(): org.partiql.lang.ast.GroupBy =
         GroupBy(

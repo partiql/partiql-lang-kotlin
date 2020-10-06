@@ -62,6 +62,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
         PROJECT_ALL,           // Wildcard, i.e. the * in `SELECT * FROM f` and a.b.c.* in `SELECT a.b.c.* FROM f`
         PATH_WILDCARD,
         PATH_UNPIVOT,
+        LET,
         SELECT_LIST,
         SELECT_VALUE,
         DISTINCT,
@@ -553,6 +554,11 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
                 val fromSource = fromList.children[0].toFromSource()
 
+                val fromLet = unconsumedChildren.firstOrNull { it.type == LET }?.let {
+                    unconsumedChildren.remove(it)
+                    it.toLetSource()
+                }
+
                 val whereExpr = unconsumedChildren.firstOrNull { it.type == WHERE }?.let {
                     unconsumedChildren.remove(it)
                     it.children[0].toExprNode()
@@ -600,6 +606,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     setQuantifier = setQuantifier,
                     projection = projection,
                     from = fromSource,
+                    fromLet = fromLet,
                     where = whereExpr,
                     groupBy = groupBy,
                     having = havingExpr,
@@ -722,6 +729,21 @@ class SqlParser(private val ion: IonSystem) : Parser {
             )
         }
         return head.unwrapAliasesAndUnpivot()
+    }
+
+    private fun ParseNode.toLetSource(): LetSource {
+        val letBindings = this.children.map { it.toLetBinding() }
+        return LetSource(letBindings)
+    }
+
+    private fun ParseNode.toLetBinding(): LetBinding {
+        val (asAliasSymbol, parseNode) = unwrapAsAlias()
+        if (asAliasSymbol == null) {
+            this.errMalformedParseTree("Unsupported syntax for ${this.type}")
+        }
+        else {
+            return LetBinding(parseNode.toExprNode(), asAliasSymbol)
+        }
     }
 
     private fun ParseNode.unwrapAliasesAndUnpivot(): FromSource {
@@ -1540,6 +1562,12 @@ class SqlParser(private val ion: IonSystem) : Parser {
             }
         }
 
+        if (rem.head?.keywordText == "let") {
+            val letParseNode = rem.parseLet()
+            rem = letParseNode.remaining
+            children.add(letParseNode)
+        }
+
         parseOptionalSingleExpressionClause(WHERE)
 
         if (rem.head?.keywordText == "group") {
@@ -1813,6 +1841,48 @@ class SqlParser(private val ion: IonSystem) : Parser {
             }
             else      -> rem.head.err("Expected one of: $DATE_PART_KEYWORDS", PARSE_EXPECTED_DATE_PART)
         }
+    }
+
+    private fun List<Token>.parseLet(): ParseNode {
+        val letClauses = ArrayList<ParseNode>()
+        var rem = this.tail
+        var child = rem.parseExpression()
+        rem = child.remaining
+
+        if (rem.head?.type != AS) {
+            rem.head.err("Expected $AS following $LET expr", PARSE_EXPECTED_AS_FOR_LET)
+        }
+
+        rem = rem.tail
+
+        if (rem.head?.type?.isIdentifier() != true) {
+            rem.head.err("Expected identifier for $AS-alias", PARSE_EXPECTED_IDENT_FOR_ALIAS)
+        }
+
+        var name = rem.head
+        rem = rem.tail
+        letClauses.add(ParseNode(AS_ALIAS, name, listOf(child), rem))
+
+        while (rem.head?.type == COMMA) {
+            rem = rem.tail
+            child = rem.parseExpression()
+            rem = child.remaining
+            if (rem.head?.type != AS) {
+                rem.head.err("Expected $AS following $LET expr", PARSE_EXPECTED_AS_FOR_LET)
+            }
+
+            rem = rem.tail
+
+            if (rem.head?.type?.isIdentifier() != true) {
+                rem.head.err("Expected identifier for $AS-alias", PARSE_EXPECTED_IDENT_FOR_ALIAS)
+            }
+
+            name = rem.head
+
+            rem = rem.tail
+            letClauses.add(ParseNode(AS_ALIAS, name, listOf(child), rem))
+        }
+        return ParseNode(LET, null, letClauses, rem)
     }
 
     private fun List<Token>.parseListLiteral(): ParseNode =

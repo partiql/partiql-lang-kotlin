@@ -62,7 +62,7 @@ object AstSanityValidator {
                     }
                 }
                 is Select -> {
-                    val (_, projection, _, _, groupBy, having, _, metas) = node
+                    val (_, projection, _, _, _, groupBy, having, _, metas) = node
 
                     if(groupBy != null) {
                         if (groupBy.grouping == GroupingStrategy.PARTIAL) {
