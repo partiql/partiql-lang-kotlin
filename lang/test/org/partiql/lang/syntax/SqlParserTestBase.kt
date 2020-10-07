@@ -40,6 +40,22 @@ abstract class SqlParserTestBase : TestBase() {
 
     protected fun assertExpression(
         source: String,
+        pigBuilder: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode
+    ) {
+        val parsedExprNode = parse(source)
+
+        val expectedPartiQlAst = PartiqlAst.build { pigBuilder() }.toIonElement().toString()
+        // Convert the query to ExprNode
+
+        val partiqlAst = loadIonSexp(expectedPartiQlAst)
+        partiqlAssert(parsedExprNode, partiqlAst, source)
+
+        pigDomainAssert(parsedExprNode, partiqlAst.toIonElement().asSexp())
+        pigExprNodeTransformAsserts(parsedExprNode)
+    }
+
+    protected fun assertExpression(
+        source: String,
         expectedSexpAstV0String: String,
         pigBuilder: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode
     ) {

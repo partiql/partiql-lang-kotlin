@@ -274,6 +274,23 @@ abstract class EvaluatorTestBase : TestBase() {
         }
     }
 
+    protected fun checkInputThrowingEvaluationException(tc: EvaluatorErrorTestCase, session: EvaluationSession) {
+        softAssert {
+            try {
+                val result = eval(tc.sqlUnderTest, session = session).ionValue;
+                fail("Expected EvaluationException but there was no Exception.  " +
+                     "The unepxected result was: \n${result.toPrettyString()}")
+            }
+            catch (e: EvaluationException) {
+                if (tc.cause != null) assertThat(e).hasRootCauseExactlyInstanceOf(tc.cause.java)
+                checkErrorAndErrorContext(tc.errorCode, e, tc.expectErrorContextValues)
+            }
+            catch (e: Exception) {
+                fail("Expected EvaluationException but a different exception was thrown:\n\t  $e")
+            }
+        }
+    }
+
     protected fun runTestCase(tc: EvaluatorTestCase, session: EvaluationSession) {
         fun showTestCase() {
             println("Query under test  : ${tc.sqlUnderTest}")
