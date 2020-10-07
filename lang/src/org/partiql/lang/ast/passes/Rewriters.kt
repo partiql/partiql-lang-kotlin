@@ -1,6 +1,8 @@
 package org.partiql.lang.ast.passes
 
+import com.amazon.ion.IonSystem
 import org.partiql.lang.ast.*
+import org.partiql.lang.eval.visitors.SelectListItemAliasVisitorTransform
 
 /**
  * Returns an [AstRewriter] requiring no external state for the basic functionality of compiling
@@ -8,9 +10,9 @@ import org.partiql.lang.ast.*
  *
  * Note that this is a function because some of the underlying rewriters are stateful.
  */
-fun basicRewriters() = PipelinedRewriter(
+fun basicRewriters(ion: IonSystem) = PipelinedRewriter(
     // These rewriters do not depend on each other and can be executed in any order.
-    SelectListItemAliasRewriter(),
+    RewriterTransformBridge(SelectListItemAliasVisitorTransform(), ion),
     FromSourceAliasRewriter(),
     GroupByItemAliasRewriter(),
     AggregateSupportRewriter(),

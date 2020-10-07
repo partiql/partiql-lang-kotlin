@@ -20,7 +20,7 @@ import org.partiql.lang.domains.PartiqlAst.Type
 import org.partiql.pig.runtime.SymbolPrimitive
 
 internal typealias PartiQlMetaContainer = org.partiql.lang.ast.MetaContainer
-internal typealias ElectrolyteMetaContainer = com.amazon.ionelement.api.MetaContainer
+internal typealias IonElementMetaContainer = com.amazon.ionelement.api.MetaContainer
 
 /** Converts a [partiql_ast.statement] to an [ExprNode], preserving all metas where possible. */
 fun Statement.toExprNode(ion: IonSystem): ExprNode =
@@ -34,7 +34,7 @@ private class StatementTransformer(val ion: IonSystem) {
             is Statement.Ddl -> stmt.toExprNode()
         }
 
-    private fun ElectrolyteMetaContainer.toPartiQlMetaContainer(): PartiQlMetaContainer {
+    private fun IonElementMetaContainer.toPartiQlMetaContainer(): PartiQlMetaContainer {
         val nonLocationMetas: List<Meta> = this.values.map {
             // We may need to account for this in the future, but for now we require that all metas placed
             // on any `partiql_ast` instances to implement Meta.  It's not clear how to deal with that now
