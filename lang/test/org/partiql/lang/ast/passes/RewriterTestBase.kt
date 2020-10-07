@@ -16,6 +16,8 @@ package org.partiql.lang.ast.passes
 
 import org.partiql.lang.syntax.*
 
+
+@Deprecated("to be removed before visitor-transforms branch is merged")
 abstract class RewriterTestBase : SqlParserTestBase() {
 
     data class RewriterTestCase(val originalSql: String, val expectedSql: String)
