@@ -287,6 +287,17 @@ class ParserErrorsTest : TestBase() {
     }
 
     @Test
+    fun expectedAsForLet() {
+        checkInputThrowingParserException("SELECT a FROM foo LET bar b",
+            ErrorCode.PARSE_EXPECTED_AS_FOR_LET,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 27L,
+                Property.TOKEN_TYPE to TokenType.IDENTIFIER,
+                Property.TOKEN_VALUE to ion.newSymbol("b")))
+    }
+
+    @Test
     fun expectedIdentForAlias() {
         checkInputThrowingParserException("select a as true from data",
             ErrorCode.PARSE_EXPECTED_IDENT_FOR_ALIAS,
@@ -308,6 +319,17 @@ class ParserErrorsTest : TestBase() {
                 Property.TOKEN_TYPE to TokenType.LITERAL,
                 Property.TOKEN_VALUE to ion.newBool(true)))
 
+    }
+
+    @Test
+    fun expectedIdentForAliasLet() {
+        checkInputThrowingParserException("SELECT a FROM foo LET bar AS",
+            ErrorCode.PARSE_EXPECTED_IDENT_FOR_ALIAS,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 29L,
+                Property.TOKEN_TYPE to TokenType.EOF,
+                Property.TOKEN_VALUE to ion.newSymbol("EOF")))
     }
 
     @Test
