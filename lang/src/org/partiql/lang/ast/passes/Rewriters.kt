@@ -2,6 +2,7 @@ package org.partiql.lang.ast.passes
 
 import com.amazon.ion.IonSystem
 import org.partiql.lang.ast.*
+import org.partiql.lang.eval.visitors.AggregateSupportVisitorTransform
 import org.partiql.lang.eval.visitors.SelectListItemAliasVisitorTransform
 
 /**
@@ -15,7 +16,7 @@ fun basicRewriters(ion: IonSystem) = PipelinedRewriter(
     RewriterTransformBridge(SelectListItemAliasVisitorTransform(), ion),
     FromSourceAliasRewriter(),
     GroupByItemAliasRewriter(),
-    AggregateSupportRewriter(),
+    RewriterTransformBridge(AggregateSupportVisitorTransform(), ion),
 
     // [GroupByPathExpressionRewriter] requires:
     //   - the synthetic from source aliases added by [FromSourceAliasRewriter]
