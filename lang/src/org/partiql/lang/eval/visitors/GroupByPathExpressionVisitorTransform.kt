@@ -1,0 +1,169 @@
+/*
+ * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ *  You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *      http://aws.amazon.com/apache2.0/
+ *
+ *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ *  language governing permissions and limitations under the License.
+ */
+
+package org.partiql.lang.eval.visitors
+
+import org.partiql.lang.ast.IsSyntheticNameMeta
+import org.partiql.lang.ast.UniqueNameMeta
+import org.partiql.lang.ast.metaContainerOf
+import org.partiql.lang.ast.toIonElementMetaContainer
+import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.PartiqlAst.Builder.caseInsensitive
+import org.partiql.lang.eval.errNoContext
+
+/**
+ * This rewrite must execute after [GroupByItemAliasVisitorTransform] and [FromSourceAliasVisitorTransform].
+ */
+class GroupByPathExpressionVisitorTransform(
+    parentSubstitutions: Map<PartiqlAst.Expr, SubstitutionPair> = mapOf())
+    : SubstitutionVisitorTransform(parentSubstitutions) {
+
+    companion object {
+        /**
+         * Determines if [gbi] is an expression of the type that should be replaced elsewhere in the query.
+         *
+         * Since we are only concerned about SQL-92 compatibility here, we only replace path expressions that
+         * have a single component, i.e. `f.bar` but not `f.bar.bat`.  (The latter is not part of SQL-92.)
+         */
+        fun canBeSubstituted(groupKey: PartiqlAst.GroupKey): Boolean {
+            val expr = groupKey.expr
+            val asName = groupKey.asAlias
+
+            //(This is the reason this rewrite needs to execute after [GroupByItemAliasVisitorTransform].)
+            return when {
+                asName == null                                     -> throw IllegalStateException("GroupByItem.asName must be specified for this rewrite to work")
+                !asName.metas.containsKey(IsSyntheticNameMeta.TAG) ->
+                    // If this meta is not present it would indicate that the alias was explicitly specifed, which is
+                    // not allowed by SQL-92, so ignore.
+                    false
+
+                // Group by expressions other than paths aren't part of SQL-92 so ignore
+                expr !is PartiqlAst.Expr.Path                      -> false
+
+                // Path expressions containing more than one component (i.e. `one.two.three`) are also not part of SQL-92
+                expr.steps.size != 1                               -> false
+                else                                               -> true
+            }
+
+        }
+
+        /**
+         * Collects all of the aliases defined by the specified [FromSource] and its children.
+         * This is why this rewrite must occur after [FromSourceAliasRewriter].
+         */
+        fun collectAliases(fromSource: PartiqlAst.FromSource): List<String> =
+            when (fromSource) {
+                is PartiqlAst.FromSource.Scan    ->
+                    listOf(
+                        fromSource.asAlias?.text
+                        ?: errNoContext("FromSourceItem.variables.asName must be specified for this rewrite to work", internal = true))
+
+                is PartiqlAst.FromSource.Join    ->
+                    collectAliases(fromSource.left) + collectAliases(fromSource.right)
+
+                is PartiqlAst.FromSource.Unpivot ->
+                    listOfNotNull(fromSource.asAlias?.text, fromSource.atAlias?.text)
+            }
+    }
+
+    override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlAst.Expr {
+        val fromSourceAliases = collectAliases(node.from)
+
+        // These are substitutions for path expressions that do not contain references to shadowed variables
+        val unshadowedSubstitutions = getSubstitutionsExceptFor(fromSourceAliases)
+
+        // A rewriter for the above
+        val unshadowedRewriter = GroupByPathExpressionVisitorTransform(unshadowedSubstitutions)
+
+        // These are the substitutions originating from the GROUP BY clause of the current [Select] node.
+        val currentSubstitutions = getSubstitutionsForSelect(node)
+
+        // A rewriter for both of the sets of the substitutions defined above.
+        val currentAndUnshadowedRewriter = GroupByPathExpressionVisitorTransform(
+            unshadowedSubstitutions + currentSubstitutions)
+
+        // Now actually rewrite the query using the appropriate rewriter for each of various clauses of the
+        // SELECT statement.
+
+        val projection = currentAndUnshadowedRewriter.transformProjection(node.project)
+
+        // The scope of the expressions in the FROM clause is the same as that of the parent scope.
+        val from = this.transformFromSource(node.from)
+
+        val fromLet = node.fromLet?.let { unshadowedRewriter.transformLet(it) }
+
+        val where = node.where?.let { unshadowedRewriter.transformExprSelect_where(node) }
+
+        val groupBy = node.group?.let { unshadowedRewriter.transformGroupBy(it) }
+
+        val having = node.having?.let { currentAndUnshadowedRewriter.transformExprSelect_having(node) }
+
+        val limit = node.limit?.let { unshadowedRewriter.transformExprSelect_limit(node) }
+
+        val metas = unshadowedRewriter.transformExprSelect_metas(node)
+
+        return PartiqlAst.build {
+            PartiqlAst.Expr.Select(
+                setq = node.setq,
+                project = projection,
+                from = from,
+                fromLet = fromLet,
+                where = where,
+                group = groupBy,
+                having = having,
+                limit = limit,
+                metas = metas)
+        }
+    }
+
+    private fun getSubstitutionsForSelect(selectExpr: PartiqlAst.Expr.Select): Map<PartiqlAst.Expr, SubstitutionPair> {
+        return (selectExpr.group?.keyList?.keys ?: listOf())
+            .asSequence()
+            .filter { groupKey -> canBeSubstituted(groupKey) }
+            .map { groupKey ->
+                val uniqueIdentifierMeta = groupKey.asAlias?.metas?.get(UniqueNameMeta.TAG) as UniqueNameMeta
+                SubstitutionPair(
+                    MetaStrippingVisitorTransform.stripMetas(groupKey.expr),
+                    PartiqlAst.build {
+                        id(
+                            name = groupKey.asAlias.text,
+                            case = caseSensitive(),
+                            qualifier = unqualified(),
+                            metas = groupKey.expr.metas + metaContainerOf(uniqueIdentifierMeta).toIonElementMetaContainer())
+                    })
+            }.associateBy { it.target }
+    }
+
+    private fun getSubstitutionsExceptFor(fromSourceAliases: List<String>): Map<PartiqlAst.Expr, SubstitutionPair> {
+        return super.substitutions.values.filter {
+            val targetRootVarRef = (it.target as? PartiqlAst.Expr.Path)?.root as? PartiqlAst.Expr.Id
+            when (targetRootVarRef) {
+                null -> true
+                else -> {
+                    val ignoreCase = targetRootVarRef.case == caseInsensitive()
+                    fromSourceAliases.all { alias ->
+                        when (targetRootVarRef) {
+                            null -> true // this branch should never execute but we should handle it if it does.
+                            else -> targetRootVarRef.name.text.compareTo(alias, ignoreCase) != 0
+                        }
+                    }
+                }
+            }
+        }.associateBy { it.target }
+    }
+
+    // do not rewrite CallAgg nodes.
+    override fun transformExprCallAgg(node: PartiqlAst.Expr.CallAgg): PartiqlAst.Expr = node
+
+}
