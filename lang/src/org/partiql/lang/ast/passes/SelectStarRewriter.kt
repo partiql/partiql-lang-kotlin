@@ -91,7 +91,7 @@ private fun extractAliases(fromSource: FromSource): List<FromSourceAliases> =
             listOf(
                 FromSourceAliases(
                     fromSource.variables.asName?.name
-                        ?: error("FromSourceAliasRewriter must be executed before SelectStarRewriter"),
+                        ?: error("FromSourceAliasVisitorTransform must be executed before SelectStarRewriter"),
                     fromSource.variables.atName?.name,
                     fromSource.variables.byName?.name))
         }

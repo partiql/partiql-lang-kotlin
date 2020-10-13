@@ -19,7 +19,7 @@ fun basicRewriters(ion: IonSystem) = PipelinedRewriter(
     AggregateSupportRewriter(),
 
     // [GroupByPathExpressionRewriter] requires:
-    //   - the synthetic from source aliases added by [FromSourceAliasRewriter]
+    //   - the synthetic from source aliases added by [FromSourceAliasVisitorTransform]
     //   - The synthetic group by item aliases added by [GroupByItemAliasRewriter]
     GroupByPathExpressionRewriter(),
     SelectStarRewriter()
