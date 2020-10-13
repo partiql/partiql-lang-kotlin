@@ -27,7 +27,7 @@ import org.partiql.lang.domains.PartiqlAst
  * [AggregateRegisterIdMeta].
  *
  * Also collects a list of all aggregate functions used in the `SELECT` list of the current query (excluding subqueries)
- * and stores them in an instance of [AggregateCallSiteListMeta] on the [Select] instance.
+ * and stores them in an instance of [AggregateCallSiteListMeta] on the [PartiqlAst.Expr.Select] instance.
  */
 
 class AggregateSupportVisitorTransform : PartiqlAst.VisitorTransform() {
@@ -35,7 +35,7 @@ class AggregateSupportVisitorTransform : PartiqlAst.VisitorTransform() {
 
     inner class RegisterIdAdderSubVisitorTransform : PartiqlAst.VisitorTransform() {
         /**
-         * Nests another [AggregateSupportVisitorTransform] within this rewrite
+         * Nests another [AggregateSupportVisitorTransform] within this transform
          * in order to avoid operating on [aggregateCallSites] of a nested SELECT.
          */
         override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlAst.Expr =

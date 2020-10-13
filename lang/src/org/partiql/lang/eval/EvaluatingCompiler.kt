@@ -954,7 +954,7 @@ internal class EvaluatingCompiler(
 
                         class CompiledAggregate(val factory: ExprAggregatorFactory, val argThunk: ThunkEnv)
 
-                        // These aggregate call sites are collected in [AggregateSupportRewriter].
+                        // These aggregate call sites are collected in [AggregateSupportVisitorTransform].
                         val compiledAggregates = aggregateListMeta?.aggregateCallSites?.map { it ->
                             val funcName = it.funcName.text
                             CompiledAggregate(
