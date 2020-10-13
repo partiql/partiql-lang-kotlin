@@ -26,15 +26,15 @@ class SelectStarVisitorTransform : PartiqlAst.VisitorTransform() {
     }
 
     override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlAst.Expr {
-        val rewritten = super.transformExprSelect(node) as PartiqlAst.Expr.Select
+        val transformedExpr = super.transformExprSelect(node) as PartiqlAst.Expr.Select
 
-        val projection = rewritten.project
+        val projection = transformedExpr.project
 
         // Check if SELECT * is being used.
         if (projection is PartiqlAst.Projection.ProjectStar) {
-            when (rewritten.group) {    // No group by
+            when (transformedExpr.group) {    // No group by
                 null -> {
-                    val fromSourceAliases = extractAliases(rewritten.from)
+                    val fromSourceAliases = extractAliases(transformedExpr.from)
 
                     val newProjection =
                         PartiqlAst.build {
@@ -47,10 +47,10 @@ class SelectStarVisitorTransform : PartiqlAst.VisitorTransform() {
                                 }.flatten()
                             )
                         }
-                    return copyProjectionToSelect(rewritten, newProjection)
+                    return copyProjectionToSelect(transformedExpr, newProjection)
                 }
                 else -> {               // With group by
-                    val selectListItemsFromGroupBy = rewritten.group.keyList.keys.map {
+                    val selectListItemsFromGroupBy = transformedExpr.group.keyList.keys.map {
                         val asName = it.asAlias
                             ?: errNoContext(
                                 "GroupByItem has no AS-alias--GroupByItemAliasVisitorTransform must be executed before SelectStarVisitorTransform",
@@ -64,17 +64,17 @@ class SelectStarVisitorTransform : PartiqlAst.VisitorTransform() {
                         createProjectExpr(uniqueNameMeta.uniqueName, asName.text)
                     }
 
-                    val groupNameItem = rewritten.group.groupAsAlias?.text.let {
+                    val groupNameItem = transformedExpr.group.groupAsAlias?.text.let {
                         if (it != null) listOf(createProjectExpr(it)) else emptyList()
                     }
 
                     val newProjection = PartiqlAst.build { projectList(selectListItemsFromGroupBy + groupNameItem) }
 
-                    return copyProjectionToSelect(rewritten, newProjection)
+                    return copyProjectionToSelect(transformedExpr, newProjection)
                 }
             }
         }
-        return rewritten
+        return transformedExpr
     }
 
     private fun createProjectAll(name: String) =
