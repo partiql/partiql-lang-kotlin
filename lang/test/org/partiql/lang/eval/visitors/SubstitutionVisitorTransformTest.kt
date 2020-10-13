@@ -31,33 +31,33 @@ class SubstitutionVisitorTransformTest {
 
     private val pairs = listOf(SubstitutionPair(litInt(1), litInt(2))).associateBy { it.target }
 
-    private val rewriter = SubstitutionVisitorTransform(pairs)
+    private val transformer = SubstitutionVisitorTransform(pairs)
 
     @Test
     fun matchingTargetIsReplaced() {
         val original = litInt(1)
-        val rewritten = rewriter.transformExpr(original)
+        val transformedExpr = transformer.transformExpr(original)
 
-        val rewrittenLiteral = rewritten.toIonElement().values[1]
+        val transformedLiteral = transformedExpr.toIonElement().values[1]
 
         // (lit 1) should be replaced with (lit 2)
-        assertEquals(2, rewrittenLiteral.longValue)
+        assertEquals(2, transformedLiteral.longValue)
 
         // because [original] has no [SourceLocationMeta]:
-        assertNull(rewritten.metas[SourceLocationMeta.TAG])
+        assertNull(transformedExpr.metas[SourceLocationMeta.TAG])
     }
 
     @Test
     fun matchingTargetIsReplacedAndSourceLocationIsCopiedToTarget() {
         val original = PartiqlAst.build { lit(ionInt(1), metasWithSourceLocation) }
-        val rewritten = rewriter.transformExpr(original)
+        val transformedExpr = transformer.transformExpr(original)
 
-        val rewrittenLiteral = rewritten.toIonElement().values[1].longValue
+        val transformedLiteral = transformedExpr.toIonElement().values[1].longValue
 
         // (lit 1) should be replaced with (lit 2)
-        assertEquals(2, rewrittenLiteral)
+        assertEquals(2, transformedLiteral)
 
-        val tag = rewritten.metas[SourceLocationMeta.TAG] as SourceLocationMeta
+        val tag = transformedExpr.metas[SourceLocationMeta.TAG] as SourceLocationMeta
         // and the original [SourceLocationMeta] should be copied to the replacement.
         assertEquals(100, tag.lineNum)
         assertEquals(101, tag.charOffset)
@@ -66,10 +66,10 @@ class SubstitutionVisitorTransformTest {
     @Test
     fun nonMatchingTargetIsNotReplaced() {
         val original = litInt(3)
-        val rewritten = rewriter.transformExpr(original)
+        val transformedExpr = transformer.transformExpr(original)
 
         // (lit 3) should still be (lit 3)
-        assertEquals(3, rewritten.toIonElement().values[1].longValue)
+        assertEquals(3, transformedExpr.toIonElement().values[1].longValue)
     }
 
 }

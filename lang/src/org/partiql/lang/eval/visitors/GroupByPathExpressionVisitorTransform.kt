@@ -23,7 +23,7 @@ import org.partiql.lang.domains.PartiqlAst.Builder.caseInsensitive
 import org.partiql.lang.eval.errNoContext
 
 /**
- * This rewrite must execute after [GroupByItemAliasVisitorTransform] and [FromSourceAliasVisitorTransform].
+ * This transform must execute after [GroupByItemAliasVisitorTransform] and [FromSourceAliasVisitorTransform].
  */
 class GroupByPathExpressionVisitorTransform(
     parentSubstitutions: Map<PartiqlAst.Expr, SubstitutionPair> = mapOf())
@@ -40,9 +40,9 @@ class GroupByPathExpressionVisitorTransform(
             val expr = groupKey.expr
             val asName = groupKey.asAlias
 
-            //(This is the reason this rewrite needs to execute after [GroupByItemAliasVisitorTransform].)
+            //(This is the reason this transform needs to execute after [GroupByItemAliasVisitorTransform].)
             return when {
-                asName == null                                     -> throw IllegalStateException("GroupByItem.asName must be specified for this rewrite to work")
+                asName == null                                     -> throw IllegalStateException("GroupByItem.asName must be specified for this transform to work")
                 !asName.metas.containsKey(IsSyntheticNameMeta.TAG) ->
                     // If this meta is not present it would indicate that the alias was explicitly specifed, which is
                     // not allowed by SQL-92, so ignore.
@@ -60,14 +60,14 @@ class GroupByPathExpressionVisitorTransform(
 
         /**
          * Collects all of the aliases defined by the specified [FromSource] and its children.
-         * This is why this rewrite must occur after [FromSourceAliasRewriter].
+         * This is why this transform must occur after [FromSourceAliasVisitorTransform].
          */
         fun collectAliases(fromSource: PartiqlAst.FromSource): List<String> =
             when (fromSource) {
                 is PartiqlAst.FromSource.Scan    ->
                     listOf(
                         fromSource.asAlias?.text
-                        ?: errNoContext("FromSourceItem.variables.asName must be specified for this rewrite to work", internal = true))
+                        ?: errNoContext("FromSourceItem.variables.asName must be specified for this transform to work", internal = true))
 
                 is PartiqlAst.FromSource.Join    ->
                     collectAliases(fromSource.left) + collectAliases(fromSource.right)
@@ -83,35 +83,35 @@ class GroupByPathExpressionVisitorTransform(
         // These are substitutions for path expressions that do not contain references to shadowed variables
         val unshadowedSubstitutions = getSubstitutionsExceptFor(fromSourceAliases)
 
-        // A rewriter for the above
-        val unshadowedRewriter = GroupByPathExpressionVisitorTransform(unshadowedSubstitutions)
+        // A transformer for the above
+        val unshadowedTransformer = GroupByPathExpressionVisitorTransform(unshadowedSubstitutions)
 
         // These are the substitutions originating from the GROUP BY clause of the current [Select] node.
         val currentSubstitutions = getSubstitutionsForSelect(node)
 
-        // A rewriter for both of the sets of the substitutions defined above.
-        val currentAndUnshadowedRewriter = GroupByPathExpressionVisitorTransform(
+        // A transformer for both of the sets of the substitutions defined above.
+        val currentAndUnshadowedTransformer = GroupByPathExpressionVisitorTransform(
             unshadowedSubstitutions + currentSubstitutions)
 
-        // Now actually rewrite the query using the appropriate rewriter for each of various clauses of the
+        // Now actually transform the query using the appropriate transformer for each of various clauses of the
         // SELECT statement.
 
-        val projection = currentAndUnshadowedRewriter.transformProjection(node.project)
+        val projection = currentAndUnshadowedTransformer.transformProjection(node.project)
 
         // The scope of the expressions in the FROM clause is the same as that of the parent scope.
         val from = this.transformFromSource(node.from)
 
-        val fromLet = node.fromLet?.let { unshadowedRewriter.transformLet(it) }
+        val fromLet = node.fromLet?.let { unshadowedTransformer.transformLet(it) }
 
-        val where = node.where?.let { unshadowedRewriter.transformExprSelect_where(node) }
+        val where = node.where?.let { unshadowedTransformer.transformExprSelect_where(node) }
 
-        val groupBy = node.group?.let { unshadowedRewriter.transformGroupBy(it) }
+        val groupBy = node.group?.let { unshadowedTransformer.transformGroupBy(it) }
 
-        val having = node.having?.let { currentAndUnshadowedRewriter.transformExprSelect_having(node) }
+        val having = node.having?.let { currentAndUnshadowedTransformer.transformExprSelect_having(node) }
 
-        val limit = node.limit?.let { unshadowedRewriter.transformExprSelect_limit(node) }
+        val limit = node.limit?.let { unshadowedTransformer.transformExprSelect_limit(node) }
 
-        val metas = unshadowedRewriter.transformExprSelect_metas(node)
+        val metas = unshadowedTransformer.transformExprSelect_metas(node)
 
         return PartiqlAst.build {
             PartiqlAst.Expr.Select(
@@ -163,7 +163,7 @@ class GroupByPathExpressionVisitorTransform(
         }.associateBy { it.target }
     }
 
-    // do not rewrite CallAgg nodes.
+    // do not transform CallAgg nodes.
     override fun transformExprCallAgg(node: PartiqlAst.Expr.CallAgg): PartiqlAst.Expr = node
 
 }

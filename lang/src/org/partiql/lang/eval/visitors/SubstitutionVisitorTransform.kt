@@ -61,7 +61,7 @@ open class SubstitutionVisitorTransform(protected val substitutions: Map<Partiql
     /**
      * Class creates a copy of [PartiqlAst.Expr], but uses [newMetas] as the metas
      */
-    inner class MetaVisitorTransform(val newMetas: MetaContainer) : PartiqlAst.VisitorTransform() {
+    inner class MetaVisitorTransform(private val newMetas: MetaContainer) : PartiqlAst.VisitorTransform() {
         override fun transformMetas(metas: MetaContainer): MetaContainer = newMetas
     }
 
