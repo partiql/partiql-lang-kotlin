@@ -27,17 +27,17 @@ internal typealias IonElementMetaContainer = com.amazon.ionelement.api.MetaConta
 fun Statement.toExprNode(ion: IonSystem): ExprNode =
     StatementTransformer(ion).transform(this)
 
-fun Expr.toExprNode(ion: IonSystem): ExprNode {
+internal fun Expr.toExprNode(ion: IonSystem): ExprNode {
     return StatementTransformer(ion).transform(this)
 }
 
-fun SetQuantifier.toSetQuantifier(): org.partiql.lang.ast.SetQuantifier =
+internal fun SetQuantifier.toSetQuantifier(): org.partiql.lang.ast.SetQuantifier =
     when (this) {
         is SetQuantifier.All -> org.partiql.lang.ast.SetQuantifier.ALL
         is SetQuantifier.Distinct -> org.partiql.lang.ast.SetQuantifier.DISTINCT
     }
 
-fun com.amazon.ionelement.api.MetaContainer.toPartiQlMetaContainer(): org.partiql.lang.ast.MetaContainer {
+internal fun com.amazon.ionelement.api.MetaContainer.toPartiQlMetaContainer(): org.partiql.lang.ast.MetaContainer {
     val nonLocationMetas: List<Meta> = this.values.map {
         // We may need to account for this in the future, but for now we require that all metas placed
         // on any `partiql_ast` instances to implement Meta.  It's not clear how to deal with that now
