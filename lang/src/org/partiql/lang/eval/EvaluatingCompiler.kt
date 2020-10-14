@@ -57,6 +57,7 @@ internal class EvaluatingCompiler(
     private val compileOptions: CompileOptions = CompileOptions.standard()
 ) {
     private val thunkFactory = ThunkFactory(compileOptions.thunkOptions)
+    private val strictnessContext = StrictnessContext(compileOptions.strictnessMode, valueFactory)
     private val compilationContextStack = Stack<CompilationContext>()
 
     private val currentCompilationContext: CompilationContext
@@ -429,16 +430,18 @@ internal class EvaluatingCompiler(
         metas: MetaContainer): ThunkEnv {
         return thunkFactory.thunkFold(valueFactory.nullValue, metas, argThunks) { lValue, rValue ->
             val denominator = rValue.numberValue()
-            if (denominator.isZero()) {
-                err("/ by zero", ErrorCode.EVALUATOR_DIVIDE_BY_ZERO, null, false)
-            }
-            try {
-                (lValue.numberValue() / denominator).exprValue()
-            }
-            catch (e: ArithmeticException) {
-                // Setting the internal flag as true as it is not clear what
-                // ArithmeticException may be thrown by the above
-                throw EvaluationException(cause = e, internal = true)
+
+            strictnessContext.errorIf(
+                test = denominator.isZero(),
+                detailsConstructor = { ErrorDetails(metas, "/ by zero", ErrorCode.EVALUATOR_DIVIDE_BY_ZERO) }
+            ) {
+                try {
+                    (lValue.numberValue() / denominator).exprValue()
+                } catch (e: ArithmeticException) {
+                    // Setting the internal flag as true as it is not clear what
+                    // ArithmeticException may be thrown by the above
+                    throw EvaluationException(cause = e, internal = true)
+                }
             }
         }
     }

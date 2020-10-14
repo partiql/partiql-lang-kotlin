@@ -14,7 +14,6 @@
 
 package org.partiql.lang.eval
 
-import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.passes.AstRewriter
 import org.partiql.lang.ast.passes.IDENTITY_REWRITER
 import org.partiql.lang.ast.passes.basicRewriters
@@ -41,6 +40,12 @@ enum class ProjectionIterationBehavior {
     FILTER_MISSING, UNFILTERED
 }
 
+enum class StrictnessMode {
+    STANDARD,
+    PERMISSIVE,
+    //TODO: STRICT
+}
+
 /**
  * Controls the behavior of intrinsic AST rewriting with [EvaluatingCompiler.compile].
  *
@@ -65,6 +70,7 @@ data class CompileOptions private constructor (
         val undefinedVariable: UndefinedVariableBehavior,
         val projectionIteration: ProjectionIterationBehavior = ProjectionIterationBehavior.FILTER_MISSING,
         val rewritingMode: RewritingMode = RewritingMode.DEFAULT,
+        val strictnessMode: StrictnessMode = StrictnessMode.STANDARD,
         val thunkOptions: ThunkOptions = ThunkOptions.standard()
 ) {
 
@@ -98,6 +104,7 @@ data class CompileOptions private constructor (
         fun projectionIteration(value: ProjectionIterationBehavior) = set { copy(projectionIteration = value) }
         fun rewriterMode(value: RewritingMode) = set { copy(rewritingMode = value) }
         fun thunkOptions(value: ThunkOptions) = set { copy(thunkOptions = value)}
+        fun strictness(value: StrictnessMode) = set { copy(strictnessMode = value)}
         private inline fun set(block: CompileOptions.() -> CompileOptions) : Builder {
             options = block(options)
             return this
