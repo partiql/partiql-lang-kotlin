@@ -134,7 +134,7 @@ class GroupByPathExpressionVisitorTransform(
             .map { groupKey ->
                 val uniqueIdentifierMeta = groupKey.asAlias?.metas?.get(UniqueNameMeta.TAG) as UniqueNameMeta
                 SubstitutionPair(
-                    MetaStrippingVisitorTransform.stripMetas(groupKey.expr),
+                    groupKey.expr,
                     PartiqlAst.build {
                         id(
                             name = groupKey.asAlias.text,

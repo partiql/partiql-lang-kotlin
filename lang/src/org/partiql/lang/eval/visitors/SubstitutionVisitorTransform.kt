@@ -44,12 +44,7 @@ open class SubstitutionVisitorTransform(protected val substitutions: Map<Partiql
      * clone.
      */
     override fun transformExpr(node: PartiqlAst.Expr): PartiqlAst.Expr {
-        // It is currently necessary to strip the meta information because meta information is included as part of
-        // equivalence, and different [SourceLocationMeta] (among others) will always cause the equivalence check to
-        // be `false`.
-        val candidate = MetaStrippingVisitorTransform.stripMetas(node)
-
-        val matchingSubstitution = substitutions[candidate]
+        val matchingSubstitution = substitutions[node]
 
         return matchingSubstitution?.let { ms ->
             node.extractSourceLocation().let {
