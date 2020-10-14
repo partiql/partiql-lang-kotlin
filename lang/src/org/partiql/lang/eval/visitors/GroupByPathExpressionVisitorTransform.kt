@@ -19,7 +19,6 @@ import org.partiql.lang.ast.UniqueNameMeta
 import org.partiql.lang.ast.metaContainerOf
 import org.partiql.lang.ast.toIonElementMetaContainer
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.domains.PartiqlAst.Builder.caseInsensitive
 import org.partiql.lang.eval.errNoContext
 
 /**
@@ -151,7 +150,7 @@ class GroupByPathExpressionVisitorTransform(
             when (targetRootVarRef) {
                 null -> true
                 else -> {
-                    val ignoreCase = targetRootVarRef.case == caseInsensitive()
+                    val ignoreCase = targetRootVarRef.case is PartiqlAst.CaseSensitivity.CaseInsensitive
                     fromSourceAliases.all { alias ->
                         when (targetRootVarRef) {
                             null -> true // this branch should never execute but we should handle it if it does.
