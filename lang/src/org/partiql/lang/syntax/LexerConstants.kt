@@ -219,8 +219,6 @@ internal val DATE_PART_KEYWORDS: Set<String> = DatePart.values()
     "then",
     "time",
     "timestamp",
-    "timezone_hour",
-    "timezone_minute",
     "to",
     "transaction",
     "translate",

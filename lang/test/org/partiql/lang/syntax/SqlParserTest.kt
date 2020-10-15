@@ -963,57 +963,57 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun callDateArithYear() = assertDateArithmetic(
         "date_<op>(year, a, b)",
-        "(call date_<op> (lit \"year\") (id a case_insensitive) (id b case_insensitive))",
-        "(call date_<op> (lit \"year\") (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
+        "(call date_<op> (lit year) (id a case_insensitive) (id b case_insensitive))",
+        "(call date_<op> (lit year) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callDateArithMonth() = assertDateArithmetic(
         "date_<op>(month, a, b)",
-        "(call date_<op> (lit \"month\") (id a case_insensitive) (id b case_insensitive))",
-        "(call date_<op> (lit \"month\") (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
+        "(call date_<op> (lit month) (id a case_insensitive) (id b case_insensitive))",
+        "(call date_<op> (lit month) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callDateArithDay() = assertDateArithmetic(
         "date_<op>(day, a, b)",
-        "(call date_<op> (lit \"day\") (id a case_insensitive) (id b case_insensitive))",
-        "(call date_<op> (lit \"day\") (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
+        "(call date_<op> (lit day) (id a case_insensitive) (id b case_insensitive))",
+        "(call date_<op> (lit day) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callDateArithHour() = assertDateArithmetic(
         "date_<op>(hour, a, b)",
-        "(call date_<op> (lit \"hour\") (id a case_insensitive) (id b case_insensitive))",
-        "(call date_<op> (lit \"hour\") (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
+        "(call date_<op> (lit hour) (id a case_insensitive) (id b case_insensitive))",
+        "(call date_<op> (lit hour) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callDateArithMinute() = assertDateArithmetic(
         "date_<op>(minute, a, b)",
-        "(call date_<op> (lit \"minute\") (id a case_insensitive) (id b case_insensitive))",
-        "(call date_<op> (lit \"minute\") (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
+        "(call date_<op> (lit minute) (id a case_insensitive) (id b case_insensitive))",
+        "(call date_<op> (lit minute) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callDateArithSecond() = assertDateArithmetic(
         "date_<op>(second, a, b)",
-        "(call date_<op> (lit \"second\") (id a case_insensitive) (id b case_insensitive))",
-        "(call date_<op> (lit \"second\") (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
+        "(call date_<op> (lit second) (id a case_insensitive) (id b case_insensitive))",
+        "(call date_<op> (lit second) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
     )
 
     @Test // invalid evaluation, but valid parsing
     fun callDateArithTimezoneHour() = assertDateArithmetic(
         "date_<op>(timezone_hour, a, b)",
-        "(call date_<op> (lit \"timezone_hour\") (id a case_insensitive) (id b case_insensitive))",
-        "(call date_<op> (lit \"timezone_hour\") (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
+        "(call date_<op> (lit timezone_hour) (id a case_insensitive) (id b case_insensitive))",
+        "(call date_<op> (lit timezone_hour) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
     )
 
     @Test // invalid evaluation, but valid parsing
     fun callDateArithTimezoneMinute() = assertDateArithmetic(
         "date_<op>(timezone_minute, a, b)",
-        "(call date_<op> (lit \"timezone_minute\") (id a case_insensitive) (id b case_insensitive))",
-        "(call date_<op> (lit \"timezone_minute\") (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
+        "(call date_<op> (lit timezone_minute) (id a case_insensitive) (id b case_insensitive))",
+        "(call date_<op> (lit timezone_minute) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
     )
 
 
@@ -1023,57 +1023,57 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun callExtractYear() = assertExpression(
         "extract(year from a)",
-        "(call extract (lit \"year\") (id a case_insensitive))",
-        "(call extract (lit \"year\") (id a (case_insensitive) (unqualified)))"
+        "(call extract (lit year) (id a case_insensitive))",
+        "(call extract (lit year) (id a (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callExtractMonth() = assertExpression(
         "extract(month from a)",
-        "(call extract (lit \"month\") (id a case_insensitive))",
-        "(call extract (lit \"month\") (id a (case_insensitive) (unqualified)))"
+        "(call extract (lit month) (id a case_insensitive))",
+        "(call extract (lit month) (id a (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callExtractDay() = assertExpression(
         "extract(day from a)",
-        "(call extract (lit \"day\") (id a case_insensitive))",
-        "(call extract (lit \"day\") (id a (case_insensitive) (unqualified)))"
+        "(call extract (lit day) (id a case_insensitive))",
+        "(call extract (lit day) (id a (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callExtractHour() = assertExpression(
         "extract(hour from a)",
-        "(call extract (lit \"hour\") (id a case_insensitive))",
-        "(call extract (lit \"hour\") (id a (case_insensitive) (unqualified)))"
+        "(call extract (lit hour) (id a case_insensitive))",
+        "(call extract (lit hour) (id a (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callExtractMinute() = assertExpression(
         "extract(minute from a)",
-        "(call extract (lit \"minute\") (id a case_insensitive))",
-        "(call extract (lit \"minute\") (id a (case_insensitive) (unqualified)))"
+        "(call extract (lit minute) (id a case_insensitive))",
+        "(call extract (lit minute) (id a (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callExtractSecond() = assertExpression(
         "extract(second from a)",
-        "(call extract (lit \"second\") (id a case_insensitive))",
-        "(call extract (lit \"second\") (id a (case_insensitive) (unqualified)))"
+        "(call extract (lit second) (id a case_insensitive))",
+        "(call extract (lit second) (id a (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callExtractTimezoneHour() = assertExpression(
         "extract(timezone_hour from a)",
-        "(call extract (lit \"timezone_hour\") (id a case_insensitive))",
-        "(call extract (lit \"timezone_hour\") (id a (case_insensitive) (unqualified)))"
+        "(call extract (lit timezone_hour) (id a case_insensitive))",
+        "(call extract (lit timezone_hour) (id a (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callExtractTimezoneMinute() = assertExpression(
         "extract(timezone_minute from a)",
-        "(call extract (lit \"timezone_minute\") (id a case_insensitive))",
-        "(call extract (lit \"timezone_minute\") (id a (case_insensitive) (unqualified)))"
+        "(call extract (lit timezone_minute) (id a case_insensitive))",
+        "(call extract (lit timezone_minute) (id a (case_insensitive) (unqualified)))"
     )
 
     @Test
