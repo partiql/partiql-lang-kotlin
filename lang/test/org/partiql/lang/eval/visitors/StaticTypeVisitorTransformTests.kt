@@ -2,7 +2,7 @@
  * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
  */
 
-package org.partiql.lang.ast.passes
+package org.partiql.lang.eval.visitors
 
 import junitparams.Parameters
 import org.junit.Test
@@ -22,9 +22,16 @@ import org.partiql.lang.ast.StaticTypeMeta
 import org.partiql.lang.ast.VariableReference
 import org.partiql.lang.ast.emptyMetaContainer
 import org.partiql.lang.ast.metaContainerOf
+import org.partiql.lang.ast.passes.AstVisitorBase
+import org.partiql.lang.ast.passes.AstWalker
+import org.partiql.lang.ast.passes.RewriterTestBase
+import org.partiql.lang.ast.passes.SemanticException
+import org.partiql.lang.ast.passes.basicRewriters
 import org.partiql.lang.ast.plus
 import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.ast.staticType
+import org.partiql.lang.ast.toAstStatement
+import org.partiql.lang.ast.toExprNode
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.Property.BINDING_NAME
@@ -36,12 +43,12 @@ import org.partiql.lang.types.StaticType
 import java.io.PrintWriter
 import java.io.StringWriter
 
-class StaticTypeRewriterTests : RewriterTestBase() {
+class StaticTypeVisitorTransformTests : RewriterTestBase() {
 
     data class STRTestCase(val originalSql: String,
                            val globals: Map<String, StaticType>,
                            val handler: (ResolveTestResult) -> Unit,
-                           val constraints: Set<StaticTypeRewriterConstraints> = setOf(),
+                           val constraints: Set<StaticTypeVisitorTransformConstraints> = setOf(),
                            val expectedAst: String? = null) {
 
         override fun toString(): String =
@@ -100,7 +107,7 @@ class StaticTypeRewriterTests : RewriterTestBase() {
                 VarExpectation("b", 1, 8, StaticType.ANY, ScopeQualifier.LEXICAL),
                 VarExpectation("b", 1, 15, StaticType.LIST, ScopeQualifier.UNQUALIFIED)
                 // There is no variable reference to `a` here since `SELECT a FROM b`
-                // is rewritten to `SELECT b.a FROM b`
+                // is transformed to `SELECT b.a FROM b`
             )
         ),
         STRTestCase(
@@ -368,7 +375,7 @@ class StaticTypeRewriterTests : RewriterTestBase() {
             expectVariableReferences(
                 VarExpectation("x", 1, 6, StaticType.BAG, ScopeQualifier.UNQUALIFIED),
                 VarExpectation("x", 1, 20, StaticType.ANY, ScopeQualifier.LEXICAL))
-            //No expectation for y because `FROM x INSERT INTO y ...` is rewritten to `FROM x INSERT INTO x.y ...`
+            //No expectation for y because `FROM x INSERT INTO y ...` is transformed to `FROM x INSERT INTO x.y ...`
         ),
         STRTestCase(
             //        1         2         3         4         5         6         7         8
@@ -389,7 +396,7 @@ class StaticTypeRewriterTests : RewriterTestBase() {
             expectVariableReferences(
                 VarExpectation("x", 1, 6, StaticType.BAG, ScopeQualifier.UNQUALIFIED),
                 VarExpectation("x", 1, 20, StaticType.ANY, ScopeQualifier.LEXICAL))
-            //No expectation for y because `FROM x INSERT INTO y ...` is rewritten to `FROM x INSERT INTO x.y ...`
+            //No expectation for y because `FROM x INSERT INTO y ...` is transformed to `FROM x INSERT INTO x.y ...`
         ),
         STRTestCase(
             //        1         2         3         4         5         6         7         8
@@ -518,7 +525,7 @@ class StaticTypeRewriterTests : RewriterTestBase() {
         // with PREVENT_GLOBALS_EXCEPT_IN_FROM option
         STRTestCase(
             // even though a global 'a' is defined, it is not accessible.
-            // (need the JOIN because a is rewritten to b.a when there is only one from source)
+            // (need the JOIN because a is transformed to b.a when there is only one from source)
             //        1         2         3         4         5         6         7         8
             //2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT a FROM b, c",
@@ -531,7 +538,7 @@ class StaticTypeRewriterTests : RewriterTestBase() {
                 BINDING_NAME to "a",
                 LINE_NUMBER to 1L,
                 COLUMN_NUMBER to 8L),
-            setOf(StaticTypeRewriterConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM)
+            setOf(StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM)
         ),
         STRTestCase(
             // Verify that a shadowed global ("b") doesn't get resolved instead of illegal global access error.
@@ -546,7 +553,7 @@ class StaticTypeRewriterTests : RewriterTestBase() {
                 BINDING_NAME to "b",
                 LINE_NUMBER to 1L,
                 COLUMN_NUMBER to 38L),
-            setOf(StaticTypeRewriterConstraints.PREVENT_GLOBALS_IN_NESTED_QUERIES)
+            setOf(StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_IN_NESTED_QUERIES)
         ),
         STRTestCase(
             // basic happy path with PREVENT_GLOBALS_EXCEPT_IN_FROM
@@ -560,7 +567,7 @@ class StaticTypeRewriterTests : RewriterTestBase() {
                 VarExpectation("b1", 1, 8, StaticType.ANY, ScopeQualifier.LEXICAL),
                 VarExpectation("b", 1, 18, StaticType.BAG, ScopeQualifier.UNQUALIFIED)
             ),
-            setOf(StaticTypeRewriterConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM)
+            setOf(StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM)
         ),
         STRTestCase(
             // nested happy case with PREVENT_GLOBALS_EXCEPT_IN_FROM
@@ -577,7 +584,7 @@ class StaticTypeRewriterTests : RewriterTestBase() {
                 VarExpectation("b", 1, 43, StaticType.BAG, ScopeQualifier.UNQUALIFIED),
                 VarExpectation("c", 1, 61, StaticType.BAG, ScopeQualifier.UNQUALIFIED)
             ),
-            setOf(StaticTypeRewriterConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM)
+            setOf(StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM)
         ),
         // multiple joins
         STRTestCase(
@@ -591,7 +598,7 @@ class StaticTypeRewriterTests : RewriterTestBase() {
                 VarExpectation("a", 1, 25, StaticType.ANY, ScopeQualifier.LEXICAL),
                 VarExpectation("movies", 1, 38, StaticType.BAG, ScopeQualifier.UNQUALIFIED)
             ),
-            setOf(StaticTypeRewriterConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM)),
+            setOf(StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM)),
         STRTestCase(
             // failure case with PREVENT_GLOBALS_IN_NESTED_QUERIES though
             //        1         2         3         4         5         6         7         8
@@ -605,7 +612,7 @@ class StaticTypeRewriterTests : RewriterTestBase() {
                 BINDING_NAME to "c",
                 LINE_NUMBER to 1L,
                 COLUMN_NUMBER to 29L),
-            setOf(StaticTypeRewriterConstraints.PREVENT_GLOBALS_IN_NESTED_QUERIES)
+            setOf(StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_IN_NESTED_QUERIES)
         ),
         STRTestCase(
             // checking PREVENT_GLOBALS_IN_NESTED_QUERIES failure within outer FROM
@@ -620,7 +627,7 @@ class StaticTypeRewriterTests : RewriterTestBase() {
                 BINDING_NAME to "c",
                 LINE_NUMBER to 1L,
                 COLUMN_NUMBER to 36L),
-            setOf(StaticTypeRewriterConstraints.PREVENT_GLOBALS_IN_NESTED_QUERIES)
+            setOf(StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_IN_NESTED_QUERIES)
         ),
         STRTestCase(
             // nested happy case with PREVENT_GLOBALS_IN_NESTED_QUERIES
@@ -640,7 +647,7 @@ class StaticTypeRewriterTests : RewriterTestBase() {
                 VarExpectation("b", 1, 52, StaticType.ANY, ScopeQualifier.LEXICAL),
                 VarExpectation("c1", 1, 78, StaticType.ANY, ScopeQualifier.LEXICAL)
             ),
-            setOf(StaticTypeRewriterConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM)
+            setOf(StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM)
         ),
         STRTestCase(
             //        1         2         3         4         5         6         7         8
@@ -664,7 +671,7 @@ class StaticTypeRewriterTests : RewriterTestBase() {
                     ),
                     metas(1, 8)
                 )),
-            setOf(StaticTypeRewriterConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM)
+            setOf(StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM)
         ),
         // DML with PREVENT_GLOBALS_EXCEPT_IN_FROM
         STRTestCase(
@@ -690,7 +697,7 @@ class StaticTypeRewriterTests : RewriterTestBase() {
                     metas(1, 25)
                 )
             ),
-            setOf(StaticTypeRewriterConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM)),
+            setOf(StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM)),
         STRTestCase(
             //        1         2         3         4         5         6         7         8
             //2345678901234567890123456789012345678901234567890123456789012345678901234567890
@@ -699,7 +706,7 @@ class StaticTypeRewriterTests : RewriterTestBase() {
             expectVariableReferences(
                 VarExpectation("dogs", 1, 13, StaticType.BAG, ScopeQualifier.UNQUALIFIED)
             ),
-            setOf(StaticTypeRewriterConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM)),
+            setOf(StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM)),
         // captures the var ranging over dogs and implicitly prefixes id and owner
         STRTestCase(
             //        1         2         3         4         5         6         7         8
@@ -710,7 +717,7 @@ class StaticTypeRewriterTests : RewriterTestBase() {
                 VarExpectation("dogs", 1, 8, StaticType.BAG, ScopeQualifier.UNQUALIFIED),
                 VarExpectation("d", 1, 19, StaticType.ANY, ScopeQualifier.LEXICAL),
                 VarExpectation("d", 1, 40, StaticType.ANY, ScopeQualifier.LEXICAL)),
-            setOf(StaticTypeRewriterConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM))
+            setOf(StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM))
     )
 
     sealed class ResolveTestResult {
@@ -854,7 +861,7 @@ class StaticTypeRewriterTests : RewriterTestBase() {
         tc: STRTestCase
     ) {
         val globalBindings = Bindings.ofMap(tc.globals)
-        val rewriter = StaticTypeRewriter(ion, globalBindings, tc.constraints)
+        val transformer = StaticTypeVisitorTransform(ion, globalBindings, tc.constraints)
 
         // We always pass the query under test through all of the basic rewriters primarily because we need
         // FromSourceAliasVisitorTransform to execute first but also to help ensure the queries we're testing
@@ -862,14 +869,14 @@ class StaticTypeRewriterTests : RewriterTestBase() {
         val defaultRewriters = basicRewriters(ion)
         val originalExprNode = defaultRewriters.rewriteExprNode(parse(tc.originalSql))
 
-        val rewrittenExprNode = try {
-            rewriter.rewriteExprNode(originalExprNode)
+        val transformedExprNode = try {
+            transformer.transformStatement(originalExprNode.toAstStatement())
         }
         catch (e: SemanticException) {
             tc.handler(ResolveTestResult.Error(tc, e))
             return
         }
 
-        tc.handler(ResolveTestResult.Value(tc, rewrittenExprNode))
+        tc.handler(ResolveTestResult.Value(tc, transformedExprNode.toExprNode(ion)))
     }
 }

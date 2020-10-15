@@ -4,6 +4,9 @@ import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.metaContainerOf
 import org.partiql.lang.ast.SourceLocationMeta
+import org.partiql.lang.errors.Property
+import org.partiql.lang.errors.PropertyValueMap
+import org.partiql.lang.eval.BindingCase
 
 // TODO:  once https://github.com/partiql/partiql-ir-generator/issues/6 has been completed, we can delete this.
 fun PartiqlAst.Builder.id(name: String) =
@@ -27,4 +30,17 @@ fun PartiqlAst.PartiqlAstNode.extractSourceLocation(): MetaContainer {
                 ?: emptyMetaContainer()
         }
     }
+}
+
+fun PropertyValueMap.addSourceLocation(metas: MetaContainer): PropertyValueMap {
+    (metas[SourceLocationMeta.TAG] as? SourceLocationMeta)?.let {
+        this[Property.LINE_NUMBER] = it.lineNum
+        this[Property.COLUMN_NUMBER] = it.charOffset
+    }
+    return this
+}
+
+fun PartiqlAst.CaseSensitivity.toBindingCase(): BindingCase = when(this) {
+    is PartiqlAst.CaseSensitivity.CaseInsensitive -> BindingCase.INSENSITIVE
+    is PartiqlAst.CaseSensitivity.CaseSensitive -> BindingCase.SENSITIVE
 }
