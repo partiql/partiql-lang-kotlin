@@ -236,25 +236,15 @@ for::{
     ],
 
     variable_sets: [
-        { result: (success null), time_part: "null", left: "`2017T`", right: "`2017T`" },
         { result: (success null), time_part: "year", left: "null",    right: "`2017T`" },
         { result: (success null), time_part: "year", left: "`2017T`", right: "null" },
 
-        { result: (success null), time_part: "missing", left: "`2017T`", right: "`2017T`" },
         { result: (success null), time_part: "year",    left: "missing", right: "`2017T`" },
         { result: (success null), time_part: "year",    left: "`2017T`", right: "missing" },
 
-        { result: (success null), time_part: "null", left: "missing", right: "`2017T`" },
-        { result: (success null), time_part: "null", left: "`2017T`", right: "missing" },
-
-        { result: (success null), time_part: "missing", left: "null", right: "`2017T`" },
         { result: (success null), time_part: "year",    left: "null", right: "missing" },
 
-        { result: (success null), time_part: "missing", left: "`2017T`", right: "null" },
         { result: (success null), time_part: "year",    left: "missing", right: "null" },
-
-        { result: (success null), time_part: "missing", left: "missing", right: "missing" },
-        { result: (success null), time_part: "null",    left: "null",    right: "null" },
     ]
 }
 

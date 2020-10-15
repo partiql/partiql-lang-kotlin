@@ -799,7 +799,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
         fun headPrecedence() = rem.head?.infixPrecedence ?: 0
 
         // XXX this is a Pratt Top-Down Operator Precedence implementation
-        while (!rem.isEmpty() && precedence < headPrecedence()) {
+        while (rem.isNotEmpty() && precedence < headPrecedence()) {
             val op = rem.head!!
             if (!op.isBinaryOperator && op.keywordText !in SPECIAL_INFIX_OPERATORS) {
                 // unrecognized operator
@@ -1009,6 +1009,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
             "substring" -> tail.parseSubstring(head!!)
             "trim" -> tail.parseTrim(head!!)
             "extract" -> tail.parseExtract(head!!)
+            "date_add", "date_diff" -> tail.parseDateAddOrDateDiff(head!!)
             in FUNCTION_NAME_KEYWORDS -> when (tail.head?.type) {
                 LEFT_PAREN ->
                     tail.tail.parseFunctionCall(head!!)
@@ -1046,7 +1047,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
             else -> atomFromHead()
         }
         QUESTION_MARK -> ParseNode(PARAMETER, head!!, listOf(), tail)
-        LITERAL, NULL, MISSING, TRIM_SPECIFICATION, DATE_PART -> atomFromHead()
+        LITERAL, NULL, MISSING, TRIM_SPECIFICATION -> atomFromHead()
         else -> err("Unexpected term", PARSE_UNEXPECTED_TERM)
     }.let { parseNode ->
         // for many of the terms here we parse the tail, assuming the head as
@@ -1819,8 +1820,18 @@ class SqlParser(private val ion: IonSystem) : Parser {
         return ParseNode(ParseType.CALL, name, arguments, rem.tail)
     }
 
+    private fun List<Token>.expectDatePart(): ParseNode =
+        when (this.head?.type) {
+            DATE_PART -> {
+                val datePartToken = this.head!!
+                ParseNode(ATOM, datePartToken, listOf(), this.drop(1))
+            }
+            else -> this.head.err("Expected one of: $DATE_PART_KEYWORDS", PARSE_EXPECTED_DATE_PART)
+        }
+
+
     /**
-     * Parses extract
+     * Parses extract function call.
      *
      * Syntax is EXTRACT(<date_part> FROM <timestamp>).
      */
@@ -1828,19 +1839,29 @@ class SqlParser(private val ion: IonSystem) : Parser {
         if (head?.type != LEFT_PAREN) err("Expected $LEFT_PAREN",
                                           PARSE_EXPECTED_LEFT_PAREN_BUILTIN_FUNCTION_CALL)
 
-        var rem = tail
+        val datePart = this.drop(1).expectDatePart().deriveExpectedKeyword("from")
+        val rem = datePart.remaining
+        val timestamp = rem.parseExpression().deriveExpected(RIGHT_PAREN)
 
-        return when (rem.head?.type) {
-            DATE_PART -> {
-                val datePart = rem.parseExpression().deriveExpectedKeyword("from")
-                rem = datePart.remaining
+        return ParseNode(CALL, name, listOf(datePart, timestamp), timestamp.remaining)
+    }
 
-                val timestamp = rem.parseExpression().deriveExpected(RIGHT_PAREN)
+    /**
+     * Parses a function call using that has the syntax of date_add and date_diff.
+     *
+     * Syntax is <func>(<date_part>, <timestamp>, <timestamp>) where <func>
+     * is the value of [name].
+     */
+    private fun List<Token>.parseDateAddOrDateDiff(name: Token): ParseNode {
+        if (head?.type != LEFT_PAREN) err("Expected $LEFT_PAREN",
+                                          PARSE_EXPECTED_LEFT_PAREN_BUILTIN_FUNCTION_CALL)
 
-                ParseNode(ParseType.CALL, name, listOf(datePart, timestamp), timestamp.remaining)
-            }
-            else      -> rem.head.err("Expected one of: $DATE_PART_KEYWORDS", PARSE_EXPECTED_DATE_PART)
-        }
+        val datePart = this.drop(1).expectDatePart().deriveExpected(COMMA)
+
+        val timestamp1 = datePart.remaining.parseExpression().deriveExpected(COMMA)
+        val timestamp2 = timestamp1.remaining.parseExpression().deriveExpected(RIGHT_PAREN)
+
+        return ParseNode(CALL, name, listOf(datePart, timestamp1, timestamp2), timestamp2.remaining)
     }
 
     private fun List<Token>.parseLet(): ParseNode {
@@ -1909,7 +1930,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
             type = STRUCT
         ).deriveExpected(RIGHT_CURLY)
 
-    private fun List<Token>. parseTableValues(): ParseNode =
+    private fun List<Token>.parseTableValues(): ParseNode =
         parseCommaList {
             var rem = this
             if (rem.head?.type != LEFT_PAREN) {

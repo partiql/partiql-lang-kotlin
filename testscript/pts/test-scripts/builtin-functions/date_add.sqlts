@@ -145,20 +145,12 @@ for::{
     ],
 
     variable_sets: [
-        {  time_part: "null",    quantity: 1,         timestamp: "`2017T`", result: (success null ) },
         {  time_part: year,      quantity: "null",    timestamp: "`2017T`", result: (success null ) },
         {  time_part: year,      quantity: 1,         timestamp: "null",    result: (success null ) },
-        {  time_part: "missing", quantity: 1,         timestamp: "`2017T`", result: (success null ) },
         {  time_part: year,      quantity: "missing", timestamp: "`2017T`", result: (success null ) },
         {  time_part: year,      quantity: 1,         timestamp: "missing", result: (success null ) },
-        {  time_part: "null",    quantity: "missing", timestamp: "`2017T`", result: (success null ) },
-        {  time_part: "null",    quantity: 1,         timestamp: "missing", result: (success null ) },
-        {  time_part: "missing", quantity: "null",    timestamp: "`2017T`", result: (success null ) },
         {  time_part: year,      quantity: "null",    timestamp: "missing", result: (success null ) },
-        {  time_part: "missing", quantity: 1,         timestamp: "null",    result: (success null ) },
         {  time_part: year,      quantity: "missing", timestamp: "null",    result: (success null ) },
-        {  time_part: "null",    quantity: "null",    timestamp: "null",    result: (success null ) },
-        {  time_part: "missing", quantity: "missing", timestamp: "missing", result: (success null ) },
     ]
 }
 

@@ -108,6 +108,8 @@ internal val DATE_PART_KEYWORDS: Set<String> = DatePart.values()
     "exists",
     "external",
     "extract",
+    "date_add",
+    "date_diff",
     "false",
     "fetch",
     "first",
