@@ -1824,8 +1824,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
         val maybeDatePart = this.head
         return when  {
             maybeDatePart?.type == IDENTIFIER && DATE_PART_KEYWORDS.contains(maybeDatePart.text?.toLowerCase()) -> {
-                val datePartToken = maybeDatePart!!
-                ParseNode(ATOM, datePartToken, listOf(), this.tail)
+                ParseNode(ATOM, maybeDatePart, listOf(), this.tail)
             }
             else -> maybeDatePart.err("Expected one of: $DATE_PART_KEYWORDS", PARSE_EXPECTED_DATE_PART)
         }
