@@ -929,7 +929,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     // consume first dot
                     rem = rem.tail
                     val pathPart = when (rem.head?.type) {
-                        IDENTIFIER        -> {
+                        IDENTIFIER       -> {
                             val litToken = Token(LITERAL, ion.newString(rem.head?.text!!), rem.head!!.position)
                             ParseNode(CASE_INSENSITIVE_ATOM, litToken, emptyList(), rem.tail)
                         }
@@ -1820,14 +1820,16 @@ class SqlParser(private val ion: IonSystem) : Parser {
         return ParseNode(ParseType.CALL, name, arguments, rem.tail)
     }
 
-    private fun List<Token>.expectDatePart(): ParseNode =
-        when (this.head?.type) {
-            DATE_PART -> {
-                val datePartToken = this.head!!
-                ParseNode(ATOM, datePartToken, listOf(), this.drop(1))
+    private fun List<Token>.parseDatePart(): ParseNode {
+        val maybeDatePart = this.head
+        return when  {
+            maybeDatePart?.type == IDENTIFIER && DATE_PART_KEYWORDS.contains(maybeDatePart.text?.toLowerCase()) -> {
+                val datePartToken = maybeDatePart!!
+                ParseNode(ATOM, datePartToken, listOf(), this.tail)
             }
-            else -> this.head.err("Expected one of: $DATE_PART_KEYWORDS", PARSE_EXPECTED_DATE_PART)
+            else -> maybeDatePart.err("Expected one of: $DATE_PART_KEYWORDS", PARSE_EXPECTED_DATE_PART)
         }
+    }
 
 
     /**
@@ -1839,7 +1841,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
         if (head?.type != LEFT_PAREN) err("Expected $LEFT_PAREN",
                                           PARSE_EXPECTED_LEFT_PAREN_BUILTIN_FUNCTION_CALL)
 
-        val datePart = this.drop(1).expectDatePart().deriveExpectedKeyword("from")
+        val datePart = this.tail.parseDatePart().deriveExpectedKeyword("from")
         val rem = datePart.remaining
         val timestamp = rem.parseExpression().deriveExpected(RIGHT_PAREN)
 
@@ -1847,7 +1849,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
     }
 
     /**
-     * Parses a function call using that has the syntax of date_add and date_diff.
+     * Parses a function call that has the syntax of `date_add` and `date_diff`.
      *
      * Syntax is <func>(<date_part>, <timestamp>, <timestamp>) where <func>
      * is the value of [name].
@@ -1856,7 +1858,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
         if (head?.type != LEFT_PAREN) err("Expected $LEFT_PAREN",
                                           PARSE_EXPECTED_LEFT_PAREN_BUILTIN_FUNCTION_CALL)
 
-        val datePart = this.drop(1).expectDatePart().deriveExpected(COMMA)
+        val datePart = this.tail.parseDatePart().deriveExpected(COMMA)
 
         val timestamp1 = datePart.remaining.parseExpression().deriveExpected(COMMA)
         val timestamp2 = timestamp1.remaining.parseExpression().deriveExpected(RIGHT_PAREN)

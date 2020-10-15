@@ -1741,6 +1741,34 @@ class EvaluatingCompilerTests : EvaluatorTestBase() {
     fun projectOfSexp() = assertEvalExprValue("SELECT * FROM `(1 2)` as foo", "<<{'_1': `(1 2)` }>>")
 
     @Test
-    fun projectOfUnpivotPath()= assertEvalExprValue("SELECT * FROM <<{'name': 'Marrowstone Brewing'}, {'name': 'Tesla'}>>.*",
+    fun projectOfUnpivotPath() = assertEvalExprValue("SELECT * FROM <<{'name': 'Marrowstone Brewing'}, {'name': 'Tesla'}>>.*",
         "<<{'_1': <<{'name': 'Marrowstone Brewing'}, {'name': 'Tesla'}>>}>>")
+
+    /**
+     * Regression test for https://github.com/partiql/partiql-lang-kotlin/issues/314
+     *
+     * Ensures that date parts can be used as variable names.
+     */
+    @Test
+    fun datePartsAsVariableNames() =
+        assertEvalExprValue(
+            """
+            SELECT VALUE [year, month, day, hour, minute, second]
+            FROM 1968 AS year, 4 AS month, 3 as day, 12 as hour, 31 as minute, 59 as second 
+            """,
+            "<<[1968, 4, 3, 12, 31, 59]>>")
+
+    /**
+     * Regression test for https://github.com/partiql/partiql-lang-kotlin/issues/121
+     *
+     * Ensures that date parts can be used as struct field names.
+     */
+    @Test
+    fun datePartsAsStructFieldNames() =
+        assertEvalExprValue(
+            """
+            SELECT VALUE [x.year, x.month, x.day, x.hour, x.minute, x.second]
+            FROM << { 'year': 1968, 'month': 4, 'day': 3, 'hour': 12, 'minute': 31, 'second': 59 }>> AS x
+            """,
+            "<<[1968, 4, 3, 12, 31, 59]>>")
 }

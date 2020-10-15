@@ -881,29 +881,6 @@ class ParserErrorsTest : TestBase() {
                                                 Property.TOKEN_VALUE to ion.newSymbol("from")))
     }
 
-
-    @Test
-    fun invalidContextForDatePart() {
-        // Regression test for https://github.com/partiql/partiql-lang-kotlin/issues/314
-        // Proves that date part reserved words cannot be used like string literals.
-        checkInputThrowingParserException("foo || year",
-                                          ErrorCode.PARSE_UNEXPECTED_TERM,
-                                          mapOf(Property.LINE_NUMBER to 1L,
-                                                Property.COLUMN_NUMBER to 8L,
-                                                Property.TOKEN_TYPE to TokenType.DATE_PART,
-                                                Property.TOKEN_VALUE to ion.newString("year")))
-    }
-
-    @Test
-    fun callExtractInvalidDatePart() {
-        checkInputThrowingParserException("extract(foobar from b)",
-                                          ErrorCode.PARSE_EXPECTED_DATE_PART,
-                                          mapOf(Property.LINE_NUMBER to 1L,
-                                                Property.COLUMN_NUMBER to 9L,
-                                                Property.TOKEN_TYPE to TokenType.IDENTIFIER,
-                                                Property.TOKEN_VALUE to ion.newSymbol("foobar")))
-    }
-
     @Test
     fun callExtractMissingFrom() {
         checkInputThrowingParserException("extract(year b)",
