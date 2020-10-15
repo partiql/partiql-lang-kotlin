@@ -32,6 +32,10 @@ fun PartiqlAst.PartiqlAstNode.extractSourceLocation(): MetaContainer {
     }
 }
 
+/**
+ * Adds [Property.LINE_NUMBER] and [Property.COLUMN_NUMBER] to the [PropertyValueMap] if the [SourceLocationMeta.TAG]
+ * is present in the passed [metas]. Otherwise, returns the unchanged [PropertyValueMap].
+ */
 fun PropertyValueMap.addSourceLocation(metas: MetaContainer): PropertyValueMap {
     (metas[SourceLocationMeta.TAG] as? SourceLocationMeta)?.let {
         this[Property.LINE_NUMBER] = it.lineNum
@@ -40,6 +44,9 @@ fun PropertyValueMap.addSourceLocation(metas: MetaContainer): PropertyValueMap {
     return this
 }
 
+/**
+ * Converts a [PartiqlAst.CaseSensitivity] to a [BindingCase].
+ */
 fun PartiqlAst.CaseSensitivity.toBindingCase(): BindingCase = when(this) {
     is PartiqlAst.CaseSensitivity.CaseInsensitive -> BindingCase.INSENSITIVE
     is PartiqlAst.CaseSensitivity.CaseSensitive -> BindingCase.SENSITIVE

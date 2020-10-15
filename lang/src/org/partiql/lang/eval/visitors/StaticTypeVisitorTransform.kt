@@ -311,7 +311,8 @@ class StaticTypeVisitorTransform(private val ion: IonSystem,
             }
 
             return PartiqlAst.build {
-                id_(node.name, node.case, newScopeQualifier, node.metas + metaContainerOf(StaticTypeMeta(found.type)).toIonElementMetaContainer())
+                id_(node.name, node.case, newScopeQualifier,
+                    node.metas + metaContainerOf(StaticTypeMeta(found.type)).toIonElementMetaContainer())
             }
         }
 
@@ -362,7 +363,8 @@ class StaticTypeVisitorTransform(private val ion: IonSystem,
             }
 
             val asSymbolicName = node.asAlias
-                                 ?: error("fromSourceLet.variables.asName is null.  This wouldn't be the case if FromSourceAliasVisitorTransform was executed first.")
+                                 ?: error("fromSourceLet.variables.asName is null.  This wouldn't be the case if " +
+                                     "FromSourceAliasVisitorTransform was executed first.")
 
             addLocal(asSymbolicName.text, StaticType.ANY, asSymbolicName.metas)
 
@@ -388,7 +390,8 @@ class StaticTypeVisitorTransform(private val ion: IonSystem,
             }
 
             val asSymbolicName = node.asAlias
-                                 ?: error("fromSourceLet.variables.asName is null.  This wouldn't be the case if FromSourceAliasVisitorTransform was executed first.")
+                                 ?: error("fromSourceLet.variables.asName is null.  This wouldn't be the case if " +
+                                     "FromSourceAliasVisitorTransform was executed first.")
 
             addLocal(asSymbolicName.text, StaticType.ANY, asSymbolicName.metas)
 
@@ -486,9 +489,9 @@ class StaticTypeVisitorTransform(private val ion: IonSystem,
 
         /**
          * This function differs from the the overridden function only in that it does not attempt to resolve
-         * [CreateIndex.keys], which would be a problem because they contain [VariableReference]s yet the keys are
-         * scoped to the table and do not follow traditional lexical scoping rules.  This indicates that
-         * [CreateIndex.keys] is incorrectly modeled as a [List<ExprNode>].
+         * [PartiqlAst.DdlOp.CreateIndex.fields], which would be a problem because they contain [PartiqlAst.Expr.Id]s
+         * yet the fields/keys are scoped to the table and do not follow traditional lexical scoping rules.  This
+         * indicates that [PartiqlAst.DdlOp.CreateIndex.fields] is incorrectly modeled as a [List<ExprNode>].
          */
         override fun transformDdlOpCreateIndex(node: PartiqlAst.DdlOp.CreateIndex): PartiqlAst.DdlOp =
             PartiqlAst.build {
@@ -501,10 +504,10 @@ class StaticTypeVisitorTransform(private val ion: IonSystem,
 
         /**
          * This function differs from the the overridden function only in that it does not attempt to resolve
-         * [DropIndex.identifier], which would be a problem because index names are scoped to the table and do not
-         * follow traditional lexical scoping rules.  This is not something the [StaticTypeVisitorTransform] is currently
-         * plumbed to deal with and also indicates that [DropIndex.identifier] is incorrectly modeled as a
-         * [VariableReference].
+         * [PartiqlAst.DdlOp.DropIndex.table], which would be a problem because index names are scoped to the table
+         * and do not follow traditional lexical scoping rules.  This is not something the [StaticTypeVisitorTransform]
+         * is currently plumbed to deal with and also indicates that [PartiqlAst.DdlOp.DropIndex.table] is incorrectly
+         * modeled as a [PartiqlAst.Expr.Id].
          */
         override fun transformDdlOpDropIndex(node: PartiqlAst.DdlOp.DropIndex): PartiqlAst.DdlOp =
             PartiqlAst.build {
