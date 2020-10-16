@@ -4,34 +4,20 @@
 
 package org.partiql.lang.eval.visitors
 
+import com.amazon.ionelement.api.emptyMetaContainer
+import com.amazon.ionelement.api.toIonElement
 import junitparams.Parameters
 import org.junit.Test
-import org.partiql.lang.ast.CallAgg
-import org.partiql.lang.ast.CaseSensitivity
-import org.partiql.lang.ast.CreateIndex
-import org.partiql.lang.ast.ExprNode
-import org.partiql.lang.ast.Literal
-import org.partiql.lang.ast.MetaContainer
-import org.partiql.lang.ast.NAry
-import org.partiql.lang.ast.NAryOp
-import org.partiql.lang.ast.Path
-import org.partiql.lang.ast.PathComponentExpr
-import org.partiql.lang.ast.ScopeQualifier
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.StaticTypeMeta
-import org.partiql.lang.ast.VariableReference
 import org.partiql.lang.ast.emptyMetaContainer
 import org.partiql.lang.ast.metaContainerOf
-import org.partiql.lang.ast.passes.AstVisitorBase
-import org.partiql.lang.ast.passes.AstWalker
-import org.partiql.lang.ast.passes.RewriterTestBase
 import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.ast.passes.basicRewriters
 import org.partiql.lang.ast.plus
-import org.partiql.lang.ast.sourceLocation
-import org.partiql.lang.ast.staticType
 import org.partiql.lang.ast.toAstStatement
-import org.partiql.lang.ast.toExprNode
+import org.partiql.lang.ast.toIonElementMetaContainer
+import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.Property.BINDING_NAME
@@ -43,7 +29,7 @@ import org.partiql.lang.types.StaticType
 import java.io.PrintWriter
 import java.io.StringWriter
 
-class StaticTypeVisitorTransformTests : RewriterTestBase() {
+class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
 
     data class STRTestCase(val originalSql: String,
                            val globals: Map<String, StaticType>,
@@ -60,14 +46,20 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
         val line: Long,
         val charOffset: Long,
         val staticType: StaticType,
-        val scopeQualifier: ScopeQualifier
+        val scopeQualifier: PartiqlAst.ScopeQualifier
     )
+
+    private val partiqlAstUnqualified = PartiqlAst.build { unqualified() }
+    private val partiqlAstLocalsFirst = PartiqlAst.build { localsFirst() }
+
+    private val partiqlAstCaseSensitive = PartiqlAst.build { caseSensitive() }
+    private val partiqlAstCaseInSensitive = PartiqlAst.build { caseInsensitive() }
 
     @Test
     @Parameters
     fun sfwTest(tc: STRTestCase) = runSTRTest(tc)
-    
-    
+
+
     // In the test cases below there exists comments consisting of a bunch of numbers.  They can be 
     // used to quickly determine the column number of the text immediately beneath it.  For example, 
     // it's easy to see the token "fiftyFive" starts at character 55:
@@ -82,7 +74,7 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
             "b",
             mapOf("b" to StaticType.BAG),
             expectVariableReferences(
-                VarExpectation("b", 1, 1, StaticType.BAG, ScopeQualifier.UNQUALIFIED)
+                VarExpectation("b", 1, 1, StaticType.BAG, partiqlAstUnqualified)
             )
         ),
         STRTestCase(
@@ -91,8 +83,8 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
             "SELECT x FROM b AS x",
             mapOf("b" to StaticType.BAG),
             expectVariableReferences(
-                VarExpectation("x", 1, 8, StaticType.ANY, ScopeQualifier.LEXICAL),
-                VarExpectation("b", 1, 15, StaticType.BAG, ScopeQualifier.UNQUALIFIED)
+                VarExpectation("x", 1, 8, StaticType.ANY, partiqlAstLocalsFirst),
+                VarExpectation("b", 1, 15, StaticType.BAG, partiqlAstUnqualified)
             )
         ),
         STRTestCase(
@@ -104,8 +96,8 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
                 "a" to StaticType.INT
             ),
             expectVariableReferences(
-                VarExpectation("b", 1, 8, StaticType.ANY, ScopeQualifier.LEXICAL),
-                VarExpectation("b", 1, 15, StaticType.LIST, ScopeQualifier.UNQUALIFIED)
+                VarExpectation("b", 1, 8, StaticType.ANY, partiqlAstLocalsFirst),
+                VarExpectation("b", 1, 15, StaticType.LIST, partiqlAstUnqualified)
                 // There is no variable reference to `a` here since `SELECT a FROM b`
                 // is transformed to `SELECT b.a FROM b`
             )
@@ -116,7 +108,7 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
             "SELECT COUNT(*) FROM b",
             mapOf("B" to StaticType.BAG),
             expectVariableReferences(
-                VarExpectation("b", 1, 22, StaticType.BAG, ScopeQualifier.UNQUALIFIED)
+                VarExpectation("b", 1, 22, StaticType.BAG, partiqlAstUnqualified)
             )
         ),
         STRTestCase(
@@ -125,21 +117,18 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
             "SELECT y FROM b AS x",
             mapOf("B" to StaticType.BAG),
             expectSubNode(
-                Path(
-                    VariableReference(
-                        "x",
-                        CaseSensitivity.SENSITIVE,
-                        ScopeQualifier.LEXICAL,
-                        StaticType.ANY.toMetas() + metas(1, 8)
-                    ),
-                    listOf(
-                        PathComponentExpr(
-                            Literal(ion.newString("y"), metas(1, 8)),
-                            CaseSensitivity.INSENSITIVE
-                        )
-                    ),
-                    metas(1, 8)
-                )
+                PartiqlAst.build {
+                    path(
+                        id(
+                            "x",
+                        partiqlAstCaseSensitive,
+                        partiqlAstLocalsFirst,
+                        StaticType.ANY.toMetas() + metas(1, 8)),
+                        listOf(pathExpr(
+                            lit(ion.newString("y").toIonElement(), metas(1, 8)),
+                            partiqlAstCaseInSensitive)),
+                        metas(1, 8))
+                }
             )
         ),
         STRTestCase(
@@ -148,25 +137,25 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
             "SELECT y.z FROM b AS x",
             mapOf("B" to StaticType.BAG),
             expectSubNode(
-                Path(
-                    VariableReference(
-                        "x",
-                        CaseSensitivity.SENSITIVE,
-                        ScopeQualifier.LEXICAL,
-                        StaticType.ANY.toMetas() + metas(1, 8)
-                    ),
-                    listOf(
-                        PathComponentExpr(
-                            Literal(ion.newString("y"), metas(1, 8)),
-                            CaseSensitivity.INSENSITIVE
-                        ),
-                        PathComponentExpr(
-                            Literal(ion.newString("z"), metas(1, 10)),
-                            CaseSensitivity.INSENSITIVE
-                        )
-                    ),
-                    emptyMetaContainer
-                )
+                PartiqlAst.build {
+                    path(
+                        id(
+                            "x",
+                            partiqlAstCaseSensitive,
+                            partiqlAstLocalsFirst,
+                            StaticType.ANY.toMetas() + metas(1, 8)),
+                        listOf(
+                            pathExpr(
+                                lit(ion.newString("y").toIonElement(), metas(1, 8)),
+                                partiqlAstCaseInSensitive
+                            ),
+                            pathExpr(
+                                lit(ion.newString("z").toIonElement(), metas(1, 10)),
+                                partiqlAstCaseInSensitive
+                            )),
+                        emptyMetaContainer()
+                    )
+                }
             )
         ),
         STRTestCase(
@@ -175,8 +164,8 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
             "SELECT x FROM b AT x",
             mapOf("b" to StaticType.BAG),
             expectVariableReferences(
-                VarExpectation("x", 1, 8, StaticType.ANY, ScopeQualifier.LEXICAL),
-                VarExpectation("b", 1, 15, StaticType.BAG, ScopeQualifier.UNQUALIFIED)
+                VarExpectation("x", 1, 8, StaticType.ANY, partiqlAstLocalsFirst),
+                VarExpectation("b", 1, 15, StaticType.BAG, partiqlAstUnqualified)
             )
         ),
         STRTestCase(
@@ -185,9 +174,9 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
             "SELECT y FROM b AS x, x AS whatever AT y",
             mapOf("b" to StaticType.BAG),
             expectVariableReferences(
-                VarExpectation("y", 1, 8, StaticType.ANY, ScopeQualifier.LEXICAL),
-                VarExpectation("b", 1, 15, StaticType.BAG, ScopeQualifier.UNQUALIFIED),
-                VarExpectation("x", 1, 23, StaticType.ANY, ScopeQualifier.LEXICAL)
+                VarExpectation("y", 1, 8, StaticType.ANY, partiqlAstLocalsFirst),
+                VarExpectation("b", 1, 15, StaticType.BAG, partiqlAstUnqualified),
+                VarExpectation("x", 1, 23, StaticType.ANY, partiqlAstLocalsFirst)
             )
         ),
         STRTestCase(
@@ -240,21 +229,21 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
             mapOf(
                 "b" to StaticType.BAG,
                 "a" to StaticType.BAG),
-            expectSubNode(Path(
-                VariableReference(
-                    "b",
-                    CaseSensitivity.SENSITIVE,
-                    ScopeQualifier.LEXICAL,
-                    StaticType.ANY.toMetas() + metas(1, 8)
-                ),
-                listOf(
-                    PathComponentExpr(
-                        Literal(ion.newString("a"), metas(1, 8)),
-                        CaseSensitivity.INSENSITIVE
-                    )
-                ),
-                metas(1, 8)
-            ))
+            expectSubNode(
+                PartiqlAst.build {
+                    path(
+                        id(
+                            "b",
+                            partiqlAstCaseSensitive,
+                            partiqlAstLocalsFirst,
+                            StaticType.ANY.toMetas() + metas(1, 8)),
+                        listOf(
+                            pathExpr(
+                                lit(ion.newString("a").toIonElement(), metas(1, 8)),
+                                partiqlAstCaseInSensitive)),
+                        metas(1, 8))
+                }
+            )
         ),
         // ambiguous binding introduced in FROM clause (same AS-binding introduced twice)
         STRTestCase(
@@ -331,10 +320,10 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
             mapOf("a" to StaticType.ANY,
                   "b" to StaticType.ANY),
             expectVariableReferences(
-                VarExpectation("a", 1, 15, StaticType.ANY, ScopeQualifier.UNQUALIFIED),
+                VarExpectation("a", 1, 15, StaticType.ANY, partiqlAstUnqualified),
                 // The [VarExpectation] below proves that the "b" in the "b AS c" from source was resolved in the global scope.
-                VarExpectation("b", 1, 23, StaticType.ANY, ScopeQualifier.UNQUALIFIED),
-                VarExpectation("c", 1, 31, StaticType.ANY, ScopeQualifier.LEXICAL))
+                VarExpectation("b", 1, 23, StaticType.ANY, partiqlAstUnqualified),
+                VarExpectation("c", 1, 31, StaticType.ANY, partiqlAstLocalsFirst))
         ),
 
         // @ causes the local b to be resolved instead of the global b.
@@ -346,8 +335,8 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
                 "B" to StaticType.BAG
             ),
             expectVariableReferences(
-                VarExpectation("b", 1, 15, StaticType.BAG, ScopeQualifier.UNQUALIFIED),
-                VarExpectation("b", 1, 24, StaticType.ANY, ScopeQualifier.LEXICAL)
+                VarExpectation("b", 1, 15, StaticType.BAG, partiqlAstUnqualified),
+                VarExpectation("b", 1, 24, StaticType.ANY, partiqlAstLocalsFirst)
             )
         ),
         // Group By should not be allowed
@@ -373,8 +362,8 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
             mapOf("x" to StaticType.BAG,
                   "y" to StaticType.BOOL),
             expectVariableReferences(
-                VarExpectation("x", 1, 6, StaticType.BAG, ScopeQualifier.UNQUALIFIED),
-                VarExpectation("x", 1, 20, StaticType.ANY, ScopeQualifier.LEXICAL))
+                VarExpectation("x", 1, 6, StaticType.BAG, partiqlAstUnqualified),
+                VarExpectation("x", 1, 20, StaticType.ANY, partiqlAstLocalsFirst))
             //No expectation for y because `FROM x INSERT INTO y ...` is transformed to `FROM x INSERT INTO x.y ...`
         ),
         STRTestCase(
@@ -383,7 +372,7 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
             "INSERT INTO x VALUE 5",
             mapOf("x" to StaticType.BAG),
             expectVariableReferences(
-                VarExpectation("x", 1, 13, StaticType.BAG, ScopeQualifier.UNQUALIFIED)
+                VarExpectation("x", 1, 13, StaticType.BAG, partiqlAstUnqualified)
             )
         ),
         STRTestCase(
@@ -394,8 +383,8 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
                 "x" to StaticType.BAG,
                 "y" to StaticType.BOOL),
             expectVariableReferences(
-                VarExpectation("x", 1, 6, StaticType.BAG, ScopeQualifier.UNQUALIFIED),
-                VarExpectation("x", 1, 20, StaticType.ANY, ScopeQualifier.LEXICAL))
+                VarExpectation("x", 1, 6, StaticType.BAG, partiqlAstUnqualified),
+                VarExpectation("x", 1, 20, StaticType.ANY, partiqlAstLocalsFirst))
             //No expectation for y because `FROM x INSERT INTO y ...` is transformed to `FROM x INSERT INTO x.y ...`
         ),
         STRTestCase(
@@ -404,8 +393,8 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
             "FROM x AS y SET doesntmatter = 1",
             mapOf("x" to StaticType.BAG),
             expectVariableReferences(
-                VarExpectation("x", 1, 6, StaticType.BAG, ScopeQualifier.UNQUALIFIED),
-                VarExpectation("y", 1, 17, StaticType.ANY, ScopeQualifier.LEXICAL)
+                VarExpectation("x", 1, 6, StaticType.BAG, partiqlAstUnqualified),
+                VarExpectation("y", 1, 17, StaticType.ANY, partiqlAstLocalsFirst)
             )
         ),
         STRTestCase(
@@ -415,8 +404,8 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
             mapOf("x" to StaticType.BAG,
                   "y" to StaticType.BOOL),
             expectVariableReferences(
-                VarExpectation("x", 1, 13, StaticType.BAG, ScopeQualifier.UNQUALIFIED),
-                VarExpectation("x", 1, 21, StaticType.ANY, ScopeQualifier.LEXICAL)
+                VarExpectation("x", 1, 13, StaticType.BAG, partiqlAstUnqualified),
+                VarExpectation("x", 1, 21, StaticType.ANY, partiqlAstLocalsFirst)
             )
         ),
         STRTestCase(
@@ -427,9 +416,9 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
                   "y" to StaticType.BOOL,
                   "z" to StaticType.INT),
             expectVariableReferences(
-                VarExpectation("x", 1, 6, StaticType.BAG, ScopeQualifier.UNQUALIFIED),
-                VarExpectation("x", 1, 14, StaticType.ANY, ScopeQualifier.LEXICAL),
-                VarExpectation("x", 1, 23, StaticType.ANY, ScopeQualifier.LEXICAL)
+                VarExpectation("x", 1, 6, StaticType.BAG, partiqlAstUnqualified),
+                VarExpectation("x", 1, 14, StaticType.ANY, partiqlAstLocalsFirst),
+                VarExpectation("x", 1, 23, StaticType.ANY, partiqlAstLocalsFirst)
             )
         ),
         STRTestCase(
@@ -438,10 +427,10 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
             "FROM canines AS dogs, dogs AS d WHERE d.name = 'Timmy' SET d.colour = 'blue merle'",
             mapOf("canines" to StaticType.BAG),
             expectVariableReferences(
-                VarExpectation("canines", 1, 6, StaticType.BAG, ScopeQualifier.UNQUALIFIED),
-                VarExpectation("dogs", 1, 23, StaticType.ANY, ScopeQualifier.LEXICAL),
-                VarExpectation("d", 1, 39, StaticType.ANY, ScopeQualifier.LEXICAL),
-                VarExpectation("d", 1, 60, StaticType.ANY, ScopeQualifier.LEXICAL)
+                VarExpectation("canines", 1, 6, StaticType.BAG, partiqlAstUnqualified),
+                VarExpectation("dogs", 1, 23, StaticType.ANY, partiqlAstLocalsFirst),
+                VarExpectation("d", 1, 39, StaticType.ANY, partiqlAstLocalsFirst),
+                VarExpectation("d", 1, 60, StaticType.ANY, partiqlAstLocalsFirst)
             )
         ),
         STRTestCase(
@@ -450,10 +439,10 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
             "FROM animals AS a, a.dogs AS d WHERE d.name = 'Timmy' SET d.colour = 'blue merle'",
             mapOf("animals" to StaticType.BAG),
             expectVariableReferences(
-                VarExpectation("animals", 1, 6, StaticType.BAG, ScopeQualifier.UNQUALIFIED),
-                VarExpectation("a", 1, 20, StaticType.ANY, ScopeQualifier.LEXICAL),
-                VarExpectation("d", 1, 38, StaticType.ANY, ScopeQualifier.LEXICAL),
-                VarExpectation("d", 1, 59, StaticType.ANY, ScopeQualifier.LEXICAL)
+                VarExpectation("animals", 1, 6, StaticType.BAG, partiqlAstUnqualified),
+                VarExpectation("a", 1, 20, StaticType.ANY, partiqlAstLocalsFirst),
+                VarExpectation("d", 1, 38, StaticType.ANY, partiqlAstLocalsFirst),
+                VarExpectation("d", 1, 59, StaticType.ANY, partiqlAstLocalsFirst)
             )
         ),
         // DML undefined variables.
@@ -473,8 +462,8 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
             "DELETE FROM x as y WHERE z",
             mapOf("x" to StaticType.BAG),
             expectVariableReferences(
-                VarExpectation("x", 1, 13, StaticType.BAG, ScopeQualifier.UNQUALIFIED),
-                VarExpectation("y", 1, 26, StaticType.ANY, ScopeQualifier.LEXICAL)
+                VarExpectation("x", 1, 13, StaticType.BAG, partiqlAstUnqualified),
+                VarExpectation("y", 1, 26, StaticType.ANY, partiqlAstLocalsFirst)
             )
         ),
         STRTestCase(
@@ -483,9 +472,9 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
             "UPDATE dogs as d SET name = 'Timmy' WHERE color = 'Blue merle'",
             mapOf("dogs" to StaticType.BAG),
             expectVariableReferences(
-                VarExpectation("dogs", 1, 8, StaticType.BAG, ScopeQualifier.UNQUALIFIED),
-                VarExpectation("d", 1, 22, StaticType.ANY, ScopeQualifier.LEXICAL),
-                VarExpectation("d", 1, 43, StaticType.ANY, ScopeQualifier.LEXICAL))
+                VarExpectation("dogs", 1, 8, StaticType.BAG, partiqlAstUnqualified),
+                VarExpectation("d", 1, 22, StaticType.ANY, partiqlAstLocalsFirst),
+                VarExpectation("d", 1, 43, StaticType.ANY, partiqlAstLocalsFirst))
         )
     )
 
@@ -564,8 +553,8 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
                 "B" to StaticType.BAG
             ),
             expectVariableReferences(
-                VarExpectation("b1", 1, 8, StaticType.ANY, ScopeQualifier.LEXICAL),
-                VarExpectation("b", 1, 18, StaticType.BAG, ScopeQualifier.UNQUALIFIED)
+                VarExpectation("b1", 1, 8, StaticType.ANY, partiqlAstLocalsFirst),
+                VarExpectation("b", 1, 18, StaticType.BAG, partiqlAstUnqualified)
             ),
             setOf(StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM)
         ),
@@ -579,10 +568,10 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
                 "C" to StaticType.BAG
             ),
             expectVariableReferences(
-                VarExpectation("c1", 1, 19, StaticType.ANY, ScopeQualifier.LEXICAL),
-                VarExpectation("c", 1, 29, StaticType.BAG, ScopeQualifier.UNQUALIFIED),
-                VarExpectation("b", 1, 43, StaticType.BAG, ScopeQualifier.UNQUALIFIED),
-                VarExpectation("c", 1, 61, StaticType.BAG, ScopeQualifier.UNQUALIFIED)
+                VarExpectation("c1", 1, 19, StaticType.ANY, partiqlAstLocalsFirst),
+                VarExpectation("c", 1, 29, StaticType.BAG, partiqlAstUnqualified),
+                VarExpectation("b", 1, 43, StaticType.BAG, partiqlAstUnqualified),
+                VarExpectation("c", 1, 61, StaticType.BAG, partiqlAstUnqualified)
             ),
             setOf(StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM)
         ),
@@ -594,9 +583,9 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
             mapOf("movies" to StaticType.BAG,
                   "actors" to StaticType.BAG),
             expectVariableReferences(
-                VarExpectation("actors", 1, 15, StaticType.BAG, ScopeQualifier.UNQUALIFIED),
-                VarExpectation("a", 1, 25, StaticType.ANY, ScopeQualifier.LEXICAL),
-                VarExpectation("movies", 1, 38, StaticType.BAG, ScopeQualifier.UNQUALIFIED)
+                VarExpectation("actors", 1, 15, StaticType.BAG, partiqlAstUnqualified),
+                VarExpectation("a", 1, 25, StaticType.ANY, partiqlAstLocalsFirst),
+                VarExpectation("movies", 1, 38, StaticType.BAG, partiqlAstUnqualified)
             ),
             setOf(StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM)),
         STRTestCase(
@@ -641,11 +630,11 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
             expectVariableReferences(
                 // No scope qualifier below because `b` is referenced twice: once with the lexical scope
                 // qualifier, and once without.
-                VarExpectation("c1", 1, 19, StaticType.ANY, ScopeQualifier.LEXICAL),
-                VarExpectation("c", 1, 29, StaticType.BAG, ScopeQualifier.UNQUALIFIED),
-                VarExpectation("b", 1, 43, StaticType.BAG, ScopeQualifier.UNQUALIFIED),
-                VarExpectation("b", 1, 52, StaticType.ANY, ScopeQualifier.LEXICAL),
-                VarExpectation("c1", 1, 78, StaticType.ANY, ScopeQualifier.LEXICAL)
+                VarExpectation("c1", 1, 19, StaticType.ANY, partiqlAstLocalsFirst),
+                VarExpectation("c", 1, 29, StaticType.BAG, partiqlAstUnqualified),
+                VarExpectation("b", 1, 43, StaticType.BAG, partiqlAstUnqualified),
+                VarExpectation("b", 1, 52, StaticType.ANY, partiqlAstLocalsFirst),
+                VarExpectation("c1", 1, 78, StaticType.ANY, partiqlAstLocalsFirst)
             ),
             setOf(StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM)
         ),
@@ -656,21 +645,19 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
             mapOf("dogs" to StaticType.BAG,
                   "collies" to StaticType.BAG),
             expectSubNode(
-                Path(
-                    VariableReference(
-                        "d",
-                        CaseSensitivity.SENSITIVE,
-                        ScopeQualifier.LEXICAL,
-                        StaticType.ANY.toMetas() + metas(1, 8)
-                    ),
-                    listOf(
-                        PathComponentExpr(
-                            Literal(ion.newString("collies"), metas(1, 8)),
-                            CaseSensitivity.INSENSITIVE
-                        )
-                    ),
-                    metas(1, 8)
-                )),
+                PartiqlAst.build {
+                    path(
+                        id(
+                            "d",
+                            partiqlAstCaseSensitive,
+                            partiqlAstLocalsFirst,
+                            StaticType.ANY.toMetas() + metas(1, 8)),
+                        listOf(
+                            pathExpr(
+                                lit(ion.newString("collies").toIonElement(), metas(1, 8)),
+                                partiqlAstCaseInSensitive)),
+                        metas(1, 8))
+                }),
             setOf(StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM)
         ),
         // DML with PREVENT_GLOBALS_EXCEPT_IN_FROM
@@ -681,22 +668,19 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
             mapOf("dogs" to StaticType.BAG,
                   "collies" to StaticType.BAG),
             expectSubNode(
-                Path(
-                    VariableReference(
-                        "d",
-                        CaseSensitivity.SENSITIVE,
-                        ScopeQualifier.LEXICAL,
-                        StaticType.ANY.toMetas() + metas(1, 25)
-                    ),
-                    listOf(
-                        PathComponentExpr(
-                            Literal(ion.newString("collies"), metas(1, 8)),
-                            CaseSensitivity.INSENSITIVE
-                        )
-                    ),
-                    metas(1, 25)
-                )
-            ),
+                PartiqlAst.build {
+                    path(
+                        id(
+                            "d",
+                            partiqlAstCaseSensitive,
+                            partiqlAstLocalsFirst,
+                            StaticType.ANY.toMetas() + metas(1, 25)),
+                        listOf(
+                            pathExpr(
+                                lit(ion.newString("collies").toIonElement(), metas(1, 8)),
+                                partiqlAstCaseInSensitive)),
+                        metas(1, 25))
+                }),
             setOf(StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM)),
         STRTestCase(
             //        1         2         3         4         5         6         7         8
@@ -704,7 +688,7 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
             "INSERT INTO dogs VALUE 'Timmy'",
             mapOf("dogs" to StaticType.BAG),
             expectVariableReferences(
-                VarExpectation("dogs", 1, 13, StaticType.BAG, ScopeQualifier.UNQUALIFIED)
+                VarExpectation("dogs", 1, 13, StaticType.BAG, partiqlAstUnqualified)
             ),
             setOf(StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM)),
         // captures the var ranging over dogs and implicitly prefixes id and owner
@@ -714,16 +698,21 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
             "UPDATE dogs d SET name = 'Timmy' WHERE owner = 'Margaret'",
             mapOf("dogs" to StaticType.BAG),
             expectVariableReferences(
-                VarExpectation("dogs", 1, 8, StaticType.BAG, ScopeQualifier.UNQUALIFIED),
-                VarExpectation("d", 1, 19, StaticType.ANY, ScopeQualifier.LEXICAL),
-                VarExpectation("d", 1, 40, StaticType.ANY, ScopeQualifier.LEXICAL)),
+                VarExpectation("dogs", 1, 8, StaticType.BAG, partiqlAstUnqualified),
+                VarExpectation("d", 1, 19, StaticType.ANY, partiqlAstLocalsFirst),
+                VarExpectation("d", 1, 40, StaticType.ANY, partiqlAstLocalsFirst)),
             setOf(StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM))
     )
 
     sealed class ResolveTestResult {
-        data class Value(val testCase: STRTestCase, val node: ExprNode) : ResolveTestResult()
+        data class Value(val testCase: STRTestCase, val node: PartiqlAst.Statement) : ResolveTestResult()
         data class Error(val testCase: STRTestCase, val error: SemanticException) : ResolveTestResult()
     }
+
+//    sealed class ResolveTestResult {
+//        data class Value(val testCase: STRTestCase, val node: ExprNode) : ResolveTestResult()
+//        data class Error(val testCase: STRTestCase, val error: SemanticException) : ResolveTestResult()
+//    }
 
     private fun expectErr(code: ErrorCode, vararg properties: Pair<Property, Any>): (ResolveTestResult) -> Unit = {
         when (it) {
@@ -755,33 +744,33 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
                 val remainingExpectations = varExpectations.toMutableList()
 
                 // all variable reference nodes should be tagged
-                val visitor = object : AstVisitorBase() {
-                    override fun visitExprNode(expr: ExprNode) {
-                        when (expr) {
-                            is VariableReference -> {
-                                val sourceLocationMeta = expr.metas.sourceLocation
-                                                         ?: error("VariableReference '${expr.id}' had no SourceLocationMeta")
+                val visitor = object : PartiqlAst.Visitor() {
+                    override fun visitExpr(node: PartiqlAst.Expr) {
+                        when (node) {
+                            is PartiqlAst.Expr.Id -> {
+                                val sourceLocationMeta = node.metas[SourceLocationMeta.TAG] as SourceLocationMeta?
+                                                         ?: error("VariableReference '${node.name.text}' had no SourceLocationMeta")
 
                                 // Find a VarExpectation that matches the given VariableReference
                                 val matchingExpectation = remainingExpectations.firstOrNull {
-                                    it.id == expr.id &&
+                                    it.id == node.name.text &&
                                     it.line == sourceLocationMeta.lineNum &&
                                     it.charOffset == sourceLocationMeta.charOffset
-                                } ?: error("No expectation found for VariableReference ${expr.id} at $sourceLocationMeta")
+                                } ?: error("No expectation found for VariableReference ${node.name.text} at $sourceLocationMeta")
 
                                 remainingExpectations.remove(matchingExpectation)
 
                                 assertEquals(
-                                    "VariableReference '${expr.id}' at $sourceLocationMeta scope qualifier must match expectation",
+                                    "VariableReference '${node.name.text}' at $sourceLocationMeta scope qualifier must match expectation",
                                     matchingExpectation.scopeQualifier,
-                                    expr.scopeQualifier
+                                    node.qualifier
                                 )
 
-                                val staticTypeMeta = expr.metas.staticType ?:
-                                                     error("VariableReference '${expr.id}' at $sourceLocationMeta had no StaticTypeMeta")
+                                val staticTypeMeta = node.metas[StaticTypeMeta.TAG] as StaticTypeMeta?
+                                                     ?: error("VariableReference '${node.name.text}' at $sourceLocationMeta had no StaticTypeMeta")
 
                                 assertEquals(
-                                    "VariableReference ${expr.id} at $sourceLocationMeta static type must match expectation",
+                                    "VariableReference ${node.name.text} at $sourceLocationMeta static type must match expectation",
                                     staticTypeMeta.type,
                                     matchingExpectation.staticType
                                 )
@@ -789,33 +778,32 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
                             else -> { /* do nothing */ }
                         }
                     }
+
+                    override fun walkExpr(node: PartiqlAst.Expr) {
+                        //do not walk the name of a function call this should be a symbolic name in another namespace (AST is over generalized here)
+                        when {
+                            node is PartiqlAst.Expr.Call -> {
+                                visitExpr(node)
+                                node.args.forEach { this.walkExpr(it) }
+                                return
+                            }
+                            node is PartiqlAst.Expr.CallAgg -> {
+                                // same for CallAgg
+                                this.walkExpr(node.arg)
+                                return
+                            }
+                        }
+                        // For everything else, rely on the super AstWalker.
+                        super.walkExpr(node)
+                    }
+
+                    override fun walkDdlOpCreateIndex(node: PartiqlAst.DdlOp.CreateIndex) {
+                        return
+                    }
+
                 }
 
-                object : AstWalker(visitor) {
-                    override fun walkExprNode(vararg exprs: ExprNode?) {
-                        exprs.filterNotNull().forEach { expr: ExprNode ->
-                            //do not walk the name of a function call this should be a symbolic name in another namespace (AST is over generalized here)
-                            when {
-                                expr is NAry && expr.op == NAryOp.CALL -> {
-                                    visitor.visitExprNode(expr)
-                                    expr.args.drop(1).forEach { this.walkExprNode(it) }
-                                    return
-                                }
-                                expr is CallAgg                        -> {
-                                    // same for CallAgg
-                                    this.walkExprNode(expr.arg)
-                                    return
-                                }
-                                expr is CreateIndex -> {
-                                    // Ignore variable references within CREATE INDEX.
-                                    return
-                                }
-                            }
-                            // For everything else, rely on the super AstWalker.
-                            super.walkExprNode(expr)
-                        }
-                    }
-                }.walk(result.node)
+                visitor.walkStatement(result.node)
 
                 if(remainingExpectations.any()) {
                     println("Unmet expectations:")
@@ -831,31 +819,31 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
         }
     }
 
-
-    fun expectSubNode(expectedNode: ExprNode): (ResolveTestResult) -> Unit = {
+    fun expectSubNode(expectedNode: PartiqlAst.Expr): (ResolveTestResult) -> Unit = {
         when (it) {
             is ResolveTestResult.Error -> fail("Expected value, not failure ${it.error}")
             is ResolveTestResult.Value -> {
                 var found = false
-                val visitor = object : AstVisitorBase() {
-                    override fun visitExprNode(expr: ExprNode) {
-                        if (expr == expectedNode) {
+
+                val visitor = object : PartiqlAst.Visitor() {
+                    override fun visitExpr(node: PartiqlAst.Expr) {
+                        if (node == expectedNode) {
                             found = true
                         }
                     }
                 }
 
-                AstWalker(visitor).walk(it.node)
+                visitor.walkExpr(expectedNode)
                 assertTrue("Could not find $expectedNode in ${it.node}", found)
             }
         }
     }
 
-    private fun metas(line: Long, column: Long, type: StaticType? = null): MetaContainer =
-        metaContainerOf(SourceLocationMeta(line, column)) +
-        (type?.let { metaContainerOf(StaticTypeMeta(it)) } ?: emptyMetaContainer)
+    private fun metas(line: Long, column: Long, type: StaticType? = null): com.amazon.ionelement.api.MetaContainer =
+        (metaContainerOf(SourceLocationMeta(line, column)) +
+        (type?.let { metaContainerOf(StaticTypeMeta(it)) } ?: emptyMetaContainer)).toIonElementMetaContainer()
 
-    private fun StaticType.toMetas(): MetaContainer = metaContainerOf(StaticTypeMeta(this))
+    private fun StaticType.toMetas(): com.amazon.ionelement.api.MetaContainer = metaContainerOf(StaticTypeMeta(this)).toIonElementMetaContainer()
 
     private fun runSTRTest(
         tc: STRTestCase
@@ -863,20 +851,20 @@ class StaticTypeVisitorTransformTests : RewriterTestBase() {
         val globalBindings = Bindings.ofMap(tc.globals)
         val transformer = StaticTypeVisitorTransform(ion, globalBindings, tc.constraints)
 
-        // We always pass the query under test through all of the basic rewriters primarily because we need
+        // We always pass the query under test through all of the basic transformers primarily because we need
         // FromSourceAliasVisitorTransform to execute first but also to help ensure the queries we're testing
         // make sense when they're all run.
-        val defaultRewriters = basicRewriters(ion)
-        val originalExprNode = defaultRewriters.rewriteExprNode(parse(tc.originalSql))
+        val defaultTransformers = basicRewriters(ion)
+        val originalPartiqlAst = defaultTransformers.rewriteExprNode(parse(tc.originalSql)).toAstStatement()
 
         val transformedExprNode = try {
-            transformer.transformStatement(originalExprNode.toAstStatement())
+            transformer.transformStatement(originalPartiqlAst)
         }
         catch (e: SemanticException) {
             tc.handler(ResolveTestResult.Error(tc, e))
             return
         }
 
-        tc.handler(ResolveTestResult.Value(tc, transformedExprNode.toExprNode(ion)))
+        tc.handler(ResolveTestResult.Value(tc, transformedExprNode))
     }
 }
