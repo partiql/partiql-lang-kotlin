@@ -14,10 +14,9 @@
 
 package org.partiql.lang.eval.visitors
 
+import com.amazon.ionelement.api.metaContainerOf
 import org.partiql.lang.ast.IsSyntheticNameMeta
 import org.partiql.lang.ast.UniqueNameMeta
-import org.partiql.lang.ast.metaContainerOf
-import org.partiql.lang.ast.toIonElementMetaContainer
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.errNoContext
 
@@ -139,7 +138,7 @@ class GroupByPathExpressionVisitorTransform(
                             name = groupKey.asAlias.text,
                             case = caseSensitive(),
                             qualifier = unqualified(),
-                            metas = groupKey.expr.metas + metaContainerOf(uniqueIdentifierMeta).toIonElementMetaContainer())
+                            metas = groupKey.expr.metas + metaContainerOf(UniqueNameMeta.TAG to uniqueIdentifierMeta))
                     })
             }.associateBy { it.target }
     }
