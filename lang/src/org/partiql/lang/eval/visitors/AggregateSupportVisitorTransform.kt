@@ -35,7 +35,7 @@ class AggregateSupportVisitorTransform : PartiqlAst.VisitorTransform() {
     inner class RegisterIdAdderSubVisitorTransform : PartiqlAst.VisitorTransform() {
         /**
          * Nests another [AggregateSupportVisitorTransform] within this transform
-         * in order to avoid operating on [aggregateCallSites] of a nested SELECT.
+         * in order to avoid exposing [aggregateCallSites] to subqueries.
          */
         override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlAst.Expr =
             AggregateSupportVisitorTransform().transformExpr(node)
@@ -48,7 +48,7 @@ class AggregateSupportVisitorTransform : PartiqlAst.VisitorTransform() {
                     setq = node.setq,
                     funcName = node.funcName,
                     arg = transformExpr(node.arg),
-                    metas = transformMetas(node.arg.metas) + metaContainerOf(AggregateRegisterIdMeta.TAG to AggregateRegisterIdMeta(aggregateCallSites.size - 1))
+                    metas = transformMetas(node.metas) + metaContainerOf(AggregateRegisterIdMeta.TAG to AggregateRegisterIdMeta(aggregateCallSites.size - 1))
                 )
             }
         }
@@ -70,7 +70,7 @@ class AggregateSupportVisitorTransform : PartiqlAst.VisitorTransform() {
 
     /**
      * Applies a new instance of [AggregateSupportVisitorTransform]
-     * to [SelectProjectionValue] nodes so that a new they different instance of [aggregateCallSites].
+     * to [SelectProjectionValue] nodes so that a different instance of [aggregateCallSites] is used.
      */
     override fun transformProjectionProjectValue(node: PartiqlAst.Projection.ProjectValue): PartiqlAst.Projection =
         PartiqlAst.build {
