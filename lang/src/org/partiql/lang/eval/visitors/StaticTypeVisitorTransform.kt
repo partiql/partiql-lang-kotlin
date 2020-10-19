@@ -6,11 +6,10 @@ package org.partiql.lang.eval.visitors
 
 import com.amazon.ion.IonSystem
 import com.amazon.ionelement.api.MetaContainer
+import com.amazon.ionelement.api.metaContainerOf
 import com.amazon.ionelement.api.toIonElement
 import org.partiql.lang.ast.StaticTypeMeta
-import org.partiql.lang.ast.metaContainerOf
 import org.partiql.lang.ast.passes.SemanticException
-import org.partiql.lang.ast.toIonElementMetaContainer
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.addSourceLocation
 import org.partiql.lang.domains.extractSourceLocation
@@ -145,7 +144,7 @@ class StaticTypeVisitorTransform(private val ion: IonSystem,
                 id(sourceName,
                     caseSensitive(),
                     localsFirst(),
-                    metas + metaContainerOf(StaticTypeMeta(sourceType.type)).toIonElementMetaContainer())
+                    metas + metaContainerOf(StaticTypeMeta.TAG to StaticTypeMeta(sourceType.type)))
             }
         }
 
@@ -312,7 +311,7 @@ class StaticTypeVisitorTransform(private val ion: IonSystem,
 
             return PartiqlAst.build {
                 id_(node.name, node.case, newScopeQualifier,
-                    node.metas + metaContainerOf(StaticTypeMeta(found.type)).toIonElementMetaContainer())
+                    node.metas + metaContainerOf(StaticTypeMeta.TAG to StaticTypeMeta(found.type)))
             }
         }
 
