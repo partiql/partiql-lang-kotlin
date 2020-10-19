@@ -17,13 +17,13 @@ package org.partiql.lang.eval
 
 import com.amazon.ion.*
 import org.partiql.lang.ast.*
-import org.partiql.lang.ast.passes.*
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.*
 import org.partiql.lang.eval.binding.*
 import org.partiql.lang.eval.like.PatternPart
 import org.partiql.lang.eval.like.executePattern
 import org.partiql.lang.eval.like.parsePattern
+import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.*
 import java.math.*
@@ -207,7 +207,7 @@ internal class EvaluatingCompiler(
     fun compile(originalAst: ExprNode): Expression {
         val rewrittenAst = compileOptions.rewritingMode.createRewriter(valueFactory.ion).rewriteExprNode(originalAst)
 
-        AstSanityValidator.validate(rewrittenAst)
+        PartiqlAstSanityValidator.validate(rewrittenAst.toAstStatement())
 
         val thunk = nestCompilationContext(ExpressionContext.NORMAL, emptySet()) {
             compileExprNode(rewrittenAst)
@@ -1313,7 +1313,7 @@ internal class EvaluatingCompiler(
             err("COUNT(*) is not allowed in this context", errorContextFrom(metas), internal = false)
         }
 
-        val funcVarRef = funcExpr as VariableReference  // AstSanityValidator ensures this cast will succeed
+        val funcVarRef = funcExpr as VariableReference  // PartiqlAstSanityValidator ensures this cast will succeed
 
         val aggFactory = getAggregatorFactory(funcVarRef.id.toLowerCase(), setQuantifier, metas)
 
