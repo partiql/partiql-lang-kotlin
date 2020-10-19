@@ -58,12 +58,6 @@ class DateDiffEvaluationTest : EvaluatorTestBase() {
                                            "1",
                                            mapOf("a" to "2016-01-10T05:30:55Z",
                                                  "b" to "2017-01-10T05:30:55Z").toSession())
-
-    @Test
-    fun wrongArgumentTypes1() = assertThrows("Expected text: 1", NodeMetadata(1, 1)) {
-        voidEval("date_diff(1, `2016-01-10T05:30:55Z`, `2017-01-10T05:30:55Z`)")
-    }
-
     @Test
     fun wrongArgumentTypes2() = assertThrows("Expected timestamp: 1", NodeMetadata(1, 1)) {
         voidEval("date_diff(second, 1, `2017-01-10T05:30:55Z`)")

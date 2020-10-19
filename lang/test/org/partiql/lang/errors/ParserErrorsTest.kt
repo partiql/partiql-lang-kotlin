@@ -882,16 +882,6 @@ class ParserErrorsTest : TestBase() {
     }
 
     @Test
-    fun callExtractInvalidDatePart() {
-        checkInputThrowingParserException("extract(foobar from b)",
-                                          ErrorCode.PARSE_EXPECTED_DATE_PART,
-                                          mapOf(Property.LINE_NUMBER to 1L,
-                                                Property.COLUMN_NUMBER to 9L,
-                                                Property.TOKEN_TYPE to TokenType.IDENTIFIER,
-                                                Property.TOKEN_VALUE to ion.newSymbol("foobar")))
-    }
-
-    @Test
     fun callExtractMissingFrom() {
         checkInputThrowingParserException("extract(year b)",
                                           ErrorCode.PARSE_EXPECTED_KEYWORD,
@@ -952,6 +942,92 @@ class ParserErrorsTest : TestBase() {
                                                 Property.KEYWORD to "FROM",
                                                 Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
                                                 Property.TOKEN_VALUE to ion.newSymbol(")")))
+    }
+
+    // NOTE that we do not test DATE_DIFF below because the parser uses the same code for both date_add and date_diff
+
+    @Test
+    fun callDateAddNoArguments() {
+        checkInputThrowingParserException("date_add()",
+            ErrorCode.PARSE_EXPECTED_DATE_PART,
+            mapOf(Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 10L,
+                Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
+                Property.TOKEN_VALUE to ion.newSymbol(")")))
+    }
+
+    @Test
+    fun callDateAddInvalidDatePart() {
+        checkInputThrowingParserException("date_add(foobar",
+            ErrorCode.PARSE_EXPECTED_DATE_PART,
+            mapOf(Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 10L,
+                Property.TOKEN_TYPE to TokenType.IDENTIFIER,
+                Property.TOKEN_VALUE to ion.newSymbol("foobar")))
+    }
+
+    @Test
+    fun callDateAddOneArgument() {
+        checkInputThrowingParserException("date_add(year)",
+            ErrorCode.PARSE_EXPECTED_TOKEN_TYPE,
+            mapOf(Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 14L,
+                Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
+                Property.TOKEN_VALUE to ion.newSymbol(")"),
+                Property.EXPECTED_TOKEN_TYPE to TokenType.COMMA))
+    }
+
+    @Test
+    fun callDateAddOneArgumentTrailingComma() {
+        checkInputThrowingParserException("date_add(year,)",
+            ErrorCode.PARSE_UNEXPECTED_TERM,
+            mapOf(Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 15L,
+                Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
+                Property.TOKEN_VALUE to ion.newSymbol(")")))
+    }
+
+    @Test
+    fun callDateAddTwoArguments() {
+        checkInputThrowingParserException("date_add(year, b)",
+            ErrorCode.PARSE_EXPECTED_TOKEN_TYPE,
+            mapOf(Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 17L,
+                Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
+                Property.TOKEN_VALUE to ion.newSymbol(")"),
+                Property.EXPECTED_TOKEN_TYPE to TokenType.COMMA))
+    }
+    @Test
+    fun callDateAddCommaAfterThirdArgument() {
+        checkInputThrowingParserException("date_add(year, b, c,)",
+            ErrorCode.PARSE_EXPECTED_TOKEN_TYPE,
+            mapOf(Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 20L,
+                Property.TOKEN_TYPE to TokenType.COMMA,
+                Property.TOKEN_VALUE to ion.newSymbol(","),
+                Property.EXPECTED_TOKEN_TYPE to TokenType.RIGHT_PAREN))
+    }
+
+    @Test
+    fun callDateAddMissingComma() {
+        checkInputThrowingParserException("date_add(year a, b)",
+            ErrorCode.PARSE_EXPECTED_TOKEN_TYPE,
+            mapOf(Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 15L,
+                Property.TOKEN_TYPE to TokenType.IDENTIFIER,
+                Property.TOKEN_VALUE to ion.newSymbol("a"),
+                Property.EXPECTED_TOKEN_TYPE to TokenType.COMMA
+            ))
+    }
+
+    @Test
+    fun callDateAddMissingDatePart() {
+        checkInputThrowingParserException("date_add(a, b, c)",
+            ErrorCode.PARSE_EXPECTED_DATE_PART,
+            mapOf(Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 10L,
+                Property.TOKEN_TYPE to TokenType.IDENTIFIER,
+                Property.TOKEN_VALUE to ion.newSymbol("a")))
     }
 
     @Test
