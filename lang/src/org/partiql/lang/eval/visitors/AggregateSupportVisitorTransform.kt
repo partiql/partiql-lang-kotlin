@@ -15,11 +15,10 @@
 package org.partiql.lang.eval.visitors
 
 import com.amazon.ionelement.api.MetaContainer
+import com.amazon.ionelement.api.metaContainerOf
 import org.partiql.lang.ast.AggregateCallSiteListMeta
 import org.partiql.lang.ast.AggregateRegisterIdMeta
 import org.partiql.lang.ast.SelectProjectionValue
-import org.partiql.lang.ast.metaContainerOf
-import org.partiql.lang.ast.toIonElementMetaContainer
 import org.partiql.lang.domains.PartiqlAst
 
 /**
@@ -49,7 +48,7 @@ class AggregateSupportVisitorTransform : PartiqlAst.VisitorTransform() {
                     setq = node.setq,
                     funcName = node.funcName,
                     arg = transformExpr(node.arg),
-                    metas = transformMetas(node.arg.metas) + metaContainerOf(AggregateRegisterIdMeta(aggregateCallSites.size - 1)).toIonElementMetaContainer()
+                    metas = transformMetas(node.arg.metas) + metaContainerOf(AggregateRegisterIdMeta.TAG to AggregateRegisterIdMeta(aggregateCallSites.size - 1))
                 )
             }
         }
@@ -86,6 +85,6 @@ class AggregateSupportVisitorTransform : PartiqlAst.VisitorTransform() {
 
 
     override fun transformExprSelect_metas(node: PartiqlAst.Expr.Select): MetaContainer =
-        transformMetas(node.metas) + metaContainerOf(AggregateCallSiteListMeta(aggregateCallSites.toList())).toIonElementMetaContainer()
+        transformMetas(node.metas) + metaContainerOf(AggregateCallSiteListMeta.TAG to AggregateCallSiteListMeta(aggregateCallSites.toList()))
 
 }
