@@ -61,4 +61,11 @@ class EvaluatingCompilerLimitTests : EvaluatorTestBase() {
             """ select * from <<1>> limit 'this won''t work' """,
             ErrorCode.EVALUATOR_NON_INT_LIMIT_VALUE,
             sourceLocationProperties(1, 28) + mapOf(Property.ACTUAL_TYPE to "STRING"))
+
+    @Test
+    fun `LIMIT applied after GROUP BY`() =
+        assertEval(
+            "SELECT g FROM `[{foo: 1, bar: 10}, {foo: 1, bar: 11}]` AS f GROUP BY f.foo GROUP AS g LIMIT 1",
+            """[ { 'g': [ { 'f': { 'foo': 1, 'bar': 10 } }, { 'f': { 'foo': 1, 'bar': 11 } } ] } ]"""
+        )
 }
