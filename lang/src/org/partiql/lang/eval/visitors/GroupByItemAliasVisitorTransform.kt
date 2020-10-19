@@ -14,10 +14,9 @@
 
 package org.partiql.lang.eval.visitors
 
+import com.amazon.ionelement.api.metaContainerOf
 import org.partiql.lang.ast.IsSyntheticNameMeta
 import org.partiql.lang.ast.UniqueNameMeta
-import org.partiql.lang.ast.metaContainerOf
-import org.partiql.lang.ast.toIonElementMetaContainer
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.extractColumnAlias
 import org.partiql.pig.runtime.SymbolPrimitive
@@ -42,9 +41,11 @@ class GroupByItemAliasVisitorTransform(var nestLevel: Int = 0) : PartiqlAst.Visi
                 strategy = node.strategy,
                 keyList = PartiqlAst.GroupKeyList(node.keyList.keys.mapIndexed { index, it ->
                     val aliasText = it.asAlias?.text ?: it.expr.extractColumnAlias(index)
-                    var metas = it.expr.metas + metaContainerOf(UniqueNameMeta("\$__partiql__group_by_${nestLevel}_item_$index")).toIonElementMetaContainer()
+                    var metas = it.expr.metas + metaContainerOf(
+                        UniqueNameMeta.TAG to UniqueNameMeta("\$__partiql__group_by_${nestLevel}_item_$index"))
+
                     if (it.asAlias == null) {
-                        metas = metas + metaContainerOf(IsSyntheticNameMeta.instance).toIonElementMetaContainer()
+                        metas = metas + metaContainerOf(IsSyntheticNameMeta.TAG to IsSyntheticNameMeta.instance)
                     }
                     val alias = SymbolPrimitive(aliasText, metas)
 
