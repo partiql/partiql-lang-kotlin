@@ -11,6 +11,8 @@ class SelectStarVisitorTransform : PartiqlAst.VisitorTransform() {
      * Copies all parts of [PartiqlAst.Expr.Select] except [newProjection] for [PartiqlAst.Projection].
      */
     private fun copyProjectionToSelect(node: PartiqlAst.Expr.Select, newProjection: PartiqlAst.Projection): PartiqlAst.Expr {
+        // Once https://github.com/partiql/partiql-ir-generator/issues/52, adding the .copy function is released,
+        // we can remove this code and call .copy instead
         return PartiqlAst.build {
             select(
                 setq = node.setq,
@@ -89,29 +91,34 @@ class SelectStarVisitorTransform : PartiqlAst.VisitorTransform() {
 
     private class FromSourceAliases(val asAlias: String, val atAlias: String?, val byAlias: String?)
 
-    private fun extractAliases(fromSource: PartiqlAst.FromSource): List<FromSourceAliases> =
-        when (fromSource) {
-            is PartiqlAst.FromSource.Scan -> {
-                listOf(
+    /** Extracts all the FROM source/unpivot aliases without recursing into any nested queries */
+    private fun extractAliases(fromSource: PartiqlAst.FromSource): List<FromSourceAliases> {
+        val aliases = mutableListOf<FromSourceAliases>()
+        val visitor = object : PartiqlAst.Visitor() {
+            override fun visitFromSourceScan(node: PartiqlAst.FromSource.Scan) {
+                aliases.add(
                     FromSourceAliases(
-                        fromSource.asAlias?.text
+                        node.asAlias?.text
                             ?: error("FromSourceAliasVisitorTransform must be executed before SelectStarVisitorTransform"),
-                        fromSource.atAlias?.text,
-                        fromSource.byAlias?.text)
-                )
+                        node.atAlias?.text,
+                        node.byAlias?.text))
             }
-            is PartiqlAst.FromSource.Unpivot -> {
-                listOf(
+
+            override fun visitFromSourceUnpivot(node: PartiqlAst.FromSource.Unpivot) {
+                aliases.add(
                     FromSourceAliases(
-                        fromSource.asAlias?.text
+                        node.asAlias?.text
                             ?: error("FromSourceAliasVisitorTransform must be executed before SelectStarVisitorTransform"),
-                        fromSource.atAlias?.text,
-                        fromSource.byAlias?.text)
-                )
+                        node.atAlias?.text,
+                        node.byAlias?.text))
             }
-            is PartiqlAst.FromSource.Join -> {
-                extractAliases(fromSource.left) + extractAliases(fromSource.right)
+
+            /** We do not want to recurse into the nested select query */
+            override fun walkExprSelect(node: PartiqlAst.Expr.Select) {
+                return
             }
         }
-
+        visitor.walkFromSource(fromSource)
+        return aliases
+    }
 }
