@@ -94,16 +94,16 @@ class GroupByPathExpressionVisitorTransform(
         // Now actually transform the query using the appropriate transformer for each of various clauses of the
         // SELECT statement.
 
-        val projection = currentAndUnshadowedTransformer.transformProjection(node.project)
+        val projection = currentAndUnshadowedTransformer.transformExprSelect_project(node)
 
         // The scope of the expressions in the FROM clause is the same as that of the parent scope.
-        val from = this.transformFromSource(node.from)
+        val from = this.transformExprSelect_from(node)
 
-        val fromLet = node.fromLet?.let { unshadowedTransformer.transformLet(it) }
+        val fromLet = node.fromLet?.let { unshadowedTransformer.transformExprSelect_fromLet(node) }
 
         val where = node.where?.let { unshadowedTransformer.transformExprSelect_where(node) }
 
-        val groupBy = node.group?.let { unshadowedTransformer.transformGroupBy(it) }
+        val groupBy = node.group?.let { unshadowedTransformer.transformExprSelect_group(node) }
 
         val having = node.having?.let { currentAndUnshadowedTransformer.transformExprSelect_having(node) }
 
