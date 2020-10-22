@@ -1,5 +1,6 @@
 package org.partiql.lang.ast
 
+import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.toIonElement
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.pig.runtime.SymbolPrimitive
@@ -159,7 +160,10 @@ private fun GroupBy.toAstGroupSpec(): PartiqlAst.GroupBy =
     PartiqlAst.build {
         groupBy_(
             this@toAstGroupSpec.grouping.toAstGroupStrategy(),
-            groupKeyList(this@toAstGroupSpec.groupByItems.map { groupKey_(it.expr.toAstExpr(), it.asName?.name?.asPrimitive()) }),
+            groupKeyList(this@toAstGroupSpec.groupByItems.map {
+                val keyMetas = it.asName?.metas?.toIonElementMetaContainer() ?: emptyMetaContainer()
+                groupKey_(it.expr.toAstExpr(), it.asName?.name?.asPrimitive(keyMetas) )
+            }),
             this@toAstGroupSpec.groupName?.name?.asPrimitive())
     }
 

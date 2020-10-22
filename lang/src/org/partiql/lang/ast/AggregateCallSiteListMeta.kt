@@ -15,11 +15,12 @@
 package org.partiql.lang.ast
 
 import com.amazon.ion.*
+import org.partiql.lang.domains.PartiqlAst
 
 /**
  * Contains references to each of the aggregate call-sites in a given [Select].
  */
-data class AggregateCallSiteListMeta(val aggregateCallSites: List<CallAgg>): Meta {
+data class AggregateCallSiteListMeta(val aggregateCallSites: List<PartiqlAst.Expr.CallAgg>): Meta {
     override val tag = TAG
 
     override fun serialize(writer: IonWriter) {
