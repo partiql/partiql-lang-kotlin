@@ -282,6 +282,11 @@ enum class ErrorCode(private val category: ErrorCategory,
         LOC_TOKEN,
         "expected identifier for alias"),
 
+    PARSE_EXPECTED_AS_FOR_LET(
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "expected AS for LET clause"),
+
     PARSE_UNSUPPORTED_CALL_WITH_STAR(
         ErrorCategory.PARSER,
         LOC_TOKEN,

@@ -857,7 +857,7 @@ class StaticTypeRewriterTests : RewriterTestBase() {
         val rewriter = StaticTypeRewriter(ion, globalBindings, tc.constraints)
 
         // We always pass the query under test through all of the basic rewriters primarily because we need
-        // FromSourceAliasRewriter to execute first but also to help ensure the queries we're testing
+        // FromSourceAliasVisitorTransform to execute first but also to help ensure the queries we're testing
         // make sense when they're all run.
         val defaultRewriters = basicRewriters(ion)
         val originalExprNode = defaultRewriters.rewriteExprNode(parse(tc.originalSql))

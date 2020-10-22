@@ -16,10 +16,11 @@ package org.partiql.lang.ast.passes
 
 import org.partiql.lang.ast.*
 import org.partiql.lang.eval.*
+import org.partiql.lang.eval.visitors.FromSourceAliasVisitorTransform
 import org.partiql.lang.eval.visitors.GroupByItemAliasVisitorTransform
 
 /**
- * This rewrite must execute after [GroupByItemAliasVisitorTransform] and [FromSourceAliasRewriter].
+ * This rewrite must execute after [GroupByItemAliasVisitorTransform] and [FromSourceAliasVisitorTransform].
  */
 class GroupByPathExpressionRewriter(
     parentSubstitutions: Map<ExprNode, SubstitutionPair> = mapOf())
@@ -55,7 +56,7 @@ class GroupByPathExpressionRewriter(
 
         /**
          * Collects all of the aliases defined by the specified [FromSource] and its children.
-         * This is why this rewrite must occur after [FromSourceAliasRewriter].
+         * This is why this rewrite must occur after [FromSourceAliasVisitorTransform].
          */
         fun collectAliases(fromSource: FromSource): List<String> =
             when (fromSource) {
@@ -96,6 +97,8 @@ class GroupByPathExpressionRewriter(
         // The scope of the expressions in the FROM clause is the same as that of the parent scope.
         val from = this.rewriteFromSource(selectExpr.from)
 
+        val fromLet = selectExpr.fromLet?.let { unshadowedRewriter.rewriteLetSource(it) }
+
         val where = selectExpr.where?.let { unshadowedRewriter.rewriteSelectWhere(it) }
 
         val groupBy = selectExpr.groupBy?.let { unshadowedRewriter.rewriteGroupBy(it) }
@@ -110,6 +113,7 @@ class GroupByPathExpressionRewriter(
             setQuantifier = selectExpr.setQuantifier,
             projection = projection,
             from = from,
+            fromLet = fromLet,
             where = where,
             groupBy = groupBy,
             having = having,

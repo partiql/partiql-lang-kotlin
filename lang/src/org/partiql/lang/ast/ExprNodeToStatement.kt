@@ -134,6 +134,7 @@ fun ExprNode.toAstExpr(): PartiqlAst.Expr {
                     },
                     project = node.projection.toAstSelectProject(),
                     from = node.from.toAstFromSource(),
+                    fromLet = node.fromLet?.toAstLetSource(),
                     where = node.where?.toAstExpr(),
                     group = node.groupBy?.toAstGroupSpec(),
                     having = node.having?.toAstExpr(),
@@ -256,6 +257,17 @@ private fun FromSource.toAstFromSource(): PartiqlAst.FromSource {
                 thiz.variables.atName?.toPrimitive(),
                 thiz.variables.byName?.toPrimitive())
         }
+    }
+}
+
+private fun LetSource.toAstLetSource(): PartiqlAst.Let {
+    val thiz = this
+    return PartiqlAst.build {
+        let(
+            thiz.bindings.map {
+                letBinding(it.expr.toAstExpr(), it.name.name)
+            }
+        )
     }
 }
 
