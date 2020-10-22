@@ -338,7 +338,7 @@ class StaticTypeRewriter(private val ion: IonSystem,
             }
 
             val asSymbolicName = fromSourceLet.variables.asName
-                                 ?: error("fromSourceLet.variables.asName is null.  This wouldn't be the case if FromSourceAliasRewriter was executed first.")
+                                 ?: error("fromSourceLet.variables.asName is null.  This wouldn't be the case if FromSourceAliasVisitorTransform was executed first.")
 
             addLocal(asSymbolicName.name, StaticType.ANY, asSymbolicName.metas)
 
