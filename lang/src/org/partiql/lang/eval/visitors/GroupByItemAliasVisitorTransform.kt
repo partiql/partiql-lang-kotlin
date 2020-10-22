@@ -58,28 +58,6 @@ class GroupByItemAliasVisitorTransform(var nestLevel: Int = 0) : PartiqlAst.Visi
 
     override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlAst.Expr {
         nestLevel++
-        val new_setq = transformExprSelect_setq(node)
-        val new_project = transformExprSelect_project(node)
-        val new_from = transformExprSelect_from(node)
-        val new_fromLet = transformExprSelect_fromLet(node)
-        val new_where = transformExprSelect_where(node)
-        val new_group = transformExprSelect_group(node)
-        val new_having = transformExprSelect_having(node)
-        val new_limit = transformExprSelect_limit(node)
-        val new_metas = transformExprSelect_metas(node)
-        nestLevel--
-        return PartiqlAst.build {
-            PartiqlAst.Expr.Select(
-                setq = new_setq,
-                project = new_project,
-                from = new_from,
-                fromLet = new_fromLet,
-                where = new_where,
-                group = new_group,
-                having = new_having,
-                limit = new_limit,
-                metas = new_metas
-            )
-        }
+        return super.transformExprSelect(node).also { nestLevel-- }
     }
 }
