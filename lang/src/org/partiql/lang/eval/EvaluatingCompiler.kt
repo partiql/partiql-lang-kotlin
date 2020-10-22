@@ -1001,12 +1001,12 @@ internal class EvaluatingCompiler(
 
                         class CompiledAggregate(val factory: ExprAggregatorFactory, val argThunk: ThunkEnv)
 
-                        // These aggregate call sites are collected in [AggregateSupportRewriter].
+                        // These aggregate call sites are collected in [AggregateSupportVisitorTransform].
                         val compiledAggregates = aggregateListMeta?.aggregateCallSites?.map { it ->
-                            val funcName = (it.funcExpr as VariableReference).id
+                            val funcName = it.funcName.text
                             CompiledAggregate(
-                                factory = getAggregatorFactory(funcName, it.setQuantifier, it.metas),
-                                argThunk = compileExprNode(it.arg))
+                                factory = getAggregatorFactory(funcName, it.setq.toSetQuantifier(), it.metas.toPartiQlMetaContainer()),
+                                argThunk = compileExprNode(it.arg.toExprNode(valueFactory.ion)))
                         }
 
                         // This closure will be invoked to create and initialize a [RegisterBank] for new [Group]s.
