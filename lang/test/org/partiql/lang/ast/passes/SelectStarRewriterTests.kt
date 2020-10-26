@@ -2,11 +2,12 @@ package org.partiql.lang.ast.passes
 
 import junitparams.Parameters
 import org.junit.Test
+import org.partiql.lang.eval.visitors.GroupByItemAliasVisitorTransform
 
 class SelectStarRewriterTests : RewriterTestBase() {
 
-    // SelectStar rewriter depends on UniqueNameMetas injected by GroupByItemAliasRewriter.
-    private val rewriters = PipelinedRewriter(GroupByItemAliasRewriter(), SelectStarRewriter())
+    // SelectStar rewriter depends on UniqueNameMetas injected by GroupByItemAliasVisitorTransform.
+    private val rewriters = PipelinedRewriter(RewriterTransformBridge(GroupByItemAliasVisitorTransform(), ion), SelectStarRewriter())
 
     @Test
     @Parameters
