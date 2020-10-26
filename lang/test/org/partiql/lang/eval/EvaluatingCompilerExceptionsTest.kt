@@ -59,7 +59,7 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
     }
 
     @Test
-    fun selectListNestedAggregateCall() = assertThrows("The arguments of an aggregate function cannot contain aggregate functions", NodeMetadata(1, 16)) {
+    fun selectListNestedAggregateCall() = assertThrows("The arguments of an aggregate function cannot contain aggregate functions", NodeMetadata(1, 12)) {
         voidEval("""SELECT SUM(AVG(n)) FROM <<numbers, numbers>> AS n""")
     }
 
