@@ -52,13 +52,13 @@ class SelectStarRewriter : AstRewriterBase() {
                     val selectListItemsFromGroupBy = rewritten.groupBy.groupByItems.map {
                         val asName = it.asName
                                      ?: errNoContext(
-                                         "GroupByItem has no AS-alias--GroupByItemAliasRewriter must be executed before SelectStarRewriter",
+                                         "GroupByItem has no AS-alias--GroupByItemAliasVisitorTransform must be executed before SelectStarRewriter",
                                          internal = true)
 
                         // We need to take the unique name of each grouping field key only because we need to handle
                         // the case when multiple grouping fields are assigned the same name (which is currently allowed)
                         val uniqueNameMeta = asName.metas[UniqueNameMeta.TAG] as? UniqueNameMeta?
-                                             ?: error("UniqueNameMeta not found--normally, this is added by GroupByItemAliasRewriter")
+                                             ?: error("UniqueNameMeta not found--normally, this is added by GroupByItemAliasVisitorTransform")
 
                         createSelectListItemExpr(uniqueNameMeta.uniqueName, asName.name)
                     }

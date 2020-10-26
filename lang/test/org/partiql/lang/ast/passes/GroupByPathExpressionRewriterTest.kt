@@ -16,16 +16,17 @@ package org.partiql.lang.ast.passes
 
 import junitparams.*
 import org.junit.*
+import org.partiql.lang.eval.visitors.GroupByItemAliasVisitorTransform
 
 class GroupByPathExpressionRewriterTest  : RewriterTestBase() {
 
 
-    // We need [GroupByItemAliasRewriter] below because it adds metas which are essential to the operation of
+    // We need [GroupByItemAliasVisitorTransform] below because it adds metas which are essential to the operation of
     // [GroupByPathExpressionRewriter].
     @Test
     @Parameters
     fun transformTest(tc: RewriterTestCase) =
-        runTest(tc, listOf(GroupByItemAliasRewriter(), GroupByPathExpressionRewriter()))
+        runTest(tc, listOf(RewriterTransformBridge(GroupByItemAliasVisitorTransform(), ion), GroupByPathExpressionRewriter()))
 
     /**
      * All the from sources here are manually aliased since the [GroupByPathExpressionRewriter] requires this
