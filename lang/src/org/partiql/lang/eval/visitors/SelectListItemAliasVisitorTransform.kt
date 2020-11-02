@@ -1,11 +1,9 @@
 package org.partiql.lang.eval.visitors
 
-import org.partiql.lang.domains.extractSourceLocation
-
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.extractSourceLocation
 import org.partiql.lang.eval.extractColumnAlias
 import org.partiql.pig.runtime.SymbolPrimitive
-
 
 /**
  * Specifies any previously unspecified select list item aliases.
@@ -45,13 +43,16 @@ class SelectListItemAliasVisitorTransform : PartiqlAst.VisitorTransform() {
                             when (it.asAlias) {
                                 //  Synthesize a column name if one was not specified in the query.
                                 null -> projectExpr_(
-                                    expr = it.expr,
+                                    expr = transformExpr(it.expr),
                                     asAlias = SymbolPrimitive(
                                         text = it.expr.extractColumnAlias(idx),
                                         metas = node.extractSourceLocation()
                                     )
                                 )
-                                else -> it
+                                else -> projectExpr_(
+                                    expr = transformExpr(it.expr),
+                                    asAlias = it.asAlias
+                                )
                             }
                         else -> it
                     }
@@ -60,4 +61,3 @@ class SelectListItemAliasVisitorTransform : PartiqlAst.VisitorTransform() {
         }
     }
 }
-
