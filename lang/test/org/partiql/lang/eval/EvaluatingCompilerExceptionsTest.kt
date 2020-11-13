@@ -231,4 +231,15 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
                 Property.COLUMN_NUMBER to 15L,
                 Property.BINDING_NAME to "trailing")
         )
+
+    @Test
+    fun trimSpecKeywordLeadingUsedAsSecondArgInTrim() =
+        checkInputThrowingEvaluationException(
+            "trim(both leading from 'foo')",
+            ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 11L,
+                Property.BINDING_NAME to "leading")
+        )
 }
