@@ -101,7 +101,7 @@ internal class TrimExprFunction(valueFactory: ExprValueFactory) : NullPropagatin
             1    -> Triple(DEFAULT_SPECIFICATION, DEFAULT_TO_REMOVE, args[0].codePoints())
             2    -> {
 
-                if(args[0].type != ExprValueType.STRING){
+                if(!args[0].type.isText){
                     errNoContext("with two arguments trim's first argument must be either the " +
                                  "specification or a 'to remove' string",
                                  internal = false)
