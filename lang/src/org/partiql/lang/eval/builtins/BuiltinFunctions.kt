@@ -33,7 +33,9 @@ internal fun createBuiltinFunctions(valueFactory: ExprValueFactory) =
         TrimExprFunction(valueFactory),
         ToStringExprFunction(valueFactory),
         ToTimestampExprFunction(valueFactory),
-        SizeExprFunction(valueFactory))
+        SizeExprFunction(valueFactory),
+        FromUnixTimeFunction(valueFactory),
+        UnixTimestampFunction(valueFactory))
 
 
 internal fun createExists(valueFactory: ExprValueFactory): ExprFunction = object : ExprFunction {
