@@ -1546,4 +1546,67 @@ class ParserErrorsTest : TestBase() {
             Property.TOKEN_TYPE to TokenType.EOF,
             Property.TOKEN_VALUE to ion.newSymbol("EOF")))
 
+    //****************************************
+    // EXEC clause parsing errors
+    //****************************************
+
+    @Test
+    fun execNoStoredProcedureProvided() = checkInputThrowingParserException(
+        "EXEC",
+        ErrorCode.PARSE_NO_STORED_PROCEDURE_PROVIDED,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 5L,
+            Property.TOKEN_TYPE to TokenType.EOF,
+            Property.TOKEN_VALUE to ion.newSymbol("EOF")))
+
+    @Test
+    fun execCommaBetweenStoredProcedureAndArg() = checkInputThrowingParserException(
+        "EXEC foo, arg0, arg1",
+        ErrorCode.PARSE_UNEXPECTED_TERM,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 9L,
+            Property.TOKEN_TYPE to TokenType.COMMA,
+            Property.TOKEN_VALUE to ion.newSymbol(",")))
+
+    @Test
+    fun execArgTrailingComma() = checkInputThrowingParserException(
+        "EXEC foo arg0, arg1,",
+        ErrorCode.PARSE_UNEXPECTED_TERM,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 21L,
+            Property.TOKEN_TYPE to TokenType.EOF,
+            Property.TOKEN_VALUE to ion.newSymbol("EOF")))
+
+    @Test
+    fun execAtUnexpectedLocation() = checkInputThrowingParserException(
+        "EXEC EXEC",
+        ErrorCode.PARSE_EXEC_AT_UNEXPECTED_LOCATION,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 6L,
+            Property.TOKEN_TYPE to TokenType.KEYWORD,
+            Property.TOKEN_VALUE to ion.newSymbol("exec")))
+
+    @Test
+    fun execAtUnexpectedLocationAfterExec() = checkInputThrowingParserException(
+        "EXEC foo EXEC",
+        ErrorCode.PARSE_EXEC_AT_UNEXPECTED_LOCATION,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 10L,
+            Property.TOKEN_TYPE to TokenType.KEYWORD,
+            Property.TOKEN_VALUE to ion.newSymbol("exec")))
+
+    @Test
+    fun execAtUnexpectedLocationInExpression() = checkInputThrowingParserException(
+        "SELECT * FROM (EXEC undrop 'foo')",
+        ErrorCode.PARSE_EXEC_AT_UNEXPECTED_LOCATION,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 16L,
+            Property.TOKEN_TYPE to TokenType.KEYWORD,
+            Property.TOKEN_VALUE to ion.newSymbol("exec")))
 }

@@ -103,6 +103,9 @@ sealed class ExprNode : AstNode(), HasMetas {
             is Parameter       -> {
                 copy(metas = metas)
             }
+            is Exec            -> {
+                copy(metas = metas)
+            }
         }
     }
 }
@@ -208,6 +211,19 @@ data class Typed(
     override val metas: MetaContainer
 ) : ExprNode() {
     override val children: List<AstNode> = listOf(expr, type)
+}
+
+//********************************
+// Stored procedure clauses
+//********************************
+
+/** Represents a call to a stored procedure, i.e. `EXEC stored_procedure [<expr>.*]` */
+data class Exec(
+    val funcName: SymbolicName,
+    val args: List<ExprNode>,
+    override val metas: MetaContainer
+) : ExprNode() {
+    override val children: List<AstNode> = args
 }
 
 //********************************

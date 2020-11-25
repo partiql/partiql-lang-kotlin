@@ -49,6 +49,7 @@ open class AstRewriterBase : AstRewriter {
             is CreateIndex       -> rewriteCreateIndex(node)
             is DropTable         -> rewriteDropTable(node)
             is DropIndex         -> rewriteDropIndex(node)
+            is Exec              -> rewriteExec(node)
         }
 
     open fun rewriteMetas(itemWithMetas: HasMetas): MetaContainer = itemWithMetas.metas
@@ -396,6 +397,12 @@ open class AstRewriterBase : AstRewriter {
         DropIndex(
             node.tableName,
             rewriteVariableReference(node.identifier) as VariableReference,
+            rewriteMetas(node))
+
+    open fun rewriteExec(node: Exec): Exec =
+        Exec(
+            rewriteSymbolicName(node.funcName),
+            node.args.map { rewriteExprNode(it) },
             rewriteMetas(node))
 
 }

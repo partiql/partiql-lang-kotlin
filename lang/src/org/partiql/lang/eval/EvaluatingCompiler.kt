@@ -278,6 +278,8 @@ internal class EvaluatingCompiler(
             is CreateIndex,
             is DropIndex,
             is DropTable -> compileDdl(expr)
+            is Exec              -> compileExec(expr)
+
         }
     }
 
@@ -1922,6 +1924,10 @@ internal class EvaluatingCompiler(
                     }, internal = false
             )
         }
+    }
+
+    private fun compileExec(node: ExprNode): ThunkEnv {
+        TODO()
     }
 
     /** A special wrapper for `UNPIVOT` values as a BAG. */

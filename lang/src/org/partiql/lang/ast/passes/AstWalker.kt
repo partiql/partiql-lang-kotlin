@@ -16,6 +16,7 @@ package org.partiql.lang.ast.passes
 
 import org.partiql.lang.ast.*
 import org.partiql.lang.util.*
+import java.lang.UnsupportedOperationException
 
 /**
  * Contains the logic necessary to walk every node in the AST and invokes methods of [AstVisitor] along the way.
@@ -116,6 +117,7 @@ open class AstWalker(private val visitor: AstVisitor) {
                     }
                 }
                 is CreateTable, is DropTable, is DropIndex -> case { }
+                is Exec         -> throw UnsupportedOperationException("EXEC clause is not supported by the V0 AST")
             }.toUnit()
         }
     }

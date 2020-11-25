@@ -26,7 +26,12 @@
                 (where where::(? expr)))
 
             // Data definition operations also cannot be composed with other `expr` nodes.
-            (ddl op::ddl_op))
+            (ddl op::ddl_op)
+
+            // Stored procedure calls are only allowed at the top level of a query and cannot be used as an expression
+            // Currently supports stored procedure calls with the unnamed argument syntax:
+            //     EXEC <symbol> [<expr>.*]
+            (exec func_name::symbol args::(* expr 0)))
 
         // The expressions that can result in values.
         (sum expr
