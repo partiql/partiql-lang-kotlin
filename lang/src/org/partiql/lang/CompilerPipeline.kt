@@ -47,6 +47,10 @@ typealias ProcessingStep = (ExprNode, StepContext) -> ExprNode
 /**
  * [CompilerPipeline] is the main interface for compiling PartiQL queries into instances of [Expression] which
  * can be executed.
+ *
+ * The provided builder companion creates an instance of [CompilerPipeline] that is NOT thread safe and should NOT be
+ * used to compile queries concurrently. If used in a multithreaded application, use one instance of [CompilerPipeline]
+ * per thread.
  */
 interface CompilerPipeline  {
     val valueFactory: ExprValueFactory
@@ -95,7 +99,8 @@ interface CompilerPipeline  {
 
     /**
      * An implementation of the builder pattern for instances of [CompilerPipeline]. The created instance of
-     * [CompilerPipeline] is NOT thread safe and should NOT be used to compile queries concurrently.
+     * [CompilerPipeline] is NOT thread safe and should NOT be used to compile queries concurrently. If used in a
+     * multithreaded application, use one instance of [CompilerPipeline] per thread.
      */
     class Builder(val valueFactory: ExprValueFactory) {
         private var parser: Parser? = null
