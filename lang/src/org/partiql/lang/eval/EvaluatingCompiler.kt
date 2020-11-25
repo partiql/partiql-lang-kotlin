@@ -278,7 +278,7 @@ internal class EvaluatingCompiler(
             is CreateIndex,
             is DropIndex,
             is DropTable -> compileDdl(expr)
-            is Exec              -> compileExec(expr)
+            is Exec      -> compileExec(expr)
 
         }
     }

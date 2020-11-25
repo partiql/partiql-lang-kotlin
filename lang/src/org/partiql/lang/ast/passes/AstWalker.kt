@@ -117,7 +117,7 @@ open class AstWalker(private val visitor: AstVisitor) {
                     }
                 }
                 is CreateTable, is DropTable, is DropIndex -> case { }
-                is Exec         -> throw UnsupportedOperationException("EXEC clause is not supported by the V0 AST")
+                is Exec -> case { }
             }.toUnit()
         }
     }
