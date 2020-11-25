@@ -93,7 +93,10 @@ interface CompilerPipeline  {
             builder(valueFactory).build()
     }
 
-    /** An implementation of the builder pattern for instances of [CompilerPipeline]. */
+    /**
+     * An implementation of the builder pattern for instances of [CompilerPipeline]. The created instance of
+     * [CompilerPipeline] is NOT thread safe and should NOT be used to compile queries concurrently.
+     */
     class Builder(val valueFactory: ExprValueFactory) {
         private var parser: Parser? = null
         private var compileOptions: CompileOptions? = null
