@@ -16,10 +16,8 @@ package org.partiql.lang.syntax
 
 import com.amazon.ion.Decimal
 import com.amazon.ionelement.api.ionDecimal
-import com.amazon.ionelement.api.ionFloat
 import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
-import com.amazon.ionelement.api.ionSymbol
 import org.junit.Test
 import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.SourceLocationMeta
