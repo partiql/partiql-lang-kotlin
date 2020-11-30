@@ -55,7 +55,7 @@ private fun ExprNode.toAstExec() : PartiqlAst.Statement {
 
     return PartiqlAst.build {
         when (node) {
-            is Exec -> exec(node.funcName.name, node.args.map { it.toAstExpr() }, metas)
+            is Exec -> exec(node.procedureName.name, node.args.map { it.toAstExpr() }, metas)
             else -> error("Can't convert ${node.javaClass} to PartiqlAst.Statement.Exec")
         }
     }

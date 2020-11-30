@@ -337,8 +337,8 @@ class SqlParser(private val ion: IonSystem) : Parser {
                 }
             }
             EXEC -> {
-                val funcName = SymbolicName(token?.text!!.toLowerCase(), token.toSourceLocationMetaContainer())
-                Exec(funcName, children.map { it.toExprNode() }, metas)
+                val procedureName = SymbolicName(token?.text!!.toLowerCase(), token.toSourceLocationMetaContainer())
+                Exec(procedureName, children.map { it.toExprNode() }, metas)
             }
             CALL_AGG -> {
                 val funcExpr =
@@ -1724,16 +1724,16 @@ class SqlParser(private val ion: IonSystem) : Parser {
             rem.err("No stored procedure provided", PARSE_NO_STORED_PROCEDURE_PROVIDED)
         }
 
-        val funcName = rem.head
+        val procedureName = rem.head
         rem = rem.tail
 
         // Stored procedure has no args
         if (rem.head?.type == EOF) {
-            return ParseNode(EXEC, funcName, emptyList(), rem)
+            return ParseNode(EXEC, procedureName, emptyList(), rem)
         }
 
         return rem.parseArgList(aliasSupportType = NONE, mode = NORMAL_ARG_LIST)
-                  .copy(type = EXEC, token = funcName)
+                  .copy(type = EXEC, token = procedureName)
     }
 
     /**

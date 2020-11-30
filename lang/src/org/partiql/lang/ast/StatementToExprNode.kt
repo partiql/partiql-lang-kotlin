@@ -348,6 +348,6 @@ private class StatementTransformer(val ion: IonSystem) {
     }
 
     private fun Statement.Exec.toExprNode(): ExprNode {
-        return Exec(funcName.toSymbolicName(), this.args.toExprNodeList(), metas.toPartiQlMetaContainer())
+        return Exec(procedureName.toSymbolicName(), this.args.toExprNodeList(), metas.toPartiQlMetaContainer())
     }
 }

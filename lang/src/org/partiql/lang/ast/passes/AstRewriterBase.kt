@@ -401,7 +401,7 @@ open class AstRewriterBase : AstRewriter {
 
     open fun rewriteExec(node: Exec): Exec =
         Exec(
-            rewriteSymbolicName(node.funcName),
+            rewriteSymbolicName(node.procedureName),
             node.args.map { rewriteExprNode(it) },
             rewriteMetas(node))
 

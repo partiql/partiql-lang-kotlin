@@ -219,7 +219,7 @@ data class Typed(
 
 /** Represents a call to a stored procedure, i.e. `EXEC stored_procedure [<expr>.*]` */
 data class Exec(
-    val funcName: SymbolicName,
+    val procedureName: SymbolicName,
     val args: List<ExprNode>,
     override val metas: MetaContainer
 ) : ExprNode() {
