@@ -1581,6 +1581,26 @@ class ParserErrorsTest : TestBase() {
             Property.TOKEN_VALUE to ion.newSymbol("EOF")))
 
     @Test
+    fun execUnexpectedParen() = checkInputThrowingParserException(
+        "EXEC foo()",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 9L,
+            Property.TOKEN_TYPE to TokenType.LEFT_PAREN,
+            Property.TOKEN_VALUE to ion.newSymbol("(")))
+
+    @Test
+    fun execUnexpectedParenWithArgs() = checkInputThrowingParserException(
+        "EXEC foo(arg0, arg1)",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 9L,
+            Property.TOKEN_TYPE to TokenType.LEFT_PAREN,
+            Property.TOKEN_VALUE to ion.newSymbol("(")))
+
+    @Test
     fun execAtUnexpectedLocation() = checkInputThrowingParserException(
         "EXEC EXEC",
         ErrorCode.PARSE_EXEC_AT_UNEXPECTED_LOCATION,

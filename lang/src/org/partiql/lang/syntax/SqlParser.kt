@@ -1727,9 +1727,13 @@ class SqlParser(private val ion: IonSystem) : Parser {
         val procedureName = rem.head
         rem = rem.tail
 
-        // Stored procedure has no args
+        // Stored procedure call has no args
         if (rem.head?.type == EOF) {
             return ParseNode(EXEC, procedureName, emptyList(), rem)
+        }
+
+        else if (rem.head?.type == LEFT_PAREN) {
+            rem.err("Unexpected $LEFT_PAREN found following stored procedure call", PARSE_UNEXPECTED_TOKEN)
         }
 
         return rem.parseArgList(aliasSupportType = NONE, mode = NORMAL_ARG_LIST)
