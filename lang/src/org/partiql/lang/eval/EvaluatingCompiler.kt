@@ -54,6 +54,7 @@ import kotlin.collections.*
 internal class EvaluatingCompiler(
     private val valueFactory: ExprValueFactory,
     private val functions: Map<String, ExprFunction>,
+    private val procedures: Map<String, ExprFunction>,
     private val compileOptions: CompileOptions = CompileOptions.standard()
 ) {
     private val thunkFactory = ThunkFactory(compileOptions.thunkOptions)
@@ -1926,8 +1927,21 @@ internal class EvaluatingCompiler(
         }
     }
 
-    private fun compileExec(node: ExprNode): ThunkEnv {
-        TODO()
+    private fun compileExec(node: Exec): ThunkEnv {
+        val (procedureName, args, metas: MetaContainer) = node
+        val argThunks = args.map { compileExprNode(it) }
+        val procedure = procedures[procedureName.name] ?: err(
+            "No such stored procedure: ${procedureName.name}",
+            ErrorCode.EVALUATOR_NO_SUCH_PROCEDURE,
+            errorContextFrom(metas).also {
+                it[Property.PROCEDURE_NAME] = procedureName.name
+            },
+            internal = false)
+
+        return thunkFactory.thunkEnv(metas) { env ->
+            val procedureArgValues = argThunks.map { it(env) }
+            procedure.call(env, procedureArgValues)
+        }
     }
 
     /** A special wrapper for `UNPIVOT` values as a BAG. */

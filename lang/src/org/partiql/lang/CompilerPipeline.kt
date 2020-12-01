@@ -18,6 +18,7 @@ import com.amazon.ion.*
 import org.partiql.lang.ast.*
 import org.partiql.lang.eval.*
 import org.partiql.lang.eval.builtins.*
+import org.partiql.lang.eval.builtins.storedprocedure.createBuiltinProcedures
 import org.partiql.lang.syntax.*
 
 /**
@@ -35,7 +36,12 @@ data class StepContext(
      * Includes built-in functions as well as custom functions added while the [CompilerPipeline]
      * was being built.
      */
-    val functions: @JvmSuppressWildcards Map<String, ExprFunction>
+    val functions: @JvmSuppressWildcards Map<String, ExprFunction>,
+
+    /**
+     * Returns a list of all stored procedures which are available for execution.
+     */
+    val procedures: @JvmSuppressWildcards Map<String, ExprFunction>
 )
 
 /**
@@ -60,6 +66,11 @@ interface CompilerPipeline  {
      * was being built.
      */
     val functions: @JvmSuppressWildcards Map<String, ExprFunction>
+
+    /**
+     * Returns a list of all stored procedures which are available for execution.
+     */
+    val procedures: @JvmSuppressWildcards Map<String, ExprFunction>
 
     /** Compiles the specified PartiQL query using the configured parser. */
     fun compile(query: String): Expression
@@ -98,6 +109,7 @@ interface CompilerPipeline  {
         private var parser: Parser? = null
         private var compileOptions: CompileOptions? = null
         private val customFunctions: MutableMap<String, ExprFunction> = HashMap()
+        private val customProcedures: MutableMap<String, ExprFunction> = HashMap()
         private val preProcessingSteps: MutableList<ProcessingStep> = ArrayList()
 
         /**
@@ -129,22 +141,32 @@ interface CompilerPipeline  {
          */
         fun addFunction(function: ExprFunction): Builder = this.apply { customFunctions[function.name] = function }
 
+        /**
+         * Add a custom stored procedure which will be callable by the compiled queries.
+         *
+         * Stored procedures added here will replace any built-in procedure with the same name.
+         */
+        fun addProcedure(procedure: ExprFunction): Builder = this.apply { customProcedures[procedure.name] = procedure }
+
         /** Adds a preprocessing step to be executed after parsing but before compilation. */
         fun addPreprocessingStep(step: ProcessingStep): Builder = this.apply { preProcessingSteps.add(step) }
 
         /** Builds the actual implementation of [CompilerPipeline]. */
         fun build(): CompilerPipeline {
             val builtinFunctions = createBuiltinFunctions(valueFactory).associateBy { it.name }
+            val builtinProcedures = createBuiltinProcedures(valueFactory).associateBy { it.name }
 
             // customFunctions must be on the right side of + here to ensure that they overwrite any
             // built-in functions with the same name.
             val allFunctions = builtinFunctions + customFunctions
+            val allProcedures = builtinProcedures + customProcedures
 
             return CompilerPipelineImpl(
                 valueFactory,
                 parser ?: SqlParser(valueFactory.ion),
                 compileOptions ?: CompileOptions.standard(),
                 allFunctions,
+                allProcedures,
                 preProcessingSteps)
         }
     }
@@ -155,17 +177,18 @@ private class CompilerPipelineImpl(
     private val parser: Parser,
     override val compileOptions: CompileOptions,
     override val functions: Map<String, ExprFunction>,
+    override val procedures: Map<String, ExprFunction>,
     private val preProcessingSteps: List<ProcessingStep>
 ) : CompilerPipeline {
 
-    private val compiler = EvaluatingCompiler(valueFactory, functions, compileOptions)
+    private val compiler = EvaluatingCompiler(valueFactory, functions, procedures, compileOptions)
 
     override fun compile(query: String): Expression {
         return compile(parser.parseExprNode(query))
     }
 
     override fun compile(query: ExprNode): Expression {
-        val context = StepContext(valueFactory, compileOptions, functions)
+        val context = StepContext(valueFactory, compileOptions, functions, procedures)
 
         val preProcessedQuery = preProcessingSteps.fold(query) { currentExprNode, step ->
             step(currentExprNode, context)
