@@ -16,7 +16,6 @@ package org.partiql.lang.ast.passes
 
 import org.partiql.lang.ast.*
 import org.partiql.lang.util.*
-import java.lang.UnsupportedOperationException
 
 /**
  * Contains the logic necessary to walk every node in the AST and invokes methods of [AstVisitor] along the way.
