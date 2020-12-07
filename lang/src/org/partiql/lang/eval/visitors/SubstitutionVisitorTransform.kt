@@ -12,19 +12,22 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.lang.ast.passes
+package org.partiql.lang.eval.visitors
 
-import org.partiql.lang.ast.*
+import com.amazon.ionelement.api.MetaContainer
+import org.partiql.lang.ast.SourceLocationMeta
+import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.extractSourceLocation
 
 /**
- * Specifies an individual substitution to be performed by [SubstitutionRewriter].
+ * Specifies an individual substitution to be performed by [SubstitutionVisitorTransform].
  *
  * [target] will be replaced with [replacement].  If the original node has an instance of [SourceLocationMeta], that is
  * copied to the replacement as well.
  *
  * [target] should have its metas stripped as metas will effect the results of the equivalence check.
  */
-data class SubstitutionPair(val target: ExprNode, val replacement: ExprNode)
+data class SubstitutionPair(val target: PartiqlAst.Expr, val replacement: PartiqlAst.Expr)
 
 /**
  * Given a [Map<ExprNode, SubstitutionPair>] ([substitutions]), replaces every node of the AST that is
@@ -32,7 +35,7 @@ data class SubstitutionPair(val target: ExprNode, val replacement: ExprNode)
  *
  * This class is `open` to allow subclasses to restrict the nodes to which the substitution should occur.
  */
-open class SubstitutionRewriter(protected val substitutions: Map<ExprNode, SubstitutionPair>): AstRewriterBase() {
+open class SubstitutionVisitorTransform(protected val substitutions: Map<PartiqlAst.Expr, SubstitutionPair>): PartiqlAst.VisitorTransform() {
 
     /**
      * If [node] matches any of the target nodes in [substitutions], replaces the node with the replacement.
@@ -40,17 +43,24 @@ open class SubstitutionRewriter(protected val substitutions: Map<ExprNode, Subst
      * If [node] has a [SourceLocationMeta], the replacement is cloned and the [SourceLocationMeta] is copied to the
      * clone.
      */
-    override fun rewriteExprNode(node: ExprNode): ExprNode {
-        // It is currently necessary to strip the meta information because meta information is included as part of
-        // equivalence, and different [SourceLocationMeta] (among others) will always cause the equivalence check to
-        // be `false`.
-        val candidate = MetaStrippingRewriter.stripMetas(node)
-
-        val matchingSubstitution = substitutions[candidate]
+    override fun transformExpr(node: PartiqlAst.Expr): PartiqlAst.Expr {
+        val matchingSubstitution = substitutions[node]
 
         return matchingSubstitution?.let { ms ->
-            node.metas.sourceLocation?.let { sl -> ms.replacement.copy(metaContainerOf(sl)) } ?: ms.replacement
-        } ?: super.rewriteExprNode(node)
+            node.extractSourceLocation().let {
+                sl -> MetaVisitorTransform(sl).transformExpr(ms.replacement)
+            }
+        } ?: super.transformExpr(node)
     }
-}
 
+    /**
+     * Class creates a copy of [PartiqlAst.Expr], but uses [newMetas] as the metas.
+     *
+     * After .copy() and copying metas is added to PIG (https://github.com/partiql/partiql-ir-generator/pull/53) change
+     * this and its usages to use .copy().
+     */
+    inner class MetaVisitorTransform(private val newMetas: MetaContainer) : PartiqlAst.VisitorTransform() {
+        override fun transformMetas(metas: MetaContainer): MetaContainer = newMetas
+    }
+
+}

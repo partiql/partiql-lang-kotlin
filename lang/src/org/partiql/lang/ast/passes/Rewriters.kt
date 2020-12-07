@@ -5,6 +5,7 @@ import org.partiql.lang.ast.*
 import org.partiql.lang.eval.visitors.AggregateSupportVisitorTransform
 import org.partiql.lang.eval.visitors.FromSourceAliasVisitorTransform
 import org.partiql.lang.eval.visitors.GroupByItemAliasVisitorTransform
+import org.partiql.lang.eval.visitors.GroupByPathExpressionVisitorTransform
 import org.partiql.lang.eval.visitors.SelectListItemAliasVisitorTransform
 
 /**
@@ -20,10 +21,10 @@ fun basicRewriters(ion: IonSystem) = PipelinedRewriter(
     RewriterTransformBridge(GroupByItemAliasVisitorTransform(), ion),
     RewriterTransformBridge(AggregateSupportVisitorTransform(), ion),
 
-    // [GroupByPathExpressionRewriter] requires:
+    // [GroupByPathExpressionVisitorTransform] requires:
     //   - the synthetic from source aliases added by [FromSourceAliasVisitorTransform]
     //   - The synthetic group by item aliases added by [GroupByItemAliasVisitorTransform]
-    GroupByPathExpressionRewriter(),
+    RewriterTransformBridge(GroupByPathExpressionVisitorTransform(), ion),
     SelectStarRewriter()
 )
 
