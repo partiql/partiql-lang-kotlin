@@ -2,7 +2,6 @@ package org.partiql.lang.eval.visitors
 
 import junitparams.Parameters
 import org.junit.Test
-import org.partiql.lang.eval.visitors.GroupByItemAliasVisitorTransform
 import org.partiql.lang.ast.passes.PipelinedRewriter
 import org.partiql.lang.ast.passes.RewriterTestBase
 import org.partiql.lang.ast.passes.RewriterTransformBridge
