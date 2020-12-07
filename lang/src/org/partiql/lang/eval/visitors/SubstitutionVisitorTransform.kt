@@ -54,7 +54,10 @@ open class SubstitutionVisitorTransform(protected val substitutions: Map<Partiql
     }
 
     /**
-     * Class creates a copy of [PartiqlAst.Expr], but uses [newMetas] as the metas
+     * Class creates a copy of [PartiqlAst.Expr], but uses [newMetas] as the metas.
+     *
+     * After .copy() and copying metas is added to PIG (https://github.com/partiql/partiql-ir-generator/pull/53) change
+     * this and its usages to use .copy().
      */
     inner class MetaVisitorTransform(private val newMetas: MetaContainer) : PartiqlAst.VisitorTransform() {
         override fun transformMetas(metas: MetaContainer): MetaContainer = newMetas
