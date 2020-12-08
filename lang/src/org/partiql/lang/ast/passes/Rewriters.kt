@@ -7,6 +7,7 @@ import org.partiql.lang.eval.visitors.FromSourceAliasVisitorTransform
 import org.partiql.lang.eval.visitors.GroupByItemAliasVisitorTransform
 import org.partiql.lang.eval.visitors.GroupByPathExpressionVisitorTransform
 import org.partiql.lang.eval.visitors.SelectListItemAliasVisitorTransform
+import org.partiql.lang.eval.visitors.SelectStarVisitorTransform
 
 /**
  * Returns an [AstRewriter] requiring no external state for the basic functionality of compiling
@@ -25,7 +26,7 @@ fun basicRewriters(ion: IonSystem) = PipelinedRewriter(
     //   - the synthetic from source aliases added by [FromSourceAliasVisitorTransform]
     //   - The synthetic group by item aliases added by [GroupByItemAliasVisitorTransform]
     RewriterTransformBridge(GroupByPathExpressionVisitorTransform(), ion),
-    SelectStarRewriter()
+    RewriterTransformBridge(SelectStarVisitorTransform(), ion)
 )
 
 /** A stateless rewriter that returns the input. */
