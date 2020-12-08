@@ -37,6 +37,8 @@ dependencies {
 
     testImplementation 'org.jetbrains.kotlin:kotlin-test'
     testImplementation 'pl.pragmatists:JUnitParams:[1.0.0,1.1.0)'
+
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
 }
 
 jacocoTestReport {
