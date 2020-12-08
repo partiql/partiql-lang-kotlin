@@ -252,17 +252,17 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun callTrimTwoArgumentsUsingBoth() = assertExpression(
         "trim(both from 'test')",
-        "(call trim (lit \"both\") (lit \"test\"))")
+        "(call trim (lit both) (lit \"test\"))")
 
     @Test
     fun callTrimTwoArgumentsUsingLeading() = assertExpression(
         "trim(leading from 'test')",
-        "(call trim (lit \"leading\") (lit \"test\"))")
+        "(call trim (lit leading) (lit \"test\"))")
 
     @Test
     fun callTrimTwoArgumentsUsingTrailing() = assertExpression(
         "trim(trailing from 'test')",
-        "(call trim (lit \"trailing\") (lit \"test\"))")
+        "(call trim (lit trailing) (lit \"test\"))")
 
     //****************************************
     // Unary operators

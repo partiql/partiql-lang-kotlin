@@ -1779,9 +1779,11 @@ class SqlParser(private val ion: IonSystem) : Parser {
             return node.remaining
         }
 
-        val hasSpecification = when(rem.head?.type) {
-            TRIM_SPECIFICATION -> {
-                rem = parseArgument()
+        val maybeTrimSpec = rem.head
+        val hasSpecification = when {
+            maybeTrimSpec?.type == IDENTIFIER && TRIM_SPECIFICATION_KEYWORDS.contains(maybeTrimSpec.text?.toLowerCase()) -> {
+                arguments.add(ParseNode(ATOM, maybeTrimSpec.copy(type = TRIM_SPECIFICATION), listOf(), rem.tail))
+                rem = rem.tail
 
                 true
             }

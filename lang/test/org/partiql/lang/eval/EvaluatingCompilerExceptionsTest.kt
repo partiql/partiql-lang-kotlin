@@ -198,4 +198,48 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
         """SELECT ? FROM <<1>>""",
         ErrorCode.EVALUATOR_UNBOUND_PARAMETER,
         sourceLocationProperties(1, 8) + mapOf(Property.EXPECTED_PARAMETER_ORDINAL to 1, Property.BOUND_PARAMETER_COUNT to 0))
+
+    @Test
+    fun trimSpecKeywordBothNotUsedInTrim() =
+        checkInputThrowingEvaluationException(
+            "SELECT 1 FROM both",
+            ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 15L,
+                Property.BINDING_NAME to "both")
+        )
+
+    @Test
+    fun trimSpecKeywordLeadingNotUsedInTrim() =
+        checkInputThrowingEvaluationException(
+            "SELECT 1 FROM leading",
+            ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 15L,
+                Property.BINDING_NAME to "leading")
+        )
+
+    @Test
+    fun trimSpecKeywordTrailingNotUsedInTrim() =
+        checkInputThrowingEvaluationException(
+            "SELECT 1 FROM trailing",
+            ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 15L,
+                Property.BINDING_NAME to "trailing")
+        )
+
+    @Test
+    fun trimSpecKeywordLeadingUsedAsSecondArgInTrim() =
+        checkInputThrowingEvaluationException(
+            "trim(both leading from 'foo')",
+            ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 11L,
+                Property.BINDING_NAME to "leading")
+        )
 }

@@ -245,9 +245,10 @@ internal val DATE_PART_KEYWORDS: Set<String> = DatePart.values()
     "work",
     "write",
     "zone"
-).union(TRIM_SPECIFICATION_KEYWORDS)
+)
 // Note: DATE_PART_KEYWORDs are not keywords in the traditional sense--they are only keywords within
 // the context of the DATE_ADD, DATE_DIFF and EXTRACT functions, for which [SqlParser] has special support.
+// Similarly, TRIM_SPECIFICATION_KEYWORDS are only keywords within the context of the TRIM function.
 
 /** PartiQL additional keywords. */
 @JvmField internal val SQLPP_KEYWORDS = setOf(
