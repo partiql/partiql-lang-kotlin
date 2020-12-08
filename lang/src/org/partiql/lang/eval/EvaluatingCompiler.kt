@@ -205,12 +205,13 @@ internal class EvaluatingCompiler(
      * Compiles an [ExprNode] tree to an [Expression].
      */
     fun compile(originalAst: ExprNode): Expression {
-        val rewrittenAst = compileOptions.rewritingMode.createRewriter(valueFactory.ion).rewriteExprNode(originalAst)
+        val visitorTransformer = compileOptions.visitorTransformMode.createVisitorTransform()
+        val transformedAst = visitorTransformer.transformStatement(originalAst.toAstStatement()).toExprNode(valueFactory.ion)
 
-        AstSanityValidator.validate(rewrittenAst)
+        AstSanityValidator.validate(transformedAst)
 
         val thunk = nestCompilationContext(ExpressionContext.NORMAL, emptySet()) {
-            compileExprNode(rewrittenAst)
+            compileExprNode(transformedAst)
         }
 
         return object : Expression {

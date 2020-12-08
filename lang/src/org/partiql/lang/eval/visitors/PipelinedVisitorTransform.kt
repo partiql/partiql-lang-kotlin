@@ -10,6 +10,9 @@ import org.partiql.lang.domains.PartiqlAst
 class PipelinedVisitorTransform(vararg transformers: PartiqlAst.VisitorTransform) : PartiqlAst.VisitorTransform() {
     private val transformerList =  transformers.toList()
 
-    override fun transformExpr(node: PartiqlAst.Expr): PartiqlAst.Expr =
-        transformerList.fold(node) { intermediateNode, transformer -> transformer.transformExpr(intermediateNode) }
+    override fun transformStatement(node: PartiqlAst.Statement): PartiqlAst.Statement =
+        transformerList.fold(node) {
+            intermediateNode, transformer ->
+            transformer.transformStatement(intermediateNode)
+        }
 }
