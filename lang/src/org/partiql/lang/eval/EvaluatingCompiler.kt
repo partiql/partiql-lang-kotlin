@@ -205,12 +205,13 @@ internal class EvaluatingCompiler(
      * Compiles an [ExprNode] tree to an [Expression].
      */
     fun compile(originalAst: ExprNode): Expression {
-        val rewrittenAst = compileOptions.rewritingMode.createRewriter(valueFactory.ion).rewriteExprNode(originalAst)
+        val visitorTransformer = compileOptions.visitorTransformMode.createVisitorTransform()
+        val transformedAst = visitorTransformer.transformStatement(originalAst.toAstStatement()).toExprNode(valueFactory.ion)
 
-        PartiqlAstSanityValidator.validate(rewrittenAst.toAstStatement())
+        PartiqlAstSanityValidator.validate(transformedAst.toAstStatement())
 
         val thunk = nestCompilationContext(ExpressionContext.NORMAL, emptySet()) {
-            compileExprNode(rewrittenAst)
+            compileExprNode(transformedAst)
         }
 
         return object : Expression {
@@ -1173,7 +1174,7 @@ internal class EvaluatingCompiler(
                         val projectionThunk: ThunkEnvValue<List<ExprValue>> =
                             when {
                                 items.filterIsInstance<SelectListItemStar>().any() -> {
-                                    errNoContext("Encountered a SelectListItemStar--did SelectStarRewriter execute?",
+                                    errNoContext("Encountered a SelectListItemStar--did SelectStarVisitorTransform execute?",
                                         internal = true)
                                 }
                                 else -> {
@@ -1551,7 +1552,7 @@ internal class EvaluatingCompiler(
         selectList.items.mapIndexed { idx, it ->
             when (it) {
                 is SelectListItemStar       -> {
-                    errNoContext("Encountered a SelectListItemStar--did SelectStarRewriter execute?",
+                    errNoContext("Encountered a SelectListItemStar--did SelectStarVisitorTransform execute?",
                         internal = true)
                 }
                 is SelectListItemExpr       -> {

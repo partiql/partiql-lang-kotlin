@@ -180,8 +180,26 @@ class SelectListItemAliasVisitorTransformTests : VisitorTransformTestBase() {
                 """,
                 """
                 SELECT 
-                    (SELECT n FROM p) _1,
-                    (SELECT q FROM r) AS o
+                    (SELECT n AS n FROM p) AS _1,
+                    (SELECT q AS q FROM r) AS o
+                FROM foo
+                """
+            ),
+            TransformTestCase(
+                """
+                SELECT 
+                    (SELECT 
+                        (SELECT n FROM p1) FROM p),
+                    (SELECT 
+                        (SELECT q FROM r1) FROM r) AS o
+                FROM foo
+                """,
+                """
+                SELECT 
+                    (SELECT 
+                        (SELECT n AS n FROM p1) AS _1 FROM p) AS _1,
+                    (SELECT 
+                        (SELECT q AS q FROM r1) AS _1 FROM r) AS o
                 FROM foo
                 """
             )
@@ -192,5 +210,3 @@ class SelectListItemAliasVisitorTransformTests : VisitorTransformTestBase() {
     @ArgumentsSource(ArgsProvider::class)
     fun test(tc: TransformTestCase) = runTestForIdempotentTransform(tc, SelectListItemAliasVisitorTransform())
 }
-
-
