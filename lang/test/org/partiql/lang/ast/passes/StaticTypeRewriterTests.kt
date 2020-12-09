@@ -25,6 +25,8 @@ import org.partiql.lang.ast.metaContainerOf
 import org.partiql.lang.ast.plus
 import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.ast.staticType
+import org.partiql.lang.ast.toAstStatement
+import org.partiql.lang.ast.toExprNode
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.Property.BINDING_NAME
@@ -32,6 +34,7 @@ import org.partiql.lang.errors.Property.COLUMN_NUMBER
 import org.partiql.lang.errors.Property.FEATURE_NAME
 import org.partiql.lang.errors.Property.LINE_NUMBER
 import org.partiql.lang.eval.Bindings
+import org.partiql.lang.eval.visitors.basicVisitorTransforms
 import org.partiql.lang.types.StaticType
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -859,8 +862,8 @@ class StaticTypeRewriterTests : RewriterTestBase() {
         // We always pass the query under test through all of the basic rewriters primarily because we need
         // FromSourceAliasVisitorTransform to execute first but also to help ensure the queries we're testing
         // make sense when they're all run.
-        val defaultRewriters = basicRewriters(ion)
-        val originalExprNode = defaultRewriters.rewriteExprNode(parse(tc.originalSql))
+        val defaultTransforms = basicVisitorTransforms()
+        val originalExprNode = defaultTransforms.transformStatement(parse(tc.originalSql).toAstStatement()).toExprNode(ion)
 
         val rewrittenExprNode = try {
             rewriter.rewriteExprNode(originalExprNode)
