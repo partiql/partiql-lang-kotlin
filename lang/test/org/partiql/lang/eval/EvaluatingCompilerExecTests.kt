@@ -6,49 +6,11 @@ import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
+import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
+import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedureSignature
 import org.partiql.lang.util.ArgumentsProviderBase
-import org.partiql.lang.util.isAnyUnknown
 import org.partiql.lang.util.softAssert
 import org.partiql.lang.util.to
-
-/**
- * Similar class to [NullPropagatingExprFunction], but will output a stored procedure related error for invalid arity.
- */
-abstract class NullPropagatingProcedure(
-    override val name: String,
-    override val arity: IntRange,
-    valueFactory: ExprValueFactory) : NullPropagatingExprFunction(name, arity, valueFactory) {
-
-    constructor(name: String, arity: Int, valueFactory: ExprValueFactory) : this(name, (arity..arity), valueFactory)
-
-    private fun arityErrorMessage(argSize: Int) = when {
-        arity.first == 1 && arity.last == 1 -> "$name takes a single argument, received: $argSize"
-        arity.first == arity.last           -> "$name takes exactly ${arity.first} arguments, received: $argSize"
-        else                                -> "$name takes between ${arity.first} and ${arity.last} arguments, received: $argSize"
-    }
-
-    fun checkSProcArity(args: List<ExprValue>) {
-        if (!arity.contains(args.size)) {
-            val errorContext = PropertyValueMap()
-            errorContext[Property.EXPECTED_ARITY_MIN] = arity.first
-            errorContext[Property.EXPECTED_ARITY_MAX] = arity.last
-
-            throw EvaluationException(arityErrorMessage(args.size),
-                                      ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_PROCEDURE_CALL,
-                                      errorContext,
-                                      internal = false)
-        }
-    }
-
-    override fun call(env: Environment, args: List<ExprValue>): ExprValue {
-        checkSProcArity(args)
-
-        return when {
-            args.isAnyUnknown() -> valueFactory.nullValue
-            else                -> eval(env, args)
-        }
-    }
-}
 
 private fun createWrongSProcErrorContext(arg: ExprValue, expectedArgTypes: String, procName: String): PropertyValueMap {
     val errorContext = PropertyValueMap()
@@ -61,8 +23,10 @@ private fun createWrongSProcErrorContext(arg: ExprValue, expectedArgTypes: Strin
 /**
  * Simple stored procedure that takes no arguments and outputs 0.
  */
-private class ZeroArgProcedure(valueFactory: ExprValueFactory): NullPropagatingProcedure("zero_arg_procedure", 0, valueFactory) {
-    override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
+private class ZeroArgProcedure(val valueFactory: ExprValueFactory): StoredProcedure {
+    override val signature = StoredProcedureSignature("zero_arg_procedure", 0)
+
+    override fun call(session: EvaluationSession, args: List<ExprValue>): ExprValue {
         return valueFactory.newInt(0)
     }
 }
@@ -71,8 +35,10 @@ private class ZeroArgProcedure(valueFactory: ExprValueFactory): NullPropagatingP
  * Simple stored procedure that takes no arguments and outputs -1. Used to show that added stored procedures of the
  * same name will be overridden.
  */
-private class OverridenZeroArgProcedure(valueFactory: ExprValueFactory): NullPropagatingProcedure("zero_arg_procedure", 0, valueFactory) {
-    override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
+private class OverriddenZeroArgProcedure(val valueFactory: ExprValueFactory): StoredProcedure {
+    override val signature = StoredProcedureSignature("zero_arg_procedure", 0)
+
+    override fun call(session: EvaluationSession, args: List<ExprValue>): ExprValue {
         return valueFactory.newInt(-1)
     }
 }
@@ -80,11 +46,13 @@ private class OverridenZeroArgProcedure(valueFactory: ExprValueFactory): NullPro
 /**
  * Simple stored procedure that takes one integer argument and outputs that argument back.
  */
-class OneArgProcedure(valueFactory: ExprValueFactory): NullPropagatingProcedure("one_arg_procedure", 1, valueFactory) {
-    override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
+private class OneArgProcedure(val valueFactory: ExprValueFactory): StoredProcedure {
+    override val signature = StoredProcedureSignature("one_arg_procedure", 1)
+
+    override fun call(session: EvaluationSession, args: List<ExprValue>): ExprValue {
         val arg = args.first()
         if (arg.type != ExprValueType.INT) {
-            val errorContext = createWrongSProcErrorContext(arg, "INT", name)
+            val errorContext = createWrongSProcErrorContext(arg, "INT", signature.name)
             throw EvaluationException("invalid first argument",
                 ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_PROCEDURE_CALL,
                 errorContext,
@@ -98,11 +66,13 @@ class OneArgProcedure(valueFactory: ExprValueFactory): NullPropagatingProcedure(
  * Simple stored procedure that takes two integer arguments and outputs the args as a string separated by
  * a space.
  */
-private class TwoArgProcedure(valueFactory: ExprValueFactory): NullPropagatingProcedure("two_arg_procedure", 2, valueFactory) {
-    override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
+private class TwoArgProcedure(val valueFactory: ExprValueFactory): StoredProcedure {
+    override val signature = StoredProcedureSignature("two_arg_procedure", 2)
+
+    override fun call(session: EvaluationSession, args: List<ExprValue>): ExprValue {
         val arg1 = args.first()
         if (arg1.type != ExprValueType.INT) {
-            val errorContext = createWrongSProcErrorContext(arg1, "INT", name)
+            val errorContext = createWrongSProcErrorContext(arg1, "INT", signature.name)
             throw EvaluationException("invalid first argument",
                 ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_PROCEDURE_CALL,
                 errorContext,
@@ -111,7 +81,7 @@ private class TwoArgProcedure(valueFactory: ExprValueFactory): NullPropagatingPr
 
         val arg2 = args[1]
         if (arg2.type != ExprValueType.INT) {
-            val errorContext = createWrongSProcErrorContext(arg2, "INT", name)
+            val errorContext = createWrongSProcErrorContext(arg2, "INT", signature.name)
             throw EvaluationException("invalid second argument",
                 ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_PROCEDURE_CALL,
                 errorContext,
@@ -123,34 +93,36 @@ private class TwoArgProcedure(valueFactory: ExprValueFactory): NullPropagatingPr
 
 /**
  * Simple stored procedure that takes one string argument and checks if the binding (case-insensitive) is in the
- * current environment. If so, returns the value associated with that binding. Otherwise, returns missing.
+ * current session's global bindings. If so, returns the value associated with that binding. Otherwise, returns missing.
  */
-private class OutputBindingProcedure(valueFactory: ExprValueFactory): NullPropagatingProcedure("output_binding", 1, valueFactory) {
-    override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
+private class OutputBindingProcedure(val valueFactory: ExprValueFactory): StoredProcedure {
+    override val signature = StoredProcedureSignature("output_binding", 1)
+
+    override fun call(session: EvaluationSession, args: List<ExprValue>): ExprValue {
         val arg = args.first()
         if (arg.type != ExprValueType.STRING) {
-            val errorContext = createWrongSProcErrorContext(arg, "STRING", name)
+            val errorContext = createWrongSProcErrorContext(arg, "STRING", signature.name)
             throw EvaluationException("invalid first argument",
                 ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_PROCEDURE_CALL,
                 errorContext,
                 internal = false)
         }
         val bindingName = BindingName(arg.stringValue(), BindingCase.INSENSITIVE)
-        return when(val value = env.current[bindingName]) {
+        return when(val value = session.globals[bindingName]) {
             null -> valueFactory.missingValue
             else -> value
         }
     }
 }
 
-class EvaluatingCompilerExecTests : EvaluatorTestBase() {
+class EvaluatingCompilerExecTest : EvaluatorTestBase() {
     private val session = mapOf("A" to "[ { id : 1 } ]").toSession()
 
     /**
      * Custom [CompilerPipeline] w/ additional stored procedures
      */
     private val pipeline = CompilerPipeline.build(ion) {
-        addProcedure(OverridenZeroArgProcedure(valueFactory))
+        addProcedure(OverriddenZeroArgProcedure(valueFactory))
         addProcedure(ZeroArgProcedure(valueFactory))
         addProcedure(OneArgProcedure(valueFactory))
         addProcedure(TwoArgProcedure(valueFactory))
@@ -203,9 +175,9 @@ class EvaluatingCompilerExecTests : EvaluatorTestBase() {
         }
     }
 
-    class ArgsProviderValid : ArgumentsProviderBase() {
+    private class ArgsProviderValid : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
-            // OverridenZeroArgProcedure w/ same name as ZeroArgProcedure overridden
+            // OverriddenZeroArgProcedure w/ same name as ZeroArgProcedure overridden
             EvaluatorTestCase(
                 "EXEC zero_arg_procedure",
                 "0"),
@@ -228,7 +200,7 @@ class EvaluatingCompilerExecTests : EvaluatorTestBase() {
     fun validTests(tc: EvaluatorTestCase) = runSProcTestCase(tc, session)
 
 
-    class ArgsProviderError : ArgumentsProviderBase() {
+    private class ArgsProviderError : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
             // call function that is not a stored procedure
             EvaluatorErrorTestCase(
@@ -257,7 +229,7 @@ class EvaluatingCompilerExecTests : EvaluatorTestBase() {
                     Property.EXPECTED_ARITY_MAX to 0)),
             // invalid # args to sproc (too many)
             EvaluatorErrorTestCase(
-                "EXEC two_arg_procedure 1 2 3",
+                "EXEC two_arg_procedure 1, 2, 3",
                 ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_PROCEDURE_CALL,
                 mapOf(
                     Property.LINE_NUMBER to 1L,

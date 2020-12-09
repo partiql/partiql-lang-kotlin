@@ -18,7 +18,7 @@ import com.amazon.ion.*
 import org.partiql.lang.ast.*
 import org.partiql.lang.eval.*
 import org.partiql.lang.eval.builtins.*
-import org.partiql.lang.eval.builtins.storedprocedure.createBuiltinProcedures
+import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.syntax.*
 
 /**
@@ -41,7 +41,7 @@ data class StepContext(
     /**
      * Returns a list of all stored procedures which are available for execution.
      */
-    val procedures: @JvmSuppressWildcards Map<String, ExprFunction>
+    val procedures: @JvmSuppressWildcards Map<String, StoredProcedure>
 )
 
 /**
@@ -70,7 +70,7 @@ interface CompilerPipeline  {
     /**
      * Returns a list of all stored procedures which are available for execution.
      */
-    val procedures: @JvmSuppressWildcards Map<String, ExprFunction>
+    val procedures: @JvmSuppressWildcards Map<String, StoredProcedure>
 
     /** Compiles the specified PartiQL query using the configured parser. */
     fun compile(query: String): Expression
@@ -109,7 +109,7 @@ interface CompilerPipeline  {
         private var parser: Parser? = null
         private var compileOptions: CompileOptions? = null
         private val customFunctions: MutableMap<String, ExprFunction> = HashMap()
-        private val customProcedures: MutableMap<String, ExprFunction> = HashMap()
+        private val customProcedures: MutableMap<String, StoredProcedure> = HashMap()
         private val preProcessingSteps: MutableList<ProcessingStep> = ArrayList()
 
         /**
@@ -146,7 +146,7 @@ interface CompilerPipeline  {
          *
          * Stored procedures added here will replace any built-in procedure with the same name.
          */
-        fun addProcedure(procedure: ExprFunction): Builder = this.apply { customProcedures[procedure.name] = procedure }
+        fun addProcedure(procedure: StoredProcedure): Builder = this.apply { customProcedures[procedure.signature.name] = procedure }
 
         /** Adds a preprocessing step to be executed after parsing but before compilation. */
         fun addPreprocessingStep(step: ProcessingStep): Builder = this.apply { preProcessingSteps.add(step) }
@@ -154,19 +154,17 @@ interface CompilerPipeline  {
         /** Builds the actual implementation of [CompilerPipeline]. */
         fun build(): CompilerPipeline {
             val builtinFunctions = createBuiltinFunctions(valueFactory).associateBy { it.name }
-            val builtinProcedures = createBuiltinProcedures(valueFactory).associateBy { it.name }
 
             // customFunctions must be on the right side of + here to ensure that they overwrite any
             // built-in functions with the same name.
             val allFunctions = builtinFunctions + customFunctions
-            val allProcedures = builtinProcedures + customProcedures
 
             return CompilerPipelineImpl(
                 valueFactory,
                 parser ?: SqlParser(valueFactory.ion),
                 compileOptions ?: CompileOptions.standard(),
                 allFunctions,
-                allProcedures,
+                customProcedures,
                 preProcessingSteps)
         }
     }
@@ -177,7 +175,7 @@ private class CompilerPipelineImpl(
     private val parser: Parser,
     override val compileOptions: CompileOptions,
     override val functions: Map<String, ExprFunction>,
-    override val procedures: Map<String, ExprFunction>,
+    override val procedures: Map<String, StoredProcedure>,
     private val preProcessingSteps: List<ProcessingStep>
 ) : CompilerPipeline {
 
