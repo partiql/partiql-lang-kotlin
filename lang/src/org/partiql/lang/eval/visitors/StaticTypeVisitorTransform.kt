@@ -210,16 +210,6 @@ class StaticTypeVisitorTransform(private val ion: IonSystem,
             }
         }
 
-        override fun transformExprCall(node: PartiqlAst.Expr.Call): PartiqlAst.Expr {
-            return PartiqlAst.build {
-                call_(
-                    node.funcName,
-                    node.args.map { transformExpr(it) },
-                    transformMetas(node.metas)
-                )
-            }
-        }
-
         private fun Bindings<TypeAndDepth>.lookupBinding(bindingName: BindingName): TypeAndScope? =
             when (val match = this[bindingName]) {
                 null -> null
