@@ -21,7 +21,6 @@ import org.junit.*
 import org.junit.Assert.*
 import org.partiql.lang.*
 import java.io.*
-import java.util.*
 import java.util.concurrent.*
 import kotlin.concurrent.*
 
