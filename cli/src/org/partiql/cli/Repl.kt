@@ -18,12 +18,11 @@ import com.amazon.ion.system.*
 import com.amazon.ionelement.api.toIonValue
 import org.partiql.cli.ReplState.*
 import org.partiql.lang.*
-import org.partiql.lang.ast.*
-import org.partiql.lang.ast.passes.MetaStrippingRewriter
 import org.partiql.lang.eval.*
 import org.partiql.lang.syntax.*
 import org.partiql.lang.util.*
 import java.io.*
+import java.util.Properties
 import java.util.concurrent.*
 
 internal const val PROMPT_1 = "PartiQL> "
@@ -192,6 +191,17 @@ internal class Repl(private val valueFactory: ExprValueFactory,
         outputWriter.write("\n")
     }
 
+    fun retrievePartiQLVersion(): String {
+        val versionProperties = Properties()
+        versionProperties.load(this.javaClass.getResourceAsStream("/version.properties"))
+        return versionProperties.getProperty("version")
+    }
+
+    private fun printVersionNumber() {
+        outputWriter.write("Using version: ${retrievePartiQLVersion()}")
+        outputWriter.write("\n")
+    }
+
     private fun printPrompt() {
         when {
             buffer.isEmpty() -> outputWriter.write(PROMPT_1)
@@ -268,6 +278,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
             state = when (state) {
                 INIT                      -> {
                     printWelcomeMessage()
+                    printVersionNumber()
                     READY
                 }
 

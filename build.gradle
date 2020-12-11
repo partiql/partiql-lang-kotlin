@@ -90,11 +90,26 @@ subprojects {
 
     })
     plugins.withId('org.jetbrains.kotlin.jvm', { _ ->
+        def generatedVersionDir = "${buildDir}/generated-version"
 
         sourceSets {
             main.kotlin.srcDirs = ["src"]
             test.kotlin.srcDirs = ["test"]
+
+            main {
+                output.dir(generatedVersionDir, builtBy: 'generateVersionProperties')
+            }
         }
+        task generateVersionProperties {
+            doLast {
+                def propertiesFile = file "$generatedVersionDir/version.properties"
+                propertiesFile.parentFile.mkdirs()
+                def properties = new Properties()
+                properties.setProperty("version", version.toString())
+                propertiesFile.withWriter { properties.store(it, null) }
+            }
+        }
+        processResources.dependsOn generateVersionProperties
     })
 
 }
