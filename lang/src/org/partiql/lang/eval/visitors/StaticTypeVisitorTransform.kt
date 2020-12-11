@@ -111,7 +111,7 @@ class StaticTypeVisitorTransform(private val ion: IonSystem,
      * - Values > 1 are for each subsequent level of nested sub-query.
      */
     private inner class VisitorTransform(private val parentEnv: Bindings<TypeAndDepth>,
-                                         private val currentScopeDepth: Int) : PartiqlAst.VisitorTransform() {
+                                         private val currentScopeDepth: Int) : VisitorTransformBase() {
 
         /** Specifies the current scope search order--default is LEXICAL. */
         private var scopeOrder = ScopeSearchOrder.LEXICAL
@@ -210,9 +210,7 @@ class StaticTypeVisitorTransform(private val ion: IonSystem,
             }
         }
 
-        // TODO: find if this override shouldn't be necessary because PIG's Call doesn't store the function call name as the first arg
         override fun transformExprCall(node: PartiqlAst.Expr.Call): PartiqlAst.Expr {
-            // do not write the name of the call--this should be a symbolic name in another namespace (AST is over generalized here)
             return PartiqlAst.build {
                 call_(
                     node.funcName,
@@ -435,51 +433,14 @@ class StaticTypeVisitorTransform(private val ion: IonSystem,
             errUnimplementedFeature("GROUP BY")
         }
 
-        private fun innerTransformExprSelect(node: PartiqlAst.Expr.Select): PartiqlAst.Expr {
-            val new_from = transformExprSelect_from(node)
-            val new_fromLet = transformExprSelect_fromLet(node)
-            val new_where = transformExprSelect_where(node)
-            val new_group = transformExprSelect_group(node)
-            val new_having = transformExprSelect_having(node)
-            val new_setq = transformExprSelect_setq(node)
-            val new_project = transformExprSelect_project(node)
-            val new_limit = transformExprSelect_limit(node)
-            val new_metas = transformExprSelect_metas(node)
-            return PartiqlAst.build {
-                PartiqlAst.Expr.Select(
-                    setq = new_setq,
-                    project = new_project,
-                    from = new_from,
-                    fromLet = new_fromLet,
-                    where = new_where,
-                    group = new_group,
-                    having = new_having,
-                    limit = new_limit,
-                    metas = new_metas
-                )
-            }
-        }
-
-        private fun innerTransformDataManipulation(node: PartiqlAst.Statement.Dml): PartiqlAst.Statement {
-            val from = node.from?.let { transformFromSource(it) }
-            val where = node.where?.let { transformStatementDml_where(node) }
-            val dmlOperation = transformDmlOp(node.operation)
-            val metas = transformMetas(node.metas)
-
-            return PartiqlAst.build {
-                dml(dmlOperation, from, where, metas)
-            }
-        }
-
-
         override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlAst.Expr {
             // a SELECT introduces a new scope, we evaluate the each from source
             // which is correlated (and thus has visibility from the previous bindings)
-            return createTransformerForNestedScope().innerTransformExprSelect(node)
+            return createTransformerForNestedScope().transformExprSelectEvaluationOrder(node)
         }
 
         override fun transformStatementDml(node: PartiqlAst.Statement.Dml): PartiqlAst.Statement {
-            return createTransformerForNestedScope().innerTransformDataManipulation(node)
+            return createTransformerForNestedScope().transformDataManipulationEvaluationOrder(node)
         }
 
         private fun createTransformerForNestedScope(): VisitorTransform {
