@@ -17,11 +17,7 @@ dependencies {
 
     testImplementation 'com.amazon.ion:ion-kotlin-builder:1.0.1'
     
-    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.3.1"
-}
-
-test {
-    useJUnitPlatform()
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
 }
 
 compileKotlin {
