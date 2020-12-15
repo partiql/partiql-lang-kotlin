@@ -38,7 +38,8 @@ import kotlin.collections.*
  * [here][1].
  *
  * **Note:** *threaded* in this context is used in how the code gets *threaded* together for
- * interpretation and **not** the concurrency primitive.
+ * interpretation and **not** the concurrency primitive. That is to say this code is NOT thread
+ * safe.
  *
  * [1]: https://www.complang.tuwien.ac.at/anton/lvas/sem06w/fest.pdf
  *
