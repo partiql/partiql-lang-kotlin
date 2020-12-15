@@ -97,19 +97,32 @@ subprojects {
             test.kotlin.srcDirs = ["test"]
 
             main {
-                output.dir(generatedVersionDir, builtBy: 'generateVersionProperties')
+                output.dir(generatedVersionDir, builtBy: 'generateVersionAndHashProperties')
             }
         }
-        task generateVersionProperties {
+
+        // generates a build properties file with the current PartiQL version and most recent commit hash
+        task generateVersionAndHashProperties {
             doLast {
-                def propertiesFile = file "$generatedVersionDir/version.properties"
+                def propertiesFile = file "$generatedVersionDir/partiql.properties"
                 propertiesFile.parentFile.mkdirs()
                 def properties = new Properties()
+
+                // get current PartiQL version
                 properties.setProperty("version", version.toString())
+
+                // get most recent short commit hash
+                def commitHash = new ByteArrayOutputStream()
+                exec {
+                    commandLine 'git', 'rev-parse', '--short', 'HEAD'
+                    standardOutput = commitHash
+                }
+                properties.setProperty("commit", commitHash.toString().trim())
+
                 propertiesFile.withWriter { properties.store(it, null) }
             }
         }
-        processResources.dependsOn generateVersionProperties
+        processResources.dependsOn generateVersionAndHashProperties
     })
 
 }

@@ -191,14 +191,14 @@ internal class Repl(private val valueFactory: ExprValueFactory,
         outputWriter.write("\n")
     }
 
-    fun retrievePartiQLVersion(): String {
-        val versionProperties = Properties()
-        versionProperties.load(this.javaClass.getResourceAsStream("/version.properties"))
-        return versionProperties.getProperty("version")
+    fun retrievePartiQLVersionAndHash(): String {
+        val properties = Properties()
+        properties.load(this.javaClass.getResourceAsStream("/partiql.properties"))
+        return "${properties.getProperty("version")}-${properties.getProperty("commit")}"
     }
 
     private fun printVersionNumber() {
-        outputWriter.write("Using version: ${retrievePartiQLVersion()}")
+        outputWriter.write("Using version: ${retrievePartiQLVersionAndHash()}")
         outputWriter.write("\n")
     }
 
