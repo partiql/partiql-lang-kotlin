@@ -14,20 +14,18 @@
 
 package org.partiql.lang
 
+import com.amazon.ion.*
 import com.amazon.ion.system.IonSystemBuilder
+import org.assertj.core.api.*
 import org.partiql.lang.ast.*
-import org.partiql.lang.ast.passes.*
+import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.eval.*
 import org.partiql.lang.errors.*
-import junitparams.JUnitParamsRunner
+import org.partiql.lang.util.*
 import org.junit.Assert
 import org.junit.runner.RunWith
 import java.util.*
-
-import org.partiql.lang.errors.Property.*
-import org.partiql.lang.eval.*
-import org.partiql.lang.util.*
-import org.assertj.core.api.*
-import com.amazon.ion.*
+import junitparams.JUnitParamsRunner
 import kotlin.reflect.*
 
 
@@ -36,7 +34,7 @@ abstract class TestBase : Assert() {
     val ion: IonSystem = IonSystemBuilder.standard().build()
     val valueFactory = ExprValueFactory.standard(ion)
 
-    val defaultRewriter = AstRewriterBase()
+    val defaultTransform = PartiqlAst.VisitorTransform()
 
     protected fun anyToExprValue(value: Any) = when (value) {
         is String    -> valueFactory.newString(value)
@@ -73,10 +71,10 @@ abstract class TestBase : Assert() {
     }
 
 
-    protected fun assertBaseRewrite(originalSql: String, exprNode: ExprNode) {
-        val clonedAst = defaultRewriter.rewriteExprNode(exprNode)
+    protected fun assertBaseTransform(originalSql: String, exprNode: ExprNode) {
+        val clonedAst = defaultTransform.transformStatement(exprNode.toAstStatement()).toExprNode(ion)
         assertEquals(
-            "AST returned from default AstRewriterBase should match the original AST. SQL was: $originalSql",
+            "AST returned from default PartiqlAst.VisitorTransform should match the original AST. SQL was: $originalSql",
             exprNode, clonedAst)
     }
 

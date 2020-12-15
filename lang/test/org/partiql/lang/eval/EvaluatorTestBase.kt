@@ -87,7 +87,7 @@ abstract class EvaluatorTestBase : TestBase() {
         // round-trip and evaluate each of the [AstVersion]s.
         AstVersion.values().forEach { serializeRoundTripEvalAndAssert(it) }
 
-        assertBaseRewrite(source, originalExprNode)
+        assertBaseTransform(source, originalExprNode)
     }
 
     /**
@@ -131,7 +131,7 @@ abstract class EvaluatorTestBase : TestBase() {
         evalAndAssertIsMissing(originalExprNode, "AST originated from parser")
         AstVersion.values().forEach { serializeRoundTripEvalAndAssertIsMissing(it) }
 
-        assertBaseRewrite(source, originalExprNode)
+        assertBaseTransform(source, originalExprNode)
     }
 
     protected fun assertExprNodeToPIGRoundTrip(exprNode: ExprNode) {

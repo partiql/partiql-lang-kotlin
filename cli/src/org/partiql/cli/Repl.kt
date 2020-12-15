@@ -18,8 +18,6 @@ import com.amazon.ion.system.*
 import com.amazon.ionelement.api.toIonValue
 import org.partiql.cli.ReplState.*
 import org.partiql.lang.*
-import org.partiql.lang.ast.*
-import org.partiql.lang.ast.passes.MetaStrippingRewriter
 import org.partiql.lang.eval.*
 import org.partiql.lang.syntax.*
 import org.partiql.lang.util.*

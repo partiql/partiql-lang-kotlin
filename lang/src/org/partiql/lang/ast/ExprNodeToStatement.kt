@@ -99,10 +99,11 @@ fun ExprNode.toAstExpr(): PartiqlAst.Expr {
                 }
             }
             is CallAgg -> {
-                val symbol1 = (node.funcExpr as? VariableReference)?.id
+                val symbol1 = (node.funcExpr as? VariableReference)
                     ?: error("Expected CallAgg.funcExpr to be a VariableReference")
+                val symbol1Primitive = symbol1.id.asPrimitive(symbol1.metas.toIonElementMetaContainer())
                 // TODO:  we are losing case-sensitivity of the function name here.  Do we care?
-                callAgg(node.setQuantifier.toAstSetQuantifier(), symbol1, node.arg.toAstExpr(), metas)
+                callAgg_(node.setQuantifier.toAstSetQuantifier(), symbol1Primitive, node.arg.toAstExpr(), metas)
             }
             is Typed ->
                 when(node.op) {
@@ -141,12 +142,12 @@ fun ExprNode.toAstExpr(): PartiqlAst.Expr {
                     having = node.having?.toAstExpr(),
                     limit = node.limit?.toAstExpr(),
                     metas = metas)
-            is Struct -> struct(node.fields.map { exprPair(it.name.toAstExpr(), it.expr.toAstExpr()) })
+            is Struct -> struct(node.fields.map { exprPair(it.name.toAstExpr(), it.expr.toAstExpr()) }, metas)
             is Seq ->
                 when(node.type) {
-                    SeqType.LIST -> list(node.values.map { it.toAstExpr() })
-                    SeqType.SEXP -> sexp(node.values.map { it.toAstExpr() })
-                    SeqType.BAG -> bag(node.values.map { it.toAstExpr() })
+                    SeqType.LIST -> list(node.values.map { it.toAstExpr() }, metas)
+                    SeqType.SEXP -> sexp(node.values.map { it.toAstExpr() }, metas)
+                    SeqType.BAG -> bag(node.values.map { it.toAstExpr() }, metas)
                 }
 
             // These are handled by `toAstDml()`
@@ -164,7 +165,7 @@ private fun GroupBy.toAstGroupSpec(): PartiqlAst.GroupBy =
                 val keyMetas = it.asName?.metas?.toIonElementMetaContainer() ?: emptyMetaContainer()
                 groupKey_(it.expr.toAstExpr(), it.asName?.name?.asPrimitive(keyMetas) )
             }),
-            this@toAstGroupSpec.groupName?.name?.asPrimitive())
+            this@toAstGroupSpec.groupName?.name?.asPrimitive(this@toAstGroupSpec.groupName.metas.toIonElementMetaContainer()))
     }
 
 
@@ -214,7 +215,8 @@ private fun SelectProjection.toAstSelectProject(): PartiqlAst.Projection {
             is SelectProjectionList -> {
                 if(thiz.items.any { it is SelectListItemStar }) {
                     if(thiz.items.size > 1) error("More than one select item when SELECT * was present.")
-                    projectStar()
+                    val metas = (thiz.items[0] as SelectListItemStar).metas.toIonElementMetaContainer()
+                    projectStar(metas)
                 }
                 else
                     projectList(
@@ -240,7 +242,8 @@ private fun FromSource.toAstFromSource(): PartiqlAst.FromSource {
                 thiz.expr.toAstExpr(),
                 thiz.variables.asName?.toPrimitive(),
                 thiz.variables.atName?.toPrimitive(),
-                thiz.variables.byName?.toPrimitive())
+                thiz.variables.byName?.toPrimitive(),
+                thiz.expr.metas.toIonElementMetaContainer())
             is FromSourceJoin -> {
                 val jt = when (thiz.joinOp) {
                     JoinOp.INNER -> inner()
@@ -259,7 +262,8 @@ private fun FromSource.toAstFromSource(): PartiqlAst.FromSource {
                 thiz.expr.toAstExpr(),
                 thiz.variables.asName?.toPrimitive(),
                 thiz.variables.atName?.toPrimitive(),
-                thiz.variables.byName?.toPrimitive())
+                thiz.variables.byName?.toPrimitive(),
+                thiz.metas.toIonElementMetaContainer())
         }
     }
 }
@@ -323,32 +327,33 @@ private fun DataManipulation.toAstDml(): PartiqlAst.Statement {
 
 private fun DataType.toAstType(): PartiqlAst.Type {
     val thiz = this
+    val metas = thiz.metas.toIonElementMetaContainer()
     val arg1 = thiz.args.getOrNull(0)?.toLong()
     val arg2 = thiz.args.getOrNull(1)?.toLong()
     return PartiqlAst.build {
         when(thiz.sqlDataType) {
-            SqlDataType.MISSING -> missingType()
-            SqlDataType.NULL -> nullType()
-            SqlDataType.BOOLEAN -> booleanType()
-            SqlDataType.SMALLINT -> smallintType()
-            SqlDataType.INTEGER -> integerType()
-            SqlDataType.FLOAT -> floatType(arg1)
-            SqlDataType.REAL -> realType()
-            SqlDataType.DOUBLE_PRECISION -> doublePrecisionType()
-            SqlDataType.DECIMAL -> decimalType(arg1, arg2)
-            SqlDataType.NUMERIC -> numericType(arg1, arg2)
-            SqlDataType.TIMESTAMP -> timestampType()
-            SqlDataType.CHARACTER -> characterType(arg1)
-            SqlDataType.CHARACTER_VARYING -> characterVaryingType(arg1)
-            SqlDataType.STRING -> stringType()
-            SqlDataType.SYMBOL -> symbolType()
-            SqlDataType.CLOB -> clobType()
-            SqlDataType.BLOB -> blobType()
-            SqlDataType.STRUCT -> structType()
-            SqlDataType.TUPLE -> tupleType()
-            SqlDataType.LIST -> listType()
-            SqlDataType.SEXP -> sexpType()
-            SqlDataType.BAG -> bagType()
+            SqlDataType.MISSING -> missingType(metas)
+            SqlDataType.NULL -> nullType(metas)
+            SqlDataType.BOOLEAN -> booleanType(metas)
+            SqlDataType.SMALLINT -> smallintType(metas)
+            SqlDataType.INTEGER -> integerType(metas)
+            SqlDataType.FLOAT -> floatType(arg1, metas)
+            SqlDataType.REAL -> realType(metas)
+            SqlDataType.DOUBLE_PRECISION -> doublePrecisionType(metas)
+            SqlDataType.DECIMAL -> decimalType(arg1, arg2, metas)
+            SqlDataType.NUMERIC -> numericType(arg1, arg2, metas)
+            SqlDataType.TIMESTAMP -> timestampType(metas)
+            SqlDataType.CHARACTER -> characterType(arg1, metas)
+            SqlDataType.CHARACTER_VARYING -> characterVaryingType(arg1, metas)
+            SqlDataType.STRING -> stringType(metas)
+            SqlDataType.SYMBOL -> symbolType(metas)
+            SqlDataType.CLOB -> clobType(metas)
+            SqlDataType.BLOB -> blobType(metas)
+            SqlDataType.STRUCT -> structType(metas)
+            SqlDataType.TUPLE -> tupleType(metas)
+            SqlDataType.LIST -> listType(metas)
+            SqlDataType.SEXP -> sexpType(metas)
+            SqlDataType.BAG -> bagType(metas)
         }
     }
 }
