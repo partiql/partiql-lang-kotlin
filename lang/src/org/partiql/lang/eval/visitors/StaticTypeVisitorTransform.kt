@@ -2,19 +2,31 @@
  * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
  */
 
-package org.partiql.lang.ast.passes
+package org.partiql.lang.eval.visitors
 
-import com.amazon.ion.*
-import org.partiql.lang.ast.*
-import org.partiql.lang.errors.*
-import org.partiql.lang.eval.*
-import org.partiql.lang.types.*
-import org.partiql.lang.util.*
+import com.amazon.ion.IonSystem
+import com.amazon.ionelement.api.MetaContainer
+import com.amazon.ionelement.api.metaContainerOf
+import com.amazon.ionelement.api.toIonElement
+import org.partiql.lang.ast.StaticTypeMeta
+import org.partiql.lang.ast.passes.SemanticException
+import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.addSourceLocation
+import org.partiql.lang.domains.extractSourceLocation
+import org.partiql.lang.domains.toBindingCase
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
+import org.partiql.lang.eval.BindingCase
+import org.partiql.lang.eval.BindingName
+import org.partiql.lang.eval.Bindings
+import org.partiql.lang.eval.delegate
+import org.partiql.lang.types.StaticType
+import org.partiql.lang.util.propertyValueMapOf
 
 /**
  * Extra constraints which may be imposed on the type checking.
  */
-enum class StaticTypeRewriterConstraints {
+enum class StaticTypeVisitorTransformConstraints {
 
     /**
      * With this constraint, any VariableReferences in SFW queries must be
@@ -37,27 +49,27 @@ enum class StaticTypeRewriterConstraints {
 }
 
 /**
- * An [AstRewriter] that annotates nodes with their static types and resolves implicit variables
+ * A [PartiqlAst.VisitorTransform] that annotates nodes with their static types and resolves implicit variables
  * explicitly based on the static types.
  *
- * The validations performed may be enhanced by the passing of additional [StaticTypeRewriterConstraints].
+ * The validations performed may be enhanced by the passing of additional [StaticTypeVisitorTransformConstraints].
  *
  * @param globalEnv The global bindings to the static environment.  This is data catalog purely from a lookup
  *                  perspective.
  * @param constraints Additional constraints on what variable scoping, or other rules should be followed.
  */
-class StaticTypeRewriter(private val ion: IonSystem,
-                         globalBindings: Bindings<StaticType>,
-                         constraints: Set<StaticTypeRewriterConstraints> = setOf()) : AstRewriter {
+class StaticTypeVisitorTransform(private val ion: IonSystem,
+                                 globalBindings: Bindings<StaticType>,
+                                 constraints: Set<StaticTypeVisitorTransformConstraints> = setOf()) : PartiqlAst.VisitorTransform() {
 
     /** Used to allow certain binding lookups to occur directly in the global scope. */
     private val globalEnv = wrapBindings(globalBindings, 0)
 
     private val preventGlobalsExceptInFrom =
-        StaticTypeRewriterConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM in constraints
+        StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM in constraints
 
     private val preventGlobalsInNestedQueries =
-        StaticTypeRewriterConstraints.PREVENT_GLOBALS_IN_NESTED_QUERIES in constraints
+        StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_IN_NESTED_QUERIES in constraints
 
     /** Captures a [StaticType] and the depth at which it is bound. */
     private data class TypeAndDepth(val type: StaticType, val depth: Int)
@@ -98,8 +110,8 @@ class StaticTypeRewriter(private val ion: IonSystem,
      * - 1 is the top-most statement with a `FROM` clause (i.e. select-from-where or DML operation),
      * - Values > 1 are for each subsequent level of nested sub-query.
      */
-    private inner class Rewriter(private val parentEnv: Bindings<TypeAndDepth>,
-                                 private val currentScopeDepth: Int) : AstRewriterBase() {
+    private inner class VisitorTransform(private val parentEnv: Bindings<TypeAndDepth>,
+                                         private val currentScopeDepth: Int) : VisitorTransformBase() {
 
         /** Specifies the current scope search order--default is LEXICAL. */
         private var scopeOrder = ScopeSearchOrder.LEXICAL
@@ -121,23 +133,25 @@ class StaticTypeRewriter(private val ion: IonSystem,
         /**
          * In short, after the FROM sources have been visited, this is set to the name if-and-only-if there is
          * a single from source.  Otherwise, it is null.
-          */
+         */
         private var singleFromSourceName: String? = null
 
-        private fun singleFromSourceRef(sourceName: String, metas: MetaContainer): VariableReference {
+        private fun singleFromSourceRef(sourceName: String, metas: MetaContainer): PartiqlAst.Expr.Id {
             val sourceType = currentEnv[BindingName(sourceName, BindingCase.SENSITIVE)] ?:
                 throw IllegalArgumentException("Could not find type for single FROM source variable")
 
-            return VariableReference(
-                sourceName,
-                CaseSensitivity.SENSITIVE,
-                ScopeQualifier.LEXICAL,
-                metas + metaContainerOf(StaticTypeMeta(sourceType.type))
-            )
+            return PartiqlAst.build {
+                id(sourceName,
+                    caseSensitive(),
+                    localsFirst(),
+                    metas + metaContainerOf(StaticTypeMeta.TAG to StaticTypeMeta(sourceType.type)))
+            }
         }
 
-        private fun VariableReference.toPathComponent(): PathComponentExpr =
-            PathComponentExpr(Literal(ion.newString(id), metas.sourceLocationContainer), case)
+        private fun PartiqlAst.Expr.Id.toPathExpr(): PartiqlAst.PathStep.PathExpr =
+            PartiqlAst.build {
+                pathExpr(index = lit(ion.newString(name.text).toIonElement(), this@toPathExpr.extractSourceLocation()), case = case)
+            }
 
         private fun errUnboundName(name: String, metas: MetaContainer): Nothing = throw SemanticException(
             "No such variable named '$name'",
@@ -185,22 +199,15 @@ class StaticTypeRewriter(private val ion: IonSystem,
             localsOnlyEnv = wrapBindings(Bindings.ofMap(localsMap), currentScopeDepth)
         }
 
-        override fun rewriteCallAgg(node: CallAgg): ExprNode {
-            return CallAgg(
-                // do not rewrite the funcExpr--as this is a symbolic name in another namespace (AST is over generalized here)
-                node.funcExpr,
-                node.setQuantifier,
-                rewriteExprNode(node.arg),
-                rewriteMetas(node))
-        }
-
-        override fun rewriteNAry(node: NAry): ExprNode = when (node.op) {
-            // do not write the name of the call--this should be a symbolic name in another namespace (AST is over generalized here)
-            NAryOp.CALL -> NAry(
-                node.op,
-                listOf(node.args[0]) + node.args.drop(1).map { rewriteExprNode(it) },
-                rewriteMetas(node))
-            else -> super.rewriteNAry(node)
+        override fun transformExprCallAgg(node: PartiqlAst.Expr.CallAgg): PartiqlAst.Expr {
+            return PartiqlAst.build {
+                callAgg_(
+                    // do not transform the funcExpr--as this is a symbolic name in another namespace (AST is over generalized here)
+                    node.setq,
+                    node.funcName,
+                    transformExpr(node.arg),
+                    transformMetas(node.metas))
+            }
         }
 
         private fun Bindings<TypeAndDepth>.lookupBinding(bindingName: BindingName): TypeAndScope? =
@@ -217,17 +224,18 @@ class StaticTypeRewriter(private val ion: IonSystem,
                     TypeAndScope(type, scope)
                 }
             }
+
         /**
          * Encapsulates variable reference lookup, layering the scoping
          * rules from the exclusions given the current state.
          *
          * Returns an instance of [TypeAndScope] if the binding was found, otherwise returns null.
          */
-        private fun findBind(bindingName: BindingName, scopeQualifier: ScopeQualifier): TypeAndScope? {
+        private fun findBind(bindingName: BindingName, scopeQualifier: PartiqlAst.ScopeQualifier): TypeAndScope? {
             // Override the current scope search order if the var is lexically qualified.
             val overridenScopeSearchOrder = when(scopeQualifier) {
-                ScopeQualifier.LEXICAL     -> ScopeSearchOrder.LEXICAL
-                ScopeQualifier.UNQUALIFIED -> this.scopeOrder
+                is PartiqlAst.ScopeQualifier.LocalsFirst -> ScopeSearchOrder.LEXICAL
+                is PartiqlAst.ScopeQualifier.Unqualified -> this.scopeOrder
             }
             val scopes: List<Bindings<TypeAndDepth>> = when(overridenScopeSearchOrder) {
                 ScopeSearchOrder.GLOBALS_THEN_LEXICAL -> listOf(globalEnv, currentEnv)
@@ -242,18 +250,18 @@ class StaticTypeRewriter(private val ion: IonSystem,
 
         /**
          * The actual variable resolution occurs in this method--all other parts of the
-         * [StaticTypeRewriter] support what's happening here.
+         * [StaticTypeVisitorTransform] support what's happening here.
          */
-        override fun rewriteVariableReference(node: VariableReference): ExprNode {
-            val bindingName = BindingName(node.id, node.case.toBindingCase())
+        override fun transformExprId(node: PartiqlAst.Expr.Id): PartiqlAst.Expr {
+            val bindingName = BindingName(node.name.text, node.case.toBindingCase())
 
-            val found = findBind(bindingName, node.scopeQualifier)
+            val found = findBind(bindingName, node.qualifier)
 
-            val singleBinding = singleFromSourceName //Copy to immutable local variable to enable smart-casting
+            val singleBinding = singleFromSourceName // Copy to immutable local variable to enable smart-casting
 
             // If we didn't find a variable with that name...
-            if(found == null) {
-                // ...and there is a single from-source in the current query, then rewrite it into
+            if (found == null) {
+                // ...and there is a single from-source in the current query, then transform it into
                 // a path expression, i.e. `SELECT foo FROM bar AS b` becomes `SELECT b.foo FROM bar AS b`
                 return when {
                     // If there's a single from source...
@@ -262,15 +270,15 @@ class StaticTypeRewriter(private val ion: IonSystem,
                     }
                     else -> {
                         // otherwise there is more than one from source so an undefined variable was referenced.
-                        errUnboundName(node.id, node.metas)
+                        errUnboundName(node.name.text, node.metas)
                     }
                 }
             }
 
-            if(found.scope == BindingScope.GLOBAL) {
+            if (found.scope == BindingScope.GLOBAL) {
                 when {
                     // If we found a variable in the global scope but a there is a single
-                    // from source, we should rewrite to this to path expression anyway and pretend
+                    // from source, we should transform to this to path expression anyway and pretend
                     // we didn't match the global variable.
                     singleBinding != null                                  -> {
                         return makePathIntoFromSource(singleBinding, node)
@@ -285,80 +293,110 @@ class StaticTypeRewriter(private val ion: IonSystem,
             }
 
             val newScopeQualifier = when(found.scope) {
-                BindingScope.LOCAL, BindingScope.LEXICAL -> ScopeQualifier.LEXICAL
-                BindingScope.GLOBAL -> ScopeQualifier.UNQUALIFIED
+                BindingScope.LOCAL, BindingScope.LEXICAL -> PartiqlAst.build { localsFirst() }
+                BindingScope.GLOBAL -> PartiqlAst.build { unqualified() }
             }
 
-            return node.copy(
-                scopeQualifier = newScopeQualifier,
-                metas = node.metas.add(StaticTypeMeta(found.type)))
+            return PartiqlAst.build {
+                id_(node.name, node.case, newScopeQualifier,
+                    node.metas + metaContainerOf(StaticTypeMeta.TAG to StaticTypeMeta(found.type)))
+            }
         }
 
         /**
          * Changes the specified variable reference to a path expression with the name of the variable as
          * its first and only element.
          */
-        private fun makePathIntoFromSource(fromSourceAlias: String, node: VariableReference): Path {
-            return Path(
-                singleFromSourceRef(fromSourceAlias, node.metas.sourceLocationContainer),
-                listOf(node.toPathComponent()),
-                node.metas.sourceLocationContainer)
+        private fun makePathIntoFromSource(fromSourceAlias: String, node: PartiqlAst.Expr.Id): PartiqlAst.Expr.Path {
+            return PartiqlAst.build {
+                path(
+                    singleFromSourceRef(fromSourceAlias, node.extractSourceLocation()),
+                    listOf(node.toPathExpr()),
+                    node.extractSourceLocation())
+            }
         }
 
-        override fun rewritePath(node: Path): ExprNode = when (node.root) {
-            is VariableReference -> super.rewritePath(node).let {
-                it as Path
-                when (it.root) {
-                    // we started with a variable, that got turned into a path, normalize it
-                    // SELECT x.y FROM tbl AS t --> SELECT ("t".x).y FROM tbl AS t --> SELECT "t".x.y FROM tbl AS t
-                    is Path -> {
-                        val childPath = it.root
-                        Path(childPath.root, childPath.components + it.components, it.metas)
+        override fun transformExprPath(node: PartiqlAst.Expr.Path): PartiqlAst.Expr =
+            when (node.root) {
+                is PartiqlAst.Expr.Id -> super.transformExprPath(node).let {
+                    it as PartiqlAst.Expr.Path
+                    when (it.root) {
+                        // we started with a variable, that got turned into a path, normalize it
+                        // SELECT x.y FROM tbl AS t --> SELECT ("t".x).y FROM tbl AS t --> SELECT "t".x.y FROM tbl AS t
+                        is PartiqlAst.Expr.Path -> {
+                            val childPath = it.root
+                            PartiqlAst.build {
+                                path(childPath.root, childPath.steps + it.steps, it.metas)
+                            }
+                        }
+
+                        // nothing to do--the transform didn't change anything
+                        else -> it
                     }
-
-                    // nothing to do--the rewrite didn't change anything
-                    else -> it
                 }
-            }
-            else -> super.rewritePath(node)
+            else -> super.transformExprPath(node)
         }
 
-        // TODO support analyzing up the call chain (n-ary, etc.)
+        override fun transformFromSourceScan(node: PartiqlAst.FromSource.Scan): PartiqlAst.FromSource {
+            // we need to transform the source expression before binding the names to our scope
+            val from = super.transformFromSourceScan(node)
 
-        override fun rewriteFromSourceLet(fromSourceLet: FromSourceLet): FromSourceLet {
-            // we need to rewrite the source expression before binding the names to our scope
-            val from = super.rewriteFromSourceLet(fromSourceLet)
-
-            fromSourceLet.variables.atName?.let {
-                addLocal(it.name, StaticType.ANY, it.metas)
+            node.atAlias?.let {
+                addLocal(it.text, StaticType.ANY, it.metas)
             }
 
-            fromSourceLet.variables.byName?.let {
-                addLocal(it.name, StaticType.ANY, it.metas)
+            node.byAlias?.let {
+                addLocal(it.text, StaticType.ANY, it.metas)
             }
 
-            val asSymbolicName = fromSourceLet.variables.asName
-                                 ?: error("fromSourceLet.variables.asName is null.  This wouldn't be the case if FromSourceAliasVisitorTransform was executed first.")
+            val asSymbolicName = node.asAlias
+                                 ?: error("fromSourceLet.variables.asName is null.  This wouldn't be the case if " +
+                                     "FromSourceAliasVisitorTransform was executed first.")
 
-            addLocal(asSymbolicName.name, StaticType.ANY, asSymbolicName.metas)
-
+            addLocal(asSymbolicName.text, StaticType.ANY, asSymbolicName.metas)
 
             if (!containsJoin) {
                 fromVisited = true
                 if (currentScopeDepth == 1) {
-                    singleFromSourceName = asSymbolicName.name
+                    singleFromSourceName = asSymbolicName.text
                 }
             }
-
             return from
         }
 
-        override fun rewriteFromSourceJoin(fromSource: FromSourceJoin): FromSource {
-            // this happens before FromSourceExpr or FromSourceUnpivot gets hit
+        override fun transformFromSourceUnpivot(node: PartiqlAst.FromSource.Unpivot): PartiqlAst.FromSource {
+            // we need to transform the source expression before binding the names to our scope
+            val from = super.transformFromSourceUnpivot(node)
+
+            node.atAlias?.let {
+                addLocal(it.text, StaticType.ANY, it.metas)
+            }
+
+            node.byAlias?.let {
+                addLocal(it.text, StaticType.ANY, it.metas)
+            }
+
+            val asSymbolicName = node.asAlias
+                                 ?: error("fromSourceLet.variables.asName is null.  This wouldn't be the case if " +
+                                     "FromSourceAliasVisitorTransform was executed first.")
+
+            addLocal(asSymbolicName.text, StaticType.ANY, asSymbolicName.metas)
+
+            if (!containsJoin) {
+                fromVisited = true
+                if (currentScopeDepth == 1) {
+                    singleFromSourceName = asSymbolicName.text
+                }
+            }
+            return from
+        }
+
+        override fun transformFromSourceJoin(node: PartiqlAst.FromSource.Join): PartiqlAst.FromSource {
+            // this happens before FromSourceScan or FromSourceUnpivot gets hit
             val outermostJoin = !containsJoin
             containsJoin = true
 
-            return super.rewriteFromSourceJoin(fromSource)
+            return super.transformFromSourceJoin(node)
                 .also {
                     if (outermostJoin) {
                         fromVisited = true
@@ -367,63 +405,73 @@ class StaticTypeRewriter(private val ion: IonSystem,
                 }
         }
 
-        override fun rewriteFromSourceValueExpr(expr: ExprNode): ExprNode {
+        override fun transformFromSourceScan_expr(node: PartiqlAst.FromSource.Scan): PartiqlAst.Expr {
             this.scopeOrder = ScopeSearchOrder.GLOBALS_THEN_LEXICAL
-            return rewriteExprNode(expr).also {
+            return transformExpr(node.expr).also {
                 this.scopeOrder = ScopeSearchOrder.LEXICAL
             }
         }
 
-        // TODO support PIVOT
-        // TODO support GROUP BY
-        override fun rewriteGroupBy(groupBy: GroupBy): Nothing {
+        override fun transformFromSourceUnpivot_expr(node: PartiqlAst.FromSource.Unpivot): PartiqlAst.Expr {
+            this.scopeOrder = ScopeSearchOrder.GLOBALS_THEN_LEXICAL
+            return transformExpr(node.expr).also {
+                this.scopeOrder = ScopeSearchOrder.LEXICAL
+            }
+        }
+
+        override fun transformGroupBy(node: PartiqlAst.GroupBy): PartiqlAst.GroupBy {
             errUnimplementedFeature("GROUP BY")
         }
 
-        override fun rewriteSelect(selectExpr: Select): ExprNode {
+        override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlAst.Expr {
             // a SELECT introduces a new scope, we evaluate the each from source
             // which is correlated (and thus has visibility from the previous bindings)
-            return createRewriterForNestedScope().innerRewriteSelect(selectExpr)
+            return createTransformerForNestedScope().transformExprSelectEvaluationOrder(node)
         }
 
-        override fun rewriteDataManipulation(node: DataManipulation): DataManipulation {
-            return createRewriterForNestedScope().innerRewriteDataManipulation(node)
+        override fun transformStatementDml(node: PartiqlAst.Statement.Dml): PartiqlAst.Statement {
+            return createTransformerForNestedScope().transformDataManipulationEvaluationOrder(node)
         }
 
-        private fun createRewriterForNestedScope(): Rewriter {
-            return Rewriter(currentEnv, currentScopeDepth + 1)
+        private fun createTransformerForNestedScope(): VisitorTransform {
+            return VisitorTransform(currentEnv, currentScopeDepth + 1)
         }
-
 
         /**
          * This function differs from the the overridden function only in that it does not attempt to resolve
-         * [CreateIndex.keys], which would be a problem because they contain [VariableReference]s yet the keys are
-         * scoped to the table and do not follow traditional lexical scoping rules.  This indicates that
-         * [CreateIndex.keys] is incorrectly modeled as a [List<ExprNode>].
+         * [PartiqlAst.DdlOp.CreateIndex.fields], which would be a problem because they contain [PartiqlAst.Expr.Id]s
+         * yet the fields/keys are scoped to the table and do not follow traditional lexical scoping rules.  This
+         * indicates that [PartiqlAst.DdlOp.CreateIndex.fields] is incorrectly modeled as a [List<ExprNode>].
          */
-        override fun rewriteCreateIndex(node: CreateIndex): CreateIndex  =
-            CreateIndex(
-                node.tableName,
-                node.keys,
-                rewriteMetas(node))
+        override fun transformDdlOpCreateIndex(node: PartiqlAst.DdlOp.CreateIndex): PartiqlAst.DdlOp =
+            PartiqlAst.build {
+                createIndex(
+                    node.indexName,
+                    node.fields,
+                    transformMetas(node.metas)
+                )
+            }
 
         /**
          * This function differs from the the overridden function only in that it does not attempt to resolve
-         * [DropIndex.identifier], which would be a problem because index names are scoped to the table and do not
-         * follow traditional lexical scoping rules.  This is not something the [StaticTypeRewriter] is currently
-         * plumbed to deal with and also indicates that [DropIndex.identifier] is incorrectly modeled as a
-         * [VariableReference].
+         * [PartiqlAst.DdlOp.DropIndex.table], which would be a problem because index names are scoped to the table
+         * and do not follow traditional lexical scoping rules.  This is not something the [StaticTypeVisitorTransform]
+         * is currently plumbed to deal with and also indicates that [PartiqlAst.DdlOp.DropIndex.table] is incorrectly
+         * modeled as a [PartiqlAst.Expr.Id].
          */
-        override fun rewriteDropIndex(node: DropIndex): DropIndex =
-            DropIndex(
-                node.tableName,
-                node.identifier,
-                rewriteMetas(node))
+        override fun transformDdlOpDropIndex(node: PartiqlAst.DdlOp.DropIndex): PartiqlAst.DdlOp =
+            PartiqlAst.build {
+                dropIndex(
+                    node.table,
+                    node.keys,
+                    transformMetas(node.metas))
+            }
     }
 
-    override fun rewriteExprNode(node: ExprNode): ExprNode =
-        Rewriter(wrapBindings(Bindings.empty(), 1), 0)
-            .rewriteExprNode(node)
+    // Use transformStatement since there's both SFW queries in addition to DDL and DML
+    override fun transformStatement(node: PartiqlAst.Statement): PartiqlAst.Statement =
+        VisitorTransform(wrapBindings(Bindings.empty(), 1), 0)
+            .transformStatement(node)
 
     private fun wrapBindings(bindings: Bindings<StaticType>, depth: Int): Bindings<TypeAndDepth> {
         return Bindings.over { name ->
