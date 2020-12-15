@@ -29,7 +29,7 @@ internal const val PROMPT_1 = "PartiQL> "
 internal const val PROMPT_2 = "   | "
 internal const val BAR_1 = "===' "
 internal const val BAR_2 = "--- "
-internal const val WELCOME_MSG = "Welcome to the PartiQL REPL!" // TODO: extract version from gradle.build and append to message
+internal const val WELCOME_MSG = "Welcome to the PartiQL REPL!"
 
 private enum class ReplState {
     /** Initial state, first state as soon as you start the REPL */
