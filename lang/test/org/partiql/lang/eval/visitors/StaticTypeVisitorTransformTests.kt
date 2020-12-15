@@ -13,7 +13,6 @@ import org.partiql.lang.ast.StaticTypeMeta
 import org.partiql.lang.ast.emptyMetaContainer
 import org.partiql.lang.ast.metaContainerOf
 import org.partiql.lang.ast.passes.SemanticException
-import org.partiql.lang.ast.passes.basicRewriters
 import org.partiql.lang.ast.plus
 import org.partiql.lang.ast.toAstStatement
 import org.partiql.lang.ast.toIonElementMetaContainer
@@ -854,8 +853,8 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         // We always pass the query under test through all of the basic transformers primarily because we need
         // FromSourceAliasVisitorTransform to execute first but also to help ensure the queries we're testing
         // make sense when they're all run.
-        val defaultTransformers = basicRewriters(ion)
-        val originalPartiqlAst = defaultTransformers.rewriteExprNode(parse(tc.originalSql)).toAstStatement()
+        val defaultTransforms = basicVisitorTransforms()
+        val originalPartiqlAst = defaultTransforms.transformStatement(parse(tc.originalSql).toAstStatement())
 
         val transformedExprNode = try {
             transformer.transformStatement(originalPartiqlAst)

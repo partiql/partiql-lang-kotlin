@@ -19,7 +19,7 @@ private val examples = mapOf(
         EvaluationWithLazyBindings::class.java.simpleName to EvaluationWithLazyBindings(System.out),
         ParserErrorExample::class.java.simpleName to ParserErrorExample(System.out),
         ParserExample::class.java.simpleName to ParserExample(System.out),
-        PartialEvaluationRewriterExample::class.java.simpleName to PartialEvaluationRewriterExample(System.out),
+        PartialEvaluationVisitorTransformExample::class.java.simpleName to PartialEvaluationVisitorTransformExample(System.out),
         PreventJoinVisitorExample::class.java.simpleName to PreventJoinVisitorExample(System.out),
         SimpleExpressionEvaluation::class.java.simpleName to SimpleExpressionEvaluation(System.out)
 )

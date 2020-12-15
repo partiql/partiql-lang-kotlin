@@ -51,3 +51,19 @@ fun PartiqlAst.CaseSensitivity.toBindingCase(): BindingCase = when(this) {
     is PartiqlAst.CaseSensitivity.CaseInsensitive -> BindingCase.INSENSITIVE
     is PartiqlAst.CaseSensitivity.CaseSensitive -> BindingCase.SENSITIVE
 }
+
+/**
+ * Returns the [SourceLocationMeta] as an error context if the [SourceLocationMeta.TAG] exists in the passed
+ * [metaContainer]. Otherwise, returns an empty map.
+ */
+fun errorContextFrom(metaContainer: MetaContainer?): PropertyValueMap {
+    if (metaContainer == null) {
+        return PropertyValueMap()
+    }
+    val location = metaContainer[SourceLocationMeta.TAG] as? SourceLocationMeta
+    return if (location != null) {
+        org.partiql.lang.eval.errorContextFrom(location)
+    } else {
+        PropertyValueMap()
+    }
+}
