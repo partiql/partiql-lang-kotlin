@@ -10,8 +10,8 @@ import org.partiql.pig.runtime.SymbolPrimitive
  * Assigns aliases to any unspecified [PartiqlAst.FromSource.Scan]/[PartiqlAst.FromSource.Unpivot] that does not
  * already have one.
  *
- * For example: `SELECT * FROM foo` gets rewritten as `SELECT * from foo as foo`.
- * Path expressions:  `SELECT * FROM foo.bar.bat` gets rewritten as `SELECT * from foo.bar.bat as bat`
+ * For example: `SELECT * FROM foo` gets transformed into `SELECT * from foo as foo`.
+ * Path expressions:  `SELECT * FROM foo.bar.bat` gets transformed into `SELECT * from foo.bar.bat as bat`
  *
  * If provided with a query that has all of the from source aliases already specified, an exact clone is returned.
  */

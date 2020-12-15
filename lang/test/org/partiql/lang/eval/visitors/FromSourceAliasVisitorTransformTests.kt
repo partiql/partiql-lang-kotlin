@@ -115,7 +115,7 @@ class FromSourceAliasVisitorTransformTests : VisitorTransformTestBase() {
             "SELECT * FROM a, (SELECT a.x, b.y FROM b)",
             "SELECT * FROM a AS a, (SELECT a.x, b.y FROM b AS b) AS _2"),
 
-        //The rewrite should apply to subqueries even if the from source they are contained within has already been
+        //The transform should apply to subqueries even if the from source they are contained within has already been
         //aliased.
         TransformTestCase(
             "SELECT * FROM (SELECT * FROM <<c>>, <<d>>) AS z, <<a>>, <<b>>",

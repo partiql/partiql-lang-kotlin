@@ -26,7 +26,7 @@ List of Examples:
     * EvaluationWithLazyBindings: query evaluation with global bindings that are lazily evaluated
     * ParserErrorExample: inspecting errors thrown by the `Parser`
     * ParserExample: how to parse a query and serialize the query AST
-    * PartialEvaluationRewriter: simple rewriter example that partially evaluates simple operations like `1+1`
+    * PartialEvaluationVisitorTransform: simple visitor transform example that partially evaluates simple operations like `1+1`
     * PreventJoinVisitor: visitor example to validate a query, in this case it prevents queries with `JOIN`
     * SimpleExpressionEvaluation: how to run a simple query
 * Java:

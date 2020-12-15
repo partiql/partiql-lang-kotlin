@@ -29,7 +29,7 @@ import org.partiql.pig.runtime.SymbolPrimitive
  * `SELECT * FROM a GROUP BY a.b AS foo, a.c AS c, 2 + 3 as _3`.
  *
  * Also adds [UniqueNameMeta] to [PartiqlAst.GroupBy.keyList].  In order for the generated unique names to be correct,
- * this rewrite must be presented with only the top-most node in a query.
+ * this transform must be presented with only the top-most node in a query.
  *
  * If provided with a query with all of the group by item aliases already specified, an exact clone is returned.
  */
