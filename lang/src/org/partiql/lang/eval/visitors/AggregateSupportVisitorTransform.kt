@@ -18,73 +18,46 @@ import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.metaContainerOf
 import org.partiql.lang.ast.AggregateCallSiteListMeta
 import org.partiql.lang.ast.AggregateRegisterIdMeta
-import org.partiql.lang.ast.SelectProjectionValue
 import org.partiql.lang.domains.PartiqlAst
 
 /**
  * Allocates registerIds to all aggregate call-sites, storing the allocated registerId in an instance of
  * [AggregateRegisterIdMeta].
  *
- * Also collects a list of all aggregate functions used in the `SELECT` list of the current query (excluding subqueries)
+ * Also collects a list of all aggregate functions used in the `SELECT` of the current query (excluding subqueries)
  * and stores them in an instance of [AggregateCallSiteListMeta] on the [PartiqlAst.Expr.Select] instance.
  */
 
-class AggregateSupportVisitorTransform : PartiqlAst.VisitorTransform() {
+class AggregateSupportVisitorTransform : VisitorTransformBase() {
     private val aggregateCallSites = ArrayList<PartiqlAst.Expr.CallAgg>()
 
-    inner class RegisterIdAdderSubVisitorTransform : PartiqlAst.VisitorTransform() {
-        /**
-         * Nests another [AggregateSupportVisitorTransform] within this transform
-         * in order to avoid exposing [aggregateCallSites] to subqueries.
-         */
-        override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlAst.Expr =
-            AggregateSupportVisitorTransform().transformExpr(node)
-
-        override fun transformExprCallAgg(node: PartiqlAst.Expr.CallAgg): PartiqlAst.Expr {
-            aggregateCallSites.add(node)
-
-            return PartiqlAst.build {
-                callAgg_(
-                    setq = node.setq,
-                    funcName = node.funcName,
-                    arg = transformExpr(node.arg),
-                    metas = transformMetas(node.metas) + metaContainerOf(AggregateRegisterIdMeta.TAG to AggregateRegisterIdMeta(aggregateCallSites.size - 1))
-                )
-            }
-        }
+    /**
+     * Nests another [AggregateSupportVisitorTransform] within this transform to avoid operating on
+     * [aggregateCallSites] of a nested `SELECT`.
+     */
+    override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlAst.Expr {
+        return AggregateSupportVisitorTransform().transformExprSelectEvaluationOrder(node)
     }
 
-    private val registerIdAdder = RegisterIdAdderSubVisitorTransform()
-
-    /**
-     * Applies the [registerIdAdder] only to expressions in select list items.
-     */
-    override fun transformProjectItemProjectExpr(node: PartiqlAst.ProjectItem.ProjectExpr): PartiqlAst.ProjectItem =
-        PartiqlAst.build {
-            projectExpr_(
-                expr = registerIdAdder.transformExpr(node.expr),
-                asAlias = node.asAlias,
-                metas = node.metas
-            )
+    override fun transformExprCallAgg(node: PartiqlAst.Expr.CallAgg): PartiqlAst.Expr {
+        val transformedCallAgg = PartiqlAst.build {
+            callAgg_(
+                setq = node.setq,
+                funcName = node.funcName,
+                arg = transformExpr(node.arg),
+                metas = transformMetas(node.metas) + metaContainerOf(AggregateRegisterIdMeta.TAG to AggregateRegisterIdMeta(aggregateCallSites.size)))
         }
-
-    /**
-     * Applies a new instance of [AggregateSupportVisitorTransform]
-     * to [SelectProjectionValue] nodes so that a different instance of [aggregateCallSites] is used.
-     */
-    override fun transformProjectionProjectValue(node: PartiqlAst.Projection.ProjectValue): PartiqlAst.Projection =
-        PartiqlAst.build {
-            projectValue(
-                value = AggregateSupportVisitorTransform().transformExpr(node.value),
-                metas = node.metas
-            )
+        aggregateCallSites.add(transformedCallAgg)
+        return transformedCallAgg
     }
 
-    override fun transformExprSelect_having(node: PartiqlAst.Expr.Select): PartiqlAst.Expr? =
-        node.having?.let { registerIdAdder.transformExpr(it) }
-
+    /**
+     * Applies a new instance of [AggregateSupportVisitorTransform] to [PartiqlAst.Projection.ProjectValue] nodes so
+     * that a different instance of [aggregateCallSites] is used.
+     */
+    override fun transformProjectionProjectValue_value(node: PartiqlAst.Projection.ProjectValue): PartiqlAst.Expr =
+        AggregateSupportVisitorTransform().transformExpr(node.value)
 
     override fun transformExprSelect_metas(node: PartiqlAst.Expr.Select): MetaContainer =
         transformMetas(node.metas) + metaContainerOf(AggregateCallSiteListMeta.TAG to AggregateCallSiteListMeta(aggregateCallSites.toList()))
-
 }
