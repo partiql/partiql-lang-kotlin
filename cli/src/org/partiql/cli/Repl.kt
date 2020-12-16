@@ -18,19 +18,18 @@ import com.amazon.ion.system.*
 import com.amazon.ionelement.api.toIonValue
 import org.partiql.cli.ReplState.*
 import org.partiql.lang.*
-import org.partiql.lang.ast.*
-import org.partiql.lang.ast.passes.MetaStrippingRewriter
 import org.partiql.lang.eval.*
 import org.partiql.lang.syntax.*
 import org.partiql.lang.util.*
 import java.io.*
+import java.util.Properties
 import java.util.concurrent.*
 
 internal const val PROMPT_1 = "PartiQL> "
 internal const val PROMPT_2 = "   | "
 internal const val BAR_1 = "===' "
 internal const val BAR_2 = "--- "
-internal const val WELCOME_MSG = "Welcome to the PartiQL REPL!" // TODO: extract version from gradle.build and append to message
+internal const val WELCOME_MSG = "Welcome to the PartiQL REPL!"
 
 private enum class ReplState {
     /** Initial state, first state as soon as you start the REPL */
@@ -192,6 +191,17 @@ internal class Repl(private val valueFactory: ExprValueFactory,
         outputWriter.write("\n")
     }
 
+    fun retrievePartiQLVersionAndHash(): String {
+        val properties = Properties()
+        properties.load(this.javaClass.getResourceAsStream("/partiql.properties"))
+        return "${properties.getProperty("version")}-${properties.getProperty("commit")}"
+    }
+
+    private fun printVersionNumber() {
+        outputWriter.write("Using version: ${retrievePartiQLVersionAndHash()}")
+        outputWriter.write("\n")
+    }
+
     private fun printPrompt() {
         when {
             buffer.isEmpty() -> outputWriter.write(PROMPT_1)
@@ -268,6 +278,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
             state = when (state) {
                 INIT                      -> {
                     printWelcomeMessage()
+                    printVersionNumber()
                     READY
                 }
 

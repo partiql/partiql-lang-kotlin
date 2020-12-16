@@ -79,6 +79,8 @@ private class ReplTester(bindings: Bindings<ExprValue> = Bindings.empty()) {
 
     private val repl = Repl(valueFactory, input, output, parser, compiler, bindings, zeroTimer)
 
+    val partiqlVersionAndHash = repl.retrievePartiQLVersionAndHash()
+
     private val actualReplPrompt = StringBuilder()
 
     private val outputPhaser = Phaser()
@@ -148,11 +150,13 @@ private class ReplTester(bindings: Bindings<ExprValue> = Bindings.empty()) {
 
 @Ignore("https://github.com/partiql/partiql-lang-kotlin/issues/266")
 class ReplTest {
+    private val partiqlVersionAndHash = ReplTester().partiqlVersionAndHash
 
     @Test
     fun singleQuery() {
         ReplTester().assertReplPrompt("""
             #Welcome to the PartiQL REPL!
+            #Using version: $partiqlVersionAndHash
             #PartiQL> 1+1
             #   | 
             #===' 
@@ -167,6 +171,7 @@ class ReplTest {
     fun querySemiColon() {
         ReplTester().assertReplPrompt("""
             #Welcome to the PartiQL REPL!
+            #Using version: $partiqlVersionAndHash
             #PartiQL> 1+1;
             #===' 
             #2
@@ -180,6 +185,7 @@ class ReplTest {
     fun multipleQuery() {
         ReplTester().assertReplPrompt("""
             #Welcome to the PartiQL REPL!
+            #Using version: $partiqlVersionAndHash
             #PartiQL> 1 + 1
             #   | 
             #===' 
@@ -201,66 +207,24 @@ class ReplTest {
     fun astWithoutMetas() {
         ReplTester().assertReplPrompt("""
             #Welcome to the PartiQL REPL!
+            #Using version: $partiqlVersionAndHash
             #PartiQL> 1 + 1
             #   | !!
             #===' 
             #
             #(
-            #  plus
-            #  (
-            #    lit
-            #    1
-            #  )
-            #  (
-            #    lit
-            #    1
-            #  )
-            #)
-            #--- 
-            #OK!
-            #PartiQL> 
-        """.trimMargin("#"))
-    }
-
-    @Test
-    fun astWithMetas() {
-        ReplTester().assertReplPrompt("""
-            #Welcome to the PartiQL REPL!
-            #PartiQL> 1 + 1
-            #   | !?
-            #===' 
-            #
-            #(
-            #  meta
+            #  query
             #  (
             #    plus
             #    (
-            #      meta
-            #      (
-            #        lit
-            #        1
-            #      )
-            #      {
-            #        line:1,
-            #        column:1
-            #      }
+            #      lit
+            #      1
             #    )
             #    (
-            #      meta
-            #      (
-            #        lit
-            #        1
-            #      )
-            #      {
-            #        line:1,
-            #        column:5
-            #      }
+            #      lit
+            #      1
             #    )
             #  )
-            #  {
-            #    line:1,
-            #    column:3
-            #  }
             #)
             #--- 
             #OK!
@@ -272,6 +236,7 @@ class ReplTest {
     fun addToGlobalEnvAndQuery() {
         ReplTester().assertReplPrompt("""
             #Welcome to the PartiQL REPL!
+            #Using version: $partiqlVersionAndHash
             #PartiQL> !add_to_global_env {'myTable': <<{'a':1}, {'a': 2}>>}
             #   | 
             #===' 
@@ -314,6 +279,7 @@ class ReplTest {
 
         ReplTester(initialBindings).assertReplPrompt("""
             #Welcome to the PartiQL REPL!
+            #Using version: $partiqlVersionAndHash
             #PartiQL> !global_env
             #   | 
             #===' 
@@ -334,6 +300,7 @@ class ReplTest {
     fun dumpEmptyInitialEnv() {
         ReplTester().assertReplPrompt("""
             #Welcome to the PartiQL REPL!
+            #Using version: $partiqlVersionAndHash
             #PartiQL> !global_env
             #   | 
             #===' 
@@ -348,6 +315,7 @@ class ReplTest {
     fun dumpEnvAfterAltering() {
         ReplTester().assertReplPrompt("""
             #Welcome to the PartiQL REPL!
+            #Using version: $partiqlVersionAndHash
             #PartiQL> !add_to_global_env {'myTable': <<{'a':1}, {'a': 2}>>}
             #   | 
             #===' 
@@ -386,6 +354,7 @@ class ReplTest {
     fun listCommands() {
         ReplTester().assertReplPrompt("""
             #Welcome to the PartiQL REPL!
+            #Using version: $partiqlVersionAndHash
             #PartiQL> !list_commands
             #   | 
             #
