@@ -1771,4 +1771,40 @@ class EvaluatingCompilerTests : EvaluatorTestBase() {
             FROM << { 'year': 1968, 'month': 4, 'day': 3, 'hour': 12, 'minute': 31, 'second': 59 }>> AS x
             """,
             "<<[1968, 4, 3, 12, 31, 59]>>")
+
+    @Test
+    fun aggregateInSubqueryOfSelect() =
+        assertEvalExprValue(
+            """
+            SELECT foo.cnt
+            FROM
+                (SELECT COUNT(*) AS cnt 
+                FROM [1, 2, 3])
+            AS foo
+            """,
+            "<< { 'cnt': 3 } >>")
+
+    @Test
+    fun aggregateInSubqueryOfSelectValue() =
+        assertEvalExprValue(
+            """
+            SELECT VALUE foo.cnt
+            FROM
+                (SELECT COUNT(*) AS cnt 
+                FROM [1, 2, 3])
+            AS foo
+            """,
+            "<< 3 >>")
+
+    @Test
+    fun aggregateWithAliasingInSubqueryOfSelectValue() =
+        assertEvalExprValue(
+            """
+            SELECT VALUE foo.cnt
+            FROM
+                (SELECT COUNT(baz.bar) AS cnt 
+                FROM << { 'bar': 1 }, { 'bar': 2 } >> AS baz)
+            AS foo
+            """,
+            "<< 2 >>")
 }
