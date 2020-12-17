@@ -15,6 +15,7 @@ private val examples = mapOf(
         // Kotlin Examples
         CsvExprValueExample::class.java.simpleName to CsvExprValueExample(System.out),
         CustomFunctionsExample::class.java.simpleName to CustomFunctionsExample(System.out),
+        CustomProceduresExample::class.java.simpleName to CustomProceduresExample(System.out),
         EvaluationWithBindings::class.java.simpleName to EvaluationWithBindings(System.out),
         EvaluationWithLazyBindings::class.java.simpleName to EvaluationWithLazyBindings(System.out),
         ParserErrorExample::class.java.simpleName to ParserErrorExample(System.out),
