@@ -40,6 +40,7 @@ data class StepContext(
 
     /**
      * Returns a list of all stored procedures which are available for execution.
+     * Only includes the custom stored procedures added while the [CompilerPipeline] was being built.
      */
     val procedures: @JvmSuppressWildcards Map<String, StoredProcedure>
 )
@@ -69,6 +70,7 @@ interface CompilerPipeline  {
 
     /**
      * Returns a list of all stored procedures which are available for execution.
+     * Only includes the custom stored procedures added while the [CompilerPipeline] was being built.
      */
     val procedures: @JvmSuppressWildcards Map<String, StoredProcedure>
 

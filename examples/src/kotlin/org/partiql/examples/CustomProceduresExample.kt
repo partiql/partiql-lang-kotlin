@@ -47,6 +47,8 @@ class CalculateCrewMoonWeight(private val valueFactory: ExprValueFactory): Store
     override fun call(session: EvaluationSession, args: List<ExprValue>): ExprValue {
         // We first check that the first argument is a string
         val crewName = args.first()
+        // In the future the evaluator will also verify function argument types, but for now we must verify their type
+        // manually
         if (crewName.type != ExprValueType.STRING) {
             val errorContext = PropertyValueMap().also {
                 it[Property.EXPECTED_ARGUMENT_TYPES] = "STRING"
