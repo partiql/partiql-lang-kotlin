@@ -41,7 +41,7 @@ internal fun OffsetDateTime.toTimestamp(): com.amazon.ion.Timestamp =
                 this.offset.totalSeconds / 60)
 
 internal fun java.util.Random.nextTimestamp(): Timestamp {
-    val year = Math.abs(this.nextInt()) % 9999 + 1
+    val year = Math.abs(this.nextInt() % 9999) + 1
     val month = Math.abs(this.nextInt() % 12) + 1
 
     //Determine last day of month for randomly generated month & year (e.g. 28, 29, 30 or 31)
@@ -52,7 +52,7 @@ internal fun java.util.Random.nextTimestamp(): Timestamp {
     val minute = Math.abs(this.nextInt() % 60)
 
     val secondFraction = BigDecimal.valueOf(Math.abs(this.nextLong()) % 1000000000).div(BigDecimal.valueOf(1000000000L))
-    val seconds = BigDecimal.valueOf(Math.abs(this.nextInt()) % 59L).add(secondFraction).abs()
+    val seconds = BigDecimal.valueOf(Math.abs(this.nextInt() % 59L)).add(secondFraction).abs()
     //Note:  need to % 59L above because 59L + secondFraction can yield 60 seconds
 
     var offsetMinutes = this.nextInt() % (18 * 60)
