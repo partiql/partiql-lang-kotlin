@@ -35,14 +35,9 @@ dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
 
     // test-time dependencies
-    testImplementation 'org.jetbrains.kotlin:kotlin-reflect'
-    testImplementation 'org.jetbrains.kotlin:kotlin-test'
-    testImplementation 'pl.pragmatists:JUnitParams:[1.0.0,1.1.0)'
-    testImplementation 'org.assertj:assertj-core:[3.11.0,3.12.0)'
     testImplementation project(':lang')
     testImplementation project(':testscript')
-
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+    testImplementation 'org.junit.vintage:junit-vintage-engine:5.7.0'
 }
 
 jacocoTestReport {

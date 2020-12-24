@@ -1,7 +1,5 @@
 package org.partiql.examples
 
-import org.junit.*
-import org.junit.Assert.*
 import com.amazon.ion.*
 import com.amazon.ion.system.*
 import org.partiql.examples.util.Example

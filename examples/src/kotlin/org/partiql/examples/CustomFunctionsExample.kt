@@ -1,12 +1,10 @@
 package org.partiql.examples
 
-import org.junit.*
 import com.amazon.ion.system.*
 import org.partiql.examples.util.Example
 import org.partiql.lang.*
 import org.partiql.lang.eval.*
 import java.io.PrintStream
-import kotlin.test.*
 
 /** A simple fibonacci calculator. */
 private fun calcFib(n: Long): Long = when (n) {
