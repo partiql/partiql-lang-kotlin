@@ -62,7 +62,7 @@ private val formatter = object : BuiltinHelpFormatter(120, 2) {
 }
 
 enum class OutputFormat {
-    ION_TEXT, ION_BINARY, PARTIQL
+    ION_TEXT, ION_BINARY, PARTIQL, PARTIQL_PRETTY
 }
 
 // opt parser options
@@ -108,7 +108,7 @@ private val outputFormatOpt = optParser.acceptsAll(listOf("output-format", "of")
  *      * -q --query: PartiQL query
  *      * -i --input: input file, default STDIN
  *      * -o --output: output file, default STDOUT
- *      * -of --output-format: output format, ION_TEXT, ION_BINARY and PARTIQL (default)
+ *      * -of --output-format: ION_TEXT, ION_BINARY, PARTIQL (default), PARTIQL_PRETTY
  */
 fun main(args: Array<String>) = try {
     optParser.formatHelpWith(formatter)

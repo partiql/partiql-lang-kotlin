@@ -25,7 +25,7 @@ Option                                Description
 -i, --input <File>                    input file, requires the query option (default: stdin)
 -o, --output <File>                   output file, requires the query option (default: stdout)
 --of, --output-format <OutputFormat:  output format, requires the query option (default: PARTIQL)
-  (ION_TEXT|ION_BINARY|PARTIQL)>
+  (ION_TEXT|ION_BINARY|PARTIQL|PARTIQL_PRETTY)>
 -q, --query <String>                  PartiQL query, triggers non interactive mode
 ```
 
