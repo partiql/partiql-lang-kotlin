@@ -69,7 +69,7 @@ public class CSVJavaExample extends Example {
 
         @NotNull
         @Override
-        public Bindings getBindings() {
+        public Bindings<ExprValue> getBindings() {
             return Bindings.ofMap(rowValues());
         }
 
