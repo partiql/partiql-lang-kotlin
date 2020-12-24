@@ -286,7 +286,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
                     line = readLine()
                     when {
                         line == null                               -> FINAL
-                        arrayOf("!!", "!?", "").any { it == line } -> EXECUTE_PARTIQL
+                        arrayOf("!!", "").any { it == line } -> EXECUTE_PARTIQL
                         line!!.startsWith("!")                     -> READ_REPL_COMMAND
                         line!!.endsWith(";")                       -> LAST_PARTIQL_LINE
                         else                                       -> READ_PARTIQL
