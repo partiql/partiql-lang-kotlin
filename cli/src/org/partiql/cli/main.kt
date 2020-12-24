@@ -62,7 +62,7 @@ private val formatter = object : BuiltinHelpFormatter(120, 2) {
 }
 
 enum class OutputFormat {
-    ION_TEXT, ION_BINARY, PARTIQL
+    ION_TEXT, ION_BINARY, PARTIQL, PARTIQL_PRETTY
 }
 
 // opt parser options

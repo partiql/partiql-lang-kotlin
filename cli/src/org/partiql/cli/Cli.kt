@@ -16,10 +16,11 @@ package org.partiql.cli
 
 import com.amazon.ion.*
 import com.amazon.ion.system.*
+import java.io.*
 import org.partiql.cli.OutputFormat.*
 import org.partiql.lang.*
 import org.partiql.lang.eval.*
-import java.io.*
+import org.partiql.lang.util.ConfigurableExprValueFormatter
 
 /**
  * TODO builder, kdoc
@@ -46,6 +47,9 @@ internal class Cli(private val valueFactory: ExprValueFactory,
                 ION_TEXT   -> valueFactory.ion.newTextWriter(output).use { printIon(it, result) }
                 ION_BINARY -> valueFactory.ion.newBinaryWriter(output).use { printIon(it, result) }
                 PARTIQL    -> OutputStreamWriter(output).use { it.write(result.toString()) }
+                PARTIQL_PRETTY -> OutputStreamWriter(output).use {
+                    ConfigurableExprValueFormatter.pretty.formatTo(result, it)
+                }
             }
         }
     }
