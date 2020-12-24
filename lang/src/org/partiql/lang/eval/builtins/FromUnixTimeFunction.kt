@@ -13,12 +13,13 @@ import java.math.BigDecimal
  * the seconds since '1970-01-01 00:00:00' UTC. Largely based off MySQL's FROM_UNIXTIME.
  *
  * Syntax: `FROM_UNIXTIME(unix_timestamp)`
- * Where unix_timestamp is a non-negative (potentially decimal) numeric value.
+ * Where unix_timestamp is a (potentially decimal) numeric value. If unix_timestamp is a decimal, the returned
+ * `TIMESTAMP` will have fractional seconds. If unix_timestamp is an integer, the returned `TIMESTAMP` will not have
+ * fractional seconds.
  *
  * When given a negative numeric value, this function returns a PartiQL `TIMESTAMP` [ExprValue] before the last epoch.
  * When given a non-negative numeric value, this function returns a PartiQL `TIMESTAMP` [ExprValue] after the last
  * epoch.
- * The returned `TIMESTAMP` has fractional seconds depending on if the value is a decimal.
  */
 internal class FromUnixTimeFunction(valueFactory: ExprValueFactory) : NullPropagatingExprFunction("from_unixtime", 1, valueFactory) {
     private val millisPerSecond = BigDecimal(1000)
