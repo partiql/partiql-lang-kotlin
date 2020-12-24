@@ -66,8 +66,8 @@ class UnixTimestampFunctionTest : EvaluatorTestBase() {
 
         override fun getParameters(): List<Any> = listOf(
             // time before the last epoch
-            UnixTimestampOneArgTestCase("unix_timestamp(`1969T`)", "0"),
-            UnixTimestampOneArgTestCase("unix_timestamp(`1969-12-31T23:59:59.999Z`)", "0"),
+            UnixTimestampOneArgTestCase("unix_timestamp(`1969T`)", "-31536000"),
+            UnixTimestampOneArgTestCase("unix_timestamp(`1969-12-31T23:59:59.999Z`)", "-0.001"),
             // exactly the last epoch
             UnixTimestampOneArgTestCase("unix_timestamp(`1970T`)", "0"),
             UnixTimestampOneArgTestCase("unix_timestamp(`1970-01-01T00:00:00.000Z`)", "0."),

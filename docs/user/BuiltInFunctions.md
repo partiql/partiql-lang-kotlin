@@ -764,3 +764,62 @@ Examples
 ```sql
 UTCNOW() -- 2017-10-13T16:02:11.123Z 
 ```
+
+### UNIX_TIMESTAMP
+
+With no `timestamp` argument, returns the number of seconds since the last epoch ('1970-01-01 00:00:00' UTC).
+
+With a `timestamp` argument, returns the number of seconds from the last epoch to the given `timestamp` 
+(possibly negative).
+
+Signature : `UNIX_TIMESTAMP: [Timestamp] -> Integer|Decimal`
+
+Header : `UNIX_TIMESTAMP([timestamp])`
+
+Purpose : `UNIX_TIMESTAMP()` called without a `timestamp` argument returns the number of whole seconds since the last 
+epoch ('1970-01-01 00:00:00' UTC) as an Integer using `UTCNOW`.
+
+`UNIX_TIMESTAMP()` called with a `timestamp` argument returns returns the number of seconds from the last epoch to the 
+`timestamp` argument.
+If given a `timestamp` before the last epoch, `UNIX_TIMESTAMP` will return the number of seconds before the last epoch as a negative 
+number.
+The return value will be a Decimal if and only if the given `timestamp` has a fractional seconds part.
+
+Examples :
+```sql
+UNIX_TIMESTAMP()                            -- 1507910531 (if current time is `2017-10-13T16:02:11Z`; # of seconds since last epoch as an Integer)
+UNIX_TIMESTAMP(`2020T`)                     -- 1577836800 (seconds from 2020 to the last epoch as an Integer)
+UNIX_TIMESTAMP(`2020-01T`)                  -- ''
+UNIX_TIMESTAMP(`2020-01-01T`)               -- ''
+UNIX_TIMESTAMP(`2020-01-01T00:00Z`)         -- ''
+UNIX_TIMESTAMP(`2020-01-01T00:00:00Z`)      -- ''
+UNIX_TIMESTAMP(`2020-01-01T00:00:00.0Z`)    -- 1577836800. (seconds from 2020 to the last epoch as a Decimal)
+UNIX_TIMESTAMP(`2020-01-01T00:00:00.00Z`)   -- ''
+UNIX_TIMESTAMP(`2020-01-01T00:00:00.000Z`)  -- ''
+UNIX_TIMESTAMP(`2020-01-01T00:00:00.100Z`)  -- 1577836800.1
+UNIX_TIMESTAMP(`1969T`)                     -- -31536000 (timestamp is before last epoch)
+```
+
+### FROM_UNIXTIME
+
+Converts the given unix epoch into a timestamp.
+
+Signature : `FROM_UNIXTIME: Integer|Decimal -> Timestamp`
+
+Header : `FROM_UNIXTIME(unix_timestamp)`
+
+Purpose : When given a non-negative numeric value, returns a timestamp after the last epoch.
+When given a negative numeric value, returns a timestamp before the last epoch.
+The returned timestamp has fractional seconds depending on if the value is a decimal.
+
+Examples :
+```sql
+FROM_UNIXTIME(-1)           -- `1969-12-31T23:59:59-00:00`      (negative unix_timestamp; returns timestamp before last epoch)
+FROM_UNIXTIME(-0.1)         -- `1969-12-31T23:59:59.9-00:00`    (unix_timestamp is decimal so timestamp has fractional seconds)
+FROM_UNIXTIME(0)            -- `1970-01-01T00:00:00.000-00:00`
+FROM_UNIXTIME(0.001)        -- `1970-01-01T00:00:00.001-00:00`  (decimal precision to fractional second precision) 
+FROM_UNIXTIME(0.01)         -- `1970-01-01T00:00:00.01-00:00`
+FROM_UNIXTIME(0.1)          -- `1970-01-01T00:00:00.1-00:00`
+FROM_UNIXTIME(1)            -- `1970-01-01T00:00:01-00:00`
+FROM_UNIXTIME(1577836800)   -- `2020-01-01T00:00:00-00:00`      (unix_timestamp is Integer so no fractional seconds)
+```

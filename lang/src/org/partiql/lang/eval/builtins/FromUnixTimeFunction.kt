@@ -15,9 +15,10 @@ import java.math.BigDecimal
  * Syntax: `FROM_UNIXTIME(unix_timestamp)`
  * Where unix_timestamp is a non-negative (potentially decimal) numeric value.
  *
- * When given a negative numeric value, this function returns a PartiQL `NULL` [ExprValue].
- * When given a non-negative numeric value, this function returns a PartiQL `TIMESTAMP` [ExprValue] that has fractional
- * seconds depending on if the value is a decimal.
+ * When given a negative numeric value, this function returns a PartiQL `TIMESTAMP` [ExprValue] before the last epoch.
+ * When given a non-negative numeric value, this function returns a PartiQL `TIMESTAMP` [ExprValue] after the last
+ * epoch.
+ * The returned `TIMESTAMP` has fractional seconds depending on if the value is a decimal.
  */
 internal class FromUnixTimeFunction(valueFactory: ExprValueFactory) : NullPropagatingExprFunction("from_unixtime", 1, valueFactory) {
     private val millisPerSecond = BigDecimal(1000)
@@ -26,10 +27,6 @@ internal class FromUnixTimeFunction(valueFactory: ExprValueFactory) : NullPropag
         val unixTimestamp = args[0].bigDecimalValue()
 
         val numMillis = unixTimestamp.times(millisPerSecond).stripTrailingZeros()
-
-        if (unixTimestamp < BigDecimal.ZERO) {
-            return valueFactory.nullValue
-        }
 
         val timestamp = Timestamp.forMillis(numMillis, null)
         return valueFactory.newTimestamp(timestamp)

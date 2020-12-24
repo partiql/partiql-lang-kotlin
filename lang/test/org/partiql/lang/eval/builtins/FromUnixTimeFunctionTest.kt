@@ -46,10 +46,10 @@ class FromUnixTimeFunctionTest : EvaluatorTestBase() {
 
     class FromUnixTimeTests : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
-            // negative unix epochs output null
-            FromUnixTimeTestCase("from_unixtime(-1)", "null"),
-            FromUnixTimeTestCase("from_unixtime(-0.1)", "null"),
-            // non-negative cases outputting a timestamp
+            // negative unix epochs output timestamp before last epoch
+            FromUnixTimeTestCase("from_unixtime(-1)", "1969-12-31T23:59:59-00:00"),
+            FromUnixTimeTestCase("from_unixtime(-0.1)", "1969-12-31T23:59:59.9-00:00"),
+            // non-negative cases outputting a timestamp after last epoch
             FromUnixTimeTestCase("from_unixtime(0)", "1970-01-01T00:00:00.000-00:00"),
             FromUnixTimeTestCase("from_unixtime(0.001)", "1970-01-01T00:00:00.001-00:00"),
             FromUnixTimeTestCase("from_unixtime(0.01)", "1970-01-01T00:00:00.01-00:00"),
