@@ -19,6 +19,7 @@ import org.partiql.lang.ast.*
 /**
  * Provides a minimal interface for an AST rewriter implementation.
  */
+@Deprecated("New rewriters should implement PIG's PartiqlAst.VisitorTransform instead")
 interface AstRewriter {
     fun rewriteExprNode(node: ExprNode): ExprNode
 }
@@ -27,6 +28,7 @@ interface AstRewriter {
  * This is the base-class for an AST rewriter which simply makes an exact copy of the original AST.
  * Simple rewrites can be performed by inheritors.
  */
+@Deprecated("New rewriters should implement PIG's PartiqlAst.VisitorTransform instead")
 open class AstRewriterBase : AstRewriter {
 
     override fun rewriteExprNode(node: ExprNode): ExprNode =
