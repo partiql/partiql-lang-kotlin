@@ -18,14 +18,19 @@ import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.metaContainerOf
 import org.junit.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.ast.AggregateCallSiteListMeta
 import org.partiql.lang.ast.AggregateRegisterIdMeta
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.toAstStatement
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.util.ArgumentsProviderBase
 
 class AggregateSupportVisitorTransformTests : VisitorTransformTestBase() {
     private val transformer = AggregateSupportVisitorTransform()
+
+    data class AggSupportTestCase(val query: String, val expectedCallAggs: List<Pair<String, Int>>)
 
     /**
      * Simple helper for testing that parses [this] SFW query, transforms it using [AggregateSupportVisitorTransform],
@@ -77,57 +82,42 @@ class AggregateSupportVisitorTransformTests : VisitorTransformTestBase() {
         }
     }
 
-    @Test
-    fun `one aggregate transform`() {
-        val query = "SELECT COUNT(1) FROM foo"
-        val select = query.parseAndTransformQuery()
-
-        val actualMetas = select.metas
-        val expectedMetas = createCallAggMetas(listOf(Pair("count", 0)))
-
-        assertSameCallAggMetas(expectedMetas, actualMetas)
+    class NonSubqueryTests : ArgumentsProviderBase() {
+        override fun getParameters(): List<Any> = listOf(
+            // one aggregate transform
+            AggSupportTestCase(
+                "SELECT COUNT(1) FROM foo",
+                listOf(Pair("count", 0))),
+            // multiple aggregates transform
+            AggSupportTestCase(
+                "SELECT COUNT(1), SUM(1), AVG(1) FROM foo",
+                listOf(Pair("count", 0), Pair("sum", 1), Pair("avg", 2))),
+            // one aggregate in HAVING transform
+            AggSupportTestCase(
+                "SELECT 1 FROM foo GROUP BY bar HAVING SUM(1) > 0",
+                listOf(Pair("sum", 0))),
+            // one aggregate and one aggregate in HAVING transform
+            AggSupportTestCase(
+                "SELECT COUNT(1) FROM foo GROUP BY bar HAVING SUM(1) > 0",
+                listOf(Pair("sum", 0), Pair("count", 1))),
+            // SELECT VALUE aggregate transform
+            AggSupportTestCase(
+                "SELECT VALUE COUNT(1) FROM foo",
+                emptyList()),
+            // SELECT VALUE one aggregate and HAVING transform
+            AggSupportTestCase(
+                "SELECT VALUE COUNT(1) FROM foo GROUP BY bar HAVING SUM(1) > 0",
+                listOf(Pair("sum", 0)))
+        )
     }
 
-    @Test
-    fun `one aggregate in HAVING transform`() {
-        val query = "SELECT 1 FROM foo GROUP BY bar HAVING SUM(1) > 0"
-        val select = query.parseAndTransformQuery()
+    @ParameterizedTest
+    @ArgumentsSource(NonSubqueryTests::class)
+    fun testNonSubquery(tc: AggSupportTestCase) {
+        val select = tc.query.parseAndTransformQuery()
 
         val actualMetas = select.metas
-        val expectedMetas = createCallAggMetas(listOf(Pair("sum", 0)))
-
-        assertSameCallAggMetas(expectedMetas, actualMetas)
-    }
-
-    @Test
-    fun `one aggregate and one aggregate in HAVING transform`() {
-        val query = "SELECT COUNT(1) FROM foo GROUP BY bar HAVING SUM(1) > 0"
-        val select = query.parseAndTransformQuery()
-
-        val actualMetas = select.metas
-        val expectedMetas = createCallAggMetas(listOf(Pair("sum", 0), Pair("count", 1)))
-
-        assertSameCallAggMetas(expectedMetas, actualMetas)
-    }
-
-    @Test
-    fun `SELECT VALUE one aggregate and HAVING transform`() {
-        val query = "SELECT VALUE COUNT(1) FROM foo GROUP BY bar HAVING SUM(1) > 0"
-        val select = query.parseAndTransformQuery()
-
-        val actualMetas = select.metas
-        val expectedMetas = createCallAggMetas(listOf(Pair("sum", 0)))
-
-        assertSameCallAggMetas(expectedMetas, actualMetas)
-    }
-
-    @Test
-    fun `SELECT VALUE aggregate transform`() {
-        val query = "SELECT VALUE COUNT(1) FROM foo"
-        val select = query.parseAndTransformQuery()
-
-        val actualMetas = select.metas
-        val expectedMetas = createCallAggMetas(emptyList())
+        val expectedMetas = createCallAggMetas(tc.expectedCallAggs)
 
         assertSameCallAggMetas(expectedMetas, actualMetas)
     }
@@ -168,17 +158,6 @@ class AggregateSupportVisitorTransformTests : VisitorTransformTestBase() {
         val innerExpectedMetas = createCallAggMetas(listOf(Pair("count", 0)))
 
         assertSameCallAggMetas(innerExpectedMetas, innerActualMetas)
-    }
-
-    @Test
-    fun `multiple aggregates transform`() {
-        val query = "SELECT COUNT(1), SUM(1), AVG(1) FROM foo"
-        val select = query.parseAndTransformQuery()
-
-        val actualMetas = select.metas
-        val expectedMetas = createCallAggMetas(listOf(Pair("count", 0), Pair("sum", 1), Pair("avg", 2)))
-
-        assertSameCallAggMetas(expectedMetas, actualMetas)
     }
 
     @Test
