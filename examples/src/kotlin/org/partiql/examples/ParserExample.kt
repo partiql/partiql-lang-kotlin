@@ -6,7 +6,6 @@ import org.partiql.lang.ast.*
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.syntax.*
 import java.io.PrintStream
-import java.util.Objects
 
 /**
  * Demonstrates the use of [SqlParser] and [PartiqlAst].

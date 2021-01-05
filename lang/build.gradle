@@ -26,7 +26,6 @@ plugins {
     id 'maven-publish'
     id 'org.jetbrains.dokka' version '0.9.18'
     id 'org.jetbrains.kotlin.jvm'
-    id 'io.gitlab.arturbosch.detekt'
     id 'signing'
 }
 

@@ -115,8 +115,7 @@ class CliTest {
 
     @Test
     fun withPartiQLPrettyOutput() {
-        val subject = makeCli("SELECT * FROM input_data", "{a: 1, b: 2}",
-            outputFormat = OutputFormat.PARTIQL_PRETTY)
+        val subject = makeCli("SELECT * FROM input_data", "{a: 1, b: 2}", outputFormat = OutputFormat.PARTIQL_PRETTY)
         val actual = subject.runAndOutput()
 
         assertEquals("<<\n  {\n    'a': 1,\n    'b': 2\n  }\n>>", actual)
