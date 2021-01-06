@@ -1,7 +1,5 @@
 package org.partiql.examples
 
-import org.junit.*
-import kotlin.test.*
 import com.amazon.ion.*
 import com.amazon.ion.system.*
 import org.partiql.examples.util.Example
@@ -28,7 +26,7 @@ class ParserErrorExample(out: PrintStream) : Example(out) {
         print("Invalid PartiQL query:", invalidQuery)
         parser.parseExprNode(invalidQuery)
 
-        fail("ParserException was not thrown")
+        throw Exception("ParserException was not thrown")
     } catch (e: ParserException) {
         val errorContext = e.errorContext!!
 

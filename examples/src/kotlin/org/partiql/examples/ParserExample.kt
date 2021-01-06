@@ -1,6 +1,5 @@
 package org.partiql.examples
 
-import kotlin.test.*
 import com.amazon.ion.system.*
 import org.partiql.examples.util.Example
 import org.partiql.lang.ast.*
@@ -45,7 +44,9 @@ class ParserExample(out: PrintStream) : Example(out) {
         // version of the s-expression form to an instance of [ExprNode].
         val deserializedAst = serializedAst.toExprNode(ion)
         // Verify that we have the correct AST.
-        assertEquals(originalAst, deserializedAst)
+        if (originalAst != deserializedAst) {
+            throw Exception("expected AST to be equal")
+        }
 
         // Here we show how to parse a query directly to a PartiqlAst statement
         val statement = parser.parseAstStatement(query)
@@ -55,6 +56,8 @@ class ParserExample(out: PrintStream) : Example(out) {
         // and back into a PartiqlAst statement
         val roundTrippedStatement = PartiqlAst.transform(elements) as PartiqlAst.Statement
         // Verify that we have the original Partiql Ast statement
-        assertEquals(statement, roundTrippedStatement)
+        if (statement != roundTrippedStatement) {
+            throw Exception("Expected statements to be the same")
+        }
     }
 }
