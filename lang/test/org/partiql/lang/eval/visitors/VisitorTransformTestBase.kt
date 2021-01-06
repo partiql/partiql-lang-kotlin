@@ -38,7 +38,7 @@ abstract class VisitorTransformTestBase : SqlParserTestBase() {
 
         val actualAst = transform.transformStatement(originalAst)
 
-        assertEquals("The expected AST must match the rewritten AST", expectedAst, actualAst)
+        assertEquals("The expected AST must match the transformed AST", expectedAst, actualAst)
 
         // Idempotent transforms should have the same result if the result of the first pass is passed into a
         // second pass.
@@ -66,6 +66,6 @@ abstract class VisitorTransformTestBase : SqlParserTestBase() {
             transform.transformStatement(node)
         }
 
-        assertEquals("The expected AST must match the rewritten AST", expectedAst, actualExprNode)
+        assertEquals("The expected AST must match the transformed AST", expectedAst, actualExprNode)
     }
 }

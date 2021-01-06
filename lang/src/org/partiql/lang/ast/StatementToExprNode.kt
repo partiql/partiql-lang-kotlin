@@ -173,7 +173,7 @@ private class StatementTransformer(val ion: IonSystem) {
                         funcName.text,
                         org.partiql.lang.ast.CaseSensitivity.INSENSITIVE,
                         org.partiql.lang.ast.ScopeQualifier.UNQUALIFIED,
-                        emptyMetaContainer),
+                        funcName.metas.toPartiQlMetaContainer()),
                     setq.toSetQuantifier(),
                     arg.toExprNode(),
                     metas)

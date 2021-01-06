@@ -27,7 +27,7 @@ class ParserExample(out: PrintStream) : Example(out) {
         // Use the SqlParser instance to parse the example query.  This is very simple.
         val originalAst = parser.parseExprNode(query)
 
-        // Now the originalAst can be inspected, rewritten and/or serialized as needed.
+        // Now the originalAst can be inspected, transformed and/or serialized as needed.
         // For now we're just going to serialize and deserialize it.
 
         // Convert the ExprNode AST to the Ion s-expression form.

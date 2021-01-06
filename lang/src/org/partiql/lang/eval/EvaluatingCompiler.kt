@@ -43,7 +43,7 @@ import kotlin.collections.*
  * [1]: https://www.complang.tuwien.ac.at/anton/lvas/sem06w/fest.pdf
  *
  * Note that this is not implemented in the pattern of a typical visitor pattern.  The visitor pattern isn't a good
- * match for all scenarios.  It's great for simple needs such as the types of checks performed or simple rewrites
+ * match for all scenarios.  It's great for simple needs such as the types of checks performed or simple transformations
  * such as partial evaluation and transforming variable references to De Bruijn indices, however a compiler needs
  * much finer grain of control over exactly how and when each node is walked, visited, and transformed.
  *
