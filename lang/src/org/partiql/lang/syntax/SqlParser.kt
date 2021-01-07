@@ -2243,10 +2243,13 @@ class SqlParser(private val ion: IonSystem) : Parser {
     }
 
     /**
-     * Checks that the given [Token] list does not have `EXEC` calls outside of the top level query. Throws
+     * Checks that the given [Token] list does not have any top-level tokens outside of the top level query. Throws
      * an error if so.
+     *
+     * Currently only checks for `EXEC`. DDL and DML along with corresponding error codes to be added in the future
+     * (https://github.com/partiql/partiql-lang-kotlin/issues/354).
      */
-    private fun List<Token>.checkForUnexpectedExec() {
+    private fun List<Token>.checkUnexpectedTopLevelToken() {
         for ((index, token) in this.withIndex()) {
             if (token.keywordText == "exec" && index != 0) {
                 token.err("EXEC call found at unexpected location", PARSE_EXEC_AT_UNEXPECTED_LOCATION)
@@ -2257,7 +2260,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
     /** Entry point into the parser. */
     override fun parseExprNode(source: String): ExprNode {
         val tokens = SqlLexer(ion).tokenize(source)
-        tokens.checkForUnexpectedExec()
+        tokens.checkUnexpectedTopLevelToken()
         val node = tokens.parseExpression()
         val rem = node.remaining
         if (!rem.onlyEndOfStatement()) {

@@ -2,6 +2,7 @@ package org.partiql.lang.ast
 
 import com.amazon.ionelement.api.toIonElement
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.pig.runtime.SymbolPrimitive
 import org.partiql.pig.runtime.asPrimitive
 
 /** Converts an [ExprNode] to a [PartiqlAst.statement]. */
@@ -22,6 +23,9 @@ fun ExprNode.toAstStatement(): PartiqlAst.Statement {
 
 private fun PartiQlMetaContainer.toElectrolyteMetaContainer(): ElectrolyteMetaContainer =
     com.amazon.ionelement.api.metaContainerOf(map { it.tag to it })
+
+private fun SymbolicName.toSymbolPrimitive() : SymbolPrimitive =
+    SymbolPrimitive(this.name, this.metas.toElectrolyteMetaContainer())
 
 private fun ExprNode.toAstDdl(): PartiqlAst.Statement {
     val thiz = this
@@ -55,7 +59,7 @@ private fun ExprNode.toAstExec() : PartiqlAst.Statement {
 
     return PartiqlAst.build {
         when (node) {
-            is Exec -> exec(node.procedureName.name, node.args.map { it.toAstExpr() }, metas)
+            is Exec -> exec_(node.procedureName.toSymbolPrimitive(), node.args.map { it.toAstExpr() }, metas)
             else -> error("Can't convert ${node.javaClass} to PartiqlAst.Statement.Exec")
         }
     }
