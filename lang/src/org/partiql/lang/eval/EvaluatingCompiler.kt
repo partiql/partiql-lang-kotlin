@@ -21,6 +21,7 @@ import org.partiql.lang.ast.passes.*
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.*
 import org.partiql.lang.eval.binding.*
+import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.like.PatternPart
 import org.partiql.lang.eval.like.executePattern
 import org.partiql.lang.eval.like.parsePattern
@@ -55,6 +56,7 @@ import kotlin.collections.*
 internal class EvaluatingCompiler(
     private val valueFactory: ExprValueFactory,
     private val functions: Map<String, ExprFunction>,
+    private val procedures: Map<String, StoredProcedure>,
     private val compileOptions: CompileOptions = CompileOptions.standard()
 ) {
     private val thunkFactory = ThunkFactory(compileOptions.thunkOptions)
@@ -279,6 +281,8 @@ internal class EvaluatingCompiler(
             is CreateIndex,
             is DropIndex,
             is DropTable -> compileDdl(expr)
+            is Exec      -> compileExec(expr)
+
         }
     }
 
@@ -1922,6 +1926,48 @@ internal class EvaluatingCompiler(
                         it[Property.FEATURE_NAME] = "DDL Operations"
                     }, internal = false
             )
+        }
+    }
+
+    private fun compileExec(node: Exec): ThunkEnv {
+        val (procedureName, args, metas: MetaContainer) = node
+        val procedure = procedures[procedureName.name] ?: err(
+            "No such stored procedure: ${procedureName.name}",
+            ErrorCode.EVALUATOR_NO_SUCH_PROCEDURE,
+            errorContextFrom(metas).also {
+                it[Property.PROCEDURE_NAME] = procedureName.name
+            },
+            internal = false)
+
+        // Check arity
+        if (args.size !in procedure.signature.arity) {
+            val errorContext = errorContextFrom(metas).also {
+                it[Property.EXPECTED_ARITY_MIN] = procedure.signature.arity.first
+                it[Property.EXPECTED_ARITY_MAX] = procedure.signature.arity.last
+            }
+
+            val message = when {
+                procedure.signature.arity.first == 1 && procedure.signature.arity.last == 1 ->
+                    "${procedure.signature.name} takes a single argument, received: ${args.size}"
+                procedure.signature.arity.first == procedure.signature.arity.last ->
+                    "${procedure.signature.name} takes exactly ${procedure.signature.arity.first} arguments, received: ${args.size}"
+                else ->
+                    "${procedure.signature.name} takes between ${procedure.signature.arity.first} and " +
+                        "${procedure.signature.arity.last} arguments, received: ${args.size}"
+            }
+
+            throw EvaluationException(message,
+                ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_PROCEDURE_CALL,
+                errorContext,
+                internal = false)
+        }
+
+        // Compile the procedure's arguments
+        val argThunks = args.map { compileExprNode(it) }
+
+        return thunkFactory.thunkEnv(metas) { env ->
+            val procedureArgValues = argThunks.map { it(env) }
+            procedure.call(env.session, procedureArgValues)
         }
     }
 

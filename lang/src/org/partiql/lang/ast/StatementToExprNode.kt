@@ -2,6 +2,7 @@ package org.partiql.lang.ast
 
 import com.amazon.ion.IonSystem
 import com.amazon.ionelement.api.toIonValue
+import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlAst.CaseSensitivity
 import org.partiql.lang.domains.PartiqlAst.DdlOp
 import org.partiql.lang.domains.PartiqlAst.DmlOp
@@ -33,6 +34,7 @@ private class StatementTransformer(val ion: IonSystem) {
             is Statement.Query -> stmt.toExprNode()
             is Statement.Dml -> stmt.toExprNode()
             is Statement.Ddl -> stmt.toExprNode()
+            is Statement.Exec -> stmt.toExprNode()
         }
 
     private fun ElectrolyteMetaContainer.toPartiQlMetaContainer(): PartiQlMetaContainer {
@@ -343,5 +345,9 @@ private class StatementTransformer(val ion: IonSystem) {
                     ),
                     metas = metas)
         }
+    }
+
+    private fun Statement.Exec.toExprNode(): ExprNode {
+        return Exec(procedureName.toSymbolicName(), this.args.toExprNodeList(), metas.toPartiQlMetaContainer())
     }
 }

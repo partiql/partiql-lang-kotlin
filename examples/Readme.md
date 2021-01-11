@@ -22,6 +22,7 @@ List of Examples:
 * Kotlin:
     * CsvExprValueExample: how to create an `ExprValue` for a custom data format, in this case CSV  
     * CustomFunctionsExample: how to create and register user defined functions (UDF)
+    * CustomProceduresExample: how to create and register stored procedures
     * EvaluationWithBindings: query evaluation with global bindings
     * EvaluationWithLazyBindings: query evaluation with global bindings that are lazily evaluated
     * ParserErrorExample: inspecting errors thrown by the `Parser`

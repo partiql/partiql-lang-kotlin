@@ -2,6 +2,7 @@ package org.partiql.lang.ast
 
 import com.amazon.ionelement.api.toIonElement
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.pig.runtime.SymbolPrimitive
 import org.partiql.pig.runtime.asPrimitive
 
 /** Converts an [ExprNode] to a [PartiqlAst.statement]. */
@@ -16,11 +17,15 @@ fun ExprNode.toAstStatement(): PartiqlAst.Statement {
 
         is CreateTable, is CreateIndex, is DropTable, is DropIndex -> toAstDdl()
 
+        is Exec -> toAstExec()
     }
 }
 
 private fun PartiQlMetaContainer.toElectrolyteMetaContainer(): ElectrolyteMetaContainer =
     com.amazon.ionelement.api.metaContainerOf(map { it.tag to it })
+
+private fun SymbolicName.toSymbolPrimitive() : SymbolPrimitive =
+    SymbolPrimitive(this.name, this.metas.toElectrolyteMetaContainer())
 
 private fun ExprNode.toAstDdl(): PartiqlAst.Statement {
     val thiz = this
@@ -30,7 +35,7 @@ private fun ExprNode.toAstDdl(): PartiqlAst.Statement {
         when(thiz) {
             is Literal, is LiteralMissing, is VariableReference, is Parameter, is NAry, is CallAgg, is Typed,
             is Path, is SimpleCase, is SearchedCase, is Select, is Struct, is Seq,
-            is DataManipulation -> error("Can't convert ${thiz.javaClass} to PartiqlAst.ddl")
+            is DataManipulation, is Exec -> error("Can't convert ${thiz.javaClass} to PartiqlAst.ddl")
 
             is CreateTable -> ddl(createTable(thiz.tableName), metas)
             is CreateIndex -> ddl(createIndex(identifier(thiz.tableName, caseSensitive()), thiz.keys.map { it.toAstExpr() }), metas)
@@ -44,6 +49,18 @@ private fun ExprNode.toAstDdl(): PartiqlAst.Statement {
             is DropTable ->
                 // case-sensitivity of table names cannot be represented with ExprNode.
                 ddl(dropTable(identifier(thiz.tableName, caseSensitive())), metas)
+        }
+    }
+}
+
+private fun ExprNode.toAstExec() : PartiqlAst.Statement {
+    val node = this
+    val metas = metas.toElectrolyteMetaContainer()
+
+    return PartiqlAst.build {
+        when (node) {
+            is Exec -> exec_(node.procedureName.toSymbolPrimitive(), node.args.map { it.toAstExpr() }, metas)
+            else -> error("Can't convert ${node.javaClass} to PartiqlAst.Statement.Exec")
         }
     }
 }
@@ -147,8 +164,8 @@ fun ExprNode.toAstExpr(): PartiqlAst.Expr {
                     SeqType.BAG -> bag(node.values.map { it.toAstExpr() })
                 }
 
-            // These are handled by `toAstDml()`
-            is DataManipulation, is CreateTable, is CreateIndex, is DropTable, is DropIndex ->
+            // These are handled by `toAstDml()`, `toAstDdl()`, and `toAstExec()`
+            is DataManipulation, is CreateTable, is CreateIndex, is DropTable, is DropIndex, is Exec ->
                 error("Can't transform ${node.javaClass} to a PartiqlAst.expr }")
         }
     }

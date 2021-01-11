@@ -114,7 +114,8 @@ class SqlParser(private val ion: IonSystem) : Parser {
         DROP_TABLE,
         DROP_INDEX,
         CREATE_INDEX,
-        PARAMETER;
+        PARAMETER,
+        EXEC;
 
         val identifier = name.toLowerCase()
     }
@@ -334,6 +335,10 @@ class SqlParser(private val ion: IonSystem) : Parser {
                         NAry(NAryOp.CALL, listOf(funcExpr) + children.map { it.toExprNode() }, metas)
                     }
                 }
+            }
+            EXEC -> {
+                val procedureName = SymbolicName(token?.text!!.toLowerCase(), token.toSourceLocationMetaContainer())
+                Exec(procedureName, children.map { it.toExprNode() }, metas)
             }
             CALL_AGG -> {
                 val funcExpr =
@@ -1015,6 +1020,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     tail.tail.parseFunctionCall(head!!)
                 else -> err("Unexpected keyword", PARSE_UNEXPECTED_KEYWORD)
             }
+            "exec" -> tail.parseExec()
             else -> err("Unexpected keyword", PARSE_UNEXPECTED_KEYWORD)
         }
         LEFT_PAREN -> {
@@ -1712,6 +1718,28 @@ class SqlParser(private val ion: IonSystem) : Parser {
         }
     }
 
+    private fun List<Token>.parseExec(): ParseNode {
+        var rem = this
+        if (rem.head?.type == EOF) {
+            rem.err("No stored procedure provided", PARSE_NO_STORED_PROCEDURE_PROVIDED)
+        }
+
+        val procedureName = rem.head
+        rem = rem.tail
+
+        // Stored procedure call has no args
+        if (rem.head?.type == EOF) {
+            return ParseNode(EXEC, procedureName, emptyList(), rem)
+        }
+
+        else if (rem.head?.type == LEFT_PAREN) {
+            rem.err("Unexpected $LEFT_PAREN found following stored procedure call", PARSE_UNEXPECTED_TOKEN)
+        }
+
+        return rem.parseArgList(aliasSupportType = NONE, mode = NORMAL_ARG_LIST)
+                  .copy(type = EXEC, token = procedureName)
+    }
+
     /**
      * Parses substring
      *
@@ -2216,9 +2244,26 @@ class SqlParser(private val ion: IonSystem) : Parser {
         return ParseNode(ARG_LIST, null, items, rem)
     }
 
+    /**
+     * Checks that the given [Token] list does not have any top-level tokens outside of the top level query. Throws
+     * an error if so.
+     *
+     * Currently only checks for `EXEC`. DDL and DML along with corresponding error codes to be added in the future
+     * (https://github.com/partiql/partiql-lang-kotlin/issues/354).
+     */
+    private fun List<Token>.checkUnexpectedTopLevelToken() {
+        for ((index, token) in this.withIndex()) {
+            if (token.keywordText == "exec" && index != 0) {
+                token.err("EXEC call found at unexpected location", PARSE_EXEC_AT_UNEXPECTED_LOCATION)
+            }
+        }
+    }
+
     /** Entry point into the parser. */
     override fun parseExprNode(source: String): ExprNode {
-        val node = SqlLexer(ion).tokenize(source).parseExpression()
+        val tokens = SqlLexer(ion).tokenize(source)
+        tokens.checkUnexpectedTopLevelToken()
+        val node = tokens.parseExpression()
         val rem = node.remaining
         if (!rem.onlyEndOfStatement()) {
             when(rem.head?.type ) {

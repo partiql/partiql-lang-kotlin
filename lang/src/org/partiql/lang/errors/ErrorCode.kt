@@ -297,6 +297,16 @@ enum class ErrorCode(private val category: ErrorCategory,
         LOC_TOKEN,
         "Aggregate function calls take 1 argument only"),
 
+    PARSE_NO_STORED_PROCEDURE_PROVIDED(
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "No stored procedure provided"),
+
+    PARSE_EXEC_AT_UNEXPECTED_LOCATION(
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "EXEC call found at unexpected location"),
+
     PARSE_MALFORMED_JOIN(
         ErrorCategory.PARSER,
         LOC_TOKEN,
@@ -407,15 +417,38 @@ enum class ErrorCode(private val category: ErrorCategory,
                 "No such function: ${errorContext?.get(Property.FUNCTION_NAME)?.stringValue() ?: UNKNOWN} "
         },
 
+    EVALUATOR_NO_SUCH_PROCEDURE(
+        ErrorCategory.EVALUATOR,
+        LOCATION + setOf(Property.PROCEDURE_NAME),
+        ""){
+            override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+                "No such stored procedure: ${errorContext?.get(Property.PROCEDURE_NAME)?.stringValue() ?: UNKNOWN} "
+        },
+
     EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.EXPECTED_ARITY_MIN, Property.EXPECTED_ARITY_MAX),
         "Incorrect number of arguments to function call"),
 
+    EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_PROCEDURE_CALL(
+        ErrorCategory.EVALUATOR,
+        LOCATION + setOf(Property.EXPECTED_ARITY_MIN, Property.EXPECTED_ARITY_MAX),
+        "Incorrect number of arguments to procedure call"),
+
     EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.EXPECTED_ARGUMENT_TYPES, Property.ACTUAL_ARGUMENT_TYPES, Property.FUNCTION_NAME),
         "Incorrect type of arguments to function call") {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "Invalid argument types for ${errorContext?.get(Property.FUNCTION_NAME) ?: UNKNOWN}, " +
+            "expected: ${errorContext?.get(Property.EXPECTED_ARGUMENT_TYPES) ?: UNKNOWN} " +
+            "got: ${errorContext?.get(Property.ACTUAL_ARGUMENT_TYPES) ?: UNKNOWN}"
+    },
+
+    EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_PROCEDURE_CALL(
+        ErrorCategory.EVALUATOR,
+        LOCATION + setOf(Property.EXPECTED_ARGUMENT_TYPES, Property.ACTUAL_ARGUMENT_TYPES, Property.FUNCTION_NAME),
+        "Incorrect type of arguments to procedure call") {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "Invalid argument types for ${errorContext?.get(Property.FUNCTION_NAME) ?: UNKNOWN}, " +
             "expected: ${errorContext?.get(Property.EXPECTED_ARGUMENT_TYPES) ?: UNKNOWN} " +

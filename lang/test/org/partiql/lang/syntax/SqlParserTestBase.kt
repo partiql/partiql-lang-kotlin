@@ -103,9 +103,10 @@ abstract class SqlParserTestBase : TestBase() {
      */
     private fun unwrapQuery(statement: PartiqlAst.Statement) : SexpElement {
        return when (statement) {
-            is PartiqlAst.Statement.Query -> statement.expr.toIonElement()
-            is PartiqlAst.Statement.Dml,
-            is PartiqlAst.Statement.Ddl -> statement.toIonElement()
+           is PartiqlAst.Statement.Query -> statement.expr.toIonElement()
+           is PartiqlAst.Statement.Dml,
+           is PartiqlAst.Statement.Ddl,
+           is PartiqlAst.Statement.Exec -> statement.toIonElement()
         }
     }
 
