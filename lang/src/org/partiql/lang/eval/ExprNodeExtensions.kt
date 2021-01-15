@@ -24,7 +24,6 @@ import org.partiql.lang.ast.*
  * If [this] is a [Path], invokes [Path.extractColumnAlias] to determine the alias.
  * Otherwise, returns the column index prefixed with `_`.
  */
-@Deprecated("to be removed before visitor-transforms branch is merged")
 fun ExprNode.extractColumnAlias(idx: Int): String =
     when (this) {
     is VariableReference -> {
@@ -41,7 +40,6 @@ fun ExprNode.extractColumnAlias(idx: Int): String =
  * Returns the name of the last component if it is a string literal, otherwise returns the
  * column index prefixed with `_`.
  */
-@Deprecated("to be removed before visitor-transforms branch is merged")
 fun Path.extractColumnAlias(idx: Int): String {
     val (_, components, _: MetaContainer) = this
     val nameOrigin = components.last()
