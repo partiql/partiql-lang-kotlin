@@ -26,7 +26,7 @@ internal fun PartiQlMetaContainer.toIonElementMetaContainer(): IonElementMetaCon
     com.amazon.ionelement.api.metaContainerOf(map { it.tag to it })
 
 private fun SymbolicName.toSymbolPrimitive() : SymbolPrimitive =
-    SymbolPrimitive(this.name, this.metas.toElectrolyteMetaContainer())
+    SymbolPrimitive(this.name, this.metas.toIonElementMetaContainer())
 
 private fun ExprNode.toAstDdl(): PartiqlAst.Statement {
     val thiz = this
@@ -56,7 +56,7 @@ private fun ExprNode.toAstDdl(): PartiqlAst.Statement {
 
 private fun ExprNode.toAstExec() : PartiqlAst.Statement {
     val node = this
-    val metas = metas.toElectrolyteMetaContainer()
+    val metas = metas.toIonElementMetaContainer()
 
     return PartiqlAst.build {
         when (node) {
