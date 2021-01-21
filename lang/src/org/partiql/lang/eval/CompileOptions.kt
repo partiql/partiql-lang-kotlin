@@ -14,10 +14,9 @@
 
 package org.partiql.lang.eval
 
-import org.partiql.lang.ast.SourceLocationMeta
-import org.partiql.lang.ast.passes.AstRewriter
-import org.partiql.lang.ast.passes.IDENTITY_REWRITER
-import org.partiql.lang.ast.passes.basicRewriters
+import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.eval.visitors.IDENTITY_VISITOR_TRANSFORM
+import org.partiql.lang.eval.visitors.basicVisitorTransforms
 
 
 /**
@@ -42,20 +41,20 @@ enum class ProjectionIterationBehavior {
 }
 
 /**
- * Controls the behavior of intrinsic AST rewriting with [EvaluatingCompiler.compile].
+ * Controls the behavior of intrinsic AST visitor transforms with [EvaluatingCompiler.compile].
  *
- * Most users will want [DEFAULT], which does the built-in rewriting for them, while
- * users wanting full control of the rewriting process should use [NONE].
+ * Most users will want [DEFAULT], which does the built-in visitor transforms for them, while
+ * users wanting full control of the visitor transform process should use [NONE].
  */
-enum class RewritingMode {
+enum class VisitorTransformMode {
     DEFAULT {
-        override fun createRewriter() = basicRewriters()
+        override fun createVisitorTransform() = basicVisitorTransforms()
     },
     NONE {
-        override fun createRewriter() = IDENTITY_REWRITER
+        override fun createVisitorTransform() = IDENTITY_VISITOR_TRANSFORM
     };
 
-    internal abstract fun createRewriter(): AstRewriter
+    internal abstract fun createVisitorTransform(): PartiqlAst.VisitorTransform
 }
 
 /**
@@ -64,7 +63,7 @@ enum class RewritingMode {
 data class CompileOptions private constructor (
         val undefinedVariable: UndefinedVariableBehavior,
         val projectionIteration: ProjectionIterationBehavior = ProjectionIterationBehavior.FILTER_MISSING,
-        val rewritingMode: RewritingMode = RewritingMode.DEFAULT,
+        val visitorTransformMode: VisitorTransformMode = VisitorTransformMode.DEFAULT,
         val thunkOptions: ThunkOptions = ThunkOptions.standard()
 ) {
 
@@ -96,7 +95,7 @@ data class CompileOptions private constructor (
 
         fun undefinedVariable(value: UndefinedVariableBehavior) = set { copy(undefinedVariable = value) }
         fun projectionIteration(value: ProjectionIterationBehavior) = set { copy(projectionIteration = value) }
-        fun rewriterMode(value: RewritingMode) = set { copy(rewritingMode = value) }
+        fun visitorTransformMode(value: VisitorTransformMode) = set { copy(visitorTransformMode = value) }
         fun thunkOptions(value: ThunkOptions) = set { copy(thunkOptions = value)}
         private inline fun set(block: CompileOptions.() -> CompileOptions) : Builder {
             options = block(options)

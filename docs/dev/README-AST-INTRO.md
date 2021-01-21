@@ -153,11 +153,11 @@ result of the `when` becomes the function's return value:
 ```Kotlin
    fun transformNode(exprNode: ExprNode): ExprNode = when(exprNode) {
        is Literal -> { // case() is not needed
-           //Perform cloning rewrite
+           //Perform cloning transform
            ...
        }
        is VariableReference -> { // case() is not needed
-           //Perform cloning rewrite
+           //Perform cloning transform
            ...
        }
        //and so on for all nodes

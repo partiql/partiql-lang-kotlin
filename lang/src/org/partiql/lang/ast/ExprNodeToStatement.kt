@@ -1,5 +1,6 @@
 package org.partiql.lang.ast
 
+import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.toIonElement
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.pig.runtime.SymbolPrimitive
@@ -21,7 +22,7 @@ fun ExprNode.toAstStatement(): PartiqlAst.Statement {
     }
 }
 
-private fun PartiQlMetaContainer.toElectrolyteMetaContainer(): ElectrolyteMetaContainer =
+internal fun PartiQlMetaContainer.toIonElementMetaContainer(): IonElementMetaContainer =
     com.amazon.ionelement.api.metaContainerOf(map { it.tag to it })
 
 private fun SymbolicName.toSymbolPrimitive() : SymbolPrimitive =
@@ -29,7 +30,7 @@ private fun SymbolicName.toSymbolPrimitive() : SymbolPrimitive =
 
 private fun ExprNode.toAstDdl(): PartiqlAst.Statement {
     val thiz = this
-    val metas = metas.toElectrolyteMetaContainer()
+    val metas = metas.toIonElementMetaContainer()
 
     return PartiqlAst.build {
         when(thiz) {
@@ -67,7 +68,7 @@ private fun ExprNode.toAstExec() : PartiqlAst.Statement {
 
 fun ExprNode.toAstExpr(): PartiqlAst.Expr {
     val node = this
-    val metas = this.metas.toElectrolyteMetaContainer()
+    val metas = this.metas.toIonElementMetaContainer()
 
     return PartiqlAst.build {
         when (node) {
@@ -90,7 +91,7 @@ fun ExprNode.toAstExpr(): PartiqlAst.Expr {
                     NAryOp.GTE -> gte(args, metas)
                     NAryOp.NE -> ne(args, metas)
                     NAryOp.LIKE -> like(args[0], args[1], if (args.size >= 3) args[2] else null, metas)
-                    NAryOp.BETWEEN -> between(args[0], args[1], args[2])
+                    NAryOp.BETWEEN -> between(args[0], args[1], args[2], metas)
                     NAryOp.NOT -> not(args[0], metas)
                     NAryOp.IN -> inCollection(args, metas)
                     NAryOp.AND -> and(args, metas)
@@ -114,10 +115,11 @@ fun ExprNode.toAstExpr(): PartiqlAst.Expr {
                 }
             }
             is CallAgg -> {
-                val symbol1 = (node.funcExpr as? VariableReference)?.id
+                val symbol1 = (node.funcExpr as? VariableReference)
                     ?: error("Expected CallAgg.funcExpr to be a VariableReference")
+                val symbol1Primitive = symbol1.id.asPrimitive(symbol1.metas.toIonElementMetaContainer())
                 // TODO:  we are losing case-sensitivity of the function name here.  Do we care?
-                callAgg(node.setQuantifier.toAstSetQuantifier(), symbol1, node.arg.toAstExpr(), metas)
+                callAgg_(node.setQuantifier.toAstSetQuantifier(), symbol1Primitive, node.arg.toAstExpr(), metas)
             }
             is Typed ->
                 when(node.op) {
@@ -156,12 +158,12 @@ fun ExprNode.toAstExpr(): PartiqlAst.Expr {
                     having = node.having?.toAstExpr(),
                     limit = node.limit?.toAstExpr(),
                     metas = metas)
-            is Struct -> struct(node.fields.map { exprPair(it.name.toAstExpr(), it.expr.toAstExpr()) })
+            is Struct -> struct(node.fields.map { exprPair(it.name.toAstExpr(), it.expr.toAstExpr()) }, metas)
             is Seq ->
                 when(node.type) {
-                    SeqType.LIST -> list(node.values.map { it.toAstExpr() })
-                    SeqType.SEXP -> sexp(node.values.map { it.toAstExpr() })
-                    SeqType.BAG -> bag(node.values.map { it.toAstExpr() })
+                    SeqType.LIST -> list(node.values.map { it.toAstExpr() }, metas)
+                    SeqType.SEXP -> sexp(node.values.map { it.toAstExpr() }, metas)
+                    SeqType.BAG -> bag(node.values.map { it.toAstExpr() }, metas)
                 }
 
             // These are handled by `toAstDml()`, `toAstDdl()`, and `toAstExec()`
@@ -175,8 +177,11 @@ private fun GroupBy.toAstGroupSpec(): PartiqlAst.GroupBy =
     PartiqlAst.build {
         groupBy_(
             this@toAstGroupSpec.grouping.toAstGroupStrategy(),
-            groupKeyList(this@toAstGroupSpec.groupByItems.map { groupKey_(it.expr.toAstExpr(), it.asName?.name?.asPrimitive()) }),
-            this@toAstGroupSpec.groupName?.name?.asPrimitive())
+            groupKeyList(this@toAstGroupSpec.groupByItems.map {
+                val keyMetas = it.asName?.metas?.toIonElementMetaContainer() ?: emptyMetaContainer()
+                groupKey_(it.expr.toAstExpr(), it.asName?.name?.asPrimitive(keyMetas) )
+            }),
+            this@toAstGroupSpec.groupName?.name?.asPrimitive(this@toAstGroupSpec.groupName.metas.toIonElementMetaContainer()))
     }
 
 
@@ -226,13 +231,14 @@ private fun SelectProjection.toAstSelectProject(): PartiqlAst.Projection {
             is SelectProjectionList -> {
                 if(thiz.items.any { it is SelectListItemStar }) {
                     if(thiz.items.size > 1) error("More than one select item when SELECT * was present.")
-                    projectStar()
+                    val metas = (thiz.items[0] as SelectListItemStar).metas.toIonElementMetaContainer()
+                    projectStar(metas)
                 }
                 else
                     projectList(
                         thiz.items.map {
                             when(it) {
-                                is SelectListItemExpr -> projectExpr(it.expr.toAstExpr(), it.asName?.name)
+                                is SelectListItemExpr -> projectExpr_(it.expr.toAstExpr(), it.asName?.toPrimitive())
                                 is SelectListItemProjectAll -> projectAll(it.expr.toAstExpr())
                                 is SelectListItemStar -> error("this should happen due to `when` branch above.")
                             }
@@ -245,14 +251,15 @@ private fun SelectProjection.toAstSelectProject(): PartiqlAst.Projection {
 
 private fun FromSource.toAstFromSource(): PartiqlAst.FromSource {
     val thiz = this
-    val metas = thiz.metas().toElectrolyteMetaContainer()
+    val metas = thiz.metas().toIonElementMetaContainer()
     return PartiqlAst.build {
         when (thiz) {
-            is FromSourceExpr -> scan(
+            is FromSourceExpr -> scan_(
                 thiz.expr.toAstExpr(),
-                thiz.variables.asName?.name,
-                thiz.variables.atName?.name,
-                thiz.variables.byName?.name)
+                thiz.variables.asName?.toPrimitive(),
+                thiz.variables.atName?.toPrimitive(),
+                thiz.variables.byName?.toPrimitive(),
+                thiz.expr.metas.toIonElementMetaContainer())
             is FromSourceJoin -> {
                 val jt = when (thiz.joinOp) {
                     JoinOp.INNER -> inner()
@@ -267,11 +274,12 @@ private fun FromSource.toAstFromSource(): PartiqlAst.FromSource {
                     if (thiz.metas.hasMeta(IsImplictJoinMeta.TAG)) null else thiz.condition.toAstExpr(),
                     metas = metas)
             }
-            is FromSourceUnpivot -> unpivot(
+            is FromSourceUnpivot -> unpivot_(
                 thiz.expr.toAstExpr(),
-                thiz.variables.asName?.name,
-                thiz.variables.atName?.name,
-                thiz.variables.byName?.name)
+                thiz.variables.asName?.toPrimitive(),
+                thiz.variables.atName?.toPrimitive(),
+                thiz.variables.byName?.toPrimitive(),
+                thiz.metas.toIonElementMetaContainer())
         }
     }
 }
@@ -292,8 +300,8 @@ private fun PathComponent.toAstPathStep(): PartiqlAst.PathStep {
     return PartiqlAst.build {
         when (thiz) {
             is PathComponentExpr -> pathExpr(thiz.expr.toAstExpr(), thiz.case.toAstCaseSensitivity())
-            is PathComponentUnpivot -> pathUnpivot(thiz.metas.toElectrolyteMetaContainer())
-            is PathComponentWildcard -> pathWildcard(thiz.metas.toElectrolyteMetaContainer())
+            is PathComponentUnpivot -> pathUnpivot(thiz.metas.toIonElementMetaContainer())
+            is PathComponentWildcard -> pathWildcard(thiz.metas.toIonElementMetaContainer())
         }
     }
 }
@@ -312,7 +320,7 @@ private fun DataManipulation.toAstDml(): PartiqlAst.Statement {
                     dmlOp.lvalue.toAstExpr(),
                     dmlOp.value.toAstExpr(),
                     dmlOp.position?.toAstExpr(),
-                    thiz.metas.toElectrolyteMetaContainer())
+                    thiz.metas.toIonElementMetaContainer())
             is AssignmentOp ->
                 set(
                     dmlOp.assignments.map {
@@ -328,39 +336,44 @@ private fun DataManipulation.toAstDml(): PartiqlAst.Statement {
             dmlOp2,
             thiz.from?.toAstFromSource(),
             thiz.where?.toAstExpr(),
-            thiz.metas.toElectrolyteMetaContainer())
+            thiz.metas.toIonElementMetaContainer())
     }
 }
 
 
 private fun DataType.toAstType(): PartiqlAst.Type {
     val thiz = this
+    val metas = thiz.metas.toIonElementMetaContainer()
     val arg1 = thiz.args.getOrNull(0)?.toLong()
     val arg2 = thiz.args.getOrNull(1)?.toLong()
     return PartiqlAst.build {
         when(thiz.sqlDataType) {
-            SqlDataType.MISSING -> missingType()
-            SqlDataType.NULL -> nullType()
-            SqlDataType.BOOLEAN -> booleanType()
-            SqlDataType.SMALLINT -> smallintType()
-            SqlDataType.INTEGER -> integerType()
-            SqlDataType.FLOAT -> floatType(arg1)
-            SqlDataType.REAL -> realType()
-            SqlDataType.DOUBLE_PRECISION -> doublePrecisionType()
-            SqlDataType.DECIMAL -> decimalType(arg1, arg2)
-            SqlDataType.NUMERIC -> numericType(arg1, arg2)
-            SqlDataType.TIMESTAMP -> timestampType()
-            SqlDataType.CHARACTER -> characterType(arg1)
-            SqlDataType.CHARACTER_VARYING -> characterVaryingType(arg1)
-            SqlDataType.STRING -> stringType()
-            SqlDataType.SYMBOL -> symbolType()
-            SqlDataType.CLOB -> clobType()
-            SqlDataType.BLOB -> blobType()
-            SqlDataType.STRUCT -> structType()
-            SqlDataType.TUPLE -> tupleType()
-            SqlDataType.LIST -> listType()
-            SqlDataType.SEXP -> sexpType()
-            SqlDataType.BAG -> bagType()
+            SqlDataType.MISSING -> missingType(metas)
+            SqlDataType.NULL -> nullType(metas)
+            SqlDataType.BOOLEAN -> booleanType(metas)
+            SqlDataType.SMALLINT -> smallintType(metas)
+            SqlDataType.INTEGER -> integerType(metas)
+            SqlDataType.FLOAT -> floatType(arg1, metas)
+            SqlDataType.REAL -> realType(metas)
+            SqlDataType.DOUBLE_PRECISION -> doublePrecisionType(metas)
+            SqlDataType.DECIMAL -> decimalType(arg1, arg2, metas)
+            SqlDataType.NUMERIC -> numericType(arg1, arg2, metas)
+            SqlDataType.TIMESTAMP -> timestampType(metas)
+            SqlDataType.CHARACTER -> characterType(arg1, metas)
+            SqlDataType.CHARACTER_VARYING -> characterVaryingType(arg1, metas)
+            SqlDataType.STRING -> stringType(metas)
+            SqlDataType.SYMBOL -> symbolType(metas)
+            SqlDataType.CLOB -> clobType(metas)
+            SqlDataType.BLOB -> blobType(metas)
+            SqlDataType.STRUCT -> structType(metas)
+            SqlDataType.TUPLE -> tupleType(metas)
+            SqlDataType.LIST -> listType(metas)
+            SqlDataType.SEXP -> sexpType(metas)
+            SqlDataType.BAG -> bagType(metas)
         }
     }
 }
+
+
+private fun SymbolicName.toPrimitive(): SymbolPrimitive =
+    SymbolPrimitive(this.name, this.metas.toIonElementMetaContainer())

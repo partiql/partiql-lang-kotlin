@@ -22,11 +22,33 @@ import org.partiql.lang.domains.PartiqlAst.Type
 import org.partiql.pig.runtime.SymbolPrimitive
 
 internal typealias PartiQlMetaContainer = org.partiql.lang.ast.MetaContainer
-internal typealias ElectrolyteMetaContainer = com.amazon.ionelement.api.MetaContainer
+internal typealias IonElementMetaContainer = com.amazon.ionelement.api.MetaContainer
 
 /** Converts a [partiql_ast.statement] to an [ExprNode], preserving all metas where possible. */
 fun Statement.toExprNode(ion: IonSystem): ExprNode =
     StatementTransformer(ion).transform(this)
+
+internal fun Expr.toExprNode(ion: IonSystem): ExprNode {
+    return StatementTransformer(ion).transform(this)
+}
+
+internal fun SetQuantifier.toSetQuantifier(): org.partiql.lang.ast.SetQuantifier =
+    when (this) {
+        is SetQuantifier.All -> org.partiql.lang.ast.SetQuantifier.ALL
+        is SetQuantifier.Distinct -> org.partiql.lang.ast.SetQuantifier.DISTINCT
+    }
+
+internal fun com.amazon.ionelement.api.MetaContainer.toPartiQlMetaContainer(): org.partiql.lang.ast.MetaContainer {
+    val nonLocationMetas: List<Meta> = this.values.map {
+        // We may need to account for this in the future, but for now we require that all metas placed
+        // on any `partiql_ast` instances to implement Meta.  It's not clear how to deal with that now
+        // so we should wait until it's needed.
+        val partiQlMeta = it as? Meta ?: error("The meta was not an instance of Meta.")
+        partiQlMeta
+    }
+
+    return org.partiql.lang.ast.metaContainerOf(nonLocationMetas)
+}
 
 private class StatementTransformer(val ion: IonSystem) {
     fun transform(stmt: Statement): ExprNode =
@@ -37,17 +59,9 @@ private class StatementTransformer(val ion: IonSystem) {
             is Statement.Exec -> stmt.toExprNode()
         }
 
-    private fun ElectrolyteMetaContainer.toPartiQlMetaContainer(): PartiQlMetaContainer {
-        val nonLocationMetas: List<Meta> = this.values.map {
-            // We may need to account for this in the future, but for now we require that all metas placed
-            // on any `partiql_ast` instances to implement Meta.  It's not clear how to deal with that now
-            // so we should wait until it's needed.
-            val partiQlMeta = it as? Meta ?: error("The meta was not an instance of Meta.")
-            partiQlMeta
-        }
+    fun transform(stmt: Expr): ExprNode =
+        stmt.toExprNode()
 
-        return org.partiql.lang.ast.metaContainerOf(nonLocationMetas)
-    }
 
     private fun Statement.Query.toExprNode(): ExprNode {
         return this.expr.toExprNode()
@@ -161,7 +175,7 @@ private class StatementTransformer(val ion: IonSystem) {
                         funcName.text,
                         org.partiql.lang.ast.CaseSensitivity.INSENSITIVE,
                         org.partiql.lang.ast.ScopeQualifier.UNQUALIFIED,
-                        emptyMetaContainer),
+                        funcName.metas.toPartiQlMetaContainer()),
                     setq.toSetQuantifier(),
                     arg.toExprNode(),
                     metas)

@@ -14,8 +14,13 @@
 
 package org.partiql.lang.ast.passes
 
-import org.partiql.lang.ast.*
+import org.partiql.lang.ast.DataType
+import org.partiql.lang.ast.ExprNode
+import org.partiql.lang.ast.HasMetas
+import org.partiql.lang.ast.MetaContainer
+import org.partiql.lang.ast.metaContainerOf
 
+@Deprecated("Will be removed after existing tests no longer require stripping metas")
 class MetaStrippingRewriter : AstRewriterBase() {
     companion object {
         private val emptyMetas = metaContainerOf()

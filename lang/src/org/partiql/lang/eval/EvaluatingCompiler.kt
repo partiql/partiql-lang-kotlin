@@ -17,7 +17,6 @@ package org.partiql.lang.eval
 
 import com.amazon.ion.*
 import org.partiql.lang.ast.*
-import org.partiql.lang.ast.passes.*
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.*
 import org.partiql.lang.eval.binding.*
@@ -25,6 +24,7 @@ import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.like.PatternPart
 import org.partiql.lang.eval.like.executePattern
 import org.partiql.lang.eval.like.parsePattern
+import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.*
 import java.math.*
@@ -45,7 +45,7 @@ import kotlin.collections.*
  * [1]: https://www.complang.tuwien.ac.at/anton/lvas/sem06w/fest.pdf
  *
  * Note that this is not implemented in the pattern of a typical visitor pattern.  The visitor pattern isn't a good
- * match for all scenarios.  It's great for simple needs such as the types of checks performed or simple rewrites
+ * match for all scenarios.  It's great for simple needs such as the types of checks performed or simple transformations
  * such as partial evaluation and transforming variable references to De Bruijn indices, however a compiler needs
  * much finer grain of control over exactly how and when each node is walked, visited, and transformed.
  *
@@ -208,12 +208,13 @@ internal class EvaluatingCompiler(
      * Compiles an [ExprNode] tree to an [Expression].
      */
     fun compile(originalAst: ExprNode): Expression {
-        val rewrittenAst = compileOptions.rewritingMode.createRewriter().rewriteExprNode(originalAst)
+        val visitorTransformer = compileOptions.visitorTransformMode.createVisitorTransform()
+        val transformedAst = visitorTransformer.transformStatement(originalAst.toAstStatement()).toExprNode(valueFactory.ion)
 
-        AstSanityValidator.validate(rewrittenAst)
+        PartiqlAstSanityValidator.validate(transformedAst.toAstStatement())
 
         val thunk = nestCompilationContext(ExpressionContext.NORMAL, emptySet()) {
-            compileExprNode(rewrittenAst)
+            compileExprNode(transformedAst)
         }
 
         return object : Expression {
@@ -1006,12 +1007,12 @@ internal class EvaluatingCompiler(
 
                         class CompiledAggregate(val factory: ExprAggregatorFactory, val argThunk: ThunkEnv)
 
-                        // These aggregate call sites are collected in [AggregateSupportRewriter].
+                        // These aggregate call sites are collected in [AggregateSupportVisitorTransform].
                         val compiledAggregates = aggregateListMeta?.aggregateCallSites?.map { it ->
-                            val funcName = (it.funcExpr as VariableReference).id
+                            val funcName = it.funcName.text
                             CompiledAggregate(
-                                factory = getAggregatorFactory(funcName, it.setQuantifier, it.metas),
-                                argThunk = compileExprNode(it.arg))
+                                factory = getAggregatorFactory(funcName, it.setq.toSetQuantifier(), it.metas.toPartiQlMetaContainer()),
+                                argThunk = compileExprNode(it.arg.toExprNode(valueFactory.ion)))
                         }
 
                         // This closure will be invoked to create and initialize a [RegisterBank] for new [Group]s.
@@ -1178,7 +1179,7 @@ internal class EvaluatingCompiler(
                         val projectionThunk: ThunkEnvValue<List<ExprValue>> =
                             when {
                                 items.filterIsInstance<SelectListItemStar>().any() -> {
-                                    errNoContext("Encountered a SelectListItemStar--did SelectStarRewriter execute?",
+                                    errNoContext("Encountered a SelectListItemStar--did SelectStarVisitorTransform execute?",
                                         internal = true)
                                 }
                                 else -> {
@@ -1318,7 +1319,7 @@ internal class EvaluatingCompiler(
             err("COUNT(*) is not allowed in this context", errorContextFrom(metas), internal = false)
         }
 
-        val funcVarRef = funcExpr as VariableReference  // AstSanityValidator ensures this cast will succeed
+        val funcVarRef = funcExpr as VariableReference  // PartiqlAstSanityValidator ensures this cast will succeed
 
         val aggFactory = getAggregatorFactory(funcVarRef.id.toLowerCase(), setQuantifier, metas)
 
@@ -1556,7 +1557,7 @@ internal class EvaluatingCompiler(
         selectList.items.mapIndexed { idx, it ->
             when (it) {
                 is SelectListItemStar       -> {
-                    errNoContext("Encountered a SelectListItemStar--did SelectStarRewriter execute?",
+                    errNoContext("Encountered a SelectListItemStar--did SelectStarVisitorTransform execute?",
                         internal = true)
                 }
                 is SelectListItemExpr       -> {

@@ -37,7 +37,7 @@ data class AggregateRegisterIdMeta(val registerId: Int) : InternalMeta(TAG) {
 }
 
 /**
- * Represents the unique name given to certain variables--allows alpha rename rewrites to avoid capturing
+ * Represents the unique name given to certain variables--allows alpha rename transforms to avoid capturing
  * variables unintentionally.
  */
 data class UniqueNameMeta(val uniqueName: String) : InternalMeta(TAG) {
