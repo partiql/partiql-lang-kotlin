@@ -100,6 +100,10 @@ internal fun ExprValue.datePartValue(): DatePart =
 
 internal fun ExprValue.intValue(): Int = this.numberValue().toInt()
 
+internal fun ExprValue.longValue(): Long = this.numberValue().toLong()
+
+internal fun ExprValue.bigDecimalValue(): BigDecimal = this.numberValue().toString().toBigDecimal()
+
 /**
  * Implements the `FROM` range operation.
  * Specifically, this is distinct from the normal [ExprValue.iterator] in that
