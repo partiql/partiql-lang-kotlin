@@ -86,6 +86,8 @@ PROJECTION → FROM → (FROM LET) → (WHERE) → (GROUP BY) → (HAVING) → (
 
 This slight difference can lead to some different behaviors when translating `innerRewriteSelect` (e.g. StaticTypeRewriter). So to completely solve this issue, you can have your VisitorTransform implement [`VisitorTransformBase`](https://github.com/partiql/partiql-lang-kotlin/blob/master/lang/src/org/partiql/lang/eval/visitors/VisitorTransformBase.kt) and call `transformExprSelectEvaluationOrder` rather than `transformExprSelect` to get the same behavior.
 
+It's also worth noting that `innerRewriteSelect` and the visitor transform equivalent, `transformExprSelectEvaluationOrder`, can be used to avoid infinite recursion in the case of nested rewriter/transform instances.
+
 ```kotlin
 fun transformExprSelectEvaluationOrder(node: PartiqlAst.Expr.Select): PartiqlAst.Expr {
     val from = transformExprSelect_from(node)
@@ -118,6 +120,8 @@ This also applies to [`innerRewriteDataManipulation`](https://github.com/partiql
 (FROM) → (WHERE) → DML Operation  vs.  DML Operation → (FROM) → (WHERE)
 
 To achieve the same behavior as the rewriter form, you can have your VisitorTransform implement [`VisitorTransformBase`](https://github.com/partiql/partiql-lang-kotlin/blob/master/lang/src/org/partiql/lang/eval/visitors/VisitorTransformBase.kt) and call `transformDataManipulationEvaluationOrder` rather than `transformStatementDml` to get the same behavior.
+
+It's also worth noting that `innerRewriteDataManipulation` and the visitor transform equivalent, `transformDataManipulationEvaluationOrder`, can be used to avoid infinite recursion in the case of nested rewriter/transform instances.
 
 ```kotlin
 fun transformDataManipulationEvaluationOrder(node: PartiqlAst.Statement.Dml): PartiqlAst.Statement {
