@@ -1247,6 +1247,16 @@ class ParserErrorsTest : TestBase() {
             Property.TOKEN_VALUE to ion.newSymbol("EOF")))
 
     @Test
+    fun updateWithNestedSet() = checkInputThrowingParserException(
+        "UPDATE test SET x = SET test.y = 6",
+        ErrorCode.PARSE_UNEXPECTED_TERM,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 35L,
+            Property.TOKEN_TYPE to TokenType.EOF,
+            Property.TOKEN_VALUE to ion.newSymbol("EOF")))
+
+    @Test
     fun updateFromList() = checkInputThrowingParserException(
         "UPDATE x, y SET a = b",
         ErrorCode.PARSE_MISSING_OPERATION,

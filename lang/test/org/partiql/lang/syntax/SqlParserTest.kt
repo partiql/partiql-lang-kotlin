@@ -2636,6 +2636,32 @@ class SqlParserTest : SqlParserTestBase() {
         """
     )
 
+    @Test
+    fun fromWhereSetDml() = assertExpression(
+        "FROM x WHERE a = b SET k = 5",
+        """
+          (dml
+            (set
+              (assignment
+                (id k case_insensitive)
+                (lit 5)))
+            (from
+              (id x case_insensitive))
+            (where (= (id a case_insensitive) (id b case_insensitive)))
+          )
+        """,
+        """
+          (dml
+            (operation
+              (set
+                (assignment
+                  (id k (case_insensitive) (unqualified))
+                  (lit 5))))
+              (from (scan (id x (case_insensitive) (unqualified)) null null null))
+              (where (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))))
+          )
+        """
+    )
 
     @Test
     fun updateWhereDml() = assertExpression(
