@@ -2264,6 +2264,17 @@ class SqlParser(private val ion: IonSystem) : Parser {
      */
     private fun ParseNode.isTopLevelType() = type in listOf(UPDATE, DELETE, INSERT)
 
+    /**
+     * Validates tree to make sure that the top level tokens are not found below the top level
+     */
+    private fun validateTopLevelNodes(node: ParseNode, level: Int) {
+        // Note that for DML operations, top level parse node is of type 'FROM'. Hence the check level > 1
+        if (level > 1 && node.isTopLevelType()) {
+            node.remaining.err("Type ${node.type} only expected at the top level", PARSE_UNEXPECTED_TERM)
+        }
+        node.children.map { validateTopLevelNodes(it, level + 1) }
+    }
+
     /** Entry point into the parser. */
     override fun parseExprNode(source: String): ExprNode {
         val tokens = SqlLexer(ion).tokenize(source)
@@ -2276,15 +2287,6 @@ class SqlParser(private val ion: IonSystem) : Parser {
                                           PARSE_UNEXPECTED_TOKEN)
                 else      -> rem.err("Unexpected token after expression", PARSE_UNEXPECTED_TOKEN)
             }
-        }
-
-        // validate tree to make sure that the top level types are not found below the top level
-        fun validateTopLevelNodes(node: ParseNode, level: Int) {
-            // Note that for DML operations, top level parse node is of type 'FROM'. Hence the check level > 1
-            if (level > 1 && node.isTopLevelType()) {
-                rem.err("Type ${node.type} only expected at the top level", PARSE_UNEXPECTED_TERM)
-            }
-            node.children.map { validateTopLevelNodes(it, level + 1) }
         }
 
         validateTopLevelNodes(node, 0)
