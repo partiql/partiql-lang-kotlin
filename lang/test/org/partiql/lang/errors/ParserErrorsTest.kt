@@ -1252,9 +1252,49 @@ class ParserErrorsTest : TestBase() {
         ErrorCode.PARSE_UNEXPECTED_TERM,
         mapOf(
             Property.LINE_NUMBER to 1L,
-            Property.COLUMN_NUMBER to 35L,
-            Property.TOKEN_TYPE to TokenType.EOF,
-            Property.TOKEN_VALUE to ion.newSymbol("EOF")))
+            Property.COLUMN_NUMBER to 21L,
+            Property.TOKEN_TYPE to TokenType.KEYWORD,
+            Property.TOKEN_VALUE to ion.newSymbol("set")))
+
+    @Test
+    fun updateWithSetAndRemove() = checkInputThrowingParserException(
+        "UPDATE test SET x = REMOVE y",
+        ErrorCode.PARSE_UNEXPECTED_TERM,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 21L,
+            Property.TOKEN_TYPE to TokenType.KEYWORD,
+            Property.TOKEN_VALUE to ion.newSymbol("remove")))
+
+    @Test
+    fun updateWithSetAndInsert() = checkInputThrowingParserException(
+        "UPDATE test SET x = INSERT INTO foo VALUE 1",
+        ErrorCode.PARSE_UNEXPECTED_TERM,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 21L,
+            Property.TOKEN_TYPE to TokenType.KEYWORD,
+            Property.TOKEN_VALUE to ion.newSymbol("insert_into")))
+
+    @Test
+    fun updateWithSetAndDelete() = checkInputThrowingParserException(
+        "UPDATE test SET x = DELETE FROM y",
+        ErrorCode.PARSE_UNEXPECTED_TERM,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 21L,
+            Property.TOKEN_TYPE to TokenType.KEYWORD,
+            Property.TOKEN_VALUE to ion.newSymbol("delete")))
+
+    @Test
+    fun updateWithSetAndExec() = checkInputThrowingParserException(
+        "UPDATE test SET x = EXEC foo arg1, arg2",
+        ErrorCode.PARSE_UNEXPECTED_TERM,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 26L,
+            Property.TOKEN_TYPE to TokenType.IDENTIFIER,
+            Property.TOKEN_VALUE to ion.newSymbol("foo")))
 
     @Test
     fun updateFromList() = checkInputThrowingParserException(
@@ -1613,7 +1653,7 @@ class ParserErrorsTest : TestBase() {
     @Test
     fun execAtUnexpectedLocation() = checkInputThrowingParserException(
         "EXEC EXEC",
-        ErrorCode.PARSE_EXEC_AT_UNEXPECTED_LOCATION,
+        ErrorCode.PARSE_UNEXPECTED_TERM,
         mapOf(
             Property.LINE_NUMBER to 1L,
             Property.COLUMN_NUMBER to 6L,
@@ -1623,7 +1663,7 @@ class ParserErrorsTest : TestBase() {
     @Test
     fun execAtUnexpectedLocationAfterExec() = checkInputThrowingParserException(
         "EXEC foo EXEC",
-        ErrorCode.PARSE_EXEC_AT_UNEXPECTED_LOCATION,
+        ErrorCode.PARSE_UNEXPECTED_TERM,
         mapOf(
             Property.LINE_NUMBER to 1L,
             Property.COLUMN_NUMBER to 10L,
@@ -1633,10 +1673,10 @@ class ParserErrorsTest : TestBase() {
     @Test
     fun execAtUnexpectedLocationInExpression() = checkInputThrowingParserException(
         "SELECT * FROM (EXEC undrop 'foo')",
-        ErrorCode.PARSE_EXEC_AT_UNEXPECTED_LOCATION,
+        ErrorCode.PARSE_UNEXPECTED_TERM,
         mapOf(
             Property.LINE_NUMBER to 1L,
-            Property.COLUMN_NUMBER to 16L,
-            Property.TOKEN_TYPE to TokenType.KEYWORD,
-            Property.TOKEN_VALUE to ion.newSymbol("exec")))
+            Property.COLUMN_NUMBER to 21L,
+            Property.TOKEN_TYPE to TokenType.IDENTIFIER,
+            Property.TOKEN_VALUE to ion.newSymbol("undrop")))
 }
