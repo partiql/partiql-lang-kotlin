@@ -1257,7 +1257,7 @@ class ParserErrorsTest : TestBase() {
             Property.TOKEN_VALUE to ion.newSymbol("set")))
 
     @Test
-    fun updateWithSetAndRemove() = checkInputThrowingParserException(
+    fun updateWithRemove() = checkInputThrowingParserException(
         "UPDATE test SET x = REMOVE y",
         ErrorCode.PARSE_UNEXPECTED_TERM,
         mapOf(
@@ -1267,7 +1267,7 @@ class ParserErrorsTest : TestBase() {
             Property.TOKEN_VALUE to ion.newSymbol("remove")))
 
     @Test
-    fun updateWithSetAndInsert() = checkInputThrowingParserException(
+    fun updateWithInsert() = checkInputThrowingParserException(
         "UPDATE test SET x = INSERT INTO foo VALUE 1",
         ErrorCode.PARSE_UNEXPECTED_TERM,
         mapOf(
@@ -1277,7 +1277,7 @@ class ParserErrorsTest : TestBase() {
             Property.TOKEN_VALUE to ion.newSymbol("insert_into")))
 
     @Test
-    fun updateWithSetAndDelete() = checkInputThrowingParserException(
+    fun updateWithDelete() = checkInputThrowingParserException(
         "UPDATE test SET x = DELETE FROM y",
         ErrorCode.PARSE_UNEXPECTED_TERM,
         mapOf(
@@ -1287,7 +1287,7 @@ class ParserErrorsTest : TestBase() {
             Property.TOKEN_VALUE to ion.newSymbol("delete")))
 
     @Test
-    fun updateWithSetAndExec() = checkInputThrowingParserException(
+    fun updateWithExec() = checkInputThrowingParserException(
         "UPDATE test SET x = EXEC foo arg1, arg2",
         ErrorCode.PARSE_UNEXPECTED_TERM,
         mapOf(
@@ -1295,6 +1295,46 @@ class ParserErrorsTest : TestBase() {
             Property.COLUMN_NUMBER to 26L,
             Property.TOKEN_TYPE to TokenType.IDENTIFIER,
             Property.TOKEN_VALUE to ion.newSymbol("foo")))
+
+    @Test
+    fun updateWithCreateTable() = checkInputThrowingParserException(
+        "UPDATE test SET x = CREATE TABLE foo",
+        ErrorCode.PARSE_UNEXPECTED_TERM,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 21L,
+            Property.TOKEN_TYPE to TokenType.KEYWORD,
+            Property.TOKEN_VALUE to ion.newSymbol("create")))
+
+    @Test
+    fun updateWithDropTable() = checkInputThrowingParserException(
+        "UPDATE test SET x = DROP TABLE foo",
+        ErrorCode.PARSE_UNEXPECTED_TERM,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 21L,
+            Property.TOKEN_TYPE to TokenType.KEYWORD,
+            Property.TOKEN_VALUE to ion.newSymbol("drop")))
+
+    @Test
+    fun updateWithCreateIndex() = checkInputThrowingParserException(
+        "UPDATE test SET x = CREATE INDEX ON foo (x, y.z)",
+        ErrorCode.PARSE_UNEXPECTED_TERM,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 21L,
+            Property.TOKEN_TYPE to TokenType.KEYWORD,
+            Property.TOKEN_VALUE to ion.newSymbol("create")))
+
+    @Test
+    fun updateWithDropIndex() = checkInputThrowingParserException(
+        "UPDATE test SET x = DROP INDEX bar ON foo",
+        ErrorCode.PARSE_UNEXPECTED_TERM,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 21L,
+            Property.TOKEN_TYPE to TokenType.KEYWORD,
+            Property.TOKEN_VALUE to ion.newSymbol("drop")))
 
     @Test
     fun updateFromList() = checkInputThrowingParserException(
@@ -1345,6 +1385,16 @@ class ParserErrorsTest : TestBase() {
             Property.COLUMN_NUMBER to 17L,
             Property.TOKEN_TYPE to TokenType.OPERATOR,
             Property.TOKEN_VALUE to ion.newSymbol("-")))
+
+    @Test
+    fun nestedCreateTable() = checkInputThrowingParserException(
+        "CREATE TABLE CREATE TABLE foo",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 14L,
+            Property.TOKEN_TYPE to TokenType.KEYWORD,
+            Property.TOKEN_VALUE to ion.newSymbol("create")))
 
     @Test
     fun dropTableWithOperatorAfterIdentifier() = checkInputThrowingParserException(

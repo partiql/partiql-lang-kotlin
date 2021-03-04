@@ -55,7 +55,10 @@ class SqlParser(private val ion: IonSystem) : Parser {
         SIMPLE_PATH
     }
 
-    internal enum class ParseType(val isJoin: Boolean = false) {
+    /** If the property [isTopLevelType] is true, then the parse node of this ParseType will only be valid at top level in the query.
+     *  For example, EXEC, DDL and DML keywords can only be used at the top level in the query.
+     */
+    internal enum class ParseType(val isJoin: Boolean = false, val isTopLevelType: Boolean = false, val isDml: Boolean = false) {
         ATOM,
         CASE_SENSITIVE_ATOM,
         CASE_INSENSITIVE_ATOM,
@@ -100,22 +103,22 @@ class SqlParser(private val ion: IonSystem) : Parser {
         WHEN,
         ELSE,
         BAG,
-        INSERT,
-        INSERT_VALUE,
-        REMOVE,
+        INSERT(isTopLevelType = true, isDml = true),
+        INSERT_VALUE(isTopLevelType = true, isDml = true),
+        REMOVE(isTopLevelType = true, isDml = true),
         SET,
-        UPDATE,
-        DELETE,
+        UPDATE(isTopLevelType = true, isDml = true),
+        DELETE(isTopLevelType = true, isDml = true),
         ASSIGNMENT,
         FROM,
         FROM_CLAUSE,
         FROM_SOURCE_JOIN,
-        CREATE_TABLE,
-        DROP_TABLE,
-        DROP_INDEX,
-        CREATE_INDEX,
+        CREATE_TABLE(isTopLevelType = true),
+        DROP_TABLE(isTopLevelType = true),
+        DROP_INDEX(isTopLevelType = true),
+        CREATE_INDEX(isTopLevelType = true),
         PARAMETER,
-        EXEC;
+        EXEC(isTopLevelType = true);
 
         val identifier = name.toLowerCase()
     }
@@ -2252,16 +2255,11 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
 
     /**
-     * Checks if the [ParseNode] requires to be only at top level. DML keyword tokens, for example, requires to be top level.
-     */
-    private fun ParseNode.isTopLevelType() = type in listOf(UPDATE, DELETE, INSERT, INSERT_VALUE, REMOVE, EXEC)
-
-    /**
      * Validates tree to make sure that the top level tokens are not found below the top level
      */
     private fun validateTopLevelNodes(node: ParseNode, level: Int) {
         // Note that for DML operations, top level parse node is of type 'FROM'. Hence the check level > 1
-        if (level > 1 && node.isTopLevelType()) {
+        if (node.type.isTopLevelType && ((node.type.isDml && level > 1) || (!node.type.isDml && level > 0))) {
             node.token?.err("Type ${node.type} only expected at the top level", PARSE_UNEXPECTED_TERM)
                 ?: throw ParserException("Type ${node.type} only expected at the top level", PARSE_UNEXPECTED_TERM, PropertyValueMap())
         }
