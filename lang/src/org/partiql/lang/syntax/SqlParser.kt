@@ -106,7 +106,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
         INSERT(isTopLevelType = true, isDml = true),
         INSERT_VALUE(isTopLevelType = true, isDml = true),
         REMOVE(isTopLevelType = true, isDml = true),
-        SET,
+        SET(isTopLevelType = true, isDml = true),
         UPDATE(isTopLevelType = true, isDml = true),
         DELETE(isTopLevelType = true, isDml = true),
         ASSIGNMENT,
@@ -2253,17 +2253,34 @@ class SqlParser(private val ion: IonSystem) : Parser {
         return ParseNode(ARG_LIST, null, items, rem)
     }
 
+    private fun ParseNode.throwTopLevelParserError(): Nothing =
+        token?.err("Keyword $token only expected at the top level in the query", PARSE_UNEXPECTED_TERM)
+        ?: throw ParserException("Keyword $token only expected at the top level in the query", PARSE_UNEXPECTED_TERM, PropertyValueMap())
 
     /**
      * Validates tree to make sure that the top level tokens are not found below the top level
      */
-    private fun validateTopLevelNodes(node: ParseNode, level: Int) {
-        // Note that for DML operations, top level parse node is of type 'FROM'. Hence the check level > 1
-        if (node.type.isTopLevelType && ((node.type.isDml && level > 1) || (!node.type.isDml && level > 0))) {
-            node.token?.err("Type ${node.type} only expected at the top level", PARSE_UNEXPECTED_TERM)
-                ?: throw ParserException("Type ${node.type} only expected at the top level", PARSE_UNEXPECTED_TERM, PropertyValueMap())
+    private fun validateTopLevelNodes(node: ParseNode, level: Int, topLevelTokens: Int) {
+        val topTokens = topLevelTokens + when(node.type.isTopLevelType) {
+            true -> 1
+            false -> 0
         }
-        node.children.map { validateTopLevelNodes(it, level + 1) }
+
+        if (topTokens > 1) {
+            node.throwTopLevelParserError()
+        }
+
+        if (node.type.isTopLevelType && level > 0) {
+            // Note that for DML operations, top level parse node may be of type 'FROM'. Hence the check level > 1
+            if (node.type.isDml) {
+                if (level > 1) {
+                    node.throwTopLevelParserError()
+                }
+            } else {
+                node.throwTopLevelParserError()
+            }
+        }
+        node.children.map { validateTopLevelNodes(it, level + 1, topTokens) }
     }
 
     /** Entry point into the parser. */
@@ -2279,7 +2296,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
             }
         }
 
-        validateTopLevelNodes(node, 0)
+        validateTopLevelNodes(node, 0, 0)
 
         return node.toExprNode()
     }

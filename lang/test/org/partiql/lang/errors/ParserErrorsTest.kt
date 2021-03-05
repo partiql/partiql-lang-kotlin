@@ -1327,6 +1327,26 @@ class ParserErrorsTest : TestBase() {
             Property.TOKEN_VALUE to ion.newSymbol("create")))
 
     @Test
+    fun nestedRemove() = checkInputThrowingParserException(
+        "REMOVE REMOVE y",
+        ErrorCode.PARSE_INVALID_PATH_COMPONENT,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 8L,
+            Property.TOKEN_TYPE to TokenType.KEYWORD,
+            Property.TOKEN_VALUE to ion.newSymbol("remove")))
+
+    @Test
+    fun nestedInsertInto() = checkInputThrowingParserException(
+        "INSERT INTO foo VALUE INSERT INTO foo VALUE 1 AT bar",
+        ErrorCode.PARSE_UNEXPECTED_TERM,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 23L,
+            Property.TOKEN_TYPE to TokenType.KEYWORD,
+            Property.TOKEN_VALUE to ion.newSymbol("insert_into")))
+
+    @Test
     fun updateWithDropIndex() = checkInputThrowingParserException(
         "UPDATE test SET x = DROP INDEX bar ON foo",
         ErrorCode.PARSE_UNEXPECTED_TERM,
