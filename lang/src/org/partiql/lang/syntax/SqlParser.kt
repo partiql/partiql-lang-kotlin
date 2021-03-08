@@ -55,7 +55,10 @@ class SqlParser(private val ion: IonSystem) : Parser {
         SIMPLE_PATH
     }
 
-    internal enum class ParseType(val isJoin: Boolean = false) {
+    /** If the property [isTopLevelType] is true, then the parse node of this ParseType will only be valid at top level in the query.
+     *  For example, EXEC, DDL and DML keywords can only be used at the top level in the query.
+     */
+    internal enum class ParseType(val isJoin: Boolean = false, val isTopLevelType: Boolean = false, val isDml: Boolean = false) {
         ATOM,
         CASE_SENSITIVE_ATOM,
         CASE_INSENSITIVE_ATOM,
@@ -100,22 +103,22 @@ class SqlParser(private val ion: IonSystem) : Parser {
         WHEN,
         ELSE,
         BAG,
-        INSERT,
-        INSERT_VALUE,
-        REMOVE,
-        SET,
-        UPDATE,
-        DELETE,
+        INSERT(isTopLevelType = true, isDml = true),
+        INSERT_VALUE(isTopLevelType = true, isDml = true),
+        REMOVE(isTopLevelType = true, isDml = true),
+        SET(isTopLevelType = true, isDml = true),
+        UPDATE(isTopLevelType = true, isDml = true),
+        DELETE(isTopLevelType = true, isDml = true),
         ASSIGNMENT,
         FROM,
         FROM_CLAUSE,
         FROM_SOURCE_JOIN,
-        CREATE_TABLE,
-        DROP_TABLE,
-        DROP_INDEX,
-        CREATE_INDEX,
+        CREATE_TABLE(isTopLevelType = true),
+        DROP_TABLE(isTopLevelType = true),
+        DROP_INDEX(isTopLevelType = true),
+        CREATE_INDEX(isTopLevelType = true),
         PARAMETER,
-        EXEC;
+        EXEC(isTopLevelType = true);
 
         val identifier = name.toLowerCase()
     }
@@ -997,7 +1000,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
         KEYWORD -> when (head?.keywordText) {
             in BASE_DML_KEYWORDS -> parseBaseDml()
             "update" -> tail.parseUpdate()
-            "delete" -> tail.parseDelete()
+            "delete" -> tail.parseDelete(head!!)
             "case" -> when (tail.head?.keywordText) {
                 "when" -> tail.parseCase(isSimple = false)
                 else -> tail.parseCase(isSimple = true)
@@ -1220,12 +1223,12 @@ class SqlParser(private val ion: IonSystem) : Parser {
         copy(type = type)
     }
 
-    private fun List<Token>.parseDelete(): ParseNode {
+    private fun List<Token>.parseDelete(name: Token): ParseNode {
         if (head?.keywordText != "from") {
             err("Expected FROM after DELETE", PARSE_UNEXPECTED_TOKEN)
         }
 
-        return tail.parseLegacyDml { ParseNode(DELETE, null, emptyList(), this) }
+        return tail.parseLegacyDml { ParseNode(DELETE, name, emptyList(), this) }
     }
 
     private fun List<Token>.parseUpdate(): ParseNode = parseLegacyDml {
@@ -1722,6 +1725,12 @@ class SqlParser(private val ion: IonSystem) : Parser {
         var rem = this
         if (rem.head?.type == EOF) {
             rem.err("No stored procedure provided", PARSE_NO_STORED_PROCEDURE_PROVIDED)
+        }
+
+        rem.forEach {
+            if (it.keywordText?.toLowerCase() == "exec") {
+                it.err("EXEC call found at unexpected location", PARSE_UNEXPECTED_TERM)
+            }
         }
 
         val procedureName = rem.head
@@ -2244,25 +2253,39 @@ class SqlParser(private val ion: IonSystem) : Parser {
         return ParseNode(ARG_LIST, null, items, rem)
     }
 
+    private fun ParseNode.throwTopLevelParserError(): Nothing =
+        token?.err("Keyword ${token.text} only expected at the top level in the query", PARSE_UNEXPECTED_TERM)
+        ?: throw ParserException("Keyword ${token?.text} only expected at the top level in the query", PARSE_UNEXPECTED_TERM, PropertyValueMap())
+
     /**
-     * Checks that the given [Token] list does not have any top-level tokens outside of the top level query. Throws
-     * an error if so.
-     *
-     * Currently only checks for `EXEC`. DDL and DML along with corresponding error codes to be added in the future
-     * (https://github.com/partiql/partiql-lang-kotlin/issues/354).
+     * Validates tree to make sure that the top level tokens are not found below the top level.
+     * Top level tokens are the tokens or keywords which are valid to be used only at the top level in the query.
+     * i.e. these tokens cannot be used with a mix of other commands. Hence if more than one top level tokens are found
+     * in the query then it is invalid.
+     * [level] is the current traversal level in the parse tree.
+     * If [topLevelTokenSeen] is true, it means it has been encountered at least once before while traversing the parse tree.
      */
-    private fun List<Token>.checkUnexpectedTopLevelToken() {
-        for ((index, token) in this.withIndex()) {
-            if (token.keywordText == "exec" && index != 0) {
-                token.err("EXEC call found at unexpected location", PARSE_EXEC_AT_UNEXPECTED_LOCATION)
+    private fun validateTopLevelNodes(node: ParseNode, level: Int, topLevelTokenSeen: Boolean) {
+        if (topLevelTokenSeen && node.type.isTopLevelType) {
+            node.throwTopLevelParserError()
+        }
+
+        if (node.type.isTopLevelType && level > 0) {
+            // Note that for DML operations, top level parse node may be of type 'FROM'. Hence the check level > 1
+            if (node.type.isDml) {
+                if (level > 1) {
+                    node.throwTopLevelParserError()
+                }
+            } else {
+                node.throwTopLevelParserError()
             }
         }
+        node.children.map { validateTopLevelNodes(node = it, level = level + 1, topLevelTokenSeen = topLevelTokenSeen || node.type.isTopLevelType) }
     }
 
     /** Entry point into the parser. */
     override fun parseExprNode(source: String): ExprNode {
         val tokens = SqlLexer(ion).tokenize(source)
-        tokens.checkUnexpectedTopLevelToken()
         val node = tokens.parseExpression()
         val rem = node.remaining
         if (!rem.onlyEndOfStatement()) {
@@ -2272,6 +2295,9 @@ class SqlParser(private val ion: IonSystem) : Parser {
                 else      -> rem.err("Unexpected token after expression", PARSE_UNEXPECTED_TOKEN)
             }
         }
+
+        validateTopLevelNodes(node = node, level = 0, topLevelTokenSeen = false)
+
         return node.toExprNode()
     }
 

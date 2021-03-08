@@ -302,11 +302,6 @@ enum class ErrorCode(private val category: ErrorCategory,
         LOC_TOKEN,
         "No stored procedure provided"),
 
-    PARSE_EXEC_AT_UNEXPECTED_LOCATION(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "EXEC call found at unexpected location"),
-
     PARSE_MALFORMED_JOIN(
         ErrorCategory.PARSER,
         LOC_TOKEN,

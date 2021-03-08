@@ -2636,7 +2636,6 @@ class SqlParserTest : SqlParserTestBase() {
         """
     )
 
-
     @Test
     fun updateWhereDml() = assertExpression(
         "UPDATE x SET k = 5, m = 6 WHERE a = b",
