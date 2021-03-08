@@ -1740,6 +1740,8 @@ class ParserErrorsTest : TestBase() {
             Property.TOKEN_TYPE to TokenType.KEYWORD,
             Property.TOKEN_VALUE to ion.newSymbol("exec")))
 
+    // TODO: The token in the error message here should be "exec" instead of "undrop".
+    //  Check this issue for more details. https://github.com/partiql/partiql-lang-kotlin/issues/372
     @Test
     fun execAtUnexpectedLocationInExpression() = checkInputThrowingParserException(
         "SELECT * FROM (EXEC undrop 'foo')",

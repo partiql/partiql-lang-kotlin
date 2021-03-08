@@ -2254,19 +2254,19 @@ class SqlParser(private val ion: IonSystem) : Parser {
     }
 
     private fun ParseNode.throwTopLevelParserError(): Nothing =
-        token?.err("Keyword $token only expected at the top level in the query", PARSE_UNEXPECTED_TERM)
-        ?: throw ParserException("Keyword $token only expected at the top level in the query", PARSE_UNEXPECTED_TERM, PropertyValueMap())
+        token?.err("Keyword ${token.text} only expected at the top level in the query", PARSE_UNEXPECTED_TERM)
+        ?: throw ParserException("Keyword ${token?.text} only expected at the top level in the query", PARSE_UNEXPECTED_TERM, PropertyValueMap())
 
     /**
-     * Validates tree to make sure that the top level tokens are not found below the top level
+     * Validates tree to make sure that the top level tokens are not found below the top level.
+     * Top level tokens are the tokens or keywords which are valid to be used only at the top level in the query.
+     * i.e. these tokens cannot be used with a mix of other commands. Hence if more than one top level tokens are found
+     * in the query then it is invalid.
+     * [level] is the current traversal level in the parse tree.
+     * If [topLevelTokenSeen] is true, it means it has been encountered at least once before while traversing the parse tree.
      */
-    private fun validateTopLevelNodes(node: ParseNode, level: Int, topLevelTokens: Int) {
-        val topTokens = topLevelTokens + when(node.type.isTopLevelType) {
-            true -> 1
-            false -> 0
-        }
-
-        if (topTokens > 1) {
+    private fun validateTopLevelNodes(node: ParseNode, level: Int, topLevelTokenSeen: Boolean) {
+        if (topLevelTokenSeen && node.type.isTopLevelType) {
             node.throwTopLevelParserError()
         }
 
@@ -2280,7 +2280,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
                 node.throwTopLevelParserError()
             }
         }
-        node.children.map { validateTopLevelNodes(it, level + 1, topTokens) }
+        node.children.map { validateTopLevelNodes(node = it, level = level + 1, topLevelTokenSeen = topLevelTokenSeen || node.type.isTopLevelType) }
     }
 
     /** Entry point into the parser. */
@@ -2296,7 +2296,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
             }
         }
 
-        validateTopLevelNodes(node, 0, 0)
+        validateTopLevelNodes(node = node, level = 0, topLevelTokenSeen = false)
 
         return node.toExprNode()
     }
