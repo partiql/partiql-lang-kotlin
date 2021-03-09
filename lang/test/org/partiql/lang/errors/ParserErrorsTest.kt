@@ -1581,6 +1581,26 @@ class ParserErrorsTest : TestBase() {
             Property.TOKEN_VALUE to ion.newSymbol("insert_into")))
 
     @Test
+    fun selectAndRemove() = checkInputThrowingParserException(
+        "SELECT REMOVE foo FROM bar",
+        ErrorCode.PARSE_UNEXPECTED_TERM,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 8L,
+            Property.TOKEN_TYPE to TokenType.KEYWORD,
+            Property.TOKEN_VALUE to ion.newSymbol("remove")))
+
+    @Test
+    fun selectAndRemove2() = checkInputThrowingParserException(
+        "SELECT * FROM REMOVE foo",
+        ErrorCode.PARSE_UNEXPECTED_TERM,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 15L,
+            Property.TOKEN_TYPE to TokenType.KEYWORD,
+            Property.TOKEN_VALUE to ion.newSymbol("remove")))
+
+    @Test
     fun updateWithDropIndex() = checkInputThrowingParserException(
         "UPDATE test SET x = DROP INDEX bar ON foo",
         ErrorCode.PARSE_UNEXPECTED_TERM,
