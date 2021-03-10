@@ -28,6 +28,7 @@ abstract class VisitorTransformBase : PartiqlAst.VisitorTransform() {
         val having = transformExprSelect_having(node)
         val setq = transformExprSelect_setq(node)
         val project = transformExprSelect_project(node)
+        val order = node.having?.let { transformExprSelect_order(node) }
         val limit = transformExprSelect_limit(node)
         val metas = transformExprSelect_metas(node)
         return PartiqlAst.build {
@@ -39,6 +40,7 @@ abstract class VisitorTransformBase : PartiqlAst.VisitorTransform() {
                 where = where,
                 group = group,
                 having = having,
+                order = order,
                 limit = limit,
                 metas = metas)
         }
@@ -57,11 +59,17 @@ abstract class VisitorTransformBase : PartiqlAst.VisitorTransform() {
     fun transformDataManipulationEvaluationOrder(node: PartiqlAst.Statement.Dml): PartiqlAst.Statement {
         val from = node.from?.let { transformFromSource(it) }
         val where = node.where?.let { transformStatementDml_where(node) }
-        val dmlOperation = transformDmlOp(node.operation)
+        val dmlOperations = transformDmlOpList(node.operations)
+        val returning = node.returning?.let { transformReturningExpr(it) }
         val metas = transformMetas(node.metas)
 
         return PartiqlAst.build {
-            dml(dmlOperation, from, where, metas)
+            dml(
+                dmlOperations,
+                from,
+                where,
+                returning,
+                metas)
         }
     }
 }

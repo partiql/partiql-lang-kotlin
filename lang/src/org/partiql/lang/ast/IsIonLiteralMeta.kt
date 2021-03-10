@@ -12,10 +12,25 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.lang.syntax
+/*
 
-/** Simple source line/column value. */
-data class SourcePosition(val line: Long, val column: Long) {
-    override fun toString(): String = "line $line, column $column"
+ */
+package org.partiql.lang.ast
+
+import com.amazon.ion.*
+import org.partiql.lang.ast.*
+
+/**
+ * Meta node intended to be attached to an instance of [Literal] to indicate that it was
+ * designated as an `ionLiteral` in the parsed statement.
+ */
+class IsIonLiteralMeta private constructor(): Meta {
+    override val tag = TAG
+
+    companion object {
+        const val TAG = "\$is_ion_literal"
+
+        val instance = IsIonLiteralMeta()
+        val deserializer = MemoizedMetaDeserializer(TAG, instance)
+    }
 }
-

@@ -259,6 +259,14 @@ internal val DATE_PART_KEYWORDS: Set<String> = DatePart.values()
     "tuple",
     "remove",
     "index",
+    "conflict",
+    "do",
+    "nothing",
+    "returning",
+    "modified",
+    "all",
+    "new",
+    "old",
     "let",
 
     // Ion type names
@@ -425,7 +433,13 @@ internal val DATE_PART_KEYWORDS: Set<String> = DatePart.values()
     listOf("outer", "cross", "join")    to ("outer_cross_join" to KEYWORD),
     listOf("full", "outer",
            "cross", "join")             to ("outer_cross_join" to KEYWORD),
-    listOf("insert", "into")            to ("insert_into" to KEYWORD)
+    listOf("insert", "into")            to ("insert_into" to KEYWORD),
+    listOf("on", "conflict")            to ("on_conflict" to KEYWORD),
+    listOf("do", "nothing")             to ("do_nothing" to KEYWORD),
+    listOf("modified", "old")           to ("modified_old" to KEYWORD),
+    listOf("modified", "new")           to ("modified_new" to KEYWORD),
+    listOf("all", "old")                to ("all_old" to KEYWORD),
+    listOf("all", "new")                to ("all_new" to KEYWORD)
 )
 
 @JvmField internal val MULTI_LEXEME_MIN_LENGTH = MULTI_LEXEME_TOKEN_MAP.keys.map { it.size }.min()!!

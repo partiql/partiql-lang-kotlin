@@ -12,10 +12,22 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.lang.syntax
+package org.partiql.cli
 
-/** Simple source line/column value. */
-data class SourcePosition(val line: Long, val column: Long) {
-    override fun toString(): String = "line $line, column $column"
+import com.amazon.ion.*
+import org.partiql.lang.eval.*
+
+internal abstract class SqlCommand {
+    abstract fun run()
+
+
+    protected fun writeResult(result: ExprValue, writer: IonWriter): Int {
+        var itemCount = 0
+        result.rangeOver().forEach {
+            it.ionValue.writeTo(writer)
+            itemCount++
+        }
+        writer.flush()
+        return itemCount
+    }
 }
-

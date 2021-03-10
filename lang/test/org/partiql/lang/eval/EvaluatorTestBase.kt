@@ -74,7 +74,8 @@ abstract class EvaluatorTestBase : TestBase() {
         fun serializeRoundTripEvalAndAssert(astVersion: AstVersion) {
             val sexpAST = AstSerializer.serialize(originalExprNode, astVersion, ion)
             val deserializedExprNode = deserializer.deserialize(sexpAST, astVersion)
-            assertEquals(originalExprNode, deserializedExprNode, "ExprNode deserialized from s-exp $astVersion AST must match the ExprNode returned by the parser")
+            assertEquals(MetaStrippingRewriter.stripMetas(originalExprNode), MetaStrippingRewriter.stripMetas(deserializedExprNode),
+                    "ExprNode deserialized from s-exp $astVersion AST must match the ExprNode returned by the parser")
 
             // This step should only fail if there is a bug in the equality check that causes two
             // dissimilar ASTs to be considered equal.

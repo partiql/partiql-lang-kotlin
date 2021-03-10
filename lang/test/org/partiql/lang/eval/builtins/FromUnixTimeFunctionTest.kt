@@ -44,7 +44,7 @@ class FromUnixTimeFunctionTest : EvaluatorTestBase() {
                   Property.EXPECTED_ARITY_MAX to 1))
 
 
-    class FromUnixTimeTests : ArgumentsProviderBase() {
+    class FromUnixTimeCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
             // negative unix epochs output timestamp before last epoch
             FromUnixTimeTestCase("from_unixtime(-1)", "1969-12-31T23:59:59-00:00"),
@@ -59,6 +59,6 @@ class FromUnixTimeFunctionTest : EvaluatorTestBase() {
         )
     }
     @ParameterizedTest
-    @ArgumentsSource(FromUnixTimeTests::class)
+    @ArgumentsSource(FromUnixTimeCases::class)
     fun runNoArgTests(tc: FromUnixTimeTestCase) = assertEval(tc.unixTimestamp, tc.expected)
 }

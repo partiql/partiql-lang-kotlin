@@ -158,6 +158,7 @@ open class AstRewriterBase : AstRewriter {
         val groupBy = selectExpr.groupBy?.let { rewriteGroupBy(it) }
         val having = selectExpr.having?.let { rewriteSelectHaving(it) }
         val projection = rewriteSelectProjection(selectExpr.projection)
+        val orderBy = selectExpr.orderBy?.let { rewriteOrderBy(it) }
         val limit = selectExpr.limit?.let { rewriteSelectLimit(it) }
         val metas = rewriteSelectMetas(selectExpr)
 
@@ -169,6 +170,7 @@ open class AstRewriterBase : AstRewriter {
             where = where,
             groupBy = groupBy,
             having = having,
+            orderBy = orderBy,
             limit = limit,
             metas = metas)
     }
@@ -298,6 +300,16 @@ open class AstRewriterBase : AstRewriter {
             rewriteExprNode(item.expr),
             item.asName?.let { rewriteSymbolicName(it) } )
 
+    open fun rewriteOrderBy(orderBy: OrderBy): OrderBy =
+        OrderBy(
+            orderBy.sortSpecItems.map { rewriteSortSpec(it) })
+
+    open fun rewriteSortSpec(sortSpec: SortSpec): SortSpec =
+        SortSpec(
+            rewriteExprNode(sortSpec.expr),
+            sortSpec.orderingSpec
+        )
+
     open fun rewriteDataType(dataType: DataType) = dataType
 
     open fun rewriteSimpleCaseWhen(case: SimpleCaseWhen): SimpleCaseWhen =
@@ -337,17 +349,31 @@ open class AstRewriterBase : AstRewriter {
     open fun innerRewriteDataManipulation(node: DataManipulation): DataManipulation {
         val from = node.from?.let { rewriteFromSource(it) }
         val where = node.where?.let { rewriteDataManipulationWhere(it) }
-        val dmlOperation = rewriteDataManipulationOperation(node.dmlOperation)
+        val returning = node.returning?.let { rewriteReturningExpr(it) }
+        val dmlOperations = rewriteDataManipulationOperations(node.dmlOperations)
         val metas = rewriteMetas(node)
 
         return DataManipulation(
-            dmlOperation,
+            dmlOperations,
             from,
             where,
+            returning,
             metas)
     }
 
     open fun rewriteDataManipulationWhere(node: ExprNode):ExprNode = rewriteExprNode(node)
+
+    open fun rewriteReturningExpr(returningExpr: ReturningExpr): ReturningExpr =
+        ReturningExpr(
+            returningExpr.returningElems.map { rewriteReturningElem(it) })
+
+    open fun rewriteReturningElem(returningElem: ReturningElem): ReturningElem =
+        ReturningElem(
+            returningElem.returningMapping,
+            returningElem.columnComponent)
+
+    open fun rewriteDataManipulationOperations(node: DmlOpList) : DmlOpList =
+        DmlOpList(node.ops.map { rewriteDataManipulationOperation(it) })
 
     open fun rewriteDataManipulationOperation(node: DataManipulationOperation): DataManipulationOperation =
         when(node) {
@@ -355,28 +381,33 @@ open class AstRewriterBase : AstRewriter {
             is InsertValueOp -> rewriteDataManipulationOperationInsertValueOp(node)
             is AssignmentOp  -> rewriteDataManipulationOperationAssignmentOp(node)
             is RemoveOp      -> rewriteDataManipulationOperationRemoveOp(node)
-            DeleteOp         -> rewriteDataManipulationOperationDeleteOp()
+            is DeleteOp      -> rewriteDataManipulationOperationDeleteOp()
         }
 
-    fun rewriteDataManipulationOperationInsertOp(node: InsertOp): DataManipulationOperation =
+    open fun rewriteDataManipulationOperationInsertOp(node: InsertOp): DataManipulationOperation =
         InsertOp(
             rewriteExprNode(node.lvalue),
             rewriteExprNode(node.values)
         )
 
-    fun rewriteDataManipulationOperationInsertValueOp(node: InsertValueOp): DataManipulationOperation =
+    open fun rewriteDataManipulationOperationInsertValueOp(node: InsertValueOp): DataManipulationOperation =
         InsertValueOp(
             rewriteExprNode(node.lvalue),
             rewriteExprNode(node.value),
-            node.position?.let { rewriteExprNode(it) })
+            node.position?.let { rewriteExprNode(it) },
+            node.onConflict?.let { rewriteOnConflict(it) })
 
-    fun rewriteDataManipulationOperationAssignmentOp(node: AssignmentOp): DataManipulationOperation =
-        AssignmentOp(node.assignments.map { rewriteAssignment(it) })
+    fun rewriteOnConflict(node: OnConflict) : OnConflict {
+        return OnConflict(rewriteExprNode(node.condition), node.conflictAction)
+    }
 
-    fun rewriteDataManipulationOperationRemoveOp(node: RemoveOp): DataManipulationOperation =
+    open fun rewriteDataManipulationOperationAssignmentOp(node: AssignmentOp): DataManipulationOperation =
+        AssignmentOp(rewriteAssignment(node.assignment) )
+
+    open fun rewriteDataManipulationOperationRemoveOp(node: RemoveOp): DataManipulationOperation =
         RemoveOp(rewriteExprNode(node.lvalue))
 
-    fun rewriteDataManipulationOperationDeleteOp(): DataManipulationOperation = DeleteOp
+    open fun rewriteDataManipulationOperationDeleteOp(): DataManipulationOperation = DeleteOp
 
     open fun rewriteAssignment(node: Assignment): Assignment =
         Assignment(

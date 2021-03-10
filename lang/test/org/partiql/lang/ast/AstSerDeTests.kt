@@ -25,7 +25,7 @@ import org.junit.*
 class AstSerDeTests : TestBase() {
 
     fun parametersForSerDeMetas() = listOf(
-        Literal(ion.newInt(1), metaContainerOf(SourceLocationMeta(1, 1)))
+        Literal(ion.newInt(1), metaContainerOf(SourceLocationMeta(1, 1, 1)))
     )
 
     @Test

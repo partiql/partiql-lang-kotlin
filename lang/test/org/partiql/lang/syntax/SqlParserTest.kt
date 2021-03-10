@@ -18,6 +18,7 @@ import com.amazon.ion.Decimal
 import com.amazon.ionelement.api.ionDecimal
 import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
+import org.junit.Ignore
 import org.junit.Test
 import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.SourceLocationMeta
@@ -1659,6 +1660,117 @@ class SqlParserTest : SqlParserTestBase() {
     )
 
     //****************************************
+    // ORDER BY
+    //****************************************
+    @Test
+    fun orderBySingleId() = assertExpression(
+            "SELECT a FROM tb WHERE hk = 1 ORDER BY rk1",
+            """(select 
+            (project 
+                (project_list 
+                    (project_expr 
+                        (id a (case_insensitive) (unqualified)) 
+                        null)))
+            (from 
+                (scan 
+                    (id tb (case_insensitive) (unqualified)) 
+                    null null null)) 
+            (where 
+                (eq 
+                    (id hk (case_insensitive) (unqualified)) 
+                    (lit 1))) 
+            (order 
+                (order_by 
+                    (sort_spec 
+                        (id rk1 (case_insensitive) (unqualified)) 
+                        (asc)))))
+        """
+    )
+
+    @Test
+    fun orderByMultipleIds() = assertExpression(
+            "SELECT a FROM tb WHERE hk = 1 ORDER BY rk1, rk2, rk3",
+            """(select 
+            (project 
+                (project_list 
+                    (project_expr 
+                        (id a (case_insensitive) (unqualified)) 
+                        null)))
+            (from 
+                (scan 
+                    (id tb (case_insensitive) (unqualified)) 
+                    null null null)) 
+            (where 
+                (eq 
+                    (id hk (case_insensitive) (unqualified)) 
+                    (lit 1))) 
+            (order 
+                (order_by
+                    (sort_spec 
+                        (id rk1 (case_insensitive) (unqualified)) 
+                        (asc)) 
+                    (sort_spec 
+                        (id rk2 (case_insensitive) (unqualified)) 
+                        (asc)) 
+                    (sort_spec 
+                        (id rk3 (case_insensitive) (unqualified)) 
+                        (asc)))))
+        """
+    )
+
+    @Test
+    fun orderBySingleIdDESC() = assertExpression(
+            "SELECT a FROM tb WHERE hk = 1 ORDER BY rk1 DESC",
+            """(select 
+            (project 
+                (project_list 
+                    (project_expr 
+                        (id a (case_insensitive) (unqualified)) 
+                        null)))
+            (from 
+                (scan 
+                    (id tb (case_insensitive) (unqualified)) 
+                    null null null)) 
+            (where 
+                (eq 
+                    (id hk (case_insensitive) (unqualified)) 
+                    (lit 1))) 
+            (order 
+                (order_by 
+                    (sort_spec 
+                        (id rk1 (case_insensitive) (unqualified)) 
+                        (desc)))))
+        """
+    )
+
+    @Test
+    fun orderByMultipleIdsWithOrderingSpec() = assertExpression(
+            "SELECT a FROM tb WHERE hk = 1 ORDER BY rk1 ASC, rk2 DESC",
+            """(select 
+            (project 
+                (project_list 
+                    (project_expr 
+                        (id a (case_insensitive) (unqualified)) 
+                        null)))
+            (from 
+                (scan 
+                    (id tb (case_insensitive) (unqualified)) 
+                    null null null)) 
+            (where 
+                (eq 
+                    (id hk (case_insensitive) (unqualified)) 
+                    (lit 1))) 
+            (order 
+                (order_by 
+                    (sort_spec 
+                        (id rk1 (case_insensitive) (unqualified)) 
+                        (asc))
+                    (sort_spec 
+                        (id rk2 (case_insensitive) (unqualified)) 
+                        (desc)))))
+        """
+    )
+    //****************************************
     // GROUP BY and GROUP PARTIAL BY
     //****************************************
     @Test
@@ -1875,12 +1987,14 @@ class SqlParserTest : SqlParserTestBase() {
         """,
         """
           (dml
-            (operation
-              (insert
-                (id foo (case_insensitive) (unqualified))
-                (bag
-                  (list (lit 1) (lit 2))
-                  (list (lit 3) (lit 4))
+            (operations
+              (dml_op_list
+                (insert
+                  (id foo (case_insensitive) (unqualified))
+                  (bag
+                    (list (lit 1) (lit 2))
+                    (list (lit 3) (lit 4))
+                  )
                 )
               )
             )
@@ -1904,12 +2018,37 @@ class SqlParserTest : SqlParserTestBase() {
         """,
         """
           (dml
-            (operation
-              (insert_value
-                (id foo (case_insensitive) (unqualified))
-                (lit 1)
-                (id bar (case_insensitive) (unqualified))))
-              (from (scan (id x (case_insensitive) (unqualified)) null null null))
+            (operations
+              (dml_op_list
+                (insert_value
+                  (id foo (case_insensitive) (unqualified))
+                  (lit 1)
+                  (id bar (case_insensitive) (unqualified))
+                  null
+                )
+              )
+            )
+            (from (scan (id x (case_insensitive) (unqualified)) null null null))
+          )
+        """
+    )
+
+    @Test
+    @Ignore
+    fun fromInsertValueAtReturningDml() = assertExpression(
+        "FROM x INSERT INTO foo VALUE 1 AT bar RETURNING ALL OLD foo",
+        """
+          (dml
+            (operations
+              (dml_op_list
+                (insert_value
+                  (id foo (case_insensitive) (unqualified))
+                  (lit 1)
+                  (id bar (case_insensitive) (unqualified))
+                )
+              )
+            )
+            (from (scan (id x (case_insensitive) (unqualified)) null null null))
           )
         """
     )
@@ -1927,14 +2066,31 @@ class SqlParserTest : SqlParserTestBase() {
         """,
         """
           (dml
-            (operation
-              (insert_value
-                (id foo (case_insensitive) (unqualified))
-                (lit 1)
-                null))
-              (from (scan (id x (case_insensitive) (unqualified)) null null null))
+            (operations
+              (dml_op_list
+                (insert_value
+                  (id foo (case_insensitive) (unqualified))
+                  (lit 1)
+                  null null)))
+            (from (scan (id x (case_insensitive) (unqualified)) null null null))
           )
         """
+    )
+
+    @Test
+    @Ignore
+    fun fromInsertValueReturningDml() = assertExpression(
+            "FROM x INSERT INTO foo VALUE 1 RETURNING ALL OLD foo",
+            """
+          (dml
+            (dml_op_list
+              (insert_value
+                (id foo case_insensitive)
+                (lit 1))
+            )
+            (from (id x case_insensitive))
+          )
+          """
     )
 
     @Test
@@ -1954,14 +2110,16 @@ class SqlParserTest : SqlParserTestBase() {
         """,
         """
           (dml
-            (operation
-              (insert
-                (id foo (case_insensitive) (unqualified))
-                (select
-                  (project (project_list (project_expr (id y (case_insensitive) (unqualified)) null)))
-                  (from (scan (id bar (case_insensitive) (unqualified)) null null null))
+            (operations
+              (dml_op_list
+                (insert
+                  (id foo (case_insensitive) (unqualified))
+                  (select
+                    (project (project_list (project_expr (id y (case_insensitive) (unqualified)) null)))
+                    (from (scan (id bar (case_insensitive) (unqualified)) null null null))
+                  )
                 )
-              )  
+              )
             )
             (from (scan (id x (case_insensitive) (unqualified)) null null null))
           )
@@ -1981,11 +2139,46 @@ class SqlParserTest : SqlParserTestBase() {
         """,
         """
           (dml
-            (operation
-              (insert_value
-                (id foo (case_insensitive) (unqualified))
-                (lit 1)
-                null)))
+            (operations
+              (dml_op_list
+                (insert_value
+                  (id foo (case_insensitive) (unqualified))
+                  (lit 1)
+                  null null
+                )
+              )
+            )
+          )
+        """
+    )
+
+    @Test
+    fun insertValueReturningDml() = assertExpression(
+        "INSERT INTO foo VALUE 1 RETURNING MODIFIED OLD foo",
+        """
+        (dml 
+            (operations 
+                (dml_op_list (insert_value (id foo (case_insensitive) (unqualified)) (lit 1) null null)))
+                (returning 
+                    (returning_expr 
+                        (returning_elem 
+                            (modified_old) 
+                            (returning_column (id foo (case_insensitive) (unqualified)))))))
+        """
+    )
+
+    @Test
+    fun insertValueReturningStarDml() = assertExpression(
+        "INSERT INTO foo VALUE 1 RETURNING ALL OLD *",
+        """
+        (dml 
+            (operations 
+                (dml_op_list (insert_value (id foo (case_insensitive) (unqualified)) (lit 1) null null)))
+                (returning 
+                    (returning_expr 
+                        (returning_elem 
+                            (all_old) 
+                            (returning_wildcard)))))
         """
     )
 
@@ -2005,12 +2198,14 @@ class SqlParserTest : SqlParserTestBase() {
         """,
         """
           (dml
-            (operation
-              (insert
-                (id foo (case_insensitive) (unqualified))
-                (bag
-                  (list (lit 1) (lit 2))
-                  (list (lit 3) (lit 4))
+            (operations
+              (dml_op_list
+                (insert
+                  (id foo (case_insensitive) (unqualified))
+                  (bag
+                    (list (lit 1) (lit 2))
+                    (list (lit 3) (lit 4))
+                  )
                 )
               )
             )
@@ -2023,22 +2218,239 @@ class SqlParserTest : SqlParserTestBase() {
         "INSERT INTO foo VALUE 1 AT bar",
         """
           (dml
-              (insert_value
-                (id foo case_insensitive)
-                (lit 1)
-                (id bar case_insensitive)
+            (operations
+              (dml_op_list
+                (insert_value
+                  (id foo (case_insensitive) (unqualified))
+                  (lit 1)
+                  (id bar (case_insensitive) (unqualified))
+                  null
+                )
               )
+            )
           )
-        """,
+        """)
+
+    @Test
+    fun insertValueAtReturningDml() = assertExpression(
+        "INSERT INTO foo VALUE 1 AT bar RETURNING ALL OLD foo",
         """
+        (dml 
+            (operations 
+                (dml_op_list (insert_value (id foo (case_insensitive) (unqualified)) 
+                (lit 1) (id bar (case_insensitive) (unqualified)) null)))
+                (returning 
+                    (returning_expr 
+                        (returning_elem 
+                            (all_old) 
+                            (returning_column (id foo (case_insensitive) (unqualified)))))))
+        """)
+
+    @Test
+    fun insertValueAtMultiReturningTwoColsDml() = assertExpression(
+        "INSERT INTO foo VALUE 1 AT bar RETURNING ALL OLD a",
+        """
+        (dml 
+            (operations 
+                (dml_op_list (insert_value (id foo (case_insensitive) (unqualified)) 
+                (lit 1) (id bar (case_insensitive) (unqualified)) null)))
+                (returning 
+                    (returning_expr 
+                        (returning_elem 
+                            (all_old) 
+                            (returning_column (id a (case_insensitive) (unqualified)))))))
+        """)
+
+    @Test
+    fun insertValueAtMultiReturningThreeColsDml() = assertExpression(
+            "INSERT INTO foo VALUE 1 AT bar RETURNING MODIFIED OLD bar, MODIFIED NEW bar, ALL NEW *",
+            """
+            (dml 
+                (operations 
+                    (dml_op_list (insert_value (id foo (case_insensitive) (unqualified)) 
+                    (lit 1) (id bar (case_insensitive) (unqualified)) null)))
+                (returning 
+                    (returning_expr 
+                        (returning_elem 
+                            (modified_old) 
+                            (returning_column (id bar (case_insensitive) (unqualified)))) 
+                        (returning_elem 
+                            (modified_new) 
+                            (returning_column (id bar (case_insensitive) (unqualified)))) 
+                        (returning_elem 
+                            (all_new) 
+                            (returning_wildcard)))))
+        """)
+
+    @Test
+    fun insertValueAtOnConflictDml() = assertExpression(
+            "INSERT INTO foo VALUE 1 AT bar ON CONFLICT WHERE a DO NOTHING",
+            """
           (dml
-            (operation
+            (operations (dml_op_list
               (insert_value
                 (id foo (case_insensitive) (unqualified))
                 (lit 1)
                 (id bar (case_insensitive) (unqualified))
+                (on_conflict
+                    (id a (case_insensitive) (unqualified))
+                    (do_nothing)
+                )
               )
-            )
+            ))
+          )
+        """)
+
+    @Test
+    fun insertValueAtOnConflictReturningDml() = assertExpression(
+        "INSERT INTO foo VALUE 1 AT bar ON CONFLICT WHERE a DO NOTHING RETURNING ALL OLD foo",
+        """
+      (dml
+        (operations (dml_op_list
+          (insert_value
+            (id foo (case_insensitive) (unqualified))
+            (lit 1)
+            (id bar (case_insensitive) (unqualified))
+            (on_conflict
+                (id a (case_insensitive) (unqualified))
+                (do_nothing)))))
+        (returning 
+            (returning_expr 
+                (returning_elem 
+                    (all_old) 
+                    (returning_column (id foo (case_insensitive) (unqualified)))))))
+        """)
+
+    @Test
+    fun insertValueOnConflictDml() = assertExpression(
+            "INSERT INTO foo VALUE 1 ON CONFLICT WHERE bar DO NOTHING",
+            """
+          (dml
+            (operations (dml_op_list
+              (insert_value
+                (id foo (case_insensitive) (unqualified))
+                (lit 1)
+                null
+                (on_conflict
+                    (id bar (case_insensitive) (unqualified))
+                    (do_nothing)
+                )
+              )
+            ))
+          )
+        """)
+
+    @Test
+    fun insertValueOnConflictExpr1Dml() = assertExpression(
+            "INSERT INTO foo VALUE 1 ON CONFLICT WHERE hk=1 DO NOTHING",
+            """
+          (dml
+            (operations (dml_op_list
+              (insert_value
+                (id foo (case_insensitive) (unqualified))
+                (lit 1)
+                null
+                (on_conflict
+                    (eq (id hk (case_insensitive) (unqualified)) (lit 1))
+                    (do_nothing)
+                )
+              )
+            ))
+          )
+        """)
+
+    @Test
+    fun insertValueOnConflictExpr2Dml() = assertExpression(
+            "INSERT INTO foo VALUE 1 ON CONFLICT WHERE hk=1 and rk=1 DO NOTHING",
+            """
+          (dml
+            (operations (dml_op_list
+              (insert_value
+                (id foo (case_insensitive) (unqualified))
+                (lit 1)
+                null
+                (on_conflict
+                    (and (eq (id hk (case_insensitive) (unqualified)) (lit 1)) (eq (id rk (case_insensitive) (unqualified)) (lit 1)))
+                    (do_nothing)
+                )
+              )
+            ))
+          )
+        """)
+
+    @Test
+    fun insertValueOnConflictExpr3Dml() = assertExpression(
+            "INSERT INTO foo VALUE 1 ON CONFLICT WHERE hk BETWEEN 'a' and 'b' or rk = 'c' DO NOTHING",
+            """
+          (dml
+            (operations (dml_op_list
+              (insert_value
+                (id foo (case_insensitive) (unqualified))
+                (lit 1)
+                null
+                (on_conflict
+                    (or (between (id hk (case_insensitive) (unqualified)) (lit "a") (lit "b")) (eq (id rk (case_insensitive) (unqualified)) (lit "c")))
+                    (do_nothing)
+                )
+              )
+            ))
+          )
+        """)
+
+    @Test
+    fun insertValueOnConflictExpr4Dml() = assertExpression(
+            "INSERT INTO foo VALUE 1 ON CONFLICT WHERE not hk = 'a' DO NOTHING",
+            """
+          (dml
+            (operations (dml_op_list
+              (insert_value
+                (id foo (case_insensitive) (unqualified))
+                (lit 1)
+                null
+                (on_conflict
+                    (not (eq (id hk (case_insensitive) (unqualified)) (lit "a")))
+                    (do_nothing)
+                )
+              )
+            ))
+          )
+        """)
+
+    @Test
+    fun insertValueOnConflictExpr5Dml() = assertExpression(
+            "INSERT INTO foo VALUE 1 ON CONFLICT WHERE attribute_exists(hk) DO NOTHING",
+            """
+          (dml
+            (operations (dml_op_list 
+              (insert_value
+                (id foo (case_insensitive) (unqualified))
+                (lit 1)
+                null
+                (on_conflict
+                    (call attribute_exists (id hk (case_insensitive) (unqualified)))
+                    (do_nothing)
+                )
+              )
+            ))
+          )
+        """)
+
+    @Test
+    fun insertValueOnConflictExpr6Dml() = assertExpression(
+            "INSERT INTO foo VALUE 1 ON CONFLICT WHERE not attribute_exists(hk) DO NOTHING",
+            """
+          (dml
+            (operations (dml_op_list
+              (insert_value
+                (id foo (case_insensitive) (unqualified))
+                (lit 1)
+                null
+                (on_conflict
+                    (not (call attribute_exists (id hk (case_insensitive) (unqualified))))
+                    (do_nothing)
+                )
+              )
+            ))
           )
         """)
 
@@ -2058,12 +2470,35 @@ class SqlParserTest : SqlParserTestBase() {
         """,
         """
           (dml
-            (operation
-              (insert
-                (id foo (case_insensitive) (unqualified))
-                (select
-                  (project (project_list (project_expr (id y (case_insensitive) (unqualified)) null)))
-                  (from (scan (id bar (case_insensitive) (unqualified)) null null null))
+            (operations
+              (dml_op_list
+                (insert
+                  (id foo (case_insensitive) (unqualified))
+                  (select
+                    (project (project_list (project_expr (id y (case_insensitive) (unqualified)) null)))
+                    (from (scan (id bar (case_insensitive) (unqualified)) null null null))
+                  )
+                )
+              )
+            )
+          )
+        """
+    )
+
+    @Test
+    @Ignore
+    fun insertQueryReturningDml() = assertExpression(
+            "INSERT INTO foo SELECT y FROM bar RETURNING ALL NEW foo",
+            """
+          (dml
+            (operations
+              (dml_op_list
+                (insert
+                  (id foo (case_insensitive) (unqualified))
+                  (select
+                    (project (project_list (project_expr (id y (case_insensitive) (unqualified)) null)))
+                    (from (scan (id bar (case_insensitive) (unqualified)) null null null))
+                  )
                 )
               )
             )
@@ -2088,17 +2523,34 @@ class SqlParserTest : SqlParserTestBase() {
         """,
         """
           (dml
-            (operation
-              (set
-                (assignment
-                  (id k (case_insensitive) (unqualified))
-                  (lit 5)
+            (operations
+              (dml_op_list
+                (set
+                  (assignment
+                    (id k (case_insensitive) (unqualified))
+                    (lit 5)
+                  )
                 )
               )
             )
             (from (scan (id x (case_insensitive) (unqualified)) null null null))
             (where (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))))
           )
+        """
+    )
+
+    @Test
+    fun fromSetSingleReturningDml() = assertExpression(
+        "FROM x WHERE a = b SET k = 5 RETURNING ALL OLD x",
+        """
+        (dml (operations (dml_op_list (set (assignment (id k (case_insensitive) (unqualified)) (lit 5)))))
+        (from (scan (id x (case_insensitive) (unqualified)) null null null))
+        (where (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))))
+        (returning 
+            (returning_expr 
+                (returning_elem 
+                    (all_old) 
+                    (returning_column (id x (case_insensitive) (unqualified)))))))
         """
     )
 
@@ -2119,11 +2571,13 @@ class SqlParserTest : SqlParserTestBase() {
         """,
         """
           (dml
-            (operation
-              (set
-                (assignment
-                  (path (id k (case_insensitive) (unqualified)) (path_expr (lit "m") (case_insensitive)))
-                  (lit 5)
+            (operations
+              (dml_op_list
+                (set
+                  (assignment
+                    (path (id k (case_insensitive) (unqualified)) (path_expr (lit "m") (case_insensitive)))
+                    (lit 5)
+                  )
                 )
               )
             )
@@ -2150,11 +2604,13 @@ class SqlParserTest : SqlParserTestBase() {
         """,
         """
           (dml
-            (operation
-              (set
-                (assignment
-                  (path (id k (case_insensitive) (unqualified)) (path_expr (lit "m") (case_sensitive)))
-                  (lit 5)
+            (operations
+              (dml_op_list
+                (set
+                  (assignment
+                    (path (id k (case_insensitive) (unqualified)) (path_expr (lit "m") (case_sensitive)))
+                    (lit 5)
+                  )
                 )
               )
             )
@@ -2163,8 +2619,6 @@ class SqlParserTest : SqlParserTestBase() {
           )
         """
     )
-
-
 
     @Test
     fun fromSetSinglePathOrdinalDml() = assertExpression(
@@ -2183,11 +2637,13 @@ class SqlParserTest : SqlParserTestBase() {
         """,
         """
           (dml
-            (operation
-              (set
-                (assignment
-                  (path (id k (case_insensitive) (unqualified)) (path_expr (lit 3) (case_sensitive)))
-                  (lit 5)
+            (operations
+              (dml_op_list
+                (set
+                  (assignment
+                    (path (id k (case_insensitive) (unqualified)) (path_expr (lit 3) (case_sensitive)))
+                    (lit 5)
+                  )
                 )
               )
             )
@@ -2202,37 +2658,172 @@ class SqlParserTest : SqlParserTestBase() {
         "FROM x WHERE a = b SET k = 5, m = 6",
         """
           (dml
-            (set
-              (assignment
-                (id k case_insensitive)
-                (lit 5)
-              )
-              (assignment
-                (id m case_insensitive)
-                (lit 6)
-              )
-            )
-            (from (id x case_insensitive))
-            (where (= (id a case_insensitive) (id b case_insensitive)))
-          )
-        """,
-        """
-          (dml
-            (operation
-              (set
-                (assignment
-                  (id k (case_insensitive) (unqualified))
-                  (lit 5)
+            (operations
+              (dml_op_list
+                (set
+                  (assignment
+                    (id k (case_insensitive) (unqualified))
+                    (lit 5)
+                  )
                 )
-                (assignment
-                  (id m (case_insensitive) (unqualified))
-                  (lit 6)
+                (set
+                  (assignment
+                    (id m (case_insensitive) (unqualified))
+                    (lit 6)
+                  )
                 )
               )
             )
             (from (scan (id x (case_insensitive) (unqualified)) null null null))
             (where (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))))
           )
+        """
+    )
+
+    @Test
+    fun fromSetMultiReturningDml() = assertExpression(
+        "FROM x WHERE a = b SET k = 5, m = 6 RETURNING ALL OLD x",
+        """
+        (dml (operations 
+            (dml_op_list 
+                (set (assignment (id k (case_insensitive) (unqualified)) (lit 5))) 
+                (set (assignment (id m (case_insensitive) (unqualified)) (lit 6)))))
+        (from (scan (id x (case_insensitive) (unqualified)) null null null))
+        (where (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))))
+        (returning 
+            (returning_expr 
+                (returning_elem 
+                    (all_old) 
+                    (returning_column (id x (case_insensitive) (unqualified)))))))
+        """
+    )
+
+    @Test
+    fun fromComplexDml() = assertExpression(
+        "FROM x WHERE a = b SET k = 5, m = 6 INSERT INTO c VALUE << 1 >> REMOVE a SET l = 3 REMOVE b",
+        // Note that this query cannot be represented with the V0 AST.
+        """ 
+        (dml
+            (operations
+                (dml_op_list
+                    (set
+                        (assignment
+                            (id k (case_insensitive) (unqualified))
+                            (lit 5)))
+                    (set
+                        (assignment
+                            (id m (case_insensitive) (unqualified))
+                            (lit 6)))
+                    (insert_value
+                        (id c (case_insensitive) (unqualified))
+                        (bag
+                            (lit 1))
+                        null null)
+                    (remove
+                        (id a (case_insensitive) (unqualified)))
+                    (set
+                        (assignment
+                            (id l (case_insensitive) (unqualified))
+                            (lit 3)))
+                    (remove
+                        (id b (case_insensitive) (unqualified)))))
+            (from
+                (scan
+                    (id x (case_insensitive) (unqualified))
+                    null
+                    null
+                    null))
+            (where
+                (eq
+                    (id a (case_insensitive) (unqualified))
+                    (id b (case_insensitive) (unqualified)))))
+    """)
+
+    @Test
+    fun legacyUpdateComplexDml() = assertExpression(
+        "UPDATE x SET k = 5, m = 6 INSERT INTO c VALUE << 1 >> REMOVE a SET l = 3 REMOVE b WHERE a = b",
+        // Note that this query cannot be represented with the V0 AST.
+        """
+            (dml
+                (operations
+                    (dml_op_list
+                        (set
+                            (assignment
+                                (id k (case_insensitive) (unqualified))
+                                (lit 5)))
+                        (set
+                            (assignment
+                                (id m (case_insensitive) (unqualified))
+                                (lit 6)))
+                        (insert_value
+                            (id c (case_insensitive) (unqualified))
+                            (bag
+                                (lit 1))
+                            null null)
+                        (remove
+                            (id a (case_insensitive) (unqualified)))
+                        (set
+                            (assignment
+                                (id l (case_insensitive) (unqualified))
+                                (lit 3)))
+                        (remove
+                            (id b (case_insensitive) (unqualified)))))
+                (from
+                    (scan
+                        (id x (case_insensitive) (unqualified))
+                        null
+                        null
+                        null))
+                (where
+                    (eq
+                        (id a (case_insensitive) (unqualified))
+                        (id b (case_insensitive) (unqualified)))))
+        """
+    )
+
+    @Test
+    fun legacyUpdateReturningComplexDml() = assertExpression(
+        "UPDATE x SET k = 5, m = 6 INSERT INTO c VALUE << 1 >> REMOVE a SET l = 3 REMOVE b WHERE a = b RETURNING MODIFIED OLD a",
+        """
+        (dml
+            (operations
+                (dml_op_list
+                    (set
+                        (assignment
+                            (id k (case_insensitive) (unqualified))
+                            (lit 5)))
+                    (set
+                        (assignment
+                            (id m (case_insensitive) (unqualified))
+                            (lit 6)))
+                    (insert_value
+                        (id c (case_insensitive) (unqualified))
+                        (bag
+                            (lit 1))
+                        null null)
+                    (remove
+                        (id a (case_insensitive) (unqualified)))
+                    (set
+                        (assignment
+                            (id l (case_insensitive) (unqualified))
+                            (lit 3)))
+                    (remove
+                        (id b (case_insensitive) (unqualified)))))
+            (from
+                (scan
+                    (id x (case_insensitive) (unqualified))
+                    null
+                    null
+                    null))
+            (where
+                (eq
+                    (id a (case_insensitive) (unqualified))
+                    (id b (case_insensitive) (unqualified))))
+            (returning 
+                (returning_expr 
+                    (returning_elem 
+                        (modified_old) 
+                        (returning_column (id a (case_insensitive) (unqualified)))))))        
         """
     )
 
@@ -2251,11 +2842,13 @@ class SqlParserTest : SqlParserTestBase() {
         """,
         """
           (dml
-            (operation
-              (set
-                (assignment
-                  (id k (case_insensitive) (unqualified))
-                  (lit 5)
+            (operations
+              (dml_op_list
+                (set
+                  (assignment
+                    (id k (case_insensitive) (unqualified))
+                    (lit 5)
+                  )
                 )
               )
             )
@@ -2278,11 +2871,13 @@ class SqlParserTest : SqlParserTestBase() {
         """,
         """
           (dml
-            (operation
-              (set
-                (assignment
-                  (id k (case_sensitive) (unqualified))
-                  (lit 5)
+            (operations
+              (dml_op_list
+                (set
+                  (assignment
+                    (id k (case_sensitive) (unqualified))
+                    (lit 5)
+                  )
                 )
               )
             )
@@ -2295,29 +2890,19 @@ class SqlParserTest : SqlParserTestBase() {
         "SET k = 5, m = 6",
         """
           (dml
-              (set
-                (assignment
-                  (id k case_insensitive)
-                  (lit 5)
+            (operations
+              (dml_op_list 
+                (set
+                  (assignment
+                    (id k (case_insensitive) (unqualified))
+                    (lit 5)
+                  )
                 )
-                (assignment
-                  (id m case_insensitive)
-                  (lit 6)
-                )
-              )
-          )
-        """,
-        """
-          (dml
-            (operation
-              (set
-                (assignment
-                  (id k (case_insensitive) (unqualified))
-                  (lit 5)
-                )
-                (assignment
-                  (id m (case_insensitive) (unqualified))
-                  (lit 6)
+                (set
+                  (assignment
+                    (id m (case_insensitive) (unqualified))
+                    (lit 6)
+                  )
                 )
               )
             )
@@ -2339,14 +2924,77 @@ class SqlParserTest : SqlParserTestBase() {
         """,
         """
           (dml
-            (operation
-              (remove
-                (id y (case_insensitive) (unqualified))
+            (operations
+              (dml_op_list
+                (remove
+                  (id y (case_insensitive) (unqualified))
+                )
               )
             )
             (from (scan (id x (case_insensitive) (unqualified)) null null null))
             (where (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))))
           )
+        """
+    )
+
+    @Test
+    fun fromRemoveReturningDml() = assertExpression(
+        "FROM x WHERE a = b REMOVE y RETURNING MODIFIED NEW a",
+        """
+        (dml (operations 
+            (dml_op_list (remove (id y (case_insensitive) (unqualified))))) 
+            (from (scan (id x (case_insensitive) (unqualified)) null null null)) 
+            (where (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))) 
+            (returning 
+                (returning_expr 
+                    (returning_elem 
+                        (modified_new) 
+                        (returning_column (id a (case_insensitive) (unqualified)))))))
+        """
+    )
+
+    @Test
+    fun fromMultipleRemoveDml() = assertExpression(
+        "FROM x WHERE a = b REMOVE y REMOVE z",
+        """
+          (dml
+            (operations
+              (dml_op_list
+                (remove
+                  (id y (case_insensitive) (unqualified))
+                )
+                (remove
+                  (id z (case_insensitive) (unqualified))
+                )
+              )
+            )
+            (from (scan (id x (case_insensitive) (unqualified)) null null null))
+            (where (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))))
+          )
+        """)
+
+    @Test
+    fun fromMultipleRemoveReturningDml() = assertExpression(
+        "FROM x WHERE a = b REMOVE y REMOVE z RETURNING MODIFIED OLD a",
+        """
+        (dml
+        (operations
+          (dml_op_list
+            (remove
+              (id y (case_insensitive) (unqualified))
+            )
+            (remove
+              (id z (case_insensitive) (unqualified))
+            )
+          )
+        )
+        (from (scan (id x (case_insensitive) (unqualified)) null null null))
+        (where (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))))
+        (returning 
+            (returning_expr 
+                (returning_elem 
+                    (modified_old) 
+                    (returning_column (id a (case_insensitive) (unqualified)))))))
         """
     )
 
@@ -2362,9 +3010,11 @@ class SqlParserTest : SqlParserTestBase() {
         """,
         """
           (dml
-            (operation
-              (remove
-                (id y (case_insensitive) (unqualified))
+            (operations
+              (dml_op_list
+                (remove
+                  (id y (case_insensitive) (unqualified))
+                )
               )
             )
           )
@@ -2388,13 +3038,15 @@ class SqlParserTest : SqlParserTestBase() {
         """,
         """
           (dml
-            (operation
-              (remove
-                (path
-                  (id a (case_insensitive) (unqualified))
-                  (path_expr (lit "b") (case_insensitive))
-                  (path_expr (lit "c") (case_sensitive))
-                  (path_expr (lit 2) (case_sensitive))
+            (operations
+              (dml_op_list
+                (remove
+                  (path
+                    (id a (case_insensitive) (unqualified))
+                    (path_expr (lit "b") (case_insensitive))
+                    (path_expr (lit "c") (case_sensitive))
+                    (path_expr (lit 2) (case_sensitive))
+                  )
                 )
               )
             )
@@ -2407,37 +3059,56 @@ class SqlParserTest : SqlParserTestBase() {
         "UPDATE x AS y SET k = 5, m = 6 WHERE a = b",
         """
           (dml
-            (set
-              (assignment
-                (id k case_insensitive)
-                (lit 5)
-              )
-              (assignment
-                (id m case_insensitive)
-                (lit 6)
-              )
-            )
-            (from (as y (id x case_insensitive)))
-            (where (= (id a case_insensitive) (id b case_insensitive)))
-          )
-        """,
-        """
-          (dml
-            (operation
-              (set
-                (assignment
-                  (id k (case_insensitive) (unqualified))
-                  (lit 5)
+            (operations
+              (dml_op_list
+                (set
+                  (assignment
+                    (id k (case_insensitive) (unqualified))
+                    (lit 5)
+                  )
                 )
-                (assignment
-                  (id m (case_insensitive) (unqualified))
-                  (lit 6)
+                (set
+                  (assignment
+                    (id m (case_insensitive) (unqualified))
+                    (lit 6)
+                  )
                 )
               )
             )
             (from (scan (id x (case_insensitive) (unqualified)) y null null))
             (where (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))))
           )
+        """
+    )
+
+    @Test
+    fun updateReturningDml() = assertExpression(
+        "UPDATE x AS y SET k = 5, m = 6 WHERE a = b RETURNING MODIFIED OLD a",
+        """
+      (dml
+        (operations
+          (dml_op_list
+            (set
+              (assignment
+                (id k (case_insensitive) (unqualified))
+                (lit 5)
+              )
+            )
+            (set
+              (assignment
+                (id m (case_insensitive) (unqualified))
+                (lit 6)
+              )
+            )
+          )
+        )
+        (from (scan (id x (case_insensitive) (unqualified)) y null null))
+        (where (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))))
+        (returning 
+            (returning_expr 
+                (returning_elem 
+                    (modified_old) 
+                    (returning_column (id a (case_insensitive) (unqualified)))))))
         """
     )
 
@@ -2461,11 +3132,12 @@ class SqlParserTest : SqlParserTestBase() {
         """,
         """
           (dml
-            (operation
-              (insert
-                (id k (case_insensitive) (unqualified))
-                (bag
-                  (lit 1))))
+            (operations
+              (dml_op_list
+                (insert
+                  (id k (case_insensitive) (unqualified))
+                  (bag
+                    (lit 1)))))
             (from
               (scan
                 (id x (case_insensitive) (unqualified))
@@ -2476,6 +3148,35 @@ class SqlParserTest : SqlParserTestBase() {
               (eq
                 (id a (case_insensitive) (unqualified))
                 (id b (case_insensitive) (unqualified)))))
+        """
+    )
+
+    @Test
+    fun updateWithInsertReturningDml() = assertExpression(
+        "UPDATE x AS y INSERT INTO k << 1 >> WHERE a = b RETURNING MODIFIED OLD a",
+        """
+      (dml
+        (operations
+          (dml_op_list
+            (insert
+              (id k (case_insensitive) (unqualified))
+              (bag
+                (lit 1)))))
+        (from
+          (scan
+            (id x (case_insensitive) (unqualified))
+            y 
+            null
+            null))
+        (where
+          (eq
+            (id a (case_insensitive) (unqualified))
+            (id b (case_insensitive) (unqualified))))
+        (returning 
+            (returning_expr 
+                (returning_elem 
+                    (modified_old) 
+                    (returning_column (id a (case_insensitive) (unqualified)))))))   
         """
     )
 
@@ -2499,11 +3200,16 @@ class SqlParserTest : SqlParserTestBase() {
         """,
         """
           (dml
-            (operation
-              (insert_value
-                (id k (case_insensitive) (unqualified))
-                (lit 1)
-                (lit "j")))
+            (operations
+              (dml_op_list
+                (insert_value
+                  (id k (case_insensitive) (unqualified))
+                  (lit 1)
+                  (lit "j")
+                  null
+                )
+              )
+            )    
             (from
               (scan (id x (case_insensitive) (unqualified)) y null null))
             (where
@@ -2528,11 +3234,12 @@ class SqlParserTest : SqlParserTestBase() {
         """,
         """
           (dml  
-            (operation
-              (remove
-                (path
-                  (id y (case_insensitive) (unqualified))
-                  (path_expr (lit "a") (case_insensitive)))))
+            (operations
+              (dml_op_list
+                (remove
+                  (path
+                    (id y (case_insensitive) (unqualified))
+                    (path_expr (lit "a") (case_insensitive))))))
             (from (scan (id x (case_insensitive) (unqualified)) y null null))
             (where (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))))
           )
@@ -2553,11 +3260,12 @@ class SqlParserTest : SqlParserTestBase() {
         """,
         """
           (dml
-            (operation
-              (set
-                (assignment
-                  (path (id z (case_insensitive) (unqualified)) (path_expr (lit "kingdom") (case_insensitive)))
-                  (lit "Fungi"))))
+            (operations
+              (dml_op_list
+                (set
+                  (assignment
+                    (path (id z (case_insensitive) (unqualified)) (path_expr (lit "kingdom") (case_insensitive)))
+                    (lit "Fungi")))))
             (from
               (scan (id zoo (case_insensitive) (unqualified)) z null null)))
         """
@@ -2577,11 +3285,12 @@ class SqlParserTest : SqlParserTestBase() {
         """,
         """
           (dml
-            (operation
-              (set
-                (assignment
-                  (path (id z (case_insensitive) (unqualified)) (path_expr (lit "kingdom") (case_insensitive)))
-                  (lit "Fungi"))))
+            (operations
+              (dml_op_list
+                (set
+                  (assignment
+                    (path (id z (case_insensitive) (unqualified)) (path_expr (lit "kingdom") (case_insensitive)))
+                    (lit "Fungi")))))
             (from
               (scan (id zoo (case_insensitive) (unqualified)) null z_ord null)))
         """
@@ -2601,16 +3310,16 @@ class SqlParserTest : SqlParserTestBase() {
         """,
         """
           (dml
-            (operation
-              (set
-                (assignment
-                  (path (id z (case_insensitive) (unqualified)) (path_expr (lit "kingdom") (case_insensitive)))
-                  (lit "Fungi"))))
+            (operations
+              (dml_op_list
+                (set
+                  (assignment
+                    (path (id z (case_insensitive) (unqualified)) (path_expr (lit "kingdom") (case_insensitive)))
+                    (lit "Fungi")))))
             (from
               (scan (id zoo (case_insensitive) (unqualified)) null null z_id)))
         """
     )
-
 
     @Test
     fun updateDmlWithAtAndBy() = assertExpression(
@@ -2626,11 +3335,12 @@ class SqlParserTest : SqlParserTestBase() {
         """,
         """
           (dml
-            (operation
-              (set
-                (assignment
-                  (path (id z (case_insensitive) (unqualified)) (path_expr (lit "kingdom") (case_insensitive)))
-                  (lit "Fungi"))))
+            (operations
+              (dml_op_list
+                (set
+                  (assignment
+                    (path (id z (case_insensitive) (unqualified)) (path_expr (lit "kingdom") (case_insensitive)))
+                    (lit "Fungi")))))
             (from
               (scan (id zoo (case_insensitive) (unqualified)) null z_ord z_id)))
         """
@@ -2641,37 +3351,130 @@ class SqlParserTest : SqlParserTestBase() {
         "UPDATE x SET k = 5, m = 6 WHERE a = b",
         """
           (dml
-            (set
-              (assignment
-                (id k case_insensitive)
-                (lit 5)
-              )
-              (assignment
-                (id m case_insensitive)
-                (lit 6)
-              )
-            )
-            (from (id x case_insensitive))
-            (where (= (id a case_insensitive) (id b case_insensitive)))
-          )
-        """,
-        """
-          (dml
-            (operation
-              (set
-                (assignment
-                  (id k (case_insensitive) (unqualified))
-                  (lit 5)
+            (operations
+              (dml_op_list
+                (set
+                  (assignment
+                    (id k (case_insensitive) (unqualified))
+                    (lit 5)
+                  )
                 )
-                (assignment
-                  (id m (case_insensitive) (unqualified))
-                  (lit 6)
+                (set
+                  (assignment
+                    (id m (case_insensitive) (unqualified))
+                    (lit 6)
+                  )
                 )
               )
             )
             (from (scan (id x (case_insensitive) (unqualified)) null null null))
             (where (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))))
           )
+        """
+    )
+
+    @Test
+    fun updateWhereReturningDml() = assertExpression(
+        "UPDATE x SET k = 5, m = 6 WHERE a = b RETURNING MODIFIED OLD a, MODIFIED OLD b",
+        """(dml 
+        (operations 
+            (dml_op_list 
+                (set (assignment (id k (case_insensitive) (unqualified)) (lit 5))) 
+                (set (assignment (id m (case_insensitive) (unqualified)) (lit 6))))) 
+        (from (scan (id x (case_insensitive) (unqualified)) null null null)) 
+        (where (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))))
+        (returning 
+            (returning_expr 
+                (returning_elem 
+                    (modified_old) 
+                    (returning_column (id a (case_insensitive) (unqualified)))) 
+                (returning_elem 
+                    (modified_old) 
+                    (returning_column (id b (case_insensitive) (unqualified)))))))
+        """
+    )
+
+    @Test
+    fun updateWhereReturningPathDml() = assertExpression(
+            "UPDATE x SET k = 5, m = 6 WHERE a = b RETURNING MODIFIED OLD a.b",
+            """(dml 
+            (operations 
+                (dml_op_list 
+                    (set (assignment (id k (case_insensitive) (unqualified)) (lit 5))) 
+                    (set (assignment (id m (case_insensitive) (unqualified)) (lit 6))))) 
+            (from (scan (id x (case_insensitive) (unqualified)) null null null)) 
+            (where (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))))
+            (returning 
+                (returning_expr 
+                    (returning_elem 
+                        (modified_old) 
+                        (returning_column 
+                            (path (id a (case_insensitive) (unqualified)) 
+                            (path_expr (lit "b") (case_insensitive))))))))
+        """
+    )
+
+    @Test
+    fun updateWhereReturningPathAsteriskDml() = assertExpression(
+        "UPDATE x SET k = 5, m = 6 WHERE a = b RETURNING MODIFIED OLD '1234'.*",
+        """(dml 
+        (operations 
+            (dml_op_list 
+                (set (assignment (id k (case_insensitive) (unqualified)) (lit 5))) 
+                (set (assignment (id m (case_insensitive) (unqualified)) (lit 6))))) 
+        (from (scan (id x (case_insensitive) (unqualified)) null null null)) 
+        (where (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))))
+        (returning 
+            (returning_expr 
+                (returning_elem 
+                    (modified_old) 
+                    (returning_column (path (lit "1234") (path_unpivot)))))))
+        """
+    )
+
+    @Test
+    fun updateMultipleSetsWhereDml() = assertExpression(
+        "UPDATE x SET k = 5 SET m = 6 WHERE a = b",
+        """
+          (dml
+            (operations
+              (dml_op_list
+                  (set
+                    (assignment
+                      (id k (case_insensitive) (unqualified))
+                      (lit 5)
+                    )
+                  )
+                  (set
+                    (assignment
+                      (id m (case_insensitive) (unqualified))
+                      (lit 6)
+                    )
+                  )
+               )
+            )
+            (from (scan (id x (case_insensitive) (unqualified)) null null null))
+            (where (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))))
+          )
+        """
+    )
+
+    @Test
+    fun updateMultipleSetsWhereReturningDml() = assertExpression(
+        "UPDATE x SET k = 5 SET m = 6 WHERE a = b RETURNING ALL OLD x.*",
+        """
+        (dml (operations (dml_op_list 
+            (set (assignment (id k (case_insensitive) (unqualified)) (lit 5))) 
+            (set (assignment (id m (case_insensitive) (unqualified)) (lit 6)))))
+        (from (scan (id x (case_insensitive) (unqualified)) null null null))
+        (where (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))))
+        (returning 
+            (returning_expr 
+                (returning_elem 
+                    (all_old) 
+                    (returning_column 
+                        (path (id x (case_insensitive) (unqualified)) 
+                        (path_unpivot)))))))
         """
     )
 
@@ -2686,9 +3489,24 @@ class SqlParserTest : SqlParserTestBase() {
         """,
         """
           (dml
-            (operation (delete))
+            (operations (dml_op_list (delete)))
             (from (scan (id y (case_insensitive) (unqualified)) null null null))
           )
+        """
+    )
+
+    @Test
+    fun deleteReturningDml() = assertExpression(
+    "DELETE FROM y RETURNING MODIFIED NEW a",
+    """
+      (dml
+        (operations (dml_op_list (delete)))
+        (from (scan (id y (case_insensitive) (unqualified)) null null null))
+        (returning 
+            (returning_expr 
+                (returning_elem 
+                    (modified_new) 
+                    (returning_column (id a (case_insensitive) (unqualified)))))))
         """
     )
 
@@ -2703,7 +3521,7 @@ class SqlParserTest : SqlParserTestBase() {
         """,
         """
           (dml
-            (operation (delete))
+            (operations (dml_op_list (delete)))
             (from (scan (id x (case_insensitive) (unqualified)) y null null))
           )
         """
@@ -2722,7 +3540,7 @@ class SqlParserTest : SqlParserTestBase() {
         """,
         """
             (dml
-              (operation (delete))
+              (operations ( dml_op_list (delete)))
               (from (scan (id x (case_insensitive) (unqualified)) null y null)))
         """
     )
@@ -2742,7 +3560,7 @@ class SqlParserTest : SqlParserTestBase() {
         """,
         """
             (dml
-                (operation (delete))
+               (operations (dml_op_list (delete)))
                (from (scan (id x (case_insensitive) (unqualified)) y z null)))
         """
     )
@@ -2760,7 +3578,7 @@ class SqlParserTest : SqlParserTestBase() {
         """,
         """
             (dml
-                (operation (delete))
+                (operations (dml_op_list (delete)))
                 (from
                     (scan
                         (path (id x (case_insensitive) (unqualified)) (path_expr (lit "n") (case_insensitive)))
@@ -2784,7 +3602,7 @@ class SqlParserTest : SqlParserTestBase() {
         """,
         """
             (dml
-                (operation (delete))
+                (operations (dml_op_list(delete)))
                 (from
                     (scan 
                         (path
@@ -2815,7 +3633,7 @@ class SqlParserTest : SqlParserTestBase() {
         """,
         """
             (dml
-                (operation (delete))
+                (operations (dml_op_list (delete)))
                 (from
                     (scan
                         (path
@@ -2848,7 +3666,7 @@ class SqlParserTest : SqlParserTestBase() {
         """,
         """
             (dml
-                (operation (delete))
+                (operations (dml_op_list (delete)))
                 (from
                     (scan 
                         (path
@@ -3042,7 +3860,7 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun rootSelectNodeHasSourceLocation() {
         val ast = parse("select 1 from dogs")
-        assertEquals(SourceLocationMeta(1L, 1L), ast.metas.sourceLocation)
+        assertEquals(SourceLocationMeta(1L, 1L, 6L), ast.metas.sourceLocation)
     }
 
     @Test

@@ -461,13 +461,13 @@ test::{
 test::{
     id: 'group by with aliased group expression and having',
     statement: '''
-        SELECT modified
+        SELECT changed
         FROM sales_report
-        GROUP BY rep || '_modified' as modified
-        HAVING modified = 'Meg_modified'
+        GROUP BY rep || '_changed' as changed
+        HAVING changed = 'Meg_changed'
     ''',
     expected: (success (bag
-        { modified: "Meg_modified" }
+        { changed: "Meg_changed" }
     ))
 }
 
@@ -504,11 +504,11 @@ test::{
     statement: '''
         SELECT rep
         FROM sales_report
-        GROUP BY rep || '_modified' as rep --Note: "rep" shadows sales_report.rep
-        HAVING rep = 'Meg_modified'
+        GROUP BY rep || '_changed' as rep --Note: "rep" shadows sales_report.rep
+        HAVING rep = 'Meg_changed'
     ''',
     expected: (success (bag
-        { rep: "Meg_modified" }
+        { rep: "Meg_changed" }
     ))
 }
 

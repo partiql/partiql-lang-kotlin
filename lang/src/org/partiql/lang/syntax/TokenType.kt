@@ -29,6 +29,7 @@ enum class TokenType {
     OPERATOR,
     KEYWORD,
     LITERAL,
+    ION_LITERAL,
     // punctuation
     DOT,
     STAR,
@@ -43,6 +44,8 @@ enum class TokenType {
     BY,
     MISSING,
     NULL,
+    ASC,
+    DESC,
     // function specific
     TRIM_SPECIFICATION,
     DATE_PART,

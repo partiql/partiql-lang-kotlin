@@ -20,7 +20,7 @@ import com.amazon.ion.IonSystem
 import org.partiql.lang.util.IonWriterContext
 import org.partiql.lang.util.asIonSexp
 import org.partiql.lang.util.case
-import java.lang.UnsupportedOperationException
+import kotlin.UnsupportedOperationException
 
 /**
  * Serializes an instance of [ExprNode] to one of the s-expression based ASTs.
@@ -203,7 +203,10 @@ private class AstSerializerImpl(val astVersion: AstVersion, val ion: IonSystem):
     }
 
     private fun IonWriterContext.writeSelect(expr: Select) {
-        val (setQuantifier, projection, from, fromLet, where, groupBy, having, limit, _: MetaContainer) = expr
+        val (setQuantifier, projection, from, fromLet, where, groupBy, having, orderBy, limit, _: MetaContainer) = expr
+        if (orderBy != null) {
+            throw UnsupportedOperationException("ORDER BY clause is not supported by the V0 AST")
+        }
 
         if (fromLet != null) {
             throw UnsupportedOperationException("LET clause is not supported by the V0 AST")
@@ -278,7 +281,11 @@ private class AstSerializerImpl(val astVersion: AstVersion, val ion: IonSystem):
     }
 
     private fun IonWriterContext.writeDataManipulation(expr: DataManipulation) {
-        val (dmlOp, from, where, _: MetaContainer) = expr
+        val (dmlOp, from, where, returning, _: MetaContainer) = expr
+
+        if (returning != null) {
+            throw java.lang.UnsupportedOperationException("RETURNING clause not supported by V0 AST.")
+        }
 
         // TODO refactor this along with SELECT to be more functional (i.e. granular)
         symbol("dml")
@@ -301,42 +308,67 @@ private class AstSerializerImpl(val astVersion: AstVersion, val ion: IonSystem):
         }
     }
 
-    private fun IonWriterContext.writeDataManipulationOperation(dmlOp: DataManipulationOperation) {
-        sexp {
-            symbol(dmlOp.name)
+    private fun IonWriterContext.writeDataManipulationOperation(opList: DmlOpList) {
+        // The V0 AST supports multiple set operations, i.e.: SET a = 1, b = 2, c = 3,
+        // but it does *not* support mixing multiple DML operations together, i.e.: SET a = 1, REMOVE b is illegal
+        // The following bit of code checks to make sure that [dmlOp] only contains items that can be represented in
+        // the V0 AST.
+        val isSetOnly = if(!opList.ops.any { it !is AssignmentOp }) {
+            if(opList.ops.size != 1) {
+                throw UnsupportedOperationException(
+                    "A single DML statement with multiple operations other than SET cannot be represented with the V0 AST")
+            }
+            true
+        } else {
+            false
+        }
 
-            when (dmlOp) {
-                is InsertOp -> case {
-                    writeExprNode(dmlOp.lvalue)
-                    writeExprNode(dmlOp.values)
-                }
-                is InsertValueOp -> case {
-                    writeExprNode(dmlOp.lvalue)
-                    writeExprNode(dmlOp.value)
+        if(!isSetOnly) {
+            val dmlOp = opList.ops.first()
 
-                    when(astVersion) {
-                        AstVersion.V0 ->
-                            dmlOp.position?.let { writeExprNode(it) }
+            sexp {
+                symbol(dmlOp.name)
+
+                when (dmlOp) {
+                    is InsertOp -> {
+                        writeExprNode(dmlOp.lvalue)
+                        writeExprNode(dmlOp.values)
                     }
-                }
-                is AssignmentOp -> case {
-                    dmlOp.assignments.forEach {
-                        sexp {
-                            symbol("assignment")
-                            writeExprNode(it.lvalue)
-                            writeExprNode(it.rvalue)
+                    is InsertValueOp -> {
+                        writeExprNode(dmlOp.lvalue)
+                        writeExprNode(dmlOp.value)
+
+                        when (astVersion) {
+                            AstVersion.V0 ->
+                                dmlOp.position?.let { writeExprNode(it) }
                         }
                     }
+                    is RemoveOp -> {
+                        writeExprNode(dmlOp.lvalue)
+                    }
+                    is DeleteOp -> {
+                        // no-op - implicit target
+                    }
+                    is AssignmentOp -> error("should be handled by else block below")
+                }.let {}
+            }
+        } else {
+            sexp {
+                symbol("set")
+                // Cast should always succeed due to checks at top of function.
+                opList.ops.map { it as AssignmentOp }.forEach {
+                    val assignment = it.assignment
+                    sexp {
+                        symbol("assignment")
+                        writeExprNode(assignment.lvalue)
+                        writeExprNode(assignment.rvalue)
+                    }
                 }
-                is RemoveOp -> case {
-                    writeExprNode(dmlOp.lvalue)
-                }
-                is DeleteOp -> case {
-                    // no-op - implicit target
-                }
-            }.toUnit()
+            }
+
         }
     }
+
 
     private fun IonWriterContext.writeSelectProjection(projection: SelectProjection, setQuantifier: SetQuantifier) {
         when (astVersion) {

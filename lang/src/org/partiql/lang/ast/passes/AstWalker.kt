@@ -87,7 +87,7 @@ open class AstWalker(private val visitor: AstVisitor) {
                     }
                 }
                 is Select       -> case {
-                    val (_, projection, from, fromLet, where, groupBy, having, limit, _: MetaContainer) = expr
+                    val (_, projection, from, fromLet, where, groupBy, having, orderBy, limit, _: MetaContainer) = expr
                     walkSelectProjection(projection)
                     walkFromSource(from)
                     walkExprNode(where)
@@ -99,15 +99,33 @@ open class AstWalker(private val visitor: AstVisitor) {
                             walkExprNode(groupExpr)
                         }
                     }
-                    walkExprNode(having, limit)
+                    walkExprNode(having)
+                    orderBy?.let {
+                        it.sortSpecItems.forEach { ssi ->
+                            walkExprNode(ssi.expr)
+                        }
+                    }
+                    walkExprNode(limit)
                 }
                 is DataManipulation -> case {
-                    val (dmlOperation, from, where, _: MetaContainer) = expr
-                    walkDmlOperation(dmlOperation)
+                    val (dmlOperation, from, where, returning, _: MetaContainer) = expr
+                    walkDmlOperations(dmlOperation)
                     if (from != null) {
                         walkFromSource(from)
                     }
                     walkExprNode(where)
+                    returning?.let {
+                        it.returningElems.forEach { re ->
+                            when (re.columnComponent) {
+                                is ReturningColumn   -> case {
+                                    walkExprNode(re.columnComponent.column)
+                                }
+                                is ReturningWildcard -> case {
+                                    //Leaf nodes have no children to walk.
+                                }
+                            }
+                        }
+                    }
                 }
                 is CreateIndex -> case {
                     val (_, keys, _: MetaContainer) = expr
@@ -190,6 +208,11 @@ open class AstWalker(private val visitor: AstVisitor) {
         }.toUnit()
     }
 
+    private fun walkDmlOperations(dmlOperations: DmlOpList) =
+        dmlOperations.ops.forEach {
+            walkDmlOperation(it)
+        }
+
     private fun walkDmlOperation(dmlOperation: DataManipulationOperation) {
         when (dmlOperation) {
             is InsertOp -> case {
@@ -197,15 +220,14 @@ open class AstWalker(private val visitor: AstVisitor) {
                 walkExprNode(lValue, values)
             }
             is InsertValueOp -> case {
-                val (lvalue, value, position) = dmlOperation
+                val (lvalue, value, position, onConflict) = dmlOperation
                 walkExprNode(lvalue, value, position)
+                walkOnConflict(onConflict)
             }
             is AssignmentOp -> case {
-                val (assignments) = dmlOperation
-                assignments.forEach {
-                    walkExprNode(it.lvalue)
-                    walkExprNode(it.rvalue)
-                }
+                val (assignment) = dmlOperation
+                walkExprNode(assignment.lvalue)
+                walkExprNode(assignment.rvalue)
             }
             is RemoveOp -> case {
                 val (lvalue) = dmlOperation
@@ -215,5 +237,17 @@ open class AstWalker(private val visitor: AstVisitor) {
                 // no-op - implicit target
             }
         }.toUnit()
+    }
+
+    private fun walkOnConflict(onConflict: OnConflict?) {
+        if (onConflict != null) {
+            visitor.visitOnConflict(onConflict)
+            val (condition, conflictAction) = onConflict
+            walkExprNode(condition)
+            when (conflictAction) {
+                ConflictAction.DO_NOTHING -> {
+                }
+            }
+        }
     }
 }

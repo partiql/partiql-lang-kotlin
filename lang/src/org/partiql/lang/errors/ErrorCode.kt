@@ -120,6 +120,26 @@ enum class ErrorCode(private val category: ErrorCategory,
         LOC_TOKEN,
         "expected WHEN clause in CASE"),
 
+    PARSE_EXPECTED_WHERE_CLAUSE(
+            ErrorCategory.PARSER,
+            LOC_TOKEN,
+            "expected WHERE clause"),
+
+    PARSE_EXPECTED_CONFLICT_ACTION(
+            ErrorCategory.PARSER,
+            LOC_TOKEN,
+            "expected <conflict action>"),
+
+    PARSE_EXPECTED_RETURNING_CLAUSE(
+            ErrorCategory.PARSER,
+            LOC_TOKEN,
+            "expected <returning mapping>"),
+
+    PARSE_UNSUPPORTED_RETURNING_CLAUSE_SYNTAX(
+            ErrorCategory.PARSER,
+            LOC_TOKEN,
+            "unsupported syntax in RETURNING clause"),
+
     PARSE_UNSUPPORTED_TOKEN(
         ErrorCategory.PARSER,
         LOC_TOKEN,

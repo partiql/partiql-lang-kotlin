@@ -12,10 +12,14 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.lang.syntax
+package org.partiql.cli
 
-/** Simple source line/column value. */
-data class SourcePosition(val line: Long, val column: Long) {
-    override fun toString(): String = "line $line, column $column"
+import java.util.concurrent.*
+
+fun <T> timeIt(block: () -> T): Long {
+    val start = System.nanoTime()
+    block()
+    val end = System.nanoTime()
+
+    return TimeUnit.MILLISECONDS.convert(end - start, TimeUnit.NANOSECONDS)
 }
-

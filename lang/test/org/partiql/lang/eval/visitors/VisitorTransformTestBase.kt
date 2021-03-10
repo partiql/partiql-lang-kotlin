@@ -14,10 +14,10 @@
 
 package org.partiql.lang.eval.visitors
 
-import org.junit.jupiter.api.assertDoesNotThrow
 import org.partiql.lang.ast.toAstStatement
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.syntax.SqlParserTestBase
+import org.junit.jupiter.api.fail
 
 /** Provides some basic functionality for parameterized testing implementation of [PartiqlAst.VisitorTransform]. */
 abstract class VisitorTransformTestBase : SqlParserTestBase() {
@@ -67,5 +67,13 @@ abstract class VisitorTransformTestBase : SqlParserTestBase() {
         }
 
         assertEquals("The expected AST must match the transformed AST", expectedAst, actualExprNode)
+    }
+
+    private fun <T> assertDoesNotThrow(message: String, block: () -> T): T {
+        try {
+            return block()
+        } catch (e: Throwable) {
+            fail("Expected block to not throw but it threw: $message", e)
+        }
     }
 }
