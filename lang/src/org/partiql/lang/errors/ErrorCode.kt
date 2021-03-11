@@ -272,6 +272,11 @@ enum class ErrorCode(private val category: ErrorCategory,
         LOC_TOKEN,
         "invalid value used for type parameter"),
 
+    PARSE_INVALID_DATE_STRING(
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "expected date string to be of the format YYYY-MM-DD"),
+
     PARSE_EMPTY_SELECT(
         ErrorCategory.PARSER,
         LOC_TOKEN,

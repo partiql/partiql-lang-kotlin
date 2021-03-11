@@ -28,6 +28,8 @@ import org.partiql.lang.syntax.SqlParser.ParseType.*
 import org.partiql.lang.syntax.TokenType.*
 import org.partiql.lang.syntax.TokenType.KEYWORD
 import org.partiql.lang.util.*
+import java.time.LocalDate
+import java.time.format.DateTimeParseException
 
 /**
  * Parses a list of tokens as infix query expression into a prefix s-expression
@@ -84,6 +86,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
         PIVOT,
         UNPIVOT,
         CALL,
+        DATE,
         CALL_AGG,
         CALL_DISTINCT_AGG,
         CALL_AGG_WILDCARD,
@@ -680,6 +683,10 @@ class SqlParser(private val ion: IonSystem) : Parser {
                 val tableName = children[1].token!!.text!!
                 DropIndex(tableName, identifier, metas = metas)
             }
+            DATE -> {
+                val dateString = token!!.text!!
+                DateTimeType.Date(dateString, metas)
+            }
             else -> unsupported("Unsupported syntax for $type", PARSE_UNSUPPORTED_SYNTAX)
         }
     }
@@ -1221,6 +1228,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
             "trim" -> tail.parseTrim(head!!)
             "extract" -> tail.parseExtract(head!!)
             "date_add", "date_diff" -> tail.parseDateAddOrDateDiff(head!!)
+            "date" -> tail.parseDate()
             in FUNCTION_NAME_KEYWORDS -> when (tail.head?.type) {
                 LEFT_PAREN ->
                     tail.tail.parseFunctionCall(head!!)
@@ -2219,6 +2227,23 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
         return ParseNode(CALL, name, listOf(datePart, timestamp), timestamp.remaining)
     }
+
+    /**
+     * Parses a date string and validates that the date string is a string and of the format YYYY-MM-DD
+     */
+    private fun List<Token>.parseDate(): ParseNode =
+        when (head?.value?.isText) {
+            true -> {
+                // validate that the date string follows the format YYYY-MM-DD
+                try {
+                    LocalDate.parse(head?.value?.stringValue())
+                } catch (e: DateTimeParseException) {
+                    err(e.localizedMessage, PARSE_INVALID_DATE_STRING)
+                }
+                ParseNode(DATE, head, listOf(), tail)
+            }
+            else -> err("Expected date string followed by the keyword DATE, found ${head?.value?.type}", PARSE_UNEXPECTED_TOKEN)
+        }
 
     /**
      * Parses a function call that has the syntax of `date_add` and `date_diff`.

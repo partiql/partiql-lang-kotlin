@@ -190,6 +190,7 @@ private class StatementTransformer(val ion: IonSystem) {
                     limit = limit?.toExprNode(),
                     metas = metas
             )
+            is Expr.Date -> DateTimeType.Date(this.dateString.text, metas)
         }
     }
 
@@ -317,6 +318,7 @@ private class StatementTransformer(val ion: IonSystem) {
             is Type.ListType -> DataType(SqlDataType.LIST, listOf(), metas)
             is Type.SexpType -> DataType(SqlDataType.SEXP, listOf(), metas)
             is Type.BagType -> DataType(SqlDataType.BAG, listOf(), metas)
+            is Type.DateType -> DataType(SqlDataType.DATE, listOf(), metas)
         }
     }
 

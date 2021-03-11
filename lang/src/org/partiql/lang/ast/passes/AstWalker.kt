@@ -133,8 +133,8 @@ open class AstWalker(private val visitor: AstVisitor) {
                         walkExprNode(key)
                     }
                 }
-                is CreateTable, is DropTable, is DropIndex -> case { }
-                is Exec -> case { }
+                is CreateTable, is DropTable, is DropIndex,
+                is Exec, is DateTimeType.Date -> case { }
             }.toUnit()
         }
     }

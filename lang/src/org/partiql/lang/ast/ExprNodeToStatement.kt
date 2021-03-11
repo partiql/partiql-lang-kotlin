@@ -11,7 +11,7 @@ fun ExprNode.toAstStatement(): PartiqlAst.Statement {
     val node = this
     return when(node) {
         is Literal, is LiteralMissing, is VariableReference, is Parameter, is NAry, is CallAgg,
-        is Typed, is Path, is SimpleCase, is SearchedCase, is Select, is Struct,
+        is Typed, is Path, is SimpleCase, is SearchedCase, is Select, is Struct, is DateTimeType.Date,
         is Seq -> PartiqlAst.build { query(toAstExpr()) }
 
         is DataManipulation -> node.toAstDml()
@@ -35,7 +35,7 @@ private fun ExprNode.toAstDdl(): PartiqlAst.Statement {
     return PartiqlAst.build {
         when(thiz) {
             is Literal, is LiteralMissing, is VariableReference, is Parameter, is NAry, is CallAgg, is Typed,
-            is Path, is SimpleCase, is SearchedCase, is Select, is Struct, is Seq,
+            is Path, is SimpleCase, is SearchedCase, is Select, is Struct, is Seq, is DateTimeType.Date,
             is DataManipulation, is Exec -> error("Can't convert ${thiz.javaClass} to PartiqlAst.ddl")
 
             is CreateTable -> ddl(createTable(thiz.tableName), metas)
@@ -170,6 +170,12 @@ fun ExprNode.toAstExpr(): PartiqlAst.Expr {
             // These are handled by `toAstDml()`, `toAstDdl()`, and `toAstExec()`
             is DataManipulation, is CreateTable, is CreateIndex, is DropTable, is DropIndex, is Exec ->
                 error("Can't transform ${node.javaClass} to a PartiqlAst.expr }")
+            // DateTime types
+            is DateTimeType -> {
+                when (node) {
+                    is DateTimeType.Date -> date(node.dateString, metas)
+                }
+            }
         }
     }
 }
@@ -440,6 +446,7 @@ private fun DataType.toAstType(): PartiqlAst.Type {
             SqlDataType.LIST -> listType(metas)
             SqlDataType.SEXP -> sexpType(metas)
             SqlDataType.BAG -> bagType(metas)
+            SqlDataType.DATE -> dateType(metas)
         }
     }
 }

@@ -106,6 +106,9 @@ sealed class ExprNode : AstNode(), HasMetas {
             is Exec            -> {
                 copy(metas = metas)
             }
+            is DateTimeType.Date -> {
+                copy(metas = metas)
+            }
         }
     }
 }
@@ -965,6 +968,16 @@ enum class OrderingSpec {
 }
 
 /**
+ * The sealed class includes all the datetime types such as DATE, TIME, TIMESTAMP
+ * Note: TIME and TIMESTAMP are yet to be added.
+ */
+sealed class DateTimeType : ExprNode() {
+    data class Date( val dateString: String, override val metas: MetaContainer ) : DateTimeType() {
+        override val children: List<AstNode> = listOf()
+    }
+}
+
+/**
  * Indicates strategy for binding lookup within scopes.
  */
 enum class ScopeQualifier {
@@ -1000,6 +1013,7 @@ enum class SqlDataType(val typeName: String, val arityRange: IntRange) {
     TUPLE("tuple", 0..0), // PartiQL
     LIST("list", 0..0), // Ion
     SEXP("sexp", 0..0), // Ion
+    DATE("date", 0..0), // SQL-92
     BAG("bag", 0..0);  // PartiQL
 
     companion object {
