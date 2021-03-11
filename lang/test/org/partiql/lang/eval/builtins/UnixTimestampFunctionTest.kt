@@ -37,7 +37,7 @@ class UnixTimestampFunctionTest : EvaluatorTestBase() {
                   Property.EXPECTED_ARITY_MAX to 1))
 
 
-    class NoArgsTests : ArgumentsProviderBase() {
+    class NoArgsCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
             // unix_timestamp no args, now = 0
             UnixTimestampNoArgTestCase(numMillis = 0, expected = "0"),
@@ -52,7 +52,7 @@ class UnixTimestampFunctionTest : EvaluatorTestBase() {
         )
     }
     @ParameterizedTest
-    @ArgumentsSource(NoArgsTests::class)
+    @ArgumentsSource(NoArgsCases::class)
     fun runNoArgTests(tc: UnixTimestampNoArgTestCase) =
         assertEval(
             "unix_timestamp()",
@@ -60,7 +60,7 @@ class UnixTimestampFunctionTest : EvaluatorTestBase() {
             session = EvaluationSession.build { now(Timestamp.forMillis(tc.numMillis, 0)) })
 
 
-    class OneArgTests : ArgumentsProviderBase() {
+    class OneArgCases : ArgumentsProviderBase() {
         private val epoch2020 = "1577836800"
         private val epoch2020Decimal = "1577836800."
 
@@ -85,6 +85,6 @@ class UnixTimestampFunctionTest : EvaluatorTestBase() {
         )
     }
     @ParameterizedTest
-    @ArgumentsSource(OneArgTests::class)
+    @ArgumentsSource(OneArgCases::class)
     fun runOneArgTests(tc: UnixTimestampOneArgTestCase) = assertEval(tc.timestamp, tc.expected)
 }

@@ -21,9 +21,10 @@
             // necessary to check the validity of these nodes during compilation or another phase.  In the future, we
             // should consider changing the modeling of these so such validity checks are not needed.
             (dml
-                (operation op::dml_op)
+                (operations ops::dml_op_list)
                 (from from::(? from_source))
-                (where where::(? expr)))
+                (where where::(? expr))
+                (returning returning::(? returning_expr)))
 
             // Data definition operations also cannot be composed with other `expr` nodes.
             (ddl op::ddl_op)
@@ -115,6 +116,7 @@
                 (where (? expr))
                 (group (? group_by))
                 (having (? expr))
+                (order (? order_by))
                 (limit (? expr))))
         // end of sum expr
 
@@ -199,6 +201,18 @@
         // <expr> [AS <symbol>]
         (product group_key expr::expr as_alias::(? symbol))
 
+        // ORDER BY <sort_spec>...
+        (product order_by sort_specs::(* sort_spec 1))
+
+        // <expr> [ASC | DESC] ?
+        (product sort_spec expr::expr ordering_spec::(? ordering_spec))
+
+        // Desired ordering spec: ASC or DESC
+        (sum ordering_spec
+            (asc)
+            (desc)
+        )
+
         // Indicates if variable lookup should be case-sensitive or not.
         (sum case_sensitivity (case_sensitive) (case_insensitive))
 
@@ -214,22 +228,31 @@
 
         // A Data Manipulation Operation.
         // TODO:  domain of `expr` is too broad for several elements below: https://github.com/partiql/partiql-lang-kotlin/issues/243
-        (sum dml_op
+        (product dml_op_list ops::(* dml_op 1))
 
+        (sum dml_op
             // `INSERT INTO <expr> <expr>`
             (insert target::expr values::expr)
 
-            // `INSERT INTO <expr> VALUE <expr> [AT <expr>]`
-            (insert_value target::expr value::expr index::(? expr))
+            // `INSERT INTO <expr> VALUE <expr> [AT <expr>]` [ON CONFLICT WHERE <expr> DO NOTHING]`
+            (insert_value target::expr value::expr index::(? expr) on_conflict::(? on_conflict))
 
             // `SET <assignment>...`
-            (set assignments::(* assignment 1))
+            (set assignment::assignment)
 
             // `REMOVE <expr>`
             (remove target::expr)
 
             // DELETE
-            (delete))
+            (delete)
+         )
+
+        // `ON CONFLICT WHERE <expr> <conflict_action>`
+        (product on_conflict expr::expr conflict_action::conflict_action)
+
+        // `CONFLICT_ACTION <action>`
+        (sum conflict_action
+            (do_nothing))
 
         // A data definition operation.
         (sum ddl_op
@@ -248,6 +271,25 @@
             (drop_index
                 (table identifier)
                 (keys identifier)))
+
+        // `RETURNING (<returning_elem> [, <returning_elem>]...)`
+        (product returning_expr elems::(* returning_elem 1))
+
+        // `<returning mapping> (<expr> [, <expr>]...)`
+        (product returning_elem mapping::returning_mapping column::column_component)
+
+        (sum column_component
+            (returning_wildcard)
+            (returning_column expr::expr)
+        )
+
+        // ( MODIFIED | ALL ) ( NEW | OLD )
+        (sum returning_mapping
+            (modified_new)
+            (modified_old)
+            (all_new)
+            (all_old)
+        )
 
         // `identifier` can be used for names that need to be looked up with a notion of case-sensitivity.
 

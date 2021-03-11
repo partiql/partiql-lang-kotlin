@@ -74,6 +74,9 @@ class SqlParser(private val ion: IonSystem) : Parser {
         RIGHT_JOIN(isJoin = true),
         OUTER_JOIN(isJoin = true),
         WHERE,
+        ORDER_BY,
+        SORT_SPEC,
+        ORDERING_SPEC,
         GROUP,
         GROUP_PARTIAL,
         HAVING,
@@ -113,6 +116,14 @@ class SqlParser(private val ion: IonSystem) : Parser {
         FROM,
         FROM_CLAUSE,
         FROM_SOURCE_JOIN,
+        CHECK,
+        ON_CONFLICT,
+        CONFLICT_ACTION,
+        DML_LIST,
+        RETURNING,
+        RETURNING_ELEM,
+        RETURNING_MAPPING,
+        RETURNING_WILDCARD,
         CREATE_TABLE(isTopLevelType = true),
         DROP_TABLE(isTopLevelType = true),
         DROP_INDEX(isTopLevelType = true),
@@ -152,7 +163,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
         fun deriveExpectedKeyword(keyword: String): ParseNode = derive { tailExpectedKeyword(keyword) }
 
         val isNumericLiteral = type == ATOM && when (token?.type) {
-            LITERAL -> token.value?.isNumeric ?: false
+            LITERAL, ION_LITERAL -> token.value?.isNumeric ?: false
             else -> false
         }
 
@@ -164,7 +175,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
         fun errMalformedParseTree(message: String): Nothing {
             val context = PropertyValueMap()
-            token?.position?.let {
+            token?.span?.let {
                 context[Property.LINE_NUMBER] = it.line
                 context[Property.COLUMN_NUMBER] = it.column
             }
@@ -172,7 +183,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
         }
     }
 
-    private fun Token.toSourceLocation() = SourceLocationMeta(position.line, position.column)
+    private fun Token.toSourceLocation() = SourceLocationMeta(span.line, span.column, span.length)
 
     private fun Token?.toSourceLocationMetaContainer(): MetaContainer =
         if(this == null) {
@@ -186,7 +197,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
             errMalformedParseTree("Expected ParseNode to have a token")
         }
         when (token.type) {
-            LITERAL, IDENTIFIER, QUOTED_IDENTIFIER -> {
+            LITERAL, ION_LITERAL, IDENTIFIER, QUOTED_IDENTIFIER -> {
                 val tokenText = token.text ?: errMalformedParseTree("Expected ParseNode.token to have text")
                 return SymbolicName(tokenText, token.toSourceLocationMetaContainer())
             }
@@ -195,6 +206,12 @@ class SqlParser(private val ion: IonSystem) : Parser {
             }
         }
      }
+
+    private fun ParseNode.malformedIfNotEmpty(unconsumedChildren: List<ParseNode>) {
+        if (!unconsumedChildren.isEmpty()) {
+            errMalformedParseTree("Unprocessed components remaining")
+        }
+    }
 
     //***************************************
     // toExprNode
@@ -205,6 +222,9 @@ class SqlParser(private val ion: IonSystem) : Parser {
             ATOM -> when (token?.type) {
                 LITERAL, NULL, TRIM_SPECIFICATION, DATE_PART -> {
                     Literal(token.value!!, metas)
+                }
+                ION_LITERAL -> {
+                    Literal(token.value!!, metas.add(IsIonLiteralMeta.instance))
                 }
                 MISSING                                      -> {
                     LiteralMissing(metas)
@@ -476,37 +496,44 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     }
                 }.children[0].toFromSource()
 
-                val where = children.firstOrNull { it.type == WHERE }?.let { it.children[0].toExprNode() }
+                // We will remove items from this collection as we consume them.
+                // If any unconsumed children remain, we've missed something and should throw an exception.
+                val unconsumedChildren = children.drop(2).toMutableList()
+
+                val where = unconsumedChildren.firstOrNull { it.type == WHERE }?.let {
+                    unconsumedChildren.remove(it)
+                    it.children[0].toExprNode()
+                }
+
+                val returning = unconsumedChildren.firstOrNull { it.type == RETURNING }?.let {
+                    unconsumedChildren.remove(it)
+                    it.toReturningExpr()
+                }
+
+                // Throw an exception if any unconsumed children remain
+                malformedIfNotEmpty(unconsumedChildren)
 
                 when (operation) {
                     is DataManipulation -> {
-                        operation.copy(from = fromSource, where = where, metas = metas)
+                        operation.copy(from = fromSource, where = where, returning = returning, metas = metas)
                     }
                     else -> {
                         errMalformedParseTree("Unsupported operation for FROM expression")
                     }
                 }
             }
-            INSERT -> {
-                DataManipulation(InsertOp(children[0].toExprNode(), children[1].toExprNode()), metas = metas)
+            INSERT, INSERT_VALUE -> {
+                val insertReturning = this.toInsertReturning()
+                DataManipulation(DmlOpList(insertReturning.ops), returning = insertReturning.returning, metas = metas)
             }
-            INSERT_VALUE -> {
-                val position = children.getOrNull(2)?.toExprNode()
-                DataManipulation(InsertValueOp(children[0].toExprNode(), children[1].toExprNode(), position), metas = metas)
+            SET, UPDATE, REMOVE, DELETE -> {
+                DataManipulation(DmlOpList(this.toDmlOperation()), metas = metas)
             }
-            SET, UPDATE -> {
-                val assignments =
-                    children
-                        .map { Assignment(it.children[0].toExprNode(), it.children[1].toExprNode()) }
-                        .toList()
-                DataManipulation(AssignmentOp(assignments), metas = metas)
+            DML_LIST -> {
+                val dmlops = children.flatMap { it.toDmlOperation() }.toList()
+                DataManipulation(DmlOpList(dmlops), metas = metas)
             }
-            REMOVE -> {
-                DataManipulation(RemoveOp(children[0].toExprNode()), metas = metas)
-            }
-            DELETE -> {
-                DataManipulation(DeleteOp(), metas = metas)
-            }
+
             SELECT_LIST, SELECT_VALUE, PIVOT -> {
                 // The first child of a SELECT_LIST parse node and be either DISTINCT or ARG_LIST.
                 // If it is ARG_LIST, the children of that node are the select items and the SetQuantifier is ALL
@@ -572,6 +599,19 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     it.children[0].toExprNode()
                 }
 
+                val orderBy = unconsumedChildren.firstOrNull { it.type == ORDER_BY }?.let {
+                    unconsumedChildren.remove(it)
+                    OrderBy(
+                        it.children[0].children.map {
+                            when (it.children.size) {
+                                1 -> SortSpec(it.children[0].toExprNode(), OrderingSpec.ASC)
+                                2 -> SortSpec(it.children[0].toExprNode(), it.children[1].toOrderingSpec())
+                                else -> errMalformedParseTree("Invalid ordering expressions syntax")
+                            }
+                        }
+                    )
+                }
+
                 val groupBy = unconsumedChildren.firstOrNull { it.type == GROUP || it.type == GROUP_PARTIAL }?.let {
                     unconsumedChildren.remove(it)
                     val groupingStrategy = when(it.type) {
@@ -618,6 +658,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     where = whereExpr,
                     groupBy = groupBy,
                     having = havingExpr,
+                    orderBy = orderBy,
                     limit = limitExpr,
                     metas = metas)
             }
@@ -642,6 +683,126 @@ class SqlParser(private val ion: IonSystem) : Parser {
             else -> unsupported("Unsupported syntax for $type", PARSE_UNSUPPORTED_SYNTAX)
         }
     }
+
+    private fun ParseNode.toDmlOperation(): List<DataManipulationOperation> =
+        when(type) {
+            INSERT -> {
+                listOf(InsertOp(children[0].toExprNode(), children[1].toExprNode()))
+            }
+            INSERT_VALUE -> {
+                fun getOnConflictExprNode(onConflictChildren: List<ParseNode>) : OnConflict {
+                    onConflictChildren.getOrNull(0)?.let {
+                        val condition = it.toExprNode()
+                        onConflictChildren.getOrNull(1)?.let {
+                            if (CONFLICT_ACTION == it.type && "do_nothing" == it.token?.keywordText) {
+                                return OnConflict(condition, ConflictAction.DO_NOTHING)
+                            }
+                        }
+                    }
+                    errMalformedParseTree("invalid ON CONFLICT syntax")
+                }
+
+                val lvalue = children[0].toExprNode()
+                val value = children[1].toExprNode()
+
+                // We will remove items from this collection as we consume them.
+                // If any unconsumed children remain, we've missed something and should throw an exception.
+                val unconsumedChildren = children.drop(2).toMutableList()
+
+                // Handle AT clause
+                val position = unconsumedChildren.firstOrNull {it.type != ON_CONFLICT && it.type != RETURNING }?.let {
+                    unconsumedChildren.remove(it)
+                    it.toExprNode()
+                }
+
+                val onConflict = unconsumedChildren.firstOrNull {it.type == ON_CONFLICT}?.let {
+                    unconsumedChildren.remove(it)
+                    getOnConflictExprNode(it.children)
+                }
+
+                // Throw an exception if any unconsumed children remain
+                malformedIfNotEmpty(unconsumedChildren)
+
+                listOf(InsertValueOp(lvalue, value, position=position, onConflict=onConflict))
+            }
+            SET, UPDATE -> {
+                val assignments =
+                        children
+                                .map { AssignmentOp(Assignment(it.children[0].toExprNode(), it.children[1].toExprNode())) }
+                                .toList()
+                assignments
+            }
+            REMOVE -> {
+                listOf(RemoveOp(children[0].toExprNode()))
+            }
+            DELETE -> {
+                listOf(DeleteOp())
+            }
+            else -> unsupported("Unsupported syntax for $type", PARSE_UNSUPPORTED_SYNTAX)
+        }
+
+    private fun ParseNode.toInsertReturning(): InsertReturning =
+            when(type) {
+                INSERT -> {
+                    val ops = listOf(InsertOp(children[0].toExprNode(), children[1].toExprNode()))
+                    // We will remove items from this collection as we consume them.
+                    // If any unconsumed children remain, we've missed something and should throw an exception.
+                    val unconsumedChildren = children.drop(2).toMutableList()
+                    val returning = unconsumedChildren.firstOrNull { it.type == RETURNING }?.let {
+                        unconsumedChildren.remove(it)
+                        it.toReturningExpr()
+                    }
+
+                    // Throw an exception if any unconsumed children remain
+                    malformedIfNotEmpty(unconsumedChildren)
+
+                    InsertReturning(ops, returning)
+                }
+                INSERT_VALUE -> {
+                    fun getOnConflictExprNode(onConflictChildren: List<ParseNode>): OnConflict {
+                        onConflictChildren.getOrNull(0)?.let {
+                            val condition = it.toExprNode()
+                            onConflictChildren.getOrNull(1)?.let {
+                                if (CONFLICT_ACTION == it.type && "do_nothing" == it.token?.keywordText) {
+                                    return OnConflict(condition, ConflictAction.DO_NOTHING)
+                                }
+                            }
+                        }
+                        errMalformedParseTree("invalid ON CONFLICT syntax")
+                    }
+
+                    val lvalue = children[0].toExprNode()
+                    val value = children[1].toExprNode()
+
+                    // We will remove items from this collection as we consume them.
+                    // If any unconsumed children remain, we've missed something and should throw an exception.
+                    val unconsumedChildren = children.drop(2).toMutableList()
+
+                    // Handle AT clause
+                    val position = unconsumedChildren.firstOrNull { it.type != ON_CONFLICT && it.type != RETURNING }?.let {
+                        unconsumedChildren.remove(it)
+                        it.toExprNode()
+                    }
+
+                    val onConflict = unconsumedChildren.firstOrNull { it.type == ON_CONFLICT }?.let {
+                        unconsumedChildren.remove(it)
+                        getOnConflictExprNode(it.children)
+                    }
+
+                    val ops = listOf(InsertValueOp(lvalue, value, position = position, onConflict = onConflict))
+
+                    val returning = unconsumedChildren.firstOrNull { it.type == RETURNING }?.let {
+                        unconsumedChildren.remove(it)
+                        it.toReturningExpr()
+                    }
+
+                    // Throw an exception if any unconsumed children remain
+                    malformedIfNotEmpty(unconsumedChildren)
+
+                    InsertReturning(ops, returning)
+                }
+                else -> unsupported("Unsupported syntax for $type", PARSE_UNSUPPORTED_SYNTAX)
+            }
 
     private data class AsAlias(val name: SymbolicName?, val node: ParseNode)
 
@@ -785,6 +946,49 @@ class SqlParser(private val ion: IonSystem) : Parser {
             metas = token.toSourceLocationMetaContainer())
     }
 
+    private fun ParseNode.toOrderingSpec(): OrderingSpec {
+        if(type != ORDERING_SPEC) {
+            errMalformedParseTree("Expected ParseType.ORDERING_SPEC instead of $type")
+        }
+        return when (token?.type) {
+            ASC -> OrderingSpec.ASC
+            DESC -> OrderingSpec.DESC
+            else -> errMalformedParseTree("Invalid ordering spec parsing")
+        }
+    }
+
+    private fun ParseNode.toReturningExpr(): ReturningExpr {
+        val metas = token.toSourceLocationMetaContainer()
+        return ReturningExpr(
+            this.children[0].children.map { re ->
+                ReturningElem(
+                    re.children[0].toReturningMapping(),
+                    re.children[1].toColumnComponent(metas)
+                )
+            }
+        )
+    }
+
+    private fun ParseNode.toReturningMapping(): ReturningMapping {
+        if(type != RETURNING_MAPPING) {
+            errMalformedParseTree("Expected ParseType.RETURNING_MAPPING instead of $type")
+        }
+        return when (token?.keywordText) {
+            "modified_old" -> ReturningMapping.MODIFIED_OLD
+            "modified_new" -> ReturningMapping.MODIFIED_NEW
+            "all_old" -> ReturningMapping.ALL_OLD
+            "all_new" -> ReturningMapping.ALL_NEW
+            else -> errMalformedParseTree("Invalid ReturningMapping parsing")
+        }
+    }
+
+    private fun ParseNode.toColumnComponent(metas: MetaContainer): ColumnComponent {
+        return when (this.type) {
+            RETURNING_WILDCARD -> ReturningWildcard(metas)
+            else -> ReturningColumn(this.toExprNode())
+        }
+    }
+
     /**********************************************************************************************
      * Parse logic below this line.
      **********************************************************************************************/
@@ -917,7 +1121,6 @@ class SqlParser(private val ion: IonSystem) : Parser {
             else -> parsePathTerm()
         }
 
-
     private fun List<Token>.parsePathTerm(pathMode: PathMode = PathMode.FULL_PATH): ParseNode {
         val term = when (pathMode) {
             PathMode.FULL_PATH -> parseTerm()
@@ -938,11 +1141,11 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     rem = rem.tail
                     val pathPart = when (rem.head?.type) {
                         IDENTIFIER       -> {
-                            val litToken = Token(LITERAL, ion.newString(rem.head?.text!!), rem.head!!.position)
+                            val litToken = Token(LITERAL, ion.newString(rem.head?.text!!), rem.head!!.span)
                             ParseNode(CASE_INSENSITIVE_ATOM, litToken, emptyList(), rem.tail)
                         }
                         QUOTED_IDENTIFIER -> {
-                            val litToken = Token(LITERAL, ion.newString(rem.head?.text!!), rem.head!!.position)
+                            val litToken = Token(LITERAL, ion.newString(rem.head?.text!!), rem.head!!.span)
                             ParseNode(CASE_SENSITIVE_ATOM, litToken, emptyList(), rem.tail)
                         }
                         STAR              -> {
@@ -1056,7 +1259,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
             else -> atomFromHead()
         }
         QUESTION_MARK -> ParseNode(PARAMETER, head!!, listOf(), tail)
-        LITERAL, NULL, MISSING, TRIM_SPECIFICATION -> atomFromHead()
+        ION_LITERAL, LITERAL, NULL, MISSING, TRIM_SPECIFICATION -> atomFromHead()
         else -> err("Unexpected term", PARSE_UNEXPECTED_TERM)
     }.let { parseNode ->
         // for many of the terms here we parse the tail, assuming the head as
@@ -1175,10 +1378,35 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
         // TODO determine if DML l-value should be restricted to paths...
         // TODO support the FROM ... SELECT forms
-        val operation = rem.parseBaseDml()
+        val operation = rem.parseBaseDmls()
         rem = operation.remaining
 
+        rem.parseOptionalReturning()?.let { it ->
+            children.add(it)
+            rem = it.remaining
+        }
+
         return ParseNode(FROM, null, listOf(operation, fromList) + children, rem)
+    }
+
+    private fun List<Token>.parseBaseDmls() : ParseNode {
+        var rem = this;
+        val nodes = ArrayList<ParseNode>()
+        while (rem.head?.keywordText in BASE_DML_KEYWORDS) {
+            var node = rem.parseBaseDml()
+            nodes.add(node)
+            rem = node.remaining
+        }
+
+        if (nodes.size == 0) {
+            err("Expected data manipulation", PARSE_MISSING_OPERATION)
+        }
+
+        if (nodes.size == 1) {
+            return nodes[0]
+        }
+
+        return ParseNode(DML_LIST, null, nodes, rem)
     }
 
     private fun List<Token>.parseBaseDml(): ParseNode {
@@ -1192,12 +1420,15 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     val value = rem.tail.parseExpression()
                     rem = value.remaining
 
-                    if ("at" == rem.head?.keywordText) {
-                        val position = rem.tail.parseExpression()
-                        ParseNode(INSERT_VALUE, null, listOf(lvalue, value, position), position.remaining)
-                    } else {
-                        ParseNode(INSERT_VALUE, null, listOf(lvalue, value), value.remaining)
+                    val position = when(rem.head?.keywordText) {
+                        "at" -> rem.tail.parseExpression().also { rem = it.remaining }
+                        else -> null
                     }
+                    val onConflict = rem.parseOptionalOnConflict()?.also { rem = it.remaining }
+
+                    val returning = rem.parseOptionalReturning()?.also { rem = it.remaining }
+
+                    ParseNode(INSERT_VALUE, null, listOfNotNull(lvalue, value, position, onConflict, returning), rem)
                 } else {
                     val values = rem.parseExpression()
                     ParseNode(INSERT, null, listOf(lvalue, values), values.remaining)
@@ -1211,6 +1442,35 @@ class SqlParser(private val ion: IonSystem) : Parser {
             }
             else -> err("Expected data manipulation", PARSE_MISSING_OPERATION)
         }
+    }
+
+    private fun List<Token>.parseConflictAction(token: Token): ParseNode {
+        val rem = this
+        return ParseNode(CONFLICT_ACTION, token, emptyList(), rem.tail)
+    }
+
+    // Parse the optional ON CONFLICT clause in 'INSERT VALUE <expr> AT <expr> ON CONFLICT WHERE <expr> <conflict action>'
+    private fun List<Token>.parseOptionalOnConflict(): ParseNode? {
+        val remaining = this
+        return if ("on_conflict" == remaining.head?.keywordText) {
+            val rem = remaining.tail
+            when (rem.head?.keywordText) {
+                "where" -> {
+                    val where_rem = rem.tail
+                    val onConflictExpression = where_rem.parseExpression()
+                    val onConflictRem = onConflictExpression.remaining
+                    when (onConflictRem.head?.keywordText) {
+                        "do_nothing" -> {
+                            val conflictAction = onConflictRem.parseConflictAction(onConflictRem.head!!)
+                            var nodes = listOfNotNull(onConflictExpression, conflictAction)
+                            ParseNode(ON_CONFLICT, null, nodes, conflictAction.remaining)
+                        }
+                        else -> rem.head.err("invalid ON CONFLICT syntax", PARSE_EXPECTED_CONFLICT_ACTION)
+                    }
+                }
+                else -> rem.head.err("invalid ON CONFLICT syntax", PARSE_EXPECTED_WHERE_CLAUSE)
+            }
+        } else null
     }
 
     private fun List<Token>.parseSetAssignments(type: ParseType): ParseNode = parseArgList(
@@ -1232,7 +1492,14 @@ class SqlParser(private val ion: IonSystem) : Parser {
     }
 
     private fun List<Token>.parseUpdate(): ParseNode = parseLegacyDml {
-        parseBaseDml()
+        parseBaseDmls()
+    }
+
+    private fun List<Token>.parseReturning(): ParseNode {
+        var rem = this
+        val returningElems = listOf(rem.parseReturningElems())
+        rem = returningElems.first().remaining
+        return ParseNode(type = RETURNING, token = null, children = returningElems, remaining = rem)
     }
 
     private inline fun List<Token>.parseLegacyDml(parseDmlOp: List<Token>.() -> ParseNode): ParseNode {
@@ -1264,6 +1531,11 @@ class SqlParser(private val ion: IonSystem) : Parser {
             rem = it.remaining
         }
 
+        rem.parseOptionalReturning()?.let { it ->
+            children.add(it)
+            rem = it.remaining
+        }
+
         // generate a FROM-node to normalize the parse tree
         return ParseNode(FROM, null, listOf(operation) + children, rem)
     }
@@ -1279,6 +1551,58 @@ class SqlParser(private val ion: IonSystem) : Parser {
         }
 
         return null
+    }
+
+    private fun List<Token>.parseOptionalReturning(): ParseNode? {
+        var rem = this
+
+        if (rem.head?.keywordText == "returning") {
+            return rem.tail.parseReturning()
+        }
+
+        return null
+    }
+
+    private fun List<Token>.parseReturningElems(): ParseNode {
+        return parseCommaList {
+            var rem = this
+            var returningMapping = rem.parseReturningMapping().also { rem = it.remaining }
+            var column = rem.parseColumn().also { rem = it.remaining }
+            ParseNode(type = RETURNING_ELEM, token = null, children = listOf(returningMapping, column), remaining = rem)
+        }
+    }
+
+    private fun List<Token>.parseReturningMapping(): ParseNode {
+        var rem = this
+        when (rem.head?.keywordText) {
+            "modified_old", "modified_new", "all_old", "all_new" -> {
+                return ParseNode(type = RETURNING_MAPPING, token = rem.head, children = listOf(), remaining = rem.tail)
+            }
+            else -> rem.err("Expected ( MODIFIED | ALL ) ( NEW | OLD ) in each returning element.", PARSE_EXPECTED_RETURNING_CLAUSE)
+        }
+    }
+
+    private fun List<Token>.parseColumn(): ParseNode {
+        return when (this.head?.type) {
+            STAR -> ParseNode(RETURNING_WILDCARD, this.head, listOf(), this.tail)
+            else -> {
+                var expr = parseExpression().let {
+                    when (it.type) {
+                        PATH -> inspectColumnPathExpression(it)
+                        ATOM -> it
+                        else -> this.err("Unsupported syntax in RETURNING columns.", PARSE_UNSUPPORTED_RETURNING_CLAUSE_SYNTAX)
+                    }
+                }
+                expr
+            }
+        }
+    }
+
+    private fun inspectColumnPathExpression(pathNode: ParseNode): ParseNode {
+        if (pathNode.children.size > 2) {
+            pathNode.children[2].token?.err("More than two paths in RETURNING columns.", PARSE_UNSUPPORTED_RETURNING_CLAUSE_SYNTAX)
+        }
+        return pathNode
     }
 
     private fun List<Token>.parsePivot(): ParseNode {
@@ -1530,7 +1854,6 @@ class SqlParser(private val ion: IonSystem) : Parser {
         return pathNode
     }
 
-
     private fun List<Token>.parseSelectList(): ParseNode {
         return parseCommaList {
             if (this.head?.type == STAR) {
@@ -1579,6 +1902,17 @@ class SqlParser(private val ion: IonSystem) : Parser {
         }
 
         parseOptionalSingleExpressionClause(WHERE)
+
+        if (rem.head?.keywordText == "order") {
+            rem = rem.tail.tailExpectedToken(BY)
+
+            val orderByChildren = listOf(rem.parseOrderByArgList())
+            rem = orderByChildren.first().remaining
+
+            children.add(
+                ParseNode(type = ORDER_BY, token = null, children = orderByChildren, remaining = rem)
+            )
+        }
 
         if (rem.head?.keywordText == "group") {
             rem = rem.tail
@@ -1894,7 +2228,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
      */
     private fun List<Token>.parseDateAddOrDateDiff(name: Token): ParseNode {
         if (head?.type != LEFT_PAREN) err("Expected $LEFT_PAREN",
-                                          PARSE_EXPECTED_LEFT_PAREN_BUILTIN_FUNCTION_CALL)
+            PARSE_EXPECTED_LEFT_PAREN_BUILTIN_FUNCTION_CALL)
 
         val datePart = this.tail.parseDatePart().deriveExpected(COMMA)
 
@@ -2003,6 +2337,28 @@ class SqlParser(private val ion: IonSystem) : Parser {
                 else -> null
             }
             else -> null
+        }
+    }
+
+        private fun List<Token>.parseOrderByArgList(): ParseNode {
+        return parseDelimitedList(parseCommaDelim) {
+            var rem = this
+
+            var child = rem.parseExpression()
+            var sortSpecKey = listOf(child)
+            rem = child.remaining
+
+            when (rem.head?.type) {
+                ASC, DESC -> {
+                    sortSpecKey = listOf(child, ParseNode(
+                        type = ORDERING_SPEC,
+                        token = rem.head,
+                        children = listOf(),
+                        remaining = rem.tail))
+                    rem = rem.tail
+                }
+            }
+            ParseNode(type = SORT_SPEC, token = null, children = sortSpecKey, remaining = rem)
         }
     }
 
@@ -2271,9 +2627,10 @@ class SqlParser(private val ion: IonSystem) : Parser {
         }
 
         if (node.type.isTopLevelType && level > 0) {
-            // Note that for DML operations, top level parse node may be of type 'FROM'. Hence the check level > 1
+            // Note that for DML operations, top level parse node may be of type 'FROM' and nested within a `DML_LIST`
+            // Hence the check level > 2
             if (node.type.isDml) {
-                if (level > 1) {
+                if (level > 2) {
                     node.throwTopLevelParserError()
                 }
             } else {
@@ -2289,7 +2646,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
         val node = tokens.parseExpression()
         val rem = node.remaining
         if (!rem.onlyEndOfStatement()) {
-            when(rem.head?.type ) {
+            when (rem.head?.type) {
                 SEMICOLON -> rem.tail.err("Unexpected token after semicolon. (Only one query is allowed.)",
                                           PARSE_UNEXPECTED_TOKEN)
                 else      -> rem.err("Unexpected token after expression", PARSE_UNEXPECTED_TOKEN)

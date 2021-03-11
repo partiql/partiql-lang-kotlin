@@ -275,7 +275,7 @@ internal class EvaluatingCompiler(
                 "DML operations are not supported yet",
                 ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
                 errorContextFrom(expr.metas).also {
-                    it[Property.FEATURE_NAME] = "DataManipulation.${expr.dmlOperation.name}"
+                    it[Property.FEATURE_NAME] = "DataManipulation.${expr.dmlOperations.ops.first().name}"
                 }, internal = false
             )
             is CreateTable,
@@ -937,6 +937,12 @@ internal class EvaluatingCompiler(
 
 
     private fun compileSelect(selectExpr: Select): ThunkEnv {
+        selectExpr.orderBy?.let {
+            err("ORDER BY is not supported in evaluator yet",
+                ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
+                errorContextFrom(selectExpr.metas),
+                internal = false )}
+
         // Get all the FROM source aliases and LET bindings for binding error checks
         val fold = object : PartiqlAst.VisitorFold<Set<String>>() {
             /** Store all the visited FROM source aliases in the accumulator */
@@ -955,12 +961,13 @@ internal class EvaluatingCompiler(
                 return accumulator
             }
         }
+
         val pigGeneratedAst = selectExpr.toAstExpr() as PartiqlAst.Expr.Select
         val allFromSourceAliases = fold.walkFromSource(pigGeneratedAst.from, emptySet())
             .union(pigGeneratedAst.fromLet?.let { fold.walkLet(pigGeneratedAst.fromLet, emptySet()) } ?: emptySet())
 
         return nestCompilationContext(ExpressionContext.NORMAL, emptySet()) {
-            val (setQuantifier, projection, from, fromLet, _, groupBy, having, limit, metas: MetaContainer) = selectExpr
+            val (setQuantifier, projection, from, fromLet, _, groupBy, having, _, limit, metas: MetaContainer) = selectExpr
 
             val fromSourceThunks = compileFromSources(from)
             val letSourceThunks = fromLet?.let { compileLetSources(it) }
@@ -1011,7 +1018,7 @@ internal class EvaluatingCompiler(
                         val compiledAggregates = aggregateListMeta?.aggregateCallSites?.map { it ->
                             val funcName = it.funcName.text
                             CompiledAggregate(
-                                factory = getAggregatorFactory(funcName, it.setq.toSetQuantifier(), it.metas.toPartiQlMetaContainer()),
+                                factory = getAggregatorFactory(funcName, it.setq.toExprNodeSetQuantifier(), it.metas.toPartiQlMetaContainer()),
                                 argThunk = compileExprNode(it.arg.toExprNode(valueFactory.ion)))
                         }
 
@@ -1218,7 +1225,7 @@ internal class EvaluatingCompiler(
                                                             for (childValue in valuesToProject) {
                                                                 val namedFacet = childValue.asFacet(Named::class.java)
                                                                 val name = namedFacet?.name
-                                                                           ?: syntheticColumnName(columns.size).exprValue()
+                                                                    ?: syntheticColumnName(columns.size).exprValue()
                                                                 columns.add(childValue.namedValue(name))
                                                             }
                                                         }

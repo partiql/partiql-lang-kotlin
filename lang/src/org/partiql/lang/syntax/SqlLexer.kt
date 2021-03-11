@@ -370,7 +370,7 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
                     }
                 }
 
-                delta(BACKTICK_CHARS, TERMINAL, LITERAL, ION_LITERAL, replacement = REPLACE_NOTHING, delegate = initialState)
+                delta(BACKTICK_CHARS, TERMINAL, TokenType.ION_LITERAL, LexType.ION_LITERAL, replacement = REPLACE_NOTHING, delegate = initialState)
             }
 
             delta(ALL_WHITESPACE_CHARS, START_AND_TERMINAL, null, WHITESPACE)
@@ -425,11 +425,13 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
         val tracker = PositionTracker()
         var parameterCt = 0
         var currPos = tracker.position
+        var tokenCodePointCount = 0L
         var curr: State = INITIAL_STATE
         val buffer = StringBuilder()
 
 
         for (cp in codePoints) {
+            tokenCodePointCount++;
 
             fun errInvalidChar(): Nothing =
                 throw LexerException(errorCode = LEXER_INVALID_CHAR, errorContext = makePropertyBag(repr(cp), tracker))
@@ -515,6 +517,14 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
                                         tokenType = FOR
                                         ion.newSymbol(lower)
                                     }
+                                    lower == "asc" -> {
+                                        tokenType = ASC
+                                        ion.newSymbol(lower)
+                                    }
+                                    lower == "desc" -> {
+                                        tokenType = DESC
+                                        ion.newSymbol(lower)
+                                    }
                                     lower in BOOLEAN_KEYWORDS -> {
                                         // literal boolean
                                         tokenType = LITERAL
@@ -537,7 +547,11 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
                                 catch (e: NumberFormatException) {
                                     errInvalidLiteral(text)
                                 }
-                                ION_LITERAL -> try {
+
+                                else        -> errInvalidLiteral(text)
+                            }
+                            TokenType.ION_LITERAL -> {
+                                try {
                                     // anything wrapped by `` is considered as an ion literal, including invalid
                                     // ion so we need to handle the exception here for proper error reporting
                                     ion.singleValue(text)
@@ -545,19 +559,24 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
                                 catch (e: IonException) {
                                     errInvalidIonLiteral(text, e)
                                 }
-                                else        -> errInvalidLiteral(text)
                             }
                             QUESTION_MARK -> {
                                 ion.newInt(++parameterCt)
                             }
                             else -> ion.newSymbol(text)
                         }.seal()
-                        tokens.addOrMerge(Token(tokenType, ionValue, currPos))
+
+                        tokens.addOrMerge(
+                            Token(
+                                type = tokenType,
+                                value = ionValue,
+                                span = SourceSpan(currPos.line, currPos.column, tokenCodePointCount)))
                     }
 
                     // get ready for next token
                     buffer.setLength(0)
                     currPos = tracker.position
+                    tokenCodePointCount = 0
                 }
             }
             val replacement = next.replacement
@@ -569,7 +588,12 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
             }
 
             // if next state is the EOF marker add it to `tokens`.
-            if (next.stateType == END) tokens.add(Token(TokenType.EOF,ion.newSymbol("EOF"), currPos))
+            if (next.stateType == END) tokens.add(
+                Token(
+                    type = TokenType.EOF,
+                    value = ion.newSymbol("EOF"),
+                    span = SourceSpan(currPos.line, currPos.column, 0)))
+
             curr = next
         }
 
@@ -596,9 +620,10 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
             val lexemeMapping = MULTI_LEXEME_TOKEN_MAP[keywords] ?: continue
 
             // at this point we found the candidate so we need to replace the suffix
-            var newPos = newToken.position
+            var newPos = newToken.span
             for (count in 1..prefixLength) {
-                newPos = removeAt(size - 1).position
+                newPos = removeAt(size - 1).span
+                // TODO: calculate length of multi-lexeme tokens correctly. We use the length of the first token for now
             }
 
             // create our new token

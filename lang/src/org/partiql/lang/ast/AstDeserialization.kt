@@ -267,7 +267,7 @@ private class AstDeserializerInternal(
         val nodeArgs = rootSexp.args
 
         val rules = nodeTag.definition.validationRules[astVersion]
-                    ?: err("Tag '${nodeTag.definition.tagText}' is not valid for AST version ${astVersion.number}.")
+            ?: err("Tag '${nodeTag.definition.tagText}' is not valid for AST version ${astVersion.number}.")
 
         if (!rules.arityRange.contains(nodeArgs.size)) {
             err("Incorrect arity of ${nodeArgs.size} for node '${nodeTag.definition.tagText}'.  Expected ${rules.arityRange}")
@@ -339,8 +339,7 @@ private class AstDeserializerInternal(
                 NodeTag.CALL_AGG_WILDCARD  -> deserializeCallAggWildcard(targetArgs, metas)
                 NodeTag.STRUCT             -> deserializeStruct(targetArgs, metas)
                 NodeTag.PARAMETER          -> Parameter(target[1].asIonInt().intValue(), metas)
-                NodeTag.LIST, NodeTag.BAG, NodeTag.SEXP
-                                           -> deserializeSeq(nodeTag, targetArgs, metas)
+                NodeTag.LIST, NodeTag.BAG, NodeTag.SEXP -> deserializeSeq(nodeTag, targetArgs, metas)
                 NodeTag.SIMPLE_CASE        -> deserializeSimpleCase(target, metas)
                 NodeTag.SEARCHED_CASE      -> deserializeSearchedCase(target, metas)
                 NodeTag.NARY_NOT           -> deserializeNAryNot(targetArgs, metas)
@@ -381,7 +380,7 @@ private class AstDeserializerInternal(
                 // These are handled elsewhere
                 NodeTag.META,
 
-                // These can't be directly deserialized to ExprNode instances.
+                    // These can't be directly deserialized to ExprNode instances.
                 NodeTag.INDEX,
                 NodeTag.TABLE,
                 NodeTag.KEYS,
@@ -446,12 +445,12 @@ private class AstDeserializerInternal(
     private fun deserializeCallAgg(targetArgs: List<IonValue>, metas: MetaContainer) =
         when (astVersion) {
             AstVersion.V0 -> CallAgg(
-                    VariableReference(
-                        targetArgs[0].asIonSymbol().stringValue(),
-                        CaseSensitivity.INSENSITIVE,
-                        ScopeQualifier.UNQUALIFIED, emptyMetaContainer),
-                    SetQuantifier.valueOf(targetArgs[1].asIonSymbol().toString().toUpperCase()),
-                    deserializeExprNode(targetArgs[2].asIonSexp()), metas)
+                VariableReference(
+                    targetArgs[0].asIonSymbol().stringValue(),
+                    CaseSensitivity.INSENSITIVE,
+                    ScopeQualifier.UNQUALIFIED, emptyMetaContainer),
+                SetQuantifier.valueOf(targetArgs[1].asIonSymbol().toString().toUpperCase()),
+                deserializeExprNode(targetArgs[2].asIonSexp()), metas)
         }
 
 
@@ -698,7 +697,7 @@ private class AstDeserializerInternal(
 
     private fun deserializeIdentifier(targetArgs: List<IonValue>): Pair<String, CaseSensitivity> {
         return (targetArgs[0].stringValue() ?: err("Identifier deserialization: expecting string value, got ${targetArgs[0]}")) to
-                CaseSensitivity.fromSymbol(targetArgs[1].asIonSexp().tagText)
+            CaseSensitivity.fromSymbol(targetArgs[1].asIonSexp().tagText)
     }
 
     private fun deserializeTypedIs(
@@ -748,27 +747,36 @@ private class AstDeserializerInternal(
         if (from == null && where != null) {
             err("WHERE cannot be specified without FROM in DML node")
         }
-        return DataManipulation(dmlOp, from, where, metas)
+        return DataManipulation(
+            DmlOpList(ops = dmlOp),
+            from = from,
+            where = where,
+            returning = null, // V0 does not support the RETURNING clause.
+            metas = metas)
     }
 
-    private fun deserializeDataManipulationOperation(target: IonSexp): DataManipulationOperation {
+    private fun deserializeDataManipulationOperation(target: IonSexp): List<DataManipulationOperation> {
         return when (target.nodeTag) {
             NodeTag.INSERT -> {
                 val sexpArgs = target.args.toListOfIonSexp()
-                InsertOp(deserializeExprNode(sexpArgs[0]), deserializeExprNode(sexpArgs[1]))
+                listOf(InsertOp(deserializeExprNode(sexpArgs[0]), deserializeExprNode(sexpArgs[1])))
             }
             NodeTag.INSERT_VALUE -> {
                 val args = target.args
-                InsertValueOp(
-                    deserializeExprNode(args[0].asIonSexp()),
-                    deserializeExprNode(args[1].asIonSexp()),
-                    when(astVersion) {
+                listOf(InsertValueOp(
+                    lvalue = deserializeExprNode(args[0].asIonSexp()),
+                    value = deserializeExprNode(args[1].asIonSexp()),
+                    position = when(astVersion) {
                         AstVersion.V0 -> args.getOrNull(2)?.let { deserializeExprNode(it.asIonSexp()) }
-                    })
+                    },
+                    onConflict = null // V0 does not support the ON CONFLICT clause
+                ))
             }
-            NodeTag.SET -> AssignmentOp(deserializeSetAssignments(target.args.toListOfIonSexp()))
-            NodeTag.REMOVE -> RemoveOp(deserializeExprNode(target.args[0].asIonSexp()))
-            NodeTag.DELETE -> DeleteOp()
+            NodeTag.SET ->
+                deserializeSetAssignments(target.args.toListOfIonSexp()).map { AssignmentOp(it) }
+
+            NodeTag.REMOVE -> listOf(RemoveOp(deserializeExprNode(target.args[0].asIonSexp())))
+            NodeTag.DELETE -> listOf(DeleteOp())
             else -> errInvalidContext(target.nodeTag)
         }
     }
@@ -1025,12 +1033,12 @@ private class AstDeserializerInternal(
             AstVersion.V0 -> {
                 val clausesIonSexp = clauses.toListOfIonSexp()
                 val whenClauses = clausesIonSexp
-                        .filter { it.nodeTag == NodeTag.WHEN }
-                        .map {
-                            val whenValueExpr = deserializeExprNode(it.args[0].asIonSexp())
-                            val thenExpr = deserializeExprNode(it.args[1].asIonSexp())
-                            SimpleCaseWhen(whenValueExpr, thenExpr)
-                        }
+                    .filter { it.nodeTag == NodeTag.WHEN }
+                    .map {
+                        val whenValueExpr = deserializeExprNode(it.args[0].asIonSexp())
+                        val thenExpr = deserializeExprNode(it.args[1].asIonSexp())
+                        SimpleCaseWhen(whenValueExpr, thenExpr)
+                    }
 
                 val elseClause = clausesIonSexp.singleOrNull { it.nodeTag == NodeTag.ELSE }?.let {
                     deserializeExprNode(it.args.first().asIonSexp())
@@ -1048,12 +1056,12 @@ private class AstDeserializerInternal(
             AstVersion.V0 -> {
                 val clauses = targetArgs.toListOfIonSexp()
                 val whenClauses = clauses
-                        .filter { it.nodeTag == NodeTag.WHEN }
-                        .map {
-                            val whenConditionExpr = deserializeExprNode(it.args[0].asIonSexp())
-                            val thenExpr = deserializeExprNode(it.args[1].asIonSexp())
-                            SearchedCaseWhen(whenConditionExpr, thenExpr)
-                        }
+                    .filter { it.nodeTag == NodeTag.WHEN }
+                    .map {
+                        val whenConditionExpr = deserializeExprNode(it.args[0].asIonSexp())
+                        val thenExpr = deserializeExprNode(it.args[1].asIonSexp())
+                        SearchedCaseWhen(whenConditionExpr, thenExpr)
+                    }
 
                 val elseClause = clauses.singleOrNull { it.nodeTag == NodeTag.ELSE }?.let {
                     deserializeExprNode(it.args.first().asIonSexp())
@@ -1066,7 +1074,7 @@ private class AstDeserializerInternal(
 
     private fun deserializeExprPair(expr_pair: IonSexp): Pair<ExprNode, ExprNode> {
         return deserializeExprNode(expr_pair.args[0].asIonSexp()) to
-               deserializeExprNode(expr_pair.args[1].asIonSexp())
+            deserializeExprNode(expr_pair.args[1].asIonSexp())
     }
 
     private fun deserializeExprPairList(exprPairList: IonSexp): List<Pair<ExprNode, ExprNode>> {
@@ -1106,7 +1114,7 @@ private class AstDeserializerInternal(
                                     PathComponentUnpivot(metas)
                                 }
                                 else -> throw IllegalStateException(
-                                        "invalid arity for (star) or (*) (this should have been caught earlier)")
+                                    "invalid arity for (star) or (*) (this should have been caught earlier)")
                             }
                         }
                         else -> {

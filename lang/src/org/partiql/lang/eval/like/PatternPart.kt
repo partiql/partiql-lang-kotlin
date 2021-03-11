@@ -18,7 +18,6 @@ internal sealed class PatternPart {
         override fun hashCode(): Int {
             return codepoints.contentHashCode()
         }
-
     }
 }
 

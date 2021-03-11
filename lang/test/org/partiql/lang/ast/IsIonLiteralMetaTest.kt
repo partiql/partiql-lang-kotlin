@@ -1,3 +1,5 @@
+package org.partiql.lang.ast
+
 /*
  * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
  *
@@ -12,10 +14,18 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.lang.syntax
+import com.amazon.ion.system.*
+import org.junit.*
+import org.partiql.lang.syntax.SqlParser
 
-/** Simple source line/column value. */
-data class SourcePosition(val line: Long, val column: Long) {
-    override fun toString(): String = "line $line, column $column"
+class IsIonLiteralMetaTest {
+
+    @Test
+    fun testIonLiteralMetaPreserved() {
+        val ion = IonSystemBuilder.standard().build()
+        val ionLiteral = SqlParser(ion).parseExprNode("`1.0`")
+        Assert.assertTrue(ionLiteral.metas.hasMeta(IsIonLiteralMeta.TAG))
+        val roundTrippedIonLiteral = ionLiteral.toAstStatement().toExprNode(ion)
+        Assert.assertTrue(roundTrippedIonLiteral.metas.hasMeta(IsIonLiteralMeta.TAG))
+    }
 }
-

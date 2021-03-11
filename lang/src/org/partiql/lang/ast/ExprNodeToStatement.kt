@@ -154,6 +154,7 @@ fun ExprNode.toAstExpr(): PartiqlAst.Expr {
                     from = node.from.toAstFromSource(),
                     fromLet = node.fromLet?.toAstLetSource(),
                     where = node.where?.toAstExpr(),
+                    order = node.orderBy?.toAstOrderBySpec(),
                     group = node.groupBy?.toAstGroupSpec(),
                     having = node.having?.toAstExpr(),
                     limit = node.limit?.toAstExpr(),
@@ -172,6 +173,23 @@ fun ExprNode.toAstExpr(): PartiqlAst.Expr {
         }
     }
 }
+
+private fun OrderBy.toAstOrderBySpec(): PartiqlAst.OrderBy {
+    val thiz = this
+    return PartiqlAst.build {
+        orderBy(
+            thiz.sortSpecItems.map { sortSpec(it.expr.toAstExpr(), it.orderingSpec.toAstOrderSpec()) }
+        )
+    }
+}
+
+private fun OrderingSpec?.toAstOrderSpec(): PartiqlAst.OrderingSpec =
+    PartiqlAst.build {
+        when (this@toAstOrderSpec) {
+            OrderingSpec.DESC -> desc()
+            else -> asc()
+        }
+    }
 
 private fun GroupBy.toAstGroupSpec(): PartiqlAst.GroupBy =
     PartiqlAst.build {
@@ -306,40 +324,92 @@ private fun PathComponent.toAstPathStep(): PartiqlAst.PathStep {
     }
 }
 
+private fun OnConflict.toAstOnConflict(): PartiqlAst.OnConflict {
+    val thiz = this
+    return PartiqlAst.build {
+        when(thiz.conflictAction) {
+            ConflictAction.DO_NOTHING -> onConflict(thiz.condition.toAstExpr(), doNothing())
+        }
+    }
+}
+
 private fun DataManipulation.toAstDml(): PartiqlAst.Statement {
     val thiz = this
     return PartiqlAst.build {
-        val dmlOp = thiz.dmlOperation
-        val dmlOp2 = when (dmlOp) {
-            is InsertOp ->
-                insert(
-                    dmlOp.lvalue.toAstExpr(),
-                    dmlOp.values.toAstExpr())
-            is InsertValueOp ->
-                insertValue(
-                    dmlOp.lvalue.toAstExpr(),
-                    dmlOp.value.toAstExpr(),
-                    dmlOp.position?.toAstExpr(),
-                    thiz.metas.toIonElementMetaContainer())
-            is AssignmentOp ->
-                set(
-                    dmlOp.assignments.map {
-                        assignment(
-                            it.lvalue.toAstExpr(),
-                            it.rvalue.toAstExpr())
-                    })
-            is RemoveOp -> remove(dmlOp.lvalue.toAstExpr())
-            DeleteOp -> delete()
-        }
+        val dmlOps = thiz.dmlOperations
+        val dmlOps2 = dmlOps.toAstDmlOps(thiz)
 
         dml(
-            dmlOp2,
+            dmlOps2,
             thiz.from?.toAstFromSource(),
             thiz.where?.toAstExpr(),
+            thiz.returning?.toAstReturningExpr(),
             thiz.metas.toIonElementMetaContainer())
     }
 }
 
+private fun DmlOpList.toAstDmlOps(dml: DataManipulation): PartiqlAst.DmlOpList =
+    PartiqlAst.build {
+        dmlOpList(
+            this@toAstDmlOps.ops.map {
+                it.toAstDmlOp(dml)
+            },
+            metas = dml.metas.toIonElementMetaContainer())
+    }
+private fun DataManipulationOperation.toAstDmlOp(dml: DataManipulation): PartiqlAst.DmlOp =
+    PartiqlAst.build {
+        when (val thiz = this@toAstDmlOp) {
+            is InsertOp ->
+                insert(
+                    thiz.lvalue.toAstExpr(),
+                    thiz.values.toAstExpr())
+            is InsertValueOp ->
+                insertValue(
+                    thiz.lvalue.toAstExpr(),
+                    thiz.value.toAstExpr(),
+                    thiz.position?.toAstExpr(),
+                    thiz.onConflict?.toAstOnConflict(),
+                    dml.metas.toIonElementMetaContainer())
+            is AssignmentOp ->
+                set(
+                    assignment(
+                        thiz.assignment.lvalue.toAstExpr(),
+                        thiz.assignment.rvalue.toAstExpr()))
+            is RemoveOp -> remove(thiz.lvalue.toAstExpr())
+            DeleteOp -> delete()
+        }
+    }
+
+private fun ReturningExpr.toAstReturningExpr(): PartiqlAst.ReturningExpr {
+    val thiz = this
+    return PartiqlAst.build {
+        returningExpr(
+            thiz.returningElems.map {
+                returningElem(it.returningMapping.toReturningMapping(), it.columnComponent.toColumnComponent())
+            }
+        )
+    }
+}
+
+private fun ColumnComponent.toColumnComponent(): PartiqlAst.ColumnComponent {
+    return PartiqlAst.build {
+        when (val thiz = this@toColumnComponent) {
+            is ReturningWildcard -> returningWildcard()
+            is ReturningColumn -> returningColumn(thiz.column.toAstExpr())
+        }
+    }
+}
+
+private fun ReturningMapping.toReturningMapping(): PartiqlAst.ReturningMapping {
+    return PartiqlAst.build {
+        when (this@toReturningMapping) {
+            ReturningMapping.MODIFIED_OLD -> modifiedOld()
+            ReturningMapping.MODIFIED_NEW -> modifiedNew()
+            ReturningMapping.ALL_OLD -> allOld()
+            ReturningMapping.ALL_NEW -> allNew()
+        }
+    }
+}
 
 private fun DataType.toAstType(): PartiqlAst.Type {
     val thiz = this

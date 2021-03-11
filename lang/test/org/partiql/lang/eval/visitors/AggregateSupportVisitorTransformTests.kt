@@ -82,7 +82,7 @@ class AggregateSupportVisitorTransformTests : VisitorTransformTestBase() {
         }
     }
 
-    class NonSubqueryTests : ArgumentsProviderBase() {
+    class NonSubqueryCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
             // one aggregate transform
             AggSupportTestCase(
@@ -112,7 +112,7 @@ class AggregateSupportVisitorTransformTests : VisitorTransformTestBase() {
     }
 
     @ParameterizedTest
-    @ArgumentsSource(NonSubqueryTests::class)
+    @ArgumentsSource(NonSubqueryCases::class)
     fun testNonSubquery(tc: AggSupportTestCase) {
         val select = tc.query.parseAndTransformQuery()
 

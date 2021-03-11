@@ -35,13 +35,13 @@ internal fun List<Token>.onlyEndOfStatement() =
  * Given an error context ([PropertyValueMap]) and a source position ([SourcePosition]) populate the given
  * error context with line and column information found in source position.
  */
-private fun populateLineAndColumn(errorContext: PropertyValueMap, sourcePosition: SourcePosition?): PropertyValueMap {
-    when (sourcePosition) {
+private fun populateLineAndColumn(errorContext: PropertyValueMap, sourceSpan: SourceSpan?): PropertyValueMap {
+    when (sourceSpan) {
         null -> {
             return errorContext
         }
         else -> {
-            val (line, col) = sourcePosition
+            val (line, col) = sourceSpan
             errorContext[Property.LINE_NUMBER] = line
             errorContext[Property.COLUMN_NUMBER] = col
             return errorContext
@@ -53,7 +53,7 @@ internal fun Token?.err(message: String, errorCode: ErrorCode, errorContext: Pro
     when (this) {
         null -> throw ParserException(errorCode = errorCode, errorContext = errorContext)
         else -> {
-            val pvmap = populateLineAndColumn(errorContext, this.position)
+            val pvmap = populateLineAndColumn(errorContext, this.span)
             pvmap[Property.TOKEN_TYPE] = type
             value?.let { pvmap[Property.TOKEN_VALUE] = it }
             throw ParserException(message, errorCode, pvmap)

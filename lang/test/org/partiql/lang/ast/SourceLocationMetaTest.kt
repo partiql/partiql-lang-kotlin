@@ -24,8 +24,8 @@ class SourceLocationMetaTest {
     fun test1() {
         val ion = IonSystemBuilder.standard().build()
 
-        val sl = SourceLocationMeta(1, 2)
-        val expected = ion.singleValue("{ line_num: 1, char_offset: 2 }")
+        val sl = SourceLocationMeta(1, 2, 3)
+        val expected = ion.singleValue("{ line_num: 1, char_offset: 2, length: 3 }")
 
         val dg = ion.newDatagram()
         val writer = ion.newWriter(dg)
