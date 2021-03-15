@@ -40,6 +40,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         ]
         """).toSession()
 
+
     @Test
     fun emptyTextUnderscorePattern() = assertEval("""SELECT * FROM `[true]` as a WHERE '' LIKE '_'  """, "[]", animals)
 
@@ -628,4 +629,8 @@ class LikePredicateTest : EvaluatorTestBase() {
                                                    NodeMetadata(1, 56)) {
         voidEval("SELECT * FROM `[{name:1, type:\"a\"}]` as a WHERE a.name LIKE a.type ")
     }
+
+    /** Regression test for: https://github.com/partiql/partiql-lang-kotlin/issues/32 */
+    @Test
+    fun multiCodepointPattern() = assertEval("'😍' LIKE '😍'", "true")
 }
