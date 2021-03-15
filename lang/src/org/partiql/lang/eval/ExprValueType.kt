@@ -190,6 +190,7 @@ enum class ExprValueType(val typeNames: List<String>,
                 SqlDataType.LIST              -> ExprValueType.LIST
                 SqlDataType.SEXP              -> ExprValueType.SEXP
                 SqlDataType.BAG               -> ExprValueType.BAG
+                SqlDataType.DATE              -> TODO()
             }
     }
 }

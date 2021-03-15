@@ -13,6 +13,7 @@
  */
 
 package org.partiql.lang.errors
+import com.amazon.ion.Timestamp
 import org.partiql.lang.*
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.syntax.ParserException
@@ -1860,7 +1861,7 @@ class ParserErrorsTest : TestBase() {
             Property.COLUMN_NUMBER to 12L,
             Property.TOKEN_TYPE to TokenType.LEFT_PAREN,
             Property.TOKEN_VALUE to ion.newSymbol("(")))
-    
+
     @Test
     fun dropIndexWithParenthesisAtTail() = checkInputThrowingParserException(
         "DROP INDEX goo ON foo (bar)",
@@ -2066,4 +2067,94 @@ class ParserErrorsTest : TestBase() {
             Property.COLUMN_NUMBER to 21L,
             Property.TOKEN_TYPE to TokenType.IDENTIFIER,
             Property.TOKEN_VALUE to ion.newSymbol("undrop")))
+
+    @Test
+    fun invalidTypeIntForDateString() = checkInputThrowingParserException(
+        "DATE 2012",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 6L,
+            Property.TOKEN_TYPE to TokenType.LITERAL,
+            Property.TOKEN_VALUE to ion.newInt(2012)))
+
+    @Test
+    fun invalidTypeIntForDateString2() = checkInputThrowingParserException(
+        "DATE 2012-08-28",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 6L,
+            Property.TOKEN_TYPE to TokenType.LITERAL,
+            Property.TOKEN_VALUE to ion.newInt(2012)))
+
+    @Test
+    fun invalidTypeTimestampForDateString() = checkInputThrowingParserException(
+        "DATE `2012-08-28`",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 6L,
+            Property.TOKEN_TYPE to TokenType.ION_LITERAL,
+            Property.TOKEN_VALUE to ion.newTimestamp(Timestamp.forDay(2012, 8, 28))))
+
+    @Test
+    fun invalidDateStringFormat() = checkInputThrowingParserException(
+        "DATE 'date_string'",
+        ErrorCode.PARSE_INVALID_DATE_STRING,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 6L,
+            Property.TOKEN_TYPE to TokenType.LITERAL,
+            Property.TOKEN_VALUE to ion.newString("date_string")))
+
+    @Test
+    fun invalidDateStringFormatMissingDashes() = checkInputThrowingParserException(
+        "DATE '20210310'",
+        ErrorCode.PARSE_INVALID_DATE_STRING,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 6L,
+            Property.TOKEN_TYPE to TokenType.LITERAL,
+            Property.TOKEN_VALUE to ion.newString("20210310")))
+
+    @Test
+    fun invalidDateStringFormatUnexpectedColons() = checkInputThrowingParserException(
+        "DATE '2021:03:10'",
+        ErrorCode.PARSE_INVALID_DATE_STRING,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 6L,
+            Property.TOKEN_TYPE to TokenType.LITERAL,
+            Property.TOKEN_VALUE to ion.newString("2021:03:10")))
+
+    @Test
+    fun invalidDateStringFormatInvalidDate() = checkInputThrowingParserException(
+        "DATE '2021-02-29'",
+        ErrorCode.PARSE_INVALID_DATE_STRING,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 6L,
+            Property.TOKEN_TYPE to TokenType.LITERAL,
+            Property.TOKEN_VALUE to ion.newString("2021-02-29")))
+
+    @Test
+    fun invalidDateStringFormatMMDDYYYY() = checkInputThrowingParserException(
+        "DATE '03-10-2021'",
+        ErrorCode.PARSE_INVALID_DATE_STRING,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 6L,
+            Property.TOKEN_TYPE to TokenType.LITERAL,
+            Property.TOKEN_VALUE to ion.newString("03-10-2021")))
+
+    @Test
+    fun invalidDateStringFormatDDMMYYYY() = checkInputThrowingParserException(
+        "DATE '10-03-2021'",
+        ErrorCode.PARSE_INVALID_DATE_STRING,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 6L,
+            Property.TOKEN_TYPE to TokenType.LITERAL,
+            Property.TOKEN_VALUE to ion.newString("10-03-2021")))
 }

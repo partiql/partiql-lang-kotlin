@@ -94,6 +94,9 @@
             (list values::(* expr 0))
             (sexp values::(* expr 0))
 
+            // Constructors for DateTime types
+            (date year::int month::int day::int)
+
             // Set operators
             (union setq::set_quantifier operands::(* expr 2))
             (except setq::set_quantifier operands::(* expr 2))
@@ -353,6 +356,7 @@
             (symbol_type)
             (blob_type)
             (clob_type)
+            (date_type)
             (struct_type)
             (tuple_type)
             (list_type)

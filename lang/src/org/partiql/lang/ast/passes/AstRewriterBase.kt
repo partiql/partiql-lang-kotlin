@@ -52,6 +52,7 @@ open class AstRewriterBase : AstRewriter {
             is DropTable         -> rewriteDropTable(node)
             is DropIndex         -> rewriteDropIndex(node)
             is Exec              -> rewriteExec(node)
+            is DateTimeType.Date -> rewriteDate(node)
         }
 
     open fun rewriteMetas(itemWithMetas: HasMetas): MetaContainer = itemWithMetas.metas
@@ -438,4 +439,11 @@ open class AstRewriterBase : AstRewriter {
             node.args.map { rewriteExprNode(it) },
             rewriteMetas(node))
 
+    open fun rewriteDate(node: DateTimeType.Date): DateTimeType.Date =
+        DateTimeType.Date(
+            node.year,
+            node.month,
+            node.day,
+            rewriteMetas(node)
+        )
 }

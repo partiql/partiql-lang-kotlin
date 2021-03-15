@@ -283,7 +283,7 @@ internal class EvaluatingCompiler(
             is DropIndex,
             is DropTable -> compileDdl(expr)
             is Exec      -> compileExec(expr)
-
+            is DateTimeType.Date      -> TODO()
         }
     }
 
