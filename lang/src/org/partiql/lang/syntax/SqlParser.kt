@@ -685,7 +685,8 @@ class SqlParser(private val ion: IonSystem) : Parser {
             }
             DATE -> {
                 val dateString = token!!.text!!
-                DateTimeType.Date(dateString, metas)
+                val (year, month, day) = dateString.split("-")
+                DateTimeType.Date(year.toInt(), month.toInt(), day.toInt(), metas)
             }
             else -> unsupported("Unsupported syntax for $type", PARSE_UNSUPPORTED_SYNTAX)
         }

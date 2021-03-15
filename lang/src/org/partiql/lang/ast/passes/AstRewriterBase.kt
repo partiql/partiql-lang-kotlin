@@ -441,7 +441,9 @@ open class AstRewriterBase : AstRewriter {
 
     open fun rewriteDate(node: DateTimeType.Date): DateTimeType.Date =
         DateTimeType.Date(
-            node.dateString,
+            node.year,
+            node.month,
+            node.day,
             rewriteMetas(node)
         )
 }

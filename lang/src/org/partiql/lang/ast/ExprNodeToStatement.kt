@@ -173,7 +173,7 @@ fun ExprNode.toAstExpr(): PartiqlAst.Expr {
             // DateTime types
             is DateTimeType -> {
                 when (node) {
-                    is DateTimeType.Date -> date(node.dateString, metas)
+                    is DateTimeType.Date -> date(node.year.toLong(), node.month.toLong(), node.day.toLong(), metas)
                 }
             }
         }

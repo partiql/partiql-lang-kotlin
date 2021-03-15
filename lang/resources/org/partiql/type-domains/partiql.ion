@@ -95,7 +95,7 @@
             (sexp values::(* expr 0))
 
             // Constructors for DateTime types
-            (date date_string::symbol)
+            (date year::int month::int day::int)
 
             // Set operators
             (union setq::set_quantifier operands::(* expr 2))

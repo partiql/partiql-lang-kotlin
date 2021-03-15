@@ -190,7 +190,8 @@ private class StatementTransformer(val ion: IonSystem) {
                     limit = limit?.toExprNode(),
                     metas = metas
             )
-            is Expr.Date -> DateTimeType.Date(this.dateString.text, metas)
+            is Expr.Date ->
+                DateTimeType.Date(year.value.toInt(), month.value.toInt(), day.value.toInt(), metas)
         }
     }
 
