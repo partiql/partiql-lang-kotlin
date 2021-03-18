@@ -30,7 +30,7 @@ internal class SizeExprFunction(valueFactory: ExprValueFactory) : NullPropagatin
         val collection = args.first()
 
         return when (collection.type) {
-            ExprValueType.LIST, ExprValueType.BAG, ExprValueType.STRUCT -> {
+            ExprValueType.LIST, ExprValueType.BAG, ExprValueType.STRUCT, ExprValueType.SEXP -> {
                 val ionCol = collection.ionValue as IonContainer
 
                 valueFactory.newInt(ionCol.size)

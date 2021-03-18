@@ -30,6 +30,9 @@ class SizeEvaluationTest : EvaluatorTestBase() {
     fun emptyList() = assertEval("size([])", "0")
 
     @Test
+    fun emptySexp() = assertEval("size(sexp())", "0")
+
+    @Test
     fun emptyBag() = assertEval("size(<<>>)", "0")
 
     @Test
@@ -39,6 +42,9 @@ class SizeEvaluationTest : EvaluatorTestBase() {
     fun nonEmptyList() = assertEval("size(['foo'])", "1")
 
     @Test
+    fun nonEmptySexp() = assertEval("size(sexp(1, 2, 3))", "3")
+
+    @Test
     fun nonEmptyBag() = assertEval("size(<<'foo'>>)", "1")
 
     @Test
@@ -46,6 +52,7 @@ class SizeEvaluationTest : EvaluatorTestBase() {
 
     @Test
     fun missingArgument() = assertEval("size(missing)", "null")
+
 
     @Test
     fun lessArguments() = checkInputThrowingEvaluationException("size()",
