@@ -21,6 +21,8 @@ import org.partiql.lang.eval.ExprValueType.*
 import org.partiql.lang.syntax.*
 import org.partiql.lang.util.*
 import java.math.*
+import java.time.LocalDate
+import java.time.format.DateTimeParseException
 import java.util.*
 import kotlin.Comparator
 
@@ -78,6 +80,9 @@ fun ExprValue.booleanValue(): Boolean =
 
 fun ExprValue.numberValue(): Number =
     scalar.numberValue() ?: errNoContext("Expected number: $ionValue", internal = false)
+
+fun ExprValue.dateValue(): LocalDate =
+    scalar.dateValue() ?: errNoContext("Expected timestamp: $ionValue", internal = false)
 
 fun ExprValue.timestampValue(): Timestamp =
     scalar.timestampValue() ?: errNoContext("Expected timestamp: $ionValue", internal = false)
@@ -237,7 +242,8 @@ fun ExprValue.cast(
                     }
                     type.isText -> return when (stringValue().toLowerCase()) {
                         "true" -> valueFactory.newBoolean(true)
-                        else -> valueFactory.newBoolean(false)
+                        "false" -> valueFactory.newBoolean(false)
+                        else -> castFailedErr("can't convert string value to BOOL", internal = false)
                     }
                 }
                 INT -> when {
@@ -287,9 +293,25 @@ fun ExprValue.cast(
                         castFailedErr("can't convert string value to TIMESTAMP", internal = false, cause = e)
                     }
                 }
+                DATE -> when {
+                    type == TIMESTAMP -> {
+                        val ts = timestampValue()
+                        return valueFactory.newDate(LocalDate.of(ts.year, ts.month, ts.day))
+                    }
+                    type.isText -> try {
+                        val date = LocalDate.parse(stringValue())
+                        return valueFactory.newDate(date)
+                    }
+                    catch (e: DateTimeParseException)
+                    {
+                        castFailedErr("Can't convert string value to DATE. Expected valid date string " +
+                            "and the date format to be YYYY-MM-DD", internal = false, cause = e)
+                    }
+                }
                 STRING, SYMBOL -> when {
                     type.isNumber -> return numberValue().toString().exprValue(targetType)
                     type.isText -> return stringValue().exprValue(targetType)
+                    type == DATE -> return dateValue().toString().exprValue(targetType)
                     type in ION_TEXT_STRING_CAST_TYPES -> return ionValue.toString().exprValue(targetType)
                 }
                 CLOB -> when {
