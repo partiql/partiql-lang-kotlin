@@ -17,6 +17,7 @@ package org.partiql.lang.eval
 import com.amazon.ion.*
 import org.partiql.lang.util.*
 import java.math.*
+import java.time.LocalDate
 
 /**
  * Provides a standard way of creating instances of ExprValue.
@@ -67,25 +68,28 @@ interface ExprValueFactory {
     /** Returns a PartiQL `FLOAT` [ExprValue] instance representing the specified [Float]. */
     fun newFloat(value: Double): ExprValue
 
-    /** Returns an PartiQL `DECIMAL` [ExprValue] instance representing the specified [Int]. */
+    /** Returns a PartiQL `DECIMAL` [ExprValue] instance representing the specified [Int]. */
     fun newDecimal(value: Int): ExprValue
 
-    /** Returns an PartiQL `DECIMAL` [ExprValue] instance representing the specified [Long]. */
+    /** Returns a PartiQL `DECIMAL` [ExprValue] instance representing the specified [Long]. */
     fun newDecimal(value: Long): ExprValue
 
-    /** Returns an PartiQL `DECIMAL` [ExprValue] instance representing the specified [BigDecimal]. */
+    /** Returns a PartiQL `DECIMAL` [ExprValue] instance representing the specified [BigDecimal]. */
     fun newDecimal(value: BigDecimal): ExprValue
 
-    /** Returns an PartiQL `TIMESTAMP` [ExprValue] instance representing the specified [Timestamp]. */
+    /** Returns a PartiQL `DATE` [ExprValue] instance representing the specified [LocalDate]. */
+    fun newDate(value: LocalDate): ExprValue
+
+    /** Returns a PartiQL `TIMESTAMP` [ExprValue] instance representing the specified [Timestamp]. */
     fun newTimestamp(value: Timestamp): ExprValue
 
-    /** Returns an  PartiQL `SYMBOL` [ExprValue] instance representing the specified [String]. */
+    /** Returns a  PartiQL `SYMBOL` [ExprValue] instance representing the specified [String]. */
     fun newSymbol(value: String) : ExprValue
 
-    /** Returns an PartiQL `CLOB` [ExprValue] instance representing the specified [ByteArray]. */
+    /** Returns a PartiQL `CLOB` [ExprValue] instance representing the specified [ByteArray]. */
     fun newClob(value: ByteArray): ExprValue
 
-    /** Returns an PartiQL `BLOB` [ExprValue] instance representing the specified [ByteArray]. */
+    /** Returns a PartiQL `BLOB` [ExprValue] instance representing the specified [ByteArray]. */
     fun newBlob(value: ByteArray): ExprValue
 
     /**
@@ -181,6 +185,9 @@ private class ExprValueFactoryImpl(override val ion: IonSystem) : ExprValueFacto
 
     override fun newDecimal(value: Long): ExprValue =
         DecimalExprValue(ion, BigDecimal.valueOf(value))
+
+    override fun newDate(value: LocalDate): ExprValue =
+        DateExprValue(ion, value)
 
     override fun newTimestamp(value: Timestamp): ExprValue =
         TimestampExprValue(ion, value)
@@ -290,6 +297,29 @@ private class DecimalExprValue(val ion: IonSystem, val value: BigDecimal): Scala
     override val type: ExprValueType = ExprValueType.DECIMAL
     override fun numberValue() = value
     override fun ionValueFun(): IonValue = ion.newDecimal(value)
+}
+
+/**
+ * [ExprValue] to represent DATE in PartiQL.
+ * [LocalDate] represents date without time and time zone.
+ */
+private class DateExprValue(val ion: IonSystem, val value: LocalDate): ScalarExprValue() {
+
+    private val PARTIQL_DATE_ANNOTATION = "partiql_date"
+
+    private fun createIonDateStruct() =
+        ion.newEmptyStruct().apply {
+            add("year", ion.newInt(value.year))
+            add("month", ion.newInt(value.monthValue))
+            add("day", ion.newInt(value.dayOfMonth))
+        }.apply {
+            addTypeAnnotation(PARTIQL_DATE_ANNOTATION)
+        }.seal()
+
+    override val type: ExprValueType = ExprValueType.DATE
+    override fun dateValue(): LocalDate? = value
+    // TODO: Verify if this is the best way to represent PartiQL DATE in ion serialization.
+    override fun ionValueFun(): IonValue = createIonDateStruct()
 }
 
 private class TimestampExprValue(val ion: IonSystem, val value: Timestamp): ScalarExprValue() {

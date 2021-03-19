@@ -5,8 +5,6 @@
 package org.partiql.lang.types
 
 import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.eval.errNoContext
-import java.lang.IllegalArgumentException
 
 // TODO consider refactoring this out as a proper interface instead of a sealed class to allow us to enumerate base types.
 
@@ -57,6 +55,7 @@ sealed class StaticType(val name: String) {
         @JvmField val SEXP: StaticType = EXPR_VALUE_TYPE_MAP.getValue(ExprValueType.SEXP)
         @JvmField val STRUCT: StaticType = EXPR_VALUE_TYPE_MAP.getValue(ExprValueType.STRUCT)
         @JvmField val BAG: StaticType = EXPR_VALUE_TYPE_MAP.getValue(ExprValueType.BAG)
+        @JvmField val DATE: StaticType = EXPR_VALUE_TYPE_MAP.getValue(ExprValueType.DATE)
 
         private val NUMERIC_NAME = "NUMERIC"
         private val ANY_NAME = "ANY"
