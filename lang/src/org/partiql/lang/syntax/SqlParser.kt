@@ -122,7 +122,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
         CHECK,
         ON_CONFLICT,
         CONFLICT_ACTION,
-        DML_LIST,
+        DML_LIST(isTopLevelType = true, isDml = true),
         RETURNING,
         RETURNING_ELEM,
         RETURNING_MAPPING,
@@ -2647,23 +2647,35 @@ class SqlParser(private val ion: IonSystem) : Parser {
      * [level] is the current traversal level in the parse tree.
      * If [topLevelTokenSeen] is true, it means it has been encountered at least once before while traversing the parse tree.
      */
-    private fun validateTopLevelNodes(node: ParseNode, level: Int, topLevelTokenSeen: Boolean) {
-        if (topLevelTokenSeen && node.type.isTopLevelType) {
+    private fun validateTopLevelNodes(node: ParseNode, level: Int, topLevelTokenSeen: Boolean, dmlListTokenSeen: Boolean) {
+        val isTopLevelType = when (node.type.isDml) {
+            // DML_LIST token type allows multiple DML keywords to be used in the same statement.
+            // Hence, DML keyword tokens are not treated as top level tokens if present with the DML_LIST token type
+            true -> !dmlListTokenSeen && node.type.isTopLevelType
+            else -> node.type.isTopLevelType
+        }
+        if (topLevelTokenSeen && isTopLevelType) {
             node.throwTopLevelParserError()
         }
 
-        if (node.type.isTopLevelType && level > 0) {
+        if (isTopLevelType && level > 0) {
             // Note that for DML operations, top level parse node may be of type 'FROM' and nested within a `DML_LIST`
-            // Hence the check level > 2
+            // Hence the check level > 1
             if (node.type.isDml) {
-                if (level > 2) {
+                if (level > 1) {
                     node.throwTopLevelParserError()
                 }
             } else {
                 node.throwTopLevelParserError()
             }
         }
-        node.children.map { validateTopLevelNodes(node = it, level = level + 1, topLevelTokenSeen = topLevelTokenSeen || node.type.isTopLevelType) }
+        node.children.map {
+            validateTopLevelNodes(
+                node = it, level = level + 1,
+                topLevelTokenSeen = topLevelTokenSeen || isTopLevelType,
+                dmlListTokenSeen = node.type == DML_LIST
+            )
+        }
     }
 
     /** Entry point into the parser. */
@@ -2679,7 +2691,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
             }
         }
 
-        validateTopLevelNodes(node = node, level = 0, topLevelTokenSeen = false)
+        validateTopLevelNodes(node = node, level = 0, topLevelTokenSeen = false, dmlListTokenSeen = false)
 
         return node.toExprNode()
     }
