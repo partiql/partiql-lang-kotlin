@@ -2646,6 +2646,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
      * in the query then it is invalid.
      * [level] is the current traversal level in the parse tree.
      * If [topLevelTokenSeen] is true, it means it has been encountered at least once before while traversing the parse tree.
+     * If [dmlListTokenSeen] is true, it means it has been encountered at least once before while traversing the parse tree.
      */
     private fun validateTopLevelNodes(node: ParseNode, level: Int, topLevelTokenSeen: Boolean, dmlListTokenSeen: Boolean) {
         val isTopLevelType = when (node.type.isDml) {
@@ -2671,9 +2672,10 @@ class SqlParser(private val ion: IonSystem) : Parser {
         }
         node.children.map {
             validateTopLevelNodes(
-                node = it, level = level + 1,
+                node = it,
+                level = level + 1,
                 topLevelTokenSeen = topLevelTokenSeen || isTopLevelType,
-                dmlListTokenSeen = node.type == DML_LIST
+                dmlListTokenSeen = dmlListTokenSeen || node.type == DML_LIST
             )
         }
     }
