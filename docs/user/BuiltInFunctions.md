@@ -392,10 +392,10 @@ EXISTS(missing)     -- false
 
 ### EXTRACT
 
-Given a date part and a timestamp returns then timestamp's date part value. 
+Given a date part and a datetime type returns then datetime's date part value. 
 
 Signature
-: `EXTRACT: ExtractDatePart Timestamp -> Integer`
+: `EXTRACT: ExtractDatePart DateTime -> Integer`
 
 where `ExtractDatePart` is one of 
 
@@ -408,16 +408,21 @@ where `ExtractDatePart` is one of
 * `timezone_hour`
 * `timezone_minute`
 
+and `DateTime` type is one of
+
+* `DATE`
+* `TIME`
+* `TIMESTAMP` 
+
 *Note* that `ExtractDatePart` **differs** from `DatePart` in [DATE_ADD](#date_add). 
 
 Header
 : `EXTRACT(edp FROM t)`
 
 Purpose 
-: Given a date part, `edp`, and a timestamp `t` return `t`'s value for `edp`. 
+: Given a date part, `edp`, and a datetime type `t` return `t`'s value for `edp`. 
 This function allows for `t` to be unknown (`null` or `missing`) but **not** `edp`.
 If `t` is unknown the function returns `null`. 
-
 
 Examples
 : 
@@ -430,7 +435,14 @@ EXTRACT(HOUR FROM `2017-01-02T03:04:05+07:08`)             -- 3
 EXTRACT(MINUTE FROM `2017-01-02T03:04:05+07:08`)           -- 4
 EXTRACT(TIMEZONE_HOUR FROM `2017-01-02T03:04:05+07:08`)    -- 7
 EXTRACT(TIMEZONE_MINUTE FROM `2017-01-02T03:04:05+07:08`)  -- 8
+EXTRACT(YEAR FROM DATE '2010-01-01')                       -- 2010
+EXTRACT(MONTH FROM DATE '2010-01-01')                      -- 1
+EXTRACT(DAY FROM DATE '2010-01-01')                        -- 1
+EXTRACT(HOUR FROM DATE '2010-01-01')                       -- 0
+EXTRACT(MINUTE FROM DATE '2010-01-01')                     -- 0
+EXTRACT(SECOND FROM DATE '2010-01-01')                     -- 0
 ```
+*Note* that `timezone_hour` and `timezone_minute` are **not supported** for `DATE` type. 
 
 ### LOWER 
 

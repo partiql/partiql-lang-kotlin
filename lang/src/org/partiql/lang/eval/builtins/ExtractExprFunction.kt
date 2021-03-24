@@ -17,19 +17,20 @@ package org.partiql.lang.eval.builtins
 import com.amazon.ion.*
 import org.partiql.lang.eval.*
 import org.partiql.lang.syntax.*
+import java.time.LocalDate
 
 private const val SECONDS_PER_MINUTE = 60
 
 /**
- * Extracts a date part from a timestamp where date part is one of the following keywords:
+ * Extracts a date part from a datetime type where date part is one of the following keywords:
  * `year, month, day, hour, minute, second, timestamp_hour, timestamp_minute`.
- *
+ * Datetime type can be one of DATE, TIME or TIMESTAMP
  * **Note** that the allowed date parts for `EXTRACT` is not the same as `DATE_ADD`
  *
  * Extract does not propagate null for its first parameter, the date part. From the SQL92 spec only the date part
  * keywords are allowed as first argument
  *
- * `EXTRACT(<date part> FROM <timestamp>)`
+ * `EXTRACT(<date part> FROM <datetime_type>)`
  */
 internal class ExtractExprFunction(valueFactory: ExprValueFactory) : NullPropagatingExprFunction("extract", 2, valueFactory) {
 
@@ -38,22 +39,39 @@ internal class ExtractExprFunction(valueFactory: ExprValueFactory) : NullPropaga
 
     private fun Timestamp.minuteOffset() = (localOffset ?: 0) % SECONDS_PER_MINUTE
 
+    private fun extractedValue(datePart: DatePart, dateTimeValue: Any?) : Int {
+        return when (dateTimeValue) {
+            is Timestamp -> when (datePart) {
+                DatePart.YEAR -> dateTimeValue.year
+                DatePart.MONTH -> dateTimeValue.month
+                DatePart.DAY -> dateTimeValue.day
+                DatePart.HOUR -> dateTimeValue.hour
+                DatePart.MINUTE -> dateTimeValue.minute
+                DatePart.SECOND -> dateTimeValue.second
+                DatePart.TIMEZONE_HOUR -> dateTimeValue.hourOffset()
+                DatePart.TIMEZONE_MINUTE -> dateTimeValue.minuteOffset()
+            }
+            is LocalDate -> when (datePart) {
+                DatePart.YEAR -> dateTimeValue.year
+                DatePart.MONTH -> dateTimeValue.monthValue
+                DatePart.DAY -> dateTimeValue.dayOfMonth
+                DatePart.TIMEZONE_HOUR,
+                DatePart.TIMEZONE_MINUTE -> errNoContext("Timestamp unit ${datePart.name.toLowerCase()} not supported for DATE type", internal = false)
+                else -> 0
+            }
+            else         -> errNoContext("Expected date or timestamp: $dateTimeValue", internal = false)
+        }
+    }
     override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
         val datePart = args[0].datePartValue()
-        val timestamp = args[1].timestampValue()
+        val dateTimeValue = when(args[1].type) {
+            ExprValueType.TIMESTAMP -> args[1].timestampValue()
+            ExprValueType.DATE      -> args[1].dateValue()
 
-        val extracted = when (datePart) {
-            DatePart.YEAR            -> timestamp.year
-            DatePart.MONTH           -> timestamp.month
-            DatePart.DAY             -> timestamp.day
-            DatePart.HOUR            -> timestamp.hour
-            DatePart.MINUTE          -> timestamp.minute
-            DatePart.SECOND          -> timestamp.second
-            DatePart.TIMEZONE_HOUR   -> timestamp.hourOffset()
-            DatePart.TIMEZONE_MINUTE -> timestamp.minuteOffset()
+            else                    -> errNoContext("Expected date or timestamp: ${args[1]}", internal = false)
         }
 
-        return valueFactory.newInt(extracted)
+        return valueFactory.newInt(extractedValue(datePart, dateTimeValue))
     }
 
     override fun call(env: Environment, args: List<ExprValue>): ExprValue {

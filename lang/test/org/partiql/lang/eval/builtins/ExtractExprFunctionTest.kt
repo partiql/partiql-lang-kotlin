@@ -21,6 +21,7 @@ import org.partiql.lang.util.*
 import junitparams.*
 import org.assertj.core.api.*
 import org.junit.*
+import java.time.LocalDate
 
 class ExtractExprFunctionTest : TestBase() {
 
@@ -59,7 +60,7 @@ class ExtractExprFunctionTest : TestBase() {
     @Test
     fun wrongTypeOfSecondArgument() {
         Assertions.assertThatThrownBy { callExtract("year", "999") }
-            .hasMessage("Expected timestamp: \"999\"")
+            .hasMessage("Expected date or timestamp: '999'")
             .isExactlyInstanceOf(EvaluationException::class.java)
     }
 
@@ -125,7 +126,15 @@ class ExtractExprFunctionTest : TestBase() {
 
         // negative offset
         -7 to { callExtract("timezone_hour", Timestamp.valueOf("2017-01-02T03:04:05-07:08")) },
-        -8 to { callExtract("timezone_minute", Timestamp.valueOf("2017-01-02T03:04:05-07:08")) }
+        -8 to { callExtract("timezone_minute", Timestamp.valueOf("2017-01-02T03:04:05-07:08")) },
+
+        // extract year, month, day, hour, minute, second from DATE literals
+        2021 to { callExtract("year", LocalDate.of(2021, 3, 24)) },
+        3 to { callExtract("month", LocalDate.of(2021, 3, 24)) },
+        24 to { callExtract("day", LocalDate.of(2021, 3, 24)) },
+        0 to { callExtract("hour", LocalDate.of(2021, 3, 24)) },
+        0 to { callExtract("minute", LocalDate.of(2021, 3, 24)) },
+        0 to { callExtract("second", LocalDate.of(2021, 3, 24)) }
     )
 
     @Test

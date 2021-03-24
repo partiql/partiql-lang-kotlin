@@ -14,8 +14,11 @@
 
 package org.partiql.lang.eval.builtins
 
+import junitparams.Parameters
 import org.partiql.lang.eval.*
 import org.junit.*
+import org.partiql.lang.syntax.DatePart
+import java.time.LocalDate
 
 /**
  * More detailed tests are in [ExtractExprFunctionTest] and parsing related tests in
@@ -67,7 +70,47 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
                                            mapOf("a" to "2017-01-10T05:30:55Z").toSession())
 
     @Test
-    fun wrongArgumentTypes() = assertThrows("Expected timestamp: 1", NodeMetadata(1, 1)) {
+    fun wrongArgumentTypes() = assertThrows("Expected date or timestamp: 1", NodeMetadata(1, 1)) {
         voidEval("extract(year from 1)")
+    }
+
+    data class ExtractFromDateTC(val source: String, val expected: ExprValue?)
+
+    private fun createDateTC(source: String, expected: LocalDate) =
+        DatePart.values()
+            .map { datePart ->
+                ExtractFromDateTC(
+                    source = "EXTRACT(${datePart.name} FROM $source)",
+                    expected = when (datePart) {
+                        DatePart.YEAR -> valueFactory.newInt(expected.year)
+                        DatePart.MONTH -> valueFactory.newInt(expected.monthValue)
+                        DatePart.DAY -> valueFactory.newInt(expected.dayOfMonth)
+                        DatePart.HOUR -> valueFactory.newInt(0)
+                        DatePart.MINUTE -> valueFactory.newInt(0)
+                        DatePart.SECOND -> valueFactory.newInt(0)
+                        DatePart.TIMEZONE_HOUR -> null
+                        DatePart.TIMEZONE_MINUTE -> null
+                    }
+                )
+            }
+
+    fun parametersForRunTests() = listOf(
+        createDateTC("DATE '2012-12-12'", LocalDate.of(2012, 12, 12)),
+        createDateTC("DATE '2020-02-29'", LocalDate.of(2020, 2, 29)),
+        createDateTC("DATE '2021-03-24'", LocalDate.of(2021, 3, 24))
+    ).flatten()
+
+    @Test
+    @Parameters
+    fun runTests(tc: ExtractFromDateTC) = when (tc.expected) {
+        null -> {
+            try {
+                voidEval(tc.source)
+                fail("Expected evaluation error")
+            } catch (e: EvaluationException) {
+                // Do nothing
+            }
+        }
+        else -> assertExprEquals(eval(tc.source), tc.expected)
     }
 }

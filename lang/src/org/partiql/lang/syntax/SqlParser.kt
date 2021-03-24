@@ -2224,9 +2224,9 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
         val datePart = this.tail.parseDatePart().deriveExpectedKeyword("from")
         val rem = datePart.remaining
-        val timestamp = rem.parseExpression().deriveExpected(RIGHT_PAREN)
+        val dateTimeType = rem.parseExpression().deriveExpected(RIGHT_PAREN)
 
-        return ParseNode(CALL, name, listOf(datePart, timestamp), timestamp.remaining)
+        return ParseNode(CALL, name, listOf(datePart, dateTimeType), dateTimeType.remaining)
     }
 
     /**
