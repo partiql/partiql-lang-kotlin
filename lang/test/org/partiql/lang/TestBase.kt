@@ -43,6 +43,7 @@ abstract class TestBase : Assert() {
         is Decimal   -> valueFactory.newDecimal(value)
         is Timestamp -> valueFactory.newTimestamp(value)
         is LocalDate -> valueFactory.newDate(value)
+        is Double    -> valueFactory.newFloat(value)
         else         ->
             error("Can't convert receiver to ExprValue (please extend this function to support the receiver's data type).")
     }

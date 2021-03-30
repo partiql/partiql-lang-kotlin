@@ -455,6 +455,11 @@ enum class ErrorCode(private val category: ErrorCategory,
         LOCATION + setOf(Property.EXPECTED_ARITY_MIN, Property.EXPECTED_ARITY_MAX),
         "Incorrect number of arguments to procedure call"),
 
+    EVALUATOR_DATE_FIELD_OUT_OF_RANGE(
+        ErrorCategory.EVALUATOR,
+        LOCATION,
+        "Date field out of range."),
+
     EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.EXPECTED_ARGUMENT_TYPES, Property.ACTUAL_ARGUMENT_TYPES, Property.FUNCTION_NAME),

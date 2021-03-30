@@ -25,7 +25,6 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         }
     }
 
-
     private class ArgumentsForDateLiterals : ArgumentsProviderBase() {
         private fun case(query: String, expected: String) = EvaluatorTestCase(query, expected)
 
@@ -36,5 +35,4 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
             case("'2021-03-17' IS DATE", "false")
         )
     }
-
 }

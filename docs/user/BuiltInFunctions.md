@@ -467,6 +467,37 @@ Examples
 LOWER('AbCdEfG!@#$') -- 'abcdefg!@#$'
 ```
 
+### MAKE_DATE
+
+Given the integer values for the year, month and day returns the associated date.
+
+Signature
+: `MAKE_DATE: Year_Int Month_Int Day_Int -> Date`
+
+where `Year_Int`, `Month_Int`, `Day_Int` are the Integers representing `year`, `month` and `day` respectively
+ for the date.
+
+Header
+: `MAKE_DATE(year, month, day)`
+
+Purpose
+: Given integer values for `year`, `month` and `day`, returns an associated `Date`. This function allows arguments to be 
+`unknown`s i.e. (`null` or `missing`).
+
+Examples
+:
+
+```sql
+MAKE_DATE(2021, 02, 28)                  -- 2021-02-28
+MAKE_DATE(2020, 02, 29)                  -- 2020-02-29
+MAKE_DATE(2021, 12, 31)                  -- 2021-12-31
+MAKE_DATE(null, 02, 28)                  -- null
+MAKE_DATE(2021, null, 28)                -- null
+MAKE_DATE(2021, 02, null)                -- null
+MAKE_DATE(missing, 02, 28)               -- null
+MAKE_DATE(2021, missing, 28)             -- null
+MAKE_DATE(2021, 02, missing)             -- null
+```
 ### SIZE   
 
 Given any container data type (i.e., list, structure or bag) return the number of elements in the container. 
