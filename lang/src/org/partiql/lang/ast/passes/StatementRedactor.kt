@@ -34,13 +34,7 @@ fun skipRedaction(node: PartiqlAst.Expr, safeFieldNames: Set<String>): Boolean {
         return false
     }
 
-    // Skip redaction for NAry node
-    if (node.isNAry()) {
-        return true
-    }
-
     return when (node) {
-        is PartiqlAst.Expr.Parameter -> true    // Skip redaction for Parameter node
         is PartiqlAst.Expr.Id -> safeFieldNames.contains(node.name.text)
         is PartiqlAst.Expr.Lit -> {
             when (node.value) {
@@ -56,9 +50,7 @@ fun skipRedaction(node: PartiqlAst.Expr, safeFieldNames: Set<String>): Boolean {
                 }
             }
         }
-        else -> {
-            throw IllegalArgumentException("Unexpected PartiqlAst.Expr in StatementRedactor.hasSafeFieldName: ${node.javaClass}")
-        }
+        else -> true // Skip redaction for other nodes
     }
 }
 
@@ -157,8 +149,12 @@ private class StatementRedactionVisitor(
 
         sourceLocationMetaForRedaction.map {
             val length = it.length.toInt()
-            val start = totalCharactersInPreviousLines[it.lineNum.toInt() - 1] + it.charOffset.toInt() - 1 + offset
-            if (start >= redactedStatement.length || start > redactedStatement.length - length) {
+            val lineNum = it.lineNum.toInt()
+            if (lineNum < 1 || lineNum > totalCharactersInPreviousLines.size) {
+                throw IllegalArgumentException("$INPUT_AST_STATEMENT_MISMATCH, line number: $lineNum")
+            }
+            val start = totalCharactersInPreviousLines[lineNum - 1] + it.charOffset.toInt() - 1 + offset
+            if (start < 0 || length < 0 || start >= redactedStatement.length || start > redactedStatement.length - length) {
                 throw IllegalArgumentException(INPUT_AST_STATEMENT_MISMATCH)
             }
             redactedStatement.replace(start, start + length, maskPattern)
@@ -304,29 +300,29 @@ private class StatementRedactionVisitor(
             }
         }
     }
-}
 
-// once NAry node modeled better in PIG (https://github.com/partiql/partiql-lang-kotlin/issues/241), this code can be
-// refactored
-// TODO: other NAry ops that not modeled (LIKE, INTERSECT, INTERSECT_ALL, EXCEPT, EXCEPT_ALL, UNION, UNION_ALL)
-private fun PartiqlAst.Expr.isNAry(): Boolean {
-    return this is PartiqlAst.Expr.And
-        || this is PartiqlAst.Expr.Or
-        || this is PartiqlAst.Expr.Not
-        || this is PartiqlAst.Expr.Eq
-        || this is PartiqlAst.Expr.Ne
-        || this is PartiqlAst.Expr.Gt
-        || this is PartiqlAst.Expr.Gte
-        || this is PartiqlAst.Expr.Lt
-        || this is PartiqlAst.Expr.Lte
-        || this is PartiqlAst.Expr.InCollection
-        || this is PartiqlAst.Expr.Plus
-        || this is PartiqlAst.Expr.Minus
-        || this is PartiqlAst.Expr.Times
-        || this is PartiqlAst.Expr.Divide
-        || this is PartiqlAst.Expr.Modulo
-        || this is PartiqlAst.Expr.Concat
-        || this is PartiqlAst.Expr.Between
-        || this is PartiqlAst.Expr.Call
+    // once NAry node modeled better in PIG (https://github.com/partiql/partiql-lang-kotlin/issues/241), this code can be
+    // refactored
+    // TODO: other NAry ops that not modeled (LIKE, INTERSECT, INTERSECT_ALL, EXCEPT, EXCEPT_ALL, UNION, UNION_ALL)
+    private fun PartiqlAst.Expr.isNAry(): Boolean {
+        return this is PartiqlAst.Expr.And
+            || this is PartiqlAst.Expr.Or
+            || this is PartiqlAst.Expr.Not
+            || this is PartiqlAst.Expr.Eq
+            || this is PartiqlAst.Expr.Ne
+            || this is PartiqlAst.Expr.Gt
+            || this is PartiqlAst.Expr.Gte
+            || this is PartiqlAst.Expr.Lt
+            || this is PartiqlAst.Expr.Lte
+            || this is PartiqlAst.Expr.InCollection
+            || this is PartiqlAst.Expr.Plus
+            || this is PartiqlAst.Expr.Minus
+            || this is PartiqlAst.Expr.Times
+            || this is PartiqlAst.Expr.Divide
+            || this is PartiqlAst.Expr.Modulo
+            || this is PartiqlAst.Expr.Concat
+            || this is PartiqlAst.Expr.Between
+            || this is PartiqlAst.Expr.Call
 
+    }
 }
