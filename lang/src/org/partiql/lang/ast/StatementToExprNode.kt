@@ -192,6 +192,16 @@ private class StatementTransformer(val ion: IonSystem) {
             )
             is Expr.Date ->
                 DateTimeType.Date(year.value.toInt(), month.value.toInt(), day.value.toInt(), metas)
+            is Expr.Time ->
+                DateTimeType.Time(
+                    hour.value.toInt(),
+                    minute.value.toInt(),
+                    second.value.toInt(),
+                    nano.value.toInt(),
+                    precision.value.toInt(),
+                    tzMinutes?.value?.toInt(),
+                    metas
+                )
         }
     }
 
@@ -320,6 +330,7 @@ private class StatementTransformer(val ion: IonSystem) {
             is Type.SexpType -> DataType(SqlDataType.SEXP, listOf(), metas)
             is Type.BagType -> DataType(SqlDataType.BAG, listOf(), metas)
             is Type.DateType -> DataType(SqlDataType.DATE, listOf(), metas)
+            is Type.TimeType -> DataType(SqlDataType.TIME, listOf(), metas)
         }
     }
 

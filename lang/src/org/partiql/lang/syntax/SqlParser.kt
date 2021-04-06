@@ -28,8 +28,13 @@ import org.partiql.lang.syntax.SqlParser.ParseType.*
 import org.partiql.lang.syntax.TokenType.*
 import org.partiql.lang.syntax.TokenType.KEYWORD
 import org.partiql.lang.util.*
-import java.time.LocalDate
+import java.lang.Integer.min
+import java.time.*
+import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
+
+// TODO: (Ques) LocalTime has a field nanosecond and is the precision limit for it. Do we want to use this as the default precision if not specified?
+private const val DEFAULT_PRECISION_FOR_TIME = 9
 
 /**
  * Parses a list of tokens as infix query expression into a prefix s-expression
@@ -87,6 +92,8 @@ class SqlParser(private val ion: IonSystem) : Parser {
         UNPIVOT,
         CALL,
         DATE,
+        TIME,
+        TIME_WITH_TIME_ZONE,
         CALL_AGG,
         CALL_DISTINCT_AGG,
         CALL_AGG_WILDCARD,
@@ -132,7 +139,8 @@ class SqlParser(private val ion: IonSystem) : Parser {
         DROP_INDEX(isTopLevelType = true),
         CREATE_INDEX(isTopLevelType = true),
         PARAMETER,
-        EXEC(isTopLevelType = true);
+        EXEC(isTopLevelType = true),
+        PRECISION;
 
         val identifier = name.toLowerCase()
     }
@@ -688,6 +696,18 @@ class SqlParser(private val ion: IonSystem) : Parser {
                 val (year, month, day) = dateString.split("-")
                 DateTimeType.Date(year.toInt(), month.toInt(), day.toInt(), metas)
             }
+            TIME -> {
+                val timeString = token!!.text!!
+                val precision = min(children[0].token?.value?.numberValue()?.toInt() ?: DEFAULT_PRECISION_FOR_TIME, DEFAULT_PRECISION_FOR_TIME)
+                val time = LocalTime.parse(timeString, DateTimeFormatter.ISO_TIME)
+                DateTimeType.Time(time.hour, time.minute, time.second, time.nano, precision, null, metas)
+            }
+            TIME_WITH_TIME_ZONE -> {
+                val timeString = token!!.text!!
+                val precision = min(children[0].token?.value?.numberValue()?.toInt() ?: DEFAULT_PRECISION_FOR_TIME, DEFAULT_PRECISION_FOR_TIME)
+                val time = OffsetTime.parse(timeString)
+                DateTimeType.Time(time.hour, time.minute, time.second, time.nano, precision, time.offset.totalSeconds/60, metas)
+            }
             else -> unsupported("Unsupported syntax for $type", PARSE_UNSUPPORTED_SYNTAX)
         }
     }
@@ -1230,6 +1250,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
             "extract" -> tail.parseExtract(head!!)
             "date_add", "date_diff" -> tail.parseDateAddOrDateDiff(head!!)
             "date" -> tail.parseDate()
+            "time" -> tail.parseTime()
             in FUNCTION_NAME_KEYWORDS -> when (tail.head?.type) {
                 LEFT_PAREN ->
                     tail.tail.parseFunctionCall(head!!)
@@ -2245,6 +2266,135 @@ class SqlParser(private val ion: IonSystem) : Parser {
             }
             else -> err("Expected date string followed by the keyword DATE, found ${head?.value?.type}", PARSE_UNEXPECTED_TOKEN)
         }
+
+    /**
+     * Parses the optional precision specified with TIME type.
+     * The precision states the precision of the second's value in the time unit.
+     * If the precision is specified, the function returns the [ParseNode] with the token as precision value.
+     * Otherwise, the function returns the [ParseNode] with the token as null.
+     * It also verifies that the specified precision is an unsigned integer.
+     */
+    private fun List<Token>.parseOptionalPrecision(): ParseNode =
+        // If the optional precision is present
+        if (head?.type == LEFT_PAREN) {
+            var rem = tail
+            // Expected precision token to be unsigned integer
+            if (rem.head == null || rem.head!!.type != LITERAL || !rem.head!!.value!!.isUnsignedInteger) {
+                rem.head.err("Expected integer value for precision", PARSE_INVALID_PRECISION_FOR_TIME)
+            }
+            val precision = rem.head
+            rem = rem.tail
+            if (rem.head?.type != RIGHT_PAREN) {
+                rem.head.errExpectedTokenType(RIGHT_PAREN)
+            }
+            ParseNode(PRECISION, precision, listOf(), rem.tail)
+        }
+        else {
+            ParseNode(PRECISION, null, listOf(), this)
+        }
+
+    /**
+     * Checks for the optional time zone indicator which is specified with "WITH TIME ZONE"
+     */
+    private fun List<Token>.checkForOptionalTimeZone(): Pair<List<Token>, Boolean> {
+        // If the keyword is specified for time zone, it must be a series of keywords - "with time zone"
+        if (head?.type == KEYWORD) {
+            val rem =
+                tailExpectedKeyword("with").
+                tailExpectedKeyword("time").
+                tailExpectedKeyword("zone")
+            return Pair(rem, true)
+        }
+        return Pair(this, false)
+    }
+
+    /**
+     * Parses a time string and verifies that the time string is a string ond is specified in the valid ISO format.
+     * Allows for optional precision and time zone to be specified with the time.
+     * The different valid usages are as follows:
+     *
+     *         1. TIME 'HH:MM:SS[.ddd....][+|-HH:MM]'
+     *
+     *         2. TIME (<p>) 'HH:MM:SS[.ddd....][+|-HH:MM]'
+     *
+     *         3. TIME WITH TIME ZONE 'HH:MM:SS[.ddd....][+|-HH:MM]'
+     *
+     *         4. TIME (<p>) WITH TIME ZONE 'HH:MM:SS[.ddd....][+|-HH:MM]'
+     *
+     * where p is the precision for the second's value in the time.
+     * The valid range for the time zone offset is [-18:00 to +18:00]
+     * If the time zone offset is not specified when used with "TIME WITH TIME ZONE", the system default time zone is picked.
+     * This behaviour is consistent with most other database languages like SQL92, PostgreSQL etc.
+     * It also makes more sense as the user using the keywords "TIME WITH TIME ZONE .." would expect the
+     * local time zone offset to be used by default.
+     */
+    private fun List<Token>.parseTime(): ParseNode {
+
+        // These are used to validate the generic format of the time string.
+        // The more involved logic such as validating the time is done by LocalTime.parse or OffsetTime.parse
+        val timeWithoutTimeZoneRegex = Regex("\\d\\d:\\d\\d:\\d\\d(\\.\\d*)?")
+        val genericTimeRegex = Regex("\\d\\d:\\d\\d:\\d\\d(\\.\\d*)?([+|-]\\d\\d:\\d\\d)?")
+
+        var rem = this
+
+        // Parses the time string without the time zone offset.
+        fun tryLocalTimeParsing(time: String?) {
+            try {
+                LocalTime.parse(time, DateTimeFormatter.ISO_TIME)
+            }
+            catch (e: DateTimeParseException) {
+                rem.head.err(e.localizedMessage, PARSE_INVALID_TIME_STRING)
+            }
+        }
+
+        // 1. Parse for optional precision and store the precision value
+        val precision = rem.parseOptionalPrecision()
+        rem = precision.remaining
+
+        // 2. Check for optional "with time zone" tokens and store the boolean
+        val (remainingAfterOptionalTimeZone, isTimeZoneSpecified) = rem.checkForOptionalTimeZone()
+        rem = remainingAfterOptionalTimeZone
+
+        val timeStringToken = rem.head
+        if (timeStringToken?.value == null || timeStringToken.type != LITERAL || !timeStringToken.value.isText) {
+            rem.head.err(
+                "Expected time string followed by the keyword TIME OR TIME WITH TIME ZONE, found ${rem.head?.value?.type}",
+                PARSE_UNEXPECTED_TOKEN
+            )
+        }
+
+        // 3. Parse the time string as local time 'hh:mm:ss.dddd...' or local time with offset 'hh:mm:ss.dddd...[+|-]hh:mm'
+        //      - If the time zone is true and the local offset is missing, consider local offset from the system settings.
+        val timeString = timeStringToken.value.stringValue()?.replace(" ", "")
+        if (!genericTimeRegex.matches(timeString!!)) {
+            rem.head.err("Invalid format for time string. Expected format is \"TIME [(p)] [WITH TIME ZONE] HH:MM:SS[.ddddd...][+|-HH:MM]\"",
+                PARSE_INVALID_TIME_STRING)
+        }
+        var newTimeString = timeString
+        when(isTimeZoneSpecified) {
+            false -> tryLocalTimeParsing(timeString)
+            true -> try {
+                OffsetTime.parse(timeString, DateTimeFormatter.ISO_TIME)
+            } catch (e: DateTimeParseException) {
+                // The exception thrown here is because of the invalid time or time zone offset specified in the timestring.
+                // The valid time zone offsets are in the range of [-18:00 - 18:00]
+                if (timeWithoutTimeZoneRegex.matches(timeString)) {
+                    // Fall back on parsing a string without a time zone offset only if the offset is not specified.
+                    // Add local system timezone offset in that case.
+                    tryLocalTimeParsing(timeString)
+                    newTimeString = timeString + ZoneOffset.systemDefault().rules.getOffset(Instant.now()).toString()
+                }
+                else {
+                    rem.head.err(e.localizedMessage, PARSE_INVALID_TIME_STRING)
+                }
+            }
+        }
+        return ParseNode(
+            if (isTimeZoneSpecified) TIME_WITH_TIME_ZONE else TIME,
+            rem.head!!.copy(value = ion.newString(newTimeString)),
+            listOf(precision),
+            rem.tail)
+    }
 
     /**
      * Parses a function call that has the syntax of `date_add` and `date_diff`.

@@ -96,6 +96,7 @@
 
             // Constructors for DateTime types
             (date year::int month::int day::int)
+            (time hour::int minute::int second::int nano::int precision::int tz_minutes::(? int))
 
             // Set operators
             (union setq::set_quantifier operands::(* expr 2))
@@ -357,6 +358,7 @@
             (blob_type)
             (clob_type)
             (date_type)
+            (time_type)
             (struct_type)
             (tuple_type)
             (list_type)
