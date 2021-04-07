@@ -29,6 +29,7 @@ import org.partiql.lang.syntax.TokenType.*
 import org.partiql.lang.syntax.TokenType.KEYWORD
 import org.partiql.lang.util.*
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter.*
 import java.time.format.DateTimeParseException
 
 /**
@@ -2232,19 +2233,29 @@ class SqlParser(private val ion: IonSystem) : Parser {
     /**
      * Parses a date string and validates that the date string is a string and of the format YYYY-MM-DD
      */
-    private fun List<Token>.parseDate(): ParseNode =
-        when (head?.value?.isText) {
-            true -> {
-                // validate that the date string follows the format YYYY-MM-DD
-                try {
-                    LocalDate.parse(head?.value?.stringValue())
-                } catch (e: DateTimeParseException) {
-                    err(e.localizedMessage, PARSE_INVALID_DATE_STRING)
-                }
-                ParseNode(DATE, head, listOf(), tail)
-            }
-            else -> err("Expected date string followed by the keyword DATE, found ${head?.value?.type}", PARSE_UNEXPECTED_TOKEN)
+    private fun List<Token>.parseDate(): ParseNode {
+        val dateStringToken = head
+        if (dateStringToken?.value == null || dateStringToken.type != LITERAL || !dateStringToken.value.isText) {
+            err("Expected date string followed by the keyword DATE, found ${head?.value?.type}", PARSE_UNEXPECTED_TOKEN)
         }
+
+        val dateString = dateStringToken.value.stringValue()
+
+        val datePatternRegex = Regex("\\d\\d\\d\\d-\\d\\d-\\d\\d")
+        // validate that the date string follows the format YYYY-MM-DD
+        // Filter out the extended dates which can be specified with the '+' or '-' symbol.
+        // '+99999-03-10' for example is allowed by LocalDate.parse and should be filtered out.
+        if (!datePatternRegex.matches(dateString!!)) {
+            err("Expected DATE string to be of the format yyyy-MM-dd", PARSE_INVALID_DATE_STRING)
+        }
+        try {
+            LocalDate.parse(dateString, ISO_LOCAL_DATE)
+        } catch (e: DateTimeParseException) {
+            err(e.localizedMessage, PARSE_INVALID_DATE_STRING)
+        }
+
+        return ParseNode(DATE, head, listOf(), tail)
+    }
 
     /**
      * Parses a function call that has the syntax of `date_add` and `date_diff`.
