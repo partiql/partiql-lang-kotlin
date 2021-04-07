@@ -13,7 +13,7 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
 
     private val MONTHS_WITH_31_DAYS = listOf(1, 3, 5, 7, 8, 10, 12)
     private val RANDOM_GENERATOR = generateRandomSeed()
-    private val RANDOM_DATES = List(5000) { RANDOM_GENERATOR.nextDate() }
+    private val RANDOM_DATES = List(500) { RANDOM_GENERATOR.nextDate() }
 
     @Test
     @Parameters
