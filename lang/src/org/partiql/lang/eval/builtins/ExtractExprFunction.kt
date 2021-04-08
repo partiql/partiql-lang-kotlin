@@ -39,39 +39,42 @@ internal class ExtractExprFunction(valueFactory: ExprValueFactory) : NullPropaga
 
     private fun Timestamp.minuteOffset() = (localOffset ?: 0) % SECONDS_PER_MINUTE
 
-    private fun extractedValue(datePart: DatePart, dateTimeValue: Any?) : Int {
-        return when (dateTimeValue) {
-            is Timestamp -> when (datePart) {
-                DatePart.YEAR -> dateTimeValue.year
-                DatePart.MONTH -> dateTimeValue.month
-                DatePart.DAY -> dateTimeValue.day
-                DatePart.HOUR -> dateTimeValue.hour
-                DatePart.MINUTE -> dateTimeValue.minute
-                DatePart.SECOND -> dateTimeValue.second
-                DatePart.TIMEZONE_HOUR -> dateTimeValue.hourOffset()
-                DatePart.TIMEZONE_MINUTE -> dateTimeValue.minuteOffset()
-            }
-            is LocalDate -> when (datePart) {
-                DatePart.YEAR -> dateTimeValue.year
-                DatePart.MONTH -> dateTimeValue.monthValue
-                DatePart.DAY -> dateTimeValue.dayOfMonth
-                DatePart.TIMEZONE_HOUR,
-                DatePart.TIMEZONE_MINUTE -> errNoContext("Timestamp unit ${datePart.name.toLowerCase()} not supported for DATE type", internal = false)
-                else -> 0
-            }
-            else         -> errNoContext("Expected date or timestamp: $dateTimeValue", internal = false)
-        }
+    private fun Timestamp.extractedValue(datePart: DatePart) : Double {
+        return when (datePart) {
+            DatePart.YEAR -> year
+            DatePart.MONTH -> month
+            DatePart.DAY -> day
+            DatePart.HOUR -> hour
+            DatePart.MINUTE -> minute
+            DatePart.SECOND -> second
+            DatePart.TIMEZONE_HOUR -> hourOffset()
+            DatePart.TIMEZONE_MINUTE -> minuteOffset()
+        }.toDouble()
     }
+
+    private fun LocalDate.extractedValue(datePart: DatePart) : Double {
+        return when (datePart) {
+            DatePart.YEAR -> year
+            DatePart.MONTH -> monthValue
+            DatePart.DAY -> dayOfMonth
+            DatePart.TIMEZONE_HOUR,
+            DatePart.TIMEZONE_MINUTE -> errNoContext(
+                "Timestamp unit ${datePart.name.toLowerCase()} not supported for DATE type",
+                internal = false
+            )
+            DatePart.HOUR, DatePart.MINUTE, DatePart.SECOND -> 0
+        }.toDouble()
+    }
+
     override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
         val datePart = args[0].datePartValue()
-        val dateTimeValue = when(args[1].type) {
-            ExprValueType.TIMESTAMP -> args[1].timestampValue()
-            ExprValueType.DATE      -> args[1].dateValue()
-
+        val extractedValue = when(args[1].type) {
+            ExprValueType.TIMESTAMP -> args[1].timestampValue().extractedValue(datePart)
+            ExprValueType.DATE      -> args[1].dateValue().extractedValue(datePart)
             else                    -> errNoContext("Expected date or timestamp: ${args[1]}", internal = false)
         }
 
-        return valueFactory.newInt(extractedValue(datePart, dateTimeValue))
+        return valueFactory.newFloat(extractedValue)
     }
 
     override fun call(env: Environment, args: List<ExprValue>): ExprValue {

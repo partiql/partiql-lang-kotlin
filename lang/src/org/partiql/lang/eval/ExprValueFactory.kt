@@ -15,6 +15,7 @@
 package org.partiql.lang.eval
 
 import com.amazon.ion.*
+import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.util.*
 import java.math.*
 import java.time.LocalDate
@@ -79,6 +80,12 @@ interface ExprValueFactory {
 
     /** Returns a PartiQL `DATE` [ExprValue] instance representing the specified [LocalDate]. */
     fun newDate(value: LocalDate): ExprValue
+
+    /** Returns a PartiQL `DATE` [ExprValue] instance representing the specified year, month and day. */
+    fun newDate(year: Int, month: Int, day: Int): ExprValue
+
+    /** Returns a PartiQL `DATE` [ExprValue] instance representing the specified date string of the format yyyy-MM-dd. */
+    fun newDate(dateString: String): ExprValue
 
     /** Returns a PartiQL `TIMESTAMP` [ExprValue] instance representing the specified [Timestamp]. */
     fun newTimestamp(value: Timestamp): ExprValue
@@ -188,6 +195,12 @@ private class ExprValueFactoryImpl(override val ion: IonSystem) : ExprValueFacto
 
     override fun newDate(value: LocalDate): ExprValue =
         DateExprValue(ion, value)
+
+    override fun newDate(year: Int, month: Int, day: Int) =
+        newDate(LocalDate.of(year, month, day))
+
+    override fun newDate(dateString: String) =
+        newDate(LocalDate.parse(dateString))
 
     override fun newTimestamp(value: Timestamp): ExprValue =
         TimestampExprValue(ion, value)
@@ -305,6 +318,15 @@ private class DecimalExprValue(val ion: IonSystem, val value: BigDecimal): Scala
  */
 private class DateExprValue(val ion: IonSystem, val value: LocalDate): ScalarExprValue() {
 
+    init {
+        // validate that the local date is not an extended date.
+        if (value.year < 0 || value.year > 9999) {
+            err("Year should be in the range 0 to 9999 inclusive.",
+                ErrorCode.EVALUATOR_DATE_FIELD_OUT_OF_RANGE,
+                propertyValueMapOf(),
+                false)
+        }
+    }
     private val PARTIQL_DATE_ANNOTATION = "partiql_date"
 
     private fun createIonDateStruct() =

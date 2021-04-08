@@ -68,6 +68,9 @@ class ConfigurableExprValueFormatterTest {
         // EmptyContainers
         "[]" to "[]",
         "<<>>" to "<<>>",
+//        TODO: This should succeed.
+//         Check https://github.com/partiql/partiql-lang-kotlin/issues/386.
+//        "DATE '2021-02-28'" to "DATE '2021-02-28'",
         "{}" to "{}").map { listOf(it.first, it.second) }
 
     fun prettyExamples() = baseExamples() + arrayOf(

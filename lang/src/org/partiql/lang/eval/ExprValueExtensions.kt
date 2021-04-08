@@ -82,7 +82,7 @@ fun ExprValue.numberValue(): Number =
     scalar.numberValue() ?: errNoContext("Expected number: $ionValue", internal = false)
 
 fun ExprValue.dateValue(): LocalDate =
-    scalar.dateValue() ?: errNoContext("Expected timestamp: $ionValue", internal = false)
+    scalar.dateValue() ?: errNoContext("Expected date: $ionValue", internal = false)
 
 fun ExprValue.timestampValue(): Timestamp =
     scalar.timestampValue() ?: errNoContext("Expected timestamp: $ionValue", internal = false)
@@ -299,6 +299,12 @@ fun ExprValue.cast(
                         return valueFactory.newDate(LocalDate.of(ts.year, ts.month, ts.day))
                     }
                     type.isText -> try {
+                        val datePatternRegex = Regex("\\d\\d\\d\\d-\\d\\d-\\d\\d")
+                        // validate that the date string follows the format YYYY-MM-DD
+                        if (!datePatternRegex.matches(stringValue())) {
+                            castFailedErr("Can't convert string value to DATE. Expected valid date string " +
+                                "and the date format to be YYYY-MM-DD", internal = false)
+                        }
                         val date = LocalDate.parse(stringValue())
                         return valueFactory.newDate(date)
                     }

@@ -1982,7 +1982,7 @@ internal class EvaluatingCompiler(
 
     private fun compileDate(node: DateTimeType.Date): ThunkEnv {
         val (year, month, day, metas) = node
-        val value = valueFactory.newDate(LocalDate.of(year, month, day))
+        val value = valueFactory.newDate(year, month, day)
         return thunkFactory.thunkEnv(metas) { value }
     }
 

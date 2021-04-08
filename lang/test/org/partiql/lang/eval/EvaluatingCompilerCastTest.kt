@@ -307,10 +307,17 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
                             case("-20.1", EVALUATOR_INVALID_CAST),
                             // timestamp
                             case("`2007-10-10T`", "partiql_date::{year:2007,month:10,day:10}"),
+                            case("`2007-02-23T12:14Z`", "partiql_date::{year:2007,month:2,day:23}"),
+                            case("`2007-02-23T12:14:33.079Z`", "partiql_date::{year:2007,month:2,day:23}"),
+                            case("`2007-02-23T12:14:33.079-08:00`", "partiql_date::{year:2007,month:2,day:23}"),
+                            case("`2007-02T`", "partiql_date::{year:2007,month:2,day:1}"),
+                            case("`2007T`", "partiql_date::{year:2007,month:1,day:1}"),
                             // text
                             case("'hello'", EVALUATOR_CAST_FAILED),
                             case("'2016-03-01T01:12:12Z'", EVALUATOR_CAST_FAILED),
                             case("""`"2001-01-01"`""", "partiql_date::{year:2001,month:1,day:1}"),
+                            case("""`"+20212-02-01"`""", EVALUATOR_CAST_FAILED),
+                            case("""`"20212-02-01"`""", EVALUATOR_CAST_FAILED),
                             case("""`'2000T'`""", EVALUATOR_CAST_FAILED),
                             case("""`'1999-04T'`""", EVALUATOR_CAST_FAILED),
                             // lob

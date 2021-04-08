@@ -18,7 +18,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         if (originalExprValue.type == ExprValueType.DATE) {
             val (year, month, day) = tc.expectedSql.split("-")
             val dateIonValue = originalExprValue.ionValue
-            assert(dateIonValue is IonStruct) { "Expected ionValue to be IonStruct" }
+            dateIonValue as IonStruct
             assertEquals("Expected year to be $year", ion.newInt(year.toInt()), dateIonValue["year"])
             assertEquals("Expected month to be $month", ion.newInt(month.toInt()), dateIonValue["month"])
             assertEquals("Expected day to be $day", ion.newInt(day.toInt()), dateIonValue["day"])

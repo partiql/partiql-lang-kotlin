@@ -4,6 +4,7 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.*
+import org.partiql.lang.util.propertyValueMapOf
 import java.time.DateTimeException
 import java.time.LocalDate
 
@@ -16,17 +17,16 @@ import java.time.LocalDate
 internal class MakeDateExprFunction(valueFactory: ExprValueFactory) : NullPropagatingExprFunction("make_date", 3, valueFactory) {
 
     override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
-        val errorContext = PropertyValueMap()
-        errorContext[Property.EXPECTED_ARGUMENT_TYPES] = "INT"
-        errorContext[Property.FUNCTION_NAME] = "make_date"
-
         args.map {
             if (it.type != ExprValueType.INT) {
-                errorContext[Property.ACTUAL_ARGUMENT_TYPES] = it.type.name
                 err(
                     message = "Invalid argument type for make_date",
                     errorCode = ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL,
-                    errorContext = null,
+                    errorContext = propertyValueMapOf(
+                        Property.EXPECTED_ARGUMENT_TYPES to "INT",
+                        Property.FUNCTION_NAME to "make_date",
+                        Property.ACTUAL_ARGUMENT_TYPES to it.type.name
+                    ),
                     internal = false
                 )
             }
@@ -35,7 +35,7 @@ internal class MakeDateExprFunction(valueFactory: ExprValueFactory) : NullPropag
         val (year, month, day) = args.map { it.intValue() }
 
         try {
-            return valueFactory.newDate(LocalDate.of(year, month, day))
+            return valueFactory.newDate(year, month, day)
         }
         catch (e: DateTimeException) {
             err(
