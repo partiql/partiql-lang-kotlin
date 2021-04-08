@@ -330,11 +330,7 @@ private class DateExprValue(val ion: IonSystem, val value: LocalDate): ScalarExp
     private val PARTIQL_DATE_ANNOTATION = "partiql_date"
 
     private fun createIonDateStruct() =
-        ion.newEmptyStruct().apply {
-            add("year", ion.newInt(value.year))
-            add("month", ion.newInt(value.monthValue))
-            add("day", ion.newInt(value.dayOfMonth))
-        }.apply {
+        ion.newTimestamp(Timestamp.forDay(value.year, value.monthValue, value.dayOfMonth)).apply {
             addTypeAnnotation(PARTIQL_DATE_ANNOTATION)
         }.seal()
 

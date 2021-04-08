@@ -1,6 +1,6 @@
 package org.partiql.lang.eval.builtins
 
-import com.amazon.ion.IonStruct
+import com.amazon.ion.IonTimestamp
 import junitparams.Parameters
 import org.assertj.core.api.Assertions
 import org.junit.Test
@@ -9,7 +9,6 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.*
 import org.partiql.lang.util.ArgumentsProviderBase
-import org.partiql.lang.util.get
 import java.time.LocalDate
 
 class MakeDateEvaluationTest : EvaluatorTestBase() {
@@ -28,10 +27,11 @@ class MakeDateEvaluationTest : EvaluatorTestBase() {
                 if (originalExprValue.type == ExprValueType.DATE) {
                     val (year, month, day) = tc.expected!!.split("-")
                     val dateIonValue = originalExprValue.ionValue
-                    assert(dateIonValue is IonStruct) { "Expected ionValue to be IonStruct" }
-                    assertEquals("Expected year to be $year", ion.newInt(year.toInt()), dateIonValue["year"])
-                    assertEquals("Expected month to be $month", ion.newInt(month.toInt()), dateIonValue["month"])
-                    assertEquals("Expected day to be $day", ion.newInt(day.toInt()), dateIonValue["day"])
+                    dateIonValue as IonTimestamp
+                    val timestamp = dateIonValue.timestampValue()
+                    assertEquals("Expected year to be $year", year.toInt(), timestamp.year)
+                    assertEquals("Expected month to be $month", month.toInt(), timestamp.month)
+                    assertEquals("Expected day to be $day", day.toInt(), timestamp.day)
                 }
             }
             else -> {

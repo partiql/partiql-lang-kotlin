@@ -1,11 +1,9 @@
 package org.partiql.lang.eval
 
-import com.amazon.ion.IonString
-import com.amazon.ion.IonStruct
+import com.amazon.ion.IonTimestamp
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.util.ArgumentsProviderBase
-import org.partiql.lang.util.get
 
 
 class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
@@ -18,10 +16,11 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         if (originalExprValue.type == ExprValueType.DATE) {
             val (year, month, day) = tc.expectedSql.split("-")
             val dateIonValue = originalExprValue.ionValue
-            dateIonValue as IonStruct
-            assertEquals("Expected year to be $year", ion.newInt(year.toInt()), dateIonValue["year"])
-            assertEquals("Expected month to be $month", ion.newInt(month.toInt()), dateIonValue["month"])
-            assertEquals("Expected day to be $day", ion.newInt(day.toInt()), dateIonValue["day"])
+            dateIonValue as IonTimestamp
+            val timestamp = dateIonValue.timestampValue()
+            assertEquals("Expected year to be $year", year.toInt(), timestamp.year)
+            assertEquals("Expected month to be $month", month.toInt(), timestamp.month)
+            assertEquals("Expected day to be $day", day.toInt(), timestamp.day)
         }
     }
 
