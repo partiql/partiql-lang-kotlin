@@ -174,13 +174,15 @@ fun ExprNode.toAstExpr(): PartiqlAst.Expr {
             is DateTimeType -> {
                 when (node) {
                     is DateTimeType.Date -> date(node.year.toLong(), node.month.toLong(), node.day.toLong(), metas)
-                    is DateTimeType.Time -> time(
-                        node.hour.toLong(),
-                        node.minute.toLong(),
-                        node.second.toLong(),
-                        node.nano.toLong(),
-                        node.precision.toLong(),
-                        node.tz_minutes?.toLong()
+                    is DateTimeType.Time -> litTime(
+                        timeValue(
+                            node.hour.toLong(),
+                            node.minute.toLong(),
+                            node.second.toLong(),
+                            node.nano.toLong(),
+                            node.precision.toLong(),
+                            node.tz_minutes?.toLong()
+                        )
                     )
                 }
             }

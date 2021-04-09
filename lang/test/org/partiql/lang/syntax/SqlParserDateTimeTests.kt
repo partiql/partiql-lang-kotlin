@@ -36,115 +36,115 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
             )
         },
         DateTimeTestCase("TIME '02:30:59'") {
-            time(2, 30, 59, 0, 9, null)
+            litTime(timeValue(2, 30, 59, 0, 9, null))
         },
         DateTimeTestCase("TIME (3) '12:59:31'") {
-            time(12, 59, 31, 0, 3, null)
+            litTime(timeValue(12, 59, 31, 0, 3, null))
         },
         DateTimeTestCase("TIME '23:59:59.9999'") {
-            time(23, 59, 59, 999900000, 9, null)
+            litTime(timeValue(23, 59, 59, 999900000, 9, null))
         },
         DateTimeTestCase("TIME (7) '23:59:59.123456789'") {
-            time(23, 59, 59, 123456789, 7, null)
+            litTime(timeValue(23, 59, 59, 123456789, 7, null))
         },
         DateTimeTestCase("TIME (9) '23:59:59.123456789'") {
-            time(23, 59, 59, 123456789, 9, null)
+            litTime(timeValue(23, 59, 59, 123456789, 9, null))
         },
         DateTimeTestCase("TIME (0) '23:59:59.123456789'") {
-            time(23, 59, 59, 123456789, 0, null)
+            litTime(timeValue(23, 59, 59, 123456789, 0, null))
         },
         DateTimeTestCase("TIME (10) '23:59:59.123456789'") {
-            time(23, 59, 59, 123456789, 9, null)
+            litTime(timeValue(23, 59, 59, 123456789, 9, null))
         },
         DateTimeTestCase("TIME '02:30:59-05:30'") {
-            time(2, 30, 59, 0, 9, null)
+            litTime(timeValue(2, 30, 59, 0, 9, null))
         },
         DateTimeTestCase("TIME '02:30:59+05:30'") {
-            time(2, 30, 59, 0, 9, null)
+            litTime(timeValue(2, 30, 59, 0, 9, null))
         },
         DateTimeTestCase("TIME '02:30:59-14:39'") {
-            time(2, 30, 59, 0, 9, null)
+            litTime(timeValue(2, 30, 59, 0, 9, null))
         },
         DateTimeTestCase("TIME '02:30:59+00:00'") {
-            time(2, 30, 59, 0, 9, null)
+            litTime(timeValue(2, 30, 59, 0, 9, null))
         },
         DateTimeTestCase("TIME '02:30:59-00:00'") {
-            time(2, 30, 59, 0, 9, null)
+            litTime(timeValue(2, 30, 59, 0, 9, null))
         },
         DateTimeTestCase("TIME (3) '12:59:31+10:30'") {
-            time(12, 59, 31, 0, 3, null)
+            litTime(timeValue(12, 59, 31, 0, 3, null))
         },
         DateTimeTestCase("TIME (0) '00:00:00+00:00'") {
-            time(0, 0, 0, 0, 0, null)
+            litTime(timeValue(0, 0, 0, 0, 0, null))
         },
         DateTimeTestCase("TIME (0) '00:00:00-00:00'") {
-            time(0, 0, 0, 0, 0, null)
+            litTime(timeValue(0, 0, 0, 0, 0, null))
         },
         DateTimeTestCase("TIME '23:59:59.9999-11:59'") {
-            time(23, 59, 59, 999900000, 9, null)
+            litTime(timeValue(23, 59, 59, 999900000, 9, null))
         },
         DateTimeTestCase("TIME (7) '23:59:59.123456789+01:00'") {
-            time(23, 59, 59, 123456789, 7, null)
+            litTime(timeValue(23, 59, 59, 123456789, 7, null))
         },
         DateTimeTestCase("TIME (9) '23:59:59.123456789-14:50'") {
-            time(23, 59, 59, 123456789, 9, null)
+            litTime(timeValue(23, 59, 59, 123456789, 9, null))
         },
         DateTimeTestCase("TIME (0) '23:59:59.123456789-18:00'") {
-            time(23, 59, 59, 123456789, 0, null)
+            litTime(timeValue(23, 59, 59, 123456789, 0, null))
         },
         DateTimeTestCase("TIME (10) '23:59:59.123456789+18:00'") {
-            time(23, 59, 59, 123456789, 9, null)
+            litTime(timeValue(23, 59, 59, 123456789, 9, null))
         },
         DateTimeTestCase("TIME WITH TIME ZONE '02:30:59'") {
-            time(2, 30, 59, 0, 9, LOCAL_TIME_ZONE_OFFSET)
+            litTime(timeValue(2, 30, 59, 0, 9, LOCAL_TIME_ZONE_OFFSET))
         },
         DateTimeTestCase("TIME (3) WITH TIME ZONE '12:59:31'") {
-            time(12, 59, 31, 0, 3, LOCAL_TIME_ZONE_OFFSET)
+            litTime(timeValue(12, 59, 31, 0, 3, LOCAL_TIME_ZONE_OFFSET))
         },
         DateTimeTestCase("TIME WITH TIME ZONE '23:59:59.9999'") {
-            time(23, 59, 59, 999900000, 9, LOCAL_TIME_ZONE_OFFSET)
+            litTime(timeValue(23, 59, 59, 999900000, 9, LOCAL_TIME_ZONE_OFFSET))
         },
         DateTimeTestCase("TIME (7) WITH TIME ZONE '23:59:59.123456789'") {
-            time(23, 59, 59, 123456789, 7, LOCAL_TIME_ZONE_OFFSET)
+            litTime(timeValue(23, 59, 59, 123456789, 7, LOCAL_TIME_ZONE_OFFSET))
         },
         DateTimeTestCase("TIME (9) WITH TIME ZONE '23:59:59.123456789'") {
-            time(23, 59, 59, 123456789, 9, LOCAL_TIME_ZONE_OFFSET)
+            litTime(timeValue(23, 59, 59, 123456789, 9, LOCAL_TIME_ZONE_OFFSET))
         },
         DateTimeTestCase("TIME (0) WITH TIME ZONE '23:59:59.123456789'") {
-            time(23, 59, 59, 123456789, 0, LOCAL_TIME_ZONE_OFFSET)
+            litTime(timeValue(23, 59, 59, 123456789, 0, LOCAL_TIME_ZONE_OFFSET))
         },
         DateTimeTestCase("TIME (10) WITH TIME ZONE '23:59:59.123456789'") {
-            time(23, 59, 59, 123456789, 9, LOCAL_TIME_ZONE_OFFSET)
+            litTime(timeValue(23, 59, 59, 123456789, 9, LOCAL_TIME_ZONE_OFFSET))
         },
         DateTimeTestCase("TIME (0) WITH TIME ZONE '00:00:00+00:00'") {
-            time(0, 0, 0, 0, 0, 0)
+            litTime(timeValue(0, 0, 0, 0, 0, 0))
         },
         DateTimeTestCase("TIME (0) WITH TIME ZONE '00:00:00-00:00'") {
-            time(0, 0, 0, 0, 0, 0)
+            litTime(timeValue(0, 0, 0, 0, 0, 0))
         },
         DateTimeTestCase("TIME WITH TIME ZONE '02:30:59-05:30'") {
-            time(2, 30, 59, 0, 9, -330)
+            litTime(timeValue(2, 30, 59, 0, 9, -330))
         },
         DateTimeTestCase("TIME WITH TIME ZONE '02:30:59+05:30'") {
-            time(2, 30, 59, 0, 9, 330)
+            litTime(timeValue(2, 30, 59, 0, 9, 330))
         },
         DateTimeTestCase("TIME WITH TIME ZONE '02:30:59-14:39'") {
-            time(2, 30, 59, 0, 9, -879)
+            litTime(timeValue(2, 30, 59, 0, 9, -879))
         },
         DateTimeTestCase("TIME WITH TIME ZONE '23:59:59.9999-11:59'") {
-            time(23, 59, 59, 999900000, 9, -719)
+            litTime(timeValue(23, 59, 59, 999900000, 9, -719))
         },
         DateTimeTestCase("TIME (7) WITH TIME ZONE '23:59:59.123456789+01:00'") {
-            time(23, 59, 59, 123456789, 7, 60)
+            litTime(timeValue(23, 59, 59, 123456789, 7, 60))
         },
         DateTimeTestCase("TIME (9) WITH TIME ZONE '23:59:59.123456789-14:50'") {
-            time(23, 59, 59, 123456789, 9, -890)
+            litTime(timeValue(23, 59, 59, 123456789, 9, -890))
         },
         DateTimeTestCase("TIME (0) WITH TIME ZONE '23:59:59.123456789-18:00'") {
-            time(23, 59, 59, 123456789, 0, -1080)
+            litTime(timeValue(23, 59, 59, 123456789, 0, -1080))
         },
         DateTimeTestCase("TIME (10) WITH TIME ZONE '23:59:59.123456789+18:00'") {
-            time(23, 59, 59, 123456789, 9, 1080)
+            litTime(timeValue(23, 59, 59, 123456789, 9, 1080))
         }
     )
 

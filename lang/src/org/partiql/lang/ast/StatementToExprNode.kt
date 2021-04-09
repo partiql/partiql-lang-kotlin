@@ -192,14 +192,14 @@ private class StatementTransformer(val ion: IonSystem) {
             )
             is Expr.Date ->
                 DateTimeType.Date(year.value.toInt(), month.value.toInt(), day.value.toInt(), metas)
-            is Expr.Time ->
+            is Expr.LitTime ->
                 DateTimeType.Time(
-                    hour.value.toInt(),
-                    minute.value.toInt(),
-                    second.value.toInt(),
-                    nano.value.toInt(),
-                    precision.value.toInt(),
-                    tzMinutes?.value?.toInt(),
+                    value.hour.value.toInt(),
+                    value.minute.value.toInt(),
+                    value.second.value.toInt(),
+                    value.nano.value.toInt(),
+                    value.precision.value.toInt(),
+                    value.tzMinutes?.value?.toInt(),
                     metas
                 )
         }
