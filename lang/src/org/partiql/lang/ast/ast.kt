@@ -986,7 +986,8 @@ sealed class DateTimeType : ExprNode() {
         val year: Int,
         val month: Int,
         val day: Int,
-        override val metas: MetaContainer ) : DateTimeType() {
+        override val metas: MetaContainer
+    ) : DateTimeType() {
         override val children: List<AstNode> = listOf()
     }
 
@@ -996,7 +997,7 @@ sealed class DateTimeType : ExprNode() {
      * @param hour represents the hour value.
      * @param minute represents the minute value.
      * @param second represents the second value.
-     * @param nano represents the fractional part of the second upto the nano seconds' precision.
+     * @param nano represents the fractional part of the second up to the nanoseconds' precision.
      * @param precision is an optional parameter which, if specified, represents the precision of the fractional second.
      * The default precision is 9 or nanosecond.
      * @param tz_minutes is the optional time zone in minutes which can be specified with "WITH TIME ZONE".
@@ -1009,7 +1010,8 @@ sealed class DateTimeType : ExprNode() {
         val nano: Int,
         val precision: Int = 9,
         val tz_minutes: Int? = null,
-        override val metas: MetaContainer ) : DateTimeType() {
+        override val metas: MetaContainer
+    ) : DateTimeType() {
         override val children: List<AstNode> = listOf()
     }
 }

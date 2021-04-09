@@ -36,6 +36,11 @@ import java.time.format.DateTimeParseException
 // TODO: (Ques) LocalTime has a field nanosecond and is the precision limit for it. Do we want to use this as the default precision if not specified?
 private const val DEFAULT_PRECISION_FOR_TIME = 9
 
+// These are used to validate the generic format of the time string.
+// The more involved logic such as validating the time is done by LocalTime.parse or OffsetTime.parse
+private val timeWithoutTimeZoneRegex = Regex("\\d\\d:\\d\\d:\\d\\d(\\.\\d*)?")
+private val genericTimeRegex = Regex("\\d\\d:\\d\\d:\\d\\d(\\.\\d*)?([+|-]\\d\\d:\\d\\d)?")
+
 /**
  * Parses a list of tokens as infix query expression into a prefix s-expression
  * as the abstract syntax tree.
@@ -2280,7 +2285,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
             var rem = tail
             // Expected precision token to be unsigned integer
             if (rem.head == null || rem.head!!.type != LITERAL || !rem.head!!.value!!.isUnsignedInteger) {
-                rem.head.err("Expected integer value for precision", PARSE_INVALID_PRECISION_FOR_TIME)
+                rem.head.err("Expected integer value between 0 and 9 for precision", PARSE_INVALID_PRECISION_FOR_TIME)
             }
             val precision = rem.head
             rem = rem.tail
@@ -2309,7 +2314,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
     }
 
     /**
-     * Parses a time string and verifies that the time string is a string ond is specified in the valid ISO format.
+     * Parses a time string and verifies that the time string is a string and is specified in the valid ISO 8601 format.
      * Allows for optional precision and time zone to be specified with the time.
      * The different valid usages are as follows:
      *
@@ -2329,11 +2334,6 @@ class SqlParser(private val ion: IonSystem) : Parser {
      * local time zone offset to be used by default.
      */
     private fun List<Token>.parseTime(): ParseNode {
-
-        // These are used to validate the generic format of the time string.
-        // The more involved logic such as validating the time is done by LocalTime.parse or OffsetTime.parse
-        val timeWithoutTimeZoneRegex = Regex("\\d\\d:\\d\\d:\\d\\d(\\.\\d*)?")
-        val genericTimeRegex = Regex("\\d\\d:\\d\\d:\\d\\d(\\.\\d*)?([+|-]\\d\\d:\\d\\d)?")
 
         var rem = this
 
