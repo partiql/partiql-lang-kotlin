@@ -14,34 +14,12 @@
 
 package org.partiql.lang.errors
 import com.amazon.ion.Timestamp
-import org.partiql.lang.*
-import org.partiql.lang.syntax.SqlParser
-import org.partiql.lang.syntax.ParserException
 import org.partiql.lang.syntax.TokenType
 import org.partiql.lang.util.*
 import org.junit.*
+import org.partiql.lang.syntax.SqlParserTestBase
 
-class ParserErrorsTest : TestBase() {
-
-    private val parser = SqlParser(ion)
-
-    private fun checkInputThrowingParserException(input: String,
-                                                  errorCode: ErrorCode,
-                                                  expectErrorContextValues: Map<Property, Any>) {
-
-        softAssert {
-            try {
-                parser.parseExprNode(input)
-                fail("Expected ParserException but there was no Exception")
-            }
-            catch (pex: ParserException) {
-                checkErrorAndErrorContext(errorCode, pex, expectErrorContextValues)
-            }
-            catch (ex: Exception) {
-                fail("Expected ParserException but a different exception was thrown \n\t  $ex")
-            }
-        }
-    }
+class ParserErrorsTest : SqlParserTestBase() {
 
     @Test
     fun expectedKeyword() {

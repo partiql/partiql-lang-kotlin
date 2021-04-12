@@ -32,8 +32,11 @@ import org.partiql.lang.ast.toAstExpr
 import org.partiql.lang.ast.toAstStatement
 import org.partiql.lang.ast.toExprNode
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
 import org.partiql.lang.util.asIonSexp
 import org.partiql.lang.util.filterMetaNodes
+import org.partiql.lang.util.softAssert
 import org.partiql.pig.runtime.toIonElement
 
 abstract class SqlParserTestBase : TestBase() {
@@ -218,4 +221,21 @@ abstract class SqlParserTestBase : TestBase() {
     private fun loadIonSexp(expectedSexpAst: String) = ion.singleValue(expectedSexpAst).asIonSexp()
     private fun ExprNode.stripMetas() = MetaStrippingRewriter.stripMetas(this)
 
+    protected fun checkInputThrowingParserException(input: String,
+                                                  errorCode: ErrorCode,
+                                                  expectErrorContextValues: Map<Property, Any>) {
+
+        softAssert {
+            try {
+                parser.parseExprNode(input)
+                fail("Expected ParserException but there was no Exception")
+            }
+            catch (pex: ParserException) {
+                checkErrorAndErrorContext(errorCode, pex, expectErrorContextValues)
+            }
+            catch (ex: Exception) {
+                fail("Expected ParserException but a different exception was thrown \n\t  $ex")
+            }
+        }
+    }
 }
