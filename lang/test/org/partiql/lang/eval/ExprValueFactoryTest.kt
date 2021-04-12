@@ -353,7 +353,7 @@ class ExprValueFactoryTest {
 
         val ionDate =
             ion.newTimestamp(Timestamp.forDay(date.year, date.monthValue, date.dayOfMonth)).apply {
-                addTypeAnnotation("partiql_date")
+                addTypeAnnotation("\$partiql_date")
             }.seal()
 
         val dateExprValue = factory.newDate(date)

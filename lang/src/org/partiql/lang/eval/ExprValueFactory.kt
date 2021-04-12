@@ -327,17 +327,16 @@ private class DateExprValue(val ion: IonSystem, val value: LocalDate): ScalarExp
                 false)
         }
     }
-    private val PARTIQL_DATE_ANNOTATION = "partiql_date"
+    private val PARTIQL_DATE_ANNOTATION = "\$partiql_date"
 
-    private fun createIonDateStruct() =
+    private fun createIonDate() =
         ion.newTimestamp(Timestamp.forDay(value.year, value.monthValue, value.dayOfMonth)).apply {
             addTypeAnnotation(PARTIQL_DATE_ANNOTATION)
         }.seal()
 
     override val type: ExprValueType = ExprValueType.DATE
     override fun dateValue(): LocalDate? = value
-    // TODO: Verify if this is the best way to represent PartiQL DATE in ion serialization.
-    override fun ionValueFun(): IonValue = createIonDateStruct()
+    override fun ionValueFun(): IonValue = createIonDate()
 }
 
 private class TimestampExprValue(val ion: IonSystem, val value: Timestamp): ScalarExprValue() {
