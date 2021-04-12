@@ -24,7 +24,7 @@ private val ion = IonSystemBuilder.standard().build()
 private val parser = SqlParser(ion)
 
 const val INVALID_NUM_ARGS = "Invalid number of args in node"
-const val INPUT_AST_STATEMENT_MISMATCH = "Input ast should be the parsed result of the input statement"
+const val INPUT_AST_STATEMENT_MISMATCH = "Unable to redact the statement. Please check that the input ast is the parsed result of the input statement"
 
 /**
  * Returns true if the given [node] type is to be skipped for redaction or its text is one of the [safeFieldNames].
@@ -108,31 +108,6 @@ private class StatementRedactionVisitor(
     private val sourceLocationMetaForRedaction = arrayListOf<SourceLocationMeta>()
     private val maskPattern = "***(Redacted)"
 
-    override fun visitExprSelect(node: PartiqlAst.Expr.Select) {
-        if (node.where != null) {
-            redactExpr(node.where)
-        }
-    }
-
-    override fun visitStatementDml(node: PartiqlAst.Statement.Dml) {
-        if (node.where != null) {
-            redactExpr(node.where)
-        }
-    }
-
-    override fun visitAssignment(node: PartiqlAst.Assignment) {
-        if (!skipRedaction(node.target, safeFieldNames)) {
-            redactExpr(node.value)
-        }
-    }
-
-    override fun visitDmlOpInsertValue(node: PartiqlAst.DmlOp.InsertValue) {
-        when (node.value) {
-            is PartiqlAst.Expr.Struct -> redactStructInInsertValueOp(node.value)
-            else -> redactExpr(node.value)
-        }
-    }
-
     /**
      * Returns the redacted [statement].
      */
@@ -160,10 +135,29 @@ private class StatementRedactionVisitor(
             redactedStatement.replace(start, start + length, maskPattern)
             offset = offset + maskPattern.length - length
         }
-
         return redactedStatement.toString()
     }
 
+    override fun visitExprSelect(node: PartiqlAst.Expr.Select) {
+        node.where?.let { redactExpr(it) }
+    }
+
+    override fun visitStatementDml(node: PartiqlAst.Statement.Dml) {
+        node.where?.let { redactExpr(it) }
+    }
+
+    override fun visitAssignment(node: PartiqlAst.Assignment) {
+        if (!skipRedaction(node.target, safeFieldNames)) {
+            redactExpr(node.value)
+        }
+    }
+
+    override fun visitDmlOpInsertValue(node: PartiqlAst.DmlOp.InsertValue) {
+        when (node.value) {
+            is PartiqlAst.Expr.Struct -> redactStructInInsertValueOp(node.value)
+            else -> redactExpr(node.value)
+        }
+    }
 
     private fun redactExpr(node: PartiqlAst.Expr) {
         if (node.isNAry()) {
@@ -272,7 +266,6 @@ private class StatementRedactionVisitor(
             null -> node.args.map { redactExpr(it) }
             else -> {
                 redactionLambda(node.args).map { redactExpr(it) }
-
             }
         }
     }
