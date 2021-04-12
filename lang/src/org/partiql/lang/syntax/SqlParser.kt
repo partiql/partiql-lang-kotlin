@@ -39,6 +39,7 @@ import java.time.format.DateTimeParseException
 class SqlParser(private val ion: IonSystem) : Parser {
 
     private val trueValue: IonBool = ion.newBool(true)
+    private val datePatternRegex = Regex("\\d\\d\\d\\d-\\d\\d-\\d\\d")
 
     internal enum class AliasSupportType(val supportsAs: Boolean, val supportsAt: Boolean, val supportsBy: Boolean) {
         NONE(supportsAs = false, supportsAt = false, supportsBy = false),
@@ -2241,7 +2242,6 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
         val dateString = dateStringToken.value.stringValue()
 
-        val datePatternRegex = Regex("\\d\\d\\d\\d-\\d\\d-\\d\\d")
         // validate that the date string follows the format YYYY-MM-DD
         // Filter out the extended dates which can be specified with the '+' or '-' symbol.
         // '+99999-03-10' for example is allowed by LocalDate.parse and should be filtered out.
