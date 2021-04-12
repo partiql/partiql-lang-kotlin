@@ -1,79 +1,72 @@
 package org.partiql.lang.ast.passes
 
-import com.amazon.ion.IonString
 import com.amazon.ion.system.IonSystemBuilder
-import org.partiql.lang.ast.*
-import org.partiql.lang.ast.NAryOp.*
+import com.amazon.ionelement.api.StringElement
+import org.partiql.lang.ast.ExprNode
+import org.partiql.lang.ast.SourceLocationMeta
+import org.partiql.lang.ast.sourceLocation
+import org.partiql.lang.ast.toAstStatement
+import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.syntax.SqlParser
 
 /**
- * This is a lambda function typed alias for caller side udf validation implementation
+ * This is a function alias for determining which UDF input arguments need to be redacted.
  *
- * There are two major components needed for implementation:
+ * There are two components needed for implementation:
  *     1. Which arguments are needed for [SafeFieldName] validation
  *     2. Which arguments are needed for redaction should be returned
  *
- * For example, for a given function which argument number is static, func(a, b, c, d)
- * We can validate whether arg[0] and arg[1] are [SafeFieldName], if yes, arg[2] and arg[3] will be redacted
+ * For example, for a given function in which argument number is static, func(a, b, c, d),
+ * we can validate whether `a` and `b` are a [SafeFieldName], if yes, `c` and `d` will be redacted.
  */
-typealias UserDefinedFunctionRedactionLambda = (List<ExprNode>) -> List<ExprNode>
+typealias UserDefinedFunctionRedactionLambda = (List<PartiqlAst.Expr>) -> List<PartiqlAst.Expr>
 
-private var safeFieldNames = emptySet<String>()
-
-private val parser = SqlParser(IonSystemBuilder.standard().build())
+private val ion = IonSystemBuilder.standard().build()
+private val parser = SqlParser(ion)
+private const val maskPattern = "***(Redacted)"
 
 const val INVALID_NUM_ARGS = "Invalid number of args in node"
-const val INPUT_AST_STATEMENT_MISMATCH = "Input ast should be the parsed result of the input statement"
+const val INPUT_AST_STATEMENT_MISMATCH = "Unable to redact the statement. Please check that the input ast is the parsed result of the input statement"
 
 /**
- * Return true if the input node has value in [safeFieldNames] or skip the redaction intentionally
+ * Returns true if the given [node] type is to be skipped for redaction or its text is one of the [safeFieldNames].
  */
-fun validateSafeFieldNames(node: ExprNode): Boolean {
+fun skipRedaction(node: PartiqlAst.Expr, safeFieldNames: Set<String>): Boolean {
     if (safeFieldNames.isEmpty()) {
         return false
     }
 
     return when (node) {
-        is NAry -> true // Skip redaction for NAry node
-        is VariableReference -> safeFieldNames.contains(node.id)
-        is Literal -> {
-            if (node.ionValue is IonString) {
-                val name = node.ionValue.stringValue()
-                safeFieldNames.contains(name)
-            } else { false }
+        is PartiqlAst.Expr.Id -> safeFieldNames.contains(node.name.text)
+        is PartiqlAst.Expr.Lit -> {
+            when (node.value) {
+                is StringElement -> safeFieldNames.contains(node.value.stringValue)
+                else -> false
+            }
         }
-        is Path -> {
-            var hasKeyAttribute = false
-            node.components.map {
+        is PartiqlAst.Expr.Path -> {
+            node.steps.any {
                 when (it) {
-                    is PathComponentExpr -> {
-                        if (it.expr is Literal && it.expr.ionValue is IonString) {
-                            val name = it.expr.ionValue.stringValue()
-                            hasKeyAttribute = hasKeyAttribute || safeFieldNames.contains(name)
-                        }
-                    }
-                    else -> { /* intentionally blank */ }
+                    is PartiqlAst.PathStep.PathExpr -> skipRedaction(it.index, safeFieldNames)
+                    else -> false
                 }
             }
-            hasKeyAttribute
         }
-        else -> {
-            throw IllegalArgumentException("Unexpected ExprNode type in StatementRedactor.validateSafeFieldNames: ${node.javaClass}")
-        }
+        else -> true // Skip redaction for other nodes
     }
 }
 
 /**
- * Redact sensitive data [Literal] not assigned with [safeFieldNames] to "***(Redacted)" based on input [statement]
- * and ast from default parser
+ * From the input PartiQL [statement], returns a statement in which [PartiqlAst.Expr.Lit]s not assigned with
+ * [providedSafeFieldNames] are redacted to "***(Redacted)".
  *
- * [safeFieldNames] is optional for fields not redacted
- *     For example: `SELECT * FROM tb WHERE hashkey = 'a' AND attr = 16453643`
- *     gets rewritten as `SELECT * FROM tb WHERE hashkey = 'a' AND attr = ***(Redacted)`
- *     because hashkey is in [safeFieldNames]
- * [userDefinedFunctionRedactionConfig] is optional for UDF function redaction, please check StatementRedactorTest.kt for more details
- *
- * Return redacted statement
+ * [providedSafeFieldNames] is an optional set of fields whose values are not to be redacted. If no set is provided,
+ * all literals will be redacted.
+ *     For example, given a [providedSafeFieldNames] of Set('hashkey')
+ *     The query of `SELECT * FROM tb WHERE hashkey = 'a' AND attr = 12345` will be redacted to:
+ *                  `SELECT * FROM tb WHERE hashkey = 'a' AND attr = ***(Redacted)`
+ * [userDefinedFunctionRedactionConfig] is an optional mapping of UDF names to functions determining which call
+ * arguments are to be redacted. For an example, please check StatementRedactorTest.kt for more details.
  */
 fun redact(statement: String,
            providedSafeFieldNames: Set<String> = emptySet(),
@@ -82,216 +75,42 @@ fun redact(statement: String,
 }
 
 /**
- * Redact sensitive data [Literal] not assigned with [safeFieldNames] to "***(Redacted)" based on input [ast]
- * and [ast] parsed from the same input [statement]
+ * From the input PartiQL [statement], returns a statement in which [PartiqlAst.Expr.Lit]s not assigned with
+ * [providedSafeFieldNames] are redacted to "***(Redacted)". Assumes that the parsed PartiQL [statement] is the same
+ * as the input [ast].
  *
- * [safeFieldNames] is optional for fields not redacted
- *     For example: `SELECT * FROM tb WHERE hashkey = 'a' AND attr = 16453643`
- *     gets rewritten as `SELECT * FROM tb WHERE hashkey = 'a' AND attr = ***(Redacted)`
- *     because hashkey is in [safeFieldNames]
- * [userDefinedFunctionRedactionConfig] is optional for UDF function redaction, please check StatementRedactorTest.kt for more details
- *
- * Return correct redacted statement only if the parsed results of input [statement] is the same as input [ast]
+ * [providedSafeFieldNames] is an optional set of fields whose values are not to be redacted. If no set is provided,
+ * all literals will be redacted.
+ *     For example, given a [providedSafeFieldNames] of Set('hashkey')
+ *     The query of `SELECT * FROM tb WHERE hashkey = 'a' AND attr = 12345` will be redacted to:
+ *                  `SELECT * FROM tb WHERE hashkey = 'a' AND attr = ***(Redacted)`
+ * [userDefinedFunctionRedactionConfig] is an optional mapping of UDF names to functions determining which call
+ * arguments are to be redacted. For an example, please check StatementRedactorTest.kt for more details.
  */
 fun redact(statement: String,
            ast: ExprNode,
            providedSafeFieldNames: Set<String> = emptySet(),
            userDefinedFunctionRedactionConfig: Map<String, UserDefinedFunctionRedactionLambda> = emptyMap()): String {
-    safeFieldNames = providedSafeFieldNames
 
-    val statementRedactionRewriter = StatementRedactionRewriter(statement, ast, userDefinedFunctionRedactionConfig)
-    statementRedactionRewriter.rewriteExprNode()
-    return statementRedactionRewriter.getRedactedStatement()
+    val partiqlAst = ast.toAstStatement()
+    val statementRedactionVisitor = StatementRedactionVisitor(statement, providedSafeFieldNames, userDefinedFunctionRedactionConfig)
+    statementRedactionVisitor.walkStatement(partiqlAst)
+    return statementRedactionVisitor.getRedactedStatement()
 }
 
 /**
- * Redact sensitive data [Literal] not assigned with [safeFieldNames] to "***(Redacted)"
- *
- * TODO: when migrating to PIG, please use PartiqlAst.Visitor and not PartiqlAst.VisitorTransform!"
+ * Redact [PartiqlAst.Expr.Lit]s not assigned with [safeFieldNames] to "***(Redacted)". Function calls that have an
+ * entry in [userDefinedFunctionRedactionConfig] will have their arguments redacted based on the redaction lambda.
  */
-private class StatementRedactionRewriter(
-        private val statement: String,
-        node: ExprNode,
-        private val userDefinedFunctionRedactionConfig: Map<String, UserDefinedFunctionRedactionLambda>
-) : AstRewriterBase() {
-    private val root = node
+private class StatementRedactionVisitor(
+    private val statement: String,
+    private val safeFieldNames: Set<String>,
+    private val userDefinedFunctionRedactionConfig: Map<String, UserDefinedFunctionRedactionLambda>
+) : PartiqlAst.Visitor() {
     private val sourceLocationMetaForRedaction = arrayListOf<SourceLocationMeta>()
-    private val maskPattern = "***(Redacted)"
-
-    fun rewriteExprNode(): ExprNode {
-        return super.rewriteExprNode(root)
-    }
-
-    override fun rewriteSelectWhere(node: ExprNode): ExprNode {
-        redactOnField(node)
-        return super.rewriteSelectWhere(node)
-    }
-
-    override fun rewriteDataManipulationWhere(node: ExprNode): ExprNode {
-        redactOnField(node)
-        return super.rewriteDataManipulationWhere(node)
-    }
-
-    override fun rewriteAssignment(node: Assignment): Assignment {
-        if (!validateSafeFieldNames(node.lvalue)) {
-            redactOnField(node.rvalue)
-        }
-        return super.rewriteAssignment(node)
-    }
-
-    override fun rewriteDataManipulationOperationInsertValueOp(node: InsertValueOp): DataManipulationOperation {
-        when (node.value) {
-            is Struct -> redactOnStructInInsertValueOp(node.value)
-            else -> redactOnField(node.value)
-        }
-        return super.rewriteDataManipulationOperationInsertValueOp(node)
-    }
-
-    private fun redactOnField(node: ExprNode) {
-        when (node) {
-            is NAry -> redactOnNAry(node)
-            is Literal -> redactOnLiteral(node)
-            is Seq -> redactOnSeq(node)
-            is Struct -> redactOnStruct(node)
-            is Typed -> redactOnTyped(node)
-            else -> { /* intentionally blank */ }
-        }
-    }
-
-    private fun redactOnNAry(node: NAry) {
-        val rewrittenArgs = node.args
-
-        when (node.op) {
-            AND, OR -> {
-                rewrittenArgs.forEach { redactOnField(it) }
-            }
-            EQ, NE, GT, GTE, LT, LTE, IN -> {
-                if (rewrittenArgs.size != 2) {
-                    throw IllegalArgumentException(INVALID_NUM_ARGS)
-                }
-                if (!validateSafeFieldNames(rewrittenArgs[0])) {
-                    redactOnField(rewrittenArgs[1])
-                }
-            }
-            ADD, SUB -> {
-                when (rewrittenArgs.size) {
-                    1 -> {
-                        redactOnField(rewrittenArgs[0])
-                    }
-                    2 -> {
-                        redactOnField(rewrittenArgs[0])
-                        redactOnField(rewrittenArgs[1])
-                    }
-                    else -> {
-                        throw IllegalArgumentException(INVALID_NUM_ARGS)
-                    }
-                }
-            }
-            MUL, DIV, MOD -> {
-                if (rewrittenArgs.size != 2) {
-                    throw IllegalArgumentException(INVALID_NUM_ARGS)
-                }
-                redactOnField(rewrittenArgs[0])
-                redactOnField(rewrittenArgs[1])
-            }
-            BETWEEN -> {
-                if (rewrittenArgs.size != 3) {
-                    throw IllegalArgumentException(INVALID_NUM_ARGS)
-                }
-                if (!validateSafeFieldNames(rewrittenArgs[0])) {
-                    redactOnField(rewrittenArgs[1])
-                    redactOnField(rewrittenArgs[2])
-                }
-            }
-            NOT -> {
-                if (rewrittenArgs.size != 1) {
-                    throw IllegalArgumentException(INVALID_NUM_ARGS)
-                }
-                val arg = rewrittenArgs[0]
-                when (arg) {
-                    is NAry -> redactOnNAry(arg)
-                    is Typed -> redactOnTyped(arg)
-                    else -> { /* intentionally blank */ }
-                }
-            }
-            CALL -> {
-                redactOnCall(rewrittenArgs)
-            }
-            else -> { /* intentionally blank */ }
-        }
-    }
-
-    private fun redactOnLiteral(literal: Literal) {
-        val sourceLocation = literal.metas.sourceLocation ?: throw NoSuchElementException("No SourceLocation meta data in Literal object $literal")
-        sourceLocationMetaForRedaction.add(sourceLocation)
-    }
-
-    private fun redactOnSeq(seq: Seq) {
-        seq.values.map {
-            redactOnField(it)
-        }
-    }
-
-    private fun redactOnStruct(struct: Struct) {
-        struct.fields.map {
-            if (it.name is Literal) {
-                redactOnLiteral(it.name)
-            }
-            redactOnField(it.expr)
-        }
-    }
-
-    private fun redactOnCall(args: List<ExprNode>) {
-        if (args.isEmpty()) {
-            return
-        }
-        if (args[0] !is VariableReference) {
-            return
-        }
-
-        val funcName = (args[0] as VariableReference).id
-
-        if (userDefinedFunctionRedactionConfig.isEmpty() || !userDefinedFunctionRedactionConfig.containsKey(funcName)) {
-            args.drop(0).map { redactOnField(it) }
-            return
-        }
-
-        /* Call is redacted based on function name */
-        val getArgsToRedact = userDefinedFunctionRedactionConfig[funcName]
-        val argsToRedact = getArgsToRedact?.invoke(args)
-        argsToRedact?.map { redactOnField(it) }
-    }
-
-    private fun redactOnTyped(typed: Typed) {
-        when(typed.op) {
-            TypedOp.IS -> {
-                if (typed.expr is VariableReference && !validateSafeFieldNames(typed.expr)) {
-                    val sourceLocation = typed.type.metas.sourceLocation ?: throw NoSuchElementException("No SourceLocation meta data in DataType object $typed")
-                    sourceLocationMetaForRedaction.add(sourceLocation)
-                }
-            }
-            else -> { /* intentionally blank */ }
-        }
-    }
 
     /**
-     * For InsertValueOp, only first level of struct files could have key attribute
-     * For example, in struct { 'hk': 'a', 'rk': 1, 'attr': { 'hk': 'a' }}
-     * 'hk' in 'attr': { 'hk': 'a' } will be redacted
-     */
-    private fun redactOnStructInInsertValueOp(struct: Struct) {
-        struct.fields.map {
-            if (it.name is Literal) {
-                if (!validateSafeFieldNames(it.name)) {
-                    redactOnField(it.expr)
-                }
-            } else { /* intentionally blank */ }
-        }
-    }
-
-    /**
-     * Redact the statement based on [redactedSourceLocationMeta]
-     * Convert the lineNum in SourceLocationMeta to the actual index in the single line
+     * Returns the redacted [statement].
      */
     fun getRedactedStatement(): String {
         val lines = statement.lines()
@@ -300,20 +119,203 @@ private class StatementRedactionRewriter(
             totalCharactersInPreviousLines[lineNum] = totalCharactersInPreviousLines[lineNum - 1] + lines[lineNum - 1].length + 1
         }
 
-        val sb = StringBuilder(statement)
-        var offset = 0;
+        val redactedStatement = StringBuilder(statement)
+        var offset = 0
         sourceLocationMetaForRedaction.sortWith(compareBy<SourceLocationMeta> { it.lineNum }.thenBy { it.charOffset })
 
         sourceLocationMetaForRedaction.map {
             val length = it.length.toInt()
-            val start = totalCharactersInPreviousLines[it.lineNum.toInt() - 1] + it.charOffset.toInt() - 1 + offset
-            if (start >= sb.length || start > sb.length - length) {
+            val lineNum = it.lineNum.toInt()
+            if (lineNum < 1 || lineNum > totalCharactersInPreviousLines.size) {
+                throw IllegalArgumentException("$INPUT_AST_STATEMENT_MISMATCH, line number: $lineNum")
+            }
+            val start = totalCharactersInPreviousLines[lineNum - 1] + it.charOffset.toInt() - 1 + offset
+            if (start < 0 || length < 0 || start >= redactedStatement.length || start > redactedStatement.length - length) {
                 throw IllegalArgumentException(INPUT_AST_STATEMENT_MISMATCH)
             }
-            sb.replace(start, start + length, maskPattern)
+            redactedStatement.replace(start, start + length, maskPattern)
             offset = offset + maskPattern.length - length
         }
+        return redactedStatement.toString()
+    }
 
-        return sb.toString()
+    override fun visitExprSelect(node: PartiqlAst.Expr.Select) {
+        node.where?.let { redactExpr(it) }
+    }
+
+    override fun visitStatementDml(node: PartiqlAst.Statement.Dml) {
+        node.where?.let { redactExpr(it) }
+    }
+
+    override fun visitAssignment(node: PartiqlAst.Assignment) {
+        if (!skipRedaction(node.target, safeFieldNames)) {
+            redactExpr(node.value)
+        }
+    }
+
+    override fun visitDmlOpInsertValue(node: PartiqlAst.DmlOp.InsertValue) {
+        when (node.value) {
+            is PartiqlAst.Expr.Struct -> redactStructInInsertValueOp(node.value)
+            else -> redactExpr(node.value)
+        }
+    }
+
+    private fun redactExpr(node: PartiqlAst.Expr) {
+        if (node.isNAry()) {
+            redactNAry(node)
+        }
+
+        else when (node) {
+            is PartiqlAst.Expr.Lit -> redactLiteral(node)
+            is PartiqlAst.Expr.List -> redactSeq(node)
+            is PartiqlAst.Expr.Sexp -> redactSeq(node)
+            is PartiqlAst.Expr.Bag -> redactSeq(node)
+            is PartiqlAst.Expr.Struct -> redactStruct(node)
+            is PartiqlAst.Expr.IsType -> redactTypes(node)
+            else -> { /* other nodes are not currently redacted */ }
+        }
+    }
+
+    private fun redactLogicalOp(args: List<PartiqlAst.Expr>) { args.forEach { redactExpr(it) } }
+
+    private fun redactComparisonOp(args: List<PartiqlAst.Expr>) {
+        if (args.size != 2) {
+            throw IllegalArgumentException(INVALID_NUM_ARGS)
+        }
+        if (!skipRedaction(args[0], safeFieldNames)) {
+            redactExpr(args[1])
+        }
+    }
+
+    private fun plusMinusRedaction(args: List<PartiqlAst.Expr>) {
+        when (args.size) {
+            1 -> redactExpr(args[0])
+            2 -> {
+                redactExpr(args[0])
+                redactExpr(args[1])
+            }
+            else -> throw IllegalArgumentException(INVALID_NUM_ARGS)
+        }
+    }
+
+    private fun arithmeticOpRedaction(args: List<PartiqlAst.Expr>) {
+        if (args.size != 2) {
+            throw IllegalArgumentException(INVALID_NUM_ARGS)
+        }
+        redactExpr(args[0])
+        redactExpr(args[1])
+    }
+
+    private fun redactNAry(node: PartiqlAst.Expr) {
+        when (node) {
+            // Logical Ops
+            is PartiqlAst.Expr.And -> redactLogicalOp(node.operands)
+            is PartiqlAst.Expr.Or -> redactLogicalOp(node.operands)
+            is PartiqlAst.Expr.Not -> redactExpr(node.expr)
+            // Comparison Ops
+            is PartiqlAst.Expr.Eq -> redactComparisonOp(node.operands)
+            is PartiqlAst.Expr.Ne -> redactComparisonOp(node.operands)
+            is PartiqlAst.Expr.Gt -> redactComparisonOp(node.operands)
+            is PartiqlAst.Expr.Gte -> redactComparisonOp(node.operands)
+            is PartiqlAst.Expr.Lt -> redactComparisonOp(node.operands)
+            is PartiqlAst.Expr.Lte -> redactComparisonOp(node.operands)
+            is PartiqlAst.Expr.InCollection -> redactComparisonOp(node.operands)
+            // Arithmetic Ops
+            is PartiqlAst.Expr.Plus -> plusMinusRedaction(node.operands)
+            is PartiqlAst.Expr.Minus -> plusMinusRedaction(node.operands)
+            is PartiqlAst.Expr.Times -> arithmeticOpRedaction(node.operands)
+            is PartiqlAst.Expr.Divide -> arithmeticOpRedaction(node.operands)
+            is PartiqlAst.Expr.Modulo -> arithmeticOpRedaction(node.operands)
+            is PartiqlAst.Expr.Concat -> arithmeticOpRedaction(node.operands)
+            // BETWEEN
+            is PartiqlAst.Expr.Between -> {
+                if (!skipRedaction(node.value, safeFieldNames)) {
+                    redactExpr(node.from)
+                    redactExpr(node.to)
+                }
+            }
+            // CALL
+            is PartiqlAst.Expr.Call -> redactCall(node)
+            else -> { /* intentionally blank */ }
+        }
+    }
+
+    private fun redactLiteral(literal: PartiqlAst.Expr.Lit) {
+        val sourceLocation = literal.metas.sourceLocation ?: error("Cannot redact due to missing source location")
+        sourceLocationMetaForRedaction.add(sourceLocation)
+    }
+
+    // once `bag`, `list`, and `sexp` modeled as described here: https://github.com/partiql/partiql-lang-kotlin/issues/239,
+    // delete duplicated code
+    private fun redactSeq(seq: PartiqlAst.Expr.List) = seq.values.map { redactExpr(it) }
+    private fun redactSeq(seq: PartiqlAst.Expr.Bag) = seq.values.map { redactExpr(it) }
+    private fun redactSeq(seq: PartiqlAst.Expr.Sexp) = seq.values.map { redactExpr(it) }
+
+    private fun redactStruct(struct: PartiqlAst.Expr.Struct) {
+        struct.fields.map {
+            if (it.first is PartiqlAst.Expr.Lit) {
+                redactLiteral(it.first)
+            }
+            redactExpr(it.second)
+        }
+    }
+
+    private fun redactCall(node: PartiqlAst.Expr.Call) {
+        val funcName = node.funcName.text
+        when (val redactionLambda = userDefinedFunctionRedactionConfig[funcName]) {
+            null -> node.args.map { redactExpr(it) }
+            else -> {
+                redactionLambda(node.args).map { redactExpr(it) }
+            }
+        }
+    }
+
+    private fun redactTypes(typed: PartiqlAst.Expr.IsType) {
+        if (typed.value is PartiqlAst.Expr.Id && !skipRedaction(typed.value, safeFieldNames)) {
+            val sourceLocation = typed.type.metas.sourceLocation ?: error("Cannot redact due to missing source location")
+            sourceLocationMetaForRedaction.add(sourceLocation)
+        }
+    }
+
+    /**
+     * For [PartiqlAst.DmlOp.InsertValue], only the outermost level of struct files could have a key attribute.
+     * For example, in the struct { 'hk': 'a', 'rk': 1, 'attr': { 'hk': 'a' }},
+     * only 'hk' in 'attr': { 'hk': 'a' } will be redacted
+     */
+    private fun redactStructInInsertValueOp(struct: PartiqlAst.Expr.Struct) {
+        struct.fields.map {
+            when (it.first) {
+                is PartiqlAst.Expr.Lit ->
+                    if (!skipRedaction(it.first, safeFieldNames)) {
+                        redactExpr(it.second)
+                    }
+                else { /* intentionally blank */ }
+            }
+        }
+    }
+
+    // once NAry node modeled better in PIG (https://github.com/partiql/partiql-lang-kotlin/issues/241), this code can be
+    // refactored
+    // TODO: other NAry ops that not modeled (LIKE, INTERSECT, INTERSECT_ALL, EXCEPT, EXCEPT_ALL, UNION, UNION_ALL)
+    private fun PartiqlAst.Expr.isNAry(): Boolean {
+        return this is PartiqlAst.Expr.And
+            || this is PartiqlAst.Expr.Or
+            || this is PartiqlAst.Expr.Not
+            || this is PartiqlAst.Expr.Eq
+            || this is PartiqlAst.Expr.Ne
+            || this is PartiqlAst.Expr.Gt
+            || this is PartiqlAst.Expr.Gte
+            || this is PartiqlAst.Expr.Lt
+            || this is PartiqlAst.Expr.Lte
+            || this is PartiqlAst.Expr.InCollection
+            || this is PartiqlAst.Expr.Plus
+            || this is PartiqlAst.Expr.Minus
+            || this is PartiqlAst.Expr.Times
+            || this is PartiqlAst.Expr.Divide
+            || this is PartiqlAst.Expr.Modulo
+            || this is PartiqlAst.Expr.Concat
+            || this is PartiqlAst.Expr.Between
+            || this is PartiqlAst.Expr.Call
+
     }
 }
