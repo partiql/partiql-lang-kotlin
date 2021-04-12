@@ -4,6 +4,7 @@ import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.StringElement
 import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.SourceLocationMeta
+import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.ast.toAstStatement
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.syntax.SqlParser
@@ -22,6 +23,7 @@ typealias UserDefinedFunctionRedactionLambda = (List<PartiqlAst.Expr>) -> List<P
 
 private val ion = IonSystemBuilder.standard().build()
 private val parser = SqlParser(ion)
+private const val maskPattern = "***(Redacted)"
 
 const val INVALID_NUM_ARGS = "Invalid number of args in node"
 const val INPUT_AST_STATEMENT_MISMATCH = "Unable to redact the statement. Please check that the input ast is the parsed result of the input statement"
@@ -106,7 +108,6 @@ private class StatementRedactionVisitor(
     private val userDefinedFunctionRedactionConfig: Map<String, UserDefinedFunctionRedactionLambda>
 ) : PartiqlAst.Visitor() {
     private val sourceLocationMetaForRedaction = arrayListOf<SourceLocationMeta>()
-    private val maskPattern = "***(Redacted)"
 
     /**
      * Returns the redacted [statement].
@@ -240,8 +241,7 @@ private class StatementRedactionVisitor(
     }
 
     private fun redactLiteral(literal: PartiqlAst.Expr.Lit) {
-        val sourceLocation = literal.metas[SourceLocationMeta.TAG] as SourceLocationMeta?
-            ?: throw NoSuchElementException("No SourceLocation meta data in Literal object $literal")
+        val sourceLocation = literal.metas.sourceLocation ?: error("Cannot redact due to missing source location")
         sourceLocationMetaForRedaction.add(sourceLocation)
     }
 
@@ -272,7 +272,7 @@ private class StatementRedactionVisitor(
 
     private fun redactTypes(typed: PartiqlAst.Expr.IsType) {
         if (typed.value is PartiqlAst.Expr.Id && !skipRedaction(typed.value, safeFieldNames)) {
-            val sourceLocation = typed.type.metas[SourceLocationMeta.TAG] as SourceLocationMeta? ?: throw NoSuchElementException("No SourceLocation meta data in DataType object $typed")
+            val sourceLocation = typed.type.metas.sourceLocation ?: error("Cannot redact due to missing source location")
             sourceLocationMetaForRedaction.add(sourceLocation)
         }
     }
