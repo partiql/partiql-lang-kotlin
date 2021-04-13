@@ -33,13 +33,17 @@ import java.time.format.DateTimeFormatter.*
 import java.time.format.DateTimeParseException
 
 /**
+ * Regex pattern to match date strings of the format yyyy-MM-dd
+ */
+@JvmField val DATE_PATTERN_REGEX = Regex("\\d\\d\\d\\d-\\d\\d-\\d\\d")
+
+/**
  * Parses a list of tokens as infix query expression into a prefix s-expression
  * as the abstract syntax tree.
  */
 class SqlParser(private val ion: IonSystem) : Parser {
 
     private val trueValue: IonBool = ion.newBool(true)
-    private val datePatternRegex = Regex("\\d\\d\\d\\d-\\d\\d-\\d\\d")
 
     internal enum class AliasSupportType(val supportsAs: Boolean, val supportsAt: Boolean, val supportsBy: Boolean) {
         NONE(supportsAs = false, supportsAt = false, supportsBy = false),
@@ -2245,7 +2249,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
         // validate that the date string follows the format YYYY-MM-DD
         // Filter out the extended dates which can be specified with the '+' or '-' symbol.
         // '+99999-03-10' for example is allowed by LocalDate.parse and should be filtered out.
-        if (!datePatternRegex.matches(dateString!!)) {
+        if (!DATE_PATTERN_REGEX.matches(dateString!!)) {
             err("Expected DATE string to be of the format yyyy-MM-dd", PARSE_INVALID_DATE_STRING)
         }
         try {
