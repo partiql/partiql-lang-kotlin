@@ -47,6 +47,8 @@ class ConfigurableExprValueFormatter(private val config: Configuration) : ExprVa
 
                 STRING                                     -> out.append("'${value.scalar.stringValue()}'")
 
+                DATE                                       -> out.append(value.scalar.dateValue().toString())
+
                 // fallback to an Ion literal for all types that don't have a native PartiQL representation
                 FLOAT, TIMESTAMP, SYMBOL, CLOB, BLOB, SEXP -> prettyPrintIonLiteral(value)
 

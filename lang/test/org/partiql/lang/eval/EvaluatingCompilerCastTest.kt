@@ -98,7 +98,7 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
                             // timestamp
                             case("`2007-10-10T`", EVALUATOR_INVALID_CAST),
                             // text
-                            case("'hello'", "false"),
+                            case("'hello'", EVALUATOR_CAST_FAILED),
                             case("'TrUe'", "true"),
                             case("""`"FALSE"`""", "false"),
                             case("""`'true'`""", "true"),
@@ -296,6 +296,42 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
                             case("<<`14d0`>>", EVALUATOR_INVALID_CAST),
                             case("<<`20d0`>>", EVALUATOR_INVALID_CAST)
                     ).types(DECIMAL.sqlTextNames),
+                    listOf(
+                            // booleans
+                            case("TRUE AND FALSE", EVALUATOR_INVALID_CAST),
+                            case("`true`", EVALUATOR_INVALID_CAST),
+                            // numbers
+                            case("5", EVALUATOR_INVALID_CAST),
+                            case("`0e0`", EVALUATOR_INVALID_CAST),
+                            case("1.1", EVALUATOR_INVALID_CAST),
+                            case("-20.1", EVALUATOR_INVALID_CAST),
+                            // timestamp
+                            case("`2007-10-10T`", "\$partiql_date::2007-10-10"),
+                            case("`2007-02-23T12:14Z`", "\$partiql_date::2007-02-23"),
+                            case("`2007-02-23T12:14:33.079Z`", "\$partiql_date::2007-02-23"),
+                            case("`2007-02-23T12:14:33.079-08:00`", "\$partiql_date::2007-02-23"),
+                            case("`2007-02T`", "\$partiql_date::2007-02-01"),
+                            case("`2007T`", "\$partiql_date::2007-01-01"),
+                            // text
+                            case("'hello'", EVALUATOR_CAST_FAILED),
+                            case("'2016-03-01T01:12:12Z'", EVALUATOR_CAST_FAILED),
+                            case("""`"2001-01-01"`""", "\$partiql_date::2001-01-01"),
+                            case("""`"+20212-02-01"`""", EVALUATOR_CAST_FAILED),
+                            case("""`"20212-02-01"`""", EVALUATOR_CAST_FAILED),
+                            case("""`'2000T'`""", EVALUATOR_CAST_FAILED),
+                            case("""`'1999-04T'`""", EVALUATOR_CAST_FAILED),
+                            // lob
+                            case("""`{{""}}`""", EVALUATOR_INVALID_CAST),
+                            case("`{{}}`", EVALUATOR_INVALID_CAST),
+                            // list
+                            case("`[]`", EVALUATOR_INVALID_CAST),
+                            // sexp
+                            case("`()`", EVALUATOR_INVALID_CAST),
+                            // struct
+                            case("`{}`", EVALUATOR_INVALID_CAST),
+                            // bag
+                            case("<<>>", EVALUATOR_INVALID_CAST)
+                    ).types(DATE.sqlTextNames),
                     listOf(
                             // booleans
                             case("TRUE AND FALSE", EVALUATOR_INVALID_CAST),
@@ -697,5 +733,41 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
         }
         else -> assertEval(castCase.expression, castCase.expected)
     }
+
+    fun parametersForCastDate() = listOf(
+        listOf(
+            case("DATE '2007-10-10'", "2007-10-10")
+        ).types(DATE.sqlTextNames),
+        listOf(
+            case("DATE '2007-10-10'", "`'2007-10-10'`")
+        ).types(SYMBOL.sqlTextNames),
+        listOf(
+            case("DATE '2007-10-10'", "'2007-10-10'")
+        ).types(STRING.sqlTextNames)
+    ).flatten() +
+        listOf(MISSING, NULL, BOOL, INT, FLOAT, DECIMAL, TIMESTAMP, CLOB, BLOB, LIST, SEXP, STRUCT, BAG)
+        .map { listOf(case("DATE '2007-10-10'", EVALUATOR_INVALID_CAST)).types(it.sqlTextNames)
+    }.flatten()
+
+    // Separate tests for Date as [assertEval] validates serialization and
+    // date literals are not supported by V0 AST serializer.
+    @Test
+    @Parameters
+    @TestCaseName("{0}")
+    fun castDate(castCase: CastCase) = when (castCase.expected) {
+        null -> {
+            try {
+                voidEval(castCase.expression)
+                fail("Expected evaluation error")
+            } catch (e: EvaluationException) {
+                if (castCase.expectedErrorCode == null) {
+                    fail("CastCase $castCase did not have an expected value or expected error code.")
+                }
+                assertEquals(castCase.expectedErrorCode, e.errorCode)
+            }
+        }
+        else -> assertEquals(castCase.expected, eval(castCase.expression).toString())
+    }
+
 }
 

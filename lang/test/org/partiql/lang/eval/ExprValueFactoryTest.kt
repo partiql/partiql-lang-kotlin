@@ -20,7 +20,9 @@ import org.junit.runner.*
 import com.amazon.ion.*
 import com.amazon.ion.system.*
 import org.junit.Test
+import org.partiql.lang.util.seal
 import java.math.*
+import java.time.LocalDate
 import kotlin.test.*
 
 
@@ -343,5 +345,24 @@ class ExprValueFactoryTest {
         } catch(e: IllegalArgumentException) {
             /* intentionally left blank */
         }
+    }
+
+    @Test
+    fun dateExprValueTest() {
+        val date = LocalDate.of(2020, 2, 29)
+
+        val ionDate =
+            ion.newTimestamp(Timestamp.forDay(date.year, date.monthValue, date.dayOfMonth)).apply {
+                addTypeAnnotation("\$partiql_date")
+            }.seal()
+
+        val dateExprValue = factory.newDate(date)
+        val dateIonValue = dateExprValue.ionValue
+        assertEquals(ionDate, dateIonValue, "Expected ionValues to be equal.")
+        dateIonValue as IonTimestamp
+        val timestamp = dateIonValue.timestampValue()
+        Assert.assertEquals("Expected year to be 2020", 2020, timestamp.year)
+        Assert.assertEquals("Expected month to be 02", 2, timestamp.month)
+        Assert.assertEquals("Expected day to be 29", 29, timestamp.day)
     }
 }

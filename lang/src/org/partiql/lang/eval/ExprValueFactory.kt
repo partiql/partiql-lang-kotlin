@@ -15,8 +15,10 @@
 package org.partiql.lang.eval
 
 import com.amazon.ion.*
+import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.util.*
 import java.math.*
+import java.time.LocalDate
 
 /**
  * Provides a standard way of creating instances of ExprValue.
@@ -67,25 +69,34 @@ interface ExprValueFactory {
     /** Returns a PartiQL `FLOAT` [ExprValue] instance representing the specified [Float]. */
     fun newFloat(value: Double): ExprValue
 
-    /** Returns an PartiQL `DECIMAL` [ExprValue] instance representing the specified [Int]. */
+    /** Returns a PartiQL `DECIMAL` [ExprValue] instance representing the specified [Int]. */
     fun newDecimal(value: Int): ExprValue
 
-    /** Returns an PartiQL `DECIMAL` [ExprValue] instance representing the specified [Long]. */
+    /** Returns a PartiQL `DECIMAL` [ExprValue] instance representing the specified [Long]. */
     fun newDecimal(value: Long): ExprValue
 
-    /** Returns an PartiQL `DECIMAL` [ExprValue] instance representing the specified [BigDecimal]. */
+    /** Returns a PartiQL `DECIMAL` [ExprValue] instance representing the specified [BigDecimal]. */
     fun newDecimal(value: BigDecimal): ExprValue
 
-    /** Returns an PartiQL `TIMESTAMP` [ExprValue] instance representing the specified [Timestamp]. */
+    /** Returns a PartiQL `DATE` [ExprValue] instance representing the specified [LocalDate]. */
+    fun newDate(value: LocalDate): ExprValue
+
+    /** Returns a PartiQL `DATE` [ExprValue] instance representing the specified year, month and day. */
+    fun newDate(year: Int, month: Int, day: Int): ExprValue
+
+    /** Returns a PartiQL `DATE` [ExprValue] instance representing the specified date string of the format yyyy-MM-dd. */
+    fun newDate(dateString: String): ExprValue
+
+    /** Returns a PartiQL `TIMESTAMP` [ExprValue] instance representing the specified [Timestamp]. */
     fun newTimestamp(value: Timestamp): ExprValue
 
-    /** Returns an  PartiQL `SYMBOL` [ExprValue] instance representing the specified [String]. */
+    /** Returns a  PartiQL `SYMBOL` [ExprValue] instance representing the specified [String]. */
     fun newSymbol(value: String) : ExprValue
 
-    /** Returns an PartiQL `CLOB` [ExprValue] instance representing the specified [ByteArray]. */
+    /** Returns a PartiQL `CLOB` [ExprValue] instance representing the specified [ByteArray]. */
     fun newClob(value: ByteArray): ExprValue
 
-    /** Returns an PartiQL `BLOB` [ExprValue] instance representing the specified [ByteArray]. */
+    /** Returns a PartiQL `BLOB` [ExprValue] instance representing the specified [ByteArray]. */
     fun newBlob(value: ByteArray): ExprValue
 
     /**
@@ -181,6 +192,15 @@ private class ExprValueFactoryImpl(override val ion: IonSystem) : ExprValueFacto
 
     override fun newDecimal(value: Long): ExprValue =
         DecimalExprValue(ion, BigDecimal.valueOf(value))
+
+    override fun newDate(value: LocalDate): ExprValue =
+        DateExprValue(ion, value)
+
+    override fun newDate(year: Int, month: Int, day: Int) =
+        newDate(LocalDate.of(year, month, day))
+
+    override fun newDate(dateString: String) =
+        newDate(LocalDate.parse(dateString))
 
     override fun newTimestamp(value: Timestamp): ExprValue =
         TimestampExprValue(ion, value)
@@ -290,6 +310,33 @@ private class DecimalExprValue(val ion: IonSystem, val value: BigDecimal): Scala
     override val type: ExprValueType = ExprValueType.DECIMAL
     override fun numberValue() = value
     override fun ionValueFun(): IonValue = ion.newDecimal(value)
+}
+
+/**
+ * [ExprValue] to represent DATE in PartiQL.
+ * [LocalDate] represents date without time and time zone.
+ */
+private class DateExprValue(val ion: IonSystem, val value: LocalDate): ScalarExprValue() {
+
+    init {
+        // validate that the local date is not an extended date.
+        if (value.year < 0 || value.year > 9999) {
+            err("Year should be in the range 0 to 9999 inclusive.",
+                ErrorCode.EVALUATOR_DATE_FIELD_OUT_OF_RANGE,
+                propertyValueMapOf(),
+                false)
+        }
+    }
+    private val PARTIQL_DATE_ANNOTATION = "\$partiql_date"
+
+    private fun createIonDate() =
+        ion.newTimestamp(Timestamp.forDay(value.year, value.monthValue, value.dayOfMonth)).apply {
+            addTypeAnnotation(PARTIQL_DATE_ANNOTATION)
+        }.seal()
+
+    override val type: ExprValueType = ExprValueType.DATE
+    override fun dateValue(): LocalDate? = value
+    override fun ionValueFun(): IonValue = createIonDate()
 }
 
 private class TimestampExprValue(val ion: IonSystem, val value: Timestamp): ScalarExprValue() {
