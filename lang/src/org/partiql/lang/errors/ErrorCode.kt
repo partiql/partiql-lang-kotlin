@@ -272,10 +272,20 @@ enum class ErrorCode(private val category: ErrorCategory,
         LOC_TOKEN,
         "invalid value used for type parameter"),
 
+    PARSE_INVALID_PRECISION_FOR_TIME(
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "invalid precision used for TIME type"),
+
     PARSE_INVALID_DATE_STRING(
         ErrorCategory.PARSER,
         LOC_TOKEN,
         "expected date string to be of the format YYYY-MM-DD"),
+
+    PARSE_INVALID_TIME_STRING(
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "expected time string to be of the format HH:MM:SS[.dddd...][+|-HH:MM]"),
 
     PARSE_EMPTY_SELECT(
         ErrorCategory.PARSER,

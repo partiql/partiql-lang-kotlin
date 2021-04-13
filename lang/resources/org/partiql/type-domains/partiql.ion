@@ -96,6 +96,7 @@
 
             // Constructors for DateTime types
             (date year::int month::int day::int)
+            (lit_time value::time_value)
 
             // Set operators
             (union setq::set_quantifier operands::(* expr 2))
@@ -122,6 +123,9 @@
                 (order (? order_by))
                 (limit (? expr))))
         // end of sum expr
+
+        // Time
+        (product time_value hour::int minute::int second::int nano::int precision::int tz_minutes::(? int))
 
         // A "step" within a path expression; that is the components of the expression following the root.
         (sum path_step
@@ -357,6 +361,7 @@
             (blob_type)
             (clob_type)
             (date_type)
+            (time_type)
             (struct_type)
             (tuple_type)
             (list_type)

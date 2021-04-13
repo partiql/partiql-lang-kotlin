@@ -15,6 +15,7 @@
 package org.partiql.lang.ast
 
 import com.amazon.ion.*
+import com.amazon.ionelement.api.metaOrNull
 import org.partiql.lang.util.*
 
 /**
@@ -77,12 +78,13 @@ data class SourceLocationMeta(val lineNum: Long, val charOffset: Long, val lengt
     }
 }
 
-val MetaContainer.sourceLocation: SourceLocationMeta? get() = find(SourceLocationMeta.TAG) as SourceLocationMeta?
+val PartiQlMetaContainer.sourceLocation: SourceLocationMeta? get() = find(SourceLocationMeta.TAG) as SourceLocationMeta?
+val IonElementMetaContainer.sourceLocation: SourceLocationMeta? get() = metaOrNull(SourceLocationMeta.TAG) as SourceLocationMeta?
 
 // TODO generalize this better against MetaContainer
 
 /** Retrieves the source locations as a container. */
-val MetaContainer.sourceLocationContainer: MetaContainer
+val PartiQlMetaContainer.sourceLocationContainer: PartiQlMetaContainer
     get() = sourceLocation?.let {
         metaContainerOf(it)
     } ?: emptyMetaContainer

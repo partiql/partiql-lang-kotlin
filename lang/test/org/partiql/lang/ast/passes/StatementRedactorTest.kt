@@ -1,38 +1,39 @@
 package org.partiql.lang.ast.passes
 
-import com.amazon.ion.IonString
+import com.amazon.ionelement.api.StringElement
 import junitparams.Parameters
 import org.junit.Test
 import org.partiql.lang.ast.ExprNode
-import org.partiql.lang.ast.Literal
-import org.partiql.lang.ast.Path
-import org.partiql.lang.ast.VariableReference
+import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.syntax.SqlParserTestBase
 
 class StatementRedactorTest : SqlParserTestBase() {
+    private val testSafeFieldNames = setOf("hk", "rk")
+
+    data class RedactionTestCase(val originalStatement: String, val redactedStatement: String)
 
     /**
      * Here is an example of user defined functions (UDF) with following signature:
      *  begins_with(Path: ExprNode, Value: Literal)
      *  contains(Path: ExprNode, Value: Literal)
      *
-     * Callers are responsible for providing implementation of the UDF validation
+     * Callers are responsible for determining which [args] are to be redacted.
      * There are two major components:
      *     1. Which arguments are needed for [SafeFieldName] validation
      *     2. Which arguments are returned for redaction
      */
-    private fun validateFuncContainsAndBeginsWith(args : List<ExprNode> ) : List<ExprNode> {
-        val path = args[1]
-        val value = args[2]
-        val argsToRedact = mutableListOf<ExprNode>()
+    private fun validateFuncContainsAndBeginsWith(args : List<PartiqlAst.Expr> ) : List<PartiqlAst.Expr> {
+        val path = args[0]
+        val value = args[1]
+        val argsToRedact = mutableListOf<PartiqlAst.Expr>()
 
-        if (path !is VariableReference && path !is Path) {
+        if (path !is PartiqlAst.Expr.Id && path !is PartiqlAst.Expr.Path) {
             throw IllegalArgumentException("Unexpected type of argument path")
         }
-        if (value !is Literal || value.ionValue !is IonString) {
+        if (value !is PartiqlAst.Expr.Lit || value.value !is StringElement) {
             throw IllegalArgumentException("Unexpected type of argument value")
         }
-        if (!validateSafeFieldNames(path)) {
+        if (!skipRedaction(path, testSafeFieldNames)) {
             argsToRedact.add(value)
         }
 
@@ -46,14 +47,10 @@ class StatementRedactorTest : SqlParserTestBase() {
         return parser.parseExprNode(statement) == ast
     }
 
-    data class RedactionTestCase(val originalStatement: String, val redactedStatement: String)
-
     @Test
     @Parameters
     fun testRedactOnPositiveCases(tc: RedactionTestCase) {
-        val testSafeFieldNames = setOf("hk", "rk")
         val testConfig = mapOf("contains" to ::validateFuncContainsAndBeginsWith, "begins_with" to ::validateFuncContainsAndBeginsWith)
-
         val redactedStatement = redact(tc.originalStatement, testSafeFieldNames, testConfig)
 
         assertEquals(tc.redactedStatement, redactedStatement)
@@ -142,6 +139,10 @@ class StatementRedactorTest : SqlParserTestBase() {
             RedactionTestCase(
                     "SELECT * FROM tb WHERE hk = 012-34-5678 AND ssn = 012*34*5678",
                     "SELECT * FROM tb WHERE hk = 012-34-5678 AND ssn = ***(Redacted)****(Redacted)****(Redacted)"),
+            // Concat operator
+            RedactionTestCase(
+                    "SELECT * FROM tb WHERE hk = 'abc' || '123' AND ssn = 'abc' || '123' || 'xyz'",
+                    "SELECT * FROM tb WHERE hk = 'abc' || '123' AND ssn = ***(Redacted) || ***(Redacted) || ***(Redacted)"),
             // In operator
             RedactionTestCase(
                     "SELECT * FROM tb WHERE hk IN (1, 3, 5) AND attr IN (2, 4, 6)",
@@ -302,7 +303,11 @@ class StatementRedactorTest : SqlParserTestBase() {
             // Path
             RedactionTestCase(
                     "SELECT ?, tb.a from tb where tb.hk = ? and tb.rk = 'eggs' and tb[*].bar = ? or tb[*].rk = 'foo'",
-                    "SELECT ?, tb.a from tb where tb.hk = ? and tb.rk = 'eggs' and tb[*].bar = ? or tb[*].rk = 'foo'")
+                    "SELECT ?, tb.a from tb where tb.hk = ? and tb.rk = 'eggs' and tb[*].bar = ? or tb[*].rk = 'foo'"),
+            // Parameter
+            RedactionTestCase(
+                    "SELECT ?, tb.a from tb where ? = 'foo' and ? = ? and ?.rk = 'eggs' and ?[*].bar = ? or ?[*].rk = 'foo'",
+                    "SELECT ?, tb.a from tb where ? = 'foo' and ? = ? and ?.rk = 'eggs' and ?[*].bar = ? or ?[*].rk = 'foo'")
     )
 
     @Test

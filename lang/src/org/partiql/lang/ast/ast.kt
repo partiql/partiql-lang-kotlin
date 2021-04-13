@@ -109,6 +109,9 @@ sealed class ExprNode : AstNode(), HasMetas {
             is DateTimeType.Date -> {
                 copy(metas = metas)
             }
+            is DateTimeType.Time -> {
+                copy(metas = metas)
+            }
         }
     }
 }
@@ -983,7 +986,32 @@ sealed class DateTimeType : ExprNode() {
         val year: Int,
         val month: Int,
         val day: Int,
-        override val metas: MetaContainer ) : DateTimeType() {
+        override val metas: MetaContainer
+    ) : DateTimeType() {
+        override val children: List<AstNode> = listOf()
+    }
+
+    /**
+     * AST node representing the TIME literal.
+     *
+     * @param hour represents the hour value.
+     * @param minute represents the minute value.
+     * @param second represents the second value.
+     * @param nano represents the fractional part of the second up to the nanoseconds' precision.
+     * @param precision is an optional parameter which, if specified, represents the precision of the fractional second.
+     * The default precision is 9 or nanosecond.
+     * @param tz_minutes is the optional time zone in minutes which can be specified with "WITH TIME ZONE".
+     * If [tz_minutes] is null, that means the time zone is undefined.
+     */
+    data class Time(
+        val hour: Int,
+        val minute: Int,
+        val second: Int,
+        val nano: Int,
+        val precision: Int = 9,
+        val tz_minutes: Int? = null,
+        override val metas: MetaContainer
+    ) : DateTimeType() {
         override val children: List<AstNode> = listOf()
     }
 }
@@ -1025,6 +1053,7 @@ enum class SqlDataType(val typeName: String, val arityRange: IntRange) {
     LIST("list", 0..0), // Ion
     SEXP("sexp", 0..0), // Ion
     DATE("date", 0..0), // SQL-92
+    TIME("time", 0..0), // SQL-92
     BAG("bag", 0..0);  // PartiQL
 
     companion object {
