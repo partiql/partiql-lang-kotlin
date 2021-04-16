@@ -2067,6 +2067,16 @@ class ParserErrorsTest : SqlParserTestBase() {
             Property.TOKEN_VALUE to ion.newSymbol("undrop")))
 
     @Test
+    fun missingDateString() = checkInputThrowingParserException(
+        "DATE",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 5L,
+            Property.TOKEN_TYPE to TokenType.EOF,
+            Property.TOKEN_VALUE to ion.newSymbol("EOF")))
+
+    @Test
     fun invalidTypeIntForDateString() = checkInputThrowingParserException(
         "DATE 2012",
         ErrorCode.PARSE_UNEXPECTED_TOKEN,
@@ -2155,4 +2165,115 @@ class ParserErrorsTest : SqlParserTestBase() {
             Property.COLUMN_NUMBER to 6L,
             Property.TOKEN_TYPE to TokenType.LITERAL,
             Property.TOKEN_VALUE to ion.newString("10-03-2021")))
+
+    @Test
+    fun invalidExtendedDateString() = checkInputThrowingParserException(
+        "DATE '+99999-03-10'",
+        ErrorCode.PARSE_INVALID_DATE_STRING,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 6L,
+            Property.TOKEN_TYPE to TokenType.LITERAL,
+            Property.TOKEN_VALUE to ion.newString("+99999-03-10")))
+
+    @Test
+    fun invalidDateStringNegativeYear() = checkInputThrowingParserException(
+        "DATE '-9999-03-10'",
+        ErrorCode.PARSE_INVALID_DATE_STRING,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 6L,
+            Property.TOKEN_TYPE to TokenType.LITERAL,
+            Property.TOKEN_VALUE to ion.newString("-9999-03-10")))
+
+    @Test
+    fun invalidDateStringPositiveYear() = checkInputThrowingParserException(
+        "DATE '+9999-03-10'",
+        ErrorCode.PARSE_INVALID_DATE_STRING,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 6L,
+            Property.TOKEN_TYPE to TokenType.LITERAL,
+            Property.TOKEN_VALUE to ion.newString("+9999-03-10")))
+
+    @Test
+    fun invalidDateStringNegativeMonth() = checkInputThrowingParserException(
+        "DATE '2021--03-10'",
+        ErrorCode.PARSE_INVALID_DATE_STRING,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 6L,
+            Property.TOKEN_TYPE to TokenType.LITERAL,
+            Property.TOKEN_VALUE to ion.newString("2021--03-10")))
+
+    @Test
+    fun invalidDateStringPositiveMonth() = checkInputThrowingParserException(
+        "DATE '2021-+03-10'",
+        ErrorCode.PARSE_INVALID_DATE_STRING,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 6L,
+            Property.TOKEN_TYPE to TokenType.LITERAL,
+            Property.TOKEN_VALUE to ion.newString("2021-+03-10")))
+
+    @Test
+    fun invalidDateStringNegativeDay() = checkInputThrowingParserException(
+        "DATE '2021-03--10'",
+        ErrorCode.PARSE_INVALID_DATE_STRING,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 6L,
+            Property.TOKEN_TYPE to TokenType.LITERAL,
+            Property.TOKEN_VALUE to ion.newString("2021-03--10")))
+
+    @Test
+    fun invalidDateStringPositiveDay() = checkInputThrowingParserException(
+        "DATE '2021-03-+10'",
+        ErrorCode.PARSE_INVALID_DATE_STRING,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 6L,
+            Property.TOKEN_TYPE to TokenType.LITERAL,
+            Property.TOKEN_VALUE to ion.newString("2021-03-+10")))
+
+    @Test
+    fun invalidDateStringMonthOutOfRange() = checkInputThrowingParserException(
+        "DATE '9999-300000000-10'",
+        ErrorCode.PARSE_INVALID_DATE_STRING,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 6L,
+            Property.TOKEN_TYPE to TokenType.LITERAL,
+            Property.TOKEN_VALUE to ion.newString("9999-300000000-10")))
+
+    @Test
+    fun invalidDateStringDayOutOfRangeForOct() = checkInputThrowingParserException(
+        "DATE '1999-10-32'",
+        ErrorCode.PARSE_INVALID_DATE_STRING,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 6L,
+            Property.TOKEN_TYPE to TokenType.LITERAL,
+            Property.TOKEN_VALUE to ion.newString("1999-10-32")))
+
+    @Test
+    fun invalidDateStringDayOutOfRangeForNov() = checkInputThrowingParserException(
+        "DATE '1999-11-31'",
+        ErrorCode.PARSE_INVALID_DATE_STRING,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 6L,
+            Property.TOKEN_TYPE to TokenType.LITERAL,
+            Property.TOKEN_VALUE to ion.newString("1999-11-31")))
+
+    @Test
+    fun invalidDateStringDayPaddedZeroMissingFromMonth() = checkInputThrowingParserException(
+        "DATE '1999-1-31'",
+        ErrorCode.PARSE_INVALID_DATE_STRING,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 6L,
+            Property.TOKEN_TYPE to TokenType.LITERAL,
+            Property.TOKEN_VALUE to ion.newString("1999-1-31")))
+
 }
