@@ -28,6 +28,7 @@ import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.*
 import java.math.*
+import java.time.LocalDate
 import java.util.*
 import kotlin.collections.*
 
@@ -283,7 +284,8 @@ internal class EvaluatingCompiler(
             is DropIndex,
             is DropTable -> compileDdl(expr)
             is Exec      -> compileExec(expr)
-            is DateTimeType.Date      -> TODO()
+            is DateTimeType.Date      -> compileDate(expr)
+            is DateTimeType.Time -> TODO()
         }
     }
 
@@ -1977,6 +1979,12 @@ internal class EvaluatingCompiler(
             val procedureArgValues = argThunks.map { it(env) }
             procedure.call(env.session, procedureArgValues)
         }
+    }
+
+    private fun compileDate(node: DateTimeType.Date): ThunkEnv {
+        val (year, month, day, metas) = node
+        val value = valueFactory.newDate(year, month, day)
+        return thunkFactory.thunkEnv(metas) { value }
     }
 
     /** A special wrapper for `UNPIVOT` values as a BAG. */

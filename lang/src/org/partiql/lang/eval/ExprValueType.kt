@@ -56,6 +56,9 @@ enum class ExprValueType(val typeNames: List<String>,
         typeNames = listOf("dec", "decimal", "numeric"),
         isNumber = true
     ),
+    DATE(
+        typeNames = listOf("date")
+    ),
     TIMESTAMP(
         typeNames = listOf("timestamp")
     ),
@@ -190,7 +193,8 @@ enum class ExprValueType(val typeNames: List<String>,
                 SqlDataType.LIST              -> ExprValueType.LIST
                 SqlDataType.SEXP              -> ExprValueType.SEXP
                 SqlDataType.BAG               -> ExprValueType.BAG
-                SqlDataType.DATE              -> TODO()
+                SqlDataType.DATE              -> ExprValueType.DATE
+                SqlDataType.TIME              -> TODO()
             }
     }
 }

@@ -95,6 +95,7 @@ private class AstSerializerImpl(val astVersion: AstVersion, val ion: IonSystem):
                     is DropIndex         -> case { writeDropIndex(expr) }
                     is Parameter         -> case { writeParameter(expr)}
                     is DateTimeType.Date -> throw UnsupportedOperationException("DATE literals not supported by the V0 AST")
+                    is DateTimeType.Time -> throw UnsupportedOperationException("TIME literals not supported by the V0 AST")
                     is Exec              -> throw UnsupportedOperationException("EXEC clause not supported by the V0 AST")
                 }.toUnit()
             }

@@ -6,8 +6,11 @@ import com.amazon.ion.IonValue
 import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.SqlException
-import org.partiql.lang.eval.*
+import org.partiql.lang.eval.EvaluationSession
+import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType.*
+import org.partiql.lang.eval.name
+import org.partiql.lang.eval.stringValue
 import org.partiql.testscript.compiler.*
 import org.partiql.testscript.evaluator.*
 import org.partiql.testscript.evaluator.TestFailure.FailureReason.*
@@ -70,7 +73,7 @@ class PartiQlPtsEvaluator(equality: PtsEquality) : Evaluator(equality) {
 
         return when (this.type) {
             MISSING -> missing
-            NULL, BOOL, INT, FLOAT, DECIMAL, TIMESTAMP, SYMBOL, STRING, CLOB, BLOB -> this.ionValue.clone()
+            NULL, BOOL, INT, FLOAT, DECIMAL, DATE, TIMESTAMP, SYMBOL, STRING, CLOB, BLOB -> this.ionValue.clone()
             LIST -> this.foldToIonSequence(ion.newEmptyList())
             SEXP -> this.foldToIonSequence(ion.newEmptySexp())
             STRUCT -> this.fold(ion.newEmptyStruct()) { struct, el ->

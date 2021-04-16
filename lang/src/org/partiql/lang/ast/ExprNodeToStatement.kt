@@ -11,7 +11,7 @@ fun ExprNode.toAstStatement(): PartiqlAst.Statement {
     val node = this
     return when(node) {
         is Literal, is LiteralMissing, is VariableReference, is Parameter, is NAry, is CallAgg,
-        is Typed, is Path, is SimpleCase, is SearchedCase, is Select, is Struct, is DateTimeType.Date,
+        is Typed, is Path, is SimpleCase, is SearchedCase, is Select, is Struct, is DateTimeType,
         is Seq -> PartiqlAst.build { query(toAstExpr()) }
 
         is DataManipulation -> node.toAstDml()
@@ -35,7 +35,7 @@ private fun ExprNode.toAstDdl(): PartiqlAst.Statement {
     return PartiqlAst.build {
         when(thiz) {
             is Literal, is LiteralMissing, is VariableReference, is Parameter, is NAry, is CallAgg, is Typed,
-            is Path, is SimpleCase, is SearchedCase, is Select, is Struct, is Seq, is DateTimeType.Date,
+            is Path, is SimpleCase, is SearchedCase, is Select, is Struct, is Seq, is DateTimeType,
             is DataManipulation, is Exec -> error("Can't convert ${thiz.javaClass} to PartiqlAst.ddl")
 
             is CreateTable -> ddl(createTable(thiz.tableName), metas)
@@ -174,6 +174,16 @@ fun ExprNode.toAstExpr(): PartiqlAst.Expr {
             is DateTimeType -> {
                 when (node) {
                     is DateTimeType.Date -> date(node.year.toLong(), node.month.toLong(), node.day.toLong(), metas)
+                    is DateTimeType.Time -> litTime(
+                        timeValue(
+                            node.hour.toLong(),
+                            node.minute.toLong(),
+                            node.second.toLong(),
+                            node.nano.toLong(),
+                            node.precision.toLong(),
+                            node.tz_minutes?.toLong()
+                        )
+                    )
                 }
             }
         }
@@ -447,6 +457,7 @@ private fun DataType.toAstType(): PartiqlAst.Type {
             SqlDataType.SEXP -> sexpType(metas)
             SqlDataType.BAG -> bagType(metas)
             SqlDataType.DATE -> dateType(metas)
+            SqlDataType.TIME -> timeType(metas)
         }
     }
 }
