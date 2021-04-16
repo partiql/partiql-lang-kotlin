@@ -35,7 +35,7 @@ import java.time.format.DateTimeParseException
 /**
  * Regex pattern to match date strings of the format yyyy-MM-dd
  */
-@JvmField val DATE_PATTERN_REGEX = Regex("\\d\\d\\d\\d-\\d\\d-\\d\\d")
+private val DATE_PATTERN_REGEX = Regex("\\d\\d\\d\\d-\\d\\d-\\d\\d")
 
 /**
  * Parses a list of tokens as infix query expression into a prefix s-expression
