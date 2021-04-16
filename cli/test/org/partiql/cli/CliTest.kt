@@ -120,4 +120,12 @@ class CliTest {
 
         assertEquals("<<\n  {\n    'a': 1,\n    'b': 2\n  }\n>>", actual)
     }
+
+    @Test
+    fun withIonTextOutput() {
+        val subject = makeCli("SELECT * FROM input_data", "{a: 1} {b: 1}", outputFormat = OutputFormat.ION_TEXT)
+        val actual = subject.runAndOutput()
+
+        assertEquals("{a:1}\n{b:1}\n", actual)
+    }
 }

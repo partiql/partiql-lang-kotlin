@@ -33,6 +33,10 @@ internal class Cli(private val valueFactory: ExprValueFactory,
                    private val globals: Bindings<ExprValue>,
                    private val query: String) : PartiQLCommand {
 
+    companion object {
+        val ionTextWriterBuilder: IonTextWriterBuilder = IonTextWriterBuilder.standard().withWriteTopLevelValuesOnNewLines(true)
+    }
+
     override fun run() {
         IonReaderBuilder.standard().build(input).use { reader ->
             val inputIonValue = valueFactory.ion.iterate(reader).asSequence().map { valueFactory.newFromIonValue(it) }
@@ -44,7 +48,10 @@ internal class Cli(private val valueFactory: ExprValueFactory,
             val result = compilerPipeline.compile(query).eval(EvaluationSession.build { globals(bindings) })
 
             when (format) {
-                ION_TEXT   -> valueFactory.ion.newTextWriter(output).use { printIon(it, result) }
+                ION_TEXT   -> {
+                    ionTextWriterBuilder.build(output).use { printIon(it, result) }
+                    output.write(System.lineSeparator().toByteArray(Charsets.UTF_8))
+                }
                 ION_BINARY -> valueFactory.ion.newBinaryWriter(output).use { printIon(it, result) }
                 PARTIQL    -> OutputStreamWriter(output).use { it.write(result.toString()) }
                 PARTIQL_PRETTY -> OutputStreamWriter(output).use {
