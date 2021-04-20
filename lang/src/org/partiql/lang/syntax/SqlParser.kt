@@ -2397,7 +2397,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     // Fall back on parsing a string without a time zone offset only if the offset is not specified.
                     // Add local system timezone offset in that case.
                     tryLocalTimeParsing(timeString)
-                    newTimeString = timeString + ZoneOffset.systemDefault().rules.getOffset(Instant.now()).toString()
+                    newTimeString = timeString + ZoneOffset.systemDefault().rules.getOffset(Instant.now()).getOffsetHHmm()
                 }
                 else {
                     rem.head.err(e.localizedMessage, PARSE_INVALID_TIME_STRING)

@@ -1,3 +1,17 @@
+/*
+ * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ *  You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *      http://aws.amazon.com/apache2.0/
+ *
+ *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ *  language governing permissions and limitations under the License.
+ */
+
 package org.partiql.lang.eval
 
 import com.amazon.ion.IonStruct
@@ -6,6 +20,7 @@ import org.junit.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.lang.util.getOffsetHHmm
 import org.partiql.lang.util.times
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -92,8 +107,8 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
             case("TIME '23:59:59'", "23:59:59.000000000", Time(23, 59, 59)),
             case("TIME (12) '12:24:12.123'", "12:24:12.123000000", Time(12, 24, 12, 123000000)),
             case("TIME (0) '12:59:59.9'", "13:00:00.000000000", Time(13, 0,0)),
-            case("TIME WITH TIME ZONE '00:00:00'", "00:00:00.000000000$LOCAL_TIMEZONE_OFFSET", Time(0,0,0,0,null, LOCAL_TZ_MINUTES)),
-            case("TIME (2) WITH TIME ZONE '12:24:12.123'", "12:24:12.120000000$LOCAL_TIMEZONE_OFFSET", Time(12, 24, 12, 120000000, 2, LOCAL_TZ_MINUTES)),
+            case("TIME WITH TIME ZONE '00:00:00'", "00:00:00.000000000${LOCAL_TIMEZONE_OFFSET.getOffsetHHmm()}", Time(0,0,0,0,null, LOCAL_TZ_MINUTES)),
+            case("TIME (2) WITH TIME ZONE '12:24:12.123'", "12:24:12.120000000${LOCAL_TIMEZONE_OFFSET.getOffsetHHmm()}", Time(12, 24, 12, 120000000, 2, LOCAL_TZ_MINUTES)),
             case("TIME (2) WITH TIME ZONE '12:24:12.123-00:00'", "12:24:12.120000000+00:00", Time(12, 24, 12, 120000000, 2, 0)),
             case("TIME (2) WITH TIME ZONE '12:24:12.123+00:00'", "12:24:12.120000000+00:00", Time(12, 24, 12, 120000000, 2, 0)),
             case("TIME (2) WITH TIME ZONE '12:24:12.123+05:30'", "12:24:12.120000000+05:30", Time(12, 24, 12, 120000000, 2, 330)),
