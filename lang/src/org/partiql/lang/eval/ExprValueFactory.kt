@@ -19,6 +19,10 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.util.*
 import java.math.*
 import java.time.LocalDate
+import java.time.LocalTime
+import java.time.OffsetTime
+import java.time.ZoneOffset
+import kotlin.math.pow
 
 /**
  * Provides a standard way of creating instances of ExprValue.
@@ -90,7 +94,18 @@ interface ExprValueFactory {
     /** Returns a PartiQL `TIMESTAMP` [ExprValue] instance representing the specified [Timestamp]. */
     fun newTimestamp(value: Timestamp): ExprValue
 
-    /** Returns a  PartiQL `SYMBOL` [ExprValue] instance representing the specified [String]. */
+    /** Returns a PartiQL `TIME` [ExprValue] instance representing the specified [LocalTime] and the [ZoneOffset].
+     * If the [zoneOffset] is null, then the instance created is of [LocalTime].
+     * If the [zoneOffset] is not null, then the instance created is of [OffsetTime] with time as [LocalTime] and offset as [zoneOffset]
+     */
+    fun newTime(value: LocalTime, zoneOffset: ZoneOffset? = null): ExprValue
+
+    /** Returns a PartiQL `TIME` [ExprValue] instance for the given hour, minute, second, precision and tz_minutes.
+     * If [tz_minutes] is not null then the time has the timezone offset, not otherwise.
+     */
+    fun newTime(hour: Int, minute: Int, second: Int, nano: Int, precision: Int? = null, tz_minutes: Int? = null): ExprValue
+
+    /** Returns an  PartiQL `SYMBOL` [ExprValue] instance representing the specified [String]. */
     fun newSymbol(value: String) : ExprValue
 
     /** Returns a PartiQL `CLOB` [ExprValue] instance representing the specified [ByteArray]. */
@@ -204,6 +219,34 @@ private class ExprValueFactoryImpl(override val ion: IonSystem) : ExprValueFacto
 
     override fun newTimestamp(value: Timestamp): ExprValue =
         TimestampExprValue(ion, value)
+
+    override fun newTime(value: LocalTime, zoneOffset: ZoneOffset?): ExprValue {
+        return TimeExprValue(ion, value, zoneOffset)
+    }
+
+    override fun newTime(hour: Int, minute: Int, second: Int, nano: Int, precision: Int?, tz_minutes: Int?): ExprValue {
+        // Round nanoseconds to the given precision.
+        val nanoWithPrecision = when  {
+            precision == null || precision >= 9 -> nano
+            else -> (BigDecimal(nano * 10.0.pow(-9)).setScale(precision, RoundingMode.HALF_UP) * 10.0.pow(9)).toInt()
+        }
+        // If the nanos are added to form up a whole second because of the specified precision, carry over the second all up to the hour
+        // and use the mod values of all the new fields to fit in the valid range.
+        val newNano = nanoWithPrecision % 10.0.pow(9).toInt()
+        val newSecond = second + (nanoWithPrecision / 10.0.pow(9).toInt())
+        val newMinute = minute + (newSecond / 60)
+        val newHour = (hour + (newMinute / 60))
+        val localTime = LocalTime.of(
+            newHour % 24,
+            newMinute % 60,
+            newSecond % 60,
+            newNano
+        )
+        val zoneOffset = tz_minutes?.let {
+            ZoneOffset.ofTotalSeconds( it * 60)
+        }
+        return newTime(localTime, zoneOffset)
+    }
 
     override fun newSymbol(value: String): ExprValue =
         SymbolExprValue(ion, value)
@@ -343,6 +386,28 @@ private class TimestampExprValue(val ion: IonSystem, val value: Timestamp): Scal
     override val type: ExprValueType = ExprValueType.TIMESTAMP
     override fun timestampValue(): Timestamp? = value
     override fun ionValueFun(): IonValue = ion.newTimestamp(value)
+}
+
+// Store LocalTime and ZoneOffset for the ease of Datetime arithmetic operations on the instance.
+private class TimeExprValue(val ion: IonSystem, val value: LocalTime, val zoneOffset: ZoneOffset? = null): ScalarExprValue() {
+    private val PARTIQL_TIME_ANNOTATION = "\$partiql_time"
+    private val SECONDS_IN_ONE_HOUR = 3600
+    private val SECONDS_IN_ONE_MINUTE = 60
+
+    fun createIonTimeStruct(): IonStruct =
+        ion.newEmptyStruct().apply {
+            add("hour", ion.newInt(value.hour))
+            add("minute", ion.newInt(value.minute))
+            add("second", ion.newFloat( value.second + value.nano * 10.0.pow(-9)))
+            add("timezone_hour", ion.newInt(zoneOffset?.totalSeconds?.div(SECONDS_IN_ONE_HOUR)))
+            add("timezone_minute", ion.newInt(zoneOffset?.totalSeconds?.div((SECONDS_IN_ONE_MINUTE))?.rem(60)))
+            addTypeAnnotation(PARTIQL_TIME_ANNOTATION)
+        }
+
+    override val type = ExprValueType.TIME
+    override fun timeValue(): LocalTime? = value
+    override fun timeWithTimezoneValue(): OffsetTime? = zoneOffset?.let { OffsetTime.of(value, it) }
+    override fun ionValueFun() = createIonTimeStruct()
 }
 
 private class SymbolExprValue(val ion: IonSystem, val value: String): ScalarExprValue() {

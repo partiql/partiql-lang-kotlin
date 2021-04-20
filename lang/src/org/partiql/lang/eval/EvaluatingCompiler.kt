@@ -285,7 +285,7 @@ internal class EvaluatingCompiler(
             is DropTable -> compileDdl(expr)
             is Exec      -> compileExec(expr)
             is DateTimeType.Date      -> compileDate(expr)
-            is DateTimeType.Time -> TODO()
+            is DateTimeType.Time -> compileTime(expr)
         }
     }
 
@@ -1985,6 +1985,13 @@ internal class EvaluatingCompiler(
         val (year, month, day, metas) = node
         val value = valueFactory.newDate(year, month, day)
         return thunkFactory.thunkEnv(metas) { value }
+    }
+
+    private fun compileTime(node: DateTimeType.Time) : ThunkEnv {
+        val (hour, minute, second, nano, precision, tz_minutes, metas) = node
+        return thunkFactory.thunkEnv(metas) {
+            valueFactory.newTime(hour, minute, second, nano, precision, tz_minutes)
+        }
     }
 
     /** A special wrapper for `UNPIVOT` values as a BAG. */

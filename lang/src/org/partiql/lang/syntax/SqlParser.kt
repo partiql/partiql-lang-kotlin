@@ -35,8 +35,7 @@ import java.time.*
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 
-// TODO: (Ques) LocalTime has a field nanosecond and is the precision limit for it. Do we want to use this as the default precision if not specified?
-private const val DEFAULT_PRECISION_FOR_TIME = 9
+private const val MAX_PRECISION_FOR_TIME = 9
 
 // These are used to validate the generic format of the time string.
 // The more involved logic such as validating the time is done by LocalTime.parse or OffsetTime.parse
@@ -710,13 +709,13 @@ class SqlParser(private val ion: IonSystem) : Parser {
             }
             TIME -> {
                 val timeString = token!!.text!!
-                val precision = min(children[0].token?.value?.numberValue()?.toInt() ?: DEFAULT_PRECISION_FOR_TIME, DEFAULT_PRECISION_FOR_TIME)
+                val precision = min(children[0].token?.value?.numberValue()?.toInt() ?: MAX_PRECISION_FOR_TIME, MAX_PRECISION_FOR_TIME)
                 val time = LocalTime.parse(timeString, DateTimeFormatter.ISO_TIME)
                 DateTimeType.Time(time.hour, time.minute, time.second, time.nano, precision, null, metas)
             }
             TIME_WITH_TIME_ZONE -> {
                 val timeString = token!!.text!!
-                val precision = min(children[0].token?.value?.numberValue()?.toInt() ?: DEFAULT_PRECISION_FOR_TIME, DEFAULT_PRECISION_FOR_TIME)
+                val precision = min(children[0].token?.value?.numberValue()?.toInt() ?: MAX_PRECISION_FOR_TIME, MAX_PRECISION_FOR_TIME)
                 val time = OffsetTime.parse(timeString)
                 DateTimeType.Time(time.hour, time.minute, time.second, time.nano, precision, time.offset.totalSeconds/60, metas)
             }

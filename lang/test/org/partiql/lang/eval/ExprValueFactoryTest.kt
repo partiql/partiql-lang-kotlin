@@ -23,6 +23,10 @@ import org.junit.Test
 import org.partiql.lang.util.seal
 import java.math.*
 import java.time.LocalDate
+import java.time.LocalTime
+import java.time.OffsetTime
+import java.time.ZoneOffset
+import kotlin.math.pow
 import kotlin.test.*
 
 
@@ -364,5 +368,87 @@ class ExprValueFactoryTest {
         Assert.assertEquals("Expected year to be 2020", 2020, timestamp.year)
         Assert.assertEquals("Expected month to be 02", 2, timestamp.month)
         Assert.assertEquals("Expected day to be 29", 29, timestamp.day)
+    }
+
+    private fun createIonTimeStruct(hour: Int, minute: Int, second: Int, nano: Int = 0, totalSeconds: Int? = null): IonStruct =
+        ion.newEmptyStruct().apply {
+            add("hour", ion.newInt(hour))
+            add("minute", ion.newInt(minute))
+            add("second", ion.newFloat( second + nano * 10.0.pow(-9)))
+            add("timezone_hour", ion.newInt(totalSeconds?.div(3600)))
+            add("timezone_minute", ion.newInt(totalSeconds?.div((60))?.rem(60)))
+            addTypeAnnotation("\$partiql_time")
+        }
+
+    @Test
+    fun localTimeExprValueTest() {
+        val time = LocalTime.of(23, 2, 29, 23)
+        val timeExprValue = factory.newTime(time)
+        assertEquals(
+            expected = time,
+            actual = timeExprValue.scalar.timeValue(),
+            message = "Expected values to be equal."
+        )
+        val timeIonValue = timeExprValue.ionValue
+        val expectedIonValue = createIonTimeStruct(time.hour, time.minute, time.second, time.nano)
+        assertEquals(
+            expected = expectedIonValue,
+            actual = timeIonValue,
+            message = "Expected ionValues to be equal."
+        )
+    }
+
+    @Test
+    fun offsetTimeExprValueTest() {
+        val time = LocalTime.of(23, 2, 29, 23)
+        val zoneOffset = ZoneOffset.ofTotalSeconds(3600)
+        val offsetTime = OffsetTime.of(time, zoneOffset)
+        val timeExprValue = factory.newTime(time, zoneOffset)
+        assertEquals(
+            expected = offsetTime,
+            actual = timeExprValue.scalar.timeWithTimezoneValue(),
+            message = "Expected values to be equal."
+        )
+        val timeIonValue = timeExprValue.ionValue
+        val expectedIonValue = createIonTimeStruct(time.hour, time.minute, time.second, time.nano, zoneOffset.totalSeconds)
+        assertEquals(
+            expected = expectedIonValue,
+            actual = timeIonValue,
+            message = "Expected ionValues to be equal."
+        )
+    }
+
+    @Test
+    fun genericTimeExprValueTest() {
+        val timeExprValue = factory.newTime(23, 2, 29, 23, 2)
+        assertEquals(
+            expected = LocalTime.of(23, 2, 29),
+            actual = timeExprValue.scalar.timeValue(),
+            message = "Expected values to be equal."
+        )
+        val timeIonValue = timeExprValue.ionValue
+        val expectedIonValue = createIonTimeStruct(23, 2, 29)
+        assertEquals(
+            expected = expectedIonValue,
+            actual = timeIonValue,
+            message = "Expected ionValues to be equal."
+        )
+    }
+
+    @Test
+    fun genericTimeExprValueTest2() {
+        val timeExprValue = factory.newTime(23, 2, 29, 23, 2, -720)
+        assertEquals(
+            expected = OffsetTime.of(23, 2, 29, 0, ZoneOffset.ofTotalSeconds(-720*60)),
+            actual = timeExprValue.scalar.timeWithTimezoneValue(),
+            message = "Expected values to be equal."
+        )
+        val timeIonValue = timeExprValue.ionValue
+        val expectedIonValue = createIonTimeStruct(23, 2, 29, 0, -720*60)
+        assertEquals(
+            expected = expectedIonValue,
+            actual = timeIonValue,
+            message = "Expected ionValues to be equal."
+        )
     }
 }

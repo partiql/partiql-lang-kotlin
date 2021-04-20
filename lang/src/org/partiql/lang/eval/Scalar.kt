@@ -16,6 +16,8 @@ package org.partiql.lang.eval
 
 import com.amazon.ion.Timestamp
 import java.time.LocalDate
+import java.time.LocalTime
+import java.time.OffsetTime
 
 /**
  * Represents a scalar view over an [ExprValue].
@@ -49,6 +51,20 @@ interface Scalar {
      * This operation is only applicable for [ExprValueType.DATE]
      */
     fun dateValue(): LocalDate? = null
+
+    /**
+     * Returns this value as a [LocalTime] or `null` if not applicable.
+     * This operation is only applicable for [ExprValueType.TIME].
+     * Note that this will return [LocalTime] value even if the timezone offset is specified.
+     * To get the time with timezone value, use [timeWithTimezoneValue] which returns an instance of [OffsetTime]
+     */
+    fun timeValue(): LocalTime? = null
+
+    /**
+     * Returns this value as a [OffsetTime] or `null` if not applicable.
+     * This operation is only applicable for [ExprValueType.TIME] with timezone offset.
+     */
+    fun timeWithTimezoneValue(): OffsetTime? = null
 
     /**
      * Returns this value as a [String] or `null` if not applicable.

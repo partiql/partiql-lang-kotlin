@@ -56,6 +56,7 @@ sealed class StaticType(val name: String) {
         @JvmField val STRUCT: StaticType = EXPR_VALUE_TYPE_MAP.getValue(ExprValueType.STRUCT)
         @JvmField val BAG: StaticType = EXPR_VALUE_TYPE_MAP.getValue(ExprValueType.BAG)
         @JvmField val DATE: StaticType = EXPR_VALUE_TYPE_MAP.getValue(ExprValueType.DATE)
+        @JvmField val TIME: StaticType = EXPR_VALUE_TYPE_MAP.getValue(ExprValueType.TIME)
 
         private val NUMERIC_NAME = "NUMERIC"
         private val ANY_NAME = "ANY"
