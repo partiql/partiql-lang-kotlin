@@ -19,7 +19,7 @@ import org.partiql.lang.util.*
 import java.util.*
 
 /**
- * Base type for all AST nodes.  
+ * Base type for all AST nodes.
  */
 sealed class AstNode : Iterable<AstNode> {
 
@@ -32,10 +32,15 @@ sealed class AstNode : Iterable<AstNode> {
      * Depth first iterator over all nodes.
      */
     override operator fun iterator(): Iterator<AstNode> {
-        fun depthFirstSequence(node: AstNode): Sequence<AstNode> =
-            sequenceOf(node) + node.children.asSequence().flatMap { depthFirstSequence(it) }
-        
-        return depthFirstSequence(this).iterator();
+        val allNodes = mutableListOf<AstNode>()
+
+        fun depthFirstSequence(node: AstNode) {
+            allNodes.add(node)
+            node.children.map { depthFirstSequence(it) }
+        }
+
+        depthFirstSequence(this)
+        return allNodes.toList().iterator()
     }
 }
 
@@ -44,7 +49,7 @@ sealed class AstNode : Iterable<AstNode> {
  * place a value is allowed.
  */
 sealed class ExprNode : AstNode(), HasMetas {
-    
+
     fun copy(newMetas: MetaContainer? = null): ExprNode {
         // This looks like duplication but really isn't: each branch executes a different compiler-generated `copy` function.
         val metas = newMetas ?: this.metas
@@ -113,7 +118,7 @@ data class Literal(
 data class LiteralMissing(
     override val metas: MetaContainer
 ) : ExprNode() {
-    
+
     override val children: List<AstNode> = listOf()
 }
 
@@ -366,15 +371,15 @@ sealed class SelectProjection : AstNode()
 data class SelectProjectionList(
     val items: List<SelectListItem>
 ) : SelectProjection() {
-    
-    override val children: List<AstNode> = items 
+
+    override val children: List<AstNode> = items
 }
 
 /** For `SELECT VALUE <expr>` */
 data class SelectProjectionValue(
     val expr: ExprNode
 ) : SelectProjection() {
-    
+
     override val children: List<AstNode> = listOf(expr)
 }
 
@@ -383,7 +388,7 @@ data class SelectProjectionPivot(
     val valueExpr: ExprNode,
     val nameExpr: ExprNode
 ) : SelectProjection() {
-    
+
     override val children: List<AstNode> = listOf(valueExpr, nameExpr)
 }
 
@@ -404,7 +409,7 @@ data class SelectListItemExpr(
     val expr: ExprNode,
     val asName: SymbolicName? = null
 ) : SelectListItem() {
-    
+
     override val children: List<AstNode> = listOf(expr)
 }
 
@@ -451,7 +456,7 @@ data class FromSourceJoin(
     val condition: ExprNode,
     override val metas: MetaContainer
 ) : FromSource(), HasMetas {
-    
+
     override val children: List<AstNode> = listOf(leftRef, rightRef, condition)
 }
 
@@ -469,7 +474,7 @@ data class FromSourceUnpivot(
     val atName: SymbolicName?,
     override val metas: MetaContainer
 ) : FromSource(), HasMetas {
-    
+
     override val children: List<AstNode> = listOf(expr)
 }
 
