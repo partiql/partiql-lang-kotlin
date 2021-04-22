@@ -32,10 +32,15 @@ sealed class AstNode : Iterable<AstNode> {
      * Depth first iterator over all nodes.
      */
     override operator fun iterator(): Iterator<AstNode> {
-        fun depthFirstSequence(node: AstNode): Sequence<AstNode> =
-            sequenceOf(node) + node.children.asSequence().flatMap { depthFirstSequence(it) }
+        val allNodes = mutableListOf<AstNode>()
 
-        return depthFirstSequence(this).iterator();
+        fun depthFirstSequence(node: AstNode) {
+            allNodes.add(node)
+            node.children.map { depthFirstSequence(it) }
+        }
+
+        depthFirstSequence(this)
+        return allNodes.toList().iterator()
     }
 }
 
