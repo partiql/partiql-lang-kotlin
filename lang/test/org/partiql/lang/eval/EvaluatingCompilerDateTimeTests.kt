@@ -6,15 +6,16 @@ import org.junit.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.eval.builtins.Time
-import org.partiql.lang.eval.builtins.Time.Companion.MAX_PRECISION_FOR_TIME
 import org.partiql.lang.eval.builtins.Time.Companion.MINUTES_PER_HOUR
 import org.partiql.lang.eval.builtins.Time.Companion.NANOS_PER_SECOND
 import org.partiql.lang.eval.builtins.Time.Companion.SECONDS_PER_MINUTE
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.getOffsetHHmm
+import org.partiql.lang.util.getPrecision
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.Instant
+import java.time.LocalTime
 import java.time.ZoneOffset
 import kotlin.math.absoluteValue
 import kotlin.random.Random
@@ -86,17 +87,25 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         private fun case(query: String, expected: String, expectedTime: TimeForTest? = null) = TimeTestCase(query, expected, expectedTime)
 
         override fun getParameters() = listOf(
-            case("TIME '00:00:00.000'", "00:00:00.000000000", TimeForTest(0, 0, 0)),
-            case("TIME '23:59:59.99999999'", "23:59:59.999999990", TimeForTest(23, 59, 59, 999999990)),
-            case("TIME (2) '23:59:59.99999999'", "00:00:00.00", TimeForTest(0, 0, 0, precision = 2)),
+            case("TIME '00:00:00.000'", "00:00:00", TimeForTest(0, 0, 0, 0, 0)),
+            case("TIME '23:59:59.99999999'", "23:59:59.99999999", TimeForTest(23, 59, 59, 999999990, 8)),
+            case("TIME (2) '23:59:59.99999999'", "00:00:00.00", TimeForTest(0, 0, 0, 0, 2)),
             case("TIME (2) '12:24:12.123'", "12:24:12.12", TimeForTest(12, 24, 12, 120000000, 2)),
-            case("TIME '00:45:13.840800524'", "00:45:13.840800524", TimeForTest(0, 45, 13, 840800524)),
-            case("TIME '05:20:52.015779149'", "05:20:52.015779149", TimeForTest(5, 20, 52, 15779149)),
-            case("TIME '23:59:59'", "23:59:59.000000000", TimeForTest(23, 59, 59)),
-            case("TIME (12) '12:24:12.123'", "12:24:12.123000000", TimeForTest(12, 24, 12, 123000000)),
-            case("TIME (0) '12:59:59.9'", "13:00:00", TimeForTest(13, 0,0, precision = 0)),
-            case("TIME WITH TIME ZONE '00:00:00'", "00:00:00.000000000${LOCAL_TIMEZONE_OFFSET.getOffsetHHmm()}", TimeForTest(0,0,0,0,9, LOCAL_TZ_MINUTES)),
+            case("TIME '00:45:13.840800524'", "00:45:13.840800524", TimeForTest(0, 45, 13, 840800524, 9)),
+            case("TIME '05:20:52.015779149'", "05:20:52.015779149", TimeForTest(5, 20, 52, 15779149, 9)),
+            case("TIME '23:59:59'", "23:59:59", TimeForTest(23, 59, 59, 0, 0)),
+            case("TIME (12) '12:24:12.123'", "12:24:12.123000000", TimeForTest(12, 24, 12, 123000000, 9)),
+            case("TIME '12:24:12.12300'", "12:24:12.123", TimeForTest(12, 24, 12, 123000000, 3)),
+            case("TIME (3) '12:24:12.12300'", "12:24:12.123", TimeForTest(12, 24, 12, 123000000, 3)),
+            case("TIME (4) '12:24:12.12300'", "12:24:12.1230", TimeForTest(12, 24, 12, 123000000, 4)),
+            case("TIME (4) '12:24:12.123'", "12:24:12.1230", TimeForTest(12, 24, 12, 123000000, 4)),
+            case("TIME (0) '12:59:59.9'", "13:00:00", TimeForTest(13, 0,0, 0, 0)),
+            case("TIME WITH TIME ZONE '00:00:00'", "00:00:00${LOCAL_TIMEZONE_OFFSET.getOffsetHHmm()}", TimeForTest(0,0,0,0,0, LOCAL_TZ_MINUTES)),
             case("TIME (2) WITH TIME ZONE '12:24:12.123'", "12:24:12.12${LOCAL_TIMEZONE_OFFSET.getOffsetHHmm()}", TimeForTest(12, 24, 12, 120000000, 2, LOCAL_TZ_MINUTES)),
+            case("TIME WITH TIME ZONE '12:24:12.12300'", "12:24:12.123${LOCAL_TIMEZONE_OFFSET.getOffsetHHmm()}", TimeForTest(12, 24, 12, 123000000, 3, LOCAL_TZ_MINUTES)),
+            case("TIME (3) WITH TIME ZONE '12:24:12.12300'", "12:24:12.123${LOCAL_TIMEZONE_OFFSET.getOffsetHHmm()}", TimeForTest(12, 24, 12, 123000000, 3, LOCAL_TZ_MINUTES)),
+            case("TIME (4) WITH TIME ZONE '12:24:12.12300'", "12:24:12.1230${LOCAL_TIMEZONE_OFFSET.getOffsetHHmm()}", TimeForTest(12, 24, 12, 123000000, 4, LOCAL_TZ_MINUTES)),
+            case("TIME (4) WITH TIME ZONE '12:24:12.123'", "12:24:12.1230${LOCAL_TIMEZONE_OFFSET.getOffsetHHmm()}", TimeForTest(12, 24, 12, 123000000, 4, LOCAL_TZ_MINUTES)),
             case("TIME (2) WITH TIME ZONE '12:24:12.123-00:00'", "12:24:12.12+00:00", TimeForTest(12, 24, 12, 120000000, 2, 0)),
             case("TIME (2) WITH TIME ZONE '12:24:12.123+00:00'", "12:24:12.12+00:00", TimeForTest(12, 24, 12, 120000000, 2, 0)),
             case("TIME (2) WITH TIME ZONE '12:24:12.123+05:30'", "12:24:12.12+05:30", TimeForTest(12, 24, 12, 120000000, 2, 330)),
@@ -119,7 +128,14 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         return Random(seed)
     }
 
-    data class TimeForTest(val hour: Int, val minute: Int, val second: Int, val nano: Int = 0, val precision: Int = MAX_PRECISION_FOR_TIME, val tz_minutes: Int? = null) {
+    data class TimeForTest(
+        val hour: Int,
+        val minute: Int,
+        val second: Int,
+        val nano: Int = 0,
+        val precision: Int,
+        val tz_minutes: Int? = null
+    ) {
         fun expectedTimeString(withTimeZone: Boolean): String {
             val timezoneMinutes = when(withTimeZone) {
                 true -> tz_minutes ?: ZoneOffset.systemDefault().rules.getOffset(Instant.now()).totalSeconds / SECONDS_PER_MINUTE
@@ -151,7 +167,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         val precision = if (withPrecision) {
             nextInt(20)
         } else {
-            MAX_PRECISION_FOR_TIME
+            LocalTime.of(hour, minute, second, nano).getPrecision()
         }
         val timezoneMinutes = if (withTimezone) {
             nextInt(-1080, 1081)

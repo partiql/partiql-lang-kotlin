@@ -2403,10 +2403,19 @@ class SqlParser(private val ion: IonSystem) : Parser {
                 }
             }
         }
+        // Extract the precision from the time if the precision is not specified.
+        // For e.g., TIME '23:12:12.123' should have precision of 3.
+        // Note that TIME '23:12:12.1230' will also have precision of 3 unless specified otherwise as the significant
+        // digits in the fractional part excluding trailing zeros is 3.
+        // The source span here is just the filler value and does not reflect the actual source location of the precision
+        // as it does not exists in case the precision is unspecified.
+        val precisionOfValue =  precision.token ?:
+            Token(LITERAL, ion.newInt(LocalTime.parse(newTimeString, DateTimeFormatter.ISO_TIME).getPrecision()), SourceSpan(-1, -1, -1))
+
         return ParseNode(
             if (isTimeZoneSpecified) TIME_WITH_TIME_ZONE else TIME,
             rem.head!!.copy(value = ion.newString(newTimeString)),
-            listOf(precision),
+            listOf(precision.copy(token = precisionOfValue)),
             rem.tail)
     }
 
