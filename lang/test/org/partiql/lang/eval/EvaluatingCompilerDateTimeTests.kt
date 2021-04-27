@@ -1,17 +1,3 @@
-/*
- * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- *  You may not use this file except in compliance with the License.
- * A copy of the License is located at:
- *
- *      http://aws.amazon.com/apache2.0/
- *
- *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
- *  language governing permissions and limitations under the License.
- */
-
 package org.partiql.lang.eval
 
 import com.amazon.ion.IonStruct
@@ -19,18 +5,18 @@ import com.amazon.ion.IonTimestamp
 import org.junit.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.lang.eval.builtins.Time
+import org.partiql.lang.eval.builtins.Time.Companion.MAX_PRECISION_FOR_TIME
+import org.partiql.lang.eval.builtins.Time.Companion.MINUTES_PER_HOUR
+import org.partiql.lang.eval.builtins.Time.Companion.NANOS_PER_SECOND
+import org.partiql.lang.eval.builtins.Time.Companion.SECONDS_PER_MINUTE
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.getOffsetHHmm
-import org.partiql.lang.util.times
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.Instant
-import java.time.LocalTime
-import java.time.OffsetTime
 import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 import kotlin.math.absoluteValue
-import kotlin.math.pow
 import kotlin.random.Random
 
 class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
@@ -64,17 +50,18 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         )
     }
 
-    private fun createIonTimeStruct(value: Time): IonStruct =
-        ion.newEmptyStruct().apply {
-            add("hour", ion.newInt(value.hour))
-            add("minute", ion.newInt(value.minute))
-            add("second", ion.newFloat( value.second + value.nano * 10.0.pow(-9)))
-            add("timezone_hour", ion.newInt(value.tz_minutes?.div(60)))
-            add("timezone_minute", ion.newInt(value.tz_minutes?.rem(60)))
-            addTypeAnnotation("\$partiql_time")
-        }
+    private fun secondsWithPrecision(time: TimeForTest) =
+        ion.newDecimal(BigDecimal(time.second + time.nano / NANOS_PER_SECOND).setScale(time.precision, RoundingMode.HALF_UP))
 
-    data class TimeTestCase(val query: String, val expected: String, val expectedTime: Time? = null)
+    private fun assertEqualsIonTimeStruct(actual: IonStruct, expectedTime: TimeForTest) {
+        assertEquals(ion.newInt(expectedTime.hour), actual["hour"])
+        assertEquals(ion.newInt(expectedTime.minute), actual["minute"])
+        assertEquals(secondsWithPrecision(expectedTime), actual["second"])
+        assertEquals(ion.newInt(expectedTime.tz_minutes?.div(MINUTES_PER_HOUR)), actual["timezone_hour"])
+        assertEquals(ion.newInt(expectedTime.tz_minutes?.rem(MINUTES_PER_HOUR)), actual["timezone_minute"])
+    }
+
+    data class TimeTestCase(val query: String, val expected: String, val expectedTime: TimeForTest? = null)
 
     @ParameterizedTest
     @ArgumentsSource(ArgumentsForTimeLiterals::class)
@@ -85,7 +72,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
             val timeIonValue = originalExprValue.ionValue
             timeIonValue as IonStruct
             assertNotNull(tc.expectedTime)
-            assertEquals("Unexpected ionStruct for time", createIonTimeStruct(value = tc.expectedTime!!), timeIonValue)
+            assertEqualsIonTimeStruct(timeIonValue, tc.expectedTime!!)
         }
     }
 
@@ -96,24 +83,26 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         private val LOCAL_TIMEZONE_OFFSET = ZoneOffset.systemDefault().rules.getOffset(Instant.now())
         private val LOCAL_TZ_MINUTES = LOCAL_TIMEZONE_OFFSET.totalSeconds / 60
 
-        private fun case(query: String, expected: String, expectedTime: Time? = null) = TimeTestCase(query, expected, expectedTime)
+        private fun case(query: String, expected: String, expectedTime: TimeForTest? = null) = TimeTestCase(query, expected, expectedTime)
 
         override fun getParameters() = listOf(
-            case("TIME '00:00:00.000'", "00:00:00.000000000", Time(0, 0, 0)),
-            case("TIME '23:59:59.99999999'", "23:59:59.999999990", Time(23, 59, 59, 999999990)),
-            case("TIME (2) '23:59:59.99999999'", "00:00:00.000000000", Time(0, 0, 0)),
-            case("TIME '00:45:13.840800524'", "00:45:13.840800524", Time(0, 45, 13, 840800524)),
-            case("TIME '05:20:52.015779149'", "05:20:52.015779149", Time(5, 20, 52, 15779149)),
-            case("TIME '23:59:59'", "23:59:59.000000000", Time(23, 59, 59)),
-            case("TIME (12) '12:24:12.123'", "12:24:12.123000000", Time(12, 24, 12, 123000000)),
-            case("TIME (0) '12:59:59.9'", "13:00:00.000000000", Time(13, 0,0)),
-            case("TIME WITH TIME ZONE '00:00:00'", "00:00:00.000000000${LOCAL_TIMEZONE_OFFSET.getOffsetHHmm()}", Time(0,0,0,0,null, LOCAL_TZ_MINUTES)),
-            case("TIME (2) WITH TIME ZONE '12:24:12.123'", "12:24:12.120000000${LOCAL_TIMEZONE_OFFSET.getOffsetHHmm()}", Time(12, 24, 12, 120000000, 2, LOCAL_TZ_MINUTES)),
-            case("TIME (2) WITH TIME ZONE '12:24:12.123-00:00'", "12:24:12.120000000+00:00", Time(12, 24, 12, 120000000, 2, 0)),
-            case("TIME (2) WITH TIME ZONE '12:24:12.123+00:00'", "12:24:12.120000000+00:00", Time(12, 24, 12, 120000000, 2, 0)),
-            case("TIME (2) WITH TIME ZONE '12:24:12.123+05:30'", "12:24:12.120000000+05:30", Time(12, 24, 12, 120000000, 2, 330)),
-            case("TIME (2) WITH TIME ZONE '12:59:59.135-05:30'", "12:59:59.140000000-05:30", Time(12, 59, 59, 140000000, 2, -330)),
-            case("TIME (2) WITH TIME ZONE '12:59:59.134-05:30'", "12:59:59.130000000-05:30", Time(12, 59, 59, 130000000, 2, -330)),
+            case("TIME '00:00:00.000'", "00:00:00.000000000", TimeForTest(0, 0, 0)),
+            case("TIME '23:59:59.99999999'", "23:59:59.999999990", TimeForTest(23, 59, 59, 999999990)),
+            case("TIME (2) '23:59:59.99999999'", "00:00:00.00", TimeForTest(0, 0, 0, precision = 2)),
+            case("TIME (2) '12:24:12.123'", "12:24:12.12", TimeForTest(12, 24, 12, 120000000, 2)),
+            case("TIME '00:45:13.840800524'", "00:45:13.840800524", TimeForTest(0, 45, 13, 840800524)),
+            case("TIME '05:20:52.015779149'", "05:20:52.015779149", TimeForTest(5, 20, 52, 15779149)),
+            case("TIME '23:59:59'", "23:59:59.000000000", TimeForTest(23, 59, 59)),
+            case("TIME (12) '12:24:12.123'", "12:24:12.123000000", TimeForTest(12, 24, 12, 123000000)),
+            case("TIME (0) '12:59:59.9'", "13:00:00", TimeForTest(13, 0,0, precision = 0)),
+            case("TIME WITH TIME ZONE '00:00:00'", "00:00:00.000000000${LOCAL_TIMEZONE_OFFSET.getOffsetHHmm()}", TimeForTest(0,0,0,0,9, LOCAL_TZ_MINUTES)),
+            case("TIME (2) WITH TIME ZONE '12:24:12.123'", "12:24:12.12${LOCAL_TIMEZONE_OFFSET.getOffsetHHmm()}", TimeForTest(12, 24, 12, 120000000, 2, LOCAL_TZ_MINUTES)),
+            case("TIME (2) WITH TIME ZONE '12:24:12.123-00:00'", "12:24:12.12+00:00", TimeForTest(12, 24, 12, 120000000, 2, 0)),
+            case("TIME (2) WITH TIME ZONE '12:24:12.123+00:00'", "12:24:12.12+00:00", TimeForTest(12, 24, 12, 120000000, 2, 0)),
+            case("TIME (2) WITH TIME ZONE '12:24:12.123+05:30'", "12:24:12.12+05:30", TimeForTest(12, 24, 12, 120000000, 2, 330)),
+            case("TIME (5) WITH TIME ZONE '12:24:12.123678+05:30'", "12:24:12.12368+05:30", TimeForTest(12, 24, 12, 123680000, 5, 330)),
+            case("TIME (2) WITH TIME ZONE '12:59:59.135-05:30'", "12:59:59.14-05:30", TimeForTest(12, 59, 59, 140000000, 2, -330)),
+            case("TIME (2) WITH TIME ZONE '12:59:59.134-05:30'", "12:59:59.13-05:30", TimeForTest(12, 59, 59, 130000000, 2, -330)),
             case("TIME '12:25:12.123456' IS TIME", "true"),
             case("TIME (2) '01:01:12' IS TIME", "true"),
             case("TIME WITH TIME ZONE '12:25:12.123456' IS TIME", "true"),
@@ -130,22 +119,13 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         return Random(seed)
     }
 
-    data class Time(val hour: Int, val minute: Int, val second: Int, val nano: Int = 0, val precision: Int? = null, val tz_minutes: Int? = null) {
+    data class TimeForTest(val hour: Int, val minute: Int, val second: Int, val nano: Int = 0, val precision: Int = MAX_PRECISION_FOR_TIME, val tz_minutes: Int? = null) {
         fun expectedTimeString(withTimeZone: Boolean): String {
-            val nanoWithPrecision = when  {
-                precision == null || precision >= 9 -> nano
-                else -> (BigDecimal(nano * 10.0.pow(-9)).setScale(precision, RoundingMode.HALF_UP) * 10.0.pow(9)).toInt()
+            val timezoneMinutes = when(withTimeZone) {
+                true -> tz_minutes ?: ZoneOffset.systemDefault().rules.getOffset(Instant.now()).totalSeconds / SECONDS_PER_MINUTE
+                else -> null
             }
-            val newNano = nanoWithPrecision % 10.0.pow(9).toInt()
-            val newSecond = second + (nanoWithPrecision / 10.0.pow(9).toInt())
-            return when(withTimeZone) {
-                true -> {
-                    val timezoneOffsetMinutes = tz_minutes ?: ZoneOffset.systemDefault().rules.getOffset(Instant.now()).totalSeconds / 60
-                    OffsetTime.of(hour, minute, newSecond, newNano, ZoneOffset.ofTotalSeconds(timezoneOffsetMinutes * 60))
-                        .format(DateTimeFormatter.ofPattern("HH:mm:ss.nnnnnnnnnxxx"))
-                }
-                false -> LocalTime.of(hour, minute, newSecond, newNano).format(DateTimeFormatter.ofPattern("HH:mm:ss.nnnnnnnnn"))
-            }
+            return Time.of(hour, minute, second, nano, precision, timezoneMinutes).toString()
         }
 
         override fun toString(): String {
@@ -163,7 +143,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         }
     }
 
-    private fun Random.nextTime(withPrecision: Boolean = false, withTimezone: Boolean = false) : Time {
+    private fun Random.nextTime(withPrecision: Boolean = false, withTimezone: Boolean = false) : TimeForTest {
         val hour = nextInt(24)
         val minute = nextInt(60)
         val second = nextInt(60)
@@ -171,14 +151,14 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         val precision = if (withPrecision) {
             nextInt(20)
         } else {
-            null
+            MAX_PRECISION_FOR_TIME
         }
         val timezoneMinutes = if (withTimezone) {
             nextInt(-1080, 1081)
         } else {
             null
         }
-        return Time(hour, minute, second, nano, precision, timezoneMinutes)
+        return TimeForTest(hour, minute, second, nano, precision, timezoneMinutes)
     }
 
     private val RANDOM_TIMES = List(RANDOM_TESTS_SIZE) {

@@ -15,6 +15,7 @@
 package org.partiql.lang.ast
 
 import com.amazon.ion.*
+import org.partiql.lang.eval.builtins.Time.Companion.MAX_PRECISION_FOR_TIME
 import org.partiql.lang.util.*
 import java.util.*
 
@@ -1008,7 +1009,7 @@ sealed class DateTimeType : ExprNode() {
         val minute: Int,
         val second: Int,
         val nano: Int,
-        val precision: Int = 9,
+        val precision: Int = MAX_PRECISION_FOR_TIME,
         val tz_minutes: Int? = null,
         override val metas: MetaContainer
     ) : DateTimeType() {

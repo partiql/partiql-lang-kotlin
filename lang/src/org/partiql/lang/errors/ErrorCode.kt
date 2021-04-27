@@ -500,6 +500,11 @@ enum class ErrorCode(private val category: ErrorCategory,
             "got ${errorContext?.get(Property.ACTUAL_ARGUMENT_TYPES)}"
     },
 
+    EVALUATOR_INVALID_PRECISION_FOR_TIME(
+        ErrorCategory.EVALUATOR,
+        LOCATION,
+        "invalid precision used for TIME type"),
+
     /**
      * This is a generic error thrown whenever Java's [DateTimeFormatter] throws an exception when attempting to
      * parse a timestamp.  Ideally, this doesn't happen and the invalidity is detected by

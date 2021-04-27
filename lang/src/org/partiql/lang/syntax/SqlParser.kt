@@ -22,6 +22,7 @@ import org.partiql.lang.errors.ErrorCode.*
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.Property.*
 import org.partiql.lang.errors.*
+import org.partiql.lang.eval.builtins.Time.Companion.MAX_PRECISION_FOR_TIME
 import org.partiql.lang.syntax.SqlParser.AliasSupportType.*
 import org.partiql.lang.syntax.SqlParser.ArgListMode.*
 import org.partiql.lang.syntax.SqlParser.ParseType.*
@@ -34,8 +35,6 @@ import java.lang.Integer.min
 import java.time.*
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
-
-private const val MAX_PRECISION_FOR_TIME = 9
 
 // These are used to validate the generic format of the time string.
 // The more involved logic such as validating the time is done by LocalTime.parse or OffsetTime.parse

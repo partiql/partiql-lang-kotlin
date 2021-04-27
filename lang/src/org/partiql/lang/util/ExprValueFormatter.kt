@@ -52,8 +52,7 @@ class ConfigurableExprValueFormatter(private val config: Configuration) : ExprVa
 
                 DATE                                       -> out.append(value.scalar.dateValue().toString())
 
-                TIME                                       -> out.append("${ value.scalar.timeWithTimezoneValue()?.format(DateTimeFormatter.ofPattern("HH:mm:ss.nnnnnnnnnxxx")) 
-                                                                            ?: value.scalar.timeValue()?.format(DateTimeFormatter.ofPattern("HH:mm:ss.nnnnnnnnn")) }")
+                TIME                                       -> out.append(value.scalar.timeValue().toString())
 
                 // fallback to an Ion literal for all types that don't have a native PartiQL representation
                 FLOAT, TIMESTAMP, SYMBOL, CLOB, BLOB, SEXP -> prettyPrintIonLiteral(value)
