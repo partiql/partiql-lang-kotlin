@@ -15,10 +15,8 @@
 package org.partiql.lang.eval
 
 import com.amazon.ion.Timestamp
-import org.partiql.lang.eval.builtins.Time
+import org.partiql.lang.eval.time.Time
 import java.time.LocalDate
-import java.time.LocalTime
-import java.time.OffsetTime
 
 /**
  * Represents a scalar view over an [ExprValue].

@@ -21,7 +21,7 @@ import com.amazon.ion.*
 import com.amazon.ion.system.*
 import org.junit.Test
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.eval.builtins.Time
+import org.partiql.lang.eval.time.Time
 import org.partiql.lang.util.seal
 import java.math.*
 import java.time.LocalDate
@@ -383,30 +383,6 @@ class ExprValueFactoryTest {
         }
 
     @Test
-    fun localTimeExprValueTest() {
-        val time = LocalTime.of(23, 2, 29, 23)
-        val timeExprValue = factory.newTime(Time(time))
-        assertEquals(
-            expected = time,
-            actual = timeExprValue.scalar.timeValue()!!.localTime,
-            message = "Expected values to be equal."
-        )
-    }
-
-    @Test
-    fun offsetTimeExprValueTest() {
-        val time = LocalTime.of(23, 2, 29, 23)
-        val zoneOffset = ZoneOffset.ofTotalSeconds(3600)
-        val offsetTime = OffsetTime.of(time, zoneOffset)
-        val timeExprValue = factory.newTime(Time(time, zoneOffset))
-        assertEquals(
-            expected = offsetTime,
-            actual = timeExprValue.scalar.timeValue()!!.offsetTime,
-            message = "Expected values to be equal."
-        )
-    }
-
-    @Test
     fun genericTimeExprValueTest() {
         val timeExprValue = factory.newTime(23, 2, 29, 23, 2)
         assertEquals(
@@ -427,9 +403,19 @@ class ExprValueFactoryTest {
     }
 
     @Test
-    fun invalidPrecisionForTime() {
+    fun negativePrecisionForTime() {
         try {
             Time.of(23, 12, 34, 344423, -1, 300)
+            Assert.fail("Expected evaluation error")
+        } catch (e: EvaluationException) {
+            Assert.assertEquals(ErrorCode.EVALUATOR_INVALID_PRECISION_FOR_TIME, e.errorCode)
+        }
+    }
+
+    @Test
+    fun outOfRangePrecisionForTime() {
+        try {
+            Time.of(23, 12, 34, 344423, 10, 300)
             Assert.fail("Expected evaluation error")
         } catch (e: EvaluationException) {
             Assert.assertEquals(ErrorCode.EVALUATOR_INVALID_PRECISION_FOR_TIME, e.errorCode)

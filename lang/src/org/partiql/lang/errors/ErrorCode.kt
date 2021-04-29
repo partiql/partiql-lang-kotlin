@@ -506,6 +506,16 @@ enum class ErrorCode(private val category: ErrorCategory,
         "invalid precision used for TIME type"),
 
     /**
+     * This is a generic error wrapper for the DateTimeException thrown by Java's [java.time] when attempting to create
+     * an instance of [java.time.LocalTime] or [java.time.OffsetTime].
+     * The exception is caught by [org.partiql.lang.eval.time.Time.Companion.of].
+     */
+    EVALUATOR_DATETIME_EXCEPTION(
+        ErrorCategory.EVALUATOR,
+        LOCATION,
+        "Invalid value for TIME type"),
+
+    /**
      * This is a generic error thrown whenever Java's [DateTimeFormatter] throws an exception when attempting to
      * parse a timestamp.  Ideally, this doesn't happen and the invalidity is detected by
      * [org.partiql.lang.eval.builtins.timestamp.FormatPattern] instead.  This needs to stick around until we

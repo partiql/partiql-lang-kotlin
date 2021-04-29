@@ -16,8 +16,7 @@ package org.partiql.lang.eval
 
 import com.amazon.ion.*
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.eval.builtins.Time
-import org.partiql.lang.eval.builtins.Time.Companion.MAX_PRECISION_FOR_TIME
+import org.partiql.lang.eval.time.Time
 import org.partiql.lang.util.*
 import java.math.*
 import java.time.LocalDate
@@ -92,28 +91,23 @@ interface ExprValueFactory {
     /** Returns a PartiQL `TIMESTAMP` [ExprValue] instance representing the specified [Timestamp]. */
     fun newTimestamp(value: Timestamp): ExprValue
 
-    /**
-     * Returns a PartiQL `TIME` [ExprValue] instance representing the specified [Time].
-     */
-    fun newTime(value: Time): ExprValue
-
     /** Returns a PartiQL `TIME` [ExprValue] instance for the given hour, minute, second, precision and tz_minutes.
      * @param hour  the hour of a day of 24 hours to represent, from 0 to 23
      * @param minute  the minute of hour of 60 minutes to represent, from 0 to 59
      * @param second  the second of minute of 60 seconds to represent, from 0 to 59
      * @param nano  the nano of second to represent, from 0 to 999,999,999.
-     * @param precision  the number of desired significant digits in the fractional part of the second's value. The default precision is 9,
-     * meaning the default precision is of nanoseconds with 9 significant digits in the fractional part of the second.
+     * @param precision  the number of desired significant digits in the fractional part of the second's value.
      * If the precision is less than 9, the fractional part of the second will be rounded to the precision and [nano] will store the rounded value.
      * For e.g., if [nano] is 126700000 and the [precision] is 3, the [nano] will be rounded to 127000000.
      * Note that the [nano] will still store the value in nanoseconds (0's padded after the desired precision digits),
      * however the [Time] instance will preserve the [precision] thereby preserving the entire original value.
+     * The valid values for precision are between 0 and 9 inclusive.
      * @param tz_minutes  the minutes of the UTC time-zone offset, from -1080 to 1080.
      * If [tz_minutes] is null then the timezone offset is not defined.
      * @return TimeExprValue
      * @throws DateTimeException if the value of any field is out of range
      */
-    fun newTime(hour: Int, minute: Int, second: Int, nano: Int, precision: Int = MAX_PRECISION_FOR_TIME, tz_minutes: Int? = null): ExprValue
+    fun newTime(hour: Int, minute: Int, second: Int, nano: Int, precision: Int, tz_minutes: Int? = null): ExprValue
 
     /** Returns an  PartiQL `SYMBOL` [ExprValue] instance representing the specified [String]. */
     fun newSymbol(value: String) : ExprValue
@@ -230,13 +224,9 @@ private class ExprValueFactoryImpl(override val ion: IonSystem) : ExprValueFacto
     override fun newTimestamp(value: Timestamp): ExprValue =
         TimestampExprValue(ion, value)
 
-    override fun newTime(value: Time): ExprValue {
-        return TimeExprValue(ion, value)
-    }
-
     override fun newTime(hour: Int, minute: Int, second: Int, nano: Int, precision: Int, tz_minutes: Int?): ExprValue {
         val timeValue = Time.of(hour, minute, second, nano, precision, tz_minutes)
-        return newTime(timeValue)
+        return TimeExprValue(ion, timeValue)
     }
 
     override fun newSymbol(value: String): ExprValue =

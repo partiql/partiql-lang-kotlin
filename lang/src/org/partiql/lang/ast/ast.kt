@@ -15,7 +15,6 @@
 package org.partiql.lang.ast
 
 import com.amazon.ion.*
-import org.partiql.lang.eval.builtins.Time.Companion.MAX_PRECISION_FOR_TIME
 import org.partiql.lang.util.*
 import java.util.*
 
@@ -1000,7 +999,6 @@ sealed class DateTimeType : ExprNode() {
      * @param second represents the second value.
      * @param nano represents the fractional part of the second up to the nanoseconds' precision.
      * @param precision is an optional parameter which, if specified, represents the precision of the fractional second.
-     * The default precision is 9 or nanosecond.
      * @param tz_minutes is the optional time zone in minutes which can be specified with "WITH TIME ZONE".
      * If [tz_minutes] is null, that means the time zone is undefined.
      */
@@ -1009,7 +1007,7 @@ sealed class DateTimeType : ExprNode() {
         val minute: Int,
         val second: Int,
         val nano: Int,
-        val precision: Int = MAX_PRECISION_FOR_TIME,
+        val precision: Int,
         val tz_minutes: Int? = null,
         override val metas: MetaContainer
     ) : DateTimeType() {

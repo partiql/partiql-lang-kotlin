@@ -71,9 +71,6 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
         DateTimeTestCase("TIME (0) '23:59:59.123456789'") {
             litTime(timeValue(23, 59, 59, 123456789, 0, null))
         },
-        DateTimeTestCase("TIME (10) '23:59:59.123456789'") {
-            litTime(timeValue(23, 59, 59, 123456789, 9, null))
-        },
         DateTimeTestCase("TIME '02:30:59-05:30'") {
             litTime(timeValue(2, 30, 59, 0, 0, null))
         },
@@ -102,7 +99,7 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
             litTime(timeValue(23, 59, 59, 999900000, 4, null))
         },
         DateTimeTestCase("TIME '23:59:59.99990-11:59'") {
-            litTime(timeValue(23, 59, 59, 999900000, 4, null))
+            litTime(timeValue(23, 59, 59, 999900000, 5, null))
         },
         DateTimeTestCase("TIME (5) '23:59:59.9999-11:59'") {
             litTime(timeValue(23, 59, 59, 999900000, 5, null))
@@ -115,9 +112,6 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
         },
         DateTimeTestCase("TIME (0) '23:59:59.123456789-18:00'") {
             litTime(timeValue(23, 59, 59, 123456789, 0, null))
-        },
-        DateTimeTestCase("TIME (10) '23:59:59.123456789+18:00'") {
-            litTime(timeValue(23, 59, 59, 123456789, 9, null))
         },
         DateTimeTestCase("TIME WITH TIME ZONE '02:30:59'") {
             litTime(timeValue(2, 30, 59, 0, 0, LOCAL_TIME_ZONE_OFFSET))
@@ -137,9 +131,6 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
         DateTimeTestCase("TIME (0) WITH TIME ZONE '23:59:59.123456789'") {
             litTime(timeValue(23, 59, 59, 123456789, 0, LOCAL_TIME_ZONE_OFFSET))
         },
-        DateTimeTestCase("TIME (10) WITH TIME ZONE '23:59:59.123456789'") {
-            litTime(timeValue(23, 59, 59, 123456789, 9, LOCAL_TIME_ZONE_OFFSET))
-        },
         DateTimeTestCase("TIME (0) WITH TIME ZONE '00:00:00+00:00'") {
             litTime(timeValue(0, 0, 0, 0, 0, 0))
         },
@@ -147,7 +138,7 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
             litTime(timeValue(0, 0, 0, 0, 0, 0))
         },
         DateTimeTestCase("TIME WITH TIME ZONE '02:30:59.1234500-05:30'") {
-            litTime(timeValue(2, 30, 59, 123450000, 5, -330))
+            litTime(timeValue(2, 30, 59, 123450000, 7, -330))
         },
         DateTimeTestCase("TIME WITH TIME ZONE '02:30:59+05:30'") {
             litTime(timeValue(2, 30, 59, 0, 0, 330))
@@ -159,7 +150,7 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
             litTime(timeValue(23, 59, 59, 999900000, 4, -719))
         },
         DateTimeTestCase("TIME WITH TIME ZONE '23:59:59.99990-11:59'") {
-            litTime(timeValue(23, 59, 59, 999900000, 4, -719))
+            litTime(timeValue(23, 59, 59, 999900000, 5, -719))
         },
         DateTimeTestCase("TIME (5) WITH TIME ZONE '23:59:59.9999-11:59'") {
             litTime(timeValue(23, 59, 59, 999900000, 5, -719))
@@ -172,10 +163,32 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
         },
         DateTimeTestCase("TIME (0) WITH TIME ZONE '23:59:59.123456789-18:00'") {
             litTime(timeValue(23, 59, 59, 123456789, 0, -1080))
-        },
-        DateTimeTestCase("TIME (10) WITH TIME ZONE '23:59:59.123456789+18:00'") {
-            litTime(timeValue(23, 59, 59, 123456789, 9, 1080))
         }
+        // TODO: These tests should pass. Check https://github.com/partiql/partiql-lang-kotlin/issues/395
+//        DateTimeTestCase("TIME '23:59:59.1234567890'") {
+//            litTime(timeValue(23, 59, 59, 123456789, 9, null))
+//        },
+//        DateTimeTestCase("TIME '23:59:59.1234567899'") {
+//            litTime(timeValue(23, 59, 59, 123456790, 9, null))
+//        },
+//        DateTimeTestCase("TIME '23:59:59.1234567890+18:00'") {
+//            litTime(timeValue(23, 59, 59, 123456789, 9, null))
+//        },
+//        DateTimeTestCase("TIME '23:59:59.1234567899+18:00'") {
+//            litTime(timeValue(23, 59, 59, 123456790, 9, null))
+//        },
+//        DateTimeTestCase("TIME WITH TIME ZONE '23:59:59.1234567890'") {
+//            litTime(timeValue(23, 59, 59, 123456789, 9, LOCAL_TIME_ZONE_OFFSET))
+//        },
+//        DateTimeTestCase("TIME WITH TIME ZONE '23:59:59.1234567899'") {
+//            litTime(timeValue(23, 59, 59, 123456790, 9, LOCAL_TIME_ZONE_OFFSET))
+//        },
+//        DateTimeTestCase("TIME WITH TIME ZONE '23:59:59.1234567890+18:00'") {
+//            litTime(timeValue(23, 59, 59, 123456789, 9, 1080))
+//        },
+//        DateTimeTestCase("TIME WITH TIME ZONE '23:59:59.1234567899+18:00'") {
+//            litTime(timeValue(23, 59, 59, 123456790, 9, 1080))
+//        }
     )
 
     private fun generateRandomSeed() : Random {
@@ -462,6 +475,22 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
             errorCode = ErrorCode.PARSE_INVALID_PRECISION_FOR_TIME,
             tokenType = TokenType.LITERAL,
             tokenValue = ion.newString("4")
+        ),
+        createErrorCaseForTime(
+            source = "TIME (-1) '23:59:59.99999'",
+            line = 1L,
+            col = 7L,
+            errorCode = ErrorCode.PARSE_INVALID_PRECISION_FOR_TIME,
+            tokenType = TokenType.OPERATOR,
+            tokenValue = ion.newSymbol("-")
+        ),
+        createErrorCaseForTime(
+            source = "TIME (10) '23:59:59.99999'",
+            line = 1L,
+            col = 7L,
+            errorCode = ErrorCode.PARSE_INVALID_PRECISION_FOR_TIME,
+            tokenType = TokenType.LITERAL,
+            tokenValue = ion.newInt(10)
         ),
         createErrorCaseForTime(
             source = "TIME ('four') '23:59:59.99999'",
