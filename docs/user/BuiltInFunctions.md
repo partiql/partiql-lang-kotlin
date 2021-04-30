@@ -441,8 +441,15 @@ EXTRACT(DAY FROM DATE '2010-01-01')                        -- 1
 EXTRACT(HOUR FROM DATE '2010-01-01')                       -- 0
 EXTRACT(MINUTE FROM DATE '2010-01-01')                     -- 0
 EXTRACT(SECOND FROM DATE '2010-01-01')                     -- 0
+EXTRACT(HOUR FROM TIME '23:12:59')                         -- 23
+EXTRACT(MINUTE FROM TIME '23:12:59')                       -- 12
+EXTRACT(SECOND FROM TIME '23:12:59')                       -- 59
+EXTRACT(SECOND FROM TIME (2) '23:12:59.128')               -- 59.13
+EXTRACT(TIMEZONE_HOUR FROM TIME WITH TIME ZONE '23:12:59-08:30')    -- -8
+EXTRACT(TIMEZONE_MINUTE FROM TIME WITH TIME ZONE '23:12:59-08:30')  -- -30
+
 ```
-*Note* that `timezone_hour` and `timezone_minute` are **not supported** for `DATE` type. 
+*Note* that `timezone_hour` and `timezone_minute` are **not supported** for `DATE` and `TIME` (without time zone) type. 
 
 ### LOWER 
 

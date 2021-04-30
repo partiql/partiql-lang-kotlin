@@ -120,6 +120,24 @@ data class Time(val localTime: LocalTime, val precision: Int = MAX_PRECISION_FOR
             OffsetTime.of(localTime, it)
         }
 
+    /**
+     * Returns the TIMEZONE_HOUR for the [zoneOffset] of this instance.
+     */
+    val timezoneHour
+        get() : Int? = zoneOffset?.totalSeconds?.div(SECONDS_PER_HOUR)
+
+    /**
+     * Returns the TIMEZONE_HOUR for the [zoneOffset] of this instance.
+     */
+    val timezoneMinute
+        get() : Int? = (zoneOffset?.totalSeconds?.div(SECONDS_PER_MINUTE))?.rem(SECONDS_PER_MINUTE)
+
+    /**
+     * Returns the seconds along with the fractional part of the second's value.
+     */
+    val secondsWithFractionalPart
+        get()  = BigDecimal(localTime.second + localTime.nano / NANOS_PER_SECOND)
+
     fun toIonValue(ion: IonSystem): IonStruct =
         ion.newEmptyStruct().apply {
             add("hour", ion.newInt(localTime.hour))

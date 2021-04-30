@@ -91,6 +91,11 @@ interface ExprValueFactory {
     /** Returns a PartiQL `TIMESTAMP` [ExprValue] instance representing the specified [Timestamp]. */
     fun newTimestamp(value: Timestamp): ExprValue
 
+    /**
+     * Returns a PartiQL `TIME` [ExprValue] instance representing the specified [Time].
+     */
+    fun newTime(value: Time): ExprValue
+
     /** Returns a PartiQL `TIME` [ExprValue] instance for the given hour, minute, second, precision and tz_minutes.
      * @param hour  the hour of a day of 24 hours to represent, from 0 to 23
      * @param minute  the minute of hour of 60 minutes to represent, from 0 to 59
@@ -223,6 +228,9 @@ private class ExprValueFactoryImpl(override val ion: IonSystem) : ExprValueFacto
 
     override fun newTimestamp(value: Timestamp): ExprValue =
         TimestampExprValue(ion, value)
+
+    override fun newTime(value: Time): ExprValue =
+        TimeExprValue(ion, value)
 
     override fun newTime(hour: Int, minute: Int, second: Int, nano: Int, precision: Int, tz_minutes: Int?): ExprValue {
         val timeValue = Time.of(hour, minute, second, nano, precision, tz_minutes)

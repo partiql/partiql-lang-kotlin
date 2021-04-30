@@ -19,6 +19,7 @@ import junitparams.Parameters
 import org.assertj.core.api.Assertions
 import org.partiql.lang.eval.*
 import org.junit.*
+import org.partiql.lang.eval.time.Time
 import org.partiql.lang.syntax.DatePart
 import java.time.LocalDate
 
@@ -108,6 +109,50 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
     @Test
     @Parameters
     fun runTests(tc: ExtractFromDateTC) = when (tc.expected) {
+        null -> {
+            try {
+                voidEval(tc.source)
+                fail("Expected evaluation error")
+            } catch (e: EvaluationException) {
+                // Do nothing
+            }
+        }
+        else -> assertExprEquals(eval(tc.source), tc.expected)
+    }
+
+    data class ExtractFromTimeTC(val source: String, val expected: ExprValue?)
+
+    private fun createTimeTC(source: String, expected: Time) =
+        DatePart.values()
+            .map { datePart ->
+                ExtractFromTimeTC(
+                    source = "EXTRACT(${datePart.name} FROM $source)",
+                    expected = when (datePart) {
+                        DatePart.YEAR -> null
+                        DatePart.MONTH -> null
+                        DatePart.DAY -> null
+                        DatePart.HOUR -> valueFactory.newInt(expected.localTime.hour)
+                        DatePart.MINUTE -> valueFactory.newInt(expected.localTime.minute)
+                        DatePart.SECOND -> valueFactory.newFloat(expected.secondsWithFractionalPart.toDouble())
+                        DatePart.TIMEZONE_HOUR -> expected.timezoneHour?.let { valueFactory.newInt(it) }
+                        DatePart.TIMEZONE_MINUTE -> expected.timezoneMinute?.let { valueFactory.newInt(it) }
+                    }
+                )
+            }
+
+    fun parametersForRunTimeTests() = listOf(
+        createTimeTC("TIME '23:12:59.128'", Time.of(23, 12, 59, 128000000, 3, null)),
+        createTimeTC("TIME WITH TIME ZONE '23:12:59.128-06:30'", Time.of(23, 12, 59, 128000000, 3, -390)),
+        createTimeTC("TIME WITH TIME ZONE '23:12:59.12800-00:00'", Time.of(23, 12, 59, 128000000, 5, 0)),
+        createTimeTC("TIME (2) '23:12:59.128'", Time.of(23, 12, 59, 130000000, 2, null)),
+        createTimeTC("TIME (2) WITH TIME ZONE '23:12:59.128-06:30'", Time.of(23, 12, 59, 130000000, 2, -390)),
+        createTimeTC("TIME (3) WITH TIME ZONE '23:12:59.128-06:30'", Time.of(23, 12, 59, 128000000, 3, -390)),
+        createTimeTC("TIME (3) WITH TIME ZONE '23:59:59.9998-18:00'", Time.of(0, 0, 0, 0, 3, -1080))
+    ).flatten()
+
+    @Test
+    @Parameters
+    fun runTimeTests(tc: ExtractFromTimeTC) = when (tc.expected) {
         null -> {
             try {
                 voidEval(tc.source)
@@ -224,7 +269,14 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
         24 to { callExtract("day", LocalDate.of(2021, 3, 24)) },
         0 to { callExtract("hour", LocalDate.of(2021, 3, 24)) },
         0 to { callExtract("minute", LocalDate.of(2021, 3, 24)) },
-        0 to { callExtract("second", LocalDate.of(2021, 3, 24)) }
+        0 to { callExtract("second", LocalDate.of(2021, 3, 24)) },
+
+        // extract hour, minute, second, timezone_hour, timezone_minute from TIME literals
+        23 to { callExtract("hour", Time.of(23, 12, 59, 128000000, 2, -510))},
+        12 to { callExtract("minute", Time.of(23, 12, 59, 128000000, 2, -510))},
+        59.13 to { callExtract("second", Time.of(23, 12, 59, 128000000, 2, -510))},
+        -8 to { callExtract("timezone_hour", Time.of(23, 12, 59, 128000000, 2, -510))},
+        -30 to { callExtract("timezone_minute", Time.of(23, 12, 59, 128000000, 2, -510))}
     )
 
     @Test
