@@ -708,9 +708,9 @@ class SqlParser(private val ion: IonSystem) : Parser {
             }
             TIME -> {
                 val timeString = token!!.text!!
-                val precision = children[0].token?.value?.numberValue()?.toInt()
+                val precision = children[0].token!!.value!!.numberValue().toInt()
                 val time = LocalTime.parse(timeString, DateTimeFormatter.ISO_TIME)
-                DateTimeType.Time(time.hour, time.minute, time.second, time.nano, precision!!, null, metas)
+                DateTimeType.Time(time.hour, time.minute, time.second, time.nano, precision, null, metas)
             }
             TIME_WITH_TIME_ZONE -> {
                 val timeString = token!!.text!!
