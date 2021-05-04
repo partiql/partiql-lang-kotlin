@@ -35,7 +35,7 @@ data class SubstitutionPair(val target: PartiqlAst.Expr, val replacement: Partiq
  *
  * This class is `open` to allow subclasses to restrict the nodes to which the substitution should occur.
  */
-open class SubstitutionVisitorTransform(protected val substitutions: Map<PartiqlAst.Expr, SubstitutionPair>): PartiqlAst.VisitorTransform() {
+open class SubstitutionVisitorTransform(protected val substitutions: Map<PartiqlAst.Expr, SubstitutionPair>): VisitorTransformBase() {
 
     /**
      * If [node] matches any of the target nodes in [substitutions], replaces the node with the replacement.
@@ -59,7 +59,7 @@ open class SubstitutionVisitorTransform(protected val substitutions: Map<Partiql
      * After .copy() and copying metas is added to PIG (https://github.com/partiql/partiql-ir-generator/pull/53) change
      * this and its usages to use .copy().
      */
-    inner class MetaVisitorTransform(private val newMetas: MetaContainer) : PartiqlAst.VisitorTransform() {
+    inner class MetaVisitorTransform(private val newMetas: MetaContainer) : VisitorTransformBase() {
         override fun transformMetas(metas: MetaContainer): MetaContainer = newMetas
     }
 

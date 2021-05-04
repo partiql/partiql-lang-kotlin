@@ -1039,12 +1039,17 @@ class SqlParser(private val ion: IonSystem) : Parser {
     /**
      * Parses the given token list.
      *
+     * Throws [InterruptedException] if [Thread.interrupted] is set. This is the best place to do
+     * that for the parser because this is the main function called to parse an expression and so
+     * is called quite frequently during parsing by many parts of the parser.
+     *
      * @param precedence The precedence of the current expression parsing.
      *                   A negative value represents the "top-level" parsing.
      *
      * @return The parse tree for the given expression.
      */
     internal fun List<Token>.parseExpression(precedence: Int = -1): ParseNode {
+        checkThreadInterrupted()
         var expr = parseUnaryTerm()
         var rem = expr.remaining
 
@@ -2815,6 +2820,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
      * If [dmlListTokenSeen] is true, it means it has been encountered at least once before while traversing the parse tree.
      */
     private fun validateTopLevelNodes(node: ParseNode, level: Int, topLevelTokenSeen: Boolean, dmlListTokenSeen: Boolean) {
+        checkThreadInterrupted()
         val isTopLevelType = when (node.type.isDml) {
             // DML_LIST token type allows multiple DML keywords to be used in the same statement.
             // Hence, DML keyword tokens are not treated as top level tokens if present with the DML_LIST token type

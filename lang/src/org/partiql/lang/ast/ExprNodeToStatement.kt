@@ -3,6 +3,7 @@ package org.partiql.lang.ast
 import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.toIonElement
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.pig.runtime.SymbolPrimitive
 import org.partiql.pig.runtime.asPrimitive
 
@@ -67,6 +68,7 @@ private fun ExprNode.toAstExec() : PartiqlAst.Statement {
 }
 
 fun ExprNode.toAstExpr(): PartiqlAst.Expr {
+    checkThreadInterrupted()
     val node = this
     val metas = this.metas.toIonElementMetaContainer()
 

@@ -32,7 +32,7 @@ import org.partiql.pig.runtime.SymbolPrimitive
  *
  * ```
  */
-class SelectListItemAliasVisitorTransform : PartiqlAst.VisitorTransform() {
+class SelectListItemAliasVisitorTransform : VisitorTransformBase() {
 
     override fun transformProjectionProjectList(node: PartiqlAst.Projection.ProjectList): PartiqlAst.Projection {
         return PartiqlAst.build {

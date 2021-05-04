@@ -6,6 +6,7 @@ import com.amazon.ion.IonSystem
 import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlAst.*
+import org.partiql.lang.util.checkThreadInterrupted
 
 import org.partiql.pig.runtime.SymbolPrimitive
 import org.partiql.lang.ast.SetQuantifier as ExprNodeSetQuantifier  // Conflicts with PartiqlAst.SetQuantifier
@@ -69,6 +70,7 @@ private class StatementTransformer(val ion: IonSystem) {
         this.map { it.toExprNode() }
 
     private fun Expr.toExprNode(): ExprNode {
+        checkThreadInterrupted()
         val metas = this.metas.toPartiQlMetaContainer()
         return when (this) {
             is Expr.Missing -> LiteralMissing(metas)
