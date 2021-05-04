@@ -18,14 +18,19 @@ import com.amazon.ion.*
 import org.partiql.lang.ast.*
 import org.partiql.lang.errors.*
 import org.partiql.lang.eval.ExprValueType.*
+import org.partiql.lang.eval.time.MAX_PRECISION_FOR_TIME
+import org.partiql.lang.eval.time.NANOS_PER_SECOND
+import org.partiql.lang.eval.time.SECONDS_PER_MINUTE
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.syntax.*
 import org.partiql.lang.util.*
 import java.math.*
 import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.util.*
-import kotlin.Comparator
 
 /**
  * Wraps the given [ExprValue] with a delegate that provides the [OrderedBindNames] facet.
@@ -155,6 +160,8 @@ private val ION_TEXT_STRING_CAST_TYPES = setOf(BOOL, TIMESTAMP)
 /** Regex to match DATE strings of the format yyyy-MM-dd */
 private val datePatternRegex = Regex("\\d\\d\\d\\d-\\d\\d-\\d\\d")
 
+private val genericTimeRegex = Regex("\\d\\d:\\d\\d:\\d\\d(\\.\\d*)?([+|-]\\d\\d:\\d\\d)?")
+
 /**
  * Casts this [ExprValue] to the target type.
  *
@@ -191,13 +198,15 @@ private val datePatternRegex = Regex("\\d\\d\\d\\d-\\d\\d-\\d\\d")
  * [ExprValueType.isNumber], and *LOB types* is defined by [ExprValueType.isLob]
  *
  * @param ion The ion system to synthesize values with.
- * @param targetType The target type to cast this value to.
+ * @param targetDataType The target type to cast this value to.
  */
 fun ExprValue.cast(
-    targetType: ExprValueType,
+    targetDataType: DataType,
     valueFactory: ExprValueFactory,
     locationMeta: SourceLocationMeta?
 ): ExprValue {
+
+    val targetType = ExprValueType.fromSqlDataType(targetDataType.sqlDataType)
 
     fun castExceptionContext(): PropertyValueMap {
         val errorContext = PropertyValueMap().also {
@@ -239,7 +248,7 @@ fun ExprValue.cast(
     when {
         type.isUnknown && targetType == ExprValueType.MISSING -> return valueFactory.missingValue
         type.isUnknown && targetType == ExprValueType.NULL -> return valueFactory.nullValue
-        type.isUnknown || type == targetType -> return this
+        type.isUnknown || (type == targetType && type != TIME) -> return this
         else                                 -> {
             when (targetType) {
                 BOOL -> when {
@@ -320,10 +329,89 @@ fun ExprValue.cast(
                             "and the date format to be YYYY-MM-DD", internal = false, cause = e)
                     }
                 }
+                TIME -> {
+                    val (timezone, precisionProvided) = targetDataType.args.map { it.toInt() }
+                    when {
+                        // Even though the target type is TIME, the value may differ depending on timezone and precision provided.
+                        type == TIME -> {
+                            val time = timeValue()
+                            val precision = when {
+                                // precisionProvided > MAX_PRECISION_FOR_TIME indicates that the precision was not specified.
+                                precisionProvided > MAX_PRECISION_FOR_TIME -> time.precision
+                                else -> precisionProvided
+                            }
+                            val tzMinutes = if (timezone == 1) {
+                                time.zoneOffset?.totalSeconds?.div(SECONDS_PER_MINUTE) ?: LOCAL_TIMEZONE_OFFSET.totalSeconds / SECONDS_PER_MINUTE
+                            } else {
+                                null
+                            }
+                            return valueFactory.newTime(Time.of(time.localTime.hour, time.localTime.minute, time.localTime.second, time.localTime.nano, precision, tzMinutes))
+                        }
+                        type == TIMESTAMP -> {
+                            val ts = timestampValue()
+                            val precision = when {
+                                precisionProvided > MAX_PRECISION_FOR_TIME -> ts.decimalSecond.scale()
+                                else -> precisionProvided
+                            }
+                            return valueFactory.newTime(
+                                ts.hour,
+                                ts.minute,
+                                ts.second,
+                                (ts.decimalSecond.remainder(BigDecimal.ONE) * NANOS_PER_SECOND).toInt(),
+                                precision,
+                                if (timezone == 1) {
+                                    ts.localOffset?: castFailedErr(
+                                        "Can't convert timestamp value with undefined time zone to TIME WITH TIME ZONE.",
+                                        internal = false
+                                    )
+                                } else {
+                                    null
+                                }
+                            )
+                        }
+                        type.isText -> try {
+                            // validate that the time string follows the format HH:MM:SS[.ddddd...][+|-HH:MM]
+                            val matcher = genericTimeRegex.toPattern().matcher(stringValue())
+                            if (!matcher.find()) {
+                                castFailedErr(
+                                    "Can't convert string value to TIME. Expected valid time string " +
+                                        "and the time to be of the format HH:MM:SS[.ddddd...][+|-HH:MM]",
+                                    internal = false
+                                )
+                            }
+
+                            val localTime = LocalTime.parse(stringValue(), DateTimeFormatter.ISO_TIME)
+
+                            // Note that the [genericTimeRegex] has a group to extract the zone offset.
+                            val zoneOffsetString = matcher.group(2)
+                            // Check if timezone is specified
+                            val zoneOffset = when(timezone) {
+                                0 -> null
+                                else -> zoneOffsetString?.let { ZoneOffset.of(it) } ?: LOCAL_TIMEZONE_OFFSET
+                            }
+
+                            // Check if precision is specified or not. Value greater than MAX_PRECISION_FOR_TIME indicates that the precision was not specified
+                            // In this case infer the precision from the TIME string.
+                            val precision = when {
+                                precisionProvided > MAX_PRECISION_FOR_TIME -> getPrecisionFromTimeString(stringValue())
+                                else -> precisionProvided
+                            }
+                            return valueFactory.newTime(Time.of(localTime.hour, localTime.minute, localTime.second, localTime.nano, precision,
+                                zoneOffset?.totalSeconds?.div(SECONDS_PER_MINUTE)
+                            ))
+                        } catch (e: DateTimeParseException) {
+                            castFailedErr(
+                                "Can't convert string value to TIME. Expected valid time string " +
+                                    "and the time format to be HH:MM:SS[.ddddd...][+|-HH:MM]", internal = false, cause = e
+                            )
+                        }
+                    }
+                }
                 STRING, SYMBOL -> when {
                     type.isNumber -> return numberValue().toString().exprValue(targetType)
                     type.isText -> return stringValue().exprValue(targetType)
                     type == DATE -> return dateValue().toString().exprValue(targetType)
+                    type == TIME -> return timeValue().toString().exprValue(targetType)
                     type in ION_TEXT_STRING_CAST_TYPES -> return ionValue.toString().exprValue(targetType)
                 }
                 CLOB -> when {

@@ -330,7 +330,7 @@ private class StatementTransformer(val ion: IonSystem) {
             is Type.SexpType -> DataType(SqlDataType.SEXP, listOf(), metas)
             is Type.BagType -> DataType(SqlDataType.BAG, listOf(), metas)
             is Type.DateType -> DataType(SqlDataType.DATE, listOf(), metas)
-            is Type.TimeType -> DataType(SqlDataType.TIME, listOf(), metas)
+            is Type.TimeType -> DataType(SqlDataType.TIME, listOfNotNull(timezoneSpecified?.value, precision?.value), metas)
         }
     }
 

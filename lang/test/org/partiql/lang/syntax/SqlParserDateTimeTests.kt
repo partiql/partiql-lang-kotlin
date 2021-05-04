@@ -8,14 +8,12 @@ import org.partiql.lang.domains.id
 import java.util.*
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
-import org.partiql.lang.util.softAssert
+import org.partiql.lang.util.LOCAL_TIMEZONE_OFFSET
 import org.partiql.lang.util.to
-import java.time.Instant
-import java.time.ZoneOffset
 
 class SqlParserDateTimeTests : SqlParserTestBase() {
 
-    private val LOCAL_TIME_ZONE_OFFSET = (ZoneOffset.systemDefault().rules.getOffset(Instant.now()).totalSeconds / 60).toLong()
+    private val LOCAL_TIME_ZONE_OFFSET_MINUTES = (LOCAL_TIMEZONE_OFFSET.totalSeconds / 60).toLong()
 
     data class DateTimeTestCase(val source: String, val block: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode)
     private data class Date(val year: Int, val month: Int, val day: Int)
@@ -114,22 +112,22 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
             litTime(timeValue(23, 59, 59, 123456789, 0, null))
         },
         DateTimeTestCase("TIME WITH TIME ZONE '02:30:59'") {
-            litTime(timeValue(2, 30, 59, 0, 0, LOCAL_TIME_ZONE_OFFSET))
+            litTime(timeValue(2, 30, 59, 0, 0, LOCAL_TIME_ZONE_OFFSET_MINUTES))
         },
         DateTimeTestCase("TIME (3) WITH TIME ZONE '12:59:31'") {
-            litTime(timeValue(12, 59, 31, 0, 3, LOCAL_TIME_ZONE_OFFSET))
+            litTime(timeValue(12, 59, 31, 0, 3, LOCAL_TIME_ZONE_OFFSET_MINUTES))
         },
         DateTimeTestCase("TIME WITH TIME ZONE '23:59:59.9999'") {
-            litTime(timeValue(23, 59, 59, 999900000, 4, LOCAL_TIME_ZONE_OFFSET))
+            litTime(timeValue(23, 59, 59, 999900000, 4, LOCAL_TIME_ZONE_OFFSET_MINUTES))
         },
         DateTimeTestCase("TIME (7) WITH TIME ZONE '23:59:59.123456789'") {
-            litTime(timeValue(23, 59, 59, 123456789, 7, LOCAL_TIME_ZONE_OFFSET))
+            litTime(timeValue(23, 59, 59, 123456789, 7, LOCAL_TIME_ZONE_OFFSET_MINUTES))
         },
         DateTimeTestCase("TIME (9) WITH TIME ZONE '23:59:59.123456789'") {
-            litTime(timeValue(23, 59, 59, 123456789, 9, LOCAL_TIME_ZONE_OFFSET))
+            litTime(timeValue(23, 59, 59, 123456789, 9, LOCAL_TIME_ZONE_OFFSET_MINUTES))
         },
         DateTimeTestCase("TIME (0) WITH TIME ZONE '23:59:59.123456789'") {
-            litTime(timeValue(23, 59, 59, 123456789, 0, LOCAL_TIME_ZONE_OFFSET))
+            litTime(timeValue(23, 59, 59, 123456789, 0, LOCAL_TIME_ZONE_OFFSET_MINUTES))
         },
         DateTimeTestCase("TIME (0) WITH TIME ZONE '00:00:00+00:00'") {
             litTime(timeValue(0, 0, 0, 0, 0, 0))
@@ -204,9 +202,9 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
         val month = nextInt(12) + 1
         val day = when (month) {
             in MONTHS_WITH_31_DAYS -> nextInt(31)
-            2 -> when (year % 4) {
-                0 -> nextInt(29)
-                else -> nextInt(28)
+            2 -> when ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0))  {
+                true -> nextInt(29)
+                false -> nextInt(28)
             }
             else -> nextInt(30)
         } + 1

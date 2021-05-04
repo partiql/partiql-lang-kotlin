@@ -322,7 +322,7 @@ internal val DATE_PART_KEYWORDS: Set<String> = DatePart.values()
     "numeric"           to 0..2, // SQL-92
     "timestamp"         to 0..0, // Ion & SQL-92
     "date"              to 0..0, // PartiQL & SQL-92
-    "time"              to 0..0, // PartiQL & SQL-92
+    "time"              to 0..2, // PartiQL & SQL-92
     "character"         to 0..1, // SQL-92
     "character_varying" to 0..1, // SQL-92
     "string"            to 0..0, // Ion

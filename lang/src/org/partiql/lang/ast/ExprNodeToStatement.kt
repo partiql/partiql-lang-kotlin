@@ -457,7 +457,7 @@ private fun DataType.toAstType(): PartiqlAst.Type {
             SqlDataType.SEXP -> sexpType(metas)
             SqlDataType.BAG -> bagType(metas)
             SqlDataType.DATE -> dateType(metas)
-            SqlDataType.TIME -> timeType(metas)
+            SqlDataType.TIME -> timeType(arg1, arg2, metas)
         }
     }
 }

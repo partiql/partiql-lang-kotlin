@@ -7,12 +7,11 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.eval.time.*
 import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.lang.util.LOCAL_TIMEZONE_OFFSET
 import org.partiql.lang.util.getOffsetHHmm
 import java.math.BigDecimal
 import java.math.RoundingMode
-import java.time.Instant
 import java.time.LocalTime
-import java.time.ZoneOffset
 import kotlin.math.absoluteValue
 import kotlin.random.Random
 
@@ -77,7 +76,6 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
      * Tests to visualize the behavior of evaluation of TIME literals. More tests are covered by [timeLiteralsTests].
      */
     private class ArgumentsForTimeLiterals : ArgumentsProviderBase() {
-        private val LOCAL_TIMEZONE_OFFSET = ZoneOffset.systemDefault().rules.getOffset(Instant.now())
         private val LOCAL_TZ_MINUTES = LOCAL_TIMEZONE_OFFSET.totalSeconds / 60
 
         private fun case(query: String, expected: String, expectedTime: TimeForTest? = null) = TimeTestCase(query, expected, expectedTime)
@@ -134,7 +132,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
     ) {
         fun expectedTimeString(withTimeZone: Boolean): String {
             val timezoneMinutes = when(withTimeZone) {
-                true -> tz_minutes ?: ZoneOffset.systemDefault().rules.getOffset(Instant.now()).totalSeconds / SECONDS_PER_MINUTE
+                true -> tz_minutes ?: LOCAL_TIMEZONE_OFFSET.totalSeconds / SECONDS_PER_MINUTE
                 else -> null
             }
             return Time.of(hour, minute, second, nano, precision, timezoneMinutes).toString()

@@ -800,7 +800,7 @@ internal class EvaluatingCompiler(
                 val locationMeta = metas.sourceLocationMeta
                 thunkFactory.thunkEnv(metas) { env ->
                     val valueToCast = expThunk(env)
-                    valueToCast.cast(exprValueType, valueFactory, locationMeta)
+                    valueToCast.cast(dataType, valueFactory, locationMeta)
                 }
             }
         }
