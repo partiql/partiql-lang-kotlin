@@ -108,7 +108,7 @@ class TimeTest {
             nano = 123456789,
             precision = 0,
             tz_min = 18 * MINUTES_PER_HOUR,
-            expectedErrorCode = ErrorCode.EVALUATOR_DATETIME_EXCEPTION
+            expectedErrorCode = ErrorCode.EVALUATOR_TIME_FIELD_OUT_OF_RANGE
         ),
         case(
             hour = 23,
@@ -135,7 +135,7 @@ class TimeTest {
             nano = 123456500,
             precision = 0,
             tz_min = 300,
-            expectedErrorCode = ErrorCode.EVALUATOR_DATETIME_EXCEPTION
+            expectedErrorCode = ErrorCode.EVALUATOR_TIME_FIELD_OUT_OF_RANGE
         ),
         case(
             hour = 23,
@@ -144,7 +144,7 @@ class TimeTest {
             nano = 123456500,
             precision = 0,
             tz_min = 300,
-            expectedErrorCode = ErrorCode.EVALUATOR_DATETIME_EXCEPTION
+            expectedErrorCode = ErrorCode.EVALUATOR_TIME_FIELD_OUT_OF_RANGE
         ),
         case(
             hour = 23,
@@ -153,7 +153,7 @@ class TimeTest {
             nano = 123456500,
             precision = 0,
             tz_min = 300,
-            expectedErrorCode = ErrorCode.EVALUATOR_DATETIME_EXCEPTION
+            expectedErrorCode = ErrorCode.EVALUATOR_TIME_FIELD_OUT_OF_RANGE
         ),
         case(
             hour = 23,
@@ -162,7 +162,7 @@ class TimeTest {
             nano = 123456789,
             precision = 0,
             tz_min = - 18 * MINUTES_PER_HOUR - 1,
-            expectedErrorCode = ErrorCode.EVALUATOR_DATETIME_EXCEPTION
+            expectedErrorCode = ErrorCode.EVALUATOR_TIME_FIELD_OUT_OF_RANGE
         ),
         case(
             hour = 23,
@@ -171,7 +171,7 @@ class TimeTest {
             nano = 123456789,
             precision = 0,
             tz_min = 18 * MINUTES_PER_HOUR + 1,
-            expectedErrorCode = ErrorCode.EVALUATOR_DATETIME_EXCEPTION
+            expectedErrorCode = ErrorCode.EVALUATOR_TIME_FIELD_OUT_OF_RANGE
         )
     )
 }

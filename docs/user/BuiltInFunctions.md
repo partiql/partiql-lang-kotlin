@@ -505,6 +505,39 @@ MAKE_DATE(missing, 02, 28)               -- null
 MAKE_DATE(2021, missing, 28)             -- null
 MAKE_DATE(2021, 02, missing)             -- null
 ```
+### MAKE_TIME
+
+Given the values for the hour (int), minute (int), second (BigDecimal) and optionally for timezone minutes (int) returns the associated time.
+
+Signature
+: `MAKE_TIME: Hour_Int Minute_Int Second_BigDecimal (optional)TimezoneMinutes_Int -> Time`
+
+where `Hour_Int`, `Minute_Int`, `TimezoneMinutes_Int` are the Integers representing `hour`, `minute` and `timezone minutes` respectively
+ for the time. `Second_BigDecimal` is the BigDecimal representing the `second` with fraction of the time. 
+
+Header
+: `MAKE_TIME(hour, minute, second, timezoneMinutes?)`
+
+Purpose
+: Given values for `hour` (int), `minute` (int), `second` (BigDecimal) and optionally for `timezone minutes` (int), returns an associated `Time`. This function allows arguments to be 
+`unknown`s i.e. (`null` or `missing`).
+
+Examples
+:
+
+```sql
+MAKE_TIME(23, 59, 59.)                   -- 23:59:59
+MAKE_TIME(23, 59, 59.12345, 330)         -- 23:59:59.12345+05:30
+MAKE_TIME(23, 59, 59.12345, -330)        -- 23:59:59.12345-05:30
+MAKE_TIME(null, 02, 28.)                 -- null
+MAKE_TIME(12, null, 28.)                 -- null
+MAKE_TIME(21, 02, null)                  -- null
+MAKE_TIME(missing, 02, 28.)              -- null
+MAKE_TIME(23, missing, 59.)              -- null
+MAKE_TIME(21, 02, missing)               -- null
+MAKE_TIME(21, 02, 28., null)             -- null
+MAKE_TIME(21, 02, 28., missing)          -- null
+```
 ### SIZE   
 
 Given any container data type (i.e., list, structure or bag) return the number of elements in the container. 

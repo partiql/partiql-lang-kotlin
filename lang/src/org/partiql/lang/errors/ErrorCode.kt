@@ -507,10 +507,10 @@ enum class ErrorCode(private val category: ErrorCategory,
 
     /**
      * This is a generic error wrapper for the DateTimeException thrown by Java's [java.time] when attempting to create
-     * an instance of [java.time.LocalTime] or [java.time.OffsetTime].
+     * an instance of [java.time.LocalTime] or [java.time.OffsetTime] when the time field is out of range.
      * The exception is caught by [org.partiql.lang.eval.time.Time.Companion.of].
      */
-    EVALUATOR_DATETIME_EXCEPTION(
+    EVALUATOR_TIME_FIELD_OUT_OF_RANGE(
         ErrorCategory.EVALUATOR,
         LOCATION,
         "Invalid value for TIME type"),
