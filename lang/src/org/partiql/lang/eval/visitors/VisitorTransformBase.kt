@@ -9,7 +9,7 @@ import org.partiql.lang.util.checkThreadInterrupted
  * to [transformExpr].
  *
  * All transforms should derive from this class instead of [PartiqlAst.VisitorTransform] so that they can
- * be interrupted of they take a long time to process large ASTs.
+ * be interrupted if they take a long time to process large ASTs.
  */
 abstract class VisitorTransformBase : PartiqlAst.VisitorTransform() {
 
