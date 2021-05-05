@@ -33,7 +33,7 @@ import org.partiql.pig.runtime.SymbolPrimitive
  *
  * If provided with a query with all of the group by item aliases already specified, an exact clone is returned.
  */
-class GroupByItemAliasVisitorTransform(var nestLevel: Int = 0) : PartiqlAst.VisitorTransform() {
+class GroupByItemAliasVisitorTransform(var nestLevel: Int = 0) : VisitorTransformBase() {
 
     override fun transformGroupBy(node: PartiqlAst.GroupBy): PartiqlAst.GroupBy {
         return PartiqlAst.build {

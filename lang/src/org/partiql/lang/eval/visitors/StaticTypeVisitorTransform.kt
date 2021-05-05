@@ -60,7 +60,7 @@ enum class StaticTypeVisitorTransformConstraints {
  */
 class StaticTypeVisitorTransform(private val ion: IonSystem,
                                  globalBindings: Bindings<StaticType>,
-                                 constraints: Set<StaticTypeVisitorTransformConstraints> = setOf()) : PartiqlAst.VisitorTransform() {
+                                 constraints: Set<StaticTypeVisitorTransformConstraints> = setOf()) : VisitorTransformBase() {
 
     /** Used to allow certain binding lookups to occur directly in the global scope. */
     private val globalEnv = wrapBindings(globalBindings, 0)
