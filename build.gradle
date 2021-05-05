@@ -61,6 +61,14 @@ configure(subprojects.findAll { it.name != 'example' }) {
 
 subprojects {
 
+    tasks.withType(Test) {
+        maxHeapSize = "8g"
+        testLogging {
+            events "failed"
+            exceptionFormat "full"
+        }
+    }
+
 
     plugins.withId('java', { _ ->
 

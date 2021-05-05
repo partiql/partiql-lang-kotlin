@@ -656,12 +656,17 @@ class SqlParser(private val ion: IonSystem) : Parser {
     /**
      * Parses the given token list.
      *
+     * Throws [InterruptedException] if [Thread.interrupted] is set. This is the best place to do
+     * that for the parser because this is the main function called to parse an expression and so
+     * is called quite frequently during parsing by many parts of the parser.
+     *
      * @param precedence The precedence of the current expression parsing.
      *                   A negative value represents the "top-level" parsing.
      *
      * @return The parse tree for the given expression.
      */
     internal fun List<Token>.parseExpression(precedence: Int = -1): ParseNode {
+        checkThreadInterrupted()
         var expr = parseUnaryTerm()
         var rem = expr.remaining
 

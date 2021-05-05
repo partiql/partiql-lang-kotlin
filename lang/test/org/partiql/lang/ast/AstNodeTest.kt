@@ -8,6 +8,7 @@ import org.junit.Assert.*
 import org.junit.runner.*
 import org.partiql.lang.syntax.*
 
+@Suppress("DEPRECATION")
 @RunWith(JUnitParamsRunner::class)
 class AstNodeTest {
     // This test builds some invalid AST nodes but since we are focusing on testing AstNode interface we only care
