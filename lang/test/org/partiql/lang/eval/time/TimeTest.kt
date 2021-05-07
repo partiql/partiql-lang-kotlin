@@ -37,9 +37,16 @@ class TimeTest {
     fun runTests(tc: TimeTestCase) {
         when (tc.expectedErrorCode) {
             null -> {
-                val time = Time.of(tc.hour, tc.min, tc.second, tc.nano, tc.precision, tc.tz_min)
-                assertEquals(tc.expectedLocalTime, time.localTime)
-                assertEquals(tc.expectedZoneOffset, time.zoneOffset)
+                val time1 = Time.of(tc.hour, tc.min, tc.second, tc.nano, tc.precision, tc.tz_min)
+                val time2 = Time.of(
+                    LocalTime.of(tc.hour, tc.min, tc.second, tc.nano),
+                    tc.precision,
+                    tc.tz_min?.let { ZoneOffset.ofTotalSeconds(it * SECONDS_PER_MINUTE) }
+                )
+                // Values returned from the above two APIs should be same.
+                assertEquals(time1, time2)
+                assertEquals(tc.expectedLocalTime, time1.localTime)
+                assertEquals(tc.expectedZoneOffset, time1.zoneOffset)
             }
             else -> {
                 try {

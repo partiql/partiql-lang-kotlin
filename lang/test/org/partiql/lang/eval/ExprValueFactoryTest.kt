@@ -384,7 +384,7 @@ class ExprValueFactoryTest {
 
     @Test
     fun genericTimeExprValueTest() {
-        val timeExprValue = factory.newTime(23, 2, 29, 23, 2)
+        val timeExprValue = factory.newTime(Time.of(23, 2, 29, 23, 2))
         assertEquals(
             expected = LocalTime.of(23, 2, 29),
             actual = timeExprValue.scalar.timeValue()!!.localTime,
@@ -394,7 +394,7 @@ class ExprValueFactoryTest {
 
     @Test
     fun genericTimeExprValueTest2() {
-        val timeExprValue = factory.newTime(23, 2, 29, 23, 2, -720)
+        val timeExprValue = factory.newTime(Time.of(23, 2, 29, 23, 2, -720))
         assertEquals(
             expected = OffsetTime.of(23, 2, 29, 0, ZoneOffset.ofTotalSeconds(-720*60)),
             actual = timeExprValue.scalar.timeValue()!!.offsetTime,
