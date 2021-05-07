@@ -15,6 +15,7 @@
 package org.partiql.lang.ast.passes
 
 import org.partiql.lang.ast.*
+import org.partiql.lang.util.checkThreadInterrupted
 
 /**
  * Provides a minimal interface for an AST rewriter implementation.
@@ -27,10 +28,11 @@ public interface AstRewriter {
  * This is the base-class for an AST rewriter which simply makes an exact copy of the original AST.
  * Simple rewrites can be performed by inheritors.
  */
-public open class AstRewriterBase : AstRewriter {
+open class AstRewriterBase : AstRewriter {
 
-    override fun rewriteExprNode(node: ExprNode): ExprNode =
-        when (node) {
+    override fun rewriteExprNode(node: ExprNode): ExprNode {
+        checkThreadInterrupted()
+        return when (node) {
             is Literal           -> rewriteLiteral(node)
             is LiteralMissing    -> rewriteLiteralMissing(node)
             is VariableReference -> rewriteVariableReference(node)
@@ -45,6 +47,7 @@ public open class AstRewriterBase : AstRewriter {
             is Bag               -> rewriteBag(node)
             is Select            -> rewriteSelect(node)
         }
+    }
 
     open fun rewriteMetas(itemWithMetas: HasMetas): MetaContainer = itemWithMetas.metas
 

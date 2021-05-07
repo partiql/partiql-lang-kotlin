@@ -18,7 +18,8 @@ import com.amazon.ion.IonSexp
 import com.amazon.ion.IonSystem
 import org.partiql.lang.util.IonWriterContext
 import org.partiql.lang.util.case
-import java.lang.UnsupportedOperationException
+import org.partiql.lang.util.checkThreadInterrupted
+import kotlin.UnsupportedOperationException
 
 /**
  * The current version of the AST.  Update this once every time a new variant of the AST is created.
@@ -71,6 +72,7 @@ private fun IonWriterContext.writeAsTerm(metas: MetaContainer, block: IonWriterC
 
 private fun IonWriterContext.writeExprNode(expr: ExprNode): Unit =
     writeAsTerm(expr.metas) {
+            checkThreadInterrupted()
         sexp {
             when (expr) {
                 is Literal           -> case { writeLiteral(expr) }

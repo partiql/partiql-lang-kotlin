@@ -24,19 +24,22 @@ import java.util.*
 sealed class AstNode : Iterable<AstNode> {
 
     /**
-     * returns all the children nodes.
+     * Returns all the children nodes.
+     *
      */
     abstract val children: List<AstNode>
 
     /**
      * Depth first iterator over all nodes.
+     *
+     * While collecting child nodes, throws [InterruptedException] if the [Thread.interrupted] flag has been set.
      */
     override operator fun iterator(): Iterator<AstNode> {
         val allNodes = mutableListOf<AstNode>()
 
         fun depthFirstSequence(node: AstNode) {
             allNodes.add(node)
-            node.children.map { depthFirstSequence(it) }
+            node.children.interruptibleMap { depthFirstSequence(it) }
         }
 
         depthFirstSequence(this)

@@ -20,11 +20,11 @@ import org.partiql.lang.util.*
 /**
  * Contains the logic necessary to walk every node in the AST and invokes methods of [AstVisitor] along the way.
  */
-@Deprecated("Use AstNode#iterator() or AstNode#children()")
-class AstWalker(private val visitor: AstVisitor) {
+open class AstWalker(private val visitor: AstVisitor) {
 
     fun walk(exprNode: ExprNode) {
-        exprNode.forEach { node -> 
+        exprNode.forEach { node ->
+            checkThreadInterrupted()
             when(node) {
                 is ExprNode -> visitor.visitExprNode(node)
                 is DataType -> visitor.visitDataType(node)
@@ -32,7 +32,7 @@ class AstWalker(private val visitor: AstVisitor) {
                 is FromSource -> visitor.visitFromSource(node)
                 is SelectListItem -> visitor.visitSelectListItem(node)
                 is SelectProjection -> visitor.visitSelectProjection(node)
-                    
+
             }
         }
     }

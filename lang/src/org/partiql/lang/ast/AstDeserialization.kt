@@ -255,7 +255,7 @@ private data class UnknownMeta(override val tag: String, val metaSexp: IonSexp) 
     }
 }
 
-private class AstDeserializerImpl(
+internal class AstDeserializerImpl(
     val ion: IonSystem,
     private val metaDeserializers: Map<String, MetaDeserializer>
 ) : AstDeserializer {
@@ -266,7 +266,7 @@ private class AstDeserializerImpl(
      *
      * The existence of this mutable state means that instances should not be accessed concurrently by different threads.
      */
-    private var astVersion = DEFAULT_AST_VERSION
+    internal var astVersion = DEFAULT_AST_VERSION
 
     companion object {
         private val DEFAULT_AST_VERSION = AstVersion.V0
@@ -304,7 +304,9 @@ private class AstDeserializerImpl(
             }
         }
 
-    private fun validate(rootSexp: IonSexp) {
+    internal fun validate(rootSexp: IonSexp) {
+        checkThreadInterrupted()
+
         val nodeTag = rootSexp.nodeTag // Throws if nodeTag is invalid for the current AstVersion
         val nodeArgs = rootSexp.args
 
@@ -411,8 +413,9 @@ private class AstDeserializerImpl(
     /**
      * Given a serialized AST, return its [ExprNode] representation.
      */
-    private fun deserializeExprNode(metaOrTermOrExp: IonSexp): ExprNode =
-        deserializeMetaOrTerm(metaOrTermOrExp) { target, metas ->
+    internal fun deserializeExprNode(metaOrTermOrExp: IonSexp): ExprNode {
+        checkThreadInterrupted()
+        return deserializeMetaOrTerm(metaOrTermOrExp) { target, metas ->
             val nodeTag = target.nodeTag
             val targetArgs = target.args //args is an extension property--call it once for efficiency
             //.toList() forces immutability
@@ -499,6 +502,7 @@ private class AstDeserializerImpl(
                 NodeTag.TYPE               -> err("Invalid context for tag '${nodeTag.definition.tagText}'")
             }
         }
+    }
 
     private fun deserializeLit(targetArgs: List<IonValue>, metas: MetaContainer) = Literal(targetArgs.first(), metas)
     private fun deserializeMissing(metas: MetaContainer) = LiteralMissing(metas)
