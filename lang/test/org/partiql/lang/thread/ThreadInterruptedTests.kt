@@ -42,12 +42,13 @@ const val WAIT_FOR_THREAD_TERMINATION_MS: Long = 1000
  */
 class ThreadInterruptedTests {
     private val ion = IonSystemBuilder.standard().build()
-    private val reallyBigNAry by lazy { makeBigExprNode(20000000) }
-    private val bigNAry by lazy { makeBigExprNode(10000000) }
+    private val reallyBigNAry = makeBigExprNode(20000000)
+    private val bigNAry = makeBigExprNode(10000000)
 
     private val bigSexpAst by lazy {
+        val nary = makeBigExprNode(1000000)
         @Suppress("DEPRECATION")
-        val sexp = AstSerializer.serialize(bigNAry, ion)
+        val sexp = AstSerializer.serialize(nary, ion)
         // format of sexp is:
         // (ast
         //    (version x)
@@ -61,11 +62,10 @@ class ThreadInterruptedTests {
         val variableA = VariableReference("a", CaseSensitivity.INSENSITIVE, ScopeQualifier.UNQUALIFIED, emptyMetas)
         return NAry(
             NAryOp.ADD,
-            (0..n).map { variableA },
+            EndlessExprNodeList(n, variableA),
             emptyMetas
         )
     }
-
 
     private fun testThreadInterrupt(block: () -> Unit) {
         val wasInterrupted = AtomicBoolean(false)

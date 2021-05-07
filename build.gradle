@@ -62,7 +62,7 @@ configure(subprojects.findAll { it.name != 'example' }) {
 subprojects {
 
     tasks.withType(Test) {
-        maxHeapSize = "8g"
+        maxHeapSize = "4g"
         testLogging {
             events "failed"
             exceptionFormat "full"
