@@ -45,13 +45,19 @@ const val WAIT_FOR_THREAD_TERMINATION_MS: Long = 1000
  */
 class ThreadInterruptedTests {
     private val ion = IonSystemBuilder.standard().build()
-    private val reallyBigNAry by lazy { makeBigExprNode(20000000) }
-    private val bigNAry by lazy { makeBigExprNode(10000000) }
-    private val bigPartiqlAst by lazy { makeBigPartiqlAstExpr(10000000) }
+    private val reallyBigNAry = makeBigExprNode(20000000)
+    private val bigNAry = makeBigExprNode(10000000)
+    private val bigPartiqlAst = makeBigPartiqlAstExpr(10000000)
 
     private val bigSexpAst by lazy {
+        val nary = makeBigExprNode(1000000)
         @Suppress("DEPRECATION")
-        AstSerializer.serialize(bigNAry, AstVersion.V0, ion)
+        AstSerializer.serialize(nary, AstVersion.V0, ion)
+    }
+
+
+    class FakeList<T>(override val size: Int, private val item: T) : AbstractList<T>() {
+        override fun get(index: Int): T = item
     }
 
     private fun makeBigExprNode(n: Int): NAry {
@@ -59,7 +65,7 @@ class ThreadInterruptedTests {
         val variableA = VariableReference("a", CaseSensitivity.INSENSITIVE, ScopeQualifier.UNQUALIFIED, emptyMetas)
         return NAry(
             NAryOp.ADD,
-            (0..n).map { variableA },
+            FakeList(n, variableA),
             emptyMetas
         )
     }
@@ -67,7 +73,7 @@ class ThreadInterruptedTests {
     private fun makeBigPartiqlAstExpr(n: Int): PartiqlAst.Expr =
         PartiqlAst.build {
             val variableA = id("a", caseInsensitive(), unqualified())
-            plus((0..n).map { variableA })
+            plus(FakeList(n, variableA))
         }
 
     private fun testThreadInterrupt(block: () -> Unit) {
@@ -100,8 +106,6 @@ class ThreadInterruptedTests {
 
     @Test
     fun astChildIterator() {
-        // force lazy load
-        reallyBigNAry
         testThreadInterrupt {
             @Suppress("DEPRECATION")
             reallyBigNAry.iterator()
@@ -110,8 +114,6 @@ class ThreadInterruptedTests {
 
     @Test
     fun astWalker() {
-        // force lazy load
-        reallyBigNAry
         val walker = AstWalker(object : AstVisitor { })
         testThreadInterrupt {
             walker.walk(reallyBigNAry)
@@ -120,8 +122,6 @@ class ThreadInterruptedTests {
 
     @Test
     fun partiqlAstToExprNode() {
-        // force lazy load
-        reallyBigNAry
         testThreadInterrupt {
             reallyBigNAry.toAstExpr()
         }
@@ -129,8 +129,6 @@ class ThreadInterruptedTests {
 
     @Test
     fun astToPartiqlAst() {
-        // force lazy load
-        bigPartiqlAst
         testThreadInterrupt {
             bigPartiqlAst.toExprNode(ion)
         }
@@ -138,8 +136,6 @@ class ThreadInterruptedTests {
 
     @Test
     fun serialize() {
-        // force lazy load
-        bigNAry
         testThreadInterrupt {
             @Suppress("DEPRECATION")
             AstSerializer.serialize(bigNAry, AstVersion.V0, ion)
@@ -148,9 +144,6 @@ class ThreadInterruptedTests {
 
     @Test
     fun deserialize_validate() {
-        // force lazy load
-        bigSexpAst
-
         val deserializer = AstDeserializerInternal(AstVersion.V0, ion, emptyMap())
 
         testThreadInterrupt {
@@ -160,9 +153,6 @@ class ThreadInterruptedTests {
 
     @Test
     fun deserialize_deserializeExprNode() {
-        // force lazy load
-        bigSexpAst
-
         val deserializer = AstDeserializerInternal(AstVersion.V0, ion, emptyMap())
 
         testThreadInterrupt {
@@ -172,9 +162,6 @@ class ThreadInterruptedTests {
 
     @Test
     fun astRewriterBase() {
-        // force lazy load
-        reallyBigNAry
-
         @Suppress("DEPRECATION")
         val identityRewriter = AstRewriterBase()
         testThreadInterrupt {
@@ -184,8 +171,6 @@ class ThreadInterruptedTests {
 
     @Test
     fun visitorTransformBase() {
-        // force lazy load
-        bigPartiqlAst
         val identityTransform = object : VisitorTransformBase() {}
         testThreadInterrupt {
             identityTransform.transformExpr(bigPartiqlAst)
