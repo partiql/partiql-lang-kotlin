@@ -27,7 +27,6 @@ import org.partiql.lang.ast.*
  *
  *  One `visit*` function is included for each base type in the AST.
  */
-@Deprecated("Use org.lang.partiql.domains.PartiqlAst.Visitor instead")
 interface AstVisitor {
     /**
      * Invoked by [AstWalker] for every instance of [ExprNode] encountered.
