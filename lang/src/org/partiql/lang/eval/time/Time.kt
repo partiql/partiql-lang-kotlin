@@ -121,6 +121,7 @@ data class Time private constructor(val localTime: LocalTime, val precision: Int
          * Precision is used to round up the fractional part of the second (nano field of localTime).
          * The [Time] instance returned has the [LocalTime] rounded up to this precision.
          */
+        @JvmOverloads
         fun of(localTime: LocalTime, precision: Int, zoneOffset: ZoneOffset? = null) : Time {
             return Time.of(localTime.hour, localTime.minute, localTime.second, localTime.nano, precision,
                 zoneOffset?.totalSeconds?.div(SECONDS_PER_MINUTE)
