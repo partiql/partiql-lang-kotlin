@@ -182,11 +182,14 @@ class ThreadInterruptedTests {
     @Test
     fun compilerPipeline() {
         val numSteps = 10000000
+        var counter = 0L
+
         val pipeline = CompilerPipeline.build(ion) {
             repeat(numSteps) {
                 addPreprocessingStep { expr, _ ->
                     // Burn some CPU so we don't get thru all the pipeline steps before the interrupt.
-                    assert(fibonacci(Int.MAX_VALUE / 16) > 0)
+                    fibonacci(131071)
+                    counter++
                     expr
                 }
             }
@@ -198,12 +201,15 @@ class ThreadInterruptedTests {
         testThreadInterrupt {
             pipeline.executePreProcessingSteps(expr, context)
         }
+        // ensure that we executed at least 10 loops, to be sure that we're not interrupting it on the *first*
+        // iteration...
+        assertTrue(counter > 10)
     }
 }
 
-private tailrec fun fibonacci(n: Int, a: Int = 0, b: Int = 1): Int =
+private tailrec fun fibonacci(n: Long, a: Long = 0, b: Long = 1): Long =
     when (n) {
-        0 -> a
-        1 -> b
-        else -> fibonacci(n - 1, b, a + b)
+        0L -> a
+        1L -> b
+        else -> fibonacci(n - 1L, b, a + b)
     }
