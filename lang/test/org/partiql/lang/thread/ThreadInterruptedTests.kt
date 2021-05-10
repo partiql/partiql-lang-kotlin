@@ -49,13 +49,18 @@ class ThreadInterruptedTests {
     private val bigNAry = makeBigExprNode(10000000)
     private val bigPartiqlAst = makeBigPartiqlAstExpr(10000000)
 
-    private val bigSexpAst by lazy {
-        val nary = makeBigExprNode(1000000)
-        @Suppress("DEPRECATION")
-        AstSerializer.serialize(nary, AstVersion.V0, ion)
-    }
 
+    private fun makeBigSexpAst() =
+        makeBigExprNode(1000000).let { nary ->
+            @Suppress("DEPRECATION")
+            AstSerializer.serialize(nary, AstVersion.V0, ion)
+        }
 
+    /**
+     * A "fake" list that contains [size] elements of [item].
+     *
+     * Constructing this is very cheap.  Adding the same element [size] times to real list is expensive.
+     */
     class FakeList<T>(override val size: Int, private val item: T) : AbstractList<T>() {
         override fun get(index: Int): T = item
     }
@@ -81,13 +86,12 @@ class ThreadInterruptedTests {
         val t = thread {
             try {
                 block()
-            } catch(_: InterruptedException) {
+            } catch (_: InterruptedException) {
                 wasInterrupted.set(true)
             }
         }
 
         Thread.sleep(INTERRUPT_AFTER_MS)
-
         t.interrupt()
         t.join(WAIT_FOR_THREAD_TERMINATION_MS)
         assertTrue(wasInterrupted.get(), "Thread should have been interrupted.")
@@ -114,7 +118,7 @@ class ThreadInterruptedTests {
 
     @Test
     fun astWalker() {
-        val walker = AstWalker(object : AstVisitor { })
+        val walker = AstWalker(object : AstVisitor {})
         testThreadInterrupt {
             walker.walk(reallyBigNAry)
         }
@@ -144,6 +148,7 @@ class ThreadInterruptedTests {
 
     @Test
     fun deserialize_validate() {
+        val bigSexpAst = makeBigSexpAst()
         val deserializer = AstDeserializerInternal(AstVersion.V0, ion, emptyMap())
 
         testThreadInterrupt {
@@ -153,6 +158,7 @@ class ThreadInterruptedTests {
 
     @Test
     fun deserialize_deserializeExprNode() {
+        val bigSexpAst = makeBigSexpAst()
         val deserializer = AstDeserializerInternal(AstVersion.V0, ion, emptyMap())
 
         testThreadInterrupt {
@@ -180,11 +186,14 @@ class ThreadInterruptedTests {
     @Test
     fun compilerPipeline() {
         val numSteps = 10000000
+        var accumulator= 0L
+
         val pipeline = CompilerPipeline.build(ion) {
             repeat(numSteps) {
                 addPreprocessingStep { expr, _ ->
-                    // burns about 200ms on first run
-                    assert(factorial(Int.MAX_VALUE / 8) >= 0)
+                    // Burn some CPU so we don't get thru all the pipeline steps before the interrupt.
+                    // Adding the return value to accumulator guarantees this won't be elided by the JIT.
+                    accumulator += fibonacci(131071)
                     expr
                 }
             }
@@ -196,22 +205,20 @@ class ThreadInterruptedTests {
         testThreadInterrupt {
             pipeline.executePreProcessingSteps(expr, context)
         }
+
+        // At this point, there's a remote possibility that accumulator has overflowed to zero and the assertion
+        // below might fail.  This guarantees that it will always pass.
+        if(accumulator == 0L) {
+            accumulator = 1L
+        }
+
+        assertTrue(accumulator != 0L)
     }
 }
 
-private fun factorial(num: Int): Long {
-    var result = 1L
-    for (i in 2..num) result *= i
-    return result
-}
-
-fun <T> time(message: String = "", block: () -> T): T {
-    val startTime = System.currentTimeMillis()
-
-    return block().also {
-        val endTime = System.currentTimeMillis()
-        val duration = endTime - startTime
-        val of = when(message.length) { 0 -> "" else -> " of $message"}
-        println("duration$of: $duration")
+private tailrec fun fibonacci(n: Long, a: Long = 0, b: Long = 1): Long =
+    when (n) {
+        0L -> a
+        1L -> b
+        else -> fibonacci(n - 1L, b, a + b)
     }
-}
