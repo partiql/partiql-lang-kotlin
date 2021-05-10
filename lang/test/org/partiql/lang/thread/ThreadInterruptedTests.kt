@@ -188,7 +188,7 @@ class ThreadInterruptedTests {
             repeat(numSteps) {
                 addPreprocessingStep { expr, _ ->
                     // Burn some CPU so we don't get thru all the pipeline steps before the interrupt.
-                    fibonacci(131071)
+                    assert(fibonacci(131071) != 0L)
                     counter++
                     expr
                 }
