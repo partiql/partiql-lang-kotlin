@@ -56,7 +56,11 @@ class ThreadInterruptedTests {
             AstSerializer.serialize(nary, AstVersion.V0, ion)
         }
 
-
+    /**
+     * A "fake" list that contains [size] elements of [item].
+     *
+     * Constructing this is very cheap.  Adding the same element [size] times to real list is expensive.
+     */
     class FakeList<T>(override val size: Int, private val item: T) : AbstractList<T>() {
         override fun get(index: Int): T = item
     }
@@ -182,14 +186,14 @@ class ThreadInterruptedTests {
     @Test
     fun compilerPipeline() {
         val numSteps = 10000000
-        var counter = 0L
+        var accumulator= 0L
 
         val pipeline = CompilerPipeline.build(ion) {
             repeat(numSteps) {
                 addPreprocessingStep { expr, _ ->
                     // Burn some CPU so we don't get thru all the pipeline steps before the interrupt.
-                    assert(fibonacci(131071) != 0L)
-                    counter++
+                    // Adding the return value to accumulator guarantees this won't be elided by the JIT.
+                    accumulator += fibonacci(131071)
                     expr
                 }
             }
@@ -201,9 +205,14 @@ class ThreadInterruptedTests {
         testThreadInterrupt {
             pipeline.executePreProcessingSteps(expr, context)
         }
-        // ensure that we executed at least 10 loops, to be sure that we're not interrupting it on the *first*
-        // iteration...
-        assertTrue(counter > 10)
+
+        // At this point, there's a remote possibility that accumulator has overflowed to zero and the assertion
+        // below might fail.  This guarantees that it will always pass.
+        if(accumulator == 0L) {
+            accumulator = 1L
+        }
+
+        assertTrue(accumulator != 0L)
     }
 }
 
