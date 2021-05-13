@@ -17,7 +17,7 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
 
     private val LOCAL_TIME_ZONE_OFFSET = (ZoneOffset.systemDefault().rules.getOffset(Instant.now()).totalSeconds / 60).toLong()
 
-    data class DateTimeTestCase(val source: String, val block: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode)
+    data class DateTimeTestCase(val source: String, val skipTest: Boolean = false, val block: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode)
     private data class Date(val year: Int, val month: Int, val day: Int)
 
     private val MONTHS_WITH_31_DAYS = listOf(1, 3, 5, 7, 8, 10, 12)
@@ -26,7 +26,12 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
 
     @Test
     @Parameters
-    fun dateLiteralTests(tc: DateTimeTestCase) = assertExpression(tc.source, tc.block)
+    fun dateLiteralTests(tc: DateTimeTestCase) =
+        if (!tc.skipTest) {
+            assertExpression(tc.source, tc.block)
+        } else {
+            // Skip test, do nothing
+        }
 
     fun parametersForDateLiteralTests() = listOf(
         DateTimeTestCase("DATE '2012-02-29'") {
@@ -163,32 +168,32 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
         },
         DateTimeTestCase("TIME (0) WITH TIME ZONE '23:59:59.123456789-18:00'") {
             litTime(timeValue(23, 59, 59, 123456789, 0, -1080))
-        }
+        },
         // TODO: These tests should pass. Check https://github.com/partiql/partiql-lang-kotlin/issues/395
-//        DateTimeTestCase("TIME '23:59:59.1234567890'") {
-//            litTime(timeValue(23, 59, 59, 123456789, 9, null))
-//        },
-//        DateTimeTestCase("TIME '23:59:59.1234567899'") {
-//            litTime(timeValue(23, 59, 59, 123456790, 9, null))
-//        },
-//        DateTimeTestCase("TIME '23:59:59.1234567890+18:00'") {
-//            litTime(timeValue(23, 59, 59, 123456789, 9, null))
-//        },
-//        DateTimeTestCase("TIME '23:59:59.1234567899+18:00'") {
-//            litTime(timeValue(23, 59, 59, 123456790, 9, null))
-//        },
-//        DateTimeTestCase("TIME WITH TIME ZONE '23:59:59.1234567890'") {
-//            litTime(timeValue(23, 59, 59, 123456789, 9, LOCAL_TIME_ZONE_OFFSET))
-//        },
-//        DateTimeTestCase("TIME WITH TIME ZONE '23:59:59.1234567899'") {
-//            litTime(timeValue(23, 59, 59, 123456790, 9, LOCAL_TIME_ZONE_OFFSET))
-//        },
-//        DateTimeTestCase("TIME WITH TIME ZONE '23:59:59.1234567890+18:00'") {
-//            litTime(timeValue(23, 59, 59, 123456789, 9, 1080))
-//        },
-//        DateTimeTestCase("TIME WITH TIME ZONE '23:59:59.1234567899+18:00'") {
-//            litTime(timeValue(23, 59, 59, 123456790, 9, 1080))
-//        }
+        DateTimeTestCase("TIME '23:59:59.1234567890'", skipTest = true) {
+            litTime(timeValue(23, 59, 59, 123456789, 9, null))
+        },
+        DateTimeTestCase("TIME '23:59:59.1234567899'", skipTest = true) {
+            litTime(timeValue(23, 59, 59, 123456790, 9, null))
+        },
+        DateTimeTestCase("TIME '23:59:59.1234567890+18:00'", skipTest = true) {
+            litTime(timeValue(23, 59, 59, 123456789, 9, null))
+        },
+        DateTimeTestCase("TIME '23:59:59.1234567899+18:00'", skipTest = true) {
+            litTime(timeValue(23, 59, 59, 123456790, 9, null))
+        },
+        DateTimeTestCase("TIME WITH TIME ZONE '23:59:59.1234567890'", skipTest = true) {
+            litTime(timeValue(23, 59, 59, 123456789, 9, LOCAL_TIME_ZONE_OFFSET))
+        },
+        DateTimeTestCase("TIME WITH TIME ZONE '23:59:59.1234567899'", skipTest = true) {
+            litTime(timeValue(23, 59, 59, 123456790, 9, LOCAL_TIME_ZONE_OFFSET))
+        },
+        DateTimeTestCase("TIME WITH TIME ZONE '23:59:59.1234567890+18:00'", skipTest = true) {
+            litTime(timeValue(23, 59, 59, 123456789, 9, 1080))
+        },
+        DateTimeTestCase("TIME WITH TIME ZONE '23:59:59.1234567899+18:00'", skipTest = true) {
+            litTime(timeValue(23, 59, 59, 123456790, 9, 1080))
+        }
     )
 
     private fun generateRandomSeed() : Random {
@@ -225,15 +230,19 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
         }
     }
   
-    private fun createErrorCaseForTime(source: String, errorCode: ErrorCode, line: Long, col: Long, tokenType: TokenType, tokenValue: IonValue): () -> Unit = {
-        checkInputThrowingParserException(
-            source,
-            errorCode,
-            mapOf(
-                Property.LINE_NUMBER to line,
-                Property.COLUMN_NUMBER to col,
-                Property.TOKEN_TYPE to tokenType,
-                Property.TOKEN_VALUE to tokenValue))
+    private fun createErrorCaseForTime(source: String, errorCode: ErrorCode, line: Long, col: Long, tokenType: TokenType, tokenValue: IonValue, skipTest: Boolean = false): () -> Unit = {
+        if (!skipTest) {
+            checkInputThrowingParserException(
+                source,
+                errorCode,
+                mapOf(
+                    Property.LINE_NUMBER to line,
+                    Property.COLUMN_NUMBER to col,
+                    Property.TOKEN_TYPE to tokenType,
+                    Property.TOKEN_VALUE to tokenValue
+                )
+            )
+        }
     }
 
     private fun createErrorCaseForTime(source: String, errorCode: ErrorCode, errorContext: Map<Property, Any>): () -> Unit = {
@@ -393,23 +402,25 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
             tokenType = TokenType.LITERAL,
             tokenValue = ion.newString("23:59:59+05:30.00")
         ),
-        // TODO: Investing why the build failed in GH actions for these two tests.
-//        createErrorCaseForTime(
-//            source = "TIME '23:59:59+24:00'",
-//            line = 1L,
-//            col = 6L,
-//            errorCode = ErrorCode.PARSE_INVALID_TIME_STRING,
-//            tokenType = TokenType.LITERAL,
-//            tokenValue = ion.newString("23:59:59+24:00")
-//        ),
-//        createErrorCaseForTime(
-//            source = "TIME '23:59:59-24:00'",
-//            line = 1L,
-//            col = 6L,
-//            errorCode = ErrorCode.PARSE_INVALID_TIME_STRING,
-//            tokenType = TokenType.LITERAL,
-//            tokenValue = ion.newString("23:59:59-24:00")
-//        ),
+        // TODO: Investigate why the build fails in GH actions for these two tests.
+        createErrorCaseForTime(
+            source = "TIME '23:59:59+24:00'",
+            line = 1L,
+            col = 6L,
+            errorCode = ErrorCode.PARSE_INVALID_TIME_STRING,
+            tokenType = TokenType.LITERAL,
+            tokenValue = ion.newString("23:59:59+24:00"),
+            skipTest = true
+        ),
+        createErrorCaseForTime(
+            source = "TIME '23:59:59-24:00'",
+            line = 1L,
+            col = 6L,
+            errorCode = ErrorCode.PARSE_INVALID_TIME_STRING,
+            tokenType = TokenType.LITERAL,
+            tokenValue = ion.newString("23:59:59-24:00"),
+            skipTest = true
+        ),
         // This is a valid time string in PostgreSQL
         createErrorCaseForTime(
             source = "TIME '08:59:59.99999 AM'",

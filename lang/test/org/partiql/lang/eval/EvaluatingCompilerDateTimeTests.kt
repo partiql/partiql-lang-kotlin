@@ -11,14 +11,13 @@ import org.partiql.lang.util.getOffsetHHmm
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.Instant
-import java.time.LocalTime
 import java.time.ZoneOffset
 import kotlin.math.absoluteValue
 import kotlin.random.Random
 
 class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
 
-    private val RANDOM_TESTS_SIZE = 200
+    private val RANDOM_TESTS_SIZE = 5000
 
     @ParameterizedTest
     @ArgumentsSource(ArgumentsForDateLiterals::class)
@@ -119,7 +118,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
     private val RANDOM_GENERATOR = generateRandomSeed()
 
     private fun generateRandomSeed() : Random {
-        val seed = Random(1).nextInt()
+        val seed = Random.nextInt()
         println("Randomly generated seed is ${seed}. Use this to reproduce failures in dev environment.")
         return Random(seed)
     }
@@ -163,7 +162,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         val precision = if (withPrecision) {
             nextInt(10)
         } else {
-            val timeStr = LocalTime.of(hour, minute, second, nano).toString()
+            val timeStr = Time.of(hour, minute, second, nano, 9).toString()
             timeStr.split(".")[1].length
         }
         val timezoneMinutes = if (withTimezone) {

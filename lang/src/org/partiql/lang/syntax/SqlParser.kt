@@ -2335,8 +2335,8 @@ class SqlParser(private val ion: IonSystem) : Parser {
         val matcher = genericTimeRegex.toPattern().matcher(timeString)
         if (!matcher.find()) {
             org.partiql.lang.eval.err("Time string does not match the format 'HH:MM:SS[.ddd....][+|-HH:MM]'",
-            propertyValueMapOf(),
-            false
+                propertyValueMapOf(),
+                false
             )
         }
         // Note that the [genericTimeRegex] has a group to extract the fractional part of the second.
