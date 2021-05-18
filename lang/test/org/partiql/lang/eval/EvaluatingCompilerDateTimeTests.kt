@@ -17,7 +17,7 @@ import kotlin.random.Random
 
 class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
 
-    private val RANDOM_TESTS_SIZE = 5000
+    private val randomTestsSize = 50000
 
     @ParameterizedTest
     @ArgumentsSource(ArgumentsForDateLiterals::class)
@@ -76,8 +76,8 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
      * Tests to visualize the behavior of evaluation of TIME literals. More tests are covered by [timeLiteralsTests].
      */
     private class ArgumentsForTimeLiterals : ArgumentsProviderBase() {
-        private val LOCAL_TIMEZONE_OFFSET = ZoneOffset.systemDefault().rules.getOffset(Instant.now())
-        private val LOCAL_TZ_MINUTES = LOCAL_TIMEZONE_OFFSET.totalSeconds / 60
+        private val localTimezoneOffset = ZoneOffset.systemDefault().rules.getOffset(Instant.now())
+        private val localTzMinutes = localTimezoneOffset.totalSeconds / 60
 
         private fun case(query: String, expected: String, expectedTime: TimeForTest? = null) = TimeTestCase(query, expected, expectedTime)
 
@@ -95,12 +95,12 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
             case("TIME (4) '12:24:12.12300'", "12:24:12.1230", TimeForTest(12, 24, 12, 123000000, 4)),
             case("TIME (4) '12:24:12.123'", "12:24:12.1230", TimeForTest(12, 24, 12, 123000000, 4)),
             case("TIME (0) '12:59:59.9'", "13:00:00", TimeForTest(13, 0,0, 0, 0)),
-            case("TIME WITH TIME ZONE '00:00:00'", "00:00:00${LOCAL_TIMEZONE_OFFSET.getOffsetHHmm()}", TimeForTest(0,0,0,0,0, LOCAL_TZ_MINUTES)),
-            case("TIME (2) WITH TIME ZONE '12:24:12.123'", "12:24:12.12${LOCAL_TIMEZONE_OFFSET.getOffsetHHmm()}", TimeForTest(12, 24, 12, 120000000, 2, LOCAL_TZ_MINUTES)),
-            case("TIME WITH TIME ZONE '12:24:12.12300'", "12:24:12.12300${LOCAL_TIMEZONE_OFFSET.getOffsetHHmm()}", TimeForTest(12, 24, 12, 123000000, 5, LOCAL_TZ_MINUTES)),
-            case("TIME (3) WITH TIME ZONE '12:24:12.12300'", "12:24:12.123${LOCAL_TIMEZONE_OFFSET.getOffsetHHmm()}", TimeForTest(12, 24, 12, 123000000, 3, LOCAL_TZ_MINUTES)),
-            case("TIME (4) WITH TIME ZONE '12:24:12.12300'", "12:24:12.1230${LOCAL_TIMEZONE_OFFSET.getOffsetHHmm()}", TimeForTest(12, 24, 12, 123000000, 4, LOCAL_TZ_MINUTES)),
-            case("TIME (4) WITH TIME ZONE '12:24:12.123'", "12:24:12.1230${LOCAL_TIMEZONE_OFFSET.getOffsetHHmm()}", TimeForTest(12, 24, 12, 123000000, 4, LOCAL_TZ_MINUTES)),
+            case("TIME WITH TIME ZONE '00:00:00'", "00:00:00${localTimezoneOffset.getOffsetHHmm()}", TimeForTest(0,0,0,0,0, localTzMinutes)),
+            case("TIME (2) WITH TIME ZONE '12:24:12.123'", "12:24:12.12${localTimezoneOffset.getOffsetHHmm()}", TimeForTest(12, 24, 12, 120000000, 2, localTzMinutes)),
+            case("TIME WITH TIME ZONE '12:24:12.12300'", "12:24:12.12300${localTimezoneOffset.getOffsetHHmm()}", TimeForTest(12, 24, 12, 123000000, 5, localTzMinutes)),
+            case("TIME (3) WITH TIME ZONE '12:24:12.12300'", "12:24:12.123${localTimezoneOffset.getOffsetHHmm()}", TimeForTest(12, 24, 12, 123000000, 3, localTzMinutes)),
+            case("TIME (4) WITH TIME ZONE '12:24:12.12300'", "12:24:12.1230${localTimezoneOffset.getOffsetHHmm()}", TimeForTest(12, 24, 12, 123000000, 4, localTzMinutes)),
+            case("TIME (4) WITH TIME ZONE '12:24:12.123'", "12:24:12.1230${localTimezoneOffset.getOffsetHHmm()}", TimeForTest(12, 24, 12, 123000000, 4, localTzMinutes)),
             case("TIME (2) WITH TIME ZONE '12:24:12.123-00:00'", "12:24:12.12+00:00", TimeForTest(12, 24, 12, 120000000, 2, 0)),
             case("TIME (2) WITH TIME ZONE '12:24:12.123+00:00'", "12:24:12.12+00:00", TimeForTest(12, 24, 12, 120000000, 2, 0)),
             case("TIME (2) WITH TIME ZONE '12:24:12.123+05:30'", "12:24:12.12+05:30", TimeForTest(12, 24, 12, 120000000, 2, 330)),
@@ -115,7 +115,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         )
     }
 
-    private val RANDOM_GENERATOR = generateRandomSeed()
+    private val randomGenerator = generateRandomSeed()
 
     private fun generateRandomSeed() : Random {
         val seed = Random.nextInt()
@@ -173,26 +173,26 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         return TimeForTest(hour, minute, second, nano, precision, timezoneMinutes)
     }
 
-    private val RANDOM_TIMES = List(RANDOM_TESTS_SIZE) {
-        RANDOM_GENERATOR.nextTime(
+    private val RANDOM_TIMES = List(randomTestsSize) {
+        randomGenerator.nextTime(
             withPrecision = false,
             withTimezone = false
         )
     }
-    private val RANDOM_TIMES_WITH_PRECISION = List(RANDOM_TESTS_SIZE) {
-        RANDOM_GENERATOR.nextTime(
+    private val RANDOM_TIMES_WITH_PRECISION = List(randomTestsSize) {
+        randomGenerator.nextTime(
             withPrecision = true,
             withTimezone = false
         )
     }
-    private val RANDOM_TIMES_WITH_TIMEZONE = List(RANDOM_TESTS_SIZE) {
-        RANDOM_GENERATOR.nextTime(
+    private val RANDOM_TIMES_WITH_TIMEZONE = List(randomTestsSize) {
+        randomGenerator.nextTime(
             withPrecision = false,
             withTimezone = true
         )
     }
-    private val RANDOM_TIMES_WITH_PRECISION_AND_TIMEZONE = List(RANDOM_TESTS_SIZE) {
-        RANDOM_GENERATOR.nextTime(
+    private val RANDOM_TIMES_WITH_PRECISION_AND_TIMEZONE = List(randomTestsSize) {
+        randomGenerator.nextTime(
             withPrecision = true,
             withTimezone = true
         )

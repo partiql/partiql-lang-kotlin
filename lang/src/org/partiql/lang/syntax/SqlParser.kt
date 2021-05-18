@@ -2425,7 +2425,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
         // The source span here is just the filler value and does not reflect the actual source location of the precision
         // as it does not exists in case the precision is unspecified.
         val precisionOfValue =  precision.token ?:
-            Token(LITERAL, ion.newInt(getPrecisionFromTimeString(newTimeString)), SourceSpan(-1, -1, -1))
+            Token(LITERAL, ion.newInt(getPrecisionFromTimeString(newTimeString)), timeStringToken.span)
 
         return ParseNode(
             if (isTimeZoneSpecified) TIME_WITH_TIME_ZONE else TIME,

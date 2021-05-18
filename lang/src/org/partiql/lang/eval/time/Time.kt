@@ -76,6 +76,7 @@ data class Time private constructor(val localTime: LocalTime, val precision: Int
          * @return TimeExprValue
          * @throws EvaluationException if the value of any field is out of range
          */
+        @JvmStatic
         @JvmOverloads
         fun of(hour: Int, minute: Int, second: Int, nano: Int, precision: Int, tz_minutes: Int? = null) : Time {
 
@@ -121,6 +122,7 @@ data class Time private constructor(val localTime: LocalTime, val precision: Int
          * Precision is used to round up the fractional part of the second (nano field of localTime).
          * The [Time] instance returned has the [LocalTime] rounded up to this precision.
          */
+        @JvmStatic
         @JvmOverloads
         fun of(localTime: LocalTime, precision: Int, zoneOffset: ZoneOffset? = null) : Time {
             return Time.of(localTime.hour, localTime.minute, localTime.second, localTime.nano, precision,
