@@ -136,7 +136,7 @@ data class Time(val localTime: LocalTime, val precision: Int = MAX_PRECISION_FOR
      * Returns the seconds along with the fractional part of the second's value.
      */
     val secondsWithFractionalPart
-        get()  = BigDecimal(localTime.second + localTime.nano / NANOS_PER_SECOND)
+        get()  = localTime.second.toBigDecimal() + localTime.nano.toBigDecimal() / NANOS_PER_SECOND.toBigDecimal()
 
     fun toIonValue(ion: IonSystem): IonStruct =
         ion.newEmptyStruct().apply {
