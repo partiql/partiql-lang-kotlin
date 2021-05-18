@@ -22,6 +22,7 @@ import org.partiql.lang.errors.ErrorCode.*
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.Property.*
 import org.partiql.lang.errors.*
+import org.partiql.lang.eval.time.*
 import org.partiql.lang.syntax.SqlParser.AliasSupportType.*
 import org.partiql.lang.syntax.SqlParser.ArgListMode.*
 import org.partiql.lang.syntax.SqlParser.ParseType.*
@@ -34,9 +35,6 @@ import java.lang.Integer.min
 import java.time.*
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
-
-// TODO: (Ques) LocalTime has a field nanosecond and is the precision limit for it. Do we want to use this as the default precision if not specified?
-private const val DEFAULT_PRECISION_FOR_TIME = 9
 
 // These are used to validate the generic format of the time string.
 // The more involved logic such as validating the time is done by LocalTime.parse or OffsetTime.parse
@@ -710,15 +708,15 @@ class SqlParser(private val ion: IonSystem) : Parser {
             }
             TIME -> {
                 val timeString = token!!.text!!
-                val precision = min(children[0].token?.value?.numberValue()?.toInt() ?: DEFAULT_PRECISION_FOR_TIME, DEFAULT_PRECISION_FOR_TIME)
+                val precision = children[0].token!!.value!!.numberValue().toInt()
                 val time = LocalTime.parse(timeString, DateTimeFormatter.ISO_TIME)
                 DateTimeType.Time(time.hour, time.minute, time.second, time.nano, precision, null, metas)
             }
             TIME_WITH_TIME_ZONE -> {
                 val timeString = token!!.text!!
-                val precision = min(children[0].token?.value?.numberValue()?.toInt() ?: DEFAULT_PRECISION_FOR_TIME, DEFAULT_PRECISION_FOR_TIME)
+                val precision = children[0].token?.value?.numberValue()?.toInt()
                 val time = OffsetTime.parse(timeString)
-                DateTimeType.Time(time.hour, time.minute, time.second, time.nano, precision, time.offset.totalSeconds/60, metas)
+                DateTimeType.Time(time.hour, time.minute, time.second, time.nano, precision!!, time.offset.totalSeconds/60, metas)
             }
             else -> unsupported("Unsupported syntax for $type", PARSE_UNSUPPORTED_SYNTAX)
         }
@@ -2304,8 +2302,9 @@ class SqlParser(private val ion: IonSystem) : Parser {
         // If the optional precision is present
         if (head?.type == LEFT_PAREN) {
             var rem = tail
-            // Expected precision token to be unsigned integer
-            if (rem.head == null || rem.head!!.type != LITERAL || !rem.head!!.value!!.isUnsignedInteger) {
+            // Expected precision token to be unsigned integer between 0 and 9 inclusive
+            if (rem.head == null || rem.head!!.type != LITERAL || !rem.head!!.value!!.isUnsignedInteger ||
+                rem.head!!.value!!.longValue() < 0 || rem.head!!.value!!.longValue() > MAX_PRECISION_FOR_TIME) {
                 rem.head.err("Expected integer value between 0 and 9 for precision", PARSE_INVALID_PRECISION_FOR_TIME)
             }
             val precision = rem.head
@@ -2332,6 +2331,22 @@ class SqlParser(private val ion: IonSystem) : Parser {
             return Pair(rem, true)
         }
         return Pair(this, false)
+    }
+
+    /**
+     * Gets the precision from the time string of the format 'HH:MM:SS[.ddd....][+|-HH:MM]'.
+     */
+    private fun getPrecisionFromTimeString(timeString: String) : Int {
+        val matcher = genericTimeRegex.toPattern().matcher(timeString)
+        if (!matcher.find()) {
+            org.partiql.lang.eval.err("Time string does not match the format 'HH:MM:SS[.ddd....][+|-HH:MM]'",
+                propertyValueMapOf(),
+                false
+            )
+        }
+        // Note that the [genericTimeRegex] has a group to extract the fractional part of the second.
+        val fraction = matcher.group(1)?.removePrefix(".")
+        return fraction?.length ?: 0
     }
 
     /**
@@ -2403,17 +2418,24 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     // Fall back on parsing a string without a time zone offset only if the offset is not specified.
                     // Add local system timezone offset in that case.
                     tryLocalTimeParsing(timeString)
-                    newTimeString = timeString + ZoneOffset.systemDefault().rules.getOffset(Instant.now()).toString()
+                    newTimeString = timeString + ZoneOffset.systemDefault().rules.getOffset(Instant.now()).getOffsetHHmm()
                 }
                 else {
                     rem.head.err(e.localizedMessage, PARSE_INVALID_TIME_STRING)
                 }
             }
         }
+        // Extract the precision from the time string representation if the precision is not specified.
+        // For e.g., TIME '23:12:12.12300' should have precision of 5.
+        // The source span here is just the filler value and does not reflect the actual source location of the precision
+        // as it does not exists in case the precision is unspecified.
+        val precisionOfValue =  precision.token ?:
+            Token(LITERAL, ion.newInt(getPrecisionFromTimeString(newTimeString)), timeStringToken.span)
+
         return ParseNode(
             if (isTimeZoneSpecified) TIME_WITH_TIME_ZONE else TIME,
             rem.head!!.copy(value = ion.newString(newTimeString)),
-            listOf(precision),
+            listOf(precision.copy(token = precisionOfValue)),
             rem.tail)
     }
 

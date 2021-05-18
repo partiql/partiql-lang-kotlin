@@ -15,6 +15,7 @@
 package org.partiql.lang.eval
 
 import com.amazon.ion.Timestamp
+import org.partiql.lang.eval.time.Time
 import java.time.LocalDate
 
 /**
@@ -49,6 +50,12 @@ interface Scalar {
      * This operation is only applicable for [ExprValueType.DATE]
      */
     fun dateValue(): LocalDate? = null
+
+    /**
+     * Returns this value as a [Time] or `null` if not applicable.
+     * This operation is only applicable for [ExprValueType.TIME].
+     */
+    fun timeValue(): Time? = null
 
     /**
      * Returns this value as a [String] or `null` if not applicable.

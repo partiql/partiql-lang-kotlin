@@ -16,6 +16,7 @@ package org.partiql.lang.eval
 
 import com.amazon.ion.*
 import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.eval.time.Time
 import org.partiql.lang.util.*
 import java.math.*
 import java.time.LocalDate
@@ -90,7 +91,10 @@ interface ExprValueFactory {
     /** Returns a PartiQL `TIMESTAMP` [ExprValue] instance representing the specified [Timestamp]. */
     fun newTimestamp(value: Timestamp): ExprValue
 
-    /** Returns a  PartiQL `SYMBOL` [ExprValue] instance representing the specified [String]. */
+    /** Returns a PartiQL `TIME` [ExprValue] instance representing the specified [Time]. */
+    fun newTime(value: Time): ExprValue
+
+    /** Returns an  PartiQL `SYMBOL` [ExprValue] instance representing the specified [String]. */
     fun newSymbol(value: String) : ExprValue
 
     /** Returns a PartiQL `CLOB` [ExprValue] instance representing the specified [ByteArray]. */
@@ -204,6 +208,9 @@ private class ExprValueFactoryImpl(override val ion: IonSystem) : ExprValueFacto
 
     override fun newTimestamp(value: Timestamp): ExprValue =
         TimestampExprValue(ion, value)
+
+    override fun newTime(value: Time): ExprValue =
+        TimeExprValue(ion, value)
 
     override fun newSymbol(value: String): ExprValue =
         SymbolExprValue(ion, value)
@@ -343,6 +350,12 @@ private class TimestampExprValue(val ion: IonSystem, val value: Timestamp): Scal
     override val type: ExprValueType = ExprValueType.TIMESTAMP
     override fun timestampValue(): Timestamp? = value
     override fun ionValueFun(): IonValue = ion.newTimestamp(value)
+}
+
+private class TimeExprValue(val ion: IonSystem, val value: Time): ScalarExprValue() {
+    override val type = ExprValueType.TIME
+    override fun timeValue(): Time = value
+    override fun ionValueFun() = value.toIonValue(ion)
 }
 
 private class SymbolExprValue(val ion: IonSystem, val value: String): ScalarExprValue() {

@@ -24,6 +24,7 @@ import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.like.PatternPart
 import org.partiql.lang.eval.like.executePattern
 import org.partiql.lang.eval.like.parsePattern
+import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.*
@@ -294,7 +295,7 @@ internal class EvaluatingCompiler(
             is DropTable -> compileDdl(expr)
             is Exec      -> compileExec(expr)
             is DateTimeType.Date      -> compileDate(expr)
-            is DateTimeType.Time -> TODO()
+            is DateTimeType.Time -> compileTime(expr)
         }
     }
 
@@ -1994,6 +1995,13 @@ internal class EvaluatingCompiler(
         val (year, month, day, metas) = node
         val value = valueFactory.newDate(year, month, day)
         return thunkFactory.thunkEnv(metas) { value }
+    }
+
+    private fun compileTime(node: DateTimeType.Time) : ThunkEnv {
+        val (hour, minute, second, nano, precision, tz_minutes, metas) = node
+        return thunkFactory.thunkEnv(metas) {
+            valueFactory.newTime(Time.of(hour, minute, second, nano, precision, tz_minutes))
+        }
     }
 
     /** A special wrapper for `UNPIVOT` values as a BAG. */

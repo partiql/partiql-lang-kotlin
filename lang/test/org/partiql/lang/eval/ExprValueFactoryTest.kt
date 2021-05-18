@@ -20,9 +20,15 @@ import org.junit.runner.*
 import com.amazon.ion.*
 import com.amazon.ion.system.*
 import org.junit.Test
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.eval.time.Time
 import org.partiql.lang.util.seal
 import java.math.*
 import java.time.LocalDate
+import java.time.LocalTime
+import java.time.OffsetTime
+import java.time.ZoneOffset
+import kotlin.math.pow
 import kotlin.test.*
 
 
@@ -364,5 +370,45 @@ class ExprValueFactoryTest {
         Assert.assertEquals("Expected year to be 2020", 2020, timestamp.year)
         Assert.assertEquals("Expected month to be 02", 2, timestamp.month)
         Assert.assertEquals("Expected day to be 29", 29, timestamp.day)
+    }
+
+    @Test
+    fun genericTimeExprValueTest() {
+        val timeExprValue = factory.newTime(Time.of(23, 2, 29, 23, 2))
+        assertEquals(
+            expected = LocalTime.of(23, 2, 29),
+            actual = timeExprValue.scalar.timeValue()!!.localTime,
+            message = "Expected values to be equal."
+        )
+    }
+
+    @Test
+    fun genericTimeExprValueTest2() {
+        val timeExprValue = factory.newTime(Time.of(23, 2, 29, 23, 2, -720))
+        assertEquals(
+            expected = OffsetTime.of(23, 2, 29, 0, ZoneOffset.ofTotalSeconds(-720*60)),
+            actual = timeExprValue.scalar.timeValue()!!.offsetTime,
+            message = "Expected values to be equal."
+        )
+    }
+
+    @Test
+    fun negativePrecisionForTime() {
+        try {
+            Time.of(23, 12, 34, 344423, -1, 300)
+            Assert.fail("Expected evaluation error")
+        } catch (e: EvaluationException) {
+            Assert.assertEquals(ErrorCode.EVALUATOR_INVALID_PRECISION_FOR_TIME, e.errorCode)
+        }
+    }
+
+    @Test
+    fun outOfRangePrecisionForTime() {
+        try {
+            Time.of(23, 12, 34, 344423, 10, 300)
+            Assert.fail("Expected evaluation error")
+        } catch (e: EvaluationException) {
+            Assert.assertEquals(ErrorCode.EVALUATOR_INVALID_PRECISION_FOR_TIME, e.errorCode)
+        }
     }
 }

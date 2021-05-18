@@ -73,7 +73,7 @@ class PartiQlPtsEvaluator(equality: PtsEquality) : Evaluator(equality) {
 
         return when (this.type) {
             MISSING -> missing
-            NULL, BOOL, INT, FLOAT, DECIMAL, DATE, TIMESTAMP, SYMBOL, STRING, CLOB, BLOB -> this.ionValue.clone()
+            NULL, BOOL, INT, FLOAT, DECIMAL, DATE, TIME, TIMESTAMP, SYMBOL, STRING, CLOB, BLOB -> this.ionValue.clone()
             LIST -> this.foldToIonSequence(ion.newEmptyList())
             SEXP -> this.foldToIonSequence(ion.newEmptySexp())
             STRUCT -> this.fold(ion.newEmptyStruct()) { struct, el ->
