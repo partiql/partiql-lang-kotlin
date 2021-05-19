@@ -24,6 +24,7 @@ import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.like.PatternPart
 import org.partiql.lang.eval.like.executePattern
 import org.partiql.lang.eval.like.parsePattern
+import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.*
@@ -1990,7 +1991,7 @@ internal class EvaluatingCompiler(
     private fun compileTime(node: DateTimeType.Time) : ThunkEnv {
         val (hour, minute, second, nano, precision, tz_minutes, metas) = node
         return thunkFactory.thunkEnv(metas) {
-            valueFactory.newTime(hour, minute, second, nano, precision, tz_minutes)
+            valueFactory.newTime(Time.of(hour, minute, second, nano, precision, tz_minutes))
         }
     }
 

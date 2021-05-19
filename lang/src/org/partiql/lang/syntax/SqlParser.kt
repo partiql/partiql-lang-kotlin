@@ -708,9 +708,9 @@ class SqlParser(private val ion: IonSystem) : Parser {
             }
             TIME -> {
                 val timeString = token!!.text!!
-                val precision = children[0].token?.value?.numberValue()?.toInt()
+                val precision = children[0].token!!.value!!.numberValue().toInt()
                 val time = LocalTime.parse(timeString, DateTimeFormatter.ISO_TIME)
-                DateTimeType.Time(time.hour, time.minute, time.second, time.nano, precision!!, null, metas)
+                DateTimeType.Time(time.hour, time.minute, time.second, time.nano, precision, null, metas)
             }
             TIME_WITH_TIME_ZONE -> {
                 val timeString = token!!.text!!
@@ -2335,8 +2335,8 @@ class SqlParser(private val ion: IonSystem) : Parser {
         val matcher = genericTimeRegex.toPattern().matcher(timeString)
         if (!matcher.find()) {
             org.partiql.lang.eval.err("Time string does not match the format 'HH:MM:SS[.ddd....][+|-HH:MM]'",
-            propertyValueMapOf(),
-            false
+                propertyValueMapOf(),
+                false
             )
         }
         // Note that the [genericTimeRegex] has a group to extract the fractional part of the second.
@@ -2425,7 +2425,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
         // The source span here is just the filler value and does not reflect the actual source location of the precision
         // as it does not exists in case the precision is unspecified.
         val precisionOfValue =  precision.token ?:
-            Token(LITERAL, ion.newInt(getPrecisionFromTimeString(newTimeString)), SourceSpan(-1, -1, -1))
+            Token(LITERAL, ion.newInt(getPrecisionFromTimeString(newTimeString)), timeStringToken.span)
 
         return ParseNode(
             if (isTimeZoneSpecified) TIME_WITH_TIME_ZONE else TIME,

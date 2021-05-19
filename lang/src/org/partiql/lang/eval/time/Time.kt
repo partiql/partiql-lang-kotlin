@@ -39,14 +39,13 @@ internal const val MAX_PRECISION_FOR_TIME = 9
  * @param zoneOffset Represents the time zone of the TIME instance.
  *  If the [zoneOffset] is null, the [Time] instance has no defined time zone.
  * @param precision Represents the number of significant digits in fractional part of the second's value of the TIME instance.
- *  The default precision is 9 meaning, the default precision is of nanoseconds.
- *  If the precision is specified by the user, the fractional part of the second will be rounded to the specified precision.
+ *  The fractional part of the second will be rounded to the specified precision.
  *  For eg, `TIME (3) 23:46:58.1267` will be stored in this instance with [localTime] as `23:46:58.127000000` along with preserving the
  *  [precision] value as 3.
  *  Note that the [LocalTime] always stores the fractional part of the second in nanoseconds.
  *  It is up to the application developers to make use of the preserved [precision] value as need be.
  */
-data class Time(val localTime: LocalTime, val precision: Int = MAX_PRECISION_FOR_TIME, val zoneOffset: ZoneOffset? = null) {
+data class Time private constructor(val localTime: LocalTime, val precision: Int, val zoneOffset: ZoneOffset? = null) {
 
     init {
         // Validate that the precision value is between 0 and 9 inclusive.
@@ -61,16 +60,23 @@ data class Time(val localTime: LocalTime, val precision: Int = MAX_PRECISION_FOR
 
     companion object {
 
-        /**
-         * Gives an instance of [Time] with the specified hour, minute, second, nano, precision and tz_minutes.
-         * Note that the precision applies for the fractional part of the second's value.
-         * However the fractional part will always be stored in the nanoseconds along with preserving the precision separately.
-         * If the specified precision is less than 9 (nanosecond's precision), then the fractional part of the second i.e. nano field is
-         * rounded up to the given precision.
+        /** Returns an instance of [Time] for the given hour, minute, second, precision and tz_minutes.
+         * @param hour  the hour of a day of 24 hours to represent, from 0 to 23
+         * @param minute  the minute of hour of 60 minutes to represent, from 0 to 59
+         * @param second  the second of minute of 60 seconds to represent, from 0 to 59
+         * @param nano  the nano of second to represent, from 0 to 999,999,999.
+         * @param precision  the number of desired significant digits in the fractional part of the second's value.
+         * If the precision is less than 9, the fractional part of the second will be rounded to the precision and [nano] will store the rounded value.
          * For e.g., if [nano] is 126700000 and the [precision] is 3, the [nano] will be rounded to 127000000.
          * Note that the [nano] will still store the value in nanoseconds (0's padded after the desired precision digits),
          * however the [Time] instance will preserve the [precision] thereby preserving the entire original value.
+         * The valid values for precision are between 0 and 9 inclusive.
+         * @param tz_minutes  the minutes of the UTC time-zone offset, from -1080 to 1080.
+         * If [tz_minutes] is null then the timezone offset is not defined.
+         * @return TimeExprValue
+         * @throws EvaluationException if the value of any field is out of range
          */
+        @JvmStatic
         @JvmOverloads
         fun of(hour: Int, minute: Int, second: Int, nano: Int, precision: Int, tz_minutes: Int? = null) : Time {
 
@@ -109,6 +115,19 @@ data class Time(val localTime: LocalTime, val precision: Int = MAX_PRECISION_FOR
                 ZoneOffset.ofTotalSeconds( it * SECONDS_PER_MINUTE)
             }
             return Time(localTime, precision, zoneOffset)
+        }
+
+        /**
+         * Returns an instance of [Time] for the given localTime, precision and zoneOffset.
+         * Precision is used to round up the fractional part of the second (nano field of localTime).
+         * The [Time] instance returned has the [LocalTime] rounded up to this precision.
+         */
+        @JvmStatic
+        @JvmOverloads
+        fun of(localTime: LocalTime, precision: Int, zoneOffset: ZoneOffset? = null) : Time {
+            return Time.of(localTime.hour, localTime.minute, localTime.second, localTime.nano, precision,
+                zoneOffset?.totalSeconds?.div(SECONDS_PER_MINUTE)
+            )
         }
     }
 

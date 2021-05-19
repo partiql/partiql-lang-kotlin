@@ -372,19 +372,9 @@ class ExprValueFactoryTest {
         Assert.assertEquals("Expected day to be 29", 29, timestamp.day)
     }
 
-    private fun createIonTimeStruct(hour: Int, minute: Int, second: Int, nano: Int = 0, totalSeconds: Int? = null): IonStruct =
-        ion.newEmptyStruct().apply {
-            add("hour", ion.newInt(hour))
-            add("minute", ion.newInt(minute))
-            add("second", ion.newFloat( second + nano * 10.0.pow(-9)))
-            add("timezone_hour", ion.newInt(totalSeconds?.div(3600)))
-            add("timezone_minute", ion.newInt(totalSeconds?.div((60))?.rem(60)))
-            addTypeAnnotation("\$partiql_time")
-        }
-
     @Test
     fun genericTimeExprValueTest() {
-        val timeExprValue = factory.newTime(23, 2, 29, 23, 2)
+        val timeExprValue = factory.newTime(Time.of(23, 2, 29, 23, 2))
         assertEquals(
             expected = LocalTime.of(23, 2, 29),
             actual = timeExprValue.scalar.timeValue()!!.localTime,
@@ -394,7 +384,7 @@ class ExprValueFactoryTest {
 
     @Test
     fun genericTimeExprValueTest2() {
-        val timeExprValue = factory.newTime(23, 2, 29, 23, 2, -720)
+        val timeExprValue = factory.newTime(Time.of(23, 2, 29, 23, 2, -720))
         assertEquals(
             expected = OffsetTime.of(23, 2, 29, 0, ZoneOffset.ofTotalSeconds(-720*60)),
             actual = timeExprValue.scalar.timeValue()!!.offsetTime,
