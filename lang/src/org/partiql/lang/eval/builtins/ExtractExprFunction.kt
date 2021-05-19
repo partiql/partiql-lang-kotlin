@@ -16,6 +16,7 @@ package org.partiql.lang.eval.builtins
 
 import com.amazon.ion.*
 import org.partiql.lang.eval.*
+import org.partiql.lang.eval.time.Time
 import org.partiql.lang.syntax.*
 import java.time.LocalDate
 
@@ -66,11 +67,32 @@ internal class ExtractExprFunction(valueFactory: ExprValueFactory) : NullPropaga
         }.toDouble()
     }
 
+    private fun Time.extractedValue(datePart: DatePart) : Double {
+        return when (datePart) {
+            DatePart.HOUR -> localTime.hour.toDouble()
+            DatePart.MINUTE -> localTime.minute.toDouble()
+            DatePart.SECOND -> secondsWithFractionalPart.toDouble()
+            DatePart.TIMEZONE_HOUR -> timezoneHour?.toDouble() ?: errNoContext(
+                "Time unit ${datePart.name.toLowerCase()} not supported for TIME type without TIME ZONE",
+                internal = false
+            )
+            DatePart.TIMEZONE_MINUTE -> timezoneMinute?.toDouble() ?: errNoContext(
+                "Time unit ${datePart.name.toLowerCase()} not supported for TIME type without TIME ZONE",
+                internal = false
+            )
+            DatePart.YEAR, DatePart.MONTH, DatePart.DAY -> errNoContext(
+                "Time unit ${datePart.name.toLowerCase()} not supported for TIME type.",
+                internal = false
+            )
+        }
+    }
+
     override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
         val datePart = args[0].datePartValue()
         val extractedValue = when(args[1].type) {
             ExprValueType.TIMESTAMP -> args[1].timestampValue().extractedValue(datePart)
             ExprValueType.DATE      -> args[1].dateValue().extractedValue(datePart)
+            ExprValueType.TIME      -> args[1].timeValue().extractedValue(datePart)
             else                    -> errNoContext("Expected date or timestamp: ${args[1]}", internal = false)
         }
 

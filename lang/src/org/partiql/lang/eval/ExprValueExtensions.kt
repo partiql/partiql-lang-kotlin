@@ -18,6 +18,7 @@ import com.amazon.ion.*
 import org.partiql.lang.ast.*
 import org.partiql.lang.errors.*
 import org.partiql.lang.eval.ExprValueType.*
+import org.partiql.lang.eval.time.Time
 import org.partiql.lang.syntax.*
 import org.partiql.lang.util.*
 import java.math.*
@@ -83,6 +84,9 @@ fun ExprValue.numberValue(): Number =
 
 fun ExprValue.dateValue(): LocalDate =
     scalar.dateValue() ?: errNoContext("Expected date: $ionValue", internal = false)
+
+fun ExprValue.timeValue(): Time =
+    scalar.timeValue() ?: errNoContext("Expected time: $ionValue", internal = false)
 
 fun ExprValue.timestampValue(): Timestamp =
     scalar.timestampValue() ?: errNoContext("Expected timestamp: $ionValue", internal = false)

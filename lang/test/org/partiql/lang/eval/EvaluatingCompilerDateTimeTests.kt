@@ -8,7 +8,6 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.eval.time.*
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.getOffsetHHmm
-import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.Instant
 import java.time.ZoneOffset
@@ -47,7 +46,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
     }
 
     private fun secondsWithPrecision(time: TimeForTest) =
-        ion.newDecimal(BigDecimal(time.second + time.nano / NANOS_PER_SECOND).setScale(time.precision, RoundingMode.HALF_UP))
+        ion.newDecimal(time.second.toBigDecimal() + time.nano.toBigDecimal().divide(NANOS_PER_SECOND.toBigDecimal()).setScale(time.precision, RoundingMode.HALF_UP))
 
     private fun assertEqualsIonTimeStruct(actual: IonStruct, expectedTime: TimeForTest) {
         assertEquals(ion.newInt(expectedTime.hour), actual["hour"])

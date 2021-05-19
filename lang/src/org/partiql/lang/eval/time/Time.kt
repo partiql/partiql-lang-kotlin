@@ -25,7 +25,7 @@ internal const val HOURS_PER_DAY = 24
 internal const val MINUTES_PER_HOUR = 60
 internal const val SECONDS_PER_MINUTE = 60
 internal const val SECONDS_PER_HOUR = SECONDS_PER_MINUTE * MINUTES_PER_HOUR
-internal const val NANOS_PER_SECOND = 1000000000.0
+internal const val NANOS_PER_SECOND = 1000000000
 internal const val MAX_PRECISION_FOR_TIME = 9
 
 
@@ -96,12 +96,12 @@ data class Time private constructor(val localTime: LocalTime, val precision: Int
             // Round nanoseconds to the given precision.
             val nanoWithPrecision = when (precision) {
                 MAX_PRECISION_FOR_TIME -> nano
-                else -> (BigDecimal(nano / NANOS_PER_SECOND).setScale(precision, RoundingMode.HALF_UP) * NANOS_PER_SECOND).toInt()
+                else -> ((nano.toBigDecimal().divide(NANOS_PER_SECOND.toBigDecimal())).setScale(precision, RoundingMode.HALF_EVEN).multiply(NANOS_PER_SECOND.toBigDecimal())).toInt()
             }
             // If the nanos are added to form up a whole second because of the specified precision, carry over the second all up to the hour
             // and use the mod values of all the new fields to fit in the valid range.
-            val newNano = nanoWithPrecision % NANOS_PER_SECOND.toInt()
-            val newSecond = second + (nanoWithPrecision / NANOS_PER_SECOND.toInt())
+            val newNano = nanoWithPrecision % NANOS_PER_SECOND
+            val newSecond = second + (nanoWithPrecision / NANOS_PER_SECOND)
             val newMinute = minute + (newSecond / SECONDS_PER_MINUTE)
             val newHour = (hour + (newMinute / MINUTES_PER_HOUR))
             // Since all the values are checked for range, this call will not throw a DateTimeException.
@@ -139,14 +139,32 @@ data class Time private constructor(val localTime: LocalTime, val precision: Int
             OffsetTime.of(localTime, it)
         }
 
+    /**
+     * Returns the TIMEZONE_HOUR for the [zoneOffset] of this instance.
+     */
+    val timezoneHour
+        get() : Int? = zoneOffset?.totalSeconds?.div(SECONDS_PER_HOUR)
+
+    /**
+     * Returns the TIMEZONE_HOUR for the [zoneOffset] of this instance.
+     */
+    val timezoneMinute
+        get() : Int? = (zoneOffset?.totalSeconds?.div(SECONDS_PER_MINUTE))?.rem(SECONDS_PER_MINUTE)
+
+    /**
+     * Returns the seconds along with the fractional part of the second's value.
+     */
+    val secondsWithFractionalPart : BigDecimal
+        get()  = (localTime.second.toBigDecimal() + localTime.nano.toBigDecimal().divide(NANOS_PER_SECOND.toBigDecimal()))
+                    .setScale(precision, RoundingMode.HALF_EVEN)
+
     fun toIonValue(ion: IonSystem): IonStruct =
         ion.newEmptyStruct().apply {
             add("hour", ion.newInt(localTime.hour))
             add("minute", ion.newInt(localTime.minute))
-            add("second", ion.newDecimal(BigDecimal(localTime.second + localTime.nano / NANOS_PER_SECOND).setScale(
-                precision, RoundingMode.HALF_UP)))
-            add("timezone_hour", ion.newInt(zoneOffset?.totalSeconds?.div(SECONDS_PER_HOUR)))
-            add("timezone_minute", ion.newInt(zoneOffset?.totalSeconds?.div((SECONDS_PER_MINUTE))?.rem(60)))
+            add("second", ion.newDecimal(secondsWithFractionalPart))
+            add("timezone_hour", ion.newInt(timezoneHour))
+            add("timezone_minute", ion.newInt(timezoneMinute))
             addTypeAnnotation(PARTIQL_TIME_ANNOTATION)
         }
 

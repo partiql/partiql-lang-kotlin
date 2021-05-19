@@ -26,6 +26,7 @@ import org.junit.runner.RunWith
 import java.util.*
 import junitparams.JUnitParamsRunner
 import org.partiql.lang.ast.passes.AstRewriterBase
+import org.partiql.lang.eval.time.Time
 import java.time.LocalDate
 import kotlin.reflect.*
 
@@ -43,6 +44,7 @@ abstract class TestBase : Assert() {
         is Decimal   -> valueFactory.newDecimal(value)
         is Timestamp -> valueFactory.newTimestamp(value)
         is LocalDate -> valueFactory.newDate(value)
+        is Time      -> valueFactory.newTime(value)
         is Double    -> valueFactory.newFloat(value)
         else         ->
             error("Can't convert receiver to ExprValue (please extend this function to support the receiver's data type).")
