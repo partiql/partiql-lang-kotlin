@@ -29,7 +29,6 @@ import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.*
 import java.math.*
-import java.time.LocalDate
 import java.util.*
 import kotlin.collections.*
 
@@ -208,6 +207,10 @@ internal class EvaluatingCompiler(
 
     /**
      * Compiles an [ExprNode] tree to an [Expression].
+     *
+     * Checks [Thread.interrupted] before every expression and sub-expression is compiled
+     * and throws [InterruptedException] if [Thread.interrupted] it has been set in the
+     * hope that long running compilations may be aborted by the caller.
      */
     fun compile(originalAst: ExprNode): Expression {
         val visitorTransformer = compileOptions.visitorTransformMode.createVisitorTransform()
@@ -258,7 +261,13 @@ internal class EvaluatingCompiler(
      */
     fun eval(ast: ExprNode, session: EvaluationSession): ExprValue = compile(ast).eval(session)
 
+    /**
+     * Compiles the specified [ExprNode] into a [ThunkEnv].
+     *
+     * This function will [InterruptedException] if [Thread.interrupted] has been set.
+     */
     private fun compileExprNode(expr: ExprNode): ThunkEnv {
+        checkThreadInterrupted()
         return when (expr) {
             is Literal           -> compileLiteral(expr)
             is LiteralMissing    -> compileLiteralMissing(expr)

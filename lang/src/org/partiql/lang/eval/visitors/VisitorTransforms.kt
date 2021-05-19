@@ -24,6 +24,6 @@ fun basicVisitorTransforms() = PipelinedVisitorTransform(
 
 /** A stateless visitor transform that returns the input. */
 @JvmField
-internal val IDENTITY_VISITOR_TRANSFORM: PartiqlAst.VisitorTransform = object : PartiqlAst.VisitorTransform() {
+internal val IDENTITY_VISITOR_TRANSFORM: PartiqlAst.VisitorTransform = object : VisitorTransformBase() {
     override fun transformStatement(node: PartiqlAst.Statement): PartiqlAst.Statement = node
 }

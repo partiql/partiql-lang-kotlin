@@ -5,7 +5,7 @@ import org.partiql.lang.ast.UniqueNameMeta
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.errNoContext
 
-class SelectStarVisitorTransform : PartiqlAst.VisitorTransform() {
+class SelectStarVisitorTransform : VisitorTransformBase() {
 
     /**
      * Copies all parts of [PartiqlAst.Expr.Select] except [newProjection] for [PartiqlAst.Projection].

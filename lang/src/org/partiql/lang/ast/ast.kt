@@ -24,18 +24,39 @@ import java.util.*
 sealed class AstNode : Iterable<AstNode> {
 
     /**
-     * returns all the children nodes.
+     * Returns all the children nodes.
+     *
+     * This property is [deprecated](see https://github.com/partiql/partiql-lang-kotlin/issues/396).  Use
+     * one of the following PIG-generated classes to analyze AST nodes instead:
+     *
+     * - [org.partiql.lang.domains.PartiqlAst.Visitor]
+     * - [org.partiql.lang.domains.PartiqlAst.VisitorFold]
      */
+    @Deprecated("DO NOT USE - see kdoc, see https://github.com/partiql/partiql-lang-kotlin/issues/396")
     abstract val children: List<AstNode>
 
     /**
      * Depth first iterator over all nodes.
+     *
+     * While collecting child nodes, throws [InterruptedException] if the [Thread.interrupted] flag has been set.
+     *
+     * This property is [deprecated](see https://github.com/partiql/partiql-lang-kotlin/issues/396).  Use
+     * one of the following PIG-generated classes to analyze AST nodes instead:
+     *
+     * - [org.partiql.lang.domains.PartiqlAst.Visitor]
+     * - [org.partiql.lang.domains.PartiqlAst.VisitorFold]
      */
+    @Deprecated("DO NOT USE - see kdoc for alternatives")
     override operator fun iterator(): Iterator<AstNode> {
-        fun depthFirstSequence(node: AstNode): Sequence<AstNode> =
-            sequenceOf(node) + node.children.asSequence().flatMap { depthFirstSequence(it) }
+        val allNodes = mutableListOf<AstNode>()
 
-        return depthFirstSequence(this).iterator();
+        fun depthFirstSequence(node: AstNode) {
+            allNodes.add(node)
+            node.children.interruptibleMap { depthFirstSequence(it) }
+        }
+
+        depthFirstSequence(this)
+        return allNodes.toList().iterator()
     }
 }
 
