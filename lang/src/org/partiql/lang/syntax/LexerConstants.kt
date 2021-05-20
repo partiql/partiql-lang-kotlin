@@ -19,6 +19,7 @@ import org.partiql.lang.syntax.TokenType.OPERATOR
 
 @JvmField internal val TRIM_SPECIFICATION_KEYWORDS = setOf("both", "leading", "trailing")
 
+//TODO: Rename DatePart to DateTimePart. Check issue https://github.com/partiql/partiql-lang-kotlin/issues/409
 internal enum class DatePart {
     YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, TIMEZONE_HOUR, TIMEZONE_MINUTE
 }

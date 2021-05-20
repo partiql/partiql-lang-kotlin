@@ -248,7 +248,7 @@ class AstDeserializerBuilder(val ion: IonSystem) {
         }
 }
 
-private class AstDeserializerInternal(
+internal class AstDeserializerInternal(
     val astVersion: AstVersion,
     val ion: IonSystem,
     private val metaDeserializers: Map<String, MetaDeserializer>
@@ -262,7 +262,9 @@ private class AstDeserializerInternal(
         return deserializeExprNode(sexp)
     }
 
-    private fun validate(rootSexp: IonSexp) {
+    internal fun validate(rootSexp: IonSexp) {
+        checkThreadInterrupted()
+
         val nodeTag = rootSexp.nodeTag // Throws if nodeTag is invalid for the current AstVersion
         val nodeArgs = rootSexp.args
 
@@ -321,8 +323,9 @@ private class AstDeserializerInternal(
     /**
      * Given a serialized AST, return its [ExprNode] representation.
      */
-    private fun deserializeExprNode(metaOrTermOrExp: IonSexp): ExprNode =
-        deserializeSexpMetaOrTerm(metaOrTermOrExp) { target, metas ->
+    internal fun deserializeExprNode(metaOrTermOrExp: IonSexp): ExprNode {
+        checkThreadInterrupted()
+        return deserializeSexpMetaOrTerm(metaOrTermOrExp) { target, metas ->
             val nodeTag = target.nodeTag
             val targetArgs = target.args //args is an extension property--call it once for efficiency
             //.toList() forces immutability
@@ -417,6 +420,7 @@ private class AstDeserializerInternal(
                 NodeTag.TYPE -> errInvalidContext(nodeTag)
             }
         }
+    }
 
     private fun deserializeLit(targetArgs: List<IonValue>, metas: MetaContainer) = Literal(targetArgs.first(), metas)
     private fun deserializeMissing(metas: MetaContainer) = LiteralMissing(metas)

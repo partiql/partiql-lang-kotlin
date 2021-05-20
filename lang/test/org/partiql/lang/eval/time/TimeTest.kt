@@ -2,6 +2,7 @@ package org.partiql.lang.eval.time
 
 import junitparams.JUnitParamsRunner
 import junitparams.Parameters
+import org.junit.Assert
 import org.junit.Test
 import org.junit.jupiter.api.Assertions.*
 import org.junit.runner.RunWith
@@ -36,13 +37,21 @@ class TimeTest {
     fun runTests(tc: TimeTestCase) {
         when (tc.expectedErrorCode) {
             null -> {
-                val time = Time.of(tc.hour, tc.min, tc.second, tc.nano, tc.precision, tc.tz_min)
-                assertEquals(tc.expectedLocalTime, time.localTime)
-                assertEquals(tc.expectedZoneOffset, time.zoneOffset)
+                val time1 = Time.of(tc.hour, tc.min, tc.second, tc.nano, tc.precision, tc.tz_min)
+                val time2 = Time.of(
+                    LocalTime.of(tc.hour, tc.min, tc.second, tc.nano),
+                    tc.precision,
+                    tc.tz_min?.let { ZoneOffset.ofTotalSeconds(it * SECONDS_PER_MINUTE) }
+                )
+                // Values returned from the above two APIs should be same.
+                assertEquals(time1, time2)
+                assertEquals(tc.expectedLocalTime, time1.localTime)
+                assertEquals(tc.expectedZoneOffset, time1.zoneOffset)
             }
             else -> {
                 try {
                     Time.of(tc.hour, tc.min, tc.second, tc.nano, tc.precision, tc.tz_min)
+                    Assert.fail("Expected evaluation error")
                 } catch (e: EvaluationException) {
                     assertEquals(tc.expectedErrorCode, e.errorCode)
                 }
@@ -105,15 +114,6 @@ class TimeTest {
             hour = 23,
             min = 23,
             sec = 12,
-            nano = 123456789,
-            precision = 0,
-            tz_min = 18 * MINUTES_PER_HOUR,
-            expectedErrorCode = ErrorCode.EVALUATOR_DATETIME_EXCEPTION
-        ),
-        case(
-            hour = 23,
-            min = 23,
-            sec = 12,
             nano = 123456500,
             precision = 10,
             tz_min = 300,
@@ -128,6 +128,7 @@ class TimeTest {
             tz_min = 300,
             expectedErrorCode = ErrorCode.EVALUATOR_INVALID_PRECISION_FOR_TIME
         ),
+        // hour value out of range
         case(
             hour = 24,
             min = 23,
@@ -137,6 +138,7 @@ class TimeTest {
             tz_min = 300,
             expectedErrorCode = ErrorCode.EVALUATOR_DATETIME_EXCEPTION
         ),
+        // minute value out of range
         case(
             hour = 23,
             min = 60,
@@ -146,6 +148,7 @@ class TimeTest {
             tz_min = 300,
             expectedErrorCode = ErrorCode.EVALUATOR_DATETIME_EXCEPTION
         ),
+        // second value out of range
         case(
             hour = 23,
             min = 23,
@@ -155,6 +158,7 @@ class TimeTest {
             tz_min = 300,
             expectedErrorCode = ErrorCode.EVALUATOR_DATETIME_EXCEPTION
         ),
+        // timezone minute out of range
         case(
             hour = 23,
             min = 23,
@@ -164,6 +168,7 @@ class TimeTest {
             tz_min = - 18 * MINUTES_PER_HOUR - 1,
             expectedErrorCode = ErrorCode.EVALUATOR_DATETIME_EXCEPTION
         ),
+        // timezone minute out of range
         case(
             hour = 23,
             min = 23,

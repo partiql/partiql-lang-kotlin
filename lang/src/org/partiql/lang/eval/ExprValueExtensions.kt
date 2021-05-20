@@ -352,24 +352,21 @@ fun ExprValue.cast(
                             val time = timeValue()
                             return valueFactory.newTime(
                                 Time.of(
-                                    time.localTime.hour,
-                                    time.localTime.minute,
-                                    time.localTime.second,
-                                    time.localTime.nano,
+                                    time.localTime,
                                     precision?: time.precision,
                                     when (targetSqlDataType) {
-                                        SqlDataType.TIME_WITH_TIME_ZONE -> time.zoneOffset?.totalSeconds?.div(SECONDS_PER_MINUTE)?: LOCAL_TIMEZONE_OFFSET.totalSeconds / SECONDS_PER_MINUTE
+                                        SqlDataType.TIME_WITH_TIME_ZONE -> time.zoneOffset?: LOCAL_TIMEZONE_OFFSET
                                         else -> null
                                     }
                                 ))
                         }
                         type == TIMESTAMP -> {
                             val ts = timestampValue()
-                            return valueFactory.newTime(
+                            return valueFactory.newTime(Time.of(
                                 ts.hour,
                                 ts.minute,
                                 ts.second,
-                                (ts.decimalSecond.remainder(BigDecimal.ONE) * NANOS_PER_SECOND).toInt(),
+                                (ts.decimalSecond.remainder(BigDecimal.ONE).multiply(NANOS_PER_SECOND.toBigDecimal())).toInt(),
                                 precision?: ts.decimalSecond.scale(),
                                 when (targetSqlDataType) {
                                     SqlDataType.TIME_WITH_TIME_ZONE -> ts.localOffset?: castFailedErr(
@@ -378,7 +375,7 @@ fun ExprValue.cast(
                                     )
                                     else -> null
                                 }
-                            )
+                            ))
                         }
                         type.isText -> try {
                             // validate that the time string follows the format HH:MM:SS[.ddddd...][+|-HH:MM]
@@ -399,13 +396,10 @@ fun ExprValue.cast(
 
                             return valueFactory.newTime(
                                 Time.of(
-                                    localTime.hour,
-                                    localTime.minute,
-                                    localTime.second,
-                                    localTime.nano,
+                                    localTime,
                                     precision?: getPrecisionFromTimeString(stringValue()),
                                     when (targetSqlDataType) {
-                                        SqlDataType.TIME_WITH_TIME_ZONE -> zoneOffset.totalSeconds / SECONDS_PER_MINUTE
+                                        SqlDataType.TIME_WITH_TIME_ZONE -> zoneOffset
                                         else -> null
                                     }
                             ))

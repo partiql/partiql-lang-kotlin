@@ -20,6 +20,7 @@ import org.partiql.lang.eval.*
 import org.partiql.lang.eval.builtins.*
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.syntax.*
+import org.partiql.lang.util.interruptibleFold
 
 /**
  * Contains all of the information needed for processing steps.
@@ -180,7 +181,7 @@ interface CompilerPipeline  {
     }
 }
 
-private class CompilerPipelineImpl(
+internal class CompilerPipelineImpl(
     override val valueFactory: ExprValueFactory,
     private val parser: Parser,
     override val compileOptions: CompileOptions,
@@ -198,10 +199,15 @@ private class CompilerPipelineImpl(
     override fun compile(query: ExprNode): Expression {
         val context = StepContext(valueFactory, compileOptions, functions, procedures)
 
-        val preProcessedQuery = preProcessingSteps.fold(query) { currentExprNode, step ->
-            step(currentExprNode, context)
-        }
+        val preProcessedQuery = executePreProcessingSteps(query, context)
 
         return compiler.compile(preProcessedQuery)
+    }
+
+    internal fun executePreProcessingSteps(
+        query: ExprNode,
+        context: StepContext
+    ) = preProcessingSteps.interruptibleFold(query) { currentExprNode, step ->
+        step(currentExprNode, context)
     }
 }
