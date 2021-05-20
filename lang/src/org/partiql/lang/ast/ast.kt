@@ -1052,7 +1052,8 @@ enum class SqlDataType(val typeName: String, val arityRange: IntRange) {
     LIST("list", 0..0), // Ion
     SEXP("sexp", 0..0), // Ion
     DATE("date", 0..0), // SQL-92
-    TIME("time", 0..2), // SQL-92
+    TIME("time", 0..1), // SQL-92
+    TIME_WITH_TIME_ZONE("time_with_time_zone", 0..1), // SQL-92
     BAG("bag", 0..0);  // PartiQL
 
     companion object {

@@ -836,6 +836,8 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
         // Error cases for TIME
         listOf(
             case("TIME '23:12:12.1267'", "TIME (-1)", PARSE_INVALID_PRECISION_FOR_TIME),
+                case("TIME '23:12:12.1267'", "TIME (1, 2)", PARSE_CAST_ARITY),
+                case("TIME '23:12:12.1267'", "TIME (1, 2) WITH TIME ZONE", PARSE_CAST_ARITY),
             case("TIME '23:12:12.1267-05:30'", "TIME (10) WITH TIME ZONE", PARSE_INVALID_PRECISION_FOR_TIME),
             case("TIME '23:12:12.1267+05:30'", "TIME (10)", PARSE_INVALID_PRECISION_FOR_TIME),
             // Cannot case timestamp with undefined timezone to "TIME WITH TIME ZONE"

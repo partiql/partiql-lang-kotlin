@@ -1346,47 +1346,6 @@ class SqlParser(private val ion: IonSystem) : Parser {
             .deriveExpectedKeyword("end")
     }
 
-    /**
-     * Parse TIME type for Typed Ops such as CAST, IS.
-     * Note that this function is intented to be called only from [parseType]
-     */
-    private fun ParseNode.parseTimeForTyped() : ParseNode {
-        val (remainingAfterOptionalTimeZone, isTimeZoneSpecified) = remaining.checkForOptionalTimeZone()
-
-        // timezone child node to indicate if "WITH TIME ZONE" was specified for the TIME type.
-        // The source span here is just the filler value and does not reflect the actual source location of the "with time zone"
-        val timezone = ParseNode(
-            ATOM,
-            Token(LITERAL, ion.newInt(if (isTimeZoneSpecified) 1 else 0), SourceSpan(-1, -1, -1)),
-            listOf(),
-            remaining
-        )
-
-        // If precision is not specified in the arguments, it is indicated by the value MAX_PRECISION_FOR_TIME + 1 (i.e. 10)
-        // TODO: Find an alternative better way to model this logic.
-        // The source span here is just the filler value and does not reflect the actual source location of the "with time zone"
-        val precision = if (children.isNotEmpty()) {
-            val precision = children[0]
-            // Check for the valid values of precision
-            if (precision.token?.value == null || !precision.token.value.isUnsignedInteger ||
-                precision.token.value.longValue() < 0 || precision.token.value.longValue() > MAX_PRECISION_FOR_TIME) {
-                precision.token.err("Expected integer value between 0 and 9 for precision", PARSE_INVALID_PRECISION_FOR_TIME)
-            }
-            precision
-        } else {
-            ParseNode(
-                ATOM,
-                // The value MAX_PRECISION_FOR_TIME + 1 is intentional to indicate that the precision was not specified.
-                Token(LITERAL, ion.newInt(MAX_PRECISION_FOR_TIME + 1), SourceSpan(-1, -1, -1)),
-                listOf(),
-                remaining
-            )
-        }
-
-        return copy(remaining = remainingAfterOptionalTimeZone,
-            children = listOf(timezone, precision))
-    }
-
     private fun List<Token>.parseCast(): ParseNode {
         if (head?.type != LEFT_PAREN) {
             err("Missing left parenthesis after CAST", PARSE_EXPECTED_LEFT_PAREN_AFTER_CAST)
@@ -1415,10 +1374,28 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
             else -> ParseNode(TYPE, head, emptyList(), tail)
         }
-        // Check for the optional time zone for TIME
+        // Check for the optional "WITH TIME ZONE" specifier for TIME and validate the value of precision.
+        // Note that this needs to be checked explicitly as the keywordtext for "TIME WITH TIME ZONE" consists of multiple words.
         .let {
             if (typeName == "time") {
-                it.parseTimeForTyped()
+                // Check for the range of valid values for precision
+                it.children.firstOrNull()?.also { precision ->
+                    if (precision.token?.value == null || !precision.token.value.isUnsignedInteger ||
+                        precision.token.value.longValue() < 0 || precision.token.value.longValue() > MAX_PRECISION_FOR_TIME
+                    ) {
+                        precision.token.err(
+                            "Expected integer value between 0 and 9 for precision",
+                            PARSE_INVALID_PRECISION_FOR_TIME
+                        )
+                    }
+                }
+                val (remainingAfterOptionalTimeZone, isTimeZoneSpecified) = it.remaining.checkForOptionalTimeZone()
+                val newToken = if (isTimeZoneSpecified) {
+                    it.token!!.copy(value = ion.singleValue(SqlDataType.TIME_WITH_TIME_ZONE.typeName))
+                } else {
+                    it.token
+                }
+                it.copy(token = newToken, remaining = remainingAfterOptionalTimeZone)
             }
             else {
                 it

@@ -365,8 +365,8 @@
             // TIME : timezoneSpecified is 1 if time zone is specified else 0
             //        precision is defaulted to the length of the mantissa of the second's value if the precision is not specified.
             // Note: This logic is implemented in SqlParser.
-            // TODO: Change timezoneSpecified to boolean or ionBool.
-            (time_type timezoneSpecified::(? int) precision::(? int))
+            (time_type precision::(? int))
+            (time_with_time_zone_type precision::(? int))
 
             (struct_type)
             (tuple_type)

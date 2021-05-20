@@ -106,7 +106,7 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
     fun castStringToIntFailed() = checkInputThrowingEvaluationException(
         "CAST(`'a'` as INT)",
         ErrorCode.EVALUATOR_CAST_FAILED,
-        sourceLocationProperties(1, 5) + mapOf(Property.CAST_FROM to "SYMBOL", Property.CAST_TO to "INT"))
+        sourceLocationProperties(1, 5) + mapOf(Property.CAST_FROM to "SYMBOL", Property.CAST_TO to "INTEGER"))
 
     @Test
     fun sum() {
