@@ -19,7 +19,6 @@ import org.partiql.lang.ast.*
 import org.partiql.lang.errors.*
 import org.partiql.lang.eval.ExprValueType.*
 import org.partiql.lang.eval.time.NANOS_PER_SECOND
-import org.partiql.lang.eval.time.SECONDS_PER_MINUTE
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.syntax.*
 import org.partiql.lang.util.*
@@ -350,31 +349,33 @@ fun ExprValue.cast(
                     when {
                         type == TIME -> {
                             val time = timeValue()
+                            val timeZoneOffset = when (targetSqlDataType) {
+                                SqlDataType.TIME_WITH_TIME_ZONE -> time.zoneOffset?: LOCAL_TIMEZONE_OFFSET
+                                else -> null
+                            }
                             return valueFactory.newTime(
                                 Time.of(
                                     time.localTime,
                                     precision?: time.precision,
-                                    when (targetSqlDataType) {
-                                        SqlDataType.TIME_WITH_TIME_ZONE -> time.zoneOffset?: LOCAL_TIMEZONE_OFFSET
-                                        else -> null
-                                    }
+                                    timeZoneOffset
                                 ))
                         }
                         type == TIMESTAMP -> {
                             val ts = timestampValue()
+                            val timeZoneOffset = when (targetSqlDataType) {
+                                SqlDataType.TIME_WITH_TIME_ZONE -> ts.localOffset?: castFailedErr(
+                                    "Can't convert timestamp value with unknown local offset (i.e. -00:00) to TIME WITH TIME ZONE.",
+                                    internal = false
+                                )
+                                else -> null
+                            }
                             return valueFactory.newTime(Time.of(
                                 ts.hour,
                                 ts.minute,
                                 ts.second,
                                 (ts.decimalSecond.remainder(BigDecimal.ONE).multiply(NANOS_PER_SECOND.toBigDecimal())).toInt(),
                                 precision?: ts.decimalSecond.scale(),
-                                when (targetSqlDataType) {
-                                    SqlDataType.TIME_WITH_TIME_ZONE -> ts.localOffset?: castFailedErr(
-                                        "Can't convert timestamp value with undefined time zone to TIME WITH TIME ZONE.",
-                                        internal = false
-                                    )
-                                    else -> null
-                                }
+                                timeZoneOffset
                             ))
                         }
                         type.isText -> try {

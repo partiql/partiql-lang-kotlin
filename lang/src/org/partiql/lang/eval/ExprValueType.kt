@@ -174,29 +174,29 @@ enum class ExprValueType(val typeNames: List<String>,
 
         fun fromSqlDataType(sqlDataType: SqlDataType) =
             when (sqlDataType) {
-                SqlDataType.BOOLEAN            -> ExprValueType.BOOL
-                SqlDataType.MISSING            -> ExprValueType.MISSING
-                SqlDataType.NULL               -> ExprValueType.NULL
-                SqlDataType.SMALLINT           -> ExprValueType.INT
-                SqlDataType.INTEGER            -> ExprValueType.INT
-                SqlDataType.FLOAT              -> ExprValueType.FLOAT
-                SqlDataType.REAL               -> ExprValueType.FLOAT
-                SqlDataType.DOUBLE_PRECISION   -> ExprValueType.FLOAT
-                SqlDataType.DECIMAL            -> ExprValueType.DECIMAL
-                SqlDataType.NUMERIC            -> ExprValueType.DECIMAL
-                SqlDataType.TIMESTAMP          -> ExprValueType.TIMESTAMP
-                SqlDataType.CHARACTER          -> ExprValueType.STRING
-                SqlDataType.CHARACTER_VARYING  -> ExprValueType.STRING
-                SqlDataType.STRING             -> ExprValueType.STRING
-                SqlDataType.SYMBOL             -> ExprValueType.SYMBOL
-                SqlDataType.CLOB               -> ExprValueType.CLOB
-                SqlDataType.BLOB               -> ExprValueType.BLOB
-                SqlDataType.STRUCT             -> ExprValueType.STRUCT
-                SqlDataType.TUPLE              -> ExprValueType.STRUCT
-                SqlDataType.LIST               -> ExprValueType.LIST
-                SqlDataType.SEXP               -> ExprValueType.SEXP
-                SqlDataType.BAG                -> ExprValueType.BAG
-                SqlDataType.DATE               -> ExprValueType.DATE
+                SqlDataType.BOOLEAN             -> ExprValueType.BOOL
+                SqlDataType.MISSING             -> ExprValueType.MISSING
+                SqlDataType.NULL                -> ExprValueType.NULL
+                SqlDataType.SMALLINT            -> ExprValueType.INT
+                SqlDataType.INTEGER             -> ExprValueType.INT
+                SqlDataType.FLOAT               -> ExprValueType.FLOAT
+                SqlDataType.REAL                -> ExprValueType.FLOAT
+                SqlDataType.DOUBLE_PRECISION    -> ExprValueType.FLOAT
+                SqlDataType.DECIMAL             -> ExprValueType.DECIMAL
+                SqlDataType.NUMERIC             -> ExprValueType.DECIMAL
+                SqlDataType.TIMESTAMP           -> ExprValueType.TIMESTAMP
+                SqlDataType.CHARACTER           -> ExprValueType.STRING
+                SqlDataType.CHARACTER_VARYING   -> ExprValueType.STRING
+                SqlDataType.STRING              -> ExprValueType.STRING
+                SqlDataType.SYMBOL              -> ExprValueType.SYMBOL
+                SqlDataType.CLOB                -> ExprValueType.CLOB
+                SqlDataType.BLOB                -> ExprValueType.BLOB
+                SqlDataType.STRUCT              -> ExprValueType.STRUCT
+                SqlDataType.TUPLE               -> ExprValueType.STRUCT
+                SqlDataType.LIST                -> ExprValueType.LIST
+                SqlDataType.SEXP                -> ExprValueType.SEXP
+                SqlDataType.BAG                 -> ExprValueType.BAG
+                SqlDataType.DATE                -> ExprValueType.DATE
                 SqlDataType.TIME,
                 SqlDataType.TIME_WITH_TIME_ZONE -> ExprValueType.TIME
             }
