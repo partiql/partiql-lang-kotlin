@@ -15,9 +15,9 @@ import org.partiql.pig.runtime.SymbolPrimitive
  *
  * If provided with a query that has all of the from source aliases already specified, an exact clone is returned.
  */
-class FromSourceAliasVisitorTransform : PartiqlAst.VisitorTransform() {
+class FromSourceAliasVisitorTransform : VisitorTransformBase() {
 
-    private class InnerFromSourceAliasVisitorTransform : PartiqlAst.VisitorTransform() {
+    private class InnerFromSourceAliasVisitorTransform : VisitorTransformBase() {
         private var fromSourceCounter = 0
 
         override fun transformFromSourceScan_asAlias(node: PartiqlAst.FromSource.Scan): SymbolPrimitive? {

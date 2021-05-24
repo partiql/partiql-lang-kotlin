@@ -6,6 +6,7 @@ import com.amazon.ion.IonSystem
 import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlAst.*
+import org.partiql.lang.util.checkThreadInterrupted
 
 import org.partiql.pig.runtime.SymbolPrimitive
 import org.partiql.lang.ast.SetQuantifier as ExprNodeSetQuantifier  // Conflicts with PartiqlAst.SetQuantifier
@@ -69,6 +70,7 @@ private class StatementTransformer(val ion: IonSystem) {
         this.map { it.toExprNode() }
 
     private fun Expr.toExprNode(): ExprNode {
+        checkThreadInterrupted()
         val metas = this.metas.toPartiQlMetaContainer()
         return when (this) {
             is Expr.Missing -> LiteralMissing(metas)
@@ -330,7 +332,8 @@ private class StatementTransformer(val ion: IonSystem) {
             is Type.SexpType -> DataType(SqlDataType.SEXP, listOf(), metas)
             is Type.BagType -> DataType(SqlDataType.BAG, listOf(), metas)
             is Type.DateType -> DataType(SqlDataType.DATE, listOf(), metas)
-            is Type.TimeType -> DataType(SqlDataType.TIME, listOfNotNull(timezoneSpecified?.value, precision?.value), metas)
+            is Type.TimeType -> DataType(SqlDataType.TIME, listOfNotNull(precision?.value), metas)
+            is Type.TimeWithTimeZoneType -> DataType(SqlDataType.TIME_WITH_TIME_ZONE, listOfNotNull(precision?.value), metas)
         }
     }
 

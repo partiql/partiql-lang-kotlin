@@ -3,6 +3,7 @@ package org.partiql.lang.ast
 import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.toIonElement
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.pig.runtime.SymbolPrimitive
 import org.partiql.pig.runtime.asPrimitive
 
@@ -67,6 +68,7 @@ private fun ExprNode.toAstExec() : PartiqlAst.Statement {
 }
 
 fun ExprNode.toAstExpr(): PartiqlAst.Expr {
+    checkThreadInterrupted()
     val node = this
     val metas = this.metas.toIonElementMetaContainer()
 
@@ -457,7 +459,8 @@ private fun DataType.toAstType(): PartiqlAst.Type {
             SqlDataType.SEXP -> sexpType(metas)
             SqlDataType.BAG -> bagType(metas)
             SqlDataType.DATE -> dateType(metas)
-            SqlDataType.TIME -> timeType(arg1, arg2, metas)
+            SqlDataType.TIME -> timeType(arg1, metas)
+            SqlDataType.TIME_WITH_TIME_ZONE -> timeWithTimeZoneType(arg1, metas)
         }
     }
 }

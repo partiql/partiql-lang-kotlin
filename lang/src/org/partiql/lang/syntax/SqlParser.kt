@@ -698,9 +698,9 @@ class SqlParser(private val ion: IonSystem) : Parser {
             }
             TIME -> {
                 val timeString = token!!.text!!
-                val precision = children[0].token?.value?.numberValue()?.toInt()
+                val precision = children[0].token!!.value!!.numberValue().toInt()
                 val time = LocalTime.parse(timeString, DateTimeFormatter.ISO_TIME)
-                DateTimeType.Time(time.hour, time.minute, time.second, time.nano, precision!!, null, metas)
+                DateTimeType.Time(time.hour, time.minute, time.second, time.nano, precision, null, metas)
             }
             TIME_WITH_TIME_ZONE -> {
                 val timeString = token!!.text!!
@@ -1027,12 +1027,17 @@ class SqlParser(private val ion: IonSystem) : Parser {
     /**
      * Parses the given token list.
      *
+     * Throws [InterruptedException] if [Thread.interrupted] is set. This is the best place to do
+     * that for the parser because this is the main function called to parse an expression and so
+     * is called quite frequently during parsing by many parts of the parser.
+     *
      * @param precedence The precedence of the current expression parsing.
      *                   A negative value represents the "top-level" parsing.
      *
      * @return The parse tree for the given expression.
      */
     internal fun List<Token>.parseExpression(precedence: Int = -1): ParseNode {
+        checkThreadInterrupted()
         var expr = parseUnaryTerm()
         var rem = expr.remaining
 
@@ -1346,47 +1351,6 @@ class SqlParser(private val ion: IonSystem) : Parser {
             .deriveExpectedKeyword("end")
     }
 
-    /**
-     * Parse TIME type for Typed Ops such as CAST, IS.
-     * Note that this function is intented to be called only from [parseType]
-     */
-    private fun ParseNode.parseTimeForTyped() : ParseNode {
-        val (remainingAfterOptionalTimeZone, isTimeZoneSpecified) = remaining.checkForOptionalTimeZone()
-
-        // timezone child node to indicate if "WITH TIME ZONE" was specified for the TIME type.
-        // The source span here is just the filler value and does not reflect the actual source location of the "with time zone"
-        val timezone = ParseNode(
-            ATOM,
-            Token(LITERAL, ion.newInt(if (isTimeZoneSpecified) 1 else 0), SourceSpan(-1, -1, -1)),
-            listOf(),
-            remaining
-        )
-
-        // If precision is not specified in the arguments, it is indicated by the value MAX_PRECISION_FOR_TIME + 1 (i.e. 10)
-        // TODO: Find an alternative better way to model this logic.
-        // The source span here is just the filler value and does not reflect the actual source location of the "with time zone"
-        val precision = if (children.isNotEmpty()) {
-            val precision = children[0]
-            // Check for the valid values of precision
-            if (precision.token?.value == null || !precision.token.value.isUnsignedInteger ||
-                precision.token.value.longValue() < 0 || precision.token.value.longValue() > MAX_PRECISION_FOR_TIME) {
-                precision.token.err("Expected integer value between 0 and 9 for precision", PARSE_INVALID_PRECISION_FOR_TIME)
-            }
-            precision
-        } else {
-            ParseNode(
-                ATOM,
-                // The value MAX_PRECISION_FOR_TIME + 1 is intentional to indicate that the precision was not specified.
-                Token(LITERAL, ion.newInt(MAX_PRECISION_FOR_TIME + 1), SourceSpan(-1, -1, -1)),
-                listOf(),
-                remaining
-            )
-        }
-
-        return copy(remaining = remainingAfterOptionalTimeZone,
-            children = listOf(timezone, precision))
-    }
-
     private fun List<Token>.parseCast(): ParseNode {
         if (head?.type != LEFT_PAREN) {
             err("Missing left parenthesis after CAST", PARSE_EXPECTED_LEFT_PAREN_AFTER_CAST)
@@ -1415,10 +1379,28 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
             else -> ParseNode(TYPE, head, emptyList(), tail)
         }
-        // Check for the optional time zone for TIME
+        // Check for the optional "WITH TIME ZONE" specifier for TIME and validate the value of precision.
+        // Note that this needs to be checked explicitly as the keywordtext for "TIME WITH TIME ZONE" consists of multiple words.
         .let {
             if (typeName == "time") {
-                it.parseTimeForTyped()
+                // Check for the range of valid values for precision
+                it.children.firstOrNull()?.also { precision ->
+                    if (precision.token?.value == null || !precision.token.value.isUnsignedInteger ||
+                        precision.token.value.longValue() < 0 || precision.token.value.longValue() > MAX_PRECISION_FOR_TIME
+                    ) {
+                        precision.token.err(
+                            "Expected integer value between 0 and 9 for precision",
+                            PARSE_INVALID_PRECISION_FOR_TIME
+                        )
+                    }
+                }
+                val (remainingAfterOptionalTimeZone, isTimeZoneSpecified) = it.remaining.checkForOptionalTimeZone()
+                val newToken = if (isTimeZoneSpecified) {
+                    it.token!!.copy(value = ion.singleValue(SqlDataType.TIME_WITH_TIME_ZONE.typeName))
+                } else {
+                    it.token
+                }
+                it.copy(token = newToken, remaining = remainingAfterOptionalTimeZone)
             }
             else {
                 it
@@ -2451,7 +2433,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
         // The source span here is just the filler value and does not reflect the actual source location of the precision
         // as it does not exists in case the precision is unspecified.
         val precisionOfValue =  precision.token ?:
-            Token(LITERAL, ion.newInt(getPrecisionFromTimeString(newTimeString)), SourceSpan(-1, -1, -1))
+            Token(LITERAL, ion.newInt(getPrecisionFromTimeString(newTimeString)), timeStringToken.span)
 
         return ParseNode(
             if (isTimeZoneSpecified) TIME_WITH_TIME_ZONE else TIME,
@@ -2863,6 +2845,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
      * If [dmlListTokenSeen] is true, it means it has been encountered at least once before while traversing the parse tree.
      */
     private fun validateTopLevelNodes(node: ParseNode, level: Int, topLevelTokenSeen: Boolean, dmlListTokenSeen: Boolean) {
+        checkThreadInterrupted()
         val isTopLevelType = when (node.type.isDml) {
             // DML_LIST token type allows multiple DML keywords to be used in the same statement.
             // Hence, DML keyword tokens are not treated as top level tokens if present with the DML_LIST token type

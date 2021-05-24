@@ -28,6 +28,7 @@ open class AstWalker(private val visitor: AstVisitor) {
 
     protected open fun walkExprNode(vararg exprs: ExprNode?) {
         exprs.filterNotNull().forEach { expr: ExprNode ->
+            checkThreadInterrupted()
             visitor.visitExprNode(expr)
 
             when (expr) {

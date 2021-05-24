@@ -2,6 +2,7 @@ package org.partiql.lang.util
 
 import org.partiql.lang.eval.time.SECONDS_PER_HOUR
 import org.partiql.lang.eval.time.SECONDS_PER_MINUTE
+import java.time.DateTimeException
 import java.time.Instant
 import java.time.ZoneOffset
 import kotlin.math.absoluteValue
@@ -47,7 +48,7 @@ internal val ZoneOffset.totalMinutes : Int
     get() = totalSeconds / SECONDS_PER_MINUTE
 
 /**
- * Gets the precision from the time string of the format 'HH:MM:SS[.ddd....][+|-HH:MM]'.
+ * Calculates the precision of a time string based on the fractional component of the 'HH:MM:SS[.ddd....][+|-HH:MM]' format.
  */
 internal fun getPrecisionFromTimeString(timeString: String) : Int {
     val matcher = genericTimeRegex.toPattern().matcher(timeString)

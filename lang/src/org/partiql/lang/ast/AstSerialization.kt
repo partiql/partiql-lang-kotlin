@@ -20,6 +20,7 @@ import com.amazon.ion.IonSystem
 import org.partiql.lang.util.IonWriterContext
 import org.partiql.lang.util.asIonSexp
 import org.partiql.lang.util.case
+import org.partiql.lang.util.checkThreadInterrupted
 import kotlin.UnsupportedOperationException
 
 /**
@@ -73,6 +74,7 @@ private class AstSerializerImpl(val astVersion: AstVersion, val ion: IonSystem):
 
     private fun IonWriterContext.writeExprNode(expr: ExprNode): Unit =
         writeAsTerm(expr.metas) {
+            checkThreadInterrupted()
             sexp {
                 when (expr) {
                     // Leaf nodes

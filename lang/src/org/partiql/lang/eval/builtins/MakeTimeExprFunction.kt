@@ -62,12 +62,14 @@ internal class MakeTimeExprFunction(valueFactory: ExprValueFactory) : NullPropag
 
         try {
             return valueFactory.newTime(
-                hour,
-                minute,
-                second.toInt(),
-                (second.remainder(BigDecimal.ONE) * NANOS_PER_SECOND).toInt(),
-                second.scale(),
-                tzMinutes
+                Time.of(
+                    hour,
+                    minute,
+                    second.toInt(),
+                    (second.remainder(BigDecimal.ONE).multiply(NANOS_PER_SECOND.toBigDecimal())).toInt(),
+                    second.scale(),
+                    tzMinutes
+                )
             )
         }
         catch (e: EvaluationException) {

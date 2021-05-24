@@ -1,11 +1,23 @@
 package org.partiql.lang.eval.visitors
 
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.util.checkThreadInterrupted
 
 /**
- * Base-class for visitor transforms that provides additional functions outside of [PartiqlAst.VisitorTransform].
+ * Base-class for visitor transforms that provides additional `transform*` functions that outside of
+ * the PIG-generated [PartiqlAst.VisitorTransform] class and adds a [Thread.interrupted] check
+ * to [transformExpr].
+ *
+ * All transforms should derive from this class instead of [PartiqlAst.VisitorTransform] so that they can
+ * be interrupted if they take a long time to process large ASTs.
  */
 abstract class VisitorTransformBase : PartiqlAst.VisitorTransform() {
+
+    override fun transformExpr(node: PartiqlAst.Expr): PartiqlAst.Expr {
+        checkThreadInterrupted()
+        return super.transformExpr(node)
+    }
+
     /**
      * Transforms the [PartiqlAst.Expr.Select] expression following the PartiQL evaluation order. That is:
      *
