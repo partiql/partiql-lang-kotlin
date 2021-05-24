@@ -8,13 +8,12 @@ import org.partiql.lang.domains.id
 import java.util.*
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
+import org.partiql.lang.util.LOCAL_TIMEZONE_OFFSET
 import org.partiql.lang.util.to
-import java.time.Instant
-import java.time.ZoneOffset
 
 class SqlParserDateTimeTests : SqlParserTestBase() {
 
-    private val localTimeZoneOffset = (ZoneOffset.systemDefault().rules.getOffset(Instant.now()).totalSeconds / 60).toLong()
+    private val localTimeZoneOffset = (LOCAL_TIMEZONE_OFFSET.totalSeconds / 60).toLong()
 
     data class DateTimeTestCase(val source: String, val skipTest: Boolean = false, val block: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode)
     private data class Date(val year: Int, val month: Int, val day: Int)

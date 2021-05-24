@@ -119,13 +119,13 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
     fun badCastToInt() = checkInputThrowingEvaluationException(
         "CAST('a' as int) > 0",
         ErrorCode.EVALUATOR_CAST_FAILED,
-        sourceLocationProperties(1, 5) + mapOf(Property.CAST_FROM to "STRING", Property.CAST_TO to "INT"))
+        sourceLocationProperties(1, 5) + mapOf(Property.CAST_FROM to "STRING", Property.CAST_TO to "INTEGER"))
 
     @Test
     fun badCastInSelectToInt() = checkInputThrowingEvaluationException(
         "SELECT *  FROM `[{_1: a, _2: 1}, {_1: a, _2: 'a'}, {_1: a, _2: 3}]` WHERE CAST(_2 as INT) > 0",
         ErrorCode.EVALUATOR_CAST_FAILED,
-        sourceLocationProperties(1, 79) + mapOf(Property.CAST_FROM to "SYMBOL", Property.CAST_TO to "INT"))
+        sourceLocationProperties(1, 79) + mapOf(Property.CAST_FROM to "SYMBOL", Property.CAST_TO to "INTEGER"))
 
     @Test
     fun badCastToDecimal() = checkInputThrowingEvaluationException(

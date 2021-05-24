@@ -18,14 +18,17 @@ import com.amazon.ion.*
 import org.partiql.lang.ast.*
 import org.partiql.lang.errors.*
 import org.partiql.lang.eval.ExprValueType.*
+import org.partiql.lang.eval.time.NANOS_PER_SECOND
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.syntax.*
 import org.partiql.lang.util.*
 import java.math.*
 import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.util.*
-import kotlin.Comparator
 
 /**
  * Wraps the given [ExprValue] with a delegate that provides the [OrderedBindNames] facet.
@@ -155,6 +158,8 @@ private val ION_TEXT_STRING_CAST_TYPES = setOf(BOOL, TIMESTAMP)
 /** Regex to match DATE strings of the format yyyy-MM-dd */
 private val datePatternRegex = Regex("\\d\\d\\d\\d-\\d\\d-\\d\\d")
 
+private val genericTimeRegex = Regex("\\d\\d:\\d\\d:\\d\\d(\\.\\d*)?([+|-]\\d\\d:\\d\\d)?")
+
 /**
  * Casts this [ExprValue] to the target type.
  *
@@ -166,8 +171,8 @@ private val datePatternRegex = Regex("\\d\\d\\d\\d-\\d\\d-\\d\\d")
  *
  *  * `BOOL`
  *      * Number types will convert to `false` if numerically equal to zero, `true` otherwise.
- *      * Text types will convert to `true` if case-insensitive compared to the text `"true"`,
- *    `false` otherwise.
+ *      * Text types will convert to `true` if case-insensitive text is `"true"`,
+ *      convert to `false` if case-insensitive text is `"true"` and throw an error otherwise.
  *  * `INT`, `FLOAT`, and `DECIMAL`
  *      * `BOOL` converts as `1` for `true` and `0` for `false`
  *      * Number types will narrow or widen from the source type.  Narrowing is a truncation
@@ -175,6 +180,20 @@ private val datePatternRegex = Regex("\\d\\d\\d\\d-\\d\\d-\\d\\d")
  *          * For `FLOAT` and `DECIMAL` targets, decimal and e-notation is also supported.
  *  * `TIMESTAMP`
  *      * Text types will convert using the Ion text notation for timestamp (W3C/ISO-8601).
+ *  * `DATE`
+ *      * `TIMESTAMP` converts as `DATE` throwing away the additional information such as time.
+ *      * Text types converts as `DATE` if the case-insensitive text is a valid ISO 8601 format date string.
+ *  * `TIME`
+ *      * `TIMESTAMP` converts as `TIME` throwing away the additional information such as date and time zone.
+ *      * Text types converts as `TIME` if the case-insensitive text is a valid ISO 8601 format time string.
+ *      * `TIME` and `TIME WITH TIME ZONE` converts as `TIME` throwing away the time zone information.
+ *  * `TIME WITH TIME ZONE`
+ *      * `TIMESTAMP` converts as `TIME WITH TIME ZONE` only if the timezone is defined in the TIMESTAMP value.
+ *      The conversion throws away the additional information such as date.
+ *      * Text types converts as `TIME WITH TIME ZONE` if the case-insensitive text is a valid ISO 8601 format time string.
+ *      If the time zone is not specified, then the default time zone is used.
+ *      * `TIME` and `TIME WITH TIME ZONE` converts as `TIME WITH TIME ZONE`.
+ *      If the time zone is not specified, then the default time zone is used.
  *  * `STRING` and `SYMBOL`
  *      * `BOOL` converts to `STRING` as `"true"` and `"false"`;
  *        converts to `SYMBOL` as `'true'` and `'false'`.
@@ -191,18 +210,21 @@ private val datePatternRegex = Regex("\\d\\d\\d\\d-\\d\\d-\\d\\d")
  * [ExprValueType.isNumber], and *LOB types* is defined by [ExprValueType.isLob]
  *
  * @param ion The ion system to synthesize values with.
- * @param targetType The target type to cast this value to.
+ * @param targetDataType The target type to cast this value to.
  */
 fun ExprValue.cast(
-    targetType: ExprValueType,
+    targetDataType: DataType,
     valueFactory: ExprValueFactory,
     locationMeta: SourceLocationMeta?
 ): ExprValue {
 
+    val targetSqlDataType = targetDataType.sqlDataType
+    val targetExprValueType = ExprValueType.fromSqlDataType(targetSqlDataType)
+
     fun castExceptionContext(): PropertyValueMap {
         val errorContext = PropertyValueMap().also {
             it[Property.CAST_FROM] = this.type.toString()
-            it[Property.CAST_TO] = targetType.toString()
+            it[Property.CAST_TO] = targetSqlDataType.toString()
         }
 
         locationMeta?.let { fillErrorContext(errorContext, it) }
@@ -237,12 +259,14 @@ fun ExprValue.cast(
     })
 
     when {
-        type.isUnknown && targetType == ExprValueType.MISSING -> return valueFactory.missingValue
-        type.isUnknown && targetType == ExprValueType.NULL -> return valueFactory.nullValue
-        type.isUnknown || type == targetType -> return this
+        type.isUnknown && targetSqlDataType == SqlDataType.MISSING -> return valueFactory.missingValue
+        type.isUnknown && targetSqlDataType == SqlDataType.NULL -> return valueFactory.nullValue
+        // Note that the ExprValueType for TIME and TIME WITH TIME ZONE is the same i.e. ExprValueType.TIME.
+        // We further need to check for the time zone and hence we do not short circuit here when the type is TIME.
+        type.isUnknown || (type == targetExprValueType && type != TIME) -> return this
         else                                 -> {
-            when (targetType) {
-                BOOL -> when {
+            when (targetSqlDataType) {
+                SqlDataType.BOOLEAN -> when {
                     type.isNumber -> return when {
                         numberValue().compareTo(0L) == 0 -> valueFactory.newBoolean(false)
                         else -> valueFactory.newBoolean(true)
@@ -253,7 +277,7 @@ fun ExprValue.cast(
                         else -> castFailedErr("can't convert string value to BOOL", internal = false)
                     }
                 }
-                INT -> when {
+                SqlDataType.SMALLINT, SqlDataType.INTEGER -> when {
                     type == BOOL -> return valueFactory.newInt(if(booleanValue()) 1L else 0L)
                     type.isNumber -> return valueFactory.newInt(numberValue().toLongFailingOverflow(locationMeta))
                     type.isText -> {
@@ -270,7 +294,7 @@ fun ExprValue.cast(
                         }
                     }
                 }
-                FLOAT -> when {
+                SqlDataType.FLOAT, SqlDataType.REAL, SqlDataType.DOUBLE_PRECISION -> when {
                     type == BOOL -> return if (booleanValue()) 1.0.exprValue() else 0.0.exprValue()
                     type.isNumber -> return numberValue().toDouble().exprValue()
                     type.isText ->
@@ -280,7 +304,7 @@ fun ExprValue.cast(
                             castFailedErr("can't convert string value to FLOAT", internal = false, cause = e)
                         }
                 }
-                DECIMAL -> when {
+                SqlDataType.DECIMAL, SqlDataType.NUMERIC -> when {
                     type == BOOL -> return if (booleanValue()) BigDecimal.ONE.exprValue() else BigDecimal.ZERO.exprValue()
                     type.isNumber -> return numberValue().coerce(BigDecimal::class.java).exprValue()
                     type.isText -> try {
@@ -291,7 +315,7 @@ fun ExprValue.cast(
                         castFailedErr("can't convert string value to DECIMAL", internal = false, cause = e)
                     }
                 }
-                TIMESTAMP -> when {
+                SqlDataType.TIMESTAMP -> when {
                     type.isText -> try {
                         return valueFactory.newTimestamp(Timestamp.valueOf(stringValue()))
                     }
@@ -300,7 +324,7 @@ fun ExprValue.cast(
                         castFailedErr("can't convert string value to TIMESTAMP", internal = false, cause = e)
                     }
                 }
-                DATE -> when {
+                SqlDataType.DATE -> when {
                     type == TIMESTAMP -> {
                         val ts = timestampValue()
                         return valueFactory.newDate(LocalDate.of(ts.year, ts.month, ts.day))
@@ -320,21 +344,90 @@ fun ExprValue.cast(
                             "and the date format to be YYYY-MM-DD", internal = false, cause = e)
                     }
                 }
-                STRING, SYMBOL -> when {
-                    type.isNumber -> return numberValue().toString().exprValue(targetType)
-                    type.isText -> return stringValue().exprValue(targetType)
-                    type == DATE -> return dateValue().toString().exprValue(targetType)
-                    type in ION_TEXT_STRING_CAST_TYPES -> return ionValue.toString().exprValue(targetType)
+                SqlDataType.TIME, SqlDataType.TIME_WITH_TIME_ZONE -> {
+                    val precision = targetDataType.args.firstOrNull()?.toInt()
+                    when {
+                        type == TIME -> {
+                            val time = timeValue()
+                            val timeZoneOffset = when (targetSqlDataType) {
+                                SqlDataType.TIME_WITH_TIME_ZONE -> time.zoneOffset?: LOCAL_TIMEZONE_OFFSET
+                                else -> null
+                            }
+                            return valueFactory.newTime(
+                                Time.of(
+                                    time.localTime,
+                                    precision?: time.precision,
+                                    timeZoneOffset
+                                ))
+                        }
+                        type == TIMESTAMP -> {
+                            val ts = timestampValue()
+                            val timeZoneOffset = when (targetSqlDataType) {
+                                SqlDataType.TIME_WITH_TIME_ZONE -> ts.localOffset?: castFailedErr(
+                                    "Can't convert timestamp value with unknown local offset (i.e. -00:00) to TIME WITH TIME ZONE.",
+                                    internal = false
+                                )
+                                else -> null
+                            }
+                            return valueFactory.newTime(Time.of(
+                                ts.hour,
+                                ts.minute,
+                                ts.second,
+                                (ts.decimalSecond.remainder(BigDecimal.ONE).multiply(NANOS_PER_SECOND.toBigDecimal())).toInt(),
+                                precision?: ts.decimalSecond.scale(),
+                                timeZoneOffset
+                            ))
+                        }
+                        type.isText -> try {
+                            // validate that the time string follows the format HH:MM:SS[.ddddd...][+|-HH:MM]
+                            val matcher = genericTimeRegex.toPattern().matcher(stringValue())
+                            if (!matcher.find()) {
+                                castFailedErr(
+                                    "Can't convert string value to TIME. Expected valid time string " +
+                                        "and the time to be of the format HH:MM:SS[.ddddd...][+|-HH:MM]",
+                                    internal = false
+                                )
+                            }
+
+                            val localTime = LocalTime.parse(stringValue(), DateTimeFormatter.ISO_TIME)
+
+                            // Note that the [genericTimeRegex] has a group to extract the zone offset.
+                            val zoneOffsetString = matcher.group(2)
+                            val zoneOffset = zoneOffsetString?.let { ZoneOffset.of(it) } ?: LOCAL_TIMEZONE_OFFSET
+
+                            return valueFactory.newTime(
+                                Time.of(
+                                    localTime,
+                                    precision?: getPrecisionFromTimeString(stringValue()),
+                                    when (targetSqlDataType) {
+                                        SqlDataType.TIME_WITH_TIME_ZONE -> zoneOffset
+                                        else -> null
+                                    }
+                            ))
+                        } catch (e: DateTimeParseException) {
+                            castFailedErr(
+                                "Can't convert string value to TIME. Expected valid time string " +
+                                    "and the time format to be HH:MM:SS[.ddddd...][+|-HH:MM]", internal = false, cause = e
+                            )
+                        }
+                    }
                 }
-                CLOB -> when {
+                SqlDataType.CHARACTER, SqlDataType.CHARACTER_VARYING, SqlDataType.STRING, SqlDataType.SYMBOL -> when {
+                    type.isNumber -> return numberValue().toString().exprValue(targetExprValueType)
+                    type.isText -> return stringValue().exprValue(targetExprValueType)
+                    type == DATE -> return dateValue().toString().exprValue(targetExprValueType)
+                    type == TIME -> return timeValue().toString().exprValue(targetExprValueType)
+                    type in ION_TEXT_STRING_CAST_TYPES -> return ionValue.toString().exprValue(targetExprValueType)
+                }
+                SqlDataType.CLOB -> when {
                     type.isLob -> return valueFactory.newClob(bytesValue())
                 }
-                BLOB -> when {
+                SqlDataType.BLOB -> when {
                     type.isLob -> return valueFactory.newBlob(bytesValue())
                 }
-                LIST -> if(type.isSequence) return valueFactory.newList(asSequence())
-                SEXP -> if(type.isSequence) return valueFactory.newSexp(asSequence())
-                BAG -> if(type.isSequence) return valueFactory.newBag(asSequence())
+                SqlDataType.LIST -> if(type.isSequence) return valueFactory.newList(asSequence())
+                SqlDataType.SEXP -> if(type.isSequence) return valueFactory.newSexp(asSequence())
+                SqlDataType.BAG -> if(type.isSequence) return valueFactory.newBag(asSequence())
             // no support for anything else
                 else -> {}
             }
@@ -348,7 +441,7 @@ fun ExprValue.cast(
     }
 
     // incompatible types
-    err("Cannot convert $type to $targetType", errorCode, castExceptionContext(), internal = false)
+    err("Cannot convert $type to $targetSqlDataType", errorCode, castExceptionContext(), internal = false)
 }
 /**
  * Remove leading spaces in decimal notation and the plus sign

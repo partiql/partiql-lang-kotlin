@@ -31,20 +31,10 @@ import org.partiql.lang.syntax.TokenType.KEYWORD
 import org.partiql.lang.util.*
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter.*
-import java.lang.Integer.min
 import java.time.*
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 
-// These are used to validate the generic format of the time string.
-// The more involved logic such as validating the time is done by LocalTime.parse or OffsetTime.parse
-private val timeWithoutTimeZoneRegex = Regex("\\d\\d:\\d\\d:\\d\\d(\\.\\d*)?")
-private val genericTimeRegex = Regex("\\d\\d:\\d\\d:\\d\\d(\\.\\d*)?([+|-]\\d\\d:\\d\\d)?")
-
-/**
- * Regex pattern to match date strings of the format yyyy-MM-dd
- */
-private val DATE_PATTERN_REGEX = Regex("\\d\\d\\d\\d-\\d\\d-\\d\\d")
 
 /**
  * Parses a list of tokens as infix query expression into a prefix s-expression
@@ -1389,6 +1379,34 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
             else -> ParseNode(TYPE, head, emptyList(), tail)
         }
+        // Check for the optional "WITH TIME ZONE" specifier for TIME and validate the value of precision.
+        // Note that this needs to be checked explicitly as the keywordtext for "TIME WITH TIME ZONE" consists of multiple words.
+        .let {
+            if (typeName == "time") {
+                // Check for the range of valid values for precision
+                it.children.firstOrNull()?.also { precision ->
+                    if (precision.token?.value == null || !precision.token.value.isUnsignedInteger ||
+                        precision.token.value.longValue() < 0 || precision.token.value.longValue() > MAX_PRECISION_FOR_TIME
+                    ) {
+                        precision.token.err(
+                            "Expected integer value between 0 and 9 for precision",
+                            PARSE_INVALID_PRECISION_FOR_TIME
+                        )
+                    }
+                }
+                val (remainingAfterOptionalTimeZone, isTimeZoneSpecified) = it.remaining.checkForOptionalTimeZone()
+                val newToken = if (isTimeZoneSpecified) {
+                    it.token!!.copy(value = ion.singleValue(SqlDataType.TIME_WITH_TIME_ZONE.typeName))
+                } else {
+                    it.token
+                }
+                it.copy(token = newToken, remaining = remainingAfterOptionalTimeZone)
+            }
+            else {
+                it
+            }
+        }
+
         if (typeNode.children.size !in typeArity) {
             val pvmap = PropertyValueMap()
             pvmap[CAST_TO] = typeName?: ""
@@ -2333,21 +2351,6 @@ class SqlParser(private val ion: IonSystem) : Parser {
         return Pair(this, false)
     }
 
-    /**
-     * Gets the precision from the time string of the format 'HH:MM:SS[.ddd....][+|-HH:MM]'.
-     */
-    private fun getPrecisionFromTimeString(timeString: String) : Int {
-        val matcher = genericTimeRegex.toPattern().matcher(timeString)
-        if (!matcher.find()) {
-            org.partiql.lang.eval.err("Time string does not match the format 'HH:MM:SS[.ddd....][+|-HH:MM]'",
-                propertyValueMapOf(),
-                false
-            )
-        }
-        // Note that the [genericTimeRegex] has a group to extract the fractional part of the second.
-        val fraction = matcher.group(1)?.removePrefix(".")
-        return fraction?.length ?: 0
-    }
 
     /**
      * Parses a time string and verifies that the time string is a string and is specified in the valid ISO 8601 format.
@@ -2418,7 +2421,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     // Fall back on parsing a string without a time zone offset only if the offset is not specified.
                     // Add local system timezone offset in that case.
                     tryLocalTimeParsing(timeString)
-                    newTimeString = timeString + ZoneOffset.systemDefault().rules.getOffset(Instant.now()).getOffsetHHmm()
+                    newTimeString = timeString + LOCAL_TIMEZONE_OFFSET.getOffsetHHmm()
                 }
                 else {
                     rem.head.err(e.localizedMessage, PARSE_INVALID_TIME_STRING)
