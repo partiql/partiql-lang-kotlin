@@ -90,7 +90,7 @@ data class Time private constructor(val localTime: LocalTime, val precision: Int
                     ChronoField.OFFSET_SECONDS.checkValidIntValue((it * SECONDS_PER_MINUTE).toLong())
                 }
             } catch (dte: DateTimeException) {
-                throw EvaluationException(dte, ErrorCode.EVALUATOR_DATETIME_EXCEPTION, propertyValueMapOf(), false)
+                throw EvaluationException(dte, ErrorCode.EVALUATOR_TIME_FIELD_OUT_OF_RANGE, propertyValueMapOf(), false)
             }
 
             // Round nanoseconds to the given precision.

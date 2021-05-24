@@ -29,6 +29,7 @@ internal fun createBuiltinFunctions(valueFactory: ExprValueFactory) =
         DateDiffExprFunction(valueFactory),
         ExtractExprFunction(valueFactory),
         MakeDateExprFunction(valueFactory),
+        MakeTimeExprFunction(valueFactory),
         NullIfExprFunction(valueFactory),
         SubstringExprFunction(valueFactory),
         TrimExprFunction(valueFactory),

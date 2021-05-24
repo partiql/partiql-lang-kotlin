@@ -42,6 +42,12 @@ internal val ZoneOffset.minute : Int
     get() = (totalSeconds / SECONDS_PER_MINUTE) % SECONDS_PER_MINUTE
 
 /**
+ * Get time zone offset in total minutes
+ */
+internal val ZoneOffset.totalMinutes : Int
+    get() = totalSeconds / SECONDS_PER_MINUTE
+
+/**
  * Calculates the precision of a time string based on the fractional component of the 'HH:MM:SS[.ddd....][+|-HH:MM]' format.
  */
 internal fun getPrecisionFromTimeString(timeString: String) : Int {
