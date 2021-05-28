@@ -5,6 +5,7 @@ import com.amazon.ion.IonSystem
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.err
+import org.partiql.lang.eval.errNoContext
 import org.partiql.lang.util.getOffsetHHmm
 import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.lang.util.times
@@ -45,7 +46,7 @@ internal const val MAX_PRECISION_FOR_TIME = 9
  *  Note that the [LocalTime] always stores the fractional part of the second in nanoseconds.
  *  It is up to the application developers to make use of the preserved [precision] value as need be.
  */
-data class Time private constructor(val localTime: LocalTime, val precision: Int, val zoneOffset: ZoneOffset? = null) {
+data class Time private constructor(val localTime: LocalTime, val precision: Int, val zoneOffset: ZoneOffset? = null): Comparable<Time>{
 
     init {
         // Validate that the precision value is between 0 and 9 inclusive.
@@ -112,7 +113,7 @@ data class Time private constructor(val localTime: LocalTime, val precision: Int
                 newNano
             )
             val zoneOffset = tz_minutes?.let {
-                ZoneOffset.ofTotalSeconds( it * SECONDS_PER_MINUTE)
+                ZoneOffset.ofTotalSeconds(it * SECONDS_PER_MINUTE)
             }
             return Time(localTime, precision, zoneOffset)
         }
@@ -180,4 +181,15 @@ data class Time private constructor(val localTime: LocalTime, val precision: Int
     override fun toString(): String =
         localTime.format(DateTimeFormatter.ofPattern(formatterPattern())) +
             (zoneOffset?.getOffsetHHmm() ?: "")
+
+    override fun compareTo(other: Time): Int {
+        return when {
+            // When the zone offsets are not null for both the operands, compare OffsetTime i.e. LocalTime with ZoneOffset
+            this.zoneOffset != null && other.zoneOffset != null -> this.offsetTime!!.compareTo(other.offsetTime)
+            // When the zone offsets are null for both the operands, compare just LocalTime
+            this.zoneOffset == null && other.zoneOffset == null -> this.localTime.compareTo(other.localTime)
+            // When one of the times is `time with time zone` and other is just `time` (without time zone), then they are incomparable.
+            else -> errNoContext("Cannot compare values: $this, $other", internal = false)
+        }
+    }
 }

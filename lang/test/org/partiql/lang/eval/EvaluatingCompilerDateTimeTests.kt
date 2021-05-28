@@ -236,5 +236,52 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
             assertEquals(expected, originalExprNode.toString())
         }
     }
+    @ParameterizedTest
+    @ArgumentsSource(ArgumentsForComparison::class)
+    fun testComparison(tc: ComparisonTestCase) {
+        when (tc.throws) {
+            true ->
+                try {
+                    voidEval(tc.query)
+                    fail("Expected ${tc.query} to throw an error")
+                } catch(e: EvaluationException) {
+                    // EvaluationException is thrown as expected, do nothing.
+                }
+            false -> {
+                val originalExprValue = eval(tc.query)
+                assertEquals(tc.expected, originalExprValue.toString())
+            }
+        }
+    }
 
+    data class ComparisonTestCase(val query: String, val expected: String?, val throws: Boolean)
+
+    private class ArgumentsForComparison : ArgumentsProviderBase() {
+        private fun case(query: String, expected: String) = ComparisonTestCase(query, expected, false)
+        private fun case(query: String, throws: Boolean) = ComparisonTestCase(query, null, throws)
+        override fun getParameters() = listOf(
+            case("DATE '2012-02-29' > DATE '2012-02-28'", "true"),
+            case("DATE '2012-02-29' < DATE '2013-02-28'", "true"),
+            case("DATE '2012-02-29' < DATE '2012-03-29'", "true"),
+            case("DATE '2012-02-29' != DATE '2012-02-29'", "false"),
+            case("DATE '2012-02-29' = DATE '2012-02-29'", "true"),
+            case("DATE '2012-02-29' = CAST('2012-02-29' AS DATE)", "true"),
+            case("TIME '12:12:12' = TIME '12:12:12'", "true"),
+            case("TIME '12:12:12' != TIME '12:12:12'", "false"),
+            case("TIME '12:12:12' < TIME '12:12:12.123'", "true"),
+            case("TIME '12:12:13' < TIME '12:12:12.123'", "false"),
+            case("TIME WITH TIME ZONE '12:12:13' < TIME WITH TIME ZONE '12:12:12.123'", "false"),
+            case("TIME WITH TIME ZONE '12:12:13' > TIME WITH TIME ZONE '12:12:12.123'", "true"),
+            case("TIME WITH TIME ZONE '12:12:12.123+00:00' = TIME WITH TIME ZONE '12:12:12.123+00:00'", "true"),
+            case("TIME WITH TIME ZONE '12:12:12.123-08:00' > TIME WITH TIME ZONE '12:12:12.123+00:00'", "true"),
+            case("TIME WITH TIME ZONE '12:12:12.123-08:00' < TIME WITH TIME ZONE '12:12:12.123+00:00'", "false"),
+            case("CAST('12:12:12.123' AS TIME WITH TIME ZONE) = TIME WITH TIME ZONE '12:12:12.123'", "true"),
+            case("CAST(TIME WITH TIME ZONE '12:12:12.123' AS TIME) = TIME '12:12:12.123'", "true"),
+            case("TIME '12:12:13' < TIME WITH TIME ZONE '12:12:12.123'", throws = true),
+            case("TIME WITH TIME ZONE '12:12:13' < TIME '12:12:12.123'", throws = true),
+            case("TIME WITH TIME ZONE '12:12:13-08:00' < TIME '12:12:12.123-08:00'", throws = true),
+            case("TIME WITH TIME ZONE '12:12:13' > DATE '2012-02-29'", throws = true)
+
+        )
+    }
 }

@@ -32,6 +32,9 @@ import org.partiql.lang.util.*
  *    of precision or specific type.
  *      For `FLOAT` special values, `nan` comes before `-inf`, which comes before all normal
  *      numeric values, which is followed by `+inf`.
+ *  * `DATE` values follow and are compared by the date from earliest to latest.
+ *  * `TIME` values follow and are compared by the time of the day (point of time in a day of 24 hours)
+ *      from earliest to latest. Note that time without time zone is incomparable with time with time zone.
  *  * `TIMESTAMP` values follow and are compared by the point of time irrespective of precision and
  *    local UTC offset.
  *  * The [ExprValueType.isText] types come next ordered by their lexicographical ordering by
@@ -183,6 +186,26 @@ enum class NaturalExprValueComparators(private val nullOrder: NullOrder) : Compa
                     lVal.isZero() && rVal.isZero() -> return EQUAL // for negative zero
                     else -> return lVal.compareTo(rVal)
                 }
+            }
+        ) { return it }
+
+        // Date
+        ifCompared(
+            handle(lType == DATE, rType == DATE) {
+                val lVal = left.dateValue()
+                val rVal = right.dateValue()
+
+                return lVal.compareTo(rVal)
+            }
+        ) { return it }
+
+        // Time
+        ifCompared(
+            handle(lType == TIME, rType == TIME) {
+                val lVal = left.timeValue()
+                val rVal = right.timeValue()
+
+                return lVal.compareTo(rVal)
             }
         ) { return it }
 
