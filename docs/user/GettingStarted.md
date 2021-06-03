@@ -66,7 +66,7 @@ form. The subfolder `code` contains 3 types of files:
 
 ### Windows 
 
-Run (double click on) `particl.bat`. This should open a command-line
+Run (double click on) `partiql.bat`. This should open a command-line
 prompt and start the PartiQL REPL which displays:
 
 ```

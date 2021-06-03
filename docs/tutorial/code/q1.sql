@@ -3,4 +3,3 @@ SELECT e.id,
        e.title AS title
 FROM hr.employees e
 WHERE e.title = 'Dev Mgr'
-

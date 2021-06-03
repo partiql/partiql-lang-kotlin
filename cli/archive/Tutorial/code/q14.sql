@@ -4,4 +4,3 @@ SELECT c."date" AS "date",
 FROM closingPrices AS c, 
      UNPIVOT c AS price AT sym
 WHERE NOT sym = 'date'
-
