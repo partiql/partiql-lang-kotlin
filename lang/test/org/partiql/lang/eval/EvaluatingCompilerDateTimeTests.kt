@@ -239,7 +239,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(ArgumentsForComparison::class)
     fun testComparison(tc: ComparisonTestCase) {
-        when (tc.throws) {
+        when (tc.expected == null) {
             true ->
                 try {
                     voidEval(tc.query)
@@ -254,11 +254,16 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         }
     }
 
-    data class ComparisonTestCase(val query: String, val expected: String?, val throws: Boolean)
+    /**
+     * [query] is the original query to be evaluated.
+     * [expected] is the expected value of the query.
+     * The [null] [expected] value indicates that the comparison test case throws an error.
+     */
+    data class ComparisonTestCase(val query: String, val expected: String?)
 
     private class ArgumentsForComparison : ArgumentsProviderBase() {
-        private fun case(query: String, expected: String) = ComparisonTestCase(query, expected, false)
-        private fun case(query: String, throws: Boolean) = ComparisonTestCase(query, null, throws)
+        private fun case(query: String, expected: String) = ComparisonTestCase(query, expected)
+        private fun case(query: String) = ComparisonTestCase(query, null)
         override fun getParameters() = listOf(
             case("DATE '2012-02-29' > DATE '2012-02-28'", "true"),
             case("DATE '2012-02-29' < DATE '2013-02-28'", "true"),
@@ -277,10 +282,11 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
             case("TIME WITH TIME ZONE '12:12:12.123-08:00' < TIME WITH TIME ZONE '12:12:12.123+00:00'", "false"),
             case("CAST('12:12:12.123' AS TIME WITH TIME ZONE) = TIME WITH TIME ZONE '12:12:12.123'", "true"),
             case("CAST(TIME WITH TIME ZONE '12:12:12.123' AS TIME) = TIME '12:12:12.123'", "true"),
-            case("TIME '12:12:13' < TIME WITH TIME ZONE '12:12:12.123'", throws = true),
-            case("TIME WITH TIME ZONE '12:12:13' < TIME '12:12:12.123'", throws = true),
-            case("TIME WITH TIME ZONE '12:12:13-08:00' < TIME '12:12:12.123-08:00'", throws = true),
-            case("TIME WITH TIME ZONE '12:12:13' > DATE '2012-02-29'", throws = true)
+            // Following are the error cases.
+            case("TIME '12:12:13' < TIME WITH TIME ZONE '12:12:12.123'"),
+            case("TIME WITH TIME ZONE '12:12:13' < TIME '12:12:12.123'"),
+            case("TIME WITH TIME ZONE '12:12:13-08:00' < TIME '12:12:12.123-08:00'"),
+            case("TIME WITH TIME ZONE '12:12:13' > DATE '2012-02-29'")
 
         )
     }
