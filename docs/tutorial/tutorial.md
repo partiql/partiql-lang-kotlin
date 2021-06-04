@@ -300,15 +300,15 @@ example executes, in a sense, a `JOIN` between employees and projects.
 If it helps you to think in terms of `JOIN`, you may replace the comma
 with `JOIN`. That is, the following two queries are equivalent.
 
-+-----------------------------------+-----------------------------------+
-| ```sql                            | ```sql                            | 
-| SELECT e.name AS employeeName,    | SELECT e.name AS employeeName,    |
-|        p.name AS projectName      |        p.name AS projectName      |
-| FROM hr.employeesNest AS e,       | FROM hr.employeesNest AS e JOIN   |
-|      e.projects AS p              |      e.projects AS p ON true      |
-| WHERE p.name LIKE '%security%'    | WHERE p.name LIKE '%security%'    |
-| ```                               | ```                               | 
-+-----------------------------------+-----------------------------------+
++-----------------------------------+-----------------------------------------+
+| ```sql                            | ```sql                                  |
+| SELECT e.name AS employeeName,    | SELECT e.name AS employeeName,          |
+|        p.name AS projectName      |        p.name AS projectName            |
+| FROM hr.employeesNest AS e,       | FROM hr.employeesNest AS e CROSS JOIN   |
+|      e.projects AS p              |      e.projects AS p                    |
+| WHERE p.name LIKE '%security%'    | WHERE p.name LIKE '%security%'          |
+| ```                               | ```                                     |
++-----------------------------------+-----------------------------------------+
 
 
 ### Unnesting data with LEFT JOIN always preserves parent information

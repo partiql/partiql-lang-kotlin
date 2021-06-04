@@ -500,8 +500,8 @@ OK!
 <p>One may think that the <code>FROM</code> clause of the example executes, in a sense, a <code>JOIN</code> between employees and projects. If it helps you to think in terms of <code>JOIN</code>, you may replace the comma with <code>JOIN</code>. That is, the following two queries are equivalent.</p>
 <table>
 <colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
+<col style="width: 46%" />
+<col style="width: 53%" />
 </colgroup>
 <tbody>
 <tr class="odd">
@@ -512,8 +512,8 @@ OK!
 <span id="cb18-5"><a href="#cb18-5" aria-hidden="true"></a><span class="kw">WHERE</span> p.name <span class="kw">LIKE</span> <span class="st">&#39;%security%&#39;</span></span></code></pre></div></td>
 <td><div class="sourceCode" id="cb19"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true"></a><span class="kw">SELECT</span> e.name <span class="kw">AS</span> employeeName,</span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true"></a>       p.name <span class="kw">AS</span> projectName</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true"></a><span class="kw">FROM</span> hr.employeesNest <span class="kw">AS</span> e <span class="kw">JOIN</span></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true"></a>     e.projects <span class="kw">AS</span> p <span class="kw">ON</span> <span class="kw">true</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true"></a><span class="kw">FROM</span> hr.employeesNest <span class="kw">AS</span> e <span class="kw">CROSS</span> <span class="kw">JOIN</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true"></a>     e.projects <span class="kw">AS</span> p</span>
 <span id="cb19-5"><a href="#cb19-5" aria-hidden="true"></a><span class="kw">WHERE</span> p.name <span class="kw">LIKE</span> <span class="st">&#39;%security%&#39;</span></span></code></pre></div></td>
 </tr>
 </tbody>
