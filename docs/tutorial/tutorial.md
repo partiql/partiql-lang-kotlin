@@ -297,21 +297,18 @@ about unnesting collections.
 
 One may think that the `FROM` clause of the
 example executes, in a sense, a `JOIN` between employees and projects.
-Except that unlike a conventional SQL join that would require an **`ON`
-condition**, the employees-projects join condition is implicit in the
-nesting of the projects data into the employee data. If it helps you to
-think in terms of `JOIN`, you may replace the comma with `JOIN`.
-That is, the following two queries are equivalent.
+If it helps you to think in terms of `JOIN`, you may replace the comma
+with `JOIN`. That is, the following two queries are equivalent.
 
-+-----------------------------------+-----------------------------------+
-| ```sql                            | ```sql                            | 
-| SELECT e.name AS employeeName,    | SELECT e.name AS employeeName,    |
-|        p.name AS projectName      |        p.name AS projectName      |
-| FROM hr.employeesNest AS e,       | FROM hr.employeesNest AS e JOIN   |
-|      e.projects AS p              |      e.projects AS p              |
-| WHERE p.name LIKE '%security%'    | WHERE p.name LIKE '%security%'    |
-| ```                               | ```                               | 
-+-----------------------------------+-----------------------------------+
++-----------------------------------+-----------------------------------------+
+| ```sql                            | ```sql                                  |
+| SELECT e.name AS employeeName,    | SELECT e.name AS employeeName,          |
+|        p.name AS projectName      |        p.name AS projectName            |
+| FROM hr.employeesNest AS e,       | FROM hr.employeesNest AS e CROSS JOIN   |
+|      e.projects AS p              |      e.projects AS p                    |
+| WHERE p.name LIKE '%security%'    | WHERE p.name LIKE '%security%'          |
+| ```                               | ```                                     |
++-----------------------------------+-----------------------------------------+
 
 
 ### Unnesting data with LEFT JOIN always preserves parent information
@@ -377,7 +374,7 @@ returns
   }
 >>
 --- 
-OK! (14 ms)
+OK!
 
 ```
 
@@ -411,7 +408,7 @@ which returns
   }
 >>
 --- 
-OK! (28 ms)
+OK!
 
 ```
 
@@ -424,32 +421,12 @@ name contains the word 'querying') each employee has.[^subquerybug]
 Making the same asssumption as before, that `id` is a key for employees, we can solve 
 the problem with the query 
 
-```sql
-SELECT e.name AS employeeName, 
-       COUNT(p.name) AS queryProjectsNum
-FROM hr.employeesNest e LEFT JOIN e.projects AS p ON p.name LIKE '%querying%'
-GROUP BY e.id, e.name
+```{.sql include=tutorial/code/q4.sql}
 ```
 
 that returns 
 
-```
-<<
-  {
-    'employeeName': 'Bob Smith',
-    'queryProjectsNum': 1
-  },
-  {
-    'employeeName': 'Susan Smith',
-    'queryProjectsNum': 0
-  },
-  {
-    'employeeName': 'Jane Smith',
-    'queryProjectsNum': 0
-  }
->>
---- 
-OK! (22 ms)
+```{include=tutorial/code/q4.output}
 ```
 
 Notice this query's result includes Susan Smith and Jane Smith, who have no
@@ -1005,7 +982,7 @@ which returns
   }
 >>
 --- 
-OK! (31 ms)
+OK!
 ```
 
 ## Pivoting into Tuples

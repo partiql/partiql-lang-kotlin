@@ -1,5 +1,16 @@
 <<
-{ 'employeeName': 'Bob Smith', 'queryProjectsNum': 1 },
-{ 'employeeName': 'Susan Smith', 'queryProjectsNum': 0 },
-{ 'employeeName': 'Jane Smith', 'queryProjectsNum': 0 },
+  {
+    'employeeName': 'Bob Smith',
+    'queryProjectsNum': 1
+  },
+  {
+    'employeeName': 'Susan Smith',
+    'queryProjectsNum': 0
+  },
+  {
+    'employeeName': 'Jane Smith',
+    'queryProjectsNum': 0
+  }
 >>
+---
+OK!

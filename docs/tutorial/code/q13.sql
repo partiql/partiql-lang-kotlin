@@ -4,4 +4,3 @@ SELECT e.name AS employeeName,
 FROM hr.employeesNest AS e, 
      e.projects AS p AT o
 WHERE p.name LIKE '%security%'
-

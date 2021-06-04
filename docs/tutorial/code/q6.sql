@@ -3,4 +3,3 @@ SELECT e.name AS employeeName,
 FROM hr.employeesNestScalars AS e, 
      e.projects AS p
 WHERE p LIKE '%security%'
-

@@ -1,6 +1,4 @@
 SELECT e.name AS employeeName, 
-       ( SELECT COUNT(*)
-         FROM e.projects AS p
-         WHERE p.name LIKE '%querying%'
-       ) AS queryProjectsNum
-FROM hr.employeesNest AS e
+       COUNT(p.name) AS queryProjectsNum
+FROM hr.employeesNest e LEFT JOIN e.projects AS p ON p.name LIKE '%querying%'
+GROUP BY e.id, e.name
