@@ -154,6 +154,7 @@ operator fun ExprValue.compareTo(other: ExprValue): Int {
 
 /**
  * Checks if the two ExprValues are directly comparable.
+ * Directly comparable is used in the context of the `<`/`<=`/`>`/`>=` operators.
  */
 internal fun ExprValue.isDirectlyComparableTo(other: ExprValue): Boolean =
     when {

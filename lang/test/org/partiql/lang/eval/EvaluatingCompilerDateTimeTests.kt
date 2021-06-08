@@ -263,7 +263,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
 
     private class ArgumentsForComparison : ArgumentsProviderBase() {
         private fun case(query: String, expected: String) = ComparisonTestCase(query, expected)
-        private fun case(query: String) = ComparisonTestCase(query, null)
+        private fun errorCase(query: String) = ComparisonTestCase(query, null)
         override fun getParameters() = listOf(
             case("DATE '2012-02-29' > DATE '2012-02-28'", "true"),
             case("DATE '2012-02-29' < DATE '2013-02-28'", "true"),
@@ -283,11 +283,10 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
             case("CAST('12:12:12.123' AS TIME WITH TIME ZONE) = TIME WITH TIME ZONE '12:12:12.123'", "true"),
             case("CAST(TIME WITH TIME ZONE '12:12:12.123' AS TIME) = TIME '12:12:12.123'", "true"),
             // Following are the error cases.
-            case("TIME '12:12:13' < TIME WITH TIME ZONE '12:12:12.123'"),
-            case("TIME WITH TIME ZONE '12:12:13' < TIME '12:12:12.123'"),
-            case("TIME WITH TIME ZONE '12:12:13-08:00' < TIME '12:12:12.123-08:00'"),
-            case("TIME WITH TIME ZONE '12:12:13' > DATE '2012-02-29'")
-
+            errorCase("TIME '12:12:13' < TIME WITH TIME ZONE '12:12:12.123'"),
+            errorCase("TIME WITH TIME ZONE '12:12:13' < TIME '12:12:12.123'"),
+            errorCase("TIME WITH TIME ZONE '12:12:13-08:00' < TIME '12:12:12.123-08:00'"),
+            errorCase("TIME WITH TIME ZONE '12:12:13' > DATE '2012-02-29'")
         )
     }
 }
