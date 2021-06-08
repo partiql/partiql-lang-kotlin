@@ -5,6 +5,7 @@ import com.amazon.ion.IonSystem
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.err
+import org.partiql.lang.eval.errNoContext
 import org.partiql.lang.util.getOffsetHHmm
 import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.lang.util.times
@@ -60,6 +61,9 @@ data class Time private constructor(val localTime: LocalTime, val precision: Int
 
     companion object {
 
+        private const val LESS = -1
+        private const val MORE = 1
+
         /** Returns an instance of [Time] for the given hour, minute, second, precision and tz_minutes.
          * @param hour  the hour of a day of 24 hours to represent, from 0 to 23
          * @param minute  the minute of hour of 60 minutes to represent, from 0 to 59
@@ -112,7 +116,7 @@ data class Time private constructor(val localTime: LocalTime, val precision: Int
                 newNano
             )
             val zoneOffset = tz_minutes?.let {
-                ZoneOffset.ofTotalSeconds( it * SECONDS_PER_MINUTE)
+                ZoneOffset.ofTotalSeconds(it * SECONDS_PER_MINUTE)
             }
             return Time(localTime, precision, zoneOffset)
         }
@@ -180,4 +184,30 @@ data class Time private constructor(val localTime: LocalTime, val precision: Int
     override fun toString(): String =
         localTime.format(DateTimeFormatter.ofPattern(formatterPattern())) +
             (zoneOffset?.getOffsetHHmm() ?: "")
+
+    /**
+     * Check if this instance is directly comparable to the other [Time] instance.
+     * The [Time] instances are directly comparable if [zoneOffset] is defined for both of them
+     * or it is not defined for both of them.
+     */
+    fun isDirectlyComparableTo(other: Time): Boolean {
+        return (this.zoneOffset == null && other.zoneOffset == null) ||
+            (this.zoneOffset != null && other.zoneOffset != null)
+    }
+
+    /**
+     * Compares the TIME and TIME WITH TIME ZONE values according to the natural order.
+     * TIME (without time zone) comes before TIME (with time zone) in the natural order comparison.
+     */
+    fun naturalOrderCompareTo(other: Time): Int {
+        return when {
+            // When the zone offsets are not null for both the operands, compare OffsetTime i.e. LocalTime with ZoneOffset
+            this.zoneOffset != null && other.zoneOffset != null -> this.offsetTime!!.compareTo(other.offsetTime)
+            // When the zone offsets are null for both the operands, compare just LocalTime
+            this.zoneOffset == null && other.zoneOffset == null -> this.localTime.compareTo(other.localTime)
+            // When one of the times is `time with time zone` and other is just `time` (without time zone), then they are incomparable.
+            this.zoneOffset == null && other.zoneOffset != null -> LESS
+            else -> MORE
+        }
+    }
 }

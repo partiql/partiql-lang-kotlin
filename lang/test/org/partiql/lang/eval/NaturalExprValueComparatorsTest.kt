@@ -82,6 +82,30 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
             "`+inf`"
         ),
         listOf(
+            "DATE '1992-08-22'"
+        ),
+        listOf(
+            "DATE '2021-08-22'"
+        ),
+        listOf(
+            "TIME '12:12:12'",
+            "TIME '12:12:12.00'",
+            "TIME (2) '12:12:12.00009'",
+            "TIME (2) '12:12:12.00009+00:00'",
+            "TIME (2) '12:12:12.00009-08:00'"
+        ),
+        listOf(
+            "TIME '12:12:12.1'"
+        ),
+        listOf(
+            "TIME WITH TIME ZONE '12:12:12-08:00'",
+            "TIME WITH TIME ZONE '12:12:12.00-08:00'",
+            "TIME (2) WITH TIME ZONE '12:12:12.00009-08:00'"
+        ),
+        listOf(
+            "TIME WITH TIME ZONE '12:12:12.1-09:00'"
+        ),
+        listOf(
             "`2017T`",
             "`2017-01T`",
             "`2017-01-01T`",
@@ -364,7 +388,7 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
     fun nonNullEqualityTests(equivalentPair: Pair<String, String>) {
         val (left, right) = equivalentPair
 
-        assertEval("$left = $right", "true")
+        assertExprEquals(valueFactory.newBoolean(true), eval("$left = $right"))
     }
 
     // null to non null pairs
@@ -385,6 +409,6 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
     fun nullEqualityTests(equivalentPair: Pair<String, String>) {
         val (left, right) = equivalentPair
 
-        assertEval("$left = $right", "null")
+        assertExprEquals(valueFactory.nullValue, eval("$left = $right"))
     }
 }

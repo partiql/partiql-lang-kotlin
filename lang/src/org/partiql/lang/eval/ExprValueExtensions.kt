@@ -147,10 +147,22 @@ operator fun ExprValue.compareTo(other: ExprValue): Int {
     return when {
         type.isUnknown || other.type.isUnknown  ->
             throw EvaluationException("Null value cannot be compared: $this, $other", internal = false)
-        type.isDirectlyComparableTo(other.type) -> DEFAULT_COMPARATOR.compare(this, other)
-        else                                    -> errNoContext("Cannot compare values: $this, $other", internal = false)
+        isDirectlyComparableTo(other) -> DEFAULT_COMPARATOR.compare(this, other)
+        else                          -> errNoContext("Cannot compare values: $this, $other", internal = false)
     }
 }
+
+/**
+ * Checks if the two ExprValues are directly comparable.
+ * Directly comparable is used in the context of the `<`/`<=`/`>`/`>=` operators.
+ */
+internal fun ExprValue.isDirectlyComparableTo(other: ExprValue): Boolean =
+    when {
+        // The ExprValue type for TIME and TIME WITH TIME ZONE is same
+        // and thus needs to be checked explicitly for the timezone values.
+        type == TIME && other.type == TIME -> timeValue().isDirectlyComparableTo(other.timeValue())
+        else -> type.isDirectlyComparableTo(other.type)
+    }
 
 /** Types that are cast to the [ExprValueType.isText] types by calling `IonValue.toString()`. */
 private val ION_TEXT_STRING_CAST_TYPES = setOf(BOOL, TIMESTAMP)
