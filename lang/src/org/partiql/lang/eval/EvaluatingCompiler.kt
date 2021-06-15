@@ -952,8 +952,9 @@ internal class EvaluatingCompiler(
         selectExpr.orderBy?.let {
             err("ORDER BY is not supported in evaluator yet",
                 ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
-                errorContextFrom(selectExpr.metas),
-                internal = false )}
+                errorContextFrom(selectExpr.metas).also { it[Property.FEATURE_NAME] = "ORDER BY" },
+                internal = false )
+        }
 
         // Get all the FROM source aliases and LET bindings for binding error checks
         val fold = object : PartiqlAst.VisitorFold<Set<String>>() {

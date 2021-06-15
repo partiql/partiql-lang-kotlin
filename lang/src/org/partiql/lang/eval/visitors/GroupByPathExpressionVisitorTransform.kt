@@ -98,19 +98,12 @@ class GroupByPathExpressionVisitorTransform(
 
         // The scope of the expressions in the FROM clause is the same as that of the parent scope.
         val from = this.transformExprSelect_from(node)
-
-        val fromLet = node.fromLet?.let { unshadowedTransformer.transformExprSelect_fromLet(node) }
-
-        val where = node.where?.let { unshadowedTransformer.transformExprSelect_where(node) }
-
-        val groupBy = node.group?.let { unshadowedTransformer.transformExprSelect_group(node) }
-
-        val having = node.having?.let { currentAndUnshadowedTransformer.transformExprSelect_having(node) }
-
-        val order = node.having?.let { currentAndUnshadowedTransformer.transformExprSelect_order(node) }
-
-        val limit = node.limit?.let { unshadowedTransformer.transformExprSelect_limit(node) }
-
+        val fromLet = unshadowedTransformer.transformExprSelect_fromLet(node)
+        val where = unshadowedTransformer.transformExprSelect_where(node)
+        val groupBy = unshadowedTransformer.transformExprSelect_group(node)
+        val having = currentAndUnshadowedTransformer.transformExprSelect_having(node)
+        val order = currentAndUnshadowedTransformer.transformExprSelect_order(node)
+        val limit = unshadowedTransformer.transformExprSelect_limit(node)
         val metas = unshadowedTransformer.transformExprSelect_metas(node)
 
         return PartiqlAst.build {

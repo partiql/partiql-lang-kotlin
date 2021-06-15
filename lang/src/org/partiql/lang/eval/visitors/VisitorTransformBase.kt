@@ -40,7 +40,7 @@ abstract class VisitorTransformBase : PartiqlAst.VisitorTransform() {
         val having = transformExprSelect_having(node)
         val setq = transformExprSelect_setq(node)
         val project = transformExprSelect_project(node)
-        val order = node.having?.let { transformExprSelect_order(node) }
+        val order = transformExprSelect_order(node)
         val limit = transformExprSelect_limit(node)
         val metas = transformExprSelect_metas(node)
         return PartiqlAst.build {

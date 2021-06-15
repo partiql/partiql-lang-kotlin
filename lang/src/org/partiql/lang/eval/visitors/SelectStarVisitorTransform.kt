@@ -22,6 +22,7 @@ class SelectStarVisitorTransform : VisitorTransformBase() {
                 where = node.where,
                 group = node.group,
                 having = node.having,
+                order = node.order,
                 limit = node.limit,
                 metas = node.metas)
         }
