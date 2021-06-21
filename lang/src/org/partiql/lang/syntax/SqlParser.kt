@@ -1118,41 +1118,39 @@ class SqlParser(private val ion: IonSystem) : Parser {
         return expr
     }
 
-    private fun List<Token>.parseUnaryTerm(): ParseNode =
-        when (head?.isUnaryOperator) {
+    private fun List<Token>.parseUnaryTerm(): ParseNode {
+        return when (head?.isUnaryOperator) {
             true -> {
                 val op = head!!
-
-                val term = tail.parseUnaryTerm()
-                var expr: ParseNode? = null
+                fun makeUnaryParseNode(term: ParseNode) =
+                    ParseNode(UNARY, op, listOf(term), term.remaining)
 
                 // constant fold unary plus/minus into constant literals
                 when (op.keywordText) {
-                    "+" -> when {
-                        term.isNumericLiteral -> {
-                            // unary plus is a NO-OP
-                            expr = term
+                    "+" -> {
+                        val term = tail.parseUnaryTerm()
+                        when {
+                            // unary plus is a no-op on numeric literals.
+                            term.isNumericLiteral -> term
+                            else -> makeUnaryParseNode(term)
                         }
                     }
-                    "-" -> when {
-                        term.isNumericLiteral -> {
-                            val num = -term.numberValue()
-                            expr = ParseNode(ATOM,
-                                             term.token!!.copy(value = num.ionValue(ion)),
-                                             emptyList(),
-                                             term.remaining)
+                    "-" -> {
+                        val term = tail.parseUnaryTerm()
+                        when {
+                            // for numbers, drop the minus sign but also negate the value
+                            term.isNumericLiteral ->
+                                term.copy(token = term.token!!.copy(value = (-term.numberValue()).ionValue(ion)))
+                            else -> makeUnaryParseNode(term)
                         }
                     }
-                    "not" -> {
-                        val children = tail.parseExpression(op.prefixPrecedence)
-                        expr = ParseNode(UNARY, op, listOf(children), children.remaining)
-                    }
+                    else -> makeUnaryParseNode(tail.parseExpression(op.prefixPrecedence))
                 }
-
-                expr ?: ParseNode(UNARY, op, listOf(term), term.remaining)
             }
             else -> parsePathTerm()
         }
+    }
+
 
     private fun List<Token>.parsePathTerm(pathMode: PathMode = PathMode.FULL_PATH): ParseNode {
         val term = when (pathMode) {
