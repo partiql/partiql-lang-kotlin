@@ -207,9 +207,9 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
         val month = nextInt(12) + 1
         val day = when (month) {
             in monthsWith31Days -> nextInt(31)
-            2 -> when (year % 4) {
-                0 -> nextInt(29)
-                else -> nextInt(28)
+            2 -> when ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0))  {
+                true -> nextInt(29)
+                false -> nextInt(28)
             }
             else -> nextInt(30)
         } + 1
