@@ -16,6 +16,7 @@ package org.partiql.lang.eval
 
 import com.amazon.ion.IonType
 import org.partiql.lang.ast.*
+import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.syntax.TYPE_ALIASES
 import org.partiql.lang.syntax.TYPE_NAME_ARITY_MAP
 
@@ -172,6 +173,7 @@ enum class ExprValueType(val typeNames: List<String>,
                                                             "No such value type for $name",
                                                             internal = true)
 
+        // TODO: delete me after [EvaluatingCompiler] is gone.
         fun fromSqlDataType(sqlDataType: SqlDataType) =
             when (sqlDataType) {
                 SqlDataType.BOOLEAN             -> ExprValueType.BOOL
@@ -200,5 +202,33 @@ enum class ExprValueType(val typeNames: List<String>,
                 SqlDataType.TIME,
                 SqlDataType.TIME_WITH_TIME_ZONE -> ExprValueType.TIME
             }
+
+        fun fromPartiQlAstType(type: PartiqlAst.Type) = when(type) {
+            is PartiqlAst.Type.BagType -> BAG
+            is PartiqlAst.Type.BlobType -> BLOB
+            is PartiqlAst.Type.BooleanType -> BOOL
+            is PartiqlAst.Type.CharacterType -> STRING
+            is PartiqlAst.Type.CharacterVaryingType -> STRING
+            is PartiqlAst.Type.ClobType -> CLOB
+            is PartiqlAst.Type.DateType -> DATE
+            is PartiqlAst.Type.DecimalType -> DECIMAL
+            is PartiqlAst.Type.DoublePrecisionType -> FLOAT
+            is PartiqlAst.Type.FloatType -> FLOAT
+            is PartiqlAst.Type.IntegerType -> INT
+            is PartiqlAst.Type.ListType -> LIST
+            is PartiqlAst.Type.MissingType -> MISSING
+            is PartiqlAst.Type.NullType -> NULL
+            is PartiqlAst.Type.NumericType -> DECIMAL
+            is PartiqlAst.Type.RealType -> FLOAT
+            is PartiqlAst.Type.SexpType -> SEXP
+            is PartiqlAst.Type.SmallintType -> INT
+            is PartiqlAst.Type.StringType -> STRING
+            is PartiqlAst.Type.StructType -> STRUCT
+            is PartiqlAst.Type.SymbolType -> SYMBOL
+            is PartiqlAst.Type.TimeType -> TIME
+            is PartiqlAst.Type.TimeWithTimeZoneType -> TIME
+            is PartiqlAst.Type.TimestampType -> TIMESTAMP
+            is PartiqlAst.Type.TupleType -> STRUCT
+        }
     }
 }

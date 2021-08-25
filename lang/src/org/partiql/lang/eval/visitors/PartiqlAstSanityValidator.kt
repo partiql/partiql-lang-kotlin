@@ -44,6 +44,10 @@ object PartiqlAstSanityValidator : PartiqlAst.Visitor() {
         this.walkStatement(statement)
     }
 
+    fun validate(expr: PartiqlAst.Expr) {
+        this.walkExpr(expr)
+    }
+
     override fun visitExprLit(node: PartiqlAst.Expr.Lit) {
         val ionValue = node.value
         val metas = node.metas

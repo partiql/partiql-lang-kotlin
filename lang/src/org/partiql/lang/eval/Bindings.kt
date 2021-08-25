@@ -15,6 +15,7 @@
 package org.partiql.lang.eval
 import com.amazon.ion.*
 import org.partiql.lang.ast.CaseSensitivity
+import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.util.*
 
 /** Indicates if the lookup of a particular binding should be case-sensitive or not. */
@@ -45,6 +46,14 @@ enum class BindingCase {
 fun CaseSensitivity.toBindingCase(): BindingCase = when(this) {
     CaseSensitivity.INSENSITIVE -> BindingCase.INSENSITIVE
     CaseSensitivity.SENSITIVE   -> BindingCase.SENSITIVE
+}
+
+/**
+ * Converts a [CaseSensitivity] to a [BindingCase].
+ */
+fun PartiqlAst.CaseSensitivity.toBindingCase(): BindingCase = when(this) {
+    is PartiqlAst.CaseSensitivity.CaseInsensitive -> BindingCase.INSENSITIVE
+    is PartiqlAst.CaseSensitivity.CaseSensitive -> BindingCase.SENSITIVE
 }
 
 /**

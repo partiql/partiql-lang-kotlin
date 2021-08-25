@@ -305,38 +305,6 @@ private class StatementTransformer(val ion: IonSystem) {
             is GroupingStrategy.GroupPartial -> org.partiql.lang.ast.GroupingStrategy.PARTIAL
         }
 
-    private fun Type.toExprNodeType(): DataType {
-        val metas = this.metas.toPartiQlMetaContainer()
-
-        return when (this) {
-            is Type.NullType -> DataType(SqlDataType.NULL, listOf(), metas)
-            is Type.MissingType -> DataType(SqlDataType.MISSING, listOf(), metas)
-            is Type.BooleanType -> DataType(SqlDataType.BOOLEAN, listOf(), metas)
-            is Type.IntegerType -> DataType(SqlDataType.INTEGER, listOf(), metas)
-            is Type.SmallintType -> DataType(SqlDataType.SMALLINT, listOf(), metas)
-            is Type.FloatType -> DataType(SqlDataType.FLOAT, listOfNotNull(precision?.value), metas)
-            is Type.RealType -> DataType(SqlDataType.REAL, listOf(), metas)
-            is Type.DoublePrecisionType -> DataType(SqlDataType.DOUBLE_PRECISION, listOf(), metas)
-            is Type.DecimalType -> DataType(SqlDataType.DECIMAL, listOfNotNull(precision?.value, scale?.value), metas)
-            is Type.NumericType -> DataType(SqlDataType.NUMERIC, listOfNotNull(precision?.value, scale?.value), metas)
-            is Type.TimestampType -> DataType(SqlDataType.TIMESTAMP, listOf(), metas)
-            is Type.CharacterType -> DataType(SqlDataType.CHARACTER, listOfNotNull(length?.value), metas)
-            is Type.CharacterVaryingType -> DataType(SqlDataType.CHARACTER_VARYING, listOfNotNull(length?.value), metas)
-            is Type.StringType -> DataType(SqlDataType.STRING, listOf(), metas)
-            is Type.SymbolType -> DataType(SqlDataType.SYMBOL, listOf(), metas)
-            is Type.BlobType -> DataType(SqlDataType.BLOB, listOf(), metas)
-            is Type.ClobType -> DataType(SqlDataType.CLOB, listOf(), metas)
-            is Type.StructType -> DataType(SqlDataType.STRUCT, listOf(), metas)
-            is Type.TupleType -> DataType(SqlDataType.TUPLE, listOf(), metas)
-            is Type.ListType -> DataType(SqlDataType.LIST, listOf(), metas)
-            is Type.SexpType -> DataType(SqlDataType.SEXP, listOf(), metas)
-            is Type.BagType -> DataType(SqlDataType.BAG, listOf(), metas)
-            is Type.DateType -> DataType(SqlDataType.DATE, listOf(), metas)
-            is Type.TimeType -> DataType(SqlDataType.TIME, listOfNotNull(precision?.value), metas)
-            is Type.TimeWithTimeZoneType -> DataType(SqlDataType.TIME_WITH_TIME_ZONE, listOfNotNull(precision?.value), metas)
-        }
-    }
-
     private fun PartiqlAst.SetQuantifier.toSetQuantifier(): ExprNodeSetQuantifier =
         when (this) {
             is PartiqlAst.SetQuantifier.All -> ExprNodeSetQuantifier.ALL
@@ -444,5 +412,37 @@ private class StatementTransformer(val ion: IonSystem) {
 
     private fun Statement.Exec.toExprNode(): ExprNode {
         return Exec(procedureName.toSymbolicName(), this.args.toExprNodeList(), metas.toPartiQlMetaContainer())
+    }
+}
+
+internal fun Type.toExprNodeType(): DataType {
+    val metas = this.metas.toPartiQlMetaContainer()
+
+    return when (this) {
+        is Type.NullType -> DataType(SqlDataType.NULL, listOf(), metas)
+        is Type.MissingType -> DataType(SqlDataType.MISSING, listOf(), metas)
+        is Type.BooleanType -> DataType(SqlDataType.BOOLEAN, listOf(), metas)
+        is Type.IntegerType -> DataType(SqlDataType.INTEGER, listOf(), metas)
+        is Type.SmallintType -> DataType(SqlDataType.SMALLINT, listOf(), metas)
+        is Type.FloatType -> DataType(SqlDataType.FLOAT, listOfNotNull(precision?.value), metas)
+        is Type.RealType -> DataType(SqlDataType.REAL, listOf(), metas)
+        is Type.DoublePrecisionType -> DataType(SqlDataType.DOUBLE_PRECISION, listOf(), metas)
+        is Type.DecimalType -> DataType(SqlDataType.DECIMAL, listOfNotNull(precision?.value, scale?.value), metas)
+        is Type.NumericType -> DataType(SqlDataType.NUMERIC, listOfNotNull(precision?.value, scale?.value), metas)
+        is Type.TimestampType -> DataType(SqlDataType.TIMESTAMP, listOf(), metas)
+        is Type.CharacterType -> DataType(SqlDataType.CHARACTER, listOfNotNull(length?.value), metas)
+        is Type.CharacterVaryingType -> DataType(SqlDataType.CHARACTER_VARYING, listOfNotNull(length?.value), metas)
+        is Type.StringType -> DataType(SqlDataType.STRING, listOf(), metas)
+        is Type.SymbolType -> DataType(SqlDataType.SYMBOL, listOf(), metas)
+        is Type.BlobType -> DataType(SqlDataType.BLOB, listOf(), metas)
+        is Type.ClobType -> DataType(SqlDataType.CLOB, listOf(), metas)
+        is Type.StructType -> DataType(SqlDataType.STRUCT, listOf(), metas)
+        is Type.TupleType -> DataType(SqlDataType.TUPLE, listOf(), metas)
+        is Type.ListType -> DataType(SqlDataType.LIST, listOf(), metas)
+        is Type.SexpType -> DataType(SqlDataType.SEXP, listOf(), metas)
+        is Type.BagType -> DataType(SqlDataType.BAG, listOf(), metas)
+        is Type.DateType -> DataType(SqlDataType.DATE, listOf(), metas)
+        is Type.TimeType -> DataType(SqlDataType.TIME, listOfNotNull(precision?.value), metas)
+        is Type.TimeWithTimeZoneType -> DataType(SqlDataType.TIME_WITH_TIME_ZONE, listOfNotNull(precision?.value), metas)
     }
 }
