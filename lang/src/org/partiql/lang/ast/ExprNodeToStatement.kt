@@ -81,8 +81,17 @@ fun ExprNode.toAstExpr(): PartiqlAst.Expr {
             is NAry -> {
                 val args = node.args.map { it.toAstExpr() }
                 when(node.op) {
-                    NAryOp.ADD -> plus(args, metas)
-                    NAryOp.SUB -> minus(args, metas)
+                    NAryOp.ADD ->
+                        when(args.size) {
+                            1 -> pos(args[0])
+                            else -> plus(args, metas)
+                        }
+                    NAryOp.SUB -> {
+                        when(args.size) {
+                            1 -> neg(args[0])
+                            else -> minus(args, metas)
+                        }
+                    }
                     NAryOp.MUL -> times(args, metas)
                     NAryOp.DIV -> divide(args, metas)
                     NAryOp.MOD -> modulo(args, metas)

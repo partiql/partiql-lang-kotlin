@@ -14,11 +14,9 @@
 
 package org.partiql.lang.eval
 
-import com.amazon.ion.system.IonSystemBuilder
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.jupiter.api.assertThrows
-import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.syntax.ParserException

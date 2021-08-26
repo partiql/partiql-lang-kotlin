@@ -201,7 +201,7 @@ internal class CompilerPipelineImpl(
 
         val preProcessedQuery = executePreProcessingSteps(query, context)
 
-        return compiler.compile(preProcessedQuery)
+        return compiler.compile(preProcessedQuery.toAstStatement())
     }
 
     internal fun executePreProcessingSteps(
