@@ -44,7 +44,7 @@ dependencies {
 
     api 'com.amazon.ion:ion-java:[1.4.0,)'
     api 'com.amazon.ion:ion-element:0.2.0'
-    api 'org.partiql:partiql-ir-generator-runtime:0.3.0'
+    api 'org.partiql:partiql-ir-generator-runtime:0.3.2'
 
     // test-time dependencies
     testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
