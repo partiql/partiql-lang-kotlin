@@ -27,6 +27,8 @@ plugins {
     id 'org.jetbrains.dokka' version '0.9.18'
     id 'org.jetbrains.kotlin.jvm'
     id 'signing'
+    // https://github.com/melix/jmh-gradle-plugin#readme
+    id 'me.champeau.gradle.jmh'
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
@@ -54,6 +56,12 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
     testImplementation 'org.junit.vintage:junit-vintage-engine:5.7.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.7.0'
+
+    jmh 'org.openjdk.jmh:jmh-core:0.9'
+    jmh 'org.openjdk.jmh:jmh-generator-annprocess:0.9'
+
+    implementation 'org.openjdk.jmh:jmh-core:0.9'
+    implementation 'org.openjdk.jmh:jmh-generator-annprocess:0.9'
 }
 
 task generatePigDomains {
@@ -165,4 +173,15 @@ jacocoTestReport {
         csv.enabled false
         html.destination file("${buildDir}/reports/jacoco/html")
     }
+}
+
+
+jmh {
+    iterations = 10
+    fork = 1
+    timeUnit = 'ns'
+    warmupIterations =10
+    jmhVersion = '1.18'
+    benchmarkMode = ['avgt']
+    duplicateClassesStrategy = 'warn'
 }
