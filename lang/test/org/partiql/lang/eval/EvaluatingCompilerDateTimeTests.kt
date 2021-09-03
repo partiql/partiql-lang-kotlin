@@ -75,8 +75,8 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
      * Tests to visualize the behavior of evaluation of TIME literals. More tests are covered by [timeLiteralsTests].
      */
     private class ArgumentsForTimeLiterals : ArgumentsProviderBase() {
-        private val localTimezoneOffset = ZoneOffset.systemDefault().rules.getOffset(Instant.now())
-        private val localTzMinutes = localTimezoneOffset.totalSeconds / 60
+        private val defaultTimezoneOffset = ZoneOffset.UTC
+        private val defaultTzMinutes = defaultTimezoneOffset.totalSeconds / 60
 
         private fun case(query: String, expected: String, expectedTime: TimeForValidation? = null) = TimeTestCase(query, expected, expectedTime)
 
@@ -94,12 +94,12 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
             case("TIME (4) '12:24:12.12300'", "12:24:12.1230", TimeForValidation(12, 24, 12, 123000000, 4)),
             case("TIME (4) '12:24:12.123'", "12:24:12.1230", TimeForValidation(12, 24, 12, 123000000, 4)),
             case("TIME (0) '12:59:59.9'", "13:00:00", TimeForValidation(13, 0,0, 0, 0)),
-            case("TIME WITH TIME ZONE '00:00:00'", "00:00:00${localTimezoneOffset.getOffsetHHmm()}", TimeForValidation(0,0,0,0,0, localTzMinutes)),
-            case("TIME (2) WITH TIME ZONE '12:24:12.123'", "12:24:12.12${localTimezoneOffset.getOffsetHHmm()}", TimeForValidation(12, 24, 12, 120000000, 2, localTzMinutes)),
-            case("TIME WITH TIME ZONE '12:24:12.12300'", "12:24:12.12300${localTimezoneOffset.getOffsetHHmm()}", TimeForValidation(12, 24, 12, 123000000, 5, localTzMinutes)),
-            case("TIME (3) WITH TIME ZONE '12:24:12.12300'", "12:24:12.123${localTimezoneOffset.getOffsetHHmm()}", TimeForValidation(12, 24, 12, 123000000, 3, localTzMinutes)),
-            case("TIME (4) WITH TIME ZONE '12:24:12.12300'", "12:24:12.1230${localTimezoneOffset.getOffsetHHmm()}", TimeForValidation(12, 24, 12, 123000000, 4, localTzMinutes)),
-            case("TIME (4) WITH TIME ZONE '12:24:12.123'", "12:24:12.1230${localTimezoneOffset.getOffsetHHmm()}", TimeForValidation(12, 24, 12, 123000000, 4, localTzMinutes)),
+            case("TIME WITH TIME ZONE '00:00:00'", "00:00:00${defaultTimezoneOffset.getOffsetHHmm()}", TimeForValidation(0,0,0,0,0, defaultTzMinutes)),
+            case("TIME (2) WITH TIME ZONE '12:24:12.123'", "12:24:12.12${defaultTimezoneOffset.getOffsetHHmm()}", TimeForValidation(12, 24, 12, 120000000, 2, defaultTzMinutes)),
+            case("TIME WITH TIME ZONE '12:24:12.12300'", "12:24:12.12300${defaultTimezoneOffset.getOffsetHHmm()}", TimeForValidation(12, 24, 12, 123000000, 5, defaultTzMinutes)),
+            case("TIME (3) WITH TIME ZONE '12:24:12.12300'", "12:24:12.123${defaultTimezoneOffset.getOffsetHHmm()}", TimeForValidation(12, 24, 12, 123000000, 3, defaultTzMinutes)),
+            case("TIME (4) WITH TIME ZONE '12:24:12.12300'", "12:24:12.1230${defaultTimezoneOffset.getOffsetHHmm()}", TimeForValidation(12, 24, 12, 123000000, 4, defaultTzMinutes)),
+            case("TIME (4) WITH TIME ZONE '12:24:12.123'", "12:24:12.1230${defaultTimezoneOffset.getOffsetHHmm()}", TimeForValidation(12, 24, 12, 123000000, 4, defaultTzMinutes)),
             case("TIME (2) WITH TIME ZONE '12:24:12.123-00:00'", "12:24:12.12+00:00", TimeForValidation(12, 24, 12, 120000000, 2, 0)),
             case("TIME (2) WITH TIME ZONE '12:24:12.123+00:00'", "12:24:12.12+00:00", TimeForValidation(12, 24, 12, 120000000, 2, 0)),
             case("TIME (2) WITH TIME ZONE '12:24:12.123+05:30'", "12:24:12.12+05:30", TimeForValidation(12, 24, 12, 120000000, 2, 330)),
@@ -132,7 +132,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
     ) {
         fun expectedTimeString(withTimeZone: Boolean): String {
             val timezoneMinutes = when(withTimeZone) {
-                true -> tz_minutes ?: ZoneOffset.systemDefault().rules.getOffset(Instant.now()).totalSeconds / SECONDS_PER_MINUTE
+                true -> tz_minutes ?: ZoneOffset.UTC.totalSeconds / SECONDS_PER_MINUTE
                 else -> null
             }
             return Time.of(hour, minute, second, nano, precision, timezoneMinutes).toString()
