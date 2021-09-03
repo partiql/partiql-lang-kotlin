@@ -8,12 +8,12 @@ import org.partiql.lang.domains.id
 import java.util.*
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
-import org.partiql.lang.util.LOCAL_TIMEZONE_OFFSET
+import org.partiql.lang.util.DEFAULT_TIMEZONE_OFFSET
 import org.partiql.lang.util.to
 
 class SqlParserDateTimeTests : SqlParserTestBase() {
 
-    private val localTimeZoneOffset = (LOCAL_TIMEZONE_OFFSET.totalSeconds / 60).toLong()
+    private val defaultTimeZoneOffset = (DEFAULT_TIMEZONE_OFFSET.totalSeconds / 60).toLong()
 
     data class DateTimeTestCase(val source: String, val skipTest: Boolean = false, val block: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode)
     private data class Date(val year: Int, val month: Int, val day: Int)
@@ -117,22 +117,22 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
             litTime(timeValue(23, 59, 59, 123456789, 0, null))
         },
         DateTimeTestCase("TIME WITH TIME ZONE '02:30:59'") {
-            litTime(timeValue(2, 30, 59, 0, 0, localTimeZoneOffset))
+            litTime(timeValue(2, 30, 59, 0, 0, defaultTimeZoneOffset))
         },
         DateTimeTestCase("TIME (3) WITH TIME ZONE '12:59:31'") {
-            litTime(timeValue(12, 59, 31, 0, 3, localTimeZoneOffset))
+            litTime(timeValue(12, 59, 31, 0, 3, defaultTimeZoneOffset))
         },
         DateTimeTestCase("TIME WITH TIME ZONE '23:59:59.9999'") {
-            litTime(timeValue(23, 59, 59, 999900000, 4, localTimeZoneOffset))
+            litTime(timeValue(23, 59, 59, 999900000, 4, defaultTimeZoneOffset))
         },
         DateTimeTestCase("TIME (7) WITH TIME ZONE '23:59:59.123456789'") {
-            litTime(timeValue(23, 59, 59, 123456789, 7, localTimeZoneOffset))
+            litTime(timeValue(23, 59, 59, 123456789, 7, defaultTimeZoneOffset))
         },
         DateTimeTestCase("TIME (9) WITH TIME ZONE '23:59:59.123456789'") {
-            litTime(timeValue(23, 59, 59, 123456789, 9, localTimeZoneOffset))
+            litTime(timeValue(23, 59, 59, 123456789, 9, defaultTimeZoneOffset))
         },
         DateTimeTestCase("TIME (0) WITH TIME ZONE '23:59:59.123456789'") {
-            litTime(timeValue(23, 59, 59, 123456789, 0, localTimeZoneOffset))
+            litTime(timeValue(23, 59, 59, 123456789, 0, defaultTimeZoneOffset))
         },
         DateTimeTestCase("TIME (0) WITH TIME ZONE '00:00:00+00:00'") {
             litTime(timeValue(0, 0, 0, 0, 0, 0))
@@ -181,10 +181,10 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
             litTime(timeValue(23, 59, 59, 123456790, 9, null))
         },
         DateTimeTestCase("TIME WITH TIME ZONE '23:59:59.1234567890'", skipTest = true) {
-            litTime(timeValue(23, 59, 59, 123456789, 9, localTimeZoneOffset))
+            litTime(timeValue(23, 59, 59, 123456789, 9, defaultTimeZoneOffset))
         },
         DateTimeTestCase("TIME WITH TIME ZONE '23:59:59.1234567899'", skipTest = true) {
-            litTime(timeValue(23, 59, 59, 123456790, 9, localTimeZoneOffset))
+            litTime(timeValue(23, 59, 59, 123456790, 9, defaultTimeZoneOffset))
         },
         DateTimeTestCase("TIME WITH TIME ZONE '23:59:59.1234567890+18:00'", skipTest = true) {
             litTime(timeValue(23, 59, 59, 123456789, 9, 1080))

@@ -21,7 +21,7 @@ import junitparams.Parameters
 import junitparams.naming.TestCaseName
 import org.junit.Test
 import org.partiql.lang.syntax.ParserException
-import org.partiql.lang.util.LOCAL_TIMEZONE_OFFSET
+import org.partiql.lang.util.DEFAULT_TIMEZONE_OFFSET
 import org.partiql.lang.util.getOffsetHHmm
 
 class EvaluatingCompilerCastTest : EvaluatorTestBase() {
@@ -797,12 +797,12 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
         listOf(
             // CAST(<TIME> AS <variants of TIME type>)
             case("TIME '23:12:12.1267'", "TIME", "23:12:12.1267"),
-            case("TIME '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "23:12:12.1267${LOCAL_TIMEZONE_OFFSET.getOffsetHHmm()}"),
+            case("TIME '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "23:12:12.1267${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}"),
             case("TIME '23:12:12.1267+05:30'", "TIME (3)", "23:12:12.127"),
-            case("TIME '23:12:12.1267-05:30'", "TIME (3) WITH TIME ZONE", "23:12:12.127${LOCAL_TIMEZONE_OFFSET.getOffsetHHmm()}"),
+            case("TIME '23:12:12.1267-05:30'", "TIME (3) WITH TIME ZONE", "23:12:12.127${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}"),
             case("TIME (3) '23:12:12.1267'", "TIME","23:12:12.127"),
             case("TIME (3) '23:12:12.1267-05:30'", "TIME","23:12:12.127"),
-            case("TIME (3) '23:12:12.1267+05:30'", "TIME WITH TIME ZONE","23:12:12.127${LOCAL_TIMEZONE_OFFSET.getOffsetHHmm()}"),
+            case("TIME (3) '23:12:12.1267+05:30'", "TIME WITH TIME ZONE","23:12:12.127${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}"),
             case("TIME (3) '23:12:12.1267-05:30'", "TIME (9)","23:12:12.127000000"),
             case("TIME WITH TIME ZONE '23:12:12.1267'", "TIME", "23:12:12.1267"),
             case("TIME WITH TIME ZONE '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "23:12:12.1267-05:30"),
@@ -822,16 +822,16 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
             // CAST(<text> AS <variants of TIME type>)
             case("'23:12:12.1267'", "TIME", "23:12:12.1267"),
             case("'23:12:12.1267'", "TIME (2)", "23:12:12.13"),
-            case("'23:12:12.1267'", "TIME WITH TIME ZONE", "23:12:12.1267${LOCAL_TIMEZONE_OFFSET.getOffsetHHmm()}"),
-            case("'23:12:12.1267'", "TIME (2) WITH TIME ZONE", "23:12:12.13${LOCAL_TIMEZONE_OFFSET.getOffsetHHmm()}"),
+            case("'23:12:12.1267'", "TIME WITH TIME ZONE", "23:12:12.1267${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}"),
+            case("'23:12:12.1267'", "TIME (2) WITH TIME ZONE", "23:12:12.13${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}"),
             case("""`"23:12:12.1267"`""", "TIME", "23:12:12.1267"),
             case("""`"23:12:12.1267"`""", "TIME (2)", "23:12:12.13"),
-            case("""`"23:12:12.1267"`""", "TIME WITH TIME ZONE", "23:12:12.1267${LOCAL_TIMEZONE_OFFSET.getOffsetHHmm()}"),
-            case("""`'23:12:12.1267'`""", "TIME (2) WITH TIME ZONE", "23:12:12.13${LOCAL_TIMEZONE_OFFSET.getOffsetHHmm()}"),
+            case("""`"23:12:12.1267"`""", "TIME WITH TIME ZONE", "23:12:12.1267${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}"),
+            case("""`'23:12:12.1267'`""", "TIME (2) WITH TIME ZONE", "23:12:12.13${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}"),
             case("""`'23:12:12.1267'`""", "TIME", "23:12:12.1267"),
             case("""`'23:12:12.1267'`""", "TIME (2)", "23:12:12.13"),
-            case("""`'23:12:12.1267'`""", "TIME WITH TIME ZONE", "23:12:12.1267${LOCAL_TIMEZONE_OFFSET.getOffsetHHmm()}"),
-            case("""`'23:12:12.1267'`""", "TIME (2) WITH TIME ZONE", "23:12:12.13${LOCAL_TIMEZONE_OFFSET.getOffsetHHmm()}")
+            case("""`'23:12:12.1267'`""", "TIME WITH TIME ZONE", "23:12:12.1267${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}"),
+            case("""`'23:12:12.1267'`""", "TIME (2) WITH TIME ZONE", "23:12:12.13${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}")
         ),
         // Error cases for TIME
         listOf(
@@ -867,11 +867,11 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
             case("TIME (3) '23:12:12.1267-05:30'", "`'23:12:12.127'`"),
             case("TIME (3) '23:12:12.1267+05:30'", "`'23:12:12.127'`"),
             case("TIME (3) '23:12:12.1267-05:30'", "`'23:12:12.127'`"),
-            case("TIME WITH TIME ZONE '23:12:12.1267'", "`'23:12:12.1267${LOCAL_TIMEZONE_OFFSET.getOffsetHHmm()}'`"),
+            case("TIME WITH TIME ZONE '23:12:12.1267'", "`'23:12:12.1267${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}'`"),
             case("TIME WITH TIME ZONE '23:12:12.1267-05:30'", "`'23:12:12.1267-05:30'`"),
             case("TIME WITH TIME ZONE '23:12:12.1267+05:30'", "`'23:12:12.1267+05:30'`"),
             case("TIME WITH TIME ZONE '23:12:12.1267-05:30'", "`'23:12:12.1267-05:30'`"),
-            case("TIME (3) WITH TIME ZONE '23:12:12.1267'", "`'23:12:12.127${LOCAL_TIMEZONE_OFFSET.getOffsetHHmm()}'`"),
+            case("TIME (3) WITH TIME ZONE '23:12:12.1267'", "`'23:12:12.127${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}'`"),
             case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "`'23:12:12.127-05:30'`"),
             case("TIME (3) WITH TIME ZONE '23:12:12.1267+05:30'", "`'23:12:12.127+05:30'`"),
             case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "`'23:12:12.127-05:30'`")
@@ -885,11 +885,11 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
             case("TIME (3) '23:12:12.1267-05:30'", "'23:12:12.127'"),
             case("TIME (3) '23:12:12.1267+05:30'", "'23:12:12.127'"),
             case("TIME (3) '23:12:12.1267-05:30'", "'23:12:12.127'"),
-            case("TIME WITH TIME ZONE '23:12:12.1267'", "'23:12:12.1267${LOCAL_TIMEZONE_OFFSET.getOffsetHHmm()}'"),
+            case("TIME WITH TIME ZONE '23:12:12.1267'", "'23:12:12.1267${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}'"),
             case("TIME WITH TIME ZONE '23:12:12.1267-05:30'", "'23:12:12.1267-05:30'"),
             case("TIME WITH TIME ZONE '23:12:12.1267+05:30'", "'23:12:12.1267+05:30'"),
             case("TIME WITH TIME ZONE '23:12:12.1267-05:30'", "'23:12:12.1267-05:30'"),
-            case("TIME (3) WITH TIME ZONE '23:12:12.1267'", "'23:12:12.127${LOCAL_TIMEZONE_OFFSET.getOffsetHHmm()}'"),
+            case("TIME (3) WITH TIME ZONE '23:12:12.1267'", "'23:12:12.127${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}'"),
             case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "'23:12:12.127-05:30'"),
             case("TIME (3) WITH TIME ZONE '23:12:12.1267+05:30'", "'23:12:12.127+05:30'"),
             case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "'23:12:12.127-05:30'")

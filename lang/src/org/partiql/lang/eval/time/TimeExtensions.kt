@@ -18,7 +18,13 @@ internal val genericTimeRegex = Regex("\\d\\d:\\d\\d:\\d\\d(\\.\\d*)?([+|-]\\d\\
  */
 internal val DATE_PATTERN_REGEX = Regex("\\d\\d\\d\\d-\\d\\d-\\d\\d")
 
-internal val LOCAL_TIMEZONE_OFFSET = ZoneOffset.systemDefault().rules.getOffset(Instant.now())
+/**
+ * If the default timezone offset is not provided with [CompileOptions], it defaults to [ZoneOffset.UTC].
+ * (The option to specify default timezone offset will be available once [#410](https://github.com/partiql/partiql-lang-kotlin/issues/410) is resolved)
+ *
+ * If timezone offset is not specified explicitly (when using `TIME WITH TIME ZONE`), the default time zone offset is used.
+ */
+internal val DEFAULT_TIMEZONE_OFFSET = ZoneOffset.UTC
 
 /**
  * Returns the string representation of the [ZoneOffset] in HH:mm format.
