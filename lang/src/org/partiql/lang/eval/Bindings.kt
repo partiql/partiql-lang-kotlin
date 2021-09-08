@@ -43,7 +43,7 @@ enum class BindingCase {
  * Encapsulates the data necessary to perform a binding lookup.
  */
 data class BindingName(val name: String, val bindingCase: BindingCase) {
-    val loweredName: String by lazy(LazyThreadSafetyMode.NONE) { name.toLowerCase() }
+    val loweredName: String by lazy(LazyThreadSafetyMode.PUBLICATION) { name.toLowerCase() }
     /**
      * Compares [name] to [otherName] using the rules specified by [bindingCase].
      */
