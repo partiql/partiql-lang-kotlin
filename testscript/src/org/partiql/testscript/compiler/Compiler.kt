@@ -107,7 +107,7 @@ class Compiler(val ion: IonSystem) {
             val dirPath = File(node.scriptLocation.inputName).parent
             val file = File("$dirPath/${node.environmentRelativeFilePath}")
             
-            val lazyDatagram = lazy(LazyThreadSafetyMode.NONE) { ion.loader.load(file) }
+            val lazyDatagram = lazy(LazyThreadSafetyMode.PUBLICATION) { ion.loader.load(file) }
 
             when {
                 !file.exists() -> {
