@@ -24,6 +24,7 @@ import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.id
+import kotlin.concurrent.thread
 
 /**
  * Originally just meant to test the parser, this class now tests several different things because
@@ -3180,5 +3181,36 @@ class SqlParserTest : SqlParserTestBase() {
                 project = projectList(projectExpr(id("baz"))),
                 from = scan(id("bar"))
             )))
+    }
+
+    @Test
+    fun manyNestedNotPerformanceRegressionTest() {
+        val startTime = System.currentTimeMillis()
+        val t = thread {
+            parse(
+                """
+                not not not not not not not not not not not not not not not not not not not not not not not not 
+                not not not not not not not not not not not not not not not not not not not not not not not not 
+                not not not not not not not not not not not not not not not not not not not not not not not not 
+                not not not not not not not not not not not not not not not not not not not not not not not not 
+                not not not not not not not not not not not not not not not not not not not not not not not not 
+                not not not not not not not not not not not not not not not not not not not not not not not not 
+                not not not not not not not not not not not not not not not not not not not not not not not not 
+                not not not not not not not not not not not not not not not not not not not not not not not not 
+                not not not not not not not not not not not not not not not not not not not not not not not not 
+                not not not not not not not not not not not not not not not not not not not not not not not not 
+                not not not not not not not not not not not not not not not not not not not not not not not not 
+                not not not not not not not not not not not not not not not not not not not not not not not not 
+                not not not not not not not not not not not not not not not not not not not not not not not not 
+                not not not not not not not not not not not not not not not not not not not not not not not not false
+                """)
+        }
+        val maxParseTime: Long = 5000
+        t.join(maxParseTime)
+        t.interrupt()
+
+        assertTrue(
+            "parsing many nested unary nots should take less than $maxParseTime",
+            System.currentTimeMillis() - startTime < maxParseTime)
     }
 }
