@@ -253,9 +253,9 @@ private abstract class ScalarExprValue : BaseExprValue(), Scalar {
 
     abstract fun ionValueFun(): IonValue
 
-    // LazyThreadSafetyMode.NONE is ok here because the worst that can happen is that [ionValueFun] is invoked
+    // LazyThreadSafetyMode.PUBLICATION is ok here because the worst that can happen is that [ionValueFun] is invoked
     // from multiple threads.  This should be ok because [IonSystem] is thread-safe.
-    override val ionValue by lazy(LazyThreadSafetyMode.NONE) { ionValueFun().seal() }
+    override val ionValue by lazy(LazyThreadSafetyMode.PUBLICATION) { ionValueFun().seal() }
 }
 
 /** A base class for the `true` boolean value, intended to be memoized. */
