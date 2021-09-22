@@ -1020,8 +1020,10 @@ sealed class DateTimeType : ExprNode() {
      * @param second represents the second value.
      * @param nano represents the fractional part of the second up to the nanoseconds' precision.
      * @param precision is an optional parameter which, if specified, represents the precision of the fractional second.
-     * @param tz_minutes is the optional time zone in minutes which can be specified with "WITH TIME ZONE".
-     * If [tz_minutes] is null, that means the time zone is undefined.
+     * @param with_time_zone is a boolean to decide whether the time has a time zone. 
+     * True represents 'TIME WITH TIME ZONE', while false represents 'TIME WITHOUT TIME ZONE'. 
+     * @param tz_minutes is the optional time zone in minutes if the time has an explicitly specified time zone. 
+     * The value should be null in case of 'TIME WITHOUT TIME ZONE' or in case that the time zone is not specified for 'TIME WITH TIME ZONE'. 
      */
     data class Time(
         val hour: Int,
@@ -1029,6 +1031,7 @@ sealed class DateTimeType : ExprNode() {
         val second: Int,
         val nano: Int,
         val precision: Int,
+        val with_time_zone: Boolean,
         val tz_minutes: Int? = null,
         override val metas: MetaContainer
     ) : DateTimeType() {
