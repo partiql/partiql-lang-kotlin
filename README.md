@@ -86,7 +86,7 @@ Gradle build.
 
 ### Running JMH benchmarks
 
-To run JMH benchmarks located in `lang/src/jmh`, build the entire project first and then run 
+To run JMH benchmarks located in `jmh`, build the entire project first and then run 
 the following command:
 
 ```
