@@ -18,6 +18,7 @@ rootProject.name = 'PartiQL'
 include('lang',
         'cli', 
         'examples', 
-        'testscript', 
+        'testscript',
+        'jmh',
         'pts')
 

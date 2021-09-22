@@ -1,0 +1,50 @@
+
+/*
+ * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the 'License').
+ *  You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *      http://aws.amazon.com/apache2.0/
+ *
+ *  or in the 'license' file accompanying this file. This file is distributed on an 'AS IS' BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ *  language governing permissions and limitations under the License.
+ */
+
+// Documentation for using Gradle with Kotlin is here: https://kotlinlang.org/docs/reference/using-gradle.html
+
+plugins {
+    // https://docs.gradle.org/current/userguide/java_library_plugin.html#header
+    id 'java-library'
+    id 'org.jetbrains.kotlin.jvm'
+    // https://github.com/melix/jmh-gradle-plugin#readme
+    id 'me.champeau.gradle.jmh'
+}
+
+dependencies {
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+    // PartiQL dependency
+    implementation project(":lang")
+
+    api 'com.amazon.ion:ion-java:[1.4.0,)'
+    api 'com.amazon.ion:ion-element:0.2.0'
+
+    jmh 'org.openjdk.jmh:jmh-core:0.9'
+    jmh 'org.openjdk.jmh:jmh-generator-annprocess:0.9'
+
+    implementation 'org.openjdk.jmh:jmh-core:0.9'
+    implementation 'org.openjdk.jmh:jmh-generator-annprocess:0.9'
+}
+
+jmh {
+    include = '.*PartiQLBenchmark.*'
+    iterations = 10
+    fork = 1
+    timeUnit = 'ns'
+    warmupIterations =10
+    jmhVersion = '1.18'
+    benchmarkMode = ['avgt']
+    duplicateClassesStrategy = 'warn'
+}
