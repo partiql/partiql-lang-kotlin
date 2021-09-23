@@ -2419,7 +2419,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
         if (!withTimeZone || timeWithoutTimeZoneRegex.matches(timeString))
             tryTimeParsing(timeString, DateTimeFormatter.ISO_TIME, LocalTime::parse)
         else
-            tryTimeParsing (timeString, DateTimeFormatter.ISO_TIME, OffsetTime::parse)
+            tryTimeParsing(timeString, DateTimeFormatter.ISO_TIME, OffsetTime::parse)
 
         // Extract the precision from the time string representation if the precision is not specified.
         // For e.g., TIME '23:12:12.12300' should have precision of 5.
