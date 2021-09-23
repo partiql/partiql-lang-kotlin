@@ -2002,7 +2002,7 @@ internal class EvaluatingCompiler(
     private fun compileTime(node: DateTimeType.Time) : ThunkEnv {
         val (hour, minute, second, nano, precision, with_time_zone, tz_minutes, metas) = node
         return thunkFactory.thunkEnv(metas) {
-            // Add the default time zone if the type 'TIME WITH TIME ZONE' does not have an explicitly specified time zone.
+            // Add the default time zone if the type "TIME WITH TIME ZONE" does not have an explicitly specified time zone.
             valueFactory.newTime(Time.of(hour, minute, second, nano, precision, if (with_time_zone && tz_minutes == null) DEFAULT_TIMEZONE_OFFSET.totalMinutes else tz_minutes))
         }
     }

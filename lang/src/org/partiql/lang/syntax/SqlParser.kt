@@ -2414,7 +2414,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
             rem.head.err("Invalid format for time string. Expected format is \"TIME [(p)] [WITH TIME ZONE] HH:MM:SS[.ddddd...][+|-HH:MM]\"",
                 PARSE_INVALID_TIME_STRING)
         }
-        // For time with time zone, if the time zone is not explicitly specified, we still consider it as valid.
+        // For "TIME WITH TIME ZONE", if the time zone is not explicitly specified, we still consider it as valid.
         // We will add the default time zone to it later in the evaluation phase.
         if (!withTimeZone || timeWithoutTimeZoneRegex.matches(timeString))
             tryTimeParsing (timeString, DateTimeFormatter.ISO_TIME, LocalTime::parse)
