@@ -458,6 +458,7 @@ open class AstRewriterBase : AstRewriter {
             node.second,
             node.nano,
             node.precision,
+            node.with_time_zone,
             node.tz_minutes,
             rewriteMetas(node)
         )

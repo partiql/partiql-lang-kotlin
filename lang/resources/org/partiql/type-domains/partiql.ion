@@ -125,7 +125,7 @@
         // end of sum expr
 
         // Time
-        (product time_value hour::int minute::int second::int nano::int precision::int tz_minutes::(? int))
+        (product time_value hour::int minute::int second::int nano::int precision::int with_time_zone::bool tz_minutes::(? int))
 
         // A "step" within a path expression; that is the components of the expression following the root.
         (sum path_step

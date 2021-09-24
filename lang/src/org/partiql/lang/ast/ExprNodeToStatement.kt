@@ -183,6 +183,7 @@ fun ExprNode.toAstExpr(): PartiqlAst.Expr {
                             node.second.toLong(),
                             node.nano.toLong(),
                             node.precision.toLong(),
+                            node.with_time_zone,
                             node.tz_minutes?.toLong()
                         )
                     )

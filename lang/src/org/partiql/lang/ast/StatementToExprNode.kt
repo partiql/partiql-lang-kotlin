@@ -201,6 +201,7 @@ private class StatementTransformer(val ion: IonSystem) {
                     value.second.value.toInt(),
                     value.nano.value.toInt(),
                     value.precision.value.toInt(),
+                    value.withTimeZone.value,
                     value.tzMinutes?.value?.toInt(),
                     metas
                 )
