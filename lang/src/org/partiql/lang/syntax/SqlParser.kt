@@ -2417,10 +2417,10 @@ class SqlParser(private val ion: IonSystem) : Parser {
         // For "TIME WITH TIME ZONE", if the time zone is not explicitly specified, we still consider it as valid.
         // We will add the default time zone to it later in the evaluation phase.
         if (!withTimeZone || timeWithoutTimeZoneRegex.matches(timeString)) {
-            tryTimeParsing(timeString, DateTimeFormatter.ISO_TIME, LocalTime::parse)
+            tryTimeParsing(timeString, ISO_TIME, LocalTime::parse)
         }
         else {
-            tryTimeParsing(timeString, DateTimeFormatter.ISO_TIME, OffsetTime::parse)
+            tryTimeParsing(timeString, ISO_TIME, OffsetTime::parse)
         }
 
         // Extract the precision from the time string representation if the precision is not specified.
