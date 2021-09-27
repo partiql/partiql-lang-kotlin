@@ -15,6 +15,7 @@
 package org.partiql.lang.eval
 
 import com.amazon.ion.*
+import java.time.ZoneOffset
 
 /**
  * Evaluation Session. Holds user defined constants used during evaluation. Each value has a default value that can
@@ -26,7 +27,8 @@ import com.amazon.ion.*
  */
 class EvaluationSession private constructor(val globals: Bindings<ExprValue>,
                                             val parameters: List<ExprValue>,
-                                            val now: Timestamp) {
+                                            val now: Timestamp,
+                                            val defaultTimezoneOffest: ZoneOffset) {
     companion object {
         /**
          * Java style builder to construct a new [EvaluationSession]. Uses the default value for any non specified field
@@ -68,8 +70,15 @@ class EvaluationSession private constructor(val globals: Bindings<ExprValue>,
             return this
         }
 
+        private var defaultTimezoneOffest: ZoneOffset = ZoneOffset.UTC
+        fun defaultTimezoneOffset(value: ZoneOffset): Builder {
+            defaultTimezoneOffest = value
+            return this
+        }
+
         fun build(): EvaluationSession = EvaluationSession(now = now ?: Timestamp.nowZ(),
                                                            parameters = parameters,
-                                                           globals = globals)
+                                                           globals = globals,
+                                                           defaultTimezoneOffest = defaultTimezoneOffest)
     }
 }

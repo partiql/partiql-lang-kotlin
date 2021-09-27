@@ -28,8 +28,8 @@ import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.*
-import org.partiql.lang.util.DEFAULT_TIMEZONE_OFFSET
 import java.math.*
+import java.time.ZoneOffset
 import java.util.*
 import kotlin.collections.*
 
@@ -1999,11 +1999,11 @@ internal class EvaluatingCompiler(
         return thunkFactory.thunkEnv(metas) { value }
     }
 
-    private fun compileTime(node: DateTimeType.Time) : ThunkEnv {
+    private fun compileTime(node: DateTimeType.Time, defaultTimezoneOffset: ZoneOffset) : ThunkEnv {
         val (hour, minute, second, nano, precision, with_time_zone, tz_minutes, metas) = node
         return thunkFactory.thunkEnv(metas) {
             // Add the default time zone if the type "TIME WITH TIME ZONE" does not have an explicitly specified time zone.
-            valueFactory.newTime(Time.of(hour, minute, second, nano, precision, if (with_time_zone && tz_minutes == null) DEFAULT_TIMEZONE_OFFSET.totalMinutes else tz_minutes))
+            valueFactory.newTime(Time.of(hour, minute, second, nano, precision, if (with_time_zone && tz_minutes == null) defaultTimezoneOffset.totalMinutes else tz_minutes))
         }
     }
 
