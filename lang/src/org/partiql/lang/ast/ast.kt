@@ -1022,8 +1022,12 @@ sealed class DateTimeType : ExprNode() {
      * @param precision is an optional parameter which, if specified, represents the precision of the fractional second.
      * @param with_time_zone is a boolean to decide whether the time has a time zone. 
      * True represents "TIME WITH TIME ZONE", while false represents "TIME WITHOUT TIME ZONE". 
+<<<<<<< HEAD
      * @param tz_minutes is the optional time zone in minutes if the time has an explicitly specified time zone. 
      * The value should be null in case of "TIME WITHOUT TIME ZONE" or in case that the time zone is not specified for 'TIME WITH TIME ZONE'. 
+=======
+     * @param tz_minutes is the optional time zone in minutes which can be explicitly specified with "WITH TIME ZONE".
+>>>>>>> 630139666d83c3fcfcd51adbeca9740e7276ee39
      */
     data class Time(
         val hour: Int,
