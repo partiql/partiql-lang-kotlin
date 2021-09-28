@@ -116,6 +116,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
             case("'01:01:12' IS TIME", "false"),
             case("TIME WITH TIME ZONE '00:00:00'", "00:00:00-01:00", TimeForValidation(0,0,0,0,0, -60), EvaluationSession.build {defaultTimezoneOffset(ZoneOffset.ofHours(-1))}),
             case("TIME WITH TIME ZONE '11:23:45.678'", "11:23:45.678+06:00", TimeForValidation(11,23,45,678000000,3, 360), EvaluationSession.build {defaultTimezoneOffset(ZoneOffset.ofHours(6))}),
+            case("TIME WITH TIME ZONE '11:23:45.678-05:30'", "11:23:45.678-05:30", TimeForValidation(11,23,45,678000000,3, -330), EvaluationSession.build {defaultTimezoneOffset(ZoneOffset.ofHours(6))}),
             case("TIME (2) WITH TIME ZONE '12:59:59.13456'", "12:59:59.13-05:30", TimeForValidation(12, 59, 59, 130000000, 2, -330), EvaluationSession.build {defaultTimezoneOffset(ZoneOffset.ofHoursMinutes(-5, -30))})
         )
     }
