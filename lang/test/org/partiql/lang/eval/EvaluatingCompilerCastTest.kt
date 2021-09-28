@@ -812,24 +812,12 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
         listOf(
             // CAST(<TIME> AS <variants of TIME type>)
             case("TIME '23:12:12.1267'", "TIME", "23:12:12.1267"),
-            case(
-                "TIME '23:12:12.1267-05:30'",
-                "TIME WITH TIME ZONE",
-                "23:12:12.1267${defaultTimezoneOffset.getOffsetHHmm()}"
-            ),
+            case("TIME '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "23:12:12.1267${defaultTimezoneOffset.getOffsetHHmm()}"),
             case("TIME '23:12:12.1267+05:30'", "TIME (3)", "23:12:12.127"),
-            case(
-                "TIME '23:12:12.1267-05:30'",
-                "TIME (3) WITH TIME ZONE",
-                "23:12:12.127${defaultTimezoneOffset.getOffsetHHmm()}"
-            ),
+            case("TIME '23:12:12.1267-05:30'", "TIME (3) WITH TIME ZONE", "23:12:12.127${defaultTimezoneOffset.getOffsetHHmm()}"),
             case("TIME (3) '23:12:12.1267'", "TIME", "23:12:12.127"),
             case("TIME (3) '23:12:12.1267-05:30'", "TIME", "23:12:12.127"),
-            case(
-                "TIME (3) '23:12:12.1267+05:30'",
-                "TIME WITH TIME ZONE",
-                "23:12:12.127${defaultTimezoneOffset.getOffsetHHmm()}"
-            ),
+            case("TIME (3) '23:12:12.1267+05:30'", "TIME WITH TIME ZONE", "23:12:12.127${defaultTimezoneOffset.getOffsetHHmm()}"),
             case("TIME (3) '23:12:12.1267-05:30'", "TIME (9)", "23:12:12.127000000"),
             case("TIME WITH TIME ZONE '23:12:12.1267'", "TIME", "23:12:12.1267"),
             case("TIME WITH TIME ZONE '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "23:12:12.1267-05:30"),
@@ -853,127 +841,35 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
             case("'23:12:12.1267'", "TIME (2) WITH TIME ZONE", "23:12:12.13${defaultTimezoneOffset.getOffsetHHmm()}"),
             case("""`"23:12:12.1267"`""", "TIME", "23:12:12.1267"),
             case("""`"23:12:12.1267"`""", "TIME (2)", "23:12:12.13"),
-            case(
-                """`"23:12:12.1267"`""",
-                "TIME WITH TIME ZONE",
-                "23:12:12.1267${defaultTimezoneOffset.getOffsetHHmm()}"
-            ),
-            case(
-                """`'23:12:12.1267'`""",
-                "TIME (2) WITH TIME ZONE",
-                "23:12:12.13${defaultTimezoneOffset.getOffsetHHmm()}"
-            ),
+            case("""`"23:12:12.1267"`""", "TIME WITH TIME ZONE", "23:12:12.1267${defaultTimezoneOffset.getOffsetHHmm()}"),
+            case("""`'23:12:12.1267'`""", "TIME (2) WITH TIME ZONE", "23:12:12.13${defaultTimezoneOffset.getOffsetHHmm()}"),
             case("""`'23:12:12.1267'`""", "TIME", "23:12:12.1267"),
             case("""`'23:12:12.1267'`""", "TIME (2)", "23:12:12.13"),
-            case(
-                """`'23:12:12.1267'`""",
-                "TIME WITH TIME ZONE",
-                "23:12:12.1267${defaultTimezoneOffset.getOffsetHHmm()}"
-            ),
-            case(
-                """`'23:12:12.1267'`""",
-                "TIME (2) WITH TIME ZONE",
-                "23:12:12.13${defaultTimezoneOffset.getOffsetHHmm()}"
-            )
+            case("""`'23:12:12.1267'`""", "TIME WITH TIME ZONE", "23:12:12.1267${defaultTimezoneOffset.getOffsetHHmm()}"),
+            case("""`'23:12:12.1267'`""", "TIME (2) WITH TIME ZONE", "23:12:12.13${defaultTimezoneOffset.getOffsetHHmm()}")
         ),
         // Configuring default timezone offset through EvaluationSession
         listOf(
             // CAST(<TIME> AS <TIME WITH TIME ZONE>)
-            case(
-                "TIME '23:12:12.1267'",
-                "TIME WITH TIME ZONE",
-                "23:12:12.1267+00:00",
-                EvaluationSession.standard()
-            ),
-            case(
-                "TIME '23:12:12.1267'",
-                "TIME WITH TIME ZONE",
-                "23:12:12.1267+11:00",
-                EvaluationSession.build { defaultTimezoneOffset(ZoneOffset.ofHours(11)) }
-            ),
-            case(
-                "TIME '23:12:12.1267-05:30'",
-                "TIME WITH TIME ZONE",
-                "23:12:12.1267+01:00",
-                EvaluationSession.build { defaultTimezoneOffset(ZoneOffset.ofHours(1)) }
-            ),
-            case(
-                "TIME '23:12:12.1267-05:30'",
-                "TIME (2) WITH TIME ZONE",
-                "23:12:12.13-05:30",
-                EvaluationSession.build { defaultTimezoneOffset(ZoneOffset.ofHoursMinutes(-5, -30)) }
-            ),
+            case("TIME '23:12:12.1267'", "TIME WITH TIME ZONE", "23:12:12.1267+00:00", EvaluationSession.standard()),
+            case("TIME '23:12:12.1267'", "TIME WITH TIME ZONE", "23:12:12.1267+11:00", EvaluationSession.build { defaultTimezoneOffset(ZoneOffset.ofHours(11)) }),
+            case("TIME '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "23:12:12.1267+01:00", EvaluationSession.build { defaultTimezoneOffset(ZoneOffset.ofHours(1)) }),
+            case("TIME '23:12:12.1267-05:30'", "TIME (2) WITH TIME ZONE", "23:12:12.13-05:30", EvaluationSession.build { defaultTimezoneOffset(ZoneOffset.ofHoursMinutes(-5, -30)) }),
             // CAST(<TIMESTAMP> AS <TIME WITH TIME ZONE>)
-            case(
-                "`2007-02-23T12:14:33.079Z`",
-                "TIME WITH TIME ZONE",
-                "12:14:33.079+00:00",
-                EvaluationSession.standard()
-            ),
-            case("`2007-02-23T12:14:33.079Z`",
-                "TIME WITH TIME ZONE",
-                "12:14:33.079+00:00",
-                EvaluationSession.build { defaultTimezoneOffset(ZoneOffset.ofHours(11)) }
-            ),
-            case("`2007-02-23T12:14:33.079-05:30`",
-                "TIME WITH TIME ZONE",
-                "12:14:33.079-05:30",
-                EvaluationSession.build { defaultTimezoneOffset(ZoneOffset.ofHours(1)) }
-            ),
-            case("`2007-02-23T12:14:33.079Z`",
-                "TIME (2) WITH TIME ZONE",
-                "12:14:33.08+00:00",
-                EvaluationSession.build { defaultTimezoneOffset(ZoneOffset.ofHoursMinutes(-5, -30)) }
-            ),
+            case("`2007-02-23T12:14:33.079Z`", "TIME WITH TIME ZONE", "12:14:33.079+00:00", EvaluationSession.standard()),
+            case("`2007-02-23T12:14:33.079Z`", "TIME WITH TIME ZONE", "12:14:33.079+00:00", EvaluationSession.build { defaultTimezoneOffset(ZoneOffset.ofHours(11)) }),
+            case("`2007-02-23T12:14:33.079-05:30`", "TIME WITH TIME ZONE", "12:14:33.079-05:30", EvaluationSession.build { defaultTimezoneOffset(ZoneOffset.ofHours(1)) }),
+            case("`2007-02-23T12:14:33.079Z`", "TIME (2) WITH TIME ZONE", "12:14:33.08+00:00", EvaluationSession.build { defaultTimezoneOffset(ZoneOffset.ofHoursMinutes(-5, -30)) }),
             // CAST(<text> AS <TIME WITH TIME ZONE>)
-            case(
-                "'23:12:12.1267'",
-                "TIME WITH TIME ZONE",
-                "23:12:12.1267+00:00",
-                EvaluationSession.standard()
-            ),
-            case("'23:12:12.1267'",
-                "TIME WITH TIME ZONE",
-                "23:12:12.1267+11:00",
-                EvaluationSession.build { defaultTimezoneOffset(ZoneOffset.ofHours(11)) }
-            ),
-            case("'23:12:12.1267'",
-                "TIME (2) WITH TIME ZONE",
-                "23:12:12.13-05:30",
-                EvaluationSession.build { defaultTimezoneOffset(ZoneOffset.ofHoursMinutes(-5, -30)) }
-            ),
-            case(
-                """`'23:12:12.1267'`""",
-                "TIME WITH TIME ZONE",
-                "23:12:12.1267+00:00",
-                EvaluationSession.standard()
-            ),
-            case("""`'23:12:12.1267'`""",
-                "TIME WITH TIME ZONE",
-                "23:12:12.1267+11:00",
-                EvaluationSession.build { defaultTimezoneOffset(ZoneOffset.ofHours(11)) }
-            ),
-            case("""`'23:12:12.1267'`""",
-                "TIME (2) WITH TIME ZONE",
-                "23:12:12.13-05:30",
-                EvaluationSession.build { defaultTimezoneOffset(ZoneOffset.ofHoursMinutes(-5, -30)) }
-            ),
-            case(
-                """`"23:12:12.1267"`""",
-                "TIME WITH TIME ZONE",
-                "23:12:12.1267+00:00",
-                EvaluationSession.standard()
-            ),
-            case("""`"23:12:12.1267"`""",
-                "TIME WITH TIME ZONE",
-                "23:12:12.1267+11:00",
-                EvaluationSession.build { defaultTimezoneOffset(ZoneOffset.ofHours(11)) }
-            ),
-            case("""`"23:12:12.1267"`""",
-                "TIME (2) WITH TIME ZONE",
-                "23:12:12.13-05:30",
-                EvaluationSession.build { defaultTimezoneOffset(ZoneOffset.ofHoursMinutes(-5, -30)) }
-            )
+            case("'23:12:12.1267'", "TIME WITH TIME ZONE", "23:12:12.1267+00:00", EvaluationSession.standard()),
+            case("'23:12:12.1267'", "TIME WITH TIME ZONE", "23:12:12.1267+11:00", EvaluationSession.build { defaultTimezoneOffset(ZoneOffset.ofHours(11)) }),
+            case("'23:12:12.1267'", "TIME (2) WITH TIME ZONE", "23:12:12.13-05:30", EvaluationSession.build { defaultTimezoneOffset(ZoneOffset.ofHoursMinutes(-5, -30)) }),
+            case("""`'23:12:12.1267'`""", "TIME WITH TIME ZONE", "23:12:12.1267+00:00", EvaluationSession.standard()),
+            case("""`'23:12:12.1267'`""", "TIME WITH TIME ZONE", "23:12:12.1267+11:00", EvaluationSession.build { defaultTimezoneOffset(ZoneOffset.ofHours(11)) }),
+            case("""`'23:12:12.1267'`""", "TIME (2) WITH TIME ZONE", "23:12:12.13-05:30", EvaluationSession.build { defaultTimezoneOffset(ZoneOffset.ofHoursMinutes(-5, -30)) }),
+            case("""`"23:12:12.1267"`""", "TIME WITH TIME ZONE", "23:12:12.1267+00:00", EvaluationSession.standard()),
+            case("""`"23:12:12.1267"`""", "TIME WITH TIME ZONE", "23:12:12.1267+11:00", EvaluationSession.build { defaultTimezoneOffset(ZoneOffset.ofHours(11)) }),
+            case("""`"23:12:12.1267"`""", "TIME (2) WITH TIME ZONE", "23:12:12.13-05:30", EvaluationSession.build { defaultTimezoneOffset(ZoneOffset.ofHoursMinutes(-5, -30)) })
         ),
         // Error cases for TIME
         listOf(

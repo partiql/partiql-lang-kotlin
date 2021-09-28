@@ -25,6 +25,7 @@ import kotlin.test.*
 class EvaluationSessionTest {
     private fun assertDefault(block: () -> EvaluationSession) {
         val session = block.invoke()
+
         assertEquals(Bindings.empty(), session.globals)
         assertEquals(ZoneOffset.UTC, session.defaultTimezoneOffset)
         assertNow(block)
