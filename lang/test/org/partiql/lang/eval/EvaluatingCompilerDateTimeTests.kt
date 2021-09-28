@@ -61,8 +61,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(ArgumentsForTimeLiterals::class)
     fun testTime(tc: TimeTestCase)  {
-        val originalExprValue = eval(source = tc.query,
-                                     session = tc.session)
+        val originalExprValue = eval(source = tc.query, session = tc.session)
         assertEquals(tc.expected, originalExprValue.toString())
         if (originalExprValue.type == ExprValueType.TIME) {
             val timeIonValue = originalExprValue.ionValue
