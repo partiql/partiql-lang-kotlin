@@ -228,7 +228,7 @@ fun ExprValue.cast(
     targetDataType: DataType,
     valueFactory: ExprValueFactory,
     locationMeta: SourceLocationMeta?,
-    env: Environment
+    session: EvaluationSession
 ): ExprValue {
 
     val targetSqlDataType = targetDataType.sqlDataType
@@ -363,7 +363,7 @@ fun ExprValue.cast(
                         type == TIME -> {
                             val time = timeValue()
                             val timeZoneOffset = when (targetSqlDataType) {
-                                SqlDataType.TIME_WITH_TIME_ZONE -> time.zoneOffset?: env.session.defaultTimezoneOffset
+                                SqlDataType.TIME_WITH_TIME_ZONE -> time.zoneOffset?: session.defaultTimezoneOffset
                                 else -> null
                             }
                             return valueFactory.newTime(
@@ -406,7 +406,7 @@ fun ExprValue.cast(
 
                             // Note that the [genericTimeRegex] has a group to extract the zone offset.
                             val zoneOffsetString = matcher.group(2)
-                            val zoneOffset = zoneOffsetString?.let { ZoneOffset.of(it) } ?: env.session.defaultTimezoneOffset
+                            val zoneOffset = zoneOffsetString?.let { ZoneOffset.of(it) } ?: session.defaultTimezoneOffset
 
                             return valueFactory.newTime(
                                 Time.of(
