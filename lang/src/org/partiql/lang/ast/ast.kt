@@ -1021,7 +1021,7 @@ sealed class DateTimeType : ExprNode() {
      * @param nano represents the fractional part of the second up to the nanoseconds' precision.
      * @param precision is an optional parameter which, if specified, represents the precision of the fractional second.
      * @param with_time_zone is a boolean to decide whether the time has a time zone. 
-     * True represents "TIME WITH TIME ZONE", while false represents "TIME WITHOUT TIME ZONE".
+     * True represents "TIME WITH TIME ZONE", while false represents "TIME WITHOUT TIME ZONE". 
      * @param tz_minutes is the optional time zone in minutes which can be explicitly specified with "WITH TIME ZONE".
      */
     data class Time(
