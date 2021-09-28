@@ -960,10 +960,9 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
                 assertEquals(castCase.expectedErrorCode, p.errorCode)
             }
         }
-        else -> assertEquals(castCase.expected,
-                             eval(source = castCase.expression,
-                                  session = castCase.session
-                             ).toString()
+        else -> assertEquals(
+            castCase.expected,
+            eval(source = castCase.expression, session = castCase.session).toString()
         )
     }
 }
