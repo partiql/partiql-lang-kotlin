@@ -909,10 +909,7 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
             case("TIME WITH TIME ZONE '23:12:12.1267-05:30'", "`'23:12:12.1267-05:30'`"),
             case("TIME WITH TIME ZONE '23:12:12.1267+05:30'", "`'23:12:12.1267+05:30'`"),
             case("TIME WITH TIME ZONE '23:12:12.1267-05:30'", "`'23:12:12.1267-05:30'`"),
-            case(
-                "TIME (3) WITH TIME ZONE '23:12:12.1267'",
-                "`'23:12:12.127${defaultTimezoneOffset.getOffsetHHmm()}'`"
-            ),
+            case("TIME (3) WITH TIME ZONE '23:12:12.1267'", "`'23:12:12.127${defaultTimezoneOffset.getOffsetHHmm()}'`"),
             case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "`'23:12:12.127-05:30'`"),
             case("TIME (3) WITH TIME ZONE '23:12:12.1267+05:30'", "`'23:12:12.127+05:30'`"),
             case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "`'23:12:12.127-05:30'`")
