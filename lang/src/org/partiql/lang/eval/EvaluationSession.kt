@@ -28,7 +28,7 @@ import java.time.ZoneOffset
 class EvaluationSession private constructor(val globals: Bindings<ExprValue>,
                                             val parameters: List<ExprValue>,
                                             val now: Timestamp,
-                                            val defaultTimezoneOffest: ZoneOffset) {
+                                            val defaultTimezoneOffset: ZoneOffset) {
     companion object {
         /**
          * Java style builder to construct a new [EvaluationSession]. Uses the default value for any non specified field
@@ -70,15 +70,15 @@ class EvaluationSession private constructor(val globals: Bindings<ExprValue>,
             return this
         }
 
-        private var defaultTimezoneOffest: ZoneOffset = ZoneOffset.UTC
+        private var defaultTimezoneOffset: ZoneOffset = ZoneOffset.UTC
         fun defaultTimezoneOffset(value: ZoneOffset): Builder {
-            defaultTimezoneOffest = value
+            defaultTimezoneOffset = value
             return this
         }
 
         fun build(): EvaluationSession = EvaluationSession(now = now ?: Timestamp.nowZ(),
                                                            parameters = parameters,
                                                            globals = globals,
-                                                           defaultTimezoneOffest = defaultTimezoneOffest)
+                                                           defaultTimezoneOffset = defaultTimezoneOffset)
     }
 }
