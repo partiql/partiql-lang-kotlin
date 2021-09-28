@@ -369,30 +369,12 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
                 case("1.1", EVALUATOR_INVALID_CAST),
                 case("-20.1", EVALUATOR_INVALID_CAST),
                 // timestamp
-                case(
-                    "`2007-10-10T`",
-                    "\$partiql_time::{hour:0,minute:0,second:0.,timezone_hour:null.int,timezone_minute:null.int}"
-                ),
-                case(
-                    "`2007-02-23T12:14Z`",
-                    "\$partiql_time::{hour:12,minute:14,second:0.,timezone_hour:null.int,timezone_minute:null.int}"
-                ),
-                case(
-                    "`2007-02-23T12:14:33.079Z`",
-                    "\$partiql_time::{hour:12,minute:14,second:33.079,timezone_hour:null.int,timezone_minute:null.int}"
-                ),
-                case(
-                    "`2007-02-23T12:14:33.079-08:00`",
-                    "\$partiql_time::{hour:12,minute:14,second:33.079,timezone_hour:null.int,timezone_minute:null.int}"
-                ),
-                case(
-                    "`2007-02T`",
-                    "\$partiql_time::{hour:0,minute:0,second:0.,timezone_hour:null.int,timezone_minute:null.int}"
-                ),
-                case(
-                    "`2007T`",
-                    "\$partiql_time::{hour:0,minute:0,second:0.,timezone_hour:null.int,timezone_minute:null.int}"
-                ),
+                case("`2007-10-10T`", "\$partiql_time::{hour:0,minute:0,second:0.,timezone_hour:null.int,timezone_minute:null.int}"),
+                case("`2007-02-23T12:14Z`", "\$partiql_time::{hour:12,minute:14,second:0.,timezone_hour:null.int,timezone_minute:null.int}"),
+                case("`2007-02-23T12:14:33.079Z`", "\$partiql_time::{hour:12,minute:14,second:33.079,timezone_hour:null.int,timezone_minute:null.int}"),
+                case("`2007-02-23T12:14:33.079-08:00`", "\$partiql_time::{hour:12,minute:14,second:33.079,timezone_hour:null.int,timezone_minute:null.int}"),
+                case("`2007-02T`", "\$partiql_time::{hour:0,minute:0,second:0.,timezone_hour:null.int,timezone_minute:null.int}"),
+                case("`2007T`", "\$partiql_time::{hour:0,minute:0,second:0.,timezone_hour:null.int,timezone_minute:null.int}"),
                 // text
                 case("'hello'", EVALUATOR_CAST_FAILED),
                 case("'2016-03-01T01:12:12Z'", EVALUATOR_CAST_FAILED),
