@@ -77,7 +77,7 @@ This will build the reference interpreter and test framework, then run all unit 
 - `docs/user` documentation for developers embedding the interpreter in an application.
 - `docs/dev` documentation for developers of the interpreter library.
 - `lang` contains the source code of the library containing the interpreter.
-- `jmh` contains the JMH benchmarks for PartiQL.
+- `lang/jmh` contains the JMH benchmarks for PartiQL.
 - `cli` contains the source code of the command-line interface and interactive prompt. (CLI/REPL)
 - `testframework` contains the source code of the integration test framework.
 - `integration-test/test-scripts` contains the test scripts executed by the test framework as part of the
@@ -86,7 +86,7 @@ Gradle build.
 
 ### Running JMH benchmarks
 
-To run JMH benchmarks located in `jmh`, build the entire project first and then run 
+To run JMH benchmarks located in `lang/jmh`, build the entire project first and then run 
 the following command:
 
 ```
