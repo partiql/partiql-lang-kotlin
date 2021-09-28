@@ -936,10 +936,10 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
             case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "'23:12:12.127-05:30'")
         ).types(STRING.sqlTextNames)
     ).flatten() +
-            listOf(MISSING, NULL, BOOL, INT, FLOAT, DECIMAL, TIMESTAMP, CLOB, BLOB, LIST, SEXP, STRUCT, BAG)
-                .map {
-                    listOf(case("DATE '2007-10-10'", EVALUATOR_INVALID_CAST)).types(it.sqlTextNames)
-                }.flatten()
+        listOf(MISSING, NULL, BOOL, INT, FLOAT, DECIMAL, TIMESTAMP, CLOB, BLOB, LIST, SEXP, STRUCT, BAG)
+            .map {
+                listOf(case("DATE '2007-10-10'", EVALUATOR_INVALID_CAST)).types(it.sqlTextNames)
+            }.flatten()
 
     // Separate tests for Date and Time as [assertEval] validates serialization and
     // date and time literals are not supported by V0 AST serializer.
