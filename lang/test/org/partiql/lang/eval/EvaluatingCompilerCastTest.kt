@@ -95,14 +95,12 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
     /**
      * Function to create explicit CAST(<source> to <type>) CastCase with EvaluationSession.
      */
-    fun case(source: String, type: String, expected: String, session: EvaluationSession) =
-        CastCase(source, type, expected, null, session)
+    fun case(source: String, type: String, expected: String, session: EvaluationSession) = CastCase(source, type, expected, null, session)
 
     /**
      * Function to create explicit CAST(<source> to <type>) CastCase throwing error.
      */
-    fun case(source: String, type: String, expectedErrorCode: ErrorCode) =
-        CastCase(source, type, null, expectedErrorCode)
+    fun case(source: String, type: String, expectedErrorCode: ErrorCode) = CastCase(source, type, null, expectedErrorCode)
 
     /** Partial application of the source expression and the expected error code without type. */
     fun case(source: String, expectedErrorCode: ErrorCode): (String) -> CastCase = {
