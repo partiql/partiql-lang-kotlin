@@ -21,14 +21,15 @@ import junitparams.Parameters
 import junitparams.naming.TestCaseName
 import org.junit.Test
 import org.partiql.lang.syntax.ParserException
-import org.partiql.lang.util.DEFAULT_TIMEZONE_OFFSET
 import org.partiql.lang.util.getOffsetHHmm
+import java.time.ZoneOffset
 
 class EvaluatingCompilerCastTest : EvaluatorTestBase() {
     private val allTypeNames = ExprValueType.values().flatMap { it.sqlTextNames }
 
     // cast as NULL is tested by castMissingAsNull
     fun parametersForCastMissing() = allTypeNames - "NULL"
+
     @Test
     @Parameters
     @TestCaseName("CAST(MISSING AS {0})")
@@ -47,6 +48,7 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
 
     // cast as MISSING is tested by castNullAsMissing
     fun parametersForCastNull() = allTypeNames - "MISSING"
+
     @Test
     @Parameters
     @TestCaseName("CAST(NULL AS {0})")
@@ -69,7 +71,13 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
      * @param expectedErrorCode The expected error code of any [EvaluationException] or `null` when no exception
      * is to be expected.
      */
-    data class CastCase(val source: String, val type: String, val expected: String?, val expectedErrorCode: ErrorCode?) {
+    data class CastCase(
+        val source: String,
+        val type: String,
+        val expected: String?,
+        val expectedErrorCode: ErrorCode?,
+        val session: EvaluationSession = EvaluationSession.standard()
+    ) {
         val expression = "CAST($source AS $type)"
         override fun toString(): String = expression
     }
@@ -85,6 +93,11 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
     fun case(source: String, type: String, expected: String) = CastCase(source, type, expected, null)
 
     /**
+     * Function to create explicit CAST(<source> to <type>) CastCase with EvaluationSession.
+     */
+    fun case(source: String, type: String, expected: String, session: EvaluationSession) = CastCase(source, type, expected, null, session)
+
+    /**
      * Function to create explicit CAST(<source> to <type>) CastCase throwing error.
      */
     fun case(source: String, type: String, expectedErrorCode: ErrorCode) = CastCase(source, type, null, expectedErrorCode)
@@ -96,7 +109,7 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
 
     /** For each partial case, apply each of the given types to generate a concrete cast case. */
     fun List<(String) -> CastCase>.types(types: List<String>): List<CastCase> =
-            this.flatMap { partial -> types.map { type -> partial(type) } }
+        this.flatMap { partial -> types.map { type -> partial(type) } }
 
     fun parametersForCast() =
             listOf(
@@ -345,7 +358,7 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
                             // bag
                             case("<<>>", EVALUATOR_INVALID_CAST)
                     ).types(DATE.sqlTextNames),
-                   // Find more coverage for the "Cast as Time" tests in `castDateAndTime`.
+                    // Find more coverage for the "Cast as Time" tests in `castDateAndTime`.
                     listOf(
                             // booleans
                             case("TRUE AND FALSE", EVALUATOR_INVALID_CAST),
@@ -784,6 +797,10 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
         else -> assertEval(castCase.expression, castCase.expected)
     }
 
+    private val defaultTimezoneOffset = ZoneOffset.UTC
+    
+    private fun buildSession(hours: Int = 0, minutes: Int = 0) = EvaluationSession.build { defaultTimezoneOffset(ZoneOffset.ofHoursMinutes(hours, minutes)) }
+
     fun parametersForCastDateAndTime() = listOf(
         listOf(
             case("DATE '2007-10-10'", "2007-10-10")
@@ -797,21 +814,21 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
         listOf(
             // CAST(<TIME> AS <variants of TIME type>)
             case("TIME '23:12:12.1267'", "TIME", "23:12:12.1267"),
-            case("TIME '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "23:12:12.1267${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}"),
+            case("TIME '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "23:12:12.1267${defaultTimezoneOffset.getOffsetHHmm()}"),
             case("TIME '23:12:12.1267+05:30'", "TIME (3)", "23:12:12.127"),
-            case("TIME '23:12:12.1267-05:30'", "TIME (3) WITH TIME ZONE", "23:12:12.127${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}"),
-            case("TIME (3) '23:12:12.1267'", "TIME","23:12:12.127"),
-            case("TIME (3) '23:12:12.1267-05:30'", "TIME","23:12:12.127"),
-            case("TIME (3) '23:12:12.1267+05:30'", "TIME WITH TIME ZONE","23:12:12.127${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}"),
-            case("TIME (3) '23:12:12.1267-05:30'", "TIME (9)","23:12:12.127000000"),
+            case("TIME '23:12:12.1267-05:30'", "TIME (3) WITH TIME ZONE", "23:12:12.127${defaultTimezoneOffset.getOffsetHHmm()}"),
+            case("TIME (3) '23:12:12.1267'", "TIME", "23:12:12.127"),
+            case("TIME (3) '23:12:12.1267-05:30'", "TIME", "23:12:12.127"),
+            case("TIME (3) '23:12:12.1267+05:30'", "TIME WITH TIME ZONE", "23:12:12.127${defaultTimezoneOffset.getOffsetHHmm()}"),
+            case("TIME (3) '23:12:12.1267-05:30'", "TIME (9)", "23:12:12.127000000"),
             case("TIME WITH TIME ZONE '23:12:12.1267'", "TIME", "23:12:12.1267"),
             case("TIME WITH TIME ZONE '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "23:12:12.1267-05:30"),
-            case("TIME WITH TIME ZONE '23:12:12.1267+05:30'", "TIME (3) WITH TIME ZONE","23:12:12.127+05:30"),
+            case("TIME WITH TIME ZONE '23:12:12.1267+05:30'", "TIME (3) WITH TIME ZONE", "23:12:12.127+05:30"),
             case("TIME WITH TIME ZONE '23:12:12.1267-05:30'", "TIME", "23:12:12.1267"),
             case("TIME (3) WITH TIME ZONE '23:12:12.1267'", "TIME", "23:12:12.127"),
             case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "23:12:12.127-05:30"),
             case("TIME (3) WITH TIME ZONE '23:12:12.1267+05:30'", "TIME (5)", "23:12:12.12700"),
-            case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "TIME (5) WITH TIME ZONE","23:12:12.12700-05:30"),
+            case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "TIME (5) WITH TIME ZONE", "23:12:12.12700-05:30"),
             case("TIME '23:12:12.1267'", "TIME", "23:12:12.1267"),
             // CAST(<TIMESTAMP> AS <variants of TIME type>)
             case("`2007-02-23T12:14:33.079Z`", "TIME", "12:14:33.079"),
@@ -822,22 +839,45 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
             // CAST(<text> AS <variants of TIME type>)
             case("'23:12:12.1267'", "TIME", "23:12:12.1267"),
             case("'23:12:12.1267'", "TIME (2)", "23:12:12.13"),
-            case("'23:12:12.1267'", "TIME WITH TIME ZONE", "23:12:12.1267${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}"),
-            case("'23:12:12.1267'", "TIME (2) WITH TIME ZONE", "23:12:12.13${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}"),
+            case("'23:12:12.1267'", "TIME WITH TIME ZONE", "23:12:12.1267${defaultTimezoneOffset.getOffsetHHmm()}"),
+            case("'23:12:12.1267'", "TIME (2) WITH TIME ZONE", "23:12:12.13${defaultTimezoneOffset.getOffsetHHmm()}"),
             case("""`"23:12:12.1267"`""", "TIME", "23:12:12.1267"),
             case("""`"23:12:12.1267"`""", "TIME (2)", "23:12:12.13"),
-            case("""`"23:12:12.1267"`""", "TIME WITH TIME ZONE", "23:12:12.1267${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}"),
-            case("""`'23:12:12.1267'`""", "TIME (2) WITH TIME ZONE", "23:12:12.13${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}"),
+            case("""`"23:12:12.1267"`""", "TIME WITH TIME ZONE", "23:12:12.1267${defaultTimezoneOffset.getOffsetHHmm()}"),
+            case("""`'23:12:12.1267'`""", "TIME (2) WITH TIME ZONE", "23:12:12.13${defaultTimezoneOffset.getOffsetHHmm()}"),
             case("""`'23:12:12.1267'`""", "TIME", "23:12:12.1267"),
             case("""`'23:12:12.1267'`""", "TIME (2)", "23:12:12.13"),
-            case("""`'23:12:12.1267'`""", "TIME WITH TIME ZONE", "23:12:12.1267${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}"),
-            case("""`'23:12:12.1267'`""", "TIME (2) WITH TIME ZONE", "23:12:12.13${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}")
+            case("""`'23:12:12.1267'`""", "TIME WITH TIME ZONE", "23:12:12.1267${defaultTimezoneOffset.getOffsetHHmm()}"),
+            case("""`'23:12:12.1267'`""", "TIME (2) WITH TIME ZONE", "23:12:12.13${defaultTimezoneOffset.getOffsetHHmm()}")
+        ),
+        // Configuring default timezone offset through EvaluationSession
+        listOf(
+            // CAST(<TIME> AS <TIME WITH TIME ZONE>)
+            case("TIME '23:12:12.1267'", "TIME WITH TIME ZONE", "23:12:12.1267+00:00", buildSession()),
+            case("TIME '23:12:12.1267'", "TIME WITH TIME ZONE", "23:12:12.1267+11:00", buildSession(11)),
+            case("TIME '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "23:12:12.1267+01:00", buildSession(1)),
+            case("TIME '23:12:12.1267-05:30'", "TIME (2) WITH TIME ZONE", "23:12:12.13-05:30", buildSession(-5, -30)),
+            // CAST(<TIMESTAMP> AS <TIME WITH TIME ZONE>)
+            case("`2007-02-23T12:14:33.079Z`", "TIME WITH TIME ZONE", "12:14:33.079+00:00", buildSession()),
+            case("`2007-02-23T12:14:33.079Z`", "TIME WITH TIME ZONE", "12:14:33.079+00:00", buildSession(11)),
+            case("`2007-02-23T12:14:33.079-05:30`", "TIME WITH TIME ZONE", "12:14:33.079-05:30", buildSession(1)),
+            case("`2007-02-23T12:14:33.079Z`", "TIME (2) WITH TIME ZONE", "12:14:33.08+00:00", buildSession(-5, -30)),
+            // CAST(<text> AS <TIME WITH TIME ZONE>)
+            case("'23:12:12.1267'", "TIME WITH TIME ZONE", "23:12:12.1267+00:00", buildSession()),
+            case("'23:12:12.1267'", "TIME WITH TIME ZONE", "23:12:12.1267+11:00", buildSession(11)),
+            case("'23:12:12.1267'", "TIME (2) WITH TIME ZONE", "23:12:12.13-05:30", buildSession(-5, -30)),
+            case("""`'23:12:12.1267'`""", "TIME WITH TIME ZONE", "23:12:12.1267+00:00", buildSession()),
+            case("""`'23:12:12.1267'`""", "TIME WITH TIME ZONE", "23:12:12.1267+11:00", buildSession(11)),
+            case("""`'23:12:12.1267'`""", "TIME (2) WITH TIME ZONE", "23:12:12.13-05:30", buildSession(-5, -30)),
+            case("""`"23:12:12.1267"`""", "TIME WITH TIME ZONE", "23:12:12.1267+00:00", buildSession()),
+            case("""`"23:12:12.1267"`""", "TIME WITH TIME ZONE", "23:12:12.1267+11:00", buildSession(11)),
+            case("""`"23:12:12.1267"`""", "TIME (2) WITH TIME ZONE", "23:12:12.13-05:30", buildSession(-5, -30))
         ),
         // Error cases for TIME
         listOf(
             case("TIME '23:12:12.1267'", "TIME (-1)", PARSE_INVALID_PRECISION_FOR_TIME),
-                case("TIME '23:12:12.1267'", "TIME (1, 2)", PARSE_CAST_ARITY),
-                case("TIME '23:12:12.1267'", "TIME (1, 2) WITH TIME ZONE", PARSE_CAST_ARITY),
+            case("TIME '23:12:12.1267'", "TIME (1, 2)", PARSE_CAST_ARITY),
+            case("TIME '23:12:12.1267'", "TIME (1, 2) WITH TIME ZONE", PARSE_CAST_ARITY),
             case("TIME '23:12:12.1267-05:30'", "TIME (10) WITH TIME ZONE", PARSE_INVALID_PRECISION_FOR_TIME),
             case("TIME '23:12:12.1267+05:30'", "TIME (10)", PARSE_INVALID_PRECISION_FOR_TIME),
             // Cannot case timestamp with undefined timezone to "TIME WITH TIME ZONE"
@@ -867,11 +907,11 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
             case("TIME (3) '23:12:12.1267-05:30'", "`'23:12:12.127'`"),
             case("TIME (3) '23:12:12.1267+05:30'", "`'23:12:12.127'`"),
             case("TIME (3) '23:12:12.1267-05:30'", "`'23:12:12.127'`"),
-            case("TIME WITH TIME ZONE '23:12:12.1267'", "`'23:12:12.1267${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}'`"),
+            case("TIME WITH TIME ZONE '23:12:12.1267'", "`'23:12:12.1267${defaultTimezoneOffset.getOffsetHHmm()}'`"),
             case("TIME WITH TIME ZONE '23:12:12.1267-05:30'", "`'23:12:12.1267-05:30'`"),
             case("TIME WITH TIME ZONE '23:12:12.1267+05:30'", "`'23:12:12.1267+05:30'`"),
             case("TIME WITH TIME ZONE '23:12:12.1267-05:30'", "`'23:12:12.1267-05:30'`"),
-            case("TIME (3) WITH TIME ZONE '23:12:12.1267'", "`'23:12:12.127${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}'`"),
+            case("TIME (3) WITH TIME ZONE '23:12:12.1267'", "`'23:12:12.127${defaultTimezoneOffset.getOffsetHHmm()}'`"),
             case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "`'23:12:12.127-05:30'`"),
             case("TIME (3) WITH TIME ZONE '23:12:12.1267+05:30'", "`'23:12:12.127+05:30'`"),
             case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "`'23:12:12.127-05:30'`")
@@ -885,19 +925,20 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
             case("TIME (3) '23:12:12.1267-05:30'", "'23:12:12.127'"),
             case("TIME (3) '23:12:12.1267+05:30'", "'23:12:12.127'"),
             case("TIME (3) '23:12:12.1267-05:30'", "'23:12:12.127'"),
-            case("TIME WITH TIME ZONE '23:12:12.1267'", "'23:12:12.1267${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}'"),
+            case("TIME WITH TIME ZONE '23:12:12.1267'", "'23:12:12.1267${defaultTimezoneOffset.getOffsetHHmm()}'"),
             case("TIME WITH TIME ZONE '23:12:12.1267-05:30'", "'23:12:12.1267-05:30'"),
             case("TIME WITH TIME ZONE '23:12:12.1267+05:30'", "'23:12:12.1267+05:30'"),
             case("TIME WITH TIME ZONE '23:12:12.1267-05:30'", "'23:12:12.1267-05:30'"),
-            case("TIME (3) WITH TIME ZONE '23:12:12.1267'", "'23:12:12.127${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}'"),
+            case("TIME (3) WITH TIME ZONE '23:12:12.1267'", "'23:12:12.127${defaultTimezoneOffset.getOffsetHHmm()}'"),
             case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "'23:12:12.127-05:30'"),
             case("TIME (3) WITH TIME ZONE '23:12:12.1267+05:30'", "'23:12:12.127+05:30'"),
             case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "'23:12:12.127-05:30'")
         ).types(STRING.sqlTextNames)
     ).flatten() +
         listOf(MISSING, NULL, BOOL, INT, FLOAT, DECIMAL, TIMESTAMP, CLOB, BLOB, LIST, SEXP, STRUCT, BAG)
-        .map { listOf(case("DATE '2007-10-10'", EVALUATOR_INVALID_CAST)).types(it.sqlTextNames)
-    }.flatten()
+            .map {
+                listOf(case("DATE '2007-10-10'", EVALUATOR_INVALID_CAST)).types(it.sqlTextNames)
+            }.flatten()
 
     // Separate tests for Date and Time as [assertEval] validates serialization and
     // date and time literals are not supported by V0 AST serializer.
@@ -921,7 +962,10 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
                 assertEquals(castCase.expectedErrorCode, p.errorCode)
             }
         }
-        else -> assertEquals(castCase.expected, eval(castCase.expression).toString())
+        else -> assertEquals(
+            castCase.expected,
+            eval(source = castCase.expression, session = castCase.session).toString()
+        )
     }
 }
 

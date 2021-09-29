@@ -15,6 +15,7 @@
 package org.partiql.lang.eval
 
 import com.amazon.ion.*
+import java.time.ZoneOffset
 
 /**
  * Evaluation Session. Holds user defined constants used during evaluation. Each value has a default value that can
@@ -23,10 +24,12 @@ import com.amazon.ion.*
  * @property globals The global bindings. Defaults to [Bindings.empty]
  * @property parameters List of parameters to be substituted for positional placeholders
  * @property now Timestamp to consider as the current time, used by functions like `utcnow()` and `now()`. Defaults to [Timestamp.nowZ]
+ * @property defaultTimezoneOffset Default timezone offset to be used when TIME WITH TIME ZONE does not explicitily specify the time zone. Defaults to [ZoneOffset.UTC]
  */
 class EvaluationSession private constructor(val globals: Bindings<ExprValue>,
                                             val parameters: List<ExprValue>,
-                                            val now: Timestamp) {
+                                            val now: Timestamp,
+                                            val defaultTimezoneOffset: ZoneOffset) {
     companion object {
         /**
          * Java style builder to construct a new [EvaluationSession]. Uses the default value for any non specified field
@@ -68,8 +71,15 @@ class EvaluationSession private constructor(val globals: Bindings<ExprValue>,
             return this
         }
 
+        private var defaultTimezoneOffset: ZoneOffset = ZoneOffset.UTC
+        fun defaultTimezoneOffset(value: ZoneOffset): Builder {
+            defaultTimezoneOffset = value
+            return this
+        }
+
         fun build(): EvaluationSession = EvaluationSession(now = now ?: Timestamp.nowZ(),
                                                            parameters = parameters,
-                                                           globals = globals)
+                                                           globals = globals,
+                                                           defaultTimezoneOffset = defaultTimezoneOffset)
     }
 }

@@ -28,7 +28,6 @@ import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.*
-import org.partiql.lang.util.DEFAULT_TIMEZONE_OFFSET
 import java.math.*
 import java.util.*
 import kotlin.collections.*
@@ -811,7 +810,7 @@ internal class EvaluatingCompiler(
                 val locationMeta = metas.sourceLocationMeta
                 thunkFactory.thunkEnv(metas) { env ->
                     val valueToCast = expThunk(env)
-                    valueToCast.cast(dataType, valueFactory, locationMeta)
+                    valueToCast.cast(dataType, valueFactory, locationMeta, env.session)
                 }
             }
         }
@@ -2010,7 +2009,7 @@ internal class EvaluatingCompiler(
                     second,
                     nano,
                     precision,
-                    if (with_time_zone && tz_minutes == null) DEFAULT_TIMEZONE_OFFSET.totalMinutes else tz_minutes
+                    if (with_time_zone && tz_minutes == null) it.session.defaultTimezoneOffset.totalMinutes else tz_minutes
                 )
             )
         }

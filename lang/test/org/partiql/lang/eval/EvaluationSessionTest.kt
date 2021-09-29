@@ -18,11 +18,15 @@ import com.amazon.ion.*
 import org.partiql.lang.util.*
 import org.junit.*
 import org.junit.Test
+import java.time.ZoneOffset
 import kotlin.test.*
 
 class EvaluationSessionTest {
     private fun assertDefault(block: () -> EvaluationSession) {
-        assertEquals(Bindings.empty(), block.invoke().globals)
+        val session = block.invoke()
+
+        assertEquals(Bindings.empty(), session.globals)
+        assertEquals(ZoneOffset.UTC, session.defaultTimezoneOffset)
         assertNow(block)
     }
 
@@ -52,8 +56,21 @@ class EvaluationSessionTest {
     fun settingGlobals() {
         val globals = Bindings.empty<ExprValue>()
         val block: () -> EvaluationSession = { EvaluationSession.build { globals(globals) }}
+        val session = block.invoke()
 
-        assertEquals(globals, block.invoke().globals)
+        assertEquals(globals, session.globals)
+        assertEquals(ZoneOffset.UTC, session.defaultTimezoneOffset)
+        assertNow(block)
+    }
+
+    @Test
+    fun settingDefaultTimezoneOffset() {
+        val defaultTimezoneOffset = ZoneOffset.ofHours(5)
+        val block: () -> EvaluationSession = { EvaluationSession.build { defaultTimezoneOffset(defaultTimezoneOffset) }}
+        val session = block.invoke()
+
+        assertEquals(Bindings.empty(), session.globals)
+        assertEquals(defaultTimezoneOffset, session.defaultTimezoneOffset)
         assertNow(block)
     }
 
@@ -63,6 +80,7 @@ class EvaluationSessionTest {
         val session =  EvaluationSession.build { now(now) }
 
         assertEquals(Bindings.empty(), session.globals)
+        assertEquals(ZoneOffset.UTC, session.defaultTimezoneOffset)
         assertEquals(now, session.now)
     }
 
@@ -74,6 +92,7 @@ class EvaluationSessionTest {
         val session =  EvaluationSession.build { now(now) }
 
         assertEquals(Bindings.empty(), session.globals)
+        assertEquals(ZoneOffset.UTC, session.defaultTimezoneOffset)
         assertEquals(utcNow, session.now)
     }
 }

@@ -223,11 +223,13 @@ private val genericTimeRegex = Regex("\\d\\d:\\d\\d:\\d\\d(\\.\\d*)?([+|-]\\d\\d
  *
  * @param ion The ion system to synthesize values with.
  * @param targetDataType The target type to cast this value to.
+ * @param session The EvaluationSession which provides necessary information for evaluation.
  */
 fun ExprValue.cast(
     targetDataType: DataType,
     valueFactory: ExprValueFactory,
-    locationMeta: SourceLocationMeta?
+    locationMeta: SourceLocationMeta?,
+    session: EvaluationSession
 ): ExprValue {
 
     val targetSqlDataType = targetDataType.sqlDataType
@@ -362,7 +364,7 @@ fun ExprValue.cast(
                         type == TIME -> {
                             val time = timeValue()
                             val timeZoneOffset = when (targetSqlDataType) {
-                                SqlDataType.TIME_WITH_TIME_ZONE -> time.zoneOffset?: DEFAULT_TIMEZONE_OFFSET
+                                SqlDataType.TIME_WITH_TIME_ZONE -> time.zoneOffset?: session.defaultTimezoneOffset
                                 else -> null
                             }
                             return valueFactory.newTime(
@@ -405,7 +407,7 @@ fun ExprValue.cast(
 
                             // Note that the [genericTimeRegex] has a group to extract the zone offset.
                             val zoneOffsetString = matcher.group(2)
-                            val zoneOffset = zoneOffsetString?.let { ZoneOffset.of(it) } ?: DEFAULT_TIMEZONE_OFFSET
+                            val zoneOffset = zoneOffsetString?.let { ZoneOffset.of(it) } ?: session.defaultTimezoneOffset
 
                             return valueFactory.newTime(
                                 Time.of(
