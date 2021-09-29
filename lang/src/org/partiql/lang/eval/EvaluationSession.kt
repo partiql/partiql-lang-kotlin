@@ -24,6 +24,7 @@ import java.time.ZoneOffset
  * @property globals The global bindings. Defaults to [Bindings.empty]
  * @property parameters List of parameters to be substituted for positional placeholders
  * @property now Timestamp to consider as the current time, used by functions like `utcnow()` and `now()`. Defaults to [Timestamp.nowZ]
+ * @property defaultTimezoneOffset Default timezone offset to be used when TIME WITH TIME ZONE does not explicitily specify the time zone. Defaults to [ZoneOffset.UTC]
  */
 class EvaluationSession private constructor(val globals: Bindings<ExprValue>,
                                             val parameters: List<ExprValue>,

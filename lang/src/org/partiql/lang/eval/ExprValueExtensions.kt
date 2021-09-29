@@ -223,6 +223,7 @@ private val genericTimeRegex = Regex("\\d\\d:\\d\\d:\\d\\d(\\.\\d*)?([+|-]\\d\\d
  *
  * @param ion The ion system to synthesize values with.
  * @param targetDataType The target type to cast this value to.
+ * @param session The EvaluationSession which provides necessary information for evaluation.
  */
 fun ExprValue.cast(
     targetDataType: DataType,
