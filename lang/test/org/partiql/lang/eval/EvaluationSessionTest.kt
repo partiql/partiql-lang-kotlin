@@ -65,7 +65,7 @@ class EvaluationSessionTest {
 
     @Test
     fun settingDefaultTimezoneOffset() {
-        val defaultTimezoneOffset = ZoneOffset.UTC
+        val defaultTimezoneOffset = ZoneOffset.ofHours(5)
         val block: () -> EvaluationSession = { EvaluationSession.build { defaultTimezoneOffset(defaultTimezoneOffset) }}
         val session = block.invoke()
 
