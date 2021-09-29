@@ -649,6 +649,11 @@ enum class ErrorCode(private val category: ErrorCategory,
             "LIMIT value must be an integer but found ${errorContext.getProperty(Property.ACTUAL_TYPE)}}"
     },
 
+    EVALUATOR_NON_TEXT_STRUCT_FIELD (
+        ErrorCategory.EVALUATOR,
+        LOCATION,
+        "Struct field should be text."),
+
     EVALUATOR_NEGATIVE_LIMIT(
         ErrorCategory.EVALUATOR,
         LOCATION,

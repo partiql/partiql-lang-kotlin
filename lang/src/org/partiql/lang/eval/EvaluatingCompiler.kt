@@ -868,11 +868,30 @@ internal class EvaluatingCompiler(
 
         val fieldThunks = fields.map {
             val (nameExpr, valueExpr) = it
+            if (nameExpr is Literal && !nameExpr.ionValue.isText) {
+                // Compile time error. Fail before the StructFieldThunks are evaluated.
+                err("Found struct field to be of type ${nameExpr.ionValue.type}",
+                    ErrorCode.EVALUATOR_NON_TEXT_STRUCT_FIELD,
+                    errorContextFrom(nameExpr.metas.sourceLocationMeta),
+                    internal = false
+                )
+            }
             StructFieldThunks(compileExprNode(nameExpr), compileExprNode(valueExpr))
         }
 
         return thunkFactory.thunkEnv(metas) { env ->
-            val seq = fieldThunks.map { it.valueThunk(env).namedValue(it.nameThunk(env)) }.asSequence()
+            val seq = fieldThunks.map {
+                val nameValue = it.nameThunk(env)
+                if (!nameValue.type.isText) {
+                    // Evaluation time error where variable reference might be evaluated to non-text struct field.
+                    err("Found struct field to be of type ${nameValue.type}",
+                        ErrorCode.EVALUATOR_NON_TEXT_STRUCT_FIELD,
+                        errorContextFrom(metas.sourceLocationMeta),
+                        internal = false
+                    )
+                }
+                it.valueThunk(env).namedValue(nameValue)
+            }.asSequence()
             createStructExprValue(seq, StructOrdering.ORDERED)
         }
     }
