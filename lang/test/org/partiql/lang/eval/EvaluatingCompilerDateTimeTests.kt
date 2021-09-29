@@ -82,6 +82,8 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
 
         private fun case(query: String, expected: String, expectedTime: TimeForValidation? = null, session: EvaluationSession) = TimeTestCase(query, expected, expectedTime, session)
 
+        private fun buildSession(hours: Int = 0, minutes: Int = 0) = EvaluationSession.build { defaultTimezoneOffset(ZoneOffset.ofHoursMinutes(hours, minutes)) }
+
         override fun getParameters() = listOf(
             case("TIME '00:00:00.000'", "00:00:00.000", TimeForValidation(0, 0, 0, 0, 3)),
             case("TIME '23:59:59.99999999'", "23:59:59.99999999", TimeForValidation(23, 59, 59, 999999990, 8)),
@@ -113,10 +115,10 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
             case("TIME WITH TIME ZONE '12:25:12.123456' IS TIME", "true"),
             case("TIME (2) WITH TIME ZONE '01:01:12' IS TIME", "true"),
             case("'01:01:12' IS TIME", "false"),
-            case("TIME WITH TIME ZONE '00:00:00'", "00:00:00-01:00", TimeForValidation(0,0,0,0,0, -60), EvaluationSession.build {defaultTimezoneOffset(ZoneOffset.ofHours(-1))}),
-            case("TIME WITH TIME ZONE '11:23:45.678'", "11:23:45.678+06:00", TimeForValidation(11,23,45,678000000,3, 360), EvaluationSession.build {defaultTimezoneOffset(ZoneOffset.ofHours(6))}),
-            case("TIME WITH TIME ZONE '11:23:45.678-05:30'", "11:23:45.678-05:30", TimeForValidation(11,23,45,678000000,3, -330), EvaluationSession.build {defaultTimezoneOffset(ZoneOffset.ofHours(6))}),
-            case("TIME (2) WITH TIME ZONE '12:59:59.13456'", "12:59:59.13-05:30", TimeForValidation(12, 59, 59, 130000000, 2, -330), EvaluationSession.build {defaultTimezoneOffset(ZoneOffset.ofHoursMinutes(-5, -30))})
+            case("TIME WITH TIME ZONE '00:00:00'", "00:00:00-01:00", TimeForValidation(0,0,0,0,0, -60), buildSession(-1)),
+            case("TIME WITH TIME ZONE '11:23:45.678'", "11:23:45.678+06:00", TimeForValidation(11,23,45,678000000,3, 360), buildSession(6)),
+            case("TIME WITH TIME ZONE '11:23:45.678-05:30'", "11:23:45.678-05:30", TimeForValidation(11,23,45,678000000,3, -330), buildSession(6)),
+            case("TIME (2) WITH TIME ZONE '12:59:59.13456'", "12:59:59.13-05:30", TimeForValidation(12, 59, 59, 130000000, 2, -330), buildSession(-5, -30))
         )
     }
 
