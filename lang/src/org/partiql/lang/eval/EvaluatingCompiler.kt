@@ -29,7 +29,6 @@ import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.*
 import java.math.*
-import java.time.ZoneOffset
 import java.util.*
 import kotlin.collections.*
 

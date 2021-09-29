@@ -19,7 +19,6 @@ import org.partiql.lang.util.*
 import org.junit.*
 import org.junit.Test
 import java.time.ZoneOffset
-import java.util.*
 import kotlin.test.*
 
 class EvaluationSessionTest {
