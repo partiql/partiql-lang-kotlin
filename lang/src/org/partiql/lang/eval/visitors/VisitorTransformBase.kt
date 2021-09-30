@@ -27,8 +27,9 @@ abstract class VisitorTransformBase : PartiqlAst.VisitorTransform() {
      * 4. `GROUP BY`
      * 5. `HAVING`
      * 6. *projection*
-     * 7. `LIMIT`
-     * 8. The metas.
+     * 7. `OFFSET`
+     * 8. `LIMIT`
+     * 9. The metas.
      *
      * This differs from [transformExprSelect], which executes following the written order of clauses.
      */
