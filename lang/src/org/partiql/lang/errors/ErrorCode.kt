@@ -669,6 +669,11 @@ enum class ErrorCode(private val category: ErrorCategory,
         LOCATION,
         "% by zero"),
 
+    SEMANTIC_NON_TEXT_STRUCT_FIELD (
+        ErrorCategory.SEMANTIC,
+        LOCATION,
+        "Struct field should be text."),
+
     SEMANTIC_ILLEGAL_GLOBAL_VARIABLE_ACCESS(
         ErrorCategory.SEMANTIC,
         LOCATION + setOf(Property.BINDING_NAME),

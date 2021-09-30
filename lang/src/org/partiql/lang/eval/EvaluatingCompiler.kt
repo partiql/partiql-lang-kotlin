@@ -868,14 +868,6 @@ internal class EvaluatingCompiler(
 
         val fieldThunks = fields.map {
             val (nameExpr, valueExpr) = it
-            if (nameExpr is Literal && !nameExpr.ionValue.isText) {
-                // Compile time error. Fail before the StructFieldThunks are evaluated.
-                err("Found struct field to be of type ${nameExpr.ionValue.type}",
-                    ErrorCode.EVALUATOR_NON_TEXT_STRUCT_FIELD,
-                    errorContextFrom(nameExpr.metas.sourceLocationMeta),
-                    internal = false
-                )
-            }
             StructFieldThunks(compileExprNode(nameExpr), compileExprNode(valueExpr))
         }
 

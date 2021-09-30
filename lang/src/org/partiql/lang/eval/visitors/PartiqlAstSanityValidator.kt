@@ -17,6 +17,7 @@ package org.partiql.lang.eval.visitors
 
 import com.amazon.ionelement.api.IntElement
 import com.amazon.ionelement.api.IntElementSize
+import com.amazon.ionelement.api.TextElement
 import org.partiql.lang.ast.IsCountStarMeta
 import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.domains.PartiqlAst
@@ -96,6 +97,18 @@ object PartiqlAstSanityValidator : PartiqlAst.Visitor() {
             throw SemanticException("HAVING used without GROUP BY (or grouping expressions)",
                                     ErrorCode.SEMANTIC_HAVING_USED_WITHOUT_GROUP_BY,
                                     PropertyValueMap().addSourceLocation(metas))
+        }
+    }
+
+    override fun visitExprStruct(node: PartiqlAst.Expr.Struct) {
+        node.fields.forEach { field ->
+            if (field.first is PartiqlAst.Expr.Lit && field.first.value !is TextElement) {
+                throw SemanticException(
+                    "Found struct field to be of type ${field.first.value.type}",
+                    ErrorCode.SEMANTIC_NON_TEXT_STRUCT_FIELD,
+                    PropertyValueMap().addSourceLocation(field.first.metas)
+                )
+            }
         }
     }
 }

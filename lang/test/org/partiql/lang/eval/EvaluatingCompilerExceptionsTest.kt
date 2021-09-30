@@ -244,28 +244,6 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
         )
 
     @Test
-    fun intAsNonTextStructField() =
-        checkInputThrowingEvaluationException(
-            "{'apple' : 1, `banana` : 2, 1 : 3}",
-            ErrorCode.EVALUATOR_NON_TEXT_STRUCT_FIELD,
-            mapOf(
-                Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 29L
-            )
-        )
-
-    @Test
-    fun timestampAsNonTextStructField() =
-        checkInputThrowingEvaluationException(
-            "{`2007-02-23T12:14Z` : 3}",
-            ErrorCode.EVALUATOR_NON_TEXT_STRUCT_FIELD,
-            mapOf(
-                Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 2L
-            )
-        )
-
-    @Test
     fun variableReferenceToIntAsNonTextStructField() =
         checkInputThrowingEvaluationException(
             "SELECT {a : 2} FROM {'a' : 1}",

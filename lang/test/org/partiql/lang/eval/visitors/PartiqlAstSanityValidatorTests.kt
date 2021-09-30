@@ -14,6 +14,7 @@
 
 package org.partiql.lang.eval.visitors
 
+import com.amazon.ionelement.api.ionTimestamp
 import com.amazon.ionelement.api.toIonElement
 import org.junit.Test
 import org.partiql.lang.TestBase
@@ -233,4 +234,31 @@ class PartiqlAstSanityValidatorTests : TestBase() {
             )
         }
     }
+
+    @Test
+    fun intAsNonTextStructKey() {
+        assertThrowsSqlException(ErrorCode.SEMANTIC_NON_TEXT_STRUCT_FIELD) {
+            PartiqlAstSanityValidator.validate(
+                PartiqlAst.build {
+                    query(
+                        struct(exprPair(litInt(1), litInt(2)))
+                    )
+                }
+            )
+        }
+    }
+
+    @Test
+    fun timeAsNonTextStructKey() {
+        assertThrowsSqlException(ErrorCode.SEMANTIC_NON_TEXT_STRUCT_FIELD) {
+            PartiqlAstSanityValidator.validate(
+                PartiqlAst.build {
+                    query(
+                        struct(exprPair(lit(ionTimestamp("2007-02-23T12:14:33.079-08:00")), litInt(2)))
+                    )
+                }
+            )
+        }
+    }
+
 }
