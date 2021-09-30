@@ -104,6 +104,7 @@ class GroupByPathExpressionVisitorTransform(
         val having = currentAndUnshadowedTransformer.transformExprSelect_having(node)
         val order = currentAndUnshadowedTransformer.transformExprSelect_order(node)
         val limit = unshadowedTransformer.transformExprSelect_limit(node)
+        val offset = unshadowedTransformer.transformExprSelect_offset(node)
         val metas = unshadowedTransformer.transformExprSelect_metas(node)
 
         return PartiqlAst.build {
@@ -117,6 +118,7 @@ class GroupByPathExpressionVisitorTransform(
                 having = having,
                 order = order,
                 limit = limit,
+                offset = offset,
                 metas = metas)
         }
     }
