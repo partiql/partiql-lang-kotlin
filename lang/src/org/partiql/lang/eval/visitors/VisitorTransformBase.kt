@@ -41,8 +41,8 @@ abstract class VisitorTransformBase : PartiqlAst.VisitorTransform() {
         val setq = transformExprSelect_setq(node)
         val project = transformExprSelect_project(node)
         val order = transformExprSelect_order(node)
-        val limit = transformExprSelect_limit(node)
         val offset = transformExprSelect_offset(node)
+        val limit = transformExprSelect_limit(node)
         val metas = transformExprSelect_metas(node)
         return PartiqlAst.build {
             PartiqlAst.Expr.Select(
@@ -54,8 +54,8 @@ abstract class VisitorTransformBase : PartiqlAst.VisitorTransform() {
                 group = group,
                 having = having,
                 order = order,
-                limit = limit,
                 offset = offset,
+                limit = limit,
                 metas = metas)
         }
     }
