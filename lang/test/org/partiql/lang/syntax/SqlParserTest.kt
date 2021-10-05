@@ -3990,6 +3990,17 @@ class SqlParserTest : SqlParserTestBase() {
         )
     }
 
+    @Test
+    fun selectOrderbyLimitOffsetTest() = assertExpression("SELECT x FROM a ORDER BY y DESC LIMIT 10 OFFSET 5") {
+        select(
+            project = buildProject("x"),
+            from = scan(id("a")),
+            order = PartiqlAst.OrderBy(listOf(PartiqlAst.SortSpec(id("y"), PartiqlAst.OrderingSpec.Desc()))),
+            limit = buildLit("10"),
+            offset = buildLit("5")
+        )
+    }
+
     //****************************************
     // EXEC clause parsing
     //****************************************
