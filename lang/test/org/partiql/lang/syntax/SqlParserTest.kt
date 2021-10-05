@@ -3991,7 +3991,7 @@ class SqlParserTest : SqlParserTestBase() {
     }
 
     @Test
-    fun selectOrderbyLimitOffsetTest() = assertExpression("SELECT x FROM a ORDER BY y desc LIMIT 10 OFFSET 5") {
+    fun selectOrderbyLimitOffsetTest() = assertExpression("SELECT x FROM a ORDER BY y DESC LIMIT 10 OFFSET 5") {
         select(
             project = buildProject("x"),
             from = scan(id("a")),
