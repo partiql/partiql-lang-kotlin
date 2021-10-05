@@ -23,6 +23,8 @@ import org.partiql.lang.errors.ErrorCode
 
 class PartiqlAstSanityValidatorTests : TestBase() {
     private fun litInt(value: Int) = PartiqlAst.build { lit(ion.newInt(value).toIonElement()) }
+    private val litNull = PartiqlAst.build { lit(ion.newNull().toIonElement()) }
+    private val missingExpr = PartiqlAst.build { missing() }
 
     @Test
     fun groupPartial() {
@@ -249,7 +251,7 @@ class PartiqlAstSanityValidatorTests : TestBase() {
     }
 
     @Test
-    fun timeAsNonTextStructKey() {
+    fun timestampAsNonTextStructKey() {
         assertThrowsSqlException(ErrorCode.SEMANTIC_NON_TEXT_STRUCT_FIELD) {
             PartiqlAstSanityValidator.validate(
                 PartiqlAst.build {
@@ -261,4 +263,29 @@ class PartiqlAstSanityValidatorTests : TestBase() {
         }
     }
 
+    @Test
+    fun nullAsNonTextStructKey() {
+        assertThrowsSqlException(ErrorCode.SEMANTIC_NON_TEXT_STRUCT_FIELD) {
+            PartiqlAstSanityValidator.validate(
+                PartiqlAst.build {
+                    query(
+                        struct(exprPair(litNull, litInt(2)))
+                    )
+                }
+            )
+        }
+    }
+
+    @Test
+    fun missingAsNonTextStructKey() {
+        assertThrowsSqlException(ErrorCode.SEMANTIC_NON_TEXT_STRUCT_FIELD) {
+            PartiqlAstSanityValidator.validate(
+                PartiqlAst.build {
+                    query(
+                        struct(exprPair(missingExpr, litInt(2)))
+                    )
+                }
+            )
+        }
+    }
 }

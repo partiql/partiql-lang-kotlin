@@ -250,7 +250,8 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
             ErrorCode.EVALUATOR_NON_TEXT_STRUCT_FIELD,
             mapOf(
                 Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 8L
+                Property.COLUMN_NUMBER to 8L,
+                Property.ACTUAL_TYPE to "INT"
             )
         )
 }

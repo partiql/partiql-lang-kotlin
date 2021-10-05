@@ -102,11 +102,17 @@ object PartiqlAstSanityValidator : PartiqlAst.Visitor() {
 
     override fun visitExprStruct(node: PartiqlAst.Expr.Struct) {
         node.fields.forEach { field ->
-            if (field.first is PartiqlAst.Expr.Lit && field.first.value !is TextElement) {
+            if (field.first is PartiqlAst.Expr.Missing || (field.first is PartiqlAst.Expr.Lit && field.first.value !is TextElement)) {
+                val type = when (field.first) {
+                    is PartiqlAst.Expr.Lit -> field.first.value.type.toString()
+                    else -> "MISSING"
+                }
                 throw SemanticException(
-                    "Found struct field to be of type ${field.first.value.type}",
+                    "Found struct field to be of type $type",
                     ErrorCode.SEMANTIC_NON_TEXT_STRUCT_FIELD,
-                    PropertyValueMap().addSourceLocation(field.first.metas)
+                    PropertyValueMap().addSourceLocation(field.first.metas).also { pvm ->
+                        pvm[Property.ACTUAL_TYPE] = type
+                    }
                 )
             }
         }
