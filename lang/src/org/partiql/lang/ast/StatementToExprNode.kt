@@ -190,6 +190,7 @@ private class StatementTransformer(val ion: IonSystem) {
                     having = having?.toExprNode(),
                     orderBy = order?.toOrderBy(),
                     limit = limit?.toExprNode(),
+                    offset = offset?.toExprNode(),
                     metas = metas
             )
             is Expr.Date ->

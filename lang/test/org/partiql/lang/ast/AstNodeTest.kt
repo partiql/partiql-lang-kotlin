@@ -275,7 +275,7 @@ class AstNodeTest {
         val from = FromSourceExpr(literal("2"), LetVariables())
 
         assertEquals(listOf(projection, from),
-                     Select(SetQuantifier.ALL, projection, from, null, null, null, null, null, null, emptyMeta).children)
+                     Select(SetQuantifier.ALL, projection, from, null, null, null, null, null, null, null, emptyMeta).children)
     }
 
     @Test
@@ -288,9 +288,10 @@ class AstNodeTest {
         val having = literal("4")
         val orderBy = OrderBy(listOf())
         val limit = literal("5")
+        val offset = literal("6")
 
-        assertEquals(listOf(projection, from, fromLet, where, groupBy, having, orderBy, limit),
-                     Select(SetQuantifier.ALL, projection, from, fromLet, where, groupBy, having, orderBy, limit, emptyMeta).children)
+        assertEquals(listOf(projection, from, fromLet, where, groupBy, having, orderBy, limit, offset),
+                     Select(SetQuantifier.ALL, projection, from, fromLet, where, groupBy, having, orderBy, limit, offset, emptyMeta).children)
     }
 
     @Test

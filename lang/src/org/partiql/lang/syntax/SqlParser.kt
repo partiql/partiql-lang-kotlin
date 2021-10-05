@@ -89,6 +89,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
         GROUP_PARTIAL,
         HAVING,
         LIMIT,
+        OFFSET,
         PIVOT,
         UNPIVOT,
         CALL,
@@ -554,7 +555,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
                 // The second child of a SELECT_LIST is always an ARG_LIST containing the from clause.
 
-                // GROUP BY, GROUP PARTIAL BY, WHERE, HAVING and limit parse nodes each have distinct ParseNodeTypes
+                // GROUP BY, GROUP PARTIAL BY, WHERE, HAVING, LIMIT and OFFSET parse nodes each have distinct ParseNodeTypes
                 // and if present, exist in children, starting at the third position.
 
                 var setQuantifier = SetQuantifier.ALL
@@ -653,6 +654,11 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     it.children[0].toExprNode()
                 }
 
+                val offsetExpr = unconsumedChildren.firstOrNull { it.type == OFFSET }?.let {
+                    unconsumedChildren.remove(it)
+                    it.children[0].toExprNode()
+                }
+
                 val limitExpr = unconsumedChildren.firstOrNull { it.type == LIMIT }?.let {
                     unconsumedChildren.remove(it)
                     it.children[0].toExprNode()
@@ -672,6 +678,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     having = havingExpr,
                     orderBy = orderBy,
                     limit = limitExpr,
+                    offset = offsetExpr,
                     metas = metas)
             }
             CREATE_TABLE -> {
@@ -1442,7 +1449,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
             rem = it.remaining
         }
 
-        // TODO support ORDER BY and LIMIT (and full select sub-clauses)
+        // TODO support ORDER BY, LIMIT and OFFSET (and full select sub-clauses)
 
         // TODO determine if DML l-value should be restricted to paths...
         // TODO support the FROM ... SELECT forms
@@ -2032,6 +2039,8 @@ class SqlParser(private val ion: IonSystem) : Parser {
         parseOptionalSingleExpressionClause(HAVING)
 
         parseOptionalSingleExpressionClause(LIMIT)
+
+        parseOptionalSingleExpressionClause(OFFSET)
 
         return ParseNode(selectType, null, children, rem)
     }

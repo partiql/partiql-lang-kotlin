@@ -440,9 +440,10 @@ data class Select(
     val having: ExprNode? = null,
     val orderBy: OrderBy? = null,
     val limit: ExprNode? = null,
+    val offset: ExprNode? = null,
     override val metas: MetaContainer
 ) : ExprNode() {
-    override val children: List<AstNode> = listOfNotNull(projection, from, fromLet, where, groupBy, having, orderBy, limit)
+    override val children: List<AstNode> = listOfNotNull(projection, from, fromLet, where, groupBy, having, orderBy, limit, offset)
 }
 
 //********************************

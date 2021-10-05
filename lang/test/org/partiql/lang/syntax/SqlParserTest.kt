@@ -15,9 +15,8 @@
 package org.partiql.lang.syntax
 
 import com.amazon.ion.Decimal
-import com.amazon.ionelement.api.ionDecimal
-import com.amazon.ionelement.api.ionInt
-import com.amazon.ionelement.api.ionString
+import com.amazon.ion.IonInt
+import com.amazon.ionelement.api.*
 import org.junit.Ignore
 import org.junit.Test
 import org.partiql.lang.ast.ExprNode
@@ -3948,6 +3947,44 @@ class SqlParserTest : SqlParserTestBase() {
             project = projectX,
             from = scan(id("table1")),
             fromLet = let(letBinding(call("foo", listOf(id("table1"))), "A"))
+        )
+    }
+
+    //****************************************
+    // LET clause parsing
+    //****************************************
+
+    private fun buildProject(project: String) = PartiqlAst.build { projectList(projectExpr(id(project))) }
+
+    private fun buildLit(lit: String) = PartiqlAst.Expr.Lit(loadSingleElement(lit))
+
+    @Test
+    fun selectLiimitTest() = assertExpression("SELECT x FROM a OFFSET 5") {
+        select(
+            project = buildProject("x"),
+            from = scan(id("a")),
+            offset = buildLit("5")
+        )
+    }
+
+    @Test
+    fun selectLimitOffsetTest() = assertExpression("SELECT x FROM a LIMIT 7 OFFSET 5") {
+        select(
+            project = buildProject("x"),
+            from = scan(id("a")),
+            limit = buildLit("7"),
+            offset = buildLit("5")
+        )
+    }
+
+    @Test
+    fun selectWhereLimitOffsetTest() = assertExpression("SELECT x FROM a WHERE y = 10 LIMIT 7 OFFSET 5") {
+        select(
+            project = buildProject("x"),
+            from = scan(id("a")),
+            where = PartiqlAst.Expr.Eq(listOf(id("y"), buildLit("10"))),
+            limit = buildLit("7"),
+            offset = buildLit("5")
         )
     }
 

@@ -154,7 +154,8 @@ open class AstRewriterBase : AstRewriter {
      * 5. `HAVING`
      * 6. *projection*
      * 7. `ORDER BY` (to be implemented)
-     * 8. `LIMIT`
+     * 8. `OFFSET`
+     * 9. `LIMIT`
      */
     protected open fun innerRewriteSelect(selectExpr: Select): Select {
         val from = rewriteFromSource(selectExpr.from)
@@ -164,6 +165,7 @@ open class AstRewriterBase : AstRewriter {
         val having = selectExpr.having?.let { rewriteSelectHaving(it) }
         val projection = rewriteSelectProjection(selectExpr.projection)
         val orderBy = selectExpr.orderBy?.let { rewriteOrderBy(it) }
+        val offset = selectExpr.offset?.let { rewriteSelectOffset(it) }
         val limit = selectExpr.limit?.let { rewriteSelectLimit(it) }
         val metas = rewriteSelectMetas(selectExpr)
 
@@ -177,6 +179,7 @@ open class AstRewriterBase : AstRewriter {
             having = having,
             orderBy = orderBy,
             limit = limit,
+            offset = offset,
             metas = metas)
     }
 
@@ -185,6 +188,8 @@ open class AstRewriterBase : AstRewriter {
     open fun rewriteSelectHaving(node: ExprNode): ExprNode = rewriteExprNode(node)
 
     open fun rewriteSelectLimit(node: ExprNode): ExprNode = rewriteExprNode(node)
+
+    open fun rewriteSelectOffset(node: ExprNode): ExprNode = rewriteExprNode(node)
 
     open fun rewriteSelectMetas(selectExpr: Select): MetaContainer = rewriteMetas(selectExpr)
 

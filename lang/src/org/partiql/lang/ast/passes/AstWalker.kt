@@ -88,7 +88,7 @@ open class AstWalker(private val visitor: AstVisitor) {
                     }
                 }
                 is Select       -> case {
-                    val (_, projection, from, fromLet, where, groupBy, having, orderBy, limit, _: MetaContainer) = expr
+                    val (_, projection, from, fromLet, where, groupBy, having, orderBy, limit, offset, _: MetaContainer) = expr
                     walkSelectProjection(projection)
                     walkFromSource(from)
                     walkExprNode(where)
@@ -107,6 +107,7 @@ open class AstWalker(private val visitor: AstVisitor) {
                         }
                     }
                     walkExprNode(limit)
+                    walkExprNode(offset)
                 }
                 is DataManipulation -> case {
                     val (dmlOperation, from, where, returning, _: MetaContainer) = expr
