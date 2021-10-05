@@ -15,8 +15,10 @@
 package org.partiql.lang.syntax
 
 import com.amazon.ion.Decimal
-import com.amazon.ion.IonInt
-import com.amazon.ionelement.api.*
+import com.amazon.ionelement.api.ionDecimal
+import com.amazon.ionelement.api.ionInt
+import com.amazon.ionelement.api.ionString
+import com.amazon.ionelement.api.loadSingleElement
 import org.junit.Ignore
 import org.junit.Test
 import org.partiql.lang.ast.ExprNode
