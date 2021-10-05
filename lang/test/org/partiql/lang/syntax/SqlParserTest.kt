@@ -3951,7 +3951,7 @@ class SqlParserTest : SqlParserTestBase() {
     }
 
     //****************************************
-    // LET clause parsing
+    // OFFSET clause parsing
     //****************************************
 
     private fun buildProject(project: String) = PartiqlAst.build { projectList(projectExpr(id(project))) }
@@ -3959,7 +3959,7 @@ class SqlParserTest : SqlParserTestBase() {
     private fun buildLit(lit: String) = PartiqlAst.Expr.Lit(loadSingleElement(lit))
 
     @Test
-    fun selectLiimitTest() = assertExpression("SELECT x FROM a OFFSET 5") {
+    fun selectOffsetTest() = assertExpression("SELECT x FROM a OFFSET 5") {
         select(
             project = buildProject("x"),
             from = scan(id("a")),
