@@ -654,12 +654,12 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     it.children[0].toExprNode()
                 }
 
-                val offsetExpr = unconsumedChildren.firstOrNull { it.type == OFFSET }?.let {
+                val limitExpr = unconsumedChildren.firstOrNull { it.type == LIMIT }?.let {
                     unconsumedChildren.remove(it)
                     it.children[0].toExprNode()
                 }
 
-                val limitExpr = unconsumedChildren.firstOrNull { it.type == LIMIT }?.let {
+                val offsetExpr = unconsumedChildren.firstOrNull { it.type == OFFSET }?.let {
                     unconsumedChildren.remove(it)
                     it.children[0].toExprNode()
                 }
