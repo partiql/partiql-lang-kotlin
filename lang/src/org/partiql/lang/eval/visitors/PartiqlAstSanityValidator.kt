@@ -109,7 +109,7 @@ object PartiqlAstSanityValidator : PartiqlAst.Visitor() {
                 }
                 throw SemanticException(
                     "Found struct field to be of type $type",
-                    ErrorCode.SEMANTIC_NON_TEXT_STRUCT_FIELD,
+                    ErrorCode.SEMANTIC_NON_TEXT_STRUCT_FIELD_KEY,
                     PropertyValueMap().addSourceLocation(field.first.metas).also { pvm ->
                         pvm[Property.ACTUAL_TYPE] = type
                     }

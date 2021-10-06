@@ -877,7 +877,7 @@ internal class EvaluatingCompiler(
                 if (!nameValue.type.isText) {
                     // Evaluation time error where variable reference might be evaluated to non-text struct field.
                     err("Found struct field key to be of type ${nameValue.type}",
-                        ErrorCode.EVALUATOR_NON_TEXT_STRUCT_FIELD,
+                        ErrorCode.EVALUATOR_NON_TEXT_STRUCT_FIELD_KEY,
                         errorContextFrom(metas.sourceLocationMeta).also { pvm ->
                             pvm[Property.ACTUAL_TYPE] = nameValue.type.toString()
                         },

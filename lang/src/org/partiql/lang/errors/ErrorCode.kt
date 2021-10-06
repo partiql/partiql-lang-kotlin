@@ -649,7 +649,7 @@ enum class ErrorCode(private val category: ErrorCategory,
             "LIMIT value must be an integer but found ${errorContext.getProperty(Property.ACTUAL_TYPE)}}"
     },
 
-    EVALUATOR_NON_TEXT_STRUCT_FIELD(
+    EVALUATOR_NON_TEXT_STRUCT_FIELD_KEY(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.ACTUAL_TYPE),
         "") {
@@ -672,7 +672,7 @@ enum class ErrorCode(private val category: ErrorCategory,
         LOCATION,
         "% by zero"),
 
-    SEMANTIC_NON_TEXT_STRUCT_FIELD (
+    SEMANTIC_NON_TEXT_STRUCT_FIELD_KEY(
         ErrorCategory.SEMANTIC,
         LOCATION + setOf(Property.ACTUAL_TYPE),
         "") {

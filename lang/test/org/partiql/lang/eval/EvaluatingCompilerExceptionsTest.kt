@@ -247,7 +247,7 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
     fun variableReferenceToIntAsNonTextStructField() =
         checkInputThrowingEvaluationException(
             "SELECT {a : 2} FROM {'a' : 1}",
-            ErrorCode.EVALUATOR_NON_TEXT_STRUCT_FIELD,
+            ErrorCode.EVALUATOR_NON_TEXT_STRUCT_FIELD_KEY,
             mapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 8L,

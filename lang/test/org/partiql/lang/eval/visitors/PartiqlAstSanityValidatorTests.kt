@@ -239,7 +239,7 @@ class PartiqlAstSanityValidatorTests : TestBase() {
 
     @Test
     fun intAsNonTextStructKey() {
-        assertThrowsSqlException(ErrorCode.SEMANTIC_NON_TEXT_STRUCT_FIELD) {
+        assertThrowsSqlException(ErrorCode.SEMANTIC_NON_TEXT_STRUCT_FIELD_KEY) {
             PartiqlAstSanityValidator.validate(
                 PartiqlAst.build {
                     query(
@@ -252,7 +252,7 @@ class PartiqlAstSanityValidatorTests : TestBase() {
 
     @Test
     fun timestampAsNonTextStructKey() {
-        assertThrowsSqlException(ErrorCode.SEMANTIC_NON_TEXT_STRUCT_FIELD) {
+        assertThrowsSqlException(ErrorCode.SEMANTIC_NON_TEXT_STRUCT_FIELD_KEY) {
             PartiqlAstSanityValidator.validate(
                 PartiqlAst.build {
                     query(
@@ -265,7 +265,7 @@ class PartiqlAstSanityValidatorTests : TestBase() {
 
     @Test
     fun nullAsNonTextStructKey() {
-        assertThrowsSqlException(ErrorCode.SEMANTIC_NON_TEXT_STRUCT_FIELD) {
+        assertThrowsSqlException(ErrorCode.SEMANTIC_NON_TEXT_STRUCT_FIELD_KEY) {
             PartiqlAstSanityValidator.validate(
                 PartiqlAst.build {
                     query(
@@ -278,7 +278,7 @@ class PartiqlAstSanityValidatorTests : TestBase() {
 
     @Test
     fun missingAsNonTextStructKey() {
-        assertThrowsSqlException(ErrorCode.SEMANTIC_NON_TEXT_STRUCT_FIELD) {
+        assertThrowsSqlException(ErrorCode.SEMANTIC_NON_TEXT_STRUCT_FIELD_KEY) {
             PartiqlAstSanityValidator.validate(
                 PartiqlAst.build {
                     query(
