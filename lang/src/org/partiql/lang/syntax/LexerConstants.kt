@@ -258,6 +258,7 @@ internal val DATE_PART_KEYWORDS: Set<String> = DatePart.values()
     "pivot",
     "unpivot",
     "limit",
+    "offset",
     "tuple",
     "remove",
     "index",

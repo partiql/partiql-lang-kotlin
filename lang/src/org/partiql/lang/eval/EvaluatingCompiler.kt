@@ -980,7 +980,7 @@ internal class EvaluatingCompiler(
             .union(pigGeneratedAst.fromLet?.let { fold.walkLet(pigGeneratedAst.fromLet, emptySet()) } ?: emptySet())
 
         return nestCompilationContext(ExpressionContext.NORMAL, emptySet()) {
-            val (setQuantifier, projection, from, fromLet, _, groupBy, having, _, limit, metas: MetaContainer) = selectExpr
+            val (setQuantifier, projection, from, fromLet, _, groupBy, having, _, limit, offset, metas: MetaContainer) = selectExpr
 
             val fromSourceThunks = compileFromSources(from)
             val letSourceThunks = fromLet?.let { compileLetSources(it) }

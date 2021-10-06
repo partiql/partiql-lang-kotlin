@@ -160,6 +160,7 @@ fun ExprNode.toAstExpr(): PartiqlAst.Expr {
                     group = node.groupBy?.toAstGroupSpec(),
                     having = node.having?.toAstExpr(),
                     limit = node.limit?.toAstExpr(),
+                    offset = node.offset?.toAstExpr(),
                     metas = metas)
             is Struct -> struct(node.fields.map { exprPair(it.name.toAstExpr(), it.expr.toAstExpr()) }, metas)
             is Seq ->

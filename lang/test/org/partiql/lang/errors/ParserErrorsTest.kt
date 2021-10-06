@@ -809,6 +809,50 @@ class ParserErrorsTest : SqlParserTestBase() {
     }
 
     @Test
+    fun offsetBeforeLimit() {
+        checkInputThrowingParserException("SELECT a FROM tb OFFSET 5 LIMIT 10",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 27L,
+                Property.TOKEN_TYPE to TokenType.KEYWORD,
+                Property.TOKEN_VALUE to ion.newSymbol("limit"))
+        )
+    }
+
+    @Test
+    fun limitOffsetBeforeOrderBy() {
+        checkInputThrowingParserException("SELECT a FROM tb LIMIT 10 OFFSET 5 ORDER BY b ASC",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 36L,
+                Property.TOKEN_TYPE to TokenType.KEYWORD,
+                Property.TOKEN_VALUE to ion.newSymbol("order"))
+        )
+    }
+
+    @Test
+    fun offsetMissingArgument() {
+        checkInputThrowingParserException("SELECT a FROM tb OFFSET",
+            ErrorCode.PARSE_UNEXPECTED_TERM,
+            mapOf(Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 24L,
+                Property.TOKEN_TYPE to TokenType.EOF,
+                Property.TOKEN_VALUE to ion.newSymbol("EOF"))
+        )
+    }
+
+    @Test
+    fun offsetUnexpectedKeywordAsAttribute() {
+        checkInputThrowingParserException("SELECT a FROM tb OFFSET SELECT",
+            ErrorCode.PARSE_UNEXPECTED_TERM,
+            mapOf(Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 31L,
+                Property.TOKEN_TYPE to TokenType.EOF,
+                Property.TOKEN_VALUE to ion.newSymbol("EOF"))
+        )
+    }
+
+    @Test
     fun onConflictUnexpectedTokenOnConflict() {
         checkInputThrowingParserException("INSERT INTO foo VALUE 1 ON_CONFLICT WHERE bar DO NOTHING",
                 ErrorCode.PARSE_UNEXPECTED_TOKEN,
