@@ -641,12 +641,20 @@ enum class ErrorCode(private val category: ErrorCategory,
             "escape char = ${errorContext?.get(Property.LIKE_ESCAPE)?.stringValue() ?: "none given"}"
     },
 
-    EVALUATOR_NON_INT_LIMIT_VALUE (
+    EVALUATOR_NON_INT_LIMIT_VALUE(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.ACTUAL_TYPE),
         "") {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "LIMIT value must be an integer but found ${errorContext.getProperty(Property.ACTUAL_TYPE)}}"
+    },
+
+    EVALUATOR_NON_TEXT_STRUCT_FIELD_KEY(
+        ErrorCategory.EVALUATOR,
+        LOCATION + setOf(Property.ACTUAL_TYPE),
+        "") {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "Struct field key should be text but found ${errorContext.getProperty(Property.ACTUAL_TYPE)}}."
     },
 
     EVALUATOR_NEGATIVE_LIMIT(
@@ -663,6 +671,14 @@ enum class ErrorCode(private val category: ErrorCategory,
         ErrorCategory.EVALUATOR,
         LOCATION,
         "% by zero"),
+
+    SEMANTIC_NON_TEXT_STRUCT_FIELD_KEY(
+        ErrorCategory.SEMANTIC,
+        LOCATION + setOf(Property.ACTUAL_TYPE),
+        "") {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "Struct field key should be text but found ${errorContext.getProperty(Property.ACTUAL_TYPE)}}."
+    },
 
     SEMANTIC_ILLEGAL_GLOBAL_VARIABLE_ACCESS(
         ErrorCategory.SEMANTIC,

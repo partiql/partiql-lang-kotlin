@@ -871,7 +871,20 @@ internal class EvaluatingCompiler(
         }
 
         return thunkFactory.thunkEnv(metas) { env ->
-            val seq = fieldThunks.map { it.valueThunk(env).namedValue(it.nameThunk(env)) }.asSequence()
+            val seq = fieldThunks.map {
+                val nameValue = it.nameThunk(env)
+                if (!nameValue.type.isText) {
+                    // Evaluation time error where variable reference might be evaluated to non-text struct field.
+                    err("Found struct field key to be of type ${nameValue.type}",
+                        ErrorCode.EVALUATOR_NON_TEXT_STRUCT_FIELD_KEY,
+                        errorContextFrom(metas.sourceLocationMeta).also { pvm ->
+                            pvm[Property.ACTUAL_TYPE] = nameValue.type.toString()
+                        },
+                        internal = false
+                    )
+                }
+                it.valueThunk(env).namedValue(nameValue)
+            }.asSequence()
             createStructExprValue(seq, StructOrdering.ORDERED)
         }
     }

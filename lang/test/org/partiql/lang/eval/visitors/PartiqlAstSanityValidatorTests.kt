@@ -14,6 +14,7 @@
 
 package org.partiql.lang.eval.visitors
 
+import com.amazon.ionelement.api.ionTimestamp
 import com.amazon.ionelement.api.toIonElement
 import org.junit.Test
 import org.partiql.lang.TestBase
@@ -22,6 +23,8 @@ import org.partiql.lang.errors.ErrorCode
 
 class PartiqlAstSanityValidatorTests : TestBase() {
     private fun litInt(value: Int) = PartiqlAst.build { lit(ion.newInt(value).toIonElement()) }
+    private val litNull = PartiqlAst.build { lit(ion.newNull().toIonElement()) }
+    private val missingExpr = PartiqlAst.build { missing() }
 
     @Test
     fun groupPartial() {
@@ -229,6 +232,58 @@ class PartiqlAstSanityValidatorTests : TestBase() {
                             project = projectValue(select(
                                 from = scan(lit(ion.singleValue("${Long.MAX_VALUE}0").toIonElement())),
                                 project = projectValue(litInt(1))))))
+                }
+            )
+        }
+    }
+
+    @Test
+    fun intAsNonTextStructKey() {
+        assertThrowsSqlException(ErrorCode.SEMANTIC_NON_TEXT_STRUCT_FIELD_KEY) {
+            PartiqlAstSanityValidator.validate(
+                PartiqlAst.build {
+                    query(
+                        struct(exprPair(litInt(1), litInt(2)))
+                    )
+                }
+            )
+        }
+    }
+
+    @Test
+    fun timestampAsNonTextStructKey() {
+        assertThrowsSqlException(ErrorCode.SEMANTIC_NON_TEXT_STRUCT_FIELD_KEY) {
+            PartiqlAstSanityValidator.validate(
+                PartiqlAst.build {
+                    query(
+                        struct(exprPair(lit(ionTimestamp("2007-02-23T12:14:33.079-08:00")), litInt(2)))
+                    )
+                }
+            )
+        }
+    }
+
+    @Test
+    fun nullAsNonTextStructKey() {
+        assertThrowsSqlException(ErrorCode.SEMANTIC_NON_TEXT_STRUCT_FIELD_KEY) {
+            PartiqlAstSanityValidator.validate(
+                PartiqlAst.build {
+                    query(
+                        struct(exprPair(litNull, litInt(2)))
+                    )
+                }
+            )
+        }
+    }
+
+    @Test
+    fun missingAsNonTextStructKey() {
+        assertThrowsSqlException(ErrorCode.SEMANTIC_NON_TEXT_STRUCT_FIELD_KEY) {
+            PartiqlAstSanityValidator.validate(
+                PartiqlAst.build {
+                    query(
+                        struct(exprPair(missingExpr, litInt(2)))
+                    )
                 }
             )
         }

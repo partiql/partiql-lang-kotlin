@@ -242,4 +242,16 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
                 Property.COLUMN_NUMBER to 11L,
                 Property.BINDING_NAME to "leading")
         )
+
+    @Test
+    fun variableReferenceToIntAsNonTextStructField() =
+        checkInputThrowingEvaluationException(
+            "SELECT {a : 2} FROM {'a' : 1}",
+            ErrorCode.EVALUATOR_NON_TEXT_STRUCT_FIELD_KEY,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 8L,
+                Property.ACTUAL_TYPE to "INT"
+            )
+        )
 }
