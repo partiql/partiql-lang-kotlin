@@ -18,7 +18,7 @@ class EvaluatingCompilerOffsetTests: EvaluatorTestBase() {
                 "SELECT * FROM foo OFFSET 0",
                 "<<{'a': 1}, {'a': 2}, {'a': 3}, {'a': 4}, {'a': 5}>>"
             ),
-            // OFFEST 1 should skip first result
+            // OFFSET 1 should skip first result
             EvaluatorTestCase(
                 "SELECT * FROM foo OFFSET 1",
                 "<<{'a': 2}, {'a': 3}, {'a': 4}, {'a': 5}>>"
