@@ -1025,8 +1025,8 @@ internal class EvaluatingCompiler(
 
             val limitThunk = limit?.let { compileExprNode(limit) }
             val limitLocationMeta = limit?.metas?.sourceLocationMeta
-            val offsetThunk = offset?.let { compileExprNode(it) }
-            val offsetLocationMeta = offset?.metas?.sourceLocationMeta
+            val limitThunk = limit?.let { compileExprNode(it) }
+            val limitLocationMeta = limit?.metas?.sourceLocationMeta
 
             fun <T> rowsWithOffsetAndLimit (rows: Sequence<T>, env: Environment): Sequence<T> {
                 val rowsWithOffset = when (offsetThunk){
