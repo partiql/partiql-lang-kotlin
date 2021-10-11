@@ -1101,7 +1101,7 @@ internal class EvaluatingCompiler(
                                 // Create a closure that groups all the rows in the FROM source into a single group.
                                 thunkFactory.thunkEnv(metas) { env ->
                                     // Evaluate the FROM clause
-                                    val fromProductions: Sequence<FromProduction> = sourceThunks(env).let { rowsWithOffsetAndLimit(it, env) }
+                                    val fromProductions: Sequence<FromProduction> = rowsWithOffsetAndLimit(sourceThunks(env), env)
                                     val registers = createRegisterBank()
 
                                     // note: the group key can be anything here because we only ever have a single
