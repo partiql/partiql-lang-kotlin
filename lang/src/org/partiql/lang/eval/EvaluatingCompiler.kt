@@ -1212,7 +1212,7 @@ internal class EvaluatingCompiler(
                         val asThunk = compileExprNode(asExpr)
                         val atThunk = compileExprNode(atExpr)
                         thunkFactory.thunkEnv(metas) { env ->
-                            val sourceValue = sourceThunks(env).asSequence().let { rowsWithOffsetAndLimit(it, env) }
+                            val sourceValue = rowsWithOffsetAndLimit(sourceThunks(env).asSequence(), env)
                             val seq = sourceValue
                                     .map { (_, env) -> Pair(asThunk(env), atThunk(env)) }
                                     .filter { (name, _) -> name.type.isText }
