@@ -1023,8 +1023,8 @@ internal class EvaluatingCompiler(
             val letSourceThunks = fromLet?.let { compileLetSources(it) }
             val sourceThunks = compileQueryWithoutProjection(selectExpr, fromSourceThunks, letSourceThunks)
 
-            val limitThunk = limit?.let { compileExprNode(limit) }
-            val limitLocationMeta = limit?.metas?.sourceLocationMeta
+            val offsetThunk = offset?.let { compileExprNode(it) }
+            val offsetLocationMeta = offset?.metas?.sourceLocationMeta
             val limitThunk = limit?.let { compileExprNode(it) }
             val limitLocationMeta = limit?.metas?.sourceLocationMeta
 
