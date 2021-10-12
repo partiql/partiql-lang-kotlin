@@ -207,7 +207,12 @@ private class AstSerializerImpl(val astVersion: AstVersion, val ion: IonSystem):
     }
 
     private fun IonWriterContext.writeSelect(expr: Select) {
-        val (setQuantifier, projection, from, fromLet, where, groupBy, having, orderBy, limit, _: MetaContainer) = expr
+        val (setQuantifier, projection, from, fromLet, where, groupBy, having, orderBy, limit, offset, _: MetaContainer) = expr
+
+        if (offset != null){
+            throw UnsupportedOperationException("OFFSET clause is not supported by the V0 AST")
+        }
+
         if (orderBy != null) {
             throw UnsupportedOperationException("ORDER BY clause is not supported by the V0 AST")
         }

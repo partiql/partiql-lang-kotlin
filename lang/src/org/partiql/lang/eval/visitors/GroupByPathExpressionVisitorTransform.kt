@@ -103,6 +103,7 @@ class GroupByPathExpressionVisitorTransform(
         val groupBy = unshadowedTransformer.transformExprSelect_group(node)
         val having = currentAndUnshadowedTransformer.transformExprSelect_having(node)
         val order = currentAndUnshadowedTransformer.transformExprSelect_order(node)
+        val offset = unshadowedTransformer.transformExprSelect_offset(node)
         val limit = unshadowedTransformer.transformExprSelect_limit(node)
         val metas = unshadowedTransformer.transformExprSelect_metas(node)
 
@@ -116,6 +117,7 @@ class GroupByPathExpressionVisitorTransform(
                 group = groupBy,
                 having = having,
                 order = order,
+                offset = offset,
                 limit = limit,
                 metas = metas)
         }

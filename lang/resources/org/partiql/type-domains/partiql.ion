@@ -121,7 +121,8 @@
                 (group (? group_by))
                 (having (? expr))
                 (order (? order_by))
-                (limit (? expr))))
+                (limit (? expr))
+                (offset (? expr))))
         // end of sum expr
 
         // Time

@@ -662,6 +662,19 @@ enum class ErrorCode(private val category: ErrorCategory,
         LOCATION,
         "LIMIT must not be negative"),
 
+    EVALUATOR_NON_INT_OFFSET_VALUE (
+        ErrorCategory.EVALUATOR,
+        LOCATION + setOf(Property.ACTUAL_TYPE),
+        "") {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "OFFSET value must be an integer but found ${errorContext.getProperty(Property.ACTUAL_TYPE)}"
+    },
+
+    EVALUATOR_NEGATIVE_OFFSET(
+        ErrorCategory.EVALUATOR,
+        LOCATION,
+        "OFFSET must not be negative"),
+
     EVALUATOR_DIVIDE_BY_ZERO(
         ErrorCategory.EVALUATOR,
         LOCATION,

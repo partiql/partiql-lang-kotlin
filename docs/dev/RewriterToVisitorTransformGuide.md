@@ -78,11 +78,11 @@ In the rewriter code, you may encounter [`innerRewriteSelect`](https://github.co
 
 However, currently there are some slight differences between the order of transforms in `innerRewriteSelect` and `transformExprSelect`. `innerRewriteSelect` follows the traversal order (SQL semantic order) that is
 
-FROM → (FROM LET) → (WHERE) → (GROUP BY) → (HAVING) → PROJECTION → (LIMIT)
+FROM → (FROM LET) → (WHERE) → (GROUP BY) → (HAVING) → PROJECTION → (OFFSET) → (LIMIT) 
 
 `transformExprSelect` transforms the clauses in the order they are written for a PartiQL query, that is
 
-PROJECTION → FROM → (FROM LET) → (WHERE) → (GROUP BY) → (HAVING) → (LIMIT)
+PROJECTION → FROM → (FROM LET) → (WHERE) → (GROUP BY) → (HAVING) → (LIMIT) → (OFFSET)
 
 This slight difference can lead to some different behaviors when translating `innerRewriteSelect` (e.g. StaticTypeRewriter). So to completely solve this issue, you can have your VisitorTransform implement [`VisitorTransformBase`](https://github.com/partiql/partiql-lang-kotlin/blob/master/lang/src/org/partiql/lang/eval/visitors/VisitorTransformBase.kt) and call `transformExprSelectEvaluationOrder` rather than `transformExprSelect` to get the same behavior.
 
@@ -97,6 +97,7 @@ fun transformExprSelectEvaluationOrder(node: PartiqlAst.Expr.Select): PartiqlAst
     val having = transformExprSelect_having(node)
     val setq = transformExprSelect_setq(node)
     val project = transformExprSelect_project(node)
+    val offset = transformExprSelect_offset(node)
     val limit = transformExprSelect_limit(node)
     val metas = transformExprSelect_metas(node)
     return PartiqlAst.build {
@@ -109,6 +110,7 @@ fun transformExprSelectEvaluationOrder(node: PartiqlAst.Expr.Select): PartiqlAst
             group = group,
             having = having,
             limit = limit,
+            offset = offset,
             metas = metas)
     }
 }
@@ -158,6 +160,7 @@ private fun copyProjectionToSelect(node: PartiqlAst.Expr.Select, newProjection: 
             group = node.group,
             having = node.having,
             limit = node.limit,
+            offset = node.offset,
             metas = node.metas)
     }
 }
