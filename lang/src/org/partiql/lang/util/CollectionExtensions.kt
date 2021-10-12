@@ -64,6 +64,37 @@ internal fun <T> Sequence<T>.take(count: Long): Sequence<T> {
     }
 }
 
+/**
+ * This should function the same as Kotlin's [Sequence<T>.drop(n: Int)] function but takes
+ * a long value instead.
+ */
+internal fun <T> Sequence<T>.drop(count: Long): Sequence<T> {
+    val wrappedSeq = this
+    return object : Sequence<T> {
+        override fun iterator(): Iterator<T> = object : Iterator<T> {
+            val wrappedIterator = wrappedSeq.iterator()
+            var left = count
+
+            private fun drop() {
+                while (left > 0 && wrappedIterator.hasNext()) {
+                    wrappedIterator.next()
+                    left--
+                }
+            }
+
+            override fun next(): T {
+                drop()
+                return wrappedIterator.next()
+            }
+
+            override fun hasNext(): Boolean {
+                drop()
+                return wrappedIterator.hasNext()
+            }
+        }
+    }
+}
+
 
 /**
  * Given a predicate function, return `true` if all members of the list satisfy the predicate, return false otherwise.

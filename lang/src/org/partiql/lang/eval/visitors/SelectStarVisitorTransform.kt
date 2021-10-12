@@ -24,6 +24,7 @@ class SelectStarVisitorTransform : VisitorTransformBase() {
                 having = node.having,
                 order = node.order,
                 limit = node.limit,
+                offset = node.offset,
                 metas = node.metas)
         }
     }
