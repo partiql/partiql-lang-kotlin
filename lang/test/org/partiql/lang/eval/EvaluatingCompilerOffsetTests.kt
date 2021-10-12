@@ -6,6 +6,7 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.to
+import kotlin.math.pow
 
 class EvaluatingCompilerOffsetTests: EvaluatorTestBase() {
     private val session = mapOf("foo" to "[ { 'a': 1 }, { 'a': 2 }, { 'a': 3 }, { 'a': 4 }, { 'a': 5 } ]").toSession()
@@ -81,6 +82,20 @@ class EvaluatingCompilerOffsetTests: EvaluatorTestBase() {
             EvaluatorTestCase(
                 "SELECT * FROM foo OFFSET 4 / 2",
                 "<<{'a': 3}, {'a': 4}, {'a': 5}>>"
+            ),
+            // OFFSET with GROUP BY and HAVING
+            EvaluatorTestCase(
+                "SELECT * FROM foo GROUP BY a HAVING a > 2 LIMIT 1 OFFSET 1",
+                "<<{'a': 4}>>"
+            ),
+            // OFFSET with PIVOT
+            EvaluatorTestCase(
+                """
+                    PIVOT foo.a AT foo.b 
+                    FROM <<{'a': 1, 'b':'I'}, {'a': 2, 'b':'II'}, {'a': 3, 'b':'III'}>> AS foo
+                    LIMIT 1 OFFSET 1
+                """.trimIndent(),
+                "{'II': 2}"
             )
         )
     }
@@ -127,6 +142,15 @@ class EvaluatingCompilerOffsetTests: EvaluatorTestBase() {
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 26L,
                     Property.ACTUAL_TYPE to "DECIMAL"
+                )
+            ),
+            // OFFSET value should not exceed Long type
+            EvaluatorErrorTestCase(
+                "select * from foo OFFSET 9223372036854775808",
+                ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
+                mapOf(
+                    Property.LINE_NUMBER to 1L,
+                    Property.COLUMN_NUMBER to 26L
                 )
             )
         )
