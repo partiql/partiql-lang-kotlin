@@ -145,7 +145,7 @@ class EvaluatingCompilerOffsetTests: EvaluatorTestBase() {
             ),
             // OFFSET value should not exceed Long type
             EvaluatorErrorTestCase(
-                "select * from foo OFFSET 9223372036854775808",
+                "select * from foo OFFSET ${Long.MAX_VALUE}0",
                 ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
                 mapOf(
                     Property.LINE_NUMBER to 1L,
