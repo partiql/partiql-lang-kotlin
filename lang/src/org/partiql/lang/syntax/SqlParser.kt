@@ -15,6 +15,9 @@
 package org.partiql.lang.syntax
 
 import com.amazon.ion.*
+import com.amazon.ionelement.api.emptyMetaContainer
+import com.amazon.ionelement.api.loadSingleElement
+import com.amazon.ionelement.api.toIonElement
 import org.partiql.lang.ast.*
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorCode
@@ -29,6 +32,8 @@ import org.partiql.lang.syntax.SqlParser.ParseType.*
 import org.partiql.lang.syntax.TokenType.*
 import org.partiql.lang.syntax.TokenType.KEYWORD
 import org.partiql.lang.util.*
+import org.partiql.pig.runtime.SymbolPrimitive
+import org.partiql.pig.runtime.asPrimitive
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter.*
 import java.time.*
@@ -221,10 +226,833 @@ class SqlParser(private val ion: IonSystem) : Parser {
      }
 
     private fun ParseNode.malformedIfNotEmpty(unconsumedChildren: List<ParseNode>) {
-        if (!unconsumedChildren.isEmpty()) {
+        if (unconsumedChildren.isNotEmpty()) {
             errMalformedParseTree("Unprocessed components remaining")
         }
     }
+
+    //***************************************
+    // toAstStatement
+    //***************************************
+    private fun ParseNode.toAstStatement(): PartiqlAst.Statement {
+        return when (type) {
+            ATOM, LIST, BAG, STRUCT, UNARY, BINARY, TERNARY, CAST, CALL, CALL_AGG,
+            CALL_DISTINCT_AGG, CALL_AGG_WILDCARD, PATH, PARAMETER, CASE, SELECT_LIST,
+            SELECT_VALUE, PIVOT, DATE, TIME, TIME_WITH_TIME_ZONE -> PartiqlAst.build { query(toAstExpr()) }
+
+            FROM, INSERT, INSERT_VALUE, SET, UPDATE, REMOVE, DELETE, DML_LIST -> toAstDml()
+
+            CREATE_TABLE, DROP_TABLE, CREATE_INDEX, DROP_INDEX -> toAstDdl()
+
+            EXEC -> toAstExec()
+
+            else -> unsupported("Unsupported syntax for $type", PARSE_UNSUPPORTED_SYNTAX)
+        }
+    }
+
+    private fun ParseNode.toAstExpr(): PartiqlAst.Expr {
+        checkThreadInterrupted()
+        val metas = getMetas()
+
+        return PartiqlAst.build {
+            when (type) {
+                ATOM -> when (token?.type){
+                    LITERAL, NULL, TRIM_SPECIFICATION, DATE_PART -> lit(token.value!!.toIonElement(), metas)
+                    ION_LITERAL -> lit(token.value!!.toIonElement(), metas + metaToIonMetaContainer(IsIonLiteralMeta.instance))
+                    MISSING -> missing(metas)
+                    QUOTED_IDENTIFIER -> id(token.text!!, caseSensitive(), unqualified(), metas)
+                    IDENTIFIER -> id(token.text!!, caseInsensitive(), unqualified(), metas)
+                    else -> errMalformedParseTree("Unsupported atom token type ${token?.type}")
+                }
+                LIST -> list(children.map { it.toAstExpr() }, metas)
+                BAG -> bag(children.map { it.toAstExpr() }, metas)
+                STRUCT -> {
+                    val fields = children.map {
+                        if (it.type != MEMBER) {
+                            errMalformedParseTree("Expected MEMBER node as direct descendant of a STRUCT node but instead found ${it.type}")
+                        }
+                        if (it.children.size != 2) {
+                            errMalformedParseTree("Expected MEMBER node to have 2 children but found ${it.children.size}")
+                        }
+                        val keyExpr = it.children[0].toAstExpr()
+                        val valueExpr = it.children[1].toAstExpr()
+                        PartiqlAst.ExprPair(keyExpr, valueExpr)
+                    }
+                    struct(fields, metas)
+                }
+                UNARY, BINARY, TERNARY -> {
+                    when (token!!.text) {
+                        "is" -> isType(children[0].toAstExpr(), children[1].toAstType(), metas)
+                        "is_not" -> not(
+                            isType(children[0].toAstExpr(), children[1].toAstType(), metas),
+                            metas + metaToIonMetaContainer(LegacyLogicalNotMeta.instance)
+                        )
+                        else -> {
+                            val (opName, wrapInNot) = when (token.text) {
+                                "not_between" -> Pair("between", true)
+                                "not_like" -> Pair("like", true)
+                                "not_in" -> Pair("in", true)
+                                else -> Pair(token.text!!, false)
+                            }
+
+                            when (opName) {
+                                "@"  -> {
+                                    val childNode = children[0]
+                                    val childToken = childNode.token
+                                        ?: errMalformedParseTree("@ node does not have a token")
+                                    when (childToken.type) {
+                                        QUOTED_IDENTIFIER -> id(childToken.text!!, caseSensitive(), localsFirst(), childNode.getMetas())
+                                        IDENTIFIER -> id(childToken.text!!, caseInsensitive(), localsFirst(), childNode.getMetas())
+                                        else -> errMalformedParseTree("Unexpected child node token type of @ operator node ${childToken}")
+                                    }
+                                }
+                                else -> {
+                                    val op = NAryOp.forSymbol(opName)
+                                        ?: errMalformedParseTree("Unsupported operator: $opName")
+                                    val args = children.map { it.toAstExpr() }
+                                    val node = op.toAstExpr(args, metas)
+                                    if (wrapInNot) not(node, metas + metaToIonMetaContainer(LegacyLogicalNotMeta.instance)) else node
+                                }
+                            }
+                        }
+                    }
+                }
+                CAST -> cast(children[0].toAstExpr(), children[1].toAstType(), metas)
+                CALL -> {
+                    when (val funcName = token?.text!!.toLowerCase()) {
+                        // special case--list/sexp/bag "functions" are intrinsic to the literal form
+                        "sexp" -> sexp(children.map { it.toAstExpr()}, metas)
+                        "list" -> list(children.map { it.toAstExpr()}, metas)
+                        "bag" -> bag(children.map { it.toAstExpr()}, metas)
+                        else -> {
+                            // Note:  we are forcing all function name lookups to be case-insensitive here...
+                            // This seems like the right thing to do because that is consistent with the
+                            // previous behavior.
+                            val funcExpr = id(funcName, caseInsensitive(), unqualified())
+                            NAryOp.CALL.toAstExpr(listOf(funcExpr) + children.map { it.toAstExpr() }, metas)
+                        }
+                    }
+                }
+                CALL_AGG -> {
+                    val symbolicPrimitive = SymbolPrimitive(token?.text!!.toLowerCase(), emptyMetaContainer())
+                    callAgg_(all(), symbolicPrimitive, children[0].toAstExpr(), metas)
+                }
+                CALL_DISTINCT_AGG -> {
+                    val symbolicPrimitive = SymbolPrimitive(token?.text!!.toLowerCase(), emptyMetaContainer())
+                    callAgg_(distinct(), symbolicPrimitive, children[0].toAstExpr(), metas)
+                }
+                CALL_AGG_WILDCARD -> {
+                    if(token!!.type != KEYWORD || token.keywordText != "count") {
+                        errMalformedParseTree("only COUNT can be used with a wildcard")
+                    }
+                    // Should only get the [SourceLocationMeta] if present, not any other metas.
+                    val srcLocationMetaOnly: IonElementMetaContainer = metas[SourceLocationMeta.TAG]
+                        ?.let { metaToIonMetaContainer(it as Meta) } ?: emptyMetaContainer()
+                    val lit = lit(loadSingleElement("1"), srcLocationMetaOnly)
+                    val symbolicPrimitive = SymbolPrimitive("count", srcLocationMetaOnly)
+                    callAgg_(all(), symbolicPrimitive, lit, metas + metaToIonMetaContainer(IsCountStarMeta.instance))
+                }
+                PATH -> {
+                    val rootExpr = children[0].toAstExpr()
+                    val pathComponents = children.drop(1).map {
+                        if (it.type != PATH_DOT && it.type != PATH_SQB) {
+                            errMalformedParseTree("Unsupported path component: ${it.type}")
+                        }
+                        if(it.children.size != 1) {
+                            errMalformedParseTree("Unexpected number of child elements in PATH_DOT ParseNode")
+                        }
+
+                        val child = it.children[0]
+                        val childMetas = child.getMetas()
+
+                        when(it.type) {
+                            PATH_DOT -> when (child.type) {
+                                CASE_SENSITIVE_ATOM, CASE_INSENSITIVE_ATOM -> {
+                                    // TODO see if there is a way to directly transform string to IonElemnt String
+                                    val lit = lit(ion.newString(child.token?.text!!).toIonElement(), childMetas)
+                                    val caseSensitivity = if (child.type  == CASE_SENSITIVE_ATOM) caseSensitive() else caseInsensitive()
+                                    pathExpr(lit, caseSensitivity)
+                                }
+                                PATH_UNPIVOT -> pathUnpivot(childMetas)
+                                else -> errMalformedParseTree("Unsupported child path node of PATH_DOT")
+                            }
+                            PATH_SQB -> if (child.type == PATH_WILDCARD) pathWildcard(childMetas) else pathExpr(child.toAstExpr(), caseSensitive())
+                            else -> error("Unreachable code")
+                        }
+                    }
+                    path(rootExpr, pathComponents, metas)
+                }
+                PARAMETER -> parameter(token!!.value!!.asIonInt().longValue(), metas)
+                CASE -> {
+                    if (children.size != 1 && children.size != 2){
+                        errMalformedParseTree("CASE must be searched or simple")
+                    }
+
+                    val branches = ArrayList<PartiqlAst.ExprPair>()
+                    val cases = exprPairList(branches)
+                    var elseExpr: PartiqlAst.Expr? = null
+
+                    fun ParseNode.addBranch() = children.forEach {
+                        when(it.type) {
+                            WHEN -> branches.add(exprPair(it.children[0].toAstExpr(), it.children[1].toAstExpr()))
+                            ELSE -> elseExpr = it.children[0].toAstExpr()
+                            else -> errMalformedParseTree("CASE clause must be WHEN or ELSE")
+                        }
+                    }
+
+                    when (children.size) {
+                        // Searched CASE
+                        1 -> {
+                            children[0].addBranch()
+                            searchedCase(cases, elseExpr, metas)
+                        }
+                        // Simple CASE
+                        2 -> {
+                            val valueExpr = children[0].toAstExpr()
+                            children[1].addBranch()
+                            simpleCase(valueExpr, cases, elseExpr, metas)
+                        }
+                        else -> error("Unreachable code")
+                    }
+                }
+                SELECT_LIST, SELECT_VALUE, PIVOT -> {
+                    // The first child of a SELECT_LIST parse node and be either DISTINCT or ARG_LIST.
+                    // If it is ARG_LIST, the children of that node are the select items and the SetQuantifier is ALL
+                    // If it is DISTINCT, the SetQuantifier is DISTINCT and there should be one child node, an ARG_LIST
+                    // containing the select items.
+
+                    // The second child of a SELECT_LIST is always an ARG_LIST containing the from clause.
+
+                    // GROUP BY, GROUP PARTIAL BY, WHERE, HAVING, LIMIT and OFFSET parse nodes each have distinct ParseNodeTypes
+                    // and if present, exist in children, starting at the third position.
+
+                    val firstChild = children[0]
+
+                    // If the query parsed was a `SELECT DISTINCT ...`, children[0] is of type DISTINCT and its
+                    // children are the actual select list.
+                    fun getSetQuantifier(): PartiqlAst.SetQuantifier.Distinct? =
+                        if (firstChild.type == DISTINCT) distinct() else null
+
+                    fun getSelectList(): ParseNode =
+                        if (firstChild.type == DISTINCT) firstChild.children[0] else children[0]
+
+                    fun getProjection(selectList: ParseNode): PartiqlAst.Projection =
+                        when (type) {
+                            SELECT_LIST -> {
+                                val childNodes = selectList.children
+                                if (childNodes.any { it.type == PROJECT_ALL && it.children.isEmpty() }) {
+                                    if (childNodes.size > 1) error("More than one select item when SELECT * was present.")
+                                    projectStar(childNodes[0].getMetas())
+                                } else {
+                                    val selectListItems = childNodes.map {
+                                        when (it.type) {
+                                            PROJECT_ALL -> projectAll(it.children[0].toAstExpr())
+                                            else -> {
+                                                val (asAliasSymbol, parseNode) = it.unwrapAstAsAlias()
+                                                projectExpr_(parseNode.toAstExpr(), asAliasSymbol)
+                                            }
+                                        }
+                                    }
+                                    projectList(selectListItems)
+                                }
+                            }
+                            SELECT_VALUE -> projectValue(selectList.toAstExpr())
+                            PIVOT -> {
+                                val member = children[0]
+                                val asExpr = member.children[0].toAstExpr()
+                                val atExpr = member.children[1].toAstExpr()
+                                projectPivot(asExpr, atExpr)
+                            }
+                            else -> throw IllegalStateException("This can never happen!")
+                        }
+
+                    fun getFromLet(unconsumedChildren: MutableList<ParseNode>): PartiqlAst.Let? =
+                        unconsumedChildren.firstOrNull { it.type == LET }?.let {
+                            unconsumedChildren.remove(it)
+                            val letBindings = it.children.map {
+                                val (asAliasSymbol, parseNode) = it.unwrapAstAsAlias()
+                                if (asAliasSymbol == null) {
+                                    errMalformedParseTree("Unsupported syntax for ${it.type}")
+                                }
+                                else {
+                                    letBinding(parseNode.toAstExpr(), asAliasSymbol.text, asAliasSymbol.metas)
+                                }
+                            }
+                            let(letBindings)
+                        }
+
+                    fun getGroupBy(unconsumedChildren: MutableList<ParseNode>): PartiqlAst.GroupBy? =
+                        unconsumedChildren.firstOrNull { it.type == GROUP || it.type == GROUP_PARTIAL }?.let {
+                            unconsumedChildren.remove(it)
+
+                            val groupingStrategy = when(it.type) {
+                                GROUP -> groupFull()
+                                else -> groupPartial()
+                            }
+
+                            var groupAsName: SymbolPrimitive? = null
+                            if (it.children.size > 1) {
+                                val token = it.children[1].token ?: errMalformedParseTree("Expected ParseNode to have a token")
+                                when (token.type) {
+                                    LITERAL, ION_LITERAL, IDENTIFIER, QUOTED_IDENTIFIER -> {
+                                        val tokenText = token.text ?: errMalformedParseTree("Expected ParseNode.token to have text")
+                                        groupAsName = SymbolPrimitive(tokenText, it.getMetas())
+                                    }
+                                    else -> errMalformedParseTree("TokenType.${token.type} cannot be converted to a SymbolicName")
+                                }
+                            }
+
+                            val keyList = it.children[0].children.map {
+                                val (alias, groupByItemNode) = it.unwrapAstAsAlias()
+                                groupKey_(groupByItemNode.toAstExpr(), alias)
+                            }
+
+                            groupBy_(
+                                groupingStrategy,
+                                groupKeyList(keyList),
+                                groupAsName
+                            )
+                        }
+
+                    fun getOrderBy(unconsumedChildren: MutableList<ParseNode>): PartiqlAst.OrderBy? =
+                        unconsumedChildren.firstOrNull { it.type == ORDER_BY }?.let {
+                            unconsumedChildren.remove(it)
+                            orderBy(
+                                it.children[0].children.map {
+                                    when (it.children.size) {
+                                        1 -> sortSpec(it.children[0].toAstExpr(), asc())
+                                        2 -> {
+                                            if(it.children[1].type != ORDERING_SPEC) {
+                                                errMalformedParseTree("Expected ParseType.ORDERING_SPEC instead of $type")
+                                            }
+                                            val orderingSpec = when (it.children[1].token?.type) {
+                                                ASC -> asc()
+                                                DESC -> desc()
+                                                else -> errMalformedParseTree("Invalid ordering spec parsing")
+                                            }
+                                            sortSpec(it.children[0].toAstExpr(), orderingSpec)
+                                        }
+                                        else -> errMalformedParseTree("Invalid ordering expressions syntax")
+                                    }
+                                }
+                            )
+                        }
+
+                    val setQuantifier = getSetQuantifier()
+                    val selectList = getSelectList()
+                    val fromList = children[1].toFromList()
+                    val projection = getProjection(selectList)
+                    val fromSource = fromList.children[0].toAstFromSource()
+
+                    // We will remove items from this collection as we consume them.
+                    // If any unconsumed children remain, we've missed something and should throw an exception.
+                    val unconsumedChildren = children.drop(2).toMutableList()
+
+                    val fromLet = getFromLet(unconsumedChildren)
+                    val whereExpr = getType(WHERE, unconsumedChildren)
+                    val groupBy = getGroupBy(unconsumedChildren)
+                    val havingExpr = getType(HAVING, unconsumedChildren)
+                    val orderBy = getOrderBy(unconsumedChildren)
+                    val limitExpr = getType(LIMIT, unconsumedChildren)
+                    val offsetExpr = getType(OFFSET, unconsumedChildren)
+
+                    malformedIfNotEmpty(unconsumedChildren)
+
+                    select(
+                        setq = setQuantifier,
+                        project = projection,
+                        from = fromSource,
+                        fromLet = fromLet,
+                        where = whereExpr,
+                        group = groupBy,
+                        having = havingExpr,
+                        order = orderBy,
+                        limit = limitExpr,
+                        offset = offsetExpr,
+                        metas = metas
+                    )
+                }
+                DATE -> {
+                    val dateString = token!!.text!!
+                    val (year, month, day) = dateString.split("-")
+                    date(year.toLong(), month.toLong(), day.toLong(), metas)
+                }
+                TIME -> {
+                    val timeString = token!!.text!!
+                    val precision = children[0].token!!.value!!.numberValue().toLong()
+                    val time = LocalTime.parse(timeString, ISO_TIME)
+                    litTime(
+                        timeValue(time.hour.toLong(), time.minute.toLong(), time.second.toLong(), time.nano.toLong(), precision, false, null),
+                        metas
+                    )
+                }
+                TIME_WITH_TIME_ZONE -> {
+                    val timeString = token!!.text!!
+                    val precision = children[0].token!!.value!!.numberValue().toLong()
+                    try {
+                        val time = OffsetTime.parse(timeString)
+                        litTime(
+                            timeValue(time.hour.toLong(), time.minute.toLong(), time.second.toLong(), time.nano.toLong(), precision, true, (time.offset.totalSeconds/60).toLong()),
+                            metas
+                        )
+                    } catch (e: DateTimeParseException) {
+                        // In case time zone not explicitly specified
+                        val time = LocalTime.parse(timeString)
+                        litTime(
+                            timeValue(time.hour.toLong(), time.minute.toLong(), time.second.toLong(), time.nano.toLong(), precision, true, null),
+                            metas
+                        )
+                    }
+                }
+                else -> error("Can't transform ${this@toAstExpr.javaClass} to a PartiqlAst.expr }")
+            }
+        }
+    }
+
+    private fun ParseNode.toAstDml(): PartiqlAst.Statement.Dml {
+        val metas = getMetas()
+
+        return PartiqlAst.build {
+            when (type) {
+                FROM -> {
+                    // The first child is the operation, the second child is the from list,
+                    // each child following is an optional clause (e.g. ORDER BY)
+                    val operation = children[0].toAstDml()
+                    val fromList = children[1].toFromList()
+                    val fromSource = fromList.children[0].toAstFromSource()
+
+                    // We will remove items from this collection as we consume them.
+                    // If any unconsumed children remain, we've missed something and should throw an exception.
+                    val unconsumedChildren = children.drop(2).toMutableList()
+
+                    val where = getType(WHERE, unconsumedChildren)
+                    val returning = getReturning(unconsumedChildren)
+
+                    // Throw an exception if any unconsumed children remain
+                    malformedIfNotEmpty(unconsumedChildren)
+
+                    operation.copy(from = fromSource, where = where, returning = returning, metas = metas)
+                }
+                INSERT, INSERT_VALUE -> {
+                    val insertReturning = toAstInsertReturning()
+                    dml(
+                        PartiqlAst.DmlOpList(insertReturning.ops),
+                        returning = insertReturning.returning,
+                        metas = metas
+                    )
+                }
+                SET, UPDATE, REMOVE, DELETE -> dml(
+                    PartiqlAst.DmlOpList(toAstDmlOperation()),
+                    metas = metas
+                )
+                DML_LIST -> {
+                    val dmlOps = children.flatMap { it.toAstDmlOperation() }.toList()
+                    dml(
+                        PartiqlAst.DmlOpList(dmlOps),
+                        metas = metas
+                    )
+                }
+                else -> error("Can't transform ${this@toAstDml.javaClass} to PartiqlAst.Statement.Dml }")
+            }
+        }
+    }
+
+    private fun ParseNode.toAstDdl(): PartiqlAst.Statement.Ddl {
+        val metas = getMetas()
+
+        return PartiqlAst.build {
+            when (type) {
+                CREATE_TABLE -> ddl(
+                    createTable(children[0].token!!.text!!),
+                    metas
+                )
+                DROP_TABLE -> ddl(
+                    dropTable(children[0].toIdentifier()),
+                    metas
+                )
+                CREATE_INDEX -> ddl(
+                    createIndex(
+                        children[0].toIdentifier(),
+                        children[1].children.map { it.toAstExpr() }
+                    ),
+                    metas
+                )
+                DROP_INDEX -> ddl(
+                    dropIndex(children[1].toIdentifier(), children[0].toIdentifier()),
+                    metas
+                )
+                else -> error("Can't convert ${this@toAstDdl.javaClass} to PartiqlAst.Statement.Ddl")
+            }
+        }
+    }
+
+    private fun ParseNode.toAstExec(): PartiqlAst.Statement.Exec {
+        val metas = getMetas()
+
+        return PartiqlAst.build {
+            when (type) {
+                EXEC -> exec_(
+                    SymbolPrimitive(token?.text!!.toLowerCase(), emptyMetaContainer()),
+                    children.map { it.toAstExpr() }, metas
+                )
+                else -> error("Can't convert ${this@toAstExec.javaClass} to PartiqlAst.Statement.Exec")
+            }
+        }
+    }
+
+    private fun ParseNode.toAstType(): PartiqlAst.Type {
+        if (type != TYPE) {
+            errMalformedParseTree("Expected ParseType.TYPE instead of $type")
+        }
+
+        val sqlDataType = SqlDataType.forTypeName(token!!.keywordText!!)
+            ?: errMalformedParseTree("Invalid DataType: ${token.keywordText!!}")
+        val metas = getMetas()
+        val args = children.mapNotNull { it.token?.value?.longValue() }
+        val arg1 = args.getOrNull(0)
+        val arg2 = args.getOrNull(1)
+
+        return PartiqlAst.build {
+            when (sqlDataType) {
+                SqlDataType.MISSING -> missingType(metas)
+                SqlDataType.NULL -> nullType(metas)
+                SqlDataType.BOOLEAN -> booleanType(metas)
+                SqlDataType.SMALLINT -> smallintType(metas)
+                SqlDataType.INTEGER -> integerType(metas)
+                SqlDataType.FLOAT -> floatType(arg1, metas)
+                SqlDataType.REAL -> realType(metas)
+                SqlDataType.DOUBLE_PRECISION -> doublePrecisionType(metas)
+                SqlDataType.DECIMAL -> decimalType(arg1, arg2, metas)
+                SqlDataType.NUMERIC -> numericType(arg1, arg2, metas)
+                SqlDataType.TIMESTAMP -> timestampType(metas)
+                SqlDataType.CHARACTER -> characterType(arg1, metas)
+                SqlDataType.CHARACTER_VARYING -> characterVaryingType(arg1, metas)
+                SqlDataType.STRING -> stringType(metas)
+                SqlDataType.SYMBOL -> symbolType(metas)
+                SqlDataType.CLOB -> clobType(metas)
+                SqlDataType.BLOB -> blobType(metas)
+                SqlDataType.STRUCT -> structType(metas)
+                SqlDataType.TUPLE -> tupleType(metas)
+                SqlDataType.LIST -> listType(metas)
+                SqlDataType.SEXP -> sexpType(metas)
+                SqlDataType.BAG -> bagType(metas)
+                SqlDataType.DATE -> dateType(metas)
+                SqlDataType.TIME -> timeType(arg1, metas)
+                SqlDataType.TIME_WITH_TIME_ZONE -> timeWithTimeZoneType(arg1, metas)
+            }
+        }
+    }
+
+    private fun NAryOp.toAstExpr(args: List<PartiqlAst.Expr>, metas: IonElementMetaContainer): PartiqlAst.Expr {
+        return PartiqlAst.build {
+            when (this@toAstExpr) {
+                NAryOp.ADD -> plus(args, metas)
+                NAryOp.SUB -> minus(args, metas)
+                NAryOp.MUL -> times(args, metas)
+                NAryOp.DIV -> divide(args, metas)
+                NAryOp.MOD -> modulo(args, metas)
+                NAryOp.EQ -> eq(args, metas)
+                NAryOp.LT -> lt(args, metas)
+                NAryOp.LTE -> lte(args, metas)
+                NAryOp.GT -> gt(args, metas)
+                NAryOp.GTE -> gte(args, metas)
+                NAryOp.NE -> ne(args, metas)
+                NAryOp.LIKE -> like(args[0], args[1], if (args.size >= 3) args[2] else null, metas)
+                NAryOp.BETWEEN -> between(args[0], args[1], args[2], metas)
+                NAryOp.NOT -> not(args[0], metas)
+                NAryOp.IN -> inCollection(args, metas)
+                NAryOp.AND -> and(args, metas)
+                NAryOp.OR -> or(args, metas)
+                NAryOp.STRING_CONCAT -> concat(args, metas)
+                NAryOp.CALL -> {
+                    val idArg = args.first() as? PartiqlAst.Expr.Id
+                        ?: error("First argument of call should be a VariableReference")
+                    // the above error message says "VariableReference" and not PartiqlAst.expr.id because it would
+                    // have been converted from a VariableReference when [args] was being built.
+
+                    // TODO:  we are losing case-sensitivity of the function name here.  Do we care?
+                    call(idArg.name.text, args.drop(1), metas)
+                }
+                NAryOp.INTERSECT -> intersect(distinct(), args, metas)
+                NAryOp.INTERSECT_ALL -> intersect(all(), args, metas)
+                NAryOp.EXCEPT -> except(distinct(), args, metas)
+                NAryOp.EXCEPT_ALL -> except(all(), args, metas)
+                NAryOp.UNION -> union(distinct(), args, metas)
+                NAryOp.UNION_ALL -> union(all(), args, metas)
+            }
+        }
+    }
+
+    private fun ParseNode.toAstFromSource(): PartiqlAst.FromSource {
+        val metas = getMetas()
+
+        return PartiqlAst.build {
+            when (type) {
+                FROM_SOURCE_JOIN -> {
+                    val isCrossJoin = token?.keywordText?.contains("cross") ?: false
+                    if (!isCrossJoin && children.size != 3) {
+                        errMalformedParseTree("Incorrect number of clauses provided to JOIN")
+                    }
+                    val jt = when (token?.keywordText) {
+                        "inner_join", "join", "cross_join" -> inner()
+                        "left_join", "left_cross_join" -> left()
+                        "right_join", "right_cross_join" -> right()
+                        "outer_join", "outer_cross_join" -> full()
+                        else -> errMalformedParseTree("Unsupported syntax for ${this@toAstFromSource.type}")
+                    }
+                    join(
+                        jt,
+                        children[0].toAstFromSource(),
+                        children[1].unwrapAstAliasesAndUnpivot(),
+                        if (isCrossJoin) null else children[2].toAstExpr(),
+                        if (isCrossJoin) metas else metas + metaToIonMetaContainer(IsImplictJoinMeta.instance)
+                    )
+                }
+                else -> unwrapAstAliasesAndUnpivot()
+            }
+        }
+    }
+
+    private fun ParseNode.unwrapAstAliasesAndUnpivot(): PartiqlAst.FromSource {
+        val (aliases, unwrappedParseNode) = unwrapAstAliases()
+
+        return PartiqlAst.build {
+            when (unwrappedParseNode.type) {
+                UNPIVOT -> unpivot_(
+                    unwrappedParseNode.children[0].toAstExpr(),
+                    aliases.asName,
+                    aliases.atName,
+                    aliases.byName,
+                    unwrappedParseNode.getMetas()
+                )
+                else -> {
+                    val expr = unwrappedParseNode.toAstExpr()
+                    scan_(expr, aliases.asName, aliases.atName, aliases.byName, expr.metas)
+                }
+            }
+        }
+    }
+
+    private fun ParseNode.unwrapAstAliases(
+        variables: AstLetVariables = AstLetVariables()
+    ): Pair<AstLetVariables, ParseNode> {
+        val metas = getMetas()
+
+        return when (type) {
+            AS_ALIAS -> {
+                if(variables.asName != null) error("Invalid parse tree: AS_ALIAS encountered more than once in FROM source")
+                children[0].unwrapAstAliases(variables.copy(asName = SymbolPrimitive(token!!.text!!, metas)))
+            }
+            AT_ALIAS -> {
+                if(variables.atName != null) error("Invalid parse tree: AT_ALIAS encountered more than once in FROM source")
+                children[0].unwrapAstAliases(variables.copy(atName = SymbolPrimitive(token!!.text!!, metas)))
+            }
+            BY_ALIAS -> {
+                if(variables.byName != null) error("Invalid parse tree: BY_ALIAS encountered more than once in FROM source")
+                children[0].unwrapAstAliases(variables.copy(byName = SymbolPrimitive(token!!.text!!, metas)))
+            }
+            else -> Pair(variables, this)
+        }
+    }
+
+    private fun ParseNode.toAstReturningExpr(): PartiqlAst.ReturningExpr =
+        PartiqlAst.build {
+            returningExpr(
+                children[0].children.map {
+                    returningElem(
+                        it.children[0].toAstReturningMapping(),
+                        it.children[1].toAstColumnComponent(it.getMetas())
+                    )
+                }
+            )
+        }
+
+    private fun ParseNode.toAstReturningMapping(): PartiqlAst.ReturningMapping {
+        if(type != RETURNING_MAPPING) {
+            errMalformedParseTree("Expected ParseType.RETURNING_MAPPING instead of $type")
+        }
+        return PartiqlAst.build {
+            when (token?.keywordText) {
+                "modified_old" -> modifiedOld()
+                "modified_new" -> modifiedNew()
+                "all_old" -> allOld()
+                "all_new" -> allNew()
+                else -> errMalformedParseTree("Invalid ReturningMapping parsing")
+            }
+        }
+    }
+
+    private fun ParseNode.toAstInsertReturning(): AstInsertReturning =
+        when (type) {
+            INSERT -> {
+                val ops = listOf(PartiqlAst.DmlOp.Insert(children[0].toAstExpr(), children[1].toAstExpr()))
+                // We will remove items from this collection as we consume them.
+                // If any unconsumed children remain, we've missed something and should throw an exception.
+                val unconsumedChildren = children.drop(2).toMutableList()
+                val returning = getReturning(unconsumedChildren)
+
+                // Throw an exception if any unconsumed children remain
+                malformedIfNotEmpty(unconsumedChildren)
+
+                AstInsertReturning(ops, returning)
+            }
+            INSERT_VALUE -> {
+                val lvalue = children[0].toAstExpr()
+                val value = children[1].toAstExpr()
+
+                // We will remove items from this collection as we consume them.
+                // If any unconsumed children remain, we've missed something and should throw an exception.
+                val unconsumedChildren = children.drop(2).toMutableList()
+
+                // Handle AT clause
+                val position = unconsumedChildren.firstOrNull { it.type != ON_CONFLICT && it.type != RETURNING }?.let {
+                    unconsumedChildren.remove(it)
+                    it.toAstExpr()
+                }
+
+                val onConflict = unconsumedChildren.firstOrNull { it.type == ON_CONFLICT }?.let {
+                    unconsumedChildren.remove(it)
+                    val onConflictChildren = it.children
+                    onConflictChildren.getOrNull(0)?.let {
+                        val condition = it.toAstExpr()
+                        onConflictChildren.getOrNull(1)?.let {
+                            if (CONFLICT_ACTION == it.type && "do_nothing" == it.token?.keywordText) {
+                                PartiqlAst.build { onConflict(condition, doNothing()) }
+                            }
+                        }
+                    }
+                    errMalformedParseTree("invalid ON CONFLICT syntax")
+                }
+
+                val ops = listOf(PartiqlAst.build { insertValue(lvalue, value, position, onConflict) })
+                val returning = getReturning(unconsumedChildren)
+
+                // Throw an exception if any unconsumed children remain
+                malformedIfNotEmpty(unconsumedChildren)
+
+                AstInsertReturning(ops, returning)
+            }
+            else -> unsupported("Unsupported syntax for $type", PARSE_UNSUPPORTED_SYNTAX)
+        }
+
+    private fun ParseNode.toAstColumnComponent(metas: IonElementMetaContainer): PartiqlAst.ColumnComponent =
+        PartiqlAst.build {
+            when (type) {
+                RETURNING_WILDCARD -> returningWildcard(metas)
+                else -> returningColumn(this@toAstColumnComponent.toAstExpr())
+            }
+        }
+
+    private fun ParseNode.toAstDmlOperation(): List<PartiqlAst.DmlOp> =
+        when (type) {
+            INSERT -> {
+                listOf(PartiqlAst.build { insert(children[0].toAstExpr(), children[1].toAstExpr()) })
+            }
+            INSERT_VALUE -> {
+                val lvalue = children[0].toAstExpr()
+                val value = children[1].toAstExpr()
+
+                // We will remove items from this collection as we consume them.
+                // If any unconsumed children remain, we've missed something and should throw an exception.
+                val unconsumedChildren = children.drop(2).toMutableList()
+
+                // Handle AT clause
+                val position = unconsumedChildren.firstOrNull { it.type != ON_CONFLICT && it.type != RETURNING }?.let {
+                    unconsumedChildren.remove(it)
+                    it.toAstExpr()
+                }
+
+                val onConflict = unconsumedChildren.firstOrNull { it.type == ON_CONFLICT }?.let {
+                    unconsumedChildren.remove(it)
+                    val onConflictChildren = it.children
+                    onConflictChildren.getOrNull(0)?.let {
+                        val condition = it.toAstExpr()
+                        onConflictChildren.getOrNull(1)?.let {
+                            if (CONFLICT_ACTION == it.type && "do_nothing" == it.token?.keywordText) {
+                                PartiqlAst.build { onConflict(condition, doNothing()) }
+                            }
+                        }
+                    }
+                    errMalformedParseTree("invalid ON CONFLICT syntax")
+                }
+
+                // Throw an exception if any unconsumed children remain
+                malformedIfNotEmpty(unconsumedChildren)
+
+                listOf(PartiqlAst.build { insertValue(lvalue, value, position, onConflict) })
+            }
+            SET, UPDATE -> children.map { PartiqlAst.build { set(assignment(it.children[0].toAstExpr(), it.children[1].toAstExpr())) } }.toList()
+            REMOVE -> listOf(PartiqlAst.build { remove(children[0].toAstExpr()) })
+            DELETE -> listOf(PartiqlAst.build { delete() })
+            else -> unsupported("Unsupported syntax for $type", PARSE_UNSUPPORTED_SYNTAX)
+        }
+
+    private fun ParseNode.unwrapAstAsAlias(): AstAsAlias =
+        if (type == AS_ALIAS) {
+            AstAsAlias(SymbolPrimitive(token!!.text!!, getMetas()), children[0])
+        } else {
+            AstAsAlias(null, this)
+        }
+
+    private fun ParseNode.toIdentifier(): PartiqlAst.Identifier {
+        if (type != ATOM){
+            errMalformedParseTree("Cannot transform ParNode type: $type to identifier")
+        }
+
+        val metas = getMetas()
+
+        return PartiqlAst.build {
+            when (token?.type){
+                QUOTED_IDENTIFIER -> identifier(token.text!!, caseSensitive(), metas)
+                IDENTIFIER -> identifier(token.text!!, caseInsensitive(), metas)
+                else -> errMalformedParseTree("Cannot transform atom token type ${token?.type} to identifier")
+            }
+        }
+    }
+
+    private fun ParseNode.toFromList(): ParseNode {
+        if (type != FROM_CLAUSE) {
+            errMalformedParseTree("Invalid second child of SELECT_LIST")
+        }
+        if (children.size != 1) {
+            errMalformedParseTree("Invalid FROM clause children length")
+        }
+        return this
+    }
+
+    private fun getType(type: ParseType, unconsumedChildren: MutableList<ParseNode>): PartiqlAst.Expr? =
+        unconsumedChildren.firstOrNull { it.type == type }?.let {
+            unconsumedChildren.remove(it)
+            it.children[0].toAstExpr()
+        }
+
+    private fun getReturning(unconsumedChildren: MutableList<ParseNode>): PartiqlAst.ReturningExpr? =
+        unconsumedChildren.firstOrNull { it.type == RETURNING }?.let {
+            unconsumedChildren.remove(it)
+            it.toAstReturningExpr()
+        }
+
+    private fun ParseNode.getMetas(): IonElementMetaContainer =
+        token.toSourceLocationMetaContainer().toIonElementMetaContainer()
+
+    private fun metaToIonMetaContainer(meta: Meta): IonElementMetaContainer =
+        metaContainerOf(meta).toIonElementMetaContainer()
+
+    private data class AstLetVariables(
+        val asName: SymbolPrimitive? = null,
+        val atName: SymbolPrimitive? = null,
+        val byName: SymbolPrimitive? = null
+    )
+
+    private data class AstInsertReturning(
+        val ops: List<PartiqlAst.DmlOp>,
+        val returning: PartiqlAst.ReturningExpr? = null
+    )
+
+    private data class AstAsAlias(
+        val name: SymbolPrimitive?,
+        val node: ParseNode
+    )
 
     //***************************************
     // toExprNode
@@ -2902,7 +3730,22 @@ class SqlParser(private val ion: IonSystem) : Parser {
     /**
      * Parse given source node as a PartiqlAst.Statement
      */
-    override fun parseAstStatement(source: String): PartiqlAst.Statement = parseExprNode(source).toAstStatement()
+    override fun parseAstStatement(source: String): PartiqlAst.Statement {
+        val tokens = SqlLexer(ion).tokenize(source)
+        val node = tokens.parseExpression()
+        val rem = node.remaining
+        if (!rem.onlyEndOfStatement()) {
+            when (rem.head?.type) {
+                SEMICOLON -> rem.tail.err("Unexpected token after semicolon. (Only one query is allowed.)",
+                    PARSE_UNEXPECTED_TOKEN)
+                else      -> rem.err("Unexpected token after expression", PARSE_UNEXPECTED_TOKEN)
+            }
+        }
+
+        validateTopLevelNodes(node = node, level = 0, topLevelTokenSeen = false, dmlListTokenSeen = false)
+
+        return node.toAstStatement()
+    }
 
     override fun parse(source: String): IonSexp =
         AstSerializer.serialize(parseExprNode(source), AstVersion.V0, ion)

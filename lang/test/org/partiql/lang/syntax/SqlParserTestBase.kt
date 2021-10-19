@@ -49,7 +49,8 @@ abstract class SqlParserTestBase : TestBase() {
         source: String,
         pigBuilder: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode
     ) {
-        val parsedExprNode = parse(source)
+        //val parsedExprNode = parse(source)
+        val parsedExprNode = parseToAst(source).toExprNode(ion)
 
         val expectedPartiQlAst = PartiqlAst.build { pigBuilder() }.toIonElement().toString()
         // Convert the query to ExprNode
