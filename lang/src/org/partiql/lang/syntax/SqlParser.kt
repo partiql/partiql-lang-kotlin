@@ -805,7 +805,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
                         children[0].toAstFromSource(),
                         children[1].unwrapAstAliasesAndUnpivot(),
                         if (isCrossJoin) null else children[2].toAstExpr(),
-                        if (isCrossJoin) metas else metas + metaToIonMetaContainer(IsImplictJoinMeta.instance)
+                        if (isCrossJoin) metas + metaToIonMetaContainer(IsImplictJoinMeta.instance) else metas
                     )
                 }
                 else -> unwrapAstAliasesAndUnpivot()
@@ -897,6 +897,18 @@ class SqlParser(private val ion: IonSystem) : Parser {
                 AstInsertReturning(ops, returning)
             }
             INSERT_VALUE -> {
+                fun getOnConflictExprNode(onConflictChildren: List<ParseNode>): PartiqlAst.OnConflict {
+                    onConflictChildren.getOrNull(0)?.let {
+                        val condition = it.toAstExpr()
+                        onConflictChildren.getOrNull(1)?.let {
+                            if (CONFLICT_ACTION == it.type && "do_nothing" == it.token?.keywordText) {
+                                return PartiqlAst.build { onConflict(condition, doNothing()) }
+                            }
+                        }
+                    }
+                    errMalformedParseTree("invalid ON CONFLICT syntax")
+                }
+
                 val lvalue = children[0].toAstExpr()
                 val value = children[1].toAstExpr()
 
@@ -912,16 +924,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
                 val onConflict = unconsumedChildren.firstOrNull { it.type == ON_CONFLICT }?.let {
                     unconsumedChildren.remove(it)
-                    val onConflictChildren = it.children
-                    onConflictChildren.getOrNull(0)?.let {
-                        val condition = it.toAstExpr()
-                        onConflictChildren.getOrNull(1)?.let {
-                            if (CONFLICT_ACTION == it.type && "do_nothing" == it.token?.keywordText) {
-                                PartiqlAst.build { onConflict(condition, doNothing()) }
-                            }
-                        }
-                    }
-                    errMalformedParseTree("invalid ON CONFLICT syntax")
+                    getOnConflictExprNode(it.children)
                 }
 
                 val ops = listOf(PartiqlAst.build { insertValue(lvalue, value, position, onConflict) })

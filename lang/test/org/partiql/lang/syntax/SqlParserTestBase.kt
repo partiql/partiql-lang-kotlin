@@ -67,7 +67,7 @@ abstract class SqlParserTestBase : TestBase() {
             source: String,
             expectedSexpAstAsString: String
     ) {
-        val parsedExprNode = parse(source)
+        val parsedExprNode = parseToAst(source).toExprNode(ion)
         val expectedSexpAst = loadSingleElement(
             expectedSexpAstAsString,
             IonElementLoaderOptions(includeLocationMeta = false)
@@ -97,7 +97,7 @@ abstract class SqlParserTestBase : TestBase() {
         expectedPartiqlAstString: String = expectedSexpAstV0String
     ) {
         // Convert the query to ExprNode
-        val parsedExprNode = parse(source)
+        val parsedExprNode = parseToAst(source).toExprNode(ion)
 
         val v0SexpAst = loadIonSexp(expectedSexpAstV0String)
         serializeAssert(AstVersion.V0, parsedExprNode, v0SexpAst, source)
