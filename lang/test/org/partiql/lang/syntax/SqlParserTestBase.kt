@@ -74,9 +74,12 @@ abstract class SqlParserTestBase : TestBase() {
         ).asSexp()
 
         val parsedExprNodeIonElement = when (parsedAstStatement) {
+            is PartiqlAst.Statement.Query -> parsedAstStatement.expr.toIonElement()
+            is PartiqlAst.Statement.Dml,
+            is PartiqlAst.Statement.Exec,
             is PartiqlAst.Statement.Ddl -> parsedAstStatement.toIonElement()
-            else -> (parsedAstStatement as PartiqlAst.Statement.Query).expr.toIonElement()
         }
+
         assertRoundTripIonElementToPartiQlAst(parsedExprNodeIonElement, expectedSexpAst)
         assertRoundTripPartiQlAstToExprNode(parsedAstStatement, expectedSexpAst, parsedExprNode)
         pigExprNodeTransformAsserts(parsedExprNode)
