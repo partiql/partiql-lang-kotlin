@@ -443,136 +443,112 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     // GROUP BY, GROUP PARTIAL BY, WHERE, HAVING, LIMIT and OFFSET parse nodes each have distinct ParseNodeTypes
                     // and if present, exist in children, starting at the third position.
 
-                    val firstChild = children[0]
-
                     // If the query parsed was a `SELECT DISTINCT ...`, children[0] is of type DISTINCT and its
                     // children are the actual select list.
-                    fun getSetQuantifier(): PartiqlAst.SetQuantifier.Distinct? =
-                        if (firstChild.type == DISTINCT) distinct() else null
+                    val setQuantifier = if (children[0].type == DISTINCT) distinct() else null
+                    val selectList = if (children[0].type == DISTINCT) children[0].children[0] else children[0]
 
-                    fun getSelectList(): ParseNode =
-                        if (firstChild.type == DISTINCT) firstChild.children[0] else children[0]
+                    val fromList = children[1]
+                    if (fromList.type != FROM_CLAUSE) {
+                        errMalformedParseTree("Invalid second child of SELECT_LIST")
+                    }
 
-                    fun getProjection(selectList: ParseNode): PartiqlAst.Projection =
-                        when (type) {
-                            SELECT_LIST -> {
-                                // We deal with ProjectStar first
-                                val childNodes = selectList.children
-                                if (childNodes.any { it.type == PROJECT_ALL && it.children.isEmpty() }) {
-                                    if (childNodes.size > 1) error("More than one select item when SELECT * was present.")
-                                    projectStar(childNodes[0].getMetas())
-                                } else {
-                                    val selectListItems = childNodes.map {
-                                        when (it.type) {
-                                            PROJECT_ALL -> projectAll(it.children[0].toAstExpr())
-                                            else -> {
-                                                val (asAliasSymbol, parseNode) = it.unwrapAstAsAlias()
-                                                projectExpr_(parseNode.toAstExpr(), asAliasSymbol)
-                                            }
-                                        }
-                                    }
-                                    projectList(selectListItems)
-                                }
-                            }
-                            SELECT_VALUE -> projectValue(selectList.toAstExpr())
-                            PIVOT -> {
-                                val member = children[0]
-                                val asExpr = member.children[0].toAstExpr()
-                                val atExpr = member.children[1].toAstExpr()
-                                projectPivot(asExpr, atExpr)
-                            }
-                            else -> throw IllegalStateException("This can never happen!")
-                        }
-
-                    fun getFromLet(unconsumedChildren: MutableList<ParseNode>): PartiqlAst.Let? =
-                        unconsumedChildren.firstOrNull { it.type == LET }?.let {
-                            unconsumedChildren.remove(it)
-                            val letBindings = it.children.map {
-                                val (asAliasSymbol, parseNode) = it.unwrapAstAsAlias()
-                                if (asAliasSymbol == null) {
-                                    errMalformedParseTree("Unsupported syntax for ${it.type}")
-                                }
-                                else {
-                                    letBinding(parseNode.toAstExpr(), asAliasSymbol.text, asAliasSymbol.metas)
-                                }
-                            }
-                            let(letBindings)
-                        }
-
-                    fun getGroupBy(unconsumedChildren: MutableList<ParseNode>): PartiqlAst.GroupBy? =
-                        unconsumedChildren.firstOrNull { it.type == GROUP || it.type == GROUP_PARTIAL }?.let {
-                            unconsumedChildren.remove(it)
-
-                            val groupingStrategy = when(it.type) {
-                                GROUP -> groupFull()
-                                else -> groupPartial()
-                            }
-
-                            var groupAsName: SymbolPrimitive? = null
-                            if (it.children.size > 1) {
-                                val token = it.children[1].token ?: errMalformedParseTree("Expected ParseNode to have a token")
-                                when (token.type) {
-                                    LITERAL, ION_LITERAL, IDENTIFIER, QUOTED_IDENTIFIER -> {
-                                        val tokenText = token.text ?: errMalformedParseTree("Expected ParseNode.token to have text")
-                                        groupAsName = SymbolPrimitive(tokenText, it.getMetas())
-                                    }
-                                    else -> errMalformedParseTree("TokenType.${token.type} cannot be converted to a SymbolicName")
-                                }
-                            }
-
-                            val keyList = it.children[0].children.map {
-                                val (alias, groupByItemNode) = it.unwrapAstAsAlias()
-                                groupKey_(groupByItemNode.toAstExpr(), alias)
-                            }
-
-                            groupBy_(
-                                groupingStrategy,
-                                groupKeyList(keyList),
-                                groupAsName
-                            )
-                        }
-
-                    fun getOrderBy(unconsumedChildren: MutableList<ParseNode>): PartiqlAst.OrderBy? =
-                        unconsumedChildren.firstOrNull { it.type == ORDER_BY }?.let {
-                            unconsumedChildren.remove(it)
-                            orderBy(
-                                it.children[0].children.map {
-                                    when (it.children.size) {
-                                        1 -> sortSpec(it.children[0].toAstExpr(), asc())
-                                        2 -> {
-                                            if(it.children[1].type != ORDERING_SPEC) {
-                                                errMalformedParseTree("Expected ParseType.ORDERING_SPEC instead of $type")
-                                            }
-                                            val orderingSpec = when (it.children[1].token?.type) {
-                                                ASC -> asc()
-                                                DESC -> desc()
-                                                else -> errMalformedParseTree("Invalid ordering spec parsing")
-                                            }
-                                            sortSpec(it.children[0].toAstExpr(), orderingSpec)
-                                        }
-                                        else -> errMalformedParseTree("Invalid ordering expressions syntax")
-                                    }
-                                }
-                            )
-                        }
-
-                    val setQuantifier = getSetQuantifier()
-                    val selectList = getSelectList()
-                    val fromList = children[1].toFromList()
-                    val projection = getProjection(selectList)
-                    val fromSource = fromList.children[0].toAstFromSource()
+                    if (fromList.children.size != 1) {
+                        errMalformedParseTree("Invalid FROM clause children length")
+                    }
 
                     // We will remove items from this collection as we consume them.
                     // If any unconsumed children remain, we've missed something and should throw an exception.
                     val unconsumedChildren = children.drop(2).toMutableList()
 
-                    val fromLet = getFromLet(unconsumedChildren)
-                    val whereExpr = getType(WHERE, unconsumedChildren)
-                    val groupBy = getGroupBy(unconsumedChildren)
-                    val havingExpr = getType(HAVING, unconsumedChildren)
-                    val orderBy = getOrderBy(unconsumedChildren)
-                    val limitExpr = getType(LIMIT, unconsumedChildren)
-                    val offsetExpr = getType(OFFSET, unconsumedChildren)
+                    val projection = when (type) {
+                        SELECT_LIST -> {
+                            // We deal with ProjectStar first
+                            val childNodes = selectList.children
+                            if (childNodes.any { it.type == PROJECT_ALL && it.children.isEmpty() }) {
+                                if (childNodes.size > 1) error("More than one select item when SELECT * was present.")
+                                projectStar(childNodes[0].getMetas())
+                            } else {
+                                val selectListItems = childNodes.map {
+                                    when (it.type) {
+                                        PROJECT_ALL -> projectAll(it.children[0].toAstExpr())
+                                        else -> {
+                                            val (asAliasSymbol, parseNode) = it.unwrapAstAsAlias()
+                                            projectExpr_(parseNode.toAstExpr(), asAliasSymbol)
+                                        }
+                                    }
+                                }
+                                projectList(selectListItems)
+                            }
+                        }
+                        SELECT_VALUE -> projectValue(selectList.toAstExpr())
+                        PIVOT -> {
+                            val member = children[0]
+                            val asExpr = member.children[0].toAstExpr()
+                            val atExpr = member.children[1].toAstExpr()
+                            projectPivot(asExpr, atExpr)
+                        }
+                        else -> throw IllegalStateException("This can never happen!")
+                    }
+
+                    val fromSource = fromList.children[0].toAstFromSource()
+
+                    val fromLet = unconsumedChildren.firstOrNull { it.type == LET }?.let {
+                        unconsumedChildren.remove(it)
+                        it.toAstLetSource()
+                    }
+
+                    val whereExpr = unconsumedChildren.firstOrNull { it.type == WHERE }?.let {
+                        unconsumedChildren.remove(it)
+                        it.children[0].toAstExpr()
+                    }
+
+                    val groupBy = unconsumedChildren.firstOrNull { it.type == GROUP || it.type == GROUP_PARTIAL }?.let {
+                        unconsumedChildren.remove(it)
+                        val groupingStrategy = when (it.type) {
+                            GROUP -> groupFull()
+                            else -> groupPartial()
+                        }
+                        val groupAsName = if (it.children.size > 1) it.children[1].toAstSymbolicName() else null
+                        val keyList = it.children[0].children.map {
+                            val (alias, groupByItemNode) = it.unwrapAstAsAlias()
+                            groupKey_(groupByItemNode.toAstExpr(), alias)
+                        }
+
+                        groupBy_(
+                            groupingStrategy,
+                            groupKeyList(keyList),
+                            groupAsName
+                        )
+                    }
+
+                    val havingExpr = unconsumedChildren.firstOrNull { it.type == HAVING }?.let {
+                        unconsumedChildren.remove(it)
+                        it.children[0].toAstExpr()
+                    }
+
+                    val orderBy = unconsumedChildren.firstOrNull { it.type == ORDER_BY }?.let {
+                        unconsumedChildren.remove(it)
+                        orderBy(
+                            it.children[0].children.map {
+                                when (it.children.size) {
+                                    1 -> sortSpec(it.children[0].toAstExpr(), asc())
+                                    2 -> sortSpec(it.children[0].toAstExpr(), it.children[1].toAstOrderingSpec())
+                                    else -> errMalformedParseTree("Invalid ordering expressions syntax")
+                                }
+                            }
+                        )
+                    }
+
+                    val limitExpr = unconsumedChildren.firstOrNull { it.type == LIMIT }?.let {
+                        unconsumedChildren.remove(it)
+                        it.children[0].toAstExpr()
+                    }
+
+                    val offsetExpr = unconsumedChildren.firstOrNull { it.type == OFFSET }?.let {
+                        unconsumedChildren.remove(it)
+                        it.children[0].toAstExpr()
+                    }
 
                     malformedIfNotEmpty(unconsumedChildren)
 
@@ -606,7 +582,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
                 }
                 TIME_WITH_TIME_ZONE -> {
                     val timeString = token!!.text!!
-                    val precision = children[0].token!!.value!!.numberValue().toLong()
+                    val precision = children[0].token!!.value!!.longValue()
                     try {
                         val time = OffsetTime.parse(timeString)
                         litTime(
@@ -636,15 +612,28 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     // The first child is the operation, the second child is the from list,
                     // each child following is an optional clause (e.g. ORDER BY)
                     val operation = children[0].toAstDml()
-                    val fromList = children[1].toFromList()
-                    val fromSource = fromList.children[0].toAstFromSource()
+                    val fromSource = children[1].also {
+                        if (it.type != FROM_CLAUSE) {
+                            errMalformedParseTree("Invalid second child of FROM")
+                        }
+
+                        if (it.children.size != 1) {
+                            errMalformedParseTree("Invalid FROM clause children length")
+                        }
+                    }.children[0].toAstFromSource()
 
                     // We will remove items from this collection as we consume them.
                     // If any unconsumed children remain, we've missed something and should throw an exception.
                     val unconsumedChildren = children.drop(2).toMutableList()
 
-                    val where = getType(WHERE, unconsumedChildren)
-                    val returning = getReturning(unconsumedChildren)
+                    val where = unconsumedChildren.firstOrNull { it.type == WHERE }?.let {
+                        unconsumedChildren.remove(it)
+                        it.children[0].toAstExpr()
+                    }
+                    val returning = unconsumedChildren.firstOrNull { it.type == RETURNING }?.let {
+                        unconsumedChildren.remove(it)
+                        it.toAstReturningExpr()
+                    }
 
                     // Throw an exception if any unconsumed children remain
                     malformedIfNotEmpty(unconsumedChildren)
@@ -908,7 +897,10 @@ class SqlParser(private val ion: IonSystem) : Parser {
                 // We will remove items from this collection as we consume them.
                 // If any unconsumed children remain, we've missed something and should throw an exception.
                 val unconsumedChildren = children.drop(2).toMutableList()
-                val returning = getReturning(unconsumedChildren)
+                val returning = unconsumedChildren.firstOrNull { it.type == RETURNING }?.let {
+                    unconsumedChildren.remove(it)
+                    it.toAstReturningExpr()
+                }
 
                 // Throw an exception if any unconsumed children remain
                 malformedIfNotEmpty(unconsumedChildren)
@@ -947,7 +939,10 @@ class SqlParser(private val ion: IonSystem) : Parser {
                 }
 
                 val ops = listOf(PartiqlAst.build { insertValue(lvalue, value, position, onConflict) })
-                val returning = getReturning(unconsumedChildren)
+                val returning = unconsumedChildren.firstOrNull { it.type == RETURNING }?.let {
+                    unconsumedChildren.remove(it)
+                    it.toAstReturningExpr()
+                }
 
                 // Throw an exception if any unconsumed children remain
                 malformedIfNotEmpty(unconsumedChildren)
@@ -1032,27 +1027,47 @@ class SqlParser(private val ion: IonSystem) : Parser {
         }
     }
 
-    private fun ParseNode.toFromList(): ParseNode {
-        if (type != FROM_CLAUSE) {
-            errMalformedParseTree("Invalid second child of SELECT_LIST")
+    private fun ParseNode.toAstOrderingSpec(): PartiqlAst.OrderingSpec {
+        if (type != ORDERING_SPEC) {
+            errMalformedParseTree("Expected ParseType.ORDERING_SPEC instead of $type")
         }
-        if (children.size != 1) {
-            errMalformedParseTree("Invalid FROM clause children length")
+        return PartiqlAst.build {
+            when (token?.type) {
+                ASC -> asc()
+                DESC -> desc()
+                else -> errMalformedParseTree("Invalid ordering spec parsing")
+            }
         }
-        return this
     }
 
-    private fun getType(type: ParseType, unconsumedChildren: MutableList<ParseNode>): PartiqlAst.Expr? =
-        unconsumedChildren.firstOrNull { it.type == type }?.let {
-            unconsumedChildren.remove(it)
-            it.children[0].toAstExpr()
+    private fun ParseNode.toAstSymbolicName(): SymbolPrimitive {
+        if (token == null) {
+            errMalformedParseTree("Expected ParseNode to have a token")
         }
+        when (token.type) {
+            LITERAL, ION_LITERAL, IDENTIFIER, QUOTED_IDENTIFIER -> {
+                val tokenText = token.text ?: errMalformedParseTree("Expected ParseNode.token to have text")
+                return SymbolPrimitive(tokenText, getMetas())
+            }
+            else -> errMalformedParseTree("TokenType.${token.type} cannot be converted to a SymbolicPrimitive")
+        }
+    }
 
-    private fun getReturning(unconsumedChildren: MutableList<ParseNode>): PartiqlAst.ReturningExpr? =
-        unconsumedChildren.firstOrNull { it.type == RETURNING }?.let {
-            unconsumedChildren.remove(it)
-            it.toAstReturningExpr()
+    private fun ParseNode.toAstLetSource(): PartiqlAst.Let {
+        return PartiqlAst.build {
+            let(children.map { it.toAstLetBinding() })
         }
+    }
+
+    private fun ParseNode.toAstLetBinding(): PartiqlAst.LetBinding {
+        val (asAliasSymbol, parseNode) = unwrapAstAsAlias()
+        if (asAliasSymbol == null) {
+            errMalformedParseTree("Unsupported syntax for $type")
+        }
+        return PartiqlAst.build {
+            letBinding(parseNode.toAstExpr(), asAliasSymbol.text, asAliasSymbol.metas)
+        }
+    }
 
     private fun ParseNode.getMetas(): IonElementMetaContainer =
         token.toSourceLocationIonElementMetaContainer()
