@@ -15,10 +15,11 @@
 package org.partiql.lang.syntax
 
 import com.amazon.ion.*
-import com.amazon.ionelement.api.emptyMetaContainer
-import com.amazon.ionelement.api.loadSingleElement
-import com.amazon.ionelement.api.toIonElement
+import com.amazon.ionelement.api.*
 import org.partiql.lang.ast.*
+import org.partiql.lang.ast.MetaContainer
+import org.partiql.lang.ast.StructField
+import org.partiql.lang.ast.metaContainerOf
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.ErrorCode.*
@@ -210,6 +211,14 @@ class SqlParser(private val ion: IonSystem) : Parser {
             metaContainerOf(this.toSourceLocation())
         }
 
+    private fun Token?.toSourceLocationIonElementMetaContainer(): IonElementMetaContainer =
+        if (this == null) {
+            emptyMetaContainer()
+        } else {
+            val sourceLocation = toSourceLocation()
+            metaContainerOf(Pair(sourceLocation.tag, sourceLocation))
+        }
+
     private fun ParseNode.toSymbolicName(): SymbolicName {
         if(token == null) {
             errMalformedParseTree("Expected ParseNode to have a token")
@@ -303,7 +312,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
                                     when (childToken.type) {
                                         QUOTED_IDENTIFIER -> id(childToken.text!!, caseSensitive(), localsFirst(), childNode.getMetas())
                                         IDENTIFIER -> id(childToken.text!!, caseInsensitive(), localsFirst(), childNode.getMetas())
-                                        else -> errMalformedParseTree("Unexpected child node token type of @ operator node ${childToken}")
+                                        else -> errMalformedParseTree("Unexpected child node token type of @ operator node $childToken")
                                     }
                                 }
                                 else -> {
@@ -311,7 +320,12 @@ class SqlParser(private val ion: IonSystem) : Parser {
                                         ?: errMalformedParseTree("Unsupported operator: $opName")
                                     val args = children.map { it.toAstExpr() }
                                     val node = op.toAstExpr(args, metas)
-                                    if (wrapInNot) not(node, metas + metaToIonMetaContainer(LegacyLogicalNotMeta.instance)) else node
+
+                                    if (wrapInNot) {
+                                        not(node, metas + metaToIonMetaContainer(LegacyLogicalNotMeta.instance))
+                                    } else {
+                                        node
+                                    }
                                 }
                             }
                         }
@@ -334,55 +348,58 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     }
                 }
                 CALL_AGG -> {
-                    val symbolicPrimitive = SymbolPrimitive(token?.text!!.toLowerCase(), emptyMetaContainer())
-                    callAgg_(all(), symbolicPrimitive, children[0].toAstExpr(), metas)
+                    val funcName = SymbolPrimitive(token?.text!!.toLowerCase(), emptyMetaContainer())
+                    callAgg_(all(), funcName, children[0].toAstExpr(), metas)
                 }
                 CALL_DISTINCT_AGG -> {
-                    val symbolicPrimitive = SymbolPrimitive(token?.text!!.toLowerCase(), emptyMetaContainer())
-                    callAgg_(distinct(), symbolicPrimitive, children[0].toAstExpr(), metas)
+                    val funcName = SymbolPrimitive(token?.text!!.toLowerCase(), emptyMetaContainer())
+                    callAgg_(distinct(), funcName, children[0].toAstExpr(), metas)
                 }
                 CALL_AGG_WILDCARD -> {
                     if(token!!.type != KEYWORD || token.keywordText != "count") {
                         errMalformedParseTree("only COUNT can be used with a wildcard")
                     }
                     // Should only get the [SourceLocationMeta] if present, not any other metas.
-                    val srcLocationMetaOnly: IonElementMetaContainer = metas[SourceLocationMeta.TAG]
+                    val srcLocationMetaOnly = metas[SourceLocationMeta.TAG]
                         ?.let { metaToIonMetaContainer(it as Meta) } ?: emptyMetaContainer()
-                    val lit = lit(loadSingleElement("1"), srcLocationMetaOnly)
+                    val lit = lit(ionInt(1), srcLocationMetaOnly)
                     val symbolicPrimitive = SymbolPrimitive("count", srcLocationMetaOnly)
                     callAgg_(all(), symbolicPrimitive, lit, metas + metaToIonMetaContainer(IsCountStarMeta.instance))
                 }
                 PATH -> {
                     val rootExpr = children[0].toAstExpr()
                     val pathComponents = children.drop(1).map {
-                        if (it.type != PATH_DOT && it.type != PATH_SQB) {
-                            errMalformedParseTree("Unsupported path component: ${it.type}")
-                        }
-                        if(it.children.size != 1) {
-                            errMalformedParseTree("Unexpected number of child elements in PATH_DOT ParseNode")
-                        }
-
-                        val child = it.children[0]
-                        val childMetas = child.getMetas()
-
                         when(it.type) {
-                            PATH_DOT -> when (child.type) {
-                                CASE_SENSITIVE_ATOM, CASE_INSENSITIVE_ATOM -> {
-                                    // TODO see if there is a way to directly transform string to IonElemnt String
-                                    val lit = lit(ion.newString(child.token?.text!!).toIonElement(), childMetas)
-                                    val caseSensitivity = if (child.type  == CASE_SENSITIVE_ATOM) caseSensitive() else caseInsensitive()
-                                    pathExpr(lit, caseSensitivity)
+                            PATH_DOT -> {
+                                if(it.children.size != 1) {
+                                    errMalformedParseTree("Unexpected number of child elements in PATH_DOT ParseNode")
                                 }
-                                PATH_UNPIVOT -> pathUnpivot(childMetas)
-                                else -> errMalformedParseTree("Unsupported child path node of PATH_DOT")
+                                val atomParseNode = it.children[0]
+                                val atomMetas = atomParseNode.getMetas()
+                                when (atomParseNode.type) {
+                                    CASE_SENSITIVE_ATOM, CASE_INSENSITIVE_ATOM -> {
+                                        val lit = lit(ionString(atomParseNode.token?.text!!), atomMetas)
+                                        val caseSensitivity = if (atomParseNode.type  == CASE_SENSITIVE_ATOM) caseSensitive() else caseInsensitive()
+                                        pathExpr(lit, caseSensitivity)
+                                    }
+                                    PATH_UNPIVOT -> pathUnpivot(atomMetas)
+                                    else -> errMalformedParseTree("Unsupported child path node of PATH_DOT")
+                                }
                             }
-                            PATH_SQB -> if (child.type == PATH_WILDCARD) pathWildcard(childMetas) else pathExpr(child.toAstExpr(), caseSensitive())
-                            else -> error("Unreachable code")
+                            PATH_SQB -> {
+                                if(it.children.size != 1) {
+                                    errMalformedParseTree("Unexpected number of child elements in PATH_SQB ParseNode")
+                                }
+                                val child = it.children[0]
+                                val childMetas = child.getMetas()
+                                if (child.type == PATH_WILDCARD) pathWildcard(childMetas) else pathExpr(child.toAstExpr(), caseSensitive())
+                            }
+                            else -> errMalformedParseTree("Unsupported path component: ${it.type}")
                         }
                     }
                     path(rootExpr, pathComponents, metas)
                 }
-                PARAMETER -> parameter(token!!.value!!.asIonInt().longValue(), metas)
+                PARAMETER -> parameter(token!!.value!!.longValue(), metas)
                 CASE -> {
                     if (children.size != 1 && children.size != 2){
                         errMalformedParseTree("CASE must be searched or simple")
@@ -392,7 +409,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     val cases = exprPairList(branches)
                     var elseExpr: PartiqlAst.Expr? = null
 
-                    fun ParseNode.addBranch() = children.forEach {
+                    fun ParseNode.addCases() = children.forEach {
                         when(it.type) {
                             WHEN -> branches.add(exprPair(it.children[0].toAstExpr(), it.children[1].toAstExpr()))
                             ELSE -> elseExpr = it.children[0].toAstExpr()
@@ -403,20 +420,20 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     when (children.size) {
                         // Searched CASE
                         1 -> {
-                            children[0].addBranch()
+                            children[0].addCases()
                             searchedCase(cases, elseExpr, metas)
                         }
                         // Simple CASE
                         2 -> {
                             val valueExpr = children[0].toAstExpr()
-                            children[1].addBranch()
+                            children[1].addCases()
                             simpleCase(valueExpr, cases, elseExpr, metas)
                         }
                         else -> error("Unreachable code")
                     }
                 }
                 SELECT_LIST, SELECT_VALUE, PIVOT -> {
-                    // The first child of a SELECT_LIST parse node and be either DISTINCT or ARG_LIST.
+                    // The first child of a SELECT_LIST parse node can be either DISTINCT or ARG_LIST.
                     // If it is ARG_LIST, the children of that node are the select items and the SetQuantifier is ALL
                     // If it is DISTINCT, the SetQuantifier is DISTINCT and there should be one child node, an ARG_LIST
                     // containing the select items.
@@ -439,6 +456,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     fun getProjection(selectList: ParseNode): PartiqlAst.Projection =
                         when (type) {
                             SELECT_LIST -> {
+                                // We deal with ProjectStar first
                                 val childNodes = selectList.children
                                 if (childNodes.any { it.type == PROJECT_ALL && it.children.isEmpty() }) {
                                     if (childNodes.size > 1) error("More than one select item when SELECT * was present.")
@@ -636,19 +654,19 @@ class SqlParser(private val ion: IonSystem) : Parser {
                 INSERT, INSERT_VALUE -> {
                     val insertReturning = toAstInsertReturning()
                     dml(
-                        PartiqlAst.DmlOpList(insertReturning.ops),
+                        dmlOpList(insertReturning.ops),
                         returning = insertReturning.returning,
                         metas = metas
                     )
                 }
                 SET, UPDATE, REMOVE, DELETE -> dml(
-                    PartiqlAst.DmlOpList(toAstDmlOperation()),
+                    dmlOpList(toAstDmlOperation()),
                     metas = metas
                 )
                 DML_LIST -> {
                     val dmlOps = children.flatMap { it.toAstDmlOperation() }.toList()
                     dml(
-                        PartiqlAst.DmlOpList(dmlOps),
+                        dmlOpList(dmlOps),
                         metas = metas
                     )
                 }
@@ -693,7 +711,8 @@ class SqlParser(private val ion: IonSystem) : Parser {
             when (type) {
                 EXEC -> exec_(
                     SymbolPrimitive(token?.text!!.toLowerCase(), emptyMetaContainer()),
-                    children.map { it.toAstExpr() }, metas
+                    children.map { it.toAstExpr() },
+                    metas
                 )
                 else -> error("Can't convert ${this@toAstExec.javaClass} to PartiqlAst.Statement.Exec")
             }
@@ -757,7 +776,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
                 NAryOp.GT -> gt(args, metas)
                 NAryOp.GTE -> gte(args, metas)
                 NAryOp.NE -> ne(args, metas)
-                NAryOp.LIKE -> like(args[0], args[1], if (args.size >= 3) args[2] else null, metas)
+                NAryOp.LIKE -> like(args[0], args[1], args.getOrNull(2), metas)
                 NAryOp.BETWEEN -> between(args[0], args[1], args[2], metas)
                 NAryOp.NOT -> not(args[0], metas)
                 NAryOp.IN -> inCollection(args, metas)
@@ -898,10 +917,10 @@ class SqlParser(private val ion: IonSystem) : Parser {
             }
             INSERT_VALUE -> {
                 fun getOnConflictExprNode(onConflictChildren: List<ParseNode>): PartiqlAst.OnConflict {
-                    onConflictChildren.getOrNull(0)?.let {
-                        val condition = it.toAstExpr()
-                        onConflictChildren.getOrNull(1)?.let {
-                            if (CONFLICT_ACTION == it.type && "do_nothing" == it.token?.keywordText) {
+                    onConflictChildren.getOrNull(0)?.let { firstNode ->
+                        val condition = firstNode.toAstExpr()
+                        onConflictChildren.getOrNull(1)?.let { secondNode ->
+                            if (CONFLICT_ACTION == secondNode.type && "do_nothing" == secondNode.token?.keywordText) {
                                 return PartiqlAst.build { onConflict(condition, doNothing()) }
                             }
                         }
@@ -1036,10 +1055,10 @@ class SqlParser(private val ion: IonSystem) : Parser {
         }
 
     private fun ParseNode.getMetas(): IonElementMetaContainer =
-        token.toSourceLocationMetaContainer().toIonElementMetaContainer()
+        token.toSourceLocationIonElementMetaContainer()
 
     private fun metaToIonMetaContainer(meta: Meta): IonElementMetaContainer =
-        metaContainerOf(meta).toIonElementMetaContainer()
+        metaContainerOf(Pair(meta.tag, meta))
 
     private data class AstLetVariables(
         val asName: SymbolPrimitive? = null,
