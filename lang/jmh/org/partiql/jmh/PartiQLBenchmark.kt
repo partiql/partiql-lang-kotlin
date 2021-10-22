@@ -54,6 +54,7 @@ open class PartiQLBenchmark {
                 } 
             }
         """.trimIndent()
+        // TODO: replace `parseExprNode` with `ParseStatement` once evaluator deprecates `ExprNode`
         val bindings = pipeline.compile(parser.parseExprNode(data)).eval(EvaluationSession.standard()).bindings
         val session = EvaluationSession.build { globals(bindings) }
 

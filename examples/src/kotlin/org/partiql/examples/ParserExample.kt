@@ -24,29 +24,15 @@ class ParserExample(out: PrintStream) : Example(out) {
         print("PartiQL query", query)
 
         // Use the SqlParser instance to parse the example query.  This is very simple.
-        val originalAst = parser.parseExprNode(query)
-
-        // Now the originalAst can be inspected, transformed and/or serialized as needed.
-        // For now we're just going to serialize and deserialize it.
-
-        // Convert the ExprNode AST to the Ion s-expression form.
-        val serializedAst = originalAst.toAstStatement()
+        val ast = parser.parseAstStatement(query)
 
         // Create an IonWriter for printing of the PartiqlAst
         val partiqlAstString = StringBuilder()
         val ionWriter = IonTextWriterBuilder.minimal().withPrettyPrinting().build(partiqlAstString)
 
         // Now we can convert the Ion s-expression form into an Ion value to pretty print
-        serializedAst.toIonElement().writeTo(ionWriter)
+        ast.toIonElement().writeTo(ionWriter)
         print("Serialized AST", partiqlAstString.toString())
-
-        // Re-constitute the serialized AST.  The toExprNode will convert from any supported
-        // version of the s-expression form to an instance of [ExprNode].
-        val deserializedAst = serializedAst.toExprNode(ion)
-        // Verify that we have the correct AST.
-        if (originalAst != deserializedAst) {
-            throw Exception("expected AST to be equal")
-        }
 
         // Here we show how to parse a query directly to a PartiqlAst statement
         val statement = parser.parseAstStatement(query)
