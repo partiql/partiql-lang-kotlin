@@ -230,7 +230,7 @@ abstract class SqlParserTestBase : TestBase() {
 
         softAssert {
             try {
-                parser.parseExprNode(input)
+                parser.parseAstStatement(input)
                 fail("Expected ParserException but there was no Exception")
             }
             catch (pex: ParserException) {

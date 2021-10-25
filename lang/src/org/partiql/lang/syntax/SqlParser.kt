@@ -882,7 +882,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
                 InsertReturning(ops, returning)
             }
             INSERT_VALUE -> {
-                fun getOnConflictExprNode(onConflictChildren: List<ParseNode>): PartiqlAst.OnConflict {
+                fun getOnConflict(onConflictChildren: List<ParseNode>): PartiqlAst.OnConflict {
                     onConflictChildren.getOrNull(0)?.let { firstNode ->
                         val condition = firstNode.toAstExpr()
                         onConflictChildren.getOrNull(1)?.let { secondNode ->
@@ -909,7 +909,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
                 val onConflict = unconsumedChildren.firstOrNull { it.type == ON_CONFLICT }?.let {
                     unconsumedChildren.remove(it)
-                    getOnConflictExprNode(it.children)
+                    getOnConflict(it.children)
                 }
 
                 val ops = listOf(PartiqlAst.build { insertValue(lvalue, value, position, onConflict) })

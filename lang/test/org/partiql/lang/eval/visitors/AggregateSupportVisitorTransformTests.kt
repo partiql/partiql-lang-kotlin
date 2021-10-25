@@ -38,7 +38,7 @@ class AggregateSupportVisitorTransformTests : VisitorTransformTestBase() {
      */
     private fun String.parseAndTransformQuery() : PartiqlAst.Expr.Select {
         val query = this
-        val statement = super.parser.parseExprNode(query).toAstStatement()
+        val statement = super.parser.parseAstStatement(query)
         val transformedNode = (transformer).transformStatement(statement) as PartiqlAst.Statement.Query
         return (transformedNode.expr) as PartiqlAst.Expr.Select
     }

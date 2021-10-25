@@ -30,10 +30,10 @@ abstract class VisitorTransformTestBase : SqlParserTestBase() {
      */
     protected fun runTestForIdempotentTransform(tc: TransformTestCase, transform: PartiqlAst.VisitorTransform) {
         val originalAst = assertDoesNotThrow("Parsing TransformTestCase.originalSql") {
-            super.parser.parseExprNode(tc.originalSql).toAstStatement()
+            super.parser.parseAstStatement(tc.originalSql)
         }
         val expectedAst = assertDoesNotThrow("Parsing TransformTestCase.expectedSql") {
-            super.parser.parseExprNode(tc.expectedSql).toAstStatement()
+            super.parser.parseAstStatement(tc.expectedSql)
         }
 
         val actualAst = transform.transformStatement(originalAst)
@@ -56,10 +56,10 @@ abstract class VisitorTransformTestBase : SqlParserTestBase() {
      */
     protected fun runTest(tc: TransformTestCase, transformers: List<PartiqlAst.VisitorTransform>) {
         val originalAst = assertDoesNotThrow("Parsing TransformTestCase.originalSql") {
-            super.parser.parseExprNode(tc.originalSql).toAstStatement()
+            super.parser.parseAstStatement(tc.originalSql)
         }
         val expectedAst = assertDoesNotThrow("Parsing TransformTestCase.expectedSql") {
-            super.parser.parseExprNode(tc.expectedSql).toAstStatement()
+            super.parser.parseAstStatement(tc.expectedSql)
         }
 
         val actualExprNode = transformers.fold(originalAst) { node, transform ->
