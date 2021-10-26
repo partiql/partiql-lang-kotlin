@@ -48,9 +48,6 @@ class GroupByPathExpressionVisitorTransform(
 
                 // Group by expressions other than paths aren't part of SQL-92 so ignore
                 expr !is PartiqlAst.Expr.Path                      -> false
-
-                // Path expressions containing more than one component (i.e. `one.two.three`) are also not part of SQL-92
-                expr.steps.size != 1                               -> false
                 else                                               -> true
             }
 
