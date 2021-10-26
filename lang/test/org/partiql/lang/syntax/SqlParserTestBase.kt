@@ -47,80 +47,80 @@ abstract class SqlParserTestBase : TestBase() {
 
     protected fun assertExpression(
         source: String,
-        pigBuilder: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode
+        expectedPigBuilder: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode
     ) {
-        val parsedExprNode = parse(source)
+        val actualExprNode = parse(source)
 
-        val expectedPartiQlAst = PartiqlAst.build { pigBuilder() }.toIonElement().toString()
+        val expectedPartiQlAst = PartiqlAst.build { expectedPigBuilder() }.toIonElement().toString()
         // Convert the query to ExprNode
 
-        val partiqlAst = loadIonSexp(expectedPartiQlAst)
-        partiqlAssert(parsedExprNode, partiqlAst, source)
+        val expectedIonSexp = loadIonSexp(expectedPartiQlAst)
+        partiqlAssert(actualExprNode, expectedIonSexp, source)
 
-        pigDomainAssert(parsedExprNode, partiqlAst.toIonElement().asSexp())
-        pigExprNodeTransformAsserts(parsedExprNode)
+        pigDomainAssert(actualExprNode, expectedIonSexp.toIonElement().asSexp())
+        pigExprNodeTransformAsserts(actualExprNode)
     }
 
     // TODO: refactor the signature with pig builder
     protected fun assertExpression(
             source: String,
-            expectedSexpAstAsString: String
+            expectedSexpAst: String
     ) {
-        val parsedExprNode = parse(source)
-        val expectedSexpAst = loadSingleElement(
-            expectedSexpAstAsString,
+        val actualExprNode = parse(source)
+        val expectedElement = loadSingleElement(
+            expectedSexpAst,
             IonElementLoaderOptions(includeLocationMeta = false)
         ).asSexp()
 
-        val parsedExprNodeIonElement = when (parsedExprNode) {
-            is DataManipulation -> parsedExprNode.toAstStatement().toIonElement()
-            else -> parsedExprNode.toAstExpr().toIonElement()
+        val actualElement = when (actualExprNode) {
+            is DataManipulation -> actualExprNode.toAstStatement().toIonElement()
+            else -> actualExprNode.toAstExpr().toIonElement()
         }
-        assertRoundTripIonElementToPartiQlAst(parsedExprNodeIonElement, expectedSexpAst)
-        assertRoundTripPartiQlAstToExprNode(parsedExprNode.toAstStatement(), expectedSexpAst, parsedExprNode)
-        pigExprNodeTransformAsserts(parsedExprNode)
+        assertRoundTripIonElementToPartiQlAst(actualElement, expectedElement)
+        assertRoundTripPartiQlAstToExprNode(actualExprNode.toAstStatement(), expectedElement, actualExprNode)
+        pigExprNodeTransformAsserts(actualExprNode)
     }
 
     protected fun assertExpression(
         source: String,
-        expectedSexpAstV0String: String,
-        pigBuilder: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode
+        expectedSexpAstV0: String,
+        expectedPigBuilder: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode
     ) {
-        val expectedPartiQlAst = PartiqlAst.build { pigBuilder() }
-        assertExpression(source, expectedSexpAstV0String, expectedPartiQlAst.toIonElement().toString())
+        val expectedPigAst = PartiqlAst.build { expectedPigBuilder() }.toIonElement().toString()
+        assertExpression(source, expectedSexpAstV0, expectedPigAst)
     }
 
     protected fun assertExpression(
         source: String,
-        expectedSexpAstV0String: String,
-        expectedPartiqlAstString: String = expectedSexpAstV0String
+        expectedV0Ast: String,
+        expectedPigAst: String = expectedV0Ast
     ) {
         // Convert the query to ExprNode
-        val parsedExprNode = parse(source)
+        val actualExprNode = parse(source)
 
-        val v0SexpAst = loadIonSexp(expectedSexpAstV0String)
-        serializeAssert(AstVersion.V0, parsedExprNode, v0SexpAst, source)
+        val expectedV0Ast = loadIonSexp(expectedV0Ast)
+        serializeAssert(AstVersion.V0, actualExprNode, expectedV0Ast, source)
 
-        val partiqlAst = loadIonSexp(expectedPartiqlAstString)
-        partiqlAssert(parsedExprNode, partiqlAst, source)
+        val expectedIonSexp = loadIonSexp(expectedPigAst)
+        partiqlAssert(actualExprNode, expectedIonSexp, source)
 
-        pigDomainAssert(parsedExprNode, partiqlAst.toIonElement().asSexp())
+        pigDomainAssert(actualExprNode, expectedIonSexp.toIonElement().asSexp())
 
-        pigExprNodeTransformAsserts(parsedExprNode)
+        pigExprNodeTransformAsserts(actualExprNode)
     }
 
-    private fun serializeAssert(astVersion: AstVersion, parsedExprNode: ExprNode, expectedSexpAst: IonSexp, source: String) {
+    private fun serializeAssert(astVersion: AstVersion, actualExprNode: ExprNode, expectedIonSexp: IonSexp, source: String) {
 
-        val actualSexpAstWithoutMetas = AstSerializer.serialize(parsedExprNode, astVersion, ion).filterMetaNodes()
+        val actualSexpAstWithoutMetas = AstSerializer.serialize(actualExprNode, astVersion, ion).filterMetaNodes()
 
         val deserializer = AstDeserializerBuilder(ion).build()
-        assertSexpEquals(expectedSexpAst, actualSexpAstWithoutMetas, "$astVersion AST, $source")
+        assertSexpEquals(expectedIonSexp, actualSexpAstWithoutMetas, "$astVersion AST, $source")
 
-        val deserializedExprNodeFromSexp = deserializer.deserialize(expectedSexpAst, astVersion)
+        val deserializedExprNodeFromSexp = deserializer.deserialize(expectedIonSexp, astVersion)
 
         assertEquals(
-            "Parsed ExprNodes must match deserialized s-exp $astVersion AST",
-            parsedExprNode.stripMetas(),
+            "actual ExprNodes must match deserialized s-exp $astVersion AST",
+            actualExprNode.stripMetas(),
             deserializedExprNodeFromSexp.stripMetas())
     }
 
@@ -140,82 +140,82 @@ abstract class SqlParserTestBase : TestBase() {
     /**
      * Performs checks similar to that of [serializeAssert]. First checks that parsing the [source] query string to
      * a [PartiqlAst] and to an IonValue Sexp equals the [expectedSexpAst]. Next checks that converting this IonValue
-     * Sexp to an ExprNode equals the [parsedExprNode].
+     * Sexp to an ExprNode equals the [actualExprNode].
      */
-    private fun partiqlAssert(parsedExprNode: ExprNode, expectedSexpAst: IonSexp, source: String) {
-        val actualSexpAstStatment = parseToAst(source)
-        val actualSexpQuery = unwrapQuery(actualSexpAstStatment)
-        val actualSexpAst = actualSexpQuery.toIonElement().asAnyElement().toIonValue(ion)
+    private fun partiqlAssert(actualExprNode: ExprNode, expectedIonSexp: IonSexp, source: String) {
+        val actualStatment = parseToAst(source)
+        val actualElement = unwrapQuery(actualStatment)
+        val actualIonSexp = actualElement.toIonElement().asAnyElement().toIonValue(ion)
 
-        assertSexpEquals(expectedSexpAst, actualSexpAst, "AST, $source")
+        assertSexpEquals(expectedIonSexp, actualIonSexp, "AST, $source")
 
-        val exprNodeFromSexp = actualSexpAstStatment.toExprNode(ion)
+        val exprNodeFromSexp = actualStatment.toExprNode(ion)
 
         assertEquals(
-            "Parsed ExprNodes must match the expected PartiqlAst",
-            parsedExprNode.stripMetas(),
+            "actual ExprNodes must match the expected PartiqlAst",
+            actualExprNode.stripMetas(),
             exprNodeFromSexp.stripMetas())
     }
 
-    private fun pigDomainAssert(parsedExprNode: ExprNode, expectedSexpAst: SexpElement) {
+    private fun pigDomainAssert(actualExprNode: ExprNode, expectedSexpAst: SexpElement) {
         // Convert ExprNode into a PartiqlAst statement
-        val statement = parsedExprNode.toAstStatement()
+        val actualStatement = actualExprNode.toAstStatement()
 
         // Test cases are missing (query <expr>) wrapping, so extract <expr>
-        val parsedElement = unwrapQuery(statement)
+        val actualElement = unwrapQuery(actualStatement)
 
-        assertRoundTripIonElementToPartiQlAst(parsedElement, expectedSexpAst)
+        assertRoundTripIonElementToPartiQlAst(actualElement, expectedSexpAst)
 
-        // Run the parsedExprNode through the conversion to PIG domain instance for all tests
+        // Run the actualExprNode through the conversion to PIG domain instance for all tests
         // to detect conditions which will cause the conversion to throw an exception.
-        assertRoundTripPartiQlAstToExprNode(statement, expectedSexpAst, parsedExprNode)
+        assertRoundTripPartiQlAstToExprNode(actualStatement, expectedSexpAst, actualExprNode)
     }
 
-    private fun assertRoundTripPartiQlAstToExprNode(statement: PartiqlAst.Statement, expectedSexpAst: IonElement, parsedExprNode: ExprNode) {
+    private fun assertRoundTripPartiQlAstToExprNode(actualStatement: PartiqlAst.Statement, expectedSexpAst: IonElement, actualExprNode: ExprNode) {
         // Run additional checks on the resulting PartiqlAst instance
 
         // None of our test cases are wrapped in (query <expr>), so extract <expr> from that out
-        val element = unwrapQuery(statement)
-        assertEquals(expectedSexpAst, element)
+        val actualElement = unwrapQuery(actualStatement)
+        assertEquals(expectedSexpAst, actualElement)
 
         // Convert the the IonElement back to the PartiqlAst instance and assert equivalence
-        val transformedPig = PartiqlAst.transform(statement.toIonElement()) as PartiqlAst.Statement
-        assertEquals(statement, transformedPig)
+        val transformedActualStatement = PartiqlAst.transform(actualStatement.toIonElement()) as PartiqlAst.Statement
+        assertEquals(actualStatement, transformedActualStatement)
 
-        // Convert from the PIG instance back to ExprNode and assert the result is the same as parsedExprNode.
-        val exprNode2 = MetaStrippingRewriter.stripMetas(transformedPig.toExprNode(ion))
-        assertEquals(MetaStrippingRewriter.stripMetas(parsedExprNode), exprNode2)
+        // Convert from the PIG instance back to ExprNode and assert the result is the same as actualExprNode.
+        val transformedActualExprNode = MetaStrippingRewriter.stripMetas(transformedActualStatement.toExprNode(ion))
+        assertEquals(MetaStrippingRewriter.stripMetas(actualExprNode), transformedActualExprNode)
     }
 
-    private fun assertRoundTripIonElementToPartiQlAst(parsedElement: SexpElement, expectedSexpAst: SexpElement) {
-        // #1 We can transform the parsed PartiqlAst element.
-        val transformedParsedElement = PartiqlAst.transform(parsedElement)
+    private fun assertRoundTripIonElementToPartiQlAst(actualElement: SexpElement, expectedElement: SexpElement) {
+        // #1 We can transform the actual PartiqlAst element.
+        val transformedActualElement = PartiqlAst.transform(actualElement)
 
         // #2 We can transform the expected PartiqlAst element.
-        val transformedExpectedElement = PartiqlAst.transform(expectedSexpAst)
+        val transformedExpectedElement = PartiqlAst.transform(expectedElement)
 
         // #3 The results of both transformations match.
-        assertEquals(transformedExpectedElement, transformedParsedElement)
+        assertEquals(transformedExpectedElement, transformedActualElement)
 
-        // #4 Re-transforming the parsed PartiqlAst element and check if it matches the expected AST.
-        val reserializedAst = transformedParsedElement.toIonElement()
-        assertEquals(expectedSexpAst, reserializedAst)
+        // #4 Re-transforming the actual PartiqlAst element and check if it matches the expected AST.
+        val reserializedActualElement = transformedActualElement.toIonElement()
+        assertEquals(expectedElement, reserializedActualElement)
 
         // #5 Re-serializing the expected PartiqlAst element matches the expected AST.
         // Note:  because of #3 above, no need for #5.
     }
 
     /**
-     * Strips metas from the [parsedExprNode] so they are not included in equivalence checks
-     * and round-trip the resulting [parsedExprNode] AST through [toAstStatement] and [toExprNode].
+     * Strips metas from the [actualExprNode] so they are not included in equivalence checks
+     * and round-trip the resulting [actualExprNode] AST through [toAstStatement] and [toExprNode].
      *
      * Verify that the result matches the original without metas.
      */
-    private fun pigExprNodeTransformAsserts(parsedExprNode: ExprNode) {
-        val parsedExprNodeNoMetas = MetaStrippingRewriter.stripMetas(parsedExprNode)
-        val statement = parsedExprNodeNoMetas.toAstStatement()
-        val exprNode2 = statement.toExprNode(ion)
-        assertEquals(parsedExprNodeNoMetas, exprNode2)
+    private fun pigExprNodeTransformAsserts(actualExprNode: ExprNode) {
+        val actualExprNodeNoMetas = MetaStrippingRewriter.stripMetas(actualExprNode)
+        val actualStatement = actualExprNodeNoMetas.toAstStatement()
+        val transformedActualExprNode = actualStatement.toExprNode(ion)
+        assertEquals(actualExprNodeNoMetas, transformedActualExprNode)
     }
 
     private fun loadIonSexp(expectedSexpAst: String) = ion.singleValue(expectedSexpAst).asIonSexp()
