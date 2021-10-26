@@ -61,7 +61,6 @@ abstract class SqlParserTestBase : TestBase() {
         pigExprNodeTransformAsserts(actualExprNode)
     }
 
-    // TODO: refactor the signature with pig builder
     protected fun assertExpression(
             source: String,
             expectedSexpAst: String
