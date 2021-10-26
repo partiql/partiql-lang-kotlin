@@ -66,16 +66,12 @@ abstract class SqlParserTestBase : TestBase() {
             expectedSexpAst: String
     ) {
         val actualExprNode = parse(source)
-        val actualStatement = actualExprNode.toAstStatement()
         val expectedElement = loadSingleElement(
             expectedSexpAst,
             IonElementLoaderOptions(includeLocationMeta = false)
         ).asSexp()
 
-        val actualElement = unwrapQuery(actualStatement)
-
-        assertRoundTripIonElementToPartiQlAst(actualElement, expectedElement)
-        assertRoundTripPartiQlAstToExprNode(actualStatement, expectedElement, actualExprNode)
+        pigDomainAssert(actualExprNode, expectedElement)
         pigExprNodeTransformAsserts(actualExprNode)
     }
 
