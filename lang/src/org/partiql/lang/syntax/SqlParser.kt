@@ -572,7 +572,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
                         )
                     }
                 }
-                else -> error("Can't transform ${this@toAstExpr.javaClass} to a PartiqlAst.expr }")
+                else -> error("Can't transform ParseType.$type to a PartiqlAst.expr }")
             }
         }
     }
@@ -627,13 +627,13 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     metas = metas
                 )
                 DML_LIST -> {
-                    val dmlOps = children.flatMap { it.toDmlOperation() }.toList()
+                    val dmlOps = children.flatMap { it.toDmlOperation() }
                     dml(
                         dmlOpList(dmlOps),
                         metas = metas
                     )
                 }
-                else -> error("Can't transform ${this@toAstDml.javaClass} to PartiqlAst.Statement.Dml }")
+                else -> error("Can't transform ParseType.$type to PartiqlAst.Statement.Dml }")
             }
         }
     }
@@ -662,7 +662,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     dropIndex(children[1].toIdentifier(), children[0].toIdentifier()),
                     metas
                 )
-                else -> error("Can't convert ${this@toAstDdl.javaClass} to PartiqlAst.Statement.Ddl")
+                else -> error("Can't convert ParseType.$type to PartiqlAst.Statement.Ddl")
             }
         }
     }
@@ -677,7 +677,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
                     children.map { it.toAstExpr() },
                     metas
                 )
-                else -> error("Can't convert ${this@toAstExec.javaClass} to PartiqlAst.Statement.Exec")
+                else -> error("Can't convert ParseType.$type to PartiqlAst.Statement.Exec")
             }
         }
     }
@@ -972,7 +972,16 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
                 listOf(PartiqlAst.build { insertValue(lvalue, value, position, onConflict) })
             }
-            SET, UPDATE -> children.map { PartiqlAst.build { set(assignment(it.children[0].toAstExpr(), it.children[1].toAstExpr())) } }.toList()
+            SET, UPDATE -> children.map {
+                PartiqlAst.build {
+                    set(
+                        assignment(
+                            it.children[0].toAstExpr(),
+                            it.children[1].toAstExpr()
+                        )
+                    )
+                }
+            }
             REMOVE -> listOf(PartiqlAst.build { remove(children[0].toAstExpr()) })
             DELETE -> listOf(PartiqlAst.build { delete() })
             else -> unsupported("Unsupported syntax for $type", PARSE_UNSUPPORTED_SYNTAX)
@@ -987,7 +996,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
     private fun ParseNode.toIdentifier(): PartiqlAst.Identifier {
         if (type != ATOM){
-            errMalformedParseTree("Cannot transform ParNode type: $type to identifier")
+            errMalformedParseTree("Cannot transform ParseNode type: $type to identifier")
         }
 
         val metas = getMetas()
