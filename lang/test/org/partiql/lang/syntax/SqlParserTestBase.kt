@@ -93,7 +93,7 @@ abstract class SqlParserTestBase : TestBase() {
     protected fun assertExpression(
         source: String,
         expectedV0Ast: String,
-        expectedPigAst: String = expectedV0Ast
+        expectedPigAst: String
     ) {
         // Convert the query to ExprNode
         val actualExprNode = parse(source)
