@@ -55,10 +55,10 @@ abstract class SqlParserTestBase : TestBase() {
         partiqlAssert(actualStatement, expectedIonSexp, source)
 
         // Check equal for actual and expected in transformed astStatement: astStatment -> SexpElement -> astStatement
-        // Check equal for actual and expected in SexpElement format
-        // Check equal for actual and expected in deprecated ExprNode format
         // Check round trip for actual: SexpElement -> astStatement -> SexpElement
+        // Check equal for actual and expected in SexpElement format
         // Check round trip for actual: astStatement -> SexpElement -> astStatement
+        // Check round trip for actual: astStatement -> SexpElement -> astStatement -> ExprNode
         pigDomainAssert(actualStatement, expectedElement)
 
         // Check round trip for actual: astStatement -> ExprNode -> astStatement
@@ -153,16 +153,25 @@ abstract class SqlParserTestBase : TestBase() {
         // Test cases are missing (query <expr>) wrapping, so extract <expr>
         val actualElement = unwrapQuery(actualStatement)
 
-        // Check equals for actual and expected in transformed statement: astStatement -> SexpElement -> astStatement
+        // Check equal for actual and expected in transformed astStatement: astStatment -> SexpElement -> astStatement
         // Check round trip for actual: SexpElement -> astStatement -> SexpElement
         assertRoundTripIonElementToPartiQlAst(actualElement, expectedElement)
 
-        // Check equals for actual and expected in SexpElement format
+        // Check equal for actual and expected in SexpElement format
         // Check round trip for actual: astStatement -> SexpElement -> astStatement
-        // Check equals in deprecated ExprNode format
+        // Check round trip for actual: astStatement -> SexpElement -> astStatement -> ExprNode
         assertRoundTripPartiQlAstToExprNode(actualStatement, expectedElement)
     }
 
+    // Check equals for the following:
+    //  1.  Actual:     astStatement -> SexpElement
+    //      Expected:   astStatement -> SexpElement
+    //
+    //  2.  Actual:     astStatement
+    //      Actual:     astStatement -> SexpElement -> astStatement
+    //
+    //  3.  Actual:     astStatement -> ExprNode
+    //      Actual:     astStatement -> SexpElement -> astStatement -> ExprNode
     private fun assertRoundTripPartiQlAstToExprNode(actualStatement: PartiqlAst.Statement, expectedElement: IonElement) {
         // Run additional checks on the resulting PartiqlAst instance
 
@@ -180,6 +189,12 @@ abstract class SqlParserTestBase : TestBase() {
         assertEquals(actualExprNode, transformedActualExprNode)
     }
 
+    // Check equals for the following:
+    //  1.  Actual:     astStatement -> SexpElement -> astStatement
+    //      Expected:   astStatement -> SexpElement -> astStatement
+    //
+    //  2.  Actual:     astStatement -> SexpElement
+    //      Actual:     astStatement -> SexpElement -> astStatement -> SexpElement
     private fun assertRoundTripIonElementToPartiQlAst(actualElement: SexpElement, expectedElement: SexpElement) {
         // #1 We can transform the actual PartiqlAst element.
         val transformedActualStatement = PartiqlAst.transform(actualElement)
