@@ -55,10 +55,10 @@ abstract class SqlParserTestBase : TestBase() {
         partiqlAssert(actualStatement, expectedIonSexp, source)
 
         // Check equal for actual and expected in transformed astStatement: astStatment -> SexpElement -> astStatement
-        // Check round trip for actual: SexpElement -> astStatement -> SexpElement
         // Check equal for actual and expected in SexpElement format
+        // Check equal for actual and expected in deprecated ExprNode format
+        // Check round trip for actual: SexpElement -> astStatement -> SexpElement
         // Check round trip for actual: astStatement -> SexpElement -> astStatement
-        // Check equal in deprecated ExprNode format
         pigDomainAssert(actualStatement, expectedElement)
 
         // Check round trip for actual: astStatement -> ExprNode -> astStatement
@@ -170,7 +170,7 @@ abstract class SqlParserTestBase : TestBase() {
         val actualElement = unwrapQuery(actualStatement)
         assertEquals(expectedElement, actualElement)
 
-        // Convert the the IonElement back to the PartiqlAst instance and assert equivalence
+        // Convert the IonElement back to the PartiqlAst instance and assert equivalence
         val transformedActualStatement = PartiqlAst.transform(actualStatement.toIonElement()) as PartiqlAst.Statement
         assertEquals(actualStatement, transformedActualStatement)
 
@@ -196,7 +196,7 @@ abstract class SqlParserTestBase : TestBase() {
     }
 
     /**
-     * Round-trip the resulting [parsedExprNode] AST through [toAstStatement] and [toExprNode].
+     * Round-trip the resulting [statement] AST through [toExprNode] and [toAstStatement].
      *
      * Verify that the result matches the original without metas.
      */
