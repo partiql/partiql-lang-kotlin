@@ -66,17 +66,16 @@ abstract class SqlParserTestBase : TestBase() {
             expectedSexpAst: String
     ) {
         val actualExprNode = parse(source)
+        val actualStatement = actualExprNode.toAstStatement()
         val expectedElement = loadSingleElement(
             expectedSexpAst,
             IonElementLoaderOptions(includeLocationMeta = false)
         ).asSexp()
 
-        val actualElement = when (actualExprNode) {
-            is DataManipulation -> actualExprNode.toAstStatement().toIonElement()
-            else -> actualExprNode.toAstExpr().toIonElement()
-        }
+        val actualElement = unwrapQuery(actualStatement)
+
         assertRoundTripIonElementToPartiQlAst(actualElement, expectedElement)
-        assertRoundTripPartiQlAstToExprNode(actualExprNode.toAstStatement(), expectedElement, actualExprNode)
+        assertRoundTripPartiQlAstToExprNode(actualStatement, expectedElement, actualExprNode)
         pigExprNodeTransformAsserts(actualExprNode)
     }
 
@@ -130,7 +129,7 @@ abstract class SqlParserTestBase : TestBase() {
     private fun unwrapQuery(statement: PartiqlAst.Statement) : SexpElement {
        return when (statement) {
            is PartiqlAst.Statement.Query -> statement.expr.toIonElement()
-           is PartiqlAst.Statement.Dml,
+           is PartiqlAst.Statement.Dml -> statement.toIonElement()
            is PartiqlAst.Statement.Ddl,
            is PartiqlAst.Statement.Exec -> statement.toIonElement()
         }
