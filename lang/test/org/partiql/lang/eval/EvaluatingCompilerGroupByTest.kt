@@ -82,7 +82,7 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
              { name: 'Joey', age: 25, manager: { name: 'John', address: { city: 'Seattle' } } },
              { name: 'Chandler', age: 27, manager: { name: 'Rocky', address: { city: 'Seattle' } } },
              { name: 'Ross', age: 22, manager: { 'name': 'Alex', address: { city: 'Chicago' } } }
-         ]"""
+        ]"""
      ).toSession()
 
     companion object {
@@ -728,7 +728,7 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             "SELECT VALUE (SELECT SUM(outerFromSource.col1) AS the_sum FROM <<1>>) FROM simple_1_col_1_group as outerFromSource",
             "<< << { 'the_sum': 1 } >>,  << { 'the_sum': 1 } >> >>"),
         EvaluatorTestCase(
-            "SELECT with nested GROUPBY",
+            "SELECT with GROUP BY path expression having more than 1 component.",
             "SELECT avg(age) as avg_employee_age, manager.address.city FROM employees GROUP BY manager.address.city",
             "<<{'avg_employee_age': 22, 'city': 'Chicago'}, {'avg_employee_age': 26, 'city': 'Seattle'}>>")
     )

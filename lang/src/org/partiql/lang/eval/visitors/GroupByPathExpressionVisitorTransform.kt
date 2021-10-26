@@ -31,8 +31,9 @@ class GroupByPathExpressionVisitorTransform(
         /**
          * Determines if [gbi] is an expression of the type that should be replaced elsewhere in the query.
          *
-         * Since we are only concerned about SQL-92 compatibility here, we only replace path expressions that
-         * have a single component, i.e. `f.bar` but not `f.bar.bat`.  (The latter is not part of SQL-92.)
+         * As we support querying nested data, we are not just limited to SQL-92 compatibility (that have
+         * path expressions with single component, i.e. `foo.bar`) but also replace path expressions that
+         * have more than one component, i.e. `f.bar.bat`.
          */
         fun canBeSubstituted(groupKey: PartiqlAst.GroupKey): Boolean {
             val expr = groupKey.expr
@@ -42,7 +43,7 @@ class GroupByPathExpressionVisitorTransform(
             return when {
                 asName == null                                     -> throw IllegalStateException("GroupByItem.asName must be specified for this transform to work")
                 !asName.metas.containsKey(IsSyntheticNameMeta.TAG) ->
-                    // If this meta is not present it would indicate that the alias was explicitly specifed, which is
+                    // If this meta is not present it would indicate that the alias was explicitly specified, which is
                     // not allowed by SQL-92, so ignore.
                     false
 
