@@ -375,10 +375,6 @@ class SqlParser(private val ion: IonSystem) : Parser {
                 }
                 PARAMETER -> parameter(token!!.value!!.longValue(), metas)
                 CASE -> {
-                    if (children.size != 1 && children.size != 2){
-                        errMalformedParseTree("CASE must be searched or simple")
-                    }
-
                     val branches = ArrayList<PartiqlAst.ExprPair>()
                     val cases = exprPairList(branches)
                     var elseExpr: PartiqlAst.Expr? = null
@@ -403,7 +399,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
                             children[1].addCases()
                             simpleCase(valueExpr, cases, elseExpr, metas)
                         }
-                        else -> error("Unreachable code")
+                        else -> errMalformedParseTree("CASE must be searched or simple")
                     }
                 }
                 SELECT_LIST, SELECT_VALUE, PIVOT -> {
@@ -2926,8 +2922,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
     }
 
     /** Entry point into the parser. */
-    // TODO: Give more detailed description on deprecation below
-    @Deprecated("DO NOT USE")
+    @Deprecated("`ExprNode` is deprecated. Please use `parseAstStatement` instead. ")
     override fun parseExprNode(source: String): ExprNode {
         return parseAstStatement(source).toExprNode(ion)
     }
