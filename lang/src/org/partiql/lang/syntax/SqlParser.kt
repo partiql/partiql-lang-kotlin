@@ -226,7 +226,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
             FROM, INSERT, INSERT_VALUE, SET, UPDATE, REMOVE, DELETE, DML_LIST -> toAstDml()
 
             CREATE_TABLE, DROP_TABLE, CREATE_INDEX, DROP_INDEX -> toAstDdl()
-
+            
             EXEC -> toAstExec()
 
             else -> unsupported("Unsupported syntax for $type", PARSE_UNSUPPORTED_SYNTAX)

@@ -229,7 +229,7 @@ private class StatementTransformer(val ion: IonSystem) {
         }
     }
 
-    private fun PartiqlAst.FromSource.toFromSource(): org.partiql.lang.ast.FromSource {
+    private fun PartiqlAst.FromSource.toFromSource(): FromSource {
         val metas = this.metas.toPartiQlMetaContainer()
         return when (this) {
             is PartiqlAst.FromSource.Scan ->
@@ -247,13 +247,22 @@ private class StatementTransformer(val ion: IonSystem) {
                         atName = atAlias?.toSymbolicName(),
                         byName = byAlias?.toSymbolicName()),
                     metas = metas)
-            is PartiqlAst.FromSource.Join ->
+            is PartiqlAst.FromSource.Join -> {
+                var newMetas = metas
+                var condition = predicate?.toExprNode()
+                if (condition == null){
+                    condition = Literal(ion.newBool(true), emptyMetaContainer)
+                    newMetas = metas.add(IsImplictJoinMeta.instance)
+                }
+
                 FromSourceJoin(
                     joinOp = type.toJoinOp(),
                     leftRef = left.toFromSource(),
                     rightRef = right.toFromSource(),
-                    condition = predicate?.toExprNode() ?: Literal(ion.newBool(true), emptyMetaContainer),
-                    metas = metas)
+                    condition = condition,
+                    metas = newMetas
+                )
+            }
         }
     }
 

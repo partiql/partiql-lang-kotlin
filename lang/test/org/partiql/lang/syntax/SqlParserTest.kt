@@ -3730,7 +3730,7 @@ class SqlParserTest : SqlParserTestBase() {
         """
         (ddl
           (create_index
-            (identifier foo (case_sensitive))
+            (identifier foo (case_insensitive))
             (id x (case_insensitive) (unqualified))
             (path (id y (case_insensitive) (unqualified)) (path_expr (lit "z") (case_insensitive)))))
         """
@@ -3761,7 +3761,7 @@ class SqlParserTest : SqlParserTestBase() {
     fun dropIndex() = assertExpression(
         "DROP INDEX bar ON foo",
         "(drop_index foo (id bar case_insensitive))",
-        "(ddl (drop_index (table (identifier foo (case_sensitive))) (keys (identifier bar (case_insensitive)))))"
+        "(ddl (drop_index (table (identifier foo (case_insensitive))) (keys (identifier bar (case_insensitive)))))"
     )
 
     @Test
