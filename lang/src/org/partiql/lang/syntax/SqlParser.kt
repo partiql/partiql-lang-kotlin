@@ -166,7 +166,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
         }
 
         fun deriveExpected(expectedType1: TokenType, expectedType2: TokenType): Pair<ParseNode, Token> =
-             if (expectedType1 != this.remaining.head?.type && expectedType2 != this.remaining.head?.type) {
+            if (expectedType1 != this.remaining.head?.type && expectedType2 != this.remaining.head?.type) {
                 val pvmap = PropertyValueMap()
                 pvmap[EXPECTED_TOKEN_TYPE_1_OF_2] = expectedType1
                 pvmap[EXPECTED_TOKEN_TYPE_2_OF_2] = expectedType2
@@ -226,7 +226,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
             FROM, INSERT, INSERT_VALUE, SET, UPDATE, REMOVE, DELETE, DML_LIST -> toAstDml()
 
             CREATE_TABLE, DROP_TABLE, CREATE_INDEX, DROP_INDEX -> toAstDdl()
-
+            
             EXEC -> toAstExec()
 
             else -> unsupported("Unsupported syntax for $type", PARSE_UNSUPPORTED_SYNTAX)
@@ -1272,7 +1272,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
     private fun List<Token>.parseTerm(): ParseNode = when (head?.type) {
         OPERATOR -> when (head?.keywordText) {
-        // the lexical scope operator is **only** allowed with identifiers
+            // the lexical scope operator is **only** allowed with identifiers
             "@" -> when (tail.head?.type) {
                 IDENTIFIER, QUOTED_IDENTIFIER -> ParseNode(
                     UNARY,
@@ -1323,9 +1323,9 @@ class SqlParser(private val ion: IonSystem) : Parser {
             ).deriveExpected(RIGHT_PAREN)
             when (group.children.size) {
                 0 -> tail.err("Expression group cannot be empty", PARSE_EXPECTED_EXPRESSION)
-            // expression grouping
+                // expression grouping
                 1 -> group.children[0].copy(remaining = group.remaining)
-            // row value constructor--which aliases to list constructor in PartiQL
+                // row value constructor--which aliases to list constructor in PartiQL
                 else -> group.copy(type = LIST)
             }
         }
@@ -1431,33 +1431,33 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
             else -> ParseNode(TYPE, head, emptyList(), tail)
         }
-        // Check for the optional "WITH TIME ZONE" specifier for TIME and validate the value of precision.
-        // Note that this needs to be checked explicitly as the keywordtext for "TIME WITH TIME ZONE" consists of multiple words.
-        .let {
-            if (typeName == "time") {
-                // Check for the range of valid values for precision
-                it.children.firstOrNull()?.also { precision ->
-                    if (precision.token?.value == null || !precision.token.value.isUnsignedInteger ||
-                        precision.token.value.longValue() < 0 || precision.token.value.longValue() > MAX_PRECISION_FOR_TIME
-                    ) {
-                        precision.token.err(
-                            "Expected integer value between 0 and 9 for precision",
-                            PARSE_INVALID_PRECISION_FOR_TIME
-                        )
+            // Check for the optional "WITH TIME ZONE" specifier for TIME and validate the value of precision.
+            // Note that this needs to be checked explicitly as the keywordtext for "TIME WITH TIME ZONE" consists of multiple words.
+            .let {
+                if (typeName == "time") {
+                    // Check for the range of valid values for precision
+                    it.children.firstOrNull()?.also { precision ->
+                        if (precision.token?.value == null || !precision.token.value.isUnsignedInteger ||
+                            precision.token.value.longValue() < 0 || precision.token.value.longValue() > MAX_PRECISION_FOR_TIME
+                        ) {
+                            precision.token.err(
+                                "Expected integer value between 0 and 9 for precision",
+                                PARSE_INVALID_PRECISION_FOR_TIME
+                            )
+                        }
                     }
+                    val (remainingAfterOptionalTimeZone, isTimeZoneSpecified) = it.remaining.checkForOptionalTimeZone()
+                    val newToken = if (isTimeZoneSpecified) {
+                        it.token!!.copy(value = ion.singleValue(SqlDataType.TIME_WITH_TIME_ZONE.typeName))
+                    } else {
+                        it.token
+                    }
+                    it.copy(token = newToken, remaining = remainingAfterOptionalTimeZone)
                 }
-                val (remainingAfterOptionalTimeZone, isTimeZoneSpecified) = it.remaining.checkForOptionalTimeZone()
-                val newToken = if (isTimeZoneSpecified) {
-                    it.token!!.copy(value = ion.singleValue(SqlDataType.TIME_WITH_TIME_ZONE.typeName))
-                } else {
-                    it.token
+                else {
+                    it
                 }
-                it.copy(token = newToken, remaining = remainingAfterOptionalTimeZone)
             }
-            else {
-                it
-            }
-        }
 
         if (typeNode.children.size !in typeArity) {
             val pvmap = PropertyValueMap()
@@ -1759,7 +1759,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
                 val asterisk = list.children.firstOrNull { it.type == ParseType.PROJECT_ALL && it.children.isEmpty() }
                 if(asterisk != null
-                   && list.children.size > 1) {
+                    && list.children.size > 1) {
                     asterisk.token.err(
                         "Other expressions may not be present in the select list when '*' is used without dot notation.",
                         ErrorCode.PARSE_ASTERISK_IS_NOT_ALONE_IN_SELECT_LIST)
@@ -2197,7 +2197,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
         }
 
         return rem.parseArgList(aliasSupportType = NONE, mode = NORMAL_ARG_LIST)
-                  .copy(type = EXEC, token = procedureName)
+            .copy(type = EXEC, token = procedureName)
     }
 
     /**
@@ -2229,7 +2229,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
         }
 
         val (positionExpr: ParseNode, expectedToken: Token) = stringExpr.remaining.parseExpression()
-                .deriveExpected(if(parseSql92Syntax) FOR else COMMA, RIGHT_PAREN)
+            .deriveExpected(if(parseSql92Syntax) FOR else COMMA, RIGHT_PAREN)
 
         if (expectedToken.type == RIGHT_PAREN) {
             return ParseNode(
@@ -2243,9 +2243,9 @@ class SqlParser(private val ion: IonSystem) : Parser {
         rem = positionExpr.remaining
         val lengthExpr = rem.parseExpression().deriveExpected(RIGHT_PAREN)
         return ParseNode(ParseType.CALL,
-                name,
-                listOf(stringExpr, positionExpr, lengthExpr),
-                lengthExpr.remaining)
+            name,
+            listOf(stringExpr, positionExpr, lengthExpr),
+            lengthExpr.remaining)
 
     }
 
@@ -2328,7 +2328,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
      */
     private fun List<Token>.parseExtract(name: Token): ParseNode {
         if (head?.type != LEFT_PAREN) err("Expected $LEFT_PAREN",
-                                          PARSE_EXPECTED_LEFT_PAREN_BUILTIN_FUNCTION_CALL)
+            PARSE_EXPECTED_LEFT_PAREN_BUILTIN_FUNCTION_CALL)
 
         val datePart = this.tail.parseDatePart().deriveExpectedKeyword("from")
         val rem = datePart.remaining
@@ -2477,7 +2477,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
         // The source span here is just the filler value and does not reflect the actual source location of the precision
         // as it does not exists in case the precision is unspecified.
         val precisionOfValue =  precision.token ?:
-            Token(LITERAL, ion.newInt(getPrecisionFromTimeString(timeString)), timeStringToken.span)
+        Token(LITERAL, ion.newInt(getPrecisionFromTimeString(timeString)), timeStringToken.span)
 
         return ParseNode(
             if (withTimeZone) TIME_WITH_TIME_ZONE else TIME,
@@ -2606,7 +2606,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
         }
     }
 
-        private fun List<Token>.parseOrderByArgList(): ParseNode {
+    private fun List<Token>.parseOrderByArgList(): ParseNode {
         return parseDelimitedList(parseCommaDelim) {
             var rem = this
 
@@ -2634,10 +2634,10 @@ class SqlParser(private val ion: IonSystem) : Parser {
             "unpivot" -> {
                 val actualChild = rem.tail.parseExpression(precedence)
                 ParseNode(
-                        UNPIVOT,
-                        rem.head,
-                        listOf(actualChild),
-                        actualChild.remaining
+                    UNPIVOT,
+                    rem.head,
+                    listOf(actualChild),
+                    actualChild.remaining
                 )
             }
             else -> {
@@ -2748,9 +2748,9 @@ class SqlParser(private val ion: IonSystem) : Parser {
     }
 
     private fun List<Token>.parseArgList(
-            aliasSupportType: AliasSupportType,
-            mode: ArgListMode,
-            precedence: Int = -1
+        aliasSupportType: AliasSupportType,
+        mode: ArgListMode,
+        precedence: Int = -1
     ): ParseNode {
         val parseDelim = parseCommaDelim
 
@@ -2877,7 +2877,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
     private fun ParseNode.throwTopLevelParserError(): Nothing =
         token?.err("Keyword ${token.text} only expected at the top level in the query", PARSE_UNEXPECTED_TERM)
-        ?: throw ParserException("Keyword ${token?.text} only expected at the top level in the query", PARSE_UNEXPECTED_TERM, PropertyValueMap())
+            ?: throw ParserException("Keyword ${token?.text} only expected at the top level in the query", PARSE_UNEXPECTED_TERM, PropertyValueMap())
 
     /**
      * Validates tree to make sure that the top level tokens are not found below the top level.
