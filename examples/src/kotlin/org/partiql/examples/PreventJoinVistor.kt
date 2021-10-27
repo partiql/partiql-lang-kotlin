@@ -20,10 +20,9 @@ class PreventJoinVisitorExample(out: PrintStream) : Example(out) {
     private val parser = SqlParser(ion)
 
     private fun hasJoins(sql: String): Boolean = try {
-        // TODO: See if there is a way to iterate Partiql.Statement
-        val ast = parser.parseAstStatement(sql).toExprNode(ion)
-        
-        if (ast.any { it is FromSourceJoin }) {
+        val ast = parser.parseExprNode(sql)
+
+        if(ast.any { it is FromSourceJoin }) {
             throw InvalidAstException("JOINs are prevented")
         }
 

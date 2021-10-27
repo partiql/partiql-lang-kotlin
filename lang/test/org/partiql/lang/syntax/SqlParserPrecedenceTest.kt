@@ -21,6 +21,7 @@ import com.amazon.ionelement.api.toIonElement
 import org.partiql.lang.ast.passes.MetaStrippingRewriter
 import org.partiql.lang.ast.toExprNode
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.util.asIonSexp
 
 
 class SqlParserPrecedenceTest : SqlParserTestBase() {

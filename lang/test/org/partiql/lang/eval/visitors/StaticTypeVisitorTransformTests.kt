@@ -854,7 +854,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         // FromSourceAliasVisitorTransform to execute first but also to help ensure the queries we're testing
         // make sense when they're all run.
         val defaultTransforms = basicVisitorTransforms()
-        val originalPartiqlAst = defaultTransforms.transformStatement(parse(tc.originalSql))
+        val originalPartiqlAst = defaultTransforms.transformStatement(parse(tc.originalSql).toAstStatement())
 
         val transformedExprNode = try {
             transformer.transformStatement(originalPartiqlAst)

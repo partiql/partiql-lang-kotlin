@@ -2,6 +2,7 @@ package org.partiql.lang.ast.passes
 
 import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.StringElement
+import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.ast.toAstStatement
@@ -70,7 +71,7 @@ fun skipRedaction(node: PartiqlAst.Expr, safeFieldNames: Set<String>): Boolean {
 fun redact(statement: String,
            providedSafeFieldNames: Set<String> = emptySet(),
            userDefinedFunctionRedactionConfig: Map<String, UserDefinedFunctionRedactionLambda> = emptyMap()): String {
-    return redact(statement, parser.parseAstStatement(statement), providedSafeFieldNames, userDefinedFunctionRedactionConfig)
+    return redact(statement, parser.parseExprNode(statement), providedSafeFieldNames, userDefinedFunctionRedactionConfig)
 }
 
 /**
@@ -87,10 +88,11 @@ fun redact(statement: String,
  * arguments are to be redacted. For an example, please check StatementRedactorTest.kt for more details.
  */
 fun redact(statement: String,
-           partiqlAst: PartiqlAst.Statement,
+           ast: ExprNode,
            providedSafeFieldNames: Set<String> = emptySet(),
            userDefinedFunctionRedactionConfig: Map<String, UserDefinedFunctionRedactionLambda> = emptyMap()): String {
-    
+
+    val partiqlAst = ast.toAstStatement()
     val statementRedactionVisitor = StatementRedactionVisitor(statement, providedSafeFieldNames, userDefinedFunctionRedactionConfig)
     statementRedactionVisitor.walkStatement(partiqlAst)
     return statementRedactionVisitor.getRedactedStatement()
@@ -287,7 +289,7 @@ private class StatementRedactionVisitor(
                     if (!skipRedaction(it.first, safeFieldNames)) {
                         redactExpr(it.second)
                     }
-                else { /* intentionally blank */ }
+                    else { /* intentionally blank */ }
             }
         }
     }
@@ -297,23 +299,24 @@ private class StatementRedactionVisitor(
     // TODO: other NAry ops that not modeled (LIKE, INTERSECT, INTERSECT_ALL, EXCEPT, EXCEPT_ALL, UNION, UNION_ALL)
     private fun PartiqlAst.Expr.isNAry(): Boolean {
         return this is PartiqlAst.Expr.And
-            || this is PartiqlAst.Expr.Or
-            || this is PartiqlAst.Expr.Not
-            || this is PartiqlAst.Expr.Eq
-            || this is PartiqlAst.Expr.Ne
-            || this is PartiqlAst.Expr.Gt
-            || this is PartiqlAst.Expr.Gte
-            || this is PartiqlAst.Expr.Lt
-            || this is PartiqlAst.Expr.Lte
-            || this is PartiqlAst.Expr.InCollection
-            || this is PartiqlAst.Expr.Plus
-            || this is PartiqlAst.Expr.Minus
-            || this is PartiqlAst.Expr.Times
-            || this is PartiqlAst.Expr.Divide
-            || this is PartiqlAst.Expr.Modulo
-            || this is PartiqlAst.Expr.Concat
-            || this is PartiqlAst.Expr.Between
-            || this is PartiqlAst.Expr.Call
+                || this is PartiqlAst.Expr.Or
+                || this is PartiqlAst.Expr.Not
+                || this is PartiqlAst.Expr.Eq
+                || this is PartiqlAst.Expr.Ne
+                || this is PartiqlAst.Expr.Gt
+                || this is PartiqlAst.Expr.Gte
+                || this is PartiqlAst.Expr.Lt
+                || this is PartiqlAst.Expr.Lte
+                || this is PartiqlAst.Expr.InCollection
+                || this is PartiqlAst.Expr.Plus
+                || this is PartiqlAst.Expr.Minus
+                || this is PartiqlAst.Expr.Times
+                || this is PartiqlAst.Expr.Divide
+                || this is PartiqlAst.Expr.Modulo
+                || this is PartiqlAst.Expr.Concat
+                || this is PartiqlAst.Expr.Between
+                || this is PartiqlAst.Expr.Call
 
     }
 }
+
