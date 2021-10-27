@@ -3697,7 +3697,7 @@ class SqlParserTest : SqlParserTestBase() {
         "(ddl (create_table user))"
     )
 
-    // TODO remove the ignore tag once the test framework for deprecating ExprNode is changed as well
+    // TODO: Will remove `Ignore` tag once the test framework for parser is changed as well
     @Ignore
     @Test
     fun dropTable() = assertExpression(
@@ -3713,7 +3713,7 @@ class SqlParserTest : SqlParserTestBase() {
         "(ddl (drop_table (identifier user (case_sensitive))))"
     )
 
-    // TODO remove the ignore tag once the test framework for deprecating ExprNode is changed as well
+    // TODO: Will remove `Ignore` tag once the test framework for parser is changed as well
     @Ignore
     @Test
     fun createIndex() = assertExpression(
@@ -3755,7 +3755,7 @@ class SqlParserTest : SqlParserTestBase() {
         """
     )
 
-    // TODO remove the ignore tag once the test framework for deprecating ExprNode is changed as well
+    // TODO: Will remove `Ignore` tag once the test framework for parser is changed as well
     @Ignore
     @Test
     fun dropIndex() = assertExpression(
