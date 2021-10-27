@@ -247,13 +247,13 @@ private class StatementTransformer(val ion: IonSystem) {
                         atName = atAlias?.toSymbolicName(),
                         byName = byAlias?.toSymbolicName()),
                     metas = metas)
-            is PartiqlAst.FromSource.Join -> FromSourceJoin(
-                joinOp = type.toJoinOp(),
-                leftRef = left.toFromSource(),
-                rightRef = right.toFromSource(),
-                condition = predicate?.toExprNode() ?: Literal(ion.newBool(true), emptyMetaContainer),
-                metas = metas
-            )
+            is PartiqlAst.FromSource.Join ->
+                FromSourceJoin(
+                    joinOp = type.toJoinOp(),
+                    leftRef = left.toFromSource(),
+                    rightRef = right.toFromSource(),
+                    condition = predicate?.toExprNode() ?: Literal(ion.newBool(true), emptyMetaContainer),
+                    metas = metas)
         }
     }
 
