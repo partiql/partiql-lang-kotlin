@@ -77,4 +77,3 @@ abstract class VisitorTransformTestBase : SqlParserTestBase() {
         }
     }
 }
-

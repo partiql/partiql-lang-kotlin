@@ -319,4 +319,3 @@ private class StatementRedactionVisitor(
 
     }
 }
-
