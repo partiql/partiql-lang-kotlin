@@ -17,8 +17,6 @@ package org.partiql.lang.syntax
 import com.amazon.ion.*
 import com.amazon.ionelement.api.*
 import org.partiql.lang.ast.*
-import org.partiql.lang.ast.MetaContainer
-import org.partiql.lang.ast.metaContainerOf
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.ErrorCode.*

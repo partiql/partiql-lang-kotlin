@@ -26,7 +26,7 @@ import org.partiql.lang.domains.PartiqlAst
 interface Parser {
     fun parseAstStatement(source: String): PartiqlAst.Statement
 
-    @Deprecated("Please use parseAstStatement() instead--the return value can be deserialized to backward-compatible IonSexp.")
+    @Deprecated("Please use parseAstStatement() instead--ExprNode is deprecated.")
     fun parseExprNode(source: String): ExprNode
 
     @Deprecated("Please use parseAstStatement() instead--the return value can be deserialized to backward-compatible IonSexp.")
