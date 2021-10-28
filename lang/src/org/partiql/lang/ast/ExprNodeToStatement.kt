@@ -186,7 +186,8 @@ fun ExprNode.toAstExpr(): PartiqlAst.Expr {
                             node.precision.toLong(),
                             node.with_time_zone,
                             node.tz_minutes?.toLong()
-                        )
+                        ),
+                        metas
                     )
                 }
             }

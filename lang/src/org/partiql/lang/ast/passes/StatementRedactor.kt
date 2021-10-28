@@ -289,7 +289,7 @@ private class StatementRedactionVisitor(
                     if (!skipRedaction(it.first, safeFieldNames)) {
                         redactExpr(it.second)
                     }
-                else { /* intentionally blank */ }
+                    else { /* intentionally blank */ }
             }
         }
     }
@@ -299,23 +299,23 @@ private class StatementRedactionVisitor(
     // TODO: other NAry ops that not modeled (LIKE, INTERSECT, INTERSECT_ALL, EXCEPT, EXCEPT_ALL, UNION, UNION_ALL)
     private fun PartiqlAst.Expr.isNAry(): Boolean {
         return this is PartiqlAst.Expr.And
-            || this is PartiqlAst.Expr.Or
-            || this is PartiqlAst.Expr.Not
-            || this is PartiqlAst.Expr.Eq
-            || this is PartiqlAst.Expr.Ne
-            || this is PartiqlAst.Expr.Gt
-            || this is PartiqlAst.Expr.Gte
-            || this is PartiqlAst.Expr.Lt
-            || this is PartiqlAst.Expr.Lte
-            || this is PartiqlAst.Expr.InCollection
-            || this is PartiqlAst.Expr.Plus
-            || this is PartiqlAst.Expr.Minus
-            || this is PartiqlAst.Expr.Times
-            || this is PartiqlAst.Expr.Divide
-            || this is PartiqlAst.Expr.Modulo
-            || this is PartiqlAst.Expr.Concat
-            || this is PartiqlAst.Expr.Between
-            || this is PartiqlAst.Expr.Call
+                || this is PartiqlAst.Expr.Or
+                || this is PartiqlAst.Expr.Not
+                || this is PartiqlAst.Expr.Eq
+                || this is PartiqlAst.Expr.Ne
+                || this is PartiqlAst.Expr.Gt
+                || this is PartiqlAst.Expr.Gte
+                || this is PartiqlAst.Expr.Lt
+                || this is PartiqlAst.Expr.Lte
+                || this is PartiqlAst.Expr.InCollection
+                || this is PartiqlAst.Expr.Plus
+                || this is PartiqlAst.Expr.Minus
+                || this is PartiqlAst.Expr.Times
+                || this is PartiqlAst.Expr.Divide
+                || this is PartiqlAst.Expr.Modulo
+                || this is PartiqlAst.Expr.Concat
+                || this is PartiqlAst.Expr.Between
+                || this is PartiqlAst.Expr.Call
 
     }
 }

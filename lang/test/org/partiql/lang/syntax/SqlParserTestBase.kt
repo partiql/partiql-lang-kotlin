@@ -63,8 +63,8 @@ abstract class SqlParserTestBase : TestBase() {
 
     // TODO: refactor the signature with pig builder
     protected fun assertExpression(
-            source: String,
-            expectedSexpAstAsString: String
+        source: String,
+        expectedSexpAstAsString: String
     ) {
         val parsedExprNode = parse(source)
         val expectedSexpAst = loadSingleElement(
@@ -129,11 +129,11 @@ abstract class SqlParserTestBase : TestBase() {
      * just the expr component to be compatible with the SqlParser tests.
      */
     private fun unwrapQuery(statement: PartiqlAst.Statement) : SexpElement {
-       return when (statement) {
-           is PartiqlAst.Statement.Query -> statement.expr.toIonElement()
-           is PartiqlAst.Statement.Dml,
-           is PartiqlAst.Statement.Ddl,
-           is PartiqlAst.Statement.Exec -> statement.toIonElement()
+        return when (statement) {
+            is PartiqlAst.Statement.Query -> statement.expr.toIonElement()
+            is PartiqlAst.Statement.Dml,
+            is PartiqlAst.Statement.Ddl,
+            is PartiqlAst.Statement.Exec -> statement.toIonElement()
         }
     }
 
@@ -222,8 +222,8 @@ abstract class SqlParserTestBase : TestBase() {
     private fun ExprNode.stripMetas() = MetaStrippingRewriter.stripMetas(this)
 
     protected fun checkInputThrowingParserException(input: String,
-                                                  errorCode: ErrorCode,
-                                                  expectErrorContextValues: Map<Property, Any>) {
+                                                    errorCode: ErrorCode,
+                                                    expectErrorContextValues: Map<Property, Any>) {
 
         softAssert {
             try {

@@ -229,7 +229,7 @@ private class StatementTransformer(val ion: IonSystem) {
         }
     }
 
-    private fun PartiqlAst.FromSource.toFromSource(): org.partiql.lang.ast.FromSource {
+    private fun PartiqlAst.FromSource.toFromSource(): FromSource {
         val metas = this.metas.toPartiQlMetaContainer()
         return when (this) {
             is PartiqlAst.FromSource.Scan ->
