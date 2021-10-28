@@ -47,16 +47,7 @@ abstract class SqlParserTestBase : TestBase() {
 
     protected fun assertExpression(
         source: String,
-        expectedPigBuilder: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode
-    ) {
-        val expectedPigAst = PartiqlAst.build { expectedPigBuilder() }.toIonElement().toString()
-
-        assertExpression(source, expectedPigAst)
-    }
-
-    protected fun assertExpression(
-            source: String,
-            expectedPigAst: String
+        expectedPigAst: String
     ) {
         val actualExprNode = parse(source)
         val expectedIonSexp = loadIonSexp(expectedPigAst)
@@ -71,11 +62,11 @@ abstract class SqlParserTestBase : TestBase() {
 
     protected fun assertExpression(
         source: String,
-        expectedSexpAstV0: String,
         expectedPigBuilder: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode
     ) {
         val expectedPigAst = PartiqlAst.build { expectedPigBuilder() }.toIonElement().toString()
-        assertExpression(source, expectedSexpAstV0, expectedPigAst)
+
+        assertExpression(source, expectedPigAst)
     }
 
     protected fun assertExpression(
@@ -95,6 +86,15 @@ abstract class SqlParserTestBase : TestBase() {
         pigDomainAssert(actualExprNode, expectedIonSexp.toIonElement().asSexp())
 
         pigExprNodeTransformAsserts(actualExprNode)
+    }
+
+    protected fun assertExpression(
+        source: String,
+        expectedSexpAstV0: String,
+        expectedPigBuilder: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode
+    ) {
+        val expectedPigAst = PartiqlAst.build { expectedPigBuilder() }.toIonElement().toString()
+        assertExpression(source, expectedSexpAstV0, expectedPigAst)
     }
 
     private fun serializeAssert(astVersion: AstVersion, actualExprNode: ExprNode, expectedIonSexp: IonSexp, source: String) {
