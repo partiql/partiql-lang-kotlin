@@ -52,7 +52,7 @@ abstract class SqlParserTestBase : TestBase() {
         val actualExprNode = parse(source)
         val expectedIonSexp = loadIonSexp(expectedPigAst)
 
-        partiqlAssert(actualExprNode, expectedIonSexp, source)
+        checkEqualInIonSexp(actualExprNode, expectedIonSexp, source)
 
         val expectedElement = expectedIonSexp.toIonElement().asSexp()
 
@@ -81,7 +81,7 @@ abstract class SqlParserTestBase : TestBase() {
         serializeAssert(AstVersion.V0, actualExprNode, expectedV0Ast, source)
 
         val expectedIonSexp = loadIonSexp(expectedPigAst)
-        partiqlAssert(actualExprNode, expectedIonSexp, source)
+        checkEqualInIonSexp(actualExprNode, expectedIonSexp, source)
 
         pigDomainAssert(actualExprNode, expectedIonSexp.toIonElement().asSexp())
 
@@ -130,19 +130,12 @@ abstract class SqlParserTestBase : TestBase() {
      * a [PartiqlAst] and to an IonValue Sexp equals the [expectedSexpAst]. Next checks that converting this IonValue
      * Sexp to an ExprNode equals the [actualExprNode].
      */
-    private fun partiqlAssert(actualExprNode: ExprNode, expectedIonSexp: IonSexp, source: String) {
-        val actualStatment = parseToAst(source)
+    private fun checkEqualInIonSexp(actualExprNode: ExprNode, expectedIonSexp: IonSexp, source: String) {
+        val actualStatment = actualExprNode.toAstStatement()
         val actualElement = unwrapQuery(actualStatment)
         val actualIonSexp = actualElement.toIonElement().asAnyElement().toIonValue(ion)
 
         assertSexpEquals(expectedIonSexp, actualIonSexp, "AST, $source")
-
-        val exprNodeFromSexp = actualStatment.toExprNode(ion)
-
-        assertEquals(
-            "actual ExprNodes must match the expected PartiqlAst",
-            actualExprNode.stripMetas(),
-            exprNodeFromSexp.stripMetas())
     }
 
     private fun pigDomainAssert(actualExprNode: ExprNode, expectedSexpAst: SexpElement) {
