@@ -74,18 +74,14 @@ abstract class SqlParserTestBase : TestBase() {
         expectedV0Ast: String,
         expectedPigAst: String
     ) {
-        // Convert the query to ExprNode
+        // Check for V0 Ast
         val actualExprNode = parse(source)
-
         val expectedV0Ast = loadIonSexp(expectedV0Ast)
+
         serializeAssert(AstVersion.V0, actualExprNode, expectedV0Ast, source)
 
-        val expectedIonSexp = loadIonSexp(expectedPigAst)
-        checkEqualInIonSexp(actualExprNode, expectedIonSexp, source)
-
-        pigDomainAssert(actualExprNode, expectedIonSexp.toIonElement().asSexp())
-
-        pigExprNodeTransformAsserts(actualExprNode)
+        // Check for PIG Ast
+        assertExpression(source, expectedPigAst)
     }
 
     protected fun assertExpression(
@@ -94,6 +90,7 @@ abstract class SqlParserTestBase : TestBase() {
         expectedPigBuilder: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode
     ) {
         val expectedPigAst = PartiqlAst.build { expectedPigBuilder() }.toIonElement().toString()
+
         assertExpression(source, expectedSexpAstV0, expectedPigAst)
     }
 
@@ -196,6 +193,7 @@ abstract class SqlParserTestBase : TestBase() {
         val actualExprNodeNoMetas = MetaStrippingRewriter.stripMetas(actualExprNode)
         val actualStatement = actualExprNodeNoMetas.toAstStatement()
         val transformedActualExprNode = actualStatement.toExprNode(ion)
+
         assertEquals(actualExprNodeNoMetas, transformedActualExprNode)
     }
 
