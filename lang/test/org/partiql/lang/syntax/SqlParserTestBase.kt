@@ -86,9 +86,9 @@ abstract class SqlParserTestBase : TestBase() {
     ) {
         // Check for V0 Ast
         val actualExprNode = parse(source)
-        val expectedV0Ast = loadIonSexp(expectedV0Ast)
+        val expectedV0AstSexp = loadIonSexp(expectedV0Ast)
 
-        serializeAssert(AstVersion.V0, actualExprNode, expectedV0Ast, source)
+        serializeAssert(AstVersion.V0, actualExprNode, expectedV0AstSexp, source)
 
         // Check for PIG Ast
         assertExpression(source, expectedPigAst)
@@ -116,7 +116,7 @@ abstract class SqlParserTestBase : TestBase() {
     private fun unwrapQuery(statement: PartiqlAst.Statement) : SexpElement {
        return when (statement) {
            is PartiqlAst.Statement.Query -> statement.expr.toIonElement()
-           is PartiqlAst.Statement.Dml -> statement.toIonElement()
+           is PartiqlAst.Statement.Dml,
            is PartiqlAst.Statement.Ddl,
            is PartiqlAst.Statement.Exec -> statement.toIonElement()
         }
@@ -124,8 +124,7 @@ abstract class SqlParserTestBase : TestBase() {
 
     /**
      * Performs checks similar to that of [serializeAssert]. First checks that parsing the [source] query string to
-     * a [PartiqlAst] and to an IonValue Sexp equals the [expectedSexpAst]. Next checks that converting this IonValue
-     * Sexp to an ExprNode equals the [actualExprNode].
+     * a [PartiqlAst] and to an IonValue Sexp equals the [expectedIonSexp].
      */
     private fun checkEqualInIonSexp(actualExprNode: ExprNode, expectedIonSexp: IonSexp, source: String) {
         val actualStatment = actualExprNode.toAstStatement()
