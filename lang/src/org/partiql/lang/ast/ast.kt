@@ -477,7 +477,7 @@ data class CreateTable(
  * @param keys The expressions that extract the keys from the target to be applied to the index.
  */
 data class CreateIndex(
-    val tableName: String,
+    val tableId: VariableReference,
     val keys: List<ExprNode>,
     override val metas: MetaContainer
 ) : ExprNode() {
