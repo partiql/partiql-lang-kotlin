@@ -743,7 +743,7 @@ private class AstSerializerImpl(val astVersion: AstVersion, val ion: IonSystem):
                 symbol(null)
                 sexp {
                     symbol("index")
-                    symbol(expr.tableName)
+                    writeExprNode(expr.tableId)
                     sexp {
                         symbol("keys")
                         expr.keys.forEach {

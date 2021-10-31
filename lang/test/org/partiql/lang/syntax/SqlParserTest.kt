@@ -3713,8 +3713,6 @@ class SqlParserTest : SqlParserTestBase() {
         "(ddl (drop_table (identifier user (case_sensitive))))"
     )
 
-    // TODO: Will remove `Ignore` tag once the test framework for parser is changed as well
-    @Ignore
     @Test
     fun createIndex() = assertExpression(
         "CREATE INDEX ON foo (x, y.z)",
@@ -3722,7 +3720,7 @@ class SqlParserTest : SqlParserTestBase() {
         (create
           null.symbol
           (index
-            foo
+            (id foo case_insensitive)
             (keys
               (id x case_insensitive)
               (path (id y case_insensitive) (case_insensitive (lit "z"))))))
