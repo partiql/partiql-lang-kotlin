@@ -3743,7 +3743,7 @@ class SqlParserTest : SqlParserTestBase() {
         (create
           null.symbol
           (index
-            user
+            (id user case_sensitive)
             (keys
               (id group case_sensitive))))
         """,
