@@ -694,9 +694,9 @@ internal class AstDeserializerInternal(
         targetArgs: List<IonValue>,
         metas: MetaContainer
     ): DropIndex {
-        val tableName = targetArgs[0].stringValue() ?: err("Table name must be specified")
+        val tableId = deserializeExprNode(targetArgs[0].asIonSexp()) as VariableReference
         val id = deserializeExprNode(targetArgs[1].asIonSexp()) as VariableReference
-        return DropIndex(tableName, id, metas)
+        return DropIndex(tableId, id, metas)
     }
 
     private fun deserializeIdentifier(targetArgs: List<IonValue>): Pair<String, CaseSensitivity> {

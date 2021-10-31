@@ -442,7 +442,12 @@ private class StatementTransformer(val ion: IonSystem) {
                 metas)
             is DdlOp.DropIndex ->
                 DropIndex(
-                    tableName = op.table.name.text,
+                    tableId = VariableReference(
+                        id = op.table.name.text,
+                        case = op.table.case.toCaseSensitivity(),
+                        scopeQualifier = org.partiql.lang.ast.ScopeQualifier.UNQUALIFIED,
+                        metas = emptyMetaContainer
+                    ),
                     identifier = VariableReference(
                         id = op.keys.name.text,
                         case = op.keys.case.toCaseSensitivity(),

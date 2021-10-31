@@ -3755,19 +3755,17 @@ class SqlParserTest : SqlParserTestBase() {
         """
     )
 
-    // TODO: Will remove `Ignore` tag once the test framework for parser is changed as well
-    @Ignore
     @Test
     fun dropIndex() = assertExpression(
         "DROP INDEX bar ON foo",
-        "(drop_index foo (id bar case_insensitive))",
+        "(drop_index (id foo case_insensitive) (id bar case_insensitive))",
         "(ddl (drop_index (table (identifier foo (case_insensitive))) (keys (identifier bar (case_insensitive)))))"
     )
 
     @Test
     fun dropIndexWithQuotedIdentifiers() = assertExpression(
         "DROP INDEX \"bar\" ON \"foo\"",
-        "(drop_index foo (id bar case_sensitive))",
+        "(drop_index (id foo case_sensitive) (id bar case_sensitive))",
         "(ddl (drop_index (table (identifier foo (case_sensitive))) (keys (identifier bar (case_sensitive)))))"
     )
 

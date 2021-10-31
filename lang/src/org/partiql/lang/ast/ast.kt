@@ -504,7 +504,7 @@ data class DropTable(
  * [AstNode] named `Identifier` which has `id` and `case` properties.
  */
 data class DropIndex(
-    val tableName: String,
+    val tableId: VariableReference,
     val identifier: VariableReference,
     override val metas: MetaContainer
 ) : ExprNode() {
