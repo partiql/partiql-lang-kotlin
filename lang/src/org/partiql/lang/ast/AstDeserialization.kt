@@ -673,10 +673,10 @@ internal class AstDeserializerInternal(
                 CreateTable(tableName, metas)
             }
             NodeTag.INDEX -> {
-                val tableId = deserializeExprNode(args[0].asIonSexp()) as VariableReference
+                val tableName = args[0].stringValue() ?: err("Table name must be specified")
                 val children = args.drop(1).toListOfIonSexp().map { Pair(it.nodeTag, it) }.toMap()
                 val keys = children[NodeTag.KEYS]?.args?.deserializeAllExprNodes() ?: err("Index definition expects keys")
-                CreateIndex(tableId, keys, metas)
+                CreateIndex(tableName, keys, metas)
             }
             else -> errInvalidContext(target.nodeTag)
         }

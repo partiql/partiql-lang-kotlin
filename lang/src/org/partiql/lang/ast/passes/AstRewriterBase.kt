@@ -429,7 +429,7 @@ open class AstRewriterBase : AstRewriter {
 
     open fun rewriteCreateIndex(node: CreateIndex): CreateIndex =
         CreateIndex(
-            rewriteVariableReference(node.tableId) as VariableReference,
+            node.tableName,
             node.keys.map { rewriteExprNode(it) },
             rewriteMetas(node))
 

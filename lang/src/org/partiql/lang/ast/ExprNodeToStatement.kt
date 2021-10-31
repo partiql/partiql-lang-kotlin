@@ -40,13 +40,7 @@ private fun ExprNode.toAstDdl(): PartiqlAst.Statement {
             is DataManipulation, is Exec -> error("Can't convert ${thiz.javaClass} to PartiqlAst.ddl")
 
             is CreateTable -> ddl(createTable(thiz.tableName), metas)
-            is CreateIndex ->
-                ddl(
-                    createIndex(
-                        identifier(thiz.tableId.id, thiz.tableId.case.toAstCaseSensitivity()),
-                        thiz.keys.map { it.toAstExpr() }
-                    ),
-                    metas)
+            is CreateIndex -> ddl(createIndex(identifier(thiz.tableName, caseSensitive()), thiz.keys.map { it.toAstExpr() }), metas)
             is DropIndex ->
                 ddl(
                     dropIndex(
