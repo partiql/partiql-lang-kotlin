@@ -118,10 +118,13 @@ abstract class SqlParserTestBase : TestBase() {
 
         val deserializedExprNodeFromSexp = deserializer.deserialize(expectedSexpAst, astVersion)
 
+        val test1 = parsedExprNode.stripMetas()
+        val test2 = deserializedExprNodeFromSexp.stripMetas()
+
         assertEquals(
             "Parsed ExprNodes must match deserialized s-exp $astVersion AST",
-            parsedExprNode.stripMetas(),
-            deserializedExprNodeFromSexp.stripMetas())
+            test1,
+            test2)
     }
 
     /**
