@@ -43,6 +43,7 @@ abstract class SqlParserTestBase : TestBase() {
 
     /**
      * This method is used by test cases, to test with PIG AST, while the expected PIG AST is a PIG builder
+     * Refer to kdoc for `assertExpression(source: String, expectedPigAst: String)` to see the checks performed.
      */
     protected fun assertExpression(
         source: String,
@@ -55,6 +56,14 @@ abstract class SqlParserTestBase : TestBase() {
 
     /**
      * This method is used by test cases, to test with PIG AST, while the expected PIG AST is a string
+     * The following checks are performed:
+     *      1. Check equals for actual value and expected value in IonSexp format
+     *      2. Check equals for actual value and expected value in SexpElement format
+     *      3. Check equals for actual value and expected value after transformation: astStatment -> SexpElement -> astStatement
+     *      4. Check equals for actual value after round trip transformation: astStatement -> ExprNode -> astStatement
+     *      5. Check equals for actual value after round trip transformation: SexpElement -> astStatement -> SexpElement
+     *      6. Check equals for actual value after round trip transformation: astStatement -> SexpElement -> astStatement
+     *      7. Check equals for actual value after round trip transformation: ExprNode -> astStatement -> SexpElement -> astStatement -> ExprNode
      */
     protected fun assertExpression(
         source: String,
@@ -73,6 +82,7 @@ abstract class SqlParserTestBase : TestBase() {
 
     /**
      * This method is used by test cases, to test with PIG AST and V0 AST, where the expected PIG AST is a PIG builder
+     * Refer to kdoc for `assertExpression(source: String, expectedSexpAstV0: String, expectedPigAst: String)` to see the checks performed.
      */
     protected fun assertExpression(
         source: String,
@@ -86,6 +96,11 @@ abstract class SqlParserTestBase : TestBase() {
 
     /**
      * This method is used by test cases, to test with PIG AST and V0 AST, while the expected PIG AST is a string
+     * The following checks for V0 AST are performed:
+     *      1. Check equals for actual value and expected value after transformation: EpxrNode -> IonSexp
+     *      2. Check equals for actual value and expected value after transformation: IonSexp -> EpxrNode
+     *
+     * Refer to kdoc for `assertExpression(source: String, expectedPigAst: String)` to see the checks performed for PIG Ast.
      */
     protected fun assertExpression(
         source: String,
@@ -174,16 +189,16 @@ abstract class SqlParserTestBase : TestBase() {
 
     private fun assertRoundTripIonElementToPartiQlAst(actualElement: SexpElement, expectedElement: SexpElement) {
         // #1 We can transform the actual PartiqlAst element.
-        val transformedActualElement = PartiqlAst.transform(actualElement)
+        val transformedActualStatement = PartiqlAst.transform(actualElement)
 
         // #2 We can transform the expected PartiqlAst element.
-        val transformedExpectedElement = PartiqlAst.transform(expectedElement)
+        val transformedExpectedStatement = PartiqlAst.transform(expectedElement)
 
         // #3 The results of both transformations match.
-        assertEquals(transformedExpectedElement, transformedActualElement)
+        assertEquals(transformedExpectedStatement, transformedActualStatement)
 
         // #4 Re-transforming the actual PartiqlAst element and check if it matches the expected AST.
-        val reserializedActualElement = transformedActualElement.toIonElement()
+        val reserializedActualElement = transformedActualStatement.toIonElement()
         assertEquals(expectedElement, reserializedActualElement)
 
         // #5 Re-serializing the expected PartiqlAst element matches the expected AST.
