@@ -16,19 +16,15 @@ package org.partiql.lang.syntax
 
 import com.amazon.ion.IonSexp
 import com.amazon.ionelement.api.IonElement
-import com.amazon.ionelement.api.IonElementLoaderOptions
 import com.amazon.ionelement.api.SexpElement
 import com.amazon.ionelement.api.toIonElement
-import com.amazon.ionelement.api.loadSingleElement
 import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.TestBase
 import org.partiql.lang.ast.AstDeserializerBuilder
 import org.partiql.lang.ast.AstSerializer
 import org.partiql.lang.ast.AstVersion
-import org.partiql.lang.ast.DataManipulation
 import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.passes.MetaStrippingRewriter
-import org.partiql.lang.ast.toAstExpr
 import org.partiql.lang.ast.toAstStatement
 import org.partiql.lang.ast.toExprNode
 import org.partiql.lang.domains.PartiqlAst
@@ -45,6 +41,9 @@ abstract class SqlParserTestBase : TestBase() {
     protected fun parse(source: String): ExprNode = parser.parseExprNode(source)
     protected fun parseToAst(source: String): PartiqlAst.Statement = parser.parseAstStatement(source)
 
+    /**
+     * This method is used by test cases, to test with PIG AST, while the expected PIG AST is a PIG builder
+     */
     protected fun assertExpression(
         source: String,
         expectedPigBuilder: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode
@@ -54,6 +53,9 @@ abstract class SqlParserTestBase : TestBase() {
         assertExpression(source, expectedPigAst)
     }
 
+    /**
+     * This method is used by test cases, to test with PIG AST, while the expected PIG AST is a string
+     */
     protected fun assertExpression(
         source: String,
         expectedPigAst: String
@@ -69,6 +71,9 @@ abstract class SqlParserTestBase : TestBase() {
         pigExprNodeTransformAsserts(actualExprNode)
     }
 
+    /**
+     * This method is used by test cases, to test with PIG AST and V0 AST, where the expected PIG AST is a PIG builder
+     */
     protected fun assertExpression(
         source: String,
         expectedSexpAstV0: String,
@@ -79,6 +84,9 @@ abstract class SqlParserTestBase : TestBase() {
         assertExpression(source, expectedSexpAstV0, expectedPigAst)
     }
 
+    /**
+     * This method is used by test cases, to test with PIG AST and V0 AST, while the expected PIG AST is a string
+     */
     protected fun assertExpression(
         source: String,
         expectedV0Ast: String,
