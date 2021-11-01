@@ -68,7 +68,7 @@ abstract class SqlParserTestBase : TestBase() {
         val expectedElement = expectedIonSexp.toIonElement().asSexp()
 
         pigDomainAssert(actualExprNode, expectedElement)
-        roundTripPigAstToExprNode(actualExprNode)
+        assertRoundTripPigAstToExprNode(actualExprNode)
     }
 
     /**
@@ -196,7 +196,7 @@ abstract class SqlParserTestBase : TestBase() {
      *
      * Verify that the result matches the original without metas.
      */
-    private fun roundTripPigAstToExprNode(actualExprNode: ExprNode) {
+    private fun assertRoundTripPigAstToExprNode(actualExprNode: ExprNode) {
         val actualExprNodeNoMetas = MetaStrippingRewriter.stripMetas(actualExprNode)
         val actualStatement = actualExprNodeNoMetas.toAstStatement()
         val roundTripActualExprNode = actualStatement.toExprNode(ion)
