@@ -445,7 +445,7 @@ private class StatementTransformer(val ion: IonSystem) {
                         op.indexName.name.text,
                         op.indexName.case.toCaseSensitivity(),
                         org.partiql.lang.ast.ScopeQualifier.UNQUALIFIED,
-                        metas
+                        emptyMetaContainer
                     ),
                 op.fields.map { it.toExprNode() },
                 metas)
