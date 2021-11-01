@@ -429,7 +429,16 @@ private class StatementTransformer(val ion: IonSystem) {
         val metas = this.metas.toPartiQlMetaContainer()
         return when(op) {
             is DdlOp.CreateTable -> CreateTable(op.tableName.text, metas)
-            is DdlOp.DropTable -> DropTable(op.tableName.name.text, metas)
+            is DdlOp.DropTable ->
+                DropTable(
+                    VariableReference(
+                        op.tableName.name.text,
+                        op.tableName.case.toCaseSensitivity(),
+                        org.partiql.lang.ast.ScopeQualifier.UNQUALIFIED,
+                        emptyMetaContainer
+                    ),
+                    metas
+                )
             is DdlOp.CreateIndex ->
                 CreateIndex(
                     VariableReference(

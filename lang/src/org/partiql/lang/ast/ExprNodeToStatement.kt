@@ -56,7 +56,11 @@ private fun ExprNode.toAstDdl(): PartiqlAst.Statement {
                     metas)
             is DropTable ->
                 // case-sensitivity of table names cannot be represented with ExprNode.
-                ddl(dropTable(identifier(thiz.tableName, caseSensitive())), metas)
+                ddl(
+                    dropTable(
+                        identifier(thiz.tableId.id, thiz.tableId.case.toAstCaseSensitivity())
+                    ),
+                    metas)
         }
     }
 }

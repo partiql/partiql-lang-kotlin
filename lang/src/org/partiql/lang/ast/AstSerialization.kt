@@ -771,7 +771,7 @@ private class AstSerializerImpl(val astVersion: AstVersion, val ion: IonSystem):
         when (astVersion) {
             AstVersion.V0 -> {
                 symbol("drop_table")
-                symbol(expr.tableName)
+                writeExprNode(expr.tableId)
             }
         }
     }

@@ -488,7 +488,7 @@ data class CreateIndex(
  * Represents a `DROP TABLE...` statement.
  */
 data class DropTable(
-    val tableName: String,
+    val tableId: VariableReference,
     override val metas: MetaContainer
 ) : ExprNode() {
     override val children: List<AstNode> get() = emptyList()

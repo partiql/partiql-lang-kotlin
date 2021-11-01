@@ -686,8 +686,8 @@ internal class AstDeserializerInternal(
         targetArgs: List<IonValue>,
         metas: MetaContainer
     ): DropTable {
-        val tableName = targetArgs[0].stringValue() ?: err("Table name must be specified")
-        return DropTable(tableName, metas)
+        val tableId = deserializeExprNode(targetArgs[0].asIonSexp()) as VariableReference
+        return DropTable(tableId, metas)
     }
 
     private fun deserializeDropIndexV0(

@@ -434,7 +434,7 @@ open class AstRewriterBase : AstRewriter {
             rewriteMetas(node))
 
     open fun rewriteDropTable(node: DropTable): DropTable =
-        DropTable(node.tableName, rewriteMetas(node))
+        DropTable(rewriteVariableReference(node.tableId) as VariableReference, rewriteMetas(node))
 
     open fun rewriteDropIndex(node: DropIndex): DropIndex =
         DropIndex(

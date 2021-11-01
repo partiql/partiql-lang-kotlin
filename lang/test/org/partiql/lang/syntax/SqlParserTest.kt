@@ -3697,24 +3697,20 @@ class SqlParserTest : SqlParserTestBase() {
         "(ddl (create_table user))"
     )
 
-    // TODO: Will remove `Ignore` tag once the test framework for parser is changed as well
-    @Ignore
     @Test
     fun dropTable() = assertExpression(
         "DROP TABLE foo",
-        "(drop_table foo)",
-        "(ddl (drop_table (identifier foo (case_sensitive))))"
+        "(drop_table (id foo case_insensitive))",
+        "(ddl (drop_table (identifier foo (case_insensitive))))"
     )
 
     @Test
     fun dropTableWithQuotedIdentifier() = assertExpression(
         "DROP TABLE \"user\"",
-        "(drop_table user)",
+        "(drop_table (id user case_sensitive))",
         "(ddl (drop_table (identifier user (case_sensitive))))"
     )
 
-    // TODO: Will remove `Ignore` tag once the test framework for parser is changed as well
-    @Ignore
     @Test
     fun createIndex() = assertExpression(
         "CREATE INDEX ON foo (x, y.z)",
