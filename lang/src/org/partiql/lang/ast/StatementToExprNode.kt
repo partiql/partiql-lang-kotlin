@@ -431,24 +431,23 @@ private class StatementTransformer(val ion: IonSystem) {
             is DdlOp.CreateTable -> CreateTable(op.tableName.text, metas)
             is DdlOp.DropTable ->
                 DropTable(
-                    VariableReference(
-                        op.tableName.name.text,
-                        op.tableName.case.toCaseSensitivity(),
-                        org.partiql.lang.ast.ScopeQualifier.UNQUALIFIED,
-                        emptyMetaContainer
+                    tableId = VariableReference(
+                        id = op.tableName.name.text,
+                        case = op.tableName.case.toCaseSensitivity(),
+                        scopeQualifier = org.partiql.lang.ast.ScopeQualifier.UNQUALIFIED,
+                        metas = emptyMetaContainer
                     ),
-                    metas
-                )
+                    metas = metas)
             is DdlOp.CreateIndex ->
                 CreateIndex(
-                    VariableReference(
-                        op.indexName.name.text,
-                        op.indexName.case.toCaseSensitivity(),
-                        org.partiql.lang.ast.ScopeQualifier.UNQUALIFIED,
-                        emptyMetaContainer
+                    tableId = VariableReference(
+                        id = op.indexName.name.text,
+                        case = op.indexName.case.toCaseSensitivity(),
+                        scopeQualifier = org.partiql.lang.ast.ScopeQualifier.UNQUALIFIED,
+                        metas = emptyMetaContainer
                     ),
-                op.fields.map { it.toExprNode() },
-                metas)
+                    keys = op.fields.map { it.toExprNode() },
+                    metas = metas)
             is DdlOp.DropIndex ->
                 DropIndex(
                     tableId = VariableReference(
