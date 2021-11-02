@@ -23,7 +23,6 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.ast.AggregateCallSiteListMeta
 import org.partiql.lang.ast.AggregateRegisterIdMeta
 import org.partiql.lang.ast.SourceLocationMeta
-import org.partiql.lang.ast.toAstStatement
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.util.ArgumentsProviderBase
 

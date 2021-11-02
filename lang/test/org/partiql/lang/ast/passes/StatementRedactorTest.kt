@@ -3,7 +3,6 @@ package org.partiql.lang.ast.passes
 import com.amazon.ionelement.api.StringElement
 import junitparams.Parameters
 import org.junit.Test
-import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.syntax.SqlParserTestBase
 
