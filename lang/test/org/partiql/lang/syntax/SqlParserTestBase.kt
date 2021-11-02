@@ -42,8 +42,9 @@ abstract class SqlParserTestBase : TestBase() {
     protected fun parseToAst(source: String): PartiqlAst.Statement = parser.parseAstStatement(source)
 
     /**
-     * This method is used by test cases, to test with PIG AST, while the expected PIG AST is a PIG builder
-     * Refer to kdoc for `assertExpression(source: String, expectedPigAst: String)` to see the checks performed.
+     * This method is used by test cases for parsing a string.
+     * The test are performed with only PIG AST.
+     * The expected PIG AST is a PIG builder.
      */
     protected fun assertExpression(
         source: String,
@@ -51,19 +52,14 @@ abstract class SqlParserTestBase : TestBase() {
     ) {
         val expectedPigAst = PartiqlAst.build { expectedPigBuilder() }.toIonElement().toString()
 
+        // Refer to comments inside the main body of the following function to see what checks are performed.
         assertExpression(source, expectedPigAst)
     }
 
     /**
-     * This method is used by test cases, to test with PIG AST, while the expected PIG AST is a string
-     * The following checks are performed:
-     *      1. Check equals for actual value and expected value in IonSexp format
-     *      2. Check equals for actual value and expected value in SexpElement format
-     *      3. Check equals for actual value and expected value after transformation: astStatment -> SexpElement -> astStatement
-     *      4. Check equals for actual value after round trip transformation: astStatement -> ExprNode -> astStatement
-     *      5. Check equals for actual value after round trip transformation: SexpElement -> astStatement -> SexpElement
-     *      6. Check equals for actual value after round trip transformation: astStatement -> SexpElement -> astStatement
-     *      7. Check equals for actual value after round trip transformation: ExprNode -> astStatement -> SexpElement -> astStatement -> ExprNode
+     * This method is used by test cases for parsing a string.
+     * The test are performed with only PIG AST.
+     * The expected PIG AST is a string.
      */
     protected fun assertExpression(
         source: String,
@@ -72,17 +68,22 @@ abstract class SqlParserTestBase : TestBase() {
         val actualExprNode = parse(source)
         val expectedIonSexp = loadIonSexp(expectedPigAst)
 
+        // Check equals for actual value and expected value in IonSexp format
         checkEqualInIonSexp(actualExprNode, expectedIonSexp, source)
 
         val expectedElement = expectedIonSexp.toIonElement().asSexp()
 
+        // See the comments inside the function to see what checks are performed.
         pigDomainAssert(actualExprNode, expectedElement)
+
+        // Check equals for actual value after round trip transformation: astStatement -> ExprNode -> astStatement
         assertRoundTripPigAstToExprNode(actualExprNode)
     }
 
     /**
-     * This method is used by test cases, to test with PIG AST and V0 AST, where the expected PIG AST is a PIG builder
-     * Refer to kdoc for `assertExpression(source: String, expectedSexpAstV0: String, expectedPigAst: String)` to see the checks performed.
+     * This method is used by test cases for parsing a string.
+     * The test are performed with both PIG AST and V0 AST.
+     * The expected PIG AST is a PIG builder.
      */
     protected fun assertExpression(
         source: String,
@@ -91,16 +92,14 @@ abstract class SqlParserTestBase : TestBase() {
     ) {
         val expectedPigAst = PartiqlAst.build { expectedPigBuilder() }.toIonElement().toString()
 
+        // Refer to comments inside the main body of the following function to see what checks are performed.
         assertExpression(source, expectedSexpAstV0, expectedPigAst)
     }
 
     /**
-     * This method is used by test cases, to test with PIG AST and V0 AST, while the expected PIG AST is a string
-     * The following checks for V0 AST are performed:
-     *      1. Check equals for actual value and expected value after transformation: EpxrNode -> IonSexp
-     *      2. Check equals for actual value and expected value after transformation: IonSexp -> EpxrNode
-     *
-     * Refer to kdoc for `assertExpression(source: String, expectedPigAst: String)` to see the checks performed for PIG Ast.
+     * This method is used by test cases for parsing a string.
+     * The test are performed with both PIG AST and V0 AST.
+     * The expected PIG AST is a string.
      */
     protected fun assertExpression(
         source: String,
@@ -111,6 +110,8 @@ abstract class SqlParserTestBase : TestBase() {
         val actualExprNode = parse(source)
         val expectedV0AstSexp = loadIonSexp(expectedV0Ast)
 
+        // Check equals for actual value and expected value after transformation: EpxrNode -> IonSexp
+        // Check equals for actual value and expected value after transformation: IonSexp -> EpxrNode
         serializeAssert(AstVersion.V0, actualExprNode, expectedV0AstSexp, source)
 
         // Check for PIG Ast
@@ -158,16 +159,16 @@ abstract class SqlParserTestBase : TestBase() {
     }
 
     private fun pigDomainAssert(actualExprNode: ExprNode, expectedSexpAst: SexpElement) {
-        // Convert ExprNode into a PartiqlAst statement
         val actualStatement = actualExprNode.toAstStatement()
-
-        // Test cases are missing (query <expr>) wrapping, so extract <expr>
         val actualElement = unwrapQuery(actualStatement)
 
+        // Check equal for actual and expected in transformed astStatement: astStatment -> SexpElement -> astStatement
+        // Check round trip for actual: SexpElement -> astStatement -> SexpElement
         assertRoundTripIonElementToPartiQlAst(actualElement, expectedSexpAst)
 
-        // Run the actualExprNode through the conversion to PIG domain instance for all tests
-        // to detect conditions which will cause the conversion to throw an exception.
+        // Check equal for actual and expected in SexpElement format
+        // Check round trip for actual: astStatement -> SexpElement -> astStatement
+        // Check equals for actual value after round trip transformation: ExprNode -> astStatement -> SexpElement -> astStatement -> ExprNode
         assertRoundTripPartiQlAstToExprNode(actualStatement, expectedSexpAst, actualExprNode)
     }
 
