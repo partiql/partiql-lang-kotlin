@@ -195,6 +195,13 @@ data class VariableReference(
     override val children: List<AstNode> = listOf()
 }
 
+
+data class Identifier(
+    val id: String,
+    val case: CaseSensitivity,
+    override val metas: MetaContainer
+) : HasMetas
+
 /**
  * Represents a dynamic parameter with ordinal position for a variable to be provided
  * by the evaluation environment.
