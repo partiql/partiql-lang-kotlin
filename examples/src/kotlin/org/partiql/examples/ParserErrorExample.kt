@@ -24,7 +24,7 @@ class ParserErrorExample(out: PrintStream) : Example(out) {
         // Attempt to parse a query with invalid syntax.
         val invalidQuery = "SELECT 1 + "
         print("Invalid PartiQL query:", invalidQuery)
-        parser.parseExprNode(invalidQuery)
+        parser.parseAstStatement(invalidQuery)
 
         throw Exception("ParserException was not thrown")
     } catch (e: ParserException) {

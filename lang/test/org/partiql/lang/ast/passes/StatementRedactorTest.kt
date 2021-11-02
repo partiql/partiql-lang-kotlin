@@ -14,8 +14,8 @@ class StatementRedactorTest : SqlParserTestBase() {
 
     /**
      * Here is an example of user defined functions (UDF) with following signature:
-     *  begins_with(Path: ExprNode, Value: Literal)
-     *  contains(Path: ExprNode, Value: Literal)
+     *  begins_with(Path: PartiqlAst.Expr.Id or PartiqlAst.Expr.Path, Value: PartiqlAst.Expr.Lit)
+     *  contains(Path: PartiqlAst.Expr or PartiqlAst.Expr.Path, Value: PartiqlAst.Expr.Lit)
      *
      * Callers are responsible for determining which [args] are to be redacted.
      * There are two major components:
@@ -43,8 +43,8 @@ class StatementRedactorTest : SqlParserTestBase() {
     /**
      * Return true if the parsed results of input [statement] is the same as input [ast]
      */
-    private fun validateInputAstParsedFromInputStatement(statement: String, ast: ExprNode): Boolean {
-        return parser.parseExprNode(statement) == ast
+    private fun validateInputAstParsedFromInputStatement(statement: String, ast: PartiqlAst.Statement): Boolean {
+        return parser.parseAstStatement(statement) == ast
     }
 
     @Test
@@ -314,20 +314,20 @@ class StatementRedactorTest : SqlParserTestBase() {
     fun testDefaultArguments() {
         val originalStatement = "SELECT * FROM tb WHERE hk = 1 AND begins_with(Attr, 'foo', bar)"
         val expectedRedactedStatement = "SELECT * FROM tb WHERE hk = ***(Redacted) AND begins_with(Attr, ***(Redacted), bar)"
-        val redactedStatement1 = redact(originalStatement, super.parser.parseExprNode(originalStatement))
+        val redactedStatement1 = redact(originalStatement, super.parser.parseAstStatement(originalStatement))
         assertEquals(expectedRedactedStatement, redactedStatement1)
 
-        val redactedStatement2 = redact(originalStatement, super.parser.parseExprNode(originalStatement), providedSafeFieldNames = emptySet())
+        val redactedStatement2 = redact(originalStatement, super.parser.parseAstStatement(originalStatement), providedSafeFieldNames = emptySet())
         assertEquals(expectedRedactedStatement, redactedStatement2)
 
-        val redactedStatement3 = redact(originalStatement, super.parser.parseExprNode(originalStatement), userDefinedFunctionRedactionConfig = emptyMap())
+        val redactedStatement3 = redact(originalStatement, super.parser.parseAstStatement(originalStatement), userDefinedFunctionRedactionConfig = emptyMap())
         assertEquals(expectedRedactedStatement, redactedStatement3)
     }
 
     @Test
     fun testInputStatementAstMismatch() {
         val inputStatement = "SELECT * FROM tb WHERE nonKey = 'a'"
-        val inputAst = super.parser.parseExprNode("SELECT * FROM tb WHERE hk = 1 AND nonKey = 'a'")
+        val inputAst = super.parser.parseAstStatement("SELECT * FROM tb WHERE hk = 1 AND nonKey = 'a'")
         assertFalse(validateInputAstParsedFromInputStatement(inputStatement, inputAst))
 
         try {

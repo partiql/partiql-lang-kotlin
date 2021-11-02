@@ -193,6 +193,7 @@ internal class CompilerPipelineImpl(
     private val compiler = EvaluatingCompiler(valueFactory, functions, procedures, compileOptions)
 
     override fun compile(query: String): Expression {
+        // TODO: replace `parseExprNode` with `ParseStatement` once evaluator deprecates `ExprNode`
         return compile(parser.parseExprNode(query))
     }
 
