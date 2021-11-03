@@ -2111,6 +2111,56 @@ class ParserErrorsTest : SqlParserTestBase() {
             Property.TOKEN_VALUE to ion.newSymbol("undrop")))
 
     @Test
+    fun execWithDmlInsert() = checkInputThrowingParserException(
+        "EXEC abc_proc INSERT INTO dogs <<{}>>",
+        ErrorCode.PARSE_UNEXPECTED_TERM,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 15L,
+            Property.TOKEN_TYPE to TokenType.KEYWORD,
+            Property.TOKEN_VALUE to ion.newSymbol("insert_into")))
+
+    @Test
+    fun execWithDmlDelete() = checkInputThrowingParserException(
+        "EXEC abc_proc DELETE FROM dogs WHERE name = 'Jack'",
+        ErrorCode.PARSE_UNEXPECTED_TERM,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 15L,
+            Property.TOKEN_TYPE to TokenType.KEYWORD,
+            Property.TOKEN_VALUE to ion.newSymbol("delete")))
+
+    @Test
+    fun execWithDmlUpdate() = checkInputThrowingParserException(
+        "EXEC abc_proc UPDATE dogs SET dogs.name = '1'",
+        ErrorCode.PARSE_UNEXPECTED_TERM,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 15L,
+            Property.TOKEN_TYPE to TokenType.KEYWORD,
+            Property.TOKEN_VALUE to ion.newSymbol("update")))
+
+    @Test
+    fun execWithDmlRemove() = checkInputThrowingParserException(
+        "EXEC abc_proc FROM dogs REMOVE dogs.name",
+        ErrorCode.PARSE_UNEXPECTED_TERM,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 25L,
+            Property.TOKEN_TYPE to TokenType.KEYWORD,
+            Property.TOKEN_VALUE to ion.newSymbol("remove")))
+
+    @Test
+    fun execWithDmlList() = checkInputThrowingParserException(
+        "EXEC abc_proc UPDATE x SET k = 5, m = 6 INSERT INTO c VALUE << 1 >> REMOVE a SET l = 3 REMOVE b WHERE a = b RETURNING MODIFIED OLD a",
+        ErrorCode.PARSE_UNEXPECTED_TERM,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 15L,
+            Property.TOKEN_TYPE to TokenType.KEYWORD,
+            Property.TOKEN_VALUE to ion.newSymbol("update")))
+
+    @Test
     fun missingDateString() = checkInputThrowingParserException(
         "DATE",
         ErrorCode.PARSE_UNEXPECTED_TOKEN,

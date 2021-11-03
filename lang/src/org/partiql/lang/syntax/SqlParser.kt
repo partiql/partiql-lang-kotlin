@@ -1247,7 +1247,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
         KEYWORD -> when (head?.keywordText) {
             in BASE_DML_KEYWORDS -> parseBaseDml()
-            "update" -> tail.parseUpdate()
+            "update" -> tail.parseUpdate(head!!)
             "delete" -> tail.parseDelete(head!!)
             "case" -> when (tail.head?.keywordText) {
                 "when" -> tail.parseCase(isSimple = false)
@@ -1464,11 +1464,11 @@ class SqlParser(private val ion: IonSystem) : Parser {
         return ParseNode(FROM, null, listOf(operation, fromList) + children, rem)
     }
 
-    private fun List<Token>.parseBaseDmls() : ParseNode {
+    private fun List<Token>.parseBaseDmls(updateToken: Token? = null) : ParseNode {
         var rem = this;
         val nodes = ArrayList<ParseNode>()
         while (rem.head?.keywordText in BASE_DML_KEYWORDS) {
-            var node = rem.parseBaseDml()
+            var node = rem.parseBaseDml(updateToken)
             nodes.add(node)
             rem = node.remaining
         }
@@ -1484,8 +1484,9 @@ class SqlParser(private val ion: IonSystem) : Parser {
         return ParseNode(DML_LIST, null, nodes, rem)
     }
 
-    private fun List<Token>.parseBaseDml(): ParseNode {
+    private fun List<Token>.parseBaseDml(updateToken: Token? = null): ParseNode {
         var rem = this
+        val headToken = rem.head
         return when (rem.head?.keywordText) {
             "insert_into" -> {
                 val lvalue = rem.tail.parsePathTerm(PathMode.SIMPLE_PATH)
@@ -1503,17 +1504,17 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
                     val returning = rem.parseOptionalReturning()?.also { rem = it.remaining }
 
-                    ParseNode(INSERT_VALUE, null, listOfNotNull(lvalue, value, position, onConflict, returning), rem)
+                    ParseNode(INSERT_VALUE, headToken, listOfNotNull(lvalue, value, position, onConflict, returning), rem)
                 } else {
                     val values = rem.parseExpression()
-                    ParseNode(INSERT, null, listOf(lvalue, values), values.remaining)
+                    ParseNode(INSERT, headToken, listOf(lvalue, values), values.remaining)
                 }
             }
-            "set" -> rem.tail.parseSetAssignments(UPDATE)
+            "set" -> rem.tail.parseSetAssignments(UPDATE, updateToken)
             "remove" -> {
                 val lvalue = rem.tail.parsePathTerm(PathMode.SIMPLE_PATH)
                 rem = lvalue.remaining
-                ParseNode(REMOVE, null, listOf(lvalue), rem)
+                ParseNode(REMOVE, headToken, listOf(lvalue), rem)
             }
             else -> err("Expected data manipulation", PARSE_MISSING_OPERATION)
         }
@@ -1548,14 +1549,14 @@ class SqlParser(private val ion: IonSystem) : Parser {
         } else null
     }
 
-    private fun List<Token>.parseSetAssignments(type: ParseType): ParseNode = parseArgList(
+    private fun List<Token>.parseSetAssignments(type: ParseType, updateToken: Token? = null): ParseNode = parseArgList(
         aliasSupportType = NONE,
         mode = SET_CLAUSE_ARG_LIST
     ).run {
         if (children.isEmpty()) {
             remaining.err("Expected assignment for SET", PARSE_MISSING_SET_ASSIGNMENT)
         }
-        copy(type = type)
+        copy(type = type, token = updateToken)
     }
 
     private fun List<Token>.parseDelete(name: Token): ParseNode {
@@ -1566,8 +1567,8 @@ class SqlParser(private val ion: IonSystem) : Parser {
         return tail.parseLegacyDml { ParseNode(DELETE, name, emptyList(), this) }
     }
 
-    private fun List<Token>.parseUpdate(): ParseNode = parseLegacyDml {
-        parseBaseDmls()
+    private fun List<Token>.parseUpdate(updateToken: Token): ParseNode = parseLegacyDml {
+        parseBaseDmls(updateToken)
     }
 
     private fun List<Token>.parseReturning(): ParseNode {
@@ -2857,7 +2858,10 @@ class SqlParser(private val ion: IonSystem) : Parser {
             else -> node.type.isTopLevelType
         }
         if (topLevelTokenSeen && isTopLevelType) {
-            node.throwTopLevelParserError()
+            when (node.type) {
+                DML_LIST -> node.children.first().throwTopLevelParserError()
+                else -> node.throwTopLevelParserError()
+            }
         }
 
         if (isTopLevelType && level > 0) {
