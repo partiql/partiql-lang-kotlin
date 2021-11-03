@@ -1,3 +1,8 @@
+
+// This line cause PIG to emit the PartiqlAstToPartiqlAlgebraVisitorTransform base class with abstract methods which
+// is (currently) the easiest way to transform from the AST to the algebra.
+(transform partiql_ast partiql_algebra)
+
 /*
     The PartiQL AST.
 
@@ -378,4 +383,100 @@
     ) // end of domain
 ) // end of define
 
+
+(define partiql_algebra
+    (permute_domain partiql_ast
+
+        (with expr
+            // Remove the select node from the `expr` sum type.
+            (exclude select)
+
+            (include
+                // Invokes `exp` once in the context of every binding tuple returned by `query`, returning a
+                // collection of values produced by `query`.  The returned collection's type (bag or list) is the same
+                // as the bindings collection returned by `query`.
+                (map_values exp::expr query::bindings_term))
+        )
+
+        // These should be excluded as well since they were referenced only by the `select` variant of `expr`, which
+        // was excluded above.
+        (exclude
+            projection
+            project_item
+            from_source
+        )
+
+        // Now we include new stuff that's unique to PartiQL's relational algebra.
+        (include
+            // `bindings_term` A node that initially contains only a `bindings_expr` but can be permuted in subsequent
+            // domains to // include additional information about the contained bindings_expr, i.e. the data type
+            // (schema) of the input and outputs required by the `bindings_expr`.  The purpose this serves is similar
+            // to that of "meta"s, but this is better because it's strongly typed and can be part of cross-domain
+            // visitor transforms.
+            (product bindings_term exp::bindings_expr)
+
+            // The operators of PartiQL's relational algebra. See `$projectDir/docs/dev/RELATIONAL-ALGEBRA.md` for the
+            // documentation of each node. (Note that we do not permute and reuse `from_source` here because:
+            // 1. it has the wrong name and 2. every variant is slightly different, meaning it would be completely
+            // redefined anyway.  In the future, we might consider renaming `from_source` to `bindings_expr` so that it
+            // can be permuted here more easily, but this comes with breaking API changes and other issues that are
+            // beyond the scope of our current goals.)
+            (sum bindings_expr
+                (scan expr::expr as_alias::var_decl at_alias::(? var_decl) by_alias::(? var_decl))
+                (cross_join left::bindings_term right::bindings_term)
+                (filter predicate::expr term::bindings_term)
+
+                // TODO: numerous other relational operators added to be incrementally via steel thread approach.
+            )
+
+            // Every instance of var_decl introduces a new binding in the current scope.
+            // Modeling variable declarations this way all of the places bindings are introduced to be be permuted in
+            // subsequent domains at the same time.   This allows DeBruijn indexes to be added to all nodes that
+            // declare bindings easily.  Later permuted domains will add an index to this node.
+            (product var_decl name::symbol)
+        )
+
+        // Nodes excluded below this line will eventually have a representation in the logical algebra, but not
+        // initially.  We will incrementally remove the exclusions in a steel thread fashion in subsequent PRs.
+
+        (with statement
+            (exclude
+                dml
+                ddl
+                exec
+            )
+        )
+
+        (exclude
+            group_by
+            grouping_strategy
+            group_key
+            group_key_list
+            order_by
+            sort_spec
+            ordering_spec
+
+            dml_op
+            dml_op_list
+            ddl_op
+            conflict_action
+            on_conflict
+            returning_expr
+            returning_elem
+            column_component
+            returning_mapping
+            assignment
+            identifier
+        )
+
+    )
+)
+
+// TODO??
+//
+//(define piql
+//    (permute_domain logical_algebra
+//        ???
+//    )
+//)
 
