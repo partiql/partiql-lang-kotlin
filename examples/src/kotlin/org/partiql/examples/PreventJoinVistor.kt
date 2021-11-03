@@ -2,7 +2,6 @@ package org.partiql.examples
 
 import com.amazon.ion.system.*
 import org.partiql.examples.util.Example
-import org.partiql.lang.ast.*
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.syntax.*
 import java.io.PrintStream
@@ -21,12 +20,12 @@ class PreventJoinVisitorExample(out: PrintStream) : Example(out) {
     private val parser = SqlParser(ion)
 
     private fun hasJoins(sql: String): Boolean = try {
-        // TODO use PIG AST to iterate the AST
-        val ast = parser.parseExprNode(sql)
-
-        if(ast.any { it is FromSourceJoin }) {
-            throw InvalidAstException("JOINs are prevented")
-        }
+        val ast = parser.parseAstStatement(sql)
+        object : PartiqlAst.Visitor(){
+            override fun visitFromSourceJoin(node: PartiqlAst.FromSource.Join) {
+                throw InvalidAstException("JOINs are prevented")
+            }
+        }.walkStatement(ast)
 
         false
     } catch (e: InvalidAstException) {
