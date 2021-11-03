@@ -708,9 +708,6 @@ internal class AstDeserializerInternal(
             CaseSensitivity.fromSymbol(targetArgs[1].asIonSexp().tagText),
             emptyMetaContainer
         )
-
-        // return (targetArgs[0].stringValue() ?: err("Identifier deserialization: expecting string value, got ${targetArgs[0]}")) to
-        //    CaseSensitivity.fromSymbol(targetArgs[1].asIonSexp().tagText)
     }
 
     private fun deserializeTypedIs(
