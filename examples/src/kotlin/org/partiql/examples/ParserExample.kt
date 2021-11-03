@@ -20,29 +20,28 @@ class ParserExample(out: PrintStream) : Example(out) {
         // An instance of [SqlParser].
         val parser: Parser = SqlParser(ion)
 
+        // A query in string format
         val query = "SELECT exampleField FROM exampleTable WHERE anotherField > 10"
         print("PartiQL query", query)
 
-        // Use the SqlParser instance to parse the example query.  This is very simple.
+        // Use the SqlParser instance to parse the example query and get the AST as a PartiqlAst Statement.
         val ast = parser.parseAstStatement(query)
 
-        // Create an IonWriter for printing of the PartiqlAst
-        val partiqlAstString = StringBuilder()
-        val ionWriter = IonTextWriterBuilder.minimal().withPrettyPrinting().build(partiqlAstString)
+        // We can transform the AST into SexpElement form to pretty print
+        val elements = ast.toIonElement()
 
-        // Now we can convert the Ion s-expression form into an Ion value to pretty print
-        ast.toIonElement().writeTo(ionWriter)
-        print("Serialized AST", partiqlAstString.toString())
+        // Create an IonWriter to print the AST
+        val astString = StringBuilder()
+        val ionWriter = IonTextWriterBuilder.minimal().withPrettyPrinting().build(astString)
 
-        // Here we show how to parse a query directly to a PartiqlAst statement
-        val statement = parser.parseAstStatement(query)
+        // Now use the IonWriter to write the SexpElement AST into the StringBuilder and pretty print it
+        elements.writeTo(ionWriter)
+        print("Serialized AST", astString.toString())
 
-        // We can easily convert the PartiqlAst statement into an Ion s-expression
-        val elements = statement.toIonElement()
-        // and back into a PartiqlAst statement
+        // We can also convert the SexpElement AST back into a PartiqlAst statement
         val roundTrippedStatement = PartiqlAst.transform(elements) as PartiqlAst.Statement
         // Verify that we have the original Partiql Ast statement
-        if (statement != roundTrippedStatement) {
+        if (ast != roundTrippedStatement) {
             throw Exception("Expected statements to be the same")
         }
     }
