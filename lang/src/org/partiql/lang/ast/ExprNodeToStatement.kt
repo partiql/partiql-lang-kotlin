@@ -52,7 +52,7 @@ private fun ExprNode.toAstDdl(): PartiqlAst.Statement {
                     dropIndex(
                         // case-sensitivity of table names cannot be represented with ExprNode.
                         identifier(thiz.tableId.id, thiz.tableId.case.toAstCaseSensitivity()),
-                        identifier(thiz.identifier.id, thiz.identifier.case.toAstCaseSensitivity())),
+                        identifier(thiz.indexId.id, thiz.indexId.case.toAstCaseSensitivity())),
                     metas)
             is DropTable ->
                 // case-sensitivity of table names cannot be represented with ExprNode.

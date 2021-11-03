@@ -210,7 +210,9 @@ private enum class NodeTag(val definition: TagDefinition) {
 
     //Only valid as path components...
     CASE_INSENSITIVE(TagDefinition("case_insensitive", 0, 1)),
-    CASE_SENSITIVE(TagDefinition("case_sensitive", 0, 1));
+    CASE_SENSITIVE(TagDefinition("case_sensitive", 0, 1)),
+
+    IDENTIFIER(TagDefinition("identifier", 2, 2));
 
     companion object {
         private val tagLookup = values().map { Pair(it.definition.tagText, it) }.toMap()
@@ -417,7 +419,8 @@ internal class AstDeserializerInternal(
                 NodeTag.VALUE,
                 NodeTag.WHEN,
                 NodeTag.ELSE,
-                NodeTag.TYPE -> errInvalidContext(nodeTag)
+                NodeTag.TYPE,
+                NodeTag.IDENTIFIER -> errInvalidContext(nodeTag)
             }
         }
     }
@@ -673,7 +676,7 @@ internal class AstDeserializerInternal(
                 CreateTable(tableName, metas)
             }
             NodeTag.INDEX -> {
-                val tableId = deserializeExprNode(args[0].asIonSexp()) as VariableReference
+                val tableId = deserializeIdentifier(args[0].asIonSexp().drop(1))
                 val children = args.drop(1).toListOfIonSexp().map { Pair(it.nodeTag, it) }.toMap()
                 val keys = children[NodeTag.KEYS]?.args?.deserializeAllExprNodes() ?: err("Index definition expects keys")
                 CreateIndex(tableId, keys, metas)
@@ -686,7 +689,7 @@ internal class AstDeserializerInternal(
         targetArgs: List<IonValue>,
         metas: MetaContainer
     ): DropTable {
-        val tableId = deserializeExprNode(targetArgs[0].asIonSexp()) as VariableReference
+        val tableId = deserializeIdentifier(targetArgs[0].asIonSexp().drop(1))
         return DropTable(tableId, metas)
     }
 
@@ -694,14 +697,20 @@ internal class AstDeserializerInternal(
         targetArgs: List<IonValue>,
         metas: MetaContainer
     ): DropIndex {
-        val tableId = deserializeExprNode(targetArgs[0].asIonSexp()) as VariableReference
-        val id = deserializeExprNode(targetArgs[1].asIonSexp()) as VariableReference
-        return DropIndex(tableId, id, metas)
+        val tableId = deserializeIdentifier(targetArgs[0].asIonSexp().drop(1))
+        val indexId = deserializeIdentifier(targetArgs[1].asIonSexp().drop(1))
+        return DropIndex(tableId, indexId, metas)
     }
 
-    private fun deserializeIdentifier(targetArgs: List<IonValue>): Pair<String, CaseSensitivity> {
-        return (targetArgs[0].stringValue() ?: err("Identifier deserialization: expecting string value, got ${targetArgs[0]}")) to
-            CaseSensitivity.fromSymbol(targetArgs[1].asIonSexp().tagText)
+    private fun deserializeIdentifier(targetArgs: List<IonValue>): Identifier {
+        return Identifier(
+            targetArgs[0].stringValue() ?: err("Identifier deserialization: expecting string value, got ${targetArgs[0]}"),
+            CaseSensitivity.fromSymbol(targetArgs[1].asIonSexp().tagText),
+            emptyMetaContainer
+        )
+
+        // return (targetArgs[0].stringValue() ?: err("Identifier deserialization: expecting string value, got ${targetArgs[0]}")) to
+        //    CaseSensitivity.fromSymbol(targetArgs[1].asIonSexp().tagText)
     }
 
     private fun deserializeTypedIs(

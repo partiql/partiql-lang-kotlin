@@ -22,6 +22,7 @@ import org.partiql.lang.util.asIonSexp
 import org.partiql.lang.util.case
 import org.partiql.lang.util.checkThreadInterrupted
 import kotlin.UnsupportedOperationException
+import kotlin.math.exp
 
 /**
  * Serializes an instance of [ExprNode] to one of the s-expression based ASTs.
@@ -743,7 +744,7 @@ private class AstSerializerImpl(val astVersion: AstVersion, val ion: IonSystem):
                 symbol(null)
                 sexp {
                     symbol("index")
-                    writeExprNode(expr.tableId)
+                    writeIdentifier(expr.tableId.id, expr.tableId.case)
                     sexp {
                         symbol("keys")
                         expr.keys.forEach {
@@ -771,7 +772,7 @@ private class AstSerializerImpl(val astVersion: AstVersion, val ion: IonSystem):
         when (astVersion) {
             AstVersion.V0 -> {
                 symbol("drop_table")
-                writeExprNode(expr.tableId)
+                writeIdentifier(expr.tableId.id, expr.tableId.case)
             }
         }
     }
@@ -780,8 +781,8 @@ private class AstSerializerImpl(val astVersion: AstVersion, val ion: IonSystem):
         when (astVersion) {
             AstVersion.V0 -> {
                 symbol("drop_index")
-                writeExprNode(expr.tableId)
-                writeExprNode(expr.identifier)
+                writeIdentifier(expr.tableId.id, expr.tableId.case)
+                writeIdentifier(expr.indexId.id, expr.indexId.case)
             }
         }
     }

@@ -3700,14 +3700,14 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun dropTable() = assertExpression(
         "DROP TABLE foo",
-        "(drop_table (id foo case_insensitive))",
+        "(drop_table (identifier foo (case_insensitive)))",
         "(ddl (drop_table (identifier foo (case_insensitive))))"
     )
 
     @Test
     fun dropTableWithQuotedIdentifier() = assertExpression(
         "DROP TABLE \"user\"",
-        "(drop_table (id user case_sensitive))",
+        "(drop_table (identifier user (case_sensitive)))",
         "(ddl (drop_table (identifier user (case_sensitive))))"
     )
 
@@ -3718,7 +3718,7 @@ class SqlParserTest : SqlParserTestBase() {
         (create
           null.symbol
           (index
-            (id foo case_insensitive)
+            (identifier foo (case_insensitive))
             (keys
               (id x case_insensitive)
               (path (id y case_insensitive) (case_insensitive (lit "z"))))))
@@ -3739,7 +3739,7 @@ class SqlParserTest : SqlParserTestBase() {
         (create
           null.symbol
           (index
-            (id user case_sensitive)
+            (identifier user (case_sensitive))
             (keys
               (id group case_sensitive))))
         """,
@@ -3754,14 +3754,14 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun dropIndex() = assertExpression(
         "DROP INDEX bar ON foo",
-        "(drop_index (id foo case_insensitive) (id bar case_insensitive))",
+        "(drop_index (identifier foo (case_insensitive)) (identifier bar (case_insensitive)))",
         "(ddl (drop_index (table (identifier foo (case_insensitive))) (keys (identifier bar (case_insensitive)))))"
     )
 
     @Test
     fun dropIndexWithQuotedIdentifiers() = assertExpression(
         "DROP INDEX \"bar\" ON \"foo\"",
-        "(drop_index (id foo case_sensitive) (id bar case_sensitive))",
+        "(drop_index (identifier foo (case_sensitive)) (identifier bar (case_sensitive)))",
         "(ddl (drop_index (table (identifier foo (case_sensitive))) (keys (identifier bar (case_sensitive)))))"
     )
 

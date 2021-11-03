@@ -429,17 +429,17 @@ open class AstRewriterBase : AstRewriter {
 
     open fun rewriteCreateIndex(node: CreateIndex): CreateIndex =
         CreateIndex(
-            rewriteVariableReference(node.tableId) as VariableReference,
+            rewriteIdentifier(node.tableId),
             node.keys.map { rewriteExprNode(it) },
             rewriteMetas(node))
 
     open fun rewriteDropTable(node: DropTable): DropTable =
-        DropTable(rewriteVariableReference(node.tableId) as VariableReference, rewriteMetas(node))
+        DropTable(rewriteIdentifier(node.tableId), rewriteMetas(node))
 
     open fun rewriteDropIndex(node: DropIndex): DropIndex =
         DropIndex(
-            rewriteVariableReference(node.tableId) as VariableReference,
-            rewriteVariableReference(node.identifier) as VariableReference,
+            rewriteIdentifier(node.tableId),
+            rewriteIdentifier(node.indexId),
             rewriteMetas(node))
 
     open fun rewriteExec(node: Exec): Exec =
@@ -466,5 +466,12 @@ open class AstRewriterBase : AstRewriter {
             node.with_time_zone,
             node.tz_minutes,
             rewriteMetas(node)
+        )
+
+    open fun rewriteIdentifier(identifier: Identifier): Identifier =
+        Identifier(
+            identifier.id,
+            identifier.case,
+            rewriteMetas(identifier)
         )
 }
