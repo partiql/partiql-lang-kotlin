@@ -2,10 +2,8 @@ package org.partiql.lang.ast.passes
 
 import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.StringElement
-import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.sourceLocation
-import org.partiql.lang.ast.toAstStatement
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.syntax.SqlParser
 
@@ -71,7 +69,7 @@ fun skipRedaction(node: PartiqlAst.Expr, safeFieldNames: Set<String>): Boolean {
 fun redact(statement: String,
            providedSafeFieldNames: Set<String> = emptySet(),
            userDefinedFunctionRedactionConfig: Map<String, UserDefinedFunctionRedactionLambda> = emptyMap()): String {
-    return redact(statement, parser.parseExprNode(statement), providedSafeFieldNames, userDefinedFunctionRedactionConfig)
+    return redact(statement, parser.parseAstStatement(statement), providedSafeFieldNames, userDefinedFunctionRedactionConfig)
 }
 
 /**
@@ -88,11 +86,10 @@ fun redact(statement: String,
  * arguments are to be redacted. For an example, please check StatementRedactorTest.kt for more details.
  */
 fun redact(statement: String,
-           ast: ExprNode,
+           partiqlAst: PartiqlAst.Statement,
            providedSafeFieldNames: Set<String> = emptySet(),
            userDefinedFunctionRedactionConfig: Map<String, UserDefinedFunctionRedactionLambda> = emptyMap()): String {
 
-    val partiqlAst = ast.toAstStatement()
     val statementRedactionVisitor = StatementRedactionVisitor(statement, providedSafeFieldNames, userDefinedFunctionRedactionConfig)
     statementRedactionVisitor.walkStatement(partiqlAst)
     return statementRedactionVisitor.getRedactedStatement()

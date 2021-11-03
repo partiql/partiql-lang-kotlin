@@ -23,7 +23,6 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.ast.AggregateCallSiteListMeta
 import org.partiql.lang.ast.AggregateRegisterIdMeta
 import org.partiql.lang.ast.SourceLocationMeta
-import org.partiql.lang.ast.toAstStatement
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.util.ArgumentsProviderBase
 
@@ -38,7 +37,7 @@ class AggregateSupportVisitorTransformTests : VisitorTransformTestBase() {
      */
     private fun String.parseAndTransformQuery() : PartiqlAst.Expr.Select {
         val query = this
-        val statement = super.parser.parseExprNode(query).toAstStatement()
+        val statement = super.parser.parseAstStatement(query)
         val transformedNode = (transformer).transformStatement(statement) as PartiqlAst.Statement.Query
         return (transformedNode.expr) as PartiqlAst.Expr.Select
     }

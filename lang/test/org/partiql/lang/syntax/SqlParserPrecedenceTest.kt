@@ -18,10 +18,7 @@ import junitparams.*
 import junitparams.naming.*
 import org.junit.*
 import com.amazon.ionelement.api.toIonElement
-import org.partiql.lang.ast.passes.MetaStrippingRewriter
-import org.partiql.lang.ast.toExprNode
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.util.asIonSexp
 
 
 class SqlParserPrecedenceTest : SqlParserTestBase() {
@@ -1049,12 +1046,10 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
     private fun runTest(pair: Pair<String, String>) {
         val (source, expectedAst) = pair
 
-        val expectedAstExpr = PartiqlAst.transform(ion.singleValue(expectedAst).toIonElement()) as PartiqlAst.Expr
-        val expectedAstStatement = PartiqlAst.build { query(expectedAstExpr) }
-        val expectedExprNode = MetaStrippingRewriter.stripMetas(expectedAstStatement.toExprNode(ion))
+        val expectedExpr = PartiqlAst.transform(ion.singleValue(expectedAst).toIonElement()) as PartiqlAst.Expr
+        val expectedStatement = PartiqlAst.build { query(expectedExpr) }
+        val actualStatement = SqlParser(ion).parseAstStatement(source)
 
-        val actualExprNode = MetaStrippingRewriter.stripMetas(SqlParser(ion).parseExprNode(source))
-
-        assertEquals(expectedExprNode, actualExprNode)
+        assertEquals(expectedStatement, actualStatement)
     }
 }
