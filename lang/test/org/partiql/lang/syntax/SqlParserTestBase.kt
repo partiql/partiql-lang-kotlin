@@ -42,21 +42,6 @@ abstract class SqlParserTestBase : TestBase() {
     /**
      * This method is used by test cases for parsing a string.
      * The test are performed with only PIG AST.
-     * The expected PIG AST is a PIG builder.
-     */
-    protected fun assertExpression(
-        source: String,
-        expectedPigBuilder: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode
-    ) {
-        val expectedPigAst = PartiqlAst.build { expectedPigBuilder() }.toIonElement().toString()
-
-        // Refer to comments inside the main body of the following function to see what checks are performed.
-        assertExpression(source, expectedPigAst)
-    }
-
-    /**
-     * This method is used by test cases for parsing a string.
-     * The test are performed with only PIG AST.
      * The expected PIG AST is a string.
      */
     protected fun assertExpression(
@@ -80,18 +65,17 @@ abstract class SqlParserTestBase : TestBase() {
 
     /**
      * This method is used by test cases for parsing a string.
-     * The test are performed with both PIG AST and V0 AST.
+     * The test are performed with only PIG AST.
      * The expected PIG AST is a PIG builder.
      */
     protected fun assertExpression(
         source: String,
-        expectedSexpAstV0: String,
         expectedPigBuilder: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode
     ) {
         val expectedPigAst = PartiqlAst.build { expectedPigBuilder() }.toIonElement().toString()
 
         // Refer to comments inside the main body of the following function to see what checks are performed.
-        assertExpression(source, expectedSexpAstV0, expectedPigAst)
+        assertExpression(source, expectedPigAst)
     }
 
     /**
@@ -111,6 +95,22 @@ abstract class SqlParserTestBase : TestBase() {
 
         // Check for PIG Ast
         assertExpression(source, expectedPigAst)
+    }
+
+    /**
+     * This method is used by test cases for parsing a string.
+     * The test are performed with both PIG AST and V0 AST.
+     * The expected PIG AST is a PIG builder.
+     */
+    protected fun assertExpression(
+        source: String,
+        expectedSexpAstV0: String,
+        expectedPigBuilder: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode
+    ) {
+        val expectedPigAst = PartiqlAst.build { expectedPigBuilder() }.toIonElement().toString()
+
+        // Refer to comments inside the main body of the following function to see what checks are performed.
+        assertExpression(source, expectedSexpAstV0, expectedPigAst)
     }
 
     private fun serializeAssert(astVersion: AstVersion, actualExprNode: ExprNode, expectedIonSexp: IonSexp, source: String) {
