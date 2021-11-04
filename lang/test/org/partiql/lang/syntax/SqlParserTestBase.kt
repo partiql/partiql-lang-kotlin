@@ -114,11 +114,11 @@ abstract class SqlParserTestBase : TestBase() {
     }
 
     private fun serializeAssert(astVersion: AstVersion, actualExprNode: ExprNode, expectedIonSexp: IonSexp, source: String) {
-        // Check equals for actual value and expected value after transformation: EpxrNode -> IonSexp
+        // Check equals for actual value and expected value after transformation: ExprNode -> IonSexp
         val actualSexpAstWithoutMetas = AstSerializer.serialize(actualExprNode, astVersion, ion).filterMetaNodes()
         assertSexpEquals(expectedIonSexp, actualSexpAstWithoutMetas, "$astVersion AST, $source")
 
-        // Check equals for actual value and expected value after transformation: IonSexp -> EpxrNode
+        // Check equals for actual value and expected value after transformation: IonSexp -> ExprNode
         val deserializer = AstDeserializerBuilder(ion).build()
         val deserializedExprNodeFromSexp = deserializer.deserialize(expectedIonSexp, astVersion)
         assertEquals(
@@ -159,7 +159,7 @@ abstract class SqlParserTestBase : TestBase() {
         // Check equal after transformation: PIG AST -> SexpElement -> PIG AST
         assertRoundTripPigAstToSexpElement(actualStatement)
 
-        // Check equal for actual and expected in transformed astStatement: astStatment -> SexpElement -> astStatement
+        // Check equal for actual and expected in transformed astStatement: astStatement -> SexpElement -> astStatement
         val transformedActualStatement = PartiqlAst.transform(actualElement)
         val transformedExpectedStatement = PartiqlAst.transform(expectedElement)
         assertEquals(transformedExpectedStatement, transformedActualStatement)
