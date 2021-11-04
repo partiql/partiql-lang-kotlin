@@ -196,6 +196,15 @@ data class VariableReference(
 }
 
 /**
+ * an Identifier, which can be used for names that need to be looked up with a notion of case-sensitivity.
+ */
+data class Identifier(
+    val id: String,
+    val case: CaseSensitivity,
+    override val metas: MetaContainer
+) : HasMetas
+
+/**
  * Represents a dynamic parameter with ordinal position for a variable to be provided
  * by the evaluation environment.
  */
@@ -477,7 +486,7 @@ data class CreateTable(
  * @param keys The expressions that extract the keys from the target to be applied to the index.
  */
 data class CreateIndex(
-    val tableName: String,
+    val tableId: Identifier,
     val keys: List<ExprNode>,
     override val metas: MetaContainer
 ) : ExprNode() {
@@ -488,7 +497,7 @@ data class CreateIndex(
  * Represents a `DROP TABLE...` statement.
  */
 data class DropTable(
-    val tableName: String,
+    val tableId: Identifier,
     override val metas: MetaContainer
 ) : ExprNode() {
     override val children: List<AstNode> get() = emptyList()
@@ -496,16 +505,10 @@ data class DropTable(
 
 /**
  * Represents a `DROP INDEX $index_identifier ON $table_name` statement.
- *
- * TODO:  [identifier] should not be modeled as a [VariableReference] since it is not actually
- * a reference to a variable.  It actually a reference to an index identifier, which doesn't have
- * the same semantics--for instance identifier only exists within a scope that is limited to its
- * table and should not be resolved in the same way a variable does.  We should create a new
- * [AstNode] named `Identifier` which has `id` and `case` properties.
  */
 data class DropIndex(
-    val tableName: String,
-    val identifier: VariableReference,
+    val tableId: Identifier,
+    val indexId: Identifier,
     override val metas: MetaContainer
 ) : ExprNode() {
     override val children: List<AstNode> get() = emptyList()
