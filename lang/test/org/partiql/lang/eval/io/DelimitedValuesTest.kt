@@ -29,10 +29,6 @@ class DelimitedValuesTest : TestBase() {
 
         assertSame(ExprValueType.BAG, value.type)
         assertEquals(expectedValues, value.ionValue)
-        try {
-            value.iterator()
-            fail("Expected single pass sequence")
-        } catch (e: IllegalStateException) {}
     }
 
     private fun read(text: String,

@@ -57,7 +57,7 @@ object DelimitedValues {
 
     /**
      * Lazily loads a stream of values from a [Reader] into a sequence backed [ExprValue].
-     * The [ExprValue] is single pass only.  This does **not** close the [Reader].
+     * This does **not** close the [Reader].
      *
      * @param ion The system to use.
      * @param input The input source.
@@ -90,7 +90,7 @@ object DelimitedValues {
                 },
                 StructOrdering.ORDERED
             )
-        }.constrainOnce()
+        }
 
         return valueFactory.newBag(seq)
     }
