@@ -73,8 +73,8 @@ object DelimitedValues {
                   conversionMode: ConversionMode): ExprValue {
         val reader = BufferedReader(input)
         val csvFormat = when (hasHeader){
-            true -> CSVFormat.DEFAULT.withDelimiter(delimiter).withTrim().withFirstRecordAsHeader()
-            false -> CSVFormat.DEFAULT.withDelimiter(delimiter).withTrim()
+            true -> CSVFormat.DEFAULT.withDelimiter(delimiter).withFirstRecordAsHeader()
+            false -> CSVFormat.DEFAULT.withDelimiter(delimiter)
         }
         val csvParser = CSVParser(reader, csvFormat)
         val columns: List<String> = csvParser.headerNames // `columns` is an empty list when `hasHeader` is false
@@ -127,33 +127,30 @@ object DelimitedValues {
                 delimiter: Char,
                 newline: String,
                 writeHeader: Boolean) {
-        val csvPrinter = CSVPrinter(output, CSVFormat.DEFAULT.withDelimiter(delimiter).withRecordSeparator(newline))
-        var names: List<String>? = null
-        for (row in value) {
-            val colNames = row.orderedNames
-                ?: throw IllegalArgumentException("Delimited data must be ordered tuple: $row")
-            if (names == null) {
-                // first row defines column names
-                names = colNames
-                if (writeHeader) {
-                    csvPrinter.printRecord(names)
+        CSVPrinter(output, CSVFormat.DEFAULT.withDelimiter(delimiter).withRecordSeparator(newline)).use { csvPrinter ->
+            var names: List<String>? = null
+            for (row in value) {
+                val colNames = row.orderedNames
+                    ?: throw IllegalArgumentException("Delimited data must be ordered tuple: $row")
+                if (names == null) {
+                    // first row defines column names
+                    names = colNames
+                    if (writeHeader) {
+                        csvPrinter.printRecord(names)
+                    }
+                } else if (names != colNames) { // We need to check if the column names in other rows are all the same as the first one's.
+                    throw IllegalArgumentException(
+                        "Inconsistent row names: $colNames != $names"
+                    )
                 }
-            } else if (names != colNames) { // We need to check if the column names in other rows are all the same as the first one's.
-                throw IllegalArgumentException(
-                    "Inconsistent row names: $colNames != $names"
+
+                csvPrinter.printRecord(
+                    names.map {
+                        val col = row.bindings[BindingName(it, BindingCase.SENSITIVE)]?.ionValue ?: ion.newNull()
+                        col.csvStringValue()
+                    }
                 )
             }
-
-            csvPrinter.printRecord(
-                names.map {
-                    val col = row.bindings[BindingName(it, BindingCase.SENSITIVE)]?.ionValue ?: ion.newNull()
-                    col.csvStringValue()
-                }
-            )
-
-            csvPrinter.flush()
         }
-
-        csvPrinter.close()
     }
 }

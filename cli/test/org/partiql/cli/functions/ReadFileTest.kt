@@ -81,18 +81,6 @@ class ReadFileTest {
     }
 
     @Test
-    fun readCsvWithSpacesSurroundingComma() {
-        writeFile("data_with_spaces_surrounding_comma.csv", "1 , 2")
-
-        val args = listOf("\"${dirPath("data_with_spaces_surrounding_comma.csv")}\"", "{type:\"csv\"}").map { it.exprValue() }
-
-        val actual = function.call(env, args).ionValue
-        val expected = "[{_1:\"1\",_2:\"2\"}]"
-
-        assertEquals(ion.singleValue(expected), actual)
-    }
-
-    @Test
     fun readCsvWithDoubleQuotesEscape() {
         writeFile("data_with_double_quotes_escape.csv", "\"1,2\",2")
 
@@ -136,6 +124,18 @@ class ReadFileTest {
 
         val actual = function.call(env, args).ionValue
         val expected = "[{_1:\"1\",_2:\"2\"}]"
+
+        assertEquals(ion.singleValue(expected), actual)
+    }
+
+    @Test
+    fun readTsvWithHeaderLine() {
+        writeFile("data_with_header_line.tsv", "col1\tcol2\n1\t2")
+
+        val args = listOf("\"${dirPath("data_with_header_line.tsv")}\"", "{type:\"tsv\", header:true}").map { it.exprValue() }
+
+        val actual = function.call(env, args).ionValue
+        val expected = "[{col1:\"1\",col2:\"2\"}]"
 
         assertEquals(ion.singleValue(expected), actual)
     }
