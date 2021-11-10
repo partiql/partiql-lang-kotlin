@@ -36,23 +36,16 @@ class DelimitedValuesTest : TestBase() {
     }
 
     private fun read(text: String,
-                     delimiter: String,
+                     delimiter: Char,
                      hasHeader: Boolean,
                      conversionMode: ConversionMode): ExprValue =
         DelimitedValues.exprValue(valueFactory, StringReader(text), delimiter, hasHeader, conversionMode)
-
-    private fun voidRead(text: String,
-                         delimiter: String,
-                         hasHeader: Boolean,
-                         conversionMode: ConversionMode): Unit {
-        read(text, delimiter, hasHeader, conversionMode)
-    }
 
     private fun assertWrite(expectedText: String,
                             valueText: String,
                             names: List<String>,
                             writeHeader: Boolean,
-                            delimiter: String = ",",
+                            delimiter: Char = ',',
                             newline: String = "\n") {
         val actualText = StringWriter().use {
 
@@ -79,7 +72,7 @@ class DelimitedValuesTest : TestBase() {
 
     private fun voidWrite(exprValue: ExprValue,
                           writeHeader: Boolean,
-                          delimiter: String = ",",
+                          delimiter: Char = ',',
                           newline: String = "\n") {
         DelimitedValues.writeTo(ion, StringWriter(), exprValue, delimiter, newline, writeHeader)
     }
@@ -89,7 +82,7 @@ class DelimitedValuesTest : TestBase() {
         """[]""",
         read(
             "",
-            delimiter = ",",
+            delimiter = ',',
             hasHeader = false,
             conversionMode = NONE
         )
@@ -100,18 +93,10 @@ class DelimitedValuesTest : TestBase() {
         """[]""",
         read(
             "",
-            delimiter = ",\t",
+            delimiter = ',',
             hasHeader = false,
             conversionMode = AUTO
         )
-    )
-
-    @Test(expected = IllegalArgumentException::class)
-    fun emptyExprValueTabAutoHeader() = voidRead(
-        "",
-        delimiter = ",\t",
-        hasHeader = true,
-        conversionMode = AUTO
     )
 
     @Test
@@ -119,7 +104,7 @@ class DelimitedValuesTest : TestBase() {
         """[{_1: "1", _2: "2", _3: "3"}]""",
         read(
             """1,2,3""",
-            delimiter = ",",
+            delimiter = ',',
             hasHeader = false,
             conversionMode = NONE
         )
@@ -138,7 +123,7 @@ class DelimitedValuesTest : TestBase() {
             |1.0,2e0,2007-10-10T12:00:00Z
             |hello,{,}
             """.trimMargin(),
-            delimiter = ",",
+            delimiter = ',',
             hasHeader = false,
             conversionMode = AUTO
         )
@@ -158,7 +143,7 @@ class DelimitedValuesTest : TestBase() {
             |1.0,2e0,2007-10-10T12:00:00Z
             |hello,{,}
             """.trimMargin(),
-            delimiter = ",",
+            delimiter = ',',
             hasHeader = true,
             conversionMode = AUTO
         )
