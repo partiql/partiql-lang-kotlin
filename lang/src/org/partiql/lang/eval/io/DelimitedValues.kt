@@ -15,6 +15,9 @@
 package org.partiql.lang.eval.io
 
 import com.amazon.ion.*
+import org.apache.commons.csv.CSVFormat
+import org.apache.commons.csv.CSVParser
+import org.apache.commons.csv.CSVPrinter
 import org.partiql.lang.eval.*
 import org.partiql.lang.util.*
 import java.io.BufferedReader
@@ -24,9 +27,8 @@ import java.io.Writer
 /**
  * Provides adapters for delimited input (e.g. TSV/CSV) as lazy sequences of values.
  *
- * Note that this implementation does not (yet) handle various escaping of TSV/CSV files
- * as specified in [RFC-4180](https://tools.ietf.org/html/rfc4180) or what Microsoft Excel
- * specifies in its particular dialect.
+ * This implementation uses Apache CSVParser library and follows [RFC-4180](https://tools.ietf.org/html/rfc4180) format.
+ * The only difference is that it is allowed for each row to have different numbers of fields.
  */
 object DelimitedValues {
     /** How to convert each element. */
@@ -55,7 +57,7 @@ object DelimitedValues {
 
     /**
      * Lazily loads a stream of values from a [Reader] into a sequence backed [ExprValue].
-     * The [ExprValue] is single pass only.  This does **not** close the [Reader].
+     * This does **not** close the [Reader].
      *
      * @param ion The system to use.
      * @param input The input source.
@@ -66,37 +68,28 @@ object DelimitedValues {
     @JvmStatic
     fun exprValue(valueFactory: ExprValueFactory,
                   input: Reader,
-                  delimiter: String,
+                  delimiter: Char,
                   hasHeader: Boolean,
                   conversionMode: ConversionMode): ExprValue {
         val reader = BufferedReader(input)
-        val columns: List<String> = when {
-            hasHeader -> {
-                val line = reader.readLine()
-                    ?: throw IllegalArgumentException("Got EOF for header row")
-
-                line.split(delimiter)
-            }
-            else -> emptyList()
+        val csvFormat = when (hasHeader){
+            true -> CSVFormat.DEFAULT.withDelimiter(delimiter).withFirstRecordAsHeader()
+            false -> CSVFormat.DEFAULT.withDelimiter(delimiter)
         }
+        val csvParser = CSVParser(reader, csvFormat)
+        val columns: List<String> = csvParser.headerNames // `columns` is an empty list when `hasHeader` is false
 
-        val seq = generateSequence {
-            val line = reader.readLine()
-            when (line) {
-                null -> null
-                else -> {
-                    valueFactory.newStruct(
-                        line.splitToSequence(delimiter).mapIndexed {i , raw ->
-                            val name = when {
-                                i < columns.size -> columns[i]
-                                else -> syntheticColumnName(i)
-                            }
-                            conversionMode.convert(valueFactory, raw).namedValue(valueFactory.newString(name))
-                        },
-                        StructOrdering.ORDERED
-                    )
-                }
-            }
+        val seq = csvParser.asSequence().map { csvRecord ->
+            valueFactory.newStruct(
+                csvRecord.mapIndexed { i, value ->
+                    val name = when {
+                        i < columns.size -> columns[i]
+                        else -> syntheticColumnName(i)
+                    }
+                    conversionMode.convert(valueFactory, value).namedValue(valueFactory.newString(name))
+                },
+                StructOrdering.ORDERED
+            )
         }
 
         return valueFactory.newBag(seq)
@@ -131,34 +124,33 @@ object DelimitedValues {
     fun writeTo(ion: IonSystem,
                 output: Writer,
                 value: ExprValue,
-                delimiter: String,
+                delimiter: Char,
                 newline: String,
-                writeHeader: Boolean): Unit {
-        val nullValue = ion.newNull()
-        var names: List<String>? = null
-        for (row in value) {
-            val colNames = row.orderedNames
-                ?: throw IllegalArgumentException("Delimited data must be ordered tuple: $row")
-            if (names == null) {
-                // first row defines column names
-                names = colNames
-
-                if (writeHeader) {
-                    names.joinTo(output, delimiter)
-                    output.write(newline)
+                writeHeader: Boolean) {
+        CSVPrinter(output, CSVFormat.DEFAULT.withDelimiter(delimiter).withRecordSeparator(newline)).use { csvPrinter ->
+            var names: List<String>? = null
+            for (row in value) {
+                val colNames = row.orderedNames
+                    ?: throw IllegalArgumentException("Delimited data must be ordered tuple: $row")
+                if (names == null) {
+                    // first row defines column names
+                    names = colNames
+                    if (writeHeader) {
+                        csvPrinter.printRecord(names)
+                    }
+                } else if (names != colNames) { // We need to check if the column names in other rows are all the same as the first one's.
+                    throw IllegalArgumentException(
+                        "Inconsistent row names: $colNames != $names"
+                    )
                 }
-            } else if (names != colNames) {
-                // mismatch on the tuples
-                throw IllegalArgumentException(
-                    "Inconsistent row names: $colNames != $names"
+
+                csvPrinter.printRecord(
+                    names.map {
+                        val col = row.bindings[BindingName(it, BindingCase.SENSITIVE)]?.ionValue ?: ion.newNull()
+                        col.csvStringValue()
+                    }
                 )
             }
-
-            names.map {
-                val col = row.bindings[BindingName(it, BindingCase.SENSITIVE)]?.ionValue ?: nullValue
-                col.csvStringValue()
-            }.joinTo(output, delimiter)
-            output.write(newline)
         }
     }
 }
