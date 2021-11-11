@@ -12,7 +12,6 @@ import org.partiql.lang.eval.BindingCase
 fun PartiqlAst.Builder.id(name: String) =
     id(name, caseInsensitive(), unqualified())
 
-
 /**
  * Returns a [MetaContainer] with *only* the source location of the receiver [MetaContainer], if present.
  *
