@@ -102,15 +102,15 @@ import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
+import org.partiql.lang.types.CustomTypeFunction
 import org.partiql.lang.types.FloatType
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.IntType
 import org.partiql.lang.types.SingleType
 import org.partiql.lang.types.StaticType
-import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.types.UnsupportedTypeCheckException
-import org.partiql.lang.types.toTypedOpParameter
+import org.partiql.lang.types.toStaticType
 import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.case
 import org.partiql.lang.util.checkThreadInterrupted
@@ -152,19 +152,22 @@ import java.util.TreeSet
  * such as partial evaluation and transforming variable references to De Bruijn indices, however a compiler needs
  * much finer grain of control over exactly how and when each node is walked, visited, and transformed.
  *
- * @param ion The ion system to use for synthesizing Ion values.
+ * @param valueFactory An [ExprValueFactory] to generate [ExprValue]s.
  * @param functions A map of functions keyed by function name that will be available during compilation.
+ * @param customTypeFunctions A map of custom type functions keyed by custom type name that will be available during compilation. Lookup is case-insensitive.
+ * @param procedures A map of stored procedures keyed by procedure name that will be available during compilation.
  * @param compileOptions Various options that effect how the source code is compiled.
  */
 internal class EvaluatingCompiler(
     private val valueFactory: ExprValueFactory,
     private val functions: Map<String, ExprFunction>,
-    private val customTypedOpParameters: Map<String, TypedOpParameter>,
+    customTypeFunctions: Map<String, CustomTypeFunction>,
     private val procedures: Map<String, StoredProcedure>,
     private val compileOptions: CompileOptions = CompileOptions.standard()
 ) {
     private val errorSignaler = compileOptions.typingMode.createErrorSignaler(valueFactory)
     private val thunkFactory = compileOptions.typingMode.createThunkFactory(compileOptions, valueFactory)
+    private val customTypeFunctionsCaseInsensitiveMap = customTypeFunctions.mapKeys { (k, _) -> k.toLowerCase() }
 
     private val compilationContextStack = Stack<CompilationContext>()
 
@@ -1119,11 +1122,21 @@ internal class EvaluatingCompiler(
     private fun compileTyped(expr: Typed): ThunkEnv {
         val (op, exp, dataType, metas: MetaContainer) = expr
         val expThunk = compileExprNode(exp)
-        val typedOpParameter = dataType.toAstType().toTypedOpParameter(customTypedOpParameters)
+        val astType = dataType.toAstType()
+        val staticType = astType.toStaticType(customTypeFunctionsCaseInsensitiveMap)
 
-        when (typedOpParameter.staticType) {
-            is SingleType -> {
-            }
+        /**
+         * Validates the [ExprValue] based on the `astType`. When the `astType` is not a [PartiqlAst.Type.CustomType] it always returns [null].
+         */
+        val validateExprValue = when (astType) {
+            is PartiqlAst.Type.CustomType ->
+                // Case-insensitive lookup
+                customTypeFunctionsCaseInsensitiveMap[astType.name.text.toLowerCase()]?.validateExprValue
+            else -> null
+        }
+
+        when (staticType) {
+            is SingleType -> {}
             is AnyType -> {
                 // return trivial results for operations against ANY
                 return when (op) {
@@ -1139,7 +1152,7 @@ internal class EvaluatingCompiler(
                 // no validation needed since type parameters are not honored in this mode anyway
             }
             TypedOpBehavior.HONOR_PARAMETERS -> {
-                when (typedOpParameter.staticType) {
+                when(staticType) {
                     is FloatType ->
                         // check if FLOAT has been given an argument--throw exception since we do not honor it.
                         if (expr.type.args.any()) {
@@ -1156,7 +1169,7 @@ internal class EvaluatingCompiler(
             }
         }
 
-        when (typedOpParameter.staticType) {
+        when (staticType) {
             is AnyType -> {
                 // return trivial results for operations against ANY
                 return when (op) {
@@ -1174,7 +1187,7 @@ internal class EvaluatingCompiler(
                            castOutput: ExprValue,
                            typeName: String,
                            locationMeta: SourceLocationMeta?) {
-            if (typedOpParameter.validationThunk?.let { it(castOutput) } == false) {
+            if (validateExprValue?.let { it(castOutput) } == false) {
                 val errorContext = PropertyValueMap().also {
                     it[Property.CAST_FROM] = value.type.toString()
                     it[Property.CAST_TO] = typeName
@@ -1235,15 +1248,15 @@ internal class EvaluatingCompiler(
         }
 
         return when (op) {
-            TypedOp.IS -> compileTypedIs(metas, expThunk, typedOpParameter)
+            TypedOp.IS -> compileTypedIs(metas, expThunk, staticType, validateExprValue)
 
             // using thunkFactory here includes the optional evaluation-time type check
-            TypedOp.CAST -> thunkFactory.thunkEnv(metas, compileCast(typedOpParameter.staticType))
+            TypedOp.CAST -> thunkFactory.thunkEnv(metas, compileCast(staticType))
 
             TypedOp.CAN_CAST -> {
                 // TODO consider making this more efficient by not directly delegating to CAST
                 // TODO consider also making the operand not double evaluated (e.g. having expThunk memoize)
-                val castThunkEnv = compileCast(typedOpParameter.staticType)
+                val castThunkEnv = compileCast(staticType)
                 thunkFactory.thunkEnv(metas) { env ->
                     val sourceValue = expThunk(env)
                     try {
@@ -1270,7 +1283,7 @@ internal class EvaluatingCompiler(
             }
             TypedOp.CAN_LOSSLESS_CAST -> {
                 // TODO consider making this more efficient by not directly delegating to CAST
-                val castThunkEnv = compileCast(typedOpParameter.staticType)
+                val castThunkEnv = compileCast(staticType)
                 thunkFactory.thunkEnv(metas) { env ->
                     val sourceValue = expThunk(env)
                     val sourceType = StaticType.fromExprValue(sourceValue)
@@ -1303,7 +1316,7 @@ internal class EvaluatingCompiler(
 
                             // Short-circuit timestamp -> date roundtrip if precision isn't [Timestamp.Precision.DAY] or
                             //   [Timestamp.Precision.MONTH] or [Timestamp.Precision.YEAR]
-                            ExprValueType.TIMESTAMP -> when (typedOpParameter.staticType) {
+                            ExprValueType.TIMESTAMP -> when(staticType) {
                                 StaticType.DATE -> when (sourceValue.ionValue.timestampValue().precision) {
                                     Timestamp.Precision.DAY, Timestamp.Precision.MONTH, Timestamp.Precision.YEAR -> roundTrip()
                                     else -> valueFactory.newBoolean(false)
@@ -1327,25 +1340,26 @@ internal class EvaluatingCompiler(
     }
 
     /**
-     * Returns a lambda that implements the `IS` operator type check according to the current
-     * [TypedOpBehavior].
+     * Returns a lambda that implements the `IS` operator type check according to the current [TypedOpBehavior].
+     * [staticType] is the type to be checked for a given exprValue.
+     * [validateExprValue] validates the exprValue.
      */
     private fun makeIsCheck(
         staticType: SingleType,
-        typedOpParameter: TypedOpParameter,
+        validateExprValue: ((ExprValue) -> Boolean)?,
         metas: MetaContainer
     ): (ExprValue) -> Boolean {
         val exprValueType = staticType.runtimeType
 
         // The "simple" type match function only looks at the [ExprValueType] of the [ExprValue]
-        // and invokes the custom [validationThunk] if one exists.
-        val simpleTypeMatchFunc = { expValue: ExprValue ->
+        // and invokes the custom [validateExprValue].
+        val simpleTypeMatchFunc = { exprValue: ExprValue ->
             val isTypeMatch = when (exprValueType) {
                 // MISSING IS NULL and NULL IS MISSING
-                ExprValueType.NULL -> expValue.type.isUnknown
-                else -> expValue.type == exprValueType
+                ExprValueType.NULL -> exprValue.type.isUnknown
+                else -> exprValue.type == exprValueType
             }
-            (isTypeMatch && typedOpParameter.validationThunk?.let { it(expValue) } != false)
+            (isTypeMatch && validateExprValue?.let { it(exprValue) } != false)
         }
 
         return when (compileOptions.typedOpBehavior) {
@@ -1364,9 +1378,9 @@ internal class EvaluatingCompiler(
 
                     when {
                         !matchesStaticType -> false
-                        else -> when (val validator = typedOpParameter.validationThunk) {
+                        else -> when (validateExprValue) {
                             null -> true
-                            else -> validator(expValue)
+                            else -> validateExprValue(expValue)
                         }
                     }
                 }
@@ -1374,12 +1388,17 @@ internal class EvaluatingCompiler(
         }
     }
 
-    private fun compileTypedIs(metas: MetaContainer, expThunk: ThunkEnv, typedOpParameter: TypedOpParameter): ThunkEnv {
-        val typeMatchFunc = when (val staticType = typedOpParameter.staticType) {
-            is SingleType -> makeIsCheck(staticType, typedOpParameter, metas)
+    private fun compileTypedIs(
+        metas: MetaContainer,
+        expThunk: ThunkEnv,
+        staticType: StaticType,
+        validateExprValue: ((ExprValue) -> Boolean)?
+    ): ThunkEnv {
+        val typeMatchFunc = when (staticType){
+            is SingleType -> makeIsCheck(staticType, validateExprValue, metas)
             is AnyOfType -> staticType.types.map { childType ->
                 when (childType) {
-                    is SingleType -> makeIsCheck(childType, typedOpParameter, metas)
+                    is SingleType -> makeIsCheck(childType, validateExprValue, metas)
                     else -> err(
                         "Union type cannot have ANY or nested AnyOf type for IS",
                         ErrorCode.SEMANTIC_UNION_TYPE_INVALID,

@@ -2,7 +2,7 @@ package org.partiql.lang.eval
 
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.lang.CUSTOM_TEST_TYPES
+import org.partiql.lang.CUSTOM_TEST_TYPES_MAP
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.honorTypedOpParameters
@@ -119,6 +119,35 @@ class EvaluatingCompilerCustomTypeCastTests : CastTestBase() {
                 case("true", "\"true\"", CastQuality.LOSSLESS),
                 case("false", "\"false\"", CastQuality.LOSSLESS)
             ).types(listOf("RS_VARCHAR_MAX")),
+            // Cast to custom parameterized type RS_VARCHAR parameterized by byte length.
+            listOf(
+                case("'a💩💩💩💩💩j'", "\"a💩\"", CastQuality.LOSSY),
+                case("'話家身圧'", "\"話家\"", CastQuality.LOSSY)
+            ).types(listOf("RS_VARCHAR(7)", "RS_VARCHAR(8)")),
+            listOf(
+                case("'a話家l💩k💩'", "\"a話家l💩k\"", CastQuality.LOSSY),
+            ).types(listOf("RS_VARCHAR(16)", "RS_VARCHAR(13)")),
+            // Cast to custom parameterized type TOY_VARCHAR parameterized by codepoint length.
+            listOf(
+                case("'a💩💩💩💩💩j'", "\"a💩💩💩💩\"", CastQuality.LOSSY),
+                case("'a話家l💩k💩'", "\"a話家l💩\"", CastQuality.LOSSY),
+                case("'話家身圧'", "\"話家身圧\"", CastQuality.LOSSY)
+            ).types(listOf("TOY_VARCHAR(5)")),
+            listOf(
+                case("'a💩💩💩💩💩j'", "\"a💩💩\"", CastQuality.LOSSY),
+                case("'a話家l💩k💩'", "\"a話家\"", CastQuality.LOSSY),
+                case("'話家身圧'", "\"話家身\"", CastQuality.LOSSY)
+            ).types(listOf("TOY_VARCHAR(3)")),
+            // Cast to custom parameterized type TOY_DECIMAL
+            listOf(
+                case("1.623", "1.623", CastQuality.LOSSLESS),
+            ).types(listOf("TOY_DECIMAL", "TOY_DECIMAL(4,3)")),
+            listOf(
+                case("1.623", "2.", CastQuality.LOSSY),
+            ).types(listOf("TOY_DECIMAL(1)")),
+            listOf(
+                case("1.627", "1.63", CastQuality.LOSSY),
+            ).types(listOf("TOY_DECIMAL(3,2)")),
             listOf(
                 case("0", "0e0", CastQuality.LOSSLESS),
                 case("5", "5e0", CastQuality.LOSSLESS),
@@ -183,7 +212,7 @@ class EvaluatingCompilerCustomTypeCastTests : CastTestBase() {
         }).map {
             it.copy(
                 configurePipeline = {
-                    customDataTypes(CUSTOM_TEST_TYPES)
+                    customTypeFunctions(CUSTOM_TEST_TYPES_MAP)
                 }
             )
         }

@@ -26,7 +26,7 @@ import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.passes.MetaStrippingRewriter
 import org.partiql.lang.ast.toAstStatement
 import org.partiql.lang.ast.toExprNode
-import org.partiql.lang.CUSTOM_TEST_TYPES
+import org.partiql.lang.CUSTOM_TEST_TYPES_MAP
 import org.partiql.lang.checkErrorAndErrorContext
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorCode
@@ -37,7 +37,7 @@ import org.partiql.lang.util.softAssert
 import org.partiql.pig.runtime.toIonElement
 
 abstract class SqlParserTestBase : TestBase() {
-    protected val parser = SqlParser(ion, CUSTOM_TEST_TYPES)
+    protected val parser = SqlParser(ion, CUSTOM_TEST_TYPES_MAP)
 
     protected fun parse(source: String): PartiqlAst.Statement = parser.parseAstStatement(source)
     protected fun parseToExprNode(source: String): ExprNode = parser.parseExprNode(source)

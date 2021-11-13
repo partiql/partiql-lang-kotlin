@@ -22,7 +22,7 @@ import org.partiql.lang.ast.AstVersion
 import org.partiql.lang.ast.ExprNode
 import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
-import org.partiql.lang.CUSTOM_TEST_TYPES
+import org.partiql.lang.CUSTOM_TEST_TYPES_MAP
 import org.partiql.lang.SqlException
 import org.partiql.lang.ast.passes.MetaStrippingRewriter
 import org.partiql.lang.ast.toAstStatement
@@ -93,7 +93,7 @@ abstract class EvaluatorTestBase : TestBase() {
                              block: AssertExprValue.() -> Unit = { }) {
 
         val expectedIon = ion.singleValue(expected)
-        val parser = SqlParser(ion, CUSTOM_TEST_TYPES)
+        val parser = SqlParser(ion, CUSTOM_TEST_TYPES_MAP)
         val originalExprNode = parser.parseExprNode(source)
 
         fun evalAndAssert(exprNodeToEvaluate: ExprNode, message: String) {
@@ -226,7 +226,7 @@ abstract class EvaluatorTestBase : TestBase() {
                        session: EvaluationSession = EvaluationSession.standard(),
                        compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }): ExprValue {
 
-        val p = SqlParser(ion, CUSTOM_TEST_TYPES)
+        val p = SqlParser(ion, CUSTOM_TEST_TYPES_MAP)
 
         val ast = p.parseExprNode(source)
         return eval(ast, compileOptions, session, compilerPipelineBuilderBlock)

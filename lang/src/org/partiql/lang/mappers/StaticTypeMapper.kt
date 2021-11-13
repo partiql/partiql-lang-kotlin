@@ -194,10 +194,9 @@ class StaticTypeMapper(schema: IonSchemaModel.Schema) {
         constraints.getConstraint(IonSchemaModel.Constraint.Element::class)?.type?.toStaticType(topLevelTypeName) ?: StaticType.ANY
 
     private fun IonSchemaModel.TypeDefinition.getStringLengthConstraint(): StringType.StringLengthConstraint =
-        when (val constraint = constraints.getConstraint(IonSchemaModel.Constraint.CodepointLength::class)?.rule){
-            null -> StringType.StringLengthConstraint.Unconstrained
-            else -> constraint.toStringLengthConstraint()
-        }
+        constraints.getConstraint(IonSchemaModel.Constraint.CodepointLength::class)?.rule?.toNumberConstraint()?.let { StringType.StringLengthConstraint.Constrained(it) } ?:
+        constraints.getConstraint(IonSchemaModel.Constraint.Utf8ByteLength::class)?.rule?.toNumberConstraint()?.let { StringType.StringLengthConstraint.ByteLengthConstrained(it) } ?:
+        StringType.StringLengthConstraint.Unconstrained
 
     private fun IonSchemaModel.TypeDefinition.getIntRangeConstraint(): IntType.IntRangeConstraint =
         when (val spec = constraints.getConstraint(IonSchemaModel.Constraint.ValidValues::class)?.spec) {
@@ -229,11 +228,9 @@ class StaticTypeMapper(schema: IonSchemaModel.Schema) {
             }
         }
 
-    private fun IonSchemaModel.NumberRule.toStringLengthConstraint(): StringType.StringLengthConstraint {
+    private fun IonSchemaModel.NumberRule.toNumberConstraint(): NumberConstraint? {
         return when (this) {
-            is IonSchemaModel.NumberRule.EqualsNumber -> StringType.StringLengthConstraint.Constrained(
-                NumberConstraint.Equals(this.value.toInt())
-            )
+            is IonSchemaModel.NumberRule.EqualsNumber ->  NumberConstraint.Equals(this.value.toInt())
             is IonSchemaModel.NumberRule.EqualsRange -> {
                 when (val min = this.range.min) {
                     is IonSchemaModel.NumberExtent.Max -> error("Min value of a range cannot be max")
@@ -241,27 +238,23 @@ class StaticTypeMapper(schema: IonSchemaModel.Schema) {
                         // This is a range that is not supported in [StringType].
                         // Instead of throwing an error, we map to an un-constrained string.
                         // If the static type generated with this is used as a target type in CAST
-                        //   the [TypedOpParameter] should contain the validation predicates that check
+                        //   the [CustomTypeFunction] should contain the validation predicates that check
                         //   for appropriate length.
                         // TODO: Add ranged length constraints in StaticType
-                        return StringType.StringLengthConstraint.Unconstrained
+                        return null
                     }
                     is IonSchemaModel.NumberExtent.Exclusive -> if ((min.value.toInt() + 1) != 0) {
                         // Same as above
-                        return StringType.StringLengthConstraint.Unconstrained
+                        return null
                     }
                     is IonSchemaModel.NumberExtent.Min -> {}
                 }
 
                 when (val max = this.range.max) {
                     is IonSchemaModel.NumberExtent.Min -> error("Max value of a range cannot be min")
-                    is IonSchemaModel.NumberExtent.Max -> StringType.StringLengthConstraint.Unconstrained
-                    is IonSchemaModel.NumberExtent.Inclusive -> StringType.StringLengthConstraint.Constrained(
-                        NumberConstraint.UpTo(max.value.toInt())
-                    )
-                    is IonSchemaModel.NumberExtent.Exclusive -> StringType.StringLengthConstraint.Constrained(
-                        NumberConstraint.UpTo(max.value.toInt() - 1)
-                    )
+                    is IonSchemaModel.NumberExtent.Max -> null
+                    is IonSchemaModel.NumberExtent.Inclusive -> NumberConstraint.UpTo(max.value.toInt())
+                    is IonSchemaModel.NumberExtent.Exclusive -> NumberConstraint.UpTo(max.value.toInt() - 1)
                 }
             }
         }

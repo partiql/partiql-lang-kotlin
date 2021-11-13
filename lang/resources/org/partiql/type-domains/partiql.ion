@@ -413,9 +413,8 @@
             (rs_real)               // float-32, RS aliases: FLOAT4
             (rs_double_precision)   // float-64, RS aliases: FLOAT8, FLOAT
 
-            (custom_type name::symbol)
+            (custom_type name::symbol args::(* int 0))
         )
-
 
     ) // end of domain
 ) // end of define

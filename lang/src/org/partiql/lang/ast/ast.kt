@@ -1109,7 +1109,7 @@ enum class ScopeQualifier {
 /**
  * The core PartiQL data types.
  */
-sealed class SqlDataType(val typeName: String, open val arityRange: IntRange) {
+sealed class SqlDataType(val typeName: String) {
 
     companion object {
         /**
@@ -1136,39 +1136,42 @@ sealed class SqlDataType(val typeName: String, open val arityRange: IntRange) {
             values().map { Pair(it.typeName, it) }.toMap()
         }
 
+        /**
+         * Returns a [SqlDataType] corresponding to the type name. Note that this method won't work for the [CustomDataType].
+         */
         fun forTypeName(typeName: String): SqlDataType? = DATA_TYPE_NAME_TO_TYPE_LOOKUP[typeName]
     }
 
-    object MISSING : SqlDataType("missing", 0..0)
-    object NULL : SqlDataType("null", 0..0)
-    object BOOLEAN : SqlDataType("boolean", 0..0)
-    object SMALLINT : SqlDataType("smallint", 0..0)
-    object INTEGER4 : SqlDataType("integer4", 0..0)
-    object INTEGER8 : SqlDataType("integer8", 0..0)
-    object INTEGER : SqlDataType("integer", 0..0)
-    object FLOAT : SqlDataType("float", 0..1)
-    object REAL : SqlDataType("real", 0..0)
-    object DOUBLE_PRECISION : SqlDataType("double_precision", 0..0)
-    object DECIMAL : SqlDataType("decimal", 0..2)
-    object NUMERIC : SqlDataType("numeric", 0..2)
-    object TIMESTAMP : SqlDataType("timestamp", 0..0)
-    object CHARACTER : SqlDataType("character", 0..1)
-    object CHARACTER_VARYING : SqlDataType("character_varying", 0..1)
-    object STRING : SqlDataType("string", 0..0)
-    object SYMBOL : SqlDataType("symbol", 0..0)
-    object CLOB : SqlDataType("clob", 0..0)
-    object BLOB : SqlDataType("blob", 0..0)
-    object STRUCT : SqlDataType("struct", 0..0)
-    object TUPLE : SqlDataType("tuple", 0..0)
-    object LIST : SqlDataType("list", 0..0)
-    object SEXP : SqlDataType("sexp", 0..0)
-    object BAG : SqlDataType("bag", 0..0)
-    object ANY : SqlDataType("any", 0..0)
-    object DATE : SqlDataType("date", 0..0)
-    object TIME : SqlDataType("time", 0..1)
-    object TIME_WITH_TIME_ZONE : SqlDataType("time_with_time_zone", 0..1)
+    object MISSING : SqlDataType("missing")
+    object NULL : SqlDataType("null")
+    object BOOLEAN : SqlDataType("boolean")
+    object SMALLINT : SqlDataType("smallint")
+    object INTEGER4 : SqlDataType("integer4")
+    object INTEGER8 : SqlDataType("integer8")
+    object INTEGER : SqlDataType("integer")
+    object FLOAT : SqlDataType("float")
+    object REAL : SqlDataType("real")
+    object DOUBLE_PRECISION : SqlDataType("double_precision")
+    object DECIMAL : SqlDataType("decimal")
+    object NUMERIC : SqlDataType("numeric")
+    object TIMESTAMP : SqlDataType("timestamp")
+    object CHARACTER : SqlDataType("character")
+    object CHARACTER_VARYING : SqlDataType("character_varying")
+    object STRING : SqlDataType("string")
+    object SYMBOL : SqlDataType("symbol")
+    object CLOB : SqlDataType("clob")
+    object BLOB : SqlDataType("blob")
+    object STRUCT : SqlDataType("struct")
+    object TUPLE : SqlDataType("tuple")
+    object LIST : SqlDataType("list")
+    object SEXP : SqlDataType("sexp")
+    object BAG : SqlDataType("bag")
+    object ANY : SqlDataType("any")
+    object DATE : SqlDataType("date")
+    object TIME : SqlDataType("time")
+    object TIME_WITH_TIME_ZONE : SqlDataType("time_with_time_zone")
     /**
      * Custom partiql data type which is an alias for the core PartiQL data type
      */
-    data class CustomDataType(val name: String) : SqlDataType(name, 0..0)
+    data class CustomDataType(val name: String) : SqlDataType(name)
 }

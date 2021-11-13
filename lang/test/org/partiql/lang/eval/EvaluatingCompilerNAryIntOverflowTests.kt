@@ -61,7 +61,7 @@ class EvaluatingCompilerNAryIntOverflowTests : EvaluatorTestBase() {
     private val compiler = EvaluatingCompiler(
         valueFactory = valueFactory,
         functions = mapOf(),
-        customTypedOpParameters = mapOf(),
+        customTypeFunctions = mapOf(),
         compileOptions = compOptions,
         procedures = mapOf()
     )
@@ -176,7 +176,7 @@ class EvaluatingCompilerNAryIntOverflowTests : EvaluatorTestBase() {
             StaticTypeInferenceVisitorTransform(
                 globalBindings = defaultEnv.typeBindings,
                 customFunctionSignatures = emptyList(),
-                customTypedOpParameters = mapOf()).transformStatement(exprNode).toExprNode(ion)
+                customTypeFunctions = mapOf()).transformStatement(exprNode).toExprNode(ion)
         }
 
         val expression = compiler.compile(transformedAst)

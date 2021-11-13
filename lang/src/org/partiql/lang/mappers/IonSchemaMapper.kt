@@ -234,6 +234,20 @@ class IonSchemaMapper(private val staticType: StaticType) {
                             }
                         }
                     }
+                    is StringType.StringLengthConstraint.ByteLengthConstrained -> {
+                        constraintsFromISL = constraintsFromISL.filterNot { it is IonSchemaModel.Constraint.Utf8ByteLength }
+                        when(lengthConstraint.byteLength) {
+                            is NumberConstraint.Equals -> IonSchemaModel.build {
+                                utf8ByteLength(equalsNumber(ionInt(lengthConstraint.byteLength.value.toLong())))
+                            }
+                            is NumberConstraint.UpTo -> IonSchemaModel.build {
+                                utf8ByteLength(equalsRange(numberRange(
+                                    inclusive(ionInt(0)),
+                                    inclusive(ionInt(lengthConstraint.byteLength.value.toLong()))
+                                )))
+                            }
+                        }
+                    }
                 }
             )
             is IntType -> {

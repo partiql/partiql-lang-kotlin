@@ -14,6 +14,7 @@ import org.partiql.lang.eval.name
 import org.partiql.lang.eval.numberValue
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.timeValue
+import org.partiql.lang.util.utf8ByteLength
 import java.math.BigDecimal
 
 /**
@@ -536,6 +537,14 @@ data class StringType(
                 val str = value.scalar.stringValue()
                     ?: error("value.scalar.stringValue() unexpectedly returned null")
                 return length.matches(str.codePointCount(0, str.length))
+            }
+        }
+
+        data class ByteLengthConstrained(val byteLength: NumberConstraint): StringLengthConstraint() {
+            override fun matches(value: ExprValue): Boolean {
+                val str = value.scalar.stringValue()
+                    ?: error("value.scalar.stringValue() unexpectedly returned null")
+                return byteLength.matches(str.utf8ByteLength)
             }
         }
     }

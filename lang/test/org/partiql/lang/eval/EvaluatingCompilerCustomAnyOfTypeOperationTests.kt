@@ -4,9 +4,8 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.anyOfType
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.esAny
+import org.partiql.lang.esAnyType
 import org.partiql.lang.types.BagType
-import org.partiql.lang.types.CustomType
 import org.partiql.lang.types.ListType
 import org.partiql.lang.types.NumberConstraint
 import org.partiql.lang.types.SexpType
@@ -14,14 +13,14 @@ import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.StringType
 import org.partiql.lang.types.StringType.*
 import org.partiql.lang.types.StructType
-import org.partiql.lang.types.TypedOpParameter
+import org.partiql.lang.types.buildTypeFunction
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.honorTypedOpParameters
 import org.partiql.lang.util.legacyTypingMode
 import org.partiql.lang.util.permissiveTypingMode
 
 /**
- * This test class covers use of [TypedOpParameter] with custom [AnyOfType] types such as `ES_ANY`.
+ * This test class covers use of [StaticType] with custom [AnyOfType] types such as `ES_ANY`.
  *
  * Note that in this case class the definition of custom type `ES_ANY` has many different definitions.  See the
  * [ArgumentsProviderBase] implementations for details.
@@ -35,8 +34,7 @@ import org.partiql.lang.util.permissiveTypingMode
  */
 class EvaluatingCompilerCustomAnyOfTypeOperationTests: CastTestBase() {
     companion object {
-        val customTypes = listOf(
-            CustomType("ES_ANY", esAny))
+        private val customTypeFunctions = mapOf("ES_ANY" to esAnyType)
 
         // Cases that pass the input to the output directly (for IS testing)
         private val esAnyCastIdentityCases = listOf(
@@ -121,7 +119,7 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests: CastTestBase() {
         }).map {
             it.copy(
                 configurePipeline = {
-                    customDataTypes(customTypes)
+                    customTypeFunctions(customTypeFunctions)
                 }
             )
         }
@@ -139,13 +137,13 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests: CastTestBase() {
         }).map {
             it.copy(
                 configurePipeline = {
-                    customDataTypes(customTypes)
+                    customTypeFunctions(customTypeFunctions)
                 }
             )
         }
 
         // TODO: these aren't bad for IS anymore.
-        private val badEsAnyTypeDefinitionsForCastAndCanCast: List<TypedOpParameter> =
+        private val badEsAnyTypeDefinitionsForCastAndCanCast: List<StaticType> =
             listOf(
                 // collection with constraint -- implicitly self-recursive element type limitation
                 anyOfType(
@@ -164,7 +162,7 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests: CastTestBase() {
                 anyOfType(
                     StructType(contentClosed = true)
                 )
-            ).map { TypedOpParameter(it) }
+            )
     }
 
     @ParameterizedTest
@@ -227,12 +225,9 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests: CastTestBase() {
                                     additionalAssertBlock = { }
                                 ),
                                 configurePipeline = {
-                                    customDataTypes(listOf(
-                                        CustomType(
-                                            "ES_ANY",
-                                            typedOpParameter = badType
-                                        )
-                                    ))
+                                    customTypeFunctions(
+                                        mapOf("ES_ANY" to buildTypeFunction(badType))
+                                    )
                                 },
                                 description = "${configuredCase.description} $badType"
                             )
@@ -265,7 +260,7 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests: CastTestBase() {
                     anyOfType(
                         anyOfType(StaticType.STRING)
                     )
-                ).map { TypedOpParameter(it) }
+                )
 
                 (badEsAnyTypeDefinitionsForCastAndCanCast + badEsAnyTypeDefinitionsForCastOnly).flatMap { badType ->
                     case.copy(
@@ -275,12 +270,9 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests: CastTestBase() {
                             additionalAssertBlock = { }
                         ),
                         configurePipeline = {
-                            customDataTypes(listOf(
-                                CustomType(
-                                    "ES_ANY",
-                                    typedOpParameter = badType
-                                )
-                            ))
+                            customTypeFunctions(
+                                mapOf("ES_ANY" to buildTypeFunction(badType))
+                            )
                         },
                         description = "${case.description} $badType"
                     ).let {

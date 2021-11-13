@@ -30,6 +30,8 @@ import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.eval.TypingMode
+import org.partiql.lang.types.toStaticType
 import org.partiql.lang.eval.builtins.createBuiltinFunctionSignatures
 import org.partiql.lang.eval.delegate
 import org.partiql.lang.eval.getStartingSourceLocationMeta
@@ -44,7 +46,7 @@ import org.partiql.lang.util.cartesianProduct
  * @param globalBindings The global bindings to the static environment.  This is data catalog purely from a lookup
  *                  perspective.
  * @param customFunctionSignatures Custom user-defined function signatures that can be called by the query.
- * @param customTypedOpParameters Mapping of custom type name to [TypedOpParameter] to be used for typed operators
+ * @param customTypeFunctions Mapping of custom type name to [CustomTypeFunction] to be used for typed operators
  * (i.e CAST/IS).
  * @param problemHandler handles the semantic problems encountered through static type inference. Default handler will
  * throw on the first [SemanticException] with [ProblemSeverity.ERROR].
@@ -52,7 +54,7 @@ import org.partiql.lang.util.cartesianProduct
 internal class StaticTypeInferenceVisitorTransform(
     globalBindings: Bindings<StaticType>,
     customFunctionSignatures: List<FunctionSignature>,
-    private val customTypedOpParameters: Map<String, TypedOpParameter>,
+    private val customTypeFunctions: Map<String, CustomTypeFunction>,
     private val problemHandler: ProblemHandler = ProblemThrower()
 ) : PartiqlAst.VisitorTransform() {
 
@@ -788,8 +790,9 @@ internal class StaticTypeInferenceVisitorTransform(
             val lengths: List<StringType.StringLengthConstraint.Constrained> = constraints.map {
                 when (it) {
                     // Return Unconstrained string when one of the StringTypes is Unconstrained
-                    is StringType.StringLengthConstraint.Unconstrained -> return StaticType.STRING
                     is StringType.StringLengthConstraint.Constrained -> it
+                    // TODO: Handle the [ByteLengthConstraint]. For now, whenever we encounter the bytelength constraint we return Unconstrained String
+                    else -> return StaticType.STRING
                 }
             }
             val maximumLength = lengths.sumBy { it.length.value }
@@ -1179,9 +1182,15 @@ internal class StaticTypeInferenceVisitorTransform(
         override fun transformExprCast(node: PartiqlAst.Expr.Cast): PartiqlAst.Expr {
             val typed = super.transformExprCast(node) as PartiqlAst.Expr.Cast
             val sourceType = typed.value.getStaticType()
-            val targetType = typed.asType.toTypedOpParameter(customTypedOpParameters)
-            val castOutputType = sourceType.cast(targetType.staticType).let {
-                if (targetType.validationThunk == null) {
+            val targetType = typed.asType.toStaticType(customTypeFunctions)
+            val validationThunk = when (typed.asType) {
+                is PartiqlAst.Type.CustomType ->
+                    // Case-insensitive lookup
+                    customTypeFunctions.mapKeys { (k, _) -> k.toLowerCase() }[typed.asType.name.text.toLowerCase()]?.validateExprValue
+                else -> null
+            }
+            val castOutputType = sourceType.cast(targetType).let {
+                if (validationThunk == null) {
                     // There is no additional validation for this parameter, return this type as-is
                     it
                 } else {

@@ -15,6 +15,7 @@
 package org.partiql.lang.syntax
 
 import com.amazon.ion.IntegerSize
+import com.amazon.ion.IonBool
 import com.amazon.ion.IonInt
 import com.amazon.ion.IonSexp
 import com.amazon.ion.IonSystem
@@ -25,6 +26,7 @@ import com.amazon.ionelement.api.metaContainerOf
 import com.amazon.ionelement.api.toIonElement
 import org.partiql.lang.ast.AstSerializer
 import org.partiql.lang.ast.AstVersion
+import org.partiql.lang.ast.DataType
 import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.IonElementMetaContainer
 import org.partiql.lang.ast.IsCountStarMeta
@@ -36,12 +38,14 @@ import org.partiql.lang.ast.NAryOp
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.SqlDataType
 import org.partiql.lang.ast.toExprNode
+import org.partiql.lang.ast.toPartiQlMetaContainer
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.time.MAX_PRECISION_FOR_TIME
-import org.partiql.lang.types.CustomType
+import org.partiql.lang.syntax.TokenType.KEYWORD
+import org.partiql.lang.types.CustomTypeFunction
 import org.partiql.lang.util.DATE_PATTERN_REGEX
 import org.partiql.lang.util.atomFromHead
 import org.partiql.lang.util.checkThreadInterrupted
@@ -77,20 +81,17 @@ import java.time.temporal.Temporal
 /**
  * Parses a list of tokens as infix query expression into a prefix s-expression
  * as the abstract syntax tree.
+ * @param ion is the [IonSystem] used to generate [Token]s.
+ * @param customTypeFunctions represents the map of custom type functions keyed by custom type names. [SqlParser] recognizes these type names case-insensitively.
+ * Note that to compile/evaluate a parsed query with these custom type names, make sure to use the same custom type functions to instantiate [CompilerPipeline].
  */
 class SqlParser(
     private val ion: IonSystem,
-    customTypes: List<CustomType> = listOf()) : Parser {
+    customTypeFunctions: Map<String, CustomTypeFunction> = mapOf()) : Parser {
 
-    private val CUSTOM_KEYWORDS =
-        customTypes.map { it.name.toLowerCase() }
-
-    private val CUSTOM_TYPE_ALIASES =
-        customTypes.map { customType ->
-            customType.aliases.map { alias ->
-                Pair(alias.toLowerCase(), customType.name.toLowerCase())
-            }
-        }.flatten().toMap()
+    private val customTypeNames = customTypeFunctions.keys.map { it.toLowerCase() }
+    private val typeNameArityMap = ALL_TYPE_NAME_ARITY_MAP + customTypeFunctions.map { (k, v) -> Pair(k.toLowerCase(), v.arity) }.toMap()
+    private val trueValue: IonBool = ion.newBool(true)
 
     internal enum class AliasSupportType(val supportsAs: Boolean, val supportsAt: Boolean, val supportsBy: Boolean) {
         NONE(supportsAs = false, supportsAt = false, supportsBy = false),
@@ -813,7 +814,7 @@ class SqlParser(
                 SqlDataType.TIME -> timeType(arg1, metas)
                 SqlDataType.TIME_WITH_TIME_ZONE -> timeWithTimeZoneType(arg1, metas)
                 SqlDataType.ANY -> anyType(metas)
-                is SqlDataType.CustomDataType -> customType(typeName!!, metas)
+                is SqlDataType.CustomDataType -> customType(typeName!!, args.map { it.toLong() }, metas)
             }
         }
     }
@@ -1150,8 +1151,7 @@ class SqlParser(
     private val Token.customKeywordText: String?
         get() = when (type) {
             TokenType.IDENTIFIER -> when (text?.toLowerCase()) {
-                in CUSTOM_KEYWORDS -> text?.toLowerCase()
-                in CUSTOM_TYPE_ALIASES.keys -> CUSTOM_TYPE_ALIASES[text?.toLowerCase()]
+                in customTypeNames -> text?.toLowerCase()
                 else -> null
             }
             else -> null
@@ -1160,17 +1160,51 @@ class SqlParser(
     private val Token.customType: SqlDataType?
         get() = when (type) {
             TokenType.IDENTIFIER -> when (text?.toLowerCase()) {
-                in CUSTOM_KEYWORDS -> SqlDataType.CustomDataType(text!!.toLowerCase())
-                in CUSTOM_TYPE_ALIASES.keys -> CUSTOM_TYPE_ALIASES[text?.toLowerCase()]?.let {
-                    SqlDataType.CustomDataType(it.toLowerCase())
-                }
+                in customTypeNames -> SqlDataType.CustomDataType(text!!.toLowerCase())
                 else -> null
             }
             else -> null
         }
 
+    private fun ParseNode.toDataType(): DataType {
+        if(type != ParseType.TYPE) {
+            errMalformedParseTree("Expected ParseType.TYPE instead of $type")
+        }
+        if (token == null) {
+            errMalformedParseTree("Token cannot be null for ParseNode with type ParseType.TYPE")
+        }
+
+        val typeName = token.keywordText ?: token.customKeywordText ?:
+        token.err("Cannot find type named ${token.text}", ErrorCode.PARSE_EXPECTED_TYPE_NAME)
+
+        val sqlDataType = SqlDataType.forTypeName(typeName) ?:
+        (token.customType ?: errMalformedParseTree("Invalid DataType: $typeName"))
+
+        return DataType(
+            sqlDataType,
+            children.map {
+                val argValue = it.token?.value
+                    ?: errMalformedParseTree("Data type argument did not have a token for some reason")
+
+                if(argValue !is IonInt) {
+                    errMalformedParseTree("Data type argument was not an Ion INT for some reason.")
+                }
+
+                when(argValue.integerSize!!) {
+                    IntegerSize.INT -> argValue.intValue()
+                    IntegerSize.LONG, IntegerSize.BIG_INTEGER ->
+                        it.token.err(
+                            "Type parameter exceeded maximum value",
+                            ErrorCode.PARSE_TYPE_PARAMETER_EXCEEDED_MAXIMUM_VALUE
+                        )
+                }
+            },
+            metas = token.toSourceLocationMetaContainer().toPartiQlMetaContainer())
+    }
+
     private fun ParseNode.getMetas(): IonElementMetaContainer =
         token.toSourceLocationMetaContainer()
+
 
     private fun metaToIonMetaContainer(meta: Meta): IonElementMetaContainer =
         metaContainerOf(Pair(meta.tag, meta))
@@ -1565,10 +1599,10 @@ class SqlParser(
     }
 
     private fun List<Token>.parseType(opName: String): ParseNode {
-        val typeName = head?.keywordText
-        val typeArity = ALL_TYPE_NAME_ARITY_MAP[typeName] ?:
-        (head?.customType?.arityRange ?:
-        err("Expected type name", ErrorCode.PARSE_EXPECTED_TYPE_NAME))
+        val typeName = head?.keywordText ?: head?.customKeywordText
+        val typeArity = typeNameArityMap[typeName] ?: err("Cannot find type named $typeName.",
+            ErrorCode.PARSE_EXPECTED_TYPE_NAME
+        )
 
         val typeNode = when (tail.head?.type) {
             TokenType.LEFT_PAREN -> tail.tail.parseArgList(

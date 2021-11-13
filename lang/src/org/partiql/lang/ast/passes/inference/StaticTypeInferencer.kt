@@ -9,9 +9,9 @@ import org.partiql.lang.errors.ProblemSeverity
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.visitors.StaticTypeInferenceVisitorTransform
 import org.partiql.lang.eval.visitors.StaticTypeVisitorTransform
+import org.partiql.lang.types.CustomTypeFunction
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
-import org.partiql.lang.types.TypedOpParameter
 
 /**
  * Infers the [StaticType] of a [PartiqlAst.Statement]. Assumes [StaticTypeVisitorTransform] was run before on this
@@ -20,13 +20,13 @@ import org.partiql.lang.types.TypedOpParameter
  * @param globalBindings The global bindings to the static environment.  This is a data catalog purely from a lookup
  * perspective.
  * @param customFunctionSignatures Custom user-defined function signatures that can be called by the query.
- * @param customTypedOpParameters Mapping of custom type name to [TypedOpParameter] to be used for typed operators
+ * @param customTypeFunctions Mapping of custom type name to [CustomTypeFunction] to be used for typed operators
  * (i.e CAST/IS) inference.
  */
 class StaticTypeInferencer(
     private val globalBindings: Bindings<StaticType>,
     private val customFunctionSignatures: List<FunctionSignature>,
-    private val customTypedOpParameters: Map<String, TypedOpParameter>,
+    private val customTypeFunctions: Map<String, CustomTypeFunction>,
 ) {
     /**
      * Infers the [StaticType] of [node] and returns an [InferenceResult]. Currently does not support inference for
@@ -42,7 +42,7 @@ class StaticTypeInferencer(
      */
     fun inferStaticType(node: PartiqlAst.Statement): InferenceResult {
         val problemCollector = ProblemCollector()
-        val inferencer = StaticTypeInferenceVisitorTransform(globalBindings, customFunctionSignatures, customTypedOpParameters, problemCollector)
+        val inferencer = StaticTypeInferenceVisitorTransform(globalBindings, customFunctionSignatures, customTypeFunctions, problemCollector)
         val transformedPartiqlAst = inferencer.transformStatement(node)
         val inferredStaticType = when (transformedPartiqlAst) {
             is PartiqlAst.Statement.Query -> transformedPartiqlAst.expr.metas.staticType?.type

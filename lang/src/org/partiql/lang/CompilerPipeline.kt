@@ -32,7 +32,7 @@ import org.partiql.lang.eval.visitors.StaticTypeInferenceVisitorTransform
 import org.partiql.lang.eval.visitors.StaticTypeVisitorTransform
 import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.SqlParser
-import org.partiql.lang.types.CustomType
+import org.partiql.lang.types.CustomTypeFunction
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.interruptibleFold
 
@@ -88,11 +88,11 @@ interface CompilerPipeline  {
     val functions: @JvmSuppressWildcards Map<String, ExprFunction>
 
     /**
-     * Returns list of custom data types that are available in typed operators (i.e CAST/IS).
+     * Returns list of custom type functions mapped by typename that are available in typed operators (i.e CAST/IS).
      *
      * This does not include core PartiQL parameters.
      */
-    val customDataTypes: List<CustomType>
+    val customTypeFunctions: Map<String, CustomTypeFunction>
 
     /**
      * Returns a list of all stored procedures which are available for execution.
@@ -139,7 +139,7 @@ interface CompilerPipeline  {
         private var parser: Parser? = null
         private var compileOptions: CompileOptions? = null
         private val customFunctions: MutableMap<String, ExprFunction> = HashMap()
-        private var customDataTypes: List<CustomType> = listOf()
+        private var customTypeFunctions: Map<String, CustomTypeFunction> = mapOf()
         private val customProcedures: MutableMap<String, StoredProcedure> = HashMap()
         private val preProcessingSteps: MutableList<ProcessingStep> = ArrayList()
         private var globalTypeBindings: Bindings<StaticType>? = null
@@ -174,12 +174,18 @@ interface CompilerPipeline  {
         fun addFunction(function: ExprFunction): Builder = this.apply { customFunctions[function.signature.name] = function }
 
         /**
-         * Add custom types to CAST/IS operators to.
+         * Add custom type functions to CAST/IS operators. A [CustomTypeFunction] is mapped to a unique typename/alias.
+         * Note that the user can also create a separate instance of [SqlParser] with different custom type names.
+         * Be careful when using the following APIs:
+         * 1. [compile] API will compile a [String] based on these [customTypeFunctions] as the [CompilerPipeline] creates its own instance of [SqlParser].
+         * 2. [compile] will compile an [ExprNode] instantiated using a separate [SqlParser] instance.
+         *
+         * Note that multiple distinct typenames/aliases can be mapped to a single [CustomTypeFunction].
          *
          * Built-in types will take precedence over custom types in case of a name collision.
          */
-        fun customDataTypes(customTypes: List<CustomType>) = this.apply {
-            customDataTypes = customTypes
+        fun customTypeFunctions(customTypeFunctions: Map<String, CustomTypeFunction>) = this.apply {
+            this.customTypeFunctions = customTypeFunctions.mapKeys { (k,_) -> k.toLowerCase() }
         }
 
         /**
@@ -218,10 +224,10 @@ interface CompilerPipeline  {
 
             return CompilerPipelineImpl(
                 valueFactory = valueFactory,
-                parser = parser ?: SqlParser(valueFactory.ion),
+                parser = parser ?: SqlParser(valueFactory.ion, customTypeFunctions),
                 compileOptions = compileOptionsToUse,
                 functions = allFunctions,
-                customDataTypes = customDataTypes,
+                customTypeFunctions = customTypeFunctions,
                 procedures = customProcedures,
                 preProcessingSteps = preProcessingSteps,
                 globalTypeBindings = globalTypeBindings
@@ -235,7 +241,7 @@ internal class CompilerPipelineImpl(
     private val parser: Parser,
     override val compileOptions: CompileOptions,
     override val functions: Map<String, ExprFunction>,
-    override val customDataTypes: List<CustomType>,
+    override val customTypeFunctions: Map<String, CustomTypeFunction>,
     override val procedures: Map<String, StoredProcedure>,
     private val preProcessingSteps: List<ProcessingStep>,
     private val globalTypeBindings: Bindings<StaticType>?
@@ -244,11 +250,7 @@ internal class CompilerPipelineImpl(
     private val compiler = EvaluatingCompiler(
         valueFactory,
         functions,
-        customDataTypes.map { customType ->
-            (customType.aliases + customType.name).map { alias ->
-                Pair(alias.toLowerCase(), customType.typedOpParameter)
-            }
-        }.flatten().toMap(),
+        customTypeFunctions,
         procedures,
         compileOptions)
 
@@ -274,12 +276,9 @@ internal class CompilerPipelineImpl(
                             StaticTypeInferenceVisitorTransform(
                                 globalBindings = globalTypeBindings,
                                 customFunctionSignatures = functions.values.map { it.signature },
-                                customTypedOpParameters =         customDataTypes.map { customType ->
-                                    (customType.aliases + customType.name).map { alias ->
-                                        Pair(alias.toLowerCase(), customType.typedOpParameter)
-                                    }
-                                }.flatten().toMap()
-                            ))
+                                customTypeFunctions = customTypeFunctions
+                            )
+                        )
                     }
                 }
             ).flatten().toTypedArray())

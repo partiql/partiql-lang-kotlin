@@ -19,7 +19,7 @@ import com.amazon.ion.IonSymbol
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
 import com.amazon.ion.IonWriter
-import org.partiql.lang.types.CustomType
+import org.partiql.lang.syntax.ALL_TYPE_NAME_ARITY_MAP
 import org.partiql.lang.util.args
 import org.partiql.lang.util.arity
 import org.partiql.lang.util.asIonInt
@@ -255,9 +255,14 @@ private enum class NodeTag(val definition: TagDefinition) {
     }
 }
 
-// TODO: CustomTypes in this signature should be removed along with all it's usages
-//  once hardcoded types are removed from the PIG domain https://github.com/partiql/partiql-lang-kotlin/issues/510
-class AstDeserializerBuilder(val ion: IonSystem, val customTypes: List<CustomType> = listOf()) {
+// TODO: CustomTypeNames in this signature should be removed along with all its usages
+//  once harrier stops using older serialized PIG Asts
+/**
+ * Builder to build an instance of [AstDeserializer].
+ * @param ion is an [IonSystem] used to generate [IonValue]s.
+ * @param customTypeNames is a set of custom type names used to case-insensitively recognize these types when deserializing.
+ */
+class AstDeserializerBuilder(val ion: IonSystem, val customTypeNames: Set<String> = setOf()) {
     private val metaDeserializers = mutableMapOf(
         SourceLocationMeta.deserializer.tag to SourceLocationMeta.deserializer,
         StaticTypeMeta.deserializer.tag to StaticTypeMeta.deserializer,
@@ -279,23 +284,26 @@ class AstDeserializerBuilder(val ion: IonSystem, val customTypes: List<CustomTyp
         object : AstDeserializer {
             override fun deserialize(sexp: IonSexp, astVersion: AstVersion): ExprNode =
                 // Note: .toMap() makes an immutable map.
-                AstDeserializerInternal(astVersion, ion, metaDeserializers.toMap(), customTypes).deserialize(sexp)
+                AstDeserializerInternal(astVersion, ion, metaDeserializers.toMap(), customTypeNames).deserialize(sexp)
         }
 }
 
-// TODO: CustomTypes in this signature should be removed along with all it's usages
-//  once hardcoded types are removed from the PIG domain https://github.com/partiql/partiql-lang-kotlin/issues/510
+// TODO: CustomTypeFunctions in this signature should be removed along with all it's usages
+//  once harrier stops using older serialized PIG Asts
 internal class AstDeserializerInternal(
     val astVersion: AstVersion,
     val ion: IonSystem,
     private val metaDeserializers: Map<String, MetaDeserializer>,
-    private val customTypes: List<CustomType> = listOf()
+    customTypeNames: Set<String> = setOf()
 ) {
-
+    private val customTypeNamesLowerCased = customTypeNames.map { it.toLowerCase() }.toSet()
     // For supporting the older serialized ASTs
     private val IonSexp.nodeTag: NodeTag
         get() = NodeTag.fromTagText(this.tagText) ?:
-                if (customTypes.map { it.name.toLowerCase() }.contains(this.tagText.toLowerCase())) NodeTag.CUSTOM_TYPE_FOR_OLDER_PIG_ASTS
+                // Case-insensitive lookup
+                if (customTypeNamesLowerCased.contains(this.tagText.toLowerCase())) {
+                    NodeTag.CUSTOM_TYPE_FOR_OLDER_PIG_ASTS
+                }
                 else err("Unknown tag: '${this.tagText}'")
 
     fun deserialize(sexp: IonSexp): ExprNode {
@@ -1233,8 +1241,9 @@ internal class AstDeserializerInternal(
                     val typeName = target.args[0].asIonSymbol().stringValue()
                     val sqlDataType = SqlDataType.forTypeName(typeName) ?: err("'$typeName' is not a valid data type")
                     val args = target.args.drop(1).map { it.asIonInt().intValue() }
-                    if (!sqlDataType.arityRange.contains(args.size)) {
-                        err("Type $typeName arity range ${sqlDataType.arityRange} was but ${args.size} were specified")
+                    val arityRange = ALL_TYPE_NAME_ARITY_MAP[typeName] ?: err("'$typeName' is not a valid data type")
+                    if (!arityRange.contains(args.size)) {
+                        err("Type $typeName arity range $arityRange was but ${args.size} were specified")
                     }
                     DataType(sqlDataType, args, metas)
                 }

@@ -642,6 +642,12 @@ class SqlParserTest : SqlParserTestBase() {
         "(cast (lit 1.123) (custom_type rs_integer))"
     )
 
+    @Test
+    fun castAsRsVarchar() = assertExpression(
+        "CAST('KELLY' AS RS_VARCHAR(5))",
+        "(cast (lit \"KELLY\") (custom_type rs_varchar 5))"
+    )
+
     //****************************************
     // searched CASE
     //****************************************

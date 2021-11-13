@@ -482,7 +482,11 @@ fun DataType.toAstType(): PartiqlAst.Type {
             SqlDataType.TIME -> timeType(arg1, metas)
             SqlDataType.TIME_WITH_TIME_ZONE -> timeWithTimeZoneType(arg1, metas)
             SqlDataType.ANY -> anyType(metas)
-            is SqlDataType.CustomDataType -> customType(thiz.sqlDataType.name.toLowerCase(), metas)
+            is SqlDataType.CustomDataType -> customType(
+                thiz.sqlDataType.name.toLowerCase(),
+                listOfNotNull(arg1, arg2),
+                metas
+            )
         }
     }
 }

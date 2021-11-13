@@ -7,18 +7,17 @@ import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.lang.CUSTOM_TEST_TYPES
+import org.partiql.lang.CUSTOM_TEST_TYPES_MAP
 import org.partiql.lang.ION
 import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.util.ArgumentsProviderBase
 
-
 class SqlParserCastTests : SqlParserTestBase() {
 
     companion object {
         val ion: IonSystem = ION
-        val parser = SqlParser(ion, CUSTOM_TEST_TYPES)
+        val parser = SqlParser(ion, CUSTOM_TEST_TYPES_MAP)
 
         fun parse(source: String): ExprNode = parser.parseExprNode(source)
         fun parseToAst(source: String): PartiqlAst.Statement = parser.parseAstStatement(source)
@@ -74,7 +73,7 @@ class SqlParserCastTests : SqlParserTestBase() {
             ),
             case(
                 source = "CAST('xyz' as RS_FLOAT4)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType("rs_real")) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType("rs_float4")) }
             ),
             case(
                 source = "CAST('xyz' as RS_DOUBLE_PRECISION)",
@@ -82,11 +81,11 @@ class SqlParserCastTests : SqlParserTestBase() {
             ),
             case(
                 source = "CAST('xyz' as RS_FLOAT)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType("rs_double_precision")) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType("rs_float")) }
             ),
             case(
                 source = "CAST('xyz' as rs_float8)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType("rs_double_precision")) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType("rs_float8")) }
             ),
             case(
                 source = "CAST('xyz' as SPARK_FLOAT)",

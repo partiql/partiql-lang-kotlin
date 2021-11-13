@@ -35,7 +35,6 @@ import org.partiql.lang.types.StaticType.Companion.ANY
 import org.partiql.lang.types.StaticType.Companion.BOOL
 import org.partiql.lang.types.StringType
 import org.partiql.lang.types.StructType
-import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.types.VarargFormalParameter
 import org.partiql.lang.types.StaticType.Companion.NULL
 import org.partiql.lang.types.StaticType.Companion.MISSING
@@ -55,6 +54,7 @@ import org.partiql.lang.types.StaticType.Companion.STRUCT
 import org.partiql.lang.types.StaticType.Companion.SYMBOL
 import org.partiql.lang.types.StaticType.Companion.TIMESTAMP
 import org.partiql.lang.types.StaticType.Companion.unionOf
+import org.partiql.lang.types.buildTypeFunction
 import org.partiql.lang.util.cartesianProduct
 import org.partiql.lang.util.compareTo
 import org.partiql.lang.util.countMatchingSubstrings
@@ -167,7 +167,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
         val inferencer = StaticTypeInferencer(
             globalBindings = globalBindings,
             customFunctionSignatures = tc.customFunctionSignatures,
-            customTypedOpParameters = customTypedOpParameters)
+            customTypeFunctions = customTypeFunctions)
 
         val defaultVisitorTransforms = basicVisitorTransforms()
         val staticTypeVisitorTransform = StaticTypeVisitorTransform(ion, globalBindings)
@@ -4665,14 +4665,16 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                 name = "CAST with a custom type without validation thunk",
                 originalSql = "CAST(an_int AS ES_INTEGER)",
                 globals = mapOf("an_int" to IntType(IntType.IntRangeConstraint.LONG)),
-                handler = expectQueryOutputType(customTypedOpParameters["es_integer"]!!.staticType)
+                handler = expectQueryOutputType(
+                    customTypeFunctions["es_integer"]!!.constructStaticType()
+                )
             ),
             TestCase(
                 name = "CAST with a custom type with validation thunk",
                 originalSql = "CAST(an_int AS ES_FLOAT)",
                 globals = mapOf("an_int" to IntType(IntType.IntRangeConstraint.LONG)),
                 handler = expectQueryOutputType(
-                    unionOf(customTypedOpParameters["es_float"]!!.staticType, MISSING)
+                    unionOf(customTypeFunctions["es_float"]!!.constructStaticType(), MISSING)
                 )
             ),
             TestCase(
@@ -7313,9 +7315,9 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
             )
         )
 
-        private val customTypedOpParameters = mapOf(
-            "es_integer" to TypedOpParameter(IntType(IntType.IntRangeConstraint.LONG)),
-            "es_float" to TypedOpParameter(StaticType.FLOAT) {
+        private val customTypeFunctions = mapOf(
+            "es_integer" to buildTypeFunction(IntType(IntType.IntRangeConstraint.LONG)),
+            "es_float" to buildTypeFunction(StaticType.FLOAT) {
                 // For the sake of this test, lets say ES_FLOAT only allows values in range (-100, 100)
                 it.numberValue() < 100L && it.numberValue() > -100L
             }

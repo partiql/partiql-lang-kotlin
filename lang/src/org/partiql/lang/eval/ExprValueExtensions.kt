@@ -50,6 +50,7 @@ import org.partiql.lang.util.compareTo
 import org.partiql.lang.util.downcast
 import org.partiql.lang.util.getPrecisionFromTimeString
 import org.partiql.lang.util.ionValue
+import org.partiql.lang.util.truncateToUtf8ByteLength
 import java.math.BigDecimal
 import java.math.MathContext
 import java.math.RoundingMode
@@ -398,6 +399,10 @@ fun ExprValue.cast(
                             is NumberConstraint.UpTo -> truncatedString
                         }
                     )
+                }
+                is StringType.StringLengthConstraint.ByteLengthConstrained -> {
+                    val byteLengthConstraint = type.lengthConstraint.byteLength.value
+                    valueFactory.newString(truncateToUtf8ByteLength(byteLengthConstraint))
                 }
             }
         }

@@ -29,3 +29,61 @@ fun String.codePointSequence(): Sequence<Int> {
         }
     }
 }
+
+/**
+ * Truncates [String] to given utf8 byte length.
+ */
+fun String.truncateToUtf8ByteLength(byteLength: Int): String {
+    var byteCount = 0
+    var i = 0
+    var charCount = i
+    while (byteCount < byteLength && i < this.length) {
+        val c = this[i]
+        val cValue = c.toInt()
+        if (cValue < 0x80) {
+            byteCount++
+        } else if (cValue < 0x800) {
+            byteCount += 2
+        } else if (c.isHighSurrogate()) {
+            // count lowSurrogate as well and jump to next character.
+            byteCount += 4
+            i += 1
+        } else {
+            byteCount += 3
+        }
+        i += 1
+        if (byteCount <= byteLength) {
+            charCount = i
+        }
+    }
+
+    return this.substring(0 until charCount)
+}
+
+/**
+ * Returns utf8 byte length of the string.
+ */
+val String.utf8ByteLength: Int
+    get() {
+        var count = 0
+        var skipLowSurrogate = false
+        for (c in this) {
+            if (skipLowSurrogate) {
+                count += 2
+                skipLowSurrogate = false
+            } else {
+                val cValue = c.toInt()
+                if (cValue < 0x80) {
+                    count++
+                } else if (cValue < 0x800) {
+                    count += 2
+                } else if (c.isHighSurrogate()) {
+                    count += 2
+                    skipLowSurrogate = true
+                } else {
+                    count += 3
+                }
+            }
+        }
+        return count
+    }
