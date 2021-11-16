@@ -21,13 +21,13 @@ import com.amazon.ionelement.api.TextElement
 import org.partiql.lang.ast.IsCountStarMeta
 import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.domains.addSourceLocation
-import org.partiql.lang.domains.errorContextFrom
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
+import org.partiql.lang.eval.addSourceLocation
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.errIntOverflow
+import org.partiql.lang.eval.errorContextFrom
 
 /**
  * Provides rules for basic AST sanity checks that should be performed before any attempt at further AST processing.

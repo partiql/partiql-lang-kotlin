@@ -11,7 +11,6 @@ import com.amazon.ionelement.api.toIonElement
 import org.partiql.lang.ast.StaticTypeMeta
 import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.domains.addSourceLocation
 import org.partiql.lang.domains.extractSourceLocation
 import org.partiql.lang.domains.toBindingCase
 import org.partiql.lang.errors.ErrorCode
@@ -19,6 +18,7 @@ import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.Bindings
+import org.partiql.lang.eval.addSourceLocation
 import org.partiql.lang.eval.delegate
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.propertyValueMapOf

@@ -1,7 +1,20 @@
 
-// This line cause PIG to emit the PartiqlAstToPartiqlAlgebraVisitorTransform base class with abstract methods which
-// is (currently) the easiest way to transform from the AST to the algebra.
-(transform partiql_ast partiql_algebra)
+// Two domains here are intended as public API: partiql_ast and partiql_algebra.
+// There may be numerous other permuted domains, but the others are not to be considered as public API.  The important
+// thing to note here is that there may be may permuted domains, but these will always be supported as public API.
+// [When supported by PIG](https://github.com/partiql/partiql-ir-generator/issues/108), any domain other than these
+// should be marked `internal`.
+
+
+// Makes PIG emit PartiqlAstToPartiqlAstVarDeclVisitorTransform
+(transform partiql_ast partiql_ast_var_decl)
+
+// Makes PIG emit PartiqlAstVarDeclToPartiqlAlgebraUnindexedVisitorTransform
+(transform partiql_ast_var_decl partiql_algebra_unindexed)
+
+// Makes PIG emit PartiqlAlgebraUnindexedToPartiqlAlgebraVisitorTransform
+(transform partiql_algebra_unindexed partiql_algebra)
+
 
 /*
     The PartiQL AST.
@@ -384,8 +397,48 @@
 ) // end of define
 
 
-(define partiql_algebra
+// Permutes partiql_ast, converting all AS aliases which introduce bindings to non-nullable `var_decl`.
+// Also makes select-list item AS aliases non-nullable.  These operations are included here due to their
+// similarity.
+//
+// In both cases, any AS alias which has not been specified by the query author is determined statically.
+(define partiql_ast_var_decl
     (permute_domain partiql_ast
+        (include
+            // Every instance of `var_decl` introduces a new binding in the current scope.
+            // - `name`: the name of the variable as specified by the query author or determined statically.
+            // - `index`: a unique integer assigned to this variable, also determined statically.
+            (product var_decl name::symbol index::int)
+        )
+
+        // Redefine `project_item.project_expr` to have a non-nullable `as_name`
+        (with project_item
+            (exclude project_expr)
+            (include
+                (project_expr expr::expr as_name::symbol)
+            )
+        )
+
+        // Change `let_binding.name` from `symbol` to `var_decl`.
+        (exclude let_binding)
+        (include (product let_binding expr::expr name::var_decl))
+
+
+        // Change all the variable declarations in `from_source` from `symbol` to `var_decl`.
+        (with from_source
+            (exclude scan unpivot)
+            (include
+                (scan expr::expr as_decl::var_decl at_decl::(? var_decl) by_decl::(? var_decl))
+                (unpivot expr::expr as_decl::var_decl at_decl::(? var_decl) by_decl::(? var_decl))
+            )
+        )
+    )
+)
+
+// Removes the syntactic representation of SFW queries and replaces it with PartiQL's relational algebra.
+// See `doc/dev/RELATIONAL-ALGEBRA.md` for details.
+(define partiql_algebra_unindexed
+    (permute_domain partiql_ast_var_decl
 
         (with expr
             // Remove the select node from the `expr` sum type.
@@ -422,18 +475,12 @@
             // can be permuted here more easily, but this comes with breaking API changes and other issues that are
             // beyond the scope of our current goals.)
             (sum bindings_expr
-                (scan expr::expr as_alias::var_decl at_alias::(? var_decl) by_alias::(? var_decl))
+                (scan expr::expr as_decl::var_decl at_decl::(? var_decl) by_decl::(? var_decl))
                 (cross_join left::bindings_term right::bindings_term)
                 (filter predicate::expr term::bindings_term)
 
                 // TODO: numerous other relational operators added to be incrementally via steel thread approach.
             )
-
-            // Every instance of var_decl introduces a new binding in the current scope.
-            // Modeling variable declarations this way all of the places bindings are introduced to be be permuted in
-            // subsequent domains at the same time.   This allows DeBruijn indexes to be added to all nodes that
-            // declare bindings easily.  Later permuted domains will add an index to this node.
-            (product var_decl name::symbol)
         )
 
         // Nodes excluded below this line will eventually have a representation in the logical algebra, but not
@@ -468,15 +515,23 @@
             assignment
             identifier
         )
-
     )
 )
 
-// TODO??
-//
-//(define piql
-//    (permute_domain logical_algebra
-//        ???
-//    )
-//)
+
+// This is public, supported API.
+// This permutation resolves the index of all variable references, or throws an error in case of an undefined
+// variable.  This pass should always be as early as possible after conversion of AST to relational algebra, so
+// that later passes do not need to be aware of lexical scoping rules.
+(define partiql_algebra
+    (permute_domain partiql_algebra_unindexed
+        (with expr
+            (exclude id)
+            (include
+                (id name::symbol index::int)
+                (global name::symbol case::case_sensitivity)
+            )
+        )
+    )
+)
 

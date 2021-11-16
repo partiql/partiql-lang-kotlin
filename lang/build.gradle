@@ -45,7 +45,7 @@ dependencies {
 
     api 'com.amazon.ion:ion-java:[1.4.0,)'
     api 'com.amazon.ion:ion-element:0.2.0'
-    api 'org.partiql:partiql-ir-generator-runtime:0.4.0'
+    api 'org.partiql:partiql-ir-generator-runtime:0.4.1-SNAPSHOT'
 
     // test-time dependencies
     testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
@@ -61,16 +61,19 @@ sourceSets {
     jmh.kotlin.srcDirs = ["jmh"]
 }
 
+def PIG_OUTPUT_DIR = new File(projectDir, "src/org/partiql/lang/domains")
+
 task generatePigDomains {
     group = "code generation"
 
     // TODO: in the future, utilize the API created as part of this ticket:
     // https://github.com/partiql/partiql-ir-generator/issues/5
 
+
     def typeUniverse = new File(projectDir, "resources/org/partiql/type-domains/partiql.ion")
-    def outputFile = new File(projectDir, "src/org/partiql/lang/domains/partiql-domains.kt")
-    def targetLanguage = new TargetLanguage.Kotlin("org.partiql.lang.domains")
-    def cmd = new Command.Generate(typeUniverse, outputFile, targetLanguage)
+    def targetLanguage = new TargetLanguage.Kotlin("org.partiql.lang.domains", PIG_OUTPUT_DIR)
+    def cmd = new Command.Generate(typeUniverse , targetLanguage)
+
 
     // TODO:
     // Tell gradle about the input and output of this task so that it only invokes pig when
@@ -88,6 +91,19 @@ task generatePigDomains {
 
 compileKotlin.dependsOn generatePigDomains
 
+
+
+// This task removes any *.generated.kt files left behind from previous builds.  Without this, there is nothing to
+// remove generated code for deleted and renamed PIG domains, which is very confusing.
+tasks.register('clean-pig-generated-files', Delete) {
+    group 'pig'
+    delete fileTree(PIG_OUTPUT_DIR).matching {
+        include "*.generated.kt"
+    }
+}
+
+
+generatePigDomains.dependsOn('clean-pig-generated-files')
 
 dokka {
     outputFormat = "html"

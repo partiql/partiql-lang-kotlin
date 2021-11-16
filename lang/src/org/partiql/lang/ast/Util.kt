@@ -19,13 +19,6 @@ import com.amazon.ion.*
 import org.partiql.lang.ast.SetQuantifier.*
 import org.partiql.lang.errors.*
 
-fun PropertyValueMap.addSourceLocation(metas: MetaContainer): PropertyValueMap {
-    (metas.find(SourceLocationMeta.TAG) as? SourceLocationMeta)?.let {
-        this[Property.LINE_NUMBER] = it.lineNum
-        this[Property.COLUMN_NUMBER] = it.charOffset
-    }
-    return this
-}
 
 /**
  * Creates an instance of [CallAgg] which is intended to be used to represent `COUNT(*)` when it is

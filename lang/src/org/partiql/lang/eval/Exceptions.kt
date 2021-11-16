@@ -90,3 +90,30 @@ fun errorContextFrom(metaContainer: MetaContainer?): PropertyValueMap {
         PropertyValueMap()
     }
 }
+
+/**
+ * Adds [Property.LINE_NUMBER] and [Property.COLUMN_NUMBER] to the [PropertyValueMap] if the [SourceLocationMeta.TAG]
+ * is present in the passed [metas]. Otherwise, returns the unchanged [PropertyValueMap].
+ */
+fun PropertyValueMap.addSourceLocation(metas: com.amazon.ionelement.api.MetaContainer): PropertyValueMap {
+    (metas[SourceLocationMeta.TAG] as? SourceLocationMeta)?.let {
+        this[Property.LINE_NUMBER] = it.lineNum
+        this[Property.COLUMN_NUMBER] = it.charOffset
+    }
+    return this
+}
+/**
+ * Returns the [SourceLocationMeta] as an error context if the [SourceLocationMeta.TAG] exists in the passed
+ * [metaContainer]. Otherwise, returns an empty map.
+ */
+fun errorContextFrom(metaContainer: com.amazon.ionelement.api.MetaContainer?): PropertyValueMap {
+    if (metaContainer == null) {
+        return PropertyValueMap()
+    }
+    val location = metaContainer[SourceLocationMeta.TAG] as? SourceLocationMeta
+    return if (location != null) {
+        org.partiql.lang.eval.errorContextFrom(location)
+    } else {
+        PropertyValueMap()
+    }
+}
