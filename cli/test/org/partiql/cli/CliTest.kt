@@ -21,7 +21,6 @@ import org.junit.Assert.*
 import org.partiql.lang.*
 import java.io.*
 import java.nio.file.Files
-import java.nio.file.Paths
 
 class CliTest {
     private val ion = IonSystemBuilder.standard().build()
@@ -44,8 +43,7 @@ class CliTest {
     }
 
     private fun makeCli(query: String,
-                        input: String,
-                        bindings: Bindings<ExprValue> = Bindings.empty(),
+                        input: String, bindings: Bindings<ExprValue> = Bindings.empty(),
                         outputFormat: OutputFormat = OutputFormat.ION_TEXT,
                         output: OutputStream = this.output) =
         Cli(
