@@ -48,8 +48,8 @@ internal class Cli(private val valueFactory: ExprValueFactory,
             val result = compilerPipeline.compile(query).eval(EvaluationSession.build { globals(bindings) })
 
             when (format) {
-                ION_TEXT   -> {
-                    ionTextWriterBuilder.build(output).use { printIon(it, result) }
+                ION_TEXT   -> ionTextWriterBuilder.build(output).use {
+                    printIon(it, result)
                     output.write(System.lineSeparator().toByteArray(Charsets.UTF_8))
                 }
                 ION_BINARY -> valueFactory.ion.newBinaryWriter(output).use { printIon(it, result) }
