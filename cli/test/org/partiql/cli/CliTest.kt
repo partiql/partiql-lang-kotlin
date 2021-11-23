@@ -36,10 +36,7 @@ class CliTest {
 
     @After
     fun cleanTestFile() {
-        val testFilePath = testFile.toPath()
-        if (Files.exists(testFilePath)){
-            Files.delete(testFilePath)
-        }
+        Files.deleteIfExists(testFile.toPath())
     }
 
     private fun makeCli(query: String,
