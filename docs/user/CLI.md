@@ -22,7 +22,7 @@ Option                                Description
 ------                                -----------
 -e, --environment <File>              initial global environment (optional)
 -h, --help                            prints this help
--i, --input <File>                    input file, requires the query option (default: stdin)
+-i, --input <File>                    input file, requires the query option (optional)
 -o, --output <File>                   output file, requires the query option (default: stdout)
 --of, --output-format <OutputFormat:  output format, requires the query option (default: PARTIQL)
   (ION_TEXT|ION_BINARY|PARTIQL|PARTIQL_PRETTY)>

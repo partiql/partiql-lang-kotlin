@@ -38,7 +38,7 @@ class CliTest {
                         outputFormat: OutputFormat = OutputFormat.ION_TEXT) =
         Cli(
             valueFactory,
-            input?.byteInputStream(Charsets.UTF_8) ?: emptyInputStream(),
+            input?.byteInputStream(Charsets.UTF_8) ?: EmptyInputStream(),
             output,
             outputFormat,
             compilerPipeline,
@@ -132,9 +132,14 @@ class CliTest {
 
     @Test
     fun withoutInput() {
-        val subject = makeCli("SELECT * FROM input_data")
+        val subject = makeCli("1")
         val actual = subject.runAndOutput()
 
-        assertEquals("\n", actual)
+        assertEquals("1\n", actual)
+    }
+
+    @Test(expected = EvaluationException::class)
+    fun withoutInputWithInputDataBindingThrowsException() {
+        makeCli("SELECT * FROM input_data").runAndOutput()
     }
 }

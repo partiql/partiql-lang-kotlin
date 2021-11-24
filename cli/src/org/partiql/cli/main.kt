@@ -18,7 +18,8 @@ package org.partiql.cli
 
 import com.amazon.ion.system.*
 import joptsimple.*
-import org.partiql.cli.functions.*
+import org.partiql.cli.functions.ReadFile
+import org.partiql.cli.functions.WriteFile
 import org.partiql.lang.*
 import org.partiql.lang.eval.*
 import org.partiql.lang.syntax.*
@@ -160,7 +161,7 @@ private fun runCli(environment: Bindings<ExprValue>, optionSet: OptionSet) {
         FileInputStream(optionSet.valueOf(inputFileOpt))
     }
     else {
-        emptyInputStream()
+        EmptyInputStream()
     }
 
     val output = if (optionSet.has(outputFileOpt)) {

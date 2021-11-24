@@ -42,7 +42,8 @@ internal class Cli(private val valueFactory: ExprValueFactory,
             val inputIonValue = valueFactory.ion.iterate(reader).asSequence().map { valueFactory.newFromIonValue(it) }
             val inputExprValue = valueFactory.newBag(inputIonValue)
             val bindings = Bindings.buildLazyBindings<ExprValue> {
-                addBinding("input_data") { inputExprValue }
+                // If `input` is a class of `EmptyInputStream`, it means there is no input data provided by user.
+                if (input !is EmptyInputStream){ addBinding("input_data") { inputExprValue } }
             }.delegate(globals)
 
             val result = compilerPipeline.compile(query).eval(EvaluationSession.build { globals(bindings) })

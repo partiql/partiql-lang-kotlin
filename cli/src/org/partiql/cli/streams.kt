@@ -29,7 +29,6 @@ internal class UnclosableOutputStream(out: OutputStream) : FilterOutputStream(ou
 /**
  * An empty InputStream, useful when users do not explicitly specify the input data while using CLI command.
  */
-internal fun emptyInputStream() =
-    object : InputStream() {
-        override fun read() = -1 // end of stream
-    }
+internal class EmptyInputStream() : InputStream() {
+    override fun read() = -1 // end of stream
+}
