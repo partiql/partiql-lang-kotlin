@@ -20,22 +20,30 @@ import org.junit.*
 import org.junit.Assert.*
 import org.partiql.lang.*
 import java.io.*
+import java.nio.file.Files
 
 class CliTest {
     private val ion = IonSystemBuilder.standard().build()
     private val valueFactory = ExprValueFactory.standard(ion)
     private val output = ByteArrayOutputStream()
     private val compilerPipeline = CompilerPipeline.standard(ion)
+    private val testFile = File("test.ion")
 
     @Before
     fun setUp() {
         output.reset()
     }
 
+    @After
+    fun cleanTestFile() {
+        Files.deleteIfExists(testFile.toPath())
+    }
+
     private fun makeCli(query: String,
-                        input: String? = null,
+                        input: String? = null, 
                         bindings: Bindings<ExprValue> = Bindings.empty(),
-                        outputFormat: OutputFormat = OutputFormat.ION_TEXT) =
+                        outputFormat: OutputFormat = OutputFormat.ION_TEXT,
+                        output: OutputStream = this.output) =
         Cli(
             valueFactory,
             input?.byteInputStream(Charsets.UTF_8) ?: EmptyInputStream(),
@@ -126,6 +134,19 @@ class CliTest {
     fun withIonTextOutput() {
         val subject = makeCli("SELECT * FROM input_data", "{a: 1} {b: 1}", outputFormat = OutputFormat.ION_TEXT)
         val actual = subject.runAndOutput()
+
+        assertEquals("{a:1}\n{b:1}\n", actual)
+    }
+
+    @Test
+    fun withIonTextOutputToFile() {
+        makeCli(
+            "SELECT * FROM input_data",
+            "{a: 1} {b: 1}",
+            output = FileOutputStream(testFile),
+            outputFormat = OutputFormat.ION_TEXT
+        ).run()
+        val actual = testFile.bufferedReader().use { it.readText() }
 
         assertEquals("{a:1}\n{b:1}\n", actual)
     }
