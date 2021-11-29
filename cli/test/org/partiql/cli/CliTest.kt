@@ -40,12 +40,13 @@ class CliTest {
     }
 
     private fun makeCli(query: String,
-                        input: String, bindings: Bindings<ExprValue> = Bindings.empty(),
+                        input: String? = null, 
+                        bindings: Bindings<ExprValue> = Bindings.empty(),
                         outputFormat: OutputFormat = OutputFormat.ION_TEXT,
                         output: OutputStream = this.output) =
         Cli(
             valueFactory,
-            input.byteInputStream(Charsets.UTF_8),
+            input?.byteInputStream(Charsets.UTF_8) ?: EmptyInputStream(),
             output,
             outputFormat,
             compilerPipeline,
@@ -148,5 +149,18 @@ class CliTest {
         val actual = testFile.bufferedReader().use { it.readText() }
 
         assertEquals("{a:1}\n{b:1}\n", actual)
+    }
+
+    @Test
+    fun withoutInput() {
+        val subject = makeCli("1")
+        val actual = subject.runAndOutput()
+
+        assertEquals("1\n", actual)
+    }
+
+    @Test(expected = EvaluationException::class)
+    fun withoutInputWithInputDataBindingThrowsException() {
+        makeCli("SELECT * FROM input_data").runAndOutput()
     }
 }
