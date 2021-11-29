@@ -27,11 +27,8 @@ internal class UnclosableOutputStream(out: OutputStream) : FilterOutputStream(ou
 }
 
 /**
- * Input stream that does nothing instead of closing, useful for decorating input streams that should not be closed but you
- * still want to use them in a use block.
+ * An empty InputStream, useful when users do not explicitly specify the input data while using CLI command.
  */
-internal class UnclosableInputStream(input: InputStream) : FilterInputStream(input) {
-    override fun close() {
-        // no-op
-    }
+internal class EmptyInputStream() : InputStream() {
+    override fun read() = -1 // end of stream
 }
