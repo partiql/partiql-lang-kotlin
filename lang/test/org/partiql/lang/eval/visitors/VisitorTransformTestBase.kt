@@ -14,7 +14,6 @@
 
 package org.partiql.lang.eval.visitors
 
-import org.partiql.lang.ast.toAstStatement
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.syntax.SqlParserTestBase
 import org.junit.jupiter.api.fail
@@ -30,10 +29,10 @@ abstract class VisitorTransformTestBase : SqlParserTestBase() {
      */
     protected fun runTestForIdempotentTransform(tc: TransformTestCase, transform: PartiqlAst.VisitorTransform) {
         val originalAst = assertDoesNotThrow("Parsing TransformTestCase.originalSql") {
-            super.parser.parseExprNode(tc.originalSql).toAstStatement()
+            super.parser.parseAstStatement(tc.originalSql)
         }
         val expectedAst = assertDoesNotThrow("Parsing TransformTestCase.expectedSql") {
-            super.parser.parseExprNode(tc.expectedSql).toAstStatement()
+            super.parser.parseAstStatement(tc.expectedSql)
         }
 
         val actualAst = transform.transformStatement(originalAst)
@@ -56,17 +55,17 @@ abstract class VisitorTransformTestBase : SqlParserTestBase() {
      */
     protected fun runTest(tc: TransformTestCase, transformers: List<PartiqlAst.VisitorTransform>) {
         val originalAst = assertDoesNotThrow("Parsing TransformTestCase.originalSql") {
-            super.parser.parseExprNode(tc.originalSql).toAstStatement()
+            super.parser.parseAstStatement(tc.originalSql)
         }
         val expectedAst = assertDoesNotThrow("Parsing TransformTestCase.expectedSql") {
-            super.parser.parseExprNode(tc.expectedSql).toAstStatement()
+            super.parser.parseAstStatement(tc.expectedSql)
         }
 
-        val actualExprNode = transformers.fold(originalAst) { node, transform ->
+        val actualStatement = transformers.fold(originalAst) { node, transform ->
             transform.transformStatement(node)
         }
 
-        assertEquals("The expected AST must match the transformed AST", expectedAst, actualExprNode)
+        assertEquals("The expected AST must match the transformed AST", expectedAst, actualStatement)
     }
 
     private fun <T> assertDoesNotThrow(message: String, block: () -> T): T {

@@ -40,17 +40,27 @@ private fun ExprNode.toAstDdl(): PartiqlAst.Statement {
             is DataManipulation, is Exec -> error("Can't convert ${thiz.javaClass} to PartiqlAst.ddl")
 
             is CreateTable -> ddl(createTable(thiz.tableName), metas)
-            is CreateIndex -> ddl(createIndex(identifier(thiz.tableName, caseSensitive()), thiz.keys.map { it.toAstExpr() }), metas)
+            is CreateIndex ->
+                ddl(
+                    createIndex(
+                        identifier(thiz.tableId.id, thiz.tableId.case.toAstCaseSensitivity()),
+                        thiz.keys.map { it.toAstExpr() }
+                    ),
+                    metas)
             is DropIndex ->
                 ddl(
                     dropIndex(
                         // case-sensitivity of table names cannot be represented with ExprNode.
-                        identifier(thiz.tableName, caseSensitive()),
-                        identifier(thiz.identifier.id, thiz.identifier.case.toAstCaseSensitivity())),
+                        identifier(thiz.tableId.id, thiz.tableId.case.toAstCaseSensitivity()),
+                        identifier(thiz.indexId.id, thiz.indexId.case.toAstCaseSensitivity())),
                     metas)
             is DropTable ->
                 // case-sensitivity of table names cannot be represented with ExprNode.
-                ddl(dropTable(identifier(thiz.tableName, caseSensitive())), metas)
+                ddl(
+                    dropTable(
+                        identifier(thiz.tableId.id, thiz.tableId.case.toAstCaseSensitivity())
+                    ),
+                    metas)
         }
     }
 }
@@ -186,7 +196,8 @@ fun ExprNode.toAstExpr(): PartiqlAst.Expr {
                             node.precision.toLong(),
                             node.with_time_zone,
                             node.tz_minutes?.toLong()
-                        )
+                        ),
+                        metas
                     )
                 }
             }
