@@ -229,7 +229,7 @@ private class StatementTransformer(val ion: IonSystem) {
         }
     }
 
-    private fun PartiqlAst.FromSource.toFromSource(): org.partiql.lang.ast.FromSource {
+    private fun PartiqlAst.FromSource.toFromSource(): FromSource {
         val metas = this.metas.toPartiQlMetaContainer()
         return when (this) {
             is PartiqlAst.FromSource.Scan ->
@@ -429,15 +429,33 @@ private class StatementTransformer(val ion: IonSystem) {
         val metas = this.metas.toPartiQlMetaContainer()
         return when(op) {
             is DdlOp.CreateTable -> CreateTable(op.tableName.text, metas)
-            is DdlOp.DropTable -> DropTable(op.tableName.name.text, metas)
-            is DdlOp.CreateIndex -> CreateIndex(op.indexName.name.text, op.fields.map { it.toExprNode() }, metas)
+            is DdlOp.DropTable ->
+                DropTable(
+                    tableId = Identifier(
+                        id = op.tableName.name.text,
+                        case = op.tableName.case.toCaseSensitivity(),
+                        metas = emptyMetaContainer
+                    ),
+                    metas = metas)
+            is DdlOp.CreateIndex ->
+                CreateIndex(
+                    tableId = Identifier(
+                        id = op.indexName.name.text,
+                        case = op.indexName.case.toCaseSensitivity(),
+                        metas = emptyMetaContainer
+                    ),
+                    keys = op.fields.map { it.toExprNode() },
+                    metas = metas)
             is DdlOp.DropIndex ->
                 DropIndex(
-                    tableName = op.table.name.text,
-                    identifier = VariableReference(
+                    tableId = Identifier(
+                        id = op.table.name.text,
+                        case = op.table.case.toCaseSensitivity(),
+                        metas = emptyMetaContainer
+                    ),
+                    indexId = Identifier(
                         id = op.keys.name.text,
                         case = op.keys.case.toCaseSensitivity(),
-                        scopeQualifier = org.partiql.lang.ast.ScopeQualifier.UNQUALIFIED,
                         metas = emptyMetaContainer
                     ),
                     metas = metas)

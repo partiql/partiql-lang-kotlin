@@ -242,6 +242,7 @@ internal class EvaluatingCompiler(
     @Deprecated("Please use CompilerPipeline instead")
     fun compile(source: String): Expression {
         val parser = SqlParser(valueFactory.ion)
+        // TODO: replace `parseExprNode` with `ParseStatement` once evaluator deprecates `ExprNode`
         val ast = parser.parseExprNode(source)
         return compile(ast)
     }

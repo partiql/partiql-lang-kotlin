@@ -28,7 +28,7 @@ internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFact
         ConversionMode.values().find { it.name.toLowerCase() == name } ?:
         throw IllegalArgumentException( "Unknown conversion: $name")
 
-    private fun delimitedReadHandler(delimiter: String): (InputStream, IonStruct) -> ExprValue = { input, options ->
+    private fun delimitedReadHandler(delimiter: Char): (InputStream, IonStruct) -> ExprValue = { input, options ->
         val encoding = options["encoding"]?.stringValue() ?: "UTF-8"
         val conversion = options["conversion"]?.stringValue() ?: "none"
         val hasHeader = options["header"]?.booleanValue() ?: false
@@ -38,10 +38,14 @@ internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFact
         DelimitedValues.exprValue(valueFactory, reader, delimiter, hasHeader, conversionModeFor(conversion))
     }
 
+    private fun ionReadHandler(): (InputStream, IonStruct) -> ExprValue = { input, _ ->
+        valueFactory.newBag(valueFactory.ion.iterate(input).asSequence().map { valueFactory.newFromIonValue(it) })
+    }
+
     private val readHandlers = mapOf(
-        "ion" to { input, _ -> valueFactory.newBag(valueFactory.ion.iterate(input).asSequence().map { valueFactory.newFromIonValue(it) }) },
-        "tsv" to delimitedReadHandler("\t"),
-        "csv" to delimitedReadHandler(","))
+        "ion" to ionReadHandler(),
+        "tsv" to delimitedReadHandler('\t'),
+        "csv" to delimitedReadHandler(','))
 
     override fun call(env: Environment, args: List<ExprValue>): ExprValue {
         val options = optionsStruct(1, args)

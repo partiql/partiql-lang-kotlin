@@ -47,6 +47,8 @@ dependencies {
     api 'com.amazon.ion:ion-element:0.2.0'
     api 'org.partiql:partiql-ir-generator-runtime:0.4.0'
 
+    implementation 'org.apache.commons:commons-csv:1.8'
+
     // test-time dependencies
     testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
     testImplementation 'pl.pragmatists:JUnitParams:[1.0.0,1.1.0)'

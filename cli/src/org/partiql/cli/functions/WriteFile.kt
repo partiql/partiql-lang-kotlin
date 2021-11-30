@@ -31,7 +31,7 @@ internal class WriteFile(valueFactory: ExprValueFactory) : BaseFunction(valueFac
         }
     }
 
-    private fun delimitedWriteHandler(delimiter: String): (ExprValue, OutputStream, IonStruct) -> Unit = { results, out, options ->
+    private fun delimitedWriteHandler(delimiter: Char): (ExprValue, OutputStream, IonStruct) -> Unit = { results, out, options ->
         val encoding = options["encoding"]?.stringValue() ?: "UTF-8"
         val writeHeader = options["header"]?.booleanValue() ?: false
         val nl = options["nl"]?.stringValue() ?: "\n"
@@ -43,8 +43,8 @@ internal class WriteFile(valueFactory: ExprValueFactory) : BaseFunction(valueFac
     }
 
     private val writeHandlers = mapOf(
-        "tsv" to delimitedWriteHandler("\t"),
-        "csv" to delimitedWriteHandler(","),
+        "tsv" to delimitedWriteHandler('\t'),
+        "csv" to delimitedWriteHandler(','),
         "ion" to PRETTY_ION_WRITER)
 
     override fun call(env: Environment, args: List<ExprValue>): ExprValue {

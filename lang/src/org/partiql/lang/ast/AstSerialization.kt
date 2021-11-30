@@ -743,7 +743,7 @@ private class AstSerializerImpl(val astVersion: AstVersion, val ion: IonSystem):
                 symbol(null)
                 sexp {
                     symbol("index")
-                    symbol(expr.tableName)
+                    writeIdentifier(expr.tableId.id, expr.tableId.case)
                     sexp {
                         symbol("keys")
                         expr.keys.forEach {
@@ -771,7 +771,7 @@ private class AstSerializerImpl(val astVersion: AstVersion, val ion: IonSystem):
         when (astVersion) {
             AstVersion.V0 -> {
                 symbol("drop_table")
-                symbol(expr.tableName)
+                writeIdentifier(expr.tableId.id, expr.tableId.case)
             }
         }
     }
@@ -780,8 +780,8 @@ private class AstSerializerImpl(val astVersion: AstVersion, val ion: IonSystem):
         when (astVersion) {
             AstVersion.V0 -> {
                 symbol("drop_index")
-                symbol(expr.tableName)
-                writeExprNode(expr.identifier)
+                writeIdentifier(expr.tableId.id, expr.tableId.case)
+                writeIdentifier(expr.indexId.id, expr.indexId.case)
             }
         }
     }

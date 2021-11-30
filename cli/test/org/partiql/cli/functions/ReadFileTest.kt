@@ -54,7 +54,7 @@ class ReadFileTest {
         val actual = function.call(env, args).ionValue
         val expected = "[1, 2]"
 
-        assertEquals(actual, ion.singleValue(expected))
+        assertEquals(ion.singleValue(expected), actual)
     }
 
     @Test
@@ -65,7 +65,7 @@ class ReadFileTest {
         val actual = function.call(env, args).ionValue
         val expected = "[1, 2]"
 
-        assertEquals(actual, ion.singleValue(expected))
+        assertEquals(ion.singleValue(expected), actual)
     }
 
     @Test
@@ -77,7 +77,55 @@ class ReadFileTest {
         val actual = function.call(env, args).ionValue
         val expected = "[{_1:\"1\",_2:\"2\"}]"
 
-        assertEquals(actual, ion.singleValue(expected))
+        assertEquals(ion.singleValue(expected), actual)
+    }
+
+    @Test
+    fun readCsvWithIonSymbolAsInput() {
+        writeFile("data_with_ion_symbol_as_input.csv", "1,2")
+
+        val args = listOf("\"${dirPath("data_with_ion_symbol_as_input.csv")}\"", "{type:csv}").map { it.exprValue() }
+
+        val actual = function.call(env, args).ionValue
+        val expected = "[{_1:\"1\",_2:\"2\"}]"
+
+        assertEquals(ion.singleValue(expected), actual)
+    }
+
+    @Test
+    fun readCsvWithDoubleQuotesEscape() {
+        writeFile("data_with_double_quotes_escape.csv", "\"1,2\",2")
+
+        val args = listOf("\"${dirPath("data_with_double_quotes_escape.csv")}\"", "{type:\"csv\"}").map { it.exprValue() }
+
+        val actual = function.call(env, args).ionValue
+        val expected = "[{_1:\"1,2\",_2:\"2\"}]"
+
+        assertEquals(ion.singleValue(expected), actual)
+    }
+
+    @Test
+    fun readCsvWithEmptyLines() {
+        writeFile("data_with_double_quotes_escape.csv", "1,2\n\n3\n\n")
+
+        val args = listOf("\"${dirPath("data_with_double_quotes_escape.csv")}\"", "{type:\"csv\"}").map { it.exprValue() }
+
+        val actual = function.call(env, args).ionValue
+        val expected = "[{_1:\"1\",_2:\"2\"},{_1:\"3\"}]"
+
+        assertEquals(ion.singleValue(expected), actual)
+    }
+
+    @Test
+    fun readCsvWithHeaderLine() {
+        writeFile("data_with_header_line.csv", "col1,col2\n1,2")
+
+        val args = listOf("\"${dirPath("data_with_header_line.csv")}\"", "{type:\"csv\", header:true}").map { it.exprValue() }
+
+        val actual = function.call(env, args).ionValue
+        val expected = "[{col1:\"1\",col2:\"2\"}]"
+
+        assertEquals(ion.singleValue(expected), actual)
     }
 
     @Test
@@ -89,6 +137,18 @@ class ReadFileTest {
         val actual = function.call(env, args).ionValue
         val expected = "[{_1:\"1\",_2:\"2\"}]"
 
-        assertEquals(actual, ion.singleValue(expected))
+        assertEquals(ion.singleValue(expected), actual)
+    }
+
+    @Test
+    fun readTsvWithHeaderLine() {
+        writeFile("data_with_header_line.tsv", "col1\tcol2\n1\t2")
+
+        val args = listOf("\"${dirPath("data_with_header_line.tsv")}\"", "{type:\"tsv\", header:true}").map { it.exprValue() }
+
+        val actual = function.call(env, args).ionValue
+        val expected = "[{col1:\"1\",col2:\"2\"}]"
+
+        assertEquals(ion.singleValue(expected), actual)
     }
 }
