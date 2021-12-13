@@ -641,3 +641,34 @@ Kumo	dog
 Mochi	dog
 Lilikoi	unicorn
 ```
+
+## Predefined CSV Data
+
+The `read_file` function provides options to read other predefined CSV data formats. 
+For example, if a CSV file is exported from PostgreSQL, we can use the following command 
+to read the file: 
+```
+read_file('simple_postgre.csv', {'type':'postgre_csv'})
+```
+Other available options for the argument `type` are "excel_csv", "mysql_csv", "mongodb_csv", "mongodb_tsv", 
+"postgresql_csv" and "postgresql_text". 
+
+## Customized CSV Data 
+The `read_file` function also provides options to read customized CSV data formats. 
+For example, we have a data file where the whitespace is the separator as shown below: 
+```
+title category price
+harry_potter book 7.99
+dot electronics 49.99
+echo electronics 99.99
+```
+We can use the following command to read the file:
+```
+read_file('customized.csv', {'type':'customized', 'delimiter':' ', 'header':true})
+```
+The following command explicitly shows all the available options for a standard CSV file: 
+```
+read_file('customized.csv', {'type':'customized', 'delimiter':',', 'header':true, \
+'ignore_empty_line':true, 'ignore_surrounding_space':true, 'trim':true, \ 
+'line_breaker: \n', 'escape':'\', 'quote':'"'})
+```
