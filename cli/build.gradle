@@ -3,7 +3,6 @@ plugins {
     id 'application'
 }
 
-
 application {
     mainClassName = "org.partiql.cli.Main"
     applicationName = 'partiql' // startup script name
@@ -19,15 +18,10 @@ distributions {
     }
 }
 
-
-
-
-
 (tasks.findByName("distTar") as Tar).compression = Compression.GZIP
 
 // Allows the CLI to receive input from the keyboard when invoked using `./gradlew :cli:run`
 tasks['run'].standardInput = System.in
-
 
 dependencies {
     implementation project(":lang")
