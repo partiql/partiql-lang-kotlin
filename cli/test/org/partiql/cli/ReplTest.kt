@@ -14,15 +14,23 @@
 
 package org.partiql.cli
 
-import com.amazon.ion.system.*
-import org.partiql.lang.eval.*
-import org.partiql.lang.syntax.*
-import org.junit.*
-import org.junit.Assert.*
-import org.partiql.lang.*
-import java.io.*
-import java.util.concurrent.*
-import kotlin.concurrent.*
+import com.amazon.ion.system.IonSystemBuilder
+import org.junit.Assert
+import org.junit.Ignore
+import org.junit.Test
+import org.partiql.lang.syntax.Parser
+import org.partiql.lang.CompilerPipeline
+import org.partiql.lang.eval.Bindings
+import org.partiql.lang.eval.EvaluationSession
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.syntax.SqlParser
+import java.io.ByteArrayOutputStream
+import java.io.OutputStream
+import java.io.PipedInputStream
+import java.io.PipedOutputStream
+import java.util.concurrent.Phaser
+import kotlin.concurrent.thread
 
 const val SLEEP_TIME = 5L
 
@@ -134,7 +142,7 @@ private class ReplTester(bindings: Bindings<ExprValue> = Bindings.empty()) {
         // make sure output was written
         outputPhaser.arriveAndAwaitAdvance()
 
-        assertEquals(expectedPromptText, actualReplPrompt.toString())
+        Assert.assertEquals(expectedPromptText, actualReplPrompt.toString())
     }
 
     private fun extractInputLines(expectedPromptText: String): List<String> =

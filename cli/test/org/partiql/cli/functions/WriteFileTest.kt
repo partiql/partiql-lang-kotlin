@@ -14,11 +14,16 @@
 
 package org.partiql.cli.functions
 
-import com.amazon.ion.system.*
-import org.partiql.lang.eval.*
-import org.junit.*
-import org.junit.Assert.*
-import java.io.*
+import com.amazon.ion.system.IonSystemBuilder
+import org.junit.After
+import org.junit.Assert
+import org.junit.Before
+import org.junit.Test
+import org.partiql.lang.eval.Bindings
+import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.EvaluationSession
+import org.partiql.lang.eval.ExprValueFactory
+import java.io.File
 
 class WriteFileTest {
     private val ion = IonSystemBuilder.standard().build()
@@ -49,7 +54,7 @@ class WriteFileTest {
 
         val expected = "1 2"
 
-        assertEquals(ion.loader.load(expected), ion.loader.load(readFile("data.ion")))
+        Assert.assertEquals(ion.loader.load(expected), ion.loader.load(readFile("data.ion")))
     }
 
     @Test
@@ -59,6 +64,6 @@ class WriteFileTest {
 
         val expected = "1 2"
 
-        assertEquals(ion.loader.load(expected), ion.loader.load(readFile("data1.ion")))
+        Assert.assertEquals(ion.loader.load(expected), ion.loader.load(readFile("data1.ion")))
     }
 }
