@@ -14,7 +14,7 @@
 
 package org.partiql.cli
 
-import java.util.concurrent.*
+import java.util.concurrent.TimeUnit
 
 fun <T> timeIt(block: () -> T): Long {
     val start = System.nanoTime()

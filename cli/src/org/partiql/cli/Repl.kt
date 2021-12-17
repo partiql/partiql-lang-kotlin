@@ -14,16 +14,27 @@
 
 package org.partiql.cli
 
-import com.amazon.ion.system.*
+import com.amazon.ion.system.IonTextWriterBuilder
 import com.amazon.ionelement.api.toIonValue
-import org.partiql.cli.ReplState.*
-import org.partiql.lang.*
-import org.partiql.lang.eval.*
-import org.partiql.lang.syntax.*
-import org.partiql.lang.util.*
-import java.io.*
+import org.partiql.lang.CompilerPipeline
+import org.partiql.lang.eval.BindingCase
+import org.partiql.lang.eval.BindingName
+import org.partiql.lang.eval.Bindings
+import org.partiql.lang.eval.EvaluationSession
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.MapBindings
+import org.partiql.lang.eval.StructOrdering
+import org.partiql.lang.eval.delegate
+import org.partiql.lang.syntax.Parser
+import org.partiql.lang.util.ConfigurableExprValueFormatter
+import org.partiql.lang.util.ExprValueFormatter
+import java.io.InputStream
+import java.io.OutputStream
+import java.io.OutputStreamWriter
+import java.io.PrintWriter
 import java.util.Properties
-import java.util.concurrent.*
+import java.util.concurrent.TimeUnit
 
 internal const val PROMPT_1 = "PartiQL> "
 internal const val PROMPT_2 = "   | "
@@ -61,9 +72,6 @@ private enum class ReplState {
 }
 
 private class GlobalBinding(private val valueFactory: ExprValueFactory) {
-
-
-
     private val knownNames = mutableSetOf<String>()
     var bindings = Bindings.empty<ExprValue>()
         private set
@@ -182,7 +190,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
     // Repl running state
     private val buffer = StringBuilder()
     private var globals = GlobalBinding(valueFactory).add(initialGlobal)
-    private var state = INIT
+    private var state = ReplState.INIT
     private var previousResult = valueFactory.nullValue
     private var line: String? = null
 
@@ -244,10 +252,10 @@ internal class Repl(private val valueFactory: ExprValueFactory,
         }
 
         return if (line == null) {
-            FINAL
+            ReplState.FINAL
         }
         else {
-            READY
+            ReplState.READY
         }
     }
 
@@ -274,58 +282,58 @@ internal class Repl(private val valueFactory: ExprValueFactory,
     }
 
     override fun run() {
-        while (state != FINAL) {
+        while (state != ReplState.FINAL) {
             state = when (state) {
-                INIT                      -> {
+                ReplState.INIT                      -> {
                     printWelcomeMessage()
                     printVersionNumber()
-                    READY
+                    ReplState.READY
                 }
 
-                READY                     -> {
+                ReplState.READY                     -> {
                     line = readLine()
                     when {
-                        line == null                         -> FINAL
-                        arrayOf("!!", "").any { it == line } -> EXECUTE_PARTIQL
-                        line!!.startsWith("!")               -> READ_REPL_COMMAND
-                        line!!.endsWith(";")                 -> LAST_PARTIQL_LINE
-                        else                                 -> READ_PARTIQL
+                        line == null                         -> ReplState.FINAL
+                        arrayOf("!!", "").any { it == line } -> ReplState.EXECUTE_PARTIQL
+                        line!!.startsWith("!")               -> ReplState.READ_REPL_COMMAND
+                        line!!.endsWith(";")                 -> ReplState.LAST_PARTIQL_LINE
+                        else                                 -> ReplState.READ_PARTIQL
                     }
                 }
 
-                READ_PARTIQL              -> {
+                ReplState.READ_PARTIQL              -> {
                     buffer.appendln(line)
                     line = readLine()
                     when {
-                        line == null         -> FINAL
-                        line == ""           -> EXECUTE_PARTIQL
-                        line!!.endsWith(";") -> LAST_PARTIQL_LINE
-                        line == "!!"         -> PARSE_PARTIQL_WITH_FILTER
-                        else                 -> READ_PARTIQL
+                        line == null         -> ReplState.FINAL
+                        line == ""           -> ReplState.EXECUTE_PARTIQL
+                        line!!.endsWith(";") -> ReplState.LAST_PARTIQL_LINE
+                        line == "!!"         -> ReplState.PARSE_PARTIQL_WITH_FILTER
+                        else                 -> ReplState.READ_PARTIQL
                     }
                 }
 
-                LAST_PARTIQL_LINE         -> {
+                ReplState.LAST_PARTIQL_LINE         -> {
                     buffer.appendln(line)
-                    EXECUTE_PARTIQL
+                    ReplState.EXECUTE_PARTIQL
                 }
 
-                READ_REPL_COMMAND         -> {
+                ReplState.READ_REPL_COMMAND         -> {
                     buffer.appendln(line)
                     line = readLine()
                     when (line) {
-                        null -> FINAL
-                        ""   -> EXECUTE_REPL_COMMAND
-                        else -> READ_REPL_COMMAND
+                        null -> ReplState.FINAL
+                        ""   -> ReplState.EXECUTE_REPL_COMMAND
+                        else -> ReplState.READ_REPL_COMMAND
                     }
                 }
 
-                EXECUTE_PARTIQL           -> executePartiQL()
-                PARSE_PARTIQL_WITH_FILTER -> parsePartiQLWithFilters()
-                EXECUTE_REPL_COMMAND      -> executeReplCommand()
+                ReplState.EXECUTE_PARTIQL           -> executePartiQL()
+                ReplState.PARSE_PARTIQL_WITH_FILTER -> parsePartiQLWithFilters()
+                ReplState.EXECUTE_REPL_COMMAND      -> executeReplCommand()
 
                 // shouldn't really happen
-                FINAL                     -> FINAL
+                ReplState.FINAL                     -> ReplState.FINAL
             }
         }
     }
