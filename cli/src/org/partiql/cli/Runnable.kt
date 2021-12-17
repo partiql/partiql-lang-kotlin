@@ -14,12 +14,12 @@
 
 package org.partiql.cli
 
-import com.amazon.ion.*
-import org.partiql.lang.eval.*
+import com.amazon.ion.IonWriter
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.rangeOver
 
 internal abstract class SqlCommand {
     abstract fun run()
-
 
     protected fun writeResult(result: ExprValue, writer: IonWriter): Int {
         var itemCount = 0

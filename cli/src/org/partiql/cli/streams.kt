@@ -14,7 +14,9 @@
 
 package org.partiql.cli
 
-import java.io.*
+import java.io.FilterOutputStream
+import java.io.InputStream
+import java.io.OutputStream
 
 /**
  * Output stream that flushes instead of closing, useful for decorating output streams that should not be closed but you

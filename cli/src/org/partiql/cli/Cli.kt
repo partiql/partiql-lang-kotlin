@@ -14,13 +14,20 @@
 
 package org.partiql.cli
 
-import com.amazon.ion.*
-import com.amazon.ion.system.*
-import java.io.*
-import org.partiql.cli.OutputFormat.*
-import org.partiql.lang.*
-import org.partiql.lang.eval.*
+import com.amazon.ion.IonWriter
+import com.amazon.ion.system.IonReaderBuilder
+import com.amazon.ion.system.IonTextWriterBuilder
+import org.partiql.lang.CompilerPipeline
+import org.partiql.lang.eval.Bindings
+import org.partiql.lang.eval.EvaluationSession
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.eval.delegate
 import org.partiql.lang.util.ConfigurableExprValueFormatter
+import java.io.InputStream
+import java.io.OutputStream
+import java.io.OutputStreamWriter
 
 /**
  * TODO builder, kdoc
@@ -34,7 +41,8 @@ internal class Cli(private val valueFactory: ExprValueFactory,
                    private val query: String) : PartiQLCommand {
 
     companion object {
-        val ionTextWriterBuilder: IonTextWriterBuilder = IonTextWriterBuilder.standard().withWriteTopLevelValuesOnNewLines(true)
+        val ionTextWriterBuilder: IonTextWriterBuilder = IonTextWriterBuilder.standard()
+                .withWriteTopLevelValuesOnNewLines(true)
     }
 
     override fun run() {
@@ -49,13 +57,13 @@ internal class Cli(private val valueFactory: ExprValueFactory,
             val result = compilerPipeline.compile(query).eval(EvaluationSession.build { globals(bindings) })
 
             when (format) {
-                ION_TEXT   -> ionTextWriterBuilder.build(output).use {
+                OutputFormat.ION_TEXT -> ionTextWriterBuilder.build(output).use {
                     printIon(it, result)
                     output.write(System.lineSeparator().toByteArray(Charsets.UTF_8))
                 }
-                ION_BINARY -> valueFactory.ion.newBinaryWriter(output).use { printIon(it, result) }
-                PARTIQL    -> OutputStreamWriter(output).use { it.write(result.toString()) }
-                PARTIQL_PRETTY -> OutputStreamWriter(output).use {
+                OutputFormat.ION_BINARY -> valueFactory.ion.newBinaryWriter(output).use { printIon(it, result) }
+                OutputFormat.PARTIQL -> OutputStreamWriter(output).use { it.write(result.toString()) }
+                OutputFormat.PARTIQL_PRETTY -> OutputStreamWriter(output).use {
                     ConfigurableExprValueFormatter.pretty.formatTo(result, it)
                 }
             }
