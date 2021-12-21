@@ -14,12 +14,16 @@
 
 package org.partiql.lang.ast
 
-import com.amazon.ion.*
-import com.amazon.ion.system.*
-import junitparams.*
+import com.amazon.ion.IonSystem
+import com.amazon.ion.system.IonSystemBuilder
+import junitparams.JUnitParamsRunner
+import junitparams.Parameters
 import org.junit.Test
-import org.junit.runner.*
-import kotlin.test.*
+import org.junit.runner.RunWith
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
+import kotlin.test.assertTrue
 
 @RunWith(JUnitParamsRunner::class)
 class PathComponentExprTest {

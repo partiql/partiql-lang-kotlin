@@ -14,29 +14,35 @@
 
 package org.partiql.lang.eval.builtins
 
-import com.amazon.ion.*
-import com.amazon.ion.Timestamp.*
-import org.partiql.lang.eval.*
-import org.partiql.lang.syntax.*
-import org.partiql.lang.util.*
+import com.amazon.ion.Timestamp
+import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.NullPropagatingExprFunction
+import org.partiql.lang.eval.datePartValue
+import org.partiql.lang.eval.errNoContext
+import org.partiql.lang.eval.intValue
+import org.partiql.lang.eval.timestampValue
+import org.partiql.lang.syntax.DatePart
 
 internal class DateAddExprFunction(valueFactory: ExprValueFactory) : NullPropagatingExprFunction("date_add", 3, valueFactory) {
     companion object {
-        @JvmStatic private val precisionOrder = listOf(Precision.YEAR,
-                                                       Precision.MONTH,
-                                                       Precision.DAY,
-                                                       Precision.MINUTE,
-                                                       Precision.SECOND)
+        @JvmStatic private val precisionOrder = listOf(Timestamp.Precision.YEAR,
+                Timestamp.Precision.MONTH,
+                Timestamp.Precision.DAY,
+                Timestamp.Precision.MINUTE,
+                Timestamp.Precision.SECOND)
 
-        @JvmStatic private val datePartToPrecision = mapOf(DatePart.YEAR to Precision.YEAR,
-                                                           DatePart.MONTH to Precision.MONTH,
-                                                           DatePart.DAY to Precision.DAY,
-                                                           DatePart.HOUR to Precision.MINUTE,
-                                                           DatePart.MINUTE to Precision.MINUTE,
-                                                           DatePart.SECOND to Precision.SECOND)
+        @JvmStatic private val datePartToPrecision = mapOf(DatePart.YEAR to Timestamp.Precision.YEAR,
+                                                           DatePart.MONTH to Timestamp.Precision.MONTH,
+                                                           DatePart.DAY to Timestamp.Precision.DAY,
+                                                           DatePart.HOUR to Timestamp.Precision.MINUTE,
+                                                           DatePart.MINUTE to Timestamp.Precision.MINUTE,
+                                                           DatePart.SECOND to Timestamp.Precision.SECOND)
     }
 
-    private fun Timestamp.hasSufficientPrecisionFor(requiredPrecision: Precision): Boolean {
+    private fun Timestamp.hasSufficientPrecisionFor(requiredPrecision: Timestamp.Precision): Boolean {
         val requiredPrecisionPos = precisionOrder.indexOf(requiredPrecision)
         val precisionPos = precisionOrder.indexOf(precision)
 
@@ -51,17 +57,17 @@ internal class DateAddExprFunction(valueFactory: ExprValueFactory) : NullPropaga
         }
 
         return when (requiredPrecision) {
-            Precision.YEAR     -> Timestamp.forYear(this.year)
-            Precision.MONTH    -> Timestamp.forMonth(this.year, this.month)
-            Precision.DAY      -> Timestamp.forDay(this.year, this.month, this.day)
-            Precision.SECOND   -> Timestamp.forSecond(this.year,
+            Timestamp.Precision.YEAR     -> Timestamp.forYear(this.year)
+            Timestamp.Precision.MONTH    -> Timestamp.forMonth(this.year, this.month)
+            Timestamp.Precision.DAY      -> Timestamp.forDay(this.year, this.month, this.day)
+            Timestamp.Precision.SECOND   -> Timestamp.forSecond(this.year,
                                                       this.month,
                                                       this.day,
                                                       this.hour,
                                                       this.minute,
                                                       this.second,
                                                       this.localOffset)
-            Precision.MINUTE   -> Timestamp.forMinute(this.year,
+            Timestamp.Precision.MINUTE   -> Timestamp.forMinute(this.year,
                                                       this.month,
                                                       this.day,
                                                       this.hour,

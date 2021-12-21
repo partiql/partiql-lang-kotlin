@@ -14,11 +14,15 @@
 
 package org.partiql.lang.eval.builtins
 
-import com.amazon.ion.system.*
-import org.partiql.lang.eval.*
-import org.partiql.lang.util.*
-import org.junit.*
-import org.junit.Assert.*
+import com.amazon.ion.system.IonSystemBuilder
+import org.junit.Assert.assertEquals
+import org.junit.Assert.fail
+import org.junit.Test
+import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.util.stringValue
 
 class SubstringExprFunctionTest {
     private val ion = IonSystemBuilder.standard().build()

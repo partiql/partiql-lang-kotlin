@@ -14,12 +14,14 @@
 
 package org.partiql.lang.eval.io
 
-import org.partiql.lang.*
-import org.partiql.lang.eval.io.DelimitedValues.ConversionMode
-import org.partiql.lang.eval.io.DelimitedValues.ConversionMode.*
+import org.partiql.lang.eval.io.DelimitedValues.ConversionMode.NONE
+import org.partiql.lang.eval.io.DelimitedValues.ConversionMode.AUTO
 import org.junit.Test
-import org.partiql.lang.eval.*
-import org.partiql.lang.util.*
+import org.partiql.lang.TestBase
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.eval.orderedNamesValue
+import org.partiql.lang.util.newFromIonText
 import java.io.StringReader
 import java.io.StringWriter
 
@@ -34,7 +36,7 @@ class DelimitedValuesTest : TestBase() {
     private fun read(text: String,
                      delimiter: Char,
                      hasHeader: Boolean,
-                     conversionMode: ConversionMode): ExprValue =
+                     conversionMode: DelimitedValues.ConversionMode): ExprValue =
         DelimitedValues.exprValue(valueFactory, StringReader(text), delimiter, hasHeader, conversionMode)
 
     private fun assertWrite(expectedText: String,

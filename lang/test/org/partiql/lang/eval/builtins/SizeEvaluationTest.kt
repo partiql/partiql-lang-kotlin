@@ -14,9 +14,10 @@
 
 package org.partiql.lang.eval.builtins
 
-import org.partiql.lang.errors.*
-import org.partiql.lang.eval.*
-import org.junit.*
+import org.junit.Test
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
+import org.partiql.lang.eval.EvaluatorTestBase
 
 /**
  * More detailed tests are in [SizeExprFunctionTest]

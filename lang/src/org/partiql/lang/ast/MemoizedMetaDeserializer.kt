@@ -14,7 +14,7 @@
 
 package org.partiql.lang.ast
 
-import com.amazon.ion.*
+import com.amazon.ion.IonSexp
 
 /**
  * Provides a common way to "deserialize" a memoized meta instance.

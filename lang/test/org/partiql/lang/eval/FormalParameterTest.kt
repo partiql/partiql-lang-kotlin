@@ -17,7 +17,7 @@ package org.partiql.lang.eval
 import org.partiql.lang.types.SingleFormalParameter
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.VarargFormalParameter
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class FormalParameterTest {

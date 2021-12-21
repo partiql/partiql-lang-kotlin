@@ -14,14 +14,23 @@
 
 package org.partiql.lang.eval.builtins
 
-import com.amazon.ion.*
-import org.partiql.lang.errors.*
-import org.partiql.lang.eval.*
-import org.partiql.lang.util.*
+import com.amazon.ion.IonText
+import com.amazon.ion.IonTimestamp
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
+import org.partiql.lang.errors.PropertyValueMap
+import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.NullPropagatingExprFunction
+import org.partiql.lang.eval.errNoContext
+import org.partiql.lang.eval.timestampValue
+import org.partiql.lang.util.stringValue
 import java.lang.IllegalArgumentException
-import java.time.*
-import java.time.format.*
-import java.time.temporal.*
+import java.time.DateTimeException
+import java.time.format.DateTimeFormatter
+import java.time.temporal.UnsupportedTemporalTypeException
 
 class ToStringExprFunction(valueFactory: ExprValueFactory) : NullPropagatingExprFunction("to_string", 2, valueFactory) {
     override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
@@ -51,7 +60,7 @@ class ToStringExprFunction(valueFactory: ExprValueFactory) : NullPropagatingExpr
     private fun validateArguments(args: List<ExprValue>) {
         when {
             args[0].ionValue !is IonTimestamp -> errNoContext("First argument of to_string is not a timestamp.", internal = false)
-            args[1].ionValue !is IonText      -> errNoContext("Second argument of to_string is not a string.", internal = false)
+            args[1].ionValue !is IonText -> errNoContext("Second argument of to_string is not a string.", internal = false)
         }
     }
 

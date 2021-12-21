@@ -14,8 +14,8 @@
 
 package org.partiql.lang.util
 
-import org.partiql.lang.*
 import org.junit.Test
+import org.partiql.lang.TestBase
 
 open class CollectionsProductTest() : TestBase() {
     fun <T> assertCartesianProduct(collections: List<List<T>>, expected: List<List<T>>) {

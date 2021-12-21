@@ -14,8 +14,8 @@
 
 package org.partiql.lang.syntax
 
-import com.amazon.ion.*
-import org.partiql.lang.ast.*
+import com.amazon.ion.IonSexp
+import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.domains.PartiqlAst
 
 /**

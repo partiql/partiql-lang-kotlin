@@ -14,10 +14,9 @@
 
 package org.partiql.lang.ast
 
-import com.amazon.ion.system.*
-import org.junit.*
+import com.amazon.ion.system.IonSystemBuilder
 import org.junit.Test
-import kotlin.test.*
+import kotlin.test.assertEquals
 
 class SourceLocationMetaTest {
     @Test

@@ -14,9 +14,9 @@
 
 package org.partiql.lang.eval
 
-import org.partiql.lang.errors.*
-import junitparams.*
-import org.junit.*
+import junitparams.Parameters
+import org.junit.Test
+import org.partiql.lang.errors.ErrorCode
 
 class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
     val session = mapOf(

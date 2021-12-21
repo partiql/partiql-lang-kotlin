@@ -14,15 +14,19 @@
 
 package org.partiql.lang.eval.builtins
 
-import com.amazon.ion.*
-import org.partiql.lang.errors.*
-import org.partiql.lang.eval.*
-import org.partiql.lang.eval.builtins.timestamp.*
-import org.partiql.lang.util.*
-import java.math.*
-import java.time.*
-import java.time.format.*
-import java.time.temporal.*
+import com.amazon.ion.Timestamp
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
+import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.builtins.timestamp.FormatPattern
+import org.partiql.lang.eval.builtins.timestamp.TimestampField
+import org.partiql.lang.eval.errNoContext
+import org.partiql.lang.util.propertyValueMapOf
+import java.math.BigDecimal
+import java.time.DateTimeException
+import java.time.format.DateTimeFormatterBuilder
+import java.time.temporal.ChronoField
+import java.time.temporal.TemporalAccessor
 
 /**
  * Uses Java 8's DateTimeFormatter to parse an Ion Timestamp value.

@@ -15,11 +15,11 @@
 
 package org.partiql.lang.util
 
-import com.amazon.ion.*
-import com.amazon.ion.system.*
-import org.junit.*
+import com.amazon.ion.IonSexp
+import com.amazon.ion.IonSymbol
+import com.amazon.ion.system.IonSystemBuilder
 import org.junit.Test
-import kotlin.test.*
+import kotlin.test.assertEquals
 
 /**
  * rewrites the ast mixing the identifiers case, for example `(id identifier)` is rewritten to `(id IdEnTiFiEr)`.

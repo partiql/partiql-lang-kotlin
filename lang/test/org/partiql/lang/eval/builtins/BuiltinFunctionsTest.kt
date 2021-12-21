@@ -14,11 +14,17 @@
 
 package org.partiql.lang.eval.builtins
 
-import org.assertj.core.api.*
-import com.amazon.ion.*
-import org.partiql.lang.eval.*
-import org.junit.*
-import org.partiql.lang.util.*
+import org.assertj.core.api.Assertions
+import com.amazon.ion.Timestamp
+import org.junit.Test
+import org.partiql.lang.eval.Bindings
+import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.EvaluationSession
+import org.partiql.lang.eval.EvaluatorTestBase
+import org.partiql.lang.eval.timestampValue
+import org.partiql.lang.util.booleanValue
+import org.partiql.lang.util.timestampValue
 
 class BuiltinFunctionsTest : EvaluatorTestBase() {
     private val env = Environment.standard()
@@ -156,8 +162,6 @@ class BuiltinFunctionsTest : EvaluatorTestBase() {
 
         assertEval("utcnow()", "1970-01-01T00:05:00.000Z", session = session)
     }
-
-
 
     @Test
     fun existsWithNonEmptyCollectionReturnsTrue() {

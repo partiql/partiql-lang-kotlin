@@ -14,7 +14,7 @@
 
 package org.partiql.lang.ast
 
-import com.amazon.ion.*
+import com.amazon.ion.IonWriter
 
 /**
  * Base class for [Meta] implementations which are used internally by [org.partiql.lang.eval.EvaluatingCompiler]

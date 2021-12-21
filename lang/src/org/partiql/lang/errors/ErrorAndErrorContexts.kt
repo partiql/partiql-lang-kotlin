@@ -15,9 +15,8 @@
 package org.partiql.lang.errors
 
 import com.amazon.ion.IonValue
-import org.partiql.lang.errors.PropertyType.*
-import org.partiql.lang.syntax.*
-import java.util.*
+import org.partiql.lang.syntax.TokenType
+import java.util.EnumMap
 
 internal const val UNKNOWN: String = "<UNKNOWN>"
 
@@ -47,36 +46,36 @@ enum class ErrorCategory(val message: String) {
  *
  */
 enum class Property(val propertyName: String, val propertyType: PropertyType) {
-    LINE_NUMBER("line_no", LONG_CLASS),
-    COLUMN_NUMBER("column_no", LONG_CLASS),
-    TOKEN_STRING("token_string", STRING_CLASS),
-    CAST_TO("cast_to", STRING_CLASS),
-    CAST_FROM("cast_from", STRING_CLASS),
-    KEYWORD("keyword", STRING_CLASS),
-    TOKEN_TYPE("token_type", TOKEN_CLASS),
-    EXPECTED_TOKEN_TYPE("expected_token_type", TOKEN_CLASS),
-    EXPECTED_TOKEN_TYPE_1_OF_2("expected_token_type_1_of_2", TOKEN_CLASS),
-    EXPECTED_TOKEN_TYPE_2_OF_2("expected_token_type_2_of_2", TOKEN_CLASS),
-    TOKEN_VALUE("token_value", ION_VALUE_CLASS),
-    EXPECTED_ARITY_MIN("arity_min", INTEGER_CLASS),
-    EXPECTED_ARITY_MAX("arity_max", INTEGER_CLASS),
-    ACTUAL_ARITY("actual_arity", INTEGER_CLASS),
-    EXPECTED_PARAMETER_ORDINAL("expected_parameter_ordinal", INTEGER_CLASS),
-    BOUND_PARAMETER_COUNT("bound_parameter_count", INTEGER_CLASS),
-    TIMESTAMP_FORMAT_PATTERN("timestamp_format_pattern", STRING_CLASS),
-    TIMESTAMP_FORMAT_PATTERN_FIELDS("timestamp_format_pattern_fields", STRING_CLASS),
-    TIMESTAMP_STRING("timestamp_string", STRING_CLASS),
-    BINDING_NAME("binding_name", STRING_CLASS),
-    BINDING_NAME_MATCHES("binding_name_matches", STRING_CLASS),
-    LIKE_VALUE("value_to_match", STRING_CLASS),
-    LIKE_PATTERN("pattern", STRING_CLASS),
-    LIKE_ESCAPE("escape_char", STRING_CLASS),
-    FUNCTION_NAME("function_name", STRING_CLASS),
-    PROCEDURE_NAME("procedure_name", STRING_CLASS),
-    EXPECTED_ARGUMENT_TYPES("expected_types", STRING_CLASS),
-    ACTUAL_ARGUMENT_TYPES("actual_types", STRING_CLASS),
-    FEATURE_NAME("FEATURE_NAME", STRING_CLASS),
-    ACTUAL_TYPE("ACTUAL_TYPE", STRING_CLASS)
+    LINE_NUMBER("line_no", PropertyType.LONG_CLASS),
+    COLUMN_NUMBER("column_no", PropertyType.LONG_CLASS),
+    TOKEN_STRING("token_string", PropertyType.STRING_CLASS),
+    CAST_TO("cast_to", PropertyType.STRING_CLASS),
+    CAST_FROM("cast_from", PropertyType.STRING_CLASS),
+    KEYWORD("keyword", PropertyType.STRING_CLASS),
+    TOKEN_TYPE("token_type", PropertyType.TOKEN_CLASS),
+    EXPECTED_TOKEN_TYPE("expected_token_type", PropertyType.TOKEN_CLASS),
+    EXPECTED_TOKEN_TYPE_1_OF_2("expected_token_type_1_of_2", PropertyType.TOKEN_CLASS),
+    EXPECTED_TOKEN_TYPE_2_OF_2("expected_token_type_2_of_2", PropertyType.TOKEN_CLASS),
+    TOKEN_VALUE("token_value", PropertyType.ION_VALUE_CLASS),
+    EXPECTED_ARITY_MIN("arity_min", PropertyType.INTEGER_CLASS),
+    EXPECTED_ARITY_MAX("arity_max", PropertyType.INTEGER_CLASS),
+    ACTUAL_ARITY("actual_arity", PropertyType.INTEGER_CLASS),
+    EXPECTED_PARAMETER_ORDINAL("expected_parameter_ordinal", PropertyType.INTEGER_CLASS),
+    BOUND_PARAMETER_COUNT("bound_parameter_count", PropertyType.INTEGER_CLASS),
+    TIMESTAMP_FORMAT_PATTERN("timestamp_format_pattern", PropertyType.STRING_CLASS),
+    TIMESTAMP_FORMAT_PATTERN_FIELDS("timestamp_format_pattern_fields", PropertyType.STRING_CLASS),
+    TIMESTAMP_STRING("timestamp_string", PropertyType.STRING_CLASS),
+    BINDING_NAME("binding_name", PropertyType.STRING_CLASS),
+    BINDING_NAME_MATCHES("binding_name_matches", PropertyType.STRING_CLASS),
+    LIKE_VALUE("value_to_match", PropertyType.STRING_CLASS),
+    LIKE_PATTERN("pattern", PropertyType.STRING_CLASS),
+    LIKE_ESCAPE("escape_char", PropertyType.STRING_CLASS),
+    FUNCTION_NAME("function_name", PropertyType.STRING_CLASS),
+    PROCEDURE_NAME("procedure_name", PropertyType.STRING_CLASS),
+    EXPECTED_ARGUMENT_TYPES("expected_types", PropertyType.STRING_CLASS),
+    ACTUAL_ARGUMENT_TYPES("actual_types", PropertyType.STRING_CLASS),
+    FEATURE_NAME("FEATURE_NAME", PropertyType.STRING_CLASS),
+    ACTUAL_TYPE("ACTUAL_TYPE", PropertyType.STRING_CLASS)
 }
 
 /**
@@ -93,16 +92,16 @@ abstract class PropertyValue(val type: PropertyType) {
 
     val value: Any
         get() = when (type) {
-            LONG_CLASS      -> longValue()
-            STRING_CLASS    -> stringValue()
-            INTEGER_CLASS   -> integerValue()
-            TOKEN_CLASS     -> tokenTypeValue()
-            ION_VALUE_CLASS -> ionValue()
+            PropertyType.LONG_CLASS -> longValue()
+            PropertyType.STRING_CLASS    -> stringValue()
+            PropertyType.INTEGER_CLASS   -> integerValue()
+            PropertyType.TOKEN_CLASS     -> tokenTypeValue()
+            PropertyType.ION_VALUE_CLASS -> ionValue()
         }
 
     override fun toString(): String =
         when (type) {
-            ION_VALUE_CLASS -> (value as IonValue).toPrettyString()
+            PropertyType.ION_VALUE_CLASS -> (value as IonValue).toPrettyString()
             else -> value.toString()
         }
 }
@@ -168,10 +167,10 @@ class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumM
      * @throws [IllegalArgumentException] if the [Property] used as `key` requires values of type **other than** [String]
      */
     operator fun set(key: Property, strValue: String) {
-        val o = object : PropertyValue(STRING_CLASS) {
+        val o = object : PropertyValue(PropertyType.STRING_CLASS) {
             override fun stringValue(): String = strValue
         }
-        verifyTypeAndSet(key, STRING_CLASS, strValue ,o)
+        verifyTypeAndSet(key, PropertyType.STRING_CLASS, strValue ,o)
     }
 
 
@@ -184,10 +183,10 @@ class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumM
      * @throws [IllegalArgumentException] if the [Property] used as `key` requires values of type **other than** [Long]
      */
     operator fun set(key: Property, longValue: Long) {
-        val o = object : PropertyValue(LONG_CLASS) {
+        val o = object : PropertyValue(PropertyType.LONG_CLASS) {
             override fun longValue(): Long = longValue
         }
-        verifyTypeAndSet(key, LONG_CLASS, longValue, o)
+        verifyTypeAndSet(key, PropertyType.LONG_CLASS, longValue, o)
     }
 
 
@@ -200,10 +199,10 @@ class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumM
      * @throws [IllegalArgumentException] if the [Property] used as `key` requires values of type **other than** [Int]
      */
     operator fun set(key: Property, intValue: Int) {
-        val o = object : PropertyValue(INTEGER_CLASS) {
+        val o = object : PropertyValue(PropertyType.INTEGER_CLASS) {
             override fun integerValue(): Int = intValue
         }
-        verifyTypeAndSet(key, INTEGER_CLASS, intValue, o)
+        verifyTypeAndSet(key, PropertyType.INTEGER_CLASS, intValue, o)
     }
 
 
@@ -216,10 +215,10 @@ class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumM
      * @throws [IllegalArgumentException] if the [Property] used as `key` requires values of type **other than** [IonValue]
      */
     operator fun set(key: Property, ionValue: IonValue) {
-        val o = object : PropertyValue(ION_VALUE_CLASS) {
+        val o = object : PropertyValue(PropertyType.ION_VALUE_CLASS) {
             override fun ionValue(): IonValue = ionValue
         }
-        verifyTypeAndSet(key, ION_VALUE_CLASS, ionValue, o)
+        verifyTypeAndSet(key, PropertyType.ION_VALUE_CLASS, ionValue, o)
     }
 
 
@@ -232,10 +231,10 @@ class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumM
      * @throws [IllegalArgumentException] if the [Property] used as `key` requires values of type **other than** [TokenType]
      */
     operator fun set(key: Property, tokenTypeValue: TokenType) {
-        val o = object : PropertyValue(TOKEN_CLASS) {
+        val o = object : PropertyValue(PropertyType.TOKEN_CLASS) {
             override fun tokenTypeValue(): TokenType = tokenTypeValue
         }
-        verifyTypeAndSet(key, TOKEN_CLASS, tokenTypeValue, o)
+        verifyTypeAndSet(key, PropertyType.TOKEN_CLASS, tokenTypeValue, o)
     }
 
 

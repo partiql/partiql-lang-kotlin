@@ -14,16 +14,18 @@
 
 package org.partiql.lang.eval.builtins
 
-import org.partiql.lang.errors.*
-import org.partiql.lang.eval.*
-import org.junit.*
+import org.junit.Test
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
+import org.partiql.lang.eval.EvaluatorTestBase
 
 /**
  * Note that tests here on on the light side because most of the testing is done in [TimestampParserTest].
  */
 class ToTimestampExprFunctionTest : EvaluatorTestBase() {
 
-    @Test fun to_timestamp_common_1() = assertEval("to_timestamp('July 20, 1969', 'MMMM d, y')", "1969-07-20T")
+    @Test
+    fun to_timestamp_common_1() = assertEval("to_timestamp('July 20, 1969', 'MMMM d, y')", "1969-07-20T")
     @Test fun to_timestamp_common_2() = assertEval("to_timestamp('Jul 20, 1969', 'MMM d, yyyy')", "1969-07-20T")
     @Test fun to_timestamp_common_4() = assertEval("to_timestamp('1969-07-20T20:18Z', 'yyyy-MM-dd''T''HH:mmX')", "1969-07-20T20:18Z")
     @Test fun to_timestamp_common_5() = assertEval("to_timestamp('July 20, 1969 8:18 PM', 'MMMM d, y h:m a')", "1969-07-20T20:18-00:00")

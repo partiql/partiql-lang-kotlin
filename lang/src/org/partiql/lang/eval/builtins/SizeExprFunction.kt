@@ -14,10 +14,17 @@
 
 package org.partiql.lang.eval.builtins
 
-import com.amazon.ion.*
-import org.partiql.lang.errors.*
-import org.partiql.lang.eval.*
-import org.partiql.lang.util.*
+import com.amazon.ion.IonContainer
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
+import org.partiql.lang.errors.PropertyValueMap
+import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.eval.NullPropagatingExprFunction
+import org.partiql.lang.eval.err
+import org.partiql.lang.util.size
 
 /**
  * Built in function to return the size of a container type, i.e. size of Lists, Structs and Bags. This function

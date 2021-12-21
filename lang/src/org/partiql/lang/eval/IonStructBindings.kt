@@ -14,8 +14,9 @@
 
 package org.partiql.lang.eval
 
-import com.amazon.ion.*
-import org.partiql.lang.util.*
+import com.amazon.ion.IonStruct
+import com.amazon.ion.IonValue
+import org.partiql.lang.util.errAmbiguousBinding
 
 /**
  * Custom implementation of [Bindings] that lazily computes case sensitive or insensitive hash tables which

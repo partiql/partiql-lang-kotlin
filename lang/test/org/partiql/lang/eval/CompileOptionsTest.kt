@@ -14,8 +14,8 @@
 
 package org.partiql.lang.eval
 
-import org.junit.*
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Test
 
 class CompileOptionsTest {
     private fun assertDefault(actual: CompileOptions) {

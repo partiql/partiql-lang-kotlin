@@ -3,12 +3,13 @@ package org.partiql.lang.eval.io
 import com.amazon.ion.system.IonSystemBuilder
 import org.junit.Test
 import org.partiql.lang.CompilerPipeline
-import org.partiql.lang.ast.SourceLocationMeta
-import org.partiql.lang.eval.*
-import java.io.IOException
+import org.partiql.lang.eval.CompileOptions
+import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.EvaluationSession
+import org.partiql.lang.eval.ExprFunction
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ThunkOptions
 import java.lang.IllegalStateException
-import java.lang.NullPointerException
-import java.util.concurrent.ThreadPoolExecutor
 import kotlin.test.assertTrue
 import kotlin.test.fail
 

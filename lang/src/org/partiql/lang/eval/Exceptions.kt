@@ -14,10 +14,12 @@
 
 package org.partiql.lang.eval
 
-import org.partiql.lang.*
-import org.partiql.lang.ast.*
-import org.partiql.lang.errors.*
-import org.partiql.lang.util.*
+import org.partiql.lang.SqlException
+import org.partiql.lang.ast.MetaContainer
+import org.partiql.lang.ast.SourceLocationMeta
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
+import org.partiql.lang.errors.PropertyValueMap
 
 /** Error for evaluation problems. */
 open class EvaluationException(message: String,

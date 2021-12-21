@@ -14,32 +14,37 @@
 
 package org.partiql.lang
 
-import com.amazon.ion.*
-import org.partiql.lang.ast.*
-import org.partiql.lang.eval.*
-import org.partiql.lang.eval.builtins.*
+import com.amazon.ion.IonSystem
+import org.partiql.lang.ast.ExprNode
+import org.partiql.lang.eval.CompileOptions
+import org.partiql.lang.eval.EvaluatingCompiler
+import org.partiql.lang.eval.ExprFunction
+import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.Expression
+import org.partiql.lang.eval.builtins.createBuiltinFunctions
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
-import org.partiql.lang.syntax.*
+import org.partiql.lang.syntax.Parser
+import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.interruptibleFold
 
 /**
  * Contains all of the information needed for processing steps.
  */
 data class StepContext(
-    /** The instance of [ExprValueFactory] that is used by the pipeline. */
+        /** The instance of [ExprValueFactory] that is used by the pipeline. */
     val valueFactory: ExprValueFactory,
 
-    /** The compilation options. */
+        /** The compilation options. */
     val compileOptions: CompileOptions,
 
-    /**
+        /**
      * Returns a list of all functions which are available for execution.
      * Includes built-in functions as well as custom functions added while the [CompilerPipeline]
      * was being built.
      */
     val functions: @JvmSuppressWildcards Map<String, ExprFunction>,
 
-    /**
+        /**
      * Returns a list of all stored procedures which are available for execution.
      * Only includes the custom stored procedures added while the [CompilerPipeline] was being built.
      */

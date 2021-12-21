@@ -14,6 +14,6 @@
 
 package org.partiql.lang.util
 
-import org.assertj.core.api.*
+import org.assertj.core.api.SoftAssertions
 
 internal fun softAssert(assertions: SoftAssertions.() -> Unit) = SoftAssertions().apply(assertions).assertAll()
