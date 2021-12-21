@@ -14,8 +14,13 @@
 
 package org.partiql.lang.eval.binding
 
-import org.partiql.lang.eval.*
-import org.partiql.lang.util.*
+import org.partiql.lang.eval.BindingCase
+import org.partiql.lang.eval.BindingName
+import org.partiql.lang.eval.Bindings
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.address
+import org.partiql.lang.eval.name
+import org.partiql.lang.util.errAmbiguousBinding
 
 /**
  * Creates a list of bindings from a list of locals.

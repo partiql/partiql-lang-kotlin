@@ -14,10 +14,9 @@
 
 package org.partiql.lang.eval
 
-import com.amazon.ion.*
-import org.partiql.lang.util.*
-import java.util.*
-
+import com.amazon.ion.IonStruct
+import com.amazon.ion.IonSystem
+import org.partiql.lang.util.seal
 
 /** Indicates if a struct is ordered or not. */
 enum class StructOrdering {
@@ -29,9 +28,9 @@ enum class StructOrdering {
  * Provides a [ExprValueType.STRUCT] implementation lazily backed by a sequence.
  */
 internal open class StructExprValue(
-    private val ion: IonSystem,
-    private val ordering: StructOrdering,
-    private val sequence: Sequence<ExprValue>
+        private val ion: IonSystem,
+        private val ordering: StructOrdering,
+        private val sequence: Sequence<ExprValue>
 ) : BaseExprValue() {
 
     override val type = ExprValueType.STRUCT

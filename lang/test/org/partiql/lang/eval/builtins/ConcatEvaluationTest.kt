@@ -14,36 +14,39 @@
 
 package org.partiql.lang.eval.builtins
 
-import org.junit.*
-import org.partiql.lang.errors.*
-import org.partiql.lang.errors.ErrorCode.*
-import org.partiql.lang.errors.Property.*
-import org.partiql.lang.eval.*
-import org.partiql.lang.eval.ExprValueType.*
+import org.junit.Test
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
+import org.partiql.lang.eval.EvaluatorTestBase
+import org.partiql.lang.eval.ExprValueType
 
 class ConcatEvaluationTest : EvaluatorTestBase() {
-    private val argumentTypeMap = mapOf(ACTUAL_ARGUMENT_TYPES to listOf(STRING, SYMBOL).toString())
+    private val argumentTypeMap = mapOf(Property.ACTUAL_ARGUMENT_TYPES to
+            listOf(ExprValueType.STRING, ExprValueType.SYMBOL).toString())
 
     @Test
     fun concatWrongLeftType() = 
         checkInputThrowingEvaluationException("1 || 'a'",
-                                              EVALUATOR_CONCAT_FAILED_DUE_TO_INCOMPATIBLE_TYPE,
-                                              sourceLocationProperties(1, 3) +
-                                              mapOf(ACTUAL_ARGUMENT_TYPES to listOf(INT, STRING).toString()))
+                ErrorCode.EVALUATOR_CONCAT_FAILED_DUE_TO_INCOMPATIBLE_TYPE,
+                sourceLocationProperties(1, 3) +
+                        mapOf(Property.ACTUAL_ARGUMENT_TYPES to
+                                listOf(ExprValueType.INT, ExprValueType.STRING).toString()))
 
     @Test
     fun concatWrongRightType() =
         checkInputThrowingEvaluationException("'a' || 1",
-                                              EVALUATOR_CONCAT_FAILED_DUE_TO_INCOMPATIBLE_TYPE,
-                                              sourceLocationProperties(1, 5) +
-                                              mapOf(ACTUAL_ARGUMENT_TYPES to listOf(STRING, INT).toString()))
+                ErrorCode.EVALUATOR_CONCAT_FAILED_DUE_TO_INCOMPATIBLE_TYPE,
+                sourceLocationProperties(1, 5) +
+                        mapOf(Property.ACTUAL_ARGUMENT_TYPES to
+                                listOf(ExprValueType.STRING, ExprValueType.INT).toString()))
 
     @Test
     fun concatWrongBothTypes() =
         checkInputThrowingEvaluationException("{} || `2010T`",
-                                              EVALUATOR_CONCAT_FAILED_DUE_TO_INCOMPATIBLE_TYPE,
-                                              sourceLocationProperties(1, 4) +
-                                              mapOf(ACTUAL_ARGUMENT_TYPES to listOf(STRUCT, TIMESTAMP).toString()))
+                ErrorCode.EVALUATOR_CONCAT_FAILED_DUE_TO_INCOMPATIBLE_TYPE,
+                sourceLocationProperties(1, 4) +
+                        mapOf(Property.ACTUAL_ARGUMENT_TYPES to
+                                listOf(ExprValueType.STRUCT, ExprValueType.TIMESTAMP).toString()))
 
     @Test
     fun strings() = assertEval("'a' || 'b'", "\"ab\"")

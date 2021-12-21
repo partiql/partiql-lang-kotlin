@@ -14,10 +14,9 @@
 
 package org.partiql.lang.errors
 
-import org.partiql.lang.*
-import org.partiql.lang.errors.Property.*
 import org.junit.Test
-
+import org.partiql.lang.SqlException
+import org.partiql.lang.TestBase
 
 class SqlExceptionTest : TestBase() {
 
@@ -33,9 +32,9 @@ class SqlExceptionTest : TestBase() {
     @Test
     fun noErrorMessageErrorCodeContext() {
         val errorContext = PropertyValueMap()
-        errorContext[COLUMN_NUMBER] = 10L
-        errorContext[LINE_NUMBER] = 20L
-        errorContext[TOKEN_STRING] = "c"
+        errorContext[Property.COLUMN_NUMBER] = 10L
+        errorContext[Property.LINE_NUMBER] = 20L
+        errorContext[Property.TOKEN_STRING] = "c"
 
         val ex = SqlException(ErrorCode.LEXER_INVALID_CHAR, errorContext)
 
@@ -45,9 +44,9 @@ class SqlExceptionTest : TestBase() {
     @Test
     fun customErrorMessageErrorCodeContext() {
         val errorContext = PropertyValueMap()
-        errorContext[COLUMN_NUMBER] = 10L
-        errorContext[LINE_NUMBER] = 20L
-        errorContext[TOKEN_STRING] = "c"
+        errorContext[Property.COLUMN_NUMBER] = 10L
+        errorContext[Property.LINE_NUMBER] = 20L
+        errorContext[Property.TOKEN_STRING] = "c"
 
         val ex = SqlException("Unexpected token", ErrorCode.LEXER_INVALID_CHAR, errorContext)
 
@@ -57,9 +56,9 @@ class SqlExceptionTest : TestBase() {
     @Test
     fun toStringDoesNotAccumulateMessageText() {
         val errorContext = PropertyValueMap()
-        errorContext[COLUMN_NUMBER] = 10L
-        errorContext[LINE_NUMBER] = 20L
-        errorContext[TOKEN_STRING] = "c"
+        errorContext[Property.COLUMN_NUMBER] = 10L
+        errorContext[Property.LINE_NUMBER] = 20L
+        errorContext[Property.TOKEN_STRING] = "c"
 
         val ex = SqlException("Unexpected token", ErrorCode.LEXER_INVALID_CHAR, errorContext)
 

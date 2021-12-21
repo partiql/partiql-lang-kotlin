@@ -1,10 +1,12 @@
 package org.partiql.lang.ast
 
-import com.amazon.ion.*
-import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.types.*
-import org.partiql.lang.util.*
+import com.amazon.ion.IonSexp
+import com.amazon.ion.IonWriter
+import org.partiql.lang.types.StaticType
+import org.partiql.lang.util.IonWriterContext
+import org.partiql.lang.util.asIonStruct
+import org.partiql.lang.util.field
+import org.partiql.lang.util.stringValue
 
 /**
  * Represents a static type for an AST element.

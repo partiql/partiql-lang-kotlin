@@ -14,7 +14,7 @@
 
 package org.partiql.lang.eval
 
-import org.junit.*
+import org.junit.Test
 
 /**
  * Test cases for PartiQL Unknown values `MISSING` and `NULL`.

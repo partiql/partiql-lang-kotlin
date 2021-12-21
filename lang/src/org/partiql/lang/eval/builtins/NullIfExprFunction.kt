@@ -14,8 +14,12 @@
 
 package org.partiql.lang.eval.builtins
 
-import com.amazon.ion.*
-import org.partiql.lang.eval.*
+import org.partiql.lang.eval.ArityCheckingTrait
+import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.ExprFunction
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.exprEquals
 
 /**
  * NullIf built in function. Takes in two arguments, expr1 and expr2, returns null if expr1 = expr2 otherwise returns expr1

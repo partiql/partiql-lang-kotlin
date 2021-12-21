@@ -15,7 +15,7 @@
 package org.partiql.lang.eval
 
 import com.amazon.ion.IonType
-import org.partiql.lang.ast.*
+import org.partiql.lang.ast.SqlDataType
 import org.partiql.lang.syntax.TYPE_ALIASES
 import org.partiql.lang.syntax.TYPE_NAME_ARITY_MAP
 

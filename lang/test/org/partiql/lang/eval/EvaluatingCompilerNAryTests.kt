@@ -14,13 +14,16 @@
 
 package org.partiql.lang.eval
 
-import com.amazon.ion.*
-import org.partiql.lang.ast.*
-import junitparams.*
-import org.junit.*
-import org.junit.runner.*
-import org.partiql.lang.*
-
+import com.amazon.ion.IonValue
+import junitparams.JUnitParamsRunner
+import junitparams.Parameters
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.partiql.lang.CompilerPipeline
+import org.partiql.lang.ast.Literal
+import org.partiql.lang.ast.NAry
+import org.partiql.lang.ast.NAryOp
+import org.partiql.lang.ast.metaContainerOf
 
 /**
  * This test class is needed to test certain types of [NAryOp] with an arity > 2.

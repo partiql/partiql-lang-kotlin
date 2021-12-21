@@ -14,7 +14,32 @@
 
 package org.partiql.lang.ast.passes
 
-import org.partiql.lang.ast.*
+import org.partiql.lang.ast.
+import org.partiql.lang.ast.CallAgg
+import org.partiql.lang.ast.CreateIndex
+import org.partiql.lang.ast.CreateTable
+import org.partiql.lang.ast.DataManipulation
+import org.partiql.lang.ast.DateTimeType
+import org.partiql.lang.ast.DropIndex
+import org.partiql.lang.ast.DropTable
+import org.partiql.lang.ast.Exec
+import org.partiql.lang.ast.ExprNode
+import org.partiql.lang.ast.HasMetas
+import org.partiql.lang.ast.Literal
+import org.partiql.lang.ast.LiteralMissing
+import org.partiql.lang.ast.MetaContainer
+import org.partiql.lang.ast.NAry
+import org.partiql.lang.ast.Parameter
+import org.partiql.lang.ast.Path
+import org.partiql.lang.ast.SearchedCase
+import org.partiql.lang.ast.Select
+import org.partiql.lang.ast.Seq
+import org.partiql.lang.ast.SeqType
+import org.partiql.lang.ast.SimpleCase
+import org.partiql.lang.ast.Struct
+import org.partiql.lang.ast.StructField
+import org.partiql.lang.ast.Typed
+import org.partiql.lang.ast.VariableReference
 import org.partiql.lang.util.checkThreadInterrupted
 
 /**
@@ -35,25 +60,25 @@ open class AstRewriterBase : AstRewriter {
     override fun rewriteExprNode(node: ExprNode): ExprNode {
         checkThreadInterrupted()
         return when (node) {
-            is Literal           -> rewriteLiteral(node)
-            is LiteralMissing    -> rewriteLiteralMissing(node)
+            is Literal -> rewriteLiteral(node)
+            is LiteralMissing -> rewriteLiteralMissing(node)
             is VariableReference -> rewriteVariableReference(node)
-            is NAry              -> rewriteNAry(node)
-            is CallAgg           -> rewriteCallAgg(node)
-            is Typed             -> rewriteTyped(node)
-            is Path              -> rewritePath(node)
-            is SimpleCase        -> rewriteSimpleCase(node)
-            is SearchedCase      -> rewriteSearchedCase(node)
-            is Struct            -> rewriteStruct(node)
-            is Seq               -> rewriteSeq(node)
-            is Select            -> rewriteSelect(node)
-            is Parameter         -> rewriteParameter(node)
-            is DataManipulation  -> rewriteDataManipulation(node)
-            is CreateTable       -> rewriteCreateTable(node)
-            is CreateIndex       -> rewriteCreateIndex(node)
-            is DropTable         -> rewriteDropTable(node)
-            is DropIndex         -> rewriteDropIndex(node)
-            is Exec              -> rewriteExec(node)
+            is NAry -> rewriteNAry(node)
+            is CallAgg -> rewriteCallAgg(node)
+            is Typed -> rewriteTyped(node)
+            is Path -> rewritePath(node)
+            is SimpleCase -> rewriteSimpleCase(node)
+            is SearchedCase -> rewriteSearchedCase(node)
+            is Struct -> rewriteStruct(node)
+            is Seq -> rewriteSeq(node)
+            is Select -> rewriteSelect(node)
+            is Parameter -> rewriteParameter(node)
+            is DataManipulation -> rewriteDataManipulation(node)
+            is CreateTable -> rewriteCreateTable(node)
+            is CreateIndex -> rewriteCreateIndex(node)
+            is DropTable -> rewriteDropTable(node)
+            is DropIndex -> rewriteDropIndex(node)
+            is Exec -> rewriteExec(node)
             is DateTimeType.Date -> rewriteDate(node)
             is DateTimeType.Time -> rewriteTime(node)
         }

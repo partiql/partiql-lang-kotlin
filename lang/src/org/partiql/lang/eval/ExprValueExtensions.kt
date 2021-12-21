@@ -14,21 +14,33 @@
 
 package org.partiql.lang.eval
 
-import com.amazon.ion.*
-import org.partiql.lang.ast.*
-import org.partiql.lang.errors.*
-import org.partiql.lang.eval.ExprValueType.*
+import com.amazon.ion.IntegerSize
+import com.amazon.ion.IonInt
+import com.amazon.ion.Timestamp
+import org.partiql.lang.ast.DataType
+import org.partiql.lang.ast.SourceLocationMeta
+import org.partiql.lang.ast.SqlDataType
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
+import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.time.NANOS_PER_SECOND
 import org.partiql.lang.eval.time.Time
-import org.partiql.lang.syntax.*
-import org.partiql.lang.util.*
-import java.math.*
+import org.partiql.lang.syntax.DATE_PART_KEYWORDS
+import org.partiql.lang.syntax.DatePart
+import org.partiql.lang.util.ConfigurableExprValueFormatter
+import org.partiql.lang.util.bigDecimalOf
+import org.partiql.lang.util.coerce
+import org.partiql.lang.util.compareTo
+import org.partiql.lang.util.downcast
+import org.partiql.lang.util.getPrecisionFromTimeString
+import org.partiql.lang.util.ionValue
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
-import java.util.*
+import java.util.TreeSet
 
 /**
  * Wraps the given [ExprValue] with a delegate that provides the [OrderedBindNames] facet.
@@ -160,12 +172,13 @@ internal fun ExprValue.isDirectlyComparableTo(other: ExprValue): Boolean =
     when {
         // The ExprValue type for TIME and TIME WITH TIME ZONE is same
         // and thus needs to be checked explicitly for the timezone values.
-        type == TIME && other.type == TIME -> timeValue().isDirectlyComparableTo(other.timeValue())
+        type == ExprValueType.TIME && other.type == ExprValueType.TIME ->
+            timeValue().isDirectlyComparableTo(other.timeValue())
         else -> type.isDirectlyComparableTo(other.type)
     }
 
 /** Types that are cast to the [ExprValueType.isText] types by calling `IonValue.toString()`. */
-private val ION_TEXT_STRING_CAST_TYPES = setOf(BOOL, TIMESTAMP)
+private val ION_TEXT_STRING_CAST_TYPES = setOf(ExprValueType.BOOL, ExprValueType.TIMESTAMP)
 
 /** Regex to match DATE strings of the format yyyy-MM-dd */
 private val datePatternRegex = Regex("\\d\\d\\d\\d-\\d\\d-\\d\\d")
@@ -226,10 +239,10 @@ private val genericTimeRegex = Regex("\\d\\d:\\d\\d:\\d\\d(\\.\\d*)?([+|-]\\d\\d
  * @param session The EvaluationSession which provides necessary information for evaluation.
  */
 fun ExprValue.cast(
-    targetDataType: DataType,
-    valueFactory: ExprValueFactory,
-    locationMeta: SourceLocationMeta?,
-    session: EvaluationSession
+        targetDataType: DataType,
+        valueFactory: ExprValueFactory,
+        locationMeta: SourceLocationMeta?,
+        session: EvaluationSession
 ): ExprValue {
 
     val targetSqlDataType = targetDataType.sqlDataType
@@ -266,8 +279,8 @@ fun ExprValue.cast(
     fun Number.exprValue() = valueFactory.newFromIonValue(ionValue(valueFactory.ion))
 
     fun String.exprValue(type: ExprValueType) = valueFactory.newFromIonValue(when (type) {
-        STRING -> valueFactory.ion.newString(this)
-        SYMBOL -> valueFactory.ion.newSymbol(this)
+        ExprValueType.STRING -> valueFactory.ion.newString(this)
+        ExprValueType.SYMBOL -> valueFactory.ion.newSymbol(this)
 
         else -> castFailedErr("Invalid type for textual conversion: $type (this code should be unreachable)", internal = true)
     })
@@ -277,7 +290,7 @@ fun ExprValue.cast(
         type.isUnknown && targetSqlDataType == SqlDataType.NULL -> return valueFactory.nullValue
         // Note that the ExprValueType for TIME and TIME WITH TIME ZONE is the same i.e. ExprValueType.TIME.
         // We further need to check for the time zone and hence we do not short circuit here when the type is TIME.
-        type.isUnknown || (type == targetExprValueType && type != TIME) -> return this
+        type.isUnknown || (type == targetExprValueType && type != ExprValueType.TIME) -> return this
         else                                 -> {
             when (targetSqlDataType) {
                 SqlDataType.BOOLEAN -> when {
@@ -292,7 +305,7 @@ fun ExprValue.cast(
                     }
                 }
                 SqlDataType.SMALLINT, SqlDataType.INTEGER -> when {
-                    type == BOOL -> return valueFactory.newInt(if(booleanValue()) 1L else 0L)
+                    type == ExprValueType.BOOL -> return valueFactory.newInt(if(booleanValue()) 1L else 0L)
                     type.isNumber -> return valueFactory.newInt(numberValue().toLongFailingOverflow(locationMeta))
                     type.isText -> {
                         val value = try {
@@ -309,7 +322,7 @@ fun ExprValue.cast(
                     }
                 }
                 SqlDataType.FLOAT, SqlDataType.REAL, SqlDataType.DOUBLE_PRECISION -> when {
-                    type == BOOL -> return if (booleanValue()) 1.0.exprValue() else 0.0.exprValue()
+                    type == ExprValueType.BOOL -> return if (booleanValue()) 1.0.exprValue() else 0.0.exprValue()
                     type.isNumber -> return numberValue().toDouble().exprValue()
                     type.isText ->
                         try {
@@ -319,7 +332,7 @@ fun ExprValue.cast(
                         }
                 }
                 SqlDataType.DECIMAL, SqlDataType.NUMERIC -> when {
-                    type == BOOL -> return if (booleanValue()) BigDecimal.ONE.exprValue() else BigDecimal.ZERO.exprValue()
+                    type == ExprValueType.BOOL -> return if (booleanValue()) BigDecimal.ONE.exprValue() else BigDecimal.ZERO.exprValue()
                     type.isNumber -> return numberValue().coerce(BigDecimal::class.java).exprValue()
                     type.isText -> try {
                         return bigDecimalOf(stringValue()).exprValue()
@@ -339,7 +352,7 @@ fun ExprValue.cast(
                     }
                 }
                 SqlDataType.DATE -> when {
-                    type == TIMESTAMP -> {
+                    type == ExprValueType.TIMESTAMP -> {
                         val ts = timestampValue()
                         return valueFactory.newDate(LocalDate.of(ts.year, ts.month, ts.day))
                     }
@@ -361,7 +374,7 @@ fun ExprValue.cast(
                 SqlDataType.TIME, SqlDataType.TIME_WITH_TIME_ZONE -> {
                     val precision = targetDataType.args.firstOrNull()?.toInt()
                     when {
-                        type == TIME -> {
+                        type == ExprValueType.TIME -> {
                             val time = timeValue()
                             val timeZoneOffset = when (targetSqlDataType) {
                                 SqlDataType.TIME_WITH_TIME_ZONE -> time.zoneOffset?: session.defaultTimezoneOffset
@@ -374,7 +387,7 @@ fun ExprValue.cast(
                                     timeZoneOffset
                                 ))
                         }
-                        type == TIMESTAMP -> {
+                        type == ExprValueType.TIMESTAMP -> {
                             val ts = timestampValue()
                             val timeZoneOffset = when (targetSqlDataType) {
                                 SqlDataType.TIME_WITH_TIME_ZONE -> ts.localOffset?: castFailedErr(
@@ -429,8 +442,8 @@ fun ExprValue.cast(
                 SqlDataType.CHARACTER, SqlDataType.CHARACTER_VARYING, SqlDataType.STRING, SqlDataType.SYMBOL -> when {
                     type.isNumber -> return numberValue().toString().exprValue(targetExprValueType)
                     type.isText -> return stringValue().exprValue(targetExprValueType)
-                    type == DATE -> return dateValue().toString().exprValue(targetExprValueType)
-                    type == TIME -> return timeValue().toString().exprValue(targetExprValueType)
+                    type == ExprValueType.DATE -> return dateValue().toString().exprValue(targetExprValueType)
+                    type == ExprValueType.TIME -> return timeValue().toString().exprValue(targetExprValueType)
                     type in ION_TEXT_STRING_CAST_TYPES -> return ionValue.toString().exprValue(targetExprValueType)
                 }
                 SqlDataType.CLOB -> when {

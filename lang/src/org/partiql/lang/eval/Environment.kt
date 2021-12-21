@@ -14,7 +14,7 @@
 
 package org.partiql.lang.eval
 
-import java.util.*
+import java.util.TreeMap
 
 /**
  * The environment for execution.

@@ -14,8 +14,7 @@
 
 package org.partiql.lang.ast.passes
 
-import org.partiql.lang.syntax.*
-
+import org.partiql.lang.syntax.SqlParserTestBase
 
 @Deprecated("New rewriters should implement PIG's PartiqlAst.VisitorTransform and use VisitorTransformTestBase to test")
 abstract class RewriterTestBase : SqlParserTestBase() {

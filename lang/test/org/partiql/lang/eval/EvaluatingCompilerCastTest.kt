@@ -14,12 +14,10 @@
 
 package org.partiql.lang.eval
 
-import org.partiql.lang.errors.*
-import org.partiql.lang.eval.ExprValueType.*
-import org.partiql.lang.errors.ErrorCode.*
 import junitparams.Parameters
 import junitparams.naming.TestCaseName
 import org.junit.Test
+import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.syntax.ParserException
 import org.partiql.lang.util.getOffsetHHmm
 import java.time.ZoneOffset
@@ -72,11 +70,11 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
      * is to be expected.
      */
     data class CastCase(
-        val source: String,
-        val type: String,
-        val expected: String?,
-        val expectedErrorCode: ErrorCode?,
-        val session: EvaluationSession = EvaluationSession.standard()
+            val source: String,
+            val type: String,
+            val expected: String?,
+            val expectedErrorCode: ErrorCode?,
+            val session: EvaluationSession = EvaluationSession.standard()
     ) {
         val expression = "CAST($source AS $type)"
         override fun toString(): String = expression
@@ -155,7 +153,7 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
                             case("<<>>", EVALUATOR_INVALID_CAST),
                             case("<<true>>", EVALUATOR_INVALID_CAST),
                             case("<<false>>", EVALUATOR_INVALID_CAST)
-                    ).types(BOOL.sqlTextNames),
+                    ).types(ExprValueType.BOOL.sqlTextNames),
                     listOf(
                             // booleans
                             case("TRUE AND FALSE", "0"),
@@ -230,7 +228,7 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
                             case("<<>>", EVALUATOR_INVALID_CAST),
                             case("<<14>>", EVALUATOR_INVALID_CAST),
                             case("<<20>>", EVALUATOR_INVALID_CAST)
-                    ).types(INT.sqlTextNames),
+                    ).types(ExprValueType.INT.sqlTextNames),
                     listOf(
                             // booleans
                             case("TRUE AND FALSE", "0e0"),
@@ -275,7 +273,7 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
                             case("<<>>", EVALUATOR_INVALID_CAST),
                             case("<<`14e0`>>", EVALUATOR_INVALID_CAST),
                             case("<<`20e0`>>", EVALUATOR_INVALID_CAST)
-                    ).types(FLOAT.sqlTextNames),
+                    ).types(ExprValueType.FLOAT.sqlTextNames),
                     listOf(
                             // booleans
                             case("TRUE AND FALSE", "0d0"),
@@ -321,7 +319,7 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
                             case("<<>>", EVALUATOR_INVALID_CAST),
                             case("<<`14d0`>>", EVALUATOR_INVALID_CAST),
                             case("<<`20d0`>>", EVALUATOR_INVALID_CAST)
-                    ).types(DECIMAL.sqlTextNames),
+                    ).types(ExprValueType.DECIMAL.sqlTextNames),
                     listOf(
                             // booleans
                             case("TRUE AND FALSE", EVALUATOR_INVALID_CAST),
@@ -357,7 +355,7 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
                             case("`{}`", EVALUATOR_INVALID_CAST),
                             // bag
                             case("<<>>", EVALUATOR_INVALID_CAST)
-                    ).types(DATE.sqlTextNames),
+                    ).types(ExprValueType.DATE.sqlTextNames),
                     // Find more coverage for the "Cast as Time" tests in `castDateAndTime`.
                     listOf(
                             // booleans
@@ -394,7 +392,7 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
                             case("`{}`", EVALUATOR_INVALID_CAST),
                             // bag
                             case("<<>>", EVALUATOR_INVALID_CAST)
-                    ).types(TIME.sqlTextNames),
+                    ).types(ExprValueType.TIME.sqlTextNames),
                     listOf(
                             // booleans
                             case("TRUE AND FALSE", EVALUATOR_INVALID_CAST),
@@ -423,7 +421,7 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
                             case("`{}`", EVALUATOR_INVALID_CAST),
                             // bag
                             case("<<>>", EVALUATOR_INVALID_CAST)
-                    ).types(TIMESTAMP.sqlTextNames),
+                    ).types(ExprValueType.TIMESTAMP.sqlTextNames),
                     listOf(
                             // booleans
                             case("TRUE AND FALSE", "'false'"),
@@ -467,7 +465,7 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
                             case("<<>>", EVALUATOR_INVALID_CAST),
                             case("<<`14d0`>>", EVALUATOR_INVALID_CAST),
                             case("<<`20d0`>>", EVALUATOR_INVALID_CAST)
-                    ).types(SYMBOL.sqlTextNames),
+                    ).types(ExprValueType.SYMBOL.sqlTextNames),
                     listOf(
                             // booleans
                             case("TRUE AND FALSE", "\"false\""),
@@ -512,7 +510,7 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
                             case("<<`14d0`>>", EVALUATOR_INVALID_CAST),
                             case("<<'a', <<'hello'>>>>", EVALUATOR_INVALID_CAST),
                             case("<<`20d0`>>", EVALUATOR_INVALID_CAST)
-                    ).types(STRING.sqlTextNames),
+                    ).types(ExprValueType.STRING.sqlTextNames),
                     listOf(
                             // booleans
                             case("TRUE AND FALSE", EVALUATOR_INVALID_CAST),
@@ -556,7 +554,7 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
                             case("<<>>", EVALUATOR_INVALID_CAST),
                             case("<<`14d0`>>", EVALUATOR_INVALID_CAST),
                             case("<<`20d0`>>", EVALUATOR_INVALID_CAST)
-                    ).types(CLOB.sqlTextNames),
+                    ).types(ExprValueType.CLOB.sqlTextNames),
                     listOf(
                             // booleans
                             case("TRUE AND FALSE", EVALUATOR_INVALID_CAST),
@@ -600,7 +598,7 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
                             case("<<>>", EVALUATOR_INVALID_CAST),
                             case("<<`14d0`>>", EVALUATOR_INVALID_CAST),
                             case("<<`20d0`>>", EVALUATOR_INVALID_CAST)
-                    ).types(BLOB.sqlTextNames),
+                    ).types(ExprValueType.BLOB.sqlTextNames),
                     listOf(
                             // booleans
                             case("TRUE AND FALSE", EVALUATOR_INVALID_CAST),
@@ -644,7 +642,7 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
                             case("<<>>", "[]"),      // TODO bag verification
                             case("<<`14d0`>>", "[14d0]"),  // TODO bag verification
                             case("<<`20d0`>>", "[20d0]")   // TODO bag verification
-                    ).types(LIST.sqlTextNames),
+                    ).types(ExprValueType.LIST.sqlTextNames),
                     listOf(
                             // booleans
                             case("TRUE AND FALSE", EVALUATOR_INVALID_CAST),
@@ -688,7 +686,7 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
                             case("<<>>", "()"),
                             case("<<`14d0`>>", "(14d0)"),
                             case("<<`20d0`>>", "(20d0)")
-                    ).types(SEXP.sqlTextNames),
+                    ).types(ExprValueType.SEXP.sqlTextNames),
                     listOf(
                             // booleans
                             case("TRUE AND FALSE", EVALUATOR_INVALID_CAST),
@@ -732,7 +730,7 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
                             case("<<>>", EVALUATOR_INVALID_CAST),
                             case("<<`14d0`>>", EVALUATOR_INVALID_CAST),
                             case("<<`20d0`>>", EVALUATOR_INVALID_CAST)
-                    ).types(STRUCT.sqlTextNames),
+                    ).types(ExprValueType.STRUCT.sqlTextNames),
                     listOf(
                             // booleans
                             case("TRUE AND FALSE", EVALUATOR_INVALID_CAST),
@@ -776,7 +774,7 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
                             case("<<>>", "[]"),          // TODO bag verification
                             case("<<`14d0`>>", "[14d0]"),      // TODO bag verification
                             case("<<`20d0`>>", "[20d0]")       // TODO bag verification
-                    ).types(BAG.sqlTextNames)
+                    ).types(ExprValueType.BAG.sqlTextNames)
             ).flatMap { it }
 
     @Test
@@ -804,13 +802,13 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
     fun parametersForCastDateAndTime() = listOf(
         listOf(
             case("DATE '2007-10-10'", "2007-10-10")
-        ).types(DATE.sqlTextNames),
+        ).types(ExprValueType.DATE.sqlTextNames),
         listOf(
             case("DATE '2007-10-10'", "`'2007-10-10'`")
-        ).types(SYMBOL.sqlTextNames),
+        ).types(ExprValueType.SYMBOL.sqlTextNames),
         listOf(
             case("DATE '2007-10-10'", "'2007-10-10'")
-        ).types(STRING.sqlTextNames),
+        ).types(ExprValueType.STRING.sqlTextNames),
         listOf(
             // CAST(<TIME> AS <variants of TIME type>)
             case("TIME '23:12:12.1267'", "TIME", "23:12:12.1267"),
@@ -915,7 +913,7 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
             case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "`'23:12:12.127-05:30'`"),
             case("TIME (3) WITH TIME ZONE '23:12:12.1267+05:30'", "`'23:12:12.127+05:30'`"),
             case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "`'23:12:12.127-05:30'`")
-        ).types(SYMBOL.sqlTextNames),
+        ).types(ExprValueType.SYMBOL.sqlTextNames),
         listOf(
             case("TIME '23:12:12.1267'", "'23:12:12.1267'"),
             case("TIME '23:12:12.1267-05:30'", "'23:12:12.1267'"),
@@ -933,10 +931,22 @@ class EvaluatingCompilerCastTest : EvaluatorTestBase() {
             case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "'23:12:12.127-05:30'"),
             case("TIME (3) WITH TIME ZONE '23:12:12.1267+05:30'", "'23:12:12.127+05:30'"),
             case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "'23:12:12.127-05:30'")
-        ).types(STRING.sqlTextNames)
+        ).types(ExprValueType.STRING.sqlTextNames)
     ).flatten() +
-        listOf(MISSING, NULL, BOOL, INT, FLOAT, DECIMAL, TIMESTAMP, CLOB, BLOB, LIST, SEXP, STRUCT, BAG)
-            .map {
+        listOf(
+                ExprValueType.MISSING,
+                ExprValueType.NULL,
+                ExprValueType.BOOL,
+                ExprValueType.INT,
+                ExprValueType.FLOAT,
+                ExprValueType.DECIMAL,
+                ExprValueType.TIMESTAMP,
+                ExprValueType.CLOB,
+                ExprValueType.BLOB,
+                ExprValueType.LIST,
+                ExprValueType.SEXP,
+                ExprValueType.STRUCT,
+                ExprValueType.BAG).map {
                 listOf(case("DATE '2007-10-10'", EVALUATOR_INVALID_CAST)).types(it.sqlTextNames)
             }.flatten()
 

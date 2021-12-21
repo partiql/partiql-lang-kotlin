@@ -14,17 +14,18 @@
 
 package org.partiql.lang.ast.passes
 
-import org.partiql.lang.*
-import org.partiql.lang.errors.*
+import org.partiql.lang.SqlException
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.PropertyValueMap
 
 
 /**
  * The exception to be thrown by semantic passes.
  */
 class SemanticException(
-    message: String = "",
-    errorCode: ErrorCode,
-    errorContext: PropertyValueMap?,
-    cause: Throwable? = null)
+        message: String = "",
+        errorCode: ErrorCode,
+        errorContext: PropertyValueMap?,
+        cause: Throwable? = null)
     : SqlException(message, errorCode, errorContext, cause)
 
