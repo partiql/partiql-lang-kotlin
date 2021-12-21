@@ -165,8 +165,8 @@ class ReadFileTest {
     }
 
     @Test
-    fun readPostgreCsvFile() {
-        writeFile("simple_postgre.csv", "id,name,balance\n1,Bob,10000.00")
+    fun readPostgreSQLCsvFile() {
+        writeFile("simple_postgresql.csv", "id,name,balance\n1,Bob,10000.00")
 
         val args = listOf("\"${dirPath("simple_postgre.csv")}\"", "{type:\"postgresql_csv\", header:true}").map { it.exprValue() }
 
