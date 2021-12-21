@@ -648,7 +648,7 @@ The `read_file` function provides options to read other predefined CSV data form
 For example, if a CSV file is exported from PostgreSQL, we can use the following command 
 to read the file: 
 ```
-read_file('simple_postgre.csv', {'type':'postgre_csv'})
+read_file('simple_postgresql.csv', {'type':'postgresql_csv'})
 ```
 Other available options for the argument `type` besides `postgre_csv` are `excel_csv`, `mysql_csv`, `mongodb_csv`, `mongodb_tsv`, `postgresql_csv` and `postgresql_text`. 
 
