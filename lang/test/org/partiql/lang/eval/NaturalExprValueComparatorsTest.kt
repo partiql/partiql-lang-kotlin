@@ -17,8 +17,8 @@ package org.partiql.lang.eval
 import org.partiql.lang.SqlException
 import junitparams.Parameters
 import org.junit.Test
-import java.util.*
-import org.partiql.lang.eval.NaturalExprValueComparators.*
+import java.util.Collections
+import java.util.Random
 
 class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
     // the lists below represent the expected ordering of values
@@ -342,8 +342,8 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
 
         return (1..iterations).flatMap {
             listOf(
-                shuffleCase("BASIC VALUES (NULLS FIRST)", NULLS_FIRST, basicExprs),
-                shuffleCase("BASIC VALUES (NULLS LAST)", NULLS_LAST, basicExprs.moveHeadToTail())
+                shuffleCase("BASIC VALUES (NULLS FIRST)", NaturalExprValueComparators.NULLS_FIRST, basicExprs),
+                shuffleCase("BASIC VALUES (NULLS LAST)", NaturalExprValueComparators.NULLS_LAST, basicExprs.moveHeadToTail())
             )
         }
     }

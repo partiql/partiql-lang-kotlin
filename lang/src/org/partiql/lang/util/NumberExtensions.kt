@@ -14,9 +14,14 @@
 
 package org.partiql.lang.util
 
-import com.amazon.ion.*
-import org.partiql.lang.eval.*
-import java.math.*
+import com.amazon.ion.Decimal
+import com.amazon.ion.IonSystem
+import com.amazon.ion.IonValue
+import org.partiql.lang.eval.errIntOverflow
+import java.math.BigDecimal
+import java.math.BigInteger
+import java.math.MathContext
+import java.math.RoundingMode
 
 private val MATH_CONTEXT = MathContext(38, RoundingMode.HALF_EVEN) // TODO should this be configurable?
 
@@ -25,7 +30,7 @@ private val MATH_CONTEXT = MathContext(38, RoundingMode.HALF_EVEN) // TODO shoul
  * and factory methods
  */
 internal fun bigDecimalOf(num: Number, mc: MathContext = MATH_CONTEXT): BigDecimal = when (num) {
-    is Decimal            -> num
+    is Decimal -> num
     is Int                -> BigDecimal(num, mc)
     is Long               -> BigDecimal(num, mc)
     is Double             -> BigDecimal(num, mc)

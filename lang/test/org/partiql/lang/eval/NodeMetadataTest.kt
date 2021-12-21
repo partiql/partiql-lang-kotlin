@@ -14,14 +14,17 @@
 
 package org.partiql.lang.eval
 
-import org.partiql.lang.errors.*
-import org.partiql.lang.util.*
-import junitparams.*
-import org.assertj.core.api.Assertions.*
-import org.junit.*
+import junitparams.JUnitParamsRunner
+import junitparams.Parameters
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
-import org.junit.runner.*
-import kotlin.test.*
+import org.junit.runner.RunWith
+import org.partiql.lang.errors.Property
+import org.partiql.lang.errors.PropertyType
+import org.partiql.lang.errors.PropertyValue
+import org.partiql.lang.errors.PropertyValueMap
+import org.partiql.lang.util.softAssert
+import kotlin.test.assertTrue
 
 @RunWith(JUnitParamsRunner::class)
 class NodeMetadataTest {

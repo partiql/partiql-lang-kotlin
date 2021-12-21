@@ -5,10 +5,10 @@ import junitparams.Parameters
 import org.junit.Test
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.id
-import java.util.*
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.util.to
+import java.util.Random
 
 class SqlParserDateTimeTests : SqlParserTestBase() {
 

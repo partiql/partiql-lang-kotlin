@@ -14,9 +14,10 @@
 
 package org.partiql.lang.eval
 
-import com.amazon.ion.*
-import org.partiql.lang.errors.*
-import org.partiql.lang.util.*
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
+import org.partiql.lang.errors.PropertyValueMap
+import org.partiql.lang.util.isAnyUnknown
 
 /**
  * Represents a function that can be invoked from within an [EvaluatingCompiler]

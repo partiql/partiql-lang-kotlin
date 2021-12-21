@@ -14,9 +14,11 @@
 
 package org.partiql.lang.ast
 
-import com.amazon.ion.*
-import org.partiql.lang.util.*
-import java.util.*
+import com.amazon.ion.IonType
+import com.amazon.ion.IonValue
+import org.partiql.lang.util.interruptibleMap
+import org.partiql.lang.util.stringValue
+import java.util.Arrays
 
 /**
  * Base type for all AST nodes.
@@ -139,8 +141,8 @@ sealed class ExprNode : AstNode(), HasMetas {
 
 /** Represents a literal value.  */
 data class Literal(
-    val ionValue: IonValue,
-    override val metas: MetaContainer
+        val ionValue: IonValue,
+        override val metas: MetaContainer
 ) : ExprNode() {
     init {
         ionValue.clone().makeReadOnly()

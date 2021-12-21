@@ -14,9 +14,13 @@
 
 package org.partiql.lang.ast
 
-import com.amazon.ion.*
+import com.amazon.ion.IonSexp
+import com.amazon.ion.IonWriter
 import com.amazon.ionelement.api.metaOrNull
-import org.partiql.lang.util.*
+import org.partiql.lang.util.IonWriterContext
+import org.partiql.lang.util.asIonStruct
+import org.partiql.lang.util.field
+import org.partiql.lang.util.longValue
 
 /**
  * Represents a specific location within a source file.

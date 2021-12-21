@@ -14,9 +14,10 @@
 
 package org.partiql.lang
 
-import org.partiql.lang.errors.*
-import org.partiql.lang.errors.Property.*
-
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
+import org.partiql.lang.errors.PropertyValueMap
+import org.partiql.lang.errors.UNKNOWN
 
 /**
  * General exception class for the interpreter.
@@ -82,8 +83,8 @@ open class SqlException(override var message: String,
             errorCode?.getErrorMessage(propertyValueMap) ?: UNKNOWN
 
     private fun errorLocation(propertyValueMap: PropertyValueMap?): String {
-        val lineNo = propertyValueMap?.get(LINE_NUMBER)?.longValue()
-        val columnNo = propertyValueMap?.get(COLUMN_NUMBER)?.longValue()
+        val lineNo = propertyValueMap?.get(Property.LINE_NUMBER)?.longValue()
+        val columnNo = propertyValueMap?.get(Property.COLUMN_NUMBER)?.longValue()
 
         return "at line ${lineNo ?: UNKNOWN}, column ${columnNo ?: UNKNOWN}"
     }

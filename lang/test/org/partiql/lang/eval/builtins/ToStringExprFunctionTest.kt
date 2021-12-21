@@ -14,9 +14,10 @@
 
 package org.partiql.lang.eval.builtins
 
-import org.partiql.lang.errors.*
-import org.partiql.lang.eval.*
-import org.junit.*
+import org.junit.Test
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
+import org.partiql.lang.eval.EvaluatorTestBase
 
 class ToStringExprFunctionTest : EvaluatorTestBase() {
     // Note that the amount of testing here is a bit on the light side because most of the testing for the formatting

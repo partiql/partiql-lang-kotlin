@@ -14,9 +14,9 @@
 
 package org.partiql.lang.eval.builtins.timestamp
 
-import org.partiql.lang.eval.*
-import org.junit.*
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Test
+import org.partiql.lang.eval.EvaluationException
 
 class TimestampFormatPatternLexerTest {
 
@@ -24,7 +24,7 @@ class TimestampFormatPatternLexerTest {
     private fun pattern(s: String) = Token(TokenType.PATTERN, s)
 
     private fun assertTokens(s: String, vararg tokens: Token) = assertEquals(tokens.toList(),
-                                                                             TimestampFormatPatternLexer().tokenize(s))
+            TimestampFormatPatternLexer().tokenize(s))
 
     @Test
     fun singlePatternToken() = assertTokens("y", pattern("y"))

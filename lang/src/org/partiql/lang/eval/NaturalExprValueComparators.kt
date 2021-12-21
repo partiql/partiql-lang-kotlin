@@ -14,8 +14,11 @@
 
 package org.partiql.lang.eval
 
-import org.partiql.lang.eval.ExprValueType.*
-import org.partiql.lang.util.*
+import org.partiql.lang.util.compareTo
+import org.partiql.lang.util.isNaN
+import org.partiql.lang.util.isNegInf
+import org.partiql.lang.util.isPosInf
+import org.partiql.lang.util.isZero
 
 /**
  * Provides a total, natural ordering over [ExprValue].  This ordering is consistent with
@@ -158,7 +161,7 @@ enum class NaturalExprValueComparators(private val nullOrder: NullOrder) : Compa
 
         // Bool
         ifCompared(
-            handle(lType == BOOL, rType == BOOL) {
+            handle(lType == ExprValueType.BOOL, rType == ExprValueType.BOOL) {
                 val lVal = left.booleanValue()
                 val rVal = right.booleanValue()
 
@@ -192,7 +195,7 @@ enum class NaturalExprValueComparators(private val nullOrder: NullOrder) : Compa
 
         // Date
         ifCompared(
-            handle(lType == DATE, rType == DATE) {
+            handle(lType == ExprValueType.DATE, rType == ExprValueType.DATE) {
                 val lVal = left.dateValue()
                 val rVal = right.dateValue()
 
@@ -202,7 +205,7 @@ enum class NaturalExprValueComparators(private val nullOrder: NullOrder) : Compa
 
         // Time
         ifCompared(
-            handle(lType == TIME, rType == TIME) {
+            handle(lType == ExprValueType.TIME, rType == ExprValueType.TIME) {
                 val lVal = left.timeValue()
                 val rVal = right.timeValue()
 
@@ -212,7 +215,7 @@ enum class NaturalExprValueComparators(private val nullOrder: NullOrder) : Compa
 
         // Timestamp
         ifCompared(
-            handle(lType == TIMESTAMP, rType == TIMESTAMP) {
+            handle(lType == ExprValueType.TIMESTAMP, rType == ExprValueType.TIMESTAMP) {
                 val lVal = left.timestampValue()
                 val rVal = right.timestampValue()
 
@@ -251,28 +254,28 @@ enum class NaturalExprValueComparators(private val nullOrder: NullOrder) : Compa
 
         // List
         ifCompared(
-            handle(lType == LIST, rType == LIST) {
+            handle(lType == ExprValueType.LIST, rType == ExprValueType.LIST) {
                 return compareOrdered(left, right, this)
             }
         ) { return it }
 
         // Sexp
         ifCompared(
-            handle(lType == SEXP, rType == SEXP) {
+            handle(lType == ExprValueType.SEXP, rType == ExprValueType.SEXP) {
                 return compareOrdered(left, right, this)
             }
         ) { return it }
 
         // Struct
         ifCompared(
-            handle(lType == STRUCT, rType == STRUCT) {
+            handle(lType == ExprValueType.STRUCT, rType == ExprValueType.STRUCT) {
                 compareUnordered(left, right, structFieldComparator)
             }
         ) { return it }
 
         // Bag
         ifCompared(
-            handle(lType == BAG, rType == BAG) {
+            handle(lType == ExprValueType.BAG, rType == ExprValueType.BAG) {
                 compareUnordered(left, right, this)
             }
         ) { return it }

@@ -14,13 +14,12 @@
 
 package org.partiql.lang.eval.builtins
 
-import com.amazon.ion.system.*
-import org.partiql.lang.eval.*
-import org.partiql.lang.util.*
-import org.assertj.core.api.Assertions.*
-import org.junit.*
-import org.junit.Assert.*
-import org.partiql.lang.*
+import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.junit.Test
+import org.partiql.lang.TestBase
+import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.stringValue
 
 /**
  * Tests for [TrimExprFunction], most tests are done e2e through the evaluator, see [BuiltinFunctionsTest]

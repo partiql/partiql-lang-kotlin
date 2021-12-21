@@ -14,36 +14,41 @@
 
 package org.partiql.lang
 
-import com.amazon.ion.*
-import org.partiql.lang.ast.*
-import org.partiql.lang.eval.*
-import org.partiql.lang.eval.builtins.*
+import com.amazon.ion.IonSystem
+import org.partiql.lang.ast.ExprNode
+import org.partiql.lang.eval.CompileOptions
+import org.partiql.lang.eval.EvaluatingCompiler
+import org.partiql.lang.eval.ExprFunction
+import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.Expression
+import org.partiql.lang.eval.builtins.createBuiltinFunctions
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
-import org.partiql.lang.syntax.*
+import org.partiql.lang.syntax.Parser
+import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.interruptibleFold
 
 /**
  * Contains all of the information needed for processing steps.
  */
 data class StepContext(
-    /** The instance of [ExprValueFactory] that is used by the pipeline. */
-    val valueFactory: ExprValueFactory,
+        /** The instance of [ExprValueFactory] that is used by the pipeline. */
+        val valueFactory: ExprValueFactory,
 
-    /** The compilation options. */
-    val compileOptions: CompileOptions,
+        /** The compilation options. */
+        val compileOptions: CompileOptions,
 
-    /**
-     * Returns a list of all functions which are available for execution.
-     * Includes built-in functions as well as custom functions added while the [CompilerPipeline]
-     * was being built.
-     */
-    val functions: @JvmSuppressWildcards Map<String, ExprFunction>,
+        /**
+         * * Returns a list of all functions which are available for execution.
+         * Includes built-in functions as well as custom functions added while the [CompilerPipeline]
+         * was being built.
+         */
+        val functions: @JvmSuppressWildcards Map<String, ExprFunction>,
 
-    /**
-     * Returns a list of all stored procedures which are available for execution.
-     * Only includes the custom stored procedures added while the [CompilerPipeline] was being built.
-     */
-    val procedures: @JvmSuppressWildcards Map<String, StoredProcedure>
+        /**
+         * Returns a list of all stored procedures which are available for execution.
+         * Only includes the custom stored procedures added while the [CompilerPipeline] was being built.
+         */
+        val procedures: @JvmSuppressWildcards Map<String, StoredProcedure>
 )
 
 /**
@@ -108,7 +113,7 @@ interface CompilerPipeline  {
         /** Returns an implementation of [CompilerPipeline] with all properties set to their defaults. */
         @JvmStatic
         fun standard(valueFactory: ExprValueFactory): CompilerPipeline =
-            builder(valueFactory).build()
+                builder(valueFactory).build()
     }
 
     /**
@@ -171,23 +176,23 @@ interface CompilerPipeline  {
             val allFunctions = builtinFunctions + customFunctions
 
             return CompilerPipelineImpl(
-                valueFactory,
-                parser ?: SqlParser(valueFactory.ion),
-                compileOptions ?: CompileOptions.standard(),
-                allFunctions,
-                customProcedures,
-                preProcessingSteps)
+                    valueFactory,
+                    parser ?: SqlParser(valueFactory.ion),
+                    compileOptions ?: CompileOptions.standard(),
+                    allFunctions,
+                    customProcedures,
+                    preProcessingSteps)
         }
     }
 }
 
 internal class CompilerPipelineImpl(
-    override val valueFactory: ExprValueFactory,
-    private val parser: Parser,
-    override val compileOptions: CompileOptions,
-    override val functions: Map<String, ExprFunction>,
-    override val procedures: Map<String, StoredProcedure>,
-    private val preProcessingSteps: List<ProcessingStep>
+        override val valueFactory: ExprValueFactory,
+        private val parser: Parser,
+        override val compileOptions: CompileOptions,
+        override val functions: Map<String, ExprFunction>,
+        override val procedures: Map<String, StoredProcedure>,
+        private val preProcessingSteps: List<ProcessingStep>
 ) : CompilerPipeline {
 
     private val compiler = EvaluatingCompiler(valueFactory, functions, procedures, compileOptions)
@@ -206,8 +211,8 @@ internal class CompilerPipelineImpl(
     }
 
     internal fun executePreProcessingSteps(
-        query: ExprNode,
-        context: StepContext
+            query: ExprNode,
+            context: StepContext
     ) = preProcessingSteps.interruptibleFold(query) { currentExprNode, step ->
         step(currentExprNode, context)
     }

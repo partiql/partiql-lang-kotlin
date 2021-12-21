@@ -14,17 +14,15 @@
 
 package org.partiql.lang.syntax
 
-import com.amazon.ion.*
-import org.partiql.lang.errors.*
-import org.partiql.lang.errors.ErrorCode.*
-import org.partiql.lang.errors.Property.*
-import org.partiql.lang.syntax.SqlLexer.LexType.*
-import org.partiql.lang.syntax.SqlLexer.StateType.*
-import org.partiql.lang.syntax.TokenType.*
-import org.partiql.lang.syntax.TokenType.KEYWORD
-import org.partiql.lang.util.*
-import java.math.*
-
+import com.amazon.ion.IonException
+import com.amazon.ion.IonSystem
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
+import org.partiql.lang.errors.PropertyValueMap
+import org.partiql.lang.util.bigDecimalOf
+import org.partiql.lang.util.codePointSequence
+import org.partiql.lang.util.seal
+import java.math.BigInteger
 
 /**
  * Simple tokenizer for PartiQL.
@@ -73,7 +71,7 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
         val tokenType: TokenType?
             get() = null
         val lexType: LexType
-            get() = NONE
+            get() = LexType.NONE
         val replacement: Int
             get() = REPLACE_SAME
 
@@ -89,7 +87,7 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
     /** State node and corresponding state table. */
     internal class TableState(override val stateType: StateType,
                               override val tokenType: TokenType? = null,
-                              override val lexType: LexType = NONE,
+                              override val lexType: LexType = LexType.NONE,
                               override val replacement: Int = REPLACE_SAME,
                               var delegate: State = ERROR_STATE,
                               setup: TableState.() -> Unit = { }) : State {
@@ -121,7 +119,7 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
 
         fun selfRepeatingDelegate(stateType: StateType,
                                   tokenType: TokenType? = null,
-                                  lexType: LexType = NONE) {
+                                  lexType: LexType = LexType.NONE) {
             delegate = object : State {
                 override val stateType = stateType
                 override val tokenType = tokenType
@@ -133,7 +131,7 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
         fun delta(chars: String,
                   stateType: StateType,
                   tokenType: TokenType? = null,
-                  lexType: LexType = NONE,
+                  lexType: LexType = LexType.NONE,
                   replacement: Int = REPLACE_SAME,
                   delegate: State = this,
                   setup: TableState.(String) -> Unit = { }): TableState {
@@ -199,83 +197,83 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
         private val REPLACE_NOTHING = -2
 
         /** Synthetic state for EOF to trigger a flush of the last token. */
-        private val EOF_STATE = RepeatingState(END)
+        private val EOF_STATE = RepeatingState(StateType.END)
 
         /** Error state. */
-        private val ERROR_STATE = RepeatingState(ERROR)
+        private val ERROR_STATE = RepeatingState(StateType.ERROR)
 
         /** Initial state. */
-        private val INITIAL_STATE = TableState(INITIAL) {
+        private val INITIAL_STATE = TableState(StateType.INITIAL) {
             val initialState = this
 
-            delta("(", START_AND_TERMINAL, LEFT_PAREN)
-            delta(")", START_AND_TERMINAL, RIGHT_PAREN)
-            delta("[", START_AND_TERMINAL, LEFT_BRACKET)
-            delta("]", START_AND_TERMINAL, RIGHT_BRACKET)
-            delta("{", START_AND_TERMINAL, LEFT_CURLY)
-            delta("}", START_AND_TERMINAL, RIGHT_CURLY)
-            delta(":", START_AND_TERMINAL, COLON)
-            delta(",", START_AND_TERMINAL, COMMA)
-            delta("*", START_AND_TERMINAL, STAR)
-            delta(";", START_AND_TERMINAL, SEMICOLON)
-            delta("?", START_AND_TERMINAL, QUESTION_MARK)
+            delta("(", StateType.START_AND_TERMINAL, TokenType.LEFT_PAREN)
+            delta(")", StateType.START_AND_TERMINAL, TokenType.RIGHT_PAREN)
+            delta("[", StateType.START_AND_TERMINAL, TokenType.LEFT_BRACKET)
+            delta("]", StateType.START_AND_TERMINAL, TokenType.RIGHT_BRACKET)
+            delta("{", StateType.START_AND_TERMINAL, TokenType.LEFT_CURLY)
+            delta("}", StateType.START_AND_TERMINAL, TokenType.RIGHT_CURLY)
+            delta(":", StateType.START_AND_TERMINAL, TokenType.COLON)
+            delta(",", StateType.START_AND_TERMINAL, TokenType.COMMA)
+            delta("*", StateType.START_AND_TERMINAL, TokenType.STAR)
+            delta(";", StateType.START_AND_TERMINAL, TokenType.SEMICOLON)
+            delta("?", StateType.START_AND_TERMINAL, TokenType.QUESTION_MARK)
 
-            delta(NON_OVERLOADED_OPERATOR_CHARS, START_AND_TERMINAL, OPERATOR)
+            delta(NON_OVERLOADED_OPERATOR_CHARS, StateType.START_AND_TERMINAL, TokenType.OPERATOR)
 
-            delta("|", START) {
-                delta("|", TERMINAL, OPERATOR, delegate = initialState)
+            delta("|", StateType.START) {
+                delta("|", StateType.TERMINAL, TokenType.OPERATOR, delegate = initialState)
             }
-            delta("!", START) {
-                delta("=", TERMINAL, OPERATOR, delegate = initialState)
+            delta("!", StateType.START) {
+                delta("=", StateType.TERMINAL, TokenType.OPERATOR, delegate = initialState)
             }
-            delta("<", START_AND_TERMINAL, OPERATOR) {
-                delta("=", TERMINAL, OPERATOR, delegate = initialState)
-                delta(">", TERMINAL, OPERATOR, delegate = initialState)
-                delta("<", TERMINAL, LEFT_DOUBLE_ANGLE_BRACKET, delegate = initialState)
+            delta("<", StateType.START_AND_TERMINAL, TokenType.OPERATOR) {
+                delta("=", StateType.TERMINAL, TokenType.OPERATOR, delegate = initialState)
+                delta(">", StateType.TERMINAL, TokenType.OPERATOR, delegate = initialState)
+                delta("<", StateType.TERMINAL, TokenType.LEFT_DOUBLE_ANGLE_BRACKET, delegate = initialState)
             }
-            delta(">", START_AND_TERMINAL, OPERATOR) {
-                delta("=", TERMINAL, OPERATOR, delegate = initialState)
-                delta(">", TERMINAL, RIGHT_DOUBLE_ANGLE_BRACKET, delegate = initialState)
+            delta(">", StateType.START_AND_TERMINAL, TokenType.OPERATOR) {
+                delta("=", StateType.TERMINAL, TokenType.OPERATOR, delegate = initialState)
+                delta(">", StateType.TERMINAL, TokenType.RIGHT_DOUBLE_ANGLE_BRACKET, delegate = initialState)
             }
 
-            delta(IDENT_START_CHARS, START_AND_TERMINAL, IDENTIFIER) {
-                delta(IDENT_CONTINUE_CHARS, TERMINAL, IDENTIFIER)
+            delta(IDENT_START_CHARS, StateType.START_AND_TERMINAL, TokenType.IDENTIFIER) {
+                delta(IDENT_CONTINUE_CHARS, StateType.TERMINAL, TokenType.IDENTIFIER)
             }
 
             fun TableState.deltaDecimalInteger(stateType: StateType, lexType: LexType, setup: TableState.(String) -> Unit = { }): Unit {
-                delta(DIGIT_CHARS, stateType, LITERAL, lexType, delegate = initialState) {
-                    delta(DIGIT_CHARS, TERMINAL, LITERAL, lexType)
+                delta(DIGIT_CHARS, stateType, TokenType.LITERAL, lexType, delegate = initialState) {
+                    delta(DIGIT_CHARS, StateType.TERMINAL, TokenType.LITERAL, lexType)
                     setup(it)
                 }
             }
 
             fun TableState.deltaDecimalFraction(setup: TableState.(String) -> Unit = { }): Unit {
-                delta(".", TERMINAL, LITERAL, DECIMAL) {
-                    deltaDecimalInteger(TERMINAL, DECIMAL, setup)
+                delta(".", StateType.TERMINAL, TokenType.LITERAL, LexType.DECIMAL) {
+                    deltaDecimalInteger(StateType.TERMINAL, LexType.DECIMAL, setup)
                 }
             }
 
             fun TableState.deltaExponent(setup: TableState.(String) -> Unit = { }): Unit {
-                delta(E_NOTATION_CHARS, INCOMPLETE, delegate = ERROR_STATE) {
-                    delta(SIGN_CHARS, INCOMPLETE, delegate = ERROR_STATE) {
-                        deltaDecimalInteger(TERMINAL, DECIMAL, setup)
+                delta(E_NOTATION_CHARS, StateType.INCOMPLETE, delegate = ERROR_STATE) {
+                    delta(SIGN_CHARS, StateType.INCOMPLETE, delegate = ERROR_STATE) {
+                        deltaDecimalInteger(StateType.TERMINAL, LexType.DECIMAL, setup)
                     }
-                    deltaDecimalInteger(TERMINAL, DECIMAL, setup)
+                    deltaDecimalInteger(StateType.TERMINAL, LexType.DECIMAL, setup)
                 }
             }
 
             fun TableState.deltaNumber(stateType: StateType) {
-                deltaDecimalInteger(stateType, INTEGER) {
+                deltaDecimalInteger(stateType, LexType.INTEGER) {
                     deltaDecimalFraction {
                         deltaExponent { }
                     }
                     deltaExponent { }
                 }
                 when (stateType) {
-                    START_AND_TERMINAL -> {
+                    StateType.START_AND_TERMINAL -> {
                         // at the top-level we need to support dot as a special
-                        delta(".", START_AND_TERMINAL, DOT) {
-                            deltaDecimalInteger(TERMINAL, DECIMAL) {
+                        delta(".", StateType.START_AND_TERMINAL, TokenType.DOT) {
+                            deltaDecimalInteger(StateType.TERMINAL, LexType.DECIMAL) {
                                 deltaExponent { }
                             }
                         }
@@ -288,108 +286,108 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
                 }
             }
 
-            deltaNumber(START_AND_TERMINAL)
+            deltaNumber(StateType.START_AND_TERMINAL)
 
             fun TableState.deltaQuote(quoteChar: String, tokenType: TokenType, lexType: LexType): Unit {
-                delta(quoteChar, START, replacement = REPLACE_NOTHING) {
-                    selfRepeatingDelegate(INCOMPLETE)
+                delta(quoteChar, StateType.START, replacement = REPLACE_NOTHING) {
+                    selfRepeatingDelegate(StateType.INCOMPLETE)
                     val quoteState = this
-                    delta(quoteChar, TERMINAL, tokenType, lexType = lexType, replacement = REPLACE_NOTHING, delegate = initialState) {
-                        delta(quoteChar, INCOMPLETE, delegate = quoteState)
+                    delta(quoteChar, StateType.TERMINAL, tokenType, lexType = lexType, replacement = REPLACE_NOTHING, delegate = initialState) {
+                        delta(quoteChar, StateType.INCOMPLETE, delegate = quoteState)
                     }
                 }
             }
 
-            deltaQuote(SINGLE_QUOTE_CHARS, LITERAL, SQ_STRING)
-            deltaQuote(DOUBLE_QUOTE_CHARS, QUOTED_IDENTIFIER, DQ_STRING)
+            deltaQuote(SINGLE_QUOTE_CHARS, TokenType.LITERAL, LexType.SQ_STRING)
+            deltaQuote(DOUBLE_QUOTE_CHARS, TokenType.QUOTED_IDENTIFIER, LexType.DQ_STRING)
 
             // Ion literals - very partial lexing of Ion to support nested back-tick
             // in Ion strings/symbols/comments
-            delta(BACKTICK_CHARS, START, replacement = REPLACE_NOTHING) {
-                selfRepeatingDelegate(INCOMPLETE)
+            delta(BACKTICK_CHARS, StateType.START, replacement = REPLACE_NOTHING) {
+                selfRepeatingDelegate(StateType.INCOMPLETE)
                 val quoteState = this
 
-                delta("/", INCOMPLETE) {
-                    delta("/", INCOMPLETE) {
+                delta("/", StateType.INCOMPLETE) {
+                    delta("/", StateType.INCOMPLETE) {
                         val ionCommentState = this
-                        selfRepeatingDelegate(INCOMPLETE)
-                        delta(BACKTICK_CHARS, INCOMPLETE, delegate = ionCommentState)
-                        delta(NL_WHITESPACE_CHARS, INCOMPLETE, delegate = quoteState)
+                        selfRepeatingDelegate(StateType.INCOMPLETE)
+                        delta(BACKTICK_CHARS, StateType.INCOMPLETE, delegate = ionCommentState)
+                        delta(NL_WHITESPACE_CHARS, StateType.INCOMPLETE, delegate = quoteState)
                     }
-                    delta("*", INCOMPLETE) {
+                    delta("*",  StateType.INCOMPLETE) {
                         val ionCommentState = this
-                        selfRepeatingDelegate(INCOMPLETE)
-                        delta(BACKTICK_CHARS, INCOMPLETE, delegate = ionCommentState)
-                        delta("*", INCOMPLETE) {
-                            delta("/", INCOMPLETE, delegate = quoteState)
+                        selfRepeatingDelegate(StateType.INCOMPLETE)
+                        delta(BACKTICK_CHARS, StateType.INCOMPLETE, delegate = ionCommentState)
+                        delta("*", StateType.INCOMPLETE) {
+                            delta("/", StateType.INCOMPLETE, delegate = quoteState)
                         }
                     }
                 }
-                delta(DOUBLE_QUOTE_CHARS, INCOMPLETE) {
+                delta(DOUBLE_QUOTE_CHARS, StateType.INCOMPLETE) {
                     val ionStringState = this
-                    selfRepeatingDelegate(INCOMPLETE)
+                    selfRepeatingDelegate(StateType.INCOMPLETE)
 
-                    delta("\\", INCOMPLETE) {
-                        delta(DOUBLE_QUOTE_CHARS, INCOMPLETE, delegate = ionStringState)
+                    delta("\\", StateType.INCOMPLETE) {
+                        delta(DOUBLE_QUOTE_CHARS, StateType.INCOMPLETE, delegate = ionStringState)
                     }
-                    delta(BACKTICK_CHARS, INCOMPLETE, delegate = ionStringState)
-                    delta(DOUBLE_QUOTE_CHARS, INCOMPLETE, delegate = quoteState)
+                    delta(BACKTICK_CHARS, StateType.INCOMPLETE, delegate = ionStringState)
+                    delta(DOUBLE_QUOTE_CHARS, StateType.INCOMPLETE, delegate = quoteState)
                 }
-                delta(SINGLE_QUOTE_CHARS, INCOMPLETE) {
+                delta(SINGLE_QUOTE_CHARS, StateType.INCOMPLETE) {
                     val ionStringState = this
-                    selfRepeatingDelegate(INCOMPLETE)
+                    selfRepeatingDelegate(StateType.INCOMPLETE)
 
-                    delta("\\", INCOMPLETE) {
-                        delta(SINGLE_QUOTE_CHARS, INCOMPLETE, delegate = ionStringState)
+                    delta("\\", StateType.INCOMPLETE) {
+                        delta(SINGLE_QUOTE_CHARS, StateType.INCOMPLETE, delegate = ionStringState)
                     }
-                    delta(BACKTICK_CHARS, INCOMPLETE, delegate = ionStringState)
-                    delta(SINGLE_QUOTE_CHARS, INCOMPLETE, delegate = quoteState) {
-                        delta(SINGLE_QUOTE_CHARS, INCOMPLETE, delegate = ionStringState) {
+                    delta(BACKTICK_CHARS, StateType.INCOMPLETE, delegate = ionStringState)
+                    delta(SINGLE_QUOTE_CHARS, StateType.INCOMPLETE, delegate = quoteState) {
+                        delta(SINGLE_QUOTE_CHARS, StateType.INCOMPLETE, delegate = ionStringState) {
                             val ionLongStringState = this
-                            selfRepeatingDelegate(INCOMPLETE)
+                            selfRepeatingDelegate(StateType.INCOMPLETE)
 
-                            delta("\\", INCOMPLETE) {
-                                delta(SINGLE_QUOTE_CHARS, INCOMPLETE, delegate = ionLongStringState)
+                            delta("\\", StateType.INCOMPLETE) {
+                                delta(SINGLE_QUOTE_CHARS, StateType.INCOMPLETE, delegate = ionLongStringState)
                             }
-                            delta(BACKTICK_CHARS, INCOMPLETE, delegate = ionLongStringState)
-                            delta(SINGLE_QUOTE_CHARS, INCOMPLETE, delegate = ionLongStringState) {
-                                delta(SINGLE_QUOTE_CHARS, INCOMPLETE, delegate = ionLongStringState) {
-                                    delta(SINGLE_QUOTE_CHARS, INCOMPLETE, delegate = quoteState)
+                            delta(BACKTICK_CHARS, StateType.INCOMPLETE, delegate = ionLongStringState)
+                            delta(SINGLE_QUOTE_CHARS, StateType.INCOMPLETE, delegate = ionLongStringState) {
+                                delta(SINGLE_QUOTE_CHARS, StateType.INCOMPLETE, delegate = ionLongStringState) {
+                                    delta(SINGLE_QUOTE_CHARS, StateType.INCOMPLETE, delegate = quoteState)
                                 }
                             }
                         }
                     }
                 }
 
-                delta("{", INCOMPLETE) {
-                    delta("{", INCOMPLETE) {
-                        selfRepeatingDelegate(INCOMPLETE)
-                        delta("}", INCOMPLETE) {
-                            delta("}", INCOMPLETE, delegate = quoteState)
+                delta("{", StateType.INCOMPLETE) {
+                    delta("{", StateType.INCOMPLETE) {
+                        selfRepeatingDelegate(StateType.INCOMPLETE)
+                        delta("}", StateType.INCOMPLETE) {
+                            delta("}", StateType.INCOMPLETE, delegate = quoteState)
                         }
                     }
                 }
 
-                delta(BACKTICK_CHARS, TERMINAL, TokenType.ION_LITERAL, LexType.ION_LITERAL, replacement = REPLACE_NOTHING, delegate = initialState)
+                delta(BACKTICK_CHARS, StateType.TERMINAL, TokenType.ION_LITERAL, LexType.ION_LITERAL, replacement = REPLACE_NOTHING, delegate = initialState)
             }
 
-            delta(ALL_WHITESPACE_CHARS, START_AND_TERMINAL, null, WHITESPACE)
+            delta(ALL_WHITESPACE_CHARS, StateType.START_AND_TERMINAL, null, LexType.WHITESPACE)
 
             // block comment and divide operator
-            delta("/", START_AND_TERMINAL, OPERATOR) {
-                delta("*", INCOMPLETE) {
-                    selfRepeatingDelegate(INCOMPLETE)
-                    delta("*", INCOMPLETE) {
-                        delta("/", TERMINAL, null, WHITESPACE, delegate = initialState)
+            delta("/", StateType.START_AND_TERMINAL, TokenType.OPERATOR) {
+                delta("*", StateType.INCOMPLETE) {
+                    selfRepeatingDelegate(StateType.INCOMPLETE)
+                    delta("*", StateType.INCOMPLETE) {
+                        delta("/", StateType.TERMINAL, null, LexType.WHITESPACE, delegate = initialState)
                     }
                 }
             }
             // line comment, subtraction operator, and signed positive integer
-            delta("-", START_AND_TERMINAL, OPERATOR) {
+            delta("-", StateType.START_AND_TERMINAL, TokenType.OPERATOR) {
                 // inline comments don't need a special terminator before EOF
-                delta("-", TERMINAL, null, WHITESPACE) {
-                    selfRepeatingDelegate(TERMINAL, null, WHITESPACE)
-                    delta(NL_WHITESPACE_CHARS, TERMINAL, null, WHITESPACE, delegate = initialState)
+                delta("-", StateType.TERMINAL, null, LexType.WHITESPACE) {
+                    selfRepeatingDelegate(StateType.TERMINAL, null, LexType.WHITESPACE)
+                    delta(NL_WHITESPACE_CHARS, StateType.TERMINAL, null, LexType.WHITESPACE, delegate = initialState)
                 }
             }
 
@@ -409,9 +407,9 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
      */
     private fun makePropertyBag(tokenString: String, tracker: PositionTracker): PropertyValueMap {
         val pvmap = PropertyValueMap()
-        pvmap[LINE_NUMBER] =  tracker.line
-        pvmap[COLUMN_NUMBER] =  tracker.col
-        pvmap[TOKEN_STRING] =  tokenString
+        pvmap[Property.LINE_NUMBER] =  tracker.line
+        pvmap[Property.COLUMN_NUMBER] =  tracker.col
+        pvmap[Property.TOKEN_STRING] =  tokenString
         return pvmap
     }
 
@@ -434,16 +432,16 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
             tokenCodePointCount++;
 
             fun errInvalidChar(): Nothing =
-                throw LexerException(errorCode = LEXER_INVALID_CHAR, errorContext = makePropertyBag(repr(cp), tracker))
+                throw LexerException(errorCode = ErrorCode.LEXER_INVALID_CHAR, errorContext = makePropertyBag(repr(cp), tracker))
 
             fun errInvalidOperator(operator: String): Nothing =
-                throw LexerException(errorCode = LEXER_INVALID_OPERATOR, errorContext = makePropertyBag(operator, tracker))
+                throw LexerException(errorCode = ErrorCode.LEXER_INVALID_OPERATOR, errorContext = makePropertyBag(operator, tracker))
 
             fun errInvalidLiteral(literal: String): Nothing =
-                throw LexerException(errorCode = LEXER_INVALID_LITERAL, errorContext = makePropertyBag(literal, tracker))
+                throw LexerException(errorCode = ErrorCode.LEXER_INVALID_LITERAL, errorContext = makePropertyBag(literal, tracker))
 
             fun errInvalidIonLiteral(literal: String, cause: IonException): Nothing =
-                throw LexerException(errorCode = LEXER_INVALID_ION_LITERAL,
+                throw LexerException(errorCode = ErrorCode.LEXER_INVALID_ION_LITERAL,
                                      errorContext = makePropertyBag(literal, tracker),
                                      cause = cause)
 
@@ -459,89 +457,89 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
             val nextType = next.stateType
             when {
 
-                nextType == ERROR -> errInvalidChar()
+                nextType == StateType.ERROR -> errInvalidChar()
                 nextType.beginsToken -> {
                     // we can only start a token if we've properly ended another one.
-                    if (currType != INITIAL && !currType.endsToken) {
+                    if (currType != StateType.INITIAL && !currType.endsToken) {
                         errInvalidChar()
                     }
-                    if (currType.endsToken && curr.lexType != WHITESPACE) {
+                    if (currType.endsToken && curr.lexType != LexType.WHITESPACE) {
                         // flush out the previous token
                         val text = buffer.toString()
 
                         var tokenType = curr.tokenType!!
                         val ionValue = when (tokenType) {
-                            OPERATOR -> {
+                            TokenType.OPERATOR -> {
                                 val unaliased = OPERATOR_ALIASES[text] ?: text
                                 when (unaliased) {
                                     in ALL_OPERATORS -> ion.newSymbol(unaliased)
                                     else -> errInvalidOperator(unaliased)
                                 }
                             }
-                            IDENTIFIER -> {
+                            TokenType.IDENTIFIER -> {
                                 val lower = text.toLowerCase()
                                 when {
-                                    curr.lexType == DQ_STRING -> ion.newSymbol(text)
+                                    curr.lexType == LexType.DQ_STRING -> ion.newSymbol(text)
                                     lower in ALL_SINGLE_LEXEME_OPERATORS -> {
                                         // an operator that looks like a keyword
-                                        tokenType = OPERATOR
+                                        tokenType = TokenType.OPERATOR
                                         ion.newSymbol(lower)
                                     }
                                     lower == "as" -> {
                                         // AS token
-                                        tokenType = AS
+                                        tokenType = TokenType.AS
                                         ion.newSymbol(lower)
                                     }
                                     lower == "at" -> {
                                         // AS token
-                                        tokenType = AT
+                                        tokenType = TokenType.AT
                                         ion.newSymbol(lower)
                                     }
                                     lower == "by" -> {
                                         // BY token
-                                        tokenType = BY
+                                        tokenType = TokenType.BY
                                         ion.newSymbol(lower)
                                     }
                                     lower == "null" -> {
                                         // literal null
-                                        tokenType = NULL
+                                        tokenType = TokenType.NULL
                                         ion.newNull()
                                     }
                                     lower == "missing" -> {
                                         // special literal for MISSING
-                                        tokenType = MISSING
+                                        tokenType = TokenType.MISSING
                                         ion.newNull()
                                     }
                                     lower == "for" -> {
                                         // used as an argument delimiter for substring
-                                        tokenType = FOR
+                                        tokenType = TokenType.FOR
                                         ion.newSymbol(lower)
                                     }
                                     lower == "asc" -> {
-                                        tokenType = ASC
+                                        tokenType = TokenType.ASC
                                         ion.newSymbol(lower)
                                     }
                                     lower == "desc" -> {
-                                        tokenType = DESC
+                                        tokenType = TokenType.DESC
                                         ion.newSymbol(lower)
                                     }
                                     lower in BOOLEAN_KEYWORDS -> {
                                         // literal boolean
-                                        tokenType = LITERAL
+                                        tokenType = TokenType.LITERAL
                                         ion.newBool(lower == "true")
                                     }
                                     lower in KEYWORDS -> {
                                         // unquoted identifier that is a keyword
-                                        tokenType = KEYWORD
+                                        tokenType = TokenType.KEYWORD
                                         ion.newSymbol(KEYWORD_ALIASES[lower] ?: lower)
                                     }
                                     else -> ion.newSymbol(text)
                                 }
                             }
-                            LITERAL -> when (curr.lexType) {
-                                SQ_STRING   -> ion.newString(text)
-                                INTEGER     -> ion.newInt(BigInteger(text, 10))
-                                DECIMAL     -> try {
+                            TokenType.LITERAL -> when (curr.lexType) {
+                                LexType.SQ_STRING   -> ion.newString(text)
+                                LexType.INTEGER     -> ion.newInt(BigInteger(text, 10))
+                                LexType.DECIMAL     -> try {
                                     ion.newDecimal(bigDecimalOf(text))
                                 }
                                 catch (e: NumberFormatException) {
@@ -560,7 +558,7 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
                                     errInvalidIonLiteral(text, e)
                                 }
                             }
-                            QUESTION_MARK -> {
+                            TokenType.QUESTION_MARK -> {
                                 ion.newInt(++parameterCt)
                             }
                             else -> ion.newSymbol(text)
@@ -588,7 +586,7 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
             }
 
             // if next state is the EOF marker add it to `tokens`.
-            if (next.stateType == END) tokens.add(
+            if (next.stateType == StateType.END) tokens.add(
                 Token(
                     type = TokenType.EOF,
                     value = ion.newSymbol("EOF"),
