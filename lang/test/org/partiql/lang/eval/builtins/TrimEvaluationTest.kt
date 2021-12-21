@@ -14,9 +14,9 @@
 
 package org.partiql.lang.eval.builtins
 
-import org.partiql.lang.eval.*
-import org.partiql.lang.syntax.*
-import org.junit.*
+import org.junit.Test
+import org.partiql.lang.eval.EvaluatorTestBase
+import org.partiql.lang.eval.NodeMetadata
 
 
 class TrimEvaluationTest : EvaluatorTestBase() {

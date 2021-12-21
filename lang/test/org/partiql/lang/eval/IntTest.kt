@@ -14,10 +14,11 @@
 
 package org.partiql.lang.eval
 
-import junitparams.*
-import org.junit.*
-import java.math.*
-import java.util.*
+import junitparams.Parameters
+import org.junit.BeforeClass
+import org.junit.Test
+import java.math.BigInteger
+import java.util.Random
 
 class IntTest : EvaluatorTestBase() {
     companion object {

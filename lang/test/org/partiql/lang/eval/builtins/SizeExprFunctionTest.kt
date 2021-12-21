@@ -14,12 +14,15 @@
 
 package org.partiql.lang.eval.builtins
 
-import org.junit.*
-import com.amazon.ion.*
-import org.partiql.lang.*
-import org.partiql.lang.errors.*
-import org.partiql.lang.eval.*
-import org.partiql.lang.util.*
+import com.amazon.ion.IonValue
+import org.junit.Test
+import org.partiql.lang.TestBase
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
+import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.util.softAssert
 
 class SizeExprFunctionTest : TestBase() {
     private val subject = SizeExprFunction(valueFactory)

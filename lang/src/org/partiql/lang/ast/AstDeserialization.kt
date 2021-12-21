@@ -14,8 +14,23 @@
 
 package org.partiql.lang.ast
 
-import com.amazon.ion.*
-import org.partiql.lang.util.*
+import com.amazon.ion.IonSexp
+import com.amazon.ion.IonSymbol
+import com.amazon.ion.IonSystem
+import com.amazon.ion.IonValue
+import org.partiql.lang.util.args
+import org.partiql.lang.util.arity
+import org.partiql.lang.util.asIonInt
+import org.partiql.lang.util.asIonSexp
+import org.partiql.lang.util.asIonStruct
+import org.partiql.lang.util.asIonSymbol
+import org.partiql.lang.util.checkThreadInterrupted
+import org.partiql.lang.util.field
+import org.partiql.lang.util.longValue
+import org.partiql.lang.util.singleArgWithTag
+import org.partiql.lang.util.stringValue
+import org.partiql.lang.util.tagText
+import org.partiql.lang.util.toListOfIonSexp
 
 /**
  * Deserializes an s-expression based AST.

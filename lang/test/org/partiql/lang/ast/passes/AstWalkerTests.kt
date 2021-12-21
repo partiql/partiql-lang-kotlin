@@ -14,14 +14,21 @@
 
 package org.partiql.lang.ast.passes
 
-import com.amazon.ion.system.*
-import org.partiql.lang.ast.*
-import org.partiql.lang.syntax.*
-import junitparams.*
-import org.junit.*
+import com.amazon.ion.system.IonSystemBuilder
+
+import junitparams.JUnitParamsRunner
+import junitparams.Parameters
 import org.junit.Test
-import org.junit.runner.*
-import kotlin.test.*
+import org.junit.runner.RunWith
+import org.partiql.lang.ast.DataManipulationOperation
+import org.partiql.lang.ast.DataType
+import org.partiql.lang.ast.ExprNode
+import org.partiql.lang.ast.FromSource
+import org.partiql.lang.ast.PathComponent
+import org.partiql.lang.ast.SelectListItem
+import org.partiql.lang.ast.SelectProjection
+import org.partiql.lang.syntax.SqlParser
+import kotlin.test.assertEquals
 
 /**
  * [AstWalker] simply traverses each node in the [ExprNode] instance but performs no transformations.

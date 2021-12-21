@@ -14,9 +14,9 @@
 
 package org.partiql.lang.ast
 
-import org.partiql.lang.*
-import junitparams.*
-import org.junit.*
+import junitparams.Parameters
+import org.junit.Test
+import org.partiql.lang.TestBase
 
 /**
  * This class contains tests for (de)serialization of metas.

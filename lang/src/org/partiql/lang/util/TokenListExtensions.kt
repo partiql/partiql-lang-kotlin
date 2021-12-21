@@ -17,7 +17,11 @@ package org.partiql.lang.util
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
-import org.partiql.lang.syntax.*
+import org.partiql.lang.syntax.ParserException
+import org.partiql.lang.syntax.SourceSpan
+import org.partiql.lang.syntax.SqlParser
+import org.partiql.lang.syntax.Token
+import org.partiql.lang.syntax.TokenType
 
 /**
  * Predicate to check if the list of [Token]'s only contains a end of statement with

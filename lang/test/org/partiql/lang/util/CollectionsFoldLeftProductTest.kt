@@ -14,8 +14,6 @@
 
 package org.partiql.lang.util
 
-import java.util.*
-
 class CollectionsFoldLeftProductTest : CollectionsProductTest() {
     var expectedCount: Int = 0
     var actualCount: Int = 0

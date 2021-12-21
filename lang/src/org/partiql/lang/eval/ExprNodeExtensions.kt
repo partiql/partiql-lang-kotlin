@@ -14,8 +14,13 @@
 
 package org.partiql.lang.eval
 
-import com.amazon.ion.*
-import org.partiql.lang.ast.*
+import com.amazon.ion.IonString
+import org.partiql.lang.ast.ExprNode
+import org.partiql.lang.ast.Literal
+import org.partiql.lang.ast.MetaContainer
+import org.partiql.lang.ast.Path
+import org.partiql.lang.ast.PathComponentExpr
+import org.partiql.lang.ast.VariableReference
 
 
 /**
@@ -30,7 +35,7 @@ fun ExprNode.extractColumnAlias(idx: Int): String =
         val (name, _, _, _: MetaContainer) = this
         name
     }
-    is Path              -> {
+    is Path -> {
         this.extractColumnAlias(idx)
     }
     else                 -> syntheticColumnName(idx)
@@ -51,7 +56,7 @@ fun Path.extractColumnAlias(idx: Int): String {
                 else                                                          -> syntheticColumnName(idx)
             }
         }
-        else                 -> syntheticColumnName(idx)
+        else -> syntheticColumnName(idx)
     }
 }
 

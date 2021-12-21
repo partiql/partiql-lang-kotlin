@@ -14,8 +14,9 @@ package org.partiql.lang.ast
  *  language governing permissions and limitations under the License.
  */
 
-import com.amazon.ion.system.*
-import org.junit.*
+import com.amazon.ion.system.IonSystemBuilder
+import org.junit.Assert
+import org.junit.Test
 import org.partiql.lang.syntax.SqlParser
 
 class IsIonLiteralMetaTest {

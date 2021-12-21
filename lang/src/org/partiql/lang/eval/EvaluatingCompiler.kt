@@ -14,12 +14,77 @@
 
 package org.partiql.lang.eval
 
-
-import com.amazon.ion.*
-import org.partiql.lang.ast.*
+import com.amazon.ion.IntegerSize
+import com.amazon.ion.IonInt
+import com.amazon.ion.IonSexp
+import com.amazon.ion.IonString
+import com.amazon.ion.IonValue
+import org.partiql.lang.ast.AggregateCallSiteListMeta
+import org.partiql.lang.ast.AggregateRegisterIdMeta
+import org.partiql.lang.ast.AstDeserializerBuilder
+import org.partiql.lang.ast.AstVersion
+import org.partiql.lang.ast.CallAgg
+import org.partiql.lang.ast.CreateIndex
+import org.partiql.lang.ast.CreateTable
+import org.partiql.lang.ast.DataManipulation
+import org.partiql.lang.ast.DateTimeType
+import org.partiql.lang.ast.DropIndex
+import org.partiql.lang.ast.DropTable
+import org.partiql.lang.ast.Exec
+import org.partiql.lang.ast.ExprNode
+import org.partiql.lang.ast.FromSource
+import org.partiql.lang.ast.FromSourceExpr
+import org.partiql.lang.ast.FromSourceJoin
+import org.partiql.lang.ast.FromSourceLet
+import org.partiql.lang.ast.FromSourceUnpivot
+import org.partiql.lang.ast.GroupBy
+import org.partiql.lang.ast.GroupByItem
+import org.partiql.lang.ast.GroupingStrategy
+import org.partiql.lang.ast.IsCountStarMeta
+import org.partiql.lang.ast.JoinOp
+import org.partiql.lang.ast.LetSource
+import org.partiql.lang.ast.Literal
+import org.partiql.lang.ast.LiteralMissing
+import org.partiql.lang.ast.MetaContainer
+import org.partiql.lang.ast.NAry
+import org.partiql.lang.ast.NAryOp
+import org.partiql.lang.ast.Parameter
+import org.partiql.lang.ast.Path
+import org.partiql.lang.ast.PathComponent
+import org.partiql.lang.ast.PathComponentExpr
+import org.partiql.lang.ast.PathComponentUnpivot
+import org.partiql.lang.ast.PathComponentWildcard
+import org.partiql.lang.ast.ScopeQualifier
+import org.partiql.lang.ast.SearchedCase
+import org.partiql.lang.ast.Select
+import org.partiql.lang.ast.SelectListItemExpr
+import org.partiql.lang.ast.SelectListItemProjectAll
+import org.partiql.lang.ast.SelectListItemStar
+import org.partiql.lang.ast.SelectProjectionList
+import org.partiql.lang.ast.SelectProjectionPivot
+import org.partiql.lang.ast.SelectProjectionValue
+import org.partiql.lang.ast.Seq
+import org.partiql.lang.ast.SeqType
+import org.partiql.lang.ast.SetQuantifier
+import org.partiql.lang.ast.SimpleCase
+import org.partiql.lang.ast.SourceLocationMeta
+import org.partiql.lang.ast.SqlDataType
+import org.partiql.lang.ast.Struct
+import org.partiql.lang.ast.SymbolicName
+import org.partiql.lang.ast.Typed
+import org.partiql.lang.ast.TypedOp
+import org.partiql.lang.ast.UniqueNameMeta
+import org.partiql.lang.ast.VariableReference
+import org.partiql.lang.ast.toAstExpr
+import org.partiql.lang.ast.toAstStatement
+import org.partiql.lang.ast.toExprNode
+import org.partiql.lang.ast.toExprNodeSetQuantifier
+import org.partiql.lang.ast.toPartiQlMetaContainer
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.errors.*
-import org.partiql.lang.eval.binding.*
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
+import org.partiql.lang.eval.binding.Alias
+import org.partiql.lang.eval.binding.localsBinder
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.like.PatternPart
 import org.partiql.lang.eval.like.executePattern
@@ -27,10 +92,28 @@ import org.partiql.lang.eval.like.parsePattern
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
 import org.partiql.lang.syntax.SqlParser
-import org.partiql.lang.util.*
-import java.math.*
-import java.util.*
-import kotlin.collections.*
+import org.partiql.lang.util.bigDecimalOf
+import org.partiql.lang.util.case
+import org.partiql.lang.util.checkThreadInterrupted
+import org.partiql.lang.util.codePointSequence
+import org.partiql.lang.util.compareTo
+import org.partiql.lang.util.div
+import org.partiql.lang.util.drop
+import org.partiql.lang.util.foldLeftProduct
+import org.partiql.lang.util.isZero
+import org.partiql.lang.util.minus
+import org.partiql.lang.util.plus
+import org.partiql.lang.util.rem
+import org.partiql.lang.util.stringValue
+import org.partiql.lang.util.take
+import org.partiql.lang.util.times
+import org.partiql.lang.util.totalMinutes
+import org.partiql.lang.util.unaryMinus
+import java.math.BigDecimal
+import java.util.LinkedList
+import java.util.Stack
+import java.util.TreeSet
+import kotlin.collections.List
 
 /**
  * A basic compiler that converts an instance of [ExprNode] to an [Expression].
@@ -139,7 +222,8 @@ internal class EvaluatingCompiler(
     /** Dispatch table for built-in aggregate functions. */
     private val builtinAggregates: Map<Pair<String, SetQuantifier>, ExprAggregatorFactory> = {
         val countAccFunc: (Number?, ExprValue) -> Number = { curr, _ -> curr!! + 1L }
-        val sumAccFunc: (Number?, ExprValue) -> Number = { curr, next -> curr?.let { it + next.numberValue() } ?: next.numberValue() }
+        val sumAccFunc: (Number?, ExprValue) -> Number =
+                { curr, next -> curr?.let { it + next.numberValue() } ?: next.numberValue() }
         val minAccFunc = comparisonAccumulator { left, right -> left < right }
         val maxAccFunc = comparisonAccumulator { left, right -> left > right }
 
@@ -214,7 +298,8 @@ internal class EvaluatingCompiler(
      */
     fun compile(originalAst: ExprNode): Expression {
         val visitorTransformer = compileOptions.visitorTransformMode.createVisitorTransform()
-        val transformedAst = visitorTransformer.transformStatement(originalAst.toAstStatement()).toExprNode(valueFactory.ion)
+        val transformedAst =
+                visitorTransformer.transformStatement(originalAst.toAstStatement()).toExprNode(valueFactory.ion)
 
         PartiqlAstSanityValidator.validate(transformedAst.toAstStatement())
 
@@ -270,20 +355,20 @@ internal class EvaluatingCompiler(
     private fun compileExprNode(expr: ExprNode): ThunkEnv {
         checkThreadInterrupted()
         return when (expr) {
-            is Literal           -> compileLiteral(expr)
-            is LiteralMissing    -> compileLiteralMissing(expr)
+            is Literal -> compileLiteral(expr)
+            is LiteralMissing -> compileLiteralMissing(expr)
             is VariableReference -> compileVariableReference(expr)
-            is NAry              -> compileNAry(expr)
-            is Typed             -> compileTyped(expr)
-            is SimpleCase        -> compileSimpleCase(expr)
-            is SearchedCase      -> compileSearchedCase(expr)
-            is Path              -> compilePath(expr)
-            is Struct            -> compileStruct(expr)
-            is Seq               -> compileSeq(expr)
-            is Select            -> compileSelect(expr)
-            is CallAgg           -> compileCallAgg(expr)
-            is Parameter         -> compileParameter(expr)
-            is DataManipulation  -> err(
+            is NAry -> compileNAry(expr)
+            is Typed -> compileTyped(expr)
+            is SimpleCase -> compileSimpleCase(expr)
+            is SearchedCase -> compileSearchedCase(expr)
+            is Path -> compilePath(expr)
+            is Struct -> compileStruct(expr)
+            is Seq -> compileSeq(expr)
+            is Select -> compileSelect(expr)
+            is CallAgg -> compileCallAgg(expr)
+            is Parameter -> compileParameter(expr)
+            is DataManipulation -> err(
                 "DML operations are not supported yet",
                 ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
                 errorContextFrom(expr.metas).also {
@@ -294,7 +379,7 @@ internal class EvaluatingCompiler(
             is CreateIndex,
             is DropIndex,
             is DropTable -> compileDdl(expr)
-            is Exec      -> compileExec(expr)
+            is Exec -> compileExec(expr)
             is DateTimeType.Date      -> compileDate(expr)
             is DateTimeType.Time -> compileTime(expr)
         }
@@ -1090,7 +1175,8 @@ internal class EvaluatingCompiler(
                         val compiledAggregates = aggregateListMeta?.aggregateCallSites?.map { it ->
                             val funcName = it.funcName.text
                             CompiledAggregate(
-                                factory = getAggregatorFactory(funcName, it.setq.toExprNodeSetQuantifier(), it.metas.toPartiQlMetaContainer()),
+                                factory = getAggregatorFactory(funcName, it.setq.toExprNodeSetQuantifier(),
+                                        it.metas.toPartiQlMetaContainer()),
                                 argThunk = compileExprNode(it.arg.toExprNode(valueFactory.ion)))
                         }
 
@@ -1236,7 +1322,7 @@ internal class EvaluatingCompiler(
                         }
                     }
                 }
-                is SelectProjectionList  -> {
+                is SelectProjectionList -> {
                     val (items) = projection
                     nestCompilationContext(ExpressionContext.SELECT_LIST, allFromSourceAliases) {
                         val projectionThunk: ThunkEnvValue<List<ExprValue>> =
@@ -1378,7 +1464,8 @@ internal class EvaluatingCompiler(
     private fun compileCallAgg(expr: CallAgg): ThunkEnv {
         val (funcExpr, setQuantifier, argExpr, metas: MetaContainer) = expr
 
-        if(metas.hasMeta(IsCountStarMeta.TAG) && currentCompilationContext.expressionContext != ExpressionContext.SELECT_LIST) {
+        if(metas.hasMeta(IsCountStarMeta.TAG) &&
+                currentCompilationContext.expressionContext != ExpressionContext.SELECT_LIST) {
             err("COUNT(*) is not allowed in this context", errorContextFrom(metas), internal = false)
         }
 
@@ -1428,10 +1515,10 @@ internal class EvaluatingCompiler(
     }
 
     private fun compileFromSources(
-        fromSource: FromSource,
-        sources: MutableList<CompiledFromSource> = ArrayList(),
-        joinExpansion: JoinExpansion = JoinExpansion.INNER,
-        conditionThunk: ThunkEnv? = null
+            fromSource: FromSource,
+            sources: MutableList<CompiledFromSource> = ArrayList(),
+            joinExpansion: JoinExpansion = JoinExpansion.INNER,
+            conditionThunk: ThunkEnv? = null
     ): List<CompiledFromSource> {
 
         val metas = fromSource.metas()
@@ -1459,7 +1546,7 @@ internal class EvaluatingCompiler(
                         joinExpansion = joinExpansion,
                         filter = conditionThunk))
             }
-            is FromSourceJoin    -> case {
+            is FromSourceJoin -> case {
 
                 val (joinOp, left, right, condition, _: MetaContainer) = fromSource
 
@@ -1623,7 +1710,7 @@ internal class EvaluatingCompiler(
                     errNoContext("Encountered a SelectListItemStar--did SelectStarVisitorTransform execute?",
                         internal = true)
                 }
-                is SelectListItemExpr       -> {
+                is SelectListItemExpr -> {
                     val (itemExpr, asName) = it
                     val alias = asName?.name ?: itemExpr.extractColumnAlias(idx)
                     val thunk = compileExprNode(itemExpr)
@@ -1661,7 +1748,7 @@ internal class EvaluatingCompiler(
 
             componentThunks.add(
                 when (c) {
-                    is PathComponentExpr     -> {
+                    is PathComponentExpr -> {
                         val (indexExpr, caseSensitivity) = c
                         val locationMeta = indexExpr.metas.sourceLocationMeta
                         when {
@@ -1695,7 +1782,7 @@ internal class EvaluatingCompiler(
                             }
                         }
                     }
-                    is PathComponentUnpivot  -> {
+                    is PathComponentUnpivot -> {
                         val (pathComponentMetas: MetaContainer) = c
                         when {
                             !remainingComponents.isEmpty() -> {
@@ -1909,10 +1996,10 @@ internal class EvaluatingCompiler(
      * and the size of the search pattern excluding uses of the escape character
      */
     private fun checkPattern(
-        pattern: IonValue,
-        patternLocationMeta: SourceLocationMeta?,
-        escape: IonValue?,
-        escapeLocationMeta: SourceLocationMeta?
+            pattern: IonValue,
+            patternLocationMeta: SourceLocationMeta?,
+            escape: IonValue?,
+            escapeLocationMeta: SourceLocationMeta?
     ): Pair<String, Int?> {
 
         val patternString = pattern.stringValue()

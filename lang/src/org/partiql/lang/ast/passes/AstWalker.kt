@@ -14,8 +14,55 @@
 
 package org.partiql.lang.ast.passes
 
-import org.partiql.lang.ast.*
-import org.partiql.lang.util.*
+import org.partiql.lang.ast.AssignmentOp
+import org.partiql.lang.ast.CallAgg
+import org.partiql.lang.ast.ConflictAction
+import org.partiql.lang.ast.CreateIndex
+import org.partiql.lang.ast.CreateTable
+import org.partiql.lang.ast.DataManipulation
+import org.partiql.lang.ast.DataManipulationOperation
+import org.partiql.lang.ast.DateTimeType
+import org.partiql.lang.ast.DeleteOp
+import org.partiql.lang.ast.DmlOpList
+import org.partiql.lang.ast.DropIndex
+import org.partiql.lang.ast.DropTable
+import org.partiql.lang.ast.Exec
+import org.partiql.lang.ast.ExprNode
+import org.partiql.lang.ast.FromSource
+import org.partiql.lang.ast.FromSourceExpr
+import org.partiql.lang.ast.FromSourceJoin
+import org.partiql.lang.ast.FromSourceUnpivot
+import org.partiql.lang.ast.InsertOp
+import org.partiql.lang.ast.InsertValueOp
+import org.partiql.lang.ast.Literal
+import org.partiql.lang.ast.LiteralMissing
+import org.partiql.lang.ast.MetaContainer
+import org.partiql.lang.ast.NAry
+import org.partiql.lang.ast.OnConflict
+import org.partiql.lang.ast.Parameter
+import org.partiql.lang.ast.Path
+import org.partiql.lang.ast.PathComponentExpr
+import org.partiql.lang.ast.PathComponentUnpivot
+import org.partiql.lang.ast.PathComponentWildcard
+import org.partiql.lang.ast.RemoveOp
+import org.partiql.lang.ast.ReturningColumn
+import org.partiql.lang.ast.ReturningWildcard
+import org.partiql.lang.ast.SearchedCase
+import org.partiql.lang.ast.Select
+import org.partiql.lang.ast.SelectListItemExpr
+import org.partiql.lang.ast.SelectListItemProjectAll
+import org.partiql.lang.ast.SelectListItemStar
+import org.partiql.lang.ast.SelectProjection
+import org.partiql.lang.ast.SelectProjectionList
+import org.partiql.lang.ast.SelectProjectionPivot
+import org.partiql.lang.ast.SelectProjectionValue
+import org.partiql.lang.ast.Seq
+import org.partiql.lang.ast.SimpleCase
+import org.partiql.lang.ast.Struct
+import org.partiql.lang.ast.Typed
+import org.partiql.lang.ast.VariableReference
+import org.partiql.lang.util.case
+import org.partiql.lang.util.checkThreadInterrupted
 
 /**
  * Contains the logic necessary to walk every node in the AST and invokes methods of [AstVisitor] along the way.
@@ -35,29 +82,29 @@ open class AstWalker(private val visitor: AstVisitor) {
                 is Literal,
                 is LiteralMissing,
                 is VariableReference,
-                is Parameter     -> case {
+                is Parameter -> case {
                     // Leaf nodes have no children to walk.
                 }
-                is NAry         -> case {
+                is NAry -> case {
                     val (_, args, _: MetaContainer) = expr
                     args.forEach { it ->
                         walkExprNode(it)
                     }
                 }
-                is CallAgg      -> case {
+                is CallAgg -> case {
                     val (funcExpr, _, arg, _: MetaContainer) = expr
                     walkExprNode(funcExpr)
                     walkExprNode(arg)
                 }
-                is Typed        -> case {
+                is Typed -> case {
                     val (_, exp, sqlDataType, _: MetaContainer) = expr
                     walkExprNode(exp)
                     visitor.visitDataType(sqlDataType)
                 }
-                is Path         -> case {
+                is Path -> case {
                     walkPath(expr)
                 }
-                is SimpleCase   -> case {
+                is SimpleCase -> case {
                     val (valueExpr, branches, elseExpr, _: MetaContainer) = expr
                     walkExprNode(valueExpr)
                     branches.forEach {
@@ -74,20 +121,20 @@ open class AstWalker(private val visitor: AstVisitor) {
                     }
                     walkExprNode(elseExpr)
                 }
-                is Struct       -> case {
+                is Struct -> case {
                     val (fields, _: MetaContainer) = expr
                     fields.forEach {
                         val (nameExpr, valueExpr) = it
                         walkExprNode(nameExpr, valueExpr)
                     }
                 }
-                is Seq          -> case {
+                is Seq -> case {
                     val (_, items, _: MetaContainer) = expr
                     items.forEach {
                         walkExprNode(it)
                     }
                 }
-                is Select       -> case {
+                is Select -> case {
                     val (_, projection, from, fromLet, where, groupBy, having, orderBy, limit, offset, _: MetaContainer) = expr
                     walkSelectProjection(projection)
                     walkFromSource(from)
@@ -119,7 +166,7 @@ open class AstWalker(private val visitor: AstVisitor) {
                     returning?.let {
                         it.returningElems.forEach { re ->
                             when (re.columnComponent) {
-                                is ReturningColumn   -> case {
+                                is ReturningColumn -> case {
                                     walkExprNode(re.columnComponent.column)
                                 }
                                 is ReturningWildcard -> case {
@@ -151,7 +198,7 @@ open class AstWalker(private val visitor: AstVisitor) {
                 is PathComponentWildcard -> case {
                     //Leaf nodes have no children to walk.
                 }
-                is PathComponentExpr     -> case {
+                is PathComponentExpr -> case {
                     val (exp) = it
                     walkExprNode(exp)
                 }
@@ -162,7 +209,7 @@ open class AstWalker(private val visitor: AstVisitor) {
     private fun walkFromSource(fromSource: FromSource) {
         visitor.visitFromSource(fromSource)
         when (fromSource) {
-            is FromSourceExpr    -> case {
+            is FromSourceExpr -> case {
                 val (exp, _) = fromSource
                 walkExprNode(exp)
             }
@@ -170,7 +217,7 @@ open class AstWalker(private val visitor: AstVisitor) {
                 val (exp, _, _) = fromSource
                 walkExprNode(exp)
             }
-            is FromSourceJoin    -> case {
+            is FromSourceJoin -> case {
                 val (_, leftRef, rightRef, condition, _: MetaContainer) = fromSource
                 walkFromSource(leftRef)
                 walkFromSource(rightRef)
@@ -190,15 +237,15 @@ open class AstWalker(private val visitor: AstVisitor) {
                 val (asExpr, atExpr) = projection
                 walkExprNode(asExpr, atExpr)
             }
-            is SelectProjectionList  -> case {
+            is SelectProjectionList -> case {
                 val (items) = projection
                 items.forEach {
                     visitor.visitSelectListItem(it)
                     when (it) {
-                        is SelectListItemStar       -> case {
+                        is SelectListItemStar -> case {
                             //Leaf nodes have no children to walk.
                         }
-                        is SelectListItemExpr       -> case {
+                        is SelectListItemExpr -> case {
                             walkExprNode(it.expr)
                         }
                         is SelectListItemProjectAll -> case {

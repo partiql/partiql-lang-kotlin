@@ -14,11 +14,17 @@
 
 package org.partiql.lang.eval.builtins
 
-import com.amazon.ion.*
-import org.partiql.lang.errors.*
-import org.partiql.lang.eval.*
-import org.partiql.lang.util.*
-
+import com.amazon.ion.IonString
+import com.amazon.ion.Timestamp
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.PropertyValueMap
+import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.NullPropagatingExprFunction
+import org.partiql.lang.eval.errNoContext
+import org.partiql.lang.util.stringValue
 
 /**
  * PartiQL function to convert a formatted string into an Ion Timestamp.

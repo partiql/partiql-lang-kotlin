@@ -14,13 +14,12 @@
 
 package org.partiql.lang.eval
 
-import org.partiql.lang.*
-import org.partiql.lang.errors.*
-import org.partiql.lang.util.*
-import org.assertj.core.api.*
-import org.junit.*
+import org.assertj.core.api.SoftAssertions
 import org.junit.Test
-import kotlin.test.*
+import org.partiql.lang.SqlException
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.util.softAssert
+import kotlin.test.assertFailsWith
 
 class LikePredicateTest : EvaluatorTestBase() {
 

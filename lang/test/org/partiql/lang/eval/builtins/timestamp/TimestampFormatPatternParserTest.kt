@@ -14,12 +14,12 @@
 
 package org.partiql.lang.eval.builtins.timestamp
 
-import org.partiql.lang.util.*
-import junitparams.*
-import org.junit.*
+import junitparams.JUnitParamsRunner
+import junitparams.Parameters
 import org.junit.Test
-import org.junit.runner.*
-import kotlin.test.*
+import org.junit.runner.RunWith
+import org.partiql.lang.util.softAssert
+import kotlin.test.assertEquals
 
 @RunWith(JUnitParamsRunner::class)
 internal class TimestampFormatPatternParserTest {
@@ -120,7 +120,6 @@ internal class TimestampFormatPatternParserTest {
         assertEquals(pair.second, formatPattern.formatItems)
     }
 
-
     @Test
     fun mostPreciseField() {
         //NOTE: we can't parameterize this unless we want to expose TimestampParser.FormatPatternPrecision as public.
@@ -136,7 +135,6 @@ internal class TimestampFormatPatternParserTest {
             }
         }
     }
-
 
     private data class MostPreciseFieldTestCase(
         val pattern: String,
@@ -196,6 +194,4 @@ internal class TimestampFormatPatternParserTest {
         //Valid symbols within quotes should not influence the result
         MostPreciseFieldTestCase("y'M d s'", TimestampField.YEAR),
         MostPreciseFieldTestCase("y'y'", TimestampField.YEAR))
-
-
 }

@@ -14,10 +14,12 @@
 
 package org.partiql.lang.eval.builtins
 
-import com.amazon.ion.*
-import org.partiql.lang.eval.*
-import org.partiql.lang.eval.builtins.TrimSpecification.*
-import org.partiql.lang.util.*
+import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.NullPropagatingExprFunction
+import org.partiql.lang.eval.errNoContext
+import org.partiql.lang.eval.stringValue
 
 /**
  * From section 6.7 of SQL 92 spec:
@@ -50,7 +52,7 @@ import org.partiql.lang.util.*
  */
 internal class TrimExprFunction(valueFactory: ExprValueFactory) : NullPropagatingExprFunction("trim", 1..3, valueFactory) {
     private val DEFAULT_TO_REMOVE = " ".codePoints().toArray()
-    private val DEFAULT_SPECIFICATION = BOTH
+    private val DEFAULT_SPECIFICATION = TrimSpecification.BOTH
 
     private fun IntArray.leadingTrimOffset(toRemove: IntArray): Int {
         var offset = 0
@@ -88,9 +90,9 @@ internal class TrimExprFunction(valueFactory: ExprValueFactory) : NullPropagatin
         val (type, toRemove, string) = extractArguments(args)
 
         return when (type) {
-            BOTH, NONE -> valueFactory.newString(string.trim(toRemove))
-            LEADING    -> valueFactory.newString(string.leadingTrim(toRemove))
-            TRAILING   -> valueFactory.newString(string.trailingTrim(toRemove))
+            TrimSpecification.BOTH, TrimSpecification.NONE -> valueFactory.newString(string.trim(toRemove))
+            TrimSpecification.LEADING -> valueFactory.newString(string.leadingTrim(toRemove))
+            TrimSpecification.TRAILING -> valueFactory.newString(string.trailingTrim(toRemove))
         }
     }
 
@@ -109,7 +111,7 @@ internal class TrimExprFunction(valueFactory: ExprValueFactory) : NullPropagatin
 
                 val specification = TrimSpecification.from(args[0])
                 val toRemove = when(specification) {
-                    NONE -> args[0].codePoints()
+                    TrimSpecification.NONE -> args[0].codePoints()
                     else -> DEFAULT_TO_REMOVE
                 }
 
@@ -117,7 +119,7 @@ internal class TrimExprFunction(valueFactory: ExprValueFactory) : NullPropagatin
             }
             3    -> {
                 val specification = TrimSpecification.from(args[0])
-                if(specification == NONE) {
+                if(specification == TrimSpecification.NONE) {
                     errNoContext("'${args[0].stringValue()}' is an unknown trim specification, " +
                                  "valid vales: ${TrimSpecification.validValues}",
                                  internal = false)

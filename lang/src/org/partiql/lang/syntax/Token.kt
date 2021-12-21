@@ -15,8 +15,7 @@
 package org.partiql.lang.syntax
 
 import com.amazon.ion.IonValue
-import org.partiql.lang.util.*
-import org.partiql.lang.syntax.TokenType.*
+import org.partiql.lang.util.stringValue
 
 /**
  * Simple [IonValue] based token for lexing PartiQL.
@@ -29,28 +28,28 @@ data class Token(val type: TokenType,
 
     val keywordText: String?
         get() = when (type) {
-            OPERATOR, KEYWORD, AS, AT -> text
-            MISSING -> "missing"
-            NULL -> "null"
+            TokenType.OPERATOR, TokenType.KEYWORD, TokenType.AS, TokenType.AT -> text
+            TokenType.MISSING -> "missing"
+            TokenType.NULL -> "null"
             else -> null
         }
 
     val isSpecialOperator: Boolean
         get() = when (type) {
-            OPERATOR -> text in SPECIAL_OPERATORS
+            TokenType.OPERATOR -> text in SPECIAL_OPERATORS
             else -> false
         }
 
     val isBinaryOperator: Boolean
         get() = when (type) {
-            OPERATOR, KEYWORD -> text in BINARY_OPERATORS
-            STAR -> true
+            TokenType.OPERATOR, TokenType.KEYWORD -> text in BINARY_OPERATORS
+            TokenType.STAR -> true
             else -> false
         }
 
     val isUnaryOperator: Boolean
         get() = when (type){
-            OPERATOR, KEYWORD -> text in UNARY_OPERATORS
+            TokenType.OPERATOR, TokenType.KEYWORD -> text in UNARY_OPERATORS
             else -> false
         }
 
