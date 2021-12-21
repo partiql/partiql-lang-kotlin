@@ -650,7 +650,7 @@ to read the file:
 ```
 read_file('simple_postgresql.csv', {'type':'postgresql_csv'})
 ```
-Other available options for the argument `type` besides `postgre_csv` are `excel_csv`, `mysql_csv`, `mongodb_csv`, `mongodb_tsv`, `postgresql_csv` and `postgresql_text`. 
+Other available options for the argument `type` besides `postgresql_csv` are `excel_csv`, `mysql_csv`, `mongodb_csv`, `mongodb_tsv`, and `postgresql_text`. 
 
 ## Customized CSV Data 
 The `read_file` function also provides options to read customized CSV data formats. 
