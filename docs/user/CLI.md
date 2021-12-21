@@ -665,9 +665,11 @@ We can use the following command to read the file:
 ```
 read_file('customized.csv', {'type':'customized', 'delimiter':' ', 'header':true})
 ```
-The following command explicitly shows all the available options for a standard CSV file: 
-```
-read_file('customized.csv', {'type':'customized', 'delimiter':',', 'header':true, \
-'ignore_empty_line':true, 'ignore_surrounding_space':true, 'trim':true, \ 
-'line_breaker: \n', 'escape':'\', 'quote':'"'})
-```
+All the available options for customized CSV files are shown as following: 
+1. Ignore empty lines: `'ignore_empty_line':true`
+2. Ignore spaces surrounding comma:  `'ignore_surrounding_space':true` 
+3. Trim leading and trailing blanks: `'trim':true` 
+4. Set line breaker (only working with '\r', '\n' and '\r\n'): `'line_breaker: \n'`
+5. Set escape sign (single character only): `'escape':'\'`
+6. Set quote sign (single character only): `'quote':'"'`
+7. Set delimiter sign (single character only): `'delimiter':','`

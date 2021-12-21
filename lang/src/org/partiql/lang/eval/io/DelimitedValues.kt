@@ -59,10 +59,8 @@ object DelimitedValues {
      * Lazily loads a stream of values from a [Reader] into a sequence backed [ExprValue].
      * This does **not** close the [Reader].
      *
-     * @param ion The system to use.
      * @param input The input source.
-     * @param delimiter The delimiter to use between columns.
-     * @param hasHeader Whether the first row of the delimited input defines the columns.
+     * @param csvFormat What the format of csv files is.
      * @param conversionMode How column text should be converted.
      */
     @JvmStatic

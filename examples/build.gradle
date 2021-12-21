@@ -29,8 +29,6 @@ dependencies {
     implementation 'com.amazonaws:aws-java-sdk-s3:1.11.554'
     implementation 'com.amazonaws:aws-java-sdk-s3control:1.11.554'
 
-    implementation 'org.apache.commons:commons-csv:1.8'
-
     testImplementation 'org.junit.vintage:junit-vintage-engine:5.7.0'
 }
 
