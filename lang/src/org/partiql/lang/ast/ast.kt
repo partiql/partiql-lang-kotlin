@@ -997,6 +997,10 @@ enum class OrderingSpec {
 
 /**
  * AST Node corresponding to the DATE literal
+ *
+ * @param year represents the year of the DATE as Integer.
+ * @param month represents the month of the DATE as Integer.
+ * @param day represents the day of the DATE as Integer.
  */
 data class DateLiteral(
     val year: Int,
