@@ -54,8 +54,8 @@ open class AstRewriterBase : AstRewriter {
             is DropTable         -> rewriteDropTable(node)
             is DropIndex         -> rewriteDropIndex(node)
             is Exec              -> rewriteExec(node)
-            is DateTimeType.Date -> rewriteDate(node)
-            is DateTimeType.Time -> rewriteTime(node)
+            is DateLiteral -> rewriteDate(node)
+            is TimeLiteral -> rewriteTime(node)
         }
     }
 
@@ -448,16 +448,16 @@ open class AstRewriterBase : AstRewriter {
             node.args.map { rewriteExprNode(it) },
             rewriteMetas(node))
 
-    open fun rewriteDate(node: DateTimeType.Date): DateTimeType.Date =
-        DateTimeType.Date(
+    open fun rewriteDate(node: DateLiteral): DateLiteral =
+        DateLiteral(
             node.year,
             node.month,
             node.day,
             rewriteMetas(node)
         )
 
-    open fun rewriteTime(node: DateTimeType.Time): DateTimeType.Time =
-        DateTimeType.Time(
+    open fun rewriteTime(node: TimeLiteral): TimeLiteral =
+        TimeLiteral(
             node.hour,
             node.minute,
             node.second,

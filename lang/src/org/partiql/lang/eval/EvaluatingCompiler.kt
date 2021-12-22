@@ -295,8 +295,8 @@ internal class EvaluatingCompiler(
             is DropIndex,
             is DropTable -> compileDdl(expr)
             is Exec      -> compileExec(expr)
-            is DateTimeType.Date      -> compileDate(expr)
-            is DateTimeType.Time -> compileTime(expr)
+            is DateLiteral -> compileDateLiteral(expr)
+            is TimeLiteral -> compileTimeLiteral(expr)
         }
     }
 
@@ -2035,13 +2035,13 @@ internal class EvaluatingCompiler(
         }
     }
 
-    private fun compileDate(node: DateTimeType.Date): ThunkEnv {
+    private fun compileDateLiteral(node: DateLiteral): ThunkEnv {
         val (year, month, day, metas) = node
         val value = valueFactory.newDate(year, month, day)
         return thunkFactory.thunkEnv(metas) { value }
     }
 
-    private fun compileTime(node: DateTimeType.Time) : ThunkEnv {
+    private fun compileTimeLiteral(node: TimeLiteral) : ThunkEnv {
         val (hour, minute, second, nano, precision, with_time_zone, tz_minutes, metas) = node
         return thunkFactory.thunkEnv(metas) {
             // Add the default time zone if the type "TIME WITH TIME ZONE" does not have an explicitly specified time zone.
