@@ -193,10 +193,9 @@ private class StatementTransformer(val ion: IonSystem) {
                     offset = offset?.toExprNode(),
                     metas = metas
             )
-            is Expr.Date ->
-                DateTimeType.Date(year.value.toInt(), month.value.toInt(), day.value.toInt(), metas)
+            is Expr.Date -> DateLiteral(year.value.toInt(), month.value.toInt(), day.value.toInt(), metas)
             is Expr.LitTime ->
-                DateTimeType.Time(
+                TimeLiteral(
                     value.hour.value.toInt(),
                     value.minute.value.toInt(),
                     value.second.value.toInt(),

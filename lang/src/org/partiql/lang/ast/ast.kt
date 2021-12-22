@@ -127,10 +127,10 @@ sealed class ExprNode : AstNode(), HasMetas {
             is Exec            -> {
                 copy(metas = metas)
             }
-            is DateTimeType.Date -> {
+            is DateLiteral -> {
                 copy(metas = metas)
             }
-            is DateTimeType.Time -> {
+            is TimeLiteral -> {
                 copy(metas = metas)
             }
         }
@@ -996,51 +996,42 @@ enum class OrderingSpec {
 }
 
 /**
- * The sealed class includes all the datetime types such as DATE, TIME, TIMESTAMP
- * Note that the ast nodes corresponding to the DATE, TIME and TIMESTAMP here are different from the [Literal] nodes.
- * You can create an Ion literal as [Timestamp] which will correspond to the [Literal] node and will have the type
- * [SqlDataType.TIMESTAMP]. However that will be different from the
- * `TIMESTAMP` here.
- * Note: TIME and TIMESTAMP are yet to be added.
+ * AST Node corresponding to the DATE literal
  */
-sealed class DateTimeType : ExprNode() {
-    /**
-     * AST Node corresponding to the DATE literal
-     */
-    data class Date(
-        val year: Int,
-        val month: Int,
-        val day: Int,
-        override val metas: MetaContainer
-    ) : DateTimeType() {
-        override val children: List<AstNode> = listOf()
-    }
-
-    /**
-     * AST node representing the TIME literal.
-     *
-     * @param hour represents the hour value.
-     * @param minute represents the minute value.
-     * @param second represents the second value.
-     * @param nano represents the fractional part of the second up to the nanoseconds' precision.
-     * @param precision is an optional parameter which, if specified, represents the precision of the fractional second.
-     * @param with_time_zone is a boolean to decide whether the time has a time zone. 
-     * True represents "TIME WITH TIME ZONE", while false represents "TIME WITHOUT TIME ZONE". 
-     * @param tz_minutes is the optional time zone in minutes which can be explicitly specified with "WITH TIME ZONE".
-     */
-    data class Time(
-        val hour: Int,
-        val minute: Int,
-        val second: Int,
-        val nano: Int,
-        val precision: Int,
-        val with_time_zone: Boolean,
-        val tz_minutes: Int? = null,
-        override val metas: MetaContainer
-    ) : DateTimeType() {
-        override val children: List<AstNode> = listOf()
-    }
+data class DateLiteral(
+    val year: Int,
+    val month: Int,
+    val day: Int,
+    override val metas: MetaContainer
+) : ExprNode() {
+    override val children: List<AstNode> = listOf()
 }
+
+/**
+ * AST node representing the TIME literal.
+ *
+ * @param hour represents the hour value.
+ * @param minute represents the minute value.
+ * @param second represents the second value.
+ * @param nano represents the fractional part of the second up to the nanoseconds' precision.
+ * @param precision is an optional parameter which, if specified, represents the precision of the fractional second.
+ * @param with_time_zone is a boolean to decide whether the time has a time zone.
+ * True represents "TIME WITH TIME ZONE", while false represents "TIME WITHOUT TIME ZONE".
+ * @param tz_minutes is the optional time zone in minutes which can be explicitly specified with "WITH TIME ZONE".
+ */
+data class TimeLiteral(
+    val hour: Int,
+    val minute: Int,
+    val second: Int,
+    val nano: Int,
+    val precision: Int,
+    val with_time_zone: Boolean,
+    val tz_minutes: Int? = null,
+    override val metas: MetaContainer
+) : ExprNode() {
+    override val children: List<AstNode> = listOf()
+}
+
 
 /**
  * Indicates strategy for binding lookup within scopes.
