@@ -43,16 +43,16 @@ internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFact
         val escape = options["escape"]?.stringValue()?.first() // CSVParser library only accepts a single character as escape
         val quote = options["quote"]?.stringValue()?.first() // CSVParser library only accepts a single character as quote
 
-        val csvFormat = csvFormat.let{ it.withIgnoreEmptyLines(ignoreEmptyLine) }
-                                .let{ it.withIgnoreSurroundingSpaces(ignoreSurroundingSpace) }
-                                .let{ it.withTrim(trim) }
+        val csvFormatWithOptions = csvFormat.withIgnoreEmptyLines(ignoreEmptyLine)
+                                .withIgnoreSurroundingSpaces(ignoreSurroundingSpace)
+                                .withTrim(trim)
                                 .let { if (hasHeader) it.withFirstRecordAsHeader() else it }
                                 .let { if (delimiter != null) it.withDelimiter(delimiter) else it }
                                 .let { if (record != null) it.withRecordSeparator(record) else it }
                                 .let { if (escape != null) it.withEscape(escape) else it }
                                 .let { if (quote != null) it.withQuote(quote) else it }
 
-        DelimitedValues.exprValue(valueFactory, reader, csvFormat, conversionModeFor(conversion))
+        DelimitedValues.exprValue(valueFactory, reader, csvFormatWithOptions, conversionModeFor(conversion))
     }
 
     private fun ionReadHandler(): (InputStream, IonStruct) -> ExprValue = { input, _ ->
