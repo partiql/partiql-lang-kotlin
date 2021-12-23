@@ -15,6 +15,7 @@
 package org.partiql.cli.functions
 
 import com.amazon.ion.IonStruct
+import org.apache.commons.csv.CSVFormat
 import org.partiql.lang.eval.Environment
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
