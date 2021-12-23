@@ -12,7 +12,7 @@ fun ExprNode.toAstStatement(): PartiqlAst.Statement {
     val node = this
     return when(node) {
         is Literal, is LiteralMissing, is VariableReference, is Parameter, is NAry, is CallAgg,
-        is Typed, is Path, is SimpleCase, is SearchedCase, is Select, is Struct, is DateTimeType,
+        is Typed, is Path, is SimpleCase, is SearchedCase, is Select, is Struct, is DateLiteral, is TimeLiteral,
         is Seq -> PartiqlAst.build { query(toAstExpr()) }
 
         is DataManipulation -> node.toAstDml()
@@ -36,7 +36,7 @@ private fun ExprNode.toAstDdl(): PartiqlAst.Statement {
     return PartiqlAst.build {
         when(thiz) {
             is Literal, is LiteralMissing, is VariableReference, is Parameter, is NAry, is CallAgg, is Typed,
-            is Path, is SimpleCase, is SearchedCase, is Select, is Struct, is Seq, is DateTimeType,
+            is Path, is SimpleCase, is SearchedCase, is Select, is Struct, is Seq, is DateLiteral, is TimeLiteral,
             is DataManipulation, is Exec -> error("Can't convert ${thiz.javaClass} to PartiqlAst.ddl")
 
             is CreateTable -> ddl(createTable(thiz.tableName), metas)
@@ -184,23 +184,20 @@ fun ExprNode.toAstExpr(): PartiqlAst.Expr {
             is DataManipulation, is CreateTable, is CreateIndex, is DropTable, is DropIndex, is Exec ->
                 error("Can't transform ${node.javaClass} to a PartiqlAst.expr }")
             // DateTime types
-            is DateTimeType -> {
-                when (node) {
-                    is DateTimeType.Date -> date(node.year.toLong(), node.month.toLong(), node.day.toLong(), metas)
-                    is DateTimeType.Time -> litTime(
-                        timeValue(
-                            node.hour.toLong(),
-                            node.minute.toLong(),
-                            node.second.toLong(),
-                            node.nano.toLong(),
-                            node.precision.toLong(),
-                            node.with_time_zone,
-                            node.tz_minutes?.toLong()
-                        ),
-                        metas
-                    )
-                }
-            }
+            is DateLiteral -> date(node.year.toLong(), node.month.toLong(), node.day.toLong(), metas)
+            is TimeLiteral ->
+                litTime(
+                    timeValue(
+                        node.hour.toLong(),
+                        node.minute.toLong(),
+                        node.second.toLong(),
+                        node.nano.toLong(),
+                        node.precision.toLong(),
+                        node.with_time_zone,
+                        node.tz_minutes?.toLong()
+                    ),
+                    metas
+                )
         }
     }
 }

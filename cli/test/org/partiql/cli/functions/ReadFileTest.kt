@@ -14,11 +14,16 @@
 
 package org.partiql.cli.functions
 
-import com.amazon.ion.system.*
-import org.partiql.lang.eval.*
-import org.junit.*
-import org.junit.Assert.*
-import java.io.*
+import com.amazon.ion.system.IonSystemBuilder
+import junit.framework.Assert.assertEquals
+import org.junit.AfterClass
+import org.junit.BeforeClass
+import org.junit.Test
+import org.partiql.lang.eval.Bindings
+import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.EvaluationSession
+import org.partiql.lang.eval.ExprValueFactory
+import java.io.File
 
 class ReadFileTest {
     private val ion = IonSystemBuilder.standard().build()

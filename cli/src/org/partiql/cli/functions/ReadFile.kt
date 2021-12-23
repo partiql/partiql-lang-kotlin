@@ -14,13 +14,18 @@
 
 package org.partiql.cli.functions
 
-import com.amazon.ion.*
-import org.apache.commons.csv.CSVFormat
-import org.partiql.lang.eval.*
-import org.partiql.lang.eval.io.*
+import com.amazon.ion.IonStruct
+import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.io.DelimitedValues
 import org.partiql.lang.eval.io.DelimitedValues.ConversionMode
-import org.partiql.lang.util.*
-import java.io.*
+import org.partiql.lang.eval.stringValue
+import org.partiql.lang.util.booleanValue
+import org.partiql.lang.util.stringValue
+import java.io.FileInputStream
+import java.io.InputStream
+import java.io.InputStreamReader
 
 internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFactory) {
     override val name = "read_file"

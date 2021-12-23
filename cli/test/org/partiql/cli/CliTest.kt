@@ -14,12 +14,21 @@
 
 package org.partiql.cli
 
-import com.amazon.ion.system.*
-import org.partiql.lang.eval.*
-import org.junit.*
-import org.junit.Assert.*
-import org.partiql.lang.*
-import java.io.*
+import com.amazon.ion.system.IonSystemBuilder
+import junit.framework.Assert.assertEquals
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
+
+import org.partiql.lang.CompilerPipeline
+import org.partiql.lang.eval.Bindings
+import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
+import java.io.OutputStream
 import java.nio.file.Files
 
 class CliTest {
@@ -40,7 +49,7 @@ class CliTest {
     }
 
     private fun makeCli(query: String,
-                        input: String? = null, 
+                        input: String? = null,
                         bindings: Bindings<ExprValue> = Bindings.empty(),
                         outputFormat: OutputFormat = OutputFormat.ION_TEXT,
                         output: OutputStream = this.output) =

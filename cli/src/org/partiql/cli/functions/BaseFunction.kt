@@ -14,8 +14,10 @@
 
 package org.partiql.cli.functions
 
-import com.amazon.ion.*
-import org.partiql.lang.eval.*
+import com.amazon.ion.IonStruct
+import org.partiql.lang.eval.ExprFunction
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
 
 internal abstract class BaseFunction(val valueFactory: ExprValueFactory) : ExprFunction {
     protected fun optionsStruct(requiredArity: Int,

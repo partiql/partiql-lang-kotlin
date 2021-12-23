@@ -16,14 +16,23 @@
 
 package org.partiql.cli
 
-import com.amazon.ion.system.*
-import joptsimple.*
+import com.amazon.ion.system.IonSystemBuilder
+import joptsimple.OptionParser
+import joptsimple.BuiltinHelpFormatter
+import joptsimple.OptionDescriptor
+import joptsimple.OptionException
+import joptsimple.OptionSet
 import org.partiql.cli.functions.ReadFile
 import org.partiql.cli.functions.WriteFile
-import org.partiql.lang.*
-import org.partiql.lang.eval.*
-import org.partiql.lang.syntax.*
-import java.io.*
+import org.partiql.lang.CompilerPipeline
+import org.partiql.lang.eval.EvaluationSession
+import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.Bindings
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.syntax.SqlParser
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 import kotlin.system.exitProcess
 
 // TODO how can a user pass the catalog here?

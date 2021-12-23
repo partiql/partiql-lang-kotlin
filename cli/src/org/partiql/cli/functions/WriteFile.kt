@@ -14,12 +14,18 @@
 
 package org.partiql.cli.functions
 
-import com.amazon.ion.*
-import com.amazon.ion.system.*
-import org.partiql.lang.eval.*
-import org.partiql.lang.eval.io.*
-import org.partiql.lang.util.*
-import java.io.*
+import com.amazon.ion.IonStruct
+import com.amazon.ion.system.IonTextWriterBuilder
+import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.io.DelimitedValues
+import org.partiql.lang.eval.stringValue
+import org.partiql.lang.util.booleanValue
+import org.partiql.lang.util.stringValue
+import java.io.FileOutputStream
+import java.io.OutputStream
+import java.io.OutputStreamWriter
 
 internal class WriteFile(valueFactory: ExprValueFactory) : BaseFunction(valueFactory) {
     override val name = "write_file"
