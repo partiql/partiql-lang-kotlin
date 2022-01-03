@@ -15,6 +15,7 @@
 package org.partiql.cli.functions
 
 import com.amazon.ion.IonStruct
+import org.apache.commons.csv.CSVFormat
 import org.partiql.lang.eval.Environment
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
@@ -34,14 +35,30 @@ internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFact
         ConversionMode.values().find { it.name.toLowerCase() == name } ?:
         throw IllegalArgumentException( "Unknown conversion: $name")
 
-    private fun delimitedReadHandler(delimiter: Char): (InputStream, IonStruct) -> ExprValue = { input, options ->
+    private fun fileReadHandler(csvFormat: CSVFormat): (InputStream, IonStruct) -> ExprValue = { input, options ->
         val encoding = options["encoding"]?.stringValue() ?: "UTF-8"
-        val conversion = options["conversion"]?.stringValue() ?: "none"
-        val hasHeader = options["header"]?.booleanValue() ?: false
-
         val reader = InputStreamReader(input, encoding)
+        val conversion = options["conversion"]?.stringValue() ?: "none"
 
-        DelimitedValues.exprValue(valueFactory, reader, delimiter, hasHeader, conversionModeFor(conversion))
+        val hasHeader = options["header"]?.booleanValue() ?: false
+        val ignoreEmptyLine = options["ignore_empty_line"]?.booleanValue() ?: true
+        val ignoreSurroundingSpace = options["ignore_surrounding_space"]?.booleanValue() ?: true
+        val trim = options["trim"]?.booleanValue() ?: true
+        val delimiter = options["delimiter"]?.stringValue()?.first() // CSVParser library only accepts a single character as delimiter
+        val record = options["line_breaker"]?.stringValue()
+        val escape = options["escape"]?.stringValue()?.first() // CSVParser library only accepts a single character as escape
+        val quote = options["quote"]?.stringValue()?.first() // CSVParser library only accepts a single character as quote
+
+        val csvFormatWithOptions = csvFormat.withIgnoreEmptyLines(ignoreEmptyLine)
+                                .withIgnoreSurroundingSpaces(ignoreSurroundingSpace)
+                                .withTrim(trim)
+                                .let { if (hasHeader) it.withFirstRecordAsHeader() else it }
+                                .let { if (delimiter != null) it.withDelimiter(delimiter) else it }
+                                .let { if (record != null) it.withRecordSeparator(record) else it }
+                                .let { if (escape != null) it.withEscape(escape) else it }
+                                .let { if (quote != null) it.withQuote(quote) else it }
+
+        DelimitedValues.exprValue(valueFactory, reader, csvFormatWithOptions, conversionModeFor(conversion))
     }
 
     private fun ionReadHandler(): (InputStream, IonStruct) -> ExprValue = { input, _ ->
@@ -50,8 +67,16 @@ internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFact
 
     private val readHandlers = mapOf(
         "ion" to ionReadHandler(),
-        "tsv" to delimitedReadHandler('\t'),
-        "csv" to delimitedReadHandler(','))
+        "csv" to fileReadHandler(CSVFormat.DEFAULT),
+        "tsv" to fileReadHandler(CSVFormat.DEFAULT.withDelimiter('\t')),
+        "excel_csv" to fileReadHandler(CSVFormat.EXCEL),
+        "mysql_csv" to fileReadHandler(CSVFormat.MYSQL),
+        "mongodb_csv" to fileReadHandler(CSVFormat.MONGODB_CSV),
+        "mongodb_tsv" to fileReadHandler(CSVFormat.MONGODB_TSV),
+        "postgresql_csv" to fileReadHandler(CSVFormat.POSTGRESQL_CSV),
+        "postgresql_text" to fileReadHandler(CSVFormat.POSTGRESQL_TEXT),
+        "customized" to fileReadHandler(CSVFormat.DEFAULT)
+    )
 
     override fun call(env: Environment, args: List<ExprValue>): ExprValue {
         val options = optionsStruct(1, args)

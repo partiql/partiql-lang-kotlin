@@ -156,4 +156,100 @@ class ReadFileTest {
 
         assertEquals(ion.singleValue(expected), actual)
     }
+
+    @Test
+    fun readExcelCsvFile() {
+        writeFile("simple_excel.csv", "title,category,price\nharry potter,book,7.99")
+
+        val args = listOf("\"${dirPath("simple_excel.csv")}\"", "{type:\"excel_csv\", header:true}").map { it.exprValue() }
+
+        val actual = function.call(env, args).ionValue
+        val expected = "[{title:\"harry potter\",category:\"book\",price:\"7.99\"}]"
+
+        assertEquals(ion.singleValue(expected), actual)
+    }
+
+    @Test
+    fun readPostgreSQLCsvFile() {
+        writeFile("simple_postgresql.csv", "id,name,balance\n1,Bob,10000.00")
+
+        val args = listOf("\"${dirPath("simple_postgresql.csv")}\"", "{type:\"postgresql_csv\", header:true}").map { it.exprValue() }
+
+        val actual = function.call(env, args).ionValue
+        val expected = "[{id:\"1\",name:\"Bob\",balance:\"10000.00\"}]"
+
+        assertEquals(ion.singleValue(expected), actual)
+    }
+
+    @Test
+    fun readCustomizedCsvFile1() { // delimiter
+        writeFile("customized.csv", "id name balance\n1 Bob 10000.00")
+
+        val args = listOf("\"${dirPath("customized.csv")}\"", "{type:\"customized\", header:true, delimiter:' '}").map { it.exprValue() }
+
+        val actual = function.call(env, args).ionValue
+        val expected = "[{id:\"1\",name:\"Bob\",balance:\"10000.00\"}]"
+
+        assertEquals(ion.singleValue(expected), actual)
+    }
+
+    @Test
+    fun readCustomizedCsvFile2() { // ignore_empty_line
+        writeFile("customized.csv", "id,name,balance\n\n1,Bob,10000.00")
+
+        val args = listOf("\"${dirPath("customized.csv")}\"", "{type:\"customized\", header:true, ignore_empty_line: false}").map { it.exprValue() }
+
+        val actual = function.call(env, args).ionValue
+        val expected = "[{id:\"\"},{id:\"1\",name:\"Bob\",balance:\"10000.00\"}]"
+
+        assertEquals(ion.singleValue(expected), actual)
+    }
+
+    @Test
+    fun readCustomizedCsvFile3() { // trim and ignore_surrounding_space
+        writeFile("customized.csv", "id,name,balance\n 1 , Bob , 10000.00 ")
+
+        val args = listOf("\"${dirPath("customized.csv")}\"", "{type:\"customized\", header:true, ignore_surrounding_space:false, trim:false}").map { it.exprValue() }
+
+        val actual = function.call(env, args).ionValue
+        val expected = "[{id:\" 1 \",name:\" Bob \",balance:\" 10000.00 \"}]"
+
+        assertEquals(ion.singleValue(expected), actual)
+    }
+
+    @Test
+    fun readCustomizedCsvFile4() { // line_breaker
+        writeFile("customized.csv", "id,name,balance\r\n1,Bob,10000.00")
+
+        val args = listOf("\"${dirPath("customized.csv")}\"", "{type:\"customized\", header:true, line_breaker:'\\\r\\\n'}").map { it.exprValue() }
+
+        val actual = function.call(env, args).ionValue
+        val expected = "[{id:\"1\",name:\"Bob\",balance:\"10000.00\"}]"
+
+        assertEquals(ion.singleValue(expected), actual)
+    }
+
+    @Test
+    fun readCustomizedCsvFile5() { // escape
+        writeFile("customized.csv", "id,name,balance\n\"/\"1\",Bob,10000.00")
+
+        val args = listOf("\"${dirPath("customized.csv")}\"", "{type:\"customized\", header:true, escape:'/'}").map { it.exprValue() }
+
+        val actual = function.call(env, args).ionValue
+        val expected = "[{id:\"\\\"1\",name:\"Bob\",balance:\"10000.00\"}]"
+
+        assertEquals(ion.singleValue(expected), actual)
+    }
+
+    @Test
+    fun readCustomizedCsvFile6() { // quote
+        writeFile("customized.csv", "id,name,balance\n'1,',Bob,10000.00")
+
+        val args = listOf("\"${dirPath("customized.csv")}\"", "{type:\"customized\", header:true, quote:\"'\"}").map { it.exprValue() }
+
+        val actual = function.call(env, args).ionValue
+        val expected = "[{id:\"1,\",name:\"Bob\",balance:\"10000.00\"}]"
+
+        assertEquals(ion.singleValue(expected), actual)
+    }
 }

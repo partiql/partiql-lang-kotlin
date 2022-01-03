@@ -28,6 +28,8 @@ dependencies {
     implementation 'net.sf.jopt-simple:jopt-simple:[5.0,6.0)'
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
 
+    implementation 'org.apache.commons:commons-csv:1.8'
+
     testImplementation 'org.junit.vintage:junit-vintage-engine:5.7.0'
 }
 

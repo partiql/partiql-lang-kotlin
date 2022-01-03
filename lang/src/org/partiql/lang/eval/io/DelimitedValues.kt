@@ -59,25 +59,18 @@ object DelimitedValues {
      * Lazily loads a stream of values from a [Reader] into a sequence backed [ExprValue].
      * This does **not** close the [Reader].
      *
-     * @param ion The system to use.
      * @param input The input source.
-     * @param delimiter The delimiter to use between columns.
-     * @param hasHeader Whether the first row of the delimited input defines the columns.
+     * @param csvFormat What the format of csv files is.
      * @param conversionMode How column text should be converted.
      */
     @JvmStatic
     fun exprValue(valueFactory: ExprValueFactory,
                   input: Reader,
-                  delimiter: Char,
-                  hasHeader: Boolean,
+                  csvFormat: CSVFormat,
                   conversionMode: ConversionMode): ExprValue {
         val reader = BufferedReader(input)
-        val csvFormat = when (hasHeader){
-            true -> CSVFormat.DEFAULT.withDelimiter(delimiter).withFirstRecordAsHeader()
-            false -> CSVFormat.DEFAULT.withDelimiter(delimiter)
-        }
         val csvParser = CSVParser(reader, csvFormat)
-        val columns: List<String> = csvParser.headerNames // `columns` is an empty list when `hasHeader` is false
+        val columns: List<String> = csvParser.headerNames
 
         val seq = csvParser.asSequence().map { csvRecord ->
             valueFactory.newStruct(
