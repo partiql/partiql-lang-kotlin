@@ -33,28 +33,28 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
     private val subject = ExtractExprFunction(valueFactory)
 
     @Test
-    fun extractYear() = assertEval("extract(year from `2017-01-10T05:30:55Z`)", "2017e0")
+    fun extractYear() = assertEval("extract(year from `2017-01-10T05:30:55Z`)", "2017.")
 
     @Test
-    fun extractMonth() = assertEval("extract(month from `2017-01-10T05:30:55Z`)", "1e0")
+    fun extractMonth() = assertEval("extract(month from `2017-01-10T05:30:55Z`)", "1.")
 
     @Test
-    fun extractDay() = assertEval("extract(day from `2017-01-10T05:30:55Z`)", "10e0")
+    fun extractDay() = assertEval("extract(day from `2017-01-10T05:30:55Z`)", "10.")
 
     @Test
-    fun extractHour() = assertEval("extract(hour from `2017-01-10T05:30:55Z`)", "5e0")
+    fun extractHour() = assertEval("extract(hour from `2017-01-10T05:30:55Z`)", "5.")
 
     @Test
-    fun extractMinute() = assertEval("extract(minute from `2017-01-10T05:30:55Z`)", "30e0")
+    fun extractMinute() = assertEval("extract(minute from `2017-01-10T05:30:55Z`)", "30.")
 
     @Test
-    fun extractSecond() = assertEval("extract(second from `2017-01-10T05:30:55Z`)", "55e0")
+    fun extractSecond() = assertEval("extract(second from `2017-01-10T05:30:55Z`)", "55.")
 
     @Test
-    fun extractTimezoneHour() = assertEval("extract(timezone_hour from `2017-01-10T05:30:55+11:30`)", "11e0")
+    fun extractTimezoneHour() = assertEval("extract(timezone_hour from `2017-01-10T05:30:55+11:30`)", "11.")
 
     @Test
-    fun extractTimezoneMinute() = assertEval("extract(timezone_minute from `2017-01-10T05:30:55+11:30`)", "30e0")
+    fun extractTimezoneMinute() = assertEval("extract(timezone_minute from `2017-01-10T05:30:55+11:30`)", "30.")
 
     @Test
     fun extractFromNull() = assertEval("extract(timezone_minute from null)", "null")
@@ -64,15 +64,15 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
 
     @Test
     fun extractTimezoneHourNegativeOffset() =
-        assertEval("extract(timezone_hour from `2017-01-10T05:30:55-11:30`)", "-11e0")
+        assertEval("extract(timezone_hour from `2017-01-10T05:30:55-11:30`)", "-11.")
 
     @Test
     fun extractTimezoneMinuteNegativeOffset() =
-        assertEval("extract(timezone_minute from `2017-01-10T05:30:55-11:30`)", "-30e0")
+        assertEval("extract(timezone_minute from `2017-01-10T05:30:55-11:30`)", "-30.")
 
     @Test
     fun extractWithBindings() = assertEval("extract(second from a)",
-                                           "55e0",
+                                           "55.",
                                            mapOf("a" to "2017-01-10T05:30:55Z").toSession())
 
     @Test
@@ -131,9 +131,9 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
                         DatePart.YEAR -> null
                         DatePart.MONTH -> null
                         DatePart.DAY -> null
-                        DatePart.HOUR -> valueFactory.newInt(expected.localTime.hour)
-                        DatePart.MINUTE -> valueFactory.newInt(expected.localTime.minute)
-                        DatePart.SECOND -> valueFactory.newFloat(expected.secondsWithFractionalPart.toDouble())
+                        DatePart.HOUR -> valueFactory.newDecimal(expected.localTime.hour)
+                        DatePart.MINUTE -> valueFactory.newDecimal(expected.localTime.minute)
+                        DatePart.SECOND -> valueFactory.newDecimal(expected.secondsWithFractionalPart)
                         DatePart.TIMEZONE_HOUR -> expected.timezoneHour?.let { valueFactory.newInt(it) }
                         DatePart.TIMEZONE_MINUTE -> expected.timezoneMinute?.let { valueFactory.newInt(it) }
                     }

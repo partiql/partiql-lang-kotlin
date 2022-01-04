@@ -18,12 +18,13 @@ import com.amazon.ion.*
 import org.partiql.lang.eval.*
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.syntax.*
+import java.math.BigDecimal
 import java.time.LocalDate
 
 private const val SECONDS_PER_MINUTE = 60
 
 /**
- * Extracts a date part from a datetime type where date part is one of the following keywords:
+ * Extracts a date part from a datetime type and returns a [DecimalExprValue] where date part is one of the following keywords:
  * `year, month, day, hour, minute, second, timestamp_hour, timestamp_minute`.
  * Datetime type can be one of DATE, TIME or TIMESTAMP
  * **Note** that the allowed date parts for `EXTRACT` is not the same as `DATE_ADD`
@@ -40,7 +41,7 @@ internal class ExtractExprFunction(valueFactory: ExprValueFactory) : NullPropaga
 
     private fun Timestamp.minuteOffset() = (localOffset ?: 0) % SECONDS_PER_MINUTE
 
-    private fun Timestamp.extractedValue(datePart: DatePart) : Double {
+    private fun Timestamp.extractedValue(datePart: DatePart): BigDecimal {
         return when (datePart) {
             DatePart.YEAR -> year
             DatePart.MONTH -> month
@@ -50,10 +51,10 @@ internal class ExtractExprFunction(valueFactory: ExprValueFactory) : NullPropaga
             DatePart.SECOND -> second
             DatePart.TIMEZONE_HOUR -> hourOffset()
             DatePart.TIMEZONE_MINUTE -> minuteOffset()
-        }.toDouble()
+        }.toBigDecimal()
     }
 
-    private fun LocalDate.extractedValue(datePart: DatePart) : Double {
+    private fun LocalDate.extractedValue(datePart: DatePart) : BigDecimal {
         return when (datePart) {
             DatePart.YEAR -> year
             DatePart.MONTH -> monthValue
@@ -64,19 +65,19 @@ internal class ExtractExprFunction(valueFactory: ExprValueFactory) : NullPropaga
                 internal = false
             )
             DatePart.HOUR, DatePart.MINUTE, DatePart.SECOND -> 0
-        }.toDouble()
+        }.toBigDecimal()
     }
 
-    private fun Time.extractedValue(datePart: DatePart) : Double {
+    private fun Time.extractedValue(datePart: DatePart) : BigDecimal {
         return when (datePart) {
-            DatePart.HOUR -> localTime.hour.toDouble()
-            DatePart.MINUTE -> localTime.minute.toDouble()
-            DatePart.SECOND -> secondsWithFractionalPart.toDouble()
-            DatePart.TIMEZONE_HOUR -> timezoneHour?.toDouble() ?: errNoContext(
+            DatePart.HOUR -> localTime.hour.toBigDecimal()
+            DatePart.MINUTE -> localTime.minute.toBigDecimal()
+            DatePart.SECOND -> secondsWithFractionalPart
+            DatePart.TIMEZONE_HOUR -> timezoneHour?.toBigDecimal() ?: errNoContext(
                 "Time unit ${datePart.name.toLowerCase()} not supported for TIME type without TIME ZONE",
                 internal = false
             )
-            DatePart.TIMEZONE_MINUTE -> timezoneMinute?.toDouble() ?: errNoContext(
+            DatePart.TIMEZONE_MINUTE -> timezoneMinute?.toBigDecimal() ?: errNoContext(
                 "Time unit ${datePart.name.toLowerCase()} not supported for TIME type without TIME ZONE",
                 internal = false
             )
@@ -96,7 +97,7 @@ internal class ExtractExprFunction(valueFactory: ExprValueFactory) : NullPropaga
             else                    -> errNoContext("Expected date or timestamp: ${args[1]}", internal = false)
         }
 
-        return valueFactory.newFloat(extractedValue)
+        return valueFactory.newDecimal(extractedValue)
     }
 
     override fun call(env: Environment, args: List<ExprValue>): ExprValue {
