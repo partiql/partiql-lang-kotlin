@@ -206,30 +206,6 @@ class ReadFileTest {
     }
 
     @Test
-    fun readMongodbCsvFile() {
-        writeFile("simple_mongo.csv", "id,name,balance\n1,Bob,10000.00")
-
-        val args = listOf("\"${dirPath("simple_mongo.csv")}\"", "{type:\"mongodb_csv\", header:true}").map { it.exprValue() }
-
-        val actual = function.call(env, args).ionValue
-        val expected = "[{id:\"1\",name:\"Bob\",balance:\"10000.00\"}]"
-
-        assertEquals(ion.singleValue(expected), actual)
-    }
-
-    @Test
-    fun readMongodbTsvFile() {
-        writeFile("simple_mongo.tsv", "id\tname\tbalance\n1\tBob\t10000.00")
-
-        val args = listOf("\"${dirPath("simple_mongo.tsv")}\"", "{type:\"mongodb_tsv\", header:true}").map { it.exprValue() }
-
-        val actual = function.call(env, args).ionValue
-        val expected = "[{id:\"1\",name:\"Bob\",balance:\"10000.00\"}]"
-
-        assertEquals(ion.singleValue(expected), actual)
-    }
-
-    @Test
     fun readCustomizedCsvFile1() { // delimiter
         writeFile("customized.csv", "id name balance\n1 Bob 10000.00")
 
