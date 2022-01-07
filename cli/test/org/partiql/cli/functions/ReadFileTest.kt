@@ -171,12 +171,36 @@ class ReadFileTest {
 
     @Test
     fun readPostgreSQLCsvFile() {
-        writeFile("simple_postgresql.csv", "id,name,balance\n1,Bob,10000.00")
+        writeFile("simple_postgresql.csv", "id,name,balance\n1,B\"\"ob,10000.00")
 
         val args = listOf("\"${dirPath("simple_postgresql.csv")}\"", "{type:\"postgresql_csv\", header:true}").map { it.exprValue() }
 
         val actual = function.call(env, args).ionValue
+        val expected = "[{id:\"1\",name:\"B\\\"ob\",balance:\"10000.00\"}]"
+
+        assertEquals(ion.singleValue(expected), actual)
+    }
+
+    @Test
+    fun readPostgreSQLTextFile() {
+        writeFile("simple_postgresql.txt", "id\tname\tbalance\n1\tBob\t10000.00")
+
+        val args = listOf("\"${dirPath("simple_postgresql.txt")}\"", "{type:\"postgresql_text\", header:true}").map { it.exprValue() }
+
+        val actual = function.call(env, args).ionValue
         val expected = "[{id:\"1\",name:\"Bob\",balance:\"10000.00\"}]"
+
+        assertEquals(ion.singleValue(expected), actual)
+    }
+
+    @Test
+    fun readMySQLCsvFile() {
+        writeFile("simple_mysql.csv", "id\tname\tbalance\n1\tB\"ob\t10000.00")
+
+        val args = listOf("\"${dirPath("simple_mysql.csv")}\"", "{type:\"mysql_csv\", header:true}").map { it.exprValue() }
+
+        val actual = function.call(env, args).ionValue
+        val expected = "[{id:\"1\",name:\"B\\\"ob\",balance:\"10000.00\"}]"
 
         assertEquals(ion.singleValue(expected), actual)
     }

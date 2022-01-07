@@ -71,8 +71,6 @@ internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFact
         "tsv" to fileReadHandler(CSVFormat.DEFAULT.withDelimiter('\t')),
         "excel_csv" to fileReadHandler(CSVFormat.EXCEL),
         "mysql_csv" to fileReadHandler(CSVFormat.MYSQL),
-        "mongodb_csv" to fileReadHandler(CSVFormat.MONGODB_CSV),
-        "mongodb_tsv" to fileReadHandler(CSVFormat.MONGODB_TSV),
         "postgresql_csv" to fileReadHandler(CSVFormat.POSTGRESQL_CSV),
         "postgresql_text" to fileReadHandler(CSVFormat.POSTGRESQL_TEXT),
         "customized" to fileReadHandler(CSVFormat.DEFAULT)
