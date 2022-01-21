@@ -135,8 +135,8 @@ publishing {
                 }
                 developers {
                     developer {
-                        name = "Amazon Ion Team"
-                        email = "ion-team@amazon.com"
+                        name = "PartiQL Team"
+                        email = "partiql-team@amazon.com"
                         organization = "PartiQL"
                         organizationUrl = "https://github.com/partiql"
                     }
