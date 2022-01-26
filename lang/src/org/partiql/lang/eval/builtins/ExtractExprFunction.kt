@@ -41,48 +41,48 @@ internal class ExtractExprFunction(valueFactory: ExprValueFactory) : NullPropaga
 
     private fun Timestamp.minuteOffset() = (localOffset ?: 0) % SECONDS_PER_MINUTE
 
-    private fun Timestamp.extractedValue(datePart: DatePart): BigDecimal {
-        return when (datePart) {
-            DatePart.YEAR -> year
-            DatePart.MONTH -> month
-            DatePart.DAY -> day
-            DatePart.HOUR -> hour
-            DatePart.MINUTE -> minute
-            DatePart.SECOND -> second
-            DatePart.TIMEZONE_HOUR -> hourOffset()
-            DatePart.TIMEZONE_MINUTE -> minuteOffset()
+    private fun Timestamp.extractedValue(dateTimePart: DateTimePart): BigDecimal {
+        return when (dateTimePart) {
+            DateTimePart.YEAR -> year
+            DateTimePart.MONTH -> month
+            DateTimePart.DAY -> day
+            DateTimePart.HOUR -> hour
+            DateTimePart.MINUTE -> minute
+            DateTimePart.SECOND -> second
+            DateTimePart.TIMEZONE_HOUR -> hourOffset()
+            DateTimePart.TIMEZONE_MINUTE -> minuteOffset()
         }.toBigDecimal()
     }
 
-    private fun LocalDate.extractedValue(datePart: DatePart) : BigDecimal {
-        return when (datePart) {
-            DatePart.YEAR -> year
-            DatePart.MONTH -> monthValue
-            DatePart.DAY -> dayOfMonth
-            DatePart.TIMEZONE_HOUR,
-            DatePart.TIMEZONE_MINUTE -> errNoContext(
-                "Timestamp unit ${datePart.name.toLowerCase()} not supported for DATE type",
+    private fun LocalDate.extractedValue(dateTimePart: DateTimePart) : BigDecimal {
+        return when (dateTimePart) {
+            DateTimePart.YEAR -> year
+            DateTimePart.MONTH -> monthValue
+            DateTimePart.DAY -> dayOfMonth
+            DateTimePart.TIMEZONE_HOUR,
+            DateTimePart.TIMEZONE_MINUTE -> errNoContext(
+                "Timestamp unit ${dateTimePart.name.toLowerCase()} not supported for DATE type",
                 internal = false
             )
-            DatePart.HOUR, DatePart.MINUTE, DatePart.SECOND -> 0
+            DateTimePart.HOUR, DateTimePart.MINUTE, DateTimePart.SECOND -> 0
         }.toBigDecimal()
     }
 
-    private fun Time.extractedValue(datePart: DatePart) : BigDecimal {
-        return when (datePart) {
-            DatePart.HOUR -> localTime.hour.toBigDecimal()
-            DatePart.MINUTE -> localTime.minute.toBigDecimal()
-            DatePart.SECOND -> secondsWithFractionalPart
-            DatePart.TIMEZONE_HOUR -> timezoneHour?.toBigDecimal() ?: errNoContext(
-                "Time unit ${datePart.name.toLowerCase()} not supported for TIME type without TIME ZONE",
+    private fun Time.extractedValue(dateTimePart: DateTimePart) : BigDecimal {
+        return when (dateTimePart) {
+            DateTimePart.HOUR -> localTime.hour.toBigDecimal()
+            DateTimePart.MINUTE -> localTime.minute.toBigDecimal()
+            DateTimePart.SECOND -> secondsWithFractionalPart
+            DateTimePart.TIMEZONE_HOUR -> timezoneHour?.toBigDecimal() ?: errNoContext(
+                "Time unit ${dateTimePart.name.toLowerCase()} not supported for TIME type without TIME ZONE",
                 internal = false
             )
-            DatePart.TIMEZONE_MINUTE -> timezoneMinute?.toBigDecimal() ?: errNoContext(
-                "Time unit ${datePart.name.toLowerCase()} not supported for TIME type without TIME ZONE",
+            DateTimePart.TIMEZONE_MINUTE -> timezoneMinute?.toBigDecimal() ?: errNoContext(
+                "Time unit ${dateTimePart.name.toLowerCase()} not supported for TIME type without TIME ZONE",
                 internal = false
             )
-            DatePart.YEAR, DatePart.MONTH, DatePart.DAY -> errNoContext(
-                "Time unit ${datePart.name.toLowerCase()} not supported for TIME type.",
+            DateTimePart.YEAR, DateTimePart.MONTH, DateTimePart.DAY -> errNoContext(
+                "Time unit ${dateTimePart.name.toLowerCase()} not supported for TIME type.",
                 internal = false
             )
         }

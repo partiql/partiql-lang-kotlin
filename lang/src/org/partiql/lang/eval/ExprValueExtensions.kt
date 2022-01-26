@@ -100,9 +100,9 @@ fun ExprValue.stringValue(): String =
 fun ExprValue.bytesValue(): ByteArray =
     scalar.bytesValue() ?: errNoContext("Expected LOB: $ionValue", internal = false)
 
-internal fun ExprValue.datePartValue(): DatePart =
+internal fun ExprValue.datePartValue(): DateTimePart =
     try {
-        DatePart.valueOf(this.stringValue().toUpperCase())
+        DateTimePart.valueOf(this.stringValue().toUpperCase())
     }
     catch (e : IllegalArgumentException)  {
         throw EvaluationException(cause = e,

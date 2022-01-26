@@ -20,7 +20,7 @@ import org.assertj.core.api.Assertions
 import org.partiql.lang.eval.*
 import org.junit.*
 import org.partiql.lang.eval.time.Time
-import org.partiql.lang.syntax.DatePart
+import org.partiql.lang.syntax.DateTimePart
 import java.time.LocalDate
 
 /**
@@ -83,19 +83,19 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
     data class ExtractFromDateTC(val source: String, val expected: ExprValue?)
 
     private fun createDateTC(source: String, expected: LocalDate) =
-        DatePart.values()
+        DateTimePart.values()
             .map { datePart ->
                 ExtractFromDateTC(
                     source = "EXTRACT(${datePart.name} FROM $source)",
                     expected = when (datePart) {
-                        DatePart.YEAR -> valueFactory.newInt(expected.year)
-                        DatePart.MONTH -> valueFactory.newInt(expected.monthValue)
-                        DatePart.DAY -> valueFactory.newInt(expected.dayOfMonth)
-                        DatePart.HOUR -> valueFactory.newInt(0)
-                        DatePart.MINUTE -> valueFactory.newInt(0)
-                        DatePart.SECOND -> valueFactory.newInt(0)
-                        DatePart.TIMEZONE_HOUR -> null
-                        DatePart.TIMEZONE_MINUTE -> null
+                        DateTimePart.YEAR -> valueFactory.newInt(expected.year)
+                        DateTimePart.MONTH -> valueFactory.newInt(expected.monthValue)
+                        DateTimePart.DAY -> valueFactory.newInt(expected.dayOfMonth)
+                        DateTimePart.HOUR -> valueFactory.newInt(0)
+                        DateTimePart.MINUTE -> valueFactory.newInt(0)
+                        DateTimePart.SECOND -> valueFactory.newInt(0)
+                        DateTimePart.TIMEZONE_HOUR -> null
+                        DateTimePart.TIMEZONE_MINUTE -> null
                     }
                 )
             }
@@ -123,19 +123,19 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
     data class ExtractFromTimeTC(val source: String, val expected: ExprValue?)
 
     private fun createTimeTC(source: String, expected: Time) =
-        DatePart.values()
+        DateTimePart.values()
             .map { datePart ->
                 ExtractFromTimeTC(
                     source = "EXTRACT(${datePart.name} FROM $source)",
                     expected = when (datePart) {
-                        DatePart.YEAR -> null
-                        DatePart.MONTH -> null
-                        DatePart.DAY -> null
-                        DatePart.HOUR -> valueFactory.newDecimal(expected.localTime.hour)
-                        DatePart.MINUTE -> valueFactory.newDecimal(expected.localTime.minute)
-                        DatePart.SECOND -> valueFactory.newDecimal(expected.secondsWithFractionalPart)
-                        DatePart.TIMEZONE_HOUR -> expected.timezoneHour?.let { valueFactory.newInt(it) }
-                        DatePart.TIMEZONE_MINUTE -> expected.timezoneMinute?.let { valueFactory.newInt(it) }
+                        DateTimePart.YEAR -> null
+                        DateTimePart.MONTH -> null
+                        DateTimePart.DAY -> null
+                        DateTimePart.HOUR -> valueFactory.newDecimal(expected.localTime.hour)
+                        DateTimePart.MINUTE -> valueFactory.newDecimal(expected.localTime.minute)
+                        DateTimePart.SECOND -> valueFactory.newDecimal(expected.secondsWithFractionalPart)
+                        DateTimePart.TIMEZONE_HOUR -> expected.timezoneHour?.let { valueFactory.newInt(it) }
+                        DateTimePart.TIMEZONE_MINUTE -> expected.timezoneMinute?.let { valueFactory.newInt(it) }
                     }
                 )
             }

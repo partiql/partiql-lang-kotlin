@@ -18,7 +18,6 @@ import com.amazon.ion.*
 import org.partiql.lang.*
 import org.partiql.lang.eval.*
 import org.partiql.lang.syntax.*
-import org.partiql.lang.util.*
 import junitparams.*
 import org.assertj.core.api.Assertions.*
 import org.junit.*
@@ -73,8 +72,8 @@ class DateAddExprFunctionTest : TestBase() {
             .isExactlyInstanceOf(EvaluationException::class.java)
     }
 
-    fun parametersForInvalidDatePart() = listOf(DatePart.TIMEZONE_HOUR,
-                                                DatePart.TIMEZONE_MINUTE).map { it.toString().toLowerCase() }
+    fun parametersForInvalidDatePart() = listOf(DateTimePart.TIMEZONE_HOUR,
+                                                DateTimePart.TIMEZONE_MINUTE).map { it.toString().toLowerCase() }
 
     @Test
     @Parameters
