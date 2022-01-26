@@ -18,7 +18,6 @@ import com.amazon.ion.*
 import com.amazon.ion.Timestamp.*
 import org.partiql.lang.eval.*
 import org.partiql.lang.syntax.*
-import org.partiql.lang.util.*
 
 internal class DateAddExprFunction(valueFactory: ExprValueFactory) : NullPropagatingExprFunction("date_add", 3, valueFactory) {
     companion object {
@@ -28,12 +27,12 @@ internal class DateAddExprFunction(valueFactory: ExprValueFactory) : NullPropaga
                                                        Precision.MINUTE,
                                                        Precision.SECOND)
 
-        @JvmStatic private val datePartToPrecision = mapOf(DatePart.YEAR to Precision.YEAR,
-                                                           DatePart.MONTH to Precision.MONTH,
-                                                           DatePart.DAY to Precision.DAY,
-                                                           DatePart.HOUR to Precision.MINUTE,
-                                                           DatePart.MINUTE to Precision.MINUTE,
-                                                           DatePart.SECOND to Precision.SECOND)
+        @JvmStatic private val dateTimePartToPrecision = mapOf(DateTimePart.YEAR to Precision.YEAR,
+                                                           DateTimePart.MONTH to Precision.MONTH,
+                                                           DateTimePart.DAY to Precision.DAY,
+                                                           DateTimePart.HOUR to Precision.MINUTE,
+                                                           DateTimePart.MINUTE to Precision.MINUTE,
+                                                           DateTimePart.SECOND to Precision.SECOND)
     }
 
     private fun Timestamp.hasSufficientPrecisionFor(requiredPrecision: Precision): Boolean {
@@ -43,8 +42,8 @@ internal class DateAddExprFunction(valueFactory: ExprValueFactory) : NullPropaga
         return precisionPos >= requiredPrecisionPos
     }
 
-    private fun Timestamp.adjustPrecisionTo(datePart: DatePart): Timestamp {
-        val requiredPrecision = datePartToPrecision[datePart]!!
+    private fun Timestamp.adjustPrecisionTo(dateTimePart: DateTimePart): Timestamp {
+        val requiredPrecision = dateTimePartToPrecision[dateTimePart]!!
 
         if (this.hasSufficientPrecisionFor(requiredPrecision)) {
             return this
@@ -67,7 +66,7 @@ internal class DateAddExprFunction(valueFactory: ExprValueFactory) : NullPropaga
                                                       this.hour,
                                                       this.minute,
                                                       this.localOffset)
-            else                -> errNoContext("invalid date part for date_add: ${datePart.toString().toLowerCase()}",
+            else                -> errNoContext("invalid date part for date_add: ${dateTimePart.toString().toLowerCase()}",
                                                 internal = false)
         }
     }
@@ -79,12 +78,12 @@ internal class DateAddExprFunction(valueFactory: ExprValueFactory) : NullPropaga
 
         try {
             val addedTimestamp = when (datePart) {
-                DatePart.YEAR   -> timestamp.adjustPrecisionTo(datePart).addYear(interval)
-                DatePart.MONTH  -> timestamp.adjustPrecisionTo(datePart).addMonth(interval)
-                DatePart.DAY    -> timestamp.adjustPrecisionTo(datePart).addDay(interval)
-                DatePart.HOUR   -> timestamp.adjustPrecisionTo(datePart).addHour(interval)
-                DatePart.MINUTE -> timestamp.adjustPrecisionTo(datePart).addMinute(interval)
-                DatePart.SECOND -> timestamp.adjustPrecisionTo(datePart).addSecond(interval)
+                DateTimePart.YEAR   -> timestamp.adjustPrecisionTo(datePart).addYear(interval)
+                DateTimePart.MONTH  -> timestamp.adjustPrecisionTo(datePart).addMonth(interval)
+                DateTimePart.DAY    -> timestamp.adjustPrecisionTo(datePart).addDay(interval)
+                DateTimePart.HOUR   -> timestamp.adjustPrecisionTo(datePart).addHour(interval)
+                DateTimePart.MINUTE -> timestamp.adjustPrecisionTo(datePart).addMinute(interval)
+                DateTimePart.SECOND -> timestamp.adjustPrecisionTo(datePart).addSecond(interval)
                 else            -> errNoContext("invalid date part for date_add: ${datePart.toString().toLowerCase()}",
                                                 internal = false)
             }

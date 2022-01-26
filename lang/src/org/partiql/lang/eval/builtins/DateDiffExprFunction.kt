@@ -77,12 +77,12 @@ internal class DateDiffExprFunction(valueFactory: ExprValueFactory) : NullPropag
         val rightAsJava = right.toJava()
 
         val difference = when (datePart) {
-            DatePart.YEAR   -> yearsSince(leftAsJava, rightAsJava)
-            DatePart.MONTH  -> monthsSince(leftAsJava, rightAsJava)
-            DatePart.DAY    -> daysSince(leftAsJava, rightAsJava)
-            DatePart.HOUR   -> hoursSince(leftAsJava, rightAsJava)
-            DatePart.MINUTE -> minutesSince(leftAsJava, rightAsJava)
-            DatePart.SECOND -> secondsSince(leftAsJava, rightAsJava)
+            DateTimePart.YEAR   -> yearsSince(leftAsJava, rightAsJava)
+            DateTimePart.MONTH  -> monthsSince(leftAsJava, rightAsJava)
+            DateTimePart.DAY    -> daysSince(leftAsJava, rightAsJava)
+            DateTimePart.HOUR   -> hoursSince(leftAsJava, rightAsJava)
+            DateTimePart.MINUTE -> minutesSince(leftAsJava, rightAsJava)
+            DateTimePart.SECOND -> secondsSince(leftAsJava, rightAsJava)
             else            -> errNoContext("invalid date part for date_diff: ${datePart.toString().toLowerCase()}",
                                             internal = false)
         }
