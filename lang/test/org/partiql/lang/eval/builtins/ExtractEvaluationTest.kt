@@ -84,10 +84,10 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
 
     private fun createDateTC(source: String, expected: LocalDate) =
         DateTimePart.values()
-            .map { datePart ->
+            .map { dateTimePart ->
                 ExtractFromDateTC(
-                    source = "EXTRACT(${datePart.name} FROM $source)",
-                    expected = when (datePart) {
+                    source = "EXTRACT(${dateTimePart.name} FROM $source)",
+                    expected = when (dateTimePart) {
                         DateTimePart.YEAR -> valueFactory.newInt(expected.year)
                         DateTimePart.MONTH -> valueFactory.newInt(expected.monthValue)
                         DateTimePart.DAY -> valueFactory.newInt(expected.dayOfMonth)
@@ -124,10 +124,10 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
 
     private fun createTimeTC(source: String, expected: Time) =
         DateTimePart.values()
-            .map { datePart ->
+            .map { dateTimePart ->
                 ExtractFromTimeTC(
-                    source = "EXTRACT(${datePart.name} FROM $source)",
-                    expected = when (datePart) {
+                    source = "EXTRACT(${dateTimePart.name} FROM $source)",
+                    expected = when (dateTimePart) {
                         DateTimePart.YEAR -> null
                         DateTimePart.MONTH -> null
                         DateTimePart.DAY -> null
@@ -188,7 +188,7 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
     @Test
     fun wrongTypeOfFirstArgument() {
         Assertions.assertThatThrownBy { callExtract("foobar", 1) }
-            .hasMessage("invalid date part, valid values: [year, month, day, hour, minute, second, timezone_hour, timezone_minute]")
+            .hasMessage("invalid datetime part, valid values: [year, month, day, hour, minute, second, timezone_hour, timezone_minute]")
             .isExactlyInstanceOf(EvaluationException::class.java)
     }
 

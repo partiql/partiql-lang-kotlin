@@ -46,7 +46,7 @@ class DateDiffExprFunctionTest : TestBase() {
     @Test
     fun wrongTypeOfFirstArgument() {
         assertThatThrownBy { callDateDiff("foobar", Timestamp.valueOf("2017T"), Timestamp.valueOf("2017T")) }
-            .hasMessage("invalid date part, valid values: [year, month, day, hour, minute, second, timezone_hour, timezone_minute]")
+            .hasMessage("invalid datetime part, valid values: [year, month, day, hour, minute, second, timezone_hour, timezone_minute]")
             .isExactlyInstanceOf(EvaluationException::class.java)
     }
 

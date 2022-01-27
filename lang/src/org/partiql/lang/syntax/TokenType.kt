@@ -48,7 +48,7 @@ enum class TokenType {
     DESC,
     // function specific
     TRIM_SPECIFICATION,
-    DATE_PART,
+    DATETIME_PART,
     EOF // End of Stream token.
     ;
     fun isIdentifier() = this == TokenType.IDENTIFIER || this == TokenType.QUOTED_IDENTIFIER

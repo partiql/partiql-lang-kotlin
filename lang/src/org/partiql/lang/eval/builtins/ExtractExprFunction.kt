@@ -24,15 +24,15 @@ import java.time.LocalDate
 private const val SECONDS_PER_MINUTE = 60
 
 /**
- * Extracts a date part from a datetime type and returns a [DecimalExprValue] where date part is one of the following keywords:
+ * Extracts a datetime part from a datetime type and returns a [DecimalExprValue] where datetime part is one of the following keywords:
  * `year, month, day, hour, minute, second, timestamp_hour, timestamp_minute`.
  * Datetime type can be one of DATE, TIME or TIMESTAMP
- * **Note** that the allowed date parts for `EXTRACT` is not the same as `DATE_ADD`
+ * **Note** that the allowed datetime parts for `EXTRACT` is not the same as `DATE_ADD`
  *
- * Extract does not propagate null for its first parameter, the date part. From the SQL92 spec only the date part
+ * Extract does not propagate null for its first parameter, the datetime part. From the SQL92 spec only the datetime part
  * keywords are allowed as first argument
  *
- * `EXTRACT(<date part> FROM <datetime_type>)`
+ * `EXTRACT(<datetime part> FROM <datetime_type>)`
  */
 internal class ExtractExprFunction(valueFactory: ExprValueFactory) : NullPropagatingExprFunction("extract", 2, valueFactory) {
 
@@ -89,11 +89,11 @@ internal class ExtractExprFunction(valueFactory: ExprValueFactory) : NullPropaga
     }
 
     override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
-        val datePart = args[0].datePartValue()
+        val dateTimePart = args[0].dateTimePartValue()
         val extractedValue = when(args[1].type) {
-            ExprValueType.TIMESTAMP -> args[1].timestampValue().extractedValue(datePart)
-            ExprValueType.DATE      -> args[1].dateValue().extractedValue(datePart)
-            ExprValueType.TIME      -> args[1].timeValue().extractedValue(datePart)
+            ExprValueType.TIMESTAMP -> args[1].timestampValue().extractedValue(dateTimePart)
+            ExprValueType.DATE      -> args[1].dateValue().extractedValue(dateTimePart)
+            ExprValueType.TIME      -> args[1].timeValue().extractedValue(dateTimePart)
             else                    -> errNoContext("Expected date or timestamp: ${args[1]}", internal = false)
         }
 

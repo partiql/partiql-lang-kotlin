@@ -66,25 +66,25 @@ internal class DateAddExprFunction(valueFactory: ExprValueFactory) : NullPropaga
                                                       this.hour,
                                                       this.minute,
                                                       this.localOffset)
-            else                -> errNoContext("invalid date part for date_add: ${dateTimePart.toString().toLowerCase()}",
+            else                -> errNoContext("invalid datetime part for date_add: ${dateTimePart.toString().toLowerCase()}",
                                                 internal = false)
         }
     }
 
     override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
-        val datePart = args[0].datePartValue()
+        val dateTimePart = args[0].dateTimePartValue()
         val interval = args[1].intValue()
         val timestamp = args[2].timestampValue()
 
         try {
-            val addedTimestamp = when (datePart) {
-                DateTimePart.YEAR   -> timestamp.adjustPrecisionTo(datePart).addYear(interval)
-                DateTimePart.MONTH  -> timestamp.adjustPrecisionTo(datePart).addMonth(interval)
-                DateTimePart.DAY    -> timestamp.adjustPrecisionTo(datePart).addDay(interval)
-                DateTimePart.HOUR   -> timestamp.adjustPrecisionTo(datePart).addHour(interval)
-                DateTimePart.MINUTE -> timestamp.adjustPrecisionTo(datePart).addMinute(interval)
-                DateTimePart.SECOND -> timestamp.adjustPrecisionTo(datePart).addSecond(interval)
-                else            -> errNoContext("invalid date part for date_add: ${datePart.toString().toLowerCase()}",
+            val addedTimestamp = when (dateTimePart) {
+                DateTimePart.YEAR   -> timestamp.adjustPrecisionTo(dateTimePart).addYear(interval)
+                DateTimePart.MONTH  -> timestamp.adjustPrecisionTo(dateTimePart).addMonth(interval)
+                DateTimePart.DAY    -> timestamp.adjustPrecisionTo(dateTimePart).addDay(interval)
+                DateTimePart.HOUR   -> timestamp.adjustPrecisionTo(dateTimePart).addHour(interval)
+                DateTimePart.MINUTE -> timestamp.adjustPrecisionTo(dateTimePart).addMinute(interval)
+                DateTimePart.SECOND -> timestamp.adjustPrecisionTo(dateTimePart).addSecond(interval)
+                else            -> errNoContext("invalid datetime part for date_add: ${dateTimePart.toString().toLowerCase()}",
                                                 internal = false)
             }
 

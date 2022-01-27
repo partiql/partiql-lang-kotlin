@@ -1750,10 +1750,10 @@ class EvaluatingCompilerTests : EvaluatorTestBase() {
     /**
      * Regression test for https://github.com/partiql/partiql-lang-kotlin/issues/314
      *
-     * Ensures that date parts can be used as variable names.
+     * Ensures that datetime parts can be used as variable names.
      */
     @Test
-    fun datePartsAsVariableNames() =
+    fun dateTimePartsAsVariableNames() =
         assertEvalExprValue(
             """
             SELECT VALUE [year, month, day, hour, minute, second]
@@ -1764,10 +1764,10 @@ class EvaluatingCompilerTests : EvaluatorTestBase() {
     /**
      * Regression test for https://github.com/partiql/partiql-lang-kotlin/issues/121
      *
-     * Ensures that date parts can be used as struct field names.
+     * Ensures that datetime parts can be used as struct field names.
      */
     @Test
-    fun datePartsAsStructFieldNames() =
+    fun dateTimePartsAsStructFieldNames() =
         assertEvalExprValue(
             """
             SELECT VALUE [x.year, x.month, x.day, x.hour, x.minute, x.second]

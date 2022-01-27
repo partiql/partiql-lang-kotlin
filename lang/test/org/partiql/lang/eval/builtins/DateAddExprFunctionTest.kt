@@ -52,9 +52,9 @@ class DateAddExprFunctionTest : TestBase() {
     }
 
     @Test
-    fun nonExistingDatePart() {
+    fun nonExistingDateTimePart() {
         assertThatThrownBy { callDateAdd("foobar", 1, Timestamp.valueOf("2017T")) }
-            .hasMessage("invalid date part, valid values: [year, month, day, hour, minute, second, timezone_hour, timezone_minute]")
+            .hasMessage("invalid datetime part, valid values: [year, month, day, hour, minute, second, timezone_hour, timezone_minute]")
             .isExactlyInstanceOf(EvaluationException::class.java)
     }
 
@@ -72,14 +72,14 @@ class DateAddExprFunctionTest : TestBase() {
             .isExactlyInstanceOf(EvaluationException::class.java)
     }
 
-    fun parametersForInvalidDatePart() = listOf(DateTimePart.TIMEZONE_HOUR,
+    fun parametersForInvalidDateTimePart() = listOf(DateTimePart.TIMEZONE_HOUR,
                                                 DateTimePart.TIMEZONE_MINUTE).map { it.toString().toLowerCase() }
 
     @Test
     @Parameters
-    fun invalidDatePart(datePart: String) {
-        assertThatThrownBy { callDateAdd(datePart, 1, Timestamp.valueOf("2017T")) }
-            .hasMessage("invalid date part for date_add: $datePart")
+    fun invalidDateTimePart(dateTimePart: String) {
+        assertThatThrownBy { callDateAdd(dateTimePart, 1, Timestamp.valueOf("2017T")) }
+            .hasMessage("invalid datetime part for date_add: $dateTimePart")
             .isExactlyInstanceOf(EvaluationException::class.java)
     }
 

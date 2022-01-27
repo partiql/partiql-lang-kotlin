@@ -1170,9 +1170,9 @@ class ParserErrorsTest : SqlParserTestBase() {
     }
 
     @Test
-    fun callExtractMissingDatePart() {
+    fun callExtractMissingDateTimePart() {
         checkInputThrowingParserException("extract(from b)",
-                                          ErrorCode.PARSE_EXPECTED_DATE_PART,
+                                          ErrorCode.PARSE_EXPECTED_DATE_TIME_PART,
                                           mapOf(Property.LINE_NUMBER to 1L,
                                                 Property.COLUMN_NUMBER to 9L,
                                                 Property.TOKEN_TYPE to TokenType.KEYWORD,
@@ -1182,7 +1182,7 @@ class ParserErrorsTest : SqlParserTestBase() {
     @Test
     fun callExtractOnlySecondArgument() {
         checkInputThrowingParserException("extract(b)",
-                                          ErrorCode.PARSE_EXPECTED_DATE_PART,
+                                          ErrorCode.PARSE_EXPECTED_DATE_TIME_PART,
                                           mapOf(Property.LINE_NUMBER to 1L,
                                                 Property.COLUMN_NUMBER to 9L,
                                                 Property.TOKEN_TYPE to TokenType.IDENTIFIER,
@@ -1190,7 +1190,7 @@ class ParserErrorsTest : SqlParserTestBase() {
     }
 
     @Test
-    fun callExtractOnlyDatePart() {
+    fun callExtractOnlyDateTimePart() {
         checkInputThrowingParserException("extract(year)",
                                           ErrorCode.PARSE_EXPECTED_KEYWORD,
                                           mapOf(Property.LINE_NUMBER to 1L,
@@ -1205,7 +1205,7 @@ class ParserErrorsTest : SqlParserTestBase() {
     @Test
     fun callDateAddNoArguments() {
         checkInputThrowingParserException("date_add()",
-            ErrorCode.PARSE_EXPECTED_DATE_PART,
+            ErrorCode.PARSE_EXPECTED_DATE_TIME_PART,
             mapOf(Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 10L,
                 Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
@@ -1213,9 +1213,9 @@ class ParserErrorsTest : SqlParserTestBase() {
     }
 
     @Test
-    fun callDateAddInvalidDatePart() {
+    fun callDateAddInvalidDateTimePart() {
         checkInputThrowingParserException("date_add(foobar",
-            ErrorCode.PARSE_EXPECTED_DATE_PART,
+            ErrorCode.PARSE_EXPECTED_DATE_TIME_PART,
             mapOf(Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 10L,
                 Property.TOKEN_TYPE to TokenType.IDENTIFIER,
@@ -1277,9 +1277,9 @@ class ParserErrorsTest : SqlParserTestBase() {
     }
 
     @Test
-    fun callDateAddMissingDatePart() {
+    fun callDateAddMissingDateTimePart() {
         checkInputThrowingParserException("date_add(a, b, c)",
-            ErrorCode.PARSE_EXPECTED_DATE_PART,
+            ErrorCode.PARSE_EXPECTED_DATE_TIME_PART,
             mapOf(Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 10L,
                 Property.TOKEN_TYPE to TokenType.IDENTIFIER,

@@ -15,7 +15,7 @@
 package org.partiql.lang.errors
 
 import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.syntax.DATE_PART_KEYWORDS
+import org.partiql.lang.syntax.DATE_TIME_PART_KEYWORDS
 import org.partiql.lang.syntax.TokenType
 
 
@@ -155,10 +155,10 @@ enum class ErrorCode(private val category: ErrorCategory,
         LOC_TOKEN,
         "expected MEMBER node"),
 
-    PARSE_EXPECTED_DATE_PART(
+    PARSE_EXPECTED_DATE_TIME_PART(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "expected one of: [${DATE_PART_KEYWORDS.joinToString()}]"),
+        "expected one of: [${DATE_TIME_PART_KEYWORDS.joinToString()}]"),
 
     PARSE_UNSUPPORTED_SELECT(
         ErrorCategory.PARSER,
