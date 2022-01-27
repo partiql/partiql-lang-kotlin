@@ -23,7 +23,7 @@ internal enum class DateTimePart {
     YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, TIMEZONE_HOUR, TIMEZONE_MINUTE
 }
 
-internal val DATE_PART_KEYWORDS: Set<String> = DateTimePart.values()
+internal val DATE_TIME_PART_KEYWORDS: Set<String> = DateTimePart.values()
     .map { it.toString().toLowerCase() }.toSet()
 
 /** All SQL-92 keywords. */
@@ -247,7 +247,7 @@ internal val DATE_PART_KEYWORDS: Set<String> = DateTimePart.values()
     "write",
     "zone"
 )
-// Note: DATE_PART_KEYWORDs are not keywords in the traditional sense--they are only keywords within
+// Note: DATE_TIME_PART_KEYWORDs are not keywords in the traditional sense--they are only keywords within
 // the context of the DATE_ADD, DATE_DIFF and EXTRACT functions, for which [SqlParser] has special support.
 // Similarly, TRIM_SPECIFICATION_KEYWORDS are only keywords within the context of the TRIM function.
 

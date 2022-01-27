@@ -238,7 +238,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
         return PartiqlAst.build {
             when (type) {
                 ATOM -> when (token?.type){
-                    LITERAL, NULL, TRIM_SPECIFICATION, DATE_PART -> lit(token.value!!.toIonElement(), metas)
+                    LITERAL, NULL, TRIM_SPECIFICATION, DATETIME_PART -> lit(token.value!!.toIonElement(), metas)
                     ION_LITERAL -> lit(token.value!!.toIonElement(), metas + metaToIonMetaContainer(IsIonLiteralMeta.instance))
                     MISSING -> missing(metas)
                     QUOTED_IDENTIFIER -> id(token.text!!, caseSensitive(), unqualified(), metas)
@@ -2308,31 +2308,30 @@ class SqlParser(private val ion: IonSystem) : Parser {
         return ParseNode(ParseType.CALL, name, arguments, rem.tail)
     }
 
-    private fun List<Token>.parseDatePart(): ParseNode {
-        val maybeDatePart = this.head
+    private fun List<Token>.parseDateTimePart(): ParseNode {
+        val maybeDateTimePart = this.head
         return when  {
-            maybeDatePart?.type == IDENTIFIER && DATE_PART_KEYWORDS.contains(maybeDatePart.text?.toLowerCase()) -> {
-                ParseNode(ATOM, maybeDatePart.copy(type = DATE_PART), listOf(), this.tail)
+            maybeDateTimePart?.type == IDENTIFIER && DATE_TIME_PART_KEYWORDS.contains(maybeDateTimePart.text?.toLowerCase()) -> {
+                ParseNode(ATOM, maybeDateTimePart.copy(type = DATETIME_PART), listOf(), this.tail)
             }
-            else -> maybeDatePart.err("Expected one of: $DATE_PART_KEYWORDS", PARSE_EXPECTED_DATE_PART)
+            else -> maybeDateTimePart.err("Expected one of: $DATE_TIME_PART_KEYWORDS", PARSE_EXPECTED_DATE_TIME_PART)
         }
     }
-
 
     /**
      * Parses extract function call.
      *
-     * Syntax is EXTRACT(<date_part> FROM <timestamp>).
+     * Syntax is EXTRACT(<date_time_part> FROM <timestamp>).
      */
     private fun List<Token>.parseExtract(name: Token): ParseNode {
         if (head?.type != LEFT_PAREN) err("Expected $LEFT_PAREN",
             PARSE_EXPECTED_LEFT_PAREN_BUILTIN_FUNCTION_CALL)
 
-        val datePart = this.tail.parseDatePart().deriveExpectedKeyword("from")
-        val rem = datePart.remaining
+        val dateTimePart = this.tail.parseDateTimePart().deriveExpectedKeyword("from")
+        val rem = dateTimePart.remaining
         val dateTimeType = rem.parseExpression().deriveExpected(RIGHT_PAREN)
 
-        return ParseNode(CALL, name, listOf(datePart, dateTimeType), dateTimeType.remaining)
+        return ParseNode(CALL, name, listOf(dateTimePart, dateTimeType), dateTimeType.remaining)
     }
 
     /**
@@ -2487,19 +2486,19 @@ class SqlParser(private val ion: IonSystem) : Parser {
     /**
      * Parses a function call that has the syntax of `date_add` and `date_diff`.
      *
-     * Syntax is <func>(<date_part>, <timestamp>, <timestamp>) where <func>
+     * Syntax is <func>(<date_time_part>, <timestamp>, <timestamp>) where <func>
      * is the value of [name].
      */
     private fun List<Token>.parseDateAddOrDateDiff(name: Token): ParseNode {
         if (head?.type != LEFT_PAREN) err("Expected $LEFT_PAREN",
             PARSE_EXPECTED_LEFT_PAREN_BUILTIN_FUNCTION_CALL)
 
-        val datePart = this.tail.parseDatePart().deriveExpected(COMMA)
+        val dateTimePart = this.tail.parseDateTimePart().deriveExpected(COMMA)
 
-        val timestamp1 = datePart.remaining.parseExpression().deriveExpected(COMMA)
+        val timestamp1 = dateTimePart.remaining.parseExpression().deriveExpected(COMMA)
         val timestamp2 = timestamp1.remaining.parseExpression().deriveExpected(RIGHT_PAREN)
 
-        return ParseNode(CALL, name, listOf(datePart, timestamp1, timestamp2), timestamp2.remaining)
+        return ParseNode(CALL, name, listOf(dateTimePart, timestamp1, timestamp2), timestamp2.remaining)
     }
 
     private fun List<Token>.parseLet(): ParseNode {

@@ -100,13 +100,13 @@ fun ExprValue.stringValue(): String =
 fun ExprValue.bytesValue(): ByteArray =
     scalar.bytesValue() ?: errNoContext("Expected LOB: $ionValue", internal = false)
 
-internal fun ExprValue.datePartValue(): DateTimePart =
+internal fun ExprValue.dateTimePartValue(): DateTimePart =
     try {
         DateTimePart.valueOf(this.stringValue().toUpperCase())
     }
     catch (e : IllegalArgumentException)  {
         throw EvaluationException(cause = e,
-                                  message = "invalid date part, valid values: [${DATE_PART_KEYWORDS.joinToString()}]",
+                                  message = "invalid datetime part, valid values: [${DATE_TIME_PART_KEYWORDS.joinToString()}]",
                                   internal = false)
     }
 

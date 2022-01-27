@@ -20,12 +20,12 @@ import org.partiql.lang.syntax.*
 import java.time.*
 
 /**
- * Difference in date parts between two timestamps. If the first timestamp is later than the second the result is negative.
+ * Difference in datetime parts between two timestamps. If the first timestamp is later than the second the result is negative.
  *
- * Syntax: `DATE_DIFF(<date part>, <timestamp>, <timestamp>)`
- * Where date part is one of the following keywords: `year, month, day, hour, minute, second`
+ * Syntax: `DATE_DIFF(<datetime part>, <timestamp>, <timestamp>)`
+ * Where date time part is one of the following keywords: `year, month, day, hour, minute, second`
  *
- * Timestamps without all date parts are considered to be in the beginning of the missing parts to make calculation possible.
+ * Timestamps without all datetime parts are considered to be in the beginning of the missing parts to make calculation possible.
  * For example:
  * - 2010T is interpreted as 2010-01-01T00:00:00.000Z
  * - date_diff(month, `2010T`, `2010-05T`) results in 4
@@ -36,10 +36,10 @@ import java.time.*
  */
 internal class DateDiffExprFunction(valueFactory: ExprValueFactory) : NullPropagatingExprFunction("date_diff", 3, valueFactory) {
 
-    // Since we don't have a date part for `milliseconds` we can safely set the OffsetDateTime to 0 as it won't
+    // Since we don't have a datetime part for `milliseconds` we can safely set the OffsetDateTime to 0 as it won't
     // affect any of the possible calculations.
     //
-    // If we introduce the `milliseconds` date part this will need to be
+    // If we introduce the `milliseconds` datetime part this will need to be
     // revisited
     private fun Timestamp.toJava() = OffsetDateTime.of(year,
                                                        month,
@@ -69,21 +69,21 @@ internal class DateDiffExprFunction(valueFactory: ExprValueFactory) : NullPropag
         Duration.between(left, right).toMillis() / 1_000
 
     override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
-        val datePart = args[0].datePartValue()
+        val dateTimePart = args[0].dateTimePartValue()
         val left = args[1].timestampValue()
         val right = args[2].timestampValue()
 
         val leftAsJava = left.toJava()
         val rightAsJava = right.toJava()
 
-        val difference = when (datePart) {
+        val difference = when (dateTimePart) {
             DateTimePart.YEAR   -> yearsSince(leftAsJava, rightAsJava)
             DateTimePart.MONTH  -> monthsSince(leftAsJava, rightAsJava)
             DateTimePart.DAY    -> daysSince(leftAsJava, rightAsJava)
             DateTimePart.HOUR   -> hoursSince(leftAsJava, rightAsJava)
             DateTimePart.MINUTE -> minutesSince(leftAsJava, rightAsJava)
             DateTimePart.SECOND -> secondsSince(leftAsJava, rightAsJava)
-            else            -> errNoContext("invalid date part for date_diff: ${datePart.toString().toLowerCase()}",
+            else            -> errNoContext("invalid datetime part for date_diff: ${dateTimePart.toString().toLowerCase()}",
                                             internal = false)
         }
 
