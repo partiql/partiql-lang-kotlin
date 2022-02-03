@@ -171,7 +171,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
 
         val defaultVisitorTransforms = basicVisitorTransforms()
         val staticTypeVisitorTransform = StaticTypeVisitorTransform(ion, globalBindings)
-        val originalStatement = parse(tc.originalSql).toAstStatement().let {
+        val originalStatement = parse(tc.originalSql).let {
             // We always pass the query under test through all of the basic VisitorTransforms primarily because we need
             // FromSourceAliasVisitorTransform to execute first but also to help ensure the queries we're testing
             // make sense when they're all run.

@@ -245,6 +245,8 @@ private val genericTimeRegex = Regex("\\d\\d:\\d\\d:\\d\\d(\\.\\d*)?([+|-]\\d\\d
  * @param valueFactory The ExprValueFactory used to create ExprValues.
  * @param typedOpBehavior TypedOpBehavior indicating how CAST should behave.
  * @param locationMeta The source location for the CAST. Used for error reporting.
+ * @param defaultTimezoneOffset Default timezone offset to be used when TIME WITH TIME ZONE does not explicitly
+ * specify the time zone.
  */
 fun ExprValue.cast(
     targetType: SingleType,

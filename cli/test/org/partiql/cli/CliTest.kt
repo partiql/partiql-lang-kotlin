@@ -99,14 +99,6 @@ class CliTest {
     }
 
     @Test
-    fun caseSensitiveBindingName() = try {
-        val subject = makeCli("SELECT * FROM \"input_DAta\"", "{a: 1}")
-        subject.run()
-    } catch (e: EvaluationException) {
-        assertEquals("No such binding: input_DAta", e.message)
-    }
-
-    @Test
     fun withBinding() {
         val subject = makeCli("SELECT v, d FROM bound_value v, input_data d", "{a: 1}", mapOf("bound_value" to "{b: 1}").asBinding())
         val actual = subject.runAndOutput()

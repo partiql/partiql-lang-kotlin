@@ -9,7 +9,6 @@ import org.partiql.lang.eval.time.*
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.getOffsetHHmm
 import java.math.RoundingMode
-import java.time.Instant
 import java.time.ZoneOffset
 import kotlin.math.absoluteValue
 import kotlin.random.Random
@@ -56,12 +55,12 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         assertEquals(ion.newInt(expectedTime.tz_minutes?.rem(MINUTES_PER_HOUR)), actual["timezone_minute"])
     }
 
-    data class TimeTestCase(val query: String, val expected: String, val expectedTime: TimeForValidation? = null, val session: EvaluationSession = EvaluationSession.standard())
+    data class TimeTestCase(val query: String, val expected: String, val expectedTime: TimeForValidation? = null, val compileOptions: CompileOptions = CompileOptions.standard())
 
     @ParameterizedTest
     @ArgumentsSource(ArgumentsForTimeLiterals::class)
     fun testTime(tc: TimeTestCase)  {
-        val originalExprValue = eval(source = tc.query, session = tc.session)
+        val originalExprValue = eval(source = tc.query, compileOptions = tc.compileOptions)
         assertEquals(tc.expected, originalExprValue.toString())
         if (originalExprValue.type == ExprValueType.TIME) {
             val timeIonValue = originalExprValue.ionValue
@@ -80,9 +79,9 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
 
         private fun case(query: String, expected: String, expectedTime: TimeForValidation? = null) = TimeTestCase(query, expected, expectedTime)
 
-        private fun case(query: String, expected: String, expectedTime: TimeForValidation? = null, session: EvaluationSession) = TimeTestCase(query, expected, expectedTime, session)
+        private fun case(query: String, expected: String, expectedTime: TimeForValidation? = null, compileOptions: CompileOptions) = TimeTestCase(query, expected, expectedTime, compileOptions)
 
-        private fun buildSession(hours: Int = 0, minutes: Int = 0) = EvaluationSession.build { defaultTimezoneOffset(ZoneOffset.ofHoursMinutes(hours, minutes)) }
+        private fun buildCompileOptions(hours: Int = 0, minutes: Int = 0) = CompileOptions.build { defaultTimezoneOffset(ZoneOffset.ofHoursMinutes(hours, minutes)) }
 
         override fun getParameters() = listOf(
             case("TIME '00:00:00.000'", "00:00:00.000", TimeForValidation(0, 0, 0, 0, 3)),
@@ -115,10 +114,10 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
             case("TIME WITH TIME ZONE '12:25:12.123456' IS TIME", "true"),
             case("TIME (2) WITH TIME ZONE '01:01:12' IS TIME", "true"),
             case("'01:01:12' IS TIME", "false"),
-            case("TIME WITH TIME ZONE '00:00:00'", "00:00:00-01:00", TimeForValidation(0,0,0,0,0, -60), buildSession(-1)),
-            case("TIME WITH TIME ZONE '11:23:45.678'", "11:23:45.678+06:00", TimeForValidation(11,23,45,678000000,3, 360), buildSession(6)),
-            case("TIME WITH TIME ZONE '11:23:45.678-05:30'", "11:23:45.678-05:30", TimeForValidation(11,23,45,678000000,3, -330), buildSession(6)),
-            case("TIME (2) WITH TIME ZONE '12:59:59.13456'", "12:59:59.13-05:30", TimeForValidation(12, 59, 59, 130000000, 2, -330), buildSession(-5, -30))
+            case("TIME WITH TIME ZONE '00:00:00'", "00:00:00-01:00", TimeForValidation(0,0,0,0,0, -60), buildCompileOptions(-1)),
+            case("TIME WITH TIME ZONE '11:23:45.678'", "11:23:45.678+06:00", TimeForValidation(11,23,45,678000000,3, 360), buildCompileOptions(6)),
+            case("TIME WITH TIME ZONE '11:23:45.678-05:30'", "11:23:45.678-05:30", TimeForValidation(11,23,45,678000000,3, -330), buildCompileOptions(6)),
+            case("TIME (2) WITH TIME ZONE '12:59:59.13456'", "12:59:59.13-05:30", TimeForValidation(12, 59, 59, 130000000, 2, -330), buildCompileOptions(-5, -30))
         )
     }
 

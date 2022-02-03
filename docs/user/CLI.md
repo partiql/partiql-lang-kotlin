@@ -603,7 +603,7 @@ format to the `write_file` function.  Similar to the `read_file` function, the `
 can be used to specify `tsv`, `csv`, or `ion` output.
 
 ```
-PartiQL> write_file('out.tsv', {'type':'tsv'}, SELECT name, type FROM animals)
+PartiQL> write_file('out.tsv', SELECT name, type FROM animals, {'type':'tsv'},)
    | 
 ===' 
 true
@@ -624,7 +624,7 @@ The options `struct` can also specify a `header` Boolean field to indicate wheth
 TSV/CSV should have a header row.
 
 ```
-PartiQL> write_file('out.tsv', {'type':'tsv', 'header':true}, SELECT name, type FROM animals)
+PartiQL> write_file('out.tsv', SELECT name, type FROM animals, {'type':'tsv', 'header':true})
    | 
 ===' 
 true

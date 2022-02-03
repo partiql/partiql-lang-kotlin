@@ -18,6 +18,7 @@ import org.partiql.lang.eval.ExprValueType.STRUCT
 import org.partiql.lang.eval.ExprValueType.TIMESTAMP
 import org.partiql.lang.syntax.ParserException
 import org.partiql.lang.util.*
+import java.time.ZoneOffset
 
 /**
  * The 'quality' of a successful cast.
@@ -205,7 +206,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                         assertEquals(castCase.expectedErrorCode, p.errorCode)
                     }
                 }
-                else -> assertEquals(castCase.expected, eval(castCase.expression).toString())
+                else -> assertEquals(castCase.expected, eval(castCase.expression, compileOptions = CompileOptions.build(compileOptionBlock)).toString())
             }
         }
     }
@@ -1256,6 +1257,10 @@ abstract class CastTestBase : EvaluatorTestBase() {
             ).types(listOf("CHAR(4)", "CHARACTER(4)"))
         ).flatten()
 
+        private val defaultTimezoneOffset = ZoneOffset.UTC
+
+        private fun createZoneOffset(hours: Int = 0, minutes: Int = 0) = ZoneOffset.ofHoursMinutes(hours, minutes)
+
         private val commonDateTimeTests = listOf(
             listOf(
                 case("DATE '2007-10-10'", "2007-10-10", CastQuality.LOSSLESS)
@@ -1269,12 +1274,12 @@ abstract class CastTestBase : EvaluatorTestBase() {
             listOf(
                 // CAST(<TIME> AS <variants of TIME type>)
                 case("TIME '23:12:12.1267'", "TIME", "23:12:12.1267", CastQuality.LOSSLESS),
-                case("TIME '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "23:12:12.1267${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}", CastQuality.LOSSLESS),
+                case("TIME '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "23:12:12.1267${defaultTimezoneOffset.getOffsetHHmm()}", CastQuality.LOSSLESS),
                 case("TIME '23:12:12.1267+05:30'", "TIME (3)", "23:12:12.127", CastQuality.LOSSY),
-                case("TIME '23:12:12.1267-05:30'", "TIME (3) WITH TIME ZONE", "23:12:12.127${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}", CastQuality.LOSSY),
+                case("TIME '23:12:12.1267-05:30'", "TIME (3) WITH TIME ZONE", "23:12:12.127${defaultTimezoneOffset.getOffsetHHmm()}", CastQuality.LOSSY),
                 case("TIME (3) '23:12:12.1267'", "TIME","23:12:12.127", CastQuality.LOSSLESS),
                 case("TIME (3) '23:12:12.1267-05:30'", "TIME","23:12:12.127", CastQuality.LOSSLESS),
-                case("TIME (3) '23:12:12.1267+05:30'", "TIME WITH TIME ZONE","23:12:12.127${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}", CastQuality.LOSSLESS),
+                case("TIME (3) '23:12:12.1267+05:30'", "TIME WITH TIME ZONE","23:12:12.127${defaultTimezoneOffset.getOffsetHHmm()}", CastQuality.LOSSLESS),
                 case("TIME (3) '23:12:12.1267-05:30'", "TIME (9)","23:12:12.127000000", CastQuality.LOSSLESS),
                 case("TIME WITH TIME ZONE '23:12:12.1267'", "TIME", "23:12:12.1267", CastQuality.LOSSLESS),
                 case("TIME WITH TIME ZONE '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "23:12:12.1267-05:30", CastQuality.LOSSLESS),
@@ -1293,16 +1298,16 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 // CAST(<text> AS <variants of TIME type>)
                 case("'23:12:12.1267'", "TIME", "23:12:12.1267", CastQuality.LOSSLESS),
                 case("'23:12:12.1267'", "TIME (2)", "23:12:12.13", CastQuality.LOSSY),
-                case("'23:12:12.1267'", "TIME WITH TIME ZONE", "23:12:12.1267${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}", CastQuality.LOSSY),
-                case("'23:12:12.1267'", "TIME (2) WITH TIME ZONE", "23:12:12.13${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}", CastQuality.LOSSY),
+                case("'23:12:12.1267'", "TIME WITH TIME ZONE", "23:12:12.1267${defaultTimezoneOffset.getOffsetHHmm()}", CastQuality.LOSSY),
+                case("'23:12:12.1267'", "TIME (2) WITH TIME ZONE", "23:12:12.13${defaultTimezoneOffset.getOffsetHHmm()}", CastQuality.LOSSY),
                 case("""`"23:12:12.1267"`""", "TIME", "23:12:12.1267", CastQuality.LOSSLESS),
                 case("""`"23:12:12.1267"`""", "TIME (2)", "23:12:12.13", CastQuality.LOSSY),
-                case("""`"23:12:12.1267"`""", "TIME WITH TIME ZONE", "23:12:12.1267${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}", CastQuality.LOSSY),
-                case("""`'23:12:12.1267'`""", "TIME (2) WITH TIME ZONE", "23:12:12.13${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}", CastQuality.LOSSY),
+                case("""`"23:12:12.1267"`""", "TIME WITH TIME ZONE", "23:12:12.1267${defaultTimezoneOffset.getOffsetHHmm()}", CastQuality.LOSSY),
+                case("""`'23:12:12.1267'`""", "TIME (2) WITH TIME ZONE", "23:12:12.13${defaultTimezoneOffset.getOffsetHHmm()}", CastQuality.LOSSY),
                 case("""`'23:12:12.1267'`""", "TIME", "23:12:12.1267", CastQuality.LOSSLESS),
                 case("""`'23:12:12.1267'`""", "TIME (2)", "23:12:12.13", CastQuality.LOSSY),
-                case("""`'23:12:12.1267'`""", "TIME WITH TIME ZONE", "23:12:12.1267${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}", CastQuality.LOSSY),
-                case("""`'23:12:12.1267'`""", "TIME (2) WITH TIME ZONE", "23:12:12.13${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}", CastQuality.LOSSY)
+                case("""`'23:12:12.1267'`""", "TIME WITH TIME ZONE", "23:12:12.1267${defaultTimezoneOffset.getOffsetHHmm()}", CastQuality.LOSSY),
+                case("""`'23:12:12.1267'`""", "TIME (2) WITH TIME ZONE", "23:12:12.13${defaultTimezoneOffset.getOffsetHHmm()}", CastQuality.LOSSY),
             ),
             // Error cases for TIME
             listOf(
@@ -1336,10 +1341,10 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case("TIME (3) '23:12:12.1267'", "`'23:12:12.127'`", CastQuality.LOSSLESS),
                 case("TIME (3) '23:12:12.1267-05:30'", "`'23:12:12.127'`", CastQuality.LOSSLESS),
                 case("TIME (3) '23:12:12.1267+05:30'", "`'23:12:12.127'`", CastQuality.LOSSLESS),
-                case("TIME WITH TIME ZONE '23:12:12.1267'", "`'23:12:12.1267${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}'`", CastQuality.LOSSLESS),
+                case("TIME WITH TIME ZONE '23:12:12.1267'", "`'23:12:12.1267${defaultTimezoneOffset.getOffsetHHmm()}'`", CastQuality.LOSSLESS),
                 case("TIME WITH TIME ZONE '23:12:12.1267-05:30'", "`'23:12:12.1267-05:30'`", CastQuality.LOSSLESS),
                 case("TIME WITH TIME ZONE '23:12:12.1267+05:30'", "`'23:12:12.1267+05:30'`", CastQuality.LOSSLESS),
-                case("TIME (3) WITH TIME ZONE '23:12:12.1267'", "`'23:12:12.127${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}'`", CastQuality.LOSSLESS),
+                case("TIME (3) WITH TIME ZONE '23:12:12.1267'", "`'23:12:12.127${defaultTimezoneOffset.getOffsetHHmm()}'`", CastQuality.LOSSLESS),
                 case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "`'23:12:12.127-05:30'`", CastQuality.LOSSLESS),
                 case("TIME (3) WITH TIME ZONE '23:12:12.1267+05:30'", "`'23:12:12.127+05:30'`", CastQuality.LOSSLESS)
             ).types(ExprValueType.SYMBOL.sqlTextNames),
@@ -1351,10 +1356,10 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case("TIME (3) '23:12:12.1267'", "'23:12:12.127'", CastQuality.LOSSLESS),
                 case("TIME (3) '23:12:12.1267-05:30'", "'23:12:12.127'", CastQuality.LOSSLESS),
                 case("TIME (3) '23:12:12.1267+05:30'", "'23:12:12.127'", CastQuality.LOSSLESS),
-                case("TIME WITH TIME ZONE '23:12:12.1267'", "'23:12:12.1267${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}'", CastQuality.LOSSLESS),
+                case("TIME WITH TIME ZONE '23:12:12.1267'", "'23:12:12.1267${defaultTimezoneOffset.getOffsetHHmm()}'", CastQuality.LOSSLESS),
                 case("TIME WITH TIME ZONE '23:12:12.1267-05:30'", "'23:12:12.1267-05:30'", CastQuality.LOSSLESS),
                 case("TIME WITH TIME ZONE '23:12:12.1267+05:30'", "'23:12:12.1267+05:30'", CastQuality.LOSSLESS),
-                case("TIME (3) WITH TIME ZONE '23:12:12.1267'", "'23:12:12.127${DEFAULT_TIMEZONE_OFFSET.getOffsetHHmm()}'", CastQuality.LOSSLESS),
+                case("TIME (3) WITH TIME ZONE '23:12:12.1267'", "'23:12:12.127${defaultTimezoneOffset.getOffsetHHmm()}'", CastQuality.LOSSLESS),
                 case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "'23:12:12.127-05:30'", CastQuality.LOSSLESS),
                 case("TIME (3) WITH TIME ZONE '23:12:12.1267+05:30'", "'23:12:12.127+05:30'", CastQuality.LOSSLESS)
             ).types(ExprValueType.STRING.sqlTextNames)
@@ -1412,6 +1417,31 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 legacyTypingMode()
             }
         })
+
+        private val castDefaultTimezoneOffsetConfiguration =
+            // Configuring default timezone offset through CompileOptions
+            listOf(
+                // CAST(<TIME> AS <TIME WITH TIME ZONE>)
+                Pair(case("TIME '23:12:12.1267'", "TIME WITH TIME ZONE", "23:12:12.1267+00:00", CastQuality.LOSSLESS), createZoneOffset()),
+                Pair(case("TIME '23:12:12.1267'", "TIME WITH TIME ZONE", "23:12:12.1267+11:00", CastQuality.LOSSLESS), createZoneOffset(11)),
+                Pair(case("TIME '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "23:12:12.1267+01:00", CastQuality.LOSSLESS), createZoneOffset(1)),
+                Pair(case("TIME '23:12:12.1267-05:30'", "TIME (2) WITH TIME ZONE", "23:12:12.13-05:30", CastQuality.LOSSY), createZoneOffset(-5, -30)),
+                // CAST(<TIMESTAMP> AS <TIME WITH TIME ZONE>)
+                Pair(case("`2007-02-23T12:14:33.079Z`", "TIME WITH TIME ZONE", "12:14:33.079+00:00", CastQuality.LOSSY), createZoneOffset()),
+                Pair(case("`2007-02-23T12:14:33.079Z`", "TIME WITH TIME ZONE", "12:14:33.079+00:00", CastQuality.LOSSY), createZoneOffset(11)),
+                Pair(case("`2007-02-23T12:14:33.079-05:30`", "TIME WITH TIME ZONE", "12:14:33.079-05:30", CastQuality.LOSSY), createZoneOffset(1)),
+                Pair(case("`2007-02-23T12:14:33.079Z`", "TIME (2) WITH TIME ZONE", "12:14:33.08+00:00", CastQuality.LOSSY), createZoneOffset(-5, -30)),
+                // CAST(<text> AS <TIME WITH TIME ZONE>)
+                Pair(case("'23:12:12.1267'", "TIME WITH TIME ZONE", "23:12:12.1267+00:00", CastQuality.LOSSY), createZoneOffset()),
+                Pair(case("'23:12:12.1267'", "TIME WITH TIME ZONE", "23:12:12.1267+11:00", CastQuality.LOSSY), createZoneOffset(11)),
+                Pair(case("'23:12:12.1267'", "TIME (2) WITH TIME ZONE", "23:12:12.13-05:30", CastQuality.LOSSY), createZoneOffset(-5, -30)),
+                Pair(case("""`'23:12:12.1267'`""", "TIME WITH TIME ZONE", "23:12:12.1267+00:00", CastQuality.LOSSY), createZoneOffset()),
+                Pair(case("""`'23:12:12.1267'`""", "TIME WITH TIME ZONE", "23:12:12.1267+11:00", CastQuality.LOSSY), createZoneOffset(11)),
+                Pair(case("""`'23:12:12.1267'`""", "TIME (2) WITH TIME ZONE", "23:12:12.13-05:30", CastQuality.LOSSY), createZoneOffset(-5, -30)),
+                Pair(case("""`"23:12:12.1267"`""", "TIME WITH TIME ZONE", "23:12:12.1267+00:00", CastQuality.LOSSY), createZoneOffset()),
+                Pair(case("""`"23:12:12.1267"`""", "TIME WITH TIME ZONE", "23:12:12.1267+11:00", CastQuality.LOSSY), createZoneOffset(11)),
+                Pair(case("""`"23:12:12.1267"`""", "TIME (2) WITH TIME ZONE", "23:12:12.13-05:30", CastQuality.LOSSY), createZoneOffset(-5, -30))
+            )
 
         private val castConfiguredTestCases = castPermissiveConfiguredTestCases + castLegacyConfiguredTestCases
 
@@ -1508,6 +1538,10 @@ abstract class CastTestBase : EvaluatorTestBase() {
             ConfiguredCastCase(case, "PERMISSIVE_TYPING_MODE") {
                 permissiveTypingMode()
             }
+        } + castDefaultTimezoneOffsetConfiguration.map { (case, configuredTimezoneOffset) ->
+            ConfiguredCastCase(case, "Configuring default timezone offset") {
+                defaultTimezoneOffset(configuredTimezoneOffset)
+            }
         }
 
         private val canCastConfiguredDateTimeTestCases = commonDateTimeTests.map { case ->
@@ -1518,6 +1552,10 @@ abstract class CastTestBase : EvaluatorTestBase() {
             ConfiguredCastCase(case.toCanCast(), "PERMISSIVE_TYPING_MODE") {
                 permissiveTypingMode()
             }
+        } + castDefaultTimezoneOffsetConfiguration.map { (case, configuredTimezoneOffset) ->
+            ConfiguredCastCase(case.toCanCast(), "Configuring default timezone offset") {
+                defaultTimezoneOffset(configuredTimezoneOffset)
+            }
         }
 
         private val canLosslessCastConfiguredDateTimeTestCases = commonDateTimeTests.map { case ->
@@ -1527,6 +1565,10 @@ abstract class CastTestBase : EvaluatorTestBase() {
         } + commonDateTimeTests.map { case ->
             ConfiguredCastCase(case.toCanLosslessCast(), "PERMISSIVE_TYPING_MODE") {
                 permissiveTypingMode()
+            }
+        } + castDefaultTimezoneOffsetConfiguration.map { (case, configuredTimezoneOffset) ->
+            ConfiguredCastCase(case.toCanLosslessCast(), "Configuring default timezone offset") {
+                defaultTimezoneOffset(configuredTimezoneOffset)
             }
         }
 

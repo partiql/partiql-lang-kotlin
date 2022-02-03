@@ -44,7 +44,6 @@ for::{
         { value: "`-1.1e0`", result: -1 },
         { value: "`-1.5e0`", result: -1 },
         { value: "`-1.9e0`", result: -1 },
-        { value: "`9223372036854775807e0`",  result: 9223372036854775807 }, // max
         { value: "`-9223372036854775808e0`", result: -9223372036854775808 }, // min
 
         // decimal

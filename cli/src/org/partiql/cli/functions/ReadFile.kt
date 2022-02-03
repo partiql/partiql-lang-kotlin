@@ -22,6 +22,9 @@ import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.io.DelimitedValues
 import org.partiql.lang.eval.io.DelimitedValues.ConversionMode
 import org.partiql.lang.eval.stringValue
+import org.partiql.lang.types.FunctionSignature
+import org.partiql.lang.types.StaticType
+import org.partiql.lang.util.asIonStruct
 import org.partiql.lang.util.booleanValue
 import org.partiql.lang.util.stringValue
 import java.io.FileInputStream
@@ -29,7 +32,12 @@ import java.io.InputStream
 import java.io.InputStreamReader
 
 internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFactory) {
-    override val name = "read_file"
+    override val signature = FunctionSignature(
+        name = "read_file",
+        requiredParameters = listOf(StaticType.STRING),
+        optionalParameter = StaticType.STRUCT,
+        returnType = StaticType.BAG
+    )
 
     private fun conversionModeFor(name: String) =
         ConversionMode.values().find { it.name.toLowerCase() == name } ?:
@@ -76,9 +84,21 @@ internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFact
         "customized" to fileReadHandler(CSVFormat.DEFAULT)
     )
 
-    override fun call(env: Environment, args: List<ExprValue>): ExprValue {
-        val options = optionsStruct(1, args)
-        val fileName = args[0].stringValue()
+    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
+        val fileName = required[0].stringValue()
+        val fileType = "ion"
+        val handler = readHandlers[fileType] ?: throw IllegalArgumentException("Unknown file type: $fileType")
+        val seq = Sequence {
+            // TODO we should take care to clean this up properly
+            val fileInput = FileInputStream(fileName)
+            handler(fileInput, valueFactory.ion.newEmptyStruct()).iterator()
+        }
+        return valueFactory.newBag(seq)
+    }
+
+    override fun callWithOptional(env: Environment, required: List<ExprValue>, opt: ExprValue): ExprValue {
+        val options = opt.ionValue.asIonStruct()
+        val fileName = required[0].stringValue()
         val fileType = options["type"]?.stringValue() ?: "ion"
         val handler = readHandlers[fileType] ?: throw IllegalArgumentException("Unknown file type: $fileType")
         val seq = Sequence {

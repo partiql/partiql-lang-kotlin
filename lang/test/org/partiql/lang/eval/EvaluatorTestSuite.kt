@@ -1267,16 +1267,16 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
     }
     group("regression") {
         // https://github.com/partiql/partiql-lang-kotlin/issues/314
-        // Ensures that date parts can be used as variable names.
-        test("datePartsAsVariableNames",
+        // Ensures that datetime parts can be used as variable names.
+        test("dateTimePartsAsVariableNames",
             """
             SELECT VALUE [year, month, day, hour, minute, second]
             FROM 1968 AS year, 4 AS month, 3 as day, 12 as hour, 31 as minute, 59 as second 
             """,
             "$partiql_bag::[[1968, 4, 3, 12, 31, 59]]")
         // https://github.com/partiql/partiql-lang-kotlin/issues/314
-        // Ensures that date parts can be used as variable names.
-        test("datePartsAsStructFieldNames",
+        // Ensures that datetime parts can be used as variable names.
+        test("dateTimePartsAsStructFieldNames",
             """
             SELECT VALUE [x.year, x.month, x.day, x.hour, x.minute, x.second]
             FROM << { 'year': 1968, 'month': 4, 'day': 3, 'hour': 12, 'minute': 31, 'second': 59 }>> AS x

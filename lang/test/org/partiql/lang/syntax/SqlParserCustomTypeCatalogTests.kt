@@ -59,7 +59,7 @@ class SqlParserCustomTypeCatalogTests: SqlParserTestBase() {
         assertEquals("Provided new sexp and new generated sexp do not match for \"${tc.name}\"", newPigSexp, oldRoundTrippedAst)
 
         // Assert that the expr node generated from the query is the same as the old deserialized one
-        val exprNodeFromQuery = parse(tc.sql)
+        val exprNodeFromQuery = parseToExprNode(tc.sql)
         val sexpFromQueryExprNode = exprNodeFromQuery.toAstExpr().toIonElement().asAnyElement().toIonValue(ion) as IonSexp
 
         assertEquals(

@@ -17,7 +17,7 @@ package org.partiql.lang.eval
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.visitors.IDENTITY_VISITOR_TRANSFORM
 import org.partiql.lang.eval.visitors.basicVisitorTransforms
-
+import java.time.ZoneOffset
 
 /**
  * Defines the behavior when a non-existent variable is referenced.
@@ -133,6 +133,9 @@ enum class ThunkReturnTypeAssertions {
 
 /**
  * Specifies options that effect the behavior of the PartiQL compiler.
+ *
+ * @param defaultTimezoneOffset Default timezone offset to be used when TIME WITH TIME ZONE does not explicitly
+ * specify the time zone. Defaults to [ZoneOffset.UTC]
  */
 data class CompileOptions private constructor (
     val undefinedVariable: UndefinedVariableBehavior,
@@ -141,7 +144,8 @@ data class CompileOptions private constructor (
     val thunkOptions: ThunkOptions = ThunkOptions.standard(),
     val typingMode: TypingMode = TypingMode.LEGACY,
     val typedOpBehavior: TypedOpBehavior = TypedOpBehavior.LEGACY,
-    val thunkReturnTypeAssertions: ThunkReturnTypeAssertions = ThunkReturnTypeAssertions.DISABLED
+    val thunkReturnTypeAssertions: ThunkReturnTypeAssertions = ThunkReturnTypeAssertions.DISABLED,
+    val defaultTimezoneOffset: ZoneOffset = ZoneOffset.UTC
 ) {
 
     companion object {
@@ -187,6 +191,7 @@ data class CompileOptions private constructor (
         fun typedOpBehavior(value: TypedOpBehavior) = set { copy(typedOpBehavior = value)}
         fun thunkOptions(value: ThunkOptions) = set { copy(thunkOptions = value)}
         fun evaluationTimeTypeChecks(value: ThunkReturnTypeAssertions) = set { copy(thunkReturnTypeAssertions = value )}
+        fun defaultTimezoneOffset(value: ZoneOffset) = set { copy(defaultTimezoneOffset = value) }
 
         private inline fun set(block: CompileOptions.() -> CompileOptions) : Builder {
             options = block(options)

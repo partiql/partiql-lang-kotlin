@@ -388,7 +388,7 @@ abstract class EvaluatorTestBase : TestBase() {
             func()
             fail("didn't throw")
         }
-        catch (e: EvaluationException) {
+        catch (e: SqlException) {
             softAssert {
                 if(metadata != null) {
                     assertThat(e.errorContext!![Property.LINE_NUMBER]!!.longValue()).`as`("line number").isEqualTo(metadata.line)
@@ -425,10 +425,10 @@ abstract class EvaluatorTestBase : TestBase() {
         softAssert {
             try {
                 val result = eval(input, session = session).ionValue;
-                fail("Expected EvaluationException but there was no Exception.  " +
+                fail("Expected SqlException but there was no Exception.  " +
                      "The unexpected result was: \n${result.toPrettyString()}")
             }
-            catch (e: EvaluationException) {
+            catch (e: SqlException) {
                 if (cause != null) assertThat(e).hasRootCauseExactlyInstanceOf(cause.java)
                 checkErrorAndErrorContext(errorCode, e, expectErrorContextValues)
                 //Error thrown in LEGACY MODE needs to be checked in PERMISSIVE MODE
@@ -449,7 +449,7 @@ abstract class EvaluatorTestBase : TestBase() {
                 }
             }
             catch (e: Exception) {
-                fail("Expected EvaluationException but a different exception was thrown:\n\t  $e")
+                fail("Expected SqlException but a different exception was thrown:\n\t  $e")
             }
         }
     }

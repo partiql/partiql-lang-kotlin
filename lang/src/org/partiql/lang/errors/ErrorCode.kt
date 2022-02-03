@@ -707,7 +707,7 @@ enum class ErrorCode(internal val category: ErrorCategory,
         "Int overflow or underflow",
         ErrorBehaviorInPermissiveMode.RETURN_MISSING) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
-            "INT-${errorContext?.get(Property.INT_SIZE_IN_BYTES)?.stringValue() ?: UNKNOWN} overflow or underflow"
+            "INT-${errorContext?.get(Property.INT_SIZE_IN_BYTES) ?: UNKNOWN} overflow or underflow"
     },
 
     EVALUATOR_AMBIGUOUS_BINDING(
@@ -751,7 +751,8 @@ enum class ErrorCode(internal val category: ErrorCategory,
     EVALUATOR_NON_TEXT_STRUCT_FIELD_KEY(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.ACTUAL_TYPE),
-        "") {
+        "",
+        ErrorBehaviorInPermissiveMode.RETURN_MISSING) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "Struct field key should be text but found ${errorContext.getProperty(Property.ACTUAL_TYPE)}}."
     },
