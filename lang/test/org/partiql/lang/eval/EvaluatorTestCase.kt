@@ -48,5 +48,3 @@ data class EvaluatorTestCase(
         else              -> "$sqlUnderTest : $compOptions"
     }
 }
-
-

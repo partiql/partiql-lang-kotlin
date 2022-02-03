@@ -1,25 +1,14 @@
-/*
- * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- *  You may not use this file except in compliance with the License.
- * A copy of the License is located at:
- *
- *      http://aws.amazon.com/apache2.0/
- *
- *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
- *  language governing permissions and limitations under the License.
- */
-
 package org.partiql.lang.eval.builtins.timestamp
 
-import org.partiql.lang.errors.*
-import org.partiql.lang.eval.*
-import org.partiql.lang.util.*
-import junitparams.*
-import org.junit.*
-import org.junit.runner.*
+import junitparams.JUnitParamsRunner
+import junitparams.Parameters
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
+import org.partiql.lang.eval.EvaluatorTestBase
+import org.partiql.lang.util.sourceLocationProperties
+import org.partiql.lang.util.to
 
 
 @RunWith(JUnitParamsRunner::class)
@@ -32,7 +21,8 @@ class ToTimestampFormatPatternValidationTest : EvaluatorTestBase() {
         checkInputThrowingEvaluationException(
             "TO_TIMESTAMP('doesnt matter', 'yyyy M dd H m a')",
             ErrorCode.EVALUATOR_TIMESTAMP_FORMAT_PATTERN_HOUR_CLOCK_AM_PM_MISMATCH,
-            sourceLocationProperties(1, 1) + mapOf(Property.TIMESTAMP_FORMAT_PATTERN to "yyyy M dd H m a"))
+            sourceLocationProperties(1, 1) + mapOf(Property.TIMESTAMP_FORMAT_PATTERN to "yyyy M dd H m a"),
+            expectedPermissiveModeResult = "MISSING")
     }
 
     @Test
@@ -40,7 +30,8 @@ class ToTimestampFormatPatternValidationTest : EvaluatorTestBase() {
         checkInputThrowingEvaluationException(
             "TO_TIMESTAMP('doesnt matter', 'yyyy M dd h m')",
             ErrorCode.EVALUATOR_TIMESTAMP_FORMAT_PATTERN_HOUR_CLOCK_AM_PM_MISMATCH,
-            sourceLocationProperties(1, 1) + mapOf(Property.TIMESTAMP_FORMAT_PATTERN to "yyyy M dd h m"))
+            sourceLocationProperties(1, 1) + mapOf(Property.TIMESTAMP_FORMAT_PATTERN to "yyyy M dd h m"),
+            expectedPermissiveModeResult = "MISSING")
     }
 
     @Test
@@ -48,7 +39,8 @@ class ToTimestampFormatPatternValidationTest : EvaluatorTestBase() {
         checkInputThrowingEvaluationException(
             "TO_TIMESTAMP('doesnt matter', 'y MMMMM')",
             ErrorCode.EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_SYMBOL_FOR_PARSING,
-            sourceLocationProperties(1, 1) + mapOf(Property.TIMESTAMP_FORMAT_PATTERN to "y MMMMM"))
+            sourceLocationProperties(1, 1) + mapOf(Property.TIMESTAMP_FORMAT_PATTERN to "y MMMMM"),
+            expectedPermissiveModeResult = "MISSING")
     }
 
     fun parametersForIncompleteFormatPatternTest() = listOf(
@@ -92,7 +84,8 @@ class ToTimestampFormatPatternValidationTest : EvaluatorTestBase() {
             ErrorCode.EVALUATOR_INCOMPLETE_TIMESTAMP_FORMAT_PATTERN,
             sourceLocationProperties(1, 1) + mapOf(Property.TIMESTAMP_FORMAT_PATTERN to testCase.pattern,
                   Property.TIMESTAMP_FORMAT_PATTERN_FIELDS to testCase.fields
-            ))
+            ),
+            expectedPermissiveModeResult = "MISSING")
     }
 
     fun parametersForDuplicateFieldPatternTest() = listOf(
@@ -247,7 +240,8 @@ class ToTimestampFormatPatternValidationTest : EvaluatorTestBase() {
           ErrorCode.EVALUATOR_TIMESTAMP_FORMAT_PATTERN_DUPLICATE_FIELDS,
           sourceLocationProperties(1, 1) + mapOf(Property.TIMESTAMP_FORMAT_PATTERN to testCase.pattern,
                                                  Property.TIMESTAMP_FORMAT_PATTERN_FIELDS to testCase.fields
-          ))
+          ),
+          expectedPermissiveModeResult = "MISSING")
     }
 }
 

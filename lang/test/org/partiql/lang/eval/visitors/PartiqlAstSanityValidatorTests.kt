@@ -25,11 +25,12 @@ class PartiqlAstSanityValidatorTests : TestBase() {
     private fun litInt(value: Int) = PartiqlAst.build { lit(ion.newInt(value).toIonElement()) }
     private val litNull = PartiqlAst.build { lit(ion.newNull().toIonElement()) }
     private val missingExpr = PartiqlAst.build { missing() }
+    private val partiqlAstSanityValidator: PartiqlAstSanityValidator = PartiqlAstSanityValidator()
 
     @Test
     fun groupPartial() {
         assertThrowsSqlException(ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET) {
-            PartiqlAstSanityValidator.validate(
+            partiqlAstSanityValidator.validate(
                 PartiqlAst.build {
                     query(
                         select(
@@ -46,7 +47,7 @@ class PartiqlAstSanityValidatorTests : TestBase() {
     @Test
     fun groupPartialInSubquery() {
         assertThrowsSqlException(ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET) {
-            PartiqlAstSanityValidator.validate(
+            partiqlAstSanityValidator.validate(
                 PartiqlAst.build {
                     query(
                         select(
@@ -66,7 +67,7 @@ class PartiqlAstSanityValidatorTests : TestBase() {
     @Test
     fun groupPartialInSubSubquery() {
         assertThrowsSqlException(ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET) {
-            PartiqlAstSanityValidator.validate(
+            partiqlAstSanityValidator.validate(
                 PartiqlAst.build {
                     query(
                         select(
@@ -89,7 +90,7 @@ class PartiqlAstSanityValidatorTests : TestBase() {
     @Test
     fun pivotWithGroupBy() {
         assertThrowsSqlException(ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET) {
-            PartiqlAstSanityValidator.validate(
+            partiqlAstSanityValidator.validate(
                 PartiqlAst.build {
                     query(
                         select(
@@ -106,7 +107,7 @@ class PartiqlAstSanityValidatorTests : TestBase() {
     @Test
     fun pivotWithGroupByInSubquery() {
         assertThrowsSqlException(ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET) {
-            PartiqlAstSanityValidator.validate(
+            partiqlAstSanityValidator.validate(
                 PartiqlAst.build {
                     query(
                         select(
@@ -125,7 +126,7 @@ class PartiqlAstSanityValidatorTests : TestBase() {
     @Test
     fun havingWithoutGroupByGroupByIsNull() {
         assertThrowsSqlException(ErrorCode.SEMANTIC_HAVING_USED_WITHOUT_GROUP_BY) {
-            PartiqlAstSanityValidator.validate(
+            partiqlAstSanityValidator.validate(
                 PartiqlAst.build {
                     query(
                         select(
@@ -142,7 +143,7 @@ class PartiqlAstSanityValidatorTests : TestBase() {
     @Test
     fun havingWithoutGroupByGroupByIsNullInSubquery() {
         assertThrowsSqlException(ErrorCode.SEMANTIC_HAVING_USED_WITHOUT_GROUP_BY) {
-            PartiqlAstSanityValidator.validate(
+            partiqlAstSanityValidator.validate(
                 PartiqlAst.build {
                     query(
                         select (
@@ -161,7 +162,7 @@ class PartiqlAstSanityValidatorTests : TestBase() {
     @Test
     fun havingWithoutGroupByNoGroupByItems() {
         assertThrowsSqlException(ErrorCode.SEMANTIC_HAVING_USED_WITHOUT_GROUP_BY) {
-            PartiqlAstSanityValidator.validate(
+            partiqlAstSanityValidator.validate(
                 PartiqlAst.build {
                     query(
                         select(
@@ -181,7 +182,7 @@ class PartiqlAstSanityValidatorTests : TestBase() {
     @Test
     fun havingWithoutGroupByNoGroupByItemsInSubquery() {
         assertThrowsSqlException(ErrorCode.SEMANTIC_HAVING_USED_WITHOUT_GROUP_BY) {
-            PartiqlAstSanityValidator.validate(
+            partiqlAstSanityValidator.validate(
                 PartiqlAst.build {
                     query(
                         select(
@@ -202,15 +203,15 @@ class PartiqlAstSanityValidatorTests : TestBase() {
     @Test
     fun literalIntOverflow() {
         val literalOverflowInt = PartiqlAst.build { query(lit(ion.singleValue("${Long.MAX_VALUE}0").toIonElement())) }
-        assertThrowsSqlException(ErrorCode.EVALUATOR_INTEGER_OVERFLOW) {
-            PartiqlAstSanityValidator.validate(literalOverflowInt)
+        assertThrowsSqlException(ErrorCode.SEMANTIC_LITERAL_INT_OVERFLOW) {
+            partiqlAstSanityValidator.validate(literalOverflowInt)
         }
     }
 
     @Test
     fun literalIntOverflowInQuery() {
-        assertThrowsSqlException(ErrorCode.EVALUATOR_INTEGER_OVERFLOW) {
-            PartiqlAstSanityValidator.validate(
+        assertThrowsSqlException(ErrorCode.SEMANTIC_LITERAL_INT_OVERFLOW) {
+            partiqlAstSanityValidator.validate(
                 PartiqlAst.build {
                     query(
                         select(
@@ -223,8 +224,8 @@ class PartiqlAstSanityValidatorTests : TestBase() {
 
     @Test
     fun literalIntOverflowInSubquery() {
-        assertThrowsSqlException(ErrorCode.EVALUATOR_INTEGER_OVERFLOW) {
-            PartiqlAstSanityValidator.validate(
+        assertThrowsSqlException(ErrorCode.SEMANTIC_LITERAL_INT_OVERFLOW) {
+            partiqlAstSanityValidator.validate(
                 PartiqlAst.build {
                     query(
                         select(
@@ -240,7 +241,7 @@ class PartiqlAstSanityValidatorTests : TestBase() {
     @Test
     fun intAsNonTextStructKey() {
         assertThrowsSqlException(ErrorCode.SEMANTIC_NON_TEXT_STRUCT_FIELD_KEY) {
-            PartiqlAstSanityValidator.validate(
+            partiqlAstSanityValidator.validate(
                 PartiqlAst.build {
                     query(
                         struct(exprPair(litInt(1), litInt(2)))
@@ -253,7 +254,7 @@ class PartiqlAstSanityValidatorTests : TestBase() {
     @Test
     fun timestampAsNonTextStructKey() {
         assertThrowsSqlException(ErrorCode.SEMANTIC_NON_TEXT_STRUCT_FIELD_KEY) {
-            PartiqlAstSanityValidator.validate(
+            partiqlAstSanityValidator.validate(
                 PartiqlAst.build {
                     query(
                         struct(exprPair(lit(ionTimestamp("2007-02-23T12:14:33.079-08:00")), litInt(2)))
@@ -266,7 +267,7 @@ class PartiqlAstSanityValidatorTests : TestBase() {
     @Test
     fun nullAsNonTextStructKey() {
         assertThrowsSqlException(ErrorCode.SEMANTIC_NON_TEXT_STRUCT_FIELD_KEY) {
-            PartiqlAstSanityValidator.validate(
+            partiqlAstSanityValidator.validate(
                 PartiqlAst.build {
                     query(
                         struct(exprPair(litNull, litInt(2)))
@@ -279,7 +280,7 @@ class PartiqlAstSanityValidatorTests : TestBase() {
     @Test
     fun missingAsNonTextStructKey() {
         assertThrowsSqlException(ErrorCode.SEMANTIC_NON_TEXT_STRUCT_FIELD_KEY) {
-            PartiqlAstSanityValidator.validate(
+            partiqlAstSanityValidator.validate(
                 PartiqlAst.build {
                     query(
                         struct(exprPair(missingExpr, litInt(2)))

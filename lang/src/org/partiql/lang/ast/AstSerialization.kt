@@ -95,6 +95,10 @@ private class AstSerializerImpl(val astVersion: AstVersion, val ion: IonSystem):
                     is CreateIndex       -> case { writeCreateIndex(expr) }
                     is DropTable         -> case { writeDropTable(expr) }
                     is DropIndex         -> case { writeDropIndex(expr) }
+                    is Undrop            -> case { writeUndrop(expr) }
+                    is Parameter         -> case { writeParameter(expr) }
+                    is NullIf            -> case { writeNullIf(expr) }
+                    is Coalesce          -> case { writeCoalesce(expr) }
                     is Parameter         -> case { writeParameter(expr)}
                     is DateLiteral -> throw UnsupportedOperationException("DATE literals not supported by the V0 AST")
                     is TimeLiteral -> throw UnsupportedOperationException("TIME literals not supported by the V0 AST")
@@ -155,7 +159,6 @@ private class AstSerializerImpl(val astVersion: AstVersion, val ion: IonSystem):
                 }
                 writeExprNode(arg)
             }
-
         }
     }
 
@@ -190,7 +193,7 @@ private class AstSerializerImpl(val astVersion: AstVersion, val ion: IonSystem):
                         symbol("type")
                         symbol(dataType.sqlDataType.typeName)
                         dataType.args.forEach {
-                            int(it)
+                            int(it.toLong())
                         }
                     }
                 }
@@ -228,6 +231,13 @@ private class AstSerializerImpl(val astVersion: AstVersion, val ion: IonSystem):
             writeFromSource(from)
         }
 
+        fromLet?.let {
+            sexp {
+                symbol("from_let")
+                writeLet(fromLet)
+            }
+        }
+
         where?.let {
             sexp {
                 symbol("where")
@@ -236,41 +246,8 @@ private class AstSerializerImpl(val astVersion: AstVersion, val ion: IonSystem):
         }
 
         groupBy?.let {
-            val (grouping, groupByItems, groupName) = it
-
-            sexp {
-                symbol(
-                    when (grouping) {
-                        GroupingStrategy.FULL    -> "group"
-                        GroupingStrategy.PARTIAL -> "group_partial"
-                    }
-                )
-                sexp {
-                    symbol("by")
-                    groupByItems.forEach { gbi ->
-                        val (itemExpr, asName) = gbi
-                        if (asName != null) {
-                            writeAsTerm(asName.metas) {
-                                sexp {
-                                    symbol("as")
-                                    symbol(asName.name)
-                                    writeExprNode(itemExpr)
-                                }
-                            }
-                        }
-                        else {
-                            writeExprNode(itemExpr)
-                        }
-                    }
-                }
-                groupName?.let { gn ->
-                    writeAsTerm(gn.metas) {
-                        sexp {
-                            symbol("name")
-                            symbol(gn.name)
-                        }
-                    }
-                }
+            when(astVersion) {
+                AstVersion.V0 -> writeGroupByV0(groupBy)
             }
         }
 
@@ -285,6 +262,59 @@ private class AstSerializerImpl(val astVersion: AstVersion, val ion: IonSystem):
             sexp {
                 symbol("limit")
                 writeExprNode(limit)
+            }
+        }
+    }
+
+    private fun IonWriterContext.writeLet(letSource: LetSource) {
+        val bindings = letSource.bindings
+        sexp {
+            symbol("let")
+            bindings.forEach {
+                sexp {
+                    symbol("let_binding")
+                    writeExprNode(it.expr)
+                    symbol(it.name.name)
+                }
+            }
+        }
+    }
+
+    private fun IonWriterContext.writeGroupByV0(groupBy: GroupBy) {
+        val (grouping, groupByItems, groupName) = groupBy
+
+        sexp {
+            symbol(
+                when (grouping) {
+                    GroupingStrategy.FULL    -> "group"
+                    GroupingStrategy.PARTIAL -> "group_partial"
+                }
+            )
+            sexp {
+                symbol("by")
+                groupByItems.forEach { gbi ->
+                    val (itemExpr, asName) = gbi
+                    if (asName != null) {
+                        writeAsTerm(asName.metas) {
+                            sexp {
+                                symbol("as")
+                                symbol(asName.name)
+                                writeExprNode(itemExpr)
+                            }
+                        }
+                    }
+                    else {
+                        writeExprNode(itemExpr)
+                    }
+                }
+            }
+            groupName?.let { gn ->
+                writeAsTerm(gn.metas) {
+                    sexp {
+                        symbol("name")
+                        symbol(gn.name)
+                    }
+                }
             }
         }
     }
@@ -786,6 +816,18 @@ private class AstSerializerImpl(val astVersion: AstVersion, val ion: IonSystem):
         }
     }
 
+    private fun IonWriterContext.writeUndrop(expr: Undrop) {
+        when (astVersion) {
+            AstVersion.V0 -> {
+                symbol("undrop")
+                symbol(expr.identifier)
+                sexp {
+                    symbol(expr.type.typeName)
+                }
+            }
+        }
+    }
+
     private fun IonWriterContext.writeDDL(block: () -> Unit) {
         symbol("ddl")
         sexp {
@@ -808,6 +850,26 @@ private class AstSerializerImpl(val astVersion: AstVersion, val ion: IonSystem):
         int(expr.position.toLong())
     }
 
+    private fun IonWriterContext.writeNullIf(expr: NullIf) {
+        val (expr1: ExprNode, expr2: ExprNode, _: MetaContainer) = expr
+        when (astVersion) {
+            AstVersion.V0 -> symbol("call")
+        }
+        symbol("null_if")
+        writeExprNode(expr1)
+        writeExprNode(expr2)
+    }
+
+    private fun IonWriterContext.writeCoalesce(expr: Coalesce) {
+        val (args: List<ExprNode>, _: MetaContainer) = expr
+        when (astVersion) {
+            AstVersion.V0 -> symbol("call")
+        }
+        symbol("coalesce")
+        args.map {
+            it to writeExprNode(it)
+        }
+    }
 
     private fun IonWriterContext.nestByAlias(variables: LetVariables, block: () -> Unit) {
         if(variables.byName != null) {

@@ -75,7 +75,7 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(ArgsProviderValid::class)
-    fun validTests(tc: EvaluatorTestCase) = runTestCase(tc, session)
+    fun validTests(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, session)
 
     class ArgsProviderError : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
@@ -87,7 +87,8 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
                         Property.LINE_NUMBER to 1L,
                         Property.COLUMN_NUMBER to 21L,
                         Property.BINDING_NAME to "Y"
-                )
+                ),
+                expectedPermissiveModeResult = "<<{}>>"
             ),
             // LET binding definition dependent on later binding
             EvaluatorErrorTestCase(
@@ -97,7 +98,8 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
                         Property.LINE_NUMBER to 1L,
                         Property.COLUMN_NUMBER to 29L,
                         Property.BINDING_NAME to "Y"
-                )
+                ),
+                expectedPermissiveModeResult = "<<{'X': 1}>>"
             ),
             // LET inner query binding not available in outer query
             EvaluatorErrorTestCase(
@@ -108,7 +110,8 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
                         Property.LINE_NUMBER to 1L,
                         Property.COLUMN_NUMBER to 8L,
                         Property.BINDING_NAME to "X"
-                )
+                ),
+                expectedPermissiveModeResult = "<<{}>>"
             ),
             // LET binding in subquery not in outer LET query
             EvaluatorErrorTestCase(
@@ -118,7 +121,8 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
                         Property.LINE_NUMBER to 1L,
                         Property.COLUMN_NUMBER to 56L,
                         Property.BINDING_NAME to "X"
-                )
+                ),
+                expectedPermissiveModeResult = "<<{}>>"
             ),
             // LET binding referenced in HAVING not in GROUP BY
             EvaluatorErrorTestCase(

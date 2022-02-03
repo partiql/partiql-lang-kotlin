@@ -31,14 +31,29 @@ data class EvaluatorErrorTestCase(
     /**
      * The Java exception that is equivalent to the thrown Kotlin exception
      */
-    val cause: KClass<out Throwable>? = null) {
+    val cause: KClass<out Throwable>? = null,
+
+    /**
+     * Expected result in the permissive mode. Default value is null.
+     */
+    val expectedPermissiveModeResult: String? = null,
+
+    /**
+     * The [CompileOptions] to be used when compiling the query.
+     *
+     * Some errors are only thrown when certain compile options are enabled.
+     */
+    val compOptions: CompOptions = CompOptions.STANDARD
+) {
 
     constructor(
         input: String,
         errorCode: ErrorCode? = null,
         expectErrorContextValues: Map<Property, Any>,
-        cause: KClass<out Throwable>? = null
-    ) : this(null, input, errorCode, expectErrorContextValues, cause)
+        cause: KClass<out Throwable>? = null,
+        compOptions: CompOptions = CompOptions.STANDARD,
+        expectedPermissiveModeResult: String? = null
+    ) : this(null, input, errorCode, expectErrorContextValues, cause, expectedPermissiveModeResult, compOptions)
 
     /** This will show up in the IDE's test runner. */
     override fun toString() : String {

@@ -14,81 +14,95 @@
 
 package org.partiql.lang.eval
 
-import com.amazon.ion.*
-import org.partiql.lang.errors.*
-import org.partiql.lang.util.*
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.types.FunctionSignature
+
+sealed class Arguments
+data class RequiredArgs(val required: List<ExprValue>) : Arguments()
+data class RequiredWithOptional(val required: List<ExprValue>, val opt: ExprValue) : Arguments()
+data class RequiredWithVariadic(val required: List<ExprValue>, val variadic: List<ExprValue>) : Arguments()
 
 /**
  * Represents a function that can be invoked from within an [EvaluatingCompiler]
  * compiled [Expression].
+ *
+ * Note that [ExprFunction] implementations do not need to deal with propagation of
+ * unknown values `MISSING` or `NULL` as this is handled by [EvaluatingCompiler].
  */
 interface ExprFunction {
     /**
-     * The name that can be used to reference this function within queries.
+     * Static signature of this function.
+     *
      */
-    val name: String
+    val signature: FunctionSignature
 
     /**
-     * Invokes the function.
+     * Invokes the function with its required parameters only.
      *
-     * Implementations are required to deal with being called with the wrong number
-     * of arguments or the wrong argument types.
+     * It is assumed that the [ExprFunction]s will always be called after validating
+     * the arguments for the `arity` and the types of arguments.
+     * [EvaluatingCompiler] validates the arguments before calling [ExprFunction]s.
+     * Hence the implementations are not required to deal with it.
      *
      * @param env The calling environment.
-     * @param args The argument list.
+     * @param required The required arguments.
      */
-    fun call(env: Environment, args: List<ExprValue>): ExprValue
+    fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
+        // Deriving ExprFunctions must implement this if they have a valid call form including only required parameters
+        errNoContext("Invalid implementation for ${signature.name}#call", ErrorCode.INTERNAL_ERROR, true)
+    }
+
+    /**
+     * Invokes the function with its required parameters and an optional parameter.
+     *
+     * It is assumed that the [ExprFunction]s will always be called after validating
+     * the arguments for the `arity` and the types of arguments.
+     * [EvaluatingCompiler] validates the arguments before calling [ExprFunction]s.
+     * Hence the implementations are not required to deal with it.
+     *
+     * @param env The calling environment.
+     * @param required The required arguments.
+     * @param opt The optional arguments.
+     */
+    fun callWithOptional(env: Environment, required: List<ExprValue>, opt: ExprValue): ExprValue {
+        // Deriving ExprFunctions must implement this if they have a valid call form including required parameters and optional
+        errNoContext("Invalid implementation for ${signature.name}#call", ErrorCode.INTERNAL_ERROR, true)
+    }
+
+
+    /**
+     * Invokes the function with its required parameters and any variadic parameters.
+     *
+     * It is assumed that the [ExprFunction]s will always be called after validating
+     * the arguments for the `arity` and the types of arguments.
+     * [EvaluatingCompiler] validates the arguments before calling [ExprFunction]s.
+     * Hence the implementations are not required to deal with it.
+     *
+     * @param env The calling environment.
+     * @param required The required arguments.
+     * @param variadic The variadic arguments.
+     */
+    fun callWithVariadic(env: Environment, required: List<ExprValue>, variadic: List<ExprValue>): ExprValue {
+        // Deriving ExprFunctions must implement this if they have a valid call form including required parameters and variadic
+        errNoContext("Invalid implementation for ${signature.name}#call", ErrorCode.INTERNAL_ERROR, true)
+    }
 }
 
+
 /**
- * [ExprFunction] template that checks arity and propagates null arguments when any parameter is either null or
- * missing
+ * Invokes the function.
  *
- * @param name function name
- * @param arity function arity
- * @param ion current Ion system
+ * It is assumed that the [ExprFunction]s will always be called after validating
+ * the arguments for the `arity` and the types of arguments.
+ * [EvaluatingCompiler] validates the arguments before calling [ExprFunction]s.
+ * Hence the implementations are not required to deal with it.
+ *
+ * @param env The calling environment.
+ * @param args The argument list.
  */
-abstract class NullPropagatingExprFunction(override val name: String,
-                                           override val arity: IntRange,
-                                           val valueFactory: ExprValueFactory) : ArityCheckingTrait, ExprFunction {
-
-    constructor(name: String, arity: Int, valueFactory: ExprValueFactory) : this(name, (arity..arity), valueFactory)
-
-    override fun call(env: Environment, args: List<ExprValue>): ExprValue {
-        checkArity(args)
-
-        return when {
-            args.isAnyUnknown() -> valueFactory.nullValue
-            else                -> eval(env, args)
-        }
+fun ExprFunction.call(env: Environment, args: Arguments): ExprValue =
+    when (args) {
+        is RequiredArgs -> callWithRequired(env, args.required)
+        is RequiredWithOptional -> callWithOptional(env, args.required, args.opt)
+        is RequiredWithVariadic -> callWithVariadic(env, args.required, args.variadic)
     }
-
-    abstract fun eval(env: Environment, args: List<ExprValue>): ExprValue
-}
-
-/**
- * "Trait" that provides [checkArity] function to validate a function arity
- */
-internal interface ArityCheckingTrait {
-    val name: String
-    val arity: IntRange
-
-    private fun arityErrorMessage(argSize: Int) = when {
-        arity.first == 1 && arity.last == 1 -> "$name takes a single argument, received: $argSize"
-        arity.first == arity.last           -> "$name takes exactly ${arity.first} arguments, received: $argSize"
-        else                                -> "$name takes between ${arity.first} and ${arity.last} arguments, received: $argSize"
-    }
-
-    fun checkArity(args: List<ExprValue>) {
-        if (!arity.contains(args.size)) {
-            val errorContext = PropertyValueMap()
-            errorContext[Property.EXPECTED_ARITY_MIN] = arity.first
-            errorContext[Property.EXPECTED_ARITY_MAX] = arity.last
-
-            throw EvaluationException(arityErrorMessage(args.size),
-                                      ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL,
-                                      errorContext,
-                                      internal = false)
-        }
-    }
-}

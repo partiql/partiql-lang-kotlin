@@ -141,7 +141,28 @@ class FromSourceAliasVisitorTransformTests : VisitorTransformTestBase() {
         // DML
         TransformTestCase(
             "FROM dogs INSERT INTO collies VALUE ?",
-            "FROM dogs AS dogs INSERT INTO collies VALUE ?")
+            "FROM dogs AS dogs INSERT INTO collies VALUE ?"),
+
+        // CAST ALIAS TEST
+        TransformTestCase(
+            """
+            SELECT 1 FROM 
+                CAST(1 AS STRING),
+                CAST(foo AS INT),
+                CAST(foo.bar AS INT),
+                CAST(CAST(bat AS INT) AS STRING),
+                CAST(CAST(foo.baz AS INT) AS FLOAT),
+                CAST(x + y AS INT)
+            """,
+            """
+            SELECT 1 FROM
+                CAST(1 AS STRING) AS _1,
+                CAST(foo AS INT) AS foo,
+                CAST(foo.bar AS INT) AS bar,
+                CAST(CAST(bat AS INT) AS STRING) AS bat,
+                CAST(CAST(foo.baz AS INT) AS FLOAT) AS baz,
+                CAST(x + y AS INT) AS _6
+            """)
         )
     }
 

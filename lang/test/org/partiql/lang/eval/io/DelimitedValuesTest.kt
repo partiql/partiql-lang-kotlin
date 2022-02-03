@@ -29,7 +29,7 @@ class DelimitedValuesTest : TestBase() {
         val expectedValues = ion.singleValue(expectedIon)
 
         assertSame(ExprValueType.BAG, value.type)
-        assertEquals(expectedValues, value.ionValue)
+        assertEquals(expectedValues, value.ionValue.cloneAndRemoveAnnotations())
     }
 
     private fun read(text: String,

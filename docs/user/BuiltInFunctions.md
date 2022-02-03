@@ -358,18 +358,22 @@ DATE_DIFF(day, `2010-01-01T23:00T`, `2010-01-02T01:00T`) -- 0 (need to be at lea
 
 ### EXISTS
 
-Given an PartiQL value returns `true` if and only if the value is a non-empty sequence, returns `false` otherwise. 
+Given a PartiQL value returns `true` if and only if the value is a non-empty container(bag, sexp, list or struct), returns `false` otherwise. 
 
 Signature
-: `EXISTS: Any -> Boolean`
+: `EXISTS: Container -> Boolean`
 
 Header
 : `EXISTS(val)`
 
 Purpose 
-: Given an PartiQL value, `val`, returns `true` if and only if `val` is a non-empty sequence, returns `false` otherwise. 
-This function does **not** propagate `null` and `missing`.  
+: Given a PartiQL value `val`, if `val` is   
+1. a container with size > 0, `EXISTS(val)` returns `true`; 
+2. a container with size = 0, `EXISTS(val)` returns `false`; 
+3. not a container, `EXISTS(val)` throws an error.
 
+Note: 
+1. This function does **not** propagate `null` and `missing`.
 
 Examples
 :  
@@ -384,10 +388,10 @@ EXISTS(`()`)        -- false (empty s-expression)
 EXISTS(`(+ 1 2)`)   -- true (non-empty s-expression)
 EXISTS(`<<>>`)      -- false (empty bag)
 EXISTS(`<<null>>`)  -- true (non-empty bag)
-EXISTS(1)           -- false
-EXISTS(`2017T`)     -- false
-EXISTS(null)        -- false
-EXISTS(missing)     -- false
+EXISTS(1)           -- error
+EXISTS(`2017T`)     -- error
+EXISTS(null)        -- error
+EXISTS(missing)     -- error
 ```
 
 ### EXTRACT

@@ -109,6 +109,17 @@ open class AstWalker(private val visitor: AstVisitor) {
                     walkExprNode(limit)
                     walkExprNode(offset)
                 }
+                is NullIf       -> case {
+                    val (expr1, expr2, _) = expr
+                    walkExprNode(expr1)
+                    walkExprNode(expr2)
+                }
+                is Coalesce     -> case {
+                    val (args, _) = expr
+                    args.map {
+                        walkExprNode(it)
+                    }
+                }
                 is DataManipulation -> case {
                     val (dmlOperation, from, where, returning, _: MetaContainer) = expr
                     walkDmlOperations(dmlOperation)
@@ -136,7 +147,7 @@ open class AstWalker(private val visitor: AstVisitor) {
                     }
                 }
                 is CreateTable, is DropTable, is DropIndex,
-                is Exec, is TimeLiteral, is DateLiteral -> case { }
+                is Undrop, is Exec, is TimeLiteral, is DateLiteral -> case { }
             }.toUnit()
         }
     }

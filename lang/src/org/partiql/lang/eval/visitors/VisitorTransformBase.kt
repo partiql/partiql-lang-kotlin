@@ -4,9 +4,9 @@ import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.util.checkThreadInterrupted
 
 /**
- * Base-class for visitor transforms that provides additional `transform*` functions that outside of
- * the PIG-generated [PartiqlAst.VisitorTransform] class and adds a [Thread.interrupted] check
- * to [transformExpr].
+ * Base-class for visitor transforms that provides additional functions outside of [PartiqlAst.VisitorTransform]. These
+ * functions are used to avoid infinite recursion when working with nested visitor instances and to change the rewrite
+ * order to follow the PartiQL evaluation order.
  *
  * All transforms should derive from this class instead of [PartiqlAst.VisitorTransform] so that they can
  * be interrupted if they take a long time to process large ASTs.
@@ -31,7 +31,9 @@ abstract class VisitorTransformBase : PartiqlAst.VisitorTransform() {
      * 8. `LIMIT`
      * 9. The metas.
      *
-     * This differs from [transformExprSelect], which executes following the written order of clauses.
+     * This differs from [transformExprSelect], which executes following the written order of clauses. Also, this
+     * function can be used to apply a different nested visitor instance to [PartiqlAst.Expr.Select] nodes to avoid
+     * infinite recursion.
      */
     fun transformExprSelectEvaluationOrder(node: PartiqlAst.Expr.Select): PartiqlAst.Expr {
         val from = transformExprSelect_from(node)
@@ -69,7 +71,9 @@ abstract class VisitorTransformBase : PartiqlAst.VisitorTransform() {
      * 3. The DML operation
      * 4. The metas
      *
-     * This differs from [transformStatementDml], which executes following the written order of clauses.
+     * This differs from [transformStatementDml], which executes following the written order of clauses. Also, this
+     * function can be used to apply a different nested visitor instances to [PartiqlAst.Statement.Dml] nodes to avoid
+     * infinite recursion.
      */
     fun transformDataManipulationEvaluationOrder(node: PartiqlAst.Statement.Dml): PartiqlAst.Statement {
         val from = node.from?.let { transformFromSource(it) }

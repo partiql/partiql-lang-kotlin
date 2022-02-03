@@ -1,26 +1,22 @@
-/*
- * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- *  You may not use this file except in compliance with the License.
- * A copy of the License is located at:
- *
- *      http://aws.amazon.com/apache2.0/
- *
- *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
- *  language governing permissions and limitations under the License.
- */
-
 package org.partiql.lang.eval.builtins
 
 import com.amazon.ion.Timestamp
 import junitparams.Parameters
 import org.assertj.core.api.Assertions
-import org.partiql.lang.eval.*
-import org.junit.*
+import org.junit.Test
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
+import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.EvaluatorTestBase
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.eval.RequiredArgs
+import org.partiql.lang.eval.call
+import org.partiql.lang.eval.numberValue
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.syntax.DateTimePart
+import org.partiql.lang.util.to
 import java.time.LocalDate
 
 /**
@@ -76,9 +72,19 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
                                            mapOf("a" to "2017-01-10T05:30:55Z").toSession())
 
     @Test
-    fun wrongArgumentTypes() = assertThrows("Expected date or timestamp: 1", NodeMetadata(1, 1)) {
-        voidEval("extract(year from 1)")
-    }
+    fun wrongArgumentTypes() =
+    checkInputThrowingEvaluationException(
+        input = "extract(year from 1)",
+        errorCode = ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL,
+        expectErrorContextValues = mapOf<Property, Any>(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 1L,
+            Property.FUNCTION_NAME to "extract",
+            Property.EXPECTED_ARGUMENT_TYPES to "TIMESTAMP, TIME, or DATE",
+            Property.ARGUMENT_POSITION to 2,
+            Property.ACTUAL_ARGUMENT_TYPES to "INT"),
+        expectedPermissiveModeResult = "MISSING"
+    )
 
     data class ExtractFromDateTC(val source: String, val expected: ExprValue?)
 
@@ -88,12 +94,12 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
                 ExtractFromDateTC(
                     source = "EXTRACT(${dateTimePart.name} FROM $source)",
                     expected = when (dateTimePart) {
-                        DateTimePart.YEAR -> valueFactory.newInt(expected.year)
-                        DateTimePart.MONTH -> valueFactory.newInt(expected.monthValue)
-                        DateTimePart.DAY -> valueFactory.newInt(expected.dayOfMonth)
-                        DateTimePart.HOUR -> valueFactory.newInt(0)
-                        DateTimePart.MINUTE -> valueFactory.newInt(0)
-                        DateTimePart.SECOND -> valueFactory.newInt(0)
+                        DateTimePart.YEAR -> valueFactory.newDecimal(expected.year)
+                        DateTimePart.MONTH -> valueFactory.newDecimal(expected.monthValue)
+                        DateTimePart.DAY -> valueFactory.newDecimal(expected.dayOfMonth)
+                        DateTimePart.HOUR -> valueFactory.newDecimal(0)
+                        DateTimePart.MINUTE -> valueFactory.newDecimal(0)
+                        DateTimePart.SECOND -> valueFactory.newDecimal(0)
                         DateTimePart.TIMEZONE_HOUR -> null
                         DateTimePart.TIMEZONE_MINUTE -> null
                     }
@@ -117,7 +123,7 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
                 // Do nothing
             }
         }
-        else -> assertExprEquals(eval(tc.source), tc.expected)
+        else -> assertExprEquals(eval(tc.source), tc.expected, "Expected exprValues to be equal.")
     }
 
     data class ExtractFromTimeTC(val source: String, val expected: ExprValue?)
@@ -134,8 +140,8 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
                         DateTimePart.HOUR -> valueFactory.newDecimal(expected.localTime.hour)
                         DateTimePart.MINUTE -> valueFactory.newDecimal(expected.localTime.minute)
                         DateTimePart.SECOND -> valueFactory.newDecimal(expected.secondsWithFractionalPart)
-                        DateTimePart.TIMEZONE_HOUR -> expected.timezoneHour?.let { valueFactory.newInt(it) }
-                        DateTimePart.TIMEZONE_MINUTE -> expected.timezoneMinute?.let { valueFactory.newInt(it) }
+                        DateTimePart.TIMEZONE_HOUR -> expected.timezoneHour?.let { valueFactory.newDecimal(it) }
+                        DateTimePart.TIMEZONE_MINUTE -> expected.timezoneMinute?.let { valueFactory.newDecimal(it) }
                     }
                 )
             }
@@ -161,28 +167,15 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
                 // Do nothing
             }
         }
-        else -> assertExprEquals(eval(tc.source), tc.expected)
+        else -> assertExprEquals(eval(tc.source), tc.expected, "Expected exprValues to be equal.")
     }
 
     private fun callExtract(vararg args: Any): Number? {
-        val value = subject.call(env, args.map { anyToExprValue(it) }.toList())
+        val value = subject.call(env, RequiredArgs(args.map { anyToExprValue(it) }))
         return when(value.type) {
             ExprValueType.NULL -> null
             else -> value.numberValue()
         }
-    }
-
-    @Test
-    fun lessArguments() {
-        Assertions.assertThatThrownBy { callExtract("year") }
-            .hasMessage("extract takes exactly 2 arguments, received: 1")
-            .isExactlyInstanceOf(EvaluationException::class.java)
-    }
-
-    @Test fun moreArguments() {
-        Assertions.assertThatThrownBy { callExtract("year", 1, 1) }
-            .hasMessage("extract takes exactly 2 arguments, received: 3")
-            .isExactlyInstanceOf(EvaluationException::class.java)
     }
 
     @Test
@@ -195,7 +188,7 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
     @Test
     fun wrongTypeOfSecondArgument() {
         Assertions.assertThatThrownBy { callExtract("year", "999") }
-            .hasMessage("Expected date or timestamp: '999'")
+            .hasMessage("Expected date, time or timestamp: '999'")
             .isExactlyInstanceOf(EvaluationException::class.java)
     }
 

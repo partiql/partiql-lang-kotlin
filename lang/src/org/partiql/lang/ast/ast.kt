@@ -121,7 +121,16 @@ sealed class ExprNode : AstNode(), HasMetas {
             is DropIndex         -> {
                 copy(metas = metas)
             }
-            is Parameter       -> {
+            is Undrop            -> {
+                copy(metas = metas)
+            }
+            is Parameter         -> {
+                copy(metas = metas)
+            }
+            is NullIf            -> {
+                copy(metas = metas)
+            }
+            is Coalesce          -> {
                 copy(metas = metas)
             }
             is Exec            -> {
@@ -247,6 +256,23 @@ data class Typed(
     override val metas: MetaContainer
 ) : ExprNode() {
     override val children: List<AstNode> = listOf(expr, type)
+}
+
+/** Represents a NULLIF Operator, i.e. NULLIF(expr1, expr2) */
+data class NullIf(
+    val expr1: ExprNode,
+    val expr2: ExprNode,
+    override val metas: MetaContainer
+) : ExprNode() {
+    override val children: List<AstNode> = listOf(expr1, expr2)
+}
+
+/** Represents a Coalesce Operator, i.e. COALESCE(expr1, expr2, expr3, ....) */
+data class Coalesce(
+    val args: List<ExprNode>,
+    override val metas: MetaContainer
+) : ExprNode() {
+    override val children: List<AstNode> = args
 }
 
 //********************************
@@ -515,6 +541,27 @@ data class DropIndex(
 }
 
 /**
+ * Undo the Dropping of a schema object, that was previously identified by [identifier].
+ *
+ * TODO: this is defined to be QLDB specific, pull out of main ast when an extension mechanism exists.
+ */
+data class Undrop(
+    val identifier: String,
+    val type: SchemaObjectType,
+    override val metas: MetaContainer
+) : ExprNode() {
+    override val children: List<AstNode> get() = emptyList()
+}
+
+
+/**
+ * Simple descriptor of the type of schema object.
+ */
+enum class SchemaObjectType(val typeName: String) {
+    TABLE("table")
+}
+
+/**
  * SymbolicName does have a semantic meaning and primarily exists so that any identifier in the query may
  * have `Meta` associated with it that is independent of the parent node which imbues its meaning.
  *
@@ -547,7 +594,16 @@ data class SymbolicName(
  * The [PathComponent] base class is used to constrain the types of child nodes that are allowed
  * in a [Path] expression.
  */
-sealed class PathComponent : AstNode()
+sealed class PathComponent : AstNode(), HasMetas {
+    fun copy(newMetas: MetaContainer?): PathComponent {
+        val metas = newMetas ?: this.metas
+        return when(this) {
+            is PathComponentExpr -> this.copy(metas = metas)
+            is PathComponentUnpivot -> this.copy(metas = metas)
+            is PathComponentWildcard -> this.copy(metas = metas)
+        }
+    }
+}
 
 /**
  * Represents a path component that is an expression, i.e. '''['bar']''' in '''foo['bar']'''.
@@ -555,7 +611,11 @@ sealed class PathComponent : AstNode()
  * [case] indicates the case-sensitivity of the lookup, but this is ignored in the event that [expr] evaluates
  * a value that is not a string.
  */
-data class PathComponentExpr(val expr: ExprNode, val case: CaseSensitivity) : PathComponent() {
+data class PathComponentExpr(
+    val expr: ExprNode,
+    val case: CaseSensitivity,
+    override val metas: MetaContainer
+) : PathComponent() {
     companion object {
         private fun getStringValueIfCaseInsensitiveLiteral(component: PathComponentExpr): String? =
             when {
@@ -610,11 +670,21 @@ data class PathComponentWildcard(override val metas: MetaContainer) : PathCompon
 }
 
 
-sealed class SelectProjection : AstNode()
+sealed class SelectProjection : AstNode(), HasMetas {
+    fun copy(newMetas: MetaContainer? = null): SelectProjection {
+        val metas = newMetas ?: this.metas
+        return when(this) {
+            is SelectProjectionList -> this.copy(metas = metas)
+            is SelectProjectionValue -> this.copy(metas = metas)
+            is SelectProjectionPivot -> this.copy(metas = metas)
+        }
+    }
+}
 
 /** For `SELECT <SelectListItem> [, <SelectListItem>]...` and `SELECT *` cases */
 data class SelectProjectionList(
-    val items: List<SelectListItem>
+    val items: List<SelectListItem>,
+    override val metas: MetaContainer
 ) : SelectProjection() {
 
     override val children: List<AstNode> = items
@@ -622,7 +692,8 @@ data class SelectProjectionList(
 
 /** For `SELECT VALUE <expr>` */
 data class SelectProjectionValue(
-    val expr: ExprNode
+    val expr: ExprNode,
+    override val metas: MetaContainer
 ) : SelectProjection() {
 
     override val children: List<AstNode> = listOf(expr)
@@ -631,7 +702,8 @@ data class SelectProjectionValue(
 /** For `PIVOT <expr> AS <asName> AT <atName>` */
 data class SelectProjectionPivot(
     val nameExpr: ExprNode,
-    val valueExpr: ExprNode
+    val valueExpr: ExprNode,
+    override val metas: MetaContainer
 ) : SelectProjection() {
 
     override val children: List<AstNode> = listOf(nameExpr, valueExpr)
@@ -833,7 +905,7 @@ data class Seq(
  */
 data class DataType(
     val sqlDataType: SqlDataType,
-    val args: List<Long>,
+    val args: List<Int>,
     override val metas: MetaContainer
 ) : AstNode(), HasMetas {
     override val children: List<AstNode> = listOf()
@@ -959,6 +1031,8 @@ enum class NAryOp(val arityRange: IntRange, val symbol: String, val textName: St
 /** Different types of type expressions.  */
 enum class TypedOp(val text: String) {
     CAST("cast"),
+    CAN_CAST("can_cast"),
+    CAN_LOSSLESS_CAST("can_lossless_cast"),
     IS("is")
 }
 
@@ -1051,39 +1125,66 @@ enum class ScopeQualifier {
 /**
  * The core PartiQL data types.
  */
-enum class SqlDataType(val typeName: String, val arityRange: IntRange) {
-    MISSING("missing", 0..0), // PartiQL
-    NULL("null", 0..0), // Ion
-    BOOLEAN("boolean", 0..0), // Ion & SQL-99
-    SMALLINT("smallint", 0..0), // SQL-92
-    INTEGER("integer", 0..0), // Ion & SQL-92
-    FLOAT("float", 0..1), // Ion & SQL-92
-    REAL("real", 0..0), // SQL-92
-    DOUBLE_PRECISION("double_precision", 0..0), // SQL-92
-    DECIMAL("decimal", 0..2), // Ion & SQL-92
-    NUMERIC("numeric", 0..2), // SQL-92
-    TIMESTAMP("timestamp", 0..0), // Ion & SQL-92
-    CHARACTER("character", 0..1), // SQL-92
-    CHARACTER_VARYING("character_varying", 0..1), // SQL-92
-    STRING("string", 0..0), // Ion
-    SYMBOL("symbol", 0..0), // Ion
-    CLOB("clob", 0..0), // Ion
-    BLOB("blob", 0..0), // Ion
-    STRUCT("struct", 0..0), // Ion
-    TUPLE("tuple", 0..0), // PartiQL
-    LIST("list", 0..0), // Ion
-    SEXP("sexp", 0..0), // Ion
-    DATE("date", 0..0), // SQL-92
-    TIME("time", 0..1), // SQL-92
-    TIME_WITH_TIME_ZONE("time_with_time_zone", 0..1), // SQL-92
-    BAG("bag", 0..0);  // PartiQL
+sealed class SqlDataType(val typeName: String, open val arityRange: IntRange) {
 
     companion object {
-        private val DATA_TYPE_NAME_TO_TYPE_LOOKUP =
-            SqlDataType.values()
-                .map { Pair(it.typeName, it) }
-                .toMap()
+        /**
+         * This API is for backward compatibility as the SqlDataType is moved from enum class to sealed class
+         */
+        @JvmStatic
+        fun values(): Array<SqlDataType> = arrayOf(
+                MISSING, NULL, BOOLEAN, SMALLINT, INTEGER4, INTEGER8, INTEGER, FLOAT, REAL, DOUBLE_PRECISION, DECIMAL,
+                NUMERIC, DATE, TIME, TIME_WITH_TIME_ZONE, TIMESTAMP, CHARACTER, CHARACTER_VARYING, STRING, SYMBOL, CLOB,
+                BLOB, STRUCT, TUPLE, LIST, SEXP, BAG, ANY)
+
+        /*
+        * Making this object lazy so that any reference to below objects
+        * (non-companion) does not lead to initialization of this object.
+        * Compiler assigns a NULL value to the object initially accessed and
+        * then initializes all the companion objects. If this is not lazy,
+        * compiler will also initialize this object in the same call. Since it
+        * references the object with a dot, it leads to NullPointerException
+        * for any NULL object. See below links for details -
+        * https://youtrack.jetbrains.com/issue/KT-8970
+        * https://stackoverflow.com/questions/54940944/initializing-companion-object-after-inner-objects/55010004
+        * */
+        private val DATA_TYPE_NAME_TO_TYPE_LOOKUP by lazy {
+            values().map { Pair(it.typeName, it) }.toMap()
+        }
 
         fun forTypeName(typeName: String): SqlDataType? = DATA_TYPE_NAME_TO_TYPE_LOOKUP[typeName]
     }
+
+    object MISSING : SqlDataType("missing", 0..0)
+    object NULL : SqlDataType("null", 0..0)
+    object BOOLEAN : SqlDataType("boolean", 0..0)
+    object SMALLINT : SqlDataType("smallint", 0..0)
+    object INTEGER4 : SqlDataType("integer4", 0..0)
+    object INTEGER8 : SqlDataType("integer8", 0..0)
+    object INTEGER : SqlDataType("integer", 0..0)
+    object FLOAT : SqlDataType("float", 0..1)
+    object REAL : SqlDataType("real", 0..0)
+    object DOUBLE_PRECISION : SqlDataType("double_precision", 0..0)
+    object DECIMAL : SqlDataType("decimal", 0..2)
+    object NUMERIC : SqlDataType("numeric", 0..2)
+    object TIMESTAMP : SqlDataType("timestamp", 0..0)
+    object CHARACTER : SqlDataType("character", 0..1)
+    object CHARACTER_VARYING : SqlDataType("character_varying", 0..1)
+    object STRING : SqlDataType("string", 0..0)
+    object SYMBOL : SqlDataType("symbol", 0..0)
+    object CLOB : SqlDataType("clob", 0..0)
+    object BLOB : SqlDataType("blob", 0..0)
+    object STRUCT : SqlDataType("struct", 0..0)
+    object TUPLE : SqlDataType("tuple", 0..0)
+    object LIST : SqlDataType("list", 0..0)
+    object SEXP : SqlDataType("sexp", 0..0)
+    object BAG : SqlDataType("bag", 0..0)
+    object ANY : SqlDataType("any", 0..0)
+    object DATE : SqlDataType("date", 0..0)
+    object TIME : SqlDataType("time", 0..1)
+    object TIME_WITH_TIME_ZONE : SqlDataType("time_with_time_zone", 0..1)
+    /**
+     * Custom partiql data type which is an alias for the core PartiQL data type
+     */
+    data class CustomDataType(val name: String) : SqlDataType(name, 0..0)
 }

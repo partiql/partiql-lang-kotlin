@@ -1,15 +1,19 @@
 package org.partiql.lang.eval.builtins
 
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Property
-import org.partiql.lang.eval.*
-import org.partiql.lang.eval.time.*
-import org.partiql.lang.util.getOffsetHHmm
-import org.partiql.lang.util.propertyValueMapOf
-import org.partiql.lang.util.times
+import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.ExprFunction
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.bigDecimalValue
+import org.partiql.lang.eval.err
+import org.partiql.lang.eval.intValue
+import org.partiql.lang.eval.time.NANOS_PER_SECOND
+import org.partiql.lang.eval.time.Time
+import org.partiql.lang.types.FunctionSignature
+import org.partiql.lang.types.StaticType
 import java.math.BigDecimal
-import java.time.DateTimeException
-import java.time.ZoneOffset
 
 /**
  * Creates a TIME ExprValue from the time fields hour, minute, second and optional timezone_minutes.
@@ -17,49 +21,30 @@ import java.time.ZoneOffset
  *
  * make_time(<hour_value>, <minute_value>, <second_value>, <optional_timezone_minutes>?)
  */
-internal class MakeTimeExprFunction(valueFactory: ExprValueFactory) : NullPropagatingExprFunction("make_time", 3..4, valueFactory) {
+internal class MakeTimeExprFunction(val valueFactory: ExprValueFactory) : ExprFunction {
+    override val signature = FunctionSignature(
+        name = "make_time",
+        requiredParameters = listOf(StaticType.INT, StaticType.INT, StaticType.DECIMAL),
+        optionalParameter = StaticType.INT,
+        returnType = StaticType.TIME
+    )
 
-    private fun ExprValue.validateType(exprValueType: ExprValueType) {
-        if (type != exprValueType) {
-            err(
-                message = "Invalid argument type for make_time",
-                errorCode = ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL,
-                errorContext = propertyValueMapOf(
-                    Property.EXPECTED_ARGUMENT_TYPES to exprValueType.name,
-                    Property.FUNCTION_NAME to "make_time",
-                    Property.ACTUAL_ARGUMENT_TYPES to type.name
-                ),
-                internal = false
-            )
-        }
+    override fun callWithOptional(env: Environment, required: List<ExprValue>, opt: ExprValue): ExprValue {
+        val (hour, min, sec) = required
+        return makeTime(hour.intValue(), min.intValue(), sec.bigDecimalValue(), opt.intValue())
     }
 
-    override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
+    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
+        val (hour, min, sec) = required
+        return makeTime(hour.intValue(), min.intValue(), sec.bigDecimalValue(), null)
+    }
 
-        // Validate all the arguments
-        val hour: Int = args[0].let {
-            it.validateType(ExprValueType.INT)
-            it.intValue()
-        }
-
-        val minute: Int = args[1].let {
-            it.validateType(ExprValueType.INT)
-            it.intValue()
-        }
-
-        val second: BigDecimal = args[2].let {
-            it.validateType(ExprValueType.DECIMAL)
-            it.bigDecimalValue()
-        }
-
-        val tzMinutes: Int? = when (args.size) {
-            4 -> args[3].let {
-                it.validateType(ExprValueType.INT)
-                it.intValue()
-            }
-            else -> null
-        }
-
+    private fun makeTime(
+        hour: Int,
+        minute: Int,
+        second: BigDecimal,
+        tzMinutes: Int?
+    ): ExprValue {
         try {
             return valueFactory.newTime(
                 Time.of(
@@ -71,8 +56,7 @@ internal class MakeTimeExprFunction(valueFactory: ExprValueFactory) : NullPropag
                     tzMinutes
                 )
             )
-        }
-        catch (e: EvaluationException) {
+        } catch (e: EvaluationException) {
             err(
                 message = e.message,
                 errorCode = ErrorCode.EVALUATOR_TIME_FIELD_OUT_OF_RANGE,

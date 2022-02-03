@@ -165,6 +165,7 @@ internal val DATE_TIME_PART_KEYWORDS: Set<String> = DateTimePart.values()
     "not",
     "null",
     "nullif",
+    "coalesce",
     "numeric",
     "octet_length",
     "of",
@@ -253,6 +254,8 @@ internal val DATE_TIME_PART_KEYWORDS: Set<String> = DateTimePart.values()
 
 /** PartiQL additional keywords. */
 @JvmField internal val SQLPP_KEYWORDS = setOf(
+    "can_cast",
+    "can_lossless_cast",
     "missing",
     "pivot",
     "unpivot",
@@ -261,6 +264,17 @@ internal val DATE_TIME_PART_KEYWORDS: Set<String> = DateTimePart.values()
     "tuple",
     "remove",
     "index",
+    "let",
+
+    // Type names
+    "smallint",
+    "integer2",
+    "int2",
+    "integer4",
+    "int4",
+    "integer8",
+    "int8",
+    "bigint",
     "conflict",
     "do",
     "nothing",
@@ -290,8 +304,15 @@ internal val DATE_TIME_PART_KEYWORDS: Set<String> = DateTimePart.values()
     "bag"
 )
 
+/**
+ * QLDB dialect keywords.
+ *
+ * TODO: move from core LexerConstants once there is an extension mechanism
+ */
+@JvmField internal val QLDB_KEYWORDS = setOf("undrop")
+
 /** All Keywords. */
-@JvmField internal val KEYWORDS = SQL92_KEYWORDS union SQLPP_KEYWORDS
+@JvmField internal val KEYWORDS = SQL92_KEYWORDS union SQLPP_KEYWORDS union QLDB_KEYWORDS
 
 /** Keywords that are aliases for type keywords. */
 @JvmField internal val TYPE_ALIASES = mapOf(
@@ -299,25 +320,29 @@ internal val DATE_TIME_PART_KEYWORDS: Set<String> = DateTimePart.values()
     "char"      to "character",
     "dec"       to "decimal",
     "int"       to "integer",
+    "int2"      to "smallint",
+    "integer2"  to "smallint",
+    "int4"      to "integer4",
+    "int8"      to "integer8",
+    "bigint"    to "integer8",
     "bool"      to "boolean"
 )
 
-/** Keywords that are purely aliases to other keywords. */
-@JvmField internal val KEYWORD_ALIASES = TYPE_ALIASES
-
 /**
- * Indicates the keywords (and pseudo keywords) the indicate types.
+ * Indicates the keywords (and pseudo keywords) the indicate types that map to core types.
  * Some of these types (e.g. VARCHAR) requires a parameters, but many implementations
  * don't require that.
  */
-@JvmField internal val TYPE_NAME_ARITY_MAP = mapOf(
+@JvmField internal val CORE_TYPE_NAME_ARITY_MAP = mapOf(
     "missing"           to 0..0, // PartiQL
     "null"              to 0..0, // Ion
     "boolean"           to 0..0, // Ion & SQL-99
     "smallint"          to 0..0, // SQL-92
+    "integer4"          to 0..0, // PartiQL
+    "integer8"          to 0..0, // PartiQL
     "integer"           to 0..0, // Ion & SQL-92
     "float"             to 0..1, // Ion & SQL-92
-    "real"              to 0..1, // SQL-92
+    "real"              to 0..0, // SQL-92
     "double_precision"  to 0..0, // SQL-92
     "decimal"           to 0..2, // Ion & SQL-92
     "numeric"           to 0..2, // SQL-92
@@ -334,9 +359,19 @@ internal val DATE_TIME_PART_KEYWORDS: Set<String> = DateTimePart.values()
     "tuple"             to 0..0, // PartiQL
     "list"              to 0..0, // Ion
     "sexp"              to 0..0, // Ion
-    "bag"               to 0..0  // PartiQL
-    // TODO SQL-92 types BIT, BIT VARYING, DATE, TIME, INTERVAL and TIMEZONE qualifier
+    "bag"               to 0..0 // PartiQL
+     // TODO SQL-92 types BIT, BIT VARYING, DATE, TIME, INTERVAL and TIMEZONE qualifier
 )
+
+/** Indicates the keywords that indicate special union types. */
+@JvmField internal val UNION_TYPE_NAME_ARITY_MAP = mapOf(
+    "any"               to 0..0,
+    /* ElasticSearch Data Types */
+    "es_any"            to 0..0
+)
+
+/** All type names and their arity. */
+@JvmField internal val ALL_TYPE_NAME_ARITY_MAP = CORE_TYPE_NAME_ARITY_MAP + UNION_TYPE_NAME_ARITY_MAP
 
 /** Keywords that are normal function names. */
 @JvmField internal val FUNCTION_NAME_KEYWORDS = setOf(
@@ -362,10 +397,6 @@ internal val DATE_TIME_PART_KEYWORDS: Set<String> = DateTimePart.values()
     // functions
     "size",
 
-    // conditionals
-    "nullif",
-    "coalesce",
-
     // sexp/list/bag constructors as functions
     "sexp",
     "list",
@@ -382,6 +413,12 @@ internal val DATE_TIME_PART_KEYWORDS: Set<String> = DateTimePart.values()
 )
 
 @JvmField internal val BASE_DML_KEYWORDS  = setOf("insert_into", "set", "remove")
+
+/**
+ * These reserved keywords cannot be used as identifiers for items in `select list`.
+ * Note that this list is not exhaustive.
+ */
+@JvmField internal val RESERVED_KEYWORDS = BASE_DML_KEYWORDS + setOf("update", "delete", "select", "from", "where")
 
 @JvmField internal val BOOLEAN_KEYWORDS = setOf("true", "false")
 

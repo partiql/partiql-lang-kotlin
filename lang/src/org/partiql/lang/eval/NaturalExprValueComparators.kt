@@ -14,6 +14,7 @@
 
 package org.partiql.lang.eval
 
+import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.ExprValueType.*
 import org.partiql.lang.util.*
 
@@ -135,8 +136,8 @@ enum class NaturalExprValueComparators(private val nullOrder: NullOrder) : Compa
 
     private val structFieldComparator = object : Comparator<ExprValue> {
         override fun compare(left: ExprValue, right: ExprValue): Int {
-            val lName = left.name ?: errNoContext("Internal error: left struct field has no name", internal = true)
-            val rName = right.name ?: errNoContext("Internal error: left struct field has no name", internal = true)
+            val lName = left.name ?: errNoContext("Internal error: left struct field has no name", errorCode = ErrorCode.INTERNAL_ERROR, internal = true)
+            val rName = right.name ?: errNoContext("Internal error: right struct field has no name", errorCode = ErrorCode.INTERNAL_ERROR, internal = true)
             val cmp = this@NaturalExprValueComparators.compare(lName, rName)
             if (cmp != 0) {
                 return cmp

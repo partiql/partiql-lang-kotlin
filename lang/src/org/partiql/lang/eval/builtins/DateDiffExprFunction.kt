@@ -14,10 +14,22 @@
 
 package org.partiql.lang.eval.builtins
 
-import com.amazon.ion.*
-import org.partiql.lang.eval.*
-import org.partiql.lang.syntax.*
-import java.time.*
+import com.amazon.ion.Timestamp
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.ExprFunction
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.dateTimePartValue
+import org.partiql.lang.eval.errNoContext
+import org.partiql.lang.eval.timestampValue
+import org.partiql.lang.syntax.DateTimePart
+import org.partiql.lang.types.FunctionSignature
+import org.partiql.lang.types.StaticType
+import java.time.Duration
+import java.time.OffsetDateTime
+import java.time.Period
+import java.time.ZoneOffset
 
 /**
  * Difference in datetime parts between two timestamps. If the first timestamp is later than the second the result is negative.
@@ -34,7 +46,12 @@ import java.time.*
  * - date_diff(day, `2010-01-01T`, `2010-01-02T`) results in 1
  * - date_diff(day, `2010-01-01T23:00Z`, `2010-01-02T01:00Z`) results in 0 as they are only 2h apart
  */
-internal class DateDiffExprFunction(valueFactory: ExprValueFactory) : NullPropagatingExprFunction("date_diff", 3, valueFactory) {
+internal class DateDiffExprFunction(val valueFactory: ExprValueFactory) : ExprFunction {
+    override val signature = FunctionSignature(
+        name = "date_diff",
+        requiredParameters = listOf(StaticType.SYMBOL, StaticType.TIMESTAMP, StaticType.TIMESTAMP),
+        returnType = StaticType.INT
+    )
 
     // Since we don't have a datetime part for `milliseconds` we can safely set the OffsetDateTime to 0 as it won't
     // affect any of the possible calculations.
@@ -68,10 +85,10 @@ internal class DateDiffExprFunction(valueFactory: ExprValueFactory) : NullPropag
     private fun secondsSince(left: OffsetDateTime, right: OffsetDateTime): Number =
         Duration.between(left, right).toMillis() / 1_000
 
-    override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
-        val dateTimePart = args[0].dateTimePartValue()
-        val left = args[1].timestampValue()
-        val right = args[2].timestampValue()
+    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
+        val dateTimePart = required[0].dateTimePartValue()
+        val left = required[1].timestampValue()
+        val right = required[2].timestampValue()
 
         val leftAsJava = left.toJava()
         val rightAsJava = right.toJava()
@@ -84,6 +101,7 @@ internal class DateDiffExprFunction(valueFactory: ExprValueFactory) : NullPropag
             DateTimePart.MINUTE -> minutesSince(leftAsJava, rightAsJava)
             DateTimePart.SECOND -> secondsSince(leftAsJava, rightAsJava)
             else            -> errNoContext("invalid datetime part for date_diff: ${dateTimePart.toString().toLowerCase()}",
+                                            errorCode = ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_DATE_PART,
                                             internal = false)
         }
 

@@ -53,6 +53,9 @@ open class AstRewriterBase : AstRewriter {
             is CreateIndex       -> rewriteCreateIndex(node)
             is DropTable         -> rewriteDropTable(node)
             is DropIndex         -> rewriteDropIndex(node)
+            is Undrop            -> rewriteUndrop(node)
+            is NullIf            -> rewriteNullIf(node)
+            is Coalesce          -> rewriteCoalesce(node)
             is Exec              -> rewriteExec(node)
             is DateLiteral -> rewriteDate(node)
             is TimeLiteral -> rewriteTime(node)
@@ -139,6 +142,19 @@ open class AstRewriterBase : AstRewriter {
     open fun rewriteSelect(selectExpr: Select): ExprNode =
         innerRewriteSelect(selectExpr)
 
+    open fun rewriteNullIf(node: NullIf): ExprNode {
+        return NullIf(
+            rewriteExprNode(node.expr1),
+            rewriteExprNode(node.expr2),
+            rewriteMetas(node))
+    }
+
+    open fun rewriteCoalesce(node: Coalesce): ExprNode {
+        return Coalesce(
+            node.args.map { rewriteExprNode(it) },
+            rewriteMetas(node))
+    }
+
     /**
      * Many subtypes of [AstRewriterBase] need to override [rewriteSelect] to selectively apply a different nested
      * instance of themselves to [Select] nodes.  These subtypes can invoke this method instead of [rewriteSelect]
@@ -202,16 +218,17 @@ open class AstRewriterBase : AstRewriter {
 
     open fun rewriteSelectProjectionList(projection: SelectProjectionList): SelectProjection =
         SelectProjectionList(
-            projection.items.map { it -> rewriteSelectListItem(it) })
+            projection.items.map { it -> rewriteSelectListItem(it) }, rewriteMetas(projection))
 
     open fun rewriteSelectProjectionValue(projection: SelectProjectionValue): SelectProjection =
-        SelectProjectionValue(rewriteExprNode(projection.expr))
+        SelectProjectionValue(rewriteExprNode(projection.expr), rewriteMetas(projection))
 
 
     open fun rewriteSelectProjectionPivot(projection: SelectProjectionPivot): SelectProjection =
         SelectProjectionPivot(
             rewriteExprNode(projection.nameExpr),
-            rewriteExprNode(projection.valueExpr))
+            rewriteExprNode(projection.valueExpr),
+            rewriteMetas(projection))
 
     open fun rewriteSelectListItem(item: SelectListItem): SelectListItem =
         when(item) {
@@ -246,7 +263,10 @@ open class AstRewriterBase : AstRewriter {
         PathComponentWildcard(rewriteMetas(pathComponent))
 
     open fun rewritePathComponentExpr(pathComponent: PathComponentExpr): PathComponent =
-        PathComponentExpr(rewriteExprNode(pathComponent.expr), pathComponent.case)
+        PathComponentExpr(
+            rewriteExprNode(pathComponent.expr),
+            pathComponent.case,
+            rewriteMetas(pathComponent))
 
     open fun rewriteFromSource(fromSource: FromSource): FromSource =
         when(fromSource) {
@@ -441,6 +461,9 @@ open class AstRewriterBase : AstRewriter {
             rewriteIdentifier(node.tableId),
             rewriteIdentifier(node.indexId),
             rewriteMetas(node))
+
+    open fun rewriteUndrop(node: Undrop): Undrop =
+        Undrop(node.identifier, node.type, rewriteMetas(node))
 
     open fun rewriteExec(node: Exec): Exec =
         Exec(

@@ -1,14 +1,22 @@
 package org.partiql.lang.eval.builtins
 
 import junitparams.Parameters
-import org.assertj.core.api.Assertions
 import org.junit.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.eval.*
+import org.partiql.lang.errors.Property
+import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.EvaluatorTestBase
+import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.eval.RequiredArgs
+import org.partiql.lang.eval.RequiredWithOptional
+import org.partiql.lang.eval.call
 import org.partiql.lang.eval.time.Time
+import org.partiql.lang.eval.timeValue
 import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.lang.util.to
 
 class MakeTimeEvaluationTest : EvaluatorTestBase() {
     private val env = Environment.standard()
@@ -77,7 +85,13 @@ class MakeTimeEvaluationTest : EvaluatorTestBase() {
     }
 
     private fun callMakeTime(vararg args: Any): Time? {
-        val value = subject.call(env, args.map { anyToExprValue(it) }.toList())
+        val required = args.take(3).map { anyToExprValue(it) }
+        val opt = args.drop(3)
+        val args = when(opt.firstOrNull()) {
+            null -> RequiredArgs(required)
+            else -> RequiredWithOptional(required, anyToExprValue(opt.first()))
+        }
+        val value = subject.call(env, args)
         return when(value.type) {
             ExprValueType.NULL -> null
             else -> value.timeValue()
@@ -85,52 +99,61 @@ class MakeTimeEvaluationTest : EvaluatorTestBase() {
     }
 
     @Test
-    fun lessArguments() {
-        Assertions.assertThatThrownBy { callMakeTime(23) }
-            .hasMessage("make_time takes between 3 and 4 arguments, received: 1")
-            .isExactlyInstanceOf(EvaluationException::class.java)
-    }
-
-    @Test
-    fun lessArguments2() {
-        Assertions.assertThatThrownBy { callMakeTime(23, 2) }
-            .hasMessage("make_time takes between 3 and 4 arguments, received: 2")
-            .isExactlyInstanceOf(EvaluationException::class.java)
-    }
-
-    @Test
-    fun moreArguments() {
-        Assertions.assertThatThrownBy { callMakeTime(22, 2, 29.123.toBigDecimal(), 128, 45) }
-            .hasMessage("make_time takes between 3 and 4 arguments, received: 5")
-            .isExactlyInstanceOf(EvaluationException::class.java)
-    }
-
-    @Test
     fun wrongTypeOfArgumentForHour() {
+        checkInputThrowingEvaluationException("MAKE_TIME('23', 2, 28.0)",
+            ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL,
+            mapOf(Property.EXPECTED_ARGUMENT_TYPES to "INT",
+                Property.ARGUMENT_POSITION to 1,
+                Property.ACTUAL_ARGUMENT_TYPES to "STRING",
+                Property.FUNCTION_NAME to "make_time",
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 1L),
+            expectedPermissiveModeResult = "MISSING")
+/*
         Assertions.assertThatThrownBy { callMakeTime("23", 2, 28.toBigDecimal()) }
             .hasMessage("Invalid argument type for make_time")
             .isExactlyInstanceOf(EvaluationException::class.java)
+
+ */
     }
 
     @Test
     fun wrongTypeOfArgumentForMinute() {
-        Assertions.assertThatThrownBy { callMakeTime(23, 2.0, 28.toBigDecimal()) }
-            .hasMessage("Invalid argument type for make_time")
-            .isExactlyInstanceOf(EvaluationException::class.java)
+        checkInputThrowingEvaluationException("MAKE_TIME(23, 2.0, 28.0)",
+            ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL,
+            mapOf(Property.EXPECTED_ARGUMENT_TYPES to "INT",
+                Property.ARGUMENT_POSITION to 2,
+                Property.ACTUAL_ARGUMENT_TYPES to "DECIMAL",
+                Property.FUNCTION_NAME to "make_time",
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 1L),
+            expectedPermissiveModeResult = "MISSING")
     }
 
     @Test
     fun wrongTypeOfArgumentForSecond() {
-        Assertions.assertThatThrownBy { callMakeTime(23, 2, 28) }
-            .hasMessage("Invalid argument type for make_time")
-            .isExactlyInstanceOf(EvaluationException::class.java)
+        checkInputThrowingEvaluationException("MAKE_TIME(23, 2, 28)",
+            ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL,
+            mapOf(Property.EXPECTED_ARGUMENT_TYPES to "DECIMAL",
+                Property.ARGUMENT_POSITION to 3,
+                Property.ACTUAL_ARGUMENT_TYPES to "INT",
+                Property.FUNCTION_NAME to "make_time",
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 1L),
+            expectedPermissiveModeResult = "MISSING")
     }
 
     @Test
     fun wrongTypeOfArgumentForTzMinutes() {
-        Assertions.assertThatThrownBy { callMakeTime(23, 2, 28.toBigDecimal(), 12.0) }
-            .hasMessage("Invalid argument type for make_time")
-            .isExactlyInstanceOf(EvaluationException::class.java)
+        checkInputThrowingEvaluationException("MAKE_TIME(23, 2, 28.0, 12.0)",
+            ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL,
+            mapOf(Property.EXPECTED_ARGUMENT_TYPES to "INT",
+                Property.ARGUMENT_POSITION to 4,
+                Property.ACTUAL_ARGUMENT_TYPES to "DECIMAL",
+                Property.FUNCTION_NAME to "make_time",
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 1L),
+            expectedPermissiveModeResult = "MISSING")
     }
 
     fun parametersForMakeTime(): List<Pair<Time?, () -> Time?>> = listOf(

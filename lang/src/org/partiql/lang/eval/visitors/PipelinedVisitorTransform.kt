@@ -16,4 +16,7 @@ class PipelinedVisitorTransform(vararg transformers: PartiqlAst.VisitorTransform
             intermediateNode, transformer ->
             transformer.transformStatement(intermediateNode)
         }
+
+    fun appendVisitorTransforms(vararg newVisitorTransforms: PartiqlAst.VisitorTransform) =
+        PipelinedVisitorTransform(*(transformerList + newVisitorTransforms.toList()).toTypedArray())
 }

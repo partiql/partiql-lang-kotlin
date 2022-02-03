@@ -14,21 +14,27 @@
 
 package org.partiql.lang.eval
 
-import org.partiql.lang.*
-import org.partiql.lang.ast.*
-import org.partiql.lang.errors.*
-import org.partiql.lang.util.*
+import org.partiql.lang.SqlException
+import org.partiql.lang.ast.MetaContainer
+import org.partiql.lang.ast.SourceLocationMeta
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
+import org.partiql.lang.errors.PropertyValueMap
+import org.partiql.lang.types.FunctionSignature
+import org.partiql.lang.util.err
+import org.partiql.lang.util.propertyValueMapOf
+import org.partiql.lang.util.to
 
 /** Error for evaluation problems. */
 open class EvaluationException(message: String,
-                               errorCode: ErrorCode? = null,
+                               errorCode: ErrorCode,
                                errorContext: PropertyValueMap? = null,
                                cause: Throwable? = null,
                                val internal: Boolean) : SqlException(message, errorCode, errorContext, cause) {
 
 
     constructor(cause: Throwable,
-                errorCode: ErrorCode? = null,
+                errorCode: ErrorCode,
                 errorContext: PropertyValueMap? = null,
                 internal: Boolean) : this(message = cause.message ?: "<NO MESSAGE>",
                                                  errorCode = errorCode,
@@ -40,20 +46,52 @@ open class EvaluationException(message: String,
 /**
  * Shorthand for throwing function evaluation. Separated from [err] to avoid loosing the context unintentionally
  */
-internal fun errNoContext(message: String, internal: Boolean): Nothing = err(message, null, internal)
-
-/** Shorthand for throwing evaluation with context. */
-internal fun err(message: String, errorContext: PropertyValueMap?, internal: Boolean): Nothing =
-    throw EvaluationException(message, errorContext = errorContext, internal = internal)
+internal fun errNoContext(message: String, errorCode: ErrorCode, internal: Boolean): Nothing = err(message, errorCode, null, internal)
 
 /** Shorthand for throwing evaluation with context with an error code.. */
 internal fun err(message: String, errorCode: ErrorCode, errorContext: PropertyValueMap?, internal: Boolean): Nothing =
     throw EvaluationException(message, errorCode, errorContext, internal = internal)
 
-internal fun errIntOverflow(errorContext: PropertyValueMap? = null): Nothing {
+/** Throw an [ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL] error */
+internal fun errInvalidArgumentType(
+    signature: FunctionSignature,
+    position: Int,
+    numArgs: Int,
+    expectedTypes: List<ExprValueType>,
+    actualType: ExprValueType
+): Nothing {
+    val arity = signature.arity
+
+    val expectedTypeMsg = when(expectedTypes.size) {
+        1 -> expectedTypes[0]
+        else -> {
+            val window = expectedTypes.size - 1
+            val (most, last) = expectedTypes.windowed(window, window, true)
+            most.joinToString(", ") + ", or ${last.first()}"
+        }
+    }
+
+    val errorContext = propertyValueMapOf(
+        Property.FUNCTION_NAME to signature.name,
+        Property.EXPECTED_ARGUMENT_TYPES to expectedTypeMsg,
+        Property.ARGUMENT_POSITION to position,
+        Property.ACTUAL_ARGUMENT_TYPES to actualType.toString()
+    )
+
+    err(
+        message = "Invalid type for argument ${position} of ${signature.name}.",
+        errorCode = ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL,
+        errorContext = errorContext,
+        internal = false
+    )
+}
+
+internal fun errIntOverflow(intSizeInBytes: Int, errorContext: PropertyValueMap? = null): Nothing {
     throw EvaluationException(message = "Int overflow or underflow",
                               errorCode = ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
-                              errorContext = errorContext,
+                              errorContext = (errorContext ?: PropertyValueMap()).also {
+                                  it[Property.INT_SIZE_IN_BYTES] = intSizeInBytes
+                              },
                               internal = false)
 }
 

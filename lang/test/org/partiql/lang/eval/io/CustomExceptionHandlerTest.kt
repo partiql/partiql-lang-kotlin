@@ -3,22 +3,21 @@ package org.partiql.lang.eval.io
 import com.amazon.ion.system.IonSystemBuilder
 import org.junit.Test
 import org.partiql.lang.CompilerPipeline
-import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.eval.*
-import java.io.IOException
+import org.partiql.lang.types.FunctionSignature
+import org.partiql.lang.types.StaticType
 import java.lang.IllegalStateException
-import java.lang.NullPointerException
-import java.util.concurrent.ThreadPoolExecutor
 import kotlin.test.assertTrue
 import kotlin.test.fail
 
-class AlwaysThrowsFunc(): ExprFunction {
-    override val name: String
-        get() = "alwaysthrows"
+class AlwaysThrowsFunc: ExprFunction {
 
-    override fun call(env: Environment, args: List<ExprValue>): ExprValue {
+    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
         throw IllegalStateException()
     }
+    override val signature: FunctionSignature
+        get() = FunctionSignature("alwaysthrows", listOf(), returnType = StaticType.ANY)
+
 }
 
 class CustomExceptionHandlerTest {
@@ -31,7 +30,7 @@ class CustomExceptionHandlerTest {
             addFunction(AlwaysThrowsFunc())
             compileOptions(CompileOptions.build {
                 thunkOptions(ThunkOptions.build {
-                    handleException { throwable, sourceLocationMeta ->
+                    handleExceptionForLegacyMode { throwable, sourceLocationMeta ->
                         customHandlerWasInvoked = true
                         throw IllegalStateException()
                     }
@@ -59,7 +58,7 @@ class CustomExceptionHandlerTest {
                 .addFunction(AlwaysThrowsFunc())
                 .compileOptions(CompileOptions.builder()
                         .thunkOptions(ThunkOptions.builder()
-                                .handleException { throwable, sourceLocationMeta ->
+                                .handleExceptionForLegacyMode { throwable, sourceLocationMeta ->
                                     customHandlerWasInvoked = true
                                     throw IllegalStateException()
                                 }

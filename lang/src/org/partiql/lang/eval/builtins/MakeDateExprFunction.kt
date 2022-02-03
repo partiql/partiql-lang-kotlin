@@ -2,11 +2,17 @@ package org.partiql.lang.eval.builtins
 
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
-import org.partiql.lang.errors.PropertyValueMap
-import org.partiql.lang.eval.*
+import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.ExprFunction
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.eval.err
+import org.partiql.lang.eval.intValue
+import org.partiql.lang.types.FunctionSignature
+import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.propertyValueMapOf
 import java.time.DateTimeException
-import java.time.LocalDate
 
 /**
  * Creates a DATE ExprValue from the date fields year, month and day.
@@ -14,10 +20,16 @@ import java.time.LocalDate
  *
  * make_date(<year_value>, <month_value>, <day_value>)
  */
-internal class MakeDateExprFunction(valueFactory: ExprValueFactory) : NullPropagatingExprFunction("make_date", 3, valueFactory) {
+internal class MakeDateExprFunction(val valueFactory: ExprValueFactory) : ExprFunction {
 
-    override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
-        args.map {
+    override val signature = FunctionSignature(
+        name = "make_date",
+        requiredParameters = listOf(StaticType.INT, StaticType.INT, StaticType.INT),
+        returnType = StaticType.DATE
+    )
+
+    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
+        required.map {
             if (it.type != ExprValueType.INT) {
                 err(
                     message = "Invalid argument type for make_date",
@@ -32,7 +44,7 @@ internal class MakeDateExprFunction(valueFactory: ExprValueFactory) : NullPropag
             }
         }
 
-        val (year, month, day) = args.map { it.intValue() }
+        val (year, month, day) = required.map { it.intValue() }
 
         try {
             return valueFactory.newDate(year, month, day)

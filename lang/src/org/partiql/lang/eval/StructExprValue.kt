@@ -15,6 +15,7 @@
 package org.partiql.lang.eval
 
 import com.amazon.ion.*
+import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.util.*
 import java.util.*
 
@@ -69,7 +70,7 @@ internal open class StructExprValue(
         val bindList = ArrayList<ExprValue>()
         val bindNames = ArrayList<String>()
         sequence.forEach {
-            val name = it.name?.stringValue() ?: errNoContext("Expected non-null name for lazy struct", internal = false)
+            val name = it.name?.stringValue() ?: errNoContext("Expected non-null name for lazy struct", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE, internal = false)
             bindMap.putIfAbsent(name, it)
             if (ordering == StructOrdering.ORDERED) {
                 bindList.add(it)

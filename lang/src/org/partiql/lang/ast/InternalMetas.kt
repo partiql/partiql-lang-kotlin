@@ -21,6 +21,9 @@ import com.amazon.ion.*
  * during compilation and should never be serialized.
  */
 open class InternalMeta(override val tag: String): Meta {
+    override val shouldSerialize: Boolean
+        get() = false
+
     override fun serialize(writer: IonWriter) {
         throw UnsupportedOperationException(
             "${this.javaClass} is meant for internal use only and cannot be serialized.")

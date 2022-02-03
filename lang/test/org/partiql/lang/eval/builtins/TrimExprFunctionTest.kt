@@ -1,36 +1,32 @@
-/*
- * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- *  You may not use this file except in compliance with the License.
- * A copy of the License is located at:
- *
- *      http://aws.amazon.com/apache2.0/
- *
- *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
- *  language governing permissions and limitations under the License.
- */
-
 package org.partiql.lang.eval.builtins
 
-import com.amazon.ion.system.*
-import org.partiql.lang.eval.*
-import org.partiql.lang.util.*
-import org.assertj.core.api.Assertions.*
-import org.junit.*
-import org.junit.Assert.*
-import org.partiql.lang.*
+import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.junit.Test
+import org.partiql.lang.TestBase
+import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.RequiredArgs
+import org.partiql.lang.eval.RequiredWithVariadic
+import org.partiql.lang.eval.call
+import org.partiql.lang.eval.stringValue
 
 /**
- * Tests for [TrimExprFunction], most tests are done e2e through the evaluator, see [BuiltinFunctionsTest]
+ * Tests for [TrimExprFunction], most tests are done e2e through the evaluator, see [TrimEvaluationTest]
  */
 class TrimExprFunctionTest : TestBase() {
     private val env = Environment.standard()
 
     private val subject = TrimExprFunction(valueFactory)
 
-    private fun callTrim(vararg args: Any) = subject.call(env, args.map { anyToExprValue(it) }.toList()).stringValue()
+    private fun callTrim(vararg args: Any): String {
+        val args = args.map { anyToExprValue(it) }.toList()
+        val required = args.take(1)
+        val rest = args.drop(1)
+        return when (rest.size) {
+            0 -> subject.call(env, RequiredArgs(required))
+            else -> subject.call(env, RequiredWithVariadic(required, rest))
+        }.stringValue()
+    }
 
     @Test
     fun oneArgument() = assertEquals("string", callTrim("   string   "))
@@ -54,31 +50,10 @@ class TrimExprFunctionTest : TestBase() {
     fun threeArguments() = assertEquals("string", callTrim("both", "a", "aaaaaaaaaastringaaaaaaa"))
 
     @Test
-    fun zeroArguments() {
-        assertThatThrownBy { callTrim() }
-            .isExactlyInstanceOf(EvaluationException::class.java)
-            .hasMessageContaining("trim takes between 1 and 3 arguments, received: 0")
-    }
-
-    @Test
-    fun moreThanThreeArguments() {
-        assertThatThrownBy { callTrim("both", "a", "aaaaaaaaaastringaaaaaaa", "a") }
-            .isExactlyInstanceOf(EvaluationException::class.java)
-            .hasMessageContaining("trim takes between 1 and 3 arguments, received: 4")
-    }
-
-    @Test
     fun wrongSpecificationType() {
         assertThatThrownBy { assertEquals("string", callTrim(1, "string")) }
             .isExactlyInstanceOf(EvaluationException::class.java)
             .hasMessageContaining("with two arguments trim's first argument must be either the specification or a 'to remove' string")
-    }
-
-    @Test
-    fun wrongArgumentType() {
-        assertThatThrownBy { assertEquals("string", callTrim(1)) }
-            .isExactlyInstanceOf(EvaluationException::class.java)
-            .hasMessageContaining("Expected text: 1")
     }
 
     @Test

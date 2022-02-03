@@ -14,38 +14,32 @@
 
 package org.partiql.lang.eval.builtins
 
-import com.amazon.ion.*
-import org.partiql.lang.errors.*
-import org.partiql.lang.eval.*
-import org.partiql.lang.util.*
+import com.amazon.ion.IonContainer
+import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.ExprFunction
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.types.AnyOfType
+import org.partiql.lang.types.FunctionSignature
+import org.partiql.lang.types.StaticType
+import org.partiql.lang.util.size
 
 /**
  * Built in function to return the size of a container type, i.e. size of Lists, Structs and Bags. This function
  * propagates null and missing values as described in docs/Functions.md
  *
- * syntax: `size(<container>)` where container can be a BAG, STRUCT or LIST.
+ * syntax: `size(<container>)` where container can be a BAG, SEXP, STRUCT or LIST.
  */
-internal class SizeExprFunction(valueFactory: ExprValueFactory) : NullPropagatingExprFunction("size", 1, valueFactory) {
-    override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
-        val collection = args.first()
+internal class SizeExprFunction(val valueFactory: ExprValueFactory) : ExprFunction {
+    override val signature = FunctionSignature(
+        name = "size",
+        requiredParameters = listOf(AnyOfType(setOf(StaticType.LIST, StaticType.BAG, StaticType.STRUCT, StaticType.SEXP))),
+        returnType = StaticType.INT
+    )
 
-        return when (collection.type) {
-            ExprValueType.LIST, ExprValueType.BAG, ExprValueType.STRUCT, ExprValueType.SEXP -> {
-                val ionCol = collection.ionValue as IonContainer
+    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
+        val ionContainer = required.first().ionValue as IonContainer
 
-                valueFactory.newInt(ionCol.size)
-            }
-            else                                                        -> {
-                val errorContext = PropertyValueMap()
-                errorContext[Property.EXPECTED_ARGUMENT_TYPES] = "LIST or BAG or STRUCT"
-                errorContext[Property.ACTUAL_ARGUMENT_TYPES] = collection.type.name
-                errorContext[Property.FUNCTION_NAME] = "size"
-
-                err(message = "invalid argument type for size",
-                    errorCode = ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL,
-                    errorContext = errorContext,
-                    internal = false)
-            }
-        }
+        return valueFactory.newInt(ionContainer.size)
     }
 }

@@ -628,6 +628,21 @@ class SqlParserTest : SqlParserTestBase() {
     )
 
     //****************************************
+    // custom type cast
+    //****************************************
+    @Test
+    fun castAsEsBoolean() = assertExpressionSkipV0(
+        "CAST(TRUE AS ES_BOOLEAN)",
+        "(cast (lit true) (custom_type es_boolean))"
+    )
+
+    @Test
+    fun castAsRsInteger() = assertExpressionSkipV0(
+        "CAST(1.123 AS RS_INTEGER)",
+        "(cast (lit 1.123) (custom_type rs_integer))"
+    )
+
+    //****************************************
     // searched CASE
     //****************************************
     @Test
@@ -3709,6 +3724,20 @@ class SqlParserTest : SqlParserTestBase() {
         "DROP TABLE \"user\"",
         "(drop_table (identifier user (case_sensitive)))",
         "(ddl (drop_table (identifier user (case_sensitive))))"
+    )
+
+    @Test
+    fun undropTableWithQuotedIdentifier() = assertExpression(
+        "UNDROP TABLE \"foo\"",
+        "(undrop foo (table))",
+        "(ddl (undrop_table foo))"
+    )
+
+    @Test
+    fun undropTableWithLiteral() = assertExpression(
+        "UNDROP TABLE 'foo'",
+        "(undrop foo (table))",
+        "(ddl (undrop_table foo))"
     )
 
     @Test

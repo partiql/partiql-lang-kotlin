@@ -40,7 +40,7 @@ import org.partiql.lang.errors.Property.*
  *
  */
 open class SqlException(override var message: String,
-                        val errorCode: ErrorCode? = null,
+                        val errorCode: ErrorCode,
                         val errorContext: PropertyValueMap? = null,
                         cause: Throwable? = null)
     : RuntimeException(message, cause) {
