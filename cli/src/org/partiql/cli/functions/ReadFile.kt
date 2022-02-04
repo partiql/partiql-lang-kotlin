@@ -89,7 +89,8 @@ internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFact
         val fileType = "ion"
         val handler = readHandlers[fileType] ?: throw IllegalArgumentException("Unknown file type: $fileType")
         val seq = Sequence {
-            // TODO we should take care to clean this up properly
+            // TODO we should take care to clean up this `FileInputStream` properly
+            //  https://github.com/partiql/partiql-lang-kotlin/issues/518
             val fileInput = FileInputStream(fileName)
             handler(fileInput, valueFactory.ion.newEmptyStruct()).iterator()
         }
@@ -102,7 +103,8 @@ internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFact
         val fileType = options["type"]?.stringValue() ?: "ion"
         val handler = readHandlers[fileType] ?: throw IllegalArgumentException("Unknown file type: $fileType")
         val seq = Sequence {
-            // TODO we should take care to clean this up properly
+            // TODO we should take care to clean up this `FileInputStream` properly
+            //  https://github.com/partiql/partiql-lang-kotlin/issues/518
             val fileInput = FileInputStream(fileName)
             handler(fileInput, options).iterator()
         }
