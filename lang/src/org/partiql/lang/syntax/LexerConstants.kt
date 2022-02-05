@@ -304,15 +304,8 @@ internal val DATE_TIME_PART_KEYWORDS: Set<String> = DateTimePart.values()
     "bag"
 )
 
-/**
- * QLDB dialect keywords.
- *
- * TODO: move from core LexerConstants once there is an extension mechanism
- */
-@JvmField internal val QLDB_KEYWORDS = setOf("undrop")
-
 /** All Keywords. */
-@JvmField internal val KEYWORDS = SQL92_KEYWORDS union SQLPP_KEYWORDS union QLDB_KEYWORDS
+@JvmField internal val KEYWORDS = SQL92_KEYWORDS union SQLPP_KEYWORDS
 
 /** Keywords that are aliases for type keywords. */
 @JvmField internal val TYPE_ALIASES = mapOf(

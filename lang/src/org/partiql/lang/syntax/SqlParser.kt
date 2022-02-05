@@ -153,7 +153,6 @@ class SqlParser(
         RETURNING_WILDCARD,
         CREATE_TABLE(isTopLevelType = true),
         DROP_TABLE(isTopLevelType = true),
-        UNDROP_TABLE(isTopLevelType = true),
         DROP_INDEX(isTopLevelType = true),
         CREATE_INDEX(isTopLevelType = true),
         PARAMETER,
@@ -239,7 +238,7 @@ class SqlParser(
 
             FROM, INSERT, INSERT_VALUE, SET, UPDATE, REMOVE, DELETE, DML_LIST -> toAstDml()
 
-            CREATE_TABLE, DROP_TABLE, UNDROP_TABLE, CREATE_INDEX, DROP_INDEX -> toAstDdl()
+            CREATE_TABLE, DROP_TABLE, CREATE_INDEX, DROP_INDEX -> toAstDdl()
             
             EXEC -> toAstExec()
 
@@ -679,10 +678,6 @@ class SqlParser(
                 )
                 DROP_TABLE -> ddl(
                     dropTable(children[0].toIdentifier()),
-                    metas
-                )
-                UNDROP_TABLE -> ddl(
-                    undropTable(children[0].token!!.text!!),
                     metas
                 )
                 CREATE_INDEX -> ddl(
@@ -1379,7 +1374,6 @@ class SqlParser(
             "select" -> tail.parseSelect()
             "create" -> tail.parseCreate()
             "drop" -> tail.parseDrop()
-            "undrop" -> tail.parseUndrop()
             "pivot" -> tail.parsePivot()
             "from" -> tail.parseFrom()
             // table value constructor--which aliases to bag constructor in PartiQL with very
@@ -1907,27 +1901,6 @@ class SqlParser(
         else -> head.err("Unexpected token following DROP", ErrorCode.PARSE_UNEXPECTED_TOKEN)
     }.apply {
         expectEof("DROP")
-    }
-
-    private fun List<Token>.parseUndrop(): ParseNode = when (head?.keywordText) {
-        "table" -> {
-            val identifier = when (tail.head?.type) {
-                QUOTED_IDENTIFIER, LITERAL -> {
-                    tail.atomFromHead().also {
-                        if (it.token?.value !is IonText) {
-                            tail.err("Expected text literal!", ErrorCode.PARSE_UNEXPECTED_TOKEN)
-                        }
-                    }
-                }
-                else -> {
-                    tail.err("Expected quoted identifier or text literal!", ErrorCode.PARSE_UNEXPECTED_TOKEN)
-                }
-            }
-            ParseNode(UNDROP_TABLE, null, listOf(identifier), identifier.remaining)
-        }
-        else -> head.err("Unexpected token following UNDROP", ErrorCode.PARSE_UNEXPECTED_TOKEN)
-    }.apply {
-        expectEof("UNDROP")
     }
 
     /**

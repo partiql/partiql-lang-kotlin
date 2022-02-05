@@ -95,7 +95,6 @@ private class AstSerializerImpl(val astVersion: AstVersion, val ion: IonSystem):
                     is CreateIndex       -> case { writeCreateIndex(expr) }
                     is DropTable         -> case { writeDropTable(expr) }
                     is DropIndex         -> case { writeDropIndex(expr) }
-                    is Undrop            -> case { writeUndrop(expr) }
                     is Parameter         -> case { writeParameter(expr) }
                     is NullIf            -> case { writeNullIf(expr) }
                     is Coalesce          -> case { writeCoalesce(expr) }
@@ -812,18 +811,6 @@ private class AstSerializerImpl(val astVersion: AstVersion, val ion: IonSystem):
                 symbol("drop_index")
                 writeIdentifier(expr.tableId.id, expr.tableId.case)
                 writeIdentifier(expr.indexId.id, expr.indexId.case)
-            }
-        }
-    }
-
-    private fun IonWriterContext.writeUndrop(expr: Undrop) {
-        when (astVersion) {
-            AstVersion.V0 -> {
-                symbol("undrop")
-                symbol(expr.identifier)
-                sexp {
-                    symbol(expr.type.typeName)
-                }
             }
         }
     }

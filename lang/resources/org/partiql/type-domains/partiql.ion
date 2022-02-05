@@ -274,9 +274,6 @@
             // `DROP TABLE <identifier>`
             (drop_table table_name::identifier)
 
-            // `UNDROP TABLE <symbol>`
-            (undrop_table table_name::symbol)
-
             // `CREATE INDEX ON <identifier> (<expr> [, <expr>]...)`
             // TODO: add optional table name
             (create_index index_name::identifier fields::(* expr 1))

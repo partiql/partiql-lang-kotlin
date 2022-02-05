@@ -476,7 +476,6 @@ private class StatementTransformer(val ion: IonSystem) {
                     ),
                     keys = op.fields.map { it.toExprNode() },
                     metas = metas)
-            is DdlOp.UndropTable -> Undrop(op.tableName.text, SchemaObjectType.TABLE, metas)
             is DdlOp.DropIndex ->
                 DropIndex(
                     tableId = Identifier(

@@ -53,7 +53,6 @@ open class AstRewriterBase : AstRewriter {
             is CreateIndex       -> rewriteCreateIndex(node)
             is DropTable         -> rewriteDropTable(node)
             is DropIndex         -> rewriteDropIndex(node)
-            is Undrop            -> rewriteUndrop(node)
             is NullIf            -> rewriteNullIf(node)
             is Coalesce          -> rewriteCoalesce(node)
             is Exec              -> rewriteExec(node)
@@ -461,9 +460,6 @@ open class AstRewriterBase : AstRewriter {
             rewriteIdentifier(node.tableId),
             rewriteIdentifier(node.indexId),
             rewriteMetas(node))
-
-    open fun rewriteUndrop(node: Undrop): Undrop =
-        Undrop(node.identifier, node.type, rewriteMetas(node))
 
     open fun rewriteExec(node: Exec): Exec =
         Exec(

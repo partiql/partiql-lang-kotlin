@@ -147,7 +147,7 @@ open class AstWalker(private val visitor: AstVisitor) {
                     }
                 }
                 is CreateTable, is DropTable, is DropIndex,
-                is Undrop, is Exec, is TimeLiteral, is DateLiteral -> case { }
+                is Exec, is TimeLiteral, is DateLiteral -> case { }
             }.toUnit()
         }
     }

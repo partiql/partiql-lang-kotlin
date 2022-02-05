@@ -309,8 +309,7 @@ internal class EvaluatingCompiler(
             is CreateTable,
             is CreateIndex,
             is DropIndex,
-            is DropTable,
-            is Undrop -> compileDdl(expr)
+            is DropTable -> compileDdl(expr)
             is Exec -> compileExec(expr)
             is DateLiteral -> compileDateLiteral(expr)
             is TimeLiteral -> compileTimeLiteral(expr)

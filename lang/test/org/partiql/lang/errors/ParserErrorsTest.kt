@@ -1871,46 +1871,6 @@ class ParserErrorsTest : SqlParserTestBase() {
             Property.TOKEN_VALUE to ion.newSymbol("+")))
 
     @Test
-    fun undropTableWithOperatorAfterIdentifier() = checkInputThrowingParserException(
-        "UNDROP TABLE 'foo' || 'bar'",
-        ErrorCode.PARSE_UNEXPECTED_TOKEN,
-        mapOf(
-            Property.LINE_NUMBER to 1L,
-            Property.COLUMN_NUMBER to 20L,
-            Property.TOKEN_TYPE to TokenType.OPERATOR,
-            Property.TOKEN_VALUE to ion.newSymbol("||")))
-
-    @Test
-    fun undropNonTable() = checkInputThrowingParserException(
-        "UNDROP INDEX foo",
-        ErrorCode.PARSE_UNEXPECTED_TOKEN,
-        mapOf(
-            Property.LINE_NUMBER to 1L,
-            Property.COLUMN_NUMBER to 8L,
-            Property.TOKEN_TYPE to TokenType.KEYWORD,
-            Property.TOKEN_VALUE to ion.newSymbol("index")))
-
-    @Test
-    fun undropNonTextLiteral() = checkInputThrowingParserException(
-        "UNDROP TABLE 3",
-        ErrorCode.PARSE_UNEXPECTED_TOKEN,
-        mapOf(
-            Property.LINE_NUMBER to 1L,
-            Property.COLUMN_NUMBER to 14L,
-            Property.TOKEN_TYPE to TokenType.LITERAL,
-            Property.TOKEN_VALUE to ion.newInt(3)))
-
-    @Test
-    fun undropExpr() = checkInputThrowingParserException(
-        "UNDROP TABLE (1 <> 2)",
-        ErrorCode.PARSE_UNEXPECTED_TOKEN,
-        mapOf(
-            Property.LINE_NUMBER to 1L,
-            Property.COLUMN_NUMBER to 14L,
-            Property.TOKEN_TYPE to TokenType.LEFT_PAREN,
-            Property.TOKEN_VALUE to ion.newSymbol("(")))
-
-    @Test
     fun createIndexWithoutAnythingElse() = checkInputThrowingParserException(
         "CREATE INDEX",
         ErrorCode.PARSE_UNEXPECTED_TOKEN,
@@ -2223,18 +2183,6 @@ class ParserErrorsTest : SqlParserTestBase() {
             Property.COLUMN_NUMBER to 10L,
             Property.TOKEN_TYPE to TokenType.KEYWORD,
             Property.TOKEN_VALUE to ion.newSymbol("exec")))
-
-    // TODO: The token in the error message here should be "exec" instead of "undrop".
-    //  Check this issue for more details. https://github.com/partiql/partiql-lang-kotlin/issues/372
-    @Test
-    fun execAtUnexpectedLocationInExpression() = checkInputThrowingParserException(
-        "SELECT * FROM (EXEC undrop 'foo')",
-        ErrorCode.PARSE_UNEXPECTED_TERM,
-        mapOf(
-            Property.LINE_NUMBER to 1L,
-            Property.COLUMN_NUMBER to 21L,
-            Property.TOKEN_TYPE to TokenType.KEYWORD,
-            Property.TOKEN_VALUE to ion.newSymbol("undrop")))
 
     @Test
     fun missingDateString() = checkInputThrowingParserException(

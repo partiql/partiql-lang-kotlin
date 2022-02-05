@@ -121,9 +121,6 @@ sealed class ExprNode : AstNode(), HasMetas {
             is DropIndex         -> {
                 copy(metas = metas)
             }
-            is Undrop            -> {
-                copy(metas = metas)
-            }
             is Parameter         -> {
                 copy(metas = metas)
             }
@@ -539,20 +536,6 @@ data class DropIndex(
 ) : ExprNode() {
     override val children: List<AstNode> get() = emptyList()
 }
-
-/**
- * Undo the Dropping of a schema object, that was previously identified by [identifier].
- *
- * TODO: this is defined to be QLDB specific, pull out of main ast when an extension mechanism exists.
- */
-data class Undrop(
-    val identifier: String,
-    val type: SchemaObjectType,
-    override val metas: MetaContainer
-) : ExprNode() {
-    override val children: List<AstNode> get() = emptyList()
-}
-
 
 /**
  * Simple descriptor of the type of schema object.

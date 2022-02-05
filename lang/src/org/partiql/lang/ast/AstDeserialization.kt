@@ -108,7 +108,6 @@ private enum class NodeTag(val definition: TagDefinition) {
     CREATE(TagDefinition("create", AstVersion.V0, 2, 2)),
     DROP_TABLE(TagDefinition("drop_table", 1, 1)),
     DROP_INDEX(TagDefinition("drop_index", 2, 2)),
-    UNDROP(TagDefinition("undrop", AstVersion.V0, 2, 2)),
     DATA_MANIPULATION(TagDefinition("dml", 1, 3)),
     PATH(TagDefinition("path", 2, Int.MAX_VALUE)),
     CALL_AGG(TagDefinition("call_agg", 3, 3)),
@@ -407,7 +406,6 @@ internal class AstDeserializerInternal(
                 NodeTag.CREATE             -> deserializeCreateV0(targetArgs, metas)
                 NodeTag.DROP_INDEX         -> deserializeDropIndexV0(targetArgs, metas)
                 NodeTag.DROP_TABLE         -> deserializeDropTableV0(targetArgs, metas)
-                NodeTag.UNDROP             -> deserializeUndropV0(targetArgs, metas)
 
                 // These are handled elsewhere
                 NodeTag.META,
@@ -739,19 +737,6 @@ internal class AstDeserializerInternal(
             CaseSensitivity.fromSymbol(targetArgs[1].asIonSexp().tagText),
             emptyMetaContainer
         )
-    }
-
-    private fun deserializeUndropV0(
-        targetArgs: List<IonValue>,
-        metas: MetaContainer
-    ): Undrop {
-        val (id, typeDesc) = targetArgs
-        val typeName = typeDesc.asIonSexp()[0].stringValue()!!
-        val type = SchemaObjectType.values()
-            .firstOrNull { it.typeName == typeName }
-            ?: err("Invalid schema object type for deserializing undrop: $typeName")
-
-        return Undrop(id.stringValue()!!, type, metas)
     }
 
     private fun deserializeTypedIs(

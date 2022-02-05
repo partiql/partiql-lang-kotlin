@@ -3727,20 +3727,6 @@ class SqlParserTest : SqlParserTestBase() {
     )
 
     @Test
-    fun undropTableWithQuotedIdentifier() = assertExpression(
-        "UNDROP TABLE \"foo\"",
-        "(undrop foo (table))",
-        "(ddl (undrop_table foo))"
-    )
-
-    @Test
-    fun undropTableWithLiteral() = assertExpression(
-        "UNDROP TABLE 'foo'",
-        "(undrop foo (table))",
-        "(ddl (undrop_table foo))"
-    )
-
-    @Test
     fun createIndex() = assertExpression(
         "CREATE INDEX ON foo (x, y.z)",
         """

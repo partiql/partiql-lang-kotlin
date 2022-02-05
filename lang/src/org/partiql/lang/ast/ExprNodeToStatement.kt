@@ -17,7 +17,7 @@ fun ExprNode.toAstStatement(): PartiqlAst.Statement {
 
         is DataManipulation -> node.toAstDml()
 
-        is CreateTable, is CreateIndex, is DropTable, is DropIndex, is Undrop -> toAstDdl()
+        is CreateTable, is CreateIndex, is DropTable, is DropIndex -> toAstDdl()
 
         is Exec -> toAstExec()
     }
@@ -61,8 +61,6 @@ private fun ExprNode.toAstDdl(): PartiqlAst.Statement {
                         identifier(thiz.tableId.id, thiz.tableId.case.toAstCaseSensitivity())
                     ),
                     metas)
-            is Undrop ->
-                ddl(undropTable(thiz.identifier, metas))
         }
     }
 }
@@ -185,7 +183,7 @@ fun ExprNode.toAstExpr(): PartiqlAst.Expr {
                 }
 
             // These are handled by `toAstDml()`, `toAstDdl()`, and `toAstExec()`
-            is DataManipulation, is CreateTable, is CreateIndex, is DropTable, is DropIndex, is Exec, is Undrop ->
+            is DataManipulation, is CreateTable, is CreateIndex, is DropTable, is DropIndex, is Exec ->
                 error("Can't transform ${node.javaClass} to a PartiqlAst.expr }")
             is NullIf -> nullIf(node.expr1.toAstExpr(), node.expr2.toAstExpr(), metas)
             is Coalesce -> coalesce(node.args.map { it.toAstExpr() }, metas)
