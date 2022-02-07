@@ -8,8 +8,10 @@ import com.amazon.ion.IonSystem
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.metaContainerOf
 import com.amazon.ionelement.api.toIonElement
+import org.partiql.lang.ast.LetBinding
 import org.partiql.lang.ast.StaticTypeMeta
 import org.partiql.lang.ast.passes.SemanticException
+import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.addSourceLocation
 import org.partiql.lang.domains.extractSourceLocation
@@ -150,16 +152,20 @@ class StaticTypeVisitorTransform(private val ion: IonSystem,
 
         private fun PartiqlAst.Expr.Id.toPathExpr(): PartiqlAst.PathStep.PathExpr =
             PartiqlAst.build {
-                pathExpr(index = lit(ion.newString(name.text).toIonElement(), this@toPathExpr.extractSourceLocation()), case = case)
+                pathExpr(index = lit(ion.newString(name.text).toIonElement(), this@toPathExpr.extractSourceLocation()), case = case, metas = metas)
             }
 
-        private fun errUnboundName(name: String, metas: MetaContainer): Nothing = throw SemanticException(
-            "No such variable named '$name'",
-            ErrorCode.SEMANTIC_UNBOUND_BINDING,
-            propertyValueMapOf(
-                Property.BINDING_NAME to name
-            ).addSourceLocation(metas)
-        )
+        private fun errUnboundName(name: String, case: PartiqlAst.CaseSensitivity, metas: MetaContainer): Nothing =
+            throw SemanticException(
+                "No such variable named '$name'",
+                when(case) {
+                    is PartiqlAst.CaseSensitivity.CaseInsensitive -> ErrorCode.SEMANTIC_UNBOUND_BINDING
+                    is PartiqlAst.CaseSensitivity.CaseSensitive -> ErrorCode.SEMANTIC_UNBOUND_QUOTED_BINDING
+                },
+                propertyValueMapOf(
+                    Property.BINDING_NAME to name
+                ).addSourceLocation(metas)
+            )
 
         private fun errIllegalGlobalVariableAccess(name: String, metas: MetaContainer): Nothing = throw SemanticException(
             "Global variable access is illegal in this context",
@@ -270,7 +276,7 @@ class StaticTypeVisitorTransform(private val ion: IonSystem,
                     }
                     else -> {
                         // otherwise there is more than one from source so an undefined variable was referenced.
-                        errUnboundName(node.name.text, node.metas)
+                        errUnboundName(node.name.text, node.case, node.metas)
                     }
                 }
             }
@@ -389,6 +395,12 @@ class StaticTypeVisitorTransform(private val ion: IonSystem,
                 }
             }
             return from
+        }
+
+        override fun transformLetBinding(letBinding: PartiqlAst.LetBinding): PartiqlAst.LetBinding {
+            val binding = super.transformLetBinding(letBinding)
+            addLocal(binding.name.text, StaticType.ANY, binding.name.metas)
+            return binding
         }
 
         override fun transformFromSourceJoin(node: PartiqlAst.FromSource.Join): PartiqlAst.FromSource {

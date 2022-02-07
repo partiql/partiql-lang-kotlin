@@ -3,7 +3,10 @@ package org.partiql.examples
 import com.amazon.ion.system.*
 import org.partiql.examples.util.Example
 import org.partiql.lang.*
+import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.*
+import org.partiql.lang.types.FunctionSignature
+import org.partiql.lang.types.StaticType
 import java.io.PrintStream
 
 /** A simple fibonacci calculator. */
@@ -24,19 +27,24 @@ private fun calcFib(n: Long): Long = when (n) {
  * If the arguments of the function should *not* trigger null-propagation (e.g.
  * `COALESCE`), the [ExprFunction] interface should be implemented directly.
  */
-class FibScalarExprFunc(valueFactory: ExprValueFactory) : NullPropagatingExprFunction("fib_scalar", 1, valueFactory) {
-    override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
+class FibScalarExprFunc(private val valueFactory: ExprValueFactory) : ExprFunction {
+    override val signature = FunctionSignature(
+        name = "fib_scalar",
+        requiredParameters = listOf(StaticType.INT),
+        returnType = StaticType.INT
+    )
 
+    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
         // [NullPropagatingExprFunction] also checks arity of the function call, so
         // there is no need to ensure [args] is the correct size.
         // However, at the moment there is no facility for ensuring that the arguments are
         // of the correct type, so each function must still be responsible for that.
 
-        val argN = args.first()
+        val argN = required.first()
         if (argN.type != ExprValueType.INT) {
             // The exception thrown is not flagged as an internal error message because
             // it is caused by user input (either by the query or by the data).
-            throw EvaluationException("Argument to $name was not an integer", internal = false)
+            throw EvaluationException("Argument to fib_scalar was not an integer", ErrorCode.INTERNAL_ERROR, internal = false)
         }
 
         val n = argN.scalar.numberValue()!!.toLong()
@@ -53,12 +61,17 @@ class FibScalarExprFunc(valueFactory: ExprValueFactory) : NullPropagatingExprFun
  * fashion demonstrates how one could implement what would be known as a table-valued
  * function in a traditional SQL implementation.
  */
-class FibListExprFunc(valueFactory: ExprValueFactory) : NullPropagatingExprFunction("fib_list", 1, valueFactory) {
-    override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
+class FibListExprFunc(private val valueFactory: ExprValueFactory): ExprFunction {
+    override val signature = FunctionSignature(
+        name = "fib_list",
+        requiredParameters = listOf(StaticType.INT),
+        returnType = StaticType.LIST
+    )
 
-        val argN = args.first()
+    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
+        val argN = required.first()
         if (argN.type != ExprValueType.INT) {
-            throw EvaluationException("Argument to $name was not an integer", internal = false)
+            throw EvaluationException("Argument to fib_list was not an integer", ErrorCode.INTERNAL_ERROR, internal = false)
         }
 
         // `!!` is safe here because of the type check above.

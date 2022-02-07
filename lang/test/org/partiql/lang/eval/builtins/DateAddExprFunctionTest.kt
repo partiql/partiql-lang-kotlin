@@ -1,26 +1,16 @@
-/*
- * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- *  You may not use this file except in compliance with the License.
- * A copy of the License is located at:
- *
- *      http://aws.amazon.com/apache2.0/
- *
- *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
- *  language governing permissions and limitations under the License.
- */
-
 package org.partiql.lang.eval.builtins
 
-import com.amazon.ion.*
-import org.partiql.lang.*
-import org.partiql.lang.eval.*
-import org.partiql.lang.syntax.*
-import junitparams.*
-import org.assertj.core.api.Assertions.*
-import org.junit.*
+import com.amazon.ion.Timestamp
+import junitparams.Parameters
+import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.junit.Test
+import org.partiql.lang.TestBase
+import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.RequiredArgs
+import org.partiql.lang.eval.call
+import org.partiql.lang.eval.timestampValue
+import org.partiql.lang.syntax.DateTimePart
 
 class DateAddExprFunctionTest : TestBase() {
 
@@ -29,20 +19,7 @@ class DateAddExprFunctionTest : TestBase() {
 
     private val subject = DateAddExprFunction(valueFactory)
 
-    private fun callDateAdd(vararg args: Any) = subject.call(env, args.map { anyToExprValue(it) }.toList()).timestampValue()
-
-    @Test
-    fun lessArguments() {
-        assertThatThrownBy { callDateAdd("year", 1) }
-            .hasMessage("date_add takes exactly 3 arguments, received: 2")
-            .isExactlyInstanceOf(EvaluationException::class.java)
-    }
-
-    @Test fun moreArguments() {
-        assertThatThrownBy { callDateAdd("year", 1, Timestamp.valueOf("2017T"), 2) }
-            .hasMessage("date_add takes exactly 3 arguments, received: 4")
-            .isExactlyInstanceOf(EvaluationException::class.java)
-    }
+    private fun callDateAdd(vararg args: Any) = subject.call(env, RequiredArgs(args.map { anyToExprValue(it) })).timestampValue()
 
     @Test
     fun wrongTypeOfFirstArgument() {

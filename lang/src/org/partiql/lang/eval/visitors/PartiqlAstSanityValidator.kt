@@ -17,6 +17,7 @@ package org.partiql.lang.eval.visitors
 
 import com.amazon.ionelement.api.IntElement
 import com.amazon.ionelement.api.IntElementSize
+import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.TextElement
 import org.partiql.lang.ast.IsCountStarMeta
 import org.partiql.lang.ast.passes.SemanticException
@@ -26,8 +27,11 @@ import org.partiql.lang.domains.errorContextFrom
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
+import org.partiql.lang.eval.CompileOptions
+import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.err
-import org.partiql.lang.eval.errIntOverflow
+import org.partiql.pig.runtime.LongPrimitive
 
 /**
  * Provides rules for basic AST sanity checks that should be performed before any attempt at further AST processing.
@@ -40,8 +44,12 @@ import org.partiql.lang.eval.errIntOverflow
  * - A visitor transform pass (internal or external)
  *
  */
-object PartiqlAstSanityValidator : PartiqlAst.Visitor() {
-    fun validate(statement: PartiqlAst.Statement) {
+class PartiqlAstSanityValidator : PartiqlAst.Visitor() {
+
+    private var compileOptions = CompileOptions.standard()
+
+    fun validate(statement: PartiqlAst.Statement, compileOptions: CompileOptions = CompileOptions.standard()) {
+        this.compileOptions = compileOptions
         this.walkStatement(statement)
     }
 
@@ -49,8 +57,30 @@ object PartiqlAstSanityValidator : PartiqlAst.Visitor() {
         val ionValue = node.value
         val metas = node.metas
         if(node.value is IntElement && ionValue.integerSize == IntElementSize.BIG_INTEGER) {
-            errIntOverflow(errorContextFrom(metas))
+            throw EvaluationException(message = "Int overflow or underflow at compile time",
+                errorCode = ErrorCode.SEMANTIC_LITERAL_INT_OVERFLOW,
+                errorContext = errorContextFrom(metas),
+                internal = false)
         }
+    }
+
+    private fun validateDecimalOrNumericType(scale: LongPrimitive?, precision: LongPrimitive?, metas: MetaContainer) {
+        if (scale != null && precision != null && compileOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS) {
+            if (scale.value !in 0..precision.value) {
+                err("Scale ${scale.value} should be between 0 and precision ${precision.value}",
+                    errorCode = ErrorCode.SEMANTIC_INVALID_DECIMAL_ARGUMENTS,
+                    errorContext = errorContextFrom(metas),
+                    internal = false)
+            }
+        }
+    }
+
+    override fun visitTypeDecimalType(node: PartiqlAst.Type.DecimalType) {
+        validateDecimalOrNumericType(node.scale, node.precision, node.metas)
+    }
+
+    override fun visitTypeNumericType(node: PartiqlAst.Type.NumericType) {
+        validateDecimalOrNumericType(node.scale, node.precision, node.metas)
     }
 
     override fun visitExprCallAgg(node: PartiqlAst.Expr.CallAgg) {

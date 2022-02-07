@@ -21,6 +21,9 @@ import org.partiql.lang.util.*
 import java.math.*
 import java.time.LocalDate
 
+internal const val MISSING_ANNOTATION = "\$partiql_missing"
+internal const val BAG_ANNOTATION = "\$partiql_bag"
+
 /**
  * Provides a standard way of creating instances of ExprValue.
  *
@@ -257,7 +260,11 @@ private class NullExprValue(value: IonNull): BaseExprValue() {
 
 /** A base class for the `MISSING` value, intended to be memoized. */
 private class MissingExprValue(value: IonNull): BaseExprValue() {
-    override val ionValue = value
+    override val ionValue = value.also {
+        if (!it.hasTypeAnnotation(MISSING_ANNOTATION)) {
+            it.addTypeAnnotation(MISSING_ANNOTATION)
+        }
+    }
     override val type: ExprValueType get() = ExprValueType.MISSING
 }
 
@@ -396,7 +403,9 @@ internal class IonExprValue(private val valueFactory: ExprValueFactory, override
     }
 
     override val type = when {
+        ionValue.isMissing -> ExprValueType.MISSING
         ionValue.isNullValue -> ExprValueType.NULL
+        ionValue.isBag -> ExprValueType.BAG
         else -> ExprValueType.fromIonType(ionValue.type)
     }
 
@@ -468,7 +477,7 @@ internal class SequenceExprValue( //dl todo: make private again
 
     init {
         if (!type.isSequence) {
-            errNoContext("Cannot bind non-sequence type to sequence: $type", internal = true)
+            errNoContext("Cannot bind non-sequence type to sequence: $type", errorCode = ErrorCode.EVALUATOR_INVALID_BINDING, internal = true)
         }
     }
 
@@ -476,7 +485,13 @@ internal class SequenceExprValue( //dl todo: make private again
         sequence
             .mapTo(
                 when (type) {
-                    ExprValueType.BAG, ExprValueType.LIST -> ion.newEmptyList()
+                    // dont add annotation if already present.
+                    ExprValueType.BAG ->  ion.newEmptyList().also {
+                        if (!it.hasTypeAnnotation(BAG_ANNOTATION)) {
+                            it.addTypeAnnotation(BAG_ANNOTATION)
+                        }
+                    }
+                    ExprValueType.LIST -> ion.newEmptyList()
                     ExprValueType.SEXP                    -> ion.newEmptySexp()
                     else                                  -> throw IllegalStateException("Invalid type: $type")
                 }

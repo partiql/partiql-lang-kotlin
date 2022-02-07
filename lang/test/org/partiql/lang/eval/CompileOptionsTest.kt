@@ -16,10 +16,12 @@ package org.partiql.lang.eval
 
 import org.junit.*
 import org.junit.Assert.*
+import java.time.ZoneOffset
 
 class CompileOptionsTest {
     private fun assertDefault(actual: CompileOptions) {
         assertEquals(UndefinedVariableBehavior.ERROR, actual.undefinedVariable)
+        assertEquals(ZoneOffset.UTC, actual.defaultTimezoneOffset)
     }
 
     @Test
@@ -36,5 +38,13 @@ class CompileOptionsTest {
         val compileOptions = CompileOptions.builder().undefinedVariable(UndefinedVariableBehavior.MISSING).build()
 
         assertEquals(UndefinedVariableBehavior.MISSING, compileOptions.undefinedVariable)
+    }
+
+    @Test
+    fun testSettingDefaultTimezoneOffset() {
+        val otherTimezoneOffset = ZoneOffset.ofHours(5)
+        val compileOptions = CompileOptions.builder().defaultTimezoneOffset(otherTimezoneOffset).build()
+
+        assertEquals(otherTimezoneOffset, compileOptions.defaultTimezoneOffset)
     }
 }

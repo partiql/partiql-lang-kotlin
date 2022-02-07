@@ -56,7 +56,7 @@ fun IonValue.asSequence(): Sequence<IonValue> = when (this) {
     else -> err("Expected container: $this")
 }
 
-private fun IonInt.javaValue(): Number = when (integerSize) {
+fun IonInt.javaValue(): Number = when (integerSize) {
     IntegerSize.BIG_INTEGER -> bigIntegerValue()
     else                    -> longValue()
 }
@@ -186,6 +186,18 @@ val IonValue.ordinal: Int
 val IonValue.isText: Boolean
     get() = when (this) {
         is IonText -> true
+        else       -> false
+    }
+
+val IonValue.isBag: Boolean
+    get() = when (this) {
+        is IonList -> this.hasTypeAnnotation(BAG_ANNOTATION)
+        else       -> false
+    }
+
+val IonValue.isMissing: Boolean
+    get() = when (this) {
+        is IonNull -> this.hasTypeAnnotation(MISSING_ANNOTATION)
         else       -> false
     }
 

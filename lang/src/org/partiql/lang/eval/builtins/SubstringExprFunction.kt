@@ -14,10 +14,18 @@
 
 package org.partiql.lang.eval.builtins
 
-import com.amazon.ion.*
-import org.partiql.lang.eval.*
-import org.partiql.lang.util.*
-import java.lang.Integer.*
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.ExprFunction
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.errNoContext
+import org.partiql.lang.eval.intValue
+import org.partiql.lang.eval.stringValue
+import org.partiql.lang.types.FunctionSignature
+import org.partiql.lang.types.StaticType
+import java.lang.Integer.max
+import java.lang.Integer.min
 
 /**
  * Built in function to return the substring of an existing string. This function
@@ -88,12 +96,32 @@ import java.lang.Integer.*
  *              L1 = E1 - S1
  *              return java's substring(C, S1, E1)
  */
-internal class SubstringExprFunction(valueFactory: ExprValueFactory): NullPropagatingExprFunction("substring", (2..3), valueFactory) {
-    override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
-        val (target, startPosition, quantity) = extractArguments(args)
+internal class SubstringExprFunction(private val valueFactory: ExprValueFactory): ExprFunction {
+    override val signature = FunctionSignature(
+        name = "substring",
+        requiredParameters = listOf(StaticType.STRING, StaticType.INT),
+        optionalParameter = StaticType.INT,
+        returnType = StaticType.STRING
+    )
 
+    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue =
+        substring(required[0].stringValue(), required[1].intValue(), null)
+
+    override fun callWithOptional(env: Environment, required: List<ExprValue>, opt: ExprValue): ExprValue {
+        val quantity = opt.intValue()
+        if (quantity < 0) {
+            errNoContext("Argument 3 of substring has to be greater than 0.", errorCode = ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_FUNC_CALL, internal = false)
+        }
+        return substring(required[0].stringValue(), required[1].intValue(), opt.intValue())
+    }
+
+    private fun substring(
+        target: String,
+        startPosition: Int,
+        quantity: Int?
+    ): ExprValue {
         val codePointCount = target.codePointCount(0, target.length)
-        if(startPosition > codePointCount) {
+        if (startPosition > codePointCount) {
             return valueFactory.newString("")
         }
 
@@ -105,7 +133,7 @@ internal class SubstringExprFunction(valueFactory: ExprValueFactory): NullPropag
         }
 
         // Clamp start indexes to values that make sense for java substring
-        val adjustedStartPosition =  max(0, startPosition - 1)
+        val adjustedStartPosition = max(0, startPosition - 1)
 
         if (endPosition < adjustedStartPosition) {
             return valueFactory.newString("")
@@ -115,30 +143,5 @@ internal class SubstringExprFunction(valueFactory: ExprValueFactory): NullPropag
         val byteIndexEnd = target.offsetByCodePoints(0, endPosition)
 
         return valueFactory.newString(target.substring(byteIndexStart, byteIndexEnd))
-    }
-
-    private fun extractArguments(args: List<ExprValue>): Triple<String, Int, Int?> {
-        // type check
-        when {
-            args[0].type != ExprValueType.STRING                -> errNoContext("Argument 1 of substring was not STRING.",
-                                                                                internal = false)
-            args[1].type != ExprValueType.INT                   -> errNoContext("Argument 2 of substring was not INT.",
-                                                                                internal = false)
-            args.size == 3 && args[2].type != ExprValueType.INT -> errNoContext("Argument 3 of substring was not INT.",
-                                                                                internal = false)
-        }
-
-        val target = args[0].stringValue()
-        val startPosition = args[1].intValue()
-        val quantity = when (args.size) {
-            3    -> args[2].intValue()
-            else -> null
-        }
-
-        if (quantity != null && quantity < 0) {
-            errNoContext("Argument 3 of substring has to be greater than 0.", internal = false)
-        }
-
-        return Triple(target, startPosition, quantity)
     }
 }

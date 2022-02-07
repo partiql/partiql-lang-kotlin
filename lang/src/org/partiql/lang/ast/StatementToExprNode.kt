@@ -6,7 +6,9 @@ import com.amazon.ion.IonSystem
 import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlAst.*
+import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.checkThreadInterrupted
+import org.partiql.lang.util.toIntExact
 
 import org.partiql.pig.runtime.SymbolPrimitive
 import org.partiql.lang.ast.SetQuantifier as ExprNodeSetQuantifier  // Conflicts with PartiqlAst.SetQuantifier
@@ -127,6 +129,8 @@ private class StatementTransformer(val ion: IonSystem) {
             is Expr.InCollection -> NAry(NAryOp.IN, operands.toExprNodeList(), metas)
             is Expr.IsType -> Typed(TypedOp.IS, value.toExprNode(), type.toExprNodeType(), metas)
             is Expr.Cast -> Typed(TypedOp.CAST, value.toExprNode(), asType.toExprNodeType(), metas)
+            is Expr.CanCast -> Typed(TypedOp.CAN_CAST, value.toExprNode(), asType.toExprNodeType(), metas)
+            is Expr.CanLosslessCast -> Typed(TypedOp.CAN_LOSSLESS_CAST, value.toExprNode(), asType.toExprNodeType(), metas)
 
             is Expr.SimpleCase ->
                 SimpleCase(
@@ -152,7 +156,8 @@ private class StatementTransformer(val ion: IonSystem) {
                             is PathStep.PathExpr ->
                                 PathComponentExpr(
                                     it.index.toExprNode(),
-                                    it.case.toCaseSensitivity())
+                                    it.case.toCaseSensitivity(),
+                                    componentMetas)
                             is PathStep.PathUnpivot -> PathComponentUnpivot(componentMetas)
                             is PathStep.PathWildcard -> PathComponentWildcard(componentMetas)
                         }
@@ -205,15 +210,17 @@ private class StatementTransformer(val ion: IonSystem) {
                     value.tzMinutes?.value?.toInt(),
                     metas
                 )
+            is Expr.NullIf -> NullIf(expr1.toExprNode(), expr2.toExprNode(), metas)
+            is Expr.Coalesce -> Coalesce(args.map { it.toExprNode() }, metas)
         }
     }
 
     private fun Projection.toSelectProjection(): SelectProjection {
         val metas = this.metas.toPartiQlMetaContainer()
         return when (this) {
-            is Projection.ProjectStar -> SelectProjectionList(listOf(SelectListItemStar(metas)))
-            is Projection.ProjectValue -> SelectProjectionValue(this.value.toExprNode())
-            is Projection.ProjectPivot -> SelectProjectionPivot(this.value.toExprNode(), this.key.toExprNode())
+            is Projection.ProjectStar -> SelectProjectionList(listOf(SelectListItemStar(metas)), metas)
+            is Projection.ProjectValue -> SelectProjectionValue(this.value.toExprNode(), metas)
+            is Projection.ProjectPivot -> SelectProjectionPivot(this.value.toExprNode(), this.key.toExprNode(), metas)
             is Projection.ProjectList ->
                 SelectProjectionList(
                     this.projectItems.map {
@@ -224,7 +231,7 @@ private class StatementTransformer(val ion: IonSystem) {
                                     it.expr.toExprNode(),
                                     it.asAlias?.toSymbolicName())
                         }
-                    })
+                    }, metas)
         }
     }
 
@@ -251,7 +258,9 @@ private class StatementTransformer(val ion: IonSystem) {
                     joinOp = type.toJoinOp(),
                     leftRef = left.toFromSource(),
                     rightRef = right.toFromSource(),
-                    condition = predicate?.toExprNode() ?: Literal(ion.newBool(true), emptyMetaContainer),
+                    // Consider adding StaticTypeMeta here only when static type inference occurs.
+                    // See https://github.com/partiql/partiql-lang-kotlin/issues/511
+                    condition = predicate?.toExprNode() ?: Literal(ion.newBool(true), metaContainerOf(StaticTypeMeta(StaticType.BOOL))),
                     metas = metas)
         }
     }
@@ -315,14 +324,16 @@ private class StatementTransformer(val ion: IonSystem) {
             is Type.BooleanType -> DataType(SqlDataType.BOOLEAN, listOf(), metas)
             is Type.IntegerType -> DataType(SqlDataType.INTEGER, listOf(), metas)
             is Type.SmallintType -> DataType(SqlDataType.SMALLINT, listOf(), metas)
-            is Type.FloatType -> DataType(SqlDataType.FLOAT, listOfNotNull(precision?.value), metas)
+            is Type.Integer4Type -> DataType(SqlDataType.INTEGER4, listOf(), metas)
+            is Type.Integer8Type -> DataType(SqlDataType.INTEGER8, listOf(), metas)
+            is Type.FloatType -> DataType(SqlDataType.FLOAT, listOfNotNull(precision?.value?.toIntExact()), metas)
             is Type.RealType -> DataType(SqlDataType.REAL, listOf(), metas)
             is Type.DoublePrecisionType -> DataType(SqlDataType.DOUBLE_PRECISION, listOf(), metas)
-            is Type.DecimalType -> DataType(SqlDataType.DECIMAL, listOfNotNull(precision?.value, scale?.value), metas)
-            is Type.NumericType -> DataType(SqlDataType.NUMERIC, listOfNotNull(precision?.value, scale?.value), metas)
+            is Type.DecimalType -> DataType(SqlDataType.DECIMAL, listOfNotNull(precision?.value?.toIntExact(), scale?.value?.toIntExact()), metas)
+            is Type.NumericType -> DataType(SqlDataType.NUMERIC, listOfNotNull(precision?.value?.toIntExact(), scale?.value?.toIntExact()), metas)
             is Type.TimestampType -> DataType(SqlDataType.TIMESTAMP, listOf(), metas)
-            is Type.CharacterType -> DataType(SqlDataType.CHARACTER, listOfNotNull(length?.value), metas)
-            is Type.CharacterVaryingType -> DataType(SqlDataType.CHARACTER_VARYING, listOfNotNull(length?.value), metas)
+            is Type.CharacterType -> DataType(SqlDataType.CHARACTER, listOfNotNull(length?.value?.toIntExact()), metas)
+            is Type.CharacterVaryingType -> DataType(SqlDataType.CHARACTER_VARYING, listOfNotNull(length?.value?.toIntExact()), metas)
             is Type.StringType -> DataType(SqlDataType.STRING, listOf(), metas)
             is Type.SymbolType -> DataType(SqlDataType.SYMBOL, listOf(), metas)
             is Type.BlobType -> DataType(SqlDataType.BLOB, listOf(), metas)
@@ -332,9 +343,29 @@ private class StatementTransformer(val ion: IonSystem) {
             is Type.ListType -> DataType(SqlDataType.LIST, listOf(), metas)
             is Type.SexpType -> DataType(SqlDataType.SEXP, listOf(), metas)
             is Type.BagType -> DataType(SqlDataType.BAG, listOf(), metas)
+            is Type.AnyType -> DataType(SqlDataType.ANY, listOf(), metas)
+            is Type.CustomType -> DataType(SqlDataType.CustomDataType(this.name.text), listOf(), metas)
             is Type.DateType -> DataType(SqlDataType.DATE, listOf(), metas)
-            is Type.TimeType -> DataType(SqlDataType.TIME, listOfNotNull(precision?.value), metas)
-            is Type.TimeWithTimeZoneType -> DataType(SqlDataType.TIME_WITH_TIME_ZONE, listOfNotNull(precision?.value), metas)
+            is Type.TimeType -> DataType(SqlDataType.TIME, listOfNotNull(precision?.value?.toIntExact()), metas)
+            is Type.TimeWithTimeZoneType -> DataType(SqlDataType.TIME_WITH_TIME_ZONE, listOfNotNull(precision?.value?.toIntExact()), metas)
+            // TODO: Remove these hardcoded nodes from the PIG domain once [https://github.com/partiql/partiql-lang-kotlin/issues/510] is resolved.
+            is Type.EsBoolean,
+            is Type.EsInteger,
+            is Type.EsText,
+            is Type.EsAny,
+            is Type.EsFloat,
+            is Type.RsBigint,
+            is Type.RsBoolean,
+            is Type.RsDoublePrecision,
+            is Type.RsInteger,
+            is Type.RsReal,
+            is Type.RsVarcharMax,
+            is Type.SparkBoolean,
+            is Type.SparkDouble,
+            is Type.SparkFloat,
+            is Type.SparkInteger,
+            is Type.SparkLong,
+            is Type.SparkShort -> error("$this node should not be present in PartiQLAST. Consider transforming the AST using CustomTypeVisitorTransform.")
         }
     }
 

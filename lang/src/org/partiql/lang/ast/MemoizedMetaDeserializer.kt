@@ -27,5 +27,5 @@ import com.amazon.ion.*
  * instance to instance or cannot otherwise be memoized.  Those need their own implementation of [MetaDeserializer].
  */
 class MemoizedMetaDeserializer(override val tag: String, val instance: Meta) : MetaDeserializer {
-    override fun deserialize(sexp: IonSexp): Meta = instance
+    override fun deserialize(sexp: IonValue): Meta = instance
 }

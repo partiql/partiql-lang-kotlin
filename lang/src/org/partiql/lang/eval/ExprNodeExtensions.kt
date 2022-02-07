@@ -14,36 +14,51 @@
 
 package org.partiql.lang.eval
 
-import com.amazon.ion.*
-import org.partiql.lang.ast.*
-
+import com.amazon.ion.IonString
+import org.partiql.lang.ast.ExprNode
+import org.partiql.lang.ast.Literal
+import org.partiql.lang.ast.MetaContainer
+import org.partiql.lang.ast.Path
+import org.partiql.lang.ast.PathComponentExpr
+import org.partiql.lang.ast.Typed
+import org.partiql.lang.ast.TypedOp
+import org.partiql.lang.ast.VariableReference
 
 /**
  * Determines an appropriate column name for the given [ExprNode].
- * If [this] is a [VariableReference], returns the name of the variable.
- * If [this] is a [Path], invokes [Path.extractColumnAlias] to determine the alias.
+ *
+ * - If [this] is a [VariableReference], returns the name of the variable.
+ * - If [this] is a [Path], invokes [Path.extractColumnAlias] to determine the alias.
+ * - If [this] is a cast expression, invokes [Typed.extractColumnAlias] to determine the alias.
+ *
  * Otherwise, returns the column index prefixed with `_`.
  */
-fun ExprNode.extractColumnAlias(idx: Int): String =
+internal fun ExprNode.extractColumnAlias(idx: Int): String =
     when (this) {
-    is VariableReference -> {
-        val (name, _, _, _: MetaContainer) = this
-        name
+        is VariableReference -> this.id
+        is Path -> this.extractColumnAlias(idx)
+        is Typed -> this.extractColumnAlias(idx)
+        else -> syntheticColumnName(idx)
     }
-    is Path              -> {
-        this.extractColumnAlias(idx)
+
+/**
+ * Extracts a name for [Typed] CAST expressions and generates a synthetic column name for CAN_CAST and IS
+ * expressions.
+ */
+private fun Typed.extractColumnAlias(idx: Int): String {
+    return when (this.op) {
+        TypedOp.CAST -> this.expr.extractColumnAlias(idx)
+        TypedOp.CAN_CAST, TypedOp.CAN_LOSSLESS_CAST, TypedOp.IS -> syntheticColumnName(idx)
     }
-    else                 -> syntheticColumnName(idx)
 }
 
 /**
  * Returns the name of the last component if it is a string literal, otherwise returns the
  * column index prefixed with `_`.
  */
-fun Path.extractColumnAlias(idx: Int): String {
+private fun Path.extractColumnAlias(idx: Int): String {
     val (_, components, _: MetaContainer) = this
-    val nameOrigin = components.last()
-    return when (nameOrigin) {
+    return when (val nameOrigin = components.last()) {
         is PathComponentExpr -> {
             val maybeLiteral = nameOrigin.expr
             when {

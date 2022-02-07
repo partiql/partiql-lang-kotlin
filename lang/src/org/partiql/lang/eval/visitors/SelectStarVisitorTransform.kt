@@ -3,6 +3,7 @@ package org.partiql.lang.eval.visitors
 import com.amazon.ionelement.api.emptyMetaContainer
 import org.partiql.lang.ast.UniqueNameMeta
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.errNoContext
 
 class SelectStarVisitorTransform : VisitorTransformBase() {
@@ -48,7 +49,8 @@ class SelectStarVisitorTransform : VisitorTransformBase() {
                                     listOf(createProjectAll(aliases.asAlias)) +
                                         (aliases.atAlias?.let { listOf(createProjectExpr(it)) } ?: emptyList()) +
                                         (aliases.byAlias?.let { listOf(createProjectExpr(it)) } ?: emptyList())
-                                }.flatten()
+                                }.flatten(),
+                                transformedExpr.metas
                             )
                         }
                     return copyProjectionToSelect(transformedExpr, newProjection)
@@ -58,6 +60,7 @@ class SelectStarVisitorTransform : VisitorTransformBase() {
                         val asName = it.asAlias
                             ?: errNoContext(
                                 "GroupByItem has no AS-alias--GroupByItemAliasVisitorTransform must be executed before SelectStarVisitorTransform",
+                                errorCode = ErrorCode.SEMANTIC_MISSING_AS_NAME,
                                 internal = true)
 
                         // We need to take the unique name of each grouping field key only because we need to handle
@@ -72,7 +75,7 @@ class SelectStarVisitorTransform : VisitorTransformBase() {
                         if (it != null) listOf(createProjectExpr(it)) else emptyList()
                     }
 
-                    val newProjection = PartiqlAst.build { projectList(selectListItemsFromGroupBy + groupNameItem) }
+                    val newProjection = PartiqlAst.build { projectList(selectListItemsFromGroupBy + groupNameItem, metas = transformMetas(projection.metas)) }
 
                     return copyProjectionToSelect(transformedExpr, newProjection)
                 }

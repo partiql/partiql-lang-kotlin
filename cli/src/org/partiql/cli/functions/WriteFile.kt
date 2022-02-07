@@ -21,6 +21,9 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.io.DelimitedValues
 import org.partiql.lang.eval.stringValue
+import org.partiql.lang.types.FunctionSignature
+import org.partiql.lang.types.StaticType
+import org.partiql.lang.util.asIonStruct
 import org.partiql.lang.util.booleanValue
 import org.partiql.lang.util.stringValue
 import java.io.FileOutputStream
@@ -28,7 +31,13 @@ import java.io.OutputStream
 import java.io.OutputStreamWriter
 
 internal class WriteFile(valueFactory: ExprValueFactory) : BaseFunction(valueFactory) {
-    override val name = "write_file"
+    override val signature = FunctionSignature(
+        name = "write_file",
+        requiredParameters = listOf(StaticType.STRING, StaticType.STRING),
+        optionalParameter = StaticType.STRUCT,
+        returnType = StaticType.BOOL
+    )
+
     companion object {
         @JvmStatic private val PRETTY_ION_WRITER: (ExprValue, OutputStream, IonStruct) -> Unit = { results, out, _ ->
             IonTextWriterBuilder.pretty().build(out).use { w ->
@@ -53,15 +62,28 @@ internal class WriteFile(valueFactory: ExprValueFactory) : BaseFunction(valueFac
         "csv" to delimitedWriteHandler(','),
         "ion" to PRETTY_ION_WRITER)
 
-    override fun call(env: Environment, args: List<ExprValue>): ExprValue {
-        val options = optionsStruct(2, args, optionsIndex = 1)
-        val fileName = args[0].stringValue()
-        val fileType = options["type"]?.stringValue() ?: "ion"
-        val resultsIndex = when (args.size) {
-            2    -> 1
-            else -> 2
+    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
+        val fileName = required[0].stringValue()
+        val fileType = "ion"
+        val results = required[1]
+        val handler = writeHandlers[fileType] ?: throw IllegalArgumentException("Unknown file type: $fileType")
+        return try {
+            FileOutputStream(fileName).use {
+                handler(results, it, valueFactory.ion.newEmptyStruct())
+            }
+            valueFactory.newBoolean(true)
         }
-        val results = args[resultsIndex]
+        catch (e: Exception) {
+            e.printStackTrace()
+            valueFactory.newBoolean(false)
+        }
+    }
+
+    override fun callWithOptional(env: Environment, required: List<ExprValue>, opt: ExprValue): ExprValue {
+        val options = opt.ionValue.asIonStruct()
+        val fileName = required[0].stringValue()
+        val fileType = options["type"]?.stringValue() ?: "ion"
+        val results = required[1]
         val handler = writeHandlers[fileType] ?: throw IllegalArgumentException("Unknown file type: $fileType")
 
         return try {

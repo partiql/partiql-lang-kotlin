@@ -17,6 +17,7 @@ package org.partiql.lang.eval
 import org.partiql.lang.SqlException
 import junitparams.Parameters
 import org.junit.Test
+import org.partiql.lang.errors.ErrorCode
 import java.util.*
 import org.partiql.lang.eval.NaturalExprValueComparators.*
 
@@ -297,7 +298,7 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
             try {
                 eval(it, compileOptions = CompileOptions.standard())
             } catch (e: Exception) {
-                throw SqlException("Could not evaluate $it", cause = e)
+                throw SqlException("Could not evaluate $it", errorCode = ErrorCode.EVALUATOR_SQL_EXCEPTION, cause = e)
             }
         }
     }
@@ -388,7 +389,7 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
     fun nonNullEqualityTests(equivalentPair: Pair<String, String>) {
         val (left, right) = equivalentPair
 
-        assertExprEquals(valueFactory.newBoolean(true), eval("$left = $right"))
+        assertExprEquals(valueFactory.newBoolean(true), eval("$left = $right"), "epected `true`")
     }
 
     // null to non null pairs
@@ -409,6 +410,6 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
     fun nullEqualityTests(equivalentPair: Pair<String, String>) {
         val (left, right) = equivalentPair
 
-        assertExprEquals(valueFactory.nullValue, eval("$left = $right"))
+        assertExprEquals(valueFactory.nullValue, eval("$left = $right"), "epected `null`")
     }
 }

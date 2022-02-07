@@ -13,7 +13,7 @@ fun ExprNode.toAstStatement(): PartiqlAst.Statement {
     return when(node) {
         is Literal, is LiteralMissing, is VariableReference, is Parameter, is NAry, is CallAgg,
         is Typed, is Path, is SimpleCase, is SearchedCase, is Select, is Struct, is DateLiteral, is TimeLiteral,
-        is Seq -> PartiqlAst.build { query(toAstExpr()) }
+        is Seq, is NullIf, is Coalesce -> PartiqlAst.build { query(toAstExpr()) }
 
         is DataManipulation -> node.toAstDml()
 
@@ -37,7 +37,7 @@ private fun ExprNode.toAstDdl(): PartiqlAst.Statement {
         when(thiz) {
             is Literal, is LiteralMissing, is VariableReference, is Parameter, is NAry, is CallAgg, is Typed,
             is Path, is SimpleCase, is SearchedCase, is Select, is Struct, is Seq, is DateLiteral, is TimeLiteral,
-            is DataManipulation, is Exec -> error("Can't convert ${thiz.javaClass} to PartiqlAst.ddl")
+            is NullIf, is Coalesce, is DataManipulation, is Exec -> error("Can't convert ${thiz.javaClass} to PartiqlAst.ddl")
 
             is CreateTable -> ddl(createTable(thiz.tableName), metas)
             is CreateIndex ->
@@ -136,6 +136,8 @@ fun ExprNode.toAstExpr(): PartiqlAst.Expr {
             is Typed ->
                 when(node.op) {
                     TypedOp.CAST -> cast(node.expr.toAstExpr(), node.type.toAstType(), metas)
+                    TypedOp.CAN_CAST -> canCast(node.expr.toAstExpr(), node.type.toAstType(), metas)
+                    TypedOp.CAN_LOSSLESS_CAST -> canLosslessCast(node.expr.toAstExpr(), node.type.toAstType(), metas)
                     TypedOp.IS -> isType(node.expr.toAstExpr(), node.type.toAstType(), metas)
                 }
             is Path -> path(node.root.toAstExpr(), node.components.map { it.toAstPathStep() }, metas)
@@ -183,6 +185,8 @@ fun ExprNode.toAstExpr(): PartiqlAst.Expr {
             // These are handled by `toAstDml()`, `toAstDdl()`, and `toAstExec()`
             is DataManipulation, is CreateTable, is CreateIndex, is DropTable, is DropIndex, is Exec ->
                 error("Can't transform ${node.javaClass} to a PartiqlAst.expr }")
+            is NullIf -> nullIf(node.expr1.toAstExpr(), node.expr2.toAstExpr(), metas)
+            is Coalesce -> coalesce(node.args.map { it.toAstExpr() }, metas)
             // DateTime types
             is DateLiteral -> date(node.year.toLong(), node.month.toLong(), node.day.toLong(), metas)
             is TimeLiteral ->
@@ -273,7 +277,7 @@ private fun SelectProjection.toAstSelectProject(): PartiqlAst.Projection {
     val thiz = this
     return PartiqlAst.build {
         when(thiz) {
-            is SelectProjectionValue -> projectValue(thiz.expr.toAstExpr())
+            is SelectProjectionValue -> projectValue(thiz.expr.toAstExpr(), thiz.metas.toIonElementMetaContainer())
             is SelectProjectionList -> {
                 if(thiz.items.any { it is SelectListItemStar }) {
                     if(thiz.items.size > 1) error("More than one select item when SELECT * was present.")
@@ -284,13 +288,15 @@ private fun SelectProjection.toAstSelectProject(): PartiqlAst.Projection {
                     projectList(
                         thiz.items.map {
                             when(it) {
-                                is SelectListItemExpr -> projectExpr_(it.expr.toAstExpr(), it.asName?.toPrimitive())
-                                is SelectListItemProjectAll -> projectAll(it.expr.toAstExpr())
+                                is SelectListItemExpr -> projectExpr_(it.expr.toAstExpr(), it.asName?.toPrimitive(), it.expr.metas.toIonElementMetaContainer())
+                                is SelectListItemProjectAll -> projectAll(it.expr.toAstExpr(), it.expr.metas.toIonElementMetaContainer())
                                 is SelectListItemStar -> error("this should happen due to `when` branch above.")
                             }
-                        })
+                        },
+                        metas = thiz.metas.toIonElementMetaContainer()
+                    )
             }
-            is SelectProjectionPivot -> projectPivot(thiz.nameExpr.toAstExpr(), thiz.valueExpr.toAstExpr())
+            is SelectProjectionPivot -> projectPivot(thiz.nameExpr.toAstExpr(), thiz.valueExpr.toAstExpr(), thiz.metas.toIonElementMetaContainer())
         }
     }
 }
@@ -335,7 +341,7 @@ private fun LetSource.toAstLetSource(): PartiqlAst.Let {
     return PartiqlAst.build {
         let(
             thiz.bindings.map {
-                letBinding(it.expr.toAstExpr(), it.name.name)
+                letBinding_(it.expr.toAstExpr(), it.name.toSymbolPrimitive())
             }
         )
     }
@@ -343,11 +349,12 @@ private fun LetSource.toAstLetSource(): PartiqlAst.Let {
 
 private fun PathComponent.toAstPathStep(): PartiqlAst.PathStep {
     val thiz = this
+    val metas = thiz.metas.toIonElementMetaContainer()
     return PartiqlAst.build {
         when (thiz) {
-            is PathComponentExpr -> pathExpr(thiz.expr.toAstExpr(), thiz.case.toAstCaseSensitivity())
-            is PathComponentUnpivot -> pathUnpivot(thiz.metas.toIonElementMetaContainer())
-            is PathComponentWildcard -> pathWildcard(thiz.metas.toIonElementMetaContainer())
+            is PathComponentExpr -> pathExpr(thiz.expr.toAstExpr(), thiz.case.toAstCaseSensitivity(), metas)
+            is PathComponentUnpivot -> pathUnpivot(metas)
+            is PathComponentWildcard -> pathWildcard(metas)
         }
     }
 }
@@ -439,17 +446,20 @@ private fun ReturningMapping.toReturningMapping(): PartiqlAst.ReturningMapping {
     }
 }
 
-private fun DataType.toAstType(): PartiqlAst.Type {
+fun DataType.toAstType(): PartiqlAst.Type {
     val thiz = this
     val metas = thiz.metas.toIonElementMetaContainer()
     val arg1 = thiz.args.getOrNull(0)?.toLong()
     val arg2 = thiz.args.getOrNull(1)?.toLong()
+
     return PartiqlAst.build {
         when(thiz.sqlDataType) {
             SqlDataType.MISSING -> missingType(metas)
             SqlDataType.NULL -> nullType(metas)
             SqlDataType.BOOLEAN -> booleanType(metas)
             SqlDataType.SMALLINT -> smallintType(metas)
+            SqlDataType.INTEGER4 -> integer4Type(metas)
+            SqlDataType.INTEGER8 -> integer8Type(metas)
             SqlDataType.INTEGER -> integerType(metas)
             SqlDataType.FLOAT -> floatType(arg1, metas)
             SqlDataType.REAL -> realType(metas)
@@ -471,6 +481,8 @@ private fun DataType.toAstType(): PartiqlAst.Type {
             SqlDataType.DATE -> dateType(metas)
             SqlDataType.TIME -> timeType(arg1, metas)
             SqlDataType.TIME_WITH_TIME_ZONE -> timeWithTimeZoneType(arg1, metas)
+            SqlDataType.ANY -> anyType(metas)
+            is SqlDataType.CustomDataType -> customType(thiz.sqlDataType.name.toLowerCase(), metas)
         }
     }
 }

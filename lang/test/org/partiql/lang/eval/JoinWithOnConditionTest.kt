@@ -78,7 +78,7 @@ class JoinWithOnConditionTest : EvaluatorTestBase() {
     @Test
     @Parameters
     fun joinWithOnConditionTest(pair: Pair<EvaluatorTestCase, EvaluationSession>): Unit =
-            runTestCase(pair.first, pair.second)
+            runTestCaseInLegacyAndPermissiveModes(pair.first, pair.second)
 
     fun parametersForJoinWithOnConditionTest(): List<Pair<EvaluatorTestCase, EvaluationSession>> {
 

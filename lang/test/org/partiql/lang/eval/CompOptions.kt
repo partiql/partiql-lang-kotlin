@@ -29,21 +29,21 @@ enum class CompOptions(val options: CompileOptions) {
 
     PROJECT_UNFILTERED(CompileOptions.build {
         projectionIteration(ProjectionIterationBehavior.UNFILTERED)
+    }),
+
+    TYPED_OP_BEHAVIOR_HONOR_PARAMS(CompileOptions.build {
+        typedOpBehavior(TypedOpBehavior.HONOR_PARAMETERS)
+    }),
+
+    PERMISSIVE(CompileOptions.build {
+        this.typingMode(TypingMode.PERMISSIVE)
     });
 
     companion object {
-        /**
-         * Only those options from [CompOptions] which have [UndefinedVariableBehavior.MISSING].
-         */
-        val onlyUndefinedVariableBehaviorMissing = listOf(
-            CompOptions.UNDEF_VAR_MISSING,
-            CompOptions.PROJECT_UNFILTERED_UNDEF_VAR_MISSING)
+        /** Only those options from [CompOptions] which have [UndefinedVariableBehavior.MISSING]. */
+        val onlyUndefinedVariableBehaviorMissing = listOf(UNDEF_VAR_MISSING, PROJECT_UNFILTERED_UNDEF_VAR_MISSING)
 
-        /**
-         * Only those options from [CompOptions] which have [ProjectionIterationBehavior.UNFILTERED] set.
-         */
-        val onlyProjectIterationBehaviorFilterMissing = listOf(
-            CompOptions.STANDARD,
-            CompOptions.UNDEF_VAR_MISSING)
+        /** Only those options from [CompOptions] which have [ProjectionIterationBehavior.UNFILTERED] set. */
+        val onlyProjectIterationBehaviorFilterMissing = listOf(STANDARD, UNDEF_VAR_MISSING)
     }
 }

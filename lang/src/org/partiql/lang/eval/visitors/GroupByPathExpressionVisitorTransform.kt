@@ -18,6 +18,7 @@ import com.amazon.ionelement.api.metaContainerOf
 import org.partiql.lang.ast.IsSyntheticNameMeta
 import org.partiql.lang.ast.UniqueNameMeta
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.errNoContext
 
 /**
@@ -63,7 +64,12 @@ class GroupByPathExpressionVisitorTransform(
                 is PartiqlAst.FromSource.Scan    ->
                     listOf(
                         fromSource.asAlias?.text
-                        ?: errNoContext("FromSourceItem.variables.asName must be specified for this transform to work", internal = true))
+                        ?: errNoContext(
+                            "FromSource.asAlias.text must be specified for this transform to work",
+                            errorCode = ErrorCode.SEMANTIC_MISSING_AS_NAME,
+                            internal = true
+                        )
+                    )
 
                 is PartiqlAst.FromSource.Join    ->
                     collectAliases(fromSource.left) + collectAliases(fromSource.right)

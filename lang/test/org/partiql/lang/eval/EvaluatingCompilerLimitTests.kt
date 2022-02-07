@@ -3,6 +3,7 @@ package org.partiql.lang.eval
 import org.junit.Test
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
+import org.partiql.lang.util.sourceLocationProperties
 
 class EvaluatingCompilerLimitTests : EvaluatorTestBase() {
 

@@ -531,44 +531,47 @@ class LikePredicateTest : EvaluatorTestBase() {
         """)
 
     @Test
-    fun emptyStringAsEscape() = assertThrows("Cannot use empty character as ESCAPE character in a LIKE predicate: \"\"",
-                                             NodeMetadata(1, 51)) {
-        voidEval("SELECT * FROM <<>> AS a WHERE '%' LIKE '%' ESCAPE ''")
-    }
+    fun emptyStringAsEscape() = assertThrows(
+        "SELECT * FROM <<>> AS a WHERE '%' LIKE '%' ESCAPE ''",
+        "Cannot use empty character as ESCAPE character in a LIKE predicate: \"\"",
+        NodeMetadata(1, 51))
 
     @Test
-    fun moreThanOneCharacterEscape() = assertThrows("Escape character must have size 1 : []", NodeMetadata(1, 51)) {
-        voidEval("SELECT * FROM <<>> AS a WHERE '%' LIKE '%' ESCAPE '[]'")
-    }
+    fun moreThanOneCharacterEscape() = assertThrows(
+        "SELECT * FROM <<>> AS a WHERE '%' LIKE '%' ESCAPE '[]'",
+        "Escape character must have size 1 : []",
+        NodeMetadata(1, 51))
 
     @Test
-    fun escapeByItself() = assertThrows("Invalid escape sequence : [", NodeMetadata(1, 44)) {
-        voidEval("SELECT * FROM <<>> AS a WHERE 'aaaaa' LIKE '[' ESCAPE '['")
-    }
+    fun escapeByItself() = assertThrows(
+        "SELECT * FROM <<>> AS a WHERE 'aaaaa' LIKE '[' ESCAPE '['",
+        "Invalid escape sequence : [",
+        NodeMetadata(1, 44))
 
     @Test
-    fun escapeWithoutWildcard() = assertThrows("Invalid escape sequence : [a", NodeMetadata(1, 44)) {
-        voidEval("SELECT * FROM <<>> AS a WHERE 'aaaaa' LIKE '[a' ESCAPE '['")
-    }
+    fun escapeWithoutWildcard() = assertThrows(
+        "SELECT * FROM <<>> AS a WHERE 'aaaaa' LIKE '[a' ESCAPE '['",
+        "Invalid escape sequence : [a",
+        NodeMetadata(1, 44))
 
     @Test
-    fun valueNotAString() = assertThrows("LIKE expression must be given non-null strings as input",
-                                         NodeMetadata(1, 33)) {
-        voidEval("SELECT * FROM <<>> AS a WHERE 1 LIKE 'a' ESCAPE '['")
-    }
+    fun valueNotAString() = assertThrows(
+        "SELECT * FROM <<>> AS a WHERE 1 LIKE 'a' ESCAPE '['",
+        "LIKE expression must be given non-null strings as input",
+        NodeMetadata(1, 33))
 
     @Test
-    fun patternNotAString() = assertThrows("LIKE expression must be given non-null strings as input",
-                                           NodeMetadata(1, 35)) {
-        voidEval("SELECT * FROM <<>> AS a WHERE 'a' LIKE 1 ESCAPE '['")
-    }
+    fun patternNotAString() = assertThrows(
+        "SELECT * FROM <<>> AS a WHERE 'a' LIKE 1 ESCAPE '['",
+        "LIKE expression must be given non-null strings as input",
+        NodeMetadata(1, 35))
 
     @Test
-    fun escapeNotAString() = assertThrows("LIKE expression must be given non-null strings as input",
-                                          NodeMetadata(1, 35)) {
+    fun escapeNotAString() = assertThrows(
         // column is marked at the position of LIKE
-        voidEval("SELECT * FROM <<>> AS a WHERE 'a' LIKE 'a' ESCAPE 1")
-    }
+        "SELECT * FROM <<>> AS a WHERE 'a' LIKE 'a' ESCAPE 1",
+        "LIKE expression must be given non-null strings as input",
+        NodeMetadata(1, 35))
 
     @Test
     fun valueIsNull() = assertEval("SELECT * FROM <<>> AS a WHERE null LIKE 'a' ESCAPE '['", "[]")
@@ -613,22 +616,22 @@ class LikePredicateTest : EvaluatorTestBase() {
 
 
     @Test
-    fun nonLiteralsNonStringEscape() = assertThrows("LIKE expression must be given non-null strings as input",
-                                                    NodeMetadata(1, 56)) {
-        voidEval("SELECT * FROM `[{name:1, type:\"a\"}]` as a WHERE a.type LIKE '%' ESCAPE a.name")
-    }
+    fun nonLiteralsNonStringEscape() = assertThrows(
+        "SELECT * FROM `[{name:1, type:\"a\"}]` as a WHERE a.type LIKE '%' ESCAPE a.name",
+        "LIKE expression must be given non-null strings as input",
+        NodeMetadata(1, 56))
 
     @Test
-    fun nonLiteralsNonStringPattern() = assertThrows("LIKE expression must be given non-null strings as input",
-                                                     NodeMetadata(1, 56)) {
-        voidEval("SELECT * FROM `[{name:1, type:\"a\"}]` as a WHERE a.type LIKE a.name")
-    }
+    fun nonLiteralsNonStringPattern() = assertThrows(
+        "SELECT * FROM `[{name:1, type:\"a\"}]` as a WHERE a.type LIKE a.name",
+        "LIKE expression must be given non-null strings as input",
+        NodeMetadata(1, 56))
 
     @Test
-    fun nonLiteralsNonStringValue() = assertThrows("LIKE expression must be given non-null strings as input",
-                                                   NodeMetadata(1, 56)) {
-        voidEval("SELECT * FROM `[{name:1, type:\"a\"}]` as a WHERE a.name LIKE a.type ")
-    }
+    fun nonLiteralsNonStringValue() = assertThrows(
+        "SELECT * FROM `[{name:1, type:\"a\"}]` as a WHERE a.name LIKE a.type ",
+        "LIKE expression must be given non-null strings as input",
+        NodeMetadata(1, 56))
 
     /** Regression test for: https://github.com/partiql/partiql-lang-kotlin/issues/32 */
     @Test

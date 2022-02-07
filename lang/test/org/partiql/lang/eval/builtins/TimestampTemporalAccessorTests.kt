@@ -1,32 +1,19 @@
-/*
- * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- *  You may not use this file except in compliance with the License.
- * A copy of the License is located at:
- *
- *      http://aws.amazon.com/apache2.0/
- *
- *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
- *  language governing permissions and limitations under the License.
- */
-
 package org.partiql.lang.eval.builtins
 
 
-import com.amazon.ion.*
-import junitparams.*
-import junitparams.naming.*
-import org.junit.*
-import org.junit.runner.*
-import java.time.format.*
-import java.util.*
-import kotlin.test.*
-import org.assertj.core.api.Assertions.*
+import com.amazon.ion.Timestamp
+import junitparams.JUnitParamsRunner
+import junitparams.Parameters
+import junitparams.naming.TestCaseName
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.Test
-import java.time.*
-import java.time.temporal.*
+import org.junit.runner.RunWith
+import java.time.DateTimeException
+import java.time.format.DateTimeFormatter
+import java.time.temporal.UnsupportedTemporalTypeException
+import java.util.*
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 @RunWith(JUnitParamsRunner::class)
 class TimestampTemporalAccessorTests {

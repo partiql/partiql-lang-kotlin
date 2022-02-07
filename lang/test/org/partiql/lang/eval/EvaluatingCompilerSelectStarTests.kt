@@ -38,7 +38,7 @@ class EvaluatingCompilerSelectStarTests : EvaluatorTestBase() {
     @Test
     @Parameters
     fun tests(tc: EvaluatorTestCase) =
-        runTestCase(tc, session)
+        runTestCaseInLegacyAndPermissiveModes(tc, session)
 
     fun parametersForTests() =
         listOf(
@@ -70,15 +70,13 @@ class EvaluatingCompilerSelectStarTests : EvaluatorTestBase() {
 
     @Test
     fun `select * over table with mixed types` () {
-        runTestCase(
+        runTestCaseInLegacyAndPermissiveModes(
             EvaluatorTestCase(
                 query = "select f.* from << { 'bar': 1 }, 10, << 11, 12 >> >> as f",
                 expectedSql = """<< { 'bar': 1 } ,{ '_1': 10 }, { '_1': <<11, 12>> } >>"""),
                 session = EvaluationSession.standard())
     }
 
-
-    //
 }
 
 

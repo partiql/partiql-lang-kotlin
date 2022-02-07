@@ -1,5 +1,6 @@
 package org.partiql.lang.util
 
+import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.time.SECONDS_PER_HOUR
 import org.partiql.lang.eval.time.SECONDS_PER_MINUTE
 import java.time.DateTimeException
@@ -52,6 +53,7 @@ internal fun getPrecisionFromTimeString(timeString: String) : Int {
     val matcher = genericTimeRegex.toPattern().matcher(timeString)
     if (!matcher.find()) {
         org.partiql.lang.eval.err("Time string does not match the format 'HH:MM:SS[.ddd....][+|-HH:MM]'",
+            ErrorCode.PARSE_INVALID_TIME_STRING,
             propertyValueMapOf(),
             false
         )

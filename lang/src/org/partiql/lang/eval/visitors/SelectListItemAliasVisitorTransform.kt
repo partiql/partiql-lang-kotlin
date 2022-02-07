@@ -56,7 +56,8 @@ class SelectListItemAliasVisitorTransform : VisitorTransformBase() {
                             }
                         else -> it
                     }
-                }
+                },
+                metas = node.metas
             )
         }
     }

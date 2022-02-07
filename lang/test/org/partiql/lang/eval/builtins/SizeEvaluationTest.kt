@@ -1,22 +1,10 @@
-/*
- * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- *  You may not use this file except in compliance with the License.
- * A copy of the License is located at:
- *
- *      http://aws.amazon.com/apache2.0/
- *
- *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
- *  language governing permissions and limitations under the License.
- */
-
 package org.partiql.lang.eval.builtins
 
-import org.partiql.lang.errors.*
-import org.partiql.lang.eval.*
-import org.junit.*
+import org.junit.Test
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
+import org.partiql.lang.eval.EvaluatorTestBase
+import org.partiql.lang.util.to
 
 /**
  * More detailed tests are in [SizeExprFunctionTest]
@@ -55,27 +43,45 @@ class SizeEvaluationTest : EvaluatorTestBase() {
 
 
     @Test
-    fun lessArguments() = checkInputThrowingEvaluationException("size()",
-                                                                ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL,
-                                                                mapOf(Property.EXPECTED_ARITY_MIN to 1,
-                                                                      Property.EXPECTED_ARITY_MAX to 1,
-                                                                      Property.LINE_NUMBER to 1L,
-                                                                      Property.COLUMN_NUMBER to 1L))
+    fun lessArguments() {
+        checkInputThrowingEvaluationException(
+            "size()",
+            ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL,
+            // Kotlin auto-casts the values of EXPECTED_ARITY_MIN and EXPECTED_ARITY_MAX to Long
+            // unless we explicitly specify [Any] as for the value generic argument of the map below
+            mapOf<Property, Any>(
+                Property.FUNCTION_NAME to "size",
+                Property.EXPECTED_ARITY_MIN to 1,
+                Property.EXPECTED_ARITY_MAX to 1,
+                Property.ACTUAL_ARITY to 0,
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 1L))
+    }
+    
+    @Test
+    fun moreArguments() =
+        checkInputThrowingEvaluationException("size(null, null)",
+            ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL,
+            // Kotlin auto-casts the values of EXPECTED_ARITY_MIN and EXPECTED_ARITY_MAX to Long
+            // unless we explicitly specify [Any] as for the value generic argument of the map below
+            mapOf<Property, Any>(
+                Property.FUNCTION_NAME to "size",
+                Property.EXPECTED_ARITY_MIN to 1,
+                Property.EXPECTED_ARITY_MAX to 1,
+                Property.ACTUAL_ARITY to 2,
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 1L))
+
 
     @Test
-    fun moreArguments() = checkInputThrowingEvaluationException("size(null, null)",
-                                                                ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL,
-                                                                mapOf(Property.EXPECTED_ARITY_MIN to 1,
-                                                                      Property.EXPECTED_ARITY_MAX to 1,
-                                                                      Property.LINE_NUMBER to 1L,
-                                                                      Property.COLUMN_NUMBER to 1L))
-
-    @Test
-    fun wrongTypeOfArgument() = checkInputThrowingEvaluationException("size(1)",
-                                                                      ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL,
-                                                                      mapOf(Property.EXPECTED_ARGUMENT_TYPES to "LIST or BAG or STRUCT",
-                                                                            Property.ACTUAL_ARGUMENT_TYPES to "INT",
-                                                                            Property.FUNCTION_NAME to "size",
-                                                                            Property.LINE_NUMBER to 1L,
-                                                                            Property.COLUMN_NUMBER to 1L))
+    fun wrongTypeOfArgument() =
+        checkInputThrowingEvaluationException("size(1)",
+          ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL,
+          mapOf(Property.EXPECTED_ARGUMENT_TYPES to "LIST, BAG, STRUCT, or SEXP",
+                Property.ARGUMENT_POSITION to 1,
+                Property.ACTUAL_ARGUMENT_TYPES to "INT",
+                Property.FUNCTION_NAME to "size",
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 1L),
+          expectedPermissiveModeResult = "MISSING")
 }

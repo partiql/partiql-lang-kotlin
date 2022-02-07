@@ -1,9 +1,10 @@
 package org.partiql.lang.eval
 
+import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.TextElement
 import org.partiql.lang.ast.ExprNode
-import org.partiql.lang.ast.Path
-import org.partiql.lang.ast.VariableReference
+import org.partiql.lang.ast.SourceLocationMeta
+import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.domains.PartiqlAst
 
 
@@ -14,6 +15,8 @@ import org.partiql.lang.domains.PartiqlAst
  *
  * If [this] is a [PartiqlAst.Expr.Path], invokes [PartiqlAst.Expr.Path.extractColumnAlias] to determine the alias.
  *
+ * If [this] is a [PartiqlAst.Expr.Cast], the column alias is the name of the [PartiqlAst.Expr.Cast.value] to be `CAST`.
+ *
  * Otherwise, returns the column index prefixed with `_`.
  */
 fun PartiqlAst.Expr.extractColumnAlias(idx: Int): String =
@@ -21,6 +24,9 @@ fun PartiqlAst.Expr.extractColumnAlias(idx: Int): String =
         is PartiqlAst.Expr.Id -> this.name.text
         is PartiqlAst.Expr.Path -> {
             this.extractColumnAlias(idx)
+        }
+        is PartiqlAst.Expr.Cast -> {
+            this.value.extractColumnAlias(idx)
         }
         else -> syntheticColumnName(idx)
     }
@@ -42,3 +48,20 @@ fun PartiqlAst.Expr.Path.extractColumnAlias(idx: Int): String {
     }
 }
 
+/**
+ * Returns the starting [SourceLocationMeta] found through walking through all nodes of [this] [PartiqlAst.Expr].
+ * Starting is defined to be the [SourceLocationMeta] with the lowest [SourceLocationMeta.lineNum] and in the event of
+ * a tie, the lowest [SourceLocationMeta.charOffset].
+ */
+internal fun PartiqlAst.Expr.getStartingSourceLocationMeta(): SourceLocationMeta {
+    val visitorFold = object : PartiqlAst.VisitorFold<SourceLocationMeta>() {
+        override fun visitMetas(node: MetaContainer, accumulator: SourceLocationMeta): SourceLocationMeta {
+            val nodeSourceLocation = node.sourceLocation
+            return nodeSourceLocation?.takeIf {
+                (nodeSourceLocation.lineNum < accumulator.lineNum ||
+                (nodeSourceLocation.lineNum == accumulator.lineNum && nodeSourceLocation.charOffset < accumulator.charOffset))
+            } ?: accumulator
+        }
+    }
+    return visitorFold.walkExpr(this, SourceLocationMeta(Long.MAX_VALUE, Long.MAX_VALUE, Long.MAX_VALUE))
+}

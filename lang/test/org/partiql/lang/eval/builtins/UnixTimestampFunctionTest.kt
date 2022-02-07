@@ -9,6 +9,7 @@ import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.EvaluatorTestBase
 import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.lang.util.to
 
 data class UnixTimestampNoArgTestCase(val numMillis: Long, val expected: String)
 data class UnixTimestampOneArgTestCase(val timestamp: String, val expected: String)
@@ -21,8 +22,10 @@ class UnixTimestampFunctionTest : EvaluatorTestBase() {
         checkInputThrowingEvaluationException(
             "unix_timestamp($testTimestamp, $testTimestamp)",
             ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL,
-            mapOf(Property.LINE_NUMBER to 1L,
+            mapOf<Property, Any>(Property.LINE_NUMBER to 1L,
+                  Property.FUNCTION_NAME to "unix_timestamp",
                   Property.COLUMN_NUMBER to 1L,
+                  Property.ACTUAL_ARITY to 2,
                   Property.EXPECTED_ARITY_MIN to 0,
                   Property.EXPECTED_ARITY_MAX to 1))
 
@@ -31,8 +34,10 @@ class UnixTimestampFunctionTest : EvaluatorTestBase() {
         checkInputThrowingEvaluationException(
             "unix_timestamp($testTimestamp, $testTimestamp, $testTimestamp)",
             ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL,
-            mapOf(Property.LINE_NUMBER to 1L,
+            mapOf<Property, Any>(Property.LINE_NUMBER to 1L,
+                  Property.FUNCTION_NAME to "unix_timestamp",
                   Property.COLUMN_NUMBER to 1L,
+                  Property.ACTUAL_ARITY to 3,
                   Property.EXPECTED_ARITY_MIN to 0,
                   Property.EXPECTED_ARITY_MAX to 1))
 

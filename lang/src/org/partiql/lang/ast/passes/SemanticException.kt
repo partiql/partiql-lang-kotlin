@@ -16,7 +16,7 @@ package org.partiql.lang.ast.passes
 
 import org.partiql.lang.*
 import org.partiql.lang.errors.*
-
+import org.partiql.lang.util.propertyValueMapOf
 
 /**
  * The exception to be thrown by semantic passes.
@@ -25,6 +25,20 @@ class SemanticException(
     message: String = "",
     errorCode: ErrorCode,
     errorContext: PropertyValueMap?,
-    cause: Throwable? = null)
-    : SqlException(message, errorCode, errorContext, cause)
+    cause: Throwable? = null) : SqlException(message, errorCode, errorContext, cause) {
 
+    /**
+     * Alternate constructor using a [Problem]. Error message is generated using [ProblemDetails.message].
+     */
+    constructor(err: Problem, cause: Throwable? = null) :
+        this(
+            message = "",
+            errorCode = ErrorCode.SEMANTIC_INFERENCER_ERROR,
+            errorContext = propertyValueMapOf(
+                Property.LINE_NUMBER to err.sourceLocation.lineNum,
+                Property.COLUMN_NUMBER to err.sourceLocation.charOffset,
+                Property.MESSAGE to err.details.message
+            ),
+            cause = cause
+        )
+}

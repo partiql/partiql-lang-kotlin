@@ -202,6 +202,29 @@ class SelectListItemAliasVisitorTransformTests : VisitorTransformTestBase() {
                         (SELECT q AS q FROM r1) AS _1 FROM r) AS o
                 FROM foo
                 """
+            ),
+            // CAST ALIAS TEST
+            TransformTestCase(
+                """
+                SELECT 
+                    CAST(1 AS STRING),
+                    CAST(foo AS INT),
+                    CAST(foo.bar AS INT),
+                    CAST(CAST(bat AS INT) AS STRING),
+                    CAST(CAST(foo.baz AS INT) AS FLOAT),
+                    CAST(x + y AS INT)
+                FROM foo
+                """,
+                """
+                SELECT 
+                    CAST(1 AS STRING) AS _1,
+                    CAST(foo AS INT) AS foo,
+                    CAST(foo.bar AS INT) AS bar,
+                    CAST(CAST(bat AS INT) AS STRING) AS bat,
+                    CAST(CAST(foo.baz AS INT) AS FLOAT) AS baz,
+                    CAST(x + y AS INT) AS _6                        
+                FROM foo
+                """
             )
         )
     }

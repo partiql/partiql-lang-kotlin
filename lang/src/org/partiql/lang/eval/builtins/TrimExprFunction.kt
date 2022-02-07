@@ -14,10 +14,21 @@
 
 package org.partiql.lang.eval.builtins
 
-import com.amazon.ion.*
-import org.partiql.lang.eval.*
-import org.partiql.lang.eval.builtins.TrimSpecification.*
-import org.partiql.lang.util.*
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.ExprFunction
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.builtins.TrimSpecification.BOTH
+import org.partiql.lang.eval.builtins.TrimSpecification.LEADING
+import org.partiql.lang.eval.builtins.TrimSpecification.NONE
+import org.partiql.lang.eval.builtins.TrimSpecification.TRAILING
+import org.partiql.lang.eval.errNoContext
+import org.partiql.lang.eval.stringValue
+import org.partiql.lang.types.FunctionSignature
+import org.partiql.lang.types.StaticType
+import org.partiql.lang.types.StaticType.Companion.unionOf
+import org.partiql.lang.types.VarargFormalParameter
 
 /**
  * From section 6.7 of SQL 92 spec:
@@ -48,7 +59,15 @@ import org.partiql.lang.util.*
  *  * `<trim character> ::= <character value expression>`
  *  * `<trim source> ::= <character value expression>`
  */
-internal class TrimExprFunction(valueFactory: ExprValueFactory) : NullPropagatingExprFunction("trim", 1..3, valueFactory) {
+internal class TrimExprFunction(private val valueFactory: ExprValueFactory) : ExprFunction {
+    override val signature =
+        FunctionSignature(
+            name = "trim",
+            requiredParameters = listOf(unionOf(StaticType.STRING, StaticType.SYMBOL)),
+            variadicParameter = VarargFormalParameter(StaticType.STRING, 0..2),
+            returnType = StaticType.STRING
+        )
+
     private val DEFAULT_TO_REMOVE = " ".codePoints().toArray()
     private val DEFAULT_SPECIFICATION = BOTH
 
@@ -84,51 +103,55 @@ internal class TrimExprFunction(valueFactory: ExprValueFactory) : NullPropagatin
         return String(this, leadingOffset, length)
     }
 
-    override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
-        val (type, toRemove, string) = extractArguments(args)
+    private fun ExprValue.codePoints() = this.stringValue().codePoints().toArray()
 
+    private fun trim(type: TrimSpecification, toRemove: IntArray, sourceString: IntArray) : ExprValue {
         return when (type) {
-            BOTH, NONE -> valueFactory.newString(string.trim(toRemove))
-            LEADING    -> valueFactory.newString(string.leadingTrim(toRemove))
-            TRAILING   -> valueFactory.newString(string.trailingTrim(toRemove))
+            BOTH, NONE -> valueFactory.newString(sourceString.trim(toRemove))
+            LEADING    -> valueFactory.newString(sourceString.leadingTrim(toRemove))
+            TRAILING   -> valueFactory.newString(sourceString.trailingTrim(toRemove))
         }
     }
 
-    private fun ExprValue.codePoints() = this.stringValue().codePoints().toArray()
+    private fun trim1Arg(sourceString: ExprValue) = trim(DEFAULT_SPECIFICATION, DEFAULT_TO_REMOVE, sourceString.codePoints())
 
-    private fun extractArguments(args: List<ExprValue>): Triple<TrimSpecification, IntArray, IntArray> {
-        return when (args.size) {
-            1    -> Triple(DEFAULT_SPECIFICATION, DEFAULT_TO_REMOVE, args[0].codePoints())
-            2    -> {
+    private fun trim2Arg(specificationOrToRemove: ExprValue, sourceString: ExprValue) : ExprValue {
+        if(!specificationOrToRemove.type.isText){
+            errNoContext("with two arguments trim's first argument must be either the " +
+                    "specification or a 'to remove' string",
+                errorCode = ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_TRIM,
+                internal = false)
+        }
 
-                if(!args[0].type.isText){
-                    errNoContext("with two arguments trim's first argument must be either the " +
-                                 "specification or a 'to remove' string",
-                                 internal = false)
-                }
+        val trimSpec = TrimSpecification.from(specificationOrToRemove)
+        val toRemove = when(trimSpec) {
+            NONE -> specificationOrToRemove.codePoints()
+            else -> DEFAULT_TO_REMOVE
+        }
 
-                val specification = TrimSpecification.from(args[0])
-                val toRemove = when(specification) {
-                    NONE -> args[0].codePoints()
-                    else -> DEFAULT_TO_REMOVE
-                }
-
-                Triple(specification, toRemove, args[1].codePoints())
-            }
-            3    -> {
-                val specification = TrimSpecification.from(args[0])
-                if(specification == NONE) {
-                    errNoContext("'${args[0].stringValue()}' is an unknown trim specification, " +
-                                 "valid vales: ${TrimSpecification.validValues}",
-                                 internal = false)
-                }
+        return trim(trimSpec, toRemove, sourceString.codePoints())
+    }
+    private fun trim3Arg(specification: ExprValue, toRemove: ExprValue, sourceString: ExprValue) : ExprValue {
+        val trimSpec = TrimSpecification.from(specification)
+        if(trimSpec == NONE) {
+            errNoContext("'${specification.stringValue()}' is an unknown trim specification, " +
+                    "valid vales: ${TrimSpecification.validValues}",
+                errorCode = ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_TRIM,
+                internal = false)
+        }
 
 
-                Triple(specification, args[1].codePoints(), args[2].codePoints())
-            }
+        return trim(trimSpec, toRemove.codePoints(), sourceString.codePoints())
+    }
 
-            // arity is checked by NullPropagatingExprFunction
-            else -> errNoContext("invalid trim arguments, should be unreachable", internal = true)
+    override fun callWithRequired(env: Environment, required: List<ExprValue>) = trim1Arg(required[0])
+
+    override fun callWithVariadic(env: Environment, required: List<ExprValue>, variadic: List<ExprValue>): ExprValue {
+        return when (variadic.size) {
+            0    -> trim1Arg(required[0])
+            1    -> trim2Arg(required[0], variadic[0])
+            2    -> trim3Arg(required[0], variadic[0], variadic[1])
+            else -> errNoContext("invalid trim arguments, should be unreachable", errorCode = ErrorCode.INTERNAL_ERROR, internal = true)
         }
     }
 }
