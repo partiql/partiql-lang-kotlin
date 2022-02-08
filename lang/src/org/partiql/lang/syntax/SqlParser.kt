@@ -14,6 +14,8 @@
 
 package org.partiql.lang.syntax
 
+import com.amazon.ion.IntegerSize
+import com.amazon.ion.IonInt
 import com.amazon.ion.IonSexp
 import com.amazon.ion.IonSystem
 import com.amazon.ionelement.api.emptyMetaContainer
@@ -60,6 +62,8 @@ import org.partiql.lang.util.tailExpectedKeyword
 import org.partiql.lang.util.tailExpectedToken
 import org.partiql.lang.util.timeWithoutTimeZoneRegex
 import org.partiql.lang.util.unaryMinus
+import org.partiql.lang.syntax.TokenType.KEYWORD
+import org.partiql.lang.types.CustomType
 import org.partiql.pig.runtime.SymbolPrimitive
 import java.time.LocalDate
 import java.time.LocalTime
@@ -75,7 +79,19 @@ import java.time.temporal.Temporal
  * Parses a list of tokens as infix query expression into a prefix s-expression
  * as the abstract syntax tree.
  */
-class SqlParser(private val ion: IonSystem) : Parser {
+class SqlParser(
+    private val ion: IonSystem,
+    customTypes: List<CustomType> = listOf()) : Parser {
+
+    private val CUSTOM_KEYWORDS =
+        customTypes.map { it.name.toLowerCase() }
+
+    private val CUSTOM_TYPE_ALIASES =
+        customTypes.map { customType ->
+            customType.aliases.map { alias ->
+                Pair(alias.toLowerCase(), customType.name.toLowerCase())
+            }
+        }.flatten().toMap()
 
     internal enum class AliasSupportType(val supportsAs: Boolean, val supportsAt: Boolean, val supportsBy: Boolean) {
         NONE(supportsAs = false, supportsAt = false, supportsBy = false),
@@ -144,11 +160,13 @@ class SqlParser(private val ion: IonSystem) : Parser {
         LIST,
         STRUCT,
         MEMBER,
-        CAST,
+        TYPE_FUNCTION,
         TYPE,
         CASE,
         WHEN,
         ELSE,
+        NULLIF,
+        COALESCE,
         BAG,
         INSERT(isTopLevelType = true, isDml = true),
         INSERT_VALUE(isTopLevelType = true, isDml = true),
@@ -250,10 +268,10 @@ class SqlParser(private val ion: IonSystem) : Parser {
     private fun ParseNode.toAstStatement(): PartiqlAst.Statement {
         return when (type) {
             ParseType.ATOM, ParseType.LIST, ParseType.BAG, ParseType.STRUCT, ParseType.UNARY, ParseType.BINARY,
-            ParseType.TERNARY, ParseType.CAST, ParseType.CALL, ParseType.CALL_AGG, ParseType.CALL_DISTINCT_AGG,
-            ParseType.CALL_AGG_WILDCARD, ParseType.PATH, ParseType.PARAMETER, ParseType.CASE, ParseType.SELECT_LIST,
-            ParseType.SELECT_VALUE, ParseType.PIVOT, ParseType.DATE, ParseType.TIME,
-            ParseType.TIME_WITH_TIME_ZONE -> PartiqlAst.build { query(toAstExpr(), getMetas()) }
+            ParseType.TERNARY, ParseType.TYPE_FUNCTION, ParseType.CALL, ParseType.CALL_AGG, ParseType.NULLIF,
+            ParseType.COALESCE, ParseType.CALL_DISTINCT_AGG, ParseType.CALL_AGG_WILDCARD, ParseType.PATH,
+            ParseType.PARAMETER, ParseType.CASE, ParseType.SELECT_LIST, ParseType.SELECT_VALUE, ParseType.PIVOT,
+            ParseType.DATE, ParseType.TIME, ParseType.TIME_WITH_TIME_ZONE -> PartiqlAst.build { query(toAstExpr(), getMetas()) }
 
             ParseType.FROM, ParseType.INSERT, ParseType.INSERT_VALUE, ParseType.SET, ParseType.UPDATE, ParseType.REMOVE,
             ParseType.DELETE, ParseType.DML_LIST -> toAstDml()
@@ -273,7 +291,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
         return PartiqlAst.build {
             when (type) {
                 ParseType.ATOM -> when (token?.type){
-                    TokenType.LITERAL, TokenType.NULL, TokenType.TRIM_SPECIFICATION,TokenType. DATE_PART -> lit(token.value!!.toIonElement(), metas)
+                    TokenType.LITERAL, TokenType.NULL, TokenType.TRIM_SPECIFICATION, TokenType.DATETIME_PART -> lit(token.value!!.toIonElement(), metas)
                     TokenType.ION_LITERAL -> lit(token.value!!.toIonElement(), metas + metaToIonMetaContainer(IsIonLiteralMeta.instance))
                     TokenType.MISSING -> missing(metas)
                     TokenType.QUOTED_IDENTIFIER -> id(token.text!!, caseSensitive(), unqualified(), metas)
@@ -338,7 +356,27 @@ class SqlParser(private val ion: IonSystem) : Parser {
                         }
                     }
                 }
-                ParseType.CAST -> cast(children[0].toAstExpr(), children[1].toAstType(), metas)
+                ParseType.NULLIF -> {
+                    nullIf(
+                        children[0].toAstExpr(),
+                        children[1].toAstExpr(),
+                        metas)
+                }
+                ParseType.COALESCE -> {
+                    coalesce(
+                        children.map { it.toAstExpr() },
+                        metas)
+                }
+                ParseType.TYPE_FUNCTION -> {
+                    val funcExpr = children[0].toAstExpr()
+                    val dataType = children[1].toAstType()
+                    when(token?.keywordText) {
+                        "cast" -> cast(funcExpr, dataType, metas)
+                        "can_cast" -> canCast(funcExpr, dataType, metas)
+                        "can_lossless_cast" -> canLosslessCast(funcExpr, dataType, metas)
+                        else -> errMalformedParseTree("Unexpected type function token: $token")
+                    }
+                }
                 ParseType.CALL -> {
                     when (val funcName = token?.text!!.toLowerCase()) {
                         // special case--list/sexp/bag "functions" are intrinsic to the literal form
@@ -386,9 +424,8 @@ class SqlParser(private val ion: IonSystem) : Parser {
                                 when (atomParseNode.type) {
                                     ParseType.CASE_SENSITIVE_ATOM, ParseType.CASE_INSENSITIVE_ATOM -> {
                                         val lit = lit(ionString(atomParseNode.token?.text!!), atomMetas)
-                                        val caseSensitivity = if (atomParseNode.type  == ParseType.CASE_SENSITIVE_ATOM)
-                                            caseSensitive() else caseInsensitive()
-                                        pathExpr(lit, caseSensitivity)
+                                        val caseSensitivity = if (atomParseNode.type  == ParseType.CASE_SENSITIVE_ATOM) caseSensitive() else caseInsensitive()
+                                        pathExpr(lit, caseSensitivity, atomMetas)
                                     }
                                     ParseType.PATH_UNPIVOT -> pathUnpivot(atomMetas)
                                     else -> errMalformedParseTree("Unsupported child path node of PATH_DOT")
@@ -400,7 +437,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
                                 }
                                 val child = it.children[0]
                                 val childMetas = child.getMetas()
-                                if (child.type == ParseType.PATH_WILDCARD) pathWildcard(childMetas) else pathExpr(child.toAstExpr(), caseSensitive())
+                                if (child.type == ParseType.PATH_WILDCARD) pathWildcard(childMetas) else pathExpr(child.toAstExpr(), caseSensitive(), childMetas)
                             }
                             else -> errMalformedParseTree("Unsupported path component: ${it.type}")
                         }
@@ -483,7 +520,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
                                         }
                                     }
                                 }
-                                projectList(selectListItems)
+                                projectList(selectListItems, metas)
                             }
                         }
                         ParseType.SELECT_VALUE -> projectValue(selectList.toAstExpr())
@@ -722,12 +759,30 @@ class SqlParser(private val ion: IonSystem) : Parser {
             errMalformedParseTree("Expected ParseType.TYPE instead of $type")
         }
 
-        val sqlDataType = SqlDataType.forTypeName(token!!.keywordText!!)
-            ?: errMalformedParseTree("Invalid DataType: ${token.keywordText!!}")
+        val typeName = token?.keywordText ?: token?.customKeywordText
+        val sqlDataType = SqlDataType.forTypeName(typeName!!) ?:
+            (token?.customType ?: errMalformedParseTree("Invalid DataType: $typeName"))
         val metas = getMetas()
-        val args = children.mapNotNull { it.token?.value?.longValue() }
-        val arg1 = args.getOrNull(0)
-        val arg2 = args.getOrNull(1)
+        val args = children.map {
+            val argValue = it.token?.value
+                ?: errMalformedParseTree("Data type argument did not have a token for some reason")
+
+            if (argValue !is IonInt) {
+                errMalformedParseTree("Data type argument was not an Ion INT for some reason")
+            }
+
+            when(argValue.integerSize!!) {
+                IntegerSize.INT -> argValue.intValue()
+                IntegerSize.LONG, IntegerSize.BIG_INTEGER ->
+                    it.token.err(
+                        "Type parameter exceeded maximum value",
+                        ErrorCode.PARSE_TYPE_PARAMETER_EXCEEDED_MAXIMUM_VALUE
+                    )
+            }
+        }
+
+        val arg1 = args.getOrNull(0)?.toLong()
+        val arg2 = args.getOrNull(1)?.toLong()
 
         return PartiqlAst.build {
             when (sqlDataType) {
@@ -735,6 +790,8 @@ class SqlParser(private val ion: IonSystem) : Parser {
                 SqlDataType.NULL -> nullType(metas)
                 SqlDataType.BOOLEAN -> booleanType(metas)
                 SqlDataType.SMALLINT -> smallintType(metas)
+                SqlDataType.INTEGER4 -> integer4Type(metas)
+                SqlDataType.INTEGER8 -> integer8Type(metas)
                 SqlDataType.INTEGER -> integerType(metas)
                 SqlDataType.FLOAT -> floatType(arg1, metas)
                 SqlDataType.REAL -> realType(metas)
@@ -756,6 +813,8 @@ class SqlParser(private val ion: IonSystem) : Parser {
                 SqlDataType.DATE -> dateType(metas)
                 SqlDataType.TIME -> timeType(arg1, metas)
                 SqlDataType.TIME_WITH_TIME_ZONE -> timeWithTimeZoneType(arg1, metas)
+                SqlDataType.ANY -> anyType(metas)
+                is SqlDataType.CustomDataType -> customType(typeName!!, metas)
             }
         }
     }
@@ -1085,9 +1144,31 @@ class SqlParser(private val ion: IonSystem) : Parser {
             errMalformedParseTree("Unsupported syntax for $type")
         }
         return PartiqlAst.build {
-            letBinding(parseNode.toAstExpr(), asAliasSymbol.text, asAliasSymbol.metas)
+            letBinding_(parseNode.toAstExpr(), asAliasSymbol, asAliasSymbol.metas)
         }
     }
+
+    private val Token.customKeywordText: String?
+        get() = when (type) {
+            TokenType.IDENTIFIER -> when (text?.toLowerCase()) {
+                in CUSTOM_KEYWORDS -> text?.toLowerCase()
+                in CUSTOM_TYPE_ALIASES.keys -> CUSTOM_TYPE_ALIASES[text?.toLowerCase()]
+                else -> null
+            }
+            else -> null
+        }
+
+    private val Token.customType: SqlDataType?
+        get() = when (type) {
+            TokenType.IDENTIFIER -> when (text?.toLowerCase()) {
+                in CUSTOM_KEYWORDS -> SqlDataType.CustomDataType(text!!.toLowerCase())
+                in CUSTOM_TYPE_ALIASES.keys -> CUSTOM_TYPE_ALIASES[text?.toLowerCase()]?.let {
+                    SqlDataType.CustomDataType(it.toLowerCase())
+                }
+                else -> null
+            }
+            else -> null
+        }
 
     private fun ParseNode.getMetas(): IonElementMetaContainer =
         token.toSourceLocationMetaContainer()
@@ -1159,7 +1240,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
 
             val right = when (op.keywordText) {
                 // IS/IS NOT requires a type
-                "is", "is_not" -> rem.tail.parseType()
+                "is", "is_not" -> rem.tail.parseType(op.keywordText!!)
                 // IN has context sensitive parsing rules around parenthesis
                 "in", "not_in" -> when {
                     rem.tail.head?.type == TokenType.LEFT_PAREN
@@ -1334,7 +1415,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
                 "when" -> tail.parseCase(isSimple = false)
                 else -> tail.parseCase(isSimple = true)
             }
-            "cast" -> tail.parseCast()
+            "cast", "can_cast", "can_lossless_cast" -> parseTypeFunction()
             "select" -> tail.parseSelect()
             "create" -> tail.parseCreate()
             "drop" -> tail.parseDrop()
@@ -1349,6 +1430,8 @@ class SqlParser(private val ion: IonSystem) : Parser {
             "date_add", "date_diff" -> tail.parseDateAddOrDateDiff(head!!)
             "date" -> tail.parseDate()
             "time" -> tail.parseTime()
+            "nullif" -> tail.parseNullIf(head!!)
+            "coalesce" -> tail.parseCoalesce()
             in FUNCTION_NAME_KEYWORDS -> when (tail.head?.type) {
                 TokenType.LEFT_PAREN ->
                     tail.tail.parseFunctionCall(head!!)
@@ -1445,22 +1528,48 @@ class SqlParser(private val ion: IonSystem) : Parser {
             .deriveExpectedKeyword("end")
     }
 
-    private fun List<Token>.parseCast(): ParseNode {
-        if (head?.type != TokenType.LEFT_PAREN) {
-            err("Missing left parenthesis after CAST", ErrorCode.PARSE_EXPECTED_LEFT_PAREN_AFTER_CAST)
+    private fun List<Token>.parseTypeFunction(): ParseNode {
+        val functionName = head?.keywordText!!
+        var rem = tail
+        if (rem.head?.type != TokenType.LEFT_PAREN) {
+            rem.err("Missing left parenthesis after $functionName", ErrorCode.PARSE_EXPECTED_LEFT_PAREN_AFTER_CAST)
         }
-        val valueExpr = tail.parseExpression().deriveExpected(TokenType.AS)
-        var rem = valueExpr.remaining
+        val valueExpr = rem.tail.parseExpression().deriveExpected(TokenType.AS)
+        rem = valueExpr.remaining
 
-        val typeNode = rem.parseType().deriveExpected(TokenType.RIGHT_PAREN)
+        val typeNode = rem.parseType(functionName).deriveExpected(TokenType.RIGHT_PAREN)
         rem = typeNode.remaining
 
-        return ParseNode(ParseType.CAST, head, listOf(valueExpr, typeNode), rem)
+        return ParseNode(ParseType.TYPE_FUNCTION, head, listOf(valueExpr, typeNode), rem)
     }
 
-    private fun List<Token>.parseType(): ParseNode {
+    private fun List<Token>.parseNullIf(nullIfToken: Token) : ParseNode {
+        if (head?.type != TokenType.LEFT_PAREN) {
+            err("Missing left parenthesis after nullif", ErrorCode.PARSE_EXPECTED_LEFT_PAREN_VALUE_CONSTRUCTOR)
+        }
+        val expr1 = tail.parseExpression().deriveExpected(TokenType.COMMA)
+        var rem = expr1.remaining
+
+        val expr2 = rem.parseExpression().deriveExpected(TokenType.RIGHT_PAREN)
+        rem = expr2.remaining
+
+        return ParseNode(ParseType.NULLIF, nullIfToken, listOf(expr1, expr2), rem)
+    }
+
+    private fun List<Token>.parseCoalesce() : ParseNode {
+        if (head?.type != TokenType.LEFT_PAREN) {
+            err("Missing left parenthesis after coalesce", ErrorCode.PARSE_EXPECTED_LEFT_PAREN_VALUE_CONSTRUCTOR)
+        }
+        return tail.parseArgList(aliasSupportType = AliasSupportType.NONE, mode = ArgListMode.NORMAL_ARG_LIST)
+            .copy(type = ParseType.COALESCE, token = head)
+            .deriveExpected(TokenType.RIGHT_PAREN)
+    }
+
+    private fun List<Token>.parseType(opName: String): ParseNode {
         val typeName = head?.keywordText
-        val typeArity = TYPE_NAME_ARITY_MAP[typeName] ?: err("Expected type name", ErrorCode.PARSE_EXPECTED_TYPE_NAME)
+        val typeArity = ALL_TYPE_NAME_ARITY_MAP[typeName] ?:
+        (head?.customType?.arityRange ?:
+        err("Expected type name", ErrorCode.PARSE_EXPECTED_TYPE_NAME))
 
         val typeNode = when (tail.head?.type) {
             TokenType.LEFT_PAREN -> tail.tail.parseArgList(
@@ -1506,7 +1615,7 @@ class SqlParser(private val ion: IonSystem) : Parser {
             pvmap[Property.CAST_TO] = typeName?: ""
             pvmap[Property.EXPECTED_ARITY_MIN] = typeArity.first
             pvmap[Property.EXPECTED_ARITY_MAX] = typeArity.last
-            tail.err("CAST for $typeName must have arity of $typeArity", ErrorCode.PARSE_CAST_ARITY, pvmap)
+            tail.err("$opName type argument $typeName must have arity of $typeArity", ErrorCode.PARSE_CAST_ARITY, pvmap)
         }
         for (child in typeNode.children) {
             if (child.type != ParseType.ATOM
@@ -2022,6 +2131,12 @@ class SqlParser(private val ion: IonSystem) : Parser {
             if (this.head?.type == TokenType.STAR) {
                 ParseNode(ParseType.PROJECT_ALL, this.head, listOf(), this.tail)
             }
+            else if (this.head != null && this.head?.keywordText in RESERVED_KEYWORDS) {
+                this.head.err(
+                    "Expected identifier or an expression but found unexpected keyword '${this.head?.keywordText?: ""}' in a select list.",
+                        ErrorCode.PARSE_UNEXPECTED_KEYWORD
+                )
+            }
             else {
                 val expr = parseExpression().let {
                     when (it.type) {
@@ -2366,32 +2481,29 @@ class SqlParser(private val ion: IonSystem) : Parser {
         return ParseNode(ParseType.CALL, name, arguments, rem.tail)
     }
 
-    private fun List<Token>.parseDatePart(): ParseNode {
-        val maybeDatePart = this.head
+    private fun List<Token>.parseDateTimePart(): ParseNode {
+        val maybeDateTimePart = this.head
         return when  {
-            maybeDatePart?.type == TokenType.IDENTIFIER && DATE_PART_KEYWORDS.contains(maybeDatePart.text?.toLowerCase()) -> {
-                ParseNode(ParseType.ATOM, maybeDatePart.copy(type = TokenType.DATE_PART), listOf(), this.tail)
+            maybeDateTimePart?.type == TokenType.IDENTIFIER && DATE_TIME_PART_KEYWORDS.contains(maybeDateTimePart.text?.toLowerCase()) -> {
+                ParseNode(ParseType.ATOM, maybeDateTimePart.copy(type = TokenType.DATETIME_PART), listOf(), this.tail)
             }
-            else -> maybeDatePart.err("Expected one of: $DATE_PART_KEYWORDS",
-                    ErrorCode.PARSE_EXPECTED_DATE_PART)
+            else -> maybeDateTimePart.err("Expected one of: $DATE_TIME_PART_KEYWORDS", ErrorCode.PARSE_EXPECTED_DATE_TIME_PART)
         }
     }
-
 
     /**
      * Parses extract function call.
      *
-     * Syntax is EXTRACT(<date_part> FROM <timestamp>).
+     * Syntax is EXTRACT(<date_time_part> FROM <timestamp>).
      */
     private fun List<Token>.parseExtract(name: Token): ParseNode {
         if (head?.type != TokenType.LEFT_PAREN) err("Expected ${TokenType.LEFT_PAREN}",
                 ErrorCode.PARSE_EXPECTED_LEFT_PAREN_BUILTIN_FUNCTION_CALL)
-
-        val datePart = this.tail.parseDatePart().deriveExpectedKeyword("from")
-        val rem = datePart.remaining
+        val dateTimePart = this.tail.parseDateTimePart().deriveExpectedKeyword("from")
+        val rem = dateTimePart.remaining
         val dateTimeType = rem.parseExpression().deriveExpected(TokenType.RIGHT_PAREN)
 
-        return ParseNode(ParseType.CALL, name, listOf(datePart, dateTimeType), dateTimeType.remaining)
+        return ParseNode(ParseType.CALL, name, listOf(dateTimePart, dateTimeType), dateTimeType.remaining)
     }
 
     /**
@@ -2547,19 +2659,18 @@ class SqlParser(private val ion: IonSystem) : Parser {
     /**
      * Parses a function call that has the syntax of `date_add` and `date_diff`.
      *
-     * Syntax is <func>(<date_part>, <timestamp>, <timestamp>) where <func>
+     * Syntax is <func>(<date_time_part>, <timestamp>, <timestamp>) where <func>
      * is the value of [name].
      */
     private fun List<Token>.parseDateAddOrDateDiff(name: Token): ParseNode {
         if (head?.type != TokenType.LEFT_PAREN) err("Expected ${TokenType.LEFT_PAREN}",
                 ErrorCode.PARSE_EXPECTED_LEFT_PAREN_BUILTIN_FUNCTION_CALL)
+        val dateTimePart = this.tail.parseDateTimePart().deriveExpected(TokenType.COMMA)
 
-        val datePart = this.tail.parseDatePart().deriveExpected(TokenType.COMMA)
-
-        val timestamp1 = datePart.remaining.parseExpression().deriveExpected(TokenType.COMMA)
+        val timestamp1 = dateTimePart.remaining.parseExpression().deriveExpected(TokenType.COMMA)
         val timestamp2 = timestamp1.remaining.parseExpression().deriveExpected(TokenType.RIGHT_PAREN)
 
-        return ParseNode(ParseType.CALL, name, listOf(datePart, timestamp1, timestamp2), timestamp2.remaining)
+        return ParseNode(ParseType.CALL, name, listOf(dateTimePart, timestamp1, timestamp2), timestamp2.remaining)
     }
 
     private fun List<Token>.parseLet(): ParseNode {

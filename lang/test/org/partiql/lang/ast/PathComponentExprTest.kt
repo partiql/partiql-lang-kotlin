@@ -31,10 +31,10 @@ class PathComponentExprTest {
     private fun litString(str: String) = Literal(ion.newString(str), emptyMetaContainer)
     private fun litInt(value: Int) = Literal(ion.newInt(value), emptyMetaContainer)
 
-    private val oneSensitive = PathComponentExpr(litInt(1), CaseSensitivity.SENSITIVE)
+    private val oneSensitive = PathComponentExpr(litInt(1), CaseSensitivity.SENSITIVE, emptyMetaContainer)
     private val oneInsensitive = oneSensitive.copy(case = CaseSensitivity.INSENSITIVE)
 
-    private val fooInsensitive = PathComponentExpr(litString("foo"), CaseSensitivity.INSENSITIVE)
+    private val fooInsensitive = PathComponentExpr(litString("foo"), CaseSensitivity.INSENSITIVE, emptyMetaContainer)
     private val fooSensitive = fooInsensitive.copy(case = CaseSensitivity.SENSITIVE)
 
     data class TestCase(val a: PathComponentExpr, val b: PathComponentExpr, val shouldBeEquivalent: Boolean)

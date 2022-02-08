@@ -202,4 +202,29 @@ inline fun <T, S, C> List<S>.foldLeftProduct(initialContext: C,
         }
     }
 
+/**
+ * Returns the cartesian product between each list in [this] (i.e. every possible list formed by choosing an element
+ * from each of the sublists where order matters). Elements in each sub-list must have homogeneous elements.
+ *
+ * e.g. [this] = [[A, B], [C, D], [X, Y]]
+ *   => [[A, C, X], [A, C, Y], [A, D, X], [A, D, Y], [B, C, X], [B, C, Y], [B, D, X], [B, D, Y]]
+ */
+fun <T> List<List<T>>.cartesianProduct(): List<List<T>> {
+    /**
+     * Creates the cartesian product between each list in [lists] with each element in [elemsToCross]. This results in
+     * a list of lists of size [lists].size * [elemsToCross].size.
+     *
+     * e.g. [lists] = [[A], [B], [C]], [elemsToCross] = [D, E]
+     *   => [[A, D], [A, E], [B, D], [B, E], [C, D], [C, E]]
+     */
+    fun cartesianProductOfTwo(lists: List<List<T>>, elemsToCross: List<T>): List<List<T>> =
+        lists.flatMap { list ->
+            elemsToCross.map { elem ->
+                list + elem
+            }
+        }
 
+    return this.fold(listOf(emptyList())) { acc, argTypes ->
+        cartesianProductOfTwo(acc, argTypes)
+    }
+}

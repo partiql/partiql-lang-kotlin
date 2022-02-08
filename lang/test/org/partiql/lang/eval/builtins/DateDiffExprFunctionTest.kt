@@ -1,17 +1,3 @@
-/*
- * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- *  You may not use this file except in compliance with the License.
- * A copy of the License is located at:
- *
- *      http://aws.amazon.com/apache2.0/
- *
- *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
- *  language governing permissions and limitations under the License.
- */
-
 package org.partiql.lang.eval.builtins
 
 import com.amazon.ion.Timestamp
@@ -28,26 +14,12 @@ class DateDiffExprFunctionTest : TestBase() {
 
     private val subject = DateDiffExprFunction(valueFactory)
 
-    private fun callDateDiff(vararg args: Any) = subject.call(env, args.map { anyToExprValue(it) }.toList()).numberValue()
-
-    @Test
-    fun lessArguments() {
-        assertThatThrownBy { callDateDiff("year") }
-            .hasMessage("date_diff takes exactly 3 arguments, received: 1")
-            .isExactlyInstanceOf(EvaluationException::class.java)
-    }
-
-    @Test
-    fun moreArguments() {
-        assertThatThrownBy { callDateDiff("year", Timestamp.valueOf("2017T"), Timestamp.valueOf("2017T"), 1) }
-            .hasMessage("date_diff takes exactly 3 arguments, received: 4")
-            .isExactlyInstanceOf(EvaluationException::class.java)
-    }
+    private fun callDateDiff(vararg args: Any) = subject.call(env, RequiredArgs(args.map { anyToExprValue(it) })).numberValue()
 
     @Test
     fun wrongTypeOfFirstArgument() {
         assertThatThrownBy { callDateDiff("foobar", Timestamp.valueOf("2017T"), Timestamp.valueOf("2017T")) }
-            .hasMessage("invalid date part, valid values: [year, month, day, hour, minute, second, timezone_hour, timezone_minute]")
+            .hasMessage("invalid datetime part, valid values: [year, month, day, hour, minute, second, timezone_hour, timezone_minute]")
             .isExactlyInstanceOf(EvaluationException::class.java)
     }
 

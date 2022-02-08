@@ -14,29 +14,32 @@
 
 package org.partiql.lang.eval.builtins
 
-import com.amazon.ion.IonText
-import com.amazon.ion.IonTimestamp
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.Environment
 import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
-import org.partiql.lang.eval.NullPropagatingExprFunction
-import org.partiql.lang.eval.errNoContext
 import org.partiql.lang.eval.timestampValue
+import org.partiql.lang.types.FunctionSignature
+import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.stringValue
-import java.lang.IllegalArgumentException
 import java.time.DateTimeException
 import java.time.format.DateTimeFormatter
 import java.time.temporal.UnsupportedTemporalTypeException
 
-class ToStringExprFunction(valueFactory: ExprValueFactory) : NullPropagatingExprFunction("to_string", 2, valueFactory) {
-    override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
-        validateArguments(args)
+class ToStringExprFunction(private val valueFactory: ExprValueFactory) : ExprFunction {
 
-        val pattern = args[1].ionValue.stringValue()!!
+    override val signature = FunctionSignature(
+        name = "to_string",
+        requiredParameters = listOf(StaticType.TIMESTAMP, StaticType.STRING),
+        returnType = StaticType.STRING
+    )
+
+    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
+        val pattern = required[1].ionValue.stringValue()!!
 
         val formatter: DateTimeFormatter = try {
             DateTimeFormatter.ofPattern(pattern)
@@ -45,7 +48,7 @@ class ToStringExprFunction(valueFactory: ExprValueFactory) : NullPropagatingExpr
             errInvalidFormatPattern(pattern, ex)
         }
 
-        val timestamp = args[0].timestampValue()
+        val timestamp = required[0].timestampValue()
         val temporalAccessor = TimestampTemporalAccessor(timestamp)
         try {
             return valueFactory.newString(formatter.format(temporalAccessor))
@@ -54,13 +57,6 @@ class ToStringExprFunction(valueFactory: ExprValueFactory) : NullPropagatingExpr
             errInvalidFormatPattern(pattern, ex)
         } catch (ex: DateTimeException) {
             errInvalidFormatPattern(pattern, ex)
-        }
-    }
-
-    private fun validateArguments(args: List<ExprValue>) {
-        when {
-            args[0].ionValue !is IonTimestamp -> errNoContext("First argument of to_string is not a timestamp.", internal = false)
-            args[1].ionValue !is IonText -> errNoContext("Second argument of to_string is not a string.", internal = false)
         }
     }
 

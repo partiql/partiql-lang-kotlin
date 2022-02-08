@@ -14,7 +14,7 @@
 
 package org.partiql.lang.ast
 
-import com.amazon.ion.IonSexp
+import com.amazon.ion.IonValue
 
 /**
  * Provides a common way to "deserialize" a memoized meta instance.
@@ -27,5 +27,5 @@ import com.amazon.ion.IonSexp
  * instance to instance or cannot otherwise be memoized.  Those need their own implementation of [MetaDeserializer].
  */
 class MemoizedMetaDeserializer(override val tag: String, val instance: Meta) : MetaDeserializer {
-    override fun deserialize(sexp: IonSexp): Meta = instance
+    override fun deserialize(sexp: IonValue): Meta = instance
 }

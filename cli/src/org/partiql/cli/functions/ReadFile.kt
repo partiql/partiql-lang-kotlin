@@ -15,12 +15,16 @@
 package org.partiql.cli.functions
 
 import com.amazon.ion.IonStruct
+import org.apache.commons.csv.CSVFormat
 import org.partiql.lang.eval.Environment
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.io.DelimitedValues
 import org.partiql.lang.eval.io.DelimitedValues.ConversionMode
 import org.partiql.lang.eval.stringValue
+import org.partiql.lang.types.FunctionSignature
+import org.partiql.lang.types.StaticType
+import org.partiql.lang.util.asIonStruct
 import org.partiql.lang.util.booleanValue
 import org.partiql.lang.util.stringValue
 import java.io.FileInputStream
@@ -28,20 +32,41 @@ import java.io.InputStream
 import java.io.InputStreamReader
 
 internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFactory) {
-    override val name = "read_file"
+    override val signature = FunctionSignature(
+        name = "read_file",
+        requiredParameters = listOf(StaticType.STRING),
+        optionalParameter = StaticType.STRUCT,
+        returnType = StaticType.BAG
+    )
 
     private fun conversionModeFor(name: String) =
         ConversionMode.values().find { it.name.toLowerCase() == name } ?:
         throw IllegalArgumentException( "Unknown conversion: $name")
 
-    private fun delimitedReadHandler(delimiter: Char): (InputStream, IonStruct) -> ExprValue = { input, options ->
+    private fun fileReadHandler(csvFormat: CSVFormat): (InputStream, IonStruct) -> ExprValue = { input, options ->
         val encoding = options["encoding"]?.stringValue() ?: "UTF-8"
-        val conversion = options["conversion"]?.stringValue() ?: "none"
-        val hasHeader = options["header"]?.booleanValue() ?: false
-
         val reader = InputStreamReader(input, encoding)
+        val conversion = options["conversion"]?.stringValue() ?: "none"
 
-        DelimitedValues.exprValue(valueFactory, reader, delimiter, hasHeader, conversionModeFor(conversion))
+        val hasHeader = options["header"]?.booleanValue() ?: false
+        val ignoreEmptyLine = options["ignore_empty_line"]?.booleanValue() ?: true
+        val ignoreSurroundingSpace = options["ignore_surrounding_space"]?.booleanValue() ?: true
+        val trim = options["trim"]?.booleanValue() ?: true
+        val delimiter = options["delimiter"]?.stringValue()?.first() // CSVParser library only accepts a single character as delimiter
+        val record = options["line_breaker"]?.stringValue()
+        val escape = options["escape"]?.stringValue()?.first() // CSVParser library only accepts a single character as escape
+        val quote = options["quote"]?.stringValue()?.first() // CSVParser library only accepts a single character as quote
+
+        val csvFormatWithOptions = csvFormat.withIgnoreEmptyLines(ignoreEmptyLine)
+                                .withIgnoreSurroundingSpaces(ignoreSurroundingSpace)
+                                .withTrim(trim)
+                                .let { if (hasHeader) it.withFirstRecordAsHeader() else it }
+                                .let { if (delimiter != null) it.withDelimiter(delimiter) else it }
+                                .let { if (record != null) it.withRecordSeparator(record) else it }
+                                .let { if (escape != null) it.withEscape(escape) else it }
+                                .let { if (quote != null) it.withQuote(quote) else it }
+
+        DelimitedValues.exprValue(valueFactory, reader, csvFormatWithOptions, conversionModeFor(conversion))
     }
 
     private fun ionReadHandler(): (InputStream, IonStruct) -> ExprValue = { input, _ ->
@@ -50,16 +75,36 @@ internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFact
 
     private val readHandlers = mapOf(
         "ion" to ionReadHandler(),
-        "tsv" to delimitedReadHandler('\t'),
-        "csv" to delimitedReadHandler(','))
+        "csv" to fileReadHandler(CSVFormat.DEFAULT),
+        "tsv" to fileReadHandler(CSVFormat.DEFAULT.withDelimiter('\t')),
+        "excel_csv" to fileReadHandler(CSVFormat.EXCEL),
+        "mysql_csv" to fileReadHandler(CSVFormat.MYSQL),
+        "postgresql_csv" to fileReadHandler(CSVFormat.POSTGRESQL_CSV),
+        "postgresql_text" to fileReadHandler(CSVFormat.POSTGRESQL_TEXT),
+        "customized" to fileReadHandler(CSVFormat.DEFAULT)
+    )
 
-    override fun call(env: Environment, args: List<ExprValue>): ExprValue {
-        val options = optionsStruct(1, args)
-        val fileName = args[0].stringValue()
+    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
+        val fileName = required[0].stringValue()
+        val fileType = "ion"
+        val handler = readHandlers[fileType] ?: throw IllegalArgumentException("Unknown file type: $fileType")
+        val seq = Sequence {
+            // TODO we should take care to clean up this `FileInputStream` properly
+            //  https://github.com/partiql/partiql-lang-kotlin/issues/518
+            val fileInput = FileInputStream(fileName)
+            handler(fileInput, valueFactory.ion.newEmptyStruct()).iterator()
+        }
+        return valueFactory.newBag(seq)
+    }
+
+    override fun callWithOptional(env: Environment, required: List<ExprValue>, opt: ExprValue): ExprValue {
+        val options = opt.ionValue.asIonStruct()
+        val fileName = required[0].stringValue()
         val fileType = options["type"]?.stringValue() ?: "ion"
         val handler = readHandlers[fileType] ?: throw IllegalArgumentException("Unknown file type: $fileType")
         val seq = Sequence {
-            // TODO we should take care to clean this up properly
+            // TODO we should take care to clean up this `FileInputStream` properly
+            //  https://github.com/partiql/partiql-lang-kotlin/issues/518
             val fileInput = FileInputStream(fileName)
             handler(fileInput, options).iterator()
         }

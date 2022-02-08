@@ -20,7 +20,9 @@ import com.amazon.ion.IonContainer
 import com.amazon.ion.IonDecimal
 import com.amazon.ion.IonFloat
 import com.amazon.ion.IonInt
+import com.amazon.ion.IonList
 import com.amazon.ion.IonLob
+import com.amazon.ion.IonNull
 import com.amazon.ion.IonSequence
 import com.amazon.ion.IonSexp
 import com.amazon.ion.IonStruct
@@ -29,6 +31,8 @@ import com.amazon.ion.IonText
 import com.amazon.ion.IonTimestamp
 import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
+import org.partiql.lang.eval.BAG_ANNOTATION
+import org.partiql.lang.eval.MISSING_ANNOTATION
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -70,7 +74,7 @@ fun IonValue.asSequence(): Sequence<IonValue> = when (this) {
     else -> err("Expected container: $this")
 }
 
-private fun IonInt.javaValue(): Number = when (integerSize) {
+fun IonInt.javaValue(): Number = when (integerSize) {
     IntegerSize.BIG_INTEGER -> bigIntegerValue()
     else                    -> longValue()
 }
@@ -200,6 +204,18 @@ val IonValue.ordinal: Int
 val IonValue.isText: Boolean
     get() = when (this) {
         is IonText -> true
+        else       -> false
+    }
+
+val IonValue.isBag: Boolean
+    get() = when (this) {
+        is IonList -> this.hasTypeAnnotation(BAG_ANNOTATION)
+        else       -> false
+    }
+
+val IonValue.isMissing: Boolean
+    get() = when (this) {
+        is IonNull -> this.hasTypeAnnotation(MISSING_ANNOTATION)
         else       -> false
     }
 

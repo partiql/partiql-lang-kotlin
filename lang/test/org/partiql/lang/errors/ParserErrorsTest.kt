@@ -21,6 +21,15 @@ import org.partiql.lang.syntax.SqlParserTestBase
 
 class ParserErrorsTest : SqlParserTestBase() {
 
+    fun emptyQuery() = checkInputThrowingParserException("",
+        ErrorCode.PARSE_UNEXPECTED_TERM,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 1L,
+            Property.TOKEN_TYPE to TokenType.EOF,
+            Property.TOKEN_VALUE to ion.newSymbol("EOF")))
+
+
     @Test
     fun expectedKeyword() {
         checkInputThrowingParserException("5 BETWEEN 1  10",
@@ -81,8 +90,6 @@ class ParserErrorsTest : SqlParserTestBase() {
 
     }
 
-    // FIXME This is still an error--but an error in a different way
-    @Ignore
     @Test
     fun expectedUnexpectedKeyword() {
         checkInputThrowingParserException("SELECT FROM table1",
@@ -94,6 +101,26 @@ class ParserErrorsTest : SqlParserTestBase() {
                 Property.TOKEN_VALUE to ion.newSymbol("from")))
 
     }
+
+    @Test
+    fun unexpectedKeywordFromInSelectList() = checkInputThrowingParserException(
+        "SELECT a, DATE '2012-12-12', FROM {'a' : 1}",
+        ErrorCode.PARSE_UNEXPECTED_KEYWORD,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 30L,
+            Property.TOKEN_TYPE to TokenType.KEYWORD,
+            Property.TOKEN_VALUE to ion.newSymbol("from")))
+
+    @Test
+    fun unexpectedKeywordUpdateInSelectList() = checkInputThrowingParserException(
+        "SELECT a, UPDATE FROM {'a' : 1}",
+        ErrorCode.PARSE_UNEXPECTED_KEYWORD,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 11L,
+            Property.TOKEN_TYPE to TokenType.KEYWORD,
+            Property.TOKEN_VALUE to ion.newSymbol("update")))
 
     @Test
     fun expectedInvalidPathComponent() {
@@ -120,7 +147,7 @@ class ParserErrorsTest : SqlParserTestBase() {
     }
 
     @Test
-    fun expectedCastArity() {
+    fun expectedCastAsIntArity() {
         checkInputThrowingParserException("CAST(5 AS INTEGER(10))",
             ErrorCode.PARSE_CAST_ARITY,
             mapOf(
@@ -135,6 +162,20 @@ class ParserErrorsTest : SqlParserTestBase() {
     }
 
     @Test
+    fun expectedCastAsRealArity() {
+        checkInputThrowingParserException("CAST(5 AS REAL(10))",
+            ErrorCode.PARSE_CAST_ARITY,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 15L,
+                Property.TOKEN_TYPE to TokenType.LEFT_PAREN,
+                Property.EXPECTED_ARITY_MIN to 0,
+                Property.EXPECTED_ARITY_MAX to 0,
+                Property.CAST_TO to "real",
+                Property.TOKEN_VALUE to ion.newSymbol("(")))
+    }
+
+    @Test
     fun expectedInvalidTypeParameter() {
         checkInputThrowingParserException("CAST(5 AS VARCHAR(a))",
             ErrorCode.PARSE_INVALID_TYPE_PARAM,
@@ -143,6 +184,63 @@ class ParserErrorsTest : SqlParserTestBase() {
                 Property.COLUMN_NUMBER to 11L,
                 Property.TOKEN_TYPE to TokenType.KEYWORD,
                 Property.TOKEN_VALUE to ion.newSymbol("character_varying")))
+
+    }
+
+    @Test
+    fun castToVarCharToTooBigLength() {
+        checkInputThrowingParserException("CAST(5 AS VARCHAR(2147483648))",
+            ErrorCode.PARSE_TYPE_PARAMETER_EXCEEDED_MAXIMUM_VALUE,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 19L,
+                Property.TOKEN_TYPE to TokenType.LITERAL,
+                Property.TOKEN_VALUE to ion.newInt(2147483648L)))
+    }
+
+    @Test
+    fun castToDecimalToTooBigLength_1() {
+        checkInputThrowingParserException("CAST(5 AS DECIMAL(2147483648))",
+            ErrorCode.PARSE_TYPE_PARAMETER_EXCEEDED_MAXIMUM_VALUE,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 19L,
+                Property.TOKEN_TYPE to TokenType.LITERAL,
+                Property.TOKEN_VALUE to ion.newInt(2147483648L)))
+    }
+
+    @Test
+    fun castToDecimalToTooBigLength_2() {
+        checkInputThrowingParserException("CAST(5 AS DECIMAL(1, 2147483648))",
+            ErrorCode.PARSE_TYPE_PARAMETER_EXCEEDED_MAXIMUM_VALUE,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 22L,
+                Property.TOKEN_TYPE to TokenType.LITERAL,
+                Property.TOKEN_VALUE to ion.newInt(2147483648L)))
+
+    }
+
+    @Test
+    fun castToNumericToTooBigLength_1() {
+        checkInputThrowingParserException("CAST(5 AS NUMERIC(2147483648))",
+            ErrorCode.PARSE_TYPE_PARAMETER_EXCEEDED_MAXIMUM_VALUE,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 19L,
+                Property.TOKEN_TYPE to TokenType.LITERAL,
+                Property.TOKEN_VALUE to ion.newInt(2147483648L)))
+    }
+
+    @Test
+    fun castToNumericToTooBigLength_2() {
+        checkInputThrowingParserException("CAST(5 AS NUMERIC(1, 2147483648))",
+            ErrorCode.PARSE_TYPE_PARAMETER_EXCEEDED_MAXIMUM_VALUE,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 22L,
+                Property.TOKEN_TYPE to TokenType.LITERAL,
+                Property.TOKEN_VALUE to ion.newInt(2147483648L)))
 
     }
 
@@ -1114,18 +1212,6 @@ class ParserErrorsTest : SqlParserTestBase() {
                                                 Property.TOKEN_VALUE to ion.newSymbol("as")))
     }
 
-    // FIXME This is still an error--but an error in a different way
-    @Ignore
-    @Test
-    fun selectNothing() {
-        checkInputThrowingParserException("SELECT FROM table1",
-                                          ErrorCode.PARSE_UNEXPECTED_KEYWORD,
-                                          mapOf(Property.LINE_NUMBER to 1L,
-                                                Property.COLUMN_NUMBER to 8L,
-                                                Property.TOKEN_TYPE to TokenType.KEYWORD,
-                                                Property.TOKEN_VALUE to ion.newSymbol("from")))
-    }
-
     @Test
     fun pivotNoAt() {
         checkInputThrowingParserException("PIVOT v FROM data",
@@ -1170,9 +1256,9 @@ class ParserErrorsTest : SqlParserTestBase() {
     }
 
     @Test
-    fun callExtractMissingDatePart() {
+    fun callExtractMissingDateTimePart() {
         checkInputThrowingParserException("extract(from b)",
-                                          ErrorCode.PARSE_EXPECTED_DATE_PART,
+                                          ErrorCode.PARSE_EXPECTED_DATE_TIME_PART,
                                           mapOf(Property.LINE_NUMBER to 1L,
                                                 Property.COLUMN_NUMBER to 9L,
                                                 Property.TOKEN_TYPE to TokenType.KEYWORD,
@@ -1182,7 +1268,7 @@ class ParserErrorsTest : SqlParserTestBase() {
     @Test
     fun callExtractOnlySecondArgument() {
         checkInputThrowingParserException("extract(b)",
-                                          ErrorCode.PARSE_EXPECTED_DATE_PART,
+                                          ErrorCode.PARSE_EXPECTED_DATE_TIME_PART,
                                           mapOf(Property.LINE_NUMBER to 1L,
                                                 Property.COLUMN_NUMBER to 9L,
                                                 Property.TOKEN_TYPE to TokenType.IDENTIFIER,
@@ -1190,7 +1276,7 @@ class ParserErrorsTest : SqlParserTestBase() {
     }
 
     @Test
-    fun callExtractOnlyDatePart() {
+    fun callExtractOnlyDateTimePart() {
         checkInputThrowingParserException("extract(year)",
                                           ErrorCode.PARSE_EXPECTED_KEYWORD,
                                           mapOf(Property.LINE_NUMBER to 1L,
@@ -1205,7 +1291,7 @@ class ParserErrorsTest : SqlParserTestBase() {
     @Test
     fun callDateAddNoArguments() {
         checkInputThrowingParserException("date_add()",
-            ErrorCode.PARSE_EXPECTED_DATE_PART,
+            ErrorCode.PARSE_EXPECTED_DATE_TIME_PART,
             mapOf(Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 10L,
                 Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
@@ -1213,9 +1299,9 @@ class ParserErrorsTest : SqlParserTestBase() {
     }
 
     @Test
-    fun callDateAddInvalidDatePart() {
+    fun callDateAddInvalidDateTimePart() {
         checkInputThrowingParserException("date_add(foobar",
-            ErrorCode.PARSE_EXPECTED_DATE_PART,
+            ErrorCode.PARSE_EXPECTED_DATE_TIME_PART,
             mapOf(Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 10L,
                 Property.TOKEN_TYPE to TokenType.IDENTIFIER,
@@ -1277,9 +1363,9 @@ class ParserErrorsTest : SqlParserTestBase() {
     }
 
     @Test
-    fun callDateAddMissingDatePart() {
+    fun callDateAddMissingDateTimePart() {
         checkInputThrowingParserException("date_add(a, b, c)",
-            ErrorCode.PARSE_EXPECTED_DATE_PART,
+            ErrorCode.PARSE_EXPECTED_DATE_TIME_PART,
             mapOf(Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 10L,
                 Property.TOKEN_TYPE to TokenType.IDENTIFIER,
@@ -1605,7 +1691,7 @@ class ParserErrorsTest : SqlParserTestBase() {
     @Test
     fun selectAndRemove() = checkInputThrowingParserException(
         "SELECT REMOVE foo FROM bar",
-        ErrorCode.PARSE_UNEXPECTED_TERM,
+        ErrorCode.PARSE_UNEXPECTED_KEYWORD,
         mapOf(
             Property.LINE_NUMBER to 1L,
             Property.COLUMN_NUMBER to 8L,
@@ -2097,18 +2183,6 @@ class ParserErrorsTest : SqlParserTestBase() {
             Property.COLUMN_NUMBER to 10L,
             Property.TOKEN_TYPE to TokenType.KEYWORD,
             Property.TOKEN_VALUE to ion.newSymbol("exec")))
-
-    // TODO: The token in the error message here should be "exec" instead of "undrop".
-    //  Check this issue for more details. https://github.com/partiql/partiql-lang-kotlin/issues/372
-    @Test
-    fun execAtUnexpectedLocationInExpression() = checkInputThrowingParserException(
-        "SELECT * FROM (EXEC undrop 'foo')",
-        ErrorCode.PARSE_UNEXPECTED_TERM,
-        mapOf(
-            Property.LINE_NUMBER to 1L,
-            Property.COLUMN_NUMBER to 21L,
-            Property.TOKEN_TYPE to TokenType.IDENTIFIER,
-            Property.TOKEN_VALUE to ion.newSymbol("undrop")))
 
     @Test
     fun missingDateString() = checkInputThrowingParserException(

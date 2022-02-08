@@ -158,6 +158,7 @@ internal class TimestampParser {
                     TimestampField.AM_PM, TimestampField.OFFSET, null -> {
                         errNoContext("This code should be unreachable because AM_PM or OFFSET or null" +
                                      "should never the value of formatPattern.leastSignificantField by at this point",
+                                     errorCode = ErrorCode.EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN,
                                      internal = true)
                     }
                 }

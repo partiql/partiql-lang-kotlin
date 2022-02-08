@@ -15,31 +15,40 @@
 package org.partiql.lang.eval.builtins
 
 import com.amazon.ion.Timestamp
+import com.amazon.ion.Timestamp.Precision
+import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.Environment
 import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
-import org.partiql.lang.eval.NullPropagatingExprFunction
-import org.partiql.lang.eval.datePartValue
+import org.partiql.lang.eval.dateTimePartValue
 import org.partiql.lang.eval.errNoContext
 import org.partiql.lang.eval.intValue
 import org.partiql.lang.eval.timestampValue
-import org.partiql.lang.syntax.DatePart
+import org.partiql.lang.syntax.DateTimePart
+import org.partiql.lang.types.FunctionSignature
+import org.partiql.lang.types.StaticType
 
-internal class DateAddExprFunction(valueFactory: ExprValueFactory) : NullPropagatingExprFunction("date_add", 3, valueFactory) {
+internal class DateAddExprFunction(val valueFactory: ExprValueFactory) : ExprFunction {
+    override val signature = FunctionSignature(
+        name = "date_add",
+        requiredParameters = listOf(StaticType.SYMBOL, StaticType.INT, StaticType.TIMESTAMP),
+        returnType = StaticType.TIMESTAMP
+    )
+
     companion object {
         @JvmStatic private val precisionOrder = listOf(Timestamp.Precision.YEAR,
                 Timestamp.Precision.MONTH,
                 Timestamp.Precision.DAY,
                 Timestamp.Precision.MINUTE,
                 Timestamp.Precision.SECOND)
-
-        @JvmStatic private val datePartToPrecision = mapOf(DatePart.YEAR to Timestamp.Precision.YEAR,
-                                                           DatePart.MONTH to Timestamp.Precision.MONTH,
-                                                           DatePart.DAY to Timestamp.Precision.DAY,
-                                                           DatePart.HOUR to Timestamp.Precision.MINUTE,
-                                                           DatePart.MINUTE to Timestamp.Precision.MINUTE,
-                                                           DatePart.SECOND to Timestamp.Precision.SECOND)
+        @JvmStatic private val dateTimePartToPrecision = mapOf(DateTimePart.YEAR to Precision.YEAR,
+                                                           DateTimePart.MONTH to Precision.MONTH,
+                                                           DateTimePart.DAY to Precision.DAY,
+                                                           DateTimePart.HOUR to Precision.MINUTE,
+                                                           DateTimePart.MINUTE to Precision.MINUTE,
+                                                           DateTimePart.SECOND to Precision.SECOND)
     }
 
     private fun Timestamp.hasSufficientPrecisionFor(requiredPrecision: Timestamp.Precision): Boolean {
@@ -49,8 +58,8 @@ internal class DateAddExprFunction(valueFactory: ExprValueFactory) : NullPropaga
         return precisionPos >= requiredPrecisionPos
     }
 
-    private fun Timestamp.adjustPrecisionTo(datePart: DatePart): Timestamp {
-        val requiredPrecision = datePartToPrecision[datePart]!!
+    private fun Timestamp.adjustPrecisionTo(dateTimePart: DateTimePart): Timestamp {
+        val requiredPrecision = dateTimePartToPrecision[dateTimePart]!!
 
         if (this.hasSufficientPrecisionFor(requiredPrecision)) {
             return this
@@ -73,32 +82,34 @@ internal class DateAddExprFunction(valueFactory: ExprValueFactory) : NullPropaga
                                                       this.hour,
                                                       this.minute,
                                                       this.localOffset)
-            else                -> errNoContext("invalid date part for date_add: ${datePart.toString().toLowerCase()}",
+            else                -> errNoContext("invalid datetime part for date_add: ${dateTimePart.toString().toLowerCase()}",
+                                                errorCode = ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_DATE_PART,
                                                 internal = false)
         }
     }
 
-    override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
-        val datePart = args[0].datePartValue()
-        val interval = args[1].intValue()
-        val timestamp = args[2].timestampValue()
+    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
+        val dateTimePart = required[0].dateTimePartValue()
+        val interval = required[1].intValue()
+        val timestamp = required[2].timestampValue()
 
         try {
-            val addedTimestamp = when (datePart) {
-                DatePart.YEAR   -> timestamp.adjustPrecisionTo(datePart).addYear(interval)
-                DatePart.MONTH  -> timestamp.adjustPrecisionTo(datePart).addMonth(interval)
-                DatePart.DAY    -> timestamp.adjustPrecisionTo(datePart).addDay(interval)
-                DatePart.HOUR   -> timestamp.adjustPrecisionTo(datePart).addHour(interval)
-                DatePart.MINUTE -> timestamp.adjustPrecisionTo(datePart).addMinute(interval)
-                DatePart.SECOND -> timestamp.adjustPrecisionTo(datePart).addSecond(interval)
-                else            -> errNoContext("invalid date part for date_add: ${datePart.toString().toLowerCase()}",
+            val addedTimestamp = when (dateTimePart) {
+                DateTimePart.YEAR   -> timestamp.adjustPrecisionTo(dateTimePart).addYear(interval)
+                DateTimePart.MONTH  -> timestamp.adjustPrecisionTo(dateTimePart).addMonth(interval)
+                DateTimePart.DAY    -> timestamp.adjustPrecisionTo(dateTimePart).addDay(interval)
+                DateTimePart.HOUR   -> timestamp.adjustPrecisionTo(dateTimePart).addHour(interval)
+                DateTimePart.MINUTE -> timestamp.adjustPrecisionTo(dateTimePart).addMinute(interval)
+                DateTimePart.SECOND -> timestamp.adjustPrecisionTo(dateTimePart).addSecond(interval)
+                else            -> errNoContext("invalid datetime part for date_add: ${dateTimePart.toString().toLowerCase()}",
+                                                errorCode = ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_DATE_PART,
                                                 internal = false)
             }
 
             return valueFactory.newTimestamp(addedTimestamp)
         } catch (e: IllegalArgumentException) {
             // illegal argument exception are thrown when the resulting timestamp go out of supported timestamp boundaries
-            throw EvaluationException(e, internal = false)
+            throw EvaluationException(e, errorCode = ErrorCode.EVALUATOR_TIMESTAMP_OUT_OF_BOUNDS, internal = false)
         }
     }
 }

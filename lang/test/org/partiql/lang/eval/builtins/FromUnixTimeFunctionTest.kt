@@ -7,6 +7,7 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.EvaluatorTestBase
 import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.lang.util.to
 
 data class FromUnixTimeTestCase(val unixTimestamp: String, val expected: String)
 
@@ -18,8 +19,10 @@ class FromUnixTimeFunctionTest : EvaluatorTestBase() {
         checkInputThrowingEvaluationException(
             "from_unixtime()",
             ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL,
-            mapOf(Property.LINE_NUMBER to 1L,
+            mapOf<Property, Any>(Property.LINE_NUMBER to 1L,
+                  Property.FUNCTION_NAME to "from_unixtime",
                   Property.COLUMN_NUMBER to 1L,
+                  Property.ACTUAL_ARITY to 0,
                   Property.EXPECTED_ARITY_MIN to 1,
                   Property.EXPECTED_ARITY_MAX to 1))
 
@@ -28,8 +31,10 @@ class FromUnixTimeFunctionTest : EvaluatorTestBase() {
         checkInputThrowingEvaluationException(
             "from_unixtime($testUnixTime, $testUnixTime)",
             ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL,
-            mapOf(Property.LINE_NUMBER to 1L,
+            mapOf<Property, Any>(Property.LINE_NUMBER to 1L,
+                  Property.FUNCTION_NAME to "from_unixtime",
                   Property.COLUMN_NUMBER to 1L,
+                  Property.ACTUAL_ARITY to 2,
                   Property.EXPECTED_ARITY_MIN to 1,
                   Property.EXPECTED_ARITY_MAX to 1))
 
@@ -38,8 +43,10 @@ class FromUnixTimeFunctionTest : EvaluatorTestBase() {
         checkInputThrowingEvaluationException(
             "from_unixtime($testUnixTime, $testUnixTime, $testUnixTime)",
             ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL,
-            mapOf(Property.LINE_NUMBER to 1L,
+            mapOf<Property, Any>(Property.LINE_NUMBER to 1L,
+                  Property.FUNCTION_NAME to "from_unixtime",
                   Property.COLUMN_NUMBER to 1L,
+                  Property.ACTUAL_ARITY to 3,
                   Property.EXPECTED_ARITY_MIN to 1,
                   Property.EXPECTED_ARITY_MAX to 1))
 

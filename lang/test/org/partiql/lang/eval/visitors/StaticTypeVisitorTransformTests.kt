@@ -5,9 +5,11 @@
 package org.partiql.lang.eval.visitors
 
 import com.amazon.ionelement.api.emptyMetaContainer
+import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.toIonElement
 import junitparams.Parameters
 import org.junit.Test
+import org.partiql.ionschema.model.IonSchemaModel
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.StaticTypeMeta
 import org.partiql.lang.ast.emptyMetaContainer
@@ -24,6 +26,9 @@ import org.partiql.lang.errors.Property.COLUMN_NUMBER
 import org.partiql.lang.errors.Property.FEATURE_NAME
 import org.partiql.lang.errors.Property.LINE_NUMBER
 import org.partiql.lang.eval.Bindings
+import org.partiql.lang.mappers.ISL_META_KEY
+import org.partiql.lang.types.IntType
+import org.partiql.lang.types.ListType
 import org.partiql.lang.types.StaticType
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -181,6 +186,54 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         STRTestCase(
             //        1         2         3         4         5         6         7         8
             //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            "SELECT x FROM b LET 1 AS x",
+            mapOf("b" to StaticType.BAG),
+            expectVariableReferences(
+                VarExpectation("x", 1, 8, StaticType.ANY, partiqlAstLocalsFirst),
+                VarExpectation("b", 1, 15, StaticType.BAG, partiqlAstUnqualified)
+            )
+        ),
+        // multiple unique bindings
+        STRTestCase(
+            //        1         2         3         4         5         6         7         8
+            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            "SELECT x, y FROM b LET char_length(b.name) AS x, x + 1 AS y",
+            mapOf("b" to StaticType.BAG),
+            expectVariableReferences(
+                VarExpectation("x", 1, 8, StaticType.ANY, partiqlAstLocalsFirst),
+                VarExpectation("y", 1, 11, StaticType.ANY, partiqlAstLocalsFirst),
+                VarExpectation("b", 1, 18, StaticType.BAG, partiqlAstUnqualified)
+            )
+        ),
+        // shadow binding from global variable
+        STRTestCase(
+            //        1         2         3         4         5         6         7         8
+            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            "SELECT b FROM b LET 1 AS b",
+            mapOf("b" to StaticType.BAG),
+            expectErr(
+                ErrorCode.SEMANTIC_AMBIGUOUS_BINDING,
+                BINDING_NAME to "b",
+                LINE_NUMBER to 1L,
+                COLUMN_NUMBER to 26L
+            )
+        ),
+        // shadow binding from local variable
+        STRTestCase(
+            //        1         2         3         4         5         6         7         8
+            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            "SELECT x FROM b LET 1 AS x, 2 AS x",
+            mapOf("b" to StaticType.BAG),
+            expectErr(
+                ErrorCode.SEMANTIC_AMBIGUOUS_BINDING,
+                BINDING_NAME to "x",
+                LINE_NUMBER to 1L,
+                COLUMN_NUMBER to 34L
+            )
+        ),
+        STRTestCase(
+            //        1         2         3         4         5         6         7         8
+            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT a FROM b",
             emptyMap(),
             expectErr(ErrorCode.SEMANTIC_UNBOUND_BINDING,
@@ -204,7 +257,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
             //2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT a FROM \"b\"",
             mapOf("B" to StaticType.ANY),
-            expectErr(ErrorCode.SEMANTIC_UNBOUND_BINDING,
+            expectErr(ErrorCode.SEMANTIC_UNBOUND_QUOTED_BINDING,
                 BINDING_NAME to "b",
                 LINE_NUMBER to 1L,
                 COLUMN_NUMBER to 15L)
@@ -800,6 +853,11 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
                         return
                     }
 
+                    // Consider removing this method in oder to avoid skipping over
+                    // the `Let` nodes - https://github.com/partiql/partiql-lang-kotlin/issues/509
+                    override fun walkLet(node: PartiqlAst.Let) {
+                        return
+                    }
                 }
 
                 visitor.walkStatement(result.node)
@@ -865,5 +923,106 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         }
 
         tc.handler(ResolveTestResult.Value(tc, transformedExprNode))
+    }
+
+    @Test
+    fun `ensure StaticTypeMeta can be serialized`() {
+        val expectedExpr = PartiqlAst.build {
+            id(
+                name = "foo",
+                caseInsensitive(),
+                unqualified(),
+            ).withMeta("staticType", StaticTypeMeta(StaticType.DECIMAL))
+        }
+
+        // note: we do not test v0 here because it's not able to store metas other than [SourceLocationMeta]
+        val sexpAst = expectedExpr.toIonElement()
+        val actualExpr = PartiqlAst.transform(sexpAst)
+        assertEquals(expectedExpr, actualExpr)
+    }
+
+    @Test
+    fun `ensure StaticTypeMeta can be serialized when StaticType is nested`() {
+        val expectedExpr = PartiqlAst.build {
+            id(
+                name = "foo",
+                case = partiqlAstCaseInSensitive,
+                qualifier = partiqlAstUnqualified,
+            ).withMeta("staticType", StaticTypeMeta(ListType(StaticType.INT)))
+        }
+
+        // note: we do not test v0 here because it's not able to store metas other than [SourceLocationMeta]
+        val sexpAst = expectedExpr.toIonElement()
+        val actualExpr = PartiqlAst.transform(sexpAst)
+        assertEquals(expectedExpr, actualExpr)
+    }
+
+//    @Test
+//    fun `ensure StaticTypeMeta can be serialized when StaticType already contains ISL`() {
+//        val expectedExpr = VariableReference(
+//            id = "foo",
+//            case = CaseSensitivity.INSENSITIVE,
+//            scopeQualifier = ScopeQualifier.UNQUALIFIED,
+//            metas = metaContainerOf(StaticTypeMeta(
+//                DecimalType(metas = mapOf(ISL_META_KEY to listOf(
+//                    IonSchemaModel.build {
+//                        typeDefinition("decimal", constraintList(typeConstraint(namedType("decimal", ionBool(false)))))
+//                    }
+//                )))
+//            ))
+//        )
+//
+//        // note: we do not test v0 here because it's not able to store metas other than [SourceLocationMeta]
+//        val sexpAst = AstSerializer.serialize(expectedExpr, AstVersion.V2, ion)
+//        val actualExpr = AstDeserializerBuilder(ion).build().deserialize(sexpAst, AstVersion.V2)
+//        assertEquals(expectedExpr, actualExpr)
+//    }
+
+//    @Test
+//    fun `ensure StaticTypeMeta can be serialized when StaticType is nested and already contains ISL`() {
+//        val expectedExpr = VariableReference(
+//            id = "foo",
+//            case = CaseSensitivity.INSENSITIVE,
+//            scopeQualifier = ScopeQualifier.UNQUALIFIED,
+//            metas = metaContainerOf(StaticTypeMeta(
+//                ListType(
+//                    IntType(metas = mapOf(ISL_META_KEY to listOf(
+//                        IonSchemaModel.build {
+//                            typeDefinition("bar", constraintList(typeConstraint(namedType("int", ionBool(false)))))
+//                        }
+//                    ))),
+//                    metas = mapOf(ISL_META_KEY to listOf(
+//                        IonSchemaModel.build {
+//                            typeDefinition("foo", constraintList(typeConstraint(namedType("list", ionBool(false))), element(namedType("bar", ionBool(false)))))
+//                        }
+//                    ))
+//                )
+//            ))
+//        )
+//
+//        // note: we do not test v0 here because it's not able to store metas other than [SourceLocationMeta]
+//        val sexpAst = AstSerializer.serialize(expectedExpr, AstVersion.V2, ion)
+//        val actualExpr = AstDeserializerBuilder(ion).build().deserialize(sexpAst, AstVersion.V2)
+//        assertEquals(expectedExpr, actualExpr)
+//    }
+
+    @Test
+    fun `ensure StaticTypeMeta can be serialized when StaticType does not have ISL but has nested StaticType that already contains ISL`() {
+        val expectedExpr = PartiqlAst.build {
+            id(
+                name = "foo",
+                case = partiqlAstCaseInSensitive,
+                qualifier = partiqlAstUnqualified
+            ).withMeta("staticType", StaticTypeMeta(ListType(IntType(metas = mapOf(ISL_META_KEY to listOf(
+                IonSchemaModel.build {
+                    typeDefinition("bar", constraintList(typeConstraint(namedType("int", ionBool(false)))))
+                }
+            ))))))
+        }
+
+        // note: we do not test v0 here because it's not able to store metas other than [SourceLocationMeta]
+        val sexpAst = expectedExpr.toIonElement()
+        val actualExpr = PartiqlAst.transform(sexpAst)
+        assertEquals(expectedExpr, actualExpr)
     }
 }

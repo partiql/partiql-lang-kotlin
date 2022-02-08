@@ -1,32 +1,22 @@
-/*
- * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- *  You may not use this file except in compliance with the License.
- * A copy of the License is located at:
- *
- *      http://aws.amazon.com/apache2.0/
- *
- *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
- *  language governing permissions and limitations under the License.
- */
-
 package org.partiql.lang.eval.builtins
 
 import com.amazon.ion.Timestamp
 import junitparams.Parameters
 import org.assertj.core.api.Assertions
 import org.junit.Test
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.Environment
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.EvaluatorTestBase
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.eval.NodeMetadata
+import org.partiql.lang.eval.RequiredArgs
+import org.partiql.lang.eval.call
 import org.partiql.lang.eval.numberValue
 import org.partiql.lang.eval.time.Time
-import org.partiql.lang.syntax.DatePart
+import org.partiql.lang.syntax.DateTimePart
+import org.partiql.lang.util.to
 import java.time.LocalDate
 
 /**
@@ -39,28 +29,28 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
     private val subject = ExtractExprFunction(valueFactory)
 
     @Test
-    fun extractYear() = assertEval("extract(year from `2017-01-10T05:30:55Z`)", "2017e0")
+    fun extractYear() = assertEval("extract(year from `2017-01-10T05:30:55Z`)", "2017.")
 
     @Test
-    fun extractMonth() = assertEval("extract(month from `2017-01-10T05:30:55Z`)", "1e0")
+    fun extractMonth() = assertEval("extract(month from `2017-01-10T05:30:55Z`)", "1.")
 
     @Test
-    fun extractDay() = assertEval("extract(day from `2017-01-10T05:30:55Z`)", "10e0")
+    fun extractDay() = assertEval("extract(day from `2017-01-10T05:30:55Z`)", "10.")
 
     @Test
-    fun extractHour() = assertEval("extract(hour from `2017-01-10T05:30:55Z`)", "5e0")
+    fun extractHour() = assertEval("extract(hour from `2017-01-10T05:30:55Z`)", "5.")
 
     @Test
-    fun extractMinute() = assertEval("extract(minute from `2017-01-10T05:30:55Z`)", "30e0")
+    fun extractMinute() = assertEval("extract(minute from `2017-01-10T05:30:55Z`)", "30.")
 
     @Test
-    fun extractSecond() = assertEval("extract(second from `2017-01-10T05:30:55Z`)", "55e0")
+    fun extractSecond() = assertEval("extract(second from `2017-01-10T05:30:55Z`)", "55.")
 
     @Test
-    fun extractTimezoneHour() = assertEval("extract(timezone_hour from `2017-01-10T05:30:55+11:30`)", "11e0")
+    fun extractTimezoneHour() = assertEval("extract(timezone_hour from `2017-01-10T05:30:55+11:30`)", "11.")
 
     @Test
-    fun extractTimezoneMinute() = assertEval("extract(timezone_minute from `2017-01-10T05:30:55+11:30`)", "30e0")
+    fun extractTimezoneMinute() = assertEval("extract(timezone_minute from `2017-01-10T05:30:55+11:30`)", "30.")
 
     @Test
     fun extractFromNull() = assertEval("extract(timezone_minute from null)", "null")
@@ -70,38 +60,48 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
 
     @Test
     fun extractTimezoneHourNegativeOffset() =
-        assertEval("extract(timezone_hour from `2017-01-10T05:30:55-11:30`)", "-11e0")
+        assertEval("extract(timezone_hour from `2017-01-10T05:30:55-11:30`)", "-11.")
 
     @Test
     fun extractTimezoneMinuteNegativeOffset() =
-        assertEval("extract(timezone_minute from `2017-01-10T05:30:55-11:30`)", "-30e0")
+        assertEval("extract(timezone_minute from `2017-01-10T05:30:55-11:30`)", "-30.")
 
     @Test
     fun extractWithBindings() = assertEval("extract(second from a)",
-                                           "55e0",
+                                           "55.",
                                            mapOf("a" to "2017-01-10T05:30:55Z").toSession())
 
     @Test
-    fun wrongArgumentTypes() = assertThrows("Expected date or timestamp: 1", NodeMetadata(1, 1)) {
-        voidEval("extract(year from 1)")
-    }
+    fun wrongArgumentTypes() =
+    checkInputThrowingEvaluationException(
+        input = "extract(year from 1)",
+        errorCode = ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL,
+        expectErrorContextValues = mapOf<Property, Any>(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 1L,
+            Property.FUNCTION_NAME to "extract",
+            Property.EXPECTED_ARGUMENT_TYPES to "TIMESTAMP, TIME, or DATE",
+            Property.ARGUMENT_POSITION to 2,
+            Property.ACTUAL_ARGUMENT_TYPES to "INT"),
+        expectedPermissiveModeResult = "MISSING"
+    )
 
     data class ExtractFromDateTC(val source: String, val expected: ExprValue?)
 
     private fun createDateTC(source: String, expected: LocalDate) =
-        DatePart.values()
-            .map { datePart ->
+        DateTimePart.values()
+            .map { dateTimePart ->
                 ExtractFromDateTC(
-                    source = "EXTRACT(${datePart.name} FROM $source)",
-                    expected = when (datePart) {
-                        DatePart.YEAR -> valueFactory.newInt(expected.year)
-                        DatePart.MONTH -> valueFactory.newInt(expected.monthValue)
-                        DatePart.DAY -> valueFactory.newInt(expected.dayOfMonth)
-                        DatePart.HOUR -> valueFactory.newInt(0)
-                        DatePart.MINUTE -> valueFactory.newInt(0)
-                        DatePart.SECOND -> valueFactory.newInt(0)
-                        DatePart.TIMEZONE_HOUR -> null
-                        DatePart.TIMEZONE_MINUTE -> null
+                    source = "EXTRACT(${dateTimePart.name} FROM $source)",
+                    expected = when (dateTimePart) {
+                        DateTimePart.YEAR -> valueFactory.newDecimal(expected.year)
+                        DateTimePart.MONTH -> valueFactory.newDecimal(expected.monthValue)
+                        DateTimePart.DAY -> valueFactory.newDecimal(expected.dayOfMonth)
+                        DateTimePart.HOUR -> valueFactory.newDecimal(0)
+                        DateTimePart.MINUTE -> valueFactory.newDecimal(0)
+                        DateTimePart.SECOND -> valueFactory.newDecimal(0)
+                        DateTimePart.TIMEZONE_HOUR -> null
+                        DateTimePart.TIMEZONE_MINUTE -> null
                     }
                 )
             }
@@ -123,25 +123,25 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
                 // Do nothing
             }
         }
-        else -> assertExprEquals(eval(tc.source), tc.expected)
+        else -> assertExprEquals(eval(tc.source), tc.expected, "Expected exprValues to be equal.")
     }
 
     data class ExtractFromTimeTC(val source: String, val expected: ExprValue?)
 
     private fun createTimeTC(source: String, expected: Time) =
-        DatePart.values()
-            .map { datePart ->
+        DateTimePart.values()
+            .map { dateTimePart ->
                 ExtractFromTimeTC(
-                    source = "EXTRACT(${datePart.name} FROM $source)",
-                    expected = when (datePart) {
-                        DatePart.YEAR -> null
-                        DatePart.MONTH -> null
-                        DatePart.DAY -> null
-                        DatePart.HOUR -> valueFactory.newInt(expected.localTime.hour)
-                        DatePart.MINUTE -> valueFactory.newInt(expected.localTime.minute)
-                        DatePart.SECOND -> valueFactory.newFloat(expected.secondsWithFractionalPart.toDouble())
-                        DatePart.TIMEZONE_HOUR -> expected.timezoneHour?.let { valueFactory.newInt(it) }
-                        DatePart.TIMEZONE_MINUTE -> expected.timezoneMinute?.let { valueFactory.newInt(it) }
+                    source = "EXTRACT(${dateTimePart.name} FROM $source)",
+                    expected = when (dateTimePart) {
+                        DateTimePart.YEAR -> null
+                        DateTimePart.MONTH -> null
+                        DateTimePart.DAY -> null
+                        DateTimePart.HOUR -> valueFactory.newDecimal(expected.localTime.hour)
+                        DateTimePart.MINUTE -> valueFactory.newDecimal(expected.localTime.minute)
+                        DateTimePart.SECOND -> valueFactory.newDecimal(expected.secondsWithFractionalPart)
+                        DateTimePart.TIMEZONE_HOUR -> expected.timezoneHour?.let { valueFactory.newDecimal(it) }
+                        DateTimePart.TIMEZONE_MINUTE -> expected.timezoneMinute?.let { valueFactory.newDecimal(it) }
                     }
                 )
             }
@@ -167,11 +167,11 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
                 // Do nothing
             }
         }
-        else -> assertExprEquals(eval(tc.source), tc.expected)
+        else -> assertExprEquals(eval(tc.source), tc.expected, "Expected exprValues to be equal.")
     }
 
     private fun callExtract(vararg args: Any): Number? {
-        val value = subject.call(env, args.map { anyToExprValue(it) }.toList())
+        val value = subject.call(env, RequiredArgs(args.map { anyToExprValue(it) }))
         return when(value.type) {
             ExprValueType.NULL -> null
             else -> value.numberValue()
@@ -179,29 +179,16 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
     }
 
     @Test
-    fun lessArguments() {
-        Assertions.assertThatThrownBy { callExtract("year") }
-            .hasMessage("extract takes exactly 2 arguments, received: 1")
-            .isExactlyInstanceOf(EvaluationException::class.java)
-    }
-
-    @Test fun moreArguments() {
-        Assertions.assertThatThrownBy { callExtract("year", 1, 1) }
-            .hasMessage("extract takes exactly 2 arguments, received: 3")
-            .isExactlyInstanceOf(EvaluationException::class.java)
-    }
-
-    @Test
     fun wrongTypeOfFirstArgument() {
         Assertions.assertThatThrownBy { callExtract("foobar", 1) }
-            .hasMessage("invalid date part, valid values: [year, month, day, hour, minute, second, timezone_hour, timezone_minute]")
+            .hasMessage("invalid datetime part, valid values: [year, month, day, hour, minute, second, timezone_hour, timezone_minute]")
             .isExactlyInstanceOf(EvaluationException::class.java)
     }
 
     @Test
     fun wrongTypeOfSecondArgument() {
         Assertions.assertThatThrownBy { callExtract("year", "999") }
-            .hasMessage("Expected date or timestamp: '999'")
+            .hasMessage("Expected date, time or timestamp: '999'")
             .isExactlyInstanceOf(EvaluationException::class.java)
     }
 

@@ -1,20 +1,7 @@
-/*
- * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- *  You may not use this file except in compliance with the License.
- * A copy of the License is located at:
- *
- *      http://aws.amazon.com/apache2.0/
- *
- *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
- *  language governing permissions and limitations under the License.
- */
-
 package org.partiql.lang.eval.builtins
 
 import org.junit.Test
+import org.partiql.lang.errors.UNBOUND_QUOTED_IDENTIFIER_HINT
 import org.partiql.lang.eval.EvaluatorTestBase
 import org.partiql.lang.eval.NodeMetadata
 
@@ -60,27 +47,37 @@ class DateAddEvaluationTest : EvaluatorTestBase() {
         "b" to "2017-01-10T05:30:55Z").toSession())
 
     @Test
-    fun wrongArgumentTypes() = assertThrows("No such binding: foobar", NodeMetadata(1, 16)) {
-        voidEval("date_add(year, \"foobar\", 1)")
-    }
+    fun wrongArgumentTypes() = assertThrows(
+        "date_add(year, \"foobar\", 1)",
+        "No such binding: foobar. $UNBOUND_QUOTED_IDENTIFIER_HINT",
+        NodeMetadata(1, 16),
+        "MISSING")
 
     @Test
-    fun addingYearOutsideOfTimestampBoundaries() = assertThrows("Year 12017 must be between 1 and 9999 inclusive", NodeMetadata(1, 1)) {
-        voidEval("date_add(year, 10000, `2017-06-27T`)")
-    }
+    fun addingYearOutsideOfTimestampBoundaries() = assertThrows(
+        "date_add(year, 10000, `2017-06-27T`)",
+        "Year 12017 must be between 1 and 9999 inclusive",
+        NodeMetadata(1, 1),
+        "MISSING")
 
     @Test
-    fun addingNegativeYearOutsideOfTimestampBoundaries() = assertThrows("Year -8001 must be between 1 and 9999 inclusive", NodeMetadata(1, 1)) {
-        voidEval("date_add(year, -10000, `2000-06-27T`)")
-    }
+    fun addingNegativeYearOutsideOfTimestampBoundaries() = assertThrows(
+        "date_add(year, -10000, `2000-06-27T`)",
+        "Year -8001 must be between 1 and 9999 inclusive",
+        NodeMetadata(1, 1),
+        "MISSING")
 
     @Test
-    fun addingMonthsOutsideOfTimestampBoundaries() = assertThrows("Year 12017 must be between 1 and 9999 inclusive", NodeMetadata(1, 1)) {
-        voidEval("date_add(month, 10000*12, `2017-06-27T`)")
-    }
+    fun addingMonthsOutsideOfTimestampBoundaries() = assertThrows(
+        "date_add(month, 10000*12, `2017-06-27T`)",
+        "Year 12017 must be between 1 and 9999 inclusive",
+        NodeMetadata(1, 1),
+        "MISSING")
 
     @Test
-    fun addingNegativeMonthsOutsideOfTimestampBoundaries() = assertThrows("Year -8001 must be between 1 and 9999 inclusive", NodeMetadata(1, 1)) {
-        voidEval("date_add(month, -10000*12, `2000-06-27T`)")
-    }
+    fun addingNegativeMonthsOutsideOfTimestampBoundaries() = assertThrows(
+        "date_add(month, -10000*12, `2000-06-27T`)",
+        "Year -8001 must be between 1 and 9999 inclusive",
+        NodeMetadata(1, 1),
+        "MISSING")
 }

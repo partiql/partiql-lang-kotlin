@@ -603,7 +603,7 @@ format to the `write_file` function.  Similar to the `read_file` function, the `
 can be used to specify `tsv`, `csv`, or `ion` output.
 
 ```
-PartiQL> write_file('out.tsv', {'type':'tsv'}, SELECT name, type FROM animals)
+PartiQL> write_file('out.tsv', SELECT name, type FROM animals, {'type':'tsv'},)
    | 
 ===' 
 true
@@ -624,7 +624,7 @@ The options `struct` can also specify a `header` Boolean field to indicate wheth
 TSV/CSV should have a header row.
 
 ```
-PartiQL> write_file('out.tsv', {'type':'tsv', 'header':true}, SELECT name, type FROM animals)
+PartiQL> write_file('out.tsv', SELECT name, type FROM animals, {'type':'tsv', 'header':true})
    | 
 ===' 
 true
@@ -641,3 +641,35 @@ Kumo	dog
 Mochi	dog
 Lilikoi	unicorn
 ```
+
+## Predefined CSV Data
+
+The `read_file` function provides options to read other predefined CSV data formats. 
+For example, if a CSV file is exported from PostgreSQL, we can use the following command 
+to read the file: 
+```
+read_file('simple_postgresql.csv', {'type':'postgresql_csv'})
+```
+Other available options for the argument `type` besides `postgresql_csv` are `excel_csv`, `mysql_csv`, and `postgresql_text`. 
+
+## Customized CSV Data 
+The `read_file` function also provides options to read customized CSV data formats. 
+For example, we have a data file where the whitespace is the separator as shown below: 
+```
+title category price
+harry_potter book 7.99
+dot electronics 49.99
+echo electronics 99.99
+```
+We can use the following command to read the file:
+```
+read_file('customized.csv', {'type':'customized', 'delimiter':' ', 'header':true})
+```
+All the available options for customized CSV files are shown as following: 
+1. Ignore empty lines: `'ignore_empty_line':true`
+2. Ignore spaces surrounding comma:  `'ignore_surrounding_space':true` 
+3. Trim leading and trailing blanks: `'trim':true` 
+4. Set line breaker (only working with '\\r', '\\n' and '\\r\\n'): `'line_breaker: \n'`
+5. Set escape sign (single character only): `'escape':'\'`
+6. Set quote sign (single character only): `'quote':'"'`
+7. Set delimiter sign (single character only): `'delimiter':','`

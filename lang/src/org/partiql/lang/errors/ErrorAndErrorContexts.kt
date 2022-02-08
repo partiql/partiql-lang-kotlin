@@ -71,11 +71,17 @@ enum class Property(val propertyName: String, val propertyType: PropertyType) {
     LIKE_PATTERN("pattern", PropertyType.STRING_CLASS),
     LIKE_ESCAPE("escape_char", PropertyType.STRING_CLASS),
     FUNCTION_NAME("function_name", PropertyType.STRING_CLASS),
+    ARGUMENT_POSITION("argument_position", PropertyType.INTEGER_CLASS),
+    NARY_OP("nary_op", PropertyType.STRING_CLASS),
     PROCEDURE_NAME("procedure_name", PropertyType.STRING_CLASS),
     EXPECTED_ARGUMENT_TYPES("expected_types", PropertyType.STRING_CLASS),
     ACTUAL_ARGUMENT_TYPES("actual_types", PropertyType.STRING_CLASS),
     FEATURE_NAME("FEATURE_NAME", PropertyType.STRING_CLASS),
-    ACTUAL_TYPE("ACTUAL_TYPE", PropertyType.STRING_CLASS)
+    ACTUAL_TYPE("ACTUAL_TYPE", PropertyType.STRING_CLASS),
+    INT_SIZE_IN_BYTES("INT_SIZE", PropertyType.INTEGER_CLASS),
+    EXPECTED_STATIC_TYPE("EXPECTED_STATIC_TYPE", PropertyType.STRING_CLASS),
+    CONSTANT("CONSTANT", PropertyType.STRING_CLASS),
+    MESSAGE("MESSAGE", PropertyType.STRING_CLASS)
 }
 
 /**

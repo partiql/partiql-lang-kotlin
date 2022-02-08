@@ -1,23 +1,10 @@
-/*
- * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- *  You may not use this file except in compliance with the License.
- * A copy of the License is located at:
- *
- *      http://aws.amazon.com/apache2.0/
- *
- *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
- *  language governing permissions and limitations under the License.
- */
-
 package org.partiql.lang.eval.builtins
 
 import org.junit.Test
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.EvaluatorTestBase
+import org.partiql.lang.util.to
 
 /**
  * Note that tests here on on the light side because most of the testing is done in [TimestampParserTest].
@@ -51,10 +38,13 @@ class ToTimestampExprFunctionTest : EvaluatorTestBase() {
         checkInputThrowingEvaluationException(
             "to_timestamp()",
             ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL,
-            mapOf(Property.LINE_NUMBER to 1L,
-                  Property.COLUMN_NUMBER to 1L,
-                  Property.EXPECTED_ARITY_MIN to 1,
-                  Property.EXPECTED_ARITY_MAX to 2))
+            mapOf<Property, Any>(
+                Property.FUNCTION_NAME to "to_timestamp",
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 1L,
+                Property.ACTUAL_ARITY to 0,
+                Property.EXPECTED_ARITY_MIN to 1,
+                Property.EXPECTED_ARITY_MAX to 2))
     }
 
     @Test
@@ -62,10 +52,13 @@ class ToTimestampExprFunctionTest : EvaluatorTestBase() {
         checkInputThrowingEvaluationException(
             "to_timestamp('one', 'two', 'three')",
             ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL,
-            mapOf(Property.LINE_NUMBER to 1L,
-                  Property.COLUMN_NUMBER to 1L,
-                  Property.EXPECTED_ARITY_MIN to 1,
-                  Property.EXPECTED_ARITY_MAX to 2))
+            mapOf<Property, Any>(
+                Property.FUNCTION_NAME to "to_timestamp",
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 1L,
+                Property.ACTUAL_ARITY to 3,
+                Property.EXPECTED_ARITY_MIN to 1,
+                Property.EXPECTED_ARITY_MAX to 2))
     }
 
     @Test
@@ -74,7 +67,8 @@ class ToTimestampExprFunctionTest : EvaluatorTestBase() {
             "to_timestamp('not a valid timestamp')",
             ErrorCode.EVALUATOR_ION_TIMESTAMP_PARSE_FAILURE,
             mapOf(Property.LINE_NUMBER to 1L,
-                  Property.COLUMN_NUMBER to 1L))
+                  Property.COLUMN_NUMBER to 1L),
+            expectedPermissiveModeResult = "MISSING")
     }
 
     @Test
@@ -85,7 +79,8 @@ class ToTimestampExprFunctionTest : EvaluatorTestBase() {
             mapOf(Property.LINE_NUMBER to 1L,
                   Property.COLUMN_NUMBER to 1L,
                   Property.TIMESTAMP_FORMAT_PATTERN to "",
-                  Property.TIMESTAMP_FORMAT_PATTERN_FIELDS to "YEAR"))
+                  Property.TIMESTAMP_FORMAT_PATTERN_FIELDS to "YEAR"),
+            expectedPermissiveModeResult = "MISSING")
    }
 
     @Test
@@ -95,7 +90,8 @@ class ToTimestampExprFunctionTest : EvaluatorTestBase() {
             ErrorCode.EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_TOKEN,
             mapOf(Property.LINE_NUMBER to 1L,
                   Property.COLUMN_NUMBER to 1L,
-                  Property.TIMESTAMP_FORMAT_PATTERN to "asdfasdfasdf"))
+                  Property.TIMESTAMP_FORMAT_PATTERN to "asdfasdfasdf"),
+            expectedPermissiveModeResult = "MISSING")
    }
 
     @Test
@@ -105,6 +101,7 @@ class ToTimestampExprFunctionTest : EvaluatorTestBase() {
             ErrorCode.EVALUATOR_CUSTOM_TIMESTAMP_PARSE_FAILURE,
             mapOf(Property.LINE_NUMBER to 1L,
                   Property.COLUMN_NUMBER to 1L,
-                  Property.TIMESTAMP_FORMAT_PATTERN to "yyyy"))
+                  Property.TIMESTAMP_FORMAT_PATTERN to "yyyy"),
+            expectedPermissiveModeResult = "MISSING")
    }
 }

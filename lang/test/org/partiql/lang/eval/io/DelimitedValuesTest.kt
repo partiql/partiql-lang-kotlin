@@ -16,10 +16,12 @@ package org.partiql.lang.eval.io
 
 import org.partiql.lang.eval.io.DelimitedValues.ConversionMode.NONE
 import org.partiql.lang.eval.io.DelimitedValues.ConversionMode.AUTO
+import org.apache.commons.csv.CSVFormat
 import org.junit.Test
 import org.partiql.lang.TestBase
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.eval.cloneAndRemoveAnnotations
 import org.partiql.lang.eval.orderedNamesValue
 import org.partiql.lang.util.newFromIonText
 import java.io.StringReader
@@ -30,14 +32,13 @@ class DelimitedValuesTest : TestBase() {
         val expectedValues = ion.singleValue(expectedIon)
 
         assertSame(ExprValueType.BAG, value.type)
-        assertEquals(expectedValues, value.ionValue)
+        assertEquals(expectedValues, value.ionValue.cloneAndRemoveAnnotations())
     }
 
     private fun read(text: String,
-                     delimiter: Char,
-                     hasHeader: Boolean,
+                     csvFormat: CSVFormat,
                      conversionMode: DelimitedValues.ConversionMode): ExprValue =
-        DelimitedValues.exprValue(valueFactory, StringReader(text), delimiter, hasHeader, conversionMode)
+        DelimitedValues.exprValue(valueFactory, StringReader(text), csvFormat, conversionMode)
 
     private fun assertWrite(expectedText: String,
                             valueText: String,
@@ -80,8 +81,7 @@ class DelimitedValuesTest : TestBase() {
         """[]""",
         read(
             "",
-            delimiter = ',',
-            hasHeader = false,
+            CSVFormat.DEFAULT,
             conversionMode = NONE
         )
     )
@@ -91,8 +91,7 @@ class DelimitedValuesTest : TestBase() {
         """[]""",
         read(
             "",
-            delimiter = ',',
-            hasHeader = false,
+            CSVFormat.DEFAULT,
             conversionMode = AUTO
         )
     )
@@ -102,8 +101,7 @@ class DelimitedValuesTest : TestBase() {
         """[{_1: "1", _2: "2", _3: "3"}]""",
         read(
             """1,2,3""",
-            delimiter = ',',
-            hasHeader = false,
+            CSVFormat.DEFAULT,
             conversionMode = NONE
         )
     )
@@ -121,8 +119,7 @@ class DelimitedValuesTest : TestBase() {
             |1.0,2e0,2007-10-10T12:00:00Z
             |hello,{,}
             """.trimMargin(),
-            delimiter = ',',
-            hasHeader = false,
+            CSVFormat.DEFAULT,
             conversionMode = AUTO
         )
     )
@@ -141,8 +138,7 @@ class DelimitedValuesTest : TestBase() {
             |1.0,2e0,2007-10-10T12:00:00Z
             |hello,{,}
             """.trimMargin(),
-            delimiter = ',',
-            hasHeader = true,
+            CSVFormat.DEFAULT.withFirstRecordAsHeader(),
             conversionMode = AUTO
         )
     )

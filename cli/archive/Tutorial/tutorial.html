@@ -185,15 +185,15 @@
 <h2 id="prerequisites">Prerequisites</h2>
 <p>PartiQL requires the Java Runtime (JVM) to be installed on your machine. You can obtain the <em>latest</em> version of the Java Runtime from either</p>
 <ol type="1">
-<li><a href="https://openjdk.java.net/install/">OpenJDK</a>, or <a href="https://developers.redhat.com/products/openjdk">OpenJDK for Windows</a><br />
+<li><a href="https://openjdk.java.net/install/" target="_blank" rel="noopener noreferrer">OpenJDK</a>, or <a href="https://developers.redhat.com/products/openjdk" target="_blank" rel="noopener noreferrer">OpenJDK for Windows</a><br />
 </li>
-<li><a href="https://www.oracle.com/technetwork/java/javase/downloads/index.html">Oracle</a></li>
+<li><a href="https://www.oracle.com/technetwork/java/javase/downloads/index.html" target="_blank" rel="noopener noreferrer">Oracle</a></li>
 </ol>
-<p><a href="https://docs.oracle.com/cd/E19182-01/820-7851/inst_cli_jdk_javahome_t/">Follow the instructions on how to set</a> <code>JAVA_HOME</code> to the path where your Java Runtime is installed.</p>
+<p><a href="https://docs.oracle.com/cd/E19182-01/820-7851/inst_cli_jdk_javahome_t/" target="_blank" rel="noopener noreferrer">Follow the instructions on how to set</a> <code>JAVA_HOME</code> to the path where your Java Runtime is installed.</p>
 <h2 id="download-the-partiql-repl">Download the PartiQL REPL</h2>
 <p>Each release of PartiQL comes with an archive that contains the PartiQL REPL as a zip file.</p>
 <ol type="1">
-<li><a href="https://github.com/partiql/partiql-lang-kotlin/releases">Download</a>. You may have to click on <code>Assets</code> to see the zip and tgz archives. the latest <code>partiql-cli</code><a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> zip archive to your machine.</li>
+<li><a href="https://github.com/partiql/partiql-lang-kotlin/releases" target="_blank" rel="noopener noreferrer">Download</a>. You may have to click on <code>Assets</code> to see the zip and tgz archives. the latest <code>partiql-cli</code><a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> zip archive to your machine.</li>
 <li>Expand (unzip) the archive on your machine. Expanding the archive yields the following folder structure:</li>
 </ol>
 <pre><code>├── partiql-cli
@@ -1709,19 +1709,19 @@ security&#39; },
 </table>
 <p>Finally the <code>SELECT</code> clause inputs the above and outputs the query result.</p>
 <h1 id="find-out-more-about-partiql">Find Out More About PartiQL</h1>
-<p>The <a href="https://partiql.github.io">PartiQL website</a> contains news, updates, documentation, and more information about PartiQL implementations.</p>
-<p>We are always happy to <a href="https://github.com/partiql/partiql-lang-kotlin/issues">receive your feedback</a> as well as <a href="https://github.com/partiql/partiql-lang-kotlin/blob/master/CONTRIBUTING.md">work with you</a> on PartiQL.</p>
+<p>The <a href="https://partiql.github.io" target="_blank" rel="noopener noreferrer">PartiQL website</a> contains news, updates, documentation, and more information about PartiQL implementations.</p>
+<p>We are always happy to <a href="https://github.com/partiql/partiql-lang-kotlin/issues" target="_blank" rel="noopener noreferrer">receive your feedback</a> as well as <a href="https://github.com/partiql/partiql-lang-kotlin/blob/master/CONTRIBUTING.md">work with you</a> on PartiQL.</p>
 <section class="footnotes" role="doc-endnotes">
 <hr />
 <ol>
 <li id="fn1" role="doc-endnote"><p>The file will append PartiQL’s release version to the archive, i.e., <code>partiql-cli-0.1.0.zip</code>.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 <li id="fn2" role="doc-endnote"><p>The folder name will have the PartiQL version as a suffix, i.e., <code>partiql-cli-0.1.0</code>.<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 <li id="fn3" role="doc-endnote"><p>The implementation currently only supports data without schema. Schema support is forthcoming.<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn4" role="doc-endnote"><p><a href="http://www.contrib.andrew.cmu.edu/~shadow/sql/sql1992.txt">SQL-92</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4" role="doc-endnote"><p><a href="https://www.contrib.andrew.cmu.edu/~shadow/sql/sql1992.txt" target="_blank" rel="noopener noreferrer">SQL-92</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 <li id="fn5" role="doc-endnote"><p>The JSON value attached to <code>employee</code> is an <em>ordered</em> list. PartiQL implementations may provide their own mappings from popular data formats, e.g., CSV, TSV, JSON, Ion etc., to the PartiQL data model and/or allow clients to implements their own mappings.<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn6" role="doc-endnote"><p>We could also have used the <code>&gt;</code> operator with the subquery’s result, but a current <a href="https://github.com/partiql/partiql-lang-kotlin/issues/81">issue</a> with the implementation currently prevents us from doing so.<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn7" role="doc-endnote"><p>We could also have used the <code>&gt;</code> operator with the subquery’s result, but a current <a href="https://github.com/partiql/partiql-lang-kotlin/issues/81">issue</a> with the implementation currently prevents us from doing so.<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn8" role="doc-endnote"><p><a href="https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Types#LanguageManualTypes-UnionTypesunionUnionTypes">Hive Union Type</a><a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6" role="doc-endnote"><p>We could also have used the <code>&gt;</code> operator with the subquery’s result, but a current <a href="https://github.com/partiql/partiql-lang-kotlin/issues/81" target="_blank" rel="noopener noreferrer">issue</a> with the implementation currently prevents us from doing so.<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7" role="doc-endnote"><p>We could also have used the <code>&gt;</code> operator with the subquery’s result, but a current <a href="https://github.com/partiql/partiql-lang-kotlin/issues/81" target="_blank" rel="noopener noreferrer">issue</a> with the implementation currently prevents us from doing so.<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8" role="doc-endnote"><p><a href="https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Types#LanguageManualTypes-UnionTypesunionUnionTypes" target="_blank" rel="noopener noreferrer">Hive Union Type</a><a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 </ol>
 </section>                    
                 </div>

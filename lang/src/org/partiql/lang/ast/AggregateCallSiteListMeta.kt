@@ -23,6 +23,9 @@ import org.partiql.lang.domains.PartiqlAst
 data class AggregateCallSiteListMeta(val aggregateCallSites: List<PartiqlAst.Expr.CallAgg>): Meta {
     override val tag = TAG
 
+    override val shouldSerialize: Boolean
+        get() = false
+
     override fun serialize(writer: IonWriter) {
         throw UnsupportedOperationException("AggregateCallSiteListMeta meant for internal use only and cannot be serialized.")
     }

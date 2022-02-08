@@ -23,11 +23,11 @@ class SqlExceptionTest : TestBase() {
     val errorMessage = "Error"
     val prefix = "${SqlException::class.qualifiedName}:"
 
-    @Test
-    fun errorMessageNoErrorCodeNoContext() {
-        val ex = SqlException(errorMessage)
-        assertEquals("$prefix $errorMessage\n\t<UNKNOWN>: at line <UNKNOWN>, column <UNKNOWN>: <UNKNOWN>\n", ex.toString())
-    }
+//    @Test
+//    fun errorMessageNoErrorCodeNoContext() {
+//        val ex = SqlException(errorMessage)
+//        assertEquals("$prefix $errorMessage\n\t<UNKNOWN>: at line <UNKNOWN>, column <UNKNOWN>: <UNKNOWN>\n", ex.toString())
+//    }
 
     @Test
     fun noErrorMessageErrorCodeContext() {

@@ -15,25 +15,30 @@
 package org.partiql.lang.eval.builtins
 
 import com.amazon.ion.Timestamp
+import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.eval.NullPropagatingExprFunction
-import org.partiql.lang.eval.datePartValue
+import org.partiql.lang.eval.dateTimePartValue
 import org.partiql.lang.eval.dateValue
 import org.partiql.lang.eval.errNoContext
 import org.partiql.lang.eval.isUnknown
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.timeValue
 import org.partiql.lang.eval.timestampValue
-import org.partiql.lang.syntax.DatePart
+import org.partiql.lang.syntax.DateTimePart
+import org.partiql.lang.types.AnyOfType
+import org.partiql.lang.types.FunctionSignature
+import org.partiql.lang.types.StaticType
+import java.math.BigDecimal
 import java.time.LocalDate
 
 private const val SECONDS_PER_MINUTE = 60
 
 /**
- * Extracts a date part from a datetime type where date part is one of the following keywords:
+ * Extracts a date part from a datetime type and returns a [DecimalExprValue] where date part is one of the following keywords:
  * `year, month, day, hour, minute, second, timestamp_hour, timestamp_minute`.
  * Datetime type can be one of DATE, TIME or TIMESTAMP
  * **Note** that the allowed date parts for `EXTRACT` is not the same as `DATE_ADD`
@@ -43,78 +48,91 @@ private const val SECONDS_PER_MINUTE = 60
  *
  * `EXTRACT(<date part> FROM <datetime_type>)`
  */
-internal class ExtractExprFunction(valueFactory: ExprValueFactory) : NullPropagatingExprFunction("extract", 2, valueFactory) {
+internal class ExtractExprFunction(val valueFactory: ExprValueFactory) : ExprFunction {
+    override val signature = FunctionSignature(
+        name = "extract",
+        requiredParameters = listOf(StaticType.SYMBOL, AnyOfType(setOf(StaticType.TIMESTAMP,
+                                                                        StaticType.TIME,
+                                                                        StaticType.DATE))),
+        returnType = StaticType.DECIMAL
+    )
 
     // IonJava Timestamp.localOffset is the offset in minutes, e.g.: `+01:00 = 60` and `-1:20 = -80`
     private fun Timestamp.hourOffset() = (localOffset ?: 0) / SECONDS_PER_MINUTE
 
     private fun Timestamp.minuteOffset() = (localOffset ?: 0) % SECONDS_PER_MINUTE
 
-    private fun Timestamp.extractedValue(datePart: DatePart) : Double {
-        return when (datePart) {
-            DatePart.YEAR -> year
-            DatePart.MONTH -> month
-            DatePart.DAY -> day
-            DatePart.HOUR -> hour
-            DatePart.MINUTE -> minute
-            DatePart.SECOND -> second
-            DatePart.TIMEZONE_HOUR -> hourOffset()
-            DatePart.TIMEZONE_MINUTE -> minuteOffset()
-        }.toDouble()
-    }
-
-    private fun LocalDate.extractedValue(datePart: DatePart) : Double {
-        return when (datePart) {
-            DatePart.YEAR -> year
-            DatePart.MONTH -> monthValue
-            DatePart.DAY -> dayOfMonth
-            DatePart.TIMEZONE_HOUR,
-            DatePart.TIMEZONE_MINUTE -> errNoContext(
-                "Timestamp unit ${datePart.name.toLowerCase()} not supported for DATE type",
-                internal = false
-            )
-            DatePart.HOUR, DatePart.MINUTE, DatePart.SECOND -> 0
-        }.toDouble()
-    }
-
-    private fun Time.extractedValue(datePart: DatePart) : Double {
-        return when (datePart) {
-            DatePart.HOUR -> localTime.hour.toDouble()
-            DatePart.MINUTE -> localTime.minute.toDouble()
-            DatePart.SECOND -> secondsWithFractionalPart.toDouble()
-            DatePart.TIMEZONE_HOUR -> timezoneHour?.toDouble() ?: errNoContext(
-                "Time unit ${datePart.name.toLowerCase()} not supported for TIME type without TIME ZONE",
-                internal = false
-            )
-            DatePart.TIMEZONE_MINUTE -> timezoneMinute?.toDouble() ?: errNoContext(
-                "Time unit ${datePart.name.toLowerCase()} not supported for TIME type without TIME ZONE",
-                internal = false
-            )
-            DatePart.YEAR, DatePart.MONTH, DatePart.DAY -> errNoContext(
-                "Time unit ${datePart.name.toLowerCase()} not supported for TIME type.",
-                internal = false
-            )
-        }
-    }
-
-    override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
-        val datePart = args[0].datePartValue()
-        val extractedValue = when(args[1].type) {
-            ExprValueType.TIMESTAMP -> args[1].timestampValue().extractedValue(datePart)
-            ExprValueType.DATE      -> args[1].dateValue().extractedValue(datePart)
-            ExprValueType.TIME      -> args[1].timeValue().extractedValue(datePart)
-            else                    -> errNoContext("Expected date or timestamp: ${args[1]}", internal = false)
-        }
-
-        return valueFactory.newFloat(extractedValue)
-    }
-
-    override fun call(env: Environment, args: List<ExprValue>): ExprValue {
-        checkArity(args)
-
+    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
         return when {
-            args[1].isUnknown() -> valueFactory.nullValue
-            else                -> eval(env, args)
+            required[1].isUnknown() -> valueFactory.nullValue
+            else                -> eval(env, required)
         }
+    }
+
+    private fun Timestamp.extractedValue(dateTimePart: DateTimePart) : BigDecimal {
+        return when (dateTimePart) {
+            DateTimePart.YEAR -> year
+            DateTimePart.MONTH -> month
+            DateTimePart.DAY -> day
+            DateTimePart.HOUR -> hour
+            DateTimePart.MINUTE -> minute
+            DateTimePart.SECOND -> second
+            DateTimePart.TIMEZONE_HOUR -> hourOffset()
+            DateTimePart.TIMEZONE_MINUTE -> minuteOffset()
+        }.toBigDecimal()
+    }
+
+    private fun LocalDate.extractedValue(dateTimePart: DateTimePart) : BigDecimal {
+        return when (dateTimePart) {
+            DateTimePart.YEAR -> year
+            DateTimePart.MONTH -> monthValue
+            DateTimePart.DAY -> dayOfMonth
+            DateTimePart.TIMEZONE_HOUR,
+            DateTimePart.TIMEZONE_MINUTE -> errNoContext(
+                "Timestamp unit ${dateTimePart.name.toLowerCase()} not supported for DATE type",
+                ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_FUNC_CALL,
+                internal = false
+            )
+            DateTimePart.HOUR, DateTimePart.MINUTE, DateTimePart.SECOND -> 0
+        }.toBigDecimal()
+    }
+
+    private fun Time.extractedValue(dateTimePart: DateTimePart) : BigDecimal {
+        return when (dateTimePart) {
+            DateTimePart.HOUR -> localTime.hour.toBigDecimal()
+            DateTimePart.MINUTE -> localTime.minute.toBigDecimal()
+            DateTimePart.SECOND -> secondsWithFractionalPart
+            DateTimePart.TIMEZONE_HOUR -> timezoneHour?.toBigDecimal() ?: errNoContext(
+                "Time unit ${dateTimePart.name.toLowerCase()} not supported for TIME type without TIME ZONE",
+                ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_FUNC_CALL,
+                internal = false
+            )
+            DateTimePart.TIMEZONE_MINUTE -> timezoneMinute?.toBigDecimal() ?: errNoContext(
+                "Time unit ${dateTimePart.name.toLowerCase()} not supported for TIME type without TIME ZONE",
+                ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_FUNC_CALL,
+                internal = false
+            )
+            DateTimePart.YEAR, DateTimePart.MONTH, DateTimePart.DAY -> errNoContext(
+                "Time unit ${dateTimePart.name.toLowerCase()} not supported for TIME type.",
+                ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_FUNC_CALL,
+                internal = false
+            )
+        }
+    }
+
+    private fun eval(env: Environment, args: List<ExprValue>): ExprValue {
+        val dateTimePart = args[0].dateTimePartValue()
+        val extractedValue = when(args[1].type) {
+            ExprValueType.TIMESTAMP -> args[1].timestampValue().extractedValue(dateTimePart)
+            ExprValueType.DATE -> args[1].dateValue().extractedValue(dateTimePart)
+            ExprValueType.TIME -> args[1].timeValue().extractedValue(dateTimePart)
+            else -> errNoContext(
+                "Expected date, time or timestamp: ${args[1]}",
+                ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_FUNC_CALL,
+                internal = false
+            )
+        }
+
+        return valueFactory.newDecimal(extractedValue)
     }
 }

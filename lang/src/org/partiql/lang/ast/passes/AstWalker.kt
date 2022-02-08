@@ -16,12 +16,13 @@ package org.partiql.lang.ast.passes
 
 import org.partiql.lang.ast.AssignmentOp
 import org.partiql.lang.ast.CallAgg
+import org.partiql.lang.ast.Coalesce
 import org.partiql.lang.ast.ConflictAction
 import org.partiql.lang.ast.CreateIndex
 import org.partiql.lang.ast.CreateTable
 import org.partiql.lang.ast.DataManipulation
 import org.partiql.lang.ast.DataManipulationOperation
-import org.partiql.lang.ast.DateTimeType
+import org.partiql.lang.ast.DateLiteral
 import org.partiql.lang.ast.DeleteOp
 import org.partiql.lang.ast.DmlOpList
 import org.partiql.lang.ast.DropIndex
@@ -38,6 +39,7 @@ import org.partiql.lang.ast.Literal
 import org.partiql.lang.ast.LiteralMissing
 import org.partiql.lang.ast.MetaContainer
 import org.partiql.lang.ast.NAry
+import org.partiql.lang.ast.NullIf
 import org.partiql.lang.ast.OnConflict
 import org.partiql.lang.ast.Parameter
 import org.partiql.lang.ast.Path
@@ -59,6 +61,7 @@ import org.partiql.lang.ast.SelectProjectionValue
 import org.partiql.lang.ast.Seq
 import org.partiql.lang.ast.SimpleCase
 import org.partiql.lang.ast.Struct
+import org.partiql.lang.ast.TimeLiteral
 import org.partiql.lang.ast.Typed
 import org.partiql.lang.ast.VariableReference
 import org.partiql.lang.util.case
@@ -156,6 +159,17 @@ open class AstWalker(private val visitor: AstVisitor) {
                     walkExprNode(limit)
                     walkExprNode(offset)
                 }
+                is NullIf -> case {
+                    val (expr1, expr2, _) = expr
+                    walkExprNode(expr1)
+                    walkExprNode(expr2)
+                }
+                is Coalesce -> case {
+                    val (args, _) = expr
+                    args.map {
+                        walkExprNode(it)
+                    }
+                }
                 is DataManipulation -> case {
                     val (dmlOperation, from, where, returning, _: MetaContainer) = expr
                     walkDmlOperations(dmlOperation)
@@ -183,7 +197,7 @@ open class AstWalker(private val visitor: AstVisitor) {
                     }
                 }
                 is CreateTable, is DropTable, is DropIndex,
-                is Exec, is DateTimeType -> case { }
+                is Exec, is TimeLiteral, is DateLiteral -> case { }
             }.toUnit()
         }
     }

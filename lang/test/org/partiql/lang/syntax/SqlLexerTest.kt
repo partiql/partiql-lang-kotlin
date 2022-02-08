@@ -269,6 +269,17 @@ class SqlLexerTest : TestBase() {
     )
 
     @Test
+    fun integer4Type() = assertTokens(
+        "INTEGER4",
+        token(KEYWORD, "integer4", 1, 1, 8)
+    )
+    @Test
+    fun int4Type() = assertTokens(
+        "INT4",
+        token(KEYWORD, "integer4", 1, 1, 4)
+    )
+
+    @Test
     fun intType() = assertTokens(
         "INT",
         token(TokenType.KEYWORD, "integer", 1, 1, 3)
@@ -382,6 +393,30 @@ class SqlLexerTest : TestBase() {
         token(TokenType.KEYWORD, "sexp", 1, 1, 4)
     )
 
+    @Test
+    fun esBooleanType() = assertTokens(
+        "ES_boolean",
+        token(IDENTIFIER, "ES_boolean", 1, 1, 10)
+    )
+
+    @Test
+    fun esIntegerType() = assertTokens(
+        "ES_integer",
+        token(IDENTIFIER, "ES_integer", 1, 1, 10)
+    )
+
+    @Test
+    fun esFloatType() = assertTokens(
+        "ES_float",
+        token(IDENTIFIER, "ES_float", 1, 1, 8)
+    )
+
+    @Test
+    fun esTextType() = assertTokens(
+        "ES_text",
+        token(IDENTIFIER, "ES_text", 1, 1, 7)
+    )
+
     @Test(expected = LexerException::class)
     fun invalidNumber() {
         tokenize("1E++0")
@@ -391,4 +426,92 @@ class SqlLexerTest : TestBase() {
     fun numberWithExponentTooLarge() {
         tokenize("1E2147483648") // exponent is represented by an int, this is bigger than 2^31-1 so doesn't fit
     }
+
+    @Test
+    fun rsVarcharMax() = assertTokens(
+        "RS_varchar_max",
+        token(IDENTIFIER, "RS_varchar_max", 1, 1, 14)
+    )
+
+    @Test
+    fun rsReal() = assertTokens(
+        "RS_real",
+        token(IDENTIFIER, "RS_real", 1, 1, 7)
+    )
+
+    @Test
+    fun rsFloat4() = assertTokens(
+        "RS_float4",
+        token(IDENTIFIER, "RS_float4", 1, 1, 9)
+    )
+
+    @Test
+    fun rsDoublePrecision() = assertTokens(
+        "RS_double_precision",
+        token(IDENTIFIER, "RS_double_precision", 1, 1, 19)
+    )
+    @Test
+    fun rsFloat() = assertTokens(
+        "RS_float",
+        token(IDENTIFIER,"RS_float", 1, 1, 8)
+    )
+    @Test
+    fun rsFloat8() = assertTokens(
+        "RS_float8",
+        token(IDENTIFIER, "RS_float8", 1, 1, 9)
+    )
+
+    @Test
+    fun sparkFloat() = assertTokens(
+        "SPARK_float",
+        token(IDENTIFIER, "SPARK_float", 1, 1, 11)
+    )
+
+    @Test
+    fun sparkShort() = assertTokens(
+        "SPARK_short",
+        token(IDENTIFIER, "SPARK_short", 1, 1, 11)
+    )
+
+    @Test
+    fun sparkInteger() = assertTokens(
+        "SPARK_integer",
+        token(IDENTIFIER, "SPARK_integer", 1, 1, 13)
+    )
+
+    @Test
+    fun sparkLong() = assertTokens(
+        "SPARK_long",
+        token(IDENTIFIER, "SPARK_long", 1, 1, 10)
+    )
+
+    @Test
+    fun sparkDouble() = assertTokens(
+        "SPARK_double",
+        token(IDENTIFIER, "SPARK_double", 1, 1, 12)
+    )
+
+    @Test
+    fun sparkBoolean() = assertTokens(
+        "SPARK_boolean",
+        token(IDENTIFIER, "SPARK_boolean", 1, 1, 13)
+    )
+
+    @Test
+    fun rsInteger() = assertTokens(
+        "RS_integer",
+        token(IDENTIFIER, "RS_integer", 1, 1, 10)
+    )
+
+    @Test
+    fun rsBigint() = assertTokens(
+        "RS_bigint",
+        token(IDENTIFIER, "RS_bigint", 1, 1, 9)
+    )
+
+    @Test
+    fun rsBoolean() = assertTokens(
+        "RS_boolean",
+        token(IDENTIFIER, "RS_boolean", 1, 1, 10)
+    )
 }

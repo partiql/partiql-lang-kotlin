@@ -63,14 +63,16 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
         checkInputThrowingEvaluationException(
             "\"abc\"",
             simpleSession,
-            ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
-            sourceLocationProperties(1L, 1L) + mapOf(Property.BINDING_NAME to "abc"))
+            ErrorCode.EVALUATOR_QUOTED_BINDING_DOES_NOT_EXIST,
+            sourceLocationProperties(1L, 1L) + mapOf(Property.BINDING_NAME to "abc"),
+            expectedPermissiveModeResult = "MISSING")
 
         checkInputThrowingEvaluationException(
             "\"ABC\"",
             simpleSession,
-            ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
-            sourceLocationProperties(1L, 1L) + mapOf(Property.BINDING_NAME to "ABC"))
+            ErrorCode.EVALUATOR_QUOTED_BINDING_DOES_NOT_EXIST,
+            sourceLocationProperties(1L, 1L) + mapOf(Property.BINDING_NAME to "ABC"),
+            expectedPermissiveModeResult = "MISSING")
     }
 
     @Test
@@ -81,7 +83,8 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
             ErrorCode.EVALUATOR_AMBIGUOUS_BINDING,
             sourceLocationProperties(1L, 1L) + mapOf(
                 Property.BINDING_NAME to "abc",
-                Property.BINDING_NAME_MATCHES to "Abc, aBc, abC"))
+                Property.BINDING_NAME_MATCHES to "Abc, aBc, abC"),
+            expectedPermissiveModeResult = "MISSING")
     }
 
     @Test
@@ -120,7 +123,8 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
             ErrorCode.EVALUATOR_AMBIGUOUS_BINDING,
             sourceLocationProperties(1L, 10L) + mapOf(
                 Property.BINDING_NAME to "abc",
-                Property.BINDING_NAME_MATCHES to "Abc, aBc, abC")
+                Property.BINDING_NAME_MATCHES to "Abc, aBc, abC"),
+            expectedPermissiveModeResult = "<<{}>>"
         )
     }
 
@@ -239,7 +243,7 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
     @Test
     fun pathDoubleUnpivotWildCard_quotedId() = assertEval(
         """ "friends".*."likes".*."type" """,
-        """["dog", "human", null, "dog", "cat", null]""",
+        """["dog", "human", "dog", "cat"]""",
         friends.toSession()
     )
 

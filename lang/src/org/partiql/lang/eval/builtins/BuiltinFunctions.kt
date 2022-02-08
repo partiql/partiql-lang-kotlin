@@ -14,29 +14,37 @@
 
 package org.partiql.lang.eval.builtins
 
+import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.lang.eval.Environment
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
-import org.partiql.lang.eval.NullPropagatingExprFunction
-import org.partiql.lang.eval.errNoContext
 import org.partiql.lang.eval.stringValue
+import org.partiql.lang.types.AnyOfType
+import org.partiql.lang.types.FunctionSignature
+import org.partiql.lang.types.StaticType
+import org.partiql.lang.types.UnknownArguments
+
+internal fun createBuiltinFunctionSignatures(): Map<String, FunctionSignature> =
+    // Creating a new IonSystem in this instance is not the problem it would normally be since we are
+    // discarding the created instances of the built-in functions after extracting all of the [FunctionSignature].
+    createBuiltinFunctions(ExprValueFactory.standard(IonSystemBuilder.standard().build()))
+        .map { it.signature }
+        .associateBy { it.name }
 
 internal fun createBuiltinFunctions(valueFactory: ExprValueFactory) =
     listOf(
         createUpper(valueFactory),
         createLower(valueFactory),
         createExists(valueFactory),
-        createCharLength(valueFactory),
-        createCharacterLength(valueFactory),
+        createCharacterLength("character_length", valueFactory),
+        createCharacterLength("char_length", valueFactory),
         createUtcNow(valueFactory),
-        CoalesceExprFunction(valueFactory),
         DateAddExprFunction(valueFactory),
         DateDiffExprFunction(valueFactory),
         ExtractExprFunction(valueFactory),
         MakeDateExprFunction(valueFactory),
         MakeTimeExprFunction(valueFactory),
-        NullIfExprFunction(valueFactory),
         SubstringExprFunction(valueFactory),
         TrimExprFunction(valueFactory),
         ToStringExprFunction(valueFactory),
@@ -47,56 +55,66 @@ internal fun createBuiltinFunctions(valueFactory: ExprValueFactory) =
 
 
 internal fun createExists(valueFactory: ExprValueFactory): ExprFunction = object : ExprFunction {
-    override val name = "exists"
+    override val signature = FunctionSignature(
+        "exists",
+        listOf(StaticType.unionOf(StaticType.SEXP, StaticType.LIST, StaticType.BAG, StaticType.STRUCT)),
+        returnType = StaticType.BOOL,
+        unknownArguments = UnknownArguments.PASS_THRU
+    )
 
-    override fun call(env: Environment, args: List<ExprValue>): ExprValue =
-        when (args.size) {
-            1    -> {
-                valueFactory.newBoolean(args[0].asSequence().any())
-            }
-            else -> errNoContext("Expected a single argument for exists but found: ${args.size}", internal = false)
-        }
+    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue =
+        valueFactory.newBoolean(required[0].any())
 }
 
 internal fun createUtcNow(valueFactory: ExprValueFactory): ExprFunction = object : ExprFunction {
-    override val name = "utcnow"
-    override fun call(env: Environment, args: List<ExprValue>): ExprValue {
-        if (args.isNotEmpty()) errNoContext("utcnow() takes no arguments", internal = false)
-        return valueFactory.newTimestamp(env.session.now)
+    override val signature = FunctionSignature(
+        "utcnow",
+        listOf(),
+        returnType = StaticType.TIMESTAMP
+    )
+
+    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue =
+        valueFactory.newTimestamp(env.session.now)
+}
+
+internal fun createCharacterLength(name: String, valueFactory: ExprValueFactory): ExprFunction =
+    object : ExprFunction {
+        override val signature: FunctionSignature
+            get() {
+                val element = AnyOfType(setOf(StaticType.STRING, StaticType.SYMBOL))
+                return FunctionSignature(
+                    name,
+                    listOf(element),
+                    returnType = StaticType.INT
+                )
+            }
+
+        override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
+            val s = required.first().stringValue()
+            return valueFactory.newInt(s.codePointCount(0, s.length))
+        }
     }
+
+internal fun createUpper(valueFactory: ExprValueFactory): ExprFunction = object : ExprFunction {
+    override val signature: FunctionSignature
+        get() = FunctionSignature(
+            "upper",
+            listOf(AnyOfType(setOf(StaticType.STRING, StaticType.SYMBOL))),
+            returnType = StaticType.STRING
+        )
+
+    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue =
+        valueFactory.newString(required.first().stringValue().toUpperCase())
 }
 
-/**
- * This function can be used to create simple functions taking only a single argument with null/missing propagation
- *
- * Provides default behaviors:
- *  - Validates that only one argument has been passed.
- *  - If that argument is null, returns null.
- *  - If that argument is missing, returns missing.
- */
-private fun makeOneArgExprFunction(valueFactory: ExprValueFactory, funcName: String, func: (Environment, ExprValue) -> ExprValue) =
-    object : NullPropagatingExprFunction(funcName, 1, valueFactory) {
-        override val name = funcName
-        override fun eval(env: Environment, args: List<ExprValue>): ExprValue = func(env, args[0])
-    }
+internal fun createLower(valueFactory: ExprValueFactory): ExprFunction = object : ExprFunction {
+    override val signature: FunctionSignature
+        get() = FunctionSignature(
+            "lower",
+            listOf(AnyOfType(setOf(StaticType.STRING, StaticType.SYMBOL))),
+            returnType = StaticType.STRING
+        )
 
-internal fun createCharLength(valueFactory: ExprValueFactory): ExprFunction = makeOneArgExprFunction(valueFactory, "char_length") { _, arg ->
-    charLengthImpl(arg, valueFactory)
-}
-
-internal fun createCharacterLength(valueFactory: ExprValueFactory): ExprFunction = makeOneArgExprFunction(valueFactory, "character_length") { _, arg ->
-    charLengthImpl(arg, valueFactory)
-}
-
-private fun charLengthImpl(arg: ExprValue, valueFactory: ExprValueFactory): ExprValue {
-    val s = arg.stringValue()
-    return valueFactory.newInt(s.codePointCount(0, s.length))
-}
-
-internal fun createUpper(valueFactory: ExprValueFactory): ExprFunction = makeOneArgExprFunction(valueFactory, "upper") { _, arg ->
-    valueFactory.newString(arg.stringValue().toUpperCase())
-}
-
-internal fun createLower(valueFactory: ExprValueFactory): ExprFunction = makeOneArgExprFunction(valueFactory, "lower") { _, arg ->
-    valueFactory.newString(arg.stringValue().toLowerCase())
+    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue =
+        valueFactory.newString(required.first().stringValue().toLowerCase())
 }

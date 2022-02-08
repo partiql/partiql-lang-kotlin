@@ -17,12 +17,13 @@ package org.partiql.lang.ast.passes
 import org.partiql.lang.ast.Assignment
 import org.partiql.lang.ast.AssignmentOp
 import org.partiql.lang.ast.CallAgg
+import org.partiql.lang.ast.Coalesce
 import org.partiql.lang.ast.CreateIndex
 import org.partiql.lang.ast.CreateTable
 import org.partiql.lang.ast.DataManipulation
 import org.partiql.lang.ast.DataManipulationOperation
 import org.partiql.lang.ast.DataType
-import org.partiql.lang.ast.DateTimeType
+import org.partiql.lang.ast.DateLiteral
 import org.partiql.lang.ast.DeleteOp
 import org.partiql.lang.ast.DmlOpList
 import org.partiql.lang.ast.DropIndex
@@ -47,6 +48,7 @@ import org.partiql.lang.ast.Literal
 import org.partiql.lang.ast.LiteralMissing
 import org.partiql.lang.ast.MetaContainer
 import org.partiql.lang.ast.NAry
+import org.partiql.lang.ast.NullIf
 import org.partiql.lang.ast.OnConflict
 import org.partiql.lang.ast.OrderBy
 import org.partiql.lang.ast.Parameter
@@ -77,6 +79,7 @@ import org.partiql.lang.ast.SortSpec
 import org.partiql.lang.ast.Struct
 import org.partiql.lang.ast.StructField
 import org.partiql.lang.ast.SymbolicName
+import org.partiql.lang.ast.TimeLiteral
 import org.partiql.lang.ast.Typed
 import org.partiql.lang.ast.VariableReference
 import org.partiql.lang.util.checkThreadInterrupted
@@ -102,24 +105,26 @@ open class AstRewriterBase : AstRewriter {
             is Literal -> rewriteLiteral(node)
             is LiteralMissing -> rewriteLiteralMissing(node)
             is VariableReference -> rewriteVariableReference(node)
-            is NAry -> rewriteNAry(node)
-            is CallAgg -> rewriteCallAgg(node)
-            is Typed -> rewriteTyped(node)
-            is Path -> rewritePath(node)
-            is SimpleCase -> rewriteSimpleCase(node)
-            is SearchedCase -> rewriteSearchedCase(node)
-            is Struct -> rewriteStruct(node)
-            is Seq -> rewriteSeq(node)
-            is Select -> rewriteSelect(node)
-            is Parameter -> rewriteParameter(node)
-            is DataManipulation -> rewriteDataManipulation(node)
-            is CreateTable -> rewriteCreateTable(node)
-            is CreateIndex -> rewriteCreateIndex(node)
-            is DropTable -> rewriteDropTable(node)
-            is DropIndex -> rewriteDropIndex(node)
-            is Exec -> rewriteExec(node)
-            is DateTimeType.Date -> rewriteDate(node)
-            is DateTimeType.Time -> rewriteTime(node)
+            is NAry              -> rewriteNAry(node)
+            is CallAgg           -> rewriteCallAgg(node)
+            is Typed             -> rewriteTyped(node)
+            is Path              -> rewritePath(node)
+            is SimpleCase        -> rewriteSimpleCase(node)
+            is SearchedCase      -> rewriteSearchedCase(node)
+            is Struct            -> rewriteStruct(node)
+            is Seq               -> rewriteSeq(node)
+            is Select            -> rewriteSelect(node)
+            is Parameter         -> rewriteParameter(node)
+            is DataManipulation  -> rewriteDataManipulation(node)
+            is CreateTable       -> rewriteCreateTable(node)
+            is CreateIndex       -> rewriteCreateIndex(node)
+            is DropTable         -> rewriteDropTable(node)
+            is DropIndex         -> rewriteDropIndex(node)
+            is NullIf -> rewriteNullIf(node)
+            is Coalesce -> rewriteCoalesce(node)
+            is Exec              -> rewriteExec(node)
+            is DateLiteral -> rewriteDate(node)
+            is TimeLiteral -> rewriteTime(node)
         }
     }
 
@@ -203,6 +208,19 @@ open class AstRewriterBase : AstRewriter {
     open fun rewriteSelect(selectExpr: Select): ExprNode =
         innerRewriteSelect(selectExpr)
 
+    open fun rewriteNullIf(node: NullIf): ExprNode {
+        return NullIf(
+            rewriteExprNode(node.expr1),
+            rewriteExprNode(node.expr2),
+            rewriteMetas(node))
+    }
+
+    open fun rewriteCoalesce(node: Coalesce): ExprNode {
+        return Coalesce(
+            node.args.map { rewriteExprNode(it) },
+            rewriteMetas(node))
+    }
+
     /**
      * Many subtypes of [AstRewriterBase] need to override [rewriteSelect] to selectively apply a different nested
      * instance of themselves to [Select] nodes.  These subtypes can invoke this method instead of [rewriteSelect]
@@ -266,16 +284,17 @@ open class AstRewriterBase : AstRewriter {
 
     open fun rewriteSelectProjectionList(projection: SelectProjectionList): SelectProjection =
         SelectProjectionList(
-            projection.items.map { it -> rewriteSelectListItem(it) })
+            projection.items.map { it -> rewriteSelectListItem(it) }, rewriteMetas(projection))
 
     open fun rewriteSelectProjectionValue(projection: SelectProjectionValue): SelectProjection =
-        SelectProjectionValue(rewriteExprNode(projection.expr))
+        SelectProjectionValue(rewriteExprNode(projection.expr), rewriteMetas(projection))
 
 
     open fun rewriteSelectProjectionPivot(projection: SelectProjectionPivot): SelectProjection =
         SelectProjectionPivot(
             rewriteExprNode(projection.nameExpr),
-            rewriteExprNode(projection.valueExpr))
+            rewriteExprNode(projection.valueExpr),
+            rewriteMetas(projection))
 
     open fun rewriteSelectListItem(item: SelectListItem): SelectListItem =
         when(item) {
@@ -310,7 +329,10 @@ open class AstRewriterBase : AstRewriter {
         PathComponentWildcard(rewriteMetas(pathComponent))
 
     open fun rewritePathComponentExpr(pathComponent: PathComponentExpr): PathComponent =
-        PathComponentExpr(rewriteExprNode(pathComponent.expr), pathComponent.case)
+        PathComponentExpr(
+            rewriteExprNode(pathComponent.expr),
+            pathComponent.case,
+            rewriteMetas(pathComponent))
 
     open fun rewriteFromSource(fromSource: FromSource): FromSource =
         when(fromSource) {
@@ -512,16 +534,16 @@ open class AstRewriterBase : AstRewriter {
             node.args.map { rewriteExprNode(it) },
             rewriteMetas(node))
 
-    open fun rewriteDate(node: DateTimeType.Date): DateTimeType.Date =
-        DateTimeType.Date(
+    open fun rewriteDate(node: DateLiteral): DateLiteral =
+        DateLiteral(
             node.year,
             node.month,
             node.day,
             rewriteMetas(node)
         )
 
-    open fun rewriteTime(node: DateTimeType.Time): DateTimeType.Time =
-        DateTimeType.Time(
+    open fun rewriteTime(node: TimeLiteral): TimeLiteral =
+        TimeLiteral(
             node.hour,
             node.minute,
             node.second,

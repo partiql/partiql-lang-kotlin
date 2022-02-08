@@ -11,6 +11,8 @@ import org.partiql.lang.eval.Environment
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.EvaluatorTestBase
 import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.eval.RequiredArgs
+import org.partiql.lang.eval.call
 import org.partiql.lang.eval.dateValue
 import org.partiql.lang.util.ArgumentsProviderBase
 import java.time.LocalDate
@@ -79,32 +81,11 @@ class MakeDateEvaluationTest : EvaluatorTestBase() {
     }
 
     private fun callMakeDate(vararg args: Any): LocalDate? {
-        val value = subject.call(env, args.map { anyToExprValue(it) }.toList())
+        val value = subject.call(env, RequiredArgs(args.map { anyToExprValue(it) }))
         return when(value.type) {
             ExprValueType.NULL -> null
             else -> value.dateValue()
         }
-    }
-
-    @Test
-    fun lessArguments() {
-        Assertions.assertThatThrownBy { callMakeDate(2021) }
-            .hasMessage("make_date takes exactly 3 arguments, received: 1")
-            .isExactlyInstanceOf(EvaluationException::class.java)
-    }
-
-    @Test
-    fun lessArguments2() {
-        Assertions.assertThatThrownBy { callMakeDate(2021, 2) }
-            .hasMessage("make_date takes exactly 3 arguments, received: 2")
-            .isExactlyInstanceOf(EvaluationException::class.java)
-    }
-
-    @Test
-    fun moreArguments() {
-        Assertions.assertThatThrownBy { callMakeDate(2021, 2, 29, 1.123) }
-            .hasMessage("make_date takes exactly 3 arguments, received: 4")
-            .isExactlyInstanceOf(EvaluationException::class.java)
     }
 
     @Test

@@ -15,6 +15,7 @@
 package org.partiql.lang.ast
 
 import com.amazon.ion.IonSexp
+import com.amazon.ion.IonValue
 import com.amazon.ion.IonWriter
 import com.amazon.ionelement.api.metaOrNull
 import org.partiql.lang.util.IonWriterContext
@@ -70,8 +71,8 @@ data class SourceLocationMeta(val lineNum: Long, val charOffset: Long, val lengt
         const val TAG = "\$source_location"
         val deserializer = object : MetaDeserializer {
             override val tag = TAG
-            override fun deserialize(sexp: IonSexp): Meta {
-                val struct = sexp.first().asIonStruct()
+            override fun deserialize(value: IonValue): Meta {
+                val struct = value.asIonStruct()
                 val lineNum = struct.field("line_num").longValue()
                 val charOffset = struct.field("char_offset").longValue()
                 val length = struct.field("length").longValue()

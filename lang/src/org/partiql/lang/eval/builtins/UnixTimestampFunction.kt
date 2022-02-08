@@ -1,10 +1,14 @@
 package org.partiql.lang.eval.builtins
 
+import com.amazon.ion.Timestamp
 import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
-import org.partiql.lang.eval.NullPropagatingExprFunction
 import org.partiql.lang.eval.timestampValue
+import org.partiql.lang.types.FunctionSignature
+import org.partiql.lang.types.StaticType
+import org.partiql.lang.types.StaticType.Companion.unionOf
 import java.math.BigDecimal
 
 /**
@@ -23,23 +27,28 @@ import java.math.BigDecimal
  *
  * The valid range of argument values is the range of PartiQL's `TIMESTAMP` value.
  */
-internal class UnixTimestampFunction(valueFactory: ExprValueFactory) : NullPropagatingExprFunction("unix_timestamp", 0..1, valueFactory) {
+internal class UnixTimestampFunction(val valueFactory: ExprValueFactory) : ExprFunction {
+    override val signature = FunctionSignature(
+        name = "unix_timestamp",
+        requiredParameters = listOf(),
+        optionalParameter = StaticType.TIMESTAMP,
+        returnType = unionOf(StaticType.INT, StaticType.DECIMAL)
+    )
+
     private val millisPerSecond = BigDecimal(1000)
+    private fun epoch(timestamp: Timestamp) : BigDecimal = timestamp.decimalMillis.divide(millisPerSecond)
 
-    override fun eval(env: Environment, args: List<ExprValue>): ExprValue {
-        val timestamp = if (args.isEmpty()) {
-            env.session.now
+    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
+        return valueFactory.newInt(epoch(env.session.now).toLong())
+    }
+
+    override fun callWithOptional(env: Environment, required: List<ExprValue>, opt: ExprValue): ExprValue {
+        val timestamp = opt.timestampValue()
+        val epochTime = epoch(timestamp)
+        return if (timestamp.decimalSecond.scale() == 0) {
+            valueFactory.newInt(epochTime.toLong())
         } else {
-            args[0].timestampValue()
+            valueFactory.newDecimal(epochTime)
         }
-
-        val numMillis = timestamp.decimalMillis
-        val epochTime = numMillis.divide(millisPerSecond)
-
-        if (timestamp.decimalSecond.scale() == 0 || args.isEmpty()) {
-            return valueFactory.newInt(epochTime.toLong())
-        }
-
-        return valueFactory.newDecimal(epochTime)
     }
 }

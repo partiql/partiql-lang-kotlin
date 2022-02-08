@@ -20,6 +20,7 @@ import org.partiql.lang.ast.CaseSensitivity
 import org.partiql.lang.util.errAmbiguousBinding
 import org.partiql.lang.util.isBindingNameEquivalent
 import org.partiql.lang.util.stringValue
+import org.partiql.lang.errors.ErrorCode
 
 /** Indicates if the lookup of a particular binding should be case-sensitive or not. */
 enum class BindingCase {
@@ -31,6 +32,7 @@ enum class BindingCase {
                 "case_sensitive" -> SENSITIVE
                 "case_insensitive" -> INSENSITIVE
                 else -> errNoContext("Unable to convert ion value '${sym.stringValue()}' to a BindingCase instance",
+                                     errorCode = ErrorCode.EVALUATOR_INVALID_CONVERSION,
                                      internal = true)
             }
         }

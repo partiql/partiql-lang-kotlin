@@ -1,23 +1,9 @@
-/*
- * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- *  You may not use this file except in compliance with the License.
- * A copy of the License is located at:
- *
- *      http://aws.amazon.com/apache2.0/
- *
- *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
- *  language governing permissions and limitations under the License.
- */
-
 package org.partiql.lang.eval.builtins
 
 import org.junit.Test
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.EvaluatorTestBase
-import org.partiql.lang.eval.NodeMetadata
-
 
 class TrimEvaluationTest : EvaluatorTestBase() {
 
@@ -109,19 +95,51 @@ class TrimEvaluationTest : EvaluatorTestBase() {
             """, "[{trimmed:\"ab\"}]")
 
     @Test
-    fun trimWrongToRemoveType() = assertThrows("Expected text: 1", NodeMetadata(1, 1)) {
-        voidEval("trim(trailing 1 from '')")
-    }
+    fun trimWrongToRemoveType() =
+        checkInputThrowingEvaluationException(
+            input = "trim(trailing 1 from '')",
+            errorCode = ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL,
+            expectErrorContextValues = mapOf<Property, Any>(
+                Property.FUNCTION_NAME to "trim",
+                Property.ARGUMENT_POSITION to 2,
+                Property.EXPECTED_ARGUMENT_TYPES to "STRING",
+                Property.ACTUAL_ARGUMENT_TYPES to "INT",
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 1L
+            ),
+            expectedPermissiveModeResult = "MISSING"
+        )
 
     @Test
-    fun trimWrongStringType() = assertThrows("Expected text: true", NodeMetadata(1, 1)) {
-        voidEval("trim(true)")
-    }
+    fun trimWrongStringType() =
+        checkInputThrowingEvaluationException(
+            input = "trim(true)",
+            errorCode = ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL,
+            expectErrorContextValues = mapOf<Property, Any>(
+                Property.FUNCTION_NAME to "trim",
+                Property.ARGUMENT_POSITION to 1,
+                Property.EXPECTED_ARGUMENT_TYPES to "STRING, or SYMBOL",
+                Property.ACTUAL_ARGUMENT_TYPES to "BOOL",
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 1L),
+            expectedPermissiveModeResult = "MISSING")
+
 
     @Test
-    fun trimWrongStringType2() = assertThrows("Expected text: true", NodeMetadata(1, 1)) {
-        voidEval("trim(trailing from true)")
-    }
+    fun trimWrongStringType2() =
+        checkInputThrowingEvaluationException(
+            input = "trim(trailing from true)",
+            errorCode = ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL,
+            expectErrorContextValues = mapOf<Property, Any>(
+                Property.FUNCTION_NAME to "trim",
+                Property.ARGUMENT_POSITION to 2,
+                Property.EXPECTED_ARGUMENT_TYPES to "STRING",
+                Property.ACTUAL_ARGUMENT_TYPES to "BOOL",
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 1L
+            ),
+            expectedPermissiveModeResult = "MISSING"
+        )
 
     @Test
     fun trimDefaultSpecification1() = assertEval("trim('12' from '1212b1212')", "\"b\"")

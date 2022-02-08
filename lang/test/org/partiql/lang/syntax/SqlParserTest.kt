@@ -628,6 +628,21 @@ class SqlParserTest : SqlParserTestBase() {
     )
 
     //****************************************
+    // custom type cast
+    //****************************************
+    @Test
+    fun castAsEsBoolean() = assertExpression(
+        "CAST(TRUE AS ES_BOOLEAN)",
+        "(cast (lit true) (custom_type es_boolean))"
+    )
+
+    @Test
+    fun castAsRsInteger() = assertExpression(
+        "CAST(1.123 AS RS_INTEGER)",
+        "(cast (lit 1.123) (custom_type rs_integer))"
+    )
+
+    //****************************************
     // searched CASE
     //****************************************
     @Test

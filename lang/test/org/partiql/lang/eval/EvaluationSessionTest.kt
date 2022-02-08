@@ -17,7 +17,6 @@ package org.partiql.lang.eval
 import com.amazon.ion.Timestamp
 import org.junit.Test
 import org.partiql.lang.util.softAssert
-import java.time.ZoneOffset
 import kotlin.test.assertEquals
 
 class EvaluationSessionTest {
@@ -25,7 +24,6 @@ class EvaluationSessionTest {
         val session = block.invoke()
 
         assertEquals(Bindings.empty(), session.globals)
-        assertEquals(ZoneOffset.UTC, session.defaultTimezoneOffset)
         assertNow(block)
     }
 
@@ -58,18 +56,6 @@ class EvaluationSessionTest {
         val session = block.invoke()
 
         assertEquals(globals, session.globals)
-        assertEquals(ZoneOffset.UTC, session.defaultTimezoneOffset)
-        assertNow(block)
-    }
-
-    @Test
-    fun settingDefaultTimezoneOffset() {
-        val defaultTimezoneOffset = ZoneOffset.ofHours(5)
-        val block: () -> EvaluationSession = { EvaluationSession.build { defaultTimezoneOffset(defaultTimezoneOffset) }}
-        val session = block.invoke()
-
-        assertEquals(Bindings.empty(), session.globals)
-        assertEquals(defaultTimezoneOffset, session.defaultTimezoneOffset)
         assertNow(block)
     }
 
@@ -79,7 +65,6 @@ class EvaluationSessionTest {
         val session =  EvaluationSession.build { now(now) }
 
         assertEquals(Bindings.empty(), session.globals)
-        assertEquals(ZoneOffset.UTC, session.defaultTimezoneOffset)
         assertEquals(now, session.now)
     }
 
@@ -91,7 +76,6 @@ class EvaluationSessionTest {
         val session =  EvaluationSession.build { now(now) }
 
         assertEquals(Bindings.empty(), session.globals)
-        assertEquals(ZoneOffset.UTC, session.defaultTimezoneOffset)
         assertEquals(utcNow, session.now)
     }
 }

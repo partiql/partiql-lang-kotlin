@@ -156,7 +156,7 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     @Parameters
-    fun groupByTest(tc: EvaluatorTestCase) = runTestCase(tc, session)
+    fun groupByTest(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, session)
 
     /** Test cases for GROUP BY without aggregates. */
     fun parametersForGroupByTest() =
@@ -228,9 +228,9 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             expected = "<< { '_1': 'aa' } >>") +
         createGroupByTestCases(
             queries = listOf("SELECT *                  FROM string_numbers GROUP BY CAST(num AS INT)",
-                             "SELECT _1                 FROM string_numbers GROUP BY CAST(num AS INT)",
-                             "SELECT VALUE { '_1': _1 } FROM string_numbers GROUP BY CAST(num AS INT)"),
-            expected = "<< { '_1': 1 }, { '_1': 2 } >>") +
+                             "SELECT num                 FROM string_numbers GROUP BY CAST(num AS INT)",
+                             "SELECT VALUE { 'num': num } FROM string_numbers GROUP BY CAST(num AS INT)"),
+            expected = "<< { 'num': 1 }, { 'num': 2 } >>") +
 
         createGroupByTestCases(
             queries = listOf("SELECT *                            FROM simple_1_col_1_group GROUP BY col1 + 1 AS someGBE",
@@ -346,7 +346,7 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     @Parameters
-    fun sql92StyleAggregatesTest(tc: EvaluatorTestCase) = runTestCase(tc, session)
+    fun sql92StyleAggregatesTest(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, session)
 
     /**
      * Test cases that cover `COUNT`, `SUM`, `MIN`, `MAX`, and `AVG`.
@@ -670,7 +670,7 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     @Parameters
-    fun groupByAggregatesTest(tc: EvaluatorTestCase) = runTestCase(tc, session)
+    fun groupByAggregatesTest(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, session)
 
     /**
      * These are test cases involving aggregates and cover behavior under less usual circumstances
@@ -735,7 +735,7 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     @Parameters
-    fun groupByGroupAsTest(tc: EvaluatorTestCase) = runTestCase(tc, session)
+    fun groupByGroupAsTest(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, session)
 
     fun parametersForGroupByGroupAsTest() =
         // GROUP BY with GROUP AS (the same as above but with "GROUP AS g")
@@ -891,7 +891,7 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     @Parameters
-    fun groupByShadowingTest(tc: EvaluatorTestCase) = runTestCase(tc, session)
+    fun groupByShadowingTest(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, session)
 
     fun parametersForGroupByShadowingTest() =
         createGroupByTestCases(
@@ -924,7 +924,7 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     @Parameters
-    fun groupByDuplicateAliasesTest(tc: EvaluatorTestCase) = runTestCase(tc, session)
+    fun groupByDuplicateAliasesTest(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, session)
 
     fun parametersForGroupByDuplicateAliasesTest() =
         createGroupByTestCases(
@@ -955,7 +955,8 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                  Property.COLUMN_NUMBER to 64L,
                  Property.BINDING_NAME to "someSelectListAlias"
             ),
-            null)
+            null,
+            expectedPermissiveModeResult = "<<{}>>")
     }
 
     @Test
@@ -1022,12 +1023,13 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             FROM orders as o
             """,
             session,
-            ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
+            ErrorCode.EVALUATOR_QUOTED_BINDING_DOES_NOT_EXIST,
             mapOf(
                     Property.LINE_NUMBER to 2L,
                     Property.COLUMN_NUMBER to 20L,
                     Property.BINDING_NAME to "O"
-            )
+            ),
+            expectedPermissiveModeResult = "<<{'_2': 10}>>"
         )
     }
 

@@ -210,8 +210,8 @@ class AstNodeTest {
     @Test
     fun pathChildren() {
         val root = literal("1")
-        val component1 = PathComponentExpr(literal("2"), CaseSensitivity.INSENSITIVE)
-        val component2 = PathComponentExpr(literal("3"), CaseSensitivity.INSENSITIVE)
+        val component1 = PathComponentExpr(literal("2"), CaseSensitivity.INSENSITIVE, emptyMetaContainer)
+        val component2 = PathComponentExpr(literal("3"), CaseSensitivity.INSENSITIVE, emptyMetaContainer)
 
         assertEquals(listOf(root, component1, component2),
                      Path(root, listOf(component1, component2), emptyMeta).children)
@@ -273,7 +273,7 @@ class AstNodeTest {
 
     @Test
     fun selectChildren() {
-        val projection = SelectProjectionValue(literal("1"))
+        val projection = SelectProjectionValue(literal("1"), emptyMetaContainer)
         val from = FromSourceExpr(literal("2"), LetVariables())
 
         assertEquals(listOf(projection, from),
@@ -282,7 +282,7 @@ class AstNodeTest {
 
     @Test
     fun selectWithAllChildren() {
-        val projection = SelectProjectionValue(literal("1"))
+        val projection = SelectProjectionValue(literal("1"), emptyMetaContainer)
         val from = FromSourceExpr(literal("2"), LetVariables())
         val fromLet = LetSource(emptyList())
         val where = literal("3")
@@ -302,7 +302,7 @@ class AstNodeTest {
     @Test
     fun pathComponentExprChildren() {
         val child = literal("2")
-        assertEquals(listOf(child), PathComponentExpr(child, CaseSensitivity.INSENSITIVE).children)
+        assertEquals(listOf(child), PathComponentExpr(child, CaseSensitivity.INSENSITIVE, emptyMetaContainer).children)
     }
 
     @Test
@@ -315,14 +315,14 @@ class AstNodeTest {
     fun selectProjectionListChildren() {
         val child1 = SelectListItemExpr(literal("1"))
         val child2 = SelectListItemExpr(literal("2"))
-        assertEquals(listOf(child1, child2), SelectProjectionList(listOf(child1, child2)).children)
+        assertEquals(listOf(child1, child2), SelectProjectionList(listOf(child1, child2), emptyMetaContainer).children)
     }
 
     @Test
     fun selectProjectionValueChildren() {
         val child = literal("1")
 
-        assertEquals(listOf(child), SelectProjectionValue(child).children)
+        assertEquals(listOf(child), SelectProjectionValue(child, emptyMetaContainer).children)
     }
 
     @Test
@@ -330,7 +330,7 @@ class AstNodeTest {
         val child1 = literal("1")
         val child2 = literal("2")
 
-        assertEquals(listOf(child1, child2), SelectProjectionPivot(child1, child2).children)
+        assertEquals(listOf(child1, child2), SelectProjectionPivot(child1, child2, emptyMetaContainer).children)
     }
 
     @Test

@@ -288,12 +288,12 @@ COALESCE(missing, 1)       -- 1
 
 ### DATE_ADD
 
-Given a data part, a quantity and a timestamp, returns an updated timestamp by altering date part by quantity
+Given a data part, a quantity and a timestamp, returns an updated timestamp by altering datetime part by quantity
 
 Signature 
-: `DATE_ADD: DatePart Integer Timestamp -> Timestamp`
+: `DATE_ADD: DateTimePart Integer Timestamp -> Timestamp`
 
-Where `DatePart` is one of 
+Where `DateTimePart` is one of 
 
 * `year`
 * `month`
@@ -327,19 +327,19 @@ DATE_ADD(second, 1, `2017-01-02T03:04:05.006Z`) -- 2017-01-02T03:04:06.006Z
 
 ### DATE_DIFF
 
-Given a date part and two valid timestamps returns the difference in date parts.
+Given a datetime part and two valid timestamps returns the difference in datetime parts.
 
 Signature
-: `DATE_DIFF: DatePart Timestamp Timestamp -> Integer`
+: `DATE_DIFF: DateTimePart Timestamp Timestamp -> Integer`
 
-See [DATE_ADD](#date_add) for the definition of `DatePart`
+See [DATE_ADD](#date_add) for the definition of `DateTimePart`
 
 Header
 : `DATE_DIFF(dp, t1, t2)`
 
 
 Purpose
-: Given a date part `dp` and two timestamps `t1` and `t2` returns the difference in value for `dp` part of `t1` with `t2`. 
+: Given a datetime part `dp` and two timestamps `t1` and `t2` returns the difference in value for `dp` part of `t1` with `t2`. 
 The return value is a negative integer when the `dp` value of `t1` is greater than the `dp` value of `t2`, and, a positive 
 integer when the `dp` value of `t1` is less than the `dp` value of `t2`. 
 
@@ -358,18 +358,22 @@ DATE_DIFF(day, `2010-01-01T23:00T`, `2010-01-02T01:00T`) -- 0 (need to be at lea
 
 ### EXISTS
 
-Given an PartiQL value returns `true` if and only if the value is a non-empty sequence, returns `false` otherwise. 
+Given a PartiQL value returns `true` if and only if the value is a non-empty container(bag, sexp, list or struct), returns `false` otherwise. 
 
 Signature
-: `EXISTS: Any -> Boolean`
+: `EXISTS: Container -> Boolean`
 
 Header
 : `EXISTS(val)`
 
 Purpose 
-: Given an PartiQL value, `val`, returns `true` if and only if `val` is a non-empty sequence, returns `false` otherwise. 
-This function does **not** propagate `null` and `missing`.  
+: Given a PartiQL value `val`, if `val` is   
+1. a container with size > 0, `EXISTS(val)` returns `true`; 
+2. a container with size = 0, `EXISTS(val)` returns `false`; 
+3. not a container, `EXISTS(val)` throws an error.
 
+Note: 
+1. This function does **not** propagate `null` and `missing`.
 
 Examples
 :  
@@ -384,20 +388,20 @@ EXISTS(`()`)        -- false (empty s-expression)
 EXISTS(`(+ 1 2)`)   -- true (non-empty s-expression)
 EXISTS(`<<>>`)      -- false (empty bag)
 EXISTS(`<<null>>`)  -- true (non-empty bag)
-EXISTS(1)           -- false
-EXISTS(`2017T`)     -- false
-EXISTS(null)        -- false
-EXISTS(missing)     -- false
+EXISTS(1)           -- error
+EXISTS(`2017T`)     -- error
+EXISTS(null)        -- error
+EXISTS(missing)     -- error
 ```
 
 ### EXTRACT
 
-Given a date part and a datetime type returns then datetime's date part value. 
+Given a datetime part and a datetime type returns then datetime's datetime part value. 
 
 Signature
-: `EXTRACT: ExtractDatePart DateTime -> Integer`
+: `EXTRACT: ExtractDateTimePart DateTime -> Integer`
 
-where `ExtractDatePart` is one of 
+where `ExtractDateTimePart` is one of 
 
 * `year`
 * `month`
@@ -414,13 +418,13 @@ and `DateTime` type is one of
 * `TIME`
 * `TIMESTAMP` 
 
-*Note* that `ExtractDatePart` **differs** from `DatePart` in [DATE_ADD](#date_add). 
+*Note* that `ExtractDateTimePart` **differs** from `DateTimePart` in [DATE_ADD](#date_add). 
 
 Header
 : `EXTRACT(edp FROM t)`
 
 Purpose 
-: Given a date part, `edp`, and a datetime type `t` return `t`'s value for `edp`. 
+: Given a datetime part, `edp`, and a datetime type `t` return `t`'s value for `edp`. 
 This function allows for `t` to be unknown (`null` or `missing`) but **not** `edp`.
 If `t` is unknown the function returns `null`. 
 

@@ -16,16 +16,25 @@ package org.partiql.lang
 
 import com.amazon.ion.IonSystem
 import org.partiql.lang.ast.ExprNode
+import org.partiql.lang.ast.toAstStatement
+import org.partiql.lang.ast.toExprNode
+import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluatingCompiler
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.Expression
+import org.partiql.lang.eval.ThunkReturnTypeAssertions
 import org.partiql.lang.eval.builtins.createBuiltinFunctions
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.SqlParser
+import org.partiql.lang.eval.visitors.PipelinedVisitorTransform
+import org.partiql.lang.eval.visitors.StaticTypeInferenceVisitorTransform
+import org.partiql.lang.eval.visitors.StaticTypeVisitorTransform
 import org.partiql.lang.util.interruptibleFold
+import org.partiql.lang.types.StaticType
+import org.partiql.lang.types.CustomType
 
 /**
  * Contains all of the information needed for processing steps.
@@ -79,6 +88,13 @@ interface CompilerPipeline  {
     val functions: @JvmSuppressWildcards Map<String, ExprFunction>
 
     /**
+     * Returns list of custom data types that are available in typed operators (i.e CAST/IS).
+     *
+     * This does not include core PartiQL parameters.
+     */
+    val customDataTypes: List<CustomType>
+
+    /**
      * Returns a list of all stored procedures which are available for execution.
      * Only includes the custom stored procedures added while the [CompilerPipeline] was being built.
      */
@@ -125,8 +141,10 @@ interface CompilerPipeline  {
         private var parser: Parser? = null
         private var compileOptions: CompileOptions? = null
         private val customFunctions: MutableMap<String, ExprFunction> = HashMap()
+        private var customDataTypes: List<CustomType> = listOf()
         private val customProcedures: MutableMap<String, StoredProcedure> = HashMap()
         private val preProcessingSteps: MutableList<ProcessingStep> = ArrayList()
+        private var globalTypeBindings: Bindings<StaticType>? = null
 
         /**
          * Specifies the [Parser] to be used to turn an PartiQL query into an instance of [ExprNode].
@@ -155,7 +173,16 @@ interface CompilerPipeline  {
          *
          * Functions added here will replace any built-in function with the same name.
          */
-        fun addFunction(function: ExprFunction): Builder = this.apply { customFunctions[function.name] = function }
+        fun addFunction(function: ExprFunction): Builder = this.apply { customFunctions[function.signature.name] = function }
+
+        /**
+         * Add custom types to CAST/IS operators to.
+         *
+         * Built-in types will take precedence over custom types in case of a name collision.
+         */
+        fun customDataTypes(customTypes: List<CustomType>) = this.apply {
+            customDataTypes = customTypes
+        }
 
         /**
          * Add a custom stored procedure which will be callable by the compiled queries.
@@ -167,35 +194,65 @@ interface CompilerPipeline  {
         /** Adds a preprocessing step to be executed after parsing but before compilation. */
         fun addPreprocessingStep(step: ProcessingStep): Builder = this.apply { preProcessingSteps.add(step) }
 
+        /** Adds the [Bindings<StaticType>] for global variables. */
+        fun globalTypeBindings(bindings: Bindings<StaticType>): Builder = this.apply { this.globalTypeBindings = bindings }
+
         /** Builds the actual implementation of [CompilerPipeline]. */
         fun build(): CompilerPipeline {
-            val builtinFunctions = createBuiltinFunctions(valueFactory).associateBy { it.name }
+            val compileOptionsToUse = compileOptions ?: CompileOptions.standard()
+
+            when(compileOptionsToUse.thunkReturnTypeAssertions) {
+                ThunkReturnTypeAssertions.DISABLED -> { /* intentionally blank */ }
+                ThunkReturnTypeAssertions.ENABLED -> {
+                    check(this.globalTypeBindings != null) {
+                        "EvaluationTimeTypeChecks.ENABLED does not work if globalTypeBindings have not been specified"
+                    }
+                }
+            }
+
+            val builtinFunctions = createBuiltinFunctions(valueFactory).associateBy {
+                it.signature.name
+            }
 
             // customFunctions must be on the right side of + here to ensure that they overwrite any
             // built-in functions with the same name.
             val allFunctions = builtinFunctions + customFunctions
 
             return CompilerPipelineImpl(
-                    valueFactory,
-                    parser ?: SqlParser(valueFactory.ion),
-                    compileOptions ?: CompileOptions.standard(),
-                    allFunctions,
-                    customProcedures,
-                    preProcessingSteps)
+                valueFactory = valueFactory,
+                parser = parser ?: SqlParser(valueFactory.ion),
+                compileOptions = compileOptionsToUse,
+                functions = allFunctions,
+                customDataTypes = customDataTypes,
+                procedures = customProcedures,
+                preProcessingSteps = preProcessingSteps,
+                globalTypeBindings = globalTypeBindings
+            )
         }
     }
 }
 
 internal class CompilerPipelineImpl(
-        override val valueFactory: ExprValueFactory,
-        private val parser: Parser,
-        override val compileOptions: CompileOptions,
-        override val functions: Map<String, ExprFunction>,
-        override val procedures: Map<String, StoredProcedure>,
-        private val preProcessingSteps: List<ProcessingStep>
+    override val valueFactory: ExprValueFactory,
+    private val parser: Parser,
+    override val compileOptions: CompileOptions,
+    override val functions: Map<String, ExprFunction>,
+    override val customDataTypes: List<CustomType>,
+    override val procedures: Map<String, StoredProcedure>,
+    private val preProcessingSteps: List<ProcessingStep>,
+    private val globalTypeBindings: Bindings<StaticType>?
 ) : CompilerPipeline {
 
-    private val compiler = EvaluatingCompiler(valueFactory, functions, procedures, compileOptions)
+    private val compiler = EvaluatingCompiler(
+        valueFactory,
+        functions,
+        customDataTypes.map { customType ->
+            (customType.aliases + customType.name).map { alias ->
+                Pair(alias.toLowerCase(), customType.typedOpParameter)
+            }
+        }.flatten().toMap(),
+        procedures,
+        compileOptions)
 
     override fun compile(query: String): Expression {
         // TODO: replace `parseExprNode` with `ParseStatement` once evaluator deprecates `ExprNode`
@@ -207,7 +264,31 @@ internal class CompilerPipelineImpl(
 
         val preProcessedQuery = executePreProcessingSteps(query, context)
 
-        return compiler.compile(preProcessedQuery)
+        val transforms = PipelinedVisitorTransform(
+            *listOfNotNull(
+                listOf(compileOptions.visitorTransformMode.createVisitorTransform()),
+                // if [typeBindings] was specified, enable [StaticTypeVisitorTransform] and [StaticTypeInferenceVisitorTransform].
+                when (globalTypeBindings) {
+                    null -> null
+                    else -> {
+                        listOf(
+                            StaticTypeVisitorTransform(valueFactory.ion, globalTypeBindings),
+                            StaticTypeInferenceVisitorTransform(
+                                globalBindings = globalTypeBindings,
+                                customFunctionSignatures = functions.values.map { it.signature },
+                                customTypedOpParameters =         customDataTypes.map { customType ->
+                                    (customType.aliases + customType.name).map { alias ->
+                                        Pair(alias.toLowerCase(), customType.typedOpParameter)
+                                    }
+                                }.flatten().toMap()
+                            ))
+                    }
+                }
+            ).flatten().toTypedArray())
+
+        val queryToCompile = transforms.transformStatement(preProcessedQuery.toAstStatement())
+
+        return compiler.compile(queryToCompile.toExprNode(valueFactory.ion))
     }
 
     internal fun executePreProcessingSteps(

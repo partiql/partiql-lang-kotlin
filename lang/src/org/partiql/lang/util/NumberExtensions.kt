@@ -35,6 +35,7 @@ internal fun bigDecimalOf(num: Number, mc: MathContext = MATH_CONTEXT): BigDecim
     is Long               -> BigDecimal(num, mc)
     is Double             -> BigDecimal(num, mc)
     is BigDecimal         -> num
+    Decimal.NEGATIVE_ZERO -> num as Decimal
     else                  -> throw IllegalArgumentException("Unsupported number type: $num, ${num.javaClass}")
 }
 
@@ -95,7 +96,7 @@ fun coerceNumbers(first: Number, second: Number): Pair<Number, Number> {
     }
 
     val type = CONVERSION_MAP[setOf(typeFor(first), typeFor(second))] ?:
-               throw IllegalArgumentException("No coercion support for ${first to second}")
+               throw IllegalArgumentException("No coercion support for ${typeFor(first)} to ${typeFor(second)}")
 
     return Pair(first.coerce(type), second.coerce(type))
 }
@@ -132,7 +133,7 @@ private fun Long.checkOverflowPlus(other: Long): Number {
     val overflows = ((this xor other) >= 0) and ((this xor result) < 0)
     return when (overflows) {
         false -> result
-        else  -> errIntOverflow()
+        else  -> errIntOverflow(8)
     }
 }
 
@@ -143,7 +144,7 @@ private fun Long.checkOverflowMinus(other: Long): Number {
     val overflows = ((this xor other) < 0) and ((this xor result) < 0)
     return when (overflows) {
         false -> result
-        else  -> errIntOverflow()
+        else  -> errIntOverflow(8)
     }
 }
 
@@ -166,14 +167,14 @@ private fun Long.checkOverflowTimes(other: Long): Number {
         return result
     }
 
-    errIntOverflow()
+    errIntOverflow(8)
 }
 
 private fun Long.checkOverflowDivision(other: Long): Number {
     // division can only underflow Long.MIN_VALUE / -1
     // because abs(Long.MIN_VALUE) == abs(Long.MAX_VALUE) + 1
     if(this == Long.MIN_VALUE && other == -1L){
-        errIntOverflow()
+        errIntOverflow(8)
     }
 
     return this / other

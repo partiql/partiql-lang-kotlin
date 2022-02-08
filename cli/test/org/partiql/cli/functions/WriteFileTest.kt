@@ -50,7 +50,7 @@ class WriteFileTest {
     @Test
     fun writeIonAsDefault() {
         val args = listOf(""" "${dirPath("data.ion")}" """, "[1, 2]").map { it.exprValue() }
-        function.call(env, args).ionValue
+        function.callWithRequired(env, args).ionValue
 
         val expected = "1 2"
 
@@ -59,8 +59,9 @@ class WriteFileTest {
 
     @Test
     fun readIon() {
-        val args = listOf(""" "${dirPath("data1.ion")}" """, """{type: "ion"}""", "[1, 2]").map { it.exprValue() }
-        function.call(env, args).ionValue
+        val args = listOf(""" "${dirPath("data1.ion")}" """, "[1, 2]").map { it.exprValue() }
+        val additionalOptions = """{type: "ion"}""".exprValue()
+        function.callWithOptional(env, args, additionalOptions).ionValue
 
         val expected = "1 2"
 

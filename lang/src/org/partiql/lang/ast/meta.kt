@@ -36,6 +36,9 @@ interface Meta {
     /** The tag which will be given to this meta during serialization. */
     val tag: String
 
+    /** A flag indicating if we should attempt to serialize this meta or not. */
+    val shouldSerialize: Boolean get() = true
+
     /**
      * Serializes the contents of the meta.
      *
@@ -43,9 +46,10 @@ interface Meta {
      * Only the meta's contents should be serialized.
      */
     fun serialize(writer: IonWriter) {
-        // The default implementation does nothing.
+        // The default implementation writes a null value.
         // This is suitable for those metas which do not have any properties (i.e. those metas which are used solely
         // as a "flag".
+        writer.writeNull()
     }
 }
 
@@ -113,19 +117,18 @@ private data class MetaContainerImpl internal constructor(private val metas: Tre
 
     override fun find(tagName: String): Meta? = metas[tagName]
 
-    override val shouldSerialize = this.metas.any()
+    override val shouldSerialize = this.metas.any { it.value.shouldSerialize }
 
     override fun serialize(writer: IonWriter) {
         IonWriterContext(writer).apply {
-            // Metas must be sorted by tag name--this is handled for us automatically by [TreeMap].
-            metas.values
-                .forEach {
-                    sexp {
-                        symbol(it.tag)
-                        sexp {
-                            it.serialize(writer)
-                        }
-                   }
+            struct {
+                // Metas must be sorted by tag name--this is handled for us automatically by [TreeMap].
+                metas.values
+                    .filter { it.shouldSerialize }
+                    .forEach {
+                        this.setNextFieldName(it.tag)
+                        it.serialize(writer)
+                    }
             }
         }
     }

@@ -19,7 +19,10 @@ import com.amazon.ion.IonSequence
 /** A simple mapping of ordinal index to [ExprValue]. */
 interface OrdinalBindings {
     companion object {
-        @JvmField
+        // @JvmField
+        // Note: for some reason, @JvmField being present causes IntelliJ's test runner to throw
+        // an exception and fail to run any tests when you tell it to run tests in a package.  It still works
+        // when you tell it to run all tests in a single class or individual tests, though.
         val EMPTY = object : OrdinalBindings {
             override fun get(index: Int): ExprValue? = null
         }

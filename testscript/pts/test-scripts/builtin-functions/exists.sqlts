@@ -22,17 +22,6 @@ for::{
         }
     ],
     variable_sets: [
-        // base types
-        { param: "1",       result: false },
-        { param: "1e0",     result: false },
-        { param: "1.0",     result: false },
-        { param: "''",      result: false },
-        { param: "`2017T`", result: false },
-
-        // null and missing
-        { param: "null",    result: false },
-        { param: "missing", result: false },
-
         // empty sequences
         { param: "`[]`", result: false },
         { param: "`()`", result: false },

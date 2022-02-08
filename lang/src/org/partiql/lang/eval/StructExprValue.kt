@@ -17,6 +17,7 @@ package org.partiql.lang.eval
 import com.amazon.ion.IonStruct
 import com.amazon.ion.IonSystem
 import org.partiql.lang.util.seal
+import org.partiql.lang.errors.ErrorCode
 
 /** Indicates if a struct is ordered or not. */
 enum class StructOrdering {
@@ -68,7 +69,7 @@ internal open class StructExprValue(
         val bindList = ArrayList<ExprValue>()
         val bindNames = ArrayList<String>()
         sequence.forEach {
-            val name = it.name?.stringValue() ?: errNoContext("Expected non-null name for lazy struct", internal = false)
+            val name = it.name?.stringValue() ?: errNoContext("Expected non-null name for lazy struct", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE, internal = false)
             bindMap.putIfAbsent(name, it)
             if (ordering == StructOrdering.ORDERED) {
                 bindList.add(it)
