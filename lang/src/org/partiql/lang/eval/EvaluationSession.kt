@@ -15,7 +15,6 @@
 package org.partiql.lang.eval
 
 import com.amazon.ion.Timestamp
-import java.time.ZoneOffset
 
 /**
  * Evaluation Session. Holds user defined constants used during evaluation. Each value has a default value that can

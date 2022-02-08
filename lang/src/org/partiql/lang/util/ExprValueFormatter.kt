@@ -4,7 +4,6 @@ import com.amazon.ion.system.IonTextWriterBuilder
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.name
-import java.lang.StringBuilder
 
 private const val MISSING_STRING = "MISSING"
 private const val NULL_STRING = "NULL"

@@ -27,14 +27,14 @@ import org.partiql.lang.eval.Expression
 import org.partiql.lang.eval.ThunkReturnTypeAssertions
 import org.partiql.lang.eval.builtins.createBuiltinFunctions
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
-import org.partiql.lang.syntax.Parser
-import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.eval.visitors.PipelinedVisitorTransform
 import org.partiql.lang.eval.visitors.StaticTypeInferenceVisitorTransform
 import org.partiql.lang.eval.visitors.StaticTypeVisitorTransform
-import org.partiql.lang.util.interruptibleFold
-import org.partiql.lang.types.StaticType
+import org.partiql.lang.syntax.Parser
+import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.types.CustomType
+import org.partiql.lang.types.StaticType
+import org.partiql.lang.util.interruptibleFold
 
 /**
  * Contains all of the information needed for processing steps.

@@ -41,6 +41,7 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.time.MAX_PRECISION_FOR_TIME
+import org.partiql.lang.types.CustomType
 import org.partiql.lang.util.DATE_PATTERN_REGEX
 import org.partiql.lang.util.atomFromHead
 import org.partiql.lang.util.checkThreadInterrupted
@@ -62,8 +63,6 @@ import org.partiql.lang.util.tailExpectedKeyword
 import org.partiql.lang.util.tailExpectedToken
 import org.partiql.lang.util.timeWithoutTimeZoneRegex
 import org.partiql.lang.util.unaryMinus
-import org.partiql.lang.syntax.TokenType.KEYWORD
-import org.partiql.lang.types.CustomType
 import org.partiql.pig.runtime.SymbolPrimitive
 import java.time.LocalDate
 import java.time.LocalTime

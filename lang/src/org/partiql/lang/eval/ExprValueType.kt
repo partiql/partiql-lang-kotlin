@@ -17,8 +17,8 @@ package org.partiql.lang.eval
 import com.amazon.ion.IonType
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.syntax.TYPE_ALIASES
 import org.partiql.lang.syntax.CORE_TYPE_NAME_ARITY_MAP
+import org.partiql.lang.syntax.TYPE_ALIASES
 
 /**
  * The core types of [ExprValue] that exist within the type system of the evaluator.

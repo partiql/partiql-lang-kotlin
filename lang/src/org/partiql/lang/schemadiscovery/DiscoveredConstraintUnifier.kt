@@ -1,7 +1,6 @@
 package org.partiql.lang.schemadiscovery
 
 import org.partiql.ionschema.model.IonSchemaModel
-import java.lang.IllegalArgumentException
 
 /**
  * For two conflicting [IonSchemaModel.ConstraintList]s with the same type constraint, unifies the constraint

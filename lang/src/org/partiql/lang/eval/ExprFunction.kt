@@ -15,9 +15,6 @@
 package org.partiql.lang.eval
 
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Property
-import org.partiql.lang.errors.PropertyValueMap
-import org.partiql.lang.util.isAnyUnknown
 import org.partiql.lang.types.FunctionSignature
 
 sealed class Arguments

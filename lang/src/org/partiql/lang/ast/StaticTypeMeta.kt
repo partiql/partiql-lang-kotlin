@@ -1,7 +1,7 @@
 package org.partiql.lang.ast
 
-import com.amazon.ion.IonWriter
 import com.amazon.ion.IonValue
+import com.amazon.ion.IonWriter
 import com.amazon.ionelement.api.loadAllElements
 import org.partiql.ionschema.model.IonSchemaModel
 import org.partiql.ionschema.model.toIsl

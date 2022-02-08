@@ -20,9 +20,9 @@ import org.partiql.lang.ast.Literal
 import org.partiql.lang.ast.MetaContainer
 import org.partiql.lang.ast.Path
 import org.partiql.lang.ast.PathComponentExpr
-import org.partiql.lang.ast.VariableReference
 import org.partiql.lang.ast.Typed
 import org.partiql.lang.ast.TypedOp
+import org.partiql.lang.ast.VariableReference
 
 /**
  * Determines an appropriate column name for the given [ExprNode].

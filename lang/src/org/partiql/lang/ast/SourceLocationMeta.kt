@@ -14,7 +14,6 @@
 
 package org.partiql.lang.ast
 
-import com.amazon.ion.IonSexp
 import com.amazon.ion.IonValue
 import com.amazon.ion.IonWriter
 import com.amazon.ionelement.api.metaOrNull

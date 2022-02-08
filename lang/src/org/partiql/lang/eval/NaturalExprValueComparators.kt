@@ -14,12 +14,8 @@
 
 package org.partiql.lang.eval
 
-import org.partiql.lang.util.compareTo
-import org.partiql.lang.util.isNaN
-import org.partiql.lang.util.isNegInf
-import org.partiql.lang.util.isPosInf
-import org.partiql.lang.util.isZero
 import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.eval.NaturalExprValueComparators.NullOrder
 import org.partiql.lang.util.*
 
 /**

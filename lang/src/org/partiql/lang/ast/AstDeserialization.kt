@@ -19,6 +19,7 @@ import com.amazon.ion.IonSymbol
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
 import com.amazon.ion.IonWriter
+import org.partiql.lang.types.CustomType
 import org.partiql.lang.util.args
 import org.partiql.lang.util.arity
 import org.partiql.lang.util.asIonInt
@@ -32,7 +33,6 @@ import org.partiql.lang.util.singleArgWithTag
 import org.partiql.lang.util.stringValue
 import org.partiql.lang.util.tagText
 import org.partiql.lang.util.toListOfIonSexp
-import org.partiql.lang.types.CustomType
 
 /**
  * Deserializes an s-expression based AST.

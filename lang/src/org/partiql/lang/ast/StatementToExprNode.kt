@@ -5,8 +5,6 @@ package org.partiql.lang.ast
 import com.amazon.ion.IonSystem
 import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.domains.PartiqlAst
-
-import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.toIntExact

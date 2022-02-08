@@ -1,7 +1,5 @@
 package org.partiql.lang.util
 
-import java.lang.IllegalStateException
-
 /**
  * Converts [this] [Long] to a [Int], throwing an exception in case the value is outside the range of an [Int].
  *

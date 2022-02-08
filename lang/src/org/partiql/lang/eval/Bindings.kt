@@ -17,10 +17,10 @@ import com.amazon.ion.IonStruct
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
 import org.partiql.lang.ast.CaseSensitivity
+import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.util.errAmbiguousBinding
 import org.partiql.lang.util.isBindingNameEquivalent
 import org.partiql.lang.util.stringValue
-import org.partiql.lang.errors.ErrorCode
 
 /** Indicates if the lookup of a particular binding should be case-sensitive or not. */
 enum class BindingCase {
