@@ -18,6 +18,7 @@ import org.junit.Ignore
 import org.partiql.lang.syntax.TokenType
 import org.junit.Test
 import org.partiql.lang.syntax.SqlParserTestBase
+import org.partiql.lang.util.sourceLocationProperties
 
 class ParserErrorsTest : SqlParserTestBase() {
 

@@ -16,6 +16,7 @@ package org.partiql.lang.errors
 
 import org.junit.Test
 import org.partiql.lang.TestBase
+import org.partiql.lang.checkErrorAndErrorContext
 import org.partiql.lang.syntax.LexerException
 import org.partiql.lang.syntax.SqlLexer
 import org.partiql.lang.util.softAssert

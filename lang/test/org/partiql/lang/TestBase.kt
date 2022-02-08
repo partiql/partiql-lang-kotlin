@@ -36,6 +36,7 @@ import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.cloneAndRemoveAnnotations
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.util.SexpAstPrettyPrinter
 import org.partiql.lang.util.softAssert

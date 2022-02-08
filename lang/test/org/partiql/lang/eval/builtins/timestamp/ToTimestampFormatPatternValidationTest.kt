@@ -7,12 +7,9 @@ import org.junit.runner.RunWith
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.EvaluatorTestBase
-<<<<<<< HEAD
-=======
+
 import org.partiql.lang.util.sourceLocationProperties
 import org.partiql.lang.util.to
-
->>>>>>> main
 
 @RunWith(JUnitParamsRunner::class)
 class ToTimestampFormatPatternValidationTest : EvaluatorTestBase() {
