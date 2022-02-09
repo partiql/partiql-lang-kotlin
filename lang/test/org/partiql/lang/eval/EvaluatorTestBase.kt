@@ -97,22 +97,9 @@ abstract class EvaluatorTestBase : TestBase() {
         val originalExprNode = parser.parseExprNode(source)
 
         fun evalAndAssert(exprNodeToEvaluate: ExprNode, message: String) {
-            val msg = "${compileOptions.typedOpBehavior} CAST in ${compileOptions.typingMode} typing mode, " +
-                    "evaluated '$source' with evaluator ($message)"
-            // LEGACY mode
-            val result = eval(exprNodeToEvaluate, compileOptions, session, compilerPipelineBuilderBlock)
-            AssertExprValue(result, message = msg)
-                .apply { assertIonValue(expectedIon) }.run(block)
-            // TODO this should not be here--this should be explicit in the test case
-            // PERMISSIVE mode
-            val resultForPermissiveMode = eval(
-                exprNodeToEvaluate,
-                CompileOptions.builder(compileOptions).typingMode(TypingMode.PERMISSIVE).build(),
-                session,
-                compilerPipelineBuilderBlock
-            )
-            AssertExprValue(resultForPermissiveMode, message = msg)
-                .apply { assertIonValue(expectedIon) }.run(block)
+            AssertExprValue(eval(exprNodeToEvaluate, compileOptions, session, compilerPipelineBuilderBlock),
+                message =  "${compileOptions.typedOpBehavior} CAST in ${compileOptions.typingMode} typing mode, " +
+                    "evaluated '$source' with evaluator ($message)").apply { assertIonValue(expectedIon) }.run(block)
         }
 
         // Evaluate the ExprNodes originally obtained from the parser
