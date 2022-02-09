@@ -147,8 +147,8 @@ sealed class ExprNode : AstNode(), HasMetas {
 
 /** Represents a literal value.  */
 data class Literal(
-        val ionValue: IonValue,
-        override val metas: MetaContainer
+    val ionValue: IonValue,
+    override val metas: MetaContainer
 ) : ExprNode() {
     init {
         ionValue.clone().makeReadOnly()
@@ -156,7 +156,6 @@ data class Literal(
 
     override val children: List<AstNode> = listOf()
 }
-
 
 /** Represents the literal value `MISSING`. */
 data class LiteralMissing(

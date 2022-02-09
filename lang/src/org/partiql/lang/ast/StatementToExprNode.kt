@@ -96,20 +96,20 @@ private class StatementTransformer(val ion: IonSystem) {
                         metas)
             is PartiqlAst.Expr.Intersect ->
                 NAry(
-                        when(setq) {
-                            is PartiqlAst.SetQuantifier.Distinct -> NAryOp.INTERSECT
-                            is PartiqlAst.SetQuantifier.All -> NAryOp.INTERSECT_ALL
-                        },
-                        operands.toExprNodeList(),
-                        metas)
-            is PartiqlAst.Expr.Except  ->
+                    when (setq) {
+                        is PartiqlAst.SetQuantifier.Distinct -> NAryOp.INTERSECT
+                        is PartiqlAst.SetQuantifier.All -> NAryOp.INTERSECT_ALL
+                    },
+                    operands.toExprNodeList(),
+                    metas)
+            is PartiqlAst.Expr.Except ->
                 NAry(
-                        when(setq) {
-                            is PartiqlAst.SetQuantifier.Distinct -> NAryOp.EXCEPT
-                            is PartiqlAst.SetQuantifier.All -> NAryOp.EXCEPT_ALL
-                        },
-                        operands.toExprNodeList(),
-                        metas)
+                    when (setq) {
+                        is PartiqlAst.SetQuantifier.Distinct -> NAryOp.EXCEPT
+                        is PartiqlAst.SetQuantifier.All -> NAryOp.EXCEPT_ALL
+                    },
+                    operands.toExprNodeList(),
+                    metas)
             is PartiqlAst.Expr.Like -> NAry(NAryOp.LIKE, listOfNotNull(value.toExprNode(), pattern.toExprNode(), escape?.toExprNode()), metas)
             is PartiqlAst.Expr.Between -> NAry(NAryOp.BETWEEN, listOf(value.toExprNode(), from.toExprNode(), to.toExprNode()), metas)
             is PartiqlAst.Expr.InCollection -> NAry(NAryOp.IN, operands.toExprNodeList(), metas)
@@ -151,25 +151,25 @@ private class StatementTransformer(val ion: IonSystem) {
                     metas)
             is PartiqlAst.Expr.Call ->
                 NAry(
-                        NAryOp.CALL,
-                        listOf(
-                                VariableReference(
-                                        funcName.text,
-                                        CaseSensitivity.INSENSITIVE,
-                                        ScopeQualifier.UNQUALIFIED,
-                                        emptyMetaContainer)
-                        ) + args.map { it.toExprNode() },
-                        metas)
+                    NAryOp.CALL,
+                    listOf(
+                        VariableReference(
+                            funcName.text,
+                            CaseSensitivity.INSENSITIVE,
+                            ScopeQualifier.UNQUALIFIED,
+                            emptyMetaContainer)
+                    ) + args.map { it.toExprNode() },
+                    metas)
             is PartiqlAst.Expr.CallAgg ->
                 CallAgg(
-                        VariableReference(
-                                funcName.text,
-                                CaseSensitivity.INSENSITIVE,
-                                ScopeQualifier.UNQUALIFIED,
-                                funcName.metas.toPartiQlMetaContainer()),
-                        setq.toSetQuantifier(),
-                        arg.toExprNode(),
-                        metas)
+                    VariableReference(
+                        funcName.text,
+                        CaseSensitivity.INSENSITIVE,
+                        ScopeQualifier.UNQUALIFIED,
+                        funcName.metas.toPartiQlMetaContainer()),
+                    setq.toSetQuantifier(),
+                    arg.toExprNode(),
+                    metas)
             is PartiqlAst.Expr.Select ->
                 Select(
                     setQuantifier = setq?.toSetQuantifier() ?: SetQuantifier.ALL,

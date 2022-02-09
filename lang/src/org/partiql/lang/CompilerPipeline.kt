@@ -40,24 +40,24 @@ import org.partiql.lang.util.interruptibleFold
  * Contains all of the information needed for processing steps.
  */
 data class StepContext(
-        /** The instance of [ExprValueFactory] that is used by the pipeline. */
-        val valueFactory: ExprValueFactory,
+    /** The instance of [ExprValueFactory] that is used by the pipeline. */
+    val valueFactory: ExprValueFactory,
 
-        /** The compilation options. */
-        val compileOptions: CompileOptions,
+    /** The compilation options. */
+    val compileOptions: CompileOptions,
 
-        /**
-         * * Returns a list of all functions which are available for execution.
-         * Includes built-in functions as well as custom functions added while the [CompilerPipeline]
-         * was being built.
-         */
-        val functions: @JvmSuppressWildcards Map<String, ExprFunction>,
+    /**
+     * Returns a list of all functions which are available for execution.
+     * Includes built-in functions as well as custom functions added while the [CompilerPipeline]
+     * was being built.
+     */
+    val functions: @JvmSuppressWildcards Map<String, ExprFunction>,
 
-        /**
-         * Returns a list of all stored procedures which are available for execution.
-         * Only includes the custom stored procedures added while the [CompilerPipeline] was being built.
-         */
-        val procedures: @JvmSuppressWildcards Map<String, StoredProcedure>
+    /**
+     * Returns a list of all stored procedures which are available for execution.
+     * Only includes the custom stored procedures added while the [CompilerPipeline] was being built.
+     */
+    val procedures: @JvmSuppressWildcards Map<String, StoredProcedure>
 )
 
 /**
@@ -107,7 +107,6 @@ interface CompilerPipeline  {
     fun compile(query: ExprNode): Expression
 
     companion object {
-
         /** Kotlin style builder for [CompilerPipeline].  If calling from Java instead use [builder]. */
         fun build(ion: IonSystem, block: Builder.() -> Unit) = build(ExprValueFactory.standard(ion), block)
 
@@ -128,8 +127,7 @@ interface CompilerPipeline  {
 
         /** Returns an implementation of [CompilerPipeline] with all properties set to their defaults. */
         @JvmStatic
-        fun standard(valueFactory: ExprValueFactory): CompilerPipeline =
-                builder(valueFactory).build()
+        fun standard(valueFactory: ExprValueFactory): CompilerPipeline = builder(valueFactory).build()
     }
 
     /**
@@ -291,10 +289,7 @@ internal class CompilerPipelineImpl(
         return compiler.compile(queryToCompile.toExprNode(valueFactory.ion))
     }
 
-    internal fun executePreProcessingSteps(
-            query: ExprNode,
-            context: StepContext
-    ) = preProcessingSteps.interruptibleFold(query) { currentExprNode, step ->
-        step(currentExprNode, context)
+    internal fun executePreProcessingSteps(query: ExprNode, context: StepContext) = preProcessingSteps
+            .interruptibleFold(query) { currentExprNode, step -> step(currentExprNode, context)
     }
 }

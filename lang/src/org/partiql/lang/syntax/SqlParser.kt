@@ -1396,10 +1396,10 @@ class SqlParser(
             // the lexical scope operator is **only** allowed with identifiers
             "@" -> when (tail.head?.type) {
                 TokenType.IDENTIFIER, TokenType.QUOTED_IDENTIFIER -> ParseNode(
-                        ParseType.UNARY,
-                        head,
-                        listOf(tail.atomFromHead()),
-                        tail.tail
+                    ParseType.UNARY,
+                    head,
+                    listOf(tail.atomFromHead()),
+                    tail.tail
                 )
                 else -> err("Identifier must follow @-operator", ErrorCode.PARSE_MISSING_IDENT_AFTER_AT)
             }
@@ -2438,9 +2438,9 @@ class SqlParser(
         val maybeTrimSpec = rem.head
         val hasSpecification = when {
             maybeTrimSpec?.type == TokenType.IDENTIFIER &&
-                    TRIM_SPECIFICATION_KEYWORDS.contains(maybeTrimSpec.text?.toLowerCase()) -> {
+                TRIM_SPECIFICATION_KEYWORDS.contains(maybeTrimSpec.text?.toLowerCase()) -> {
                 arguments.add(ParseNode(ParseType.ATOM, maybeTrimSpec.copy(type = TokenType.TRIM_SPECIFICATION),
-                        listOf(), rem.tail))
+                    listOf(), rem.tail))
                 rem = rem.tail
 
                 true
@@ -2805,10 +2805,10 @@ class SqlParser(
             "unpivot" -> {
                 val actualChild = rem.tail.parseExpression(precedence)
                 ParseNode(
-                        ParseType.UNPIVOT,
-                        rem.head,
-                        listOf(actualChild),
-                        actualChild.remaining
+                    ParseType.UNPIVOT,
+                    rem.head,
+                    listOf(actualChild),
+                    actualChild.remaining
                 )
             }
             else -> {
@@ -2817,8 +2817,7 @@ class SqlParser(
                     // Starts with a left paren and is not a subquery or literal, so parse as a from source
                     rem = rem.tail
                     rem.parseFromSource(precedence).deriveExpected(TokenType.RIGHT_PAREN)
-                }
-                else {
+                } else {
                     rem.parseExpression(precedence)
                 }
             }
