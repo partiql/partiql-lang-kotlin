@@ -14,7 +14,7 @@
 
 package org.partiql.lang.eval
 
-import com.amazon.ion.*
+import com.amazon.ion.Timestamp
 
 /**
  * Evaluation Session. Holds user defined constants used during evaluation. Each value has a default value that can

@@ -17,9 +17,6 @@
  */
 package org.partiql.lang.ast
 
-import com.amazon.ion.*
-import org.partiql.lang.ast.*
-
 /**
  * Meta node intended to be attached to an instance of [Literal] to indicate that it was
  * designated as an `ionLiteral` in the parsed statement.

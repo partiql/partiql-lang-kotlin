@@ -5,38 +5,26 @@ package org.partiql.lang.ast
 import com.amazon.ion.IonSystem
 import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.domains.PartiqlAst.*
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.toIntExact
-
 import org.partiql.pig.runtime.SymbolPrimitive
-import org.partiql.lang.ast.SetQuantifier as ExprNodeSetQuantifier  // Conflicts with PartiqlAst.SetQuantifier
-import org.partiql.lang.ast.ReturningMapping as ExprNodeReturningMapping  // Conflicts with PartiqlAst.ReturningMapping
-
-// Note that IntelliJ believes the next 3 aliases are unused without the @file:Suppress("UnusedImport") above,
-// however they are actually preventing naming collisions between their ExprNode and PartiqlAst counterparts so don't
-// remove them!
-import org.partiql.lang.ast.CaseSensitivity as ExprNodeCaseSensitivity  // Conflicts with PartiqlAst.CaseSensitivity
-import org.partiql.lang.ast.ScopeQualifier as ExprNodeScopeQualifier  // Conflicts with PartiqlAst.ScopeQualifier
-import org.partiql.lang.ast.GroupingStrategy as ExprNodeGroupingStrategy  // Conflicts with PartiqlAst.GroupingStrategy
-
 
 internal typealias PartiQlMetaContainer = org.partiql.lang.ast.MetaContainer
 internal typealias IonElementMetaContainer = com.amazon.ionelement.api.MetaContainer
 
 /** Converts a [partiql_ast.statement] to an [ExprNode], preserving all metas where possible. */
-fun Statement.toExprNode(ion: IonSystem): ExprNode =
+fun PartiqlAst.Statement.toExprNode(ion: IonSystem): ExprNode =
     StatementTransformer(ion).transform(this)
 
-internal fun Expr.toExprNode(ion: IonSystem): ExprNode {
+internal fun PartiqlAst.Expr.toExprNode(ion: IonSystem): ExprNode {
     return StatementTransformer(ion).transform(this)
 }
 
-internal fun SetQuantifier.toExprNodeSetQuantifier(): ExprNodeSetQuantifier  =
+internal fun PartiqlAst.SetQuantifier.toExprNodeSetQuantifier(): SetQuantifier  =
     when (this) {
-        is SetQuantifier.All -> ExprNodeSetQuantifier.ALL
-        is SetQuantifier.Distinct -> ExprNodeSetQuantifier.DISTINCT
+        is PartiqlAst.SetQuantifier.All -> SetQuantifier.ALL
+        is PartiqlAst.SetQuantifier.Distinct -> SetQuantifier.DISTINCT
     }
 
 internal fun com.amazon.ionelement.api.MetaContainer.toPartiQlMetaContainer(): PartiQlMetaContainer {
@@ -48,145 +36,143 @@ internal fun com.amazon.ionelement.api.MetaContainer.toPartiQlMetaContainer(): P
         partiQlMeta
     }
 
-    return org.partiql.lang.ast.metaContainerOf(nonLocationMetas)
+    return metaContainerOf(nonLocationMetas)
 }
 
 private class StatementTransformer(val ion: IonSystem) {
-    fun transform(stmt: Statement): ExprNode =
+    fun transform(stmt: PartiqlAst.Statement): ExprNode =
         when (stmt) {
-            is Statement.Query -> stmt.toExprNode()
-            is Statement.Dml -> stmt.toExprNode()
-            is Statement.Ddl -> stmt.toExprNode()
-            is Statement.Exec -> stmt.toExprNode()
+            is PartiqlAst.Statement.Query -> stmt.toExprNode()
+            is PartiqlAst.Statement.Dml -> stmt.toExprNode()
+            is PartiqlAst.Statement.Ddl -> stmt.toExprNode()
+            is PartiqlAst.Statement.Exec -> stmt.toExprNode()
         }
 
-    fun transform(stmt: Expr): ExprNode =
+    fun transform(stmt: PartiqlAst.Expr): ExprNode =
         stmt.toExprNode()
 
 
-    private fun Statement.Query.toExprNode(): ExprNode {
+    private fun PartiqlAst.Statement.Query.toExprNode(): ExprNode {
         return this.expr.toExprNode()
     }
 
-    private fun List<Expr>.toExprNodeList(): List<ExprNode> =
+    private fun List<PartiqlAst.Expr>.toExprNodeList(): List<ExprNode> =
         this.map { it.toExprNode() }
 
-    private fun Expr.toExprNode(): ExprNode {
+    private fun PartiqlAst.Expr.toExprNode(): ExprNode {
         checkThreadInterrupted()
         val metas = this.metas.toPartiQlMetaContainer()
         return when (this) {
-            is Expr.Missing -> LiteralMissing(metas)
+            is PartiqlAst.Expr.Missing -> LiteralMissing(metas)
             // https://github.com/amzn/ion-element-kotlin/issues/35, .asAnyElement() is unfortunately needed for now
-            is Expr.Lit -> Literal(value.asAnyElement().toIonValue(ion), metas)
-            is Expr.Id -> VariableReference(name.text, case.toCaseSensitivity(), qualifier.toScopeQualifier(), metas)
-            is Expr.Parameter -> Parameter(index.value.toInt(), metas)
-            is Expr.Not -> NAry(NAryOp.NOT, listOf(expr.toExprNode()), metas)
-            is Expr.Pos -> expr.toExprNode()
-            is Expr.Neg -> NAry(NAryOp.SUB, listOf(expr.toExprNode()), metas)
-            is Expr.Plus -> NAry(NAryOp.ADD, operands.toExprNodeList(), metas)
-            is Expr.Minus -> NAry(NAryOp.SUB, operands.toExprNodeList(), metas)
-            is Expr.Times -> NAry(NAryOp.MUL, operands.toExprNodeList(), metas)
-            is Expr.Divide -> NAry(NAryOp.DIV, operands.toExprNodeList(), metas)
-            is Expr.Modulo -> NAry(NAryOp.MOD, operands.toExprNodeList(), metas)
-            is Expr.Concat -> NAry(NAryOp.STRING_CONCAT, operands.toExprNodeList(), metas)
-            is Expr.And -> NAry(NAryOp.AND, operands.toExprNodeList(), metas)
-            is Expr.Or -> NAry(NAryOp.OR, operands.toExprNodeList(), metas)
-            is Expr.Eq -> NAry(NAryOp.EQ, operands.toExprNodeList(), metas)
-            is Expr.Ne -> NAry(NAryOp.NE, operands.toExprNodeList(), metas)
-            is Expr.Gt -> NAry(NAryOp.GT, operands.toExprNodeList(), metas)
-            is Expr.Gte -> NAry(NAryOp.GTE, operands.toExprNodeList(), metas)
-            is Expr.Lt -> NAry(NAryOp.LT, operands.toExprNodeList(), metas)
-            is Expr.Lte -> NAry(NAryOp.LTE, operands.toExprNodeList(), metas)
+            is PartiqlAst.Expr.Lit -> Literal(value.asAnyElement().toIonValue(ion), metas)
+            is PartiqlAst.Expr.Id -> VariableReference(name.text, case.toCaseSensitivity(), qualifier.toScopeQualifier(), metas)
+            is PartiqlAst.Expr.Parameter -> Parameter(index.value.toInt(), metas)
+            is PartiqlAst.Expr.Not -> NAry(NAryOp.NOT, listOf(expr.toExprNode()), metas)
+            is PartiqlAst.Expr.Pos -> expr.toExprNode()
+            is PartiqlAst.Expr.Neg -> NAry(NAryOp.SUB, listOf(expr.toExprNode()), metas)
+            is PartiqlAst.Expr.Plus -> NAry(NAryOp.ADD, operands.toExprNodeList(), metas)
+            is PartiqlAst.Expr.Minus -> NAry(NAryOp.SUB, operands.toExprNodeList(), metas)
+            is PartiqlAst.Expr.Times -> NAry(NAryOp.MUL, operands.toExprNodeList(), metas)
+            is PartiqlAst.Expr.Divide -> NAry(NAryOp.DIV, operands.toExprNodeList(), metas)
+            is PartiqlAst.Expr.Modulo -> NAry(NAryOp.MOD, operands.toExprNodeList(), metas)
+            is PartiqlAst.Expr.Concat -> NAry(NAryOp.STRING_CONCAT, operands.toExprNodeList(), metas)
+            is PartiqlAst.Expr.And -> NAry(NAryOp.AND, operands.toExprNodeList(), metas)
+            is PartiqlAst.Expr.Or -> NAry(NAryOp.OR, operands.toExprNodeList(), metas)
+            is PartiqlAst.Expr.Eq -> NAry(NAryOp.EQ, operands.toExprNodeList(), metas)
+            is PartiqlAst.Expr.Ne -> NAry(NAryOp.NE, operands.toExprNodeList(), metas)
+            is PartiqlAst.Expr.Gt -> NAry(NAryOp.GT, operands.toExprNodeList(), metas)
+            is PartiqlAst.Expr.Gte -> NAry(NAryOp.GTE, operands.toExprNodeList(), metas)
+            is PartiqlAst.Expr.Lt -> NAry(NAryOp.LT, operands.toExprNodeList(), metas)
+            is PartiqlAst.Expr.Lte -> NAry(NAryOp.LTE, operands.toExprNodeList(), metas)
 
-            is Expr.Union ->
+            is PartiqlAst.Expr.Union ->
                 NAry(
-                    when(setq) {
-                        is SetQuantifier.Distinct -> NAryOp.UNION
-                        is SetQuantifier.All -> NAryOp.UNION_ALL
+                    when (setq) {
+                        is PartiqlAst.SetQuantifier.Distinct -> NAryOp.UNION
+                        is PartiqlAst.SetQuantifier.All -> NAryOp.UNION_ALL
                     },
                     operands.toExprNodeList(),
                     metas)
-            is Expr.Intersect ->
+            is PartiqlAst.Expr.Intersect ->
                 NAry(
-                    when(setq) {
-                        is SetQuantifier.Distinct -> NAryOp.INTERSECT
-                        is SetQuantifier.All -> NAryOp.INTERSECT_ALL
+                    when (setq) {
+                        is PartiqlAst.SetQuantifier.Distinct -> NAryOp.INTERSECT
+                        is PartiqlAst.SetQuantifier.All -> NAryOp.INTERSECT_ALL
                     },
                     operands.toExprNodeList(),
                     metas)
-            is Expr.Except  ->
+            is PartiqlAst.Expr.Except ->
                 NAry(
-                    when(setq) {
-                        is SetQuantifier.Distinct -> NAryOp.EXCEPT
-                        is SetQuantifier.All -> NAryOp.EXCEPT_ALL
+                    when (setq) {
+                        is PartiqlAst.SetQuantifier.Distinct -> NAryOp.EXCEPT
+                        is PartiqlAst.SetQuantifier.All -> NAryOp.EXCEPT_ALL
                     },
                     operands.toExprNodeList(),
                     metas)
+            is PartiqlAst.Expr.Like -> NAry(NAryOp.LIKE, listOfNotNull(value.toExprNode(), pattern.toExprNode(), escape?.toExprNode()), metas)
+            is PartiqlAst.Expr.Between -> NAry(NAryOp.BETWEEN, listOf(value.toExprNode(), from.toExprNode(), to.toExprNode()), metas)
+            is PartiqlAst.Expr.InCollection -> NAry(NAryOp.IN, operands.toExprNodeList(), metas)
+            is PartiqlAst.Expr.IsType -> Typed(TypedOp.IS, value.toExprNode(), type.toExprNodeType(), metas)
+            is PartiqlAst.Expr.Cast -> Typed(TypedOp.CAST, value.toExprNode(), asType.toExprNodeType(), metas)
+            is PartiqlAst.Expr.CanCast -> Typed(TypedOp.CAN_CAST, value.toExprNode(), asType.toExprNodeType(), metas)
+            is PartiqlAst.Expr.CanLosslessCast -> Typed(TypedOp.CAN_LOSSLESS_CAST, value.toExprNode(), asType.toExprNodeType(), metas)
 
-
-            is Expr.Like -> NAry(NAryOp.LIKE, listOfNotNull(value.toExprNode(), pattern.toExprNode(), escape?.toExprNode()), metas)
-            is Expr.Between -> NAry(NAryOp.BETWEEN, listOf(value.toExprNode(), from.toExprNode(), to.toExprNode()), metas)
-            is Expr.InCollection -> NAry(NAryOp.IN, operands.toExprNodeList(), metas)
-            is Expr.IsType -> Typed(TypedOp.IS, value.toExprNode(), type.toExprNodeType(), metas)
-            is Expr.Cast -> Typed(TypedOp.CAST, value.toExprNode(), asType.toExprNodeType(), metas)
-            is Expr.CanCast -> Typed(TypedOp.CAN_CAST, value.toExprNode(), asType.toExprNodeType(), metas)
-            is Expr.CanLosslessCast -> Typed(TypedOp.CAN_LOSSLESS_CAST, value.toExprNode(), asType.toExprNodeType(), metas)
-
-            is Expr.SimpleCase ->
+            is PartiqlAst.Expr.SimpleCase ->
                 SimpleCase(
                     expr.toExprNode(),
                     cases.pairs.map { SimpleCaseWhen(it.first.toExprNode(), it.second.toExprNode()) },
                     default?.toExprNode(),
                     metas)
-            is Expr.SearchedCase ->
+            is PartiqlAst.Expr.SearchedCase ->
                 SearchedCase(
                     cases.pairs.map { SearchedCaseWhen(it.first.toExprNode(), it.second.toExprNode()) },
                     this.default?.toExprNode(),
                     metas)
-            is Expr.Struct -> Struct(this.fields.map { StructField(it.first.toExprNode(), it.second.toExprNode()) }, metas)
-            is Expr.Bag -> Seq(SeqType.BAG, values.toExprNodeList(), metas)
-            is Expr.List -> Seq(SeqType.LIST, values.toExprNodeList(), metas)
-            is Expr.Sexp -> Seq(SeqType.SEXP, values.toExprNodeList(), metas)
-            is Expr.Path ->
+            is PartiqlAst.Expr.Struct -> Struct(this.fields.map { StructField(it.first.toExprNode(), it.second.toExprNode()) }, metas)
+            is PartiqlAst.Expr.Bag -> Seq(SeqType.BAG, values.toExprNodeList(), metas)
+            is PartiqlAst.Expr.List -> Seq(SeqType.LIST, values.toExprNodeList(), metas)
+            is PartiqlAst.Expr.Sexp -> Seq(SeqType.SEXP, values.toExprNodeList(), metas)
+            is PartiqlAst.Expr.Path ->
                 Path(
                     root.toExprNode(),
                     steps.map {
                         val componentMetas = it.metas.toPartiQlMetaContainer()
                         when (it) {
-                            is PathStep.PathExpr ->
+                            is PartiqlAst.PathStep.PathExpr ->
                                 PathComponentExpr(
                                     it.index.toExprNode(),
                                     it.case.toCaseSensitivity(),
                                     componentMetas)
-                            is PathStep.PathUnpivot -> PathComponentUnpivot(componentMetas)
-                            is PathStep.PathWildcard -> PathComponentWildcard(componentMetas)
+                            is PartiqlAst.PathStep.PathUnpivot -> PathComponentUnpivot(componentMetas)
+                            is PartiqlAst.PathStep.PathWildcard -> PathComponentWildcard(componentMetas)
                         }
                     },
                     metas)
-            is Expr.Call ->
+            is PartiqlAst.Expr.Call ->
                 NAry(
                     NAryOp.CALL,
                     listOf(
                         VariableReference(
                             funcName.text,
-                            org.partiql.lang.ast.CaseSensitivity.INSENSITIVE,
-                            org.partiql.lang.ast.ScopeQualifier.UNQUALIFIED,
+                            CaseSensitivity.INSENSITIVE,
+                            ScopeQualifier.UNQUALIFIED,
                             emptyMetaContainer)
                     ) + args.map { it.toExprNode() },
                     metas)
-            is Expr.CallAgg ->
+            is PartiqlAst.Expr.CallAgg ->
                 CallAgg(
                     VariableReference(
                         funcName.text,
-                        org.partiql.lang.ast.CaseSensitivity.INSENSITIVE,
-                        org.partiql.lang.ast.ScopeQualifier.UNQUALIFIED,
+                        CaseSensitivity.INSENSITIVE,
+                        ScopeQualifier.UNQUALIFIED,
                         funcName.metas.toPartiQlMetaContainer()),
                     setq.toSetQuantifier(),
                     arg.toExprNode(),
                     metas)
-            is Expr.Select ->
+            is PartiqlAst.Expr.Select ->
                 Select(
-                    setQuantifier = setq?.toSetQuantifier() ?: ExprNodeSetQuantifier.ALL,
+                    setQuantifier = setq?.toSetQuantifier() ?: SetQuantifier.ALL,
                     projection = project.toSelectProjection(),
                     from = from.toFromSource(),
                     fromLet = fromLet?.toLetSource(),
@@ -198,8 +184,8 @@ private class StatementTransformer(val ion: IonSystem) {
                     offset = offset?.toExprNode(),
                     metas = metas
             )
-            is Expr.Date -> DateLiteral(year.value.toInt(), month.value.toInt(), day.value.toInt(), metas)
-            is Expr.LitTime ->
+            is PartiqlAst.Expr.Date -> DateLiteral(year.value.toInt(), month.value.toInt(), day.value.toInt(), metas)
+            is PartiqlAst.Expr.LitTime ->
                 TimeLiteral(
                     value.hour.value.toInt(),
                     value.minute.value.toInt(),
@@ -210,23 +196,23 @@ private class StatementTransformer(val ion: IonSystem) {
                     value.tzMinutes?.value?.toInt(),
                     metas
                 )
-            is Expr.NullIf -> NullIf(expr1.toExprNode(), expr2.toExprNode(), metas)
-            is Expr.Coalesce -> Coalesce(args.map { it.toExprNode() }, metas)
+            is PartiqlAst.Expr.NullIf -> NullIf(expr1.toExprNode(), expr2.toExprNode(), metas)
+            is PartiqlAst.Expr.Coalesce -> Coalesce(args.map { it.toExprNode() }, metas)
         }
     }
 
-    private fun Projection.toSelectProjection(): SelectProjection {
+    private fun PartiqlAst.Projection.toSelectProjection(): SelectProjection {
         val metas = this.metas.toPartiQlMetaContainer()
         return when (this) {
-            is Projection.ProjectStar -> SelectProjectionList(listOf(SelectListItemStar(metas)), metas)
-            is Projection.ProjectValue -> SelectProjectionValue(this.value.toExprNode(), metas)
-            is Projection.ProjectPivot -> SelectProjectionPivot(this.value.toExprNode(), this.key.toExprNode(), metas)
-            is Projection.ProjectList ->
+            is PartiqlAst.Projection.ProjectStar -> SelectProjectionList(listOf(SelectListItemStar(metas)), metas)
+            is PartiqlAst.Projection.ProjectValue -> SelectProjectionValue(this.value.toExprNode(), metas)
+            is PartiqlAst.Projection.ProjectPivot -> SelectProjectionPivot(this.value.toExprNode(), this.key.toExprNode(), metas)
+            is PartiqlAst.Projection.ProjectList ->
                 SelectProjectionList(
                     this.projectItems.map {
                         when (it) {
-                            is ProjectItem.ProjectAll -> SelectListItemProjectAll(it.expr.toExprNode())
-                            is ProjectItem.ProjectExpr ->
+                            is PartiqlAst.ProjectItem.ProjectAll -> SelectListItemProjectAll(it.expr.toExprNode())
+                            is PartiqlAst.ProjectItem.ProjectExpr ->
                                 SelectListItemExpr(
                                     it.expr.toExprNode(),
                                     it.asAlias?.toSymbolicName())
@@ -265,15 +251,15 @@ private class StatementTransformer(val ion: IonSystem) {
         }
     }
 
-    private fun JoinType.toJoinOp(): JoinOp =
+    private fun PartiqlAst.JoinType.toJoinOp(): JoinOp =
         when (this) {
-            is JoinType.Inner -> JoinOp.INNER
-            is JoinType.Left -> JoinOp.LEFT
-            is JoinType.Right -> JoinOp.RIGHT
-            is JoinType.Full -> JoinOp.OUTER
+            is PartiqlAst.JoinType.Inner -> JoinOp.INNER
+            is PartiqlAst.JoinType.Left -> JoinOp.LEFT
+            is PartiqlAst.JoinType.Right -> JoinOp.RIGHT
+            is PartiqlAst.JoinType.Full -> JoinOp.OUTER
         }
 
-    private fun Let.toLetSource(): LetSource {
+    private fun PartiqlAst.Let.toLetSource(): LetSource {
         return LetSource(
             this.letBindings.map {
                 LetBinding(
@@ -299,7 +285,7 @@ private class StatementTransformer(val ion: IonSystem) {
             else -> OrderingSpec.ASC
         }
 
-    private fun PartiqlAst.GroupBy.toGroupBy(): org.partiql.lang.ast.GroupBy =
+    private fun PartiqlAst.GroupBy.toGroupBy(): GroupBy =
         GroupBy(
             grouping = strategy.toGroupingStrategy(),
             groupByItems = keyList.keys.map {
@@ -309,82 +295,82 @@ private class StatementTransformer(val ion: IonSystem) {
             },
             groupName = groupAsAlias?.toSymbolicName())
 
-    private fun GroupingStrategy.toGroupingStrategy(): org.partiql.lang.ast.GroupingStrategy =
+    private fun PartiqlAst.GroupingStrategy.toGroupingStrategy(): GroupingStrategy =
         when(this) {
-            is GroupingStrategy.GroupFull-> org.partiql.lang.ast.GroupingStrategy.FULL
-            is GroupingStrategy.GroupPartial -> org.partiql.lang.ast.GroupingStrategy.PARTIAL
+            is PartiqlAst.GroupingStrategy.GroupFull-> GroupingStrategy.FULL
+            is PartiqlAst.GroupingStrategy.GroupPartial -> GroupingStrategy.PARTIAL
         }
 
-    private fun Type.toExprNodeType(): DataType {
+    private fun PartiqlAst.Type.toExprNodeType(): DataType {
         val metas = this.metas.toPartiQlMetaContainer()
 
         return when (this) {
-            is Type.NullType -> DataType(SqlDataType.NULL, listOf(), metas)
-            is Type.MissingType -> DataType(SqlDataType.MISSING, listOf(), metas)
-            is Type.BooleanType -> DataType(SqlDataType.BOOLEAN, listOf(), metas)
-            is Type.IntegerType -> DataType(SqlDataType.INTEGER, listOf(), metas)
-            is Type.SmallintType -> DataType(SqlDataType.SMALLINT, listOf(), metas)
-            is Type.Integer4Type -> DataType(SqlDataType.INTEGER4, listOf(), metas)
-            is Type.Integer8Type -> DataType(SqlDataType.INTEGER8, listOf(), metas)
-            is Type.FloatType -> DataType(SqlDataType.FLOAT, listOfNotNull(precision?.value?.toIntExact()), metas)
-            is Type.RealType -> DataType(SqlDataType.REAL, listOf(), metas)
-            is Type.DoublePrecisionType -> DataType(SqlDataType.DOUBLE_PRECISION, listOf(), metas)
-            is Type.DecimalType -> DataType(SqlDataType.DECIMAL, listOfNotNull(precision?.value?.toIntExact(), scale?.value?.toIntExact()), metas)
-            is Type.NumericType -> DataType(SqlDataType.NUMERIC, listOfNotNull(precision?.value?.toIntExact(), scale?.value?.toIntExact()), metas)
-            is Type.TimestampType -> DataType(SqlDataType.TIMESTAMP, listOf(), metas)
-            is Type.CharacterType -> DataType(SqlDataType.CHARACTER, listOfNotNull(length?.value?.toIntExact()), metas)
-            is Type.CharacterVaryingType -> DataType(SqlDataType.CHARACTER_VARYING, listOfNotNull(length?.value?.toIntExact()), metas)
-            is Type.StringType -> DataType(SqlDataType.STRING, listOf(), metas)
-            is Type.SymbolType -> DataType(SqlDataType.SYMBOL, listOf(), metas)
-            is Type.BlobType -> DataType(SqlDataType.BLOB, listOf(), metas)
-            is Type.ClobType -> DataType(SqlDataType.CLOB, listOf(), metas)
-            is Type.StructType -> DataType(SqlDataType.STRUCT, listOf(), metas)
-            is Type.TupleType -> DataType(SqlDataType.TUPLE, listOf(), metas)
-            is Type.ListType -> DataType(SqlDataType.LIST, listOf(), metas)
-            is Type.SexpType -> DataType(SqlDataType.SEXP, listOf(), metas)
-            is Type.BagType -> DataType(SqlDataType.BAG, listOf(), metas)
-            is Type.AnyType -> DataType(SqlDataType.ANY, listOf(), metas)
-            is Type.CustomType -> DataType(SqlDataType.CustomDataType(this.name.text), listOf(), metas)
-            is Type.DateType -> DataType(SqlDataType.DATE, listOf(), metas)
-            is Type.TimeType -> DataType(SqlDataType.TIME, listOfNotNull(precision?.value?.toIntExact()), metas)
-            is Type.TimeWithTimeZoneType -> DataType(SqlDataType.TIME_WITH_TIME_ZONE, listOfNotNull(precision?.value?.toIntExact()), metas)
+            is PartiqlAst.Type.NullType -> DataType(SqlDataType.NULL, listOf(), metas)
+            is PartiqlAst.Type.MissingType -> DataType(SqlDataType.MISSING, listOf(), metas)
+            is PartiqlAst.Type.BooleanType -> DataType(SqlDataType.BOOLEAN, listOf(), metas)
+            is PartiqlAst.Type.IntegerType -> DataType(SqlDataType.INTEGER, listOf(), metas)
+            is PartiqlAst.Type.SmallintType -> DataType(SqlDataType.SMALLINT, listOf(), metas)
+            is PartiqlAst.Type.Integer4Type -> DataType(SqlDataType.INTEGER4, listOf(), metas)
+            is PartiqlAst.Type.Integer8Type -> DataType(SqlDataType.INTEGER8, listOf(), metas)
+            is PartiqlAst.Type.FloatType -> DataType(SqlDataType.FLOAT, listOfNotNull(precision?.value?.toIntExact()), metas)
+            is PartiqlAst.Type.RealType -> DataType(SqlDataType.REAL, listOf(), metas)
+            is PartiqlAst.Type.DoublePrecisionType -> DataType(SqlDataType.DOUBLE_PRECISION, listOf(), metas)
+            is PartiqlAst.Type.DecimalType -> DataType(SqlDataType.DECIMAL, listOfNotNull(precision?.value?.toIntExact(), scale?.value?.toIntExact()), metas)
+            is PartiqlAst.Type.NumericType -> DataType(SqlDataType.NUMERIC, listOfNotNull(precision?.value?.toIntExact(), scale?.value?.toIntExact()), metas)
+            is PartiqlAst.Type.TimestampType -> DataType(SqlDataType.TIMESTAMP, listOf(), metas)
+            is PartiqlAst.Type.CharacterType -> DataType(SqlDataType.CHARACTER, listOfNotNull(length?.value?.toIntExact()), metas)
+            is PartiqlAst.Type.CharacterVaryingType -> DataType(SqlDataType.CHARACTER_VARYING, listOfNotNull(length?.value?.toIntExact()), metas)
+            is PartiqlAst.Type.StringType -> DataType(SqlDataType.STRING, listOf(), metas)
+            is PartiqlAst.Type.SymbolType -> DataType(SqlDataType.SYMBOL, listOf(), metas)
+            is PartiqlAst.Type.BlobType -> DataType(SqlDataType.BLOB, listOf(), metas)
+            is PartiqlAst.Type.ClobType -> DataType(SqlDataType.CLOB, listOf(), metas)
+            is PartiqlAst.Type.StructType -> DataType(SqlDataType.STRUCT, listOf(), metas)
+            is PartiqlAst.Type.TupleType -> DataType(SqlDataType.TUPLE, listOf(), metas)
+            is PartiqlAst.Type.ListType -> DataType(SqlDataType.LIST, listOf(), metas)
+            is PartiqlAst.Type.SexpType -> DataType(SqlDataType.SEXP, listOf(), metas)
+            is PartiqlAst.Type.BagType -> DataType(SqlDataType.BAG, listOf(), metas)
+            is PartiqlAst.Type.AnyType -> DataType(SqlDataType.ANY, listOf(), metas)
+            is PartiqlAst.Type.CustomType -> DataType(SqlDataType.CustomDataType(this.name.text), listOf(), metas)
+            is PartiqlAst.Type.DateType -> DataType(SqlDataType.DATE, listOf(), metas)
+            is PartiqlAst.Type.TimeType -> DataType(SqlDataType.TIME, listOfNotNull(precision?.value?.toIntExact()), metas)
+            is PartiqlAst.Type.TimeWithTimeZoneType -> DataType(SqlDataType.TIME_WITH_TIME_ZONE, listOfNotNull(precision?.value?.toIntExact()), metas)
             // TODO: Remove these hardcoded nodes from the PIG domain once [https://github.com/partiql/partiql-lang-kotlin/issues/510] is resolved.
-            is Type.EsBoolean,
-            is Type.EsInteger,
-            is Type.EsText,
-            is Type.EsAny,
-            is Type.EsFloat,
-            is Type.RsBigint,
-            is Type.RsBoolean,
-            is Type.RsDoublePrecision,
-            is Type.RsInteger,
-            is Type.RsReal,
-            is Type.RsVarcharMax,
-            is Type.SparkBoolean,
-            is Type.SparkDouble,
-            is Type.SparkFloat,
-            is Type.SparkInteger,
-            is Type.SparkLong,
-            is Type.SparkShort -> error("$this node should not be present in PartiQLAST. Consider transforming the AST using CustomTypeVisitorTransform.")
+            is PartiqlAst.Type.EsBoolean,
+            is PartiqlAst.Type.EsInteger,
+            is PartiqlAst.Type.EsText,
+            is PartiqlAst.Type.EsAny,
+            is PartiqlAst.Type.EsFloat,
+            is PartiqlAst.Type.RsBigint,
+            is PartiqlAst.Type.RsBoolean,
+            is PartiqlAst.Type.RsDoublePrecision,
+            is PartiqlAst.Type.RsInteger,
+            is PartiqlAst.Type.RsReal,
+            is PartiqlAst.Type.RsVarcharMax,
+            is PartiqlAst.Type.SparkBoolean,
+            is PartiqlAst.Type.SparkDouble,
+            is PartiqlAst.Type.SparkFloat,
+            is PartiqlAst.Type.SparkInteger,
+            is PartiqlAst.Type.SparkLong,
+            is PartiqlAst.Type.SparkShort -> error("$this node should not be present in PartiQLAST. Consider transforming the AST using CustomTypeVisitorTransform.")
         }
     }
 
-    private fun PartiqlAst.SetQuantifier.toSetQuantifier(): ExprNodeSetQuantifier =
+    private fun PartiqlAst.SetQuantifier.toSetQuantifier(): SetQuantifier =
         when (this) {
-            is PartiqlAst.SetQuantifier.All -> ExprNodeSetQuantifier.ALL
-            is PartiqlAst.SetQuantifier.Distinct -> ExprNodeSetQuantifier.DISTINCT
+            is PartiqlAst.SetQuantifier.All -> SetQuantifier.ALL
+            is PartiqlAst.SetQuantifier.Distinct -> SetQuantifier.DISTINCT
         }
 
-    private fun ScopeQualifier.toScopeQualifier(): org.partiql.lang.ast.ScopeQualifier =
+    private fun PartiqlAst.ScopeQualifier.toScopeQualifier(): ScopeQualifier =
         when (this) {
-            is ScopeQualifier.Unqualified -> org.partiql.lang.ast.ScopeQualifier.UNQUALIFIED
-            is ScopeQualifier.LocalsFirst -> org.partiql.lang.ast.ScopeQualifier.LEXICAL
+            is PartiqlAst.ScopeQualifier.Unqualified -> ScopeQualifier.UNQUALIFIED
+            is PartiqlAst.ScopeQualifier.LocalsFirst -> ScopeQualifier.LEXICAL
         }
 
-    private fun CaseSensitivity.toCaseSensitivity(): org.partiql.lang.ast.CaseSensitivity =
+    private fun PartiqlAst.CaseSensitivity.toCaseSensitivity(): CaseSensitivity =
         when (this) {
-            is CaseSensitivity.CaseSensitive -> org.partiql.lang.ast.CaseSensitivity.SENSITIVE
-            is CaseSensitivity.CaseInsensitive -> org.partiql.lang.ast.CaseSensitivity.INSENSITIVE
+            is PartiqlAst.CaseSensitivity.CaseSensitive -> CaseSensitivity.SENSITIVE
+            is PartiqlAst.CaseSensitivity.CaseInsensitive -> CaseSensitivity.INSENSITIVE
         }
 
     private fun PartiqlAst.OnConflict.toOnConflictNode(): OnConflict {
@@ -446,20 +432,20 @@ private class StatementTransformer(val ion: IonSystem) {
         }
     }
 
-    private fun ReturningMapping.toExprNodeReturningMapping(): ExprNodeReturningMapping =
+    private fun PartiqlAst.ReturningMapping.toExprNodeReturningMapping(): ReturningMapping =
             when(this) {
-                is ReturningMapping.ModifiedOld -> ExprNodeReturningMapping.MODIFIED_OLD
-                is ReturningMapping.ModifiedNew -> ExprNodeReturningMapping.MODIFIED_NEW
-                is ReturningMapping.AllOld -> ExprNodeReturningMapping.ALL_OLD
-                is ReturningMapping.AllNew -> ExprNodeReturningMapping.ALL_NEW
+                is PartiqlAst.ReturningMapping.ModifiedOld -> ReturningMapping.MODIFIED_OLD
+                is PartiqlAst.ReturningMapping.ModifiedNew -> ReturningMapping.MODIFIED_NEW
+                is PartiqlAst.ReturningMapping.AllOld -> ReturningMapping.ALL_OLD
+                is PartiqlAst.ReturningMapping.AllNew -> ReturningMapping.ALL_NEW
             }
 
-    private fun Statement.Ddl.toExprNode(): ExprNode {
+    private fun PartiqlAst.Statement.Ddl.toExprNode(): ExprNode {
         val op = this.op
         val metas = this.metas.toPartiQlMetaContainer()
         return when(op) {
-            is DdlOp.CreateTable -> CreateTable(op.tableName.text, metas)
-            is DdlOp.DropTable ->
+            is PartiqlAst.DdlOp.CreateTable -> CreateTable(op.tableName.text, metas)
+            is PartiqlAst.DdlOp.DropTable ->
                 DropTable(
                     tableId = Identifier(
                         id = op.tableName.name.text,
@@ -467,7 +453,7 @@ private class StatementTransformer(val ion: IonSystem) {
                         metas = emptyMetaContainer
                     ),
                     metas = metas)
-            is DdlOp.CreateIndex ->
+            is PartiqlAst.DdlOp.CreateIndex ->
                 CreateIndex(
                     tableId = Identifier(
                         id = op.indexName.name.text,
@@ -476,7 +462,7 @@ private class StatementTransformer(val ion: IonSystem) {
                     ),
                     keys = op.fields.map { it.toExprNode() },
                     metas = metas)
-            is DdlOp.DropIndex ->
+            is PartiqlAst.DdlOp.DropIndex ->
                 DropIndex(
                     tableId = Identifier(
                         id = op.table.name.text,
@@ -492,7 +478,7 @@ private class StatementTransformer(val ion: IonSystem) {
         }
     }
 
-    private fun Statement.Exec.toExprNode(): ExprNode {
+    private fun PartiqlAst.Statement.Exec.toExprNode(): ExprNode {
         return Exec(procedureName.toSymbolicName(), this.args.toExprNodeList(), metas.toPartiQlMetaContainer())
     }
 }

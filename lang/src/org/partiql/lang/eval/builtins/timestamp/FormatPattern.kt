@@ -14,11 +14,10 @@
 
 package org.partiql.lang.eval.builtins.timestamp
 
-import org.partiql.lang.errors.*
-import org.partiql.lang.eval.*
-import org.partiql.lang.util.*
-
-import org.partiql.lang.eval.builtins.timestamp.TimestampField.*
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
+import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.util.propertyValueMapOf
 
 /**
  * Represents a parsed timestamp format pattern.
@@ -170,7 +169,8 @@ internal class FormatPattern(val formatPatternString: String, val formatItems: L
         //NOTE: HOUR is not a valid precision for an Ion timestamp but when a format pattern's
         //leastSignificantField is HOUR, the minute field defaults to 00.
         if(hasOffset || hasAmPm) {
-            errIfMissingTimestampFields(YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY)
+            errIfMissingTimestampFields(TimestampField.YEAR, TimestampField.MONTH_OF_YEAR, TimestampField.DAY_OF_MONTH,
+                    TimestampField.HOUR_OF_DAY)
         }
 
         when (leastSignificantField) {
@@ -178,18 +178,24 @@ internal class FormatPattern(val formatPatternString: String, val formatItems: L
                 //If most precise field is null there are no format symbols corresponding to any timestamp fields.
                 err("YEAR")
             }
-            YEAR -> {
+            TimestampField.YEAR -> {
                 // the year field is the most coarse of the timestamp fields
                 // it does not require any other fields to make a complete timestamp
             }
-            MONTH_OF_YEAR      -> errIfMissingTimestampFields(YEAR)
-            DAY_OF_MONTH       -> errIfMissingTimestampFields(YEAR, MONTH_OF_YEAR)
-            HOUR_OF_DAY        -> errIfMissingTimestampFields(YEAR, MONTH_OF_YEAR, DAY_OF_MONTH)
-            MINUTE_OF_HOUR     -> errIfMissingTimestampFields(YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY)
-            SECOND_OF_MINUTE   -> errIfMissingTimestampFields(YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR)
-            FRACTION_OF_SECOND -> errIfMissingTimestampFields(YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE)
+            TimestampField.MONTH_OF_YEAR -> errIfMissingTimestampFields(TimestampField.YEAR)
+            TimestampField.DAY_OF_MONTH -> errIfMissingTimestampFields(TimestampField.YEAR, TimestampField.MONTH_OF_YEAR)
+            TimestampField.HOUR_OF_DAY        -> errIfMissingTimestampFields(TimestampField.YEAR,
+                    TimestampField.MONTH_OF_YEAR, TimestampField.DAY_OF_MONTH)
+            TimestampField.MINUTE_OF_HOUR     -> errIfMissingTimestampFields(TimestampField.YEAR,
+                    TimestampField.MONTH_OF_YEAR, TimestampField.DAY_OF_MONTH, TimestampField.HOUR_OF_DAY)
+            TimestampField.SECOND_OF_MINUTE   -> errIfMissingTimestampFields(TimestampField.YEAR,
+                    TimestampField.MONTH_OF_YEAR, TimestampField.DAY_OF_MONTH, TimestampField.HOUR_OF_DAY,
+                    TimestampField.MINUTE_OF_HOUR)
+            TimestampField. FRACTION_OF_SECOND -> errIfMissingTimestampFields(TimestampField.YEAR,
+                    TimestampField.MONTH_OF_YEAR, TimestampField.DAY_OF_MONTH, TimestampField.HOUR_OF_DAY,
+                    TimestampField.MINUTE_OF_HOUR, TimestampField.SECOND_OF_MINUTE)
 
-            OFFSET, AM_PM      -> {
+            TimestampField.OFFSET, TimestampField.AM_PM      -> {
                 throw IllegalStateException("OFFSET, AM_PM should never be the least significant field!")
             }
         }

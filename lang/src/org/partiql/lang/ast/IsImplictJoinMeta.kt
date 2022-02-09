@@ -11,14 +11,7 @@
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
  *  language governing permissions and limitations under the License.
  */
-
-/*
-
- */
 package org.partiql.lang.ast
-
-import com.amazon.ion.*
-import org.partiql.lang.ast.*
 
 /**
  * Meta node intended to be attached to an instance of [FromSourcedJoin] to indicate that no

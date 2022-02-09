@@ -3,7 +3,6 @@ package org.partiql.lang.schemadiscovery
 import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.ionInt
 import org.partiql.ionschema.model.IonSchemaModel
-import java.lang.IllegalStateException
 import kotlin.math.max
 import kotlin.math.min
 

@@ -14,7 +14,74 @@
 
 package org.partiql.lang.ast.passes
 
-import org.partiql.lang.ast.*
+import org.partiql.lang.ast.Assignment
+import org.partiql.lang.ast.AssignmentOp
+import org.partiql.lang.ast.CallAgg
+import org.partiql.lang.ast.Coalesce
+import org.partiql.lang.ast.CreateIndex
+import org.partiql.lang.ast.CreateTable
+import org.partiql.lang.ast.DataManipulation
+import org.partiql.lang.ast.DataManipulationOperation
+import org.partiql.lang.ast.DataType
+import org.partiql.lang.ast.DateLiteral
+import org.partiql.lang.ast.DeleteOp
+import org.partiql.lang.ast.DmlOpList
+import org.partiql.lang.ast.DropIndex
+import org.partiql.lang.ast.DropTable
+import org.partiql.lang.ast.Exec
+import org.partiql.lang.ast.ExprNode
+import org.partiql.lang.ast.FromSource
+import org.partiql.lang.ast.FromSourceExpr
+import org.partiql.lang.ast.FromSourceJoin
+import org.partiql.lang.ast.FromSourceLet
+import org.partiql.lang.ast.FromSourceUnpivot
+import org.partiql.lang.ast.GroupBy
+import org.partiql.lang.ast.GroupByItem
+import org.partiql.lang.ast.HasMetas
+import org.partiql.lang.ast.Identifier
+import org.partiql.lang.ast.InsertOp
+import org.partiql.lang.ast.InsertValueOp
+import org.partiql.lang.ast.LetBinding
+import org.partiql.lang.ast.LetSource
+import org.partiql.lang.ast.LetVariables
+import org.partiql.lang.ast.Literal
+import org.partiql.lang.ast.LiteralMissing
+import org.partiql.lang.ast.MetaContainer
+import org.partiql.lang.ast.NAry
+import org.partiql.lang.ast.NullIf
+import org.partiql.lang.ast.OnConflict
+import org.partiql.lang.ast.OrderBy
+import org.partiql.lang.ast.Parameter
+import org.partiql.lang.ast.Path
+import org.partiql.lang.ast.PathComponent
+import org.partiql.lang.ast.PathComponentExpr
+import org.partiql.lang.ast.PathComponentUnpivot
+import org.partiql.lang.ast.PathComponentWildcard
+import org.partiql.lang.ast.RemoveOp
+import org.partiql.lang.ast.ReturningElem
+import org.partiql.lang.ast.ReturningExpr
+import org.partiql.lang.ast.SearchedCase
+import org.partiql.lang.ast.SearchedCaseWhen
+import org.partiql.lang.ast.Select
+import org.partiql.lang.ast.SelectListItem
+import org.partiql.lang.ast.SelectListItemExpr
+import org.partiql.lang.ast.SelectListItemProjectAll
+import org.partiql.lang.ast.SelectListItemStar
+import org.partiql.lang.ast.SelectProjection
+import org.partiql.lang.ast.SelectProjectionList
+import org.partiql.lang.ast.SelectProjectionPivot
+import org.partiql.lang.ast.SelectProjectionValue
+import org.partiql.lang.ast.Seq
+import org.partiql.lang.ast.SeqType
+import org.partiql.lang.ast.SimpleCase
+import org.partiql.lang.ast.SimpleCaseWhen
+import org.partiql.lang.ast.SortSpec
+import org.partiql.lang.ast.Struct
+import org.partiql.lang.ast.StructField
+import org.partiql.lang.ast.SymbolicName
+import org.partiql.lang.ast.TimeLiteral
+import org.partiql.lang.ast.Typed
+import org.partiql.lang.ast.VariableReference
 import org.partiql.lang.util.checkThreadInterrupted
 
 /**
@@ -35,8 +102,8 @@ open class AstRewriterBase : AstRewriter {
     override fun rewriteExprNode(node: ExprNode): ExprNode {
         checkThreadInterrupted()
         return when (node) {
-            is Literal           -> rewriteLiteral(node)
-            is LiteralMissing    -> rewriteLiteralMissing(node)
+            is Literal -> rewriteLiteral(node)
+            is LiteralMissing -> rewriteLiteralMissing(node)
             is VariableReference -> rewriteVariableReference(node)
             is NAry              -> rewriteNAry(node)
             is CallAgg           -> rewriteCallAgg(node)
@@ -53,8 +120,8 @@ open class AstRewriterBase : AstRewriter {
             is CreateIndex       -> rewriteCreateIndex(node)
             is DropTable         -> rewriteDropTable(node)
             is DropIndex         -> rewriteDropIndex(node)
-            is NullIf            -> rewriteNullIf(node)
-            is Coalesce          -> rewriteCoalesce(node)
+            is NullIf -> rewriteNullIf(node)
+            is Coalesce -> rewriteCoalesce(node)
             is Exec              -> rewriteExec(node)
             is DateLiteral -> rewriteDate(node)
             is TimeLiteral -> rewriteTime(node)
@@ -210,7 +277,7 @@ open class AstRewriterBase : AstRewriter {
 
     open fun rewriteSelectProjection(projection: SelectProjection): SelectProjection =
         when (projection) {
-            is SelectProjectionList  -> rewriteSelectProjectionList(projection)
+            is SelectProjectionList -> rewriteSelectProjectionList(projection)
             is SelectProjectionValue -> rewriteSelectProjectionValue(projection)
             is SelectProjectionPivot -> rewriteSelectProjectionPivot(projection)
         }
@@ -231,8 +298,8 @@ open class AstRewriterBase : AstRewriter {
 
     open fun rewriteSelectListItem(item: SelectListItem): SelectListItem =
         when(item) {
-            is SelectListItemStar       -> rewriteSelectListItemStar(item)
-            is SelectListItemExpr       -> rewriteSelectListItemExpr(item)
+            is SelectListItemStar -> rewriteSelectListItemStar(item)
+            is SelectListItemExpr -> rewriteSelectListItemExpr(item)
             is SelectListItemProjectAll -> rewriteSelectListItemProjectAll(item)
         }
 
@@ -252,7 +319,7 @@ open class AstRewriterBase : AstRewriter {
         when(pathComponent) {
             is PathComponentUnpivot -> rewritePathComponentUnpivot(pathComponent)
             is PathComponentWildcard -> rewritePathComponentWildcard(pathComponent)
-            is PathComponentExpr     -> rewritePathComponentExpr(pathComponent)
+            is PathComponentExpr -> rewritePathComponentExpr(pathComponent)
         }
 
     open fun rewritePathComponentUnpivot(pathComponent: PathComponentUnpivot): PathComponent =
@@ -270,12 +337,12 @@ open class AstRewriterBase : AstRewriter {
     open fun rewriteFromSource(fromSource: FromSource): FromSource =
         when(fromSource) {
             is FromSourceJoin -> rewriteFromSourceJoin(fromSource)
-            is FromSourceLet  -> rewriteFromSourceLet(fromSource)
+            is FromSourceLet -> rewriteFromSourceLet(fromSource)
         }
 
     open fun rewriteFromSourceLet(fromSourceLet: FromSourceLet): FromSourceLet =
         when(fromSourceLet) {
-            is FromSourceExpr    -> rewriteFromSourceExpr(fromSourceLet)
+            is FromSourceExpr -> rewriteFromSourceExpr(fromSourceLet)
             is FromSourceUnpivot -> rewriteFromSourceUnpivot(fromSourceLet)
         }
 
@@ -406,11 +473,11 @@ open class AstRewriterBase : AstRewriter {
 
     open fun rewriteDataManipulationOperation(node: DataManipulationOperation): DataManipulationOperation =
         when(node) {
-            is InsertOp      -> rewriteDataManipulationOperationInsertOp(node)
+            is InsertOp -> rewriteDataManipulationOperationInsertOp(node)
             is InsertValueOp -> rewriteDataManipulationOperationInsertValueOp(node)
-            is AssignmentOp  -> rewriteDataManipulationOperationAssignmentOp(node)
-            is RemoveOp      -> rewriteDataManipulationOperationRemoveOp(node)
-            is DeleteOp      -> rewriteDataManipulationOperationDeleteOp()
+            is AssignmentOp -> rewriteDataManipulationOperationAssignmentOp(node)
+            is RemoveOp -> rewriteDataManipulationOperationRemoveOp(node)
+            is DeleteOp -> rewriteDataManipulationOperationDeleteOp()
         }
 
     open fun rewriteDataManipulationOperationInsertOp(node: InsertOp): DataManipulationOperation =

@@ -5,7 +5,6 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.EvaluatorTestBase
 
-
 class TrimEvaluationTest : EvaluatorTestBase() {
 
     @Test

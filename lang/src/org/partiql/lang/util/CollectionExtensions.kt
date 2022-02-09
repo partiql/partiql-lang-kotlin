@@ -14,10 +14,9 @@
 
 package org.partiql.lang.util
 
-import com.amazon.ion.*
-import org.partiql.lang.eval.*
-import java.util.*
-import java.util.Collections.*
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.eval.isUnknown
 
 /** Returns the first element of the list or `null` if it doesn't exist. */
 inline val <T> List<T>.head: T?

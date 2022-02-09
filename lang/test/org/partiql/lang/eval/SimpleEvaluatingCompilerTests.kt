@@ -14,9 +14,10 @@
 
 package org.partiql.lang.eval
 
-import org.partiql.lang.errors.*
-import org.partiql.lang.util.*
-import org.junit.*
+import org.junit.Test
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
+import org.partiql.lang.util.sourceLocationProperties
 
 class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
     val session = mapOf(

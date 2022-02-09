@@ -14,12 +14,11 @@
 
 package org.partiql.lang.syntax
 
-import junitparams.*
-import junitparams.naming.*
-import org.junit.*
 import com.amazon.ionelement.api.toIonElement
+import junitparams.Parameters
+import junitparams.naming.TestCaseName
+import org.junit.Test
 import org.partiql.lang.domains.PartiqlAst
-
 
 class SqlParserPrecedenceTest : SqlParserTestBase() {
 

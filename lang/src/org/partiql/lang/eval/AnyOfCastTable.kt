@@ -11,7 +11,6 @@ import org.partiql.lang.types.CollectionType
 import org.partiql.lang.types.SingleType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.StructType
-import java.lang.IllegalStateException
 
 /**
  * The template table that encodes the type conversion precedence for a source type to target type.

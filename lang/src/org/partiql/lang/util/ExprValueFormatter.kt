@@ -1,12 +1,9 @@
 package org.partiql.lang.util
 
-import com.amazon.ion.system.*
-import org.partiql.lang.eval.*
-import org.partiql.lang.eval.ExprValueType.*
-import java.lang.StringBuilder
-import java.time.LocalTime
-import java.time.OffsetTime
-import java.time.format.DateTimeFormatter
+import com.amazon.ion.system.IonTextWriterBuilder
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.eval.name
 
 private const val MISSING_STRING = "MISSING"
 private const val NULL_STRING = "NULL"
@@ -41,33 +38,27 @@ class ConfigurableExprValueFormatter(private val config: Configuration) : ExprVa
         fun recursivePrettyPrint(value: ExprValue) {
             when (value.type) {
 
-                MISSING                                    -> out.append(MISSING_STRING)
-                NULL                                       -> out.append(NULL_STRING)
-
-                BOOL                                       -> out.append(value.scalar.booleanValue().toString())
-
-                INT, DECIMAL                               -> out.append(value.scalar.numberValue().toString())
-
-                STRING                                     -> out.append("'${value.scalar.stringValue()}'")
-
-                DATE                                       -> out.append(value.scalar.dateValue().toString())
-
-                TIME                                       -> out.append(value.scalar.timeValue().toString())
+                ExprValueType.MISSING -> out.append(MISSING_STRING)
+                ExprValueType.NULL -> out.append(NULL_STRING)
+                ExprValueType.BOOL -> out.append(value.scalar.booleanValue().toString())
+                ExprValueType.INT, ExprValueType.DECIMAL -> out.append(value.scalar.numberValue().toString())
+                ExprValueType.STRING -> out.append("'${value.scalar.stringValue()}'")
+                ExprValueType.DATE -> out.append(value.scalar.dateValue().toString())
+                ExprValueType.TIME -> out.append(value.scalar.timeValue().toString())
 
                 // fallback to an Ion literal for all types that don't have a native PartiQL representation
-                FLOAT, TIMESTAMP, SYMBOL, CLOB, BLOB, SEXP -> prettyPrintIonLiteral(value)
+                ExprValueType.FLOAT, ExprValueType.TIMESTAMP, ExprValueType.SYMBOL,
+                ExprValueType.CLOB,ExprValueType. BLOB, ExprValueType.SEXP -> prettyPrintIonLiteral(value)
 
-                LIST                                       -> prettyPrintContainer(value, "[", "]")
-                BAG                                        -> prettyPrintContainer(value, "<<", ">>")
-                STRUCT                                     -> prettyPrintContainer(value, "{", "}") { v ->
+                ExprValueType.LIST -> prettyPrintContainer(value, "[", "]")
+                ExprValueType.BAG -> prettyPrintContainer(value, "<<", ">>")
+                ExprValueType.STRUCT -> prettyPrintContainer(value, "{", "}") { v ->
                     val fieldName = v.name!!.scalar.stringValue()
                     out.append("'$fieldName': ")
-
                     recursivePrettyPrint(v)
                 }
             }
         }
-
 
         private fun prettyPrintContainer(value: ExprValue,
                                          openingMarker: String,

@@ -15,9 +15,9 @@
 
 package org.partiql.lang.ast
 
-import com.amazon.ion.*
-import org.partiql.lang.ast.SetQuantifier.*
-import org.partiql.lang.errors.*
+import com.amazon.ion.IonSystem
+import org.partiql.lang.errors.Property
+import org.partiql.lang.errors.PropertyValueMap
 
 fun PropertyValueMap.addSourceLocation(metas: MetaContainer): PropertyValueMap {
     (metas.find(SourceLocationMeta.TAG) as? SourceLocationMeta)?.let {
@@ -44,7 +44,7 @@ fun createCountStar(ion: IonSystem, metas: MetaContainer): CallAgg {
             case = CaseSensitivity.INSENSITIVE,
             scopeQualifier = ScopeQualifier.UNQUALIFIED,
             metas = srcLocationMetaOnly),
-        setQuantifier = ALL,
+        setQuantifier = SetQuantifier.ALL,
         arg = Literal(ion.newInt(1), srcLocationMetaOnly), 
         metas = metas.add(IsCountStarMeta.instance)
     )

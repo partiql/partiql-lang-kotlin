@@ -14,22 +14,35 @@
 
 package org.partiql.lang
 
-import com.amazon.ion.*
+import com.amazon.ion.Decimal
+import com.amazon.ion.IonSystem
+import com.amazon.ion.IonValue
+import com.amazon.ion.Timestamp
 import com.amazon.ion.system.IonSystemBuilder
-import org.assertj.core.api.*
-import org.partiql.lang.ast.*
-import org.partiql.lang.eval.*
-import org.partiql.lang.errors.*
-import org.partiql.lang.util.*
 import org.junit.Assert
 import org.junit.runner.RunWith
-import java.util.*
 import junitparams.JUnitParamsRunner
+import org.assertj.core.api.SoftAssertions
+import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.passes.AstRewriterBase
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
+import org.partiql.lang.errors.PropertyType
+import org.partiql.lang.errors.PropertyValue
+import org.partiql.lang.errors.PropertyValueMap
+import org.partiql.lang.eval.BindingCase
+import org.partiql.lang.eval.BindingName
+import org.partiql.lang.eval.Bindings
+import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.cloneAndRemoveAnnotations
 import org.partiql.lang.eval.time.Time
+import org.partiql.lang.util.SexpAstPrettyPrinter
+import org.partiql.lang.util.softAssert
 import java.math.BigDecimal
 import java.time.LocalDate
-import kotlin.reflect.*
+import kotlin.reflect.KClass
 
 /**
  * Validates [errorCode] and [expectedValues] for given exception [ex].

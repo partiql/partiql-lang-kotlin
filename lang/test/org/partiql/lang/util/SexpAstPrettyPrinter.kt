@@ -14,7 +14,9 @@
 
 package org.partiql.lang.util
 
-import com.amazon.ion.*
+import com.amazon.ion.IonSexp
+import com.amazon.ion.IonSymbol
+import com.amazon.ion.IonValue
 
 /**
  * Formats "tagged s-expressions" in a pretty, readable fashion, i.e.

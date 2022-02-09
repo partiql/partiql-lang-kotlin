@@ -14,7 +14,6 @@ import org.partiql.lang.util.ArgumentsProviderBase
 import java.lang.AssertionError
 import java.math.BigInteger
 
-
 private const val typeName = "SchemaInferencerFromExample"
 private const val schemaId = "partiql.isl"
 private val islHeader = """

@@ -14,11 +14,10 @@
 
 package org.partiql.lang.eval
 
-import com.amazon.ion.*
+import com.amazon.ion.IonStruct
+import com.amazon.ion.IonSystem
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.util.*
-import java.util.*
-
+import org.partiql.lang.util.seal
 
 /** Indicates if a struct is ordered or not. */
 enum class StructOrdering {

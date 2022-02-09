@@ -14,13 +14,17 @@
 
 package org.partiql.lang.eval
 
-import com.amazon.ion.*
-import org.partiql.lang.ast.*
-import org.partiql.lang.errors.*
-import org.partiql.lang.eval.ExprValueType.*
+import com.amazon.ion.IntegerSize
+import com.amazon.ion.IonInt
+import com.amazon.ion.Timestamp
+import org.partiql.lang.ast.SourceLocationMeta
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
+import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.time.NANOS_PER_SECOND
 import org.partiql.lang.eval.time.Time
-import org.partiql.lang.syntax.*
+import org.partiql.lang.syntax.DATE_TIME_PART_KEYWORDS
+import org.partiql.lang.syntax.DateTimePart
 import org.partiql.lang.types.BagType
 import org.partiql.lang.types.BlobType
 import org.partiql.lang.types.BoolType
@@ -39,14 +43,22 @@ import org.partiql.lang.types.StringType
 import org.partiql.lang.types.SymbolType
 import org.partiql.lang.types.TimeType
 import org.partiql.lang.types.TimestampType
-import org.partiql.lang.util.*
-import java.math.*
+import org.partiql.lang.util.ConfigurableExprValueFormatter
+import org.partiql.lang.util.bigDecimalOf
+import org.partiql.lang.util.coerce
+import org.partiql.lang.util.compareTo
+import org.partiql.lang.util.downcast
+import org.partiql.lang.util.getPrecisionFromTimeString
+import org.partiql.lang.util.ionValue
+import java.math.BigDecimal
+import java.math.MathContext
+import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
-import java.util.*
+import java.util.TreeSet
 import kotlin.math.round
 
 /**
@@ -180,12 +192,13 @@ internal fun ExprValue.isDirectlyComparableTo(other: ExprValue): Boolean =
     when {
         // The ExprValue type for TIME and TIME WITH TIME ZONE is same
         // and thus needs to be checked explicitly for the timezone values.
-        type == TIME && other.type == TIME -> timeValue().isDirectlyComparableTo(other.timeValue())
+        type == ExprValueType.TIME && other.type == ExprValueType.TIME ->
+            timeValue().isDirectlyComparableTo(other.timeValue())
         else -> type.isDirectlyComparableTo(other.type)
     }
 
 /** Types that are cast to the [ExprValueType.isText] types by calling `IonValue.toString()`. */
-private val ION_TEXT_STRING_CAST_TYPES = setOf(BOOL, TIMESTAMP)
+private val ION_TEXT_STRING_CAST_TYPES = setOf(ExprValueType.BOOL, ExprValueType.TIMESTAMP)
 
 /** Regex to match DATE strings of the format yyyy-MM-dd */
 private val datePatternRegex = Regex("\\d\\d\\d\\d-\\d\\d-\\d\\d")
@@ -336,7 +349,6 @@ fun ExprValue.cast(
                 }
                 it.toLong()
             }
-
             valueFactory.newInt(result)
         }
         is FloatType -> valueFactory.newFloat(this.toDouble())
@@ -400,7 +412,7 @@ fun ExprValue.cast(
         type.isUnknown -> return this
         // Note that the ExprValueType for TIME and TIME WITH TIME ZONE is the same i.e. ExprValueType.TIME.
         // We further need to check for the time zone and hence we do not short circuit here when the type is TIME.
-        type == targetType.runtimeType && type != TIME -> {
+        type == targetType.runtimeType && type != ExprValueType.TIME -> {
             return when (targetType) {
                 is IntType, is FloatType, is DecimalType-> numberValue().exprValue(targetType)
                 is StringType -> stringValue().exprValue(targetType)
@@ -421,7 +433,7 @@ fun ExprValue.cast(
                     }
                 }
                 is IntType -> when {
-                    type == BOOL -> return if(booleanValue()) 1L.exprValue(targetType) else 0L.exprValue(targetType)
+                    type == ExprValueType.BOOL -> return if(booleanValue()) 1L.exprValue(targetType) else 0L.exprValue(targetType)
                     type.isNumber -> return numberValue().exprValue(targetType)
                     type.isText -> {
                         val value = try {
@@ -439,7 +451,7 @@ fun ExprValue.cast(
                     }
                 }
                 is FloatType -> when {
-                    type == BOOL -> return if (booleanValue()) 1.0.exprValue(targetType) else 0.0.exprValue(targetType)
+                    type == ExprValueType.BOOL -> return if (booleanValue()) 1.0.exprValue(targetType) else 0.0.exprValue(targetType)
                     type.isNumber -> return numberValue().toDouble().exprValue(targetType)
                     type.isText ->
                         try {
@@ -449,7 +461,7 @@ fun ExprValue.cast(
                         }
                 }
                 is DecimalType -> when {
-                    type == BOOL -> return if (booleanValue()) {
+                    type == ExprValueType.BOOL -> return if (booleanValue()) {
                         BigDecimal.ONE.exprValue(targetType)
                     } else {
                         BigDecimal.ZERO.exprValue(targetType)
@@ -471,7 +483,7 @@ fun ExprValue.cast(
                     }
                 }
                 is DateType -> when {
-                    type == TIMESTAMP -> {
+                    type == ExprValueType.TIMESTAMP -> {
                         val ts = timestampValue()
                         return valueFactory.newDate(LocalDate.of(ts.year, ts.month, ts.day))
                     }
@@ -493,7 +505,7 @@ fun ExprValue.cast(
                 is TimeType -> {
                     val precision = targetType.precision
                     when {
-                        type == TIME -> {
+                        type == ExprValueType.TIME -> {
                             val time = timeValue()
                             val timeZoneOffset = when (targetType.withTimeZone) {
                                 true -> time.zoneOffset?: defaultTimezoneOffset
@@ -506,7 +518,7 @@ fun ExprValue.cast(
                                     timeZoneOffset
                                 ))
                         }
-                        type == TIMESTAMP -> {
+                        type == ExprValueType.TIMESTAMP -> {
                             val ts = timestampValue()
                             val timeZoneOffset = when (targetType.withTimeZone) {
                                 true -> ts.localOffset?: castFailedErr(
@@ -561,8 +573,8 @@ fun ExprValue.cast(
                 is StringType, is SymbolType -> when {
                     type.isNumber -> return numberValue().toString().exprValue(targetType)
                     type.isText -> return stringValue().exprValue(targetType)
-                    type == DATE -> return dateValue().toString().exprValue(targetType)
-                    type == TIME -> return timeValue().toString().exprValue(targetType)
+                    type == ExprValueType.DATE -> return dateValue().toString().exprValue(targetType)
+                    type == ExprValueType.TIME -> return timeValue().toString().exprValue(targetType)
                     type in ION_TEXT_STRING_CAST_TYPES -> return ionValue.toString().exprValue(targetType)
                 }
                 is ClobType -> when {

@@ -38,12 +38,11 @@ internal class DateAddExprFunction(val valueFactory: ExprValueFactory) : ExprFun
     )
 
     companion object {
-        @JvmStatic private val precisionOrder = listOf(Precision.YEAR,
-                                                       Precision.MONTH,
-                                                       Precision.DAY,
-                                                       Precision.MINUTE,
-                                                       Precision.SECOND)
-
+        @JvmStatic private val precisionOrder = listOf(Timestamp.Precision.YEAR,
+                Timestamp.Precision.MONTH,
+                Timestamp.Precision.DAY,
+                Timestamp.Precision.MINUTE,
+                Timestamp.Precision.SECOND)
         @JvmStatic private val dateTimePartToPrecision = mapOf(DateTimePart.YEAR to Precision.YEAR,
                                                            DateTimePart.MONTH to Precision.MONTH,
                                                            DateTimePart.DAY to Precision.DAY,
@@ -52,7 +51,7 @@ internal class DateAddExprFunction(val valueFactory: ExprValueFactory) : ExprFun
                                                            DateTimePart.SECOND to Precision.SECOND)
     }
 
-    private fun Timestamp.hasSufficientPrecisionFor(requiredPrecision: Precision): Boolean {
+    private fun Timestamp.hasSufficientPrecisionFor(requiredPrecision: Timestamp.Precision): Boolean {
         val requiredPrecisionPos = precisionOrder.indexOf(requiredPrecision)
         val precisionPos = precisionOrder.indexOf(precision)
 
@@ -67,17 +66,17 @@ internal class DateAddExprFunction(val valueFactory: ExprValueFactory) : ExprFun
         }
 
         return when (requiredPrecision) {
-            Precision.YEAR     -> Timestamp.forYear(this.year)
-            Precision.MONTH    -> Timestamp.forMonth(this.year, this.month)
-            Precision.DAY      -> Timestamp.forDay(this.year, this.month, this.day)
-            Precision.SECOND   -> Timestamp.forSecond(this.year,
+            Timestamp.Precision.YEAR     -> Timestamp.forYear(this.year)
+            Timestamp.Precision.MONTH    -> Timestamp.forMonth(this.year, this.month)
+            Timestamp.Precision.DAY      -> Timestamp.forDay(this.year, this.month, this.day)
+            Timestamp.Precision.SECOND   -> Timestamp.forSecond(this.year,
                                                       this.month,
                                                       this.day,
                                                       this.hour,
                                                       this.minute,
                                                       this.second,
                                                       this.localOffset)
-            Precision.MINUTE   -> Timestamp.forMinute(this.year,
+            Timestamp.Precision.MINUTE   -> Timestamp.forMinute(this.year,
                                                       this.month,
                                                       this.day,
                                                       this.hour,

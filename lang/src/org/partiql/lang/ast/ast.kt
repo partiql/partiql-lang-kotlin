@@ -14,9 +14,11 @@
 
 package org.partiql.lang.ast
 
-import com.amazon.ion.*
-import org.partiql.lang.util.*
-import java.util.*
+import com.amazon.ion.IonType
+import com.amazon.ion.IonValue
+import org.partiql.lang.util.interruptibleMap
+import org.partiql.lang.util.stringValue
+import java.util.Arrays
 
 /**
  * Base type for all AST nodes.
@@ -154,7 +156,6 @@ data class Literal(
 
     override val children: List<AstNode> = listOf()
 }
-
 
 /** Represents the literal value `MISSING`. */
 data class LiteralMissing(

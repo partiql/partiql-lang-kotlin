@@ -14,11 +14,30 @@
 
 package org.partiql.lang.eval
 
-import com.amazon.ion.*
+import com.amazon.ion.IonBool
+import com.amazon.ion.IonContainer
+import com.amazon.ion.IonNull
+import com.amazon.ion.IonReader
+import com.amazon.ion.IonSequence
+import com.amazon.ion.IonStruct
+import com.amazon.ion.IonSystem
+import com.amazon.ion.IonType
+import com.amazon.ion.IonValue
+import com.amazon.ion.Timestamp
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.time.Time
-import org.partiql.lang.util.*
-import java.math.*
+import org.partiql.lang.util.booleanValueOrNull
+import org.partiql.lang.util.bytesValueOrNull
+import org.partiql.lang.util.isBag
+import org.partiql.lang.util.isMissing
+import org.partiql.lang.util.numberValueOrNull
+import org.partiql.lang.util.ordinal
+import org.partiql.lang.util.propertyValueMapOf
+import org.partiql.lang.util.seal
+import org.partiql.lang.util.stringValueOrNull
+import org.partiql.lang.util.timestampValueOrNull
+import java.math.BigDecimal
+import java.math.BigInteger
 import java.time.LocalDate
 
 internal const val MISSING_ANNOTATION = "\$partiql_missing"

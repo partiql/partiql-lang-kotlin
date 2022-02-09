@@ -5,10 +5,8 @@ import com.amazon.ion.IonSystem
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.err
-import org.partiql.lang.eval.errNoContext
 import org.partiql.lang.util.getOffsetHHmm
 import org.partiql.lang.util.propertyValueMapOf
-import org.partiql.lang.util.times
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.DateTimeException

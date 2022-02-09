@@ -14,11 +14,10 @@
 
 package org.partiql.lang.errors
 
-import org.partiql.lang.*
-import org.partiql.lang.errors.Property.*
 import org.partiql.lang.syntax.TokenType
 import org.junit.Before
 import org.junit.Test
+import org.partiql.lang.TestBase
 
 
 class PropertyValueMapTest : TestBase() {
@@ -29,29 +28,29 @@ class PropertyValueMapTest : TestBase() {
 
     @Before
     fun setUp() {
-        onlyColumnValueMap[COLUMN_NUMBER] = 11L
-        oneOfEachType[EXPECTED_TOKEN_TYPE] = TokenType.COMMA
-        oneOfEachType[KEYWORD] = "test"
-        oneOfEachType[EXPECTED_ARITY_MAX] = 1
-        oneOfEachType[TOKEN_VALUE] = ion.newEmptyList()
-        oneOfEachType[COLUMN_NUMBER] = 11L
+        onlyColumnValueMap[Property.COLUMN_NUMBER] = 11L
+        oneOfEachType[Property.EXPECTED_TOKEN_TYPE] = TokenType.COMMA
+        oneOfEachType[Property.KEYWORD] = "test"
+        oneOfEachType[Property.EXPECTED_ARITY_MAX] = 1
+        oneOfEachType[Property.TOKEN_VALUE] = ion.newEmptyList()
+        oneOfEachType[Property.COLUMN_NUMBER] = 11L
     }
 
     @Test fun getPropFromEmptyBag() {
-        assertNull(emptyValueMap[LINE_NUMBER])
+        assertNull(emptyValueMap[Property.LINE_NUMBER])
     }
 
     @Test fun getAbsentPropFromNonEmptyBag() {
-        assertNull(onlyColumnValueMap[LINE_NUMBER])
+        assertNull(onlyColumnValueMap[Property.LINE_NUMBER])
     }
 
 
     @Test fun getValues() {
-        assertEquals(11L, oneOfEachType[COLUMN_NUMBER]?.longValue())
-        assertEquals(TokenType.COMMA, oneOfEachType[EXPECTED_TOKEN_TYPE]?.tokenTypeValue())
-        assertEquals("test", oneOfEachType[KEYWORD]?.stringValue())
-        assertEquals(1, oneOfEachType[EXPECTED_ARITY_MAX]?.integerValue())
-        assertEquals(11L, oneOfEachType[COLUMN_NUMBER]?.longValue())
+        assertEquals(11L, oneOfEachType[Property.COLUMN_NUMBER]?.longValue())
+        assertEquals(TokenType.COMMA, oneOfEachType[Property.EXPECTED_TOKEN_TYPE]?.tokenTypeValue())
+        assertEquals("test", oneOfEachType[Property.KEYWORD]?.stringValue())
+        assertEquals(1, oneOfEachType[Property.EXPECTED_ARITY_MAX]?.integerValue())
+        assertEquals(11L, oneOfEachType[Property.COLUMN_NUMBER]?.longValue())
     }
 
 }

@@ -14,9 +14,10 @@
 
 package org.partiql.lang.eval
 
-import com.amazon.ion.*
-import org.partiql.lang.errors.*
-import org.partiql.lang.util.*
+import com.amazon.ion.IonStruct
+import org.partiql.lang.errors.Property
+import org.partiql.lang.errors.PropertyValueMap
+import org.partiql.lang.util.longValue
 
 /*
  * WARNING: This whole file is intended as a non intrusive way to preserve the meta nodes information during
