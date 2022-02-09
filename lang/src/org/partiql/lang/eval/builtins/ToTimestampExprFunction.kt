@@ -26,7 +26,6 @@ import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.stringValue
 
-
 /**
  * PartiQL function to convert a formatted string into an Ion Timestamp.
  */

@@ -14,7 +14,14 @@
 
 package org.partiql.lang.ast.passes
 
-import org.partiql.lang.ast.*
+import org.partiql.lang.ast.DataManipulationOperation
+import org.partiql.lang.ast.DataType
+import org.partiql.lang.ast.ExprNode
+import org.partiql.lang.ast.FromSource
+import org.partiql.lang.ast.OnConflict
+import org.partiql.lang.ast.PathComponent
+import org.partiql.lang.ast.SelectListItem
+import org.partiql.lang.ast.SelectProjection
 
 /**
  * Used in conjunction with [AstWalker], implementors of this interface can easily inspect an AST.

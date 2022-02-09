@@ -69,7 +69,7 @@ internal class TrimExprFunction(private val valueFactory: ExprValueFactory) : Ex
         )
 
     private val DEFAULT_TO_REMOVE = " ".codePoints().toArray()
-    private val DEFAULT_SPECIFICATION = BOTH
+    private val DEFAULT_SPECIFICATION = TrimSpecification.BOTH
 
     private fun IntArray.leadingTrimOffset(toRemove: IntArray): Int {
         var offset = 0
@@ -145,7 +145,6 @@ internal class TrimExprFunction(private val valueFactory: ExprValueFactory) : Ex
     }
 
     override fun callWithRequired(env: Environment, required: List<ExprValue>) = trim1Arg(required[0])
-
     override fun callWithVariadic(env: Environment, required: List<ExprValue>, variadic: List<ExprValue>): ExprValue {
         return when (variadic.size) {
             0    -> trim1Arg(required[0])

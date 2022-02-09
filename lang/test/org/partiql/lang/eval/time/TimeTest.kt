@@ -4,7 +4,7 @@ import junitparams.JUnitParamsRunner
 import junitparams.Parameters
 import org.junit.Assert
 import org.junit.Test
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.runner.RunWith
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluationException

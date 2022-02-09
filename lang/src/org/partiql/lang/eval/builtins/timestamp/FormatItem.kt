@@ -14,8 +14,6 @@
 
 package org.partiql.lang.eval.builtins.timestamp
 
-import org.partiql.lang.eval.builtins.timestamp.TimestampField.*
-
 /**
  * A item that is parsed from the format pattern. i.e. text or one of many symbols corresponding to a
  * field and its formatting options.

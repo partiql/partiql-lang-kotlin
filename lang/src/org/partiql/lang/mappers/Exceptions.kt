@@ -1,7 +1,5 @@
 package org.partiql.lang.mappers
 
-import java.lang.RuntimeException
-
 /**
  * General exception class for ISL and StaticType mappers.
  */

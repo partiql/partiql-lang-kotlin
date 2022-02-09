@@ -14,10 +14,10 @@
 
 package org.partiql.lang.eval
 
-import com.amazon.ion.*
-import org.partiql.lang.util.*
+import com.amazon.ion.Timestamp
 import org.junit.Test
-import kotlin.test.*
+import org.partiql.lang.util.softAssert
+import kotlin.test.assertEquals
 
 class EvaluationSessionTest {
     private fun assertDefault(block: () -> EvaluationSession) {

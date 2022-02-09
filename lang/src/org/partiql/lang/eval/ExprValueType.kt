@@ -15,12 +15,10 @@
 package org.partiql.lang.eval
 
 import com.amazon.ion.IonType
-import org.partiql.lang.ast.*
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.domains.PartiqlAst.Type.*
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.syntax.TYPE_ALIASES
 import org.partiql.lang.syntax.CORE_TYPE_NAME_ARITY_MAP
+import org.partiql.lang.syntax.TYPE_ALIASES
 
 /**
  * The core types of [ExprValue] that exist within the type system of the evaluator.
@@ -49,7 +47,7 @@ enum class ExprValueType(val typeNames: List<String>,
     ),
     INT(
         typeNames = listOf("int", "smallint", "integer2", "int2", "integer", "integer4", "int4", "integer8", "int8",
-                "bigint"),
+            "bigint"),
         isNumber = true
     ),
     FLOAT(
@@ -141,7 +139,7 @@ enum class ExprValueType(val typeNames: List<String>,
             .map {
                 val ourType = when (it) {
                     IonType.DATAGRAM -> BAG
-                    else             -> valueOf(it.name)
+                    else -> valueOf(it.name)
                 }
                 Pair(it, ourType)
             }.toMap()
@@ -156,14 +154,14 @@ enum class ExprValueType(val typeNames: List<String>,
                 } catch (e: IllegalArgumentException) {
                     // no direct type mapping
                     when (it) {
-                        "boolean"                                    -> BOOL
+                        "boolean" -> BOOL
                         "smallint", "integer", "integer4",
-                        "integer8"                                   -> INT
-                        "real", "double_precision"                   -> FLOAT
-                        "numeric"                                    -> DECIMAL
-                        "character", "character_varying"             -> STRING
-                        "tuple"                                      -> STRUCT
-                        else                                         -> throw IllegalStateException("No ExprValueType handler for $it")
+                        "integer8" -> INT
+                        "real", "double_precision" -> FLOAT
+                        "numeric" -> DECIMAL
+                        "character", "character_varying" -> STRING
+                        "tuple" -> STRUCT
+                        else -> throw IllegalStateException("No ExprValueType handler for $it")
                     }
                 }
 
@@ -173,10 +171,10 @@ enum class ExprValueType(val typeNames: List<String>,
 
 
         fun fromTypeName(name: String): ExprValueType = LEX_TYPE_MAP[name]
-                                                        ?: throw EvaluationException(
-                                                            "No such value type for $name",
-                                                            ErrorCode.LEXER_INVALID_NAME,
-                                                            internal = true)
+            ?: throw EvaluationException(
+                "No such value type for $name",
+                ErrorCode.LEXER_INVALID_NAME,
+                internal = true)
 
         fun fromSqlDataType(sqlDataType: PartiqlAst.Type) = fromSqlDataTypeOrNull(sqlDataType)
             ?: throw EvaluationException(
@@ -186,53 +184,53 @@ enum class ExprValueType(val typeNames: List<String>,
             )
 
         fun fromSqlDataTypeOrNull(sqlDataType: PartiqlAst.Type) = when (sqlDataType) {
-            is BooleanType -> BOOL
-            is MissingType -> MISSING
-            is NullType -> NULL
-            is SmallintType -> INT
-            is Integer4Type -> INT
-            is Integer8Type -> INT
-            is IntegerType -> INT
-            is FloatType -> FLOAT
-            is RealType -> FLOAT
-            is DoublePrecisionType -> FLOAT
-            is DecimalType -> DECIMAL
-            is NumericType -> DECIMAL
-            is TimestampType -> TIMESTAMP
-            is CharacterType -> STRING
-            is CharacterVaryingType -> STRING
-            is StringType -> STRING
-            is SymbolType -> SYMBOL
-            is ClobType -> CLOB
-            is BlobType -> BLOB
-            is StructType -> STRUCT
-            is TupleType -> STRUCT
-            is ListType -> LIST
-            is SexpType -> SEXP
-            is BagType -> BAG
-            is AnyType -> null
-            is DateType -> DATE
-            is TimeType,
-            is TimeWithTimeZoneType -> TIME
-            is CustomType -> null
+            is PartiqlAst.Type.BooleanType -> BOOL
+            is PartiqlAst.Type.MissingType -> MISSING
+            is PartiqlAst.Type.NullType -> NULL
+            is PartiqlAst.Type.SmallintType -> INT
+            is PartiqlAst.Type.Integer4Type -> INT
+            is PartiqlAst.Type.Integer8Type -> INT
+            is PartiqlAst.Type.IntegerType -> INT
+            is PartiqlAst.Type.FloatType -> FLOAT
+            is PartiqlAst.Type.RealType -> FLOAT
+            is PartiqlAst.Type.DoublePrecisionType -> FLOAT
+            is PartiqlAst.Type.DecimalType -> DECIMAL
+            is PartiqlAst.Type.NumericType -> DECIMAL
+            is PartiqlAst.Type.TimestampType -> TIMESTAMP
+            is PartiqlAst.Type.CharacterType -> STRING
+            is PartiqlAst.Type.CharacterVaryingType -> STRING
+            is PartiqlAst.Type.StringType -> STRING
+            is PartiqlAst.Type.SymbolType -> SYMBOL
+            is PartiqlAst.Type.ClobType -> CLOB
+            is PartiqlAst.Type.BlobType -> BLOB
+            is PartiqlAst.Type.StructType -> STRUCT
+            is PartiqlAst.Type.TupleType -> STRUCT
+            is PartiqlAst.Type.ListType -> LIST
+            is PartiqlAst.Type.SexpType -> SEXP
+            is PartiqlAst.Type.BagType -> BAG
+            is PartiqlAst.Type.AnyType -> null
+            is PartiqlAst.Type.DateType -> DATE
+            is PartiqlAst.Type.TimeType,
+            is PartiqlAst.Type.TimeWithTimeZoneType -> TIME
+            is PartiqlAst.Type.CustomType -> null
             // TODO: Remove these hardcoded nodes from the PIG domain once [https://github.com/partiql/partiql-lang-kotlin/issues/510] is resolved.
-            is EsBoolean,
-            is EsInteger,
-            is EsText,
-            is EsAny,
-            is EsFloat,
-            is RsBigint,
-            is RsBoolean,
-            is RsDoublePrecision,
-            is RsInteger,
-            is RsReal,
-            is RsVarcharMax,
-            is SparkBoolean,
-            is SparkDouble,
-            is SparkFloat,
-            is SparkInteger,
-            is SparkLong,
-            is SparkShort -> error("$this node should not be present in PartiQLAST. Consider transforming the AST using CustomTypeVisitorTransform.")
+            is PartiqlAst.Type.EsBoolean,
+            is PartiqlAst.Type.EsInteger,
+            is PartiqlAst.Type.EsText,
+            is PartiqlAst.Type.EsAny,
+            is PartiqlAst.Type.EsFloat,
+            is PartiqlAst.Type.RsBigint,
+            is PartiqlAst.Type.RsBoolean,
+            is PartiqlAst.Type.RsDoublePrecision,
+            is PartiqlAst.Type.RsInteger,
+            is PartiqlAst.Type.RsReal,
+            is PartiqlAst.Type.RsVarcharMax,
+            is PartiqlAst.Type.SparkBoolean,
+            is PartiqlAst.Type.SparkDouble,
+            is PartiqlAst.Type.SparkFloat,
+            is PartiqlAst.Type.SparkInteger,
+            is PartiqlAst.Type.SparkLong,
+            is PartiqlAst.Type.SparkShort -> error("$this node should not be present in PartiQLAST. Consider transforming the AST using CustomTypeVisitorTransform.")
         }
     }
 }

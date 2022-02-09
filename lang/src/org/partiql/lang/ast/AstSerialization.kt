@@ -21,7 +21,6 @@ import org.partiql.lang.util.IonWriterContext
 import org.partiql.lang.util.asIonSexp
 import org.partiql.lang.util.case
 import org.partiql.lang.util.checkThreadInterrupted
-import kotlin.UnsupportedOperationException
 
 /**
  * Serializes an instance of [ExprNode] to one of the s-expression based ASTs.

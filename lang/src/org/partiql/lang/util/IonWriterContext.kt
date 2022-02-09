@@ -14,7 +14,9 @@
 
 package org.partiql.lang.util
 
-import com.amazon.ion.*
+import com.amazon.ion.IonType
+import com.amazon.ion.IonValue
+import com.amazon.ion.IonWriter
 
 /**
  * A simple wrapper for writing Ion from Kotlin.

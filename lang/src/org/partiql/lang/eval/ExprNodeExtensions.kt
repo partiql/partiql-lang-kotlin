@@ -66,7 +66,7 @@ private fun Path.extractColumnAlias(idx: Int): String {
                 else                                                          -> syntheticColumnName(idx)
             }
         }
-        else                 -> syntheticColumnName(idx)
+        else -> syntheticColumnName(idx)
     }
 }
 

@@ -1,8 +1,7 @@
 package org.partiql.lang.eval.visitors
 
-import org.partiql.lang.domains.extractSourceLocation
-
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.extractSourceLocation
 import org.partiql.lang.eval.extractColumnAlias
 import org.partiql.pig.runtime.SymbolPrimitive
 

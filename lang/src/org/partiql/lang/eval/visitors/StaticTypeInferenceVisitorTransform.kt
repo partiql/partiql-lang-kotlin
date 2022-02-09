@@ -23,7 +23,6 @@ import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.staticType
 import org.partiql.lang.domains.toBindingCase
 import org.partiql.lang.errors.Problem
-import org.partiql.lang.types.toTypedOpParameter
 import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.errors.ProblemSeverity
 import org.partiql.lang.errors.ProblemThrower
@@ -31,13 +30,11 @@ import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.builtins.createBuiltinFunctionSignatures
 import org.partiql.lang.eval.delegate
 import org.partiql.lang.eval.getStartingSourceLocationMeta
 import org.partiql.lang.types.*
 import org.partiql.lang.util.cartesianProduct
-import java.lang.IllegalStateException
 
 /**
  * A [PartiqlAst.VisitorTransform] that annotates nodes with their static type.

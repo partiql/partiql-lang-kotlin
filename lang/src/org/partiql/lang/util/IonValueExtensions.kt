@@ -14,9 +14,27 @@
 
 package org.partiql.lang.util
 
-import com.amazon.ion.*
-import org.partiql.lang.eval.*
-import java.math.*
+import com.amazon.ion.IntegerSize
+import com.amazon.ion.IonBool
+import com.amazon.ion.IonContainer
+import com.amazon.ion.IonDecimal
+import com.amazon.ion.IonFloat
+import com.amazon.ion.IonInt
+import com.amazon.ion.IonList
+import com.amazon.ion.IonLob
+import com.amazon.ion.IonNull
+import com.amazon.ion.IonSequence
+import com.amazon.ion.IonSexp
+import com.amazon.ion.IonStruct
+import com.amazon.ion.IonSymbol
+import com.amazon.ion.IonText
+import com.amazon.ion.IonTimestamp
+import com.amazon.ion.IonValue
+import com.amazon.ion.Timestamp
+import org.partiql.lang.eval.BAG_ANNOTATION
+import org.partiql.lang.eval.MISSING_ANNOTATION
+import java.math.BigDecimal
+import java.math.BigInteger
 
 @JvmName("IonValueUtils")
 
@@ -65,7 +83,7 @@ fun IonValue.numberValue(): Number = when {
     isNullValue -> err("Expected non-null number: $this")
     else        -> when (this) {
         is IonInt     -> javaValue()
-        is IonFloat   -> doubleValue()
+        is IonFloat -> doubleValue()
         is IonDecimal -> decimalValue()
         else          -> err("Expected number: $this")
     }

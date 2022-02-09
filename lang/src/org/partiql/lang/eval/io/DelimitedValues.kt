@@ -14,12 +14,26 @@
 
 package org.partiql.lang.eval.io
 
-import com.amazon.ion.*
+import com.amazon.ion.IonDecimal
+import com.amazon.ion.IonException
+import com.amazon.ion.IonFloat
+import com.amazon.ion.IonInt
+import com.amazon.ion.IonSystem
+import com.amazon.ion.IonTimestamp
+import com.amazon.ion.IonType
+import com.amazon.ion.IonValue
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import org.apache.commons.csv.CSVPrinter
-import org.partiql.lang.eval.*
-import org.partiql.lang.util.*
+import org.partiql.lang.eval.BindingCase
+import org.partiql.lang.eval.BindingName
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.StructOrdering
+import org.partiql.lang.eval.namedValue
+import org.partiql.lang.eval.orderedNames
+import org.partiql.lang.eval.syntheticColumnName
+import org.partiql.lang.util.stringValue
 import java.io.BufferedReader
 import java.io.Reader
 import java.io.Writer

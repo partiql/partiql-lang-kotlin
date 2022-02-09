@@ -14,18 +14,27 @@
 
 package org.partiql.lang
 
-import com.amazon.ion.*
-import org.partiql.lang.ast.*
-import org.partiql.lang.eval.*
-import org.partiql.lang.eval.builtins.*
+import com.amazon.ion.IonSystem
+import org.partiql.lang.ast.ExprNode
+import org.partiql.lang.ast.toAstStatement
+import org.partiql.lang.ast.toExprNode
+import org.partiql.lang.eval.Bindings
+import org.partiql.lang.eval.CompileOptions
+import org.partiql.lang.eval.EvaluatingCompiler
+import org.partiql.lang.eval.ExprFunction
+import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.Expression
+import org.partiql.lang.eval.ThunkReturnTypeAssertions
+import org.partiql.lang.eval.builtins.createBuiltinFunctions
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.visitors.PipelinedVisitorTransform
 import org.partiql.lang.eval.visitors.StaticTypeInferenceVisitorTransform
 import org.partiql.lang.eval.visitors.StaticTypeVisitorTransform
-import org.partiql.lang.syntax.*
-import org.partiql.lang.util.interruptibleFold
-import org.partiql.lang.types.StaticType
+import org.partiql.lang.syntax.Parser
+import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.types.CustomType
+import org.partiql.lang.types.StaticType
+import org.partiql.lang.util.interruptibleFold
 
 /**
  * Contains all of the information needed for processing steps.
@@ -98,7 +107,6 @@ interface CompilerPipeline  {
     fun compile(query: ExprNode): Expression
 
     companion object {
-
         /** Kotlin style builder for [CompilerPipeline].  If calling from Java instead use [builder]. */
         fun build(ion: IonSystem, block: Builder.() -> Unit) = build(ExprValueFactory.standard(ion), block)
 
@@ -119,8 +127,7 @@ interface CompilerPipeline  {
 
         /** Returns an implementation of [CompilerPipeline] with all properties set to their defaults. */
         @JvmStatic
-        fun standard(valueFactory: ExprValueFactory): CompilerPipeline =
-            builder(valueFactory).build()
+        fun standard(valueFactory: ExprValueFactory): CompilerPipeline = builder(valueFactory).build()
     }
 
     /**
@@ -282,10 +289,7 @@ internal class CompilerPipelineImpl(
         return compiler.compile(queryToCompile.toExprNode(valueFactory.ion))
     }
 
-    internal fun executePreProcessingSteps(
-        query: ExprNode,
-        context: StepContext
-    ) = preProcessingSteps.interruptibleFold(query) { currentExprNode, step ->
-        step(currentExprNode, context)
+    internal fun executePreProcessingSteps(query: ExprNode, context: StepContext) = preProcessingSteps
+            .interruptibleFold(query) { currentExprNode, step -> step(currentExprNode, context)
     }
 }

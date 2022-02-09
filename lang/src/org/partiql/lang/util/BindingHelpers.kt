@@ -14,9 +14,10 @@
 
 package org.partiql.lang.util
 
-import com.amazon.ion.*
-import org.partiql.lang.errors.*
-import org.partiql.lang.eval.*
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
+import org.partiql.lang.eval.BindingCase
+import org.partiql.lang.eval.err
 
 internal fun errAmbiguousBinding(bindingName: String, matchingNames: List<String>): Nothing {
     err("Multiple matches were found for the specified identifier",

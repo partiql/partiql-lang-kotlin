@@ -3,7 +3,12 @@ package org.partiql.lang.eval.io
 import com.amazon.ion.system.IonSystemBuilder
 import org.junit.Test
 import org.partiql.lang.CompilerPipeline
-import org.partiql.lang.eval.*
+import org.partiql.lang.eval.CompileOptions
+import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.EvaluationSession
+import org.partiql.lang.eval.ExprFunction
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ThunkOptions
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
 import java.lang.IllegalStateException

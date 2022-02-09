@@ -14,9 +14,10 @@
 
 package org.partiql.lang.ast
 
-import com.amazon.ion.*
-import org.partiql.lang.util.*
-import java.util.*
+import com.amazon.ion.IonWriter
+import org.partiql.lang.util.IonWriterContext
+import java.util.Arrays
+import java.util.TreeMap
 
 /**
  * The [Meta] interface is implemented by classes that provide an object mapping view to AST meta nodes.

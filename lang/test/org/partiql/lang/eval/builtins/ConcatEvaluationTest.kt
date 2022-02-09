@@ -4,16 +4,13 @@ import org.junit.Test
 import org.partiql.lang.errors.ErrorCode.EVALUATOR_CONCAT_FAILED_DUE_TO_INCOMPATIBLE_TYPE
 import org.partiql.lang.errors.Property.ACTUAL_ARGUMENT_TYPES
 import org.partiql.lang.eval.EvaluatorTestBase
-import org.partiql.lang.eval.ExprValueType.INT
 import org.partiql.lang.eval.ExprValueType.STRING
+import org.partiql.lang.eval.ExprValueType.INT
 import org.partiql.lang.eval.ExprValueType.STRUCT
-import org.partiql.lang.eval.ExprValueType.SYMBOL
 import org.partiql.lang.eval.ExprValueType.TIMESTAMP
 import org.partiql.lang.util.sourceLocationProperties
 
 class ConcatEvaluationTest : EvaluatorTestBase() {
-    private val argumentTypeMap = mapOf(ACTUAL_ARGUMENT_TYPES to listOf(STRING, SYMBOL).toString())
-
     @Test
     fun concatWrongLeftType() = 
         checkInputThrowingEvaluationException("1 || 'a'",

@@ -14,7 +14,7 @@
 
 package org.partiql.lang.ast
 
-import com.amazon.ion.*
+import com.amazon.ion.IonWriter
 import org.partiql.lang.domains.PartiqlAst
 
 /**

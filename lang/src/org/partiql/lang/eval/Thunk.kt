@@ -14,8 +14,12 @@
 
 package org.partiql.lang.eval
 
-import org.partiql.lang.ast.*
-import org.partiql.lang.errors.*
+import org.partiql.lang.ast.MetaContainer
+import org.partiql.lang.ast.SourceLocationMeta
+import org.partiql.lang.ast.staticType
+import org.partiql.lang.errors.ErrorBehaviorInPermissiveMode
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
 
 
 /**

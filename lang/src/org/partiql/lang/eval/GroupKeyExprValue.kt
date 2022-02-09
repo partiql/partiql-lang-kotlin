@@ -14,7 +14,7 @@
 
 package org.partiql.lang.eval
 
-import com.amazon.ion.*
+import com.amazon.ion.IonSystem
 import org.partiql.lang.eval.visitors.GroupByItemAliasVisitorTransform
 
 

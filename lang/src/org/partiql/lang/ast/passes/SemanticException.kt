@@ -14,8 +14,11 @@
 
 package org.partiql.lang.ast.passes
 
-import org.partiql.lang.*
-import org.partiql.lang.errors.*
+import org.partiql.lang.SqlException
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Problem
+import org.partiql.lang.errors.Property
+import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.util.propertyValueMapOf
 
 /**

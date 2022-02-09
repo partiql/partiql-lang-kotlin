@@ -14,9 +14,11 @@
 
 package org.partiql.lang.eval.builtins.timestamp
 
-import org.partiql.lang.errors.*
-import org.partiql.lang.eval.*
-import org.partiql.lang.util.*
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
+import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.util.codePointSequence
+import org.partiql.lang.util.propertyValueMapOf
 
 private const val NON_ESCAPED_TEXT = " /-,:."
 private const val SINGLE_QUOTE_CP = '\''.toInt()

@@ -10,7 +10,7 @@ class TimestampFormatPatternLexerTest {
     private fun pattern(s: String) = Token(TokenType.PATTERN, s)
 
     private fun assertTokens(s: String, vararg tokens: Token) = assertEquals(tokens.toList(),
-                                                                             TimestampFormatPatternLexer().tokenize(s))
+            TimestampFormatPatternLexer().tokenize(s))
 
     @Test
     fun singlePatternToken() = assertTokens("y", pattern("y"))

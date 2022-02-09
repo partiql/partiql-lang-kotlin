@@ -5,7 +5,10 @@ import com.amazon.ion.IonTimestamp
 import org.junit.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.lang.eval.time.*
+import org.partiql.lang.eval.time.MINUTES_PER_HOUR
+import org.partiql.lang.eval.time.NANOS_PER_SECOND
+import org.partiql.lang.eval.time.SECONDS_PER_MINUTE
+import org.partiql.lang.eval.time.Time
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.getOffsetHHmm
 import java.math.RoundingMode

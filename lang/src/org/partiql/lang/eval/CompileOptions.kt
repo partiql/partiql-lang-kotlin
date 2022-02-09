@@ -15,6 +15,11 @@
 package org.partiql.lang.eval
 
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.eval.ProjectionIterationBehavior.FILTER_MISSING
+import org.partiql.lang.eval.ProjectionIterationBehavior.UNFILTERED
+import org.partiql.lang.eval.ThunkReturnTypeAssertions.ENABLED
+import org.partiql.lang.eval.VisitorTransformMode.DEFAULT
+import org.partiql.lang.eval.VisitorTransformMode.NONE
 import org.partiql.lang.eval.visitors.IDENTITY_VISITOR_TRANSFORM
 import org.partiql.lang.eval.visitors.basicVisitorTransforms
 import java.time.ZoneOffset
