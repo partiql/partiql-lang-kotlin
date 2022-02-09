@@ -14,16 +14,31 @@
 
 package org.partiql.lang.eval
 
+import org.partiql.lang.CompilerPipeline
+import org.partiql.lang.TestBase
+import org.partiql.lang.ast.AstDeserializerBuilder
+import org.partiql.lang.ast.AstSerializer
+import org.partiql.lang.ast.AstVersion
+import org.partiql.lang.ast.ExprNode
 import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
-import org.partiql.lang.*
-import org.partiql.lang.ast.*
-import org.partiql.lang.errors.*
-import org.partiql.lang.syntax.*
-import org.partiql.lang.util.*
+import org.partiql.lang.CUSTOM_TEST_TYPES
+import org.partiql.lang.SqlException
 import org.partiql.lang.ast.passes.MetaStrippingRewriter
-import kotlin.reflect.*
-import kotlin.test.*
+import org.partiql.lang.ast.toAstStatement
+import org.partiql.lang.ast.toExprNode
+import org.partiql.lang.checkErrorAndErrorContext
+import org.partiql.lang.errors.ErrorBehaviorInPermissiveMode
+import org.partiql.lang.errors.ErrorCategory
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
+import org.partiql.lang.syntax.SqlParser
+import org.partiql.lang.util.ConfigurableExprValueFormatter
+import org.partiql.lang.util.asSequence
+import org.partiql.lang.util.newFromIonText
+import org.partiql.lang.util.softAssert
+import kotlin.reflect.KClass
+import kotlin.test.assertEquals
 
 /**
  * This class is being deprecated because it is becoming unmaintainable but can't be removed yet.
@@ -82,9 +97,11 @@ abstract class EvaluatorTestBase : TestBase() {
         val originalExprNode = parser.parseExprNode(source)
 
         fun evalAndAssert(exprNodeToEvaluate: ExprNode, message: String) {
+            val msg = "${compileOptions.typedOpBehavior} CAST in ${compileOptions.typingMode} typing mode, " +
+                    "evaluated '$source' with evaluator ($message)"
             // LEGACY mode
             val result = eval(exprNodeToEvaluate, compileOptions, session, compilerPipelineBuilderBlock)
-            AssertExprValue(result, message = "(LEGACY mode) Evaluated '$source' with evaluator ($message)")
+            AssertExprValue(result, message = msg)
                 .apply { assertIonValue(expectedIon) }.run(block)
             // TODO this should not be here--this should be explicit in the test case
             // PERMISSIVE mode
@@ -94,7 +111,7 @@ abstract class EvaluatorTestBase : TestBase() {
                 session,
                 compilerPipelineBuilderBlock
             )
-            AssertExprValue(resultForPermissiveMode, message = "(PERMISSIVE mode) Evaluated '$source' with evaluator ($message)")
+            AssertExprValue(resultForPermissiveMode, message = msg)
                 .apply { assertIonValue(expectedIon) }.run(block)
         }
 
