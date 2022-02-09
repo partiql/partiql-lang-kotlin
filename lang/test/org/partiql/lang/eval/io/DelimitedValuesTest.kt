@@ -14,8 +14,8 @@
 
 package org.partiql.lang.eval.io
 
-import org.partiql.lang.eval.io.DelimitedValues.ConversionMode.NONE
 import org.partiql.lang.eval.io.DelimitedValues.ConversionMode.AUTO
+import org.partiql.lang.eval.io.DelimitedValues.ConversionMode.NONE
 import org.apache.commons.csv.CSVFormat
 import org.junit.Test
 import org.partiql.lang.TestBase

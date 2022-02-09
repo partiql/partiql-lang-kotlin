@@ -29,9 +29,9 @@ enum class StructOrdering {
  * Provides a [ExprValueType.STRUCT] implementation lazily backed by a sequence.
  */
 internal open class StructExprValue(
-        private val ion: IonSystem,
-        private val ordering: StructOrdering,
-        private val sequence: Sequence<ExprValue>
+    private val ion: IonSystem,
+    private val ordering: StructOrdering,
+    private val sequence: Sequence<ExprValue>
 ) : BaseExprValue() {
 
     override val type = ExprValueType.STRUCT

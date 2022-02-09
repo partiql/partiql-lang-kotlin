@@ -35,70 +35,70 @@ enum class ExprValueType(val typeNames: List<String>,
                          val isSequence: Boolean = false,
                          val isRangedFrom: Boolean = false) {
     MISSING(
-            typeNames = listOf("missing"),
-            isUnknown = true
+        typeNames = listOf("missing"),
+        isUnknown = true
     ),
     NULL(
-            typeNames = listOf("null"),
-            isUnknown = true
+        typeNames = listOf("null"),
+        isUnknown = true
     ),
     BOOL(
-            typeNames = listOf("bool", "boolean")
+        typeNames = listOf("bool", "boolean")
     ),
     INT(
-            typeNames = listOf("int", "smallint", "integer2", "int2", "integer", "integer4", "int4", "integer8", "int8",
-                    "bigint"),
-            isNumber = true
+        typeNames = listOf("int", "smallint", "integer2", "int2", "integer", "integer4", "int4", "integer8", "int8",
+            "bigint"),
+        isNumber = true
     ),
     FLOAT(
-            typeNames = listOf("float", "real", "double_precision"),
-            isNumber = true
+        typeNames = listOf("float", "real", "double_precision"),
+        isNumber = true
     ),
     DECIMAL(
-            typeNames = listOf("dec", "decimal", "numeric"),
-            isNumber = true
+        typeNames = listOf("dec", "decimal", "numeric"),
+        isNumber = true
     ),
     DATE(
-            typeNames = listOf("date")
+        typeNames = listOf("date")
     ),
     TIMESTAMP(
-            typeNames = listOf("timestamp")
+        typeNames = listOf("timestamp")
     ),
     TIME(
-            typeNames = listOf("time")
+        typeNames = listOf("time")
     ),
     SYMBOL(
-            typeNames = listOf("symbol"),
-            isText = true
+        typeNames = listOf("symbol"),
+        isText = true
     ),
     STRING(
-            typeNames = listOf("string", "char", "varchar", "character", "character_varying"),
-            isText = true
+        typeNames = listOf("string", "char", "varchar", "character", "character_varying"),
+        isText = true
     ),
     CLOB(
-            typeNames = listOf("clob"),
-            isLob = true
+        typeNames = listOf("clob"),
+        isLob = true
     ),
     BLOB(
-            typeNames = listOf("blob"),
-            isLob = true
+        typeNames = listOf("blob"),
+        isLob = true
     ),
     LIST(
-            typeNames = listOf("list"),
-            isSequence = true,
-            isRangedFrom = true
+        typeNames = listOf("list"),
+        isSequence = true,
+        isRangedFrom = true
     ),
     SEXP(
-            typeNames = listOf("sexp"),
-            isSequence = true
+        typeNames = listOf("sexp"),
+        isSequence = true
     ),
     STRUCT(
-            typeNames = listOf("struct", "tuple")
+        typeNames = listOf("struct", "tuple")
     ),
     BAG(
-            typeNames = listOf("bag"),
-            isSequence = true,
-            isRangedFrom = true
+        typeNames = listOf("bag"),
+        isSequence = true,
+        isRangedFrom = true
     );
 
 
@@ -110,10 +110,10 @@ enum class ExprValueType(val typeNames: List<String>,
 
     /** Whether or not the given type is in the same type grouping as another. */
     fun isDirectlyComparableTo(other: ExprValueType): Boolean =
-            (this == other)
-                    || (isNumber && other.isNumber)
-                    || (isText && other.isText)
-                    || (isLob && other.isLob)
+        (this == other)
+            || (isNumber && other.isNumber)
+            || (isText && other.isText)
+            || (isLob && other.isLob)
 
     companion object {
         init {
@@ -136,52 +136,52 @@ enum class ExprValueType(val typeNames: List<String>,
         }
 
         private val ION_TYPE_MAP = enumValues<IonType>().asSequence()
-                .map {
-                    val ourType = when (it) {
-                        IonType.DATAGRAM -> BAG
-                        else             -> valueOf(it.name)
-                    }
-                    Pair(it, ourType)
-                }.toMap()
+            .map {
+                val ourType = when (it) {
+                    IonType.DATAGRAM -> BAG
+                    else -> valueOf(it.name)
+                }
+                Pair(it, ourType)
+            }.toMap()
 
         /** Maps an [IonType] to an [ExprType]. */
         fun fromIonType(ionType: IonType): ExprValueType = ION_TYPE_MAP[ionType]!!
 
         private val LEX_TYPE_MAP = mapOf(
-                *CORE_TYPE_NAME_ARITY_MAP.keys.map {
-                    val type = try {
-                        ExprValueType.valueOf(it.toUpperCase())
-                    } catch (e: IllegalArgumentException) {
-                        // no direct type mapping
-                        when (it) {
-                            "boolean"                                    -> BOOL
-                            "smallint", "integer", "integer4",
-                            "integer8"                                   -> INT
-                            "real", "double_precision"                   -> FLOAT
-                            "numeric"                                    -> DECIMAL
-                            "character", "character_varying"             -> STRING
-                            "tuple"                                      -> STRUCT
-                            else                                         -> throw IllegalStateException("No ExprValueType handler for $it")
-                        }
+            *CORE_TYPE_NAME_ARITY_MAP.keys.map {
+                val type = try {
+                    ExprValueType.valueOf(it.toUpperCase())
+                } catch (e: IllegalArgumentException) {
+                    // no direct type mapping
+                    when (it) {
+                        "boolean" -> BOOL
+                        "smallint", "integer", "integer4",
+                        "integer8" -> INT
+                        "real", "double_precision" -> FLOAT
+                        "numeric" -> DECIMAL
+                        "character", "character_varying" -> STRING
+                        "tuple" -> STRUCT
+                        else -> throw IllegalStateException("No ExprValueType handler for $it")
                     }
+                }
 
-                    Pair(it, type)
-                }.toTypedArray()
+                Pair(it, type)
+            }.toTypedArray()
         )
 
 
         fun fromTypeName(name: String): ExprValueType = LEX_TYPE_MAP[name]
-                ?: throw EvaluationException(
-                        "No such value type for $name",
-                        ErrorCode.LEXER_INVALID_NAME,
-                        internal = true)
+            ?: throw EvaluationException(
+                "No such value type for $name",
+                ErrorCode.LEXER_INVALID_NAME,
+                internal = true)
 
         fun fromSqlDataType(sqlDataType: PartiqlAst.Type) = fromSqlDataTypeOrNull(sqlDataType)
-                ?: throw EvaluationException(
-                        "No such ExprValueType for ${sqlDataType.javaClass.name}",
-                        ErrorCode.SEMANTIC_UNION_TYPE_INVALID,
-                        internal = true
-                )
+            ?: throw EvaluationException(
+                "No such ExprValueType for ${sqlDataType.javaClass.name}",
+                ErrorCode.SEMANTIC_UNION_TYPE_INVALID,
+                internal = true
+            )
 
         fun fromSqlDataTypeOrNull(sqlDataType: PartiqlAst.Type) = when (sqlDataType) {
             is PartiqlAst.Type.BooleanType -> BOOL

@@ -38,34 +38,27 @@ class ConfigurableExprValueFormatter(private val config: Configuration) : ExprVa
         fun recursivePrettyPrint(value: ExprValue) {
             when (value.type) {
 
-                ExprValueType.MISSING                                    -> out.append(MISSING_STRING)
-                ExprValueType.NULL                                       -> out.append(NULL_STRING)
-
-                ExprValueType.BOOL                                       -> out.append(value.scalar.booleanValue().toString())
-
-                ExprValueType.INT, ExprValueType.DECIMAL                               -> out.append(value.scalar.numberValue().toString())
-
-                ExprValueType.STRING                                     -> out.append("'${value.scalar.stringValue()}'")
-
-                ExprValueType.DATE                                       -> out.append(value.scalar.dateValue().toString())
-
-                ExprValueType.TIME                                       -> out.append(value.scalar.timeValue().toString())
+                ExprValueType.MISSING -> out.append(MISSING_STRING)
+                ExprValueType.NULL -> out.append(NULL_STRING)
+                ExprValueType.BOOL -> out.append(value.scalar.booleanValue().toString())
+                ExprValueType.INT, ExprValueType.DECIMAL -> out.append(value.scalar.numberValue().toString())
+                ExprValueType.STRING -> out.append("'${value.scalar.stringValue()}'")
+                ExprValueType.DATE -> out.append(value.scalar.dateValue().toString())
+                ExprValueType.TIME -> out.append(value.scalar.timeValue().toString())
 
                 // fallback to an Ion literal for all types that don't have a native PartiQL representation
                 ExprValueType.FLOAT, ExprValueType.TIMESTAMP, ExprValueType.SYMBOL,
                 ExprValueType.CLOB,ExprValueType. BLOB, ExprValueType.SEXP -> prettyPrintIonLiteral(value)
 
-                ExprValueType.LIST                                       -> prettyPrintContainer(value, "[", "]")
-                ExprValueType.BAG                                        -> prettyPrintContainer(value, "<<", ">>")
-                ExprValueType.STRUCT                                     -> prettyPrintContainer(value, "{", "}") { v ->
+                ExprValueType.LIST -> prettyPrintContainer(value, "[", "]")
+                ExprValueType.BAG -> prettyPrintContainer(value, "<<", ">>")
+                ExprValueType.STRUCT -> prettyPrintContainer(value, "{", "}") { v ->
                     val fieldName = v.name!!.scalar.stringValue()
                     out.append("'$fieldName': ")
-
                     recursivePrettyPrint(v)
                 }
             }
         }
-
 
         private fun prettyPrintContainer(value: ExprValue,
                                          openingMarker: String,

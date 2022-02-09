@@ -88,12 +88,12 @@ private class StatementTransformer(val ion: IonSystem) {
 
             is PartiqlAst.Expr.Union ->
                 NAry(
-                        when(setq) {
-                            is PartiqlAst.SetQuantifier.Distinct -> NAryOp.UNION
-                            is PartiqlAst.SetQuantifier.All -> NAryOp.UNION_ALL
-                        },
-                        operands.toExprNodeList(),
-                        metas)
+                    when (setq) {
+                        is PartiqlAst.SetQuantifier.Distinct -> NAryOp.UNION
+                        is PartiqlAst.SetQuantifier.All -> NAryOp.UNION_ALL
+                    },
+                    operands.toExprNodeList(),
+                    metas)
             is PartiqlAst.Expr.Intersect ->
                 NAry(
                     when (setq) {
@@ -120,15 +120,15 @@ private class StatementTransformer(val ion: IonSystem) {
 
             is PartiqlAst.Expr.SimpleCase ->
                 SimpleCase(
-                        expr.toExprNode(),
-                        cases.pairs.map { SimpleCaseWhen(it.first.toExprNode(), it.second.toExprNode()) },
-                        default?.toExprNode(),
-                        metas)
+                    expr.toExprNode(),
+                    cases.pairs.map { SimpleCaseWhen(it.first.toExprNode(), it.second.toExprNode()) },
+                    default?.toExprNode(),
+                    metas)
             is PartiqlAst.Expr.SearchedCase ->
                 SearchedCase(
-                        cases.pairs.map { SearchedCaseWhen(it.first.toExprNode(), it.second.toExprNode()) },
-                        this.default?.toExprNode(),
-                        metas)
+                    cases.pairs.map { SearchedCaseWhen(it.first.toExprNode(), it.second.toExprNode()) },
+                    this.default?.toExprNode(),
+                    metas)
             is PartiqlAst.Expr.Struct -> Struct(this.fields.map { StructField(it.first.toExprNode(), it.second.toExprNode()) }, metas)
             is PartiqlAst.Expr.Bag -> Seq(SeqType.BAG, values.toExprNodeList(), metas)
             is PartiqlAst.Expr.List -> Seq(SeqType.LIST, values.toExprNodeList(), metas)

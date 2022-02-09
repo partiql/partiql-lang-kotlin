@@ -24,7 +24,6 @@ import org.partiql.lang.eval.intValue
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
-import java.lang.Integer.max
 
 /**
  * Built in function to return the substring of an existing string. This function
@@ -132,7 +131,7 @@ internal class SubstringExprFunction(private val valueFactory: ExprValueFactory)
         }
 
         // Clamp start indexes to values that make sense for java substring
-        val adjustedStartPosition = max(0, startPosition - 1)
+        val adjustedStartPosition = Integer.max(0, startPosition - 1)
 
         if (endPosition < adjustedStartPosition) {
             return valueFactory.newString("")

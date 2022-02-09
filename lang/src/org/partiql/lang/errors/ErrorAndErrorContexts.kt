@@ -25,10 +25,10 @@ internal const val UNKNOWN: String = "<UNKNOWN>"
  * Categories for errors. Should map to stages in the Compiler and Evaluator.
  */
 enum class ErrorCategory(val message: String) {
-    LEXER ("Lexer Error"),
-    PARSER ("Parser Error"),
-    SEMANTIC ("Semantic Error"),
-    EVALUATOR ("Evaluator Error");
+    LEXER("Lexer Error"),
+    PARSER("Parser Error"),
+    SEMANTIC("Semantic Error"),
+    EVALUATOR("Evaluator Error");
 
     override fun toString() = message
 }
@@ -99,9 +99,9 @@ abstract class PropertyValue(val type: PropertyType) {
     val value: Any
         get() = when (type) {
             PropertyType.LONG_CLASS -> longValue()
-            PropertyType.STRING_CLASS    -> stringValue()
-            PropertyType.INTEGER_CLASS   -> integerValue()
-            PropertyType.TOKEN_CLASS     -> tokenTypeValue()
+            PropertyType.STRING_CLASS -> stringValue()
+            PropertyType.INTEGER_CLASS -> integerValue()
+            PropertyType.TOKEN_CLASS -> tokenTypeValue()
             PropertyType.ION_VALUE_CLASS -> ionValue()
         }
 
@@ -112,15 +112,13 @@ abstract class PropertyValue(val type: PropertyType) {
         }
 }
 
-
-
 /**
  * A [PropertyType] is a top level type for all types of values that appear as properties in error codes.
  * Clients can access the type (as a `Class<*>`) of a property's value through [getType()].
  *
  */
-enum class PropertyType(private val type: Class<*>){
-    LONG_CLASS (Long::class.javaObjectType),
+enum class PropertyType(private val type: Class<*>) {
+    LONG_CLASS(Long::class.javaObjectType),
     STRING_CLASS(String::class.javaObjectType),
     INTEGER_CLASS(Int::class.javaObjectType),
     TOKEN_CLASS(TokenType::class.javaObjectType),
@@ -156,7 +154,7 @@ class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumM
     operator fun get(key: Property): PropertyValue? = map[key]
 
 
-    private fun <T> verifyTypeAndSet(prop: Property, expectedType: PropertyType, value : T,  pValue: PropertyValue) {
+    private fun <T> verifyTypeAndSet(prop: Property, expectedType: PropertyType, value: T, pValue: PropertyValue) {
         if (prop.propertyType == expectedType) {
             map[prop] = pValue
         } else {
@@ -176,7 +174,7 @@ class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumM
         val o = object : PropertyValue(PropertyType.STRING_CLASS) {
             override fun stringValue(): String = strValue
         }
-        verifyTypeAndSet(key, PropertyType.STRING_CLASS, strValue ,o)
+        verifyTypeAndSet(key, PropertyType.STRING_CLASS, strValue, o)
     }
 
 
