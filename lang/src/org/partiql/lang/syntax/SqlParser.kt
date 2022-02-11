@@ -441,7 +441,7 @@ class SqlParser(
                             else -> errMalformedParseTree("Unsupported path component: ${it.type}")
                         }
                     }
-                    path(rootExpr, pathComponents, metas)
+                    path(rootExpr, pathComponents, rootExpr.metas) // Here we use its root source location, since itself has no source location (not a token).
                 }
                 ParseType.PARAMETER -> parameter(token!!.value!!.longValue(), metas)
                 ParseType.CASE -> {
