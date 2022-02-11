@@ -1,5 +1,6 @@
 package org.partiql.lang.domains
 
+import com.amazon.ionelement.api.IonElement
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.metaContainerOf
@@ -14,11 +15,22 @@ import org.partiql.lang.eval.BindingCase
 fun PartiqlAst.Builder.id(name: String) =
     id(name, caseInsensitive(), unqualified())
 
+// TODO:  once https://github.com/partiql/partiql-ir-generator/issues/6 has been completed, we can delete this.
+fun PartiqlLogical.Builder.id(name: String) =
+    id(name, caseInsensitive(), unqualified())
+
+// TODO:  once https://github.com/partiql/partiql-ir-generator/issues/6 has been completed, we can delete this.
+fun PartiqlLogical.Builder.pathExpr(exp: PartiqlLogical.Expr) =
+    pathExpr(exp, caseInsensitive())
+
+// Workaround for a bug in PIG that is fixed in its next release:
+// https://github.com/partiql/partiql-ir-generator/issues/41
+fun List<IonElement>.asAnyElement() =
+    this.map { it.asAnyElement() }
+
+
 val MetaContainer.staticType: StaticTypeMeta? get() = this[StaticTypeMeta.TAG] as StaticTypeMeta?
 
-/** Constructs a container with the specified metas. */
-fun metaContainerOf(vararg metas: Meta): MetaContainer =
-    metaContainerOf(metas.map { Pair(it.tag, it) })
 
 /**
  * Returns a [MetaContainer] with *only* the source location of the receiver [MetaContainer], if present.
@@ -57,6 +69,14 @@ fun PropertyValueMap.addSourceLocation(metas: MetaContainer): PropertyValueMap {
 fun PartiqlAst.CaseSensitivity.toBindingCase(): BindingCase = when (this) {
     is PartiqlAst.CaseSensitivity.CaseInsensitive -> BindingCase.INSENSITIVE
     is PartiqlAst.CaseSensitivity.CaseSensitive -> BindingCase.SENSITIVE
+}
+
+/**
+ * Converts a [PartiqlLogical.CaseSensitivity] to a [BindingCase].
+ */
+fun PartiqlLogical.CaseSensitivity.toBindingCase(): BindingCase = when(this) {
+    is PartiqlLogical.CaseSensitivity.CaseInsensitive -> BindingCase.INSENSITIVE
+    is PartiqlLogical.CaseSensitivity.CaseSensitive -> BindingCase.SENSITIVE
 }
 
 /**
