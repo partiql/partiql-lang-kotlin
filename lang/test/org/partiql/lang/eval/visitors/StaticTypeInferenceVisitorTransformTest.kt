@@ -5738,6 +5738,36 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                 )
             ),
             TestCase(
+                name = "function signature without optional/variadic arguments, null propagating given non matching type for a path",
+                originalSql = "UPPER(x.y)",
+                globals = mapOf("x" to StructType(mapOf("y" to INT))),
+                handler = expectSemanticProblems(
+                    expectedProblems = listOf(
+                        createInvalidArgumentTypeForFunctionError(
+                            sourceLocation = SourceLocationMeta(1L, 7L, 1L),
+                            functionName = "upper",
+                            expectedArgType = unionOf(STRING, SYMBOL),
+                            actualType = INT
+                        )
+                    )
+                )
+            ),
+            TestCase(
+                name = "function signature without optional/variadic arguments, null propagating given non matching type for list reference",
+                originalSql = "UPPER(x[0])",
+                globals = mapOf("x" to ListType(INT)),
+                handler = expectSemanticProblems(
+                    expectedProblems = listOf(
+                        createInvalidArgumentTypeForFunctionError(
+                            sourceLocation = SourceLocationMeta(1L, 7L, 1L),
+                            functionName = "upper",
+                            expectedArgType = unionOf(STRING, SYMBOL),
+                            actualType = INT
+                        )
+                    )
+                )
+            ),
+            TestCase(
                 name = "function signature without optional/variadic arguments, null propagating given non matching type with missing",
                 originalSql = "UPPER(x)",
                 globals = mapOf("x" to INT.asOptional()),
