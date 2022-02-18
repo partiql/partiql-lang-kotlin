@@ -286,7 +286,7 @@ internal class CompilerPipelineImpl(
 
         val queryToCompile = transforms.transformStatement(preProcessedQuery.toAstStatement())
 
-        return compiler.compile(queryToCompile.toExprNode(valueFactory.ion))
+        return compiler.compile(queryToCompile)
     }
 
     internal fun executePreProcessingSteps(query: ExprNode, context: StepContext) = preProcessingSteps
