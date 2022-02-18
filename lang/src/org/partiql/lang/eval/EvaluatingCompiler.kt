@@ -22,7 +22,18 @@ import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
 import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.toIonValue
-import org.partiql.lang.ast.*
+import org.partiql.lang.ast.AstDeserializerBuilder
+import org.partiql.lang.ast.AstVersion
+import org.partiql.lang.ast.sourceLocation
+import org.partiql.lang.ast.IonElementMetaContainer
+import org.partiql.lang.ast.AggregateCallSiteListMeta
+import org.partiql.lang.ast.AggregateRegisterIdMeta
+import org.partiql.lang.ast.IsCountStarMeta
+import org.partiql.lang.ast.MetaContainer
+import org.partiql.lang.ast.SourceLocationMeta
+import org.partiql.lang.ast.UniqueNameMeta
+import org.partiql.lang.ast.staticType
+import org.partiql.lang.ast.toAstStatement
 import org.partiql.lang.ast.toPartiQlMetaContainer
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.toBindingCase
@@ -39,7 +50,16 @@ import org.partiql.lang.eval.like.parsePattern
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
 import org.partiql.lang.syntax.SqlParser
-import org.partiql.lang.types.*
+import org.partiql.lang.types.TypedOpParameter
+import org.partiql.lang.types.IntType
+import org.partiql.lang.types.FunctionSignature
+import org.partiql.lang.types.StaticType
+import org.partiql.lang.types.AnyType
+import org.partiql.lang.types.toTypedOpParameter
+import org.partiql.lang.types.AnyOfType
+import org.partiql.lang.types.SingleType
+import org.partiql.lang.types.UnknownArguments
+import org.partiql.lang.types.UnsupportedTypeCheckException
 import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.codePointSequence
@@ -1881,7 +1901,7 @@ internal class EvaluatingCompiler(
                     nestCompilationContext(ExpressionContext.SELECT_LIST, allFromSourceAliases) {
                         val projectionThunk: ThunkEnvValue<List<ExprValue>> =
                             when {
-                                items.filterIsInstance<SelectListItemStar>().any() -> {
+                                items.filterIsInstance<PartiqlAst.Projection.ProjectStar>().any() -> {
                                     errNoContext(
                                         "Encountered a SelectListItemStar--did SelectStarVisitorTransform execute?",
                                         errorCode = ErrorCode.INTERNAL_ERROR,
