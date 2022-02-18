@@ -702,77 +702,44 @@ internal class EvaluatingCompiler(
         val leftThunk = compileAstExpr(args[0])
         val rightOp = args[1]
 
+        fun checkOptimizedCase(values: List<PartiqlAst.Expr>): Boolean =
+            values.all {
+                it is PartiqlAst.Expr.Lit && !it.value.toIonValue(
+                    valueFactory.ion
+                ).isNullValue
+            }
+
+        fun optimizedCase(values: List<PartiqlAst.Expr>): ThunkEnv{
+            // Put all the literals in the sequence into a pre-computed map to be checked later by the thunk.
+            // If the left-hand value is one of these we can short-circuit with a result of TRUE.
+            // This is the fastest possible case and allows for hundreds of literal values (or more) in the
+            // sequence without a huge performance penalty.
+            // NOTE: we cannot use a [HashSet<>] here because [ExprValue] does not implement [Object.hashCode] or
+            // [Object.equals].
+            val precomputedLiteralsMap = values
+                .filterIsInstance<PartiqlAst.Expr.Lit>()
+                .mapTo(TreeSet<ExprValue>(DEFAULT_COMPARATOR)) {
+                    valueFactory.newFromIonValue(
+                        it.value.toIonValue(
+                            valueFactory.ion
+                        )
+                    )
+                }
+
+            // the compiled thunk simply checks if the left side is contained on the right side.
+            // thunkEnvOperands takes care of unknown propagation for the left side; for the right,
+            // this unknown propagation does not apply since we've eliminated the possibility of unknowns above.
+            return thunkFactory.thunkEnvOperands(metas, leftThunk) { _, leftValue ->
+                precomputedLiteralsMap.contains(leftValue).exprValue()
+            }
+        }
+
         val computeThunk = when {
             // We can significantly optimize this if rightArg is a sequence constructor which is composed of entirely
             // of non-null literal values.
-            rightOp is PartiqlAst.Expr.List && rightOp.values.all {
-                it is PartiqlAst.Expr.Lit && !it.value.toIonValue(
-                    valueFactory.ion
-                ).isNullValue
-            } -> {
-                // Put all the literals in the sequence into a pre-computed map to be checked later by the thunk.
-                // If the left-hand value is one of these we can short-circuit with a result of TRUE.
-                // This is the fastest possible case and allows for hundreds of literal values (or more) in the
-                // sequence without a huge performance penalty.
-                // NOTE: we cannot use a [HashSet<>] here because [ExprValue] does not implement [Object.hashCode] or
-                // [Object.equals].
-                val precomputedLiteralsMap = rightOp.values
-                    .filterIsInstance<PartiqlAst.Expr.Lit>()
-                    .mapTo(TreeSet<ExprValue>(DEFAULT_COMPARATOR)) {
-                        valueFactory.newFromIonValue(
-                            it.value.toIonValue(
-                                valueFactory.ion
-                            )
-                        )
-                    }
-
-                // the compiled thunk simply checks if the left side is contained on the right side.
-                // thunkEnvOperands takes care of unknown propagation for the left side; for the right,
-                // this unknown propagation does not apply since we've eliminated the possibility of unknowns above.
-                thunkFactory.thunkEnvOperands(metas, leftThunk) { _, leftValue ->
-                    precomputedLiteralsMap.contains(leftValue).exprValue()
-                }
-            }
-            // The same for bag
-            rightOp is PartiqlAst.Expr.Bag && rightOp.values.all {
-                it is PartiqlAst.Expr.Lit && !it.value.toIonValue(
-                    valueFactory.ion
-                ).isNullValue
-            } -> {
-                val precomputedLiteralsMap = rightOp.values
-                    .filterIsInstance<PartiqlAst.Expr.Lit>()
-                    .mapTo(TreeSet<ExprValue>(DEFAULT_COMPARATOR)) {
-                        valueFactory.newFromIonValue(
-                            it.value.toIonValue(
-                                valueFactory.ion
-                            )
-                        )
-                    }
-
-                thunkFactory.thunkEnvOperands(metas, leftThunk) { _, leftValue ->
-                    precomputedLiteralsMap.contains(leftValue).exprValue()
-                }
-            }
-            // The same for sexp
-            rightOp is PartiqlAst.Expr.Sexp && rightOp.values.all {
-                it is PartiqlAst.Expr.Lit && !it.value.toIonValue(
-                    valueFactory.ion
-                ).isNullValue
-            } -> {
-                val precomputedLiteralsMap = rightOp.values
-                    .filterIsInstance<PartiqlAst.Expr.Lit>()
-                    .mapTo(TreeSet<ExprValue>(DEFAULT_COMPARATOR)) {
-                        valueFactory.newFromIonValue(
-                            it.value.toIonValue(
-                                valueFactory.ion
-                            )
-                        )
-                    }
-
-                thunkFactory.thunkEnvOperands(metas, leftThunk) { _, leftValue ->
-                    precomputedLiteralsMap.contains(leftValue).exprValue()
-                }
-            }
+            rightOp is PartiqlAst.Expr.List && checkOptimizedCase(rightOp.values) -> optimizedCase(rightOp.values)
+            rightOp is PartiqlAst.Expr.Bag && checkOptimizedCase(rightOp.values) -> optimizedCase(rightOp.values)
+            rightOp is PartiqlAst.Expr.Sexp && checkOptimizedCase(rightOp.values) -> optimizedCase(rightOp.values)
             // The unoptimized case...
             else -> {
                 val rightThunk = compileAstExpr(rightOp)
@@ -1539,7 +1506,7 @@ internal class EvaluatingCompiler(
     }
 
     private fun compileSeq(seqType: ExprValueType, itemExprs: List<PartiqlAst.Expr>, metas: MetaContainer): ThunkEnv {
-        require(seqType.isSequence) { "seqType mist be a sequence!" }
+        require(seqType.isSequence) { "seqType must be a sequence!" }
 
         val itemThunks = compileAstExprs(itemExprs)
 
