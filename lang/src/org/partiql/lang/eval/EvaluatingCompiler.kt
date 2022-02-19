@@ -133,6 +133,7 @@ import java.math.BigDecimal
 import java.util.LinkedList
 import java.util.Stack
 import java.util.TreeSet
+import kotlin.math.exp
 
 /**
  * A basic compiler that converts an instance of [ExprNode] to an [Expression].
@@ -312,6 +313,9 @@ internal class EvaluatingCompiler(
         )
     }()
 
+    @Deprecated("ExprNode is deprecated. Please use PIG generated AST. ")
+    fun compile(exprNode: ExprNode): Expression = compile(exprNode.toAstStatement())
+
     /**
      * Compiles an [ExprNode] tree to an [Expression].
      *
@@ -319,9 +323,9 @@ internal class EvaluatingCompiler(
      * and throws [InterruptedException] if [Thread.interrupted] it has been set in the
      * hope that long running compilations may be aborted by the caller.
      */
-    fun compile(originalAst: ExprNode): Expression {
+    fun compile(originalAst: PartiqlAst.Statement): Expression {
         val visitorTransform = compileOptions.visitorTransformMode.createVisitorTransform()
-        val transformedAst = visitorTransform.transformStatement(originalAst.toAstStatement()).toExprNode(valueFactory.ion)
+        val transformedAst = visitorTransform.transformStatement(originalAst).toExprNode(valueFactory.ion)
         val partiqlAstSanityValidator = PartiqlAstSanityValidator()
 
         partiqlAstSanityValidator.validate(transformedAst.toAstStatement(), compileOptions)
@@ -350,8 +354,7 @@ internal class EvaluatingCompiler(
     @Deprecated("Please use CompilerPipeline instead")
     fun compile(source: String): Expression {
         val parser = SqlParser(valueFactory.ion)
-        // TODO: replace `parseExprNode` with `ParseStatement` once evaluator deprecates `ExprNode`
-        val ast = parser.parseExprNode(source)
+        val ast = parser.parseAstStatement(source)
         return compile(ast)
     }
 
@@ -361,13 +364,13 @@ internal class EvaluatingCompiler(
     @Deprecated("Please use CompilerPipeline.compile(ExprNode).eval(EvaluationSession) instead.")
     fun eval(ast: IonSexp, session: EvaluationSession): ExprValue {
         val exprNode = AstDeserializerBuilder(valueFactory.ion).build().deserialize(ast, AstVersion.V0)
-        return compile(exprNode).eval(session)
+        return compile(exprNode.toAstStatement()).eval(session)
     }
 
     /**
      * Evaluates an instance of [ExprNode] against a global set of bindings.
      */
-    fun eval(ast: ExprNode, session: EvaluationSession): ExprValue = compile(ast).eval(session)
+    fun eval(ast: PartiqlAst.Statement, session: EvaluationSession): ExprValue = compile(ast).eval(session)
 
     /**
      * Compiles the specified [ExprNode] into a [ThunkEnv].

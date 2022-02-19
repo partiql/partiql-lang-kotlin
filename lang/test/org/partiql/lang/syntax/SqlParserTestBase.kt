@@ -40,7 +40,6 @@ abstract class SqlParserTestBase : TestBase() {
     protected val parser = SqlParser(ion, CUSTOM_TEST_TYPES)
 
     protected fun parse(source: String): PartiqlAst.Statement = parser.parseAstStatement(source)
-    protected fun parseToExprNode(source: String): ExprNode = parser.parseExprNode(source)
 
     /**
      * This method is used by test cases for parsing a string.
@@ -193,7 +192,7 @@ abstract class SqlParserTestBase : TestBase() {
 
         softAssert {
             try {
-                parser.parseExprNode(input)
+                parser.parseAstStatement(input)
                 fail("Expected ParserException but there was no Exception")
             }
             catch (pex: ParserException) {

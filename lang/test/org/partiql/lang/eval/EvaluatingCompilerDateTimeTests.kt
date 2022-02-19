@@ -212,8 +212,8 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         (RANDOM_TIMES + RANDOM_TIMES_WITH_TIMEZONE).map {
             val query = "TIME '$it'"
             val expected = it.expectedTimeString(withTimeZone = false)
-            val originalExprNode = eval(query)
-            assertEquals("Query $query failed.", expected, originalExprNode.toString())
+            val actual = eval(query)
+            assertEquals("Query $query failed.", expected, actual.toString())
         }
     }
 
@@ -222,8 +222,8 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
          (RANDOM_TIMES_WITH_PRECISION + RANDOM_TIMES_WITH_PRECISION_AND_TIMEZONE).map {
             val query = "TIME (${it.precision}) '$it'"
             val expected = it.expectedTimeString(withTimeZone = false)
-            val originalExprNode = eval(query)
-            assertEquals(expected, originalExprNode.toString())
+            val actual = eval(query)
+            assertEquals(expected, actual.toString())
         }
     }
 
@@ -232,8 +232,8 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
          (RANDOM_TIMES + RANDOM_TIMES_WITH_TIMEZONE).map {
             val query = "TIME WITH TIME ZONE '$it'"
             val expected = it.expectedTimeString(withTimeZone = true)
-            val originalExprNode = eval(query)
-            assertEquals(expected, originalExprNode.toString())
+            val actual = eval(query)
+            assertEquals(expected, actual.toString())
         }
     }
 
@@ -242,8 +242,8 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         (RANDOM_TIMES_WITH_PRECISION + RANDOM_TIMES_WITH_PRECISION_AND_TIMEZONE).map {
             val query = "TIME (${it.precision}) WITH TIME ZONE '$it'"
             val expected = it.expectedTimeString(withTimeZone = true)
-            val originalExprNode = eval(query)
-            assertEquals(expected, originalExprNode.toString())
+            val actual = eval(query)
+            assertEquals(expected, actual.toString())
         }
     }
     @ParameterizedTest

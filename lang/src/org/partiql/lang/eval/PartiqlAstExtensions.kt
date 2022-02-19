@@ -2,14 +2,13 @@ package org.partiql.lang.eval
 
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.TextElement
-import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.domains.PartiqlAst
 
 
 /**
- * Determines an appropriate column name for the given [ExprNode].
+ * Determines an appropriate column name for the given [PartiqlAst.Expr].
  *
  * If [this] is a [PartiqlAst.Expr.Id], returns the name of the variable.
  *
