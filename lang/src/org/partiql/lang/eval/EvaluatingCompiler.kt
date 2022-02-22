@@ -83,7 +83,6 @@ import java.math.BigDecimal
 import java.util.LinkedList
 import java.util.Stack
 import java.util.TreeSet
-import kotlin.math.exp
 
 /**
  * A basic compiler that converts an instance of [PartiqlAst] to an [Expression].
@@ -271,9 +270,6 @@ internal class EvaluatingCompiler(
                 }
             )
         }
-
-    @Deprecated("ExprNode is deprecated. Please use PIG generated AST. ")
-    fun compile(exprNode: ExprNode): Expression = compile(exprNode.toAstStatement())
 
     @Deprecated("ExprNode is deprecated. Please use PIG generated AST. ")
     fun compile(exprNode: ExprNode): Expression = compile(exprNode.toAstStatement())
