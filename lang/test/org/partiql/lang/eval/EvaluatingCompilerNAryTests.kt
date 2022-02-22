@@ -38,59 +38,80 @@ class EvaluatingCompilerNAryTests: EvaluatorTestBase() {
     private fun Long?.toIonValue(): IonValue =
         this?.let { ion.newInt(it) } ?: ion.newNull()
 
+    enum class ArithmeticOp {
+        Plus,
+        Minus,
+        Times,
+        Divide,
+        Modulo
+    }
+
+    enum class ComparisonOp {
+        Eq,
+        Gt,
+        Gte,
+        Lt,
+        Lte
+    }
+
+    enum class LogicalOp {
+        And,
+        Or
+    }
+
     /**
-     * A test case for integer arithmetic.  Should be sufficient to test [NAry] arithmetic with arity > 2.
+     * A test case for integer arithmetic.  Should be sufficient to test arithmetic operators with arity > 2.
      *
      * A null value of any argument is converted to PartiQL `NULL`.
      */
-    data class ArithmeticTestCase(val op: String, val arg1: Long?, val arg2: Long?, val arg3: Long?, val expectedResult: Long?)
+    data class ArithmeticTestCase(val op: ArithmeticOp, val arg1: Long?, val arg2: Long?, val arg3: Long?, val expectedResult: Long?)
 
 
     fun parametersForTernaryArithmeticTest() = listOf(
         //Null propagation for ADD
-        ArithmeticTestCase("plus", null, 2, 3, null),
-        ArithmeticTestCase("plus", 1, null, 3, null),
-        ArithmeticTestCase("plus", 1, 2, null, null),
+        ArithmeticTestCase(ArithmeticOp.Plus, null, 2, 3, null),
+        ArithmeticTestCase(ArithmeticOp.Plus, 1, null, 3, null),
+        ArithmeticTestCase(ArithmeticOp.Plus, 1, 2, null, null),
 
         //ADD is commutative
-        ArithmeticTestCase("plus", 1, 2, 3, 6),
-        ArithmeticTestCase("plus", 3, 1, 2, 6),
+        ArithmeticTestCase(ArithmeticOp.Plus, 1, 2, 3, 6),
+        ArithmeticTestCase(ArithmeticOp.Plus, 3, 1, 2, 6),
 
         //Null propagation for SUB
-        ArithmeticTestCase("minus", null, 1, 2, null),
-        ArithmeticTestCase("minus", 10, null, 2, null),
-        ArithmeticTestCase("minus", 10, 1, null, null),
+        ArithmeticTestCase(ArithmeticOp.Minus, null, 1, 2, null),
+        ArithmeticTestCase(ArithmeticOp.Minus, 10, null, 2, null),
+        ArithmeticTestCase(ArithmeticOp.Minus, 10, 1, null, null),
 
         //SUB is noncommutative
-        ArithmeticTestCase("minus", 10, 1, 2, 7),
-        ArithmeticTestCase("minus", 1, 2, 10, -11),
+        ArithmeticTestCase(ArithmeticOp.Minus, 10, 1, 2, 7),
+        ArithmeticTestCase(ArithmeticOp.Minus, 1, 2, 10, -11),
 
         //Null propagation for MUL
-        ArithmeticTestCase("times", null, 2, 3, null),
-        ArithmeticTestCase("times", 10, null, 3, null),
-        ArithmeticTestCase("times", 10, 2, null, null),
+        ArithmeticTestCase(ArithmeticOp.Times, null, 2, 3, null),
+        ArithmeticTestCase(ArithmeticOp.Times, 10, null, 3, null),
+        ArithmeticTestCase(ArithmeticOp.Times, 10, 2, null, null),
 
         //MUL is commutative
-        ArithmeticTestCase("times", 10, 2, 3, 60),
-        ArithmeticTestCase("times", 2, 3, 10, 60),
+        ArithmeticTestCase(ArithmeticOp.Times, 10, 2, 3, 60),
+        ArithmeticTestCase(ArithmeticOp.Times, 2, 3, 10, 60),
 
         //Null propagation for DIV
-        ArithmeticTestCase("divide", null, 2, 3, null),
-        ArithmeticTestCase("divide", 10, null, 3, null),
-        ArithmeticTestCase("divide", 10, 2, null, null),
+        ArithmeticTestCase(ArithmeticOp.Divide, null, 2, 3, null),
+        ArithmeticTestCase(ArithmeticOp.Divide, 10, null, 3, null),
+        ArithmeticTestCase(ArithmeticOp.Divide, 10, 2, null, null),
 
         //DIV is noncommutative
-        ArithmeticTestCase("divide", 60, 2, 3, 10),
-        ArithmeticTestCase("divide", 2, 3, 10, 0),
+        ArithmeticTestCase(ArithmeticOp.Divide, 60, 2, 3, 10),
+        ArithmeticTestCase(ArithmeticOp.Divide, 2, 3, 10, 0),
 
         //Null propagation for MOD
-        ArithmeticTestCase("modulo", null, 2, 3, null),
-        ArithmeticTestCase("modulo", 10, null, 3, null),
-        ArithmeticTestCase("modulo", 10, 2, null, null),
+        ArithmeticTestCase(ArithmeticOp.Modulo, null, 2, 3, null),
+        ArithmeticTestCase(ArithmeticOp.Modulo, 10, null, 3, null),
+        ArithmeticTestCase(ArithmeticOp.Modulo, 10, 2, null, null),
 
         //MOD is noncommutative
-        ArithmeticTestCase("modulo", 19, 5, 3, 1),
-        ArithmeticTestCase("modulo", 5, 3, 19, 2)
+        ArithmeticTestCase(ArithmeticOp.Modulo, 19, 5, 3, 1),
+        ArithmeticTestCase(ArithmeticOp.Modulo, 5, 3, 19, 2)
     )
 
     @Test
@@ -105,12 +126,11 @@ class EvaluatingCompilerNAryTests: EvaluatorTestBase() {
         val query = PartiqlAst.build {
             query(
                 when (tc.op) {
-                    "plus" -> plus(buildExprList(tc.arg1, tc.arg2, tc.arg3))
-                    "minus" -> minus(buildExprList(tc.arg1, tc.arg2, tc.arg3))
-                    "times" -> times(buildExprList(tc.arg1, tc.arg2, tc.arg3))
-                    "divide" -> divide(buildExprList(tc.arg1, tc.arg2, tc.arg3))
-                    "modulo" -> modulo(buildExprList(tc.arg1, tc.arg2, tc.arg3))
-                    else -> error("Internal error: Unrecognized operator name: ${tc.op}")
+                    ArithmeticOp.Plus -> plus(buildExprList(tc.arg1, tc.arg2, tc.arg3))
+                    ArithmeticOp.Minus -> minus(buildExprList(tc.arg1, tc.arg2, tc.arg3))
+                    ArithmeticOp.Times -> times(buildExprList(tc.arg1, tc.arg2, tc.arg3))
+                    ArithmeticOp.Divide -> divide(buildExprList(tc.arg1, tc.arg2, tc.arg3))
+                    ArithmeticOp.Modulo -> modulo(buildExprList(tc.arg1, tc.arg2, tc.arg3))
                 }
             )
         }
@@ -135,7 +155,7 @@ class EvaluatingCompilerNAryTests: EvaluatorTestBase() {
      *
      * A null value of any property is converted to PartiQL `NULL`.
      */
-    data class ComparisonTestCase(val op: String, val args: List<Long?>, val expectedResult: Boolean?)
+    data class ComparisonTestCase(val op: ComparisonOp, val args: List<Long?>, val expectedResult: Boolean?)
 
     private fun Int.pow(n: Int): Int = when {
         n > 0 -> this * this.pow(n - 1)
@@ -155,13 +175,13 @@ class EvaluatingCompilerNAryTests: EvaluatorTestBase() {
     fun parametersForTernaryComparisonTest(): List<ComparisonTestCase> {
         val possibleArgumentValues = mapOf('0' to -1L, '1' to 1L, '2' to null)
 
-        class FuncDef(val op: String, val block: (Long?, Long?) -> Boolean?)
+        class FuncDef(val op: ComparisonOp, val block: (Long?, Long?) -> Boolean?)
         val possibleFuncs = listOf(
-            FuncDef("eq") { v1, v2 -> if (v1 == null || v2 == null) { null } else { v1 == v2 } },
-            FuncDef("gt") { v1, v2 -> if (v1 == null || v2 == null) { null } else { v1 > v2 } },
-            FuncDef("gte") { v1, v2 -> if (v1 == null || v2 == null) { null } else { v1 >= v2 } },
-            FuncDef("lt") { v1, v2 -> if (v1 == null || v2 == null) { null } else { v1 < v2 } },
-            FuncDef("lte") { v1, v2 -> if (v1 == null || v2 == null) { null } else { v1 <= v2 } }
+            FuncDef(ComparisonOp.Eq) { v1, v2 -> if (v1 == null || v2 == null) { null } else { v1 == v2 } },
+            FuncDef(ComparisonOp.Gt) { v1, v2 -> if (v1 == null || v2 == null) { null } else { v1 > v2 } },
+            FuncDef(ComparisonOp.Gte) { v1, v2 -> if (v1 == null || v2 == null) { null } else { v1 >= v2 } },
+            FuncDef(ComparisonOp.Lt) { v1, v2 -> if (v1 == null || v2 == null) { null } else { v1 < v2 } },
+            FuncDef(ComparisonOp.Lte) { v1, v2 -> if (v1 == null || v2 == null) { null } else { v1 <= v2 } }
         )
 
         val testCases = ArrayList<ComparisonTestCase>()
@@ -204,12 +224,11 @@ class EvaluatingCompilerNAryTests: EvaluatorTestBase() {
         val query = PartiqlAst.build {
             query(
                 when (tc.op) {
-                    "eq" -> eq(tc.args.map { lit(it.toIonValue().toIonElement()) })
-                    "gt" -> gt(tc.args.map { lit(it.toIonValue().toIonElement()) })
-                    "gte" -> gte(tc.args.map { lit(it.toIonValue().toIonElement()) })
-                    "lt" -> lt(tc.args.map { lit(it.toIonValue().toIonElement()) })
-                    "lte" -> lte(tc.args.map { lit(it.toIonValue().toIonElement()) })
-                    else -> error("Internal error: Unrecognized operator name: ${tc.op}")
+                    ComparisonOp.Eq -> eq(tc.args.map { lit(it.toIonValue().toIonElement()) })
+                    ComparisonOp.Gt -> gt(tc.args.map { lit(it.toIonValue().toIonElement()) })
+                    ComparisonOp.Gte -> gte(tc.args.map { lit(it.toIonValue().toIonElement()) })
+                    ComparisonOp.Lt -> lt(tc.args.map { lit(it.toIonValue().toIonElement()) })
+                    ComparisonOp.Lte -> lte(tc.args.map { lit(it.toIonValue().toIonElement()) })
                 }
             )
         }
@@ -219,45 +238,45 @@ class EvaluatingCompilerNAryTests: EvaluatorTestBase() {
         assertEvalStatement(query, expectedExprValue)
     }
 
-    data class LogicalOperatorsTestCase(val op: String, val b1: Boolean?, val b2: Boolean?, val b3: Boolean?, val expectedResult: Boolean?)
+    data class LogicalOperatorsTestCase(val op: LogicalOp, val b1: Boolean?, val b2: Boolean?, val b3: Boolean?, val expectedResult: Boolean?)
 
 
     fun parametersForLogicalOperatorsTest() = listOf(
         // AND tests
         // true, false arguments
-        LogicalOperatorsTestCase("and", true, true, true, true),
-        LogicalOperatorsTestCase("and", true, true, false, false),
-        LogicalOperatorsTestCase("and", true, false, true, false),
-        LogicalOperatorsTestCase("and", false, true, true, false),
+        LogicalOperatorsTestCase(LogicalOp.And, true, true, true, true),
+        LogicalOperatorsTestCase(LogicalOp.And, true, true, false, false),
+        LogicalOperatorsTestCase(LogicalOp.And, true, false, true, false),
+        LogicalOperatorsTestCase(LogicalOp.And, false, true, true, false),
         // Null only propagates when none of the terms are false.  
         // If any one of them is false, the entire expression evaluates to false.
         // true, null arguments
-        LogicalOperatorsTestCase("and", true, true, null, null),
-        LogicalOperatorsTestCase("and", true, null, true, null),
-        LogicalOperatorsTestCase("and", null, true, true, null),
+        LogicalOperatorsTestCase(LogicalOp.And, true, true, null, null),
+        LogicalOperatorsTestCase(LogicalOp.And, true, null, true, null),
+        LogicalOperatorsTestCase(LogicalOp.And, null, true, true, null),
 
         // true, false, null arguments.
-        LogicalOperatorsTestCase("and", true, false, null, false),
-        LogicalOperatorsTestCase("and", true, null, false, false),
-        LogicalOperatorsTestCase("and", null, true, false, false),
+        LogicalOperatorsTestCase(LogicalOp.And, true, false, null, false),
+        LogicalOperatorsTestCase(LogicalOp.And, true, null, false, false),
+        LogicalOperatorsTestCase(LogicalOp.And, null, true, false, false),
 
         // OR tests
         // true, false arguments
-        LogicalOperatorsTestCase("or", false, false, false, false),
-        LogicalOperatorsTestCase("or", false, false, true, true),
-        LogicalOperatorsTestCase("or", false, true, false, true),
-        LogicalOperatorsTestCase("or", true, false, false, true),
+        LogicalOperatorsTestCase(LogicalOp.Or, false, false, false, false),
+        LogicalOperatorsTestCase(LogicalOp.Or, false, false, true, true),
+        LogicalOperatorsTestCase(LogicalOp.Or, false, true, false, true),
+        LogicalOperatorsTestCase(LogicalOp.Or, true, false, false, true),
 
         // Null only propagates when none of the terms are true.
         // If any one of them is true the entire expression evaluates to true.
-        LogicalOperatorsTestCase("or", false, false, null, null),
-        LogicalOperatorsTestCase("or", false, null, false, null),
-        LogicalOperatorsTestCase("or", null, false, false, null),
+        LogicalOperatorsTestCase(LogicalOp.Or, false, false, null, null),
+        LogicalOperatorsTestCase(LogicalOp.Or, false, null, false, null),
+        LogicalOperatorsTestCase(LogicalOp.Or, null, false, false, null),
         
         // true, false, null arguments
-        LogicalOperatorsTestCase("or", true, false, null, true),
-        LogicalOperatorsTestCase("or", true, null, false, true),
-        LogicalOperatorsTestCase("or", null, true, false, true)
+        LogicalOperatorsTestCase(LogicalOp.Or, true, false, null, true),
+        LogicalOperatorsTestCase(LogicalOp.Or, true, null, false, true),
+        LogicalOperatorsTestCase(LogicalOp.Or, null, true, false, true)
     )
 
     @Test
@@ -272,9 +291,8 @@ class EvaluatingCompilerNAryTests: EvaluatorTestBase() {
         val query = PartiqlAst.build {
             query(
                 when (tc.op) {
-                    "and" -> and(buildExprList(tc.b1, tc.b2, tc.b3))
-                    "or" -> or(buildExprList(tc.b1, tc.b2, tc.b3))
-                    else -> error("Internal error: Unrecognized operator name: ${tc.op}")
+                    LogicalOp.And -> and(buildExprList(tc.b1, tc.b2, tc.b3))
+                    LogicalOp.Or -> or(buildExprList(tc.b1, tc.b2, tc.b3))
                 }
             )
         }

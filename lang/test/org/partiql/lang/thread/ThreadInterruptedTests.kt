@@ -11,7 +11,6 @@ import org.partiql.lang.ast.AstDeserializerInternal
 import org.partiql.lang.ast.AstSerializer
 import org.partiql.lang.ast.AstVersion
 import org.partiql.lang.ast.CaseSensitivity
-import org.partiql.lang.ast.Literal
 import org.partiql.lang.ast.NAry
 import org.partiql.lang.ast.NAryOp
 import org.partiql.lang.ast.ScopeQualifier
@@ -26,7 +25,6 @@ import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.visitors.VisitorTransformBase
 import org.partiql.lang.syntax.SqlParser
-import org.partiql.pig.runtime.toIonElement
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
 
