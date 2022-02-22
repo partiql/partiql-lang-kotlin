@@ -34,6 +34,7 @@ import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.UniqueNameMeta
 import org.partiql.lang.ast.staticType
 import org.partiql.lang.ast.toAstStatement
+import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.toPartiQlMetaContainer
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.toBindingCase
@@ -228,7 +229,6 @@ internal class EvaluatingCompiler(
             }
             val allFilter: (ExprValue) -> Boolean = { _ -> true }
             // each distinct ExprAggregator must get its own createUniqueExprValueFilter()
-            // each distinct ExprAggregator must get its own createUniqueExprValueFilter()
             mapOf(
                 Pair("count", PartiqlAst.SetQuantifier.All()) to ExprAggregatorFactory.over {
                     Accumulator(0L, countAccFunc, allFilter)
@@ -271,6 +271,9 @@ internal class EvaluatingCompiler(
                 }
             )
         }
+
+    @Deprecated("ExprNode is deprecated. Please use PIG generated AST. ")
+    fun compile(exprNode: ExprNode): Expression = compile(exprNode.toAstStatement())
 
     /**
      * Compiles an [PartiqlAst.Statement] tree to an [Expression].
@@ -464,7 +467,7 @@ internal class EvaluatingCompiler(
     }
 
     /**
-     * Returns a function accepts an [ExprValue] as an argument and returns true it is `NULL`, `MISSING`, or
+     * Returns a function that accepts an [ExprValue] as an argument and returns true it is `NULL`, `MISSING`, or
      * within the range specified by [range].
      */
     private fun integerValueValidator(
