@@ -1182,7 +1182,6 @@ internal class EvaluatingCompiler(
         }
 
         val typeMatchFunc = when (val staticType = typedOpParameter.staticType) {
-            is AnyType -> { _: ExprValue -> true }
             is SingleType -> makeIsCheck(staticType, typedOpParameter, metas)
             is AnyOfType -> staticType.types.map { childType ->
                 when (childType) {
@@ -1197,6 +1196,7 @@ internal class EvaluatingCompiler(
             }.let { typeMatchFuncs ->
                 { expValue: ExprValue -> typeMatchFuncs.any { func -> func(expValue) } }
             }
+            is AnyType -> throw IllegalStateException("Unexpected ANY type in IS compilation")
         }
 
         return thunkFactory.thunkEnv(metas) { env ->
