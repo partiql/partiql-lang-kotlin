@@ -3,8 +3,6 @@ package org.partiql.lang.eval
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.lang.ast.toAstStatement
-import org.partiql.lang.ast.toExprNode
 import org.partiql.lang.eval.visitors.StaticTypeInferenceVisitorTransform
 import org.partiql.lang.eval.visitors.StaticTypeVisitorTransform
 import org.partiql.lang.eval.visitors.basicVisitorTransforms
