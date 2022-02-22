@@ -51,7 +51,16 @@ import org.partiql.lang.eval.like.parsePattern
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
 import org.partiql.lang.syntax.SqlParser
-import org.partiql.lang.types.*
+import org.partiql.lang.types.TypedOpParameter
+import org.partiql.lang.types.IntType
+import org.partiql.lang.types.StaticType
+import org.partiql.lang.types.FunctionSignature
+import org.partiql.lang.types.UnknownArguments
+import org.partiql.lang.types.SingleType
+import org.partiql.lang.types.UnsupportedTypeCheckException
+import org.partiql.lang.types.toTypedOpParameter
+import org.partiql.lang.types.AnyType
+import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.codePointSequence
@@ -1292,13 +1301,6 @@ internal class EvaluatingCompiler(
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }
-        if (compileOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS && expr.asType is PartiqlAst.Type.FloatType && expr.asType.precision != null) {
-            err(
-                "FLOAT precision parameter is unsupported",
-                ErrorCode.SEMANTIC_FLOAT_PRECISION_UNSUPPORTED,
-                errorContextFrom(expr.asType.metas.toPartiQlMetaContainer()),
-                internal = false)
-        }
 
         val expThunk = compileAstExpr(expr.value)
 
@@ -1334,13 +1336,6 @@ internal class EvaluatingCompiler(
         val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters)
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
-        }
-        if (compileOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS && expr.asType is PartiqlAst.Type.FloatType && expr.asType.precision != null) {
-            err(
-                "FLOAT precision parameter is unsupported",
-                ErrorCode.SEMANTIC_FLOAT_PRECISION_UNSUPPORTED,
-                errorContextFrom(expr.asType.metas.toPartiQlMetaContainer()),
-                internal = false)
         }
 
         val expThunk = compileAstExpr(expr.value)
@@ -2543,7 +2538,7 @@ internal class EvaluatingCompiler(
 
         // If the pattern and escape expressions are literals then we can compile the pattern now and
         // re-use it with every execution. Otherwise, we must re-compile the pattern every time.
-        val computeThunk = when {
+        return when {
             patternExpr is PartiqlAst.Expr.Lit && (escapeExpr == null || escapeExpr is PartiqlAst.Expr.Lit) -> {
                 val patternParts = getPatternParts(
                     valueFactory.newFromIonValue(patternExpr.value.toIonValue(valueFactory.ion)),
@@ -2589,8 +2584,6 @@ internal class EvaluatingCompiler(
                 }
             }
         }
-
-        return resolveIntConstraint(computeThunk, metas)
     }
 
     /**
