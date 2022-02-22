@@ -1947,7 +1947,7 @@ internal class EvaluatingCompiler(
                         getQueryThunk(projectionThunk)
                     } // nestCompilationContext(ExpressionContext.SELECT_LIST)
                 } // is SelectProjectionList
-                is PartiqlAst.Projection.ProjectStar -> TODO()
+                is PartiqlAst.Projection.ProjectStar -> error("Internal Error: PartiqlAst.Projection.ProjectStar can only be wrapped in PartiqlAst.Projection.ProjectList")
             }
         }
     }
