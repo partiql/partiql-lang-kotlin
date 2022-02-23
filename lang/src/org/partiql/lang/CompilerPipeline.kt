@@ -17,6 +17,7 @@ package org.partiql.lang
 import com.amazon.ion.IonSystem
 import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.toAstStatement
+import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluatingCompiler
@@ -60,10 +61,10 @@ data class StepContext(
 )
 
 /**
- * [ProcessingStep] functions accept an [ExprNode] and [StepContext] as an arguments and processes them in some
- * way and then returns either the original [ExprNode] or a modified [ExprNode].
+ * [ProcessingStep] functions accept an [PartiqlAst.Statement] and [StepContext] as an arguments and processes them in some
+ * way and then returns either the original [PartiqlAst.Statement] or a modified [PartiqlAst.Statement].
  */
-typealias ProcessingStep = (ExprNode, StepContext) -> ExprNode
+typealias ProcessingStep = (PartiqlAst.Statement, StepContext) -> PartiqlAst.Statement
 
 /**
  * [CompilerPipeline] is the main interface for compiling PartiQL queries into instances of [Expression] which
@@ -102,8 +103,12 @@ interface CompilerPipeline  {
     /** Compiles the specified PartiQL query using the configured parser. */
     fun compile(query: String): Expression
 
+    @Deprecated("ExprNode is deprecated. Please use PIG generated AST. ")
     /** Compiles the specified [ExprNode] instance. */
     fun compile(query: ExprNode): Expression
+
+    /** Compiles the specified [PartiqlAst.Statement] instance. */
+    fun compile(query: PartiqlAst.Statement): Expression
 
     companion object {
         /** Kotlin style builder for [CompilerPipeline].  If calling from Java instead use [builder]. */
@@ -114,11 +119,11 @@ interface CompilerPipeline  {
 
         /** Fluent style builder.  If calling from Kotlin instead use the [build] method. */
         @JvmStatic
-        fun builder(ion: IonSystem): CompilerPipeline.Builder = builder(ExprValueFactory.standard(ion))
+        fun builder(ion: IonSystem): Builder = builder(ExprValueFactory.standard(ion))
 
         /** Fluent style builder.  If calling from Kotlin instead use the [build] method. */
         @JvmStatic
-        fun builder(valueFactory: ExprValueFactory): CompilerPipeline.Builder = Builder(valueFactory)
+        fun builder(valueFactory: ExprValueFactory): Builder = Builder(valueFactory)
 
         /** Returns an implementation of [CompilerPipeline] with all properties set to their defaults. */
         @JvmStatic
@@ -144,7 +149,7 @@ interface CompilerPipeline  {
         private var globalTypeBindings: Bindings<StaticType>? = null
 
         /**
-         * Specifies the [Parser] to be used to turn an PartiQL query into an instance of [ExprNode].
+         * Specifies the [Parser] to be used to turn an PartiQL query into an instance of [PartiqlAst].
          * The default is [SqlParser].
          */
         fun sqlParser(p: Parser): Builder = this.apply { parser = p }
@@ -251,12 +256,11 @@ internal class CompilerPipelineImpl(
         procedures,
         compileOptions)
 
-    override fun compile(query: String): Expression {
-        // TODO: replace `parseExprNode` with `ParseStatement` once evaluator deprecates `ExprNode`
-        return compile(parser.parseExprNode(query))
-    }
+    override fun compile(query: String): Expression = compile(parser.parseAstStatement(query))
 
-    override fun compile(query: ExprNode): Expression {
+    override fun compile(query: ExprNode): Expression = compile(query.toAstStatement())
+
+    override fun compile(query: PartiqlAst.Statement): Expression {
         val context = StepContext(valueFactory, compileOptions, functions, procedures)
 
         val preProcessedQuery = executePreProcessingSteps(query, context)
@@ -283,12 +287,11 @@ internal class CompilerPipelineImpl(
                 }
             ).flatten().toTypedArray())
 
-        val queryToCompile = transforms.transformStatement(preProcessedQuery.toAstStatement())
+        val queryToCompile = transforms.transformStatement(preProcessedQuery)
 
         return compiler.compile(queryToCompile)
     }
 
-    internal fun executePreProcessingSteps(query: ExprNode, context: StepContext) = preProcessingSteps
-            .interruptibleFold(query) { currentExprNode, step -> step(currentExprNode, context)
-    }
+    internal fun executePreProcessingSteps(query: PartiqlAst.Statement, context: StepContext) = preProcessingSteps
+            .interruptibleFold(query) { currentAstStatement, step -> step(currentAstStatement, context) }
 }

@@ -1,15 +1,12 @@
 package org.partiql.lang.util.testdsl
 
-import org.junit.Assume
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.ION
-import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EVALUATOR_TEST_SUITE
 import org.partiql.lang.eval.EvaluationSession
-import org.partiql.lang.eval.EvaluatorStaticTypeTests
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.mockdb.MockDb
@@ -76,8 +73,8 @@ internal fun IonResultTestCase.runTestCase(
     fun runTheTest() {
         val parser = SqlParser(ION)
 
-        val exprNode = assertDoesNotThrow("Parsing the sql under test should not throw for test \"${this.name}\"") {
-            parser.parseExprNode(sqlUnderTest)
+        val astStatement = assertDoesNotThrow("Parsing the sql under test should not throw for test \"${this.name}\"") {
+            parser.parseAstStatement(sqlUnderTest)
         }
 
         val expectedResult = assertDoesNotThrow(
@@ -98,7 +95,7 @@ internal fun IonResultTestCase.runTestCase(
         }
 
         val expression = assertDoesNotThrow("Compiling the query should not throw for test \"${this.name}\"") {
-            pipeline.compile(exprNode)
+            pipeline.compile(astStatement)
         }
 
         val session = EvaluationSession.build {

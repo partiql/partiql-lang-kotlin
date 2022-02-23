@@ -451,7 +451,7 @@ class StaticTypeVisitorTransform(private val ion: IonSystem,
          * This function differs from the the overridden function only in that it does not attempt to resolve
          * [PartiqlAst.DdlOp.CreateIndex.fields], which would be a problem because they contain [PartiqlAst.Expr.Id]s
          * yet the fields/keys are scoped to the table and do not follow traditional lexical scoping rules.  This
-         * indicates that [PartiqlAst.DdlOp.CreateIndex.fields] is incorrectly modeled as a [List<ExprNode>].
+         * indicates that [PartiqlAst.DdlOp.CreateIndex.fields] is incorrectly modeled as a [List<[PartiqlAst.Expr]>].
          */
         override fun transformDdlOpCreateIndex(node: PartiqlAst.DdlOp.CreateIndex): PartiqlAst.DdlOp =
             PartiqlAst.build {

@@ -32,9 +32,9 @@ import kotlin.concurrent.thread
  * Originally just meant to test the parser, this class now tests several different things because
  * the same test cases can be used for all three:
  *
- * - Parsing of query to [ExprNode]s
- * - Conversion of [ExprNode]s to legacy and new s-exp ASTs.
- * - Conversion of both AST forms to [ExprNode]s.
+ * - Parsing of query to PIG-generated ast
+ * - Conversion of PIG-generated ast to [ExprNode].
+ * - Conversion of [ExprNode] to legacy and new s-exp ASTs.
  */
 class SqlParserTest : SqlParserTestBase() {
 

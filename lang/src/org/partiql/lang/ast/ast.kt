@@ -20,6 +20,7 @@ import org.partiql.lang.util.interruptibleMap
 import org.partiql.lang.util.stringValue
 import java.util.Arrays
 
+@Deprecated("Please use PIG-generated AST instead.")
 /**
  * Base type for all AST nodes.
  */
@@ -62,6 +63,7 @@ sealed class AstNode : Iterable<AstNode> {
     }
 }
 
+@Deprecated("Please use PIG-generated AST instead.")
 /**
  * The only nodes that inherit directly from ExprNode should just be generic expressions that can be used any
  * place a value is allowed.

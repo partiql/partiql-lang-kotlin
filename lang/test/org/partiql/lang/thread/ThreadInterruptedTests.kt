@@ -1,6 +1,7 @@
 package org.partiql.lang.thread
 
 import com.amazon.ion.system.IonSystemBuilder
+import com.amazon.ionelement.api.ionInt
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.partiql.lang.CompilerPipeline
@@ -10,7 +11,6 @@ import org.partiql.lang.ast.AstDeserializerInternal
 import org.partiql.lang.ast.AstSerializer
 import org.partiql.lang.ast.AstVersion
 import org.partiql.lang.ast.CaseSensitivity
-import org.partiql.lang.ast.Literal
 import org.partiql.lang.ast.NAry
 import org.partiql.lang.ast.NAryOp
 import org.partiql.lang.ast.ScopeQualifier
@@ -199,7 +199,7 @@ class ThreadInterruptedTests {
             }
         } as CompilerPipelineImpl
 
-        val expr = Literal(ion.newInt(42), metaContainerOf())
+        val expr = PartiqlAst.build { query(lit((ionInt(42)))) }
         val context = StepContext(pipeline.valueFactory, CompileOptions.standard(), emptyMap(), emptyMap())
 
         testThreadInterrupt {

@@ -30,7 +30,7 @@ import org.partiql.lang.domains.extractSourceLocation
 data class SubstitutionPair(val target: PartiqlAst.Expr, val replacement: PartiqlAst.Expr)
 
 /**
- * Given a [Map<ExprNode, SubstitutionPair>] ([substitutions]), replaces every node of the AST that is
+ * Given a [Map<PartiqlAst.Expr, SubstitutionPair>] ([substitutions]), replaces every node of the AST that is
  * equivalent to a [SubstitutionPair.target] with its corresponding [SubstitutionPair.replacement].
  *
  * This class is `open` to allow subclasses to restrict the nodes to which the substitution should occur.
