@@ -91,8 +91,16 @@ fun ExprNode.toAstExpr(): PartiqlAst.Expr {
             is NAry -> {
                 val args = node.args.map { it.toAstExpr() }
                 when(node.op) {
-                    NAryOp.ADD -> plus(args, metas)
-                    NAryOp.SUB -> minus(args, metas)
+                    NAryOp.ADD -> when (args.size) {
+                        0 -> throw IllegalArgumentException("Operator 'Add' must have at least one argument")
+                        1 -> pos(args.first(), metas)
+                        else -> plus(args, metas)
+                    }
+                    NAryOp.SUB -> when (args.size) {
+                        0 -> throw IllegalArgumentException("Operator 'Sub' must have at least one argument")
+                        1 -> neg(args.first(), metas)
+                        else -> minus(args, metas)
+                    }
                     NAryOp.MUL -> times(args, metas)
                     NAryOp.DIV -> divide(args, metas)
                     NAryOp.MOD -> modulo(args, metas)

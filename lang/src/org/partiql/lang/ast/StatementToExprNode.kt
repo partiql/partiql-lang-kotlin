@@ -69,7 +69,7 @@ private class StatementTransformer(val ion: IonSystem) {
             is PartiqlAst.Expr.Id -> VariableReference(name.text, case.toCaseSensitivity(), qualifier.toScopeQualifier(), metas)
             is PartiqlAst.Expr.Parameter -> Parameter(index.value.toInt(), metas)
             is PartiqlAst.Expr.Not -> NAry(NAryOp.NOT, listOf(expr.toExprNode()), metas)
-            is PartiqlAst.Expr.Pos -> expr.toExprNode()
+            is PartiqlAst.Expr.Pos -> NAry(NAryOp.ADD, listOf(expr.toExprNode()), metas)
             is PartiqlAst.Expr.Neg -> NAry(NAryOp.SUB, listOf(expr.toExprNode()), metas)
             is PartiqlAst.Expr.Plus -> NAry(NAryOp.ADD, operands.toExprNodeList(), metas)
             is PartiqlAst.Expr.Minus -> NAry(NAryOp.SUB, operands.toExprNodeList(), metas)
