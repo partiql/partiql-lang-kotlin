@@ -558,7 +558,7 @@ internal class EvaluatingCompiler(
 
     private fun compileMinus(expr: PartiqlAst.Expr.Minus, metas: MetaContainer): ThunkEnv {
         if (expr.operands.size < 2) {
-            error("Internal Error: PartiqlAst.Expr.Plus must have at lest 2 arguments")
+            error("Internal Error: PartiqlAst.Expr.Minus must have at least 2 arguments")
         }
 
         val argThunks = compileAstExprs(expr.operands)
