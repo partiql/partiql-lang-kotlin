@@ -256,19 +256,31 @@ internal class StaticTypeInferenceVisitorTransform(
         // Arithmetic NAry ops: ADD, SUB, MUL, DIV, MOD
         override fun transformExprPlus(node: PartiqlAst.Expr.Plus): PartiqlAst.Expr {
             val nAry = super.transformExprPlus(node) as PartiqlAst.Expr.Plus
-            val type = when (nAry.operands.size) {
-                1    -> computeReturnTypeForArithmeticUnary(nAry, nAry.operands, "+")
+            val type = when {
+                nAry.operands.size < 2 -> throw IllegalArgumentException("PartiqlAst.Expr.Plus must have at least 2 arguments")
                 else -> computeReturnTypeForArithmeticNAry(nAry, nAry.operands, "+")
             }
             return nAry.withStaticType(type)
         }
 
+        override fun transformExprPos(node: PartiqlAst.Expr.Pos): PartiqlAst.Expr {
+            val nAry = super.transformExprPos(node) as PartiqlAst.Expr.Pos
+            val type = computeReturnTypeForArithmeticUnary(nAry, listOf(nAry.expr), "+")
+            return nAry.withStaticType(type)
+        }
+
         override fun transformExprMinus(node: PartiqlAst.Expr.Minus): PartiqlAst.Expr {
             val nAry = (super.transformExprMinus(node) as PartiqlAst.Expr.Minus)
-            val type = when (nAry.operands.size) {
-                1    -> computeReturnTypeForArithmeticUnary(nAry, nAry.operands, "-")
+            val type = when {
+                nAry.operands.size < 2 -> throw IllegalArgumentException("PartiqlAst.Expr.Minus must have at least 2 arguments")
                 else -> computeReturnTypeForArithmeticNAry(nAry, nAry.operands, "-")
             }
+            return nAry.withStaticType(type)
+        }
+
+        override fun transformExprNeg(node: PartiqlAst.Expr.Neg): PartiqlAst.Expr {
+            val nAry = super.transformExprNeg(node) as PartiqlAst.Expr.Neg
+            val type = computeReturnTypeForArithmeticUnary(nAry, listOf(nAry.expr), "-")
             return nAry.withStaticType(type)
         }
 

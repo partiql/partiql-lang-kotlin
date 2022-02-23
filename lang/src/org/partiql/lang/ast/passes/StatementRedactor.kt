@@ -186,13 +186,16 @@ private class StatementRedactionVisitor(
 
     private fun plusMinusRedaction(args: List<PartiqlAst.Expr>) {
         when (args.size) {
-            1 -> redactExpr(args[0])
             2 -> {
                 redactExpr(args[0])
                 redactExpr(args[1])
             }
             else -> throw IllegalArgumentException(INVALID_NUM_ARGS)
         }
+    }
+
+    private fun posNegRedaction(expr: PartiqlAst.Expr) {
+        redactExpr(expr)
     }
 
     private fun arithmeticOpRedaction(args: List<PartiqlAst.Expr>) {
@@ -220,6 +223,8 @@ private class StatementRedactionVisitor(
             // Arithmetic Ops
             is PartiqlAst.Expr.Plus -> plusMinusRedaction(node.operands)
             is PartiqlAst.Expr.Minus -> plusMinusRedaction(node.operands)
+            is PartiqlAst.Expr.Pos -> posNegRedaction(node.expr)
+            is PartiqlAst.Expr.Neg -> posNegRedaction(node.expr)
             is PartiqlAst.Expr.Times -> arithmeticOpRedaction(node.operands)
             is PartiqlAst.Expr.Divide -> arithmeticOpRedaction(node.operands)
             is PartiqlAst.Expr.Modulo -> arithmeticOpRedaction(node.operands)
@@ -305,6 +310,8 @@ private class StatementRedactionVisitor(
                 || this is PartiqlAst.Expr.Lt
                 || this is PartiqlAst.Expr.Lte
                 || this is PartiqlAst.Expr.InCollection
+                || this is PartiqlAst.Expr.Pos
+                || this is PartiqlAst.Expr.Neg
                 || this is PartiqlAst.Expr.Plus
                 || this is PartiqlAst.Expr.Minus
                 || this is PartiqlAst.Expr.Times

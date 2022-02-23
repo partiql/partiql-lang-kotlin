@@ -1022,8 +1022,8 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
                 (not (id e (case_insensitive) (unqualified)))
             )""",
 
-        // minus and plus unary
-        "- a + b" to "(plus (minus (id a (case_insensitive) (unqualified))) (id b (case_insensitive) (unqualified)) )",
+        // pos and neg
+        "- a + b" to "(plus (neg (id a (case_insensitive) (unqualified))) (id b (case_insensitive) (unqualified)) )",
 
         "(a+-5e0) and (c-+7.0)" to """
             (and
@@ -1036,7 +1036,7 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
                 (times (id d (case_insensitive) (unqualified)) (lit 9) )
                 (gte
                     (id e (case_insensitive) (unqualified))
-                    (plus (minus (plus (id foo (case_insensitive) (unqualified)))))
+                    (pos (neg (pos (id foo (case_insensitive) (unqualified)))))
                 )
             )""")
 

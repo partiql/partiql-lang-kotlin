@@ -274,24 +274,24 @@ class SqlParserTest : SqlParserTestBase() {
     //****************************************
 
     @Test
-    fun unaryMinusCall() = assertExpression(
+    fun negCall() = assertExpression(
         "-baz()",
         "(- (call baz))",
-        "(minus (call baz))"
+        "(neg (call baz))"
     )
 
     @Test
-    fun unaryPlusMinusIdent() = assertExpression(
+    fun posNegIdent() = assertExpression(
         "+(-baz())",
         "(+ (- (call baz)))",
-        "(plus (minus (call baz)))"
+        "(pos (neg (call baz)))"
     )
 
     @Test
-    fun unaryPlusMinusIdentNoSpaces() = assertExpression(
+    fun posNegIdentNoSpaces() = assertExpression(
         "+-baz()",
         "(+ (- (call baz)))",
-        "(plus (minus (call baz)))"
+        "(pos (neg (call baz)))"
     )
 
     @Test
@@ -310,7 +310,7 @@ class SqlParserTest : SqlParserTestBase() {
     fun unaryIonTimestampLiteral() = assertExpression(
         "+-`2017-01-01`",
         "(+ (- (lit 2017-01-01T)))",
-        "(plus (minus (lit 2017-01-01T)))"
+        "(pos (neg (lit 2017-01-01T)))"
     )
 
     @Test

@@ -386,8 +386,8 @@ internal class EvaluatingCompiler(
 
             // unary
             is PartiqlAst.Expr.Not -> compileNot(expr, metas)
-            is PartiqlAst.Expr.Pos -> TODO() // compilePos(expr)
-            is PartiqlAst.Expr.Neg -> TODO() // compileNeg(expr)
+            is PartiqlAst.Expr.Pos -> compilePos(expr, metas)
+            is PartiqlAst.Expr.Neg -> compileNeg(expr, metas)
 
             // other operators
             is PartiqlAst.Expr.Concat -> compileConcat(expr, metas)
@@ -543,44 +543,51 @@ internal class EvaluatingCompiler(
         }
 
     private fun compilePlus(expr: PartiqlAst.Expr.Plus, metas: MetaContainer): ThunkEnv {
+        if (expr.operands.size < 2) {
+            error("Internal Error: PartiqlAst.Expr.Plus must have at least 2 arguments")
+        }
+
         val argThunks = compileAstExprs(expr.operands)
 
-        val computeThunk = when (argThunks.size) {
-            //Unary +
-            1 -> {
-                val firstThunk = argThunks[0]
-                thunkFactory.thunkEnvOperands(metas, firstThunk) { _, value ->
-                    //Invoking .numberValue() here makes this essentially just a type check
-                    value.numberValue()
-                    //Original value is returned unmodified.
-                    value
-                }
-            }
-            //N-ary +
-            else -> thunkFactory.thunkFold(metas, argThunks) { lValue, rValue ->
-                (lValue.numberValue() + rValue.numberValue()).exprValue()
-            }
+        val computeThunk = thunkFactory.thunkFold(metas, argThunks) { lValue, rValue ->
+            (lValue.numberValue() + rValue.numberValue()).exprValue()
         }
 
         return resolveIntConstraint(computeThunk, metas)
     }
 
     private fun compileMinus(expr: PartiqlAst.Expr.Minus, metas: MetaContainer): ThunkEnv {
+        if (expr.operands.size < 2) {
+            error("Internal Error: PartiqlAst.Expr.Minus must have at least 2 arguments")
+        }
+
         val argThunks = compileAstExprs(expr.operands)
 
-        val computeThunk = when (argThunks.size) {
-            //Unary -
-            1 -> {
-                val firstThunk = argThunks[0]
-                thunkFactory.thunkEnvOperands(metas, firstThunk) { _, value ->
-                    (-value.numberValue()).exprValue()
-                }
-            }
+        val computeThunk = thunkFactory.thunkFold(metas, argThunks) { lValue, rValue ->
+            (lValue.numberValue() - rValue.numberValue()).exprValue()
+        }
 
-            //N-ary -
-            else -> thunkFactory.thunkFold(metas, argThunks) { lValue, rValue ->
-                (lValue.numberValue() - rValue.numberValue()).exprValue()
-            }
+        return resolveIntConstraint(computeThunk, metas)
+    }
+
+    private fun compilePos(expr: PartiqlAst.Expr.Pos, metas: MetaContainer): ThunkEnv {
+        val exprThunk = compileAstExpr(expr.expr)
+
+        val computeThunk = thunkFactory.thunkEnvOperands(metas, exprThunk) { _, value ->
+            //Invoking .numberValue() here makes this essentially just a type check
+            value.numberValue()
+            //Original value is returned unmodified.
+            value
+        }
+
+        return resolveIntConstraint(computeThunk, metas)
+    }
+
+    private fun compileNeg(expr: PartiqlAst.Expr.Neg, metas: MetaContainer): ThunkEnv {
+        val exprThunk = compileAstExpr(expr.expr)
+
+        val computeThunk = thunkFactory.thunkEnvOperands(metas, exprThunk) { _, value ->
+            (-value.numberValue()).exprValue()
         }
 
         return resolveIntConstraint(computeThunk, metas)
