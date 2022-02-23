@@ -14,8 +14,8 @@
 
 package org.partiql.lang.eval
 
+import com.amazon.ionelement.api.MetaContainer
 import org.partiql.lang.SqlException
-import org.partiql.lang.ast.MetaContainer
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
@@ -110,18 +110,18 @@ fun fillErrorContext(errorContext: PropertyValueMap, location: SourceLocationMet
     }
 }
 
-fun fillErrorContext(errorContext: PropertyValueMap, metaContainer: MetaContainer) {
-    val location = metaContainer.find(SourceLocationMeta.TAG) as? SourceLocationMeta
+fun fillErrorContext(errorContext: PropertyValueMap, metaContainer: com.amazon.ionelement.api.MetaContainer) {
+    val location = metaContainer[SourceLocationMeta.TAG] as? SourceLocationMeta
     if(location != null) {
         fillErrorContext(errorContext, location)
     }
 }
 
-fun errorContextFrom(metaContainer: MetaContainer?): PropertyValueMap {
+fun errorContextFrom(metaContainer: com.amazon.ionelement.api.MetaContainer?): PropertyValueMap {
     if(metaContainer == null) {
         return PropertyValueMap()
     }
-    val location = metaContainer.find(SourceLocationMeta.TAG) as? SourceLocationMeta
+    val location = metaContainer[SourceLocationMeta.TAG] as? SourceLocationMeta
     return if(location != null) {
         errorContextFrom(location)
     } else {

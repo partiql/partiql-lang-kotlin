@@ -3,6 +3,7 @@ package org.partiql.lang.domains
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.metaContainerOf
+import org.partiql.lang.ast.Meta
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.StaticTypeMeta
 import org.partiql.lang.errors.Property
@@ -15,6 +16,9 @@ fun PartiqlAst.Builder.id(name: String) =
 
 
 val MetaContainer.staticType: StaticTypeMeta? get() = this[StaticTypeMeta.TAG] as StaticTypeMeta?
+
+fun metaContainerOf(vararg metas: Meta): MetaContainer =
+    metaContainerOf(metas.map { Pair(it.tag, it) })
 
 /**
  * Returns a [MetaContainer] with *only* the source location of the receiver [MetaContainer], if present.

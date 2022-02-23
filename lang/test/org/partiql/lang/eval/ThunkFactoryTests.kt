@@ -5,7 +5,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.lang.ION
 import org.partiql.lang.ast.StaticTypeMeta
-import org.partiql.lang.ast.metaContainerOf
+import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.types.NumberConstraint
 import org.partiql.lang.types.StaticType

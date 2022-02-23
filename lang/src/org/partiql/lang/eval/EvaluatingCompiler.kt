@@ -20,21 +20,21 @@ import com.amazon.ion.IonSexp
 import com.amazon.ion.IonString
 import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
+import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.toIonValue
+import org.partiql.lang.ast.ExprNode
+import org.partiql.lang.ast.toAstStatement
+import org.partiql.lang.ast.UniqueNameMeta
+import org.partiql.lang.ast.SourceLocationMeta
+import org.partiql.lang.ast.AggregateCallSiteListMeta
+import org.partiql.lang.ast.AggregateRegisterIdMeta
+import org.partiql.lang.ast.IsCountStarMeta
+import org.partiql.lang.domains.staticType
 import org.partiql.lang.ast.AstDeserializerBuilder
 import org.partiql.lang.ast.AstVersion
 import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.ast.IonElementMetaContainer
-import org.partiql.lang.ast.AggregateCallSiteListMeta
-import org.partiql.lang.ast.AggregateRegisterIdMeta
-import org.partiql.lang.ast.IsCountStarMeta
-import org.partiql.lang.ast.MetaContainer
-import org.partiql.lang.ast.SourceLocationMeta
-import org.partiql.lang.ast.UniqueNameMeta
-import org.partiql.lang.ast.staticType
-import org.partiql.lang.ast.toAstStatement
-import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.toPartiQlMetaContainer
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.toBindingCase
@@ -346,7 +346,7 @@ internal class EvaluatingCompiler(
     }
 
     private fun compileAstExpr(expr: PartiqlAst.Expr): ThunkEnv {
-        val metas = expr.metas.toPartiQlMetaContainer()
+        val metas = expr.metas
 
         return when (expr) {
             is PartiqlAst.Expr.Lit -> compileLit(expr, metas)
@@ -1030,7 +1030,7 @@ internal class EvaluatingCompiler(
         thunkFactory.thunkEnv(metas) { valueFactory.missingValue }
 
     private fun compileId(expr: PartiqlAst.Expr.Id, metas: MetaContainer): ThunkEnv {
-        val uniqueNameMeta = metas.find(UniqueNameMeta.TAG) as? UniqueNameMeta
+        val uniqueNameMeta = metas[UniqueNameMeta.TAG] as? UniqueNameMeta
         val fromSourceNames = currentCompilationContext.fromSourceNames
 
         return when (uniqueNameMeta) {
@@ -1184,7 +1184,7 @@ internal class EvaluatingCompiler(
             err(
                 "FLOAT precision parameter is unsupported",
                 ErrorCode.SEMANTIC_FLOAT_PRECISION_UNSUPPORTED,
-                errorContextFrom(expr.type.metas.toPartiQlMetaContainer()),
+                errorContextFrom(expr.type.metas),
                 internal = false)
         }
 
@@ -1222,7 +1222,7 @@ internal class EvaluatingCompiler(
             err(
                 "FLOAT precision parameter is unsupported",
                 ErrorCode.SEMANTIC_FLOAT_PRECISION_UNSUPPORTED,
-                errorContextFrom(asType.metas.toPartiQlMetaContainer()),
+                errorContextFrom(asType.metas),
                 internal = false)
         }
 
@@ -1313,7 +1313,7 @@ internal class EvaluatingCompiler(
 
         // TODO consider making this more efficient by not directly delegating to CAST
         // TODO consider also making the operand not double evaluated (e.g. having expThunk memoize)
-        val castThunkEnv = compileCastHelper(expr.value, expr.asType, expr.metas.toPartiQlMetaContainer())
+        val castThunkEnv = compileCastHelper(expr.value, expr.asType, expr.metas)
         return thunkFactory.thunkEnv(metas) { env ->
             val sourceValue = expThunk(env)
             try {
@@ -1348,7 +1348,7 @@ internal class EvaluatingCompiler(
         val expThunk = compileAstExpr(expr.value)
 
         // TODO consider making this more efficient by not directly delegating to CAST
-        val castThunkEnv = compileCastHelper(expr.value, expr.asType, expr.metas.toPartiQlMetaContainer())
+        val castThunkEnv = compileCastHelper(expr.value, expr.asType, expr.metas)
         return thunkFactory.thunkEnv(metas) { env ->
             val sourceValue = expThunk(env)
             val sourceType = StaticType.fromExprValue(sourceValue)
@@ -1697,7 +1697,7 @@ internal class EvaluatingCompiler(
                 val groupByItems = selectExpr.group?.keyList?.keys ?: listOf()
                 val groupAsName = selectExpr.group?.groupAsAlias
 
-                val aggregateListMeta = metas.find(AggregateCallSiteListMeta.TAG) as AggregateCallSiteListMeta?
+                val aggregateListMeta = metas[AggregateCallSiteListMeta.TAG] as AggregateCallSiteListMeta?
                 val hasAggregateCallSites = aggregateListMeta?.aggregateCallSites?.any() ?: false
 
                 val queryThunk = when {
@@ -1733,7 +1733,7 @@ internal class EvaluatingCompiler(
                                 factory = getAggregatorFactory(
                                     funcName,
                                     it.setq,
-                                    it.metas.toPartiQlMetaContainer()
+                                    it.metas
                                 ),
                                 argThunk = compileAstExpr(it.arg)
                             )
@@ -1867,7 +1867,7 @@ internal class EvaluatingCompiler(
                 is PartiqlAst.Projection.ProjectValue -> {
                     nestCompilationContext(ExpressionContext.NORMAL, allFromSourceAliases) {
                         val valueThunk = compileAstExpr(project.value)
-                        getQueryThunk(thunkFactory.thunkEnvValueList(project.metas.toPartiQlMetaContainer()) { env, _ ->
+                        getQueryThunk(thunkFactory.thunkEnvValueList(project.metas) { env, _ ->
                             valueThunk(
                                 env
                             )
@@ -1911,7 +1911,7 @@ internal class EvaluatingCompiler(
                                     else
                                         StructOrdering.UNORDERED
 
-                                    thunkFactory.thunkEnvValueList(project.metas.toPartiQlMetaContainer()) { env, _ ->
+                                    thunkFactory.thunkEnvValueList(project.metas) { env, _ ->
                                         val columns = mutableListOf<ExprValue>()
                                         for (element in projectionElements) {
                                             when (element) {
@@ -2040,7 +2040,7 @@ internal class EvaluatingCompiler(
         }
 
     private fun compileCallAgg(expr: PartiqlAst.Expr.CallAgg, metas: MetaContainer): ThunkEnv {
-        if (metas.hasMeta(IsCountStarMeta.TAG) && currentCompilationContext.expressionContext != ExpressionContext.SELECT_LIST) {
+        if (metas.containsKey(IsCountStarMeta.TAG) && currentCompilationContext.expressionContext != ExpressionContext.SELECT_LIST) {
             err(
                 "COUNT(*) is not allowed in this context",
                 ErrorCode.EVALUATOR_COUNT_START_NOT_ALLOWED,
@@ -2072,7 +2072,7 @@ internal class EvaluatingCompiler(
                     aggregator.compute()
                 }
             ExpressionContext.SELECT_LIST -> {
-                val registerIdMeta = metas.find(AggregateRegisterIdMeta.TAG) as AggregateRegisterIdMeta
+                val registerIdMeta = metas[AggregateRegisterIdMeta.TAG] as AggregateRegisterIdMeta
                 val registerId = registerIdMeta.registerId
                 thunkFactory.thunkEnv(metas) { env ->
                     // Note: env.currentGroup must be set by caller.
@@ -2111,7 +2111,7 @@ internal class EvaluatingCompiler(
         joinExpansion: JoinExpansion = JoinExpansion.INNER,
         conditionThunk: ThunkEnv? = null
     ): List<CompiledFromSource> {
-        val metas = fromSource.metas.toPartiQlMetaContainer()
+        val metas = fromSource.metas
 
         fun addAliases(
             thunk: ThunkEnv,
@@ -2125,7 +2125,7 @@ internal class EvaluatingCompiler(
                     alias = Alias(
                         asName = asName ?: err(
                             "PartiqlAst.FromSource.Scan.variables.asName was null", ErrorCode.INTERNAL_ERROR,
-                            errorContextFrom(metas.toPartiQlMetaContainer()), internal = true
+                            errorContextFrom(metas), internal = true
                         ),
                         atName = atName,
                         byName = byName
@@ -2359,7 +2359,7 @@ internal class EvaluatingCompiler(
 
         while (!remainingComponents.isEmpty()) {
             val pathComponent = remainingComponents.removeFirst()
-            val componentMetas = pathComponent.metas.toPartiQlMetaContainer()
+            val componentMetas = pathComponent.metas
             componentThunks.add(
                 when (pathComponent) {
                     is PartiqlAst.PathStep.PathExpr -> {
@@ -2705,7 +2705,7 @@ internal class EvaluatingCompiler(
             err(
                 "DDL operations are not supported yet",
                 ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
-                errorContextFrom(node.metas.toPartiQlMetaContainer()).also {
+                errorContextFrom(node.metas).also {
                     it[Property.FEATURE_NAME] = "DDL Operations"
                 }, internal = false
             )
@@ -2716,14 +2716,14 @@ internal class EvaluatingCompiler(
             err(
                 "DML operations are not supported yet",
                 ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
-                errorContextFrom(node.metas.toPartiQlMetaContainer()).also {
+                errorContextFrom(node.metas).also {
                     it[Property.FEATURE_NAME] = "DML Operations"
                 }, internal = false
             )
         }
 
     private fun compileExec(node: PartiqlAst.Statement.Exec): ThunkEnv {
-        val metas = node.metas.toPartiQlMetaContainer()
+        val metas = node.metas
         val procedureName = node.procedureName.text
         val procedure = procedures[procedureName] ?: err(
             "No such stored procedure: $procedureName",
@@ -2918,8 +2918,7 @@ private class SingleProjectionElement(val name: ExprValue, val thunk: ThunkEnv) 
 private class MultipleProjectionElement(val thunks: List<ThunkEnv>) : ProjectionElement()
 
 
-private val MetaContainer.sourceLocationMeta get() = (this.find(SourceLocationMeta.TAG) as? SourceLocationMeta)
-
+private val MetaContainer.sourceLocationMeta get() = this[SourceLocationMeta.TAG] as? SourceLocationMeta
 
 private fun StaticType.getTypes() = when (val flattened = this.flatten()) {
     is AnyOfType -> flattened.types
