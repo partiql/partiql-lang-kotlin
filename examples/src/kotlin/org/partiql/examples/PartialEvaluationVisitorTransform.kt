@@ -5,8 +5,6 @@ import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.toIonElement
 import org.partiql.examples.util.Example
 import org.partiql.lang.CompilerPipeline
-import org.partiql.lang.ast.toAstStatement
-import org.partiql.lang.ast.toExprNode
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluationSession
@@ -71,7 +69,7 @@ private class PartialEvaluationVisitorTransform(val ion: IonSystem, val compileO
 
         return when {
             transformedOps.all { it is PartiqlAst.Expr.Lit } -> {
-                val e = pipeline.compile(PartiqlAst.build { query(transformedNAry) }.toExprNode(ion) )
+                val e = pipeline.compile(PartiqlAst.build { query(transformedNAry) } )
                 val partiallyEvaluatedResult = e.eval(session)
                 PartiqlAst.build { lit(partiallyEvaluatedResult.ionValue.toIonElement(), metas) }
             }
@@ -88,18 +86,17 @@ class PartialEvaluationVisitorTransformExample(out: PrintStream) : Example(out) 
 
     override fun run() {
         val pipeline = CompilerPipeline.build(ion) {
-            addPreprocessingStep { node, stepContext ->
+            addPreprocessingStep { originalAst, stepContext ->
                 val visitorTransformer = PartialEvaluationVisitorTransform(ion, stepContext.compileOptions)
 
-                val originalAst = node.toAstStatement()
                 print("Original AST:", originalAst.toString())
 
-                val query = node.toAstStatement() as PartiqlAst.Statement.Query
+                val query = originalAst as PartiqlAst.Statement.Query
 
                 val transformedNode = PartiqlAst.build { query(visitorTransformer.transformExpr(query.expr)) }
                 print("Transformed AST:", transformedNode.toString())
 
-                transformedNode.toExprNode(ion)
+                transformedNode
             }
         }
 

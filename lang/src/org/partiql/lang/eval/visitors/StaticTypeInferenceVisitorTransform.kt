@@ -1172,7 +1172,7 @@ internal class StaticTypeInferenceVisitorTransform(
             return AnyOfType(possibleTypes.toSet()).flatten()
         }
 
-        // ExprNode's Types => CanCast, CanLosslessCast, IsType, ExprCast
+        // PIG ast Types => CanCast, CanLosslessCast, IsType, ExprCast
         override fun transformExprCanCast(node: PartiqlAst.Expr.CanCast): PartiqlAst.Expr {
             val typed = super.transformExprCanCast(node) as PartiqlAst.Expr.CanCast
             return typed.withStaticType(StaticType.BOOL)

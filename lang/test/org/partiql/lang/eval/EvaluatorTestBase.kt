@@ -24,10 +24,10 @@ import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
 import org.partiql.lang.CUSTOM_TEST_TYPES
 import org.partiql.lang.SqlException
-import org.partiql.lang.ast.passes.MetaStrippingRewriter
 import org.partiql.lang.ast.toAstStatement
 import org.partiql.lang.ast.toExprNode
 import org.partiql.lang.checkErrorAndErrorContext
+import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorBehaviorInPermissiveMode
 import org.partiql.lang.errors.ErrorCategory
 import org.partiql.lang.errors.ErrorCode
@@ -94,17 +94,17 @@ abstract class EvaluatorTestBase : TestBase() {
 
         val expectedIon = ion.singleValue(expected)
         val parser = SqlParser(ion, CUSTOM_TEST_TYPES)
-        val originalExprNode = parser.parseExprNode(source)
+        val originalAst = parser.parseAstStatement(source)
 
-        fun evalAndAssert(exprNodeToEvaluate: ExprNode, message: String) {
+        fun evalAndAssert(ast: PartiqlAst.Statement, message: String) {
             // LEGACY mode
-            val result = eval(exprNodeToEvaluate, compileOptions, session, compilerPipelineBuilderBlock)
+            val result = eval(ast, compileOptions, session, compilerPipelineBuilderBlock)
             AssertExprValue(result, message = "(LEGACY mode) Evaluated '$source' with evaluator ($message)")
                 .apply { assertIonValue(expectedIon) }.run(block)
             // TODO this should not be here--this should be explicit in the test case
             // PERMISSIVE mode
             val resultForPermissiveMode = eval(
-                exprNodeToEvaluate,
+                ast,
                 CompileOptions.builder(compileOptions).typingMode(TypingMode.PERMISSIVE).build(),
                 session,
                 compilerPipelineBuilderBlock
@@ -113,10 +113,10 @@ abstract class EvaluatorTestBase : TestBase() {
                 .apply { assertIonValue(expectedIon) }.run(block)
         }
 
-        // Evaluate the ExprNodes originally obtained from the parser
-        evalAndAssert(originalExprNode, "AST originated from parser")
+        // Evaluate the ast originally obtained from the parser
+        evalAndAssert(originalAst, "AST originated from parser")
 
-        assertBaseRewrite(source, originalExprNode)
+        assertBaseRewrite(source, originalAst.toExprNode(ion))
     }
 
     /**
@@ -124,9 +124,7 @@ abstract class EvaluatorTestBase : TestBase() {
      * [EvaluationSession] and [CompileOptions].
      *
      * @param source query source to be tested
-     * @param expected expected result
      * @param session [EvaluationSession] used for evaluation
-     * @param block function literal with receiver used to plug in custom assertions
      */
     protected fun assertEvalIsMissing(source: String,
                                       session: EvaluationSession = EvaluationSession.standard(),
@@ -135,50 +133,50 @@ abstract class EvaluatorTestBase : TestBase() {
         val parser = SqlParser(ion)
         val deserializer = AstDeserializerBuilder(ion).build()
 
-        val originalExprNode = parser.parseExprNode(source)
+        val originalAst = parser.parseAstStatement(source)
 
-        // Evaluate the ExprNodes originally obtained from the parser
+        // Evaluate the ast originally obtained from the parser
 
-        fun evalAndAssertIsMissing(exprNodeToEvaluate: ExprNode, message: String) {
+        fun evalAndAssertIsMissing(ast: PartiqlAst.Statement, message: String) {
             // LEGACY mode
-            val result = eval(exprNodeToEvaluate, compileOptions, session)
+            val result = eval(ast, compileOptions, session)
             assertEquals(ExprValueType.MISSING, result.type, "(LEGACY mode) $message")
             // PERMISSIVE mode
-            val resultForPermissiveMode = eval(exprNodeToEvaluate, CompileOptions.builder(compileOptions).typingMode(TypingMode.PERMISSIVE).build(), session)
+            val resultForPermissiveMode = eval(ast, CompileOptions.builder(compileOptions).typingMode(TypingMode.PERMISSIVE).build(), session)
             assertEquals(ExprValueType.MISSING, resultForPermissiveMode.type, "(PERMISSIVE mode) $message")
         }
 
         // Also send the serializer through V0 sexp AST and evaluate them again
         // to be sure they still work after being deserialized
         fun serializeRoundTripEvalAndAssertIsMissing(astVersion: AstVersion) {
-            val sexp = AstSerializer.serialize(originalExprNode, astVersion, ion)
+            val sexp = AstSerializer.serialize(originalAst.toExprNode(ion), astVersion, ion)
             val sexpAST = deserializer.deserialize(sexp, astVersion)
-            assertEquals(originalExprNode, sexpAST, "ExprNode deserialized from s-exp $astVersion AST must match the ExprNode returned by the parser")
+            assertEquals(originalAst.toExprNode(ion), sexpAST, "ExprNode deserialized from s-exp $astVersion AST must match the ExprNode returned by the parser")
 
             // This step should only fail if there is a bug in the equality check that causes two
             // dissimilar ASTs to be considered equal.
 
             // LEGACY mode
-            val result = eval(sexpAST, compileOptions, session)
+            val result = eval(sexpAST.toAstStatement(), compileOptions, session)
             assertEquals(ExprValueType.MISSING, result.type, "(LEGACY mode) Evaluating AST created from deseriailzed $astVersion s-exp AST must result in missing")
             // PERMISSIVE mode
-            val resultForPermissiveMode = eval(sexpAST, CompileOptions.builder(compileOptions).typingMode(TypingMode.PERMISSIVE).build(), session)
+            val resultForPermissiveMode = eval(sexpAST.toAstStatement(), CompileOptions.builder(compileOptions).typingMode(TypingMode.PERMISSIVE).build(), session)
             assertEquals(ExprValueType.MISSING, resultForPermissiveMode.type, "(PERMISSIVE mode) Evaluating AST created from deseriailzed $astVersion s-exp AST must result in missing")
         }
 
-        evalAndAssertIsMissing(originalExprNode, "AST originated from parser")
+        evalAndAssertIsMissing(originalAst, "AST originated from parser")
         AstVersion.values().forEach { serializeRoundTripEvalAndAssertIsMissing(it) }
 
-        assertBaseRewrite(source, originalExprNode)
+        assertBaseRewrite(source, originalAst.toExprNode(ion))
     }
 
-    protected fun assertExprNodeToPIGRoundTrip(exprNode: ExprNode) {
-        val roundTrippedExprNode = MetaStrippingRewriter.stripMetas(exprNode).toAstStatement().toExprNode(ion)
+    protected fun assertPIGToExprNodeRoundTrip(ast: PartiqlAst.Statement) {
+        val roundTrippedAst = ast.toExprNode(ion).toAstStatement()
 
         assertEquals(
-            MetaStrippingRewriter.stripMetas(exprNode),
-            roundTrippedExprNode,
-            "ExprNode resulting from round trip to partiql_ast and back should be equivalent.")
+            ast,
+            roundTrippedAst,
+            "PIG ast resulting from round trip to ExprNode and back should be equivalent.")
     }
 
 
@@ -239,7 +237,7 @@ abstract class EvaluatorTestBase : TestBase() {
 
         val p = SqlParser(ion, CUSTOM_TEST_TYPES)
 
-        val ast = p.parseExprNode(source)
+        val ast = p.parseAstStatement(source)
         return eval(ast, compileOptions, session, compilerPipelineBuilderBlock)
     }
 
@@ -258,7 +256,7 @@ abstract class EvaluatorTestBase : TestBase() {
 
         val p = SqlParser(ion)
 
-        val ast = p.parseExprNode(source)
+        val ast = p.parseAstStatement(source)
         return eval(
             ast,
             CompileOptions.builder(compileOptions).typingMode(TypingMode.PERMISSIVE).build(),
@@ -266,29 +264,29 @@ abstract class EvaluatorTestBase : TestBase() {
             compilerPipelineBuilderBlock
         )
     }
+
     /**
-     * Evaluates an [ExprNode] given a [EvaluationSession]
+     * Evaluates an [PartiqlAst.Statement] given a [EvaluationSession]
      *
-     * @param exprNode The [ExprNode] instance to be evaluated.
+     * @param astStatement The [PartiqlAst.Statement] instance to be evaluated.
      * @param session [EvaluationSession] used for evaluation
      * @param compilerPipelineBuilderBlock any additional configuration to the pipeline after the options are set.
      */
-    protected fun eval(exprNode: ExprNode,
+    protected fun eval(astStatement: PartiqlAst.Statement,
                        compileOptions: CompileOptions = CompileOptions.standard(),
                        session: EvaluationSession = EvaluationSession.standard(),
                        compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = {  } ): ExprValue {
 
-        // "Sneak" in this little assertion to test that every ExprNode AST that passes through
-        // this function can be round-tripped to `partiql_ast` and back.
-        assertExprNodeToPIGRoundTrip(exprNode)
-
+        // "Sneak" in this little assertion to test that every PIG ast that passes through
+        // this function can be round-tripped to ExprNode and back.
+        assertPIGToExprNodeRoundTrip(astStatement)
 
         val pipeline = CompilerPipeline.builder(ion).apply {
             compileOptions(compileOptions)
             compilerPipelineBuilderBlock()
         }
 
-        return pipeline.build().compile(exprNode).eval(session)
+        return pipeline.build().compile(astStatement).eval(session)
     }
 
     private fun assertEvalThrows(query: String,
@@ -439,7 +437,7 @@ abstract class EvaluatorTestBase : TestBase() {
                                                         expectedPermissiveModeResult: String? = null) {
         softAssert {
             try {
-                val result = eval(input, session = session).ionValue;
+                val result = eval(input, session = session).ionValue
                 fail("Expected SqlException but there was no Exception.  " +
                      "The unexpected result was: \n${result.toPrettyString()}")
             }
@@ -472,7 +470,7 @@ abstract class EvaluatorTestBase : TestBase() {
     protected fun checkInputThrowingEvaluationException(tc: EvaluatorErrorTestCase, session: EvaluationSession) {
         softAssert {
             try {
-                val result = eval(tc.sqlUnderTest, compileOptions = tc.compOptions.options, session = session).ionValue;
+                val result = eval(tc.sqlUnderTest, compileOptions = tc.compOptions.options, session = session).ionValue
                 fail("Expected EvaluationException but there was no Exception.  " +
                      "The unepxected result was: \n${result.toPrettyString()}")
             }
