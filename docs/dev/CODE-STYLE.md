@@ -93,7 +93,7 @@ fun calculateArea(shape: Shape): Double {
 ```Kotlin
 val sources = ArrayList<CompiledLetSource>() // [sources] is mutable!
 letSource.bindings.forEach {
-    sources.add(CompiledLetSource(name = it.name.name, thunk = compileExprNode(it.expr)))
+    sources.add(CompiledLetSource(name = it.name.name, thunk = compileAstExpr(it.expr)))
 }
 ```    
 
@@ -101,7 +101,7 @@ letSource.bindings.forEach {
 
 ```Kotlin
 val sources = letSource.bindings.map {
-    CompiledLetSource(name = it.name.name, thunk = compileExprNode(it.expr)))
+    CompiledLetSource(name = it.name.name, thunk = compileAstExpr(it.expr)))
 }
 ```
 
