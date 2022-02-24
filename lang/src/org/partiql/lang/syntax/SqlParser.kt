@@ -32,7 +32,6 @@ import org.partiql.lang.ast.IsImplictJoinMeta
 import org.partiql.lang.ast.IsIonLiteralMeta
 import org.partiql.lang.ast.LegacyLogicalNotMeta
 import org.partiql.lang.ast.Meta
-import org.partiql.lang.ast.NAryOp
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.SqlDataType
 import org.partiql.lang.ast.toExprNode
@@ -340,10 +339,8 @@ class SqlParser(
                                     }
                                 }
                                 else -> {
-                                    val op = NAryOp.forSymbol(opName)
-                                        ?: errMalformedParseTree("Unsupported operator: $opName")
                                     val args = children.map { it.toAstExpr() }
-                                    val node = op.toAstExpr(args, metas)
+                                    val node = opName.toOperator(args, metas)
 
                                     if (wrapInNot) {
                                         not(node, metas + metaToIonMetaContainer(LegacyLogicalNotMeta.instance))
@@ -386,8 +383,7 @@ class SqlParser(
                             // Note:  we are forcing all function name lookups to be case-insensitive here...
                             // This seems like the right thing to do because that is consistent with the
                             // previous behavior.
-                            val funcExpr = id(funcName, caseInsensitive(), unqualified())
-                            NAryOp.CALL.toAstExpr(listOf(funcExpr) + children.map { it.toAstExpr() }, metas)
+                            call(funcName, children.map { it.toAstExpr() }, metas)
                         }
                     }
                 }
@@ -818,36 +814,36 @@ class SqlParser(
         }
     }
 
-    private fun NAryOp.toAstExpr(args: List<PartiqlAst.Expr>, metas: IonElementMetaContainer): PartiqlAst.Expr {
+    private fun String.toOperator(args: List<PartiqlAst.Expr>, metas: IonElementMetaContainer): PartiqlAst.Expr {
         return PartiqlAst.build {
-            when (this@toAstExpr) {
-                NAryOp.ADD -> when (args.size) {
+            when (this@toOperator) {
+                "+" -> when (args.size) {
                     0 -> throw IllegalArgumentException("Operator 'Add' must have at least one argument")
                     1 -> pos(args.first(), metas)
                     else -> plus(args, metas)
                 }
-                NAryOp.SUB -> when (args.size) {
+                "-" -> when (args.size) {
                     0 -> throw IllegalArgumentException("Operator 'Sub' must have at least one argument")
                     1 -> neg(args.first(), metas)
                     else -> minus(args, metas)
                 }
-                NAryOp.MUL -> times(args, metas)
-                NAryOp.DIV -> divide(args, metas)
-                NAryOp.MOD -> modulo(args, metas)
-                NAryOp.EQ -> eq(args, metas)
-                NAryOp.LT -> lt(args, metas)
-                NAryOp.LTE -> lte(args, metas)
-                NAryOp.GT -> gt(args, metas)
-                NAryOp.GTE -> gte(args, metas)
-                NAryOp.NE -> ne(args, metas)
-                NAryOp.LIKE -> like(args[0], args[1], args.getOrNull(2), metas)
-                NAryOp.BETWEEN -> between(args[0], args[1], args[2], metas)
-                NAryOp.NOT -> not(args[0], metas)
-                NAryOp.IN -> inCollection(args, metas)
-                NAryOp.AND -> and(args, metas)
-                NAryOp.OR -> or(args, metas)
-                NAryOp.STRING_CONCAT -> concat(args, metas)
-                NAryOp.CALL -> {
+                "*" -> times(args, metas)
+                "/" -> divide(args, metas)
+                "%" -> modulo(args, metas)
+                "=" -> eq(args, metas)
+                "<" -> lt(args, metas)
+                "<=" -> lte(args, metas)
+                ">" -> gt(args, metas)
+                ">=" -> gte(args, metas)
+                "<>" -> ne(args, metas)
+                "like" -> like(args[0], args[1], args.getOrNull(2), metas)
+                "between" -> between(args[0], args[1], args[2], metas)
+                "not" -> not(args[0], metas)
+                "in" -> inCollection(args, metas)
+                "and" -> and(args, metas)
+                "or" -> or(args, metas)
+                "||" -> concat(args, metas)
+                "call" -> {
                     val idArg = args.first() as? PartiqlAst.Expr.Id
                         ?: error("First argument of call should be a VariableReference")
                     // the above error message says "VariableReference" and not PartiqlAst.expr.id because it would
@@ -856,12 +852,13 @@ class SqlParser(
                     // TODO:  we are losing case-sensitivity of the function name here.  Do we care?
                     call(idArg.name.text, args.drop(1), metas)
                 }
-                NAryOp.INTERSECT -> intersect(distinct(), args, metas)
-                NAryOp.INTERSECT_ALL -> intersect(all(), args, metas)
-                NAryOp.EXCEPT -> except(distinct(), args, metas)
-                NAryOp.EXCEPT_ALL -> except(all(), args, metas)
-                NAryOp.UNION -> union(distinct(), args, metas)
-                NAryOp.UNION_ALL -> union(all(), args, metas)
+                "intersect" -> intersect(distinct(), args, metas)
+                "intersect_all" -> intersect(all(), args, metas)
+                "except" -> except(distinct(), args, metas)
+                "except_all" -> except(all(), args, metas)
+                "union" -> union(distinct(), args, metas)
+                "union_all" -> union(all(), args, metas)
+                else -> throw IllegalArgumentException("Unsupported operator: ${this@toOperator}")
             }
         }
     }
