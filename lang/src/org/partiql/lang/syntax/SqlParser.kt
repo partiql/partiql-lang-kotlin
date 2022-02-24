@@ -23,6 +23,7 @@ import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.metaContainerOf
 import com.amazon.ionelement.api.toIonElement
+import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.ast.AstSerializer
 import org.partiql.lang.ast.AstVersion
 import org.partiql.lang.ast.ExprNode
@@ -291,7 +292,7 @@ class SqlParser(
             when (type) {
                 ParseType.ATOM -> when (token?.type){
                     TokenType.LITERAL, TokenType.NULL, TokenType.TRIM_SPECIFICATION, TokenType.DATETIME_PART -> lit(token.value!!.toIonElement(), metas)
-                    TokenType.ION_LITERAL -> lit(token.value!!.toIonElement(), metas + metaToIonMetaContainer(IsIonLiteralMeta.instance))
+                    TokenType.ION_LITERAL -> lit(token.value!!.toIonElement(), metas + metaContainerOf(IsIonLiteralMeta.instance))
                     TokenType.MISSING -> missing(metas)
                     TokenType.QUOTED_IDENTIFIER -> id(token.text!!, caseSensitive(), unqualified(), metas)
                     TokenType.IDENTIFIER -> id(token.text!!, caseInsensitive(), unqualified(), metas)
@@ -318,7 +319,7 @@ class SqlParser(
                         "is" -> isType(children[0].toAstExpr(), children[1].toAstType(), metas)
                         "is_not" -> not(
                             isType(children[0].toAstExpr(), children[1].toAstType(), metas),
-                            metas + metaToIonMetaContainer(LegacyLogicalNotMeta.instance)
+                            metas + metaContainerOf(LegacyLogicalNotMeta.instance)
                         )
                         else -> {
                             val (opName, wrapInNot) = when (token.text) {
@@ -346,7 +347,7 @@ class SqlParser(
                                     val node = op.toAstExpr(args, metas)
 
                                     if (wrapInNot) {
-                                        not(node, metas + metaToIonMetaContainer(LegacyLogicalNotMeta.instance))
+                                        not(node, metas + metaContainerOf(LegacyLogicalNotMeta.instance))
                                     } else {
                                         node
                                     }
@@ -405,10 +406,10 @@ class SqlParser(
                     }
                     // Should only get the [SourceLocationMeta] if present, not any other metas.
                     val srcLocationMetaOnly = metas[SourceLocationMeta.TAG]
-                        ?.let { metaToIonMetaContainer(it as Meta) } ?: emptyMetaContainer()
+                        ?.let { metaContainerOf(it as Meta) } ?: emptyMetaContainer()
                     val lit = lit(ionInt(1), srcLocationMetaOnly)
                     val symbolicPrimitive = SymbolPrimitive("count", srcLocationMetaOnly)
-                    callAgg_(all(), symbolicPrimitive, lit, metas + metaToIonMetaContainer(IsCountStarMeta.instance))
+                    callAgg_(all(), symbolicPrimitive, lit, metas + metaContainerOf(IsCountStarMeta.instance))
                 }
                 ParseType.PATH -> {
                     val rootExpr = children[0].toAstExpr()
@@ -888,7 +889,7 @@ class SqlParser(
                         children[0].toFromSource(),
                         children[1].unwrapAliasesAndUnpivot(),
                         if (isCrossJoin) null else children[2].toAstExpr(),
-                        if (isCrossJoin) metas + metaToIonMetaContainer(IsImplictJoinMeta.instance) else metas
+                        if (isCrossJoin) metas + metaContainerOf(IsImplictJoinMeta.instance) else metas
                     )
                 }
                 else -> unwrapAliasesAndUnpivot()
@@ -1179,9 +1180,6 @@ class SqlParser(
 
     private fun ParseNode.getMetas(): IonElementMetaContainer =
         token.toSourceLocationMetaContainer()
-
-    private fun metaToIonMetaContainer(meta: Meta): IonElementMetaContainer =
-        metaContainerOf(Pair(meta.tag, meta))
 
     private data class LetVariables(
         val asName: SymbolPrimitive? = null,
