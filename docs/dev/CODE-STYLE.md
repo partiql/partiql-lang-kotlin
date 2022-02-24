@@ -101,7 +101,7 @@ letSource.bindings.forEach {
 
 ```Kotlin
 val sources = letSource.bindings.map {
-    CompiledLetSource(name = it.name.name, thunk = compileAstExpr(it.expr)))
+    CompiledLetSource(name = it.name.name, thunk = compileAstExpr(it.expr))
 }
 ```
 
