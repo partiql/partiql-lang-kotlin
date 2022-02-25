@@ -1,6 +1,6 @@
 package org.partiql.lang.eval
 
-import org.partiql.lang.ast.MetaContainer
+import com.amazon.ionelement.api.MetaContainer
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.errors.ErrorBehaviorInPermissiveMode
 import org.partiql.lang.errors.ErrorCode

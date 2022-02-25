@@ -18,14 +18,13 @@ import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.ionInt
 import org.junit.Test
 import org.partiql.lang.ast.SourceLocationMeta
-import org.partiql.lang.ast.metaContainerOf
-import org.partiql.lang.ast.toIonElementMetaContainer
+import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.domains.PartiqlAst
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 class SubstitutionVisitorTransformTest {
-    private val metasWithSourceLocation = metaContainerOf(SourceLocationMeta(100, 101)).toIonElementMetaContainer()
+    private val metasWithSourceLocation = metaContainerOf(SourceLocationMeta(100, 101))
 
     private fun litInt(value: Long) = PartiqlAst.build { lit(ionInt(value), emptyMetaContainer()) }
 

@@ -79,4 +79,5 @@ data class StaticTypeMeta(val type: StaticType) : Meta {
     }
 }
 
+@Deprecated("Please use org.partiql.lang.domains.staticType")
 val MetaContainer.staticType: StaticTypeMeta? get() = find(StaticTypeMeta.TAG) as StaticTypeMeta?

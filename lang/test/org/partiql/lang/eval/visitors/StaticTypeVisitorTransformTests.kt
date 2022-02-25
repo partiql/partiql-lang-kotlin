@@ -12,12 +12,9 @@ import org.junit.Test
 import org.partiql.ionschema.model.IonSchemaModel
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.StaticTypeMeta
-import org.partiql.lang.ast.emptyMetaContainer
-import org.partiql.lang.ast.metaContainerOf
 import org.partiql.lang.ast.passes.SemanticException
-import org.partiql.lang.ast.plus
-import org.partiql.lang.ast.toIonElementMetaContainer
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.Property.BINDING_NAME
@@ -892,9 +889,9 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
 
     private fun metas(line: Long, column: Long, type: StaticType? = null): com.amazon.ionelement.api.MetaContainer =
         (metaContainerOf(SourceLocationMeta(line, column)) +
-        (type?.let { metaContainerOf(StaticTypeMeta(it)) } ?: emptyMetaContainer)).toIonElementMetaContainer()
+        (type?.let { metaContainerOf(StaticTypeMeta(it)) } ?: emptyMetaContainer()))
 
-    private fun StaticType.toMetas(): com.amazon.ionelement.api.MetaContainer = metaContainerOf(StaticTypeMeta(this)).toIonElementMetaContainer()
+    private fun StaticType.toMetas(): com.amazon.ionelement.api.MetaContainer = metaContainerOf(StaticTypeMeta(this))
 
     private fun runSTRTest(
         tc: STRTestCase
