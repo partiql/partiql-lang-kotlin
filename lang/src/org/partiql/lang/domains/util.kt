@@ -17,6 +17,7 @@ fun PartiqlAst.Builder.id(name: String) =
 
 val MetaContainer.staticType: StaticTypeMeta? get() = this[StaticTypeMeta.TAG] as StaticTypeMeta?
 
+/** Constructs a container with the specified metas. */
 fun metaContainerOf(vararg metas: Meta): MetaContainer =
     metaContainerOf(metas.map { Pair(it.tag, it) })
 

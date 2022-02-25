@@ -110,14 +110,14 @@ fun fillErrorContext(errorContext: PropertyValueMap, location: SourceLocationMet
     }
 }
 
-fun fillErrorContext(errorContext: PropertyValueMap, metaContainer: com.amazon.ionelement.api.MetaContainer) {
+fun fillErrorContext(errorContext: PropertyValueMap, metaContainer: MetaContainer) {
     val location = metaContainer[SourceLocationMeta.TAG] as? SourceLocationMeta
     if(location != null) {
         fillErrorContext(errorContext, location)
     }
 }
 
-fun errorContextFrom(metaContainer: com.amazon.ionelement.api.MetaContainer?): PropertyValueMap {
+fun errorContextFrom(metaContainer: MetaContainer?): PropertyValueMap {
     if(metaContainer == null) {
         return PropertyValueMap()
     }

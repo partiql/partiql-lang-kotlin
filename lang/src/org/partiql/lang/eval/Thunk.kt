@@ -17,6 +17,7 @@ package org.partiql.lang.eval
 import com.amazon.ionelement.api.MetaContainer
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.StaticTypeMeta
+import org.partiql.lang.domains.staticType
 import org.partiql.lang.errors.ErrorBehaviorInPermissiveMode
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
@@ -133,7 +134,7 @@ internal abstract class ThunkFactory(
         // When this check is enabled we throw an exception the [MetaContainer] does not have a
         // [StaticTypeMeta].  This indicates a bug or unimplemented support for an AST node in
         // [StaticTypeInferenceVisitorTransform].
-        val staticType = (metas["\$static_type"]as StaticTypeMeta?)?.type ?: error("Metas collection does not have a StaticTypeMeta")
+        val staticType = metas.staticType?.type ?: error("Metas collection does not have a StaticTypeMeta")
         if (!staticType.isInstance(thunkResult)) {
             throw EvaluationException(
                 "Runtime type does not match the expected StaticType",
