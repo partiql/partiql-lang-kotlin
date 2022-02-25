@@ -753,6 +753,7 @@ class SqlParser(
         }
     }
 
+     // Resolve types here with the help of type and function manager.
     private fun ParseNode.toAstType(): PartiqlAst.Type {
         if (type != ParseType.TYPE) {
             errMalformedParseTree("Expected ParseType.TYPE instead of $type")

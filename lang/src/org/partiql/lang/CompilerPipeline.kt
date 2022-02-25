@@ -33,6 +33,7 @@ import org.partiql.lang.eval.visitors.StaticTypeVisitorTransform
 import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.types.CustomType
+import org.partiql.lang.types.Plugin
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.interruptibleFold
 
@@ -140,6 +141,7 @@ interface CompilerPipeline  {
         private var compileOptions: CompileOptions? = null
         private val customFunctions: MutableMap<String, ExprFunction> = HashMap()
         private var customDataTypes: List<CustomType> = listOf()
+        private var plugins: List<Plugin> = listOf()
         private val customProcedures: MutableMap<String, StoredProcedure> = HashMap()
         private val preProcessingSteps: MutableList<ProcessingStep> = ArrayList()
         private var globalTypeBindings: Bindings<StaticType>? = null
@@ -180,6 +182,14 @@ interface CompilerPipeline  {
          */
         fun customDataTypes(customTypes: List<CustomType>) = this.apply {
             customDataTypes = customTypes
+        }
+
+        /**
+         * Register a list of [Plugin]s.
+         */
+        fun registerPlugins(externalPlugins: List<Plugin>) = this.apply {
+            plugins = externalPlugins
+            // TODO: Register types and functions in these plugins to TypeAndFunctionManager
         }
 
         /**
