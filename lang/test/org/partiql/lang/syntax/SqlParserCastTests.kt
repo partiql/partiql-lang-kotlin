@@ -9,7 +9,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.CUSTOM_TEST_TYPES
 import org.partiql.lang.ION
-import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.util.ArgumentsProviderBase
 
@@ -20,8 +19,7 @@ class SqlParserCastTests : SqlParserTestBase() {
         val ion: IonSystem = ION
         val parser = SqlParser(ion, CUSTOM_TEST_TYPES)
 
-        fun parse(source: String): ExprNode = parser.parseExprNode(source)
-        fun parseToAst(source: String): PartiqlAst.Statement = parser.parseAstStatement(source)
+        fun parse(source: String): PartiqlAst.Statement = parser.parseAstStatement(source)
 
         data class CastParseTest(val source: String, val ast: PartiqlAst.Expr.Cast) {
             fun toCastTest() =
@@ -39,8 +37,8 @@ class SqlParserCastTests : SqlParserTestBase() {
         }
         data class ConfiguredCastParseTest(val source: String, val expectedAst: PartiqlAst.PartiqlAstNode) {
             fun assertCase() {
-                // Convert the query to ExprNode
-                val parsedPartiqlAst = parseToAst(source) as PartiqlAst.Statement.Query
+                // Convert the query to ast
+                val parsedPartiqlAst = parse(source) as PartiqlAst.Statement.Query
                 assertEquals("Expected PartiqlAst and actual PartiqlAst must match", expectedAst, parsedPartiqlAst)
             }
         }

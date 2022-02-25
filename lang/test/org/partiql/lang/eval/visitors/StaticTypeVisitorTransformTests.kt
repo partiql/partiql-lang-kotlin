@@ -12,13 +12,9 @@ import org.junit.Test
 import org.partiql.ionschema.model.IonSchemaModel
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.StaticTypeMeta
-import org.partiql.lang.ast.emptyMetaContainer
-import org.partiql.lang.ast.metaContainerOf
 import org.partiql.lang.ast.passes.SemanticException
-import org.partiql.lang.ast.plus
-import org.partiql.lang.ast.toAstStatement
-import org.partiql.lang.ast.toIonElementMetaContainer
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.Property.BINDING_NAME
@@ -547,7 +543,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
             expectVariableReferences()
         ),
         // Regression test:  do not attempt to resolve any variables for a CREATE INDEX statement.
-        // CreateIndex incorrectly models the index identifier as a [List<ExprNode>]
+        // CreateIndex incorrectly models the index identifier as a [List<PartiqlAst.Expr>]
         // and this test ensures we don't treat [keys] as if it were a normal variable.
         STRTestCase(
             //        1         2         3         4         5         6         7         8
@@ -761,11 +757,6 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         data class Error(val testCase: STRTestCase, val error: SemanticException) : ResolveTestResult()
     }
 
-//    sealed class ResolveTestResult {
-//        data class Value(val testCase: STRTestCase, val node: ExprNode) : ResolveTestResult()
-//        data class Error(val testCase: STRTestCase, val error: SemanticException) : ResolveTestResult()
-//    }
-
     private fun expectErr(code: ErrorCode, vararg properties: Pair<Property, Any>): (ResolveTestResult) -> Unit = {
         when (it) {
             is ResolveTestResult.Value -> fail("Expected id error for: ${it.testCase.originalSql}")
@@ -898,9 +889,9 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
 
     private fun metas(line: Long, column: Long, type: StaticType? = null): com.amazon.ionelement.api.MetaContainer =
         (metaContainerOf(SourceLocationMeta(line, column)) +
-        (type?.let { metaContainerOf(StaticTypeMeta(it)) } ?: emptyMetaContainer)).toIonElementMetaContainer()
+        (type?.let { metaContainerOf(StaticTypeMeta(it)) } ?: emptyMetaContainer()))
 
-    private fun StaticType.toMetas(): com.amazon.ionelement.api.MetaContainer = metaContainerOf(StaticTypeMeta(this)).toIonElementMetaContainer()
+    private fun StaticType.toMetas(): com.amazon.ionelement.api.MetaContainer = metaContainerOf(StaticTypeMeta(this))
 
     private fun runSTRTest(
         tc: STRTestCase
@@ -912,17 +903,17 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         // FromSourceAliasVisitorTransform to execute first but also to help ensure the queries we're testing
         // make sense when they're all run.
         val defaultTransforms = basicVisitorTransforms()
-        val originalPartiqlAst = defaultTransforms.transformStatement(parse(tc.originalSql))
+        val originalAst = defaultTransforms.transformStatement(parse(tc.originalSql))
 
-        val transformedExprNode = try {
-            transformer.transformStatement(originalPartiqlAst)
+        val transformedAst = try {
+            transformer.transformStatement(originalAst)
         }
         catch (e: SemanticException) {
             tc.handler(ResolveTestResult.Error(tc, e))
             return
         }
 
-        tc.handler(ResolveTestResult.Value(tc, transformedExprNode))
+        tc.handler(ResolveTestResult.Value(tc, transformedAst))
     }
 
     @Test

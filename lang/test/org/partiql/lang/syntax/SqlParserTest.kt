@@ -32,9 +32,9 @@ import kotlin.concurrent.thread
  * Originally just meant to test the parser, this class now tests several different things because
  * the same test cases can be used for all three:
  *
- * - Parsing of query to [ExprNode]s
- * - Conversion of [ExprNode]s to legacy and new s-exp ASTs.
- * - Conversion of both AST forms to [ExprNode]s.
+ * - Parsing of query to PIG-generated ast
+ * - Conversion of PIG-generated ast to [ExprNode].
+ * - Conversion of [ExprNode] to legacy and new s-exp ASTs.
  */
 class SqlParserTest : SqlParserTestBase() {
 
@@ -274,24 +274,24 @@ class SqlParserTest : SqlParserTestBase() {
     //****************************************
 
     @Test
-    fun unaryMinusCall() = assertExpression(
+    fun negCall() = assertExpression(
         "-baz()",
         "(- (call baz))",
-        "(minus (call baz))"
+        "(neg (call baz))"
     )
 
     @Test
-    fun unaryPlusMinusIdent() = assertExpression(
+    fun posNegIdent() = assertExpression(
         "+(-baz())",
         "(+ (- (call baz)))",
-        "(plus (minus (call baz)))"
+        "(pos (neg (call baz)))"
     )
 
     @Test
-    fun unaryPlusMinusIdentNoSpaces() = assertExpression(
+    fun posNegIdentNoSpaces() = assertExpression(
         "+-baz()",
         "(+ (- (call baz)))",
-        "(plus (minus (call baz)))"
+        "(pos (neg (call baz)))"
     )
 
     @Test
@@ -310,7 +310,7 @@ class SqlParserTest : SqlParserTestBase() {
     fun unaryIonTimestampLiteral() = assertExpression(
         "+-`2017-01-01`",
         "(+ (- (lit 2017-01-01T)))",
-        "(plus (minus (lit 2017-01-01T)))"
+        "(pos (neg (lit 2017-01-01T)))"
     )
 
     @Test

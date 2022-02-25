@@ -64,6 +64,7 @@ interface HasMetas {
 /**
  * An immutable container for [Meta] instances.
  */
+@Deprecated("Please use com.amazon.ionelement.api.MetaContainer")
 interface MetaContainer : Iterable<Meta> {
 
     /**
@@ -172,14 +173,17 @@ private data class MetaContainerImpl internal constructor(private val metas: Tre
 }
 
 /** Constructs a container with the specified metas. */
+@Deprecated("Please use org.partiql.lang.domains.metaContainerOf")
 fun metaContainerOf(vararg metas: Meta): MetaContainer = metaContainerOf(metas.asIterable())
 
 /** Empty meta container. */
+@Deprecated("Please use com.amazon.ionelement.api.emptyMetaContainer")
 val emptyMetaContainer: MetaContainer = metaContainerOf()
 
 /**
  * Constructs a container with the elements found within [metas].
  */
+@Deprecated("Please use com.amazon.ionelement.api.metaContainerOf")
 fun metaContainerOf(metas: Iterable<Meta>): MetaContainer {
     return MetaContainerImpl(
         TreeMap<String, Meta>().apply {

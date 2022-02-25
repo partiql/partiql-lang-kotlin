@@ -54,14 +54,12 @@ open class PartiQLBenchmark {
                 } 
             }
         """.trimIndent()
-        // TODO: replace `parseExprNode` with `ParseStatement` once evaluator deprecates `ExprNode`
-        val bindings = pipeline.compile(parser.parseExprNode(data)).eval(EvaluationSession.standard()).bindings
+        val bindings = pipeline.compile(parser.parseAstStatement(data)).eval(EvaluationSession.standard()).bindings
         val session = EvaluationSession.build { globals(bindings) }
 
         val query = "SELECT * FROM hr.employeesNestScalars"
-        // TODO: replace `parseExprNode` with `ParseStatement` once evaluator deprecates `ExprNode`
-        val exprNode = parser.parseExprNode(query)
-        val expression = pipeline.compile(exprNode)
+        val astStatement = parser.parseAstStatement(query)
+        val expression = pipeline.compile(astStatement)
     }
 
     /**
@@ -70,8 +68,7 @@ open class PartiQLBenchmark {
     @Benchmark
     @BenchmarkMode(Mode.AverageTime)
     fun testPartiQLParser(state: MyState, blackhole: Blackhole) {
-        // TODO: replace `parseExprNode` with `ParseStatement` once evaluator deprecates `ExprNode`
-        val expr = state.parser.parseExprNode(state.query)
+        val expr = state.parser.parseAstStatement(state.query)
         blackhole.consume(expr)
     }
 
@@ -81,7 +78,7 @@ open class PartiQLBenchmark {
     @Benchmark
     @BenchmarkMode(Mode.AverageTime)
     fun testPartiQLCompiler(state: MyState, blackhole: Blackhole) {
-        val exprValue = state.pipeline.compile(state.exprNode)
+        val exprValue = state.pipeline.compile(state.astStatement)
         blackhole.consume(exprValue)
     }
 

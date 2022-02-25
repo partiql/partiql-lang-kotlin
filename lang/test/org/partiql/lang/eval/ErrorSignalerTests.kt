@@ -3,7 +3,7 @@ package org.partiql.lang.eval
 import com.amazon.ion.system.IonSystemBuilder
 import org.junit.Test
 import org.partiql.lang.ast.SourceLocationMeta
-import org.partiql.lang.ast.metaContainerOf
+import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import kotlin.test.assertEquals

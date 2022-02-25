@@ -3,8 +3,6 @@ package org.partiql.lang.eval
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.lang.ast.toAstStatement
-import org.partiql.lang.ast.toExprNode
 import org.partiql.lang.eval.visitors.StaticTypeInferenceVisitorTransform
 import org.partiql.lang.eval.visitors.StaticTypeVisitorTransform
 import org.partiql.lang.eval.visitors.basicVisitorTransforms
@@ -164,19 +162,19 @@ class EvaluatingCompilerNAryIntOverflowTests : EvaluatorTestBase() {
         // TODO:  today we only test permissive error mode mode, but we also need to consider this behavior in legacy
         // error mode as well.
 
-        val ast = sqlParser.parseExprNode(tc.sqlUnderTest).toAstStatement()
+        val ast = sqlParser.parseAstStatement(tc.sqlUnderTest)
 
         val transformedAst = basicVisitorTransforms().transformStatement(ast).let {
             StaticTypeVisitorTransform(
                 ion = ion,
                 globalBindings = defaultEnv.typeBindings,
                 constraints = emptySet()).transformStatement(it)
-        }.let { exprNode ->
+        }.let { astStatement ->
             // [StaticTypeInferenceVisitorTransform] currently requires that [StaticTypeVisitorTransform] is run first.
             StaticTypeInferenceVisitorTransform(
                 globalBindings = defaultEnv.typeBindings,
                 customFunctionSignatures = emptyList(),
-                customTypedOpParameters = mapOf()).transformStatement(exprNode).toExprNode(ion)
+                customTypedOpParameters = mapOf()).transformStatement(astStatement)
         }
 
         val expression = compiler.compile(transformedAst)
