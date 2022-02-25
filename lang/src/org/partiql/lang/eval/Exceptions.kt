@@ -52,6 +52,16 @@ internal fun errNoContext(message: String, errorCode: ErrorCode, internal: Boole
 internal fun err(message: String, errorCode: ErrorCode, errorContext: PropertyValueMap?, internal: Boolean): Nothing =
     throw EvaluationException(message, errorCode, errorContext, internal = internal)
 
+internal fun expectedArgTypeErrorMsg (types: List<ExprValueType>) : String = when (types.size) {
+    0 -> throw IllegalStateException("Should have at least one expected argument type. ")
+    1 -> types[0].toString()
+    else -> {
+        val window = types.size - 1
+        val (most, last) = types.windowed(window, window, true)
+        most.joinToString(", ") + ", or ${last.first()}"
+    }
+}
+
 /** Throw an [ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL] error */
 internal fun errInvalidArgumentType(
     signature: FunctionSignature,
@@ -62,14 +72,7 @@ internal fun errInvalidArgumentType(
 ): Nothing {
     val arity = signature.arity
 
-    val expectedTypeMsg = when(expectedTypes.size) {
-        1 -> expectedTypes[0]
-        else -> {
-            val window = expectedTypes.size - 1
-            val (most, last) = expectedTypes.windowed(window, window, true)
-            most.joinToString(", ") + ", or ${last.first()}"
-        }
-    }
+    val expectedTypeMsg = expectedArgTypeErrorMsg(expectedTypes)
 
     val errorContext = propertyValueMapOf(
         Property.FUNCTION_NAME to signature.name,

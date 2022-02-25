@@ -97,20 +97,9 @@ abstract class EvaluatorTestBase : TestBase() {
         val originalAst = parser.parseAstStatement(source)
 
         fun evalAndAssert(ast: PartiqlAst.Statement, message: String) {
-            // LEGACY mode
-            val result = eval(ast, compileOptions, session, compilerPipelineBuilderBlock)
-            AssertExprValue(result, message = "(LEGACY mode) Evaluated '$source' with evaluator ($message)")
-                .apply { assertIonValue(expectedIon) }.run(block)
-            // TODO this should not be here--this should be explicit in the test case
-            // PERMISSIVE mode
-            val resultForPermissiveMode = eval(
-                ast,
-                CompileOptions.builder(compileOptions).typingMode(TypingMode.PERMISSIVE).build(),
-                session,
-                compilerPipelineBuilderBlock
-            )
-            AssertExprValue(resultForPermissiveMode, message = "(PERMISSIVE mode) Evaluated '$source' with evaluator ($message)")
-                .apply { assertIonValue(expectedIon) }.run(block)
+            AssertExprValue(eval(ast, compileOptions, session, compilerPipelineBuilderBlock),
+                message =  "${compileOptions.typedOpBehavior} CAST in ${compileOptions.typingMode} typing mode, " +
+                    "evaluated '$source' with evaluator ($message)").apply { assertIonValue(expectedIon) }.run(block)
         }
 
         // Evaluate the ast originally obtained from the parser
