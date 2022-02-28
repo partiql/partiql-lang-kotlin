@@ -82,42 +82,6 @@ class PartiqlPhysicalSanityValidator : PartiqlPhysical.Visitor() {
         }
     }
 
-    override fun visitExprSelect(node: PartiqlPhysical.Expr.Select) {
-        val projection = node.project
-        val groupBy = node.group
-        val having = node.having
-        val metas = node.metas
-
-        if (groupBy != null) {
-            if (groupBy.strategy is PartiqlPhysical.GroupingStrategy.GroupPartial) {
-                err("GROUP PARTIAL not supported yet",
-                    ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
-                    errorContextFrom(metas).also {
-                        it[Property.FEATURE_NAME] = "GROUP PARTIAL"
-                    }, internal = false)
-            }
-
-            when (projection) {
-                is PartiqlPhysical.Projection.ProjectPivot -> {
-                    err("PIVOT with GROUP BY not supported yet",
-                        ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
-                        errorContextFrom(metas).also {
-                            it[Property.FEATURE_NAME] = "PIVOT with GROUP BY"
-                        }, internal = false)
-                }
-                is PartiqlPhysical.Projection.ProjectValue, is PartiqlPhysical.Projection.ProjectList -> {
-                    // use of group by with SELECT & SELECT VALUE is supported
-                }
-            }
-        }
-
-        if ((groupBy == null || groupBy.keyList.keys.isEmpty()) && having != null) {
-            throw SemanticException("HAVING used without GROUP BY (or grouping expressions)",
-                ErrorCode.SEMANTIC_HAVING_USED_WITHOUT_GROUP_BY,
-                PropertyValueMap().addSourceLocation(metas))
-        }
-    }
-
     override fun visitExprStruct(node: PartiqlPhysical.Expr.Struct) {
         node.fields.forEach { field ->
             if (field.first is PartiqlPhysical.Expr.Missing || (field.first is PartiqlPhysical.Expr.Lit && field.first.value !is TextElement)) {

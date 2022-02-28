@@ -4,6 +4,8 @@ import org.partiql.lang.domains.PartiqlAst
 
 /**
  * Helper to convert [PartiqlAst.Type] in AST to a [TypedOpParameter].
+ *
+ * DL TODO: resolve this duplication, which absolutely cannot remain.
  */
 fun PartiqlAst.Type.toTypedOpParameter(customTypedOpParameters: Map<String, TypedOpParameter>): TypedOpParameter = when (this) {
     is PartiqlAst.Type.MissingType -> TypedOpParameter(StaticType.MISSING)
@@ -83,3 +85,4 @@ fun PartiqlAst.Type.toTypedOpParameter(customTypedOpParameters: Map<String, Type
     is PartiqlAst.Type.SparkLong,
     is PartiqlAst.Type.SparkShort -> error("$this node should not be present in PartiQLAST. Consider transforming the AST using CustomTypeVisitorTransform.")
 }
+

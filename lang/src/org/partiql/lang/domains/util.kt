@@ -80,6 +80,14 @@ fun PartiqlLogical.CaseSensitivity.toBindingCase(): BindingCase = when(this) {
 }
 
 /**
+ * Converts a [PartiqlLogical.CaseSensitivity] to a [BindingCase].
+ */
+fun PartiqlPhysical.CaseSensitivity.toBindingCase(): BindingCase = when(this) {
+    is PartiqlPhysical.CaseSensitivity.CaseInsensitive -> BindingCase.INSENSITIVE
+    is PartiqlPhysical.CaseSensitivity.CaseSensitive -> BindingCase.SENSITIVE
+}
+
+/**
  * Returns the [SourceLocationMeta] as an error context if the [SourceLocationMeta.TAG] exists in the passed
  * [metaContainer]. Otherwise, returns an empty map.
  */
