@@ -14,8 +14,6 @@
 
 package org.partiql.lang.eval
 
-import com.amazon.ion.IntegerSize
-import com.amazon.ion.IonInt
 import com.amazon.ion.IonString
 import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
@@ -91,36 +89,11 @@ internal class PartiqlPhysicalCompiler(
     private val procedures: Map<String, StoredProcedure>,
     private val compileOptions: CompileOptions = CompileOptions.standard()
 ) {
-    private val errorSignaler = compileOptions.typingMode.createErrorSignaler(valueFactory)
     private val thunkFactory = compileOptions.typingMode.createThunkFactory(compileOptions, valueFactory)
 
-    private val compilationContextStack = Stack<CompilationContext>()
-
-    private val currentCompilationContext: CompilationContext
-        get() = compilationContextStack.peek() ?: throw EvaluationException(
-            "compilationContextStack was empty.", ErrorCode.EVALUATOR_UNEXPECTED_VALUE, internal = true
-        )
-
-    //Note: please don't make this inline -- it messes up [EvaluationException] stack traces and
-    //isn't a huge benefit because this is only used at SQL-compile time anyway.
-    private fun <R> nestCompilationContext(
-        expressionContext: ExpressionContext,
-        fromSourceNames: Set<String>, block: () -> R
-    ): R {
-        compilationContextStack.push(
-            when {
-                compilationContextStack.empty() -> CompilationContext(expressionContext, fromSourceNames)
-                else -> compilationContextStack.peek().createNested(
-                    expressionContext,
-                    fromSourceNames
-                )
-            }
-        )
-
-        try {
-            return block()
-        } finally {
-            compilationContextStack.pop()
+    init {
+        if(procedures.isNotEmpty()) {
+            TODO("Support system stored procedures")
         }
     }
 
@@ -138,15 +111,6 @@ internal class PartiqlPhysicalCompiler(
 
     private fun Boolean.exprValue(): ExprValue = valueFactory.newBoolean(this)
     private fun String.exprValue(): ExprValue = valueFactory.newString(this)
-
-    /** Represents an instance of a compiled `GROUP BY` expression and alias. */
-    private class CompiledGroupByItem(val alias: ExprValue, val uniqueId: String?, val thunk: ThunkEnv)
-
-    /**
-     * Represents a memoized binding [BindingName] and an [ExprValue] of the same name.
-     * Used during evaluation og `GROUP BY`.
-     */
-    private data class FromSourceBindingNamePair(val bindingName: BindingName, val nameExprValue: ExprValue)
 
     /**
      * Base class for [ExprAggregator] instances which accumulate values and perform a final computation.
@@ -179,77 +143,6 @@ internal class PartiqlPhysicalCompiler(
             }
         }
 
-    /** Dispatch table for built-in aggregate functions. */
-    private val builtinAggregates: Map<Pair<String, PartiqlPhysical.SetQuantifier>, ExprAggregatorFactory> =
-        run {
-            val countAccFunc: (Number?, ExprValue) -> Number = { curr, _ -> curr!! + 1L }
-            val sumAccFunc: (Number?, ExprValue) -> Number = { curr, next ->
-                curr?.let { it + next.numberValue() } ?: next.numberValue()
-            }
-            val minAccFunc = comparisonAccumulator { left, right -> left < right }
-            val maxAccFunc = comparisonAccumulator { left, right -> left > right }
-            val avgAggregateGenerator = { filter: (ExprValue) -> Boolean ->
-                object : ExprAggregator {
-                    var sum: Number? = null
-                    var count = 0L
-
-                    override fun next(value: ExprValue) {
-                        if (value.isNotUnknown() && filter.invoke(value)) {
-                            sum = sum?.let { it + value.numberValue() } ?: value.numberValue()
-                            count++
-                        }
-                    }
-
-                    override fun compute() =
-                        sum?.let { (it / bigDecimalOf(count)).exprValue() }
-                            ?: this@PartiqlPhysicalCompiler.valueFactory.nullValue
-                }
-            }
-            val allFilter: (ExprValue) -> Boolean = { _ -> true }
-            // each distinct ExprAggregator must get its own createUniqueExprValueFilter()
-            mapOf(
-                Pair("count", PartiqlPhysical.SetQuantifier.All()) to ExprAggregatorFactory.over {
-                    Accumulator(0L, countAccFunc, allFilter)
-                },
-
-                Pair("count", PartiqlPhysical.SetQuantifier.Distinct()) to ExprAggregatorFactory.over {
-                    Accumulator(0L, countAccFunc, createUniqueExprValueFilter())
-                },
-
-                Pair("sum", PartiqlPhysical.SetQuantifier.All()) to ExprAggregatorFactory.over {
-                    Accumulator(null, sumAccFunc, allFilter)
-                },
-
-                Pair("sum", PartiqlPhysical.SetQuantifier.Distinct()) to ExprAggregatorFactory.over {
-                    Accumulator(null, sumAccFunc, createUniqueExprValueFilter())
-                },
-
-                Pair("avg", PartiqlPhysical.SetQuantifier.All()) to ExprAggregatorFactory.over {
-                    avgAggregateGenerator(allFilter)
-                },
-
-                Pair("avg", PartiqlPhysical.SetQuantifier.Distinct()) to ExprAggregatorFactory.over {
-                    avgAggregateGenerator(createUniqueExprValueFilter())
-                },
-
-                Pair("max", PartiqlPhysical.SetQuantifier.All()) to ExprAggregatorFactory.over {
-                    Accumulator(null, maxAccFunc, allFilter)
-                },
-
-                Pair("max", PartiqlPhysical.SetQuantifier.Distinct()) to ExprAggregatorFactory.over {
-                    Accumulator(null, maxAccFunc, createUniqueExprValueFilter())
-                },
-
-                Pair("min", PartiqlPhysical.SetQuantifier.All()) to ExprAggregatorFactory.over {
-                    Accumulator(null, minAccFunc, allFilter)
-                },
-
-                Pair("min", PartiqlPhysical.SetQuantifier.Distinct()) to ExprAggregatorFactory.over {
-                    Accumulator(null, minAccFunc, createUniqueExprValueFilter())
-                }
-            )
-        }
-
     /**
      * Compiles a [PartiqlPhysical.Statement] tree to an [Expression].
      *
@@ -260,9 +153,7 @@ internal class PartiqlPhysicalCompiler(
     fun compile(plan: PartiqlPhysical.Statement): Expression {
         PartiqlPhysicalSanityValidator().validate(plan, compileOptions)
 
-        val thunk = nestCompilationContext(ExpressionContext.NORMAL, emptySet()) {
-            compileAstStatement(plan)
-        }
+        val thunk = compileAstStatement(plan)
 
         return object : Expression {
             override fun eval(session: EvaluationSession): ExprValue {
@@ -1425,98 +1316,6 @@ internal class PartiqlPhysicalCompiler(
                 makeItemThunkSequence(env)
             )
         }
-    }
-
-    private fun evalLimit(limitThunk: ThunkEnv, env: Environment, limitLocationMeta: SourceLocationMeta?): Long {
-        val limitExprValue = limitThunk(env)
-
-        if (limitExprValue.type != ExprValueType.INT) {
-            err(
-                "LIMIT value was not an integer",
-                ErrorCode.EVALUATOR_NON_INT_LIMIT_VALUE,
-                errorContextFrom(limitLocationMeta).also {
-                    it[Property.ACTUAL_TYPE] = limitExprValue.type.toString()
-                },
-                internal = false
-            )
-        }
-
-        // `Number.toLong()` (used below) does *not* cause an overflow exception if the underlying [Number]
-        // implementation (i.e. Decimal or BigInteger) exceeds the range that can be represented by Longs.
-        // This can cause very confusing behavior if the user specifies a LIMIT value that exceeds
-        // Long.MAX_VALUE, because no results will be returned from their query.  That no overflow exception
-        // is thrown is not a problem as long as PartiQL's restriction of integer values to +/- 2^63 remains.
-        // We throw an exception here if the value exceeds the supported range (say if we change that
-        // restriction or if a custom [ExprValue] is provided which exceeds that value).
-        val limitIonValue = limitExprValue.ionValue as IonInt
-        if (limitIonValue.integerSize == IntegerSize.BIG_INTEGER) {
-            err(
-                "IntegerSize.BIG_INTEGER not supported for LIMIT values",
-                ErrorCode.INTERNAL_ERROR,
-                errorContextFrom(limitLocationMeta),
-                internal = true
-            )
-        }
-
-        val limitValue = limitExprValue.numberValue().toLong()
-
-        if (limitValue < 0) {
-            err(
-                "negative LIMIT",
-                ErrorCode.EVALUATOR_NEGATIVE_LIMIT,
-                errorContextFrom(limitLocationMeta),
-                internal = false
-            )
-        }
-
-        // we can't use the Kotlin's Sequence<T>.take(n) for this since it accepts only an integer.
-        // this references [Sequence<T>.take(count: Long): Sequence<T>] defined in [org.partiql.util].
-        return limitValue
-    }
-
-    private fun evalOffset(offsetThunk: ThunkEnv, env: Environment, offsetLocationMeta: SourceLocationMeta?): Long {
-        val offsetExprValue = offsetThunk(env)
-
-        if (offsetExprValue.type != ExprValueType.INT) {
-            err(
-                "OFFSET value was not an integer",
-                ErrorCode.EVALUATOR_NON_INT_OFFSET_VALUE,
-                errorContextFrom(offsetLocationMeta).also {
-                    it[Property.ACTUAL_TYPE] = offsetExprValue.type.toString()
-                },
-                internal = false
-            )
-        }
-
-        // `Number.toLong()` (used below) does *not* cause an overflow exception if the underlying [Number]
-        // implementation (i.e. Decimal or BigInteger) exceeds the range that can be represented by Longs.
-        // This can cause very confusing behavior if the user specifies a OFFSET value that exceeds
-        // Long.MAX_VALUE, because no results will be returned from their query.  That no overflow exception
-        // is thrown is not a problem as long as PartiQL's restriction of integer values to +/- 2^63 remains.
-        // We throw an exception here if the value exceeds the supported range (say if we change that
-        // restriction or if a custom [ExprValue] is provided which exceeds that value).
-        val offsetIonValue = offsetExprValue.ionValue as IonInt
-        if (offsetIonValue.integerSize == IntegerSize.BIG_INTEGER) {
-            err(
-                "IntegerSize.BIG_INTEGER not supported for OFFSET values",
-                ErrorCode.INTERNAL_ERROR,
-                errorContextFrom(offsetLocationMeta),
-                internal = true
-            )
-        }
-
-        val offsetValue = offsetExprValue.numberValue().toLong()
-
-        if (offsetValue < 0) {
-            err(
-                "negative OFFSET",
-                ErrorCode.EVALUATOR_NEGATIVE_OFFSET,
-                errorContextFrom(offsetLocationMeta),
-                internal = false
-            )
-        }
-
-        return offsetValue
     }
 
     @Suppress("UNUSED_PARAMETER")
