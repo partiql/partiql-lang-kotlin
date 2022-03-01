@@ -304,7 +304,7 @@ internal class CompilerPipelineImpl(
 
         val queryToCompile = transforms.transformStatement(preProcessedQuery)
 
-        val qp = createQueryPlanner(valueFactory.ion) {
+        val qp = createQueryPlanner(valueFactory.ion, allowUndefinedVariables = true) {
             // DL TODO: query planner will have to deal with dynamic lookup earlier than anticipated as a result of
             // DL TODO: this.  Many tests are failing because we aren't plumbed to know that they exist at compile time.
             ResolutionResult.Undefined

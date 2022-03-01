@@ -22,13 +22,13 @@ import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.ast.toPartiQlMetaContainer
-import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.domains.staticType
 import org.partiql.lang.domains.toBindingCase
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
+import org.partiql.lang.errors.UNBOUND_QUOTED_IDENTIFIER_HINT
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.like.PatternPart
 import org.partiql.lang.eval.like.executePattern
@@ -158,7 +158,8 @@ internal class EvaluatingCompiler(
         return when (expr) {
             is PartiqlPhysical.Expr.Lit -> compileLit(expr, metas)
             is PartiqlPhysical.Expr.Missing -> compileMissing(metas)
-            is PartiqlPhysical.Expr.Id -> compileId(expr, metas)
+            is PartiqlPhysical.Expr.DynamicId -> compileDynamicId(expr, metas)
+            is PartiqlPhysical.Expr.LocalId -> compileLocalId(expr, metas)
             is PartiqlPhysical.Expr.GlobalId -> compileGlobalId(expr)
             is PartiqlPhysical.Expr.SimpleCase -> compileSimpleCase(expr, metas)
             is PartiqlPhysical.Expr.SearchedCase -> compileSearchedCase(expr, metas)
@@ -226,7 +227,7 @@ internal class EvaluatingCompiler(
                     internal = false
                 )
             }
-            is PartiqlPhysical.Expr.MapValues -> TODO()
+            is PartiqlPhysical.Expr.MapValues -> TODO("mapValues expression")
         }
     }
 
@@ -840,13 +841,47 @@ internal class EvaluatingCompiler(
     private fun compileMissing(metas: MetaContainer): ThunkEnv =
         thunkFactory.thunkEnv(metas) { valueFactory.missingValue }
 
-    @Suppress("UNUSED_PARAMETER")
-    private fun compileId(expr: PartiqlPhysical.Expr.Id, metas: MetaContainer): ThunkEnv {
-        // DL TODO:  which customer(s) are using this and at which setting?  How do we account for this behavior?
-        when (compileOptions.undefinedVariable) {
-            UndefinedVariableBehavior.ERROR -> TODO()
-            UndefinedVariableBehavior.MISSING -> TODO()
+
+    private fun compileDynamicId(expr: PartiqlPhysical.Expr.DynamicId, metas: MetaContainer): ThunkEnv {
+        val bindingName = BindingName(expr.name.text, expr.case.toBindingCase())
+        val evalVariableReference = when (compileOptions.undefinedVariable) {
+            UndefinedVariableBehavior.ERROR ->
+                thunkFactory.thunkEnv(metas) { env ->
+                    when (val value = env.current[bindingName]) {
+                    null -> {
+                            val (errorCode, hint) = when (expr.case) {
+                                is PartiqlPhysical.CaseSensitivity.CaseSensitive ->
+                                    Pair(
+                                        ErrorCode.EVALUATOR_QUOTED_BINDING_DOES_NOT_EXIST,
+                                        " $UNBOUND_QUOTED_IDENTIFIER_HINT"
+                                    )
+                                is PartiqlPhysical.CaseSensitivity.CaseInsensitive ->
+                                    Pair(ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST, "")
+                            }
+                            throw EvaluationException(
+                                "No such binding: ${bindingName.name}.$hint",
+                                errorCode,
+                                errorContextFrom(metas).also {
+                                    it[Property.BINDING_NAME] = bindingName.name
+                                },
+                                internal = false
+                            )
+                        }
+                        else -> value
+                    }
+                }
+            UndefinedVariableBehavior.MISSING ->
+                thunkFactory.thunkEnv(metas) { env ->
+                    env.current[bindingName] ?: valueFactory.missingValue
+                }
         }
+
+        return evalVariableReference
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    private fun compileLocalId(expr: PartiqlPhysical.Expr.LocalId, metas: MetaContainer): ThunkEnv {
+        TODO()
     }
 
 
@@ -1299,7 +1334,7 @@ internal class EvaluatingCompiler(
     }
 
     @Suppress("UNUSED_PARAMETER")
-    private fun compileCallAgg(expr: PartiqlPhysical.Expr.CallAgg, metas: MetaContainer): ThunkEnv = TODO()
+    private fun compileCallAgg(expr: PartiqlPhysical.Expr.CallAgg, metas: MetaContainer): ThunkEnv = TODO("call_agg")
 
     private fun compilePath(expr: PartiqlPhysical.Expr.Path, metas: MetaContainer): ThunkEnv {
         val rootThunk = compileAstExpr(expr.root)

@@ -38,13 +38,15 @@ import org.partiql.planner.ResolutionResult
  */
 internal fun PartiqlLogical.Statement.toResolved(
     problemHandler: ProblemHandler,
-    globals: GlobalBindings
+    globals: GlobalBindings,
+    allowUndefinedVariables: Boolean = false
 ): PartiqlLogicalResolved.Statement {
     // Allocate a unique id for each `VarDecl`
     val planWithAllocatedVariables = VariableIdAllocator().transformStatement(this)
 
     // Transform to `partiql_logical_resolved` while resolving variables.
-    return LogicalToLogicalResolvedVisitorTransform(problemHandler, globals).transformStatement(planWithAllocatedVariables)
+    return LogicalToLogicalResolvedVisitorTransform(allowUndefinedVariables, problemHandler, globals)
+        .transformStatement(planWithAllocatedVariables)
 }
 
 private const val VARIABLE_ID_META_TAG = "\$variable_id"
@@ -73,12 +75,12 @@ private fun PartiqlLogical.Expr.Id.asGlobalId(uniqueId: IonElement): PartiqlLogi
 
 private fun PartiqlLogical.Expr.Id.asLocalId(index: Int): PartiqlLogicalResolved.Expr =
     PartiqlLogicalResolved.build {
-        id_(name, index.asPrimitive())
+        localId_(name, index.asPrimitive())
     }
 
 private fun PartiqlLogical.Expr.Id.asErrorId(): PartiqlLogicalResolved.Expr =
     PartiqlLogicalResolved.build {
-        id_(name, (-1).asPrimitive())
+        localId_(name, (-1).asPrimitive())
     }
 
 /**
@@ -91,6 +93,8 @@ private fun PartiqlLogical.Expr.Id.asErrorId(): PartiqlLogicalResolved.Expr =
 private data class LocalScope(val varDecls: List<PartiqlLogical.VarDecl>, val parent: LocalScope?)
 
 private data class LogicalToLogicalResolvedVisitorTransform(
+    /** If set to `true`, do not log errors about undefined variables.  Leave `(id <name> <case>  */
+    val allowUndefinedVariables: Boolean,
     /** Where to send error reports. */
     private val problemHandler: ProblemHandler,
     /** If a variable is not found using [currentScope], we will attempt to locate the binding here instead. */
@@ -156,7 +160,7 @@ private data class LogicalToLogicalResolvedVisitorTransform(
         return findBindings(currentScope)
     }
 
-    /** Resolves the `(id ...)` node to a local or global variable. */
+    /** Resolves the `(id ...)` node to a local, global, or dynamic variable. */
     override fun transformExprId(node: PartiqlLogical.Expr.Id): PartiqlLogicalResolved.Expr {
         val bindingName = BindingName(node.name.text, node.case.toBindingCase())
 
@@ -183,15 +187,22 @@ private data class LogicalToLogicalResolvedVisitorTransform(
                 node.asLocalId(resolutionResult.index)
             }
             ResolutionResult.Undefined -> {
-                node.asErrorId().also {
-                    problemHandler.handleProblem(
-                        Problem(
-                            node.metas.sourceLocation ?: error("MetaContainer is missing SourceLocationMeta"),
-                            PlanningProblemDetails.UndefinedVariable(
-                                node.name.text,
-                                node.case is PartiqlLogical.CaseSensitivity.CaseSensitive)
+                if(this.allowUndefinedVariables) {
+                    // DL TODO: this currently only works for dynamically resolved global variables.
+                    // DL TODO: need to include search expressions.
+                    node.asDynamicId()
+                } else {
+                    node.asErrorId().also {
+                        problemHandler.handleProblem(
+                            Problem(
+                                node.metas.sourceLocation ?: error("MetaContainer is missing SourceLocationMeta"),
+                                PlanningProblemDetails.UndefinedVariable(
+                                    node.name.text,
+                                    node.case is PartiqlLogical.CaseSensitivity.CaseSensitive
+                                )
+                            )
                         )
-                    )
+                    }
                 }
             }
         }
@@ -249,5 +260,11 @@ private data class LogicalToLogicalResolvedVisitorTransform(
                 // note: `(filter ...)` does not itself produce new bindings so no need to check for duplicates.
             }
         }
+
+    private fun PartiqlLogical.Expr.Id.asDynamicId(): PartiqlLogicalResolved.Expr =
+        PartiqlLogicalResolved.build {
+            dynamicId_(name, transformCaseSensitivity(case))
+        }
+
 }
 

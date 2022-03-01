@@ -17,10 +17,13 @@ import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.planner.createFakeGlobalBindings
 import org.partiql.planner.problem
 
+// DL TODO: add some tests that allow unresolved variables.
+
 class LogicalToLogicalResolvedVisitorTransformTests {
     data class TestCase(
         val sql: String,
-        val expectation: Expectation
+        val expectation: Expectation,
+        val allowUndefinedVariables: Boolean = false
     )
 
     sealed class Expectation {
@@ -52,7 +55,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
 
         when(tc.expectation) {
             is Expectation.Success -> {
-                val resolved = algebra.toResolved(problemHandler, globalBindings)
+                val resolved = algebra.toResolved(problemHandler, globalBindings, tc.allowUndefinedVariables)
                 assertEquals(emptyList<Problem>(), problemHandler.problems)
                 assertEquals(tc.expectation.expectedAlgebra, resolved)
                 assertEquals(emptyList<Problem>(), problemHandler.problems, "Expected success, but there were problems!")
@@ -74,8 +77,8 @@ class LogicalToLogicalResolvedVisitorTransformTests {
             // Case-insensitive resolution of global variables...
             TestCase(
                 // all uppercase
-                "FOO",
-                Expectation.Success(PartiqlLogicalResolved.build { query(globalId("FOO", ionSymbol("fake_uid_for_foo"))) })
+                sql = "FOO",
+                expectation = Expectation.Success(PartiqlLogicalResolved.build { query(globalId("FOO", ionSymbol("fake_uid_for_foo"))) })
             ),
             TestCase(
                 // all lower case
@@ -116,7 +119,18 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 // mixed case
                 "UpPeRcAsE_fOo",
                 Expectation.Success(PartiqlLogicalResolved.build { query(globalId("UpPeRcAsE_fOo", ionSymbol("fake_uid_for_UPPERCASE_FOO"))) })
-            )
+            ),
+
+            // undefined variables allowed
+
+            TestCase(
+                // undefined allowed (case-insensitive)
+                """ some_undefined """,
+                Expectation.Success(PartiqlLogicalResolved.build {
+                    query(dynamicId("some_undefined", caseInsensitive()))
+                }),
+                allowUndefinedVariables = true
+            ),
         )
     }
 
@@ -186,6 +200,15 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 // undefined
                 """ FOOBAR """,
                 Expectation.Problems(problem(1, 2, PlanningProblemDetails.UndefinedVariable("FOOBAR", caseSensitive = false)))
+            ),
+
+            TestCase(
+                // undefined allowed (case-sensitive)
+                """ "some_undefined" """,
+                Expectation.Success(PartiqlLogicalResolved.build {
+                    query(dynamicId("some_undefined", caseSensitive()))
+                }),
+                allowUndefinedVariables = true
             )
         )
     }
@@ -202,9 +225,9 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 Expectation.Success(PartiqlLogicalResolved.build {
                     query(
                         mapValues(
-                            id("FOO", 0),
+                            localId("FOO", 0),
                             filter(
-                                id("FOO", 0),
+                                localId("FOO", 0),
                                 scan(lit(ionInt(1)), varDecl("foo", 0))
                             )
                         )
@@ -217,9 +240,9 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 Expectation.Success(PartiqlLogicalResolved.build {
                     query(
                         mapValues(
-                            id("foo", 0),
+                            localId("foo", 0),
                             filter(
-                                id("foo", 0),
+                                localId("foo", 0),
                                 scan(lit(ionInt(1)), varDecl("foo", 0))
                             )
                         )
@@ -232,9 +255,9 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 Expectation.Success(PartiqlLogicalResolved.build {
                     query(
                         mapValues(
-                            id("FoO", 0),
+                            localId("FoO", 0),
                             filter(
-                                id("fOo", 0),
+                                localId("fOo", 0),
                                 scan(lit(ionInt(1)), varDecl("foo", 0))
                             )
                         )
@@ -274,9 +297,9 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 Expectation.Success(PartiqlLogicalResolved.build {
                     query(
                         mapValues(
-                            id("foo", 0),
+                            localId("foo", 0),
                             filter(
-                                id("foo", 0),
+                                localId("foo", 0),
                                 scan(lit(ionInt(1)), varDecl("foo", 0))
                             )
                         )
@@ -366,7 +389,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                     PartiqlLogicalResolved.build {
                         query(
                             mapValues(
-                                id(varName, expectedIndex.toLong()),
+                                localId(varName, expectedIndex.toLong()),
                                 scan(
                                     globalId("foo", ionSymbol("fake_uid_for_foo")),
                                     varDecl("a", 0),
@@ -393,10 +416,10 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                     PartiqlLogicalResolved.build {
                         query(
                             mapValues(
-                                id("b", 0),
+                                localId("b", 0),
                                 filter(
                                     eq(
-                                        path(id("b", 0), pathExpr(lit(ionString("primaryKey")), caseInsensitive())),
+                                        path(localId("b", 0), pathExpr(lit(ionString("primaryKey")), caseInsensitive())),
                                         lit(ionInt(42))
                                     ),
                                     scan(
@@ -419,7 +442,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                     PartiqlLogicalResolved.build {
                         query(
                             mapValues(
-                                id("shadow", 0), // <-- local variable f
+                                localId("shadow", 0), // <-- local variable f
                                 scan(
                                     expr = globalId(name = "shadow", uniqueId = ionSymbol("fake_uid_for_shadow")), // <-- global variable f.
                                     asDecl = varDecl("shadow", 0),

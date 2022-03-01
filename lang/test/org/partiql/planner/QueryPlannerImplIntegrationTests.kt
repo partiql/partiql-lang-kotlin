@@ -22,7 +22,7 @@ class QueryPlannerImplIntegrationTests {
 
     @Test
     fun `happy path`() {
-        val qp = createQueryPlanner(ion, globalBindings)
+        val qp = createQueryPlanner(ion, allowUndefinedVariables = true, globalBindings)
         val result = qp.plan("SELECT c.* FROM Customer AS c WHERE c.primaryKey = 42")
         println(result)
 
@@ -32,11 +32,11 @@ class QueryPlannerImplIntegrationTests {
                 physicalPlan = PartiqlPhysical.build {
                     query(
                         mapValues(
-                            exp = id("c", 0),
+                            exp = localId("c", 0),
                             query = filter(
                                 i = impl("default"),
                                 predicate = eq(
-                                    operands0 = path(id("c", 0), pathExpr(lit(ionString("primaryKey")), caseInsensitive())),
+                                    operands0 = path(localId("c", 0), pathExpr(lit(ionString("primaryKey")), caseInsensitive())),
                                     operands1 = lit(ionInt(42))
                                 ),
                                 source = scan(
@@ -55,7 +55,7 @@ class QueryPlannerImplIntegrationTests {
 
     @Test
     fun `undefined variable`() {
-        val qp = createQueryPlanner(ion, globalBindings)
+        val qp = createQueryPlanner(ion, allowUndefinedVariables = false, globalBindings)
         val result = qp.plan("SELECT undefined.* FROM Customer AS c")
         assertEquals(
             PlanningResult.Error(

@@ -191,7 +191,7 @@ class EvaluatingCompilerNAryIntOverflowTests : EvaluatorTestBase() {
             ).transformStatement(astStatement)
         }
 
-        val qp = createQueryPlanner(ion, defaultEnv.globalBindings)
+        val qp = createQueryPlanner(ion, allowUndefinedVariables = true, defaultEnv.globalBindings)
         val planningResult = qp.plan(transformedAst) as? PlanningResult.Success ?: error("Planning should not fail")
         val expression = compiler.compile(
             planningResult.physicalPlan

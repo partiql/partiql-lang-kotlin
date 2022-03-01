@@ -76,6 +76,7 @@ internal fun IonResultTestCase.runTestCase(
     compileOptionsBlock: (CompileOptions.Builder.() -> Unit)? = null
 ) {
     fun runTheTest() {
+        println("Running test '${this.name}'")
         val parser = SqlParser(ION)
 
         val astStatement = assertDoesNotThrow("Parsing the sql under test should not throw for test \"${this.name}\"") {
@@ -100,7 +101,7 @@ internal fun IonResultTestCase.runTestCase(
         }
 
         val plannerResult = assertDoesNotThrow("Planning the query should not throw for test \"${this.name}\"") {
-            val qp = createQueryPlanner(ION, globalBindings)
+            val qp = createQueryPlanner(ION, allowUndefinedVariables = true, globalBindings)
             qp.plan(astStatement)
         }
 

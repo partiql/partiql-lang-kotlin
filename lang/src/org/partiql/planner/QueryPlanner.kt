@@ -56,8 +56,9 @@ sealed class PlanningResult {
  */
 fun createQueryPlanner(
     ion: IonSystem,
+    allowUndefinedVariables: Boolean = false,
     globals: GlobalBindings
-): QueryPlanner = QueryPlannerImpl(ion, globals)
+): QueryPlanner = QueryPlannerImpl(ion, allowUndefinedVariables, globals)
 
 
 /**
@@ -69,7 +70,8 @@ fun createQueryPlanner(
  * - Convert the AST to a logical plan.
  * - Resolve all global and local variables in the logical plan, assigning unique indexes to local variables
  * and calling [GlobalBindings.resolve] of [globals] to obtain PartiQL-service specific unique identifiers of global
- * values such as tables.
+ * values such as tables.  If [allowUndefinedVariables] is set to true, undefined variables will not result in an error
+ * and will remain unmodified.
  * - Convert the AST to a physical plan with `(impl default)` operators.
  *
  * Future work:
@@ -81,6 +83,7 @@ fun createQueryPlanner(
  */
 private class QueryPlannerImpl(
     private val ion: IonSystem,
+    val allowUndefinedVariables: Boolean,
     private val globals: GlobalBindings
 ) : QueryPlanner {
 
@@ -115,7 +118,7 @@ private class QueryPlannerImpl(
 
         // logical plan -> resolved logical plan
         val problemHandler = ProblemCollector()
-        val resolvedLogicalPlan = logicalPlan.toResolved(problemHandler, globals)
+        val resolvedLogicalPlan = logicalPlan.toResolved(problemHandler, globals, allowUndefinedVariables)
         // If there are unresolved variables after attempting to resolve variables, then we can't proceed.
         if (problemHandler.hasErrors) {
             return PlanningResult.Error(problemHandler.problems)

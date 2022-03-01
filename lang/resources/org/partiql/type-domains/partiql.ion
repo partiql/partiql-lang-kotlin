@@ -558,6 +558,13 @@ may then be further optimized by selecting better implementations of each operat
         (with expr
             (exclude id)
             (include
+                 // looks up `name` with the specified `case` in each of the `search` expressions (if it results in a
+                 // struct) or the evaluation-time global scope.
+                 // DL TODO: needs longer doc?
+                 // DL TODO: need deep consideration of whether or not global_id and dynamic_id should actually be
+                 // DL TODO: combined since dynamic_id with no search expressions extremely similar to global_id.
+                 (dynamic_id name::symbol case::case_sensitivity search::(* expr 0))
+
                 // A resolved reference to a variable that was defined within a query.  Otherwise known as a local
                 // variable. "Resolved" means that the variable is guaranteed to exist and we know its unique index.
                 // From this domain permutation forward, `id` always refers to a local variable, whereas previously it
@@ -566,7 +573,7 @@ may then be further optimized by selecting better implementations of each operat
                 // - `name`: the original name of the variable, kept mostly just for error reporting purposes.
                 // - `index`: the index of the `var_decl` that this variable refers to, i.e. this always corresponds to
                 // the `var_decl` with the same index.
-                (id name::symbol index::int)
+                (local_id name::symbol index::int)
 
                 // Global variable reference, like `id`, typically represents a global variable--typically a
                 // database table although it can actually be bound to any value.
