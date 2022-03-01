@@ -28,9 +28,7 @@ fun PartiqlLogical.Builder.pathExpr(exp: PartiqlLogical.Expr) =
 fun List<IonElement>.asAnyElement() =
     this.map { it.asAnyElement() }
 
-
 val MetaContainer.staticType: StaticTypeMeta? get() = this[StaticTypeMeta.TAG] as StaticTypeMeta?
-
 
 /**
  * Returns a [MetaContainer] with *only* the source location of the receiver [MetaContainer], if present.

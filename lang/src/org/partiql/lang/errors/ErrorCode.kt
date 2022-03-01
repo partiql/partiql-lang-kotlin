@@ -631,7 +631,7 @@ enum class ErrorCode(
                 "got: ${errorContext?.get(Property.ACTUAL_ARGUMENT_TYPES) ?: UNKNOWN}"
     },
 
-    SEMANTIC_INFERENCER_ERROR(
+    SEMANTIC_PROBLEM(
         ErrorCategory.SEMANTIC,
         LOCATION + setOf(Property.MESSAGE),
         ""

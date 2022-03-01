@@ -21,7 +21,7 @@ import com.amazon.ion.IonSystem
 import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
-import com.amazon.ionelement.api.metaContainerOf
+import org.partiql.lang.util.metaContainerOf
 import com.amazon.ionelement.api.toIonElement
 import org.partiql.lang.ast.AstSerializer
 import org.partiql.lang.ast.AstVersion
@@ -36,7 +36,6 @@ import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.SqlDataType
 import org.partiql.lang.ast.toExprNode
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
@@ -254,7 +253,7 @@ class SqlParser(
             emptyMetaContainer()
         } else {
             val sourceLocation = toSourceLocation()
-            metaContainerOf(Pair(sourceLocation.tag, sourceLocation))
+            metaContainerOf(sourceLocation)
         }
 
     private fun ParseNode.malformedIfNotEmpty(unconsumedChildren: List<ParseNode>) {

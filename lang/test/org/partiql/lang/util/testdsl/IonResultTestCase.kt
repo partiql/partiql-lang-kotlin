@@ -1,17 +1,24 @@
 package org.partiql.lang.util.testdsl
 
+import com.amazon.ionelement.api.ionSymbol
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
-import org.partiql.lang.CompilerPipeline
+import org.junit.jupiter.api.fail
 import org.partiql.lang.ION
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EVALUATOR_TEST_SUITE
+import org.partiql.lang.eval.EvaluatingCompiler
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.builtins.createBuiltinFunctions
 import org.partiql.lang.mockdb.MockDb
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.assertIonEquals
+import org.partiql.planner.GlobalBindings
+import org.partiql.planner.PlanningResult
+import org.partiql.planner.ResolutionResult
+import org.partiql.planner.createQueryPlanner
 
 /** Defines a test case for query evaluation. */
 data class IonResultTestCase(
@@ -62,12 +69,11 @@ data class IonResultTestCase(
         }
 }
 
+
 internal fun IonResultTestCase.runTestCase(
     valueFactory: ExprValueFactory,
     db: MockDb,
-    compileOptionsBlock: (CompileOptions.Builder.() -> Unit)? = null,
-    pipelineBlock: (CompilerPipeline.Builder.() -> Unit)? = null
-
+    compileOptionsBlock: (CompileOptions.Builder.() -> Unit)? = null
 ) {
     fun runTheTest() {
         val parser = SqlParser(ION)
@@ -82,18 +88,42 @@ internal fun IonResultTestCase.runTestCase(
             expectedIonResult?.let { ION.singleValue(it) }
         }
 
-        val modifiedCompileOptions = when (compileOptionsBlock) {
+        val globalBindings = GlobalBindings { bindingName ->
+            val result = db.globals.entries.firstOrNull { bindingName.isEquivalentTo(it.key) }
+            if(result != null) {
+                // Note that the unique id is set to result.key (which is the actual name of the variable)
+                // which *might* have different letter case than the [bindingName].
+                ResolutionResult.GlobalVariable(ionSymbol(result.key))
+            } else {
+                ResolutionResult.Undefined
+            }
+        }
+
+        val plannerResult = assertDoesNotThrow("Planning the query should not throw for test \"${this.name}\"") {
+            val qp = createQueryPlanner(ION, globalBindings)
+            qp.plan(astStatement)
+        }
+
+        // TODO:  should we be doing any assertions on the planner warnings? (currently we don't issue any)
+
+        val plannedQuery = when(plannerResult) {
+            is PlanningResult.Success -> plannerResult.physicalPlan
+            is PlanningResult.Error -> fail("Failed to plan query for tests \"${this.name}\"")
+        }
+
+        val modifiedCompileOptions = when(compileOptionsBlock) {
             null -> compileOptions
             else -> CompileOptions.build { compileOptionsBlock() }
         }
 
-        val pipeline = CompilerPipeline.build(ION) pipelineBlock@{
-            compileOptions(modifiedCompileOptions)
-            pipelineBlock?.invoke(this)
-        }
-
         val expression = assertDoesNotThrow("Compiling the query should not throw for test \"${this.name}\"") {
-            pipeline.compile(astStatement)
+            EvaluatingCompiler(
+                valueFactory = valueFactory,
+                functions = createBuiltinFunctions(valueFactory).associateBy { it.signature.name },
+                customTypedOpParameters = emptyMap(),
+                procedures = emptyMap(),
+                compileOptions = modifiedCompileOptions
+            ).compile(plannedQuery)
         }
 
         val session = EvaluationSession.build {

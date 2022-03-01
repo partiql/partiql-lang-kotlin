@@ -19,7 +19,7 @@ import com.amazon.ionelement.api.ionInt
 import org.junit.Test
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.domains.metaContainerOf
+import org.partiql.lang.util.metaContainerOf
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
