@@ -44,10 +44,8 @@ import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.types.UnsupportedTypeCheckException
 import org.partiql.lang.types.toTypedOpParameter
-import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.codePointSequence
-import org.partiql.lang.util.compareTo
 import org.partiql.lang.util.div
 import org.partiql.lang.util.isZero
 import org.partiql.lang.util.minus
@@ -89,6 +87,7 @@ internal class PartiqlPhysicalCompiler(
     private val procedures: Map<String, StoredProcedure>,
     private val compileOptions: CompileOptions = CompileOptions.standard()
 ) {
+    private val errorSignaler = compileOptions.typingMode.createErrorSignaler(valueFactory)
     private val thunkFactory = compileOptions.typingMode.createThunkFactory(compileOptions, valueFactory)
 
     init {
@@ -1742,3 +1741,4 @@ internal class PartiqlPhysicalCompiler(
             ordering
         )
 }
+

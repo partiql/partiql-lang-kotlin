@@ -2,6 +2,7 @@ package org.partiql.planner
 
 import com.amazon.ion.IonSystem
 import org.partiql.lang.ast.SourceLocationMeta
+import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemCollector
@@ -20,6 +21,12 @@ interface QueryPlanner {
      * Parses a query and transforms it all the way to a [PartiqlPhysical.Statement] that is ready for compilation.
      */
     fun plan(sql: String): PlanningResult
+
+    /**
+     * Transforms the specified query in the form of a [PartiqlAst.Statement], transforming all the way to a
+     * [PartiqlPhysical.Statement] that is ready for compilation.
+     */
+    fun plan(sql: PartiqlAst.Statement): PlanningResult
 }
 
 sealed class PlanningResult {
@@ -93,9 +100,12 @@ private class QueryPlannerImpl(
             return PlanningResult.Error(listOf(problem))
         }
 
-        //
+        return plan(ast)
+    }
+
+    override fun plan(ast: PartiqlAst.Statement): PlanningResult {
+
         // Now run the AST thru each pass until we arrive at the physical algebra.
-        //
 
         // Normalization--synthesizes any unspecified `AS` aliases, converts `SELECT *` to `SELECT f.*[, ...]` ...
         val normalizedAst = ast.normalize()
