@@ -41,7 +41,7 @@ class QueryPlannerImplIntegrationTests {
                                 ),
                                 source = scan(
                                     i = impl("default"),
-                                    expr = globalId("Customer", ionSymbol("fake_uid_for_Customer")),
+                                    expr = globalId("Customer", "fake_uid_for_Customer"),
                                     asDecl = varDecl("c", 0)
                                 )
                             )

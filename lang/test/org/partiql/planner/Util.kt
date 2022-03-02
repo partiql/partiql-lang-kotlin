@@ -15,7 +15,7 @@ fun createFakeGlobalBindings(vararg globalVariableNames: String) =
         val matches = globalVariableNames.filter { bindingName.isEquivalentTo(it) }
         when(matches.size) {
             0 -> ResolutionResult.Undefined
-            else -> ResolutionResult.GlobalVariable(ionSymbol("fake_uid_for_" + matches.first()))
+            else -> ResolutionResult.GlobalVariable("fake_uid_for_" + matches.first())
         }
     }
 

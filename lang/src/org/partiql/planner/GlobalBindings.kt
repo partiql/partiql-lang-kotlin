@@ -7,10 +7,10 @@ import org.partiql.lang.eval.BindingName
 /** Indicates the result of an attempt to resolve a global binding. */
 sealed class ResolutionResult {
     /**
-     * A success case, indicates the [uniqueId] of the only possible match to the [BindingName] in the global scope.
-     * Typically, this is a database table.
+     * A success case, indicates the [uniqueId] of the match to the [BindingName] in the global scope.
+     * Typically, this is defined by the storage layer.
      */
-    data class GlobalVariable(val uniqueId: IonElement) : ResolutionResult()
+    data class GlobalVariable(val uniqueId: String) : ResolutionResult()
 
     /**
      * A success case, indicates the [index] of the only possible match to the [BindingName] in a local lexical scope.

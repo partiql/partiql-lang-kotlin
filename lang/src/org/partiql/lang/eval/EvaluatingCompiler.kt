@@ -60,6 +60,10 @@ import org.partiql.lang.util.unaryMinus
 import java.math.BigDecimal
 import java.util.*
 
+internal interface ExprCompiler {
+    fun compile(expr: PartiqlPhysical.Expr): ThunkEnv
+}
+
 /**
  * A basic compiler that converts an instance of [PartiqlPhysical] to an [Expression].
  *
@@ -87,7 +91,7 @@ internal class EvaluatingCompiler(
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val procedures: Map<String, StoredProcedure>,
     private val compileOptions: CompileOptions = CompileOptions.standard()
-) {
+): ExprCompiler {
     private val errorSignaler = compileOptions.typingMode.createErrorSignaler(valueFactory)
     private val thunkFactory = compileOptions.typingMode.createThunkFactory(compileOptions, valueFactory)
 
@@ -126,17 +130,17 @@ internal class EvaluatingCompiler(
 
         return object : Expression {
             override fun eval(session: EvaluationSession): ExprValue {
-
                 val env = Environment(
                     session = session,
-                    locals = session.globals,
-                    current = session.globals
+                    //registers = (0..registerCount).map { valueFactory.missingValue }
                 )
 
                 return thunk(env)
             }
         }
     }
+
+    override fun compile(expr: PartiqlPhysical.Expr): ThunkEnv = this.compileAstExpr(expr)
 
     /**
      * Compiles the specified [PartiqlPhysical.Statement] into a [ThunkEnv].
@@ -227,7 +231,18 @@ internal class EvaluatingCompiler(
                     internal = false
                 )
             }
-            is PartiqlPhysical.Expr.MapValues -> TODO("mapValues expression")
+            is PartiqlPhysical.Expr.MapValues -> compileMapValues(expr)
+        }
+    }
+
+
+
+    private fun compileMapValues(expr: PartiqlPhysical.Expr.MapValues): ThunkEnv {
+        val mapThunk = compileAstExpr(expr.exp)
+        val bexprThunk = EvaluatingBexprCompiler(this, thunkFactory).convert(expr.query)
+
+        return thunkFactory.thunkEnv(expr.metas) {
+            TODO()
         }
     }
 
@@ -847,7 +862,7 @@ internal class EvaluatingCompiler(
         val evalVariableReference = when (compileOptions.undefinedVariable) {
             UndefinedVariableBehavior.ERROR ->
                 thunkFactory.thunkEnv(metas) { env ->
-                    when (val value = env.current[bindingName]) {
+                    when (val value = env.session.globals[bindingName]) {
                     null -> {
                             val (errorCode, hint) = when (expr.case) {
                                 is PartiqlPhysical.CaseSensitivity.CaseSensitive ->
@@ -872,7 +887,7 @@ internal class EvaluatingCompiler(
                 }
             UndefinedVariableBehavior.MISSING ->
                 thunkFactory.thunkEnv(metas) { env ->
-                    env.current[bindingName] ?: valueFactory.missingValue
+                    env.session.globals[bindingName] ?: valueFactory.missingValue
                 }
         }
 
@@ -885,9 +900,13 @@ internal class EvaluatingCompiler(
     }
 
 
-    private fun compileGlobalId(expr: PartiqlPhysical.Expr.GlobalId): (Environment) -> ExprValue {
-        TODO()
-    }
+    private fun compileGlobalId(expr: PartiqlPhysical.Expr.GlobalId): ThunkEnv =
+        thunkFactory.thunkEnv(expr.metas) { env ->
+            // DL TODO: ok, this *really* makes me think dynamic_id and global_id should really be the same node.
+            env.session.globals[BindingName(expr.uniqueId.text, BindingCase.SENSITIVE)]
+                ?: TODO("undefined global_id")
+        }
+
 
     private fun compileParameter(expr: PartiqlPhysical.Expr.Parameter, metas: MetaContainer): ThunkEnv {
         val ordinal = expr.index.value.toInt()
@@ -906,7 +925,6 @@ internal class EvaluatingCompiler(
                     internal = false
                 )
             }
-
             params[index]
         }
     }

@@ -14,64 +14,22 @@
 
 package org.partiql.lang.eval
 
-import java.util.TreeMap
-
 /**
  * The environment for execution.
  *
- * @param locals The current local bindings.
- * @param current The current bindings to use for evaluation which is generally
- *                `globals` or `locals` depending on the context.
+ * TODO: would love to make this class `internal`, but it is currently an argument to `ExprFunction.call`.  That's
+ * TODO: a big refactor.
+ *
  * @param session The evaluation session.
- * @param groups The map of [Group]s that is currently being built during query execution.
+ * @param registers An array of registers containing [ExprValue]s needed during query execution.  Generally, there is
+ * one register per local variable.  When query execution begins, every register should be set to `MISSING`.
  */
-internal data class Environment(
-    internal val locals: Bindings<ExprValue>,
-    val current: Bindings<ExprValue> = locals,
+class Environment(
     val session: EvaluationSession,
-    val groups: MutableMap<ExprValue, Group> = createGroupMap(),
-    val currentGroup: Group? = null
+    val inputBindingsMap: BindingsMap = newBindingsMap()
 ) {
 
     companion object {
-        fun standard() = Environment(locals = Bindings.empty(), session = EvaluationSession.standard())
-
-        private fun createGroupMap() = TreeMap<ExprValue, Group>(DEFAULT_COMPARATOR)
+        fun standard() = Environment(session = EvaluationSession.standard())
     }
-
-    internal enum class CurrentMode {
-        LOCALS,
-        GLOBALS_THEN_LOCALS
-    }
-
-    /** Constructs a new nested environment with the locals being the [current] bindings. */
-    internal fun nest(
-        newLocals: Bindings<ExprValue>,
-        currentMode: CurrentMode = CurrentMode.LOCALS,
-        newGroup: Group? = currentGroup
-    ): Environment {
-
-        val derivedLocals = newLocals.delegate(locals)
-        val newCurrent = when (currentMode) {
-            CurrentMode.LOCALS -> derivedLocals
-            CurrentMode.GLOBALS_THEN_LOCALS -> session.globals.delegate(derivedLocals)
-        }
-        return copy(locals = derivedLocals, current = newCurrent, currentGroup = newGroup)
-    }
-
-    /**
-     * Creates a new environment with the same [Bindings] and session but with empty grouping state.
-     * This is what allows GROUP BY to work in sub-queries without running into any grouping state
-     * from the outer query.
-     */
-    internal fun nestQuery() = copy(
-        currentGroup = null,
-        groups = createGroupMap()
-    )
-
-    /** Constructs a copy of this environment with the locals being the current bindings. */
-    internal fun flipToLocals(): Environment = copy(current = locals)
-
-    /** Constructs a copy of this environment with the [globals] being the current bindings. */
-    internal fun flipToGlobalsFirst(): Environment = copy(current = session.globals.delegate(locals))
 }

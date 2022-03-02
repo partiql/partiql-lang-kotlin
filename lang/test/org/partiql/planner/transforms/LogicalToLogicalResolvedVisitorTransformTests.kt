@@ -78,17 +78,17 @@ class LogicalToLogicalResolvedVisitorTransformTests {
             TestCase(
                 // all uppercase
                 sql = "FOO",
-                expectation = Expectation.Success(PartiqlLogicalResolved.build { query(globalId("FOO", ionSymbol("fake_uid_for_foo"))) })
+                expectation = Expectation.Success(PartiqlLogicalResolved.build { query(globalId("FOO", "fake_uid_for_foo")) })
             ),
             TestCase(
                 // all lower case
                 "foo",
-                Expectation.Success(PartiqlLogicalResolved.build { query(globalId("foo", ionSymbol("fake_uid_for_foo"))) })
+                Expectation.Success(PartiqlLogicalResolved.build { query(globalId("foo", "fake_uid_for_foo")) })
             ),
             TestCase(
                 // mixed case
                 "fOo",
-                Expectation.Success(PartiqlLogicalResolved.build { query(globalId("fOo", ionSymbol("fake_uid_for_foo"))) })
+                Expectation.Success(PartiqlLogicalResolved.build { query(globalId("fOo", "fake_uid_for_foo")) })
             ),
             TestCase(
                 // undefined
@@ -101,24 +101,24 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 // ambiguous
                 """ case_ambiguous_foo """,
                 // In this case, we resolve to the first matching binding.  This is consistent with Postres 9.6.
-                Expectation.Success(PartiqlLogicalResolved.build { query(globalId("case_ambiguous_foo", ionSymbol("fake_uid_for_case_AMBIGUOUS_foo"))) })
+                Expectation.Success(PartiqlLogicalResolved.build { query(globalId("case_ambiguous_foo", "fake_uid_for_case_AMBIGUOUS_foo")) })
             ),
 
             // Case-insensitive resolution of global variables with all uppercase letters...
             TestCase(
                 // all uppercase
                 "UPPERCASE_FOO",
-                Expectation.Success(PartiqlLogicalResolved.build { query(globalId("UPPERCASE_FOO", ionSymbol("fake_uid_for_UPPERCASE_FOO"))) })
+                Expectation.Success(PartiqlLogicalResolved.build { query(globalId("UPPERCASE_FOO", "fake_uid_for_UPPERCASE_FOO")) })
             ),
             TestCase(
                 // all lower case
                 "uppercase_foo",
-                Expectation.Success(PartiqlLogicalResolved.build { query(globalId("uppercase_foo", ionSymbol("fake_uid_for_UPPERCASE_FOO"))) })
+                Expectation.Success(PartiqlLogicalResolved.build { query(globalId("uppercase_foo", "fake_uid_for_UPPERCASE_FOO")) })
             ),
             TestCase(
                 // mixed case
                 "UpPeRcAsE_fOo",
-                Expectation.Success(PartiqlLogicalResolved.build { query(globalId("UpPeRcAsE_fOo", ionSymbol("fake_uid_for_UPPERCASE_FOO"))) })
+                Expectation.Success(PartiqlLogicalResolved.build { query(globalId("UpPeRcAsE_fOo", "fake_uid_for_UPPERCASE_FOO")) })
             ),
 
             // undefined variables allowed
@@ -148,7 +148,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
             TestCase(
                 // all lowercase
                 """ "foo" """,
-                Expectation.Success(PartiqlLogicalResolved.build { query(globalId("foo", ionSymbol("fake_uid_for_foo"))) })
+                Expectation.Success(PartiqlLogicalResolved.build { query(globalId("foo", "fake_uid_for_foo")) })
             ),
             TestCase(
                 // mixed
@@ -160,7 +160,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
             TestCase(
                 // all uppercase
                 """ "UPPERCASE_FOO" """,
-                Expectation.Success(PartiqlLogicalResolved.build { query(globalId("UPPERCASE_FOO", ionSymbol("fake_uid_for_UPPERCASE_FOO"))) })
+                Expectation.Success(PartiqlLogicalResolved.build { query(globalId("UPPERCASE_FOO", "fake_uid_for_UPPERCASE_FOO")) })
             ),
             TestCase(
                 // all lowercase
@@ -176,24 +176,14 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 // not ambiguous when case-sensitive
                 "\"case_AMBIGUOUS_foo\"",
                 Expectation.Success(PartiqlLogicalResolved.build {
-                    query(
-                        globalId(
-                            "case_AMBIGUOUS_foo",
-                            ionSymbol("fake_uid_for_case_AMBIGUOUS_foo")
-                        )
-                    )
+                    query(globalId("case_AMBIGUOUS_foo", "fake_uid_for_case_AMBIGUOUS_foo"))
                 })
             ),
             TestCase(
                 // not ambiguous when case-sensitive
                 "\"case_ambiguous_FOO\"",
                 Expectation.Success(PartiqlLogicalResolved.build {
-                    query(
-                        globalId(
-                            "case_ambiguous_FOO",
-                            ionSymbol("fake_uid_for_case_ambiguous_FOO")
-                        )
-                    )
+                    query(globalId("case_ambiguous_FOO", "fake_uid_for_case_ambiguous_FOO"))
                 })
             ),
             TestCase(
@@ -391,7 +381,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                             mapValues(
                                 localId(varName, expectedIndex.toLong()),
                                 scan(
-                                    globalId("foo", ionSymbol("fake_uid_for_foo")),
+                                    globalId("foo", "fake_uid_for_foo"),
                                     varDecl("a", 0),
                                     varDecl("b", 1),
                                     varDecl("c", 2)
@@ -423,7 +413,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                                         lit(ionInt(42))
                                     ),
                                     scan(
-                                        expr = globalId(name = "bar", uniqueId = ionSymbol("fake_uid_for_bar")),
+                                        expr = globalId(name = "bar", uniqueId = "fake_uid_for_bar"),
                                         asDecl = varDecl("b", 0),
                                         atDecl = null,
                                         byDecl = null
@@ -444,7 +434,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                             mapValues(
                                 localId("shadow", 0), // <-- local variable f
                                 scan(
-                                    expr = globalId(name = "shadow", uniqueId = ionSymbol("fake_uid_for_shadow")), // <-- global variable f.
+                                    expr = globalId(name = "shadow", uniqueId = "fake_uid_for_shadow"), // <-- global variable f.
                                     asDecl = varDecl("shadow", 0),
                                     atDecl = null,
                                     byDecl = null

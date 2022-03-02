@@ -23,7 +23,7 @@ class LogicalResolvedToPhysicalVisitorTransformTests {
             TestCase(
                 PartiqlLogicalResolved.build {
                     scan(
-                        expr = globalId("foo", ionSymbol("foo")),
+                        expr = globalId("foo", "foo"),
                         asDecl = varDecl("b", 0),
                         atDecl = varDecl("c", 1),
                         byDecl = varDecl("d", 2)
@@ -32,7 +32,7 @@ class LogicalResolvedToPhysicalVisitorTransformTests {
                 PartiqlPhysical.build {
                     scan(
                         i = DEFAULT_IMPL,
-                        expr = globalId("foo", ionSymbol("foo")),
+                        expr = globalId("foo", "foo"),
                         asDecl = varDecl("b", 0),
                         atDecl = varDecl("c", 1),
                         byDecl = varDecl("d", 2)
@@ -44,7 +44,7 @@ class LogicalResolvedToPhysicalVisitorTransformTests {
                     filter(
                         predicate = lit(ionBool(true)),
                         source = scan(
-                            expr = globalId("foo", ionSymbol("foo")),
+                            expr = globalId("foo", "foo"),
                             asDecl = varDecl("b", 0),
                             atDecl = varDecl("c", 1),
                             byDecl = varDecl("d", 2)
@@ -57,7 +57,7 @@ class LogicalResolvedToPhysicalVisitorTransformTests {
                         predicate = lit(ionBool(true)),
                         source = scan(
                             i = DEFAULT_IMPL,
-                            expr = globalId("foo", ionSymbol("foo")),
+                            expr = globalId("foo", "foo"),
                             asDecl = varDecl("b", 0),
                             atDecl = varDecl("c", 1),
                             byDecl = varDecl("d", 2)

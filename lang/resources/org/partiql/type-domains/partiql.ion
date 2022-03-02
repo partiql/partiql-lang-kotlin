@@ -580,10 +580,10 @@ may then be further optimized by selecting better implementations of each operat
                 // Elements:
                 // - `name`: the original name of the variable, kept mostly just for error reporting purposes.
                 // - `uniqueId`: any Ion value that uniquely identifies the global variable.
-                // The value of `uniqueId` is PartiQL integration defined and can be any value that uniquely
+                // The value of `uniqueId` is PartiQL integration defined and can be any symbol that uniquely
                 // identifies the global variable.  Examples include database object ids or the alphabetical case
                 // respecting table name found after case-insensitive lookup.
-                (global_id name::symbol uniqueId::ion)
+                (global_id name::symbol uniqueId::symbol)
             )
         )
 

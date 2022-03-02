@@ -64,11 +64,11 @@ private class VariableIdAllocator : PartiqlLogical.VisitorTransform() {
         node.withMeta(VARIABLE_ID_META_TAG, nextVariableId++)
 }
 
-private fun PartiqlLogical.Expr.Id.asGlobalId(uniqueId: IonElement): PartiqlLogicalResolved.Expr.GlobalId =
+private fun PartiqlLogical.Expr.Id.asGlobalId(uniqueId: String): PartiqlLogicalResolved.Expr.GlobalId =
     PartiqlLogicalResolved.build {
         globalId_(
             name = name,
-            uniqueId = uniqueId,
+            uniqueId = uniqueId.asPrimitive(),
             metas = metas
         )
     }

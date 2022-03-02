@@ -94,7 +94,7 @@ internal fun IonResultTestCase.runTestCase(
             if(result != null) {
                 // Note that the unique id is set to result.key (which is the actual name of the variable)
                 // which *might* have different letter case than the [bindingName].
-                ResolutionResult.GlobalVariable(ionSymbol(result.key))
+                ResolutionResult.GlobalVariable(result.key)
             } else {
                 ResolutionResult.Undefined
             }
