@@ -99,10 +99,6 @@ class EvaluatorTests {
             "notInPredicateWithTableConstructor",
             "inPredicateWithExpressionOnRightSide",
             "notInPredicateWithExpressionOnRightSide",
-            "simpleCase",
-            "simpleCaseNoElse",
-            "searchedCase",
-            "searchedCaseNoElse",
             "betweenPredicate",
             "notBetweenPredicate",
             "betweenStringsPredicate",
@@ -172,7 +168,6 @@ class EvaluatorTests {
             "emptySymbolInGlobals",
             "semicolonAtEndOfExpression",
             "dateTimePartsAsVariableNames",
-            "dateTimePartsAsStructFieldNames",
         )
 
         // DL TODO: need to duplicate these tests--some also should run without a working [GlobalBindings]

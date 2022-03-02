@@ -33,7 +33,7 @@ private object AstToLogicalVisitorTransform : PartiqlAstToPartiqlLogicalVisitorT
         PartiqlLogical.build {
             mapValues(
                 when (val project = node.project) {
-                    is PartiqlAst.Projection.ProjectValue -> TODO("Support for SELECT VALUE <expr>")
+                    is PartiqlAst.Projection.ProjectValue -> transformExpr(project.value)
                     is PartiqlAst.Projection.ProjectList -> {
                         if(project.projectItems.size > 1) {
                             TODO("Support for more than one projectItem")
