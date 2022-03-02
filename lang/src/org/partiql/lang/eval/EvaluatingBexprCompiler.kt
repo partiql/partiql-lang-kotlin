@@ -50,6 +50,23 @@ internal class EvaluatingBexprCompiler(
     }
 
     override fun convertFilter(node: PartiqlPhysical.Bexpr.Filter): BindingsThunkEnv {
-        TODO("not implemented")
+        val predicateThunk = exprCompiler.compile(node.predicate)
+        val sourceThunk = this.convert(node.source)
+
+        return thunkFactory.bindingsThunk(node.metas) { env ->
+            val sourceToFilter = sourceThunk(env)
+
+            BindingsCollection(
+                sourceToFilter.seqType,
+                sourceToFilter.asSequence().filter { item ->
+                    val predicateResult = predicateThunk(env.copy(localBindingsMap = item))
+                    when(predicateResult.type) {
+                       ExprValueType.NULL, ExprValueType.MISSING -> false
+                       ExprValueType.BOOL -> predicateResult.booleanValue()
+                       else -> TODO("how to handle predicates that don't return missing, null or boolean?")
+                    }
+                }
+            )
+        }
     }
 }
