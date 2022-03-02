@@ -34,12 +34,3 @@ dependencies {
     testImplementation project(':testscript')
     testImplementation 'org.junit.vintage:junit-vintage-engine:5.7.0'
 }
-
-jacocoTestReport {
-    reports {
-        xml.required.set(false)
-        html.required.set(true)
-        xml.required.set(false)
-        html.outputLocation.set(file("${buildDir}/reports/jacoco/html"))
-    }
-}

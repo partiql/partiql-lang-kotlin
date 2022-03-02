@@ -21,12 +21,3 @@ compileKotlin {
 compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
-
-jacocoTestReport {
-    reports {
-        xml.required.set(false)
-        html.required.set(true)
-        xml.required.set(false)
-        html.destination file("${buildDir}/reports/jacoco/html")
-    }
-}

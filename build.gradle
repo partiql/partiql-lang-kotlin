@@ -30,8 +30,6 @@ allprojects {
         mavenLocal()
         mavenCentral()
     }
-
-
 }
 
 subprojects {
@@ -67,6 +65,12 @@ subprojects {
             exceptionFormat "full"
         }
         useJUnitPlatform()
+        jacocoTestReport {
+            reports {
+                html.required.set(true)
+                html.outputLocation.set(file("${buildDir}/reports/jacoco/html"))
+            }
+        }
     }
 
     plugins.withId('java', { _ ->

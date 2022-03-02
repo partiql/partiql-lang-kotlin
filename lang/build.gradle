@@ -167,12 +167,3 @@ signing {
 
     sign publishing.publications.maven
 }
-
-jacocoTestReport {
-    reports {
-        xml.required.set(false)
-        html.required.set(true)
-        xml.required.set(false)
-        html.outputLocation.set(file("${buildDir}/reports/jacoco/html"))
-    }
-}
