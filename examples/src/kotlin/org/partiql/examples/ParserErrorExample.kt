@@ -1,11 +1,11 @@
 package org.partiql.examples
 
-import com.amazon.ion.*
-import com.amazon.ion.system.*
+import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.examples.util.Example
-import org.partiql.lang.ast.*
-import org.partiql.lang.errors.*
-import org.partiql.lang.syntax.*
+import org.partiql.lang.errors.Property
+import org.partiql.lang.syntax.Parser
+import org.partiql.lang.syntax.ParserException
+import org.partiql.lang.syntax.SqlParser
 import java.io.PrintStream
 
 /**
@@ -31,10 +31,10 @@ class ParserErrorExample(out: PrintStream) : Example(out) {
         val errorContext = e.errorContext!!
 
         val errorInformation = "errorCode: ${e.errorCode}" +
-                "\nLINE_NUMBER: ${errorContext[Property.LINE_NUMBER]}" +
-                "\nCOLUMN_NUMBER: ${errorContext[Property.COLUMN_NUMBER]}" +
-                "\nTOKEN_TYPE: ${errorContext[Property.TOKEN_TYPE]}" +
-                "\nTOKEN_VALUE: ${errorContext[Property.TOKEN_VALUE]}"
+            "\nLINE_NUMBER: ${errorContext[Property.LINE_NUMBER]}" +
+            "\nCOLUMN_NUMBER: ${errorContext[Property.COLUMN_NUMBER]}" +
+            "\nTOKEN_TYPE: ${errorContext[Property.TOKEN_TYPE]}" +
+            "\nTOKEN_VALUE: ${errorContext[Property.TOKEN_VALUE]}"
         print("Error message:", e.generateMessage())
         print("Error information:", errorInformation)
     }

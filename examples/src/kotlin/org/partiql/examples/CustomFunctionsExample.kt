@@ -1,10 +1,18 @@
 package org.partiql.examples
 
-import com.amazon.ion.system.*
+import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.examples.util.Example
-import org.partiql.lang.*
+import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.eval.*
+import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.EvaluationSession
+import org.partiql.lang.eval.ExprFunction
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.eval.StructOrdering
+import org.partiql.lang.eval.namedValue
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
 import java.io.PrintStream
@@ -61,7 +69,7 @@ class FibScalarExprFunc(private val valueFactory: ExprValueFactory) : ExprFuncti
  * fashion demonstrates how one could implement what would be known as a table-valued
  * function in a traditional SQL implementation.
  */
-class FibListExprFunc(private val valueFactory: ExprValueFactory): ExprFunction {
+class FibListExprFunc(private val valueFactory: ExprValueFactory) : ExprFunction {
     override val signature = FunctionSignature(
         name = "fib_list",
         requiredParameters = listOf(StaticType.INT),
@@ -115,27 +123,28 @@ class CustomFunctionsExample(out: PrintStream) : Example(out) {
 
     override fun run() {
         listOf(
-                "fib_scalar(NULL)",
-                "fib_scalar(MISSING)",
-                "fib_scalar(0)",
-                "fib_scalar(1)",
-                "fib_scalar(2)",
-                "fib_scalar(3)",
-                "fib_scalar(4)",
-                "fib_scalar(5)",
-                "fib_scalar(6)",
-                "fib_scalar(7)",
-                "fib_scalar(8)",
-                "fib_list(NULL)",
-                "fib_list(MISSING)",
-                "fib_list(0)",
-                "fib_list(1)",
-                "fib_list(2)",
-                "fib_list(3)",
-                "fib_list(4)",
-                "fib_list(5)",
-                "fib_list(6)",
-                "fib_list(7)",
-                "fib_list(8)").forEach { query -> print(query, eval(query)) }
+            "fib_scalar(NULL)",
+            "fib_scalar(MISSING)",
+            "fib_scalar(0)",
+            "fib_scalar(1)",
+            "fib_scalar(2)",
+            "fib_scalar(3)",
+            "fib_scalar(4)",
+            "fib_scalar(5)",
+            "fib_scalar(6)",
+            "fib_scalar(7)",
+            "fib_scalar(8)",
+            "fib_list(NULL)",
+            "fib_list(MISSING)",
+            "fib_list(0)",
+            "fib_list(1)",
+            "fib_list(2)",
+            "fib_list(3)",
+            "fib_list(4)",
+            "fib_list(5)",
+            "fib_list(6)",
+            "fib_list(7)",
+            "fib_list(8)"
+        ).forEach { query -> print(query, eval(query)) }
     }
 }

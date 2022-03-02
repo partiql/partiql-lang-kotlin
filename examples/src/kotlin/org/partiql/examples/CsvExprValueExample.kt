@@ -1,11 +1,17 @@
 package org.partiql.examples
 
-import com.amazon.ion.*
-import com.amazon.ion.system.*
+import com.amazon.ion.IonValue
+import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.examples.util.Example
-import org.partiql.lang.*
-import org.partiql.lang.eval.*
-import org.partiql.lang.util.*
+import org.partiql.lang.CompilerPipeline
+import org.partiql.lang.eval.BaseExprValue
+import org.partiql.lang.eval.Bindings
+import org.partiql.lang.eval.EvaluationSession
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.eval.namedValue
+import org.partiql.lang.eval.stringValue
 import java.io.PrintStream
 
 /**
@@ -16,7 +22,7 @@ import java.io.PrintStream
  *
  * The first column in the row will be assigned the name `_1`, the second `_2` and so on.
  */
-private class CsvRowExprValue(private val valueFactory: ExprValueFactory, private val rowString: String): BaseExprValue() {
+private class CsvRowExprValue(private val valueFactory: ExprValueFactory, private val rowString: String) : BaseExprValue() {
 
     /** The Ion type that CsvRowExprValue is must similar to is a struct. */
     override val type: ExprValueType get() = ExprValueType.STRUCT
@@ -88,7 +94,8 @@ class CsvExprValueExample(out: PrintStream) : Example(out) {
                         .filter { it.isNotEmpty() }
                         .map {
                             CsvRowExprValue(pipeline.valueFactory, it)
-                        })
+                        }
+                )
             }
         }
 
