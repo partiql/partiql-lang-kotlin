@@ -1,17 +1,16 @@
 plugins {
-    id 'org.jetbrains.kotlin.jvm'
     id 'application'
 }
 
 application {
-    mainClassName = "org.partiql.cli.Main"
     applicationName = 'partiql' // startup script name
+    mainClass.set("org.partiql.cli.Main")
 }
 
 // distribution configuration, brought in by `application` plugin
 distributions {
     main {
-        baseName = 'partiql-cli' // archive name
+        distributionBaseName.set('partiql-cli') // archive name
         contents {
             from 'archive'  // include contents of archive dir into the final zip/tar
         }
@@ -31,13 +30,4 @@ dependencies {
     implementation 'org.apache.commons:commons-csv:1.8'
 
     testImplementation 'org.junit.vintage:junit-vintage-engine:5.7.0'
-}
-
-jacocoTestReport {
-    reports {
-        xml.enabled true
-        html.enabled true
-        csv.enabled false
-        html.destination file("${buildDir}/reports/jacoco/html")
-    }
 }

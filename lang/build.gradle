@@ -1,4 +1,3 @@
-
 import org.partiql.pig.cmdline.Command
 import org.partiql.pig.cmdline.TargetLanguage
 import org.partiql.pig.errors.PigException
@@ -25,7 +24,6 @@ plugins {
     // https://docs.gradle.org/5.0/userguide/publishing_maven.html#header
     id 'maven-publish'
     id 'org.jetbrains.dokka' version '0.9.18'
-    id 'org.jetbrains.kotlin.jvm'
     id 'signing'
     id 'me.champeau.gradle.jmh' version '0.5.3'
 }
@@ -61,7 +59,11 @@ dependencies {
 }
 
 sourceSets {
-    jmh.kotlin.srcDirs = ["jmh"]
+    jmh {
+        java.srcDirs = ['src/jmh/java']
+        resources.srcDirs = ['src/jmh/resources']
+        compileClasspath += sourceSets.main.runtimeClasspath
+    }
 }
 
 task generatePigDomains {
@@ -164,13 +166,4 @@ signing {
     required { !gradle.taskGraph.hasTask(":lang:publishToMavenLocal") }
 
     sign publishing.publications.maven
-}
-
-jacocoTestReport {
-    reports {
-        xml.enabled true
-        html.enabled true
-        csv.enabled false
-        html.destination file("${buildDir}/reports/jacoco/html")
-    }
 }

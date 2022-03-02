@@ -15,7 +15,7 @@
 plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.4.0' apply false
     // https://arturbosch.github.io/detekt/groovydsl.html
-    id 'io.gitlab.arturbosch.detekt' version '1.4.0' apply false
+    id "io.gitlab.arturbosch.detekt" version "1.20.0-RC1" apply false
 }
 
 allprojects {
@@ -23,16 +23,13 @@ allprojects {
 
     jacoco {
         toolVersion = '0.8.5'
-        reportsDir = file("$buildDir/reports/jacoco/")
+        reportsDirectory = file("$buildDir/reports/jacoco/")
     }
 
     repositories {
         mavenLocal()
         mavenCentral()
-        jcenter()    // needed for detekt
     }
-
-
 }
 
 subprojects {
@@ -52,22 +49,15 @@ configure(subprojects.findAll { it.name != 'example' }) {
         ignoreFailures = true                                 // If set to `true` the build does not fail when the maxIssues count was reached. Defaults to `false`.
         config = files(new File(rootProject.projectDir, "detekt-config.yml").toString())
         reports {
-            html {
-                enabled = true                                // Enable/Disable HTML report (default: true)
-                destination = file("build/reports/detekt/detekt.html") // Path where HTML report will be stored (default: `build/reports/detekt/detekt.html`)
-            }
-            txt {
-                enabled = false
-            }
-            xml {
-                enabled = false
-            }
+            html.required.set(true)
+            txt.required.set(true)
+            xml.required.set(true)
         }
     }
 }
 
 subprojects {
-
+    apply plugin: "org.jetbrains.kotlin.jvm"
     tasks.withType(Test) {
         maxHeapSize = "4g"
         testLogging {
@@ -75,8 +65,13 @@ subprojects {
             exceptionFormat "full"
         }
         useJUnitPlatform()
+        jacocoTestReport {
+            reports {
+                html.required.set(true)
+                html.outputLocation.set(file("${buildDir}/reports/jacoco/html"))
+            }
+        }
     }
-
 
     plugins.withId('java', { _ ->
 
@@ -86,8 +81,6 @@ subprojects {
             test.java.srcDirs = ["test"]
             test.resources.srcDirs = ["test-resources"]
         }
-        
-
     })
     plugins.withId('org.jetbrains.kotlin.jvm', { _ ->
         def generatedVersionDir = "${buildDir}/generated-version"
@@ -124,6 +117,5 @@ subprojects {
         }
         processResources.dependsOn generateVersionAndHashProperties
     })
-
 }
 

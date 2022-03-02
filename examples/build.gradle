@@ -1,5 +1,4 @@
 plugins {
-    id 'org.jetbrains.kotlin.jvm'
     id 'application'
 }
 
@@ -20,7 +19,7 @@ plugins.withId('org.jetbrains.kotlin.jvm', { _ ->
 })
 
 application {
-    mainClassName = "org.partiql.examples.util.Main"
+    mainClass.set("org.partiql.examples.util.Main")
 }
 
 dependencies {
@@ -30,13 +29,4 @@ dependencies {
     implementation 'com.amazonaws:aws-java-sdk-s3control:1.11.554'
 
     testImplementation 'org.junit.vintage:junit-vintage-engine:5.7.0'
-}
-
-jacocoTestReport {
-    reports {
-        xml.enabled true
-        html.enabled true
-        csv.enabled false
-        html.destination file("${buildDir}/reports/jacoco/html")
-    }
 }
