@@ -8,6 +8,8 @@ internal class EvaluatingBexprCompiler(
     private val exprCompiler: ExprCompiler,
     private val thunkFactory: ThunkFactory
 ) : PartiqlPhysical.Bexpr.Converter<BindingsThunkEnv> {
+    val valueFactory = thunkFactory.valueFactory
+
     override fun convertProject(node: PartiqlPhysical.Bexpr.Project): BindingsThunkEnv {
         TODO("not implemented")
     }
@@ -22,28 +24,30 @@ internal class EvaluatingBexprCompiler(
             val valueToScan = exprThunk.invoke(env)
             // DL TODO: verify that this .map is *not* eager.
 
-            // determines the BindingsCollectionType and coerces non-collection types to a singleton Sequence<>.
-            val (bcType, rows)  = when(valueToScan.type) {
-                ExprValueType.SEXP, ExprValueType.LIST -> BindingsCollectionType.LIST to valueToScan.asSequence()
-                ExprValueType.BAG -> BindingsCollectionType.BAG to valueToScan.asSequence()
-                else -> BindingsCollectionType.LIST to sequenceOf(valueToScan)
+            // coerces non-collection types to a singleton Sequence<>.
+            val rows = when(valueToScan.type) {
+                ExprValueType.LIST, ExprValueType.BAG -> valueToScan.asSequence()
+                else -> sequenceOf(valueToScan)
             }
+
             BindingsCollection(
-                bcType,
-                rows.asSequence().map {
-                    newBindingsMap().also { bindingsMap ->
-                        bindingsMap[asIndex] = it
+                BindingsCollectionType.BAG,
+                rows.map { item ->
+                    val bindings = newBindingsMap().also { bindingsMap ->
+                        bindingsMap[asIndex] = item
+
+                        // DL TODO: consider putting a ValueFactory on the EvaluationSession so we don't have
+                        // DL TODO: to use thunkFactory's
 
                         if (atIndex >= 0) {
-                            bindingsMap[asIndex] = it
+                            bindingsMap[atIndex] = item.name ?: valueFactory.missingValue
                         }
 
                         if (byIndex >= 0) {
-                            // DL TODO: consider putting a ValueFactory on the EvaluationSession so we don't have
-                            // DL TODO: to use thunkFactory's
-                            bindingsMap[byIndex] = it.address ?: thunkFactory.valueFactory.missingValue
+                            bindingsMap[byIndex] = item.address ?: valueFactory.missingValue
                         }
                     }
+                    bindings
                 }
             )
         }
