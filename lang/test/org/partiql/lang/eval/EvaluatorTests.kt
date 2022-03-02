@@ -38,7 +38,7 @@ class EvaluatorTests {
             // most fail due to not supporting foundational nodes like id, global_id and scan yet.
             // PartiQL's test cases are not all that cleanly separated.
             //"identifier",
-            "functionCall",
+            //"functionCall",
             "selectValuePath",
             "undefinedUnqualifiedVariableInSelectWithUndefinedVariableBehaviorMissing",
             "selectFromScalarAndAtUnpivotWildCardOverScalar",
@@ -175,6 +175,7 @@ class EvaluatorTests {
             "dateTimePartsAsStructFieldNames",
         )
 
+        // DL TODO: need to duplicate these tests--some also should run without a working [GlobalBindings]
         @JvmStatic
         @Suppress("UNUSED")
         fun evaluatorTests(): List<IonResultTestCase> {

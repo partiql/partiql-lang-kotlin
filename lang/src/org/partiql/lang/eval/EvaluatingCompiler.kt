@@ -55,6 +55,7 @@ import org.partiql.lang.util.rem
 import org.partiql.lang.util.stringValue
 import org.partiql.lang.util.times
 import org.partiql.lang.util.timestampValue
+import org.partiql.lang.util.toIntExact
 import org.partiql.lang.util.totalMinutes
 import org.partiql.lang.util.unaryMinus
 import java.math.BigDecimal
@@ -235,14 +236,19 @@ internal class EvaluatingCompiler(
         }
     }
 
-
-
     private fun compileMapValues(expr: PartiqlPhysical.Expr.MapValues): ThunkEnv {
         val mapThunk = compileAstExpr(expr.exp)
-        val bexprThunk = EvaluatingBexprCompiler(this, thunkFactory).convert(expr.query)
+        val bexprThunk: BindingsThunkEnv = EvaluatingBexprCompiler(this, thunkFactory).convert(expr.query)
 
-        return thunkFactory.thunkEnv(expr.metas) {
-            TODO()
+        return thunkFactory.thunkEnv(expr.metas) { env ->
+            val seq = bexprThunk(env)
+            val elements = seq.asSequence().map {
+                mapThunk(env.copy(localBindingsMap = it))
+            }
+            when(seq.seqType) {
+                BindingsCollectionType.BAG -> valueFactory.newBag(elements)
+                BindingsCollectionType.LIST -> valueFactory.newList(elements)
+            }
         }
     }
 
@@ -896,7 +902,16 @@ internal class EvaluatingCompiler(
 
     @Suppress("UNUSED_PARAMETER")
     private fun compileLocalId(expr: PartiqlPhysical.Expr.LocalId, metas: MetaContainer): ThunkEnv {
-        TODO()
+        val localIndex = expr.index.value.toIntExact()
+        return thunkFactory.thunkEnv(metas) { env ->
+            env.localBindingsMap[localIndex]
+                ?: err(
+                    "Variable with index $localIndex not found in localBindingsMap",
+                    ErrorCode.INTERNAL_ERROR,
+                    errorContextFrom(expr.metas),
+                    internal = true
+                )
+        }
     }
 
 

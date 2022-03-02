@@ -24,9 +24,9 @@ package org.partiql.lang.eval
  * @param registers An array of registers containing [ExprValue]s needed during query execution.  Generally, there is
  * one register per local variable.  When query execution begins, every register should be set to `MISSING`.
  */
-class Environment(
+data class Environment(
     val session: EvaluationSession,
-    val inputBindingsMap: BindingsMap = newBindingsMap()
+    val localBindingsMap: BindingsMap = newBindingsMap()
 ) {
 
     companion object {

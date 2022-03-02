@@ -35,8 +35,13 @@ internal typealias ThunkEnv = (Environment) -> ExprValue
 // DL TODO: is there a better home for this?
 internal typealias BindingsMap = MutableMap<Int, ExprValue>
 internal fun newBindingsMap() = HashMap<Int, ExprValue>()
+internal enum class BindingsCollectionType { BAG, LIST }
+internal class BindingsCollection(
+    val seqType: BindingsCollectionType,
+    val sequence: Sequence<BindingsMap>
+) : Sequence<BindingsMap> by sequence
 
-internal typealias BindingsThunkEnv = (Environment) -> Sequence<BindingsMap>
+internal typealias BindingsThunkEnv = (Environment) -> BindingsCollection
 
 /**
  * A thunk taking a single [T] argument and the current environment.
