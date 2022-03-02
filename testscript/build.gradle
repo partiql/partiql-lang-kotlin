@@ -1,7 +1,3 @@
-plugins {
-    id 'org.jetbrains.kotlin.jvm'
-}
-
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     implementation "com.amazon.ion:ion-java:[1.4.0,)"
@@ -28,9 +24,9 @@ compileTestKotlin {
 
 jacocoTestReport {
     reports {
-        xml.enabled true
-        html.enabled true
-        csv.enabled false
+        xml.required.set(false)
+        html.required.set(true)
+        xml.required.set(false)
         html.destination file("${buildDir}/reports/jacoco/html")
     }
 }

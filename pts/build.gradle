@@ -14,10 +14,6 @@
 
 // Documentation for using Gradle with Kotlin is here: https://kotlinlang.org/docs/reference/using-gradle.html
 
-plugins {
-    id 'org.jetbrains.kotlin.jvm'
-}
-
 group = 'org.partiql.lang'
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
@@ -41,9 +37,9 @@ dependencies {
 
 jacocoTestReport {
     reports {
-        xml.enabled true
-        html.enabled true
-        csv.enabled false
-        html.destination file("${buildDir}/reports/jacoco/html")
+        xml.required.set(false)
+        html.required.set(true)
+        xml.required.set(false)
+        html.outputLocation.set(file("${buildDir}/reports/jacoco/html"))
     }
 }

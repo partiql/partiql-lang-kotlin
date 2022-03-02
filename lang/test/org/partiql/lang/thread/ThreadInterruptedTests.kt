@@ -4,6 +4,8 @@ import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.ionInt
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.CompilerPipelineImpl
 import org.partiql.lang.StepContext
@@ -43,13 +45,14 @@ const val WAIT_FOR_THREAD_TERMINATION_MS: Long = 1000
  * In order to ensure the these tests are deterministic, we use fairly low values for [INTERRUPT_AFTER_MS],
  * a large value for [WAIT_FOR_THREAD_TERMINATION_MS] and pathologically large mock data.
  */
+// Enforce execution of tests in same thread as we need the execution to be deterministic for interruption behavior.
+@Execution(ExecutionMode.SAME_THREAD)
 class ThreadInterruptedTests {
     private val ion = IonSystemBuilder.standard().build()
     private val reallyBigNAry = makeBigExprNode(20000000)
     private val bigNAry = makeBigExprNode(10000000)
     private val bigPartiqlAst = makeBigPartiqlAstExpr(10000000)
-
-
+    
     private fun makeBigSexpAst() =
         makeBigExprNode(1000000).let { nary ->
             @Suppress("DEPRECATION")

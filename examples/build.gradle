@@ -1,5 +1,4 @@
 plugins {
-    id 'org.jetbrains.kotlin.jvm'
     id 'application'
 }
 
@@ -20,7 +19,7 @@ plugins.withId('org.jetbrains.kotlin.jvm', { _ ->
 })
 
 application {
-    mainClassName = "org.partiql.examples.util.Main"
+    mainClass.set("org.partiql.examples.util.Main")
 }
 
 dependencies {
@@ -34,9 +33,9 @@ dependencies {
 
 jacocoTestReport {
     reports {
-        xml.enabled true
-        html.enabled true
-        csv.enabled false
-        html.destination file("${buildDir}/reports/jacoco/html")
+        xml.required.set(false)
+        html.required.set(true)
+        xml.required.set(false)
+        html.outputLocation.set(file("${buildDir}/reports/jacoco/html"))
     }
 }
