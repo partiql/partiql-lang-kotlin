@@ -118,11 +118,11 @@ private data class LogicalToLogicalResolvedVisitorTransform(
         // Have to call in to super.transformBexprScan_expr to avoid infinitely looping...
         this.copy(lookupUnqualifiedInGlobalsFirst = true).superTransformBexprScanExpr(node)
 
-    override fun transformExprMapValues(node: PartiqlLogical.Expr.MapValues): PartiqlLogicalResolved.Expr {
+    override fun transformExprBindingsToValues(node: PartiqlLogical.Expr.BindingsToValues): PartiqlLogicalResolved.Expr {
         if(this.lookupUnqualifiedInGlobalsFirst) {
             TODO("Support for sub-queries")
         } else {
-            return super.transformExprMapValues(node)
+            return super.transformExprBindingsToValues(node)
         }
     }
 
@@ -208,7 +208,7 @@ private data class LogicalToLogicalResolvedVisitorTransform(
         }
     }
 
-    override fun transformExprMapValues_exp(node: PartiqlLogical.Expr.MapValues): PartiqlLogicalResolved.Expr {
+    override fun transformExprBindingsToValues_exp(node: PartiqlLogical.Expr.BindingsToValues): PartiqlLogicalResolved.Expr {
         val bindings = getNestedScope(node.query, currentScope)
         return nest(bindings).transformExpr(node.exp)
     }

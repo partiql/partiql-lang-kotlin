@@ -26,25 +26,29 @@ private object AstToLogicalVisitorTransform : PartiqlAstToPartiqlLogicalVisitorT
             PartiqlLogical.build { filter(transformExpr(it), algebra, it.metas) }
         } ?: algebra
 
-        return convertProjectionToMapValues(node, algebra)
+        return convertProjectionToBindingsToValues(node, algebra)
     }
 
-    private fun convertProjectionToMapValues(node: PartiqlAst.Expr.Select, algebra: PartiqlLogical.Bexpr) =
+    private fun convertProjectionToBindingsToValues(node: PartiqlAst.Expr.Select, algebra: PartiqlLogical.Bexpr) =
         PartiqlLogical.build {
-            mapValues(
+            bindingsToValues(
                 when (val project = node.project) {
                     is PartiqlAst.Projection.ProjectValue -> transformExpr(project.value)
                     is PartiqlAst.Projection.ProjectList -> {
-                        if(project.projectItems.size > 1) {
-                            TODO("Support for more than one projectItem")
-                        } else {
-                            when(val projectItem = project.projectItems.first()) {
-                                is PartiqlAst.ProjectItem.ProjectExpr -> TODO("Support for <expr> AS <alias> in select list")
-                                is PartiqlAst.ProjectItem.ProjectAll -> {
-                                    transformExpr(projectItem.expr)
+                        mergeStruct(
+                            List(project.projectItems.size) { idx ->
+                                when(val projectItem = project.projectItems[idx]) {
+                                    is PartiqlAst.ProjectItem.ProjectExpr ->
+                                        structField_(
+                                            transformExpr(projectItem.expr),
+                                            projectItem.asAlias ?: errAstNotNormalized("SELECT-list item alias not specified")
+                                        )
+                                    is PartiqlAst.ProjectItem.ProjectAll -> {
+                                        structFields(transformExpr(projectItem.expr), projectItem.metas)
+                                    }
                                 }
                             }
-                        }
+                        )
                     }
                     is PartiqlAst.Projection.ProjectStar ->
                         // `SELECT * FROM bar AS b` is rewritten to `SELECT b.* FROM bar as b` by

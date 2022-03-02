@@ -232,11 +232,74 @@ internal class EvaluatingCompiler(
                     internal = false
                 )
             }
-            is PartiqlPhysical.Expr.MapValues -> compileMapValues(expr)
+            is PartiqlPhysical.Expr.BindingsToValues -> compileBindingsToValues(expr)
+            is PartiqlPhysical.Expr.MergeStruct -> compileMergeStruct(expr)
         }
     }
 
-    private fun compileMapValues(expr: PartiqlPhysical.Expr.MapValues): ThunkEnv {
+    private fun compileMergeStruct(expr: PartiqlPhysical.Expr.MergeStruct): ThunkEnv {
+        val structParts = compileStructParts(expr.parts)
+
+        val ordering = if (expr.parts.none { it is PartiqlPhysical.StructPart.StructFields })
+            StructOrdering.ORDERED
+        else
+            StructOrdering.UNORDERED
+
+        return thunkFactory.thunkEnv(expr.metas) { env ->
+            val columns = mutableListOf<ExprValue>()
+            for (element in structParts) {
+                when (element) {
+                    is CompiledStructPart.Field -> {
+                        val eval = element.thunk(env)
+                        columns.add(eval.namedValue(element.name))
+                    }
+                    is CompiledStructPart.StructMerge -> {
+                        for (projThunk in element.thunks) {
+                            val value = projThunk(env)
+                            if (value.type == ExprValueType.MISSING) continue
+
+                            val children = value.asSequence()
+                            if (!children.any() || value.type.isSequence) {
+                                val name = syntheticColumnName(columns.size).exprValue()
+                                columns.add(value.namedValue(name))
+                            } else {
+                                val valuesToProject =
+                                    when (compileOptions.projectionIteration) {
+                                        ProjectionIterationBehavior.FILTER_MISSING -> {
+                                            value.filter { it.type != ExprValueType.MISSING }
+                                        }
+                                        ProjectionIterationBehavior.UNFILTERED -> value
+                                    }
+                                for (childValue in valuesToProject) {
+                                    val namedFacet = childValue.asFacet(Named::class.java)
+                                    val name = namedFacet?.name
+                                        ?: syntheticColumnName(columns.size).exprValue()
+                                    columns.add(childValue.namedValue(name))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            createStructExprValue(columns.asSequence(), ordering)
+        }
+    }
+
+    private fun compileStructParts(projectItems: List<PartiqlPhysical.StructPart>): List<CompiledStructPart> =
+        projectItems.map { it ->
+            when (it) {
+                is PartiqlPhysical.StructPart.StructField -> {
+                    val alias = it.asAlias.text
+                    val thunk = compileAstExpr(it.expr)
+                    CompiledStructPart.Field(valueFactory.newString(alias), thunk)
+                }
+                is PartiqlPhysical.StructPart.StructFields -> {
+                    CompiledStructPart.StructMerge(listOf(compileAstExpr(it.expr)))
+                }
+            }
+        }
+
+    private fun compileBindingsToValues(expr: PartiqlPhysical.Expr.BindingsToValues): ThunkEnv {
         val mapThunk = compileAstExpr(expr.exp)
         val bexprThunk: BindingsThunkEnv = EvaluatingBexprCompiler(this, thunkFactory).convert(expr.query)
 
@@ -1796,4 +1859,29 @@ internal val MetaContainer.sourceLocationMeta get() = this[SourceLocationMeta.TA
 internal fun StaticType.getTypes() = when (val flattened = this.flatten()) {
     is AnyOfType -> flattened.types
     else -> listOf(this)
+}
+
+/**
+ * Represents an element in a select list that is to be projected into the final result.
+ * i.e. an expression, or a (project_all) node.
+ */
+private sealed class CompiledStructPart {
+
+    /**
+     * Represents a single compiled expression to be projected into the final result.
+     * Given `SELECT a + b as value FROM foo`:
+     * - `name` is "value"
+     * - `thunk` is compiled expression, i.e. `a + b`
+     */
+    class Field(val name: ExprValue, val thunk: ThunkEnv) : CompiledStructPart()
+
+    /**
+     * Represents a wildcard ((path_project_all) node) expression to be projected into the final result.
+     * This covers two cases.  For `SELECT foo.* FROM foo`, `exprThunks` contains a single compiled expression
+     * `foo`.
+     *
+     * For `SELECT * FROM foo, bar, bat`, `exprThunks` would contain a compiled expression for each of `foo`, `bar` and
+     * `bat`.
+     */
+    class StructMerge(val thunks: List<ThunkEnv>) : CompiledStructPart()
 }

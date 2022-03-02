@@ -50,7 +50,7 @@ class AstToLogicalVisitorTransformTests {
                 "SELECT b.* FROM bar AS b",
                 PartiqlLogical.build {
                     query(
-                        mapValues(
+                        bindingsToValues(
                             id("b"),
                             scan(id("bar"), varDecl("b"))
                         )
@@ -63,7 +63,7 @@ class AstToLogicalVisitorTransformTests {
                 "SELECT b.* FROM bar AS b WHERE TRUE = TRUE",
                 PartiqlLogical.build {
                     query(
-                        mapValues(
+                        bindingsToValues(
                             id("b"),
                             filter(
                                 eq(lit(ionBool(true)), lit(ionBool(true))),
@@ -77,7 +77,7 @@ class AstToLogicalVisitorTransformTests {
                 "SELECT b.* FROM bar AS b WHERE b.primaryKey = 42",
                 PartiqlLogical.build {
                     query(
-                        mapValues(
+                        bindingsToValues(
                             id("b"),
                             filter(
                                 eq(path(id("b"), pathExpr(lit(ionString("primaryKey")))), lit(ionInt(42))),

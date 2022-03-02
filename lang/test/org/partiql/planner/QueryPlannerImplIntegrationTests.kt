@@ -31,7 +31,7 @@ class QueryPlannerImplIntegrationTests {
             PlanningResult.Success(
                 physicalPlan = PartiqlPhysical.build {
                     query(
-                        mapValues(
+                        bindingsToValues(
                             exp = localId("c", 0),
                             query = filter(
                                 i = impl("default"),

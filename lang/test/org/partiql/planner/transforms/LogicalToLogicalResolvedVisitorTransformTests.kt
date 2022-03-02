@@ -214,7 +214,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 "SELECT FOO.* FROM 1 AS foo WHERE FOO",
                 Expectation.Success(PartiqlLogicalResolved.build {
                     query(
-                        mapValues(
+                        bindingsToValues(
                             localId("FOO", 0),
                             filter(
                                 localId("FOO", 0),
@@ -229,7 +229,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 "SELECT foo.* FROM 1 AS foo WHERE foo",
                 Expectation.Success(PartiqlLogicalResolved.build {
                     query(
-                        mapValues(
+                        bindingsToValues(
                             localId("foo", 0),
                             filter(
                                 localId("foo", 0),
@@ -244,7 +244,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 "SELECT FoO.* FROM 1 AS foo WHERE fOo",
                 Expectation.Success(PartiqlLogicalResolved.build {
                     query(
-                        mapValues(
+                        bindingsToValues(
                             localId("FoO", 0),
                             filter(
                                 localId("fOo", 0),
@@ -286,7 +286,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 "SELECT \"foo\".* FROM 1 AS foo WHERE \"foo\"",
                 Expectation.Success(PartiqlLogicalResolved.build {
                     query(
-                        mapValues(
+                        bindingsToValues(
                             localId("foo", 0),
                             filter(
                                 localId("foo", 0),
@@ -378,7 +378,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 Expectation.Success(
                     PartiqlLogicalResolved.build {
                         query(
-                            mapValues(
+                            bindingsToValues(
                                 localId(varName, expectedIndex.toLong()),
                                 scan(
                                     globalId("foo", "fake_uid_for_foo"),
@@ -405,7 +405,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 Expectation.Success(
                     PartiqlLogicalResolved.build {
                         query(
-                            mapValues(
+                            bindingsToValues(
                                 localId("b", 0),
                                 filter(
                                     eq(
@@ -431,7 +431,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 Expectation.Success(
                     PartiqlLogicalResolved.build {
                         query(
-                            mapValues(
+                            bindingsToValues(
                                 localId("shadow", 0), // <-- local variable f
                                 scan(
                                     expr = globalId(name = "shadow", uniqueId = "fake_uid_for_shadow"), // <-- global variable f.

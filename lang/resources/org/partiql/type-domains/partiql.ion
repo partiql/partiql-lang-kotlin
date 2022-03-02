@@ -451,6 +451,19 @@ may then be further optimized by selecting better implementations of each operat
 // Removes the syntactic representation of SFW queries and replaces it with PartiQL's logical relational algebra.
 (define partiql_logical
     (permute_domain partiql_ast
+        (include
+            // DL TODO: document this better.
+            // This is similar to project_item but has a better name for this domain and the as-alias is non-nullable.
+            (sum struct_part
+                // For `.*` in SELECT list
+                // If `<expr>` is a struct, the fields of that struct will be part of the merged struct.
+                // If `<expr>` is not a struct, The field `_n` will be included in the struct, where `n` is the
+                // ordinal of the field in the final merged struct.
+                (struct_fields expr::expr)
+                // For `<expr> [AS <id>]`
+                (struct_field expr::expr as_alias::symbol))
+        )
+
         (with expr
             // Remove the select node from the `expr` sum type.
             (exclude select)
@@ -459,15 +472,21 @@ may then be further optimized by selecting better implementations of each operat
                 // Invokes `exp` once in the context of every binding tuple returned by `query`, returning a
                 // collection of values produced by `exp`.  The returned collection's type (bag or list) is the same
                 // as the bindings collection returned by `query`.
-                (map_values exp::expr query::bexpr)
+                (bindings_to_values exp::expr query::bexpr)
+
+                // DL TODO: document this better.
+                // map_to_struct encapsulates semantics needed for SELECT *, SELECT x.*, and SELECT x.y AS y...
+                // this is different than a struct constructor... i.e. some in circumstances this can synthesize field
+                // names.
+                (merge_struct parts::(* struct_part 1))
             )
         )
 
         // These should be excluded as well since they were referenced only by the `select` variant of `expr`, which
         // was excluded above.
         (exclude
-            projection
             project_item
+            projection
             from_source
             join_type
         )

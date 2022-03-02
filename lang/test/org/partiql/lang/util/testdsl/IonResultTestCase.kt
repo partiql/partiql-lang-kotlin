@@ -1,6 +1,5 @@
 package org.partiql.lang.util.testdsl
 
-import com.amazon.ionelement.api.ionSymbol
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.fail
@@ -77,6 +76,7 @@ internal fun IonResultTestCase.runTestCase(
 ) {
     fun runTheTest() {
         println("Running test '${this.name}'")
+        println("SQL: ${this.sqlUnderTest}")
         val parser = SqlParser(ION)
 
         val astStatement = assertDoesNotThrow("Parsing the sql under test should not throw for test \"${this.name}\"") {
@@ -116,6 +116,8 @@ internal fun IonResultTestCase.runTestCase(
             null -> compileOptions
             else -> CompileOptions.build { compileOptionsBlock() }
         }
+        // Uncomment to see AST in test runner output.
+        //org.partiql.lang.util.println(SexpAstPrettyPrinter.format(plannedQuery.toIonElement().asAnyElement().toIonValue(ION)))
 
         val expression = assertDoesNotThrow("Compiling the query should not throw for test \"${this.name}\"") {
             EvaluatingCompiler(
