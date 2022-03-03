@@ -16,10 +16,6 @@ import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.planner.createFakeGlobalBindings
 import org.partiql.planner.problem
 
-// DL TODO: add some tests that allow unresolved variables, i.e. dynamic_id nodes.
-// DL TODO: add some tests for different SELECT list projections.
-// DL TODO: add some tests for local variables.
-
 class LogicalToLogicalResolvedVisitorTransformTests {
     data class TestCase(
         val sql: String,
@@ -39,6 +35,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
         "shadow",
         "foo",
         "bar",
+        "bat",
         "UPPERCASE_FOO",
         "case_AMBIGUOUS_foo",
         "case_ambiguous_FOO"
@@ -54,12 +51,15 @@ class LogicalToLogicalResolvedVisitorTransformTests {
 
         val problemHandler = ProblemCollector()
 
-        when(tc.expectation) {
+        when (tc.expectation) {
             is Expectation.Success -> {
                 val resolved = algebra.toResolved(problemHandler, globalBindings, tc.allowUndefinedVariables)
-                assertEquals(emptyList<Problem>(), problemHandler.problems)
                 assertEquals(tc.expectation.expectedAlgebra, resolved)
-                assertEquals(emptyList<Problem>(), problemHandler.problems, "Expected success, but there were problems!")
+                assertEquals(
+                    emptyList<Problem>(),
+                    problemHandler.problems,
+                    "Expected success, but there were problems!"
+                )
             }
             is Expectation.Problems -> {
                 assertDoesNotThrow("Should not throw when variables are undefined") {
@@ -79,7 +79,14 @@ class LogicalToLogicalResolvedVisitorTransformTests {
             TestCase(
                 // all uppercase
                 sql = "FOO",
-                expectation = Expectation.Success(PartiqlLogicalResolved.build { query(globalId("FOO", "fake_uid_for_foo")) })
+                expectation = Expectation.Success(PartiqlLogicalResolved.build {
+                    query(
+                        globalId(
+                            "FOO",
+                            "fake_uid_for_foo"
+                        )
+                    )
+                })
             ),
             TestCase(
                 // all lower case
@@ -94,7 +101,13 @@ class LogicalToLogicalResolvedVisitorTransformTests {
             TestCase(
                 // undefined
                 """ foobar """,
-                Expectation.Problems(problem(1, 2, PlanningProblemDetails.UndefinedVariable("foobar", caseSensitive = false)))
+                Expectation.Problems(
+                    problem(
+                        1,
+                        2,
+                        PlanningProblemDetails.UndefinedVariable("foobar", caseSensitive = false)
+                    )
+                )
             ),
 
             // Ambiguous case-insensitive lookup
@@ -102,28 +115,55 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 // ambiguous
                 """ case_ambiguous_foo """,
                 // In this case, we resolve to the first matching binding.  This is consistent with Postres 9.6.
-                Expectation.Success(PartiqlLogicalResolved.build { query(globalId("case_ambiguous_foo", "fake_uid_for_case_AMBIGUOUS_foo")) })
+                Expectation.Success(PartiqlLogicalResolved.build {
+                    query(
+                        globalId(
+                            "case_ambiguous_foo",
+                            "fake_uid_for_case_AMBIGUOUS_foo"
+                        )
+                    )
+                })
             ),
 
             // Case-insensitive resolution of global variables with all uppercase letters...
             TestCase(
                 // all uppercase
                 "UPPERCASE_FOO",
-                Expectation.Success(PartiqlLogicalResolved.build { query(globalId("UPPERCASE_FOO", "fake_uid_for_UPPERCASE_FOO")) })
+                Expectation.Success(PartiqlLogicalResolved.build {
+                    query(
+                        globalId(
+                            "UPPERCASE_FOO",
+                            "fake_uid_for_UPPERCASE_FOO"
+                        )
+                    )
+                })
             ),
             TestCase(
                 // all lower case
                 "uppercase_foo",
-                Expectation.Success(PartiqlLogicalResolved.build { query(globalId("uppercase_foo", "fake_uid_for_UPPERCASE_FOO")) })
+                Expectation.Success(PartiqlLogicalResolved.build {
+                    query(
+                        globalId(
+                            "uppercase_foo",
+                            "fake_uid_for_UPPERCASE_FOO"
+                        )
+                    )
+                })
             ),
             TestCase(
                 // mixed case
                 "UpPeRcAsE_fOo",
-                Expectation.Success(PartiqlLogicalResolved.build { query(globalId("UpPeRcAsE_fOo", "fake_uid_for_UPPERCASE_FOO")) })
+                Expectation.Success(PartiqlLogicalResolved.build {
+                    query(
+                        globalId(
+                            "UpPeRcAsE_fOo",
+                            "fake_uid_for_UPPERCASE_FOO"
+                        )
+                    )
+                })
             ),
 
             // undefined variables allowed
-
             TestCase(
                 // undefined allowed (case-insensitive)
                 """ some_undefined """,
@@ -144,7 +184,13 @@ class LogicalToLogicalResolvedVisitorTransformTests {
             TestCase(
                 // all uppercase
                 """ "FOO" """,
-                Expectation.Problems(problem(1, 2, PlanningProblemDetails.UndefinedVariable("FOO", caseSensitive = true)))
+                Expectation.Problems(
+                    problem(
+                        1,
+                        2,
+                        PlanningProblemDetails.UndefinedVariable("FOO", caseSensitive = true)
+                    )
+                )
             ),
             TestCase(
                 // all lowercase
@@ -154,24 +200,49 @@ class LogicalToLogicalResolvedVisitorTransformTests {
             TestCase(
                 // mixed
                 """ "foO" """,
-                Expectation.Problems(problem(1, 2, PlanningProblemDetails.UndefinedVariable("foO", caseSensitive = true)))
+                Expectation.Problems(
+                    problem(
+                        1,
+                        2,
+                        PlanningProblemDetails.UndefinedVariable("foO", caseSensitive = true)
+                    )
+                )
             ),
 
             // Case-sensitive resolution of global variables with all uppercase letters
             TestCase(
                 // all uppercase
                 """ "UPPERCASE_FOO" """,
-                Expectation.Success(PartiqlLogicalResolved.build { query(globalId("UPPERCASE_FOO", "fake_uid_for_UPPERCASE_FOO")) })
+                Expectation.Success(PartiqlLogicalResolved.build {
+                    query(
+                        globalId(
+                            "UPPERCASE_FOO",
+                            "fake_uid_for_UPPERCASE_FOO"
+                        )
+                    )
+                })
             ),
             TestCase(
                 // all lowercase
                 """ "uppercase_foo" """,
-                Expectation.Problems(problem(1, 2, PlanningProblemDetails.UndefinedVariable("uppercase_foo", caseSensitive = true)))
+                Expectation.Problems(
+                    problem(
+                        1,
+                        2,
+                        PlanningProblemDetails.UndefinedVariable("uppercase_foo", caseSensitive = true)
+                    )
+                )
             ),
             TestCase(
                 // mixed
                 """ "UpPeRcAsE_fOo" """,
-                Expectation.Problems(problem(1, 2, PlanningProblemDetails.UndefinedVariable("UpPeRcAsE_fOo", caseSensitive = true)))
+                Expectation.Problems(
+                    problem(
+                        1,
+                        2,
+                        PlanningProblemDetails.UndefinedVariable("UpPeRcAsE_fOo", caseSensitive = true)
+                    )
+                )
             ),
             TestCase(
                 // not ambiguous when case-sensitive
@@ -190,7 +261,13 @@ class LogicalToLogicalResolvedVisitorTransformTests {
             TestCase(
                 // undefined
                 """ FOOBAR """,
-                Expectation.Problems(problem(1, 2, PlanningProblemDetails.UndefinedVariable("FOOBAR", caseSensitive = false)))
+                Expectation.Problems(
+                    problem(
+                        1,
+                        2,
+                        PlanningProblemDetails.UndefinedVariable("FOOBAR", caseSensitive = false)
+                    )
+                )
             ),
 
             TestCase(
@@ -216,7 +293,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 Expectation.Success(PartiqlLogicalResolved.build {
                     query(
                         bindingsToValues(
-                            localId("FOO", 0),
+                            mergeStruct(structFields(localId("FOO", 0))),
                             filter(
                                 localId("FOO", 0),
                                 scan(lit(ionInt(1)), varDecl("foo", 0))
@@ -231,7 +308,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 Expectation.Success(PartiqlLogicalResolved.build {
                     query(
                         bindingsToValues(
-                            localId("foo", 0),
+                            mergeStruct(structFields(localId("foo", 0))),
                             filter(
                                 localId("foo", 0),
                                 scan(lit(ionInt(1)), varDecl("foo", 0))
@@ -246,7 +323,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 Expectation.Success(PartiqlLogicalResolved.build {
                     query(
                         bindingsToValues(
-                            localId("FoO", 0),
+                            mergeStruct(structFields(localId("FoO", 0))),
                             filter(
                                 localId("fOo", 0),
                                 scan(lit(ionInt(1)), varDecl("foo", 0))
@@ -258,12 +335,24 @@ class LogicalToLogicalResolvedVisitorTransformTests {
             TestCase(
                 // foobar is undefined (select list)
                 "SELECT foobar.* FROM [] AS foo",
-                Expectation.Problems(problem(1, 8, PlanningProblemDetails.UndefinedVariable("foobar", caseSensitive = false)))
+                Expectation.Problems(
+                    problem(
+                        1,
+                        8,
+                        PlanningProblemDetails.UndefinedVariable("foobar", caseSensitive = false)
+                    )
+                )
             ),
             TestCase(
                 //barbat is undefined (where clause)
                 "SELECT foo.* FROM [] AS foo WHERE barbat",
-                Expectation.Problems(problem(1, 35, PlanningProblemDetails.UndefinedVariable("barbat", caseSensitive = false)))
+                Expectation.Problems(
+                    problem(
+                        1,
+                        35,
+                        PlanningProblemDetails.UndefinedVariable("barbat", caseSensitive = false)
+                    )
+                )
             )
         )
     }
@@ -288,7 +377,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 Expectation.Success(PartiqlLogicalResolved.build {
                     query(
                         bindingsToValues(
-                            localId("foo", 0),
+                            mergeStruct(structFields(localId("foo", 0))),
                             filter(
                                 localId("foo", 0),
                                 scan(lit(ionInt(1)), varDecl("foo", 0))
@@ -308,18 +397,30 @@ class LogicalToLogicalResolvedVisitorTransformTests {
             TestCase(
                 // "foobar" is undefined (select list)
                 "SELECT \"foobar\".* FROM [] AS foo ",
-                Expectation.Problems(problem(1, 8, PlanningProblemDetails.UndefinedVariable("foobar", caseSensitive = true)))
+                Expectation.Problems(
+                    problem(
+                        1,
+                        8,
+                        PlanningProblemDetails.UndefinedVariable("foobar", caseSensitive = true)
+                    )
+                )
             ),
             TestCase(
                 // "barbat" is undefined (where clause)
                 "SELECT \"foo\".* FROM [] AS foo WHERE \"barbat\"",
-                Expectation.Problems(problem(1, 37, PlanningProblemDetails.UndefinedVariable("barbat", caseSensitive = true)))
+                Expectation.Problems(
+                    problem(
+                        1,
+                        37,
+                        PlanningProblemDetails.UndefinedVariable("barbat", caseSensitive = true)
+                    )
+                )
             )
         )
     }
 
     // TODO: cases for ambiguity between local and global lookups
-    
+
     @ParameterizedTest
     @ArgumentsSource(DuplicateVariableCases::class)
     fun `duplicate variables`(tc: TestCase) = runTestCase(tc)
@@ -380,7 +481,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                     PartiqlLogicalResolved.build {
                         query(
                             bindingsToValues(
-                                localId(varName, expectedIndex.toLong()),
+                                mergeStruct(structFields(localId(varName, expectedIndex.toLong()))),
                                 scan(
                                     globalId("foo", "fake_uid_for_foo"),
                                     varDecl("a", 0),
@@ -392,6 +493,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                     }
                 )
             )
+
         override fun getParameters() = listOf(
             // Demonstrates that FROM source AS aliases work
             createScanTestCase("a", 0),
@@ -407,10 +509,13 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                     PartiqlLogicalResolved.build {
                         query(
                             bindingsToValues(
-                                localId("b", 0),
+                                mergeStruct(structFields(localId("b", 0))),
                                 filter(
                                     eq(
-                                        path(localId("b", 0), pathExpr(lit(ionString("primaryKey")), caseInsensitive())),
+                                        path(
+                                            localId("b", 0),
+                                            pathExpr(lit(ionString("primaryKey")), caseInsensitive())
+                                        ),
                                         lit(ionInt(42))
                                     ),
                                     scan(
@@ -433,9 +538,12 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                     PartiqlLogicalResolved.build {
                         query(
                             bindingsToValues(
-                                localId("shadow", 0), // <-- local variable f
+                                mergeStruct(structFields(localId("shadow", 0))), // <-- local variable f
                                 scan(
-                                    expr = globalId(name = "shadow", uniqueId = "fake_uid_for_shadow"), // <-- global variable f.
+                                    expr = globalId(
+                                        name = "shadow",
+                                        uniqueId = "fake_uid_for_shadow"
+                                    ), // <-- global variable f.
                                     asDecl = varDecl("shadow", 0),
                                     atDecl = null,
                                     byDecl = null
@@ -445,6 +553,79 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                     }
                 )
             ),
+        )
+    }
+
+    data class DynamicIdTestCase(
+        val sql: String,
+        val expectedDynamicIds: List<PartiqlLogicalResolved.Expr.DynamicId>
+    )
+
+    @ParameterizedTest
+    @ArgumentsSource(DynamicIdSearchCases::class)
+    fun `dynamic_id search order cases`(tc: DynamicIdTestCase) {
+        val algebra: PartiqlLogical.Statement = assertDoesNotThrow {
+            parser.parseAstStatement(tc.sql).toLogical()
+        }
+        val problemHandler = ProblemCollector()
+        val resolved = algebra.toResolved(problemHandler, globalBindings, allowUndefinedVariables = true)
+        assertEquals(emptyList<Problem>(), problemHandler.problems, "Expected success, but there were problems!")
+
+        // get a list of all the dynamic_id nodes.
+        val actualDynamicIds =
+            object : PartiqlLogicalResolved.VisitorFold<List<PartiqlLogicalResolved.Expr.DynamicId>>() {
+                override fun visitExprDynamicId(
+                    node: PartiqlLogicalResolved.Expr.DynamicId,
+                    accumulator: List<PartiqlLogicalResolved.Expr.DynamicId>
+                ): List<PartiqlLogicalResolved.Expr.DynamicId> = accumulator + node
+            }.walkStatement(resolved, emptyList())
+
+        assertEquals(tc.expectedDynamicIds, actualDynamicIds)
+    }
+
+    class DynamicIdSearchCases : ArgumentsProviderBase() {
+        // The important thing being asserted here is the contents of the dynamicId.search, which
+        // defines the places we'll look for variables that are unresolved at compile time.
+        override fun getParameters() = listOf(
+            // Not in an SFW query (empty search path)
+            DynamicIdTestCase(
+                sql = "undefined1 + undefined2",
+                listOf(
+                    PartiqlLogicalResolved.build { dynamicId("undefined1", caseInsensitive()) },
+                    PartiqlLogicalResolved.build { dynamicId("undefined2", caseInsensitive()) }
+                )
+            ),
+
+            // In select list and where clause
+            DynamicIdTestCase(
+                sql = "SELECT undefined1 AS u FROM foo AS f WHERE undefined2", // 1 from source
+                listOf(
+                    PartiqlLogicalResolved.build { dynamicId("undefined1", caseInsensitive(), localId("f", 0)) },
+                    PartiqlLogicalResolved.build { dynamicId("undefined2", caseInsensitive(), localId("f", 0)) }
+                )
+            ),
+            DynamicIdTestCase(
+                sql = "SELECT undefined1 AS u FROM foo AS f, bar AS b WHERE undefined2", // 2 from sources
+                listOf(
+                    PartiqlLogicalResolved.build {
+                        dynamicId("undefined1", caseInsensitive(), localId("f", 0), localId("b", 1))
+                    },
+                    PartiqlLogicalResolved.build {
+                        dynamicId("undefined2", caseInsensitive(), localId("f", 0), localId("b", 1))
+                    }
+                )
+            ),
+            DynamicIdTestCase(
+                sql = "SELECT undefined1 AS u FROM foo AS f, bar AS b, bat AS t WHERE undefined2", // 3 from sources
+                listOf(
+                    PartiqlLogicalResolved.build {
+                        dynamicId("undefined1", caseInsensitive(), localId("f", 0), localId("b", 1), localId("t", 2))
+                    },
+                    PartiqlLogicalResolved.build {
+                        dynamicId("undefined2", caseInsensitive(), localId("f", 0), localId("b", 1), localId("t", 2))
+                    }
+                )
+            )
         )
     }
 }

@@ -3,6 +3,8 @@ package org.partiql.lang.eval
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.util.toIntExact
 
+private val DEFAULT_IMPL = PartiqlPhysical.build { impl("default") }
+
 // DL TODO: consider a different name and package for this.
 internal class EvaluatingBexprCompiler(
     private val exprCompiler: ExprCompiler,
@@ -10,11 +12,19 @@ internal class EvaluatingBexprCompiler(
 ) : PartiqlPhysical.Bexpr.Converter<BindingsThunkEnv> {
     val valueFactory = thunkFactory.valueFactory
 
+    private fun blockNonDefaultImpl(i: PartiqlPhysical.Impl) {
+        if(i != DEFAULT_IMPL) {
+            TODO("Support non-default operator implementations")
+        }
+    }
+
     override fun convertProject(node: PartiqlPhysical.Bexpr.Project): BindingsThunkEnv {
         TODO("not implemented")
     }
 
     override fun convertScan(node: PartiqlPhysical.Bexpr.Scan): BindingsThunkEnv {
+        blockNonDefaultImpl(node.i)
+
         val exprThunk = exprCompiler.compile(node.expr)
         val asIndex = node.asDecl.index.value.toIntExact()
         val atIndex = node.atDecl?.index?.value?.toIntExact() ?: -1
@@ -54,6 +64,8 @@ internal class EvaluatingBexprCompiler(
     }
 
     override fun convertFilter(node: PartiqlPhysical.Bexpr.Filter): BindingsThunkEnv {
+        blockNonDefaultImpl(node.i)
+
         val predicateThunk = exprCompiler.compile(node.predicate)
         val sourceThunk = this.convert(node.source)
 
@@ -75,6 +87,8 @@ internal class EvaluatingBexprCompiler(
     }
 
     override fun convertJoin(node: PartiqlPhysical.Bexpr.Join): BindingsThunkEnv {
+        blockNonDefaultImpl(node.i)
+
         val leftThunk = this.convert(node.left)
         val rightThunk = this.convert(node.right)
         val predicateThunk = exprCompiler.compile(node.predicate)

@@ -17,6 +17,8 @@ import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.SexpAstPrettyPrinter
 
+// DL TODO: add some tests for different SELECT list projections.
+
 class AstToLogicalVisitorTransformTests {
     private val ion = IonSystemBuilder.standard().build()
     private val parser = SqlParser(ion)
@@ -51,7 +53,7 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     query(
                         bindingsToValues(
-                            id("b"),
+                            mergeStruct(structFields(id("b"))),
                             scan(id("bar"), varDecl("b"))
                         )
                     )
@@ -64,7 +66,7 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     query(
                         bindingsToValues(
-                            id("b"),
+                            mergeStruct(structFields(id("b"))),
                             filter(
                                 eq(lit(ionBool(true)), lit(ionBool(true))),
                                 scan(id("bar"), varDecl("b"))
@@ -78,7 +80,7 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     query(
                         bindingsToValues(
-                            id("b"),
+                            mergeStruct(structFields(id("b"))),
                             filter(
                                 eq(path(id("b"), pathExpr(lit(ionString("primaryKey")))), lit(ionInt(42))),
                                 scan(id("bar"), varDecl("b"))
@@ -108,9 +110,6 @@ class AstToLogicalVisitorTransformTests {
     class ArgumentsForToToDoTests : ArgumentsProviderBase() {
         override fun getParameters() = listOf(
             // SELECT queries
-            TodoTestCase("SELECT VALUE b FROM bar AS b"),
-            TodoTestCase("SELECT x AS y FROM bar AS b"),
-            TodoTestCase("SELECT b.* FROM bar AS b, bat AS b2"),
             TodoTestCase("SELECT b.* FROM bar AS b LET x AS y"),
             TodoTestCase("SELECT b.* FROM UNPIVOT x as y"),
             TodoTestCase("SELECT b.* FROM bar AS b LIMIT 1"),
@@ -118,8 +117,6 @@ class AstToLogicalVisitorTransformTests {
             TodoTestCase("SELECT b.* FROM bar AS b GROUP BY a"),
             TodoTestCase("SELECT b.* FROM bar AS b HAVING x"),
             TodoTestCase("SELECT b.* FROM bar AS b ORDER BY y"),
-            TodoTestCase("SELECT a AS b FROM bar AS c"),
-            TodoTestCase("SELECT a.*, y.* FROM bar AS d"),
             TodoTestCase("SELECT DISTINCT b.x FROM bar AS b"),
             TodoTestCase("PIVOT v AT n FROM data AS d"),
 

@@ -3,7 +3,6 @@ package org.partiql.planner
 import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
-import com.amazon.ionelement.api.ionSymbol
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.partiql.lang.domains.PartiqlPhysical
@@ -32,7 +31,7 @@ class QueryPlannerImplIntegrationTests {
                 physicalPlan = PartiqlPhysical.build {
                     query(
                         bindingsToValues(
-                            exp = localId("c", 0),
+                            exp = mergeStruct(structFields(localId("c", 0))),
                             query = filter(
                                 i = impl("default"),
                                 predicate = eq(
