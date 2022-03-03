@@ -1,22 +1,33 @@
 package org.partiql.testscript.parser
 
-import com.amazon.ion.*
+import com.amazon.ion.IonException
+import com.amazon.ion.IonString
+import com.amazon.ion.IonStruct
+import com.amazon.ion.IonSystem
+import com.amazon.ion.IonType
 import org.partiql.testscript.Failure
 import org.partiql.testscript.Result
 import org.partiql.testscript.Success
 import org.partiql.testscript.TestScriptError
-import org.partiql.testscript.parser.ast.*
+import org.partiql.testscript.parser.ast.AppendTestNode
+import org.partiql.testscript.parser.ast.AstNode
+import org.partiql.testscript.parser.ast.FileSetDefaultEnvironmentNode
+import org.partiql.testscript.parser.ast.InlineSetDefaultEnvironmentNode
+import org.partiql.testscript.parser.ast.ModuleNode
+import org.partiql.testscript.parser.ast.SetDefaultEnvironmentNode
+import org.partiql.testscript.parser.ast.SkipListNode
+import org.partiql.testscript.parser.ast.TestNode
 import org.partiql.testscript.parser.ast.builders.AppendTestBuilder
 import org.partiql.testscript.parser.ast.builders.ForBuilder
 import org.partiql.testscript.parser.ast.builders.StructBuilder
 import org.partiql.testscript.parser.ast.builders.TestBuilder
 
-//TODO replace the validation side of this class by ion-schema if/when https://github.com/amzn/ion-schema-kotlin/issues/120 
+// TODO replace the validation side of this class by ion-schema if/when https://github.com/amzn/ion-schema-kotlin/issues/120 
 // is completed. Ion schema will provide much richer error messages but without the line numbers it's hard to figure 
 // out where a correction must be made
 
 /**
- * PTS parser. 
+ * PTS parser.
  */
 class Parser(private val ion: IonSystem) {
 
@@ -31,7 +42,7 @@ class Parser(private val ion: IonSystem) {
                 when (result) {
                     is Failure -> errors.addAll(result.errors)
                     is Success -> modules.add(result.value)
-                }    
+                }
             } catch (e: IonException) {
                 throw ParserIonException(input.name, e)
             }
@@ -87,28 +98,34 @@ class Parser(private val ion: IonSystem) {
     }
 
     private fun parseSetDefaultEnvironment(reader: IonInputReader): Result<SetDefaultEnvironmentNode> {
-        return when(reader.type) {
+        return when (reader.type) {
             IonType.STRUCT -> {
                 val value = reader.ionValueWithLocation()
 
                 // remove the set_default_environment annotation
                 value.ionValue.clearTypeAnnotations()
-                Success(InlineSetDefaultEnvironmentNode(value.ionValue as IonStruct, value.scriptLocation)) 
+                Success(InlineSetDefaultEnvironmentNode(value.ionValue as IonStruct, value.scriptLocation))
             }
 
             IonType.STRING -> {
                 val value = reader.ionValueWithLocation()
 
-                Success(FileSetDefaultEnvironmentNode(
-                        (value.ionValue as IonString).stringValue(), 
-                        value.scriptLocation))
+                Success(
+                    FileSetDefaultEnvironmentNode(
+                        (value.ionValue as IonString).stringValue(),
+                        value.scriptLocation
+                    )
+                )
             }
             else -> {
-                Failure(UnexpectedIonTypeError(
+                Failure(
+                    UnexpectedIonTypeError(
                         "set_default_environment",
                         listOf(IonType.STRUCT, IonType.STRING),
                         reader.type,
-                        reader.currentScriptLocation()))
+                        reader.currentScriptLocation()
+                    )
+                )
             }
         }
     }
@@ -127,11 +144,14 @@ class Parser(private val ion: IonSystem) {
                 if (reader.type == IonType.STRING) {
                     patterns.add(reader.stringValue())
                 } else {
-                    errors.add(UnexpectedIonTypeError(
+                    errors.add(
+                        UnexpectedIonTypeError(
                             "skip_list[$index]",
                             IonType.STRING,
                             reader.type,
-                            reader.currentScriptLocation()))
+                            reader.currentScriptLocation()
+                        )
+                    )
                 }
             }
         }
@@ -158,24 +178,27 @@ class Parser(private val ion: IonSystem) {
     }
 
     private fun parseTest(reader: IonInputReader): Result<TestNode> =
-            parseStructFunction(reader, TestBuilder("test", reader.currentScriptLocation()))
+        parseStructFunction(reader, TestBuilder("test", reader.currentScriptLocation()))
 
     private fun parseAppendTest(reader: IonInputReader): Result<AppendTestNode> =
-            parseStructFunction(reader, AppendTestBuilder(reader.currentScriptLocation()))
+        parseStructFunction(reader, AppendTestBuilder(reader.currentScriptLocation()))
 
     private fun parseFor(reader: IonInputReader): Result<List<TestNode>> {
         val location = reader.currentScriptLocation()
         if (reader.type != IonType.STRUCT) {
-            return Failure(UnexpectedIonTypeError(
+            return Failure(
+                UnexpectedIonTypeError(
                     "for",
                     IonType.STRUCT,
                     reader.type,
-                    location))
+                    location
+                )
+            )
         }
 
         val builder = ForBuilder(ion, location)
 
-        reader.stepIn { seq -> 
+        reader.stepIn { seq ->
             seq.forEach { _ -> builder.setValue(reader.fieldName, reader) }
         }
 

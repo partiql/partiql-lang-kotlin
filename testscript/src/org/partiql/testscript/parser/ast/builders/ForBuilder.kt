@@ -1,15 +1,27 @@
 package org.partiql.testscript.parser.ast.builders
 
-import com.amazon.ion.*
+import com.amazon.ion.IonStruct
+import com.amazon.ion.IonSymbol
+import com.amazon.ion.IonSystem
+import com.amazon.ion.IonType
+import com.amazon.ion.IonValue
 import org.partiql.testscript.Failure
 import org.partiql.testscript.Result
 import org.partiql.testscript.Success
 import org.partiql.testscript.TestScriptError
 import org.partiql.testscript.extensions.UndefinedVariableInterpolationException
-import org.partiql.testscript.extensions.interpolate
 import org.partiql.testscript.extensions.crossProduct
+import org.partiql.testscript.extensions.interpolate
 import org.partiql.testscript.extensions.toIonText
-import org.partiql.testscript.parser.*
+import org.partiql.testscript.parser.EmptyError
+import org.partiql.testscript.parser.InvalidTemplateValueError
+import org.partiql.testscript.parser.IonInputReader
+import org.partiql.testscript.parser.IonValueWithLocation
+import org.partiql.testscript.parser.MissingRequiredError
+import org.partiql.testscript.parser.MissingTemplateVariableError
+import org.partiql.testscript.parser.ScriptLocation
+import org.partiql.testscript.parser.UnexpectedFieldError
+import org.partiql.testscript.parser.UnexpectedIonTypeError
 import org.partiql.testscript.parser.ast.TestNode
 import org.partiql.testscript.parser.ast.TestTemplate
 import org.partiql.testscript.parser.ast.VariableSet
@@ -19,7 +31,7 @@ internal class ForBuilder(private val ion: IonSystem, private val location: Scri
     private var variableSets: MutableList<Result<VariableSet>>? = null
 
     private val errors = mutableListOf<TestScriptError>()
-    
+
     fun setValue(name: String, reader: IonInputReader) {
         when (name) {
             "template" -> {
@@ -29,7 +41,7 @@ internal class ForBuilder(private val ion: IonSystem, private val location: Scri
             }
             "variable_sets" -> {
                 variableSets = mutableListOf()
-                
+
                 setVariableSet(reader)
             }
             else -> errors.add(UnexpectedFieldError("for.$name", reader.currentScriptLocation()))
@@ -39,10 +51,13 @@ internal class ForBuilder(private val ion: IonSystem, private val location: Scri
     private fun setTemplate(reader: IonInputReader) {
         if (reader.type != IonType.LIST) {
             val error = Failure<TestTemplate>(
-                    UnexpectedIonTypeError("for.template",
-                            IonType.LIST,
-                            reader.type,
-                            reader.currentScriptLocation()))
+                UnexpectedIonTypeError(
+                    "for.template",
+                    IonType.LIST,
+                    reader.type,
+                    reader.currentScriptLocation()
+                )
+            )
             templates!!.add(error)
         } else {
             reader.stepIn()
@@ -72,11 +87,13 @@ internal class ForBuilder(private val ion: IonSystem, private val location: Scri
     private fun setVariableSet(reader: IonInputReader) {
         if (reader.type != IonType.LIST) {
             val error = Failure<VariableSet>(
-                    UnexpectedIonTypeError(
-                            "for.variable_sets",
-                            IonType.LIST,
-                            reader.type,
-                            reader.currentScriptLocation()))
+                UnexpectedIonTypeError(
+                    "for.variable_sets",
+                    IonType.LIST,
+                    reader.type,
+                    reader.currentScriptLocation()
+                )
+            )
 
             variableSets!!.add(error)
         } else {
@@ -87,11 +104,14 @@ internal class ForBuilder(private val ion: IonSystem, private val location: Scri
                     val value = reader.ionValueWithLocation()
                     Success(VariableSet(value.ionValue as IonStruct, value.scriptLocation))
                 } else {
-                    Failure(UnexpectedIonTypeError(
+                    Failure(
+                        UnexpectedIonTypeError(
                             "variable_sets[$index]",
                             IonType.STRUCT,
                             reader.type,
-                            reader.currentScriptLocation()))
+                            reader.currentScriptLocation()
+                        )
+                    )
                 }
                 variableSets!!.add(result)
 
@@ -118,10 +138,10 @@ internal class ForBuilder(private val ion: IonSystem, private val location: Scri
 
         val testBuilder = TestBuilder("for.template", location)
 
-
         val id = IonValueWithLocation(
-                ion.newSymbol("${testTemplate.id}\$\$${variableSet.variables.toIonText()}"),
-                location)
+            ion.newSymbol("${testTemplate.id}\$\$${variableSet.variables.toIonText()}"),
+            location
+        )
 
         testBuilder.setValue("id", id)
 
@@ -189,8 +209,8 @@ internal class ForBuilder(private val ion: IonSystem, private val location: Scri
         val (validVariableSets, variableSetsWithErrors) = variableSets!!.partition { it is Success }
 
         templatesWithErrors.map { it as Failure }
-                .union(variableSetsWithErrors.map { it as Failure })
-                .forEach { errors.addAll(it.errors) }
+            .union(variableSetsWithErrors.map { it as Failure })
+            .forEach { errors.addAll(it.errors) }
 
         val testNodes = mutableListOf<TestNode>()
         validTemplates.crossProduct(validVariableSets).forEach {
@@ -213,15 +233,14 @@ internal class ForBuilder(private val ion: IonSystem, private val location: Scri
 
     private fun interpolate(target: IonValue, variableSet: VariableSet): Result<IonValue> = try {
         Success(target.interpolate(variableSet.variables))
-    }
-    catch (e: UndefinedVariableInterpolationException) {
+    } catch (e: UndefinedVariableInterpolationException) {
         Failure(MissingTemplateVariableError(e.variableName, variableSet.scriptLocation))
     }
 }
 
-private class TestTemplateBuilder(path: String, location: ScriptLocation) : 
-        StructBuilder<TestTemplate>(path, location) {
-    
+private class TestTemplateBuilder(path: String, location: ScriptLocation) :
+    StructBuilder<TestTemplate>(path, location) {
+
     private fun validateTemplate(label: String, field: IonValueWithLocation?, expected: IonType) {
         if (field == null) {
             return
@@ -237,14 +256,14 @@ private class TestTemplateBuilder(path: String, location: ScriptLocation) :
     }
 
     override fun build(): Result<TestTemplate> {
-        val id = fieldMap.remove("id") 
-        val statement = fieldMap.remove("statement") 
-        val expected = fieldMap.remove("expected") 
-        val description = fieldMap.remove("description") 
+        val id = fieldMap.remove("id")
+        val statement = fieldMap.remove("statement")
+        val expected = fieldMap.remove("expected")
+        val description = fieldMap.remove("description")
         val environment = fieldMap.remove("environment")
 
         validateUnexpectedFields()
-        
+
         validateRequired("$path.id", id)
         validateType("$path.id", id, IonType.SYMBOL)
 
@@ -259,13 +278,16 @@ private class TestTemplateBuilder(path: String, location: ScriptLocation) :
         validateTemplate("$path.expected", expected, IonType.SEXP)
 
         return if (errors.isEmpty()) {
-            Success(TestTemplate(
+            Success(
+                TestTemplate(
                     id = (id!!.ionValue as IonSymbol).stringValue(),
                     description = description?.ionValue,
                     statement = statement!!.ionValue,
                     environment = environment?.ionValue,
                     expected = expected!!.ionValue,
-                    scriptLocation = location))
+                    scriptLocation = location
+                )
+            )
         } else {
             Failure(errors)
         }
