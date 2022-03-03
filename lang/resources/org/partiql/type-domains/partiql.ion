@@ -488,7 +488,6 @@ may then be further optimized by selecting better implementations of each operat
             project_item
             projection
             from_source
-            join_type
         )
 
         // Now we include new stuff that's unique to PartiQL's relational algebra.
@@ -519,6 +518,13 @@ may then be further optimized by selecting better implementations of each operat
                 // Evaluates `predicate` within the scope of every row of `bexpr`, and only returns those
                 // rows for which `predicate` returns true.
                 (filter predicate::expr source::bexpr)
+
+                // DL TODO: documentation
+                (join
+                    join_type::join_type
+                    left::bexpr
+                    right::bexpr
+                    predicate::expr)
 
                 // Future work: additional relational operators
             )
@@ -577,9 +583,9 @@ may then be further optimized by selecting better implementations of each operat
         (with expr
             (exclude id)
             (include
-                 // looks up `name` with the specified `case` in each of the `search` expressions (if it results in a
-                 // struct) or the evaluation-time global scope.
-                 // DL TODO: needs longer doc?
+                 // Searches for a field with the specified name (matching the case-sensitivity), in each of
+                 // the expressions in `search` and returns its value, if found.  If not found, searches the global
+                 // scope instead.
                  // DL TODO: need deep consideration of whether or not global_id and dynamic_id should actually be
                  // DL TODO: combined since dynamic_id with no search expressions extremely similar to global_id.
                  (dynamic_id name::symbol case::case_sensitivity search::(* expr 0))
@@ -638,6 +644,12 @@ may then be further optimized by selecting better implementations of each operat
 
                 (scan i::impl expr::expr as_decl::var_decl at_decl::(? var_decl) by_decl::(? var_decl))
                 (filter i::impl predicate::expr source::bexpr)
+                (join
+                    i::impl
+                    join_type::join_type
+                    left::bexpr
+                    right::bexpr
+                    predicate::expr)
             )
         )
     )

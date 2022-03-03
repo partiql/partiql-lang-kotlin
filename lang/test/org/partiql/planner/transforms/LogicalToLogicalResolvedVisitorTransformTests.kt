@@ -3,7 +3,6 @@ package org.partiql.planner.transforms
 import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
-import com.amazon.ionelement.api.ionSymbol
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
@@ -17,7 +16,8 @@ import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.planner.createFakeGlobalBindings
 import org.partiql.planner.problem
 
-// DL TODO: add some tests that allow unresolved variables.
+// DL TODO: add some tests that allow unresolved variables, i.e. dynamic_id nodes.
+// DL TODO: add some tests for different SELECT list projections.
 
 class LogicalToLogicalResolvedVisitorTransformTests {
     data class TestCase(

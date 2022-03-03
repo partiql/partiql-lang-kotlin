@@ -1,6 +1,5 @@
 package org.partiql.planner.transforms
 
-import com.amazon.ionelement.api.IonElement
 import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.PartiqlLogicalResolved
@@ -69,18 +68,18 @@ private fun PartiqlLogical.Expr.Id.asGlobalId(uniqueId: String): PartiqlLogicalR
         globalId_(
             name = name,
             uniqueId = uniqueId.asPrimitive(),
-            metas = metas
+            metas = this@asGlobalId.metas
         )
     }
 
 private fun PartiqlLogical.Expr.Id.asLocalId(index: Int): PartiqlLogicalResolved.Expr =
     PartiqlLogicalResolved.build {
-        localId_(name, index.asPrimitive())
+        localId_(name, index.asPrimitive(), this@asLocalId.metas)
     }
 
 private fun PartiqlLogical.Expr.Id.asErrorId(): PartiqlLogicalResolved.Expr =
     PartiqlLogicalResolved.build {
-        localId_(name, (-1).asPrimitive())
+        localId_(name, (-1).asPrimitive(), this@asErrorId.metas)
     }
 
 /**
@@ -188,9 +187,13 @@ private data class LogicalToLogicalResolvedVisitorTransform(
             }
             ResolutionResult.Undefined -> {
                 if(this.allowUndefinedVariables) {
-                    // DL TODO: this currently only works for dynamically resolved global variables.
-                    // DL TODO: need to include search expressions.
-                    node.asDynamicId()
+                    node.asDynamicId(
+                        this.currentScope.varDecls.map {
+                            PartiqlLogicalResolved.build {
+                                localId(it.name.text, it.indexMeta.toLong())
+                            } as PartiqlLogicalResolved.Expr
+                        }
+                    )
                 } else {
                     node.asErrorId().also {
                         problemHandler.handleProblem(
@@ -212,8 +215,15 @@ private data class LogicalToLogicalResolvedVisitorTransform(
         val bindings = getNestedScope(node.query, currentScope)
         return nest(bindings).transformExpr(node.exp)
     }
+
     override fun transformBexprFilter_predicate(node: PartiqlLogical.Bexpr.Filter): PartiqlLogicalResolved.Expr {
         val bindings = getNestedScope(node.source, currentScope)
+        val nested = this.copy(currentScope = bindings)
+        return nested.transformExpr(node.predicate)
+    }
+
+    override fun transformBexprJoin_predicate(node: PartiqlLogical.Bexpr.Join): PartiqlLogicalResolved.Expr {
+        val bindings = getNestedScope(node, currentScope)
         val nested = this.copy(currentScope = bindings)
         return nested.transformExpr(node.predicate)
     }
@@ -259,11 +269,28 @@ private data class LogicalToLogicalResolvedVisitorTransform(
                 getNestedScope(bindingsTerm.source, parent)
                 // note: `(filter ...)` does not itself produce new bindings so no need to check for duplicates.
             }
+            is PartiqlLogical.Bexpr.Join -> {
+                // note: we don't actually care what the parent scope of the left and right scopes are...
+                // we assign the parent scope to the LocalScope returned by this function.
+                val leftScope = getNestedScope(bindingsTerm.left, parent = null)
+                val rightScope = getNestedScope(bindingsTerm.right, parent = null)
+
+                val allVariables = leftScope.varDecls + rightScope.varDecls
+                checkForDuplicateVariables(allVariables)
+                LocalScope(allVariables, parent)
+            }
         }
 
-    private fun PartiqlLogical.Expr.Id.asDynamicId(): PartiqlLogicalResolved.Expr =
+    private fun PartiqlLogical.Expr.Id.asDynamicId(
+        search: List<PartiqlLogicalResolved.Expr>
+    ): PartiqlLogicalResolved.Expr =
         PartiqlLogicalResolved.build {
-            dynamicId_(name, transformCaseSensitivity(case))
+            dynamicId_(
+                name = name,
+                case = transformCaseSensitivity(case),
+                search = search,
+                metas = this@asDynamicId.metas
+            )
         }
 
 }

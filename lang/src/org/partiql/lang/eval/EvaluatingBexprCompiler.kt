@@ -73,4 +73,60 @@ internal class EvaluatingBexprCompiler(
             )
         }
     }
+
+    override fun convertJoin(node: PartiqlPhysical.Bexpr.Join): BindingsThunkEnv {
+        val leftThunk = this.convert(node.left)
+        val rightThunk = this.convert(node.right)
+        val predicateThunk = exprCompiler.compile(node.predicate)
+
+//        if(!(node.predicate is PartiqlPhysical.Expr.Lit && node.predicate.value is BoolElement && node.predicate.value.booleanValue)) {
+//            TODO("Support JOIN predicates other than TRUE")
+//        }
+
+        return when(node.joinType) {
+            is PartiqlPhysical.JoinType.Inner -> thunkFactory.bindingsThunk(node.metas) { env ->
+                // evaluate left thunk
+                val leftRows = leftThunk(env)
+                BindingsCollection(
+                    BindingsCollectionType.BAG,
+                    // DL TODO: verify that this is lazy and not eager.
+                    sequence<BindingsMap> {
+                        // DL TODO: can we reduce the need to build so many hashsets?
+                        // DL TODO: create a BindingsMap.merge function which also checks for duplicate variable indexes, as this should indicate a bug.
+                        // DL TODO: rename these variables for clarity (clearly indicate input vs output bindings)
+                        leftRows.asSequence().forEach { leftOutputBindings: BindingsMap ->
+                            val rightBindings = newBindingsMap().apply {
+                                putAll(env.localBindingsMap)
+                                putAll(leftOutputBindings)
+                            }
+
+                            val rightRows = rightThunk(env.copy(localBindingsMap = rightBindings))
+                            rightRows.asSequence().forEach { rightOutputBindings ->
+                                val joinOutputBindings = newBindingsMap().apply {
+                                    putAll(leftOutputBindings)
+                                    putAll(rightOutputBindings)
+                                }
+
+                                // Now we've got the final output scope, let's check the predicate and yield
+                                // a row if it matches.
+                                val matches = predicateThunk(env.copy(localBindingsMap = joinOutputBindings))
+                                when(matches.type) {
+                                    ExprValueType.MISSING, ExprValueType.NULL -> { }
+                                    ExprValueType.BOOL -> {
+                                        if (matches.booleanValue()) {
+                                            yield(joinOutputBindings)
+                                        }; Unit
+                                    }
+                                    else -> TODO("Handle mismatched where predicate type.")
+                                }.let { }
+                            }
+                        }
+                    }
+                )
+            }
+            is PartiqlPhysical.JoinType.Full -> TODO("FULL JOIN")
+            is PartiqlPhysical.JoinType.Left -> TODO("LEFT JOIN")
+            is PartiqlPhysical.JoinType.Right -> TODO("RIGHT JOIN")
+        }
+    }
 }

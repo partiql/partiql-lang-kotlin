@@ -1,5 +1,6 @@
 package org.partiql.planner.transforms
 
+import com.amazon.ionelement.api.ionBool
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlAstToPartiqlLogicalVisitorTransform
 import org.partiql.lang.domains.PartiqlLogical
@@ -35,6 +36,7 @@ private object AstToLogicalVisitorTransform : PartiqlAstToPartiqlLogicalVisitorT
                 when (val project = node.project) {
                     is PartiqlAst.Projection.ProjectValue -> transformExpr(project.value)
                     is PartiqlAst.Projection.ProjectList -> {
+                        // DL TODO: don't include needless `mergeStruct` operator (or is this always requried?)
                         mergeStruct(
                             List(project.projectItems.size) { idx ->
                                 when(val projectItem = project.projectItems[idx]) {
@@ -57,7 +59,8 @@ private object AstToLogicalVisitorTransform : PartiqlAstToPartiqlLogicalVisitorT
 
                     is PartiqlAst.Projection.ProjectPivot -> TODO("PIVOT ...")
                 },
-                algebra
+                algebra,
+                node.project.metas
             )
         }
 
@@ -117,8 +120,15 @@ private object FromSourceToBexpr : PartiqlAst.FromSource.Converter<PartiqlLogica
         TODO("Support for UNPIVOT")
     }
 
-    override fun convertJoin(node: PartiqlAst.FromSource.Join): PartiqlLogical.Bexpr {
-        TODO("Support for JOINs")
-    }
+    override fun convertJoin(node: PartiqlAst.FromSource.Join): PartiqlLogical.Bexpr =
+        PartiqlLogical.build {
+            join(
+                joinType = AstToLogicalVisitorTransform.transformJoinType(node.type),
+                left = convert(node.left),
+                right = convert(node.right),
+                predicate = node.predicate?.let { AstToLogicalVisitorTransform.transformExpr(it) } ?: lit(ionBool(true)),
+                node.metas
+            )
+        }
 }
 

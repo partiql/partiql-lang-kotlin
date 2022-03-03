@@ -322,7 +322,10 @@ internal class CompilerPipelineImpl(
                     } ?: error("PlanningResult.Error did not include an error")
                 )
             }
-            is PlanningResult.Success -> return compiler.compile(result.physicalPlan)
+            is PlanningResult.Success -> {
+                //println(result.physicalPlan)
+                return compiler.compile(result.physicalPlan)
+            }
         }
     }
 

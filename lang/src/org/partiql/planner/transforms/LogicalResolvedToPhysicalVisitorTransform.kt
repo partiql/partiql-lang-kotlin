@@ -42,5 +42,19 @@ internal class LogicalResolvedToPhysicalVisitorTransform : PartiqlLogicalResolve
             )
         }
     }
+
+    override fun transformBexprJoin(node: PartiqlLogicalResolved.Bexpr.Join): PartiqlPhysical.Bexpr {
+        val thiz = this
+        return PartiqlPhysical.build {
+            join(
+                i = DEFAULT_IMPL,
+                joinType = thiz.transformJoinType(node.joinType),
+                left = thiz.transformBexpr(node.left),
+                right = thiz.transformBexpr(node.right),
+                predicate = thiz.transformExpr(node.predicate),
+                metas = node.metas
+            )
+        }
+    }
 }
 

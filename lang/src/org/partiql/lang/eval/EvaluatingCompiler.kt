@@ -163,7 +163,7 @@ internal class EvaluatingCompiler(
         return when (expr) {
             is PartiqlPhysical.Expr.Lit -> compileLit(expr, metas)
             is PartiqlPhysical.Expr.Missing -> compileMissing(metas)
-            is PartiqlPhysical.Expr.DynamicId -> compileDynamicId(expr, metas)
+            is PartiqlPhysical.Expr.DynamicId -> compileDynamicId(expr)
             is PartiqlPhysical.Expr.LocalId -> compileLocalId(expr, metas)
             is PartiqlPhysical.Expr.GlobalId -> compileGlobalId(expr)
             is PartiqlPhysical.Expr.SimpleCase -> compileSimpleCase(expr, metas)
@@ -925,43 +925,56 @@ internal class EvaluatingCompiler(
     private fun compileMissing(metas: MetaContainer): ThunkEnv =
         thunkFactory.thunkEnv(metas) { valueFactory.missingValue }
 
-
-    private fun compileDynamicId(expr: PartiqlPhysical.Expr.DynamicId, metas: MetaContainer): ThunkEnv {
+    private fun compileDynamicId(expr: PartiqlPhysical.Expr.DynamicId): ThunkEnv {
         val bindingName = BindingName(expr.name.text, expr.case.toBindingCase())
-        val evalVariableReference = when (compileOptions.undefinedVariable) {
-            UndefinedVariableBehavior.ERROR ->
-                thunkFactory.thunkEnv(metas) { env ->
-                    when (val value = env.session.globals[bindingName]) {
-                    null -> {
-                            val (errorCode, hint) = when (expr.case) {
-                                is PartiqlPhysical.CaseSensitivity.CaseSensitive ->
-                                    Pair(
-                                        ErrorCode.EVALUATOR_QUOTED_BINDING_DOES_NOT_EXIST,
-                                        " $UNBOUND_QUOTED_IDENTIFIER_HINT"
-                                    )
-                                is PartiqlPhysical.CaseSensitivity.CaseInsensitive ->
-                                    Pair(ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST, "")
-                            }
-                            throw EvaluationException(
-                                "No such binding: ${bindingName.name}.$hint",
-                                errorCode,
-                                errorContextFrom(metas).also {
-                                    it[Property.BINDING_NAME] = bindingName.name
-                                },
-                                internal = false
-                            )
-                        }
-                        else -> value
-                    }
-                }
-            UndefinedVariableBehavior.MISSING ->
-                thunkFactory.thunkEnv(metas) { env ->
-                    env.session.globals[bindingName] ?: valueFactory.missingValue
-                }
-        }
+        val searchThunks = expr.search.map { compileAstExpr(it) }.asSequence()
 
-        return evalVariableReference
+        return thunkFactory.thunkEnv(expr.metas) { env ->
+            // search in the dynamic search locations first.
+            val found = searchThunks.map {
+                val found = it(env)
+                when (found.type) {
+                    ExprValueType.STRUCT ->
+                        // DL TODO: some binding implementations can throw--do we care?
+                        found.bindings[bindingName]
+                    else ->
+                        null
+                }
+            }.firstOrNull { it != null }
+                ?: env.session.globals[bindingName]
+
+            return@thunkEnv found ?: handleUndefinedVariable(bindingName, expr.metas)
+        }
     }
+
+    private fun handleUndefinedVariable(
+        bindingName: BindingName,
+        metas: MetaContainer
+    ) = when (compileOptions.undefinedVariable) {
+        UndefinedVariableBehavior.ERROR -> {
+            val (errorCode, hint) = when (bindingName.bindingCase) {
+                BindingCase.SENSITIVE ->
+                    ErrorCode.EVALUATOR_QUOTED_BINDING_DOES_NOT_EXIST to " $UNBOUND_QUOTED_IDENTIFIER_HINT"
+                BindingCase.INSENSITIVE ->
+                    ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST to ""
+            }
+            throw EvaluationException(
+                "No such binding: ${bindingName.name}.$hint",
+                errorCode,
+                errorContextFrom(metas).also {
+                    it[Property.BINDING_NAME] = bindingName.name
+                },
+                internal = false
+            )
+        }
+        UndefinedVariableBehavior.MISSING -> valueFactory.missingValue
+    }
+
+    private fun compileGlobalId(expr: PartiqlPhysical.Expr.GlobalId): ThunkEnv =
+        thunkFactory.thunkEnv(expr.metas) { env ->
+            val bindingName = BindingName(expr.uniqueId.text, BindingCase.SENSITIVE)
+            env.session.globals[bindingName]  ?: handleUndefinedVariable(bindingName, expr.metas)
+        }
 
     @Suppress("UNUSED_PARAMETER")
     private fun compileLocalId(expr: PartiqlPhysical.Expr.LocalId, metas: MetaContainer): ThunkEnv {
@@ -977,13 +990,6 @@ internal class EvaluatingCompiler(
         }
     }
 
-
-    private fun compileGlobalId(expr: PartiqlPhysical.Expr.GlobalId): ThunkEnv =
-        thunkFactory.thunkEnv(expr.metas) { env ->
-            // DL TODO: ok, this *really* makes me think dynamic_id and global_id should really be the same node.
-            env.session.globals[BindingName(expr.uniqueId.text, BindingCase.SENSITIVE)]
-                ?: TODO("undefined global_id")
-        }
 
 
     private fun compileParameter(expr: PartiqlPhysical.Expr.Parameter, metas: MetaContainer): ThunkEnv {
