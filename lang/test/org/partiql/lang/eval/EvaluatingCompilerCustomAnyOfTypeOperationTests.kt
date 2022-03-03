@@ -12,7 +12,6 @@ import org.partiql.lang.types.NumberConstraint
 import org.partiql.lang.types.SexpType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.StringType
-import org.partiql.lang.types.StringType.*
 import org.partiql.lang.types.StructType
 import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.util.ArgumentsProviderBase
@@ -33,10 +32,11 @@ import org.partiql.lang.util.permissiveTypingMode
  * - `CAN_LOSSLESS_CAST(<value> AS ES_ANY)`
  * - `<value> IS ES_ANY`
  */
-class EvaluatingCompilerCustomAnyOfTypeOperationTests: CastTestBase() {
+class EvaluatingCompilerCustomAnyOfTypeOperationTests : CastTestBase() {
     companion object {
         val customTypes = listOf(
-            CustomType("ES_ANY", esAny))
+            CustomType("ES_ANY", esAny)
+        )
 
         // Cases that pass the input to the output directly (for IS testing)
         private val esAnyCastIdentityCases = listOf(
@@ -82,9 +82,11 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests: CastTestBase() {
                 case("[1, `{{\"woof\"}}`, 9999.0]", ErrorCode.EVALUATOR_CAST_FAILED),
                 // sexp
                 //   This round trips from <sexp(<sym>, <sym>, <list(<timestamp>)>)> to <sexp(<str>, <str>, <list(<str>)>)>
-                case("`(a b [2099-01-21T12:34:56Z])`",
+                case(
+                    "`(a b [2099-01-21T12:34:56Z])`",
                     "[\"a\", \"b\", [\"2099-01-21T12:34:56Z\"]]",
-                    FixSemantics(CastQuality.LOSSLESS)),
+                    FixSemantics(CastQuality.LOSSLESS)
+                ),
                 case("`(a b [2099-01-21T12:34:56Z, {{Ymxhcmc=}}])`", ErrorCode.EVALUATOR_CAST_FAILED),
                 // bag
                 case("<<99, 20000, MISSING>>", "[99, 20000, null]", FixSemantics(CastQuality.LOSSY)) {
@@ -93,32 +95,38 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests: CastTestBase() {
                 },
                 case("<<99, 20000, MISSING, `{{}}`>>", ErrorCode.EVALUATOR_CAST_FAILED),
                 // struct
-                case("`{a: 1000, b: 1312000.1e0, c: 9999000.0, d: null}`",
+                case(
+                    "`{a: 1000, b: 1312000.1e0, c: 9999000.0, d: null}`",
                     "{a: 1000, b: 1312000, c: 9999000, d: null}",
-                    CastQuality.LOSSY),
-                case("`{a: 1000, b: 1312000.1e0, c: 9999000.0, d: null, e:[{f:({{}})}]}`",
-                    ErrorCode.EVALUATOR_CAST_FAILED)
+                    CastQuality.LOSSY
+                ),
+                case(
+                    "`{a: 1000, b: 1312000.1e0, c: 9999000.0, d: null, e:[{f:({{}})}]}`",
+                    ErrorCode.EVALUATOR_CAST_FAILED
+                )
             ).types(listOf("ES_ANY"))
         ).flatten()
 
         private val esAnyCastCases = esAnyCastIdentityCases + esAnyCastConvertOrFailCases
 
         // TODO consider refactoring into CastTestBase (with parameter)
-        fun List<CastCase>.toConfiguredCases(): List<ConfiguredCastCase> = (flatMap { case ->
-            castBehaviors.map { (castBehaviorName, castBehaviorConfig) ->
-                ConfiguredCastCase(case, "$castBehaviorName, LEGACY_TYPING_MODE") {
-                    castBehaviorConfig(this)
-                    legacyTypingMode()
+        fun List<CastCase>.toConfiguredCases(): List<ConfiguredCastCase> = (
+            flatMap { case ->
+                castBehaviors.map { (castBehaviorName, castBehaviorConfig) ->
+                    ConfiguredCastCase(case, "$castBehaviorName, LEGACY_TYPING_MODE") {
+                        castBehaviorConfig(this)
+                        legacyTypingMode()
+                    }
+                }
+            } + toPermissive().flatMap { case ->
+                castBehaviors.map { (castBehaviorName, castBehaviorConfig) ->
+                    ConfiguredCastCase(case, "$castBehaviorName, PERMISSIVE_TYPING_MODE") {
+                        castBehaviorConfig(this)
+                        permissiveTypingMode()
+                    }
                 }
             }
-        } + toPermissive().flatMap { case ->
-            castBehaviors.map { (castBehaviorName, castBehaviorConfig) ->
-                ConfiguredCastCase(case, "$castBehaviorName, PERMISSIVE_TYPING_MODE") {
-                    castBehaviorConfig(this)
-                    permissiveTypingMode()
-                }
-            }
-        }).map {
+            ).map {
             it.copy(
                 configurePipeline = {
                     customDataTypes(customTypes)
@@ -126,17 +134,19 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests: CastTestBase() {
             )
         }
 
-        fun List<CastCase>.toConfiguredHonorParamMode(): List<ConfiguredCastCase> = (map { case ->
-            ConfiguredCastCase(case, "HONOR_PARAMS, LEGACY_TYPING_MODE") {
-                honorTypedOpParameters()
-                legacyTypingMode()
+        fun List<CastCase>.toConfiguredHonorParamMode(): List<ConfiguredCastCase> = (
+            map { case ->
+                ConfiguredCastCase(case, "HONOR_PARAMS, LEGACY_TYPING_MODE") {
+                    honorTypedOpParameters()
+                    legacyTypingMode()
+                }
+            } + toPermissive().map { case ->
+                ConfiguredCastCase(case, "HONOR_PARAMS, PERMISSIVE_TYPING_MODE") {
+                    honorTypedOpParameters()
+                    permissiveTypingMode()
+                }
             }
-        } + toPermissive().map { case ->
-            ConfiguredCastCase(case, "HONOR_PARAMS, PERMISSIVE_TYPING_MODE") {
-                honorTypedOpParameters()
-                permissiveTypingMode()
-            }
-        }).map {
+            ).map {
             it.copy(
                 configurePipeline = {
                     customDataTypes(customTypes)
@@ -197,21 +207,23 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests: CastTestBase() {
     fun esAnyIs(configuredCastCase: CastTestBase.ConfiguredCastCase) = configuredCastCase.assertCase()
     class EsAnyIsConfiguredCastCases : ArgumentsProviderBase() {
         override fun getParameters(): List<ConfiguredCastCase> {
-            val esAnyIsBaseCases = (esAnyCastIdentityCases.map { case ->
-                case.copy(
-                    funcName = "IS",
-                    expected = "true",
-                    expectedErrorCode = null,
-                    additionalAssertBlock = { }
+            val esAnyIsBaseCases = (
+                esAnyCastIdentityCases.map { case ->
+                    case.copy(
+                        funcName = "IS",
+                        expected = "true",
+                        expectedErrorCode = null,
+                        additionalAssertBlock = { }
+                    )
+                } + esAnyCastConvertOrFailCases.map { case ->
+                    case.copy(
+                        funcName = "IS",
+                        expected = "false",
+                        expectedErrorCode = null,
+                        additionalAssertBlock = { }
+                    )
+                }
                 )
-            } + esAnyCastConvertOrFailCases.map { case ->
-                case.copy(
-                    funcName = "IS",
-                    expected = "false",
-                    expectedErrorCode = null,
-                    additionalAssertBlock = { }
-                )
-            })
 
             return esAnyIsBaseCases.toConfiguredCases() +
                 // Take the bad union of type cases and rewrite them for `IS`.
@@ -227,12 +239,14 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests: CastTestBase() {
                                     additionalAssertBlock = { }
                                 ),
                                 configurePipeline = {
-                                    customDataTypes(listOf(
-                                        CustomType(
-                                            "ES_ANY",
-                                            typedOpParameter = badType
+                                    customDataTypes(
+                                        listOf(
+                                            CustomType(
+                                                "ES_ANY",
+                                                typedOpParameter = badType
+                                            )
                                         )
-                                    ))
+                                    )
                                 },
                                 description = "${configuredCase.description} $badType"
                             )
@@ -250,7 +264,7 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests: CastTestBase() {
                     // duplicate types
                     anyOfType(
                         StaticType.STRING,
-                        StringType(StringLengthConstraint.Constrained(NumberConstraint.UpTo(500)))
+                        StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(500)))
                     ),
                     anyOfType(
                         StaticType.INT,
@@ -275,12 +289,14 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests: CastTestBase() {
                             additionalAssertBlock = { }
                         ),
                         configurePipeline = {
-                            customDataTypes(listOf(
-                                CustomType(
-                                    "ES_ANY",
-                                    typedOpParameter = badType
+                            customDataTypes(
+                                listOf(
+                                    CustomType(
+                                        "ES_ANY",
+                                        typedOpParameter = badType
+                                    )
                                 )
-                            ))
+                            )
                         },
                         description = "${case.description} $badType"
                     ).let {

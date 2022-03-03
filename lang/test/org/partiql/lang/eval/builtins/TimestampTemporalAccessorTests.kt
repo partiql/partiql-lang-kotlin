@@ -1,6 +1,5 @@
 package org.partiql.lang.eval.builtins
 
-
 import com.amazon.ion.Timestamp
 import junitparams.JUnitParamsRunner
 import junitparams.Parameters
@@ -22,7 +21,7 @@ class TimestampTemporalAccessorTests {
     fun createRng(): Random {
         val rng = Random()
         val seed = rng.nextLong()
-        System.out.println("Randomly generated seed is ${seed}.  Use this to reproduce failures in dev environment.")
+        System.out.println("Randomly generated seed is $seed.  Use this to reproduce failures in dev environment.")
         rng.setSeed(seed)
         return rng
     }
@@ -31,12 +30,16 @@ class TimestampTemporalAccessorTests {
     @Parameters
     @TestCaseName("formatRandomTimesWithSymbol_{0}")
     fun formatRandomTimesWithAllDateFormatSymbolsTest(formatSymbol: String) {
-        System.out.println(String.format("Generating %,d random dates, formatting each of them with \"%s\" comparing the result...",
-                ITERATION_COUNT, formatSymbol))
+        System.out.println(
+            String.format(
+                "Generating %,d random dates, formatting each of them with \"%s\" comparing the result...",
+                ITERATION_COUNT, formatSymbol
+            )
+        )
 
         val rng = createRng()
 
-        val formatter = DateTimeFormatter.ofPattern(formatSymbol);
+        val formatter = DateTimeFormatter.ofPattern(formatSymbol)
 
         (0..ITERATION_COUNT).toList().parallelStream().forEach { _ ->
             val timestamp = rng.nextTimestamp()
@@ -49,11 +52,11 @@ class TimestampTemporalAccessorTests {
             assertEquals(formattedOffsetDateTime, formattedTimestamp)
         }
     }
-    fun parametersForFormatRandomTimesWithAllDateFormatSymbolsTest() : Set<Char> = TIMESTAMP_FORMAT_SYMBOLS
+    fun parametersForFormatRandomTimesWithAllDateFormatSymbolsTest(): Set<Char> = TIMESTAMP_FORMAT_SYMBOLS
 
     @Test
     fun timestampWithUnknownOffset() {
-        //Note:  Ion spec allows representation of unknown offset with "0"
+        // Note:  Ion spec allows representation of unknown offset with "0"
         val timestamp = Timestamp.forSecond(1969, 7, 20, 20, 18, 36, null)
         assertNull(timestamp.localOffset)
 
@@ -84,23 +87,22 @@ class TimestampTemporalAccessorTests {
      * Java's DateTimeFormatter with something else later.
      */
     fun parametersForHandleUnsupportedFormatSymbolsTest(): List<UnsupportedSymbolTestCase> = listOf(
-        UnsupportedSymbolTestCase("G", UnsupportedTemporalTypeException::class.java),    //Era, e.g. "AD"
-        UnsupportedSymbolTestCase("u", UnsupportedTemporalTypeException::class.java),    //Year of era, e.g. "1978"; "78", (this is always positive, even for BC values)
-        UnsupportedSymbolTestCase("Q", UnsupportedTemporalTypeException::class.java),    //Quarter of year (1-4)
-        UnsupportedSymbolTestCase("q", UnsupportedTemporalTypeException::class.java),    //Quarter of year e.g. "Q3" "3rd quarter",
-        UnsupportedSymbolTestCase("E", UnsupportedTemporalTypeException::class.java),    //Day of week
-        UnsupportedSymbolTestCase("F", UnsupportedTemporalTypeException::class.java),    //Week of month
-        UnsupportedSymbolTestCase("K", UnsupportedTemporalTypeException::class.java),    //hour of am-pm (0-11)
-        UnsupportedSymbolTestCase("k", UnsupportedTemporalTypeException::class.java),    //clock of am-pm (1-24)
-        UnsupportedSymbolTestCase("A", UnsupportedTemporalTypeException::class.java),    //Millsecond of day (0-85,499,999)
-        UnsupportedSymbolTestCase("N", UnsupportedTemporalTypeException::class.java),    //Nano of day (0-85,499,999,999,999)
-        UnsupportedSymbolTestCase("Y", UnsupportedTemporalTypeException::class.java),    //Week based year
-        UnsupportedSymbolTestCase("w", UnsupportedTemporalTypeException::class.java),    //Week of week based year
-        UnsupportedSymbolTestCase("W", UnsupportedTemporalTypeException::class.java),    //Week of month
-        UnsupportedSymbolTestCase("e", UnsupportedTemporalTypeException::class.java),    //Localized day of week (number)
-        UnsupportedSymbolTestCase("c", UnsupportedTemporalTypeException::class.java),    //Localized day of week (week name, e.g. "Tue" or "Tuesday")
-        UnsupportedSymbolTestCase("VV", DateTimeException::class.java),   //time zone id, e.g "America/Los_Angeles; Z; -08:30" - ion timestamp does not know timezone, only offset
-        UnsupportedSymbolTestCase("z", DateTimeException::class.java)     //time zone name, e.g. "Pacific Standard Time" - ion timestamp does not know timezone, only offset
+        UnsupportedSymbolTestCase("G", UnsupportedTemporalTypeException::class.java), // Era, e.g. "AD"
+        UnsupportedSymbolTestCase("u", UnsupportedTemporalTypeException::class.java), // Year of era, e.g. "1978"; "78", (this is always positive, even for BC values)
+        UnsupportedSymbolTestCase("Q", UnsupportedTemporalTypeException::class.java), // Quarter of year (1-4)
+        UnsupportedSymbolTestCase("q", UnsupportedTemporalTypeException::class.java), // Quarter of year e.g. "Q3" "3rd quarter",
+        UnsupportedSymbolTestCase("E", UnsupportedTemporalTypeException::class.java), // Day of week
+        UnsupportedSymbolTestCase("F", UnsupportedTemporalTypeException::class.java), // Week of month
+        UnsupportedSymbolTestCase("K", UnsupportedTemporalTypeException::class.java), // hour of am-pm (0-11)
+        UnsupportedSymbolTestCase("k", UnsupportedTemporalTypeException::class.java), // clock of am-pm (1-24)
+        UnsupportedSymbolTestCase("A", UnsupportedTemporalTypeException::class.java), // Millsecond of day (0-85,499,999)
+        UnsupportedSymbolTestCase("N", UnsupportedTemporalTypeException::class.java), // Nano of day (0-85,499,999,999,999)
+        UnsupportedSymbolTestCase("Y", UnsupportedTemporalTypeException::class.java), // Week based year
+        UnsupportedSymbolTestCase("w", UnsupportedTemporalTypeException::class.java), // Week of week based year
+        UnsupportedSymbolTestCase("W", UnsupportedTemporalTypeException::class.java), // Week of month
+        UnsupportedSymbolTestCase("e", UnsupportedTemporalTypeException::class.java), // Localized day of week (number)
+        UnsupportedSymbolTestCase("c", UnsupportedTemporalTypeException::class.java), // Localized day of week (week name, e.g. "Tue" or "Tuesday")
+        UnsupportedSymbolTestCase("VV", DateTimeException::class.java), // time zone id, e.g "America/Los_Angeles; Z; -08:30" - ion timestamp does not know timezone, only offset
+        UnsupportedSymbolTestCase("z", DateTimeException::class.java) // time zone name, e.g. "Pacific Standard Time" - ion timestamp does not know timezone, only offset
     )
 }
-
