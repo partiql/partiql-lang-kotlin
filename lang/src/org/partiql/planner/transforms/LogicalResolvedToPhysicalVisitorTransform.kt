@@ -56,5 +56,29 @@ internal class LogicalResolvedToPhysicalVisitorTransform : PartiqlLogicalResolve
             )
         }
     }
+
+    override fun transformBexprOffset(node: PartiqlLogicalResolved.Bexpr.Offset): PartiqlPhysical.Bexpr {
+        val thiz = this
+        return PartiqlPhysical.build {
+            offset(
+                i = DEFAULT_IMPL,
+                rowCount = thiz.transformExpr(node.rowCount),
+                source = thiz.transformBexpr(node.source),
+                metas = node.metas
+            )
+        }
+    }
+
+    override fun transformBexprLimit(node: PartiqlLogicalResolved.Bexpr.Limit): PartiqlPhysical.Bexpr {
+        val thiz = this
+        return PartiqlPhysical.build {
+            limit(
+                i = DEFAULT_IMPL,
+                rowCount = thiz.transformExpr(node.rowCount),
+                source = thiz.transformBexpr(node.source),
+                metas = node.metas
+            )
+        }
+    }
 }
 

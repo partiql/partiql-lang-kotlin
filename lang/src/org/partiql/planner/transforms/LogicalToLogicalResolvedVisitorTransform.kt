@@ -264,6 +264,9 @@ private data class LogicalToLogicalResolvedVisitorTransform(
 
     private fun getNestedScope(bexpr: PartiqlLogical.Bexpr, parent: LocalScope?): LocalScope =
         when(bexpr) {
+            is PartiqlLogical.Bexpr.Filter -> getNestedScope(bexpr.source, parent)
+            is PartiqlLogical.Bexpr.Limit -> getNestedScope(bexpr.source, parent)
+            is PartiqlLogical.Bexpr.Offset -> getNestedScope(bexpr.source, parent)
             is PartiqlLogical.Bexpr.Scan -> {
                 LocalScope(
                     listOfNotNull(bexpr.asDecl, bexpr.atDecl, bexpr.byDecl).also {
@@ -272,7 +275,6 @@ private data class LogicalToLogicalResolvedVisitorTransform(
                     parent
                 )
             }
-            is PartiqlLogical.Bexpr.Filter -> getNestedScope(bexpr.source, parent)
             is PartiqlLogical.Bexpr.Join -> {
                 // note: we don't actually care what the parent scope of the left and right scopes are
                 // since we are only going to concatenate them below anyway.

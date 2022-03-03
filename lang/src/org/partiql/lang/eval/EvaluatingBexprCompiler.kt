@@ -1,7 +1,15 @@
 package org.partiql.lang.eval
 
+import com.amazon.ion.IntegerSize
+import com.amazon.ion.IonInt
+import org.partiql.lang.ast.SourceLocationMeta
+import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.domains.PartiqlPhysical
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
 import org.partiql.lang.util.toIntExact
+import org.partiql.lang.util.drop
+import org.partiql.lang.util.take
 
 private val DEFAULT_IMPL = PartiqlPhysical.build { impl("default") }
 
@@ -143,5 +151,125 @@ internal class EvaluatingBexprCompiler(
             is PartiqlPhysical.JoinType.Right -> TODO("RIGHT JOIN")
         }
     }
+
+    override fun convertOffset(node: PartiqlPhysical.Bexpr.Offset): BindingsThunkEnv {
+        val rowCountThunk = exprCompiler.compile(node.rowCount)
+        val sourceThunk = this.convert(node.source)
+        val rowCountLocation = node.rowCount.metas.sourceLocationMeta
+        return thunkFactory.bindingsThunk(node.metas) { env ->
+            val rowCount = evalOffsetRowCount(rowCountThunk, env, rowCountLocation)
+            val rows = sourceThunk(env)
+            BindingsCollection(
+                rows.seqType,
+                rows.drop(rowCount)
+            )
+        }
+    }
+
+    override fun convertLimit(node: PartiqlPhysical.Bexpr.Limit): BindingsThunkEnv {
+        val rowCountThunk = exprCompiler.compile(node.rowCount)
+        val sourceThunk = this.convert(node.source)
+        val rowCountLocation = node.rowCount.metas.sourceLocationMeta
+        return thunkFactory.bindingsThunk(node.metas) { env ->
+            val rowCount = evalLimitRowCount(rowCountThunk, env, rowCountLocation)
+            val rows = sourceThunk(env)
+            BindingsCollection(
+                rows.seqType,
+                rows.take(rowCount)
+            )
+        }
+    }
 }
 
+
+private fun evalLimitRowCount(rowCountThunk: ThunkEnv, env: Environment, limitLocationMeta: SourceLocationMeta?): Long {
+    val limitExprValue = rowCountThunk(env)
+
+    if (limitExprValue.type != ExprValueType.INT) {
+        err(
+            "LIMIT value was not an integer",
+            ErrorCode.EVALUATOR_NON_INT_LIMIT_VALUE,
+            errorContextFrom(limitLocationMeta).also {
+                it[Property.ACTUAL_TYPE] = limitExprValue.type.toString()
+            },
+            internal = false
+        )
+    }
+
+    // `Number.toLong()` (used below) does *not* cause an overflow exception if the underlying [Number]
+    // implementation (i.e. Decimal or BigInteger) exceeds the range that can be represented by Longs.
+    // This can cause very confusing behavior if the user specifies a LIMIT value that exceeds
+    // Long.MAX_VALUE, because no results will be returned from their query.  That no overflow exception
+    // is thrown is not a problem as long as PartiQL's restriction of integer values to +/- 2^63 remains.
+    // We throw an exception here if the value exceeds the supported range (say if we change that
+    // restriction or if a custom [ExprValue] is provided which exceeds that value).
+    val limitIonValue = limitExprValue.ionValue as IonInt
+    if (limitIonValue.integerSize == IntegerSize.BIG_INTEGER) {
+        err(
+            "IntegerSize.BIG_INTEGER not supported for LIMIT values",
+            ErrorCode.INTERNAL_ERROR,
+            errorContextFrom(limitLocationMeta),
+            internal = true
+        )
+    }
+
+    val limitValue = limitExprValue.numberValue().toLong()
+
+    if (limitValue < 0) {
+        err(
+            "negative LIMIT",
+            ErrorCode.EVALUATOR_NEGATIVE_LIMIT,
+            errorContextFrom(limitLocationMeta),
+            internal = false
+        )
+    }
+
+    // we can't use the Kotlin's Sequence<T>.take(n) for this since it accepts only an integer.
+    // this references [Sequence<T>.take(count: Long): Sequence<T>] defined in [org.partiql.util].
+    return limitValue
+}
+
+private fun evalOffsetRowCount(rowCountThunk: ThunkEnv, env: Environment, offsetLocationMeta: SourceLocationMeta?): Long {
+    val offsetExprValue = rowCountThunk(env)
+
+    if (offsetExprValue.type != ExprValueType.INT) {
+        err(
+            "OFFSET value was not an integer",
+            ErrorCode.EVALUATOR_NON_INT_OFFSET_VALUE,
+            errorContextFrom(offsetLocationMeta).also {
+                it[Property.ACTUAL_TYPE] = offsetExprValue.type.toString()
+            },
+            internal = false
+        )
+    }
+
+    // `Number.toLong()` (used below) does *not* cause an overflow exception if the underlying [Number]
+    // implementation (i.e. Decimal or BigInteger) exceeds the range that can be represented by Longs.
+    // This can cause very confusing behavior if the user specifies a OFFSET value that exceeds
+    // Long.MAX_VALUE, because no results will be returned from their query.  That no overflow exception
+    // is thrown is not a problem as long as PartiQL's restriction of integer values to +/- 2^63 remains.
+    // We throw an exception here if the value exceeds the supported range (say if we change that
+    // restriction or if a custom [ExprValue] is provided which exceeds that value).
+    val offsetIonValue = offsetExprValue.ionValue as IonInt
+    if (offsetIonValue.integerSize == IntegerSize.BIG_INTEGER) {
+        err(
+            "IntegerSize.BIG_INTEGER not supported for OFFSET values",
+            ErrorCode.INTERNAL_ERROR,
+            errorContextFrom(offsetLocationMeta),
+            internal = true
+        )
+    }
+
+    val offsetValue = offsetExprValue.numberValue().toLong()
+
+    if (offsetValue < 0) {
+        err(
+            "negative OFFSET",
+            ErrorCode.EVALUATOR_NEGATIVE_OFFSET,
+            errorContextFrom(offsetLocationMeta),
+            internal = false
+        )
+    }
+
+    return offsetValue
+}

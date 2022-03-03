@@ -27,6 +27,14 @@ private object AstToLogicalVisitorTransform : PartiqlAstToPartiqlLogicalVisitorT
             PartiqlLogical.build { filter(transformExpr(it), algebra, it.metas) }
         } ?: algebra
 
+        algebra = node.offset?.let {
+            PartiqlLogical.build { offset(transformExpr(it), algebra, node.offset.metas) }
+        } ?: algebra
+
+        algebra = node.limit?.let {
+            PartiqlLogical.build { limit(transformExpr(it), algebra, node.limit.metas) }
+        } ?: algebra
+
         return convertProjectionToBindingsToValues(node, algebra)
     }
 
@@ -82,8 +90,6 @@ private object AstToLogicalVisitorTransform : PartiqlAstToPartiqlLogicalVisitorT
             node.group != null -> TODO("Support for GROUP BY")
             node.order != null -> TODO("Support for ORDER BY")
             node.having != null -> TODO("Support for HAVING")
-            node.offset != null -> TODO("Support for OFFSET")
-            node.limit != null -> TODO("Support for LIMIT")
         }
     }
 

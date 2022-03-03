@@ -267,7 +267,7 @@ abstract class EvaluatorTestBase : TestBase() {
     }
 
     /**
-     * Evaluates an [PartiqlAst.Statement] given a [EvaluationSession]
+     * Evaluates an [PartiqlAst.Statement] given an [EvaluationSession].
      *
      * @param astStatement The [PartiqlAst.Statement] instance to be evaluated.
      * @param session [EvaluationSession] used for evaluation

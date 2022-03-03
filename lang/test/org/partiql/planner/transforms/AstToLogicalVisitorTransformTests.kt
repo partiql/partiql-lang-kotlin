@@ -125,8 +125,6 @@ class AstToLogicalVisitorTransformTests {
             // SELECT queries
             TodoTestCase("SELECT b.* FROM bar AS b LET x AS y"),
             TodoTestCase("SELECT b.* FROM UNPIVOT x as y"),
-            TodoTestCase("SELECT b.* FROM bar AS b LIMIT 1"),
-            TodoTestCase("SELECT b.* FROM bar AS b OFFSET 1"),
             TodoTestCase("SELECT b.* FROM bar AS b GROUP BY a"),
             TodoTestCase("SELECT b.* FROM bar AS b HAVING x"),
             TodoTestCase("SELECT b.* FROM bar AS b ORDER BY y"),

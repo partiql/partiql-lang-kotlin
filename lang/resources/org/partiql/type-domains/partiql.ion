@@ -526,6 +526,9 @@ may then be further optimized by selecting better implementations of each operat
                     right::bexpr
                     predicate::expr)
 
+                (offset row_count::expr source::bexpr)
+                (limit row_count::expr source::bexpr)
+
                 // Future work: additional relational operators
             )
         )
@@ -650,6 +653,10 @@ may then be further optimized by selecting better implementations of each operat
                     left::bexpr
                     right::bexpr
                     predicate::expr)
+
+
+                (offset i::impl row_count::expr source::bexpr)
+                (limit i::impl row_count::expr source::bexpr)
             )
         )
     )
