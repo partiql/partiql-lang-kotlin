@@ -96,12 +96,6 @@ internal class EvaluatingCompiler(
     private val errorSignaler = compileOptions.typingMode.createErrorSignaler(valueFactory)
     private val thunkFactory = compileOptions.typingMode.createThunkFactory(compileOptions, valueFactory)
 
-    init {
-        if(procedures.isNotEmpty()) {
-            TODO("Support system stored procedures")
-        }
-    }
-
     private fun Number.exprValue(): ExprValue = when (this) {
         is Int -> valueFactory.newInt(this)
         is Long -> valueFactory.newInt(this)
@@ -149,15 +143,15 @@ internal class EvaluatingCompiler(
      * This function will [InterruptedException] if [Thread.interrupted] has been set.
      */
     private fun compileAstStatement(ast: PartiqlPhysical.Statement): ThunkEnv {
-        checkThreadInterrupted()
         return when (ast) {
             is PartiqlPhysical.Statement.Query -> compileAstExpr(ast.expr)
+            is PartiqlPhysical.Statement.Exec -> compileExec(ast)
         }
     }
 
     private fun compileAstExpr(expr: PartiqlPhysical.Expr): ThunkEnv {
+        checkThreadInterrupted()
         val metas = expr.metas
-
 
         // DL TODO: why are we passing metas in to each of these functions?
         return when (expr) {
@@ -990,8 +984,6 @@ internal class EvaluatingCompiler(
         }
     }
 
-
-
     private fun compileParameter(expr: PartiqlPhysical.Expr.Parameter, metas: MetaContainer): ThunkEnv {
         val ordinal = expr.index.value.toInt()
         val index = ordinal - 1
@@ -1800,6 +1792,53 @@ internal class EvaluatingCompiler(
             }
         }
         return escapeChar
+    }
+
+    private fun compileExec(node: PartiqlPhysical.Statement.Exec): ThunkEnv {
+        val metas = node.metas
+        val procedureName = node.procedureName.text
+        val procedure = procedures[procedureName] ?: err(
+            "No such stored procedure: $procedureName",
+            ErrorCode.EVALUATOR_NO_SUCH_PROCEDURE,
+            errorContextFrom(metas).also {
+                it[Property.PROCEDURE_NAME] = procedureName
+            },
+            internal = false
+        )
+
+        val args = node.args
+        // Check arity
+        if (args.size !in procedure.signature.arity) {
+            val errorContext = errorContextFrom(metas).also {
+                it[Property.EXPECTED_ARITY_MIN] = procedure.signature.arity.first
+                it[Property.EXPECTED_ARITY_MAX] = procedure.signature.arity.last
+            }
+
+            val message = when {
+                procedure.signature.arity.first == 1 && procedure.signature.arity.last == 1 ->
+                    "${procedure.signature.name} takes a single argument, received: ${args.size}"
+                procedure.signature.arity.first == procedure.signature.arity.last ->
+                    "${procedure.signature.name} takes exactly ${procedure.signature.arity.first} arguments, received: ${args.size}"
+                else ->
+                    "${procedure.signature.name} takes between ${procedure.signature.arity.first} and " +
+                        "${procedure.signature.arity.last} arguments, received: ${args.size}"
+            }
+
+            throw EvaluationException(
+                message,
+                ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_PROCEDURE_CALL,
+                errorContext,
+                internal = false
+            )
+        }
+
+        // Compile the procedure's arguments
+        val argThunks = compileAstExprs(args)
+
+        return thunkFactory.thunkEnv(metas) { env ->
+            val procedureArgValues = argThunks.map { it(env) }
+            procedure.call(env.session, procedureArgValues)
+        }
     }
 
     private fun compileDate(expr: PartiqlPhysical.Expr.Date, metas: MetaContainer): ThunkEnv =

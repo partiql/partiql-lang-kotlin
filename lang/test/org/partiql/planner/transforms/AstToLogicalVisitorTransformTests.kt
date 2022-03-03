@@ -145,9 +145,6 @@ class AstToLogicalVisitorTransformTests {
             TodoTestCase("UPDATE x INSERT INTO k << 1 >>"),
             TodoTestCase("DELETE FROM y"),
             TodoTestCase("REMOVE y"),
-
-            // EXEC
-            TodoTestCase("EXEC foo"),
         )
     }
 }

@@ -100,10 +100,6 @@ private object AstToLogicalVisitorTransform : PartiqlAstToPartiqlLogicalVisitorT
     override fun transformStatementDdl(node: PartiqlAst.Statement.Ddl): PartiqlLogical.Statement {
         TODO("Support for DDL")
     }
-
-    override fun transformStatementExec(node: PartiqlAst.Statement.Exec): PartiqlLogical.Statement {
-        TODO("Support for EXEC")
-    }
 }
 
 private object FromSourceToBexpr : PartiqlAst.FromSource.Converter<PartiqlLogical.Bexpr> {

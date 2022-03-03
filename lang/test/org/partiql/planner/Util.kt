@@ -1,6 +1,5 @@
 package org.partiql.planner
 
-import com.amazon.ionelement.api.ionSymbol
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemDetails

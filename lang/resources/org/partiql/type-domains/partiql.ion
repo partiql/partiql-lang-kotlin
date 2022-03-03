@@ -540,7 +540,6 @@ may then be further optimized by selecting better implementations of each operat
             (exclude
                 dml
                 ddl
-                exec
             )
         )
 
