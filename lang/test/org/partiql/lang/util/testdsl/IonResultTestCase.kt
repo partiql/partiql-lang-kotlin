@@ -1,5 +1,6 @@
 package org.partiql.lang.util.testdsl
 
+import com.amazon.ionelement.api.toIonValue
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.fail
@@ -13,6 +14,7 @@ import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.builtins.createBuiltinFunctions
 import org.partiql.lang.mockdb.MockDb
 import org.partiql.lang.syntax.SqlParser
+import org.partiql.lang.util.SexpAstPrettyPrinter
 import org.partiql.lang.util.assertIonEquals
 import org.partiql.planner.GlobalBindings
 import org.partiql.planner.PlanningResult
@@ -117,7 +119,7 @@ internal fun IonResultTestCase.runTestCase(
             else -> CompileOptions.build { compileOptionsBlock() }
         }
         // Uncomment to see query plan in test runner output.
-        //println(SexpAstPrettyPrinter.format(plannedQuery.toIonElement().asAnyElement().toIonValue(ION)))
+        println(SexpAstPrettyPrinter.format(plannedQuery.toIonElement().asAnyElement().toIonValue(ION)))
 
         val expression = assertDoesNotThrow("Compiling the query should not throw for test \"${this.name}\"") {
             EvaluatingCompiler(

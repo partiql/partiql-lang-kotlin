@@ -21,7 +21,7 @@ private object AstToLogicalVisitorTransform : PartiqlAstToPartiqlLogicalVisitorT
     override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlLogical.Expr {
         checkForUnsupportedSelectClauses(node)
 
-        var algebra = FromSourceToBexpr.convert(node.from)
+        var algebra: PartiqlLogical.Bexpr = FromSourceToBexpr.convert(node.from)
 
         algebra = node.where?.let {
             PartiqlLogical.build { filter(transformExpr(it), algebra, it.metas) }
@@ -62,6 +62,12 @@ private object AstToLogicalVisitorTransform : PartiqlAstToPartiqlLogicalVisitorT
                 algebra,
                 node.project.metas
             )
+        }.let { q ->
+            // in case of SELECT DISTINCT, wrap bindingsToValues in call to filter_distinct
+            when(node.setq) {
+                null, is PartiqlAst.SetQuantifier.All -> q
+                is PartiqlAst.SetQuantifier.Distinct -> PartiqlLogical.build { call("filter_distinct", q) }
+            }
         }
 
     /**
@@ -78,13 +84,6 @@ private object AstToLogicalVisitorTransform : PartiqlAstToPartiqlLogicalVisitorT
             node.having != null -> TODO("Support for HAVING")
             node.offset != null -> TODO("Support for OFFSET")
             node.limit != null -> TODO("Support for LIMIT")
-        }
-
-        when (node.setq) {
-            null, is PartiqlAst.SetQuantifier.All -> {
-                /* do nothing, this is supported (if null, default is SetQuantifier.All) */
-            }
-            is PartiqlAst.SetQuantifier.Distinct -> TODO("Support for SELECT DISTINCT")
         }
     }
 

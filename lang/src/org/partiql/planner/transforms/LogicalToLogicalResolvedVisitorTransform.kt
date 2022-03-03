@@ -198,7 +198,7 @@ private data class LogicalToLogicalResolvedVisitorTransform(
                         this.currentScope.varDecls.map {
                             PartiqlLogicalResolved.build {
                                 localId(it.name.text, it.indexMeta.toLong())
-                            } as PartiqlLogicalResolved.Expr
+                            }
                         }
                     )
                 } else {
@@ -262,25 +262,22 @@ private data class LogicalToLogicalResolvedVisitorTransform(
         }
     }
 
-    private fun getNestedScope(bindingsTerm: PartiqlLogical.Bexpr, parent: LocalScope?): LocalScope =
-        when(bindingsTerm) {
+    private fun getNestedScope(bexpr: PartiqlLogical.Bexpr, parent: LocalScope?): LocalScope =
+        when(bexpr) {
             is PartiqlLogical.Bexpr.Scan -> {
                 LocalScope(
-                    listOfNotNull(bindingsTerm.asDecl, bindingsTerm.atDecl, bindingsTerm.byDecl).also {
+                    listOfNotNull(bexpr.asDecl, bexpr.atDecl, bexpr.byDecl).also {
                         checkForDuplicateVariables(it)
                     },
                     parent
                 )
             }
-            is PartiqlLogical.Bexpr.Filter -> {
-                getNestedScope(bindingsTerm.source, parent)
-                // note: `(filter ...)` does not itself produce new bindings so no need to check for duplicates.
-            }
+            is PartiqlLogical.Bexpr.Filter -> getNestedScope(bexpr.source, parent)
             is PartiqlLogical.Bexpr.Join -> {
                 // note: we don't actually care what the parent scope of the left and right scopes are
                 // since we are only going to concatenate them below anyway.
-                val leftScope = getNestedScope(bindingsTerm.left, parent = null)
-                val rightScope = getNestedScope(bindingsTerm.right, parent = null)
+                val leftScope = getNestedScope(bexpr.left, parent = null)
+                val rightScope = getNestedScope(bexpr.right, parent = null)
                 leftScope.concatenate(rightScope, parent)
             }
         }

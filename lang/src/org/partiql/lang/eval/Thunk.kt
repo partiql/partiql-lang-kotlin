@@ -33,6 +33,7 @@ import org.partiql.lang.errors.Property
 internal typealias ThunkEnv = (Environment) -> ExprValue
 
 // DL TODO: is there a better home for this?
+// DL TODO: does [BindingsMap] really need to be mutable?  Can it be made immutable?
 internal typealias BindingsMap = MutableMap<Int, ExprValue>
 internal fun newBindingsMap() = HashMap<Int, ExprValue>()
 internal enum class BindingsCollectionType { BAG, LIST }

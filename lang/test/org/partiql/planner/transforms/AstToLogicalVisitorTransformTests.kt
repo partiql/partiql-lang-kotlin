@@ -89,6 +89,19 @@ class AstToLogicalVisitorTransformTests {
                     )
                 }
             ),
+            TestCase(
+                "SELECT DISTINCT b.* FROM bar AS b",
+                PartiqlLogical.build {
+                    query(
+                        call("filter_distinct",
+                            bindingsToValues(
+                                mergeStruct(structFields(id("b"))),
+                                scan(id("bar"), varDecl("b"))
+                            )
+                        )
+                    )
+                }
+            ),
         )
     }
 
@@ -117,7 +130,6 @@ class AstToLogicalVisitorTransformTests {
             TodoTestCase("SELECT b.* FROM bar AS b GROUP BY a"),
             TodoTestCase("SELECT b.* FROM bar AS b HAVING x"),
             TodoTestCase("SELECT b.* FROM bar AS b ORDER BY y"),
-            TodoTestCase("SELECT DISTINCT b.x FROM bar AS b"),
             TodoTestCase("PIVOT v AT n FROM data AS d"),
 
             // DML

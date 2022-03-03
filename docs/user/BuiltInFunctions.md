@@ -226,8 +226,6 @@ CAST(<<'a', 'b'>> AS bag) -- <<'a', 'b'>> (REPL does not display << >> and comma
 
 ### CHAR_LENGTH, CHARACTER_LENGTH
 
-
-
 Counts the number of characters in the specified string, where 'character' is defined as a single unicode code point.
 
 *Note:* `CHAR_LENGTH` and `CHARACTER_LENGTH` are synonyms. 
@@ -455,9 +453,31 @@ EXTRACT(TIMEZONE_MINUTE FROM TIME WITH TIME ZONE '23:12:59-08:30')  -- -30
 ```
 *Note* that `timezone_hour` and `timezone_minute` are **not supported** for `DATE` and `TIME` (without time zone) type. 
 
+### `FILTER_DISTINCT`
+
+Signature
+: `FILTER_DISTINCT: Container -> Bag`
+
+Header
+: `FILTER_DISTINCT(c)`
+
+Purpose
+: Returns a bag of distinct values contained within a bag, list, sexp, or struct.  If the container is a struct,
+the field names are not considered.
+
+Examples
+:
+
+```sql
+FILTER_DISTINCT([0, 0, 1])                  -- <<0, 1>>
+FILTER_DISTINCT(<<0, 0, 1>>)                -- <<0, 1>>
+FILTER_DISTINCT(SEXP(0, 0, 1))              -- <<0, 1>>
+FILTER_DISTINCT({'a': 0, 'b': 0, 'c': 1})   -- <<0, 1>>
+```
+
 ### LOWER 
 
-Given a string convert all upper case characters to lower case characters. 
+Given a string convert all upper case characters to lower case characters.
 
 Signature
 : `LOWER: String -> String`
