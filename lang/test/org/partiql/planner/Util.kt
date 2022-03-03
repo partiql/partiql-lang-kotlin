@@ -10,12 +10,12 @@ import org.partiql.lang.errors.ProblemDetails
  *
  * The fake unique identifier of bound variables is computed to be `fake_uid_for_${globalVariableName}`.
  */
-fun createFakeGlobalBindings(vararg globalVariableNames: String) =
+fun createFakeGlobalBindings(vararg globalVariableNames: Pair<String, String>) =
     GlobalBindings { bindingName ->
-        val matches = globalVariableNames.filter { bindingName.isEquivalentTo(it) }
+        val matches = globalVariableNames.filter { bindingName.isEquivalentTo(it.first) }
         when(matches.size) {
             0 -> ResolutionResult.Undefined
-            else -> ResolutionResult.GlobalVariable("fake_uid_for_" + matches.first())
+            else -> ResolutionResult.GlobalVariable(matches.first().second)
         }
     }
 

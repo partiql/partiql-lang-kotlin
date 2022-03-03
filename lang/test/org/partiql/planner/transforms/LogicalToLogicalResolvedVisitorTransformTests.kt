@@ -32,13 +32,17 @@ class LogicalToLogicalResolvedVisitorTransformTests {
 
     /** Mock table resolver. That can resolve f, foo, or UPPERCASE_FOO, while respecting case-sensitivity. */
     private val globalBindings = createFakeGlobalBindings(
-        "shadow",
-        "foo",
-        "bar",
-        "bat",
-        "UPPERCASE_FOO",
-        "case_AMBIGUOUS_foo",
-        "case_ambiguous_FOO"
+        *listOf(
+            "shadow",
+            "foo",
+            "bar",
+            "bat",
+            "UPPERCASE_FOO",
+            "case_AMBIGUOUS_foo",
+            "case_ambiguous_FOO"
+        ).map {
+            it to "fake_uid_for_$it"
+        }.toTypedArray()
     )
 
     private val ion = IonSystemBuilder.standard().build()

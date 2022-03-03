@@ -17,7 +17,7 @@ import org.partiql.planner.transforms.PlanningProblemDetails
 class QueryPlannerImplIntegrationTests {
     private val ion = IonSystemBuilder.standard().build()
 
-    private val globalBindings = createFakeGlobalBindings("Customer")
+    private val globalBindings = createFakeGlobalBindings("Customer" to "fake_uid_for_Customer")
 
     @Test
     fun `happy path`() {
