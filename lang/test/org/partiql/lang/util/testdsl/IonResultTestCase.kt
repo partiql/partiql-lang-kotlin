@@ -116,8 +116,8 @@ internal fun IonResultTestCase.runTestCase(
             null -> compileOptions
             else -> CompileOptions.build { compileOptionsBlock() }
         }
-        // Uncomment to see AST in test runner output.
-        //org.partiql.lang.util.println(SexpAstPrettyPrinter.format(plannedQuery.toIonElement().asAnyElement().toIonValue(ION)))
+        // Uncomment to see query plan in test runner output.
+        //println(SexpAstPrettyPrinter.format(plannedQuery.toIonElement().asAnyElement().toIonValue(ION)))
 
         val expression = assertDoesNotThrow("Compiling the query should not throw for test \"${this.name}\"") {
             EvaluatingCompiler(
@@ -141,7 +141,7 @@ internal fun IonResultTestCase.runTestCase(
             result to result.ionValue
         }
 
-        expectedResult?.let { assertIonEquals(it, ionValueResult, "for test \"${this.name}\", ") }
+        expectedResult?.let { assertIonEquals(it, ionValueResult, " for test \"${this.name}\", ") }
 
         assertDoesNotThrow("extraAssertions should not throw for test \"${this.name}\"") {
             extraAssertions?.invoke(exprValueResult, compileOptions)

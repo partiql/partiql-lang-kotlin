@@ -18,6 +18,7 @@ import org.partiql.planner.problem
 
 // DL TODO: add some tests that allow unresolved variables, i.e. dynamic_id nodes.
 // DL TODO: add some tests for different SELECT list projections.
+// DL TODO: add some tests for local variables.
 
 class LogicalToLogicalResolvedVisitorTransformTests {
     data class TestCase(

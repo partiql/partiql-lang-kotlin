@@ -117,6 +117,14 @@ private data class LogicalToLogicalResolvedVisitorTransform(
         // Have to call in to super.transformBexprScan_expr to avoid infinitely looping...
         this.copy(lookupUnqualifiedInGlobalsFirst = true).superTransformBexprScanExpr(node)
 
+    override fun transformBexprJoin_right(node: PartiqlLogical.Bexpr.Join): PartiqlLogicalResolved.Bexpr {
+        // No need to change the current scope of the node.left.  Node.right gets the current scope +
+        // the left output scope.
+        val leftOutputScope = getNestedScope(node.left, currentScope)
+        val rightInputScope = currentScope.concatenate(leftOutputScope, currentScope)
+        return this.copy(currentScope = rightInputScope).transformBexpr(node.right)
+    }
+
     override fun transformExprBindingsToValues(node: PartiqlLogical.Expr.BindingsToValues): PartiqlLogicalResolved.Expr {
         if(this.lookupUnqualifiedInGlobalsFirst) {
             TODO("Support for sub-queries")
@@ -163,11 +171,10 @@ private data class LogicalToLogicalResolvedVisitorTransform(
     override fun transformExprId(node: PartiqlLogical.Expr.Id): PartiqlLogicalResolved.Expr {
         val bindingName = BindingName(node.name.text, node.case.toBindingCase())
 
-        val resolutionResult = if (lookupUnqualifiedInGlobalsFirst) {
-            if (node.qualifier is PartiqlLogical.ScopeQualifier.LocalsFirst) {
-                // this isn't needed until we support JOINs
-                TODO("Support for looking up locally qualified (`@<variable>`) variables.")
-            }
+        val resolutionResult = if (
+            lookupUnqualifiedInGlobalsFirst &&
+            node.qualifier is PartiqlLogical.ScopeQualifier.Unqualified
+        ) {
             when (val globalResolutionResult = globals.resolve(bindingName)) {
                 ResolutionResult.Undefined -> lookupLocalVariable(bindingName)
                 else -> globalResolutionResult
@@ -270,16 +277,19 @@ private data class LogicalToLogicalResolvedVisitorTransform(
                 // note: `(filter ...)` does not itself produce new bindings so no need to check for duplicates.
             }
             is PartiqlLogical.Bexpr.Join -> {
-                // note: we don't actually care what the parent scope of the left and right scopes are...
-                // we assign the parent scope to the LocalScope returned by this function.
+                // note: we don't actually care what the parent scope of the left and right scopes are
+                // since we are only going to concatenate them below anyway.
                 val leftScope = getNestedScope(bindingsTerm.left, parent = null)
                 val rightScope = getNestedScope(bindingsTerm.right, parent = null)
-
-                val allVariables = leftScope.varDecls + rightScope.varDecls
-                checkForDuplicateVariables(allVariables)
-                LocalScope(allVariables, parent)
+                leftScope.concatenate(rightScope, parent)
             }
         }
+
+    private fun LocalScope.concatenate(other: LocalScope, parent: LocalScope?): LocalScope {
+        val concatenatedScopeVariables = this.varDecls + other.varDecls
+        checkForDuplicateVariables(concatenatedScopeVariables)
+        return LocalScope(concatenatedScopeVariables, parent)
+    }
 
     private fun PartiqlLogical.Expr.Id.asDynamicId(
         search: List<PartiqlLogicalResolved.Expr>

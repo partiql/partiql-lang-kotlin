@@ -19,8 +19,7 @@ import org.junit.Test
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 
-class
-EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
+class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     private val session = mapOf(
         "simple_1_col_1_group" to "[{col1: 1}, {col1: 1}]",

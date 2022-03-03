@@ -224,15 +224,14 @@ internal abstract class ThunkFactory(
         }.typeCheck(metas)
     }
 
-    /** DL TODO: kdoc, make inline, make t crossinline */
+    /** DL TODO: kdoc, handle exceptions, make inline, make t crossinline */
     internal fun bindingsThunk(metas: MetaContainer, t: BindingsThunkEnv): BindingsThunkEnv {
         val sourceLocationMeta = metas[SourceLocationMeta.TAG] as? SourceLocationMeta
 
-        // DL TODO: handleException--how do I call that exactly?
+        // DL TODO: handleException--it is just not currently clear how exceptions inside this thunk should be
+        // DL TODO: handled exactly.  For instance, what does a permissive mode exception return?  For value
+        // DL TODO: expressions, it's supposed to return MISSING, but there is no BindingsCollection equivalent.
         return t
-        //{ env: Environment ->
-//            flow {
-//                for (row in t(env)) {
 //                    //handleException(sourceLocationMeta) {
 //                        emit(row)
 //                    //}

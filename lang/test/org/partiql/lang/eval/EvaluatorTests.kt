@@ -37,19 +37,13 @@ class EvaluatorTests {
             // below this line use features not supported by the current physical algebra compiler.
             // most fail due to not supporting foundational nodes like id, global_id and scan yet.
             // PartiQL's test cases are not all that cleanly separated.
-            "selectFromListAndAtUnpivotWildCardOverScalar",
-            "selectFromBagAndAtUnpivotWildCardOverScalar",
-            "rangeTwiceOverScalar",
             "rangeOverNestedWithAt",
-            "selectCorrelatedJoin",
             "selectCorrelatedLeftJoin",
             "selectCorrelatedLeftJoinOnClause",
             "selectJoinOnClauseScoping",
             "selectCorrelatedUnpivot",
             "nestedSelectJoinWithUnpivot",
             "nestedSelectJoinLimit",
-            "correlatedJoinWithShadowedAttributes",
-            "correlatedJoinWithoutLexicalScope",
             "pivotFrom",
             "pivotLiteralFieldNameFrom",
             "pivotBadFieldType",
@@ -95,7 +89,6 @@ class EvaluatorTests {
             "unpivotEmptyStruct",
             "unpivotMissingWithAsAndAt",
             "unpivotMissingCrossJoinWithAsAndAt",
-            "variableShadow",
             "selectIndexStruct",
         )
 
