@@ -10,7 +10,7 @@ import org.junit.runner.RunWith
 import java.time.DateTimeException
 import java.time.format.DateTimeFormatter
 import java.time.temporal.UnsupportedTemporalTypeException
-import java.util.*
+import java.util.Random
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
@@ -21,7 +21,7 @@ class TimestampTemporalAccessorTests {
     fun createRng(): Random {
         val rng = Random()
         val seed = rng.nextLong()
-        System.out.println("Randomly generated seed is $seed.  Use this to reproduce failures in dev environment.")
+        println("Randomly generated seed is $seed.  Use this to reproduce failures in dev environment.")
         rng.setSeed(seed)
         return rng
     }

@@ -42,7 +42,7 @@ internal interface ConstraintDiscoverer {
 }
 
 /**
- * An implementation of [ConstraintDiscoverer] that supports all [IonType]s except for DATAGRAM. All base 
+ * An implementation of [ConstraintDiscoverer] that supports all [IonType]s except for DATAGRAM. All base
  * implementations return an empty [IonSchemaModel.ConstraintList] and do not depend on each other (i.e. sequence
  * and struct constraint discoverers do not call the scalar constraint discoverers).
  *
@@ -50,7 +50,7 @@ internal interface ConstraintDiscoverer {
  * [IonSchemaModel.Constraint.TypeConstraint], typed nulls collapse to `null` and will not have any additional
  * constraints discovered.
  */
-internal open class TypeConstraintDiscoverer: ConstraintDiscoverer {
+internal open class TypeConstraintDiscoverer : ConstraintDiscoverer {
     override fun discover(value: IonValue): IonSchemaModel.ConstraintList =
         when (value) {
             is IonBool -> constraintDiscovererBool(value)
@@ -75,7 +75,7 @@ internal open class TypeConstraintDiscoverer: ConstraintDiscoverer {
      * This implementation returns an empty constraint list.
      */
     open fun constraintDiscovererBool(value: IonBool): IonSchemaModel.ConstraintList = emptyConstraintList
-    
+
     /**
      * Returns a [IonSchemaModel.ConstraintList] with additional discovered constraints for [IonInt]s.
      *
@@ -95,70 +95,70 @@ internal open class TypeConstraintDiscoverer: ConstraintDiscoverer {
      *
      * This implementation returns an empty constraint list.
      */
-    open fun constraintDiscovererDecimal(value: IonDecimal): IonSchemaModel.ConstraintList  = emptyConstraintList
+    open fun constraintDiscovererDecimal(value: IonDecimal): IonSchemaModel.ConstraintList = emptyConstraintList
 
     /**
      * Returns a [IonSchemaModel.ConstraintList] with additional discovered constraints for [IonTimestamp]s.
      *
      * This implementation returns an empty constraint list.
      */
-    open fun constraintDiscovererTimestamp(value: IonTimestamp): IonSchemaModel.ConstraintList  = emptyConstraintList
+    open fun constraintDiscovererTimestamp(value: IonTimestamp): IonSchemaModel.ConstraintList = emptyConstraintList
 
     /**
      * Returns a [IonSchemaModel.ConstraintList] with additional discovered constraints for [IonSymbol]s.
      *
      * This implementation returns an empty constraint list.
      */
-    open fun constraintDiscovererSymbol(value: IonSymbol): IonSchemaModel.ConstraintList  = emptyConstraintList
+    open fun constraintDiscovererSymbol(value: IonSymbol): IonSchemaModel.ConstraintList = emptyConstraintList
 
     /**
      * Returns a [IonSchemaModel.ConstraintList] with additional discovered constraints for [IonString]s.
      *
      * This implementation returns an empty constraint list.
      */
-    open fun constraintDiscovererString(value: IonString): IonSchemaModel.ConstraintList  = emptyConstraintList
+    open fun constraintDiscovererString(value: IonString): IonSchemaModel.ConstraintList = emptyConstraintList
 
     /**
      * Returns a [IonSchemaModel.ConstraintList] with additional discovered constraints for [IonClob]s.
      *
      * This implementation returns an empty constraint list.
      */
-    open fun constraintDiscovererClob(value: IonClob): IonSchemaModel.ConstraintList  = emptyConstraintList
+    open fun constraintDiscovererClob(value: IonClob): IonSchemaModel.ConstraintList = emptyConstraintList
 
     /**
      * Returns a [IonSchemaModel.ConstraintList] with additional discovered constraints for [IonBlob]s.
      *
      * This implementation returns an empty constraint list.
      */
-    open fun constraintDiscovererBlob(value: IonBlob): IonSchemaModel.ConstraintList  = emptyConstraintList
+    open fun constraintDiscovererBlob(value: IonBlob): IonSchemaModel.ConstraintList = emptyConstraintList
 
     /**
      * Returns a [IonSchemaModel.ConstraintList] with additional discovered constraints for [IonNull]s.
      *
      * This implementation returns an empty constraint list.
      */
-    open fun constraintDiscovererNull(value: IonNull): IonSchemaModel.ConstraintList  = emptyConstraintList
+    open fun constraintDiscovererNull(value: IonNull): IonSchemaModel.ConstraintList = emptyConstraintList
 
     /**
      * Returns a [IonSchemaModel.ConstraintList] with additional discovered constraints for [IonSexp]s.
      *
      * This implementation returns an empty constraint list.
      */
-    open fun constraintDiscovererSexp(value: IonSexp): IonSchemaModel.ConstraintList  = emptyConstraintList
+    open fun constraintDiscovererSexp(value: IonSexp): IonSchemaModel.ConstraintList = emptyConstraintList
 
     /**
      * Returns a [IonSchemaModel.ConstraintList] with additional discovered constraints for [IonList]s.
      *
      * This implementation returns an empty constraint list.
      */
-    open fun constraintDiscovererList(value: IonList): IonSchemaModel.ConstraintList  = emptyConstraintList
+    open fun constraintDiscovererList(value: IonList): IonSchemaModel.ConstraintList = emptyConstraintList
 
     /**
      * Returns a [IonSchemaModel.ConstraintList] with additional discovered constraints for [IonStruct]s.
      *
      * This implementation returns an empty constraint list.
      */
-    open fun constraintDiscovererStruct(value: IonStruct): IonSchemaModel.ConstraintList  = emptyConstraintList
+    open fun constraintDiscovererStruct(value: IonStruct): IonSchemaModel.ConstraintList = emptyConstraintList
 }
 
 /**
@@ -171,7 +171,7 @@ internal open class TypeConstraintDiscoverer: ConstraintDiscoverer {
  * some specific discovered constraints can be done through overriding [TypeConstraintDiscoverer]'s extensible
  * `constraintDiscoverer...` functions.
  */
-internal class StandardConstraintDiscoverer: TypeConstraintDiscoverer() {
+internal class StandardConstraintDiscoverer : TypeConstraintDiscoverer() {
     override fun constraintDiscovererInt(value: IonInt) = INT_VALID_VALUES_DISCOVERER(value)
     override fun constraintDiscovererDecimal(value: IonDecimal) = DECIMAL_SCALE_AND_PRECISION_DISCOVERER(value)
     override fun constraintDiscovererString(value: IonString) = STRING_CODEPOINT_LENGTH_DISCOVERER(value)
@@ -191,7 +191,7 @@ internal val INT_VALID_VALUES_DISCOVERER = { value: IonInt ->
             in INT2_RANGE -> constraintList(INT2_RANGE_CONSTRAINT)
             in INT4_RANGE -> constraintList(INT4_RANGE_CONSTRAINT)
             in INT8_RANGE -> constraintList(INT8_RANGE_CONSTRAINT)
-            else -> constraintList()  // unconstrained int has no constraint added
+            else -> constraintList() // unconstrained int has no constraint added
         }
     }
 }

@@ -18,11 +18,10 @@ import com.amazon.ion.Decimal
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
-import com.amazon.ion.system.IonSystemBuilder
-import org.junit.Assert
-import org.junit.runner.RunWith
 import junitparams.JUnitParamsRunner
 import org.assertj.core.api.SoftAssertions
+import org.junit.Assert
+import org.junit.runner.RunWith
 import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.passes.AstRewriterBase
 import org.partiql.lang.errors.ErrorCode
@@ -52,14 +51,14 @@ import kotlin.reflect.KClass
  * @param expectedValues expected values for errorContext
  */
 fun <T : SqlException> SoftAssertions.checkErrorAndErrorContext(errorCode: ErrorCode?, ex: T, expectedValues: Map<Property, Any>) {
-    if(ex.errorCode == null && errorCode != null) {
+    if (ex.errorCode == null && errorCode != null) {
         fail("Expected an error code but exception error code was null, message was: ${ex.message}")
     } else {
         this.assertThat(ex.errorCode).isEqualTo(errorCode)
     }
     val errorContext = ex.errorContext
 
-    if(errorCode != null) {
+    if (errorCode != null) {
         correctContextKeys(errorCode, errorContext)
         correctContextValues(errorCode, errorContext, expectedValues)
     }
@@ -76,7 +75,6 @@ private fun SoftAssertions.correctContextKeys(errorCode: ErrorCode, errorContext
         assertThat(errorContext!!.hasProperty(it))
             .withFailMessage("Error Context does not contain $it")
             .isTrue
-
     }
 
 /**
@@ -90,17 +88,19 @@ private fun SoftAssertions.correctContextKeys(errorCode: ErrorCode, errorContext
 private fun SoftAssertions.correctContextValues(errorCode: ErrorCode, errorContext: PropertyValueMap?, expected: Map<Property, Any>) {
 
     assertThat(errorCode.getProperties().containsAll(expected.keys))
-        .withFailMessage("Actual errorCode must contain these properties: " +
-                         "${expected.keys.joinToString(", ")} but contained only: " +
-                         errorCode.getProperties().joinToString(", "))
+        .withFailMessage(
+            "Actual errorCode must contain these properties: " +
+                "${expected.keys.joinToString(", ")} but contained only: " +
+                errorCode.getProperties().joinToString(", ")
+        )
         .isTrue
 
     val unexpectedProperties = errorCode.getProperties().filter { p -> !expected.containsKey(p) }
-    if(unexpectedProperties.any()) {
+    if (unexpectedProperties.any()) {
         fail("Unexpected properties found in error code: ${unexpectedProperties.joinToString(", ")}")
     }
 
-    if(errorContext == null) return
+    if (errorContext == null) return
     expected.forEach { entry ->
         val actualPropertyValue: PropertyValue? = errorContext[entry.key]
         assertThat(errorContext.hasProperty(entry.key))
@@ -109,15 +109,15 @@ private fun SoftAssertions.correctContextValues(errorCode: ErrorCode, errorConte
 
         val message by lazy {
             "Expected property ${entry.key} to have value '${entry.value}' " +
-            "but found value '${actualPropertyValue.toString()}'"
+                "but found value '$actualPropertyValue'"
         }
 
         val propertyValue: Any? = actualPropertyValue?.run {
             when (entry.key.propertyType) {
-                PropertyType.LONG_CLASS      -> longValue()
-                PropertyType.STRING_CLASS    -> stringValue()
-                PropertyType.INTEGER_CLASS   -> integerValue()
-                PropertyType.TOKEN_CLASS     -> tokenTypeValue()
+                PropertyType.LONG_CLASS -> longValue()
+                PropertyType.STRING_CLASS -> stringValue()
+                PropertyType.INTEGER_CLASS -> integerValue()
+                PropertyType.TOKEN_CLASS -> tokenTypeValue()
                 PropertyType.ION_VALUE_CLASS -> ionValue()
             }
         }
@@ -139,21 +139,23 @@ abstract class TestBase : Assert() {
     val defaultRewriter = AstRewriterBase()
 
     protected fun anyToExprValue(value: Any) = when (value) {
-        is String    -> valueFactory.newString(value)
-        is Int       -> valueFactory.newInt(value)
+        is String -> valueFactory.newString(value)
+        is Int -> valueFactory.newInt(value)
         is Decimal -> valueFactory.newDecimal(value)
         is Timestamp -> valueFactory.newTimestamp(value)
         is LocalDate -> valueFactory.newDate(value)
-        is Time      -> valueFactory.newTime(value)
-        is Double    -> valueFactory.newFloat(value)
+        is Time -> valueFactory.newTime(value)
+        is Double -> valueFactory.newFloat(value)
         is BigDecimal -> valueFactory.newDecimal(value)
-        else         ->
+        else ->
             error("Can't convert receiver to ExprValue (please extend this function to support the receiver's data type).")
     }
 
-    inner class AssertExprValue(val exprValue: ExprValue,
-                                val bindingsTransform: Bindings<ExprValue>.() -> Bindings<ExprValue> = { this },
-                                val message: String? = null) {
+    inner class AssertExprValue(
+        val exprValue: ExprValue,
+        val bindingsTransform: Bindings<ExprValue>.() -> Bindings<ExprValue> = { this },
+        val message: String? = null
+    ) {
         fun assertBindings(predicate: Bindings<ExprValue>.() -> Boolean) =
             assertTrue(
                 exprValue.bindings.bindingsTransform().predicate()
@@ -168,12 +170,12 @@ abstract class TestBase : Assert() {
         }
     }
 
-
     protected fun assertBaseRewrite(originalSql: String, exprNode: ExprNode) {
         val clonedAst = defaultRewriter.rewriteExprNode(exprNode)
         assertEquals(
             "AST returned from default AstRewriterBase should match the original AST. SQL was: $originalSql",
-            exprNode, clonedAst)
+            exprNode, clonedAst
+        )
     }
 
     protected fun assertSexpEquals(
@@ -181,11 +183,11 @@ abstract class TestBase : Assert() {
         actualValue: IonValue,
         message: String = ""
     ) {
-        if(!expectedValue.equals(actualValue)) {
+        if (!expectedValue.equals(actualValue)) {
             fail(
                 "Expected and actual values do not match: $message\n" +
-                "Expected:\n${SexpAstPrettyPrinter.format(expectedValue)}\n" +
-                "Actual:\n${SexpAstPrettyPrinter.format(actualValue)}"
+                    "Expected:\n${SexpAstPrettyPrinter.format(expectedValue)}\n" +
+                    "Actual:\n${SexpAstPrettyPrinter.format(actualValue)}"
             )
         }
     }
@@ -194,14 +196,12 @@ abstract class TestBase : Assert() {
      * Asserts that the specified [block] throws an [SqlException] and its [expectedErrorCode] matches the expected value.
      */
     protected fun assertThrowsSqlException(expectedErrorCode: ErrorCode, block: () -> Unit) {
-               try {
+        try {
             block()
             fail("Expected EvaluationException but there was no Exception")
-        }
-        catch (e: SqlException) {
+        } catch (e: SqlException) {
             assertEquals("The expected error code did not match the actual error code", expectedErrorCode, e.errorCode)
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
             fail("Expected EvaluationException but a different exception was thrown \n\t  $e")
         }
     }
@@ -210,20 +210,20 @@ abstract class TestBase : Assert() {
      * Asserts that the specified [block] throws an [EvaluationException] and its [errorCode] and
      * [expectErrorContextValues] match the expected values.
      */
-    protected fun assertThrowsEvaluationException(errorCode: ErrorCode? = null,
-                                                  expectErrorContextValues: Map<Property, Any>,
-                                                  cause: KClass<out Throwable>? = null,
-                                                  block: () -> Unit) {
+    protected fun assertThrowsEvaluationException(
+        errorCode: ErrorCode? = null,
+        expectErrorContextValues: Map<Property, Any>,
+        cause: KClass<out Throwable>? = null,
+        block: () -> Unit
+    ) {
         softAssert {
             try {
                 block()
                 fail("Expected EvaluationException but there was no Exception")
-            }
-            catch (e: EvaluationException) {
+            } catch (e: EvaluationException) {
                 if (cause != null) assertThat(e).hasRootCauseExactlyInstanceOf(cause.java)
                 checkErrorAndErrorContext(errorCode, e, expectErrorContextValues)
-            }
-            catch (e: Exception) {
+            } catch (e: Exception) {
                 fail("Expected EvaluationException but a different exception was thrown \n\t  $e")
             }
         }

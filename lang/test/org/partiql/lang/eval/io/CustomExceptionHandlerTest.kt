@@ -15,14 +15,13 @@ import java.lang.IllegalStateException
 import kotlin.test.assertTrue
 import kotlin.test.fail
 
-class AlwaysThrowsFunc: ExprFunction {
+class AlwaysThrowsFunc : ExprFunction {
 
     override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
         throw IllegalStateException()
     }
     override val signature: FunctionSignature
         get() = FunctionSignature("alwaysthrows", listOf(), returnType = StaticType.ANY)
-
 }
 
 class CustomExceptionHandlerTest {
@@ -33,14 +32,18 @@ class CustomExceptionHandlerTest {
         val ion = IonSystemBuilder.standard().build()
         val compilerPipeline = CompilerPipeline.build(ion) {
             addFunction(AlwaysThrowsFunc())
-            compileOptions(CompileOptions.build {
-                thunkOptions(ThunkOptions.build {
-                    handleExceptionForLegacyMode { throwable, sourceLocationMeta ->
-                        customHandlerWasInvoked = true
-                        throw IllegalStateException()
-                    }
-                })
-            })
+            compileOptions(
+                CompileOptions.build {
+                    thunkOptions(
+                        ThunkOptions.build {
+                            handleExceptionForLegacyMode { throwable, sourceLocationMeta ->
+                                customHandlerWasInvoked = true
+                                throw IllegalStateException()
+                            }
+                        }
+                    )
+                }
+            )
         }
 
         val expression = compilerPipeline.compile("alwaysthrows()")
@@ -60,16 +63,20 @@ class CustomExceptionHandlerTest {
 
         val ion = IonSystemBuilder.standard().build()
         val compilerPipeline = CompilerPipeline.builder(ion)
-                .addFunction(AlwaysThrowsFunc())
-                .compileOptions(CompileOptions.builder()
-                        .thunkOptions(ThunkOptions.builder()
-                                .handleExceptionForLegacyMode { throwable, sourceLocationMeta ->
-                                    customHandlerWasInvoked = true
-                                    throw IllegalStateException()
-                                }
-                                .build())
-                        .build())
-                .build()
+            .addFunction(AlwaysThrowsFunc())
+            .compileOptions(
+                CompileOptions.builder()
+                    .thunkOptions(
+                        ThunkOptions.builder()
+                            .handleExceptionForLegacyMode { throwable, sourceLocationMeta ->
+                                customHandlerWasInvoked = true
+                                throw IllegalStateException()
+                            }
+                            .build()
+                    )
+                    .build()
+            )
+            .build()
 
         val expression = compilerPipeline.compile("alwaysthrows()")
 

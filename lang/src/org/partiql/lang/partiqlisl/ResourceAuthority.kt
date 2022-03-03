@@ -8,14 +8,14 @@ import com.amazon.ionschema.util.CloseableIterator
 import java.io.InputStream
 
 class ResourceAuthority(
-        val rootPackage: String,
-        val classLoader: ClassLoader,
-val ion: IonSystem
+    val rootPackage: String,
+    val classLoader: ClassLoader,
+    val ion: IonSystem
 ) : Authority {
     override fun iteratorFor(iss: IonSchemaSystem, id: String): CloseableIterator<IonValue> {
-        val resourceName = "${rootPackage}/$id"
+        val resourceName = "$rootPackage/$id"
         var str: InputStream? = classLoader.getResourceAsStream(resourceName)
-                ?: error("Failed to load schema with resource name '$resourceName'")
+            ?: error("Failed to load schema with resource name '$resourceName'")
 
         return object : CloseableIterator<IonValue> {
 

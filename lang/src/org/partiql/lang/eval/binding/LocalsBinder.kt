@@ -28,7 +28,7 @@ import org.partiql.lang.util.errAmbiguousBinding
  * Think of this as a factory which precomputes the name-bindings map for a list of locals.
  */
 abstract class LocalsBinder {
-    fun bindLocals(locals: List<ExprValue>) : Bindings<ExprValue> {
+    fun bindLocals(locals: List<ExprValue>): Bindings<ExprValue> {
         return object : Bindings<ExprValue> {
             override fun get(bindingName: BindingName): ExprValue? = binderForName(bindingName)(locals)
         }
@@ -65,18 +65,19 @@ fun List<Alias>.localsBinder(missingValue: ExprValue): LocalsBinder {
                 // the alias binds to the name of the value
                 when {
                     alias.atName == null -> null
-                    else                 -> Binder(alias.atName) { it[index].name ?: missingValue }
+                    else -> Binder(alias.atName) { it[index].name ?: missingValue }
                 },
                 when {
                     alias.byName == null -> null
-                    else                 -> Binder(alias.byName) { it[index].address ?: missingValue }
-                })
-            }.asSequence()
+                    else -> Binder(alias.byName) { it[index].address ?: missingValue }
+                }
+            )
+        }.asSequence()
             .flatten()
             .filterNotNull()
             // There may be multiple accessors per name.
             // Squash the accessor list to either the sole element or an error function
-            .groupBy { keyMangler(it.name)  }
+            .groupBy { keyMangler(it.name) }
             .mapValues { (name, binders) ->
                 when (binders.size) {
                     1 -> binders[0].func
@@ -94,22 +95,25 @@ fun List<Alias>.localsBinder(missingValue: ExprValue): LocalsBinder {
     val dynamicLocalsBinder: (BindingName) -> (List<ExprValue>) -> ExprValue? = when (this.count()) {
         0 -> { _ -> { _ -> null } }
         1 -> { name -> { locals -> locals.first().bindings[name] } }
-        else -> { name -> { locals -> locals.asSequence()
-            .map { it.bindings[name] }
-            .filterNotNull()
-            .firstOrNull()
-        }}
+        else -> { name ->
+            { locals ->
+                locals.asSequence()
+                    .map { it.bindings[name] }
+                    .filterNotNull()
+                    .firstOrNull()
+            }
+        }
     }
 
     // Compile case-[in]sensitive bindings and return the accessor
-    return object: LocalsBinder() {
+    return object : LocalsBinder() {
         val caseSensitiveBindings = compileBindings()
         val caseInsensitiveBindings = compileBindings { it.toLowerCase() }
         override fun binderForName(bindingName: BindingName): (List<ExprValue>) -> ExprValue? {
             return when (bindingName.bindingCase) {
-                       BindingCase.INSENSITIVE -> caseInsensitiveBindings[bindingName.name.toLowerCase()]
-                       BindingCase.SENSITIVE -> caseSensitiveBindings[bindingName.name]
-                   } ?: dynamicLocalsBinder(bindingName)
+                BindingCase.INSENSITIVE -> caseInsensitiveBindings[bindingName.name.toLowerCase()]
+                BindingCase.SENSITIVE -> caseSensitiveBindings[bindingName.name]
+            } ?: dynamicLocalsBinder(bindingName)
         }
     }
 }

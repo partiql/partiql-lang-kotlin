@@ -19,7 +19,6 @@ import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.util.propertyValueMapOf
 
-
 internal class TimestampFormatPatternParser {
 
     fun parse(formatPatternString: String): FormatPattern {
@@ -30,7 +29,7 @@ internal class TimestampFormatPatternParser {
         val formatItems = tokens.map { token ->
             when (token.tokenType) {
                 TokenType.TEXT -> TextItem(token.value)
-                TokenType.PATTERN                           -> {
+                TokenType.PATTERN -> {
                     patternCounter += 1
                     parsePattern(token.value)
                 }
@@ -44,44 +43,44 @@ internal class TimestampFormatPatternParser {
         // Possible optimization here:  create singleton instances corresponding to each of the branches and return
         // those instead of creating new instances.  This could work because all of the objects here are immutable.
         // This reduces the amount of garbage created during execution of this method.
-        "y"            -> YearPatternSymbol(YearFormat.FOUR_DIGIT)
-        "yy"           -> YearPatternSymbol(YearFormat.TWO_DIGIT)
-        "yyy", "yyyy"  -> YearPatternSymbol(YearFormat.FOUR_DIGIT_ZERO_PADDED)
+        "y" -> YearPatternSymbol(YearFormat.FOUR_DIGIT)
+        "yy" -> YearPatternSymbol(YearFormat.TWO_DIGIT)
+        "yyy", "yyyy" -> YearPatternSymbol(YearFormat.FOUR_DIGIT_ZERO_PADDED)
 
-        "M"            -> MonthPatternSymbol(MonthFormat.MONTH_NUMBER)
-        "MM"           -> MonthPatternSymbol(MonthFormat.MONTH_NUMBER_ZERO_PADDED)
-        "MMM"          -> MonthPatternSymbol(MonthFormat.ABBREVIATED_MONTH_NAME)
-        "MMMM"         -> MonthPatternSymbol(MonthFormat.FULL_MONTH_NAME)
-        "MMMMM"        -> MonthPatternSymbol(MonthFormat.FIRST_LETTER_OF_MONTH_NAME)
+        "M" -> MonthPatternSymbol(MonthFormat.MONTH_NUMBER)
+        "MM" -> MonthPatternSymbol(MonthFormat.MONTH_NUMBER_ZERO_PADDED)
+        "MMM" -> MonthPatternSymbol(MonthFormat.ABBREVIATED_MONTH_NAME)
+        "MMMM" -> MonthPatternSymbol(MonthFormat.FULL_MONTH_NAME)
+        "MMMMM" -> MonthPatternSymbol(MonthFormat.FIRST_LETTER_OF_MONTH_NAME)
 
-        "d"            -> DayOfMonthPatternSymbol(TimestampFieldFormat.NUMBER)
-        "dd"           -> DayOfMonthPatternSymbol(TimestampFieldFormat.ZERO_PADDED_NUMBER)
+        "d" -> DayOfMonthPatternSymbol(TimestampFieldFormat.NUMBER)
+        "dd" -> DayOfMonthPatternSymbol(TimestampFieldFormat.ZERO_PADDED_NUMBER)
 
-        "H"            -> HourOfDayPatternSymbol(HourOfDayFormatFieldFormat.NUMBER_24_HOUR)
-        "HH"           -> HourOfDayPatternSymbol(HourOfDayFormatFieldFormat.ZERO_PADDED_NUMBER_24_HOUR)
-        "h"            -> HourOfDayPatternSymbol(HourOfDayFormatFieldFormat.NUMBER_12_HOUR)
-        "hh"           -> HourOfDayPatternSymbol(HourOfDayFormatFieldFormat.ZERO_PADDED_NUMBER_12_HOUR)
+        "H" -> HourOfDayPatternSymbol(HourOfDayFormatFieldFormat.NUMBER_24_HOUR)
+        "HH" -> HourOfDayPatternSymbol(HourOfDayFormatFieldFormat.ZERO_PADDED_NUMBER_24_HOUR)
+        "h" -> HourOfDayPatternSymbol(HourOfDayFormatFieldFormat.NUMBER_12_HOUR)
+        "hh" -> HourOfDayPatternSymbol(HourOfDayFormatFieldFormat.ZERO_PADDED_NUMBER_12_HOUR)
 
-        "a"            -> AmPmPatternSymbol()
+        "a" -> AmPmPatternSymbol()
 
-        "m"            -> MinuteOfHourPatternSymbol(TimestampFieldFormat.NUMBER)
-        "mm"           -> MinuteOfHourPatternSymbol(TimestampFieldFormat.ZERO_PADDED_NUMBER)
+        "m" -> MinuteOfHourPatternSymbol(TimestampFieldFormat.NUMBER)
+        "mm" -> MinuteOfHourPatternSymbol(TimestampFieldFormat.ZERO_PADDED_NUMBER)
 
-        "s"            -> SecondOfMinutePatternPatternSymbol(TimestampFieldFormat.NUMBER)
-        "ss"           -> SecondOfMinutePatternPatternSymbol(TimestampFieldFormat.ZERO_PADDED_NUMBER)
+        "s" -> SecondOfMinutePatternPatternSymbol(TimestampFieldFormat.NUMBER)
+        "ss" -> SecondOfMinutePatternPatternSymbol(TimestampFieldFormat.ZERO_PADDED_NUMBER)
 
-        "n"            -> NanoOfSecondPatternSymbol()
+        "n" -> NanoOfSecondPatternSymbol()
 
-        "X"            -> OffsetPatternSymbol(OffsetFieldFormat.ZERO_PADDED_HOUR_OR_Z)
-        "XX", "XXXX"   -> OffsetPatternSymbol(OffsetFieldFormat.ZERO_PADDED_HOUR_MINUTE_OR_Z)
+        "X" -> OffsetPatternSymbol(OffsetFieldFormat.ZERO_PADDED_HOUR_OR_Z)
+        "XX", "XXXX" -> OffsetPatternSymbol(OffsetFieldFormat.ZERO_PADDED_HOUR_MINUTE_OR_Z)
         "XXX", "XXXXX" -> OffsetPatternSymbol(OffsetFieldFormat.ZERO_PADDED_HOUR_COLON_MINUTE_OR_Z)
 
-        "x"            -> OffsetPatternSymbol(OffsetFieldFormat.ZERO_PADDED_HOUR)
-        "xx", "xxxx"   -> OffsetPatternSymbol(OffsetFieldFormat.ZERO_PADDED_HOUR_MINUTE)
+        "x" -> OffsetPatternSymbol(OffsetFieldFormat.ZERO_PADDED_HOUR)
+        "xx", "xxxx" -> OffsetPatternSymbol(OffsetFieldFormat.ZERO_PADDED_HOUR_MINUTE)
         "xxx", "xxxxx" -> OffsetPatternSymbol(OffsetFieldFormat.ZERO_PADDED_HOUR_COLON_MINUTE)
 
-        else           ->
-            //Note: the lexer *should* only return tokens that are full of capital S's so the precision is the length.
+        else ->
+            // Note: the lexer *should* only return tokens that are full of capital S's so the precision is the length.
             if (raw.first() == 'S')
                 FractionOfSecondPatternSymbol(raw.length)
             else

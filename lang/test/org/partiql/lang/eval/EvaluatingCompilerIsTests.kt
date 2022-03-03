@@ -84,7 +84,6 @@ private fun isIntDecimalTypeTestCase(
     EvaluatorTestCase(sql, expectedHonorParamsResult, CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS)
 )
 
-
 /** Tests for `IS` operator. */
 class EvaluatingCompilerIsTests : EvaluatorTestBase() {
 
@@ -150,16 +149,19 @@ class EvaluatingCompilerIsTests : EvaluatorTestBase() {
                     isIntDecimalTypeTestCase(
                         "1 IS $typeName",
                         expectedLegacyResult = "TRUE",
-                        expectedHonorParamsResult = "TRUE"),
+                        expectedHonorParamsResult = "TRUE"
+                    ),
                     isIntDecimalTypeTestCase(
                         "-1 IS $typeName",
                         expectedLegacyResult = "TRUE",
-                        expectedHonorParamsResult = "TRUE"),
+                        expectedHonorParamsResult = "TRUE"
+                    ),
 
                     isIntDecimalTypeTestCase(
                         "$minValue IS $typeName",
                         expectedLegacyResult = "TRUE",
-                        expectedHonorParamsResult = "TRUE"),
+                        expectedHonorParamsResult = "TRUE"
+                    ),
                     isIntDecimalTypeTestCase(
                         "${minValue - 1} IS $typeName",
                         expectedLegacyResult = "TRUE",
@@ -169,7 +171,8 @@ class EvaluatingCompilerIsTests : EvaluatorTestBase() {
                     isIntDecimalTypeTestCase(
                         "$maxValue IS $typeName",
                         expectedLegacyResult = "TRUE",
-                        expectedHonorParamsResult = "TRUE"),
+                        expectedHonorParamsResult = "TRUE"
+                    ),
 
                     isIntDecimalTypeTestCase(
                         "${maxValue + 1} IS $typeName",
@@ -245,7 +248,8 @@ class EvaluatingCompilerIsTests : EvaluatorTestBase() {
                 "話家身圧",
                 "💋💋💋💋",
                 "a💩😸💋",
-                "\u00A2\u0039\uD55C\uD800\uDF48")
+                "\u00A2\u0039\uD55C\uD800\uDF48"
+            )
 
             return listOf(
                 isUnicodeStringTestCase(
@@ -280,7 +284,8 @@ class EvaluatingCompilerIsTests : EvaluatorTestBase() {
                     expectedResult = "TRUE",
                     expectedIsCharHonorParamsSql = "FALSE",
                     expectedIsVarcharHonorParamsSql = "TRUE"
-                ), isUnicodeStringTestCase(
+                ),
+                isUnicodeStringTestCase(
                     strings = listOf("a", "💩"),
                     sqlTemplate = "'<STRING>' IS {TYPE}(1)",
                     expectedResult = "TRUE"
@@ -438,6 +443,3 @@ class EvaluatingCompilerIsTests : EvaluatorTestBase() {
         ).flatten()
     }
 }
-
-
-

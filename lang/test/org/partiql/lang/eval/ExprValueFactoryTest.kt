@@ -25,10 +25,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.time.Time
-import org.partiql.lang.util.seal
-import java.math.BigDecimal
 import org.partiql.lang.util.isBag
 import org.partiql.lang.util.isMissing
+import org.partiql.lang.util.seal
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetTime
@@ -57,7 +57,7 @@ class ExprValueFactoryTest {
     fun parametersForExprValueFactoryTest() = listOf(
         TestCase(ExprValueType.BOOL, true, ion.newBool(true), factory.newBoolean(true)),
         TestCase(ExprValueType.BOOL, false, ion.newBool(false), factory.newBoolean(false)),
-        TestCase(ExprValueType.INT, 100L, ion.newInt(100), factory.newInt(100)),  //<--Int converted to Long
+        TestCase(ExprValueType.INT, 100L, ion.newInt(100), factory.newInt(100)), // <--Int converted to Long
         TestCase(ExprValueType.INT, 101L, ion.newInt(101), factory.newInt(101L)),
         TestCase(ExprValueType.FLOAT, 103.0, ion.newFloat(103.0), factory.newFloat(103.0)),
         TestCase(ExprValueType.DECIMAL, BigDecimal(104), ion.newDecimal(BigDecimal(104)), factory.newDecimal(104)),
@@ -98,31 +98,31 @@ class ExprValueFactoryTest {
             ExprValueType.STRUCT,
             ExprValueType.SEXP,
             ExprValueType.LIST,
-            ExprValueType.BAG       -> {
+            ExprValueType.BAG -> {
                 assertScalarEmpty(tc.value)
             }
-            ExprValueType.BOOL      -> {
+            ExprValueType.BOOL -> {
                 assertEquals(expectedValue, tc.value.scalar.booleanValue())
                 assertNull(tc.value.scalar.numberValue())
                 assertNull(tc.value.scalar.stringValue())
                 assertNull(tc.value.scalar.bytesValue())
                 assertNull(tc.value.scalar.timestampValue())
             }
-            ExprValueType.INT       -> {
+            ExprValueType.INT -> {
                 assertNull(tc.value.scalar.booleanValue())
                 assertEquals(expectedValue, tc.value.scalar.numberValue())
                 assertNull(tc.value.scalar.stringValue())
                 assertNull(tc.value.scalar.bytesValue())
                 assertNull(tc.value.scalar.timestampValue())
             }
-            ExprValueType.FLOAT     -> {
+            ExprValueType.FLOAT -> {
                 assertNull(tc.value.scalar.booleanValue())
                 assertEquals(expectedValue, tc.value.scalar.numberValue())
                 assertNull(tc.value.scalar.stringValue())
                 assertNull(tc.value.scalar.bytesValue())
                 assertNull(tc.value.scalar.timestampValue())
             }
-            ExprValueType.DECIMAL   -> {
+            ExprValueType.DECIMAL -> {
                 assertNull(tc.value.scalar.booleanValue())
                 assertEquals(expectedValue, tc.value.scalar.numberValue())
                 assertNull(tc.value.scalar.stringValue())
@@ -136,28 +136,28 @@ class ExprValueFactoryTest {
                 assertNull(tc.value.scalar.bytesValue())
                 assertEquals(expectedValue, tc.value.scalar.timestampValue())
             }
-            ExprValueType.SYMBOL    -> {
+            ExprValueType.SYMBOL -> {
                 assertNull(tc.value.scalar.booleanValue())
                 assertNull(tc.value.scalar.numberValue())
                 assertEquals(expectedValue, tc.value.scalar.stringValue())
                 assertNull(tc.value.scalar.bytesValue())
                 assertNull(tc.value.scalar.timestampValue())
             }
-            ExprValueType.STRING    -> {
+            ExprValueType.STRING -> {
                 assertNull(tc.value.scalar.booleanValue())
                 assertNull(tc.value.scalar.numberValue())
                 assertEquals(expectedValue, tc.value.scalar.stringValue())
                 assertNull(tc.value.scalar.bytesValue())
                 assertNull(tc.value.scalar.timestampValue())
             }
-            ExprValueType.CLOB      -> {
+            ExprValueType.CLOB -> {
                 assertNull(tc.value.scalar.booleanValue())
                 assertNull(tc.value.scalar.numberValue())
                 assertNull(tc.value.scalar.stringValue())
                 assertEquals(expectedValue, tc.value.scalar.bytesValue())
                 assertNull(tc.value.scalar.timestampValue())
             }
-            ExprValueType.BLOB      -> {
+            ExprValueType.BLOB -> {
                 assertNull(tc.value.scalar.booleanValue())
                 assertNull(tc.value.scalar.numberValue())
                 assertNull(tc.value.scalar.stringValue())
@@ -243,7 +243,7 @@ class ExprValueFactoryTest {
                 assertEquals(tc.expectedIonValue, tc.value.ionValue)
 
                 val fromIonValue = factory.newFromIonValue(tc.value.ionValue)
-                assertEquals(ExprValueType.BAG, fromIonValue.type) //Ion has no bag type--[bag.ionVaule] converts to a list with annotation $partiql_bag
+                assertEquals(ExprValueType.BAG, fromIonValue.type) // Ion has no bag type--[bag.ionVaule] converts to a list with annotation $partiql_bag
                 assertBagValues(fromIonValue)
                 assertEquals(fromIonValue.ionValue, tc.value.ionValue)
 
@@ -289,13 +289,15 @@ class ExprValueFactoryTest {
 
     fun nonEmptyUnorderedStructs(): Array<ExprValue> {
         val list = listOf(
-                factory.newInt(1).namedValue(factory.newSymbol("foo")),
-                factory.newInt(2).namedValue(factory.newSymbol("bar")),
-                factory.newInt(3).namedValue(factory.newSymbol("bat")))
+            factory.newInt(1).namedValue(factory.newSymbol("foo")),
+            factory.newInt(2).namedValue(factory.newSymbol("bar")),
+            factory.newInt(3).namedValue(factory.newSymbol("bat"))
+        )
 
         return arrayOf(
-                factory.newStruct(list.asSequence(), StructOrdering.UNORDERED),
-                factory.newStruct(list, StructOrdering.UNORDERED))
+            factory.newStruct(list.asSequence(), StructOrdering.UNORDERED),
+            factory.newStruct(list, StructOrdering.UNORDERED)
+        )
     }
 
     @Test
@@ -314,18 +316,19 @@ class ExprValueFactoryTest {
         assertEquals(1L, contents.single { it.name!!.stringValue() == "foo" }.numberValue())
         assertEquals(2L, contents.single { it.name!!.stringValue() == "bar" }.numberValue())
         assertEquals(3L, contents.single { it.name!!.stringValue() == "bat" }.numberValue())
-
     }
 
     fun nonEmptyOrderedStructs(): Array<ExprValue> {
         val list = listOf(
-                factory.newInt(1).namedValue(factory.newSymbol("foo")),
-                factory.newInt(2).namedValue(factory.newSymbol("bar")),
-                factory.newInt(3).namedValue(factory.newSymbol("bat")))
+            factory.newInt(1).namedValue(factory.newSymbol("foo")),
+            factory.newInt(2).namedValue(factory.newSymbol("bar")),
+            factory.newInt(3).namedValue(factory.newSymbol("bat"))
+        )
 
         return arrayOf(
-                factory.newStruct(list.asSequence(), StructOrdering.ORDERED),
-                factory.newStruct(list, StructOrdering.ORDERED))
+            factory.newStruct(list.asSequence(), StructOrdering.ORDERED),
+            factory.newStruct(list, StructOrdering.ORDERED)
+        )
     }
 
     @Test
@@ -355,20 +358,20 @@ class ExprValueFactoryTest {
         try {
             factory.newFromIonValue(otherIonSystem.newInt(1))
             fail("no exception thrown")
-        } catch(e: IllegalArgumentException) {
+        } catch (e: IllegalArgumentException) {
             /* intentionally left blank */
         }
     }
 
     @Test
     fun serializeDeserializeMissing() {
-        //Deserialize - IonValue to ExprValue using newFromIonValue
+        // Deserialize - IonValue to ExprValue using newFromIonValue
         val ionValue = ion.newNull().also { it.addTypeAnnotation(MISSING_ANNOTATION) }
         val exprValue = factory.newFromIonValue(ionValue)
         assertEquals(ExprValueType.MISSING, exprValue.type)
         assertEquals(exprValue.ionValue, ionValue)
 
-        //Deserialize - IonValue to ExprValue using factory's missing value
+        // Deserialize - IonValue to ExprValue using factory's missing value
         val exprValueFromFactory = factory.missingValue
         assertEquals(ExprValueType.MISSING, exprValueFromFactory.type)
 
@@ -385,17 +388,17 @@ class ExprValueFactoryTest {
 
     @Test
     fun serializeDeserializeBag() {
-        //Deserialize - IonValue to ExprValue using newFromIonValue
+        // Deserialize - IonValue to ExprValue using newFromIonValue
         val ionValue = ion.newList(ion.newInt(1), ion.newInt(2), ion.newInt(3)).also { it.addTypeAnnotation(BAG_ANNOTATION) }
         val exprValue = factory.newFromIonValue(ionValue)
         assertEquals(ExprValueType.BAG, exprValue.type)
         assertEquals(exprValue.ionValue, ionValue)
 
-        //Deserialize - IonValue to ExprValue using newBag, newBag adds $partiql_bag annotation to the list
+        // Deserialize - IonValue to ExprValue using newBag, newBag adds $partiql_bag annotation to the list
         val exprValueFromFactory = factory.newBag(listOf(factory.newInt(1), factory.newInt(2), factory.newInt(3)).asSequence())
         assertEquals(ExprValueType.BAG, exprValueFromFactory.type)
 
-        //Serialize - ExprValue to IonValue using ionValue by lazy
+        // Serialize - ExprValue to IonValue using ionValue by lazy
         assertTrue(exprValueFromFactory.ionValue.isBag)
 
         // Ensure round trip doesn't add the annotation if it already has $partiql_bag annotation
@@ -438,7 +441,7 @@ class ExprValueFactoryTest {
     fun genericTimeExprValueTest2() {
         val timeExprValue = factory.newTime(Time.of(23, 2, 29, 23, 2, -720))
         assertEquals(
-            expected = OffsetTime.of(23, 2, 29, 0, ZoneOffset.ofTotalSeconds(-720*60)),
+            expected = OffsetTime.of(23, 2, 29, 0, ZoneOffset.ofTotalSeconds(-720 * 60)),
             actual = timeExprValue.scalar.timeValue()!!.offsetTime,
             message = "Expected values to be equal."
         )

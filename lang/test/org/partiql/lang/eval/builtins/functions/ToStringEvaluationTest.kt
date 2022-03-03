@@ -70,11 +70,11 @@ class ToStringEvaluationTest : EvaluatorTestBase() {
         override fun getParameters(): List<Any> = listOf(
             InvalidArgTestCase("to_string(`2017-01-01`, 'b')", "b"),
 
-            //Symbol 'z' is known to Java's DateTimeFormatter but is not handled by TimestampTemporalAccessor
+            // Symbol 'z' is known to Java's DateTimeFormatter but is not handled by TimestampTemporalAccessor
             InvalidArgTestCase("to_string(`2017-01-01`, 'Y')", "Y"),
 
-            //Symbol 'VV' is known to Java's DateTimeFormatter but is not handled by TimestampTemporalAccessor
-            //*and* causes a different exception to be thrown by DateTimeFormatter.format() than 'z'
+            // Symbol 'VV' is known to Java's DateTimeFormatter but is not handled by TimestampTemporalAccessor
+            // *and* causes a different exception to be thrown by DateTimeFormatter.format() than 'z'
             InvalidArgTestCase("to_string(`2017-01-01`, 'VV')", "VV")
         )
     }

@@ -9,8 +9,8 @@ import org.partiql.ionschema.model.IonSchemaModel
  *  - [IonSchemaModel.Constraint.Fields] for structs
  *  - [IonSchemaModel.Constraint.ClosedContent] for structs
  *  - [IonSchemaModel.Constraint.Element] for sequences).
- *  
- * This is intended to be called by a [ConstraintUnifier] when unifying 
+ *
+ * This is intended to be called by a [ConstraintUnifier] when unifying
  *  - discovered constraints only ([MultipleTypedDCU])
  *  - discovered with definite constraints ([AppendAdditionalConstraints])
  */
@@ -20,14 +20,14 @@ internal fun interface DiscoveredConstraintUnifier {
 
 /**
  * Represents a [DiscoveredConstraintUnifier] where each [IonSchemaModel.ConstraintList] to unify has a
- * [IonSchemaModel.Constraint.TypeConstraint] with [typeName]. This is intended to be used when creating 
+ * [IonSchemaModel.Constraint.TypeConstraint] with [typeName]. This is intended to be used when creating
  * [MultipleTypedDCU].
  */
 internal data class SingleTypedDCU(val typeName: String, val unifyFunc: DiscoveredConstraintUnifier)
 
 /**
- * For two conflicting constraint lists, `a` and `b`, unifies discovered constraints based on [constraintUnifiers]. 
- * If `a`/`b`'s type name matches one of the [constraintUnifiers]' [SingleTypedDCU.typeName]s, then `a` and `b` are 
+ * For two conflicting constraint lists, `a` and `b`, unifies discovered constraints based on [constraintUnifiers].
+ * If `a`/`b`'s type name matches one of the [constraintUnifiers]' [SingleTypedDCU.typeName]s, then `a` and `b` are
  * unified with that corresponding unifier. Otherwise, an empty constraint list is returned.
  *
  * @exception IllegalArgumentException if any of [constraintUnifiers] have the same
@@ -35,7 +35,7 @@ internal data class SingleTypedDCU(val typeName: String, val unifyFunc: Discover
  */
 internal class MultipleTypedDCU(
     private val constraintUnifiers: List<SingleTypedDCU> = standardTypedDiscoveredConstraintUnifiers
-): DiscoveredConstraintUnifier {
+) : DiscoveredConstraintUnifier {
     private val discoveredConstraintUnifierMapping = initializeMapping()
 
     private fun initializeMapping(): Map<String, DiscoveredConstraintUnifier> {
@@ -62,12 +62,12 @@ internal class MultipleTypedDCU(
  * For two conflicting constraint lists, `a` and `b`, appends `b`'s constraints not found in `a`. Any constraints that
  * are found in `a` and `b` will return `a`'s constraint.
  */
-internal class AppendAdditionalConstraints: DiscoveredConstraintUnifier {
+internal class AppendAdditionalConstraints : DiscoveredConstraintUnifier {
     private fun IonSchemaModel.Constraint.isDiscoveredConstraint(): Boolean {
-        return this !is IonSchemaModel.Constraint.TypeConstraint
-            && this !is IonSchemaModel.Constraint.ClosedContent
-            && this !is IonSchemaModel.Constraint.Fields
-            && this !is IonSchemaModel.Constraint.Element
+        return this !is IonSchemaModel.Constraint.TypeConstraint &&
+            this !is IonSchemaModel.Constraint.ClosedContent &&
+            this !is IonSchemaModel.Constraint.Fields &&
+            this !is IonSchemaModel.Constraint.Element
     }
 
     override fun invoke(a: IonSchemaModel.ConstraintList, b: IonSchemaModel.ConstraintList): IonSchemaModel.ConstraintList {
@@ -154,4 +154,5 @@ internal val standardTypedDiscoveredConstraintUnifiers =
     listOf(
         INT_VALID_VALUES_UNIFIER,
         DECIMAL_SCALE_AND_PRECISION_UNIFIER,
-        STRING_CODEPOINT_LENGTH_UNIFIER)
+        STRING_CODEPOINT_LENGTH_UNIFIER
+    )

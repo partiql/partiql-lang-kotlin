@@ -19,7 +19,6 @@ import junit.framework.Assert.assertEquals
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationException
@@ -48,11 +47,13 @@ class CliTest {
         Files.deleteIfExists(testFile.toPath())
     }
 
-    private fun makeCli(query: String,
-                        input: String? = null,
-                        bindings: Bindings<ExprValue> = Bindings.empty(),
-                        outputFormat: OutputFormat = OutputFormat.ION_TEXT,
-                        output: OutputStream = this.output) =
+    private fun makeCli(
+        query: String,
+        input: String? = null,
+        bindings: Bindings<ExprValue> = Bindings.empty(),
+        outputFormat: OutputFormat = OutputFormat.ION_TEXT,
+        output: OutputStream = this.output
+    ) =
         Cli(
             valueFactory,
             input?.byteInputStream(Charsets.UTF_8) ?: EmptyInputStream(),
@@ -60,7 +61,8 @@ class CliTest {
             outputFormat,
             compilerPipeline,
             bindings,
-            query)
+            query
+        )
 
     private fun Cli.runAndOutput(): String {
         run()

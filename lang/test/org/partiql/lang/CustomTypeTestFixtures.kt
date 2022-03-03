@@ -36,7 +36,7 @@ val esFloatParameter = TypedOpParameter(StaticType.FLOAT) {
 
 /** Emulate the recursive validation function for ES_ANY. */
 private fun esValidateAny(value: ExprValue): Boolean =
-    when (value.type){
+    when (value.type) {
         ExprValueType.FLOAT -> esFloatParameter.validationThunk?.invoke(value) ?: true
         ExprValueType.MISSING,
         ExprValueType.NULL,
@@ -64,7 +64,6 @@ val esAny = TypedOpParameter(
     ::esValidateAny
 )
 
-
 // RS_INTEGER
 private val rsIntegerPrecisionParameter = TypedOpParameter(IntType(IntType.IntRangeConstraint.INT4))
 
@@ -73,7 +72,8 @@ private val rsBigintPrecisionParameter = TypedOpParameter(IntType(IntType.IntRan
 
 // RS_VARCHAR_MAX
 private val rsStringParameter = TypedOpParameter(
-    StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(10))))
+    StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(10)))
+)
 
 // RS_REAL
 private val rsRealParameter = TypedOpParameter(StaticType.FLOAT) {

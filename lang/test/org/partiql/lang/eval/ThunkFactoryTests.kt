@@ -67,7 +67,8 @@ class ThunkFactoryTests {
             createTestCases(
                 StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(20))),
                 STRING_LONG,
-                true)
+                true
+            )
         ).flatten()
     }
 
@@ -157,17 +158,17 @@ class ThunkFactoryTests {
             }.invoke(Environment.standard())
         }
 
-
     private fun assertInvoke(expectException: Boolean, block: () -> Unit) {
-        if(expectException) {
+        if (expectException) {
             val ex = assertThrows<EvaluationException> {
                 block()
             }
-            assertEquals(ErrorCode.EVALUATOR_VALUE_NOT_INSTANCE_OF_EXPECTED_TYPE, ex.errorCode,
-                "Message was: ${ex.message}")
+            assertEquals(
+                ErrorCode.EVALUATOR_VALUE_NOT_INSTANCE_OF_EXPECTED_TYPE, ex.errorCode,
+                "Message was: ${ex.message}"
+            )
         } else {
             block()
         }
     }
 }
-

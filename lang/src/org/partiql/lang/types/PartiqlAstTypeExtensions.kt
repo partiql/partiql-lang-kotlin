@@ -18,19 +18,26 @@ fun PartiqlAst.Type.toTypedOpParameter(customTypedOpParameters: Map<String, Type
         this.precision == null && this.scale == null -> TypedOpParameter(StaticType.DECIMAL)
         this.precision != null && this.scale == null -> TypedOpParameter(DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(this.precision.value.toInt())))
         else -> TypedOpParameter(
-            DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(this.precision!!.value.toInt(), this.scale!!.value.toInt())))
+            DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(this.precision!!.value.toInt(), this.scale!!.value.toInt()))
+        )
     }
     is PartiqlAst.Type.NumericType -> when {
         this.precision == null && this.scale == null -> TypedOpParameter(StaticType.DECIMAL)
         this.precision != null && this.scale == null -> TypedOpParameter(DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(this.precision.value.toInt())))
         else -> TypedOpParameter(
-            DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(this.precision!!.value.toInt(), this.scale!!.value.toInt())))
+            DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(this.precision!!.value.toInt(), this.scale!!.value.toInt()))
+        )
     }
     is PartiqlAst.Type.TimestampType -> TypedOpParameter(StaticType.TIMESTAMP)
     is PartiqlAst.Type.CharacterType -> when {
         this.length == null -> TypedOpParameter(StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(1))))
-        else -> TypedOpParameter(StringType(StringType.StringLengthConstraint.Constrained(
-            NumberConstraint.Equals(this.length.value.toInt()))))
+        else -> TypedOpParameter(
+            StringType(
+                StringType.StringLengthConstraint.Constrained(
+                    NumberConstraint.Equals(this.length.value.toInt())
+                )
+            )
+        )
     }
     is PartiqlAst.Type.CharacterVaryingType -> when (this.length) {
         null -> TypedOpParameter(StringType(StringType.StringLengthConstraint.Unconstrained))
@@ -48,7 +55,8 @@ fun PartiqlAst.Type.toTypedOpParameter(customTypedOpParameters: Map<String, Type
     is PartiqlAst.Type.AnyType -> TypedOpParameter(StaticType.ANY)
     is PartiqlAst.Type.CustomType ->
         customTypedOpParameters.mapKeys {
-            (k, _) -> k.toLowerCase()
+            (k, _) ->
+            k.toLowerCase()
         }[this.name.text.toLowerCase()] ?: error("Could not find parameter for $this")
     is PartiqlAst.Type.DateType -> TypedOpParameter(StaticType.DATE)
     is PartiqlAst.Type.TimeType -> TypedOpParameter(

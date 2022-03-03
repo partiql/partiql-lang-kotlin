@@ -12,4 +12,3 @@ import com.amazon.ion.system.IonSystemBuilder
  * (Singletons like this probably should be avoided in production code.)
  */
 internal val ION: IonSystem = IonSystemBuilder.standard().build()
-

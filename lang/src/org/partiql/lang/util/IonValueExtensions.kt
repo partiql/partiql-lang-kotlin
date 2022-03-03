@@ -76,126 +76,125 @@ fun IonValue.asSequence(): Sequence<IonValue> = when (this) {
 
 fun IonInt.javaValue(): Number = when (integerSize) {
     IntegerSize.BIG_INTEGER -> bigIntegerValue()
-    else                    -> longValue()
+    else -> longValue()
 }
 
 fun IonValue.numberValue(): Number = when {
     isNullValue -> err("Expected non-null number: $this")
-    else        -> when (this) {
-        is IonInt     -> javaValue()
+    else -> when (this) {
+        is IonInt -> javaValue()
         is IonFloat -> doubleValue()
         is IonDecimal -> decimalValue()
-        else          -> err("Expected number: $this")
+        else -> err("Expected number: $this")
     }
 }
 
 fun IonValue.longValue(): Long {
     val number = numberValue()
     return when (number) {
-        is Int        -> number.toLong()
-        is Long       -> number
+        is Int -> number.toLong()
+        is Long -> number
         is BigInteger -> number.longValueExact()
-        else          -> err("Number is not a long: $number")
+        else -> err("Number is not a long: $number")
     }
 }
 
 fun IonValue.doubleValue(): Double = when {
-    isNullValue      -> err("Expected non-null double: $this")
+    isNullValue -> err("Expected non-null double: $this")
     this is IonFloat -> doubleValue()
-    else             -> err("Expected double: $this")
+    else -> err("Expected double: $this")
 }
 
 fun IonValue.bigDecimalValue(): BigDecimal = when {
-    isNullValue        -> err("Expected non-null decimal: $this")
+    isNullValue -> err("Expected non-null decimal: $this")
     this is IonDecimal -> decimalValue()
-    else               -> err("Expected decimal: $this")
+    else -> err("Expected decimal: $this")
 }
 
 fun IonValue.booleanValue(): Boolean = when (this) {
     is IonBool -> booleanValue()
-    else       -> err("Expected boolean: $this")
+    else -> err("Expected boolean: $this")
 }
 
 fun IonValue.timestampValue(): Timestamp = when (this) {
     is IonTimestamp -> timestampValue()
-    else            -> err("Expected timestamp: $this")
+    else -> err("Expected timestamp: $this")
 }
 
 fun IonValue.stringValue(): String? = when (this) {
     is IonText -> stringValue()
-    else       -> err("Expected text: $this")
+    else -> err("Expected text: $this")
 }
 
 fun IonValue.bytesValue(): ByteArray = when (this) {
     is IonLob -> bytes
-    else      -> err("Expected LOB: $this")
+    else -> err("Expected LOB: $this")
 }
 
 fun IonValue.numberValueOrNull(): Number? =
     when (this) {
-        is IonInt     -> javaValue()
-        is IonFloat   -> doubleValue()
+        is IonInt -> javaValue()
+        is IonFloat -> doubleValue()
         is IonDecimal -> decimalValue()
-        else          -> null
+        else -> null
     }
-
 
 fun IonValue.longValueOrNull(): Long? {
     val number = numberValue()
     return when (number) {
-        is Int        -> number.toLong()
-        is Long       -> number
+        is Int -> number.toLong()
+        is Long -> number
         is BigInteger -> number.longValueExact()
-        else          -> null
+        else -> null
     }
 }
 
 fun IonValue.doubleValueOrNull(): Double? = when {
     this is IonFloat -> doubleValue()
-    else             -> null
+    else -> null
 }
 
 fun IonValue.bigDecimalValueOrNull(): BigDecimal? = when {
     this is IonDecimal -> bigDecimalValue()
-    else               -> null
+    else -> null
 }
 
 fun IonValue.booleanValueOrNull(): Boolean? = when (this) {
     is IonBool -> booleanValue()
-    else       -> null
+    else -> null
 }
 
 fun IonValue.timestampValueOrNull(): Timestamp? = when (this) {
     is IonTimestamp -> timestampValue()
-    else            -> null
+    else -> null
 }
 
 fun IonValue.stringValueOrNull(): String? = when (this) {
     is IonText -> stringValue()
-    else       -> null
+    else -> null
 }
 
 fun IonValue.bytesValueOrNull(): ByteArray? = when (this) {
     is IonLob -> bytes
-    else      -> null
+    else -> null
 }
 
 val IonValue.isNumeric: Boolean
     get() = when (this) {
         is IonInt, is IonFloat, is IonDecimal -> true
-        else                                  -> false
+        else -> false
     }
 
 val IonValue.isUnsignedInteger: Boolean
     get() = when (this) {
         is IonInt -> longValue() >= 0
-        else      -> false
+        else -> false
     }
 
 val IonValue.isNonNullText: Boolean
     get() = when (this) {
         is IonText -> !isNullValue
-        else       -> false
+        else -> false
     }
 
 val IonValue.ordinal: Int
@@ -204,19 +203,19 @@ val IonValue.ordinal: Int
 val IonValue.isText: Boolean
     get() = when (this) {
         is IonText -> true
-        else       -> false
+        else -> false
     }
 
 val IonValue.isBag: Boolean
     get() = when (this) {
         is IonList -> this.hasTypeAnnotation(BAG_ANNOTATION)
-        else       -> false
+        else -> false
     }
 
 val IonValue.isMissing: Boolean
     get() = when (this) {
         is IonNull -> this.hasTypeAnnotation(MISSING_ANNOTATION)
-        else       -> false
+        else -> false
     }
 
 /** Creates a new [IonSexp] from a legacy AST [IonSexp] that strips out meta nodes. */
@@ -225,7 +224,7 @@ fun IonSexp.filterMetaNodes(): IonValue {
 
     while (target[0].stringValue() == "meta") {
         val tmpTarget = target[1]
-        if(tmpTarget !is IonSexp) {
+        if (tmpTarget !is IonSexp) {
             return tmpTarget.clone()
         }
         target = tmpTarget.asIonSexp()
@@ -237,7 +236,7 @@ fun IonSexp.filterMetaNodes(): IonValue {
             add(
                 when {
                     !isLiteral && child is IonSexp -> child.filterMetaNodes()
-                    else                           -> child.clone()
+                    else -> child.clone()
                 }
             )
         }
@@ -258,7 +257,7 @@ fun IonValue.asIonSymbol() = this as? IonSymbol ?: err("Expected an IonSymbol bu
 fun IonStruct.field(nameOfField: String) = this.get(nameOfField) ?: err("Expected struct field '$nameOfField' was not present.")
 
 val IonSexp.tagText: String get() {
-    if(this.isEmpty) {
+    if (this.isEmpty) {
         err("IonSexp was empty")
     }
 
@@ -273,4 +272,4 @@ val IonSexp.arity: Int get() = this.size - 1
 
 fun IonValue.isAstLiteral(): Boolean =
     this is IonSexp &&
-    this[0].stringValue() == "lit" //TODO AST node names should be refactored to statics
+        this[0].stringValue() == "lit" // TODO AST node names should be refactored to statics

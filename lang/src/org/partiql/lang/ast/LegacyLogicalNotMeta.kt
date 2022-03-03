@@ -41,4 +41,3 @@ class LegacyLogicalNotMeta private constructor() : Meta {
         val deserializer = MemoizedMetaDeserializer(TAG, instance)
     }
 }
-

@@ -53,4 +53,3 @@ enum class TokenType {
     ;
     fun isIdentifier() = this == TokenType.IDENTIFIER || this == TokenType.QUOTED_IDENTIFIER
 }
-

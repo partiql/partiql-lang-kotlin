@@ -184,7 +184,7 @@ open class AstWalker(private val visitor: AstVisitor) {
                                     walkExprNode(re.columnComponent.column)
                                 }
                                 is ReturningWildcard -> case {
-                                    //Leaf nodes have no children to walk.
+                                    // Leaf nodes have no children to walk.
                                 }
                             }
                         }
@@ -210,7 +210,7 @@ open class AstWalker(private val visitor: AstVisitor) {
             when (it) {
                 is PathComponentUnpivot,
                 is PathComponentWildcard -> case {
-                    //Leaf nodes have no children to walk.
+                    // Leaf nodes have no children to walk.
                 }
                 is PathComponentExpr -> case {
                     val (exp) = it
@@ -257,7 +257,7 @@ open class AstWalker(private val visitor: AstVisitor) {
                     visitor.visitSelectListItem(it)
                     when (it) {
                         is SelectListItemStar -> case {
-                            //Leaf nodes have no children to walk.
+                            // Leaf nodes have no children to walk.
                         }
                         is SelectListItemExpr -> case {
                             walkExprNode(it.expr)

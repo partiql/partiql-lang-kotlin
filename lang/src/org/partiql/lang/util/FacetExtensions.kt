@@ -14,7 +14,6 @@
 
 package org.partiql.lang.util
 
-
 /**
  * Simple dynamic downcast for a type.
  */

@@ -105,41 +105,44 @@ internal class TrimExprFunction(private val valueFactory: ExprValueFactory) : Ex
 
     private fun ExprValue.codePoints() = this.stringValue().codePoints().toArray()
 
-    private fun trim(type: TrimSpecification, toRemove: IntArray, sourceString: IntArray) : ExprValue {
+    private fun trim(type: TrimSpecification, toRemove: IntArray, sourceString: IntArray): ExprValue {
         return when (type) {
             BOTH, NONE -> valueFactory.newString(sourceString.trim(toRemove))
-            LEADING    -> valueFactory.newString(sourceString.leadingTrim(toRemove))
-            TRAILING   -> valueFactory.newString(sourceString.trailingTrim(toRemove))
+            LEADING -> valueFactory.newString(sourceString.leadingTrim(toRemove))
+            TRAILING -> valueFactory.newString(sourceString.trailingTrim(toRemove))
         }
     }
 
     private fun trim1Arg(sourceString: ExprValue) = trim(DEFAULT_SPECIFICATION, DEFAULT_TO_REMOVE, sourceString.codePoints())
 
-    private fun trim2Arg(specificationOrToRemove: ExprValue, sourceString: ExprValue) : ExprValue {
-        if(!specificationOrToRemove.type.isText){
-            errNoContext("with two arguments trim's first argument must be either the " +
+    private fun trim2Arg(specificationOrToRemove: ExprValue, sourceString: ExprValue): ExprValue {
+        if (!specificationOrToRemove.type.isText) {
+            errNoContext(
+                "with two arguments trim's first argument must be either the " +
                     "specification or a 'to remove' string",
                 errorCode = ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_TRIM,
-                internal = false)
+                internal = false
+            )
         }
 
         val trimSpec = TrimSpecification.from(specificationOrToRemove)
-        val toRemove = when(trimSpec) {
+        val toRemove = when (trimSpec) {
             NONE -> specificationOrToRemove.codePoints()
             else -> DEFAULT_TO_REMOVE
         }
 
         return trim(trimSpec, toRemove, sourceString.codePoints())
     }
-    private fun trim3Arg(specification: ExprValue, toRemove: ExprValue, sourceString: ExprValue) : ExprValue {
+    private fun trim3Arg(specification: ExprValue, toRemove: ExprValue, sourceString: ExprValue): ExprValue {
         val trimSpec = TrimSpecification.from(specification)
-        if(trimSpec == NONE) {
-            errNoContext("'${specification.stringValue()}' is an unknown trim specification, " +
+        if (trimSpec == NONE) {
+            errNoContext(
+                "'${specification.stringValue()}' is an unknown trim specification, " +
                     "valid vales: ${TrimSpecification.validValues}",
                 errorCode = ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_TRIM,
-                internal = false)
+                internal = false
+            )
         }
-
 
         return trim(trimSpec, toRemove.codePoints(), sourceString.codePoints())
     }
@@ -147,9 +150,9 @@ internal class TrimExprFunction(private val valueFactory: ExprValueFactory) : Ex
     override fun callWithRequired(env: Environment, required: List<ExprValue>) = trim1Arg(required[0])
     override fun callWithVariadic(env: Environment, required: List<ExprValue>, variadic: List<ExprValue>): ExprValue {
         return when (variadic.size) {
-            0    -> trim1Arg(required[0])
-            1    -> trim2Arg(required[0], variadic[0])
-            2    -> trim3Arg(required[0], variadic[0], variadic[1])
+            0 -> trim1Arg(required[0])
+            1 -> trim2Arg(required[0], variadic[0])
+            2 -> trim3Arg(required[0], variadic[0], variadic[1])
             else -> errNoContext("invalid trim arguments, should be unreachable", errorCode = ErrorCode.INTERNAL_ERROR, internal = true)
         }
     }
@@ -160,10 +163,10 @@ private enum class TrimSpecification {
 
     companion object {
         fun from(arg: ExprValue) = when (arg.stringValue()) {
-            "both"     -> BOTH
-            "leading"  -> LEADING
+            "both" -> BOTH
+            "leading" -> LEADING
             "trailing" -> TRAILING
-            else       -> NONE
+            else -> NONE
         }
 
         val validValues = TrimSpecification.values()

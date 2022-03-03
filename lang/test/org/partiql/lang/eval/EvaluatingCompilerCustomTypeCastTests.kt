@@ -9,7 +9,6 @@ import org.partiql.lang.util.honorTypedOpParameters
 import org.partiql.lang.util.legacyTypingMode
 import org.partiql.lang.util.permissiveTypingMode
 
-
 class EvaluatingCompilerCustomTypeCastTests : CastTestBase() {
     companion object {
 
@@ -170,17 +169,19 @@ class EvaluatingCompilerCustomTypeCastTests : CastTestBase() {
             ).types(listOf("RS_DOUBLE_PRECISION", "RS_FLOAT", "RS_FLOAT8", "SPARK_DOUBLE"))
         ).flatten()
 
-        private val customTypeCastConfiguredTestCases = (customTypeCases.map { case ->
-            ConfiguredCastCase(case, "HONOR_PARAM_CAST, LEGACY_TYPING_MODE") {
-                honorTypedOpParameters()
-                legacyTypingMode()
+        private val customTypeCastConfiguredTestCases = (
+            customTypeCases.map { case ->
+                ConfiguredCastCase(case, "HONOR_PARAM_CAST, LEGACY_TYPING_MODE") {
+                    honorTypedOpParameters()
+                    legacyTypingMode()
+                }
+            } + customTypeCases.toPermissive().map { case ->
+                ConfiguredCastCase(case, "HONOR_PARAM_CAST, PERMISSIVE_TYPING_MODE") {
+                    honorTypedOpParameters()
+                    permissiveTypingMode()
+                }
             }
-        } + customTypeCases.toPermissive().map { case ->
-            ConfiguredCastCase(case, "HONOR_PARAM_CAST, PERMISSIVE_TYPING_MODE") {
-                honorTypedOpParameters()
-                permissiveTypingMode()
-            }
-        }).map {
+            ).map {
             it.copy(
                 configurePipeline = {
                     customDataTypes(CUSTOM_TEST_TYPES)
@@ -192,7 +193,6 @@ class EvaluatingCompilerCustomTypeCastTests : CastTestBase() {
     class ConfiguredCastArguments : ArgumentsProviderBase() {
         override fun getParameters() = customTypeCastConfiguredTestCases
     }
-
 
     @ParameterizedTest
     @ArgumentsSource(ConfiguredCastArguments::class)

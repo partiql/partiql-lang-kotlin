@@ -18,17 +18,15 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.syntax.DATE_TIME_PART_KEYWORDS
 import org.partiql.lang.syntax.TokenType
 
-
 /** Property Set constants used in [ErrorCode] */
 private val LOCATION = setOf(Property.LINE_NUMBER, Property.COLUMN_NUMBER)
 private val TOKEN_INFO = setOf(Property.TOKEN_TYPE, Property.TOKEN_VALUE)
 private val LOC_TOKEN = LOCATION + (TOKEN_INFO)
 private val LOC_TOKEN_STR = LOCATION + (setOf(Property.TOKEN_STRING))
 
-
 /** Helper function to reduce syntactical overhead of accessing property values as strings. */
 private fun PropertyValueMap.getAsString(key: Property, defaultValue: String) =
-        this[key]?.toString() ?: defaultValue
+    this[key]?.toString() ?: defaultValue
 
 enum class ErrorBehaviorInPermissiveMode {
     THROW_EXCEPTION, RETURN_MISSING
@@ -45,21 +43,24 @@ internal const val UNBOUND_QUOTED_IDENTIFIER_HINT =
  *  - If is is RETURN_MISSING, evaluator will return MISSING in the permissive mode.
  *  - in the LEGACY mode, the evaluator always throws exception irrespective of this flag.
  */
-enum class ErrorCode(internal val category: ErrorCategory,
-                     private val properties: Set<Property>,
-                     private val messagePrefix: String,
-                     val errorBehaviorInPermissiveMode: ErrorBehaviorInPermissiveMode = ErrorBehaviorInPermissiveMode.THROW_EXCEPTION) {
-
+enum class ErrorCode(
+    internal val category: ErrorCategory,
+    private val properties: Set<Property>,
+    private val messagePrefix: String,
+    val errorBehaviorInPermissiveMode: ErrorBehaviorInPermissiveMode = ErrorBehaviorInPermissiveMode.THROW_EXCEPTION
+) {
 
     INTERNAL_ERROR(
         ErrorCategory.EVALUATOR,
         LOCATION,
-        "internal error"),
+        "internal error"
+    ),
 
     LEXER_INVALID_CHAR(
         ErrorCategory.LEXER,
         LOC_TOKEN_STR,
-        "invalid character at") {
+        "invalid character at"
+    ) {
         override fun detailMessageSuffix(errorContext: PropertyValueMap?): String =
             getTokenString(errorContext)
     },
@@ -67,12 +68,14 @@ enum class ErrorCode(internal val category: ErrorCategory,
     LEXER_INVALID_NAME(
         ErrorCategory.LEXER,
         LOC_TOKEN_STR,
-        "invalid name"),
+        "invalid name"
+    ),
 
     LEXER_INVALID_OPERATOR(
         ErrorCategory.LEXER,
         LOC_TOKEN_STR,
-        "invalid operator at") {
+        "invalid operator at"
+    ) {
         override fun detailMessageSuffix(errorContext: PropertyValueMap?): String =
             getTokenString(errorContext)
     },
@@ -80,7 +83,8 @@ enum class ErrorCode(internal val category: ErrorCategory,
     LEXER_INVALID_LITERAL(
         ErrorCategory.LEXER,
         LOC_TOKEN_STR,
-        "invalid literal at") {
+        "invalid literal at"
+    ) {
         override fun detailMessageSuffix(errorContext: PropertyValueMap?): String =
             getTokenString(errorContext)
     },
@@ -88,7 +92,8 @@ enum class ErrorCode(internal val category: ErrorCategory,
     LEXER_INVALID_ION_LITERAL(
         ErrorCategory.LEXER,
         LOC_TOKEN_STR,
-        "invalid ion literal at") {
+        "invalid ion literal at"
+    ) {
         override fun detailMessageSuffix(errorContext: PropertyValueMap?): String =
             getTokenString(errorContext)
     },
@@ -96,12 +101,14 @@ enum class ErrorCode(internal val category: ErrorCategory,
     PARSE_MALFORMED_PARSE_TREE(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "Internal error - malformed parse tree detected"),
+        "Internal error - malformed parse tree detected"
+    ),
 
     PARSE_EXPECTED_KEYWORD(
         ErrorCategory.PARSER,
         LOC_TOKEN + setOf(Property.KEYWORD),
-        "expected keyword") {
+        "expected keyword"
+    ) {
         override fun detailMessageSuffix(errorContext: PropertyValueMap?): String =
             getKeyword(errorContext)
     },
@@ -109,7 +116,8 @@ enum class ErrorCode(internal val category: ErrorCategory,
     PARSE_EXPECTED_TOKEN_TYPE(
         ErrorCategory.PARSER,
         LOC_TOKEN + setOf(Property.EXPECTED_TOKEN_TYPE),
-        "expected token of type") {
+        "expected token of type"
+    ) {
         override fun detailMessageSuffix(errorContext: PropertyValueMap?): String =
             errorContext?.get(Property.EXPECTED_TOKEN_TYPE)?.tokenTypeValue()?.toString() ?: UNKNOWN +
                 "found ${getTokenType(errorContext)}"
@@ -118,9 +126,10 @@ enum class ErrorCode(internal val category: ErrorCategory,
     PARSE_EXPECTED_2_TOKEN_TYPES(
         ErrorCategory.PARSER,
         LOC_TOKEN + setOf(Property.EXPECTED_TOKEN_TYPE_1_OF_2, Property.EXPECTED_TOKEN_TYPE_2_OF_2),
-        "unexpected token") {
+        "unexpected token"
+    ) {
         override fun detailMessageSuffix(errorContext: PropertyValueMap?): String =
-                "expected ${errorContext?.getAsString(Property.EXPECTED_TOKEN_TYPE_1_OF_2, UNKNOWN)}" +
+            "expected ${errorContext?.getAsString(Property.EXPECTED_TOKEN_TYPE_1_OF_2, UNKNOWN)}" +
                 " or ${errorContext?.getAsString(Property.EXPECTED_TOKEN_TYPE_2_OF_2, UNKNOWN)}" +
                 " but found ${getTokenType(errorContext)}"
     },
@@ -128,7 +137,8 @@ enum class ErrorCode(internal val category: ErrorCategory,
     PARSE_EXPECTED_NUMBER(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "Expected number, found") {
+        "Expected number, found"
+    ) {
         override fun detailMessageSuffix(errorContext: PropertyValueMap?): String =
             getTokenValue(errorContext)
     },
@@ -136,275 +146,324 @@ enum class ErrorCode(internal val category: ErrorCategory,
     PARSE_EXPECTED_TYPE_NAME(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "expected type name, found"),
+        "expected type name, found"
+    ),
 
     PARSE_EXPECTED_WHEN_CLAUSE(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "expected WHEN clause in CASE"),
+        "expected WHEN clause in CASE"
+    ),
 
     PARSE_EXPECTED_WHERE_CLAUSE(
-            ErrorCategory.PARSER,
-            LOC_TOKEN,
-            "expected WHERE clause"),
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "expected WHERE clause"
+    ),
 
     PARSE_EXPECTED_CONFLICT_ACTION(
-            ErrorCategory.PARSER,
-            LOC_TOKEN,
-            "expected <conflict action>"),
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "expected <conflict action>"
+    ),
 
     PARSE_EXPECTED_RETURNING_CLAUSE(
-            ErrorCategory.PARSER,
-            LOC_TOKEN,
-            "expected <returning mapping>"),
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "expected <returning mapping>"
+    ),
 
     PARSE_UNSUPPORTED_RETURNING_CLAUSE_SYNTAX(
-            ErrorCategory.PARSER,
-            LOC_TOKEN,
-            "unsupported syntax in RETURNING clause"),
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "unsupported syntax in RETURNING clause"
+    ),
 
     PARSE_UNSUPPORTED_TOKEN(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "Unexpected token"),
+        "Unexpected token"
+    ),
 
     PARSE_UNSUPPORTED_LITERALS_GROUPBY(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "unsupported literal in GROUP BY"),
+        "unsupported literal in GROUP BY"
+    ),
 
     PARSE_EXPECTED_MEMBER(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "expected MEMBER node"),
+        "expected MEMBER node"
+    ),
 
     PARSE_EXPECTED_DATE_TIME_PART(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "expected one of: [${DATE_TIME_PART_KEYWORDS.joinToString()}]"),
+        "expected one of: [${DATE_TIME_PART_KEYWORDS.joinToString()}]"
+    ),
 
     PARSE_UNSUPPORTED_SELECT(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "unsupported use of SELECT"),
+        "unsupported use of SELECT"
+    ),
 
     PARSE_UNSUPPORTED_CASE(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "unsupported use of CASE"),
+        "unsupported use of CASE"
+    ),
 
     PARSE_UNSUPPORTED_CASE_CLAUSE(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "Unsupported use of CASE statement"),
+        "Unsupported use of CASE statement"
+    ),
     PARSE_UNSUPPORTED_ALIAS(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "unsupported syntax for alias, `at` and `as` are supported"),
+        "unsupported syntax for alias, `at` and `as` are supported"
+    ),
 
     PARSE_UNSUPPORTED_SYNTAX(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "unsupported Syntax"),
+        "unsupported Syntax"
+    ),
 
     PARSE_UNKNOWN_OPERATOR(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "unsupported operator"),
+        "unsupported operator"
+    ),
 
     PARSE_INVALID_PATH_COMPONENT(
         ErrorCategory.PARSER,
         LOC_TOKEN + setOf(Property.TOKEN_TYPE, Property.TOKEN_VALUE),
-        "invalid Path component") {
+        "invalid Path component"
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String {
             return "Invalid path component, expecting either an ${TokenType.IDENTIFIER} or ${TokenType.STAR}, " +
-                   "got: ${errorContext?.get(Property.TOKEN_TYPE) ?: UNKNOWN} " +
-                   "with value: ${errorContext?.get(Property.TOKEN_VALUE) ?: UNKNOWN}"
-
+                "got: ${errorContext?.get(Property.TOKEN_TYPE) ?: UNKNOWN} " +
+                "with value: ${errorContext?.get(Property.TOKEN_VALUE) ?: UNKNOWN}"
         }
     },
 
     PARSE_MISSING_IDENT_AFTER_AT(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "identifier expected after `@` symbol"),
+        "identifier expected after `@` symbol"
+    ),
 
     PARSE_UNEXPECTED_OPERATOR(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "unexpected operator"),
+        "unexpected operator"
+    ),
 
     PARSE_UNEXPECTED_TERM(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "unexpected term found"),
+        "unexpected term found"
+    ),
 
     PARSE_UNEXPECTED_TOKEN(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "unexpected token found"),
+        "unexpected token found"
+    ),
 
     PARSE_UNEXPECTED_KEYWORD(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "unexpected keyword found"),
+        "unexpected keyword found"
+    ),
 
     PARSE_EXPECTED_EXPRESSION(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "expected expression"),
+        "expected expression"
+    ),
 
     PARSE_EXPECTED_LEFT_PAREN_AFTER_CAST(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "expected left parenthesis after CAST"),
+        "expected left parenthesis after CAST"
+    ),
 
     PARSE_EXPECTED_LEFT_PAREN_VALUE_CONSTRUCTOR(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "expected left parenthesis"),
+        "expected left parenthesis"
+    ),
 
     PARSE_EXPECTED_LEFT_PAREN_BUILTIN_FUNCTION_CALL(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "expected left parenthesis"),
+        "expected left parenthesis"
+    ),
 
     PARSE_EXPECTED_RIGHT_PAREN_BUILTIN_FUNCTION_CALL(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "expected right parenthesis"),
+        "expected right parenthesis"
+    ),
 
     PARSE_EXPECTED_ARGUMENT_DELIMITER(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "expected argument delimiter"),
+        "expected argument delimiter"
+    ),
 
     PARSE_CAST_ARITY(
         ErrorCategory.PARSER,
         LOC_TOKEN + setOf(Property.CAST_TO, Property.EXPECTED_ARITY_MIN, Property.EXPECTED_ARITY_MAX),
-        "") {
+        ""
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "Cast to type ${errorContext?.get(Property.CAST_TO)?.stringValue() ?: UNKNOWN} has incorrect arity." +
                 "Correct arity is ${errorContext?.get(Property.EXPECTED_ARITY_MIN)?.integerValue() ?: UNKNOWN}.." +
                 "${errorContext?.get(Property.EXPECTED_ARITY_MAX)?.integerValue() ?: UNKNOWN}"
-
     },
 
     PARSE_TYPE_PARAMETER_EXCEEDED_MAXIMUM_VALUE(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "Type parameter has exceeded the maximum allowed value of ${Int.MAX_VALUE}"),
+        "Type parameter has exceeded the maximum allowed value of ${Int.MAX_VALUE}"
+    ),
 
     PARSE_INVALID_TYPE_PARAM(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "invalid value used for type parameter"),
+        "invalid value used for type parameter"
+    ),
 
     PARSE_INVALID_PRECISION_FOR_TIME(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "invalid precision used for TIME type"),
+        "invalid precision used for TIME type"
+    ),
 
     PARSE_INVALID_DATE_STRING(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "expected date string to be of the format YYYY-MM-DD"),
+        "expected date string to be of the format YYYY-MM-DD"
+    ),
 
     PARSE_INVALID_TIME_STRING(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "expected time string to be of the format HH:MM:SS[.dddd...][+|-HH:MM]"),
+        "expected time string to be of the format HH:MM:SS[.dddd...][+|-HH:MM]"
+    ),
 
     PARSE_EMPTY_SELECT(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "found empty SELECT list"),
+        "found empty SELECT list"
+    ),
 
     PARSE_SELECT_MISSING_FROM(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "missing FROM after SELECT list"),
+        "missing FROM after SELECT list"
+    ),
 
     PARSE_MISSING_OPERATION(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "expected DML or SELECT operation after FROM"),
+        "expected DML or SELECT operation after FROM"
+    ),
 
     PARSE_MISSING_SET_ASSIGNMENT(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "expected assignment for SET"),
+        "expected assignment for SET"
+    ),
 
     PARSE_EXPECTED_IDENT_FOR_GROUP_NAME(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "expected identifier for GROUP name"),
+        "expected identifier for GROUP name"
+    ),
 
     PARSE_EXPECTED_IDENT_FOR_ALIAS(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "expected identifier for alias"),
+        "expected identifier for alias"
+    ),
 
     PARSE_EXPECTED_AS_FOR_LET(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "expected AS for LET clause"),
+        "expected AS for LET clause"
+    ),
 
     PARSE_UNSUPPORTED_CALL_WITH_STAR(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "function call, other than COUNT, with (*) as parameter is not supported"),
+        "function call, other than COUNT, with (*) as parameter is not supported"
+    ),
 
     PARSE_NON_UNARY_AGREGATE_FUNCTION_CALL(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "Aggregate function calls take 1 argument only"),
+        "Aggregate function calls take 1 argument only"
+    ),
 
     PARSE_NO_STORED_PROCEDURE_PROVIDED(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "No stored procedure provided"),
+        "No stored procedure provided"
+    ),
 
     PARSE_MALFORMED_JOIN(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "malformed use of FROM with JOIN"),
+        "malformed use of FROM with JOIN"
+    ),
 
     PARSE_EXPECTED_IDENT_FOR_AT(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "expected identifier for AT name"),
+        "expected identifier for AT name"
+    ),
 
     PARSE_INVALID_CONTEXT_FOR_WILDCARD_IN_SELECT_LIST(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "Invalid use of * in select list"),
+        "Invalid use of * in select list"
+    ),
 
-    //SQB = SQuare Bracket
+    // SQB = SQuare Bracket
     PARSE_CANNOT_MIX_SQB_AND_WILDCARD_IN_SELECT_LIST(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "Cannot mix [] and * in the same expression in a select list"),
+        "Cannot mix [] and * in the same expression in a select list"
+    ),
 
     PARSE_ASTERISK_IS_NOT_ALONE_IN_SELECT_LIST(
         ErrorCategory.PARSER,
         LOCATION,
-        "Other expressions may not be present in the select list when '*' is used without dot notation."),
+        "Other expressions may not be present in the select list when '*' is used without dot notation."
+    ),
 
-    //Evaluator errors
+    // Evaluator errors
     // TODO:  replace uses of this with UNIMPLEMENTED_FEATURE
     EVALUATOR_FEATURE_NOT_SUPPORTED_YET(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.FEATURE_NAME),
-        "") {
+        ""
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "Feature '${errorContext?.get(Property.FEATURE_NAME)?.stringValue() ?: UNKNOWN}' not supported yet"
-        },
+    },
 
     EVALUATOR_COUNT_DISTINCT_STAR(
         ErrorCategory.EVALUATOR,
         LOCATION,
-        "") {
+        ""
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "COUNT(DISTINCT *) is not supported"
     },
@@ -413,7 +472,8 @@ enum class ErrorCode(internal val category: ErrorCategory,
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.BINDING_NAME),
         "Binding does not exist",
-        ErrorBehaviorInPermissiveMode.RETURN_MISSING) {
+        ErrorBehaviorInPermissiveMode.RETURN_MISSING
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "Binding '${errorContext?.get(Property.BINDING_NAME)?.stringValue() ?: UNKNOWN}' does not exist"
     },
@@ -422,7 +482,8 @@ enum class ErrorCode(internal val category: ErrorCategory,
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.BINDING_NAME),
         "Binding does not exist. $UNBOUND_QUOTED_IDENTIFIER_HINT",
-        ErrorBehaviorInPermissiveMode.RETURN_MISSING) {
+        ErrorBehaviorInPermissiveMode.RETURN_MISSING
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "Binding '${errorContext?.get(Property.BINDING_NAME)?.stringValue() ?: UNKNOWN}' does not exist"
     },
@@ -430,77 +491,86 @@ enum class ErrorCode(internal val category: ErrorCategory,
     EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.BINDING_NAME),
-        "") {
+        ""
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "Variable '${errorContext?.get(Property.BINDING_NAME)?.stringValue() ?: UNKNOWN}' " +
-            "must appear in the GROUP BY clause or be used in an aggregation function"
+                "must appear in the GROUP BY clause or be used in an aggregation function"
     },
 
     EVALUATOR_UNBOUND_PARAMETER(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.EXPECTED_PARAMETER_ORDINAL, Property.BOUND_PARAMETER_COUNT),
-        "No parameter bound for position!"),
+        "No parameter bound for position!"
+    ),
 
     EVALUATOR_INVALID_CAST(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.CAST_TO, Property.CAST_FROM),
         "",
-        ErrorBehaviorInPermissiveMode.RETURN_MISSING){
-            override fun getErrorMessage(errorContext: PropertyValueMap?): String =
-                "Cannot convert ${errorContext?.get(Property.CAST_FROM)?.stringValue() ?: UNKNOWN} " +
+        ErrorBehaviorInPermissiveMode.RETURN_MISSING
+    ) {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "Cannot convert ${errorContext?.get(Property.CAST_FROM)?.stringValue() ?: UNKNOWN} " +
                 "to ${errorContext?.get(Property.CAST_TO)?.stringValue() ?: UNKNOWN}"
-        },
+    },
 
     EVALUATOR_INVALID_CAST_NO_LOCATION(
         ErrorCategory.EVALUATOR,
         setOf(Property.CAST_TO, Property.CAST_FROM),
         "",
-        ErrorBehaviorInPermissiveMode.RETURN_MISSING){
-            override fun getErrorMessage(errorContext: PropertyValueMap?): String =
-                "Cannot convert ${errorContext?.get(Property.CAST_FROM)?.stringValue() ?: UNKNOWN} " +
+        ErrorBehaviorInPermissiveMode.RETURN_MISSING
+    ) {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "Cannot convert ${errorContext?.get(Property.CAST_FROM)?.stringValue() ?: UNKNOWN} " +
                 "to ${errorContext?.get(Property.CAST_TO)?.stringValue() ?: UNKNOWN}"
-        },
+    },
 
     EVALUATOR_CAST_FAILED(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.CAST_TO, Property.CAST_FROM),
         "",
-        ErrorBehaviorInPermissiveMode.RETURN_MISSING){
+        ErrorBehaviorInPermissiveMode.RETURN_MISSING
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "Failed to convert ${errorContext?.get(Property.CAST_FROM)?.stringValue() ?: UNKNOWN} " +
-            "to ${errorContext?.get(Property.CAST_TO)?.stringValue() ?: UNKNOWN}"
-        },
+                "to ${errorContext?.get(Property.CAST_TO)?.stringValue() ?: UNKNOWN}"
+    },
 
     EVALUATOR_CAST_FAILED_NO_LOCATION(
         ErrorCategory.EVALUATOR,
         setOf(Property.CAST_TO, Property.CAST_FROM),
         "",
-        ErrorBehaviorInPermissiveMode.RETURN_MISSING){
+        ErrorBehaviorInPermissiveMode.RETURN_MISSING
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "Failed to convert ${errorContext?.get(Property.CAST_FROM)?.stringValue() ?: UNKNOWN} " +
-            "to ${errorContext?.get(Property.CAST_TO)?.stringValue() ?: UNKNOWN}"
-        },
+                "to ${errorContext?.get(Property.CAST_TO)?.stringValue() ?: UNKNOWN}"
+    },
 
     EVALUATOR_NO_SUCH_FUNCTION(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.FUNCTION_NAME),
-        ""){
-            override fun getErrorMessage(errorContext: PropertyValueMap?): String =
-                "No such function: ${errorContext?.get(Property.FUNCTION_NAME)?.stringValue() ?: UNKNOWN} "
-        },
+        ""
+    ) {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "No such function: ${errorContext?.get(Property.FUNCTION_NAME)?.stringValue() ?: UNKNOWN} "
+    },
 
     SEMANTIC_DUPLICATE_ALIASES_IN_SELECT_LIST_ITEM(
         ErrorCategory.SEMANTIC,
         LOCATION,
-        ""){
+        ""
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "Duplicate projection field encountered in SelectListItem expression"
-        },
+    },
 
     SEMANTIC_NO_SUCH_FUNCTION(
         ErrorCategory.SEMANTIC,
         LOCATION + setOf(Property.FUNCTION_NAME),
-        ""){
+        ""
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "No such function: ${errorContext?.get(Property.FUNCTION_NAME)?.stringValue() ?: UNKNOWN} "
     },
@@ -508,45 +578,53 @@ enum class ErrorCode(internal val category: ErrorCategory,
     EVALUATOR_NO_SUCH_PROCEDURE(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.PROCEDURE_NAME),
-        ""){
-            override fun getErrorMessage(errorContext: PropertyValueMap?): String =
-                "No such stored procedure: ${errorContext?.get(Property.PROCEDURE_NAME)?.stringValue() ?: UNKNOWN} "
-        },
+        ""
+    ) {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "No such stored procedure: ${errorContext?.get(Property.PROCEDURE_NAME)?.stringValue() ?: UNKNOWN} "
+    },
 
     EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.FUNCTION_NAME, Property.EXPECTED_ARITY_MIN, Property.EXPECTED_ARITY_MAX, Property.ACTUAL_ARITY),
-        "Incorrect number of arguments to function call"),
+        "Incorrect number of arguments to function call"
+    ),
 
     EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_PROCEDURE_CALL(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.EXPECTED_ARITY_MIN, Property.EXPECTED_ARITY_MAX),
-        "Incorrect number of arguments to procedure call"),
+        "Incorrect number of arguments to procedure call"
+    ),
 
     EVALUATOR_DATE_FIELD_OUT_OF_RANGE(
         ErrorCategory.EVALUATOR,
         LOCATION,
-        "Date field out of range."),
+        "Date field out of range."
+    ),
 
     EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL(
         ErrorCategory.EVALUATOR,
-        LOCATION + setOf(Property.FUNCTION_NAME,
-                                    Property.EXPECTED_ARGUMENT_TYPES,
-                                    Property.ACTUAL_ARGUMENT_TYPES,
-                                    Property.ARGUMENT_POSITION),
+        LOCATION + setOf(
+            Property.FUNCTION_NAME,
+            Property.EXPECTED_ARGUMENT_TYPES,
+            Property.ACTUAL_ARGUMENT_TYPES,
+            Property.ARGUMENT_POSITION
+        ),
         "Incorrect type of arguments to function call",
-        ErrorBehaviorInPermissiveMode.RETURN_MISSING) {
+        ErrorBehaviorInPermissiveMode.RETURN_MISSING
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "Invalid argument type for ${errorContext?.get(Property.FUNCTION_NAME) ?: UNKNOWN} " +
-            "argument number ${errorContext?.get(Property.ARGUMENT_POSITION) ?: UNKNOWN}, " +
-            "expected: [${errorContext?.get(Property.EXPECTED_ARGUMENT_TYPES) ?: UNKNOWN}] " +
-            "got: ${errorContext?.get(Property.ACTUAL_ARGUMENT_TYPES) ?: UNKNOWN}"
+                "argument number ${errorContext?.get(Property.ARGUMENT_POSITION) ?: UNKNOWN}, " +
+                "expected: [${errorContext?.get(Property.EXPECTED_ARGUMENT_TYPES) ?: UNKNOWN}] " +
+                "got: ${errorContext?.get(Property.ACTUAL_ARGUMENT_TYPES) ?: UNKNOWN}"
     },
 
     SEMANTIC_INCORRECT_ARGUMENT_TYPES_TO_FUNC_CALL(
         ErrorCategory.SEMANTIC,
         LOCATION + setOf(Property.EXPECTED_ARGUMENT_TYPES, Property.ACTUAL_ARGUMENT_TYPES, Property.FUNCTION_NAME),
-        "Incorrect type of arguments to function call") {
+        "Incorrect type of arguments to function call"
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "Invalid argument types for ${errorContext?.get(Property.FUNCTION_NAME) ?: UNKNOWN}, " +
                 "expected: ${errorContext?.get(Property.EXPECTED_ARGUMENT_TYPES) ?: UNKNOWN} " +
@@ -556,7 +634,8 @@ enum class ErrorCode(internal val category: ErrorCategory,
     SEMANTIC_INFERENCER_ERROR(
         ErrorCategory.SEMANTIC,
         LOCATION + setOf(Property.MESSAGE),
-        ""){
+        ""
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String {
             return errorContext?.get(Property.MESSAGE)?.stringValue() ?: UNKNOWN
         }
@@ -565,28 +644,31 @@ enum class ErrorCode(internal val category: ErrorCategory,
     EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_PROCEDURE_CALL(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.EXPECTED_ARGUMENT_TYPES, Property.ACTUAL_ARGUMENT_TYPES, Property.FUNCTION_NAME),
-        "Incorrect type of arguments to procedure call") {
+        "Incorrect type of arguments to procedure call"
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "Invalid argument types for ${errorContext?.get(Property.FUNCTION_NAME) ?: UNKNOWN}, " +
-            "expected: ${errorContext?.get(Property.EXPECTED_ARGUMENT_TYPES) ?: UNKNOWN} " +
-            "got: ${errorContext?.get(Property.ACTUAL_ARGUMENT_TYPES) ?: UNKNOWN}"
+                "expected: ${errorContext?.get(Property.EXPECTED_ARGUMENT_TYPES) ?: UNKNOWN} " +
+                "got: ${errorContext?.get(Property.ACTUAL_ARGUMENT_TYPES) ?: UNKNOWN}"
     },
 
     EVALUATOR_CONCAT_FAILED_DUE_TO_INCOMPATIBLE_TYPE(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.ACTUAL_ARGUMENT_TYPES),
         "Incorrect type of arguments for operator '||'",
-        ErrorBehaviorInPermissiveMode.RETURN_MISSING) {
+        ErrorBehaviorInPermissiveMode.RETURN_MISSING
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "Incorrect type of arguments for operator '||', " +
-            "expected one of ${ExprValueType.values().filter { it.isText }} " +
-            "got ${errorContext?.get(Property.ACTUAL_ARGUMENT_TYPES)}"
+                "expected one of ${ExprValueType.values().filter { it.isText }} " +
+                "got ${errorContext?.get(Property.ACTUAL_ARGUMENT_TYPES)}"
     },
 
     EVALUATOR_INVALID_PRECISION_FOR_TIME(
         ErrorCategory.EVALUATOR,
         LOCATION,
-        "invalid precision used for TIME type"),
+        "invalid precision used for TIME type"
+    ),
 
     /**
      * This is a generic error wrapper for the DateTimeException thrown by Java's [java.time] when attempting to create
@@ -596,7 +678,8 @@ enum class ErrorCode(internal val category: ErrorCategory,
     EVALUATOR_TIME_FIELD_OUT_OF_RANGE(
         ErrorCategory.EVALUATOR,
         LOCATION,
-        "Invalid value for TIME type"),
+        "Invalid value for TIME type"
+    ),
 
     /**
      * This is a generic error thrown whenever Java's [DateTimeFormatter] throws an exception when attempting to
@@ -609,7 +692,8 @@ enum class ErrorCode(internal val category: ErrorCategory,
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.TIMESTAMP_FORMAT_PATTERN),
         "",
-        ErrorBehaviorInPermissiveMode.RETURN_MISSING) {
+        ErrorBehaviorInPermissiveMode.RETURN_MISSING
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "Invalid timestamp format pattern: '${errorContext?.get(Property.TIMESTAMP_FORMAT_PATTERN)}'."
     },
@@ -618,7 +702,8 @@ enum class ErrorCode(internal val category: ErrorCategory,
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.TIMESTAMP_FORMAT_PATTERN),
         "",
-        ErrorBehaviorInPermissiveMode.RETURN_MISSING) {
+        ErrorBehaviorInPermissiveMode.RETURN_MISSING
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "Timestamp format pattern contains invalid token: '${errorContext?.get(Property.TIMESTAMP_FORMAT_PATTERN)}'."
     },
@@ -627,7 +712,8 @@ enum class ErrorCode(internal val category: ErrorCategory,
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.TIMESTAMP_FORMAT_PATTERN),
         "",
-        ErrorBehaviorInPermissiveMode.RETURN_MISSING) {
+        ErrorBehaviorInPermissiveMode.RETURN_MISSING
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "Timestamp format pattern contains invalid symbol: '${errorContext?.get(Property.TIMESTAMP_FORMAT_PATTERN)}'."
     },
@@ -636,50 +722,54 @@ enum class ErrorCode(internal val category: ErrorCategory,
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.TIMESTAMP_FORMAT_PATTERN),
         "",
-        ErrorBehaviorInPermissiveMode.RETURN_MISSING) {
+        ErrorBehaviorInPermissiveMode.RETURN_MISSING
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "Timestamp format pattern contains unterminated token: '${errorContext?.get(Property.TIMESTAMP_FORMAT_PATTERN)}'."
     },
-
 
     EVALUATOR_INCOMPLETE_TIMESTAMP_FORMAT_PATTERN(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.TIMESTAMP_FORMAT_PATTERN, Property.TIMESTAMP_FORMAT_PATTERN_FIELDS),
         "",
-        ErrorBehaviorInPermissiveMode.RETURN_MISSING) {
+        ErrorBehaviorInPermissiveMode.RETURN_MISSING
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "Timestamp format pattern '${errorContext?.get(Property.TIMESTAMP_FORMAT_PATTERN)}' " +
-            "requires additional fields '${errorContext?.get(Property.TIMESTAMP_FORMAT_PATTERN_FIELDS)}'."
+                "requires additional fields '${errorContext?.get(Property.TIMESTAMP_FORMAT_PATTERN_FIELDS)}'."
     },
 
     EVALUATOR_TIMESTAMP_FORMAT_PATTERN_DUPLICATE_FIELDS(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.TIMESTAMP_FORMAT_PATTERN, Property.TIMESTAMP_FORMAT_PATTERN_FIELDS),
         "",
-        ErrorBehaviorInPermissiveMode.RETURN_MISSING) {
+        ErrorBehaviorInPermissiveMode.RETURN_MISSING
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "The format pattern '${errorContext?.get(Property.TIMESTAMP_FORMAT_PATTERN)}' contains multiple format " +
-            "specifiers representing the timestamp field '${errorContext?.get(Property.TIMESTAMP_FORMAT_PATTERN_FIELDS)}'."
+                "specifiers representing the timestamp field '${errorContext?.get(Property.TIMESTAMP_FORMAT_PATTERN_FIELDS)}'."
     },
 
     EVALUATOR_TIMESTAMP_FORMAT_PATTERN_HOUR_CLOCK_AM_PM_MISMATCH(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.TIMESTAMP_FORMAT_PATTERN),
         "",
-        ErrorBehaviorInPermissiveMode.RETURN_MISSING) {
+        ErrorBehaviorInPermissiveMode.RETURN_MISSING
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "The format pattern '${errorContext?.get(Property.TIMESTAMP_FORMAT_PATTERN)}' contains a 12-hour hour of " +
-            "day format symbol but doesn't also contain an AM/PM field, or it contains a 24-hour hour of day format " +
-            "specifier and contains an AM/PM field."
+                "day format symbol but doesn't also contain an AM/PM field, or it contains a 24-hour hour of day format " +
+                "specifier and contains an AM/PM field."
     },
 
     EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_SYMBOL_FOR_PARSING(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.TIMESTAMP_FORMAT_PATTERN),
         "",
-        ErrorBehaviorInPermissiveMode.RETURN_MISSING) {
-            override fun getErrorMessage(errorContext: PropertyValueMap?): String =
-                "The format pattern '${errorContext?.get(Property.TIMESTAMP_FORMAT_PATTERN)}' contains a valid format " +
+        ErrorBehaviorInPermissiveMode.RETURN_MISSING
+    ) {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
+            "The format pattern '${errorContext?.get(Property.TIMESTAMP_FORMAT_PATTERN)}' contains a valid format " +
                 "symbol that cannot be applied to timestamp parsing."
     },
 
@@ -687,25 +777,29 @@ enum class ErrorCode(internal val category: ErrorCategory,
         ErrorCategory.EVALUATOR,
         LOCATION,
         "Failed to parse Ion timestamp",
-        ErrorBehaviorInPermissiveMode.RETURN_MISSING),
+        ErrorBehaviorInPermissiveMode.RETURN_MISSING
+    ),
 
     EVALUATOR_CUSTOM_TIMESTAMP_PARSE_FAILURE(
         ErrorCategory.EVALUATOR,
-        LOCATION+ setOf(Property.TIMESTAMP_FORMAT_PATTERN),
+        LOCATION + setOf(Property.TIMESTAMP_FORMAT_PATTERN),
         "Failed to parse custom timestamp using the specified format pattern",
-        ErrorBehaviorInPermissiveMode.RETURN_MISSING),
+        ErrorBehaviorInPermissiveMode.RETURN_MISSING
+    ),
 
     EVALUATOR_PRECISION_LOSS_WHEN_PARSING_TIMESTAMP(
         ErrorCategory.EVALUATOR,
         LOCATION,
         "loss of precision when parsing timestamp",
-        ErrorBehaviorInPermissiveMode.RETURN_MISSING),
+        ErrorBehaviorInPermissiveMode.RETURN_MISSING
+    ),
 
     EVALUATOR_INTEGER_OVERFLOW(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.INT_SIZE_IN_BYTES),
         "Int overflow or underflow",
-        ErrorBehaviorInPermissiveMode.RETURN_MISSING) {
+        ErrorBehaviorInPermissiveMode.RETURN_MISSING
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "INT-${errorContext?.get(Property.INT_SIZE_IN_BYTES) ?: UNKNOWN} overflow or underflow"
     },
@@ -714,7 +808,8 @@ enum class ErrorCode(internal val category: ErrorCategory,
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.BINDING_NAME, Property.BINDING_NAME_MATCHES),
         "Binding name was ambiguous",
-        ErrorBehaviorInPermissiveMode.RETURN_MISSING) {
+        ErrorBehaviorInPermissiveMode.RETURN_MISSING
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "Binding name was '${errorContext?.get(Property.BINDING_NAME)}'"
     },
@@ -722,28 +817,31 @@ enum class ErrorCode(internal val category: ErrorCategory,
     EVALUATOR_LIKE_INVALID_INPUTS(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.LIKE_VALUE, Property.LIKE_PATTERN, Property.LIKE_ESCAPE),
-        "Invalid argument given to LIKE expression") {
+        "Invalid argument given to LIKE expression"
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "Given: " +
-            "value = ${errorContext?.get(Property.LIKE_VALUE)?.stringValue() ?: UNKNOWN}, " +
-            "pattern =  ${errorContext?.get(Property.LIKE_PATTERN)?.stringValue() ?: UNKNOWN}, " +
-            "escape char = ${errorContext?.get(Property.LIKE_ESCAPE)?.stringValue() ?: "none given"}"
+                "value = ${errorContext?.get(Property.LIKE_VALUE)?.stringValue() ?: UNKNOWN}, " +
+                "pattern =  ${errorContext?.get(Property.LIKE_PATTERN)?.stringValue() ?: UNKNOWN}, " +
+                "escape char = ${errorContext?.get(Property.LIKE_ESCAPE)?.stringValue() ?: "none given"}"
     },
 
     EVALUATOR_LIKE_PATTERN_INVALID_ESCAPE_SEQUENCE(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.LIKE_PATTERN, Property.LIKE_ESCAPE),
-        "Pattern contains an invalid or malformed escape sequence"){
+        "Pattern contains an invalid or malformed escape sequence"
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "Given: " +
-            "pattern =  ${errorContext?.get(Property.LIKE_PATTERN)?.stringValue() ?: UNKNOWN}, " +
-            "escape char = ${errorContext?.get(Property.LIKE_ESCAPE)?.stringValue() ?: "none given"}"
+                "pattern =  ${errorContext?.get(Property.LIKE_PATTERN)?.stringValue() ?: UNKNOWN}, " +
+                "escape char = ${errorContext?.get(Property.LIKE_ESCAPE)?.stringValue() ?: "none given"}"
     },
 
     EVALUATOR_NON_INT_LIMIT_VALUE(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.ACTUAL_TYPE),
-        "") {
+        ""
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "LIMIT value must be an integer but found ${errorContext.getProperty(Property.ACTUAL_TYPE)}}"
     },
@@ -752,7 +850,8 @@ enum class ErrorCode(internal val category: ErrorCategory,
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.ACTUAL_TYPE),
         "",
-        ErrorBehaviorInPermissiveMode.RETURN_MISSING) {
+        ErrorBehaviorInPermissiveMode.RETURN_MISSING
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "Struct field key should be text but found ${errorContext.getProperty(Property.ACTUAL_TYPE)}}."
     },
@@ -760,12 +859,14 @@ enum class ErrorCode(internal val category: ErrorCategory,
     EVALUATOR_NEGATIVE_LIMIT(
         ErrorCategory.EVALUATOR,
         LOCATION,
-        "LIMIT must not be negative"),
+        "LIMIT must not be negative"
+    ),
 
-    EVALUATOR_NON_INT_OFFSET_VALUE (
+    EVALUATOR_NON_INT_OFFSET_VALUE(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.ACTUAL_TYPE),
-        "") {
+        ""
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "OFFSET value must be an integer but found ${errorContext.getProperty(Property.ACTUAL_TYPE)}"
     },
@@ -773,101 +874,119 @@ enum class ErrorCode(internal val category: ErrorCategory,
     EVALUATOR_NEGATIVE_OFFSET(
         ErrorCategory.EVALUATOR,
         LOCATION,
-        "OFFSET must not be negative"),
+        "OFFSET must not be negative"
+    ),
 
     EVALUATOR_DIVIDE_BY_ZERO(
         ErrorCategory.EVALUATOR,
         LOCATION,
         "/ by zero",
-        ErrorBehaviorInPermissiveMode.RETURN_MISSING),
+        ErrorBehaviorInPermissiveMode.RETURN_MISSING
+    ),
 
     EVALUATOR_MODULO_BY_ZERO(
         ErrorCategory.EVALUATOR,
         LOCATION,
         "% by zero",
-        ErrorBehaviorInPermissiveMode.RETURN_MISSING),
+        ErrorBehaviorInPermissiveMode.RETURN_MISSING
+    ),
 
     EVALUATOR_INVALID_CONVERSION(
         ErrorCategory.EVALUATOR,
         LOCATION,
         "Invalid conversion",
-        ErrorBehaviorInPermissiveMode.RETURN_MISSING),
+        ErrorBehaviorInPermissiveMode.RETURN_MISSING
+    ),
 
     EVALUATOR_UNEXPECTED_VALUE(
         ErrorCategory.EVALUATOR,
         LOCATION,
-        "Unexpected value"),
+        "Unexpected value"
+    ),
 
     EVALUATOR_UNEXPECTED_VALUE_TYPE(
         ErrorCategory.EVALUATOR,
         LOCATION,
         "Unexpected value type",
-        ErrorBehaviorInPermissiveMode.RETURN_MISSING),
+        ErrorBehaviorInPermissiveMode.RETURN_MISSING
+    ),
 
     EVALUATOR_INVALID_ARGUMENTS_FOR_TRIM(
         ErrorCategory.EVALUATOR,
         setOf(),
-        "Invalid arguments for trim"),
+        "Invalid arguments for trim"
+    ),
 
     EVALUATOR_TIMESTAMP_OUT_OF_BOUNDS(
         ErrorCategory.EVALUATOR,
         setOf(),
         "Timestamp out of bounds",
-        ErrorBehaviorInPermissiveMode.RETURN_MISSING),
+        ErrorBehaviorInPermissiveMode.RETURN_MISSING
+    ),
 
     EVALUATOR_INVALID_ARGUMENTS_FOR_FUNC_CALL(
         ErrorCategory.EVALUATOR,
         setOf(),
         "Invalid arguments for function call",
-        ErrorBehaviorInPermissiveMode.RETURN_MISSING),
+        ErrorBehaviorInPermissiveMode.RETURN_MISSING
+    ),
 
     EVALUATOR_INVALID_ARGUMENTS_FOR_DATE_PART(
         ErrorCategory.EVALUATOR,
         setOf(),
         "Invalid arguments for date",
-        ErrorBehaviorInPermissiveMode.RETURN_MISSING),
+        ErrorBehaviorInPermissiveMode.RETURN_MISSING
+    ),
 
     EVALUATOR_INVALID_ARGUMENTS_FOR_AGG_FUNCTION(
         ErrorCategory.EVALUATOR,
         setOf(),
-        "Invalid arguments for agg function"),
+        "Invalid arguments for agg function"
+    ),
 
     EVALUATOR_INVALID_COMPARISION(
         ErrorCategory.EVALUATOR,
         LOCATION,
         "Invalid comparision",
-        ErrorBehaviorInPermissiveMode.RETURN_MISSING),
+        ErrorBehaviorInPermissiveMode.RETURN_MISSING
+    ),
 
     EVALUATOR_INVALID_BINDING(
         ErrorCategory.EVALUATOR,
         LOCATION,
-        "Invalid binding"),
+        "Invalid binding"
+    ),
 
     EVALUATOR_ARITHMETIC_EXCEPTION(
         ErrorCategory.EVALUATOR,
         LOCATION,
         "Arithmetic exception",
-        ErrorBehaviorInPermissiveMode.RETURN_MISSING),
+        ErrorBehaviorInPermissiveMode.RETURN_MISSING
+    ),
 
     EVALUATOR_SQL_EXCEPTION(
         ErrorCategory.EVALUATOR,
         LOCATION,
-        "SQL exception"),
+        "SQL exception"
+    ),
 
     EVALUATOR_COUNT_START_NOT_ALLOWED(
         ErrorCategory.EVALUATOR,
         LOCATION,
-        "COUNT(*) not allowed"),
+        "COUNT(*) not allowed"
+    ),
 
     EVALUATOR_GENERIC_EXCEPTION(
         ErrorCategory.EVALUATOR,
         LOCATION,
-        "Generic exception"),
+        "Generic exception"
+    ),
 
     EVALUATOR_VALUE_NOT_INSTANCE_OF_EXPECTED_TYPE(
         ErrorCategory.EVALUATOR,
         LOCATION + Property.EXPECTED_STATIC_TYPE,
-        "") {
+        ""
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?) =
             "Value was not an instance of the expected static type: ${errorContext.getProperty(Property.EXPECTED_STATIC_TYPE)}"
     },
@@ -882,7 +1001,8 @@ enum class ErrorCode(internal val category: ErrorCategory,
     SEMANTIC_NON_TEXT_STRUCT_FIELD_KEY(
         ErrorCategory.SEMANTIC,
         LOCATION + setOf(Property.ACTUAL_TYPE),
-        "") {
+        ""
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "Struct field key should be text but found ${errorContext.getProperty(Property.ACTUAL_TYPE)}}."
     },
@@ -890,7 +1010,8 @@ enum class ErrorCode(internal val category: ErrorCategory,
     SEMANTIC_ILLEGAL_GLOBAL_VARIABLE_ACCESS(
         ErrorCategory.SEMANTIC,
         LOCATION + setOf(Property.BINDING_NAME),
-         "") {
+        ""
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "Global variable access is illegal in this context, variable name: '${errorContext.getProperty(Property.BINDING_NAME)}'"
     },
@@ -898,7 +1019,8 @@ enum class ErrorCode(internal val category: ErrorCategory,
     SEMANTIC_UNBOUND_BINDING(
         ErrorCategory.SEMANTIC,
         LOCATION + setOf(Property.BINDING_NAME),
-         "") {
+        ""
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "No such variable named '${errorContext.getProperty(Property.BINDING_NAME)}'."
     },
@@ -906,7 +1028,8 @@ enum class ErrorCode(internal val category: ErrorCategory,
     SEMANTIC_UNBOUND_QUOTED_BINDING(
         ErrorCategory.SEMANTIC,
         LOCATION + setOf(Property.BINDING_NAME),
-         "") {
+        ""
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "No such variable named '${errorContext.getProperty(Property.BINDING_NAME)}'. $UNBOUND_QUOTED_IDENTIFIER_HINT"
     },
@@ -914,7 +1037,8 @@ enum class ErrorCode(internal val category: ErrorCategory,
     SEMANTIC_AMBIGUOUS_BINDING(
         ErrorCategory.SEMANTIC,
         LOCATION + setOf(Property.BINDING_NAME),
-        "") {
+        ""
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "A variable named '${errorContext.getProperty(Property.BINDING_NAME)}' was already defined in this scope"
     },
@@ -925,53 +1049,62 @@ enum class ErrorCode(internal val category: ErrorCategory,
     SEMANTIC_INCORRECT_NODE_ARITY(
         ErrorCategory.SEMANTIC,
         LOCATION + setOf(Property.EXPECTED_ARITY_MAX, Property.EXPECTED_ARITY_MIN, Property.ACTUAL_ARITY, Property.FUNCTION_NAME),
-        "Incorrect number of arguments for node") {
+        "Incorrect number of arguments for node"
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "Incorrect number of arguments supplied to `${errorContext.getProperty(Property.FUNCTION_NAME)}`. " +
-            "Min = ${errorContext.getProperty(Property.EXPECTED_ARITY_MIN)}, max = ${errorContext.getProperty(Property.EXPECTED_ARITY_MAX)} " +
-            "Actual = ${errorContext.getProperty(Property.ACTUAL_ARITY)}"
+                "Min = ${errorContext.getProperty(Property.EXPECTED_ARITY_MIN)}, max = ${errorContext.getProperty(Property.EXPECTED_ARITY_MAX)} " +
+                "Actual = ${errorContext.getProperty(Property.ACTUAL_ARITY)}"
     },
 
     SEMANTIC_INVALID_DECIMAL_ARGUMENTS(
         ErrorCategory.SEMANTIC,
         LOCATION,
-        "Invalid precision or scale for decimal"),
+        "Invalid precision or scale for decimal"
+    ),
 
     SEMANTIC_HAVING_USED_WITHOUT_GROUP_BY(
         ErrorCategory.EVALUATOR,
         LOCATION,
-        "HAVING cannot be used without GROUP BY or GROUP ALL"),
+        "HAVING cannot be used without GROUP BY or GROUP ALL"
+    ),
 
     SEMANTIC_ASTERISK_USED_WITH_OTHER_ITEMS(
         ErrorCategory.EVALUATOR,
         LOCATION,
-        "`*` may not be used with other items in a select list"),
+        "`*` may not be used with other items in a select list"
+    ),
 
     SEMANTIC_MISSING_AS_NAME(
         ErrorCategory.EVALUATOR,
         LOCATION,
-        "Missing AS name"),
+        "Missing AS name"
+    ),
 
     SEMANTIC_LITERAL_INT_OVERFLOW(
         ErrorCategory.SEMANTIC,
         LOCATION,
-        "Literal int overflow or underflow"),
+        "Literal int overflow or underflow"
+    ),
 
     SEMANTIC_FLOAT_PRECISION_UNSUPPORTED(
         ErrorCategory.SEMANTIC,
         LOCATION,
-        "FLOAT precision not supported"),
+        "FLOAT precision not supported"
+    ),
 
     SEMANTIC_UNION_TYPE_INVALID(
         ErrorCategory.SEMANTIC,
         LOCATION,
-        "Union type not permitted"),
+        "Union type not permitted"
+    ),
 
     // Generic errors
     UNIMPLEMENTED_FEATURE(
         ErrorCategory.SEMANTIC,
         LOCATION + setOf(Property.FEATURE_NAME),
-        "") {
+        ""
+    ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "Feature '${errorContext?.get(Property.FEATURE_NAME)?.stringValue() ?: UNKNOWN}' not implemented yet"
     };
@@ -991,10 +1124,9 @@ enum class ErrorCode(internal val category: ErrorCategory,
     protected fun getTokenTypeAndTokenValue(errorContext: PropertyValueMap?): String =
         getTokenType(errorContext) + " : " + getTokenValue(errorContext)
 
+    protected open fun detailMessagePrefix(): String = messagePrefix
 
-    open protected fun detailMessagePrefix(): String = messagePrefix
-
-    open protected fun detailMessageSuffix(errorContext: PropertyValueMap?): String =
+    protected open fun detailMessageSuffix(errorContext: PropertyValueMap?): String =
         getTokenTypeAndTokenValue(errorContext)
 
     /**
@@ -1010,9 +1142,7 @@ enum class ErrorCode(internal val category: ErrorCategory,
 
     fun errorCategory(): String = category.toString()
 
-
     fun getProperties(): Set<Property> = properties
-
 }
 
 private fun PropertyValueMap?.getProperty(prop: Property): String =

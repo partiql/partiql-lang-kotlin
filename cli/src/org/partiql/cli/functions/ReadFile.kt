@@ -40,8 +40,8 @@ internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFact
     )
 
     private fun conversionModeFor(name: String) =
-        ConversionMode.values().find { it.name.toLowerCase() == name } ?:
-        throw IllegalArgumentException( "Unknown conversion: $name")
+        ConversionMode.values().find { it.name.toLowerCase() == name }
+            ?: throw IllegalArgumentException("Unknown conversion: $name")
 
     private fun fileReadHandler(csvFormat: CSVFormat): (InputStream, IonStruct) -> ExprValue = { input, options ->
         val encoding = options["encoding"]?.stringValue() ?: "UTF-8"
@@ -58,13 +58,13 @@ internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFact
         val quote = options["quote"]?.stringValue()?.first() // CSVParser library only accepts a single character as quote
 
         val csvFormatWithOptions = csvFormat.withIgnoreEmptyLines(ignoreEmptyLine)
-                                .withIgnoreSurroundingSpaces(ignoreSurroundingSpace)
-                                .withTrim(trim)
-                                .let { if (hasHeader) it.withFirstRecordAsHeader() else it }
-                                .let { if (delimiter != null) it.withDelimiter(delimiter) else it }
-                                .let { if (record != null) it.withRecordSeparator(record) else it }
-                                .let { if (escape != null) it.withEscape(escape) else it }
-                                .let { if (quote != null) it.withQuote(quote) else it }
+            .withIgnoreSurroundingSpaces(ignoreSurroundingSpace)
+            .withTrim(trim)
+            .let { if (hasHeader) it.withFirstRecordAsHeader() else it }
+            .let { if (delimiter != null) it.withDelimiter(delimiter) else it }
+            .let { if (record != null) it.withRecordSeparator(record) else it }
+            .let { if (escape != null) it.withEscape(escape) else it }
+            .let { if (quote != null) it.withQuote(quote) else it }
 
         DelimitedValues.exprValue(valueFactory, reader, csvFormatWithOptions, conversionModeFor(conversion))
     }
@@ -111,4 +111,3 @@ internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFact
         return valueFactory.newBag(seq)
     }
 }
-

@@ -21,7 +21,7 @@ package org.partiql.lang.ast
  * Meta node intended to be attached to an instance of [Literal] to indicate that it was
  * designated as an `ionLiteral` in the parsed statement.
  */
-class IsIonLiteralMeta private constructor(): Meta {
+class IsIonLiteralMeta private constructor() : Meta {
     override val tag = TAG
 
     companion object {

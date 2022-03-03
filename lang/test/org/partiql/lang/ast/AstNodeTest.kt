@@ -4,8 +4,8 @@ import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
 import junitparams.JUnitParamsRunner
 import junitparams.Parameters
-import org.junit.Assert.assertTrue
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.partiql.lang.syntax.SqlParser
@@ -75,88 +75,116 @@ class AstNodeTest {
     fun parametersForIteratorTests() = listOf(
         IteratorTestCase(
             "MISSING",
-            "LiteralMissing"),
+            "LiteralMissing"
+        ),
         IteratorTestCase(
             "1",
-            "Literal"),
+            "Literal"
+        ),
         IteratorTestCase(
             "1 + 1",
-            "NAry|Literal|Literal"),
+            "NAry|Literal|Literal"
+        ),
         IteratorTestCase(
             "[1, 2]",
-            "Seq|Literal|Literal"),
+            "Seq|Literal|Literal"
+        ),
         IteratorTestCase(
             "{ 'fooField': 1 }",
-            "Struct|StructField|Literal|Literal"),
+            "Struct|StructField|Literal|Literal"
+        ),
         IteratorTestCase(
             "a.b.c",
-            "Path|VariableReference|PathComponentExpr|Literal|PathComponentExpr|Literal"),
+            "Path|VariableReference|PathComponentExpr|Literal|PathComponentExpr|Literal"
+        ),
         IteratorTestCase(
             "a[b].c",
-            "Path|VariableReference|PathComponentExpr|VariableReference|PathComponentExpr|Literal"),
+            "Path|VariableReference|PathComponentExpr|VariableReference|PathComponentExpr|Literal"
+        ),
         IteratorTestCase(
             "a[1].c",
-            "Path|VariableReference|PathComponentExpr|Literal|PathComponentExpr|Literal"),
+            "Path|VariableReference|PathComponentExpr|Literal|PathComponentExpr|Literal"
+        ),
         IteratorTestCase(
             "a[*].c",
-            "Path|VariableReference|PathComponentWildcard|PathComponentExpr|Literal"),
+            "Path|VariableReference|PathComponentWildcard|PathComponentExpr|Literal"
+        ),
         IteratorTestCase(
             "a.*.c",
-            "Path|VariableReference|PathComponentUnpivot|PathComponentExpr|Literal"),
+            "Path|VariableReference|PathComponentUnpivot|PathComponentExpr|Literal"
+        ),
         IteratorTestCase(
             "fcall(var1, var2)",
-            "NAry|VariableReference|VariableReference|VariableReference"),
+            "NAry|VariableReference|VariableReference|VariableReference"
+        ),
         IteratorTestCase(
             "CASE foo WHEN 1 THEN 10 ELSE 11 END",
-            "SimpleCase|VariableReference|SimpleCaseWhen|Literal|Literal|Literal"),
+            "SimpleCase|VariableReference|SimpleCaseWhen|Literal|Literal|Literal"
+        ),
         IteratorTestCase(
             "CASE WHEN 1 THEN 10 ELSE 11 END",
-            "SearchedCase|SearchedCaseWhen|Literal|Literal|Literal"),
+            "SearchedCase|SearchedCaseWhen|Literal|Literal|Literal"
+        ),
         IteratorTestCase(
             "SELECT * FROM foo",
-            "Select|SelectProjectionList|SelectListItemStar|FromSourceExpr|VariableReference"),
+            "Select|SelectProjectionList|SelectListItemStar|FromSourceExpr|VariableReference"
+        ),
         IteratorTestCase(
             "SELECT * FROM foo, bar",
-            //Reminder:  this yields the same AST as: ... FROM foo INNER JOIN bar ON true
-            "Select|SelectProjectionList|SelectListItemStar|FromSourceJoin|FromSourceExpr|VariableReference|FromSourceExpr|VariableReference|Literal"),
+            // Reminder:  this yields the same AST as: ... FROM foo INNER JOIN bar ON true
+            "Select|SelectProjectionList|SelectListItemStar|FromSourceJoin|FromSourceExpr|VariableReference|FromSourceExpr|VariableReference|Literal"
+        ),
         IteratorTestCase(
             "SELECT * FROM foo, bar",
-            "Select|SelectProjectionList|SelectListItemStar|FromSourceJoin|FromSourceExpr|VariableReference|FromSourceExpr|VariableReference|Literal"),
+            "Select|SelectProjectionList|SelectListItemStar|FromSourceJoin|FromSourceExpr|VariableReference|FromSourceExpr|VariableReference|Literal"
+        ),
         IteratorTestCase(
             "SELECT * FROM foo WHERE bar",
-            "Select|SelectProjectionList|SelectListItemStar|FromSourceExpr|VariableReference|VariableReference"),
+            "Select|SelectProjectionList|SelectListItemStar|FromSourceExpr|VariableReference|VariableReference"
+        ),
         IteratorTestCase(
             "SELECT * FROM foo INNER JOIN bar ON condition",
-            "Select|SelectProjectionList|SelectListItemStar|FromSourceJoin|FromSourceExpr|VariableReference|FromSourceExpr|VariableReference|VariableReference"),
+            "Select|SelectProjectionList|SelectListItemStar|FromSourceJoin|FromSourceExpr|VariableReference|FromSourceExpr|VariableReference|VariableReference"
+        ),
         IteratorTestCase(
             "SELECT f.* FROM foo AS f",
-            "Select|SelectProjectionList|SelectListItemProjectAll|VariableReference|FromSourceExpr|VariableReference"),
+            "Select|SelectProjectionList|SelectListItemProjectAll|VariableReference|FromSourceExpr|VariableReference"
+        ),
         IteratorTestCase(
             "SELECT VALUE foo FROM bar",
-            "Select|SelectProjectionValue|VariableReference|FromSourceExpr|VariableReference"),
+            "Select|SelectProjectionValue|VariableReference|FromSourceExpr|VariableReference"
+        ),
         IteratorTestCase(
             "PIVOT 1 AT 2 FROM 3",
-            "Select|SelectProjectionPivot|Literal|Literal|FromSourceExpr|Literal"),
+            "Select|SelectProjectionPivot|Literal|Literal|FromSourceExpr|Literal"
+        ),
         IteratorTestCase(
             "INSERT INTO foo VALUES (1)",
-            "DataManipulation|InsertOp|VariableReference|Seq|Seq|Literal|DmlOpList|InsertOp|VariableReference|Seq|Seq|Literal"),
+            "DataManipulation|InsertOp|VariableReference|Seq|Seq|Literal|DmlOpList|InsertOp|VariableReference|Seq|Seq|Literal"
+        ),
         IteratorTestCase(
             "UPDATE foo SET x.y = bar WHERE n",
-            "DataManipulation|AssignmentOp|Assignment|Path|VariableReference|PathComponentExpr|Literal|VariableReference|FromSourceExpr|VariableReference|VariableReference|DmlOpList|AssignmentOp|Assignment|Path|VariableReference|PathComponentExpr|Literal|VariableReference"),
+            "DataManipulation|AssignmentOp|Assignment|Path|VariableReference|PathComponentExpr|Literal|VariableReference|FromSourceExpr|VariableReference|VariableReference|DmlOpList|AssignmentOp|Assignment|Path|VariableReference|PathComponentExpr|Literal|VariableReference"
+        ),
         IteratorTestCase(
             "FROM x IN Y REMOVE p",
-            "DataManipulation|RemoveOp|VariableReference|FromSourceExpr|NAry|VariableReference|VariableReference|DmlOpList|RemoveOp|VariableReference"),
+            "DataManipulation|RemoveOp|VariableReference|FromSourceExpr|NAry|VariableReference|VariableReference|DmlOpList|RemoveOp|VariableReference"
+        ),
         IteratorTestCase(
             "DELETE FROM foo WHERE bar",
-            "DataManipulation|DeleteOp|FromSourceExpr|VariableReference|VariableReference|DmlOpList|DeleteOp"),
+            "DataManipulation|DeleteOp|FromSourceExpr|VariableReference|VariableReference|DmlOpList|DeleteOp"
+        ),
         IteratorTestCase(
             "CREATE TABLE foo",
-            "CreateTable"),
+            "CreateTable"
+        ),
         IteratorTestCase(
             "DROP TABLE foo",
-            "DropTable"),
+            "DropTable"
+        ),
 
-        IteratorTestCase("MISSING", "LiteralMissing"))
+        IteratorTestCase("MISSING", "LiteralMissing")
+    )
 
     @Test
     fun nodeWithMultipleNonLeafChildren() {
@@ -179,10 +207,14 @@ class AstNodeTest {
     fun literalMissingChildren() = assertTrue(LiteralMissing(emptyMeta).children.isEmpty())
 
     @Test
-    fun variableReferenceChildren() = assertTrue(VariableReference("",
-                                                                   CaseSensitivity.INSENSITIVE,
-                                                                   ScopeQualifier.LEXICAL,
-                                                                   emptyMeta).children.isEmpty())
+    fun variableReferenceChildren() = assertTrue(
+        VariableReference(
+            "",
+            CaseSensitivity.INSENSITIVE,
+            ScopeQualifier.LEXICAL,
+            emptyMeta
+        ).children.isEmpty()
+    )
 
     @Test
     fun nAryChildren() {
@@ -213,8 +245,10 @@ class AstNodeTest {
         val component1 = PathComponentExpr(literal("2"), CaseSensitivity.INSENSITIVE, emptyMetaContainer)
         val component2 = PathComponentExpr(literal("3"), CaseSensitivity.INSENSITIVE, emptyMetaContainer)
 
-        assertEquals(listOf(root, component1, component2),
-                     Path(root, listOf(component1, component2), emptyMeta).children)
+        assertEquals(
+            listOf(root, component1, component2),
+            Path(root, listOf(component1, component2), emptyMeta).children
+        )
     }
 
     @Test
@@ -222,8 +256,10 @@ class AstNodeTest {
         val value = literal("1")
         val whenClause1 = SimpleCaseWhen(literal("21"), literal("22"))
         val whenClause2 = SimpleCaseWhen(literal("31"), literal("32"))
-        assertEquals(listOf(value, whenClause1, whenClause2),
-                     SimpleCase(value, listOf(whenClause1, whenClause2), null, emptyMeta).children)
+        assertEquals(
+            listOf(value, whenClause1, whenClause2),
+            SimpleCase(value, listOf(whenClause1, whenClause2), null, emptyMeta).children
+        )
     }
 
     @Test
@@ -232,8 +268,10 @@ class AstNodeTest {
         val whenClause1 = SimpleCaseWhen(literal("21"), literal("22"))
         val whenClause2 = SimpleCaseWhen(literal("31"), literal("32"))
         val elseExpr = literal("4")
-        assertEquals(listOf(value, whenClause1, whenClause2, elseExpr),
-                     SimpleCase(value, listOf(whenClause1, whenClause2), elseExpr, emptyMeta).children)
+        assertEquals(
+            listOf(value, whenClause1, whenClause2, elseExpr),
+            SimpleCase(value, listOf(whenClause1, whenClause2), elseExpr, emptyMeta).children
+        )
     }
 
     @Test
@@ -249,8 +287,10 @@ class AstNodeTest {
         val searchedCaseWhen1 = SearchedCaseWhen(literal("11"), literal("12"))
         val searchedCaseWhen2 = SearchedCaseWhen(literal("21"), literal("22"))
 
-        assertEquals(listOf(searchedCaseWhen1, searchedCaseWhen2),
-                     SearchedCase(listOf(searchedCaseWhen1, searchedCaseWhen2), null, emptyMeta).children)
+        assertEquals(
+            listOf(searchedCaseWhen1, searchedCaseWhen2),
+            SearchedCase(listOf(searchedCaseWhen1, searchedCaseWhen2), null, emptyMeta).children
+        )
     }
 
     @Test
@@ -259,8 +299,10 @@ class AstNodeTest {
         val searchedCaseWhen2 = SearchedCaseWhen(literal("21"), literal("22"))
         val elseExpr = literal("3")
 
-        assertEquals(listOf(searchedCaseWhen1, searchedCaseWhen2, elseExpr),
-                     SearchedCase(listOf(searchedCaseWhen1, searchedCaseWhen2), elseExpr, emptyMeta).children)
+        assertEquals(
+            listOf(searchedCaseWhen1, searchedCaseWhen2, elseExpr),
+            SearchedCase(listOf(searchedCaseWhen1, searchedCaseWhen2), elseExpr, emptyMeta).children
+        )
     }
 
     @Test
@@ -276,8 +318,10 @@ class AstNodeTest {
         val projection = SelectProjectionValue(literal("1"), emptyMetaContainer)
         val from = FromSourceExpr(literal("2"), LetVariables())
 
-        assertEquals(listOf(projection, from),
-                     Select(SetQuantifier.ALL, projection, from, null, null, null, null, null, null, null, emptyMeta).children)
+        assertEquals(
+            listOf(projection, from),
+            Select(SetQuantifier.ALL, projection, from, null, null, null, null, null, null, null, emptyMeta).children
+        )
     }
 
     @Test
@@ -292,8 +336,10 @@ class AstNodeTest {
         val limit = literal("5")
         val offset = literal("6")
 
-        assertEquals(listOf(projection, from, fromLet, where, groupBy, having, orderBy, limit, offset),
-                     Select(SetQuantifier.ALL, projection, from, fromLet, where, groupBy, having, orderBy, limit, offset, emptyMeta).children)
+        assertEquals(
+            listOf(projection, from, fromLet, where, groupBy, having, orderBy, limit, offset),
+            Select(SetQuantifier.ALL, projection, from, fromLet, where, groupBy, having, orderBy, limit, offset, emptyMeta).children
+        )
     }
 
     @Test
@@ -363,8 +409,10 @@ class AstNodeTest {
         val child2 = FromSourceExpr(literal("2"), LetVariables())
         val child3 = literal("3")
 
-        assertEquals(listOf(child1, child2, child3),
-                     FromSourceJoin(JoinOp.INNER, child1, child2, child3, emptyMeta).children)
+        assertEquals(
+            listOf(child1, child2, child3),
+            FromSourceJoin(JoinOp.INNER, child1, child2, child3, emptyMeta).children
+        )
     }
 
     @Test

@@ -20,20 +20,21 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 
 internal abstract class BaseFunction(val valueFactory: ExprValueFactory) : ExprFunction {
-    protected fun optionsStruct(requiredArity: Int,
-                                args: List<ExprValue>,
-                                optionsIndex: Int = requiredArity): IonStruct = when (args.size) {
-        requiredArity     -> valueFactory.ion.newEmptyStruct()
+    protected fun optionsStruct(
+        requiredArity: Int,
+        args: List<ExprValue>,
+        optionsIndex: Int = requiredArity
+    ): IonStruct = when (args.size) {
+        requiredArity -> valueFactory.ion.newEmptyStruct()
         requiredArity + 1 -> extractOptVal(args, optionsIndex)
-        else              -> throw IllegalArgumentException("Bad number of arguments: ${args.size}")
+        else -> throw IllegalArgumentException("Bad number of arguments: ${args.size}")
     }
 
     private fun extractOptVal(args: List<ExprValue>, optionsIndex: Int): IonStruct {
         val optVal = args[optionsIndex].ionValue
         return when (optVal) {
             is IonStruct -> optVal
-            else         -> throw IllegalArgumentException("Invalid option: $optVal")
+            else -> throw IllegalArgumentException("Invalid option: $optVal")
         }
     }
 }
-

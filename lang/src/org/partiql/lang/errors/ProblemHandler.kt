@@ -17,7 +17,7 @@ internal interface ProblemHandler {
  * inference pass that can result in multiple errors and/or warnings). This handler does not collect other exceptions
  * that may be thrown.
  */
-internal class ProblemCollector: ProblemHandler {
+internal class ProblemCollector : ProblemHandler {
     private val problemList = mutableListOf<Problem>()
 
     val problems: List<Problem>
@@ -41,7 +41,7 @@ internal class ProblemCollector: ProblemHandler {
  *
  * @throws SemanticException on the first [Problem] logged with severity of [ProblemSeverity.ERROR]
  */
-internal class ProblemThrower: ProblemHandler {
+internal class ProblemThrower : ProblemHandler {
     override fun handleProblem(problem: Problem) {
         if (problem.details.severity == ProblemSeverity.ERROR) {
             throw SemanticException(problem)

@@ -218,48 +218,55 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
             "undefinedUnqualifiedVariableWithUndefinedVariableBehaviorMissing",
             "undefined_variable",
             "$partiql_missing::null",
-            compileOptions = undefinedVariableMisisng)
-
+            compileOptions = undefinedVariableMisisng
+        )
 
         test(
             "undefinedUnqualifiedVariableIsNullExprWithUndefinedVariableBehaviorMissing",
             "undefined_variable IS NULL",
             "true",
-            compileOptions = undefinedVariableMisisng)
+            compileOptions = undefinedVariableMisisng
+        )
 
         test(
             "undefinedUnqualifiedVariableIsMissingExprWithUndefinedVariableBehaviorMissing",
             "undefined_variable IS MISSING",
             "true",
-            compileOptions = undefinedVariableMisisng)
+            compileOptions = undefinedVariableMisisng
+        )
 
         test(
             "undefinedUnqualifiedVariableInSelectWithUndefinedVariableBehaviorMissing",
             "SELECT s.a, s.undefined_variable, s.b FROM `[{a:100, b:200}]` s",
             "$partiql_bag::[{a:100, b:200}]",
-            compileOptions = undefinedVariableMisisng)
+            compileOptions = undefinedVariableMisisng
+        )
     }
 
     group("path in from clause") {
         test(
             "selectFromScalarAndAtUnpivotWildCardOverScalar",
             "SELECT VALUE [n, v] FROM (100).* AS v AT n",
-            """$partiql_bag::[ ["_1", 100] ]""")
+            """$partiql_bag::[ ["_1", 100] ]"""
+        )
 
         test(
             "selectFromListAndAtUnpivotWildCardOverScalar",
             "SELECT VALUE [n, (SELECT VALUE [i, x] FROM @v AS x AT i)] FROM [100, 200].*.*.* AS v AT n",
-            """$partiql_bag::[ ["_1", $partiql_bag::[[0, 100], [1, 200]]] ]""")
+            """$partiql_bag::[ ["_1", $partiql_bag::[[0, 100], [1, 200]]] ]"""
+        )
 
         test(
             "selectFromBagAndAtUnpivotWildCardOverScalar",
             """ SELECT VALUE [n, (SELECT VALUE [i IS MISSING, i, x] FROM @v AS x AT i)] FROM <<100, 200>>.* AS v AT n """,
-            """$partiql_bag::[["_1",$partiql_bag::[[true,$partiql_missing::null,100],[true,$partiql_missing::null,200]]]]""")
+            """$partiql_bag::[["_1",$partiql_bag::[[true,$partiql_missing::null,100],[true,$partiql_missing::null,200]]]]"""
+        )
 
         test(
             "selectPathUnpivotWildCardOverStructMultiple",
             "SELECT name, val FROM a.*.*.*.* AS val AT name",
-            """$partiql_bag::[{name: "e", val: 5}, {name: "f", val: 6}]""")
+            """$partiql_bag::[{name: "e", val: 5}, {name: "f", val: 6}]"""
+        )
 
         test(
             "selectStarSingleSourceHoisted",
@@ -276,8 +283,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
         test(
             "ordinalAccessWithNegativeIndexAndBindings",
             "SELECT temp[-2] FROM [[1,2,3,4]] AS temp",
-            "$partiql_bag::[{}]")
-
+            "$partiql_bag::[{}]"
+        )
     }
 
     group("various types in from clause") {
@@ -293,18 +300,21 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
         test(
             "rangeOverBagWithAt",
             "SELECT VALUE [i, v] FROM <<1, 2, 3>> AS v AT i",
-            "$partiql_bag::[[$partiql_missing::null, 1], [$partiql_missing::null, 2], [$partiql_missing::null, 3]]")
+            "$partiql_bag::[[$partiql_missing::null, 1], [$partiql_missing::null, 2], [$partiql_missing::null, 3]]"
+        )
         test(
             "rangeOverNestedWithAt",
             "SELECT VALUE [i, v] FROM (SELECT VALUE v FROM `[1, 2, 3]` AS v) AS v AT i",
-            "$partiql_bag::[[$partiql_missing::null, 1], [$partiql_missing::null, 2], [$partiql_missing::null, 3]]")
+            "$partiql_bag::[[$partiql_missing::null, 1], [$partiql_missing::null, 2], [$partiql_missing::null, 3]]"
+        )
     }
 
     group("select list item") {
         test(
             "explicitAliasSelectSingleSource",
             "SELECT id AS name FROM stores",
-            """$partiql_bag::[{name:"5"}, {name:"6"}, {name:"7"}]""")
+            """$partiql_bag::[{name:"5"}, {name:"6"}, {name:"7"}]"""
+        )
 
         test(
             "selectImplicitAndExplicitAliasSingleSourceHoisted",
@@ -315,19 +325,22 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
                 {name:"E", price: 9.5},
                 {name:"F", price: 10.0},
               ]
-            """)
+            """
+        )
 
         test(
             "syntheticColumnNameInSelect",
             """SELECT i+1 FROM <<100>> i""",
-            """$partiql_bag::[{_1: 101}]""")
+            """$partiql_bag::[{_1: 101}]"""
+        )
 
         test(
             "properAliasFromPathInSelect",
             """
               SELECT s.id, s.books[1].title FROM stores AS s WHERE s.id = '5'
             """,
-            """$partiql_bag::[ { id: "5", title: "B" } ] """)
+            """$partiql_bag::[ { id: "5", title: "B" } ] """
+        )
 
         test(
             "selectListWithMissing",
@@ -354,7 +367,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
                 {name: "Lilikoi", type: "unicorn", id: "cat", is_magic: false},
                 {name: "Lilikoi", type: "unicorn", id: "unicorn", is_magic: true},
               ]
-            """)
+            """
+        )
     }
     group("select-where") {
         test(
@@ -364,14 +378,16 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
               $partiql_bag::[
                 {name: "Kumo", type: "dog"}
               ]
-            """)
+            """
+        )
 
         test(
             "selectWhereStrinEqualsDifferentCase",
             """SELECT * FROM animals as a WHERE a.name = 'KUMO' """,
             """
               $partiql_bag::[]
-            """)
+            """
+        )
     }
     group("select-join") {
         test(
@@ -383,7 +399,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
                 {name: "Mochi", type: "dog", id: "dog", is_magic: false},
                 {name: "Lilikoi", type: "unicorn", id: "unicorn", is_magic: true},
               ]
-            """)
+            """
+        )
 
         test(
             "selectCorrelatedJoin",
@@ -395,7 +412,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
                 {id: "6", title: "E"},
                 {id: "6", title: "F"},
               ]
-            """)
+            """
+        )
         test(
             "selectCorrelatedLeftJoin",
             """SELECT s.id AS id, b.title AS title FROM stores AS s LEFT CROSS JOIN @s.books AS b WHERE b IS NULL""",
@@ -403,7 +421,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
               $partiql_bag::[
                 {id: "7"}
               ]
-            """)
+            """
+        )
 
         test(
             "selectCorrelatedLeftJoinOnClause",
@@ -419,7 +438,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
                 {id: "6", title: "F"},
                 {id: "7"}
               ]
-            """)
+            """
+        )
 
         test(
             "selectJoinOnClauseScoping",
@@ -438,7 +458,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
                 [3, 1, null],
                 [3, 2, null],
               ]
-            """)
+            """
+        )
 
         test(
             "selectNonCorrelatedJoin",
@@ -450,7 +471,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
                 {id: "6", title: "hello"},
                 {id: "7", title: "hello"},
               ]
-            """)
+            """
+        )
 
         test(
             "selectCorrelatedUnpivot",
@@ -466,7 +488,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
                 {n1: "b", n2: "c", n3: "d", n4: "e", val: 5},
                 {n1: "b", n2: "c", n3: "d", n4: "f", val: 6}
               ]
-            """)
+            """
+        )
 
         test(
             "nestedSelectJoinWithUnpivot",
@@ -490,7 +513,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
                 {col: "type", val: "unicorn"},
                 {col: "is_magic", val: true},
               ]
-            """)
+            """
+        )
 
         test(
             "nestedSelectJoinLimit",
@@ -507,11 +531,13 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
                 {col: "type", val: "dog"},
                 {col: "is_magic", val: false},
               ]
-            """)
+            """
+        )
         test(
             "correlatedJoinWithShadowedAttributes",
             """SELECT VALUE v FROM `[{v:5}]` AS item, @item.v AS v""",
-            """$partiql_bag::[5]""")
+            """$partiql_bag::[5]"""
+        )
 
         test(
             "correlatedJoinWithoutLexicalScope",
@@ -523,7 +549,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
             "joinWithShadowedGlobal",
             // 'a' is a global variable
             """SELECT VALUE b FROM `[{b:5}]` AS a, a.b AS b""",
-            """$partiql_bag::[{c:{d:{e:5, f:6}}}]""")
+            """$partiql_bag::[{c:{d:{e:5, f:6}}}]"""
+        )
     }
     group("pivot") {
         test(
@@ -537,7 +564,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
                 Mochi: "dog",
                 Lilikoi: "unicorn",
               }
-            """)
+            """
+        )
 
         test(
             "pivotLiteralFieldNameFrom",
@@ -550,7 +578,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
                 name: "Mochi",
                 name: "Lilikoi",
               }
-            """)
+            """
+        )
 
         test(
             "pivotBadFieldType",
@@ -559,7 +588,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
             """,
             """
               {}
-            """)
+            """
+        )
 
         test(
             "pivotUnpivotWithWhereLimit",
@@ -575,7 +605,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
                 new_d: 4,
                 new_e: 5,
               }
-            """)
+            """
+        )
     }
 
     group("in") {
@@ -584,56 +615,64 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
             """
               SELECT VALUE b.title FROM stores[*].books[*] AS b WHERE b.price IN (5, `2e0`)
             """,
-            """$partiql_bag::["A", "B", "A"]""")
+            """$partiql_bag::["A", "B", "A"]"""
+        )
 
         test(
             "inPredicateSingleItem",
             """
               SELECT VALUE b.title FROM stores[*].books[*] AS b WHERE b.price IN (5)
             """,
-            """$partiql_bag::[ "A", "A" ]""")
+            """$partiql_bag::[ "A", "A" ]"""
+        )
 
         test(
             "inPredicateSingleExpr",
             """
               SELECT VALUE b.title FROM stores[*].books[*] AS b WHERE b.price IN 5
             """,
-            "$partiql_bag::[]")
+            "$partiql_bag::[]"
+        )
 
         test(
             "inPredicateSingleItemListVar",
             """
               SELECT VALUE b.title FROM stores[*].books[*] AS b WHERE b.price IN (prices)
             """,
-            """$partiql_bag::[]""")
+            """$partiql_bag::[]"""
+        )
 
         test(
             "inPredicateSingleListVar",
             """
               SELECT VALUE b.title FROM stores[*].books[*] AS b WHERE b.price IN prices
             """,
-            """$partiql_bag::[ "A", "B", "A" ]""")
+            """$partiql_bag::[ "A", "B", "A" ]"""
+        )
 
         test(
             "inPredicateSubQuerySelectValue",
             """
               SELECT VALUE b.title FROM stores[*].books[*] AS b WHERE b.price IN (SELECT VALUE p FROM prices AS p)
             """,
-            """$partiql_bag::[ "A", "B", "A" ]""")
+            """$partiql_bag::[ "A", "B", "A" ]"""
+        )
 
         test(
             "notInPredicate",
             """
               SELECT VALUE b.title FROM stores[*].books[*] AS b WHERE b.price NOT IN (5, `2e0`)
             """,
-            """$partiql_bag::["C", "D", "E", "F" ] """)
+            """$partiql_bag::["C", "D", "E", "F" ] """
+        )
 
         test(
             "notInPredicateSingleItem",
             """
               SELECT VALUE b.title FROM stores[*].books[*] AS b WHERE b.price NOT IN (5)
             """,
-            """$partiql_bag::[ "B", "C", "D", "E", "F" ]""")
+            """$partiql_bag::[ "B", "C", "D", "E", "F" ]"""
+        )
 
         test(
             "notInPredicateSingleExpr",
@@ -656,17 +695,20 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
         test(
             "notInPredicateSingleItemListVar",
             """ SELECT VALUE b.title FROM stores[*].books[*] AS b WHERE b.price NOT IN (prices) """,
-            """ $partiql_bag::[ "A", "B", "C", "D", "A", "E", "F" ] """)
+            """ $partiql_bag::[ "A", "B", "C", "D", "A", "E", "F" ] """
+        )
 
         test(
             "notInPredicateSingleListVar",
             """ SELECT VALUE b.title FROM stores[*].books[*] AS b WHERE b.price NOT IN prices """,
-            """ $partiql_bag::[ "C", "D", "E", "F" ] """)
+            """ $partiql_bag::[ "C", "D", "E", "F" ] """
+        )
 
         test(
             "notInPredicateSubQuerySelectValue",
             "SELECT VALUE b.title FROM stores[*].books[*] AS b WHERE b.price NOT IN (SELECT VALUE p FROM prices AS p)",
-            """ $partiql_bag::[ "C", "D", "E", "F" ] """)
+            """ $partiql_bag::[ "C", "D", "E", "F" ] """
+        )
 
         test(
             "inPredicateWithTableConstructor",
@@ -674,7 +716,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
               SELECT VALUE b.title FROM stores[*].books[*] AS b
               WHERE (b.title, b.price) IN (VALUES ('A', `5e0`), ('B', 3.0), ('X', 9.0))
             """,
-            """ $partiql_bag::[ "A", "A" ] """)
+            """ $partiql_bag::[ "A", "A" ] """
+        )
 
         test(
             "notInPredicateWithTableConstructor",
@@ -682,7 +725,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
               SELECT VALUE b.title FROM stores[*].books[*] AS b
               WHERE (b.title, b.price) NOT IN (VALUES ('A', `5e0`), ('B', 3.0), ('X', 9.0))
             """,
-            """ $partiql_bag::[ "B", "C", "D", "E", "F" ] """)
+            """ $partiql_bag::[ "B", "C", "D", "E", "F" ] """
+        )
 
         test(
             "inPredicateWithExpressionOnRightSide",
@@ -690,7 +734,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
               SELECT VALUE b.title FROM stores[*].books[*] AS b
               WHERE 'comedy' IN b.categories
             """,
-            """ $partiql_bag::[ "B", "E" ] """)
+            """ $partiql_bag::[ "B", "E" ] """
+        )
 
         test(
             "notInPredicateWithExpressionOnRightSide",
@@ -698,7 +743,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
               SELECT VALUE b.title FROM stores[*].books[*] AS b
               WHERE 'comedy' NOT IN b.categories
             """,
-            """ $partiql_bag::[ "A", "C", "D", "A", "F" ] """)
+            """ $partiql_bag::[ "A", "C", "D", "A", "F" ] """
+        )
     }
     group("case") {
         test(
@@ -717,7 +763,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
             """,
             """
               $partiql_bag::[ "TWO", "THREE", "?", "?", "?" ]
-            """)
+            """
+        )
 
         test(
             "simpleCaseNoElse",
@@ -732,7 +779,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
                 END
               FROM << i, f, d, null, missing >> AS x
             """,
-            """ $partiql_bag::[ "TWO", "THREE", null, null, null ] """)
+            """ $partiql_bag::[ "TWO", "THREE", null, null, null ] """
+        )
 
         test(
             "searchedCase",
@@ -746,7 +794,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
                 END
               FROM << -1.0000, i, f, d, 100e0, null, missing >> AS x
             """,
-            """ $partiql_bag::[ "< ONE", "TWO", "?", ">= THREE < 100", "?", "?", "?" ] """)
+            """ $partiql_bag::[ "< ONE", "TWO", "?", ">= THREE < 100", "?", "?", "?" ] """
+        )
 
         test(
             "searchedCaseNoElse",
@@ -759,7 +808,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
                 END
               FROM << -1.0000, i, f, d, 100e0, null, missing >> AS x
             """,
-            """ $partiql_bag::[ "< ONE", "TWO", null, ">= THREE < 100", null, null, null ] """)
+            """ $partiql_bag::[ "< ONE", "TWO", null, ">= THREE < 100", null, null, null ] """
+        )
     }
     group("between") {
         test(
@@ -769,7 +819,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
               FROM << -1.0000, i, f, d, 100e0 >> AS x
               WHERE x BETWEEN 1.000001 AND 3.0000000
             """,
-            """ $partiql_bag::[ 2e0, 3d0 ] """)
+            """ $partiql_bag::[ 2e0, 3d0 ] """
+        )
 
         test(
             "notBetweenPredicate",
@@ -778,7 +829,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
               FROM << -1.0000, i, f, d, 100e0 >> AS x
               WHERE x NOT BETWEEN 1.000001 AND 3.0000000
             """,
-            """$partiql_bag::[ -1.0000, 1, 100d0 ] """)
+            """$partiql_bag::[ -1.0000, 1, 100d0 ] """
+        )
 
         test(
             "betweenStringsPredicate",
@@ -787,7 +839,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
               FROM << 'APPLE', 'AZURE', 'B', 'XZ', 'ZOE', 'YOYO' >> AS x
               WHERE x BETWEEN 'B' AND 'Y'
             """,
-            """ $partiql_bag::[ "B", "XZ" ] """)
+            """ $partiql_bag::[ "B", "XZ" ] """
+        )
 
         test(
             "notBetweenStringsPredicate",
@@ -796,104 +849,124 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
               FROM << 'APPLE', 'AZURE', 'B', 'XZ', 'Z', 'ZOE', 'YOYO' >> AS x
               WHERE x NOT BETWEEN 'B' AND 'Y'
             """,
-            """ $partiql_bag::[ "APPLE", "AZURE", "Z", "ZOE", "YOYO" ] """)
+            """ $partiql_bag::[ "APPLE", "AZURE", "Z", "ZOE", "YOYO" ] """
+        )
     }
     group("aggregates") {
         test(
             "topLevelCountDistinct",
             """COUNT(DISTINCT [1,1,1,1,2])""",
-            """2""")
+            """2"""
+        )
 
         test(
             "topLevelCount",
             """COUNT(numbers)""",
-            """5""")
+            """5"""
+        )
 
         test(
             "topLevelAllCount",
             """COUNT(ALL numbers)""",
-            """5""")
+            """5"""
+        )
 
         test(
             "topLevelSum",
             """SUM(numbers)""",
-            """15.0""")
+            """15.0"""
+        )
 
         test(
             "topLevelAllSum",
             """SUM(ALL numbers)""",
-            """15.0""")
+            """15.0"""
+        )
 
         test(
             "topLevelDistinctSum",
             """SUM(DISTINCT [1,1,1,1,1,1,1,2])""",
-            """3""")
+            """3"""
+        )
 
         test(
             "topLevelMin",
             """MIN(numbers)""",
-            """1""")
+            """1"""
+        )
 
         test(
             "topLevelDistinctMin",
             """MIN(DISTINCT numbers)""",
-            """1""")
+            """1"""
+        )
 
         test(
             "topLevelAllMin",
             """MIN(ALL numbers)""",
-            """1""")
+            """1"""
+        )
 
         test(
             "topLevelMax",
             """MAX(numbers)""",
-            """5d0""")
+            """5d0"""
+        )
 
         test(
             "topLevelDistinctMax",
             """MAX(DISTINCT numbers)""",
-            """5d0""")
+            """5d0"""
+        )
 
         test(
             "topLevelAllMax",
             """MAX(ALL numbers)""",
-            """5d0""")
+            """5d0"""
+        )
 
         test(
             "topLevelAvg",
             """AVG(numbers)""",
-            """3.0""")
+            """3.0"""
+        )
 
         test(
             "topLevelDistinctAvg",
             """AVG(DISTINCT [1,1,1,1,1,3])""",
-            """2.""")
+            """2."""
+        )
 
         // AVG of integers should be of type DECIMAL.
         test(
             "topLevelAvgOnlyInt",
             """AVG([2,2,2,4])""",
-            """2.5""")
+            """2.5"""
+        )
 
         test(
             "selectValueAggregate",
             // SELECT VALUE does not do legacy aggregation
             """SELECT VALUE COUNT(v) + SUM(v) FROM <<numbers, numbers>> AS v""",
-            """$partiql_bag::[20.0, 20.0]""")
+            """$partiql_bag::[20.0, 20.0]"""
+        )
 
         test(
             "selectListCountStar",
             """SELECT COUNT(*) AS c FROM <<numbers, numbers>> AS v""",
-            """$partiql_bag::[{c:2}]""")
+            """$partiql_bag::[{c:2}]"""
+        )
 
         test(
             "selectListCountVariable",
             """SELECT COUNT(v) AS c FROM <<numbers, numbers>> AS v""",
-            """$partiql_bag::[{c:2}]""")
+            """$partiql_bag::[{c:2}]"""
+        )
         test(
             "selectListMultipleAggregates",
             """SELECT COUNT(*) AS c, AVG(v * 2) + SUM(v + v) AS result FROM numbers AS v""",
-            "$partiql_bag::[{c:5, result:36.0}]")
+            "$partiql_bag::[{c:5, result:36.0}]"
+        )
 
         test(
             "selectListMultipleAggregatesNestedQuery",
@@ -908,7 +981,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
                 $partiql_bag::[{result:31.}],
                 $partiql_bag::[{result:33.}],
                 $partiql_bag::[{result:35.}],
-            ]""")
+            ]"""
+        )
 
         test(
             "aggregateInSubqueryOfSelect",
@@ -919,7 +993,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
                 FROM [1, 2, 3])
             AS foo
             """,
-            "$partiql_bag::[{ 'cnt': 3 }]")
+            "$partiql_bag::[{ 'cnt': 3 }]"
+        )
 
         test(
             "aggregateInSubqueryOfSelectValue",
@@ -930,7 +1005,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
                 FROM [1, 2, 3])
             AS foo
             """,
-            "$partiql_bag::[3]")
+            "$partiql_bag::[3]"
+        )
 
         test(
             "aggregateWithAliasingInSubqueryOfSelectValue",
@@ -941,7 +1017,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
                 FROM << { 'bar': 1 }, { 'bar': 2 } >> AS baz)
             AS foo
             """,
-            "$partiql_bag::[2]")
+            "$partiql_bag::[2]"
+        )
     }
     group("projection iteration behavior unfiltered") {
         val projectionIterationUnfiltered = CompileOptions.build { projectionIteration(ProjectionIterationBehavior.UNFILTERED) }
@@ -960,16 +1037,16 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
             "projectionIterationBehaviorUnfiltered_select_list",
             "select x.someColumn from <<{'someColumn': MISSING}>> AS x",
             "$partiql_bag::[{someColumn: $partiql_missing::null}]",
-            compileOptions = projectionIterationUnfiltered)
+            compileOptions = projectionIterationUnfiltered
+        )
 
         test(
             "projectionIterationBehaviorUnfiltered_select_star",
             "select * from <<{'someColumn': MISSING}>>",
             "$partiql_bag::[{someColumn: $partiql_missing::null}]",
-            compileOptions = projectionIterationUnfiltered)
+            compileOptions = projectionIterationUnfiltered
+        )
     }
-
-
 
     group("ordered names") {
         test(
@@ -979,7 +1056,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
         ) { exprValue, _ ->
             Assert.assertNull(
                 "Ordering of the fields should not be known when '*' is used",
-                exprValue.first().orderedNames)
+                exprValue.first().orderedNames
+            )
         }
 
         test(
@@ -989,7 +1067,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
         ) { exprValue, _ ->
             Assert.assertNull(
                 "Ordering of the fields should not be known when 'alias.*' is used",
-                exprValue.first().orderedNames)
+                exprValue.first().orderedNames
+            )
         }
 
         test(
@@ -999,7 +1078,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
         ) { exprValue, _ ->
             Assert.assertNull(
                 "Ordering of the fields should not be known when an 'alias.*' is used",
-                exprValue.first().orderedNames)
+                exprValue.first().orderedNames
+            )
         }
 
         test(
@@ -1010,7 +1090,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
             Assert.assertEquals(
                 "Ordering of the fields should be known when no wildcards are used",
                 listOf("a", "b"),
-                exprValue.first().orderedNames)
+                exprValue.first().orderedNames
+            )
         }
     }
 
@@ -1018,22 +1099,26 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
         test(
             "selectDistinct",
             """SELECT DISTINCT t.a FROM `[{a: 1}, {a: 2}, {a: 1}]` t""",
-            """$partiql_bag::[{a: 1}, {a: 2}] """)
+            """$partiql_bag::[{a: 1}, {a: 2}] """
+        )
 
         test(
             "selectDistinctWithAggregate",
             """SELECT SUM(DISTINCT t.a) AS a FROM `[{a:10}, {a:1}, {a:10}, {a:3}]` t""",
-            "$partiql_bag::[{a:14}]")
+            "$partiql_bag::[{a:14}]"
+        )
 
         test(
             "selectDistinctSubQuery",
             """SELECT * FROM (SELECT DISTINCT t.a FROM `[{a: 1}, {a: 2}, {a: 1}]` t)""",
-            """$partiql_bag::[{a:1},{a:2}]""")
+            """$partiql_bag::[{a:1},{a:2}]"""
+        )
 
         test(
             "selectDistinctWithSubQuery",
             """SELECT DISTINCT * FROM (SELECT t.a FROM `[{a: 1}, {a: 2}, {a: 1}]` t)""",
-            """$partiql_bag::[{a:1},{a:2}]""")
+            """$partiql_bag::[{a:1},{a:2}]"""
+        )
 
         test(
             "selectDistinctAggregationWithGroupBy",
@@ -1042,7 +1127,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
                 FROM `[{a:1, b:10}, {a:1, b:10}, {a:1, b:20}, {a:2, b:10}, {a:2, b:10}]` t
                 GROUP by t.a
             """,
-            """$partiql_bag::[{a:1, c:2}, {a:2, c:1}]""")
+            """$partiql_bag::[{a:1, c:2}, {a:2, c:1}]"""
+        )
 
         test(
             "selectDistinctWithGroupBy",
@@ -1051,7 +1137,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
                 FROM `[{a:1, b:10}, {a:1, b:10}, {a:1, b:20}, {a:2, b:10}, {a:2, b:10}]` t
                 GROUP by t.a
             """,
-            """$partiql_bag::[{a:1, c:3}, {a:2, c:2}]""")
+            """$partiql_bag::[{a:1, c:3}, {a:2, c:2}]"""
+        )
 
         test(
             "selectDistinctWithJoin",
@@ -1061,7 +1148,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
                     `[1, 1, 1, 1, 2]` t1,
                     `[2, 2, 2, 2, 1]` t2
             """,
-            """$partiql_bag::[{_1:1,_2:2}, {_1:1, _2:1}, {_1:2,_2:2}, {_1:2,_2:1}]""")
+            """$partiql_bag::[{_1:1,_2:2}, {_1:1, _2:1}, {_1:2,_2:2}, {_1:2,_2:1}]"""
+        )
 
         test(
             "selectDistinctStarMixed",
@@ -1074,42 +1162,50 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
                     MISSING, NULL, NULL, MISSING, 
                     {'a':1}, {'a':1}, {'a':2}]
             """,
-            """ $partiql_bag::[{_1:1},{_1:2},{},{_1:null},{a:1},{a:2}] """)
+            """ $partiql_bag::[{_1:1},{_1:2},{},{_1:null},{a:1},{a:2}] """
+        )
 
         test(
             "selectDistinctStarScalars",
             """ SELECT DISTINCT * FROM [1, 1, 2] """,
-            """ $partiql_bag::[{_1:1},{_1:2}] """)
+            """ $partiql_bag::[{_1:1},{_1:2}] """
+        )
 
         test(
             "selectDistinctStarStructs",
             """ SELECT DISTINCT * FROM [ {'a':1}, {'a':1}, {'a':2} ] """,
-            """ $partiql_bag::[{a:1},{a:2}] """)
+            """ $partiql_bag::[{a:1},{a:2}] """
+        )
 
         test(
             "selectDistinctStarUnknowns",
             "SELECT DISTINCT * FROM [MISSING, NULL, NULL, MISSING]",
-            """ $partiql_bag::[{}, {_1: null}] """)
+            """ $partiql_bag::[{}, {_1: null}] """
+        )
 
         test(
             "selectDistinctStarBags",
             "SELECT DISTINCT * FROM [ <<>>, <<>>, <<1>>, <<1>>, <<1, 2>>, <<2, 1>>, <<3, 4>>]",
-            "$partiql_bag::[{_1:[]}, {_1: [1]}]")
+            "$partiql_bag::[{_1:[]}, {_1: [1]}]"
+        )
 
         test(
             "selectDistinctStarLists",
             "SELECT DISTINCT * FROM [[1], [1], [1, 2]]",
-            "$partiql_bag[{_1:[1]}, {_1: [1, 2]}]")
+            "$partiql_bag[{_1:[1]}, {_1: [1, 2]}]"
+        )
 
         test(
             "selectDistinctStarIntegers",
             "SELECT DISTINCT * FROM [ 1, 1, 2 ]",
-            "$partiql_bag::[{_1:1},{_1:2}]")
+            "$partiql_bag::[{_1:1},{_1:2}]"
+        )
 
         test(
             "selectDistinctValue",
             "SELECT DISTINCT VALUE t FROM [1,2,3,1,1,1,1,1] t",
-            "$partiql_bag::[1,2,3]")
+            "$partiql_bag::[1,2,3]"
+        )
 
         test(
             "selectDistinctExpressionAndWhere",
@@ -1120,7 +1216,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
             """,
             """
               $partiql_bag::[{c: 2}, {c: 4}]
-            """)
+            """
+        )
 
         test(
             "selectDistinctExpression",
@@ -1130,7 +1227,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
             """,
             """
               $partiql_bag::[{c:"11"},{c:"22"}]
-            """)
+            """
+        )
     }
     group("project various container types") {
 
@@ -1146,14 +1244,16 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
 
         test(
             "projectOfUnpivotPath", "SELECT * FROM <<{'name': 'Marrowstone Brewing'}, {'name': 'Tesla'}>>.*",
-            """$partiql_bag::[{_1: $partiql_bag::[{name: "Marrowstone Brewing"}, {name: "Tesla"}]}]""")
+            """$partiql_bag::[{_1: $partiql_bag::[{name: "Marrowstone Brewing"}, {name: "Tesla"}]}]"""
+        )
     }
 
     group("misc") {
         test(
             "parameters",
             """SELECT ? as b1, f.bar FROM parameterTestTable f WHERE f.bar = ?""",
-            """$partiql_bag::[{b1:"spam",bar:"baz"}]""")
+            """$partiql_bag::[{b1:"spam",bar:"baz"}]"""
+        )
     }
 
     group("floatN") {
@@ -1167,43 +1267,51 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
         test(
             "unpivotMissing",
             "SELECT * FROM UNPIVOT MISSING",
-            "$partiql_bag::[]")
+            "$partiql_bag::[]"
+        )
 
         test(
             "unpivotEmptyStruct",
             "SELECT * FROM UNPIVOT {}",
-            "$partiql_bag::[]")
+            "$partiql_bag::[]"
+        )
 
         EvaluatorTestCase(
             "unpivotStructWithMissingField",
             "test * FROM UNPIVOT { 'a': MISSING }",
-            "$partiql_bag::[]")
+            "$partiql_bag::[]"
+        )
 
         test(
             "unpivotMissingWithAsAndAt",
             "SELECT unnestIndex, unnestValue FROM UNPIVOT MISSING AS unnestValue AT unnestIndex",
-            "$partiql_bag::[]")
+            "$partiql_bag::[]"
+        )
 
         test(
             "unpivotMissingCrossJoinWithAsAndAt",
             "SELECT unnestIndex, unnestValue FROM MISSING, UNPIVOT MISSING AS unnestValue AT unnestIndex",
-            "$partiql_bag::[]")
+            "$partiql_bag::[]"
+        )
 
         // double unpivots with wildcard paths
         test(
             "pathUnpivotEmptyStruct1",
             "{}.*.*.bar",
-            "$partiql_bag::[]")
+            "$partiql_bag::[]"
+        )
 
         test(
             "pathUnpivotEmptyStruct2",
             "{}.*.bar.*",
-            "$partiql_bag::[]")
+            "$partiql_bag::[]"
+        )
 
         test(
             "pathUnpivotEmptyStruct3",
             "{}.*.bar.*.baz",
-            "$partiql_bag::[]")
+            "$partiql_bag::[]"
+        )
     }
 
     group("uncategorized") {
@@ -1211,17 +1319,20 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
             "variableShadow",
             // Note that i, f, d, and s are defined in the global environment
             "SELECT f, d, s FROM i AS f, f AS d, @f AS s WHERE f = 1 AND d = 2e0 and s = 1",
-            "$partiql_bag::[{f: 1, d: 2e0, s: 1}]")
+            "$partiql_bag::[{f: 1, d: 2e0, s: 1}]"
+        )
 
         test(
             "selectValueStructConstructorWithMissing",
             """SELECT VALUE {'x': a.x, 'y': a.y} FROM `[{x:5}, {y:6}]` AS a""",
-            """$partiql_bag::[{x:5}, {y:6}]""")
+            """$partiql_bag::[{x:5}, {y:6}]"""
+        )
 
         test(
             "selectIndexStruct",
             "SELECT VALUE x[0] FROM (SELECT s.id FROM stores AS s) AS x",
-            """$partiql_bag::["5", "6", "7"]""")
+            """$partiql_bag::["5", "6", "7"]"""
+        )
 
         test(
             "selectStarSingleSource",
@@ -1232,7 +1343,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
                         {name: "Mochi", type: "dog"},
                         {name: "Lilikoi", type: "unicorn"},
                     ]
-                """)
+                """
+        )
         test(
             "implicitAliasSelectSingleSource",
             "SELECT id FROM stores",
@@ -1250,7 +1362,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
         test(
             "explicitAliasSelectSingleSourceWithWhere",
             """SELECT id AS name FROM stores WHERE id = '5' """,
-            """$partiql_bag::[{name:"5"}]""")
+            """$partiql_bag::[{name:"5"}]"""
+        )
 
         // Demonstrates that UndefinedVariableBehavior.ERROR does not affect qualified field names.
         test(
@@ -1268,20 +1381,23 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
     group("regression") {
         // https://github.com/partiql/partiql-lang-kotlin/issues/314
         // Ensures that datetime parts can be used as variable names.
-        test("dateTimePartsAsVariableNames",
+        test(
+            "dateTimePartsAsVariableNames",
             """
             SELECT VALUE [year, month, day, hour, minute, second]
             FROM 1968 AS year, 4 AS month, 3 as day, 12 as hour, 31 as minute, 59 as second 
             """,
-            "$partiql_bag::[[1968, 4, 3, 12, 31, 59]]")
+            "$partiql_bag::[[1968, 4, 3, 12, 31, 59]]"
+        )
         // https://github.com/partiql/partiql-lang-kotlin/issues/314
         // Ensures that datetime parts can be used as variable names.
-        test("dateTimePartsAsStructFieldNames",
+        test(
+            "dateTimePartsAsStructFieldNames",
             """
             SELECT VALUE [x.year, x.month, x.day, x.hour, x.minute, x.second]
             FROM << { 'year': 1968, 'month': 4, 'day': 3, 'hour': 12, 'minute': 31, 'second': 59 }>> AS x
             """,
-            "$partiql_bag::[[1968, 4, 3, 12, 31, 59]]")
+            "$partiql_bag::[[1968, 4, 3, 12, 31, 59]]"
+        )
     }
 }
-

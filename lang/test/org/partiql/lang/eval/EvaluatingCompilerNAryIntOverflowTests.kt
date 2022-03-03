@@ -35,16 +35,16 @@ class EvaluatingCompilerNAryIntOverflowTests : EvaluatorTestBase() {
             object : Bindings<StaticType> {
                 override fun get(bindingName: BindingName): StaticType? =
                     globals.firstOrNull { bindingName.isEquivalentTo(it.name) }?.type
-                    // this is a unit test so we don't care, but we don't handle the case
-                    // of multiple ambiguous matches here.
+                // this is a unit test so we don't care, but we don't handle the case
+                // of multiple ambiguous matches here.
             }
 
         val valueBindings get() =
             object : Bindings<ExprValue> {
                 override fun get(bindingName: BindingName): ExprValue? =
                     globals.firstOrNull { bindingName.isEquivalentTo(it.name) }?.value
-                    // this is a unit test so we don't care, but we don't handle the case
-                    // of multiple ambiguous matches here.
+                // this is a unit test so we don't care, but we don't handle the case
+                // of multiple ambiguous matches here.
             }
     }
 
@@ -94,7 +94,8 @@ class EvaluatingCompilerNAryIntOverflowTests : EvaluatorTestBase() {
                 prefix = "int2",
                 type = IntType(IntType.IntRangeConstraint.SHORT),
                 minValue = Short.MIN_VALUE.toLong(),
-                maxValue = Short.MAX_VALUE.toLong()),
+                maxValue = Short.MAX_VALUE.toLong()
+            ),
             createVariablesForInt(
                 prefix = "int4",
                 type = IntType(IntType.IntRangeConstraint.INT4),
@@ -118,7 +119,8 @@ class EvaluatingCompilerNAryIntOverflowTests : EvaluatorTestBase() {
                 prefix = "int2_4",
                 type = StaticType.unionOf(
                     IntType(IntType.IntRangeConstraint.SHORT),
-                    IntType(IntType.IntRangeConstraint.INT4)),
+                    IntType(IntType.IntRangeConstraint.INT4)
+                ),
                 minValue = Int.MIN_VALUE.toLong(),
                 maxValue = Int.MAX_VALUE.toLong()
             ),
@@ -126,7 +128,8 @@ class EvaluatingCompilerNAryIntOverflowTests : EvaluatorTestBase() {
                 prefix = "int2_u",
                 type = StaticType.unionOf(
                     IntType(IntType.IntRangeConstraint.INT4),
-                    IntType(IntType.IntRangeConstraint.UNCONSTRAINED)),
+                    IntType(IntType.IntRangeConstraint.UNCONSTRAINED)
+                ),
                 minValue = Long.MIN_VALUE,
                 maxValue = Long.MAX_VALUE
             ),
@@ -147,14 +150,17 @@ class EvaluatingCompilerNAryIntOverflowTests : EvaluatorTestBase() {
                 Variable(
                     name = "int2_or_string_string",
                     type = StaticType.unionOf(StaticType.INT2, StaticType.STRING),
-                    value = valueFactory.newString("foo")),
+                    value = valueFactory.newString("foo")
+                ),
                 // This variable has the type of `any_of(int2, string) and has a value that is a integer
                 Variable(
                     name = "int2_or_string_int",
                     type = StaticType.unionOf(StaticType.INT2, StaticType.STRING),
-                    value = valueFactory.newInt(1))
+                    value = valueFactory.newInt(1)
+                )
             )
-        ).flatten())
+        ).flatten()
+    )
 
     @ParameterizedTest
     @ArgumentsSource(IntOverflowTestCases::class)
@@ -168,13 +174,15 @@ class EvaluatingCompilerNAryIntOverflowTests : EvaluatorTestBase() {
             StaticTypeVisitorTransform(
                 ion = ion,
                 globalBindings = defaultEnv.typeBindings,
-                constraints = emptySet()).transformStatement(it)
+                constraints = emptySet()
+            ).transformStatement(it)
         }.let { astStatement ->
             // [StaticTypeInferenceVisitorTransform] currently requires that [StaticTypeVisitorTransform] is run first.
             StaticTypeInferenceVisitorTransform(
                 globalBindings = defaultEnv.typeBindings,
                 customFunctionSignatures = emptyList(),
-                customTypedOpParameters = mapOf()).transformStatement(astStatement)
+                customTypedOpParameters = mapOf()
+            ).transformStatement(astStatement)
         }
 
         val expression = compiler.compile(transformedAst)
@@ -239,7 +247,7 @@ class EvaluatingCompilerNAryIntOverflowTests : EvaluatorTestBase() {
                     // Unary negation
                     TestCase("-${prefix}_max", "${prefix}_minPlus1"),
                     // https://github.com/partiql/partiql-lang-kotlin/issues/513
-                    //TestCase("-${prefix}_min", "MISSING"),
+                    // TestCase("-${prefix}_min", "MISSING"),
                     TestCase("-${prefix}_1", "${prefix}_neg1"),
                     TestCase("-${prefix}_neg1", "${prefix}_1")
                 )
@@ -266,6 +274,4 @@ class EvaluatingCompilerNAryIntOverflowTests : EvaluatorTestBase() {
             ).flatten()
         }
     }
-
 }
-

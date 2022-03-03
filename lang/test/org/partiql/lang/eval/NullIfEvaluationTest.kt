@@ -22,14 +22,15 @@ class NullIfEvaluationTest : EvaluatorTestBase() {
     data class NullIfTestCase(
         val expr1: String,
         val expr2: String,
-        val expected: String)
+        val expected: String
+    )
 
     @ParameterizedTest
     @MethodSource("nullifEvaluationTests")
     fun runTests(tc: NullIfTestCase) = assertEvalExprValue("nullif(${tc.expr1}, ${tc.expr2})", tc.expected)
 
     companion object {
-        fun testCase(expr1: String,expr2: String, expected: String) = NullIfTestCase(expr1, expr2, expected)
+        fun testCase(expr1: String, expr2: String, expected: String) = NullIfTestCase(expr1, expr2, expected)
 
         @JvmStatic
         @Suppress("unused")

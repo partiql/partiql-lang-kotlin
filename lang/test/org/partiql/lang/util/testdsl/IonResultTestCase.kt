@@ -60,7 +60,6 @@ data class IonResultTestCase(
         assertDoesNotThrow("IonResultTestCase ${toString()} should not throw when parsing") {
             ExprNodeTestCase(name, SqlParser(ION).parseExprNode(sqlUnderTest))
         }
-
 }
 
 internal fun IonResultTestCase.runTestCase(
@@ -83,11 +82,10 @@ internal fun IonResultTestCase.runTestCase(
             expectedIonResult?.let { ION.singleValue(it) }
         }
 
-        val modifiedCompileOptions = when(compileOptionsBlock) {
+        val modifiedCompileOptions = when (compileOptionsBlock) {
             null -> compileOptions
             else -> CompileOptions.build { compileOptionsBlock() }
         }
-
 
         val pipeline = CompilerPipeline.build(ION) pipelineBlock@{
             compileOptions(modifiedCompileOptions)

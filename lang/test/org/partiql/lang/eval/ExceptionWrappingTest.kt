@@ -45,7 +45,7 @@ class ExceptionWrappingTest {
             thunkOptions(
                 ThunkOptions.build {
                     handleExceptionForLegacyMode { ex, srcLocation ->
-                        if(ex is SemanticException) {
+                        if (ex is SemanticException) {
                             DEFAULT_EXCEPTION_HANDLER_FOR_LEGACY_MODE(ex, srcLocation)
                         } else {
                             throw ex

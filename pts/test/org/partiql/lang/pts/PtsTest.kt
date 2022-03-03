@@ -14,5 +14,4 @@ class PtsTest : Junit4PtsTest() {
     override fun getEvaluator(): Evaluator = PartiQlPtsEvaluator(PtsEquality.getDefault())
 
     override fun getPtsFilePaths() = listOf("../testscript/pts/test-scripts")
-
 }

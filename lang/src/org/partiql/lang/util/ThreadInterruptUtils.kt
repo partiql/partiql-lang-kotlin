@@ -2,7 +2,7 @@ package org.partiql.lang.util
 
 /** Throws [InterruptedException] if [Thread.interrupted] is set. */
 internal fun checkThreadInterrupted() {
-    if(Thread.interrupted()) {
+    if (Thread.interrupted()) {
         throw InterruptedException()
     }
 }

@@ -31,11 +31,13 @@ import java.io.StringWriter
 
 class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
 
-    data class STRTestCase(val originalSql: String,
-                           val globals: Map<String, StaticType>,
-                           val handler: (ResolveTestResult) -> Unit,
-                           val constraints: Set<StaticTypeVisitorTransformConstraints> = setOf(),
-                           val expectedAst: String? = null) {
+    data class STRTestCase(
+        val originalSql: String,
+        val globals: Map<String, StaticType>,
+        val handler: (ResolveTestResult) -> Unit,
+        val constraints: Set<StaticTypeVisitorTransformConstraints> = setOf(),
+        val expectedAst: String? = null
+    ) {
 
         override fun toString(): String =
             "originalSql=$originalSql, globals=$globals, constraints=$constraints, expectedSql=$expectedAst"
@@ -59,12 +61,11 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
     @Parameters
     fun sfwTest(tc: STRTestCase) = runSTRTest(tc)
 
-
     // In the test cases below there exists comments consisting of a bunch of numbers.  They can be 
     // used to quickly determine the column number of the text immediately beneath it.  For example, 
     // it's easy to see the token "fiftyFive" starts at character 55:
     //        1         2         3         4         5         6         7         8
-    //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+    // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
     //                                                     fiftyFive
     // The first line is the 10's place of the column number, while the second line is the 1's place.
     // This helps to speed up the finding of the column number when it is used as part of the 
@@ -79,7 +80,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         ),
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT x FROM b AS x",
             mapOf("b" to StaticType.BAG),
             expectVariableReferences(
@@ -89,7 +90,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         ),
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT a FROM b",
             mapOf(
                 "B" to StaticType.LIST,
@@ -104,7 +105,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         ),
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT COUNT(*) FROM b",
             mapOf("B" to StaticType.BAG),
             expectVariableReferences(
@@ -113,7 +114,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         ),
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT y FROM b AS x",
             mapOf("B" to StaticType.BAG),
             expectSubNode(
@@ -121,19 +122,24 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
                     path(
                         id(
                             "x",
-                        partiqlAstCaseSensitive,
-                        partiqlAstLocalsFirst,
-                        StaticType.ANY.toMetas() + metas(1, 8)),
-                        listOf(pathExpr(
-                            lit(ion.newString("y").toIonElement(), metas(1, 8)),
-                            partiqlAstCaseInSensitive)),
-                        metas(1, 8))
+                            partiqlAstCaseSensitive,
+                            partiqlAstLocalsFirst,
+                            StaticType.ANY.toMetas() + metas(1, 8)
+                        ),
+                        listOf(
+                            pathExpr(
+                                lit(ion.newString("y").toIonElement(), metas(1, 8)),
+                                partiqlAstCaseInSensitive
+                            )
+                        ),
+                        metas(1, 8)
+                    )
                 }
             )
         ),
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT y.z FROM b AS x",
             mapOf("B" to StaticType.BAG),
             expectSubNode(
@@ -143,7 +149,8 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
                             "x",
                             partiqlAstCaseSensitive,
                             partiqlAstLocalsFirst,
-                            StaticType.ANY.toMetas() + metas(1, 8)),
+                            StaticType.ANY.toMetas() + metas(1, 8)
+                        ),
                         listOf(
                             pathExpr(
                                 lit(ion.newString("y").toIonElement(), metas(1, 8)),
@@ -152,7 +159,8 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
                             pathExpr(
                                 lit(ion.newString("z").toIonElement(), metas(1, 10)),
                                 partiqlAstCaseInSensitive
-                            )),
+                            )
+                        ),
                         emptyMetaContainer()
                     )
                 }
@@ -160,7 +168,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         ),
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT x FROM b AT x",
             mapOf("b" to StaticType.BAG),
             expectVariableReferences(
@@ -170,7 +178,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         ),
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT y FROM b AS x, x AS whatever AT y",
             mapOf("b" to StaticType.BAG),
             expectVariableReferences(
@@ -181,7 +189,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         ),
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT x FROM b LET 1 AS x",
             mapOf("b" to StaticType.BAG),
             expectVariableReferences(
@@ -192,7 +200,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         // multiple unique bindings
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT x, y FROM b LET char_length(b.name) AS x, x + 1 AS y",
             mapOf("b" to StaticType.BAG),
             expectVariableReferences(
@@ -204,7 +212,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         // shadow binding from global variable
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT b FROM b LET 1 AS b",
             mapOf("b" to StaticType.BAG),
             expectErr(
@@ -217,7 +225,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         // shadow binding from local variable
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT x FROM b LET 1 AS x, 2 AS x",
             mapOf("b" to StaticType.BAG),
             expectErr(
@@ -229,54 +237,67 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         ),
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT a FROM b",
             emptyMap(),
-            expectErr(ErrorCode.SEMANTIC_UNBOUND_BINDING,
+            expectErr(
+                ErrorCode.SEMANTIC_UNBOUND_BINDING,
                 BINDING_NAME to "b",
                 LINE_NUMBER to 1L,
-                COLUMN_NUMBER to 15L)
+                COLUMN_NUMBER to 15L
+            )
         ),
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT a FROM b,c",
-            mapOf("B" to StaticType.ANY,
-                  "C" to StaticType.ANY),
-            expectErr(ErrorCode.SEMANTIC_UNBOUND_BINDING,
+            mapOf(
+                "B" to StaticType.ANY,
+                "C" to StaticType.ANY
+            ),
+            expectErr(
+                ErrorCode.SEMANTIC_UNBOUND_BINDING,
                 BINDING_NAME to "a",
                 LINE_NUMBER to 1L,
-                COLUMN_NUMBER to 8L)
+                COLUMN_NUMBER to 8L
+            )
         ),
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT a FROM \"b\"",
             mapOf("B" to StaticType.ANY),
-            expectErr(ErrorCode.SEMANTIC_UNBOUND_QUOTED_BINDING,
+            expectErr(
+                ErrorCode.SEMANTIC_UNBOUND_QUOTED_BINDING,
                 BINDING_NAME to "b",
                 LINE_NUMBER to 1L,
-                COLUMN_NUMBER to 15L)
+                COLUMN_NUMBER to 15L
+            )
         ),
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT a FROM b, c",
-            mapOf("B" to StaticType.ANY,
-                  "C" to StaticType.ANY),
-            expectErr(ErrorCode.SEMANTIC_UNBOUND_BINDING,
+            mapOf(
+                "B" to StaticType.ANY,
+                "C" to StaticType.ANY
+            ),
+            expectErr(
+                ErrorCode.SEMANTIC_UNBOUND_BINDING,
                 BINDING_NAME to "a",
                 LINE_NUMBER to 1L,
-                COLUMN_NUMBER to 8L)
+                COLUMN_NUMBER to 8L
+            )
         ),
         // variable scoping within SELECT should resolve implicit lexical alias over global
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT a FROM b",
             mapOf(
                 "b" to StaticType.BAG,
-                "a" to StaticType.BAG),
+                "a" to StaticType.BAG
+            ),
             expectSubNode(
                 PartiqlAst.build {
                     path(
@@ -284,100 +305,119 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
                             "b",
                             partiqlAstCaseSensitive,
                             partiqlAstLocalsFirst,
-                            StaticType.ANY.toMetas() + metas(1, 8)),
+                            StaticType.ANY.toMetas() + metas(1, 8)
+                        ),
                         listOf(
                             pathExpr(
                                 lit(ion.newString("a").toIonElement(), metas(1, 8)),
-                                partiqlAstCaseInSensitive)),
-                        metas(1, 8))
+                                partiqlAstCaseInSensitive
+                            )
+                        ),
+                        metas(1, 8)
+                    )
                 }
             )
         ),
         // ambiguous binding introduced in FROM clause (same AS-binding introduced twice)
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT * FROM b AS b, b AS B",
             mapOf("B" to StaticType.ANY),
-            expectErr(ErrorCode.SEMANTIC_AMBIGUOUS_BINDING,
+            expectErr(
+                ErrorCode.SEMANTIC_AMBIGUOUS_BINDING,
                 BINDING_NAME to "B",
                 LINE_NUMBER to 1L,
-                COLUMN_NUMBER to 28L)
+                COLUMN_NUMBER to 28L
+            )
         ),
         // ambiguous binding introduced in FROM clause (AS binding given same name as AT binding)
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT * FROM b AS b AT b",
             mapOf("B" to StaticType.ANY),
-            expectErr(ErrorCode.SEMANTIC_AMBIGUOUS_BINDING,
+            expectErr(
+                ErrorCode.SEMANTIC_AMBIGUOUS_BINDING,
                 BINDING_NAME to "b",
                 LINE_NUMBER to 1L,
-                COLUMN_NUMBER to 20L)
+                COLUMN_NUMBER to 20L
+            )
         ),
         // ambiguous binding introduced in FROM clause (AS binding given same name as BY binding)
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT * FROM b AS b BY b",
             mapOf("B" to StaticType.ANY),
-            expectErr(ErrorCode.SEMANTIC_AMBIGUOUS_BINDING,
+            expectErr(
+                ErrorCode.SEMANTIC_AMBIGUOUS_BINDING,
                 BINDING_NAME to "b",
                 LINE_NUMBER to 1L,
-                COLUMN_NUMBER to 20L)
+                COLUMN_NUMBER to 20L
+            )
         ),
         // ambiguous binding introduced in FROM clause (AT binding given same name as BY binding)
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT * FROM b AS x AT b BY b",
             mapOf("B" to StaticType.ANY),
-            expectErr(ErrorCode.SEMANTIC_AMBIGUOUS_BINDING,
+            expectErr(
+                ErrorCode.SEMANTIC_AMBIGUOUS_BINDING,
                 BINDING_NAME to "b",
                 LINE_NUMBER to 1L,
-                COLUMN_NUMBER to 30L)
+                COLUMN_NUMBER to 30L
+            )
         ),
         // join should not allow implicit attribute without schema
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT a FROM b AS x, B AS y",
             mapOf("B" to StaticType.ANY),
-            expectErr(ErrorCode.SEMANTIC_UNBOUND_BINDING,
+            expectErr(
+                ErrorCode.SEMANTIC_UNBOUND_BINDING,
                 BINDING_NAME to "a",
                 LINE_NUMBER to 1L,
-                COLUMN_NUMBER to 8L)
+                COLUMN_NUMBER to 8L
+            )
         ),
         // nested query should not allow implicit attribute as variable without schema
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT a FROM b AS x WHERE EXISTS (SELECT y FROM x)",
             mapOf("B" to StaticType.ANY),
-            expectErr(ErrorCode.SEMANTIC_UNBOUND_BINDING,
+            expectErr(
+                ErrorCode.SEMANTIC_UNBOUND_BINDING,
                 BINDING_NAME to "y",
                 LINE_NUMBER to 1L,
-                COLUMN_NUMBER to 43L)
+                COLUMN_NUMBER to 43L
+            )
         ),
 
         // local variable with same name as global should not shadow global in from source
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT 1 FROM a AS b, b AS c, c as d",
-            mapOf("a" to StaticType.ANY,
-                  "b" to StaticType.ANY),
+            mapOf(
+                "a" to StaticType.ANY,
+                "b" to StaticType.ANY
+            ),
             expectVariableReferences(
                 VarExpectation("a", 1, 15, StaticType.ANY, partiqlAstUnqualified),
                 // The [VarExpectation] below proves that the "b" in the "b AS c" from source was resolved in the global scope.
                 VarExpectation("b", 1, 23, StaticType.ANY, partiqlAstUnqualified),
-                VarExpectation("c", 1, 31, StaticType.ANY, partiqlAstLocalsFirst))
+                VarExpectation("c", 1, 31, StaticType.ANY, partiqlAstLocalsFirst)
+            )
         ),
 
         // @ causes the local b to be resolved instead of the global b.
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT 1 FROM b as b, @b.c",
             mapOf(
                 "B" to StaticType.BAG
@@ -390,7 +430,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         // Group By should not be allowed
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT * FROM b as x GROUP BY x.name",
             mapOf("b" to StaticType.ANY),
             expectErr(ErrorCode.UNIMPLEMENTED_FEATURE, FEATURE_NAME to "GROUP BY")
@@ -405,18 +445,21 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         // DML happy paths
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "FROM x INSERT INTO y << 'doesnt matter' >>",
-            mapOf("x" to StaticType.BAG,
-                  "y" to StaticType.BOOL),
+            mapOf(
+                "x" to StaticType.BAG,
+                "y" to StaticType.BOOL
+            ),
             expectVariableReferences(
                 VarExpectation("x", 1, 6, StaticType.BAG, partiqlAstUnqualified),
-                VarExpectation("x", 1, 20, StaticType.ANY, partiqlAstLocalsFirst))
-            //No expectation for y because `FROM x INSERT INTO y ...` is transformed to `FROM x INSERT INTO x.y ...`
+                VarExpectation("x", 1, 20, StaticType.ANY, partiqlAstLocalsFirst)
+            )
+            // No expectation for y because `FROM x INSERT INTO y ...` is transformed to `FROM x INSERT INTO x.y ...`
         ),
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "INSERT INTO x VALUE 5",
             mapOf("x" to StaticType.BAG),
             expectVariableReferences(
@@ -425,19 +468,21 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         ),
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "FROM x INSERT INTO y VALUE 5",
             mapOf(
                 "x" to StaticType.BAG,
-                "y" to StaticType.BOOL),
+                "y" to StaticType.BOOL
+            ),
             expectVariableReferences(
                 VarExpectation("x", 1, 6, StaticType.BAG, partiqlAstUnqualified),
-                VarExpectation("x", 1, 20, StaticType.ANY, partiqlAstLocalsFirst))
-            //No expectation for y because `FROM x INSERT INTO y ...` is transformed to `FROM x INSERT INTO x.y ...`
+                VarExpectation("x", 1, 20, StaticType.ANY, partiqlAstLocalsFirst)
+            )
+            // No expectation for y because `FROM x INSERT INTO y ...` is transformed to `FROM x INSERT INTO x.y ...`
         ),
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "FROM x AS y SET doesntmatter = 1",
             mapOf("x" to StaticType.BAG),
             expectVariableReferences(
@@ -447,10 +492,12 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         ),
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "DELETE FROM x WHERE y",
-            mapOf("x" to StaticType.BAG,
-                  "y" to StaticType.BOOL),
+            mapOf(
+                "x" to StaticType.BAG,
+                "y" to StaticType.BOOL
+            ),
             expectVariableReferences(
                 VarExpectation("x", 1, 13, StaticType.BAG, partiqlAstUnqualified),
                 VarExpectation("x", 1, 21, StaticType.ANY, partiqlAstLocalsFirst)
@@ -458,11 +505,13 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         ),
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "FROM x WHERE z REMOVE y",
-            mapOf("x" to StaticType.BAG,
-                  "y" to StaticType.BOOL,
-                  "z" to StaticType.INT),
+            mapOf(
+                "x" to StaticType.BAG,
+                "y" to StaticType.BOOL,
+                "z" to StaticType.INT
+            ),
             expectVariableReferences(
                 VarExpectation("x", 1, 6, StaticType.BAG, partiqlAstUnqualified),
                 VarExpectation("x", 1, 14, StaticType.ANY, partiqlAstLocalsFirst),
@@ -471,7 +520,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         ),
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "FROM canines AS dogs, dogs AS d WHERE d.name = 'Timmy' SET d.colour = 'blue merle'",
             mapOf("canines" to StaticType.BAG),
             expectVariableReferences(
@@ -483,7 +532,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         ),
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "FROM animals AS a, a.dogs AS d WHERE d.name = 'Timmy' SET d.colour = 'blue merle'",
             mapOf("animals" to StaticType.BAG),
             expectVariableReferences(
@@ -496,17 +545,19 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         // DML undefined variables.
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "FROM y SET doesntmatter = 1",
             mapOf(),
-            expectErr(ErrorCode.SEMANTIC_UNBOUND_BINDING,
+            expectErr(
+                ErrorCode.SEMANTIC_UNBOUND_BINDING,
                 BINDING_NAME to "y",
                 LINE_NUMBER to 1L,
-                COLUMN_NUMBER to 6L)
+                COLUMN_NUMBER to 6L
+            )
         ),
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "DELETE FROM x as y WHERE z",
             mapOf("x" to StaticType.BAG),
             expectVariableReferences(
@@ -516,16 +567,16 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         ),
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "UPDATE dogs as d SET name = 'Timmy' WHERE color = 'Blue merle'",
             mapOf("dogs" to StaticType.BAG),
             expectVariableReferences(
                 VarExpectation("dogs", 1, 8, StaticType.BAG, partiqlAstUnqualified),
                 VarExpectation("d", 1, 22, StaticType.ANY, partiqlAstLocalsFirst),
-                VarExpectation("d", 1, 43, StaticType.ANY, partiqlAstLocalsFirst))
+                VarExpectation("d", 1, 43, StaticType.ANY, partiqlAstLocalsFirst)
+            )
         )
     )
-
 
     @Test
     @Parameters
@@ -537,7 +588,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         // and this test ensures we don't treat [identifier] as if it were a normal variable.
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "DROP INDEX IDX_foo ON SomeTable",
             mapOf(),
             expectVariableReferences()
@@ -547,7 +598,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         // and this test ensures we don't treat [keys] as if it were a normal variable.
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "CREATE INDEX ON SomeTable (SomeColumn)",
             mapOf(),
             expectVariableReferences()
@@ -564,38 +615,42 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
             // even though a global 'a' is defined, it is not accessible.
             // (need the JOIN because a is transformed to b.a when there is only one from source)
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT a FROM b, c",
             mapOf(
                 "B" to StaticType.BAG,
                 "A" to StaticType.BAG,
                 "C" to StaticType.BAG
             ),
-            expectErr(ErrorCode.SEMANTIC_ILLEGAL_GLOBAL_VARIABLE_ACCESS,
+            expectErr(
+                ErrorCode.SEMANTIC_ILLEGAL_GLOBAL_VARIABLE_ACCESS,
                 BINDING_NAME to "a",
                 LINE_NUMBER to 1L,
-                COLUMN_NUMBER to 8L),
+                COLUMN_NUMBER to 8L
+            ),
             setOf(StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM)
         ),
         STRTestCase(
             // Verify that a shadowed global ("b") doesn't get resolved instead of illegal global access error.
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "select * from a as b, (select * from b)",
             mapOf(
                 "a" to StaticType.BAG,
                 "b" to StaticType.BAG
             ),
-            expectErr(ErrorCode.SEMANTIC_ILLEGAL_GLOBAL_VARIABLE_ACCESS,
+            expectErr(
+                ErrorCode.SEMANTIC_ILLEGAL_GLOBAL_VARIABLE_ACCESS,
                 BINDING_NAME to "b",
                 LINE_NUMBER to 1L,
-                COLUMN_NUMBER to 38L),
+                COLUMN_NUMBER to 38L
+            ),
             setOf(StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_IN_NESTED_QUERIES)
         ),
         STRTestCase(
             // basic happy path with PREVENT_GLOBALS_EXCEPT_IN_FROM
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT b1.a FROM b AS b1",
             mapOf(
                 "B" to StaticType.BAG
@@ -609,7 +664,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         STRTestCase(
             // nested happy case with PREVENT_GLOBALS_EXCEPT_IN_FROM
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT 1, (SELECT c1.d FROM c as c1) FROM b, (SELECT 2 FROM c)",
             mapOf(
                 "B" to StaticType.BAG,
@@ -626,50 +681,57 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         // multiple joins
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "select 1 from actors a, a.movies am, movies m",
-            mapOf("movies" to StaticType.BAG,
-                  "actors" to StaticType.BAG),
+            mapOf(
+                "movies" to StaticType.BAG,
+                "actors" to StaticType.BAG
+            ),
             expectVariableReferences(
                 VarExpectation("actors", 1, 15, StaticType.BAG, partiqlAstUnqualified),
                 VarExpectation("a", 1, 25, StaticType.ANY, partiqlAstLocalsFirst),
                 VarExpectation("movies", 1, 38, StaticType.BAG, partiqlAstUnqualified)
             ),
-            setOf(StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM)),
+            setOf(StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM)
+        ),
         STRTestCase(
             // failure case with PREVENT_GLOBALS_IN_NESTED_QUERIES though
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT 1, (SELECT c1.d FROM c as c1) FROM b",
             mapOf(
                 "B" to StaticType.BAG,
                 "C" to StaticType.BAG
             ),
-            expectErr(ErrorCode.SEMANTIC_ILLEGAL_GLOBAL_VARIABLE_ACCESS,
+            expectErr(
+                ErrorCode.SEMANTIC_ILLEGAL_GLOBAL_VARIABLE_ACCESS,
                 BINDING_NAME to "c",
                 LINE_NUMBER to 1L,
-                COLUMN_NUMBER to 29L),
+                COLUMN_NUMBER to 29L
+            ),
             setOf(StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_IN_NESTED_QUERIES)
         ),
         STRTestCase(
             // checking PREVENT_GLOBALS_IN_NESTED_QUERIES failure within outer FROM
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT 1 FROM b, (SELECT c1.d FROM c as c1)",
             mapOf(
                 "B" to StaticType.BAG,
                 "C" to StaticType.BAG
             ),
-            expectErr(ErrorCode.SEMANTIC_ILLEGAL_GLOBAL_VARIABLE_ACCESS,
+            expectErr(
+                ErrorCode.SEMANTIC_ILLEGAL_GLOBAL_VARIABLE_ACCESS,
                 BINDING_NAME to "c",
                 LINE_NUMBER to 1L,
-                COLUMN_NUMBER to 36L),
+                COLUMN_NUMBER to 36L
+            ),
             setOf(StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_IN_NESTED_QUERIES)
         ),
         STRTestCase(
             // nested happy case with PREVENT_GLOBALS_IN_NESTED_QUERIES
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "SELECT 1, (SELECT c1.d FROM c as c1) FROM b as b, @b.c as c1, (SELECT 2 FROM c1)",
             mapOf(
                 "B" to StaticType.BAG,
@@ -688,10 +750,12 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         ),
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "select collies FROM dogs d",
-            mapOf("dogs" to StaticType.BAG,
-                  "collies" to StaticType.BAG),
+            mapOf(
+                "dogs" to StaticType.BAG,
+                "collies" to StaticType.BAG
+            ),
             expectSubNode(
                 PartiqlAst.build {
                     path(
@@ -699,22 +763,29 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
                             "d",
                             partiqlAstCaseSensitive,
                             partiqlAstLocalsFirst,
-                            StaticType.ANY.toMetas() + metas(1, 8)),
+                            StaticType.ANY.toMetas() + metas(1, 8)
+                        ),
                         listOf(
                             pathExpr(
                                 lit(ion.newString("collies").toIonElement(), metas(1, 8)),
-                                partiqlAstCaseInSensitive)),
-                        metas(1, 8))
-                }),
+                                partiqlAstCaseInSensitive
+                            )
+                        ),
+                        metas(1, 8)
+                    )
+                }
+            ),
             setOf(StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM)
         ),
         // DML with PREVENT_GLOBALS_EXCEPT_IN_FROM
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "FROM dogs d INSERT INTO collies VALUE 'Timmy'",
-            mapOf("dogs" to StaticType.BAG,
-                  "collies" to StaticType.BAG),
+            mapOf(
+                "dogs" to StaticType.BAG,
+                "collies" to StaticType.BAG
+            ),
             expectSubNode(
                 PartiqlAst.build {
                     path(
@@ -722,34 +793,43 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
                             "d",
                             partiqlAstCaseSensitive,
                             partiqlAstLocalsFirst,
-                            StaticType.ANY.toMetas() + metas(1, 25)),
+                            StaticType.ANY.toMetas() + metas(1, 25)
+                        ),
                         listOf(
                             pathExpr(
                                 lit(ion.newString("collies").toIonElement(), metas(1, 8)),
-                                partiqlAstCaseInSensitive)),
-                        metas(1, 25))
-                }),
-            setOf(StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM)),
+                                partiqlAstCaseInSensitive
+                            )
+                        ),
+                        metas(1, 25)
+                    )
+                }
+            ),
+            setOf(StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM)
+        ),
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "INSERT INTO dogs VALUE 'Timmy'",
             mapOf("dogs" to StaticType.BAG),
             expectVariableReferences(
                 VarExpectation("dogs", 1, 13, StaticType.BAG, partiqlAstUnqualified)
             ),
-            setOf(StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM)),
+            setOf(StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM)
+        ),
         // captures the var ranging over dogs and implicitly prefixes id and owner
         STRTestCase(
             //        1         2         3         4         5         6         7         8
-            //2345678901234567890123456789012345678901234567890123456789012345678901234567890
+            // 2345678901234567890123456789012345678901234567890123456789012345678901234567890
             "UPDATE dogs d SET name = 'Timmy' WHERE owner = 'Margaret'",
             mapOf("dogs" to StaticType.BAG),
             expectVariableReferences(
                 VarExpectation("dogs", 1, 8, StaticType.BAG, partiqlAstUnqualified),
                 VarExpectation("d", 1, 19, StaticType.ANY, partiqlAstLocalsFirst),
-                VarExpectation("d", 1, 40, StaticType.ANY, partiqlAstLocalsFirst)),
-            setOf(StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM))
+                VarExpectation("d", 1, 40, StaticType.ANY, partiqlAstLocalsFirst)
+            ),
+            setOf(StaticTypeVisitorTransformConstraints.PREVENT_GLOBALS_EXCEPT_IN_FROM)
+        )
     )
 
     sealed class ResolveTestResult {
@@ -765,8 +845,8 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
                 properties.forEach { (property, expectedValue) ->
                     assertEquals(
                         "${property.propertyName} in error doesn't match",
-                        expectedValue, it.error.errorContext?.get(property)?.value)
-
+                        expectedValue, it.error.errorContext?.get(property)?.value
+                    )
                 }
             }
         }
@@ -792,13 +872,13 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
                         when (node) {
                             is PartiqlAst.Expr.Id -> {
                                 val sourceLocationMeta = node.metas[SourceLocationMeta.TAG] as SourceLocationMeta?
-                                                         ?: error("VariableReference '${node.name.text}' had no SourceLocationMeta")
+                                    ?: error("VariableReference '${node.name.text}' had no SourceLocationMeta")
 
                                 // Find a VarExpectation that matches the given VariableReference
                                 val matchingExpectation = remainingExpectations.firstOrNull {
                                     it.id == node.name.text &&
-                                    it.line == sourceLocationMeta.lineNum &&
-                                    it.charOffset == sourceLocationMeta.charOffset
+                                        it.line == sourceLocationMeta.lineNum &&
+                                        it.charOffset == sourceLocationMeta.charOffset
                                 } ?: error("No expectation found for VariableReference ${node.name.text} at $sourceLocationMeta")
 
                                 remainingExpectations.remove(matchingExpectation)
@@ -810,7 +890,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
                                 )
 
                                 val staticTypeMeta = node.metas[StaticTypeMeta.TAG] as StaticTypeMeta?
-                                                     ?: error("VariableReference '${node.name.text}' at $sourceLocationMeta had no StaticTypeMeta")
+                                    ?: error("VariableReference '${node.name.text}' at $sourceLocationMeta had no StaticTypeMeta")
 
                                 assertEquals(
                                     "VariableReference ${node.name.text} at $sourceLocationMeta static type must match expectation",
@@ -823,7 +903,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
                     }
 
                     override fun walkExpr(node: PartiqlAst.Expr) {
-                        //do not walk the name of a function call this should be a symbolic name in another namespace (AST is over generalized here)
+                        // do not walk the name of a function call this should be a symbolic name in another namespace (AST is over generalized here)
                         when {
                             node is PartiqlAst.Expr.Call -> {
                                 visitExpr(node)
@@ -853,15 +933,17 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
 
                 visitor.walkStatement(result.node)
 
-                if(remainingExpectations.any()) {
+                if (remainingExpectations.any()) {
                     println("Unmet expectations:")
                     remainingExpectations.forEach {
                         println(it)
                     }
 
-                    fail("${remainingExpectations.size} variable expectations were not met.\n" +
-                         "The first was: ${remainingExpectations.first()}\n" +
-                         "See standard output for a complete list")
+                    fail(
+                        "${remainingExpectations.size} variable expectations were not met.\n" +
+                            "The first was: ${remainingExpectations.first()}\n" +
+                            "See standard output for a complete list"
+                    )
                 }
             }
         }
@@ -888,8 +970,10 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
     }
 
     private fun metas(line: Long, column: Long, type: StaticType? = null): com.amazon.ionelement.api.MetaContainer =
-        (metaContainerOf(SourceLocationMeta(line, column)) +
-        (type?.let { metaContainerOf(StaticTypeMeta(it)) } ?: emptyMetaContainer()))
+        (
+            metaContainerOf(SourceLocationMeta(line, column)) +
+                (type?.let { metaContainerOf(StaticTypeMeta(it)) } ?: emptyMetaContainer())
+            )
 
     private fun StaticType.toMetas(): com.amazon.ionelement.api.MetaContainer = metaContainerOf(StaticTypeMeta(this))
 
@@ -907,8 +991,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
 
         val transformedAst = try {
             transformer.transformStatement(originalAst)
-        }
-        catch (e: SemanticException) {
+        } catch (e: SemanticException) {
             tc.handler(ResolveTestResult.Error(tc, e))
             return
         }
@@ -1004,11 +1087,22 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
                 name = "foo",
                 case = partiqlAstCaseInSensitive,
                 qualifier = partiqlAstUnqualified
-            ).withMeta("staticType", StaticTypeMeta(ListType(IntType(metas = mapOf(ISL_META_KEY to listOf(
-                IonSchemaModel.build {
-                    typeDefinition("bar", constraintList(typeConstraint(namedType("int", ionBool(false)))))
-                }
-            ))))))
+            ).withMeta(
+                "staticType",
+                StaticTypeMeta(
+                    ListType(
+                        IntType(
+                            metas = mapOf(
+                                ISL_META_KEY to listOf(
+                                    IonSchemaModel.build {
+                                        typeDefinition("bar", constraintList(typeConstraint(namedType("int", ionBool(false)))))
+                                    }
+                                )
+                            )
+                        )
+                    )
+                )
+            )
         }
 
         // note: we do not test v0 here because it's not able to store metas other than [SourceLocationMeta]

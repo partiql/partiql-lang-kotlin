@@ -43,8 +43,7 @@ class ToStringExprFunction(private val valueFactory: ExprValueFactory) : ExprFun
 
         val formatter: DateTimeFormatter = try {
             DateTimeFormatter.ofPattern(pattern)
-        }
-        catch (ex: IllegalArgumentException) {
+        } catch (ex: IllegalArgumentException) {
             errInvalidFormatPattern(pattern, ex)
         }
 
@@ -52,8 +51,7 @@ class ToStringExprFunction(private val valueFactory: ExprValueFactory) : ExprFun
         val temporalAccessor = TimestampTemporalAccessor(timestamp)
         try {
             return valueFactory.newString(formatter.format(temporalAccessor))
-        }
-        catch (ex: UnsupportedTemporalTypeException) {
+        } catch (ex: UnsupportedTemporalTypeException) {
             errInvalidFormatPattern(pattern, ex)
         } catch (ex: DateTimeException) {
             errInvalidFormatPattern(pattern, ex)
@@ -63,10 +61,12 @@ class ToStringExprFunction(private val valueFactory: ExprValueFactory) : ExprFun
     private fun errInvalidFormatPattern(pattern: String, cause: Exception): Nothing {
         val pvmap = PropertyValueMap()
         pvmap[Property.TIMESTAMP_FORMAT_PATTERN] = pattern
-        throw EvaluationException("Invalid DateTime format pattern",
-                                 ErrorCode.EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN,
-                                 pvmap,
-                                 cause,
-                                 internal = false)
+        throw EvaluationException(
+            "Invalid DateTime format pattern",
+            ErrorCode.EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN,
+            pvmap,
+            cause,
+            internal = false
+        )
     }
 }

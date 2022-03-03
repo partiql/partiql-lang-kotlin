@@ -25,7 +25,8 @@ class SerializationRoundTripTests {
                 failingTestNames = hashSetOf(
                     // CAN_CAST is not supported by V0 and will never be.
                     "canCastAsFloat1"
-                ))
+                )
+            )
                 // we really don't need to test failure cases in this case since the (de)serializers are legacy.
                 .filter { !it.expectFailure }
                 .map { it.toExprNodeTestCase() }
@@ -41,9 +42,8 @@ class SerializationRoundTripTests {
             deserializer.deserialize(sexp, AstVersion.V0)
         }
 
-        val originalStripped = MetaStrippingRewriter.stripMetas(tc.expr);
+        val originalStripped = MetaStrippingRewriter.stripMetas(tc.expr)
         val roundTrippedStripped = MetaStrippingRewriter.stripMetas(roundTrippedExprNode)
         assertEquals(originalStripped, roundTrippedStripped, "ExprNode deserialized from s-exp V0 AST must match the ExprNode")
     }
 }
-

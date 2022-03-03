@@ -39,13 +39,13 @@ internal class TimestampTemporalAccessor(val ts: Timestamp) : TemporalAccessor {
      * doesn't invoke this method to check if a ChronoField is supported.
      */
     override fun isSupported(field: TemporalField?): Boolean =
-            when (field) {
-                IsoFields.QUARTER_OF_YEAR -> true
-                else -> false
-            }
+        when (field) {
+            IsoFields.QUARTER_OF_YEAR -> true
+            else -> false
+        }
 
     override fun getLong(field: TemporalField?): Long {
-        if(field == null) {
+        if (field == null) {
             throw IllegalArgumentException("argument 'field' may not be null")
         }
         return when (field) {
@@ -61,11 +61,12 @@ internal class TimestampTemporalAccessor(val ts: Timestamp) : TemporalAccessor {
             ChronoField.AMPM_OF_DAY -> ts.hour / 12L
             ChronoField.CLOCK_HOUR_OF_AMPM -> {
                 val hourOfAmPm = ts.hour.toLong() % 12L
-                if(hourOfAmPm == 0L) 12 else hourOfAmPm
+                if (hourOfAmPm == 0L) 12 else hourOfAmPm
             }
-            ChronoField.OFFSET_SECONDS -> if(ts.localOffset == null) 0 else ts.localOffset * 60L
+            ChronoField.OFFSET_SECONDS -> if (ts.localOffset == null) 0 else ts.localOffset * 60L
             else -> throw UnsupportedTemporalTypeException(
-                    field.javaClass.name + "." + field.toString() + " not supported")
+                field.javaClass.name + "." + field.toString() + " not supported"
+            )
         }
     }
 }

@@ -17,7 +17,7 @@ package org.partiql.lang.ast
  * Meta node intended to be attached to an instance of [FromSourcedJoin] to indicate that no
  * join condition was specified in the original query and therefore this is an implicit join.
  */
-class IsImplictJoinMeta private constructor(): Meta {
+class IsImplictJoinMeta private constructor() : Meta {
     override val tag = TAG
 
     companion object {

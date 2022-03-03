@@ -44,27 +44,29 @@ class NodeMetadataTest {
     }
 
     private fun PropertyValue.valueAsAny(): Any = when (this.type) {
-        PropertyType.LONG_CLASS      -> this.longValue()
-        PropertyType.STRING_CLASS    -> this.stringValue()
-        PropertyType.INTEGER_CLASS   -> this.integerValue()
-        PropertyType.TOKEN_CLASS     -> this.tokenTypeValue()
+        PropertyType.LONG_CLASS -> this.longValue()
+        PropertyType.STRING_CLASS -> this.stringValue()
+        PropertyType.INTEGER_CLASS -> this.integerValue()
+        PropertyType.TOKEN_CLASS -> this.tokenTypeValue()
         PropertyType.ION_VALUE_CLASS -> this.ionValue()
     }
 
     private fun PropertyValueMap.clone(): PropertyValueMap = this.getProperties().fold(PropertyValueMap()) { acc, property ->
         when (property.propertyType) {
-            PropertyType.LONG_CLASS      -> acc[property] = this[property]!!.longValue()
-            PropertyType.STRING_CLASS    -> acc[property] = this[property]!!.stringValue()
-            PropertyType.INTEGER_CLASS   -> acc[property] = this[property]!!.integerValue()
-            PropertyType.TOKEN_CLASS     -> acc[property] = this[property]!!.tokenTypeValue()
+            PropertyType.LONG_CLASS -> acc[property] = this[property]!!.longValue()
+            PropertyType.STRING_CLASS -> acc[property] = this[property]!!.stringValue()
+            PropertyType.INTEGER_CLASS -> acc[property] = this[property]!!.integerValue()
+            PropertyType.TOKEN_CLASS -> acc[property] = this[property]!!.tokenTypeValue()
             PropertyType.ION_VALUE_CLASS -> acc[property] = this[property]!!.ionValue()
         }
 
         acc
     }
 
-    private fun buildErrorContext(initial: PropertyValueMap? = null,
-                                  build: PropertyValueMap.() -> Unit): PropertyValueMap {
+    private fun buildErrorContext(
+        initial: PropertyValueMap? = null,
+        build: PropertyValueMap.() -> Unit
+    ): PropertyValueMap {
         val p = initial?.clone() ?: PropertyValueMap()
         p.apply(build)
         return p
@@ -96,12 +98,14 @@ class NodeMetadataTest {
      * contain either line, column number or both
      */
     private fun parametersForFillErrorContextNotAddingMetadata(): List<PropertyValueMap> {
-        return listOf(buildErrorContext { this[Property.COLUMN_NUMBER] = 1L },
-                      buildErrorContext { this[Property.LINE_NUMBER] = 2L },
-                      buildErrorContext {
-                          this[Property.LINE_NUMBER] = 3L
-                          this[Property.COLUMN_NUMBER] = 4L
-                      })
+        return listOf(
+            buildErrorContext { this[Property.COLUMN_NUMBER] = 1L },
+            buildErrorContext { this[Property.LINE_NUMBER] = 2L },
+            buildErrorContext {
+                this[Property.LINE_NUMBER] = 3L
+                this[Property.COLUMN_NUMBER] = 4L
+            }
+        )
     }
 
     @Test

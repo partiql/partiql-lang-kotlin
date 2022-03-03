@@ -50,16 +50,16 @@ object DelimitedValues {
         /** Attempt to parse each value as a scalar, and fall back to string. */
         AUTO {
             override fun convert(valueFactory: ExprValueFactory, raw: String): ExprValue = try {
-                    val converted = valueFactory.ion.singleValue(raw)
-                    when (converted) {
-                        is IonInt, is IonFloat, is IonDecimal, is IonTimestamp ->
-                            valueFactory.newFromIonValue(converted)
-                        // if we can't convert the above, we just use the input string as-is
-                        else -> valueFactory.newString(raw)
-                    }
-                } catch (e: IonException) {
-                    valueFactory.newString(raw)
+                val converted = valueFactory.ion.singleValue(raw)
+                when (converted) {
+                    is IonInt, is IonFloat, is IonDecimal, is IonTimestamp ->
+                        valueFactory.newFromIonValue(converted)
+                    // if we can't convert the above, we just use the input string as-is
+                    else -> valueFactory.newString(raw)
                 }
+            } catch (e: IonException) {
+                valueFactory.newString(raw)
+            }
         },
         /** Each field is a string. */
         NONE {
@@ -78,10 +78,12 @@ object DelimitedValues {
      * @param conversionMode How column text should be converted.
      */
     @JvmStatic
-    fun exprValue(valueFactory: ExprValueFactory,
-                  input: Reader,
-                  csvFormat: CSVFormat,
-                  conversionMode: ConversionMode): ExprValue {
+    fun exprValue(
+        valueFactory: ExprValueFactory,
+        input: Reader,
+        csvFormat: CSVFormat,
+        conversionMode: ConversionMode
+    ): ExprValue {
         val reader = BufferedReader(input)
         val csvParser = CSVParser(reader, csvFormat)
         val columns: List<String> = csvParser.headerNames
@@ -128,12 +130,14 @@ object DelimitedValues {
      * @param writeHeader Whether or not to write the header.
      */
     @JvmStatic
-    fun writeTo(ion: IonSystem,
-                output: Writer,
-                value: ExprValue,
-                delimiter: Char,
-                newline: String,
-                writeHeader: Boolean) {
+    fun writeTo(
+        ion: IonSystem,
+        output: Writer,
+        value: ExprValue,
+        delimiter: Char,
+        newline: String,
+        writeHeader: Boolean
+    ) {
         CSVPrinter(output, CSVFormat.DEFAULT.withDelimiter(delimiter).withRecordSeparator(newline)).use { csvPrinter ->
             var names: List<String>? = null
             for (row in value) {

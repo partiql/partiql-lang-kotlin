@@ -55,7 +55,7 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
         assertEvalIsMissing("\"abc\"", simpleSession, undefinedVariableMissingCompileOptions)
         assertEvalIsMissing("\"ABC\"", simpleSession, undefinedVariableMissingCompileOptions)
 
-        //Ensure case sensitive lookup still works.
+        // Ensure case sensitive lookup still works.
         assertEval("\"Abc\"", "1", simpleSession, undefinedVariableMissingCompileOptions)
     }
 
@@ -66,14 +66,16 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
             simpleSession,
             ErrorCode.EVALUATOR_QUOTED_BINDING_DOES_NOT_EXIST,
             sourceLocationProperties(1L, 1L) + mapOf(Property.BINDING_NAME to "abc"),
-            expectedPermissiveModeResult = "MISSING")
+            expectedPermissiveModeResult = "MISSING"
+        )
 
         checkInputThrowingEvaluationException(
             "\"ABC\"",
             simpleSession,
             ErrorCode.EVALUATOR_QUOTED_BINDING_DOES_NOT_EXIST,
             sourceLocationProperties(1L, 1L) + mapOf(Property.BINDING_NAME to "ABC"),
-            expectedPermissiveModeResult = "MISSING")
+            expectedPermissiveModeResult = "MISSING"
+        )
     }
 
     @Test
@@ -84,8 +86,10 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
             ErrorCode.EVALUATOR_AMBIGUOUS_BINDING,
             sourceLocationProperties(1L, 1L) + mapOf(
                 Property.BINDING_NAME to "abc",
-                Property.BINDING_NAME_MATCHES to "Abc, aBc, abC"),
-            expectedPermissiveModeResult = "MISSING")
+                Property.BINDING_NAME_MATCHES to "Abc, aBc, abC"
+            ),
+            expectedPermissiveModeResult = "MISSING"
+        )
     }
 
     @Test
@@ -100,21 +104,25 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
         assertEval(
             "SELECT \"Abc\".n AS a, \"aBc\".n AS b, \"abC\".n AS c FROM a as Abc, b as aBc, c as abC",
             "[{a:1, b:2, c:3}]",
-            simpleSessionWithTables)
+            simpleSessionWithTables
+        )
 
     @Test
     fun quotedTableAliasesAreCaseSensitive() =
         assertEval(
             "SELECT \"Abc\".n AS a, \"aBc\".n AS b, \"abC\".n AS c FROM a as \"Abc\", b as \"aBc\", c as \"abC\"",
             "[{a:1, b:2, c:3}]",
-            simpleSessionWithTables)
+            simpleSessionWithTables
+        )
 
     val tableWithCaseVaryingFields = "[{ Abc: 1, aBc: 2, abC: 3}]"
 
     @Test
     fun quotedStructFieldsAreCaseSensitive() =
-        assertEval("SELECT s.\"Abc\" , s.\"aBc\", s.\"abC\" FROM `$tableWithCaseVaryingFields` AS s",
-                   tableWithCaseVaryingFields)
+        assertEval(
+            "SELECT s.\"Abc\" , s.\"aBc\", s.\"abC\" FROM `$tableWithCaseVaryingFields` AS s",
+            tableWithCaseVaryingFields
+        )
 
     @Test
     fun unquotedStructFieldsAreAmbiguous() {
@@ -124,12 +132,13 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
             ErrorCode.EVALUATOR_AMBIGUOUS_BINDING,
             sourceLocationProperties(1L, 10L) + mapOf(
                 Property.BINDING_NAME to "abc",
-                Property.BINDING_NAME_MATCHES to "Abc, aBc, abC"),
+                Property.BINDING_NAME_MATCHES to "Abc, aBc, abC"
+            ),
             expectedPermissiveModeResult = "<<{}>>"
         )
     }
 
-    ////////////////////////////////////////////
+    // //////////////////////////////////////////
     private val nestedStructsLowercase = mapOf("a" to "{b:{c:{d:{e:5,f:6}}}}")
     private val globalHello = mapOf("s" to "\"hello\"")
 
@@ -169,8 +178,6 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
         """,
         "Stores" to "1"
     )
-
-
 
     private val friends = mapOf(
         "friends" to """
@@ -221,7 +228,6 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
     fun pathDotMissingAttribute_Inverted() =
         assertEval(""" "a".z IS MISSING """, "true", nestedStructsLowercase.toSession())
 
-
     @Test
     fun pathIndexing_quotedId() = assertEval(""" "stores"[0]."books"[2]."title" """, "\"C\"", stores.toSession())
 
@@ -247,7 +253,6 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
         """["dog", "human", "dog", "cat"]""",
         friends.toSession()
     )
-
 
     @Test
     fun pathWildCardOverScalar_quotedId() = assertEval(

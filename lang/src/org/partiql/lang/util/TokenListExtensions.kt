@@ -33,7 +33,7 @@ import org.partiql.lang.syntax.TokenType
  */
 internal fun List<Token>.onlyEndOfStatement() =
     (size == 1 && this[0].type == TokenType.EOF) ||
-    (size == 2 && this[0].type == TokenType.SEMICOLON && this[1].type == TokenType.EOF)
+        (size == 2 && this[0].type == TokenType.SEMICOLON && this[1].type == TokenType.EOF)
 
 /**
  * Given an error context ([PropertyValueMap]) and a source position ([SourcePosition]) populate the given
@@ -72,10 +72,10 @@ internal fun Token?.errExpectedTokenType(expectedType: TokenType): Nothing {
 }
 
 internal fun List<Token>.atomFromHead(parseType: SqlParser.ParseType = SqlParser.ParseType.ATOM): SqlParser.ParseNode =
-        SqlParser.ParseNode(parseType, head, emptyList(), tail)
+    SqlParser.ParseNode(parseType, head, emptyList(), tail)
 
 internal fun List<Token>.err(message: String, errorCode: ErrorCode, errorContext: PropertyValueMap = PropertyValueMap()): Nothing =
-        head.err(message, errorCode, errorContext)
+    head.err(message, errorCode, errorContext)
 
 internal fun List<Token>.tailExpectedKeyword(keyword: String): List<Token> {
     when (head?.keywordText) {
@@ -91,7 +91,5 @@ internal fun List<Token>.tailExpectedKeyword(keyword: String): List<Token> {
 internal fun List<Token>.tailExpectedToken(tokenType: TokenType): List<Token> =
     when (head?.type) {
         tokenType -> tail
-        else      -> head.errExpectedTokenType(tokenType)
+        else -> head.errExpectedTokenType(tokenType)
     }
-
-

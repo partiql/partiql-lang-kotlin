@@ -7,11 +7,12 @@ val inputBasePath = "${File(".").absolutePath.removeSuffix("/.")}/test/resources
 
 /**
  * Creates the input and replaces `#` by `$`. We use `#` in the test fixtures because escaping `$` in a kotlin
- * multiline string is messy, e.g. `"""${"$"}"""` results in `"$"` 
+ * multiline string is messy, e.g. `"""${"$"}"""` results in `"$"`
  */
 fun createInput(vararg ionDocuments: String): List<NamedInputStream> =
-        ionDocuments.mapIndexed { index, doc ->
-            NamedInputStream(
-                    "$inputBasePath/input[$index].sqlts",
-                    doc.replace("#", "$").byteInputStream(Charset.forName("UTF-8")))
-        }
+    ionDocuments.mapIndexed { index, doc ->
+        NamedInputStream(
+            "$inputBasePath/input[$index].sqlts",
+            doc.replace("#", "$").byteInputStream(Charset.forName("UTF-8"))
+        )
+    }

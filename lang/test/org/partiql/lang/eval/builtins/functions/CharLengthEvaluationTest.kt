@@ -8,7 +8,6 @@ import org.partiql.lang.eval.builtins.Argument
 import org.partiql.lang.eval.builtins.ExprFunctionTestCase
 import org.partiql.lang.eval.builtins.checkInvalidArgType
 import org.partiql.lang.eval.builtins.checkInvalidArity
-
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.ArgumentsProviderBase
 
@@ -32,7 +31,7 @@ class CharLengthEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("char_length('ȴȵ💩💋')", "4"),
             ExprFunctionTestCase("char_length('😁😞😸😸')", "4"),
             ExprFunctionTestCase("char_length('話家身圧費谷料村能計税金')", "12"),
-            ExprFunctionTestCase("char_length('eࠫ')", "2"), //This is a unicode "combining character" which is actually 2 codepoints
+            ExprFunctionTestCase("char_length('eࠫ')", "2"), // This is a unicode "combining character" which is actually 2 codepoints
         )
     }
 

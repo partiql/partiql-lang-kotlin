@@ -42,12 +42,14 @@ class EvaluatorTests {
             return unskippedTests.map {
                 it.copy(
                     note = "legacy typing",
-                    compileOptions = CompileOptions.build(it.compileOptions) { typingMode(TypingMode.LEGACY) })
+                    compileOptions = CompileOptions.build(it.compileOptions) { typingMode(TypingMode.LEGACY) }
+                )
             } +
                 unskippedTests.map {
                     it.copy(
                         note = "permissive typing",
-                        compileOptions = CompileOptions.build(it.compileOptions) { typingMode(TypingMode.PERMISSIVE) })
+                        compileOptions = CompileOptions.build(it.compileOptions) { typingMode(TypingMode.PERMISSIVE) }
+                    )
                 }
         }
     }
@@ -56,4 +58,3 @@ class EvaluatorTests {
     @MethodSource("evaluatorTests")
     fun allTests(tc: IonResultTestCase) = tc.runTestCase(valueFactory, mockDb)
 }
-

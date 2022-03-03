@@ -37,13 +37,13 @@ fun <T> Bindings<T>.delegate(fallback: Bindings<T>): Bindings<T> =
  * @receiver The [Bindings] to delegate over.
  * @param names, the blacklisted names
  */
-fun <T> Bindings<T>.blacklist(vararg names: String) = object: Bindings<T> {
+fun <T> Bindings<T>.blacklist(vararg names: String) = object : Bindings<T> {
     val blacklisted = names.toSet()
     val loweredBlacklisted = names.map { it.toLowerCase() }.toSet()
 
     override fun get(bindingName: BindingName): T? {
         val isBlacklisted = when (bindingName.bindingCase) {
-            BindingCase.SENSITIVE   -> blacklisted.contains(bindingName.name)
+            BindingCase.SENSITIVE -> blacklisted.contains(bindingName.name)
             BindingCase.INSENSITIVE -> loweredBlacklisted.contains(bindingName.loweredName)
         }
         return when {

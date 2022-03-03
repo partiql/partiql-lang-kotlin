@@ -74,7 +74,7 @@ typealias ProcessingStep = (PartiqlAst.Statement, StepContext) -> PartiqlAst.Sta
  * used to compile queries concurrently. If used in a multithreaded application, use one instance of [CompilerPipeline]
  * per thread.
  */
-interface CompilerPipeline  {
+interface CompilerPipeline {
     val valueFactory: ExprValueFactory
 
     /** The compilation options. */
@@ -203,7 +203,7 @@ interface CompilerPipeline  {
         fun build(): CompilerPipeline {
             val compileOptionsToUse = compileOptions ?: CompileOptions.standard()
 
-            when(compileOptionsToUse.thunkReturnTypeAssertions) {
+            when (compileOptionsToUse.thunkReturnTypeAssertions) {
                 ThunkReturnTypeAssertions.DISABLED -> { /* intentionally blank */ }
                 ThunkReturnTypeAssertions.ENABLED -> {
                     check(this.globalTypeBindings != null) {
@@ -254,7 +254,8 @@ internal class CompilerPipelineImpl(
             }
         }.flatten().toMap(),
         procedures,
-        compileOptions)
+        compileOptions
+    )
 
     override fun compile(query: String): Expression = compile(parser.parseAstStatement(query))
 
@@ -277,15 +278,17 @@ internal class CompilerPipelineImpl(
                             StaticTypeInferenceVisitorTransform(
                                 globalBindings = globalTypeBindings,
                                 customFunctionSignatures = functions.values.map { it.signature },
-                                customTypedOpParameters =         customDataTypes.map { customType ->
+                                customTypedOpParameters = customDataTypes.map { customType ->
                                     (customType.aliases + customType.name).map { alias ->
                                         Pair(alias.toLowerCase(), customType.typedOpParameter)
                                     }
                                 }.flatten().toMap()
-                            ))
+                            )
+                        )
                     }
                 }
-            ).flatten().toTypedArray())
+            ).flatten().toTypedArray()
+        )
 
         val queryToCompile = transforms.transformStatement(preProcessedQuery)
 
@@ -293,5 +296,5 @@ internal class CompilerPipelineImpl(
     }
 
     internal fun executePreProcessingSteps(query: PartiqlAst.Statement, context: StepContext) = preProcessingSteps
-            .interruptibleFold(query) { currentAstStatement, step -> step(currentAstStatement, context) }
+        .interruptibleFold(query) { currentAstStatement, step -> step(currentAstStatement, context) }
 }

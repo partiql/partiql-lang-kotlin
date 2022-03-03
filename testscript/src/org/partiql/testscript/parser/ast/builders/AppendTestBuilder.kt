@@ -7,7 +7,6 @@ import org.partiql.testscript.Failure
 import org.partiql.testscript.Result
 import org.partiql.testscript.Success
 import org.partiql.testscript.parser.ScriptLocation
-import org.partiql.testscript.parser.UnexpectedFieldError
 import org.partiql.testscript.parser.ast.AppendTestNode
 
 internal class AppendTestBuilder(location: ScriptLocation) : StructBuilder<AppendTestNode>("append_test", location) {
@@ -25,10 +24,13 @@ internal class AppendTestBuilder(location: ScriptLocation) : StructBuilder<Appen
         validateType("$path.additional_data", additionalData, IonType.STRUCT)
 
         return if (errors.isEmpty()) {
-            Success(AppendTestNode(
+            Success(
+                AppendTestNode(
                     pattern = (pattern!!.ionValue as IonString).stringValue(),
                     additionalData = additionalData!!.ionValue as IonStruct,
-                    scriptLocation = location))
+                    scriptLocation = location
+                )
+            )
         } else {
             Failure(errors)
         }

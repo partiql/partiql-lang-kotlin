@@ -10,7 +10,10 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluationException
 import java.lang.reflect.Type
 import java.time.format.DateTimeParseException
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.fail
 
 @RunWith(JUnitParamsRunner::class)
 class TimestampParserTest {

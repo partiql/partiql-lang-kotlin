@@ -20,7 +20,7 @@ import org.partiql.lang.domains.PartiqlAst
 /**
  * Contains references to each of the aggregate call-sites in a given [Select].
  */
-data class AggregateCallSiteListMeta(val aggregateCallSites: List<PartiqlAst.Expr.CallAgg>): Meta {
+data class AggregateCallSiteListMeta(val aggregateCallSites: List<PartiqlAst.Expr.CallAgg>) : Meta {
     override val tag = TAG
 
     override val shouldSerialize: Boolean
@@ -32,6 +32,6 @@ data class AggregateCallSiteListMeta(val aggregateCallSites: List<PartiqlAst.Exp
 
     companion object {
         const val TAG = "\$aggregate_call_sites"
-        //Note: no deserializer if we don't support serialization.
+        // Note: no deserializer if we don't support serialization.
     }
 }

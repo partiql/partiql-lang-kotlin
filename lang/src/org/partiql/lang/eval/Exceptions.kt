@@ -26,21 +26,26 @@ import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.lang.util.to
 
 /** Error for evaluation problems. */
-open class EvaluationException(message: String,
-                               errorCode: ErrorCode,
-                               errorContext: PropertyValueMap? = null,
-                               cause: Throwable? = null,
-                               val internal: Boolean) : SqlException(message, errorCode, errorContext, cause) {
+open class EvaluationException(
+    message: String,
+    errorCode: ErrorCode,
+    errorContext: PropertyValueMap? = null,
+    cause: Throwable? = null,
+    val internal: Boolean
+) : SqlException(message, errorCode, errorContext, cause) {
 
-
-    constructor(cause: Throwable,
-                errorCode: ErrorCode,
-                errorContext: PropertyValueMap? = null,
-                internal: Boolean) : this(message = cause.message ?: "<NO MESSAGE>",
-                                                 errorCode = errorCode,
-                                                 errorContext = errorContext,
-                                                 internal = internal,
-                                                 cause = cause)
+    constructor(
+        cause: Throwable,
+        errorCode: ErrorCode,
+        errorContext: PropertyValueMap? = null,
+        internal: Boolean
+    ) : this(
+        message = cause.message ?: "<NO MESSAGE>",
+        errorCode = errorCode,
+        errorContext = errorContext,
+        internal = internal,
+        cause = cause
+    )
 }
 
 /**
@@ -52,7 +57,7 @@ internal fun errNoContext(message: String, errorCode: ErrorCode, internal: Boole
 internal fun err(message: String, errorCode: ErrorCode, errorContext: PropertyValueMap?, internal: Boolean): Nothing =
     throw EvaluationException(message, errorCode, errorContext, internal = internal)
 
-internal fun expectedArgTypeErrorMsg (types: List<ExprValueType>) : String = when (types.size) {
+internal fun expectedArgTypeErrorMsg(types: List<ExprValueType>): String = when (types.size) {
     0 -> throw IllegalStateException("Should have at least one expected argument type. ")
     1 -> types[0].toString()
     else -> {
@@ -82,7 +87,7 @@ internal fun errInvalidArgumentType(
     )
 
     err(
-        message = "Invalid type for argument ${position} of ${signature.name}.",
+        message = "Invalid type for argument $position of ${signature.name}.",
         errorCode = ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL,
         errorContext = errorContext,
         internal = false
@@ -90,24 +95,26 @@ internal fun errInvalidArgumentType(
 }
 
 internal fun errIntOverflow(intSizeInBytes: Int, errorContext: PropertyValueMap? = null): Nothing {
-    throw EvaluationException(message = "Int overflow or underflow",
-                              errorCode = ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
-                              errorContext = (errorContext ?: PropertyValueMap()).also {
-                                  it[Property.INT_SIZE_IN_BYTES] = intSizeInBytes
-                              },
-                              internal = false)
+    throw EvaluationException(
+        message = "Int overflow or underflow",
+        errorCode = ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
+        errorContext = (errorContext ?: PropertyValueMap()).also {
+            it[Property.INT_SIZE_IN_BYTES] = intSizeInBytes
+        },
+        internal = false
+    )
 }
 
 fun errorContextFrom(location: SourceLocationMeta?): PropertyValueMap {
     val errorContext = PropertyValueMap()
-    if(location != null) {
+    if (location != null) {
         fillErrorContext(errorContext, location)
     }
     return errorContext
 }
 
 fun fillErrorContext(errorContext: PropertyValueMap, location: SourceLocationMeta?) {
-    if(location != null) {
+    if (location != null) {
         errorContext[Property.LINE_NUMBER] = location.lineNum
         errorContext[Property.COLUMN_NUMBER] = location.charOffset
     }
@@ -115,17 +122,17 @@ fun fillErrorContext(errorContext: PropertyValueMap, location: SourceLocationMet
 
 fun fillErrorContext(errorContext: PropertyValueMap, metaContainer: MetaContainer) {
     val location = metaContainer[SourceLocationMeta.TAG] as? SourceLocationMeta
-    if(location != null) {
+    if (location != null) {
         fillErrorContext(errorContext, location)
     }
 }
 
 fun errorContextFrom(metaContainer: MetaContainer?): PropertyValueMap {
-    if(metaContainer == null) {
+    if (metaContainer == null) {
         return PropertyValueMap()
     }
     val location = metaContainer[SourceLocationMeta.TAG] as? SourceLocationMeta
-    return if(location != null) {
+    return if (location != null) {
         errorContextFrom(location)
     } else {
         PropertyValueMap()

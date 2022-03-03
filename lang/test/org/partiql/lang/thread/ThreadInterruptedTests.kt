@@ -30,7 +30,6 @@ import org.partiql.lang.syntax.SqlParser
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
 
-
 /** How long (in miilis) to wait after starting a thread to set the interrupted flag. */
 const val INTERRUPT_AFTER_MS: Long = 100
 
@@ -52,7 +51,7 @@ class ThreadInterruptedTests {
     private val reallyBigNAry = makeBigExprNode(20000000)
     private val bigNAry = makeBigExprNode(10000000)
     private val bigPartiqlAst = makeBigPartiqlAstExpr(10000000)
-    
+
     private fun makeBigSexpAst() =
         makeBigExprNode(1000000).let { nary ->
             @Suppress("DEPRECATION")
@@ -189,7 +188,7 @@ class ThreadInterruptedTests {
     @Test
     fun compilerPipeline() {
         val numSteps = 10000000
-        var accumulator= 0L
+        var accumulator = 0L
 
         val pipeline = CompilerPipeline.build(ion) {
             repeat(numSteps) {
@@ -211,7 +210,7 @@ class ThreadInterruptedTests {
 
         // At this point, there's a remote possibility that accumulator has overflowed to zero and the assertion
         // below might fail.  This guarantees that it will always pass.
-        if(accumulator == 0L) {
+        if (accumulator == 0L) {
             accumulator = 1L
         }
 

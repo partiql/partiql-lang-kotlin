@@ -54,14 +54,16 @@ class EvaluatingCompilerLimitTests : EvaluatorTestBase() {
         checkInputThrowingEvaluationException(
             """ select * from <<1>> limit -1 """,
             ErrorCode.EVALUATOR_NEGATIVE_LIMIT,
-            sourceLocationProperties(1, 29))
+            sourceLocationProperties(1, 29)
+        )
 
     @Test
     fun `non-integer value should throw exception`() =
         checkInputThrowingEvaluationException(
             """ select * from <<1>> limit 'this won''t work' """,
             ErrorCode.EVALUATOR_NON_INT_LIMIT_VALUE,
-            sourceLocationProperties(1, 28) + mapOf(Property.ACTUAL_TYPE to "STRING"))
+            sourceLocationProperties(1, 28) + mapOf(Property.ACTUAL_TYPE to "STRING")
+        )
 
     @Test
     fun `LIMIT applied after GROUP BY`() =

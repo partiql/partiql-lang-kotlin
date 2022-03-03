@@ -32,9 +32,11 @@ class LexerErrorsTest : TestBase() {
             else -> "'${String(Character.toChars(codePoint))}' [U+${Integer.toHexString(codePoint)}]"
         }
 
-    private fun checkInputThrowingLexerException(input: String,
-                                                errorCode: ErrorCode,
-                                                expectErrorContextValues: Map<Property, Any>) {
+    private fun checkInputThrowingLexerException(
+        input: String,
+        errorCode: ErrorCode,
+        expectErrorContextValues: Map<Property, Any>
+    ) {
         try {
             lexer.tokenize(input)
             fail("Expected LexerException but there was no Exception")
@@ -49,31 +51,40 @@ class LexerErrorsTest : TestBase() {
 
     @Test
     fun testInvalidChar() {
-        checkInputThrowingLexerException("©",
+        checkInputThrowingLexerException(
+            "©",
             ErrorCode.LEXER_INVALID_CHAR,
             mapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 1L,
-                Property.TOKEN_STRING to representation("©".codePointAt(0))))
+                Property.TOKEN_STRING to representation("©".codePointAt(0))
+            )
+        )
     }
 
     @Test
     fun testInvalidOperator() {
-        checkInputThrowingLexerException("10 ^ 4",
+        checkInputThrowingLexerException(
+            "10 ^ 4",
             ErrorCode.LEXER_INVALID_OPERATOR,
             mapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 5L,
-                Property.TOKEN_STRING to "^"))
+                Property.TOKEN_STRING to "^"
+            )
+        )
     }
 
     @Test
     fun testInvalidIonLiteral() {
-        checkInputThrowingLexerException("`{I am not a list}`",
-                                         ErrorCode.LEXER_INVALID_ION_LITERAL,
-                                         mapOf(
-                                             Property.LINE_NUMBER to 1L,
-                                             Property.COLUMN_NUMBER to 20L,
-                                             Property.TOKEN_STRING to "{I am not a list}"))
+        checkInputThrowingLexerException(
+            "`{I am not a list}`",
+            ErrorCode.LEXER_INVALID_ION_LITERAL,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 20L,
+                Property.TOKEN_STRING to "{I am not a list}"
+            )
+        )
     }
- }
+}

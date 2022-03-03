@@ -9,19 +9,19 @@ import org.partiql.lang.ION
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.types.StaticType.Companion.BLOB
-import org.partiql.lang.types.StaticType.Companion.NULL
-import org.partiql.lang.types.StaticType.Companion.MISSING
+import org.partiql.lang.types.StaticType.Companion.BOOL
+import org.partiql.lang.types.StaticType.Companion.CLOB
+import org.partiql.lang.types.StaticType.Companion.DECIMAL
+import org.partiql.lang.types.StaticType.Companion.FLOAT
 import org.partiql.lang.types.StaticType.Companion.INT
 import org.partiql.lang.types.StaticType.Companion.INT2
 import org.partiql.lang.types.StaticType.Companion.INT4
 import org.partiql.lang.types.StaticType.Companion.INT8
-import org.partiql.lang.types.StaticType.Companion.FLOAT
-import org.partiql.lang.types.StaticType.Companion.DECIMAL
-import org.partiql.lang.types.StaticType.Companion.TIMESTAMP
-import org.partiql.lang.types.StaticType.Companion.BOOL
-import org.partiql.lang.types.StaticType.Companion.CLOB
+import org.partiql.lang.types.StaticType.Companion.MISSING
+import org.partiql.lang.types.StaticType.Companion.NULL
 import org.partiql.lang.types.StaticType.Companion.STRING
 import org.partiql.lang.types.StaticType.Companion.SYMBOL
+import org.partiql.lang.types.StaticType.Companion.TIMESTAMP
 import org.partiql.lang.util.ArgumentsProviderBase
 import java.math.BigInteger
 
@@ -71,11 +71,11 @@ class StaticTypeTests {
     data class TestCase(
         val sqlValue: String,
         val staticType: StaticType,
-        val expectedIsInstanceResult: Boolean)
+        val expectedIsInstanceResult: Boolean
+    )
 
     fun eval(sql: String): ExprValue =
-         CompilerPipeline.standard(ION).compile(sql).eval(EvaluationSession.standard())
-
+        CompilerPipeline.standard(ION).compile(sql).eval(EvaluationSession.standard())
 
     @ParameterizedTest
     @ArgumentsSource(ScalarIsInstanceArguments::class)
@@ -85,8 +85,10 @@ class StaticTypeTests {
             eval(tc.sqlValue)
         }
 
-        assertEquals(tc.expectedIsInstanceResult, tc.staticType.isInstance(exprValue),
-            "The result of StaticType.isInstance() should match the expected value for type ${tc.staticType} and \"${tc.sqlValue}\"")
+        assertEquals(
+            tc.expectedIsInstanceResult, tc.staticType.isInstance(exprValue),
+            "The result of StaticType.isInstance() should match the expected value for type ${tc.staticType} and \"${tc.sqlValue}\""
+        )
     }
 
     class ScalarIsInstanceArguments : ArgumentsProviderBase() {
@@ -99,7 +101,6 @@ class StaticTypeTests {
         }
     }
 
-
     @ParameterizedTest
     @ArgumentsSource(SequenceIsInstanceArguments::class)
     fun sequenceIsInstanceArgumentsTest(tc: TestCase) {
@@ -108,8 +109,10 @@ class StaticTypeTests {
             eval(tc.sqlValue)
         }
 
-        assertEquals(tc.expectedIsInstanceResult, tc.staticType.isInstance(exprValue),
-            "The result of StaticType.isInstance() should match the expected value for type ${tc.staticType} and \"${tc.sqlValue}\"")
+        assertEquals(
+            tc.expectedIsInstanceResult, tc.staticType.isInstance(exprValue),
+            "The result of StaticType.isInstance() should match the expected value for type ${tc.staticType} and \"${tc.sqlValue}\""
+        )
     }
 
     class SequenceIsInstanceArguments : ArgumentsProviderBase() {
@@ -191,8 +194,10 @@ class StaticTypeTests {
             eval(tc.sqlValue)
         }
 
-        assertEquals(tc.expectedIsInstanceResult, tc.staticType.isInstance(exprValue),
-            "The result of StaticType.isInstance() should match the expected value for type ${tc.staticType} and \"${tc.sqlValue}\"")
+        assertEquals(
+            tc.expectedIsInstanceResult, tc.staticType.isInstance(exprValue),
+            "The result of StaticType.isInstance() should match the expected value for type ${tc.staticType} and \"${tc.sqlValue}\""
+        )
     }
 
     class StructIsInstanceArguments : ArgumentsProviderBase() {
@@ -211,73 +216,85 @@ class StaticTypeTests {
                                 TestCase(
                                     sqlValue = "{'foo': ${scalarInput1.sqlValue} }",
                                     staticType = closedContentStructType,
-                                    expectedIsInstanceResult = scalarInput1.expectedTypes.contains(staticType)),
+                                    expectedIsInstanceResult = scalarInput1.expectedTypes.contains(staticType)
+                                ),
 
                                 // open content where all fields match
                                 TestCase(
                                     sqlValue = "{'foo': ${scalarInput1.sqlValue}, 'openContent': 'isAllowed' }",
                                     staticType = openContentStructType,
-                                    expectedIsInstanceResult = scalarInput1.expectedTypes.contains(staticType)),
+                                    expectedIsInstanceResult = scalarInput1.expectedTypes.contains(staticType)
+                                ),
 
                                 // closed content with missing required field
                                 TestCase(
                                     sqlValue = "{ }",
                                     staticType = closedContentStructType,
-                                    expectedIsInstanceResult = false),
+                                    expectedIsInstanceResult = false
+                                ),
 
                                 // closed content with non-matching field
                                 TestCase(
                                     sqlValue = "{'bar': ${scalarInput1.sqlValue} }",
                                     staticType = closedContentStructType,
-                                    expectedIsInstanceResult = false),
+                                    expectedIsInstanceResult = false
+                                ),
 
                                 // closed content with optional field that is present
                                 TestCase(
                                     sqlValue = "{'foo': ${scalarInput1.sqlValue} }",
                                     staticType = closedContentWithOptionalField,
-                                    expectedIsInstanceResult = scalarInput1.expectedTypes.contains(staticType)),
+                                    expectedIsInstanceResult = scalarInput1.expectedTypes.contains(staticType)
+                                ),
 
                                 // closed content with optional field that is not present
                                 TestCase(
                                     sqlValue = "{ }",
                                     staticType = closedContentWithOptionalField,
-                                    expectedIsInstanceResult = true),
+                                    expectedIsInstanceResult = true
+                                ),
 
                                 // open content with missing required field
                                 TestCase(
                                     sqlValue = "{ 'openContent': 'isAllowed' }",
                                     staticType = openContentStructType,
-                                    expectedIsInstanceResult = false),
+                                    expectedIsInstanceResult = false
+                                ),
 
                                 // open content with a non-matching field
                                 TestCase(
                                     sqlValue = "{'bar': ${scalarInput1.sqlValue}, 'openContent': 'isAllowed' }",
                                     staticType = openContentStructType,
-                                    expectedIsInstanceResult = false),
+                                    expectedIsInstanceResult = false
+                                ),
 
                                 // open content with an non-matching field
                                 TestCase(
                                     sqlValue = "{'bar': ${scalarInput1.sqlValue}, 'openContent': 'isNotAllowed' }",
                                     staticType = openContentStructType,
-                                    expectedIsInstanceResult = false),
+                                    expectedIsInstanceResult = false
+                                ),
 
                                 // duplicate struct fields with values of the same type
                                 TestCase(
                                     sqlValue = "{'foo': ${scalarInput1.sqlValue}, 'foo': ${scalarInput1.sqlValue} }",
                                     staticType = closedContentStructType,
-                                    expectedIsInstanceResult = scalarInput1.expectedTypes.contains(staticType))),
-                        // Duplicate struct fields with values of different types.
-                        // We generate one test case for every scalar value with every other scalar value and
-                        // every type.
-                        SCALARS.filterNot { it.sqlValue == "MISSING" }.map { scalarInput2 ->
-                            TestCase(
-                                sqlValue = "{'foo': ${scalarInput1.sqlValue}, 'foo': ${scalarInput2.sqlValue} }",
-                                staticType = closedContentStructType,
-                                // We expect the result to be `TRUE` only if the values of the foo and bar fields
-                                // match the static type.
-                                expectedIsInstanceResult = scalarInput1.expectedTypes.contains(staticType) && scalarInput2.expectedTypes.contains(staticType))
-
-                        }).flatten()
+                                    expectedIsInstanceResult = scalarInput1.expectedTypes.contains(staticType)
+                                )
+                            ),
+                            // Duplicate struct fields with values of different types.
+                            // We generate one test case for every scalar value with every other scalar value and
+                            // every type.
+                            SCALARS.filterNot { it.sqlValue == "MISSING" }.map { scalarInput2 ->
+                                TestCase(
+                                    sqlValue = "{'foo': ${scalarInput1.sqlValue}, 'foo': ${scalarInput2.sqlValue} }",
+                                    staticType = closedContentStructType,
+                                    // We expect the result to be `TRUE` only if the values of the foo and bar fields
+                                    // match the static type.
+                                    expectedIsInstanceResult = scalarInput1.expectedTypes.contains(staticType) && scalarInput2.expectedTypes.contains(staticType)
+                                )
+                            }
+                        ).flatten()
                     }
                 }
             ).flatten()

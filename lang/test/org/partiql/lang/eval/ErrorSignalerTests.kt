@@ -33,7 +33,7 @@ class ErrorSignalerTests {
         val ex = try {
             runTest(b, 6)
             fail("Didn't throw")
-        } catch(ex: EvaluationException) {
+        } catch (ex: EvaluationException) {
             ex
         }
         assertEquals(ex.errorCode, ErrorCode.EVALUATOR_CAST_FAILED)
@@ -47,7 +47,6 @@ class ErrorSignalerTests {
             // The choice of ErrorCode.EVALUATOR_CAST_FAILED is arbitrary just for this test.
             ErrorCode.EVALUATOR_CAST_FAILED,
             { ErrorDetails(dummyMetas, "The value can't be 6") },
-            { valueFactory.newInt(value * 10) })
-
+            { valueFactory.newInt(value * 10) }
+        )
 }
-

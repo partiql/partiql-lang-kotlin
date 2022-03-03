@@ -4,7 +4,6 @@ import org.junit.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.eval.EvaluatorTestBase
-
 import org.partiql.lang.eval.builtins.Argument
 import org.partiql.lang.eval.builtins.ExprFunctionTestCase
 import org.partiql.lang.eval.builtins.checkInvalidArgType
@@ -228,7 +227,7 @@ class DateDiffEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("date_diff(day, `2017-09-01T`, `2017-10-01T`)", "30"), // September
             ExprFunctionTestCase("date_diff(day, `2017-10-01T`, `2017-11-01T`)", "31"), // October
             ExprFunctionTestCase("date_diff(day, `2017-11-01T`, `2017-12-01T`)", "30"), // November
-            ExprFunctionTestCase("date_diff(day, `2017-12-01T`, `2018-01-01T`)", "31")  // December
+            ExprFunctionTestCase("date_diff(day, `2017-12-01T`, `2018-01-01T`)", "31") // December
         )
     }
 

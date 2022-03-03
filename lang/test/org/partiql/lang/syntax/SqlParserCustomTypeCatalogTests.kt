@@ -16,7 +16,7 @@ import org.partiql.lang.util.asIonSexp
  * Parser tests covering the (de)serialization of the old ASTs to custom types
  * TODO: Remove these tests https://github.com/partiql/partiql-lang-kotlin/issues/510
  */
-class SqlParserCustomTypeCatalogTests: SqlParserTestBase() {
+class SqlParserCustomTypeCatalogTests : SqlParserTestBase() {
 
     private val customTypeVisitorTransform = CustomTypeVisitorTransform()
 
@@ -31,7 +31,7 @@ class SqlParserCustomTypeCatalogTests: SqlParserTestBase() {
         val newSerializedPigAst: String
     )
 
-    private fun deserialize(serializedSexp: String) : ExprNode {
+    private fun deserialize(serializedSexp: String): ExprNode {
         val sexp = ion.singleValue(serializedSexp).asIonSexp()
         val astExpr = PartiqlAst.transform(sexp.toIonElement()) as PartiqlAst.Expr
         val astStatement = PartiqlAst.build {
@@ -102,7 +102,7 @@ class SqlParserCustomTypeCatalogTests: SqlParserTestBase() {
                             (project_expr (cast (id colour (case_insensitive) (unqualified)) (es_text)) colour) 
                             (project_expr (cast (id age (case_insensitive) (unqualified)) (es_integer)) years))) 
                                 (from (scan (id SOURCE_VIEW_DELTA_FULL_TRANSACTIONS (case_insensitive) (unqualified)) null null null)))
-                    """.trimIndent(),
+                """.trimIndent(),
                 newSerializedPigAst = """
                     (select 
                         (project (project_list 
@@ -110,7 +110,7 @@ class SqlParserCustomTypeCatalogTests: SqlParserTestBase() {
                             (project_expr (cast (id colour (case_insensitive) (unqualified)) (custom_type es_text)) colour) 
                             (project_expr (cast (id age (case_insensitive) (unqualified)) (custom_type es_integer)) years))) 
                                 (from (scan (id SOURCE_VIEW_DELTA_FULL_TRANSACTIONS (case_insensitive) (unqualified)) null null null)))
-                    """.trimIndent()
+                """.trimIndent()
             )
         ) + castToCustomTypeTests()
     }

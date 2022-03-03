@@ -3,18 +3,17 @@ package org.partiql.lang.eval
 import junitparams.Parameters
 import org.junit.Test
 
-
 class JoinWithOnConditionTest : EvaluatorTestBase() {
 
     val sessionNoNulls = mapOf(
-            "t1" to """
+        "t1" to """
                [ 
                {id: 1, val:"a"},
                {id: 2, val:"b"},
                {id: 3, val:"c"},
                ]
             """,
-            "t2" to """
+        "t2" to """
                [ 
                {id: 1, val: 10},
                {id: 2, val: 20},
@@ -24,14 +23,14 @@ class JoinWithOnConditionTest : EvaluatorTestBase() {
     ).toSession()
 
     val sessionNullIdRow = mapOf(
-            "t1" to """
+        "t1" to """
                [ 
                {id: 1, val:"a"},
                {id: 2, val:"b"},
                {id: 3, val:"c"},
                ]
             """,
-            "t2" to """
+        "t2" to """
                [ 
                {id: 1,    val: 10},
                {id: null, val: 20},
@@ -41,27 +40,26 @@ class JoinWithOnConditionTest : EvaluatorTestBase() {
     ).toSession()
 
     val sessionNullTable: EvaluationSession = mapOf(
-            "t1" to """
+        "t1" to """
                [ 
                {id: 1, val:"a"},
                {id: 2, val:"b"},
                {id: 3, val:"c"},
                ]
             """,
-            "t2" to """ null """
+        "t2" to """ null """
     ).toSession()
 
     val sessionNullTableRow: EvaluationSession = mapOf(
-            "t1" to """
+        "t1" to """
                [ 
                {id: 1, val:"a"},
                {id: 2, val:"b"},
                {id: 3, val:"c"},
                ]
             """,
-            "t2" to """[ null ]"""
+        "t2" to """[ null ]"""
     ).toSession()
-
 
     val sqlUnderTest = """ 
                             SELECT t1.id  AS id, 
@@ -71,49 +69,66 @@ class JoinWithOnConditionTest : EvaluatorTestBase() {
                         """
 
     private val session = mapOf(
-            "A" to "[ { 'n': 1 }, { 'n': 3 } ]",
-            "B" to "[ { 'n': 1 }, { 'n': 2 }, { 'n': 3 } ]",
-            "C" to "[ { 'n': 2 }, { 'n': 3 } ]").toSession()
+        "A" to "[ { 'n': 1 }, { 'n': 3 } ]",
+        "B" to "[ { 'n': 1 }, { 'n': 2 }, { 'n': 3 } ]",
+        "C" to "[ { 'n': 2 }, { 'n': 3 } ]"
+    ).toSession()
 
     @Test
     @Parameters
     fun joinWithOnConditionTest(pair: Pair<EvaluatorTestCase, EvaluationSession>): Unit =
-            runTestCaseInLegacyAndPermissiveModes(pair.first, pair.second)
+        runTestCaseInLegacyAndPermissiveModes(pair.first, pair.second)
 
     fun parametersForJoinWithOnConditionTest(): List<Pair<EvaluatorTestCase, EvaluationSession>> {
 
         return listOf(
-                Pair(EvaluatorTestCase(
-                        "JOIN ON with no nulls",
-                        sqlUnderTest,
-                        """
+            Pair(
+                EvaluatorTestCase(
+                    "JOIN ON with no nulls",
+                    sqlUnderTest,
+                    """
                             << 
                             {'id':1, 'val1':'a', 'val2':10},
                             {'id':2, 'val1':'b', 'val2':20},
                             {'id':3, 'val1':'c', 'val2':30}
                             >>
-                        """), sessionNoNulls),
-                Pair(EvaluatorTestCase(
-                        "JOIN ON with no nulls",
-                        sqlUnderTest,
                         """
+                ),
+                sessionNoNulls
+            ),
+            Pair(
+                EvaluatorTestCase(
+                    "JOIN ON with no nulls",
+                    sqlUnderTest,
+                    """
                             << 
                             {'id':1, 'val1':'a', 'val2':10},
                             {'id':3, 'val1':'c', 'val2':30}
                             >>
-                        """), sessionNullIdRow),
-                Pair(EvaluatorTestCase(
-                        "JOIN ON with no nulls",
-                        sqlUnderTest,
                         """
+                ),
+                sessionNullIdRow
+            ),
+            Pair(
+                EvaluatorTestCase(
+                    "JOIN ON with no nulls",
+                    sqlUnderTest,
+                    """
                             <<>>
-                        """), sessionNullTable),
-                Pair(EvaluatorTestCase(
-                        "JOIN ON with no nulls",
-                        sqlUnderTest,
                         """
+                ),
+                sessionNullTable
+            ),
+            Pair(
+                EvaluatorTestCase(
+                    "JOIN ON with no nulls",
+                    sqlUnderTest,
+                    """
                             <<>>
-                        """), sessionNullTableRow)
+                        """
+                ),
+                sessionNullTableRow
+            )
         )
     }
 

@@ -48,31 +48,30 @@ internal class ErrorDetails(
     val metas: MetaContainer,
     /** The programmer readable exception message.  */
     val message: String,
-    val errorContext: PropertyValueMap? = null)
+    val errorContext: PropertyValueMap? = null
+)
 
 internal fun TypingMode.createErrorSignaler(valueFactory: ExprValueFactory) =
-    when(this) {
+    when (this) {
         TypingMode.LEGACY -> LegacyErrorSignaler()
         TypingMode.PERMISSIVE -> PermissiveErrorSignaler(valueFactory.missingValue)
     }
 
-
 /** Defines legacy error signaling. */
-private class LegacyErrorSignaler: ErrorSignaler {
+private class LegacyErrorSignaler : ErrorSignaler {
     /** Invokes [createErrorDetails] and uses the return value to construct and throw an [EvaluationException]. */
     override fun error(errorCode: ErrorCode, createErrorDetails: () -> ErrorDetails): ExprValue =
         throwEE(errorCode, createErrorDetails)
 }
 
 /** Defines permissive error signaling. */
-private class PermissiveErrorSignaler(private val theMissingValue: ExprValue): ErrorSignaler {
+private class PermissiveErrorSignaler(private val theMissingValue: ExprValue) : ErrorSignaler {
 
     /** Ignores [createErrorDetails] and simply returns [theMissingValue]. */
     override fun error(errorCode: ErrorCode, createErrorDetails: () -> ErrorDetails): ExprValue =
-        when(errorCode.errorBehaviorInPermissiveMode) {
+        when (errorCode.errorBehaviorInPermissiveMode) {
             ErrorBehaviorInPermissiveMode.THROW_EXCEPTION -> throwEE(errorCode, createErrorDetails)
             ErrorBehaviorInPermissiveMode.RETURN_MISSING -> theMissingValue
-
         }
 }
 
@@ -82,7 +81,7 @@ private fun throwEE(errorCode: ErrorCode, createErrorDetails: () -> ErrorDetails
         // Add source location if we need to and if we can
         val srcLoc = metas[SourceLocationMeta.TAG] as? SourceLocationMeta
         val errCtx = this.errorContext ?: propertyValueMapOf()
-        if(srcLoc != null) {
+        if (srcLoc != null) {
             if (!errCtx.hasProperty(Property.LINE_NUMBER)) {
                 errCtx[Property.LINE_NUMBER] = srcLoc.lineNum
             }
@@ -96,6 +95,7 @@ private fun throwEE(errorCode: ErrorCode, createErrorDetails: () -> ErrorDetails
             errorCode = errorCode,
             errorContext = errCtx,
             cause = null,
-            internal = false)
+            internal = false
+        )
     }
 }

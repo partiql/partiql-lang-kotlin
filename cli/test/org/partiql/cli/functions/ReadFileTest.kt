@@ -35,8 +35,10 @@ class ReadFileTest {
     private val ion = IonSystemBuilder.standard().build()
     private val valueFactory = ExprValueFactory.standard(ion)
     private val function = ReadFile(valueFactory)
-    private val env = Environment(locals = Bindings.empty(),
-                                  session = EvaluationSession.standard())
+    private val env = Environment(
+        locals = Bindings.empty(),
+        session = EvaluationSession.standard()
+    )
 
     private fun String.exprValue() = valueFactory.newFromIonValue(ion.singleValue(this))
     private fun writeFile(path: String, content: String) = File(dirPath(path)).writeText(content)
@@ -58,7 +60,7 @@ class ReadFileTest {
     }
 
     private fun IonValue.removeAnnotations() {
-        when(this.type) {
+        when (this.type) {
             // Remove $partiql_missing annotation from NULL for assertions
             IonType.NULL -> this.removeTypeAnnotation("\$partiql_missing")
             IonType.DATAGRAM,
@@ -111,7 +113,6 @@ class ReadFileTest {
         val expected = "[1, 2]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -124,7 +125,6 @@ class ReadFileTest {
         val expected = "[{_1:\"1\",_2:\"2\"}]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -137,7 +137,6 @@ class ReadFileTest {
         val expected = "[{_1:\"1\",_2:\"2\"}]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -150,7 +149,6 @@ class ReadFileTest {
         val expected = "[{_1:\"1,2\",_2:\"2\"}]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -163,7 +161,6 @@ class ReadFileTest {
         val expected = "[{_1:\"1\",_2:\"2\"},{_1:\"3\"}]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -176,7 +173,6 @@ class ReadFileTest {
         val expected = "[{col1:\"1\",col2:\"2\"}]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -189,7 +185,6 @@ class ReadFileTest {
         val expected = "[{_1:\"1\",_2:\"2\"}]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -202,7 +197,6 @@ class ReadFileTest {
         val expected = "[{col1:\"1\",col2:\"2\"}]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -215,7 +209,6 @@ class ReadFileTest {
         val expected = "[{title:\"harry potter\",category:\"book\",price:\"7.99\"}]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -228,7 +221,6 @@ class ReadFileTest {
         val expected = "[{id:\"1\",name:\"B\\\"ob\",balance:\"10000.00\"}]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -241,7 +233,6 @@ class ReadFileTest {
         val expected = "[{id:\"1\",name:\"Bob\",balance:\"10000.00\"}]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -254,7 +245,6 @@ class ReadFileTest {
         val expected = "[{id:\"1\",name:\"B\\\"ob\",balance:\"10000.00\"}]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -267,7 +257,6 @@ class ReadFileTest {
         val expected = "[{id:\"1\",name:\"Bob\",balance:\"10000.00\"}]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -280,7 +269,6 @@ class ReadFileTest {
         val expected = "[{id:\"\"},{id:\"1\",name:\"Bob\",balance:\"10000.00\"}]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -293,7 +281,6 @@ class ReadFileTest {
         val expected = "[{id:\" 1 \",name:\" Bob \",balance:\" 10000.00 \"}]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -306,7 +293,6 @@ class ReadFileTest {
         val expected = "[{id:\"1\",name:\"Bob\",balance:\"10000.00\"}]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -319,7 +305,6 @@ class ReadFileTest {
         val expected = "[{id:\"\\\"1\",name:\"Bob\",balance:\"10000.00\"}]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -332,6 +317,5 @@ class ReadFileTest {
         val expected = "[{id:\"1,\",name:\"Bob\",balance:\"10000.00\"}]"
 
         assertValues(expected, actual)
-
     }
 }

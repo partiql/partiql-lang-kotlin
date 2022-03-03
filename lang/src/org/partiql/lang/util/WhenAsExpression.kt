@@ -12,7 +12,7 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.lang.util;
+package org.partiql.lang.util
 
 /**
  * In Kotlin, the cases of a `when <is <type>>...` must be exhaustive only when `when` is used as an expression.
@@ -34,7 +34,6 @@ inline fun case(block: () -> Unit): WhenAsExpressionHelper {
     block()
     return WhenAsExpressionHelper.Instance
 }
-
 
 /**
  * See [case] for a description of how to use this[]

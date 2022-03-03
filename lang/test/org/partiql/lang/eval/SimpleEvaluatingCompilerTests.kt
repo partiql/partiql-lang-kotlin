@@ -25,7 +25,6 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
         "listOfInts" to "[1, 2, 3, 4, 5]"
     ).toSession()
 
-
     @Test
     fun selectValue() {
         assertEval("SELECT VALUE someScalar FROM someScalar", "[1]", session)
@@ -45,7 +44,8 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
     fun selectStarWhere() {
         assertEval(
             "SELECT * FROM `[{a: 100, b: 1000}, {a: 101, b: 1001}]` WHERE a > 100",
-            "[{a: 101, b: 1001}]")
+            "[{a: 101, b: 1001}]"
+        )
     }
 
     @Test
@@ -108,7 +108,8 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
         "CAST(`'a'` as INT)",
         ErrorCode.EVALUATOR_CAST_FAILED,
         sourceLocationProperties(1, 1) + mapOf(Property.CAST_FROM to "SYMBOL", Property.CAST_TO to "INT"),
-        expectedPermissiveModeResult = "MISSING")
+        expectedPermissiveModeResult = "MISSING"
+    )
 
     @Test
     fun sum() {

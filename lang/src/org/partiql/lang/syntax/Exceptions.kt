@@ -18,25 +18,29 @@ import org.partiql.lang.SqlException
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.PropertyValueMap
 
-
-
 /** Root exception type for syntactic problems. */
-open class SyntaxException(message: String = "",
-                           errorCode: ErrorCode,
-                           errorContext: PropertyValueMap,
-                           cause: Throwable? = null)
-    : SqlException(message, errorCode, errorContext, cause)
+open class SyntaxException(
+    message: String = "",
+    errorCode: ErrorCode,
+    errorContext: PropertyValueMap,
+    cause: Throwable? = null
+) :
+    SqlException(message, errorCode, errorContext, cause)
 
 /** Error in the Lexer. */
-open class LexerException(message: String = "",
-                          errorCode: ErrorCode,
-                          errorContext: PropertyValueMap,
-                          cause: Throwable? = null)
-    : SyntaxException(message, errorCode, errorContext, cause)
+open class LexerException(
+    message: String = "",
+    errorCode: ErrorCode,
+    errorContext: PropertyValueMap,
+    cause: Throwable? = null
+) :
+    SyntaxException(message, errorCode, errorContext, cause)
 
 /** Error in the parser. */
-open class ParserException(message: String = "",
-                           errorCode: ErrorCode,
-                           errorContext: PropertyValueMap,
-                           cause: Throwable? = null)
-    : SyntaxException(message, errorCode, errorContext, cause)
+open class ParserException(
+    message: String = "",
+    errorCode: ErrorCode,
+    errorContext: PropertyValueMap,
+    cause: Throwable? = null
+) :
+    SyntaxException(message, errorCode, errorContext, cause)

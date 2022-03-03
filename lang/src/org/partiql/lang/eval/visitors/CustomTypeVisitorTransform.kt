@@ -9,7 +9,7 @@ import org.partiql.lang.domains.PartiqlAst
  * The tests for this visitor transform are covered in `SqlParserCustomTypeCatalogTests.kt`
  * TODO: Remove this VisitorTransform once https://github.com/partiql/partiql-lang-kotlin/issues/510 is resolved.
  */
-class CustomTypeVisitorTransform : VisitorTransformBase(){
+class CustomTypeVisitorTransform : VisitorTransformBase() {
 
     override fun transformTypeEsBoolean(node: PartiqlAst.Type.EsBoolean): PartiqlAst.Type =
         PartiqlAst.build { customType(name = "es_boolean", metas = transformTypeEsBoolean_metas(node)) }

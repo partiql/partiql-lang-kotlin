@@ -21,7 +21,7 @@ internal fun PartiqlAst.Expr.toExprNode(ion: IonSystem): ExprNode {
     return StatementTransformer(ion).transform(this)
 }
 
-internal fun PartiqlAst.SetQuantifier.toExprNodeSetQuantifier(): SetQuantifier  =
+internal fun PartiqlAst.SetQuantifier.toExprNodeSetQuantifier(): SetQuantifier =
     when (this) {
         is PartiqlAst.SetQuantifier.All -> SetQuantifier.ALL
         is PartiqlAst.SetQuantifier.Distinct -> SetQuantifier.DISTINCT
@@ -50,7 +50,6 @@ private class StatementTransformer(val ion: IonSystem) {
 
     fun transform(stmt: PartiqlAst.Expr): ExprNode =
         stmt.toExprNode()
-
 
     private fun PartiqlAst.Statement.Query.toExprNode(): ExprNode {
         return this.expr.toExprNode()
@@ -93,7 +92,8 @@ private class StatementTransformer(val ion: IonSystem) {
                         is PartiqlAst.SetQuantifier.All -> NAryOp.UNION_ALL
                     },
                     operands.toExprNodeList(),
-                    metas)
+                    metas
+                )
             is PartiqlAst.Expr.Intersect ->
                 NAry(
                     when (setq) {
@@ -101,7 +101,8 @@ private class StatementTransformer(val ion: IonSystem) {
                         is PartiqlAst.SetQuantifier.All -> NAryOp.INTERSECT_ALL
                     },
                     operands.toExprNodeList(),
-                    metas)
+                    metas
+                )
             is PartiqlAst.Expr.Except ->
                 NAry(
                     when (setq) {
@@ -109,7 +110,8 @@ private class StatementTransformer(val ion: IonSystem) {
                         is PartiqlAst.SetQuantifier.All -> NAryOp.EXCEPT_ALL
                     },
                     operands.toExprNodeList(),
-                    metas)
+                    metas
+                )
             is PartiqlAst.Expr.Like -> NAry(NAryOp.LIKE, listOfNotNull(value.toExprNode(), pattern.toExprNode(), escape?.toExprNode()), metas)
             is PartiqlAst.Expr.Between -> NAry(NAryOp.BETWEEN, listOf(value.toExprNode(), from.toExprNode(), to.toExprNode()), metas)
             is PartiqlAst.Expr.InCollection -> NAry(NAryOp.IN, operands.toExprNodeList(), metas)
@@ -123,12 +125,14 @@ private class StatementTransformer(val ion: IonSystem) {
                     expr.toExprNode(),
                     cases.pairs.map { SimpleCaseWhen(it.first.toExprNode(), it.second.toExprNode()) },
                     default?.toExprNode(),
-                    metas)
+                    metas
+                )
             is PartiqlAst.Expr.SearchedCase ->
                 SearchedCase(
                     cases.pairs.map { SearchedCaseWhen(it.first.toExprNode(), it.second.toExprNode()) },
                     this.default?.toExprNode(),
-                    metas)
+                    metas
+                )
             is PartiqlAst.Expr.Struct -> Struct(this.fields.map { StructField(it.first.toExprNode(), it.second.toExprNode()) }, metas)
             is PartiqlAst.Expr.Bag -> Seq(SeqType.BAG, values.toExprNodeList(), metas)
             is PartiqlAst.Expr.List -> Seq(SeqType.LIST, values.toExprNodeList(), metas)
@@ -143,12 +147,14 @@ private class StatementTransformer(val ion: IonSystem) {
                                 PathComponentExpr(
                                     it.index.toExprNode(),
                                     it.case.toCaseSensitivity(),
-                                    componentMetas)
+                                    componentMetas
+                                )
                             is PartiqlAst.PathStep.PathUnpivot -> PathComponentUnpivot(componentMetas)
                             is PartiqlAst.PathStep.PathWildcard -> PathComponentWildcard(componentMetas)
                         }
                     },
-                    metas)
+                    metas
+                )
             is PartiqlAst.Expr.Call ->
                 NAry(
                     NAryOp.CALL,
@@ -157,19 +163,23 @@ private class StatementTransformer(val ion: IonSystem) {
                             funcName.text,
                             CaseSensitivity.INSENSITIVE,
                             ScopeQualifier.UNQUALIFIED,
-                            emptyMetaContainer)
+                            emptyMetaContainer
+                        )
                     ) + args.map { it.toExprNode() },
-                    metas)
+                    metas
+                )
             is PartiqlAst.Expr.CallAgg ->
                 CallAgg(
                     VariableReference(
                         funcName.text,
                         CaseSensitivity.INSENSITIVE,
                         ScopeQualifier.UNQUALIFIED,
-                        funcName.metas.toPartiQlMetaContainer()),
+                        funcName.metas.toPartiQlMetaContainer()
+                    ),
                     setq.toSetQuantifier(),
                     arg.toExprNode(),
-                    metas)
+                    metas
+                )
             is PartiqlAst.Expr.Select ->
                 Select(
                     setQuantifier = setq?.toSetQuantifier() ?: SetQuantifier.ALL,
@@ -183,7 +193,7 @@ private class StatementTransformer(val ion: IonSystem) {
                     limit = limit?.toExprNode(),
                     offset = offset?.toExprNode(),
                     metas = metas
-            )
+                )
             is PartiqlAst.Expr.Date -> DateLiteral(year.value.toInt(), month.value.toInt(), day.value.toInt(), metas)
             is PartiqlAst.Expr.LitTime ->
                 TimeLiteral(
@@ -215,9 +225,12 @@ private class StatementTransformer(val ion: IonSystem) {
                             is PartiqlAst.ProjectItem.ProjectExpr ->
                                 SelectListItemExpr(
                                     it.expr.toExprNode(),
-                                    it.asAlias?.toSymbolicName())
+                                    it.asAlias?.toSymbolicName()
+                                )
                         }
-                    }, metas)
+                    },
+                    metas
+                )
         }
     }
 
@@ -230,15 +243,19 @@ private class StatementTransformer(val ion: IonSystem) {
                     variables = LetVariables(
                         asName = asAlias?.toSymbolicName(),
                         atName = atAlias?.toSymbolicName(),
-                        byName = byAlias?.toSymbolicName()))
+                        byName = byAlias?.toSymbolicName()
+                    )
+                )
             is PartiqlAst.FromSource.Unpivot ->
                 FromSourceUnpivot(
                     expr = expr.toExprNode(),
                     variables = LetVariables(
                         asName = asAlias?.toSymbolicName(),
                         atName = atAlias?.toSymbolicName(),
-                        byName = byAlias?.toSymbolicName()),
-                    metas = metas)
+                        byName = byAlias?.toSymbolicName()
+                    ),
+                    metas = metas
+                )
             is PartiqlAst.FromSource.Join ->
                 FromSourceJoin(
                     joinOp = type.toJoinOp(),
@@ -247,7 +264,8 @@ private class StatementTransformer(val ion: IonSystem) {
                     // Consider adding StaticTypeMeta here only when static type inference occurs.
                     // See https://github.com/partiql/partiql-lang-kotlin/issues/511
                     condition = predicate?.toExprNode() ?: Literal(ion.newBool(true), metaContainerOf(StaticTypeMeta(StaticType.BOOL))),
-                    metas = metas)
+                    metas = metas
+                )
         }
     }
 
@@ -277,10 +295,13 @@ private class StatementTransformer(val ion: IonSystem) {
             sortSpecItems = this.sortSpecs.map {
                 SortSpec(
                     it.expr.toExprNode(),
-                    it.orderingSpec.toOrderSpec())})
+                    it.orderingSpec.toOrderSpec()
+                )
+            }
+        )
 
     private fun PartiqlAst.OrderingSpec?.toOrderSpec(): OrderingSpec =
-        when(this) {
+        when (this) {
             is PartiqlAst.OrderingSpec.Desc -> OrderingSpec.DESC
             else -> OrderingSpec.ASC
         }
@@ -291,13 +312,15 @@ private class StatementTransformer(val ion: IonSystem) {
             groupByItems = keyList.keys.map {
                 GroupByItem(
                     it.expr.toExprNode(),
-                    it.asAlias?.toSymbolicName())
+                    it.asAlias?.toSymbolicName()
+                )
             },
-            groupName = groupAsAlias?.toSymbolicName())
+            groupName = groupAsAlias?.toSymbolicName()
+        )
 
     private fun PartiqlAst.GroupingStrategy.toGroupingStrategy(): GroupingStrategy =
-        when(this) {
-            is PartiqlAst.GroupingStrategy.GroupFull-> GroupingStrategy.FULL
+        when (this) {
+            is PartiqlAst.GroupingStrategy.GroupFull -> GroupingStrategy.FULL
             is PartiqlAst.GroupingStrategy.GroupPartial -> GroupingStrategy.PARTIAL
         }
 
@@ -374,7 +397,7 @@ private class StatementTransformer(val ion: IonSystem) {
         }
 
     private fun PartiqlAst.OnConflict.toOnConflictNode(): OnConflict {
-        return when(this.conflictAction) {
+        return when (this.conflictAction) {
             is PartiqlAst.ConflictAction.DoNothing -> OnConflict(this.expr.toExprNode(), ConflictAction.DO_NOTHING)
         }
     }
@@ -400,12 +423,15 @@ private class StatementTransformer(val ion: IonSystem) {
                     lvalue = target.toExprNode(),
                     value = value.toExprNode(),
                     position = this.index?.toExprNode(),
-                    onConflict = onConflict?.toOnConflictNode())
+                    onConflict = onConflict?.toOnConflictNode()
+                )
             is PartiqlAst.DmlOp.Set ->
                 AssignmentOp(
                     assignment = Assignment(
                         lvalue = this.assignment.target.toExprNode(),
-                        rvalue = assignment.value.toExprNode()))
+                        rvalue = assignment.value.toExprNode()
+                    )
+                )
 
             is PartiqlAst.DmlOp.Remove ->
                 RemoveOp(target.toExprNode())
@@ -418,8 +444,8 @@ private class StatementTransformer(val ion: IonSystem) {
         ReturningExpr(
             returningElems = elems.map {
                 ReturningElem(
-                   it.mapping.toExprNodeReturningMapping(),
-                   it.column.toColumnComponent()
+                    it.mapping.toExprNodeReturningMapping(),
+                    it.column.toColumnComponent()
                 )
             }
         )
@@ -433,17 +459,17 @@ private class StatementTransformer(val ion: IonSystem) {
     }
 
     private fun PartiqlAst.ReturningMapping.toExprNodeReturningMapping(): ReturningMapping =
-            when(this) {
-                is PartiqlAst.ReturningMapping.ModifiedOld -> ReturningMapping.MODIFIED_OLD
-                is PartiqlAst.ReturningMapping.ModifiedNew -> ReturningMapping.MODIFIED_NEW
-                is PartiqlAst.ReturningMapping.AllOld -> ReturningMapping.ALL_OLD
-                is PartiqlAst.ReturningMapping.AllNew -> ReturningMapping.ALL_NEW
-            }
+        when (this) {
+            is PartiqlAst.ReturningMapping.ModifiedOld -> ReturningMapping.MODIFIED_OLD
+            is PartiqlAst.ReturningMapping.ModifiedNew -> ReturningMapping.MODIFIED_NEW
+            is PartiqlAst.ReturningMapping.AllOld -> ReturningMapping.ALL_OLD
+            is PartiqlAst.ReturningMapping.AllNew -> ReturningMapping.ALL_NEW
+        }
 
     private fun PartiqlAst.Statement.Ddl.toExprNode(): ExprNode {
         val op = this.op
         val metas = this.metas.toPartiQlMetaContainer()
-        return when(op) {
+        return when (op) {
             is PartiqlAst.DdlOp.CreateTable -> CreateTable(op.tableName.text, metas)
             is PartiqlAst.DdlOp.DropTable ->
                 DropTable(
@@ -452,7 +478,8 @@ private class StatementTransformer(val ion: IonSystem) {
                         case = op.tableName.case.toCaseSensitivity(),
                         metas = emptyMetaContainer
                     ),
-                    metas = metas)
+                    metas = metas
+                )
             is PartiqlAst.DdlOp.CreateIndex ->
                 CreateIndex(
                     tableId = Identifier(
@@ -461,7 +488,8 @@ private class StatementTransformer(val ion: IonSystem) {
                         metas = emptyMetaContainer
                     ),
                     keys = op.fields.map { it.toExprNode() },
-                    metas = metas)
+                    metas = metas
+                )
             is PartiqlAst.DdlOp.DropIndex ->
                 DropIndex(
                     tableId = Identifier(
@@ -474,7 +502,8 @@ private class StatementTransformer(val ion: IonSystem) {
                         case = op.keys.case.toCaseSensitivity(),
                         metas = emptyMetaContainer
                     ),
-                    metas = metas)
+                    metas = metas
+                )
         }
     }
 

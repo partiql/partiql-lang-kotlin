@@ -66,9 +66,11 @@ fun skipRedaction(node: PartiqlAst.Expr, safeFieldNames: Set<String>): Boolean {
  * [userDefinedFunctionRedactionConfig] is an optional mapping of UDF names to functions determining which call
  * arguments are to be redacted. For an example, please check StatementRedactorTest.kt for more details.
  */
-fun redact(statement: String,
-           providedSafeFieldNames: Set<String> = emptySet(),
-           userDefinedFunctionRedactionConfig: Map<String, UserDefinedFunctionRedactionLambda> = emptyMap()): String {
+fun redact(
+    statement: String,
+    providedSafeFieldNames: Set<String> = emptySet(),
+    userDefinedFunctionRedactionConfig: Map<String, UserDefinedFunctionRedactionLambda> = emptyMap()
+): String {
     return redact(statement, parser.parseAstStatement(statement), providedSafeFieldNames, userDefinedFunctionRedactionConfig)
 }
 
@@ -85,10 +87,12 @@ fun redact(statement: String,
  * [userDefinedFunctionRedactionConfig] is an optional mapping of UDF names to functions determining which call
  * arguments are to be redacted. For an example, please check StatementRedactorTest.kt for more details.
  */
-fun redact(statement: String,
-           partiqlAst: PartiqlAst.Statement,
-           providedSafeFieldNames: Set<String> = emptySet(),
-           userDefinedFunctionRedactionConfig: Map<String, UserDefinedFunctionRedactionLambda> = emptyMap()): String {
+fun redact(
+    statement: String,
+    partiqlAst: PartiqlAst.Statement,
+    providedSafeFieldNames: Set<String> = emptySet(),
+    userDefinedFunctionRedactionConfig: Map<String, UserDefinedFunctionRedactionLambda> = emptyMap()
+): String {
 
     val statementRedactionVisitor = StatementRedactionVisitor(statement, providedSafeFieldNames, userDefinedFunctionRedactionConfig)
     statementRedactionVisitor.walkStatement(partiqlAst)
@@ -160,9 +164,7 @@ private class StatementRedactionVisitor(
     private fun redactExpr(node: PartiqlAst.Expr) {
         if (node.isNAry()) {
             redactNAry(node)
-        }
-
-        else when (node) {
+        } else when (node) {
             is PartiqlAst.Expr.Lit -> redactLiteral(node)
             is PartiqlAst.Expr.List -> redactSeq(node)
             is PartiqlAst.Expr.Sexp -> redactSeq(node)
@@ -290,8 +292,7 @@ private class StatementRedactionVisitor(
                 is PartiqlAst.Expr.Lit ->
                     if (!skipRedaction(it.first, safeFieldNames)) {
                         redactExpr(it.second)
-                    }
-                    else { /* intentionally blank */ }
+                    } else { /* intentionally blank */ }
             }
         }
     }
@@ -300,26 +301,25 @@ private class StatementRedactionVisitor(
     // refactored
     // TODO: other NAry ops that not modeled (LIKE, INTERSECT, INTERSECT_ALL, EXCEPT, EXCEPT_ALL, UNION, UNION_ALL)
     private fun PartiqlAst.Expr.isNAry(): Boolean {
-        return this is PartiqlAst.Expr.And
-                || this is PartiqlAst.Expr.Or
-                || this is PartiqlAst.Expr.Not
-                || this is PartiqlAst.Expr.Eq
-                || this is PartiqlAst.Expr.Ne
-                || this is PartiqlAst.Expr.Gt
-                || this is PartiqlAst.Expr.Gte
-                || this is PartiqlAst.Expr.Lt
-                || this is PartiqlAst.Expr.Lte
-                || this is PartiqlAst.Expr.InCollection
-                || this is PartiqlAst.Expr.Pos
-                || this is PartiqlAst.Expr.Neg
-                || this is PartiqlAst.Expr.Plus
-                || this is PartiqlAst.Expr.Minus
-                || this is PartiqlAst.Expr.Times
-                || this is PartiqlAst.Expr.Divide
-                || this is PartiqlAst.Expr.Modulo
-                || this is PartiqlAst.Expr.Concat
-                || this is PartiqlAst.Expr.Between
-                || this is PartiqlAst.Expr.Call
-
+        return this is PartiqlAst.Expr.And ||
+            this is PartiqlAst.Expr.Or ||
+            this is PartiqlAst.Expr.Not ||
+            this is PartiqlAst.Expr.Eq ||
+            this is PartiqlAst.Expr.Ne ||
+            this is PartiqlAst.Expr.Gt ||
+            this is PartiqlAst.Expr.Gte ||
+            this is PartiqlAst.Expr.Lt ||
+            this is PartiqlAst.Expr.Lte ||
+            this is PartiqlAst.Expr.InCollection ||
+            this is PartiqlAst.Expr.Pos ||
+            this is PartiqlAst.Expr.Neg ||
+            this is PartiqlAst.Expr.Plus ||
+            this is PartiqlAst.Expr.Minus ||
+            this is PartiqlAst.Expr.Times ||
+            this is PartiqlAst.Expr.Divide ||
+            this is PartiqlAst.Expr.Modulo ||
+            this is PartiqlAst.Expr.Concat ||
+            this is PartiqlAst.Expr.Between ||
+            this is PartiqlAst.Expr.Call
     }
 }

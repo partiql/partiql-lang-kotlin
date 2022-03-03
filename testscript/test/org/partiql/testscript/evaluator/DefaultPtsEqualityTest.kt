@@ -41,83 +41,83 @@ internal class DefaultPtsEqualityTest {
     companion object {
         // values are grouped by equivalent values
         private val values = listOf(
-                // unknown
-                listOf("missing::null"),
-                listOf("null"),
+            // unknown
+            listOf("missing::null"),
+            listOf("null"),
 
-                // boolean
-                listOf("true"),
-                listOf("false"),
+            // boolean
+            listOf("true"),
+            listOf("false"),
 
-                // int
-                listOf("1"),
-                listOf("2"),
+            // int
+            listOf("1"),
+            listOf("2"),
 
-                // float
-                listOf("nan"),
-                listOf("-inf", "-1e1000", "-1.000000000000e1000"),
-                listOf("1e0", "1e00"),
-                listOf("-5e-1", "-0.5e0"),
-                listOf("+inf", "1e1000", "1.000000000000e1000"),
+            // float
+            listOf("nan"),
+            listOf("-inf", "-1e1000", "-1.000000000000e1000"),
+            listOf("1e0", "1e00"),
+            listOf("-5e-1", "-0.5e0"),
+            listOf("+inf", "1e1000", "1.000000000000e1000"),
 
-                // decimal
-                listOf("1.0", "1.00"),
-                listOf("-0.0", "-0.0000000000", "0d10000"),
-                listOf("-1d1000", "-1.000000000000d1000"),
+            // decimal
+            listOf("1.0", "1.00"),
+            listOf("-0.0", "-0.0000000000", "0d10000"),
+            listOf("-1d1000", "-1.000000000000d1000"),
 
-                // timestamp
-                listOf("2019T"),
-                listOf(
-                        "2017T",
-                        "2017-01T",
-                        "2017-01-01T",
-                        "2017-01-01T00:00-00:00",
-                        "2017-01-01T01:00+01:00"
-                ),
+            // timestamp
+            listOf("2019T"),
+            listOf(
+                "2017T",
+                "2017-01T",
+                "2017-01-01T",
+                "2017-01-01T00:00-00:00",
+                "2017-01-01T01:00+01:00"
+            ),
 
-                // symbol
-                listOf("aSymbol"),
+            // symbol
+            listOf("aSymbol"),
 
-                // string
-                listOf("\"a string\""),
+            // string
+            listOf("\"a string\""),
 
-                // clob
-                listOf("{{ \"This is a CLOB of text.\" }}"),
+            // clob
+            listOf("{{ \"This is a CLOB of text.\" }}"),
 
-                // blob
-                listOf("{{ dHdvIHBhZGRpbmcgY2hhcmFjdGVycw== }}"),
+            // blob
+            listOf("{{ dHdvIHBhZGRpbmcgY2hhcmFjdGVycw== }}"),
 
-                // list
-                listOf("[]"),
-                listOf("[[]]"),
-                listOf("[[1]]"),
-                listOf("[1, 2, 3]"),
-                listOf("[1, 2, 4]"),
-                listOf("[1, 2, [10,11,[12,[]]]]"),
+            // list
+            listOf("[]"),
+            listOf("[[]]"),
+            listOf("[[1]]"),
+            listOf("[1, 2, 3]"),
+            listOf("[1, 2, 4]"),
+            listOf("[1, 2, [10,11,[12,[]]]]"),
 
-                // S-exp
-                listOf("()"),
-                listOf("(1 2 3)"),
-                listOf("(1 2 4)"),
-                listOf("(3 2 1)"),
-                listOf("(1 2 (3))"),
-                listOf("(1 2 (3 4 5 (6)) () () (()))"),
+            // S-exp
+            listOf("()"),
+            listOf("(1 2 3)"),
+            listOf("(1 2 4)"),
+            listOf("(3 2 1)"),
+            listOf("(1 2 (3))"),
+            listOf("(1 2 (3 4 5 (6)) () () (()))"),
 
-                // bag
-                listOf("(bag)"),
-                listOf("(bag 1 2 3)", "(bag 3 2 1)"),
-                listOf("(bag 1 1 2)"),
-                listOf("(bag 1 2 2)"),
-                listOf("(bag 1 2 (3))"),
-                listOf("(bag 1 2 (3 4 5 (6)) () () (()))"),
-                listOf("(bag 1 2 (3 4 5 (6)) () () ((null) missing::null))"),
+            // bag
+            listOf("(bag)"),
+            listOf("(bag 1 2 3)", "(bag 3 2 1)"),
+            listOf("(bag 1 1 2)"),
+            listOf("(bag 1 2 2)"),
+            listOf("(bag 1 2 (3))"),
+            listOf("(bag 1 2 (3 4 5 (6)) () () (()))"),
+            listOf("(bag 1 2 (3 4 5 (6)) () () ((null) missing::null))"),
 
-                // struct 
-                listOf("{}"),
-                listOf("{foo: 1.0}", "{foo: 1.00}"),
-                listOf("{foo: 1, bar: {}}"),
-                listOf("{foo: 1, bar: 2}", "{bar: 2, foo: 1}"),
-                listOf("{foo: [1,2, (a {bar: baz})], bar: {}}")
+            // struct 
+            listOf("{}"),
+            listOf("{foo: 1.0}", "{foo: 1.00}"),
+            listOf("{foo: 1, bar: {}}"),
+            listOf("{foo: 1, bar: 2}", "{bar: 2, foo: 1}"),
+            listOf("{foo: [1,2, (a {bar: baz})], bar: {}}")
         )
 
         @JvmStatic
@@ -126,24 +126,24 @@ internal class DefaultPtsEqualityTest {
         // combine each element from a equivalent group with the elements from the other groups
         @JvmStatic
         fun nonEquivalentValuesTestCases(): Stream<Array<String>> =
-                values.foldIndexed(mutableListOf<Array<String>>()) { index, pairs, list ->
-                    val nonEquivalent = values.toMutableList().apply { removeAt(index) }.flatten()
+            values.foldIndexed(mutableListOf<Array<String>>()) { index, pairs, list ->
+                val nonEquivalent = values.toMutableList().apply { removeAt(index) }.flatten()
 
-                    list.crossProduct(nonEquivalent).mapTo(pairs) { arrayOf(it.first, it.second) }
+                list.crossProduct(nonEquivalent).mapTo(pairs) { arrayOf(it.first, it.second) }
 
-                    pairs
-                }.stream()
+                pairs
+            }.stream()
     }
 }
 
 // all combinations of size 2 including each element with itself
 private fun List<String>.combinations2(): List<Array<String>> =
-        when (this.size) {
-            0 -> throw IllegalArgumentException()
-            1 -> listOf(arrayOf(this[0], this[0]))
-            else -> this.foldIndexed(mutableListOf()) { index, pairs, el ->
-                this.subList(index, this.size).forEach { subEl -> pairs.add(arrayOf(el, subEl)) }
+    when (this.size) {
+        0 -> throw IllegalArgumentException()
+        1 -> listOf(arrayOf(this[0], this[0]))
+        else -> this.foldIndexed(mutableListOf()) { index, pairs, el ->
+            this.subList(index, this.size).forEach { subEl -> pairs.add(arrayOf(el, subEl)) }
 
-                pairs
-            }
+            pairs
         }
+    }

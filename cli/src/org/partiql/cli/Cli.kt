@@ -32,17 +32,19 @@ import java.io.OutputStreamWriter
 /**
  * TODO builder, kdoc
  */
-internal class Cli(private val valueFactory: ExprValueFactory,
-                   private val input: InputStream,
-                   private val output: OutputStream,
-                   private val format: OutputFormat,
-                   private val compilerPipeline: CompilerPipeline,
-                   private val globals: Bindings<ExprValue>,
-                   private val query: String) : PartiQLCommand {
+internal class Cli(
+    private val valueFactory: ExprValueFactory,
+    private val input: InputStream,
+    private val output: OutputStream,
+    private val format: OutputFormat,
+    private val compilerPipeline: CompilerPipeline,
+    private val globals: Bindings<ExprValue>,
+    private val query: String
+) : PartiQLCommand {
 
     companion object {
         val ionTextWriterBuilder: IonTextWriterBuilder = IonTextWriterBuilder.standard()
-                .withWriteTopLevelValuesOnNewLines(true)
+            .withWriteTopLevelValuesOnNewLines(true)
     }
 
     override fun run() {
@@ -51,7 +53,7 @@ internal class Cli(private val valueFactory: ExprValueFactory,
             val inputExprValue = valueFactory.newBag(inputIonValue)
             val bindings = Bindings.buildLazyBindings<ExprValue> {
                 // If `input` is a class of `EmptyInputStream`, it means there is no input data provided by user.
-                if (input !is EmptyInputStream){ addBinding("input_data") { inputExprValue } }
+                if (input !is EmptyInputStream) { addBinding("input_data") { inputExprValue } }
             }.delegate(globals)
 
             val result = compilerPipeline.compile(query).eval(EvaluationSession.build { globals(bindings) })
@@ -74,7 +76,7 @@ internal class Cli(private val valueFactory: ExprValueFactory,
         when (value.type) {
             // writes top level bags as a datagram
             ExprValueType.BAG -> value.iterator().forEach { v -> v.ionValue.writeTo(ionWriter) }
-            else              -> value.ionValue.writeTo(ionWriter)
+            else -> value.ionValue.writeTo(ionWriter)
         }
     }
 }

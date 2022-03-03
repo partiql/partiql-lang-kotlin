@@ -13,16 +13,19 @@ class SqlParserCorrelatedJoinTests : SqlParserTestBase() {
         joinPredicate: PartiqlAst.Expr?,
         wherePredicate: PartiqlAst.Expr? = null
     ): PartiqlAst.Expr =
-            select(
-                project = projectList(
-                    projectExpr(id("a")),
-                    projectExpr(id("b"))),
-                from = join(
-                    joinType,
-                    scan(id("stuff"), "s"),
-                    scan(id("s", caseInsensitive(), localsFirst())),
-                    joinPredicate),
-                where = wherePredicate)
+        select(
+            project = projectList(
+                projectExpr(id("a")),
+                projectExpr(id("b"))
+            ),
+            from = join(
+                joinType,
+                scan(id("stuff"), "s"),
+                scan(id("s", caseInsensitive(), localsFirst())),
+                joinPredicate
+            ),
+            where = wherePredicate
+        )
 
     @Test
     fun selectCorrelatedExplicitCrossJoin() = assertExpression(
@@ -37,7 +40,8 @@ class SqlParserCorrelatedJoinTests : SqlParserTestBase() {
         selectWithCorrelatedJoin(
             joinType = PartiqlAst.JoinType.Inner(),
             joinPredicate = null,
-            wherePredicate = callFWithS())
+            wherePredicate = callFWithS()
+        )
     }
 
     @Test
@@ -53,7 +57,8 @@ class SqlParserCorrelatedJoinTests : SqlParserTestBase() {
         selectWithCorrelatedJoin(
             joinType = PartiqlAst.JoinType.Left(),
             joinPredicate = null,
-            wherePredicate = callFWithS())
+            wherePredicate = callFWithS()
+        )
     }
 
     @Test
@@ -73,9 +78,9 @@ class SqlParserCorrelatedJoinTests : SqlParserTestBase() {
     ) {
         selectWithCorrelatedJoin(
             joinType = PartiqlAst.JoinType.Left(),
-            joinPredicate = callFWithS())
+            joinPredicate = callFWithS()
+        )
     }
-
 
     @Test
     fun selectCorrelatedJoin() = assertExpression(
@@ -90,7 +95,8 @@ class SqlParserCorrelatedJoinTests : SqlParserTestBase() {
         selectWithCorrelatedJoin(
             joinType = PartiqlAst.JoinType.Inner(),
             joinPredicate = null,
-            wherePredicate = callFWithS())
+            wherePredicate = callFWithS()
+        )
     }
 
     @Test
@@ -106,6 +112,7 @@ class SqlParserCorrelatedJoinTests : SqlParserTestBase() {
         selectWithCorrelatedJoin(
             joinType = PartiqlAst.JoinType.Inner(),
             joinPredicate = null,
-            wherePredicate = callFWithS())
+            wherePredicate = callFWithS()
+        )
     }
 }

@@ -11,11 +11,11 @@ class SelectStarVisitorTransformTests : VisitorTransformTestBase() {
     class ArgsProvider : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
             TransformTestCase(
-            """
+                """
                 SELECT * 
                 FROM foo AS f
             """,
-            """
+                """
                 SELECT "f".* 
                 FROM foo AS f
             """

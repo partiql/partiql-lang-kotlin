@@ -21,7 +21,6 @@ import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.extractColumnAlias
 import org.partiql.pig.runtime.SymbolPrimitive
 
-
 /**
  * Pre-calculates [PartiqlAst.GroupBy] aliases, while not changing any that were previously specified, for example:
  *
@@ -39,20 +38,25 @@ class GroupByItemAliasVisitorTransform(var nestLevel: Int = 0) : VisitorTransfor
         return PartiqlAst.build {
             groupBy_(
                 strategy = node.strategy,
-                keyList = PartiqlAst.GroupKeyList(node.keyList.keys.mapIndexed { index, it ->
-                    val aliasText = it.asAlias?.text ?: it.expr.extractColumnAlias(index)
-                    var metas = it.expr.metas + metaContainerOf(
-                        UniqueNameMeta.TAG to UniqueNameMeta("\$__partiql__group_by_${nestLevel}_item_$index"))
+                keyList = PartiqlAst.GroupKeyList(
+                    node.keyList.keys.mapIndexed { index, it ->
+                        val aliasText = it.asAlias?.text ?: it.expr.extractColumnAlias(index)
+                        var metas = it.expr.metas + metaContainerOf(
+                            UniqueNameMeta.TAG to UniqueNameMeta("\$__partiql__group_by_${nestLevel}_item_$index")
+                        )
 
-                    if (it.asAlias == null) {
-                        metas = metas + metaContainerOf(IsSyntheticNameMeta.TAG to IsSyntheticNameMeta.instance)
-                    }
-                    val alias = SymbolPrimitive(aliasText, metas)
+                        if (it.asAlias == null) {
+                            metas = metas + metaContainerOf(IsSyntheticNameMeta.TAG to IsSyntheticNameMeta.instance)
+                        }
+                        val alias = SymbolPrimitive(aliasText, metas)
 
-                    groupKey_(transformExpr(it.expr), alias, alias.metas)
-                }, node.keyList.metas),
+                        groupKey_(transformExpr(it.expr), alias, alias.metas)
+                    },
+                    node.keyList.metas
+                ),
                 groupAsAlias = node.groupAsAlias?.let { transformSymbolPrimitive(it) },
-                metas = node.metas)
+                metas = node.metas
+            )
         }
     }
 

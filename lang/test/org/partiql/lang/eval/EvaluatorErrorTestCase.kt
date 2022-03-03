@@ -56,7 +56,7 @@ data class EvaluatorErrorTestCase(
     ) : this(null, input, errorCode, expectErrorContextValues, cause, expectedPermissiveModeResult, compOptions)
 
     /** This will show up in the IDE's test runner. */
-    override fun toString() : String {
+    override fun toString(): String {
         val groupNameString = if (groupName == null) "" else "$groupName"
         val causeString = if (cause == null) "" else ": $cause"
         return "$groupNameString $sqlUnderTest : $errorCode : $expectErrorContextValues $causeString"

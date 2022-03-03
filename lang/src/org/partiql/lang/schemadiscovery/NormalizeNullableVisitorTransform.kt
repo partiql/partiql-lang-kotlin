@@ -61,7 +61,7 @@ class NormalizeNullableVisitorTransform : IonSchemaModel.VisitorTransform() {
             val anyOfTypes = node.getAnyOfConstraint().types
             if (anyOfTypes.any { it.isNullable() }) {
                 val newAnyOf = anyOfTypes.filter { it != nullNamedType }
-                                         .map { transformTypeReference(it.toNullable()) }
+                    .map { transformTypeReference(it.toNullable()) }
 
                 return if (newAnyOf.size == 1) {
                     newAnyOf.first().toConstraintList().items

@@ -14,4 +14,5 @@ import org.partiql.lang.ast.SqlDataType
 data class CustomType(
     val name: String,
     val typedOpParameter: TypedOpParameter,
-    val aliases: List<String> = listOf())
+    val aliases: List<String> = listOf()
+)

@@ -11,7 +11,7 @@ internal class CodepointCheckpointIterator(private val str: String) : Checkpoint
     override fun hasNext(): Boolean = (codepointCount - 1) > idx
 
     override fun next(): Int {
-        if(!hasNext()) throw NoSuchElementException()
+        if (!hasNext()) throw NoSuchElementException()
         return str.codePointAt(++idx)
     }
 

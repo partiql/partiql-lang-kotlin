@@ -81,12 +81,16 @@ class PartiQLISLSchemaTests {
         Assert.assertTrue(bagType.isl.isReadOnly)
         Assert.assertNull(bagType.isl.container)
 
-        val violations = bagType.validate(ION.singleValue("""
+        val violations = bagType.validate(
+            ION.singleValue(
+                """
             $BAG_ANNOTATION::[1,
                2, 
                $BAG_ANNOTATION::["a", "a", "b"],
                2]
-            """.trimIndent()))
+                """.trimIndent()
+            )
+        )
         Assert.assertNotNull(violations)
         Assert.assertTrue(violations.isValid())
         Assert.assertFalse(violations.iterator().hasNext())
@@ -183,14 +187,18 @@ class PartiQLISLSchemaTests {
         Assert.assertNull(dateType.isl.container)
 
         // time - 23:59:59.009999(HH:MM:SS.MMMMMM) is represented as ion struct
-        val violations = dateType.validate(ION.singleValue("""
+        val violations = dateType.validate(
+            ION.singleValue(
+                """
             ${'$'}partiql_time::{
                 hour: 23,
                 min: 59,
                 sec: 59,
                 sec_fraction: 9999
             }
-            """.trimIndent()))
+                """.trimIndent()
+            )
+        )
         Assert.assertNotNull(violations)
         Assert.assertTrue(violations.isValid())
     }
@@ -202,20 +210,27 @@ class PartiQLISLSchemaTests {
         Assert.assertNull(dateType.isl.container)
 
         // time - 24:59:1(HH:MM:SS.MMMMMM)
-        val violations = dateType.validate(ION.singleValue("""
+        val violations = dateType.validate(
+            ION.singleValue(
+                """
             {
                 hour: 23,
                 min: 59,
                 sec: 1
             }
-            """.trimIndent()))
+                """.trimIndent()
+            )
+        )
         Assert.assertNotNull(violations)
         Assert.assertFalse(violations.isValid())
         Assert.assertTrue(violations.violations.size > 0)
-        Assert.assertEquals("""
+        Assert.assertEquals(
+            """
             Validation failed:
             - missing annotation(s): ${'$'}partiql_time
-            """.trimIndent(), violations.toString().trimIndent())
+            """.trimIndent(),
+            violations.toString().trimIndent()
+        )
     }
 
     @Test
@@ -225,13 +240,17 @@ class PartiQLISLSchemaTests {
         Assert.assertNull(dateType.isl.container)
 
         // time - 23:59:59(HH:MM:SS.MMMMMM) is represented as ion struct
-        val violations = dateType.validate(ION.singleValue("""
+        val violations = dateType.validate(
+            ION.singleValue(
+                """
             ${'$'}partiql_time::{
                 hour: 23,
                 min: 59,
                 sec: 59
             }
-            """.trimIndent()))
+                """.trimIndent()
+            )
+        )
         Assert.assertNotNull(violations)
         Assert.assertTrue(violations.isValid())
     }
@@ -243,21 +262,28 @@ class PartiQLISLSchemaTests {
         Assert.assertNull(dateType.isl.container)
 
         // time - 23:59(HH:MM:SS.MMMMMM) is invalid as sec field is missing
-        val violations = dateType.validate(ION.singleValue("""
+        val violations = dateType.validate(
+            ION.singleValue(
+                """
             ${'$'}partiql_time::{
                 hour: 23,
                 min: 59
             }
-        """.trimIndent()))
+                """.trimIndent()
+            )
+        )
         Assert.assertNotNull(violations)
         Assert.assertFalse(violations.isValid())
         Assert.assertTrue(violations.violations.size > 0)
-        Assert.assertEquals("""
+        Assert.assertEquals(
+            """
             Validation failed:
             - one or more fields don't match expectations
               - sec
                 - expected range::[1,1] occurrences, found 0
-            """.trimIndent(), violations.toString().trimIndent())
+            """.trimIndent(),
+            violations.toString().trimIndent()
+        )
     }
 
     @Test
@@ -267,22 +293,29 @@ class PartiQLISLSchemaTests {
         Assert.assertNull(dateType.isl.container)
 
         // time - 24:59:1(HH:MM:SS.MMMMMM)
-        val violations = dateType.validate(ION.singleValue("""
+        val violations = dateType.validate(
+            ION.singleValue(
+                """
             ${'$'}partiql_time::{
                 hour: 24,
                 min: 59,
                 sec: 1
             }
-            """.trimIndent()))
+                """.trimIndent()
+            )
+        )
         Assert.assertNotNull(violations)
         Assert.assertFalse(violations.isValid())
         Assert.assertTrue(violations.violations.size > 0)
-        Assert.assertEquals("""
+        Assert.assertEquals(
+            """
             Validation failed:
             - one or more fields don't match expectations
               - hour: 24
                 - invalid value 24
-            """.trimIndent(), violations.toString().trimIndent())
+            """.trimIndent(),
+            violations.toString().trimIndent()
+        )
     }
 
     @Test
@@ -291,7 +324,9 @@ class PartiQLISLSchemaTests {
         Assert.assertTrue(dateType.isl.isReadOnly)
         Assert.assertNull(dateType.isl.container)
 
-        val violations = dateType.validate(ION.singleValue("""
+        val violations = dateType.validate(
+            ION.singleValue(
+                """
             ${'$'}partiql_time::{
                 hour: 23,
                 min: 59,
@@ -299,15 +334,19 @@ class PartiQLISLSchemaTests {
                 sec_fraction: 999999,
                 foo: 12
             }
-            """.trimIndent()))
+                """.trimIndent()
+            )
+        )
         Assert.assertNotNull(violations)
         Assert.assertFalse(violations.isValid())
         Assert.assertTrue(violations.violations.size > 0)
-        Assert.assertEquals("""
+        Assert.assertEquals(
+            """
             Validation failed:
             - found one or more unexpected fields
               - foo: 12
-            """.trimIndent(), violations.toString().trimIndent())
+            """.trimIndent(),
+            violations.toString().trimIndent()
+        )
     }
-
 }

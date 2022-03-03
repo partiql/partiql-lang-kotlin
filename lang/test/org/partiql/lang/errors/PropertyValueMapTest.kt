@@ -14,11 +14,10 @@
 
 package org.partiql.lang.errors
 
-import org.partiql.lang.syntax.TokenType
 import org.junit.Before
 import org.junit.Test
 import org.partiql.lang.TestBase
-
+import org.partiql.lang.syntax.TokenType
 
 class PropertyValueMapTest : TestBase() {
 
@@ -44,7 +43,6 @@ class PropertyValueMapTest : TestBase() {
         assertNull(onlyColumnValueMap[Property.LINE_NUMBER])
     }
 
-
     @Test fun getValues() {
         assertEquals(11L, oneOfEachType[Property.COLUMN_NUMBER]?.longValue())
         assertEquals(TokenType.COMMA, oneOfEachType[Property.EXPECTED_TOKEN_TYPE]?.tokenTypeValue())
@@ -52,5 +50,4 @@ class PropertyValueMapTest : TestBase() {
         assertEquals(1, oneOfEachType[Property.EXPECTED_ARITY_MAX]?.integerValue())
         assertEquals(11L, oneOfEachType[Property.COLUMN_NUMBER]?.longValue())
     }
-
 }

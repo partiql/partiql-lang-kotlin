@@ -14,14 +14,14 @@
 
 package org.partiql.lang.eval.io
 
-import org.partiql.lang.eval.io.DelimitedValues.ConversionMode.AUTO
-import org.partiql.lang.eval.io.DelimitedValues.ConversionMode.NONE
 import org.apache.commons.csv.CSVFormat
 import org.junit.Test
 import org.partiql.lang.TestBase
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.cloneAndRemoveAnnotations
+import org.partiql.lang.eval.io.DelimitedValues.ConversionMode.AUTO
+import org.partiql.lang.eval.io.DelimitedValues.ConversionMode.NONE
 import org.partiql.lang.eval.orderedNamesValue
 import org.partiql.lang.util.newFromIonText
 import java.io.StringReader
@@ -35,17 +35,21 @@ class DelimitedValuesTest : TestBase() {
         assertEquals(expectedValues, value.ionValue.cloneAndRemoveAnnotations())
     }
 
-    private fun read(text: String,
-                     csvFormat: CSVFormat,
-                     conversionMode: DelimitedValues.ConversionMode): ExprValue =
+    private fun read(
+        text: String,
+        csvFormat: CSVFormat,
+        conversionMode: DelimitedValues.ConversionMode
+    ): ExprValue =
         DelimitedValues.exprValue(valueFactory, StringReader(text), csvFormat, conversionMode)
 
-    private fun assertWrite(expectedText: String,
-                            valueText: String,
-                            names: List<String>,
-                            writeHeader: Boolean,
-                            delimiter: Char = ',',
-                            newline: String = "\n") {
+    private fun assertWrite(
+        expectedText: String,
+        valueText: String,
+        names: List<String>,
+        writeHeader: Boolean,
+        delimiter: Char = ',',
+        newline: String = "\n"
+    ) {
         val actualText = StringWriter().use {
 
             val rowExprValue = valueFactory.newFromIonText(valueText)
@@ -53,7 +57,8 @@ class DelimitedValuesTest : TestBase() {
                 rowExprValue.asSequence().map {
                     // apply the "schema"
                     it.orderedNamesValue(names)
-                })
+                }
+            )
 
 //            val exprValue = SequenceExprValue(
 //                ion,
@@ -69,10 +74,12 @@ class DelimitedValuesTest : TestBase() {
         assertEquals(expectedText, actualText)
     }
 
-    private fun voidWrite(exprValue: ExprValue,
-                          writeHeader: Boolean,
-                          delimiter: Char = ',',
-                          newline: String = "\n") {
+    private fun voidWrite(
+        exprValue: ExprValue,
+        writeHeader: Boolean,
+        delimiter: Char = ',',
+        newline: String = "\n"
+    ) {
         DelimitedValues.writeTo(ion, StringWriter(), exprValue, delimiter, newline, writeHeader)
     }
 
@@ -196,7 +203,8 @@ class DelimitedValuesTest : TestBase() {
                         0 -> exprValue.orderedNamesValue(listOf("a"))
                         else -> exprValue.orderedNamesValue(listOf("b"))
                     }
-                }),
+                }
+        ),
         writeHeader = false
     )
 

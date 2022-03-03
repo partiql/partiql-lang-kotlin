@@ -45,7 +45,8 @@ class AggregateSupportVisitorTransform : VisitorTransformBase() {
                 setq = node.setq,
                 funcName = node.funcName,
                 arg = transformExpr(node.arg),
-                metas = transformMetas(node.metas) + metaContainerOf(AggregateRegisterIdMeta.TAG to AggregateRegisterIdMeta(aggregateCallSites.size)))
+                metas = transformMetas(node.metas) + metaContainerOf(AggregateRegisterIdMeta.TAG to AggregateRegisterIdMeta(aggregateCallSites.size))
+            )
         }
         aggregateCallSites.add(transformedCallAgg)
         return transformedCallAgg

@@ -26,11 +26,9 @@ import org.partiql.lang.util.longValue
  * Represents a specific location within a source file.
  */
 data class SourceLocationMeta(val lineNum: Long, val charOffset: Long, val length: Long = -1) : Meta {
-    override fun toString() = "$lineNum:$charOffset:${if(length > 0) length.toString() else "<unknown>"}"
+    override fun toString() = "$lineNum:$charOffset:${if (length > 0) length.toString() else "<unknown>"}"
 
     override val tag = TAG
-
-
 
     override fun serialize(writer: IonWriter) {
         IonWriterContext(writer).apply {
@@ -50,7 +48,7 @@ data class SourceLocationMeta(val lineNum: Long, val charOffset: Long, val lengt
         if (charOffset != other.charOffset) return false
 
         // if length is unknown or the other is unknown, ignore the length.
-        if(length > 0 && other.length > 0 && length != other.length) return false
+        if (length > 0 && other.length > 0 && length != other.length) return false
 
         return true
     }
@@ -60,7 +58,7 @@ data class SourceLocationMeta(val lineNum: Long, val charOffset: Long, val lengt
         result = 31 * result + charOffset.hashCode()
 
         // if the length is unknown, ignore it.
-        if(length > 0) {
+        if (length > 0) {
             result = 31 * result + length.hashCode()
         }
         return result

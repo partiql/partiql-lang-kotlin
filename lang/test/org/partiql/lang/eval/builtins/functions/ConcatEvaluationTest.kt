@@ -23,52 +23,52 @@ class ConcatEvaluationTest : EvaluatorTestBase() {
             // 4. null or missing
 
             // 1st arg: String
-            ExprFunctionTestCase("'a' || 'b'", "\"ab\""),       // 2nd arg: String
-            ExprFunctionTestCase("'a' || `\"b\"`", "\"ab\""),   // 2nd arg: Ion String
-            ExprFunctionTestCase("'a' || `b`", "\"ab\""),       // 2nd arg: Ion symbol ``
-            ExprFunctionTestCase("'a' || `'b'`", "\"ab\""),     // 2nd arg: Ion symbol `''`
-            ExprFunctionTestCase("'a' || null", "null"),        // 2nd arg: null
-            ExprFunctionTestCase("'a' || missing", "null"),     // 2nd arg: missing
+            ExprFunctionTestCase("'a' || 'b'", "\"ab\""), // 2nd arg: String
+            ExprFunctionTestCase("'a' || `\"b\"`", "\"ab\""), // 2nd arg: Ion String
+            ExprFunctionTestCase("'a' || `b`", "\"ab\""), // 2nd arg: Ion symbol ``
+            ExprFunctionTestCase("'a' || `'b'`", "\"ab\""), // 2nd arg: Ion symbol `''`
+            ExprFunctionTestCase("'a' || null", "null"), // 2nd arg: null
+            ExprFunctionTestCase("'a' || missing", "null"), // 2nd arg: missing
 
             // 1st arg: Ion String
-            ExprFunctionTestCase("`\"a\"` || 'b'", "\"ab\""),       // 2nd arg: String
-            ExprFunctionTestCase("`\"a\"` || `\"b\"`", "\"ab\""),   // 2nd arg: Ion String
-            ExprFunctionTestCase("`\"a\"` || `b`", "\"ab\""),       // 2nd arg: Ion symbol ``
-            ExprFunctionTestCase("`\"a\"` || `'b'`", "\"ab\""),     // 2nd arg: Ion symbol `''`
-            ExprFunctionTestCase("`\"a\"` || null", "null"),        // 2nd arg: null
-            ExprFunctionTestCase("`\"a\"` || missing", "null"),     // 2nd arg: missing
+            ExprFunctionTestCase("`\"a\"` || 'b'", "\"ab\""), // 2nd arg: String
+            ExprFunctionTestCase("`\"a\"` || `\"b\"`", "\"ab\""), // 2nd arg: Ion String
+            ExprFunctionTestCase("`\"a\"` || `b`", "\"ab\""), // 2nd arg: Ion symbol ``
+            ExprFunctionTestCase("`\"a\"` || `'b'`", "\"ab\""), // 2nd arg: Ion symbol `''`
+            ExprFunctionTestCase("`\"a\"` || null", "null"), // 2nd arg: null
+            ExprFunctionTestCase("`\"a\"` || missing", "null"), // 2nd arg: missing
 
             // 1st arg: Ion symbol (``)
-            ExprFunctionTestCase("`a` || 'b'", "\"ab\""),       // 2nd arg: String
-            ExprFunctionTestCase("`a` || `\"b\"`", "\"ab\""),   // 2nd arg: Ion String
-            ExprFunctionTestCase("`a` || `b`", "\"ab\""),       // 2nd arg: Ion symbol ``
-            ExprFunctionTestCase("`a` || `'b'`", "\"ab\""),     // 2nd arg: Ion symbol `''`
-            ExprFunctionTestCase("`a` || null", "null"),        // 2nd arg: null
-            ExprFunctionTestCase("`a` || missing", "null"),     // 2nd arg: missing
+            ExprFunctionTestCase("`a` || 'b'", "\"ab\""), // 2nd arg: String
+            ExprFunctionTestCase("`a` || `\"b\"`", "\"ab\""), // 2nd arg: Ion String
+            ExprFunctionTestCase("`a` || `b`", "\"ab\""), // 2nd arg: Ion symbol ``
+            ExprFunctionTestCase("`a` || `'b'`", "\"ab\""), // 2nd arg: Ion symbol `''`
+            ExprFunctionTestCase("`a` || null", "null"), // 2nd arg: null
+            ExprFunctionTestCase("`a` || missing", "null"), // 2nd arg: missing
 
             // 1st arg: Ion symbol (``)
-            ExprFunctionTestCase("`'a'` || 'b'", "\"ab\""),         // 2nd arg: String
-            ExprFunctionTestCase("`'a'` || `\"b\"`", "\"ab\""),     // 2nd arg: Ion String
-            ExprFunctionTestCase("`'a'` || `b`", "\"ab\""),         // 2nd arg: Ion symbol ``
-            ExprFunctionTestCase("`'a'` || `'b'`", "\"ab\""),       // 2nd arg: Ion symbol `''`
-            ExprFunctionTestCase("`'a'` || null", "null"),          // 2nd arg: null
-            ExprFunctionTestCase("`'a'` || missing", "null"),       // 2nd arg: missing
+            ExprFunctionTestCase("`'a'` || 'b'", "\"ab\""), // 2nd arg: String
+            ExprFunctionTestCase("`'a'` || `\"b\"`", "\"ab\""), // 2nd arg: Ion String
+            ExprFunctionTestCase("`'a'` || `b`", "\"ab\""), // 2nd arg: Ion symbol ``
+            ExprFunctionTestCase("`'a'` || `'b'`", "\"ab\""), // 2nd arg: Ion symbol `''`
+            ExprFunctionTestCase("`'a'` || null", "null"), // 2nd arg: null
+            ExprFunctionTestCase("`'a'` || missing", "null"), // 2nd arg: missing
 
             // 1st arg: null
-            ExprFunctionTestCase("null || 'b'", "null"),         // 2nd arg: String
-            ExprFunctionTestCase("null || `\"b\"`", "null"),     // 2nd arg: Ion String
-            ExprFunctionTestCase("null || `b`", "null"),         // 2nd arg: Ion symbol ``
-            ExprFunctionTestCase("null || `'b'`", "null"),       // 2nd arg: Ion symbol `''`
-            ExprFunctionTestCase("null || null", "null"),          // 2nd arg: null
-            ExprFunctionTestCase("null || missing", "null"),       // 2nd arg: missing
+            ExprFunctionTestCase("null || 'b'", "null"), // 2nd arg: String
+            ExprFunctionTestCase("null || `\"b\"`", "null"), // 2nd arg: Ion String
+            ExprFunctionTestCase("null || `b`", "null"), // 2nd arg: Ion symbol ``
+            ExprFunctionTestCase("null || `'b'`", "null"), // 2nd arg: Ion symbol `''`
+            ExprFunctionTestCase("null || null", "null"), // 2nd arg: null
+            ExprFunctionTestCase("null || missing", "null"), // 2nd arg: missing
 
             // 1st arg: missing
-            ExprFunctionTestCase("missing || 'b'", "null"),         // 2nd arg: String
-            ExprFunctionTestCase("missing || `\"b\"`", "null"),     // 2nd arg: Ion String
-            ExprFunctionTestCase("missing || `b`", "null"),         // 2nd arg: Ion symbol ``
-            ExprFunctionTestCase("missing || `'b'`", "null"),       // 2nd arg: Ion symbol `''`
-            ExprFunctionTestCase("missing || null", "null"),          // 2nd arg: null
-            ExprFunctionTestCase("missing || missing", "null"),       // 2nd arg: missing
+            ExprFunctionTestCase("missing || 'b'", "null"), // 2nd arg: String
+            ExprFunctionTestCase("missing || `\"b\"`", "null"), // 2nd arg: Ion String
+            ExprFunctionTestCase("missing || `b`", "null"), // 2nd arg: Ion symbol ``
+            ExprFunctionTestCase("missing || `'b'`", "null"), // 2nd arg: Ion symbol `''`
+            ExprFunctionTestCase("missing || null", "null"), // 2nd arg: null
+            ExprFunctionTestCase("missing || missing", "null"), // 2nd arg: missing
 
             // Test for more characters in strings
             ExprFunctionTestCase("'' || 'a'", "\"a\""),

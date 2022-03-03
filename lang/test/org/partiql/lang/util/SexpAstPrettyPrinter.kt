@@ -55,18 +55,17 @@ class SexpAstPrettyPrinter(val builder: StringBuilder = StringBuilder()) {
     }
 
     private fun append(node: IonValue) {
-        when(node) {
+        when (node) {
             is IonSexp -> {
                 builder.append('(')
                 val tag = node.firstOrNull()
-                if(tag != null) {
+                if (tag != null) {
                     val tagSymbol = tag as? IonSymbol
 
                     if (tagSymbol == null) {
                         builder.append(tag.toString())
                         builder.append(" /* <-- NOTE: first position of s-exp was not a symbol */")
-                    }
-                    else {
+                    } else {
                         builder.append(tagSymbol.stringValue())
 
                         if (dontIndent.contains(tagSymbol.stringValue())) {
@@ -74,8 +73,7 @@ class SexpAstPrettyPrinter(val builder: StringBuilder = StringBuilder()) {
                                 builder.append(' ')
                                 append(it)
                             }
-                        }
-                        else {
+                        } else {
                             if (node.size > 1) {
                                 nestLevel++
 
@@ -96,5 +94,4 @@ class SexpAstPrettyPrinter(val builder: StringBuilder = StringBuilder()) {
             }
         }
     }
-
 }

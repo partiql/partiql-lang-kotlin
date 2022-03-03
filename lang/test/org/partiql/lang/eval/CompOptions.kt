@@ -18,26 +18,36 @@ package org.partiql.lang.eval
 enum class CompOptions(val options: CompileOptions) {
     STANDARD(CompileOptions.standard()),
 
-    UNDEF_VAR_MISSING(CompileOptions.build {
-        undefinedVariable(UndefinedVariableBehavior.MISSING)
-    }),
+    UNDEF_VAR_MISSING(
+        CompileOptions.build {
+            undefinedVariable(UndefinedVariableBehavior.MISSING)
+        }
+    ),
 
-    PROJECT_UNFILTERED_UNDEF_VAR_MISSING(CompileOptions.build {
-        projectionIteration(ProjectionIterationBehavior.UNFILTERED)
-        undefinedVariable(UndefinedVariableBehavior.MISSING)
-    }),
+    PROJECT_UNFILTERED_UNDEF_VAR_MISSING(
+        CompileOptions.build {
+            projectionIteration(ProjectionIterationBehavior.UNFILTERED)
+            undefinedVariable(UndefinedVariableBehavior.MISSING)
+        }
+    ),
 
-    PROJECT_UNFILTERED(CompileOptions.build {
-        projectionIteration(ProjectionIterationBehavior.UNFILTERED)
-    }),
+    PROJECT_UNFILTERED(
+        CompileOptions.build {
+            projectionIteration(ProjectionIterationBehavior.UNFILTERED)
+        }
+    ),
 
-    TYPED_OP_BEHAVIOR_HONOR_PARAMS(CompileOptions.build {
-        typedOpBehavior(TypedOpBehavior.HONOR_PARAMETERS)
-    }),
+    TYPED_OP_BEHAVIOR_HONOR_PARAMS(
+        CompileOptions.build {
+            typedOpBehavior(TypedOpBehavior.HONOR_PARAMETERS)
+        }
+    ),
 
-    PERMISSIVE(CompileOptions.build {
-        this.typingMode(TypingMode.PERMISSIVE)
-    });
+    PERMISSIVE(
+        CompileOptions.build {
+            this.typingMode(TypingMode.PERMISSIVE)
+        }
+    );
 
     companion object {
         /** Only those options from [CompOptions] which have [UndefinedVariableBehavior.MISSING]. */

@@ -27,13 +27,15 @@ import org.partiql.lang.syntax.TYPE_ALIASES
  * @param typeNames The normalized type names and aliases associated with the runtime type.
  * @param isRangedFrom Whether or not the `FROM` clause uses the value's iterator directly.
  */
-enum class ExprValueType(val typeNames: List<String>,
-                         val isUnknown: Boolean = false,
-                         val isNumber: Boolean = false,
-                         val isText: Boolean = false,
-                         val isLob: Boolean = false,
-                         val isSequence: Boolean = false,
-                         val isRangedFrom: Boolean = false) {
+enum class ExprValueType(
+    val typeNames: List<String>,
+    val isUnknown: Boolean = false,
+    val isNumber: Boolean = false,
+    val isText: Boolean = false,
+    val isLob: Boolean = false,
+    val isSequence: Boolean = false,
+    val isRangedFrom: Boolean = false
+) {
     MISSING(
         typeNames = listOf("missing"),
         isUnknown = true
@@ -46,8 +48,10 @@ enum class ExprValueType(val typeNames: List<String>,
         typeNames = listOf("bool", "boolean")
     ),
     INT(
-        typeNames = listOf("int", "smallint", "integer2", "int2", "integer", "integer4", "int4", "integer8", "int8",
-            "bigint"),
+        typeNames = listOf(
+            "int", "smallint", "integer2", "int2", "integer", "integer4", "int4", "integer8", "int8",
+            "bigint"
+        ),
         isNumber = true
     ),
     FLOAT(
@@ -101,7 +105,6 @@ enum class ExprValueType(val typeNames: List<String>,
         isRangedFrom = true
     );
 
-
     @Deprecated("Please use isUnknown instead", ReplaceWith("isUnknown"))
     fun isNull() = isUnknown
 
@@ -110,10 +113,10 @@ enum class ExprValueType(val typeNames: List<String>,
 
     /** Whether or not the given type is in the same type grouping as another. */
     fun isDirectlyComparableTo(other: ExprValueType): Boolean =
-        (this == other)
-            || (isNumber && other.isNumber)
-            || (isText && other.isText)
-            || (isLob && other.isLob)
+        (this == other) ||
+            (isNumber && other.isNumber) ||
+            (isText && other.isText) ||
+            (isLob && other.isLob)
 
     companion object {
         init {
@@ -169,12 +172,12 @@ enum class ExprValueType(val typeNames: List<String>,
             }.toTypedArray()
         )
 
-
         fun fromTypeName(name: String): ExprValueType = LEX_TYPE_MAP[name]
             ?: throw EvaluationException(
                 "No such value type for $name",
                 ErrorCode.LEXER_INVALID_NAME,
-                internal = true)
+                internal = true
+            )
 
         fun fromSqlDataType(sqlDataType: PartiqlAst.Type) = fromSqlDataTypeOrNull(sqlDataType)
             ?: throw EvaluationException(

@@ -5,7 +5,6 @@ import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.types.StaticType
 
-
 /**
  * Derives a [Bindings<StaticType>] from a [Bindings<ExprValue>].
  *
@@ -21,5 +20,3 @@ fun Bindings<ExprValue>.toTypedBindings() = this.let { valuedBindings ->
         }
     }
 }
-
-

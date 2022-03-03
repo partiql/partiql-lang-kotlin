@@ -117,12 +117,12 @@ private data class CastError(val error: EvaluationException) : CastResult() {
     override fun unwrap() = throw error
 }
 
-private data class CastValue(val value: ExprValue): CastResult() {
+private data class CastValue(val value: ExprValue) : CastResult() {
     override fun unwrap() = value
 }
 
 /** Sentinel case to deal with empty target table--no compatible cast available for the source. */
-private data class CastNil(val sourceType: ExprValueType, val metas: MetaContainer): CastResult() {
+private data class CastNil(val sourceType: ExprValueType, val metas: MetaContainer) : CastResult() {
     override fun unwrap(): Nothing {
         val errorContext = PropertyValueMap().also {
             it[Property.CAST_FROM] = sourceType.toString()
@@ -152,10 +152,12 @@ private data class CastNil(val sourceType: ExprValueType, val metas: MetaContain
  * @param metas The metadata of the compilation context.
  * @param singleTypeCast The function to delegate the implementation of a cast to a single type.
  */
-internal class AnyOfCastTable(private val anyOfType: AnyOfType,
-                              private val metas: MetaContainer,
-                              private val valueFactory: ExprValueFactory,
-                              singleTypeCast: (SingleType) -> CastFunc) {
+internal class AnyOfCastTable(
+    private val anyOfType: AnyOfType,
+    private val metas: MetaContainer,
+    private val valueFactory: ExprValueFactory,
+    singleTypeCast: (SingleType) -> CastFunc
+) {
     val castFuncTable: Map<ExprValueType, List<CastFunc>>
     val castTypeTable: Map<ExprValueType, List<ExprValueType>>
 

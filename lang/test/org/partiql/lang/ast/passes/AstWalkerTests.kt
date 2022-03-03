@@ -15,7 +15,6 @@
 package org.partiql.lang.ast.passes
 
 import com.amazon.ion.system.IonSystemBuilder
-
 import junitparams.JUnitParamsRunner
 import junitparams.Parameters
 import org.junit.Test
@@ -39,7 +38,7 @@ import kotlin.test.assertEquals
 class AstWalkerTests {
 
     // these tests are duplicated on AstNodeTest but kept here until we delete AstWalker
-    
+
     companion object {
 
         /** A dummy visitor that simply appends the type name of each node to a StringBuilder to that
@@ -104,71 +103,93 @@ class AstWalkerTests {
     fun parametersForWalkerTest() = listOf(
         WalkerTestCase(
             "MISSING",
-            "LiteralMissing|"),
+            "LiteralMissing|"
+        ),
         WalkerTestCase(
             "1",
-            "Literal|"),
+            "Literal|"
+        ),
         WalkerTestCase(
             "1 + 1",
-            "NAry|Literal|Literal|"),
+            "NAry|Literal|Literal|"
+        ),
         WalkerTestCase(
             "[1, 2]",
-            "Seq|Literal|Literal|"),
+            "Seq|Literal|Literal|"
+        ),
         WalkerTestCase(
             "{ 'fooField': 1 }",
-            "Struct|Literal|Literal|"),
+            "Struct|Literal|Literal|"
+        ),
         WalkerTestCase(
             "a.b.c",
-            "Path|VariableReference|PathComponentExpr|Literal|PathComponentExpr|Literal|"),
+            "Path|VariableReference|PathComponentExpr|Literal|PathComponentExpr|Literal|"
+        ),
         WalkerTestCase(
             "a[b].c",
-            "Path|VariableReference|PathComponentExpr|VariableReference|PathComponentExpr|Literal|"),
+            "Path|VariableReference|PathComponentExpr|VariableReference|PathComponentExpr|Literal|"
+        ),
         WalkerTestCase(
             "a[1].c",
-            "Path|VariableReference|PathComponentExpr|Literal|PathComponentExpr|Literal|"),
+            "Path|VariableReference|PathComponentExpr|Literal|PathComponentExpr|Literal|"
+        ),
         WalkerTestCase(
             "a[*].c",
-            "Path|VariableReference|PathComponentWildcard|PathComponentExpr|Literal|"),
+            "Path|VariableReference|PathComponentWildcard|PathComponentExpr|Literal|"
+        ),
         WalkerTestCase(
             "a.*.c",
-            "Path|VariableReference|PathComponentUnpivot|PathComponentExpr|Literal|"),
+            "Path|VariableReference|PathComponentUnpivot|PathComponentExpr|Literal|"
+        ),
         WalkerTestCase(
             "fcall(var1, var2)",
-            "NAry|VariableReference|VariableReference|VariableReference|"),
+            "NAry|VariableReference|VariableReference|VariableReference|"
+        ),
         WalkerTestCase(
             "CASE foo WHEN 1 THEN 10 ELSE 11 END",
-            "SimpleCase|VariableReference|Literal|Literal|Literal|"),
+            "SimpleCase|VariableReference|Literal|Literal|Literal|"
+        ),
         WalkerTestCase(
             "CASE WHEN 1 THEN 10 ELSE 11 END",
-            "SearchedCase|Literal|Literal|Literal|"),
+            "SearchedCase|Literal|Literal|Literal|"
+        ),
         WalkerTestCase(
             "SELECT * FROM foo",
-            "Select|SelectProjectionList|SelectListItemStar|FromSourceExpr|VariableReference|"),
+            "Select|SelectProjectionList|SelectListItemStar|FromSourceExpr|VariableReference|"
+        ),
         WalkerTestCase(
             "SELECT * FROM foo, bar",
-            //Reminder:  this yields the same AST as: ... FROM foo INNER JOIN bar ON true
-            "Select|SelectProjectionList|SelectListItemStar|FromSourceJoin|FromSourceExpr|VariableReference|FromSourceExpr|VariableReference|Literal|"),
+            // Reminder:  this yields the same AST as: ... FROM foo INNER JOIN bar ON true
+            "Select|SelectProjectionList|SelectListItemStar|FromSourceJoin|FromSourceExpr|VariableReference|FromSourceExpr|VariableReference|Literal|"
+        ),
         WalkerTestCase(
             "SELECT * FROM foo, bar",
-            "Select|SelectProjectionList|SelectListItemStar|FromSourceJoin|FromSourceExpr|VariableReference|FromSourceExpr|VariableReference|Literal|"),
+            "Select|SelectProjectionList|SelectListItemStar|FromSourceJoin|FromSourceExpr|VariableReference|FromSourceExpr|VariableReference|Literal|"
+        ),
         WalkerTestCase(
             "SELECT * FROM foo INNER JOIN bar ON condition",
-            "Select|SelectProjectionList|SelectListItemStar|FromSourceJoin|FromSourceExpr|VariableReference|FromSourceExpr|VariableReference|VariableReference|"),
+            "Select|SelectProjectionList|SelectListItemStar|FromSourceJoin|FromSourceExpr|VariableReference|FromSourceExpr|VariableReference|VariableReference|"
+        ),
         WalkerTestCase(
             "SELECT f.* FROM foo AS f",
-            "Select|SelectProjectionList|SelectListItemProjectAll|VariableReference|FromSourceExpr|VariableReference|"),
+            "Select|SelectProjectionList|SelectListItemProjectAll|VariableReference|FromSourceExpr|VariableReference|"
+        ),
         WalkerTestCase(
             "SELECT VALUE foo FROM bar",
-            "Select|SelectProjectionValue|VariableReference|FromSourceExpr|VariableReference|"),
+            "Select|SelectProjectionValue|VariableReference|FromSourceExpr|VariableReference|"
+        ),
         WalkerTestCase(
             "PIVOT 1 AT 2 FROM 3",
-            "Select|SelectProjectionPivot|Literal|Literal|FromSourceExpr|Literal|"),
+            "Select|SelectProjectionPivot|Literal|Literal|FromSourceExpr|Literal|"
+        ),
         WalkerTestCase(
             "CREATE TABLE FOO",
-            "CreateTable|"),
+            "CreateTable|"
+        ),
         WalkerTestCase(
             "?",
-            "Parameter|"),
+            "Parameter|"
+        ),
 
         WalkerTestCase("MISSING", "LiteralMissing|"),
 
@@ -176,5 +197,4 @@ class AstWalkerTests {
         WalkerTestCase("INSERT INTO foo VALUE 1 ON CONFLICT WHERE bar DO NOTHING", "DataManipulation|VariableReference|Literal|VariableReference|")
 
     )
-
 }

@@ -30,7 +30,8 @@ data class Environment(
     val current: Bindings<ExprValue> = locals,
     val session: EvaluationSession,
     val groups: MutableMap<ExprValue, Group> = createGroupMap(),
-    val currentGroup: Group? = null) {
+    val currentGroup: Group? = null
+) {
 
     companion object {
         fun standard() = Environment(locals = Bindings.empty(), session = EvaluationSession.standard())
@@ -47,7 +48,8 @@ data class Environment(
     internal fun nest(
         newLocals: Bindings<ExprValue>,
         currentMode: CurrentMode = CurrentMode.LOCALS,
-        newGroup: Group? = currentGroup): Environment {
+        newGroup: Group? = currentGroup
+    ): Environment {
 
         val derivedLocals = newLocals.delegate(locals)
         val newCurrent = when (currentMode) {
@@ -64,12 +66,12 @@ data class Environment(
      */
     internal fun nestQuery() = copy(
         currentGroup = null,
-        groups = createGroupMap())
+        groups = createGroupMap()
+    )
 
     /** Constructs a copy of this environment with the locals being the current bindings. */
     internal fun flipToLocals(): Environment = copy(current = locals)
 
     /** Constructs a copy of this environment with the [globals] being the current bindings. */
     internal fun flipToGlobalsFirst(): Environment = copy(current = session.globals.delegate(locals))
-
 }

@@ -23,9 +23,10 @@ data class TestResultSuccess(override val test: TestScriptExpression) : TestResu
  * @param reason failure reason
  */
 data class TestFailure(
-        override val test: TestScriptExpression,
-        val actualResult: String,
-        val reason: FailureReason) : TestResult() {
+    override val test: TestScriptExpression,
+    val actualResult: String,
+    val reason: FailureReason
+) : TestResult() {
 
     enum class FailureReason {
         /** Evaluation threw an error when none was expected */

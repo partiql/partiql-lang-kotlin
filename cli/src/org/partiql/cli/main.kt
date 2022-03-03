@@ -17,18 +17,18 @@
 package org.partiql.cli
 
 import com.amazon.ion.system.IonSystemBuilder
-import joptsimple.OptionParser
 import joptsimple.BuiltinHelpFormatter
 import joptsimple.OptionDescriptor
 import joptsimple.OptionException
+import joptsimple.OptionParser
 import joptsimple.OptionSet
 import org.partiql.cli.functions.ReadFile
 import org.partiql.cli.functions.WriteFile
 import org.partiql.lang.CompilerPipeline
-import org.partiql.lang.eval.EvaluationSession
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.Bindings
+import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.syntax.SqlParser
 import java.io.File
 import java.io.FileInputStream
@@ -129,7 +129,7 @@ fun main(args: Array<String>) = try {
         System.exit(0) // print help and bail
     }
 
-    if(optionSet.nonOptionArguments().isNotEmpty()) {
+    if (optionSet.nonOptionArguments().isNotEmpty()) {
         throw IllegalArgumentException("Non option arguments are not allowed!")
     }
 
@@ -140,23 +140,19 @@ fun main(args: Array<String>) = try {
             val config = compilerPipeline.compile(configSource).eval(EvaluationSession.standard())
             config.bindings
         }
-        else                          -> Bindings.empty()
+        else -> Bindings.empty()
     }
 
     if (optionSet.has(queryOpt)) {
         runCli(environment, optionSet)
-    }
-    else {
+    } else {
         runRepl(environment)
     }
-}
-catch (e: OptionException) {
+} catch (e: OptionException) {
     System.err.println("${e.message}\n")
     optParser.printHelpOn(System.err)
     exitProcess(1)
-
-}
-catch (e: Exception) {
+} catch (e: Exception) {
     e.printStackTrace(System.err)
     exitProcess(1)
 }
@@ -168,15 +164,13 @@ private fun runRepl(environment: Bindings<ExprValue>) {
 private fun runCli(environment: Bindings<ExprValue>, optionSet: OptionSet) {
     val input = if (optionSet.has(inputFileOpt)) {
         FileInputStream(optionSet.valueOf(inputFileOpt))
-    }
-    else {
+    } else {
         EmptyInputStream()
     }
 
     val output = if (optionSet.has(outputFileOpt)) {
         FileOutputStream(optionSet.valueOf(outputFileOpt))
-    }
-    else {
+    } else {
         UnclosableOutputStream(System.out)
     }
 

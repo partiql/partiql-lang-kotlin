@@ -18,12 +18,12 @@ import com.amazon.ion.system.IonSystemBuilder
 import org.junit.Assert
 import org.junit.Ignore
 import org.junit.Test
-import org.partiql.lang.syntax.Parser
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.SqlParser
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
@@ -112,7 +112,6 @@ private class ReplTester(bindings: Bindings<ExprValue> = Bindings.empty()) {
     fun assertReplPrompt(expectedPromptText: String) {
         outputPhaser.register()
 
-
         replThread.start()
         outputCollectorThread.start()
 
@@ -153,7 +152,6 @@ private class ReplTester(bindings: Bindings<ExprValue> = Bindings.empty()) {
             .map { it.removePrefix(PROMPT_1) }
             .map { it.removePrefix(PROMPT_2) }
             .map { line -> "$line\n" } // add back the \n removed in the split
-
 }
 
 @Ignore("https://github.com/partiql/partiql-lang-kotlin/issues/266")
@@ -162,7 +160,8 @@ class ReplTest {
 
     @Test
     fun singleQuery() {
-        ReplTester().assertReplPrompt("""
+        ReplTester().assertReplPrompt(
+            """
             #Welcome to the PartiQL REPL!
             #Using version: $partiqlVersionAndHash
             #PartiQL> 1+1
@@ -172,12 +171,14 @@ class ReplTest {
             #--- 
             #OK!
             #PartiQL> 
-        """.trimMargin("#"))
+        """.trimMargin("#")
+        )
     }
 
     @Test
     fun querySemiColon() {
-        ReplTester().assertReplPrompt("""
+        ReplTester().assertReplPrompt(
+            """
             #Welcome to the PartiQL REPL!
             #Using version: $partiqlVersionAndHash
             #PartiQL> 1+1;
@@ -186,12 +187,14 @@ class ReplTest {
             #--- 
             #OK!
             #PartiQL> 
-        """.trimMargin("#"))
+        """.trimMargin("#")
+        )
     }
 
     @Test
     fun multipleQuery() {
-        ReplTester().assertReplPrompt("""
+        ReplTester().assertReplPrompt(
+            """
             #Welcome to the PartiQL REPL!
             #Using version: $partiqlVersionAndHash
             #PartiQL> 1 + 1
@@ -207,13 +210,14 @@ class ReplTest {
             #--- 
             #OK!
             #PartiQL> 
-        """.trimMargin("#"))
-
+        """.trimMargin("#")
+        )
     }
 
     @Test
     fun astWithoutMetas() {
-        ReplTester().assertReplPrompt("""
+        ReplTester().assertReplPrompt(
+            """
             #Welcome to the PartiQL REPL!
             #Using version: $partiqlVersionAndHash
             #PartiQL> 1 + 1
@@ -237,12 +241,14 @@ class ReplTest {
             #--- 
             #OK!
             #PartiQL> 
-        """.trimMargin("#"))
+        """.trimMargin("#")
+        )
     }
 
     @Test
     fun addToGlobalEnvAndQuery() {
-        ReplTester().assertReplPrompt("""
+        ReplTester().assertReplPrompt(
+            """
             #Welcome to the PartiQL REPL!
             #Using version: $partiqlVersionAndHash
             #PartiQL> !add_to_global_env {'myTable': <<{'a':1}, {'a': 2}>>}
@@ -274,7 +280,8 @@ class ReplTest {
             #--- 
             #OK!
             #PartiQL> 
-        """.trimMargin("#"))
+        """.trimMargin("#")
+        )
     }
 
     @Test
@@ -285,7 +292,8 @@ class ReplTest {
             .eval(EvaluationSession.standard())
             .bindings
 
-        ReplTester(initialBindings).assertReplPrompt("""
+        ReplTester(initialBindings).assertReplPrompt(
+            """
             #Welcome to the PartiQL REPL!
             #Using version: $partiqlVersionAndHash
             #PartiQL> !global_env
@@ -301,12 +309,14 @@ class ReplTest {
             #--- 
             #OK!
             #PartiQL> 
-        """.trimMargin("#"))
+        """.trimMargin("#")
+        )
     }
 
     @Test
     fun dumpEmptyInitialEnv() {
-        ReplTester().assertReplPrompt("""
+        ReplTester().assertReplPrompt(
+            """
             #Welcome to the PartiQL REPL!
             #Using version: $partiqlVersionAndHash
             #PartiQL> !global_env
@@ -316,12 +326,14 @@ class ReplTest {
             #--- 
             #OK!
             #PartiQL> 
-        """.trimMargin("#"))
+        """.trimMargin("#")
+        )
     }
 
     @Test
     fun dumpEnvAfterAltering() {
-        ReplTester().assertReplPrompt("""
+        ReplTester().assertReplPrompt(
+            """
             #Welcome to the PartiQL REPL!
             #Using version: $partiqlVersionAndHash
             #PartiQL> !add_to_global_env {'myTable': <<{'a':1}, {'a': 2}>>}
@@ -355,12 +367,14 @@ class ReplTest {
             #--- 
             #OK!
             #PartiQL> 
-        """.trimMargin("#"))
+        """.trimMargin("#")
+        )
     }
 
     @Test
     fun listCommands() {
-        ReplTester().assertReplPrompt("""
+        ReplTester().assertReplPrompt(
+            """
             #Welcome to the PartiQL REPL!
             #Using version: $partiqlVersionAndHash
             #PartiQL> !list_commands
@@ -371,6 +385,7 @@ class ReplTest {
             #!list_commands: print this message
             #OK!
             #PartiQL> 
-        """.trimMargin("#"))
+        """.trimMargin("#")
+        )
     }
 }

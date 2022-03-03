@@ -23,9 +23,11 @@ class BindingsTest : TestBase() {
 
     fun bind(text: String): Bindings<ExprValue> = valueFactory.newFromIonText(text).bindings
 
-    fun over(text: String,
-             bindingsTransform: Bindings<ExprValue>.() -> Bindings<ExprValue>,
-             block: AssertExprValue.() -> Unit) =
+    fun over(
+        text: String,
+        bindingsTransform: Bindings<ExprValue>.() -> Bindings<ExprValue>,
+        block: AssertExprValue.() -> Unit
+    ) =
         AssertExprValue(
             valueFactory.newFromIonText(text),
             bindingsTransform
@@ -66,7 +68,6 @@ class BindingsTest : TestBase() {
         fun lookupSensitive(name: String) =
             testBindings[BindingName(name, BindingCase.SENSITIVE)]!!.scalar.numberValue()!!.toInt()
 
-
         fun lookupInsensitive(name: String) =
             testBindings[BindingName(name, BindingCase.INSENSITIVE)]!!.scalar.numberValue()!!.toInt()
 
@@ -93,7 +94,6 @@ class BindingsTest : TestBase() {
         kotlin.test.assertEquals(1, barEvaluateCount, "bar should be evaluated once")
         kotlin.test.assertEquals(0, bAtEvaluateCount, "bAt should not yet be evaluated")
         kotlin.test.assertEquals(0, BaTEvaluateCount, "BaT should not yet be evaluated")
-
 
         // Multiple case-sensitive lookups of bAt should cause it to only be evaluated once
         assertEquals(30, lookupSensitive("bAt"))
@@ -124,15 +124,18 @@ class BindingsTest : TestBase() {
             add("valueThatExists", ion.newInt(1))
             add("duplicateFieldName", ion.newInt(1))
             add("duplicateFieldName", ion.newInt(2))
-        }, valueFactory)
-
+        },
+        valueFactory
+    )
 
     private val bindingForCaseInsensitiveTests = Bindings.ofIonStruct(
         ion.newEmptyStruct().apply {
             add("valueThatExists", ion.newInt(1))
             add("ambiguousFieldName", ion.newInt(1))
             add("AmbiguousFieldName", ion.newInt(2))
-        }, valueFactory )
+        },
+        valueFactory
+    )
 
     @Test
     fun BindingsOfIonStruct_caseSensitiveNotFound() =
@@ -142,17 +145,17 @@ class BindingsTest : TestBase() {
     fun BindingsOfIonStruct_caseSensitiveFound() =
         assertEquals(
             ion.newInt(1),
-            bindingForCaseSensitiveTests[BindingName("valueThatExists", BindingCase.SENSITIVE)]?.ionValue)
+            bindingForCaseSensitiveTests[BindingName("valueThatExists", BindingCase.SENSITIVE)]?.ionValue
+        )
 
     @Test
     fun BindingsOfIonStruct_caseSensitiveAmbiguous() =
         try {
             bindingForCaseSensitiveTests[BindingName("duplicateFieldName", BindingCase.SENSITIVE)]
             fail("Didn't throw")
-        } catch(ex: EvaluationException) {
+        } catch (ex: EvaluationException) {
             assertEquals(ErrorCode.EVALUATOR_AMBIGUOUS_BINDING, ex.errorCode)
         }
-
 
     @Test
     fun BindingsOfIonStruct_caseInsensitiveNotFound() =
@@ -162,14 +165,15 @@ class BindingsTest : TestBase() {
     fun BindingsOfIonStruct_caseInsensitiveFound() =
         assertEquals(
             ion.newInt(1),
-            bindingForCaseInsensitiveTests[BindingName("valueThatExists", BindingCase.INSENSITIVE)]?.ionValue)
+            bindingForCaseInsensitiveTests[BindingName("valueThatExists", BindingCase.INSENSITIVE)]?.ionValue
+        )
 
     @Test
     fun BindingsOfIonStruct_caseInsensitiveAmbiguous() =
         try {
             bindingForCaseInsensitiveTests[BindingName("AMBIGUOUSFIELDNAME", BindingCase.INSENSITIVE)]
             fail("Didn't throw")
-        } catch(ex: EvaluationException) {
+        } catch (ex: EvaluationException) {
             assertEquals(ErrorCode.EVALUATOR_AMBIGUOUS_BINDING, ex.errorCode)
         }
 }

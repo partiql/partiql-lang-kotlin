@@ -114,7 +114,7 @@ private data class MetaContainerImpl internal constructor(private val metas: Tre
         metas.containsKey(tagName)
 
     override operator fun get(tagName: String): Meta =
-        metas[tagName] ?: throw IllegalArgumentException("Meta with tag '${tagName}' is not present in this MetaContainer instance.")
+        metas[tagName] ?: throw IllegalArgumentException("Meta with tag '$tagName' is not present in this MetaContainer instance.")
 
     override fun find(tagName: String): Meta? = metas[tagName]
 
@@ -146,12 +146,12 @@ private data class MetaContainerImpl internal constructor(private val metas: Tre
     override fun equals(other: Any?): Boolean =
         when {
             this === other -> true
-            else           -> when (other) {
-                null                 -> false
+            else -> when (other) {
+                null -> false
                 is MetaContainerImpl -> {
                     when {
                         metas.size != other.metas.size -> false
-                        else                           -> {
+                        else -> {
                             metas.forEach {
                                 val otherValue = other.metas[it.key]
                                 when (otherValue) {
@@ -167,7 +167,7 @@ private data class MetaContainerImpl internal constructor(private val metas: Tre
                         }
                     }
                 }
-                else                 -> false
+                else -> false
             }
         }
 }
@@ -188,16 +188,17 @@ fun metaContainerOf(metas: Iterable<Meta>): MetaContainer {
     return MetaContainerImpl(
         TreeMap<String, Meta>().apply {
             metas.forEach {
-                //Sanity check to make sure there are no duplicate keys (the type of the Meta instance is used as the key)
+                // Sanity check to make sure there are no duplicate keys (the type of the Meta instance is used as the key)
                 if (containsKey(it.tag)) {
                     IllegalArgumentException("List of metas contains one or more duplicate s-expression tag: ${it.tag}")
                 }
                 put(it.tag, it)
             }
-        })
+        }
+    )
 }
 
-infix fun Class<*>.to (m: Meta) = Pair(this, m)
+infix fun Class<*>.to(m: Meta) = Pair(this, m)
 
 /**
  * Merges two meta containers.
@@ -209,5 +210,5 @@ operator fun MetaContainer.plus(other: MetaContainer): MetaContainer =
         TreeMap<String, Meta>().also { newMap ->
             forEach { newMap.put(it.tag, it) }
             other.forEach { newMap.put(it.tag, it) }
-        })
-
+        }
+    )
