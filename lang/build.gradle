@@ -66,6 +66,8 @@ sourceSets {
     }
 }
 
+def partiqlDomainFile = 'partiql-domains.kt'
+
 task generatePigDomains {
     group = "code generation"
 
@@ -73,7 +75,7 @@ task generatePigDomains {
     // https://github.com/partiql/partiql-ir-generator/issues/5
 
     def typeUniverse = new File(projectDir, "resources/org/partiql/type-domains/partiql.ion")
-    def outputFile = new File(projectDir, "src/org/partiql/lang/domains/partiql-domains.kt")
+    def outputFile = new File(projectDir, "src/org/partiql/lang/domains/$partiqlDomainFile")
     def targetLanguage = new TargetLanguage.Kotlin("org.partiql.lang.domains")
     def cmd = new Command.Generate(typeUniverse, outputFile, targetLanguage)
 
@@ -93,6 +95,11 @@ task generatePigDomains {
 
 compileKotlin.dependsOn generatePigDomains
 
+ktlint {
+    filter {
+        exclude("**/$partiqlDomainFile")
+    }
+}
 
 dokka {
     outputFormat = "html"
