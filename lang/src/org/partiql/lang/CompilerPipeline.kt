@@ -311,7 +311,7 @@ internal class CompilerPipelineImpl(
         }
 
         // DL TODO: the "normalization" passes of the planner are redundant in this context.
-        // DL TODO: create a way to avoid running them?
+        // DL TODO: the other visitor transforms, i.e. the aggregate support, etc, are probably also not needed anymore
         when(val result = qp.plan(queryToCompile)) {
             is PlanningResult.Error -> {
                 // DL TODO:  this kinda is suboptimal because we're ignoring the warnings and picking only

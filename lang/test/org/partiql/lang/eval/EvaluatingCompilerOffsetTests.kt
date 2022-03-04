@@ -52,16 +52,18 @@ class EvaluatingCompilerOffsetTests : EvaluatorTestBase() {
                 "SELECT * FROM foo LIMIT 10 OFFSET 10",
                 "<<>>"
             ),
-            // LIMIT 2 and OFFSET 2 should return third and fourth results
-            EvaluatorTestCase(
-                "SELECT * FROM foo GROUP BY a LIMIT 2 OFFSET 2",
-                "<<{'a': 3}, {'a': 4}>>"
-            ),
-            // LIMIT and OFFSET applied after GROUP BY
-            EvaluatorTestCase(
-                "SELECT * FROM foo GROUP BY a LIMIT 1 OFFSET 1",
-                "<<{'a': 2}>>"
-            ),
+// PHYS_ALGEBRA_REFACTOR_GROUP_BY
+//            // LIMIT 2 and OFFSET 2 should return third and fourth results
+//            EvaluatorTestCase(
+//                "SELECT * FROM foo GROUP BY a LIMIT 2 OFFSET 2",
+//                "<<{'a': 3}, {'a': 4}>>"
+//            ),
+// PHYS_ALGEBRA_REFACTOR_GROUP_BY
+//            // LIMIT and OFFSET applied after GROUP BY
+//            EvaluatorTestCase(
+//                "SELECT * FROM foo GROUP BY a LIMIT 1 OFFSET 1",
+//                "<<{'a': 2}>>"
+//            ),
             // OFFSET value can be subtraction of 2 numbers
             EvaluatorTestCase(
                 "SELECT * FROM foo OFFSET 2 - 1",
@@ -82,27 +84,28 @@ class EvaluatingCompilerOffsetTests : EvaluatorTestBase() {
                 "SELECT * FROM foo OFFSET 4 / 2",
                 "<<{'a': 3}, {'a': 4}, {'a': 5}>>"
             ),
-            // OFFSET with GROUP BY and HAVING
-            EvaluatorTestCase(
-                "SELECT * FROM foo GROUP BY a HAVING a > 2 LIMIT 1 OFFSET 1",
-                "<<{'a': 4}>>"
-            ),
-            // OFFSET with PIVOT
-            EvaluatorTestCase(
-                """
-                    PIVOT foo.a AT foo.b 
-                    FROM <<{'a': 1, 'b':'I'}, {'a': 2, 'b':'II'}, {'a': 3, 'b':'III'}>> AS foo
-                    LIMIT 1 OFFSET 1
-                """.trimIndent(),
-                "{'II': 2}"
-            )
+// PHYS_ALGEBRA_REFACTOR_GROUP_BY
+//            // OFFSET with GROUP BY and HAVING
+//            EvaluatorTestCase(
+//                "SELECT * FROM foo GROUP BY a HAVING a > 2 LIMIT 1 OFFSET 1",
+//                "<<{'a': 4}>>"
+//            ),
+// PHYS_ALGEBRA_REFACTOR_GROUP_PIVOT
+//            // OFFSET with PIVOT
+//            EvaluatorTestCase(
+//                """
+//                    PIVOT foo.a AT foo.b
+//                    FROM <<{'a': 1, 'b':'I'}, {'a': 2, 'b':'II'}, {'a': 3, 'b':'III'}>> AS foo
+//                    LIMIT 1 OFFSET 1
+//                """.trimIndent(),
+//                "{'II': 2}"
+//            )
         )
     }
 
     @ParameterizedTest
     @ArgumentsSource(ArgsProviderValid::class)
     fun validTests(tc: EvaluatorTestCase) = runTestCase(tc, session)
-
     class ArgsProviderError : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
             // OFFSET -1 should throw exception

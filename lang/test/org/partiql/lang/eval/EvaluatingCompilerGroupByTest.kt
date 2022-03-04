@@ -15,10 +15,12 @@
 package org.partiql.lang.eval
 
 import junitparams.Parameters
+import org.junit.Ignore
 import org.junit.Test
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 
+@Ignore("PHYS_ALGEBRA_REFACTOR_GROUP_BY")
 class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     private val session = mapOf(

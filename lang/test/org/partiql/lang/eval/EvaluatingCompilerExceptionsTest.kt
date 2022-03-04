@@ -14,8 +14,9 @@
 
 package org.partiql.lang.eval
 
-import org.junit.Test
 import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.errors.ErrorCode
@@ -31,7 +32,6 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
     // to follow a pattern that we'd like to change anyway.
     // FIXME - these tests don't seem to work, and when enabled the options are set but the `FLOAT` type is missing
     //         the parameter at the point we test it in the EvaluatingCompiler
-    // XXX - for some reason, @Ignore did not work on this parameterized test.
     @Disabled
     @ParameterizedTest
     @ArgumentsSource(ErrorTestCasesTestCases::class)
@@ -96,9 +96,11 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
     )
 
     @Test
+    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun topLevelCountStar() = assertThrows("""COUNT(*)""", "COUNT(*) is not allowed in this context", NodeMetadata(1, 1))
 
     @Test
+    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun selectValueCountStar() = assertThrows(
         """SELECT VALUE COUNT(*) FROM numbers""",
         "COUNT(*) is not allowed in this context",
@@ -106,6 +108,7 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
     )
 
     @Test
+    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun selectListNestedAggregateCall() = assertThrows(
         """SELECT SUM(AVG(n)) FROM <<numbers, numbers>> AS n""",
         "The arguments of an aggregate function cannot contain aggregate functions",
@@ -451,13 +454,9 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
     //  incorrect source location in the reported error
     @Test
     fun orderByThrowsCorrectException() =
-        checkInputThrowingEvaluationException(
-            input = "SELECT 1 FROM <<>> ORDER BY x",
-            errorCode = ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
-            expectErrorContextValues = mapOf(
-                Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 1L,
-                Property.FEATURE_NAME to "ORDER BY"
-            )
-        )
+        // DL TODO: should I consider throwing a semantic exception with that error code?
+        assertThrows<NotImplementedError> {
+            voidEval("SELECT 1 FROM <<>> ORDER BY x")
+        }
+
 }

@@ -1,10 +1,12 @@
 package org.partiql.planner.transforms
 
 import com.amazon.ion.system.IonSystemBuilder
+import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.assertDoesNotThrow
+import org.junit.jupiter.api.fail
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.domains.PartiqlLogical
@@ -58,7 +60,14 @@ class LogicalToLogicalResolvedVisitorTransformTests {
         when (tc.expectation) {
             is Expectation.Success -> {
                 val resolved = algebra.toResolved(problemHandler, globalBindings, tc.allowUndefinedVariables)
-                assertEquals(tc.expectation.expectedAlgebra, resolved)
+
+                // not using assertEquals here because for some reason it is replacing the end of long strings with
+                // "..." and I can't see the differences between the actual and expected algebras.
+                if(tc.expectation.expectedAlgebra != resolved) {
+                    println("Expected: ${tc.expectation.expectedAlgebra}")
+                    println("Actual  : ${resolved}")
+                    fail("Actual algebra must match expected (see console)")
+                }
                 assertEquals(
                     emptyList<Problem>(),
                     problemHandler.problems,
@@ -423,7 +432,58 @@ class LogicalToLogicalResolvedVisitorTransformTests {
         )
     }
 
-    // TODO: cases for ambiguity between local and global lookups
+    @ParameterizedTest
+    @ArgumentsSource(SubqueryCases::class)
+    fun `sub-queries`(tc: TestCase) = runTestCase(tc)
+    class SubqueryCases : ArgumentsProviderBase() {
+        override fun getParameters() = listOf(
+            TestCase(
+                "SELECT b.* FROM (SELECT a.* FROM 1 AS a) AS b",
+                Expectation.Success(
+                    PartiqlLogicalResolved.build {
+                        query(
+                            bindingsToValues(
+                                mergeStruct(structFields(localId("b", 1))),
+                                scan(
+                                    bindingsToValues(
+                                        mergeStruct(structFields(localId("a", 0))),
+                                        scan(lit(ionInt(1)), varDecl("a", 0))
+                                    ),
+                                    varDecl("b", 1)
+                                )
+                            )
+                        )
+                    }
+                )
+            ),
+            TestCase(
+                "SELECT a.*, b.* FROM 1 AS a, (SELECT z.* FROM 1 AS z) AS b",
+                Expectation.Success(
+                    PartiqlLogicalResolved.build {
+                        query(
+                            bindingsToValues(
+                                mergeStruct(
+                                    structFields(localId("a", 0)),
+                                    structFields(localId("b", 2))),
+                                join(
+                                    joinType = inner(),
+                                    left = scan(lit(ionInt(1)), varDecl("a", 0)),
+                                    right = scan(
+                                            bindingsToValues(
+                                                mergeStruct(structFields(localId("z", 1))),
+                                                scan(lit(ionInt(1)), varDecl("z", 1))
+                                            ),
+                                            varDecl("b", 2)
+                                        ),
+                                    predicate = lit(ionBool(true))
+                                )
+                            )
+                        )
+                    }
+                )
+            )
+        )
+    }
 
     @ParameterizedTest
     @ArgumentsSource(DuplicateVariableCases::class)

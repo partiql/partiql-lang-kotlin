@@ -1,6 +1,8 @@
 package org.partiql.lang.eval
 
+import org.junit.Ignore
 import org.junit.Test
+import org.junit.jupiter.api.Disabled
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.util.sourceLocationProperties
@@ -66,6 +68,7 @@ class EvaluatingCompilerLimitTests : EvaluatorTestBase() {
         )
 
     @Test
+    @Ignore("PHYS_ALGEBRA_REFACTOR_GROUP_BY")
     fun `LIMIT applied after GROUP BY`() =
         assertEval(
             "SELECT g FROM `[{foo: 1, bar: 10}, {foo: 1, bar: 11}]` AS f GROUP BY f.foo GROUP AS g LIMIT 1",

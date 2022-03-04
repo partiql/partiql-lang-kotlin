@@ -98,40 +98,58 @@ private data class LogicalToLogicalResolvedVisitorTransform(
     private val problemHandler: ProblemHandler,
     /** If a variable is not found using [currentScope], we will attempt to locate the binding here instead. */
     private val globals: GlobalBindings,
-    /** The current [LocalScope]. */
-    private val currentScope: LocalScope = LocalScope(emptyList(), parent = null),
-    /** This should only be set for the `<expr>` in `(scan <expr> ...)` nodes. */
-    private val lookupUnqualifiedInGlobalsFirst: Boolean = false
 ) : PartiqlLogicalToPartiqlLogicalResolvedVisitorTransform() {
+    /** The current [LocalScope]. */
+    private var currentScope: LocalScope = LocalScope(emptyList(), parent = null)
+
+    private enum class VariableLookupStrategy {
+        LOCALS_THEN_GLOBALS,
+        GLOBALS_THEN_LOCALS
+    }
 
     /**
-     * Creates a new instance of this class bound to a nested lexical scope.
-     * Should be invoked at any place in the logical algebra where we descend into new lexical scope.
+     * This set to [VariableLookupStrategy.GLOBALS_THEN_LOCALS] for the `<expr>` in `(scan <expr> ...)` nodes and
+     * [VariableLookupStrategy.LOCALS_THEN_GLOBALS] for everything else.
      */
-    private fun nest(nextScope: LocalScope) = this.copy(currentScope = nextScope)
+    private var currentVariableLookupStrategy: VariableLookupStrategy = VariableLookupStrategy.LOCALS_THEN_GLOBALS
 
-    private fun superTransformBexprScanExpr(node: PartiqlLogical.Bexpr.Scan): PartiqlLogicalResolved.Expr =
-        super.transformBexprScan_expr(node)
+    private fun <T> withNestedScope(nextScope: LocalScope, block: () -> T): T {
+        val lastScope = currentScope
+        currentScope = nextScope
+        return block().also {
+            currentScope = lastScope
+        }
+    }
 
+    private fun <T> withVariableLookupStrategy(nextVariableLookupStrategy: VariableLookupStrategy, block: () -> T): T {
+        val lastVariableLookupStrategy = this.currentVariableLookupStrategy
+        this.currentVariableLookupStrategy = nextVariableLookupStrategy
+        return block().also {
+            this.currentVariableLookupStrategy = lastVariableLookupStrategy
+        }
+    }
     override fun transformBexprScan_expr(node: PartiqlLogical.Bexpr.Scan): PartiqlLogicalResolved.Expr =
-        // Have to call in to super.transformBexprScan_expr to avoid infinitely looping...
-        this.copy(lookupUnqualifiedInGlobalsFirst = true).superTransformBexprScanExpr(node)
+        withVariableLookupStrategy(VariableLookupStrategy.GLOBALS_THEN_LOCALS) {
+            super.transformBexprScan_expr(node)
+        }
 
     override fun transformBexprJoin_right(node: PartiqlLogical.Bexpr.Join): PartiqlLogicalResolved.Bexpr {
         // No need to change the current scope of the node.left.  Node.right gets the current scope +
         // the left output scope.
         val leftOutputScope = getNestedScope(node.left, currentScope)
         val rightInputScope = currentScope.concatenate(leftOutputScope, currentScope)
-        return this.copy(currentScope = rightInputScope).transformBexpr(node.right)
-    }
-
-    override fun transformExprBindingsToValues(node: PartiqlLogical.Expr.BindingsToValues): PartiqlLogicalResolved.Expr {
-        if(this.lookupUnqualifiedInGlobalsFirst) {
-            TODO("Support for sub-queries")
-        } else {
-            return super.transformExprBindingsToValues(node)
+        return withNestedScope(rightInputScope) {
+            this.transformBexpr(node.right)
         }
     }
+
+    // We are currently using bindings_to_values to denote a sub-query, which works for all the use cases we are
+    // presented with today, as every SELECT statement is replaced with `bindings_to_values at the top level.
+    override fun transformExprBindingsToValues(node: PartiqlLogical.Expr.BindingsToValues): PartiqlLogicalResolved.Expr =
+        // If we are in the expr of a scan node, we need to reset the lookup strategy
+        withVariableLookupStrategy(VariableLookupStrategy.LOCALS_THEN_GLOBALS) {
+            super.transformExprBindingsToValues(node)
+        }
 
     /**
      * Grabs the index meta added by [VariableIdAllocator] and stores it as an element in
@@ -172,7 +190,7 @@ private data class LogicalToLogicalResolvedVisitorTransform(
         val bindingName = BindingName(node.name.text, node.case.toBindingCase())
 
         val resolutionResult = if (
-            lookupUnqualifiedInGlobalsFirst &&
+            this.currentVariableLookupStrategy == VariableLookupStrategy.GLOBALS_THEN_LOCALS &&
             node.qualifier is PartiqlLogical.ScopeQualifier.Unqualified
         ) {
             when (val globalResolutionResult = globals.resolve(bindingName)) {
@@ -220,19 +238,23 @@ private data class LogicalToLogicalResolvedVisitorTransform(
 
     override fun transformExprBindingsToValues_exp(node: PartiqlLogical.Expr.BindingsToValues): PartiqlLogicalResolved.Expr {
         val bindings = getNestedScope(node.query, currentScope)
-        return nest(bindings).transformExpr(node.exp)
+        return withNestedScope(bindings) {
+            this.transformExpr(node.exp)
+        }
     }
 
     override fun transformBexprFilter_predicate(node: PartiqlLogical.Bexpr.Filter): PartiqlLogicalResolved.Expr {
         val bindings = getNestedScope(node.source, currentScope)
-        val nested = this.copy(currentScope = bindings)
-        return nested.transformExpr(node.predicate)
+        return withNestedScope(bindings) {
+            this.transformExpr(node.predicate)
+        }
     }
 
     override fun transformBexprJoin_predicate(node: PartiqlLogical.Bexpr.Join): PartiqlLogicalResolved.Expr {
         val bindings = getNestedScope(node, currentScope)
-        val nested = this.copy(currentScope = bindings)
-        return nested.transformExpr(node.predicate)
+        return withNestedScope(bindings) {
+            this.transformExpr(node.predicate)
+        }
     }
 
     /**
