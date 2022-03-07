@@ -14,16 +14,16 @@
 
 package org.partiql.lang.eval
 
+import com.amazon.ion.IonType
+import com.amazon.ion.IonValue
+import org.partiql.lang.CUSTOM_TEST_TYPES
 import org.partiql.lang.CompilerPipeline
+import org.partiql.lang.SqlException
 import org.partiql.lang.TestBase
 import org.partiql.lang.ast.AstDeserializerBuilder
 import org.partiql.lang.ast.AstSerializer
 import org.partiql.lang.ast.AstVersion
 import org.partiql.lang.ast.ExprNode
-import com.amazon.ion.IonType
-import com.amazon.ion.IonValue
-import org.partiql.lang.CUSTOM_TEST_TYPES
-import org.partiql.lang.SqlException
 import org.partiql.lang.ast.toAstStatement
 import org.partiql.lang.ast.toExprNode
 import org.partiql.lang.checkErrorAndErrorContext
@@ -64,10 +64,12 @@ abstract class EvaluatorTestBase : TestBase() {
 
     protected fun Map<String, String>.toSession() = EvaluationSession.build { globals(this@toSession.toBindings()) }
 
-    fun voidEval(source: String,
-                 compileOptions: CompileOptions = CompileOptions.standard(),
-                 session: EvaluationSession = EvaluationSession.standard(),
-                 compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = {  }) {
+    fun voidEval(
+        source: String,
+        compileOptions: CompileOptions = CompileOptions.standard(),
+        session: EvaluationSession = EvaluationSession.standard(),
+        compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }
+    ) {
         // force materialization
         eval(source, compileOptions, session, compilerPipelineBuilderBlock).ionValue
     }
@@ -85,21 +87,25 @@ abstract class EvaluatorTestBase : TestBase() {
      * @param compilerPipelineBuilderBlock any additional configuration to the pipeline after the options are set.
      * @param block function literal with receiver used to plug in custom assertions
      */
-    protected fun assertEval(source: String,
-                             expected: String,
-                             session: EvaluationSession = EvaluationSession.standard(),
-                             compileOptions: CompileOptions = CompileOptions.standard(),
-                             compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = {  },
-                             block: AssertExprValue.() -> Unit = { }) {
+    protected fun assertEval(
+        source: String,
+        expected: String,
+        session: EvaluationSession = EvaluationSession.standard(),
+        compileOptions: CompileOptions = CompileOptions.standard(),
+        compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { },
+        block: AssertExprValue.() -> Unit = { }
+    ) {
 
         val expectedIon = ion.singleValue(expected)
         val parser = SqlParser(ion, CUSTOM_TEST_TYPES)
         val originalAst = parser.parseAstStatement(source)
 
         fun evalAndAssert(ast: PartiqlAst.Statement, message: String) {
-            AssertExprValue(eval(ast, compileOptions, session, compilerPipelineBuilderBlock),
-                message =  "${compileOptions.typedOpBehavior} CAST in ${compileOptions.typingMode} typing mode, " +
-                    "evaluated '$source' with evaluator ($message)").apply { assertIonValue(expectedIon) }.run(block)
+            AssertExprValue(
+                eval(ast, compileOptions, session, compilerPipelineBuilderBlock),
+                message = "${compileOptions.typedOpBehavior} CAST in ${compileOptions.typingMode} typing mode, " +
+                    "evaluated '$source' with evaluator ($message)"
+            ).apply { assertIonValue(expectedIon) }.run(block)
         }
 
         // Evaluate the ast originally obtained from the parser
@@ -115,9 +121,11 @@ abstract class EvaluatorTestBase : TestBase() {
      * @param source query source to be tested
      * @param session [EvaluationSession] used for evaluation
      */
-    protected fun assertEvalIsMissing(source: String,
-                                      session: EvaluationSession = EvaluationSession.standard(),
-                                      compileOptions: CompileOptions = CompileOptions.standard()) {
+    protected fun assertEvalIsMissing(
+        source: String,
+        session: EvaluationSession = EvaluationSession.standard(),
+        compileOptions: CompileOptions = CompileOptions.standard()
+    ) {
 
         val parser = SqlParser(ion)
         val deserializer = AstDeserializerBuilder(ion).build()
@@ -165,15 +173,15 @@ abstract class EvaluatorTestBase : TestBase() {
         assertEquals(
             ast,
             roundTrippedAst,
-            "PIG ast resulting from round trip to ExprNode and back should be equivalent.")
+            "PIG ast resulting from round trip to ExprNode and back should be equivalent."
+        )
     }
-
 
     protected fun assertExprEquals(expected: ExprValue, actual: ExprValue, message: String) {
         // exprEquals consider NULL and MISSING to be equivalent so we also check types here
         val isActuallyEquivalent = expected.type == actual.type && expected.exprEquals(actual)
 
-        if(!isActuallyEquivalent) {
+        if (!isActuallyEquivalent) {
             println("Expected ionValue: ${ConfigurableExprValueFormatter.pretty.format(expected)} ")
             println("Actual ionValue  : ${ConfigurableExprValueFormatter.pretty.format(actual)} ")
             fail("$message Expected and actual ExprValue instances are not equivalent")
@@ -219,10 +227,12 @@ abstract class EvaluatorTestBase : TestBase() {
      * @param session [EvaluationSession] used for evaluation
      * @param compilerPipelineBuilderBlock any additional configuration to the pipeline after the options are set.
      */
-    protected fun eval(source: String,
-                       compileOptions: CompileOptions = CompileOptions.standard(),
-                       session: EvaluationSession = EvaluationSession.standard(),
-                       compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }): ExprValue {
+    protected fun eval(
+        source: String,
+        compileOptions: CompileOptions = CompileOptions.standard(),
+        session: EvaluationSession = EvaluationSession.standard(),
+        compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }
+    ): ExprValue {
 
         val p = SqlParser(ion, CUSTOM_TEST_TYPES)
 
@@ -238,10 +248,12 @@ abstract class EvaluatorTestBase : TestBase() {
      * @param session [EvaluationSession] used for evaluation
      * @param compilerPipelineBuilderBlock any additional configuration to the pipeline after the options are set.
      */
-    protected fun evalForPermissiveMode(source: String,
-                                        compileOptions: CompileOptions = CompileOptions.standard(),
-                                        session: EvaluationSession = EvaluationSession.standard(),
-                                        compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }): ExprValue {
+    protected fun evalForPermissiveMode(
+        source: String,
+        compileOptions: CompileOptions = CompileOptions.standard(),
+        session: EvaluationSession = EvaluationSession.standard(),
+        compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }
+    ): ExprValue {
 
         val p = SqlParser(ion)
 
@@ -261,10 +273,12 @@ abstract class EvaluatorTestBase : TestBase() {
      * @param session [EvaluationSession] used for evaluation
      * @param compilerPipelineBuilderBlock any additional configuration to the pipeline after the options are set.
      */
-    protected fun eval(astStatement: PartiqlAst.Statement,
-                       compileOptions: CompileOptions = CompileOptions.standard(),
-                       session: EvaluationSession = EvaluationSession.standard(),
-                       compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = {  } ): ExprValue {
+    protected fun eval(
+        astStatement: PartiqlAst.Statement,
+        compileOptions: CompileOptions = CompileOptions.standard(),
+        session: EvaluationSession = EvaluationSession.standard(),
+        compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }
+    ): ExprValue {
 
         // "Sneak" in this little assertion to test that every PIG ast that passes through
         // this function can be round-tripped to ExprNode and back.
@@ -278,13 +292,15 @@ abstract class EvaluatorTestBase : TestBase() {
         return pipeline.build().compile(astStatement).eval(session)
     }
 
-    private fun assertEvalThrows(query: String,
-                                 message: String,
-                                 metadata: NodeMetadata? = null,
-                                 internal: Boolean = false,
-                                 cause: KClass<out Throwable>? = null,
-                                 session: EvaluationSession = EvaluationSession.standard(),
-                                 typingMode: TypingMode = TypingMode.LEGACY): EvaluationException {
+    private fun assertEvalThrows(
+        query: String,
+        message: String,
+        metadata: NodeMetadata? = null,
+        internal: Boolean = false,
+        cause: KClass<out Throwable>? = null,
+        session: EvaluationSession = EvaluationSession.standard(),
+        typingMode: TypingMode = TypingMode.LEGACY
+    ): EvaluationException {
 
         val compileOptions = when (typingMode) {
             TypingMode.LEGACY -> CompileOptions.standard()
@@ -294,8 +310,7 @@ abstract class EvaluatorTestBase : TestBase() {
         try {
             voidEval(query, session = session, compileOptions = compileOptions)
             fail("didn't throw")
-        }
-        catch (e: EvaluationException) {
+        } catch (e: EvaluationException) {
             softAssert {
                 if (typingMode == TypingMode.LEGACY) {
                     assertThat(e.message).`as`("error message").isEqualTo(message)
@@ -304,11 +319,10 @@ abstract class EvaluatorTestBase : TestBase() {
 
                 if (cause != null) assertThat(e).hasRootCauseExactlyInstanceOf(cause.java)
 
-                if(metadata != null) {
+                if (metadata != null) {
                     assertThat(e.errorContext!![Property.LINE_NUMBER]!!.longValue()).`as`("line number").isEqualTo(metadata.line)
                     assertThat(e.errorContext!![Property.COLUMN_NUMBER]!!.longValue()).`as`("column number").isEqualTo(metadata.column)
-                }
-                else {
+                } else {
                     assertThat(e.errorContext).isNull()
                 }
             }
@@ -320,27 +334,27 @@ abstract class EvaluatorTestBase : TestBase() {
     /**
      *  Asserts that [func] throws an [SqlException] with the specified message, line and column number
      */
-    protected fun assertThrows(message: String,
-                               metadata: NodeMetadata? = null,
-                               internal: Boolean = false,
-                               cause: KClass<out Throwable>? = null,
-                               func: () -> Unit) {
+    protected fun assertThrows(
+        message: String,
+        metadata: NodeMetadata? = null,
+        internal: Boolean = false,
+        cause: KClass<out Throwable>? = null,
+        func: () -> Unit
+    ) {
         try {
             func()
             fail("didn't throw")
-        }
-        catch (e: EvaluationException) {
+        } catch (e: EvaluationException) {
             softAssert {
                 assertThat(e.message).`as`("error message").isEqualTo(message)
                 assertThat(e.internal).isEqualTo(internal)
 
                 if (cause != null) assertThat(e).hasRootCauseExactlyInstanceOf(cause.java)
 
-                if(metadata != null) {
+                if (metadata != null) {
                     assertThat(e.errorContext!![Property.LINE_NUMBER]!!.longValue()).`as`("line number").isEqualTo(metadata.line)
                     assertThat(e.errorContext!![Property.COLUMN_NUMBER]!!.longValue()).`as`("column number").isEqualTo(metadata.column)
-                }
-                else {
+                } else {
                     assertThat(e.errorContext).isNull()
                 }
             }
@@ -353,13 +367,15 @@ abstract class EvaluatorTestBase : TestBase() {
      *  It also verifies the behavior of error in [TypingMode.PERMISSIVE] mode.
      *  This should be used to ensure that the query is tested for both [TypingMode.LEGACY] and [TypingMode.PERMISSIVE]
      */
-    protected fun assertThrows(query: String,
-                               message: String,
-                               metadata: NodeMetadata? = null,
-                               expectedPermissiveModeResult: String? = null,
-                               internal: Boolean = false,
-                               cause: KClass<out Throwable>? = null,
-                               session: EvaluationSession = EvaluationSession.standard()) {
+    protected fun assertThrows(
+        query: String,
+        message: String,
+        metadata: NodeMetadata? = null,
+        expectedPermissiveModeResult: String? = null,
+        internal: Boolean = false,
+        cause: KClass<out Throwable>? = null,
+        session: EvaluationSession = EvaluationSession.standard()
+    ) {
 
         val exception = assertEvalThrows(query, message, metadata, internal, cause, session = session, typingMode = TypingMode.LEGACY)
 
@@ -382,58 +398,64 @@ abstract class EvaluatorTestBase : TestBase() {
     /**
      *  Asserts that [func] throws an [SqlException], line and column number in [TypingMode.PERMISSIVE] mode
      */
-    protected fun assertThrowsInPermissiveMode(errorCode: ErrorCode,
-                                               metadata: NodeMetadata? = null,
-                                               cause: KClass<out Throwable>? = null,
-                                               func: () -> Unit) {
+    protected fun assertThrowsInPermissiveMode(
+        errorCode: ErrorCode,
+        metadata: NodeMetadata? = null,
+        cause: KClass<out Throwable>? = null,
+        func: () -> Unit
+    ) {
         try {
             func()
             fail("didn't throw")
-        }
-        catch (e: SqlException) {
+        } catch (e: SqlException) {
             softAssert {
-                if(metadata != null) {
+                if (metadata != null) {
                     assertThat(e.errorContext!![Property.LINE_NUMBER]!!.longValue()).`as`("line number").isEqualTo(metadata.line)
                     assertThat(e.errorContext!![Property.COLUMN_NUMBER]!!.longValue()).`as`("column number").isEqualTo(metadata.column)
 
                     if (cause != null) assertThat(e).hasRootCauseExactlyInstanceOf(cause.java)
                 }
                 assertEquals(errorCode, e.errorCode, "Error codes should be same")
-
             }
         }
     }
 
-    protected fun checkInputThrowingEvaluationException(input: String,
-                                                        errorCode: ErrorCode? = null,
-                                                        expectErrorContextValues: Map<Property, Any>,
-                                                        cause: KClass<out Throwable>? = null,
-                                                        expectedPermissiveModeResult: String? = null) {
+    protected fun checkInputThrowingEvaluationException(
+        input: String,
+        errorCode: ErrorCode? = null,
+        expectErrorContextValues: Map<Property, Any>,
+        cause: KClass<out Throwable>? = null,
+        expectedPermissiveModeResult: String? = null
+    ) {
         checkInputThrowingEvaluationException(
             input,
             EvaluationSession.standard(),
             errorCode,
             expectErrorContextValues,
             cause,
-            expectedPermissiveModeResult)
+            expectedPermissiveModeResult
+        )
     }
 
-    protected fun checkInputThrowingEvaluationException(input: String,
-                                                        session: EvaluationSession,
-                                                        errorCode: ErrorCode? = null,
-                                                        expectErrorContextValues: Map<Property, Any>,
-                                                        cause: KClass<out Throwable>? = null,
-                                                        expectedPermissiveModeResult: String? = null) {
+    protected fun checkInputThrowingEvaluationException(
+        input: String,
+        session: EvaluationSession,
+        errorCode: ErrorCode? = null,
+        expectErrorContextValues: Map<Property, Any>,
+        cause: KClass<out Throwable>? = null,
+        expectedPermissiveModeResult: String? = null
+    ) {
         softAssert {
             try {
                 val result = eval(input, session = session).ionValue
-                fail("Expected SqlException but there was no Exception.  " +
-                     "The unexpected result was: \n${result.toPrettyString()}")
-            }
-            catch (e: SqlException) {
+                fail(
+                    "Expected SqlException but there was no Exception.  " +
+                        "The unexpected result was: \n${result.toPrettyString()}"
+                )
+            } catch (e: SqlException) {
                 if (cause != null) assertThat(e).hasRootCauseExactlyInstanceOf(cause.java)
                 checkErrorAndErrorContext(errorCode, e, expectErrorContextValues)
-                //Error thrown in LEGACY MODE needs to be checked in PERMISSIVE MODE
+                // Error thrown in LEGACY MODE needs to be checked in PERMISSIVE MODE
                 when (e.errorCode.errorBehaviorInPermissiveMode) {
                     ErrorBehaviorInPermissiveMode.THROW_EXCEPTION -> {
                         assertNull("An expectedPermissiveModeResult must not be specified when ErrorCode.errorBehaviorInPermissiveMode is set to ErrorBehaviorInPermissiveMode.THROW_EXCEPTION", expectedPermissiveModeResult)
@@ -449,8 +471,7 @@ abstract class EvaluatorTestBase : TestBase() {
                         assertExprEquals(expectedExprValueForPermissiveMode, originalExprValueForPermissiveMode, "(PERMISSIVE mode)")
                     }
                 }
-            }
-            catch (e: Exception) {
+            } catch (e: Exception) {
                 fail("Expected SqlException but a different exception was thrown:\n\t  $e")
             }
         }
@@ -460,13 +481,14 @@ abstract class EvaluatorTestBase : TestBase() {
         softAssert {
             try {
                 val result = eval(tc.sqlUnderTest, compileOptions = tc.compOptions.options, session = session).ionValue
-                fail("Expected EvaluationException but there was no Exception.  " +
-                     "The unepxected result was: \n${result.toPrettyString()}")
-            }
-            catch (e: EvaluationException) {
+                fail(
+                    "Expected EvaluationException but there was no Exception.  " +
+                        "The unepxected result was: \n${result.toPrettyString()}"
+                )
+            } catch (e: EvaluationException) {
                 if (tc.cause != null) assertThat(e).hasRootCauseExactlyInstanceOf(tc.cause.java)
                 checkErrorAndErrorContext(tc.errorCode, e, tc.expectErrorContextValues)
-                //Error thrown in LEGACY MODE needs to be checked in PERMISSIVE MODE
+                // Error thrown in LEGACY MODE needs to be checked in PERMISSIVE MODE
                 when (e.errorCode.errorBehaviorInPermissiveMode) {
                     ErrorBehaviorInPermissiveMode.THROW_EXCEPTION -> {
                         assertNull("An EvaluatorErrorTestCase.expectedPermissiveModeResult must not be specified when ErrorCode.errorBehaviorInPermissiveMode is set to ErrorBehaviorInPermissiveMode.THROW_EXCEPTION", tc.expectedPermissiveModeResult)
@@ -484,8 +506,7 @@ abstract class EvaluatorTestBase : TestBase() {
                         }
                     }
                 }
-            }
-            catch (e: Exception) {
+            } catch (e: Exception) {
                 fail("Expected EvaluationException but a different exception was thrown:\n\t  $e")
             }
         }
@@ -538,7 +559,8 @@ abstract class EvaluatorTestBase : TestBase() {
             eval(
                 source = tc.expectedSql,
                 compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,
-                compileOptions = co)
+                compileOptions = co
+            )
         } catch (e: Throwable) {
             showTestCase()
             e.printStackTrace()
@@ -551,7 +573,8 @@ abstract class EvaluatorTestBase : TestBase() {
                 source = tc.sqlUnderTest,
                 compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,
                 session = session,
-                compileOptions = co)
+                compileOptions = co
+            )
         } catch (e: Throwable) {
             showTestCase()
             e.printStackTrace()
@@ -569,9 +592,8 @@ abstract class EvaluatorTestBase : TestBase() {
     }
 }
 
-
 internal fun IonValue.removeAnnotations() {
-    when(this.type) {
+    when (this.type) {
         // Remove $partiql_missing annotation from NULL for assertions
         IonType.NULL -> this.removeTypeAnnotation(MISSING_ANNOTATION)
         IonType.DATAGRAM,

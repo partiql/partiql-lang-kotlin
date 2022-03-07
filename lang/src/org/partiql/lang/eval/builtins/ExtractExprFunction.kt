@@ -51,9 +51,16 @@ private const val SECONDS_PER_MINUTE = 60
 internal class ExtractExprFunction(val valueFactory: ExprValueFactory) : ExprFunction {
     override val signature = FunctionSignature(
         name = "extract",
-        requiredParameters = listOf(StaticType.SYMBOL, AnyOfType(setOf(StaticType.TIMESTAMP,
-                                                                        StaticType.TIME,
-                                                                        StaticType.DATE))),
+        requiredParameters = listOf(
+            StaticType.SYMBOL,
+            AnyOfType(
+                setOf(
+                    StaticType.TIMESTAMP,
+                    StaticType.TIME,
+                    StaticType.DATE
+                )
+            )
+        ),
         returnType = StaticType.DECIMAL
     )
 
@@ -65,11 +72,11 @@ internal class ExtractExprFunction(val valueFactory: ExprValueFactory) : ExprFun
     override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
         return when {
             required[1].isUnknown() -> valueFactory.nullValue
-            else                -> eval(env, required)
+            else -> eval(env, required)
         }
     }
 
-    private fun Timestamp.extractedValue(dateTimePart: DateTimePart) : BigDecimal {
+    private fun Timestamp.extractedValue(dateTimePart: DateTimePart): BigDecimal {
         return when (dateTimePart) {
             DateTimePart.YEAR -> year
             DateTimePart.MONTH -> month
@@ -82,7 +89,7 @@ internal class ExtractExprFunction(val valueFactory: ExprValueFactory) : ExprFun
         }.toBigDecimal()
     }
 
-    private fun LocalDate.extractedValue(dateTimePart: DateTimePart) : BigDecimal {
+    private fun LocalDate.extractedValue(dateTimePart: DateTimePart): BigDecimal {
         return when (dateTimePart) {
             DateTimePart.YEAR -> year
             DateTimePart.MONTH -> monthValue
@@ -97,7 +104,7 @@ internal class ExtractExprFunction(val valueFactory: ExprValueFactory) : ExprFun
         }.toBigDecimal()
     }
 
-    private fun Time.extractedValue(dateTimePart: DateTimePart) : BigDecimal {
+    private fun Time.extractedValue(dateTimePart: DateTimePart): BigDecimal {
         return when (dateTimePart) {
             DateTimePart.HOUR -> localTime.hour.toBigDecimal()
             DateTimePart.MINUTE -> localTime.minute.toBigDecimal()
@@ -122,7 +129,7 @@ internal class ExtractExprFunction(val valueFactory: ExprValueFactory) : ExprFun
 
     private fun eval(env: Environment, args: List<ExprValue>): ExprValue {
         val dateTimePart = args[0].dateTimePartValue()
-        val extractedValue = when(args[1].type) {
+        val extractedValue = when (args[1].type) {
             ExprValueType.TIMESTAMP -> args[1].timestampValue().extractedValue(dateTimePart)
             ExprValueType.DATE -> args[1].dateValue().extractedValue(dateTimePart)
             ExprValueType.TIME -> args[1].timeValue().extractedValue(dateTimePart)

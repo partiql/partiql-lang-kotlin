@@ -93,7 +93,7 @@ internal enum class MonthFormat {
     /**
      * Format symbol: `MMMMM`.
      */
-     FIRST_LETTER_OF_MONTH_NAME,
+    FIRST_LETTER_OF_MONTH_NAME,
 }
 
 /**
@@ -194,7 +194,6 @@ internal class NanoOfSecondPatternSymbol : PatternSymbol() {
      */
     override fun hashCode(): Int = field.hashCode()
 }
-
 
 /**
  * Represents the AM-PM "pseudo" timestamp field:  `a`.

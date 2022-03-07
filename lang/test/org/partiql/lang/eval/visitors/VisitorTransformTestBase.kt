@@ -14,9 +14,9 @@
 
 package org.partiql.lang.eval.visitors
 
+import org.junit.jupiter.api.fail
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.syntax.SqlParserTestBase
-import org.junit.jupiter.api.fail
 
 /** Provides some basic functionality for parameterized testing implementation of [PartiqlAst.VisitorTransform]. */
 abstract class VisitorTransformTestBase : SqlParserTestBase() {
@@ -45,9 +45,9 @@ abstract class VisitorTransformTestBase : SqlParserTestBase() {
         assertEquals(
             "The second pass of ${transform.javaClass.name} pass should not change the AST",
             actualAst,
-            anotherActualAst)
+            anotherActualAst
+        )
     }
-
 
     /**
      * Parses [TransformTestCase.originalSql], then runs the specified transformers on the AST.

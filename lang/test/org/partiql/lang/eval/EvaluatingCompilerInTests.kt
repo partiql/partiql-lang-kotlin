@@ -43,12 +43,14 @@ class EvaluatingCompilerInTests : EvaluatorTestBase() {
                 groupName = "IN--right operand not a sequence (TypingMode.LEGACY)",
                 sqlUnderTest = "1 IN 'so long'",
                 expectedSql = "false",
-                compOptions = CompOptions.STANDARD),
+                compOptions = CompOptions.STANDARD
+            ),
             EvaluatorTestCase(
                 groupName = "IN--right operand not a sequence (TypingMode.PERMISSIVE)",
                 sqlUnderTest = "1 IN 'thanks for all the fish'",
                 expectedSql = "MISSING",
-                compOptions = CompOptions.PERMISSIVE)
+                compOptions = CompOptions.PERMISSIVE
+            )
         )
     }
 }

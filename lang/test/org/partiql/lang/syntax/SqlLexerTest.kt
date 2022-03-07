@@ -176,7 +176,6 @@ class SqlLexerTest : TestBase() {
         token(TokenType.ION_LITERAL, "{{ \"not a comment //\" }}", 2, 27, 26)
     )
 
-
     @Test
     fun quotedStrings() = assertTokens(
         "'1e0' '{''a'':5}'",

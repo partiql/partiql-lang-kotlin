@@ -35,17 +35,18 @@ fun createCountStar(ion: IonSystem, metas: MetaContainer): CallAgg {
     // The [VariableReference] and [Literal] below should only get the [SourceLocationMeta] if present,
     // not any other metas.
     val srcLocationMetaOnly = metas.find(SourceLocationMeta.TAG)
-                                  ?.let { metaContainerOf(it) } ?: metaContainerOf()
-    
+        ?.let { metaContainerOf(it) } ?: metaContainerOf()
+
     // optimize count(*) to count(1). 
     return CallAgg(
         funcExpr = VariableReference(
             id = "count",
             case = CaseSensitivity.INSENSITIVE,
             scopeQualifier = ScopeQualifier.UNQUALIFIED,
-            metas = srcLocationMetaOnly),
+            metas = srcLocationMetaOnly
+        ),
         setQuantifier = SetQuantifier.ALL,
-        arg = Literal(ion.newInt(1), srcLocationMetaOnly), 
+        arg = Literal(ion.newInt(1), srcLocationMetaOnly),
         metas = metas.add(IsCountStarMeta.instance)
     )
 }

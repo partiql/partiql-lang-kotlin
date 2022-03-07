@@ -21,14 +21,14 @@ class FromSourceAliasVisitorTransform : VisitorTransformBase() {
 
         override fun transformFromSourceScan_asAlias(node: PartiqlAst.FromSource.Scan): SymbolPrimitive? {
             val thisFromSourceIndex = fromSourceCounter++
-            return node.asAlias ?:
-                    SymbolPrimitive(node.expr.extractColumnAlias(thisFromSourceIndex), node.extractSourceLocation())
+            return node.asAlias
+                ?: SymbolPrimitive(node.expr.extractColumnAlias(thisFromSourceIndex), node.extractSourceLocation())
         }
 
         override fun transformFromSourceUnpivot_asAlias(node: PartiqlAst.FromSource.Unpivot): SymbolPrimitive? {
             val thisFromSourceIndex = fromSourceCounter++
-            return node.asAlias ?:
-                    SymbolPrimitive(node.expr.extractColumnAlias(thisFromSourceIndex), node.extractSourceLocation())
+            return node.asAlias
+                ?: SymbolPrimitive(node.expr.extractColumnAlias(thisFromSourceIndex), node.extractSourceLocation())
         }
 
         // Need use a different [fromSourceCounter] for sub-queries.

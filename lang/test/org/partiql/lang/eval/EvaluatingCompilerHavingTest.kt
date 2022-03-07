@@ -47,7 +47,8 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
             { thingId: 19, attributeId: null },
             { thingId: 20, attributeId: null },
             { thingId: 21, attributeId: null },
-        ]""").toSession()
+        ]"""
+    ).toSession()
 
     @Test
     @Parameters
@@ -70,8 +71,9 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
                   { 'attributeId': 40,   'the_count': 4 },
                   { 'attributeId': 50,   'the_count': 5 },
                   { 'attributeId': null, 'the_count': 6 }
-                >>"""),
-           EvaluatorTestCase(
+                >>"""
+            ),
+            EvaluatorTestCase(
                 "GROUP BY with HAVING and WHERE",
                 """
                     SELECT attributeId, COUNT(*) as the_count
@@ -84,7 +86,8 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
                   { 'attributeId': 40,   'the_count': 2 },
                   { 'attributeId': 50,   'the_count': 5 },
                   { 'attributeId': null, 'the_count': 6 }
-                >>"""),
+                >>"""
+            ),
             EvaluatorTestCase(
                 "GROUP BY with HAVING - no rows",
                 """
@@ -93,7 +96,8 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
                     GROUP BY attributeId GROUP AS g
                     HAVING 1 = 0
                 """,
-                """<<>>"""),
+                """<<>>"""
+            ),
             EvaluatorTestCase(
                 "GROUP BY with HAVING",
                 """
@@ -105,7 +109,8 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
                 """<<
                   { 'attributeId': 40, 'the_count': 4 },
                   { 'attributeId': 50, 'the_count': 5 }
-                >>"""),
+                >>"""
+            ),
             EvaluatorTestCase(
                 "GROUP BY with HAVING and WHERE",
                 """
@@ -118,7 +123,8 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
                 """<<
                   { 'attributeId': 40, 'the_count': 2 },
                   { 'attributeId': 50, 'the_count': 5 }
-                >>"""),
+                >>"""
+            ),
             EvaluatorTestCase(
                 "GROUP BY with HAVING that calls COUNT(*)",
                 """
@@ -132,7 +138,8 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
                   { 'attributeId': 40,   'the_count': 4 },
                   { 'attributeId': 50,   'the_count': 5 },
                   { 'attributeId': null, 'the_count': 6 }
-                >>"""),
+                >>"""
+            ),
             EvaluatorTestCase(
                 "GROUP BY with HAVING that calls SUM(*)",
                 """
@@ -144,7 +151,8 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
                 """<<
                   { 'attributeId': 40, 'the_count': 160 },
                   { 'attributeId': 50, 'the_count': 250 }
-                >>"""),
+                >>"""
+            ),
             EvaluatorTestCase(
                 "GROUP BY with HAVING that references GROUP AS variable",
                 """
@@ -160,8 +168,9 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
                   { 'attributeId': 40,   'the_count': 4 },
                   { 'attributeId': 50,   'the_count': 5 },
                   { 'attributeId': null, 'the_count': 6 }
-                >>"""))
-
+                >>"""
+            )
+        )
 
     @Test
     fun havingWithoutGroupBy() {

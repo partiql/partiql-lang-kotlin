@@ -48,7 +48,7 @@ class ConfigurableExprValueFormatter(private val config: Configuration) : ExprVa
 
                 // fallback to an Ion literal for all types that don't have a native PartiQL representation
                 ExprValueType.FLOAT, ExprValueType.TIMESTAMP, ExprValueType.SYMBOL,
-                ExprValueType.CLOB,ExprValueType. BLOB, ExprValueType.SEXP -> prettyPrintIonLiteral(value)
+                ExprValueType.CLOB, ExprValueType.BLOB, ExprValueType.SEXP -> prettyPrintIonLiteral(value)
 
                 ExprValueType.LIST -> prettyPrintContainer(value, "[", "]")
                 ExprValueType.BAG -> prettyPrintContainer(value, "<<", ">>")
@@ -60,10 +60,12 @@ class ConfigurableExprValueFormatter(private val config: Configuration) : ExprVa
             }
         }
 
-        private fun prettyPrintContainer(value: ExprValue,
-                                         openingMarker: String,
-                                         closingMarker: String,
-                                         prettyPrintElement: (ExprValue) -> Unit = { v -> recursivePrettyPrint(v) }) {
+        private fun prettyPrintContainer(
+            value: ExprValue,
+            openingMarker: String,
+            closingMarker: String,
+            prettyPrintElement: (ExprValue) -> Unit = { v -> recursivePrettyPrint(v) }
+        ) {
 
             val iterator = value.iterator()
 
@@ -78,10 +80,9 @@ class ConfigurableExprValueFormatter(private val config: Configuration) : ExprVa
 
                 iterator.forEach { v ->
                     out.append(",")
-                    if(config.containerValueSeparator.isEmpty()) {
+                    if (config.containerValueSeparator.isEmpty()) {
                         out.append(" ")
-                    }
-                    else {
+                    } else {
                         out.append(config.containerValueSeparator)
                     }
 
@@ -94,13 +95,11 @@ class ConfigurableExprValueFormatter(private val config: Configuration) : ExprVa
                 out.append(config.containerValueSeparator)
                 writeIndentation()
                 out.append(closingMarker)
-            }
-            else {
+            } else {
                 // empty container
                 out.append(openingMarker).append(closingMarker)
             }
         }
-
 
         private fun prettyPrintIonLiteral(value: ExprValue) {
             val ionValue = value.ionValue

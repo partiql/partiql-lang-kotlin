@@ -28,7 +28,8 @@ class SemanticException(
     message: String = "",
     errorCode: ErrorCode,
     errorContext: PropertyValueMap?,
-    cause: Throwable? = null) : SqlException(message, errorCode, errorContext, cause) {
+    cause: Throwable? = null
+) : SqlException(message, errorCode, errorContext, cause) {
 
     /**
      * Alternate constructor using a [Problem]. Error message is generated using [ProblemDetails.message].

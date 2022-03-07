@@ -62,7 +62,7 @@ class PathComponentExprTest {
     @Test
     @Parameters
     fun equivalenceTest(tc: TestCase) {
-        when(tc.shouldBeEquivalent) {
+        when (tc.shouldBeEquivalent) {
             true -> {
                 assertTrue(tc.a.equals(tc.b), "a must equal b")
                 assertTrue(tc.b.equals(tc.a), "b must equal a")
@@ -74,8 +74,10 @@ class PathComponentExprTest {
 
                 // .hashCode() uniqueness is not guaranteed so this assertion might fail problem someday.
                 // however, the odds of this should be extremely low if `.hashCode()` is implemented effectively.
-                assertNotEquals(tc.a.hashCode(), tc.b.hashCode(),
-                                "a.hashCode() must not equal b.hashCode(), most likely.")
+                assertNotEquals(
+                    tc.a.hashCode(), tc.b.hashCode(),
+                    "a.hashCode() must not equal b.hashCode(), most likely."
+                )
             }
         }
     }
@@ -117,5 +119,4 @@ class PathComponentExprTest {
             TestCase(fooSensitive, oneInsensitive, false),
             TestCase(oneSensitive, oneInsensitive, false)
         )
-
 }

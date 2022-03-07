@@ -37,8 +37,11 @@ class PartiqlAstSanityValidatorTests : TestBase() {
                             project = projectValue(litInt(1)),
                             from = scan(litInt(1)),
                             group = groupBy(
-                                strategy =  groupPartial(),
-                                keyList =  groupKeyList(emptyList()))))
+                                strategy = groupPartial(),
+                                keyList = groupKeyList(emptyList())
+                            )
+                        )
+                    )
                 }
             )
         }
@@ -57,8 +60,13 @@ class PartiqlAstSanityValidatorTests : TestBase() {
                                     project = projectValue(litInt(1)),
                                     from = scan(litInt(1)),
                                     group = groupBy(
-                                        strategy =  groupPartial(),
-                                        keyList =  groupKeyList(emptyList()))))))
+                                        strategy = groupPartial(),
+                                        keyList = groupKeyList(emptyList())
+                                    )
+                                )
+                            )
+                        )
+                    )
                 }
             )
         }
@@ -80,8 +88,15 @@ class PartiqlAstSanityValidatorTests : TestBase() {
                                             project = projectValue(litInt(1)),
                                             from = scan(litInt(1)),
                                             group = groupBy(
-                                                strategy =  groupPartial(),
-                                                keyList =  groupKeyList(emptyList()))))))))
+                                                strategy = groupPartial(),
+                                                keyList = groupKeyList(emptyList())
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
                 }
             )
         }
@@ -98,7 +113,10 @@ class PartiqlAstSanityValidatorTests : TestBase() {
                             project = projectPivot(litInt(1), litInt(1)),
                             group = groupBy(
                                 strategy = groupFull(),
-                                keyList = groupKeyList(emptyList()))))
+                                keyList = groupKeyList(emptyList())
+                            )
+                        )
+                    )
                 }
             )
         }
@@ -111,13 +129,19 @@ class PartiqlAstSanityValidatorTests : TestBase() {
                 PartiqlAst.build {
                     query(
                         select(
-                            project = projectValue(select(
+                            project = projectValue(
+                                select(
                                     from = scan(litInt(1)),
                                     project = projectPivot(litInt(1), litInt(1)),
                                     group = groupBy(
                                         strategy = groupFull(),
-                                        keyList = groupKeyList(emptyList())))),
-                            from = scan(litInt(1))))
+                                        keyList = groupKeyList(emptyList())
+                                    )
+                                )
+                            ),
+                            from = scan(litInt(1))
+                        )
+                    )
                 }
             )
         }
@@ -134,7 +158,9 @@ class PartiqlAstSanityValidatorTests : TestBase() {
                             project = projectValue(litInt(1)),
                             // The error should occur when `groupBy` is null but `having` is not
                             group = null,
-                            having = litInt(1)))
+                            having = litInt(1)
+                        )
+                    )
                 }
             )
         }
@@ -146,14 +172,19 @@ class PartiqlAstSanityValidatorTests : TestBase() {
             partiqlAstSanityValidator.validate(
                 PartiqlAst.build {
                     query(
-                        select (
-                            from = scan(select(
-                                from = scan(litInt(1)),
-                                project = projectValue(litInt(1)),
-                                // The error should occur when `groupBy` is null but `having` is not
-                                group = null,
-                                having = litInt(1))),
-                            project = projectValue(litInt(1))))
+                        select(
+                            from = scan(
+                                select(
+                                    from = scan(litInt(1)),
+                                    project = projectValue(litInt(1)),
+                                    // The error should occur when `groupBy` is null but `having` is not
+                                    group = null,
+                                    having = litInt(1)
+                                )
+                            ),
+                            project = projectValue(litInt(1))
+                        )
+                    )
                 }
             )
         }
@@ -172,8 +203,11 @@ class PartiqlAstSanityValidatorTests : TestBase() {
                             // The error should occur when `groupBy.groupByItems` is empty and `having` is not null
                             group = groupBy(
                                 strategy = groupFull(),
-                                keyList = groupKeyList(emptyList())),
-                            having = litInt(1)))
+                                keyList = groupKeyList(emptyList())
+                            ),
+                            having = litInt(1)
+                        )
+                    )
                 }
             )
         }
@@ -186,15 +220,21 @@ class PartiqlAstSanityValidatorTests : TestBase() {
                 PartiqlAst.build {
                     query(
                         select(
-                            from = scan(select(
-                                from = scan(litInt(1)),
-                                project = projectValue(litInt(1)),
-                                // The error should occur when `groupBy.groupByItems` is empty and `having` is not null
-                                group = groupBy(
-                                    strategy = groupFull(),
-                                    keyList = groupKeyList(emptyList())),
-                                having = litInt(1))),
-                            project = projectValue(litInt(1))))
+                            from = scan(
+                                select(
+                                    from = scan(litInt(1)),
+                                    project = projectValue(litInt(1)),
+                                    // The error should occur when `groupBy.groupByItems` is empty and `having` is not null
+                                    group = groupBy(
+                                        strategy = groupFull(),
+                                        keyList = groupKeyList(emptyList())
+                                    ),
+                                    having = litInt(1)
+                                )
+                            ),
+                            project = projectValue(litInt(1))
+                        )
+                    )
                 }
             )
         }
@@ -216,7 +256,9 @@ class PartiqlAstSanityValidatorTests : TestBase() {
                     query(
                         select(
                             from = scan(lit(ion.singleValue("${Long.MAX_VALUE}0").toIonElement())),
-                            project = projectValue(litInt(1))))
+                            project = projectValue(litInt(1))
+                        )
+                    )
                 }
             )
         }
@@ -230,9 +272,14 @@ class PartiqlAstSanityValidatorTests : TestBase() {
                     query(
                         select(
                             from = scan(litInt(1)),
-                            project = projectValue(select(
-                                from = scan(lit(ion.singleValue("${Long.MAX_VALUE}0").toIonElement())),
-                                project = projectValue(litInt(1))))))
+                            project = projectValue(
+                                select(
+                                    from = scan(lit(ion.singleValue("${Long.MAX_VALUE}0").toIonElement())),
+                                    project = projectValue(litInt(1))
+                                )
+                            )
+                        )
+                    )
                 }
             )
         }

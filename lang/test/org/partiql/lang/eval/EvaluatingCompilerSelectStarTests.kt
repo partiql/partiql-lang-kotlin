@@ -14,9 +14,13 @@ class EvaluatingCompilerSelectStarTests : EvaluatorTestBase() {
                         sequenceOf(
                             createExprValue("""{ name: "fido" }""", 100, "addr0"),
                             createExprValue("""{ name: "bella" }""", 101, "addr1"),
-                            createExprValue("""{ name: "max" }""", 102, "addr2"))))))
+                            createExprValue("""{ name: "max" }""", 102, "addr2")
+                        )
+                    )
+                )
+            )
+        )
     }
-
 
     class AddressedExprValue(
         private val innerExprValue: ExprValue,
@@ -33,7 +37,8 @@ class EvaluatingCompilerSelectStarTests : EvaluatorTestBase() {
         AddressedExprValue(
             IonExprValue(valueFactory, ion.singleValue(ionText)),
             valueFactory.newInt(index),
-            valueFactory.newString(address))
+            valueFactory.newString(address)
+        )
 
     @Test
     @Parameters
@@ -49,7 +54,8 @@ class EvaluatingCompilerSelectStarTests : EvaluatorTestBase() {
                         { 'name': 'fido', 'idx': 100 }, 
                         { 'name': 'bella', 'idx': 101 },
                         { 'name': 'max', 'idx': 102 } 
-                    >>"""),
+                    >>"""
+            ),
             // SELECT * with BY projects the BY binding,
             EvaluatorTestCase(
                 query = "SELECT * FROM dogs BY addr",
@@ -57,7 +63,8 @@ class EvaluatingCompilerSelectStarTests : EvaluatorTestBase() {
                         { 'name': 'fido', 'addr': 'addr0' }, 
                         { 'name': 'bella', 'addr': 'addr1' },
                         { 'name': 'max', 'addr': 'addr2' } 
-                    >>"""),
+                    >>"""
+            ),
             // SELECT * with both AT and BY projects both,
             EvaluatorTestCase(
                 query = "SELECT * FROM dogs AT idx BY addr",
@@ -65,18 +72,18 @@ class EvaluatingCompilerSelectStarTests : EvaluatorTestBase() {
                         { 'name': 'fido', 'addr': 'addr0', 'idx': 100 }, 
                         { 'name': 'bella', 'addr': 'addr1', 'idx': 101 },
                         { 'name': 'max', 'addr': 'addr2', 'idx': 102 } 
-                    >>""")
+                    >>"""
+            )
         )
 
     @Test
-    fun `select * over table with mixed types` () {
+    fun `select * over table with mixed types`() {
         runTestCaseInLegacyAndPermissiveModes(
             EvaluatorTestCase(
                 query = "select f.* from << { 'bar': 1 }, 10, << 11, 12 >> >> as f",
-                expectedSql = """<< { 'bar': 1 } ,{ '_1': 10 }, { '_1': <<11, 12>> } >>"""),
-                session = EvaluationSession.standard())
+                expectedSql = """<< { 'bar': 1 } ,{ '_1': 10 }, { '_1': <<11, 12>> } >>"""
+            ),
+            session = EvaluationSession.standard()
+        )
     }
-
 }
-
-

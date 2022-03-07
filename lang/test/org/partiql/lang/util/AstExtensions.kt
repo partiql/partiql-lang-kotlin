@@ -32,7 +32,7 @@ internal fun IonSexp.mixIdentifierCase(): IonSexp {
     fun IonSymbol.cloneMixingCase(): IonSymbol {
         val mixedCase = stringValue()!!.foldIndexed("") { index, acc, c ->
             acc + when (index % 2 == 0) {
-                true  -> c.toUpperCase()
+                true -> c.toUpperCase()
                 false -> c.toLowerCase()
             }
         }
@@ -41,14 +41,14 @@ internal fun IonSexp.mixIdentifierCase(): IonSexp {
     }
 
     fun IonSexp.isId(): Boolean = size == 2 &&
-                                  this[0] is IonSymbol &&
-                                  this[0].stringValue() == "id"
+        this[0] is IonSymbol &&
+        this[0].stringValue() == "id"
 
     fun IonSexp.copyRewritingNodes(): IonSexp = foldIndexed(ion.newEmptySexp()) { index, newNode, element ->
         val rewritten = when {
             element is IonSymbol && this.isId() && index == 1 -> element.cloneMixingCase()
-            element is IonSexp                                -> element.copyRewritingNodes()
-            else                                              -> element.clone()
+            element is IonSexp -> element.copyRewritingNodes()
+            else -> element.clone()
         }
 
         newNode.add(rewritten)

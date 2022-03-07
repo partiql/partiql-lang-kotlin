@@ -57,17 +57,18 @@ internal class TimestampParser {
          * @throws EvaluationException if the offset seconds value was not a multiple of 60.
          */
         private fun TemporalAccessor.getLocalOffset(): Int? =
-            if(!this.isSupported(ChronoField.OFFSET_SECONDS))
+            if (!this.isSupported(ChronoField.OFFSET_SECONDS))
                 null
             else {
                 val offsetSeconds = this.get(ChronoField.OFFSET_SECONDS)
                 if (offsetSeconds % 60 != 0) {
                     throw EvaluationException(
                         "The parsed timestamp has a UTC offset that not a multiple of 1 minute. " +
-                        "This timestamp cannot be parsed accurately because the maximum " +
-                        "resolution for an Ion timestamp offset is 1 minute.",
+                            "This timestamp cannot be parsed accurately because the maximum " +
+                            "resolution for an Ion timestamp offset is 1 minute.",
                         ErrorCode.EVALUATOR_PRECISION_LOSS_WHEN_PARSING_TIMESTAMP,
-                        internal = false)
+                        internal = false
+                    )
                 }
                 offsetSeconds / 60
             }
@@ -77,7 +78,7 @@ internal class TimestampParser {
          */
         fun parseTimestamp(timestampString: String, formatPattern: String): Timestamp {
             val pattern = FormatPattern.fromString(formatPattern)
-            //TODO: do this during compilation
+            // TODO: do this during compilation
             pattern.validateForTimestampParsing()
 
             val accessor: TemporalAccessor by lazy {
@@ -88,11 +89,12 @@ internal class TimestampParser {
                         .toFormatter()
                         .parse(timestampString)
 
-                    //DateTimeFormatter.ofPattern(formatPattern).parse(timestampString)
-                }
-                catch (ex: IllegalArgumentException) {
-                    throw EvaluationException(ex, ErrorCode.EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN,
-                        internal = false)
+                    // DateTimeFormatter.ofPattern(formatPattern).parse(timestampString)
+                } catch (ex: IllegalArgumentException) {
+                    throw EvaluationException(
+                        ex, ErrorCode.EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN,
+                        internal = false
+                    )
                 }
             }
             val year: Int by lazy {
@@ -108,74 +110,91 @@ internal class TimestampParser {
                     TimestampField.FRACTION_OF_SECOND -> {
                         val nanoSeconds = BigDecimal.valueOf(accessor.getLong(ChronoField.NANO_OF_SECOND))
                         val secondsFraction = nanoSeconds.scaleByPowerOfTen(-9).stripTrailingZeros()
-                        //Note that this overload of Timestamp.forSecond(...) creates a timestamp with "fraction" precision.
-                        Timestamp.forSecond(year,
-                                            accessor.get(ChronoField.MONTH_OF_YEAR),
-                                            accessor.get(ChronoField.DAY_OF_MONTH),
-                                            accessor.get(ChronoField.HOUR_OF_DAY),
-                                            accessor.get(ChronoField.MINUTE_OF_HOUR),
-                                            BigDecimal.valueOf(accessor.getLong(ChronoField.SECOND_OF_MINUTE)).add(
-                                                secondsFraction) as BigDecimal,
-                                            accessor.getLocalOffset())
+                        // Note that this overload of Timestamp.forSecond(...) creates a timestamp with "fraction" precision.
+                        Timestamp.forSecond(
+                            year,
+                            accessor.get(ChronoField.MONTH_OF_YEAR),
+                            accessor.get(ChronoField.DAY_OF_MONTH),
+                            accessor.get(ChronoField.HOUR_OF_DAY),
+                            accessor.get(ChronoField.MINUTE_OF_HOUR),
+                            BigDecimal.valueOf(accessor.getLong(ChronoField.SECOND_OF_MINUTE)).add(
+                                secondsFraction
+                            ) as BigDecimal,
+                            accessor.getLocalOffset()
+                        )
                     }
-                    TimestampField.SECOND_OF_MINUTE   -> {
-                        //Note that this overload of Timestamp.forSecond(...) creates a timestamp with "second" precision.
-                        Timestamp.forSecond(year,
-                                            accessor.get(ChronoField.MONTH_OF_YEAR),
-                                            accessor.get(ChronoField.DAY_OF_MONTH),
-                                            accessor.get(ChronoField.HOUR_OF_DAY),
-                                            accessor.get(ChronoField.MINUTE_OF_HOUR),
-                                            accessor.get(ChronoField.SECOND_OF_MINUTE),
-                                            accessor.getLocalOffset())
+                    TimestampField.SECOND_OF_MINUTE -> {
+                        // Note that this overload of Timestamp.forSecond(...) creates a timestamp with "second" precision.
+                        Timestamp.forSecond(
+                            year,
+                            accessor.get(ChronoField.MONTH_OF_YEAR),
+                            accessor.get(ChronoField.DAY_OF_MONTH),
+                            accessor.get(ChronoField.HOUR_OF_DAY),
+                            accessor.get(ChronoField.MINUTE_OF_HOUR),
+                            accessor.get(ChronoField.SECOND_OF_MINUTE),
+                            accessor.getLocalOffset()
+                        )
                     }
                     TimestampField.MINUTE_OF_HOUR -> {
-                        Timestamp.forMinute(year,
-                                            accessor.get(ChronoField.MONTH_OF_YEAR),
-                                            accessor.get(ChronoField.DAY_OF_MONTH),
-                                            accessor.get(ChronoField.HOUR_OF_DAY),
-                                            accessor.get(ChronoField.MINUTE_OF_HOUR),
-                                            accessor.getLocalOffset())
+                        Timestamp.forMinute(
+                            year,
+                            accessor.get(ChronoField.MONTH_OF_YEAR),
+                            accessor.get(ChronoField.DAY_OF_MONTH),
+                            accessor.get(ChronoField.HOUR_OF_DAY),
+                            accessor.get(ChronoField.MINUTE_OF_HOUR),
+                            accessor.getLocalOffset()
+                        )
                     }
                     TimestampField.HOUR_OF_DAY -> {
-                        Timestamp.forMinute(year,
-                                            accessor.get(ChronoField.MONTH_OF_YEAR),
-                                            accessor.get(ChronoField.DAY_OF_MONTH),
-                                            accessor.get(ChronoField.HOUR_OF_DAY),
-                                            0, //Ion Timestamp has no HOUR precision -- default minutes to 0
-                                            accessor.getLocalOffset())
+                        Timestamp.forMinute(
+                            year,
+                            accessor.get(ChronoField.MONTH_OF_YEAR),
+                            accessor.get(ChronoField.DAY_OF_MONTH),
+                            accessor.get(ChronoField.HOUR_OF_DAY),
+                            0, // Ion Timestamp has no HOUR precision -- default minutes to 0
+                            accessor.getLocalOffset()
+                        )
                     }
-                    TimestampField.DAY_OF_MONTH  -> {
-                        Timestamp.forDay(year,
-                                         accessor.get(ChronoField.MONTH_OF_YEAR),
-                                         accessor.get(ChronoField.DAY_OF_MONTH))
+                    TimestampField.DAY_OF_MONTH -> {
+                        Timestamp.forDay(
+                            year,
+                            accessor.get(ChronoField.MONTH_OF_YEAR),
+                            accessor.get(ChronoField.DAY_OF_MONTH)
+                        )
                     }
                     TimestampField.MONTH_OF_YEAR -> {
                         Timestamp.forMonth(year, accessor.get(ChronoField.MONTH_OF_YEAR))
                     }
-                    TimestampField.YEAR          -> {
+                    TimestampField.YEAR -> {
                         Timestamp.forYear(year)
                     }
                     TimestampField.AM_PM, TimestampField.OFFSET, null -> {
-                        errNoContext("This code should be unreachable because AM_PM or OFFSET or null" +
-                                     "should never the value of formatPattern.leastSignificantField by at this point",
-                                     errorCode = ErrorCode.EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN,
-                                     internal = true)
+                        errNoContext(
+                            "This code should be unreachable because AM_PM or OFFSET or null" +
+                                "should never the value of formatPattern.leastSignificantField by at this point",
+                            errorCode = ErrorCode.EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN,
+                            internal = true
+                        )
                     }
                 }
             }
-            //Can be thrown by Timestamp.for*(...) methods.
-            catch(ex: IllegalArgumentException) {
-                throw EvaluationException(ex,
+            // Can be thrown by Timestamp.for*(...) methods.
+            catch (ex: IllegalArgumentException) {
+                throw EvaluationException(
+                    ex,
                     ErrorCode.EVALUATOR_CUSTOM_TIMESTAMP_PARSE_FAILURE,
                     propertyValueMapOf(Property.TIMESTAMP_FORMAT_PATTERN to formatPattern),
-                    internal = false)
+                    internal = false
+                )
             }
-            //Can be thrown by TemporalAccessor.get(ChronoField)
-            catch(ex: DateTimeException) {
-                throw EvaluationException(ex,
-                     ErrorCode.EVALUATOR_CUSTOM_TIMESTAMP_PARSE_FAILURE,
-                     propertyValueMapOf(Property.TIMESTAMP_FORMAT_PATTERN to formatPattern),
-                     internal = false)
+            // Can be thrown by TemporalAccessor.get(ChronoField)
+            catch (ex: DateTimeException) {
+                throw EvaluationException(
+                    ex,
+                    ErrorCode.EVALUATOR_CUSTOM_TIMESTAMP_PARSE_FAILURE,
+                    propertyValueMapOf(Property.TIMESTAMP_FORMAT_PATTERN to formatPattern),
+                    internal = false
+                )
             }
         }
     }

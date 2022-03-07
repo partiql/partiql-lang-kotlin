@@ -1,7 +1,6 @@
-package org.partiql.examples;
+package org.partiql.examples
 
 import org.partiql.examples.util.Example
-
 import java.io.PrintStream
 
 class CSVJavaExampleTest : BaseExampleTest() {

@@ -34,7 +34,8 @@ data class EvaluatorTestCase(
     /**
      * The [CompOptions] containing the [CompileOptions] to use when executing [sqlUnderTest] and [expectedSql].
      */
-    val compOptions: CompOptions = CompOptions.STANDARD) {
+    val compOptions: CompOptions = CompOptions.STANDARD
+) {
 
     constructor(
         query: String,
@@ -45,6 +46,6 @@ data class EvaluatorTestCase(
     /** This will show up in the IDE's test runner. */
     override fun toString() = when {
         groupName != null -> "$groupName : $sqlUnderTest : $compOptions"
-        else              -> "$sqlUnderTest : $compOptions"
+        else -> "$sqlUnderTest : $compOptions"
     }
 }

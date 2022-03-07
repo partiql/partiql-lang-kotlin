@@ -14,12 +14,12 @@
 
 package org.partiql.lang.eval
 
-import org.partiql.lang.SqlException
 import junitparams.Parameters
 import org.junit.Test
+import org.partiql.lang.SqlException
+import org.partiql.lang.errors.ErrorCode
 import java.util.Collections
 import java.util.Random
-import org.partiql.lang.errors.ErrorCode
 
 class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
     // the lists below represent the expected ordering of values
@@ -33,7 +33,7 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
         "`null.int`",
         "`null.struct`"
     )
-    
+
     private val nonNullExpr = listOf(
         listOf(
             "false",
@@ -260,11 +260,11 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
             "<<>>"
         ),
         listOf(
-            //The ordered values are: true, true, 1
+            // The ordered values are: true, true, 1
             "<<1, true, true>>"
         ),
         listOf(
-            //The ordered values are: true, true, 1, 1, 1
+            // The ordered values are: true, true, 1, 1, 1
             "<<true, 1, 1.0, `1e0`, true>>"
         ),
         listOf(
@@ -291,7 +291,7 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
     )
 
     private val basicExprs = listOf(nullExprs) + nonNullExpr
-    
+
     private fun <T> List<List<T>>.flatten() = this.flatMap { it }
     private fun List<List<String>>.eval() = map {
         it.map {
@@ -305,11 +305,13 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
 
     private val iterations = 1000
 
-    data class CompareCase(val id: Int,
-                           val description: String,
-                           val comparator: Comparator<ExprValue>,
-                           val unordered: List<ExprValue>,
-                           val expected: List<List<ExprValue>>) {
+    data class CompareCase(
+        val id: Int,
+        val description: String,
+        val comparator: Comparator<ExprValue>,
+        val unordered: List<ExprValue>,
+        val expected: List<List<ExprValue>>
+    ) {
         override fun toString() = "$description.$id"
     }
 
@@ -325,9 +327,11 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
         fun <T> List<List<T>>.moveHeadToTail(): List<List<T>> =
             drop(1).plusElement(this[0])
 
-        fun shuffleCase(description: String,
-                        comparator: Comparator<ExprValue>,
-                        expectedSource: List<List<String>>): CompareCase {
+        fun shuffleCase(
+            description: String,
+            comparator: Comparator<ExprValue>,
+            expectedSource: List<List<String>>
+        ): CompareCase {
 
             val expected = expectedSource.eval()
             val unordered = expected.flatShuffle()

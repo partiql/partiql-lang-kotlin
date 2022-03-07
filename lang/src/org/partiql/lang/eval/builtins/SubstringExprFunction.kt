@@ -94,7 +94,7 @@ import org.partiql.lang.types.StaticType
  *              L1 = E1 - S1
  *              return java's substring(C, S1, E1)
  */
-internal class SubstringExprFunction(private val valueFactory: ExprValueFactory): ExprFunction {
+internal class SubstringExprFunction(private val valueFactory: ExprValueFactory) : ExprFunction {
     override val signature = FunctionSignature(
         name = "substring",
         requiredParameters = listOf(StaticType.STRING, StaticType.INT),

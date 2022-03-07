@@ -2,7 +2,13 @@ package org.partiql.testscript.parser.ast.builders
 
 import com.amazon.ion.IonType
 import org.partiql.testscript.Result
-import org.partiql.testscript.parser.*
+import org.partiql.testscript.parser.DuplicatedFieldError
+import org.partiql.testscript.parser.IonValueWithLocation
+import org.partiql.testscript.parser.MissingRequiredError
+import org.partiql.testscript.parser.ParserError
+import org.partiql.testscript.parser.ScriptLocation
+import org.partiql.testscript.parser.UnexpectedFieldError
+import org.partiql.testscript.parser.UnexpectedIonTypeError
 
 internal abstract class BaseBuilder<T>(val location: ScriptLocation) {
     protected val errors = mutableListOf<ParserError>()
@@ -12,9 +18,7 @@ internal abstract class BaseBuilder<T>(val location: ScriptLocation) {
             errors.add(MissingRequiredError(label, location))
         }
     }
-    
-    
-    
+
     abstract fun build(): Result<T>
 }
 

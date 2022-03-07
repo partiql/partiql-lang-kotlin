@@ -15,6 +15,4 @@ class IonExampleParser(val ion: IonSystem) {
         reader.next() ?: return null
         return ion.newValue(reader)
     }
-
-
 }

@@ -33,8 +33,9 @@ class GroupBuilderImpl(private val groupName: String) : GroupBuilder {
                 sqlUnderTest = sql,
                 expectedIonResult = expected,
                 compileOptions = compileOptions,
-                extraAssertions = extraAssertions))
-
+                extraAssertions = extraAssertions
+            )
+        )
     }
 
     fun build() = IonResultTestGroup(groupName, tests)

@@ -4,7 +4,6 @@ import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.TypingMode
 
-
 fun CompileOptions.Builder.legacyCastBehavior() {
     typedOpBehavior(TypedOpBehavior.LEGACY)
 }

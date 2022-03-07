@@ -6,7 +6,6 @@ import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.domains.PartiqlAst
 
-
 /**
  * Determines an appropriate column name for the given [PartiqlAst.Expr].
  *
@@ -57,8 +56,10 @@ internal fun PartiqlAst.Expr.getStartingSourceLocationMeta(): SourceLocationMeta
         override fun visitMetas(node: MetaContainer, accumulator: SourceLocationMeta): SourceLocationMeta {
             val nodeSourceLocation = node.sourceLocation
             return nodeSourceLocation?.takeIf {
-                (nodeSourceLocation.lineNum < accumulator.lineNum ||
-                (nodeSourceLocation.lineNum == accumulator.lineNum && nodeSourceLocation.charOffset < accumulator.charOffset))
+                (
+                    nodeSourceLocation.lineNum < accumulator.lineNum ||
+                        (nodeSourceLocation.lineNum == accumulator.lineNum && nodeSourceLocation.charOffset < accumulator.charOffset)
+                    )
             } ?: accumulator
         }
     }

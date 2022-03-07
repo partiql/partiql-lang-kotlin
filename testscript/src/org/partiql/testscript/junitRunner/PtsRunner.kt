@@ -3,20 +3,23 @@ package org.partiql.testscript.junitRunner
 import com.amazon.ion.system.IonSystemBuilder
 import org.junit.runner.Description
 import org.junit.runner.Runner
+import org.junit.runner.notification.Failure
 import org.junit.runner.notification.RunNotifier
-import org.partiql.testscript.parser.Parser
+import org.partiql.testscript.compiler.AppendedTestExpression
+import org.partiql.testscript.compiler.Compiler
+import org.partiql.testscript.compiler.ExpectedResult
+import org.partiql.testscript.compiler.SkippedTestExpression
+import org.partiql.testscript.compiler.TestExpression
+import org.partiql.testscript.compiler.TestScriptExpression
 import org.partiql.testscript.evaluator.TestFailure
 import org.partiql.testscript.evaluator.TestResultSuccess
-import org.partiql.testscript.parser.NamedInputStream
-import java.io.File
-import java.io.FileInputStream
-import org.junit.runner.notification.Failure
-import org.partiql.testscript.compiler.*
 import org.partiql.testscript.extensions.listRecursive
 import org.partiql.testscript.extensions.ptsFileFilter
-import java.io.FileFilter
+import org.partiql.testscript.parser.NamedInputStream
+import org.partiql.testscript.parser.Parser
+import java.io.File
+import java.io.FileInputStream
 import java.lang.AssertionError
-import java.lang.IllegalArgumentException
 
 /**
  * A Junit4 runner that integrates PTS tests into JUnit.
@@ -25,9 +28,9 @@ class PtsRunner(private val testClass: Class<*>) : Runner() {
     private val ion = IonSystemBuilder.standard().build()
 
     private val testInstance = testClass
-            .asSubclass(Junit4PtsTest::class.java)
-            .getDeclaredConstructor()
-            .newInstance()
+        .asSubclass(Junit4PtsTest::class.java)
+        .getDeclaredConstructor()
+        .newInstance()
 
     private val parser = Parser(ion)
     private val compiler = Compiler(ion)
@@ -35,12 +38,12 @@ class PtsRunner(private val testClass: Class<*>) : Runner() {
     private val evaluator = testInstance.evaluator
 
     private val ionDocs = testInstance.ptsFilePaths
-            .asSequence()
-            .map { File(it) }
-            .map { it.listRecursive(ptsFileFilter) }
-            .flatMap { it.asSequence() }
-            .map { NamedInputStream(it.absolutePath, FileInputStream(it)) }
-            .toList()
+        .asSequence()
+        .map { File(it) }
+        .map { it.listRecursive(ptsFileFilter) }
+        .flatMap { it.asSequence() }
+        .map { NamedInputStream(it.absolutePath, FileInputStream(it)) }
+        .toList()
 
     private val ast = parser.parse(ionDocs)
     private val testExpressions = compiler.compile(ast)
@@ -51,7 +54,8 @@ class PtsRunner(private val testClass: Class<*>) : Runner() {
             testResults.forEach {
                 val testDescription = Description.createTestDescription(
                     testClass,
-                    "${it.test.scriptLocation} ${it.test.id}")
+                    "${it.test.scriptLocation} ${it.test.id}"
+                )
 
                 notifier.fireTestStarted(testDescription)
                 try {
@@ -69,11 +73,9 @@ class PtsRunner(private val testClass: Class<*>) : Runner() {
                             notifier.fireTestFailure(Failure(testDescription, AssertionError(errorMessage)))
                         }
                     }
-                }
-                catch (e: Exception) {
+                } catch (e: Exception) {
                     notifier.fireTestFailure(Failure(description, e))
-                }
-                finally {
+                } finally {
                     notifier.fireTestFinished(testDescription)
                 }
             }

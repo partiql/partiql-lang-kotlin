@@ -23,20 +23,20 @@ import com.amazon.ion.Timestamp
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.toIonValue
-import org.partiql.lang.ast.ExprNode
-import org.partiql.lang.ast.toAstStatement
-import org.partiql.lang.ast.UniqueNameMeta
-import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.AggregateCallSiteListMeta
 import org.partiql.lang.ast.AggregateRegisterIdMeta
-import org.partiql.lang.ast.IsCountStarMeta
-import org.partiql.lang.domains.staticType
 import org.partiql.lang.ast.AstDeserializerBuilder
 import org.partiql.lang.ast.AstVersion
-import org.partiql.lang.ast.sourceLocation
+import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.IonElementMetaContainer
+import org.partiql.lang.ast.IsCountStarMeta
+import org.partiql.lang.ast.SourceLocationMeta
+import org.partiql.lang.ast.UniqueNameMeta
+import org.partiql.lang.ast.sourceLocation
+import org.partiql.lang.ast.toAstStatement
 import org.partiql.lang.ast.toPartiQlMetaContainer
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.staticType
 import org.partiql.lang.domains.toBindingCase
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
@@ -51,16 +51,16 @@ import org.partiql.lang.eval.like.parsePattern
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
 import org.partiql.lang.syntax.SqlParser
-import org.partiql.lang.types.TypedOpParameter
-import org.partiql.lang.types.IntType
-import org.partiql.lang.types.StaticType
+import org.partiql.lang.types.AnyOfType
+import org.partiql.lang.types.AnyType
 import org.partiql.lang.types.FunctionSignature
-import org.partiql.lang.types.UnknownArguments
+import org.partiql.lang.types.IntType
 import org.partiql.lang.types.SingleType
+import org.partiql.lang.types.StaticType
+import org.partiql.lang.types.TypedOpParameter
+import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.types.UnsupportedTypeCheckException
 import org.partiql.lang.types.toTypedOpParameter
-import org.partiql.lang.types.AnyType
-import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.codePointSequence
@@ -122,11 +122,12 @@ internal class EvaluatingCompiler(
             "compilationContextStack was empty.", ErrorCode.EVALUATOR_UNEXPECTED_VALUE, internal = true
         )
 
-    //Note: please don't make this inline -- it messes up [EvaluationException] stack traces and
-    //isn't a huge benefit because this is only used at SQL-compile time anyway.
+    // Note: please don't make this inline -- it messes up [EvaluationException] stack traces and
+    // isn't a huge benefit because this is only used at SQL-compile time anyway.
     private fun <R> nestCompilationContext(
         expressionContext: ExpressionContext,
-        fromSourceNames: Set<String>, block: () -> R
+        fromSourceNames: Set<String>,
+        block: () -> R
     ): R {
         compilationContextStack.push(
             when {
@@ -415,7 +416,8 @@ internal class EvaluatingCompiler(
                     ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
                     errorContextFrom(metas).also {
                         it[Property.FEATURE_NAME] = expr.javaClass.canonicalName
-                    }, internal = false
+                    },
+                    internal = false
                 )
             }
         }
@@ -478,7 +480,7 @@ internal class EvaluatingCompiler(
                 val longValue: Long = value.scalar.numberValue()?.toLong()
                     ?: error(
                         "ExprValue.numberValue() must not be `NULL` when its type is INT." +
-                                "This indicates that the ExprValue instance has a bug."
+                            "This indicates that the ExprValue instance has a bug."
                     )
 
                 // PRO-TIP:  make sure to use the `Long` primitive type here with `.contains` otherwise
@@ -488,7 +490,7 @@ internal class EvaluatingCompiler(
             }
             else -> error(
                 "The expression's static type was supposed to be INT but instead it was ${value.type}" +
-                        "This may indicate the presence of a bug in the type inferencer."
+                    "This may indicate the presence of a bug in the type inferencer."
             )
         }
     }
@@ -530,7 +532,8 @@ internal class EvaluatingCompiler(
                                         !validator(naryResult),
                                         ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
                                         { ErrorDetails(metas, "Integer overflow", errorContextFrom(metas)) },
-                                        { naryResult })
+                                        { naryResult }
+                                    )
                                 }
                             }
                             // If there is no IntType StaticType, can't validate the integer size either.
@@ -574,9 +577,9 @@ internal class EvaluatingCompiler(
         val exprThunk = compileAstExpr(expr.expr)
 
         val computeThunk = thunkFactory.thunkEnvOperands(metas, exprThunk) { _, value ->
-            //Invoking .numberValue() here makes this essentially just a type check
+            // Invoking .numberValue() here makes this essentially just a type check
             value.numberValue()
-            //Original value is returned unmodified.
+            // Original value is returned unmodified.
             value
         }
 
@@ -719,7 +722,7 @@ internal class EvaluatingCompiler(
 
         fun isOptimizedCase(values: List<PartiqlAst.Expr>): Boolean = values.all { it is PartiqlAst.Expr.Lit && !it.value.isNull }
 
-        fun optimizedCase(values: List<PartiqlAst.Expr>): ThunkEnv{
+        fun optimizedCase(values: List<PartiqlAst.Expr>): ThunkEnv {
             // Put all the literals in the sequence into a pre-computed map to be checked later by the thunk.
             // If the left-hand value is one of these we can short-circuit with a result of TRUE.
             // This is the fastest possible case and allows for hundreds of literal values (or more) in the
@@ -822,7 +825,7 @@ internal class EvaluatingCompiler(
                     val currValue = currThunk(env)
                     when {
                         currValue.isUnknown() -> hasUnknowns = true
-                        //Short circuit only if we encounter a known false value.
+                        // Short circuit only if we encounter a known false value.
                         !currValue.booleanValue() -> return@thunk valueFactory.newBoolean(false)
                     }
                 }
@@ -838,7 +841,7 @@ internal class EvaluatingCompiler(
                 argThunks.forEach { currThunk ->
                     val currValue = currThunk(env)
                     when (currValue.type) {
-                        //Short circuit only if we encounter a known false value.
+                        // Short circuit only if we encounter a known false value.
                         ExprValueType.BOOL -> if (!currValue.booleanValue()) return@thunk valueFactory.newBoolean(false)
                         ExprValueType.NULL -> hasNull = true
                         // type mismatch, return missing
@@ -889,7 +892,7 @@ internal class EvaluatingCompiler(
                 argThunks.forEach { currThunk ->
                     val currValue = currThunk(env)
                     when (currValue.type) {
-                        //Short circuit only if we encounter a known true value.
+                        // Short circuit only if we encounter a known true value.
                         ExprValueType.BOOL -> if (currValue.booleanValue()) return@thunk valueFactory.newBoolean(true)
                         ExprValueType.NULL -> hasNull = true
                         else -> hasMissing = true // type mismatch, return missing.
@@ -955,7 +958,7 @@ internal class EvaluatingCompiler(
                     "${func.signature.name} takes exactly ${func.signature.arity.first} arguments, received: ${funcArgThunks.size}"
                 else ->
                     "${func.signature.name} takes between ${func.signature.arity.first} and " +
-                            "${func.signature.arity.last} arguments, received: ${funcArgThunks.size}"
+                        "${func.signature.arity.last} arguments, received: ${funcArgThunks.size}"
             }
 
             throw EvaluationException(
@@ -1185,7 +1188,8 @@ internal class EvaluatingCompiler(
                 "FLOAT precision parameter is unsupported",
                 ErrorCode.SEMANTIC_FLOAT_PRECISION_UNSUPPORTED,
                 errorContextFrom(expr.type.metas),
-                internal = false)
+                internal = false
+            )
         }
 
         val typeMatchFunc = when (val staticType = typedOpParameter.staticType) {
@@ -1223,7 +1227,8 @@ internal class EvaluatingCompiler(
                 "FLOAT precision parameter is unsupported",
                 ErrorCode.SEMANTIC_FLOAT_PRECISION_UNSUPPORTED,
                 errorContextFrom(asType.metas),
-                internal = false)
+                internal = false
+            )
         }
 
         fun typeOpValidate(
@@ -1241,7 +1246,7 @@ internal class EvaluatingCompiler(
                 locationMeta?.let { fillErrorContext(errorContext, it) }
 
                 throw EvaluationException(
-                    "Validation failure for ${asType}",
+                    "Validation failure for $asType",
                     ErrorCode.EVALUATOR_CAST_FAILED,
                     errorContext,
                     internal = false
@@ -1329,7 +1334,6 @@ internal class EvaluatingCompiler(
                         }
                     }
                 }
-
             } catch (e: EvaluationException) {
                 if (e.internal) {
                     throw e
@@ -1715,11 +1719,13 @@ internal class EvaluatingCompiler(
                                 is PartiqlAst.SetQuantifier.All -> projectedRows
                             }.let { rowsWithOffsetAndLimit(it, env) }
 
-                            valueFactory.newBag(quantifiedRows.map {
-                                // TODO make this expose the ordinal for ordered sequences
-                                // make sure we don't expose the underlying value's name out of a SELECT
-                                it.unnamedValue()
-                            })
+                            valueFactory.newBag(
+                                quantifiedRows.map {
+                                    // TODO make this expose the ordinal for ordered sequences
+                                    // make sure we don't expose the underlying value's name out of a SELECT
+                                    it.unnamedValue()
+                                }
+                            )
                         }
                     else -> {
                         // Grouping is needed
@@ -1747,7 +1753,7 @@ internal class EvaluatingCompiler(
                             }
                             else -> { ->
                                 RegisterBank(aggregateListMeta.aggregateCallSites.size).apply {
-                                    //set up aggregate registers
+                                    // set up aggregate registers
                                     compiledAggregates?.forEachIndexed { index, ca ->
                                         set(index, ca.factory.create())
                                     }
@@ -1781,7 +1787,6 @@ internal class EvaluatingCompiler(
                                         env.copy(currentGroup = syntheticGroup),
                                         listOf(syntheticGroup.key)
                                     )
-
 
                                     valueFactory.newBag(listOf(groupResult).asSequence())
                                 }
@@ -1817,7 +1822,7 @@ internal class EvaluatingCompiler(
                                     // For each "row" in the output of the FROM clause
                                     fromProductions.forEach { fromProduction ->
 
-                                        //Determine the group key for this value
+                                        // Determine the group key for this value
                                         val groupKey = groupKeyThunk(fromProduction.env)
 
                                         // look up existing group using group key (this is slow)
@@ -1834,11 +1839,13 @@ internal class EvaluatingCompiler(
 
                                         groupAsName.run {
                                             val seq = fromSourceBindingNames.asSequence().map { pair ->
-                                                (fromProduction.env.current[pair.bindingName] ?: errNoContext(
-                                                    "Could not resolve from source binding name during group as variable mapping",
-                                                    errorCode = ErrorCode.INTERNAL_ERROR,
-                                                    internal = true
-                                                )).namedValue(pair.nameExprValue)
+                                                (
+                                                    fromProduction.env.current[pair.bindingName] ?: errNoContext(
+                                                        "Could not resolve from source binding name during group as variable mapping",
+                                                        errorCode = ErrorCode.INTERNAL_ERROR,
+                                                        internal = true
+                                                    )
+                                                    ).namedValue(pair.nameExprValue)
                                             }.asSequence()
 
                                             group.groupValues.add(createStructExprValue(seq, StructOrdering.UNORDERED))
@@ -1867,11 +1874,13 @@ internal class EvaluatingCompiler(
                 is PartiqlAst.Projection.ProjectValue -> {
                     nestCompilationContext(ExpressionContext.NORMAL, allFromSourceAliases) {
                         val valueThunk = compileAstExpr(project.value)
-                        getQueryThunk(thunkFactory.thunkEnvValueList(project.metas) { env, _ ->
-                            valueThunk(
-                                env
-                            )
-                        })
+                        getQueryThunk(
+                            thunkFactory.thunkEnvValueList(project.metas) { env, _ ->
+                                valueThunk(
+                                    env
+                                )
+                            }
+                        )
                     }
                 }
                 is PartiqlAst.Projection.ProjectPivot -> {
@@ -2005,7 +2014,6 @@ internal class EvaluatingCompiler(
 
                 groupByEnv.nest(currentGroup.key.bindings, newGroup = currentGroup)
                     .nest(groupAsBindings)
-
             }
             else -> { groupByEnv, currentGroup ->
                 groupByEnv.nest(currentGroup.key.bindings, newGroup = currentGroup)
@@ -2033,7 +2041,7 @@ internal class EvaluatingCompiler(
                 }
             }
             else -> { groupByEnv, currentGroup ->
-                //Create a closure that simply performs the final projection and
+                // Create a closure that simply performs the final projection and
                 // returns the result.
                 selectProjectionThunk(groupByEnv, listOf(currentGroup.key))
             }
@@ -2366,8 +2374,8 @@ internal class EvaluatingCompiler(
                         val indexExpr = pathComponent.index
                         val caseSensitivity = pathComponent.case
                         when {
-                            //If indexExpr is a literal string, there is no need to evaluate it--just compile a
-                            //thunk that directly returns a bound value
+                            // If indexExpr is a literal string, there is no need to evaluate it--just compile a
+                            // thunk that directly returns a bound value
                             indexExpr is PartiqlAst.Expr.Lit && indexExpr.value.toIonValue(valueFactory.ion) is IonString -> {
                                 val lookupName = BindingName(
                                     indexExpr.value.toIonValue(valueFactory.ion).stringValue()!!,
@@ -2400,7 +2408,6 @@ internal class EvaluatingCompiler(
                                                 )
                                                 TypingMode.PERMISSIVE -> valueFactory.missingValue
                                             }
-
                                         }
                                     } ?: valueFactory.missingValue
                                 }
@@ -2462,7 +2469,8 @@ internal class EvaluatingCompiler(
                             }
                         }
                     }
-                })
+                }
+            )
         }
         return when (componentThunks.size) {
             1 -> componentThunks.first()
@@ -2550,7 +2558,8 @@ internal class EvaluatingCompiler(
                 val patternParts = getPatternParts(
                     valueFactory.newFromIonValue(patternExpr.value.toIonValue(valueFactory.ion)),
                     (escapeExpr as? PartiqlAst.Expr.Lit)?.value?.toIonValue(valueFactory.ion)
-                        ?.let { valueFactory.newFromIonValue(it) })
+                        ?.let { valueFactory.newFromIonValue(it) }
+                )
 
                 // If valueExpr is also a literal then we can evaluate this at compile time and return a constant.
                 if (valueExpr is PartiqlAst.Expr.Lit) {
@@ -2569,14 +2578,14 @@ internal class EvaluatingCompiler(
                 val patternThunk = compileAstExpr(patternExpr)
                 when (escapeExpr) {
                     null -> {
-                        //thunk that re-compiles the DFA every evaluation without a custom escape sequence
+                        // thunk that re-compiles the DFA every evaluation without a custom escape sequence
                         thunkFactory.thunkEnvOperands(metas, valueThunk, patternThunk) { _, value, pattern ->
                             val pps = getPatternParts(pattern, null)
                             runPatternParts(value, pps)
                         }
                     }
                     else -> {
-                        //thunk that re-compiles the pattern every evaluation but *with* a custom escape sequence
+                        // thunk that re-compiles the pattern every evaluation but *with* a custom escape sequence
                         val escapeThunk = compileAstExpr(escapeExpr)
                         thunkFactory.thunkEnvOperands(
                             metas,
@@ -2634,7 +2643,7 @@ internal class EvaluatingCompiler(
 
         escape?.let {
             val escapeCharString = checkEscapeChar(escape, escapeLocationMeta)
-            val escapeCharCodePoint = escapeCharString.codePointAt(0)  // escape is a string of length 1
+            val escapeCharCodePoint = escapeCharString.codePointAt(0) // escape is a string of length 1
             val validEscapedChars = setOf('_'.toInt(), '%'.toInt(), escapeCharCodePoint)
             val iter = patternString.codePointSequence().iterator()
 
@@ -2707,7 +2716,8 @@ internal class EvaluatingCompiler(
                 ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
                 errorContextFrom(node.metas).also {
                     it[Property.FEATURE_NAME] = "DDL Operations"
-                }, internal = false
+                },
+                internal = false
             )
         }
 
@@ -2718,7 +2728,8 @@ internal class EvaluatingCompiler(
                 ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
                 errorContextFrom(node.metas).also {
                     it[Property.FEATURE_NAME] = "DML Operations"
-                }, internal = false
+                },
+                internal = false
             )
         }
 
@@ -2749,7 +2760,7 @@ internal class EvaluatingCompiler(
                     "${procedure.signature.name} takes exactly ${procedure.signature.arity.first} arguments, received: ${args.size}"
                 else ->
                     "${procedure.signature.name} takes between ${procedure.signature.arity.first} and " +
-                            "${procedure.signature.arity.last} arguments, received: ${args.size}"
+                        "${procedure.signature.arity.last} arguments, received: ${args.size}"
             }
 
             throw EvaluationException(
@@ -2881,7 +2892,6 @@ private enum class ExpressionContext {
     AGG_ARG
 }
 
-
 /**
  * Tracks state used by the compiler while compiling.
  *
@@ -2916,7 +2926,6 @@ private class SingleProjectionElement(val name: ExprValue, val thunk: ThunkEnv) 
  * `bat`.
  */
 private class MultipleProjectionElement(val thunks: List<ThunkEnv>) : ProjectionElement()
-
 
 private val MetaContainer.sourceLocationMeta get() = this[SourceLocationMeta.TAG] as? SourceLocationMeta
 

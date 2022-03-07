@@ -20,19 +20,23 @@ import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.err
 
 internal fun errAmbiguousBinding(bindingName: String, matchingNames: List<String>): Nothing {
-    err("Multiple matches were found for the specified identifier",
+    err(
+        "Multiple matches were found for the specified identifier",
         ErrorCode.EVALUATOR_AMBIGUOUS_BINDING,
-        propertyValueMapOf(Property.BINDING_NAME to bindingName,
-                           Property.BINDING_NAME_MATCHES to matchingNames.joinToString(", ")),
-        internal = false)
+        propertyValueMapOf(
+            Property.BINDING_NAME to bindingName,
+            Property.BINDING_NAME_MATCHES to matchingNames.joinToString(", ")
+        ),
+        internal = false
+    )
 }
 
 /**
  * Compares this string to [other] using the rules specified by [case].
  */
 fun String.isBindingNameEquivalent(other: String, case: BindingCase): Boolean =
-    when(case) {
-        BindingCase.SENSITIVE   -> this.equals(other)
+    when (case) {
+        BindingCase.SENSITIVE -> this.equals(other)
         BindingCase.INSENSITIVE -> this.caseInsensitiveEquivalent(other)
     }
 
@@ -56,8 +60,8 @@ abstract class BindingHelper private constructor() {
          */
         @JvmStatic
         fun bindingNameEquals(id1: String, id2: String, case: BindingCase): Boolean =
-            when(case) {
-                BindingCase.SENSITIVE   -> id1.equals(id2)
+            when (case) {
+                BindingCase.SENSITIVE -> id1.equals(id2)
                 BindingCase.INSENSITIVE -> id1.caseInsensitiveEquivalent(id2)
             }
 

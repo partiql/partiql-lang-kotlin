@@ -7,10 +7,10 @@ import org.partiql.lang.errors.Property
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.to
 
-class EvaluatingCompilerOffsetTests: EvaluatorTestBase() {
+class EvaluatingCompilerOffsetTests : EvaluatorTestBase() {
     private val session = mapOf("foo" to "[ { 'a': 1 }, { 'a': 2 }, { 'a': 3 }, { 'a': 4 }, { 'a': 5 } ]").toSession()
 
-    class ArgsProviderValid: ArgumentsProviderBase() {
+    class ArgsProviderValid : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
             // OFFSET 0 should not affect results
             EvaluatorTestCase(

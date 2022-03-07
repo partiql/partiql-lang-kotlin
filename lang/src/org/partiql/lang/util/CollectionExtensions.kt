@@ -29,7 +29,6 @@ inline val <T> List<T>.tail: List<T>
         else -> this.subList(1, this.size)
     }
 
-
 /** Returns true if any ExprValue in the Iterable is an unknown value, i.e. either MISSING or NULL. */
 fun Iterable<ExprValue>.isAnyUnknown() = any { it.isUnknown() }
 
@@ -38,7 +37,6 @@ fun Iterable<ExprValue>.isAnyNull() = any { it.type == ExprValueType.NULL }
 
 /** Returns true if any ExprValue in the Iterable is missing. */
 fun Iterable<ExprValue>.isAnyMissing() = any { it.type == ExprValueType.MISSING }
-
 
 /**
  * This should function the same as Kotlin's [Sequence<T>.take(n: Int)] function but takes
@@ -94,7 +92,6 @@ internal fun <T> Sequence<T>.drop(count: Long): Sequence<T> {
     }
 }
 
-
 /**
  * Given a predicate function, return `true` if all members of the list satisfy the predicate, return false otherwise.
  * In the case that an empty list is given, the result is `true`.
@@ -108,7 +105,7 @@ internal fun <T> Sequence<T>.drop(count: Long): Sequence<T> {
  * @param T type of each element in the list
  *
  */
-inline fun <T> List<T>.forAll(predicate: (T) -> Boolean) : Boolean =
+inline fun <T> List<T>.forAll(predicate: (T) -> Boolean): Boolean =
     this.find { x -> !predicate(x) } == null
 
 /**
@@ -134,8 +131,10 @@ fun <T> List<Iterable<T>>.product(): Iterable<List<T>> = foldLeftProduct(Unit) {
  * @param S The source type of the list to be map and folded upon.
  * @param C The context to map and fold over [S].
  */
-inline fun <T, S, C> List<S>.foldLeftProduct(initialContext: C,
-                                      crossinline map: (C, S) -> Iterator<Pair<C, T>>) : Iterable<List<T>> =
+inline fun <T, S, C> List<S>.foldLeftProduct(
+    initialContext: C,
+    crossinline map: (C, S) -> Iterator<Pair<C, T>>
+): Iterable<List<T>> =
     object : Iterable<List<T>> {
         override fun iterator(): Iterator<List<T>> {
             val sources = this@foldLeftProduct

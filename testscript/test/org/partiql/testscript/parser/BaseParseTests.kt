@@ -20,8 +20,12 @@ abstract class BaseParseTests {
         assertEquals(expectedErrorMessage, exception.message)
     }
 
-    protected fun singleModulesList(vararg node: AstNode) = listOf(ModuleNode(node.asList(),
-            ScriptLocation("$inputBasePath/input[0].sqlts", 0)))
+    protected fun singleModulesList(vararg node: AstNode) = listOf(
+        ModuleNode(
+            node.asList(),
+            ScriptLocation("$inputBasePath/input[0].sqlts", 0)
+        )
+    )
 
     protected fun assertParse(vararg ionDocuments: String, expected: List<ModuleNode>) {
         val inputs = createInput(*ionDocuments)

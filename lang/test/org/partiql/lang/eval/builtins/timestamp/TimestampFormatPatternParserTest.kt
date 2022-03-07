@@ -1,11 +1,11 @@
 package org.partiql.lang.eval.builtins.timestamp
 
-import org.partiql.lang.util.*
-import junitparams.*
-import org.junit.*
+import junitparams.JUnitParamsRunner
+import junitparams.Parameters
 import org.junit.Test
-import org.junit.runner.*
-import kotlin.test.*
+import org.junit.runner.RunWith
+import org.partiql.lang.util.softAssert
+import kotlin.test.assertEquals
 
 @RunWith(JUnitParamsRunner::class)
 internal class TimestampFormatPatternParserTest {
@@ -35,7 +35,7 @@ internal class TimestampFormatPatternParserTest {
         "mm" to listOf(MinuteOfHourPatternSymbol(TimestampFieldFormat.ZERO_PADDED_NUMBER)),
 
         "s" to listOf(SecondOfMinutePatternPatternSymbol(TimestampFieldFormat.NUMBER)),
-        "ss" to listOf(SecondOfMinutePatternPatternSymbol( TimestampFieldFormat.ZERO_PADDED_NUMBER)),
+        "ss" to listOf(SecondOfMinutePatternPatternSymbol(TimestampFieldFormat.ZERO_PADDED_NUMBER)),
 
         "x" to listOf(OffsetPatternSymbol(OffsetFieldFormat.ZERO_PADDED_HOUR)),
 
@@ -86,7 +86,8 @@ internal class TimestampFormatPatternParserTest {
             SecondOfMinutePatternPatternSymbol(TimestampFieldFormat.ZERO_PADDED_NUMBER),
             TextItem("."),
             FractionOfSecondPatternSymbol(3),
-            OffsetPatternSymbol(OffsetFieldFormat.ZERO_PADDED_HOUR_COLON_MINUTE_OR_Z)),
+            OffsetPatternSymbol(OffsetFieldFormat.ZERO_PADDED_HOUR_COLON_MINUTE_OR_Z)
+        ),
 
         "yyyyMMddHHmmssSSSXXXXX" to listOf(
             YearPatternSymbol(YearFormat.FOUR_DIGIT_ZERO_PADDED),
@@ -96,7 +97,8 @@ internal class TimestampFormatPatternParserTest {
             MinuteOfHourPatternSymbol(TimestampFieldFormat.ZERO_PADDED_NUMBER),
             SecondOfMinutePatternPatternSymbol(TimestampFieldFormat.ZERO_PADDED_NUMBER),
             FractionOfSecondPatternSymbol(3),
-            OffsetPatternSymbol(OffsetFieldFormat.ZERO_PADDED_HOUR_COLON_MINUTE_OR_Z))
+            OffsetPatternSymbol(OffsetFieldFormat.ZERO_PADDED_HOUR_COLON_MINUTE_OR_Z)
+        )
     )
 
     @Test
@@ -106,28 +108,27 @@ internal class TimestampFormatPatternParserTest {
         assertEquals(pair.second, formatPattern.formatItems)
     }
 
-
     @Test
     fun mostPreciseField() {
-        //NOTE: we can't parameterize this unless we want to expose TimestampParser.FormatPatternPrecision as public.
+        // NOTE: we can't parameterize this unless we want to expose TimestampParser.FormatPatternPrecision as public.
         softAssert {
-            for((pattern, expectedResult, expectedHas2DigitYear) in parametersForExaminePatternTest) {
+            for ((pattern, expectedResult, expectedHas2DigitYear) in parametersForExaminePatternTest) {
                 val result = FormatPattern.fromString(pattern)
                 assertThat(result.leastSignificantField)
-                    .withFailMessage("Pattern '${pattern}' was used, '${expectedResult}' was expected but result was '${result.leastSignificantField}'")
+                    .withFailMessage("Pattern '$pattern' was used, '$expectedResult' was expected but result was '${result.leastSignificantField}'")
                     .isEqualTo(expectedResult)
                 assertThat(result.has2DigitYear)
-                    .withFailMessage("has2DigitYear expected: ${expectedHas2DigitYear} but was ${result.has2DigitYear}, pattern was: '${pattern}'")
+                    .withFailMessage("has2DigitYear expected: $expectedHas2DigitYear but was ${result.has2DigitYear}, pattern was: '$pattern'")
                     .isEqualTo(expectedHas2DigitYear)
             }
         }
     }
 
-
     private data class MostPreciseFieldTestCase(
         val pattern: String,
         val expectedResult: TimestampField,
-        val expectedHas2DigitYear: Boolean = false)
+        val expectedHas2DigitYear: Boolean = false
+    )
 
     private val parametersForExaminePatternTest = listOf(
 
@@ -141,47 +142,46 @@ internal class TimestampFormatPatternParserTest {
 
         MostPreciseFieldTestCase("M d, y", TimestampField.DAY_OF_MONTH),
 
-        //Delimited with "/"
+        // Delimited with "/"
         MostPreciseFieldTestCase("y/M", TimestampField.MONTH_OF_YEAR),
         MostPreciseFieldTestCase("y/M/d", TimestampField.DAY_OF_MONTH),
         MostPreciseFieldTestCase("y/M/d/s", TimestampField.SECOND_OF_MINUTE),
 
-        //delimited with "-"
+        // delimited with "-"
         MostPreciseFieldTestCase("y-M", TimestampField.MONTH_OF_YEAR),
         MostPreciseFieldTestCase("yy-M", TimestampField.MONTH_OF_YEAR, expectedHas2DigitYear = true),
         MostPreciseFieldTestCase("y-M-d", TimestampField.DAY_OF_MONTH),
         MostPreciseFieldTestCase("y-M-d-s", TimestampField.SECOND_OF_MINUTE),
 
-        //delimited with "':'"
+        // delimited with "':'"
         MostPreciseFieldTestCase("y:M", TimestampField.MONTH_OF_YEAR),
         MostPreciseFieldTestCase("yy:M", TimestampField.MONTH_OF_YEAR, expectedHas2DigitYear = true),
         MostPreciseFieldTestCase("y:M:d", TimestampField.DAY_OF_MONTH),
         MostPreciseFieldTestCase("y:M:d:s", TimestampField.SECOND_OF_MINUTE),
 
-        //delimited with "'1'"
+        // delimited with "'1'"
         MostPreciseFieldTestCase("'1'y'1'", TimestampField.YEAR),
         MostPreciseFieldTestCase("'1'yy'1'", TimestampField.YEAR, expectedHas2DigitYear = true),
         MostPreciseFieldTestCase("'1'y'1'M'1'", TimestampField.MONTH_OF_YEAR),
         MostPreciseFieldTestCase("'1'y'1'M'1'd'1'", TimestampField.DAY_OF_MONTH),
         MostPreciseFieldTestCase("'1'y'1'M'1'd'1's'1'", TimestampField.SECOND_OF_MINUTE),
 
-        //delimited with "'😸'"
+        // delimited with "'😸'"
         MostPreciseFieldTestCase("'😸'y'😸'", TimestampField.YEAR),
         MostPreciseFieldTestCase("'😸'yy'😸'", TimestampField.YEAR, expectedHas2DigitYear = true),
         MostPreciseFieldTestCase("'😸'y'😸'M'😸'", TimestampField.MONTH_OF_YEAR),
         MostPreciseFieldTestCase("'😸'y'😸'M'😸'd'😸'", TimestampField.DAY_OF_MONTH),
         MostPreciseFieldTestCase("'😸'y'😸'M'😸'd'😸's'😸'", TimestampField.SECOND_OF_MINUTE),
 
-        //delimited with "'話家'"
+        // delimited with "'話家'"
         MostPreciseFieldTestCase("'話家'y'話家'", TimestampField.YEAR),
         MostPreciseFieldTestCase("'話家'yy'話家'", TimestampField.YEAR, expectedHas2DigitYear = true),
         MostPreciseFieldTestCase("'話家'y'話家'M'話家'", TimestampField.MONTH_OF_YEAR),
         MostPreciseFieldTestCase("'話家'y'話家'M'話家'd'話家'", TimestampField.DAY_OF_MONTH),
         MostPreciseFieldTestCase("'話家'y'話家'M'話家'd'話家's'話家'", TimestampField.SECOND_OF_MINUTE),
 
-        //Valid symbols within quotes should not influence the result
+        // Valid symbols within quotes should not influence the result
         MostPreciseFieldTestCase("y'M d s'", TimestampField.YEAR),
-        MostPreciseFieldTestCase("y'y'", TimestampField.YEAR))
-
-
+        MostPreciseFieldTestCase("y'y'", TimestampField.YEAR)
+    )
 }

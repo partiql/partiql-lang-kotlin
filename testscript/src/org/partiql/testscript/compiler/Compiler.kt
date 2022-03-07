@@ -1,11 +1,21 @@
 package org.partiql.testscript.compiler
 
-import com.amazon.ion.*
+import com.amazon.ion.IonSexp
+import com.amazon.ion.IonStruct
+import com.amazon.ion.IonSymbol
+import com.amazon.ion.IonSystem
+import com.amazon.ion.IonType
 import org.partiql.testscript.Failure
 import org.partiql.testscript.Result
 import org.partiql.testscript.Success
 import org.partiql.testscript.foldToResult
-import org.partiql.testscript.parser.ast.*
+import org.partiql.testscript.parser.ast.AppendTestNode
+import org.partiql.testscript.parser.ast.FileSetDefaultEnvironmentNode
+import org.partiql.testscript.parser.ast.InlineSetDefaultEnvironmentNode
+import org.partiql.testscript.parser.ast.ModuleNode
+import org.partiql.testscript.parser.ast.SetDefaultEnvironmentNode
+import org.partiql.testscript.parser.ast.SkipListNode
+import org.partiql.testscript.parser.ast.TestNode
 import java.io.File
 
 /**
@@ -43,7 +53,7 @@ private class CompileEnvironment(var testEnvironment: IonStruct) {
     // this way if there are multiple appends to the same skipped test they
     // will be no-op regardless of order
     fun invokeDeferred(): List<Result<Unit>> =
-            skipListDeferred.union(appendDeferred).map { it.invoke() }
+        skipListDeferred.union(appendDeferred).map { it.invoke() }
 }
 
 /**
@@ -82,8 +92,8 @@ class Compiler(val ion: IonSystem) {
         val deferredResults = compileEnvironment.invokeDeferred()
 
         val errors = results.union(deferredResults)
-                .filterIsInstance<Failure<Unit>>()
-                .flatMap { it.errors }
+            .filterIsInstance<Failure<Unit>>()
+            .flatMap { it.errors }
 
         if (errors.isNotEmpty()) {
             throw CompilerException(errors.map { it.toPtsError() })
@@ -96,8 +106,9 @@ class Compiler(val ion: IonSystem) {
      * Changes the current test environment affecting subsequent AST nodes until a new Module is started.
      */
     private fun compileSetDefaultEnvironmentNode(
-            compileEnvironment: CompileEnvironment,
-            node: SetDefaultEnvironmentNode): Result<Unit> = when (node) {
+        compileEnvironment: CompileEnvironment,
+        node: SetDefaultEnvironmentNode
+    ): Result<Unit> = when (node) {
         is InlineSetDefaultEnvironmentNode -> {
             compileEnvironment.testEnvironment = node.environment
 
@@ -106,7 +117,7 @@ class Compiler(val ion: IonSystem) {
         is FileSetDefaultEnvironmentNode -> {
             val dirPath = File(node.scriptLocation.inputName).parent
             val file = File("$dirPath/${node.environmentRelativeFilePath}")
-            
+
             val lazyDatagram = lazy(LazyThreadSafetyMode.PUBLICATION) { ion.loader.load(file) }
 
             when {
@@ -117,10 +128,13 @@ class Compiler(val ion: IonSystem) {
                     Failure(FileSetDefaultEnvironmentNotSingleValue(file.absolutePath, node.scriptLocation))
                 }
                 lazyDatagram.value[0].type != IonType.STRUCT -> {
-                    Failure(FileSetDefaultEnvironmentNotStruct(
+                    Failure(
+                        FileSetDefaultEnvironmentNotStruct(
                             file.absolutePath,
                             lazyDatagram.value[0].type,
-                            node.scriptLocation))
+                            node.scriptLocation
+                        )
+                    )
                 }
                 else -> {
                     compileEnvironment.testEnvironment = lazyDatagram.value[0] as IonStruct
@@ -130,18 +144,18 @@ class Compiler(val ion: IonSystem) {
         }
     }
 
-
     /**
      * Generates and register a [TestExpression] into the compile environment.
      */
     private fun compileTestNode(compileEnvironment: CompileEnvironment, node: TestNode): Result<Unit> {
         val testExpression = TestExpression(
-                id = node.id,
-                description = node.description,
-                statement = node.statement,
-                environment = node.environment ?: compileEnvironment.testEnvironment,
-                expected = makeExpectedResult(node.expected),
-                scriptLocation = node.scriptLocation)
+            id = node.id,
+            description = node.description,
+            statement = node.statement,
+            environment = node.environment ?: compileEnvironment.testEnvironment,
+            expected = makeExpectedResult(node.expected),
+            scriptLocation = node.scriptLocation
+        )
 
         val expressions = compileEnvironment.expressions
         return if (expressions.containsKey(node.id)) {
@@ -179,10 +193,11 @@ class Compiler(val ion: IonSystem) {
             when (original) {
                 is TestExpression -> {
                     compileEnvironment.expressions[original.id] = AppendedTestExpression(
-                            original.id,
-                            original,
-                            node.additionalData,
-                            node.scriptLocation)
+                        original.id,
+                        original,
+                        node.additionalData,
+                        node.scriptLocation
+                    )
                     SUCCESS
                 }
                 is SkippedTestExpression -> {
@@ -206,25 +221,27 @@ class Compiler(val ion: IonSystem) {
         val matchers = node.patterns.map { it.toPatternRegex() }
 
         expressions.filter { (testId, _) -> matchers.any { it.matches(testId) } }
-                .forEach { (testId, testExpression) ->
-                    when (testExpression) {
-                        is TestExpression -> {
-                            expressions[testId] = SkippedTestExpression(
-                                    testId,
-                                    testExpression,
-                                    node.scriptLocation)
-                        }
-                        is SkippedTestExpression -> {
-                            // no-op
-                        }
-                        is AppendedTestExpression -> {
-                            expressions[testId] = SkippedTestExpression(
-                                    testId,
-                                    testExpression.original,
-                                    node.scriptLocation)
-                        }
+            .forEach { (testId, testExpression) ->
+                when (testExpression) {
+                    is TestExpression -> {
+                        expressions[testId] = SkippedTestExpression(
+                            testId,
+                            testExpression,
+                            node.scriptLocation
+                        )
+                    }
+                    is SkippedTestExpression -> {
+                        // no-op
+                    }
+                    is AppendedTestExpression -> {
+                        expressions[testId] = SkippedTestExpression(
+                            testId,
+                            testExpression.original,
+                            node.scriptLocation
+                        )
                     }
                 }
+            }
 
         return SUCCESS
     }

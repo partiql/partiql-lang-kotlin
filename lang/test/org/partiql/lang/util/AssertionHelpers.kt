@@ -16,7 +16,7 @@ fun assertIonEquals(expectedResult: IonValue, actualResult: IonValue, message: S
         message?.let { print(it) }
         println()
 
-        println("expected: ${expectedResult}")
+        println("expected: $expectedResult")
         println("actual  : ${actualResult}\n")
 
         println("expected (pretty):\n${expectedResult.toPrettyString().trim()}")

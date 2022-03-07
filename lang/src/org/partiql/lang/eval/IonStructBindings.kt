@@ -56,16 +56,15 @@ internal class IonStructBindings(private val valueFactory: ExprValueFactory, pri
 
     private fun handleMatches(entries: List<IonValue>, fieldName: String): IonValue? =
         when (entries.size) {
-            0    -> null
-            1    -> entries[0]
+            0 -> null
+            1 -> entries[0]
             else ->
                 errAmbiguousBinding(fieldName, entries.map { it.fieldName })
         }
 
-
     override operator fun get(bindingName: BindingName): ExprValue? =
         when (bindingName.bindingCase) {
-            BindingCase.SENSITIVE   -> caseSensitiveLookup(bindingName.name)
+            BindingCase.SENSITIVE -> caseSensitiveLookup(bindingName.name)
             BindingCase.INSENSITIVE -> caseInsensitiveLookup(bindingName.name)
         }?.let { valueFactory.newFromIonValue(it) }
 }

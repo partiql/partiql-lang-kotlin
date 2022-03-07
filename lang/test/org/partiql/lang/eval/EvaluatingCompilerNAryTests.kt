@@ -29,7 +29,7 @@ import org.partiql.lang.domains.PartiqlAst
  * Currently, the parser does not ever instantiate these with an arity > 2 so this is the only way to test this.
  */
 @RunWith(JUnitParamsRunner::class)
-class EvaluatingCompilerNAryTests: EvaluatorTestBase() {
+class EvaluatingCompilerNAryTests : EvaluatorTestBase() {
     private val session = EvaluationSession.standard()
 
     private fun Boolean?.toIonValue(): IonValue =
@@ -66,50 +66,49 @@ class EvaluatingCompilerNAryTests: EvaluatorTestBase() {
      */
     data class ArithmeticTestCase(val op: ArithmeticOp, val arg1: Long?, val arg2: Long?, val arg3: Long?, val expectedResult: Long?)
 
-
     fun parametersForTernaryArithmeticTest() = listOf(
-        //Null propagation for ADD
+        // Null propagation for ADD
         ArithmeticTestCase(ArithmeticOp.Plus, null, 2, 3, null),
         ArithmeticTestCase(ArithmeticOp.Plus, 1, null, 3, null),
         ArithmeticTestCase(ArithmeticOp.Plus, 1, 2, null, null),
 
-        //ADD is commutative
+        // ADD is commutative
         ArithmeticTestCase(ArithmeticOp.Plus, 1, 2, 3, 6),
         ArithmeticTestCase(ArithmeticOp.Plus, 3, 1, 2, 6),
 
-        //Null propagation for SUB
+        // Null propagation for SUB
         ArithmeticTestCase(ArithmeticOp.Minus, null, 1, 2, null),
         ArithmeticTestCase(ArithmeticOp.Minus, 10, null, 2, null),
         ArithmeticTestCase(ArithmeticOp.Minus, 10, 1, null, null),
 
-        //SUB is noncommutative
+        // SUB is noncommutative
         ArithmeticTestCase(ArithmeticOp.Minus, 10, 1, 2, 7),
         ArithmeticTestCase(ArithmeticOp.Minus, 1, 2, 10, -11),
 
-        //Null propagation for MUL
+        // Null propagation for MUL
         ArithmeticTestCase(ArithmeticOp.Times, null, 2, 3, null),
         ArithmeticTestCase(ArithmeticOp.Times, 10, null, 3, null),
         ArithmeticTestCase(ArithmeticOp.Times, 10, 2, null, null),
 
-        //MUL is commutative
+        // MUL is commutative
         ArithmeticTestCase(ArithmeticOp.Times, 10, 2, 3, 60),
         ArithmeticTestCase(ArithmeticOp.Times, 2, 3, 10, 60),
 
-        //Null propagation for DIV
+        // Null propagation for DIV
         ArithmeticTestCase(ArithmeticOp.Divide, null, 2, 3, null),
         ArithmeticTestCase(ArithmeticOp.Divide, 10, null, 3, null),
         ArithmeticTestCase(ArithmeticOp.Divide, 10, 2, null, null),
 
-        //DIV is noncommutative
+        // DIV is noncommutative
         ArithmeticTestCase(ArithmeticOp.Divide, 60, 2, 3, 10),
         ArithmeticTestCase(ArithmeticOp.Divide, 2, 3, 10, 0),
 
-        //Null propagation for MOD
+        // Null propagation for MOD
         ArithmeticTestCase(ArithmeticOp.Modulo, null, 2, 3, null),
         ArithmeticTestCase(ArithmeticOp.Modulo, 10, null, 3, null),
         ArithmeticTestCase(ArithmeticOp.Modulo, 10, 2, null, null),
 
-        //MOD is noncommutative
+        // MOD is noncommutative
         ArithmeticTestCase(ArithmeticOp.Modulo, 19, 5, 3, 1),
         ArithmeticTestCase(ArithmeticOp.Modulo, 5, 3, 19, 2)
     )
@@ -142,13 +141,13 @@ class EvaluatingCompilerNAryTests: EvaluatorTestBase() {
 
     private fun assertEvalStatement(
         astExpr: PartiqlAst.Statement,
-        expectedExprValue: ExprValue) {
+        expectedExprValue: ExprValue
+    ) {
         val pipeline = CompilerPipeline.standard(ion)
         val expr = pipeline.compile(astExpr)
         val result = expr.eval(session)
         assertEquals(expectedExprValue.ionValue, result.ionValue)
     }
-
 
     /**
      * A test case for comparison operators.
@@ -188,18 +187,18 @@ class EvaluatingCompilerNAryTests: EvaluatorTestBase() {
         possibleFuncs.forEach { func ->
             for (arity in 2..4) {
                 val argumentPermutationCount = possibleArgumentValues.size.pow(arity)
-                for(i in 0..argumentPermutationCount) {
+                for (i in 0..argumentPermutationCount) {
                     val baseN = i.toStringZeroPadded(arity, possibleArgumentValues.size)
                     val args = baseN.map { possibleArgumentValues[it] }.toList()
 
-                    //determine the expected value
+                    // determine the expected value
                     var current = args.first()
                     val rest = args.drop(1)
 
                     var expected: Boolean? = true
-                    loop@for(it in rest) {
+                    loop@for (it in rest) {
                         when (func.block(current, it)) {
-                            null  -> {
+                            null -> {
                                 expected = null
                                 break@loop
                             }
@@ -240,7 +239,6 @@ class EvaluatingCompilerNAryTests: EvaluatorTestBase() {
 
     data class LogicalOperatorsTestCase(val op: LogicalOp, val b1: Boolean?, val b2: Boolean?, val b3: Boolean?, val expectedResult: Boolean?)
 
-
     fun parametersForLogicalOperatorsTest() = listOf(
         // AND tests
         // true, false arguments
@@ -272,7 +270,7 @@ class EvaluatingCompilerNAryTests: EvaluatorTestBase() {
         LogicalOperatorsTestCase(LogicalOp.Or, false, false, null, null),
         LogicalOperatorsTestCase(LogicalOp.Or, false, null, false, null),
         LogicalOperatorsTestCase(LogicalOp.Or, null, false, false, null),
-        
+
         // true, false, null arguments
         LogicalOperatorsTestCase(LogicalOp.Or, true, false, null, true),
         LogicalOperatorsTestCase(LogicalOp.Or, true, null, false, true),
@@ -297,7 +295,7 @@ class EvaluatingCompilerNAryTests: EvaluatorTestBase() {
             )
         }
 
-        val expectedExprValue = tc.expectedResult?.let { valueFactory.newBoolean(it)} ?: valueFactory.nullValue
+        val expectedExprValue = tc.expectedResult?.let { valueFactory.newBoolean(it) } ?: valueFactory.nullValue
 
         assertEvalStatement(query, expectedExprValue)
     }

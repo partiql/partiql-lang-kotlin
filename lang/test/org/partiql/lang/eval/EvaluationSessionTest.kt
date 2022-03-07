@@ -52,7 +52,7 @@ class EvaluationSessionTest {
     @Test
     fun settingGlobals() {
         val globals = Bindings.empty<ExprValue>()
-        val block: () -> EvaluationSession = { EvaluationSession.build { globals(globals) }}
+        val block: () -> EvaluationSession = { EvaluationSession.build { globals(globals) } }
         val session = block.invoke()
 
         assertEquals(globals, session.globals)
@@ -62,7 +62,7 @@ class EvaluationSessionTest {
     @Test
     fun settingNow() {
         val now = Timestamp.forMillis(10, 0)
-        val session =  EvaluationSession.build { now(now) }
+        val session = EvaluationSession.build { now(now) }
 
         assertEquals(Bindings.empty(), session.globals)
         assertEquals(now, session.now)
@@ -73,7 +73,7 @@ class EvaluationSessionTest {
         val now = Timestamp.forMillis(10, 10)
         val utcNow = now.withLocalOffset(0)
 
-        val session =  EvaluationSession.build { now(now) }
+        val session = EvaluationSession.build { now(now) }
 
         assertEquals(Bindings.empty(), session.globals)
         assertEquals(utcNow, session.now)

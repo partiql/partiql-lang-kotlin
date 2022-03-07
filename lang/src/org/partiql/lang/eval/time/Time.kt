@@ -27,7 +27,6 @@ internal const val SECONDS_PER_HOUR = SECONDS_PER_MINUTE * MINUTES_PER_HOUR
 internal const val NANOS_PER_SECOND = 1000000000
 internal const val MAX_PRECISION_FOR_TIME = 9
 
-
 /**
  * Wrapper class representing the run time instance of TIME in PartiQL.
  * - `TIME [(p)] HH:MM:ss[.ddd][+|-HH:MM]` PartiQL statement creates a run-time instance of this class with [zoneOffset] as null.
@@ -53,7 +52,8 @@ data class Time private constructor(val localTime: LocalTime, val precision: Int
                 message = "Specified precision for TIME should be a non-negative integer between 0 and 9 inclusive",
                 errorCode = ErrorCode.EVALUATOR_INVALID_PRECISION_FOR_TIME,
                 errorContext = propertyValueMapOf(),
-                internal = false)
+                internal = false
+            )
         }
     }
 
@@ -80,9 +80,9 @@ data class Time private constructor(val localTime: LocalTime, val precision: Int
          */
         @JvmStatic
         @JvmOverloads
-        fun of(hour: Int, minute: Int, second: Int, nano: Int, precision: Int, tz_minutes: Int? = null) : Time {
+        fun of(hour: Int, minute: Int, second: Int, nano: Int, precision: Int, tz_minutes: Int? = null): Time {
 
-            //Validates the range of values for all the parameters. This part may throw a DateTimeException
+            // Validates the range of values for all the parameters. This part may throw a DateTimeException
             try {
                 ChronoField.HOUR_OF_DAY.checkValidValue(hour.toLong())
                 ChronoField.MINUTE_OF_HOUR.checkValidValue(minute.toLong())
@@ -126,8 +126,9 @@ data class Time private constructor(val localTime: LocalTime, val precision: Int
          */
         @JvmStatic
         @JvmOverloads
-        fun of(localTime: LocalTime, precision: Int, zoneOffset: ZoneOffset? = null) : Time {
-            return Time.of(localTime.hour, localTime.minute, localTime.second, localTime.nano, precision,
+        fun of(localTime: LocalTime, precision: Int, zoneOffset: ZoneOffset? = null): Time {
+            return Time.of(
+                localTime.hour, localTime.minute, localTime.second, localTime.nano, precision,
                 zoneOffset?.totalSeconds?.div(SECONDS_PER_MINUTE)
             )
         }
@@ -137,7 +138,7 @@ data class Time private constructor(val localTime: LocalTime, val precision: Int
      * Returns the [OffsetTime] representation of this value if a [ZoneOffset] is defined for this, otherwise returns null.
      */
     val offsetTime
-        get() : OffsetTime? = zoneOffset?.let {
+        get(): OffsetTime? = zoneOffset?.let {
             OffsetTime.of(localTime, it)
         }
 
@@ -145,20 +146,20 @@ data class Time private constructor(val localTime: LocalTime, val precision: Int
      * Returns the TIMEZONE_HOUR for the [zoneOffset] of this instance.
      */
     val timezoneHour
-        get() : Int? = zoneOffset?.totalSeconds?.div(SECONDS_PER_HOUR)
+        get(): Int? = zoneOffset?.totalSeconds?.div(SECONDS_PER_HOUR)
 
     /**
      * Returns the TIMEZONE_HOUR for the [zoneOffset] of this instance.
      */
     val timezoneMinute
-        get() : Int? = (zoneOffset?.totalSeconds?.div(SECONDS_PER_MINUTE))?.rem(SECONDS_PER_MINUTE)
+        get(): Int? = (zoneOffset?.totalSeconds?.div(SECONDS_PER_MINUTE))?.rem(SECONDS_PER_MINUTE)
 
     /**
      * Returns the seconds along with the fractional part of the second's value.
      */
-    val secondsWithFractionalPart : BigDecimal
-        get()  = (localTime.second.toBigDecimal() + localTime.nano.toBigDecimal().divide(NANOS_PER_SECOND.toBigDecimal()))
-                    .setScale(precision, RoundingMode.HALF_EVEN)
+    val secondsWithFractionalPart: BigDecimal
+        get() = (localTime.second.toBigDecimal() + localTime.nano.toBigDecimal().divide(NANOS_PER_SECOND.toBigDecimal()))
+            .setScale(precision, RoundingMode.HALF_EVEN)
 
     fun toIonValue(ion: IonSystem): IonStruct =
         ion.newEmptyStruct().apply {
@@ -171,11 +172,11 @@ data class Time private constructor(val localTime: LocalTime, val precision: Int
         }
 
     /**
-    + Generates a formatter pattern at run time depending on the precision value.
-    * This pattern is subject to change based on the java's [DateTimeFormatter]. [java doc](https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html)
-    * Check here if there are issues with the output format pattern.
-    */
-    private fun formatterPattern() : String {
+     + Generates a formatter pattern at run time depending on the precision value.
+     * This pattern is subject to change based on the java's [DateTimeFormatter]. [java doc](https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html)
+     * Check here if there are issues with the output format pattern.
+     */
+    private fun formatterPattern(): String {
         return "HH:mm:ss" + if (precision > 0) "." + "S".repeat(min(9, precision)) else ""
     }
 

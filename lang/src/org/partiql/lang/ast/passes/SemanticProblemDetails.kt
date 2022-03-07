@@ -9,7 +9,7 @@ import org.partiql.lang.types.StaticType
  * Variants of [SemanticProblemDetails] contain info about various problems that can be encountered through semantic
  * passes.
  */
-sealed class SemanticProblemDetails(override val severity: ProblemSeverity, val messageFormatter: () -> String): ProblemDetails {
+sealed class SemanticProblemDetails(override val severity: ProblemSeverity, val messageFormatter: () -> String) : ProblemDetails {
     override val message: String
         get() = messageFormatter()
 
@@ -18,7 +18,7 @@ sealed class SemanticProblemDetails(override val severity: ProblemSeverity, val 
             severity = ProblemSeverity.ERROR,
             messageFormatter = {
                 "Incorrect number of arguments for '$functionName'. " +
-                "Expected $expectedArity but was supplied $actualArity."
+                    "Expected $expectedArity but was supplied $actualArity."
             }
         )
 
@@ -61,7 +61,9 @@ sealed class SemanticProblemDetails(override val severity: ProblemSeverity, val 
     data class NullOrMissingFunctionArgument(val functionName: String) :
         SemanticProblemDetails(
             severity = ProblemSeverity.ERROR,
-            messageFormatter = { "Function $functionName given an argument that will always be null or missing. " +
-                "As a result, this function call will always return null or missing." }
+            messageFormatter = {
+                "Function $functionName given an argument that will always be null or missing. " +
+                    "As a result, this function call will always return null or missing."
+            }
         )
 }

@@ -11,8 +11,6 @@ import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.syntax.SqlParser
 import java.io.PrintStream
 
-
-
 /**
  * A simple AST visitor transform that performs partial evaluation--i.e.: evaluates all sub-expressions containing only
  * literal operands and replaces them with the result. For example, the query `1 + 2 * 3` would be transformed to
@@ -69,7 +67,7 @@ private class PartialEvaluationVisitorTransform(val ion: IonSystem, val compileO
 
         return when {
             transformedOps.all { it is PartiqlAst.Expr.Lit } -> {
-                val e = pipeline.compile(PartiqlAst.build { query(transformedNAry) } )
+                val e = pipeline.compile(PartiqlAst.build { query(transformedNAry) })
                 val partiallyEvaluatedResult = e.eval(session)
                 PartiqlAst.build { lit(partiallyEvaluatedResult.ionValue.toIonElement(), metas) }
             }

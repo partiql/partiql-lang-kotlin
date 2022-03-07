@@ -50,10 +50,10 @@ class FunctionSignature private constructor (
 
     val arity: IntRange = let {
         val r = requiredParameters.size..requiredParameters.size
-        val o = if(optionalParameter != null) 0..1 else 0..0
+        val o = if (optionalParameter != null) 0..1 else 0..0
         val v = variadicParameter?.arityRange ?: 0..0
 
-        (r.first + o.first + v.first)..when(v.last) {
+        (r.first + o.first + v.first)..when (v.last) {
             Int.MAX_VALUE -> Int.MAX_VALUE
             else -> (r.last + o.last + v.last)
         }

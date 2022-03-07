@@ -79,15 +79,17 @@ private interface State {
 /**
  * Table backed [State]. This class is mutable through [transitionTo] so needs to be setup statically to be thread safe
  */
-private class TableState(override val tokenType: TokenType?,
-                         override val stateType: StateType,
-                         val delegate: State? = null) : State {
+private class TableState(
+    override val tokenType: TokenType?,
+    override val stateType: StateType,
+    val delegate: State? = null
+) : State {
     private val transitionTable = object {
         val backingArray = Array<State?>(TABLE_SIZE) { null }
 
         operator fun get(codePoint: Int): State? = when {
             codePoint < TABLE_SIZE -> backingArray[codePoint]
-            else                   -> null
+            else -> null
         }
 
         operator fun set(codePoint: Int, next: State) {
@@ -147,40 +149,42 @@ internal class TimestampFormatPatternLexer {
                 val endQuotedState = object : TextState(StateType.TERMINAL) {
                     override fun nextFor(cp: Int): State = when (cp) {
                         SINGLE_QUOTE_CP -> startQuotedText
-                        else            -> INITIAL_STATE.nextFor(cp)
+                        else -> INITIAL_STATE.nextFor(cp)
                     }
                 }
 
                 val inQuotedState = object : TextState(StateType.INCOMPLETE) {
                     override fun nextFor(cp: Int): State = when (cp) {
                         SINGLE_QUOTE_CP -> endQuotedState
-                        else            -> this
+                        else -> this
                     }
                 }
 
                 override fun nextFor(cp: Int): State = when (cp) {
                     SINGLE_QUOTE_CP -> endQuotedState
-                    else            -> inQuotedState
+                    else -> inQuotedState
                 }
             }
 
             INITIAL_STATE.transitionTo(NON_ESCAPED_TEXT, startEscapedText)
             INITIAL_STATE.transitionTo(SINGLE_QUOTE_CP, startQuotedText)
             PATTERN.codePoints().forEach { cp ->
-                INITIAL_STATE.transitionTo(cp, object : PatternState(cp, StateType.START_AND_TERMINAL) {
-                    val repeatingState = object : PatternState(cp, StateType.TERMINAL) {
-                        override fun nextFor(cp: Int): State = when (cp) {
-                            codePoint -> this
-                            else      -> INITIAL_STATE.nextFor(cp)
+                INITIAL_STATE.transitionTo(
+                    cp,
+                    object : PatternState(cp, StateType.START_AND_TERMINAL) {
+                        val repeatingState = object : PatternState(cp, StateType.TERMINAL) {
+                            override fun nextFor(cp: Int): State = when (cp) {
+                                codePoint -> this
+                                else -> INITIAL_STATE.nextFor(cp)
+                            }
                         }
 
-                    }
-
                         override fun nextFor(cp: Int): State = when (cp) {
-                        codePoint -> repeatingState
-                        else      -> INITIAL_STATE.nextFor(cp)
+                            codePoint -> repeatingState
+                            else -> INITIAL_STATE.nextFor(cp)
+                        }
                     }
-                })
+                )
             }
         }
     }
@@ -188,17 +192,17 @@ internal class TimestampFormatPatternLexer {
     private fun StringBuilder.reset() = this.setLength(0)
 
     private fun tokenEnd(current: State, next: State) = when {
-        current.stateType == StateType.INITIAL                            -> false
+        current.stateType == StateType.INITIAL -> false
         current.tokenType == next.tokenType && next.stateType.beginsToken -> true
-        current.tokenType != next.tokenType                               -> true
-        else                                                              -> false
+        current.tokenType != next.tokenType -> true
+        else -> false
     }
 
     fun tokenize(source: String): List<Token> {
         val tokens = mutableListOf<Token>()
         val buffer = StringBuilder()
 
-        if(source.isEmpty()) {
+        if (source.isEmpty()) {
             return listOf()
         }
 

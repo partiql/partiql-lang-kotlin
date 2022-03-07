@@ -35,7 +35,7 @@ data class SubstitutionPair(val target: PartiqlAst.Expr, val replacement: Partiq
  *
  * This class is `open` to allow subclasses to restrict the nodes to which the substitution should occur.
  */
-open class SubstitutionVisitorTransform(protected val substitutions: Map<PartiqlAst.Expr, SubstitutionPair>): VisitorTransformBase() {
+open class SubstitutionVisitorTransform(protected val substitutions: Map<PartiqlAst.Expr, SubstitutionPair>) : VisitorTransformBase() {
 
     /**
      * If [node] matches any of the target nodes in [substitutions], replaces the node with the replacement.
@@ -48,7 +48,8 @@ open class SubstitutionVisitorTransform(protected val substitutions: Map<Partiql
 
         return matchingSubstitution?.let { ms ->
             node.extractSourceLocation().let {
-                sl -> MetaVisitorTransform(sl).transformExpr(ms.replacement)
+                sl ->
+                MetaVisitorTransform(sl).transformExpr(ms.replacement)
             }
         } ?: super.transformExpr(node)
     }
@@ -62,5 +63,4 @@ open class SubstitutionVisitorTransform(protected val substitutions: Map<Partiql
     inner class MetaVisitorTransform(private val newMetas: MetaContainer) : VisitorTransformBase() {
         override fun transformMetas(metas: MetaContainer): MetaContainer = newMetas
     }
-
 }

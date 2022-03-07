@@ -58,14 +58,16 @@ internal class DateDiffExprFunction(val valueFactory: ExprValueFactory) : ExprFu
     //
     // If we introduce the `milliseconds` datetime part this will need to be
     // revisited
-    private fun Timestamp.toJava() = OffsetDateTime.of(year,
-                                                       month,
-                                                       day,
-                                                       hour,
-                                                       minute,
-                                                       second,
-                                                       0,
-                                                       ZoneOffset.ofTotalSeconds((localOffset ?: 0) * 60))
+    private fun Timestamp.toJava() = OffsetDateTime.of(
+        year,
+        month,
+        day,
+        hour,
+        minute,
+        second,
+        0,
+        ZoneOffset.ofTotalSeconds((localOffset ?: 0) * 60)
+    )
 
     private fun yearsSince(left: OffsetDateTime, right: OffsetDateTime): Number =
         Period.between(left.toLocalDate(), right.toLocalDate()).years
@@ -94,15 +96,17 @@ internal class DateDiffExprFunction(val valueFactory: ExprValueFactory) : ExprFu
         val rightAsJava = right.toJava()
 
         val difference = when (dateTimePart) {
-            DateTimePart.YEAR   -> yearsSince(leftAsJava, rightAsJava)
-            DateTimePart.MONTH  -> monthsSince(leftAsJava, rightAsJava)
-            DateTimePart.DAY    -> daysSince(leftAsJava, rightAsJava)
-            DateTimePart.HOUR   -> hoursSince(leftAsJava, rightAsJava)
+            DateTimePart.YEAR -> yearsSince(leftAsJava, rightAsJava)
+            DateTimePart.MONTH -> monthsSince(leftAsJava, rightAsJava)
+            DateTimePart.DAY -> daysSince(leftAsJava, rightAsJava)
+            DateTimePart.HOUR -> hoursSince(leftAsJava, rightAsJava)
             DateTimePart.MINUTE -> minutesSince(leftAsJava, rightAsJava)
             DateTimePart.SECOND -> secondsSince(leftAsJava, rightAsJava)
-            else            -> errNoContext("invalid datetime part for date_diff: ${dateTimePart.toString().toLowerCase()}",
-                                            errorCode = ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_DATE_PART,
-                                            internal = false)
+            else -> errNoContext(
+                "invalid datetime part for date_diff: ${dateTimePart.toString().toLowerCase()}",
+                errorCode = ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_DATE_PART,
+                internal = false
+            )
         }
 
         return valueFactory.newInt(difference.toLong())

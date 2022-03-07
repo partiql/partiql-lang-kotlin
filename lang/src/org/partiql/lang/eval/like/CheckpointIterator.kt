@@ -27,5 +27,3 @@ internal interface CheckpointIterator<T> : Iterator<T> {
      */
     fun discardCheckpoint()
 }
-
-

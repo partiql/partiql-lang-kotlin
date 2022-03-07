@@ -63,10 +63,9 @@ private fun Path.extractColumnAlias(idx: Int): String {
             val maybeLiteral = nameOrigin.expr
             when {
                 maybeLiteral is Literal && maybeLiteral.ionValue is IonString -> maybeLiteral.ionValue.stringValue()
-                else                                                          -> syntheticColumnName(idx)
+                else -> syntheticColumnName(idx)
             }
         }
         else -> syntheticColumnName(idx)
     }
 }
-

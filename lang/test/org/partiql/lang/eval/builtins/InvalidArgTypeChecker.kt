@@ -4,29 +4,26 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.EvaluatorTestBase
 import org.partiql.lang.eval.expectedArgTypeErrorMsg
-import org.partiql.lang.types.StaticType
-import org.partiql.lang.types.SingleType
-import org.partiql.lang.types.BoolType
-import org.partiql.lang.types.IntType
-import org.partiql.lang.types.FloatType
-import org.partiql.lang.types.DecimalType
-import org.partiql.lang.types.DateType
-import org.partiql.lang.types.TimestampType
-import org.partiql.lang.types.TimeType
-import org.partiql.lang.types.SymbolType
-import org.partiql.lang.types.StringType
-import org.partiql.lang.types.ClobType
-import org.partiql.lang.types.BlobType
-import org.partiql.lang.types.ListType
-import org.partiql.lang.types.SexpType
-import org.partiql.lang.types.StructType
 import org.partiql.lang.types.BagType
+import org.partiql.lang.types.BlobType
+import org.partiql.lang.types.BoolType
+import org.partiql.lang.types.ClobType
+import org.partiql.lang.types.DateType
+import org.partiql.lang.types.DecimalType
+import org.partiql.lang.types.FloatType
+import org.partiql.lang.types.IntType
+import org.partiql.lang.types.ListType
 import org.partiql.lang.types.MissingType
 import org.partiql.lang.types.NullType
-
-
+import org.partiql.lang.types.SexpType
+import org.partiql.lang.types.SingleType
+import org.partiql.lang.types.StaticType
+import org.partiql.lang.types.StringType
+import org.partiql.lang.types.StructType
+import org.partiql.lang.types.SymbolType
+import org.partiql.lang.types.TimeType
+import org.partiql.lang.types.TimestampType
 import java.lang.StringBuilder
-
 
 /**
  * This class is used to represent each argument in ExprFunctions for argument type checking.

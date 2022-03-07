@@ -23,4 +23,3 @@ class AstRewriterBaseTest {
         tc.assertEquals(rewritten)
     }
 }
-

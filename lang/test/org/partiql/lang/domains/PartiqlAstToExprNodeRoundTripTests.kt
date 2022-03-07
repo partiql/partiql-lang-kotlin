@@ -22,4 +22,3 @@ class PartiqlAstToExprNodeRoundTripTests {
         assertEquals(stripped, roundTrippedExprNode)
     }
 }
-

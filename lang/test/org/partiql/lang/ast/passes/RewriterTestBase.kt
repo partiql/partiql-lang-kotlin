@@ -42,7 +42,8 @@ abstract class RewriterTestBase : SqlParserTestBase() {
         assertEquals(
             "The second pass of ${rewriter.javaClass.name} pass should be idempotent",
             MetaStrippingRewriter.stripMetas(actualExprNode),
-            MetaStrippingRewriter.stripMetas(anotherActualExprNode))
+            MetaStrippingRewriter.stripMetas(anotherActualExprNode)
+        )
     }
 
     /**
@@ -60,9 +61,11 @@ abstract class RewriterTestBase : SqlParserTestBase() {
         val expectedExprNode =
             MetaStrippingRewriter.stripMetas(super.parser.parseExprNode(tc.expectedSql))
 
-        val actualExprNode = MetaStrippingRewriter.stripMetas(rewriters.fold(originalExprNode) { expr, rewriter ->
-            rewriter.rewriteExprNode(expr)
-        })
+        val actualExprNode = MetaStrippingRewriter.stripMetas(
+            rewriters.fold(originalExprNode) { expr, rewriter ->
+                rewriter.rewriteExprNode(expr)
+            }
+        )
 
         assertEquals("The expected AST must match the rewritten AST", expectedExprNode, actualExprNode)
     }

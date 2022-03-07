@@ -3,7 +3,27 @@ package org.partiql.lang.mappers
 import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.ionInt
 import org.partiql.ionschema.model.IonSchemaModel
-import org.partiql.lang.types.*
+import org.partiql.lang.types.AnyOfType
+import org.partiql.lang.types.AnyType
+import org.partiql.lang.types.BagType
+import org.partiql.lang.types.BlobType
+import org.partiql.lang.types.BoolType
+import org.partiql.lang.types.ClobType
+import org.partiql.lang.types.DateType
+import org.partiql.lang.types.DecimalType
+import org.partiql.lang.types.FloatType
+import org.partiql.lang.types.IntType
+import org.partiql.lang.types.ListType
+import org.partiql.lang.types.MissingType
+import org.partiql.lang.types.NullType
+import org.partiql.lang.types.NumberConstraint
+import org.partiql.lang.types.SexpType
+import org.partiql.lang.types.StaticType
+import org.partiql.lang.types.StringType
+import org.partiql.lang.types.StructType
+import org.partiql.lang.types.SymbolType
+import org.partiql.lang.types.TimeType
+import org.partiql.lang.types.TimestampType
 
 internal const val ISL_META_KEY = "ISL"
 
@@ -27,13 +47,13 @@ class IonSchemaMapper(private val staticType: StaticType) {
         return IonSchemaModel.build {
             schema(
                 // header
-                listOf(headerStatement(openFieldList(), importList(import("partiql.isl"))))
-                // other top-level type statements
-                + remaining.mapValues { typeStatement(it.value) }.values.toList()
-                // type statement for `topLevelTypeName`
-                + typeStatement(staticType.toTypeDefinition(topLevelTypeName, typeDefName = topLevelTypeName))
-                // footer
-                + footerStatement(openFieldList())
+                listOf(headerStatement(openFieldList(), importList(import("partiql.isl")))) +
+                    // other top-level type statements
+                    remaining.mapValues { typeStatement(it.value) }.values.toList() +
+                    // type statement for `topLevelTypeName`
+                    typeStatement(staticType.toTypeDefinition(topLevelTypeName, typeDefName = topLevelTypeName)) +
+                    // footer
+                    footerStatement(openFieldList())
             )
         }
     }
@@ -42,11 +62,16 @@ class IonSchemaMapper(private val staticType: StaticType) {
      * Creates a top-level or an inline ISL type definition
      */
     private fun StaticType.toTypeDefinition(topLevelTypeName: String, typeDefName: String? = null, constraints: Set<IonSchemaModel.Constraint> = emptySet()): IonSchemaModel.TypeDefinition =
-        IonSchemaModel.build { typeDefinition(typeDefName, constraints = when {
-            constraints.isEmpty() -> constraintList(getConstraints(topLevelTypeName, typeDefName).toList())
-            else -> constraintList(constraints.toList())
-        })}
-    
+        IonSchemaModel.build {
+            typeDefinition(
+                typeDefName,
+                constraints = when {
+                    constraints.isEmpty() -> constraintList(getConstraints(topLevelTypeName, typeDefName).toList())
+                    else -> constraintList(constraints.toList())
+                }
+            )
+        }
+
     /**
      * Returns a set of all constraints for the StaticType
      */
@@ -81,7 +106,7 @@ class IonSchemaMapper(private val staticType: StaticType) {
             // Examples: type:int, type:{type:list,element:int}, type:custom
             // We only create type constraint here
             val isNullable = ionBool(isNullable(this) || nullable)
-            
+
             // Get type definitions stored in metas
             val typeDefsFromMetas = metas[ISL_META_KEY] as? List<IonSchemaModel.TypeDefinition>
             // Get type definition for `typeDefName` if exists. Note that `typeDefName` may be null but there may still be a valid type definition.
@@ -140,11 +165,13 @@ class IonSchemaMapper(private val staticType: StaticType) {
         is IonSchemaModel.TypeReference.NamedType -> this
         is IonSchemaModel.TypeReference.InlineType -> when (this.type.constraints.items.size) {
             1 -> when (val constraint = this.type.constraints.items.first()) {
-                is IonSchemaModel.Constraint.TypeConstraint -> when(val typeFromConstraint = constraint.type) {
-                    is IonSchemaModel.TypeReference.NamedType -> IonSchemaModel.build { namedType(
-                        typeFromConstraint.name.text,
-                        ionBool(this@flatten.nullable.booleanValue || typeFromConstraint.nullable.booleanValue)
-                    ) }
+                is IonSchemaModel.Constraint.TypeConstraint -> when (val typeFromConstraint = constraint.type) {
+                    is IonSchemaModel.TypeReference.NamedType -> IonSchemaModel.build {
+                        namedType(
+                            typeFromConstraint.name.text,
+                            ionBool(this@flatten.nullable.booleanValue || typeFromConstraint.nullable.booleanValue)
+                        )
+                    }
                     is IonSchemaModel.TypeReference.InlineType -> IonSchemaModel.build {
                         inlineType(
                             typeFromConstraint.type,
@@ -179,8 +206,12 @@ class IonSchemaMapper(private val staticType: StaticType) {
                     }
                     else -> {
                         // Examples: any_of:[int, string], any_of:[int, custom], any_of:[custom1, custom2]
-                        IonSchemaModel.build { anyOf(nonNullableTypes.map {
-                            it.toTypeReference(topLevelTypeName, nullable) })
+                        IonSchemaModel.build {
+                            anyOf(
+                                nonNullableTypes.map {
+                                    it.toTypeReference(topLevelTypeName, nullable)
+                                }
+                            )
                         }
                     }
                 }
@@ -205,7 +236,7 @@ class IonSchemaMapper(private val staticType: StaticType) {
     private fun StaticType.getOtherConstraints(topLevelTypeName: String, typeDefName: String? = null): Set<IonSchemaModel.Constraint> {
         // Get type definitions from metas, if present
         val typeDefsFromMetas = metas[ISL_META_KEY] as? List<IonSchemaModel.TypeDefinition> ?: listOf()
-        
+
         // If there are multiple type definitions, only consider constraints for the relevant one
         // The type def we are interested in has name as `typeDefName` (which may be null, for instance, if we are getting constraints for a struct field)
         // Once the correct type def is identified, get all constraints excluding
@@ -227,10 +258,14 @@ class IonSchemaMapper(private val staticType: StaticType) {
                                 codepointLength(equalsNumber(ionInt(lengthConstraint.length.value.toLong())))
                             }
                             is NumberConstraint.UpTo -> IonSchemaModel.build {
-                                codepointLength(equalsRange(numberRange(
-                                    inclusive(ionInt(0)),
-                                    inclusive(ionInt(lengthConstraint.length.value.toLong()))
-                                )))
+                                codepointLength(
+                                    equalsRange(
+                                        numberRange(
+                                            inclusive(ionInt(0)),
+                                            inclusive(ionInt(lengthConstraint.length.value.toLong()))
+                                        )
+                                    )
+                                )
                             }
                         }
                     }
@@ -241,12 +276,20 @@ class IonSchemaMapper(private val staticType: StaticType) {
                     IntType.IntRangeConstraint.UNCONSTRAINED -> emptyList()
                     else -> {
                         constraintsFromISL = constraintsFromISL.filterNot { it is IonSchemaModel.Constraint.ValidValues }
-                        listOf(IonSchemaModel.build {
-                            validValues(rangeOfValidValues(numRange(numberRange(
-                                inclusive(ionInt(constraint.validRange.first)),
-                                inclusive(ionInt(constraint.validRange.last))
-                            ))))
-                        })
+                        listOf(
+                            IonSchemaModel.build {
+                                validValues(
+                                    rangeOfValidValues(
+                                        numRange(
+                                            numberRange(
+                                                inclusive(ionInt(constraint.validRange.first)),
+                                                inclusive(ionInt(constraint.validRange.last))
+                                            )
+                                        )
+                                    )
+                                )
+                            }
+                        )
                     }
                 }
             }
@@ -373,14 +416,18 @@ class IonSchemaMapper(private val staticType: StaticType) {
                         }
                         else -> {
                             when (val reference = value.toTypeReference(topLevelTypeName)) {
-                                is IonSchemaModel.TypeReference.NamedType -> inlineType(typeDefinition(
-                                    null,
-                                    constraintList(typeConstraint(reference), occurs(occursRequired()))),
+                                is IonSchemaModel.TypeReference.NamedType -> inlineType(
+                                    typeDefinition(
+                                        null,
+                                        constraintList(typeConstraint(reference), occurs(occursRequired()))
+                                    ),
                                     reference.nullable
                                 )
-                                is IonSchemaModel.TypeReference.InlineType -> inlineType(typeDefinition(
-                                    null,
-                                    constraintList(reference.type.constraints.items + occurs(occursRequired()))),
+                                is IonSchemaModel.TypeReference.InlineType -> inlineType(
+                                    typeDefinition(
+                                        null,
+                                        constraintList(reference.type.constraints.items + occurs(occursRequired()))
+                                    ),
                                     reference.nullable
                                 )
                                 is IonSchemaModel.TypeReference.ImportedType -> TODO("Imported types are not supported yet")
@@ -429,9 +476,9 @@ private fun IonSchemaModel.TypeDefinition.getTypeConstraintName(): String? {
  * A top-level type is found when ISL type definition in metas has "name" attribute present - this is only possible if
  * it was a top-level type in original ISL (ISL used to create the StaticType instance)
  */
-private fun StaticType.addTopLevelTypesFromMetas() : Map<String, IonSchemaModel.TypeDefinition> {
+private fun StaticType.addTopLevelTypesFromMetas(): Map<String, IonSchemaModel.TypeDefinition> {
     val typeDefs = this.metas[ISL_META_KEY] as? List<IonSchemaModel.TypeDefinition> ?: emptyList()
-    return typeDefs.filter {it.name != null }.map { it.name!!.text to it }.toMap()
+    return typeDefs.filter { it.name != null }.map { it.name!!.text to it }.toMap()
 }
 
 /**
@@ -500,7 +547,7 @@ fun StaticType.getBaseTypeName(): String = when (this) {
         }
     }
     is DateType -> "date"
-    is TimeType -> when(withTimeZone) {
+    is TimeType -> when (withTimeZone) {
         false -> "time"
         true -> "time_with_time_zone"
     }

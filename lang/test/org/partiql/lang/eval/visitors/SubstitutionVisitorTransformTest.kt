@@ -18,8 +18,8 @@ import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.ionInt
 import org.junit.Test
 import org.partiql.lang.ast.SourceLocationMeta
-import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.metaContainerOf
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
@@ -70,5 +70,4 @@ class SubstitutionVisitorTransformTest {
         // (lit 3) should still be (lit 3)
         assertEquals(3, transformedExpr.toIonElement().values[1].longValue)
     }
-
 }

@@ -51,8 +51,8 @@ internal fun createBuiltinFunctions(valueFactory: ExprValueFactory) =
         ToTimestampExprFunction(valueFactory),
         SizeExprFunction(valueFactory),
         FromUnixTimeFunction(valueFactory),
-        UnixTimestampFunction(valueFactory))
-
+        UnixTimestampFunction(valueFactory)
+    )
 
 internal fun createExists(valueFactory: ExprValueFactory): ExprFunction = object : ExprFunction {
     override val signature = FunctionSignature(

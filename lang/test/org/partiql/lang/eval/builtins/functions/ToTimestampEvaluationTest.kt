@@ -13,7 +13,6 @@ import org.partiql.lang.eval.builtins.checkInvalidArity
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.to
-import kotlin.math.min
 
 class ToTimestampEvaluationTest : EvaluatorTestBase() {
     // Pass test cases

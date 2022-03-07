@@ -11,9 +11,10 @@ class ParserMacroTests : BaseParseTests() {
      * We use `#` instead of `$` in test fixtures because escaping `$` in a kotlin
      * multiline string is messy, e.g. `"""${"$"}"""` results in `"$"`
      */
-    
+
     @Test
-    fun forWithSingleTestAndVariable() = assertParse("""
+    fun forWithSingleTestAndVariable() = assertParse(
+        """
             |for::{ 
             |  template: [
             |    test::{
@@ -27,17 +28,24 @@ class ParserMacroTests : BaseParseTests() {
             |    { value: 1, expected: (success 2) }
             |  ]
             |}""".trimMargin(),
-            expected = singleModulesList(TestNode(id = "testTemplate\$\${value:1,expected:(success 2)}",
-                    description = null,
-                    statement = "1 + 1",
-                    environment = null,
-                    expected = BaseParseTests.ion.singleValue("(success 2)") as IonSexp,
-                    scriptLocation = ScriptLocation(
-                            "$inputBasePath/input[0].sqlts",
-                            11))))
+        expected = singleModulesList(
+            TestNode(
+                id = "testTemplate\$\${value:1,expected:(success 2)}",
+                description = null,
+                statement = "1 + 1",
+                environment = null,
+                expected = BaseParseTests.ion.singleValue("(success 2)") as IonSexp,
+                scriptLocation = ScriptLocation(
+                    "$inputBasePath/input[0].sqlts",
+                    11
+                )
+            )
+        )
+    )
 
     @Test
-    fun forWithMultipleTestsAndMultipleVariables() = assertParse("""
+    fun forWithMultipleTestsAndMultipleVariables() = assertParse(
+        """
             |for::{ 
             |  template: [
             |    
@@ -63,61 +71,87 @@ class ParserMacroTests : BaseParseTests() {
             |    { description: "description 2", value: 2, table: [2], result: 2, environment: {foo: 2}, expected: (success 20) }
             |  ]
             |}""".trimMargin(),
-            expected = singleModulesList(TestNode(id = "testTemplate1\$\${description:\"description 1\",value:1,table:[1],result:1,environment:{foo:1},expected:(success 10)}",
-                    description = "test: description 1",
-                    statement = "1 + 1",
-                    environment = BaseParseTests.ion.singleValue(
-                            "{myTable: [1]}") as IonStruct,
-                    expected = BaseParseTests.ion.singleValue(
-                            "(success 1)") as IonSexp,
-                    scriptLocation = ScriptLocation(
-                            "$inputBasePath/input[0].sqlts",
-                            22)),
+        expected = singleModulesList(
+            TestNode(
+                id = "testTemplate1\$\${description:\"description 1\",value:1,table:[1],result:1,environment:{foo:1},expected:(success 10)}",
+                description = "test: description 1",
+                statement = "1 + 1",
+                environment = BaseParseTests.ion.singleValue(
+                    "{myTable: [1]}"
+                ) as IonStruct,
+                expected = BaseParseTests.ion.singleValue(
+                    "(success 1)"
+                ) as IonSexp,
+                scriptLocation = ScriptLocation(
+                    "$inputBasePath/input[0].sqlts",
+                    22
+                )
+            ),
 
-                    TestNode(id = "testTemplate1\$\${description:\"description 2\",value:2,table:[2],result:2,environment:{foo:2},expected:(success 20)}",
-                            description = "test: description 2",
-                            statement = "1 + 2",
-                            environment = BaseParseTests.ion.singleValue(
-                                    "{myTable: [2]}") as IonStruct,
-                            expected = BaseParseTests.ion.singleValue(
-                                    "(success 2)") as IonSexp,
-                            scriptLocation = ScriptLocation(
-                                    "$inputBasePath/input[0].sqlts",
-                                    23)),
+            TestNode(
+                id = "testTemplate1\$\${description:\"description 2\",value:2,table:[2],result:2,environment:{foo:2},expected:(success 20)}",
+                description = "test: description 2",
+                statement = "1 + 2",
+                environment = BaseParseTests.ion.singleValue(
+                    "{myTable: [2]}"
+                ) as IonStruct,
+                expected = BaseParseTests.ion.singleValue(
+                    "(success 2)"
+                ) as IonSexp,
+                scriptLocation = ScriptLocation(
+                    "$inputBasePath/input[0].sqlts",
+                    23
+                )
+            ),
 
-                    TestNode(id = "testTemplate2\$\${description:\"description 1\",value:1,table:[1],result:1,environment:{foo:1},expected:(success 10)}",
-                            description = "description 1",
-                            statement = "1",
-                            environment = ion.singleValue(
-                                    "{foo: 1}") as IonStruct,
-                            expected = ion.singleValue(
-                                    "(success 10)") as IonSexp,
-                            scriptLocation = ScriptLocation(
-                                    "$inputBasePath/input[0].sqlts",
-                                    22)),
+            TestNode(
+                id = "testTemplate2\$\${description:\"description 1\",value:1,table:[1],result:1,environment:{foo:1},expected:(success 10)}",
+                description = "description 1",
+                statement = "1",
+                environment = ion.singleValue(
+                    "{foo: 1}"
+                ) as IonStruct,
+                expected = ion.singleValue(
+                    "(success 10)"
+                ) as IonSexp,
+                scriptLocation = ScriptLocation(
+                    "$inputBasePath/input[0].sqlts",
+                    22
+                )
+            ),
 
-                    TestNode(id = "testTemplate2\$\${description:\"description 2\",value:2,table:[2],result:2,environment:{foo:2},expected:(success 20)}",
-                            description = "description 2",
-                            statement = "2",
-                            environment = BaseParseTests.ion.singleValue(
-                                    "{foo: 2}") as IonStruct,
-                            expected = BaseParseTests.ion.singleValue(
-                                    "(success 20)") as IonSexp,
-                            scriptLocation = ScriptLocation(
-                                    "$inputBasePath/input[0].sqlts",
-                                    23))))
+            TestNode(
+                id = "testTemplate2\$\${description:\"description 2\",value:2,table:[2],result:2,environment:{foo:2},expected:(success 20)}",
+                description = "description 2",
+                statement = "2",
+                environment = BaseParseTests.ion.singleValue(
+                    "{foo: 2}"
+                ) as IonStruct,
+                expected = BaseParseTests.ion.singleValue(
+                    "(success 20)"
+                ) as IonSexp,
+                scriptLocation = ScriptLocation(
+                    "$inputBasePath/input[0].sqlts",
+                    23
+                )
+            )
+        )
+    )
 
     @Test
     fun forWrongType() =
-            assertParseError(input = """ for::"should be a struct" """,
-                    expectedErrorMessage = """ 
+        assertParseError(
+            input = """ for::"should be a struct" """,
+            expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
                 |    $inputBasePath/input[0].sqlts:1 - Wrong type for for. Expected [STRUCT], got STRING
-            """.trimMargin())
+            """.trimMargin()
+        )
 
     @Test
     fun forWrongTemplateType() =
-            assertParseError(input = """
+        assertParseError(
+            input = """
                 |for::{ 
                 |  template: "should be a list",
                 |  
@@ -126,13 +160,15 @@ class ParserMacroTests : BaseParseTests() {
                 |  ] 
                 |}
                 |""".trimMargin(),
-                    expectedErrorMessage = """ 
+            expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
                 |    $inputBasePath/input[0].sqlts:2 - Wrong type for for.template. Expected [LIST], got STRING
-                """.trimMargin())
+                """.trimMargin()
+        )
 
     @Test
-    fun forEmptyTemplate() = assertParseError(input = """
+    fun forEmptyTemplate() = assertParseError(
+        input = """
                 |for::{ 
                 |  template: [],
                 |  
@@ -140,13 +176,15 @@ class ParserMacroTests : BaseParseTests() {
                 |    { value: 1, expected: (success 2) }
                 |  ] 
                 |}  """.trimMargin(),
-            expectedErrorMessage = """ 
+        expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
                 |    $inputBasePath/input[0].sqlts:1 - Field must have at least one element: for.template
-                """.trimMargin())
+                """.trimMargin()
+    )
 
     @Test
-    fun forTestTemplateWrongType() = assertParseError(input = """
+    fun forTestTemplateWrongType() = assertParseError(
+        input = """
                 |for::{ 
                 |  template: [
                 |    test::"should be a struct"
@@ -157,13 +195,15 @@ class ParserMacroTests : BaseParseTests() {
                 |  ]
                 |}
                 |""".trimMargin(),
-            expectedErrorMessage = """ 
+        expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
                 |    $inputBasePath/input[0].sqlts:3 - Wrong type for for.template[0]. Expected [STRUCT], got STRING
-                """.trimMargin())
+                """.trimMargin()
+    )
 
     @Test
-    fun forTestTemplateWrongIdType() = assertParseError(input = """
+    fun forTestTemplateWrongIdType() = assertParseError(
+        input = """
                 |for::{ 
                 |  template: [
                 |    test::{
@@ -178,13 +218,15 @@ class ParserMacroTests : BaseParseTests() {
                 |  ]
                 |}
                 |""".trimMargin(),
-            expectedErrorMessage = """ 
+        expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
                 |    $inputBasePath/input[0].sqlts:4 - Wrong type for for.template[0].id. Expected [SYMBOL], got STRING
-                """.trimMargin())
+                """.trimMargin()
+    )
 
     @Test
-    fun forTestTemplateMissingId() = assertParseError(input = """
+    fun forTestTemplateMissingId() = assertParseError(
+        input = """
                 |for::{ 
                 |  template: [
                 |    test::{
@@ -198,13 +240,15 @@ class ParserMacroTests : BaseParseTests() {
                 |  ]
                 |}
                 |""".trimMargin(),
-            expectedErrorMessage = """ 
+        expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
                 |    $inputBasePath/input[0].sqlts:3 - Missing required field: for.template[0].id
-                """.trimMargin())
+                """.trimMargin()
+    )
 
     @Test
-    fun forTestTemplateWrongDescriptionType() = assertParseError(input = """
+    fun forTestTemplateWrongDescriptionType() = assertParseError(
+        input = """
                 |for::{ 
                 |  template: [
                 |    test::{
@@ -220,13 +264,15 @@ class ParserMacroTests : BaseParseTests() {
                 |  ]
                 |}
                 |""".trimMargin(),
-            expectedErrorMessage = """ 
+        expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
                 |    $inputBasePath/input[0].sqlts:5 - Invalid template value for field: for.template[0].description. Must start with '${'$'}' when it's a SYMBOL
-                """.trimMargin())
+                """.trimMargin()
+    )
 
     @Test
-    fun forTestTemplateWrongStatementType() = assertParseError(input = """
+    fun forTestTemplateWrongStatementType() = assertParseError(
+        input = """
                 |for::{ 
                 |  template: [
                 |    test::{
@@ -241,13 +287,15 @@ class ParserMacroTests : BaseParseTests() {
                 |  ]
                 |}
                 |""".trimMargin(),
-            expectedErrorMessage = """ 
+        expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
                 |    $inputBasePath/input[0].sqlts:5 - Invalid template value for field: for.template[0].statement. Must start with '${'$'}' when it's a SYMBOL
-                """.trimMargin())
+                """.trimMargin()
+    )
 
     @Test
-    fun forTestTemplateMissingStatement() = assertParseError(input = """
+    fun forTestTemplateMissingStatement() = assertParseError(
+        input = """
                 |for::{ 
                 |  template: [
                 |    test::{
@@ -261,13 +309,15 @@ class ParserMacroTests : BaseParseTests() {
                 |  ]
                 |}
                 |""".trimMargin(),
-            expectedErrorMessage = """ 
+        expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
                 |    $inputBasePath/input[0].sqlts:3 - Missing required field: for.template[0].statement
-                """.trimMargin())
+                """.trimMargin()
+    )
 
     @Test
-    fun forTestTemplateWrongEnvironmentType() = assertParseError(input = """
+    fun forTestTemplateWrongEnvironmentType() = assertParseError(
+        input = """
                 |for::{ 
                 |  template: [
                 |    test::{
@@ -282,13 +332,15 @@ class ParserMacroTests : BaseParseTests() {
                 |    { value: 1, expected: (success 2) }
                 |  ]
                 |}""".trimMargin(),
-            expectedErrorMessage = """ 
+        expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
                 |    $inputBasePath/input[0].sqlts:6 - Wrong type for for.template[0].environment. Expected [STRUCT], got STRING
-                """.trimMargin())
+                """.trimMargin()
+    )
 
     @Test
-    fun forTestTemplateWrongExpectedType() = assertParseError(input = """
+    fun forTestTemplateWrongExpectedType() = assertParseError(
+        input = """
                 |for::{ 
                 |  template: [
                 |    test::{
@@ -302,13 +354,15 @@ class ParserMacroTests : BaseParseTests() {
                 |    { value: 1, expected: (success 2) }
                 |  ]
                 |}""".trimMargin(),
-            expectedErrorMessage = """ 
+        expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
                 |    $inputBasePath/input[0].sqlts:7 - Invalid template value for field: for.template[0].expected. Must start with '${'$'}' when it's a SYMBOL
-                """.trimMargin())
+                """.trimMargin()
+    )
 
     @Test
-    fun forTestTemplateMissingExpected() = assertParseError(input = """
+    fun forTestTemplateMissingExpected() = assertParseError(
+        input = """
                 |for::{ 
                 |  template: [
                 |    test::{
@@ -322,26 +376,30 @@ class ParserMacroTests : BaseParseTests() {
                 |  ]
                 |}
                 |""".trimMargin(),
-            expectedErrorMessage = """ 
+        expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
                 |    $inputBasePath/input[0].sqlts:3 - Missing required field: for.template[0].expected
-                """.trimMargin())
+                """.trimMargin()
+    )
 
     @Test
-    fun forMissingTemplate() = assertParseError(input = """
+    fun forMissingTemplate() = assertParseError(
+        input = """
                 |for::{
                 |  variable_sets: [
                 |    { value: 1, expected: (success 2) }
                 |  ]
                 |}
                 |""".trimMargin(),
-            expectedErrorMessage = """ 
+        expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
                 |    $inputBasePath/input[0].sqlts:1 - Missing required field: for.template
-                """.trimMargin())
+                """.trimMargin()
+    )
 
     @Test
-    fun forWrongVariableSetType() = assertParseError(input = """
+    fun forWrongVariableSetType() = assertParseError(
+        input = """
                 |for::{ 
                 |  template: [
                 |    test::{
@@ -354,13 +412,15 @@ class ParserMacroTests : BaseParseTests() {
                 |  variable_sets: "should be a list" 
                 |}
                 |""".trimMargin(),
-            expectedErrorMessage = """ 
+        expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
                 |    $inputBasePath/input[0].sqlts:10 - Wrong type for for.variable_sets. Expected [LIST], got STRING
-                """.trimMargin())
+                """.trimMargin()
+    )
 
     @Test
-    fun forMissingVariableSet() = assertParseError(input = """
+    fun forMissingVariableSet() = assertParseError(
+        input = """
                 |for::{ 
                 |  template: [
                 |    test::{
@@ -371,13 +431,15 @@ class ParserMacroTests : BaseParseTests() {
                 |  ]
                 |}
                 |""".trimMargin(),
-            expectedErrorMessage = """ 
+        expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
                 |    $inputBasePath/input[0].sqlts:1 - Missing required field: for.variable_sets
-                """.trimMargin())
+                """.trimMargin()
+    )
 
     @Test
-    fun forWrongVariableSetElementType() = assertParseError(input = """
+    fun forWrongVariableSetElementType() = assertParseError(
+        input = """
                 |for::{ 
                 |  template: [
                 |    test::{
@@ -392,13 +454,15 @@ class ParserMacroTests : BaseParseTests() {
                 |  ]
                 |}
                 |""".trimMargin(),
-            expectedErrorMessage = """ 
+        expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
                 |    $inputBasePath/input[0].sqlts:11 - Wrong type for variable_sets[0]. Expected [STRUCT], got STRING
-                """.trimMargin())
+                """.trimMargin()
+    )
 
     @Test
-    fun forEmptyVariableSet() = assertParseError(input = """
+    fun forEmptyVariableSet() = assertParseError(
+        input = """
                 |for::{ 
                 |  template: [
                 |    test::{
@@ -411,13 +475,15 @@ class ParserMacroTests : BaseParseTests() {
                 |  variable_sets: []
                 |}
                 |""".trimMargin(),
-            expectedErrorMessage = """ 
+        expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
                 |    $inputBasePath/input[0].sqlts:1 - Field must have at least one element: for.variable_sets
-                """.trimMargin())
+                """.trimMargin()
+    )
 
     @Test
-    fun forUnknownField() = assertParseError(input = """
+    fun forUnknownField() = assertParseError(
+        input = """
                 |for::{ 
                 |  template: [
                 |    test::{
@@ -434,13 +500,15 @@ class ParserMacroTests : BaseParseTests() {
                 |  ]
                 |}
                 |""".trimMargin(),
-            expectedErrorMessage = """ 
+        expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
                 |    $inputBasePath/input[0].sqlts:10 - Unexpected field: for.shouldNotBeHere
-                """.trimMargin())
+                """.trimMargin()
+    )
 
     @Test
-    fun forUnknownVariable() = assertParseError(input = """
+    fun forUnknownVariable() = assertParseError(
+        input = """
                 |for::{ 
                 |  template: [
                 |    test::{
@@ -455,13 +523,15 @@ class ParserMacroTests : BaseParseTests() {
                 |  ]
                 |}
                 |""".trimMargin(),
-            expectedErrorMessage = """ 
+        expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
                 |    $inputBasePath/input[0].sqlts:11 - Missing template variable: unknown
-                """.trimMargin())
+                """.trimMargin()
+    )
 
     @Test
-    fun forInvalidExpectedVariable() = assertParseError(input = """
+    fun forInvalidExpectedVariable() = assertParseError(
+        input = """
                 |for::{ 
                 |  template: [
                 |    test::{
@@ -476,10 +546,9 @@ class ParserMacroTests : BaseParseTests() {
                 |  ]
                 |}
                 |""".trimMargin(),
-            expectedErrorMessage = """ 
+        expectedErrorMessage = """ 
                 |Errors found when parsing test scripts:
                 |    $inputBasePath/input[0].sqlts:11 - for.template.expected success must have two elements, e.g. (success (bag {a: 1}))
-                """.trimMargin())
-
-
+                """.trimMargin()
+    )
 }

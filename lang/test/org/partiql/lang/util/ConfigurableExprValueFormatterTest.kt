@@ -13,7 +13,6 @@ import org.partiql.lang.syntax.SqlParser
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-
 @RunWith(JUnitParamsRunner::class)
 class ConfigurableExprValueFormatterTest {
 
@@ -38,7 +37,8 @@ class ConfigurableExprValueFormatterTest {
         "MISSING" to "MISSING",
         "null" to "NULL",
         "NULL" to "NULL",
-        "`null`" to "NULL").map { listOf(it.first, it.second) }
+        "`null`" to "NULL"
+    ).map { listOf(it.first, it.second) }
 
     private fun baseExamples() = arrayOf(
         // Bool
@@ -74,7 +74,8 @@ class ConfigurableExprValueFormatterTest {
 //        TODO: This should succeed.
 //         Check https://github.com/partiql/partiql-lang-kotlin/issues/386.
 //        "DATE '2021-02-28'" to "DATE '2021-02-28'",
-        "{}" to "{}").map { listOf(it.first, it.second) }
+        "{}" to "{}"
+    ).map { listOf(it.first, it.second) }
 
     fun prettyExamples() = baseExamples() + arrayOf(
         // List
@@ -108,7 +109,6 @@ class ConfigurableExprValueFormatterTest {
                 |  2,
                 |  3
                 |>>""".trimMargin(),
-
 
         "<<1,2,<<1>> >>" to """
                 |<<
@@ -158,7 +158,7 @@ class ConfigurableExprValueFormatterTest {
                 |  }
                 |>>
                 """.trimMargin()
-        ).map { listOf(it.first, it.second) }
+    ).map { listOf(it.first, it.second) }
 
     fun standardExamples() = baseExamples() + arrayOf(
         // List
@@ -175,7 +175,7 @@ class ConfigurableExprValueFormatterTest {
 
         // Mixed containers
         "<<{'foo': 1, 'bar': [1, 2, 3], 'baz': {'books': <<>>}}>>"
-   ).map { listOf(it, it) }
+    ).map { listOf(it, it) }
 
     private fun assertFormatter(expression: String, expected: String, formatter: ConfigurableExprValueFormatter) {
         val value = evalQuery(expression)
@@ -197,13 +197,13 @@ class ConfigurableExprValueFormatterTest {
 
     @Test
     @Parameters(method = "unknownExamples")
-    fun testPrettyUnknown(expression: String, expected: String)
-        = assertFormatterForUnknown(expression, expected, pretty)
+    fun testPrettyUnknown(expression: String, expected: String) =
+        assertFormatterForUnknown(expression, expected, pretty)
 
     @Test
     @Parameters(method = "unknownExamples")
-    fun testStandardUnknown(expression: String, expected: String)
-        = assertFormatterForUnknown(expression, expected, standard)
+    fun testStandardUnknown(expression: String, expected: String) =
+        assertFormatterForUnknown(expression, expected, standard)
 
     @Test
     @Parameters(method = "prettyExamples")

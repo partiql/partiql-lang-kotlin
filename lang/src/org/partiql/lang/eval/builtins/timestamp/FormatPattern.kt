@@ -90,9 +90,9 @@ internal class FormatPattern(val formatPatternString: String, val formatItems: L
 
         val duplicatedField = formatSymbols.groupingBy { it.field }
             .eachCount()
-            .filter { it.value > 1 }  //Appears more than once in field
+            .filter { it.value > 1 } // Appears more than once in field
             .asSequence()
-            .sortedByDescending { it.value }  //Sort descending by number of appearances
+            .sortedByDescending { it.value } // Sort descending by number of appearances
             .firstOrNull()
 
         if (duplicatedField != null) {
@@ -117,7 +117,7 @@ internal class FormatPattern(val formatPatternString: String, val formatItems: L
 
             val hasAmPm = formatSymbols.filterIsInstance<AmPmPatternSymbol>().any()
             when (it.format.clock) {
-                HourClock.TwelveHour     -> {
+                HourClock.TwelveHour -> {
                     if (!hasAmPm) {
                         throw EvaluationException(
                             message = "timestamp format pattern contains 12-hour hour of day field but doesn't " + "contain an am/pm field.",
@@ -128,7 +128,7 @@ internal class FormatPattern(val formatPatternString: String, val formatItems: L
                     }
                 }
                 HourClock.TwentyFourHour -> {
-                    if(hasAmPm) {
+                    if (hasAmPm) {
                         throw EvaluationException(
                             message = "timestamp format pattern contains 24-hour hour of day field and also " + "contains an am/pm field.",
                             errorCode = ErrorCode.EVALUATOR_TIMESTAMP_FORMAT_PATTERN_HOUR_CLOCK_AM_PM_MISMATCH,
@@ -160,22 +160,24 @@ internal class FormatPattern(val formatPatternString: String, val formatItems: L
         fun errIfMissingTimestampFields(vararg fields: TimestampField) {
             val missingFields = fields.filter { requiredField -> formatSymbols.all { it.field != requiredField } }
 
-            if(missingFields.any()) {
+            if (missingFields.any()) {
                 err(missingFields.asSequence().joinToString(", "))
             }
         }
 
-        //Minimum precision for patterns containing offset or am/pm symbols is HOUR.
-        //NOTE: HOUR is not a valid precision for an Ion timestamp but when a format pattern's
-        //leastSignificantField is HOUR, the minute field defaults to 00.
-        if(hasOffset || hasAmPm) {
-            errIfMissingTimestampFields(TimestampField.YEAR, TimestampField.MONTH_OF_YEAR, TimestampField.DAY_OF_MONTH,
-                    TimestampField.HOUR_OF_DAY)
+        // Minimum precision for patterns containing offset or am/pm symbols is HOUR.
+        // NOTE: HOUR is not a valid precision for an Ion timestamp but when a format pattern's
+        // leastSignificantField is HOUR, the minute field defaults to 00.
+        if (hasOffset || hasAmPm) {
+            errIfMissingTimestampFields(
+                TimestampField.YEAR, TimestampField.MONTH_OF_YEAR, TimestampField.DAY_OF_MONTH,
+                TimestampField.HOUR_OF_DAY
+            )
         }
 
         when (leastSignificantField) {
             null -> {
-                //If most precise field is null there are no format symbols corresponding to any timestamp fields.
+                // If most precise field is null there are no format symbols corresponding to any timestamp fields.
                 err("YEAR")
             }
             TimestampField.YEAR -> {
@@ -184,18 +186,26 @@ internal class FormatPattern(val formatPatternString: String, val formatItems: L
             }
             TimestampField.MONTH_OF_YEAR -> errIfMissingTimestampFields(TimestampField.YEAR)
             TimestampField.DAY_OF_MONTH -> errIfMissingTimestampFields(TimestampField.YEAR, TimestampField.MONTH_OF_YEAR)
-            TimestampField.HOUR_OF_DAY        -> errIfMissingTimestampFields(TimestampField.YEAR,
-                    TimestampField.MONTH_OF_YEAR, TimestampField.DAY_OF_MONTH)
-            TimestampField.MINUTE_OF_HOUR     -> errIfMissingTimestampFields(TimestampField.YEAR,
-                    TimestampField.MONTH_OF_YEAR, TimestampField.DAY_OF_MONTH, TimestampField.HOUR_OF_DAY)
-            TimestampField.SECOND_OF_MINUTE   -> errIfMissingTimestampFields(TimestampField.YEAR,
-                    TimestampField.MONTH_OF_YEAR, TimestampField.DAY_OF_MONTH, TimestampField.HOUR_OF_DAY,
-                    TimestampField.MINUTE_OF_HOUR)
-            TimestampField. FRACTION_OF_SECOND -> errIfMissingTimestampFields(TimestampField.YEAR,
-                    TimestampField.MONTH_OF_YEAR, TimestampField.DAY_OF_MONTH, TimestampField.HOUR_OF_DAY,
-                    TimestampField.MINUTE_OF_HOUR, TimestampField.SECOND_OF_MINUTE)
+            TimestampField.HOUR_OF_DAY -> errIfMissingTimestampFields(
+                TimestampField.YEAR,
+                TimestampField.MONTH_OF_YEAR, TimestampField.DAY_OF_MONTH
+            )
+            TimestampField.MINUTE_OF_HOUR -> errIfMissingTimestampFields(
+                TimestampField.YEAR,
+                TimestampField.MONTH_OF_YEAR, TimestampField.DAY_OF_MONTH, TimestampField.HOUR_OF_DAY
+            )
+            TimestampField.SECOND_OF_MINUTE -> errIfMissingTimestampFields(
+                TimestampField.YEAR,
+                TimestampField.MONTH_OF_YEAR, TimestampField.DAY_OF_MONTH, TimestampField.HOUR_OF_DAY,
+                TimestampField.MINUTE_OF_HOUR
+            )
+            TimestampField.FRACTION_OF_SECOND -> errIfMissingTimestampFields(
+                TimestampField.YEAR,
+                TimestampField.MONTH_OF_YEAR, TimestampField.DAY_OF_MONTH, TimestampField.HOUR_OF_DAY,
+                TimestampField.MINUTE_OF_HOUR, TimestampField.SECOND_OF_MINUTE
+            )
 
-            TimestampField.OFFSET, TimestampField.AM_PM      -> {
+            TimestampField.OFFSET, TimestampField.AM_PM -> {
                 throw IllegalStateException("OFFSET, AM_PM should never be the least significant field!")
             }
         }
@@ -205,7 +215,7 @@ internal class FormatPattern(val formatPatternString: String, val formatItems: L
      * but not for parsing.
      */
     private fun checkForFieldsNotValidForParsing() {
-        if(formatSymbols.filterIsInstance<MonthPatternSymbol>().any { it.format == MonthFormat.FIRST_LETTER_OF_MONTH_NAME }) {
+        if (formatSymbols.filterIsInstance<MonthPatternSymbol>().any { it.format == MonthFormat.FIRST_LETTER_OF_MONTH_NAME }) {
             throw EvaluationException(
                 message = "timestamp format pattern missing fields",
                 errorCode = ErrorCode.EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_SYMBOL_FOR_PARSING,

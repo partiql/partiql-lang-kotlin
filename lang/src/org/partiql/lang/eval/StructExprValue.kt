@@ -60,9 +60,11 @@ internal open class StructExprValue(
     }
 
     /** The backing data structured for operations that require materialization. */
-    private data class Materialized(val bindings: Bindings<ExprValue>,
-                                    val ordinalBindings: OrdinalBindings,
-                                    val orderedBindNames: OrderedBindNames?)
+    private data class Materialized(
+        val bindings: Bindings<ExprValue>,
+        val ordinalBindings: OrdinalBindings,
+        val orderedBindNames: OrderedBindNames?
+    )
 
     private val materialized by lazy {
         val bindMap = HashMap<String, ExprValue>()
@@ -79,7 +81,7 @@ internal open class StructExprValue(
 
         val bindings = Bindings.ofMap(bindMap)
         val ordinalBindings = OrdinalBindings.ofList(bindList)
-        val orderedBindNames = when(ordering) {
+        val orderedBindNames = when (ordering) {
             StructOrdering.ORDERED -> object : OrderedBindNames {
                 override val orderedNames = bindNames
             }
@@ -97,7 +99,7 @@ internal open class StructExprValue(
 
     @Suppress("UNCHECKED_CAST")
     override fun <T> provideFacet(type: Class<T>?): T? = when (type) {
-        OrderedBindNames::class.java -> when(ordering){
+        OrderedBindNames::class.java -> when (ordering) {
             StructOrdering.ORDERED -> materialized.orderedBindNames
             else -> null
         } as T?
@@ -106,4 +108,3 @@ internal open class StructExprValue(
 
     override fun iterator() = sequence.iterator()
 }
-

@@ -56,21 +56,25 @@ class PartiqlAstSanityValidator : PartiqlAst.Visitor() {
     override fun visitExprLit(node: PartiqlAst.Expr.Lit) {
         val ionValue = node.value
         val metas = node.metas
-        if(node.value is IntElement && ionValue.integerSize == IntElementSize.BIG_INTEGER) {
-            throw EvaluationException(message = "Int overflow or underflow at compile time",
+        if (node.value is IntElement && ionValue.integerSize == IntElementSize.BIG_INTEGER) {
+            throw EvaluationException(
+                message = "Int overflow or underflow at compile time",
                 errorCode = ErrorCode.SEMANTIC_LITERAL_INT_OVERFLOW,
                 errorContext = errorContextFrom(metas),
-                internal = false)
+                internal = false
+            )
         }
     }
 
     private fun validateDecimalOrNumericType(scale: LongPrimitive?, precision: LongPrimitive?, metas: MetaContainer) {
         if (scale != null && precision != null && compileOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS) {
             if (scale.value !in 0..precision.value) {
-                err("Scale ${scale.value} should be between 0 and precision ${precision.value}",
+                err(
+                    "Scale ${scale.value} should be between 0 and precision ${precision.value}",
                     errorCode = ErrorCode.SEMANTIC_INVALID_DECIMAL_ARGUMENTS,
                     errorContext = errorContextFrom(metas),
-                    internal = false)
+                    internal = false
+                )
             }
         }
     }
@@ -87,10 +91,12 @@ class PartiqlAstSanityValidator : PartiqlAst.Visitor() {
         val setQuantifier = node.setq
         val metas = node.metas
         if (setQuantifier is PartiqlAst.SetQuantifier.Distinct && metas.containsKey(IsCountStarMeta.TAG)) {
-            err("COUNT(DISTINCT *) is not supported",
+            err(
+                "COUNT(DISTINCT *) is not supported",
                 ErrorCode.EVALUATOR_COUNT_DISTINCT_STAR,
                 errorContextFrom(metas),
-                internal = false)
+                internal = false
+            )
         }
     }
 
@@ -102,20 +108,26 @@ class PartiqlAstSanityValidator : PartiqlAst.Visitor() {
 
         if (groupBy != null) {
             if (groupBy.strategy is PartiqlAst.GroupingStrategy.GroupPartial) {
-                err("GROUP PARTIAL not supported yet",
+                err(
+                    "GROUP PARTIAL not supported yet",
                     ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
                     errorContextFrom(metas).also {
                         it[Property.FEATURE_NAME] = "GROUP PARTIAL"
-                    }, internal = false)
+                    },
+                    internal = false
+                )
             }
 
             when (projection) {
                 is PartiqlAst.Projection.ProjectPivot -> {
-                    err("PIVOT with GROUP BY not supported yet",
+                    err(
+                        "PIVOT with GROUP BY not supported yet",
                         ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
                         errorContextFrom(metas).also {
                             it[Property.FEATURE_NAME] = "PIVOT with GROUP BY"
-                        }, internal = false)
+                        },
+                        internal = false
+                    )
                 }
                 is PartiqlAst.Projection.ProjectValue, is PartiqlAst.Projection.ProjectList -> {
                     // use of group by with SELECT & SELECT VALUE is supported
@@ -124,9 +136,11 @@ class PartiqlAstSanityValidator : PartiqlAst.Visitor() {
         }
 
         if ((groupBy == null || groupBy.keyList.keys.isEmpty()) && having != null) {
-            throw SemanticException("HAVING used without GROUP BY (or grouping expressions)",
-                                    ErrorCode.SEMANTIC_HAVING_USED_WITHOUT_GROUP_BY,
-                                    PropertyValueMap().addSourceLocation(metas))
+            throw SemanticException(
+                "HAVING used without GROUP BY (or grouping expressions)",
+                ErrorCode.SEMANTIC_HAVING_USED_WITHOUT_GROUP_BY,
+                PropertyValueMap().addSourceLocation(metas)
+            )
         }
     }
 

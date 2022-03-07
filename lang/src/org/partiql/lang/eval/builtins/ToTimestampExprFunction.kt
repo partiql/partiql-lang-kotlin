@@ -40,12 +40,14 @@ class ToTimestampExprFunction(private val valueFactory: ExprValueFactory) : Expr
     override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
         val ts = try {
             Timestamp.valueOf(required[0].ionValue.stringValue())
-        } catch(ex: IllegalArgumentException) {
-            throw EvaluationException("Timestamp was not a valid ion timestamp",
+        } catch (ex: IllegalArgumentException) {
+            throw EvaluationException(
+                "Timestamp was not a valid ion timestamp",
                 ErrorCode.EVALUATOR_ION_TIMESTAMP_PARSE_FAILURE,
                 PropertyValueMap(),
                 ex,
-                true)
+                true
+            )
         }
         return valueFactory.newTimestamp(ts)
     }

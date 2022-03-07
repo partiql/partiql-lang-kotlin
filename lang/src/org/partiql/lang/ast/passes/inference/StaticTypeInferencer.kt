@@ -45,8 +45,9 @@ class StaticTypeInferencer(
         val inferencer = StaticTypeInferenceVisitorTransform(globalBindings, customFunctionSignatures, customTypedOpParameters, problemCollector)
         val transformedPartiqlAst = inferencer.transformStatement(node)
         val inferredStaticType = when (transformedPartiqlAst) {
-            is PartiqlAst.Statement.Query -> transformedPartiqlAst.expr.metas.staticType?.type
-                ?: error("Expected query's inferred StaticType to not be null")
+            is PartiqlAst.Statement.Query ->
+                transformedPartiqlAst.expr.metas.staticType?.type
+                    ?: error("Expected query's inferred StaticType to not be null")
             is PartiqlAst.Statement.Dml,
             is PartiqlAst.Statement.Ddl,
             is PartiqlAst.Statement.Exec -> error("Type inference for DML, DDL, EXEC statements is not currently supported")
@@ -75,7 +76,7 @@ class StaticTypeInferencer(
          * @param problems all of the [Problem]s encountered through static type inference, which will all have
          * [ProblemSeverity.WARNING]
          */
-        data class Success(val staticType: StaticType, override val problems: List<Problem>): InferenceResult()
+        data class Success(val staticType: StaticType, override val problems: List<Problem>) : InferenceResult()
 
         /**
          * Unsuccessful static type inference result due to at least one [Problem] encountered with
@@ -89,7 +90,7 @@ class StaticTypeInferencer(
          * It is used internally for testing the query's type inference behavior after an error is encountered.
          * @param problems all of the [Problem]s encountered through static type inference.
          */
-        data class Failure(internal val staticType: StaticType, internal val partiqlAst: PartiqlAst.Statement, override val problems: List<Problem>): InferenceResult()
+        data class Failure(internal val staticType: StaticType, internal val partiqlAst: PartiqlAst.Statement, override val problems: List<Problem>) : InferenceResult()
     }
 }
 

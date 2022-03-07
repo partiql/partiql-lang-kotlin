@@ -48,8 +48,7 @@ internal class MakeDateExprFunction(val valueFactory: ExprValueFactory) : ExprFu
 
         try {
             return valueFactory.newDate(year, month, day)
-        }
-        catch (e: DateTimeException) {
+        } catch (e: DateTimeException) {
             err(
                 message = "Date field value out of range. $year-$month-$day",
                 errorCode = ErrorCode.EVALUATOR_DATE_FIELD_OUT_OF_RANGE,

@@ -42,7 +42,8 @@ class VariableReferenceTest {
     fun caseSensitiveEquals() {
         assertEquals(
             sensitiveFoo,
-            sensitiveFoo.copy())
+            sensitiveFoo.copy()
+        )
     }
 
     @Test

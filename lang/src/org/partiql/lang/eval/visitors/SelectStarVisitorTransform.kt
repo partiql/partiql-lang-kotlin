@@ -26,7 +26,8 @@ class SelectStarVisitorTransform : VisitorTransformBase() {
                 order = node.order,
                 limit = node.limit,
                 offset = node.offset,
-                metas = node.metas)
+                metas = node.metas
+            )
         }
     }
 
@@ -37,7 +38,7 @@ class SelectStarVisitorTransform : VisitorTransformBase() {
 
         // Check if SELECT * is being used.
         if (projection is PartiqlAst.Projection.ProjectStar) {
-            when (transformedExpr.group) {    // No group by
+            when (transformedExpr.group) { // No group by
                 null -> {
                     val fromSourceAliases = extractAliases(transformedExpr.from)
 
@@ -55,13 +56,14 @@ class SelectStarVisitorTransform : VisitorTransformBase() {
                         }
                     return copyProjectionToSelect(transformedExpr, newProjection)
                 }
-                else -> {               // With group by
+                else -> { // With group by
                     val selectListItemsFromGroupBy = transformedExpr.group.keyList.keys.map {
                         val asName = it.asAlias
                             ?: errNoContext(
                                 "GroupByItem has no AS-alias--GroupByItemAliasVisitorTransform must be executed before SelectStarVisitorTransform",
                                 errorCode = ErrorCode.SEMANTIC_MISSING_AS_NAME,
-                                internal = true)
+                                internal = true
+                            )
 
                         // We need to take the unique name of each grouping field key only because we need to handle
                         // the case when multiple grouping fields are assigned the same name (which is currently allowed)
@@ -106,7 +108,9 @@ class SelectStarVisitorTransform : VisitorTransformBase() {
                         node.asAlias?.text
                             ?: error("FromSourceAliasVisitorTransform must be executed before SelectStarVisitorTransform"),
                         node.atAlias?.text,
-                        node.byAlias?.text))
+                        node.byAlias?.text
+                    )
+                )
             }
 
             override fun visitFromSourceUnpivot(node: PartiqlAst.FromSource.Unpivot) {
@@ -115,7 +119,9 @@ class SelectStarVisitorTransform : VisitorTransformBase() {
                         node.asAlias?.text
                             ?: error("FromSourceAliasVisitorTransform must be executed before SelectStarVisitorTransform"),
                         node.atAlias?.text,
-                        node.byAlias?.text))
+                        node.byAlias?.text
+                    )
+                )
             }
 
             /** We do not want to recurse into the nested select query */

@@ -47,21 +47,23 @@ internal enum class ConflictStrategy {
  */
 internal enum class StructBehavior {
     INTERSECTION {
-        override fun unifyStructs(unifier: ConstraintUnifier,
-                                  structA: IonSchemaModel.ConstraintList,
-                                  structB: IonSchemaModel.ConstraintList): IonSchemaModel.ConstraintList {
+        override fun unifyStructs(
+            unifier: ConstraintUnifier,
+            structA: IonSchemaModel.ConstraintList,
+            structB: IonSchemaModel.ConstraintList
+        ): IonSchemaModel.ConstraintList {
             TODO("Not yet implemented")
         }
     },
     UNION {
-        override fun unifyStructs(unifier: ConstraintUnifier,
-                                  structA: IonSchemaModel.ConstraintList,
-                                  structB: IonSchemaModel.ConstraintList): IonSchemaModel.ConstraintList {
+        override fun unifyStructs(
+            unifier: ConstraintUnifier,
+            structA: IonSchemaModel.ConstraintList,
+            structB: IonSchemaModel.ConstraintList
+        ): IonSchemaModel.ConstraintList {
             if (structA.isEmptyStruct()) {
                 return structB.addClosedContentConstraint()
-            }
-
-            else if (structB.isEmptyStruct()) {
+            } else if (structB.isEmptyStruct()) {
                 return structA.addClosedContentConstraint()
             }
 
@@ -80,9 +82,7 @@ internal enum class StructBehavior {
                         unifiedFields.add(unifiedField)
                     }
                     // Otherwise, has same name and value type
-                }
-
-                else {
+                } else {
                     // `structA` doesn't have `structB`'s field
                     unifiedFields.add(bField)
                 }
@@ -93,16 +93,20 @@ internal enum class StructBehavior {
         }
     },
     INTERSECTION_AS_REQUIRED {
-        override fun unifyStructs(unifier: ConstraintUnifier,
-                                  structA: IonSchemaModel.ConstraintList,
-                                  structB: IonSchemaModel.ConstraintList): IonSchemaModel.ConstraintList {
+        override fun unifyStructs(
+            unifier: ConstraintUnifier,
+            structA: IonSchemaModel.ConstraintList,
+            structB: IonSchemaModel.ConstraintList
+        ): IonSchemaModel.ConstraintList {
             TODO("Not yet implemented")
         }
     };
 
-    abstract fun unifyStructs(unifier: ConstraintUnifier,
-                              structA: IonSchemaModel.ConstraintList,
-                              structB: IonSchemaModel.ConstraintList): IonSchemaModel.ConstraintList
+    abstract fun unifyStructs(
+        unifier: ConstraintUnifier,
+        structA: IonSchemaModel.ConstraintList,
+        structB: IonSchemaModel.ConstraintList
+    ): IonSchemaModel.ConstraintList
 }
 
 /**
@@ -157,7 +161,7 @@ private class ConstraintUnifierImpl(
     val conflictStrategy: ConflictStrategy,
     val structBehavior: StructBehavior,
     val discoveredConstraintUnifier: DiscoveredConstraintUnifier
-): ConstraintUnifier {
+) : ConstraintUnifier {
     /**
      * Unifies [aConstraints] with [bConstraints].
      */
@@ -190,8 +194,7 @@ private class ConstraintUnifierImpl(
 
                     return if (aTypeName == bTypeName) {
                         IonSchemaModel.build { unifyNonUnionTypes(aConstraints, bConstraints) }
-                    }
-                    else {
+                    } else {
                         // typenames of `aConstraints` and `bConstraints` are different so create union
                         IonSchemaModel.build {
                             constraintList(anyOf(aConstraints.toTypeReference(), bConstraints.toTypeReference()))
@@ -216,9 +219,7 @@ private class ConstraintUnifierImpl(
         // items.size == 1 -> no element type so is empty sequence
         if (sequenceA.items.size == 1) {
             return sequenceB
-        }
-
-        else if (sequenceB.items.size == 1) {
+        } else if (sequenceB.items.size == 1) {
             return sequenceA
         }
 
@@ -236,8 +237,10 @@ private class ConstraintUnifierImpl(
         }
 
         return IonSchemaModel.build {
-            constraintList(typeConstraint(namedType(aTypeName, notNullable)),
-                           element(inlineType(typeDefinition(name = null, constraints = elementTypeConstraints), notNullable)))
+            constraintList(
+                typeConstraint(namedType(aTypeName, notNullable)),
+                element(inlineType(typeDefinition(name = null, constraints = elementTypeConstraints), notNullable))
+            )
         }
     }
 

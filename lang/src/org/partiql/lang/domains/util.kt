@@ -14,7 +14,6 @@ import org.partiql.lang.eval.BindingCase
 fun PartiqlAst.Builder.id(name: String) =
     id(name, caseInsensitive(), unqualified())
 
-
 val MetaContainer.staticType: StaticTypeMeta? get() = this[StaticTypeMeta.TAG] as StaticTypeMeta?
 
 /** Constructs a container with the specified metas. */
@@ -55,7 +54,7 @@ fun PropertyValueMap.addSourceLocation(metas: MetaContainer): PropertyValueMap {
 /**
  * Converts a [PartiqlAst.CaseSensitivity] to a [BindingCase].
  */
-fun PartiqlAst.CaseSensitivity.toBindingCase(): BindingCase = when(this) {
+fun PartiqlAst.CaseSensitivity.toBindingCase(): BindingCase = when (this) {
     is PartiqlAst.CaseSensitivity.CaseInsensitive -> BindingCase.INSENSITIVE
     is PartiqlAst.CaseSensitivity.CaseSensitive -> BindingCase.SENSITIVE
 }

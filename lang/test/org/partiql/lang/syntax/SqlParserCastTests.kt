@@ -12,7 +12,6 @@ import org.partiql.lang.ION
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.util.ArgumentsProviderBase
 
-
 class SqlParserCastTests : SqlParserTestBase() {
 
     companion object {
@@ -25,15 +24,18 @@ class SqlParserCastTests : SqlParserTestBase() {
             fun toCastTest() =
                 ConfiguredCastParseTest(
                     source,
-                    PartiqlAst.build { query( cast(ast.value, ast.asType, ast.metas)) })
+                    PartiqlAst.build { query(cast(ast.value, ast.asType, ast.metas)) }
+                )
             fun toCanCastTest() =
                 ConfiguredCastParseTest(
                     source.replaceFirst("CAST", "CAN_CAST"),
-                    PartiqlAst.build { query( canCast(ast.value, ast.asType, ast.metas)) })
+                    PartiqlAst.build { query(canCast(ast.value, ast.asType, ast.metas)) }
+                )
             fun toCanLosslessCastTest() =
                 ConfiguredCastParseTest(
                     source.replaceFirst("CAST", "CAN_LOSSLESS_CAST"),
-                    PartiqlAst.build { query( canLosslessCast(ast.value, ast.asType, ast.metas) ) })
+                    PartiqlAst.build { query(canLosslessCast(ast.value, ast.asType, ast.metas)) }
+                )
         }
         data class ConfiguredCastParseTest(val source: String, val expectedAst: PartiqlAst.PartiqlAstNode) {
             fun assertCase() {

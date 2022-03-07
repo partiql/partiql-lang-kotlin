@@ -96,7 +96,7 @@ class StaticTypeCastTests {
         private val numberOrMissingType = StaticType.unionOf(StaticType.MISSING, numberType)
         private val numberOrUnknownType = StaticType.unionOf(StaticType.MISSING, StaticType.NULL, numberType)
 
-        fun List<TestCase>.addCastToAnyCases(): List<TestCase> = this + this.map{
+        fun List<TestCase>.addCastToAnyCases(): List<TestCase> = this + this.map {
             it.copy(
                 targetType = StaticType.ANY,
                 expectedType = it.sourceType
@@ -435,8 +435,8 @@ class StaticTypeCastTests {
         val unconstrainedInt = IntType(IntType.IntRangeConstraint.UNCONSTRAINED)
 
         val decimal4_2 = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(4, 2))
-        val decimal7_2 = DecimalType( DecimalType.PrecisionScaleConstraint.Constrained(7, 2))
-        val decimal32_0 = DecimalType( DecimalType.PrecisionScaleConstraint.Constrained(32, 0))
+        val decimal7_2 = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(7, 2))
+        val decimal32_0 = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(32, 0))
 
         return listOf(
             TestCase(smallint, smallint, smallint),
@@ -473,7 +473,6 @@ class StaticTypeCastTests {
             TestCase(decimal32_0, int4, StaticType.unionOf(StaticType.MISSING, int4)),
             TestCase(decimal32_0, bigint, StaticType.unionOf(StaticType.MISSING, bigint)),
             TestCase(decimal32_0, unconstrainedInt, unconstrainedInt),
-
 
             TestCase(StaticType.FLOAT, smallint, StaticType.unionOf(StaticType.MISSING, smallint)),
             TestCase(decimal4_2, smallint, smallint),

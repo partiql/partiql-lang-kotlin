@@ -5,8 +5,8 @@ package org.partiql.lang.util
  *
  * This is needed because Kotlin's default [Long.toInt()] returns `-1` instead of throwing an exception.
  */
-fun Long.toIntExact():Int =
-    if(this !in Int.MIN_VALUE..Int.MAX_VALUE) {
+fun Long.toIntExact(): Int =
+    if (this !in Int.MIN_VALUE..Int.MAX_VALUE) {
         throw IllegalStateException("Long value is not within Int.MIN_VALUE..Int.MAX_VALUE")
     } else {
         this.toInt()

@@ -44,7 +44,6 @@ interface OrdinalBindings {
                         }
                     }
             }
-
     }
 
     /**

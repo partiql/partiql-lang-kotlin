@@ -42,7 +42,7 @@ class NumbersTest : TestBase() {
     @Test fun coerceBigDecimalLong() = assertCoerce(dec("1.1"), 2L, dec("1.1"), dec("2"))
     @Test fun coerceBigDecimalDouble() = assertCoerce(dec("1.1"), 2.0, dec("1.1"), dec(2.0))
 
-    @Test fun unaryMinusLong() = assertEquals(-1L,-(1L as Number))
+    @Test fun unaryMinusLong() = assertEquals(-1L, -(1L as Number))
     @Test fun unaryMinusDouble() = assertEquals(-1.0, -(1.0 as Number))
     @Test fun unaryMinusBigDecimal() =
         assertEquals(dec("-100.1"), -(dec("100.1") as Number))

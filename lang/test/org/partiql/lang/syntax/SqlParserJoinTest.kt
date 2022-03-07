@@ -20,9 +20,10 @@ class SqlParserJoinTest : SqlParserTestBase() {
                 joinType,
                 scan(id("stuff"), "s"),
                 scan(id("foo"), "f"),
-                joinPredicate),
-            where = wherePredicate)
-
+                joinPredicate
+            ),
+            where = wherePredicate
+        )
 
     private fun PartiqlAst.Builder.selectWithFromSource(fromSource: PartiqlAst.FromSource): PartiqlAst.Expr =
         select(project = projectX, from = fromSource)
@@ -40,7 +41,8 @@ class SqlParserJoinTest : SqlParserTestBase() {
     ) {
         selectWithOneJoin(
             joinType = PartiqlAst.JoinType.Right(),
-            joinPredicate = null)
+            joinPredicate = null
+        )
     }
 
     @Test
@@ -57,7 +59,8 @@ class SqlParserJoinTest : SqlParserTestBase() {
     ) {
         selectWithOneJoin(
             joinType = full(),
-            joinPredicate = eq(id("s"), id("f")))
+            joinPredicate = eq(id("s"), id("f"))
+        )
     }
 
     @Test
@@ -82,8 +85,10 @@ class SqlParserJoinTest : SqlParserTestBase() {
                 inner(),
                 scan(id("A")),
                 scan(id("B")),
-                eq(id("A"), id("B"))),
-            where = null)
+                eq(id("A"), id("B"))
+            ),
+            where = null
+        )
     }
 
     @Test
@@ -108,8 +113,10 @@ class SqlParserJoinTest : SqlParserTestBase() {
                 inner(),
                 scan(id("A")),
                 scan(id("B")),
-                eq(id("A"), id("B"))),
-            where = null)
+                eq(id("A"), id("B"))
+            ),
+            where = null
+        )
     }
 
     @Test
@@ -137,13 +144,17 @@ class SqlParserJoinTest : SqlParserTestBase() {
             project = projectX,
             from = join(
                 inner(),
-                join(inner(),
+                join(
+                    inner(),
                     scan(id("A")),
                     scan(id("B")),
-                    eq(id("A"), id("B"))),
+                    eq(id("A"), id("B"))
+                ),
                 scan(id("C")),
-                eq(id("B"), id("C"))),
-            where = null)
+                eq(id("B"), id("C"))
+            ),
+            where = null
+        )
     }
 
     @Test
@@ -171,13 +182,17 @@ class SqlParserJoinTest : SqlParserTestBase() {
             project = projectX,
             from = join(
                 inner(),
-                join(inner(),
+                join(
+                    inner(),
                     scan(id("B")),
                     scan(id("C")),
-                    eq(id("B"), id("C"))),
+                    eq(id("B"), id("C"))
+                ),
                 scan(id("A")),
-                eq(id("A"), id("B"))),
-            where = null)
+                eq(id("A"), id("B"))
+            ),
+            where = null
+        )
     }
 
     @Test
@@ -210,16 +225,22 @@ class SqlParserJoinTest : SqlParserTestBase() {
             project = projectX,
             from = join(
                 inner(),
-                join(inner(),
-                    join(inner(),
+                join(
+                    inner(),
+                    join(
+                        inner(),
                         scan(id("C")),
                         scan(id("D")),
-                        eq(id("C"), id("D"))),
+                        eq(id("C"), id("D"))
+                    ),
                     scan(id("B")),
-                    eq(id("B"), id("C"))),
+                    eq(id("B"), id("C"))
+                ),
                 scan(id("A")),
-                eq(id("A"), id("B"))),
-            where = null)
+                eq(id("A"), id("B"))
+            ),
+            where = null
+        )
     }
 
     @Test
@@ -242,8 +263,10 @@ class SqlParserJoinTest : SqlParserTestBase() {
                 inner(),
                 scan(id("A")),
                 scan(lit(ionInt(1))),
-                lit(ionBool(true))),
-            where = null)
+                lit(ionBool(true))
+            ),
+            where = null
+        )
     }
 
     @Test
@@ -277,8 +300,10 @@ class SqlParserJoinTest : SqlParserTestBase() {
                         where = null
                     )
                 ),
-                lit(ionBool(true))),
-            where = null)
+                lit(ionBool(true))
+            ),
+            where = null
+        )
     }
 
     private val deeplyNestedJoins = PartiqlAst.build {
@@ -294,15 +319,20 @@ class SqlParserJoinTest : SqlParserTestBase() {
                             inner(),
                             scan(id("a")),
                             scan(id("b")),
-                            null),
+                            null
+                        ),
                         scan(id("c")),
-                        null),
+                        null
+                    ),
                     scan(id("d")),
-                    id("e")),
+                    id("e")
+                ),
                 scan(id("f")),
-                null),
+                null
+            ),
             scan(id("g")),
-            id("h"))
+            id("h")
+        )
     }
 
     @Test

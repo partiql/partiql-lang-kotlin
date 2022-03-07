@@ -6,7 +6,6 @@ import org.partiql.lang.ION
 import org.partiql.lang.util.testdsl.IonResultTestCase
 import org.partiql.lang.util.testdsl.runTestCase
 
-
 /**
  * This test class is effectively the same as [EvaluatorTests] however it:
  *
@@ -162,8 +161,6 @@ class EvaluatorStaticTypeTests {
             "pivotLiteralFieldNameFrom",
             "pivotUnpivotWithWhereLimit",
 
-
-
             // STIR does not support `CompilePipeline.undefinedVariableBehavior`
             // (these are likely to be a permanent entries to this list since STR/STIR will probably
             // never support undefined variables).
@@ -183,12 +180,14 @@ class EvaluatorStaticTypeTests {
         fun evaluatorStaticTypeTests() = EVALUATOR_TEST_SUITE.getAllTests(
             EvaluatorTests.SKIP_LIST.union(FAILING_TESTS)
         ).map {
-            it.copy(compileOptions = CompileOptions.build(it.compileOptions) {
-                // set permissive mode
-                typingMode(TypingMode.PERMISSIVE)
-                // enable evaluation time type checking
-                evaluationTimeTypeChecks(ThunkReturnTypeAssertions.ENABLED)
-            })
+            it.copy(
+                compileOptions = CompileOptions.build(it.compileOptions) {
+                    // set permissive mode
+                    typingMode(TypingMode.PERMISSIVE)
+                    // enable evaluation time type checking
+                    evaluationTimeTypeChecks(ThunkReturnTypeAssertions.ENABLED)
+                }
+            )
         }
     }
 
@@ -199,6 +198,6 @@ class EvaluatorStaticTypeTests {
             valueFactory = valueFactory,
             db = mockDb,
             // Enable the static type inferencer for this
-            pipelineBlock = { this.globalTypeBindings(mockDb.typeBindings) })
-
+            pipelineBlock = { this.globalTypeBindings(mockDb.typeBindings) }
+        )
 }

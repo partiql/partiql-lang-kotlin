@@ -31,7 +31,8 @@ class MockDb(
      * other global variables of our mock database.
      */
     val valueBindings: Bindings<ExprValue> = Bindings.ofMap(
-        globals.mapValues { valueFactory.newFromIonValue(it.value) })
+        globals.mapValues { valueFactory.newFromIonValue(it.value) }
+    )
 
     /**
      * Provides an implementation of [Bindings<StaticType>] for accessing the data types of tables and other
@@ -48,7 +49,8 @@ class MockDb(
             // "upto" decimal precision ranges
             val normalizedSchemaModel = NormalizeDecimalPrecisionsToUpToRange().transformSchema(schemaModel)
             StaticTypeMapper(normalizedSchemaModel).toStaticType(it.key)
-        }.toMap())
+        }.toMap()
+    )
 
     fun toSession(): EvaluationSession = EvaluationSession.build { globals(valueBindings) }
 }

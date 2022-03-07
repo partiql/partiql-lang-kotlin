@@ -1,10 +1,20 @@
 package org.partiql.testscript.parser.ast.builders
 
-import com.amazon.ion.*
+import com.amazon.ion.IonSexp
+import com.amazon.ion.IonString
+import com.amazon.ion.IonStruct
+import com.amazon.ion.IonSymbol
+import com.amazon.ion.IonType
 import org.partiql.testscript.Failure
 import org.partiql.testscript.Result
 import org.partiql.testscript.Success
-import org.partiql.testscript.parser.*
+import org.partiql.testscript.parser.EmptyError
+import org.partiql.testscript.parser.InvalidExpectedErrorSizeError
+import org.partiql.testscript.parser.InvalidExpectedSuccessSizeError
+import org.partiql.testscript.parser.InvalidExpectedTagError
+import org.partiql.testscript.parser.IonValueWithLocation
+import org.partiql.testscript.parser.ScriptLocation
+import org.partiql.testscript.parser.UnexpectedIonTypeError
 import org.partiql.testscript.parser.ast.TestNode
 
 internal class TestBuilder(path: String, location: ScriptLocation) : StructBuilder<TestNode>(path, location) {
@@ -59,13 +69,16 @@ internal class TestBuilder(path: String, location: ScriptLocation) : StructBuild
         validateExpected(expected)
 
         return if (errors.isEmpty()) {
-            Success(TestNode(
+            Success(
+                TestNode(
                     id = (id!!.ionValue as IonSymbol).stringValue(),
                     description = (description?.ionValue as IonString?)?.stringValue(),
                     statement = (statement!!.ionValue as IonString).stringValue(),
                     environment = environment?.ionValue as IonStruct?,
                     expected = expected!!.ionValue as IonSexp,
-                    scriptLocation = location))
+                    scriptLocation = location
+                )
+            )
         } else {
             Failure(errors)
         }

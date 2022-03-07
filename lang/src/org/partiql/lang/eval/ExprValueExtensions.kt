@@ -109,7 +109,6 @@ val ExprValue.name: ExprValue?
 val ExprValue.address: ExprValue?
     get() = asFacet(Addressed::class.java)?.address
 
-
 fun ExprValue.booleanValue(): Boolean =
     scalar.booleanValue() ?: errNoContext("Expected boolean: $ionValue", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
 
@@ -134,12 +133,13 @@ fun ExprValue.bytesValue(): ByteArray =
 internal fun ExprValue.dateTimePartValue(): DateTimePart =
     try {
         DateTimePart.valueOf(this.stringValue().toUpperCase())
-    }
-    catch (e : IllegalArgumentException)  {
-        throw EvaluationException(cause = e,
-                                  message = "invalid datetime part, valid values: [${DATE_TIME_PART_KEYWORDS.joinToString()}]",
-                                  errorCode = ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_DATE_PART,
-                                  internal = false)
+    } catch (e: IllegalArgumentException) {
+        throw EvaluationException(
+            cause = e,
+            message = "invalid datetime part, valid values: [${DATE_TIME_PART_KEYWORDS.joinToString()}]",
+            errorCode = ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_DATE_PART,
+            internal = false
+        )
     }
 
 internal fun ExprValue.intValue(): Int = this.numberValue().toInt()
@@ -177,10 +177,10 @@ fun ExprValue.exprEquals(other: ExprValue): Boolean = DEFAULT_COMPARATOR.compare
  */
 operator fun ExprValue.compareTo(other: ExprValue): Int {
     return when {
-        type.isUnknown || other.type.isUnknown  ->
+        type.isUnknown || other.type.isUnknown ->
             throw EvaluationException("Null value cannot be compared: $this, $other", errorCode = ErrorCode.EVALUATOR_INVALID_COMPARISION, internal = false)
-        isDirectlyComparableTo(other)           -> DEFAULT_COMPARATOR.compare(this, other)
-        else                                    -> errNoContext("Cannot compare values: $this, $other", errorCode = ErrorCode.EVALUATOR_INVALID_COMPARISION, internal = false)
+        isDirectlyComparableTo(other) -> DEFAULT_COMPARATOR.compare(this, other)
+        else -> errNoContext("Cannot compare values: $this, $other", errorCode = ErrorCode.EVALUATOR_INVALID_COMPARISION, internal = false)
     }
 }
 
@@ -284,16 +284,17 @@ fun ExprValue.cast(
 
         val errorCode = if (locationMeta == null) {
             ErrorCode.EVALUATOR_CAST_FAILED_NO_LOCATION
-        }
-        else {
+        } else {
             ErrorCode.EVALUATOR_CAST_FAILED
         }
 
-        throw EvaluationException(message = message,
-                                  errorCode = errorCode,
-                                  errorContext = errorContext,
-                                  internal = internal,
-                                  cause = cause)
+        throw EvaluationException(
+            message = message,
+            errorCode = errorCode,
+            errorContext = errorContext,
+            internal = internal,
+            cause = cause
+        )
     }
 
     val longMaxDecimal = bigDecimalOf(Long.MAX_VALUE)
@@ -335,13 +336,13 @@ fun ExprValue.cast(
                     else -> this
                 }
                 TypedOpBehavior.HONOR_PARAMETERS -> when (this) {
-                        is BigDecimal -> this.setScale(0, RoundingMode.HALF_EVEN)
-                        // [kotlin.math.round] rounds towards the closes even number on tie
-                        //   https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.math/round.html
-                        is Float -> round(this)
-                        is Double -> round(this)
-                        else -> this
-                    }
+                    is BigDecimal -> this.setScale(0, RoundingMode.HALF_EVEN)
+                    // [kotlin.math.round] rounds towards the closes even number on tie
+                    //   https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.math/round.html
+                    is Float -> round(this)
+                    is Double -> round(this)
+                    else -> this
+                }
             }.let {
                 // after rounding, check that the value can fit into range of the type being casted into
                 if (it < rangeForType.first || it > rangeForType.last) {
@@ -386,7 +387,7 @@ fun ExprValue.cast(
                 is StringType.StringLengthConstraint.Constrained -> {
                     val actualCodepointCount = this.codePointCount(0, this.length)
                     val lengthConstraint = type.lengthConstraint.length.value
-                    val truncatedString = if(actualCodepointCount <= lengthConstraint) {
+                    val truncatedString = if (actualCodepointCount <= lengthConstraint) {
                         this // no truncation needed
                     } else {
                         this.substring(0, this.offsetByCodePoints(0, lengthConstraint))
@@ -414,7 +415,7 @@ fun ExprValue.cast(
         // We further need to check for the time zone and hence we do not short circuit here when the type is TIME.
         type == targetType.runtimeType && type != ExprValueType.TIME -> {
             return when (targetType) {
-                is IntType, is FloatType, is DecimalType-> numberValue().exprValue(targetType)
+                is IntType, is FloatType, is DecimalType -> numberValue().exprValue(targetType)
                 is StringType -> stringValue().exprValue(targetType)
                 else -> this
             }
@@ -433,13 +434,13 @@ fun ExprValue.cast(
                     }
                 }
                 is IntType -> when {
-                    type == ExprValueType.BOOL -> return if(booleanValue()) 1L.exprValue(targetType) else 0L.exprValue(targetType)
+                    type == ExprValueType.BOOL -> return if (booleanValue()) 1L.exprValue(targetType) else 0L.exprValue(targetType)
                     type.isNumber -> return numberValue().exprValue(targetType)
                     type.isText -> {
                         val value = try {
                             val normalized = stringValue().normalizeForCastToInt()
                             valueFactory.ion.singleValue(normalized) as IonInt
-                        } catch (e : Exception) {
+                        } catch (e: Exception) {
                             castFailedErr("can't convert string value to INT", internal = false, cause = e)
                         }
 
@@ -456,7 +457,7 @@ fun ExprValue.cast(
                     type.isText ->
                         try {
                             return stringValue().toDouble().exprValue(targetType)
-                        } catch(e: NumberFormatException) {
+                        } catch (e: NumberFormatException) {
                             castFailedErr("can't convert string value to FLOAT", internal = false, cause = e)
                         }
                 }
@@ -469,9 +470,7 @@ fun ExprValue.cast(
                     type.isNumber -> return numberValue().exprValue(targetType)
                     type.isText -> try {
                         return bigDecimalOf(stringValue()).exprValue(targetType)
-                    }
-                    catch (e: NumberFormatException)
-                    {
+                    } catch (e: NumberFormatException) {
                         castFailedErr("can't convert string value to DECIMAL", internal = false, cause = e)
                     }
                 }
@@ -490,16 +489,20 @@ fun ExprValue.cast(
                     type.isText -> try {
                         // validate that the date string follows the format YYYY-MM-DD
                         if (!datePatternRegex.matches(stringValue())) {
-                            castFailedErr("Can't convert string value to DATE. Expected valid date string " +
-                                "and the date format to be YYYY-MM-DD", internal = false)
+                            castFailedErr(
+                                "Can't convert string value to DATE. Expected valid date string " +
+                                    "and the date format to be YYYY-MM-DD",
+                                internal = false
+                            )
                         }
                         val date = LocalDate.parse(stringValue())
                         return valueFactory.newDate(date)
-                    }
-                    catch (e: DateTimeParseException)
-                    {
-                        castFailedErr("Can't convert string value to DATE. Expected valid date string " +
-                            "and the date format to be YYYY-MM-DD", internal = false, cause = e)
+                    } catch (e: DateTimeParseException) {
+                        castFailedErr(
+                            "Can't convert string value to DATE. Expected valid date string " +
+                                "and the date format to be YYYY-MM-DD",
+                            internal = false, cause = e
+                        )
                     }
                 }
                 is TimeType -> {
@@ -508,33 +511,36 @@ fun ExprValue.cast(
                         type == ExprValueType.TIME -> {
                             val time = timeValue()
                             val timeZoneOffset = when (targetType.withTimeZone) {
-                                true -> time.zoneOffset?: defaultTimezoneOffset
+                                true -> time.zoneOffset ?: defaultTimezoneOffset
                                 else -> null
                             }
                             return valueFactory.newTime(
                                 Time.of(
                                     time.localTime,
-                                    precision?: time.precision,
+                                    precision ?: time.precision,
                                     timeZoneOffset
-                                ))
+                                )
+                            )
                         }
                         type == ExprValueType.TIMESTAMP -> {
                             val ts = timestampValue()
                             val timeZoneOffset = when (targetType.withTimeZone) {
-                                true -> ts.localOffset?: castFailedErr(
+                                true -> ts.localOffset ?: castFailedErr(
                                     "Can't convert timestamp value with unknown local offset (i.e. -00:00) to TIME WITH TIME ZONE.",
                                     internal = false
                                 )
                                 else -> null
                             }
-                            return valueFactory.newTime(Time.of(
-                                ts.hour,
-                                ts.minute,
-                                ts.second,
-                                (ts.decimalSecond.remainder(BigDecimal.ONE).multiply(NANOS_PER_SECOND.toBigDecimal())).toInt(),
-                                precision?: ts.decimalSecond.scale(),
-                                timeZoneOffset
-                            ))
+                            return valueFactory.newTime(
+                                Time.of(
+                                    ts.hour,
+                                    ts.minute,
+                                    ts.second,
+                                    (ts.decimalSecond.remainder(BigDecimal.ONE).multiply(NANOS_PER_SECOND.toBigDecimal())).toInt(),
+                                    precision ?: ts.decimalSecond.scale(),
+                                    timeZoneOffset
+                                )
+                            )
                         }
                         type.isText -> try {
                             // validate that the time string follows the format HH:MM:SS[.ddddd...][+|-HH:MM]
@@ -556,16 +562,18 @@ fun ExprValue.cast(
                             return valueFactory.newTime(
                                 Time.of(
                                     localTime,
-                                    precision?: getPrecisionFromTimeString(stringValue()),
+                                    precision ?: getPrecisionFromTimeString(stringValue()),
                                     when (targetType.withTimeZone) {
                                         true -> zoneOffset
                                         else -> null
                                     }
-                                ))
+                                )
+                            )
                         } catch (e: DateTimeParseException) {
                             castFailedErr(
                                 "Can't convert string value to TIME. Expected valid time string " +
-                                    "and the time format to be HH:MM:SS[.ddddd...][+|-HH:MM]", internal = false, cause = e
+                                    "and the time format to be HH:MM:SS[.ddddd...][+|-HH:MM]",
+                                internal = false, cause = e
                             )
                         }
                     }
@@ -583,9 +591,9 @@ fun ExprValue.cast(
                 is BlobType -> when {
                     type.isLob -> return valueFactory.newBlob(bytesValue())
                 }
-                is ListType -> if(type.isSequence) return valueFactory.newList(asSequence())
-                is SexpType -> if(type.isSequence) return valueFactory.newSexp(asSequence())
-                is BagType -> if(type.isSequence) return valueFactory.newBag(asSequence())
+                is ListType -> if (type.isSequence) return valueFactory.newList(asSequence())
+                is SexpType -> if (type.isSequence) return valueFactory.newSexp(asSequence())
+                is BagType -> if (type.isSequence) return valueFactory.newBag(asSequence())
                 // no support for anything else
                 else -> {}
             }
@@ -620,22 +628,21 @@ private fun String.normalizeForCastToInt(): String {
     }
 
     fun String.possiblyHexOrBase2() = (length >= 2 && this[1].isHexOrBase2Marker()) ||
-                                      (length >= 3 && this[0].isSign() && this[2].isHexOrBase2Marker())
+        (length >= 3 && this[0].isSign() && this[2].isHexOrBase2Marker())
 
     return when {
-        length == 0          -> this
+        length == 0 -> this
         possiblyHexOrBase2() -> {
             if (this[0] == '+') {
                 this.drop(1)
-            }
-            else {
+            } else {
                 this
             }
         }
-        else                 -> {
+        else -> {
             val (isNegative, startIndex) = when (this[0]) {
-                '-'  -> Pair(true, 1)
-                '+'  -> Pair(false, 1)
+                '-' -> Pair(true, 1)
+                '+' -> Pair(false, 1)
                 else -> Pair(false, 0)
             }
 
@@ -645,11 +652,11 @@ private fun String.normalizeForCastToInt(): String {
             }
 
             when {
-                toDrop == length          -> "0"  // string is all zeros
-                toDrop == 0               -> this
+                toDrop == length -> "0" // string is all zeros
+                toDrop == 0 -> this
                 toDrop == 1 && isNegative -> this
-                toDrop > 1 && isNegative  -> '-' + this.drop(toDrop)
-                else                      -> this.drop(toDrop)
+                toDrop > 1 && isNegative -> '-' + this.drop(toDrop)
+                else -> this.drop(toDrop)
             }
         }
     }
@@ -658,11 +665,11 @@ private fun String.normalizeForCastToInt(): String {
 /**
  * An Unknown value is one of `MISSING` or `NULL`
  */
-internal fun ExprValue.isUnknown() : Boolean = this.type.isUnknown
+internal fun ExprValue.isUnknown(): Boolean = this.type.isUnknown
 /**
  * The opposite of [isUnknown].
  */
-internal fun ExprValue.isNotUnknown() : Boolean = !this.type.isUnknown
+internal fun ExprValue.isNotUnknown(): Boolean = !this.type.isUnknown
 
 /**
  * Creates a filter for unique ExprValues consistent with exprEquals. This filter is stateful keeping track of

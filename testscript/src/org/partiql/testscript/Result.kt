@@ -3,7 +3,7 @@ package org.partiql.testscript
 import org.partiql.testscript.parser.ScriptLocation
 
 /**
- * Specialized either type to make it easier to accumulate failures when processing test scripts 
+ * Specialized either type to make it easier to accumulate failures when processing test scripts
  */
 internal sealed class Result<T>
 
@@ -24,21 +24,19 @@ internal abstract class TestScriptError {
 }
 
 /**
- * Folds an iterable of results into a single [Result]. When there is at least a single failure it merges all 
+ * Folds an iterable of results into a single [Result]. When there is at least a single failure it merges all
  * errors into a single Failure otherwise it uses `block` to aggregate the success values
- * 
- * @param block lambda executed to group all successes into a single result. 
+ *
+ * @param block lambda executed to group all successes into a single result.
  */
 internal fun <T, Y> Iterable<Result<T>>.foldToResult(block: (List<Success<T>>) -> Result<Y>): Result<Y> {
-    
+
     val (successes: List<Result<T>>, failures: List<Result<T>>) = this.partition { it is Success }
-    return if(failures.isEmpty()) {
+    return if (failures.isEmpty()) {
         block(successes.filterIsInstance<Success<T>>())
-    }
-    else {
+    } else {
         Failure(failures.filterIsInstance<Failure<T>>().flatMap { it.errors })
     }
-    
 }
 
 internal fun <T> Iterable<Result<T>>.foldToResult(): Result<List<T>> {

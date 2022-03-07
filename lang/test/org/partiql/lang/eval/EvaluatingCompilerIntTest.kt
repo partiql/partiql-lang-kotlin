@@ -20,7 +20,6 @@ import org.junit.Test
 import java.math.BigInteger
 import java.util.Random
 
-
 /**
  * This class tests evaluation-time behavior for integer and integer overflows that existed *prior* to the
  * introduction of [StaticType].  The behavior described in these tests is still how the we should handle
@@ -68,10 +67,10 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
     }
 
     @Test
-    fun bigInt() = assertThrows("$bigInt", "Int overflow or underflow at compile time", NodeMetadata(1,1))
+    fun bigInt() = assertThrows("$bigInt", "Int overflow or underflow at compile time", NodeMetadata(1, 1))
 
     @Test
-    fun negativeBigInt() = assertThrows("$negativeBigInt", "Int overflow or underflow at compile time", NodeMetadata(1,2))
+    fun negativeBigInt() = assertThrows("$negativeBigInt", "Int overflow or underflow at compile time", NodeMetadata(1, 2))
 
     @Test
     @Parameters
@@ -95,7 +94,7 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
     }
 
     @Test
-    fun plusOverflow() = assertThrows("$closeToMaxLong + $closeToMaxLong", "Int overflow or underflow", NodeMetadata(1,21), "MISSING")
+    fun plusOverflow() = assertThrows("$closeToMaxLong + $closeToMaxLong", "Int overflow or underflow", NodeMetadata(1, 21), "MISSING")
 
     @Test
     @Parameters
@@ -119,7 +118,7 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
     }
 
     @Test
-    fun minusUnderflow() = assertThrows("$closeToMinLong - $closeToMaxLong", "Int overflow or underflow", NodeMetadata(1,22), "MISSING")
+    fun minusUnderflow() = assertThrows("$closeToMinLong - $closeToMaxLong", "Int overflow or underflow", NodeMetadata(1, 22), "MISSING")
 
     @Test
     @Parameters
@@ -132,8 +131,8 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
         val parameters = mutableListOf<Pair<String, String>>()
 
         (1..40).map { i ->
-            var left =  RANDOM.nextInt(1_000).toLong()
-            if(i % 2 == 0) left = -left
+            var left = RANDOM.nextInt(1_000).toLong()
+            if (i % 2 == 0) left = -left
 
             val right = RANDOM.nextInt(1_000).toLong()
 
@@ -146,10 +145,10 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
     }
 
     @Test
-    fun timesOverflow() = assertThrows("$closeToMaxLong * 2", "Int overflow or underflow", NodeMetadata(1,21), "MISSING")
+    fun timesOverflow() = assertThrows("$closeToMaxLong * 2", "Int overflow or underflow", NodeMetadata(1, 21), "MISSING")
 
     @Test
-    fun timesUnderflow() = assertThrows("${Long.MIN_VALUE} * -1", "Int overflow or underflow", NodeMetadata(1,22), "MISSING")
+    fun timesUnderflow() = assertThrows("${Long.MIN_VALUE} * -1", "Int overflow or underflow", NodeMetadata(1, 22), "MISSING")
 
     @Test
     @Parameters
@@ -162,8 +161,8 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
         val parameters = mutableListOf<Pair<String, String>>()
 
         (1..40).map { i ->
-            var left =  RANDOM.nextInt(1_000).toLong()
-            if(i % 2 == 0) left = -left
+            var left = RANDOM.nextInt(1_000).toLong()
+            if (i % 2 == 0) left = -left
 
             val right = RANDOM.nextInt(1_000).toLong() + 1 // to avoid being 0
 
@@ -176,7 +175,7 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
     }
 
     @Test
-    fun divisionUnderflow() = assertThrows("${Long.MIN_VALUE} / -1", "Int overflow or underflow", NodeMetadata(1,22), "MISSING")
+    fun divisionUnderflow() = assertThrows("${Long.MIN_VALUE} / -1", "Int overflow or underflow", NodeMetadata(1, 22), "MISSING")
 
     @Test
     fun castBigInt() = assertThrows("cast('$bigInt' as int)", "Int overflow or underflow", NodeMetadata(1, 1), "MISSING")

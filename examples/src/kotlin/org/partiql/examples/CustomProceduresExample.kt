@@ -33,7 +33,7 @@ private val ion = IonSystemBuilder.standard().build()
  * This example demonstrates how to create a custom stored procedure, check argument types, and modify the
  * [EvaluationSession].
  */
-class CalculateCrewMoonWeight(private val valueFactory: ExprValueFactory): StoredProcedure {
+class CalculateCrewMoonWeight(private val valueFactory: ExprValueFactory) : StoredProcedure {
     private val MOON_GRAVITATIONAL_CONSTANT = BigDecimal(1.622 / 9.81)
 
     // [StoredProcedureSignature] takes two arguments:
@@ -55,10 +55,12 @@ class CalculateCrewMoonWeight(private val valueFactory: ExprValueFactory): Store
                 it[Property.ACTUAL_ARGUMENT_TYPES] = crewName.type.name
                 it[Property.FUNCTION_NAME] = signature.name
             }
-            throw EvaluationException("First argument to ${signature.name} was not a string",
+            throw EvaluationException(
+                "First argument to ${signature.name} was not a string",
                 ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_PROCEDURE_CALL,
                 errorContext,
-                internal = false)
+                internal = false
+            )
         }
 
         // Next we check if the given `crewName` is in the [EvaluationSession]'s global bindings. If not, we return 0.
@@ -99,12 +101,18 @@ class CustomProceduresExample(out: PrintStream) : Example(out) {
         val initialCrews = Bindings.ofMap(
             mapOf(
                 "crew1" to pipeline.valueFactory.newFromIonValue(
-                    ion.singleValue("""[ { name: "Neil",    mass: 80.5 }, 
+                    ion.singleValue(
+                        """[ { name: "Neil",    mass: 80.5 }, 
                                          { name: "Buzz",    mass: 72.3 },
-                                         { name: "Michael", mass: 89.9 } ]""")),
+                                         { name: "Michael", mass: 89.9 } ]"""
+                    )
+                ),
                 "crew2" to pipeline.valueFactory.newFromIonValue(
-                    ion.singleValue("""[ { name: "James", mass: 77.1 }, 
-                                         { name: "Spock", mass: 81.6 } ]"""))
+                    ion.singleValue(
+                        """[ { name: "James", mass: 77.1 }, 
+                                         { name: "Spock", mass: 81.6 } ]"""
+                    )
+                )
             )
         )
         val session = EvaluationSession.build { globals(initialCrews) }

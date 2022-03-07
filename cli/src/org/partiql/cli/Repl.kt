@@ -84,7 +84,7 @@ private class GlobalBinding(private val valueFactory: ExprValueFactory) {
             }
             Bindings.empty<ExprValue>() -> {
             } // nothing to do
-            else           -> throw IllegalArgumentException("Invalid binding type for global environment: $bindings")
+            else -> throw IllegalArgumentException("Invalid binding type for global environment: $bindings")
         }
 
         return this
@@ -112,24 +112,27 @@ interface Timer {
 /**
  * TODO builder, kdoc
  */
-internal class Repl(private val valueFactory: ExprValueFactory,
-                    input: InputStream,
-                    output: OutputStream,
-                    private val parser: Parser,
-                    private val compiler: CompilerPipeline,
-                    initialGlobal: Bindings<ExprValue>,
-                    private val timer: Timer = object : Timer {}
+internal class Repl(
+    private val valueFactory: ExprValueFactory,
+    input: InputStream,
+    output: OutputStream,
+    private val parser: Parser,
+    private val compiler: CompilerPipeline,
+    initialGlobal: Bindings<ExprValue>,
+    private val timer: Timer = object : Timer {}
 ) : PartiQLCommand {
 
     private val outputWriter = OutputStreamWriter(output, "UTF-8")
 
     private inner class ReplCommands {
         operator fun get(commandName: String): (String) -> ExprValue? = commands[commandName]
-                                                                        ?: throw IllegalArgumentException("REPL command: '$commandName' not found! " + "use '!list_commands' to see all available commands")
+            ?: throw IllegalArgumentException("REPL command: '$commandName' not found! " + "use '!list_commands' to see all available commands")
 
-        private val commands: Map<String, (String) -> ExprValue?> = mapOf("add_to_global_env" to ::addToGlobalEnv,
-                                                                          "global_env" to ::globalEnv,
-                                                                          "list_commands" to ::listCommands)
+        private val commands: Map<String, (String) -> ExprValue?> = mapOf(
+            "add_to_global_env" to ::addToGlobalEnv,
+            "global_env" to ::globalEnv,
+            "list_commands" to ::listCommands
+        )
 
         private fun addToGlobalEnv(source: String): ExprValue? {
             if (source == "") {
@@ -147,12 +150,14 @@ internal class Repl(private val valueFactory: ExprValueFactory,
 
         private fun listCommands(@Suppress("UNUSED_PARAMETER") source: String): ExprValue? {
             outputWriter.write("\n")
-            outputWriter.write("""
+            outputWriter.write(
+                """
                 |!add_to_global_env: adds a value to the global environment
                 |!global_env: displays the current global environment
                 |!list_commands: print this message
                 |
-            """.trimMargin())
+            """.trimMargin()
+            )
             return null
         }
     }
@@ -162,8 +167,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
         val splitIndex = source.indexOfFirst { it == ' ' }.let {
             if (it == -1) {
                 source.length
-            }
-            else {
+            } else {
                 it
             }
         }
@@ -213,7 +217,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
     private fun printPrompt() {
         when {
             buffer.isEmpty() -> outputWriter.write(PROMPT_1)
-            else             -> outputWriter.write(PROMPT_2)
+            else -> outputWriter.write(PROMPT_2)
         }
         outputWriter.flush()
     }
@@ -244,8 +248,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
             outputWriter.write("OK!")
             outputWriter.write("\n")
             outputWriter.flush()
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
             e.printStackTrace(PrintWriter(outputWriter))
             outputWriter.write("ERROR!")
             outputWriter.write("\n")
@@ -253,8 +256,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
 
         return if (line == null) {
             ReplState.FINAL
-        }
-        else {
+        } else {
             ReplState.READY
         }
     }
@@ -264,8 +266,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
             val locals = Bindings.buildLazyBindings<ExprValue> { addBinding("_") { previousResult } }.delegate(globals.bindings)
 
             compiler.compile(source).eval(EvaluationSession.build { globals(locals) })
-        }
-        else {
+        } else {
             null
         }
     }
@@ -275,8 +276,7 @@ internal class Repl(private val valueFactory: ExprValueFactory,
             val astStatementSexp = parser.parseAstStatement(source).toIonElement()
             val astStatmentIonValue = astStatementSexp.asAnyElement().toIonValue(valueFactory.ion)
             valueFactory.newFromIonValue(astStatmentIonValue)
-        }
-        else {
+        } else {
             null
         }
     }
@@ -284,56 +284,56 @@ internal class Repl(private val valueFactory: ExprValueFactory,
     override fun run() {
         while (state != ReplState.FINAL) {
             state = when (state) {
-                ReplState.INIT                      -> {
+                ReplState.INIT -> {
                     printWelcomeMessage()
                     printVersionNumber()
                     ReplState.READY
                 }
 
-                ReplState.READY                     -> {
+                ReplState.READY -> {
                     line = readLine()
                     when {
-                        line == null                         -> ReplState.FINAL
+                        line == null -> ReplState.FINAL
                         arrayOf("!!", "").any { it == line } -> ReplState.EXECUTE_PARTIQL
-                        line!!.startsWith("!")               -> ReplState.READ_REPL_COMMAND
-                        line!!.endsWith(";")                 -> ReplState.LAST_PARTIQL_LINE
-                        else                                 -> ReplState.READ_PARTIQL
+                        line!!.startsWith("!") -> ReplState.READ_REPL_COMMAND
+                        line!!.endsWith(";") -> ReplState.LAST_PARTIQL_LINE
+                        else -> ReplState.READ_PARTIQL
                     }
                 }
 
-                ReplState.READ_PARTIQL              -> {
+                ReplState.READ_PARTIQL -> {
                     buffer.appendln(line)
                     line = readLine()
                     when {
-                        line == null         -> ReplState.FINAL
-                        line == ""           -> ReplState.EXECUTE_PARTIQL
+                        line == null -> ReplState.FINAL
+                        line == "" -> ReplState.EXECUTE_PARTIQL
                         line!!.endsWith(";") -> ReplState.LAST_PARTIQL_LINE
-                        line == "!!"         -> ReplState.PARSE_PARTIQL_WITH_FILTER
-                        else                 -> ReplState.READ_PARTIQL
+                        line == "!!" -> ReplState.PARSE_PARTIQL_WITH_FILTER
+                        else -> ReplState.READ_PARTIQL
                     }
                 }
 
-                ReplState.LAST_PARTIQL_LINE         -> {
+                ReplState.LAST_PARTIQL_LINE -> {
                     buffer.appendln(line)
                     ReplState.EXECUTE_PARTIQL
                 }
 
-                ReplState.READ_REPL_COMMAND         -> {
+                ReplState.READ_REPL_COMMAND -> {
                     buffer.appendln(line)
                     line = readLine()
                     when (line) {
                         null -> ReplState.FINAL
-                        ""   -> ReplState.EXECUTE_REPL_COMMAND
+                        "" -> ReplState.EXECUTE_REPL_COMMAND
                         else -> ReplState.READ_REPL_COMMAND
                     }
                 }
 
-                ReplState.EXECUTE_PARTIQL           -> executePartiQL()
+                ReplState.EXECUTE_PARTIQL -> executePartiQL()
                 ReplState.PARSE_PARTIQL_WITH_FILTER -> parsePartiQLWithFilters()
-                ReplState.EXECUTE_REPL_COMMAND      -> executeReplCommand()
+                ReplState.EXECUTE_REPL_COMMAND -> executeReplCommand()
 
                 // shouldn't really happen
-                ReplState.FINAL                     -> ReplState.FINAL
+                ReplState.FINAL -> ReplState.FINAL
             }
         }
     }

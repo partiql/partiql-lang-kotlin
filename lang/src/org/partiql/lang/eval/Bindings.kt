@@ -28,29 +28,32 @@ enum class BindingCase {
 
     companion object {
         fun fromIonValue(sym: IonValue): BindingCase =
-            when(sym.stringValue()) {
+            when (sym.stringValue()) {
                 "case_sensitive" -> SENSITIVE
                 "case_insensitive" -> INSENSITIVE
-                else -> errNoContext("Unable to convert ion value '${sym.stringValue()}' to a BindingCase instance",
-                                     errorCode = ErrorCode.EVALUATOR_INVALID_CONVERSION,
-                                     internal = true)
+                else -> errNoContext(
+                    "Unable to convert ion value '${sym.stringValue()}' to a BindingCase instance",
+                    errorCode = ErrorCode.EVALUATOR_INVALID_CONVERSION,
+                    internal = true
+                )
             }
-        }
+    }
 
     fun toSymbol(ions: IonSystem) =
         ions.newSymbol(
-            when(this) {
+            when (this) {
                 SENSITIVE -> "case_sensitive"
                 INSENSITIVE -> "case_insensitive"
-            })
+            }
+        )
 }
 
 /**
  * Converts a [CaseSensitivity] to a [BindingCase].
  */
-fun CaseSensitivity.toBindingCase(): BindingCase = when(this) {
+fun CaseSensitivity.toBindingCase(): BindingCase = when (this) {
     CaseSensitivity.INSENSITIVE -> BindingCase.INSENSITIVE
-    CaseSensitivity.SENSITIVE   -> BindingCase.SENSITIVE
+    CaseSensitivity.SENSITIVE -> BindingCase.SENSITIVE
 }
 
 /**
@@ -129,8 +132,8 @@ interface Bindings<T> {
         fun <T> ofMap(backingMap: Map<String, T>): Bindings<T> = MapBindings(backingMap)
 
         /**
-        * Returns an instance of [Bindings<T>] that is backed by an [IonStruct].
-        */
+         * Returns an instance of [Bindings<T>] that is backed by an [IonStruct].
+         */
         @JvmStatic
         fun ofIonStruct(struct: IonStruct, valueFactory: ExprValueFactory): Bindings<ExprValue> = IonStructBindings(valueFactory, struct)
     }
@@ -140,7 +143,7 @@ interface Bindings<T> {
         private val bindings = HashMap<String, Lazy<T>> ()
 
         fun addBinding(name: String, getter: () -> T): LazyBindingBuilder<T> =
-            this.apply { bindings[name] = lazy(getter)}
+            this.apply { bindings[name] = lazy(getter) }
 
         fun build(): Bindings<T> =
             LazyBindings<T>(bindings)
@@ -167,19 +170,18 @@ class MapBindings<T>(val originalCaseMap: Map<String, T>) : Bindings<T> {
 
     override fun get(bindingName: BindingName): T? =
         when (bindingName.bindingCase) {
-            BindingCase.SENSITIVE   -> originalCaseMap[bindingName.name]
+            BindingCase.SENSITIVE -> originalCaseMap[bindingName.name]
             BindingCase.INSENSITIVE -> {
                 val foundBindings = loweredCaseMap[bindingName.loweredName]
                 when {
-                    foundBindings == null   -> null
+                    foundBindings == null -> null
                     foundBindings.size == 1 -> foundBindings.first().value
-                    else                    ->
+                    else ->
                         errAmbiguousBinding(bindingName.name, foundBindings.map { it.key })
                 }
             }
         }
 }
-
 
 /** A [Bindings] implementation that lazily materializes the values of the bindings contained within. */
 private class LazyBindings<T>(originalCaseMap: Map<String, Lazy<T>>) : Bindings<T> {

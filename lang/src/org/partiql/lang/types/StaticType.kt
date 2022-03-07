@@ -68,7 +68,7 @@ sealed class StaticType {
 
         @JvmStatic
         fun fromExprValueType(exprValueType: ExprValueType): StaticType =
-            when(exprValueType) {
+            when (exprValueType) {
                 ExprValueType.MISSING -> MISSING
                 ExprValueType.NULL -> NULL
                 ExprValueType.BOOL -> BOOL
@@ -90,7 +90,7 @@ sealed class StaticType {
 
         @JvmStatic
         fun fromExprValue(exprValue: ExprValue): StaticType =
-            when(exprValue.type) {
+            when (exprValue.type) {
                 ExprValueType.TIME -> {
                     val timeValue = exprValue.timeValue()
                     TimeType(precision = timeValue.precision, withTimeZone = timeValue.zoneOffset != null)
@@ -242,7 +242,7 @@ sealed class StaticType {
  */
 // TODO: Remove `NULL` from here. This affects inference as operations (especially NAry) can produce
 //  `NULL` or `MISSING` depending on a null propagation or an incorrect argument.
-data class AnyType(override val metas: Map<String, Any> = mapOf()): StaticType() {
+data class AnyType(override val metas: Map<String, Any> = mapOf()) : StaticType() {
     // AnyType encompasses all PartiQL types (including Null type)
     override fun isInstance(value: ExprValue): Boolean = true
     override fun isComparableTo(other: StaticType): Boolean = true
@@ -267,7 +267,7 @@ data class AnyType(override val metas: Map<String, Any> = mapOf()): StaticType()
 /**
  * Represents a [StaticType] that is type of a single [ExprValueType].
  */
-sealed class SingleType:  StaticType() {
+sealed class SingleType : StaticType() {
     abstract val runtimeType: ExprValueType
     override val typeDomain: Set<ExprValueType>
         get() = setOf(runtimeType)
@@ -314,9 +314,8 @@ class UnsupportedTypeCheckException(message: String) : RuntimeException(message)
 sealed class CollectionType : SingleType() {
     abstract val elementType: StaticType
 
-
     override fun isInstance(value: ExprValue): Boolean {
-        if(!super.isInstance(value)) return false
+        if (!super.isInstance(value)) return false
 
         return when (this.elementType) {
             StaticType.ANY -> true // no need to check every element if the elementType is ANY.
@@ -362,10 +361,9 @@ object MissingType : SingleType() {
         get() = listOf(this)
 
     override fun toString(): String = "missing"
-
 }
 
-data class BoolType(override val metas: Map<String, Any> = mapOf()): SingleType() {
+data class BoolType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
     override val runtimeType: ExprValueType
         get() = ExprValueType.BOOL
 
@@ -378,7 +376,7 @@ data class BoolType(override val metas: Map<String, Any> = mapOf()): SingleType(
 data class IntType(
     val rangeConstraint: IntRangeConstraint = IntRangeConstraint.UNCONSTRAINED,
     override val metas: Map<String, Any> = mapOf()
-): SingleType() {
+) : SingleType() {
 
     enum class IntRangeConstraint(val numBytes: Int, val validRange: LongRange) {
         /** SQL's SMALLINT (2 Bytes) */
@@ -410,7 +408,7 @@ data class IntType(
         }
 
     override fun isInstance(value: ExprValue): Boolean {
-        if(value.type != ExprValueType.INT) {
+        if (value.type != ExprValueType.INT) {
             return false
         }
 
@@ -418,10 +416,9 @@ data class IntType(
 
         return rangeConstraint.validRange.contains(longValue)
     }
-
 }
 
-data class FloatType(override val metas: Map<String, Any> = mapOf()): SingleType() {
+data class FloatType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
     override val runtimeType: ExprValueType
         get() = ExprValueType.FLOAT
 
@@ -444,7 +441,7 @@ data class DecimalType(
             override fun matches(d: BigDecimal): Boolean = true
         }
 
-        data class Constrained(val precision: Int, val scale: Int = 0): PrecisionScaleConstraint() {
+        data class Constrained(val precision: Int, val scale: Int = 0) : PrecisionScaleConstraint() {
             override fun matches(d: BigDecimal): Boolean {
                 val dv = d.stripTrailingZeros()
 
@@ -453,7 +450,6 @@ data class DecimalType(
                 return integerDigits <= expectedIntegerDigits && dv.scale() <= scale
             }
         }
-
     }
 
     override val runtimeType: ExprValueType
@@ -465,13 +461,13 @@ data class DecimalType(
     override fun toString(): String = "decimal"
 
     override fun isInstance(value: ExprValue): Boolean =
-        when(value.type) {
+        when (value.type) {
             ExprValueType.DECIMAL -> precisionScaleConstraint.matches(value.scalar.numberValue() as BigDecimal)
             else -> false
         }
 }
 
-data class DateType(override val metas: Map<String, Any> = mapOf()): SingleType() {
+data class DateType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
     override val runtimeType: ExprValueType
         get() = ExprValueType.DATE
 
@@ -485,7 +481,7 @@ data class TimeType(
     val precision: Int? = null,
     val withTimeZone: Boolean = false,
     override val metas: Map<String, Any> = mapOf()
-): SingleType() {
+) : SingleType() {
     override val runtimeType: ExprValueType
         get() = ExprValueType.TIME
 
@@ -498,7 +494,7 @@ data class TimeType(
     }
 }
 
-data class TimestampType(override val metas: Map<String, Any> = mapOf()): SingleType() {
+data class TimestampType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
     override val runtimeType: ExprValueType
         get() = ExprValueType.TIMESTAMP
 
@@ -508,7 +504,7 @@ data class TimestampType(override val metas: Map<String, Any> = mapOf()): Single
     override fun toString(): String = "timestamp"
 }
 
-data class SymbolType(override val metas: Map<String, Any> = mapOf()): SingleType() {
+data class SymbolType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
     override val runtimeType: ExprValueType
         get() = ExprValueType.SYMBOL
 
@@ -523,7 +519,7 @@ data class StringType(
     override val metas: Map<String, Any> = mapOf()
 ) : SingleType() {
 
-    sealed class StringLengthConstraint{
+    sealed class StringLengthConstraint {
         /** Returns true if the code point count of [value] falls within the constraints.  */
         abstract fun matches(value: ExprValue): Boolean
 
@@ -531,7 +527,7 @@ data class StringType(
             override fun matches(value: ExprValue): Boolean = true
         }
 
-        data class Constrained(val length: NumberConstraint): StringLengthConstraint() {
+        data class Constrained(val length: NumberConstraint) : StringLengthConstraint() {
             override fun matches(value: ExprValue): Boolean {
                 val str = value.scalar.stringValue()
                     ?: error("value.scalar.stringValue() unexpectedly returned null")
@@ -549,7 +545,7 @@ data class StringType(
     override fun toString(): String = "string"
 
     override fun isInstance(value: ExprValue): Boolean =
-        when(value.type) {
+        when (value.type) {
             ExprValueType.STRING -> lengthConstraint.matches(value)
             else -> false
         }
@@ -557,7 +553,7 @@ data class StringType(
     internal constructor(numberConstraint: NumberConstraint) : this(StringLengthConstraint.Constrained(numberConstraint))
 }
 
-data class BlobType(override val metas: Map<String, Any> = mapOf()): SingleType() {
+data class BlobType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
     override val runtimeType: ExprValueType
         get() = ExprValueType.BLOB
 
@@ -567,7 +563,7 @@ data class BlobType(override val metas: Map<String, Any> = mapOf()): SingleType(
     override fun toString(): String = "blob"
 }
 
-data class ClobType(override val metas: Map<String, Any> = mapOf()): SingleType() {
+data class ClobType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
     override val runtimeType: ExprValueType
         get() = ExprValueType.CLOB
 
@@ -583,7 +579,7 @@ data class ClobType(override val metas: Map<String, Any> = mapOf()): SingleType(
 data class ListType(
     override val elementType: StaticType = ANY,
     override val metas: Map<String, Any> = mapOf()
-): CollectionType() {
+) : CollectionType() {
 
     override val runtimeType: ExprValueType
         get() = ExprValueType.LIST
@@ -592,7 +588,7 @@ data class ListType(
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
-    override fun toString(): String = "list(${elementType})"
+    override fun toString(): String = "list($elementType)"
 }
 
 /**
@@ -601,7 +597,7 @@ data class ListType(
 data class SexpType(
     override val elementType: StaticType = ANY,
     override val metas: Map<String, Any> = mapOf()
-): CollectionType() {
+) : CollectionType() {
     override val runtimeType: ExprValueType
         get() = ExprValueType.SEXP
     override fun flatten(): StaticType = this
@@ -609,7 +605,7 @@ data class SexpType(
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
-    override fun toString(): String = "sexp(${elementType})"
+    override fun toString(): String = "sexp($elementType)"
 }
 
 /**
@@ -618,7 +614,7 @@ data class SexpType(
 data class BagType(
     override val elementType: StaticType = ANY,
     override val metas: Map<String, Any> = mapOf()
-): CollectionType() {
+) : CollectionType() {
     override val runtimeType: ExprValueType
         get() = ExprValueType.BAG
 
@@ -627,7 +623,7 @@ data class BagType(
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
-    override fun toString(): String = "bag(${elementType})"
+    override fun toString(): String = "bag($elementType)"
 }
 
 data class StructType(
@@ -713,7 +709,6 @@ data class StructType(
             }
         }
     }
-
 }
 
 /**
@@ -727,13 +722,15 @@ data class AnyOfType(val types: Set<StaticType>, override val metas: Map<String,
      *
      * If union type ends up having just one type in it, then that type is returned.
      */
-    override fun flatten(): StaticType = this.copy(types = this.types.flatMap {
-        when (it) {
-            is SingleType -> listOf(it)
-            is AnyType -> listOf(it)
-            is AnyOfType -> it.types
-        }
-    }.toSet()).let {
+    override fun flatten(): StaticType = this.copy(
+        types = this.types.flatMap {
+            when (it) {
+                is SingleType -> listOf(it)
+                is AnyType -> listOf(it)
+                is AnyOfType -> it.types
+            }
+        }.toSet()
+    ).let {
         when {
             it.types.size == 1 -> it.types.first()
             it.types.filterIsInstance<AnyOfType>().any() -> it.flatten()
@@ -791,11 +788,11 @@ sealed class NumberConstraint {
 
     abstract val value: Int
 
-    data class Equals(override val value: Int): NumberConstraint() {
+    data class Equals(override val value: Int) : NumberConstraint() {
         override fun matches(num: Int): Boolean = value == num
     }
 
-    data class UpTo(override val value: Int): NumberConstraint() {
+    data class UpTo(override val value: Int) : NumberConstraint() {
         override fun matches(num: Int): Boolean = value >= num
     }
 }

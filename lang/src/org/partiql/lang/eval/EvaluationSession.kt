@@ -24,9 +24,11 @@ import com.amazon.ion.Timestamp
  * @property parameters List of parameters to be substituted for positional placeholders
  * @property now Timestamp to consider as the current time, used by functions like `utcnow()` and `now()`. Defaults to [Timestamp.nowZ]
  */
-class EvaluationSession private constructor(val globals: Bindings<ExprValue>,
-                                            val parameters: List<ExprValue>,
-                                            val now: Timestamp) {
+class EvaluationSession private constructor(
+    val globals: Bindings<ExprValue>,
+    val parameters: List<ExprValue>,
+    val now: Timestamp
+) {
     companion object {
         /**
          * Java style builder to construct a new [EvaluationSession]. Uses the default value for any non specified field
@@ -68,8 +70,10 @@ class EvaluationSession private constructor(val globals: Bindings<ExprValue>,
             return this
         }
 
-        fun build(): EvaluationSession = EvaluationSession(now = now ?: Timestamp.nowZ(),
-                                                           parameters = parameters,
-                                                           globals = globals)
+        fun build(): EvaluationSession = EvaluationSession(
+            now = now ?: Timestamp.nowZ(),
+            parameters = parameters,
+            globals = globals
+        )
     }
 }

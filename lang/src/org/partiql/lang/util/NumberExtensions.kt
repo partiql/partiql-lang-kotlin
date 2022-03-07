@@ -31,12 +31,12 @@ private val MATH_CONTEXT = MathContext(38, RoundingMode.HALF_EVEN) // TODO shoul
  */
 internal fun bigDecimalOf(num: Number, mc: MathContext = MATH_CONTEXT): BigDecimal = when (num) {
     is Decimal -> num
-    is Int                -> BigDecimal(num, mc)
-    is Long               -> BigDecimal(num, mc)
-    is Double             -> BigDecimal(num, mc)
-    is BigDecimal         -> num
+    is Int -> BigDecimal(num, mc)
+    is Long -> BigDecimal(num, mc)
+    is Double -> BigDecimal(num, mc)
+    is BigDecimal -> num
     Decimal.NEGATIVE_ZERO -> num as Decimal
-    else                  -> throw IllegalArgumentException("Unsupported number type: $num, ${num.javaClass}")
+    else -> throw IllegalArgumentException("Unsupported number type: $num, ${num.javaClass}")
 }
 
 internal fun bigDecimalOf(text: String, mc: MathContext = MATH_CONTEXT): BigDecimal = BigDecimal(text.trim(), mc)
@@ -49,12 +49,12 @@ private val CONVERSION_MAP = mapOf<Set<Class<*>>, Class<out Number>>(
     setOf(Double::class.javaObjectType, Double::class.javaObjectType) to Double::class.javaObjectType,
     setOf(Double::class.javaObjectType, BigDecimal::class.javaObjectType) to BigDecimal::class.javaObjectType,
 
-    setOf(BigDecimal::class.javaObjectType, BigDecimal::class.javaObjectType) to BigDecimal::class.javaObjectType)
-
+    setOf(BigDecimal::class.javaObjectType, BigDecimal::class.javaObjectType) to BigDecimal::class.javaObjectType
+)
 
 private val CONVERTERS = mapOf<Class<*>, (Number) -> Number>(
-    Long::class.javaObjectType      to Number::toLong,
-    Double::class.javaObjectType    to Number::toDouble,
+    Long::class.javaObjectType to Number::toLong,
+    Double::class.javaObjectType to Number::toDouble,
     BigDecimal::class.java to { num ->
         when (num) {
             is Long -> bigDecimalOf(num)
@@ -67,11 +67,11 @@ private val CONVERTERS = mapOf<Class<*>, (Number) -> Number>(
     }
 )
 
-internal fun Number.isZero() = when(this) {
+internal fun Number.isZero() = when (this) {
     // using compareTo instead of equals for BigDecimal because equality also checks same scale
 
     is Long -> this == 0L
-    is Double -> this == 0.0 || this == -0.0 
+    is Double -> this == 0.0 || this == -0.0
     is BigDecimal -> BigDecimal.ZERO.compareTo(this) == 0
     else -> throw IllegalStateException()
 }
@@ -89,14 +89,14 @@ fun Number.coerce(type: Class<out Number>): Number {
  * This is only supported on limited types needed by the expression system.
  */
 fun coerceNumbers(first: Number, second: Number): Pair<Number, Number> {
-    fun typeFor(n: Number): Class<*> = if(n is Decimal) {
+    fun typeFor(n: Number): Class<*> = if (n is Decimal) {
         BigDecimal::class.javaObjectType
     } else {
         n.javaClass
     }
 
-    val type = CONVERSION_MAP[setOf(typeFor(first), typeFor(second))] ?:
-               throw IllegalArgumentException("No coercion support for ${typeFor(first)} to ${typeFor(second)}")
+    val type = CONVERSION_MAP[setOf(typeFor(first), typeFor(second))]
+        ?: throw IllegalArgumentException("No coercion support for ${typeFor(first)} to ${typeFor(second)}")
 
     return Pair(first.coerce(type), second.coerce(type))
 }
@@ -114,11 +114,11 @@ operator fun Number.unaryMinus(): Number {
         is Long -> -this
         is BigInteger -> this.negate()
         is Double -> -this
-        is BigDecimal -> if(this.isZero()) {
-                Decimal.negativeZero(this.scale())
-            } else {
-                this.negate()
-            }
+        is BigDecimal -> if (this.isZero()) {
+            Decimal.negativeZero(this.scale())
+        } else {
+            this.negate()
+        }
         else -> throw IllegalStateException()
     }
 }
@@ -133,7 +133,7 @@ private fun Long.checkOverflowPlus(other: Long): Number {
     val overflows = ((this xor other) >= 0) and ((this xor result) < 0)
     return when (overflows) {
         false -> result
-        else  -> errIntOverflow(8)
+        else -> errIntOverflow(8)
     }
 }
 
@@ -144,7 +144,7 @@ private fun Long.checkOverflowMinus(other: Long): Number {
     val overflows = ((this xor other) < 0) and ((this xor result) < 0)
     return when (overflows) {
         false -> result
-        else  -> errIntOverflow(8)
+        else -> errIntOverflow(8)
     }
 }
 
@@ -154,16 +154,17 @@ private fun Long.checkOverflowTimes(other: Long): Number {
     // Hacker's Delight, Section 2-12
 
     val leadingZeros = this.numberOfLeadingZeros() +
-                       this.inv().numberOfLeadingZeros() +
-                       other.numberOfLeadingZeros() +
-                       other.inv().numberOfLeadingZeros()
+        this.inv().numberOfLeadingZeros() +
+        other.numberOfLeadingZeros() +
+        other.inv().numberOfLeadingZeros()
 
     val result = this * other
     val longSize = java.lang.Long.SIZE
 
     if ((leadingZeros >= longSize) &&
         ((this >= 0) or (other != Long.MIN_VALUE)) &&
-        (this == 0L || result / this == other)) {
+        (this == 0L || result / this == other)
+    ) {
         return result
     }
 
@@ -173,7 +174,7 @@ private fun Long.checkOverflowTimes(other: Long): Number {
 private fun Long.checkOverflowDivision(other: Long): Number {
     // division can only underflow Long.MIN_VALUE / -1
     // because abs(Long.MIN_VALUE) == abs(Long.MAX_VALUE) + 1
-    if(this == Long.MIN_VALUE && other == -1L){
+    if (this == Long.MIN_VALUE && other == -1L) {
         errIntOverflow(8)
     }
 
@@ -240,17 +241,17 @@ operator fun Number.compareTo(other: Number): Int {
     }
 }
 
-val Number.isNaN get() = when(this) {
+val Number.isNaN get() = when (this) {
     is Double -> isNaN()
     else -> false
 }
 
-val Number.isNegInf get() = when(this) {
+val Number.isNegInf get() = when (this) {
     is Double -> isInfinite() && this < 0
     else -> false
 }
 
-val Number.isPosInf get() = when(this) {
+val Number.isPosInf get() = when (this) {
     is Double -> isInfinite() && this > 0
     else -> false
 }

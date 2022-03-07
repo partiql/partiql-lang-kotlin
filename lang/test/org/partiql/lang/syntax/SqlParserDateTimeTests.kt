@@ -191,20 +191,20 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
         }
     )
 
-    private fun generateRandomSeed() : Random {
+    private fun generateRandomSeed(): Random {
         val rng = Random()
         val seed = rng.nextLong()
-        println("Randomly generated seed is ${seed}.  Use this to reproduce failures in dev environment.")
+        println("Randomly generated seed is $seed.  Use this to reproduce failures in dev environment.")
         rng.setSeed(seed)
         return rng
     }
 
-    private fun Random.nextDate() : Date {
+    private fun Random.nextDate(): Date {
         val year = nextInt(10000)
         val month = nextInt(12) + 1
         val day = when (month) {
             in monthsWith31Days -> nextInt(31)
-            2 -> when ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0))  {
+            2 -> when ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)) {
                 true -> nextInt(29)
                 false -> nextInt(28)
             }
@@ -224,7 +224,7 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
             }
         }
     }
-  
+
     private fun createErrorCaseForTime(source: String, errorCode: ErrorCode, line: Long, col: Long, tokenType: TokenType, tokenValue: IonValue, skipTest: Boolean = false): () -> Unit = {
         if (!skipTest) {
             checkInputThrowingParserException(
@@ -244,7 +244,8 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
         checkInputThrowingParserException(
             source,
             errorCode,
-            errorContext)
+            errorContext
+        )
     }
 
     fun parametersForTimeParserErrorTests() = listOf(
@@ -695,5 +696,4 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
     @Test
     @Parameters
     fun timeParserErrorTests(block: () -> Unit) = block()
-
 }

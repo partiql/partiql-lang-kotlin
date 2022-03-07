@@ -18,6 +18,7 @@ import com.amazon.ion.IonSexp
 import com.amazon.ionelement.api.SexpElement
 import com.amazon.ionelement.api.toIonElement
 import com.amazon.ionelement.api.toIonValue
+import org.partiql.lang.CUSTOM_TEST_TYPES
 import org.partiql.lang.TestBase
 import org.partiql.lang.ast.AstDeserializerBuilder
 import org.partiql.lang.ast.AstSerializer
@@ -26,7 +27,6 @@ import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.passes.MetaStrippingRewriter
 import org.partiql.lang.ast.toAstStatement
 import org.partiql.lang.ast.toExprNode
-import org.partiql.lang.CUSTOM_TEST_TYPES
 import org.partiql.lang.checkErrorAndErrorContext
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorCode
@@ -126,14 +126,15 @@ abstract class SqlParserTestBase : TestBase() {
         assertEquals(
             "actual ExprNodes must match deserialized s-exp $astVersion AST",
             actualExprNode.stripMetas(),
-            deserializedExprNodeFromSexp.stripMetas())
+            deserializedExprNodeFromSexp.stripMetas()
+        )
     }
 
     /**
      * Converts the given PartiqlAst.Statement into an IonElement. If the given [statement] is a query, extracts
      * just the expr component to be compatible with the SqlParser tests.
      */
-    private fun unwrapQuery(statement: PartiqlAst.Statement) : SexpElement {
+    private fun unwrapQuery(statement: PartiqlAst.Statement): SexpElement {
         return when (statement) {
             is PartiqlAst.Statement.Query -> statement.expr.toIonElement()
             is PartiqlAst.Statement.Dml,
@@ -186,19 +187,19 @@ abstract class SqlParserTestBase : TestBase() {
     private fun loadIonSexp(expectedSexpAst: String) = ion.singleValue(expectedSexpAst).asIonSexp()
     private fun ExprNode.stripMetas() = MetaStrippingRewriter.stripMetas(this)
 
-    protected fun checkInputThrowingParserException(input: String,
-                                                    errorCode: ErrorCode,
-                                                    expectErrorContextValues: Map<Property, Any>) {
+    protected fun checkInputThrowingParserException(
+        input: String,
+        errorCode: ErrorCode,
+        expectErrorContextValues: Map<Property, Any>
+    ) {
 
         softAssert {
             try {
                 parser.parseAstStatement(input)
                 fail("Expected ParserException but there was no Exception")
-            }
-            catch (pex: ParserException) {
+            } catch (pex: ParserException) {
                 checkErrorAndErrorContext(errorCode, pex, expectErrorContextValues)
-            }
-            catch (ex: Exception) {
+            } catch (ex: Exception) {
                 fail("Expected ParserException but a different exception was thrown \n\t  $ex")
             }
         }

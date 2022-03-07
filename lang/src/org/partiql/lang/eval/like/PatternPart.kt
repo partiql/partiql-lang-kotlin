@@ -28,42 +28,43 @@ internal fun parsePattern(pattern: String, escapeChar: Int?): List<PatternPart> 
     val codepointList = pattern.codePoints().toList()
     val codepointsItr = codepointList.listIterator()
     val parts = ArrayList<PatternPart>()
-    while(codepointsItr.hasNext()) {
+    while (codepointsItr.hasNext()) {
         val c = codepointsItr.next()
-        parts.add(when(c) {
-            ANY_ONE_CHAR -> PatternPart.AnyOneChar
-            ZERO_OR_MORE_OF_ANY_CHAR -> {
-                // consider consecutive `%` to be the same as one `%`
-                while(codepointsItr.hasNext() && codepointList[codepointsItr.nextIndex()] == ZERO_OR_MORE_OF_ANY_CHAR) {
-                    codepointsItr.next()
-                }
-
-                PatternPart.ZeroOrMoreOfAnyChar
-            }
-            else -> {
-                codepointsItr.previous()
-                // Build pattern for matching the exact string
-                val buffer = ArrayList<Int>()
-                // stop building if we encounter end of input
-                do {
-                    val cc = codepointsItr.next()
-                    // If [escapeChar] is encountered, just add the next codepoint to the buffer.
-                    if(escapeChar != null && cc == escapeChar) {
-                        buffer.add(codepointsItr.next())
-                    } else {
-                        // stop building and back up one if we encounter `%` or `_` characters
-                        if (cc == ANY_ONE_CHAR || cc == ZERO_OR_MORE_OF_ANY_CHAR) {
-                            codepointsItr.previous()
-                            break
-                        }
-                        buffer.add(cc)
+        parts.add(
+            when (c) {
+                ANY_ONE_CHAR -> PatternPart.AnyOneChar
+                ZERO_OR_MORE_OF_ANY_CHAR -> {
+                    // consider consecutive `%` to be the same as one `%`
+                    while (codepointsItr.hasNext() && codepointList[codepointsItr.nextIndex()] == ZERO_OR_MORE_OF_ANY_CHAR) {
+                        codepointsItr.next()
                     }
 
-                } while(codepointsItr.hasNext())
+                    PatternPart.ZeroOrMoreOfAnyChar
+                }
+                else -> {
+                    codepointsItr.previous()
+                    // Build pattern for matching the exact string
+                    val buffer = ArrayList<Int>()
+                    // stop building if we encounter end of input
+                    do {
+                        val cc = codepointsItr.next()
+                        // If [escapeChar] is encountered, just add the next codepoint to the buffer.
+                        if (escapeChar != null && cc == escapeChar) {
+                            buffer.add(codepointsItr.next())
+                        } else {
+                            // stop building and back up one if we encounter `%` or `_` characters
+                            if (cc == ANY_ONE_CHAR || cc == ZERO_OR_MORE_OF_ANY_CHAR) {
+                                codepointsItr.previous()
+                                break
+                            }
+                            buffer.add(cc)
+                        }
+                    } while (codepointsItr.hasNext())
 
-                PatternPart.ExactChars(buffer.toIntArray())
+                    PatternPart.ExactChars(buffer.toIntArray())
+                }
             }
-        })
+        )
     }
 
     return parts
@@ -71,12 +72,13 @@ internal fun parsePattern(pattern: String, escapeChar: Int?): List<PatternPart> 
 
 internal fun executePattern(parts: List<PatternPart>, str: String): Boolean {
     return executePattern(
-        CheckpointIteratorImpl(parts), CodepointCheckpointIterator(str))
+        CheckpointIteratorImpl(parts), CodepointCheckpointIterator(str)
+    )
 }
 
 private fun executePattern(partsItr: CheckpointIterator<PatternPart>, charsItr: CodepointCheckpointIterator): Boolean {
     while (partsItr.hasNext()) {
-        if(!executeOnePart(partsItr, charsItr))
+        if (!executeOnePart(partsItr, charsItr))
             return false
     }
     return !charsItr.hasNext()
@@ -85,7 +87,7 @@ private fun executePattern(partsItr: CheckpointIterator<PatternPart>, charsItr: 
 private fun executeOnePart(partsItr: CheckpointIterator<PatternPart>, charsItr: CodepointCheckpointIterator): Boolean {
     when (val currentPart = partsItr.next()) {
         is PatternPart.AnyOneChar -> {
-            if(!charsItr.hasNext()) {
+            if (!charsItr.hasNext()) {
                 return false
             }
 
@@ -103,7 +105,7 @@ private fun executeOnePart(partsItr: CheckpointIterator<PatternPart>, charsItr: 
         PatternPart.ZeroOrMoreOfAnyChar -> {
             // No need to check the rest of the string if this is the last pattern part
             if (!partsItr.hasNext()) {
-                charsItr.skipToEnd()  // consume rest of string otherwise we will consider this a non-match.
+                charsItr.skipToEnd() // consume rest of string otherwise we will consider this a non-match.
                 return true
             }
 
@@ -136,4 +138,3 @@ private fun executeOnePart(partsItr: CheckpointIterator<PatternPart>, charsItr: 
         }
     }
 }
-

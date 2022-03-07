@@ -22,17 +22,17 @@ private val islHeader = """
             { id: "$schemaId" },
         ],
     }
-    """.trimIndent()
+""".trimIndent()
 
 private val islFooter = """
     schema_footer::{ }
-    """.trimIndent()
+""".trimIndent()
 
 private val ion = IonSystemBuilder.standard().build()
 private val resourceAuthority = ResourceAuthority("org/partiql/schemas", ClassLoader.getSystemClassLoader(), ion)
 private val iss = IonSchemaSystemBuilder.standard().addAuthority(resourceAuthority).build()
 
-private val inferencer : SchemaInferencerFromExample = SchemaInferencerFromExampleImpl(typeName, iss, listOf(schemaId))
+private val inferencer: SchemaInferencerFromExample = SchemaInferencerFromExampleImpl(typeName, iss, listOf(schemaId))
 
 private val NEG_BIG_INT = BigInteger.valueOf(MIN_INT8).minus(BigInteger.ONE)
 private val POS_BIG_INT = BigInteger.valueOf(MAX_INT8).plus(BigInteger.ONE)
@@ -44,7 +44,8 @@ private const val INT8_VALID_VALUES = "valid_values: range::[$MIN_INT8, $MAX_INT
 data class ExampleInferenceTestCase(
     val examples: String,
     val islAsString: String,
-    val maxExampleCount: Int = Int.MAX_VALUE) {
+    val maxExampleCount: Int = Int.MAX_VALUE
+) {
 
     override fun toString(): String {
         return examples.trimIndent() + " -> " + islAsString.trimIndent()
@@ -56,7 +57,8 @@ data class InferenceAndDefiniteUnifyTestCase(
     val examples: String,
     val definiteIslAsString: String,
     val islAsString: String,
-    val maxExampleCount: Int = Int.MAX_VALUE) {
+    val maxExampleCount: Int = Int.MAX_VALUE
+) {
 
     override fun toString(): String = name
 }
@@ -82,10 +84,13 @@ private fun assertCorrectISL(
     val generatedISL = generatedIonSchemaModel.toIsl()
 
     if (expectedISL != generatedISL) {
-        throw AssertionError("""
+        throw AssertionError(
+            """
             Expected ISL and discovered ISL differ,
             Expected: $expectedISL
-            Actual:   $generatedISL""".trimIndent())
+            Actual:   $generatedISL
+            """.trimIndent()
+        )
     }
 }
 
@@ -106,7 +111,7 @@ class SchemaInferencerFromExampleTests : TestBase() {
                 """
         override fun getParameters(): List<Any> = listOf(
             // empty sequence
-            ExampleInferenceTestCase("","type::{ name: $typeName }"),
+            ExampleInferenceTestCase("", "type::{ name: $typeName }"),
             // boolean
             ExampleInferenceTestCase("false", "type::{ name: $typeName, type: bool }"),
             // int
@@ -1065,7 +1070,7 @@ class SchemaInferencerFromExampleTests : TestBase() {
             return ExampleInferenceTestCase(
                 examples = examplesCombined,
                 islAsString =
-                    """
+                """
                     type::{ name: $typeName, type: struct,
                         content: closed,
                         fields: {
@@ -1081,160 +1086,198 @@ class SchemaInferencerFromExampleTests : TestBase() {
             // single example: int (0)
             createMultiExampleConstraintTestCase(
                 examples = listOf("0"),
-                constraints = listOf(INT2_VALID_VALUES)),
+                constraints = listOf(INT2_VALID_VALUES)
+            ),
             // single example: int2
             createMultiExampleConstraintTestCase(
                 examples = listOf("12345"),
-                constraints = listOf(INT2_VALID_VALUES)),
+                constraints = listOf(INT2_VALID_VALUES)
+            ),
             // single example: int2 min
             createMultiExampleConstraintTestCase(
                 examples = listOf("$MIN_INT2"),
-                constraints = listOf(INT2_VALID_VALUES)),
+                constraints = listOf(INT2_VALID_VALUES)
+            ),
             // single example: int2 max
             createMultiExampleConstraintTestCase(
                 examples = listOf("$MAX_INT2"),
-                constraints = listOf(INT2_VALID_VALUES)),
+                constraints = listOf(INT2_VALID_VALUES)
+            ),
             // single example: int4 (minInt2 - 1)
             createMultiExampleConstraintTestCase(
                 examples = listOf("${MIN_INT2 - 1}"),
-                constraints = listOf(INT4_VALID_VALUES)),
+                constraints = listOf(INT4_VALID_VALUES)
+            ),
             // single example: int4 (maxInt2 + 1)
             createMultiExampleConstraintTestCase(
                 examples = listOf("${MAX_INT2 + 1}"),
-                constraints = listOf(INT4_VALID_VALUES)),
+                constraints = listOf(INT4_VALID_VALUES)
+            ),
             // single example: int4 min
             createMultiExampleConstraintTestCase(
                 examples = listOf("$MIN_INT4"),
-                constraints = listOf(INT4_VALID_VALUES)),
+                constraints = listOf(INT4_VALID_VALUES)
+            ),
             // single example: int4 max
             createMultiExampleConstraintTestCase(
                 examples = listOf("$MAX_INT4"),
-                constraints = listOf(INT4_VALID_VALUES)),
+                constraints = listOf(INT4_VALID_VALUES)
+            ),
             // single example: int8 (minInt4 - 1)
             createMultiExampleConstraintTestCase(
                 examples = listOf("${MIN_INT4 - 1}"),
-                constraints = listOf(INT8_VALID_VALUES)),
+                constraints = listOf(INT8_VALID_VALUES)
+            ),
             // single example: int8 (maxInt4 + 1)
             createMultiExampleConstraintTestCase(
                 examples = listOf("${MAX_INT4 + 1}"),
-                constraints = listOf(INT8_VALID_VALUES)),
+                constraints = listOf(INT8_VALID_VALUES)
+            ),
             // single example: int8 min
             createMultiExampleConstraintTestCase(
                 examples = listOf("$MIN_INT8"),
-                constraints = listOf(INT8_VALID_VALUES)),
+                constraints = listOf(INT8_VALID_VALUES)
+            ),
             // single example: int8 max
             createMultiExampleConstraintTestCase(
                 examples = listOf("$MAX_INT8"),
-                constraints = listOf(INT8_VALID_VALUES)),
+                constraints = listOf(INT8_VALID_VALUES)
+            ),
             // single example: unconstrained negative int
             createMultiExampleConstraintTestCase(
                 examples = listOf("$NEG_BIG_INT"),
-                constraints = emptyList()),
+                constraints = emptyList()
+            ),
             // single example: unconstrained positive int
             createMultiExampleConstraintTestCase(
                 examples = listOf("$POS_BIG_INT"),
-                constraints = emptyList()),
+                constraints = emptyList()
+            ),
             // single example: decimal
             // single example: decimal zero
             createMultiExampleConstraintTestCase(
                 examples = listOf("0d0"),
-                constraints = listOf("scale: 0", "precision: 1")),
+                constraints = listOf("scale: 0", "precision: 1")
+            ),
             // single example: decimal negative zero
             createMultiExampleConstraintTestCase(
                 examples = listOf("-0d0"),
-                constraints = listOf("scale: 0", "precision: 1")),
+                constraints = listOf("scale: 0", "precision: 1")
+            ),
             // single example: decimal w/ precision != 1, scale = 0
             createMultiExampleConstraintTestCase(
                 examples = listOf("12345d0"),
-                constraints = listOf("scale: 0", "precision: 5")),
+                constraints = listOf("scale: 0", "precision: 5")
+            ),
             // single example: decimal w/ precision = 1, scale != 0
             createMultiExampleConstraintTestCase(
                 examples = listOf("1d-5"),
-                constraints = listOf("scale: 5", "precision: 1")),
+                constraints = listOf("scale: 5", "precision: 1")
+            ),
             // single example: decimal w/ precision != 1, scale != 0
             createMultiExampleConstraintTestCase(
                 examples = listOf("12345.123"),
-                constraints = listOf("scale: 3", "precision: 8")),
+                constraints = listOf("scale: 3", "precision: 8")
+            ),
             // single example: string
             // single example: empty string
             createMultiExampleConstraintTestCase(
                 examples = listOf("\"\""),
-                constraints = listOf("codepoint_length: 0")),
+                constraints = listOf("codepoint_length: 0")
+            ),
             // single example: non-empty string
             createMultiExampleConstraintTestCase(
                 examples = listOf("\"abc\""),
-                constraints = listOf("codepoint_length: 3")),
+                constraints = listOf("codepoint_length: 3")
+            ),
             // multiple examples: int
             // int2 with int2 -> int2
             createMultiExampleConstraintTestCase(
                 examples = listOf("12345", "-12345"),
-                constraints = listOf(INT2_VALID_VALUES)),
+                constraints = listOf(INT2_VALID_VALUES)
+            ),
             // int2 with int4 -> int4
             createMultiExampleConstraintTestCase(
                 examples = listOf("12345", "$MAX_INT4"),
-                constraints = listOf(INT4_VALID_VALUES)),
+                constraints = listOf(INT4_VALID_VALUES)
+            ),
             // int2 with int8 -> int8
             createMultiExampleConstraintTestCase(
                 examples = listOf("12345", "$MAX_INT8"),
-                constraints = listOf(INT8_VALID_VALUES)),
+                constraints = listOf(INT8_VALID_VALUES)
+            ),
             // int4 with int8 -> int8
             createMultiExampleConstraintTestCase(
                 examples = listOf("$MAX_INT4", "$MIN_INT8"),
-                constraints = listOf(INT8_VALID_VALUES)),
+                constraints = listOf(INT8_VALID_VALUES)
+            ),
             // int2 and int4 with int8 -> int8
             createMultiExampleConstraintTestCase(
                 examples = listOf("12345", "$MAX_INT4", "$MAX_INT8"),
-                constraints = listOf(INT8_VALID_VALUES)),
+                constraints = listOf(INT8_VALID_VALUES)
+            ),
             // int2 with unconstrained int
             createMultiExampleConstraintTestCase(
                 examples = listOf("$MAX_INT2", "$POS_BIG_INT"),
-                constraints = emptyList()),
+                constraints = emptyList()
+            ),
             // int4 with unconstrained int
             createMultiExampleConstraintTestCase(
                 examples = listOf("$MAX_INT4", "$POS_BIG_INT"),
-                constraints = emptyList()),
+                constraints = emptyList()
+            ),
             // int8 with unconstrained int
             createMultiExampleConstraintTestCase(
                 examples = listOf("$MAX_INT8", "$POS_BIG_INT"),
-                constraints = emptyList()),
+                constraints = emptyList()
+            ),
             // unconstrained int with unconstrained int
             createMultiExampleConstraintTestCase(
                 examples = listOf("$NEG_BIG_INT", "$POS_BIG_INT"),
-                constraints = emptyList()),
+                constraints = emptyList()
+            ),
             // int2, int4, int8 with unconstrained int
             createMultiExampleConstraintTestCase(
                 examples = listOf("$MIN_INT2", "$MAX_INT4", "$MIN_INT8", "$POS_BIG_INT"),
-                constraints = emptyList()),
+                constraints = emptyList()
+            ),
             // multiple examples: decimal
             // decimals of the same scale and precision
             createMultiExampleConstraintTestCase(
                 examples = listOf("12345.123", "54321.321"),
-                constraints = listOf("scale: 3", "precision: 8")),
+                constraints = listOf("scale: 3", "precision: 8")
+            ),
             // decimals of the same scale and different precision
             createMultiExampleConstraintTestCase(
                 examples = listOf("12345.123", "1234.123"),
-                constraints = listOf("scale: 3", "precision: range::[7, 8]")),
+                constraints = listOf("scale: 3", "precision: range::[7, 8]")
+            ),
             // decimals of the different scale and same precision
             createMultiExampleConstraintTestCase(
                 examples = listOf("12345.123", "123456.12"),
-                constraints = listOf("scale: range::[2, 3]", "precision: 8")),
+                constraints = listOf("scale: range::[2, 3]", "precision: 8")
+            ),
             // decimals of the different scale and precision
             createMultiExampleConstraintTestCase(
                 examples = listOf("12345.123", "123456.1234"),
-                constraints = listOf("scale: range::[3, 4]", "precision: range::[8, 10]")),
+                constraints = listOf("scale: range::[3, 4]", "precision: range::[8, 10]")
+            ),
             // multiple decimals of the different scale and precision
             createMultiExampleConstraintTestCase(
                 examples = listOf("1.1", "123.123", "12345.12345"),
-                constraints = listOf("scale: range::[1, 5]", "precision: range::[2, 10]")),
+                constraints = listOf("scale: range::[1, 5]", "precision: range::[2, 10]")
+            ),
             // multiple examples: string
             // string with string of same lengths
             createMultiExampleConstraintTestCase(
                 examples = listOf("\"123\"", "\"456\""),
-                constraints = listOf("codepoint_length: 3")),
+                constraints = listOf("codepoint_length: 3")
+            ),
             // string with string of differing lengths
             createMultiExampleConstraintTestCase(
                 examples = listOf("\"abc\"", "\"abcdefgh\""),
-                constraints = listOf("codepoint_length: range::[3, 8]")),
+                constraints = listOf("codepoint_length: range::[3, 8]")
+            ),
             // collections + structs
             // list of int2s
             ExampleInferenceTestCase(
@@ -1435,7 +1478,7 @@ class SchemaInferencerFromExampleTests : TestBase() {
                 """
                 ${'$'}partiql_bag::[ { a: 1,          b: [1, 2, 3],       c: { x: 1,   y: 2 } },
                                      { a: 10,         b: [10, 20, 30],    c: { x: 10,  y: $POS_BIG_INT } },
-                                     { a: ${MAX_INT4}, b: [100, 200, 300], c: { x: 100, y: 200 } } ]
+                                     { a: $MAX_INT4, b: [100, 200, 300], c: { x: 100, y: 200 } } ]
                 """,
                 """
                 type::{ name: $typeName, type: bag,
@@ -1472,13 +1515,14 @@ class SchemaInferencerFromExampleTests : TestBase() {
     class NullTypeTests : ArgumentsProviderBase() {
         // All typed nulls will collapse down to untyped null
         private fun createTypedNullTests(): List<ExampleInferenceTestCase> {
-            val coreTypedNulls = listOf("null.null", "null.int", "null.float", "null.decimal", "null.string",
-                "null.symbol", "null.timestamp", "null.blob", "null.clob", "null.list", "null.sexp", "null.struct")
+            val coreTypedNulls = listOf(
+                "null.null", "null.int", "null.float", "null.decimal", "null.string",
+                "null.symbol", "null.timestamp", "null.blob", "null.clob", "null.list", "null.sexp", "null.struct"
+            )
             return coreTypedNulls.map { typedNull ->
                 ExampleInferenceTestCase(typedNull, "type::{ name: $typeName, type: nullable::\$null }")
             }
         }
-
 
         override fun getParameters(): List<Any> = createTypedNullTests() + listOf(
             // null
@@ -1486,7 +1530,8 @@ class SchemaInferencerFromExampleTests : TestBase() {
             // list of null.int
             ExampleInferenceTestCase("[null.int]", "type::{ name: $typeName, type: list, element: { type: nullable::\$null } }"),
             // struct with null.int field value
-            ExampleInferenceTestCase("{ foo: null.int }",
+            ExampleInferenceTestCase(
+                "{ foo: null.int }",
                 """
                 type::{ name: $typeName, type: struct,
                     content:closed,
@@ -1497,7 +1542,8 @@ class SchemaInferencerFromExampleTests : TestBase() {
                 """
             ),
             // list of struct with null.int field value
-            ExampleInferenceTestCase("[ { foo: null.int } ]",
+            ExampleInferenceTestCase(
+                "[ { foo: null.int } ]",
                 """
                 type::{ name: $typeName, type: list,
                     element: {
@@ -1511,7 +1557,8 @@ class SchemaInferencerFromExampleTests : TestBase() {
                 """
             ),
             // struct of list with null.int field value
-            ExampleInferenceTestCase("{ foo: [ null.int ] }",
+            ExampleInferenceTestCase(
+                "{ foo: [ null.int ] }",
                 """
                 type::{ name: $typeName, type: struct,
                     content:closed,
@@ -1523,7 +1570,8 @@ class SchemaInferencerFromExampleTests : TestBase() {
             ),
             // unification of null types tests
             // list of int and null
-            ExampleInferenceTestCase("[1, null]",
+            ExampleInferenceTestCase(
+                "[1, null]",
                 """
                 type::{ name: $typeName, type: list,
                     element: { type: nullable::int, $INT2_VALID_VALUES }
@@ -1531,7 +1579,8 @@ class SchemaInferencerFromExampleTests : TestBase() {
                 """
             ),
             // list of int and null.int
-            ExampleInferenceTestCase("[1, null.int]",
+            ExampleInferenceTestCase(
+                "[1, null.int]",
                 """
                 type::{ name: $typeName, type: list,
                     element: { type: nullable::int, $INT2_VALID_VALUES }
@@ -1539,7 +1588,8 @@ class SchemaInferencerFromExampleTests : TestBase() {
                 """
             ),
             // list of int, null, and null.int
-            ExampleInferenceTestCase("[1, null, null.int]",
+            ExampleInferenceTestCase(
+                "[1, null, null.int]",
                 """
                 type::{ name: $typeName, type: list,
                     element: { type: nullable::int, $INT2_VALID_VALUES }
@@ -1560,7 +1610,8 @@ class SchemaInferencerFromExampleTests : TestBase() {
             ExampleInferenceTestCase("{} null null.struct", "type::{ name: $typeName, type: nullable::struct, content:closed }"),
             // lists with conflicting types
             // list of int, decimal, and null
-            ExampleInferenceTestCase("[null, 1, 1d0]",
+            ExampleInferenceTestCase(
+                "[null, 1, 1d0]",
                 """
                 type::{ name: $typeName, type: list,
                     element: {
@@ -1573,7 +1624,8 @@ class SchemaInferencerFromExampleTests : TestBase() {
                 """
             ),
             // list of int, decimal, and null (separate lists)
-            ExampleInferenceTestCase("[1, 1d0] [null]",
+            ExampleInferenceTestCase(
+                "[1, 1d0] [null]",
                 """
                 type::{ name: $typeName, type: list,
                     element: {
@@ -1586,7 +1638,8 @@ class SchemaInferencerFromExampleTests : TestBase() {
                 """
             ),
             // list of int and decimal with int and null (separate lists)
-            ExampleInferenceTestCase("[1, 1d0] [1, null]",
+            ExampleInferenceTestCase(
+                "[1, 1d0] [1, null]",
                 """
                 type::{ name: $typeName, type: list,
                     element: {
@@ -1599,7 +1652,8 @@ class SchemaInferencerFromExampleTests : TestBase() {
                 """
             ),
             // structs with nullable type
-            ExampleInferenceTestCase("{ one: 1 } { one: null }",
+            ExampleInferenceTestCase(
+                "{ one: 1 } { one: null }",
                 """
                 type::{ name: $typeName, type: struct,
                     content: closed,
@@ -1610,7 +1664,8 @@ class SchemaInferencerFromExampleTests : TestBase() {
                 """
             ),
             // structs with nullable type and conflict
-            ExampleInferenceTestCase("{ one: 1 } { one: 1d0 } { one: null }",
+            ExampleInferenceTestCase(
+                "{ one: 1 } { one: 1d0 } { one: null }",
                 """
                 type::{ name: $typeName, type: struct,
                     content: closed,
@@ -1626,7 +1681,8 @@ class SchemaInferencerFromExampleTests : TestBase() {
                 """
             ),
             // structs with nullable container type
-            ExampleInferenceTestCase("{ one: [1] } { one: null }",
+            ExampleInferenceTestCase(
+                "{ one: [1] } { one: null }",
                 """
                 type::{ name: $typeName, type: struct,
                     content: closed,
@@ -1640,7 +1696,8 @@ class SchemaInferencerFromExampleTests : TestBase() {
                 """
             ),
             // structs with nullable container type and nullable element
-            ExampleInferenceTestCase("{ one: [1] } { one: null } { one: [null] }",
+            ExampleInferenceTestCase(
+                "{ one: [1] } { one: null } { one: [null] }",
                 """
                 type::{ name: $typeName, type: struct,
                     content: closed,
@@ -1783,13 +1840,13 @@ class SchemaInferencerFromExampleTests : TestBase() {
                 name = "decimal unified with definite schema with non-discovered constraint (valid_values)",
                 examples = "1d0",
                 definiteIslAsString =
-                    """
+                """
                     type::{ name: $typeName, type: decimal,
                         $decimalValidValuesRange
                     }
                     """,
                 islAsString =
-                    """
+                """
                     type::{ name: $typeName, type: decimal,
                         scale: 0,
                         precision: 1,
@@ -1802,14 +1859,14 @@ class SchemaInferencerFromExampleTests : TestBase() {
                 name = "decimal unified with definite schema with discovered (precision) and non-discovered constraint (valid_values)",
                 examples = "1d0",
                 definiteIslAsString =
-                    """
+                """
                     type::{ name: $typeName, type: decimal,
                         precision: range::[1, 38],
                         $decimalValidValuesRange
                     }
                     """,
                 islAsString =
-                    """
+                """
                     type::{ name: $typeName, type: decimal,
                         scale: 0,
                         precision: 1,
@@ -1822,13 +1879,13 @@ class SchemaInferencerFromExampleTests : TestBase() {
                 name = "string unified with definite schema with non-discovered constraint (utf8_byte_length)",
                 examples = "\"abc\"",
                 definiteIslAsString =
-                    """
+                """
                     type::{ name: $typeName, type: string,
                         $stringUTF8ByteLengthRange
                     }
                     """,
                 islAsString =
-                    """
+                """
                     type::{ name: $typeName, type: string,
                         codepoint_length: 3,
                         $stringUTF8ByteLengthRange
@@ -1840,13 +1897,13 @@ class SchemaInferencerFromExampleTests : TestBase() {
                 name = "blob unified with definite schema with non-discovered constraint (byte_length)",
                 examples = "{{ +AB/ }}",
                 definiteIslAsString =
-                    """
+                """
                     type::{ name: $typeName, type: blob,
                         $blobByteLengthRange
                     }
                     """,
                 islAsString =
-                    """
+                """
                     type::{ name: $typeName, type: blob,
                         $blobByteLengthRange
                     }
@@ -1856,13 +1913,13 @@ class SchemaInferencerFromExampleTests : TestBase() {
                 name = "union(int, decimal) with definite schema of decimal with non-discovered constraint (valid_values)",
                 examples = "1 1d0",
                 definiteIslAsString =
-                    """
+                """
                     type::{ name: $typeName, type: decimal,
                         $decimalValidValuesRange
                     }
                     """,
                 islAsString =
-                    """
+                """
                     type::{ name: $typeName, any_of:[
                         { type: int, $INT2_VALID_VALUES },
                         { type: decimal, scale: 0, precision: 1, $decimalValidValuesRange }
@@ -1873,14 +1930,14 @@ class SchemaInferencerFromExampleTests : TestBase() {
                 name = "decimal with definite schema of union(blob, decimal) with non-discovered constraints",
                 examples = "1d0",
                 definiteIslAsString =
-                    """
+                """
                     type::{ name: $typeName, any_of:[
                         { type: blob, $blobByteLengthRange },
                         { type: decimal, $decimalValidValuesRange }
                     ]}
                     """,
                 islAsString =
-                    """
+                """
                     type::{ name: $typeName, any_of:[
                         { type: blob, $blobByteLengthRange },
                         { type: decimal, scale: 0, precision: 1, $decimalValidValuesRange }
@@ -1891,7 +1948,7 @@ class SchemaInferencerFromExampleTests : TestBase() {
                 name = "empty struct with definite schema struct",
                 examples = "{ }",
                 definiteIslAsString =
-                    """
+                """
                     type::{ name: $typeName, type: struct,
                         fields: {
                             a: { type: decimal, $decimalValidValuesRange },
@@ -1899,7 +1956,7 @@ class SchemaInferencerFromExampleTests : TestBase() {
                     }
                     """,
                 islAsString =
-                    """
+                """
                     type::{ name: $typeName, type: struct, content: closed,
                         fields: {
                             a: { type: decimal, $decimalValidValuesRange },
@@ -1911,7 +1968,7 @@ class SchemaInferencerFromExampleTests : TestBase() {
                 name = "struct with definite schema struct with additional field",
                 examples = "{ a: 1d0 }",
                 definiteIslAsString =
-                    """
+                """
                     type::{ name: $typeName, type: struct,
                         fields: {
                             a: { type: decimal, $decimalValidValuesRange },
@@ -1920,7 +1977,7 @@ class SchemaInferencerFromExampleTests : TestBase() {
                     }
                     """,
                 islAsString =
-                    """
+                """
                     type::{ name: $typeName, type: struct, content: closed,
                         fields: {
                             a: { type: decimal, scale: 0, precision: 1, $decimalValidValuesRange },
@@ -1933,7 +1990,7 @@ class SchemaInferencerFromExampleTests : TestBase() {
                 name = "struct with additional fields with definite schema struct",
                 examples = "{ a: 1d0, b: {{ +AB/ }}, c: \"abc\" }",
                 definiteIslAsString =
-                    """
+                """
                     type::{ name: $typeName, type: struct,
                         fields: {
                             a: { type: decimal, $decimalValidValuesRange },
@@ -1941,7 +1998,7 @@ class SchemaInferencerFromExampleTests : TestBase() {
                     }
                     """,
                 islAsString =
-                    """
+                """
                     type::{ name: $typeName, type: struct, content: closed,
                         fields: {
                             a: { type: decimal, scale: 0, precision: 1, $decimalValidValuesRange },
@@ -1955,7 +2012,7 @@ class SchemaInferencerFromExampleTests : TestBase() {
                 name = "bag of struct unified with additional decimal constraint",
                 examples = "\$partiql_bag::[ { a: 1d0 } ]",
                 definiteIslAsString =
-                    """
+                """
                     type::{ name: $typeName, type: bag,
                         element: {
                             type: struct,
@@ -1966,7 +2023,7 @@ class SchemaInferencerFromExampleTests : TestBase() {
                     }
                     """,
                 islAsString =
-                    """
+                """
                     type::{ name: $typeName, type: bag,
                         element: {
                             type: struct, content: closed,
@@ -1981,7 +2038,7 @@ class SchemaInferencerFromExampleTests : TestBase() {
                 name = "bag of struct unified with additional decimal constraint",
                 examples = "\$partiql_bag::[ { a: 1d0 } ]",
                 definiteIslAsString =
-                    """
+                """
                     type::{ name: $typeName, type: bag,
                         element: {
                             type: struct,
@@ -1992,7 +2049,7 @@ class SchemaInferencerFromExampleTests : TestBase() {
                     }
                     """,
                 islAsString =
-                    """
+                """
                     type::{ name: $typeName, type: bag,
                         element: {
                             type: struct, content: closed,
@@ -2006,13 +2063,13 @@ class SchemaInferencerFromExampleTests : TestBase() {
             InferenceAndDefiniteUnifyTestCase(
                 name = "bag of structs unified with additional constraints",
                 examples =
-                    """
+                """
                     ${'$'}partiql_bag::[ { a: 1,   b: ["a", "b", "c"],       c: { x: 1.,   y: {{ +AA/ }} } },
                                          { a: 10,  b: ["aa", "bb", "cc"],    c: { x: 10.,  y: {{ +BB/ }} } },
                                          { a: 100, b: ["aaa", "bbb", "ccc"], c: { x: 100., y: {{ +CC/ }} } } ]
                     """,
                 definiteIslAsString =
-                    """
+                """
                     type::{ name: $typeName, type: bag,
                         element: {
                             type: struct,
@@ -2029,7 +2086,7 @@ class SchemaInferencerFromExampleTests : TestBase() {
                     }
                     """,
                 islAsString =
-                    """
+                """
                     type::{ name: $typeName, type: bag,
                         element: {
                             type: struct, content: closed,

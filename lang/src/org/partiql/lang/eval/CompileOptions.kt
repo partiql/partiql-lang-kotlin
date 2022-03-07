@@ -45,7 +45,6 @@ enum class ProjectionIterationBehavior {
     FILTER_MISSING, UNFILTERED
 }
 
-
 /**
  * Indicates how the evaluator is to handle type checking errors and how `MISSING` values are propagated
  * when encountered while evaluating binary operators and function calls.
@@ -73,7 +72,7 @@ enum class TypingMode {
      */
     PERMISSIVE
 
-    //TODO: STRICT
+    // TODO: STRICT
 }
 
 /**
@@ -192,13 +191,13 @@ data class CompileOptions private constructor (
         fun undefinedVariable(value: UndefinedVariableBehavior) = set { copy(undefinedVariable = value) }
         fun projectionIteration(value: ProjectionIterationBehavior) = set { copy(projectionIteration = value) }
         fun visitorTransformMode(value: VisitorTransformMode) = set { copy(visitorTransformMode = value) }
-        fun typingMode(value: TypingMode) = set { copy(typingMode = value)}
-        fun typedOpBehavior(value: TypedOpBehavior) = set { copy(typedOpBehavior = value)}
-        fun thunkOptions(value: ThunkOptions) = set { copy(thunkOptions = value)}
-        fun evaluationTimeTypeChecks(value: ThunkReturnTypeAssertions) = set { copy(thunkReturnTypeAssertions = value )}
+        fun typingMode(value: TypingMode) = set { copy(typingMode = value) }
+        fun typedOpBehavior(value: TypedOpBehavior) = set { copy(typedOpBehavior = value) }
+        fun thunkOptions(value: ThunkOptions) = set { copy(thunkOptions = value) }
+        fun evaluationTimeTypeChecks(value: ThunkReturnTypeAssertions) = set { copy(thunkReturnTypeAssertions = value) }
         fun defaultTimezoneOffset(value: ZoneOffset) = set { copy(defaultTimezoneOffset = value) }
 
-        private inline fun set(block: CompileOptions.() -> CompileOptions) : Builder {
+        private inline fun set(block: CompileOptions.() -> CompileOptions): Builder {
             options = block(options)
             return this
         }

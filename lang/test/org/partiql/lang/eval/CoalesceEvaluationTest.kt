@@ -27,7 +27,8 @@ class CoalesceEvaluationTest : EvaluatorTestBase() {
     data class CoalesceTestCase(
         val args: List<String>,
         val expectedLegacyResult: String,
-        val expectedPermissiveResult: String = expectedLegacyResult)
+        val expectedPermissiveResult: String = expectedLegacyResult
+    )
 
     @ParameterizedTest
     @MethodSource("coalesceEvaluationTests")
@@ -35,48 +36,78 @@ class CoalesceEvaluationTest : EvaluatorTestBase() {
         assertEvalExprValue(
             "coalesce(${tc.args.joinToString(",")})",
             expectedLegacyModeResult = tc.expectedLegacyResult,
-            expectedPermissiveModeResult = tc.expectedPermissiveResult)
+            expectedPermissiveModeResult = tc.expectedPermissiveResult
+        )
 
     companion object {
         fun testCase(
             vararg args: String,
             expectedLegacyResult: String,
-            expectedPermissiveResult: String = expectedLegacyResult) =
+            expectedPermissiveResult: String = expectedLegacyResult
+        ) =
             CoalesceTestCase(args.toList(), expectedLegacyResult, expectedPermissiveResult)
 
         @JvmStatic
         @Suppress("unused")
         fun coalesceEvaluationTests() = listOf(
-            testCase("null",
-                expectedLegacyResult = "null"),
-            testCase("null", "null",
-                expectedLegacyResult = "null"),
-            testCase("missing", "null", "missing",
-                expectedLegacyResult = "null"),
-            testCase("null", "missing",
-                expectedLegacyResult = "null"),
-            testCase("missing",
+            testCase(
+                "null",
+                expectedLegacyResult = "null"
+            ),
+            testCase(
+                "null", "null",
+                expectedLegacyResult = "null"
+            ),
+            testCase(
+                "missing", "null", "missing",
+                expectedLegacyResult = "null"
+            ),
+            testCase(
+                "null", "missing",
+                expectedLegacyResult = "null"
+            ),
+            testCase(
+                "missing",
                 expectedLegacyResult = "null",
-                expectedPermissiveResult = "missing"),
-            testCase("missing", "missing",
+                expectedPermissiveResult = "missing"
+            ),
+            testCase(
+                "missing", "missing",
                 expectedLegacyResult = "null",
-                expectedPermissiveResult = "missing"),
-            testCase("1", "null",
-                expectedLegacyResult = "1"),
-            testCase("null", "2",
-                expectedLegacyResult = "2"),
-            testCase("1", "missing",
-                expectedLegacyResult = "1"),
-            testCase("missing", "2",
-                expectedLegacyResult = "2"),
-            testCase("null", "missing", "null", "null", "2", "3", "4", "5",
-                expectedLegacyResult = "2"),
-            testCase("null", "null", "2", "3", "4", "5",
-                expectedLegacyResult = "2"),
-            testCase("missing", "missing", "2", "3", "4", "5",
-                expectedLegacyResult = "2"),
-            testCase("null", "missing", "null", "null", "2 in [1,2,3]", "3", "4", "5",
-                expectedLegacyResult = "true")
+                expectedPermissiveResult = "missing"
+            ),
+            testCase(
+                "1", "null",
+                expectedLegacyResult = "1"
+            ),
+            testCase(
+                "null", "2",
+                expectedLegacyResult = "2"
+            ),
+            testCase(
+                "1", "missing",
+                expectedLegacyResult = "1"
+            ),
+            testCase(
+                "missing", "2",
+                expectedLegacyResult = "2"
+            ),
+            testCase(
+                "null", "missing", "null", "null", "2", "3", "4", "5",
+                expectedLegacyResult = "2"
+            ),
+            testCase(
+                "null", "null", "2", "3", "4", "5",
+                expectedLegacyResult = "2"
+            ),
+            testCase(
+                "missing", "missing", "2", "3", "4", "5",
+                expectedLegacyResult = "2"
+            ),
+            testCase(
+                "null", "missing", "null", "null", "2 in [1,2,3]", "3", "4", "5",
+                expectedLegacyResult = "true"
+            )
         )
     }
 }

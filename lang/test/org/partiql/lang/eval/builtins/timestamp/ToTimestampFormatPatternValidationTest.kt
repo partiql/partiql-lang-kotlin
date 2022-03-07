@@ -10,7 +10,6 @@ import org.partiql.lang.eval.EvaluatorTestBase
 import org.partiql.lang.util.sourceLocationProperties
 import org.partiql.lang.util.to
 
-
 @RunWith(JUnitParamsRunner::class)
 class ToTimestampFormatPatternValidationTest : EvaluatorTestBase() {
 
@@ -22,7 +21,8 @@ class ToTimestampFormatPatternValidationTest : EvaluatorTestBase() {
             "TO_TIMESTAMP('doesnt matter', 'yyyy M dd H m a')",
             ErrorCode.EVALUATOR_TIMESTAMP_FORMAT_PATTERN_HOUR_CLOCK_AM_PM_MISMATCH,
             sourceLocationProperties(1, 1) + mapOf(Property.TIMESTAMP_FORMAT_PATTERN to "yyyy M dd H m a"),
-            expectedPermissiveModeResult = "MISSING")
+            expectedPermissiveModeResult = "MISSING"
+        )
     }
 
     @Test
@@ -31,7 +31,8 @@ class ToTimestampFormatPatternValidationTest : EvaluatorTestBase() {
             "TO_TIMESTAMP('doesnt matter', 'yyyy M dd h m')",
             ErrorCode.EVALUATOR_TIMESTAMP_FORMAT_PATTERN_HOUR_CLOCK_AM_PM_MISMATCH,
             sourceLocationProperties(1, 1) + mapOf(Property.TIMESTAMP_FORMAT_PATTERN to "yyyy M dd h m"),
-            expectedPermissiveModeResult = "MISSING")
+            expectedPermissiveModeResult = "MISSING"
+        )
     }
 
     @Test
@@ -40,7 +41,8 @@ class ToTimestampFormatPatternValidationTest : EvaluatorTestBase() {
             "TO_TIMESTAMP('doesnt matter', 'y MMMMM')",
             ErrorCode.EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_SYMBOL_FOR_PARSING,
             sourceLocationProperties(1, 1) + mapOf(Property.TIMESTAMP_FORMAT_PATTERN to "y MMMMM"),
-            expectedPermissiveModeResult = "MISSING")
+            expectedPermissiveModeResult = "MISSING"
+        )
     }
 
     fun parametersForIncompleteFormatPatternTest() = listOf(
@@ -76,21 +78,23 @@ class ToTimestampFormatPatternValidationTest : EvaluatorTestBase() {
         ValidationTestCase("yyyy-M-d-h-m-S", "SECOND_OF_MINUTE")
     )
 
-
     @Test
     @Parameters
     fun incompleteFormatPatternTest(testCase: ValidationTestCase) {
-        checkInputThrowingEvaluationException("TO_TIMESTAMP('doesnt matter', '${testCase.pattern.replace("'", "''")}')",
+        checkInputThrowingEvaluationException(
+            "TO_TIMESTAMP('doesnt matter', '${testCase.pattern.replace("'", "''")}')",
             ErrorCode.EVALUATOR_INCOMPLETE_TIMESTAMP_FORMAT_PATTERN,
-            sourceLocationProperties(1, 1) + mapOf(Property.TIMESTAMP_FORMAT_PATTERN to testCase.pattern,
-                  Property.TIMESTAMP_FORMAT_PATTERN_FIELDS to testCase.fields
+            sourceLocationProperties(1, 1) + mapOf(
+                Property.TIMESTAMP_FORMAT_PATTERN to testCase.pattern,
+                Property.TIMESTAMP_FORMAT_PATTERN_FIELDS to testCase.fields
             ),
-            expectedPermissiveModeResult = "MISSING")
+            expectedPermissiveModeResult = "MISSING"
+        )
     }
 
     fun parametersForDuplicateFieldPatternTest() = listOf(
 
-        //y, yy, and yyyy
+        // y, yy, and yyyy
         ValidationTestCase("y y", "YEAR"),
         ValidationTestCase("y yy", "YEAR"),
         ValidationTestCase("y yyyy", "YEAR"),
@@ -100,8 +104,8 @@ class ToTimestampFormatPatternValidationTest : EvaluatorTestBase() {
         ValidationTestCase("yyyy y", "YEAR"),
         ValidationTestCase("yyyy yy", "YEAR"),
         ValidationTestCase("yyyy yyyy", "YEAR"),
-        
-        //M, MM and MMMM
+
+        // M, MM and MMMM
         ValidationTestCase("M M", "MONTH_OF_YEAR"),
         ValidationTestCase("M MM", "MONTH_OF_YEAR"),
         ValidationTestCase("M MMM", "MONTH_OF_YEAR"),
@@ -119,12 +123,12 @@ class ToTimestampFormatPatternValidationTest : EvaluatorTestBase() {
         ValidationTestCase("MMMM MMM", "MONTH_OF_YEAR"),
         ValidationTestCase("MMMM MMMM", "MONTH_OF_YEAR"),
 
-        //d and dd
+        // d and dd
         ValidationTestCase("d d", "DAY_OF_MONTH"),
         ValidationTestCase("d dd", "DAY_OF_MONTH"),
         ValidationTestCase("dd dd", "DAY_OF_MONTH"),
-        
-        //h, hh, H and HH
+
+        // h, hh, H and HH
         ValidationTestCase("h h", "HOUR_OF_DAY"),
         ValidationTestCase("h hh", "HOUR_OF_DAY"),
         ValidationTestCase("hh hh", "HOUR_OF_DAY"),
@@ -133,25 +137,25 @@ class ToTimestampFormatPatternValidationTest : EvaluatorTestBase() {
         ValidationTestCase("HH HH", "HOUR_OF_DAY"),
         ValidationTestCase("h H", "HOUR_OF_DAY"),
         ValidationTestCase("hh HH", "HOUR_OF_DAY"),
-        
-        //m and mm
+
+        // m and mm
         ValidationTestCase("m m", "MINUTE_OF_HOUR"),
         ValidationTestCase("m mm", "MINUTE_OF_HOUR"),
         ValidationTestCase("mm mm", "MINUTE_OF_HOUR"),
-        
-        //s and s
+
+        // s and s
         ValidationTestCase("s s", "SECOND_OF_MINUTE"),
         ValidationTestCase("s ss", "SECOND_OF_MINUTE"),
         ValidationTestCase("ss ss", "SECOND_OF_MINUTE"),
 
-        //n, S and S
+        // n, S and S
         ValidationTestCase("n S", "FRACTION_OF_SECOND"),
         ValidationTestCase("n SS", "FRACTION_OF_SECOND"),
         ValidationTestCase("S SS", "FRACTION_OF_SECOND"),
         ValidationTestCase("S SSS", "FRACTION_OF_SECOND"),
         ValidationTestCase("S SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS", "FRACTION_OF_SECOND"),
 
-        //x, xx, xxx, xxxx, and xxxxx (y is needed to prevent validation error from a different rule)
+        // x, xx, xxx, xxxx, and xxxxx (y is needed to prevent validation error from a different rule)
         ValidationTestCase("y x x", "OFFSET"),
         ValidationTestCase("y x xx", "OFFSET"),
         ValidationTestCase("y x xxx", "OFFSET"),
@@ -178,7 +182,7 @@ class ToTimestampFormatPatternValidationTest : EvaluatorTestBase() {
         ValidationTestCase("y xxxxx xxxx", "OFFSET"),
         ValidationTestCase("y xxxxx xxxxx", "OFFSET"),
 
-        //X, XX, XXX, XXXX and XXXXX
+        // X, XX, XXX, XXXX and XXXXX
         ValidationTestCase("y X X", "OFFSET"),
         ValidationTestCase("y X XX", "OFFSET"),
         ValidationTestCase("y X XXX", "OFFSET"),
@@ -205,7 +209,7 @@ class ToTimestampFormatPatternValidationTest : EvaluatorTestBase() {
         ValidationTestCase("y XXXXX XXXX", "OFFSET"),
         ValidationTestCase("y XXXXX XXXXX", "OFFSET"),
 
-        //x and X (mixed case)
+        // x and X (mixed case)
         ValidationTestCase("y x X", "OFFSET"),
         ValidationTestCase("y x XX", "OFFSET"),
         ValidationTestCase("y x XXX", "OFFSET"),
@@ -236,12 +240,14 @@ class ToTimestampFormatPatternValidationTest : EvaluatorTestBase() {
     @Test
     @Parameters
     fun duplicateFieldPatternTest(testCase: ValidationTestCase) {
-        checkInputThrowingEvaluationException("TO_TIMESTAMP('doesnt matter', '${testCase.pattern}')",
-          ErrorCode.EVALUATOR_TIMESTAMP_FORMAT_PATTERN_DUPLICATE_FIELDS,
-          sourceLocationProperties(1, 1) + mapOf(Property.TIMESTAMP_FORMAT_PATTERN to testCase.pattern,
-                                                 Property.TIMESTAMP_FORMAT_PATTERN_FIELDS to testCase.fields
-          ),
-          expectedPermissiveModeResult = "MISSING")
+        checkInputThrowingEvaluationException(
+            "TO_TIMESTAMP('doesnt matter', '${testCase.pattern}')",
+            ErrorCode.EVALUATOR_TIMESTAMP_FORMAT_PATTERN_DUPLICATE_FIELDS,
+            sourceLocationProperties(1, 1) + mapOf(
+                Property.TIMESTAMP_FORMAT_PATTERN to testCase.pattern,
+                Property.TIMESTAMP_FORMAT_PATTERN_FIELDS to testCase.fields
+            ),
+            expectedPermissiveModeResult = "MISSING"
+        )
     }
 }
-

@@ -27,10 +27,12 @@ class SuiteBuilderImpl : SuiteBuilder {
     }
 
     override infix fun String.hasVal(ionText: String) =
-        globals.put(this,
-            assertDoesNotThrow("Parsing global variable '${this}' should not throw") {
+        globals.put(
+            this,
+            assertDoesNotThrow("Parsing global variable '$this' should not throw") {
                 ION.singleValue(ionText)
-            })
+            }
+        )
 
     override fun parameterFactory(block: (ExprValueFactory) -> List<ExprValue>) {
         factoryBlock = block

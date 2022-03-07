@@ -33,7 +33,27 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.builtins.createBuiltinFunctionSignatures
 import org.partiql.lang.eval.delegate
 import org.partiql.lang.eval.getStartingSourceLocationMeta
-import org.partiql.lang.types.*
+import org.partiql.lang.types.AnyOfType
+import org.partiql.lang.types.AnyType
+import org.partiql.lang.types.BagType
+import org.partiql.lang.types.BoolType
+import org.partiql.lang.types.CollectionType
+import org.partiql.lang.types.DecimalType
+import org.partiql.lang.types.FloatType
+import org.partiql.lang.types.FunctionSignature
+import org.partiql.lang.types.IntType
+import org.partiql.lang.types.ListType
+import org.partiql.lang.types.MissingType
+import org.partiql.lang.types.NullType
+import org.partiql.lang.types.NumberConstraint
+import org.partiql.lang.types.SexpType
+import org.partiql.lang.types.SingleType
+import org.partiql.lang.types.StaticType
+import org.partiql.lang.types.StringType
+import org.partiql.lang.types.StructType
+import org.partiql.lang.types.TypedOpParameter
+import org.partiql.lang.types.UnknownArguments
+import org.partiql.lang.types.toTypedOpParameter
 import org.partiql.lang.util.cartesianProduct
 
 /**
@@ -79,8 +99,10 @@ internal class StaticTypeInferenceVisitorTransform(
      * - 1 is the top-most statement with a `FROM` clause (i.e. select-from-where or DML operation),
      * - Values > 1 are for each subsequent level of nested sub-query.
      */
-    private inner class VisitorTransform(private val parentEnv: Bindings<TypeAndDepth>,
-                                 private val currentScopeDepth: Int) : VisitorTransformBase() {
+    private inner class VisitorTransform(
+        private val parentEnv: Bindings<TypeAndDepth>,
+        private val currentScopeDepth: Int
+    ) : VisitorTransformBase() {
 
         /** Specifies the current scope search order--default is LEXICAL. */
         private var scopeOrder = ScopeSearchOrder.LEXICAL
@@ -201,8 +223,10 @@ internal class StaticTypeInferenceVisitorTransform(
         private fun addLocal(name: String, type: StaticType) {
             val existing = localsOnlyEnv[BindingName(name, BindingCase.INSENSITIVE)]
             if (existing != null) {
-                TODO("A variable named '$name' was already defined in this scope. " +
-                    "This wouldn't be the case if StaticTypeVisitorTransform was executed first.")
+                TODO(
+                    "A variable named '$name' was already defined in this scope. " +
+                        "This wouldn't be the case if StaticTypeVisitorTransform was executed first."
+                )
             }
             localsMap[name] = type
             // this requires a new instance because of how [Bindings.ofMap] works
@@ -237,8 +261,10 @@ internal class StaticTypeInferenceVisitorTransform(
         override fun transformExprId(node: PartiqlAst.Expr.Id): PartiqlAst.Expr {
             val bindingName = BindingName(node.name.text, node.case.toBindingCase())
 
-            val foundType = findBind(bindingName, node.qualifier) ?: error("No such variable named ${node.name.text}. " +
-                "This wouldn't be the case if StaticTypeVisitorTransform was executed first.")
+            val foundType = findBind(bindingName, node.qualifier) ?: error(
+                "No such variable named ${node.name.text}. " +
+                    "This wouldn't be the case if StaticTypeVisitorTransform was executed first."
+            )
 
             return node.withStaticType(foundType)
         }
@@ -403,8 +429,8 @@ internal class StaticTypeInferenceVisitorTransform(
             val nAry = super.transformExprNot(node) as PartiqlAst.Expr.Not
             val args = listOf(nAry.expr)
             return if (hasValidOperandTypes(args, { it is BoolType }, "NOT", nAry.metas)) {
-                transformNAry(nAry, args) { recurseForNAryOperations(nAry, it, ::getTypeForNAryLogicalOperations) }
-            } else {
+            transformNAry(nAry, args) { recurseForNAryOperations(nAry, it, ::getTypeForNAryLogicalOperations) }
+        } else {
                 nAry.withStaticType(StaticType.BOOL)
             }
         }
@@ -412,8 +438,8 @@ internal class StaticTypeInferenceVisitorTransform(
         override fun transformExprAnd(node: PartiqlAst.Expr.And): PartiqlAst.Expr {
             val nAry = super.transformExprAnd(node) as PartiqlAst.Expr.And
             return if (hasValidOperandTypes(nAry.operands, { it is BoolType }, "AND", nAry.metas)) {
-                transformNAry(nAry, nAry.operands) { recurseForNAryOperations(nAry, it, ::getTypeForNAryLogicalOperations) }
-            } else {
+            transformNAry(nAry, nAry.operands) { recurseForNAryOperations(nAry, it, ::getTypeForNAryLogicalOperations) }
+        } else {
                 nAry.withStaticType(StaticType.BOOL)
             }
         }
@@ -421,8 +447,8 @@ internal class StaticTypeInferenceVisitorTransform(
         override fun transformExprOr(node: PartiqlAst.Expr.Or): PartiqlAst.Expr {
             val nAry = super.transformExprOr(node) as PartiqlAst.Expr.Or
             return if (hasValidOperandTypes(nAry.operands, { it is BoolType }, "OR", nAry.metas)) {
-                transformNAry(nAry, nAry.operands) { recurseForNAryOperations(nAry, it, ::getTypeForNAryLogicalOperations) }
-            } else {
+            transformNAry(nAry, nAry.operands) { recurseForNAryOperations(nAry, it, ::getTypeForNAryLogicalOperations) }
+        } else {
                 nAry.withStaticType(StaticType.BOOL)
             }
         }
@@ -461,8 +487,8 @@ internal class StaticTypeInferenceVisitorTransform(
 
             // check if any non-unknown operand has no text type. if so, then data type mismatch
             return if (hasValidOperandTypes(nAry.operands, { it.isText() }, "||", nAry.metas)) {
-                transformNAry(nAry, nAry.operands) { recurseForNAryOperations(nAry, operandsTypes, ::getTypeForNAryStringConcat) }
-            } else {
+            transformNAry(nAry, nAry.operands) { recurseForNAryOperations(nAry, operandsTypes, ::getTypeForNAryStringConcat) }
+        } else {
                 nAry.withStaticType(StaticType.STRING)
             }
         }
@@ -474,8 +500,8 @@ internal class StaticTypeInferenceVisitorTransform(
 
             // check if any non-unknown operand has no text type. if so, then data type mismatch
             return if (hasValidOperandTypes(args, { it.isText() }, "LIKE", nAry.metas)) {
-                transformNAry(nAry, args) { recurseForNAryOperations(nAry, it, ::getTypeForNAryLike) }
-            } else {
+            transformNAry(nAry, args) { recurseForNAryOperations(nAry, it, ::getTypeForNAryLike) }
+        } else {
                 nAry.withStaticType(StaticType.BOOL)
             }
         }
@@ -507,7 +533,8 @@ internal class StaticTypeInferenceVisitorTransform(
             operands: List<PartiqlAst.Expr>,
             operandTypeValidator: (StaticType) -> Boolean,
             op: String,
-            metas: MetaContainer): Boolean {
+            metas: MetaContainer
+        ): Boolean {
             val operandsTypes = operands.map { it.getStaticType() }
             var hasValidOperands = true
 
@@ -533,20 +560,20 @@ internal class StaticTypeInferenceVisitorTransform(
 
             // check if [argType] could be a numeric type
             return if (hasValidOperandTypes(operands, { it.isNumeric() }, op, expr.metas)) {
-                val allTypes = argType.allTypes
-                val possibleReturnTypes = allTypes.map { st ->
-                    when (st) {
-                        is IntType, is FloatType, is DecimalType -> st
-                        is NullType -> StaticType.NULL
-                        else -> StaticType.MISSING
-                    }
-                }.distinct()
-
-                when (possibleReturnTypes.size) {
-                    1 -> possibleReturnTypes.single()
-                    else -> StaticType.unionOf(*possibleReturnTypes.toTypedArray())
+            val allTypes = argType.allTypes
+            val possibleReturnTypes = allTypes.map { st ->
+                when (st) {
+                    is IntType, is FloatType, is DecimalType -> st
+                    is NullType -> StaticType.NULL
+                    else -> StaticType.MISSING
                 }
-            } else {
+            }.distinct()
+
+            when (possibleReturnTypes.size) {
+                1 -> possibleReturnTypes.single()
+                else -> StaticType.unionOf(*possibleReturnTypes.toTypedArray())
+            }
+        } else {
                 // continuation type of all numeric types to prevent incompatible types and unknown errors from propagating
                 StaticType.unionOf(StaticType.ALL_TYPES.filter { it.isNumeric() }.toSet())
             }
@@ -555,34 +582,34 @@ internal class StaticTypeInferenceVisitorTransform(
         private fun computeReturnTypeForArithmeticNAry(expr: PartiqlAst.Expr, operands: List<PartiqlAst.Expr>, op: String): StaticType {
             // check if all operands could be a numeric type
             return if (hasValidOperandTypes(operands, { it.isNumeric() }, op, expr.metas)) {
-                operands.map { it.getStaticType() }.reduce { lastType, currentType ->
-                    when {
-                        lastType is MissingType || currentType is MissingType -> StaticType.MISSING
-                        lastType is NullType || currentType is NullType -> StaticType.NULL
-                        else -> {
-                            val leftTypes = lastType.allTypes
-                            val rightTypes = currentType.allTypes
+            operands.map { it.getStaticType() }.reduce { lastType, currentType ->
+                when {
+                    lastType is MissingType || currentType is MissingType -> StaticType.MISSING
+                    lastType is NullType || currentType is NullType -> StaticType.NULL
+                    else -> {
+                        val leftTypes = lastType.allTypes
+                        val rightTypes = currentType.allTypes
 
-                            val possibleResultTypes: List<SingleType> =
-                                leftTypes.flatMap { type1 ->
-                                    rightTypes.map { type2 ->
-                                        computeBinaryArithmeticResultType(type1, type2)
-                                    }
-                                }.distinct()
-
-                            when (possibleResultTypes.size) {
-                                0 -> error("We always expect there to be at least one possible result type, even if is MISSING")
-                                1 -> {
-                                    // returning StaticType.MISSING from this branch is an error condition because the
-                                    // arithmetic operation can *never* succeed.
-                                    possibleResultTypes.first()
+                        val possibleResultTypes: List<SingleType> =
+                            leftTypes.flatMap { type1 ->
+                                rightTypes.map { type2 ->
+                                    computeBinaryArithmeticResultType(type1, type2)
                                 }
-                                else -> AnyOfType(possibleResultTypes.toSet())
+                            }.distinct()
+
+                        when (possibleResultTypes.size) {
+                            0 -> error("We always expect there to be at least one possible result type, even if is MISSING")
+                            1 -> {
+                                // returning StaticType.MISSING from this branch is an error condition because the
+                                // arithmetic operation can *never* succeed.
+                                possibleResultTypes.first()
                             }
+                            else -> AnyOfType(possibleResultTypes.toSet())
                         }
                     }
                 }
-            } else {
+            }
+        } else {
                 // continuation type of all numeric types to prevent incompatible types and unknown errors from propagating
                 StaticType.unionOf(StaticType.ALL_TYPES.filter { it.isNumeric() }.toSet())
             }
@@ -640,20 +667,20 @@ internal class StaticTypeInferenceVisitorTransform(
                     }
                 }.distinct()
 
-            return when(finalTypes.size) {
+            return when (finalTypes.size) {
                 1 -> finalTypes.first()
                 else -> StaticType.unionOf(*finalTypes.toTypedArray())
             }
         }
 
         private fun computeReturnTypeForBinaryIn(left: StaticType, right: StaticType): StaticType =
-            when(right) {
-                is NullType -> when(left) {
+            when (right) {
+                is NullType -> when (left) {
                     is MissingType -> StaticType.MISSING
                     else -> StaticType.NULL
                 }
                 is MissingType -> StaticType.MISSING
-                is CollectionType -> when(left) {
+                is CollectionType -> when (left) {
                     is NullType -> StaticType.NULL
                     is MissingType -> StaticType.MISSING
                     else -> {
@@ -671,11 +698,10 @@ internal class StaticTypeInferenceVisitorTransform(
                         StaticType.unionOf(possibleTypes).flatten()
                     }
                 }
-                else -> when(left) {
+                else -> when (left) {
                     is NullType -> StaticType.unionOf(StaticType.NULL, StaticType.MISSING)
                     else -> StaticType.MISSING
                 }
-
             }
 
         /**
@@ -861,7 +887,7 @@ internal class StaticTypeInferenceVisitorTransform(
         /**
          * Computes the return type of the function call based on the [FunctionSignature.unknownArguments]
          */
-        private fun computeReturnTypeForFunctionCall(signature: FunctionSignature, arguments: List<PartiqlAst.Expr>, functionMetas: MetaContainer) : StaticType {
+        private fun computeReturnTypeForFunctionCall(signature: FunctionSignature, arguments: List<PartiqlAst.Expr>, functionMetas: MetaContainer): StaticType {
             // Check for all the possible invalid number of argument cases. Throws an error if invalid number of arguments found.
             if (!signature.arity.contains(arguments.size)) {
                 handleIncorrectNumberOfArgumentsToFunctionCallError(signature.name, signature.arity, arguments.size, functionMetas.getSourceLocation())
@@ -876,7 +902,7 @@ internal class StaticTypeInferenceVisitorTransform(
         /**
          * Computes return type for functions with [FunctionSignature.unknownArguments] as [UnknownArguments.PASS_THRU]
          */
-        private fun returnTypeForPassThruFunction(signature: FunctionSignature, arguments: List<PartiqlAst.Expr>) : StaticType {
+        private fun returnTypeForPassThruFunction(signature: FunctionSignature, arguments: List<PartiqlAst.Expr>): StaticType {
             return when {
                 matchesAllArguments(arguments, signature) -> signature.returnType
                 matchesAtLeastOneArgument(arguments, signature) -> StaticType.unionOf(signature.returnType, StaticType.MISSING)
@@ -900,8 +926,7 @@ internal class StaticTypeInferenceVisitorTransform(
                 if (actualType.isUnknown()) {
                     handleNullOrMissingFunctionArgument(functionName, actualExpr.metas.getSourceLocation())
                     allArgsValid = false
-                }
-                else {
+                } else {
                     val actualNonUnknownType = actualType.filterNullMissing()
                     if (actualNonUnknownType.typeDomain.intersect(expectedType.typeDomain).isEmpty()) {
                         handleInvalidArgumentTypeForFunction(
@@ -920,7 +945,7 @@ internal class StaticTypeInferenceVisitorTransform(
         /**
          * Computes return type for functions with [FunctionSignature.unknownArguments] as [UnknownArguments.PROPAGATE]
          */
-        private fun returnTypeForPropagatingFunction(signature: FunctionSignature, arguments: List<PartiqlAst.Expr>) : StaticType {
+        private fun returnTypeForPropagatingFunction(signature: FunctionSignature, arguments: List<PartiqlAst.Expr>): StaticType {
             val requiredArgs = arguments.zip(signature.requiredParameters)
             val restOfArgs = arguments.drop(signature.requiredParameters.size)
 
@@ -976,24 +1001,26 @@ internal class StaticTypeInferenceVisitorTransform(
                     actual.getStaticType().typeDomain.intersect(expected.typeDomain).isNotEmpty()
                 }
 
-            val optionalArgumentMatches = when(signature.optionalParameter) {
+            val optionalArgumentMatches = when (signature.optionalParameter) {
                 null -> true
-                else -> arguments
-                    .getOrNull(signature.requiredParameters.size)
-                    ?.getStaticType()?.typeDomain
-                    ?.intersect(signature.optionalParameter.typeDomain)
-                    ?.isNotEmpty()
-                    ?: true
+                else ->
+                    arguments
+                        .getOrNull(signature.requiredParameters.size)
+                        ?.getStaticType()?.typeDomain
+                        ?.intersect(signature.optionalParameter.typeDomain)
+                        ?.isNotEmpty()
+                        ?: true
             }
 
-            val variadicArgumentsMatch = when(signature.variadicParameter) {
+            val variadicArgumentsMatch = when (signature.variadicParameter) {
                 null -> true
-                else -> arguments
-                    .drop(signature.requiredParameters.size)
-                    .all { arg ->
-                        val argType = arg.getStaticType()
-                        argType.typeDomain.intersect(signature.variadicParameter.type.typeDomain).isNotEmpty()
-                    }
+                else ->
+                    arguments
+                        .drop(signature.requiredParameters.size)
+                        .all { arg ->
+                            val argType = arg.getStaticType()
+                            argType.typeDomain.intersect(signature.variadicParameter.type.typeDomain).isNotEmpty()
+                        }
             }
 
             return requiredArgumentsMatch && optionalArgumentMatches && variadicArgumentsMatch
@@ -1008,15 +1035,17 @@ internal class StaticTypeInferenceVisitorTransform(
             // Checks if the actual StaticType is subtype of expected StaticType ( filtering the null/missing for PROPAGATING functions
             fun isSubType(actual: StaticType, expected: StaticType) =
                 when (signature.unknownArguments) {
-                    UnknownArguments.PROPAGATE -> when(actual) {
-                        is AnyOfType -> actual.copy(types = actual.types.filter {
-                            !it.isNullOrMissing()
-                        }.toSet())
+                    UnknownArguments.PROPAGATE -> when (actual) {
+                        is AnyOfType -> actual.copy(
+                            types = actual.types.filter {
+                                !it.isNullOrMissing()
+                            }.toSet()
+                        )
                         else -> actual
                     }
                     UnknownArguments.PASS_THRU -> actual
                 }
-                .isSubTypeOf(expected)
+                    .isSubTypeOf(expected)
 
             val requiredArgumentsMatch = arguments
                 .zip(signature.requiredParameters)
@@ -1025,7 +1054,7 @@ internal class StaticTypeInferenceVisitorTransform(
                     isSubType(st, expected)
                 }
 
-            val optionalArgumentMatches = when(signature.optionalParameter) {
+            val optionalArgumentMatches = when (signature.optionalParameter) {
                 null -> true
                 else -> {
                     val st = arguments
@@ -1038,16 +1067,17 @@ internal class StaticTypeInferenceVisitorTransform(
                 }
             }
 
-            val variadicArgumentsMatch = when(signature.variadicParameter) {
+            val variadicArgumentsMatch = when (signature.variadicParameter) {
                 null -> true
-                else -> arguments
-                    // We make an assumption here that either the optional or the variadic arguments are passed to the function.
-                    // This "drop" may not hold true if both, optional and variadic arguments, are allowed at the same time.
-                    .drop(signature.requiredParameters.size)
-                    .all { arg ->
-                        val st = arg.getStaticType()
-                        isSubType(st, signature.variadicParameter.type)
-                    }
+                else ->
+                    arguments
+                        // We make an assumption here that either the optional or the variadic arguments are passed to the function.
+                        // This "drop" may not hold true if both, optional and variadic arguments, are allowed at the same time.
+                        .drop(signature.requiredParameters.size)
+                        .all { arg ->
+                            val st = arg.getStaticType()
+                            isSubType(st, signature.variadicParameter.type)
+                        }
             }
 
             return requiredArgumentsMatch && optionalArgumentMatches && variadicArgumentsMatch
@@ -1337,9 +1367,7 @@ internal class StaticTypeInferenceVisitorTransform(
 
             if (exprType.isUnknown()) {
                 handleExpressionAlwaysReturnsNullOrMissingError(expr.getStartingSourceLocationMeta())
-            }
-
-            else if (exprType.allTypes.none { it == expectedType }) {
+            } else if (exprType.allTypes.none { it == expectedType }) {
                 handleIncompatibleDataTypeForExprError(
                     expectedType = expectedType,
                     actualType = exprType,
@@ -1398,7 +1426,6 @@ internal class StaticTypeInferenceVisitorTransform(
             val valueType = getUnpivotValueType(fromExprType)
             addLocal(asSymbolicName.text, valueType)
 
-
             node.atAlias?.let {
                 val valueHasMissing = valueType.typeDomain.contains(ExprValueType.MISSING)
                 val valueOnlyHasMissing = valueHasMissing && valueType.typeDomain.size == 1
@@ -1425,7 +1452,7 @@ internal class StaticTypeInferenceVisitorTransform(
         override fun transformExprPath(node: PartiqlAst.Expr.Path): PartiqlAst.Expr {
             val path = super.transformExprPath(node) as PartiqlAst.Expr.Path
             var currentType = path.root.getStaticType()
-            val newComponents = path.steps.map {  pathComponent ->
+            val newComponents = path.steps.map { pathComponent ->
                 currentType = when (pathComponent) {
                     is PartiqlAst.PathStep.PathExpr -> inferPathComponentExprType(currentType, pathComponent)
                     is PartiqlAst.PathStep.PathUnpivot -> TODO("PathUnpivot is not implemented yet")
@@ -1446,13 +1473,14 @@ internal class StaticTypeInferenceVisitorTransform(
 
         private fun inferPathComponentExprType(
             previousComponentType: StaticType,
-            currentPathComponent: PartiqlAst.PathStep.PathExpr): StaticType =
+            currentPathComponent: PartiqlAst.PathStep.PathExpr
+        ): StaticType =
             when (previousComponentType) {
                 is AnyType -> StaticType.ANY
                 is StructType -> inferStructLookupType(currentPathComponent, previousComponentType.fields, previousComponentType.contentClosed)
                 is ListType,
                 is SexpType -> {
-                    val previous = previousComponentType as CollectionType  // help Kotlin's type inference to be more specific
+                    val previous = previousComponentType as CollectionType // help Kotlin's type inference to be more specific
                     if (currentPathComponent.index.getStaticType() is IntType) {
                         previous.elementType
                     } else {
@@ -1466,8 +1494,7 @@ internal class StaticTypeInferenceVisitorTransform(
                             val prevTypes = previousComponentType.allTypes
                             if (prevTypes.any { it is AnyType }) {
                                 StaticType.ANY
-                            }
-                            else {
+                            } else {
                                 val staticTypes = prevTypes.map { inferPathComponentExprType(it, currentPathComponent) }
                                 AnyOfType(staticTypes.toSet()).flatten()
                             }
@@ -1480,7 +1507,8 @@ internal class StaticTypeInferenceVisitorTransform(
         private fun inferStructLookupType(
             currentPathComponent: PartiqlAst.PathStep.PathExpr,
             structFields: Map<String, StaticType>,
-            contentClosed: Boolean): StaticType =
+            contentClosed: Boolean
+        ): StaticType =
             when (currentPathComponent.index) {
                 is PartiqlAst.Expr.Lit -> {
                     if (currentPathComponent.index.value is StringElement) {
@@ -1488,7 +1516,8 @@ internal class StaticTypeInferenceVisitorTransform(
                         val caseSensitivity = currentPathComponent.case
                         val lookupName = BindingName(
                             currentPathComponent.index.value.stringValue,
-                            caseSensitivity.toBindingCase())
+                            caseSensitivity.toBindingCase()
+                        )
                         bindings[lookupName] ?: if (contentClosed) {
                             StaticType.MISSING
                         } else {
@@ -1559,8 +1588,10 @@ internal class StaticTypeInferenceVisitorTransform(
                     // TODO: Make the name optional in StaticType
                     StructType(projectionFields, contentClosed)
                 }
-                is PartiqlAst.Projection.ProjectStar -> error("Encountered a SelectListItemStar." +
-                                " This wouldn't be the case if SelectStarVisitorTransform ran before this.")
+                is PartiqlAst.Projection.ProjectStar -> error(
+                    "Encountered a SelectListItemStar." +
+                        " This wouldn't be the case if SelectStarVisitorTransform ran before this."
+                )
                 is PartiqlAst.Projection.ProjectValue -> newProjection.value.getStaticType()
                 is PartiqlAst.Projection.ProjectPivot -> TODO("PartiqlAst.Projection.ProjectPivot is not implemented yet")
             }

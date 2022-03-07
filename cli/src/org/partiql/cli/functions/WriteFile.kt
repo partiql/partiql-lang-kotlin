@@ -60,7 +60,8 @@ internal class WriteFile(valueFactory: ExprValueFactory) : BaseFunction(valueFac
     private val writeHandlers = mapOf(
         "tsv" to delimitedWriteHandler('\t'),
         "csv" to delimitedWriteHandler(','),
-        "ion" to PRETTY_ION_WRITER)
+        "ion" to PRETTY_ION_WRITER
+    )
 
     override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
         val fileName = required[0].stringValue()
@@ -72,8 +73,7 @@ internal class WriteFile(valueFactory: ExprValueFactory) : BaseFunction(valueFac
                 handler(results, it, valueFactory.ion.newEmptyStruct())
             }
             valueFactory.newBoolean(true)
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
             e.printStackTrace()
             valueFactory.newBoolean(false)
         }
@@ -91,8 +91,7 @@ internal class WriteFile(valueFactory: ExprValueFactory) : BaseFunction(valueFac
                 handler(results, it, options)
             }
             valueFactory.newBoolean(true)
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
             e.printStackTrace()
             valueFactory.newBoolean(false)
         }

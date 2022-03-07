@@ -5,7 +5,7 @@ import org.junit.Test
 
 class EvaluatingCompilerFromSourceByTests : EvaluatorTestBase() {
 
-    class AddressedExprValue(val value: Long, val valueFactory: ExprValueFactory): BaseExprValue(), Scalar, Addressed {
+    class AddressedExprValue(val value: Long, val valueFactory: ExprValueFactory) : BaseExprValue(), Scalar, Addressed {
 
         override val ionValue: IonValue
             get() = valueFactory.ion.newInt(value)
@@ -23,16 +23,26 @@ class EvaluatingCompilerFromSourceByTests : EvaluatorTestBase() {
     }
 
     val session = EvaluationSession.build {
-        globals(Bindings.ofMap(
-            mapOf(
-                "someList" to valueFactory.newList(sequenceOf(
-                    AddressedExprValue(1, valueFactory),
-                    AddressedExprValue(2, valueFactory),
-                    AddressedExprValue(3, valueFactory))),
-                "someBag" to valueFactory.newBag(sequenceOf(
-                    AddressedExprValue(11, valueFactory),
-                    AddressedExprValue(12, valueFactory),
-                    AddressedExprValue(13, valueFactory))))))
+        globals(
+            Bindings.ofMap(
+                mapOf(
+                    "someList" to valueFactory.newList(
+                        sequenceOf(
+                            AddressedExprValue(1, valueFactory),
+                            AddressedExprValue(2, valueFactory),
+                            AddressedExprValue(3, valueFactory)
+                        )
+                    ),
+                    "someBag" to valueFactory.newBag(
+                        sequenceOf(
+                            AddressedExprValue(11, valueFactory),
+                            AddressedExprValue(12, valueFactory),
+                            AddressedExprValue(13, valueFactory)
+                        )
+                    )
+                )
+            )
+        )
     }
 
     @Test

@@ -20,7 +20,6 @@ import java.util.EnumMap
 
 internal const val UNKNOWN: String = "<UNKNOWN>"
 
-
 /**
  * Categories for errors. Should map to stages in the Compiler and Evaluator.
  */
@@ -32,7 +31,6 @@ enum class ErrorCategory(val message: String) {
 
     override fun toString() = message
 }
-
 
 /** Each possible value that can be reported as part of an error has a
  * [Property]. [Property] is used as a key in [PropertyValueMap].
@@ -153,7 +151,6 @@ class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumM
      */
     operator fun get(key: Property): PropertyValue? = map[key]
 
-
     private fun <T> verifyTypeAndSet(prop: Property, expectedType: PropertyType, value: T, pValue: PropertyValue) {
         if (prop.propertyType == expectedType) {
             map[prop] = pValue
@@ -177,7 +174,6 @@ class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumM
         verifyTypeAndSet(key, PropertyType.STRING_CLASS, strValue, o)
     }
 
-
     /**
      * Given a `key` and a [Long] value, insert the key-value pair into the [PropertyValueMap].
      *
@@ -192,7 +188,6 @@ class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumM
         }
         verifyTypeAndSet(key, PropertyType.LONG_CLASS, longValue, o)
     }
-
 
     /**
      * Given a `key` and a [Int] value, insert the key-value pair into the [PropertyValueMap].
@@ -209,7 +204,6 @@ class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumM
         verifyTypeAndSet(key, PropertyType.INTEGER_CLASS, intValue, o)
     }
 
-
     /**
      * Given a `key` and a [IonValue] value, insert the key-value pair into the [PropertyValueMap].
      *
@@ -224,7 +218,6 @@ class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumM
         }
         verifyTypeAndSet(key, PropertyType.ION_VALUE_CLASS, ionValue, o)
     }
-
 
     /**
      * Given a `key` and a [TokenType] value, insert the key-value pair into the [PropertyValueMap].
@@ -241,7 +234,6 @@ class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumM
         verifyTypeAndSet(key, PropertyType.TOKEN_CLASS, tokenTypeValue, o)
     }
 
-
     /**
      * Predicate to check if [property] is already in this [PropertyValueMap]
      *
@@ -250,8 +242,5 @@ class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumM
      */
     fun hasProperty(property: Property) = map.containsKey(property)
 
-
     fun getProperties() = this.map.keys
-
 }
-

@@ -20,9 +20,11 @@ import org.partiql.lang.util.stringValue
 /**
  * Simple [IonValue] based token for lexing PartiQL.
  */
-data class Token(val type: TokenType,
-                 val value: IonValue? = null,
-                 val span: SourceSpan) {
+data class Token(
+    val type: TokenType,
+    val value: IonValue? = null,
+    val span: SourceSpan
+) {
     val text: String?
         get() = value?.stringValue()
 
@@ -48,7 +50,7 @@ data class Token(val type: TokenType,
         }
 
     val isUnaryOperator: Boolean
-        get() = when (type){
+        get() = when (type) {
             TokenType.OPERATOR, TokenType.KEYWORD -> text in UNARY_OPERATORS
             else -> false
         }

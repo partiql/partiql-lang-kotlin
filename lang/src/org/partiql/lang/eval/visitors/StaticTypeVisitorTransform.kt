@@ -58,9 +58,11 @@ enum class StaticTypeVisitorTransformConstraints {
  *                  perspective.
  * @param constraints Additional constraints on what variable scoping, or other rules should be followed.
  */
-class StaticTypeVisitorTransform(private val ion: IonSystem,
-                                 globalBindings: Bindings<StaticType>,
-                                 constraints: Set<StaticTypeVisitorTransformConstraints> = setOf()) : VisitorTransformBase() {
+class StaticTypeVisitorTransform(
+    private val ion: IonSystem,
+    globalBindings: Bindings<StaticType>,
+    constraints: Set<StaticTypeVisitorTransformConstraints> = setOf()
+) : VisitorTransformBase() {
 
     /** Used to allow certain binding lookups to occur directly in the global scope. */
     private val globalEnv = wrapBindings(globalBindings, 0)
@@ -110,8 +112,10 @@ class StaticTypeVisitorTransform(private val ion: IonSystem,
      * - 1 is the top-most statement with a `FROM` clause (i.e. select-from-where or DML operation),
      * - Values > 1 are for each subsequent level of nested sub-query.
      */
-    private inner class VisitorTransform(private val parentEnv: Bindings<TypeAndDepth>,
-                                         private val currentScopeDepth: Int) : VisitorTransformBase() {
+    private inner class VisitorTransform(
+        private val parentEnv: Bindings<TypeAndDepth>,
+        private val currentScopeDepth: Int
+    ) : VisitorTransformBase() {
 
         /** Specifies the current scope search order--default is LEXICAL. */
         private var scopeOrder = ScopeSearchOrder.LEXICAL
@@ -137,14 +141,16 @@ class StaticTypeVisitorTransform(private val ion: IonSystem,
         private var singleFromSourceName: String? = null
 
         private fun singleFromSourceRef(sourceName: String, metas: MetaContainer): PartiqlAst.Expr.Id {
-            val sourceType = currentEnv[BindingName(sourceName, BindingCase.SENSITIVE)] ?:
-                throw IllegalArgumentException("Could not find type for single FROM source variable")
+            val sourceType = currentEnv[BindingName(sourceName, BindingCase.SENSITIVE)]
+                ?: throw IllegalArgumentException("Could not find type for single FROM source variable")
 
             return PartiqlAst.build {
-                id(sourceName,
+                id(
+                    sourceName,
                     caseSensitive(),
                     localsFirst(),
-                    metas + metaContainerOf(StaticTypeMeta.TAG to StaticTypeMeta(sourceType.type)))
+                    metas + metaContainerOf(StaticTypeMeta.TAG to StaticTypeMeta(sourceType.type))
+                )
             }
         }
 
@@ -156,7 +162,7 @@ class StaticTypeVisitorTransform(private val ion: IonSystem,
         private fun errUnboundName(name: String, case: PartiqlAst.CaseSensitivity, metas: MetaContainer): Nothing =
             throw SemanticException(
                 "No such variable named '$name'",
-                when(case) {
+                when (case) {
                     is PartiqlAst.CaseSensitivity.CaseInsensitive -> ErrorCode.SEMANTIC_UNBOUND_BINDING
                     is PartiqlAst.CaseSensitivity.CaseSensitive -> ErrorCode.SEMANTIC_UNBOUND_QUOTED_BINDING
                 },
@@ -210,7 +216,8 @@ class StaticTypeVisitorTransform(private val ion: IonSystem,
                     node.setq,
                     node.funcName,
                     transformExpr(node.arg),
-                    transformMetas(node.metas))
+                    transformMetas(node.metas)
+                )
             }
         }
 
@@ -220,10 +227,10 @@ class StaticTypeVisitorTransform(private val ion: IonSystem,
                 else -> {
                     val (type, depth) = match
                     val scope = when {
-                        depth == 0                 -> BindingScope.GLOBAL
-                        depth < currentScopeDepth  -> BindingScope.LEXICAL
+                        depth == 0 -> BindingScope.GLOBAL
+                        depth < currentScopeDepth -> BindingScope.LEXICAL
                         depth == currentScopeDepth -> BindingScope.LOCAL
-                        else                       -> error("Unexpected: depth should never be > currentScopeDepth")
+                        else -> error("Unexpected: depth should never be > currentScopeDepth")
                     }
                     TypeAndScope(type, scope)
                 }
@@ -237,11 +244,11 @@ class StaticTypeVisitorTransform(private val ion: IonSystem,
          */
         private fun findBind(bindingName: BindingName, scopeQualifier: PartiqlAst.ScopeQualifier): TypeAndScope? {
             // Override the current scope search order if the var is lexically qualified.
-            val overridenScopeSearchOrder = when(scopeQualifier) {
+            val overridenScopeSearchOrder = when (scopeQualifier) {
                 is PartiqlAst.ScopeQualifier.LocalsFirst -> ScopeSearchOrder.LEXICAL
                 is PartiqlAst.ScopeQualifier.Unqualified -> this.scopeOrder
             }
-            val scopes: List<Bindings<TypeAndDepth>> = when(overridenScopeSearchOrder) {
+            val scopes: List<Bindings<TypeAndDepth>> = when (overridenScopeSearchOrder) {
                 ScopeSearchOrder.GLOBALS_THEN_LEXICAL -> listOf(globalEnv, currentEnv)
                 ScopeSearchOrder.LEXICAL -> listOf(currentEnv, globalEnv)
             }
@@ -284,10 +291,10 @@ class StaticTypeVisitorTransform(private val ion: IonSystem,
                     // If we found a variable in the global scope but a there is a single
                     // from source, we should transform to this to path expression anyway and pretend
                     // we didn't match the global variable.
-                    singleBinding != null                                  -> {
+                    singleBinding != null -> {
                         return makePathIntoFromSource(singleBinding, node)
                     }
-                    preventGlobalsExceptInFrom && fromVisited       -> {
+                    preventGlobalsExceptInFrom && fromVisited -> {
                         errIllegalGlobalVariableAccess(bindingName.name, node.metas)
                     }
                     preventGlobalsInNestedQueries && currentScopeDepth > 1 -> {
@@ -296,14 +303,16 @@ class StaticTypeVisitorTransform(private val ion: IonSystem,
                 }
             }
 
-            val newScopeQualifier = when(found.scope) {
+            val newScopeQualifier = when (found.scope) {
                 BindingScope.LOCAL, BindingScope.LEXICAL -> PartiqlAst.build { localsFirst() }
                 BindingScope.GLOBAL -> PartiqlAst.build { unqualified() }
             }
 
             return PartiqlAst.build {
-                id_(node.name, node.case, newScopeQualifier,
-                    node.metas + metaContainerOf(StaticTypeMeta.TAG to StaticTypeMeta(found.type)))
+                id_(
+                    node.name, node.case, newScopeQualifier,
+                    node.metas + metaContainerOf(StaticTypeMeta.TAG to StaticTypeMeta(found.type))
+                )
             }
         }
 
@@ -316,7 +325,8 @@ class StaticTypeVisitorTransform(private val ion: IonSystem,
                 path(
                     singleFromSourceRef(fromSourceAlias, node.extractSourceLocation()),
                     listOf(node.toPathExpr()),
-                    node.extractSourceLocation())
+                    node.extractSourceLocation()
+                )
             }
         }
 
@@ -338,8 +348,8 @@ class StaticTypeVisitorTransform(private val ion: IonSystem,
                         else -> it
                     }
                 }
-            else -> super.transformExprPath(node)
-        }
+                else -> super.transformExprPath(node)
+            }
 
         override fun transformFromSourceScan(node: PartiqlAst.FromSource.Scan): PartiqlAst.FromSource {
             // we need to transform the source expression before binding the names to our scope
@@ -354,8 +364,10 @@ class StaticTypeVisitorTransform(private val ion: IonSystem,
             }
 
             val asSymbolicName = node.asAlias
-                                 ?: error("fromSourceLet.variables.asName is null.  This wouldn't be the case if " +
-                                     "FromSourceAliasVisitorTransform was executed first.")
+                ?: error(
+                    "fromSourceLet.variables.asName is null.  This wouldn't be the case if " +
+                        "FromSourceAliasVisitorTransform was executed first."
+                )
 
             addLocal(asSymbolicName.text, StaticType.ANY, asSymbolicName.metas)
 
@@ -381,8 +393,10 @@ class StaticTypeVisitorTransform(private val ion: IonSystem,
             }
 
             val asSymbolicName = node.asAlias
-                                 ?: error("fromSourceLet.variables.asName is null.  This wouldn't be the case if " +
-                                     "FromSourceAliasVisitorTransform was executed first.")
+                ?: error(
+                    "fromSourceLet.variables.asName is null.  This wouldn't be the case if " +
+                        "FromSourceAliasVisitorTransform was executed first."
+                )
 
             addLocal(asSymbolicName.text, StaticType.ANY, asSymbolicName.metas)
 
@@ -474,7 +488,8 @@ class StaticTypeVisitorTransform(private val ion: IonSystem,
                 dropIndex(
                     node.table,
                     node.keys,
-                    transformMetas(node.metas))
+                    transformMetas(node.metas)
+                )
             }
     }
 

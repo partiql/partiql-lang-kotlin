@@ -16,7 +16,11 @@ package org.partiql.lang.eval
 
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.NaturalExprValueComparators.NullOrder
-import org.partiql.lang.util.*
+import org.partiql.lang.util.compareTo
+import org.partiql.lang.util.isNaN
+import org.partiql.lang.util.isNegInf
+import org.partiql.lang.util.isPosInf
+import org.partiql.lang.util.isZero
 
 /**
  * Provides a total, natural ordering over [ExprValue].  This ordering is consistent with
@@ -73,9 +77,11 @@ enum class NaturalExprValueComparators(private val nullOrder: NullOrder) : Compa
      * the left type is the specified condition and the right type isn't this implies
      * that the left value is less than the right and vice versa.
      */
-    private inline fun handle(leftTypeCond: Boolean,
-                              rightTypeCond: Boolean,
-                              sameTypeHandler: () -> Int): Int? = when {
+    private inline fun handle(
+        leftTypeCond: Boolean,
+        rightTypeCond: Boolean,
+        sameTypeHandler: () -> Int
+    ): Int? = when {
 
         leftTypeCond && rightTypeCond -> sameTypeHandler()
         leftTypeCond -> LESS
@@ -83,15 +89,17 @@ enum class NaturalExprValueComparators(private val nullOrder: NullOrder) : Compa
         else -> null
     }
 
-    private inline fun ifCompared(value: Int?, handler: (Int) -> Unit): Unit {
+    private inline fun ifCompared(value: Int?, handler: (Int) -> Unit) {
         if (value != null) {
             handler(value)
         }
     }
 
-    private fun <T> compareOrdered(left: Iterable<T>,
-                                   right: Iterable<T>,
-                                   comparator: Comparator<T>): Int {
+    private fun <T> compareOrdered(
+        left: Iterable<T>,
+        right: Iterable<T>,
+        comparator: Comparator<T>
+    ): Int {
         val lIter = left.iterator()
         val rIter = right.iterator()
 
@@ -111,9 +119,11 @@ enum class NaturalExprValueComparators(private val nullOrder: NullOrder) : Compa
         }
     }
 
-    private fun <T> compareUnordered(left: Iterable<T>,
-                                     right: Iterable<T>,
-                                     entityCmp: Comparator<T>): Int {
+    private fun <T> compareUnordered(
+        left: Iterable<T>,
+        right: Iterable<T>,
+        entityCmp: Comparator<T>
+    ): Int {
         val pairCmp = object : Comparator<Pair<T, Int>> {
             override fun compare(o1: Pair<T, Int>, o2: Pair<T, Int>): Int {
                 val cmp = entityCmp.compare(o1.first, o2.first)

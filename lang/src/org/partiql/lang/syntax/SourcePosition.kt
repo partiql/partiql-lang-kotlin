@@ -18,4 +18,3 @@ package org.partiql.lang.syntax
 data class SourcePosition(val line: Long, val column: Long) {
     override fun toString(): String = "line $line, column $column"
 }
-

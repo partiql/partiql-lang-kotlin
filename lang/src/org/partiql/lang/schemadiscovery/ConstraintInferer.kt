@@ -51,7 +51,7 @@ internal class TypeAndConstraintInferer(
     val constraintUnifier: ConstraintUnifier,
     val constraintDiscoverer: ConstraintDiscoverer = StandardConstraintDiscoverer(),
     private val importedTypes: List<Type> = emptyList()
-): ConstraintInferer {
+) : ConstraintInferer {
     private val nullNamedType = IonSchemaModel.build { namedType("\$null", nullable = ionBool(true)) }
     private val nullNamedTypeConstraintList = IonSchemaModel.build { constraintList(typeConstraint(nullNamedType)) }
     private val notNullable = ionBool(false)
@@ -174,8 +174,9 @@ internal class TypeAndConstraintInferer(
         }
 
         val structConstraints = mutableListOf(
-                IonSchemaModel.build { typeConstraint(namedType(TypeConstraint.STRUCT.typeName, notNullable)) },
-                IonSchemaModel.build { closedContent() })
+            IonSchemaModel.build { typeConstraint(namedType(TypeConstraint.STRUCT.typeName, notNullable)) },
+            IonSchemaModel.build { closedContent() }
+        )
 
         if (fields.isNotEmpty()) {
             structConstraints.add(

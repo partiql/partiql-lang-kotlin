@@ -29,8 +29,10 @@ import java.math.BigInteger
  */
 class SqlLexer(private val ion: IonSystem) : Lexer {
     /** Transition types. */
-    internal enum class StateType(val beginsToken: Boolean = false,
-                                  val endsToken: Boolean = false) {
+    internal enum class StateType(
+        val beginsToken: Boolean = false,
+        val endsToken: Boolean = false
+    ) {
         /** Indicates the initial state for recognition. */
         INITIAL(),
         /** Indicates an error state. */
@@ -85,12 +87,14 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
     }
 
     /** State node and corresponding state table. */
-    internal class TableState(override val stateType: StateType,
-                              override val tokenType: TokenType? = null,
-                              override val lexType: LexType = LexType.NONE,
-                              override val replacement: Int = REPLACE_SAME,
-                              var delegate: State = ERROR_STATE,
-                              setup: TableState.() -> Unit = { }) : State {
+    internal class TableState(
+        override val stateType: StateType,
+        override val tokenType: TokenType? = null,
+        override val lexType: LexType = LexType.NONE,
+        override val replacement: Int = REPLACE_SAME,
+        var delegate: State = ERROR_STATE,
+        setup: TableState.() -> Unit = { }
+    ) : State {
         /** Default table with null states. */
         val table = Array<State?>(TABLE_SIZE) { null }
 
@@ -105,7 +109,8 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
                 this[cp] = when (old) {
                     null -> new
                     else -> throw IllegalStateException(
-                        "Cannot replace existing state $old with $new")
+                        "Cannot replace existing state $old with $new"
+                    )
                 }
             }
         }
@@ -117,9 +122,11 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
 
         override fun get(next: Int): State = getFromTable(next) ?: delegate[next]
 
-        fun selfRepeatingDelegate(stateType: StateType,
-                                  tokenType: TokenType? = null,
-                                  lexType: LexType = LexType.NONE) {
+        fun selfRepeatingDelegate(
+            stateType: StateType,
+            tokenType: TokenType? = null,
+            lexType: LexType = LexType.NONE
+        ) {
             delegate = object : State {
                 override val stateType = stateType
                 override val tokenType = tokenType
@@ -128,13 +135,15 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
             }
         }
 
-        fun delta(chars: String,
-                  stateType: StateType,
-                  tokenType: TokenType? = null,
-                  lexType: LexType = LexType.NONE,
-                  replacement: Int = REPLACE_SAME,
-                  delegate: State = this,
-                  setup: TableState.(String) -> Unit = { }): TableState {
+        fun delta(
+            chars: String,
+            stateType: StateType,
+            tokenType: TokenType? = null,
+            lexType: LexType = LexType.NONE,
+            replacement: Int = REPLACE_SAME,
+            delegate: State = this,
+            setup: TableState.(String) -> Unit = { }
+        ): TableState {
             val child = TableState(stateType, tokenType, lexType, replacement, delegate) {
                 setup(chars)
             }
@@ -240,20 +249,20 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
                 delta(IDENT_CONTINUE_CHARS, StateType.TERMINAL, TokenType.IDENTIFIER)
             }
 
-            fun TableState.deltaDecimalInteger(stateType: StateType, lexType: LexType, setup: TableState.(String) -> Unit = { }): Unit {
+            fun TableState.deltaDecimalInteger(stateType: StateType, lexType: LexType, setup: TableState.(String) -> Unit = { }) {
                 delta(DIGIT_CHARS, stateType, TokenType.LITERAL, lexType, delegate = initialState) {
                     delta(DIGIT_CHARS, StateType.TERMINAL, TokenType.LITERAL, lexType)
                     setup(it)
                 }
             }
 
-            fun TableState.deltaDecimalFraction(setup: TableState.(String) -> Unit = { }): Unit {
+            fun TableState.deltaDecimalFraction(setup: TableState.(String) -> Unit = { }) {
                 delta(".", StateType.TERMINAL, TokenType.LITERAL, LexType.DECIMAL) {
                     deltaDecimalInteger(StateType.TERMINAL, LexType.DECIMAL, setup)
                 }
             }
 
-            fun TableState.deltaExponent(setup: TableState.(String) -> Unit = { }): Unit {
+            fun TableState.deltaExponent(setup: TableState.(String) -> Unit = { }) {
                 delta(E_NOTATION_CHARS, StateType.INCOMPLETE, delegate = ERROR_STATE) {
                     delta(SIGN_CHARS, StateType.INCOMPLETE, delegate = ERROR_STATE) {
                         deltaDecimalInteger(StateType.TERMINAL, LexType.DECIMAL, setup)
@@ -288,7 +297,7 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
 
             deltaNumber(StateType.START_AND_TERMINAL)
 
-            fun TableState.deltaQuote(quoteChar: String, tokenType: TokenType, lexType: LexType): Unit {
+            fun TableState.deltaQuote(quoteChar: String, tokenType: TokenType, lexType: LexType) {
                 delta(quoteChar, StateType.START, replacement = REPLACE_NOTHING) {
                     selfRepeatingDelegate(StateType.INCOMPLETE)
                     val quoteState = this
@@ -314,7 +323,7 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
                         delta(BACKTICK_CHARS, StateType.INCOMPLETE, delegate = ionCommentState)
                         delta(NL_WHITESPACE_CHARS, StateType.INCOMPLETE, delegate = quoteState)
                     }
-                    delta("*",  StateType.INCOMPLETE) {
+                    delta("*", StateType.INCOMPLETE) {
                         val ionCommentState = this
                         selfRepeatingDelegate(StateType.INCOMPLETE)
                         delta(BACKTICK_CHARS, StateType.INCOMPLETE, delegate = ionCommentState)
@@ -407,15 +416,13 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
      */
     private fun makePropertyBag(tokenString: String, tracker: PositionTracker): PropertyValueMap {
         val pvmap = PropertyValueMap()
-        pvmap[Property.LINE_NUMBER] =  tracker.line
-        pvmap[Property.COLUMN_NUMBER] =  tracker.col
-        pvmap[Property.TOKEN_STRING] =  tokenString
+        pvmap[Property.LINE_NUMBER] = tracker.line
+        pvmap[Property.COLUMN_NUMBER] = tracker.col
+        pvmap[Property.TOKEN_STRING] = tokenString
         return pvmap
     }
 
-
     override fun tokenize(source: String): List<Token> {
-
 
         val codePoints = source.codePointSequence() + EOF
 
@@ -427,9 +434,8 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
         var curr: State = INITIAL_STATE
         val buffer = StringBuilder()
 
-
         for (cp in codePoints) {
-            tokenCodePointCount++;
+            tokenCodePointCount++
 
             fun errInvalidChar(): Nothing =
                 throw LexerException(errorCode = ErrorCode.LEXER_INVALID_CHAR, errorContext = makePropertyBag(repr(cp), tracker))
@@ -441,15 +447,17 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
                 throw LexerException(errorCode = ErrorCode.LEXER_INVALID_LITERAL, errorContext = makePropertyBag(literal, tracker))
 
             fun errInvalidIonLiteral(literal: String, cause: IonException): Nothing =
-                throw LexerException(errorCode = ErrorCode.LEXER_INVALID_ION_LITERAL,
-                                     errorContext = makePropertyBag(literal, tracker),
-                                     cause = cause)
+                throw LexerException(
+                    errorCode = ErrorCode.LEXER_INVALID_ION_LITERAL,
+                    errorContext = makePropertyBag(literal, tracker),
+                    cause = cause
+                )
 
             tracker.advance(cp)
 
             // retrieve the next state
             val next = when (cp) {
-                EOF  -> EOF_STATE
+                EOF -> EOF_STATE
                 else -> curr[cp]
             }
 
@@ -537,24 +545,22 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
                                 }
                             }
                             TokenType.LITERAL -> when (curr.lexType) {
-                                LexType.SQ_STRING   -> ion.newString(text)
-                                LexType.INTEGER     -> ion.newInt(BigInteger(text, 10))
-                                LexType.DECIMAL     -> try {
+                                LexType.SQ_STRING -> ion.newString(text)
+                                LexType.INTEGER -> ion.newInt(BigInteger(text, 10))
+                                LexType.DECIMAL -> try {
                                     ion.newDecimal(bigDecimalOf(text))
-                                }
-                                catch (e: NumberFormatException) {
+                                } catch (e: NumberFormatException) {
                                     errInvalidLiteral(text)
                                 }
 
-                                else        -> errInvalidLiteral(text)
+                                else -> errInvalidLiteral(text)
                             }
                             TokenType.ION_LITERAL -> {
                                 try {
                                     // anything wrapped by `` is considered as an ion literal, including invalid
                                     // ion so we need to handle the exception here for proper error reporting
                                     ion.singleValue(text)
-                                }
-                                catch (e: IonException) {
+                                } catch (e: IonException) {
                                     errInvalidIonLiteral(text, e)
                                 }
                             }
@@ -568,7 +574,9 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
                             Token(
                                 type = tokenType,
                                 value = ionValue,
-                                span = SourceSpan(currPos.line, currPos.column, tokenCodePointCount)))
+                                span = SourceSpan(currPos.line, currPos.column, tokenCodePointCount)
+                            )
+                        )
                     }
 
                     // get ready for next token
@@ -579,10 +587,12 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
             }
             val replacement = next.replacement
             if (cp != EOF && replacement != REPLACE_NOTHING) {
-                buffer.appendCodePoint(when (replacement) {
-                    REPLACE_SAME -> cp
-                    else -> replacement
-                })
+                buffer.appendCodePoint(
+                    when (replacement) {
+                        REPLACE_SAME -> cp
+                        else -> replacement
+                    }
+                )
             }
 
             // if next state is the EOF marker add it to `tokens`.
@@ -590,7 +600,9 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
                 Token(
                     type = TokenType.EOF,
                     value = ion.newSymbol("EOF"),
-                    span = SourceSpan(currPos.line, currPos.column, 0)))
+                    span = SourceSpan(currPos.line, currPos.column, 0)
+                )
+            )
 
             curr = next
         }

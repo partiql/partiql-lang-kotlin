@@ -17,7 +17,11 @@ import org.partiql.lang.eval.ExprValueType.SEXP
 import org.partiql.lang.eval.ExprValueType.STRUCT
 import org.partiql.lang.eval.ExprValueType.TIMESTAMP
 import org.partiql.lang.syntax.ParserException
-import org.partiql.lang.util.*
+import org.partiql.lang.util.getOffsetHHmm
+import org.partiql.lang.util.honorTypedOpParameters
+import org.partiql.lang.util.legacyCastBehavior
+import org.partiql.lang.util.legacyTypingMode
+import org.partiql.lang.util.permissiveTypingMode
 import java.time.ZoneOffset
 
 /**
@@ -65,13 +69,15 @@ abstract class CastTestBase : EvaluatorTestBase() {
      * @param additionalAssertBlock The additional block of assertions on the resulting value.  Only valid for
      * non-error cases and defaults to no-op.
      */
-    data class CastCase(val funcName: String,
-                        val source: String,
-                        val type: String,
-                        val expected: String?,
-                        val expectedErrorCode: ErrorCode?,
-                        val quality: CastQualityStatus?,
-                        val additionalAssertBlock: AssertExprValue.() -> Unit = { }) {
+    data class CastCase(
+        val funcName: String,
+        val source: String,
+        val type: String,
+        val expected: String?,
+        val expectedErrorCode: ErrorCode?,
+        val quality: CastQualityStatus?,
+        val additionalAssertBlock: AssertExprValue.() -> Unit = { }
+    ) {
         val expression = when (funcName.toUpperCase()) {
             "IS" -> "($source) IS $type"
             else -> "$funcName($source AS $type)"
@@ -149,10 +155,12 @@ abstract class CastTestBase : EvaluatorTestBase() {
      * @param compileOptionBlock The optional lambda with a receiver to a [CompileOptions.Builder] to
      *  configure it.
      */
-    data class ConfiguredCastCase(val castCase: CastCase,
-                                  val description: String = "",
-                                  val configurePipeline: CompilerPipeline.Builder.() -> Unit = {},
-                                  val compileOptionBlock: CompileOptions.Builder.() -> Unit = {}) {
+    data class ConfiguredCastCase(
+        val castCase: CastCase,
+        val description: String = "",
+        val configurePipeline: CompilerPipeline.Builder.() -> Unit = {},
+        val compileOptionBlock: CompileOptions.Builder.() -> Unit = {}
+    ) {
         private val additionalDescription = when (description) {
             "" -> ""
             else -> " - $description"
@@ -214,18 +222,22 @@ abstract class CastTestBase : EvaluatorTestBase() {
     companion object : EvaluatorTestBase() {
 
         /** Partial application of the source expression and the expected Ion value without type. Assumes [Implemented] logic*/
-        fun case(source: String,
-                 expected: String?,
-                 quality: CastQuality,
-                 additionalAssertBlock: AssertExprValue.() -> Unit = { }): (String) -> CastCase = {
+        fun case(
+            source: String,
+            expected: String?,
+            quality: CastQuality,
+            additionalAssertBlock: AssertExprValue.() -> Unit = { }
+        ): (String) -> CastCase = {
             CastCase("CAST", source, it, expected, null, Implemented(quality), additionalAssertBlock)
         }
 
         /** Partial application of the source expression and the expected Ion value without type. */
-        fun case(source: String,
-                 expected: String?,
-                 qualityStatus: CastQualityStatus,
-                 additionalAssertBlock: AssertExprValue.() -> Unit = { }): (String) -> CastCase = {
+        fun case(
+            source: String,
+            expected: String?,
+            qualityStatus: CastQualityStatus,
+            additionalAssertBlock: AssertExprValue.() -> Unit = { }
+        ): (String) -> CastCase = {
             CastCase("CAST", source, it, expected, null, qualityStatus, additionalAssertBlock)
         }
 
@@ -442,8 +454,8 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     // numbers
                     case("5", "5d0", CastQuality.LOSSLESS),
                     case("5 ", "5d0", CastQuality.LOSSLESS),
-                    case("`0e0`", "0.", CastQuality.LOSSLESS),  // TODO formalize this behavior
-                    case("`1e0`", "1.", CastQuality.LOSSLESS),  // TODO formalize this behavior
+                    case("`0e0`", "0.", CastQuality.LOSSLESS), // TODO formalize this behavior
+                    case("`1e0`", "1.", CastQuality.LOSSLESS), // TODO formalize this behavior
                     case("1.1", "1.1d0", CastQuality.LOSSLESS),
                     case("-20.1", "-20.1d0", CastQuality.LOSSLESS),
                     // timestamp
@@ -606,9 +618,9 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("""`{{"1.0"}}`""", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("""`{{"2e10"}}`""", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("`{{}}`", ErrorCode.EVALUATOR_INVALID_CAST),
-                    case("`{{MA==}}`", ErrorCode.EVALUATOR_INVALID_CAST),  // 0
-                    case("`{{MS4w}}`", ErrorCode.EVALUATOR_INVALID_CAST),  // 1.0
-                    case("`{{MmUxMA==}}`", ErrorCode.EVALUATOR_INVALID_CAST),  // 2e10
+                    case("`{{MA==}}`", ErrorCode.EVALUATOR_INVALID_CAST), // 0
+                    case("`{{MS4w}}`", ErrorCode.EVALUATOR_INVALID_CAST), // 1.0
+                    case("`{{MmUxMA==}}`", ErrorCode.EVALUATOR_INVALID_CAST), // 2e10
                     // list
                     case("`[]`", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("['hello']", ErrorCode.EVALUATOR_INVALID_CAST),
@@ -650,9 +662,9 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("""`{{"1.0"}}`""", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("""`{{"2e10"}}`""", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("`{{}}`", ErrorCode.EVALUATOR_INVALID_CAST),
-                    case("`{{MA==}}`", ErrorCode.EVALUATOR_INVALID_CAST),  // 0
-                    case("`{{MS4w}}`", ErrorCode.EVALUATOR_INVALID_CAST),  // 1.0
-                    case("`{{MmUxMA==}}`", ErrorCode.EVALUATOR_INVALID_CAST),  // 2e10
+                    case("`{{MA==}}`", ErrorCode.EVALUATOR_INVALID_CAST), // 0
+                    case("`{{MS4w}}`", ErrorCode.EVALUATOR_INVALID_CAST), // 1.0
+                    case("`{{MmUxMA==}}`", ErrorCode.EVALUATOR_INVALID_CAST), // 2e10
                     // list
                     case("`[]`", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("['hello']", ErrorCode.EVALUATOR_INVALID_CAST),
@@ -739,8 +751,8 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("""`{{"1.0"}}`""", """{{MS4w}}""", CastQuality.LOSSLESS),
                     case("""`{{"2e10"}}`""", """{{MmUxMA==}}""", CastQuality.LOSSLESS),
                     case("`{{}}`", """{{}}""", CastQuality.LOSSLESS),
-                    case("`{{MA==}}`", """{{MA==}}""", CastQuality.LOSSLESS),     // 0
-                    case("`{{MS4w}}`", """{{MS4w}}""", CastQuality.LOSSLESS),     // 1.0
+                    case("`{{MA==}}`", """{{MA==}}""", CastQuality.LOSSLESS), // 0
+                    case("`{{MS4w}}`", """{{MS4w}}""", CastQuality.LOSSLESS), // 1.0
                     case("`{{MmUxMA==}}`", """{{MmUxMA==}}""", CastQuality.LOSSLESS), // 2e10
                     // list
                     case("`[]`", ErrorCode.EVALUATOR_INVALID_CAST),
@@ -800,9 +812,9 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("`{a:12d0}`", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("{'b':`-4d0`}", ErrorCode.EVALUATOR_INVALID_CAST),
                     // bag
-                    case("<<>>", "[]", CastQuality.LOSSLESS),      // TODO bag verification
-                    case("<<`14d0`>>", "[14d0]", CastQuality.LOSSLESS),  // TODO bag verification
-                    case("<<`20d0`>>", "[20d0]", CastQuality.LOSSLESS)   // TODO bag verification
+                    case("<<>>", "[]", CastQuality.LOSSLESS), // TODO bag verification
+                    case("<<`14d0`>>", "[14d0]", CastQuality.LOSSLESS), // TODO bag verification
+                    case("<<`20d0`>>", "[20d0]", CastQuality.LOSSLESS) // TODO bag verification
                 ).types(ExprValueType.LIST.sqlTextNames),
                 listOf(
                     // booleans
@@ -919,22 +931,22 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("`{{MS4w}}`", ErrorCode.EVALUATOR_INVALID_CAST), // 1.0
                     case("`{{MmUxMA==}}`", ErrorCode.EVALUATOR_INVALID_CAST), // 2e10
                     // list
-                    case("`[]`", "[]", CastQuality.LOSSLESS),          // TODO bag verification
+                    case("`[]`", "[]", CastQuality.LOSSLESS), // TODO bag verification
                     case("['hello']", "[\"hello\"]", CastQuality.LOSSLESS), // TODO bag verification
                     case("`[-2d0, 0d0]`", "[-2d0, 0d0]", CastQuality.LOSSLESS), // TODO bag verification
                     // sexp
-                    case("`()`", "[]", CastQuality.LOSSLESS),          // TODO bag verification
-                    case("`(1d0)`", "[1d0]", CastQuality.LOSSLESS),       // TODO bag verification
-                    case("`(0d0)`", "[0d0]", CastQuality.LOSSLESS),       // TODO bag verification
+                    case("`()`", "[]", CastQuality.LOSSLESS), // TODO bag verification
+                    case("`(1d0)`", "[1d0]", CastQuality.LOSSLESS), // TODO bag verification
+                    case("`(0d0)`", "[0d0]", CastQuality.LOSSLESS), // TODO bag verification
                     // struct
                     case("`{}`", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("{}", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("`{a:12d0}`", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("{'b':`-4d0`}", ErrorCode.EVALUATOR_INVALID_CAST),
                     // bag
-                    case("<<>>", "[]", CastQuality.LOSSLESS),          // TODO bag verification
-                    case("<<`14d0`>>", "[14d0]", CastQuality.LOSSLESS),      // TODO bag verification
-                    case("<<`20d0`>>", "[20d0]", CastQuality.LOSSLESS)       // TODO bag verification
+                    case("<<>>", "[]", CastQuality.LOSSLESS), // TODO bag verification
+                    case("<<`14d0`>>", "[14d0]", CastQuality.LOSSLESS), // TODO bag verification
+                    case("<<`20d0`>>", "[20d0]", CastQuality.LOSSLESS) // TODO bag verification
                 ).types(ExprValueType.BAG.sqlTextNames)
             ).flatten()
 
@@ -962,9 +974,9 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case("""`{{"1.0"}}`""", ErrorCode.EVALUATOR_INVALID_CAST),
                 case("""`{{"2e10"}}`""", ErrorCode.EVALUATOR_INVALID_CAST),
                 case("`{{}}`", ErrorCode.EVALUATOR_INVALID_CAST),
-                case("`{{MA==}}`", ErrorCode.EVALUATOR_INVALID_CAST),  // 0
-                case("`{{MS4w}}`", ErrorCode.EVALUATOR_INVALID_CAST),  // 1.0
-                case("`{{MmUxMA==}}`", ErrorCode.EVALUATOR_INVALID_CAST),  // 2e10
+                case("`{{MA==}}`", ErrorCode.EVALUATOR_INVALID_CAST), // 0
+                case("`{{MS4w}}`", ErrorCode.EVALUATOR_INVALID_CAST), // 1.0
+                case("`{{MmUxMA==}}`", ErrorCode.EVALUATOR_INVALID_CAST), // 2e10
                 // list
                 case("`[]`", ErrorCode.EVALUATOR_INVALID_CAST),
                 case("['hello']", ErrorCode.EVALUATOR_INVALID_CAST),
@@ -1041,7 +1053,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case("'123'", "123.", CastQuality.LOSSLESS),
                 case("'1234'", "1234.", CastQuality.LOSSLESS),
                 case("'123.45'", "123.45", CastQuality.LOSSLESS)
-            ).types(ExprValueType.DECIMAL.sqlTextNames.map {"${it}(3)"}),
+            ).types(ExprValueType.DECIMAL.sqlTextNames.map { "$it(3)" }),
             // DECIMAL(5,2) ; LEGACY mode does not respect DECIMAL's precison or scale
             listOf(
                 case("12", "12.", CastQuality.LOSSLESS),
@@ -1054,17 +1066,17 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case("'1234'", "1234.", CastQuality.LOSSLESS),
                 case("'123.45'", "123.45", CastQuality.LOSSLESS),
                 case("'123.459'", "123.459", CastQuality.LOSSLESS)
-            ).types(ExprValueType.DECIMAL.sqlTextNames.map {"${it}(5, 2)"}),
+            ).types(ExprValueType.DECIMAL.sqlTextNames.map { "$it(5, 2)" }),
             // DECIMAL(4,4) ; LEGACY mode does not respect DECIMAL's precison or scale; precision = scale is valid here
             listOf(
                 case("0.1", "1d-1", CastQuality.LOSSLESS),
                 case("0.1234", "0.1234", CastQuality.LOSSLESS),
                 case("0.12345", "0.12345", CastQuality.LOSSLESS)
-            ).types(ExprValueType.DECIMAL.sqlTextNames.map { "${it}(4,4)" }),
+            ).types(ExprValueType.DECIMAL.sqlTextNames.map { "$it(4,4)" }),
             // DECIMAL(2, 4) ; LEGACY mode does not respect DECIMAL's precison or scale; precision < scale is valid in legacy mode
             listOf(
                 case("1", "1d0", CastQuality.LOSSLESS)
-            ).types(ExprValueType.DECIMAL.sqlTextNames.map { "${it}(2,4)" }),
+            ).types(ExprValueType.DECIMAL.sqlTextNames.map { "$it(2,4)" }),
             // VARCHAR(4) legacy mode doesn't care about params
             listOf(
                 // from string types
@@ -1122,9 +1134,9 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case("""`{{"1.0"}}`""", ErrorCode.EVALUATOR_INVALID_CAST),
                 case("""`{{"2e10"}}`""", ErrorCode.EVALUATOR_INVALID_CAST),
                 case("`{{}}`", ErrorCode.EVALUATOR_INVALID_CAST),
-                case("`{{MA==}}`", ErrorCode.EVALUATOR_INVALID_CAST),  // 0
-                case("`{{MS4w}}`", ErrorCode.EVALUATOR_INVALID_CAST),  // 1.0
-                case("`{{MmUxMA==}}`", ErrorCode.EVALUATOR_INVALID_CAST),  // 2e10
+                case("`{{MA==}}`", ErrorCode.EVALUATOR_INVALID_CAST), // 0
+                case("`{{MS4w}}`", ErrorCode.EVALUATOR_INVALID_CAST), // 1.0
+                case("`{{MmUxMA==}}`", ErrorCode.EVALUATOR_INVALID_CAST), // 2e10
                 // list
                 case("`[]`", ErrorCode.EVALUATOR_INVALID_CAST),
                 case("['hello']", ErrorCode.EVALUATOR_INVALID_CAST),
@@ -1201,7 +1213,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case("'123'", "123.", CastQuality.LOSSLESS),
                 case("'1234'", ErrorCode.EVALUATOR_CAST_FAILED),
                 case("'123.45'", "123.", CastQuality.LOSSY)
-            ).types(ExprValueType.DECIMAL.sqlTextNames.map {"${it}(3)"}),
+            ).types(ExprValueType.DECIMAL.sqlTextNames.map { "$it(3)" }),
             // DECIMAL(5,2)
             listOf(
                 case("12", "12.00", CastQuality.LOSSLESS),
@@ -1214,17 +1226,17 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case("'1234'", ErrorCode.EVALUATOR_CAST_FAILED),
                 case("'123.45'", "123.45", CastQuality.LOSSLESS),
                 case("'123.459'", "123.46", CastQuality.LOSSY)
-            ).types(ExprValueType.DECIMAL.sqlTextNames.map {"${it}(5, 2)"}),
+            ).types(ExprValueType.DECIMAL.sqlTextNames.map { "$it(5, 2)" }),
             // DECIMAL(4,4) precision = scale is valid in honor_params
             listOf(
                 case("0.1", "1.000d-1", CastQuality.LOSSLESS),
                 case("0.1234", "0.1234", CastQuality.LOSSLESS),
                 case("0.12345", "0.1235", CastQuality.LOSSY)
-            ).types(ExprValueType.DECIMAL.sqlTextNames.map { "${it}(4,4)" }),
+            ).types(ExprValueType.DECIMAL.sqlTextNames.map { "$it(4,4)" }),
             // DECIMAL(2, 4) is a compilation failure in this mode
             listOf(
                 case("1", ErrorCode.SEMANTIC_INVALID_DECIMAL_ARGUMENTS)
-            ).types(ExprValueType.DECIMAL.sqlTextNames.map { "${it}(2,4)" }),
+            ).types(ExprValueType.DECIMAL.sqlTextNames.map { "$it(2,4)" }),
             // VARCHAR(4) should truncate to size <= 4
             listOf(
                 // from string types
@@ -1277,18 +1289,18 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case("TIME '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "23:12:12.1267${defaultTimezoneOffset.getOffsetHHmm()}", CastQuality.LOSSLESS),
                 case("TIME '23:12:12.1267+05:30'", "TIME (3)", "23:12:12.127", CastQuality.LOSSY),
                 case("TIME '23:12:12.1267-05:30'", "TIME (3) WITH TIME ZONE", "23:12:12.127${defaultTimezoneOffset.getOffsetHHmm()}", CastQuality.LOSSY),
-                case("TIME (3) '23:12:12.1267'", "TIME","23:12:12.127", CastQuality.LOSSLESS),
-                case("TIME (3) '23:12:12.1267-05:30'", "TIME","23:12:12.127", CastQuality.LOSSLESS),
-                case("TIME (3) '23:12:12.1267+05:30'", "TIME WITH TIME ZONE","23:12:12.127${defaultTimezoneOffset.getOffsetHHmm()}", CastQuality.LOSSLESS),
-                case("TIME (3) '23:12:12.1267-05:30'", "TIME (9)","23:12:12.127000000", CastQuality.LOSSLESS),
+                case("TIME (3) '23:12:12.1267'", "TIME", "23:12:12.127", CastQuality.LOSSLESS),
+                case("TIME (3) '23:12:12.1267-05:30'", "TIME", "23:12:12.127", CastQuality.LOSSLESS),
+                case("TIME (3) '23:12:12.1267+05:30'", "TIME WITH TIME ZONE", "23:12:12.127${defaultTimezoneOffset.getOffsetHHmm()}", CastQuality.LOSSLESS),
+                case("TIME (3) '23:12:12.1267-05:30'", "TIME (9)", "23:12:12.127000000", CastQuality.LOSSLESS),
                 case("TIME WITH TIME ZONE '23:12:12.1267'", "TIME", "23:12:12.1267", CastQuality.LOSSLESS),
                 case("TIME WITH TIME ZONE '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "23:12:12.1267-05:30", CastQuality.LOSSLESS),
-                case("TIME WITH TIME ZONE '23:12:12.1267+05:30'", "TIME (3) WITH TIME ZONE","23:12:12.127+05:30", CastQuality.LOSSY),
+                case("TIME WITH TIME ZONE '23:12:12.1267+05:30'", "TIME (3) WITH TIME ZONE", "23:12:12.127+05:30", CastQuality.LOSSY),
                 case("TIME WITH TIME ZONE '23:12:12.1267-05:30'", "TIME", "23:12:12.1267", CastQuality.LOSSY),
                 case("TIME (3) WITH TIME ZONE '23:12:12.1267'", "TIME", "23:12:12.127", CastQuality.LOSSLESS),
                 case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "23:12:12.127-05:30", CastQuality.LOSSLESS),
                 case("TIME (3) WITH TIME ZONE '23:12:12.1267+05:30'", "TIME (5)", "23:12:12.12700", CastQuality.LOSSY),
-                case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "TIME (5) WITH TIME ZONE","23:12:12.12700-05:30", CastQuality.LOSSLESS),
+                case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "TIME (5) WITH TIME ZONE", "23:12:12.12700-05:30", CastQuality.LOSSLESS),
                 // CAST(<TIMESTAMP> AS <variants of TIME type>)
                 case("`2007-02-23T12:14:33.079Z`", "TIME", "12:14:33.079", CastQuality.LOSSY),
                 case("`2007-02-23T12:14:33.079-08:00`", "TIME", "12:14:33.079", CastQuality.LOSSY),
@@ -1365,8 +1377,9 @@ abstract class CastTestBase : EvaluatorTestBase() {
             ).types(ExprValueType.STRING.sqlTextNames)
         ).flatten() +
             listOf(MISSING, NULL, BOOL, INT, FLOAT, DECIMAL, TIMESTAMP, CLOB, BLOB, LIST, SEXP, STRUCT, BAG)
-                .map { listOf(case("DATE '2007-10-10'", ErrorCode.EVALUATOR_INVALID_CAST)).types(it.sqlTextNames)
-            }.flatten()
+                .map {
+                    listOf(case("DATE '2007-10-10'", ErrorCode.EVALUATOR_INVALID_CAST)).types(it.sqlTextNames)
+                }.flatten()
 
         private val typingModes: Map<String, (CompileOptions.Builder) -> Unit> = mapOf(
             "LEGACY_TYPING_MODE" to { cob -> cob.legacyTypingMode() },
@@ -1374,7 +1387,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
         )
 
         val castBehaviors: Map<String, (CompileOptions.Builder) -> Unit> = mapOf(
-            "LEGACY_CAST" to { cob -> cob.legacyCastBehavior() } ,
+            "LEGACY_CAST" to { cob -> cob.legacyCastBehavior() },
             "HONOR_PARAM_CAST" to { cob -> cob.honorTypedOpParameters() }
         )
 
@@ -1394,29 +1407,33 @@ abstract class CastTestBase : EvaluatorTestBase() {
             }
         }
 
-        private val castPermissiveConfiguredTestCases = (legacyCastTestCases.toPermissive().map { case ->
-            ConfiguredCastCase(case, "LEGACY_CAST, PERMISSIVE_TYPING_MODE") {
-                legacyCastBehavior()
-                permissiveTypingMode()
+        private val castPermissiveConfiguredTestCases = (
+            legacyCastTestCases.toPermissive().map { case ->
+                ConfiguredCastCase(case, "LEGACY_CAST, PERMISSIVE_TYPING_MODE") {
+                    legacyCastBehavior()
+                    permissiveTypingMode()
+                }
+            } + honorParamCastTestCases.toPermissive().map { case ->
+                ConfiguredCastCase(case, "HONOR_PARAM_CAST, PERMISSIVE_TYPING_MODE") {
+                    honorTypedOpParameters()
+                    permissiveTypingMode()
+                }
             }
-        } + honorParamCastTestCases.toPermissive().map { case ->
-            ConfiguredCastCase(case, "HONOR_PARAM_CAST, PERMISSIVE_TYPING_MODE") {
-                honorTypedOpParameters()
-                permissiveTypingMode()
-            }
-        })
+            )
 
-        private val castLegacyConfiguredTestCases = (legacyCastTestCases.map { case ->
-            ConfiguredCastCase(case, "LEGACY_CAST, LEGACY_ERROR_MODE") {
-                legacyCastBehavior()
-                legacyTypingMode()
+        private val castLegacyConfiguredTestCases = (
+            legacyCastTestCases.map { case ->
+                ConfiguredCastCase(case, "LEGACY_CAST, LEGACY_ERROR_MODE") {
+                    legacyCastBehavior()
+                    legacyTypingMode()
+                }
+            } + honorParamCastTestCases.map { case ->
+                ConfiguredCastCase(case, "HONOR_PARAM_CAST, LEGACY_ERROR_MODE") {
+                    honorTypedOpParameters()
+                    legacyTypingMode()
+                }
             }
-        } + honorParamCastTestCases.map { case ->
-            ConfiguredCastCase(case, "HONOR_PARAM_CAST, LEGACY_ERROR_MODE") {
-                honorTypedOpParameters()
-                legacyTypingMode()
-            }
-        })
+            )
 
         private val castDefaultTimezoneOffsetConfiguration =
             // Configuring default timezone offset through CompileOptions
@@ -1465,7 +1482,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case.copy(
                     castCase = newCastCase
                 )
-            }.distinctBy {case ->
+            }.distinctBy { case ->
                 // dedupe by source and compilation option function
                 Pair(case.castCase.source, case.compileOptionBlock)
             }
@@ -1491,37 +1508,41 @@ abstract class CastTestBase : EvaluatorTestBase() {
             )
         }
 
-        private val canCastConfiguredTestCases = (legacyCastTestCases.flatMap { case ->
-            typingModes.map { (typingModeName, typingModeConfig) ->
-                ConfiguredCastCase(case.toCanCast(), "LEGACY_CAST, $typingModeName") {
-                    legacyCastBehavior()
-                    typingModeConfig(this)
+        private val canCastConfiguredTestCases = (
+            legacyCastTestCases.flatMap { case ->
+                typingModes.map { (typingModeName, typingModeConfig) ->
+                    ConfiguredCastCase(case.toCanCast(), "LEGACY_CAST, $typingModeName") {
+                        legacyCastBehavior()
+                        typingModeConfig(this)
+                    }
+                }
+            } + honorParamCastTestCases.flatMap { case ->
+                typingModes.map { (typingModeName, typingModeConfig) ->
+                    ConfiguredCastCase(case.toCanCast(), "HONOR_PARAM_CAST, $typingModeName") {
+                        honorTypedOpParameters()
+                        typingModeConfig(this)
+                    }
                 }
             }
-        } + honorParamCastTestCases.flatMap { case ->
-            typingModes.map { (typingModeName, typingModeConfig) ->
-                ConfiguredCastCase(case.toCanCast(), "HONOR_PARAM_CAST, $typingModeName") {
-                    honorTypedOpParameters()
-                    typingModeConfig(this)
-                }
-            }
-        })
+            )
 
-        private val canLosslessCastConfiguredTestCases = (legacyCastTestCases.flatMap { case ->
-            typingModes.map { (typingModeName, typingModeConfig) ->
-                ConfiguredCastCase(case.toCanLosslessCast(), "LEGACY_CAST, $typingModeName") {
-                    legacyCastBehavior()
-                    typingModeConfig(this)
+        private val canLosslessCastConfiguredTestCases = (
+            legacyCastTestCases.flatMap { case ->
+                typingModes.map { (typingModeName, typingModeConfig) ->
+                    ConfiguredCastCase(case.toCanLosslessCast(), "LEGACY_CAST, $typingModeName") {
+                        legacyCastBehavior()
+                        typingModeConfig(this)
+                    }
+                }
+            } + honorParamCastTestCases.flatMap { case ->
+                typingModes.map { (typingModeName, typingModeConfig) ->
+                    ConfiguredCastCase(case.toCanLosslessCast(), "HONOR_PARAM_CAST, $typingModeName") {
+                        honorTypedOpParameters()
+                        typingModeConfig(this)
+                    }
                 }
             }
-        } + honorParamCastTestCases.flatMap { case ->
-            typingModes.map { (typingModeName, typingModeConfig) ->
-                ConfiguredCastCase(case.toCanLosslessCast(), "HONOR_PARAM_CAST, $typingModeName") {
-                    honorTypedOpParameters()
-                    typingModeConfig(this)
-                }
-            }
-        })
+            )
 
         internal val allConfiguredTestCases =
             castConfiguredTestCases +
@@ -1574,7 +1595,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
 
         internal val allConfiguredDateTimeTestCases =
             configuredDateTimeTestCases +
-                    canCastConfiguredDateTimeTestCases +
-                    canLosslessCastConfiguredDateTimeTestCases
+                canCastConfiguredDateTimeTestCases +
+                canLosslessCastConfiguredDateTimeTestCases
     }
 }

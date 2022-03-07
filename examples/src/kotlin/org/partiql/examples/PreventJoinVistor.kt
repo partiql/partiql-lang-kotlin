@@ -1,9 +1,9 @@
 package org.partiql.examples
 
-import com.amazon.ion.system.*
+import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.examples.util.Example
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.syntax.*
+import org.partiql.lang.syntax.SqlParser
 import java.io.PrintStream
 
 /** The exception thrown by when a JOIN clause was detected. */
@@ -11,7 +11,7 @@ private class InvalidAstException(message: String) : RuntimeException(message)
 
 /**
  * Customers wishing to embed PartiQL into their application might wish to restrict the use of certain language
- * features or provide custom semantic checking.  One way of accomplishing that is by inspecting the AST, this 
+ * features or provide custom semantic checking.  One way of accomplishing that is by inspecting the AST, this
  * example shows how to prevent the use of any kind of JOIN clause.
  */
 
@@ -21,7 +21,7 @@ class PreventJoinVisitorExample(out: PrintStream) : Example(out) {
 
     private fun hasJoins(sql: String): Boolean = try {
         val ast = parser.parseAstStatement(sql)
-        object : PartiqlAst.Visitor(){
+        object : PartiqlAst.Visitor() {
             override fun visitFromSourceJoin(node: PartiqlAst.FromSource.Join) {
                 throw InvalidAstException("JOINs are prevented")
             }
@@ -43,4 +43,3 @@ class PreventJoinVisitorExample(out: PrintStream) : Example(out) {
         print("Has joins:", hasJoins(queryWithJoin).toString())
     }
 }
-

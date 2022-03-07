@@ -35,7 +35,7 @@ class AggregateSupportVisitorTransformTests : VisitorTransformTestBase() {
      * Simple helper for testing that parses [this] SFW query, transforms it using [AggregateSupportVisitorTransform],
      * and returns the transformed query as [PartiqlAst.Expr.Select].
      */
-    private fun String.parseAndTransformQuery() : PartiqlAst.Expr.Select {
+    private fun String.parseAndTransformQuery(): PartiqlAst.Expr.Select {
         val query = this
         val statement = super.parser.parseAstStatement(query)
         val transformedNode = (transformer).transformStatement(statement) as PartiqlAst.Statement.Query
@@ -50,21 +50,25 @@ class AggregateSupportVisitorTransformTests : VisitorTransformTestBase() {
      * and [AggregateRegisterIdMeta] passed as the second argument of the pair.
      */
     private fun createCallAggMetas(callAggs: List<Pair<String, Int>>): MetaContainer =
-        metaContainerOf(AggregateCallSiteListMeta.TAG to AggregateCallSiteListMeta(
-            callAggs.map { callAgg ->
-                PartiqlAst.build {
-                    callAgg(
-                        setq = all(),
-                        funcName = callAgg.first,
-                        arg = lit(ionInt(1)),
-                        metas = metaContainerOf(AggregateRegisterIdMeta.TAG to AggregateRegisterIdMeta(callAgg.second)))
+        metaContainerOf(
+            AggregateCallSiteListMeta.TAG to AggregateCallSiteListMeta(
+                callAggs.map { callAgg ->
+                    PartiqlAst.build {
+                        callAgg(
+                            setq = all(),
+                            funcName = callAgg.first,
+                            arg = lit(ionInt(1)),
+                            metas = metaContainerOf(AggregateRegisterIdMeta.TAG to AggregateRegisterIdMeta(callAgg.second))
+                        )
+                    }
                 }
-            }))
+            )
+        )
 
     /**
      * Simple helper for testing to remove the [SourceLocationMeta] from [this] [MetaContainer].
      */
-    private fun MetaContainer.removeSourceLocation() : MetaContainer = this.minus(SourceLocationMeta.TAG)
+    private fun MetaContainer.removeSourceLocation(): MetaContainer = this.minus(SourceLocationMeta.TAG)
 
     /**
      * Checks that [expected] and [actual] have the same metas (i.e. [AggregateCallSiteListMeta])
@@ -86,27 +90,33 @@ class AggregateSupportVisitorTransformTests : VisitorTransformTestBase() {
             // one aggregate transform
             AggSupportTestCase(
                 "SELECT COUNT(1) FROM foo",
-                listOf(Pair("count", 0))),
+                listOf(Pair("count", 0))
+            ),
             // multiple aggregates transform
             AggSupportTestCase(
                 "SELECT COUNT(1), SUM(1), AVG(1) FROM foo",
-                listOf(Pair("count", 0), Pair("sum", 1), Pair("avg", 2))),
+                listOf(Pair("count", 0), Pair("sum", 1), Pair("avg", 2))
+            ),
             // one aggregate in HAVING transform
             AggSupportTestCase(
                 "SELECT 1 FROM foo GROUP BY bar HAVING SUM(1) > 0",
-                listOf(Pair("sum", 0))),
+                listOf(Pair("sum", 0))
+            ),
             // one aggregate and one aggregate in HAVING transform
             AggSupportTestCase(
                 "SELECT COUNT(1) FROM foo GROUP BY bar HAVING SUM(1) > 0",
-                listOf(Pair("sum", 0), Pair("count", 1))),
+                listOf(Pair("sum", 0), Pair("count", 1))
+            ),
             // SELECT VALUE aggregate transform
             AggSupportTestCase(
                 "SELECT VALUE COUNT(1) FROM foo",
-                emptyList()),
+                emptyList()
+            ),
             // SELECT VALUE one aggregate and HAVING transform
             AggSupportTestCase(
                 "SELECT VALUE COUNT(1) FROM foo GROUP BY bar HAVING SUM(1) > 0",
-                listOf(Pair("sum", 0)))
+                listOf(Pair("sum", 0))
+            )
         )
     }
 

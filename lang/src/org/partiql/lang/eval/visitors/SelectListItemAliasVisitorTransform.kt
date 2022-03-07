@@ -38,7 +38,7 @@ class SelectListItemAliasVisitorTransform : VisitorTransformBase() {
         return PartiqlAst.build {
             projectList(
                 projectItems = node.projectItems.mapIndexed { idx, it ->
-                    when(it) {
+                    when (it) {
                         is PartiqlAst.ProjectItem.ProjectExpr ->
                             when (it.asAlias) {
                                 //  Synthesize a column name if one was not specified in the query.

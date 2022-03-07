@@ -15,7 +15,7 @@ import org.partiql.lang.util.stringValueOrNull
  * generated schema. The passed [schemaIds] will also be used for the generated
  * [IonSchemaModel.SchemaStatement.HeaderStatement]'s [IonSchemaModel.ImportList].
  */
-class SchemaInferencerFromExampleImpl(val typeName: String, iss: IonSchemaSystem, val schemaIds: List<String>): SchemaInferencerFromExample {
+class SchemaInferencerFromExampleImpl(val typeName: String, iss: IonSchemaSystem, val schemaIds: List<String>) : SchemaInferencerFromExample {
     private val importedTypes = schemaIds.loadImportedTypes(iss)
     private val sequenceTypes = importedTypes.loadSequenceTypes()
     private val islAnyConstraints = IonSchemaModel.build { constraintList() }
@@ -23,7 +23,8 @@ class SchemaInferencerFromExampleImpl(val typeName: String, iss: IonSchemaSystem
         schema(
             headerStatement(openFieldList(), importList(schemaIds.map { import(it) })),
             typeStatement(typeDefinition(typeName, islAnyConstraints)),
-            footerStatement(openFieldList()))
+            footerStatement(openFieldList())
+        )
     }
 
     override fun inferFromExamples(reader: IonReader, maxExampleCount: Int, definiteISL: IonSchemaModel.Schema?): IonSchemaModel.Schema {
@@ -51,7 +52,8 @@ class SchemaInferencerFromExampleImpl(val typeName: String, iss: IonSchemaSystem
         val dataguideInferer = TypeAndConstraintInferer(
             constraintUnifier = dataguideConstraintUnifier,
             constraintDiscoverer = StandardConstraintDiscoverer(),
-            importedTypes = importedTypes)
+            importedTypes = importedTypes
+        )
 
         val discoveredWithDefiniteUnifier = ConstraintUnifier.builder()
             .sequenceTypes(sequenceTypes)
@@ -69,9 +71,12 @@ class SchemaInferencerFromExampleImpl(val typeName: String, iss: IonSchemaSystem
                         val definiteSchemaTypeStatement = definiteISL.getFirstTypeStatement()
                         val definiteISLTopTypeName = definiteSchemaTypeStatement.typeDef.name?.text
                         if (typeName != definiteISLTopTypeName) {
-                            error("""Top level type name differs.
+                            error(
+                                """Top level type name differs.
                                      Expected: $typeName
-                                     Actual:   $definiteISLTopTypeName""".trimIndent())
+                                     Actual:   $definiteISLTopTypeName
+                                """.trimIndent()
+                            )
                         }
                         discoveredWithDefiniteUnifier.unify(discoveredConstraints, definiteSchemaTypeStatement.typeDef.constraints)
                     }

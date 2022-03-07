@@ -25,8 +25,9 @@ import org.partiql.lang.eval.errNoContext
  * This transform must execute after [GroupByItemAliasVisitorTransform] and [FromSourceAliasVisitorTransform].
  */
 class GroupByPathExpressionVisitorTransform(
-    parentSubstitutions: Map<PartiqlAst.Expr, SubstitutionPair> = mapOf())
-    : SubstitutionVisitorTransform(parentSubstitutions) {
+    parentSubstitutions: Map<PartiqlAst.Expr, SubstitutionPair> = mapOf()
+) :
+    SubstitutionVisitorTransform(parentSubstitutions) {
 
     companion object {
         /**
@@ -40,19 +41,18 @@ class GroupByPathExpressionVisitorTransform(
             val expr = groupKey.expr
             val asName = groupKey.asAlias
 
-            //(This is the reason this transform needs to execute after [GroupByItemAliasVisitorTransform].)
+            // (This is the reason this transform needs to execute after [GroupByItemAliasVisitorTransform].)
             return when {
-                asName == null                                     -> throw IllegalStateException("GroupByItem.asName must be specified for this transform to work")
+                asName == null -> throw IllegalStateException("GroupByItem.asName must be specified for this transform to work")
                 !asName.metas.containsKey(IsSyntheticNameMeta.TAG) ->
                     // If this meta is not present it would indicate that the alias was explicitly specified, which is
                     // not allowed by SQL-92, so ignore.
                     false
 
                 // Group by expressions other than paths aren't part of SQL-92 so ignore
-                expr !is PartiqlAst.Expr.Path                      -> false
-                else                                               -> true
+                expr !is PartiqlAst.Expr.Path -> false
+                else -> true
             }
-
         }
 
         /**
@@ -61,17 +61,17 @@ class GroupByPathExpressionVisitorTransform(
          */
         fun collectAliases(fromSource: PartiqlAst.FromSource): List<String> =
             when (fromSource) {
-                is PartiqlAst.FromSource.Scan    ->
+                is PartiqlAst.FromSource.Scan ->
                     listOf(
                         fromSource.asAlias?.text
-                        ?: errNoContext(
-                            "FromSource.asAlias.text must be specified for this transform to work",
-                            errorCode = ErrorCode.SEMANTIC_MISSING_AS_NAME,
-                            internal = true
-                        )
+                            ?: errNoContext(
+                                "FromSource.asAlias.text must be specified for this transform to work",
+                                errorCode = ErrorCode.SEMANTIC_MISSING_AS_NAME,
+                                internal = true
+                            )
                     )
 
-                is PartiqlAst.FromSource.Join    ->
+                is PartiqlAst.FromSource.Join ->
                     collectAliases(fromSource.left) + collectAliases(fromSource.right)
 
                 is PartiqlAst.FromSource.Unpivot ->
@@ -93,7 +93,8 @@ class GroupByPathExpressionVisitorTransform(
 
         // A transformer for both of the sets of the substitutions defined above.
         val currentAndUnshadowedTransformer = GroupByPathExpressionVisitorTransform(
-            unshadowedSubstitutions + currentSubstitutions)
+            unshadowedSubstitutions + currentSubstitutions
+        )
 
         // Now actually transform the query using the appropriate transformer for each of various clauses of the
         // SELECT statement.
@@ -123,7 +124,8 @@ class GroupByPathExpressionVisitorTransform(
                 order = order,
                 offset = offset,
                 limit = limit,
-                metas = metas)
+                metas = metas
+            )
         }
     }
 
@@ -140,8 +142,10 @@ class GroupByPathExpressionVisitorTransform(
                             name = groupKey.asAlias.text,
                             case = caseSensitive(),
                             qualifier = unqualified(),
-                            metas = groupKey.expr.metas + metaContainerOf(UniqueNameMeta.TAG to uniqueIdentifierMeta))
-                    })
+                            metas = groupKey.expr.metas + metaContainerOf(UniqueNameMeta.TAG to uniqueIdentifierMeta)
+                        )
+                    }
+                )
             }.associateBy { it.target }
     }
 
@@ -165,5 +169,4 @@ class GroupByPathExpressionVisitorTransform(
 
     // do not transform CallAgg nodes.
     override fun transformExprCallAgg(node: PartiqlAst.Expr.CallAgg): PartiqlAst.Expr = node
-
 }

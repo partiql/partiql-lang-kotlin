@@ -38,10 +38,9 @@ import kotlin.concurrent.thread
  */
 class SqlParserTest : SqlParserTestBase() {
 
-
-    //****************************************
+    // ****************************************
     // literals
-    //****************************************
+    // ****************************************
     @Test
     fun litInt() = assertExpression(
         "5",
@@ -153,9 +152,9 @@ class SqlParserTest : SqlParserTestBase() {
         """(struct (expr_pair (lit "a") (struct)))"""
     )
 
-    //****************************************
+    // ****************************************
     // container constructors
-    //****************************************
+    // ****************************************
     @Test
     fun rowValueConstructorWithSimpleExpressions() = assertExpression(
         "(1, 2, 3, 4)",
@@ -180,9 +179,9 @@ class SqlParserTest : SqlParserTestBase() {
         """(bag (list (lit 1)) (list (lit 2)) (list (lit 3)))"""
     )
 
-    //****************************************
+    // ****************************************
     // identifiers
-    //****************************************
+    // ****************************************
     @Test
     fun id_case_insensitive() = assertExpression(
         "kumo",
@@ -197,9 +196,9 @@ class SqlParserTest : SqlParserTestBase() {
         "(id kumo (case_sensitive) (unqualified))"
     )
 
-    //****************************************
+    // ****************************************
     // call
-    //****************************************
+    // ****************************************
     @Test
     fun callEmpty() = assertExpression(
         "foobar()",
@@ -245,33 +244,36 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun callTrimSingleArgument() = assertExpression(
         "trim('test')",
-        "(call trim (lit \"test\"))")
-
-
+        "(call trim (lit \"test\"))"
+    )
 
     @Test
     fun callTrimTwoArgumentsDefaultSpecification() = assertExpression(
         "trim(' ' from 'test')",
-        "(call trim (lit \" \") (lit \"test\"))")
+        "(call trim (lit \" \") (lit \"test\"))"
+    )
 
     @Test
     fun callTrimTwoArgumentsUsingBoth() = assertExpression(
         "trim(both from 'test')",
-        "(call trim (lit both) (lit \"test\"))")
+        "(call trim (lit both) (lit \"test\"))"
+    )
 
     @Test
     fun callTrimTwoArgumentsUsingLeading() = assertExpression(
         "trim(leading from 'test')",
-        "(call trim (lit leading) (lit \"test\"))")
+        "(call trim (lit leading) (lit \"test\"))"
+    )
 
     @Test
     fun callTrimTwoArgumentsUsingTrailing() = assertExpression(
         "trim(trailing from 'test')",
-        "(call trim (lit trailing) (lit \"test\"))")
+        "(call trim (lit trailing) (lit \"test\"))"
+    )
 
-    //****************************************
+    // ****************************************
     // Unary operators
-    //****************************************
+    // ****************************************
 
     @Test
     fun negCall() = assertExpression(
@@ -319,9 +321,9 @@ class SqlParserTest : SqlParserTestBase() {
         "(not (lit 1))"
     )
 
-    //****************************************
+    // ****************************************
     // BETWEEN
-    //****************************************
+    // ****************************************
     @Test
     fun betweenOperator() = assertExpression(
         "5 BETWEEN 1 AND 10",
@@ -334,9 +336,9 @@ class SqlParserTest : SqlParserTestBase() {
         "(not_between (lit 5) (lit 1) (lit 10))",
         "(not (between (lit 5) (lit 1) (lit 10)))"
     )
-    //****************************************
+    // ****************************************
     // @ operator
-    //****************************************
+    // ****************************************
 
     @Test
     fun atOperatorOnIdentifier() = assertExpression(
@@ -352,9 +354,9 @@ class SqlParserTest : SqlParserTestBase() {
         """(path (id a (case_insensitive) (locals_first)) (path_expr (lit "b") (case_insensitive)))"""
     )
 
-    //****************************************
+    // ****************************************
     // IS operator
-    //****************************************
+    // ****************************************
     @Test
     fun nullIsNull() = assertExpression(
         "null IS NULL",
@@ -439,9 +441,9 @@ class SqlParserTest : SqlParserTestBase() {
         "(call_agg (distinct) count (id a (case_insensitive) (unqualified)))"
     )
 
-    //****************************************
+    // ****************************************
     // path expression
-    //****************************************
+    // ****************************************
     @Test
     fun dot_case_1_insensitive_component() = assertExpression(
         "a.b",
@@ -560,9 +562,9 @@ class SqlParserTest : SqlParserTestBase() {
            (path_expr (lit "b") (case_insensitive)))""".trimMargin()
     )
 
-    //****************************************
+    // ****************************************
     // cast
-    //****************************************
+    // ****************************************
     @Test
     fun castNoArgs() = assertExpression(
         "CAST(5 AS VARCHAR)",
@@ -627,9 +629,9 @@ class SqlParserTest : SqlParserTestBase() {
         "(cast (id a (case_insensitive) (unqualified)) (numeric_type 1 2))"
     )
 
-    //****************************************
+    // ****************************************
     // custom type cast
-    //****************************************
+    // ****************************************
     @Test
     fun castAsEsBoolean() = assertExpression(
         "CAST(TRUE AS ES_BOOLEAN)",
@@ -642,9 +644,9 @@ class SqlParserTest : SqlParserTestBase() {
         "(cast (lit 1.123) (custom_type rs_integer))"
     )
 
-    //****************************************
+    // ****************************************
     // searched CASE
-    //****************************************
+    // ****************************************
     @Test
     fun searchedCaseSingleNoElse() = assertExpression(
         "CASE WHEN name = 'zoe' THEN 1 END",
@@ -706,9 +708,9 @@ class SqlParserTest : SqlParserTestBase() {
         """
     )
 
-    //****************************************
+    // ****************************************
     // simple CASE
-    //****************************************
+    // ****************************************
     @Test
     fun simpleCaseSingleNoElse() = assertExpression(
         "CASE name WHEN 'zoe' THEN 1 END",
@@ -782,9 +784,9 @@ class SqlParserTest : SqlParserTestBase() {
         """
     )
 
-    //****************************************
+    // ****************************************
     // IN operator
-    //****************************************
+    // ****************************************
     @Test
     fun inOperatorWithImplicitValues() = assertExpression(
         "a IN (1, 2, 3, 4)",
@@ -830,11 +832,9 @@ class SqlParserTest : SqlParserTestBase() {
         """
     )
 
-
-
-    //****************************************
+    // ****************************************
     // LIKE operator
-    //****************************************
+    // ****************************************
     /*
     From SQL92 https://www.contrib.andrew.cmu.edu/~shadow/sql/sql1992.txt
          <like predicate>   ::= <match value> [ NOT ] LIKE <pattern>
@@ -955,9 +955,9 @@ class SqlParserTest : SqlParserTestBase() {
         """(like (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)) (path (id x (case_insensitive) (unqualified)) (path_expr (lit "c") (case_insensitive))))"""
     )
 
-    //****************************************
+    // ****************************************
     // call date_add and date_diff (special syntax)
-    //****************************************
+    // ****************************************
 
     private fun assertDateArithmetic(
         templateSql: String,
@@ -976,8 +976,8 @@ class SqlParserTest : SqlParserTestBase() {
         assertExpression(
             templateSql.replace("<op>", operation),
             templateExpectedV0.replace("<op>", operation),
-            templateExpectedPartiqlAst.replace("<op>", operation))
-
+            templateExpectedPartiqlAst.replace("<op>", operation)
+        )
     }
 
     @Test
@@ -1036,10 +1036,9 @@ class SqlParserTest : SqlParserTestBase() {
         "(call date_<op> (lit timezone_minute) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
     )
 
-
-    //****************************************
+    // ****************************************
     // call extract (special syntax)
-    //****************************************
+    // ****************************************
     @Test
     fun callExtractYear() = assertExpression(
         "extract(year from a)",
@@ -1106,11 +1105,12 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun parameterExpression() = assertExpression(
         "?",
-        "(parameter 1)")
+        "(parameter 1)"
+    )
 
-    //****************************************
+    // ****************************************
     // SELECT
-    //****************************************
+    // ****************************************
     @Test
     fun selectWithSingleFrom() = assertExpression(
         "SELECT a FROM table1",
@@ -1153,7 +1153,6 @@ class SqlParserTest : SqlParserTestBase() {
         "(select (project (project_list (project_all (path (id a (case_insensitive) (unqualified)) (path_expr (lit \"b\") (case_insensitive)))))) (from (scan (id table1 (case_insensitive) (unqualified)) t null null)))"
     )
 
-
     @Test
     fun selectWithFromAt() = assertExpression(
         "SELECT ord FROM table1 AT ord",
@@ -1167,7 +1166,6 @@ class SqlParserTest : SqlParserTestBase() {
         "(select (project (list (id ord case_insensitive) (id val case_insensitive))) (from (at ord (as val (id table1 case_insensitive)))))",
         "(select (project (project_list (project_expr (id ord (case_insensitive) (unqualified)) null) (project_expr (id val (case_insensitive) (unqualified)) null))) (from (scan (id table1 (case_insensitive) (unqualified)) val ord null)))"
     )
-
 
     @Test
     fun selectWithFromIdBy() = assertExpression(
@@ -1196,7 +1194,6 @@ class SqlParserTest : SqlParserTestBase() {
         "(select (project (list (project_all))) (from (by uid (at ord (as val (id table1 case_insensitive))))))",
         "(select (project (project_star)) (from (scan (id table1 (case_insensitive) (unqualified)) val ord uid)))"
     )
-
 
     @Test
     fun selectWithFromUnpivot() = assertExpression(
@@ -1381,7 +1378,6 @@ class SqlParserTest : SqlParserTestBase() {
         )
         """
     )
-
 
     @Test
     fun selectListWithAggregateWildcardCall() = assertExpression(
@@ -1676,13 +1672,13 @@ class SqlParserTest : SqlParserTestBase() {
         """
     )
 
-    //****************************************
+    // ****************************************
     // ORDER BY
-    //****************************************
+    // ****************************************
     @Test
     fun orderBySingleId() = assertExpression(
-            "SELECT a FROM tb WHERE hk = 1 ORDER BY rk1",
-            """(select 
+        "SELECT a FROM tb WHERE hk = 1 ORDER BY rk1",
+        """(select 
             (project 
                 (project_list 
                     (project_expr 
@@ -1706,8 +1702,8 @@ class SqlParserTest : SqlParserTestBase() {
 
     @Test
     fun orderByMultipleIds() = assertExpression(
-            "SELECT a FROM tb WHERE hk = 1 ORDER BY rk1, rk2, rk3",
-            """(select 
+        "SELECT a FROM tb WHERE hk = 1 ORDER BY rk1, rk2, rk3",
+        """(select 
             (project 
                 (project_list 
                     (project_expr 
@@ -1737,8 +1733,8 @@ class SqlParserTest : SqlParserTestBase() {
 
     @Test
     fun orderBySingleIdDESC() = assertExpression(
-            "SELECT a FROM tb WHERE hk = 1 ORDER BY rk1 DESC",
-            """(select 
+        "SELECT a FROM tb WHERE hk = 1 ORDER BY rk1 DESC",
+        """(select 
             (project 
                 (project_list 
                     (project_expr 
@@ -1762,8 +1758,8 @@ class SqlParserTest : SqlParserTestBase() {
 
     @Test
     fun orderByMultipleIdsWithOrderingSpec() = assertExpression(
-            "SELECT a FROM tb WHERE hk = 1 ORDER BY rk1 ASC, rk2 DESC",
-            """(select 
+        "SELECT a FROM tb WHERE hk = 1 ORDER BY rk1 ASC, rk2 DESC",
+        """(select 
             (project 
                 (project_list 
                     (project_expr 
@@ -1787,9 +1783,9 @@ class SqlParserTest : SqlParserTestBase() {
                         (desc)))))
         """
     )
-    //****************************************
+    // ****************************************
     // GROUP BY and GROUP PARTIAL BY
-    //****************************************
+    // ****************************************
     @Test
     fun groupBySingleId() = assertExpression(
         "SELECT a FROM data GROUP BY a",
@@ -1868,9 +1864,9 @@ class SqlParserTest : SqlParserTestBase() {
         """
     )
 
-    //****************************************
+    // ****************************************
     // HAVING
-    //****************************************
+    // ****************************************
     @Test
     fun havingMinimal() = assertExpression(
         "SELECT a FROM data HAVING a = b",
@@ -1934,9 +1930,9 @@ class SqlParserTest : SqlParserTestBase() {
         """
     )
 
-    //****************************************
+    // ****************************************
     // PIVOT
-    //****************************************
+    // ****************************************
     @Test
     fun pivotWithOnlyFrom() = assertExpression(
         "PIVOT v AT n FROM data",
@@ -1983,9 +1979,9 @@ class SqlParserTest : SqlParserTestBase() {
         """
     )
 
-    //****************************************
+    // ****************************************
     // DML
-    //****************************************
+    // ****************************************
 
     @Test
     fun fromInsertValuesDml() = assertExpression(
@@ -2097,8 +2093,8 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     @Ignore
     fun fromInsertValueReturningDml() = assertExpression(
-            "FROM x INSERT INTO foo VALUE 1 RETURNING ALL OLD foo",
-            """
+        "FROM x INSERT INTO foo VALUE 1 RETURNING ALL OLD foo",
+        """
           (dml
             (dml_op_list
               (insert_value
@@ -2246,7 +2242,8 @@ class SqlParserTest : SqlParserTestBase() {
               )
             )
           )
-        """)
+        """
+    )
 
     @Test
     fun insertValueAtReturningDml() = assertExpression(
@@ -2261,7 +2258,8 @@ class SqlParserTest : SqlParserTestBase() {
                         (returning_elem 
                             (all_old) 
                             (returning_column (id foo (case_insensitive) (unqualified)))))))
-        """)
+        """
+    )
 
     @Test
     fun insertValueAtMultiReturningTwoColsDml() = assertExpression(
@@ -2276,12 +2274,13 @@ class SqlParserTest : SqlParserTestBase() {
                         (returning_elem 
                             (all_old) 
                             (returning_column (id a (case_insensitive) (unqualified)))))))
-        """)
+        """
+    )
 
     @Test
     fun insertValueAtMultiReturningThreeColsDml() = assertExpression(
-            "INSERT INTO foo VALUE 1 AT bar RETURNING MODIFIED OLD bar, MODIFIED NEW bar, ALL NEW *",
-            """
+        "INSERT INTO foo VALUE 1 AT bar RETURNING MODIFIED OLD bar, MODIFIED NEW bar, ALL NEW *",
+        """
             (dml 
                 (operations 
                     (dml_op_list (insert_value (id foo (case_insensitive) (unqualified)) 
@@ -2297,12 +2296,13 @@ class SqlParserTest : SqlParserTestBase() {
                         (returning_elem 
                             (all_new) 
                             (returning_wildcard)))))
-        """)
+        """
+    )
 
     @Test
     fun insertValueAtOnConflictDml() = assertExpression(
-            "INSERT INTO foo VALUE 1 AT bar ON CONFLICT WHERE a DO NOTHING",
-            """
+        "INSERT INTO foo VALUE 1 AT bar ON CONFLICT WHERE a DO NOTHING",
+        """
           (dml
             (operations (dml_op_list
               (insert_value
@@ -2316,7 +2316,8 @@ class SqlParserTest : SqlParserTestBase() {
               )
             ))
           )
-        """)
+        """
+    )
 
     @Test
     fun insertValueAtOnConflictReturningDml() = assertExpression(
@@ -2336,12 +2337,13 @@ class SqlParserTest : SqlParserTestBase() {
                 (returning_elem 
                     (all_old) 
                     (returning_column (id foo (case_insensitive) (unqualified)))))))
-        """)
+        """
+    )
 
     @Test
     fun insertValueOnConflictDml() = assertExpression(
-            "INSERT INTO foo VALUE 1 ON CONFLICT WHERE bar DO NOTHING",
-            """
+        "INSERT INTO foo VALUE 1 ON CONFLICT WHERE bar DO NOTHING",
+        """
           (dml
             (operations (dml_op_list
               (insert_value
@@ -2355,12 +2357,13 @@ class SqlParserTest : SqlParserTestBase() {
               )
             ))
           )
-        """)
+        """
+    )
 
     @Test
     fun insertValueOnConflictExpr1Dml() = assertExpression(
-            "INSERT INTO foo VALUE 1 ON CONFLICT WHERE hk=1 DO NOTHING",
-            """
+        "INSERT INTO foo VALUE 1 ON CONFLICT WHERE hk=1 DO NOTHING",
+        """
           (dml
             (operations (dml_op_list
               (insert_value
@@ -2374,12 +2377,13 @@ class SqlParserTest : SqlParserTestBase() {
               )
             ))
           )
-        """)
+        """
+    )
 
     @Test
     fun insertValueOnConflictExpr2Dml() = assertExpression(
-            "INSERT INTO foo VALUE 1 ON CONFLICT WHERE hk=1 and rk=1 DO NOTHING",
-            """
+        "INSERT INTO foo VALUE 1 ON CONFLICT WHERE hk=1 and rk=1 DO NOTHING",
+        """
           (dml
             (operations (dml_op_list
               (insert_value
@@ -2393,12 +2397,13 @@ class SqlParserTest : SqlParserTestBase() {
               )
             ))
           )
-        """)
+        """
+    )
 
     @Test
     fun insertValueOnConflictExpr3Dml() = assertExpression(
-            "INSERT INTO foo VALUE 1 ON CONFLICT WHERE hk BETWEEN 'a' and 'b' or rk = 'c' DO NOTHING",
-            """
+        "INSERT INTO foo VALUE 1 ON CONFLICT WHERE hk BETWEEN 'a' and 'b' or rk = 'c' DO NOTHING",
+        """
           (dml
             (operations (dml_op_list
               (insert_value
@@ -2412,12 +2417,13 @@ class SqlParserTest : SqlParserTestBase() {
               )
             ))
           )
-        """)
+        """
+    )
 
     @Test
     fun insertValueOnConflictExpr4Dml() = assertExpression(
-            "INSERT INTO foo VALUE 1 ON CONFLICT WHERE not hk = 'a' DO NOTHING",
-            """
+        "INSERT INTO foo VALUE 1 ON CONFLICT WHERE not hk = 'a' DO NOTHING",
+        """
           (dml
             (operations (dml_op_list
               (insert_value
@@ -2431,12 +2437,13 @@ class SqlParserTest : SqlParserTestBase() {
               )
             ))
           )
-        """)
+        """
+    )
 
     @Test
     fun insertValueOnConflictExpr5Dml() = assertExpression(
-            "INSERT INTO foo VALUE 1 ON CONFLICT WHERE attribute_exists(hk) DO NOTHING",
-            """
+        "INSERT INTO foo VALUE 1 ON CONFLICT WHERE attribute_exists(hk) DO NOTHING",
+        """
           (dml
             (operations (dml_op_list 
               (insert_value
@@ -2450,12 +2457,13 @@ class SqlParserTest : SqlParserTestBase() {
               )
             ))
           )
-        """)
+        """
+    )
 
     @Test
     fun insertValueOnConflictExpr6Dml() = assertExpression(
-            "INSERT INTO foo VALUE 1 ON CONFLICT WHERE not attribute_exists(hk) DO NOTHING",
-            """
+        "INSERT INTO foo VALUE 1 ON CONFLICT WHERE not attribute_exists(hk) DO NOTHING",
+        """
           (dml
             (operations (dml_op_list
               (insert_value
@@ -2469,7 +2477,8 @@ class SqlParserTest : SqlParserTestBase() {
               )
             ))
           )
-        """)
+        """
+    )
 
     @Test
     fun insertQueryDml() = assertExpression(
@@ -2505,8 +2514,8 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     @Ignore
     fun insertQueryReturningDml() = assertExpression(
-            "INSERT INTO foo SELECT y FROM bar RETURNING ALL NEW foo",
-            """
+        "INSERT INTO foo SELECT y FROM bar RETURNING ALL NEW foo",
+        """
           (dml
             (operations
               (dml_op_list
@@ -2754,7 +2763,8 @@ class SqlParserTest : SqlParserTestBase() {
                 (eq
                     (id a (case_insensitive) (unqualified))
                     (id b (case_insensitive) (unqualified)))))
-    """)
+    """
+    )
 
     @Test
     fun legacyUpdateComplexDml() = assertExpression(
@@ -2988,7 +2998,8 @@ class SqlParserTest : SqlParserTestBase() {
             (from (scan (id x (case_insensitive) (unqualified)) null null null))
             (where (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))))
           )
-        """)
+        """
+    )
 
     @Test
     fun fromMultipleRemoveReturningDml() = assertExpression(
@@ -3413,8 +3424,8 @@ class SqlParserTest : SqlParserTestBase() {
 
     @Test
     fun updateWhereReturningPathDml() = assertExpression(
-            "UPDATE x SET k = 5, m = 6 WHERE a = b RETURNING MODIFIED OLD a.b",
-            """(dml 
+        "UPDATE x SET k = 5, m = 6 WHERE a = b RETURNING MODIFIED OLD a.b",
+        """(dml 
             (operations 
                 (dml_op_list 
                     (set (assignment (id k (case_insensitive) (unqualified)) (lit 5))) 
@@ -3514,8 +3525,8 @@ class SqlParserTest : SqlParserTestBase() {
 
     @Test
     fun deleteReturningDml() = assertExpression(
-    "DELETE FROM y RETURNING MODIFIED NEW a",
-    """
+        "DELETE FROM y RETURNING MODIFIED NEW a",
+        """
       (dml
         (operations (dml_op_list (delete)))
         (from (scan (id y (case_insensitive) (unqualified)) null null null))
@@ -3697,7 +3708,7 @@ class SqlParserTest : SqlParserTestBase() {
     )
 
     // DDL
-    //****************************************
+    // ****************************************
     @Test
     fun createTable() = assertExpression(
         "CREATE TABLE foo",
@@ -3789,8 +3800,8 @@ class SqlParserTest : SqlParserTestBase() {
 
     @Test
     fun unionSelectPrecedence() = assertExpression(
-            "SELECT * FROM foo UNION SELECT * FROM bar",
-            """
+        "SELECT * FROM foo UNION SELECT * FROM bar",
+        """
         (union
             (select
                 (project
@@ -3805,7 +3816,7 @@ class SqlParserTest : SqlParserTestBase() {
                 (from
                     (id bar case_insensitive))))            
         """,
-            """
+        """
         (union
             (distinct)
             (select
@@ -3864,9 +3875,9 @@ class SqlParserTest : SqlParserTestBase() {
         "(intersect (all) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
     )
 
-    //****************************************
+    // ****************************************
     // semicolon at end of sqlUnderTest
-    //****************************************
+    // ****************************************
     @Test
     fun semicolonAtEndOfQuery() = assertExpression(
         "SELECT * FROM <<1>>;",
@@ -3905,9 +3916,9 @@ class SqlParserTest : SqlParserTestBase() {
         assertEquals(withoutSemicolon, withSemicolon)
     }
 
-    //****************************************
+    // ****************************************
     // LET clause parsing
-    //****************************************
+    // ****************************************
 
     private val projectX = PartiqlAst.build { projectList(projectExpr(id("x"))) }
 
@@ -3949,7 +3960,8 @@ class SqlParserTest : SqlParserTestBase() {
 
     @Test
     fun selectFromLetFunctionWithLiteralsTest() = assertExpression(
-        "SELECT x FROM table1 LET foo(42, 'bar') AS A") {
+        "SELECT x FROM table1 LET foo(42, 'bar') AS A"
+    ) {
         select(
             project = projectX,
             from = scan(id("table1")),
@@ -3959,7 +3971,8 @@ class SqlParserTest : SqlParserTestBase() {
 
     @Test
     fun selectFromLetFunctionWithVariablesTest() = assertExpression(
-        "SELECT x FROM table1 LET foo(table1) AS A") {
+        "SELECT x FROM table1 LET foo(table1) AS A"
+    ) {
         select(
             project = projectX,
             from = scan(id("table1")),
@@ -3967,9 +3980,9 @@ class SqlParserTest : SqlParserTestBase() {
         )
     }
 
-    //****************************************
+    // ****************************************
     // OFFSET clause parsing
-    //****************************************
+    // ****************************************
 
     private fun buildProject(project: String) = PartiqlAst.build { projectList(projectExpr(id(project))) }
 
@@ -4016,53 +4029,64 @@ class SqlParserTest : SqlParserTestBase() {
         )
     }
 
-    //****************************************
+    // ****************************************
     // EXEC clause parsing
-    //****************************************
+    // ****************************************
     @Test
     fun execNoArgs() = assertExpression(
-        "EXEC foo") {
+        "EXEC foo"
+    ) {
         exec("foo", emptyList())
     }
 
     @Test
     fun execOneStringArg() = assertExpression(
-        "EXEC foo 'bar'") {
+        "EXEC foo 'bar'"
+    ) {
         exec("foo", listOf(lit(ionString("bar"))))
     }
 
     @Test
     fun execOneIntArg() = assertExpression(
-        "EXEC foo 1") {
+        "EXEC foo 1"
+    ) {
         exec("foo", listOf(lit(ionInt(1))))
     }
 
     @Test
     fun execMultipleArg() = assertExpression(
-        "EXEC foo 'bar0', `1d0`, 2, [3]") {
+        "EXEC foo 'bar0', `1d0`, 2, [3]"
+    ) {
         exec("foo", listOf(lit(ionString("bar0")), lit(ionDecimal(Decimal.valueOf(1))), lit(ionInt(2)), list(lit(ionInt(3)))))
     }
 
     @Test
     fun execWithMissing() = assertExpression(
-        "EXEC foo MISSING") {
+        "EXEC foo MISSING"
+    ) {
         exec("foo", listOf(missing()))
     }
 
     @Test
     fun execWithBag() = assertExpression(
-        "EXEC foo <<1>>") {
+        "EXEC foo <<1>>"
+    ) {
         exec("foo", listOf(bag(lit(ionInt(1)))))
     }
 
     @Test
     fun execWithSelectQuery() = assertExpression(
-        "EXEC foo SELECT baz FROM bar") {
-        exec("foo", listOf(
-            select(
-                project = projectList(projectExpr(id("baz"))),
-                from = scan(id("bar"))
-            )))
+        "EXEC foo SELECT baz FROM bar"
+    ) {
+        exec(
+            "foo",
+            listOf(
+                select(
+                    project = projectList(projectExpr(id("baz"))),
+                    from = scan(id("bar"))
+                )
+            )
+        )
     }
 
     @Test
@@ -4085,7 +4109,8 @@ class SqlParserTest : SqlParserTestBase() {
                 not not not not not not not not not not not not not not not not not not not not not not not not 
                 not not not not not not not not not not not not not not not not not not not not not not not not 
                 not not not not not not not not not not not not not not not not not not not not not not not not false
-                """)
+                """
+            )
         }
         val maxParseTime: Long = 5000
         t.join(maxParseTime)
@@ -4093,6 +4118,7 @@ class SqlParserTest : SqlParserTestBase() {
 
         assertTrue(
             "parsing many nested unary nots should take less than $maxParseTime",
-            System.currentTimeMillis() - startTime < maxParseTime)
+            System.currentTimeMillis() - startTime < maxParseTime
+        )
     }
 }

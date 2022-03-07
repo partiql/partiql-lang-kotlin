@@ -26,14 +26,12 @@ import com.amazon.ion.IonWriter
 class IonWriterContext(val writer: IonWriter) {
 
     fun setNextFieldName(fieldName: String) {
-        if(!writer.isInStruct) {
+        if (!writer.isInStruct) {
             throw IllegalStateException("Cannot set field name while not in a struct")
         }
 
         writer.setFieldName(fieldName)
     }
-
-
 
     fun sexp(block: IonWriterContext.() -> Unit) {
         writer.stepIn(IonType.SEXP)
@@ -185,7 +183,7 @@ class IonWriterContext(val writer: IonWriter) {
         }
     }
 
-    fun value(fieldName: String, value:IonValue) {
+    fun value(fieldName: String, value: IonValue) {
         setNextFieldName(fieldName)
         value(value)
     }

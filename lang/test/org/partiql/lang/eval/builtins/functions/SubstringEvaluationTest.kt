@@ -37,7 +37,7 @@ class SubstringEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase(
                 "substring('abcde\u0832fgh' FROM 3 FOR 6)",
                 "\"cde\u0832fg\""
-            ), //Note:  U+0832 is a "combining diacritical mark" https://en.wikipedia.org/wiki/Combining_character.
+            ), // Note:  U+0832 is a "combining diacritical mark" https://en.wikipedia.org/wiki/Combining_character.
             // Even though it is visually merged with the preceding letter when displayed, it still counts as a distinct codepoint.
             ExprFunctionTestCase("substring(null FROM 1)", "null"),
             ExprFunctionTestCase("substring('abc' FROM null)", "null"),

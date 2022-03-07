@@ -18,7 +18,7 @@ internal class EndlessTokenList(val ion: IonSystem, val startIndex: Int = 0) : A
     override fun get(index: Int): Token {
         val span = SourceSpan(index / 80L, index % 80L, 1L)
 
-        return when((startIndex + index) % 2) {
+        return when ((startIndex + index) % 2) {
             0 -> Token(
                 type = TokenType.LITERAL,
                 value = ion.newInt(startIndex + index),

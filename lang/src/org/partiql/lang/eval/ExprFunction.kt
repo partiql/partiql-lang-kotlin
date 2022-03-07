@@ -69,7 +69,6 @@ interface ExprFunction {
         errNoContext("Invalid implementation for ${signature.name}#call", ErrorCode.INTERNAL_ERROR, true)
     }
 
-
     /**
      * Invokes the function with its required parameters and any variadic parameters.
      *
@@ -87,7 +86,6 @@ interface ExprFunction {
         errNoContext("Invalid implementation for ${signature.name}#call", ErrorCode.INTERNAL_ERROR, true)
     }
 }
-
 
 /**
  * Invokes the function.

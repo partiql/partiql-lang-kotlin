@@ -36,7 +36,7 @@ internal class UnixTimestampFunction(val valueFactory: ExprValueFactory) : ExprF
     )
 
     private val millisPerSecond = BigDecimal(1000)
-    private fun epoch(timestamp: Timestamp) : BigDecimal = timestamp.decimalMillis.divide(millisPerSecond)
+    private fun epoch(timestamp: Timestamp): BigDecimal = timestamp.decimalMillis.divide(millisPerSecond)
 
     override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
         return valueFactory.newInt(epoch(env.session.now).toLong())

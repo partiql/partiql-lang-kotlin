@@ -98,7 +98,7 @@ class TimeTest {
             precision = 0,
             tz_min = -18 * MINUTES_PER_HOUR,
             expectedLocalTime = LocalTime.of(23, 23, 12, 0),
-            expectedZoneOffset = ZoneOffset.ofTotalSeconds( -18 * SECONDS_PER_HOUR)
+            expectedZoneOffset = ZoneOffset.ofTotalSeconds(-18 * SECONDS_PER_HOUR)
         ),
         case(
             hour = 23,
@@ -108,7 +108,7 @@ class TimeTest {
             precision = 0,
             tz_min = 18 * MINUTES_PER_HOUR,
             expectedLocalTime = LocalTime.of(23, 23, 12, 0),
-            expectedZoneOffset = ZoneOffset.ofTotalSeconds( 18 * SECONDS_PER_HOUR)
+            expectedZoneOffset = ZoneOffset.ofTotalSeconds(18 * SECONDS_PER_HOUR)
         ),
         case(
             hour = 23,

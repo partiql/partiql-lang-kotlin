@@ -59,7 +59,8 @@ abstract class VisitorTransformBase : PartiqlAst.VisitorTransform() {
                 order = order,
                 offset = offset,
                 limit = limit,
-                metas = metas)
+                metas = metas
+            )
         }
     }
 
@@ -88,7 +89,8 @@ abstract class VisitorTransformBase : PartiqlAst.VisitorTransform() {
                 from,
                 where,
                 returning,
-                metas)
+                metas
+            )
         }
     }
 }

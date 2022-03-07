@@ -22,7 +22,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(ArgumentsForDateLiterals::class)
-    fun testDate(tc: EvaluatorTestCase)  {
+    fun testDate(tc: EvaluatorTestCase) {
         val originalExprValue = eval(tc.sqlUnderTest)
         assertEquals(originalExprValue.toString(), tc.expectedSql)
         if (originalExprValue.type == ExprValueType.DATE) {
@@ -62,7 +62,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(ArgumentsForTimeLiterals::class)
-    fun testTime(tc: TimeTestCase)  {
+    fun testTime(tc: TimeTestCase) {
         val originalExprValue = eval(source = tc.query, compileOptions = tc.compileOptions)
         assertEquals(tc.expected, originalExprValue.toString())
         if (originalExprValue.type == ExprValueType.TIME) {
@@ -99,8 +99,8 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
             case("TIME (3) '12:24:12.12300'", "12:24:12.123", TimeForValidation(12, 24, 12, 123000000, 3)),
             case("TIME (4) '12:24:12.12300'", "12:24:12.1230", TimeForValidation(12, 24, 12, 123000000, 4)),
             case("TIME (4) '12:24:12.123'", "12:24:12.1230", TimeForValidation(12, 24, 12, 123000000, 4)),
-            case("TIME (0) '12:59:59.9'", "13:00:00", TimeForValidation(13, 0,0, 0, 0)),
-            case("TIME WITH TIME ZONE '00:00:00'", "00:00:00${defaultTimezoneOffset.getOffsetHHmm()}", TimeForValidation(0,0,0,0,0, defaultTzMinutes)),
+            case("TIME (0) '12:59:59.9'", "13:00:00", TimeForValidation(13, 0, 0, 0, 0)),
+            case("TIME WITH TIME ZONE '00:00:00'", "00:00:00${defaultTimezoneOffset.getOffsetHHmm()}", TimeForValidation(0, 0, 0, 0, 0, defaultTzMinutes)),
             case("TIME (2) WITH TIME ZONE '12:24:12.123'", "12:24:12.12${defaultTimezoneOffset.getOffsetHHmm()}", TimeForValidation(12, 24, 12, 120000000, 2, defaultTzMinutes)),
             case("TIME WITH TIME ZONE '12:24:12.12300'", "12:24:12.12300${defaultTimezoneOffset.getOffsetHHmm()}", TimeForValidation(12, 24, 12, 123000000, 5, defaultTzMinutes)),
             case("TIME (3) WITH TIME ZONE '12:24:12.12300'", "12:24:12.123${defaultTimezoneOffset.getOffsetHHmm()}", TimeForValidation(12, 24, 12, 123000000, 3, defaultTzMinutes)),
@@ -117,18 +117,18 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
             case("TIME WITH TIME ZONE '12:25:12.123456' IS TIME", "true"),
             case("TIME (2) WITH TIME ZONE '01:01:12' IS TIME", "true"),
             case("'01:01:12' IS TIME", "false"),
-            case("TIME WITH TIME ZONE '00:00:00'", "00:00:00-01:00", TimeForValidation(0,0,0,0,0, -60), buildCompileOptions(-1)),
-            case("TIME WITH TIME ZONE '11:23:45.678'", "11:23:45.678+06:00", TimeForValidation(11,23,45,678000000,3, 360), buildCompileOptions(6)),
-            case("TIME WITH TIME ZONE '11:23:45.678-05:30'", "11:23:45.678-05:30", TimeForValidation(11,23,45,678000000,3, -330), buildCompileOptions(6)),
+            case("TIME WITH TIME ZONE '00:00:00'", "00:00:00-01:00", TimeForValidation(0, 0, 0, 0, 0, -60), buildCompileOptions(-1)),
+            case("TIME WITH TIME ZONE '11:23:45.678'", "11:23:45.678+06:00", TimeForValidation(11, 23, 45, 678000000, 3, 360), buildCompileOptions(6)),
+            case("TIME WITH TIME ZONE '11:23:45.678-05:30'", "11:23:45.678-05:30", TimeForValidation(11, 23, 45, 678000000, 3, -330), buildCompileOptions(6)),
             case("TIME (2) WITH TIME ZONE '12:59:59.13456'", "12:59:59.13-05:30", TimeForValidation(12, 59, 59, 130000000, 2, -330), buildCompileOptions(-5, -30))
         )
     }
 
     private val randomGenerator = generateRandomSeed()
 
-    private fun generateRandomSeed() : Random {
+    private fun generateRandomSeed(): Random {
         val seed = Random.nextInt()
-        println("Randomly generated seed is ${seed}. Use this to reproduce failures in dev environment.")
+        println("Randomly generated seed is $seed. Use this to reproduce failures in dev environment.")
         return Random(seed)
     }
 
@@ -141,7 +141,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         val tz_minutes: Int? = null
     ) {
         fun expectedTimeString(withTimeZone: Boolean): String {
-            val timezoneMinutes = when(withTimeZone) {
+            val timezoneMinutes = when (withTimeZone) {
                 true -> tz_minutes ?: ZoneOffset.UTC.totalSeconds / SECONDS_PER_MINUTE
                 else -> null
             }
@@ -150,20 +150,21 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
 
         override fun toString(): String {
             val hourStr = hour.toString().padStart(2, '0')
-            val minStr = minute.toString().padStart(2,'0')
+            val minStr = minute.toString().padStart(2, '0')
             val secStr = second.toString().padStart(2, '0')
             val nanoStr = nano.toString().padStart(9, '0')
-            val timezoneStr = tz_minutes?.let { "" +
-                (if (it >= 0) "+" else "-") +
-                (it.absoluteValue / 60).toString().padStart(2, '0') +
-                ":" +
-                (it.absoluteValue % 60).toString().padStart(2, '0')
+            val timezoneStr = tz_minutes?.let {
+                "" +
+                    (if (it >= 0) "+" else "-") +
+                    (it.absoluteValue / 60).toString().padStart(2, '0') +
+                    ":" +
+                    (it.absoluteValue % 60).toString().padStart(2, '0')
             } ?: ""
             return "$hourStr:$minStr:$secStr.$nanoStr$timezoneStr"
         }
     }
 
-    private fun Random.nextTime(withPrecision: Boolean = false, withTimezone: Boolean = false) : TimeForValidation {
+    private fun Random.nextTime(withPrecision: Boolean = false, withTimezone: Boolean = false): TimeForValidation {
         val hour = nextInt(24)
         val minute = nextInt(60)
         val second = nextInt(60)
@@ -219,7 +220,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
 
     @Test
     fun testRandomTimesWithPrecision() {
-         (RANDOM_TIMES_WITH_PRECISION + RANDOM_TIMES_WITH_PRECISION_AND_TIMEZONE).map {
+        (RANDOM_TIMES_WITH_PRECISION + RANDOM_TIMES_WITH_PRECISION_AND_TIMEZONE).map {
             val query = "TIME (${it.precision}) '$it'"
             val expected = it.expectedTimeString(withTimeZone = false)
             val actual = eval(query)
@@ -229,7 +230,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
 
     @Test
     fun testRandomTimesWithTimezone() {
-         (RANDOM_TIMES + RANDOM_TIMES_WITH_TIMEZONE).map {
+        (RANDOM_TIMES + RANDOM_TIMES_WITH_TIMEZONE).map {
             val query = "TIME WITH TIME ZONE '$it'"
             val expected = it.expectedTimeString(withTimeZone = true)
             val actual = eval(query)
@@ -254,7 +255,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
                 try {
                     voidEval(tc.query)
                     fail("Expected ${tc.query} to throw an error")
-                } catch(e: EvaluationException) {
+                } catch (e: EvaluationException) {
                     // EvaluationException is thrown as expected, do nothing.
                 }
             false -> {

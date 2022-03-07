@@ -41,15 +41,14 @@ data class IonResultTestSuite(
     ): List<IonResultTestCase> {
         val allTests = groups.flatMap { category -> category.tests.map { it.copy(group = category.name) } }
         // find any names in the skip list that are not actual tests (to help keep the skip list clean and sane)
-        val invalidFailListNames = (failingTestNames.filter { failEntry -> allTests.none { it.name == failEntry }})
-        if(invalidFailListNames.any()) {
+        val invalidFailListNames = (failingTestNames.filter { failEntry -> allTests.none { it.name == failEntry } })
+        if (invalidFailListNames.any()) {
             println("The following failing test names entries do not match the name of any test:")
             invalidFailListNames.forEach {
                 println("\"$it\"")
             }
             fail("invalid failing test names found, see console")
         }
-
 
         return allTests.map {
             it.copy(expectFailure = failingTestNames.contains(it.name))
@@ -68,7 +67,6 @@ data class IonResultTestSuite(
     /** Instantiates an instance of [MockDb] with values and types instantiated using [globals]. */
     fun mockDb(valueFactory: ExprValueFactory): MockDb =
         MockDb(globals, valueFactory, createPartiqlIonSchemaSystem(ION))
-
 }
 
 /**
@@ -84,5 +82,3 @@ data class IonResultTestSuite(
  */
 internal fun defineTestSuite(block: SuiteBuilder.() -> Unit): IonResultTestSuite =
     SuiteBuilderImpl().apply(block).build()
-
-

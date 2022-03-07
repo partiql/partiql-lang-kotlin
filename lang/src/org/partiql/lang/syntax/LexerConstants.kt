@@ -309,16 +309,16 @@ internal val DATE_TIME_PART_KEYWORDS: Set<String> = DateTimePart.values()
 
 /** Keywords that are aliases for type keywords. */
 @JvmField internal val TYPE_ALIASES = mapOf(
-    "varchar"   to "character_varying",
-    "char"      to "character",
-    "dec"       to "decimal",
-    "int"       to "integer",
-    "int2"      to "smallint",
-    "integer2"  to "smallint",
-    "int4"      to "integer4",
-    "int8"      to "integer8",
-    "bigint"    to "integer8",
-    "bool"      to "boolean"
+    "varchar" to "character_varying",
+    "char" to "character",
+    "dec" to "decimal",
+    "int" to "integer",
+    "int2" to "smallint",
+    "integer2" to "smallint",
+    "int4" to "integer4",
+    "int8" to "integer8",
+    "bigint" to "integer8",
+    "bool" to "boolean"
 )
 
 /**
@@ -327,40 +327,40 @@ internal val DATE_TIME_PART_KEYWORDS: Set<String> = DateTimePart.values()
  * don't require that.
  */
 @JvmField internal val CORE_TYPE_NAME_ARITY_MAP = mapOf(
-    "missing"           to 0..0, // PartiQL
-    "null"              to 0..0, // Ion
-    "boolean"           to 0..0, // Ion & SQL-99
-    "smallint"          to 0..0, // SQL-92
-    "integer4"          to 0..0, // PartiQL
-    "integer8"          to 0..0, // PartiQL
-    "integer"           to 0..0, // Ion & SQL-92
-    "float"             to 0..1, // Ion & SQL-92
-    "real"              to 0..0, // SQL-92
-    "double_precision"  to 0..0, // SQL-92
-    "decimal"           to 0..2, // Ion & SQL-92
-    "numeric"           to 0..2, // SQL-92
-    "timestamp"         to 0..0, // Ion & SQL-92
-    "date"              to 0..0, // PartiQL & SQL-92
-    "time"              to 0..1, // PartiQL & SQL-92
-    "character"         to 0..1, // SQL-92
+    "missing" to 0..0, // PartiQL
+    "null" to 0..0, // Ion
+    "boolean" to 0..0, // Ion & SQL-99
+    "smallint" to 0..0, // SQL-92
+    "integer4" to 0..0, // PartiQL
+    "integer8" to 0..0, // PartiQL
+    "integer" to 0..0, // Ion & SQL-92
+    "float" to 0..1, // Ion & SQL-92
+    "real" to 0..0, // SQL-92
+    "double_precision" to 0..0, // SQL-92
+    "decimal" to 0..2, // Ion & SQL-92
+    "numeric" to 0..2, // SQL-92
+    "timestamp" to 0..0, // Ion & SQL-92
+    "date" to 0..0, // PartiQL & SQL-92
+    "time" to 0..1, // PartiQL & SQL-92
+    "character" to 0..1, // SQL-92
     "character_varying" to 0..1, // SQL-92
-    "string"            to 0..0, // Ion
-    "symbol"            to 0..0, // Ion
-    "clob"              to 0..0, // Ion
-    "blob"              to 0..0, // Ion
-    "struct"            to 0..0, // Ion
-    "tuple"             to 0..0, // PartiQL
-    "list"              to 0..0, // Ion
-    "sexp"              to 0..0, // Ion
-    "bag"               to 0..0 // PartiQL
-     // TODO SQL-92 types BIT, BIT VARYING, DATE, TIME, INTERVAL and TIMEZONE qualifier
+    "string" to 0..0, // Ion
+    "symbol" to 0..0, // Ion
+    "clob" to 0..0, // Ion
+    "blob" to 0..0, // Ion
+    "struct" to 0..0, // Ion
+    "tuple" to 0..0, // PartiQL
+    "list" to 0..0, // Ion
+    "sexp" to 0..0, // Ion
+    "bag" to 0..0 // PartiQL
+    // TODO SQL-92 types BIT, BIT VARYING, DATE, TIME, INTERVAL and TIMEZONE qualifier
 )
 
 /** Indicates the keywords that indicate special union types. */
 @JvmField internal val UNION_TYPE_NAME_ARITY_MAP = mapOf(
-    "any"               to 0..0,
+    "any" to 0..0,
     /* ElasticSearch Data Types */
-    "es_any"            to 0..0
+    "es_any" to 0..0
 )
 
 /** All type names and their arity. */
@@ -405,7 +405,7 @@ internal val DATE_TIME_PART_KEYWORDS: Set<String> = DateTimePart.values()
     "sum"
 )
 
-@JvmField internal val BASE_DML_KEYWORDS  = setOf("insert_into", "set", "remove")
+@JvmField internal val BASE_DML_KEYWORDS = setOf("insert_into", "set", "remove")
 
 /**
  * These reserved keywords cannot be used as identifiers for items in `select list`.
@@ -423,7 +423,7 @@ internal val DATE_TIME_PART_KEYWORDS: Set<String> = DateTimePart.values()
 /** Operators that parse as infix, but have special parsing rules. */
 @JvmField internal val SPECIAL_INFIX_OPERATORS = setOf(
     "between", "not_between",
-    "like", "not_like"        // optionally a ternary operator when `ESCAPE` is present
+    "like", "not_like" // optionally a ternary operator when `ESCAPE` is present
 )
 
 /** Binary operators with verbatim lexical token equivalents. */
@@ -438,42 +438,48 @@ internal val DATE_TIME_PART_KEYWORDS: Set<String> = DateTimePart.values()
 
 /** Tokens comprising multiple lexemes (**happens before** keyword aliasing). */
 @JvmField internal val MULTI_LEXEME_TOKEN_MAP = mapOf(
-    listOf("not", "in")                 to ("not_in" to OPERATOR),
-    listOf("is", "not")                 to ("is_not" to OPERATOR),
-    listOf("not", "between")            to ("not_between" to OPERATOR),
-    listOf("intersect", "all")          to ("intersect_all" to OPERATOR),
-    listOf("except", "all")             to ("except_all" to OPERATOR),
-    listOf("union", "all")              to ("union_all" to OPERATOR),
-    listOf("character", "varying")      to ("character_varying" to KEYWORD),
-    listOf("double", "precision")       to ("double_precision" to KEYWORD),
-    listOf("not", "like")               to ("not_like" to OPERATOR),
-    listOf("cross", "join")             to ("cross_join" to KEYWORD),
-    listOf("inner", "join")             to ("inner_join" to KEYWORD),
-    listOf("inner", "cross", "join")    to ("cross_join" to KEYWORD),
-    listOf("left", "join")              to ("left_join" to KEYWORD),
-    listOf("left", "outer", "join")     to ("left_join" to KEYWORD),
-    listOf("left", "cross", "join")     to ("left_cross_join" to KEYWORD),
-    listOf("left", "outer",
-           "cross", "join")             to ("left_cross_join" to KEYWORD),
-    listOf("right", "join")             to ("right_join" to KEYWORD),
-    listOf("right", "outer", "join")    to ("right_join" to KEYWORD),
-    listOf("right", "cross", "join")    to ("right_cross_join" to KEYWORD),
-    listOf("right", "outer",
-           "cross", "join")             to ("right_cross_join" to KEYWORD),
-    listOf("full", "join")              to ("outer_join" to KEYWORD),
-    listOf("outer", "join")             to ("outer_join" to KEYWORD),
-    listOf("full", "outer", "join")     to ("outer_join" to KEYWORD),
-    listOf("full", "cross", "join")     to ("outer_cross_join" to KEYWORD),
-    listOf("outer", "cross", "join")    to ("outer_cross_join" to KEYWORD),
-    listOf("full", "outer",
-           "cross", "join")             to ("outer_cross_join" to KEYWORD),
-    listOf("insert", "into")            to ("insert_into" to KEYWORD),
-    listOf("on", "conflict")            to ("on_conflict" to KEYWORD),
-    listOf("do", "nothing")             to ("do_nothing" to KEYWORD),
-    listOf("modified", "old")           to ("modified_old" to KEYWORD),
-    listOf("modified", "new")           to ("modified_new" to KEYWORD),
-    listOf("all", "old")                to ("all_old" to KEYWORD),
-    listOf("all", "new")                to ("all_new" to KEYWORD)
+    listOf("not", "in") to ("not_in" to OPERATOR),
+    listOf("is", "not") to ("is_not" to OPERATOR),
+    listOf("not", "between") to ("not_between" to OPERATOR),
+    listOf("intersect", "all") to ("intersect_all" to OPERATOR),
+    listOf("except", "all") to ("except_all" to OPERATOR),
+    listOf("union", "all") to ("union_all" to OPERATOR),
+    listOf("character", "varying") to ("character_varying" to KEYWORD),
+    listOf("double", "precision") to ("double_precision" to KEYWORD),
+    listOf("not", "like") to ("not_like" to OPERATOR),
+    listOf("cross", "join") to ("cross_join" to KEYWORD),
+    listOf("inner", "join") to ("inner_join" to KEYWORD),
+    listOf("inner", "cross", "join") to ("cross_join" to KEYWORD),
+    listOf("left", "join") to ("left_join" to KEYWORD),
+    listOf("left", "outer", "join") to ("left_join" to KEYWORD),
+    listOf("left", "cross", "join") to ("left_cross_join" to KEYWORD),
+    listOf(
+        "left", "outer",
+        "cross", "join"
+    ) to ("left_cross_join" to KEYWORD),
+    listOf("right", "join") to ("right_join" to KEYWORD),
+    listOf("right", "outer", "join") to ("right_join" to KEYWORD),
+    listOf("right", "cross", "join") to ("right_cross_join" to KEYWORD),
+    listOf(
+        "right", "outer",
+        "cross", "join"
+    ) to ("right_cross_join" to KEYWORD),
+    listOf("full", "join") to ("outer_join" to KEYWORD),
+    listOf("outer", "join") to ("outer_join" to KEYWORD),
+    listOf("full", "outer", "join") to ("outer_join" to KEYWORD),
+    listOf("full", "cross", "join") to ("outer_cross_join" to KEYWORD),
+    listOf("outer", "cross", "join") to ("outer_cross_join" to KEYWORD),
+    listOf(
+        "full", "outer",
+        "cross", "join"
+    ) to ("outer_cross_join" to KEYWORD),
+    listOf("insert", "into") to ("insert_into" to KEYWORD),
+    listOf("on", "conflict") to ("on_conflict" to KEYWORD),
+    listOf("do", "nothing") to ("do_nothing" to KEYWORD),
+    listOf("modified", "old") to ("modified_old" to KEYWORD),
+    listOf("modified", "new") to ("modified_new" to KEYWORD),
+    listOf("all", "old") to ("all_old" to KEYWORD),
+    listOf("all", "new") to ("all_new" to KEYWORD)
 )
 
 @JvmField internal val MULTI_LEXEME_MIN_LENGTH = MULTI_LEXEME_TOKEN_MAP.keys.map { it.size }.min()!!
@@ -524,45 +530,45 @@ enum class OperatorPrecedenceGroups(val precedence: Int) {
  */
 @JvmField internal val OPERATOR_PRECEDENCE = mapOf(
     // set operator group
-    "intersect"     to OperatorPrecedenceGroups.SET.precedence,
+    "intersect" to OperatorPrecedenceGroups.SET.precedence,
     "intersect_all" to OperatorPrecedenceGroups.SET.precedence,
-    "except"        to OperatorPrecedenceGroups.SET.precedence,
-    "except_all"    to OperatorPrecedenceGroups.SET.precedence,
-    "union"         to OperatorPrecedenceGroups.SET.precedence,
-    "union_all"     to OperatorPrecedenceGroups.SET.precedence,
+    "except" to OperatorPrecedenceGroups.SET.precedence,
+    "except_all" to OperatorPrecedenceGroups.SET.precedence,
+    "union" to OperatorPrecedenceGroups.SET.precedence,
+    "union_all" to OperatorPrecedenceGroups.SET.precedence,
 
     // logical group
-    "or"            to OperatorPrecedenceGroups.LOGICAL_OR.precedence,
-    "and"           to OperatorPrecedenceGroups.LOGICAL_AND.precedence,
-    "not"           to OperatorPrecedenceGroups.LOGICAL_NOT.precedence,
+    "or" to OperatorPrecedenceGroups.LOGICAL_OR.precedence,
+    "and" to OperatorPrecedenceGroups.LOGICAL_AND.precedence,
+    "not" to OperatorPrecedenceGroups.LOGICAL_NOT.precedence,
 
     // equality group (TODO add other morphemes of equality/non-equality)
-    "="             to OperatorPrecedenceGroups.EQUITY.precedence,
-    "<>"            to OperatorPrecedenceGroups.EQUITY.precedence,
-    "is"            to OperatorPrecedenceGroups.EQUITY.precedence,
-    "is_not"        to OperatorPrecedenceGroups.EQUITY.precedence,
-    "in"            to OperatorPrecedenceGroups.EQUITY.precedence,
-    "not_in"        to OperatorPrecedenceGroups.EQUITY.precedence,
+    "=" to OperatorPrecedenceGroups.EQUITY.precedence,
+    "<>" to OperatorPrecedenceGroups.EQUITY.precedence,
+    "is" to OperatorPrecedenceGroups.EQUITY.precedence,
+    "is_not" to OperatorPrecedenceGroups.EQUITY.precedence,
+    "in" to OperatorPrecedenceGroups.EQUITY.precedence,
+    "not_in" to OperatorPrecedenceGroups.EQUITY.precedence,
 
     // comparison group
-    "<"             to OperatorPrecedenceGroups.COMPARISON.precedence,
-    "<="            to OperatorPrecedenceGroups.COMPARISON.precedence,
-    ">"             to OperatorPrecedenceGroups.COMPARISON.precedence,
-    ">="            to OperatorPrecedenceGroups.COMPARISON.precedence,
-    "between"       to OperatorPrecedenceGroups.COMPARISON.precedence, // note that this **must** be above 'AND'
-    "not_between"   to OperatorPrecedenceGroups.COMPARISON.precedence, // note that this **must** be above 'AND'
-    "like"          to OperatorPrecedenceGroups.COMPARISON.precedence,
-    "not_like"      to OperatorPrecedenceGroups.COMPARISON.precedence,
+    "<" to OperatorPrecedenceGroups.COMPARISON.precedence,
+    "<=" to OperatorPrecedenceGroups.COMPARISON.precedence,
+    ">" to OperatorPrecedenceGroups.COMPARISON.precedence,
+    ">=" to OperatorPrecedenceGroups.COMPARISON.precedence,
+    "between" to OperatorPrecedenceGroups.COMPARISON.precedence, // note that this **must** be above 'AND'
+    "not_between" to OperatorPrecedenceGroups.COMPARISON.precedence, // note that this **must** be above 'AND'
+    "like" to OperatorPrecedenceGroups.COMPARISON.precedence,
+    "not_like" to OperatorPrecedenceGroups.COMPARISON.precedence,
 
     // the addition group
-    "+"             to OperatorPrecedenceGroups.ADDITION.precedence,
-    "-"             to OperatorPrecedenceGroups.ADDITION.precedence,
-    "||"            to OperatorPrecedenceGroups.ADDITION.precedence,
+    "+" to OperatorPrecedenceGroups.ADDITION.precedence,
+    "-" to OperatorPrecedenceGroups.ADDITION.precedence,
+    "||" to OperatorPrecedenceGroups.ADDITION.precedence,
 
     // multiply group (TODO add exponentiation)
-    "*"             to OperatorPrecedenceGroups.MULTIPLY.precedence,
-    "/"             to OperatorPrecedenceGroups.MULTIPLY.precedence,
-    "%"             to OperatorPrecedenceGroups.MULTIPLY.precedence
+    "*" to OperatorPrecedenceGroups.MULTIPLY.precedence,
+    "/" to OperatorPrecedenceGroups.MULTIPLY.precedence,
+    "%" to OperatorPrecedenceGroups.MULTIPLY.precedence
 )
 
 //
@@ -572,24 +578,24 @@ enum class OperatorPrecedenceGroups(val precedence: Int) {
 
 private fun allCase(chars: String) = chars.toLowerCase() + chars.toUpperCase()
 
-const internal val SIGN_CHARS = "+-"
+internal const val SIGN_CHARS = "+-"
 
-const internal val NON_ZERO_DIGIT_CHARS = "123456789"
-const internal val DIGIT_CHARS = "0" + NON_ZERO_DIGIT_CHARS
+internal const val NON_ZERO_DIGIT_CHARS = "123456789"
+internal const val DIGIT_CHARS = "0" + NON_ZERO_DIGIT_CHARS
 
 @JvmField internal val E_NOTATION_CHARS = allCase("E")
 
-const internal val NON_OVERLOADED_OPERATOR_CHARS = "^%=@+"
-const internal val OPERATOR_CHARS = NON_OVERLOADED_OPERATOR_CHARS + "-*/<>|!"
+internal const val NON_OVERLOADED_OPERATOR_CHARS = "^%=@+"
+internal const val OPERATOR_CHARS = NON_OVERLOADED_OPERATOR_CHARS + "-*/<>|!"
 
 @JvmField internal val ALPHA_CHARS = allCase("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 @JvmField internal val IDENT_START_CHARS = "_\$" + ALPHA_CHARS
 @JvmField internal val IDENT_CONTINUE_CHARS = IDENT_START_CHARS + DIGIT_CHARS
 
-const internal val NL_WHITESPACE_CHARS = "\u000D\u000A"                 // CR, LF
-const internal val NON_NL_WHITESPACE_CHARS = "\u0009\u000B\u000C\u0020" // TAB, VT, FF, SPACE
-const internal val ALL_WHITESPACE_CHARS = NL_WHITESPACE_CHARS + NON_NL_WHITESPACE_CHARS
+internal const val NL_WHITESPACE_CHARS = "\u000D\u000A" // CR, LF
+internal const val NON_NL_WHITESPACE_CHARS = "\u0009\u000B\u000C\u0020" // TAB, VT, FF, SPACE
+internal const val ALL_WHITESPACE_CHARS = NL_WHITESPACE_CHARS + NON_NL_WHITESPACE_CHARS
 
-const internal val DOUBLE_QUOTE_CHARS = "\""
-const internal val SINGLE_QUOTE_CHARS = "'"
-const internal val BACKTICK_CHARS = "`"
+internal const val DOUBLE_QUOTE_CHARS = "\""
+internal const val SINGLE_QUOTE_CHARS = "'"
+internal const val BACKTICK_CHARS = "`"
