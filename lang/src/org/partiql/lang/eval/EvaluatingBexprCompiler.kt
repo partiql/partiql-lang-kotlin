@@ -52,7 +52,7 @@ internal class EvaluatingBexprCompiler(
                 BindingsCollectionType.BAG,
                 rows.map { item ->
                     val bindings = newBindingsMap().also { bindingsMap ->
-                        bindingsMap[asIndex] = item
+                        bindingsMap[asIndex] = item.unnamedValue() // Remove any ordinal (output is a bag)
 
                         // DL TODO: consider putting a ValueFactory on the EvaluationSession so we don't have
                         // DL TODO: to use thunkFactory's

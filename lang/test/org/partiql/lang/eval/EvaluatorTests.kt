@@ -37,7 +37,6 @@ class EvaluatorTests {
             // below this line use features not supported by the current physical algebra compiler.
             // most fail due to not supporting foundational nodes like id, global_id and scan yet.
             // PartiQL's test cases are not all that cleanly separated.
-            "rangeOverNestedWithAt", // DL TODO: bug?
             "selectCorrelatedLeftJoin", // DL TODO: bug?
             "selectCorrelatedLeftJoinOnClause", // DL TODO: bug?
             "selectJoinOnClauseScoping", // DL TODO: bug?
