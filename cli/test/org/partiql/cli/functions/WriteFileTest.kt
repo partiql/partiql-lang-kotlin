@@ -20,7 +20,6 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.partiql.lang.eval.Environment
-import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValueFactory
 import java.io.File
 
@@ -28,7 +27,7 @@ class WriteFileTest {
     private val ion = IonSystemBuilder.standard().build()
     private val valueFactory = ExprValueFactory.standard(ion)
     private val function = WriteFile(valueFactory)
-    private val env = Environment(session = EvaluationSession.standard())
+    private val env = Environment.standard()
 
     private fun String.exprValue() = valueFactory.newFromIonValue(ion.singleValue(this))
     private fun readFile(path: String) = File(dirPath(path)).readText()

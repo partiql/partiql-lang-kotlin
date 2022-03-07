@@ -21,6 +21,7 @@ import org.partiql.lang.domains.staticType
 import org.partiql.lang.errors.ErrorBehaviorInPermissiveMode
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
+import org.partiql.lang.eval.relation.RelationIterator
 
 
 /**
@@ -32,17 +33,10 @@ import org.partiql.lang.errors.Property
  */
 internal typealias ThunkEnv = (Environment) -> ExprValue
 
-// DL TODO: is there a better home for this?
-// DL TODO: does [BindingsMap] really need to be mutable?  Can it be made immutable?
-internal typealias BindingsMap = MutableMap<Int, ExprValue>
-internal fun newBindingsMap() = HashMap<Int, ExprValue>()
-internal enum class BindingsCollectionType { BAG, LIST }
-internal class BindingsCollection(
-    val seqType: BindingsCollectionType,
-    val sequence: Sequence<BindingsMap>
-) : Sequence<BindingsMap> by sequence
-
-internal typealias BindingsThunkEnv = (Environment) -> BindingsCollection
+/** A thunk that returns a [RelationIterator], which is the result of evaluating a relational operator. */
+internal fun interface RelationThunkEnv {
+    fun eval(env: Environment): RelationIterator
+}
 
 /**
  * A thunk taking a single [T] argument and the current environment.
@@ -75,6 +69,7 @@ data class ThunkOptions private constructor(
     val handleExceptionForLegacyMode: ThunkExceptionHandlerForLegacyMode = DEFAULT_EXCEPTION_HANDLER_FOR_LEGACY_MODE,
     val handleExceptionForPermissiveMode: ThunkExceptionHandlerForPermissiveMode = DEFAULT_EXCEPTION_HANDLER_FOR_PERMISSIVE_MODE
 ) {
+
     companion object {
 
         /**
@@ -226,7 +221,7 @@ internal abstract class ThunkFactory(
     }
 
     /** DL TODO: kdoc, handle exceptions, make inline, make t crossinline */
-    internal fun bindingsThunk(metas: MetaContainer, t: BindingsThunkEnv): BindingsThunkEnv {
+    internal fun bindingsThunk(metas: MetaContainer, t: RelationThunkEnv): RelationThunkEnv {
         val sourceLocationMeta = metas[SourceLocationMeta.TAG] as? SourceLocationMeta
 
         // DL TODO: handleException--it is just not currently clear how exceptions inside this thunk should be

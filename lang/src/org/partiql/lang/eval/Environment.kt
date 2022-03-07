@@ -22,14 +22,24 @@ package org.partiql.lang.eval
  *
  * @param session The evaluation session.
  * @param registers An array of registers containing [ExprValue]s needed during query execution.  Generally, there is
- * one register per local variable.  When query execution begins, every register should be set to `MISSING`.
+ * one register per local variable.  When query execution begins, every register should be set to `MISSING`.  This is
+ * an array (and not a [List]) because its semantics match exactly what we need: fixed length but mutable elements.
  */
-data class Environment(
+class Environment(
     val session: EvaluationSession,
-    val localBindingsMap: BindingsMap = newBindingsMap()
+    val registers: Array<ExprValue>
 ) {
 
     companion object {
-        fun standard() = Environment(session = EvaluationSession.standard())
+        /**
+         * This is really just for unit tests--the [Environment] created by this isn't really usable for normal
+         * query evaluation because it has no registers.
+         */
+        fun standard() =
+            Environment(
+                session = EvaluationSession.standard(),
+                registers = emptyArray()
+
+        )
     }
 }

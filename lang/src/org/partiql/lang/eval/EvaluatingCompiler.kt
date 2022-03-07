@@ -33,6 +33,7 @@ import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.like.PatternPart
 import org.partiql.lang.eval.like.executePattern
 import org.partiql.lang.eval.like.parsePattern
+import org.partiql.lang.eval.relation.RelationIterator
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.visitors.PartiqlPhysicalSanityValidator
 import org.partiql.lang.types.AnyOfType
@@ -123,11 +124,18 @@ internal class EvaluatingCompiler(
 
         val thunk = compileAstStatement(plan)
 
+        // determine the number of registers we'll need.
+        // DL TODO: precompute this and store it in the plan.
+        val registerCount = object : PartiqlPhysical.VisitorFold<Long>() {
+            override fun visitVarDecl(node: PartiqlPhysical.VarDecl, accumulator: Long): Long =
+                if(accumulator > node.index.value) accumulator else node.index.value
+        }.walkStatement(plan, 0L) + 1
+
         return object : Expression {
             override fun eval(session: EvaluationSession): ExprValue {
                 val env = Environment(
                     session = session,
-                    //registers = (0..registerCount).map { valueFactory.missingValue }
+                    registers = Array(registerCount.toIntExact()) { valueFactory.missingValue }
                 )
 
                 return thunk(env)
@@ -295,20 +303,18 @@ internal class EvaluatingCompiler(
 
     private fun compileBindingsToValues(expr: PartiqlPhysical.Expr.BindingsToValues): ThunkEnv {
         val mapThunk = compileAstExpr(expr.exp)
-        val bexprThunk: BindingsThunkEnv = EvaluatingBexprCompiler(this, thunkFactory).convert(expr.query)
+        val bexprThunk: RelationThunkEnv = EvaluatingBexprCompiler(this, thunkFactory).convert(expr.query)
 
         return thunkFactory.thunkEnv(expr.metas) { env ->
-            val seq = bexprThunk(env)
-            val elements = seq.asSequence().map {
-                mapThunk(env.copy(localBindingsMap = it))
+            val elements = sequence {
+                val relItr = bexprThunk.eval(env)
+                while (relItr.nextRow()) {
+                    yield(mapThunk(env))
+                }
             }
-            when(seq.seqType) {
-                BindingsCollectionType.BAG -> valueFactory.newBag(elements)
-                BindingsCollectionType.LIST -> valueFactory.newList(elements)
-            }
+            valueFactory.newBag(elements)
         }
     }
-
 
     private fun compileAstExprs(args: List<PartiqlPhysical.Expr>) = args.map { compileAstExpr(it) }
 
@@ -974,7 +980,7 @@ internal class EvaluatingCompiler(
     private fun compileLocalId(expr: PartiqlPhysical.Expr.LocalId, metas: MetaContainer): ThunkEnv {
         val localIndex = expr.index.value.toIntExact()
         return thunkFactory.thunkEnv(metas) { env ->
-            env.localBindingsMap[localIndex]
+            env.registers[localIndex]
                 ?: err(
                     "Variable with index $localIndex not found in localBindingsMap",
                     ErrorCode.INTERNAL_ERROR,

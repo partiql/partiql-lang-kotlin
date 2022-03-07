@@ -23,7 +23,6 @@ import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.Test
 import org.partiql.lang.eval.Environment
-import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.ExprValueType
@@ -34,7 +33,7 @@ class ReadFileTest {
     private val ion = IonSystemBuilder.standard().build()
     private val valueFactory = ExprValueFactory.standard(ion)
     private val function = ReadFile(valueFactory)
-    private val env = Environment(session = EvaluationSession.standard())
+    private val env = Environment.standard()
 
     private fun String.exprValue() = valueFactory.newFromIonValue(ion.singleValue(this))
     private fun writeFile(path: String, content: String) = File(dirPath(path)).writeText(content)
