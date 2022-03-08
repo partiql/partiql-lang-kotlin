@@ -26,6 +26,7 @@ Option                                Description
 -o, --output <File>                   output file, requires the query option (default: stdout)
 --of, --output-format <OutputFormat:  output format, requires the query option (default: PARTIQL)
   (ION_TEXT|ION_BINARY|PARTIQL|PARTIQL_PRETTY)>
+-p, --permissive                      run the PartiQL query in PERMISSIVE typing mode
 -q, --query <String>                  PartiQL query, triggers non interactive mode
 ```
 
@@ -673,3 +674,26 @@ All the available options for customized CSV files are shown as following:
 5. Set escape sign (single character only): `'escape':'\'`
 6. Set quote sign (single character only): `'quote':'"'`
 7. Set delimiter sign (single character only): `'delimiter':','`
+
+## Permissive Typing Mode
+By default, the CLI/REPL runs in [LEGACY](https://github.com/partiql/partiql-lang-kotlin/blob/main/lang/src/org/partiql/lang/eval/CompileOptions.kt#L53-L62)
+typing mode, which will give an evaluation time error in the case of data type mismatches.
+
+```
+(Running in the default LEGACY typing mode)
+PartiQL> 1 + 'foo';
+org.partiql.lang.eval.EvaluationException: ...
+    ...
+```
+
+Specifying the `-p` or `-permissive` flag will allow you to run PartiQL queries in [PERMISSIVE](https://github.com/partiql/partiql-lang-kotlin/blob/main/lang/src/org/partiql/lang/eval/CompileOptions.kt#L64-L73)
+typing mode, which will return `MISSING` in the case of data type mismatches.
+
+```
+(Running in PERMISSIVE typing mode)
+PartiQL> 1 + 'foo';
+==='
+MISSING
+---
+OK!
+```

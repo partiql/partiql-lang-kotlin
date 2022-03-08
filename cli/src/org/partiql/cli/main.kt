@@ -26,9 +26,11 @@ import org.partiql.cli.functions.ReadFile
 import org.partiql.cli.functions.WriteFile
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.Bindings
+import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.syntax.SqlParser
 import java.io.File
 import java.io.FileInputStream
@@ -40,10 +42,6 @@ private val ion = IonSystemBuilder.standard().build()
 private val valueFactory = ExprValueFactory.standard(ion)
 
 private val parser = SqlParser(ion)
-private val compilerPipeline = CompilerPipeline.build(ion) {
-    addFunction(ReadFile(valueFactory))
-    addFunction(WriteFile(valueFactory))
-}
 
 private val optParser = OptionParser()
 
@@ -84,6 +82,8 @@ private val queryOpt = optParser.acceptsAll(listOf("query", "q"), "PartiQL query
     .withRequiredArg()
     .ofType(String::class.java)
 
+private val permissiveModeOpt = optParser.acceptsAll(listOf("permissive", "p"), "runs the query in permissive mode")
+
 private val environmentOpt = optParser.acceptsAll(listOf("environment", "e"), "initial global environment (optional)")
     .withRequiredArg()
     .ofType(File::class.java)
@@ -114,6 +114,8 @@ private val outputFormatOpt = optParser.acceptsAll(listOf("output-format", "of")
  *
  * Options:
  * * -e --environment: takes an environment file to load as the initial global environment
+ * * -p --permissive: run the query in permissive typing mode (returns MISSING rather than error for data type
+ * mismatches)
  * * Non interactive only:
  *      * -q --query: PartiQL query
  *      * -i --input: input file, default STDIN
@@ -133,6 +135,21 @@ fun main(args: Array<String>) = try {
         throw IllegalArgumentException("Non option arguments are not allowed!")
     }
 
+    // compile options
+    // TODO: add other compile options https://github.com/partiql/partiql-lang-kotlin/issues/544
+    val compileOptions = CompileOptions.build {
+        when (optionSet.has(permissiveModeOpt)) {
+            true -> typingMode(TypingMode.PERMISSIVE)
+            false -> typingMode(TypingMode.LEGACY)
+        }
+    }
+
+    val compilerPipeline = CompilerPipeline.build(ion) {
+        addFunction(ReadFile(valueFactory))
+        addFunction(WriteFile(valueFactory))
+        compileOptions(compileOptions)
+    }
+
     // common options
     val environment = when {
         optionSet.has(environmentOpt) -> {
@@ -144,9 +161,9 @@ fun main(args: Array<String>) = try {
     }
 
     if (optionSet.has(queryOpt)) {
-        runCli(environment, optionSet)
+        runCli(environment, optionSet, compilerPipeline)
     } else {
-        runRepl(environment)
+        runRepl(environment, compilerPipeline)
     }
 } catch (e: OptionException) {
     System.err.println("${e.message}\n")
@@ -157,11 +174,11 @@ fun main(args: Array<String>) = try {
     exitProcess(1)
 }
 
-private fun runRepl(environment: Bindings<ExprValue>) {
+private fun runRepl(environment: Bindings<ExprValue>, compilerPipeline: CompilerPipeline) {
     Repl(valueFactory, System.`in`, System.out, parser, compilerPipeline, environment).run()
 }
 
-private fun runCli(environment: Bindings<ExprValue>, optionSet: OptionSet) {
+private fun runCli(environment: Bindings<ExprValue>, optionSet: OptionSet, compilerPipeline: CompilerPipeline) {
     val input = if (optionSet.has(inputFileOpt)) {
         FileInputStream(optionSet.valueOf(inputFileOpt))
     } else {

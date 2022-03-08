@@ -24,6 +24,7 @@ import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.TypingMode
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -34,7 +35,6 @@ class CliTest {
     private val ion = IonSystemBuilder.standard().build()
     private val valueFactory = ExprValueFactory.standard(ion)
     private val output = ByteArrayOutputStream()
-    private val compilerPipeline = CompilerPipeline.standard(ion)
     private val testFile = File("test.ion")
 
     @Before
@@ -52,7 +52,8 @@ class CliTest {
         input: String? = null,
         bindings: Bindings<ExprValue> = Bindings.empty(),
         outputFormat: OutputFormat = OutputFormat.ION_TEXT,
-        output: OutputStream = this.output
+        output: OutputStream = this.output,
+        compilerPipeline: CompilerPipeline = CompilerPipeline.standard(ion)
     ) =
         Cli(
             valueFactory,
@@ -165,5 +166,18 @@ class CliTest {
     @Test(expected = EvaluationException::class)
     fun withoutInputWithInputDataBindingThrowsException() {
         makeCli("SELECT * FROM input_data").runAndOutput()
+    }
+
+    @Test
+    fun runQueryInPermissiveMode() {
+        val permissiveModeCP = CompilerPipeline.build(ion) {
+            compileOptions {
+                typingMode(TypingMode.PERMISSIVE)
+            }
+        }
+        val subject = makeCli("1 + 'foo'", compilerPipeline = permissiveModeCP)
+        val actual = subject.runAndOutput()
+
+        assertAsIon("\$partiql_missing::null", actual)
     }
 }
