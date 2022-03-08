@@ -25,6 +25,7 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.MapBindings
 import org.partiql.lang.eval.StructOrdering
+import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.delegate
 import org.partiql.lang.syntax.Parser
 import org.partiql.lang.util.ConfigurableExprValueFormatter
@@ -203,6 +204,15 @@ internal class Repl(
         outputWriter.write("\n")
     }
 
+    private fun printTypingMode() {
+        val typingModeString = when (compiler.compileOptions.typingMode) {
+            TypingMode.LEGACY -> "LEGACY"
+            TypingMode.PERMISSIVE -> "PERMISSIVE"
+        }
+        outputWriter.write("Typing mode: $typingModeString")
+        outputWriter.write("\n")
+    }
+
     fun retrievePartiQLVersionAndHash(): String {
         val properties = Properties()
         properties.load(this.javaClass.getResourceAsStream("/partiql.properties"))
@@ -286,6 +296,7 @@ internal class Repl(
             state = when (state) {
                 ReplState.INIT -> {
                     printWelcomeMessage()
+                    printTypingMode()
                     printVersionNumber()
                     ReplState.READY
                 }
