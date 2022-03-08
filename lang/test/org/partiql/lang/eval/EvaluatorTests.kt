@@ -79,10 +79,10 @@ class EvaluatorTests {
             "unpivotMissingCrossJoinWithAsAndAt", // TODO: PHYS_ALGEBRA_REFACTOR_UNPIVOT
         )
 
-        // DL TODO: need to duplicate these tests--some also should run without a working [GlobalBindings]
+        /** Test cases for `definedGlobalVariableTests`. */
         @JvmStatic
         @Suppress("UNUSED")
-        fun evaluatorTests(): List<IonResultTestCase> {
+        fun definedVariableTestCases(): List<IonResultTestCase> {
             val unskippedTests = EVALUATOR_TEST_SUITE.getAllTests(SKIP_LIST)
 
             return unskippedTests.map {
@@ -98,9 +98,46 @@ class EvaluatorTests {
                     )
                 }
         }
+
+        /** Test cases for `undefinedGlobalVariableTests`. */
+        @JvmStatic
+        @Suppress("UNUSED")
+        fun undefinedVariableTestCases(): List<IonResultTestCase> {
+            val testCasesWithVariablesThatShadowGlobal = setOf(
+                "variableShadow",
+                "selectNonCorrelatedJoin",
+                "joinWithShadowedGlobal",
+            )
+            return definedVariableTestCases().map { tc ->
+                tc.takeIf { it.name in testCasesWithVariablesThatShadowGlobal }?.copy(expectFailure = true) ?: tc
+            }
+        }
     }
 
+    /**
+     * Runs the tests with bindings that are known at compile-time.
+     * In this scenario, global variables are unambiguously resolved at compile-time.
+     */
     @ParameterizedTest
-    @MethodSource("evaluatorTests")
-    fun allTests(tc: IonResultTestCase) = tc.runTestCase(valueFactory, mockDb)
+    @MethodSource("definedVariableTestCases")
+    fun definedGlobalVariableTests(tc: IonResultTestCase) = tc.runTestCase(
+        valueFactory,
+        mockDb,
+        defineGlobals = true
+    )
+
+    /**
+     * Runs the tests with bindings that are not known at compile-time.
+     *
+     * In this scenario, global variables are dynamically resolved at evaluation time.  This should be identical
+     * to [definedGlobalVariableTests], with only one exception: a local variable with the same name as a global
+     * variable will always be resolved to the local variables, even in within a `(scan ...)` `<expr>`.
+     */
+    @ParameterizedTest
+    @MethodSource("undefinedVariableTestCases")
+    fun undefinedGlobalVariableTests(tc: IonResultTestCase) = tc.runTestCase(
+        valueFactory,
+        mockDb,
+        defineGlobals = false
+    )
 }

@@ -1,5 +1,6 @@
 package org.partiql.lang.util.testdsl
 
+import com.amazon.ionelement.api.toIonValue
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.fail
@@ -13,6 +14,7 @@ import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.builtins.createBuiltinFunctions
 import org.partiql.lang.mockdb.MockDb
 import org.partiql.lang.syntax.SqlParser
+import org.partiql.lang.util.SexpAstPrettyPrinter
 import org.partiql.lang.util.assertIonEquals
 import org.partiql.planner.GlobalBindings
 import org.partiql.planner.PlanningResult
@@ -72,6 +74,16 @@ data class IonResultTestCase(
 internal fun IonResultTestCase.runTestCase(
     valueFactory: ExprValueFactory,
     db: MockDb,
+    /**
+     * Determines if global variables from [MockDb] should be defined.
+     *
+     * When true, `(id <name> <case> <scope-qualifier>)` referencing global variables will be rewritten to
+     * `(global_id <unique-id>)`.  Otherwise, rewritten to
+     * `(dynamic_id <name> <case> <scope-qualifier> [<search-expr>])`).  The latter more accurately reflects legacy
+     * behavior, from a time when PartiQL did not have a query planner or the ability to resolve variables at compile
+     * time.
+     */
+    defineGlobals: Boolean = false,
     compileOptionsBlock: (CompileOptions.Builder.() -> Unit)? = null
 ) {
     fun runTheTest() {
@@ -89,23 +101,25 @@ internal fun IonResultTestCase.runTestCase(
             expectedIonResult?.let { ION.singleValue(it) }
         }
 
-        val globalBindings = GlobalBindings { bindingName ->
-            val result = db.globals.entries.firstOrNull { bindingName.isEquivalentTo(it.key) }
-            if(result != null) {
-                // Note that the unique id is set to result.key (which is the actual name of the variable)
-                // which *might* have different letter case than the [bindingName].
-                ResolutionResult.GlobalVariable(result.key)
-            } else {
-                ResolutionResult.Undefined
+        val globalBindings = if(defineGlobals) {
+            GlobalBindings { bindingName ->
+                val result = db.globals.entries.firstOrNull { bindingName.isEquivalentTo(it.key) }
+                if(result != null) {
+                    // Note that the unique id is set to result.key (which is the actual name of the variable)
+                    // which *might* have different letter case than the [bindingName].
+                    ResolutionResult.GlobalVariable(result.key)
+                } else {
+                    ResolutionResult.Undefined
+                }
             }
+        } else {
+            GlobalBindings { ResolutionResult.Undefined }
         }
 
         val plannerResult = assertDoesNotThrow("Planning the query should not throw for test \"${this.name}\"") {
             val qp = createQueryPlanner(ION, allowUndefinedVariables = true, globalBindings)
             qp.plan(astStatement)
         }
-
-        // TODO:  should we be doing any assertions on the planner warnings? (currently we don't issue any)
 
         val plannedQuery = when(plannerResult) {
             is PlanningResult.Success -> plannerResult.physicalPlan
@@ -116,6 +130,7 @@ internal fun IonResultTestCase.runTestCase(
             null -> compileOptions
             else -> CompileOptions.build { compileOptionsBlock() }
         }
+
         // Uncomment to see query plan in test runner output.
         //println(SexpAstPrettyPrinter.format(plannedQuery.toIonElement().asAnyElement().toIonValue(ION)))
 
