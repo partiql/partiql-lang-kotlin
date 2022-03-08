@@ -123,15 +123,13 @@ internal class EvaluatingBexprCompiler(
                 break
             } else {
                 val matches = predicateThunk(env)
-                when (matches.type) {
-                    ExprValueType.MISSING, ExprValueType.NULL -> { }
-                    ExprValueType.BOOL -> {
+                when {
+                    matches.isUnknown() -> { }
+                    else -> {
                         if (matches.booleanValue()) {
                             yield()
-                        };
-                        Unit
+                        }
                     }
-                    else -> TODO("Handle msismatched where predicate type.")
                 }
             }
         }

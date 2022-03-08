@@ -490,7 +490,7 @@ internal class IonExprValue(private val valueFactory: ExprValueFactory, override
  * @param type The reported [ExprValueType] for this value.
  * @param sequence The [Sequence] generating function.
  */
-internal class SequenceExprValue( // dl todo: make private again
+internal class SequenceExprValue(
     private val ion: IonSystem,
     override val type: ExprValueType,
     private val sequence: Sequence<ExprValue>
