@@ -20,6 +20,9 @@ package org.partiql.lang.eval
  * TODO: would love to make this class `internal`, but it is currently an argument to `ExprFunction.call`.  That's
  * TODO: a big refactor.
  *
+ * Since the elements of [registers] are mutable, when if we decide to make query execution multi-threaded, we'll have
+ * to take care to not share [Environment] instances among different threads.
+ *
  * @param session The evaluation session.
  * @param registers An array of registers containing [ExprValue]s needed during query execution.  Generally, there is
  * one register per local variable.  When query execution begins, every register should be set to `MISSING`.  This is
@@ -39,7 +42,6 @@ class Environment(
             Environment(
                 session = EvaluationSession.standard(),
                 registers = emptyArray()
-
-        )
+            )
     }
 }
