@@ -4,8 +4,6 @@ import org.partiql.lang.domains.PartiqlPhysical
 
 /**
  * Helper to convert [PartiqlPhysical.Type] in AST to a [TypedOpParameter].
- *
- * DL TODO: resolve this duplication, which absolutely cannot remain.
  */
 fun PartiqlPhysical.Type.toTypedOpParameter(customTypedOpParameters: Map<String, TypedOpParameter>): TypedOpParameter = when (this) {
     is PartiqlPhysical.Type.MissingType -> TypedOpParameter(StaticType.MISSING)
