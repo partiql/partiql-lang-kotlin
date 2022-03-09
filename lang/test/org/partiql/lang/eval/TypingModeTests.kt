@@ -62,20 +62,20 @@ class TypingModeTests : EvaluatorTestBase() {
         try {
             eval(tc.sql, compileOptions = legacyCompileOptions).ionValue
             fail("Expected EvaluationException but none was thrown")
-        } catch (ex: EvaluationException) {
+        } catch(ex: EvaluationException) {
             assertEquals("error code", tc.expectedLegacyError.errorCode, ex.errorCode)
             assertEquals(
                 "line number",
                 tc.expectedLegacyError.lineNum.toLong(),
-                ex.errorContext?.get(Property.LINE_NUMBER)?.longValue()
-            )
+                ex.errorContext[Property.LINE_NUMBER]?.longValue())
             assertEquals(
                 "column number",
                 tc.expectedLegacyError.charOffset.toLong(),
-                ex.errorContext?.get(Property.COLUMN_NUMBER)?.longValue()
-            )
+                ex.errorContext[Property.COLUMN_NUMBER]?.longValue())
         }
 
         assertEvalExprValue(tc.sql, tc.expectedPermissiveModeResult, compileOptions = permissiveCompileOptions)
     }
+
+
 }

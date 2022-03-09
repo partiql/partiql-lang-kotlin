@@ -95,8 +95,8 @@ private class QueryPlannerImpl(
         } catch (ex: SyntaxException) {
             val problem = Problem(
                 SourceLocationMeta(
-                    ex.errorContext?.get(Property.LINE_NUMBER)?.longValue() ?: -1,
-                    ex.errorContext?.get(Property.COLUMN_NUMBER)?.longValue() ?: -1
+                    ex.errorContext[Property.LINE_NUMBER]?.longValue() ?: -1,
+                    ex.errorContext[Property.COLUMN_NUMBER]?.longValue() ?: -1
                 ),
                 PlanningProblemDetails.ParseError(ex.generateMessageNoLocation())
             )

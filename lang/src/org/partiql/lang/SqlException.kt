@@ -18,6 +18,7 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.errors.UNKNOWN
+import org.partiql.lang.util.propertyValueMapOf
 
 /**
  * General exception class for the interpreter.
@@ -40,13 +41,13 @@ import org.partiql.lang.errors.UNKNOWN
  * [SqlException]. This is the constructor for the second configuration explained above.
  *
  */
-open class SqlException(
-    override var message: String,
-    val errorCode: ErrorCode,
-    val errorContext: PropertyValueMap? = null,
-    cause: Throwable? = null
-) :
-    RuntimeException(message, cause) {
+open class SqlException(override var message: String,
+                        val errorCode: ErrorCode,
+                        errorContext: PropertyValueMap? = null,
+                        cause: Throwable? = null)
+    : RuntimeException(message, cause) {
+
+    val errorContext: PropertyValueMap = errorContext ?: propertyValueMapOf()
 
     /**
      * Given  the [errorCode], error context as a [propertyValueMap] and optional [cause] creates an
@@ -58,7 +59,7 @@ open class SqlException(
      * @param cause for this exception
      */
     constructor(errorCode: ErrorCode, propertyValueMap: PropertyValueMap, cause: Throwable? = null) :
-        this("", errorCode, propertyValueMap, cause)
+        this("",errorCode, propertyValueMap, cause)
 
     /**
      * Auto-generated message has the structure
@@ -95,7 +96,7 @@ open class SqlException(
     }
 
     private fun errorCategory(errorCode: ErrorCode?): String =
-        errorCode?.errorCategory() ?: UNKNOWN
+       errorCode?.errorCategory() ?: UNKNOWN
 
     override fun toString(): String =
         when (this.message.isNotBlank()) {
@@ -114,3 +115,4 @@ open class SqlException(
             }
         }
 }
+

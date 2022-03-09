@@ -33,6 +33,7 @@ import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.like.PatternPart
 import org.partiql.lang.eval.like.executePattern
 import org.partiql.lang.eval.like.parsePattern
+import org.partiql.lang.eval.physical.RelationThunkEnv
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.visitors.PartiqlPhysicalSanityValidator
 import org.partiql.lang.types.AnyOfType
@@ -305,7 +306,7 @@ internal class EvaluatingCompiler(
 
         return thunkFactory.thunkEnv(expr.metas) { env ->
             val elements = sequence {
-                val relItr = bexprThunk.eval(env)
+                val relItr = bexprThunk(env)
                 while (relItr.nextRow()) {
                     yield(mapThunk(env))
                 }

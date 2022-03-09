@@ -196,12 +196,11 @@ class EvaluatorStaticTypeTests {
     @ParameterizedTest
     @MethodSource("evaluatorStaticTypeTests")
     fun allTests(tc: IonResultTestCase) =
-        // DL TODO: run with planner
         tc.runTestCase(
             valueFactory = valueFactory,
             db = mockDb
         )
-            // Enable the static type inferencer for this
+        // Enable the static type inferencer for this
          //   pipelineBlock = { this.globalTypeBindings(mockDb.typeBindings) })
 
 }

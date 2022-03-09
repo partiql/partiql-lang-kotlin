@@ -6,6 +6,8 @@ import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
+import org.partiql.lang.eval.physical.RelationThunkEnv
+import org.partiql.lang.eval.physical.relationThunk
 import org.partiql.lang.eval.relation.RelationIterator
 import org.partiql.lang.eval.relation.RelationType
 import org.partiql.lang.eval.relation.relation
@@ -38,7 +40,7 @@ internal class EvaluatingBexprCompiler(
         val atIndex = node.atDecl?.index?.value?.toIntExact() ?: -1
         val byIndex = node.byDecl?.index?.value?.toIntExact() ?: -1
 
-        return thunkFactory.bindingsThunk(node.metas) { env ->
+        return relationThunk(node.metas) { env ->
             val valueToScan = exprThunk.invoke(env)
 
             // coerces non-collection types to a singleton Sequence<>.
@@ -73,8 +75,8 @@ internal class EvaluatingBexprCompiler(
         val predicateThunk = exprCompiler.compile(node.predicate)
         val sourceThunk = this.convert(node.source)
 
-        return thunkFactory.bindingsThunk(node.metas) { env ->
-            val sourceToFilter = sourceThunk.eval(env)
+        return relationThunk(node.metas) { env ->
+            val sourceToFilter = sourceThunk(env)
             createFilterRelItr(sourceToFilter, predicateThunk, env)
         }
     }
@@ -85,9 +87,9 @@ internal class EvaluatingBexprCompiler(
         env: Environment
     ): RelationIterator {
         return relation(RelationType.BAG) {
-            val leftItr = leftThunk.eval(env)
+            val leftItr = leftThunk(env)
             while (leftItr.nextRow()) {
-                val rightItr = rightThunk.eval(env)
+                val rightItr = rightThunk(env)
                 while (rightItr.nextRow()) {
                     yield()
                 }
@@ -103,7 +105,7 @@ internal class EvaluatingBexprCompiler(
         val predicateThunk = exprCompiler.compile(node.predicate)
 
         return when (node.joinType) {
-            is PartiqlPhysical.JoinType.Inner -> thunkFactory.bindingsThunk(node.metas) { env ->
+            is PartiqlPhysical.JoinType.Inner -> relationThunk(node.metas) { env ->
                 val crossJoinRelItr = createCrossJoinRelItr(leftThunk, rightThunk, env)
                 createFilterRelItr(crossJoinRelItr, predicateThunk, env)
             }
@@ -139,10 +141,10 @@ internal class EvaluatingBexprCompiler(
         val rowCountThunk = exprCompiler.compile(node.rowCount)
         val sourceThunk = this.convert(node.source)
         val rowCountLocation = node.rowCount.metas.sourceLocationMeta
-        return thunkFactory.bindingsThunk(node.metas) { env ->
+        return relationThunk(node.metas) { env ->
             val skipCount: Long = evalOffsetRowCount(rowCountThunk, env, rowCountLocation)
             relation(RelationType.BAG) {
-                val sourceRel = sourceThunk.eval(env)
+                val sourceRel = sourceThunk(env)
                 var rowCount = 0L
                 while(rowCount++ < skipCount) {
                     // stop iterating if we finish run out of rows before we hit the offset.
@@ -160,9 +162,9 @@ internal class EvaluatingBexprCompiler(
         val rowCountThunk = exprCompiler.compile(node.rowCount)
         val sourceThunk = this.convert(node.source)
         val rowCountLocation = node.rowCount.metas.sourceLocationMeta
-        return thunkFactory.bindingsThunk(node.metas) { env ->
+        return relationThunk(node.metas) { env ->
             val limitCount = evalLimitRowCount(rowCountThunk, env, rowCountLocation)
-            val rowIter = sourceThunk.eval(env)
+            val rowIter = sourceThunk(env)
             relation(RelationType.BAG) {
                 var rowCount = 0L
                 while(rowCount++ < limitCount && rowIter.nextRow()) {

@@ -33,11 +33,6 @@ import org.partiql.lang.eval.relation.RelationIterator
  */
 internal typealias ThunkEnv = (Environment) -> ExprValue
 
-/** A thunk that returns a [RelationIterator], which is the result of evaluating a relational operator. */
-internal fun interface RelationThunkEnv {
-    fun eval(env: Environment): RelationIterator
-}
-
 /**
  * A thunk taking a single [T] argument and the current environment.
  *
@@ -218,23 +213,6 @@ internal abstract class ThunkFactory(
                 t(env)
             }
         }.typeCheck(metas)
-    }
-
-    /** DL TODO: kdoc, handle exceptions, make inline, make t crossinline */
-    internal fun bindingsThunk(metas: MetaContainer, t: RelationThunkEnv): RelationThunkEnv {
-        val sourceLocationMeta = metas[SourceLocationMeta.TAG] as? SourceLocationMeta
-
-        // DL TODO: handleException--it is just not currently clear how exceptions inside this thunk should be
-        // DL TODO: handled exactly.  For instance, what does a permissive mode exception return?  For value
-        // DL TODO: expressions, it's supposed to return MISSING, but there is no BindingsCollection equivalent.
-        return t
-//                    //handleException(sourceLocationMeta) {
-//                        emit(row)
-//                    //}
-//                }
-//            }
-        //}
-            // DL TODO:.typeCheck(metas)
     }
 
     /**
@@ -551,23 +529,12 @@ internal class LegacyThunkFactory(
             try {
                 block()
             } catch (e: EvaluationException) {
-                when {
-                    e.errorContext == null ->
-                        throw EvaluationException(
-                                message = e.message,
-                                errorCode = e.errorCode,
-                                errorContext = errorContextFrom(sourceLocation),
-                                cause = e,
-                                internal = e.internal)
-                    else -> {
-                        // Only add source location data to the error context if it doesn't already exist
-                        // in [errorContext].
-                        if (!e.errorContext.hasProperty(Property.LINE_NUMBER)) {
-                            sourceLocation?.let { fillErrorContext(e.errorContext, sourceLocation) }
-                        }
-                        throw e
-                    }
+                // Only add source location data to the error context if it doesn't already exist
+                // in [errorContext].
+                if (!e.errorContext.hasProperty(Property.LINE_NUMBER)) {
+                    sourceLocation?.let { fillErrorContext(e.errorContext, sourceLocation) }
                 }
+                throw e
             } catch (e: Exception) {
                 compileOptions.thunkOptions.handleExceptionForLegacyMode(e, sourceLocation)
             }
