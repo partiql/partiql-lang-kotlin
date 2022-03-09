@@ -44,7 +44,6 @@ private object AstToLogicalVisitorTransform : PartiqlAstToPartiqlLogicalVisitorT
                 when (val project = node.project) {
                     is PartiqlAst.Projection.ProjectValue -> transformExpr(project.value)
                     is PartiqlAst.Projection.ProjectList -> {
-                        // DL TODO: don't include needless `mergeStruct` operator (or is this always requried?)
                         mergeStruct(
                             List(project.projectItems.size) { idx ->
                                 when(val projectItem = project.projectItems[idx]) {

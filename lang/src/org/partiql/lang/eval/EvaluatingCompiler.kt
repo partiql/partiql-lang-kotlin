@@ -33,6 +33,8 @@ import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.like.PatternPart
 import org.partiql.lang.eval.like.executePattern
 import org.partiql.lang.eval.like.parsePattern
+import org.partiql.lang.eval.physical.PhysicalBexprToThunkConverter
+import org.partiql.lang.eval.physical.PhysicalExprToThunkConverter
 import org.partiql.lang.eval.physical.RelationThunkEnv
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.visitors.PartiqlPhysicalSanityValidator
@@ -60,11 +62,9 @@ import org.partiql.lang.util.toIntExact
 import org.partiql.lang.util.totalMinutes
 import org.partiql.lang.util.unaryMinus
 import java.math.BigDecimal
-import java.util.*
-
-internal interface ExprCompiler {
-    fun compile(expr: PartiqlPhysical.Expr): ThunkEnv
-}
+import java.util.TreeSet
+import java.util.LinkedList
+import kotlin.collections.ArrayList
 
 /**
  * A basic compiler that converts an instance of [PartiqlPhysical] to an [Expression].
@@ -93,7 +93,7 @@ internal class EvaluatingCompiler(
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val procedures: Map<String, StoredProcedure>,
     private val compileOptions: CompileOptions = CompileOptions.standard()
-): ExprCompiler {
+): PhysicalExprToThunkConverter {
     private val errorSignaler = compileOptions.typingMode.createErrorSignaler(valueFactory)
     private val thunkFactory = compileOptions.typingMode.createThunkFactory(compileOptions, valueFactory)
 
@@ -142,7 +142,7 @@ internal class EvaluatingCompiler(
         }
     }
 
-    override fun compile(expr: PartiqlPhysical.Expr): ThunkEnv = this.compileAstExpr(expr)
+    override fun convert(expr: PartiqlPhysical.Expr): ThunkEnv = this.compileAstExpr(expr)
 
     /**
      * Compiles the specified [PartiqlPhysical.Statement] into a [ThunkEnv].
@@ -302,7 +302,8 @@ internal class EvaluatingCompiler(
 
     private fun compileBindingsToValues(expr: PartiqlPhysical.Expr.BindingsToValues): ThunkEnv {
         val mapThunk = compileAstExpr(expr.exp)
-        val bexprThunk: RelationThunkEnv = EvaluatingBexprCompiler(this, thunkFactory).convert(expr.query)
+        val bexprThunk: RelationThunkEnv = PhysicalBexprToThunkConverter(this, thunkFactory.valueFactory)
+            .convert(expr.query)
 
         return thunkFactory.thunkEnv(expr.metas) { env ->
             val elements = sequence {
@@ -980,12 +981,6 @@ internal class EvaluatingCompiler(
         val localIndex = expr.index.value.toIntExact()
         return thunkFactory.thunkEnv(metas) { env ->
             env.registers[localIndex]
-                ?: err(
-                    "Variable with index $localIndex not found in localBindingsMap",
-                    ErrorCode.INTERNAL_ERROR,
-                    errorContextFrom(expr.metas),
-                    internal = true
-                )
         }
     }
 

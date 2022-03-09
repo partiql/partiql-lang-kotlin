@@ -21,7 +21,6 @@ import org.partiql.lang.domains.staticType
 import org.partiql.lang.errors.ErrorBehaviorInPermissiveMode
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
-import org.partiql.lang.eval.relation.RelationIterator
 
 
 /**

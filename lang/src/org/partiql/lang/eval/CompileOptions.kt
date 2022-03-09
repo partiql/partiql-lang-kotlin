@@ -107,7 +107,7 @@ enum class TypedOpBehavior {
 }
 
 /**
- * Controls the behavior of intrinsic AST visitor transforms with [EvaluatingCompiler.compile].
+ * Controls the behavior of intrinsic AST visitor transforms with [EvaluatingCompiler.convert].
  *
  * Most users will want [DEFAULT], which does the built-in visitor transforms for them, while
  * users wanting full control of the visitor transform process should use [NONE].
