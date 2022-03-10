@@ -15,19 +15,19 @@ import org.partiql.lang.domains.PartiqlAst
  * The first 3 parameters are chosen as they represent the main feature of a PIG AST node.
  *
  */
-class FeatureTree (astType: String, value: String? = null, attrOfParent: String? = null, children: List<FeatureTree>? = null) {
+class FeatureTree(astType: String, value: String? = null, attrOfParent: String? = null, children: List<FeatureTree>? = null) {
     private val astType = astType
     private val value = value
     private val attrOfParent = attrOfParent
     private val children = children
 
-    fun convertToString (): String {
+    fun convertToString(): String {
         val result = StringBuilder()
         recurseToResult(0, result)
         return result.toString().dropLast(1) // Drop last line separator \n
     }
 
-    private fun recurseToResult (indent: Int, result: StringBuilder) {
+    private fun recurseToResult(indent: Int, result: StringBuilder) {
         val prefix = when (attrOfParent) {
             null -> ""
             else -> "$attrOfParent: "

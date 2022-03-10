@@ -3,7 +3,6 @@ package org.partiql.cli.prettyprintAST
 import org.junit.Assert
 import org.junit.Test
 
-
 class PrettyPrinterTest {
     private val prettyPrinter = PrettyPrinter()
 
@@ -14,7 +13,7 @@ class PrettyPrinterTest {
     }
 
     @Test
-    fun selectFrom(){
+    fun selectFrom() {
         checkPrettyPrintAst(
             "SELECT * FROM 1",
             """
@@ -27,7 +26,7 @@ class PrettyPrinterTest {
     }
 
     @Test
-    fun selectFromLet(){
+    fun selectFromLet() {
         checkPrettyPrintAst(
             "SELECT * FROM 1 LET 1 AS a",
             """
@@ -44,7 +43,7 @@ class PrettyPrinterTest {
     }
 
     @Test
-    fun selectFromWhere(){
+    fun selectFromWhere() {
         checkPrettyPrintAst(
             "SELECT * FROM 1 WHERE a = b",
             """
@@ -60,7 +59,7 @@ class PrettyPrinterTest {
     }
 
     @Test
-    fun selectFromWhereGroupHaving(){
+    fun selectFromWhereGroupHaving() {
         checkPrettyPrintAst(
             "SELECT * FROM 1 WHERE a = b GROUP BY c HAVING d = '123'",
             """
@@ -84,7 +83,7 @@ class PrettyPrinterTest {
     }
 
     @Test
-    fun selectFromWhereGroupHavingLimitOffset(){
+    fun selectFromWhereGroupHavingLimitOffset() {
         checkPrettyPrintAst(
             "SELECT * FROM 1 WHERE a = b GROUP BY c HAVING d = '123' LIMIT 3 OFFSET 4",
             """
@@ -110,7 +109,7 @@ class PrettyPrinterTest {
     }
 
     @Test
-    fun selectFromWhereGroupHavingLimitOffsetWithSubQuery(){
+    fun selectFromWhereGroupHavingLimitOffsetWithSubQuery() {
         checkPrettyPrintAst(
             "SELECT (SELECT * FROM foo WHERE bar = 1) FROM 1 WHERE a = b GROUP BY c HAVING d = '123' LIMIT 3 OFFSET 4",
             """

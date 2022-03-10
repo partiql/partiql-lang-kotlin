@@ -5,7 +5,6 @@ import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.pig.runtime.SymbolPrimitive
 
-
 /**
  * This class is used to pretty print PIG AST.
  */
@@ -62,11 +61,11 @@ class PrettyPrinter {
             is PartiqlAst.Expr.LitTime -> FeatureTree(
                 astType = "LitTime",
                 value = node.value.hour.value.toString() +
-                        ":" + node.value.minute.value.toString() +
-                        ":" + node.value.second.toString() +
-                        "." + node.value.nano.toString() +
-                        " 'precision': " + node.value.precision.value.toString() +
-                        " 'timeZone': " + node.value.withTimeZone.toString(),
+                    ":" + node.value.minute.value.toString() +
+                    ":" + node.value.second.toString() +
+                    "." + node.value.nano.toString() +
+                    " 'precision': " + node.value.precision.value.toString() +
+                    " 'timeZone': " + node.value.withTimeZone.toString(),
                 attrOfParent = attrOfParent,
             )
             is PartiqlAst.Expr.Not -> FeatureTree(
@@ -394,7 +393,7 @@ class PrettyPrinter {
                 astType = "ProjectExpr",
                 attrOfParent = attrOfParent,
                 children = listOf(toFeatureTree(node.expr, "expr")).let {
-                    if (node.asAlias == null) it else { it.plusElement(toFeatureTree(node.asAlias!!,"as")) }
+                    if (node.asAlias == null) it else { it.plusElement(toFeatureTree(node.asAlias!!, "as")) }
                 }
             )
         }
@@ -454,7 +453,7 @@ class PrettyPrinter {
         attrOfParent = attrOfParent,
         children = listOf(
             FeatureTree(
-                astType = when(node.strategy){
+                astType = when (node.strategy) {
                     is PartiqlAst.GroupingStrategy.GroupFull -> "GroupFull"
                     is PartiqlAst.GroupingStrategy.GroupPartial -> "GroupPartial"
                 },
