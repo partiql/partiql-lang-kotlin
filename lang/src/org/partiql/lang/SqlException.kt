@@ -34,32 +34,22 @@ import org.partiql.lang.util.propertyValueMapOf
  *
  * @param message the message for this exception
  * @param errorCode the error code for this exception
- * @param propertyValueMap context for this error
+ * @param errorContext context for this error
+ * @param internal True to indicate that this exception a bug in ParitQL itself.  False to indicate it was caused by
+ * incorrect usage of APIs or invalid end-user queries.
  * @param cause for this exception
- *
- * @constructor a custom error [message], the [errorCode], error context as a [propertyValueMap] and optional [cause] creates an
- * [SqlException]. This is the constructor for the second configuration explained above.
- *
  */
 open class SqlException(override var message: String,
                         val errorCode: ErrorCode,
                         errorContext: PropertyValueMap? = null,
+                        val internal: Boolean,
                         cause: Throwable? = null)
     : RuntimeException(message, cause) {
 
     val errorContext: PropertyValueMap = errorContext ?: propertyValueMapOf()
 
-    /**
-     * Given  the [errorCode], error context as a [propertyValueMap] and optional [cause] creates an
-     * [SqlException] with an auto-generated error message.
-     * This is the constructor for the third configuration explained above.
-     *
-     * @param errorCode the error code for this exception
-     * @param propertyValueMap context for this error
-     * @param cause for this exception
-     */
-    constructor(errorCode: ErrorCode, propertyValueMap: PropertyValueMap, cause: Throwable? = null) :
-        this("",errorCode, propertyValueMap, cause)
+    constructor(errorCode: ErrorCode, propertyValueMap: PropertyValueMap, internal: Boolean, cause: Throwable? = null) :
+        this("",errorCode, propertyValueMap, internal, cause)
 
     /**
      * Auto-generated message has the structure

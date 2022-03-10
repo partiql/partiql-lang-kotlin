@@ -23,6 +23,12 @@ private object AstToLogicalVisitorTransform : PartiqlAstToPartiqlLogicalVisitorT
 
         var algebra: PartiqlLogical.Bexpr = FromSourceToBexpr.convert(node.from)
 
+        algebra = node.fromLet?.let { fromLet ->
+            PartiqlLogical.build {
+                let(algebra, fromLet.letBindings.map { transformLetBinding(it) }, node.fromLet.metas)
+            }
+        } ?: algebra
+
         algebra = node.where?.let {
             PartiqlLogical.build { filter(transformExpr(it), algebra, it.metas) }
         } ?: algebra
@@ -85,12 +91,20 @@ private object AstToLogicalVisitorTransform : PartiqlAstToPartiqlLogicalVisitorT
      */
     private fun checkForUnsupportedSelectClauses(node: PartiqlAst.Expr.Select) {
         when {
-            node.fromLet != null -> TODO("Support for FROM LET")
             node.group != null -> TODO("Support for GROUP BY")
             node.order != null -> TODO("Support for ORDER BY")
             node.having != null -> TODO("Support for HAVING")
         }
     }
+
+    override fun transformLetBinding(node: PartiqlAst.LetBinding): PartiqlLogical.LetBinding =
+        PartiqlLogical.build {
+            letBinding(
+                transformExpr(node.expr),
+                varDecl_(node.name, node.name.metas),
+                node.metas
+            )
+        }
 
     override fun transformStatementDml(node: PartiqlAst.Statement.Dml): PartiqlLogical.Statement {
         TODO("Support for DML")

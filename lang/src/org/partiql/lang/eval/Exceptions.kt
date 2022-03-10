@@ -26,13 +26,11 @@ import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.lang.util.to
 
 /** Error for evaluation problems. */
-open class EvaluationException(
-    message: String,
-    errorCode: ErrorCode,
-    errorContext: PropertyValueMap? = null,
-    cause: Throwable? = null,
-    val internal: Boolean
-) : SqlException(message, errorCode, errorContext, cause) {
+open class EvaluationException(message: String,
+                               errorCode: ErrorCode,
+                               errorContext: PropertyValueMap? = null,
+                               cause: Throwable? = null,
+                               internal: Boolean) : SqlException(message, errorCode, errorContext, internal, cause) {
 
     constructor(
         cause: Throwable,

@@ -295,11 +295,7 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
     private fun <T> List<List<T>>.flatten() = this.flatMap { it }
     private fun List<List<String>>.eval() = map {
         it.map {
-            try {
-                eval(it, compileOptions = CompileOptions.standard())
-            } catch (e: Exception) {
-                throw SqlException("Could not evaluate $it", errorCode = ErrorCode.EVALUATOR_SQL_EXCEPTION, cause = e)
-            }
+            eval(it, compileOptions = CompileOptions.standard())
         }
     }
 

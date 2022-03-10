@@ -17,8 +17,10 @@ import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.SexpAstPrettyPrinter
 
-// DL TODO: add some tests for different SELECT list projections.
-
+/**
+ * Test cases in this class might seem a little light--that's because [AstToLogicalVisitorTransform] is getting
+ * heavily exercised during many other integration tests.  These should be considered "smoke tests".
+ */
 class AstToLogicalVisitorTransformTests {
     private val ion = IonSystemBuilder.standard().build()
     private val parser = SqlParser(ion)
@@ -123,7 +125,6 @@ class AstToLogicalVisitorTransformTests {
     class ArgumentsForToToDoTests : ArgumentsProviderBase() {
         override fun getParameters() = listOf(
             // SELECT queries
-            TodoTestCase("SELECT b.* FROM bar AS b LET x AS y"),
             TodoTestCase("SELECT b.* FROM UNPIVOT x as y"),
             TodoTestCase("SELECT b.* FROM bar AS b GROUP BY a"),
             TodoTestCase("SELECT b.* FROM bar AS b HAVING x"),

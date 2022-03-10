@@ -80,5 +80,16 @@ internal class LogicalResolvedToPhysicalVisitorTransform : PartiqlLogicalResolve
             )
         }
     }
+
+    override fun transformBexprLet(node: PartiqlLogicalResolved.Bexpr.Let): PartiqlPhysical.Bexpr {
+        val thiz = this
+        return PartiqlPhysical.build {
+            let(
+                i = DEFAULT_IMPL,
+                source = thiz.transformBexpr(node.source),
+                bindings = node.bindings.map { transformLetBinding(it) }
+            )
+        }
+    }
 }
 

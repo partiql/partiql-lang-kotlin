@@ -935,7 +935,6 @@ internal class EvaluatingCompiler(
                 val found = it(env)
                 when (found.type) {
                     ExprValueType.STRUCT ->
-                        // DL TODO: some binding implementations can throw--do we care?
                         found.bindings[bindingName]
                     else ->
                         null

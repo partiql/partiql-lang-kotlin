@@ -36,7 +36,7 @@ class SqlExceptionTest : TestBase() {
         errorContext[Property.LINE_NUMBER] = 20L
         errorContext[Property.TOKEN_STRING] = "c"
 
-        val ex = SqlException(ErrorCode.LEXER_INVALID_CHAR, errorContext)
+        val ex = SqlException(ErrorCode.LEXER_INVALID_CHAR, errorContext, internal = false)
 
         assertEquals("$prefix Lexer Error: at line 20, column 10: invalid character at, c\n", ex.toString())
     }
@@ -48,7 +48,7 @@ class SqlExceptionTest : TestBase() {
         errorContext[Property.LINE_NUMBER] = 20L
         errorContext[Property.TOKEN_STRING] = "c"
 
-        val ex = SqlException("Unexpected token", ErrorCode.LEXER_INVALID_CHAR, errorContext)
+        val ex = SqlException("Unexpected token", ErrorCode.LEXER_INVALID_CHAR, errorContext, internal = false)
 
         assertEquals("$prefix Unexpected token\n\tLexer Error: at line 20, column 10: invalid character at, c\n", ex.toString())
     }
@@ -60,7 +60,7 @@ class SqlExceptionTest : TestBase() {
         errorContext[Property.LINE_NUMBER] = 20L
         errorContext[Property.TOKEN_STRING] = "c"
 
-        val ex = SqlException("Unexpected token", ErrorCode.LEXER_INVALID_CHAR, errorContext)
+        val ex = SqlException("Unexpected token", ErrorCode.LEXER_INVALID_CHAR, errorContext, internal = false)
 
         assertEquals("$prefix Unexpected token\n\tLexer Error: at line 20, column 10: invalid character at, c\n", ex.toString())
         assertEquals("$prefix Unexpected token\n\tLexer Error: at line 20, column 10: invalid character at, c\n", ex.toString())

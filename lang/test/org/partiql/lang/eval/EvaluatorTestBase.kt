@@ -300,7 +300,7 @@ abstract class EvaluatorTestBase : TestBase() {
         cause: KClass<out Throwable>? = null,
         session: EvaluationSession = EvaluationSession.standard(),
         typingMode: TypingMode = TypingMode.LEGACY
-    ): EvaluationException {
+    ): SqlException {
 
         val compileOptions = when (typingMode) {
             TypingMode.LEGACY -> CompileOptions.standard()

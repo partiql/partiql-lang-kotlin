@@ -458,8 +458,50 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
                 [3, 1, null],
                 [3, 2, null],
               ]
+            """)
+        test(
+            "selectCorrelatedLeftJoin",
+            """SELECT s.id AS id, b.title AS title FROM stores AS s LEFT CROSS JOIN @s.books AS b WHERE b IS NULL""",
             """
-        )
+              $partiql_bag::[
+                {id: "7"}
+              ]
+            """)
+
+        test(
+            "selectCorrelatedLeftJoinOnClause",
+            """
+                SELECT
+                  s.id AS id, b.title AS title
+                FROM stores AS s LEFT OUTER JOIN @s.books AS b ON b.price > 9
+            """,
+            """
+              $partiql_bag::[
+                {id: "5"},
+                {id: "6", title: "E"},
+                {id: "6", title: "F"},
+                {id: "7"}
+              ]
+            """)
+
+        test(
+            "selectJoinOnClauseScoping",
+            // note that d is a global which should be shadowed by the last from source
+            """
+                SELECT VALUE [a, b, d]
+                FROM [1, 3] AS a
+                INNER JOIN [1, 2, 3] AS b ON b < d
+                LEFT JOIN [1.1, 2.1] AS d ON b < d AND a <= d
+            """,
+            """
+              $partiql_bag::[
+                [1, 1, 1.1],
+                [1, 1, 2.1],
+                [1, 2, 2.1],
+                [3, 1, null],
+                [3, 2, null],
+              ]
+            """)
 
         test(
             "selectNonCorrelatedJoin",

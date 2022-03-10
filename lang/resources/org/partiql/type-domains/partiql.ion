@@ -490,6 +490,10 @@ may then be further optimized by selecting better implementations of each operat
             from_source
         )
 
+        // Replace let_binding with one that uses a var_decl instead of a name to represent bindings.
+        (exclude let_binding)
+        (include (product let_binding value::expr decl::var_decl))
+
         // Now we include new stuff that's unique to PartiQL's relational algebra.
         (include
             // Every instance of `var_decl` introduces a new binding in the current scope.
@@ -530,6 +534,8 @@ may then be further optimized by selecting better implementations of each operat
                 (limit row_count::expr source::bexpr)
 
                 // Future work: additional relational operators
+
+                (let source::bexpr bindings::(* let_binding 1))
             )
         )
 
@@ -553,8 +559,6 @@ may then be further optimized by selecting better implementations of each operat
             ordering_spec
 
             let
-            let_binding
-
 
             dml_op
             dml_op_list
@@ -656,6 +660,7 @@ may then be further optimized by selecting better implementations of each operat
 
                 (offset i::impl row_count::expr source::bexpr)
                 (limit i::impl row_count::expr source::bexpr)
+                (let i::impl source::bexpr bindings::(* let_binding 1))
             )
         )
     )

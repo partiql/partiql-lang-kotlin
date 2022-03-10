@@ -19,13 +19,11 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.PropertyValueMap
 
 /** Root exception type for syntactic problems. */
-open class SyntaxException(
-    message: String = "",
-    errorCode: ErrorCode,
-    errorContext: PropertyValueMap,
-    cause: Throwable? = null
-) :
-    SqlException(message, errorCode, errorContext, cause)
+open class SyntaxException(message: String = "",
+                           errorCode: ErrorCode,
+                           errorContext: PropertyValueMap,
+                           cause: Throwable? = null)
+    : SqlException(message, errorCode, errorContext, internal = false, cause)
 
 /** Error in the Lexer. */
 open class LexerException(

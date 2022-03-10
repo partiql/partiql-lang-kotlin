@@ -303,6 +303,29 @@ internal class PhysicalBexprToThunkConverter(
             }
         }
     }
+
+    override fun convertLet(node: PartiqlPhysical.Bexpr.Let): RelationThunkEnv {
+        val sourceThunk = this.convert(node.source)
+        class CompiledBinding(val index: Int, val valueThunk: ThunkEnv)
+        val compiledBindings = node.bindings.map {
+            CompiledBinding(
+                it.decl.index.value.toIntExact(),
+                exprConverter.convert(it.value)
+            )
+        }
+        return relationThunk(node.metas) { env ->
+            val sourceItr = sourceThunk(env)
+
+            relation(sourceItr.relType) {
+                while (sourceItr.nextRow()) {
+                    compiledBindings.forEach {
+                        env.registers[it.index] = it.valueThunk(env)
+                    }
+                    yield()
+                }
+            }
+        }
+    }
 }
 
 private fun PartiqlPhysical.Expr.isLitTrue() =
