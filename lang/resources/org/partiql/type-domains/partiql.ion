@@ -523,18 +523,21 @@ may then be further optimized by selecting better implementations of each operat
                 // rows for which `predicate` returns true.
                 (filter predicate::expr source::bexpr)
 
-                // DL TODO: documentation
+                // Basic join operator.  Covers cross, inner, left, right and full joins.
+                // For cross joins, set `join_type` to `(inner)` and the `predicate` to `(lit true)`.
                 (join
                     join_type::join_type
                     left::bexpr
                     right::bexpr
                     predicate::expr)
 
+                // Skips `row_count` rows, then emits all remaining rows.
                 (offset row_count::expr source::bexpr)
+
+                // Emits `row_count` rows, discards all remaining rows.
                 (limit row_count::expr source::bexpr)
 
-                // Future work: additional relational operators
-
+                // For every row of `source`, adds each specified `let_binding`.
                 (let source::bexpr bindings::(* let_binding 1))
             )
         )

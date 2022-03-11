@@ -160,7 +160,6 @@ internal class EvaluatingCompiler(
         checkThreadInterrupted()
         val metas = expr.metas
 
-        // DL TODO: why are we passing metas in to each of these functions?
         return when (expr) {
             is PartiqlPhysical.Expr.Lit -> compileLit(expr, metas)
             is PartiqlPhysical.Expr.Missing -> compileMissing(metas)

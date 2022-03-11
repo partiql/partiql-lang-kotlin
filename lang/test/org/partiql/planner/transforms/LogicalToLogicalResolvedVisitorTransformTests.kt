@@ -105,19 +105,10 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 )
 
                 val remainingActualResolvedIds = actualResolvedIds.map {
-                    val location = it.metas.sourceLocationMeta
-                        ?: error("$it missing source location meta")
-
+                    val location = it.metas.sourceLocationMeta ?: error("$it missing source location meta")
                     ResolvedId(location.lineNum.toIntExact(), location.charOffset.toIntExact()) { it }
-                }.toMutableList()
-
-                // dl todo: can we make this a filter instead of using imperative code?
-                tc.expectation.expectedIds.forEach { expectedId: ResolvedId ->
-                    val matchingIndex = remainingActualResolvedIds.indexOfFirst { actualId -> actualId == expectedId }
-
-                    if(matchingIndex >= 0) {
-                        remainingActualResolvedIds.removeAt(matchingIndex)
-                    }
+                }.filter { expectedId: ResolvedId ->
+                    tc.expectation.expectedIds.none { actualId -> actualId == expectedId }
                 }
 
                 if(remainingActualResolvedIds.isNotEmpty()) {
@@ -423,36 +414,6 @@ class LogicalToLogicalResolvedVisitorTransformTests {
     }
 
     @ParameterizedTest
-    @ArgumentsSource(SubqueryCases::class)
-    fun `sub-queries`(tc: TestCase) = runTestCase(tc)
-    class SubqueryCases : ArgumentsProviderBase() {
-        override fun getParameters() = listOf(
-            TestCase(
-                // inner query does not reference variables outer query
-                "SELECT b.* FROM (SELECT a.* FROM 1 AS a) AS b",
-                Expectation.Success(
-                    ResolvedId(1, 8)  { localId("b", 1) },
-                    ResolvedId(1, 25)  { localId("a", 0) },
-                )
-            ),
-            TestCase(
-                // inner query references variable from outer query.
-                "SELECT a.*, b.* FROM 1 AS a, (SELECT a.*, b.* FROM 1 AS x) AS b",
-                Expectation.Success(
-                    // The variables reference in the outer query
-                    ResolvedId(1, 8)  { localId("a", 0) },
-                    ResolvedId(1, 13)  { localId("b", 2) },
-                    // The variables reference in the inner query
-                    ResolvedId(1, 38)  { localId("a", 0) }, //
-                    // Note that `b` from the outer query is not accessible inside the query so we fall back on dynamic lookup
-                    ResolvedId(1, 43)  { dynamicId("b", caseInsensitive(), localId("x", 1), localId("a", 0)) }
-                ),
-                allowUndefinedVariables = true
-            )
-        )
-    }
-
-    @ParameterizedTest
     @ArgumentsSource(DuplicateVariableCases::class)
     fun `duplicate variables`(tc: TestCase) = runTestCase(tc)
     class DuplicateVariableCases : ArgumentsProviderBase() {
@@ -539,14 +500,22 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                     ResolvedId(1, 22)  {globalId("shadow", "fake_uid_for_shadow") }
                 )
             ),
+
+            // JOIN with shadowing
+            TestCase(
+                // first `AS s` shadowed by second `AS s`.
+                "SELECT s.* FROM 1 AS s, @s AS s",
+                Expectation.Success(
+                    ResolvedId(1, 8)  { localId("s", 1) },
+                    ResolvedId(1, 26) { localId("s", 0) }
+                )
+            ),
         )
     }
 
     @ParameterizedTest
     @ArgumentsSource(DynamicIdSearchCases::class)
     fun `dynamic_id search order cases`(tc: TestCase) = runTestCase(tc)
-
-    // DL TODO: include some sub-queries here.
     class DynamicIdSearchCases : ArgumentsProviderBase() {
         // The important thing being asserted here is the contents of the dynamicId.search, which
         // defines the places we'll look for variables that are unresolved at compile time.
@@ -587,6 +556,37 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                     ResolvedId(1, 58) {
                         dynamicId("undefined2", caseInsensitive(), localId("t", 2), localId("b", 1), localId("f", 0))
                     }
+                ),
+                allowUndefinedVariables = true
+            )
+        )
+    }
+
+
+    @ParameterizedTest
+    @ArgumentsSource(SubqueryCases::class)
+    fun `sub-queries`(tc: TestCase) = runTestCase(tc)
+    class SubqueryCases : ArgumentsProviderBase() {
+        override fun getParameters() = listOf(
+            TestCase(
+                // inner query does not reference variables outer query
+                "SELECT b.* FROM (SELECT a.* FROM 1 AS a) AS b",
+                Expectation.Success(
+                    ResolvedId(1, 8)  { localId("b", 1) },
+                    ResolvedId(1, 25)  { localId("a", 0) },
+                )
+            ),
+            TestCase(
+                // inner query references variable from outer query.
+                "SELECT a.*, b.* FROM 1 AS a, (SELECT a.*, b.* FROM 1 AS x) AS b",
+                Expectation.Success(
+                    // The variables reference in the outer query
+                    ResolvedId(1, 8)  { localId("a", 0) },
+                    ResolvedId(1, 13)  { localId("b", 2) },
+                    // The variables reference in the inner query
+                    ResolvedId(1, 38)  { localId("a", 0) }, //
+                    // Note that `b` from the outer query is not accessible inside the query so we fall back on dynamic lookup
+                    ResolvedId(1, 43)  { dynamicId("b", caseInsensitive(), localId("x", 1), localId("a", 0)) }
                 ),
                 allowUndefinedVariables = true
             )

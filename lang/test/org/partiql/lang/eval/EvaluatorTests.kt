@@ -39,7 +39,7 @@ class EvaluatorTests {
             // PartiQL's test cases are not all that cleanly separated.
             "selectCorrelatedUnpivot",  // TODO: PHYS_ALGEBRA_REFACTOR_UNPIVOT
             "nestedSelectJoinWithUnpivot", // TODO: PHYS_ALGEBRA_REFACTOR_UNPIVOT
-            "nestedSelectJoinLimit", // DL TODO: bug?
+            "nestedSelectJoinLimit", // TODO: PHYS_ALGEBRA_REFACTOR_UNPIVOT
             "pivotFrom", // TODO: PHYS_ALGEBRA_REFACTOR_PIVOT
             "pivotLiteralFieldNameFrom", // TODO: PHYS_ALGEBRA_REFACTOR_PIVOT
             "pivotBadFieldType", // TODO: PHYS_ALGEBRA_REFACTOR_PIVOT

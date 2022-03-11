@@ -1,6 +1,5 @@
 package org.partiql.planner
 
-import com.amazon.ionelement.api.IonElement
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 

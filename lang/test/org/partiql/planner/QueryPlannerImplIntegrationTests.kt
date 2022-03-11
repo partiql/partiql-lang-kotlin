@@ -3,9 +3,12 @@ package org.partiql.planner
 import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
+import com.amazon.ionelement.api.toIonValue
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.partiql.lang.ION
 import org.partiql.lang.domains.PartiqlPhysical
+import org.partiql.lang.util.SexpAstPrettyPrinter
 import org.partiql.planner.transforms.PlanningProblemDetails
 
 /**
@@ -23,7 +26,10 @@ class QueryPlannerImplIntegrationTests {
     fun `happy path`() {
         val qp = createQueryPlanner(ion, allowUndefinedVariables = true, globalBindings)
         val result = qp.plan("SELECT c.* FROM Customer AS c WHERE c.primaryKey = 42")
-        println(result)
+
+        result as PlanningResult.Success
+        println(SexpAstPrettyPrinter.format(result.physicalPlan.toIonElement().asAnyElement().toIonValue(ION)))
+
 
         assertEquals(
             result,

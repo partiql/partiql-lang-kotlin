@@ -19,18 +19,11 @@ import org.partiql.lang.eval.err
 import org.partiql.pig.runtime.LongPrimitive
 
 /**
- * TODO: kdoc
- */
-/**
- * Provides rules for basic AST sanity checks that should be performed before any attempt at further AST processing.
- * This is provided as a distinct [PartiqlPhysical.Visitor] so that all other visitors may assume that the AST at least
- * passed the checking performed here.
+ * Provides rules for basic AST sanity checks that should be performed before any attempt at further phsycial
+ * plan processing. This is provided as a distinct [PartiqlPhysical.Visitor] so that [PlanCompiler] may assume that
+ * the physical plan passed the checks performed here.
  *
- * Any exception thrown by this class should always be considered an indication of a bug in one of the following places:
- *
- * - [org.partiql.lang.syntax.SqlParser]
- * - A visitor transform pass (internal or external)
- *
+ * Any exception thrown by this class should always be considered an indication of a bug:
  */
 class PartiqlPhysicalSanityValidator : PartiqlPhysical.Visitor() {
 
