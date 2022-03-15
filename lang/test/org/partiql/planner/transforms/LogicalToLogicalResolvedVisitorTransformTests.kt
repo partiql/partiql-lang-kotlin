@@ -85,15 +85,15 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                             accumulator: List<PartiqlLogicalResolved.Expr>
                         ): List<PartiqlLogicalResolved.Expr> =
                             when(node) {
-                                is PartiqlLogicalResolved.Expr.DynamicId,
+                                is PartiqlLogicalResolved.Expr.Id,
                                 is PartiqlLogicalResolved.Expr.GlobalId,
                                 is PartiqlLogicalResolved.Expr.LocalId -> accumulator + node
                                 else -> accumulator
                             }
 
                         // Don't include children of dynamic id
-                        override fun walkExprDynamicId(
-                            node: PartiqlLogicalResolved.Expr.DynamicId,
+                        override fun walkExprId(
+                            node: PartiqlLogicalResolved.Expr.Id,
                             accumulator: List<PartiqlLogicalResolved.Expr>
                         ): List<PartiqlLogicalResolved.Expr> {
                             return accumulator
@@ -216,7 +216,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 // undefined allowed (case-insensitive)
                 """some_undefined """,
                 Expectation.Success(ResolvedId(1, 1)  {
-                    dynamicId("some_undefined", caseInsensitive())
+                    id("some_undefined", caseInsensitive(), localsThenGlobals())
                 }),
                 allowUndefinedVariables = true
             ),
@@ -312,7 +312,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 // undefined allowed (case-sensitive)
                 "\"some_undefined\"",
                 Expectation.Success(ResolvedId(1, 1)  {
-                    dynamicId("some_undefined", caseSensitive())
+                    id("some_undefined", caseSensitive(), localsThenGlobals())
                 }),
                 allowUndefinedVariables = true
             )
@@ -524,8 +524,8 @@ class LogicalToLogicalResolvedVisitorTransformTests {
             TestCase(
                 "undefined1 + undefined2",
                 Expectation.Success(
-                    ResolvedId(1, 1)  { dynamicId("undefined1", caseInsensitive()) },
-                    ResolvedId(1, 14)  { dynamicId("undefined2", caseInsensitive()) }
+                    ResolvedId(1, 1)  { id("undefined1", caseInsensitive(), localsThenGlobals()) },
+                    ResolvedId(1, 14)  { id("undefined2", caseInsensitive(), localsThenGlobals()) }
                 ),
                 allowUndefinedVariables = true
             ),
@@ -534,16 +534,16 @@ class LogicalToLogicalResolvedVisitorTransformTests {
             TestCase(
                 "SELECT undefined1 AS u FROM 1 AS f WHERE undefined2", // 1 from source
                 Expectation.Success(
-                    ResolvedId(1, 8)  { dynamicId("undefined1", caseInsensitive(), localId("f", 0)) },
-                    ResolvedId(1, 42)  { dynamicId("undefined2", caseInsensitive(), localId("f", 0)) }
+                    ResolvedId(1, 8)  { id("undefined1", caseInsensitive(), localsThenGlobals(), localId("f", 0)) },
+                    ResolvedId(1, 42)  { id("undefined2", caseInsensitive(), localsThenGlobals(), localId("f", 0)) }
                 ),
                 allowUndefinedVariables = true
             ),
             TestCase(
                 sql = "SELECT undefined1 AS u FROM 1 AS a, 2 AS b WHERE undefined2", // 2 from sources
                 Expectation.Success(
-                    ResolvedId(1, 8) { dynamicId("undefined1", caseInsensitive(), localId("b", 1), localId("a", 0)) },
-                    ResolvedId(1, 50) { dynamicId("undefined2", caseInsensitive(), localId("b", 1), localId("a", 0)) }
+                    ResolvedId(1, 8) { id("undefined1", caseInsensitive(), localsThenGlobals(), localId("b", 1), localId("a", 0)) },
+                    ResolvedId(1, 50) { id("undefined2", caseInsensitive(), localsThenGlobals(), localId("b", 1), localId("a", 0)) }
                 ),
                 allowUndefinedVariables = true
             ),
@@ -551,10 +551,10 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 sql = "SELECT undefined1 AS u FROM 1 AS f, 1 AS b, 1 AS t WHERE undefined2", // 3 from sources
                 Expectation.Success(
                     ResolvedId(1, 8) {
-                        dynamicId("undefined1", caseInsensitive(), localId("t", 2), localId("b", 1), localId("f", 0))
+                        id("undefined1", caseInsensitive(), localsThenGlobals(), localId("t", 2), localId("b", 1), localId("f", 0))
                     },
                     ResolvedId(1, 58) {
-                        dynamicId("undefined2", caseInsensitive(), localId("t", 2), localId("b", 1), localId("f", 0))
+                        id("undefined2", caseInsensitive(), localsThenGlobals(), localId("t", 2), localId("b", 1), localId("f", 0))
                     }
                 ),
                 allowUndefinedVariables = true
@@ -584,12 +584,23 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                     ResolvedId(1, 8)  { localId("a", 0) },
                     ResolvedId(1, 13)  { localId("b", 2) },
                     // The variables reference in the inner query
-                    ResolvedId(1, 38)  { localId("a", 0) }, //
+                    ResolvedId(1, 38)  { localId("a", 0) },
                     // Note that `b` from the outer query is not accessible inside the query so we fall back on dynamic lookup
-                    ResolvedId(1, 43)  { dynamicId("b", caseInsensitive(), localId("x", 1), localId("a", 0)) }
+                    ResolvedId(1, 43)  { id("b", caseInsensitive(), localsThenGlobals(), localId("x", 1), localId("a", 0)) }
                 ),
                 allowUndefinedVariables = true
-            )
+            ),
+
+            // In FROM source
+            TestCase(
+                "SELECT f.*, u.* FROM 1 AS f, undefined AS u",
+                Expectation.Success(
+                    ResolvedId(1, 8)  { localId("f", 0) },
+                    ResolvedId(1, 13)  { localId("u", 1) },
+                    ResolvedId(1, 30)  { id("undefined", caseInsensitive(), globalsThenLocals(), localId("f", 0)) }
+                ),
+                allowUndefinedVariables = true
+            ),
         )
     }
 }

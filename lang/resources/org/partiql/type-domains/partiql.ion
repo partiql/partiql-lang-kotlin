@@ -452,7 +452,7 @@ may then be further optimized by selecting better implementations of each operat
 (define partiql_logical
     (permute_domain partiql_ast
         (include
-            // DL TODO: document this better.
+            // An item to be projected in the logical algebra equivalent of a `SELECT`-list.
             // This is similar to project_item but has a better name for this domain and the as-alias is non-nullable.
             (sum struct_part
                 // For `.*` in SELECT list
@@ -474,10 +474,9 @@ may then be further optimized by selecting better implementations of each operat
                 // as the bindings collection returned by `query`.
                 (bindings_to_values exp::expr query::bexpr)
 
-                // DL TODO: document this better.
-                // map_to_struct encapsulates semantics needed for SELECT *, SELECT x.*, and SELECT x.y AS y...
-                // this is different than a struct constructor... i.e. some in circumstances this can synthesize field
-                // names.
+                // `merge_struct` encapsulates semantics needed for `SELECT <expr>.*`, and `SELECT <expr> AS y`
+                // This has functionality above and beyond a the struct constructor, i.e. structs may be
+                // concatenated.
                 (merge_struct parts::(* struct_part 1))
             )
         )
@@ -585,19 +584,30 @@ may then be further optimized by selecting better implementations of each operat
     (permute_domain partiql_logical
         // Add `index` to `var_decl`.  Every variable `var_decl` is assigned this unique index (starting with index 0)
         // and increasing by one for every `var_decl` encountered in the logical plan.
-        (exclude var_decl)
+        (exclude var_decl scope_qualifier)
         (include
-            (product var_decl name::symbol index::int))
+            (product var_decl name::symbol index::int)
+
+            // Indicates scope search order when dynamically resolving variables with the `id` expression defined
+            // below. This is similar to `scope_qualifier`, however is *not* context sensitive.
+            (sum lookup_strategy
+                (globals_then_locals)
+                (locals_then_globals))
+        )
 
         (with expr
             (exclude id)
             (include
-                 // Searches for a field with the specified name (matching the case-sensitivity), in each of
-                 // the expressions in `search` and returns its value, if found.  If not found, searches the global
-                 // scope instead.
-                 // DL TODO: need deep consideration of whether or not global_id and dynamic_id should actually be
-                 // DL TODO: combined since dynamic_id with no search expressions extremely similar to global_id.
-                 (dynamic_id name::symbol case::case_sensitivity search::(* expr 0))
+                 // A dynamically resolved variable or field.
+                 // - When `strategy` is `(globals_first)`, tries to resolve the variable in the global scope first.
+                 // If not found then returns the value of the first matching field in `search`.
+                 // - When `strategy` is `(dynamic_first)`, returns the value of the first matching field in `search`.
+                 // If not found then tries to resolve the variable in the global scope.
+                 // In the event that no field or global variable with the specified name is not found, an
+                 // evaluation-time exception is raised.
+                 // DL TODO: need deep consideration of whether or not global_id and id should actually be
+                 // DL TODO: combined since id with no search expressions extremely similar to global_id.
+                 (id name::symbol case::case_sensitivity strategy::lookup_strategy search::(* expr 0))
 
                 // A resolved reference to a variable that was defined within a query.  Otherwise known as a local
                 // variable. "Resolved" means that the variable is guaranteed to exist and we know its unique index.

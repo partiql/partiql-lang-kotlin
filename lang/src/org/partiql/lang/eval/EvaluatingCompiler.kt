@@ -163,7 +163,7 @@ internal class EvaluatingCompiler(
         return when (expr) {
             is PartiqlPhysical.Expr.Lit -> compileLit(expr, metas)
             is PartiqlPhysical.Expr.Missing -> compileMissing(metas)
-            is PartiqlPhysical.Expr.DynamicId -> compileDynamicId(expr)
+            is PartiqlPhysical.Expr.Id -> compileDynamicId(expr)
             is PartiqlPhysical.Expr.LocalId -> compileLocalId(expr, metas)
             is PartiqlPhysical.Expr.GlobalId -> compileGlobalId(expr)
             is PartiqlPhysical.Expr.SimpleCase -> compileSimpleCase(expr, metas)
@@ -924,7 +924,7 @@ internal class EvaluatingCompiler(
     private fun compileMissing(metas: MetaContainer): ThunkEnv =
         thunkFactory.thunkEnv(metas) { valueFactory.missingValue }
 
-    private fun compileDynamicId(expr: PartiqlPhysical.Expr.DynamicId): ThunkEnv {
+    private fun compileDynamicId(expr: PartiqlPhysical.Expr.Id): ThunkEnv {
         val bindingName = BindingName(expr.name.text, expr.case.toBindingCase())
         val searchThunks = expr.search.map { compileAstExpr(it) }.asSequence()
 

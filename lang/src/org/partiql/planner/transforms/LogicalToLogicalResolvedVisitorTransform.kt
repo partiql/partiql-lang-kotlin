@@ -96,11 +96,11 @@ private data class LogicalToLogicalResolvedVisitorTransform(
     val allowUndefinedVariables: Boolean,
     /** Where to send error reports. */
     private val problemHandler: ProblemHandler,
-    /** If a variable is not found using [currentScope], we will attempt to locate the binding here instead. */
+    /** If a variable is not found using [inputScope], we will attempt to locate the binding here instead. */
     private val globals: GlobalBindings,
 ) : PartiqlLogicalToPartiqlLogicalResolvedVisitorTransform() {
     /** The current [LocalScope]. */
-    private var currentScope: LocalScope = LocalScope(emptyList())
+    private var inputScope: LocalScope = LocalScope(emptyList())
 
     private enum class VariableLookupStrategy {
         LOCALS_THEN_GLOBALS,
@@ -113,11 +113,11 @@ private data class LogicalToLogicalResolvedVisitorTransform(
      */
     private var currentVariableLookupStrategy: VariableLookupStrategy = VariableLookupStrategy.LOCALS_THEN_GLOBALS
 
-    private fun <T> withScope(nextScope: LocalScope, block: () -> T): T {
-        val lastScope = currentScope
-        currentScope = nextScope
+    private fun <T> withInputScope(nextScope: LocalScope, block: () -> T): T {
+        val lastScope = inputScope
+        inputScope = nextScope
         return block().also {
-            currentScope = lastScope
+            inputScope = lastScope
         }
     }
 
@@ -128,6 +128,7 @@ private data class LogicalToLogicalResolvedVisitorTransform(
             this.currentVariableLookupStrategy = lastVariableLookupStrategy
         }
     }
+
     override fun transformBexprScan_expr(node: PartiqlLogical.Bexpr.Scan): PartiqlLogicalResolved.Expr =
         withVariableLookupStrategy(VariableLookupStrategy.GLOBALS_THEN_LOCALS) {
             super.transformBexprScan_expr(node)
@@ -137,8 +138,8 @@ private data class LogicalToLogicalResolvedVisitorTransform(
         // No need to change the current scope of the node.left.  Node.right gets the current scope +
         // the left output scope.
         val leftOutputScope = getOutputScope(node.left)
-        val rightInputScope = currentScope.concatenate(leftOutputScope)
-        return withScope(rightInputScope) {
+        val rightInputScope = inputScope.concatenate(leftOutputScope)
+        return withInputScope(rightInputScope) {
             this.transformBexpr(node.right)
         }
     }
@@ -148,19 +149,19 @@ private data class LogicalToLogicalResolvedVisitorTransform(
         return PartiqlLogicalResolved.build {
             let(
                 source = transformBexpr(node.source),
-                bindings = withScope(getOutputScope(node.source)) {
+                bindings = withInputScope(getOutputScope(node.source)) {
                     // This "wonderful" (depending on your definition of the term) bit of code performs a fold
                     // combined with a map... The accumulator is a Pair<List<PartiqlLogicalResolved.LetBinding>,
                     // LocalScope>.
                     // accumulator.first:  the current list of let bindings that have been transformed so far
                     // accumulator.second:  an instance of LocalScope that includes all the variables defined up to
                     // this point, not including the current let binding.
-                    val initial = emptyList<PartiqlLogicalResolved.LetBinding>() to thiz.currentScope
+                    val initial = emptyList<PartiqlLogicalResolved.LetBinding>() to thiz.inputScope
                     val (newBindings: List<PartiqlLogicalResolved.LetBinding>, _: LocalScope) =
                         node.bindings.fold(initial) { accumulator, current ->
                             // Each let binding's expression should be resolved within the scope of the *last*
                             // let binding (or the current scope if this is the first let binding).
-                            val resolvedValueExpr = withScope(accumulator.second) {
+                            val resolvedValueExpr = withInputScope(accumulator.second) {
                                 thiz.transformExpr(current.value)
                             }
                             val nextScope = LocalScope(listOf(current.decl)).concatenate(accumulator.second)
@@ -199,7 +200,7 @@ private data class LogicalToLogicalResolvedVisitorTransform(
      * Otherwise, returns [ResolutionResult.Undefined].  (Elsewhere, [globals] will be checked next.)
      */
     private fun lookupLocalVariable(bindingName: BindingName): ResolutionResult {
-        val found = this.currentScope.varDecls.firstOrNull { bindingName.isEquivalentTo(it.name.text) }
+        val found = this.inputScope.varDecls.firstOrNull { bindingName.isEquivalentTo(it.name.text) }
         return if (found == null) {
             ResolutionResult.Undefined
         } else {
@@ -207,7 +208,10 @@ private data class LogicalToLogicalResolvedVisitorTransform(
         }
     }
 
-    /** Resolves the `(id ...)` node to a local, global, or dynamic variable. */
+    /**
+     * Resolves the logical `(id ...)` node node to a `(local_id ...)`, `(global_id ...)`, or dynamic `(id...)`
+     * variable.
+     */
     override fun transformExprId(node: PartiqlLogical.Expr.Id): PartiqlLogicalResolved.Expr {
         val bindingName = BindingName(node.name.text, node.case.toBindingCase())
 
@@ -215,11 +219,13 @@ private data class LogicalToLogicalResolvedVisitorTransform(
             this.currentVariableLookupStrategy == VariableLookupStrategy.GLOBALS_THEN_LOCALS &&
             node.qualifier is PartiqlLogical.ScopeQualifier.Unqualified
         ) {
+            // look up variable in globals first, then locals
             when (val globalResolutionResult = globals.resolve(bindingName)) {
                 ResolutionResult.Undefined -> lookupLocalVariable(bindingName)
                 else -> globalResolutionResult
             }
         } else {
+            // look up variable in locals first, then globals.
             when (val localResolutionResult = lookupLocalVariable(bindingName)) {
                 ResolutionResult.Undefined -> globals.resolve(bindingName)
                 else -> localResolutionResult
@@ -264,25 +270,25 @@ private data class LogicalToLogicalResolvedVisitorTransform(
      * an unqualified variable, in the order that they should be searched.
      */
     fun currentDynamicResolutionCandidates(): List<PartiqlLogical.VarDecl> =
-        currentScope.varDecls.filter { it.includeInDynamicResolution }
+        inputScope.varDecls.filter { it.includeInDynamicResolution }
 
     override fun transformExprBindingsToValues_exp(node: PartiqlLogical.Expr.BindingsToValues): PartiqlLogicalResolved.Expr {
-        val bindings = getOutputScope(node.query).concatenate(this.currentScope)
-        return withScope(bindings) {
+        val bindings = getOutputScope(node.query).concatenate(this.inputScope)
+        return withInputScope(bindings) {
             this.transformExpr(node.exp)
         }
     }
 
     override fun transformBexprFilter_predicate(node: PartiqlLogical.Bexpr.Filter): PartiqlLogicalResolved.Expr {
         val bindings = getOutputScope(node.source)
-        return withScope(bindings) {
+        return withInputScope(bindings) {
             this.transformExpr(node.predicate)
         }
     }
 
     override fun transformBexprJoin_predicate(node: PartiqlLogical.Bexpr.Join): PartiqlLogicalResolved.Expr {
         val bindings = getOutputScope(node)
-        return withScope(bindings) {
+        return withInputScope(bindings) {
             this.transformExpr(node.predicate)
         }
     }
@@ -355,7 +361,6 @@ private data class LogicalToLogicalResolvedVisitorTransform(
 
     private fun LocalScope.concatenate(other: List<PartiqlLogical.VarDecl>): LocalScope {
         val concatenatedScopeVariables = this.varDecls + other
-        //checkForDuplicateVariables(concatenatedScopeVariables)
         return LocalScope(concatenatedScopeVariables)
     }
 
@@ -363,9 +368,13 @@ private data class LogicalToLogicalResolvedVisitorTransform(
         search: List<PartiqlLogicalResolved.Expr>
     ): PartiqlLogicalResolved.Expr =
         PartiqlLogicalResolved.build {
-            dynamicId_(
+            id_(
                 name = name,
                 case = transformCaseSensitivity(case),
+                strategy = when(this@LogicalToLogicalResolvedVisitorTransform.currentVariableLookupStrategy) {
+                    VariableLookupStrategy.LOCALS_THEN_GLOBALS -> localsThenGlobals()
+                    VariableLookupStrategy.GLOBALS_THEN_LOCALS -> globalsThenLocals()
+                },
                 search = search,
                 metas = this@asDynamicId.metas
             )
