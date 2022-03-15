@@ -19,7 +19,7 @@ class PrettyPrinter {
     /**
      * PIG AST is first transformed into a recursive tree structure, RecursionTree, then it is pretty printed.
      */
-    fun prettyPrintAST(ast: PartiqlAst.Statement): String{
+    fun prettyPrintAST(ast: PartiqlAst.Statement): String {
         val recursionTree = when (ast) {
             is PartiqlAst.Statement.Query -> {
                 toRecursionTree(ast.expr)
@@ -61,11 +61,11 @@ class PrettyPrinter {
             is PartiqlAst.Expr.LitTime -> RecursionTree(
                 astType = "LitTime",
                 value = node.value.hour.value.toString() +
-                        ":" + node.value.minute.value.toString() +
-                        ":" + node.value.second.toString() +
-                        "." + node.value.nano.toString() +
-                        " 'precision': " + node.value.precision.value.toString() +
-                        " 'timeZone': " + node.value.withTimeZone.toString(),
+                    ":" + node.value.minute.value.toString() +
+                    ":" + node.value.second.toString() +
+                    "." + node.value.nano.toString() +
+                    " 'precision': " + node.value.precision.value.toString() +
+                    " 'timeZone': " + node.value.withTimeZone.toString(),
                 attrOfParent = attrOfParent,
             )
             is PartiqlAst.Expr.Not -> RecursionTree(
