@@ -15,7 +15,7 @@ import org.partiql.lang.domains.PartiqlAst
  * The first 3 parameters are chosen as they represent the main feature of a PIG AST node.
  *
  */
-class FeatureTree(astType: String, value: String? = null, attrOfParent: String? = null, children: List<FeatureTree>? = null) {
+class RecursionTree(astType: String, value: String? = null, attrOfParent: String? = null, children: List<RecursionTree>? = null) {
     private val astType = astType
     private val value = value
     private val attrOfParent = attrOfParent
