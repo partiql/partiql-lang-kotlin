@@ -1,10 +1,8 @@
 package org.partiql.lang.eval
 
-import com.amazon.ionelement.api.toIonValue
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.lang.ION
 import org.partiql.lang.eval.visitors.StaticTypeInferenceVisitorTransform
 import org.partiql.lang.eval.visitors.StaticTypeVisitorTransform
 import org.partiql.lang.eval.visitors.basicVisitorTransforms
@@ -12,7 +10,6 @@ import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.types.IntType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.ArgumentsProviderBase
-import org.partiql.lang.util.SexpAstPrettyPrinter
 import org.partiql.planner.PlanningResult
 import org.partiql.planner.createFakeGlobalBindings
 import org.partiql.planner.createQueryPlanner

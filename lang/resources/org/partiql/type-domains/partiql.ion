@@ -605,8 +605,6 @@ may then be further optimized by selecting better implementations of each operat
                  // If not found then tries to resolve the variable in the global scope.
                  // In the event that no field or global variable with the specified name is not found, an
                  // evaluation-time exception is raised.
-                 // DL TODO: need deep consideration of whether or not global_id and id should actually be
-                 // DL TODO: combined since id with no search expressions extremely similar to global_id.
                  (id name::symbol case::case_sensitivity strategy::lookup_strategy search::(* expr 0))
 
                 // A resolved reference to a variable that was defined within a query.  Otherwise known as a local

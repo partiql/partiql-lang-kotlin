@@ -192,7 +192,7 @@ class EvaluatorStaticTypeTests {
         }
     }
 
-    @Disabled("DL TODO: need to consider how static types will be computed.")
+    @Disabled("PHYS_ALG_REFACTOR_STATIC_TYPES")
     @ParameterizedTest
     @MethodSource("evaluatorStaticTypeTests")
     fun allTests(tc: IonResultTestCase) =
@@ -201,6 +201,6 @@ class EvaluatorStaticTypeTests {
             db = mockDb
         )
         // Enable the static type inferencer for this
-         //   pipelineBlock = { this.globalTypeBindings(mockDb.typeBindings) })
+        //pipelineBlock = { this.globalTypeBindings(mockDb.typeBindings) })
 
 }
