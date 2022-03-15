@@ -4,13 +4,13 @@ import org.partiql.lang.domains.PartiqlAst
 
 /**
  * PIG AST is not a recursive data structure, thus it is not easy to transform it directly to a pretty printed string.
- * So we need to first transform it into FeatureTree, which is a recursive tree structure (it has a list of children which are also Feature Tree),
- * then we can recursively pretty print the FeatureTree as we want.
+ * So we need to first transform it into RecursionTree, which is a recursive tree structure (it has a list of children which are also RecursionTree),
+ * then we can recursively pretty print the RecursionTree as we want.
  *
  * @param astType is a string of the PIG AST node type
  * @param value is the value in case node type is [PartiqlAst.Expr.Lit]
  * @param attrOfParent is a string which represents which attribute it belongs to its parent
- * @param children is a list of child FeatureTree
+ * @param children is a list of child RecursionTree
  *
  * The first 3 parameters are chosen as they represent the main feature of a PIG AST node.
  *
