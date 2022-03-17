@@ -12,8 +12,8 @@ import org.partiql.lang.domains.PartiqlAst
  * @param attrOfParent is a string which represents which attribute it belongs to its parent
  * @param children is a list of child RecursionTree
  *
- * The first 3 parameters are chosen as they represent the main feature of a PIG AST node.
- *
+ * Take the [PartiqlAst.Expr.Eq] node in the WHERE clause in `SELECT a FROM b WHERE c = d` as example.
+ * [astType] is '=', [value] is null, [attrOfParent] is 'where', [children] is a list of [PartiqlAst.Expr.Id] c and d.
  */
 class RecursionTree(astType: String, value: String? = null, attrOfParent: String? = null, children: List<RecursionTree>? = null) {
     private val astType = astType
