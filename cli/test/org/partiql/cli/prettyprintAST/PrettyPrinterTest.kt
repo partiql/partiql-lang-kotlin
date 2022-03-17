@@ -225,7 +225,6 @@ class PrettyPrinterTest {
         )
     }
 
-
     // *********
     // * Query *
     // *********

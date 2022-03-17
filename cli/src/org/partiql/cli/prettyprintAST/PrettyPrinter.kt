@@ -1,7 +1,6 @@
 package org.partiql.cli.prettyprintAST
 
 import com.amazon.ion.system.IonSystemBuilder
-import org.partiql.ionschema.parser.validateSchemaModel
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.pig.runtime.SymbolPrimitive
@@ -54,7 +53,7 @@ class PrettyPrinter {
         )
 
     private fun toRecursionTree(node: PartiqlAst.DdlOp, attrOfParent: String? = null): RecursionTree =
-        when(node){
+        when (node) {
             is PartiqlAst.DdlOp.CreateIndex -> RecursionTree(
                 astType = "CreateIndex",
                 attrOfParent = attrOfParent,
@@ -118,7 +117,7 @@ class PrettyPrinter {
         )
 
     private fun toRecursionTree(node: PartiqlAst.DmlOp, attrOfParent: String? = null): RecursionTree =
-        when(node){
+        when (node) {
             is PartiqlAst.DmlOp.Delete -> RecursionTree(
                 astType = "Delete",
                 attrOfParent = attrOfParent
@@ -180,7 +179,7 @@ class PrettyPrinter {
         )
 
     private fun toRecursionTree(node: PartiqlAst.ConflictAction, attrOfParent: String? = null): RecursionTree =
-        when(node){
+        when (node) {
             is PartiqlAst.ConflictAction.DoNothing -> RecursionTree(
                 astType = "DoNothing",
                 attrOfParent = attrOfParent
@@ -205,7 +204,7 @@ class PrettyPrinter {
         )
 
     private fun toRecursionTree(node: PartiqlAst.ReturningMapping, attrOfParent: String? = null): RecursionTree =
-        when(node){
+        when (node) {
             is PartiqlAst.ReturningMapping.AllNew -> RecursionTree(
                 astType = "AllNew",
                 attrOfParent = attrOfParent
@@ -215,7 +214,7 @@ class PrettyPrinter {
                 attrOfParent = attrOfParent
             )
             is PartiqlAst.ReturningMapping.ModifiedNew -> RecursionTree(
-                astType =  "ModifiedNew",
+                astType = "ModifiedNew",
                 attrOfParent = attrOfParent
             )
             is PartiqlAst.ReturningMapping.ModifiedOld -> RecursionTree(
@@ -225,7 +224,7 @@ class PrettyPrinter {
         }
 
     private fun toRecursionTree(node: PartiqlAst.ColumnComponent, attrOfParent: String? = null): RecursionTree =
-        when(node){
+        when (node) {
             is PartiqlAst.ColumnComponent.ReturningColumn -> RecursionTree(
                 astType = "ReturningColumn",
                 attrOfParent = attrOfParent
@@ -726,7 +725,7 @@ class PrettyPrinter {
         )
 
     private fun toRecursionTree(node: PartiqlAst.ScopeQualifier, attrOfParent: String? = null): RecursionTree =
-        when(node){
+        when (node) {
             is PartiqlAst.ScopeQualifier.Unqualified -> RecursionTree(
                 astType = "Unqualified",
                 attrOfParent = attrOfParent
