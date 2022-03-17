@@ -1,6 +1,7 @@
 package org.partiql.cli.prettyprintAST
 
 import com.amazon.ion.system.IonSystemBuilder
+import org.partiql.ionschema.parser.validateSchemaModel
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.pig.runtime.SymbolPrimitive
@@ -21,22 +22,228 @@ class PrettyPrinter {
      */
     fun prettyPrintAST(ast: PartiqlAst.Statement): String {
         val recursionTree = when (ast) {
-            is PartiqlAst.Statement.Query -> {
-                toRecursionTree(ast.expr)
-            }
-            is PartiqlAst.Statement.Dml -> TODO()
-            is PartiqlAst.Statement.Ddl -> TODO()
-            is PartiqlAst.Statement.Exec -> TODO()
+            is PartiqlAst.Statement.Query -> toRecursionTree(ast.expr)
+            is PartiqlAst.Statement.Dml -> toRecursionTree(ast)
+            is PartiqlAst.Statement.Ddl -> toRecursionTree(ast)
+            is PartiqlAst.Statement.Exec -> toRecursionTree(ast)
         }
 
         return recursionTree.convertToString()
     }
 
+    // ********
+    // * EXEC *
+    // ********
+    private fun toRecursionTree(node: PartiqlAst.Statement.Exec): RecursionTree =
+        RecursionTree(
+            astType = "Exec",
+            children = listOf(
+                toRecursionTree(node.procedureName, "procedureName")
+            ) + node.args.mapIndexed { index, expr -> toRecursionTree(expr, "arg${index + 1}") }
+        )
+
+    // *******
+    // * DDL *
+    // *******
+    private fun toRecursionTree(node: PartiqlAst.Statement.Ddl): RecursionTree =
+        RecursionTree(
+            astType = "Ddl",
+            children = listOf(
+                toRecursionTree(node.op, "op")
+            )
+        )
+
+    private fun toRecursionTree(node: PartiqlAst.DdlOp, attrOfParent: String? = null): RecursionTree =
+        when(node){
+            is PartiqlAst.DdlOp.CreateIndex -> RecursionTree(
+                astType = "CreateIndex",
+                attrOfParent = attrOfParent,
+                children = listOf(
+                    toRecursionTree(node.indexName, "indexName")
+                ) + node.fields.mapIndexed { index, expr -> toRecursionTree(expr, "field${index + 1}") }
+            )
+            is PartiqlAst.DdlOp.CreateTable -> RecursionTree(
+                astType = "CreateTable",
+                attrOfParent = attrOfParent,
+                children = listOf(
+                    toRecursionTree(node.tableName, "tableName")
+                )
+            )
+            is PartiqlAst.DdlOp.DropIndex -> RecursionTree(
+                astType = "DropIndex",
+                attrOfParent = attrOfParent,
+                children = listOf(
+                    toRecursionTree(node.table, "table"),
+                    toRecursionTree(node.keys, "keys")
+                )
+            )
+            is PartiqlAst.DdlOp.DropTable -> RecursionTree(
+                astType = "DropTable",
+                attrOfParent = attrOfParent,
+                children = listOf(
+                    toRecursionTree(node.tableName, "tableName")
+                )
+            )
+        }
+
+    private fun toRecursionTree(node: PartiqlAst.Identifier, attrOfParent: String? = null): RecursionTree =
+        RecursionTree(
+            astType = "Identifier",
+            value = node.name.text + " " + node.case.toString(),
+            attrOfParent = attrOfParent
+        )
+
+    // *******
+    // * DML *
+    // *******
+    private fun toRecursionTree(node: PartiqlAst.Statement.Dml): RecursionTree =
+        RecursionTree(
+            astType = "Dml",
+            children = listOf(
+                toRecursionTree(node.operations, "operations")
+            ).let {
+                if (node.from == null) it else (it.plusElement(toRecursionTree(node.from!!, "from")))
+            }.let {
+                if (node.where == null) it else (it.plusElement(toRecursionTree(node.where!!, "where")))
+            }.let {
+                if (node.returning == null) it else (it.plusElement(toRecursionTree(node.returning!!, "returning")))
+            }
+        )
+
+    private fun toRecursionTree(node: PartiqlAst.DmlOpList, attrOfParent: String? = null): RecursionTree =
+        RecursionTree(
+            astType = "DmlOpList",
+            attrOfParent = attrOfParent,
+            children = node.ops.mapIndexed { index, dmlOp -> toRecursionTree(dmlOp, "op${index + 1}") }
+        )
+
+    private fun toRecursionTree(node: PartiqlAst.DmlOp, attrOfParent: String? = null): RecursionTree =
+        when(node){
+            is PartiqlAst.DmlOp.Delete -> RecursionTree(
+                astType = "Delete",
+                attrOfParent = attrOfParent
+            )
+            is PartiqlAst.DmlOp.Insert -> RecursionTree(
+                astType = "Insert",
+                attrOfParent = attrOfParent,
+                children = listOf(
+                    toRecursionTree(node.target, "target"),
+                    toRecursionTree(node.values, "values")
+                )
+            )
+            is PartiqlAst.DmlOp.InsertValue -> RecursionTree(
+                astType = "InsertValue",
+                attrOfParent = attrOfParent,
+                children = listOf(
+                    toRecursionTree(node.target, "target"),
+                    toRecursionTree(node.value, "value")
+                ).let {
+                    if (node.index == null) it else (it.plusElement(toRecursionTree(node.index!!, "index")))
+                }.let {
+                    if (node.onConflict == null) it else (it.plusElement(toRecursionTree(node.onConflict!!, "onConflict")))
+                }
+            )
+            is PartiqlAst.DmlOp.Remove -> RecursionTree(
+                astType = "Remove",
+                attrOfParent = attrOfParent,
+                children = listOf(
+                    toRecursionTree(node.target, "target")
+                )
+            )
+            is PartiqlAst.DmlOp.Set -> RecursionTree(
+                astType = "Set",
+                attrOfParent = attrOfParent,
+                children = listOf(
+                    toRecursionTree(node.assignment, "assignment")
+                )
+            )
+        }
+
+    private fun toRecursionTree(node: PartiqlAst.Assignment, attrOfParent: String? = null): RecursionTree =
+        RecursionTree(
+            astType = "Assignment",
+            attrOfParent = attrOfParent,
+            children = listOf(
+                toRecursionTree(node.target, "target"),
+                toRecursionTree(node.value, "value")
+            )
+        )
+
+    private fun toRecursionTree(node: PartiqlAst.OnConflict, attrOfParent: String? = null): RecursionTree =
+        RecursionTree(
+            astType = "OnConflict",
+            attrOfParent = attrOfParent,
+            children = listOf(
+                toRecursionTree(node.expr, "expr"),
+                toRecursionTree(node.conflictAction, "conflictAction")
+            )
+        )
+
+    private fun toRecursionTree(node: PartiqlAst.ConflictAction, attrOfParent: String? = null): RecursionTree =
+        when(node){
+            is PartiqlAst.ConflictAction.DoNothing -> RecursionTree(
+                astType = "DoNothing",
+                attrOfParent = attrOfParent
+            )
+        }
+
+    private fun toRecursionTree(node: PartiqlAst.ReturningExpr, attrOfParent: String? = null): RecursionTree =
+        RecursionTree(
+            astType = "ReturningExpr",
+            attrOfParent = attrOfParent,
+            children = node.elems.mapIndexed { index, returningElem -> toRecursionTree(returningElem, "elem${index + 1}") }
+        )
+
+    private fun toRecursionTree(node: PartiqlAst.ReturningElem, attrOfParent: String? = null): RecursionTree =
+        RecursionTree(
+            astType = "ReturningElem",
+            attrOfParent = attrOfParent,
+            children = listOf(
+                toRecursionTree(node.mapping, "mapping"),
+                toRecursionTree(node.column, "column")
+            )
+        )
+
+    private fun toRecursionTree(node: PartiqlAst.ReturningMapping, attrOfParent: String? = null): RecursionTree =
+        when(node){
+            is PartiqlAst.ReturningMapping.AllNew -> RecursionTree(
+                astType = "AllNew",
+                attrOfParent = attrOfParent
+            )
+            is PartiqlAst.ReturningMapping.AllOld -> RecursionTree(
+                astType = "AllOld",
+                attrOfParent = attrOfParent
+            )
+            is PartiqlAst.ReturningMapping.ModifiedNew -> RecursionTree(
+                astType =  "ModifiedNew",
+                attrOfParent = attrOfParent
+            )
+            is PartiqlAst.ReturningMapping.ModifiedOld -> RecursionTree(
+                astType = "ModifiedOld",
+                attrOfParent = attrOfParent
+            )
+        }
+
+    private fun toRecursionTree(node: PartiqlAst.ColumnComponent, attrOfParent: String? = null): RecursionTree =
+        when(node){
+            is PartiqlAst.ColumnComponent.ReturningColumn -> RecursionTree(
+                astType = "ReturningColumn",
+                attrOfParent = attrOfParent
+            )
+            is PartiqlAst.ColumnComponent.ReturningWildcard -> RecursionTree(
+                astType = "ReturningWildcard",
+                attrOfParent = attrOfParent
+            )
+        }
+
+    // *********
+    // * Query *
+    // *********
     private fun toRecursionTree(node: PartiqlAst.Expr, attrOfParent: String? = null): RecursionTree =
         when (node) {
             is PartiqlAst.Expr.Id -> RecursionTree(
                 astType = "Id",
-                value = node.name.text,
+                value = node.name.text + " " + node.case.toString() + " " + node.qualifier.toString(),
                 attrOfParent = attrOfParent
             )
             is PartiqlAst.Expr.Missing -> RecursionTree(
@@ -64,8 +271,9 @@ class PrettyPrinter {
                     ":" + node.value.minute.value.toString() +
                     ":" + node.value.second.toString() +
                     "." + node.value.nano.toString() +
-                    " 'precision': " + node.value.precision.value.toString() +
-                    " 'timeZone': " + node.value.withTimeZone.toString(),
+                    ", 'precision': " + node.value.precision.value.toString() +
+                    ", 'timeZone': " + node.value.withTimeZone.toString() +
+                    ", 'tzminute': " + node.value.tzMinutes.toString(),
                 attrOfParent = attrOfParent,
             )
             is PartiqlAst.Expr.Not -> RecursionTree(
@@ -114,12 +322,12 @@ class PrettyPrinter {
                 children = toRecursionTreeList(node.operands)
             )
             is PartiqlAst.Expr.And -> RecursionTree(
-                astType = "and",
+                astType = "And",
                 attrOfParent = attrOfParent,
                 children = toRecursionTreeList(node.operands)
             )
             is PartiqlAst.Expr.Or -> RecursionTree(
-                astType = "or",
+                astType = "Or",
                 attrOfParent = attrOfParent,
                 children = toRecursionTreeList(node.operands)
             )
@@ -154,7 +362,7 @@ class PrettyPrinter {
                 children = toRecursionTreeList(node.operands)
             )
             is PartiqlAst.Expr.InCollection -> RecursionTree(
-                astType = "in",
+                astType = "In",
                 attrOfParent = attrOfParent,
                 children = toRecursionTreeList(node.operands)
             )
@@ -196,42 +404,47 @@ class PrettyPrinter {
                 astType = "SimpleCase",
                 attrOfParent = attrOfParent,
                 children = listOf(
-                    toRecursionTree(node.expr, "expr")
-                ) + toRecursionTreeList(node.cases, "case").let {
+                    toRecursionTree(node.expr, "expr"),
+                    toRecursionTree(node.cases, "cases")
+                ).let {
                     if (node.default == null) it else (it.plusElement(toRecursionTree(node.default!!, "default")))
                 }
             )
             is PartiqlAst.Expr.SearchedCase -> RecursionTree(
                 astType = "SearchedCase",
                 attrOfParent = attrOfParent,
-                children = toRecursionTreeList(node.cases, "case").let {
+                children = listOf(
+                    toRecursionTree(node.cases, "cases")
+                ).let {
                     if (node.default == null) it else (it.plusElement(toRecursionTree(node.default!!, "default")))
                 }
             )
             is PartiqlAst.Expr.Struct -> RecursionTree(
-                astType = "{}",
+                astType = "Struct",
                 attrOfParent = attrOfParent,
-                children = node.fields.map { toRecursionTree(it, "field") }
+                children = node.fields.mapIndexed { index, exprPair -> toRecursionTree(exprPair, "field${index + 1}") }
             )
             is PartiqlAst.Expr.Bag -> RecursionTree(
-                astType = "<<>>",
+                astType = "Bag",
                 attrOfParent = attrOfParent,
-                children = toRecursionTreeList(node.values, "value")
+                children = toRecursionTreeList(node.values)
             )
             is PartiqlAst.Expr.List -> RecursionTree(
-                astType = "[]",
+                astType = "List",
                 attrOfParent = attrOfParent,
-                children = toRecursionTreeList(node.values, "value")
+                children = toRecursionTreeList(node.values)
             )
             is PartiqlAst.Expr.Sexp -> RecursionTree(
-                astType = "()",
+                astType = "Sexp",
                 attrOfParent = attrOfParent,
-                children = toRecursionTreeList(node.values, "value")
+                children = toRecursionTreeList(node.values)
             )
             is PartiqlAst.Expr.Path -> RecursionTree(
                 astType = "Path",
                 attrOfParent = attrOfParent,
-                children = listOf(toRecursionTree(node.root, "root")) + node.steps.map { toRecursionTree(it, "step") }
+                children = listOf(
+                    toRecursionTree(node.root, "root")
+                ) + node.steps.mapIndexed { index, pathStep -> toRecursionTree(pathStep, "step${index + 1}") }
             )
             is PartiqlAst.Expr.Call -> RecursionTree(
                 astType = "Call",
@@ -240,7 +453,7 @@ class PrettyPrinter {
                 children = toRecursionTreeList(node.args, "arg")
             )
             is PartiqlAst.Expr.CallAgg -> RecursionTree(
-                astType = "CallAgg: ",
+                astType = "CallAgg",
                 value = node.funcName.text,
                 attrOfParent = attrOfParent,
                 children = listOf(toRecursionTree(node.arg, "arg"))
@@ -331,7 +544,7 @@ class PrettyPrinter {
 
     private fun toRecursionTree(node: PartiqlAst.ExprPair, attrOfParent: String? = null): RecursionTree =
         RecursionTree(
-            astType = "pair",
+            astType = "Pair",
             attrOfParent = attrOfParent,
             children = listOf(
                 toRecursionTree(node.first, "first"),
@@ -339,8 +552,12 @@ class PrettyPrinter {
             )
         )
 
-    private fun toRecursionTreeList(node: PartiqlAst.ExprPairList, attrOfParent: String? = null): List<RecursionTree> =
-        node.pairs.map { toRecursionTree(it, attrOfParent) }
+    private fun toRecursionTree(node: PartiqlAst.ExprPairList, attrOfParent: String? = null): RecursionTree =
+        RecursionTree(
+            astType = "ExprPairList",
+            attrOfParent = attrOfParent,
+            children = node.pairs.mapIndexed { index, exprPair -> toRecursionTree(exprPair, "pair${index + 1}") }
+        )
 
     private fun toRecursionTree(node: PartiqlAst.PathStep, attrOfParent: String? = null): RecursionTree =
         when (node) {
@@ -369,7 +586,7 @@ class PrettyPrinter {
             is PartiqlAst.Projection.ProjectList -> RecursionTree(
                 astType = "ProjectList",
                 attrOfParent = attrOfParent,
-                children = node.projectItems.map { toRecursionTree(it, "projectItem") }
+                children = node.projectItems.mapIndexed { index, projectItem -> toRecursionTree(projectItem, "projectItem${index + 1}") }
             )
             is PartiqlAst.Projection.ProjectPivot -> RecursionTree(
                 astType = "ProjectPivot",
@@ -437,7 +654,7 @@ class PrettyPrinter {
         RecursionTree(
             astType = "Let",
             attrOfParent = attrOfParent,
-            children = node.letBindings.map { toRecursionTree(it) }
+            children = node.letBindings.mapIndexed { index, letBinding -> toRecursionTree(letBinding, "letBinding${index + 1}") }
         )
 
     private fun toRecursionTree(node: PartiqlAst.LetBinding, attrOfParent: String? = null): RecursionTree =
@@ -465,11 +682,13 @@ class PrettyPrinter {
                 RecursionTree(
                     astType = "GroupKeyList",
                     attrOfParent = "keyList",
-                    children = node.keyList.keys.map { groupKey ->
+                    children = node.keyList.keys.mapIndexed { index, groupKey ->
                         RecursionTree(
                             astType = "GroupKey",
-                            attrOfParent = "key",
-                            children = listOf(toRecursionTree(groupKey.expr, "expr")).let {
+                            attrOfParent = "key${index + 1}",
+                            children = listOf(
+                                toRecursionTree(groupKey.expr, "expr")
+                            ).let {
                                 if (groupKey.asAlias == null) it else { it.plusElement(toRecursionTree(groupKey.asAlias!!, "as")) }
                             }
                         )
@@ -484,14 +703,14 @@ class PrettyPrinter {
         RecursionTree(
             astType = "Order",
             attrOfParent = attrOfParent,
-            children = node.sortSpecs.map {
+            children = node.sortSpecs.mapIndexed { index, sortSpec ->
                 RecursionTree(
                     astType = "SortSpec",
-                    attrOfParent = "sortSpec",
+                    attrOfParent = "sortSpec${index + 1}",
                     children = listOf(
-                        toRecursionTree(it.expr, "expr"),
+                        toRecursionTree(sortSpec.expr, "expr"),
                         RecursionTree(
-                            astType = it.orderingSpec.toString(),
+                            astType = sortSpec.orderingSpec.toString(),
                             attrOfParent = "orderingSpec"
                         )
                     )
@@ -505,4 +724,16 @@ class PrettyPrinter {
             value = symbol.text,
             attrOfParent = attrOfParent
         )
+
+    private fun toRecursionTree(node: PartiqlAst.ScopeQualifier, attrOfParent: String? = null): RecursionTree =
+        when(node){
+            is PartiqlAst.ScopeQualifier.Unqualified -> RecursionTree(
+                astType = "Unqualified",
+                attrOfParent = attrOfParent
+            )
+            is PartiqlAst.ScopeQualifier.LocalsFirst -> RecursionTree(
+                astType = "LocalsFirst",
+                attrOfParent = attrOfParent
+            )
+        }
 }
