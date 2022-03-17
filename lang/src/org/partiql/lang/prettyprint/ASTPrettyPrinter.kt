@@ -1,4 +1,4 @@
-package org.partiql.cli.prettyprintAST
+package org.partiql.lang.prettyprint
 
 import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.lang.domains.PartiqlAst
@@ -8,7 +8,7 @@ import org.partiql.pig.runtime.SymbolPrimitive
 /**
  * This class is used to pretty print PIG AST.
  */
-class PrettyPrinter {
+class ASTPrettyPrinter {
     fun prettyPrintAST(query: String): String {
         val ion = IonSystemBuilder.standard().build()
         val ast = SqlParser(ion).parseAstStatement(query)

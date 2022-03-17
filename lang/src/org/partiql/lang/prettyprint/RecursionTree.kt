@@ -1,4 +1,4 @@
-package org.partiql.cli.prettyprintAST
+package org.partiql.lang.prettyprint
 
 import org.partiql.lang.domains.PartiqlAst
 

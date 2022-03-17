@@ -1,10 +1,10 @@
-package org.partiql.cli.prettyprintAST
+package org.partiql.lang.prettyprint
 
 import org.junit.Assert
 import org.junit.Test
 
-class PrettyPrinterTest {
-    private val prettyPrinter = PrettyPrinter()
+class ASTPrettyPrinterTest {
+    private val prettyPrinter = ASTPrettyPrinter()
 
     private fun checkPrettyPrintAst(query: String, expected: String) {
         // In triples quotes, a tab consists of 4 whitespaces. We need to transform them into a tab.
