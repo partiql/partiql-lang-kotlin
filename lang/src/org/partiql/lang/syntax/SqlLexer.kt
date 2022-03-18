@@ -531,6 +531,18 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
                                         tokenType = TokenType.DESC
                                         ion.newSymbol(lower)
                                     }
+                                    lower == "nulls" -> {
+                                        tokenType = TokenType.NULLS
+                                        ion.newSymbol(lower)
+                                    }
+                                    lower == "first" -> {
+                                        tokenType = TokenType.FIRST
+                                        ion.newSymbol(lower)
+                                    }
+                                    lower == "last" -> {
+                                        tokenType = TokenType.LAST
+                                        ion.newSymbol(lower)
+                                    }
                                     lower in BOOLEAN_KEYWORDS -> {
                                         // literal boolean
                                         tokenType = TokenType.LITERAL

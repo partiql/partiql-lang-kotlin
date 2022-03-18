@@ -428,7 +428,8 @@ open class AstRewriterBase : AstRewriter {
         open fun rewriteSortSpec(sortSpec: SortSpec): SortSpec =
             SortSpec(
                 rewriteExprNode(sortSpec.expr),
-                sortSpec.orderingSpec
+                sortSpec.orderingSpec,
+                sortSpec.nullsSpec
             )
 
         open fun rewriteDataType(dataType: DataType) = dataType

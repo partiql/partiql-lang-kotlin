@@ -132,6 +132,7 @@ class SqlParser(
         ORDER_BY,
         SORT_SPEC,
         ORDERING_SPEC,
+        NULLS,
         GROUP,
         GROUP_PARTIAL,
         HAVING,
@@ -577,8 +578,13 @@ class SqlParser(
                         orderBy(
                             it.children[0].children.map {
                                 when (it.children.size) {
-                                    1 -> sortSpec(it.children[0].toAstExpr(), asc())
-                                    2 -> sortSpec(it.children[0].toAstExpr(), it.children[1].toOrderingSpec())
+                                    1 -> sortSpec(it.children[0].toAstExpr(), asc(), nullsLast())
+                                    2 -> when (it.children[1].type) {
+                                        ParseType.ORDERING_SPEC -> sortSpec(it.children[0].toAstExpr(), it.children[1].toOrderingSpec(), nullsLast())
+                                        ParseType.NULLS -> sortSpec(it.children[0].toAstExpr(), asc(), it.children[1].toNullsSpec())
+                                        else -> errMalformedParseTree("Invalid ordering expressions syntax")
+                                    }
+                                    3 -> sortSpec(it.children[0].toAstExpr(), it.children[1].toOrderingSpec(), it.children[2].toNullsSpec())
                                     else -> errMalformedParseTree("Invalid ordering expressions syntax")
                                 }
                             }
@@ -1136,6 +1142,19 @@ class SqlParser(
                 TokenType.ASC -> asc()
                 TokenType.DESC -> desc()
                 else -> errMalformedParseTree("Invalid ordering spec parsing")
+            }
+        }
+    }
+
+    private fun ParseNode.toNullsSpec(): PartiqlAst.NullsSpec {
+        if (type != ParseType.NULLS) {
+            errMalformedParseTree("Expected ParseType.NULLS instead of $type")
+        }
+        return PartiqlAst.build {
+            when (token?.type) {
+                TokenType.FIRST -> nullsFirst()
+                TokenType.LAST -> nullsLast()
+                else -> errMalformedParseTree("Invalid nulls spec parsing")
             }
         }
     }
@@ -2210,17 +2229,6 @@ class SqlParser(
 
         parseOptionalSingleExpressionClause(ParseType.WHERE)
 
-        if (rem.head?.keywordText == "order") {
-            rem = rem.tail.tailExpectedToken(TokenType.BY)
-
-            val orderByChildren = listOf(rem.parseOrderByArgList())
-            rem = orderByChildren.first().remaining
-
-            children.add(
-                ParseNode(type = ParseType.ORDER_BY, token = null, children = orderByChildren, remaining = rem)
-            )
-        }
-
         if (rem.head?.keywordText == "group") {
             rem = rem.tail
             val type = when (rem.head?.keywordText) {
@@ -2275,6 +2283,17 @@ class SqlParser(
         }
 
         parseOptionalSingleExpressionClause(ParseType.HAVING)
+
+        if (rem.head?.keywordText == "order") {
+            rem = rem.tail.tailExpectedToken(TokenType.BY)
+
+            val orderByChildren = listOf(rem.parseOrderByArgList())
+            rem = orderByChildren.first().remaining
+
+            children.add(
+                ParseNode(type = ParseType.ORDER_BY, token = null, children = orderByChildren, remaining = rem)
+            )
+        }
 
         parseOptionalSingleExpressionClause(ParseType.LIMIT)
 
@@ -2837,13 +2856,12 @@ class SqlParser(
             var rem = this
 
             var child = rem.parseExpression()
-            var sortSpecKey = listOf(child)
+            var children = listOf(child)
             rem = child.remaining
 
             when (rem.head?.type) {
                 TokenType.ASC, TokenType.DESC -> {
-                    sortSpecKey = listOf(
-                        child,
+                    children = children + listOf(
                         ParseNode(
                             type = ParseType.ORDERING_SPEC,
                             token = rem.head,
@@ -2854,7 +2872,26 @@ class SqlParser(
                     rem = rem.tail
                 }
             }
-            ParseNode(type = ParseType.SORT_SPEC, token = null, children = sortSpecKey, remaining = rem)
+            when (rem.head?.type) {
+                TokenType.NULLS -> {
+                    rem = rem.tail
+                    when (rem.head?.type) {
+                        TokenType.FIRST, TokenType.LAST -> {
+                            children = children + listOf(
+                                ParseNode(
+                                    type = ParseType.NULLS,
+                                    token = rem.head,
+                                    children = listOf(),
+                                    remaining = rem.tail
+                                )
+                            )
+                        }
+                        else -> rem.head.err("Expected FIRST OR LAST after NULLS", ErrorCode.PARSE_UNEXPECTED_TOKEN)
+                    }
+                    rem = rem.tail
+                }
+            }
+            ParseNode(type = ParseType.SORT_SPEC, token = null, children = children, remaining = rem)
         }
     }
 

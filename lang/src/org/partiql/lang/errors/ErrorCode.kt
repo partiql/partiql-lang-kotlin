@@ -557,6 +557,22 @@ enum class ErrorCode(
             "No such function: ${errorContext?.get(Property.FUNCTION_NAME)?.stringValue() ?: UNKNOWN} "
     },
 
+    EVALUATOR_ORDER_BY_NULL_COMPARATOR(
+        ErrorCategory.EVALUATOR,
+        LOCATION,
+        ""
+    ) {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String = ""
+    },
+
+    EVALUATOR_ORDER_BY_ENVIRONMENT_CANNOT_RESOLVED(
+        ErrorCategory.EVALUATOR,
+        LOCATION,
+        ""
+    ) {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String = ""
+    },
+
     SEMANTIC_DUPLICATE_ALIASES_IN_SELECT_LIST_ITEM(
         ErrorCategory.SEMANTIC,
         LOCATION,

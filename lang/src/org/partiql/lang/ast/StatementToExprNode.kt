@@ -295,7 +295,8 @@ private class StatementTransformer(val ion: IonSystem) {
             sortSpecItems = this.sortSpecs.map {
                 SortSpec(
                     it.expr.toExprNode(),
-                    it.orderingSpec.toOrderSpec()
+                    it.orderingSpec.toOrderSpec(),
+                    it.nulls.toNullsSpec()
                 )
             }
         )
@@ -304,6 +305,12 @@ private class StatementTransformer(val ion: IonSystem) {
         when (this) {
             is PartiqlAst.OrderingSpec.Desc -> OrderingSpec.DESC
             else -> OrderingSpec.ASC
+        }
+
+    private fun PartiqlAst.NullsSpec?.toNullsSpec(): NullsSpec =
+        when (this) {
+            is PartiqlAst.NullsSpec.NullsFirst -> NullsSpec.FIRST
+            else -> NullsSpec.LAST
         }
 
     private fun PartiqlAst.GroupBy.toGroupBy(): GroupBy =

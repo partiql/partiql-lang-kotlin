@@ -217,12 +217,18 @@
         (product order_by sort_specs::(* sort_spec 1))
 
         // <expr> [ASC | DESC] ?
-        (product sort_spec expr::expr ordering_spec::(? ordering_spec))
+        (product sort_spec expr::expr ordering_spec::(? ordering_spec) nulls::(? nulls_spec))
 
         // Desired ordering spec: ASC or DESC
         (sum ordering_spec
             (asc)
             (desc)
+        )
+
+        // Desired ordering spec: ASC or DESC
+        (sum nulls_spec
+             (nulls_first)
+             (nulls_last)
         )
 
         // Indicates if variable lookup should be case-sensitive or not.

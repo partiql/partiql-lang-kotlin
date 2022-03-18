@@ -1696,7 +1696,8 @@ class SqlParserTest : SqlParserTestBase() {
                 (order_by 
                     (sort_spec 
                         (id rk1 (case_insensitive) (unqualified)) 
-                        (asc)))))
+                        (asc)
+                        (nulls_last)))))
         """
     )
 
@@ -1721,13 +1722,16 @@ class SqlParserTest : SqlParserTestBase() {
                 (order_by
                     (sort_spec 
                         (id rk1 (case_insensitive) (unqualified)) 
-                        (asc)) 
+                        (asc)
+                        (nulls_last)) 
                     (sort_spec 
                         (id rk2 (case_insensitive) (unqualified)) 
-                        (asc)) 
+                        (asc)
+                        (nulls_last)) 
                     (sort_spec 
                         (id rk3 (case_insensitive) (unqualified)) 
-                        (asc)))))
+                        (asc)
+                        (nulls_last)))))
         """
     )
 
@@ -1752,7 +1756,8 @@ class SqlParserTest : SqlParserTestBase() {
                 (order_by 
                     (sort_spec 
                         (id rk1 (case_insensitive) (unqualified)) 
-                        (desc)))))
+                        (desc)
+                        (nulls_last)))))
         """
     )
 
@@ -1777,10 +1782,12 @@ class SqlParserTest : SqlParserTestBase() {
                 (order_by 
                     (sort_spec 
                         (id rk1 (case_insensitive) (unqualified)) 
-                        (asc))
+                        (asc)
+                        (nulls_last))
                     (sort_spec 
                         (id rk2 (case_insensitive) (unqualified)) 
-                        (desc)))))
+                        (desc)
+                        (nulls_last)))))
         """
     )
     // ****************************************
@@ -4023,7 +4030,7 @@ class SqlParserTest : SqlParserTestBase() {
         select(
             project = buildProject("x"),
             from = scan(id("a")),
-            order = PartiqlAst.OrderBy(listOf(PartiqlAst.SortSpec(id("y"), PartiqlAst.OrderingSpec.Desc()))),
+            order = PartiqlAst.OrderBy(listOf(PartiqlAst.SortSpec(id("y"), PartiqlAst.OrderingSpec.Desc(), PartiqlAst.NullsSpec.NullsLast()))),
             limit = buildLit("10"),
             offset = buildLit("5")
         )

@@ -225,7 +225,7 @@ private fun OrderBy.toAstOrderBySpec(): PartiqlAst.OrderBy {
     val thiz = this
     return PartiqlAst.build {
         orderBy(
-            thiz.sortSpecItems.map { sortSpec(it.expr.toAstExpr(), it.orderingSpec.toAstOrderSpec()) }
+            thiz.sortSpecItems.map { sortSpec(it.expr.toAstExpr(), it.orderingSpec.toAstOrderSpec(), it.nullsSpec.toAstNullsSpec()) }
         )
     }
 }
@@ -235,6 +235,14 @@ private fun OrderingSpec?.toAstOrderSpec(): PartiqlAst.OrderingSpec =
         when (this@toAstOrderSpec) {
             OrderingSpec.DESC -> desc()
             else -> asc()
+        }
+    }
+
+private fun NullsSpec?.toAstNullsSpec(): PartiqlAst.NullsSpec =
+    PartiqlAst.build {
+        when (this@toAstNullsSpec) {
+            NullsSpec.FIRST -> nullsFirst()
+            else -> nullsLast()
         }
     }
 

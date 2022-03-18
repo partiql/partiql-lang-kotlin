@@ -64,6 +64,7 @@ import org.partiql.lang.types.toTypedOpParameter
 import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.codePointSequence
+import org.partiql.lang.util.compareBy
 import org.partiql.lang.util.compareTo
 import org.partiql.lang.util.div
 import org.partiql.lang.util.drop
@@ -74,12 +75,14 @@ import org.partiql.lang.util.plus
 import org.partiql.lang.util.rem
 import org.partiql.lang.util.stringValue
 import org.partiql.lang.util.take
+import org.partiql.lang.util.thenBy
 import org.partiql.lang.util.times
 import org.partiql.lang.util.timestampValue
 import org.partiql.lang.util.totalMinutes
 import org.partiql.lang.util.unaryMinus
 import org.partiql.pig.runtime.SymbolPrimitive
 import java.math.BigDecimal
+import java.util.Comparator
 import java.util.LinkedList
 import java.util.Stack
 import java.util.TreeSet
@@ -169,6 +172,13 @@ internal class EvaluatingCompiler(
      * Used during evaluation og `GROUP BY`.
      */
     private data class FromSourceBindingNamePair(val bindingName: BindingName, val nameExprValue: ExprValue)
+
+    enum class OrderingType { ASC, DESC }
+
+    enum class NullsType { FIRST, LAST }
+
+    /** Represents an instance of a compiled `ORDER BY` expression, orderingSpec and nulls type. */
+    private class CompiledOrderByItem(val orderingType: OrderingType, val nullsType: NullsType, val thunk: ThunkEnv)
 
     /**
      * Base class for [ExprAggregator] instances which accumulate values and perform a final computation.
@@ -1643,14 +1653,6 @@ internal class EvaluatingCompiler(
     }
 
     private fun compileSelect(selectExpr: PartiqlAst.Expr.Select, metas: MetaContainer): ThunkEnv {
-        selectExpr.order?.let {
-            err(
-                "ORDER BY is not supported in evaluator yet",
-                ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
-                errorContextFrom(metas).also { it[Property.FEATURE_NAME] = "ORDER BY" },
-                internal = false
-            )
-        }
 
         // Get all the FROM source aliases and LET bindings for binding error checks
         val fold = object : PartiqlAst.VisitorFold<Set<String>>() {
@@ -1678,6 +1680,9 @@ internal class EvaluatingCompiler(
             val fromSourceThunks = compileFromSources(selectExpr.from)
             val letSourceThunks = selectExpr.fromLet?.let { compileLetSources(it) }
             val sourceThunks = compileQueryWithoutProjection(selectExpr, fromSourceThunks, letSourceThunks)
+
+            val orderByThunk = selectExpr.order?.let { compileOrderByExpression(selectExpr.order.sortSpecs) }
+            val orderByLocationMeta = selectExpr.order?.metas?.sourceLocation
 
             val offsetThunk = selectExpr.offset?.let { compileAstExpr(it) }
             val offsetLocationMeta = selectExpr.offset?.metas?.sourceLocation
@@ -1709,7 +1714,12 @@ internal class EvaluatingCompiler(
                         // Grouping is not needed -- simply project the results from the FROM clause directly.
                         thunkFactory.thunkEnv(metas) { env ->
 
-                            val projectedRows = sourceThunks(env).map { (joinedValues, projectEnv) ->
+                            val orderedRows = when (orderByThunk) {
+                                null -> sourceThunks(env)
+                                else -> orderRows(sourceThunks(env), orderByThunk, orderByLocationMeta)
+                            }
+
+                            val projectedRows = orderedRows.map { (joinedValues, projectEnv) ->
                                 selectProjectionThunk(projectEnv, joinedValues)
                             }
 
@@ -1766,8 +1776,13 @@ internal class EvaluatingCompiler(
                                 // Create a closure that groups all the rows in the FROM source into a single group.
                                 thunkFactory.thunkEnv(metas) { env ->
                                     // Evaluate the FROM clause
+                                    val orderedRows = when (orderByThunk) {
+                                        null -> sourceThunks(env)
+                                        else -> orderRows(sourceThunks(env), orderByThunk, orderByLocationMeta)
+                                    }
+
                                     val fromProductions: Sequence<FromProduction> =
-                                        rowsWithOffsetAndLimit(sourceThunks(env), env)
+                                        rowsWithOffsetAndLimit(orderedRows, env)
                                     val registers = createRegisterBank()
 
                                     // note: the group key can be anything here because we only ever have a single
@@ -1852,10 +1867,15 @@ internal class EvaluatingCompiler(
                                         }
                                     }
 
+                                    val groupByEnvValuePairs = env.groups.mapNotNull { g -> getGroupEnv(env, g.value) to g.value }.asSequence()
+                                    val orderedGroupEnvPairs = when (orderByThunk) {
+                                        null -> groupByEnvValuePairs
+                                        else -> orderRows(groupByEnvValuePairs, orderByThunk, orderByLocationMeta)
+                                    }
+
                                     // generate the final group by projection
-                                    val projectedRows = env.groups.mapNotNull { g ->
-                                        val groupByEnv = getGroupEnv(env, g.value)
-                                        filterHavingAndProject(groupByEnv, g.value)
+                                    val projectedRows = orderedGroupEnvPairs.mapNotNull { (groupByEnv, groupValue) ->
+                                        filterHavingAndProject(groupByEnv, groupValue)
                                     }.asSequence().let { rowsWithOffsetAndLimit(it, env) }
 
                                     valueFactory.newBag(projectedRows)
@@ -1982,6 +2002,35 @@ internal class EvaluatingCompiler(
             CompiledGroupByItem(alias.text.exprValue(), uniqueName, compileAstExpr(it.expr))
         }
 
+    private fun compileOrderByExpression(sortSpecs: List<PartiqlAst.SortSpec>): List<CompiledOrderByItem> =
+        sortSpecs.map {
+            it.orderingSpec
+                ?: errNoContext(
+                    "SortSpec.orderingSpec was not specified",
+                    errorCode = ErrorCode.INTERNAL_ERROR,
+                    internal = true
+                )
+
+            it.nulls
+                ?: errNoContext(
+                    "SortSpec.nulls was not specified",
+                    errorCode = ErrorCode.INTERNAL_ERROR,
+                    internal = true
+                )
+
+            val orderSpec = when (it.orderingSpec) {
+                is PartiqlAst.OrderingSpec.Asc -> OrderingType.ASC
+                is PartiqlAst.OrderingSpec.Desc -> OrderingType.DESC
+            }
+
+            val nullsSpec = when (it.nulls) {
+                is PartiqlAst.NullsSpec.NullsFirst -> NullsType.FIRST
+                is PartiqlAst.NullsSpec.NullsLast -> NullsType.LAST
+            }
+
+            CompiledOrderByItem(orderSpec, nullsSpec, compileAstExpr(it.expr))
+        }
+
     /**
      * Create a thunk that uses the compiled GROUP BY expressions to create the group key.
      */
@@ -1997,6 +2046,106 @@ internal class EvaluatingCompiler(
             }
             GroupKeyExprValue(valueFactory.ion, keyValues.asSequence(), uniqueNames)
         }
+
+    private fun <T> orderBySelector(
+        row: T,
+        orderBy: CompiledOrderByItem,
+        offsetLocationMeta: SourceLocationMeta?
+    ): Comparable<*>? {
+        val env = when (row) {
+            is FromProduction -> row.env
+            is Environment -> row
+            is Pair<*, *> -> {
+                if (row.first is Environment) {
+                    row.first as Environment
+                } else if (row.second is Environment) {
+                    row.second as Environment
+                } else {
+                    err(
+                        "Environment cannot be resolved from pair",
+                        ErrorCode.EVALUATOR_ORDER_BY_ENVIRONMENT_CANNOT_RESOLVED,
+                        errorContextFrom(offsetLocationMeta).also { it[Property.FEATURE_NAME] = "ORDER BY" },
+                        internal = true
+                    )
+                }
+            }
+            else -> err(
+                "Environment cannot be resolved",
+                ErrorCode.EVALUATOR_ORDER_BY_ENVIRONMENT_CANNOT_RESOLVED,
+                errorContextFrom(offsetLocationMeta).also { it[Property.FEATURE_NAME] = "ORDER BY" },
+                internal = true
+            )
+        }
+
+        val thunkValue = orderBy.thunk(env)
+
+        val selector = when (thunkValue.type) {
+            ExprValueType.NULL,
+            ExprValueType.MISSING -> return null
+            ExprValueType.BOOL -> thunkValue.booleanValue()
+            ExprValueType.INT,
+            ExprValueType.FLOAT,
+            ExprValueType.DECIMAL -> thunkValue.numberValue()
+            ExprValueType.DATE -> thunkValue.dateValue()
+            ExprValueType.TIMESTAMP -> thunkValue.timestampValue()
+            ExprValueType.TIME -> thunkValue.timeValue()
+            ExprValueType.STRING -> thunkValue.stringValue()
+            ExprValueType.CLOB,
+            ExprValueType.BLOB,
+            ExprValueType.LIST,
+            ExprValueType.SEXP,
+            ExprValueType.STRUCT,
+            ExprValueType.BAG -> err(
+                "ORDER BY is not supported for value type [${thunkValue.type}] yet.",
+                ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
+                errorContextFrom(offsetLocationMeta).also { it[Property.FEATURE_NAME] = "ORDER BY" },
+                internal = false
+            )
+            else -> err(
+                "Unknown value type [${thunkValue.type}] for ORDER BY",
+                ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
+                errorContextFrom(offsetLocationMeta).also { it[Property.FEATURE_NAME] = "ORDER BY" },
+                internal = true
+            )
+        }
+
+        if (selector !is Comparable<*>) {
+            err(
+                "Comparable need to be implemented for value type [${thunkValue.type}]",
+                ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
+                errorContextFrom(offsetLocationMeta).also { it[Property.FEATURE_NAME] = "ORDER BY" },
+                internal = true
+            )
+        }
+
+        return selector
+    }
+
+    private fun <T> orderRows(
+        rows: Sequence<T>,
+        orderByItems: List<CompiledOrderByItem>,
+        offsetLocationMeta: SourceLocationMeta?
+    ): Sequence<T> {
+        val initialComparator: Comparator<T>? = null
+        val resultComparator = orderByItems.fold(initialComparator) { intermediateComparator, orderBy ->
+            if (intermediateComparator == null) {
+                return@fold compareBy(orderBy.orderingType, orderBy.nullsType) { row ->
+                    orderBySelector(row, orderBy, offsetLocationMeta)
+                }
+            }
+
+            return@fold intermediateComparator.thenBy(orderBy.orderingType, orderBy.nullsType) { row ->
+                orderBySelector(row, orderBy, offsetLocationMeta)
+            }
+        } ?: err(
+            "Order BY comparator cannot be null",
+            ErrorCode.EVALUATOR_ORDER_BY_NULL_COMPARATOR,
+            null,
+            internal = true
+        )
+
+        return rows.sortedWith(resultComparator)
+    }
 
     /**
      * Returns a closure which creates an [Environment] for the specified [Group].
