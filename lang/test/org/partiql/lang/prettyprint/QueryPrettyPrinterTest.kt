@@ -26,16 +26,13 @@ class QueryPrettyPrinterTest {
     // * EXEC *
     // ********
 
-
     // *******
     // * DDL *
     // *******
 
-
     // *******
     // * Dml *
     // *******
-
 
     // *********
     // * Query *
@@ -122,7 +119,7 @@ class QueryPrettyPrinterTest {
 
     @Test
     fun litTimestamp() {
-        checkPrettyPrintQuery("`2017-01-10T05:30:55Z`","`2017-01-10T05:30:55Z`")
+        checkPrettyPrintQuery("`2017-01-10T05:30:55Z`", "`2017-01-10T05:30:55Z`")
     }
 
     @Test
@@ -177,72 +174,72 @@ class QueryPrettyPrinterTest {
 
     @Test
     fun not1() {
-        checkPrettyPrintQuery("NOT TRUE","NOT TRUE")
+        checkPrettyPrintQuery("NOT TRUE", "NOT TRUE")
     }
 
     @Test
     fun not2() {
-        checkPrettyPrintQuery("NOT (TRUE AND FALSE)","NOT (TRUE AND FALSE)")
+        checkPrettyPrintQuery("NOT (TRUE AND FALSE)", "NOT (TRUE AND FALSE)")
     }
 
     @Test
     fun pos() {
-        checkPrettyPrintQuery("+function1()","+function1()")
+        checkPrettyPrintQuery("+function1()", "+function1()")
     }
 
     @Test
     fun neg() {
-        checkPrettyPrintQuery("-function1()","-function1()")
+        checkPrettyPrintQuery("-function1()", "-function1()")
     }
 
     @Test
     fun plus1() {
-        checkPrettyPrintQuery("1 + 2","1 + 2")
+        checkPrettyPrintQuery("1 + 2", "1 + 2")
     }
 
     @Test
     fun plus2() {
-        checkPrettyPrintQuery("1 + 2 + 3","(1 + 2) + 3")
+        checkPrettyPrintQuery("1 + 2 + 3", "(1 + 2) + 3")
     }
 
     @Test
     fun plus3() {
-        checkPrettyPrintQuery("1 + (2 + 3)","1 + (2 + 3)")
+        checkPrettyPrintQuery("1 + (2 + 3)", "1 + (2 + 3)")
     }
 
     @Test
     fun minus1() {
-        checkPrettyPrintQuery("1 - 2","1 - 2")
+        checkPrettyPrintQuery("1 - 2", "1 - 2")
     }
 
     @Test
     fun minus2() {
-        checkPrettyPrintQuery("1 - 2 - 3","(1 - 2) - 3")
+        checkPrettyPrintQuery("1 - 2 - 3", "(1 - 2) - 3")
     }
 
     @Test
     fun minus3() {
-        checkPrettyPrintQuery("1 - 2 - 3 - 4","((1 - 2) - 3) - 4")
+        checkPrettyPrintQuery("1 - 2 - 3 - 4", "((1 - 2) - 3) - 4")
     }
 
     @Test
     fun times() {
-        checkPrettyPrintQuery("1 * 2","1 * 2")
+        checkPrettyPrintQuery("1 * 2", "1 * 2")
     }
 
     @Test
     fun divide() {
-        checkPrettyPrintQuery("1 / 2","1 / 2")
+        checkPrettyPrintQuery("1 / 2", "1 / 2")
     }
 
     @Test
     fun modulo() {
-        checkPrettyPrintQuery("3 % 2","3 % 2")
+        checkPrettyPrintQuery("3 % 2", "3 % 2")
     }
 
     @Test
     fun concat() {
-        checkPrettyPrintQuery("1 || 2","1 || 2")
+        checkPrettyPrintQuery("1 || 2", "1 || 2")
     }
 
     @Test
@@ -367,52 +364,52 @@ class QueryPrettyPrinterTest {
 
     @Test
     fun call1() {
-        checkPrettyPrintQuery("function1(1)","function1(1)")
+        checkPrettyPrintQuery("function1(1)", "function1(1)")
     }
 
     @Test
     fun call2() {
-        checkPrettyPrintQuery("function1(a)","function1(a)")
+        checkPrettyPrintQuery("function1(a)", "function1(a)")
     }
 
     @Test
     fun callAgg1() {
-        checkPrettyPrintQuery("sum(a)","sum(a)")
+        checkPrettyPrintQuery("sum(a)", "sum(a)")
     }
 
     @Test
     fun callAgg2() {
-        checkPrettyPrintQuery("sum(DISTINCT a)","sum(DISTINCT a)")
+        checkPrettyPrintQuery("sum(DISTINCT a)", "sum(DISTINCT a)")
     }
 
     @Test
     fun isType() {
-        checkPrettyPrintQuery("1 IS INT","1 IS INT")
+        checkPrettyPrintQuery("1 IS INT", "1 IS INT")
     }
 
     @Test
     fun cast() {
-        checkPrettyPrintQuery("CAST (1 AS STRING)","CAST (1 AS STRING)")
+        checkPrettyPrintQuery("CAST (1 AS STRING)", "CAST (1 AS STRING)")
     }
 
     @Test
     fun canCast() {
-        checkPrettyPrintQuery("CAN_CAST (1 AS STRING)","CAN_CAST (1 AS STRING)")
+        checkPrettyPrintQuery("CAN_CAST (1 AS STRING)", "CAN_CAST (1 AS STRING)")
     }
 
     @Test
     fun canLosslessCast() {
-        checkPrettyPrintQuery("CAN_LOSSLESS_CAST (1 AS STRING)","CAN_LOSSLESS_CAST (1 AS STRING)")
+        checkPrettyPrintQuery("CAN_LOSSLESS_CAST (1 AS STRING)", "CAN_LOSSLESS_CAST (1 AS STRING)")
     }
 
     @Test
     fun nullIf() {
-        checkPrettyPrintQuery("NULLIF(1, 2)","NULLIF(1, 2)")
+        checkPrettyPrintQuery("NULLIF(1, 2)", "NULLIF(1, 2)")
     }
 
     @Test
     fun coalesce() {
-        checkPrettyPrintQuery("COALESCE(1, 2)","COALESCE(1, 2)")
+        checkPrettyPrintQuery("COALESCE(1, 2)", "COALESCE(1, 2)")
     }
 
     @Test
@@ -565,51 +562,60 @@ class QueryPrettyPrinterTest {
     // TODO: Make the following queries looks better after formatting
     @Test
     fun selectInFunction() {
-        checkPrettyPrintQuery("function0((SELECT a FROM b), c)",
+        checkPrettyPrintQuery(
+            "function0((SELECT a FROM b), c)",
             """
                 function0((
                     SELECT a
                     FROM b), c)
-            """.trimIndent())
+            """.trimIndent()
+        )
     }
 
     @Test
     fun caseInFunction() {
-        checkPrettyPrintQuery("function0((CASE name WHEN 'jack' THEN 1 WHEN 'joe' THEN 2 END), c)",
+        checkPrettyPrintQuery(
+            "function0((CASE name WHEN 'jack' THEN 1 WHEN 'joe' THEN 2 END), c)",
             """
                 function0((
                     CASE name
                         WHEN 'jack' THEN 1
                         WHEN 'joe' THEN 2
                     END), c)
-            """.trimIndent())
+            """.trimIndent()
+        )
     }
 
     @Test
     fun selectInContainerType() {
-        checkPrettyPrintQuery("<< (SELECT a FROM b), c >>",
+        checkPrettyPrintQuery(
+            "<< (SELECT a FROM b), c >>",
             """
                 << (
                     SELECT a
                     FROM b), c >>
-            """.trimIndent())
+            """.trimIndent()
+        )
     }
 
     @Test
     fun caseInContainerType() {
-        checkPrettyPrintQuery("<< (CASE name WHEN 'jack' THEN 1 WHEN 'joe' THEN 2 END), c >>",
+        checkPrettyPrintQuery(
+            "<< (CASE name WHEN 'jack' THEN 1 WHEN 'joe' THEN 2 END), c >>",
             """
                 << (
                     CASE name
                         WHEN 'jack' THEN 1
                         WHEN 'joe' THEN 2
                     END), c >>
-            """.trimIndent())
+            """.trimIndent()
+        )
     }
 
     @Test
     fun selectInOperator1() {
-        checkPrettyPrintQuery("(SELECT a FROM b) UNION (SELECT c FROM d) UNION (SELECT e FROM f)",
+        checkPrettyPrintQuery(
+            "(SELECT a FROM b) UNION (SELECT c FROM d) UNION (SELECT e FROM f)",
             """
                 ((
                     SELECT a
@@ -618,51 +624,60 @@ class QueryPrettyPrinterTest {
                     FROM d)) UNION (
                     SELECT e
                     FROM f)
-            """.trimIndent())
+            """.trimIndent()
+        )
     }
 
     @Test
     fun selectInOperator2() {
-        checkPrettyPrintQuery("(SELECT a FROM b) UNION c",
+        checkPrettyPrintQuery(
+            "(SELECT a FROM b) UNION c",
             """
                 (
                     SELECT a
                     FROM b) UNION c
-            """.trimIndent())
+            """.trimIndent()
+        )
     }
 
     @Test
     fun selectInOperator3() {
-        checkPrettyPrintQuery("CAST((SELECT VALUE a FROM b) AS STRING)",
+        checkPrettyPrintQuery(
+            "CAST((SELECT VALUE a FROM b) AS STRING)",
             """
                 CAST ((
                     SELECT VALUE a
                     FROM b) AS STRING)
-            """.trimIndent())
+            """.trimIndent()
+        )
     }
 
     @Test
     fun caseInOperator1() {
-        checkPrettyPrintQuery("(CASE name WHEN 'jack' THEN 1 WHEN 'joe' THEN 2 END) || ' alice'",
+        checkPrettyPrintQuery(
+            "(CASE name WHEN 'jack' THEN 1 WHEN 'joe' THEN 2 END) || ' alice'",
             """
                 (
                     CASE name
                         WHEN 'jack' THEN 1
                         WHEN 'joe' THEN 2
                     END) || ' alice'
-            """.trimIndent())
+            """.trimIndent()
+        )
     }
 
     @Test
     fun caseInOperator2() {
-        checkPrettyPrintQuery("CAST((CASE name WHEN 'jack' THEN 1 WHEN 'joe' THEN 2 END) AS STRING)",
+        checkPrettyPrintQuery(
+            "CAST((CASE name WHEN 'jack' THEN 1 WHEN 'joe' THEN 2 END) AS STRING)",
             """
                 CAST ((
                     CASE name
                         WHEN 'jack' THEN 1
                         WHEN 'joe' THEN 2
                     END) AS STRING)
-            """.trimIndent())
+            """.trimIndent()
+        )
     }
 
     @Test

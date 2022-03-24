@@ -10,7 +10,6 @@ import java.time.LocalTime
 import kotlin.IllegalStateException
 import kotlin.math.abs
 
-
 /**
  * This class is used to pretty print a query, which first transforms a query into a parsed tree,
  * and then transform it back to a pretty string.
@@ -29,7 +28,7 @@ class QueryPrettyPrinter {
     fun astToPrettyQuery(ast: PartiqlAst.Statement): String {
         val sb = StringBuilder()
         writeAstNode(ast, sb)
-        if (sb.lastOrNull() == '\n'){
+        if (sb.lastOrNull() == '\n') {
             sb.removeLast(1)
         }
 
@@ -37,7 +36,7 @@ class QueryPrettyPrinter {
     }
 
     private fun writeAstNode(node: PartiqlAst.Statement, sb: StringBuilder) {
-        when(node){
+        when (node) {
             is PartiqlAst.Statement.Query -> writeAstNode(node.expr, sb, 0)
             is PartiqlAst.Statement.Ddl -> TODO()
             is PartiqlAst.Statement.Dml -> TODO()
@@ -52,7 +51,7 @@ class QueryPrettyPrinter {
      * into a Case or Select clause.
      */
     private fun writeAstNode(node: PartiqlAst.Expr, sb: StringBuilder, level: Int) {
-        when (node){
+        when (node) {
             is PartiqlAst.Expr.Missing -> writeAstNode(node, sb)
             is PartiqlAst.Expr.Lit -> writeAstNode(node, sb)
             is PartiqlAst.Expr.LitTime -> writeAstNode(node, sb)
@@ -117,8 +116,8 @@ class QueryPrettyPrinter {
     /**
      * If the node indicates a sub-query, we surround it with parenthesis and start a new line for it.
      */
-    private fun writeAstNodeCheckSubQuery(node: PartiqlAst.Expr, sb: StringBuilder, level: Int){
-        when (isCaseOrSelect(node)){
+    private fun writeAstNodeCheckSubQuery(node: PartiqlAst.Expr, sb: StringBuilder, level: Int) {
+        when (isCaseOrSelect(node)) {
             true -> {
                 val indent = getIndent(level + 1)
                 sb.append("(\n$indent")
@@ -135,7 +134,7 @@ class QueryPrettyPrinter {
 
     private fun writeAstNode(node: PartiqlAst.Expr.Lit, sb: StringBuilder) {
         // Not sure if there is a better way to transform IonElement into a PartiQL value as string
-        val value = when (node.value.type){
+        val value = when (node.value.type) {
             com.amazon.ionelement.api.ElementType.NULL -> "NULL"
             com.amazon.ionelement.api.ElementType.BOOL -> node.value.booleanValue.toString().toUpperCase()
             com.amazon.ionelement.api.ElementType.INT -> node.value.longValue.toString()
@@ -200,7 +199,7 @@ class QueryPrettyPrinter {
             writeAstNodeCheckSubQuery(it, sb, level)
             sb.append(", ")
         }
-        if (node.values.isNotEmpty()){
+        if (node.values.isNotEmpty()) {
             sb.removeLast(2)
         }
         sb.append(")")
@@ -214,7 +213,7 @@ class QueryPrettyPrinter {
             writeAstNodeCheckSubQuery(it, sb, level)
             sb.append(", ")
         }
-        if (node.values.isNotEmpty()){
+        if (node.values.isNotEmpty()) {
             sb.removeLast(2)
         }
         sb.append(" ]")
@@ -230,7 +229,7 @@ class QueryPrettyPrinter {
             writeAstNodeCheckSubQuery(it.second, sb, level)
             sb.append(", ")
         }
-        if (node.fields.isNotEmpty()){
+        if (node.fields.isNotEmpty()) {
             sb.removeLast(2)
         }
         sb.append(" }")
@@ -241,7 +240,7 @@ class QueryPrettyPrinter {
     }
 
     private fun writeAstNode(node: PartiqlAst.Expr.Id, sb: StringBuilder) {
-        when (node.case){
+        when (node.case) {
             is PartiqlAst.CaseSensitivity.CaseSensitive -> sb.append("\"${node.name.text}\"")
             is PartiqlAst.CaseSensitivity.CaseInsensitive -> sb.append(node.name.text)
         }
@@ -255,7 +254,7 @@ class QueryPrettyPrinter {
             writeAstNodeCheckSubQuery(arg, sb, level)
             sb.append(", ")
         }
-        if (node.args.isNotEmpty()){
+        if (node.args.isNotEmpty()) {
             sb.removeLast(2)
         }
         sb.append(')')
@@ -408,7 +407,7 @@ class QueryPrettyPrinter {
         }
     }
 
-    private fun writeSortSpec (sortSpec: PartiqlAst.SortSpec, sb: StringBuilder, level: Int) {
+    private fun writeSortSpec(sortSpec: PartiqlAst.SortSpec, sb: StringBuilder, level: Int) {
         writeAstNodeCheckSubQuery(sortSpec.expr, sb, level + 1)
         when (sortSpec.orderingSpec) {
             is PartiqlAst.OrderingSpec.Asc -> sb.append(" ASC")
@@ -416,7 +415,7 @@ class QueryPrettyPrinter {
         }
     }
 
-    private fun writeGroupBy (group: PartiqlAst.GroupBy, sb: StringBuilder, level: Int) {
+    private fun writeGroupBy(group: PartiqlAst.GroupBy, sb: StringBuilder, level: Int) {
         when (group.strategy) {
             is PartiqlAst.GroupingStrategy.GroupFull -> sb.append("BY ")
             is PartiqlAst.GroupingStrategy.GroupPartial -> sb.append("PARTIAL BY ")
@@ -429,7 +428,7 @@ class QueryPrettyPrinter {
         group.groupAsAlias?.let { sb.append(" GROUP AS ${it.text}") }
     }
 
-    private fun writeGroupKey (key: PartiqlAst.GroupKey, sb: StringBuilder, level: Int) {
+    private fun writeGroupKey(key: PartiqlAst.GroupKey, sb: StringBuilder, level: Int) {
         writeAstNodeCheckSubQuery(key.expr, sb, level)
         key.asAlias?.let { sb.append(" AS ${it.text}") }
     }
@@ -531,7 +530,7 @@ class QueryPrettyPrinter {
     // The logic here can be improved, so we can remove unnecessary parenthesis in different scenarios.
     // i.e. currently, it transforms '1 + 2 + 3' as '(1 + 2) + 3', however, the parenthesis can be removed.
     private fun writeAstNodeCheckOp(node: PartiqlAst.Expr, sb: StringBuilder, level: Int) {
-        when (isOperator(node)){
+        when (isOperator(node)) {
             true -> {
                 sb.append('(')
                 writeAstNode(node, sb, level)
@@ -663,7 +662,7 @@ class QueryPrettyPrinter {
             writeAstNodeCheckSubQuery(arg, sb, level)
             sb.append(", ")
         }
-        if (node.args.isNotEmpty()){
+        if (node.args.isNotEmpty()) {
             sb.removeLast(2)
         }
         sb.append(')')
@@ -677,7 +676,7 @@ class QueryPrettyPrinter {
         sb.append(')')
     }
 
-    private fun writeNAryOperator(operatorName: String, operands: List<PartiqlAst.Expr>, sb: StringBuilder, level: Int){
+    private fun writeNAryOperator(operatorName: String, operands: List<PartiqlAst.Expr>, sb: StringBuilder, level: Int) {
         if (operands.size < 2) IllegalStateException("Internal Error: NAry operator $operatorName must have at least 2 operands")
         operands.forEach {
             writeAstNodeCheckOp(it, sb, level)
@@ -686,13 +685,13 @@ class QueryPrettyPrinter {
         sb.removeLast(operatorName.length + 2)
     }
 
-    private fun isCaseOrSelect(node: PartiqlAst.Expr) : Boolean =
+    private fun isCaseOrSelect(node: PartiqlAst.Expr): Boolean =
         when (node) {
             is PartiqlAst.Expr.SimpleCase, is PartiqlAst.Expr.SearchedCase, is PartiqlAst.Expr.Select -> true
             else -> false
         }
 
-    private fun isOperator(node: PartiqlAst.Expr) : Boolean =
+    private fun isOperator(node: PartiqlAst.Expr): Boolean =
         when (node) {
             is PartiqlAst.Expr.And, is PartiqlAst.Expr.Between, is PartiqlAst.Expr.CanCast,
             is PartiqlAst.Expr.CanLosslessCast, is PartiqlAst.Expr.Cast, is PartiqlAst.Expr.Concat,
@@ -708,8 +707,8 @@ class QueryPrettyPrinter {
 
     private fun getIndent(level: Int) = "\t".repeat(level)
 
-    private fun StringBuilder.removeLast(n: Int) : StringBuilder {
-        for (i in 1..n){
+    private fun StringBuilder.removeLast(n: Int): StringBuilder {
+        for (i in 1..n) {
             deleteCharAt(length - 1)
         }
         return this
