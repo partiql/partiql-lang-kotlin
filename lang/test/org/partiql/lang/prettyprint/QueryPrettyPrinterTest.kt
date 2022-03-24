@@ -690,7 +690,7 @@ class QueryPrettyPrinterTest {
                         SELECT c
                         FROM d) THEN 2
                     ELSE (
-                        SELECT e 
+                        SELECT e
                         FROM f)
                 END
             """.trimIndent()
