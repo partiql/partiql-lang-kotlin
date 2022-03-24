@@ -225,7 +225,7 @@
             (desc)
         )
 
-        // Desired ordering spec: ASC or DESC
+        // Desired null/missing ordering spec: NULLS FIRST or NULLS LAST
         (sum nulls_spec
              (nulls_first)
              (nulls_last)

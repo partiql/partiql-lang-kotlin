@@ -242,7 +242,7 @@ private fun NullsSpec?.toAstNullsSpec(): PartiqlAst.NullsSpec =
     PartiqlAst.build {
         when (this@toAstNullsSpec) {
             NullsSpec.FIRST -> nullsFirst()
-            else -> nullsLast()
+            NullsSpec.LAST -> nullsLast()
         }
     }
 

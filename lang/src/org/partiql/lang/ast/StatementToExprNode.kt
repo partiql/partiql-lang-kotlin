@@ -310,7 +310,7 @@ private class StatementTransformer(val ion: IonSystem) {
     private fun PartiqlAst.NullsSpec?.toNullsSpec(): NullsSpec =
         when (this) {
             is PartiqlAst.NullsSpec.NullsFirst -> NullsSpec.FIRST
-            else -> NullsSpec.LAST
+            is PartiqlAst.NullsSpec.NullsLast -> NullsSpec.LAST
         }
 
     private fun PartiqlAst.GroupBy.toGroupBy(): GroupBy =
