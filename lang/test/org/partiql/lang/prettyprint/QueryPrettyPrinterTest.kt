@@ -12,11 +12,6 @@ class QueryPrettyPrinterTest {
     private fun checkPrettyPrintQuery(query: String, expected: String) {
         // In triples quotes, a tab consists of 4 whitespaces. We need to transform them into a tab.
         val newExpected = expected.replace("    ", "\t")
-
-        println(newExpected)
-
-        println(prettyPrinter.prettyPrintQuery(query))
-
         Assert.assertEquals(newExpected, prettyPrinter.prettyPrintQuery(query))
         // New sting and old string should be the same when transformed into PIG AST
         Assert.assertEquals(sqlParser.parseAstStatement(query), sqlParser.parseAstStatement(newExpected))
@@ -683,7 +678,7 @@ class QueryPrettyPrinterTest {
     @Test
     fun selectInSimpleCase() {
         checkPrettyPrintQuery(
-            "CASE (SELECT name FROM t) WHEN (SELECT a FROM b) UNION c THEN 1 WHEN (SELECT c FROM d) THEN 2 ELSE (SELCT e FROM f) END",
+            "CASE (SELECT name FROM t) WHEN (SELECT a FROM b) UNION c THEN 1 WHEN (SELECT c FROM d) THEN 2 ELSE (SELECT e FROM f) END",
             """
                 CASE (
                     SELECT name
@@ -695,7 +690,7 @@ class QueryPrettyPrinterTest {
                         SELECT c
                         FROM d) THEN 2
                     ELSE (
-                        SELECT e 
+                        SELECT e
                         FROM f)
                 END
             """.trimIndent()
