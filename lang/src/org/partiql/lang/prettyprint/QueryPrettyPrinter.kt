@@ -53,7 +53,7 @@ class QueryPrettyPrinter {
             writeAstNodeCheckSubQuery(it, sb, -1)
             sb.append(", ")
         }
-        if (node.args.isNotEmpty()){
+        if (node.args.isNotEmpty()) {
             sb.removeLast(2)
         }
     }
@@ -89,7 +89,7 @@ class QueryPrettyPrinter {
     }
 
     private fun writeAstNode(node: PartiqlAst.Identifier, sb: StringBuilder) {
-        when (node.case){
+        when (node.case) {
             is PartiqlAst.CaseSensitivity.CaseSensitive -> sb.append("\"${node.name.text}\"")
             is PartiqlAst.CaseSensitivity.CaseInsensitive -> sb.append(node.name.text)
         }
@@ -99,7 +99,7 @@ class QueryPrettyPrinter {
     // * Dml *
     // *******
     private fun writeAstNode(node: PartiqlAst.Statement.Dml, sb: StringBuilder) {
-        if (node.operations.ops.first() is PartiqlAst.DmlOp.Delete){
+        if (node.operations.ops.first() is PartiqlAst.DmlOp.Delete) {
             sb.append("DELETE FROM ")
             writeFromSource(node.from!!, sb, 0)
             node.where?.let {
@@ -131,7 +131,7 @@ class QueryPrettyPrinter {
         node.returning?.let { writeReturning(it, sb) }
     }
 
-    private fun writeDmlOp(dmlOp: PartiqlAst.DmlOp, sb: StringBuilder, previousIsSet: Boolean): Boolean{
+    private fun writeDmlOp(dmlOp: PartiqlAst.DmlOp, sb: StringBuilder, previousIsSet: Boolean): Boolean {
         when (dmlOp) {
             is PartiqlAst.DmlOp.Insert -> {
                 sb.append("INSERT INTO ")
@@ -174,7 +174,7 @@ class QueryPrettyPrinter {
                 writeAstNodeCheckSubQuery(dmlOp.target, sb, 0)
             }
             is PartiqlAst.DmlOp.Set -> {
-                when (previousIsSet){
+                when (previousIsSet) {
                     true -> {
                         sb.removeLast(1) // Remove the last line breaker
                         sb.append(", ")
@@ -191,7 +191,7 @@ class QueryPrettyPrinter {
         return dmlOp is PartiqlAst.DmlOp.Set
     }
 
-    private fun writeReturning(returning: PartiqlAst.ReturningExpr, sb: StringBuilder){
+    private fun writeReturning(returning: PartiqlAst.ReturningExpr, sb: StringBuilder) {
         sb.append("\nRETURNING ")
         returning.elems.forEach {
             when (it.mapping) {
@@ -288,7 +288,7 @@ class QueryPrettyPrinter {
         when (isCaseOrSelect(node)) {
             true -> {
                 val subQueryLevel = getSubQueryLevel(level)
-                val separator = when (subQueryLevel == -1){
+                val separator = when (subQueryLevel == -1) {
                     true -> ""
                     false -> getSeparator(subQueryLevel)
                 }
@@ -886,7 +886,7 @@ class QueryPrettyPrinter {
         }
 
     private fun getSubQueryLevel(level: Int) =
-        when (level == -1){
+        when (level == -1) {
             true -> -1
             false -> level + 1
         }

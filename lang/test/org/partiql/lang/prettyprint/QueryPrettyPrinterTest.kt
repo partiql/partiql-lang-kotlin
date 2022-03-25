@@ -23,7 +23,7 @@ class QueryPrettyPrinterTest {
     @Test
     fun exec() {
         checkPrettyPrintQuery(
-            "EXEC foo 'bar0', 1, 2, [3]","EXEC foo 'bar0', 1, 2, [ 3 ]"
+            "EXEC foo 'bar0', 1, 2, [3]", "EXEC foo 'bar0', 1, 2, [ 3 ]"
         )
     }
 
@@ -33,14 +33,14 @@ class QueryPrettyPrinterTest {
     @Test
     fun createTable() {
         checkPrettyPrintQuery(
-            "CREATE TABLE foo","CREATE TABLE foo"
+            "CREATE TABLE foo", "CREATE TABLE foo"
         )
     }
 
     @Test
     fun dropTable() {
         checkPrettyPrintQuery(
-            "DROP TABLE foo","DROP TABLE foo"
+            "DROP TABLE foo", "DROP TABLE foo"
         )
     }
 
@@ -64,14 +64,14 @@ class QueryPrettyPrinterTest {
     @Test
     fun insertValue() {
         checkPrettyPrintQuery(
-            "INSERT INTO foo VALUE (1, 2)","INSERT INTO foo VALUE [ 1, 2 ]"
+            "INSERT INTO foo VALUE (1, 2)", "INSERT INTO foo VALUE [ 1, 2 ]"
         )
     }
 
     @Test
     fun insertValues() {
         checkPrettyPrintQuery(
-            "INSERT INTO foo VALUEs (1, 2), (3, 4)","INSERT INTO foo VALUES (1, 2), (3, 4)"
+            "INSERT INTO foo VALUEs (1, 2), (3, 4)", "INSERT INTO foo VALUES (1, 2), (3, 4)"
         )
     }
 
@@ -862,7 +862,7 @@ class QueryPrettyPrinterTest {
     @Test
     fun selectInExec() {
         checkPrettyPrintQuery(
-            "EXEC foo 'bar0', 1, 2, [3], SELECT a FROM b","EXEC foo 'bar0', 1, 2, [ 3 ], (SELECT a FROM b)"
+            "EXEC foo 'bar0', 1, 2, [3], SELECT a FROM b", "EXEC foo 'bar0', 1, 2, [ 3 ], (SELECT a FROM b)"
         )
     }
 }
