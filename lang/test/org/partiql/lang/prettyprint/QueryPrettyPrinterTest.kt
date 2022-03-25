@@ -20,14 +20,133 @@ class QueryPrettyPrinterTest {
     // ********
     // * EXEC *
     // ********
+    @Test
+    fun exec() {
+        checkPrettyPrintQuery(
+            "EXEC foo 'bar0', 1, 2, [3]","EXEC foo 'bar0', 1, 2, [ 3 ]"
+        )
+    }
 
     // *******
     // * DDL *
     // *******
+    @Test
+    fun createTable() {
+        checkPrettyPrintQuery(
+            "CREATE TABLE foo","CREATE TABLE foo"
+        )
+    }
+
+    @Test
+    fun dropTable() {
+        checkPrettyPrintQuery(
+            "DROP TABLE foo","DROP TABLE foo"
+        )
+    }
+
+    @Test
+    fun createIndex() {
+        checkPrettyPrintQuery(
+            "CREATE INDEX ON foo (x, y.z)", "CREATE INDEX ON foo (x, y.z)"
+        )
+    }
+
+    @Test
+    fun dropIndex() {
+        checkPrettyPrintQuery(
+            "DROP INDEX bar ON foo", "DROP INDEX bar ON foo"
+        )
+    }
 
     // *******
     // * Dml *
     // *******
+    @Test
+    fun insertValue() {
+        checkPrettyPrintQuery(
+            "INSERT INTO foo VALUE (1, 2)","INSERT INTO foo VALUE [1, 2]"
+        )
+    }
+
+    @Test
+    fun insertValues() {
+        checkPrettyPrintQuery(
+            "INSERT INTO foo VALUEs (1, 2)","INSERT INTO foo VALUES << [ 1, 2 ] >>"
+        )
+    }
+
+    @Test
+    fun set1() {
+        checkPrettyPrintQuery(
+            "FROM x SET k.m = 5",
+            """
+                FROM x
+                SET k.m = 5
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun set2() {
+        checkPrettyPrintQuery(
+            "UPDATE x SET k.m = 5",
+            """
+                FROM x
+                SET k.m = 5
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun set3() {
+        checkPrettyPrintQuery(
+            "FROM x SET k.m = 5, a = b",
+            """
+                FROM x
+                SET k.m = 5, a = b
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun remove() {
+        checkPrettyPrintQuery(
+            "FROM x WHERE a = b REMOVE y",
+            """
+                FROM x
+                WHERE a = b
+                REMOVE y
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun delete() {
+        checkPrettyPrintQuery(
+            "DELETE FROM y WHERE a = b",
+            """
+                DELETE FROM y
+                WHERE a = b
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun longDmlQuery() {
+        checkPrettyPrintQuery(
+            "FROM x WHERE a = b SET k = 5, m = 6 INSERT INTO c VALUE << 1 >> REMOVE a SET l = 3 REMOVE b RETURNING MODIFIED OLD a, ALL NEW *",
+            """
+                FROM x
+                WHERE a = b
+                SET k = 5, m = 6
+                INSERT INTO c VALUE << 1 >>
+                REMOVE a
+                SET l = 3
+                REMOVE b
+                RETURNING MODIFIED OLD a, ALL NEW *
+            """.trimIndent()
+        )
+    }
 
     // *********
     // * Query *
@@ -462,12 +581,37 @@ class QueryPrettyPrinterTest {
     }
 
     @Test
+    fun selectFromJoin() {
+        checkPrettyPrintQuery(
+            "SELECT * FROM a, b",
+            """
+                SELECT *
+                FROM a, b
+            """.trimIndent()
+        )
+    }
+
+    @Test
     fun selectFromLet() {
         checkPrettyPrintQuery(
             "SELECT * FROM 1 LET 1 AS a",
             """
                 SELECT *
-                FROM 1 LET 1 AS a
+                FROM 1
+                    LET 1 AS a
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun selectFromInnerJoinLet() {
+        checkPrettyPrintQuery(
+            "SELECT * FROM a INNER JOIN b ON c LET 1 AS d",
+            """
+                SELECT *
+                FROM a
+                    JOIN b ON c
+                    LET 1 AS d
             """.trimIndent()
         )
     }
@@ -478,7 +622,8 @@ class QueryPrettyPrinterTest {
             "SELECT * FROM 1 LET 1 AS a WHERE a = b",
             """
                 SELECT *
-                FROM 1 LET 1 AS a
+                FROM 1
+                    LET 1 AS a
                 WHERE a = b
             """.trimIndent()
         )
@@ -490,9 +635,11 @@ class QueryPrettyPrinterTest {
             "SELECT * FROM 1 LET 1 AS a WHERE b = c GROUP BY d GROUP AS e HAVING f = '123'",
             """
                 SELECT *
-                FROM 1 LET 1 AS a
+                FROM 1
+                    LET 1 AS a
                 WHERE b = c
-                GROUP BY d GROUP AS e
+                GROUP BY d
+                    GROUP AS e
                 HAVING f = '123'
             """.trimIndent()
         )
@@ -504,9 +651,11 @@ class QueryPrettyPrinterTest {
             "SELECT * FROM 1 LET 1 AS a WHERE b = c GROUP BY d GROUP AS e HAVING f = '123' LIMIT 3 OFFSET 4",
             """
                 SELECT *
-                FROM 1 LET 1 AS a
+                FROM 1
+                    LET 1 AS a
                 WHERE b = c
-                GROUP BY d GROUP AS e
+                GROUP BY d
+                    GROUP AS e
                 HAVING f = '123'
                 LIMIT 3
                 OFFSET 4
@@ -523,9 +672,11 @@ class QueryPrettyPrinterTest {
                     SELECT *
                     FROM foo
                     WHERE bar = 1)
-                FROM 1 LET 1 AS a
+                FROM 1
+                    LET 1 AS a
                 WHERE b = c
-                GROUP BY d GROUP AS e
+                GROUP BY d
+                    GROUP AS e
                 HAVING f = '123'
                 LIMIT 3
                 OFFSET 4
@@ -544,9 +695,11 @@ class QueryPrettyPrinterTest {
                         SELECT foo
                         FROM t1 AS t2) AS foo1
                     WHERE bar = 1)
-                FROM 1 LET 1 AS a
+                FROM 1
+                    LET 1 AS a
                 WHERE b = c
-                GROUP BY d GROUP AS e
+                GROUP BY d
+                    GROUP AS e
                 HAVING f = '123'
                 LIMIT 3
                 OFFSET 4

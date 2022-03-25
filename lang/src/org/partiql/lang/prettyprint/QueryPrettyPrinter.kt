@@ -38,12 +38,165 @@ class QueryPrettyPrinter {
     private fun writeAstNode(node: PartiqlAst.Statement, sb: StringBuilder) {
         when (node) {
             is PartiqlAst.Statement.Query -> writeAstNode(node.expr, sb, 0)
-            is PartiqlAst.Statement.Ddl -> TODO()
-            is PartiqlAst.Statement.Dml -> TODO()
-            is PartiqlAst.Statement.Exec -> TODO()
+            is PartiqlAst.Statement.Ddl -> writeAstNode(node, sb)
+            is PartiqlAst.Statement.Dml -> writeAstNode(node, sb)
+            is PartiqlAst.Statement.Exec -> writeAstNode(node, sb)
         }
     }
 
+    // ********
+    // * Exec *
+    // ********
+    private fun writeAstNode(node: PartiqlAst.Statement.Exec, sb: StringBuilder) {
+        sb.append("EXEC ${node.procedureName.text} ")
+        node.args.forEach {
+            writeAstNodeCheckSubQuery(it, sb, 0)
+            sb.append(", ")
+        }
+        if (node.args.isNotEmpty()){
+            sb.removeLast(2)
+        }
+    }
+
+    // *******
+    // * Ddl *
+    // *******
+    private fun writeAstNode(node: PartiqlAst.Statement.Ddl, sb: StringBuilder) {
+        when (node.op) {
+            is PartiqlAst.DdlOp.CreateTable -> sb.append("CREATE TABLE ${node.op.tableName.text}")
+            is PartiqlAst.DdlOp.DropTable -> {
+                sb.append("DROP TABLE ")
+                writeAstNode(node.op.tableName, sb)
+            }
+            is PartiqlAst.DdlOp.CreateIndex -> {
+                sb.append("CREATE INDEX ON ")
+                writeAstNode(node.op.indexName, sb)
+                sb.append(" (")
+                node.op.fields.forEach {
+                    writeAstNode(it, sb, 0)
+                    sb.append(", ")
+                }
+                sb.removeLast(2).append(')')
+            }
+            is PartiqlAst.DdlOp.DropIndex -> {
+                sb.append("DROP INDEX ")
+                writeAstNode(node.op.keys, sb)
+                sb.append(" ON ")
+                writeAstNode(node.op.table, sb)
+            }
+        }
+    }
+
+    private fun writeAstNode(node: PartiqlAst.Identifier, sb: StringBuilder) {
+        when (node.case){
+            is PartiqlAst.CaseSensitivity.CaseSensitive -> sb.append("\"${node.name.text}\"")
+            is PartiqlAst.CaseSensitivity.CaseInsensitive -> sb.append(node.name.text)
+        }
+    }
+
+    // *******
+    // * Dml *
+    // *******
+    private fun writeAstNode(node: PartiqlAst.Statement.Dml, sb: StringBuilder) {
+        if (node.operations.ops.first() is PartiqlAst.DmlOp.Delete){
+            sb.append("DELETE FROM ")
+            writeFromSource(node.from!!, sb, 0)
+            node.where?.let { writeWhere(it, sb, 0) }
+            node.returning?.let { writeReturning(it, sb) }
+            return
+        }
+
+        node.from?.let {
+            sb.append("FROM ")
+            writeFromSource(it, sb, 0)
+        }
+
+        node.where?.let {
+            sb.append("\nWHERE ")
+            writeAstNodeCheckSubQuery(it, sb, 0)
+        }
+
+        var previousIsSet = false // Consecutive SET nodes should be transformed into one SET clause
+        node.operations.ops.forEach {
+            if (sb.isNotEmpty()) { // If there is no FROM WHERE clause before, we don't need to add a line break
+                sb.append('\n')
+            }
+            previousIsSet = writeDmlOp(it, sb, previousIsSet)
+        }
+
+        node.returning?.let { writeReturning(it, sb) }
+    }
+
+    private fun writeDmlOp(dmlOp: PartiqlAst.DmlOp, sb: StringBuilder, previousIsSet: Boolean): Boolean{
+        when (dmlOp) {
+            is PartiqlAst.DmlOp.Insert -> {
+                sb.append("INSERT INTO ")
+                writeAstNodeCheckSubQuery(dmlOp.target, sb, 0)
+                sb.append(" VALUES ")
+                writeAstNodeCheckSubQuery(dmlOp.values, sb, 0)
+            }
+            is PartiqlAst.DmlOp.InsertValue -> {
+                sb.append("INSERT INTO ")
+                writeAstNodeCheckSubQuery(dmlOp.target, sb, 0)
+                sb.append(" VALUE ")
+                writeAstNodeCheckSubQuery(dmlOp.value, sb, 0)
+                dmlOp.index?.let {
+                    sb.append(" AT ")
+                    writeAstNodeCheckSubQuery(it, sb, 0)
+                }
+                dmlOp.onConflict?.let {
+                    sb.append(" ON CONFLICT WHERE ")
+                    writeAstNodeCheckSubQuery(it.expr, sb, 0)
+                    when (it.conflictAction) {
+                        is PartiqlAst.ConflictAction.DoNothing -> {
+                            sb.append(" DO NOTHING")
+                        }
+                    }
+                }
+            }
+            is PartiqlAst.DmlOp.Remove -> {
+                sb.append("REMOVE ")
+                writeAstNodeCheckSubQuery(dmlOp.target, sb, 0)
+            }
+            is PartiqlAst.DmlOp.Set -> {
+                when (previousIsSet){
+                    true -> {
+                        sb.removeLast(1) // Remove the last line breaker
+                        sb.append(", ")
+                    }
+                    false -> sb.append("SET ")
+                }
+                writeAstNodeCheckSubQuery(dmlOp.assignment.target, sb, 0)
+                sb.append(" = ")
+                writeAstNodeCheckSubQuery(dmlOp.assignment.value, sb, 0)
+            }
+            is PartiqlAst.DmlOp.Delete -> error("DELETE clause has different syntax")
+        }
+
+        return dmlOp is PartiqlAst.DmlOp.Set
+    }
+
+    private fun writeReturning(returning: PartiqlAst.ReturningExpr, sb: StringBuilder){
+        sb.append("\nRETURNING ")
+        returning.elems.forEach {
+            when (it.mapping) {
+                is PartiqlAst.ReturningMapping.ModifiedNew -> sb.append("MODIFIED NEW ")
+                is PartiqlAst.ReturningMapping.ModifiedOld -> sb.append("MODIFIED OLD ")
+                is PartiqlAst.ReturningMapping.AllNew -> sb.append("ALL NEW ")
+                is PartiqlAst.ReturningMapping.AllOld -> sb.append("ALL OLD ")
+            }
+            when (it.column) {
+                is PartiqlAst.ColumnComponent.ReturningWildcard -> sb.append('*')
+                is PartiqlAst.ColumnComponent.ReturningColumn -> writeAstNodeCheckSubQuery(it.column.expr, sb, 0)
+            }
+            sb.append(", ")
+        }
+        sb.removeLast(2)
+    }
+
+    // *********
+    // * Query *
+    // *********
     /**
      * @param node is the PIG AST node
      * @param sb is the StringBuilder where we write the pretty query according to the like of the parsed tree
@@ -362,14 +515,13 @@ class QueryPrettyPrinter {
 
         // LET clause
         node.fromLet?.let {
-            sb.append(" LET ")
+            sb.append("\n${indent}\tLET ")
             writeFromLet(it, sb, level)
         }
 
         // WHERE clause
         node.where?.let {
-            sb.append("\n${indent}WHERE ")
-            writeAstNodeCheckSubQuery(it, sb, level + 1)
+            writeWhere(it, sb, level)
         }
 
         // GROUP clause
@@ -425,12 +577,19 @@ class QueryPrettyPrinter {
             sb.append(", ")
         }
         sb.removeLast(2)
-        group.groupAsAlias?.let { sb.append(" GROUP AS ${it.text}") }
+        val indent = getIndent(level + 1)
+        group.groupAsAlias?.let { sb.append("\n${indent}GROUP AS ${it.text}") }
     }
 
     private fun writeGroupKey(key: PartiqlAst.GroupKey, sb: StringBuilder, level: Int) {
         writeAstNodeCheckSubQuery(key.expr, sb, level)
         key.asAlias?.let { sb.append(" AS ${it.text}") }
+    }
+
+    private fun writeWhere(expr: PartiqlAst.Expr, sb: StringBuilder, level: Int){
+        val indent = getIndent(level)
+        sb.append("\n${indent}WHERE ")
+        writeAstNodeCheckSubQuery(expr, sb, level)
     }
 
     private fun writeFromLet(fromLet: PartiqlAst.Let, sb: StringBuilder, level: Int) {
@@ -456,7 +615,7 @@ class QueryPrettyPrinter {
                 from.byAlias?.let { sb.append(" BY ${it.text}") }
             }
             is PartiqlAst.FromSource.Join -> when {
-                (from.type is PartiqlAst.JoinType.Inner && from.predicate != null) -> {
+                (from.type is PartiqlAst.JoinType.Inner && from.predicate == null) -> {
                     // This means we can use comma to separate JOIN left-hand side and right-hand side
                     writeFromSource(from.left, sb, level)
                     sb.append(", ")
