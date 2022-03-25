@@ -64,28 +64,27 @@ import org.partiql.lang.types.toTypedOpParameter
 import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.codePointSequence
-import org.partiql.lang.util.compareBy
 import org.partiql.lang.util.compareTo
 import org.partiql.lang.util.div
 import org.partiql.lang.util.drop
 import org.partiql.lang.util.foldLeftProduct
+import org.partiql.lang.util.interruptibleFold
 import org.partiql.lang.util.isZero
 import org.partiql.lang.util.minus
 import org.partiql.lang.util.plus
 import org.partiql.lang.util.rem
 import org.partiql.lang.util.stringValue
 import org.partiql.lang.util.take
-import org.partiql.lang.util.thenBy
 import org.partiql.lang.util.times
 import org.partiql.lang.util.timestampValue
 import org.partiql.lang.util.totalMinutes
 import org.partiql.lang.util.unaryMinus
 import org.partiql.pig.runtime.SymbolPrimitive
 import java.math.BigDecimal
-import java.util.Comparator
 import java.util.LinkedList
 import java.util.Stack
 import java.util.TreeSet
+import kotlin.Comparator
 
 /**
  * A basic compiler that converts an instance of [PartiqlAst] to an [Expression].
@@ -173,12 +172,8 @@ internal class EvaluatingCompiler(
      */
     private data class FromSourceBindingNamePair(val bindingName: BindingName, val nameExprValue: ExprValue)
 
-    enum class OrderingType { ASC, DESC }
-
-    enum class NullsType { FIRST, LAST }
-
     /** Represents an instance of a compiled `ORDER BY` expression, orderingSpec and nulls type. */
-    private class CompiledOrderByItem(val orderingType: OrderingType, val nullsType: NullsType, val thunk: ThunkEnv)
+    private class CompiledOrderByItem(val comparator: NaturalExprValueComparators, val thunk: ThunkEnv)
 
     /**
      * Base class for [ExprAggregator] instances which accumulate values and perform a final computation.
@@ -1716,7 +1711,7 @@ internal class EvaluatingCompiler(
 
                             val orderedRows = when (orderByThunk) {
                                 null -> sourceThunks(env)
-                                else -> orderRows(sourceThunks(env), orderByThunk, orderByLocationMeta)
+                                else -> evalOrderBy(sourceThunks(env), orderByThunk, orderByLocationMeta)
                             }
 
                             val projectedRows = orderedRows.map { (joinedValues, projectEnv) ->
@@ -1729,13 +1724,17 @@ internal class EvaluatingCompiler(
                                 is PartiqlAst.SetQuantifier.All -> projectedRows
                             }.let { rowsWithOffsetAndLimit(it, env) }
 
-                            valueFactory.newBag(
-                                quantifiedRows.map {
-                                    // TODO make this expose the ordinal for ordered sequences
-                                    // make sure we don't expose the underlying value's name out of a SELECT
-                                    it.unnamedValue()
-                                }
-                            )
+                            // if order by is specified, return list otherwise bag
+                            when (orderByThunk) {
+                                null -> valueFactory.newBag(
+                                    quantifiedRows.map {
+                                        // TODO make this expose the ordinal for ordered sequences
+                                        // make sure we don't expose the underlying value's name out of a SELECT
+                                        it.unnamedValue()
+                                    }
+                                )
+                                else -> valueFactory.newList(quantifiedRows.map { it.unnamedValue() })
+                            }
                         }
                     else -> {
                         // Grouping is needed
@@ -1778,7 +1777,7 @@ internal class EvaluatingCompiler(
                                     // Evaluate the FROM clause
                                     val orderedRows = when (orderByThunk) {
                                         null -> sourceThunks(env)
-                                        else -> orderRows(sourceThunks(env), orderByThunk, orderByLocationMeta)
+                                        else -> evalOrderBy(sourceThunks(env), orderByThunk, orderByLocationMeta)
                                     }
 
                                     val fromProductions: Sequence<FromProduction> =
@@ -1803,7 +1802,11 @@ internal class EvaluatingCompiler(
                                         listOf(syntheticGroup.key)
                                     )
 
-                                    valueFactory.newBag(listOf(groupResult).asSequence())
+                                    // if order by is specified, return list otherwise bag
+                                    when (orderByThunk) {
+                                        null -> valueFactory.newBag(listOf(groupResult).asSequence())
+                                        else -> valueFactory.newList(listOf(groupResult).asSequence())
+                                    }
                                 }
                             }
                             else -> {
@@ -1870,7 +1873,7 @@ internal class EvaluatingCompiler(
                                     val groupByEnvValuePairs = env.groups.mapNotNull { g -> getGroupEnv(env, g.value) to g.value }.asSequence()
                                     val orderedGroupEnvPairs = when (orderByThunk) {
                                         null -> groupByEnvValuePairs
-                                        else -> orderRows(groupByEnvValuePairs, orderByThunk, orderByLocationMeta)
+                                        else -> evalOrderBy(groupByEnvValuePairs, orderByThunk, orderByLocationMeta)
                                     }
 
                                     // generate the final group by projection
@@ -1878,7 +1881,11 @@ internal class EvaluatingCompiler(
                                         filterHavingAndProject(groupByEnv, groupValue)
                                     }.asSequence().let { rowsWithOffsetAndLimit(it, env) }
 
-                                    valueFactory.newBag(projectedRows)
+                                    // if order by is specified, return list otherwise bag
+                                    when (orderByThunk) {
+                                        null -> valueFactory.newBag(projectedRows)
+                                        else -> valueFactory.newList(projectedRows)
+                                    }
                                 }
                             }
                         }
@@ -2002,35 +2009,6 @@ internal class EvaluatingCompiler(
             CompiledGroupByItem(alias.text.exprValue(), uniqueName, compileAstExpr(it.expr))
         }
 
-    private fun compileOrderByExpression(sortSpecs: List<PartiqlAst.SortSpec>): List<CompiledOrderByItem> =
-        sortSpecs.map {
-            it.orderingSpec
-                ?: errNoContext(
-                    "SortSpec.orderingSpec was not specified",
-                    errorCode = ErrorCode.INTERNAL_ERROR,
-                    internal = true
-                )
-
-            it.nulls
-                ?: errNoContext(
-                    "SortSpec.nulls was not specified",
-                    errorCode = ErrorCode.INTERNAL_ERROR,
-                    internal = true
-                )
-
-            val orderSpec = when (it.orderingSpec) {
-                is PartiqlAst.OrderingSpec.Asc -> OrderingType.ASC
-                is PartiqlAst.OrderingSpec.Desc -> OrderingType.DESC
-            }
-
-            val nullsSpec = when (it.nulls) {
-                is PartiqlAst.NullsSpec.NullsFirst -> NullsType.FIRST
-                is PartiqlAst.NullsSpec.NullsLast -> NullsType.LAST
-            }
-
-            CompiledOrderByItem(orderSpec, nullsSpec, compileAstExpr(it.expr))
-        }
-
     /**
      * Create a thunk that uses the compiled GROUP BY expressions to create the group key.
      */
@@ -2047,95 +2025,55 @@ internal class EvaluatingCompiler(
             GroupKeyExprValue(valueFactory.ion, keyValues.asSequence(), uniqueNames)
         }
 
-    private fun <T> orderBySelector(
-        row: T,
-        orderBy: CompiledOrderByItem,
-        offsetLocationMeta: SourceLocationMeta?
-    ): Comparable<*>? {
-        val env = when (row) {
-            is FromProduction -> row.env
-            is Environment -> row
-            is Pair<*, *> -> {
-                if (row.first is Environment) {
-                    row.first as Environment
-                } else if (row.second is Environment) {
-                    row.second as Environment
-                } else {
-                    err(
-                        "Environment cannot be resolved from pair",
-                        ErrorCode.EVALUATOR_ORDER_BY_ENVIRONMENT_CANNOT_RESOLVED,
-                        errorContextFrom(offsetLocationMeta).also { it[Property.FEATURE_NAME] = "ORDER BY" },
-                        internal = true
-                    )
-                }
+    private fun compileOrderByExpression(sortSpecs: List<PartiqlAst.SortSpec>): List<CompiledOrderByItem> =
+        sortSpecs.map {
+            it.orderingSpec
+                ?: errNoContext(
+                    "SortSpec.orderingSpec was not specified",
+                    errorCode = ErrorCode.INTERNAL_ERROR,
+                    internal = true
+                )
+
+            it.nullsSpec
+                ?: errNoContext(
+                    "SortSpec.nulls was not specified",
+                    errorCode = ErrorCode.INTERNAL_ERROR,
+                    internal = true
+                )
+
+            val comparator = when (it.orderingSpec) {
+                is PartiqlAst.OrderingSpec.Asc ->
+                    when (it.nullsSpec) {
+                        is PartiqlAst.NullsSpec.NullsFirst -> NaturalExprValueComparators.NULLS_FIRST_ASC
+                        is PartiqlAst.NullsSpec.NullsLast -> NaturalExprValueComparators.NULLS_LAST_ASC
+                    }
+                is PartiqlAst.OrderingSpec.Desc ->
+                    when (it.nullsSpec) {
+                        is PartiqlAst.NullsSpec.NullsFirst -> NaturalExprValueComparators.NULLS_FIRST_DESC
+                        is PartiqlAst.NullsSpec.NullsLast -> NaturalExprValueComparators.NULLS_LAST_DESC
+                    }
             }
-            else -> err(
-                "Environment cannot be resolved",
-                ErrorCode.EVALUATOR_ORDER_BY_ENVIRONMENT_CANNOT_RESOLVED,
-                errorContextFrom(offsetLocationMeta).also { it[Property.FEATURE_NAME] = "ORDER BY" },
-                internal = true
-            )
+
+            CompiledOrderByItem(comparator, compileAstExpr(it.expr))
         }
 
-        val thunkValue = orderBy.thunk(env)
-
-        val selector = when (thunkValue.type) {
-            ExprValueType.NULL,
-            ExprValueType.MISSING -> return null
-            ExprValueType.BOOL -> thunkValue.booleanValue()
-            ExprValueType.INT,
-            ExprValueType.FLOAT,
-            ExprValueType.DECIMAL -> thunkValue.numberValue()
-            ExprValueType.DATE -> thunkValue.dateValue()
-            ExprValueType.TIMESTAMP -> thunkValue.timestampValue()
-            ExprValueType.TIME -> thunkValue.timeValue()
-            ExprValueType.STRING -> thunkValue.stringValue()
-            ExprValueType.CLOB,
-            ExprValueType.BLOB,
-            ExprValueType.LIST,
-            ExprValueType.SEXP,
-            ExprValueType.STRUCT,
-            ExprValueType.BAG -> err(
-                "ORDER BY is not supported for value type [${thunkValue.type}] yet.",
-                ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
-                errorContextFrom(offsetLocationMeta).also { it[Property.FEATURE_NAME] = "ORDER BY" },
-                internal = false
-            )
-            else -> err(
-                "Unknown value type [${thunkValue.type}] for ORDER BY",
-                ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
-                errorContextFrom(offsetLocationMeta).also { it[Property.FEATURE_NAME] = "ORDER BY" },
-                internal = true
-            )
-        }
-
-        if (selector !is Comparable<*>) {
-            err(
-                "Comparable need to be implemented for value type [${thunkValue.type}]",
-                ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
-                errorContextFrom(offsetLocationMeta).also { it[Property.FEATURE_NAME] = "ORDER BY" },
-                internal = true
-            )
-        }
-
-        return selector
-    }
-
-    private fun <T> orderRows(
+    private fun <T> evalOrderBy(
         rows: Sequence<T>,
         orderByItems: List<CompiledOrderByItem>,
         offsetLocationMeta: SourceLocationMeta?
     ): Sequence<T> {
         val initialComparator: Comparator<T>? = null
-        val resultComparator = orderByItems.fold(initialComparator) { intermediateComparator, orderBy ->
+        val resultComparator = orderByItems.interruptibleFold(initialComparator) { intermediateComparator, orderByItem ->
             if (intermediateComparator == null) {
-                return@fold compareBy(orderBy.orderingType, orderBy.nullsType) { row ->
-                    orderBySelector(row, orderBy, offsetLocationMeta)
+                return@interruptibleFold compareBy<T, ExprValue>(orderByItem.comparator) { row ->
+                    val env = resolveEnvironment(row, offsetLocationMeta)
+                    orderByItem.thunk(env)
                 }
             }
 
-            return@fold intermediateComparator.thenBy(orderBy.orderingType, orderBy.nullsType) { row ->
-                orderBySelector(row, orderBy, offsetLocationMeta)
+            return@interruptibleFold intermediateComparator.thenBy(orderByItem.comparator) { row ->
+                val env = resolveEnvironment(row, offsetLocationMeta)
+                orderByItem.thunk(env)
             }
         } ?: err(
             "Order BY comparator cannot be null",
@@ -2145,6 +2083,32 @@ internal class EvaluatingCompiler(
         )
 
         return rows.sortedWith(resultComparator)
+    }
+
+    private fun <T> resolveEnvironment(envWrapper: T, offsetLocationMeta: SourceLocationMeta?): Environment {
+        return when (envWrapper) {
+            is FromProduction -> envWrapper.env
+            is Pair<*, *> -> {
+                if (envWrapper.first is Environment) {
+                    envWrapper.first as Environment
+                } else if (envWrapper.second is Environment) {
+                    envWrapper.second as Environment
+                } else {
+                    err(
+                        "Environment cannot be resolved from pair",
+                        ErrorCode.EVALUATOR_ENVIRONMENT_CANNOT_BE_RESOLVED,
+                        errorContextFrom(offsetLocationMeta),
+                        internal = true
+                    )
+                }
+            }
+            else -> err(
+                "Environment cannot be resolved",
+                ErrorCode.EVALUATOR_ENVIRONMENT_CANNOT_BE_RESOLVED,
+                errorContextFrom(offsetLocationMeta),
+                internal = true
+            )
+        }
     }
 
     /**

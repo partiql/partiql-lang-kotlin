@@ -55,9 +55,17 @@ import org.partiql.lang.util.isZero
  *  * `BAG` values come finally (except with [NullOrder.NULLS_LAST]), and their values
  *    compare lexicographically based on the *sorted* child elements.
  */
-enum class NaturalExprValueComparators(private val nullOrder: NullOrder) : Comparator<ExprValue> {
-    NULLS_FIRST(NullOrder.FIRST),
-    NULLS_LAST(NullOrder.LAST);
+enum class NaturalExprValueComparators(private val order: Order, private val nullOrder: NullOrder) : Comparator<ExprValue> {
+    NULLS_FIRST_ASC(Order.ASC, NullOrder.FIRST),
+    NULLS_FIRST_DESC(Order.DESC, NullOrder.FIRST),
+    NULLS_LAST_ASC(Order.ASC, NullOrder.LAST),
+    NULLS_LAST_DESC(Order.DESC, NullOrder.LAST);
+
+    /** Whether or not null values come first or last. */
+    private enum class Order {
+        ASC,
+        DESC
+    }
 
     /** Whether or not null values come first or last. */
     private enum class NullOrder {
@@ -157,6 +165,13 @@ enum class NaturalExprValueComparators(private val nullOrder: NullOrder) : Compa
         }
     }
 
+    private fun <T> orderLeftRight(order: Order, left: T, right: T): Pair<T, T> {
+        return when (order) {
+            Order.ASC -> left to right
+            Order.DESC -> right to left
+        }
+    }
+
     override fun compare(left: ExprValue, right: ExprValue): Int {
         if (left === right) return EQUAL
 
@@ -170,8 +185,7 @@ enum class NaturalExprValueComparators(private val nullOrder: NullOrder) : Compa
         // Bool
         ifCompared(
             handle(lType == ExprValueType.BOOL, rType == ExprValueType.BOOL) {
-                val lVal = left.booleanValue()
-                val rVal = right.booleanValue()
+                val (lVal, rVal) = orderLeftRight(order, left.booleanValue(), right.booleanValue())
 
                 when {
                     lVal == rVal -> EQUAL
@@ -184,8 +198,7 @@ enum class NaturalExprValueComparators(private val nullOrder: NullOrder) : Compa
         // Numbers
         ifCompared(
             handle(lType.isNumber, rType.isNumber) {
-                val lVal = left.numberValue()
-                val rVal = right.numberValue()
+                val (lVal, rVal) = orderLeftRight(order, left.numberValue(), right.numberValue())
 
                 ifCompared(handle(lVal.isNaN, rVal.isNaN) { EQUAL }) { return it }
                 ifCompared(handle(lVal.isNegInf, rVal.isNegInf) { EQUAL }) { return it }
@@ -204,8 +217,7 @@ enum class NaturalExprValueComparators(private val nullOrder: NullOrder) : Compa
         // Date
         ifCompared(
             handle(lType == ExprValueType.DATE, rType == ExprValueType.DATE) {
-                val lVal = left.dateValue()
-                val rVal = right.dateValue()
+                val (lVal, rVal) = orderLeftRight(order, left.dateValue(), right.dateValue())
 
                 return lVal.compareTo(rVal)
             }
@@ -214,8 +226,7 @@ enum class NaturalExprValueComparators(private val nullOrder: NullOrder) : Compa
         // Time
         ifCompared(
             handle(lType == ExprValueType.TIME, rType == ExprValueType.TIME) {
-                val lVal = left.timeValue()
-                val rVal = right.timeValue()
+                val (lVal, rVal) = orderLeftRight(order, left.timeValue(), right.timeValue())
 
                 return lVal.naturalOrderCompareTo(rVal)
             }
@@ -224,8 +235,7 @@ enum class NaturalExprValueComparators(private val nullOrder: NullOrder) : Compa
         // Timestamp
         ifCompared(
             handle(lType == ExprValueType.TIMESTAMP, rType == ExprValueType.TIMESTAMP) {
-                val lVal = left.timestampValue()
-                val rVal = right.timestampValue()
+                val (lVal, rVal) = orderLeftRight(order, left.timestampValue(), right.timestampValue())
 
                 return lVal.compareTo(rVal)
             }
@@ -234,8 +244,7 @@ enum class NaturalExprValueComparators(private val nullOrder: NullOrder) : Compa
         // Text
         ifCompared(
             handle(lType.isText, rType.isText) {
-                val lVal = left.stringValue()
-                val rVal = right.stringValue()
+                val (lVal, rVal) = orderLeftRight(order, left.stringValue(), right.stringValue())
 
                 return lVal.compareTo(rVal)
             }
@@ -244,8 +253,7 @@ enum class NaturalExprValueComparators(private val nullOrder: NullOrder) : Compa
         // LOB
         ifCompared(
             handle(lType.isLob, rType.isLob) {
-                val lVal = left.bytesValue()
-                val rVal = right.bytesValue()
+                val (lVal, rVal) = orderLeftRight(order, left.bytesValue(), right.bytesValue())
 
                 val commonLen = minOf(lVal.size, rVal.size)
                 for (i in 0 until commonLen) {
@@ -263,28 +271,36 @@ enum class NaturalExprValueComparators(private val nullOrder: NullOrder) : Compa
         // List
         ifCompared(
             handle(lType == ExprValueType.LIST, rType == ExprValueType.LIST) {
-                return compareOrdered(left, right, this)
+                val (lVal, rVal) = orderLeftRight(order, left, right)
+
+                return compareOrdered(lVal, rVal, this)
             }
         ) { return it }
 
         // Sexp
         ifCompared(
             handle(lType == ExprValueType.SEXP, rType == ExprValueType.SEXP) {
-                return compareOrdered(left, right, this)
+                val (lVal, rVal) = orderLeftRight(order, left, right)
+
+                return compareOrdered(lVal, rVal, this)
             }
         ) { return it }
 
         // Struct
         ifCompared(
             handle(lType == ExprValueType.STRUCT, rType == ExprValueType.STRUCT) {
-                compareUnordered(left, right, structFieldComparator)
+                val (lVal, rVal) = orderLeftRight(order, left, right)
+
+                compareUnordered(lVal, rVal, structFieldComparator)
             }
         ) { return it }
 
         // Bag
         ifCompared(
             handle(lType == ExprValueType.BAG, rType == ExprValueType.BAG) {
-                compareUnordered(left, right, this)
+                val (lVal, rVal) = orderLeftRight(order, left, right)
+
+                compareUnordered(lVal, rVal, this)
             }
         ) { return it }
 

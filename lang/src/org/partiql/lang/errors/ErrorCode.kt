@@ -565,7 +565,7 @@ enum class ErrorCode(
         override fun getErrorMessage(errorContext: PropertyValueMap?): String = ""
     },
 
-    EVALUATOR_ORDER_BY_ENVIRONMENT_CANNOT_RESOLVED(
+    EVALUATOR_ENVIRONMENT_CANNOT_BE_RESOLVED(
         ErrorCategory.EVALUATOR,
         LOCATION,
         ""

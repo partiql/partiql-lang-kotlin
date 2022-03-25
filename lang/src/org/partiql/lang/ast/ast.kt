@@ -847,8 +847,8 @@ data class OrderBy(
 
 data class SortSpec(
     val expr: ExprNode,
-    val orderingSpec: OrderingSpec,
-    val nullsSpec: NullsSpec
+    val orderingSpec: OrderingSpec?,
+    val nullsSpec: NullsSpec?
 ) : AstNode() {
     override val children: List<AstNode> = listOf(expr)
 }
@@ -1058,7 +1058,7 @@ enum class OrderingSpec {
 
 /** Nulls specification */
 enum class NullsSpec {
-    /** Represents */
+    /** Represents whether null or missing values are placed before non-null values */
     FIRST,
     LAST
 }

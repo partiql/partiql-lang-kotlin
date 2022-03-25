@@ -1757,7 +1757,7 @@ class SqlParserTest : SqlParserTestBase() {
                     (sort_spec 
                         (id rk1 (case_insensitive) (unqualified)) 
                         (desc)
-                        (nulls_last)))))
+                        (nulls_first)))))
         """
     )
 
@@ -1787,9 +1787,150 @@ class SqlParserTest : SqlParserTestBase() {
                     (sort_spec 
                         (id rk2 (case_insensitive) (unqualified)) 
                         (desc)
-                        (nulls_last)))))
+                        (nulls_first)))))
         """
     )
+
+    @Test
+    fun orderBySingleIdWithoutOrderingAndNullsSpecShouldProduceAscNullsLastAsDefault() = assertExpression("SELECT x FROM tb ORDER BY rk1") {
+        select(
+            project = projectX,
+            from = scan(id("tb")),
+            order = orderBy(
+                listOf(
+                    sortSpec(id("rk1"), asc(), nullsLast())
+                )
+            )
+        )
+    }
+
+    @Test
+    fun orderByMultipleIdWithoutOrderingAndNullsSpecShouldProduceAscNullsLastAsDefault() = assertExpression("SELECT x FROM tb ORDER BY rk1, rk2, rk3, rk4") {
+        select(
+            project = projectX,
+            from = scan(id("tb")),
+            order = orderBy(
+                listOf(
+                    sortSpec(id("rk1"), asc(), nullsLast()),
+                    sortSpec(id("rk2"), asc(), nullsLast()),
+                    sortSpec(id("rk3"), asc(), nullsLast()),
+                    sortSpec(id("rk4"), asc(), nullsLast())
+                )
+            )
+        )
+    }
+
+    @Test
+    fun orderByWithAscShouldProduceNullsLastAsDefault() = assertExpression("SELECT x FROM tb ORDER BY rk1 asc") {
+        select(
+            project = projectX,
+            from = scan(id("tb")),
+            order = orderBy(
+                listOf(
+                    sortSpec(id("rk1"), asc(), nullsLast())
+                )
+            )
+        )
+    }
+
+    @Test
+    fun orderByWithDescShouldProduceNullsFirstAsDefault() = assertExpression("SELECT x FROM tb ORDER BY rk1 desc") {
+        select(
+            project = projectX,
+            from = scan(id("tb")),
+            order = orderBy(
+                listOf(
+                    sortSpec(id("rk1"), desc(), nullsFirst())
+                )
+            )
+        )
+    }
+
+    @Test
+    fun orderByWithAscAndDescShouldProduceDefaultNullsSpec() = assertExpression("SELECT x FROM tb ORDER BY rk1 desc, rk2 asc, rk3 asc, rk4 desc") {
+        select(
+            project = projectX,
+            from = scan(id("tb")),
+            order = orderBy(
+                listOf(
+                    sortSpec(id("rk1"), desc(), nullsFirst()),
+                    sortSpec(id("rk2"), asc(), nullsLast()),
+                    sortSpec(id("rk3"), asc(), nullsLast()),
+                    sortSpec(id("rk4"), desc(), nullsFirst())
+                )
+            )
+        )
+    }
+
+    @Test
+    fun orderByAscMustBeDefaultIfOrderingSpecIsNotSpecifiedWithNullsFirst() = assertExpression("SELECT x FROM tb ORDER BY rk1 NULLS FIRST") {
+        select(
+            project = projectX,
+            from = scan(id("tb")),
+            order = orderBy(
+                listOf(
+                    sortSpec(id("rk1"), asc(), nullsFirst())
+                )
+            )
+        )
+    }
+
+    @Test
+    fun orderByAscMustBeDefaultIfOrderingSpecIsNotSpecifiedWithNullsLast() = assertExpression("SELECT x FROM tb ORDER BY rk1 NULLS LAST") {
+        select(
+            project = projectX,
+            from = scan(id("tb")),
+            order = orderBy(
+                listOf(
+                    sortSpec(id("rk1"), asc(), nullsLast())
+                )
+            )
+        )
+    }
+
+    @Test
+    fun orderByAscWithNullsSpec() = assertExpression("SELECT x FROM tb ORDER BY rk1 asc NULLS FIRST, rk2 asc NULLS LAST") {
+        select(
+            project = projectX,
+            from = scan(id("tb")),
+            order = orderBy(
+                listOf(
+                    sortSpec(id("rk1"), asc(), nullsFirst()),
+                    sortSpec(id("rk2"), asc(), nullsLast())
+                )
+            )
+        )
+    }
+
+    @Test
+    fun orderByDescWithNullsSpec() = assertExpression("SELECT x FROM tb ORDER BY rk1 desc NULLS FIRST, rk2 desc NULLS LAST") {
+        select(
+            project = projectX,
+            from = scan(id("tb")),
+            order = orderBy(
+                listOf(
+                    sortSpec(id("rk1"), desc(), nullsFirst()),
+                    sortSpec(id("rk2"), desc(), nullsLast())
+                )
+            )
+        )
+    }
+
+    @Test
+    fun orderByWithOrderingAndNullsSpec() = assertExpression("SELECT x FROM tb ORDER BY rk1 desc NULLS FIRST, rk2 asc NULLS LAST, rk3 desc NULLS LAST, rk4 asc NULLS FIRST") {
+        select(
+            project = projectX,
+            from = scan(id("tb")),
+            order = orderBy(
+                listOf(
+                    sortSpec(id("rk1"), desc(), nullsFirst()),
+                    sortSpec(id("rk2"), asc(), nullsLast()),
+                    sortSpec(id("rk3"), desc(), nullsLast()),
+                    sortSpec(id("rk4"), asc(), nullsFirst())
+                )
+            )
+        )
+    }
     // ****************************************
     // GROUP BY and GROUP PARTIAL BY
     // ****************************************
@@ -4030,7 +4171,7 @@ class SqlParserTest : SqlParserTestBase() {
         select(
             project = buildProject("x"),
             from = scan(id("a")),
-            order = PartiqlAst.OrderBy(listOf(PartiqlAst.SortSpec(id("y"), PartiqlAst.OrderingSpec.Desc(), PartiqlAst.NullsSpec.NullsLast()))),
+            order = PartiqlAst.OrderBy(listOf(PartiqlAst.SortSpec(id("y"), PartiqlAst.OrderingSpec.Desc(), PartiqlAst.NullsSpec.NullsFirst()))),
             limit = buildLit("10"),
             offset = buildLit("5")
         )

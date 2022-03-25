@@ -347,8 +347,8 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
 
         return (1..iterations).flatMap {
             listOf(
-                shuffleCase("BASIC VALUES (NULLS FIRST)", NaturalExprValueComparators.NULLS_FIRST, basicExprs),
-                shuffleCase("BASIC VALUES (NULLS LAST)", NaturalExprValueComparators.NULLS_LAST, basicExprs.moveHeadToTail())
+                shuffleCase("BASIC VALUES (NULLS FIRST)", NaturalExprValueComparators.NULLS_FIRST_ASC, basicExprs),
+                shuffleCase("BASIC VALUES (NULLS LAST)", NaturalExprValueComparators.NULLS_LAST_ASC, basicExprs.moveHeadToTail())
             )
         }
     }

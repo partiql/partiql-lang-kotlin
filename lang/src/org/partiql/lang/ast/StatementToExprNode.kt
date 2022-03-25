@@ -295,19 +295,19 @@ private class StatementTransformer(val ion: IonSystem) {
             sortSpecItems = this.sortSpecs.map {
                 SortSpec(
                     it.expr.toExprNode(),
-                    it.orderingSpec.toOrderSpec(),
-                    it.nulls.toNullsSpec()
+                    it.orderingSpec?.toOrderSpec(),
+                    it.nullsSpec?.toNullsSpec()
                 )
             }
         )
 
-    private fun PartiqlAst.OrderingSpec?.toOrderSpec(): OrderingSpec =
+    private fun PartiqlAst.OrderingSpec.toOrderSpec(): OrderingSpec =
         when (this) {
+            is PartiqlAst.OrderingSpec.Asc -> OrderingSpec.ASC
             is PartiqlAst.OrderingSpec.Desc -> OrderingSpec.DESC
-            else -> OrderingSpec.ASC
         }
 
-    private fun PartiqlAst.NullsSpec?.toNullsSpec(): NullsSpec =
+    private fun PartiqlAst.NullsSpec.toNullsSpec(): NullsSpec =
         when (this) {
             is PartiqlAst.NullsSpec.NullsFirst -> NullsSpec.FIRST
             is PartiqlAst.NullsSpec.NullsLast -> NullsSpec.LAST

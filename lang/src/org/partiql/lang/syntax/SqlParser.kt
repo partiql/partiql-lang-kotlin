@@ -132,7 +132,7 @@ class SqlParser(
         ORDER_BY,
         SORT_SPEC,
         ORDERING_SPEC,
-        NULLS,
+        NULLS_SPEC,
         GROUP,
         GROUP_PARTIAL,
         HAVING,
@@ -580,8 +580,15 @@ class SqlParser(
                                 when (it.children.size) {
                                     1 -> sortSpec(it.children[0].toAstExpr(), asc(), nullsLast())
                                     2 -> when (it.children[1].type) {
-                                        ParseType.ORDERING_SPEC -> sortSpec(it.children[0].toAstExpr(), it.children[1].toOrderingSpec(), nullsLast())
-                                        ParseType.NULLS -> sortSpec(it.children[0].toAstExpr(), asc(), it.children[1].toNullsSpec())
+                                        ParseType.ORDERING_SPEC -> {
+                                            val orderingSpec = it.children[1].toOrderingSpec()
+                                            val defaultNullsSpec = when (orderingSpec) {
+                                                is PartiqlAst.OrderingSpec.Asc -> nullsLast()
+                                                is PartiqlAst.OrderingSpec.Desc -> nullsFirst()
+                                            }
+                                            sortSpec(it.children[0].toAstExpr(), orderingSpec, defaultNullsSpec)
+                                        }
+                                        ParseType.NULLS_SPEC -> sortSpec(it.children[0].toAstExpr(), asc(), it.children[1].toNullsSpec())
                                         else -> errMalformedParseTree("Invalid ordering expressions syntax")
                                     }
                                     3 -> sortSpec(it.children[0].toAstExpr(), it.children[1].toOrderingSpec(), it.children[2].toNullsSpec())
@@ -1147,7 +1154,7 @@ class SqlParser(
     }
 
     private fun ParseNode.toNullsSpec(): PartiqlAst.NullsSpec {
-        if (type != ParseType.NULLS) {
+        if (type != ParseType.NULLS_SPEC) {
             errMalformedParseTree("Expected ParseType.NULLS instead of $type")
         }
         return PartiqlAst.build {
@@ -2879,7 +2886,7 @@ class SqlParser(
                         TokenType.FIRST, TokenType.LAST -> {
                             children = children + listOf(
                                 ParseNode(
-                                    type = ParseType.NULLS,
+                                    type = ParseType.NULLS_SPEC,
                                     token = rem.head,
                                     children = listOf(),
                                     remaining = rem.tail
