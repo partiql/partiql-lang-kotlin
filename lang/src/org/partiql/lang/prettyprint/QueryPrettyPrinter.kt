@@ -133,7 +133,18 @@ class QueryPrettyPrinter {
                 sb.append("INSERT INTO ")
                 writeAstNodeCheckSubQuery(dmlOp.target, sb, 0)
                 sb.append(" VALUES ")
-                writeAstNodeCheckSubQuery(dmlOp.values, sb, 0)
+                val bag = dmlOp.values as PartiqlAst.Expr.Bag
+                bag.values.forEach {
+                    val list = it as PartiqlAst.Expr.List
+                    sb.append('(')
+                    list.values.forEach { value ->
+                        writeAstNodeCheckSubQuery(value, sb, 0)
+                        sb.append(", ")
+                    }
+                    sb.removeLast(2)
+                    sb.append("), ")
+                }
+                sb.removeLast(2)
             }
             is PartiqlAst.DmlOp.InsertValue -> {
                 sb.append("INSERT INTO ")
