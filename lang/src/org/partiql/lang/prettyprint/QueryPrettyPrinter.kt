@@ -50,6 +50,7 @@ class QueryPrettyPrinter {
     private fun writeAstNode(node: PartiqlAst.Statement.Exec, sb: StringBuilder) {
         sb.append("EXEC ${node.procedureName.text} ")
         node.args.forEach {
+            // Print anything as one line inside EXEC clause
             writeAstNodeCheckSubQuery(it, sb, -1)
             sb.append(", ")
         }
@@ -230,10 +231,9 @@ class QueryPrettyPrinter {
             is PartiqlAst.Expr.Struct -> writeAstNode(node, sb, level)
             is PartiqlAst.Expr.List -> writeAstNode(node, sb, level)
             is PartiqlAst.Expr.Parameter -> writeAstNode(node, sb)
+            is PartiqlAst.Expr.Path -> writeAstNode(node, sb, level)
             is PartiqlAst.Expr.Call -> writeAstNode(node, sb, level)
             is PartiqlAst.Expr.CallAgg -> writeAstNode(node, sb, level)
-
-            is PartiqlAst.Expr.Path -> writeAstNode(node, sb, level)
 
             is PartiqlAst.Expr.SimpleCase -> writeAstNode(node, sb, level)
             is PartiqlAst.Expr.SearchedCase -> writeAstNode(node, sb, level)
