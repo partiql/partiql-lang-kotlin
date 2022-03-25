@@ -50,7 +50,7 @@ class QueryPrettyPrinter {
     private fun writeAstNode(node: PartiqlAst.Statement.Exec, sb: StringBuilder) {
         sb.append("EXEC ${node.procedureName.text} ")
         node.args.forEach {
-            writeAstNodeCheckSubQuery(it, sb, 0)
+            writeAstNodeCheckSubQuery(it, sb, -1)
             sb.append(", ")
         }
         if (node.args.isNotEmpty()){
@@ -73,6 +73,7 @@ class QueryPrettyPrinter {
                 writeAstNode(node.op.indexName, sb)
                 sb.append(" (")
                 node.op.fields.forEach {
+                    // Assume fields in CREATE INDEX clause are not SELECT or CASE
                     writeAstNode(it, sb, 0)
                     sb.append(", ")
                 }
@@ -101,7 +102,10 @@ class QueryPrettyPrinter {
         if (node.operations.ops.first() is PartiqlAst.DmlOp.Delete){
             sb.append("DELETE FROM ")
             writeFromSource(node.from!!, sb, 0)
-            node.where?.let { writeWhere(it, sb, 0) }
+            node.where?.let {
+                sb.append("\nWHERE ")
+                writeAstNodeCheckSubQuery(it, sb, 0)
+            }
             node.returning?.let { writeReturning(it, sb) }
             return
         }
@@ -198,7 +202,7 @@ class QueryPrettyPrinter {
             }
             when (it.column) {
                 is PartiqlAst.ColumnComponent.ReturningWildcard -> sb.append('*')
-                is PartiqlAst.ColumnComponent.ReturningColumn -> writeAstNodeCheckSubQuery(it.column.expr, sb, 0)
+                is PartiqlAst.ColumnComponent.ReturningColumn -> writeAstNode(it.column.expr, sb, 0)
             }
             sb.append(", ")
         }
@@ -212,7 +216,7 @@ class QueryPrettyPrinter {
      * @param node is the PIG AST node
      * @param sb is the StringBuilder where we write the pretty query according to the like of the parsed tree
      * @param level is an integer which marks how deep in the nested query we are. It increments Only when we step
-     * into a Case or Select clause.
+     * into a Case or Select clause. -1 represents no formatting, which transforms the sub-query as a line string
      */
     private fun writeAstNode(node: PartiqlAst.Expr, sb: StringBuilder, level: Int) {
         when (node) {
@@ -283,9 +287,13 @@ class QueryPrettyPrinter {
     private fun writeAstNodeCheckSubQuery(node: PartiqlAst.Expr, sb: StringBuilder, level: Int) {
         when (isCaseOrSelect(node)) {
             true -> {
-                val indent = getIndent(level + 1)
-                sb.append("(\n$indent")
-                writeAstNode(node, sb, level + 1)
+                val subQueryLevel = getSubQueryLevel(level)
+                val separator = when (subQueryLevel == -1){
+                    true -> ""
+                    false -> getSeparator(subQueryLevel)
+                }
+                sb.append("($separator")
+                writeAstNode(node, sb, subQueryLevel)
                 sb.append(')')
             }
             false -> writeAstNode(node, sb, level)
@@ -344,9 +352,8 @@ class QueryPrettyPrinter {
     private fun writeAstNode(node: PartiqlAst.Expr.Bag, sb: StringBuilder, level: Int) {
         sb.append("<< ")
         node.values.forEach {
-            // The next line may need to be changed, as it does not produce a pretty query
-            // where CASE or SELECT clause is wrapped inside a bag
-            writeAstNodeCheckSubQuery(it, sb, level)
+            // Print anything as one line inside a bag
+            writeAstNodeCheckSubQuery(it, sb, -1)
             sb.append(", ")
         }
         if (node.values.isNotEmpty()) {
@@ -358,9 +365,8 @@ class QueryPrettyPrinter {
     private fun writeAstNode(node: PartiqlAst.Expr.Sexp, sb: StringBuilder, level: Int) {
         sb.append("sexp(")
         node.values.forEach {
-            // The next line may need to be changed, as it does not produce a pretty query
-            // where CASE or SELECT clause is wrapped inside a sexp
-            writeAstNodeCheckSubQuery(it, sb, level)
+            // Print anything as one line inside a sexp
+            writeAstNodeCheckSubQuery(it, sb, -1)
             sb.append(", ")
         }
         if (node.values.isNotEmpty()) {
@@ -372,9 +378,8 @@ class QueryPrettyPrinter {
     private fun writeAstNode(node: PartiqlAst.Expr.List, sb: StringBuilder, level: Int) {
         sb.append("[ ")
         node.values.forEach {
-            // The next line may need to be changed, as it does not produce a pretty query
-            // where CASE or SELECT clause is wrapped inside a list
-            writeAstNodeCheckSubQuery(it, sb, level)
+            // Print anything as one line inside a list
+            writeAstNodeCheckSubQuery(it, sb, -1)
             sb.append(", ")
         }
         if (node.values.isNotEmpty()) {
@@ -386,11 +391,10 @@ class QueryPrettyPrinter {
     private fun writeAstNode(node: PartiqlAst.Expr.Struct, sb: StringBuilder, level: Int) {
         sb.append("{ ")
         node.fields.forEach {
-            // The next line may need to be changed, as it does not produce a pretty query
-            // where CASE or SELECT clause is wrapped inside a struct
-            writeAstNodeCheckSubQuery(it.first, sb, level)
+            // Print anything as one line inside a struct
+            writeAstNodeCheckSubQuery(it.first, sb, -1)
             sb.append(": ")
-            writeAstNodeCheckSubQuery(it.second, sb, level)
+            writeAstNodeCheckSubQuery(it.second, sb, -1)
             sb.append(", ")
         }
         if (node.fields.isNotEmpty()) {
@@ -413,9 +417,8 @@ class QueryPrettyPrinter {
     private fun writeAstNode(node: PartiqlAst.Expr.Call, sb: StringBuilder, level: Int) {
         sb.append("${node.funcName.text}(")
         node.args.forEach { arg ->
-            // The next line may need to be changed, as it does not produce a pretty query
-            // where CASE or SELECT clause is wrapped inside a function call
-            writeAstNodeCheckSubQuery(arg, sb, level)
+            // Print anything as one line inside a function call
+            writeAstNodeCheckSubQuery(arg, sb, -1)
             sb.append(", ")
         }
         if (node.args.isNotEmpty()) {
@@ -429,9 +432,8 @@ class QueryPrettyPrinter {
         if (node.setq is PartiqlAst.SetQuantifier.Distinct) {
             sb.append("DISTINCT ")
         }
-        // The next line may need to be changed, as it does not produce a pretty query
-        // where CASE or SELECT clause is wrapped inside a function call
-        writeAstNodeCheckSubQuery(node.arg, sb, level + 1)
+        // Print anything as one line inside aggregate function call
+        writeAstNodeCheckSubQuery(node.arg, sb, -1)
         sb.append(')')
     }
 
@@ -471,44 +473,44 @@ class QueryPrettyPrinter {
     }
 
     private fun writeAstNode(node: PartiqlAst.Expr.SimpleCase, sb: StringBuilder, level: Int) {
-        val indent = getIndent(level)
+        val separator = getSeparator(level)
+        val sqLevel = getSubQueryLevel(level)
         sb.append("CASE ")
-        // The next lines may need to be changed, as it does not produce a pretty query
-        // where CASE or SELECT clause is wrapped inside CASE clause
-        writeAstNodeCheckSubQuery(node.expr, sb, level)
-        writeCaseWhenClauses(node.cases.pairs, sb, level + 1)
-        writeCaseElseClause(node.default, sb, level + 1)
-        sb.append("\n${indent}END")
+        // Print anything as one line inside a CASE clause
+        writeAstNodeCheckSubQuery(node.expr, sb, -1)
+        writeCaseWhenClauses(node.cases.pairs, sb, sqLevel)
+        writeCaseElseClause(node.default, sb, sqLevel)
+        sb.append("${separator}END")
     }
 
     private fun writeAstNode(node: PartiqlAst.Expr.SearchedCase, sb: StringBuilder, level: Int) {
-        val indent = getIndent(level)
+        val separator = getSeparator(level)
         sb.append("CASE")
         writeCaseWhenClauses(node.cases.pairs, sb, level + 1)
         writeCaseElseClause(node.default, sb, level + 1)
-        sb.append("\n${indent}END")
+        sb.append("${separator}END")
     }
 
     private fun writeCaseWhenClauses(pairs: List<PartiqlAst.ExprPair>, sb: StringBuilder, level: Int) {
-        val indent = getIndent(level)
+        val separator = getSeparator(level)
         pairs.forEach { pair ->
-            sb.append("\n${indent}WHEN ")
-            writeAstNodeCheckSubQuery(pair.first, sb, level)
+            sb.append("${separator}WHEN ")
+            writeAstNodeCheckSubQuery(pair.first, sb, -1)
             sb.append(" THEN ")
-            writeAstNodeCheckSubQuery(pair.second, sb, level)
+            writeAstNodeCheckSubQuery(pair.second, sb, -1)
         }
     }
 
     private fun writeCaseElseClause(default: PartiqlAst.Expr?, sb: StringBuilder, level: Int) {
         if (default != null) {
-            val indent = getIndent(level)
-            sb.append("\n${indent}ELSE ")
-            writeAstNodeCheckSubQuery(default, sb, level)
+            val separator = getSeparator(level)
+            sb.append("${separator}ELSE ")
+            writeAstNodeCheckSubQuery(default, sb, -1)
         }
     }
 
     private fun writeAstNode(node: PartiqlAst.Expr.Select, sb: StringBuilder, level: Int) {
-        val indent = getIndent(level)
+        val separator = getSeparator(level)
 
         // SELECT clause
         when (node.project) {
@@ -521,35 +523,38 @@ class QueryPrettyPrinter {
         writeProjection(node.project, sb, level)
 
         // FROM clause
-        sb.append("\n${indent}FROM ")
+        sb.append("${separator}FROM ")
         writeFromSource(node.from, sb, level)
 
         // LET clause
         node.fromLet?.let {
-            sb.append("\n${indent}\tLET ")
+            val sqLevel = getSubQueryLevel(level)
+            val separator = getSeparator(sqLevel)
+            sb.append("${separator}LET ")
             writeFromLet(it, sb, level)
         }
 
         // WHERE clause
         node.where?.let {
-            writeWhere(it, sb, level)
+            sb.append("${separator}WHERE ")
+            writeAstNodeCheckSubQuery(it, sb, level)
         }
 
         // GROUP clause
         node.group?.let {
-            sb.append("\n${indent}GROUP ")
+            sb.append("${separator}GROUP ")
             writeGroupBy(it, sb, level)
         }
 
         // HAVING clause
         node.having?.let {
-            sb.append("\n${indent}HAVING ")
+            sb.append("${separator}HAVING ")
             writeAstNodeCheckSubQuery(it, sb, level)
         }
 
         // ORDER BY clause
         node.order?.let { orderBy ->
-            sb.append("\n${indent}ORDER BY ")
+            sb.append("${separator}ORDER BY ")
             orderBy.sortSpecs.forEach { sortSpec ->
                 writeSortSpec(sortSpec, sb, level)
                 sb.append(", ")
@@ -559,14 +564,14 @@ class QueryPrettyPrinter {
 
         // LIMIT clause
         node.limit?.let {
-            sb.append("\n${indent}LIMIT ")
-            writeAstNodeCheckSubQuery(it, sb, level + 1)
+            sb.append("${separator}LIMIT ")
+            writeAstNodeCheckSubQuery(it, sb, level)
         }
 
         // OFFSET clause
         node.offset?.let {
-            sb.append("\n${indent}OFFSET ")
-            writeAstNodeCheckSubQuery(it, sb, level + 1)
+            sb.append("${separator}OFFSET ")
+            writeAstNodeCheckSubQuery(it, sb, level)
         }
     }
 
@@ -588,19 +593,14 @@ class QueryPrettyPrinter {
             sb.append(", ")
         }
         sb.removeLast(2)
-        val indent = getIndent(level + 1)
-        group.groupAsAlias?.let { sb.append("\n${indent}GROUP AS ${it.text}") }
+        val sqLevel = getSubQueryLevel(level)
+        val separator = getSeparator(sqLevel)
+        group.groupAsAlias?.let { sb.append("${separator}GROUP AS ${it.text}") }
     }
 
     private fun writeGroupKey(key: PartiqlAst.GroupKey, sb: StringBuilder, level: Int) {
         writeAstNodeCheckSubQuery(key.expr, sb, level)
         key.asAlias?.let { sb.append(" AS ${it.text}") }
-    }
-
-    private fun writeWhere(expr: PartiqlAst.Expr, sb: StringBuilder, level: Int){
-        val indent = getIndent(level)
-        sb.append("\n${indent}WHERE ")
-        writeAstNodeCheckSubQuery(expr, sb, level)
     }
 
     private fun writeFromLet(fromLet: PartiqlAst.Let, sb: StringBuilder, level: Int) {
@@ -617,7 +617,6 @@ class QueryPrettyPrinter {
     }
 
     private fun writeFromSource(from: PartiqlAst.FromSource, sb: StringBuilder, level: Int) {
-        val indent = getIndent(level)
         when (from) {
             is PartiqlAst.FromSource.Scan -> {
                 writeAstNodeCheckSubQuery(from.expr, sb, level)
@@ -633,6 +632,8 @@ class QueryPrettyPrinter {
                     writeFromSource(from.right, sb, level)
                 }
                 else -> {
+                    val sqLevel = getSubQueryLevel(level)
+                    val separator = getSeparator(sqLevel)
                     val join = when (from.type) {
                         is PartiqlAst.JoinType.Inner -> "JOIN"
                         is PartiqlAst.JoinType.Left -> "LEFT CROSS JOIN"
@@ -640,7 +641,7 @@ class QueryPrettyPrinter {
                         is PartiqlAst.JoinType.Full -> "FULL CROSS JOIN"
                     }
                     writeFromSource(from.left, sb, level)
-                    sb.append("\n${indent}\t$join ")
+                    sb.append("$separator$join ")
                     writeFromSource(from.right, sb, level)
                     from.predicate?.let {
                         sb.append(" ON ")
@@ -706,9 +707,8 @@ class QueryPrettyPrinter {
                 writeAstNode(node, sb, level)
                 sb.append(')')
             }
-            // The next line may need to be changed, as it does not produce a pretty query
-            // where CASE or SELECT clause is wrapped inside operators
-            false -> writeAstNodeCheckSubQuery(node, sb, level)
+            // Print anything as one line inside an operator
+            false -> writeAstNodeCheckSubQuery(node, sb, -1)
         }
     }
 
@@ -829,7 +829,8 @@ class QueryPrettyPrinter {
     private fun writeAstNode(node: PartiqlAst.Expr.Coalesce, sb: StringBuilder, level: Int) {
         sb.append("COALESCE(")
         node.args.forEach { arg ->
-            writeAstNodeCheckSubQuery(arg, sb, level)
+            // Write anything as one line as COALESCE arguments
+            writeAstNodeCheckSubQuery(arg, sb, -1)
             sb.append(", ")
         }
         if (node.args.isNotEmpty()) {
@@ -839,10 +840,11 @@ class QueryPrettyPrinter {
     }
 
     private fun writeAstNode(node: PartiqlAst.Expr.NullIf, sb: StringBuilder, level: Int) {
+        // Write anything as one line as COALESCE arguments
         sb.append("NULLIF(")
-        writeAstNodeCheckSubQuery(node.expr1, sb, level)
+        writeAstNodeCheckSubQuery(node.expr1, sb, -1)
         sb.append(", ")
-        writeAstNodeCheckSubQuery(node.expr2, sb, level)
+        writeAstNodeCheckSubQuery(node.expr2, sb, -1)
         sb.append(')')
     }
 
@@ -875,7 +877,19 @@ class QueryPrettyPrinter {
             else -> false
         }
 
-    private fun getIndent(level: Int) = "\t".repeat(level)
+    // We need to add a line breaker and indent only for CASE and SELECT clauses.
+    // If level is -1, this indicates there is no need for formatting
+    private fun getSeparator(level: Int) =
+        when (level == -1) {
+            true -> " "
+            false -> "\n${"\t".repeat(level)}"
+        }
+
+    private fun getSubQueryLevel(level: Int) =
+        when (level == -1){
+            true -> -1
+            false -> level + 1
+        }
 
     private fun StringBuilder.removeLast(n: Int): StringBuilder {
         for (i in 1..n) {

@@ -148,6 +148,21 @@ class QueryPrettyPrinterTest {
         )
     }
 
+    @Test
+    fun selectInDml() {
+        checkPrettyPrintQuery(
+            "FROM (SELECT foo FROM a) WHERE b = c SET d = e RETURNING ALL NEW *",
+            """
+                FROM (
+                    SELECT foo
+                    FROM a)
+                WHERE b = c
+                SET d = e
+                RETURNING ALL NEW *
+            """.trimIndent()
+        )
+    }
+
     // *********
     // * Query *
     // *********
@@ -707,15 +722,30 @@ class QueryPrettyPrinterTest {
         )
     }
 
+    @Test
+    fun caseInSelect() {
+        checkPrettyPrintQuery(
+            "SELECT (CASE WHEN name = 'jack' THEN 1 WHEN 1 + 1 = 2 THEN 2 ELSE 3 END) FROM b WHERE c = d",
+            """
+                SELECT (
+                    CASE
+                        WHEN name = 'jack' THEN 1
+                        WHEN (1 + 1) = 2 THEN 2
+                        ELSE 3
+                    END)
+                FROM b
+                WHERE c = d
+            """.trimIndent()
+        )
+    }
+
     // TODO: Make the following queries looks better after formatting
     @Test
     fun selectInFunction() {
         checkPrettyPrintQuery(
             "function0((SELECT a FROM b), c)",
             """
-                function0((
-                    SELECT a
-                    FROM b), c)
+                function0((SELECT a FROM b), c)
             """.trimIndent()
         )
     }
@@ -725,11 +755,7 @@ class QueryPrettyPrinterTest {
         checkPrettyPrintQuery(
             "function0((CASE name WHEN 'jack' THEN 1 WHEN 'joe' THEN 2 END), c)",
             """
-                function0((
-                    CASE name
-                        WHEN 'jack' THEN 1
-                        WHEN 'joe' THEN 2
-                    END), c)
+                function0((CASE name WHEN 'jack' THEN 1 WHEN 'joe' THEN 2 END), c)
             """.trimIndent()
         )
     }
@@ -739,9 +765,7 @@ class QueryPrettyPrinterTest {
         checkPrettyPrintQuery(
             "<< (SELECT a FROM b), c >>",
             """
-                << (
-                    SELECT a
-                    FROM b), c >>
+                << (SELECT a FROM b), c >>
             """.trimIndent()
         )
     }
@@ -751,11 +775,7 @@ class QueryPrettyPrinterTest {
         checkPrettyPrintQuery(
             "<< (CASE name WHEN 'jack' THEN 1 WHEN 'joe' THEN 2 END), c >>",
             """
-                << (
-                    CASE name
-                        WHEN 'jack' THEN 1
-                        WHEN 'joe' THEN 2
-                    END), c >>
+                << (CASE name WHEN 'jack' THEN 1 WHEN 'joe' THEN 2 END), c >>
             """.trimIndent()
         )
     }
@@ -765,13 +785,7 @@ class QueryPrettyPrinterTest {
         checkPrettyPrintQuery(
             "(SELECT a FROM b) UNION (SELECT c FROM d) UNION (SELECT e FROM f)",
             """
-                ((
-                    SELECT a
-                    FROM b) UNION (
-                    SELECT c
-                    FROM d)) UNION (
-                    SELECT e
-                    FROM f)
+                ((SELECT a FROM b) UNION (SELECT c FROM d)) UNION (SELECT e FROM f)
             """.trimIndent()
         )
     }
@@ -781,9 +795,7 @@ class QueryPrettyPrinterTest {
         checkPrettyPrintQuery(
             "(SELECT a FROM b) UNION c",
             """
-                (
-                    SELECT a
-                    FROM b) UNION c
+                (SELECT a FROM b) UNION c
             """.trimIndent()
         )
     }
@@ -793,9 +805,7 @@ class QueryPrettyPrinterTest {
         checkPrettyPrintQuery(
             "CAST((SELECT VALUE a FROM b) AS STRING)",
             """
-                CAST ((
-                    SELECT VALUE a
-                    FROM b) AS STRING)
+                CAST ((SELECT VALUE a FROM b) AS STRING)
             """.trimIndent()
         )
     }
@@ -805,11 +815,7 @@ class QueryPrettyPrinterTest {
         checkPrettyPrintQuery(
             "(CASE name WHEN 'jack' THEN 1 WHEN 'joe' THEN 2 END) || ' alice'",
             """
-                (
-                    CASE name
-                        WHEN 'jack' THEN 1
-                        WHEN 'joe' THEN 2
-                    END) || ' alice'
+                (CASE name WHEN 'jack' THEN 1 WHEN 'joe' THEN 2 END) || ' alice'
             """.trimIndent()
         )
     }
@@ -817,13 +823,9 @@ class QueryPrettyPrinterTest {
     @Test
     fun caseInOperator2() {
         checkPrettyPrintQuery(
-            "CAST((CASE name WHEN 'jack' THEN 1 WHEN 'joe' THEN 2 END) AS STRING)",
+            "CAST ((CASE name WHEN 'jack' THEN 1 WHEN 'joe' THEN 2 END) AS STRING)",
             """
-                CAST ((
-                    CASE name
-                        WHEN 'jack' THEN 1
-                        WHEN 'joe' THEN 2
-                    END) AS STRING)
+                CAST ((CASE name WHEN 'jack' THEN 1 WHEN 'joe' THEN 2 END) AS STRING)
             """.trimIndent()
         )
     }
@@ -833,18 +835,10 @@ class QueryPrettyPrinterTest {
         checkPrettyPrintQuery(
             "CASE (SELECT name FROM t) WHEN (SELECT a FROM b) UNION c THEN 1 WHEN (SELECT c FROM d) THEN 2 ELSE (SELECT e FROM f) END",
             """
-                CASE (
-                    SELECT name
-                    FROM t)
-                    WHEN (
-                        SELECT a
-                        FROM b) UNION c THEN 1
-                    WHEN (
-                        SELECT c
-                        FROM d) THEN 2
-                    ELSE (
-                        SELECT e
-                        FROM f)
+                CASE (SELECT name FROM t)
+                    WHEN (SELECT a FROM b) UNION c THEN 1
+                    WHEN (SELECT c FROM d) THEN 2
+                    ELSE (SELECT e FROM f)
                 END
             """.trimIndent()
         )
@@ -856,24 +850,19 @@ class QueryPrettyPrinterTest {
             "CASE WHEN name = 'jack' THEN (SELECT a FROM b) WHEN (SELECT c FROM d) IS INT THEN (SELECT f FROM g) WHEN (SELECT foo FROM t1) THEN (SELECT bar FROM t2) ELSE (SELECT h FROM i) END",
             """
                 CASE
-                    WHEN name = 'jack' THEN (
-                        SELECT a
-                        FROM b)
-                    WHEN (
-                        SELECT c
-                        FROM d) IS INT THEN (
-                        SELECT f
-                        FROM g)
-                    WHEN (
-                        SELECT foo
-                        FROM t1) THEN (
-                        SELECT bar
-                        FROM t2)
-                    ELSE (
-                        SELECT h
-                        FROM i)
+                    WHEN name = 'jack' THEN (SELECT a FROM b)
+                    WHEN (SELECT c FROM d) IS INT THEN (SELECT f FROM g)
+                    WHEN (SELECT foo FROM t1) THEN (SELECT bar FROM t2)
+                    ELSE (SELECT h FROM i)
                 END
             """.trimIndent()
+        )
+    }
+
+    @Test
+    fun selectInExec() {
+        checkPrettyPrintQuery(
+            "EXEC foo 'bar0', 1, 2, [3], SELECT a FROM b","EXEC foo 'bar0', 1, 2, [ 3 ], (SELECT a FROM b)"
         )
     }
 }
