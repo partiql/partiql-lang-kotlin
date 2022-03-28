@@ -17,8 +17,8 @@ package org.partiql.lang.eval.builtins
 import com.amazon.ion.Timestamp
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.PropertyValueMap
-import org.partiql.lang.eval.Environment
 import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
@@ -37,7 +37,7 @@ class ToTimestampExprFunction(private val valueFactory: ExprValueFactory) : Expr
         returnType = StaticType.TIMESTAMP
     )
 
-    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
         val ts = try {
             Timestamp.valueOf(required[0].ionValue.stringValue())
         } catch (ex: IllegalArgumentException) {
@@ -52,7 +52,7 @@ class ToTimestampExprFunction(private val valueFactory: ExprValueFactory) : Expr
         return valueFactory.newTimestamp(ts)
     }
 
-    override fun callWithOptional(env: Environment, required: List<ExprValue>, opt: ExprValue): ExprValue {
+    override fun callWithOptional(session: EvaluationSession, required: List<ExprValue>, opt: ExprValue): ExprValue {
         val ts = TimestampParser.parseTimestamp(required[0].ionValue.stringValue()!!, opt.ionValue.stringValue()!!)
         return valueFactory.newTimestamp(ts)
     }

@@ -16,7 +16,7 @@ package org.partiql.cli.functions
 
 import com.amazon.ion.IonStruct
 import org.apache.commons.csv.CSVFormat
-import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.io.DelimitedValues
@@ -84,7 +84,7 @@ internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFact
         "customized" to fileReadHandler(CSVFormat.DEFAULT)
     )
 
-    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
         val fileName = required[0].stringValue()
         val fileType = "ion"
         val handler = readHandlers[fileType] ?: throw IllegalArgumentException("Unknown file type: $fileType")
@@ -97,7 +97,7 @@ internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFact
         return valueFactory.newBag(seq)
     }
 
-    override fun callWithOptional(env: Environment, required: List<ExprValue>, opt: ExprValue): ExprValue {
+    override fun callWithOptional(session: EvaluationSession, required: List<ExprValue>, opt: ExprValue): ExprValue {
         val options = opt.ionValue.asIonStruct()
         val fileName = required[0].stringValue()
         val fileType = options["type"]?.stringValue() ?: "ion"

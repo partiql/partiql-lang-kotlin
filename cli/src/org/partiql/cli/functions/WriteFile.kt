@@ -16,7 +16,7 @@ package org.partiql.cli.functions
 
 import com.amazon.ion.IonStruct
 import com.amazon.ion.system.IonTextWriterBuilder
-import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.io.DelimitedValues
@@ -63,7 +63,7 @@ internal class WriteFile(valueFactory: ExprValueFactory) : BaseFunction(valueFac
         "ion" to PRETTY_ION_WRITER
     )
 
-    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
         val fileName = required[0].stringValue()
         val fileType = "ion"
         val results = required[1]
@@ -79,7 +79,7 @@ internal class WriteFile(valueFactory: ExprValueFactory) : BaseFunction(valueFac
         }
     }
 
-    override fun callWithOptional(env: Environment, required: List<ExprValue>, opt: ExprValue): ExprValue {
+    override fun callWithOptional(session: EvaluationSession, required: List<ExprValue>, opt: ExprValue): ExprValue {
         val options = opt.ionValue.asIonStruct()
         val fileName = required[0].stringValue()
         val fileType = options["type"]?.stringValue() ?: "ion"

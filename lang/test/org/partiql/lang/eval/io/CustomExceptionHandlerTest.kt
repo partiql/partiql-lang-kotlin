@@ -4,20 +4,18 @@ import com.amazon.ion.system.IonSystemBuilder
 import org.junit.Test
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.CompileOptions
-import org.partiql.lang.eval.Environment
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ThunkOptions
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
-import java.lang.IllegalStateException
 import kotlin.test.assertTrue
 import kotlin.test.fail
 
 class AlwaysThrowsFunc : ExprFunction {
 
-    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
         throw IllegalStateException()
     }
     override val signature: FunctionSignature

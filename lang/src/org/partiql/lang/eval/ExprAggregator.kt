@@ -23,7 +23,7 @@ package org.partiql.lang.eval
  * operand.  The evaluator's responsibility is to effectively compile this definition
  * into a form of [ExprFunction] that operates over the collection as an [ExprValue].
  */
-interface ExprAggregator {
+internal interface ExprAggregator {
     /** Accumulates the next value into this [ExprAggregator]. */
     fun next(value: ExprValue)
 

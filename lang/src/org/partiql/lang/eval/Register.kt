@@ -20,7 +20,7 @@ package org.partiql.lang.eval
  * Currently this supports registers that are [ExprAggregator], but may be expanded in the future
  * to support other things like [ExprValue] for things like optimized local variable access.
  */
-abstract class Register {
+internal abstract class Register {
     companion object {
         /** The empty register. */
         val EMPTY = object : Register() {

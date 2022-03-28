@@ -45,7 +45,7 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
                                 unknownArguments = UnknownArguments.PROPAGATE
                             )
 
-                        override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue =
+                        override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue =
                             valueFactory.newInt(required.map { it.numberValue().toLong() }.sum())
                     }
                 )

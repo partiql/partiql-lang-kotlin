@@ -17,7 +17,7 @@ package org.partiql.lang.eval
 /**
  * Represents a set of internal compiler slots for intermediate execution states.
  */
-class RegisterBank(size: Int) {
+internal class RegisterBank(size: Int) {
 
     private val bank: Array<Register> = Array(size) { Register.EMPTY }
 

@@ -29,7 +29,7 @@ import org.partiql.lang.errors.Property
  *
  * This name was chosen because it is a thunk that accepts an instance of `Environment`.
  */
-typealias ThunkEnv = (Environment) -> ExprValue
+internal typealias ThunkEnv = (Environment) -> ExprValue
 
 /**
  * A thunk taking a single [T] argument and the current environment.
@@ -39,17 +39,17 @@ typealias ThunkEnv = (Environment) -> ExprValue
  * This name was chosen because it is a thunk that accepts an instance of `Environment` and an [ExprValue] as
  * its arguments.
  */
-typealias ThunkEnvValue<T> = (Environment, T) -> ExprValue
+internal typealias ThunkEnvValue<T> = (Environment, T) -> ExprValue
 
 /**
  * A type alias for an exception handler which always throws(primarily used for [TypingMode.LEGACY]).
  */
-typealias ThunkExceptionHandlerForLegacyMode = (Throwable, SourceLocationMeta?) -> Nothing
+internal typealias ThunkExceptionHandlerForLegacyMode = (Throwable, SourceLocationMeta?) -> Nothing
 
 /**
  * A type alias for an exception handler which does not always throw(primarily used for [TypingMode.PERMISSIVE]).
  */
-typealias ThunkExceptionHandlerForPermissiveMode = (Throwable, SourceLocationMeta?) -> Unit
+internal typealias ThunkExceptionHandlerForPermissiveMode = (Throwable, SourceLocationMeta?) -> Unit
 
 /**
  * Options for thunk construction.
@@ -98,7 +98,7 @@ data class ThunkOptions private constructor(
     }
 }
 
-val DEFAULT_EXCEPTION_HANDLER_FOR_LEGACY_MODE: ThunkExceptionHandlerForLegacyMode = { e, sourceLocation ->
+internal val DEFAULT_EXCEPTION_HANDLER_FOR_LEGACY_MODE: ThunkExceptionHandlerForLegacyMode = { e, sourceLocation ->
     val message = e.message ?: "<NO MESSAGE>"
     throw EvaluationException(
         "Internal error, $message",
@@ -109,7 +109,7 @@ val DEFAULT_EXCEPTION_HANDLER_FOR_LEGACY_MODE: ThunkExceptionHandlerForLegacyMod
     )
 }
 
-val DEFAULT_EXCEPTION_HANDLER_FOR_PERMISSIVE_MODE: ThunkExceptionHandlerForPermissiveMode = { _, _ -> }
+internal val DEFAULT_EXCEPTION_HANDLER_FOR_PERMISSIVE_MODE: ThunkExceptionHandlerForPermissiveMode = { _, _ -> }
 
 /**
  * An extension method for creating [ThunkFactory] based on the type of [TypingMode]

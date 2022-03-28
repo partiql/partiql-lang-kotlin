@@ -16,7 +16,7 @@ package org.partiql.lang.eval.builtins
 
 import com.amazon.ion.Timestamp
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
@@ -87,7 +87,7 @@ internal class DateDiffExprFunction(val valueFactory: ExprValueFactory) : ExprFu
     private fun secondsSince(left: OffsetDateTime, right: OffsetDateTime): Number =
         Duration.between(left, right).toMillis() / 1_000
 
-    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
         val dateTimePart = required[0].dateTimePartValue()
         val left = required[1].timestampValue()
         val right = required[2].timestampValue()

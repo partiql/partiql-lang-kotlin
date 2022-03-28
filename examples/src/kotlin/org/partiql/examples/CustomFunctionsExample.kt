@@ -4,7 +4,6 @@ import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.examples.util.Example
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.eval.Environment
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
@@ -42,7 +41,7 @@ class FibScalarExprFunc(private val valueFactory: ExprValueFactory) : ExprFuncti
         returnType = StaticType.INT
     )
 
-    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
         // [NullPropagatingExprFunction] also checks arity of the function call, so
         // there is no need to ensure [args] is the correct size.
         // However, at the moment there is no facility for ensuring that the arguments are
@@ -76,7 +75,7 @@ class FibListExprFunc(private val valueFactory: ExprValueFactory) : ExprFunction
         returnType = StaticType.LIST
     )
 
-    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
         val argN = required.first()
         if (argN.type != ExprValueType.INT) {
             throw EvaluationException("Argument to fib_list was not an integer", ErrorCode.INTERNAL_ERROR, internal = false)

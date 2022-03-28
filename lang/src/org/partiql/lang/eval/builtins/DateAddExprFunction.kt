@@ -17,8 +17,8 @@ package org.partiql.lang.eval.builtins
 import com.amazon.ion.Timestamp
 import com.amazon.ion.Timestamp.Precision
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.eval.Environment
 import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
@@ -98,7 +98,7 @@ internal class DateAddExprFunction(val valueFactory: ExprValueFactory) : ExprFun
         }
     }
 
-    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
         val dateTimePart = required[0].dateTimePartValue()
         val interval = required[1].intValue()
         val timestamp = required[2].timestampValue()

@@ -2,7 +2,7 @@ package org.partiql.lang.eval.builtins
 
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
-import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
@@ -28,7 +28,7 @@ internal class MakeDateExprFunction(val valueFactory: ExprValueFactory) : ExprFu
         returnType = StaticType.DATE
     )
 
-    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
         required.map {
             if (it.type != ExprValueType.INT) {
                 err(

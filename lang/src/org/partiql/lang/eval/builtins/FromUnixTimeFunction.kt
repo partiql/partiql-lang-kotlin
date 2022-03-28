@@ -1,7 +1,7 @@
 package org.partiql.lang.eval.builtins
 
 import com.amazon.ion.Timestamp
-import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
@@ -33,7 +33,7 @@ internal class FromUnixTimeFunction(val valueFactory: ExprValueFactory) : ExprFu
 
     private val millisPerSecond = BigDecimal(1000)
 
-    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
         val unixTimestamp = required[0].bigDecimalValue()
 
         val numMillis = unixTimestamp.times(millisPerSecond).stripTrailingZeros()
