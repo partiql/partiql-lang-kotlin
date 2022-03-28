@@ -458,7 +458,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
                 [3, 1, null],
                 [3, 2, null],
               ]
-            """)
+            """
+        )
         test(
             "selectCorrelatedLeftJoin",
             """SELECT s.id AS id, b.title AS title FROM stores AS s LEFT CROSS JOIN @s.books AS b WHERE b IS NULL""",
@@ -466,7 +467,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
               $partiql_bag::[
                 {id: "7"}
               ]
-            """)
+            """
+        )
 
         test(
             "selectCorrelatedLeftJoinOnClause",
@@ -482,7 +484,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
                 {id: "6", title: "F"},
                 {id: "7"}
               ]
-            """)
+            """
+        )
 
         test(
             "selectJoinOnClauseScoping",
@@ -501,7 +504,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
                 [3, 1, null],
                 [3, 2, null],
               ]
-            """)
+            """
+        )
 
         test(
             "selectNonCorrelatedJoin",

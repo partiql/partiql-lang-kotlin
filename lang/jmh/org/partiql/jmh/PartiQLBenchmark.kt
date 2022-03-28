@@ -11,7 +11,6 @@ import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.syntax.SqlParser
 
-
 /**
  * These are the sample benchmarks to demonstrate how JMH benchmarks in PartiQL should be set up.
  * Refer this [JMH tutorial](http://tutorials.jenkov.com/java-performance/jmh.html) for more information on [Benchmark]s,

@@ -37,21 +37,25 @@ class PartiqlPhysicalSanityValidator : PartiqlPhysical.Visitor() {
     override fun visitExprLit(node: PartiqlPhysical.Expr.Lit) {
         val ionValue = node.value
         val metas = node.metas
-        if(node.value is IntElement && ionValue.integerSize == IntElementSize.BIG_INTEGER) {
-            throw EvaluationException(message = "Int overflow or underflow at compile time",
+        if (node.value is IntElement && ionValue.integerSize == IntElementSize.BIG_INTEGER) {
+            throw EvaluationException(
+                message = "Int overflow or underflow at compile time",
                 errorCode = ErrorCode.SEMANTIC_LITERAL_INT_OVERFLOW,
                 errorContext = errorContextFrom(metas),
-                internal = false)
+                internal = false
+            )
         }
     }
 
     private fun validateDecimalOrNumericType(scale: LongPrimitive?, precision: LongPrimitive?, metas: MetaContainer) {
         if (scale != null && precision != null && compileOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS) {
             if (scale.value !in 0..precision.value) {
-                err("Scale ${scale.value} should be between 0 and precision ${precision.value}",
+                err(
+                    "Scale ${scale.value} should be between 0 and precision ${precision.value}",
                     errorCode = ErrorCode.SEMANTIC_INVALID_DECIMAL_ARGUMENTS,
                     errorContext = errorContextFrom(metas),
-                    internal = false)
+                    internal = false
+                )
             }
         }
     }
@@ -68,10 +72,12 @@ class PartiqlPhysicalSanityValidator : PartiqlPhysical.Visitor() {
         val setQuantifier = node.setq
         val metas = node.metas
         if (setQuantifier is PartiqlPhysical.SetQuantifier.Distinct && metas.containsKey(IsCountStarMeta.TAG)) {
-            err("COUNT(DISTINCT *) is not supported",
+            err(
+                "COUNT(DISTINCT *) is not supported",
                 ErrorCode.EVALUATOR_COUNT_DISTINCT_STAR,
                 errorContextFrom(metas),
-                internal = false)
+                internal = false
+            )
         }
     }
 

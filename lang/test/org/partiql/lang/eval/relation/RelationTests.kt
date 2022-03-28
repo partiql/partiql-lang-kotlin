@@ -10,13 +10,13 @@ class RelationTests {
 
     @Test
     fun relType() {
-        val rel = relation(RelationType.BAG) {  }
+        val rel = relation(RelationType.BAG) { }
         assertEquals(RelationType.BAG, rel.relType)
     }
 
     @Test
     fun `0 yields`() {
-        val rel = relation(RelationType.BAG) {  }
+        val rel = relation(RelationType.BAG) { }
         assertEquals(RelationType.BAG, rel.relType)
         assertFalse(rel.nextRow())
         assertThrows<IllegalStateException> { rel.nextRow() }

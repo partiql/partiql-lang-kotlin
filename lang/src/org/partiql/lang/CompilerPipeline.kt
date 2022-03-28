@@ -12,7 +12,6 @@
  *  language governing permissions and limitations under the License.
  */
 
-
 package org.partiql.lang
 
 import com.amazon.ion.IonSystem
@@ -310,7 +309,7 @@ internal class CompilerPipelineImpl(
 
         // DL TODO: the "normalization" passes of the planner are redundant in this context.
         // DL TODO: the other visitor transforms, i.e. the aggregate support, etc, are probably also not needed anymore
-        when(val result = qp.plan(queryToCompile)) {
+        when (val result = qp.plan(queryToCompile)) {
             is PlanningResult.Error -> {
                 // DL TODO:  this kinda is suboptimal because we're ignoring the warnings and picking only
                 // DL TODO:  first error.  What to do about it?
@@ -321,7 +320,7 @@ internal class CompilerPipelineImpl(
                 )
             }
             is PlanningResult.Success -> {
-                //println(result.physicalPlan)
+                // println(result.physicalPlan)
                 return compiler.compile(result.physicalPlan)
             }
         }

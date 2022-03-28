@@ -11,9 +11,9 @@ import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.syntax.SyntaxException
 import org.partiql.planner.transforms.PlanningProblemDetails
 import org.partiql.planner.transforms.normalize
-import org.partiql.planner.transforms.toResolved
 import org.partiql.planner.transforms.toLogical
 import org.partiql.planner.transforms.toPhysical
+import org.partiql.planner.transforms.toResolved
 
 /** A simple interface for a query planner. */
 interface QueryPlanner {
@@ -59,7 +59,6 @@ fun createQueryPlanner(
     allowUndefinedVariables: Boolean = false,
     globals: GlobalBindings
 ): QueryPlanner = QueryPlannerImpl(ion, allowUndefinedVariables, globals)
-
 
 /**
  * This is an embryonic query planner.

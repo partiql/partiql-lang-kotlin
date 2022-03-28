@@ -18,19 +18,26 @@ fun PartiqlPhysical.Type.toTypedOpParameter(customTypedOpParameters: Map<String,
         this.precision == null && this.scale == null -> TypedOpParameter(StaticType.DECIMAL)
         this.precision != null && this.scale == null -> TypedOpParameter(DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(this.precision.value.toInt())))
         else -> TypedOpParameter(
-            DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(this.precision!!.value.toInt(), this.scale!!.value.toInt())))
+            DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(this.precision!!.value.toInt(), this.scale!!.value.toInt()))
+        )
     }
     is PartiqlPhysical.Type.NumericType -> when {
         this.precision == null && this.scale == null -> TypedOpParameter(StaticType.DECIMAL)
         this.precision != null && this.scale == null -> TypedOpParameter(DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(this.precision.value.toInt())))
         else -> TypedOpParameter(
-            DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(this.precision!!.value.toInt(), this.scale!!.value.toInt())))
+            DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(this.precision!!.value.toInt(), this.scale!!.value.toInt()))
+        )
     }
     is PartiqlPhysical.Type.TimestampType -> TypedOpParameter(StaticType.TIMESTAMP)
     is PartiqlPhysical.Type.CharacterType -> when {
         this.length == null -> TypedOpParameter(StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(1))))
-        else -> TypedOpParameter(StringType(StringType.StringLengthConstraint.Constrained(
-            NumberConstraint.Equals(this.length.value.toInt()))))
+        else -> TypedOpParameter(
+            StringType(
+                StringType.StringLengthConstraint.Constrained(
+                    NumberConstraint.Equals(this.length.value.toInt())
+                )
+            )
+        )
     }
     is PartiqlPhysical.Type.CharacterVaryingType -> when (this.length) {
         null -> TypedOpParameter(StringType(StringType.StringLengthConstraint.Unconstrained))
@@ -48,7 +55,8 @@ fun PartiqlPhysical.Type.toTypedOpParameter(customTypedOpParameters: Map<String,
     is PartiqlPhysical.Type.AnyType -> TypedOpParameter(StaticType.ANY)
     is PartiqlPhysical.Type.CustomType ->
         customTypedOpParameters.mapKeys {
-            (k, _) -> k.toLowerCase()
+            (k, _) ->
+            k.toLowerCase()
         }[this.name.text.toLowerCase()] ?: error("Could not find parameter for $this")
     is PartiqlPhysical.Type.DateType -> TypedOpParameter(StaticType.DATE)
     is PartiqlPhysical.Type.TimeType -> TypedOpParameter(
@@ -75,4 +83,3 @@ fun PartiqlPhysical.Type.toTypedOpParameter(customTypedOpParameters: Map<String,
     is PartiqlPhysical.Type.SparkLong,
     is PartiqlPhysical.Type.SparkShort -> error("$this node should not be present in PartiqlPhysical. Consider transforming the AST using CustomTypeVisitorTransform.")
 }
-

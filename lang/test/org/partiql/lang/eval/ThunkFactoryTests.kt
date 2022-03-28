@@ -5,11 +5,11 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.lang.ION
 import org.partiql.lang.ast.StaticTypeMeta
-import org.partiql.lang.util.metaContainerOf
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.types.NumberConstraint
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.StringType
+import org.partiql.lang.util.metaContainerOf
 import kotlin.test.assertEquals
 
 /**

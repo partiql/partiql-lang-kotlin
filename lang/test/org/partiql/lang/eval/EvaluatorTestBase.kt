@@ -319,11 +319,10 @@ abstract class EvaluatorTestBase : TestBase() {
 
                 if (cause != null) assertThat(e).hasRootCauseExactlyInstanceOf(cause.java)
 
-                if(metadata != null) {
+                if (metadata != null) {
                     assertThat(e.errorContext[Property.LINE_NUMBER]!!.longValue()).`as`("line number").isEqualTo(metadata.line)
                     assertThat(e.errorContext[Property.COLUMN_NUMBER]!!.longValue()).`as`("column number").isEqualTo(metadata.column)
-                }
-                else {
+                } else {
                     assertThat(e.errorContext).isNull()
                 }
             }
@@ -352,11 +351,10 @@ abstract class EvaluatorTestBase : TestBase() {
 
                 if (cause != null) assertThat(e).hasRootCauseExactlyInstanceOf(cause.java)
 
-                if(metadata != null) {
+                if (metadata != null) {
                     assertThat(e.errorContext[Property.LINE_NUMBER]!!.longValue()).`as`("line number").isEqualTo(metadata.line)
                     assertThat(e.errorContext[Property.COLUMN_NUMBER]!!.longValue()).`as`("column number").isEqualTo(metadata.column)
-                }
-                else {
+                } else {
                     assertThat(e.errorContext).isNull()
                 }
             }
@@ -411,7 +409,7 @@ abstract class EvaluatorTestBase : TestBase() {
             fail("didn't throw")
         } catch (e: SqlException) {
             softAssert {
-                if(metadata != null) {
+                if (metadata != null) {
                     assertThat(e.errorContext[Property.LINE_NUMBER]!!.longValue()).`as`("line number").isEqualTo(metadata.line)
                     assertThat(e.errorContext[Property.COLUMN_NUMBER]!!.longValue()).`as`("column number").isEqualTo(metadata.column)
 

@@ -3,7 +3,6 @@ package org.partiql.planner.transforms
 import org.partiql.lang.errors.ProblemDetails
 import org.partiql.lang.errors.ProblemSeverity
 
-
 /**
  * Contains detailed information about errors that may occur during query planning.
  *
@@ -13,30 +12,32 @@ import org.partiql.lang.errors.ProblemSeverity
 sealed class PlanningProblemDetails(
     override val severity: ProblemSeverity,
     val messageFormatter: () -> String
-): ProblemDetails {
+) : ProblemDetails {
 
     override val message: String get() = messageFormatter()
 
-    data class ParseError(val parseErrorMessage: String)
-        : PlanningProblemDetails(ProblemSeverity.ERROR, { parseErrorMessage })
+    data class ParseError(val parseErrorMessage: String) :
+        PlanningProblemDetails(ProblemSeverity.ERROR, { parseErrorMessage })
 
-    data class UndefinedVariable(val variableName: String, val caseSensitive: Boolean)
-        : PlanningProblemDetails(ProblemSeverity.ERROR,
+    data class UndefinedVariable(val variableName: String, val caseSensitive: Boolean) :
+        PlanningProblemDetails(
+            ProblemSeverity.ERROR,
             {
                 "Undefined variable '$variableName'." +
-                if(caseSensitive) {
-                    // Individuals that are new to SQL often try to use double quotes for string literals.
-                    // Let's help them out a bit.
-                    " Hint: did you intend to use single-quotes (') here?  Remember that double-quotes (\") denote " +
-                        "quoted identifiers and single-quotes denote strings."
-                } else {
-                    ""
-                }
+                    if (caseSensitive) {
+                        // Individuals that are new to SQL often try to use double quotes for string literals.
+                        // Let's help them out a bit.
+                        " Hint: did you intend to use single-quotes (') here?  Remember that double-quotes (\") denote " +
+                            "quoted identifiers and single-quotes denote strings."
+                    } else {
+                        ""
+                    }
             }
         )
 
-    data class VariablePreviouslyDefined(val variableName: String)
-        : PlanningProblemDetails(ProblemSeverity.ERROR,
-            { "The variable '$variableName' was previously defined." })
+    data class VariablePreviouslyDefined(val variableName: String) :
+        PlanningProblemDetails(
+            ProblemSeverity.ERROR,
+            { "The variable '$variableName' was previously defined." }
+        )
 }
-

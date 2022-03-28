@@ -26,11 +26,13 @@ import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.lang.util.to
 
 /** Error for evaluation problems. */
-open class EvaluationException(message: String,
-                               errorCode: ErrorCode,
-                               errorContext: PropertyValueMap? = null,
-                               cause: Throwable? = null,
-                               internal: Boolean) : SqlException(message, errorCode, errorContext, internal, cause) {
+open class EvaluationException(
+    message: String,
+    errorCode: ErrorCode,
+    errorContext: PropertyValueMap? = null,
+    cause: Throwable? = null,
+    internal: Boolean
+) : SqlException(message, errorCode, errorContext, internal, cause) {
 
     constructor(
         cause: Throwable,
@@ -124,7 +126,6 @@ fun fillErrorContext(errorContext: PropertyValueMap, metaContainer: MetaContaine
         fillErrorContext(errorContext, location)
     }
 }
-
 
 /**
  * Returns the [SourceLocationMeta] as an error context if the [SourceLocationMeta.TAG] exists in the passed

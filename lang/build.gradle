@@ -66,8 +66,6 @@ sourceSets {
     }
 }
 
-def partiqlDomainFile = 'partiql-domains.kt'
-
 def PIG_SOURCE_ROOT = new File(projectDir, "build/generated-src/pig")
 def PIG_OUTPUT_DIR = new File(PIG_SOURCE_ROOT, "org/partiql/lang/domains")
 
@@ -98,18 +96,19 @@ task generatePigDomains {
     }
 }
 
-
 compileKotlin.dependsOn generatePigDomains
+
+ktlint {
+    filter {
+        // excluding multiple files from ktlint was somewhat of a challenge
+        // used "workaround" described here: https://github.com/JLLeitschuh/ktlint-gradle/issues/222
+        exclude({it.file.absolutePath.contains("/generated-src/")})
+    }
+}
 
 sourceSets {
     jmh.kotlin.srcDirs = ["jmh"]
     main.kotlin.srcDirs += [PIG_SOURCE_ROOT]
-}
-
-ktlint {
-    filter {
-        exclude("**/$partiqlDomainFile")
-    }
 }
 
 dokka {

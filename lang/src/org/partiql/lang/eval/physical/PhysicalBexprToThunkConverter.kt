@@ -28,7 +28,7 @@ internal class PhysicalBexprToThunkConverter(
 ) : PartiqlPhysical.Bexpr.Converter<RelationThunkEnv> {
 
     private fun blockNonDefaultImpl(i: PartiqlPhysical.Impl) {
-        if(i != DEFAULT_IMPL) {
+        if (i != DEFAULT_IMPL) {
             TODO("Support non-default operator implementations")
         }
     }
@@ -49,14 +49,14 @@ internal class PhysicalBexprToThunkConverter(
             val valueToScan = exprThunk.invoke(env)
 
             // coerces non-collection types to a singleton Sequence<>.
-            val rows: Sequence<ExprValue> = when(valueToScan.type) {
+            val rows: Sequence<ExprValue> = when (valueToScan.type) {
                 ExprValueType.LIST, ExprValueType.BAG -> valueToScan.asSequence()
                 else -> sequenceOf(valueToScan)
             }
 
             relation(RelationType.BAG) {
                 var rowsIter: Iterator<ExprValue> = rows.iterator()
-                while(rowsIter.hasNext()) {
+                while (rowsIter.hasNext()) {
                     val item = rowsIter.next()
                     env.registers[asIndex] = item.unnamedValue() // Remove any ordinal (output is a bag)
 
@@ -175,7 +175,7 @@ internal class PhysicalBexprToThunkConverter(
         predicateThunk: ThunkEnv?,
         env: Environment
     ): RelationIterator {
-        return if(predicateThunk == null) {
+        return if (predicateThunk == null) {
             relation(RelationType.BAG) {
                 val leftItr = leftThunk(env)
                 while (leftItr.nextRow()) {
@@ -190,8 +190,7 @@ internal class PhysicalBexprToThunkConverter(
                     }
                 }
             }
-        }
-        else {
+        } else {
             relation(RelationType.BAG) {
                 val leftItr = leftThunk(env)
                 while (leftItr.nextRow()) {
@@ -240,21 +239,19 @@ internal class PhysicalBexprToThunkConverter(
             ): List<PartiqlPhysical.VarDecl> {
                 return accumulator
             }
-
         }.walkBexpr(this, emptyList())
-
 
     private fun createFilterRelItr(
         relItr: RelationIterator,
         predicateThunk: ThunkEnv,
         env: Environment
     ) = relation(RelationType.BAG) {
-        while(true) {
+        while (true) {
             if (!relItr.nextRow()) {
                 break
             } else {
                 val matches = predicateThunk(env)
-                if(coercePredicateResult(matches)) {
+                if (coercePredicateResult(matches)) {
                     yield()
                 }
             }
@@ -264,7 +261,7 @@ internal class PhysicalBexprToThunkConverter(
     private fun coercePredicateResult(value: ExprValue): Boolean =
         when {
             value.isUnknown() -> false
-            else -> value.booleanValue() //<-- throws if [value] is not a boolean.
+            else -> value.booleanValue() // <-- throws if [value] is not a boolean.
         }
 
     override fun convertOffset(node: PartiqlPhysical.Bexpr.Offset): RelationThunkEnv {
@@ -276,9 +273,9 @@ internal class PhysicalBexprToThunkConverter(
             relation(RelationType.BAG) {
                 val sourceRel = sourceThunk(env)
                 var rowCount = 0L
-                while(rowCount++ < skipCount) {
+                while (rowCount++ < skipCount) {
                     // stop iterating if we finish run out of rows before we hit the offset.
-                    if(!sourceRel.nextRow()) {
+                    if (!sourceRel.nextRow()) {
                         return@relation
                     }
                 }
@@ -297,7 +294,7 @@ internal class PhysicalBexprToThunkConverter(
             val rowIter = sourceThunk(env)
             relation(RelationType.BAG) {
                 var rowCount = 0L
-                while(rowCount++ < limitCount && rowIter.nextRow()) {
+                while (rowCount++ < limitCount && rowIter.nextRow()) {
                     yield()
                 }
             }
@@ -330,5 +327,3 @@ internal class PhysicalBexprToThunkConverter(
 
 private fun PartiqlPhysical.Expr.isLitTrue() =
     this is PartiqlPhysical.Expr.Lit && this.value is BoolElement && this.value.booleanValue
-
-

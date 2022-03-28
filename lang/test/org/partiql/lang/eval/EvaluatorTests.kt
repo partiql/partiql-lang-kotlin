@@ -33,11 +33,10 @@ class EvaluatorTests {
             "projectionIterationBehaviorUnfiltered_select_list",
             "projectionIterationBehaviorUnfiltered_select_star",
 
-
             // below this line use features not supported by the current physical algebra compiler.
             // most fail due to not supporting foundational nodes like id, global_id and scan yet.
             // PartiQL's test cases are not all that cleanly separated.
-            "selectCorrelatedUnpivot",  // TODO: PHYS_ALGEBRA_REFACTOR_UNPIVOT
+            "selectCorrelatedUnpivot", // TODO: PHYS_ALGEBRA_REFACTOR_UNPIVOT
             "nestedSelectJoinWithUnpivot", // TODO: PHYS_ALGEBRA_REFACTOR_UNPIVOT
             "nestedSelectJoinLimit", // TODO: PHYS_ALGEBRA_REFACTOR_UNPIVOT
             "pivotFrom", // TODO: PHYS_ALGEBRA_REFACTOR_PIVOT
@@ -68,9 +67,9 @@ class EvaluatorTests {
             "aggregateInSubqueryOfSelectValue", // TODO: PHYS_ALGEBRA_REFACTOR_CALL_AGG
             "aggregateWithAliasingInSubqueryOfSelectValue", // TODO: PHYS_ALGEBRA_REFACTOR_CALL_AGG
             "selectDistinctWithAggregate", // TODO: PHYS_ALGEBRA_REFACTOR_CALL_AGG
-            "selectDistinctAggregationWithGroupBy",  // TODO: PHYS_ALGEBRA_REFACTOR_GROUP_BY
+            "selectDistinctAggregationWithGroupBy", // TODO: PHYS_ALGEBRA_REFACTOR_GROUP_BY
             "selectDistinctWithGroupBy", // TODO: PHYS_ALGEBRA_REFACTOR_GROUP_BY
-            "unpivotMissing",  // TODO: PHYS_ALGEBRA_REFACTOR_UNPIVOT
+            "unpivotMissing", // TODO: PHYS_ALGEBRA_REFACTOR_UNPIVOT
             "unpivotEmptyStruct", // TODO: PHYS_ALGEBRA_REFACTOR_UNPIVOT
             "unpivotMissingWithAsAndAt", // TODO: PHYS_ALGEBRA_REFACTOR_UNPIVOT
             "unpivotMissingCrossJoinWithAsAndAt", // TODO: PHYS_ALGEBRA_REFACTOR_UNPIVOT

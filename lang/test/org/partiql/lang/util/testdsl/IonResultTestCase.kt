@@ -1,6 +1,5 @@
 package org.partiql.lang.util.testdsl
 
-import com.amazon.ionelement.api.toIonValue
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.fail
@@ -14,7 +13,6 @@ import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.builtins.createBuiltinFunctions
 import org.partiql.lang.mockdb.MockDb
 import org.partiql.lang.syntax.SqlParser
-import org.partiql.lang.util.SexpAstPrettyPrinter
 import org.partiql.lang.util.assertIonEquals
 import org.partiql.planner.GlobalBindings
 import org.partiql.planner.PlanningResult
@@ -70,7 +68,6 @@ data class IonResultTestCase(
         }
 }
 
-
 internal fun IonResultTestCase.runTestCase(
     valueFactory: ExprValueFactory,
     db: MockDb,
@@ -101,10 +98,10 @@ internal fun IonResultTestCase.runTestCase(
             expectedIonResult?.let { ION.singleValue(it) }
         }
 
-        val globalBindings = if(defineGlobals) {
+        val globalBindings = if (defineGlobals) {
             GlobalBindings { bindingName ->
                 val result = db.globals.entries.firstOrNull { bindingName.isEquivalentTo(it.key) }
-                if(result != null) {
+                if (result != null) {
                     // Note that the unique id is set to result.key (which is the actual name of the variable)
                     // which *might* have different letter case than the [bindingName].
                     ResolutionResult.GlobalVariable(result.key)
@@ -121,18 +118,18 @@ internal fun IonResultTestCase.runTestCase(
             qp.plan(astStatement)
         }
 
-        val plannedQuery = when(plannerResult) {
+        val plannedQuery = when (plannerResult) {
             is PlanningResult.Success -> plannerResult.physicalPlan
             is PlanningResult.Error -> fail("Failed to plan query for tests \"${this.name}\"")
         }
 
-        val modifiedCompileOptions = when(compileOptionsBlock) {
+        val modifiedCompileOptions = when (compileOptionsBlock) {
             null -> compileOptions
             else -> CompileOptions.build { compileOptionsBlock() }
         }
 
         // Uncomment to see query plan in test runner output.
-        //println(SexpAstPrettyPrinter.format(plannedQuery.toIonElement().asAnyElement().toIonValue(ION)))
+        // println(SexpAstPrettyPrinter.format(plannedQuery.toIonElement().asAnyElement().toIonValue(ION)))
 
         val expression = assertDoesNotThrow("Compiling the query should not throw for test \"${this.name}\"") {
             EvaluatingCompiler(

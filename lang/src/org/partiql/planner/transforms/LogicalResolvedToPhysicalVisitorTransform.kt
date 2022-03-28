@@ -92,4 +92,3 @@ internal class LogicalResolvedToPhysicalVisitorTransform : PartiqlLogicalResolve
         }
     }
 }
-

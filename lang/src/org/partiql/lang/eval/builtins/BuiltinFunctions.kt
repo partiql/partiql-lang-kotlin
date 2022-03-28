@@ -16,7 +16,7 @@ package org.partiql.lang.eval.builtins
 
 import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.lang.eval.DEFAULT_COMPARATOR
-import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
@@ -26,7 +26,7 @@ import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.UnknownArguments
-import java.util.*
+import java.util.TreeSet
 
 internal fun createBuiltinFunctionSignatures(): Map<String, FunctionSignature> =
     // Creating a new IonSystem in this instance is not the problem it would normally be since we are
@@ -88,7 +88,7 @@ internal fun createFilterDistinct(valueFactory: ExprValueFactory): ExprFunction 
         returnType = StaticType.BAG
     )
 
-    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
         val argument = required.first()
         // We cannot use a [HashSet] here because [ExprValue] does not implement .equals() and .hashCode()
         val encountered = TreeSet(DEFAULT_COMPARATOR)
@@ -103,7 +103,6 @@ internal fun createFilterDistinct(valueFactory: ExprValueFactory): ExprFunction 
             }
         )
     }
-
 }
 
 internal fun createCharacterLength(name: String, valueFactory: ExprValueFactory): ExprFunction =

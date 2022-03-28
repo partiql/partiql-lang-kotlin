@@ -16,8 +16,6 @@ package org.partiql.lang.eval
 
 import junitparams.Parameters
 import org.junit.Test
-import org.partiql.lang.SqlException
-import org.partiql.lang.errors.ErrorCode
 import java.util.Collections
 import java.util.Random
 

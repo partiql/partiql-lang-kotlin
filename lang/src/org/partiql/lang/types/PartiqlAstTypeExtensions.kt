@@ -18,4 +18,3 @@ fun PartiqlAst.Type.toTypedOpParameter(customTypedOpParameters: Map<String, Type
     val physicalType = PartiqlPhysical.transform(sexp) as PartiqlPhysical.Type
     return physicalType.toTypedOpParameter(customTypedOpParameters)
 }
-

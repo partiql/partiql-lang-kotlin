@@ -27,7 +27,8 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
             // LET used in SELECT
             EvaluatorTestCase(
                 "SELECT X FROM A LET 1 AS X",
-                """<< {'X': 1} >>"""),
+                """<< {'X': 1} >>"""
+            ),
             // Disabled: PHYS_ALGEBRA_REFACTOR_GROUP_BY
 //            // LET used in GROUP BY
 //            EvaluatorTestCase(
@@ -49,7 +50,8 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
             // LET shadowing FROM binding
             EvaluatorTestCase(
                 "SELECT * FROM A LET 100 AS A",
-                """<< { 'id': 1 } >>"""),
+                """<< { 'id': 1 } >>"""
+            ),
             // LET using other variables
             EvaluatorTestCase(
                 "SELECT X, Y FROM A LET 1 AS X, X + 1 AS Y",
@@ -68,7 +70,8 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
             // LET calling function on each row
             EvaluatorTestCase(
                 "SELECT nameLength FROM C LET char_length(C.name) AS nameLength",
-                """<< {'nameLength': 3}, {'nameLength': 6}, {'nameLength': 9} >>"""),
+                """<< {'nameLength': 3}, {'nameLength': 6}, {'nameLength': 9} >>"""
+            ),
             // Disabled: PHYS_ALGEBRA_REFACTOR_GROUP_BY
 //            // LET calling function with GROUP BY and aggregation
 //            EvaluatorTestCase(

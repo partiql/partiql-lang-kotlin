@@ -39,17 +39,19 @@ import org.partiql.lang.util.propertyValueMapOf
  * incorrect usage of APIs or invalid end-user queries.
  * @param cause for this exception
  */
-open class SqlException(override var message: String,
-                        val errorCode: ErrorCode,
-                        errorContext: PropertyValueMap? = null,
-                        val internal: Boolean,
-                        cause: Throwable? = null)
-    : RuntimeException(message, cause) {
+open class SqlException(
+    override var message: String,
+    val errorCode: ErrorCode,
+    errorContext: PropertyValueMap? = null,
+    val internal: Boolean,
+    cause: Throwable? = null
+) :
+    RuntimeException(message, cause) {
 
     val errorContext: PropertyValueMap = errorContext ?: propertyValueMapOf()
 
     constructor(errorCode: ErrorCode, propertyValueMap: PropertyValueMap, internal: Boolean, cause: Throwable? = null) :
-        this("",errorCode, propertyValueMap, internal, cause)
+        this("", errorCode, propertyValueMap, internal, cause)
 
     /**
      * Auto-generated message has the structure
@@ -75,8 +77,8 @@ open class SqlException(override var message: String,
     fun generateMessageNoLocation(): String =
         "${errorCategory(errorCode)}: ${errorMessage(errorCode, errorContext)}"
 
-    private fun errorMessage(errorCode: ErrorCode?, propertyValueMap: PropertyValueMap?): String  =
-            errorCode?.getErrorMessage(propertyValueMap) ?: UNKNOWN
+    private fun errorMessage(errorCode: ErrorCode?, propertyValueMap: PropertyValueMap?): String =
+        errorCode?.getErrorMessage(propertyValueMap) ?: UNKNOWN
 
     private fun errorLocation(propertyValueMap: PropertyValueMap?): String {
         val lineNo = propertyValueMap?.get(Property.LINE_NUMBER)?.longValue()
@@ -86,7 +88,7 @@ open class SqlException(override var message: String,
     }
 
     private fun errorCategory(errorCode: ErrorCode?): String =
-       errorCode?.errorCategory() ?: UNKNOWN
+        errorCode?.errorCategory() ?: UNKNOWN
 
     override fun toString(): String =
         when (this.message.isNotBlank()) {
@@ -105,4 +107,3 @@ open class SqlException(override var message: String,
             }
         }
 }
-

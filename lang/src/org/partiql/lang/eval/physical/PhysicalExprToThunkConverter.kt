@@ -12,4 +12,3 @@ import org.partiql.lang.eval.ThunkEnv
 internal interface PhysicalExprToThunkConverter {
     fun convert(expr: PartiqlPhysical.Expr): ThunkEnv
 }
-

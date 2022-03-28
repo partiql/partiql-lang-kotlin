@@ -2,7 +2,6 @@ package org.partiql.lang.eval
 
 import org.junit.Ignore
 import org.junit.Test
-import org.junit.jupiter.api.Disabled
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.util.sourceLocationProperties

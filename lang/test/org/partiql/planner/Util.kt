@@ -12,7 +12,7 @@ import org.partiql.lang.errors.ProblemDetails
 fun createFakeGlobalBindings(vararg globalVariableNames: Pair<String, String>) =
     GlobalBindings { bindingName ->
         val matches = globalVariableNames.filter { bindingName.isEquivalentTo(it.first) }
-        when(matches.size) {
+        when (matches.size) {
             0 -> ResolutionResult.Undefined
             else -> ResolutionResult.GlobalVariable(matches.first().second)
         }

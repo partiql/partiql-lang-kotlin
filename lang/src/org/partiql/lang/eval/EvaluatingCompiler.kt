@@ -62,8 +62,8 @@ import org.partiql.lang.util.toIntExact
 import org.partiql.lang.util.totalMinutes
 import org.partiql.lang.util.unaryMinus
 import java.math.BigDecimal
-import java.util.TreeSet
 import java.util.LinkedList
+import java.util.TreeSet
 import kotlin.collections.ArrayList
 
 /**
@@ -93,7 +93,7 @@ internal class EvaluatingCompiler(
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val procedures: Map<String, StoredProcedure>,
     private val compileOptions: CompileOptions = CompileOptions.standard()
-): PhysicalExprToThunkConverter {
+) : PhysicalExprToThunkConverter {
     private val errorSignaler = compileOptions.typingMode.createErrorSignaler(valueFactory)
     private val thunkFactory = compileOptions.typingMode.createThunkFactory(compileOptions, valueFactory)
 
@@ -127,7 +127,7 @@ internal class EvaluatingCompiler(
         // determine the number of registers we'll need.
         val registerCount = object : PartiqlPhysical.VisitorFold<Long>() {
             override fun visitVarDecl(node: PartiqlPhysical.VarDecl, accumulator: Long): Long =
-                if(accumulator > node.index.value) accumulator else node.index.value
+                if (accumulator > node.index.value) accumulator else node.index.value
         }.walkStatement(plan, 0L) + 1
 
         return object : Expression {
@@ -304,7 +304,7 @@ internal class EvaluatingCompiler(
         val bexprThunk: RelationThunkEnv = PhysicalBexprToThunkConverter(this, thunkFactory.valueFactory)
             .convert(expr.query)
 
-        return thunkFactory.thunkEnv(expr.metas)  { env ->
+        return thunkFactory.thunkEnv(expr.metas) { env ->
             val elements = sequence {
                 val relItr = bexprThunk(env)
                 while (relItr.nextRow()) {
@@ -971,7 +971,7 @@ internal class EvaluatingCompiler(
     private fun compileGlobalId(expr: PartiqlPhysical.Expr.GlobalId): ThunkEnv =
         thunkFactory.thunkEnv(expr.metas) { env ->
             val bindingName = BindingName(expr.uniqueId.text, BindingCase.SENSITIVE)
-            env.session.globals[bindingName]  ?: handleUndefinedVariable(bindingName, expr.metas)
+            env.session.globals[bindingName] ?: handleUndefinedVariable(bindingName, expr.metas)
         }
 
     @Suppress("UNUSED_PARAMETER")
@@ -1458,8 +1458,8 @@ internal class EvaluatingCompiler(
                         val indexExpr = pathComponent.index
                         val caseSensitivity = pathComponent.case
                         when {
-                            //If indexExpr is a literal string, there is no need to evaluate it--just compile a
-                            //thunk that directly returns a bound value
+                            // If indexExpr is a literal string, there is no need to evaluate it--just compile a
+                            // thunk that directly returns a bound value
                             indexExpr is PartiqlPhysical.Expr.Lit && indexExpr.value.toIonValue(valueFactory.ion) is IonString -> {
                                 val lookupName = BindingName(
                                     indexExpr.value.toIonValue(valueFactory.ion).stringValue()!!,
@@ -1642,7 +1642,8 @@ internal class EvaluatingCompiler(
                 val patternParts = getPatternParts(
                     valueFactory.newFromIonValue(patternExpr.value.toIonValue(valueFactory.ion)),
                     (escapeExpr as? PartiqlPhysical.Expr.Lit)?.value?.toIonValue(valueFactory.ion)
-                        ?.let { valueFactory.newFromIonValue(it) })
+                        ?.let { valueFactory.newFromIonValue(it) }
+                )
 
                 // If valueExpr is also a literal then we can evaluate this at compile time and return a constant.
                 if (valueExpr is PartiqlPhysical.Expr.Lit) {

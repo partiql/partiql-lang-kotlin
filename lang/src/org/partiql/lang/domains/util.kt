@@ -4,7 +4,6 @@ import com.amazon.ionelement.api.IonElement
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.metaContainerOf
-import org.partiql.lang.ast.Meta
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.StaticTypeMeta
 import org.partiql.lang.errors.Property
@@ -72,7 +71,7 @@ fun PartiqlAst.CaseSensitivity.toBindingCase(): BindingCase = when (this) {
 /**
  * Converts a [PartiqlLogical.CaseSensitivity] to a [BindingCase].
  */
-fun PartiqlLogical.CaseSensitivity.toBindingCase(): BindingCase = when(this) {
+fun PartiqlLogical.CaseSensitivity.toBindingCase(): BindingCase = when (this) {
     is PartiqlLogical.CaseSensitivity.CaseInsensitive -> BindingCase.INSENSITIVE
     is PartiqlLogical.CaseSensitivity.CaseSensitive -> BindingCase.SENSITIVE
 }
@@ -80,7 +79,7 @@ fun PartiqlLogical.CaseSensitivity.toBindingCase(): BindingCase = when(this) {
 /**
  * Converts a [PartiqlLogical.CaseSensitivity] to a [BindingCase].
  */
-fun PartiqlPhysical.CaseSensitivity.toBindingCase(): BindingCase = when(this) {
+fun PartiqlPhysical.CaseSensitivity.toBindingCase(): BindingCase = when (this) {
     is PartiqlPhysical.CaseSensitivity.CaseInsensitive -> BindingCase.INSENSITIVE
     is PartiqlPhysical.CaseSensitivity.CaseSensitive -> BindingCase.SENSITIVE
 }

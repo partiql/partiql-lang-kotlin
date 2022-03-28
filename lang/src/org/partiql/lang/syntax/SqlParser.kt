@@ -21,7 +21,6 @@ import com.amazon.ion.IonSystem
 import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
-import org.partiql.lang.util.metaContainerOf
 import com.amazon.ionelement.api.toIonElement
 import org.partiql.lang.ast.AstSerializer
 import org.partiql.lang.ast.AstVersion
@@ -54,6 +53,7 @@ import org.partiql.lang.util.isNumeric
 import org.partiql.lang.util.isText
 import org.partiql.lang.util.isUnsignedInteger
 import org.partiql.lang.util.longValue
+import org.partiql.lang.util.metaContainerOf
 import org.partiql.lang.util.numberValue
 import org.partiql.lang.util.onlyEndOfStatement
 import org.partiql.lang.util.stringValue

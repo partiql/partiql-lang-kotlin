@@ -30,7 +30,6 @@ class QueryPlannerImplIntegrationTests {
         result as PlanningResult.Success
         println(SexpAstPrettyPrinter.format(result.physicalPlan.toIonElement().asAnyElement().toIonValue(ION)))
 
-
         assertEquals(
             result,
             PlanningResult.Success(

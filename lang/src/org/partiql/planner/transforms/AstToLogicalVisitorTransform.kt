@@ -52,7 +52,7 @@ private object AstToLogicalVisitorTransform : PartiqlAstToPartiqlLogicalVisitorT
                     is PartiqlAst.Projection.ProjectList -> {
                         mergeStruct(
                             List(project.projectItems.size) { idx ->
-                                when(val projectItem = project.projectItems[idx]) {
+                                when (val projectItem = project.projectItems[idx]) {
                                     is PartiqlAst.ProjectItem.ProjectExpr ->
                                         structField_(
                                             transformExpr(projectItem.expr),
@@ -77,7 +77,7 @@ private object AstToLogicalVisitorTransform : PartiqlAstToPartiqlLogicalVisitorT
             )
         }.let { q ->
             // in case of SELECT DISTINCT, wrap bindingsToValues in call to filter_distinct
-            when(node.setq) {
+            when (node.setq) {
                 null, is PartiqlAst.SetQuantifier.All -> q
                 is PartiqlAst.SetQuantifier.Distinct -> PartiqlLogical.build { call("filter_distinct", q) }
             }
@@ -145,4 +145,3 @@ private object FromSourceToBexpr : PartiqlAst.FromSource.Converter<PartiqlLogica
             )
         }
 }
-

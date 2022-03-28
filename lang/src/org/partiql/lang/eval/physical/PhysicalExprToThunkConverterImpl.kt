@@ -23,7 +23,6 @@ import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.ast.toPartiQlMetaContainer
 import org.partiql.lang.domains.PartiqlPhysical
-import org.partiql.lang.eval.errorContextFrom
 import org.partiql.lang.domains.staticType
 import org.partiql.lang.domains.toBindingCase
 import org.partiql.lang.errors.ErrorCode
@@ -38,17 +37,15 @@ import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.CastFunc
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.DEFAULT_COMPARATOR
-import org.partiql.lang.eval.EvaluationSession
-import org.partiql.lang.eval.createErrorSignaler
-import org.partiql.lang.eval.createThunkFactory
 import org.partiql.lang.eval.Environment
 import org.partiql.lang.eval.ErrorDetails
 import org.partiql.lang.eval.EvaluationException
-import org.partiql.lang.eval.Expression
+import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.eval.Expression
 import org.partiql.lang.eval.Named
 import org.partiql.lang.eval.ProjectionIterationBehavior
 import org.partiql.lang.eval.RequiredArgs
@@ -66,9 +63,12 @@ import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.call
 import org.partiql.lang.eval.cast
 import org.partiql.lang.eval.compareTo
+import org.partiql.lang.eval.createErrorSignaler
+import org.partiql.lang.eval.createThunkFactory
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.errInvalidArgumentType
 import org.partiql.lang.eval.errNoContext
+import org.partiql.lang.eval.errorContextFrom
 import org.partiql.lang.eval.errorIf
 import org.partiql.lang.eval.exprEquals
 import org.partiql.lang.eval.fillErrorContext
@@ -110,8 +110,8 @@ import org.partiql.lang.util.toIntExact
 import org.partiql.lang.util.totalMinutes
 import org.partiql.lang.util.unaryMinus
 import java.math.BigDecimal
-import java.util.TreeSet
 import java.util.LinkedList
+import java.util.TreeSet
 import kotlin.collections.ArrayList
 
 /**
@@ -140,7 +140,7 @@ internal class PhysicalExprToThunkConverterImpl(
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val procedures: Map<String, StoredProcedure>,
     private val compileOptions: CompileOptions = CompileOptions.standard()
-): PhysicalExprToThunkConverter {
+) : PhysicalExprToThunkConverter {
     private val errorSignaler = compileOptions.typingMode.createErrorSignaler(valueFactory)
     private val thunkFactory = compileOptions.typingMode.createThunkFactory(compileOptions, valueFactory)
 
@@ -174,7 +174,7 @@ internal class PhysicalExprToThunkConverterImpl(
         // determine the number of registers we'll need.
         val registerCount = object : PartiqlPhysical.VisitorFold<Long>() {
             override fun visitVarDecl(node: PartiqlPhysical.VarDecl, accumulator: Long): Long =
-                if(accumulator > node.index.value) accumulator else node.index.value
+                if (accumulator > node.index.value) accumulator else node.index.value
         }.walkStatement(plan, 0L) + 1
 
         return object : Expression {
@@ -275,7 +275,8 @@ internal class PhysicalExprToThunkConverterImpl(
                     ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
                     errorContextFrom(metas).also {
                         it[Property.FEATURE_NAME] = expr.javaClass.canonicalName
-                    }, internal = false
+                    },
+                    internal = false
                 )
             }
             is PartiqlPhysical.Expr.BindingsToValues -> compileBindingsToValues(expr)
@@ -350,7 +351,7 @@ internal class PhysicalExprToThunkConverterImpl(
         val bexprThunk: RelationThunkEnv = PhysicalBexprToThunkConverter(this, thunkFactory.valueFactory)
             .convert(expr.query)
 
-        return thunkFactory.thunkEnv(expr.metas)  { env ->
+        return thunkFactory.thunkEnv(expr.metas) { env ->
             val elements = sequence {
                 val relItr = bexprThunk(env)
                 while (relItr.nextRow()) {
@@ -470,7 +471,8 @@ internal class PhysicalExprToThunkConverterImpl(
                                         !validator(naryResult),
                                         ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
                                         { ErrorDetails(metas, "Integer overflow", errorContextFrom(metas)) },
-                                        { naryResult })
+                                        { naryResult }
+                                    )
                                 }
                             }
                             // If there is no IntType StaticType, can't validate the integer size either.
@@ -514,9 +516,9 @@ internal class PhysicalExprToThunkConverterImpl(
         val exprThunk = compileAstExpr(expr.expr)
 
         val computeThunk = thunkFactory.thunkEnvOperands(metas, exprThunk) { _, value ->
-            //Invoking .numberValue() here makes this essentially just a type check
+            // Invoking .numberValue() here makes this essentially just a type check
             value.numberValue()
-            //Original value is returned unmodified.
+            // Original value is returned unmodified.
             value
         }
 
@@ -762,7 +764,7 @@ internal class PhysicalExprToThunkConverterImpl(
                     val currValue = currThunk(env)
                     when {
                         currValue.isUnknown() -> hasUnknowns = true
-                        //Short circuit only if we encounter a known false value.
+                        // Short circuit only if we encounter a known false value.
                         !currValue.booleanValue() -> return@thunk valueFactory.newBoolean(false)
                     }
                 }
@@ -778,7 +780,7 @@ internal class PhysicalExprToThunkConverterImpl(
                 argThunks.forEach { currThunk ->
                     val currValue = currThunk(env)
                     when (currValue.type) {
-                        //Short circuit only if we encounter a known false value.
+                        // Short circuit only if we encounter a known false value.
                         ExprValueType.BOOL -> if (!currValue.booleanValue()) return@thunk valueFactory.newBoolean(false)
                         ExprValueType.NULL -> hasNull = true
                         // type mismatch, return missing
@@ -829,7 +831,7 @@ internal class PhysicalExprToThunkConverterImpl(
                 argThunks.forEach { currThunk ->
                     val currValue = currThunk(env)
                     when (currValue.type) {
-                        //Short circuit only if we encounter a known true value.
+                        // Short circuit only if we encounter a known true value.
                         ExprValueType.BOOL -> if (currValue.booleanValue()) return@thunk valueFactory.newBoolean(true)
                         ExprValueType.NULL -> hasNull = true
                         else -> hasMissing = true // type mismatch, return missing.
@@ -948,12 +950,12 @@ internal class PhysicalExprToThunkConverterImpl(
         val computeThunk = when (func.signature.unknownArguments) {
             UnknownArguments.PROPAGATE -> thunkFactory.thunkEnvOperands(metas, funcArgThunks) { env, values ->
                 val checkedArgs = checkArgumentTypes(func.signature, values)
-                func.call(env, checkedArgs)
+                func.call(env.session, checkedArgs)
             }
             UnknownArguments.PASS_THRU -> thunkFactory.thunkEnv(metas) { env ->
                 val funcArgValues = funcArgThunks.map { it(env) }
                 val checkedArgs = checkArgumentTypes(func.signature, funcArgValues)
-                func.call(env, checkedArgs)
+                func.call(env.session, checkedArgs)
             }
         }
 
@@ -1016,7 +1018,7 @@ internal class PhysicalExprToThunkConverterImpl(
     private fun compileGlobalId(expr: PartiqlPhysical.Expr.GlobalId): ThunkEnv =
         thunkFactory.thunkEnv(expr.metas) { env ->
             val bindingName = BindingName(expr.uniqueId.text, BindingCase.SENSITIVE)
-            env.session.globals[bindingName]  ?: handleUndefinedVariable(bindingName, expr.metas)
+            env.session.globals[bindingName] ?: handleUndefinedVariable(bindingName, expr.metas)
         }
 
     @Suppress("UNUSED_PARAMETER")
@@ -1166,7 +1168,7 @@ internal class PhysicalExprToThunkConverterImpl(
                 locationMeta?.let { fillErrorContext(errorContext, it) }
 
                 throw EvaluationException(
-                    "Validation failure for ${asType}",
+                    "Validation failure for $asType",
                     ErrorCode.EVALUATOR_CAST_FAILED,
                     errorContext,
                     internal = false
@@ -1254,7 +1256,6 @@ internal class PhysicalExprToThunkConverterImpl(
                         }
                     }
                 }
-
             } catch (e: EvaluationException) {
                 if (e.internal) {
                     throw e
@@ -1504,8 +1505,8 @@ internal class PhysicalExprToThunkConverterImpl(
                         val indexExpr = pathComponent.index
                         val caseSensitivity = pathComponent.case
                         when {
-                            //If indexExpr is a literal string, there is no need to evaluate it--just compile a
-                            //thunk that directly returns a bound value
+                            // If indexExpr is a literal string, there is no need to evaluate it--just compile a
+                            // thunk that directly returns a bound value
                             indexExpr is PartiqlPhysical.Expr.Lit && indexExpr.value.toIonValue(valueFactory.ion) is IonString -> {
                                 val lookupName = BindingName(
                                     indexExpr.value.toIonValue(valueFactory.ion).stringValue()!!,
@@ -1538,7 +1539,6 @@ internal class PhysicalExprToThunkConverterImpl(
                                                 )
                                                 TypingMode.PERMISSIVE -> valueFactory.missingValue
                                             }
-
                                         }
                                     } ?: valueFactory.missingValue
                                 }
@@ -1600,7 +1600,8 @@ internal class PhysicalExprToThunkConverterImpl(
                             }
                         }
                     }
-                })
+                }
+            )
         }
         return when (componentThunks.size) {
             1 -> componentThunks.first()
@@ -1688,7 +1689,8 @@ internal class PhysicalExprToThunkConverterImpl(
                 val patternParts = getPatternParts(
                     valueFactory.newFromIonValue(patternExpr.value.toIonValue(valueFactory.ion)),
                     (escapeExpr as? PartiqlPhysical.Expr.Lit)?.value?.toIonValue(valueFactory.ion)
-                        ?.let { valueFactory.newFromIonValue(it) })
+                        ?.let { valueFactory.newFromIonValue(it) }
+                )
 
                 // If valueExpr is also a literal then we can evaluate this at compile time and return a constant.
                 if (valueExpr is PartiqlPhysical.Expr.Lit) {
@@ -1707,14 +1709,14 @@ internal class PhysicalExprToThunkConverterImpl(
                 val patternThunk = compileAstExpr(patternExpr)
                 when (escapeExpr) {
                     null -> {
-                        //thunk that re-compiles the DFA every evaluation without a custom escape sequence
+                        // thunk that re-compiles the DFA every evaluation without a custom escape sequence
                         thunkFactory.thunkEnvOperands(metas, valueThunk, patternThunk) { _, value, pattern ->
                             val pps = getPatternParts(pattern, null)
                             runPatternParts(value, pps)
                         }
                     }
                     else -> {
-                        //thunk that re-compiles the pattern every evaluation but *with* a custom escape sequence
+                        // thunk that re-compiles the pattern every evaluation but *with* a custom escape sequence
                         val escapeThunk = compileAstExpr(escapeExpr)
                         thunkFactory.thunkEnvOperands(
                             metas,
@@ -1772,7 +1774,7 @@ internal class PhysicalExprToThunkConverterImpl(
 
         escape?.let {
             val escapeCharString = checkEscapeChar(escape, escapeLocationMeta)
-            val escapeCharCodePoint = escapeCharString.codePointAt(0)  // escape is a string of length 1
+            val escapeCharCodePoint = escapeCharString.codePointAt(0) // escape is a string of length 1
             val validEscapedChars = setOf('_'.toInt(), '%'.toInt(), escapeCharCodePoint)
             val iter = patternString.codePointSequence().iterator()
 

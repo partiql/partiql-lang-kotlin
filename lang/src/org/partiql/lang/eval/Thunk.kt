@@ -22,7 +22,6 @@ import org.partiql.lang.errors.ErrorBehaviorInPermissiveMode
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 
-
 /**
  * A thunk with no parameters other than the current environment.
  *
@@ -89,9 +88,9 @@ data class ThunkOptions private constructor(
      */
     class Builder {
         private var options = ThunkOptions()
-        fun handleExceptionForLegacyMode(value: ThunkExceptionHandlerForLegacyMode) = set { copy(handleExceptionForLegacyMode = value)}
+        fun handleExceptionForLegacyMode(value: ThunkExceptionHandlerForLegacyMode) = set { copy(handleExceptionForLegacyMode = value) }
         fun handleExceptionForPermissiveMode(value: ThunkExceptionHandlerForPermissiveMode) = set { copy(handleExceptionForPermissiveMode = value) }
-        private inline fun set(block: ThunkOptions.() -> ThunkOptions) : Builder {
+        private inline fun set(block: ThunkOptions.() -> ThunkOptions): Builder {
             options = block(options)
             return this
         }
@@ -104,10 +103,11 @@ val DEFAULT_EXCEPTION_HANDLER_FOR_LEGACY_MODE: ThunkExceptionHandlerForLegacyMod
     val message = e.message ?: "<NO MESSAGE>"
     throw EvaluationException(
         "Internal error, $message",
-        errorCode = (e as? EvaluationException)?.errorCode?: ErrorCode.EVALUATOR_GENERIC_EXCEPTION,
+        errorCode = (e as? EvaluationException)?.errorCode ?: ErrorCode.EVALUATOR_GENERIC_EXCEPTION,
         errorContext = errorContextFrom(sourceLocation),
         cause = e,
-        internal = true)
+        internal = true
+    )
 }
 
 val DEFAULT_EXCEPTION_HANDLER_FOR_PERMISSIVE_MODE: ThunkExceptionHandlerForPermissiveMode = { _, _ -> }
@@ -120,7 +120,7 @@ val DEFAULT_EXCEPTION_HANDLER_FOR_PERMISSIVE_MODE: ThunkExceptionHandlerForPermi
 internal fun TypingMode.createThunkFactory(
     compileOptions: CompileOptions,
     valueFactory: ExprValueFactory
-) : ThunkFactory = when(this) {
+): ThunkFactory = when (this) {
     TypingMode.LEGACY -> LegacyThunkFactory(compileOptions, valueFactory)
     TypingMode.PERMISSIVE -> PermissiveThunkFactory(compileOptions, valueFactory)
 }
@@ -281,8 +281,8 @@ internal abstract class ThunkFactory(
     ): ThunkEnv =
         this.thunkEnv(metas) { env ->
             propagateUnknowns({ t1(env) }, { t2(env) }, null) { v1, v2, _ ->
-                compute(env, v1, v2!!)
-            }
+            compute(env, v1, v2!!)
+        }
         }.typeCheck(metas)
 
     /** See the [thunkEnvOperands] with three [ThunkEnv] operands. */
@@ -293,8 +293,8 @@ internal abstract class ThunkFactory(
     ): ThunkEnv =
         this.thunkEnv(metas) { env ->
             propagateUnknowns({ t1(env) }, null, null) { v1, _, _ ->
-                compute(env, v1)
-            }
+            compute(env, v1)
+        }
         }.typeCheck(metas)
 
     /** See the [thunkEnvOperands] with a variadic list of [ThunkEnv] operands. */
@@ -487,7 +487,7 @@ internal class LegacyThunkFactory(
         return thunkEnv(metas) thunkBlock@{ env ->
             val firstValue = firstThunk(env)
             when {
-                //If the first value is unknown, short circuit returning null.
+                // If the first value is unknown, short circuit returning null.
                 firstValue.isUnknown() -> valueFactory.nullValue
                 else -> {
                     otherThunks.fold(firstValue) { lastValue, currentThunk ->
@@ -507,7 +507,6 @@ internal class LegacyThunkFactory(
 
                     valueFactory.newBoolean(true)
                 }
-
             }
         }
     }
@@ -522,22 +521,21 @@ internal class LegacyThunkFactory(
      * with the original exception as the cause.
      */
     override fun handleException(
-            sourceLocation: SourceLocationMeta?,
-            block: () -> ExprValue
+        sourceLocation: SourceLocationMeta?,
+        block: () -> ExprValue
     ): ExprValue =
-            try {
-                block()
-            } catch (e: EvaluationException) {
-                // Only add source location data to the error context if it doesn't already exist
-                // in [errorContext].
-                if (!e.errorContext.hasProperty(Property.LINE_NUMBER)) {
-                    sourceLocation?.let { fillErrorContext(e.errorContext, sourceLocation) }
-                }
-                throw e
-            } catch (e: Exception) {
-                compileOptions.thunkOptions.handleExceptionForLegacyMode(e, sourceLocation)
+        try {
+            block()
+        } catch (e: EvaluationException) {
+            // Only add source location data to the error context if it doesn't already exist
+            // in [errorContext].
+            if (!e.errorContext.hasProperty(Property.LINE_NUMBER)) {
+                sourceLocation?.let { fillErrorContext(e.errorContext, sourceLocation) }
             }
-
+            throw e
+        } catch (e: Exception) {
+            compileOptions.thunkOptions.handleExceptionForLegacyMode(e, sourceLocation)
+        }
 }
 
 /**
@@ -604,12 +602,11 @@ internal class PermissiveThunkFactory(
         compute: (ExprValue, ExprValue?, ExprValue?) -> ExprValue
     ): ExprValue =
         when {
-            v1.type == ExprValueType.NULL
-                || (v2?.let { it.type == ExprValueType.NULL }) ?: false
-                || (v3?.let { it.type == ExprValueType.NULL }) ?: false -> valueFactory.nullValue
+            v1.type == ExprValueType.NULL ||
+                (v2?.let { it.type == ExprValueType.NULL }) ?: false ||
+                (v3?.let { it.type == ExprValueType.NULL }) ?: false -> valueFactory.nullValue
             else -> compute(v1, v2, v3)
         }
-
 
     /** See [ThunkFactory.thunkFold]. */
     override fun thunkFold(

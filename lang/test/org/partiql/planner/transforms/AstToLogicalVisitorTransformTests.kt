@@ -3,8 +3,8 @@ package org.partiql.planner.transforms
 import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.ionInt
-import com.amazon.ionelement.api.toIonValue
 import com.amazon.ionelement.api.ionString
+import com.amazon.ionelement.api.toIonValue
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
@@ -95,7 +95,8 @@ class AstToLogicalVisitorTransformTests {
                 "SELECT DISTINCT b.* FROM bar AS b",
                 PartiqlLogical.build {
                     query(
-                        call("filter_distinct",
+                        call(
+                            "filter_distinct",
                             bindingsToValues(
                                 mergeStruct(structFields(id("b"))),
                                 scan(id("bar"), varDecl("b"))
@@ -149,5 +150,3 @@ class AstToLogicalVisitorTransformTests {
         )
     }
 }
-
-

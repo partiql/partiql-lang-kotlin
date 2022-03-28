@@ -1,7 +1,6 @@
 package org.partiql.planner.transforms
 
 import com.amazon.ionelement.api.ionBool
-import com.amazon.ionelement.api.ionSymbol
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
@@ -68,4 +67,3 @@ class LogicalResolvedToPhysicalVisitorTransformTests {
         )
     }
 }
-

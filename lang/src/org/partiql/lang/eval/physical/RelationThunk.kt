@@ -38,7 +38,8 @@ internal inline fun relationThunk(metas: MetaContainer, crossinline t: RelationT
                 errorCode = ErrorCode.EVALUATOR_GENERIC_EXCEPTION,
                 errorContext = errorContextFrom(sourceLocationMeta),
                 cause = e,
-                internal = true)
+                internal = true
+            )
         }
     }
 }

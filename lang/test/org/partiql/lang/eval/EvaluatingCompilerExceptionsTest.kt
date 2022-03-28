@@ -458,5 +458,4 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
         assertThrows<NotImplementedError> {
             voidEval("SELECT 1 FROM <<>> ORDER BY x")
         }
-
 }

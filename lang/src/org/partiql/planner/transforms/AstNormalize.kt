@@ -23,4 +23,3 @@ fun PartiqlAst.Statement.normalize(): PartiqlAst.Statement {
     )
     return transforms.transformStatement(this)
 }
-

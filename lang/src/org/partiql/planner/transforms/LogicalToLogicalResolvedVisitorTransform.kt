@@ -176,7 +176,6 @@ private data class LogicalToLogicalResolvedVisitorTransform(
         }
     }
 
-
     // We are currently using bindings_to_values to denote a sub-query, which works for all the use cases we are
     // presented with today, as every SELECT statement is replaced with `bindings_to_values at the top level.
     override fun transformExprBindingsToValues(node: PartiqlLogical.Expr.BindingsToValues): PartiqlLogicalResolved.Expr =
@@ -239,14 +238,14 @@ private data class LogicalToLogicalResolvedVisitorTransform(
                 node.asLocalId(resolutionResult.index)
             }
             ResolutionResult.Undefined -> {
-                if(this.allowUndefinedVariables) {
+                if (this.allowUndefinedVariables) {
                     node.asDynamicId(
                         currentDynamicResolutionCandidates()
                             .map {
                                 PartiqlLogicalResolved.build {
                                     localId(it.name.text, it.indexMeta.toLong())
+                                }
                             }
-                        }
                     )
                 } else {
                     node.asErrorId().also {
@@ -308,7 +307,7 @@ private data class LogicalToLogicalResolvedVisitorTransform(
         val usedVariableNames = hashSetOf<String>()
         varDecls.forEach { varDecl ->
             val loweredVariableName = varDecl.name.text.toLowerCase()
-            if(usedVariableNames.contains(loweredVariableName)) {
+            if (usedVariableNames.contains(loweredVariableName)) {
                 this.problemHandler.handleProblem(
                     Problem(
                         varDecl.metas.sourceLocation ?: error("VarDecl was missing source location meta"),
@@ -324,7 +323,7 @@ private data class LogicalToLogicalResolvedVisitorTransform(
      * Computes a [LocalScope] for containing all of the variables that are output from [bexpr].
      */
     private fun getOutputScope(bexpr: PartiqlLogical.Bexpr): LocalScope =
-        when(bexpr) {
+        when (bexpr) {
             is PartiqlLogical.Bexpr.Filter -> getOutputScope(bexpr.source)
             is PartiqlLogical.Bexpr.Limit -> getOutputScope(bexpr.source)
             is PartiqlLogical.Bexpr.Offset -> getOutputScope(bexpr.source)
@@ -371,7 +370,7 @@ private data class LogicalToLogicalResolvedVisitorTransform(
             id_(
                 name = name,
                 case = transformCaseSensitivity(case),
-                strategy = when(this@LogicalToLogicalResolvedVisitorTransform.currentVariableLookupStrategy) {
+                strategy = when (this@LogicalToLogicalResolvedVisitorTransform.currentVariableLookupStrategy) {
                     VariableLookupStrategy.LOCALS_THEN_GLOBALS -> localsThenGlobals()
                     VariableLookupStrategy.GLOBALS_THEN_LOCALS -> globalsThenLocals()
                 },

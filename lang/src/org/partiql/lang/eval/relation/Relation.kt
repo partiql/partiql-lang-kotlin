@@ -42,13 +42,13 @@ private class RelationBuilderIterator(
     override suspend fun yield() {
         yielded = true
         suspendCoroutineUninterceptedOrReturn<Unit> { c ->
-            nextStep = c;
+            nextStep = c
             COROUTINE_SUSPENDED
         }
     }
 
     override suspend fun yieldAll(relItr: RelationIterator) {
-        while(relItr.nextRow()) {
+        while (relItr.nextRow()) {
             yield()
         }
     }
@@ -57,15 +57,17 @@ private class RelationBuilderIterator(
         // if nextStep is null it means we've reached the end of the relation, but nextRow() was called again
         // for some reason.  This probably indicates a bug since we should not in general be attempting to
         // read a `RelationIterator` after it has exhausted.
-        if(nextStep == null) {
-            error("Relation was previously exhausted.  " +
-                "Please don't call nextRow() again after it returns false the first time.")
+        if (nextStep == null) {
+            error(
+                "Relation was previously exhausted.  " +
+                    "Please don't call nextRow() again after it returns false the first time."
+            )
         }
         val step = nextStep!!
         nextStep = null
         step.resume(Unit)
 
-        return if(yielded) {
+        return if (yielded) {
             yielded = false
             true
         } else {
@@ -80,6 +82,4 @@ private class RelationBuilderIterator(
 
     override val context: CoroutineContext
         get() = EmptyCoroutineContext
-
-
 }

@@ -22,7 +22,7 @@ import junit.framework.Assert.assertSame
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.Test
-import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.ExprValueType
@@ -33,7 +33,7 @@ class ReadFileTest {
     private val ion = IonSystemBuilder.standard().build()
     private val valueFactory = ExprValueFactory.standard(ion)
     private val function = ReadFile(valueFactory)
-    private val env = Environment.standard()
+    private val session = EvaluationSession.standard()
 
     private fun String.exprValue() = valueFactory.newFromIonValue(ion.singleValue(this))
     private fun writeFile(path: String, content: String) = File(dirPath(path)).writeText(content)
@@ -55,7 +55,7 @@ class ReadFileTest {
     }
 
     private fun IonValue.removeAnnotations() {
-        when(this.type) {
+        when (this.type) {
             // Remove $partiql_missing annotation from NULL for assertions
             IonType.NULL -> this.removeTypeAnnotation("\$partiql_missing")
             IonType.DATAGRAM,
@@ -92,7 +92,7 @@ class ReadFileTest {
         writeFile("data.ion", "1 2")
 
         val args = listOf("\"${dirPath("data.ion")}\"").map { it.exprValue() }
-        val actual = function.callWithRequired(env, args)
+        val actual = function.callWithRequired(session, args)
         val expected = "[1, 2]"
 
         assertValues(expected, actual)
@@ -104,11 +104,10 @@ class ReadFileTest {
 
         val args = listOf("\"${dirPath("data.ion")}\"").map { it.exprValue() }
         val additionalOptions = "{type:\"ion\"}".exprValue()
-        val actual = function.callWithOptional(env, args, additionalOptions)
+        val actual = function.callWithOptional(session, args, additionalOptions)
         val expected = "[1, 2]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -117,11 +116,10 @@ class ReadFileTest {
 
         val args = listOf("\"${dirPath("data.csv")}\"").map { it.exprValue() }
         val additionalOptions = "{type:\"csv\"}".exprValue()
-        val actual = function.callWithOptional(env, args, additionalOptions)
+        val actual = function.callWithOptional(session, args, additionalOptions)
         val expected = "[{_1:\"1\",_2:\"2\"}]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -130,11 +128,10 @@ class ReadFileTest {
 
         val args = listOf("\"${dirPath("data_with_ion_symbol_as_input.csv")}\"").map { it.exprValue() }
         val additionalOptions = "{type:csv}".exprValue()
-        val actual = function.callWithOptional(env, args, additionalOptions)
+        val actual = function.callWithOptional(session, args, additionalOptions)
         val expected = "[{_1:\"1\",_2:\"2\"}]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -143,11 +140,10 @@ class ReadFileTest {
 
         val args = listOf("\"${dirPath("data_with_double_quotes_escape.csv")}\"").map { it.exprValue() }
         val additionalOptions = "{type:\"csv\"}".exprValue()
-        val actual = function.callWithOptional(env, args, additionalOptions)
+        val actual = function.callWithOptional(session, args, additionalOptions)
         val expected = "[{_1:\"1,2\",_2:\"2\"}]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -156,11 +152,10 @@ class ReadFileTest {
 
         val args = listOf("\"${dirPath("data_with_double_quotes_escape.csv")}\"").map { it.exprValue() }
         val additionalOptions = "{type:\"csv\"}".exprValue()
-        val actual = function.callWithOptional(env, args, additionalOptions)
+        val actual = function.callWithOptional(session, args, additionalOptions)
         val expected = "[{_1:\"1\",_2:\"2\"},{_1:\"3\"}]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -169,11 +164,10 @@ class ReadFileTest {
 
         val args = listOf("\"${dirPath("data_with_header_line.csv")}\"").map { it.exprValue() }
         val additionalOptions = "{type:\"csv\", header:true}".exprValue()
-        val actual = function.callWithOptional(env, args, additionalOptions)
+        val actual = function.callWithOptional(session, args, additionalOptions)
         val expected = "[{col1:\"1\",col2:\"2\"}]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -182,11 +176,10 @@ class ReadFileTest {
 
         val args = listOf("\"${dirPath("data.tsv")}\"").map { it.exprValue() }
         val additionalOptions = "{type:\"tsv\"}".exprValue()
-        val actual = function.callWithOptional(env, args, additionalOptions)
+        val actual = function.callWithOptional(session, args, additionalOptions)
         val expected = "[{_1:\"1\",_2:\"2\"}]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -195,11 +188,10 @@ class ReadFileTest {
 
         val args = listOf("\"${dirPath("data_with_header_line.tsv")}\"").map { it.exprValue() }
         val additionalOptions = "{type:\"tsv\", header:true}".exprValue()
-        val actual = function.callWithOptional(env, args, additionalOptions)
+        val actual = function.callWithOptional(session, args, additionalOptions)
         val expected = "[{col1:\"1\",col2:\"2\"}]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -208,11 +200,10 @@ class ReadFileTest {
 
         val args = listOf("\"${dirPath("simple_excel.csv")}\"").map { it.exprValue() }
         val additionalOptions = "{type:\"excel_csv\", header:true}".exprValue()
-        val actual = function.callWithOptional(env, args, additionalOptions)
+        val actual = function.callWithOptional(session, args, additionalOptions)
         val expected = "[{title:\"harry potter\",category:\"book\",price:\"7.99\"}]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -221,11 +212,10 @@ class ReadFileTest {
 
         val args = listOf("\"${dirPath("simple_postgresql.csv")}\"").map { it.exprValue() }
         val additionalOptions = "{type:\"postgresql_csv\", header:true}".exprValue()
-        val actual = function.callWithOptional(env, args, additionalOptions)
+        val actual = function.callWithOptional(session, args, additionalOptions)
         val expected = "[{id:\"1\",name:\"B\\\"ob\",balance:\"10000.00\"}]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -234,11 +224,10 @@ class ReadFileTest {
 
         val args = listOf("\"${dirPath("simple_postgresql.txt")}\"").map { it.exprValue() }
         val additionalOptions = "{type:\"postgresql_text\", header:true}".exprValue()
-        val actual = function.callWithOptional(env, args, additionalOptions)
+        val actual = function.callWithOptional(session, args, additionalOptions)
         val expected = "[{id:\"1\",name:\"Bob\",balance:\"10000.00\"}]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -247,11 +236,10 @@ class ReadFileTest {
 
         val args = listOf("\"${dirPath("simple_mysql.csv")}\"").map { it.exprValue() }
         val additionalOptions = "{type:\"mysql_csv\", header:true}".exprValue()
-        val actual = function.callWithOptional(env, args, additionalOptions)
+        val actual = function.callWithOptional(session, args, additionalOptions)
         val expected = "[{id:\"1\",name:\"B\\\"ob\",balance:\"10000.00\"}]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -260,11 +248,10 @@ class ReadFileTest {
 
         val args = listOf("\"${dirPath("customized.csv")}\"").map { it.exprValue() }
         val additionalOptions = "{type:\"customized\", header:true, delimiter:' '}".exprValue()
-        val actual = function.callWithOptional(env, args, additionalOptions)
+        val actual = function.callWithOptional(session, args, additionalOptions)
         val expected = "[{id:\"1\",name:\"Bob\",balance:\"10000.00\"}]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -273,11 +260,10 @@ class ReadFileTest {
 
         val args = listOf("\"${dirPath("customized.csv")}\"").map { it.exprValue() }
         val additionalOptions = "{type:\"customized\", header:true, ignore_empty_line: false}".exprValue()
-        val actual = function.callWithOptional(env, args, additionalOptions)
+        val actual = function.callWithOptional(session, args, additionalOptions)
         val expected = "[{id:\"\"},{id:\"1\",name:\"Bob\",balance:\"10000.00\"}]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -286,11 +272,10 @@ class ReadFileTest {
 
         val args = listOf("\"${dirPath("customized.csv")}\"").map { it.exprValue() }
         val additionalOptions = "{type:\"customized\", header:true, ignore_surrounding_space:false, trim:false}".exprValue()
-        val actual = function.callWithOptional(env, args, additionalOptions)
+        val actual = function.callWithOptional(session, args, additionalOptions)
         val expected = "[{id:\" 1 \",name:\" Bob \",balance:\" 10000.00 \"}]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -299,11 +284,10 @@ class ReadFileTest {
 
         val args = listOf("\"${dirPath("customized.csv")}\"").map { it.exprValue() }
         val additionalOptions = "{type:\"customized\", header:true, line_breaker:'\\\r\\\n'}".exprValue()
-        val actual = function.callWithOptional(env, args, additionalOptions)
+        val actual = function.callWithOptional(session, args, additionalOptions)
         val expected = "[{id:\"1\",name:\"Bob\",balance:\"10000.00\"}]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -312,11 +296,10 @@ class ReadFileTest {
 
         val args = listOf("\"${dirPath("customized.csv")}\"").map { it.exprValue() }
         val additionalOptions = "{type:\"customized\", header:true, escape:'/'}".exprValue()
-        val actual = function.callWithOptional(env, args, additionalOptions)
+        val actual = function.callWithOptional(session, args, additionalOptions)
         val expected = "[{id:\"\\\"1\",name:\"Bob\",balance:\"10000.00\"}]"
 
         assertValues(expected, actual)
-
     }
 
     @Test
@@ -325,10 +308,9 @@ class ReadFileTest {
 
         val args = listOf("\"${dirPath("customized.csv")}\"").map { it.exprValue() }
         val additionalOptions = "{type:\"customized\", header:true, quote:\"'\"}".exprValue()
-        val actual = function.callWithOptional(env, args, additionalOptions)
+        val actual = function.callWithOptional(session, args, additionalOptions)
         val expected = "[{id:\"1,\",name:\"Bob\",balance:\"10000.00\"}]"
 
         assertValues(expected, actual)
-
     }
 }
