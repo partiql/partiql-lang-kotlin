@@ -9,6 +9,8 @@ import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
 import kotlin.coroutines.resume
 
 /**
+ * Builds a [RelationIterator] that yields after every step in evaluating a relational operator.
+ *
  * This is inspired heavily by Kotlin's [sequence] but for [RelationIterator] instead of [Sequence].
  */
 internal fun relation(

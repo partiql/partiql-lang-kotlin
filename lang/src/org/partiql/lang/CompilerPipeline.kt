@@ -42,7 +42,7 @@ import org.partiql.planner.ResolutionResult
 import org.partiql.planner.createQueryPlanner
 
 /**
- * Contains all of the information needed for processing steps.
+ * Contains all information needed for processing steps.
  */
 data class StepContext(
     /** The instance of [ExprValueFactory] that is used by the pipeline. */

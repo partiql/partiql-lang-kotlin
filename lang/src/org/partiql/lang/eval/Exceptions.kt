@@ -125,6 +125,11 @@ fun fillErrorContext(errorContext: PropertyValueMap, metaContainer: MetaContaine
     }
 }
 
+
+/**
+ * Returns the [SourceLocationMeta] as an error context if the [SourceLocationMeta.TAG] exists in the passed
+ * [metaContainer]. Otherwise, returns an empty map.
+ */
 fun errorContextFrom(metaContainer: MetaContainer?): PropertyValueMap {
     if (metaContainer == null) {
         return PropertyValueMap()

@@ -12,7 +12,7 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.lang.eval
+package org.partiql.lang.eval.physical
 
 import com.amazon.ion.IonString
 import com.amazon.ion.IonValue
@@ -23,20 +23,68 @@ import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.ast.toPartiQlMetaContainer
 import org.partiql.lang.domains.PartiqlPhysical
+import org.partiql.lang.eval.errorContextFrom
 import org.partiql.lang.domains.staticType
 import org.partiql.lang.domains.toBindingCase
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.errors.UNBOUND_QUOTED_IDENTIFIER_HINT
+import org.partiql.lang.eval.AnyOfCastTable
+import org.partiql.lang.eval.Arguments
+import org.partiql.lang.eval.BaseExprValue
+import org.partiql.lang.eval.BindingCase
+import org.partiql.lang.eval.BindingName
+import org.partiql.lang.eval.CastFunc
+import org.partiql.lang.eval.CompileOptions
+import org.partiql.lang.eval.DEFAULT_COMPARATOR
+import org.partiql.lang.eval.EvaluationSession
+import org.partiql.lang.eval.createErrorSignaler
+import org.partiql.lang.eval.createThunkFactory
+import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.ErrorDetails
+import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.Expression
+import org.partiql.lang.eval.ExprFunction
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.Named
+import org.partiql.lang.eval.ProjectionIterationBehavior
+import org.partiql.lang.eval.RequiredArgs
+import org.partiql.lang.eval.RequiredWithOptional
+import org.partiql.lang.eval.RequiredWithVariadic
+import org.partiql.lang.eval.SequenceExprValue
+import org.partiql.lang.eval.StructOrdering
+import org.partiql.lang.eval.ThunkEnv
+import org.partiql.lang.eval.ThunkEnvValue
+import org.partiql.lang.eval.TypedOpBehavior
+import org.partiql.lang.eval.TypingMode
+import org.partiql.lang.eval.UndefinedVariableBehavior
+import org.partiql.lang.eval.booleanValue
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
+import org.partiql.lang.eval.call
+import org.partiql.lang.eval.cast
+import org.partiql.lang.eval.compareTo
+import org.partiql.lang.eval.err
+import org.partiql.lang.eval.errInvalidArgumentType
+import org.partiql.lang.eval.errNoContext
+import org.partiql.lang.eval.errorIf
+import org.partiql.lang.eval.exprEquals
+import org.partiql.lang.eval.fillErrorContext
+import org.partiql.lang.eval.isNotUnknown
+import org.partiql.lang.eval.isUnknown
 import org.partiql.lang.eval.like.PatternPart
 import org.partiql.lang.eval.like.executePattern
 import org.partiql.lang.eval.like.parsePattern
-import org.partiql.lang.eval.physical.PhysicalBexprToThunkConverter
-import org.partiql.lang.eval.physical.PhysicalExprToThunkConverter
-import org.partiql.lang.eval.physical.RelationThunkEnv
+import org.partiql.lang.eval.name
+import org.partiql.lang.eval.namedValue
+import org.partiql.lang.eval.numberValue
+import org.partiql.lang.eval.rangeOver
+import org.partiql.lang.eval.stringValue
+import org.partiql.lang.eval.syntheticColumnName
 import org.partiql.lang.eval.time.Time
+import org.partiql.lang.eval.unnamedValue
 import org.partiql.lang.eval.visitors.PartiqlPhysicalSanityValidator
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
@@ -67,7 +115,14 @@ import java.util.LinkedList
 import kotlin.collections.ArrayList
 
 /**
- * A basic compiler that converts an instance of [PartiqlPhysical] to an [Expression].
+ * A basic compiler that converts an instance of [PartiqlPhysical.Expr] to an [Expression].
+ *
+ * This is a modified copy of the legacy `EvaluatingCompiler` class, which is now legacy.
+ * The primary differences between this class an `EvaluatingCompiler` are:
+ *
+ * - All references to `PartiqlAst` are replaced with `PartiqlPhysical`.
+ * - `EvaluatingCompiler` compiles "monolithic" SFW queries--this class compiles relational
+ * operators (in concert with [PhysicalBexprToThunkConverter]).
  *
  * This implementation produces a "compiled" form consisting of context-threaded
  * code in the form of a tree of [ThunkEnv]s.  An overview of this technique can be found
@@ -78,16 +133,8 @@ import kotlin.collections.ArrayList
  * safe.
  *
  * [1]: https://www.complang.tuwien.ac.at/anton/lvas/sem06w/fest.pdf
- *
- * Note that this is not implemented in the pattern of a typical visitor pattern.  The visitor pattern isn't a good
- * match for all scenarios.  It's great for simple needs such as the types of checks performed or simple transformations
- * such as partial evaluation and transforming variable references to De Bruijn indices, however a compiler needs
- * much finer grain of control over exactly how and when each node is walked, visited, and transformed.
- *
- * @param functions A map of functions keyed by function name that will be available during compilation.
- * @param compileOptions Various options that effect how the source code is compiled.
  */
-internal class EvaluatingCompiler(
+internal class PhysicalExprToThunkConverterImpl(
     private val valueFactory: ExprValueFactory,
     private val functions: Map<String, ExprFunction>,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
@@ -228,8 +275,7 @@ internal class EvaluatingCompiler(
                     ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
                     errorContextFrom(metas).also {
                         it[Property.FEATURE_NAME] = expr.javaClass.canonicalName
-                    },
-                    internal = false
+                    }, internal = false
                 )
             }
             is PartiqlPhysical.Expr.BindingsToValues -> compileBindingsToValues(expr)
@@ -424,8 +470,7 @@ internal class EvaluatingCompiler(
                                         !validator(naryResult),
                                         ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
                                         { ErrorDetails(metas, "Integer overflow", errorContextFrom(metas)) },
-                                        { naryResult }
-                                    )
+                                        { naryResult })
                                 }
                             }
                             // If there is no IntType StaticType, can't validate the integer size either.
@@ -469,9 +514,9 @@ internal class EvaluatingCompiler(
         val exprThunk = compileAstExpr(expr.expr)
 
         val computeThunk = thunkFactory.thunkEnvOperands(metas, exprThunk) { _, value ->
-            // Invoking .numberValue() here makes this essentially just a type check
+            //Invoking .numberValue() here makes this essentially just a type check
             value.numberValue()
-            // Original value is returned unmodified.
+            //Original value is returned unmodified.
             value
         }
 
@@ -717,7 +762,7 @@ internal class EvaluatingCompiler(
                     val currValue = currThunk(env)
                     when {
                         currValue.isUnknown() -> hasUnknowns = true
-                        // Short circuit only if we encounter a known false value.
+                        //Short circuit only if we encounter a known false value.
                         !currValue.booleanValue() -> return@thunk valueFactory.newBoolean(false)
                     }
                 }
@@ -733,7 +778,7 @@ internal class EvaluatingCompiler(
                 argThunks.forEach { currThunk ->
                     val currValue = currThunk(env)
                     when (currValue.type) {
-                        // Short circuit only if we encounter a known false value.
+                        //Short circuit only if we encounter a known false value.
                         ExprValueType.BOOL -> if (!currValue.booleanValue()) return@thunk valueFactory.newBoolean(false)
                         ExprValueType.NULL -> hasNull = true
                         // type mismatch, return missing
@@ -784,7 +829,7 @@ internal class EvaluatingCompiler(
                 argThunks.forEach { currThunk ->
                     val currValue = currThunk(env)
                     when (currValue.type) {
-                        // Short circuit only if we encounter a known true value.
+                        //Short circuit only if we encounter a known true value.
                         ExprValueType.BOOL -> if (currValue.booleanValue()) return@thunk valueFactory.newBoolean(true)
                         ExprValueType.NULL -> hasNull = true
                         else -> hasMissing = true // type mismatch, return missing.
@@ -903,12 +948,12 @@ internal class EvaluatingCompiler(
         val computeThunk = when (func.signature.unknownArguments) {
             UnknownArguments.PROPAGATE -> thunkFactory.thunkEnvOperands(metas, funcArgThunks) { env, values ->
                 val checkedArgs = checkArgumentTypes(func.signature, values)
-                func.call(env.session, checkedArgs)
+                func.call(env, checkedArgs)
             }
             UnknownArguments.PASS_THRU -> thunkFactory.thunkEnv(metas) { env ->
                 val funcArgValues = funcArgThunks.map { it(env) }
                 val checkedArgs = checkArgumentTypes(func.signature, funcArgValues)
-                func.call(env.session, checkedArgs)
+                func.call(env, checkedArgs)
             }
         }
 
@@ -1121,7 +1166,7 @@ internal class EvaluatingCompiler(
                 locationMeta?.let { fillErrorContext(errorContext, it) }
 
                 throw EvaluationException(
-                    "Validation failure for $asType",
+                    "Validation failure for ${asType}",
                     ErrorCode.EVALUATOR_CAST_FAILED,
                     errorContext,
                     internal = false
@@ -1209,6 +1254,7 @@ internal class EvaluatingCompiler(
                         }
                     }
                 }
+
             } catch (e: EvaluationException) {
                 if (e.internal) {
                     throw e
@@ -1492,6 +1538,7 @@ internal class EvaluatingCompiler(
                                                 )
                                                 TypingMode.PERMISSIVE -> valueFactory.missingValue
                                             }
+
                                         }
                                     } ?: valueFactory.missingValue
                                 }
@@ -1553,8 +1600,7 @@ internal class EvaluatingCompiler(
                             }
                         }
                     }
-                }
-            )
+                })
         }
         return when (componentThunks.size) {
             1 -> componentThunks.first()
@@ -1661,14 +1707,14 @@ internal class EvaluatingCompiler(
                 val patternThunk = compileAstExpr(patternExpr)
                 when (escapeExpr) {
                     null -> {
-                        // thunk that re-compiles the DFA every evaluation without a custom escape sequence
+                        //thunk that re-compiles the DFA every evaluation without a custom escape sequence
                         thunkFactory.thunkEnvOperands(metas, valueThunk, patternThunk) { _, value, pattern ->
                             val pps = getPatternParts(pattern, null)
                             runPatternParts(value, pps)
                         }
                     }
                     else -> {
-                        // thunk that re-compiles the pattern every evaluation but *with* a custom escape sequence
+                        //thunk that re-compiles the pattern every evaluation but *with* a custom escape sequence
                         val escapeThunk = compileAstExpr(escapeExpr)
                         thunkFactory.thunkEnvOperands(
                             metas,
@@ -1726,7 +1772,7 @@ internal class EvaluatingCompiler(
 
         escape?.let {
             val escapeCharString = checkEscapeChar(escape, escapeLocationMeta)
-            val escapeCharCodePoint = escapeCharString.codePointAt(0) // escape is a string of length 1
+            val escapeCharCodePoint = escapeCharString.codePointAt(0)  // escape is a string of length 1
             val validEscapedChars = setOf('_'.toInt(), '%'.toInt(), escapeCharCodePoint)
             val iter = patternString.codePointSequence().iterator()
 
