@@ -15,7 +15,7 @@
 package org.partiql.lang.eval.builtins
 
 import com.amazon.ion.IonContainer
-import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
@@ -37,7 +37,7 @@ internal class SizeExprFunction(val valueFactory: ExprValueFactory) : ExprFuncti
         returnType = StaticType.INT
     )
 
-    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
         val ionContainer = required.first().ionValue as IonContainer
 
         return valueFactory.newInt(ionContainer.size)

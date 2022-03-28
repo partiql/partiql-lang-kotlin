@@ -16,7 +16,7 @@ package org.partiql.lang.eval.builtins
 
 import com.amazon.ion.Timestamp
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
@@ -69,10 +69,10 @@ internal class ExtractExprFunction(val valueFactory: ExprValueFactory) : ExprFun
 
     private fun Timestamp.minuteOffset() = (localOffset ?: 0) % SECONDS_PER_MINUTE
 
-    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
         return when {
             required[1].isUnknown() -> valueFactory.nullValue
-            else -> eval(env, required)
+            else -> eval(session, required)
         }
     }
 
@@ -127,7 +127,7 @@ internal class ExtractExprFunction(val valueFactory: ExprValueFactory) : ExprFun
         }
     }
 
-    private fun eval(env: Environment, args: List<ExprValue>): ExprValue {
+    private fun eval(session: EvaluationSession, args: List<ExprValue>): ExprValue {
         val dateTimePart = args[0].dateTimePartValue()
         val extractedValue = when (args[1].type) {
             ExprValueType.TIMESTAMP -> args[1].timestampValue().extractedValue(dateTimePart)

@@ -1,8 +1,8 @@
 package org.partiql.lang.eval.builtins
 
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.eval.Environment
 import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
@@ -29,12 +29,12 @@ internal class MakeTimeExprFunction(val valueFactory: ExprValueFactory) : ExprFu
         returnType = StaticType.TIME
     )
 
-    override fun callWithOptional(env: Environment, required: List<ExprValue>, opt: ExprValue): ExprValue {
+    override fun callWithOptional(session: EvaluationSession, required: List<ExprValue>, opt: ExprValue): ExprValue {
         val (hour, min, sec) = required
         return makeTime(hour.intValue(), min.intValue(), sec.bigDecimalValue(), opt.intValue())
     }
 
-    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
         val (hour, min, sec) = required
         return makeTime(hour.intValue(), min.intValue(), sec.bigDecimalValue(), null)
     }

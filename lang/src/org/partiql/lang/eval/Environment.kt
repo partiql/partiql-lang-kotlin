@@ -25,7 +25,7 @@ import java.util.TreeMap
  * @param session The evaluation session.
  * @param groups The map of [Group]s that is currently being built during query execution.
  */
-data class Environment(
+internal data class Environment(
     internal val locals: Bindings<ExprValue>,
     val current: Bindings<ExprValue> = locals,
     val session: EvaluationSession,

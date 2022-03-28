@@ -15,7 +15,7 @@
 package org.partiql.lang.eval.builtins
 
 import com.amazon.ion.system.IonSystemBuilder
-import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
@@ -62,7 +62,7 @@ internal fun createExists(valueFactory: ExprValueFactory): ExprFunction = object
         unknownArguments = UnknownArguments.PASS_THRU
     )
 
-    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue =
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue =
         valueFactory.newBoolean(required[0].any())
 }
 
@@ -73,8 +73,8 @@ internal fun createUtcNow(valueFactory: ExprValueFactory): ExprFunction = object
         returnType = StaticType.TIMESTAMP
     )
 
-    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue =
-        valueFactory.newTimestamp(env.session.now)
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue =
+        valueFactory.newTimestamp(session.now)
 }
 
 internal fun createCharacterLength(name: String, valueFactory: ExprValueFactory): ExprFunction =
@@ -89,7 +89,7 @@ internal fun createCharacterLength(name: String, valueFactory: ExprValueFactory)
                 )
             }
 
-        override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
+        override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
             val s = required.first().stringValue()
             return valueFactory.newInt(s.codePointCount(0, s.length))
         }
@@ -103,7 +103,7 @@ internal fun createUpper(valueFactory: ExprValueFactory): ExprFunction = object 
             returnType = StaticType.STRING
         )
 
-    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue =
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue =
         valueFactory.newString(required.first().stringValue().toUpperCase())
 }
 
@@ -115,6 +115,6 @@ internal fun createLower(valueFactory: ExprValueFactory): ExprFunction = object 
             returnType = StaticType.STRING
         )
 
-    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue =
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue =
         valueFactory.newString(required.first().stringValue().toLowerCase())
 }

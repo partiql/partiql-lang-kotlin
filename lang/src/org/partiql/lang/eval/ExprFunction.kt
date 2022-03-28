@@ -44,10 +44,10 @@ interface ExprFunction {
      * [EvaluatingCompiler] validates the arguments before calling [ExprFunction]s.
      * Hence the implementations are not required to deal with it.
      *
-     * @param env The calling environment.
+     * @param session The current [EvaluationSession].
      * @param required The required arguments.
      */
-    fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
+    fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
         // Deriving ExprFunctions must implement this if they have a valid call form including only required parameters
         errNoContext("Invalid implementation for ${signature.name}#call", ErrorCode.INTERNAL_ERROR, true)
     }
@@ -60,11 +60,11 @@ interface ExprFunction {
      * [EvaluatingCompiler] validates the arguments before calling [ExprFunction]s.
      * Hence the implementations are not required to deal with it.
      *
-     * @param env The calling environment.
+     * @param session The current [EvaluationSession].
      * @param required The required arguments.
      * @param opt The optional arguments.
      */
-    fun callWithOptional(env: Environment, required: List<ExprValue>, opt: ExprValue): ExprValue {
+    fun callWithOptional(session: EvaluationSession, required: List<ExprValue>, opt: ExprValue): ExprValue {
         // Deriving ExprFunctions must implement this if they have a valid call form including required parameters and optional
         errNoContext("Invalid implementation for ${signature.name}#call", ErrorCode.INTERNAL_ERROR, true)
     }
@@ -77,11 +77,11 @@ interface ExprFunction {
      * [EvaluatingCompiler] validates the arguments before calling [ExprFunction]s.
      * Hence the implementations are not required to deal with it.
      *
-     * @param env The calling environment.
+     * @param session The current [EvaluationSession].
      * @param required The required arguments.
      * @param variadic The variadic arguments.
      */
-    fun callWithVariadic(env: Environment, required: List<ExprValue>, variadic: List<ExprValue>): ExprValue {
+    fun callWithVariadic(session: EvaluationSession, required: List<ExprValue>, variadic: List<ExprValue>): ExprValue {
         // Deriving ExprFunctions must implement this if they have a valid call form including required parameters and variadic
         errNoContext("Invalid implementation for ${signature.name}#call", ErrorCode.INTERNAL_ERROR, true)
     }
@@ -95,12 +95,12 @@ interface ExprFunction {
  * [EvaluatingCompiler] validates the arguments before calling [ExprFunction]s.
  * Hence the implementations are not required to deal with it.
  *
- * @param env The calling environment.
+ * @param session The current [EvaluationSession].
  * @param args The argument list.
  */
-fun ExprFunction.call(env: Environment, args: Arguments): ExprValue =
+fun ExprFunction.call(session: EvaluationSession, args: Arguments): ExprValue =
     when (args) {
-        is RequiredArgs -> callWithRequired(env, args.required)
-        is RequiredWithOptional -> callWithOptional(env, args.required, args.opt)
-        is RequiredWithVariadic -> callWithVariadic(env, args.required, args.variadic)
+        is RequiredArgs -> callWithRequired(session, args.required)
+        is RequiredWithOptional -> callWithOptional(session, args.required, args.opt)
+        is RequiredWithVariadic -> callWithVariadic(session, args.required, args.variadic)
     }

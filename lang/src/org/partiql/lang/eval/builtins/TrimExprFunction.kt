@@ -15,7 +15,7 @@
 package org.partiql.lang.eval.builtins
 
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
@@ -147,8 +147,8 @@ internal class TrimExprFunction(private val valueFactory: ExprValueFactory) : Ex
         return trim(trimSpec, toRemove.codePoints(), sourceString.codePoints())
     }
 
-    override fun callWithRequired(env: Environment, required: List<ExprValue>) = trim1Arg(required[0])
-    override fun callWithVariadic(env: Environment, required: List<ExprValue>, variadic: List<ExprValue>): ExprValue {
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>) = trim1Arg(required[0])
+    override fun callWithVariadic(session: EvaluationSession, required: List<ExprValue>, variadic: List<ExprValue>): ExprValue {
         return when (variadic.size) {
             0 -> trim1Arg(required[0])
             1 -> trim2Arg(required[0], variadic[0])

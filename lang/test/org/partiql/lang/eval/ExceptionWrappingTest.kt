@@ -19,13 +19,13 @@ class ExceptionWrappingTest {
         override val signature: FunctionSignature
             get() = FunctionSignature("throw_illegal_state_exception", listOf(), returnType = StaticType.ANY)
 
-        override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
+        override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
             throw IllegalStateException("Intentionally throw an IllegalStateException")
         }
     }
 
     private val throwSemanticExceptionExprFunction = object : ExprFunction {
-        override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue {
+        override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
             throw SemanticException("Intentionally throw a SemanticException", ErrorCode.SEMANTIC_AMBIGUOUS_BINDING, null)
         }
 

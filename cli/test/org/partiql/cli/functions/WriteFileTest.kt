@@ -19,8 +19,6 @@ import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
-import org.partiql.lang.eval.Bindings
-import org.partiql.lang.eval.Environment
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValueFactory
 import java.io.File
@@ -29,10 +27,7 @@ class WriteFileTest {
     private val ion = IonSystemBuilder.standard().build()
     private val valueFactory = ExprValueFactory.standard(ion)
     private val function = WriteFile(valueFactory)
-    private val env = Environment(
-        locals = Bindings.empty(),
-        session = EvaluationSession.standard()
-    )
+    private val session = EvaluationSession.standard()
 
     private fun String.exprValue() = valueFactory.newFromIonValue(ion.singleValue(this))
     private fun readFile(path: String) = File(dirPath(path)).readText()
@@ -52,7 +47,7 @@ class WriteFileTest {
     @Test
     fun writeIonAsDefault() {
         val args = listOf(""" "${dirPath("data.ion")}" """, "[1, 2]").map { it.exprValue() }
-        function.callWithRequired(env, args).ionValue
+        function.callWithRequired(session, args).ionValue
 
         val expected = "1 2"
 
@@ -63,7 +58,7 @@ class WriteFileTest {
     fun readIon() {
         val args = listOf(""" "${dirPath("data1.ion")}" """, "[1, 2]").map { it.exprValue() }
         val additionalOptions = """{type: "ion"}""".exprValue()
-        function.callWithOptional(env, args, additionalOptions).ionValue
+        function.callWithOptional(session, args, additionalOptions).ionValue
 
         val expected = "1 2"
 

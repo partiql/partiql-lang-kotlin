@@ -15,7 +15,7 @@
 package org.partiql.lang.eval.builtins
 
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
@@ -102,10 +102,10 @@ internal class SubstringExprFunction(private val valueFactory: ExprValueFactory)
         returnType = StaticType.STRING
     )
 
-    override fun callWithRequired(env: Environment, required: List<ExprValue>): ExprValue =
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue =
         substring(required[0].stringValue(), required[1].intValue(), null)
 
-    override fun callWithOptional(env: Environment, required: List<ExprValue>, opt: ExprValue): ExprValue {
+    override fun callWithOptional(session: EvaluationSession, required: List<ExprValue>, opt: ExprValue): ExprValue {
         val quantity = opt.intValue()
         if (quantity < 0) {
             errNoContext("Argument 3 of substring has to be greater than 0.", errorCode = ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_FUNC_CALL, internal = false)
