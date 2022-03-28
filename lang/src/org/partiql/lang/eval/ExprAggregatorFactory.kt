@@ -19,7 +19,7 @@ package org.partiql.lang.eval
  *
  * This is the entry point for aggregate function definitions in the evaluator.
  */
-interface ExprAggregatorFactory {
+internal interface ExprAggregatorFactory {
     companion object {
         fun over(func: () -> ExprAggregator): ExprAggregatorFactory =
             object : ExprAggregatorFactory {

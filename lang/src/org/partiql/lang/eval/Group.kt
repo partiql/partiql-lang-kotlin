@@ -17,6 +17,6 @@ package org.partiql.lang.eval
 /**
  * Defines a group and tracks the values of each group as they are processed into a final result.
  */
-class Group(val key: ExprValue, val registers: RegisterBank) {
+internal class Group(val key: ExprValue, val registers: RegisterBank) {
     val groupValues: MutableList<ExprValue> = ArrayList()
 }
