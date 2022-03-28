@@ -37,6 +37,9 @@ import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.CastFunc
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.DEFAULT_COMPARATOR
+import org.partiql.lang.eval.EvaluationSession
+import org.partiql.lang.eval.createErrorSignaler
+import org.partiql.lang.eval.createThunkFactory
 import org.partiql.lang.eval.Environment
 import org.partiql.lang.eval.ErrorDetails
 import org.partiql.lang.eval.EvaluationException
@@ -53,7 +56,6 @@ import org.partiql.lang.eval.RequiredWithOptional
 import org.partiql.lang.eval.RequiredWithVariadic
 import org.partiql.lang.eval.SequenceExprValue
 import org.partiql.lang.eval.StructOrdering
-import org.partiql.lang.eval.ThunkEnv
 import org.partiql.lang.eval.ThunkEnvValue
 import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.TypingMode
@@ -125,7 +127,7 @@ import kotlin.collections.ArrayList
  * operators (in concert with [PhysicalBexprToThunkConverter]).
  *
  * This implementation produces a "compiled" form consisting of context-threaded
- * code in the form of a tree of [ThunkEnv]s.  An overview of this technique can be found
+ * code in the form of a tree of [PhysicalThunkEnv]s.  An overview of this technique can be found
  * [here][1].
  *
  * **Note:** *threaded* in this context is used in how the code gets *threaded* together for
@@ -142,7 +144,7 @@ internal class PhysicalExprToThunkConverterImpl(
     private val compileOptions: CompileOptions = CompileOptions.standard()
 ) : PhysicalExprToThunkConverter {
     private val errorSignaler = compileOptions.typingMode.createErrorSignaler(valueFactory)
-    private val thunkFactory = compileOptions.typingMode.createThunkFactory(compileOptions, valueFactory)
+    private val thunkFactory = compileOptions.typingMode.createThunkFactory<Environment>(compileOptions, valueFactory)
 
     private fun Number.exprValue(): ExprValue = when (this) {
         is Int -> valueFactory.newInt(this)
@@ -189,21 +191,21 @@ internal class PhysicalExprToThunkConverterImpl(
         }
     }
 
-    override fun convert(expr: PartiqlPhysical.Expr): ThunkEnv = this.compileAstExpr(expr)
+    override fun convert(expr: PartiqlPhysical.Expr): PhysicalThunkEnv = this.compileAstExpr(expr)
 
     /**
-     * Compiles the specified [PartiqlPhysical.Statement] into a [ThunkEnv].
+     * Compiles the specified [PartiqlPhysical.Statement] into a [PhysicalThunkEnv].
      *
      * This function will [InterruptedException] if [Thread.interrupted] has been set.
      */
-    private fun compileAstStatement(ast: PartiqlPhysical.Statement): ThunkEnv {
+    private fun compileAstStatement(ast: PartiqlPhysical.Statement): PhysicalThunkEnv {
         return when (ast) {
             is PartiqlPhysical.Statement.Query -> compileAstExpr(ast.expr)
             is PartiqlPhysical.Statement.Exec -> compileExec(ast)
         }
     }
 
-    private fun compileAstExpr(expr: PartiqlPhysical.Expr): ThunkEnv {
+    private fun compileAstExpr(expr: PartiqlPhysical.Expr): PhysicalThunkEnv {
         checkThreadInterrupted()
         val metas = expr.metas
 
@@ -284,7 +286,7 @@ internal class PhysicalExprToThunkConverterImpl(
         }
     }
 
-    private fun compileMergeStruct(expr: PartiqlPhysical.Expr.MergeStruct): ThunkEnv {
+    private fun compileMergeStruct(expr: PartiqlPhysical.Expr.MergeStruct): PhysicalThunkEnv {
         val structParts = compileStructParts(expr.parts)
 
         val ordering = if (expr.parts.none { it is PartiqlPhysical.StructPart.StructFields })
@@ -346,7 +348,7 @@ internal class PhysicalExprToThunkConverterImpl(
             }
         }
 
-    private fun compileBindingsToValues(expr: PartiqlPhysical.Expr.BindingsToValues): ThunkEnv {
+    private fun compileBindingsToValues(expr: PartiqlPhysical.Expr.BindingsToValues): PhysicalThunkEnv {
         val mapThunk = compileAstExpr(expr.exp)
         val bexprThunk: RelationThunkEnv = PhysicalBexprToThunkConverter(this, thunkFactory.valueFactory)
             .convert(expr.query)
@@ -364,7 +366,7 @@ internal class PhysicalExprToThunkConverterImpl(
 
     private fun compileAstExprs(args: List<PartiqlPhysical.Expr>) = args.map { compileAstExpr(it) }
 
-    private fun compileNullIf(expr: PartiqlPhysical.Expr.NullIf, metas: MetaContainer): ThunkEnv {
+    private fun compileNullIf(expr: PartiqlPhysical.Expr.NullIf, metas: MetaContainer): PhysicalThunkEnv {
         val expr1Thunk = compileAstExpr(expr.expr1)
         val expr2Thunk = compileAstExpr(expr.expr2)
 
@@ -379,7 +381,7 @@ internal class PhysicalExprToThunkConverterImpl(
         }
     }
 
-    private fun compileCoalesce(expr: PartiqlPhysical.Expr.Coalesce, metas: MetaContainer): ThunkEnv {
+    private fun compileCoalesce(expr: PartiqlPhysical.Expr.Coalesce, metas: MetaContainer): PhysicalThunkEnv {
         val argThunks = compileAstExprs(expr.args)
 
         return thunkFactory.thunkEnv(metas) { env ->
@@ -437,7 +439,7 @@ internal class PhysicalExprToThunkConverterImpl(
     /**
      *  For operators which could return integer type, check integer overflow in case of [TypingMode.PERMISSIVE].
      */
-    private fun resolveIntConstraint(computeThunk: ThunkEnv, metas: MetaContainer): ThunkEnv =
+    private fun resolveIntConstraint(computeThunk: PhysicalThunkEnv, metas: MetaContainer): PhysicalThunkEnv =
         when (val staticTypes = metas.staticType?.type?.getTypes()) {
             // No staticType, can't validate integer size.
             null -> computeThunk
@@ -484,7 +486,7 @@ internal class PhysicalExprToThunkConverterImpl(
             }
         }
 
-    private fun compilePlus(expr: PartiqlPhysical.Expr.Plus, metas: MetaContainer): ThunkEnv {
+    private fun compilePlus(expr: PartiqlPhysical.Expr.Plus, metas: MetaContainer): PhysicalThunkEnv {
         if (expr.operands.size < 2) {
             error("Internal Error: PartiqlPhysical.Expr.Plus must have at least 2 arguments")
         }
@@ -498,7 +500,7 @@ internal class PhysicalExprToThunkConverterImpl(
         return resolveIntConstraint(computeThunk, metas)
     }
 
-    private fun compileMinus(expr: PartiqlPhysical.Expr.Minus, metas: MetaContainer): ThunkEnv {
+    private fun compileMinus(expr: PartiqlPhysical.Expr.Minus, metas: MetaContainer): PhysicalThunkEnv {
         if (expr.operands.size < 2) {
             error("Internal Error: PartiqlPhysical.Expr.Minus must have at least 2 arguments")
         }
@@ -512,7 +514,7 @@ internal class PhysicalExprToThunkConverterImpl(
         return resolveIntConstraint(computeThunk, metas)
     }
 
-    private fun compilePos(expr: PartiqlPhysical.Expr.Pos, metas: MetaContainer): ThunkEnv {
+    private fun compilePos(expr: PartiqlPhysical.Expr.Pos, metas: MetaContainer): PhysicalThunkEnv {
         val exprThunk = compileAstExpr(expr.expr)
 
         val computeThunk = thunkFactory.thunkEnvOperands(metas, exprThunk) { _, value ->
@@ -525,7 +527,7 @@ internal class PhysicalExprToThunkConverterImpl(
         return resolveIntConstraint(computeThunk, metas)
     }
 
-    private fun compileNeg(expr: PartiqlPhysical.Expr.Neg, metas: MetaContainer): ThunkEnv {
+    private fun compileNeg(expr: PartiqlPhysical.Expr.Neg, metas: MetaContainer): PhysicalThunkEnv {
         val exprThunk = compileAstExpr(expr.expr)
 
         val computeThunk = thunkFactory.thunkEnvOperands(metas, exprThunk) { _, value ->
@@ -535,7 +537,7 @@ internal class PhysicalExprToThunkConverterImpl(
         return resolveIntConstraint(computeThunk, metas)
     }
 
-    private fun compileTimes(expr: PartiqlPhysical.Expr.Times, metas: MetaContainer): ThunkEnv {
+    private fun compileTimes(expr: PartiqlPhysical.Expr.Times, metas: MetaContainer): PhysicalThunkEnv {
         val argThunks = compileAstExprs(expr.operands)
 
         val computeThunk = thunkFactory.thunkFold(metas, argThunks) { lValue, rValue ->
@@ -545,7 +547,7 @@ internal class PhysicalExprToThunkConverterImpl(
         return resolveIntConstraint(computeThunk, metas)
     }
 
-    private fun compileDivide(expr: PartiqlPhysical.Expr.Divide, metas: MetaContainer): ThunkEnv {
+    private fun compileDivide(expr: PartiqlPhysical.Expr.Divide, metas: MetaContainer): PhysicalThunkEnv {
         val argThunks = compileAstExprs(expr.operands)
 
         val computeThunk = thunkFactory.thunkFold(metas, argThunks) { lValue, rValue ->
@@ -573,7 +575,7 @@ internal class PhysicalExprToThunkConverterImpl(
         return resolveIntConstraint(computeThunk, metas)
     }
 
-    private fun compileModulo(expr: PartiqlPhysical.Expr.Modulo, metas: MetaContainer): ThunkEnv {
+    private fun compileModulo(expr: PartiqlPhysical.Expr.Modulo, metas: MetaContainer): PhysicalThunkEnv {
         val argThunks = compileAstExprs(expr.operands)
 
         val computeThunk = thunkFactory.thunkFold(metas, argThunks) { lValue, rValue ->
@@ -588,7 +590,7 @@ internal class PhysicalExprToThunkConverterImpl(
         return resolveIntConstraint(computeThunk, metas)
     }
 
-    private fun compileEq(expr: PartiqlPhysical.Expr.Eq, metas: MetaContainer): ThunkEnv {
+    private fun compileEq(expr: PartiqlPhysical.Expr.Eq, metas: MetaContainer): PhysicalThunkEnv {
         val argThunks = compileAstExprs(expr.operands)
 
         return thunkFactory.thunkAndMap(metas, argThunks) { lValue, rValue ->
@@ -596,7 +598,7 @@ internal class PhysicalExprToThunkConverterImpl(
         }
     }
 
-    private fun compileNe(expr: PartiqlPhysical.Expr.Ne, metas: MetaContainer): ThunkEnv {
+    private fun compileNe(expr: PartiqlPhysical.Expr.Ne, metas: MetaContainer): PhysicalThunkEnv {
         val argThunks = compileAstExprs(expr.operands)
 
         return thunkFactory.thunkFold(metas, argThunks) { lValue, rValue ->
@@ -604,31 +606,31 @@ internal class PhysicalExprToThunkConverterImpl(
         }
     }
 
-    private fun compileLt(expr: PartiqlPhysical.Expr.Lt, metas: MetaContainer): ThunkEnv {
+    private fun compileLt(expr: PartiqlPhysical.Expr.Lt, metas: MetaContainer): PhysicalThunkEnv {
         val argThunks = compileAstExprs(expr.operands)
 
         return thunkFactory.thunkAndMap(metas, argThunks) { lValue, rValue -> lValue < rValue }
     }
 
-    private fun compileLte(expr: PartiqlPhysical.Expr.Lte, metas: MetaContainer): ThunkEnv {
+    private fun compileLte(expr: PartiqlPhysical.Expr.Lte, metas: MetaContainer): PhysicalThunkEnv {
         val argThunks = compileAstExprs(expr.operands)
 
         return thunkFactory.thunkAndMap(metas, argThunks) { lValue, rValue -> lValue <= rValue }
     }
 
-    private fun compileGt(expr: PartiqlPhysical.Expr.Gt, metas: MetaContainer): ThunkEnv {
+    private fun compileGt(expr: PartiqlPhysical.Expr.Gt, metas: MetaContainer): PhysicalThunkEnv {
         val argThunks = compileAstExprs(expr.operands)
 
         return thunkFactory.thunkAndMap(metas, argThunks) { lValue, rValue -> lValue > rValue }
     }
 
-    private fun compileGte(expr: PartiqlPhysical.Expr.Gte, metas: MetaContainer): ThunkEnv {
+    private fun compileGte(expr: PartiqlPhysical.Expr.Gte, metas: MetaContainer): PhysicalThunkEnv {
         val argThunks = compileAstExprs(expr.operands)
 
         return thunkFactory.thunkAndMap(metas, argThunks) { lValue, rValue -> lValue >= rValue }
     }
 
-    private fun compileBetween(expr: PartiqlPhysical.Expr.Between, metas: MetaContainer): ThunkEnv {
+    private fun compileBetween(expr: PartiqlPhysical.Expr.Between, metas: MetaContainer): PhysicalThunkEnv {
         val valueThunk = compileAstExpr(expr.value)
         val fromThunk = compileAstExpr(expr.from)
         val toThunk = compileAstExpr(expr.to)
@@ -654,14 +656,14 @@ internal class PhysicalExprToThunkConverterImpl(
      * `IN` is varies from the `OR` operator in that this behavior holds true when other types of expressions are
      * used on the right side of `IN` such as sub-queries and variables whose value is that of a list or bag.
      */
-    private fun compileIn(expr: PartiqlPhysical.Expr.InCollection, metas: MetaContainer): ThunkEnv {
+    private fun compileIn(expr: PartiqlPhysical.Expr.InCollection, metas: MetaContainer): PhysicalThunkEnv {
         val args = expr.operands
         val leftThunk = compileAstExpr(args[0])
         val rightOp = args[1]
 
         fun isOptimizedCase(values: List<PartiqlPhysical.Expr>): Boolean = values.all { it is PartiqlPhysical.Expr.Lit && !it.value.isNull }
 
-        fun optimizedCase(values: List<PartiqlPhysical.Expr>): ThunkEnv {
+        fun optimizedCase(values: List<PartiqlPhysical.Expr>): PhysicalThunkEnv {
             // Put all the literals in the sequence into a pre-computed map to be checked later by the thunk.
             // If the left-hand value is one of these we can short-circuit with a result of TRUE.
             // This is the fastest possible case and allows for hundreds of literal values (or more) in the
@@ -744,7 +746,7 @@ internal class PhysicalExprToThunkConverterImpl(
         }
     }
 
-    private fun compileNot(expr: PartiqlPhysical.Expr.Not, metas: MetaContainer): ThunkEnv {
+    private fun compileNot(expr: PartiqlPhysical.Expr.Not, metas: MetaContainer): PhysicalThunkEnv {
         val argThunk = compileAstExpr(expr.expr)
 
         return thunkFactory.thunkEnvOperands(metas, argThunk) { _, value ->
@@ -752,7 +754,7 @@ internal class PhysicalExprToThunkConverterImpl(
         }
     }
 
-    private fun compileAnd(expr: PartiqlPhysical.Expr.And, metas: MetaContainer): ThunkEnv {
+    private fun compileAnd(expr: PartiqlPhysical.Expr.And, metas: MetaContainer): PhysicalThunkEnv {
         val argThunks = compileAstExprs(expr.operands)
 
         // can't use the null propagation supplied by [ThunkFactory.thunkEnv] here because AND short-circuits on
@@ -797,7 +799,7 @@ internal class PhysicalExprToThunkConverterImpl(
         }
     }
 
-    private fun compileOr(expr: PartiqlPhysical.Expr.Or, metas: MetaContainer): ThunkEnv {
+    private fun compileOr(expr: PartiqlPhysical.Expr.Or, metas: MetaContainer): PhysicalThunkEnv {
         val argThunks = compileAstExprs(expr.operands)
 
         // can't use the null propagation supplied by [ThunkFactory.thunkEnv] here because OR short-circuits on
@@ -847,7 +849,7 @@ internal class PhysicalExprToThunkConverterImpl(
         }
     }
 
-    private fun compileConcat(expr: PartiqlPhysical.Expr.Concat, metas: MetaContainer): ThunkEnv {
+    private fun compileConcat(expr: PartiqlPhysical.Expr.Concat, metas: MetaContainer): PhysicalThunkEnv {
         val argThunks = compileAstExprs(expr.operands)
 
         return thunkFactory.thunkFold(metas, argThunks) { lValue, rValue ->
@@ -870,7 +872,7 @@ internal class PhysicalExprToThunkConverterImpl(
         }
     }
 
-    private fun compileCall(expr: PartiqlPhysical.Expr.Call, metas: MetaContainer): ThunkEnv {
+    private fun compileCall(expr: PartiqlPhysical.Expr.Call, metas: MetaContainer): PhysicalThunkEnv {
         val funcArgThunks = compileAstExprs(expr.args)
         val func = functions[expr.funcName.text] ?: err(
             "No such function: ${expr.funcName.text}",
@@ -962,16 +964,16 @@ internal class PhysicalExprToThunkConverterImpl(
         return resolveIntConstraint(computeThunk, metas)
     }
 
-    private fun compileLit(expr: PartiqlPhysical.Expr.Lit, metas: MetaContainer): ThunkEnv {
+    private fun compileLit(expr: PartiqlPhysical.Expr.Lit, metas: MetaContainer): PhysicalThunkEnv {
         val value = valueFactory.newFromIonValue(expr.value.toIonValue(valueFactory.ion))
 
         return thunkFactory.thunkEnv(metas) { value }
     }
 
-    private fun compileMissing(metas: MetaContainer): ThunkEnv =
+    private fun compileMissing(metas: MetaContainer): PhysicalThunkEnv =
         thunkFactory.thunkEnv(metas) { valueFactory.missingValue }
 
-    private fun compileId(expr: PartiqlPhysical.Expr.Id): ThunkEnv {
+    private fun compileId(expr: PartiqlPhysical.Expr.Id): PhysicalThunkEnv {
         val bindingName = BindingName(expr.name.text, expr.case.toBindingCase())
         val searchThunks = expr.search.map { compileAstExpr(it) }.asSequence()
 
@@ -1015,21 +1017,21 @@ internal class PhysicalExprToThunkConverterImpl(
         UndefinedVariableBehavior.MISSING -> valueFactory.missingValue
     }
 
-    private fun compileGlobalId(expr: PartiqlPhysical.Expr.GlobalId): ThunkEnv =
+    private fun compileGlobalId(expr: PartiqlPhysical.Expr.GlobalId): PhysicalThunkEnv =
         thunkFactory.thunkEnv(expr.metas) { env ->
             val bindingName = BindingName(expr.uniqueId.text, BindingCase.SENSITIVE)
             env.session.globals[bindingName] ?: handleUndefinedVariable(bindingName, expr.metas)
         }
 
     @Suppress("UNUSED_PARAMETER")
-    private fun compileLocalId(expr: PartiqlPhysical.Expr.LocalId, metas: MetaContainer): ThunkEnv {
+    private fun compileLocalId(expr: PartiqlPhysical.Expr.LocalId, metas: MetaContainer): PhysicalThunkEnv {
         val localIndex = expr.index.value.toIntExact()
         return thunkFactory.thunkEnv(metas) { env ->
             env.registers[localIndex]
         }
     }
 
-    private fun compileParameter(expr: PartiqlPhysical.Expr.Parameter, metas: MetaContainer): ThunkEnv {
+    private fun compileParameter(expr: PartiqlPhysical.Expr.Parameter, metas: MetaContainer): PhysicalThunkEnv {
         val ordinal = expr.index.value.toInt()
         val index = ordinal - 1
 
@@ -1099,7 +1101,7 @@ internal class PhysicalExprToThunkConverterImpl(
         }
     }
 
-    private fun compileIs(expr: PartiqlPhysical.Expr.IsType, metas: MetaContainer): ThunkEnv {
+    private fun compileIs(expr: PartiqlPhysical.Expr.IsType, metas: MetaContainer): PhysicalThunkEnv {
         val expThunk = compileAstExpr(expr.value)
         val typedOpParameter = expr.type.toTypedOpParameter(customTypedOpParameters)
         if (typedOpParameter.staticType is AnyType) {
@@ -1138,7 +1140,7 @@ internal class PhysicalExprToThunkConverterImpl(
         }
     }
 
-    private fun compileCastHelper(value: PartiqlPhysical.Expr, asType: PartiqlPhysical.Type, metas: MetaContainer): ThunkEnv {
+    private fun compileCastHelper(value: PartiqlPhysical.Expr, asType: PartiqlPhysical.Type, metas: MetaContainer): PhysicalThunkEnv {
         val expThunk = compileAstExpr(value)
         val typedOpParameter = asType.toTypedOpParameter(customTypedOpParameters)
         if (typedOpParameter.staticType is AnyType) {
@@ -1191,7 +1193,7 @@ internal class PhysicalExprToThunkConverterImpl(
             }
         }
 
-        fun compileSingleTypeCast(singleType: SingleType): ThunkEnv {
+        fun compileSingleTypeCast(singleType: SingleType): PhysicalThunkEnv {
             val castFunc = singleTypeCastFunc(singleType)
             // We do not use thunkFactory here because we want to explicitly avoid
             // the optional evaluation-time type check for CAN_CAST below.
@@ -1203,7 +1205,7 @@ internal class PhysicalExprToThunkConverterImpl(
             }
         }
 
-        fun compileCast(type: StaticType): ThunkEnv = when (type) {
+        fun compileCast(type: StaticType): PhysicalThunkEnv = when (type) {
             is SingleType -> compileSingleTypeCast(type)
             is AnyOfType -> {
                 val locationMeta = metas.sourceLocationMeta
@@ -1227,10 +1229,10 @@ internal class PhysicalExprToThunkConverterImpl(
         return compileCast(typedOpParameter.staticType)
     }
 
-    private fun compileCast(expr: PartiqlPhysical.Expr.Cast, metas: MetaContainer): ThunkEnv =
+    private fun compileCast(expr: PartiqlPhysical.Expr.Cast, metas: MetaContainer): PhysicalThunkEnv =
         thunkFactory.thunkEnv(metas, compileCastHelper(expr.value, expr.asType, metas))
 
-    private fun compileCanCast(expr: PartiqlPhysical.Expr.CanCast, metas: MetaContainer): ThunkEnv {
+    private fun compileCanCast(expr: PartiqlPhysical.Expr.CanCast, metas: MetaContainer): PhysicalThunkEnv {
         val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters)
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
@@ -1265,7 +1267,7 @@ internal class PhysicalExprToThunkConverterImpl(
         }
     }
 
-    private fun compileCanLosslessCast(expr: PartiqlPhysical.Expr.CanLosslessCast, metas: MetaContainer): ThunkEnv {
+    private fun compileCanLosslessCast(expr: PartiqlPhysical.Expr.CanLosslessCast, metas: MetaContainer): PhysicalThunkEnv {
         val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters)
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
@@ -1336,7 +1338,7 @@ internal class PhysicalExprToThunkConverterImpl(
         }
     }
 
-    private fun compileSimpleCase(expr: PartiqlPhysical.Expr.SimpleCase, metas: MetaContainer): ThunkEnv {
+    private fun compileSimpleCase(expr: PartiqlPhysical.Expr.SimpleCase, metas: MetaContainer): PhysicalThunkEnv {
         val valueThunk = compileAstExpr(expr.expr)
         val branchThunks = expr.cases.pairs.map { Pair(compileAstExpr(it.first), compileAstExpr(it.second)) }
         val elseThunk = when (expr.default) {
@@ -1369,7 +1371,7 @@ internal class PhysicalExprToThunkConverterImpl(
         }
     }
 
-    private fun compileSearchedCase(expr: PartiqlPhysical.Expr.SearchedCase, metas: MetaContainer): ThunkEnv {
+    private fun compileSearchedCase(expr: PartiqlPhysical.Expr.SearchedCase, metas: MetaContainer): PhysicalThunkEnv {
         val branchThunks = expr.cases.pairs.map { compileAstExpr(it.first) to compileAstExpr(it.second) }
         val elseThunk = when (expr.default) {
             null -> thunkFactory.thunkEnv(metas) { valueFactory.nullValue }
@@ -1407,8 +1409,8 @@ internal class PhysicalExprToThunkConverterImpl(
         }
     }
 
-    private fun compileStruct(expr: PartiqlPhysical.Expr.Struct, metas: MetaContainer): ThunkEnv {
-        class StructFieldThunks(val nameThunk: ThunkEnv, val valueThunk: ThunkEnv)
+    private fun compileStruct(expr: PartiqlPhysical.Expr.Struct, metas: MetaContainer): PhysicalThunkEnv {
+        class StructFieldThunks(val nameThunk: PhysicalThunkEnv, val valueThunk: PhysicalThunkEnv)
 
         val fieldThunks = expr.fields.map {
             StructFieldThunks(compileAstExpr(it.first), compileAstExpr(it.second))
@@ -1445,7 +1447,7 @@ internal class PhysicalExprToThunkConverterImpl(
         }
     }
 
-    private fun compileSeq(seqType: ExprValueType, itemExprs: List<PartiqlPhysical.Expr>, metas: MetaContainer): ThunkEnv {
+    private fun compileSeq(seqType: ExprValueType, itemExprs: List<PartiqlPhysical.Expr>, metas: MetaContainer): PhysicalThunkEnv {
         require(seqType.isSequence) { "seqType must be a sequence!" }
 
         val itemThunks = compileAstExprs(itemExprs)
@@ -1473,9 +1475,9 @@ internal class PhysicalExprToThunkConverterImpl(
     }
 
     @Suppress("UNUSED_PARAMETER")
-    private fun compileCallAgg(expr: PartiqlPhysical.Expr.CallAgg, metas: MetaContainer): ThunkEnv = TODO("call_agg")
+    private fun compileCallAgg(expr: PartiqlPhysical.Expr.CallAgg, metas: MetaContainer): PhysicalThunkEnv = TODO("call_agg")
 
-    private fun compilePath(expr: PartiqlPhysical.Expr.Path, metas: MetaContainer): ThunkEnv {
+    private fun compilePath(expr: PartiqlPhysical.Expr.Path, metas: MetaContainer): PhysicalThunkEnv {
         val rootThunk = compileAstExpr(expr.root)
         val remainingComponents = LinkedList<PartiqlPhysical.PathStep>()
 
@@ -1628,7 +1630,7 @@ internal class PhysicalExprToThunkConverterImpl(
      *
      * @return a thunk that when provided with an environment evaluates the `LIKE` predicate
      */
-    private fun compileLike(expr: PartiqlPhysical.Expr.Like, metas: MetaContainer): ThunkEnv {
+    private fun compileLike(expr: PartiqlPhysical.Expr.Like, metas: MetaContainer): PhysicalThunkEnv {
         val valueExpr = expr.value
         val patternExpr = expr.pattern
         val escapeExpr = expr.escape
@@ -1840,7 +1842,7 @@ internal class PhysicalExprToThunkConverterImpl(
         return escapeChar
     }
 
-    private fun compileExec(node: PartiqlPhysical.Statement.Exec): ThunkEnv {
+    private fun compileExec(node: PartiqlPhysical.Statement.Exec): PhysicalThunkEnv {
         val metas = node.metas
         val procedureName = node.procedureName.text
         val procedure = procedures[procedureName] ?: err(
@@ -1887,7 +1889,7 @@ internal class PhysicalExprToThunkConverterImpl(
         }
     }
 
-    private fun compileDate(expr: PartiqlPhysical.Expr.Date, metas: MetaContainer): ThunkEnv =
+    private fun compileDate(expr: PartiqlPhysical.Expr.Date, metas: MetaContainer): PhysicalThunkEnv =
         thunkFactory.thunkEnv(metas) {
             valueFactory.newDate(
                 expr.year.value.toInt(),
@@ -1896,7 +1898,7 @@ internal class PhysicalExprToThunkConverterImpl(
             )
         }
 
-    private fun compileLitTime(expr: PartiqlPhysical.Expr.LitTime, metas: MetaContainer): ThunkEnv =
+    private fun compileLitTime(expr: PartiqlPhysical.Expr.LitTime, metas: MetaContainer): PhysicalThunkEnv =
         thunkFactory.thunkEnv(metas) {
             // Add the default time zone if the type "TIME WITH TIME ZONE" does not have an explicitly specified time zone.
             valueFactory.newTime(
@@ -1964,7 +1966,7 @@ private sealed class CompiledStructPart {
      * - `name` is "value"
      * - `thunk` is compiled expression, i.e. `a + b`
      */
-    class Field(val name: ExprValue, val thunk: ThunkEnv) : CompiledStructPart()
+    class Field(val name: ExprValue, val thunk: PhysicalThunkEnv) : CompiledStructPart()
 
     /**
      * Represents a wildcard ((path_project_all) node) expression to be projected into the final result.
@@ -1974,5 +1976,5 @@ private sealed class CompiledStructPart {
      * For `SELECT * FROM foo, bar, bat`, `exprThunks` would contain a compiled expression for each of `foo`, `bar` and
      * `bat`.
      */
-    class StructMerge(val thunks: List<ThunkEnv>) : CompiledStructPart()
+    class StructMerge(val thunks: List<PhysicalThunkEnv>) : CompiledStructPart()
 }

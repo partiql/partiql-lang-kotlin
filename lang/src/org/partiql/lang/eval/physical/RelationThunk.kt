@@ -4,7 +4,7 @@ import com.amazon.ionelement.api.MetaContainer
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
-import org.partiql.lang.eval.Environment
+import org.partiql.lang.eval.physical.Environment
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.errorContextFrom
 import org.partiql.lang.eval.fillErrorContext

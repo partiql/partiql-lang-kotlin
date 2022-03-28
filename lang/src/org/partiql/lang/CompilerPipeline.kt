@@ -15,10 +15,9 @@
 package org.partiql.lang
 
 import com.amazon.ion.IonSystem
-import org.partiql.lang.ast.passes.SemanticException
+import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.toAstStatement
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.errors.ProblemSeverity
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluatingCompiler
@@ -36,12 +35,9 @@ import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.interruptibleFold
-import org.partiql.planner.PlanningResult
-import org.partiql.planner.ResolutionResult
-import org.partiql.planner.createQueryPlanner
 
 /**
- * Contains all information needed for processing steps.
+ * Contains all of the information needed for processing steps.
  */
 data class StepContext(
     /** The instance of [ExprValueFactory] that is used by the pipeline. */
@@ -77,11 +73,6 @@ typealias ProcessingStep = (PartiqlAst.Statement, StepContext) -> PartiqlAst.Sta
  * The provided builder companion creates an instance of [CompilerPipeline] that is NOT thread safe and should NOT be
  * used to compile queries concurrently. If used in a multithreaded application, use one instance of [CompilerPipeline]
  * per thread.
- *
- * DL TODO:  what to do about this class?
- * DL TODO:   - it's not named correctly anymore since it does query planning too.
- * DL TODO:   - some of its passes are redundant with `QueryPlannerImpl`.
- * DL TODO:       - Fold query planner impl into this?  (possibly)
  */
 interface CompilerPipeline {
     val valueFactory: ExprValueFactory
@@ -112,10 +103,9 @@ interface CompilerPipeline {
     /** Compiles the specified PartiQL query using the configured parser. */
     fun compile(query: String): Expression
 
-    @Suppress("DEPRECATION")
     @Deprecated("ExprNode is deprecated. Please use PIG generated AST. ")
-    /** Compiles the specified [ExprNode] instance. */
-    fun compile(query: org.partiql.lang.ast.ExprNode): Expression
+        /** Compiles the specified [ExprNode] instance. */
+    fun compile(query: ExprNode): Expression
 
     /** Compiles the specified [PartiqlAst.Statement] instance. */
     fun compile(query: PartiqlAst.Statement): Expression
@@ -269,8 +259,7 @@ internal class CompilerPipelineImpl(
 
     override fun compile(query: String): Expression = compile(parser.parseAstStatement(query))
 
-    @Suppress("DEPRECATION")
-    override fun compile(query: org.partiql.lang.ast.ExprNode): Expression = compile(query.toAstStatement())
+    override fun compile(query: ExprNode): Expression = compile(query.toAstStatement())
 
     override fun compile(query: PartiqlAst.Statement): Expression {
         val context = StepContext(valueFactory, compileOptions, functions, procedures)
@@ -303,27 +292,7 @@ internal class CompilerPipelineImpl(
 
         val queryToCompile = transforms.transformStatement(preProcessedQuery)
 
-        val qp = createQueryPlanner(valueFactory.ion, allowUndefinedVariables = true) {
-            ResolutionResult.Undefined
-        }
-
-        // DL TODO: the "normalization" passes of the planner are redundant in this context.
-        // DL TODO: the other visitor transforms, i.e. the aggregate support, etc, are probably also not needed anymore
-        when (val result = qp.plan(queryToCompile)) {
-            is PlanningResult.Error -> {
-                // DL TODO:  this kinda is suboptimal because we're ignoring the warnings and picking only
-                // DL TODO:  first error.  What to do about it?
-                throw SemanticException(
-                    result.errors.firstOrNull {
-                        it.details.severity == ProblemSeverity.ERROR
-                    } ?: error("PlanningResult.Error did not include an error")
-                )
-            }
-            is PlanningResult.Success -> {
-                // println(result.physicalPlan)
-                return compiler.compile(result.physicalPlan)
-            }
-        }
+        return compiler.compile(queryToCompile)
     }
 
     internal fun executePreProcessingSteps(query: PartiqlAst.Statement, context: StepContext) = preProcessingSteps
