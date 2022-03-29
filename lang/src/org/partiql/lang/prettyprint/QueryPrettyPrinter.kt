@@ -18,12 +18,12 @@ import kotlin.math.abs
  * of the parsed tree
  */
 class QueryPrettyPrinter {
-    fun prettyPrintQuery(query: String): String {
-        val ion = IonSystemBuilder.standard().build()
-        val ast = SqlParser(ion).parseAstStatement(query)
-
-        return astToPrettyQuery(ast)
-    }
+    fun prettyPrintQuery(query: String): String =
+        astToPrettyQuery(
+            SqlParser(
+                IonSystemBuilder.standard().build()
+            ).parseAstStatement(query)
+        )
 
     fun astToPrettyQuery(ast: PartiqlAst.Statement): String {
         val sb = StringBuilder()
@@ -798,6 +798,7 @@ class QueryPrettyPrinter {
             is PartiqlAst.Type.TimeWithTimeZoneType -> sb.append("TIME WITH TIME ZONE")
             is PartiqlAst.Type.TimestampType -> sb.append("TIMESTAMP")
             is PartiqlAst.Type.TupleType -> sb.append("TUPLE")
+            // TODO: Support formatting CustomType
             is PartiqlAst.Type.CustomType -> error("CustomType is not supported yet. ")
         }
     }
