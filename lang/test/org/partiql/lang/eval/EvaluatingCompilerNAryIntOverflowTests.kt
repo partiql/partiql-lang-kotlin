@@ -10,9 +10,6 @@ import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.types.IntType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.ArgumentsProviderBase
-import org.partiql.planner.PlanningResult
-import org.partiql.planner.createFakeGlobalBindings
-import org.partiql.planner.createQueryPlanner
 
 /**
  * This class tests the runtime behavior of integer operations when we have [StaticType] information
@@ -28,14 +25,11 @@ import org.partiql.planner.createQueryPlanner
  *
  * TODO:  extend this test class to include other [ErrorMode](s).
  */
-@Suppress("DEPRECATION")
 class EvaluatingCompilerNAryIntOverflowTests : EvaluatorTestBase() {
 
     data class Variable(val name: String, val type: StaticType, val value: ExprValue)
 
     class Env(val globals: List<Variable>) {
-
-        val globalBindings = createFakeGlobalBindings(*globals.map { it.name to it.name }.toTypedArray())
 
         val typeBindings get() =
             object : Bindings<StaticType> {
@@ -191,11 +185,7 @@ class EvaluatingCompilerNAryIntOverflowTests : EvaluatorTestBase() {
             ).transformStatement(astStatement)
         }
 
-        val qp = createQueryPlanner(ion, allowUndefinedVariables = true, defaultEnv.globalBindings)
-        val planningResult = qp.plan(transformedAst) as? PlanningResult.Success ?: error("Planning should not fail")
-        val expression = compiler.compile(
-            planningResult.physicalPlan
-        )
+        val expression = compiler.compile(transformedAst)
         val session = EvaluationSession.build {
             globals(defaultEnv.valueBindings)
         }

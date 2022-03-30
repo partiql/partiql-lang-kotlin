@@ -3,6 +3,8 @@ package org.partiql.planner
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemDetails
+import org.partiql.lang.planner.GlobalBindings
+import org.partiql.lang.planner.ResolutionResult
 
 /**
  * Creates a fake implementation of [GlobalBindings] with the specified [globalVariableNames].

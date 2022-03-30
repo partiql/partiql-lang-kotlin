@@ -5,9 +5,7 @@ import com.amazon.ion.IonInt
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
-import org.partiql.lang.eval.physical.Environment
 import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.eval.ThunkEnv
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.errorContextFrom
 import org.partiql.lang.eval.numberValue
@@ -15,7 +13,7 @@ import org.partiql.lang.eval.numberValue
 // The functions in this file look very similar and so the temptation to DRY is quite strong....
 // However, there are enough subtle differences between them that avoiding the duplication isn't worth it.
 
-internal fun evalLimitRowCount(rowCountThunk: PhysicalThunkEnv, env: Environment, limitLocationMeta: SourceLocationMeta?): Long {
+internal fun evalLimitRowCount(rowCountThunk: PhysicalPlanThunk, env: EvaluatorState, limitLocationMeta: SourceLocationMeta?): Long {
     val limitExprValue = rowCountThunk(env)
 
     if (limitExprValue.type != ExprValueType.INT) {
@@ -62,7 +60,7 @@ internal fun evalLimitRowCount(rowCountThunk: PhysicalThunkEnv, env: Environment
     return limitValue
 }
 
-internal fun evalOffsetRowCount(rowCountThunk: PhysicalThunkEnv, env: Environment, offsetLocationMeta: SourceLocationMeta?): Long {
+internal fun evalOffsetRowCount(rowCountThunk: PhysicalPlanThunk, env: EvaluatorState, offsetLocationMeta: SourceLocationMeta?): Long {
     val offsetExprValue = rowCountThunk(env)
 
     if (offsetExprValue.type != ExprValueType.INT) {

@@ -1,5 +1,6 @@
-package org.partiql.planner.transforms
+package org.partiql.lang.planner.transforms
 
+import jdk.nashorn.internal.runtime.regexp.joni.exception.ErrorMessages
 import org.partiql.lang.errors.ProblemDetails
 import org.partiql.lang.errors.ProblemSeverity
 
@@ -17,6 +18,9 @@ sealed class PlanningProblemDetails(
     override val message: String get() = messageFormatter()
 
     data class ParseError(val parseErrorMessage: String) :
+        PlanningProblemDetails(ProblemSeverity.ERROR, { parseErrorMessage })
+
+    data class CompileError(val parseErrorMessage: String) :
         PlanningProblemDetails(ProblemSeverity.ERROR, { parseErrorMessage })
 
     data class UndefinedVariable(val variableName: String, val caseSensitive: Boolean) :

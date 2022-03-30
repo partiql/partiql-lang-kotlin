@@ -2,22 +2,16 @@ package org.partiql.lang.util.testdsl
 
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
-import org.junit.jupiter.api.fail
+import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.ION
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EVALUATOR_TEST_SUITE
-import org.partiql.lang.eval.EvaluatingCompiler
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
-import org.partiql.lang.eval.builtins.createBuiltinFunctions
 import org.partiql.lang.mockdb.MockDb
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.assertIonEquals
-import org.partiql.planner.GlobalBindings
-import org.partiql.planner.PlanningResult
-import org.partiql.planner.ResolutionResult
-import org.partiql.planner.createQueryPlanner
 
 /** Defines a test case for query evaluation. */
 data class IonResultTestCase(
@@ -67,25 +61,14 @@ data class IonResultTestCase(
             ExprNodeTestCase(name, SqlParser(ION).parseExprNode(sqlUnderTest))
         }
 }
-
 internal fun IonResultTestCase.runTestCase(
     valueFactory: ExprValueFactory,
     db: MockDb,
-    /**
-     * Determines if global variables from [MockDb] should be defined.
-     *
-     * When true, `(id <name> <case> <scope-qualifier>)` referencing global variables will be rewritten to
-     * `(global_id <unique-id>)`.  Otherwise, rewritten to
-     * `(dynamic_id <name> <case> <scope-qualifier> [<search-expr>])`).  The latter more accurately reflects legacy
-     * behavior, from a time when PartiQL did not have a query planner or the ability to resolve variables at compile
-     * time.
-     */
-    defineGlobals: Boolean = false,
-    compileOptionsBlock: (CompileOptions.Builder.() -> Unit)? = null
+    compileOptionsBlock: (CompileOptions.Builder.() -> Unit)? = null,
+    pipelineBlock: (CompilerPipeline.Builder.() -> Unit)? = null
+
 ) {
     fun runTheTest() {
-        println("Running test '${this.name}'")
-        println("SQL: ${this.sqlUnderTest}")
         val parser = SqlParser(ION)
 
         val astStatement = assertDoesNotThrow("Parsing the sql under test should not throw for test \"${this.name}\"") {
@@ -98,47 +81,18 @@ internal fun IonResultTestCase.runTestCase(
             expectedIonResult?.let { ION.singleValue(it) }
         }
 
-        val globalBindings = if (defineGlobals) {
-            GlobalBindings { bindingName ->
-                val result = db.globals.entries.firstOrNull { bindingName.isEquivalentTo(it.key) }
-                if (result != null) {
-                    // Note that the unique id is set to result.key (which is the actual name of the variable)
-                    // which *might* have different letter case than the [bindingName].
-                    ResolutionResult.GlobalVariable(result.key)
-                } else {
-                    ResolutionResult.Undefined
-                }
-            }
-        } else {
-            GlobalBindings { ResolutionResult.Undefined }
-        }
-
-        val plannerResult = assertDoesNotThrow("Planning the query should not throw for test \"${this.name}\"") {
-            val qp = createQueryPlanner(ION, allowUndefinedVariables = true, globalBindings)
-            qp.plan(astStatement)
-        }
-
-        val plannedQuery = when (plannerResult) {
-            is PlanningResult.Success -> plannerResult.physicalPlan
-            is PlanningResult.Error -> fail("Failed to plan query for tests \"${this.name}\"")
-        }
-
         val modifiedCompileOptions = when (compileOptionsBlock) {
             null -> compileOptions
             else -> CompileOptions.build { compileOptionsBlock() }
         }
 
-        // Uncomment to see query plan in test runner output.
-        // println(SexpAstPrettyPrinter.format(plannedQuery.toIonElement().asAnyElement().toIonValue(ION)))
+        val pipeline = CompilerPipeline.build(ION) pipelineBlock@{
+            compileOptions(modifiedCompileOptions)
+            pipelineBlock?.invoke(this)
+        }
 
         val expression = assertDoesNotThrow("Compiling the query should not throw for test \"${this.name}\"") {
-            EvaluatingCompiler(
-                valueFactory = valueFactory,
-                functions = createBuiltinFunctions(valueFactory).associateBy { it.signature.name },
-                customTypedOpParameters = emptyMap(),
-                procedures = emptyMap(),
-                compileOptions = modifiedCompileOptions
-            ).compile(plannedQuery)
+            pipeline.compile(astStatement)
         }
 
         val session = EvaluationSession.build {
@@ -153,7 +107,7 @@ internal fun IonResultTestCase.runTestCase(
             result to result.ionValue
         }
 
-        expectedResult?.let { assertIonEquals(it, ionValueResult, " for test \"${this.name}\", ") }
+        expectedResult?.let { assertIonEquals(it, ionValueResult, "for test \"${this.name}\", ") }
 
         assertDoesNotThrow("extraAssertions should not throw for test \"${this.name}\"") {
             extraAssertions?.invoke(exprValueResult, compileOptions)

@@ -1,4 +1,4 @@
-package org.partiql.planner.transforms
+package org.partiql.lang.planner.transforms
 
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.visitors.FromSourceAliasVisitorTransform

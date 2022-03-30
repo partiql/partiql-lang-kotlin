@@ -4,14 +4,13 @@ import com.amazon.ionelement.api.MetaContainer
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
-import org.partiql.lang.eval.physical.Environment
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.errorContextFrom
 import org.partiql.lang.eval.fillErrorContext
 import org.partiql.lang.eval.relation.RelationIterator
 
 /** A thunk that returns a [RelationIterator], which is the result of evaluating a relational operator. */
-internal typealias RelationThunkEnv = (Environment) -> RelationIterator
+internal typealias RelationThunkEnv = (EvaluatorState) -> RelationIterator
 
 /**
  * Invokes [t] with error handling like is supplied by [org.partiql.lang.eval.ThunkFactory].
@@ -21,7 +20,7 @@ internal typealias RelationThunkEnv = (Environment) -> RelationIterator
  */
 internal inline fun relationThunk(metas: MetaContainer, crossinline t: RelationThunkEnv): RelationThunkEnv {
     val sourceLocationMeta = metas[SourceLocationMeta.TAG] as? SourceLocationMeta
-    return { env: Environment ->
+    return { env: EvaluatorState ->
         try {
             t(env)
         } catch (e: EvaluationException) {

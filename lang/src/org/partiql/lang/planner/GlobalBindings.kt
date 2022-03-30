@@ -1,4 +1,4 @@
-package org.partiql.planner
+package org.partiql.lang.planner
 
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
@@ -43,3 +43,9 @@ fun interface GlobalBindings {
      */
     fun resolve(bindingName: BindingName): ResolutionResult
 }
+
+private val EMPTY = GlobalBindings { ResolutionResult.Undefined }
+
+/** Convenience function for obtaining an instance of [GlobalBindings] with no defined variables. */
+fun emptyGlobalBindings(): GlobalBindings = EMPTY
+

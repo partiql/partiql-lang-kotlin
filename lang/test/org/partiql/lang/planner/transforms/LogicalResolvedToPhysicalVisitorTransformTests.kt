@@ -6,6 +6,8 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.domains.PartiqlLogicalResolved
 import org.partiql.lang.domains.PartiqlPhysical
+import org.partiql.lang.planner.transforms.DEFAULT_IMPL
+import org.partiql.lang.planner.transforms.LogicalResolvedToPhysicalVisitorTransform
 import org.partiql.lang.util.ArgumentsProviderBase
 
 class LogicalResolvedToPhysicalVisitorTransformTests {

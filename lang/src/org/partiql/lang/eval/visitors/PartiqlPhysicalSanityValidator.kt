@@ -16,6 +16,7 @@ import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.errorContextFrom
+import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.pig.runtime.LongPrimitive
 
 /**
@@ -25,14 +26,7 @@ import org.partiql.pig.runtime.LongPrimitive
  *
  * Any exception thrown by this class should always be considered an indication of a bug:
  */
-class PartiqlPhysicalSanityValidator : PartiqlPhysical.Visitor() {
-
-    private var compileOptions = CompileOptions.standard()
-
-    fun validate(statement: PartiqlPhysical.Statement, compileOptions: CompileOptions = CompileOptions.standard()) {
-        this.compileOptions = compileOptions
-        this.walkStatement(statement)
-    }
+class PartiqlPhysicalSanityValidator(val evaluatorOptions: EvaluatorOptions) : PartiqlPhysical.Visitor() {
 
     override fun visitExprLit(node: PartiqlPhysical.Expr.Lit) {
         val ionValue = node.value
@@ -48,7 +42,7 @@ class PartiqlPhysicalSanityValidator : PartiqlPhysical.Visitor() {
     }
 
     private fun validateDecimalOrNumericType(scale: LongPrimitive?, precision: LongPrimitive?, metas: MetaContainer) {
-        if (scale != null && precision != null && compileOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS) {
+        if (scale != null && precision != null && evaluatorOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS) {
             if (scale.value !in 0..precision.value) {
                 err(
                     "Scale ${scale.value} should be between 0 and precision ${precision.value}",

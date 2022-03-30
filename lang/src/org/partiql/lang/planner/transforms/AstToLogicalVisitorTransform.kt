@@ -1,4 +1,4 @@
-package org.partiql.planner.transforms
+package org.partiql.lang.planner.transforms
 
 import com.amazon.ionelement.api.ionBool
 import org.partiql.lang.domains.PartiqlAst

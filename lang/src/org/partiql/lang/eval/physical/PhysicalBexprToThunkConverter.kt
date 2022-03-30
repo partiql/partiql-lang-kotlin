@@ -3,7 +3,6 @@ package org.partiql.lang.eval.physical
 import com.amazon.ionelement.api.BoolElement
 import com.amazon.ionelement.api.MetaContainer
 import org.partiql.lang.domains.PartiqlPhysical
-import org.partiql.lang.eval.physical.Environment
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.ExprValueType
@@ -23,7 +22,11 @@ import org.partiql.lang.util.toIntExact
 
 private val DEFAULT_IMPL = PartiqlPhysical.build { impl("default") }
 
-typealias PhysicalThunkEnv = Thunk<Environment>
+/** A specialization of [Thunk] that we use for evaluation of physical plans. */
+internal typealias PhysicalPlanThunk = Thunk<EvaluatorState>
+
+/** A specialization of [ThunkValue] that we use for evaluation of physical plans. */
+internal typealias PhsycialPlanThunkValue<T> = ThunkValue<EvaluatorState, T>
 
 internal class PhysicalBexprToThunkConverter(
     private val exprConverter: PhysicalExprToThunkConverter,
@@ -128,7 +131,7 @@ internal class PhysicalBexprToThunkConverter(
         joinMetas: MetaContainer,
         leftThunk: RelationThunkEnv,
         rightThunk: RelationThunkEnv,
-        predicateThunk: PhysicalThunkEnv?
+        predicateThunk: PhysicalPlanThunk?
     ) = if (predicateThunk == null) {
         relationThunk(joinMetas) { env ->
             createCrossJoinRelItr(leftThunk, rightThunk, env)
@@ -143,7 +146,7 @@ internal class PhysicalBexprToThunkConverter(
     private fun createCrossJoinRelItr(
         leftThunk: RelationThunkEnv,
         rightThunk: RelationThunkEnv,
-        env: Environment
+        env: EvaluatorState
     ): RelationIterator {
         return relation(RelationType.BAG) {
             val leftItr = leftThunk(env)
@@ -161,7 +164,7 @@ internal class PhysicalBexprToThunkConverter(
         leftThunk: RelationThunkEnv,
         rightThunk: RelationThunkEnv,
         rightVariableIndexes: List<Int>,
-        predicateThunk: PhysicalThunkEnv?
+        predicateThunk: PhysicalPlanThunk?
     ) =
         relationThunk(joinMetas) { env ->
             createLeftJoinRelItr(leftThunk, rightThunk, rightVariableIndexes, predicateThunk, env)
@@ -175,8 +178,8 @@ internal class PhysicalBexprToThunkConverter(
         leftThunk: RelationThunkEnv,
         rightThunk: RelationThunkEnv,
         rightVariableIndexes: List<Int>,
-        predicateThunk: PhysicalThunkEnv?,
-        env: Environment
+        predicateThunk: PhysicalPlanThunk?,
+        env: EvaluatorState
     ): RelationIterator {
         return if (predicateThunk == null) {
             relation(RelationType.BAG) {
@@ -217,7 +220,7 @@ internal class PhysicalBexprToThunkConverter(
 
     private suspend fun RelationScope.yieldPaddedUnknowns(
         rightVariableIndexes: List<Int>,
-        env: Environment
+        env: EvaluatorState
     ) {
         rightVariableIndexes.forEach { env.registers[it] = valueFactory.nullValue }
         yield()
@@ -246,8 +249,8 @@ internal class PhysicalBexprToThunkConverter(
 
     private fun createFilterRelItr(
         relItr: RelationIterator,
-        predicateThunk: PhysicalThunkEnv,
-        env: Environment
+        predicateThunk: PhysicalPlanThunk,
+        env: EvaluatorState
     ) = relation(RelationType.BAG) {
         while (true) {
             if (!relItr.nextRow()) {
@@ -306,7 +309,7 @@ internal class PhysicalBexprToThunkConverter(
 
     override fun convertLet(node: PartiqlPhysical.Bexpr.Let): RelationThunkEnv {
         val sourceThunk = this.convert(node.source)
-        class CompiledBinding(val index: Int, val valueThunk: PhysicalThunkEnv)
+        class CompiledBinding(val index: Int, val valueThunk: PhysicalPlanThunk)
         val compiledBindings = node.bindings.map {
             CompiledBinding(
                 it.decl.index.value.toIntExact(),

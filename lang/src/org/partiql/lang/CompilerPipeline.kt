@@ -34,10 +34,11 @@ import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.types.StaticType
+import org.partiql.lang.util.BuilderDsl
 import org.partiql.lang.util.interruptibleFold
 
 /**
- * Contains all of the information needed for processing steps.
+ * Contains all information needed for processing steps.
  */
 data class StepContext(
     /** The instance of [ExprValueFactory] that is used by the pipeline. */
@@ -139,6 +140,7 @@ interface CompilerPipeline {
      * [CompilerPipeline] is NOT thread safe and should NOT be used to compile queries concurrently. If used in a
      * multithreaded application, use one instance of [CompilerPipeline] per thread.
      */
+    @BuilderDsl
     class Builder(val valueFactory: ExprValueFactory) {
         private var parser: Parser? = null
         private var compileOptions: CompileOptions? = null
@@ -203,7 +205,7 @@ interface CompilerPipeline {
         fun build(): CompilerPipeline {
             val compileOptionsToUse = compileOptions ?: CompileOptions.standard()
 
-            when (compileOptionsToUse.thunkReturnTypeAssertions) {
+            when (compileOptionsToUse.thunkOptions.thunkReturnTypeAssertions) {
                 ThunkReturnTypeAssertions.DISABLED -> { /* intentionally blank */ }
                 ThunkReturnTypeAssertions.ENABLED -> {
                     check(this.globalTypeBindings != null) {

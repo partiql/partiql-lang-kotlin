@@ -21,11 +21,7 @@ import org.partiql.lang.domains.staticType
 import org.partiql.lang.errors.ErrorBehaviorInPermissiveMode
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
-
-// DL TODO: names, kdoc
-internal typealias Thunk<E> = (E) -> ExprValue
-internal typealias ThunkValue<E, T> = (E, T) -> ExprValue
-
+import org.partiql.lang.util.BuilderDsl
 
 /**
  * A thunk with no parameters other than the current environment.
@@ -33,9 +29,10 @@ internal typealias ThunkValue<E, T> = (E, T) -> ExprValue
  * See https://en.wikipedia.org/wiki/Thunk
  *
  * This name was chosen because it is a thunk that accepts an instance of `Environment`.
+ * @param TEnv The type of the environment.  Generic so that the legacy AST compiler and the new compiler may use
+ * different types here.
  */
-internal typealias ThunkEnv = Thunk<Environment>
-
+internal typealias Thunk<TEnv> = (TEnv) -> ExprValue
 
 /**
  * A thunk taking a single [T] argument and the current environment.
@@ -44,8 +41,12 @@ internal typealias ThunkEnv = Thunk<Environment>
  *
  * This name was chosen because it is a thunk that accepts an instance of `Environment` and an [ExprValue] as
  * its arguments.
+ *
+ * @param TEnv The type of the environment.  Generic so that the legacy AST compiler and the new compiler may use
+ * different types here.
+ * @param TArg The type of the additional argument.
  */
-internal typealias ThunkEnvValue<T> = ThunkValue<Environment, T>
+internal typealias ThunkValue<TEnv, TArg> = (TEnv, TArg) -> ExprValue
 
 /**
  * A type alias for an exception handler which always throws(primarily used for [TypingMode.LEGACY]).
@@ -66,7 +67,8 @@ typealias ThunkExceptionHandlerForPermissiveMode = (Throwable, SourceLocationMet
  */
 data class ThunkOptions private constructor(
     val handleExceptionForLegacyMode: ThunkExceptionHandlerForLegacyMode = DEFAULT_EXCEPTION_HANDLER_FOR_LEGACY_MODE,
-    val handleExceptionForPermissiveMode: ThunkExceptionHandlerForPermissiveMode = DEFAULT_EXCEPTION_HANDLER_FOR_PERMISSIVE_MODE
+    val handleExceptionForPermissiveMode: ThunkExceptionHandlerForPermissiveMode = DEFAULT_EXCEPTION_HANDLER_FOR_PERMISSIVE_MODE,
+    val thunkReturnTypeAssertions: ThunkReturnTypeAssertions = ThunkReturnTypeAssertions.DISABLED,
 ) {
 
     companion object {
@@ -92,10 +94,12 @@ data class ThunkOptions private constructor(
     /**
      * Builds a [ThunkOptions] instance.
      */
+    @BuilderDsl
     class Builder {
         private var options = ThunkOptions()
         fun handleExceptionForLegacyMode(value: ThunkExceptionHandlerForLegacyMode) = set { copy(handleExceptionForLegacyMode = value) }
         fun handleExceptionForPermissiveMode(value: ThunkExceptionHandlerForPermissiveMode) = set { copy(handleExceptionForPermissiveMode = value) }
+        fun evaluationTimeTypeChecks(value: ThunkReturnTypeAssertions) = set { copy(thunkReturnTypeAssertions = value) }
         private inline fun set(block: ThunkOptions.() -> ThunkOptions): Builder {
             options = block(options)
             return this
@@ -124,17 +128,17 @@ val DEFAULT_EXCEPTION_HANDLER_FOR_PERMISSIVE_MODE: ThunkExceptionHandlerForPermi
  *  - when [TypingMode] is [TypingMode.PERMISSIVE], creates [PermissiveThunkFactory]
  */
 internal fun <TEnv> TypingMode.createThunkFactory(
-    compileOptions: CompileOptions,
+    thunkOptions: ThunkOptions,
     valueFactory: ExprValueFactory
-) : ThunkFactory<TEnv> = when(this) {
-    TypingMode.LEGACY -> LegacyThunkFactory<TEnv>(compileOptions, valueFactory)
-    TypingMode.PERMISSIVE -> PermissiveThunkFactory<TEnv>(compileOptions, valueFactory)
+): ThunkFactory<TEnv> = when (this) {
+    TypingMode.LEGACY -> LegacyThunkFactory(thunkOptions, valueFactory)
+    TypingMode.PERMISSIVE -> PermissiveThunkFactory(thunkOptions, valueFactory)
 }
 /**
  * Provides methods for constructing new thunks according to the specified [CompileOptions].
  */
 internal abstract class ThunkFactory<TEnv>(
-    val compileOptions: CompileOptions,
+    val thunkOptions: ThunkOptions,
     val valueFactory: ExprValueFactory
 ) {
     private fun checkEvaluationTimeType(thunkResult: ExprValue, metas: MetaContainer): ExprValue {
@@ -165,7 +169,7 @@ internal abstract class ThunkFactory<TEnv>(
      * [StaticTypeMeta] or in case it is not run at all.
      */
     protected fun Thunk<TEnv>.typeCheck(metas: MetaContainer): Thunk<TEnv> =
-        when (compileOptions.thunkReturnTypeAssertions) {
+        when (thunkOptions.thunkReturnTypeAssertions) {
             ThunkReturnTypeAssertions.DISABLED -> this
             ThunkReturnTypeAssertions.ENABLED -> {
                 val wrapper = { env: TEnv ->
@@ -177,11 +181,11 @@ internal abstract class ThunkFactory<TEnv>(
         }
 
     /** Same as [typeCheck] but works on a [ThunkEnvValue<ExprValue>] instead of a [Thunk<TEnv>]. */
-    protected fun ThunkEnvValue<ExprValue>.typeCheckEnvValue(metas: MetaContainer): ThunkEnvValue<ExprValue> =
-        when (compileOptions.thunkReturnTypeAssertions) {
+    protected fun ThunkValue<TEnv, ExprValue>.typeCheckEnvValue(metas: MetaContainer): ThunkValue<TEnv, ExprValue> =
+        when (thunkOptions.thunkReturnTypeAssertions) {
             ThunkReturnTypeAssertions.DISABLED -> this
             ThunkReturnTypeAssertions.ENABLED -> {
-                val wrapper = { env: Environment, value: ExprValue ->
+                val wrapper = { env: TEnv, value: ExprValue ->
                     val thunkResult: ExprValue = this(env, value)
                     checkEvaluationTimeType(thunkResult, metas)
                 }
@@ -190,11 +194,11 @@ internal abstract class ThunkFactory<TEnv>(
         }
 
     /** Same as [typeCheck] but works on a [ThunkEnvValue<List<ExprValue>>] instead of a [Thunk<TEnv>]. */
-    protected fun ThunkEnvValue<List<ExprValue>>.typeCheckEnvValueList(metas: MetaContainer): ThunkEnvValue<List<ExprValue>> =
-        when (compileOptions.thunkReturnTypeAssertions) {
+    protected fun ThunkValue<TEnv, List<ExprValue>>.typeCheckEnvValueList(metas: MetaContainer): ThunkValue<TEnv, List<ExprValue>> =
+        when (thunkOptions.thunkReturnTypeAssertions) {
             ThunkReturnTypeAssertions.DISABLED -> this
             ThunkReturnTypeAssertions.ENABLED -> {
-                val wrapper = { env: Environment, value: List<ExprValue> ->
+                val wrapper = { env: TEnv, value: List<ExprValue> ->
                     val thunkResult: ExprValue = this(env, value)
                     checkEvaluationTimeType(thunkResult, metas)
                 }
@@ -321,11 +325,11 @@ internal abstract class ThunkFactory<TEnv>(
     /** Similar to [thunkEnv], but creates a [ThunkEnvValue<ExprValue>] instead. */
     internal inline fun thunkEnvValue(
         metas: MetaContainer,
-        crossinline t: ThunkEnvValue<ExprValue>
-    ): ThunkEnvValue<ExprValue> {
+        crossinline t: ThunkValue<TEnv, ExprValue>
+    ): ThunkValue<TEnv, ExprValue> {
         val sourceLocationMeta = metas[SourceLocationMeta.TAG] as? SourceLocationMeta
 
-        return { env: Environment, arg1: ExprValue ->
+        return { env: TEnv, arg1: ExprValue ->
             handleException(sourceLocationMeta) {
                 t(env, arg1)
             }
@@ -335,11 +339,11 @@ internal abstract class ThunkFactory<TEnv>(
     /** Similar to [thunkEnv], but creates a [ThunkEnvValue<List<ExprValue>>] instead. */
     internal inline fun thunkEnvValueList(
         metas: MetaContainer,
-        crossinline t: ThunkEnvValue<List<ExprValue>>
-    ): ThunkEnvValue<List<ExprValue>> {
+        crossinline t: ThunkValue<TEnv, List<ExprValue>>
+    ): ThunkValue<TEnv, List<ExprValue>> {
         val sourceLocationMeta = metas[SourceLocationMeta.TAG] as? SourceLocationMeta
 
-        return { env: Environment, arg1: List<ExprValue> ->
+        return { env: TEnv, arg1: List<ExprValue> ->
             handleException(sourceLocationMeta) {
                 t(env, arg1)
             }
@@ -404,9 +408,9 @@ internal abstract class ThunkFactory<TEnv>(
  * Provides methods for constructing new thunks according to the specified [CompileOptions] for [TypingMode.LEGACY] behaviour.
  */
 internal class LegacyThunkFactory<TEnv>(
-    compileOptions: CompileOptions,
+    thunkOptions: ThunkOptions,
     valueFactory: ExprValueFactory
-) : ThunkFactory<TEnv>(compileOptions, valueFactory) {
+) : ThunkFactory<TEnv>(thunkOptions, valueFactory) {
 
     override fun propagateUnknowns(
         getVal1: () -> ExprValue,
@@ -540,7 +544,7 @@ internal class LegacyThunkFactory<TEnv>(
             }
             throw e
         } catch (e: Exception) {
-            compileOptions.thunkOptions.handleExceptionForLegacyMode(e, sourceLocation)
+            thunkOptions.handleExceptionForLegacyMode(e, sourceLocation)
         }
 }
 
@@ -549,9 +553,9 @@ internal class LegacyThunkFactory<TEnv>(
  * [TypingMode.PERMISSIVE] behaviour.
  */
 internal class PermissiveThunkFactory<TEnv>(
-    compileOptions: CompileOptions,
+    thunkOptions: ThunkOptions,
     valueFactory: ExprValueFactory
-) : ThunkFactory<TEnv>(compileOptions, valueFactory) {
+) : ThunkFactory<TEnv>(thunkOptions, valueFactory) {
 
     override fun propagateUnknowns(
         getVal1: () -> ExprValue,
@@ -686,13 +690,13 @@ internal class PermissiveThunkFactory<TEnv>(
         try {
             block()
         } catch (e: EvaluationException) {
-            compileOptions.thunkOptions.handleExceptionForPermissiveMode(e, sourceLocation)
+            thunkOptions.handleExceptionForPermissiveMode(e, sourceLocation)
             when (e.errorCode.errorBehaviorInPermissiveMode) {
                 // Rethrows the exception as it does in LEGACY mode.
                 ErrorBehaviorInPermissiveMode.THROW_EXCEPTION -> throw e
                 ErrorBehaviorInPermissiveMode.RETURN_MISSING -> valueFactory.missingValue
             }
         } catch (e: Exception) {
-            compileOptions.thunkOptions.handleExceptionForLegacyMode(e, sourceLocation)
+            thunkOptions.handleExceptionForLegacyMode(e, sourceLocation)
         }
 }

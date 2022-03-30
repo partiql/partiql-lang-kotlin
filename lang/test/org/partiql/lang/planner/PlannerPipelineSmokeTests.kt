@@ -8,32 +8,35 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.partiql.lang.ION
 import org.partiql.lang.domains.PartiqlPhysical
+import org.partiql.lang.planner.PassResult
+import org.partiql.lang.planner.PlannerPipeline
 import org.partiql.lang.util.SexpAstPrettyPrinter
-import org.partiql.planner.transforms.PlanningProblemDetails
+import org.partiql.lang.planner.transforms.PlanningProblemDetails
 
 /**
  * Query planning primarily consists of AST traversals and rewrites.  Each of those are thoroughly tested separately,
- * so the tests here will focus on functionality that is specific to the planner itself, such as the ability of the
- * planner to parse & send the resulting AST thru all of the passes, and to stop planning when encountering semantic
- * problems such as undefined variables.
+ * but it is still good to have a simple "smoke test" for the planner pipeline.
  */
-class QueryPlannerImplIntegrationTests {
+class PlannerPipelineSmokeTests {
     private val ion = IonSystemBuilder.standard().build()
 
-    private val globalBindings = createFakeGlobalBindings("Customer" to "fake_uid_for_Customer")
+    private fun createPlannerPipelineForTest(allowUndefinedVariables: Boolean) = PlannerPipeline.build(ion) {
+        allowUndefinedVariables(allowUndefinedVariables)
+        globalBindings(createFakeGlobalBindings("Customer" to "fake_uid_for_Customer"))
+    }
 
     @Test
     fun `happy path`() {
-        val qp = createQueryPlanner(ion, allowUndefinedVariables = true, globalBindings)
-        val result = qp.plan("SELECT c.* FROM Customer AS c WHERE c.primaryKey = 42")
+        val pipeline = createPlannerPipelineForTest(allowUndefinedVariables = true)
+        val result = pipeline.plan("SELECT c.* FROM Customer AS c WHERE c.primaryKey = 42")
 
-        result as PlanningResult.Success
-        println(SexpAstPrettyPrinter.format(result.physicalPlan.toIonElement().asAnyElement().toIonValue(ION)))
+        result as PassResult.Success
+        println(SexpAstPrettyPrinter.format(result.result.toIonElement().asAnyElement().toIonValue(ION)))
 
         assertEquals(
             result,
-            PlanningResult.Success(
-                physicalPlan = PartiqlPhysical.build {
+            PassResult.Success(
+                result = PartiqlPhysical.build {
                     query(
                         bindingsToValues(
                             exp = mergeStruct(structFields(localId("c", 0))),
@@ -59,10 +62,10 @@ class QueryPlannerImplIntegrationTests {
 
     @Test
     fun `undefined variable`() {
-        val qp = createQueryPlanner(ion, allowUndefinedVariables = false, globalBindings)
+        val qp = createPlannerPipelineForTest(allowUndefinedVariables = false)
         val result = qp.plan("SELECT undefined.* FROM Customer AS c")
         assertEquals(
-            PlanningResult.Error(
+            PassResult.Error<PartiqlPhysical.Statement>(
                 listOf(problem(1, 8, PlanningProblemDetails.UndefinedVariable("undefined", caseSensitive = false)))
             ),
             result

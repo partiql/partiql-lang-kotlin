@@ -1,4 +1,4 @@
-package org.partiql.planner.transforms
+package org.partiql.lang.planner.transforms
 
 import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.domains.PartiqlLogical
@@ -9,8 +9,8 @@ import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.eval.BindingName
 import org.partiql.pig.runtime.asPrimitive
-import org.partiql.planner.GlobalBindings
-import org.partiql.planner.ResolutionResult
+import org.partiql.lang.planner.GlobalBindings
+import org.partiql.lang.planner.ResolutionResult
 
 /**
  * Resolves all variables by rewriting `(id <name> <case-sensitivity> <scope-qualifier>)` to

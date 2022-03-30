@@ -233,9 +233,7 @@ abstract class EvaluatorTestBase : TestBase() {
         session: EvaluationSession = EvaluationSession.standard(),
         compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }
     ): ExprValue {
-
         val p = SqlParser(ion, CUSTOM_TEST_TYPES)
-
         val ast = p.parseAstStatement(source)
         return eval(ast, compileOptions, session, compilerPipelineBuilderBlock)
     }

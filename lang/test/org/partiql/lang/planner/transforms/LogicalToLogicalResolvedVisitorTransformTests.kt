@@ -11,6 +11,9 @@ import org.partiql.lang.domains.PartiqlLogicalResolved
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemCollector
 import org.partiql.lang.eval.sourceLocationMeta
+import org.partiql.lang.planner.transforms.PlanningProblemDetails
+import org.partiql.lang.planner.transforms.toLogical
+import org.partiql.lang.planner.transforms.toResolved
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.toIntExact

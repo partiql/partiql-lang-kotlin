@@ -22,6 +22,7 @@ import org.partiql.lang.eval.VisitorTransformMode.DEFAULT
 import org.partiql.lang.eval.VisitorTransformMode.NONE
 import org.partiql.lang.eval.visitors.IDENTITY_VISITOR_TRANSFORM
 import org.partiql.lang.eval.visitors.basicVisitorTransforms
+import org.partiql.lang.util.BuilderDsl
 import java.time.ZoneOffset
 
 /**
@@ -144,11 +145,11 @@ enum class ThunkReturnTypeAssertions {
 data class CompileOptions private constructor (
     val undefinedVariable: UndefinedVariableBehavior,
     val projectionIteration: ProjectionIterationBehavior = ProjectionIterationBehavior.FILTER_MISSING,
+    @Deprecated("Physical plan compiler does not use this, please avoid.")
     val visitorTransformMode: VisitorTransformMode = VisitorTransformMode.DEFAULT,
     val thunkOptions: ThunkOptions = ThunkOptions.standard(),
     val typingMode: TypingMode = TypingMode.LEGACY,
     val typedOpBehavior: TypedOpBehavior = TypedOpBehavior.LEGACY,
-    val thunkReturnTypeAssertions: ThunkReturnTypeAssertions = ThunkReturnTypeAssertions.DISABLED,
     val defaultTimezoneOffset: ZoneOffset = ZoneOffset.UTC
 ) {
 
@@ -177,7 +178,7 @@ data class CompileOptions private constructor (
         fun build(options: CompileOptions, block: Builder.() -> Unit) = Builder(options).apply(block).build()
 
         /**
-         * Creates a [CompileOptions] instance with the standard values.
+         * Creates a [CompileOptions] instance with the standard values for use by the legacy AST compiler.
          */
         @JvmStatic
         fun standard() = Builder().build()
@@ -186,6 +187,7 @@ data class CompileOptions private constructor (
     /**
      * Builds a [CompileOptions] instance.
      */
+    @BuilderDsl
     class Builder(private var options: CompileOptions = CompileOptions(UndefinedVariableBehavior.ERROR)) {
 
         fun undefinedVariable(value: UndefinedVariableBehavior) = set { copy(undefinedVariable = value) }
@@ -194,7 +196,7 @@ data class CompileOptions private constructor (
         fun typingMode(value: TypingMode) = set { copy(typingMode = value) }
         fun typedOpBehavior(value: TypedOpBehavior) = set { copy(typedOpBehavior = value) }
         fun thunkOptions(value: ThunkOptions) = set { copy(thunkOptions = value) }
-        fun evaluationTimeTypeChecks(value: ThunkReturnTypeAssertions) = set { copy(thunkReturnTypeAssertions = value) }
+        fun thunkOptions(build: ThunkOptions.Builder.() -> Unit) = set { copy(thunkOptions = ThunkOptions.build(build)) }
         fun defaultTimezoneOffset(value: ZoneOffset) = set { copy(defaultTimezoneOffset = value) }
 
         private inline fun set(block: CompileOptions.() -> CompileOptions): Builder {
