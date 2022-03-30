@@ -1,6 +1,5 @@
 package org.partiql.lang.planner.transforms
 
-import jdk.nashorn.internal.runtime.regexp.joni.exception.ErrorMessages
 import org.partiql.lang.errors.ProblemDetails
 import org.partiql.lang.errors.ProblemSeverity
 

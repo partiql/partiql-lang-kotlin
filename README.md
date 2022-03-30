@@ -1,10 +1,6 @@
-# TODO
-
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.partiql/partiql-lang-kotlin/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.partiql/partiql-lang-kotlin)
 [![Build Status](https://travis-ci.org/partiql/partiql-lang-kotlin.svg?branch=master)](https://travis-ci.org/partiql/partiql-lang-kotlin)
 [![codecov](https://codecov.io/gh/partiql/partiql-lang-kotlin/branch/master/graph/badge.svg)](https://codecov.io/gh/partiql/partiql-lang-kotlin)
-
-
 
 # PartiQL Lang Kotlin
 

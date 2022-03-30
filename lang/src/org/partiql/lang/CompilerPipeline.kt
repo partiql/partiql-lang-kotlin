@@ -105,7 +105,7 @@ interface CompilerPipeline {
     fun compile(query: String): Expression
 
     @Deprecated("ExprNode is deprecated. Please use PIG generated AST. ")
-        /** Compiles the specified [ExprNode] instance. */
+    /** Compiles the specified [ExprNode] instance. */
     fun compile(query: ExprNode): Expression
 
     /** Compiles the specified [PartiqlAst.Statement] instance. */

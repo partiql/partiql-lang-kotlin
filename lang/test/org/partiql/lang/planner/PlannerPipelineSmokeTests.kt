@@ -10,8 +10,8 @@ import org.partiql.lang.ION
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.planner.PassResult
 import org.partiql.lang.planner.PlannerPipeline
-import org.partiql.lang.util.SexpAstPrettyPrinter
 import org.partiql.lang.planner.transforms.PlanningProblemDetails
+import org.partiql.lang.util.SexpAstPrettyPrinter
 
 /**
  * Query planning primarily consists of AST traversals and rewrites.  Each of those are thoroughly tested separately,

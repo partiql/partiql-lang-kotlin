@@ -19,7 +19,6 @@ import org.junit.Ignore
 import org.junit.Test
 import org.partiql.lang.errors.ErrorCode
 
-@Ignore("PHYS_ALGEBRA_REFACTOR_HAVING")
 class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
     val session = mapOf(
         "repeating_things" to """[

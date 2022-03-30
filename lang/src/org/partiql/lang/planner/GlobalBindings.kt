@@ -48,4 +48,3 @@ private val EMPTY = GlobalBindings { ResolutionResult.Undefined }
 
 /** Convenience function for obtaining an instance of [GlobalBindings] with no defined variables. */
 fun emptyGlobalBindings(): GlobalBindings = EMPTY
-

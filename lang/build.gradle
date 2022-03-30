@@ -87,6 +87,13 @@ task generatePigDomains {
     outputs.dir(PIG_SOURCE_ROOT)
 
     doLast {
+        // If the old PIG output file is present it will break the build so delete it. This prevents confusion and
+        // frustration on the part of PartiQL developers who will otherwise need to know and remember to delete
+        // this file after working with an older revision of PartiQL.
+        def oldPigOutputFile = new File(projectDir, "src/org/partiql/lang/domains/partiql-domains.kt")
+        if(oldPigOutputFile.exists()) {
+            oldPigOutputFile.delete()
+        }
         try {
             org.partiql.pig.MainKt.generateCode(cmd)
         } catch(PigException e) {

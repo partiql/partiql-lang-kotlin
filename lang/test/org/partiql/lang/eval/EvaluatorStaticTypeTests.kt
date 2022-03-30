@@ -173,7 +173,6 @@ class EvaluatorStaticTypeTests {
             "aggregateInSubqueryOfSelect",
             "aggregateInSubqueryOfSelectValue",
             "aggregateWithAliasingInSubqueryOfSelectValue"
-
         )
 
         @JvmStatic
@@ -194,14 +193,12 @@ class EvaluatorStaticTypeTests {
         }
     }
 
-    @Disabled("PHYS_ALG_REFACTOR_STATIC_TYPES")
     @ParameterizedTest
     @MethodSource("evaluatorStaticTypeTests")
     fun allTests(tc: IonResultTestCase) =
         tc.runTestCase(
             valueFactory = valueFactory,
-            db = mockDb
-        )
-    // Enable the static type inferencer for this
-    // pipelineBlock = { this.globalTypeBindings(mockDb.typeBindings) })
+            db = mockDb,
+            // Enable the static type inferencer for this
+            pipelineBlock = { this.globalTypeBindings(mockDb.typeBindings) })
 }

@@ -54,7 +54,6 @@ import org.partiql.lang.eval.StructOrdering
 import org.partiql.lang.eval.ThunkValue
 import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.TypingMode
-import org.partiql.lang.eval.UndefinedVariableBehavior
 import org.partiql.lang.eval.booleanValue
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.call

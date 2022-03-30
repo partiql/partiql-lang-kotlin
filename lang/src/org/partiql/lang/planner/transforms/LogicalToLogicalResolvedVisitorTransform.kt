@@ -8,9 +8,9 @@ import org.partiql.lang.domains.toBindingCase
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.eval.BindingName
-import org.partiql.pig.runtime.asPrimitive
 import org.partiql.lang.planner.GlobalBindings
 import org.partiql.lang.planner.ResolutionResult
+import org.partiql.pig.runtime.asPrimitive
 
 /**
  * Resolves all variables by rewriting `(id <name> <case-sensitivity> <scope-qualifier>)` to

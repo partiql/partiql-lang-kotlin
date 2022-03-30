@@ -11,7 +11,6 @@ import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedureSignature
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.softAssert
-import org.partiql.lang.util.to
 
 private fun createWrongSProcErrorContext(arg: ExprValue, expectedArgTypes: String, procName: String): PropertyValueMap {
     val errorContext = PropertyValueMap()

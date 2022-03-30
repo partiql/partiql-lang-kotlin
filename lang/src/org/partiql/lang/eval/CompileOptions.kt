@@ -142,6 +142,7 @@ enum class ThunkReturnTypeAssertions {
  * @param defaultTimezoneOffset Default timezone offset to be used when TIME WITH TIME ZONE does not explicitly
  * specify the time zone. Defaults to [ZoneOffset.UTC]
  */
+@Suppress("DataClassPrivateConstructor")
 data class CompileOptions private constructor (
     val undefinedVariable: UndefinedVariableBehavior,
     val projectionIteration: ProjectionIterationBehavior = ProjectionIterationBehavior.FILTER_MISSING,

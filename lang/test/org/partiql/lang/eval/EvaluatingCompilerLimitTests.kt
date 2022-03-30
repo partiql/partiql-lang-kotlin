@@ -67,7 +67,6 @@ class EvaluatingCompilerLimitTests : EvaluatorTestBase() {
         )
 
     @Test
-    @Ignore("PHYS_ALGEBRA_REFACTOR_GROUP_BY")
     fun `LIMIT applied after GROUP BY`() =
         assertEval(
             "SELECT g FROM `[{foo: 1, bar: 10}, {foo: 1, bar: 11}]` AS f GROUP BY f.foo GROUP AS g LIMIT 1",

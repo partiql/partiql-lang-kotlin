@@ -14,7 +14,6 @@
 
 package org.partiql.lang.eval
 
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
@@ -618,11 +617,9 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     // ////////////////////////////////////////////////
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun aggregateSumWithNull() = assertEval("SELECT sum(x.n) from nullSample as x", "[{_1: 4}]", nullSample)
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun aggregateSumWithMissing() = assertEval(
         "SELECT sum(x.n) from missingSample as x",
         "[{_1: 3}]",
@@ -630,7 +627,6 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     )
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun aggregateSumWithMissingAndNull() = assertEval(
         "SELECT sum(x.n) from missingAndNullSample as x",
         "[{_1: 9}]",
@@ -638,11 +634,9 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     )
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun aggregateMinWithNull() = assertEval("SELECT min(x.n) from nullSample as x", "[{_1: 1}]", nullSample)
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun aggregateMinWithMissing() = assertEval(
         "SELECT min(x.n) from missingSample as x",
         "[{_1: 1}]",
@@ -650,7 +644,6 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     )
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun aggregateMinWithMissingAndNull() = assertEval(
         "SELECT min(x.n) from missingAndNullSample as x",
         "[{_1: 2}]",
@@ -658,11 +651,9 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     )
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun aggregateAvgWithNull() = assertEval("SELECT avg(x.n) from nullSample as x", "[{_1: 2.}]", nullSample)
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun aggregateAvgWithMissing() = assertEval(
         "SELECT avg(x.n) from missingSample as x",
         "[{_1: 1.5}]",
@@ -670,7 +661,6 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     )
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun aggregateAvgWithMissingAndNull() = assertEval(
         "SELECT avg(x.n) from missingAndNullSample as x",
         "[{_1: 3.}]",
@@ -678,7 +668,6 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     )
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun aggregateCountWithNull() = assertEval(
         "SELECT count(x.n) from nullSample as x",
         "[{_1: 2}]",
@@ -686,7 +675,6 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     )
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun aggregateCountWithMissing() = assertEval(
         "SELECT count(x.n) from missingSample as x",
         "[{_1: 2}]",
@@ -694,7 +682,6 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     )
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun aggregateCountWithMissingAndNull() = assertEval(
         "SELECT count(x.n) from missingAndNullSample as x",
         "[{_1: 3}]",
@@ -702,108 +689,88 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     )
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun countEmpty() = assertEval("SELECT count(*) from `[]`", "[{_1: 0}]")
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun countEmptyTuple() = assertEval("SELECT count(*) from `[{}]`", "[{_1: 1}]")
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun sumEmpty() = assertEval("SELECT sum(x.i) from `[]` as x", "[{_1: null}]")
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun sumEmptyTuple() = assertEval("SELECT sum(x.i) from `[{}]` as x", "[{_1: null}]")
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun avgEmpty() = assertEval("SELECT avg(x.i) from `[]` as x", "[{_1: null}]")
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun avgEmptyTuple() = assertEval("SELECT avg(x.i) from `[{}]` as x", "[{_1: null}]")
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun avgSomeEmptyTuples() = assertEval(
         "SELECT avg(x.i) from `[{i: 1}, {}, {i:3}]` as x",
         "[{_1: 2.}]"
     )
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun avgSomeEmptyAndNullTuples() = assertEval(
         "SELECT avg(x.i) from `[{i: 1}, {}, {i:null}, {i:3}]` as x",
         "[{_1: 2.}]"
     )
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun minSomeEmptyTuples() = assertEval(
         "SELECT min(x.i) from `[{i: null}, {}, {i:3}]` as x",
         "[{_1: 3}]"
     )
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun maxSomeEmptyTuples() = assertEval(
         "SELECT max(x.i) from `[{i: null}, {}, {i:3}, {i:10}]` as x",
         "[{_1: 10}]"
     )
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun minEmpty() = assertEval("SELECT min(x.i) from `[]` as x", "[{_1: null}]")
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun minEmptyTuple() = assertEval("SELECT min(x.i) from `[{}]` as x", "[{_1: null}]")
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun maxEmpty() = assertEval("SELECT max(x.i) from `[]` as x", "[{_1: null}]")
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun maxEmptyTuple() = assertEval("SELECT max(x.i) from `[{}]` as x", "[{_1: null}]")
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun maxSomeEmptyTuple() = assertEval(
         "SELECT max(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
         "[{_1: 2}]"
     )
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun minSomeEmptyTuple() = assertEval(
         "SELECT min(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
         "[{_1: 1}]"
     )
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun sumSomeEmptyTuple() = assertEval(
         "SELECT sum(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
         "[{_1: 3}]"
     )
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun countSomeEmptyTuple() = assertEval(
         "SELECT count(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
         "[{_1: 2}]"
     )
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun countStar() = assertEval(
         "SELECT count(*) from `[{}, {i:1}, {}, {i:2}]` as x",
         "[{_1: 4}]"
     )
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun countLiteral() = assertEval("SELECT count(1) from `[{}, {}, {}, {}]` as x", "[{_1: 4}]")
 }

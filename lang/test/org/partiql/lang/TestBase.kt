@@ -129,7 +129,6 @@ private fun SoftAssertions.correctContextValues(errorCode: ErrorCode, errorConte
 }
 
 @RunWith(JUnitParamsRunner::class)
-@Deprecated("New test fixtures should not use this--inheritance is an anti-pattern in this case.")
 abstract class TestBase : Assert() {
 
     val ion: IonSystem = ION

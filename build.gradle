@@ -61,12 +61,13 @@ configure(subprojects.findAll { it.name != 'example' }) {
 subprojects {
     apply plugin: "org.jetbrains.kotlin.jvm"
     tasks.withType(Test) {
+        useJUnitPlatform()
         maxHeapSize = "4g"
         testLogging {
             events "failed"
             exceptionFormat "full"
         }
-        useJUnitPlatform()
+        testLogging.showStandardStreams = true
         jacocoTestReport {
             reports {
                 html.required.set(true)

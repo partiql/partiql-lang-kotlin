@@ -96,11 +96,9 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
     )
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun topLevelCountStar() = assertThrows("""COUNT(*)""", "COUNT(*) is not allowed in this context", NodeMetadata(1, 1))
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun selectValueCountStar() = assertThrows(
         """SELECT VALUE COUNT(*) FROM numbers""",
         "COUNT(*) is not allowed in this context",
@@ -108,7 +106,6 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
     )
 
     @Test
-    @Disabled("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun selectListNestedAggregateCall() = assertThrows(
         """SELECT SUM(AVG(n)) FROM <<numbers, numbers>> AS n""",
         "The arguments of an aggregate function cannot contain aggregate functions",

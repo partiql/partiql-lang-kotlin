@@ -115,15 +115,16 @@ interface PlannerPipeline {
      * if compiling and planning was successful or [PassResult.Error] if not.
      */
     fun planAndCompile(query: String): PassResult<Expression> =
-        when(val planResult = plan(query)) {
+        when (val planResult = plan(query)) {
             is PassResult.Error -> PassResult.Error(planResult.errors)
             is PassResult.Success -> {
-                when(val compileResult = compile(planResult.result)) {
+                when (val compileResult = compile(planResult.result)) {
                     is PassResult.Error -> compileResult
                     is PassResult.Success -> PassResult.Success(
                         compileResult.result,
                         // Need to include any warnings that may have been discovered during planning.
-                        planResult.warnings + compileResult.warnings)
+                        planResult.warnings + compileResult.warnings
+                    )
                 }
             }
         }
@@ -244,8 +245,10 @@ interface PlannerPipeline {
 
             when (compileOptionsToUse.thunkOptions.thunkReturnTypeAssertions) {
                 ThunkReturnTypeAssertions.DISABLED -> { /* intentionally blank */ }
-                ThunkReturnTypeAssertions.ENABLED -> error("TODO: Support ThunkReturnTypeAssertions.ENABLED " +
-                    "need a static type pass first)")
+                ThunkReturnTypeAssertions.ENABLED -> error(
+                    "TODO: Support ThunkReturnTypeAssertions.ENABLED " +
+                        "need a static type pass first)"
+                )
             }
 
             val builtinFunctions = createBuiltinFunctions(valueFactory).associateBy {
@@ -297,7 +300,6 @@ internal class PlannerPipelineImpl(
             Pair(alias.toLowerCase(), customType.typedOpParameter)
         }
     }.flatten().toMap()
-
 
     override fun plan(query: String): PassResult<PartiqlPhysical.Statement> {
         val ast = try {
@@ -358,7 +360,7 @@ internal class PlannerPipelineImpl(
 
         val expression = try {
             compiler.compile(physcialPlan)
-        } catch(e: SqlException) {
+        } catch (e: SqlException) {
             val problem = Problem(
                 SourceLocationMeta(
                     e.errorContext[Property.LINE_NUMBER]?.longValue() ?: -1,

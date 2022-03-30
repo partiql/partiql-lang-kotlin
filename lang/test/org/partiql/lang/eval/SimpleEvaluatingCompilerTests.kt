@@ -65,7 +65,6 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
     }
 
     @Test
-    @Ignore("PHYS_ALGEBRA_REFACTOR_UNPIVOT")
     fun unpivot() = assertEval(
         "SELECT name, val FROM UNPIVOT `{a:1, b:2, c:3, d:4, e:5, f:6}` AS val AT name",
         """[
@@ -114,7 +113,6 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
     )
 
     @Test
-    @Ignore("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun sum() {
         assertEval("SUM(`[1, 2, 3]`)", "6")
         assertEval("SUM(`[1, 2e0, 3e0]`)", "6e0")
@@ -124,7 +122,6 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
     }
 
     @Test
-    @Ignore("PHYS_ALGEBRA_REFACTOR_CALL_AGG")
     fun max() {
         assertEval("max(`[1, 2, 3]`)", "3")
         assertEval("max(`[1, 2.0, 3]`)", "3")

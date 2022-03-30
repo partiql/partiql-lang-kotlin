@@ -37,6 +37,7 @@ import org.partiql.lang.util.ConfigurableExprValueFormatter
 import org.partiql.lang.util.asSequence
 import org.partiql.lang.util.newFromIonText
 import org.partiql.lang.util.softAssert
+import java.io.OutputStream
 import kotlin.reflect.KClass
 import kotlin.test.assertEquals
 
@@ -50,7 +51,7 @@ import kotlin.test.assertEquals
  *
  * As we parameterize PartiQL's other tests, we should migrate them away from using this base class as well.
  */
-@Deprecated("This class and everything in it should be considered deprecated.")
+@Suppress("DEPRECATION")
 abstract class EvaluatorTestBase : TestBase() {
 
     /**
@@ -59,7 +60,7 @@ abstract class EvaluatorTestBase : TestBase() {
      */
     private fun String.toExprValue(): ExprValue = valueFactory.newFromIonText(this)
 
-    protected fun Map<String, String>.toBindings(): Bindings<ExprValue> =
+    private fun Map<String, String>.toBindings(): Bindings<ExprValue> =
         Bindings.ofMap(mapValues { it.value.toExprValue() })
 
     protected fun Map<String, String>.toSession() = EvaluationSession.build { globals(this@toSession.toBindings()) }
@@ -246,7 +247,7 @@ abstract class EvaluatorTestBase : TestBase() {
      * @param session [EvaluationSession] used for evaluation
      * @param compilerPipelineBuilderBlock any additional configuration to the pipeline after the options are set.
      */
-    protected fun evalForPermissiveMode(
+    private fun evalForPermissiveMode(
         source: String,
         compileOptions: CompileOptions = CompileOptions.standard(),
         session: EvaluationSession = EvaluationSession.standard(),
@@ -300,10 +301,7 @@ abstract class EvaluatorTestBase : TestBase() {
         typingMode: TypingMode = TypingMode.LEGACY
     ): SqlException {
 
-        val compileOptions = when (typingMode) {
-            TypingMode.LEGACY -> CompileOptions.standard()
-            TypingMode.PERMISSIVE -> CompileOptions.build { typingMode(TypingMode.PERMISSIVE) }
-        }
+        val compileOptions = CompileOptions.build { typingMode(typingMode) }
 
         try {
             voidEval(query, session = session, compileOptions = compileOptions)
@@ -396,7 +394,7 @@ abstract class EvaluatorTestBase : TestBase() {
     /**
      *  Asserts that [func] throws an [SqlException], line and column number in [TypingMode.PERMISSIVE] mode
      */
-    protected fun assertThrowsInPermissiveMode(
+    private fun assertThrowsInPermissiveMode(
         errorCode: ErrorCode,
         metadata: NodeMetadata? = null,
         cause: KClass<out Throwable>? = null,
@@ -535,7 +533,7 @@ abstract class EvaluatorTestBase : TestBase() {
      * If non-null, [message] will be dumped to the console before test failure to aid in the identification
      * and debugging of failed tests.
      */
-    protected fun runTestCase(
+    internal fun runTestCase(
         tc: EvaluatorTestCase,
         session: EvaluationSession,
         message: String? = null,
