@@ -1155,7 +1155,7 @@ class SqlParser(
 
     private fun ParseNode.toNullsSpec(): PartiqlAst.NullsSpec {
         if (type != ParseType.NULLS_SPEC) {
-            errMalformedParseTree("Expected ParseType.NULLS instead of $type")
+            errMalformedParseTree("Expected ParseType.NULLS_SPEC instead of $type")
         }
         return PartiqlAst.build {
             when (token?.type) {

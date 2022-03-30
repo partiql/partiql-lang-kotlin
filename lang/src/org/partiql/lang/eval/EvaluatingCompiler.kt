@@ -2036,7 +2036,7 @@ internal class EvaluatingCompiler(
 
             it.nullsSpec
                 ?: errNoContext(
-                    "SortSpec.nulls was not specified",
+                    "SortSpec.nullsSpec was not specified",
                     errorCode = ErrorCode.INTERNAL_ERROR,
                     internal = true
                 )
