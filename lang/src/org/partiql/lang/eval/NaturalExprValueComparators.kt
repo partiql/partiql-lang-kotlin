@@ -54,6 +54,9 @@ import org.partiql.lang.util.isZero
  *    (as defined by this definition) members, as pairs of field name and the member value.
  *  * `BAG` values come finally (except with [NullOrder.NULLS_LAST]), and their values
  *    compare lexicographically based on the *sorted* child elements.
+ *
+ *  @param order that compares left and right values by [Order.ASC] (ascending) or [Order.DESC] (descending) order
+ *  @param nullOrder that places `NULL`/`MISSING` values first or last
  */
 enum class NaturalExprValueComparators(private val order: Order, private val nullOrder: NullOrder) : Comparator<ExprValue> {
     NULLS_FIRST_ASC(Order.ASC, NullOrder.FIRST),
@@ -61,7 +64,7 @@ enum class NaturalExprValueComparators(private val order: Order, private val nul
     NULLS_LAST_ASC(Order.ASC, NullOrder.LAST),
     NULLS_LAST_DESC(Order.DESC, NullOrder.LAST);
 
-    /** Whether or not null values come first or last. */
+    /** Compare items by ascending or descending order */
     private enum class Order {
         ASC,
         DESC
@@ -106,14 +109,14 @@ enum class NaturalExprValueComparators(private val order: Order, private val nul
     private fun <T> compareOrdered(
         left: Iterable<T>,
         right: Iterable<T>,
+        order: Order,
         comparator: Comparator<T>
     ): Int {
         val lIter = left.iterator()
         val rIter = right.iterator()
 
         while (lIter.hasNext() && rIter.hasNext()) {
-            val lChild = lIter.next()
-            val rChild = rIter.next()
+            val (lChild, rChild) = orderLeftRight(order, lIter.next(), rIter.next())
             val cmp = comparator.compare(lChild, rChild)
             if (cmp != 0) {
                 return cmp
@@ -130,15 +133,17 @@ enum class NaturalExprValueComparators(private val order: Order, private val nul
     private fun <T> compareUnordered(
         left: Iterable<T>,
         right: Iterable<T>,
+        order: Order,
         entityCmp: Comparator<T>
     ): Int {
         val pairCmp = object : Comparator<Pair<T, Int>> {
             override fun compare(o1: Pair<T, Int>, o2: Pair<T, Int>): Int {
-                val cmp = entityCmp.compare(o1.first, o2.first)
+                val (lPair, rPair) = orderLeftRight(order, o1, o2)
+                val cmp = entityCmp.compare(lPair.first, rPair.first)
                 if (cmp != 0) {
                     return cmp
                 }
-                return o2.second - o1.second
+                return rPair.second - lPair.second
             }
         }
 
@@ -149,7 +154,7 @@ enum class NaturalExprValueComparators(private val order: Order, private val nul
                 .map { (e, _) -> e }
                 .asIterable()
 
-        return compareOrdered(left.sorted(), right.sorted(), entityCmp)
+        return compareOrdered(left.sorted(), right.sorted(), order, entityCmp)
     }
 
     private val structFieldComparator = object : Comparator<ExprValue> {
@@ -273,7 +278,7 @@ enum class NaturalExprValueComparators(private val order: Order, private val nul
             handle(lType == ExprValueType.LIST, rType == ExprValueType.LIST) {
                 val (lVal, rVal) = orderLeftRight(order, left, right)
 
-                return compareOrdered(lVal, rVal, this)
+                return compareOrdered(lVal, rVal, order, this)
             }
         ) { return it }
 
@@ -282,7 +287,7 @@ enum class NaturalExprValueComparators(private val order: Order, private val nul
             handle(lType == ExprValueType.SEXP, rType == ExprValueType.SEXP) {
                 val (lVal, rVal) = orderLeftRight(order, left, right)
 
-                return compareOrdered(lVal, rVal, this)
+                return compareOrdered(lVal, rVal, order, this)
             }
         ) { return it }
 
@@ -291,7 +296,7 @@ enum class NaturalExprValueComparators(private val order: Order, private val nul
             handle(lType == ExprValueType.STRUCT, rType == ExprValueType.STRUCT) {
                 val (lVal, rVal) = orderLeftRight(order, left, right)
 
-                compareUnordered(lVal, rVal, structFieldComparator)
+                compareUnordered(lVal, rVal, order, structFieldComparator)
             }
         ) { return it }
 
@@ -300,7 +305,7 @@ enum class NaturalExprValueComparators(private val order: Order, private val nul
             handle(lType == ExprValueType.BAG, rType == ExprValueType.BAG) {
                 val (lVal, rVal) = orderLeftRight(order, left, right)
 
-                compareUnordered(lVal, rVal, this)
+                compareUnordered(lVal, rVal, order, this)
             }
         ) { return it }
 

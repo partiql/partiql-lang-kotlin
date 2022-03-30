@@ -22,8 +22,13 @@ import java.util.Collections
 import java.util.Random
 
 class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
-    // the lists below represent the expected ordering of values
+    // the lists below represent the expected ordering of values for asc/desc ordering
     // grouped by lists of equivalent values.
+    // used reversed type of boolean, number, date, time, timestamp, string and lob exprs when preparing
+    // [basicExprsDescOrder] but cannot used reversed type of list, sexp, struct and bag exprs since they
+    // can contain different data type at the same time and asc/desc ordering don't change priority of
+    // comparing data types (nulls first then bools then numbers then date ...)
+    // so needed to create separate exprs for those types
 
     private val nullExprs = listOf(
         // reminder, annotations don't affect order
@@ -34,7 +39,7 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
         "`null.struct`"
     )
 
-    private val nonNullExpr = listOf(
+    private val booleanExprs = listOf(
         listOf(
             "false",
             "`b::false`"
@@ -42,7 +47,10 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
         listOf(
             "`c::true`",
             "true"
-        ),
+        )
+    )
+
+    private val numberExprs = listOf(
         listOf(
             // make sure there are at least two nan
             "`nan`",
@@ -81,13 +89,19 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
             // make sure there are at least two +inf
             "`+inf`",
             "`+inf`"
-        ),
+        )
+    )
+
+    private val dateExprs = listOf(
         listOf(
             "DATE '1992-08-22'"
         ),
         listOf(
             "DATE '2021-08-22'"
-        ),
+        )
+    )
+
+    private val timeExprs = listOf(
         listOf(
             "TIME '12:12:12'",
             "TIME '12:12:12.00'",
@@ -105,7 +119,10 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
         ),
         listOf(
             "TIME WITH TIME ZONE '12:12:12.1-09:00'"
-        ),
+        )
+    )
+
+    private val timestampExprs = listOf(
         listOf(
             "`2017T`",
             "`2017-01T`",
@@ -115,7 +132,10 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
         ),
         listOf(
             "`2017-01-01T01:00Z`"
-        ),
+        )
+    )
+
+    private val stringExprs = listOf(
         listOf(
             "''",
             "`foobar::\"\"`"
@@ -141,7 +161,10 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
         listOf(
             """`"\U0001F4A9"`""",
             """`'\uD83D\uDCA9'`"""
-        ),
+        )
+    )
+
+    private val lobExprs = listOf(
         listOf(
             "`{{}}`",
             "`{{\"\"}}`"
@@ -153,7 +176,10 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
         listOf(
             """`{{"aaaaaaaaaaaaa\xFF"}}`""",
             """`{{YWFhYWFhYWFhYWFhYf8=}}`"""
-        ),
+        )
+    )
+
+    private val listExprs = listOf(
         listOf(
             "[]",
             "`z::x::y::[]`"
@@ -184,7 +210,44 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
         ),
         listOf(
             "[[[1]]]"
+        )
+    )
+
+    private val listExprsDescOrder = listOf(
+        listOf(
+            "[true, true]"
         ),
+        listOf(
+            "[true, 100]"
+        ),
+        listOf(
+            "[true]"
+        ),
+        listOf(
+            "[false, {}]"
+        ),
+        listOf(
+            "[[2, 1]]"
+        ),
+        listOf(
+            "[[1, 2]]"
+        ),
+        listOf(
+            "[[1, 1]]"
+        ),
+        listOf(
+            "[[1]]"
+        ),
+        listOf(
+            "[[[1]]]"
+        ),
+        listOf(
+            "[]",
+            "`z::x::y::[]`"
+        )
+    )
+
+    private val sexpExprs = listOf(
         listOf(
             "`a::b::c::()`"
         ),
@@ -204,7 +267,33 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
         ),
         listOf(
             "`([] [])`"
+        )
+    )
+
+    private val sexpExprsDescOrder = listOf(
+        listOf(
+            "`a::b::c::(1e0)`",
+            "`(1.0000000000000)`",
+            "`(1)`"
         ),
+        listOf(
+            "`(2012T 1 2 3)`"
+        ),
+        listOf(
+            "`(2012T nan)`"
+        ),
+        listOf(
+            "`([] [])`"
+        ),
+        listOf(
+            "`([])`"
+        ),
+        listOf(
+            "`a::b::c::()`"
+        ),
+    )
+
+    private val structExprs = listOf(
         listOf(
             "{}",
             "`m::n::o::{}`"
@@ -255,7 +344,64 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
         ),
         listOf(
             "{'x': 1, 'y': 2, 'z': 1}"
+        )
+    )
+
+    private val structExprsDesc = listOf(
+        listOf(
+            "{'x': 1, 'y': 2, 'z': 1}"
         ),
+        listOf(
+            "{'x': 1, 'y': 2}"
+        ),
+        listOf(
+            "{ 'm': [2, 2], 'n': [2, 2]}"
+        ),
+        listOf(
+            "{ 'm': [1, 2], 'n': [2, 2]}"
+        ),
+        listOf(
+            "{ 'm': [1, 1], 'n': [2, 2]}"
+        ),
+        listOf(
+            "{ 'm': [1, 1], 'n': [1, 2]}"
+        ),
+        listOf(
+            "{ 'm': [1, 1], 'n': [1, 1]}"
+        ),
+        listOf(
+            "{ 'm': <<1, 1>>, 'n': []}"
+        ),
+        listOf(
+            "{ 'm': <<1, 1>>, 'n': <<>>}"
+        ),
+        listOf(
+            "{'d': 3, 'e': 2}"
+        ),
+        listOf(
+            "{'d': 2, 'e': 3, 'f': 4}"
+        ),
+        listOf(
+            "{'d': 1, 'f': 2}"
+        ),
+        listOf(
+            "{'c': false}"
+        ),
+        listOf(
+            "{'b': 1000, 'c': false}",
+            "{'c': false, 'b': 1.00000000e3}"
+        ),
+        listOf(
+            "{'b': `1e3`, 'a': true, 'c': false}",
+            "{'a': true, 'b': 1000, 'c': false}"
+        ),
+        listOf(
+            "{}",
+            "`m::n::o::{}`"
+        )
+    )
+
+    private val bagExprs = listOf(
         listOf(
             "<<>>"
         ),
@@ -290,7 +436,47 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
         )
     )
 
-    private val basicExprs = listOf(nullExprs) + nonNullExpr
+    private val bagExprsDescOrder = listOf(
+        listOf(
+            // The ordered values are: true, true, 1
+            "<<1, true, true>>"
+        ),
+        listOf(
+            // The ordered values are: true, true, 1, 1, 1
+            "<<true, 1, 1.0, `1e0`, true>>"
+        ),
+        listOf(
+            "<<1, 1>>"
+        ),
+        listOf(
+            "<<1>>"
+        ),
+        listOf(
+            "<< [] >>"
+        ),
+        listOf(
+            "<< {}, [] >>"
+        ),
+        listOf(
+            "<< {} >>"
+        ),
+        listOf(
+            "<< <<>>, <<>> >>"
+        ),
+        listOf(
+            "<< <<>> >>"
+        ),
+        listOf(
+            "<<>>"
+        )
+    )
+
+    private val basicExprsAscOrder = listOf(nullExprs) + booleanExprs + numberExprs + dateExprs + timeExprs +
+        timestampExprs + stringExprs + lobExprs + listExprs + sexpExprs + structExprs + bagExprs
+
+    private val basicExprsDescOrder = listOf(nullExprs) + booleanExprs.reversed() + numberExprs.reversed() + dateExprs.reversed() +
+        timeExprs.reversed() + timestampExprs.reversed() + stringExprs.reversed() + lobExprs.reversed() + listExprsDescOrder +
+        sexpExprsDescOrder + structExprsDesc + bagExprsDescOrder
 
     private fun <T> List<List<T>>.flatten() = this.flatMap { it }
     private fun List<List<String>>.eval() = map {
@@ -347,8 +533,10 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
 
         return (1..iterations).flatMap {
             listOf(
-                shuffleCase("BASIC VALUES (NULLS FIRST)", NaturalExprValueComparators.NULLS_FIRST_ASC, basicExprs),
-                shuffleCase("BASIC VALUES (NULLS LAST)", NaturalExprValueComparators.NULLS_LAST_ASC, basicExprs.moveHeadToTail())
+                shuffleCase("BASIC VALUES (NULLS FIRST ASC)", NaturalExprValueComparators.NULLS_FIRST_ASC, basicExprsAscOrder),
+                shuffleCase("BASIC VALUES (NULLS LAST ASC)", NaturalExprValueComparators.NULLS_LAST_ASC, basicExprsAscOrder.moveHeadToTail()),
+                shuffleCase("BASIC VALUES (NULLS FIRST DESC)", NaturalExprValueComparators.NULLS_FIRST_DESC, basicExprsDescOrder),
+                shuffleCase("BASIC VALUES (NULLS LAST DESC)", NaturalExprValueComparators.NULLS_LAST_DESC, basicExprsDescOrder.moveHeadToTail()),
             )
         }
     }
@@ -375,7 +563,10 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
     }
 
     // value pairs for each equality set
-    fun parametersForNonNullEqualityTests(): List<Pair<String, String>> = nonNullExpr.map { equivalentExprs ->
+    fun parametersForNonNullEqualityTests(): List<Pair<String, String>> = listOf(
+        basicExprsAscOrder.drop(1),
+        basicExprsDescOrder.drop(1)
+    ).flatten().map { equivalentExprs ->
         val pairs = mutableListOf<Pair<String, String>>()
 
         equivalentExprs.forEachIndexed { index, expr ->
@@ -397,7 +588,10 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
     }
 
     // null to non null pairs
-    fun parametersForNullEqualityTests(): List<Pair<String, String>> = nonNullExpr.map { equivalentExprs ->
+    fun parametersForNullEqualityTests(): List<Pair<String, String>> = listOf(
+        basicExprsAscOrder.drop(1),
+        basicExprsDescOrder.drop(1)
+    ).flatten().map { equivalentExprs ->
         val pairs = mutableListOf<Pair<String, String>>()
 
         nullExprs.forEach { ne ->
