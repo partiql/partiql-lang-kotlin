@@ -109,14 +109,16 @@ enum class NaturalExprValueComparators(private val order: Order, private val nul
     private fun <T> compareOrdered(
         left: Iterable<T>,
         right: Iterable<T>,
-        order: Order,
         comparator: Comparator<T>
     ): Int {
         val lIter = left.iterator()
         val rIter = right.iterator()
 
         while (lIter.hasNext() && rIter.hasNext()) {
-            val (lChild, rChild) = orderLeftRight(order, lIter.next(), rIter.next())
+            val (lChild, rChild) = when(order) {
+                Order.ASC -> lIter.next() to rIter.next()
+                Order.DESC -> rIter.next() to lIter.next()
+            }
             val cmp = comparator.compare(lChild, rChild)
             if (cmp != 0) {
                 return cmp
@@ -133,17 +135,19 @@ enum class NaturalExprValueComparators(private val order: Order, private val nul
     private fun <T> compareUnordered(
         left: Iterable<T>,
         right: Iterable<T>,
-        order: Order,
         entityCmp: Comparator<T>
     ): Int {
         val pairCmp = object : Comparator<Pair<T, Int>> {
             override fun compare(o1: Pair<T, Int>, o2: Pair<T, Int>): Int {
-                val (lPair, rPair) = orderLeftRight(order, o1, o2)
-                val cmp = entityCmp.compare(lPair.first, rPair.first)
+                val (leftPair, rightPair) = when(order) {
+                    Order.ASC -> o1 to o2
+                    Order.DESC -> o2 to o1
+                }
+                val cmp = entityCmp.compare(leftPair.first, rightPair.first)
                 if (cmp != 0) {
                     return cmp
                 }
-                return rPair.second - lPair.second
+                return rightPair.second - leftPair.second
             }
         }
 
@@ -154,7 +158,7 @@ enum class NaturalExprValueComparators(private val order: Order, private val nul
                 .map { (e, _) -> e }
                 .asIterable()
 
-        return compareOrdered(left.sorted(), right.sorted(), order, entityCmp)
+        return compareOrdered(left.sorted(), right.sorted(), entityCmp)
     }
 
     private val structFieldComparator = object : Comparator<ExprValue> {
@@ -170,14 +174,7 @@ enum class NaturalExprValueComparators(private val order: Order, private val nul
         }
     }
 
-    private fun <T> orderLeftRight(order: Order, left: T, right: T): Pair<T, T> {
-        return when (order) {
-            Order.ASC -> left to right
-            Order.DESC -> right to left
-        }
-    }
-
-    override fun compare(left: ExprValue, right: ExprValue): Int {
+    private fun compareInternal(left: ExprValue, right: ExprValue, nullOrder: NullOrder): Int {
         if (left === right) return EQUAL
 
         val lType = left.type
@@ -190,7 +187,8 @@ enum class NaturalExprValueComparators(private val order: Order, private val nul
         // Bool
         ifCompared(
             handle(lType == ExprValueType.BOOL, rType == ExprValueType.BOOL) {
-                val (lVal, rVal) = orderLeftRight(order, left.booleanValue(), right.booleanValue())
+                val lVal = left.booleanValue()
+                val rVal = right.booleanValue()
 
                 when {
                     lVal == rVal -> EQUAL
@@ -203,7 +201,8 @@ enum class NaturalExprValueComparators(private val order: Order, private val nul
         // Numbers
         ifCompared(
             handle(lType.isNumber, rType.isNumber) {
-                val (lVal, rVal) = orderLeftRight(order, left.numberValue(), right.numberValue())
+                val lVal = left.numberValue()
+                val rVal = right.numberValue()
 
                 ifCompared(handle(lVal.isNaN, rVal.isNaN) { EQUAL }) { return it }
                 ifCompared(handle(lVal.isNegInf, rVal.isNegInf) { EQUAL }) { return it }
@@ -222,7 +221,8 @@ enum class NaturalExprValueComparators(private val order: Order, private val nul
         // Date
         ifCompared(
             handle(lType == ExprValueType.DATE, rType == ExprValueType.DATE) {
-                val (lVal, rVal) = orderLeftRight(order, left.dateValue(), right.dateValue())
+                val lVal = left.dateValue()
+                val rVal = right.dateValue()
 
                 return lVal.compareTo(rVal)
             }
@@ -231,7 +231,8 @@ enum class NaturalExprValueComparators(private val order: Order, private val nul
         // Time
         ifCompared(
             handle(lType == ExprValueType.TIME, rType == ExprValueType.TIME) {
-                val (lVal, rVal) = orderLeftRight(order, left.timeValue(), right.timeValue())
+                val lVal = left.timeValue()
+                val rVal = right.timeValue()
 
                 return lVal.naturalOrderCompareTo(rVal)
             }
@@ -240,7 +241,8 @@ enum class NaturalExprValueComparators(private val order: Order, private val nul
         // Timestamp
         ifCompared(
             handle(lType == ExprValueType.TIMESTAMP, rType == ExprValueType.TIMESTAMP) {
-                val (lVal, rVal) = orderLeftRight(order, left.timestampValue(), right.timestampValue())
+                val lVal = left.timestampValue()
+                val rVal = right.timestampValue()
 
                 return lVal.compareTo(rVal)
             }
@@ -249,7 +251,8 @@ enum class NaturalExprValueComparators(private val order: Order, private val nul
         // Text
         ifCompared(
             handle(lType.isText, rType.isText) {
-                val (lVal, rVal) = orderLeftRight(order, left.stringValue(), right.stringValue())
+                val lVal = left.stringValue()
+                val rVal = right.stringValue()
 
                 return lVal.compareTo(rVal)
             }
@@ -258,7 +261,8 @@ enum class NaturalExprValueComparators(private val order: Order, private val nul
         // LOB
         ifCompared(
             handle(lType.isLob, rType.isLob) {
-                val (lVal, rVal) = orderLeftRight(order, left.bytesValue(), right.bytesValue())
+                val lVal = left.bytesValue()
+                val rVal = right.bytesValue()
 
                 val commonLen = minOf(lVal.size, rVal.size)
                 for (i in 0 until commonLen) {
@@ -276,36 +280,28 @@ enum class NaturalExprValueComparators(private val order: Order, private val nul
         // List
         ifCompared(
             handle(lType == ExprValueType.LIST, rType == ExprValueType.LIST) {
-                val (lVal, rVal) = orderLeftRight(order, left, right)
-
-                return compareOrdered(lVal, rVal, order, this)
+                return compareOrdered(left, right, this)
             }
         ) { return it }
 
         // Sexp
         ifCompared(
             handle(lType == ExprValueType.SEXP, rType == ExprValueType.SEXP) {
-                val (lVal, rVal) = orderLeftRight(order, left, right)
-
-                return compareOrdered(lVal, rVal, order, this)
+                return compareOrdered(left, right, this)
             }
         ) { return it }
 
         // Struct
         ifCompared(
             handle(lType == ExprValueType.STRUCT, rType == ExprValueType.STRUCT) {
-                val (lVal, rVal) = orderLeftRight(order, left, right)
-
-                compareUnordered(lVal, rVal, order, structFieldComparator)
+                compareUnordered(left, right, structFieldComparator)
             }
         ) { return it }
 
         // Bag
         ifCompared(
             handle(lType == ExprValueType.BAG, rType == ExprValueType.BAG) {
-                val (lVal, rVal) = orderLeftRight(order, left, right)
-
-                compareUnordered(lVal, rVal, order, this)
+                compareUnordered(left, right, this)
             }
         ) { return it }
 
@@ -314,5 +310,23 @@ enum class NaturalExprValueComparators(private val order: Order, private val nul
         }
 
         throw IllegalStateException("Could not compare: $left and $right")
+    }
+
+    // can think of `DESC` as the converse/result of `ASC`
+    // - ASC with NULLS FIRST == DESC with NULLS LAST (reverse)
+    // - ASC with NULLS LAST == DESC with NULLS FIRST (reverse)
+    // for `DESC`, return the converse result by multiplying by -1
+    //  need to also flip the NullOrder in the `DESC` case
+    override fun compare(left: ExprValue, right: ExprValue): Int {
+        return when (order) {
+            Order.ASC -> compareInternal(left, right, nullOrder)
+            Order.DESC -> compareInternal(
+                left, right,
+                when (nullOrder) {
+                    NullOrder.FIRST -> NullOrder.LAST
+                    NullOrder.LAST -> NullOrder.FIRST
+                }
+            ) * -1
+        }
     }
 }

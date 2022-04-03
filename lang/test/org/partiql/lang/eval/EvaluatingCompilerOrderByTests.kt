@@ -154,7 +154,7 @@ class EvaluatingCompilerOrderByTests : EvaluatorTestBase() {
             // should order data types by the specifications (NULLS FIRST default for desc)
             EvaluatorTestCase(
                 "SELECT * FROM $differentDataTypes ORDER BY data_value DESC",
-                """[{'data_value': NULL}, {'data_value': false}, {'data_value': 5}, {'data_value': DATE '2021-08-22'}, {'data_value': TIME '12:12:12.1'}, {'data_value': `2017-01-01T00:00-00:00`}, {'data_value': 'a'}, {'data_value': `{{YWFhYWFhYWFhYWFhYf8=}}`}, {'data_value': `{{"aaaaaaaaaaaaa\xff"}}`}, {'data_value': []}, {'data_value': {}}, {'data_value': <<>>}]"""
+                """[{'data_value': NULL}, {'data_value': <<>>}, {'data_value': {}}, {'data_value': []}, {'data_value': `{{YWFhYWFhYWFhYWFhYf8=}}`}, {'data_value': `{{"aaaaaaaaaaaaa\xff"}}`}, {'data_value': 'a'}, {'data_value': `2017-01-01T00:00-00:00`}, {'data_value': TIME '12:12:12.1'}, {'data_value': DATE '2021-08-22'}, {'data_value': 5}, {'data_value': false}]"""
             ),
             // should order data types by the specifications (nulls should be first due to nulls spec)
             EvaluatorTestCase(
@@ -237,7 +237,7 @@ class EvaluatingCompilerOrderByTests : EvaluatorTestBase() {
             // lists items should be ordered by data types (DESC) (nulls first as default for desc)
             EvaluatorTestCase(
                 """SELECT * FROM [{'a': ['a']}, {'a': [1]}, {'a': [true]}, {'a': [null]}, {'a': [{}]}, {'a': [<<>>]}, {'a': [`{{}}`]}, {'a': [[]]} ] ORDER BY a DESC""",
-                "[{'a': [NULL]}, {'a': [true]}, {'a': [1]}, {'a': ['a']}, {'a': [`{{}}`]}, {'a': [[]]}, {'a': [{}]}, {'a': [<<>>]}]"
+                "[{'a': [NULL]}, {'a': [<<>>]}, {'a': [{}]}, {'a': [[]]}, {'a': [`{{}}`]}, {'a': ['a']}, {'a': [1]}, {'a': [true]}]"
             ),
             // structs compared lexicographically first by key then by value (ASC)
             EvaluatorTestCase(
@@ -257,7 +257,7 @@ class EvaluatingCompilerOrderByTests : EvaluatorTestBase() {
             // structs should be ordered by data types (DESC) (nulls first as default for desc)
             EvaluatorTestCase(
                 "SELECT * FROM [{'a': {'a': 5}}, {'a': {'a': 'b'}}, {'a': {'a': true}}, {'a': {'a': []}}, {'a': {'a': {}}}, {'a': {'a': <<>>}}, {'a': {'a': `{{}}`}}, {'a': {'a': null}}] ORDER BY a DESC",
-                "[{'a': {'a': NULL}}, {'a': {'a': true}}, {'a': {'a': 5}}, {'a': {'a': 'b'}}, {'a': {'a': `{{}}`}}, {'a': {'a': []}}, {'a': {'a': {}}}, {'a': {'a': <<>>}}]"
+                "[{'a': {'a': NULL}}, {'a': {'a': <<>>}}, {'a': {'a': {}}}, {'a': {'a': []}}, {'a': {'a': `{{}}`}}, {'a': {'a': 'b'}}, {'a': {'a': 5}}, {'a': {'a': true}}]"
             ),
             // bags compared as sorted lists (ASC)
             EvaluatorTestCase(
