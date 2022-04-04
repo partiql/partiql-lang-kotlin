@@ -12,6 +12,9 @@
  *  language governing permissions and limitations under the License.
  */
 
+// Many deprecated things in this file refer to other things in this file that are deprecated.
+@file:Suppress("DEPRECATION")
+
 package org.partiql.lang.ast
 
 import com.amazon.ion.IonType

@@ -12,6 +12,8 @@
  *  language governing permissions and limitations under the License.
  */
 
+@file:Suppress("DEPRECATION") // We don't need warnings about deprecated ExprNode.
+
 package org.partiql.lang
 
 import com.amazon.ion.IonSystem

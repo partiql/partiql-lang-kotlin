@@ -18,6 +18,7 @@ import org.junit.Assert
 import org.junit.Test
 import kotlin.test.assertEquals
 
+@Suppress("DEPRECATION")
 class VariableReferenceTest {
 
     /**

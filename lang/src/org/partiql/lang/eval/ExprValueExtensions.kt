@@ -394,7 +394,7 @@ fun ExprValue.cast(
                     }
 
                     valueFactory.newString(
-                        when (val l = type.lengthConstraint.length) {
+                        when (type.lengthConstraint.length) {
                             is NumberConstraint.Equals -> truncatedString.trimEnd { c -> c == '\u0020' }
                             is NumberConstraint.UpTo -> truncatedString
                         }

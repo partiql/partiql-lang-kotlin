@@ -70,6 +70,7 @@ internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFact
     }
 
     private fun ionReadHandler(): (InputStream, IonStruct) -> ExprValue = { input, _ ->
+        @Suppress("DEPRECATION")
         valueFactory.newBag(valueFactory.ion.iterate(input).asSequence().map { valueFactory.newFromIonValue(it) })
     }
 

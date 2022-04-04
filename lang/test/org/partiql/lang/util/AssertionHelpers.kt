@@ -11,7 +11,7 @@ import org.junit.jupiter.api.fail
  * to help them to be easier to read.
  */
 fun assertIonEquals(expectedResult: IonValue, actualResult: IonValue, message: String?) {
-    if (expectedResult != null && !actualResult.equals(expectedResult)) {
+    if (actualResult != expectedResult) {
         print("The actual value must match expected value")
         message?.let { print(it) }
         println()

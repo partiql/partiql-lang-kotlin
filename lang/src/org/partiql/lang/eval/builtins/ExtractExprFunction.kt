@@ -72,7 +72,7 @@ internal class ExtractExprFunction(val valueFactory: ExprValueFactory) : ExprFun
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
         return when {
             required[1].isUnknown() -> valueFactory.nullValue
-            else -> eval(session, required)
+            else -> eval(required)
         }
     }
 
@@ -127,7 +127,7 @@ internal class ExtractExprFunction(val valueFactory: ExprValueFactory) : ExprFun
         }
     }
 
-    private fun eval(session: EvaluationSession, args: List<ExprValue>): ExprValue {
+    private fun eval(args: List<ExprValue>): ExprValue {
         val dateTimePart = args[0].dateTimePartValue()
         val extractedValue = when (args[1].type) {
             ExprValueType.TIMESTAMP -> args[1].timestampValue().extractedValue(dateTimePart)

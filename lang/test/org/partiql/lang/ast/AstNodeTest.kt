@@ -1,3 +1,6 @@
+
+@file:Suppress("DEPRECATION") // We don't need warnings about ExprNode deprecation.
+
 package org.partiql.lang.ast
 
 import com.amazon.ion.IonSystem

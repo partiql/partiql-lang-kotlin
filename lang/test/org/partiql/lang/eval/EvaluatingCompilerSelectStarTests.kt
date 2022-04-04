@@ -77,7 +77,7 @@ class EvaluatingCompilerSelectStarTests : EvaluatorTestBase() {
         )
 
     @Test
-    fun `select * over table with mixed types`() {
+    fun `select star over table with mixed types`() {
         runTestCaseInLegacyAndPermissiveModes(
             EvaluatorTestCase(
                 query = "select f.* from << { 'bar': 1 }, 10, << 11, 12 >> >> as f",
