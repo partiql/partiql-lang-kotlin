@@ -303,7 +303,7 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
         }
     }
 
-    private val iterations = 1
+    private val iterations = 1000
 
     data class CompareCase(
         val id: Int,
