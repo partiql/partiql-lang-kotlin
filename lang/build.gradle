@@ -43,7 +43,7 @@ dependencies {
 
     api 'com.amazon.ion:ion-java:1.9.0'
     api 'com.amazon.ion:ion-element:0.2.0'
-    api 'org.partiql:partiql-ir-generator-runtime:0.4.0'
+    api 'org.partiql:partiql-ir-generator-runtime:0.5.0'
     api 'org.partiql:partiql-isl-kotlin:0.1.0'
 
     implementation 'org.apache.commons:commons-csv:1.8'
@@ -58,15 +58,8 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.7.0'
 }
 
-sourceSets {
-    jmh {
-        java.srcDirs = ['src/jmh/java']
-        resources.srcDirs = ['src/jmh/resources']
-        compileClasspath += sourceSets.main.runtimeClasspath
-    }
-}
-
-def partiqlDomainFile = 'partiql-domains.kt'
+def PIG_SOURCE_ROOT = new File(projectDir, "build/generated-src/pig")
+def PIG_OUTPUT_DIR = new File(PIG_SOURCE_ROOT, "org/partiql/lang/domains")
 
 task generatePigDomains {
     group = "code generation"
@@ -74,16 +67,25 @@ task generatePigDomains {
     // TODO: in the future, utilize the API created as part of this ticket:
     // https://github.com/partiql/partiql-ir-generator/issues/5
 
-    def typeUniverse = new File(projectDir, "resources/org/partiql/type-domains/partiql.ion")
-    def outputFile = new File(projectDir, "src/org/partiql/lang/domains/$partiqlDomainFile")
-    def targetLanguage = new TargetLanguage.Kotlin("org.partiql.lang.domains")
-    def cmd = new Command.Generate(typeUniverse, outputFile, targetLanguage)
 
-    // TODO:
+    def typeUniverse = new File(projectDir, "resources/org/partiql/type-domains/partiql.ion")
+    def targetLanguage = new TargetLanguage.Kotlin("org.partiql.lang.domains", PIG_OUTPUT_DIR)
+    def cmd = new Command.Generate(typeUniverse , targetLanguage)
+
+
     // Tell gradle about the input and output of this task so that it only invokes pig when
-    // the input file has changed or the output file is missing.
+    // the input file has changed or the output files are missing.
+    inputs.file(typeUniverse)
+    outputs.dir(PIG_SOURCE_ROOT)
 
     doLast {
+        // If the old PIG output file is present it will break the build so delete it. This prevents confusion and
+        // frustration on the part of PartiQL developers who will otherwise need to know and remember to delete
+        // this file after working with an older revision of PartiQL.
+        def oldPigOutputFile = new File(projectDir, "src/org/partiql/lang/domains/partiql-domains.kt")
+        if(oldPigOutputFile.exists()) {
+            oldPigOutputFile.delete()
+        }
         try {
             org.partiql.pig.MainKt.generateCode(cmd)
         } catch(PigException e) {
@@ -93,11 +95,25 @@ task generatePigDomains {
     }
 }
 
+sourceSets {
+    main {
+        kotlin.srcDirs += [PIG_SOURCE_ROOT]
+    }
+    jmh {
+        java.srcDirs = ['src/jmh/java']
+        kotlin.srcDirs = ["jmh"]
+        resources.srcDirs = ['src/jmh/resources']
+        compileClasspath += sourceSets.main.runtimeClasspath
+    }
+}
+
 compileKotlin.dependsOn generatePigDomains
 
 ktlint {
     filter {
-        exclude("**/$partiqlDomainFile")
+        // excluding multiple files from ktlint was somewhat of a challenge using other approaches..
+        // We use the "workaround" described here: https://github.com/JLLeitschuh/ktlint-gradle/issues/222
+        exclude({it.file.absolutePath.contains("/generated-src/")})
     }
 }
 
