@@ -54,10 +54,21 @@ import org.partiql.lang.util.isZero
  *    (as defined by this definition) members, as pairs of field name and the member value.
  *  * `BAG` values come finally (except with [NullOrder.NULLS_LAST]), and their values
  *    compare lexicographically based on the *sorted* child elements.
+ *
+ *  @param order that compares left and right values by [Order.ASC] (ascending) or [Order.DESC] (descending) order
+ *  @param nullOrder that places `NULL`/`MISSING` values first or last
  */
-enum class NaturalExprValueComparators(private val nullOrder: NullOrder) : Comparator<ExprValue> {
-    NULLS_FIRST(NullOrder.FIRST),
-    NULLS_LAST(NullOrder.LAST);
+enum class NaturalExprValueComparators(private val order: Order, private val nullOrder: NullOrder) : Comparator<ExprValue> {
+    NULLS_FIRST_ASC(Order.ASC, NullOrder.FIRST),
+    NULLS_FIRST_DESC(Order.DESC, NullOrder.FIRST),
+    NULLS_LAST_ASC(Order.ASC, NullOrder.LAST),
+    NULLS_LAST_DESC(Order.DESC, NullOrder.LAST);
+
+    /** Compare items by ascending or descending order */
+    private enum class Order {
+        ASC,
+        DESC
+    }
 
     /** Whether or not null values come first or last. */
     private enum class NullOrder {
@@ -104,8 +115,10 @@ enum class NaturalExprValueComparators(private val nullOrder: NullOrder) : Compa
         val rIter = right.iterator()
 
         while (lIter.hasNext() && rIter.hasNext()) {
-            val lChild = lIter.next()
-            val rChild = rIter.next()
+            val (lChild, rChild) = when (order) {
+                Order.ASC -> lIter.next() to rIter.next()
+                Order.DESC -> rIter.next() to lIter.next()
+            }
             val cmp = comparator.compare(lChild, rChild)
             if (cmp != 0) {
                 return cmp
@@ -126,11 +139,15 @@ enum class NaturalExprValueComparators(private val nullOrder: NullOrder) : Compa
     ): Int {
         val pairCmp = object : Comparator<Pair<T, Int>> {
             override fun compare(o1: Pair<T, Int>, o2: Pair<T, Int>): Int {
-                val cmp = entityCmp.compare(o1.first, o2.first)
+                val (leftPair, rightPair) = when (order) {
+                    Order.ASC -> o1 to o2
+                    Order.DESC -> o2 to o1
+                }
+                val cmp = entityCmp.compare(leftPair.first, rightPair.first)
                 if (cmp != 0) {
                     return cmp
                 }
-                return o2.second - o1.second
+                return rightPair.second - leftPair.second
             }
         }
 
@@ -157,7 +174,7 @@ enum class NaturalExprValueComparators(private val nullOrder: NullOrder) : Compa
         }
     }
 
-    override fun compare(left: ExprValue, right: ExprValue): Int {
+    private fun compareInternal(left: ExprValue, right: ExprValue, nullOrder: NullOrder): Int {
         if (left === right) return EQUAL
 
         val lType = left.type
@@ -293,5 +310,23 @@ enum class NaturalExprValueComparators(private val nullOrder: NullOrder) : Compa
         }
 
         throw IllegalStateException("Could not compare: $left and $right")
+    }
+
+    // can think of `DESC` as the converse/reverse of `ASC`
+    // - ASC with NULLS FIRST == DESC with NULLS LAST (reverse)
+    // - ASC with NULLS LAST == DESC with NULLS FIRST (reverse)
+    // for `DESC`, return the converse result by multiplying by -1
+    //  need to also flip the NullOrder in the `DESC` case
+    override fun compare(left: ExprValue, right: ExprValue): Int {
+        return when (order) {
+            Order.ASC -> compareInternal(left, right, nullOrder)
+            Order.DESC -> compareInternal(
+                left, right,
+                when (nullOrder) {
+                    NullOrder.FIRST -> NullOrder.LAST
+                    NullOrder.LAST -> NullOrder.FIRST
+                }
+            ) * -1
+        }
     }
 }

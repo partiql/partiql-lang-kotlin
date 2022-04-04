@@ -22,7 +22,7 @@ import java.util.Collections
 import java.util.Random
 
 class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
-    // the lists below represent the expected ordering of values
+    // the lists below represent the expected ordering of values for asc/desc ordering
     // grouped by lists of equivalent values.
 
     private val nullExprs = listOf(
@@ -327,6 +327,9 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
         fun <T> List<List<T>>.moveHeadToTail(): List<List<T>> =
             drop(1).plusElement(this[0])
 
+        fun <T> List<List<T>>.moveTailToHead(): List<List<T>> =
+            listOf(this.last()).plus(this).dropLast(1)
+
         fun shuffleCase(
             description: String,
             comparator: Comparator<ExprValue>,
@@ -347,8 +350,10 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
 
         return (1..iterations).flatMap {
             listOf(
-                shuffleCase("BASIC VALUES (NULLS FIRST)", NaturalExprValueComparators.NULLS_FIRST, basicExprs),
-                shuffleCase("BASIC VALUES (NULLS LAST)", NaturalExprValueComparators.NULLS_LAST, basicExprs.moveHeadToTail())
+                shuffleCase("BASIC VALUES (NULLS FIRST ASC)", NaturalExprValueComparators.NULLS_FIRST_ASC, basicExprs),
+                shuffleCase("BASIC VALUES (NULLS LAST ASC)", NaturalExprValueComparators.NULLS_LAST_ASC, basicExprs.moveHeadToTail()),
+                shuffleCase("BASIC VALUES (NULLS FIRST DESC)", NaturalExprValueComparators.NULLS_FIRST_DESC, basicExprs.reversed().moveTailToHead()),
+                shuffleCase("BASIC VALUES (NULLS LAST DESC)", NaturalExprValueComparators.NULLS_LAST_DESC, basicExprs.reversed()),
             )
         }
     }

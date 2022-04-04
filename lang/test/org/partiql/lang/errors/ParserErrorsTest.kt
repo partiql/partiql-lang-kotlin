@@ -1135,6 +1135,90 @@ class ParserErrorsTest : SqlParserTestBase() {
     }
 
     @Test
+    fun orderByMissingNullsType() {
+        checkInputThrowingParserException(
+            "SELECT a FROM tb ORDER BY a ASC NULLS",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 38L,
+                Property.TOKEN_TYPE to TokenType.EOF,
+                Property.TOKEN_VALUE to ion.newSymbol("EOF")
+            )
+        )
+    }
+
+    @Test
+    fun orderByMissingNullsKeywordWithFirstNullsType() {
+        checkInputThrowingParserException(
+            "SELECT a FROM tb ORDER BY a ASC FIRST",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 33L,
+                Property.TOKEN_TYPE to TokenType.FIRST,
+                Property.TOKEN_VALUE to ion.newSymbol("first")
+            )
+        )
+    }
+
+    @Test
+    fun orderByMissingNullsKeywordWithLastNullsType() {
+        checkInputThrowingParserException(
+            "SELECT a FROM tb ORDER BY a ASC LAST",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 33L,
+                Property.TOKEN_TYPE to TokenType.LAST,
+                Property.TOKEN_VALUE to ion.newSymbol("last")
+            )
+        )
+    }
+
+    @Test
+    fun nullsBeforeOrderBy() {
+        checkInputThrowingParserException(
+            "SELECT a FROM tb NULLS LAST ORDER BY a ASC",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 18L,
+                Property.TOKEN_TYPE to TokenType.NULLS,
+                Property.TOKEN_VALUE to ion.newSymbol("nulls")
+            )
+        )
+    }
+
+    @Test
+    fun orderByUnexpectedNullsKeywordAsAttribute() {
+        checkInputThrowingParserException(
+            "SELECT a FROM tb ORDER BY a NULLS SELECT",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 35L,
+                Property.TOKEN_TYPE to TokenType.KEYWORD,
+                Property.TOKEN_VALUE to ion.newSymbol("select")
+            )
+        )
+    }
+
+    @Test
+    fun orderByUnexpectedKeyword() {
+        checkInputThrowingParserException(
+            "SELECT a FROM tb ORDER BY a NULLS FIRST SELECT",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 41L,
+                Property.TOKEN_TYPE to TokenType.KEYWORD,
+                Property.TOKEN_VALUE to ion.newSymbol("select")
+            )
+        )
+    }
+
+    @Test
     fun offsetBeforeLimit() {
         checkInputThrowingParserException(
             "SELECT a FROM tb OFFSET 5 LIMIT 10",
@@ -1152,6 +1236,20 @@ class ParserErrorsTest : SqlParserTestBase() {
     fun limitOffsetBeforeOrderBy() {
         checkInputThrowingParserException(
             "SELECT a FROM tb LIMIT 10 OFFSET 5 ORDER BY b ASC",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 36L,
+                Property.TOKEN_TYPE to TokenType.KEYWORD,
+                Property.TOKEN_VALUE to ion.newSymbol("order")
+            )
+        )
+    }
+
+    @Test
+    fun limitOffsetBeforeOrderByWithNulls() {
+        checkInputThrowingParserException(
+            "SELECT a FROM tb LIMIT 10 OFFSET 5 ORDER BY b ASC NULLS FIRST",
             ErrorCode.PARSE_UNEXPECTED_TOKEN,
             mapOf(
                 Property.LINE_NUMBER to 1L,

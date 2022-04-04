@@ -164,7 +164,7 @@ fun ExprValue.rangeOver(): Iterable<ExprValue> = when {
 fun ExprValue.stringify(): String =
     ConfigurableExprValueFormatter.standard.format(this)
 
-val DEFAULT_COMPARATOR = NaturalExprValueComparators.NULLS_FIRST
+val DEFAULT_COMPARATOR = NaturalExprValueComparators.NULLS_FIRST_ASC
 
 /** Provides the default equality function. */
 fun ExprValue.exprEquals(other: ExprValue): Boolean = DEFAULT_COMPARATOR.compare(this, other) == 0

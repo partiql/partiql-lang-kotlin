@@ -46,6 +46,9 @@ enum class TokenType {
     NULL,
     ASC,
     DESC,
+    NULLS,
+    FIRST,
+    LAST,
     // function specific
     TRIM_SPECIFICATION,
     DATETIME_PART,
