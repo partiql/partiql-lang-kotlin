@@ -209,7 +209,7 @@ class EvaluatingCompilerOrderByTests : EvaluatorTestBase() {
                 """SELECT * FROM [{'a': `{{"Z"}}`}, {'a': `{{"a"}}`}, {'a': `{{"A"}}`}, {'a': `{{"z"}}`}] ORDER BY a DESC""",
                 """[{'a': `{{"z"}}`}, {'a': `{{"a"}}`}, {'a': `{{"Z"}}`}, {'a': `{{"A"}}`}]"""
             ),
-            // sorter array comes first (ASC)
+            // shorter array comes first (ASC)
             EvaluatorTestCase(
                 "SELECT * FROM [ {'a': [1, 2, 3, 4]}, {'a': [1, 2]}, {'a': [1, 2, 3]}, {'a': []}] ORDER BY a",
                 "[{'a': []}, {'a': [1, 2]}, {'a': [1, 2, 3]}, {'a': [1, 2, 3, 4]}]"

@@ -115,7 +115,7 @@ enum class NaturalExprValueComparators(private val order: Order, private val nul
         val rIter = right.iterator()
 
         while (lIter.hasNext() && rIter.hasNext()) {
-            val (lChild, rChild) = when(order) {
+            val (lChild, rChild) = when (order) {
                 Order.ASC -> lIter.next() to rIter.next()
                 Order.DESC -> rIter.next() to lIter.next()
             }
@@ -139,7 +139,7 @@ enum class NaturalExprValueComparators(private val order: Order, private val nul
     ): Int {
         val pairCmp = object : Comparator<Pair<T, Int>> {
             override fun compare(o1: Pair<T, Int>, o2: Pair<T, Int>): Int {
-                val (leftPair, rightPair) = when(order) {
+                val (leftPair, rightPair) = when (order) {
                     Order.ASC -> o1 to o2
                     Order.DESC -> o2 to o1
                 }
@@ -312,7 +312,7 @@ enum class NaturalExprValueComparators(private val order: Order, private val nul
         throw IllegalStateException("Could not compare: $left and $right")
     }
 
-    // can think of `DESC` as the converse/result of `ASC`
+    // can think of `DESC` as the converse/reverse of `ASC`
     // - ASC with NULLS FIRST == DESC with NULLS LAST (reverse)
     // - ASC with NULLS LAST == DESC with NULLS FIRST (reverse)
     // for `DESC`, return the converse result by multiplying by -1
