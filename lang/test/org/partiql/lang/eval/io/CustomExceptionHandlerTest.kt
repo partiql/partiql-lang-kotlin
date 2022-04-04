@@ -11,7 +11,6 @@ import org.partiql.lang.eval.ThunkOptions
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
 import kotlin.test.assertTrue
-import kotlin.test.fail
 
 class AlwaysThrowsFunc : ExprFunction {
 
@@ -34,7 +33,7 @@ class CustomExceptionHandlerTest {
                 CompileOptions.build {
                     thunkOptions(
                         ThunkOptions.build {
-                            handleExceptionForLegacyMode { throwable, sourceLocationMeta ->
+                            handleExceptionForLegacyMode { _, _ ->
                                 customHandlerWasInvoked = true
                                 throw IllegalStateException()
                             }
@@ -48,8 +47,6 @@ class CustomExceptionHandlerTest {
 
         try {
             expression.eval(EvaluationSession.standard())
-            throw IllegalStateException()
-            fail("IllegalStateException was not thrown.")
         } catch (e: IllegalStateException) {
             assertTrue(customHandlerWasInvoked, "Custom handler must be invoked")
         }
@@ -66,7 +63,7 @@ class CustomExceptionHandlerTest {
                 CompileOptions.builder()
                     .thunkOptions(
                         ThunkOptions.builder()
-                            .handleExceptionForLegacyMode { throwable, sourceLocationMeta ->
+                            .handleExceptionForLegacyMode { _, _ ->
                                 customHandlerWasInvoked = true
                                 throw IllegalStateException()
                             }
@@ -80,8 +77,6 @@ class CustomExceptionHandlerTest {
 
         try {
             expression.eval(EvaluationSession.standard())
-            throw IllegalStateException()
-            fail("IllegalStateException was not thrown.")
         } catch (e: IllegalStateException) {
             assertTrue(customHandlerWasInvoked, "Custom handler must be invoked")
         }

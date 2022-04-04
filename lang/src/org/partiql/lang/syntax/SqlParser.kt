@@ -23,9 +23,7 @@ import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.metaContainerOf
 import com.amazon.ionelement.api.toIonElement
-import org.partiql.lang.ast.AstSerializer
 import org.partiql.lang.ast.AstVersion
-import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.IonElementMetaContainer
 import org.partiql.lang.ast.IsCountStarMeta
 import org.partiql.lang.ast.IsImplictJoinMeta
@@ -822,7 +820,7 @@ class SqlParser(
                 SqlDataType.TIME -> timeType(arg1, metas)
                 SqlDataType.TIME_WITH_TIME_ZONE -> timeWithTimeZoneType(arg1, metas)
                 SqlDataType.ANY -> anyType(metas)
-                is SqlDataType.CustomDataType -> customType(typeName!!, metas)
+                is SqlDataType.CustomDataType -> customType(typeName, metas)
             }
         }
     }
@@ -2853,6 +2851,7 @@ class SqlParser(
                     )
                     rem = rem.tail
                 }
+                else -> { /* intentionally blank. */ }
             }
             ParseNode(type = ParseType.SORT_SPEC, token = null, children = sortSpecKey, remaining = rem)
         }
@@ -2976,7 +2975,7 @@ class SqlParser(
     ): ParseNode {
         val parseDelim = parseCommaDelim
 
-        return parseDelimitedList(parseDelim) { delim ->
+        return parseDelimitedList(parseDelim) { _ ->
             var rem = this
             var child = when (mode) {
                 ArgListMode.STRUCT_LITERAL_ARG_LIST -> {
@@ -3152,7 +3151,8 @@ class SqlParser(
 
     /** Entry point into the parser. */
     @Deprecated("`ExprNode` is deprecated. Please use `parseAstStatement` instead. ")
-    override fun parseExprNode(source: String): ExprNode {
+    @Suppress("DEPRECATION")
+    override fun parseExprNode(source: String): org.partiql.lang.ast.ExprNode {
         return parseAstStatement(source).toExprNode(ion)
     }
 
@@ -3178,6 +3178,7 @@ class SqlParser(
         return node.toAstStatement()
     }
 
+    @Suppress("DEPRECATION")
     override fun parse(source: String): IonSexp =
-        AstSerializer.serialize(parseExprNode(source), AstVersion.V0, ion)
+        org.partiql.lang.ast.AstSerializer.serialize(parseExprNode(source), AstVersion.V0, ion)
 }

@@ -1,4 +1,4 @@
-@file:Suppress("UnusedImport")
+@file:Suppress("DEPRECATION", "TYPEALIAS_EXPANSION_DEPRECATION") // We don't need warnings about ExprNode deprecation.
 
 package org.partiql.lang.ast
 

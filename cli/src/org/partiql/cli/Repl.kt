@@ -313,7 +313,7 @@ internal class Repl(
                 }
 
                 ReplState.READ_PARTIQL -> {
-                    buffer.appendln(line)
+                    buffer.appendLine(line)
                     line = readLine()
                     when {
                         line == null -> ReplState.FINAL
@@ -325,12 +325,12 @@ internal class Repl(
                 }
 
                 ReplState.LAST_PARTIQL_LINE -> {
-                    buffer.appendln(line)
+                    buffer.appendLine(line)
                     ReplState.EXECUTE_PARTIQL
                 }
 
                 ReplState.READ_REPL_COMMAND -> {
-                    buffer.appendln(line)
+                    buffer.appendLine(line)
                     line = readLine()
                     when (line) {
                         null -> ReplState.FINAL

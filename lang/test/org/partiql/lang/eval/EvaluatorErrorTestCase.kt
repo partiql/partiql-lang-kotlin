@@ -21,7 +21,7 @@ data class EvaluatorErrorTestCase(
     /**
      * The [ErrorCode] the query is to throw.
      */
-    val errorCode: ErrorCode? = null,
+    val errorCode: ErrorCode,
 
     /**
      * The error context the query throws is to match this mapping.
@@ -48,7 +48,7 @@ data class EvaluatorErrorTestCase(
 
     constructor(
         input: String,
-        errorCode: ErrorCode? = null,
+        errorCode: ErrorCode,
         expectErrorContextValues: Map<Property, Any>,
         cause: KClass<out Throwable>? = null,
         compOptions: CompOptions = CompOptions.STANDARD,

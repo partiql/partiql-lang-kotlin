@@ -1,3 +1,7 @@
+
+// We don't need warnings about deprecated ExprNode.
+@file: Suppress("DEPRECATION")
+
 package org.partiql.lang.ast
 
 import com.amazon.ionelement.api.emptyMetaContainer
@@ -23,6 +27,7 @@ fun ExprNode.toAstStatement(): PartiqlAst.Statement {
     }
 }
 
+@Suppress("TYPEALIAS_EXPANSION_DEPRECATION")
 internal fun PartiQlMetaContainer.toIonElementMetaContainer(): IonElementMetaContainer =
     com.amazon.ionelement.api.metaContainerOf(map { it.tag to it })
 

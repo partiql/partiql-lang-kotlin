@@ -4,6 +4,7 @@ import org.junit.Assert
 import org.junit.Test
 
 class SqlDataTypeTest {
+    @Suppress("SENSELESS_COMPARISON")
     @Test
     fun `accessing non-companion object should not cause NPE`() {
         // Accessing companion object to see if they are initialized properly.
@@ -41,6 +42,7 @@ class SqlDataTypeTest {
         }
     }
 
+    @Suppress("SENSELESS_COMPARISON")
     @Test
     fun sqlDataTypeAccessingCompanionTest() {
         // Accessing companion object should not cause any initialization

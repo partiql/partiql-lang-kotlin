@@ -118,7 +118,6 @@ class StaticTypeTests {
     class SequenceIsInstanceArguments : ArgumentsProviderBase() {
 
         override fun getParameters(): List<TestCase> {
-            val listType = ListType()
             return listOf(
                 // An empty list and an empty s-expression should be a list of s-exp of any type
                 StaticType.ALL_TYPES.map {

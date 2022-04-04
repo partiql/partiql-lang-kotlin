@@ -164,6 +164,7 @@ class ExprValueFactoryTest {
                 assertEquals(expectedValue, tc.value.scalar.bytesValue())
                 assertNull(tc.value.scalar.timestampValue())
             }
+            else -> fail("Unexpected ExprValueType: ${tc.expectedType}")
         }
     }
 
@@ -264,6 +265,7 @@ class ExprValueFactoryTest {
                 assertEquals(tc.expectedIonValue, tc.value.ionValue)
                 assertEquivalentAfterConversionToIon(tc.value)
             }
+            else -> fail("Unexpected ExprValueType: ${tc.expectedType}")
         }
     }
 

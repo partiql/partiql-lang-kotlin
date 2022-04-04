@@ -15,8 +15,8 @@
 package org.partiql.cli
 
 import com.amazon.ion.system.IonSystemBuilder
-import junit.framework.Assert.assertEquals
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.partiql.lang.CompilerPipeline

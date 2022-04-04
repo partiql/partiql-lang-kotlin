@@ -15,6 +15,7 @@ import org.partiql.lang.util.testdsl.ExprNodeTestCase
  * TODO:  when SqlParserTest case has been parameterized, include its test cases here too.
  */
 class AstRewriterBaseTest {
+    @Suppress("DEPRECATION")
     private val defaultRewriter = AstRewriterBase()
     @ParameterizedTest
     @ArgumentsSource(EvaluatorTestCasesAsExprNodeTestCases::class)

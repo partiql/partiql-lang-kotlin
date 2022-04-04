@@ -25,6 +25,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
+@Suppress("DEPRECATION")
 @RunWith(JUnitParamsRunner::class)
 class PathComponentExprTest {
     private val ion: IonSystem = IonSystemBuilder.standard().build()

@@ -21,7 +21,6 @@ import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.loadSingleElement
 import org.junit.Ignore
 import org.junit.Test
-import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.domains.PartiqlAst

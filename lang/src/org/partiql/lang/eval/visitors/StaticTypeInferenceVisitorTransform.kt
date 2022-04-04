@@ -868,7 +868,11 @@ internal class StaticTypeInferenceVisitorTransform(
          * Even if the escape character is of length 1, escape sequence can be incorrect.
          * Check [EvaluatingCompiler.checkPattern] method for more details.
          */
-        fun getTypeForNAryLike(nAryOp: PartiqlAst.Expr, args: List<SingleType>): StaticType {
+        fun getTypeForNAryLike(
+            @Suppress("UNUSED_PARAMETER")
+            nAryOp: PartiqlAst.Expr,
+            args: List<SingleType>
+        ): StaticType {
             return when {
                 // If any one of the operands is missing, return MISSING. MISSING has precedence over NULL
                 args.any { it is MissingType } -> StaticType.MISSING

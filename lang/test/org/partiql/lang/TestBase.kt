@@ -12,6 +12,8 @@
  *  language governing permissions and limitations under the License.
  */
 
+@file:Suppress("DEPRECATION") // We don't need warnings about ExprNode deprecation.
+
 package org.partiql.lang
 
 import com.amazon.ion.Decimal
@@ -50,18 +52,14 @@ import kotlin.reflect.KClass
  * @param ex actual exception thrown by test
  * @param expectedValues expected values for errorContext
  */
-fun <T : SqlException> SoftAssertions.checkErrorAndErrorContext(errorCode: ErrorCode?, ex: T, expectedValues: Map<Property, Any>) {
-    if (ex.errorCode == null && errorCode != null) {
-        fail("Expected an error code but exception error code was null, message was: ${ex.message}")
-    } else {
-        this.assertThat(ex.errorCode).isEqualTo(errorCode)
-    }
+fun <T : SqlException> SoftAssertions.checkErrorAndErrorContext(errorCode: ErrorCode, ex: T, expectedValues: Map<Property, Any>) {
+
+    this.assertThat(ex.errorCode).isEqualTo(errorCode)
+
     val errorContext = ex.errorContext
 
-    if (errorCode != null) {
-        correctContextKeys(errorCode, errorContext)
-        correctContextValues(errorCode, errorContext, expectedValues)
-    }
+    correctContextKeys(errorCode, errorContext)
+    correctContextValues(errorCode, errorContext, expectedValues)
 }
 
 /**
@@ -129,7 +127,6 @@ private fun SoftAssertions.correctContextValues(errorCode: ErrorCode, errorConte
 }
 
 @RunWith(JUnitParamsRunner::class)
-@Deprecated("New test fixtures should not use this--inheritance is an anti-pattern in this case.")
 abstract class TestBase : Assert() {
 
     val ion: IonSystem = ION
@@ -211,7 +208,7 @@ abstract class TestBase : Assert() {
      * [expectErrorContextValues] match the expected values.
      */
     protected fun assertThrowsEvaluationException(
-        errorCode: ErrorCode? = null,
+        errorCode: ErrorCode,
         expectErrorContextValues: Map<Property, Any>,
         cause: KClass<out Throwable>? = null,
         block: () -> Unit

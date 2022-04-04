@@ -12,6 +12,9 @@
  *  language governing permissions and limitations under the License.
  */
 
+// We don't need warnings about deprecated ExprNode.
+@file: Suppress("DEPRECATION")
+
 package org.partiql.lang.ast
 
 import com.amazon.ion.IonSexp
@@ -96,7 +99,6 @@ private class AstSerializerImpl(val astVersion: AstVersion, val ion: IonSystem) 
                     is Parameter -> case { writeParameter(expr) }
                     is NullIf -> case { writeNullIf(expr) }
                     is Coalesce -> case { writeCoalesce(expr) }
-                    is Parameter -> case { writeParameter(expr) }
                     is DateLiteral -> throw UnsupportedOperationException("DATE literals not supported by the V0 AST")
                     is TimeLiteral -> throw UnsupportedOperationException("TIME literals not supported by the V0 AST")
                     is Exec -> throw UnsupportedOperationException("EXEC clause not supported by the V0 AST")

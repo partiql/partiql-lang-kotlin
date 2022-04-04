@@ -119,7 +119,7 @@ class LikePredicateTest : EvaluatorTestBase() {
             val query = "Select * From Object a Where " + whereClause
 
             softly.assertThatCode {
-                when (types.map { it.type }.minBy { it.precedence }) {
+                when (types.map { it.type }.minByOrNull { it.precedence }) {
                     NULL -> assertEval(query, "[]", session)
                     INT -> {
                         val ex = assertFailsWith<SqlException>(message = query) {

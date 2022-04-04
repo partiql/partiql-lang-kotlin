@@ -16,7 +16,7 @@ fun Bindings<ExprValue>.toTypedBindings() = this.let { valuedBindings ->
     object : Bindings<StaticType> {
         override fun get(bindingName: BindingName): StaticType? {
             val exprValue = valuedBindings[bindingName] ?: return null
-            return exprValue.type?.let { StaticType.fromExprValueType(it) }
+            return exprValue.type.let { StaticType.fromExprValueType(it) }
         }
     }
 }

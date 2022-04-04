@@ -409,8 +409,8 @@ class StaticTypeVisitorTransform(
             return from
         }
 
-        override fun transformLetBinding(letBinding: PartiqlAst.LetBinding): PartiqlAst.LetBinding {
-            val binding = super.transformLetBinding(letBinding)
+        override fun transformLetBinding(node: PartiqlAst.LetBinding): PartiqlAst.LetBinding {
+            val binding = super.transformLetBinding(node)
             addLocal(binding.name.text, StaticType.ANY, binding.name.metas)
             return binding
         }

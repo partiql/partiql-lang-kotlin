@@ -108,6 +108,7 @@ class IonSchemaMapper(private val staticType: StaticType) {
             val isNullable = ionBool(isNullable(this) || nullable)
 
             // Get type definitions stored in metas
+            @Suppress("UNCHECKED_CAST")
             val typeDefsFromMetas = metas[ISL_META_KEY] as? List<IonSchemaModel.TypeDefinition>
             // Get type definition for `typeDefName` if exists. Note that `typeDefName` may be null but there may still be a valid type definition.
             val currentTypeDef = typeDefsFromMetas?.firstOrNull { typeDefName == it.name?.text }
@@ -235,6 +236,7 @@ class IonSchemaMapper(private val staticType: StaticType) {
      */
     private fun StaticType.getOtherConstraints(topLevelTypeName: String, typeDefName: String? = null): Set<IonSchemaModel.Constraint> {
         // Get type definitions from metas, if present
+        @Suppress("UNCHECKED_CAST")
         val typeDefsFromMetas = metas[ISL_META_KEY] as? List<IonSchemaModel.TypeDefinition> ?: listOf()
 
         // If there are multiple type definitions, only consider constraints for the relevant one
@@ -360,6 +362,7 @@ class IonSchemaMapper(private val staticType: StaticType) {
     private fun StaticType.toTypeReference(topLevelTypeName: String, nullable: Boolean = false): IonSchemaModel.TypeReference {
         // If ISL in metas has exactly one top-level type, create type reference as a named type with that top-level type name
         // In all other cases, create an inline type definition
+        @Suppress("UNCHECKED_CAST")
         val typeDefsFromMetas = metas[ISL_META_KEY] as? List<IonSchemaModel.TypeDefinition> ?: listOf()
         if (typeDefsFromMetas.size == 1) {
             val typeDefName = typeDefsFromMetas[0].name?.text
@@ -477,6 +480,7 @@ private fun IonSchemaModel.TypeDefinition.getTypeConstraintName(): String? {
  * it was a top-level type in original ISL (ISL used to create the StaticType instance)
  */
 private fun StaticType.addTopLevelTypesFromMetas(): Map<String, IonSchemaModel.TypeDefinition> {
+    @Suppress("UNCHECKED_CAST")
     val typeDefs = this.metas[ISL_META_KEY] as? List<IonSchemaModel.TypeDefinition> ?: emptyList()
     return typeDefs.filter { it.name != null }.map { it.name!!.text to it }.toMap()
 }

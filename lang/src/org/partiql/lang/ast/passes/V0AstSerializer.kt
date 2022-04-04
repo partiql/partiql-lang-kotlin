@@ -1,4 +1,6 @@
 
+@file:Suppress("DEPRECATION") // We don't need warnings about ExprNode deprecation.
+
 package org.partiql.lang.ast.passes
 
 import com.amazon.ion.IonSexp
@@ -22,6 +24,7 @@ class V0AstSerializer {
          * Converts an instance of [ExprNode] to the legacy s-expression based AST.
          */
         @JvmStatic
+        @Suppress("DEPRECATION")
         fun serialize(expr: ExprNode, ion: IonSystem): IonSexp =
             AstSerializer.serialize(expr, AstVersion.V0, ion)
     }

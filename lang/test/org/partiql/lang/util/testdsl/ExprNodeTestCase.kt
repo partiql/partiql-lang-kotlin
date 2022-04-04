@@ -1,3 +1,6 @@
+
+@file:Suppress("DEPRECATION") // Don't need warnings about ExprNode deprecation.
+
 package org.partiql.lang.util.testdsl
 
 import org.junit.jupiter.api.fail

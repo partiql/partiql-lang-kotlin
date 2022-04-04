@@ -5,7 +5,6 @@ import com.amazon.ionelement.api.toIonElement
 import com.amazon.ionelement.api.toIonValue
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
-import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.toAstExpr
 import org.partiql.lang.ast.toExprNode
 import org.partiql.lang.domains.PartiqlAst
@@ -31,7 +30,8 @@ class SqlParserCustomTypeCatalogTests : SqlParserTestBase() {
         val newSerializedPigAst: String
     )
 
-    private fun deserialize(serializedSexp: String): ExprNode {
+    @Suppress("DEPRECATION")
+    private fun deserialize(serializedSexp: String): org.partiql.lang.ast.ExprNode {
         val sexp = ion.singleValue(serializedSexp).asIonSexp()
         val astExpr = PartiqlAst.transform(sexp.toIonElement()) as PartiqlAst.Expr
         val astStatement = PartiqlAst.build {

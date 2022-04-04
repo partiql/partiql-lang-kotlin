@@ -58,6 +58,7 @@ data class IonResultTestCase(
 
     fun toExprNodeTestCase(): ExprNodeTestCase =
         assertDoesNotThrow("IonResultTestCase ${toString()} should not throw when parsing") {
+            @Suppress("DEPRECATION")
             ExprNodeTestCase(name, SqlParser(ION).parseExprNode(sqlUnderTest))
         }
 }

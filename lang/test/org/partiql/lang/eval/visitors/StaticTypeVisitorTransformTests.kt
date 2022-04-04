@@ -856,7 +856,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         StringWriter().use { sw ->
             PrintWriter(sw).use { pw ->
                 this.printStackTrace(pw)
-                return sw.toString()
+                sw.toString()
             }
         }
 

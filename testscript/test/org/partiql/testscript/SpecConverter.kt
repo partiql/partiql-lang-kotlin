@@ -13,7 +13,7 @@ private val ion = IonSystemBuilder.standard().build()
 private val ptsParser = Parser(ion)
 private val ptsCompiler = Compiler(ion)
 
-fun main(args: Array<String>) {
+fun main() {
     val inputs = File("integration-test2/test-scripts")
         .listRecursive(ptsFileFilter)
         .map { file -> NamedInputStream(file.absolutePath, FileInputStream(file)) }

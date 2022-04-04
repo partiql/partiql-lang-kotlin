@@ -12,6 +12,9 @@
  *  language governing permissions and limitations under the License.
  */
 
+// We don't need warnings about deprecated ExprNode.
+@file:Suppress("DEPRECATION")
+
 package org.partiql.lang.eval
 
 import com.amazon.ion.IonType
@@ -50,7 +53,6 @@ import kotlin.test.assertEquals
  *
  * As we parameterize PartiQL's other tests, we should migrate them away from using this base class as well.
  */
-@Deprecated("This class and everything in it should be considered deprecated.")
 abstract class EvaluatorTestBase : TestBase() {
 
     /**
@@ -422,7 +424,7 @@ abstract class EvaluatorTestBase : TestBase() {
 
     protected fun checkInputThrowingEvaluationException(
         input: String,
-        errorCode: ErrorCode? = null,
+        errorCode: ErrorCode,
         expectErrorContextValues: Map<Property, Any>,
         cause: KClass<out Throwable>? = null,
         expectedPermissiveModeResult: String? = null
@@ -440,7 +442,7 @@ abstract class EvaluatorTestBase : TestBase() {
     protected fun checkInputThrowingEvaluationException(
         input: String,
         session: EvaluationSession,
-        errorCode: ErrorCode? = null,
+        errorCode: ErrorCode,
         expectErrorContextValues: Map<Property, Any>,
         cause: KClass<out Throwable>? = null,
         expectedPermissiveModeResult: String? = null
@@ -498,7 +500,7 @@ abstract class EvaluatorTestBase : TestBase() {
                     }
                     // Return MISSING
                     ErrorBehaviorInPermissiveMode.RETURN_MISSING -> {
-                        if (tc.errorCode?.errorCategory() != ErrorCategory.SEMANTIC.toString()) {
+                        if (tc.errorCode.errorCategory() != ErrorCategory.SEMANTIC.toString()) {
                             assertNotNull("Required non null expectedPermissiveModeResult when ErrorCode.errorBehaviorInPermissiveMode is set to ErrorBehaviorInPermissiveMode.RETURN_MISSING", tc.expectedPermissiveModeResult)
                             val originalExprValueForPermissiveMode = evalForPermissiveMode(tc.sqlUnderTest, session = session)
                             val expectedExprValueForPermissiveMode = evalForPermissiveMode(tc.expectedPermissiveModeResult!!, session = session)

@@ -71,11 +71,9 @@ internal fun expectedArgTypeErrorMsg(types: List<ExprValueType>): String = when 
 internal fun errInvalidArgumentType(
     signature: FunctionSignature,
     position: Int,
-    numArgs: Int,
     expectedTypes: List<ExprValueType>,
     actualType: ExprValueType
 ): Nothing {
-    val arity = signature.arity
 
     val expectedTypeMsg = expectedArgTypeErrorMsg(expectedTypes)
 
