@@ -93,6 +93,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 castCase.expression,
                 castCase.expected,
                 compileOptions = CompileOptions.build(compileOptionBlock),
+                excludeLegacySerializerAssertions = true,
                 compilerPipelineBuilderBlock = configurePipeline,
                 block = castCase.additionalAssertBlock
             )
@@ -119,7 +120,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
         val expected: String?,
         val expectedErrorCode: ErrorCode?,
         val quality: CastQualityStatus?,
-        val additionalAssertBlock: AssertExprValue.() -> Unit = { }
+        val additionalAssertBlock: (ExprValue) -> Unit = { }
     ) {
         val expression = when (funcName.toUpperCase()) {
             "IS" -> "($source) IS $type"
@@ -218,7 +219,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
             source: String,
             expected: String?,
             quality: CastQuality,
-            additionalAssertBlock: AssertExprValue.() -> Unit = { }
+            additionalAssertBlock: (ExprValue) -> Unit = { }
         ): (String) -> CastCase = {
             CastCase("CAST", source, it, expected, null, Implemented(quality), additionalAssertBlock)
         }
@@ -228,7 +229,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
             source: String,
             expected: String?,
             qualityStatus: CastQualityStatus,
-            additionalAssertBlock: AssertExprValue.() -> Unit = { }
+            additionalAssertBlock: (ExprValue) -> Unit = { }
         ): (String) -> CastCase = {
             CastCase("CAST", source, it, expected, null, qualityStatus, additionalAssertBlock)
         }
@@ -260,22 +261,22 @@ abstract class CastTestBase : EvaluatorTestBase() {
             listOf(
                 listOf(
                     case("NULL", "null", CastQuality.LOSSLESS) {
-                        assertEquals(ExprValueType.NULL, exprValue.type)
+                        assertEquals(NULL, it.type)
                     }
                 ).types(allTypeNames - "MISSING"),
                 listOf(
                     case("NULL", "null", CastQuality.LOSSLESS) {
-                        assertEquals(ExprValueType.MISSING, exprValue.type)
+                        assertEquals(MISSING, it.type)
                     }
                 ).types(listOf("MISSING")),
                 listOf(
                     case("MISSING", "null", CastQuality.LOSSLESS) {
-                        assertEquals(ExprValueType.MISSING, exprValue.type)
+                        assertEquals(MISSING, it.type)
                     }
                 ).types(allTypeNames - "NULL"),
                 listOf(
                     case("MISSING", "null", CastQuality.LOSSLESS) {
-                        assertEquals(ExprValueType.NULL, exprValue.type)
+                        assertEquals(NULL, it.type)
                     }
                 ).types(listOf("NULL")),
                 listOf(
@@ -1387,7 +1388,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case.expectedErrorCode != null && case.expectedErrorCode.category != ErrorCategory.SEMANTIC -> {
                     // rewrite error code cases to `MISSING` for permissive mode
                     case.copy(expected = "null", expectedErrorCode = null) {
-                        assertEquals(ExprValueType.MISSING, exprValue.type)
+                        assertEquals(MISSING, it.type)
                     }
                 }
                 else -> case
@@ -1470,8 +1471,8 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     },
                     expectedErrorCode = null
                 ) {
-                    assertEquals(identityValue.type, exprValue.type)
-                    assertEquals(0, DEFAULT_COMPARATOR.compare(identityValue, exprValue))
+                    assertEquals(identityValue.type, it.type)
+                    assertEquals(0, DEFAULT_COMPARATOR.compare(identityValue, it))
                 }
 
                 case.copy(

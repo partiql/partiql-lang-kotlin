@@ -20,7 +20,12 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
     // Pass test cases
     @ParameterizedTest
     @ArgumentsSource(ExtractPassCases::class)
-    fun runPassTests(testCase: ExprFunctionTestCase) = assertEval(testCase.source, testCase.expected, testCase.session)
+    fun runPassTests(testCase: ExprFunctionTestCase) = assertEval(
+        source = testCase.source,
+        expected = testCase.expected,
+        session = testCase.session,
+        excludeLegacySerializerAssertions = true
+    )
 
     class ExtractPassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(

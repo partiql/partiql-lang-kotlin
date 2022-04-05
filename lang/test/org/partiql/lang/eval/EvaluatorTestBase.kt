@@ -28,6 +28,7 @@ import org.partiql.lang.ast.AstDeserializerBuilder
 import org.partiql.lang.ast.AstSerializer
 import org.partiql.lang.ast.AstVersion
 import org.partiql.lang.ast.ExprNode
+import org.partiql.lang.ast.passes.AstRewriterBase
 import org.partiql.lang.ast.toAstStatement
 import org.partiql.lang.ast.toExprNode
 import org.partiql.lang.domains.PartiqlAst
@@ -38,9 +39,7 @@ import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.ConfigurableExprValueFormatter
 import org.partiql.lang.util.asSequence
 import org.partiql.lang.util.newFromIonText
-import org.partiql.lang.util.softAssert
 import org.partiql.lang.util.stripMetas
-import kotlin.reflect.KClass
 import kotlin.test.assertEquals
 
 /**
@@ -54,6 +53,8 @@ import kotlin.test.assertEquals
  * As we parameterize PartiQL's other tests, we should migrate them away from using this base class as well.
  */
 abstract class EvaluatorTestBase : TestBase() {
+
+    val defaultRewriter = AstRewriterBase()
 
     /**
      * creates a [ExprValue] from the IonValue represented by this String. Assumes the string represents a single
@@ -83,27 +84,24 @@ abstract class EvaluatorTestBase : TestBase() {
         source: String,
         expected: String,
         session: EvaluationSession = EvaluationSession.standard(),
+        excludeLegacySerializerAssertions: Boolean = false,
         compileOptions: CompileOptions = CompileOptions.standard(),
         compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { },
-        block: AssertExprValue.() -> Unit = { }
+        block: (ExprValue) -> Unit = { }
     ) {
 
         val expectedIon = ion.singleValue(expected)
-        val parser = SqlParser(ion, CUSTOM_TEST_TYPES)
-        val originalAst = parser.parseAstStatement(source)
 
-        fun evalAndAssert(ast: PartiqlAst.Statement, message: String) {
-            AssertExprValue(
-                eval(ast, compileOptions, session, compilerPipelineBuilderBlock),
-                message = "${compileOptions.typedOpBehavior} CAST in ${compileOptions.typingMode} typing mode, " +
-                    "evaluated '$source' with evaluator ($message)"
-            ).apply { assertIonValue(expectedIon) }.run(block)
-        }
+        val result = eval(source, compileOptions, session, compilerPipelineBuilderBlock)
+        assertEquals(
+            expectedIon,
+            result.ionValue.cloneAndRemoveAnnotations(),
+            "${compileOptions.typedOpBehavior} CAST in ${compileOptions.typingMode} typing mode, " +
+                "evaluated '$source' with evaluator"
+        )
+        block(result)
 
-        // Evaluate the ast originally obtained from the parser
-        evalAndAssert(originalAst, "AST originated from parser")
-
-        assertAstRewriterBase(source, originalAst.toExprNode(ion))
+        commonAssertions(source, excludeLegacySerializerAssertions);
     }
 
     /**
@@ -228,7 +226,7 @@ abstract class EvaluatorTestBase : TestBase() {
      * @param session [EvaluationSession] used for evaluation
      * @param compilerPipelineBuilderBlock any additional configuration to the pipeline after the options are set.
      */
-    protected fun evalForPermissiveMode(
+    private fun evalForPermissiveMode(
         source: String,
         compileOptions: CompileOptions = CompileOptions.standard(),
         session: EvaluationSession = EvaluationSession.standard(),
@@ -462,29 +460,6 @@ abstract class EvaluatorTestBase : TestBase() {
             compileOptionsBuilderBlock = tc.compileOptionsBuilderBlock,
             compilerPipelineBuilderBlock = tc.compilerPipelineBuilderBlock
         )
-    }
-
-    /**
-     *  Asserts that [func] throws an [SqlException], line and column number in [TypingMode.PERMISSIVE] mode
-     */
-    private fun assertThrowsInPermissiveMode(
-        expectedErrorCode: ErrorCode,
-        expectedErrorContext: PropertyValueMap? = null,
-        cause: KClass<out Throwable>? = null,
-        func: () -> Unit
-    ) {
-        try {
-            func()
-            fail("didn't throw")
-        } catch (e: SqlException) {
-            softAssert {
-                assertThat(e.errorCode).`as`("error code").isEqualTo(expectedErrorCode)
-                if (expectedErrorContext != null) {
-                    assertThat(e.errorContext).`as`("error context").isEqualTo(expectedErrorContext)
-                }
-                if (cause != null) assertThat(e).hasRootCauseExactlyInstanceOf(cause.java)
-            }
-        }
     }
 
     /**

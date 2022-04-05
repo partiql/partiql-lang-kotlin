@@ -1113,11 +1113,11 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
     fun missingGroupByCaseInsensitiveTest() {
         assertThrows(
             """
-                SELECT O.customerId, MAX(o.cost)
-                FROM orders as o
-            """,
+                    SELECT O.customerId, MAX(o.cost)
+                    FROM orders as o
+                """,
             ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
-            propertyValueMapOf(2, 24, Property.BINDING_NAME to "O"),
+            propertyValueMapOf(2, 28, Property.BINDING_NAME to "O"),
             session = session,
         )
     }
@@ -1126,11 +1126,11 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
     fun missingGroupByCaseSensitiveTest() {
         assertThrows(
             """
-                SELECT "O".customerId, MAX(o.cost)
-                FROM orders as o
-            """,
+                    SELECT "O".customerId, MAX(o.cost)
+                    FROM orders as o
+                """,
             ErrorCode.EVALUATOR_QUOTED_BINDING_DOES_NOT_EXIST,
-            propertyValueMapOf(2, 24, Property.BINDING_NAME to "O"),
+            propertyValueMapOf(2, 28, Property.BINDING_NAME to "O"),
             expectedPermissiveModeResult = "<<{'_2': 10}>>",
             session = session
         )
@@ -1140,12 +1140,12 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
     fun missingGroupByJoinTest() {
         assertThrows(
             query = """
-                SELECT MAX(o.cost), c.firstName
-                FROM customers AS c
-                INNER JOIN orders AS o ON c.customerId = o.customerId
-            """,
+                    SELECT MAX(o.cost), c.firstName
+                    FROM customers AS c
+                    INNER JOIN orders AS o ON c.customerId = o.customerId
+                """,
             expectedErrorCode = ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
-            expectedErrorContext = propertyValueMapOf(2, 37, Property.BINDING_NAME to "c"),
+            expectedErrorContext = propertyValueMapOf(2, 41, Property.BINDING_NAME to "c"),
             session = session
         )
     }
@@ -1154,13 +1154,13 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
     fun missingGroupByHavingTest() {
         assertThrows(
             query = """
-                SELECT MAX(o.cost), o.sellerId
-                FROM orders AS o
-                GROUP BY o.customerId
-                HAVING COUNT(1) > 1
-            """,
+                    SELECT MAX(o.cost), o.sellerId
+                    FROM orders AS o
+                    GROUP BY o.customerId
+                    HAVING COUNT(1) > 1
+                """,
             expectedErrorCode = ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
-            expectedErrorContext = propertyValueMapOf(2, 37, Property.BINDING_NAME to "o"),
+            expectedErrorContext = propertyValueMapOf(2, 41, Property.BINDING_NAME to "o"),
             session = session
         )
     }
@@ -1169,17 +1169,17 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
     fun missingGroupByOuterQueryTest() {
         assertThrows(
             query = """
-            SELECT AVG(o.cost), o.customerId
-            FROM orders AS o
-            WHERE
-	            o.customerId IN(
-                    SELECT VALUE o.customerId
-                    FROM orders AS o
-                    GROUP BY o.customerId
-                )
-            """,
+                SELECT AVG(o.cost), o.customerId
+                FROM orders AS o
+                WHERE
+                    o.customerId IN(
+                        SELECT VALUE o.customerId
+                        FROM orders AS o
+                        GROUP BY o.customerId
+                    )
+                """,
             expectedErrorCode = ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
-            expectedErrorContext = propertyValueMapOf(2, 33, Property.BINDING_NAME to "o"),
+            expectedErrorContext = propertyValueMapOf(2, 37, Property.BINDING_NAME to "o"),
             session = session
         )
     }
@@ -1188,15 +1188,15 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
     fun missingGroupByInnerQueryTest() {
         assertThrows(
             query = """
-            SELECT MIN(o.numOrders)
-            FROM(
-                SELECT o.customerId, COUNT(1) AS numOrders
-                FROM orders AS o
-            ) as o
-            GROUP BY o.customerId
-            """,
+                SELECT MIN(o.numOrders)
+                FROM(
+                    SELECT o.customerId, COUNT(1) AS numOrders
+                    FROM orders AS o
+                ) as o
+                GROUP BY o.customerId
+                """,
             expectedErrorCode = ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
-            expectedErrorContext = propertyValueMapOf(4, 24, Property.BINDING_NAME to "o"),
+            expectedErrorContext = propertyValueMapOf(4, 28, Property.BINDING_NAME to "o"),
             session = session
         )
     }

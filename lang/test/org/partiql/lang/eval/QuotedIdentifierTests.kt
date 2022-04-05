@@ -56,7 +56,7 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
         assertEvalIsMissing("\"ABC\"", simpleSession, undefinedVariableMissingCompileOptions)
 
         // Ensure case sensitive lookup still works.
-        assertEval("\"Abc\"", "1", simpleSession, undefinedVariableMissingCompileOptions)
+        assertEval("\"Abc\"", "1", simpleSession, compileOptions = undefinedVariableMissingCompileOptions)
     }
 
     @Test
