@@ -3,14 +3,15 @@ package org.partiql.lang.eval.builtins.functions
 import org.junit.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluatorTestBase
-import org.partiql.lang.eval.NodeMetadata
 import org.partiql.lang.eval.builtins.Argument
 import org.partiql.lang.eval.builtins.ExprFunctionTestCase
 import org.partiql.lang.eval.builtins.checkInvalidArgType
 import org.partiql.lang.eval.builtins.toSession
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.lang.util.propertyValueMapOf
 
 /**
  * Parsing related tests in [org.partiql.lang.syntax.SqlParserTest] and [org.partiql.lang.errors.ParserErrorsTest].
@@ -134,7 +135,12 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(InvalidArgCases::class)
     fun extractInvalidArgumentTests(testCase: InvalidArgTestCase) =
-        assertThrows(testCase.query, testCase.message, NodeMetadata(1, 1), "MISSING")
+        assertThrows(
+            testCase.query,
+            ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_FUNC_CALL,
+            expectedErrorContext = propertyValueMapOf(1, 1),
+            expectedPermissiveModeResult = "MISSING"
+        )
 
     class InvalidArgCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(

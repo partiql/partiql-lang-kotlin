@@ -1,8 +1,8 @@
 package org.partiql.lang.eval
 
+import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Property
-import kotlin.reflect.KClass
+import org.partiql.lang.errors.PropertyValueMap
 
 /**
  * Defines a error test case for query evaluation.
@@ -16,7 +16,7 @@ data class EvaluatorErrorTestCase(
     /**
      * The query to be evaluated.
      */
-    val sqlUnderTest: String,
+    val query: String,
 
     /**
      * The [ErrorCode] the query is to throw.
@@ -26,12 +26,7 @@ data class EvaluatorErrorTestCase(
     /**
      * The error context the query throws is to match this mapping.
      */
-    val expectErrorContextValues: Map<Property, Any>,
-
-    /**
-     * The Java exception that is equivalent to the thrown Kotlin exception
-     */
-    val cause: KClass<out Throwable>? = null,
+    val expectErrorContext: PropertyValueMap,
 
     /**
      * Expected result in the permissive mode. Default value is null.
@@ -39,26 +34,36 @@ data class EvaluatorErrorTestCase(
     val expectedPermissiveModeResult: String? = null,
 
     /**
-     * The [CompileOptions] to be used when compiling the query.
-     *
-     * Some errors are only thrown when certain compile options are enabled.
+     * Builder block for building [CompileOptions].
      */
-    val compOptions: CompOptions = CompOptions.STANDARD
+    val compileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit = { },
+
+    /**
+     * Allows each test to configure its pipeline.
+     */
+    val compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }
 ) {
 
     constructor(
-        input: String,
+        query: String,
         errorCode: ErrorCode,
-        expectErrorContextValues: Map<Property, Any>,
-        cause: KClass<out Throwable>? = null,
-        compOptions: CompOptions = CompOptions.STANDARD,
-        expectedPermissiveModeResult: String? = null
-    ) : this(null, input, errorCode, expectErrorContextValues, cause, expectedPermissiveModeResult, compOptions)
+        expectErrorContext: PropertyValueMap,
+        expectedPermissiveModeResult: String? = null,
+        compileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit = { },
+        compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }
+    ) : this(
+        null,
+        query,
+        errorCode,
+        expectErrorContext,
+        expectedPermissiveModeResult,
+        compileOptionsBuilderBlock,
+        compilerPipelineBuilderBlock
+    )
 
     /** This will show up in the IDE's test runner. */
     override fun toString(): String {
         val groupNameString = if (groupName == null) "" else "$groupName"
-        val causeString = if (cause == null) "" else ": $cause"
-        return "$groupNameString $sqlUnderTest : $errorCode : $expectErrorContextValues $causeString"
+        return "$groupNameString $query : $errorCode : $expectErrorContext"
     }
 }

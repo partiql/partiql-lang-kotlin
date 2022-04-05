@@ -4,7 +4,6 @@ import org.junit.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.EvaluatorTestBase
 import org.partiql.lang.eval.builtins.Argument
 import org.partiql.lang.eval.builtins.ExprFunctionTestCase
@@ -12,7 +11,7 @@ import org.partiql.lang.eval.builtins.checkInvalidArgType
 import org.partiql.lang.eval.builtins.checkInvalidArity
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.ArgumentsProviderBase
-import org.partiql.lang.util.to
+import org.partiql.lang.util.propertyValueMapOf
 
 class MakeTimeEvaluationTest : EvaluatorTestBase() {
     @ParameterizedTest
@@ -47,13 +46,10 @@ class MakeTimeEvaluationTest : EvaluatorTestBase() {
     // Error test cases: Invalid arguments
     @ParameterizedTest
     @ArgumentsSource(InvalidArgCases::class)
-    fun makeTimeInvalidArgumentTests(query: String) = checkInputThrowingEvaluationException(
-        input = query,
-        errorCode = ErrorCode.EVALUATOR_TIME_FIELD_OUT_OF_RANGE,
-        expectErrorContextValues = mapOf<Property, Any>(
-            Property.LINE_NUMBER to 1L,
-            Property.COLUMN_NUMBER to 1L
-        )
+    fun makeTimeInvalidArgumentTests(query: String) = assertThrows(
+        query = query,
+        expectedErrorCode = ErrorCode.EVALUATOR_TIME_FIELD_OUT_OF_RANGE,
+        expectedErrorContext = propertyValueMapOf(1, 1)
     )
 
     class InvalidArgCases : ArgumentsProviderBase() {

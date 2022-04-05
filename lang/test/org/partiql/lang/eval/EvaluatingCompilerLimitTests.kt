@@ -3,6 +3,7 @@ package org.partiql.lang.eval
 import org.junit.Test
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
+import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.lang.util.sourceLocationProperties
 
 class EvaluatingCompilerLimitTests : EvaluatorTestBase() {
@@ -51,18 +52,18 @@ class EvaluatingCompilerLimitTests : EvaluatorTestBase() {
 
     @Test
     fun `LIMIT -1 should throw exception`() =
-        checkInputThrowingEvaluationException(
+        assertThrows(
             """ select * from <<1>> limit -1 """,
             ErrorCode.EVALUATOR_NEGATIVE_LIMIT,
-            sourceLocationProperties(1, 29)
+            propertyValueMapOf(1, 29)
         )
 
     @Test
     fun `non-integer value should throw exception`() =
-        checkInputThrowingEvaluationException(
+        assertThrows(
             """ select * from <<1>> limit 'this won''t work' """,
             ErrorCode.EVALUATOR_NON_INT_LIMIT_VALUE,
-            sourceLocationProperties(1, 28) + mapOf(Property.ACTUAL_TYPE to "STRING")
+            propertyValueMapOf(1, 28, Property.ACTUAL_TYPE to "STRING")
         )
 
     @Test

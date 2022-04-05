@@ -378,6 +378,29 @@ internal abstract class ThunkFactory(
         op: (ExprValue, ExprValue) -> Boolean
     ): ThunkEnv
 
+    /** Populates [exception] with the line & column from the specified [SourceLocationMeta]. */
+    protected fun populateErrorContext(
+        exception: EvaluationException,
+        sourceLocation: SourceLocationMeta?
+    ) = when (exception.errorContext) {
+        null ->
+            EvaluationException(
+                message = exception.message,
+                errorCode = exception.errorCode,
+                errorContext = errorContextFrom(sourceLocation),
+                cause = exception,
+                internal = exception.internal
+            )
+        else -> {
+            // Only add source location data to the error context if it doesn't already exist
+            // in [errorContext].
+            if (!exception.errorContext.hasProperty(Property.LINE_NUMBER)) {
+                sourceLocation?.let { fillErrorContext(exception.errorContext, sourceLocation) }
+            }
+            exception
+        }
+    }
+
     /**
      * Handles exceptions appropriately for a run-time [ThunkEnv].
      *
@@ -526,27 +549,12 @@ internal class LegacyThunkFactory(
         try {
             block()
         } catch (e: EvaluationException) {
-            when {
-                e.errorContext == null ->
-                    throw EvaluationException(
-                        message = e.message,
-                        errorCode = e.errorCode,
-                        errorContext = errorContextFrom(sourceLocation),
-                        cause = e,
-                        internal = e.internal
-                    )
-                else -> {
-                    // Only add source location data to the error context if it doesn't already exist
-                    // in [errorContext].
-                    if (!e.errorContext.hasProperty(Property.LINE_NUMBER)) {
-                        sourceLocation?.let { fillErrorContext(e.errorContext, sourceLocation) }
-                    }
-                    throw e
-                }
-            }
+            throw populateErrorContext(e, sourceLocation)
         } catch (e: Exception) {
             compileOptions.thunkOptions.handleExceptionForLegacyMode(e, sourceLocation)
         }
+
+
 }
 
 /**
@@ -694,7 +702,7 @@ internal class PermissiveThunkFactory(
             compileOptions.thunkOptions.handleExceptionForPermissiveMode(e, sourceLocation)
             when (e.errorCode.errorBehaviorInPermissiveMode) {
                 // Rethrows the exception as it does in LEGACY mode.
-                ErrorBehaviorInPermissiveMode.THROW_EXCEPTION -> throw e
+                ErrorBehaviorInPermissiveMode.THROW_EXCEPTION -> throw populateErrorContext(e, sourceLocation)
                 ErrorBehaviorInPermissiveMode.RETURN_MISSING -> valueFactory.missingValue
             }
         } catch (e: Exception) {

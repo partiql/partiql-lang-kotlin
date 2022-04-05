@@ -17,6 +17,9 @@ package org.partiql.lang.eval
 import junitparams.Parameters
 import org.junit.BeforeClass
 import org.junit.Test
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
+import org.partiql.lang.util.propertyValueMapOf
 import java.math.BigInteger
 import java.util.Random
 
@@ -67,10 +70,18 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
     }
 
     @Test
-    fun bigInt() = assertThrows("$bigInt", "Int overflow or underflow at compile time", NodeMetadata(1, 1))
+    fun bigInt() = assertThrows(
+        "$bigInt",
+        ErrorCode.SEMANTIC_LITERAL_INT_OVERFLOW,
+        expectedErrorContext = propertyValueMapOf(1, 1)
+    )
 
     @Test
-    fun negativeBigInt() = assertThrows("$negativeBigInt", "Int overflow or underflow at compile time", NodeMetadata(1, 2))
+    fun negativeBigInt() = assertThrows(
+        "$negativeBigInt",
+        ErrorCode.SEMANTIC_LITERAL_INT_OVERFLOW,
+        expectedErrorContext = propertyValueMapOf(1, 2)
+    )
 
     @Test
     @Parameters
@@ -94,7 +105,12 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
     }
 
     @Test
-    fun plusOverflow() = assertThrows("$closeToMaxLong + $closeToMaxLong", "Int overflow or underflow", NodeMetadata(1, 21), "MISSING")
+    fun plusOverflow() = assertThrows(
+        "$closeToMaxLong + $closeToMaxLong",
+        ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
+        expectedErrorContext = propertyValueMapOf(1, 21, Property.INT_SIZE_IN_BYTES to 8),
+        expectedPermissiveModeResult = "MISSING"
+    )
 
     @Test
     @Parameters
@@ -118,7 +134,12 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
     }
 
     @Test
-    fun minusUnderflow() = assertThrows("$closeToMinLong - $closeToMaxLong", "Int overflow or underflow", NodeMetadata(1, 22), "MISSING")
+    fun minusUnderflow() = assertThrows(
+        "$closeToMinLong - $closeToMaxLong",
+        ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
+        expectedErrorContext = propertyValueMapOf(1, 22, Property.INT_SIZE_IN_BYTES to 8),
+        expectedPermissiveModeResult = "MISSING"
+    )
 
     @Test
     @Parameters
@@ -145,10 +166,20 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
     }
 
     @Test
-    fun timesOverflow() = assertThrows("$closeToMaxLong * 2", "Int overflow or underflow", NodeMetadata(1, 21), "MISSING")
+    fun timesOverflow() = assertThrows(
+        "$closeToMaxLong * 2",
+        ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
+        expectedErrorContext = propertyValueMapOf(1, 21, Property.INT_SIZE_IN_BYTES to 8),
+        expectedPermissiveModeResult = "MISSING"
+    )
 
     @Test
-    fun timesUnderflow() = assertThrows("${Long.MIN_VALUE} * -1", "Int overflow or underflow", NodeMetadata(1, 22), "MISSING")
+    fun timesUnderflow() = assertThrows(
+        "${Long.MIN_VALUE} * -1",
+        ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
+        expectedErrorContext = propertyValueMapOf(1, 22, Property.INT_SIZE_IN_BYTES to 8),
+        expectedPermissiveModeResult = "MISSING"
+    )
 
     @Test
     @Parameters
@@ -175,13 +206,28 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
     }
 
     @Test
-    fun divisionUnderflow() = assertThrows("${Long.MIN_VALUE} / -1", "Int overflow or underflow", NodeMetadata(1, 22), "MISSING")
+    fun divisionUnderflow() = assertThrows(
+        "${Long.MIN_VALUE} / -1",
+        ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
+        expectedErrorContext = propertyValueMapOf(1, 22, Property.INT_SIZE_IN_BYTES to 8),
+        expectedPermissiveModeResult = "MISSING"
+    )
 
     @Test
-    fun castBigInt() = assertThrows("cast('$bigInt' as int)", "Int overflow or underflow", NodeMetadata(1, 1), "MISSING")
+    fun castBigInt() = assertThrows(
+        "cast('$bigInt' as int)",
+        ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
+        expectedErrorContext = propertyValueMapOf(1, 1, Property.INT_SIZE_IN_BYTES to 8),
+        expectedPermissiveModeResult = "MISSING"
+    )
 
     @Test
-    fun castNegativeBigInt() = assertThrows("cast('$negativeBigInt' as int)", "Int overflow or underflow", NodeMetadata(1, 1), "MISSING")
+    fun castNegativeBigInt() = assertThrows(
+        "cast('$negativeBigInt' as int)",
+        ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
+        expectedErrorContext = propertyValueMapOf(1, 1, Property.INT_SIZE_IN_BYTES to 8),
+        expectedPermissiveModeResult = "MISSING"
+    )
 
     @Test
     fun castSmallDecimalExact() = assertEval("cast(5e0 as int)", "5")
@@ -190,10 +236,20 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
     fun castSmallDecimal() = assertEval("cast(5.2 as int)", "5")
 
     @Test
-    fun castHugeDecimal() = assertThrows("cast(1e2147483609 as int)", "Int overflow or underflow", NodeMetadata(1, 1), "MISSING")
+    fun castHugeDecimal() = assertThrows(
+        "cast(1e2147483609 as int)",
+        ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
+        expectedErrorContext = propertyValueMapOf(1, 1, Property.INT_SIZE_IN_BYTES to 8),
+        expectedPermissiveModeResult = "MISSING"
+    )
 
     @Test
-    fun castHugeNegativeDecimal() = assertThrows("cast(-1e2147483609 as int)", "Int overflow or underflow", NodeMetadata(1, 1), "MISSING")
+    fun castHugeNegativeDecimal() = assertThrows(
+        "cast(-1e2147483609 as int)",
+        ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
+        expectedErrorContext = propertyValueMapOf(1, 1, Property.INT_SIZE_IN_BYTES to 8),
+        expectedPermissiveModeResult = "MISSING"
+    )
 
     @Test
     fun castAlmostZeroDecimal() = assertEval("cast(1e-2147483609 as int)", "0")

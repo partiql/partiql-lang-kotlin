@@ -18,6 +18,8 @@ import org.assertj.core.api.SoftAssertions
 import org.junit.Test
 import org.partiql.lang.SqlException
 import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
+import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.lang.util.softAssert
 import kotlin.test.assertFailsWith
 
@@ -631,51 +633,51 @@ class LikePredicateTest : EvaluatorTestBase() {
     @Test
     fun emptyStringAsEscape() = assertThrows(
         "SELECT * FROM <<>> AS a WHERE '%' LIKE '%' ESCAPE ''",
-        "Cannot use empty character as ESCAPE character in a LIKE predicate: \"\"",
-        NodeMetadata(1, 51)
+        ErrorCode.EVALUATOR_LIKE_PATTERN_INVALID_ESCAPE_SEQUENCE,
+        expectedErrorContext = propertyValueMapOf(1, 51)
     )
 
     @Test
     fun moreThanOneCharacterEscape() = assertThrows(
         "SELECT * FROM <<>> AS a WHERE '%' LIKE '%' ESCAPE '[]'",
-        "Escape character must have size 1 : []",
-        NodeMetadata(1, 51)
+        ErrorCode.EVALUATOR_LIKE_PATTERN_INVALID_ESCAPE_SEQUENCE,
+        expectedErrorContext = propertyValueMapOf(1, 51)
     )
 
     @Test
     fun escapeByItself() = assertThrows(
         "SELECT * FROM <<>> AS a WHERE 'aaaaa' LIKE '[' ESCAPE '['",
-        "Invalid escape sequence : [",
-        NodeMetadata(1, 44)
+        ErrorCode.EVALUATOR_LIKE_PATTERN_INVALID_ESCAPE_SEQUENCE,
+        expectedErrorContext = propertyValueMapOf(1, 44, Property.LIKE_PATTERN to "[", Property.LIKE_ESCAPE to "[")
     )
 
     @Test
     fun escapeWithoutWildcard() = assertThrows(
         "SELECT * FROM <<>> AS a WHERE 'aaaaa' LIKE '[a' ESCAPE '['",
-        "Invalid escape sequence : [a",
-        NodeMetadata(1, 44)
+        ErrorCode.EVALUATOR_LIKE_PATTERN_INVALID_ESCAPE_SEQUENCE,
+        expectedErrorContext = propertyValueMapOf(1, 44, Property.LIKE_PATTERN to "[a", Property.LIKE_ESCAPE to "[")
     )
 
     @Test
     fun valueNotAString() = assertThrows(
         "SELECT * FROM <<>> AS a WHERE 1 LIKE 'a' ESCAPE '['",
-        "LIKE expression must be given non-null strings as input",
-        NodeMetadata(1, 33)
+        ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
+        expectedErrorContext = propertyValueMapOf(1, 33, Property.LIKE_VALUE to "1")
     )
 
     @Test
     fun patternNotAString() = assertThrows(
         "SELECT * FROM <<>> AS a WHERE 'a' LIKE 1 ESCAPE '['",
-        "LIKE expression must be given non-null strings as input",
-        NodeMetadata(1, 35)
+        ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
+        expectedErrorContext = propertyValueMapOf(1, 35, Property.LIKE_PATTERN to "1", Property.LIKE_ESCAPE to "\"[\"")
     )
 
     @Test
     fun escapeNotAString() = assertThrows(
         // column is marked at the position of LIKE
         "SELECT * FROM <<>> AS a WHERE 'a' LIKE 'a' ESCAPE 1",
-        "LIKE expression must be given non-null strings as input",
-        NodeMetadata(1, 35)
+        ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
+        expectedErrorContext = propertyValueMapOf(1, 35, Property.LIKE_PATTERN to "\"a\"", Property.LIKE_ESCAPE to "1")
     )
 
     @Test
@@ -744,22 +746,22 @@ class LikePredicateTest : EvaluatorTestBase() {
     @Test
     fun nonLiteralsNonStringEscape() = assertThrows(
         "SELECT * FROM `[{name:1, type:\"a\"}]` as a WHERE a.type LIKE '%' ESCAPE a.name",
-        "LIKE expression must be given non-null strings as input",
-        NodeMetadata(1, 56)
+        ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
+        expectedErrorContext = propertyValueMapOf(1, 56, Property.LIKE_PATTERN to "\"%\"", Property.LIKE_ESCAPE to "1")
     )
 
     @Test
     fun nonLiteralsNonStringPattern() = assertThrows(
         "SELECT * FROM `[{name:1, type:\"a\"}]` as a WHERE a.type LIKE a.name",
-        "LIKE expression must be given non-null strings as input",
-        NodeMetadata(1, 56)
+        ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
+        expectedErrorContext = propertyValueMapOf(1, 56, Property.LIKE_PATTERN to "1")
     )
 
     @Test
     fun nonLiteralsNonStringValue() = assertThrows(
         "SELECT * FROM `[{name:1, type:\"a\"}]` as a WHERE a.name LIKE a.type ",
-        "LIKE expression must be given non-null strings as input",
-        NodeMetadata(1, 56)
+        ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
+        expectedErrorContext = propertyValueMapOf(1, 56, Property.LIKE_VALUE to "1")
     )
 
     /** Regression test for: https://github.com/partiql/partiql-lang-kotlin/issues/32 */

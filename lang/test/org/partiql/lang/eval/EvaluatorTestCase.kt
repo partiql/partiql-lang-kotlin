@@ -14,38 +14,51 @@
 
 package org.partiql.lang.eval
 
+import org.partiql.lang.CompilerPipeline
+
 /**
  * Defines a test case for query evaluation.
  */
 data class EvaluatorTestCase(
+
     /** The "group" of the tests--this only appears in the IDE's test runner and can be used to identify where in the
      * source code the test is defined.
      */
     val groupName: String?,
+
     /**
      * The query to be evaluated.
      */
     val sqlUnderTest: String,
+
     /**
      * A expression which will be evaluated to determine the set of expected values that should match the result
      * of [sqlUnderTest].
      */
     val expectedSql: String,
-    /**
-     * The [CompOptions] containing the [CompileOptions] to use when executing [sqlUnderTest] and [expectedSql].
-     */
-    val compOptions: CompOptions = CompOptions.STANDARD
-) {
 
+    /**
+     * Builder block for building [CompileOptions].
+     */
+    val compileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit = { },
+
+    /**
+     * Allows each test to configure its pipeline.
+     */
+    val compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }
+) {
     constructor(
         query: String,
         expectedSql: String,
-        compOptions: CompOptions = CompOptions.STANDARD
-    ) : this(null, query, expectedSql, compOptions)
+        compileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit = { },
+        compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }
+    ) : this(null, query, expectedSql, compileOptionsBuilderBlock, compilerPipelineBuilderBlock)
 
     /** This will show up in the IDE's test runner. */
     override fun toString() = when {
-        groupName != null -> "$groupName : $sqlUnderTest : $compOptions"
-        else -> "$sqlUnderTest : $compOptions"
+        groupName != null -> "$groupName : $sqlUnderTest"
+        else -> "$sqlUnderTest"
     }
+
+
 }

@@ -5,6 +5,7 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.lang.util.to
 
 class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
@@ -97,7 +98,7 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
             EvaluatorErrorTestCase(
                 "SELECT X FROM A LET Y AS X",
                 ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
-                mapOf(
+                propertyValueMapOf(
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 21L,
                     Property.BINDING_NAME to "Y"
@@ -108,7 +109,7 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
             EvaluatorErrorTestCase(
                 "SELECT X FROM A LET 1 AS X, Y AS Z, 3 AS Y",
                 ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
-                mapOf(
+                propertyValueMapOf(
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 29L,
                     Property.BINDING_NAME to "Y"
@@ -120,7 +121,7 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
                 "SELECT X FROM A LET Y AS X",
                 "SELECT X FROM (SELECT VALUE X FROM A LET 1 AS X)",
                 ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
-                mapOf(
+                propertyValueMapOf(
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 8L,
                     Property.BINDING_NAME to "X"
@@ -131,7 +132,7 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
             EvaluatorErrorTestCase(
                 "SELECT Z FROM A LET (SELECT 1 FROM A LET 1 AS X) AS Y, X AS Z",
                 ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
-                mapOf(
+                propertyValueMapOf(
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 56L,
                     Property.BINDING_NAME to "X"
@@ -142,20 +143,20 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
             EvaluatorErrorTestCase(
                 "SELECT B.id FROM B LET 100 AS foo GROUP BY B.id HAVING B.id > foo",
                 ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
-                mapOf(
-                    Property.LINE_NUMBER to 1L,
-                    Property.COLUMN_NUMBER to 63L,
-                    Property.BINDING_NAME to "foo"
+                propertyValueMapOf(
+                        Property.LINE_NUMBER to 1L,
+                        Property.COLUMN_NUMBER to 63L,
+                        Property.BINDING_NAME to "foo"
                 )
             ),
             // LET binding referenced in projection not in GROUP BY
             EvaluatorErrorTestCase(
                 "SELECT foo FROM B LET 100 AS foo GROUP BY B.id",
                 ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
-                mapOf(
-                    Property.LINE_NUMBER to 1L,
-                    Property.COLUMN_NUMBER to 8L,
-                    Property.BINDING_NAME to "foo"
+                propertyValueMapOf(
+                        Property.LINE_NUMBER to 1L,
+                        Property.COLUMN_NUMBER to 8L,
+                        Property.BINDING_NAME to "foo"
                 )
             )
         )
@@ -163,5 +164,5 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(ArgsProviderError::class)
-    fun errorTests(tc: EvaluatorErrorTestCase) = checkInputThrowingEvaluationException(tc, session)
+    fun errorTests(tc: EvaluatorErrorTestCase) = assertThrows(tc, session)
 }

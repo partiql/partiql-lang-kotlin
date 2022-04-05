@@ -49,6 +49,16 @@ open class SqlException(
     RuntimeException(message, cause) {
 
     /**
+     * Indicates if this exception is due to an internal error or not.
+     *
+     * Internal errors are those that are likely due to a bug in PartiQL itself or in the usage of its APIs.
+     *
+     * Non-internal errors are caused by query authors--i.e. syntax errors, or semantic errors such as undefined
+     * variables, etc.
+     */
+    open val internal: Boolean get() = false
+
+    /**
      * Given  the [errorCode], error context as a [propertyValueMap] and optional [cause] creates an
      * [SqlException] with an auto-generated error message.
      * This is the constructor for the third configuration explained above.

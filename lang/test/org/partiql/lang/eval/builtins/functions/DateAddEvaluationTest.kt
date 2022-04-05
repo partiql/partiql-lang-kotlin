@@ -3,14 +3,15 @@ package org.partiql.lang.eval.builtins.functions
 import org.junit.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluatorTestBase
-import org.partiql.lang.eval.NodeMetadata
 import org.partiql.lang.eval.builtins.Argument
 import org.partiql.lang.eval.builtins.ExprFunctionTestCase
 import org.partiql.lang.eval.builtins.checkInvalidArgType
 import org.partiql.lang.eval.builtins.toSession
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.lang.util.propertyValueMapOf
 
 class DateAddEvaluationTest : EvaluatorTestBase() {
     // Pass test cases
@@ -153,7 +154,12 @@ class DateAddEvaluationTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(InvalidArgCases::class)
     fun dateAddInvalidArgumentTests(testCase: InvalidArgTestCase) =
-        assertThrows(testCase.query, testCase.message, NodeMetadata(1, 1), "MISSING")
+        assertThrows(
+            testCase.query,
+            ErrorCode.EVALUATOR_TIMESTAMP_OUT_OF_BOUNDS,
+            expectedErrorContext = propertyValueMapOf(1, 1),
+            expectedPermissiveModeResult = "MISSING"
+        )
 
     class InvalidArgCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(

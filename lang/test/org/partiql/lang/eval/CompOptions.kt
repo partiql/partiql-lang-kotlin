@@ -15,39 +15,43 @@
 package org.partiql.lang.eval
 
 /** Pre-defined sets of compilation options for use with [EvaluatorTestCase]. */
-enum class CompOptions(val options: CompileOptions) {
-    STANDARD(CompileOptions.standard()),
+enum class CompOptions(
+    val optionsBlock: CompileOptions.Builder.() -> Unit
+) {
+    STANDARD( { /* intentionally empty. */ }),
 
     UNDEF_VAR_MISSING(
-        CompileOptions.build {
+        {
             undefinedVariable(UndefinedVariableBehavior.MISSING)
         }
     ),
 
     PROJECT_UNFILTERED_UNDEF_VAR_MISSING(
-        CompileOptions.build {
+        {
             projectionIteration(ProjectionIterationBehavior.UNFILTERED)
             undefinedVariable(UndefinedVariableBehavior.MISSING)
         }
     ),
 
     PROJECT_UNFILTERED(
-        CompileOptions.build {
+        {
             projectionIteration(ProjectionIterationBehavior.UNFILTERED)
         }
     ),
 
     TYPED_OP_BEHAVIOR_HONOR_PARAMS(
-        CompileOptions.build {
+        {
             typedOpBehavior(TypedOpBehavior.HONOR_PARAMETERS)
         }
     ),
 
     PERMISSIVE(
-        CompileOptions.build {
+        {
             this.typingMode(TypingMode.PERMISSIVE)
         }
     );
+
+    val options get() = CompileOptions.build { optionsBlock() }
 
     companion object {
         /** Only those options from [CompOptions] which have [UndefinedVariableBehavior.MISSING]. */

@@ -174,8 +174,8 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
 
     @Test
     fun havingWithoutGroupBy() {
-        assertThrowsSqlException(ErrorCode.SEMANTIC_HAVING_USED_WITHOUT_GROUP_BY) {
-            voidEval("SELECT foo.bar FROM bat HAVING 1 = 1")
+        evalAssertThrowsSqlException("SELECT foo.bar FROM bat HAVING 1 = 1") {
+            assertEquals(it.errorCode, ErrorCode.SEMANTIC_HAVING_USED_WITHOUT_GROUP_BY)
         }
     }
 }

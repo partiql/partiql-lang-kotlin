@@ -25,14 +25,14 @@ private fun isStringTypeTestCase(
     expectedIsVarcharHonorParamsSql: String = expectedResult
 ) =
     listOf(
-        EvaluatorTestCase(sql.replace("{TYPE}", "CHAR"), expectedResult, CompOptions.STANDARD),
-        EvaluatorTestCase(sql.replace("{TYPE}", "CHARACTER"), expectedResult, CompOptions.STANDARD),
-        EvaluatorTestCase(sql.replace("{TYPE}", "VARCHAR"), expectedResult, CompOptions.STANDARD),
-        EvaluatorTestCase(sql.replace("{TYPE}", "CHARACTER VARYING"), expectedResult, CompOptions.STANDARD),
-        EvaluatorTestCase(sql.replace("{TYPE}", "CHAR"), expectedIsCharHonorParamsSql, CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS),
-        EvaluatorTestCase(sql.replace("{TYPE}", "CHARACTER"), expectedIsCharHonorParamsSql, CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS),
-        EvaluatorTestCase(sql.replace("{TYPE}", "VARCHAR"), expectedIsVarcharHonorParamsSql, CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS),
-        EvaluatorTestCase(sql.replace("{TYPE}", "CHARACTER VARYING"), expectedIsVarcharHonorParamsSql, CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS)
+        EvaluatorTestCase(sql.replace("{TYPE}", "CHAR"), expectedResult, CompOptions.STANDARD.optionsBlock),
+        EvaluatorTestCase(sql.replace("{TYPE}", "CHARACTER"), expectedResult, CompOptions.STANDARD.optionsBlock),
+        EvaluatorTestCase(sql.replace("{TYPE}", "VARCHAR"), expectedResult, CompOptions.STANDARD.optionsBlock),
+        EvaluatorTestCase(sql.replace("{TYPE}", "CHARACTER VARYING"), expectedResult, CompOptions.STANDARD.optionsBlock),
+        EvaluatorTestCase(sql.replace("{TYPE}", "CHAR"), expectedIsCharHonorParamsSql, CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock),
+        EvaluatorTestCase(sql.replace("{TYPE}", "CHARACTER"), expectedIsCharHonorParamsSql, CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock),
+        EvaluatorTestCase(sql.replace("{TYPE}", "VARCHAR"), expectedIsVarcharHonorParamsSql, CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock),
+        EvaluatorTestCase(sql.replace("{TYPE}", "CHARACTER VARYING"), expectedIsVarcharHonorParamsSql, CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock)
     )
 
 /**
@@ -66,10 +66,10 @@ private fun isDecimalTypeTestCase(
     expectedIsDecimalHonorParamsResult: String = expectedResult
 ) =
     listOf(
-        EvaluatorTestCase(sql.replace("{TYPE}", "DECIMAL"), expectedResult, CompOptions.STANDARD),
-        EvaluatorTestCase(sql.replace("{TYPE}", "NUMERIC"), expectedResult, CompOptions.STANDARD),
-        EvaluatorTestCase(sql.replace("{TYPE}", "DECIMAL"), expectedIsDecimalHonorParamsResult, CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS),
-        EvaluatorTestCase(sql.replace("{TYPE}", "NUMERIC"), expectedIsDecimalHonorParamsResult, CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS)
+        EvaluatorTestCase(sql.replace("{TYPE}", "DECIMAL"), expectedResult, CompOptions.STANDARD.optionsBlock),
+        EvaluatorTestCase(sql.replace("{TYPE}", "NUMERIC"), expectedResult, CompOptions.STANDARD.optionsBlock),
+        EvaluatorTestCase(sql.replace("{TYPE}", "DECIMAL"), expectedIsDecimalHonorParamsResult, CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock),
+        EvaluatorTestCase(sql.replace("{TYPE}", "NUMERIC"), expectedIsDecimalHonorParamsResult, CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock)
     )
 
 /**
@@ -80,8 +80,8 @@ private fun isIntDecimalTypeTestCase(
     expectedLegacyResult: String,
     expectedHonorParamsResult: String = expectedLegacyResult
 ) = listOf(
-    EvaluatorTestCase(sql, expectedLegacyResult, CompOptions.STANDARD),
-    EvaluatorTestCase(sql, expectedHonorParamsResult, CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS)
+    EvaluatorTestCase(sql, expectedLegacyResult, CompOptions.STANDARD.optionsBlock),
+    EvaluatorTestCase(sql, expectedHonorParamsResult, CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock)
 )
 
 /** Tests for `IS` operator. */

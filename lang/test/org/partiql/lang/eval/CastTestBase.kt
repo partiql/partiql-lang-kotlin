@@ -16,7 +16,6 @@ import org.partiql.lang.eval.ExprValueType.NULL
 import org.partiql.lang.eval.ExprValueType.SEXP
 import org.partiql.lang.eval.ExprValueType.STRUCT
 import org.partiql.lang.eval.ExprValueType.TIMESTAMP
-import org.partiql.lang.syntax.ParserException
 import org.partiql.lang.util.getOffsetHHmm
 import org.partiql.lang.util.honorTypedOpParameters
 import org.partiql.lang.util.legacyCastBehavior
@@ -170,18 +169,15 @@ abstract class CastTestBase : EvaluatorTestBase() {
         fun assertCase() {
             when (castCase.expected) {
                 null -> {
-                    try {
-                        voidEval(
-                            castCase.expression,
-                            compileOptions = CompileOptions.build(compileOptionBlock),
-                            compilerPipelineBuilderBlock = configurePipeline
-                        )
-                        fail("Expected evaluation error")
-                    } catch (e: EvaluationException) {
-                        if (castCase.expectedErrorCode == null) {
-                            fail("CastCase $castCase did not have an expected value or expected error code.")
-                        }
-                        assertEquals(castCase.expectedErrorCode, e.errorCode)
+                    if (castCase.expectedErrorCode == null) {
+                        fail("CastCase $castCase did not have an expected value or expected error code.")
+                    }
+                    evalAssertThrowsSqlException(
+                        castCase.expression,
+                        compileOptions = CompileOptions.build(compileOptionBlock),
+                        compilerPipelineBuilderBlock = configurePipeline
+                    ) {
+                        assertEquals(castCase.expectedErrorCode, it.errorCode)
                     }
                 }
                 else -> assertEval(
@@ -199,22 +195,20 @@ abstract class CastTestBase : EvaluatorTestBase() {
         internal fun assertDateTimeCase() {
             when (castCase.expected) {
                 null -> {
-                    try {
-                        voidEval(castCase.expression)
-                        fail("Expected evaluation error")
-                    } catch (e: EvaluationException) {
-                        if (castCase.expectedErrorCode == null) {
-                            fail("CastCase $castCase did not have an expected value or expected error code.")
-                        }
-                        assertEquals(castCase.expectedErrorCode, e.errorCode)
-                    } catch (p: ParserException) {
-                        if (castCase.expectedErrorCode == null) {
-                            fail("CastCase $castCase did not have an expected value or expected error code.")
-                        }
-                        assertEquals(castCase.expectedErrorCode, p.errorCode)
+                    if (castCase.expectedErrorCode == null) {
+                        fail("CastCase $castCase did not have an expected value or expected error code.")
+                    }
+                    evalAssertThrowsSqlException(castCase.expression) {
+                        assertEquals(castCase.expectedErrorCode, it.errorCode)
                     }
                 }
-                else -> assertEquals(castCase.expected, eval(castCase.expression, compileOptions = CompileOptions.build(compileOptionBlock)).toString())
+                else -> assertEquals(
+                    castCase.expected,
+                    eval(
+                        castCase.expression,
+                        compileOptions = CompileOptions.build(compileOptionBlock)
+                    ).toString()
+                )
             }
         }
     }

@@ -16,7 +16,7 @@ package org.partiql.lang.errors
 
 import com.amazon.ion.IonValue
 import org.partiql.lang.syntax.TokenType
-import java.util.EnumMap
+import java.util.*
 
 internal const val UNKNOWN: String = "<UNKNOWN>"
 
@@ -108,6 +108,20 @@ abstract class PropertyValue(val type: PropertyType) {
             PropertyType.ION_VALUE_CLASS -> (value as IonValue).toPrettyString()
             else -> value.toString()
         }
+
+    /** For debugging purposes (unit tests) only.*/
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is PropertyValue) return false
+        if (type != other.type) return false
+        if (value != other.value) return false
+
+        return true
+    }
+
+    /** For debugging purposes (unit tests) only.*/
+    override fun hashCode(): Int = this.value.hashCode()
+
 }
 
 /**
@@ -243,4 +257,29 @@ class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumM
     fun hasProperty(property: Property) = map.containsKey(property)
 
     fun getProperties() = this.map.keys
+
+    /** Creates a human readable representation of this [PropertyValueMap].  For debugging only. */
+    override fun toString(): String =
+        this.map.entries.sortedBy { it.key }.joinToString(", ", "propertyValueMapOf(", ")") {
+            val value = when(it.value.value) {
+                is String -> "\"${it.value}\""
+                else -> it.value.toString()
+            }
+            "Property.${it.key} to $value"
+        }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as PropertyValueMap
+
+        if (map != other.map) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return map.hashCode()
+    }
 }

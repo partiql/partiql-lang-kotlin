@@ -12,6 +12,7 @@ import org.partiql.lang.eval.builtins.checkInvalidArgType
 import org.partiql.lang.eval.builtins.checkInvalidArity
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.lang.util.to
 
 class ToTimestampEvaluationTest : EvaluatorTestBase() {
@@ -53,10 +54,10 @@ class ToTimestampEvaluationTest : EvaluatorTestBase() {
     // Invalid arguments
     @Test
     fun to_timestamp_invalid_ion_timestamp() {
-        checkInputThrowingEvaluationException(
+        assertThrows(
             "to_timestamp('not a valid timestamp')",
             ErrorCode.EVALUATOR_ION_TIMESTAMP_PARSE_FAILURE,
-            mapOf(
+            propertyValueMapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 1L
             ),
@@ -66,10 +67,10 @@ class ToTimestampEvaluationTest : EvaluatorTestBase() {
 
     @Test
     fun to_timestamp_empty_format_pattern() {
-        checkInputThrowingEvaluationException(
+        assertThrows(
             "to_timestamp('doesnt matter', '')",
             ErrorCode.EVALUATOR_INCOMPLETE_TIMESTAMP_FORMAT_PATTERN,
-            mapOf(
+            propertyValueMapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 1L,
                 Property.TIMESTAMP_FORMAT_PATTERN to "",
@@ -81,10 +82,10 @@ class ToTimestampEvaluationTest : EvaluatorTestBase() {
 
     @Test
     fun to_timestamp_invalid_format_pattern() {
-        checkInputThrowingEvaluationException(
+        assertThrows(
             "to_timestamp('doesnt matter', 'asdfasdfasdf')",
             ErrorCode.EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_TOKEN,
-            mapOf(
+            propertyValueMapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 1L,
                 Property.TIMESTAMP_FORMAT_PATTERN to "asdfasdfasdf"
@@ -95,10 +96,10 @@ class ToTimestampEvaluationTest : EvaluatorTestBase() {
 
     @Test
     fun to_timestamp_invalid_timestamp() {
-        checkInputThrowingEvaluationException(
+        assertThrows(
             "to_timestamp('asdf', 'yyyy')",
             ErrorCode.EVALUATOR_CUSTOM_TIMESTAMP_PARSE_FAILURE,
-            mapOf(
+            propertyValueMapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 1L,
                 Property.TIMESTAMP_FORMAT_PATTERN to "yyyy"

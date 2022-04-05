@@ -17,6 +17,7 @@ package org.partiql.lang.eval
 import org.junit.Test
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
+import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.lang.util.sourceLocationProperties
 
 class QuotedIdentifierTests : EvaluatorTestBase() {
@@ -61,34 +62,34 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
 
     @Test
     fun quotedIdsCantFindMismatchedCase() {
-        checkInputThrowingEvaluationException(
+        assertThrows(
             "\"abc\"",
-            simpleSession,
             ErrorCode.EVALUATOR_QUOTED_BINDING_DOES_NOT_EXIST,
-            sourceLocationProperties(1L, 1L) + mapOf(Property.BINDING_NAME to "abc"),
-            expectedPermissiveModeResult = "MISSING"
+            propertyValueMapOf(1, 1, Property.BINDING_NAME to "abc"),
+            expectedPermissiveModeResult = "MISSING",
+            session = simpleSession
         )
 
-        checkInputThrowingEvaluationException(
+        assertThrows(
             "\"ABC\"",
-            simpleSession,
             ErrorCode.EVALUATOR_QUOTED_BINDING_DOES_NOT_EXIST,
-            sourceLocationProperties(1L, 1L) + mapOf(Property.BINDING_NAME to "ABC"),
-            expectedPermissiveModeResult = "MISSING"
+            propertyValueMapOf(1, 1, Property.BINDING_NAME to "ABC"),
+            expectedPermissiveModeResult = "MISSING",
+            session = simpleSession
         )
     }
 
     @Test
     fun unquotedIdIsAmbigous() {
-        checkInputThrowingEvaluationException(
+        assertThrows(
             "abc",
-            simpleSession,
             ErrorCode.EVALUATOR_AMBIGUOUS_BINDING,
-            sourceLocationProperties(1L, 1L) + mapOf(
+            propertyValueMapOf(1, 1,
                 Property.BINDING_NAME to "abc",
                 Property.BINDING_NAME_MATCHES to "Abc, aBc, abC"
             ),
-            expectedPermissiveModeResult = "MISSING"
+            expectedPermissiveModeResult = "MISSING",
+            session = simpleSession
         )
     }
 
@@ -126,15 +127,15 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
 
     @Test
     fun unquotedStructFieldsAreAmbiguous() {
-        checkInputThrowingEvaluationException(
+        assertThrows(
             "SELECT s.abc FROM `$tableWithCaseVaryingFields` AS s",
-            simpleSession,
             ErrorCode.EVALUATOR_AMBIGUOUS_BINDING,
-            sourceLocationProperties(1L, 10L) + mapOf(
+            propertyValueMapOf(1, 10,
                 Property.BINDING_NAME to "abc",
                 Property.BINDING_NAME_MATCHES to "Abc, aBc, abC"
             ),
-            expectedPermissiveModeResult = "<<{}>>"
+            expectedPermissiveModeResult = "<<{}>>",
+            session = simpleSession
         )
     }
 

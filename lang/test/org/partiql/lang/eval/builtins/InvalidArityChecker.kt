@@ -3,6 +3,7 @@ package org.partiql.lang.eval.builtins
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.EvaluatorTestBase
+import org.partiql.lang.util.propertyValueMapOf
 
 /**
  * This class is used to check arity for ExprFunctions.
@@ -54,16 +55,14 @@ class InvalidArityChecker : EvaluatorTestBase() {
         actualArity: Int,
         minArity: Int,
         maxArity: Int
-    ) = checkInputThrowingEvaluationException(
-        input = query,
-        errorCode = ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL,
-        expectErrorContextValues = mapOf<Property, Any>(
+    ) = assertThrows(
+        query = query,
+        expectedErrorCode = ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL,
+        expectedErrorContext = propertyValueMapOf(1, 1,
             Property.FUNCTION_NAME to funcName,
             Property.EXPECTED_ARITY_MIN to minArity,
             Property.EXPECTED_ARITY_MAX to maxArity,
-            Property.ACTUAL_ARITY to actualArity,
-            Property.LINE_NUMBER to 1L,
-            Property.COLUMN_NUMBER to 1L
+            Property.ACTUAL_ARITY to actualArity
         )
     )
 }

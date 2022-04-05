@@ -29,12 +29,10 @@ import org.partiql.lang.ast.AstVersion
 import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.toAstStatement
 import org.partiql.lang.ast.toExprNode
-import org.partiql.lang.checkErrorAndErrorContext
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorBehaviorInPermissiveMode
-import org.partiql.lang.errors.ErrorCategory
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Property
+import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.ConfigurableExprValueFormatter
 import org.partiql.lang.util.asSequence
@@ -61,19 +59,28 @@ abstract class EvaluatorTestBase : TestBase() {
      */
     private fun String.toExprValue(): ExprValue = valueFactory.newFromIonText(this)
 
-    protected fun Map<String, String>.toBindings(): Bindings<ExprValue> =
+    private fun Map<String, String>.toBindings(): Bindings<ExprValue> =
         Bindings.ofMap(mapValues { it.value.toExprValue() })
 
     protected fun Map<String, String>.toSession() = EvaluationSession.build { globals(this@toSession.toBindings()) }
 
-    fun voidEval(
+    // DL TODO: should this catch evaluationException instead?
+    protected fun evalAssertThrowsSqlException(
         source: String,
         compileOptions: CompileOptions = CompileOptions.standard(),
         session: EvaluationSession = EvaluationSession.standard(),
-        compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }
+        compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit =  { },
+        exceptionAssertBlock: (SqlException) -> Unit
     ) {
-        // force materialization
-        eval(source, compileOptions, session, compilerPipelineBuilderBlock).ionValue
+        // DL TODO: call plan compiler as well
+        try {
+            // .ionValue forces materialization, which actually cases the query
+            // to be evaluated.
+            eval(source, compileOptions, session, compilerPipelineBuilderBlock).ionValue
+            fail("Expected SqlException but was not thrown.")
+        } catch(e: SqlException) {
+            exceptionAssertBlock(e)
+        }
     }
 
     /**
@@ -169,7 +176,7 @@ abstract class EvaluatorTestBase : TestBase() {
         assertBaseRewrite(source, originalAst.toExprNode(ion))
     }
 
-    protected fun assertPIGToExprNodeRoundTrip(ast: PartiqlAst.Statement) {
+    private fun assertPIGToExprNodeRoundTrip(ast: PartiqlAst.Statement) {
         val roundTrippedAst = ast.toExprNode(ion).toAstStatement()
 
         assertEquals(
@@ -294,72 +301,34 @@ abstract class EvaluatorTestBase : TestBase() {
         return pipeline.build().compile(astStatement).eval(session)
     }
 
-    private fun assertEvalThrows(
+    private fun privateAssertThrows(
         query: String,
-        message: String,
-        metadata: NodeMetadata? = null,
-        internal: Boolean = false,
-        cause: KClass<out Throwable>? = null,
+        expectedErrorCode: ErrorCode,
+        expectedErrorContext: PropertyValueMap? = null,
+        expectedInternal: Boolean = false,
         session: EvaluationSession = EvaluationSession.standard(),
-        typingMode: TypingMode = TypingMode.LEGACY
-    ): EvaluationException {
-
-        val compileOptions = when (typingMode) {
-            TypingMode.LEGACY -> CompileOptions.standard()
-            TypingMode.PERMISSIVE -> CompileOptions.build { typingMode(TypingMode.PERMISSIVE) }
-        }
-
-        try {
-            voidEval(query, session = session, compileOptions = compileOptions)
-            fail("didn't throw")
-        } catch (e: EvaluationException) {
-            softAssert {
-                if (typingMode == TypingMode.LEGACY) {
-                    assertThat(e.message).`as`("error message").isEqualTo(message)
-                    assertThat(e.internal).isEqualTo(internal)
-                }
-
-                if (cause != null) assertThat(e).hasRootCauseExactlyInstanceOf(cause.java)
-
-                if (metadata != null) {
-                    assertThat(e.errorContext!![Property.LINE_NUMBER]!!.longValue()).`as`("line number").isEqualTo(metadata.line)
-                    assertThat(e.errorContext!![Property.COLUMN_NUMBER]!!.longValue()).`as`("column number").isEqualTo(metadata.column)
-                } else {
-                    assertThat(e.errorContext).isNull()
-                }
-            }
-            return e
-        }
-        throw Exception("This should be unreachable.")
-    }
-
-    /**
-     *  Asserts that [func] throws an [SqlException] with the specified message, line and column number
-     */
-    protected fun assertThrows(
-        message: String,
-        metadata: NodeMetadata? = null,
-        internal: Boolean = false,
-        cause: KClass<out Throwable>? = null,
-        func: () -> Unit
+        compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { },
+        compileOptionsBlock: CompileOptions.Builder.() -> Unit = {},
+        exceptionAssertBlock: (SqlException) -> Unit
     ) {
-        try {
-            func()
-            fail("didn't throw")
-        } catch (e: EvaluationException) {
+        val compileOptions = CompileOptions.build { compileOptionsBlock() }
+        evalAssertThrowsSqlException(
+            query,
+            session = session,
+            compileOptions = compileOptions,
+            compilerPipelineBuilderBlock = compilerPipelineBuilderBlock
+        ) { e: SqlException ->
             softAssert {
-                assertThat(e.message).`as`("error message").isEqualTo(message)
-                assertThat(e.internal).isEqualTo(internal)
+                assertThat(e.errorCode).`as`("error code").isEqualTo(expectedErrorCode)
+                assertThat(e.internal).`as`("internal").isEqualTo(expectedInternal)
 
-                if (cause != null) assertThat(e).hasRootCauseExactlyInstanceOf(cause.java)
-
-                if (metadata != null) {
-                    assertThat(e.errorContext!![Property.LINE_NUMBER]!!.longValue()).`as`("line number").isEqualTo(metadata.line)
-                    assertThat(e.errorContext!![Property.COLUMN_NUMBER]!!.longValue()).`as`("column number").isEqualTo(metadata.column)
+                if(expectedErrorContext != null) {
+                    assertThat(e.errorContext).`as`("error context").isEqualTo(expectedErrorContext)
                 } else {
-                    assertThat(e.errorContext).isNull()
+                    assertThat(e.errorContext).`as`("error context").isNull()
                 }
             }
+            exceptionAssertBlock(e)
         }
     }
 
@@ -371,38 +340,98 @@ abstract class EvaluatorTestBase : TestBase() {
      */
     protected fun assertThrows(
         query: String,
-        message: String,
-        metadata: NodeMetadata? = null,
+        expectedErrorCode: ErrorCode,
+        expectedErrorContext: PropertyValueMap,
         expectedPermissiveModeResult: String? = null,
-        internal: Boolean = false,
-        cause: KClass<out Throwable>? = null,
-        session: EvaluationSession = EvaluationSession.standard()
+        expectedInternal: Boolean = false,
+        session: EvaluationSession = EvaluationSession.standard(),
+        compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { },
+        compileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit = { },
+        exceptionAssertBlock: (SqlException) -> Unit = { }
     ) {
-
-        val exception = assertEvalThrows(query, message, metadata, internal, cause, session = session, typingMode = TypingMode.LEGACY)
-
-        when (exception.errorCode.errorBehaviorInPermissiveMode) {
-            ErrorBehaviorInPermissiveMode.THROW_EXCEPTION -> {
-                assertNull("An expectedPermissiveModeResult must not be specified when ErrorCode.errorBehaviorInPermissiveMode is set to ErrorBehaviorInPermissiveMode.THROW_EXCEPTION", expectedPermissiveModeResult)
-                val e = assertEvalThrows(query, message, metadata, internal, cause, session = session, typingMode = TypingMode.PERMISSIVE)
-                assertEquals(exception.errorCode, e.errorCode)
+        // Run the query once in legacy mode.
+        privateAssertThrows(
+            query = query,
+            expectedErrorCode = expectedErrorCode,
+            expectedErrorContext = expectedErrorContext,
+            expectedInternal = expectedInternal,
+            session = session,
+            compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,
+            compileOptionsBlock = {
+                compileOptionsBuilderBlock()
+                typingMode(TypingMode.LEGACY)
             }
-            // Return MISSING
-            ErrorBehaviorInPermissiveMode.RETURN_MISSING -> {
-                assertNotNull("Required non null expectedPermissiveModeResult when ErrorCode.errorBehaviorInPermissiveMode is set to ErrorBehaviorInPermissiveMode.RETURN_MISSING", expectedPermissiveModeResult)
-                val originalExprValueForPermissiveMode = evalForPermissiveMode(query, session = session)
-                val expectedExprValueForPermissiveMode = evalForPermissiveMode(expectedPermissiveModeResult!!, session = session)
-                assertExprEquals(expectedExprValueForPermissiveMode, originalExprValueForPermissiveMode, "(PERMISSIVE mode)")
+        ) { exception ->
+            when (exception.errorCode.errorBehaviorInPermissiveMode) {
+                ErrorBehaviorInPermissiveMode.THROW_EXCEPTION -> {
+                    exceptionAssertBlock(exception)
+                    // Reaching this point means: that the exception thrown in legacy mode indicates
+                    // that an exception should also be thrown in permissive mode (unlike other exceptions
+                    // which cause an expression's value to be changed to MISSING).
+
+                    // In that case, we are going to re-run the test in permissive mode to ensure the same exception
+                    // is thrown and verify that the expected permissive mode result is correct.
+
+                    // But first, we check to ensure that the test case itself is valid.
+                    assertNull(
+                        "An expectedPermissiveModeResult must not be specified when " +
+                            "ErrorCode.errorBehaviorInPermissiveMode is set to " +
+                            "ErrorBehaviorInPermissiveMode.THROW_EXCEPTION",
+                        expectedPermissiveModeResult
+                    )
+
+                    privateAssertThrows(
+                        query = query,
+                        expectedErrorCode = expectedErrorCode,
+                        expectedErrorContext = expectedErrorContext,
+                        expectedInternal = expectedInternal,
+                        session = session,
+                        compileOptionsBlock = {
+                            compileOptionsBuilderBlock()
+                            typingMode(TypingMode.PERMISSIVE)
+                        },
+                        compilerPipelineBuilderBlock = compilerPipelineBuilderBlock
+                    ) { exception2 ->
+                        exceptionAssertBlock(exception2)
+                    }
+                }
+                // Return MISSING
+                ErrorBehaviorInPermissiveMode.RETURN_MISSING -> {
+                    assertNotNull(
+                        "Required non null expectedPermissiveModeResult when ErrorCode.errorBehaviorInPermissiveMode is set to ErrorBehaviorInPermissiveMode.RETURN_MISSING",
+                        expectedPermissiveModeResult
+                    )
+                    val originalExprValueForPermissiveMode = evalForPermissiveMode(query, session = session)
+                    val expectedExprValueForPermissiveMode =
+                        evalForPermissiveMode(expectedPermissiveModeResult!!, session = session)
+                    assertExprEquals(
+                        expectedExprValueForPermissiveMode,
+                        originalExprValueForPermissiveMode,
+                        "(PERMISSIVE mode)"
+                    )
+                }
             }
         }
+    }
+
+    protected fun assertThrows(tc: EvaluatorErrorTestCase, session: EvaluationSession) {
+        assertThrows(
+            query = tc.query,
+            expectedErrorCode = tc.errorCode,
+            expectedErrorContext = tc.expectErrorContext,
+            session = session,
+            expectedPermissiveModeResult = tc.expectedPermissiveModeResult,
+            compileOptionsBuilderBlock = tc.compileOptionsBuilderBlock,
+            compilerPipelineBuilderBlock = tc.compilerPipelineBuilderBlock
+        )
     }
 
     /**
      *  Asserts that [func] throws an [SqlException], line and column number in [TypingMode.PERMISSIVE] mode
      */
-    protected fun assertThrowsInPermissiveMode(
-        errorCode: ErrorCode,
-        metadata: NodeMetadata? = null,
+    private fun assertThrowsInPermissiveMode(
+        expectedErrorCode: ErrorCode,
+        expectedErrorContext: PropertyValueMap? = null,
         cause: KClass<out Throwable>? = null,
         func: () -> Unit
     ) {
@@ -411,105 +440,11 @@ abstract class EvaluatorTestBase : TestBase() {
             fail("didn't throw")
         } catch (e: SqlException) {
             softAssert {
-                if (metadata != null) {
-                    assertThat(e.errorContext!![Property.LINE_NUMBER]!!.longValue()).`as`("line number").isEqualTo(metadata.line)
-                    assertThat(e.errorContext!![Property.COLUMN_NUMBER]!!.longValue()).`as`("column number").isEqualTo(metadata.column)
-
-                    if (cause != null) assertThat(e).hasRootCauseExactlyInstanceOf(cause.java)
+                assertThat(e.errorCode).`as`("error code").isEqualTo(expectedErrorCode)
+                if (expectedErrorContext != null) {
+                    assertThat(e.errorContext).`as`("error context").isEqualTo(expectedErrorContext)
                 }
-                assertEquals(errorCode, e.errorCode, "Error codes should be same")
-            }
-        }
-    }
-
-    protected fun checkInputThrowingEvaluationException(
-        input: String,
-        errorCode: ErrorCode,
-        expectErrorContextValues: Map<Property, Any>,
-        cause: KClass<out Throwable>? = null,
-        expectedPermissiveModeResult: String? = null
-    ) {
-        checkInputThrowingEvaluationException(
-            input,
-            EvaluationSession.standard(),
-            errorCode,
-            expectErrorContextValues,
-            cause,
-            expectedPermissiveModeResult
-        )
-    }
-
-    protected fun checkInputThrowingEvaluationException(
-        input: String,
-        session: EvaluationSession,
-        errorCode: ErrorCode,
-        expectErrorContextValues: Map<Property, Any>,
-        cause: KClass<out Throwable>? = null,
-        expectedPermissiveModeResult: String? = null
-    ) {
-        softAssert {
-            try {
-                val result = eval(input, session = session).ionValue
-                fail(
-                    "Expected SqlException but there was no Exception.  " +
-                        "The unexpected result was: \n${result.toPrettyString()}"
-                )
-            } catch (e: SqlException) {
                 if (cause != null) assertThat(e).hasRootCauseExactlyInstanceOf(cause.java)
-                checkErrorAndErrorContext(errorCode, e, expectErrorContextValues)
-                // Error thrown in LEGACY MODE needs to be checked in PERMISSIVE MODE
-                when (e.errorCode.errorBehaviorInPermissiveMode) {
-                    ErrorBehaviorInPermissiveMode.THROW_EXCEPTION -> {
-                        assertNull("An expectedPermissiveModeResult must not be specified when ErrorCode.errorBehaviorInPermissiveMode is set to ErrorBehaviorInPermissiveMode.THROW_EXCEPTION", expectedPermissiveModeResult)
-                        assertThrowsInPermissiveMode(e.errorCode) {
-                            voidEval(input, session = session, compileOptions = CompileOptions.build { typingMode(TypingMode.PERMISSIVE) })
-                        }
-                    }
-                    // Return MISSING
-                    ErrorBehaviorInPermissiveMode.RETURN_MISSING -> {
-                        assertNotNull("Required non null expectedPermissiveModeResult when ErrorCode.errorBehaviorInPermissiveMode is set to ErrorBehaviorInPermissiveMode.RETURN_MISSING", expectedPermissiveModeResult)
-                        val originalExprValueForPermissiveMode = evalForPermissiveMode(input, session = session)
-                        val expectedExprValueForPermissiveMode = evalForPermissiveMode(expectedPermissiveModeResult!!, session = session)
-                        assertExprEquals(expectedExprValueForPermissiveMode, originalExprValueForPermissiveMode, "(PERMISSIVE mode)")
-                    }
-                }
-            } catch (e: Exception) {
-                fail("Expected SqlException but a different exception was thrown:\n\t  $e")
-            }
-        }
-    }
-
-    protected fun checkInputThrowingEvaluationException(tc: EvaluatorErrorTestCase, session: EvaluationSession) {
-        softAssert {
-            try {
-                val result = eval(tc.sqlUnderTest, compileOptions = tc.compOptions.options, session = session).ionValue
-                fail(
-                    "Expected EvaluationException but there was no Exception.  " +
-                        "The unepxected result was: \n${result.toPrettyString()}"
-                )
-            } catch (e: EvaluationException) {
-                if (tc.cause != null) assertThat(e).hasRootCauseExactlyInstanceOf(tc.cause.java)
-                checkErrorAndErrorContext(tc.errorCode, e, tc.expectErrorContextValues)
-                // Error thrown in LEGACY MODE needs to be checked in PERMISSIVE MODE
-                when (e.errorCode.errorBehaviorInPermissiveMode) {
-                    ErrorBehaviorInPermissiveMode.THROW_EXCEPTION -> {
-                        assertNull("An EvaluatorErrorTestCase.expectedPermissiveModeResult must not be specified when ErrorCode.errorBehaviorInPermissiveMode is set to ErrorBehaviorInPermissiveMode.THROW_EXCEPTION", tc.expectedPermissiveModeResult)
-                        assertThrowsInPermissiveMode(e.errorCode) {
-                            voidEval(tc.sqlUnderTest, session = session, compileOptions = CompileOptions.build { typingMode(TypingMode.PERMISSIVE) })
-                        }
-                    }
-                    // Return MISSING
-                    ErrorBehaviorInPermissiveMode.RETURN_MISSING -> {
-                        if (tc.errorCode.errorCategory() != ErrorCategory.SEMANTIC.toString()) {
-                            assertNotNull("Required non null expectedPermissiveModeResult when ErrorCode.errorBehaviorInPermissiveMode is set to ErrorBehaviorInPermissiveMode.RETURN_MISSING", tc.expectedPermissiveModeResult)
-                            val originalExprValueForPermissiveMode = evalForPermissiveMode(tc.sqlUnderTest, session = session)
-                            val expectedExprValueForPermissiveMode = evalForPermissiveMode(tc.expectedPermissiveModeResult!!, session = session)
-                            assertExprEquals(expectedExprValueForPermissiveMode, originalExprValueForPermissiveMode, "(PERMISSIVE mode)")
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                fail("Expected EvaluationException but a different exception was thrown:\n\t  $e")
             }
         }
     }
@@ -524,9 +459,15 @@ abstract class EvaluatorTestBase : TestBase() {
         runTestCase(tc, session, "compile options unaltered")
 
         // PERMISSIVE mode
-        runTestCase(tc, session, "compile options forced to PERMISSIVE mode") { compileOptions ->
-            CompileOptions.build(compileOptions) { typingMode(TypingMode.PERMISSIVE) }
-        }
+        runTestCase(
+            tc.copy(
+                compileOptionsBuilderBlock = {
+                    tc.compileOptionsBuilderBlock(this)
+                    typingMode(TypingMode.PERMISSIVE)
+                }
+            ),
+            session,
+            "compile options forced to PERMISSIVE mode")
     }
 
     /**
@@ -542,13 +483,9 @@ abstract class EvaluatorTestBase : TestBase() {
     protected fun runTestCase(
         tc: EvaluatorTestCase,
         session: EvaluationSession,
-        message: String? = null,
-        compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { },
-        compileOptionsMutator: ((CompileOptions) -> CompileOptions) = { it }
+        message: String? = null
     ) {
         val msg = message?.let { "($it)" } ?: ""
-
-        val co = compileOptionsMutator(tc.compOptions.options)
 
         fun showTestCase() {
             println(listOfNotNull(message, tc.groupName).joinToString(" : "))
@@ -560,8 +497,10 @@ abstract class EvaluatorTestBase : TestBase() {
         val expected = try {
             eval(
                 source = tc.expectedSql,
-                compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,
-                compileOptions = co
+                compilerPipelineBuilderBlock = tc.compilerPipelineBuilderBlock,
+                compileOptions = CompileOptions.build {
+                    tc.compileOptionsBuilderBlock(this)
+                }
             )
         } catch (e: Throwable) {
             showTestCase()
@@ -573,9 +512,11 @@ abstract class EvaluatorTestBase : TestBase() {
         val actual = try {
             eval(
                 source = tc.sqlUnderTest,
-                compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,
+                compilerPipelineBuilderBlock = tc.compilerPipelineBuilderBlock,
                 session = session,
-                compileOptions = co
+                compileOptions = CompileOptions.build {
+                    tc.compileOptionsBuilderBlock(this)
+                }
             )
         } catch (e: Throwable) {
             showTestCase()

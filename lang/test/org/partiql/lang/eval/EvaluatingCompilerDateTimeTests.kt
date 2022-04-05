@@ -252,11 +252,9 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
     fun testComparison(tc: ComparisonTestCase) {
         when (tc.expected == null) {
             true ->
-                try {
-                    voidEval(tc.query)
-                    fail("Expected ${tc.query} to throw an error")
-                } catch (e: EvaluationException) {
+                evalAssertThrowsSqlException(tc.query) {
                     // EvaluationException is thrown as expected, do nothing.
+                    // TODO: why are there no assertions here?
                 }
             false -> {
                 val originalExprValue = eval(tc.query)

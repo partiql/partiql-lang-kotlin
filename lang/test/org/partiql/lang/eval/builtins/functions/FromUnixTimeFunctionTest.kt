@@ -3,14 +3,15 @@ package org.partiql.lang.eval.builtins.functions
 import org.junit.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluatorTestBase
-import org.partiql.lang.eval.NodeMetadata
 import org.partiql.lang.eval.builtins.Argument
 import org.partiql.lang.eval.builtins.ExprFunctionTestCase
 import org.partiql.lang.eval.builtins.checkInvalidArgType
 import org.partiql.lang.eval.builtins.checkInvalidArity
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.lang.util.propertyValueMapOf
 
 class FromUnixTimeFunctionTest : EvaluatorTestBase() {
     @ParameterizedTest
@@ -52,7 +53,13 @@ class FromUnixTimeFunctionTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(InvalidArgCases::class)
     fun fromUnixTimeInvalidArgumentTests(testCase: InvalidArgTestCase) =
-        assertThrows(testCase.query, testCase.message, NodeMetadata(1, 1), null, true)
+        assertThrows(
+            testCase.query,
+            ErrorCode.EVALUATOR_GENERIC_EXCEPTION,
+            propertyValueMapOf(1, 1),
+            null,
+            true
+        )
 
     class InvalidArgCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(

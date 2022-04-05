@@ -23,6 +23,7 @@ import org.partiql.lang.types.StructType
 import org.partiql.lang.types.SymbolType
 import org.partiql.lang.types.TimeType
 import org.partiql.lang.types.TimestampType
+import org.partiql.lang.util.propertyValueMapOf
 import java.lang.StringBuilder
 
 /**
@@ -119,16 +120,14 @@ class InvalidArgTypeChecker : EvaluatorTestBase() {
         expectedTypes: StaticType,
         actualType: SingleType
     ) =
-        checkInputThrowingEvaluationException(
-            input = source,
-            errorCode = ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL,
-            expectErrorContextValues = mapOf<Property, Any>(
+        assertThrows(
+            query = source,
+            expectedErrorCode = ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL,
+            expectedErrorContext = propertyValueMapOf(1, 1,
                 Property.FUNCTION_NAME to funcName,
                 Property.ARGUMENT_POSITION to argPosition,
                 Property.EXPECTED_ARGUMENT_TYPES to expectedArgTypeErrorMsg(expectedTypes.typeDomain.toList()),
-                Property.ACTUAL_ARGUMENT_TYPES to actualType.runtimeType.toString(),
-                Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 1L
+                Property.ACTUAL_ARGUMENT_TYPES to actualType.runtimeType.toString()
             ),
             expectedPermissiveModeResult = "MISSING"
         )

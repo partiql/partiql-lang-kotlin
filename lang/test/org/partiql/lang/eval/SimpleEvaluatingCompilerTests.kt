@@ -17,6 +17,7 @@ package org.partiql.lang.eval
 import org.junit.Test
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
+import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.lang.util.sourceLocationProperties
 
 class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
@@ -104,10 +105,10 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
     fun tableAliases() = assertEval("SELECT _2 FROM `[{_1: a, _2: 1}, {_1: a, _2: 'a'}, {_1: a, _2: 3}]` WHERE _2 = 21", "[]")
 
     @Test
-    fun castStringToIntFailed() = checkInputThrowingEvaluationException(
+    fun castStringToIntFailed() = assertThrows(
         "CAST(`'a'` as INT)",
         ErrorCode.EVALUATOR_CAST_FAILED,
-        sourceLocationProperties(1, 1) + mapOf(Property.CAST_FROM to "SYMBOL", Property.CAST_TO to "INT"),
+        propertyValueMapOf(1, 1, Property.CAST_FROM to "SYMBOL", Property.CAST_TO to "INT"),
         expectedPermissiveModeResult = "MISSING"
     )
 

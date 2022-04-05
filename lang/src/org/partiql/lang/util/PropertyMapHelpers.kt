@@ -41,7 +41,24 @@ fun propertyValueMapOf(vararg properties: Pair<Property, Any>): PropertyValueMap
 }
 
 /**
+ * Helper function to reduce the syntactical overhead of creating a [PropertyValueMap].
+ *
+ * This overload accepts [line] and [column] arguments before other properties.
+ */
+fun propertyValueMapOf(
+    line: Int,
+    column: Int,
+    vararg otherProperties: Pair<Property, Any>
+): PropertyValueMap =
+    propertyValueMapOf(
+        *otherProperties,
+        Property.LINE_NUMBER to line.toLong(),
+        Property.COLUMN_NUMBER to column.toLong()
+    )
+
+/**
  * Simple overloaded infix operator which accepts a [Propery] and value as arguments and returns a [Pair].
  * Intended to be used in conjunction with [propertyValueMapOf].
  */
 infix fun Property.to(that: Any): Pair<Property, Any> = Pair(this, that)
+

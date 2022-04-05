@@ -17,11 +17,14 @@ package org.partiql.lang.eval
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.crossMap
+import org.partiql.lang.util.propertyValueMapOf
 
 /** Test cases for PartiQL unknown values `MISSING` and `NULL`, including their propagation. */
 class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
@@ -30,26 +33,27 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     @ArgumentsSource(NAryUnknownPropagationCases::class)
     fun testUnknownPropagation(tc: EvaluatorTestCase) =
         runTestCase(
-            tc = tc,
-            session = EvaluationSession.standard(),
-            compilerPipelineBuilderBlock = {
-                addFunction(
-                    object : ExprFunction {
-                        override val signature: FunctionSignature
-                            get() = FunctionSignature(
-                                name = "simple_sum",
-                                requiredParameters = listOf(StaticType.INT8, StaticType.INT8, StaticType.INT8),
-                                returnType = StaticType.INT8,
-                                // NOTE: we do not test UnknownArguments.PASS_THRU in this test class
-                                // (this path is covered by [CoalesceEvaluationTest]).
-                                unknownArguments = UnknownArguments.PROPAGATE
-                            )
+            tc = tc.copy(
+                compilerPipelineBuilderBlock = {
+                    addFunction(
+                        object : ExprFunction {
+                            override val signature: FunctionSignature
+                                get() = FunctionSignature(
+                                    name = "simple_sum",
+                                    requiredParameters = listOf(StaticType.INT8, StaticType.INT8, StaticType.INT8),
+                                    returnType = StaticType.INT8,
+                                    // NOTE: we do not test UnknownArguments.PASS_THRU in this test class
+                                    // (this path is covered by [CoalesceEvaluationTest]).
+                                    unknownArguments = UnknownArguments.PROPAGATE
+                                )
 
-                        override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue =
-                            valueFactory.newInt(required.map { it.numberValue().toLong() }.sum())
-                    }
-                )
-            }
+                            override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue =
+                                valueFactory.newInt(required.map { it.numberValue().toLong() }.sum())
+                        }
+                    )
+                }
+            ),
+            session = EvaluationSession.standard(),
         )
 
     /** Generates a few hundred test cases for most NAry operators as they relate to propagation of unknown values. */
@@ -121,13 +125,13 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
                     // in [Typing] mode, missing values are propagated as
                     // null.  Swapping this here means we don't need to specify a legacy mode value separately.
                     expectedSql = expectedResult.replace("missing", "null"),
-                    compOptions = CompOptions.STANDARD
+                    compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock
                 ),
                 EvaluatorTestCase(
                     groupName = "$testCaseGroup : PERMISSIVE",
                     sqlUnderTest = sqlUnderTest,
                     expectedSql = expectedResult,
-                    compOptions = CompOptions.PERMISSIVE
+                    compileOptionsBuilderBlock = CompOptions.PERMISSIVE.optionsBlock
                 )
             )
         }
@@ -574,17 +578,17 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     @Test
     fun andWithNullDoesNotShortCircuits() = assertThrows(
         "SELECT s.x FROM [{'x': '1.1'},{'x': '2'},{'x': '3'},{'x': '4'},{'x': '5'}] as s WHERE NULL AND CAST(s.x as INT)",
-        "can't convert string value to INT",
-        NodeMetadata(1, 96),
-        "<<>>"
+        ErrorCode.EVALUATOR_CAST_FAILED,
+        expectedErrorContext = propertyValueMapOf(1, 96, Property.CAST_TO to "INT", Property.CAST_FROM to "STRING"),
+        expectedPermissiveModeResult = "<<>>"
     )
 
     @Test
     fun andWithMissingDoesNotShortCircuits() = assertThrows(
         "SELECT s.x FROM [{'x': '1.1'},{'x': '2'},{'x': '3'},{'x': '4'},{'x': '5'}] as s WHERE MISSING AND CAST(s.x as INT)",
-        "can't convert string value to INT",
-        NodeMetadata(1, 99),
-        "<<>>"
+        ErrorCode.EVALUATOR_CAST_FAILED,
+        expectedErrorContext = propertyValueMapOf(1, 99, Property.CAST_TO to "INT", Property.CAST_FROM to "STRING"),
+        expectedPermissiveModeResult = "<<>>"
     )
 
     // ////////////////////////////////////////////////

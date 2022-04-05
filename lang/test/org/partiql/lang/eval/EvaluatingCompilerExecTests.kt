@@ -3,14 +3,13 @@ package org.partiql.lang.eval
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.CompilerPipeline
-import org.partiql.lang.checkErrorAndErrorContext
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedureSignature
 import org.partiql.lang.util.ArgumentsProviderBase
-import org.partiql.lang.util.softAssert
+import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.lang.util.to
 
 private fun createWrongSProcErrorContext(arg: ExprValue, expectedArgTypes: String, procName: String): PropertyValueMap {
@@ -19,6 +18,15 @@ private fun createWrongSProcErrorContext(arg: ExprValue, expectedArgTypes: Strin
     errorContext[Property.ACTUAL_ARGUMENT_TYPES] = arg.type.name
     errorContext[Property.FUNCTION_NAME] = procName
     return errorContext
+}
+
+/** Custom [CompilerPipeline] builder that adds our test stored procedures. */
+private val compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = {
+    addProcedure(OverriddenZeroArgProcedure(valueFactory))
+    addProcedure(ZeroArgProcedure(valueFactory))
+    addProcedure(OneArgProcedure(valueFactory))
+    addProcedure(TwoArgProcedure(valueFactory))
+    addProcedure(OutputBindingProcedure(valueFactory))
 }
 
 /**
@@ -127,92 +135,40 @@ private class OutputBindingProcedure(val valueFactory: ExprValueFactory) : Store
 class EvaluatingCompilerExecTest : EvaluatorTestBase() {
     private val session = mapOf("A" to "[ { id : 1 } ]").toSession()
 
-    /**
-     * Custom [CompilerPipeline] w/ additional stored procedures
-     */
-    private val pipeline = CompilerPipeline.build(ion) {
-        addProcedure(OverriddenZeroArgProcedure(valueFactory))
-        addProcedure(ZeroArgProcedure(valueFactory))
-        addProcedure(OneArgProcedure(valueFactory))
-        addProcedure(TwoArgProcedure(valueFactory))
-        addProcedure(OutputBindingProcedure(valueFactory))
-    }
-
-    /**
-     * Runs the given [query] with the provided [session] using the custom [CompilerPipeline] with additional stored
-     * procedures to query.
-     */
-    private fun evalSProc(query: String, session: EvaluationSession): ExprValue {
-        val e = pipeline.compile(query)
-        return e.eval(session)
-    }
-
-    /**
-     * Similar to [EvaluatorTestBase]'s [runTestCase], but evaluates using a [CompilerPipeline] with added stored
-     * procedures.
-     */
-    private fun runSProcTestCase(tc: EvaluatorTestCase, session: EvaluationSession) {
-        val queryExprValue = evalSProc(tc.sqlUnderTest, session)
-        val expectedExprValue = evalSProc(tc.expectedSql, session)
-
-        if (!expectedExprValue.exprEquals(queryExprValue)) {
-            println("Expected ionValue : ${expectedExprValue.ionValue}")
-            println("Actual ionValue   : ${queryExprValue.ionValue}")
-
-            fail("Expected and actual ExprValue instances are not equivalent")
-        }
-    }
-
-    /**
-     * Similar to [EvaluatorTestBase]'s [checkInputThrowingEvaluationException], but evaluates using a
-     * [CompilerPipeline] with added stored procedures.
-     */
-    private fun checkInputThrowingEvaluationExceptionSProc(tc: EvaluatorErrorTestCase, session: EvaluationSession) {
-        softAssert {
-            try {
-                val result = evalSProc(tc.sqlUnderTest, session = session).ionValue
-                fail(
-                    "Expected EvaluationException but there was no Exception.  " +
-                        "The unexpected result was: \n${result.toPrettyString()}"
-                )
-            } catch (e: EvaluationException) {
-                if (tc.cause != null) assertThat(e).hasRootCauseExactlyInstanceOf(tc.cause.java)
-                checkErrorAndErrorContext(tc.errorCode, e, tc.expectErrorContextValues)
-            } catch (e: Exception) {
-                fail("Expected EvaluationException but a different exception was thrown:\n\t  $e")
-            }
-        }
-    }
-
     private class ArgsProviderValid : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
             // OverriddenZeroArgProcedure w/ same name as ZeroArgProcedure overridden
             EvaluatorTestCase(
                 "EXEC zero_arg_procedure",
-                "0"
+                "0",
+                compilerPipelineBuilderBlock = compilerPipelineBuilderBlock
             ),
             EvaluatorTestCase(
                 "EXEC one_arg_procedure 1",
-                "1"
+                "1",
+                compilerPipelineBuilderBlock = compilerPipelineBuilderBlock
             ),
             EvaluatorTestCase(
                 "EXEC two_arg_procedure 1, 2",
-                "'1 2'"
+                "'1 2'",
+                compilerPipelineBuilderBlock = compilerPipelineBuilderBlock
             ),
             EvaluatorTestCase(
                 "EXEC output_binding 'A'",
-                "[{'id':1}]"
+                "[{'id':1}]",
+                compilerPipelineBuilderBlock = compilerPipelineBuilderBlock
             ),
             EvaluatorTestCase(
                 "EXEC output_binding 'B'",
-                "MISSING"
+                "MISSING",
+                compilerPipelineBuilderBlock = compilerPipelineBuilderBlock
             )
         )
     }
 
     @ParameterizedTest
     @ArgumentsSource(ArgsProviderValid::class)
-    fun validTests(tc: EvaluatorTestCase) = runSProcTestCase(tc, session)
+    fun validTests(tc: EvaluatorTestCase) = runTestCase(tc, session)
 
     private class ArgsProviderError : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
@@ -220,7 +176,7 @@ class EvaluatingCompilerExecTest : EvaluatorTestBase() {
             EvaluatorErrorTestCase(
                 "EXEC utcnow",
                 ErrorCode.EVALUATOR_NO_SUCH_PROCEDURE,
-                mapOf(
+                propertyValueMapOf(
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 6L,
                     Property.PROCEDURE_NAME to "utcnow"
@@ -230,7 +186,7 @@ class EvaluatingCompilerExecTest : EvaluatorTestBase() {
             EvaluatorErrorTestCase(
                 "EXEC substring 0, 1, 'foo'",
                 ErrorCode.EVALUATOR_NO_SUCH_PROCEDURE,
-                mapOf(
+                propertyValueMapOf(
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 6L,
                     Property.PROCEDURE_NAME to "substring"
@@ -240,63 +196,68 @@ class EvaluatingCompilerExecTest : EvaluatorTestBase() {
             EvaluatorErrorTestCase(
                 "EXEC zero_arg_procedure 1",
                 ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_PROCEDURE_CALL,
-                mapOf(
+                propertyValueMapOf(
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 6L,
                     Property.EXPECTED_ARITY_MIN to 0,
                     Property.EXPECTED_ARITY_MAX to 0
-                )
+                ),
+                compilerPipelineBuilderBlock = compilerPipelineBuilderBlock
             ),
             // invalid # args to sproc (too many)
             EvaluatorErrorTestCase(
                 "EXEC two_arg_procedure 1, 2, 3",
                 ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_PROCEDURE_CALL,
-                mapOf(
+                propertyValueMapOf(
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 6L,
                     Property.EXPECTED_ARITY_MIN to 2,
                     Property.EXPECTED_ARITY_MAX to 2
-                )
+                ),
+                compilerPipelineBuilderBlock = compilerPipelineBuilderBlock
             ),
             // invalid # args to sproc (too few)
             EvaluatorErrorTestCase(
                 "EXEC one_arg_procedure",
                 ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_PROCEDURE_CALL,
-                mapOf(
+                propertyValueMapOf(
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 6L,
                     Property.EXPECTED_ARITY_MIN to 1,
                     Property.EXPECTED_ARITY_MAX to 1
-                )
+                ),
+                compilerPipelineBuilderBlock = compilerPipelineBuilderBlock
             ),
             // invalid first arg type
             EvaluatorErrorTestCase(
                 "EXEC one_arg_procedure 'foo'",
                 ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_PROCEDURE_CALL,
-                mapOf(
+                propertyValueMapOf(
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 6L,
                     Property.EXPECTED_ARGUMENT_TYPES to "INT",
                     Property.ACTUAL_ARGUMENT_TYPES to "STRING",
                     Property.FUNCTION_NAME to "one_arg_procedure"
-                )
+                ),
+                compilerPipelineBuilderBlock = compilerPipelineBuilderBlock
             ),
             // invalid second arg type
             EvaluatorErrorTestCase(
                 "EXEC two_arg_procedure 1, 'two'",
                 ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_PROCEDURE_CALL,
-                mapOf(
+                propertyValueMapOf(
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 6L,
                     Property.EXPECTED_ARGUMENT_TYPES to "INT",
                     Property.ACTUAL_ARGUMENT_TYPES to "STRING",
                     Property.FUNCTION_NAME to "two_arg_procedure"
-                )
+                ),
+                compilerPipelineBuilderBlock = compilerPipelineBuilderBlock
             )
         )
     }
 
     @ParameterizedTest
     @ArgumentsSource(ArgsProviderError::class)
-    fun errorTests(tc: EvaluatorErrorTestCase) = checkInputThrowingEvaluationExceptionSProc(tc, session)
+    fun errorTests(tc: EvaluatorErrorTestCase) = assertThrows(tc, session)
 }
