@@ -23,7 +23,7 @@ plugins {
     id 'java-library'
     // https://docs.gradle.org/5.0/userguide/publishing_maven.html#header
     id 'maven-publish'
-    id 'org.jetbrains.dokka' version '0.9.18'
+    id 'org.jetbrains.dokka' version '1.6.10'
     id 'signing'
     id 'me.champeau.gradle.jmh' version '0.5.3'
 }
@@ -117,9 +117,9 @@ ktlint {
     }
 }
 
-dokka {
-    outputFormat = "html"
-    outputDirectory = "$buildDir/javadoc"
+tasks.dokkaHtml.configure {
+    dependsOn(generatePigDomains)
+    outputDirectory.set(file("$buildDir/javadoc"))
     //todo: includes = ["path/to/module.md"]
 }
 
@@ -129,8 +129,8 @@ task sourcesJar(type: Jar) {
 }
 
 task javadocJar(type: Jar) {
-    from dokka
-    classifier = "javadoc"
+    from dokkaHtml
+    archiveClassifier.set("javadoc")
 }
 
 publishing {
