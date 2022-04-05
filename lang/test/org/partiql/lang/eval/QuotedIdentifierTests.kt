@@ -18,7 +18,6 @@ import org.junit.Test
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.util.propertyValueMapOf
-import org.partiql.lang.util.sourceLocationProperties
 
 class QuotedIdentifierTests : EvaluatorTestBase() {
 
@@ -84,7 +83,8 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
         assertThrows(
             "abc",
             ErrorCode.EVALUATOR_AMBIGUOUS_BINDING,
-            propertyValueMapOf(1, 1,
+            propertyValueMapOf(
+                1, 1,
                 Property.BINDING_NAME to "abc",
                 Property.BINDING_NAME_MATCHES to "Abc, aBc, abC"
             ),
@@ -130,7 +130,8 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
         assertThrows(
             "SELECT s.abc FROM `$tableWithCaseVaryingFields` AS s",
             ErrorCode.EVALUATOR_AMBIGUOUS_BINDING,
-            propertyValueMapOf(1, 10,
+            propertyValueMapOf(
+                1, 10,
                 Property.BINDING_NAME to "abc",
                 Property.BINDING_NAME_MATCHES to "Abc, aBc, abC"
             ),

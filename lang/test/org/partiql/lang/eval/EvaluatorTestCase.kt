@@ -59,6 +59,4 @@ data class EvaluatorTestCase(
         groupName != null -> "$groupName : $sqlUnderTest"
         else -> "$sqlUnderTest"
     }
-
-
 }

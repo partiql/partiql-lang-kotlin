@@ -59,7 +59,8 @@ class ToStringEvaluationTest : EvaluatorTestBase() {
     fun toStringInvalidArgumentTests(testCase: InvalidArgTestCase) = assertThrows(
         testCase.source,
         ErrorCode.EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN,
-        propertyValueMapOf(1, 1,
+        propertyValueMapOf(
+            1, 1,
             Property.TIMESTAMP_FORMAT_PATTERN to testCase.invalidTimeFormatPattern
         ),
         expectedPermissiveModeResult = "MISSING"

@@ -166,7 +166,8 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
     fun wrongArityExists() = assertThrows(
         "exists()",
         ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL,
-        expectedErrorContext = propertyValueMapOf(1, 1,
+        expectedErrorContext = propertyValueMapOf(
+            1, 1,
             Property.EXPECTED_ARITY_MIN to 1,
             Property.EXPECTED_ARITY_MAX to 1,
             Property.ACTUAL_ARITY to 0,
@@ -238,7 +239,6 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
     ) {
         assertEquals(IllegalArgumentException::class, it.rootCause?.javaClass)
     }
-
 
     @Test
     fun divideByZero() = assertThrows(

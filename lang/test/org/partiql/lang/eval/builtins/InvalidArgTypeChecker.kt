@@ -123,12 +123,14 @@ class InvalidArgTypeChecker : EvaluatorTestBase() {
         assertThrows(
             query = source,
             expectedErrorCode = ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL,
-            expectedErrorContext = propertyValueMapOf(1, 1,
+            expectedErrorContext = propertyValueMapOf(
+                1, 1,
                 Property.FUNCTION_NAME to funcName,
                 Property.ARGUMENT_POSITION to argPosition,
                 Property.EXPECTED_ARGUMENT_TYPES to expectedArgTypeErrorMsg(expectedTypes.typeDomain.toList()),
                 Property.ACTUAL_ARGUMENT_TYPES to actualType.runtimeType.toString()
             ),
-            expectedPermissiveModeResult = "MISSING"
+            expectedPermissiveModeResult = "MISSING",
+            excludeLegacySerializerAssertions = true
         )
 }

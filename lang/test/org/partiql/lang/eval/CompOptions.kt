@@ -18,7 +18,7 @@ package org.partiql.lang.eval
 enum class CompOptions(
     val optionsBlock: CompileOptions.Builder.() -> Unit
 ) {
-    STANDARD( { /* intentionally empty. */ }),
+    STANDARD({ /* intentionally empty. */ }),
 
     UNDEF_VAR_MISSING(
         {

@@ -21,6 +21,7 @@ import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
 import org.partiql.lang.CUSTOM_TEST_TYPES
 import org.partiql.lang.CompilerPipeline
+import org.partiql.lang.ION
 import org.partiql.lang.SqlException
 import org.partiql.lang.TestBase
 import org.partiql.lang.ast.AstDeserializerBuilder
@@ -38,6 +39,7 @@ import org.partiql.lang.util.ConfigurableExprValueFormatter
 import org.partiql.lang.util.asSequence
 import org.partiql.lang.util.newFromIonText
 import org.partiql.lang.util.softAssert
+import org.partiql.lang.util.stripMetas
 import kotlin.reflect.KClass
 import kotlin.test.assertEquals
 
@@ -63,25 +65,6 @@ abstract class EvaluatorTestBase : TestBase() {
         Bindings.ofMap(mapValues { it.value.toExprValue() })
 
     protected fun Map<String, String>.toSession() = EvaluationSession.build { globals(this@toSession.toBindings()) }
-
-    // DL TODO: should this catch evaluationException instead?
-    protected fun evalAssertThrowsSqlException(
-        source: String,
-        compileOptions: CompileOptions = CompileOptions.standard(),
-        session: EvaluationSession = EvaluationSession.standard(),
-        compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit =  { },
-        exceptionAssertBlock: (SqlException) -> Unit
-    ) {
-        // DL TODO: call plan compiler as well
-        try {
-            // .ionValue forces materialization, which actually cases the query
-            // to be evaluated.
-            eval(source, compileOptions, session, compilerPipelineBuilderBlock).ionValue
-            fail("Expected SqlException but was not thrown.")
-        } catch(e: SqlException) {
-            exceptionAssertBlock(e)
-        }
-    }
 
     /**
      * Assert that the result of the evaluation of source is the same as expected given optionally given an
@@ -120,7 +103,7 @@ abstract class EvaluatorTestBase : TestBase() {
         // Evaluate the ast originally obtained from the parser
         evalAndAssert(originalAst, "AST originated from parser")
 
-        assertBaseRewrite(source, originalAst.toExprNode(ion))
+        assertAstRewriterBase(source, originalAst.toExprNode(ion))
     }
 
     /**
@@ -173,17 +156,7 @@ abstract class EvaluatorTestBase : TestBase() {
         evalAndAssertIsMissing(originalAst, "AST originated from parser")
         AstVersion.values().forEach { serializeRoundTripEvalAndAssertIsMissing(it) }
 
-        assertBaseRewrite(source, originalAst.toExprNode(ion))
-    }
-
-    private fun assertPIGToExprNodeRoundTrip(ast: PartiqlAst.Statement) {
-        val roundTrippedAst = ast.toExprNode(ion).toAstStatement()
-
-        assertEquals(
-            ast,
-            roundTrippedAst,
-            "PIG ast resulting from round trip to ExprNode and back should be equivalent."
-        )
+        assertAstRewriterBase(source, originalAst.toExprNode(ion))
     }
 
     protected fun assertExprEquals(expected: ExprValue, actual: ExprValue, message: String) {
@@ -242,9 +215,7 @@ abstract class EvaluatorTestBase : TestBase() {
         session: EvaluationSession = EvaluationSession.standard(),
         compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }
     ): ExprValue {
-
         val p = SqlParser(ion, CUSTOM_TEST_TYPES)
-
         val ast = p.parseAstStatement(source)
         return eval(ast, compileOptions, session, compilerPipelineBuilderBlock)
     }
@@ -264,7 +235,7 @@ abstract class EvaluatorTestBase : TestBase() {
         compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }
     ): ExprValue {
 
-        val p = SqlParser(ion)
+        val p = SqlParser(ion, CUSTOM_TEST_TYPES)
 
         val ast = p.parseAstStatement(source)
         return eval(
@@ -291,9 +262,10 @@ abstract class EvaluatorTestBase : TestBase() {
 
         // "Sneak" in this little assertion to test that every PIG ast that passes through
         // this function can be round-tripped to ExprNode and back.
-        assertPIGToExprNodeRoundTrip(astStatement)
+        assertPartiqlAstExprNodeRoundTrip(astStatement)
 
         val pipeline = CompilerPipeline.builder(ion).apply {
+            customDataTypes(CUSTOM_TEST_TYPES)
             compileOptions(compileOptions)
             compilerPipelineBuilderBlock()
         }
@@ -304,32 +276,89 @@ abstract class EvaluatorTestBase : TestBase() {
     private fun privateAssertThrows(
         query: String,
         expectedErrorCode: ErrorCode,
-        expectedErrorContext: PropertyValueMap? = null,
-        expectedInternal: Boolean = false,
-        session: EvaluationSession = EvaluationSession.standard(),
-        compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { },
-        compileOptionsBlock: CompileOptions.Builder.() -> Unit = {},
+        expectedErrorContext: PropertyValueMap?,
+        expectedInternal: Boolean?,
+        session: EvaluationSession,
+        excludeLegacySerializerAssertions: Boolean,
+        compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit,
+        compileOptionsBlock: CompileOptions.Builder.() -> Unit,
         exceptionAssertBlock: (SqlException) -> Unit
     ) {
-        val compileOptions = CompileOptions.build { compileOptionsBlock() }
-        evalAssertThrowsSqlException(
-            query,
-            session = session,
-            compileOptions = compileOptions,
-            compilerPipelineBuilderBlock = compilerPipelineBuilderBlock
-        ) { e: SqlException ->
-            softAssert {
-                assertThat(e.errorCode).`as`("error code").isEqualTo(expectedErrorCode)
-                assertThat(e.internal).`as`("internal").isEqualTo(expectedInternal)
-
-                if(expectedErrorContext != null) {
-                    assertThat(e.errorContext).`as`("error context").isEqualTo(expectedErrorContext)
-                } else {
-                    assertThat(e.errorContext).`as`("error context").isNull()
-                }
-            }
-            exceptionAssertBlock(e)
+        val compilerPipeline = CompilerPipeline.build(ION) {
+            customDataTypes(CUSTOM_TEST_TYPES)
+            compilerPipelineBuilderBlock()
+            compileOptions { compileOptionsBlock() }
         }
+
+        val ex = org.junit.jupiter.api.assertThrows<SqlException>("test case should throw during evaluation") {
+            // Note that an SqlException (usually a SemanticException or EvaluationException) might be thrown in
+            // .compile OR in .eval.  We currently don't make a distinction, so tests cannot assert that certain
+            // errors are compile-time and others are evaluation-time.  We really aught to create a way for tests to
+            // indicate when the exception should be thrown.  This is undone.
+            val expression = compilerPipeline.compile(query)
+            expression.eval(session).ionValue
+            // The call to .ionValue is important since query execution won't actually
+            // begin otherwise.
+        }
+
+        assertEquals(expectedErrorCode, ex.errorCode, "Expected error code must match")
+        if (expectedErrorContext != null) {
+            assertEquals(expectedErrorContext, ex.errorContext, "Expected error context must match")
+        }
+        if (expectedInternal != null) {
+            assertEquals(expectedInternal, ex.internal, "Expected internal flag must match")
+        }
+
+        exceptionAssertBlock(ex)
+
+        commonAssertions(query, excludeLegacySerializerAssertions)
+    }
+
+    private fun commonAssertions(query: String, excludeLegacySerializerAssertions: Boolean) {
+        val parser = SqlParser(ION, CUSTOM_TEST_TYPES)
+        val ast = parser.parseAstStatement(query)
+
+        assertPartiqlAstExprNodeRoundTrip(ast)
+
+        val exprNode = ast.toExprNode(ion)
+
+        assertAstRewriterBase(query, exprNode)
+
+        if (!excludeLegacySerializerAssertions) {
+            assertLegacySerializer(exprNode)
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun assertLegacySerializer(exprNode: ExprNode) {
+        val deserializer = AstDeserializerBuilder(ion).build()
+        AstVersion.values().forEach { astVersion ->
+            val sexpRepresentation = AstSerializer.serialize(exprNode, astVersion, ion)
+            val roundTrippedExprNode = deserializer.deserialize(sexpRepresentation, astVersion)
+            assertEquals(
+                exprNode.stripMetas(),
+                roundTrippedExprNode.stripMetas(),
+                "ExprNode deserialized from s-exp $astVersion AST must match the ExprNode returned by the parser"
+            )
+        }
+    }
+
+    private fun assertPartiqlAstExprNodeRoundTrip(ast: PartiqlAst.Statement) {
+        val roundTrippedAst = ast.toExprNode(ion).toAstStatement()
+        assertEquals(
+            ast,
+            roundTrippedAst,
+            "PIG ast resulting from round trip to ExprNode and back should be equivalent."
+        )
+    }
+
+    private fun assertAstRewriterBase(originalSql: String, exprNode: ExprNode) {
+        val clonedAst = defaultRewriter.rewriteExprNode(exprNode)
+        assertEquals(
+            exprNode,
+            clonedAst,
+            "AST returned from default AstRewriterBase should match the original AST. SQL was: $originalSql"
+        )
     }
 
     /**
@@ -341,9 +370,10 @@ abstract class EvaluatorTestBase : TestBase() {
     protected fun assertThrows(
         query: String,
         expectedErrorCode: ErrorCode,
-        expectedErrorContext: PropertyValueMap,
+        expectedErrorContext: PropertyValueMap? = null,
         expectedPermissiveModeResult: String? = null,
-        expectedInternal: Boolean = false,
+        expectedInternal: Boolean? = null,
+        excludeLegacySerializerAssertions: Boolean = false,
         session: EvaluationSession = EvaluationSession.standard(),
         compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { },
         compileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit = { },
@@ -355,6 +385,7 @@ abstract class EvaluatorTestBase : TestBase() {
             expectedErrorCode = expectedErrorCode,
             expectedErrorContext = expectedErrorContext,
             expectedInternal = expectedInternal,
+            excludeLegacySerializerAssertions = excludeLegacySerializerAssertions,
             session = session,
             compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,
             compileOptionsBlock = {
@@ -386,11 +417,12 @@ abstract class EvaluatorTestBase : TestBase() {
                         expectedErrorContext = expectedErrorContext,
                         expectedInternal = expectedInternal,
                         session = session,
+                        excludeLegacySerializerAssertions = excludeLegacySerializerAssertions,
+                        compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,
                         compileOptionsBlock = {
                             compileOptionsBuilderBlock()
                             typingMode(TypingMode.PERMISSIVE)
-                        },
-                        compilerPipelineBuilderBlock = compilerPipelineBuilderBlock
+                        }
                     ) { exception2 ->
                         exceptionAssertBlock(exception2)
                     }
@@ -401,7 +433,12 @@ abstract class EvaluatorTestBase : TestBase() {
                         "Required non null expectedPermissiveModeResult when ErrorCode.errorBehaviorInPermissiveMode is set to ErrorBehaviorInPermissiveMode.RETURN_MISSING",
                         expectedPermissiveModeResult
                     )
-                    val originalExprValueForPermissiveMode = evalForPermissiveMode(query, session = session)
+                    val originalExprValueForPermissiveMode = evalForPermissiveMode(
+                        query,
+                        session = session,
+                        compileOptions = CompileOptions.build { compileOptionsBuilderBlock() },
+                        compilerPipelineBuilderBlock = compilerPipelineBuilderBlock
+                    )
                     val expectedExprValueForPermissiveMode =
                         evalForPermissiveMode(expectedPermissiveModeResult!!, session = session)
                     assertExprEquals(
@@ -419,6 +456,7 @@ abstract class EvaluatorTestBase : TestBase() {
             query = tc.query,
             expectedErrorCode = tc.errorCode,
             expectedErrorContext = tc.expectErrorContext,
+            excludeLegacySerializerAssertions = tc.excludeLegacySerializerAssertions,
             session = session,
             expectedPermissiveModeResult = tc.expectedPermissiveModeResult,
             compileOptionsBuilderBlock = tc.compileOptionsBuilderBlock,
@@ -467,7 +505,8 @@ abstract class EvaluatorTestBase : TestBase() {
                 }
             ),
             session,
-            "compile options forced to PERMISSIVE mode")
+            "compile options forced to PERMISSIVE mode"
+        )
     }
 
     /**
@@ -535,7 +574,7 @@ abstract class EvaluatorTestBase : TestBase() {
     }
 }
 
-internal fun IonValue.removeAnnotations() {
+internal fun IonValue.removePartiqlAnnotations() {
     when (this.type) {
         // Remove $partiql_missing annotation from NULL for assertions
         IonType.NULL -> this.removeTypeAnnotation(MISSING_ANNOTATION)
@@ -549,14 +588,15 @@ internal fun IonValue.removeAnnotations() {
             }
             // Recursively remove annotations
             this.asSequence().forEach {
-                it.removeAnnotations()
+                it.removePartiqlAnnotations()
             }
         }
+        // IonType.TIMESTAMP -> this.removeTypeAnnotation(DATE_ANNOTATION)
         else -> { /* ok to do nothing. */ }
     }
 }
 
 internal fun IonValue.cloneAndRemoveAnnotations() = this.clone().apply {
-    removeAnnotations()
+    removePartiqlAnnotations()
     makeReadOnly()
 }

@@ -16,7 +16,7 @@ package org.partiql.lang.errors
 
 import com.amazon.ion.IonValue
 import org.partiql.lang.syntax.TokenType
-import java.util.*
+import java.util.EnumMap
 
 internal const val UNKNOWN: String = "<UNKNOWN>"
 
@@ -121,7 +121,6 @@ abstract class PropertyValue(val type: PropertyType) {
 
     /** For debugging purposes (unit tests) only.*/
     override fun hashCode(): Int = this.value.hashCode()
-
 }
 
 /**
@@ -261,7 +260,7 @@ class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumM
     /** Creates a human readable representation of this [PropertyValueMap].  For debugging only. */
     override fun toString(): String =
         this.map.entries.sortedBy { it.key }.joinToString(", ", "propertyValueMapOf(", ")") {
-            val value = when(it.value.value) {
+            val value = when (it.value.value) {
                 is String -> "\"${it.value}\""
                 else -> it.value.toString()
             }

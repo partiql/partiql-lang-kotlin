@@ -553,8 +553,6 @@ internal class LegacyThunkFactory(
         } catch (e: Exception) {
             compileOptions.thunkOptions.handleExceptionForLegacyMode(e, sourceLocation)
         }
-
-
 }
 
 /**

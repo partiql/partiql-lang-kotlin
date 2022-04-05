@@ -61,4 +61,3 @@ fun propertyValueMapOf(
  * Intended to be used in conjunction with [propertyValueMapOf].
  */
 infix fun Property.to(that: Any): Pair<Property, Any> = Pair(this, that)
-

@@ -8,7 +8,6 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.EvaluatorTestBase
 import org.partiql.lang.util.propertyValueMapOf
-import org.partiql.lang.util.sourceLocationProperties
 import org.partiql.lang.util.to
 
 @RunWith(JUnitParamsRunner::class)
@@ -85,7 +84,8 @@ class ToTimestampFormatPatternValidationTest : EvaluatorTestBase() {
         assertThrows(
             "TO_TIMESTAMP('doesnt matter', '${testCase.pattern.replace("'", "''")}')",
             ErrorCode.EVALUATOR_INCOMPLETE_TIMESTAMP_FORMAT_PATTERN,
-            propertyValueMapOf(1, 1,
+            propertyValueMapOf(
+                1, 1,
                 Property.TIMESTAMP_FORMAT_PATTERN to testCase.pattern,
                 Property.TIMESTAMP_FORMAT_PATTERN_FIELDS to testCase.fields
             ),
@@ -244,7 +244,8 @@ class ToTimestampFormatPatternValidationTest : EvaluatorTestBase() {
         assertThrows(
             "TO_TIMESTAMP('doesnt matter', '${testCase.pattern}')",
             ErrorCode.EVALUATOR_TIMESTAMP_FORMAT_PATTERN_DUPLICATE_FIELDS,
-            propertyValueMapOf(1, 1,
+            propertyValueMapOf(
+                1, 1,
                 Property.TIMESTAMP_FORMAT_PATTERN to testCase.pattern,
                 Property.TIMESTAMP_FORMAT_PATTERN_FIELDS to testCase.fields
             ),

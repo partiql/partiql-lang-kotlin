@@ -144,9 +144,9 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
                 "SELECT B.id FROM B LET 100 AS foo GROUP BY B.id HAVING B.id > foo",
                 ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
                 propertyValueMapOf(
-                        Property.LINE_NUMBER to 1L,
-                        Property.COLUMN_NUMBER to 63L,
-                        Property.BINDING_NAME to "foo"
+                    Property.LINE_NUMBER to 1L,
+                    Property.COLUMN_NUMBER to 63L,
+                    Property.BINDING_NAME to "foo"
                 )
             ),
             // LET binding referenced in projection not in GROUP BY
@@ -154,9 +154,9 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
                 "SELECT foo FROM B LET 100 AS foo GROUP BY B.id",
                 ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
                 propertyValueMapOf(
-                        Property.LINE_NUMBER to 1L,
-                        Property.COLUMN_NUMBER to 8L,
-                        Property.BINDING_NAME to "foo"
+                    Property.LINE_NUMBER to 1L,
+                    Property.COLUMN_NUMBER to 8L,
+                    Property.BINDING_NAME to "foo"
                 )
             )
         )
@@ -164,5 +164,8 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(ArgsProviderError::class)
-    fun errorTests(tc: EvaluatorErrorTestCase) = assertThrows(tc, session)
+    fun errorTests(tc: EvaluatorErrorTestCase) = assertThrows(
+        tc.copy(excludeLegacySerializerAssertions = true),
+        session
+    )
 }

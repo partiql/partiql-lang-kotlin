@@ -1,6 +1,8 @@
 package org.partiql.lang.eval
 
+import com.amazon.ion.system.IonTextWriterBuilder
 import org.partiql.lang.CompilerPipeline
+import org.partiql.lang.errors.ErrorBehaviorInPermissiveMode
 import org.partiql.lang.errors.ErrorCategory
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.ExprValueType.BAG
@@ -21,6 +23,7 @@ import org.partiql.lang.util.honorTypedOpParameters
 import org.partiql.lang.util.legacyCastBehavior
 import org.partiql.lang.util.legacyTypingMode
 import org.partiql.lang.util.permissiveTypingMode
+import java.io.StringWriter
 import java.time.ZoneOffset
 
 /**
@@ -54,6 +57,47 @@ data class NotImplemented(val expectedQuality: CastQuality) : CastQualityStatus(
 data class FixSemantics(val expectedQuality: CastQuality) : CastQualityStatus()
 
 abstract class CastTestBase : EvaluatorTestBase() {
+
+    fun ConfiguredCastCase.assertCase() {
+        when (castCase.expected) {
+            null -> {
+                val expectedErrorCode = castCase.expectedErrorCode
+                if (expectedErrorCode == null) {
+                    fail("CastCase $castCase did not have an expected value or expected error code.")
+                } else {
+                    when (expectedErrorCode.category) {
+                        ErrorCategory.PARSER -> {
+                            error("WTH")
+                        }
+                        else -> {
+                            assertThrows(
+                                query = castCase.expression,
+                                expectedErrorCode = expectedErrorCode,
+                                expectedPermissiveModeResult = when (expectedErrorCode.errorBehaviorInPermissiveMode) {
+                                    ErrorBehaviorInPermissiveMode.THROW_EXCEPTION -> null
+                                    ErrorBehaviorInPermissiveMode.RETURN_MISSING -> "MISSING"
+                                },
+                                expectedInternal = null, // <-- disables internal flag assertion
+                                excludeLegacySerializerAssertions = true,
+                                compileOptionsBuilderBlock = compileOptionBlock,
+                                compilerPipelineBuilderBlock = configurePipeline,
+                                exceptionAssertBlock = { it ->
+                                    assertEquals(expectedErrorCode, it.errorCode)
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+            else -> assertEval(
+                castCase.expression,
+                castCase.expected,
+                compileOptions = CompileOptions.build(compileOptionBlock),
+                compilerPipelineBuilderBlock = configurePipeline,
+                block = castCase.additionalAssertBlock
+            )
+        }
+    }
 
     /**
      * Test case for general casting tests.
@@ -165,52 +209,6 @@ abstract class CastTestBase : EvaluatorTestBase() {
             else -> " - $description"
         }
         override fun toString() = "$castCase$additionalDescription"
-
-        fun assertCase() {
-            when (castCase.expected) {
-                null -> {
-                    if (castCase.expectedErrorCode == null) {
-                        fail("CastCase $castCase did not have an expected value or expected error code.")
-                    }
-                    evalAssertThrowsSqlException(
-                        castCase.expression,
-                        compileOptions = CompileOptions.build(compileOptionBlock),
-                        compilerPipelineBuilderBlock = configurePipeline
-                    ) {
-                        assertEquals(castCase.expectedErrorCode, it.errorCode)
-                    }
-                }
-                else -> assertEval(
-                    castCase.expression,
-                    castCase.expected,
-                    compileOptions = CompileOptions.build(compileOptionBlock),
-                    compilerPipelineBuilderBlock = configurePipeline,
-                    block = castCase.additionalAssertBlock
-                )
-            }
-        }
-
-        // Separate tests for Date and Time as [assertEval] validates serialization and
-        // date and time literals are not supported by V0 AST serializer.
-        internal fun assertDateTimeCase() {
-            when (castCase.expected) {
-                null -> {
-                    if (castCase.expectedErrorCode == null) {
-                        fail("CastCase $castCase did not have an expected value or expected error code.")
-                    }
-                    evalAssertThrowsSqlException(castCase.expression) {
-                        assertEquals(castCase.expectedErrorCode, it.errorCode)
-                    }
-                }
-                else -> assertEquals(
-                    castCase.expected,
-                    eval(
-                        castCase.expression,
-                        compileOptions = CompileOptions.build(compileOptionBlock)
-                    ).toString()
-                )
-            }
-        }
     }
 
     companion object : EvaluatorTestBase() {
@@ -1269,59 +1267,54 @@ abstract class CastTestBase : EvaluatorTestBase() {
 
         private val commonDateTimeTests = listOf(
             listOf(
-                case("DATE '2007-10-10'", "2007-10-10", CastQuality.LOSSLESS)
+                case("DATE '2007-10-10'", "\$partiql_date::2007-10-10", CastQuality.LOSSLESS)
             ).types(ExprValueType.DATE.sqlTextNames),
             listOf(
-                case("DATE '2007-10-10'", "`'2007-10-10'`", CastQuality.LOSSLESS)
+                case("DATE '2007-10-10'", "'2007-10-10'", CastQuality.LOSSLESS)
             ).types(ExprValueType.SYMBOL.sqlTextNames),
             listOf(
-                case("DATE '2007-10-10'", "'2007-10-10'", CastQuality.LOSSLESS)
+                case("DATE '2007-10-10'", "\"2007-10-10\"", CastQuality.LOSSLESS)
             ).types(ExprValueType.STRING.sqlTextNames),
             listOf(
                 // CAST(<TIME> AS <variants of TIME type>)
-                case("TIME '23:12:12.1267'", "TIME", "23:12:12.1267", CastQuality.LOSSLESS),
-                case("TIME '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "23:12:12.1267${defaultTimezoneOffset.getOffsetHHmm()}", CastQuality.LOSSLESS),
-                case("TIME '23:12:12.1267+05:30'", "TIME (3)", "23:12:12.127", CastQuality.LOSSY),
-                case("TIME '23:12:12.1267-05:30'", "TIME (3) WITH TIME ZONE", "23:12:12.127${defaultTimezoneOffset.getOffsetHHmm()}", CastQuality.LOSSY),
-                case("TIME (3) '23:12:12.1267'", "TIME", "23:12:12.127", CastQuality.LOSSLESS),
-                case("TIME (3) '23:12:12.1267-05:30'", "TIME", "23:12:12.127", CastQuality.LOSSLESS),
-                case("TIME (3) '23:12:12.1267+05:30'", "TIME WITH TIME ZONE", "23:12:12.127${defaultTimezoneOffset.getOffsetHHmm()}", CastQuality.LOSSLESS),
-                case("TIME (3) '23:12:12.1267-05:30'", "TIME (9)", "23:12:12.127000000", CastQuality.LOSSLESS),
-                case("TIME WITH TIME ZONE '23:12:12.1267'", "TIME", "23:12:12.1267", CastQuality.LOSSLESS),
-                case("TIME WITH TIME ZONE '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "23:12:12.1267-05:30", CastQuality.LOSSLESS),
-                case("TIME WITH TIME ZONE '23:12:12.1267+05:30'", "TIME (3) WITH TIME ZONE", "23:12:12.127+05:30", CastQuality.LOSSY),
-                case("TIME WITH TIME ZONE '23:12:12.1267-05:30'", "TIME", "23:12:12.1267", CastQuality.LOSSY),
-                case("TIME (3) WITH TIME ZONE '23:12:12.1267'", "TIME", "23:12:12.127", CastQuality.LOSSLESS),
-                case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "23:12:12.127-05:30", CastQuality.LOSSLESS),
-                case("TIME (3) WITH TIME ZONE '23:12:12.1267+05:30'", "TIME (5)", "23:12:12.12700", CastQuality.LOSSY),
-                case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "TIME (5) WITH TIME ZONE", "23:12:12.12700-05:30", CastQuality.LOSSLESS),
+                case("TIME '23:12:12.1267'", "TIME", "\$partiql_time::{hour:23,minute:12,second:12.1267,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSLESS),
+                case("TIME '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "\$partiql_time::{hour:23,minute:12,second:12.1267,timezone_hour:0,timezone_minute:0}", CastQuality.LOSSLESS),
+                case("TIME '23:12:12.1267+05:30'", "TIME (3)", "\$partiql_time::{hour:23,minute:12,second:12.127,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
+                case("TIME '23:12:12.1267-05:30'", "TIME (3) WITH TIME ZONE", "\$partiql_time::{hour:23,minute:12,second:12.127,timezone_hour:0,timezone_minute:0}", CastQuality.LOSSY),
+                case("TIME (3) '23:12:12.1267'", "TIME", "\$partiql_time::{hour:23,minute:12,second:12.127,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSLESS),
+                case("TIME (3) '23:12:12.1267-05:30'", "TIME", "\$partiql_time::{hour:23,minute:12,second:12.127,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSLESS),
+                case("TIME (3) '23:12:12.1267+05:30'", "TIME WITH TIME ZONE", "\$partiql_time::{hour:23,minute:12,second:12.127,timezone_hour:0,timezone_minute:0}", CastQuality.LOSSLESS),
+                case("TIME (3) '23:12:12.1267-05:30'", "TIME (9)", "\$partiql_time::{hour:23,minute:12,second:12.127000000,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSLESS),
+                case("TIME WITH TIME ZONE '23:12:12.1267'", "TIME", "\$partiql_time::{hour:23,minute:12,second:12.1267,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSLESS),
+                case("TIME WITH TIME ZONE '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "\$partiql_time::{hour:23,minute:12,second:12.1267,timezone_hour:-5,timezone_minute:-30}", CastQuality.LOSSLESS),
+                case("TIME WITH TIME ZONE '23:12:12.1267+05:30'", "TIME (3) WITH TIME ZONE", "\$partiql_time::{hour:23,minute:12,second:12.127,timezone_hour:5,timezone_minute:30}", CastQuality.LOSSY),
+                case("TIME WITH TIME ZONE '23:12:12.1267-05:30'", "TIME", "\$partiql_time::{hour:23,minute:12,second:12.1267,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
+                case("TIME (3) WITH TIME ZONE '23:12:12.1267'", "TIME", "\$partiql_time::{hour:23,minute:12,second:12.127,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSLESS),
+                case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "\$partiql_time::{hour:23,minute:12,second:12.127,timezone_hour:-5,timezone_minute:-30}", CastQuality.LOSSLESS),
+                case("TIME (3) WITH TIME ZONE '23:12:12.1267+05:30'", "TIME (5)", "\$partiql_time::{hour:23,minute:12,second:12.12700,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
+                case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "TIME (5) WITH TIME ZONE", "\$partiql_time::{hour:23,minute:12,second:12.12700,timezone_hour:-5,timezone_minute:-30}", CastQuality.LOSSLESS),
                 // CAST(<TIMESTAMP> AS <variants of TIME type>)
-                case("`2007-02-23T12:14:33.079Z`", "TIME", "12:14:33.079", CastQuality.LOSSY),
-                case("`2007-02-23T12:14:33.079-08:00`", "TIME", "12:14:33.079", CastQuality.LOSSY),
-                case("`2007-02-23T12:14:33.079Z`", "TIME WITH TIME ZONE", "12:14:33.079+00:00", CastQuality.LOSSY),
-                case("`2007-02-23T12:14:33.079-08:00`", "TIME (1)", "12:14:33.1", CastQuality.LOSSY),
-                case("`2007-02-23T12:14:33.079-08:00`", "TIME (2) WITH TIME ZONE", "12:14:33.08-08:00", CastQuality.LOSSY),
+                case("`2007-02-23T12:14:33.079Z`", "TIME", "\$partiql_time::{hour:12,minute:14,second:33.079,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
+                case("`2007-02-23T12:14:33.079-08:00`", "TIME", "\$partiql_time::{hour:12,minute:14,second:33.079,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
+                case("`2007-02-23T12:14:33.079Z`", "TIME WITH TIME ZONE", "\$partiql_time::{hour:12,minute:14,second:33.079,timezone_hour:0,timezone_minute:0}", CastQuality.LOSSY),
+                case("`2007-02-23T12:14:33.079-08:00`", "TIME (1)", "\$partiql_time::{hour:12,minute:14,second:33.1,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
+                case("`2007-02-23T12:14:33.079-08:00`", "TIME (2) WITH TIME ZONE", "\$partiql_time::{hour:12,minute:14,second:33.08,timezone_hour:-8,timezone_minute:0}", CastQuality.LOSSY),
                 // CAST(<text> AS <variants of TIME type>)
-                case("'23:12:12.1267'", "TIME", "23:12:12.1267", CastQuality.LOSSLESS),
-                case("'23:12:12.1267'", "TIME (2)", "23:12:12.13", CastQuality.LOSSY),
-                case("'23:12:12.1267'", "TIME WITH TIME ZONE", "23:12:12.1267${defaultTimezoneOffset.getOffsetHHmm()}", CastQuality.LOSSY),
-                case("'23:12:12.1267'", "TIME (2) WITH TIME ZONE", "23:12:12.13${defaultTimezoneOffset.getOffsetHHmm()}", CastQuality.LOSSY),
-                case("""`"23:12:12.1267"`""", "TIME", "23:12:12.1267", CastQuality.LOSSLESS),
-                case("""`"23:12:12.1267"`""", "TIME (2)", "23:12:12.13", CastQuality.LOSSY),
-                case("""`"23:12:12.1267"`""", "TIME WITH TIME ZONE", "23:12:12.1267${defaultTimezoneOffset.getOffsetHHmm()}", CastQuality.LOSSY),
-                case("""`'23:12:12.1267'`""", "TIME (2) WITH TIME ZONE", "23:12:12.13${defaultTimezoneOffset.getOffsetHHmm()}", CastQuality.LOSSY),
-                case("""`'23:12:12.1267'`""", "TIME", "23:12:12.1267", CastQuality.LOSSLESS),
-                case("""`'23:12:12.1267'`""", "TIME (2)", "23:12:12.13", CastQuality.LOSSY),
-                case("""`'23:12:12.1267'`""", "TIME WITH TIME ZONE", "23:12:12.1267${defaultTimezoneOffset.getOffsetHHmm()}", CastQuality.LOSSY),
-                case("""`'23:12:12.1267'`""", "TIME (2) WITH TIME ZONE", "23:12:12.13${defaultTimezoneOffset.getOffsetHHmm()}", CastQuality.LOSSY),
+                case("'23:12:12.1267'", "TIME", "\$partiql_time::{hour:23,minute:12,second:12.1267,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSLESS),
+                case("'23:12:12.1267'", "TIME (2)", "\$partiql_time::{hour:23,minute:12,second:12.13,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
+                case("'23:12:12.1267'", "TIME WITH TIME ZONE", "\$partiql_time::{hour:23,minute:12,second:12.1267,timezone_hour:0,timezone_minute:0}", CastQuality.LOSSY),
+                case("'23:12:12.1267'", "TIME (2) WITH TIME ZONE", "\$partiql_time::{hour:23,minute:12,second:12.13,timezone_hour:0,timezone_minute:0}", CastQuality.LOSSY),
+                case("""`"23:12:12.1267"`""", "TIME", "\$partiql_time::{hour:23,minute:12,second:12.1267,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSLESS),
+                case("""`"23:12:12.1267"`""", "TIME (2)", "\$partiql_time::{hour:23,minute:12,second:12.13,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
+                case("""`"23:12:12.1267"`""", "TIME WITH TIME ZONE", "\$partiql_time::{hour:23,minute:12,second:12.1267,timezone_hour:0,timezone_minute:0}", CastQuality.LOSSY),
+                case("""`'23:12:12.1267'`""", "TIME (2) WITH TIME ZONE", "\$partiql_time::{hour:23,minute:12,second:12.13,timezone_hour:0,timezone_minute:0}", CastQuality.LOSSY),
+                case("""`'23:12:12.1267'`""", "TIME", "\$partiql_time::{hour:23,minute:12,second:12.1267,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSLESS),
+                case("""`'23:12:12.1267'`""", "TIME (2)", "\$partiql_time::{hour:23,minute:12,second:12.13,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
+                case("""`'23:12:12.1267'`""", "TIME WITH TIME ZONE", "\$partiql_time::{hour:23,minute:12,second:12.1267,timezone_hour:0,timezone_minute:0}", CastQuality.LOSSY),
+                case("""`'23:12:12.1267'`""", "TIME (2) WITH TIME ZONE", "\$partiql_time::{hour:23,minute:12,second:12.13,timezone_hour:0,timezone_minute:0}", CastQuality.LOSSY),
             ),
             // Error cases for TIME
             listOf(
-                case("TIME '23:12:12.1267'", "TIME (-1)", ErrorCode.PARSE_INVALID_PRECISION_FOR_TIME),
-                case("TIME '23:12:12.1267'", "TIME (1, 2)", ErrorCode.PARSE_CAST_ARITY),
-                case("TIME '23:12:12.1267'", "TIME (1, 2) WITH TIME ZONE", ErrorCode.PARSE_CAST_ARITY),
-                case("TIME '23:12:12.1267-05:30'", "TIME (10) WITH TIME ZONE", ErrorCode.PARSE_INVALID_PRECISION_FOR_TIME),
-                case("TIME '23:12:12.1267+05:30'", "TIME (10)", ErrorCode.PARSE_INVALID_PRECISION_FOR_TIME),
                 // Cannot cast timestamp with undefined timezone to "TIME WITH TIME ZONE"
                 case("`2007-02-23T`", "TIME WITH TIME ZONE", ErrorCode.EVALUATOR_CAST_FAILED),
                 case("`2007-02-23T12:14:33.079-00:00`", "TIME WITH TIME ZONE", ErrorCode.EVALUATOR_CAST_FAILED),
@@ -1341,21 +1334,6 @@ abstract class CastTestBase : EvaluatorTestBase() {
             ),
             // CAST <TIME> AS SYMBOL
             listOf(
-                case("TIME '23:12:12.1267'", "`'23:12:12.1267'`", CastQuality.LOSSLESS),
-                case("TIME '23:12:12.1267-05:30'", "`'23:12:12.1267'`", CastQuality.LOSSLESS),
-                case("TIME '23:12:12.1267+05:30'", "`'23:12:12.1267'`", CastQuality.LOSSLESS),
-                case("TIME (3) '23:12:12.1267'", "`'23:12:12.127'`", CastQuality.LOSSLESS),
-                case("TIME (3) '23:12:12.1267-05:30'", "`'23:12:12.127'`", CastQuality.LOSSLESS),
-                case("TIME (3) '23:12:12.1267+05:30'", "`'23:12:12.127'`", CastQuality.LOSSLESS),
-                case("TIME WITH TIME ZONE '23:12:12.1267'", "`'23:12:12.1267${defaultTimezoneOffset.getOffsetHHmm()}'`", CastQuality.LOSSLESS),
-                case("TIME WITH TIME ZONE '23:12:12.1267-05:30'", "`'23:12:12.1267-05:30'`", CastQuality.LOSSLESS),
-                case("TIME WITH TIME ZONE '23:12:12.1267+05:30'", "`'23:12:12.1267+05:30'`", CastQuality.LOSSLESS),
-                case("TIME (3) WITH TIME ZONE '23:12:12.1267'", "`'23:12:12.127${defaultTimezoneOffset.getOffsetHHmm()}'`", CastQuality.LOSSLESS),
-                case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "`'23:12:12.127-05:30'`", CastQuality.LOSSLESS),
-                case("TIME (3) WITH TIME ZONE '23:12:12.1267+05:30'", "`'23:12:12.127+05:30'`", CastQuality.LOSSLESS)
-            ).types(ExprValueType.SYMBOL.sqlTextNames),
-            // CAST <TIME> AS STRING
-            listOf(
                 case("TIME '23:12:12.1267'", "'23:12:12.1267'", CastQuality.LOSSLESS),
                 case("TIME '23:12:12.1267-05:30'", "'23:12:12.1267'", CastQuality.LOSSLESS),
                 case("TIME '23:12:12.1267+05:30'", "'23:12:12.1267'", CastQuality.LOSSLESS),
@@ -1368,6 +1346,21 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case("TIME (3) WITH TIME ZONE '23:12:12.1267'", "'23:12:12.127${defaultTimezoneOffset.getOffsetHHmm()}'", CastQuality.LOSSLESS),
                 case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "'23:12:12.127-05:30'", CastQuality.LOSSLESS),
                 case("TIME (3) WITH TIME ZONE '23:12:12.1267+05:30'", "'23:12:12.127+05:30'", CastQuality.LOSSLESS)
+            ).types(ExprValueType.SYMBOL.sqlTextNames),
+            // CAST <TIME> AS STRING
+            listOf(
+                case("TIME '23:12:12.1267'", "\"23:12:12.1267\"", CastQuality.LOSSLESS),
+                case("TIME '23:12:12.1267-05:30'", "\"23:12:12.1267\"", CastQuality.LOSSLESS),
+                case("TIME '23:12:12.1267+05:30'", "\"23:12:12.1267\"", CastQuality.LOSSLESS),
+                case("TIME (3) '23:12:12.1267'", "\"23:12:12.127\"", CastQuality.LOSSLESS),
+                case("TIME (3) '23:12:12.1267-05:30'", "\"23:12:12.127\"", CastQuality.LOSSLESS),
+                case("TIME (3) '23:12:12.1267+05:30'", "\"23:12:12.127\"", CastQuality.LOSSLESS),
+                case("TIME WITH TIME ZONE '23:12:12.1267'", "\"23:12:12.1267${defaultTimezoneOffset.getOffsetHHmm()}\"", CastQuality.LOSSLESS),
+                case("TIME WITH TIME ZONE '23:12:12.1267-05:30'", "\"23:12:12.1267-05:30\"", CastQuality.LOSSLESS),
+                case("TIME WITH TIME ZONE '23:12:12.1267+05:30'", "\"23:12:12.1267+05:30\"", CastQuality.LOSSLESS),
+                case("TIME (3) WITH TIME ZONE '23:12:12.1267'", "\"23:12:12.127${defaultTimezoneOffset.getOffsetHHmm()}\"", CastQuality.LOSSLESS),
+                case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "\"23:12:12.127-05:30\"", CastQuality.LOSSLESS),
+                case("TIME (3) WITH TIME ZONE '23:12:12.1267+05:30'", "\"23:12:12.127+05:30\"", CastQuality.LOSSLESS)
             ).types(ExprValueType.STRING.sqlTextNames)
         ).flatten() +
             listOf(MISSING, NULL, BOOL, INT, FLOAT, DECIMAL, TIMESTAMP, CLOB, BLOB, LIST, SEXP, STRUCT, BAG)
@@ -1433,25 +1426,25 @@ abstract class CastTestBase : EvaluatorTestBase() {
             // Configuring default timezone offset through CompileOptions
             listOf(
                 // CAST(<TIME> AS <TIME WITH TIME ZONE>)
-                Pair(case("TIME '23:12:12.1267'", "TIME WITH TIME ZONE", "23:12:12.1267+00:00", CastQuality.LOSSLESS), createZoneOffset()),
-                Pair(case("TIME '23:12:12.1267'", "TIME WITH TIME ZONE", "23:12:12.1267+11:00", CastQuality.LOSSLESS), createZoneOffset(11)),
-                Pair(case("TIME '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "23:12:12.1267+01:00", CastQuality.LOSSLESS), createZoneOffset(1)),
-                Pair(case("TIME '23:12:12.1267-05:30'", "TIME (2) WITH TIME ZONE", "23:12:12.13-05:30", CastQuality.LOSSY), createZoneOffset(-5, -30)),
+                Pair(case("TIME '23:12:12.1267'", "TIME WITH TIME ZONE", "\$partiql_time::{hour:23,minute:12,second:12.1267,timezone_hour:0,timezone_minute:0}", CastQuality.LOSSLESS), createZoneOffset()),
+                Pair(case("TIME '23:12:12.1267'", "TIME WITH TIME ZONE", "\$partiql_time::{hour:23,minute:12,second:12.1267,timezone_hour:11,timezone_minute:0}", CastQuality.LOSSLESS), createZoneOffset(11)),
+                Pair(case("TIME '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "\$partiql_time::{hour:23,minute:12,second:12.1267,timezone_hour:1,timezone_minute:0}", CastQuality.LOSSLESS), createZoneOffset(1)),
+                Pair(case("TIME '23:12:12.1267-05:30'", "TIME (2) WITH TIME ZONE", "\$partiql_time::{hour:23,minute:12,second:12.13,timezone_hour:-5,timezone_minute:-30}", CastQuality.LOSSY), createZoneOffset(-5, -30)),
                 // CAST(<TIMESTAMP> AS <TIME WITH TIME ZONE>)
-                Pair(case("`2007-02-23T12:14:33.079Z`", "TIME WITH TIME ZONE", "12:14:33.079+00:00", CastQuality.LOSSY), createZoneOffset()),
-                Pair(case("`2007-02-23T12:14:33.079Z`", "TIME WITH TIME ZONE", "12:14:33.079+00:00", CastQuality.LOSSY), createZoneOffset(11)),
-                Pair(case("`2007-02-23T12:14:33.079-05:30`", "TIME WITH TIME ZONE", "12:14:33.079-05:30", CastQuality.LOSSY), createZoneOffset(1)),
-                Pair(case("`2007-02-23T12:14:33.079Z`", "TIME (2) WITH TIME ZONE", "12:14:33.08+00:00", CastQuality.LOSSY), createZoneOffset(-5, -30)),
+                Pair(case("`2007-02-23T12:14:33.079Z`", "TIME WITH TIME ZONE", "\$partiql_time::{hour:12,minute:14,second:33.079,timezone_hour:0,timezone_minute:0}", CastQuality.LOSSY), createZoneOffset()),
+                Pair(case("`2007-02-23T12:14:33.079Z`", "TIME WITH TIME ZONE", "\$partiql_time::{hour:12,minute:14,second:33.079,timezone_hour:0,timezone_minute:0}", CastQuality.LOSSY), createZoneOffset(11)),
+                Pair(case("`2007-02-23T12:14:33.079-05:30`", "TIME WITH TIME ZONE", "\$partiql_time::{hour:12,minute:14,second:33.079,timezone_hour:-5,timezone_minute:-30}", CastQuality.LOSSY), createZoneOffset(1)),
+                Pair(case("`2007-02-23T12:14:33.079Z`", "TIME (2) WITH TIME ZONE", "\$partiql_time::{hour:12,minute:14,second:33.08,timezone_hour:0,timezone_minute:0}", CastQuality.LOSSY), createZoneOffset(-5, -30)),
                 // CAST(<text> AS <TIME WITH TIME ZONE>)
-                Pair(case("'23:12:12.1267'", "TIME WITH TIME ZONE", "23:12:12.1267+00:00", CastQuality.LOSSY), createZoneOffset()),
-                Pair(case("'23:12:12.1267'", "TIME WITH TIME ZONE", "23:12:12.1267+11:00", CastQuality.LOSSY), createZoneOffset(11)),
-                Pair(case("'23:12:12.1267'", "TIME (2) WITH TIME ZONE", "23:12:12.13-05:30", CastQuality.LOSSY), createZoneOffset(-5, -30)),
-                Pair(case("""`'23:12:12.1267'`""", "TIME WITH TIME ZONE", "23:12:12.1267+00:00", CastQuality.LOSSY), createZoneOffset()),
-                Pair(case("""`'23:12:12.1267'`""", "TIME WITH TIME ZONE", "23:12:12.1267+11:00", CastQuality.LOSSY), createZoneOffset(11)),
-                Pair(case("""`'23:12:12.1267'`""", "TIME (2) WITH TIME ZONE", "23:12:12.13-05:30", CastQuality.LOSSY), createZoneOffset(-5, -30)),
-                Pair(case("""`"23:12:12.1267"`""", "TIME WITH TIME ZONE", "23:12:12.1267+00:00", CastQuality.LOSSY), createZoneOffset()),
-                Pair(case("""`"23:12:12.1267"`""", "TIME WITH TIME ZONE", "23:12:12.1267+11:00", CastQuality.LOSSY), createZoneOffset(11)),
-                Pair(case("""`"23:12:12.1267"`""", "TIME (2) WITH TIME ZONE", "23:12:12.13-05:30", CastQuality.LOSSY), createZoneOffset(-5, -30))
+                Pair(case("'23:12:12.1267'", "TIME WITH TIME ZONE", "\$partiql_time::{hour:23,minute:12,second:12.1267,timezone_hour:0,timezone_minute:0}", CastQuality.LOSSY), createZoneOffset()),
+                Pair(case("'23:12:12.1267'", "TIME WITH TIME ZONE", "\$partiql_time::{hour:23,minute:12,second:12.1267,timezone_hour:11,timezone_minute:0}", CastQuality.LOSSY), createZoneOffset(11)),
+                Pair(case("'23:12:12.1267'", "TIME (2) WITH TIME ZONE", "\$partiql_time::{hour:23,minute:12,second:12.13,timezone_hour:-5,timezone_minute:-30}", CastQuality.LOSSY), createZoneOffset(-5, -30)),
+                Pair(case("""`'23:12:12.1267'`""", "TIME WITH TIME ZONE", "\$partiql_time::{hour:23,minute:12,second:12.1267,timezone_hour:0,timezone_minute:0}", CastQuality.LOSSY), createZoneOffset()),
+                Pair(case("""`'23:12:12.1267'`""", "TIME WITH TIME ZONE", "\$partiql_time::{hour:23,minute:12,second:12.1267,timezone_hour:11,timezone_minute:0}", CastQuality.LOSSY), createZoneOffset(11)),
+                Pair(case("""`'23:12:12.1267'`""", "TIME (2) WITH TIME ZONE", "\$partiql_time::{hour:23,minute:12,second:12.13,timezone_hour:-5,timezone_minute:-30}", CastQuality.LOSSY), createZoneOffset(-5, -30)),
+                Pair(case("""`"23:12:12.1267"`""", "TIME WITH TIME ZONE", "\$partiql_time::{hour:23,minute:12,second:12.1267,timezone_hour:0,timezone_minute:0}", CastQuality.LOSSY), createZoneOffset()),
+                Pair(case("""`"23:12:12.1267"`""", "TIME WITH TIME ZONE", "\$partiql_time::{hour:23,minute:12,second:12.1267,timezone_hour:11,timezone_minute:0}", CastQuality.LOSSY), createZoneOffset(11)),
+                Pair(case("""`"23:12:12.1267"`""", "TIME (2) WITH TIME ZONE", "\$partiql_time::{hour:23,minute:12,second:12.13,timezone_hour:-5,timezone_minute:-30}", CastQuality.LOSSY), createZoneOffset(-5, -30))
             )
 
         private val castConfiguredTestCases = castPermissiveConfiguredTestCases + castLegacyConfiguredTestCases
@@ -1466,7 +1459,15 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 val identityValue = eval(castCase.source)
                 val newCastCase = castCase.copy(
                     type = "ANY",
-                    expected = identityValue.ionValue.cloneAndRemoveAnnotations().toString(),
+                    // have to convert the identity value to an Ion string. .toString() is supposed to be
+                    // for debugging purposes only and not guaranteed to produce valid Ion so we have to use an
+                    // IonTextWriter instead.
+                    expected = StringWriter().use { sw ->
+                        IonTextWriterBuilder.standard().build(sw).use { iw ->
+                            identityValue.ionValue.cloneAndRemoveAnnotations().writeTo(iw)
+                        }
+                        sw.toString()
+                    },
                     expectedErrorCode = null
                 ) {
                     assertEquals(identityValue.type, exprValue.type)

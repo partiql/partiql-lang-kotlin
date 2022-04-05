@@ -5,6 +5,7 @@ import com.amazon.ion.IonTimestamp
 import org.junit.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.time.MINUTES_PER_HOUR
 import org.partiql.lang.eval.time.NANOS_PER_SECOND
 import org.partiql.lang.eval.time.SECONDS_PER_MINUTE
@@ -250,13 +251,15 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(ArgumentsForComparison::class)
     fun testComparison(tc: ComparisonTestCase) {
-        when (tc.expected == null) {
-            true ->
-                evalAssertThrowsSqlException(tc.query) {
-                    // EvaluationException is thrown as expected, do nothing.
-                    // TODO: why are there no assertions here?
-                }
-            false -> {
+        when (tc.expected) {
+            null ->
+                assertThrows(
+                    query = tc.query,
+                    expectedErrorCode = ErrorCode.EVALUATOR_INVALID_COMPARISION,
+                    expectedPermissiveModeResult = "MISSING",
+                    excludeLegacySerializerAssertions = true
+                )
+            else -> {
                 val originalExprValue = eval(tc.query)
                 assertEquals(tc.expected, originalExprValue.toString())
             }

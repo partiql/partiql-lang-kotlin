@@ -141,5 +141,8 @@ class EvaluatingCompilerOffsetTests : EvaluatorTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(ArgsProviderError::class)
-    fun errorTests(tc: EvaluatorErrorTestCase) = assertThrows(tc, session)
+    fun errorTests(tc: EvaluatorErrorTestCase) = assertThrows(
+        tc.copy(excludeLegacySerializerAssertions = true),
+        session
+    )
 }

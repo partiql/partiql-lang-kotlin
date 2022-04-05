@@ -224,7 +224,7 @@ interface CompilerPipeline {
 
             return CompilerPipelineImpl(
                 valueFactory = valueFactory,
-                parser = parser ?: SqlParser(valueFactory.ion),
+                parser = parser ?: SqlParser(valueFactory.ion, customDataTypes),
                 compileOptions = compileOptionsToUse,
                 functions = allFunctions,
                 customDataTypes = customDataTypes,

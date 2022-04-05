@@ -4,7 +4,6 @@ import org.junit.Test
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.util.propertyValueMapOf
-import org.partiql.lang.util.sourceLocationProperties
 
 class EvaluatingCompilerLimitTests : EvaluatorTestBase() {
 

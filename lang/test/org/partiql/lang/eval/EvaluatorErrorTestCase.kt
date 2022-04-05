@@ -29,6 +29,12 @@ data class EvaluatorErrorTestCase(
     val expectErrorContext: PropertyValueMap,
 
     /**
+     * Set to true to avoid testing the legacy AST serializers which are deprecated
+     * and not being updated to include new AST nodes.
+     */
+    val excludeLegacySerializerAssertions: Boolean = false,
+
+    /**
      * Expected result in the permissive mode. Default value is null.
      */
     val expectedPermissiveModeResult: String? = null,
@@ -48,6 +54,7 @@ data class EvaluatorErrorTestCase(
         query: String,
         errorCode: ErrorCode,
         expectErrorContext: PropertyValueMap,
+        excludeLegacySerializerAssertions: Boolean = false,
         expectedPermissiveModeResult: String? = null,
         compileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit = { },
         compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }
@@ -56,6 +63,7 @@ data class EvaluatorErrorTestCase(
         query,
         errorCode,
         expectErrorContext,
+        excludeLegacySerializerAssertions,
         expectedPermissiveModeResult,
         compileOptionsBuilderBlock,
         compilerPipelineBuilderBlock

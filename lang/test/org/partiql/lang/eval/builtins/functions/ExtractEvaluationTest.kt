@@ -139,7 +139,8 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
             testCase.query,
             ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_FUNC_CALL,
             expectedErrorContext = propertyValueMapOf(1, 1),
-            expectedPermissiveModeResult = "MISSING"
+            expectedPermissiveModeResult = "MISSING",
+            excludeLegacySerializerAssertions = true
         )
 
     class InvalidArgCases : ArgumentsProviderBase() {

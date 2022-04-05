@@ -24,7 +24,6 @@ import junitparams.JUnitParamsRunner
 import org.assertj.core.api.SoftAssertions
 import org.junit.Assert
 import org.junit.runner.RunWith
-import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.passes.AstRewriterBase
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
@@ -165,14 +164,6 @@ abstract class TestBase : Assert() {
         fun assertIonValue(expected: IonValue) {
             assertEquals(message, expected, exprValue.ionValue.cloneAndRemoveAnnotations())
         }
-    }
-
-    protected fun assertBaseRewrite(originalSql: String, exprNode: ExprNode) {
-        val clonedAst = defaultRewriter.rewriteExprNode(exprNode)
-        assertEquals(
-            "AST returned from default AstRewriterBase should match the original AST. SQL was: $originalSql",
-            exprNode, clonedAst
-        )
     }
 
     protected fun assertSexpEquals(

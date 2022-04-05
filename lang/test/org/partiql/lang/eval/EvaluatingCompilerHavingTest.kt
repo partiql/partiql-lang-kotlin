@@ -17,6 +17,7 @@ package org.partiql.lang.eval
 import junitparams.Parameters
 import org.junit.Test
 import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.util.propertyValueMapOf
 
 class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
     val session = mapOf(
@@ -174,8 +175,10 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
 
     @Test
     fun havingWithoutGroupBy() {
-        evalAssertThrowsSqlException("SELECT foo.bar FROM bat HAVING 1 = 1") {
-            assertEquals(it.errorCode, ErrorCode.SEMANTIC_HAVING_USED_WITHOUT_GROUP_BY)
-        }
+        assertThrows(
+            query = "SELECT foo.bar FROM bat HAVING 1 = 1",
+            expectedErrorCode = ErrorCode.SEMANTIC_HAVING_USED_WITHOUT_GROUP_BY,
+            expectedErrorContext = propertyValueMapOf(1, 1)
+        )
     }
 }
