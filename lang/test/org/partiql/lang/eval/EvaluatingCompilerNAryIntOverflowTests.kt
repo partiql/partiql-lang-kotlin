@@ -1,12 +1,8 @@
 package org.partiql.lang.eval
 
-import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.eval.visitors.StaticTypeInferenceVisitorTransform
-import org.partiql.lang.eval.visitors.StaticTypeVisitorTransform
-import org.partiql.lang.eval.visitors.basicVisitorTransforms
-import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.types.IntType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.ArgumentsProviderBase
@@ -47,22 +43,6 @@ class EvaluatingCompilerNAryIntOverflowTests : EvaluatorTestBase() {
                 // of multiple ambiguous matches here.
             }
     }
-
-    private val sqlParser = SqlParser(ion)
-
-    // TODO: test with [TypingMode.LEGACY] too.
-    private val compOptions = CompileOptions.build {
-        typingMode(TypingMode.PERMISSIVE)
-        visitorTransformMode(VisitorTransformMode.NONE)
-    }
-
-    private val compiler = EvaluatingCompiler(
-        valueFactory = valueFactory,
-        functions = mapOf(),
-        customTypedOpParameters = mapOf(),
-        compileOptions = compOptions,
-        procedures = mapOf()
-    )
 
     data class TestCase(
         val sqlUnderTest: String,
@@ -167,35 +147,25 @@ class EvaluatingCompilerNAryIntOverflowTests : EvaluatorTestBase() {
     fun intOverflowTests(tc: TestCase) {
         // TODO:  today we only test permissive error mode mode, but we also need to consider this behavior in legacy
         // error mode as well.
-
-        val ast = sqlParser.parseAstStatement(tc.sqlUnderTest)
-
-        val transformedAst = basicVisitorTransforms().transformStatement(ast).let {
-            StaticTypeVisitorTransform(
-                ion = ion,
-                globalBindings = defaultEnv.typeBindings,
-                constraints = emptySet()
-            ).transformStatement(it)
-        }.let { astStatement ->
-            // [StaticTypeInferenceVisitorTransform] currently requires that [StaticTypeVisitorTransform] is run first.
-            StaticTypeInferenceVisitorTransform(
-                globalBindings = defaultEnv.typeBindings,
-                customFunctionSignatures = emptyList(),
-                customTypedOpParameters = mapOf()
-            ).transformStatement(astStatement)
-        }
-
-        val expression = compiler.compile(transformedAst)
         val session = EvaluationSession.build {
             globals(defaultEnv.valueBindings)
         }
-        val result = expression.eval(session)
 
-        val expectedResult = assertDoesNotThrow("The expected result should evaluate correctly") {
-            eval(tc.expectedPermissiveModeResult, session = session)
-        }
+        // We use EvaluatorTestCase/runTestCase from EvaluatorTestBase here instead of assertEval
+        // because the expected values are expressed in PartiQL syntax, but with assertEval it's expressed in
+        // Ion syntax.
+        val tc = EvaluatorTestCase(
+            query = tc.sqlUnderTest,
+            expectedSql = tc.expectedPermissiveModeResult,
+            compilerPipelineBuilderBlock = {
+                globalTypeBindings(defaultEnv.typeBindings)
+                compileOptions {
+                    typingMode(TypingMode.PERMISSIVE)
+                }
+            }
+        )
 
-        assertExprEquals(expectedResult, result, "The expected and actual results must match")
+        runTestCase(tc, session)
     }
     class IntOverflowTestCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> {

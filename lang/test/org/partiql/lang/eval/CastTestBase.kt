@@ -1465,7 +1465,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     // IonTextWriter instead.
                     expected = StringWriter().use { sw ->
                         IonTextWriterBuilder.standard().build(sw).use { iw ->
-                            identityValue.ionValue.cloneAndRemoveAnnotations().writeTo(iw)
+                            identityValue.ionValue.cloneAndRemoveBagAndMissingAnnotations().writeTo(iw)
                         }
                         sw.toString()
                     },

@@ -27,5 +27,4 @@ abstract class TestBase : Assert() {
 
     val ion: IonSystem = ION
     val valueFactory = ExprValueFactory.standard(ion)
-
 }

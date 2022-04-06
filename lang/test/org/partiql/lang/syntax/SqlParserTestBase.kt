@@ -249,7 +249,6 @@ private fun <T : SqlException> SoftAssertions.checkErrorAndErrorContext(
     correctContextValues(errorCode, errorContext, expectedValues)
 }
 
-
 /**
  * Checks that [errorContext] contains keys for each [Property] found in [errorCode]
  *

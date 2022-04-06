@@ -39,8 +39,6 @@ class BindingsTest {
         assertEquals(4, delegatedBindings[BindingName("c", BindingCase.INSENSITIVE)]!!.intValue())
     }
 
-
-
     @Test
     fun testLazyBindings() {
         var fooEvaluateCount = 0

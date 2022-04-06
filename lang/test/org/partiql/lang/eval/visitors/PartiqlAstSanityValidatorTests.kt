@@ -42,7 +42,6 @@ class PartiqlAstSanityValidatorTests : TestBase() {
         }
     }
 
-
     @Test
     fun groupPartial() {
         assertThrowsSqlException(ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET) {

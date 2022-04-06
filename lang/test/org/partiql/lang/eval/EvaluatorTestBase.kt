@@ -54,7 +54,7 @@ import kotlin.test.assertEquals
  */
 abstract class EvaluatorTestBase : TestBase() {
 
-    val defaultRewriter = AstRewriterBase()
+    private val defaultRewriter = AstRewriterBase()
 
     /**
      * creates a [ExprValue] from the IonValue represented by this String. Assumes the string represents a single
@@ -95,13 +95,13 @@ abstract class EvaluatorTestBase : TestBase() {
         val result = eval(source, compileOptions, session, compilerPipelineBuilderBlock)
         assertEquals(
             expectedIon,
-            result.ionValue.cloneAndRemoveAnnotations(),
+            result.ionValue.cloneAndRemoveBagAndMissingAnnotations(),
             "${compileOptions.typedOpBehavior} CAST in ${compileOptions.typingMode} typing mode, " +
                 "evaluated '$source' with evaluator"
         )
         block(result)
 
-        commonAssertions(source, excludeLegacySerializerAssertions);
+        commonAssertions(source, excludeLegacySerializerAssertions)
     }
 
     /**
@@ -257,11 +257,6 @@ abstract class EvaluatorTestBase : TestBase() {
         session: EvaluationSession = EvaluationSession.standard(),
         compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }
     ): ExprValue {
-
-        // "Sneak" in this little assertion to test that every PIG ast that passes through
-        // this function can be round-tripped to ExprNode and back.
-        assertPartiqlAstExprNodeRoundTrip(astStatement)
-
         val pipeline = CompilerPipeline.builder(ion).apply {
             customDataTypes(CUSTOM_TEST_TYPES)
             compileOptions(compileOptions)
@@ -514,7 +509,8 @@ abstract class EvaluatorTestBase : TestBase() {
                 compilerPipelineBuilderBlock = tc.compilerPipelineBuilderBlock,
                 compileOptions = CompileOptions.build {
                     tc.compileOptionsBuilderBlock(this)
-                }
+                },
+                session = session
             )
         } catch (e: Throwable) {
             showTestCase()
@@ -549,29 +545,38 @@ abstract class EvaluatorTestBase : TestBase() {
     }
 }
 
-internal fun IonValue.removePartiqlAnnotations() {
+internal fun IonValue.removeBagAndMissingAnnotations() {
     when (this.type) {
         // Remove $partiql_missing annotation from NULL for assertions
         IonType.NULL -> this.removeTypeAnnotation(MISSING_ANNOTATION)
-        IonType.DATAGRAM,
-        IonType.SEXP,
-        IonType.STRUCT,
-        IonType.LIST -> {
+        // Recurse into all container types.
+        IonType.DATAGRAM, IonType.SEXP, IonType.STRUCT, IonType.LIST -> {
             // Remove $partiql_bag annotation from LIST for assertions
             if (this.type == IonType.LIST) {
                 this.removeTypeAnnotation(BAG_ANNOTATION)
             }
             // Recursively remove annotations
             this.asSequence().forEach {
-                it.removePartiqlAnnotations()
+                it.removeBagAndMissingAnnotations()
             }
         }
-        // IonType.TIMESTAMP -> this.removeTypeAnnotation(DATE_ANNOTATION)
         else -> { /* ok to do nothing. */ }
     }
 }
 
-internal fun IonValue.cloneAndRemoveAnnotations() = this.clone().apply {
-    removePartiqlAnnotations()
+/**
+ * Clones and removes $partiql_bag and $partiql_missing annotations from the clone and any child values.
+ *
+ * There are many tests which were created before these annotations were present and thus do not include them
+ * in their expected values.  This function provides an alternative to having to go and update all of them.
+ * This is tech debt of the unhappy variety:  all of those test cases should really be updated and this function
+ * should be deleted.
+ *
+ * NOTE: this function does not remove $partiql_date annotations ever!  There are tests that depend on this too.
+ * $partiql_date however, was added AFTER this function was created, and so no test cases needed to remove that
+ * annotation.
+ */
+internal fun IonValue.cloneAndRemoveBagAndMissingAnnotations() = this.clone().apply {
+    removeBagAndMissingAnnotations()
     makeReadOnly()
 }
