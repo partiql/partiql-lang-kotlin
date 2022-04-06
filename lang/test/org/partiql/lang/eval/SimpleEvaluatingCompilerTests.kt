@@ -104,7 +104,7 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
     fun tableAliases() = assertEval("SELECT _2 FROM `[{_1: a, _2: 1}, {_1: a, _2: 'a'}, {_1: a, _2: 3}]` WHERE _2 = 21", "[]")
 
     @Test
-    fun castStringToIntFailed() = assertThrows(
+    fun castStringToIntFailed() = runEvaluatorErrorTestCase(
         "CAST(`'a'` as INT)",
         ErrorCode.EVALUATOR_CAST_FAILED,
         propertyValueMapOf(1, 1, Property.CAST_FROM to "SYMBOL", Property.CAST_TO to "INT"),

@@ -120,7 +120,7 @@ class InvalidArgTypeChecker : EvaluatorTestBase() {
         expectedTypes: StaticType,
         actualType: SingleType
     ) =
-        assertThrows(
+        runEvaluatorErrorTestCase(
             query = source,
             expectedErrorCode = ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL,
             expectedErrorContext = propertyValueMapOf(

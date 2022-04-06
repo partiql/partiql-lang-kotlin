@@ -108,40 +108,40 @@ class EvaluatingCompilerOffsetTests : EvaluatorTestBase() {
         override fun getParameters(): List<Any> = listOf(
             // OFFSET -1 should throw exception
             EvaluatorErrorTestCase(
-                "select * from foo OFFSET -1",
-                ErrorCode.EVALUATOR_NEGATIVE_OFFSET,
-                propertyValueMapOf(1, 27)
+                query = "select * from foo OFFSET -1",
+                expectedErrorCode = ErrorCode.EVALUATOR_NEGATIVE_OFFSET,
+                expectedErrorContext = propertyValueMapOf(1, 27)
             ),
             // OFFSET 1 - 2 should throw exception
             EvaluatorErrorTestCase(
-                "select * from foo OFFSET 1 - 2",
-                ErrorCode.EVALUATOR_NEGATIVE_OFFSET,
-                propertyValueMapOf(1, 28)
+                query = "select * from foo OFFSET 1 - 2",
+                expectedErrorCode = ErrorCode.EVALUATOR_NEGATIVE_OFFSET,
+                expectedErrorContext = propertyValueMapOf(1, 28)
             ),
             // non-integer value should throw exception
             EvaluatorErrorTestCase(
-                "select * from foo OFFSET 'this won''t work'",
-                ErrorCode.EVALUATOR_NON_INT_OFFSET_VALUE,
-                propertyValueMapOf(1, 26, Property.ACTUAL_TYPE to "STRING")
+                query = "select * from foo OFFSET 'this won''t work'",
+                expectedErrorCode = ErrorCode.EVALUATOR_NON_INT_OFFSET_VALUE,
+                expectedErrorContext = propertyValueMapOf(1, 26, Property.ACTUAL_TYPE to "STRING")
             ),
             // non-integer value should throw exception
             EvaluatorErrorTestCase(
-                "select * from foo OFFSET 2.5",
-                ErrorCode.EVALUATOR_NON_INT_OFFSET_VALUE,
-                propertyValueMapOf(1, 26, Property.ACTUAL_TYPE to "DECIMAL")
+                query = "select * from foo OFFSET 2.5",
+                expectedErrorCode = ErrorCode.EVALUATOR_NON_INT_OFFSET_VALUE,
+                expectedErrorContext = propertyValueMapOf(1, 26, Property.ACTUAL_TYPE to "DECIMAL")
             ),
             // OFFSET value should not exceed Long type
             EvaluatorErrorTestCase(
-                "select * from foo OFFSET ${Long.MAX_VALUE}0",
-                ErrorCode.SEMANTIC_LITERAL_INT_OVERFLOW,
-                propertyValueMapOf(1, 26)
+                query = "select * from foo OFFSET ${Long.MAX_VALUE}0",
+                expectedErrorCode = ErrorCode.SEMANTIC_LITERAL_INT_OVERFLOW,
+                expectedErrorContext = propertyValueMapOf(1, 26)
             )
         )
     }
 
     @ParameterizedTest
     @ArgumentsSource(ArgsProviderError::class)
-    fun errorTests(tc: EvaluatorErrorTestCase) = assertThrows(
+    fun errorTests(tc: EvaluatorErrorTestCase) = runEvaluatorErrorTestCase(
         tc.copy(excludeLegacySerializerAssertions = true),
         session
     )

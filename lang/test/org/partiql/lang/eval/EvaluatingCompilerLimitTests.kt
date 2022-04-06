@@ -51,7 +51,7 @@ class EvaluatingCompilerLimitTests : EvaluatorTestBase() {
 
     @Test
     fun `LIMIT -1 should throw exception`() =
-        assertThrows(
+        runEvaluatorErrorTestCase(
             """ select * from <<1>> limit -1 """,
             ErrorCode.EVALUATOR_NEGATIVE_LIMIT,
             propertyValueMapOf(1, 29)
@@ -59,7 +59,7 @@ class EvaluatingCompilerLimitTests : EvaluatorTestBase() {
 
     @Test
     fun `non-integer value should throw exception`() =
-        assertThrows(
+        runEvaluatorErrorTestCase(
             """ select * from <<1>> limit 'this won''t work' """,
             ErrorCode.EVALUATOR_NON_INT_LIMIT_VALUE,
             propertyValueMapOf(1, 28, Property.ACTUAL_TYPE to "STRING")

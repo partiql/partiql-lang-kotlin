@@ -70,18 +70,18 @@ abstract class CastTestBase : EvaluatorTestBase() {
                             error("WTH")
                         }
                         else -> {
-                            assertThrows(
+                            runEvaluatorErrorTestCase(
                                 query = castCase.expression,
                                 expectedErrorCode = expectedErrorCode,
                                 expectedPermissiveModeResult = when (expectedErrorCode.errorBehaviorInPermissiveMode) {
                                     ErrorBehaviorInPermissiveMode.THROW_EXCEPTION -> null
                                     ErrorBehaviorInPermissiveMode.RETURN_MISSING -> "MISSING"
                                 },
-                                expectedInternal = null, // <-- disables internal flag assertion
+                                expectedInternalFlag = null, // <-- disables internal flag assertion
                                 excludeLegacySerializerAssertions = true,
-                                compileOptionsBuilderBlock = compileOptionBlock,
                                 compilerPipelineBuilderBlock = configurePipeline,
-                                exceptionAssertBlock = { it ->
+                                compileOptionsBuilderBlock = compileOptionBlock,
+                                addtionalExceptionAssertBlock = { it ->
                                     assertEquals(expectedErrorCode, it.errorCode)
                                 }
                             )

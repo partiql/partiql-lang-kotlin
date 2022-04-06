@@ -17,7 +17,7 @@ class ToTimestampFormatPatternValidationTest : EvaluatorTestBase() {
 
     @Test
     fun hourClock24HourAmPmMistmatchTest() {
-        assertThrows(
+        runEvaluatorErrorTestCase(
             "TO_TIMESTAMP('doesnt matter', 'yyyy M dd H m a')",
             ErrorCode.EVALUATOR_TIMESTAMP_FORMAT_PATTERN_HOUR_CLOCK_AM_PM_MISMATCH,
             propertyValueMapOf(1, 1, Property.TIMESTAMP_FORMAT_PATTERN to "yyyy M dd H m a"),
@@ -27,7 +27,7 @@ class ToTimestampFormatPatternValidationTest : EvaluatorTestBase() {
 
     @Test
     fun hourClock12HourAmPmMistmatchTest() {
-        assertThrows(
+        runEvaluatorErrorTestCase(
             "TO_TIMESTAMP('doesnt matter', 'yyyy M dd h m')",
             ErrorCode.EVALUATOR_TIMESTAMP_FORMAT_PATTERN_HOUR_CLOCK_AM_PM_MISMATCH,
             propertyValueMapOf(1, 1, Property.TIMESTAMP_FORMAT_PATTERN to "yyyy M dd h m"),
@@ -37,7 +37,7 @@ class ToTimestampFormatPatternValidationTest : EvaluatorTestBase() {
 
     @Test
     fun firstLetterOfMonthIsInvalidForToTimestamp() {
-        assertThrows(
+        runEvaluatorErrorTestCase(
             "TO_TIMESTAMP('doesnt matter', 'y MMMMM')",
             ErrorCode.EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_SYMBOL_FOR_PARSING,
             propertyValueMapOf(1, 1, Property.TIMESTAMP_FORMAT_PATTERN to "y MMMMM"),
@@ -81,7 +81,7 @@ class ToTimestampFormatPatternValidationTest : EvaluatorTestBase() {
     @Test
     @Parameters
     fun incompleteFormatPatternTest(testCase: ValidationTestCase) {
-        assertThrows(
+        runEvaluatorErrorTestCase(
             "TO_TIMESTAMP('doesnt matter', '${testCase.pattern.replace("'", "''")}')",
             ErrorCode.EVALUATOR_INCOMPLETE_TIMESTAMP_FORMAT_PATTERN,
             propertyValueMapOf(
@@ -241,7 +241,7 @@ class ToTimestampFormatPatternValidationTest : EvaluatorTestBase() {
     @Test
     @Parameters
     fun duplicateFieldPatternTest(testCase: ValidationTestCase) {
-        assertThrows(
+        runEvaluatorErrorTestCase(
             "TO_TIMESTAMP('doesnt matter', '${testCase.pattern}')",
             ErrorCode.EVALUATOR_TIMESTAMP_FORMAT_PATTERN_DUPLICATE_FIELDS,
             propertyValueMapOf(

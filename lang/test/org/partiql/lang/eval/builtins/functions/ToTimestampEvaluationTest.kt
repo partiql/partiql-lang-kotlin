@@ -54,7 +54,7 @@ class ToTimestampEvaluationTest : EvaluatorTestBase() {
     // Invalid arguments
     @Test
     fun to_timestamp_invalid_ion_timestamp() {
-        assertThrows(
+        runEvaluatorErrorTestCase(
             "to_timestamp('not a valid timestamp')",
             ErrorCode.EVALUATOR_ION_TIMESTAMP_PARSE_FAILURE,
             propertyValueMapOf(
@@ -67,7 +67,7 @@ class ToTimestampEvaluationTest : EvaluatorTestBase() {
 
     @Test
     fun to_timestamp_empty_format_pattern() {
-        assertThrows(
+        runEvaluatorErrorTestCase(
             "to_timestamp('doesnt matter', '')",
             ErrorCode.EVALUATOR_INCOMPLETE_TIMESTAMP_FORMAT_PATTERN,
             propertyValueMapOf(
@@ -82,7 +82,7 @@ class ToTimestampEvaluationTest : EvaluatorTestBase() {
 
     @Test
     fun to_timestamp_invalid_format_pattern() {
-        assertThrows(
+        runEvaluatorErrorTestCase(
             "to_timestamp('doesnt matter', 'asdfasdfasdf')",
             ErrorCode.EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_TOKEN,
             propertyValueMapOf(
@@ -96,7 +96,7 @@ class ToTimestampEvaluationTest : EvaluatorTestBase() {
 
     @Test
     fun to_timestamp_invalid_timestamp() {
-        assertThrows(
+        runEvaluatorErrorTestCase(
             "to_timestamp('asdf', 'yyyy')",
             ErrorCode.EVALUATOR_CUSTOM_TIMESTAMP_PARSE_FAILURE,
             propertyValueMapOf(

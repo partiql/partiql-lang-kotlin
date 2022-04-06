@@ -56,7 +56,7 @@ class ToStringEvaluationTest : EvaluatorTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(InvalidArgCases::class)
-    fun toStringInvalidArgumentTests(testCase: InvalidArgTestCase) = assertThrows(
+    fun toStringInvalidArgumentTests(testCase: InvalidArgTestCase) = runEvaluatorErrorTestCase(
         testCase.source,
         ErrorCode.EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN,
         propertyValueMapOf(

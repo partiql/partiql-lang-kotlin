@@ -1074,7 +1074,7 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     fun cannotGroupBySelectListItemAliasTest() {
-        assertThrows(
+        runEvaluatorErrorTestCase(
             "SELECT foo AS someSelectListAlias FROM <<{ 'a': 1 }>> GROUP BY someSelectListAlias",
             ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
             propertyValueMapOf(1, 64, Property.BINDING_NAME to "someSelectListAlias"),
@@ -1084,7 +1084,7 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     fun missingGroupByTest() {
-        assertThrows(
+        runEvaluatorErrorTestCase(
             "SELECT MAX(@v2), @v2 FROM `[1, 2.0, 3e0, 4, 5d0]` AS v2",
             ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
             propertyValueMapOf(1, 19, Property.BINDING_NAME to "v2")
@@ -1093,7 +1093,7 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     fun missingGroupByCausedByHavingTest() {
-        assertThrows(
+        runEvaluatorErrorTestCase(
             "SELECT * FROM << {'a': 1 } >> AS f GROUP BY f.a HAVING f.id = 1",
             ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
             propertyValueMapOf(1, 56, Property.BINDING_NAME to "f")
@@ -1102,7 +1102,7 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     fun missingGroupBySelectValueTest() {
-        assertThrows(
+        runEvaluatorErrorTestCase(
             "SELECT VALUE f.id FROM << {'a': 'b' } >> AS f GROUP BY f.a",
             ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
             propertyValueMapOf(1, 14, Property.BINDING_NAME to "f")
@@ -1111,7 +1111,7 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     fun missingGroupByCaseInsensitiveTest() {
-        assertThrows(
+        runEvaluatorErrorTestCase(
             """
                     SELECT O.customerId, MAX(o.cost)
                     FROM orders as o
@@ -1124,7 +1124,7 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     fun missingGroupByCaseSensitiveTest() {
-        assertThrows(
+        runEvaluatorErrorTestCase(
             """
                     SELECT "O".customerId, MAX(o.cost)
                     FROM orders as o
@@ -1138,7 +1138,7 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     fun missingGroupByJoinTest() {
-        assertThrows(
+        runEvaluatorErrorTestCase(
             query = """
                     SELECT MAX(o.cost), c.firstName
                     FROM customers AS c
@@ -1152,7 +1152,7 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     fun missingGroupByHavingTest() {
-        assertThrows(
+        runEvaluatorErrorTestCase(
             query = """
                     SELECT MAX(o.cost), o.sellerId
                     FROM orders AS o
@@ -1167,7 +1167,7 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     fun missingGroupByOuterQueryTest() {
-        assertThrows(
+        runEvaluatorErrorTestCase(
             query = """
                 SELECT AVG(o.cost), o.customerId
                 FROM orders AS o
@@ -1186,7 +1186,7 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     fun missingGroupByInnerQueryTest() {
-        assertThrows(
+        runEvaluatorErrorTestCase(
             query = """
                 SELECT MIN(o.numOrders)
                 FROM(

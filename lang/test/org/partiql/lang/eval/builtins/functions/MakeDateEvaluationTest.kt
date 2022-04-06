@@ -47,7 +47,7 @@ class MakeDateEvaluationTest : EvaluatorTestBase() {
     // Invalid arguments
     @ParameterizedTest
     @ArgumentsSource(InvalidArgCases::class)
-    fun makeDateInvalidArgumentTests(query: String) = assertThrows(
+    fun makeDateInvalidArgumentTests(query: String) = runEvaluatorErrorTestCase(
         query = query,
         expectedErrorCode = ErrorCode.EVALUATOR_DATE_FIELD_OUT_OF_RANGE,
         expectedErrorContext = propertyValueMapOf(1, 1)

@@ -70,14 +70,14 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
     }
 
     @Test
-    fun bigInt() = assertThrows(
+    fun bigInt() = runEvaluatorErrorTestCase(
         "$bigInt",
         ErrorCode.SEMANTIC_LITERAL_INT_OVERFLOW,
         expectedErrorContext = propertyValueMapOf(1, 1)
     )
 
     @Test
-    fun negativeBigInt() = assertThrows(
+    fun negativeBigInt() = runEvaluatorErrorTestCase(
         "$negativeBigInt",
         ErrorCode.SEMANTIC_LITERAL_INT_OVERFLOW,
         expectedErrorContext = propertyValueMapOf(1, 2)
@@ -105,7 +105,7 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
     }
 
     @Test
-    fun plusOverflow() = assertThrows(
+    fun plusOverflow() = runEvaluatorErrorTestCase(
         "$closeToMaxLong + $closeToMaxLong",
         ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
         expectedErrorContext = propertyValueMapOf(1, 21, Property.INT_SIZE_IN_BYTES to 8),
@@ -134,7 +134,7 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
     }
 
     @Test
-    fun minusUnderflow() = assertThrows(
+    fun minusUnderflow() = runEvaluatorErrorTestCase(
         "$closeToMinLong - $closeToMaxLong",
         ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
         expectedErrorContext = propertyValueMapOf(1, 22, Property.INT_SIZE_IN_BYTES to 8),
@@ -166,7 +166,7 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
     }
 
     @Test
-    fun timesOverflow() = assertThrows(
+    fun timesOverflow() = runEvaluatorErrorTestCase(
         "$closeToMaxLong * 2",
         ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
         expectedErrorContext = propertyValueMapOf(1, 21, Property.INT_SIZE_IN_BYTES to 8),
@@ -174,7 +174,7 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
     )
 
     @Test
-    fun timesUnderflow() = assertThrows(
+    fun timesUnderflow() = runEvaluatorErrorTestCase(
         "${Long.MIN_VALUE} * -1",
         ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
         expectedErrorContext = propertyValueMapOf(1, 22, Property.INT_SIZE_IN_BYTES to 8),
@@ -206,7 +206,7 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
     }
 
     @Test
-    fun divisionUnderflow() = assertThrows(
+    fun divisionUnderflow() = runEvaluatorErrorTestCase(
         "${Long.MIN_VALUE} / -1",
         ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
         expectedErrorContext = propertyValueMapOf(1, 22, Property.INT_SIZE_IN_BYTES to 8),
@@ -214,7 +214,7 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
     )
 
     @Test
-    fun castBigInt() = assertThrows(
+    fun castBigInt() = runEvaluatorErrorTestCase(
         "cast('$bigInt' as int)",
         ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
         expectedErrorContext = propertyValueMapOf(1, 1, Property.INT_SIZE_IN_BYTES to 8),
@@ -222,7 +222,7 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
     )
 
     @Test
-    fun castNegativeBigInt() = assertThrows(
+    fun castNegativeBigInt() = runEvaluatorErrorTestCase(
         "cast('$negativeBigInt' as int)",
         ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
         expectedErrorContext = propertyValueMapOf(1, 1, Property.INT_SIZE_IN_BYTES to 8),
@@ -236,7 +236,7 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
     fun castSmallDecimal() = assertEval("cast(5.2 as int)", "5")
 
     @Test
-    fun castHugeDecimal() = assertThrows(
+    fun castHugeDecimal() = runEvaluatorErrorTestCase(
         "cast(1e2147483609 as int)",
         ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
         expectedErrorContext = propertyValueMapOf(1, 1, Property.INT_SIZE_IN_BYTES to 8),
@@ -244,7 +244,7 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
     )
 
     @Test
-    fun castHugeNegativeDecimal() = assertThrows(
+    fun castHugeNegativeDecimal() = runEvaluatorErrorTestCase(
         "cast(-1e2147483609 as int)",
         ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
         expectedErrorContext = propertyValueMapOf(1, 1, Property.INT_SIZE_IN_BYTES to 8),

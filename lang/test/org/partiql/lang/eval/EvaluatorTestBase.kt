@@ -219,32 +219,6 @@ abstract class EvaluatorTestBase : TestBase() {
     }
 
     /**
-     * Evaluates a source query given a [EvaluationSession] with default [CompileOptions] for [TypingMode.PERMISSIVE]
-     *
-     * The provided (or default) [compileOptions] are modified to have the [TypingMode] as [TypingMode.PERMISSIVE]
-     * @param source query source to be evaluated
-     * @param session [EvaluationSession] used for evaluation
-     * @param compilerPipelineBuilderBlock any additional configuration to the pipeline after the options are set.
-     */
-    private fun evalForPermissiveMode(
-        source: String,
-        compileOptions: CompileOptions = CompileOptions.standard(),
-        session: EvaluationSession = EvaluationSession.standard(),
-        compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }
-    ): ExprValue {
-
-        val p = SqlParser(ion, CUSTOM_TEST_TYPES)
-
-        val ast = p.parseAstStatement(source)
-        return eval(
-            ast,
-            CompileOptions.builder(compileOptions).typingMode(TypingMode.PERMISSIVE).build(),
-            session,
-            compilerPipelineBuilderBlock
-        )
-    }
-
-    /**
      * Evaluates an [PartiqlAst.Statement] given a [EvaluationSession]
      *
      * @param astStatement The [PartiqlAst.Statement] instance to be evaluated.
@@ -264,47 +238,6 @@ abstract class EvaluatorTestBase : TestBase() {
         }
 
         return pipeline.build().compile(astStatement).eval(session)
-    }
-
-    private fun privateAssertThrows(
-        query: String,
-        expectedErrorCode: ErrorCode,
-        expectedErrorContext: PropertyValueMap?,
-        expectedInternal: Boolean?,
-        session: EvaluationSession,
-        excludeLegacySerializerAssertions: Boolean,
-        compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit,
-        compileOptionsBlock: CompileOptions.Builder.() -> Unit,
-        exceptionAssertBlock: (SqlException) -> Unit
-    ) {
-        val compilerPipeline = CompilerPipeline.build(ION) {
-            customDataTypes(CUSTOM_TEST_TYPES)
-            compilerPipelineBuilderBlock()
-            compileOptions { compileOptionsBlock() }
-        }
-
-        val ex = org.junit.jupiter.api.assertThrows<SqlException>("test case should throw during evaluation") {
-            // Note that an SqlException (usually a SemanticException or EvaluationException) might be thrown in
-            // .compile OR in .eval.  We currently don't make a distinction, so tests cannot assert that certain
-            // errors are compile-time and others are evaluation-time.  We really aught to create a way for tests to
-            // indicate when the exception should be thrown.  This is undone.
-            val expression = compilerPipeline.compile(query)
-            expression.eval(session).ionValue
-            // The call to .ionValue is important since query execution won't actually
-            // begin otherwise.
-        }
-
-        assertEquals(expectedErrorCode, ex.errorCode, "Expected error code must match")
-        if (expectedErrorContext != null) {
-            assertEquals(expectedErrorContext, ex.errorContext, "Expected error context must match")
-        }
-        if (expectedInternal != null) {
-            assertEquals(expectedInternal, ex.internal, "Expected internal flag must match")
-        }
-
-        exceptionAssertBlock(ex)
-
-        commonAssertions(query, excludeLegacySerializerAssertions)
     }
 
     private fun commonAssertions(query: String, excludeLegacySerializerAssertions: Boolean) {
@@ -354,106 +287,168 @@ abstract class EvaluatorTestBase : TestBase() {
         )
     }
 
-    /**
-     *  Asserts that [query] throws an [EvaluationException] or [SqlException] with the specified message, line and column number.
-     *  Asserts that the [query] throws or returns missing in the [TypingMode.PERMISSIVE] mode depending on the [ErrorCode.errorBehaviorInPermissiveMode]
-     *  It also verifies the behavior of error in [TypingMode.PERMISSIVE] mode.
-     *  This should be used to ensure that the query is tested for both [TypingMode.LEGACY] and [TypingMode.PERMISSIVE]
-     */
-    protected fun assertThrows(
+    /** Runs an [EvaluatorErrorTestCase] once. */
+    private fun privateRunEvaluatorTestCase(
+        tc: EvaluatorErrorTestCase,
+        session: EvaluationSession,
+    ) {
+        val compilerPipeline = CompilerPipeline.build(ION) {
+            customDataTypes(CUSTOM_TEST_TYPES)
+            tc.compilerPipelineBuilderBlock(this)
+            compileOptions { tc.compileOptionsBuilderBlock(this) }
+        }
+
+        val ex = org.junit.jupiter.api.assertThrows<SqlException>("test case should throw during evaluation") {
+            // Note that an SqlException (usually a SemanticException or EvaluationException) might be thrown in
+            // .compile OR in .eval.  We currently don't make a distinction, so tests cannot assert that certain
+            // errors are compile-time and others are evaluation-time.  We really aught to create a way for tests to
+            // indicate when the exception should be thrown.  This is undone.
+            val expression = compilerPipeline.compile(tc.query)
+            expression.eval(session).ionValue
+            // The call to .ionValue is important since query execution won't actually
+            // begin otherwise.
+        }
+
+        assertEquals(tc.expectedErrorCode, ex.errorCode, "Expected error code must match")
+        if (tc.expectedErrorContext != null) {
+            assertEquals(tc.expectedErrorContext, ex.errorContext, "Expected error context must match")
+        }
+        if (tc.expectedInternalFlag != null) {
+            assertEquals(tc.expectedInternalFlag, ex.internal, "Expected internal flag must match")
+        }
+
+        tc.additionalExceptionAssertBlock(ex)
+    }
+
+    /** See the other overload of this function.  This overload is for non-parameterized tests. */
+    protected fun runEvaluatorErrorTestCase(
         query: String,
         expectedErrorCode: ErrorCode,
         expectedErrorContext: PropertyValueMap? = null,
         expectedPermissiveModeResult: String? = null,
-        expectedInternal: Boolean? = null,
+        expectedInternalFlag: Boolean? = null,
         excludeLegacySerializerAssertions: Boolean = false,
-        session: EvaluationSession = EvaluationSession.standard(),
         compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { },
         compileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit = { },
-        exceptionAssertBlock: (SqlException) -> Unit = { }
+        addtionalExceptionAssertBlock: (SqlException) -> Unit = { },
+        session: EvaluationSession = EvaluationSession.standard()
     ) {
-        // Run the query once in legacy mode.
-        privateAssertThrows(
+        val tc = EvaluatorErrorTestCase(
             query = query,
             expectedErrorCode = expectedErrorCode,
             expectedErrorContext = expectedErrorContext,
-            expectedInternal = expectedInternal,
+            expectedInternalFlag = expectedInternalFlag,
+            expectedPermissiveModeResult = expectedPermissiveModeResult,
             excludeLegacySerializerAssertions = excludeLegacySerializerAssertions,
-            session = session,
+            compileOptionsBuilderBlock = compileOptionsBuilderBlock,
             compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,
-            compileOptionsBlock = {
-                compileOptionsBuilderBlock()
-                typingMode(TypingMode.LEGACY)
-            }
-        ) { exception ->
-            when (exception.errorCode.errorBehaviorInPermissiveMode) {
-                ErrorBehaviorInPermissiveMode.THROW_EXCEPTION -> {
-                    exceptionAssertBlock(exception)
-                    // Reaching this point means: that the exception thrown in legacy mode indicates
-                    // that an exception should also be thrown in permissive mode (unlike other exceptions
-                    // which cause an expression's value to be changed to MISSING).
+            additionalExceptionAssertBlock = addtionalExceptionAssertBlock
+        )
 
-                    // In that case, we are going to re-run the test in permissive mode to ensure the same exception
-                    // is thrown and verify that the expected permissive mode result is correct.
-
-                    // But first, we check to ensure that the test case itself is valid.
-                    assertNull(
-                        "An expectedPermissiveModeResult must not be specified when " +
-                            "ErrorCode.errorBehaviorInPermissiveMode is set to " +
-                            "ErrorBehaviorInPermissiveMode.THROW_EXCEPTION",
-                        expectedPermissiveModeResult
-                    )
-
-                    privateAssertThrows(
-                        query = query,
-                        expectedErrorCode = expectedErrorCode,
-                        expectedErrorContext = expectedErrorContext,
-                        expectedInternal = expectedInternal,
-                        session = session,
-                        excludeLegacySerializerAssertions = excludeLegacySerializerAssertions,
-                        compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,
-                        compileOptionsBlock = {
-                            compileOptionsBuilderBlock()
-                            typingMode(TypingMode.PERMISSIVE)
-                        }
-                    ) { exception2 ->
-                        exceptionAssertBlock(exception2)
-                    }
-                }
-                // Return MISSING
-                ErrorBehaviorInPermissiveMode.RETURN_MISSING -> {
-                    assertNotNull(
-                        "Required non null expectedPermissiveModeResult when ErrorCode.errorBehaviorInPermissiveMode is set to ErrorBehaviorInPermissiveMode.RETURN_MISSING",
-                        expectedPermissiveModeResult
-                    )
-                    val originalExprValueForPermissiveMode = evalForPermissiveMode(
-                        query,
-                        session = session,
-                        compileOptions = CompileOptions.build { compileOptionsBuilderBlock() },
-                        compilerPipelineBuilderBlock = compilerPipelineBuilderBlock
-                    )
-                    val expectedExprValueForPermissiveMode =
-                        evalForPermissiveMode(expectedPermissiveModeResult!!, session = session)
-                    assertExprEquals(
-                        expectedExprValueForPermissiveMode,
-                        originalExprValueForPermissiveMode,
-                        "(PERMISSIVE mode)"
-                    )
-                }
-            }
-        }
+        runEvaluatorErrorTestCase(tc, session)
     }
 
-    protected fun assertThrows(tc: EvaluatorErrorTestCase, session: EvaluationSession) {
-        assertThrows(
-            query = tc.query,
-            expectedErrorCode = tc.errorCode,
-            expectedErrorContext = tc.expectErrorContext,
-            excludeLegacySerializerAssertions = tc.excludeLegacySerializerAssertions,
-            session = session,
-            expectedPermissiveModeResult = tc.expectedPermissiveModeResult,
-            compileOptionsBuilderBlock = tc.compileOptionsBuilderBlock,
-            compilerPipelineBuilderBlock = tc.compilerPipelineBuilderBlock
+    /**
+     * Runs an [EvaluatorErrorTestCase].  This should be the normal entry point for all error test cases.
+     **
+     * If the [EvaluatorErrorTestCase.expectedErrorCode] has [ErrorBehaviorInPermissiveMode.RETURN_MISSING] set,
+     * evaluates and asserts no [SqlException] was thrown and the return value is equal to
+     * [EvaluatorErrorTestCase.expectedPermissiveModeResult] (PartiQL equivalence.)  Otherwise, the error assertions
+     * are the same as [TypingMode.LEGACY]
+     */
+    protected fun runEvaluatorErrorTestCase(tc: EvaluatorErrorTestCase, session: EvaluationSession) {
+        // Run the query once in legacy mode.
+        privateRunEvaluatorTestCase(
+            tc.copy(
+                compileOptionsBuilderBlock = {
+                    tc.compileOptionsBuilderBlock(this)
+                    typingMode(TypingMode.LEGACY)
+                }
+            ),
+            session
+        )
+        when (tc.expectedErrorCode.errorBehaviorInPermissiveMode) {
+            ErrorBehaviorInPermissiveMode.THROW_EXCEPTION -> {
+                // Reaching this point means: that the exception thrown in legacy mode indicates
+                // that an exception should also be thrown in permissive mode (unlike other exceptions
+                // which cause an expression's value to be changed to MISSING).
+
+                // In that case, we are going to re-run the test in permissive mode to ensure the same exception
+                // is thrown and verify that the expected permissive mode result is correct.
+
+                // But first, we check to ensure that the test case itself is valid.
+                assertNull(
+                    "An expectedPermissiveModeResult must not be specified when " +
+                        "ErrorCode.errorBehaviorInPermissiveMode is set to " +
+                        "ErrorBehaviorInPermissiveMode.THROW_EXCEPTION",
+                    tc.expectedPermissiveModeResult
+                )
+
+                // Run the query once in permissive mode.
+                privateRunEvaluatorTestCase(
+                    tc.copy(
+                        compileOptionsBuilderBlock = {
+                            tc.compileOptionsBuilderBlock(this)
+                            typingMode(TypingMode.PERMISSIVE)
+                        }
+                    ),
+                    session
+                )
+            }
+            // Return MISSING
+            ErrorBehaviorInPermissiveMode.RETURN_MISSING -> {
+                assertNotNull(
+                    "Required non null expectedPermissiveModeResult when ErrorCode.errorBehaviorInPermissiveMode is " +
+                        "set to ErrorBehaviorInPermissiveMode.RETURN_MISSING",
+                    tc.expectedPermissiveModeResult
+                )
+
+                // Compute the expected return value
+                val expectedExprValueForPermissiveMode = evalInPermissiveMode(
+                    tc.expectedPermissiveModeResult!!,
+                    session = session
+                )
+
+                val actualReturnValueForPermissiveMode = evalInPermissiveMode(
+                    tc.query,
+                    session = session,
+                    compileOptions = CompileOptions.build { tc.compileOptionsBuilderBlock(this) },
+                    compilerPipelineBuilderBlock = tc.compilerPipelineBuilderBlock
+                )
+                assertExprEquals(
+                    expectedExprValueForPermissiveMode,
+                    actualReturnValueForPermissiveMode,
+                    "(PERMISSIVE mode)"
+                )
+            }
+        }
+
+        commonAssertions(tc.query, tc.excludeLegacySerializerAssertions)
+    }
+
+    /**
+     * Evaluates a source query given a [EvaluationSession] with default [CompileOptions] for [TypingMode.PERMISSIVE]
+     *
+     * The provided (or default) [compileOptions] are modified to have the [TypingMode] as [TypingMode.PERMISSIVE]
+     * @param source query source to be evaluated
+     * @param session [EvaluationSession] used for evaluation
+     * @param compilerPipelineBuilderBlock any additional configuration to the pipeline after the options are set.
+     */
+    private fun evalInPermissiveMode(
+        source: String,
+        compileOptions: CompileOptions = CompileOptions.standard(),
+        session: EvaluationSession = EvaluationSession.standard(),
+        compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }
+    ): ExprValue {
+
+        val p = SqlParser(ion, CUSTOM_TEST_TYPES)
+
+        val ast = p.parseAstStatement(source)
+        return eval(
+            ast,
+            CompileOptions.builder(compileOptions).typingMode(TypingMode.PERMISSIVE).build(),
+            session,
+            compilerPipelineBuilderBlock
         )
     }
 

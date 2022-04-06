@@ -96,9 +96,9 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
         override fun getParameters(): List<Any> = listOf(
             // LET unbound variable
             EvaluatorErrorTestCase(
-                "SELECT X FROM A LET Y AS X",
-                ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
-                propertyValueMapOf(
+                query = "SELECT X FROM A LET Y AS X",
+                expectedErrorCode = ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
+                expectedErrorContext = propertyValueMapOf(
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 21L,
                     Property.BINDING_NAME to "Y"
@@ -107,9 +107,9 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
             ),
             // LET binding definition dependent on later binding
             EvaluatorErrorTestCase(
-                "SELECT X FROM A LET 1 AS X, Y AS Z, 3 AS Y",
-                ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
-                propertyValueMapOf(
+                query = "SELECT X FROM A LET 1 AS X, Y AS Z, 3 AS Y",
+                expectedErrorCode = ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
+                expectedErrorContext = propertyValueMapOf(
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 29L,
                     Property.BINDING_NAME to "Y"
@@ -118,10 +118,10 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
             ),
             // LET inner query binding not available in outer query
             EvaluatorErrorTestCase(
-                "SELECT X FROM A LET Y AS X",
-                "SELECT X FROM (SELECT VALUE X FROM A LET 1 AS X)",
-                ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
-                propertyValueMapOf(
+                groupName = "SELECT X FROM A LET Y AS X",
+                query = "SELECT X FROM (SELECT VALUE X FROM A LET 1 AS X)",
+                expectedErrorCode = ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
+                expectedErrorContext = propertyValueMapOf(
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 8L,
                     Property.BINDING_NAME to "X"
@@ -130,9 +130,9 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
             ),
             // LET binding in subquery not in outer LET query
             EvaluatorErrorTestCase(
-                "SELECT Z FROM A LET (SELECT 1 FROM A LET 1 AS X) AS Y, X AS Z",
-                ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
-                propertyValueMapOf(
+                query = "SELECT Z FROM A LET (SELECT 1 FROM A LET 1 AS X) AS Y, X AS Z",
+                expectedErrorCode = ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
+                expectedErrorContext = propertyValueMapOf(
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 56L,
                     Property.BINDING_NAME to "X"
@@ -141,9 +141,9 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
             ),
             // LET binding referenced in HAVING not in GROUP BY
             EvaluatorErrorTestCase(
-                "SELECT B.id FROM B LET 100 AS foo GROUP BY B.id HAVING B.id > foo",
-                ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
-                propertyValueMapOf(
+                query = "SELECT B.id FROM B LET 100 AS foo GROUP BY B.id HAVING B.id > foo",
+                expectedErrorCode = ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
+                expectedErrorContext = propertyValueMapOf(
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 63L,
                     Property.BINDING_NAME to "foo"
@@ -151,9 +151,9 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
             ),
             // LET binding referenced in projection not in GROUP BY
             EvaluatorErrorTestCase(
-                "SELECT foo FROM B LET 100 AS foo GROUP BY B.id",
-                ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
-                propertyValueMapOf(
+                query = "SELECT foo FROM B LET 100 AS foo GROUP BY B.id",
+                expectedErrorCode = ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
+                expectedErrorContext = propertyValueMapOf(
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 8L,
                     Property.BINDING_NAME to "foo"
@@ -164,7 +164,7 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(ArgsProviderError::class)
-    fun errorTests(tc: EvaluatorErrorTestCase) = assertThrows(
+    fun errorTests(tc: EvaluatorErrorTestCase) = runEvaluatorErrorTestCase(
         tc.copy(excludeLegacySerializerAssertions = true),
         session
     )

@@ -174,9 +174,9 @@ class EvaluatingCompilerExecTest : EvaluatorTestBase() {
         override fun getParameters(): List<Any> = listOf(
             // call function that is not a stored procedure
             EvaluatorErrorTestCase(
-                "EXEC utcnow",
-                ErrorCode.EVALUATOR_NO_SUCH_PROCEDURE,
-                propertyValueMapOf(
+                query = "EXEC utcnow",
+                expectedErrorCode = ErrorCode.EVALUATOR_NO_SUCH_PROCEDURE,
+                expectedErrorContext = propertyValueMapOf(
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 6L,
                     Property.PROCEDURE_NAME to "utcnow"
@@ -184,9 +184,9 @@ class EvaluatingCompilerExecTest : EvaluatorTestBase() {
             ),
             // call function that is not a stored procedure, w/ args
             EvaluatorErrorTestCase(
-                "EXEC substring 0, 1, 'foo'",
-                ErrorCode.EVALUATOR_NO_SUCH_PROCEDURE,
-                propertyValueMapOf(
+                query = "EXEC substring 0, 1, 'foo'",
+                expectedErrorCode = ErrorCode.EVALUATOR_NO_SUCH_PROCEDURE,
+                expectedErrorContext = propertyValueMapOf(
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 6L,
                     Property.PROCEDURE_NAME to "substring"
@@ -194,9 +194,9 @@ class EvaluatingCompilerExecTest : EvaluatorTestBase() {
             ),
             // invalid # args to sproc (too many)
             EvaluatorErrorTestCase(
-                "EXEC zero_arg_procedure 1",
-                ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_PROCEDURE_CALL,
-                propertyValueMapOf(
+                query = "EXEC zero_arg_procedure 1",
+                expectedErrorCode = ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_PROCEDURE_CALL,
+                expectedErrorContext = propertyValueMapOf(
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 6L,
                     Property.EXPECTED_ARITY_MIN to 0,
@@ -206,9 +206,9 @@ class EvaluatingCompilerExecTest : EvaluatorTestBase() {
             ),
             // invalid # args to sproc (too many)
             EvaluatorErrorTestCase(
-                "EXEC two_arg_procedure 1, 2, 3",
-                ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_PROCEDURE_CALL,
-                propertyValueMapOf(
+                query = "EXEC two_arg_procedure 1, 2, 3",
+                expectedErrorCode = ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_PROCEDURE_CALL,
+                expectedErrorContext = propertyValueMapOf(
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 6L,
                     Property.EXPECTED_ARITY_MIN to 2,
@@ -218,9 +218,9 @@ class EvaluatingCompilerExecTest : EvaluatorTestBase() {
             ),
             // invalid # args to sproc (too few)
             EvaluatorErrorTestCase(
-                "EXEC one_arg_procedure",
-                ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_PROCEDURE_CALL,
-                propertyValueMapOf(
+                query = "EXEC one_arg_procedure",
+                expectedErrorCode = ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_PROCEDURE_CALL,
+                expectedErrorContext = propertyValueMapOf(
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 6L,
                     Property.EXPECTED_ARITY_MIN to 1,
@@ -230,9 +230,9 @@ class EvaluatingCompilerExecTest : EvaluatorTestBase() {
             ),
             // invalid first arg type
             EvaluatorErrorTestCase(
-                "EXEC one_arg_procedure 'foo'",
-                ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_PROCEDURE_CALL,
-                propertyValueMapOf(
+                query = "EXEC one_arg_procedure 'foo'",
+                expectedErrorCode = ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_PROCEDURE_CALL,
+                expectedErrorContext = propertyValueMapOf(
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 6L,
                     Property.EXPECTED_ARGUMENT_TYPES to "INT",
@@ -243,9 +243,9 @@ class EvaluatingCompilerExecTest : EvaluatorTestBase() {
             ),
             // invalid second arg type
             EvaluatorErrorTestCase(
-                "EXEC two_arg_procedure 1, 'two'",
-                ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_PROCEDURE_CALL,
-                propertyValueMapOf(
+                query = "EXEC two_arg_procedure 1, 'two'",
+                expectedErrorCode = ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_PROCEDURE_CALL,
+                expectedErrorContext = propertyValueMapOf(
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 6L,
                     Property.EXPECTED_ARGUMENT_TYPES to "INT",
@@ -259,7 +259,7 @@ class EvaluatingCompilerExecTest : EvaluatorTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(ArgsProviderError::class)
-    fun errorTests(tc: EvaluatorErrorTestCase) = assertThrows(
+    fun errorTests(tc: EvaluatorErrorTestCase) = runEvaluatorErrorTestCase(
         tc.copy(excludeLegacySerializerAssertions = true),
         session
     )

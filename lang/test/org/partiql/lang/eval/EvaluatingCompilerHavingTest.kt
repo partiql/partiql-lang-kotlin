@@ -175,7 +175,7 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
 
     @Test
     fun havingWithoutGroupBy() {
-        assertThrows(
+        runEvaluatorErrorTestCase(
             query = "SELECT foo.bar FROM bat HAVING 1 = 1",
             expectedErrorCode = ErrorCode.SEMANTIC_HAVING_USED_WITHOUT_GROUP_BY,
             expectedErrorContext = propertyValueMapOf(1, 1)

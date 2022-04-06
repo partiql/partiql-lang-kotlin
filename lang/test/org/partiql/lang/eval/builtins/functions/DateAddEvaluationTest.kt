@@ -154,7 +154,7 @@ class DateAddEvaluationTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(InvalidArgCases::class)
     fun dateAddInvalidArgumentTests(testCase: InvalidArgTestCase) =
-        assertThrows(
+        runEvaluatorErrorTestCase(
             testCase.query,
             ErrorCode.EVALUATOR_TIMESTAMP_OUT_OF_BOUNDS,
             expectedErrorContext = propertyValueMapOf(1, 1),

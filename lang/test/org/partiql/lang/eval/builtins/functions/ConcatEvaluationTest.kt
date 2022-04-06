@@ -93,7 +93,7 @@ class ConcatEvaluationTest : EvaluatorTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(InvalidArgTypeCases::class)
-    fun concatInvalidArgumentTypeTests(testCase: InvalidArgTypeTestCase) = assertThrows(
+    fun concatInvalidArgumentTypeTests(testCase: InvalidArgTypeTestCase) = runEvaluatorErrorTestCase(
         query = testCase.source,
         expectedErrorCode = ErrorCode.EVALUATOR_CONCAT_FAILED_DUE_TO_INCOMPATIBLE_TYPE,
         expectedErrorContext = propertyValueMapOf(

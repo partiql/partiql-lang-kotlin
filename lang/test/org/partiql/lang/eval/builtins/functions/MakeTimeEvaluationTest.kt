@@ -46,7 +46,7 @@ class MakeTimeEvaluationTest : EvaluatorTestBase() {
     // Error test cases: Invalid arguments
     @ParameterizedTest
     @ArgumentsSource(InvalidArgCases::class)
-    fun makeTimeInvalidArgumentTests(query: String) = assertThrows(
+    fun makeTimeInvalidArgumentTests(query: String) = runEvaluatorErrorTestCase(
         query = query,
         expectedErrorCode = ErrorCode.EVALUATOR_TIME_FIELD_OUT_OF_RANGE,
         expectedErrorContext = propertyValueMapOf(1, 1)

@@ -576,7 +576,7 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     )
 
     @Test
-    fun andWithNullDoesNotShortCircuits() = assertThrows(
+    fun andWithNullDoesNotShortCircuits() = runEvaluatorErrorTestCase(
         "SELECT s.x FROM [{'x': '1.1'},{'x': '2'},{'x': '3'},{'x': '4'},{'x': '5'}] as s WHERE NULL AND CAST(s.x as INT)",
         ErrorCode.EVALUATOR_CAST_FAILED,
         expectedErrorContext = propertyValueMapOf(1, 96, Property.CAST_TO to "INT", Property.CAST_FROM to "STRING"),
@@ -584,7 +584,7 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     )
 
     @Test
-    fun andWithMissingDoesNotShortCircuits() = assertThrows(
+    fun andWithMissingDoesNotShortCircuits() = runEvaluatorErrorTestCase(
         "SELECT s.x FROM [{'x': '1.1'},{'x': '2'},{'x': '3'},{'x': '4'},{'x': '5'}] as s WHERE MISSING AND CAST(s.x as INT)",
         ErrorCode.EVALUATOR_CAST_FAILED,
         expectedErrorContext = propertyValueMapOf(1, 99, Property.CAST_TO to "INT", Property.CAST_FROM to "STRING"),

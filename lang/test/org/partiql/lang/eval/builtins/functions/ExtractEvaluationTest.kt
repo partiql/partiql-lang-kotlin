@@ -140,7 +140,7 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(InvalidArgCases::class)
     fun extractInvalidArgumentTests(testCase: InvalidArgTestCase) =
-        assertThrows(
+        runEvaluatorErrorTestCase(
             testCase.query,
             ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_FUNC_CALL,
             expectedErrorContext = propertyValueMapOf(1, 1),

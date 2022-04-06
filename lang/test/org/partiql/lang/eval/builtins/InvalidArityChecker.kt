@@ -55,7 +55,7 @@ class InvalidArityChecker : EvaluatorTestBase() {
         actualArity: Int,
         minArity: Int,
         maxArity: Int
-    ) = assertThrows(
+    ) = runEvaluatorErrorTestCase(
         query = query,
         expectedErrorCode = ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL,
         expectedErrorContext = propertyValueMapOf(

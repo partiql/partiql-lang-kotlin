@@ -53,7 +53,7 @@ class FromUnixTimeFunctionTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(InvalidArgCases::class)
     fun fromUnixTimeInvalidArgumentTests(testCase: InvalidArgTestCase) =
-        assertThrows(
+        runEvaluatorErrorTestCase(
             testCase.query,
             ErrorCode.EVALUATOR_GENERIC_EXCEPTION,
             propertyValueMapOf(1, 1),

@@ -61,7 +61,7 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
 
     @Test
     fun quotedIdsCantFindMismatchedCase() {
-        assertThrows(
+        runEvaluatorErrorTestCase(
             "\"abc\"",
             ErrorCode.EVALUATOR_QUOTED_BINDING_DOES_NOT_EXIST,
             propertyValueMapOf(1, 1, Property.BINDING_NAME to "abc"),
@@ -69,7 +69,7 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
             session = simpleSession
         )
 
-        assertThrows(
+        runEvaluatorErrorTestCase(
             "\"ABC\"",
             ErrorCode.EVALUATOR_QUOTED_BINDING_DOES_NOT_EXIST,
             propertyValueMapOf(1, 1, Property.BINDING_NAME to "ABC"),
@@ -80,7 +80,7 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
 
     @Test
     fun unquotedIdIsAmbigous() {
-        assertThrows(
+        runEvaluatorErrorTestCase(
             "abc",
             ErrorCode.EVALUATOR_AMBIGUOUS_BINDING,
             propertyValueMapOf(
@@ -127,7 +127,7 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
 
     @Test
     fun unquotedStructFieldsAreAmbiguous() {
-        assertThrows(
+        runEvaluatorErrorTestCase(
             "SELECT s.abc FROM `$tableWithCaseVaryingFields` AS s",
             ErrorCode.EVALUATOR_AMBIGUOUS_BINDING,
             propertyValueMapOf(

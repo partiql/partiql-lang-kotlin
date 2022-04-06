@@ -1,6 +1,7 @@
 package org.partiql.lang.eval
 
 import org.partiql.lang.CompilerPipeline
+import org.partiql.lang.SqlException
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.PropertyValueMap
 
@@ -11,7 +12,7 @@ data class EvaluatorErrorTestCase(
     /** The "group" of the tests--this only appears in the IDE's test runner and can be used to identify where in the
      * source code the test is defined.
      */
-    val groupName: String?,
+    val groupName: String? = null,
 
     /**
      * The query to be evaluated.
@@ -21,23 +22,28 @@ data class EvaluatorErrorTestCase(
     /**
      * The [ErrorCode] the query is to throw.
      */
-    val errorCode: ErrorCode,
+    val expectedErrorCode: ErrorCode,
 
     /**
      * The error context the query throws is to match this mapping.
      */
-    val expectErrorContext: PropertyValueMap,
+    val expectedErrorContext: PropertyValueMap? = null,
+
+    /**
+     * The expected value of [org.partiql.lang.SqlException.internal].
+     */
+    val expectedInternalFlag: Boolean? = false,
+
+    /**
+     * Expected result in the permissive mode. Default value is null.
+     */
+    val expectedPermissiveModeResult: String? = null,
 
     /**
      * Set to true to avoid testing the legacy AST serializers which are deprecated
      * and not being updated to include new AST nodes.
      */
     val excludeLegacySerializerAssertions: Boolean = false,
-
-    /**
-     * Expected result in the permissive mode. Default value is null.
-     */
-    val expectedPermissiveModeResult: String? = null,
 
     /**
      * Builder block for building [CompileOptions].
@@ -47,31 +53,17 @@ data class EvaluatorErrorTestCase(
     /**
      * Allows each test to configure its pipeline.
      */
-    val compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }
-) {
+    val compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { },
 
-    constructor(
-        query: String,
-        errorCode: ErrorCode,
-        expectErrorContext: PropertyValueMap,
-        excludeLegacySerializerAssertions: Boolean = false,
-        expectedPermissiveModeResult: String? = null,
-        compileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit = { },
-        compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }
-    ) : this(
-        null,
-        query,
-        errorCode,
-        expectErrorContext,
-        excludeLegacySerializerAssertions,
-        expectedPermissiveModeResult,
-        compileOptionsBuilderBlock,
-        compilerPipelineBuilderBlock
-    )
+    /**
+     * This will be executed to perform additional exceptions on the resulting exception.
+     */
+    val additionalExceptionAssertBlock: (SqlException) -> Unit = { }
+) {
 
     /** This will show up in the IDE's test runner. */
     override fun toString(): String {
         val groupNameString = if (groupName == null) "" else "$groupName"
-        return "$groupNameString $query : $errorCode : $expectErrorContext"
+        return "$groupNameString $query : $expectedErrorCode : $expectedErrorContext"
     }
 }

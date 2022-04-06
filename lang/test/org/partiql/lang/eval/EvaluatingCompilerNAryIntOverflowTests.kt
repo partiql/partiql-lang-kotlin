@@ -154,7 +154,7 @@ class EvaluatingCompilerNAryIntOverflowTests : EvaluatorTestBase() {
         // We use EvaluatorTestCase/runTestCase from EvaluatorTestBase here instead of assertEval
         // because the expected values are expressed in PartiQL syntax, but with assertEval it's expressed in
         // Ion syntax.
-        val tc = EvaluatorTestCase(
+        val etc = EvaluatorTestCase(
             query = tc.sqlUnderTest,
             expectedSql = tc.expectedPermissiveModeResult,
             compilerPipelineBuilderBlock = {
@@ -165,7 +165,7 @@ class EvaluatingCompilerNAryIntOverflowTests : EvaluatorTestBase() {
             }
         )
 
-        runTestCase(tc, session)
+        runTestCase(etc, session)
     }
     class IntOverflowTestCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> {

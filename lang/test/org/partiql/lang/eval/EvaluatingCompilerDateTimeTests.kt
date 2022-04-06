@@ -253,7 +253,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
     fun testComparison(tc: ComparisonTestCase) {
         when (tc.expected) {
             null ->
-                assertThrows(
+                runEvaluatorErrorTestCase(
                     query = tc.query,
                     expectedErrorCode = ErrorCode.EVALUATOR_INVALID_COMPARISION,
                     expectedPermissiveModeResult = "MISSING",
