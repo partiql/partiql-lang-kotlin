@@ -457,12 +457,12 @@ abstract class EvaluatorTestBase : TestBase() {
      * is the current default), and once while forcing [TypingMode.PERMISSIVE].  Used for cases where we expect the
      * result to be the same in both modes.
      */
-    protected fun runTestCaseInLegacyAndPermissiveModes(tc: EvaluatorTestCase, session: EvaluationSession) {
+    protected fun runEvaluatorTestCase(tc: EvaluatorTestCase, session: EvaluationSession) {
         // LEGACY mode
-        runTestCase(tc, session, "compile options unaltered")
+        privateRunEvaluatorTestCase(tc, session, "compile options unaltered")
 
         // PERMISSIVE mode
-        runTestCase(
+        privateRunEvaluatorTestCase(
             tc.copy(
                 compileOptionsBuilderBlock = {
                     tc.compileOptionsBuilderBlock(this)
@@ -484,7 +484,7 @@ abstract class EvaluatorTestBase : TestBase() {
      * If non-null, [message] will be dumped to the console before test failure to aid in the identification
      * and debugging of failed tests.
      */
-    protected fun runTestCase(
+    private fun privateRunEvaluatorTestCase(
         tc: EvaluatorTestCase,
         session: EvaluationSession,
         message: String? = null
@@ -493,14 +493,14 @@ abstract class EvaluatorTestBase : TestBase() {
 
         fun showTestCase() {
             println(listOfNotNull(message, tc.groupName).joinToString(" : "))
-            println("Query under test  : ${tc.sqlUnderTest}")
-            println("Expected value    : ${tc.expectedSql}")
+            println("Query under test  : ${tc.query}")
+            println("Expected value    : ${tc.expectedResult}")
             println()
         }
 
         val expected = try {
             eval(
-                source = tc.expectedSql,
+                source = tc.expectedResult,
                 compilerPipelineBuilderBlock = tc.compilerPipelineBuilderBlock,
                 compileOptions = CompileOptions.build {
                     tc.compileOptionsBuilderBlock(this)
@@ -516,7 +516,7 @@ abstract class EvaluatorTestBase : TestBase() {
 
         val actual = try {
             eval(
-                source = tc.sqlUnderTest,
+                source = tc.query,
                 compilerPipelineBuilderBlock = tc.compilerPipelineBuilderBlock,
                 session = session,
                 compileOptions = CompileOptions.build {

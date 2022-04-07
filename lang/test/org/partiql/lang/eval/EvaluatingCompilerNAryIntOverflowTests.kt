@@ -165,7 +165,7 @@ class EvaluatingCompilerNAryIntOverflowTests : EvaluatorTestBase() {
             }
         )
 
-        runTestCase(etc, session)
+        runEvaluatorTestCase(etc, session)
     }
     class IntOverflowTestCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> {

@@ -24,10 +24,10 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(ArgumentsForDateLiterals::class)
     fun testDate(tc: EvaluatorTestCase) {
-        val originalExprValue = eval(tc.sqlUnderTest)
-        assertEquals(originalExprValue.toString(), tc.expectedSql)
+        val originalExprValue = eval(tc.query)
+        assertEquals(originalExprValue.toString(), tc.expectedResult)
         if (originalExprValue.type == ExprValueType.DATE) {
-            val (year, month, day) = tc.expectedSql.split("-")
+            val (year, month, day) = tc.expectedResult.split("-")
             val dateIonValue = originalExprValue.ionValue
             dateIonValue as IonTimestamp
             val timestamp = dateIonValue.timestampValue()

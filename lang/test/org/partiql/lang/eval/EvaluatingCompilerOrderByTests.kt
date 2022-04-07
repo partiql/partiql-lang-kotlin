@@ -274,5 +274,5 @@ class EvaluatingCompilerOrderByTests : EvaluatorTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(ArgsProviderValid::class)
-    fun validTests(tc: EvaluatorTestCase) = runTestCase(tc, session)
+    fun validTests(tc: EvaluatorTestCase) = runEvaluatorTestCase(tc, session)
 }

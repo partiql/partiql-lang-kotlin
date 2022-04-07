@@ -89,7 +89,7 @@ class EvaluatingCompilerIsTests : EvaluatorTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(BasicIsOperatorTests::class)
-    fun basicIsOperatorTests(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, EvaluationSession.standard())
+    fun basicIsOperatorTests(tc: EvaluatorTestCase) = runEvaluatorTestCase(tc, EvaluationSession.standard())
     class BasicIsOperatorTests : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
             EvaluatorTestCase(
@@ -141,7 +141,7 @@ class EvaluatingCompilerIsTests : EvaluatorTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(SizedIntegerTests::class)
-    fun sizedIntegerTests(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, EvaluationSession.standard())
+    fun sizedIntegerTests(tc: EvaluatorTestCase) = runEvaluatorTestCase(tc, EvaluationSession.standard())
     class SizedIntegerTests : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> {
             fun constrainedIntCases(typeName: String, minValue: Long, maxValue: Long, includeOufRangeTests: Boolean) =
@@ -190,7 +190,7 @@ class EvaluatingCompilerIsTests : EvaluatorTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(NotAStringCases::class)
-    fun notAStringTests(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, EvaluationSession.standard())
+    fun notAStringTests(tc: EvaluatorTestCase) = runEvaluatorTestCase(tc, EvaluationSession.standard())
     class NotAStringCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
             isStringTypeTestCase(
@@ -218,7 +218,7 @@ class EvaluatingCompilerIsTests : EvaluatorTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(ZeroLengthCases::class)
-    fun zeroLengthStringTests(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, EvaluationSession.standard())
+    fun zeroLengthStringTests(tc: EvaluatorTestCase) = runEvaluatorTestCase(tc, EvaluationSession.standard())
     class ZeroLengthCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
             isStringTypeTestCase(
@@ -238,7 +238,7 @@ class EvaluatingCompilerIsTests : EvaluatorTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(SingleByteCharacterCases::class)
-    fun unicodeIsCharacterTypeTests(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, EvaluationSession.standard())
+    fun unicodeIsCharacterTypeTests(tc: EvaluatorTestCase) = runEvaluatorTestCase(tc, EvaluationSession.standard())
     class SingleByteCharacterCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> {
             val fourCharacterStrings = listOf(
@@ -324,7 +324,7 @@ class EvaluatingCompilerIsTests : EvaluatorTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(DecimalIsOperatorTestCases::class)
-    fun isDecimalTests(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, EvaluationSession.standard())
+    fun isDecimalTests(tc: EvaluatorTestCase) = runEvaluatorTestCase(tc, EvaluationSession.standard())
     class DecimalIsOperatorTestCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
             isDecimalTypeTestCase(

@@ -32,7 +32,7 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(NAryUnknownPropagationCases::class)
     fun testUnknownPropagation(tc: EvaluatorTestCase) =
-        runTestCase(
+        runEvaluatorTestCase(
             tc = tc.copy(
                 compilerPipelineBuilderBlock = {
                     addFunction(
@@ -120,17 +120,17 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
             return listOf(
                 EvaluatorTestCase(
                     groupName = "$testCaseGroup : LEGACY",
-                    sqlUnderTest = sqlUnderTest,
+                    query = sqlUnderTest,
                     // dirty hack to simplify things.
                     // in [Typing] mode, missing values are propagated as
                     // null.  Swapping this here means we don't need to specify a legacy mode value separately.
-                    expectedSql = expectedResult.replace("missing", "null"),
+                    expectedResult = expectedResult.replace("missing", "null"),
                     compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock
                 ),
                 EvaluatorTestCase(
                     groupName = "$testCaseGroup : PERMISSIVE",
-                    sqlUnderTest = sqlUnderTest,
-                    expectedSql = expectedResult,
+                    query = sqlUnderTest,
+                    expectedResult = expectedResult,
                     compileOptionsBuilderBlock = CompOptions.PERMISSIVE.optionsBlock
                 )
             )

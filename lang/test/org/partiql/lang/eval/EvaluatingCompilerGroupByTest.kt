@@ -159,7 +159,7 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     @Parameters
-    fun groupByTest(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, session)
+    fun groupByTest(tc: EvaluatorTestCase) = runEvaluatorTestCase(tc, session)
 
     /** Test cases for GROUP BY without aggregates. */
     fun parametersForGroupByTest() =
@@ -423,7 +423,7 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     @Parameters
-    fun sql92StyleAggregatesTest(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, session)
+    fun sql92StyleAggregatesTest(tc: EvaluatorTestCase) = runEvaluatorTestCase(tc, session)
 
     /**
      * Test cases that cover `COUNT`, `SUM`, `MIN`, `MAX`, and `AVG`.
@@ -769,7 +769,7 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     @Parameters
-    fun groupByAggregatesTest(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, session)
+    fun groupByAggregatesTest(tc: EvaluatorTestCase) = runEvaluatorTestCase(tc, session)
 
     /**
      * These are test cases involving aggregates and cover behavior under less usual circumstances
@@ -841,7 +841,7 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     @Parameters
-    fun groupByGroupAsTest(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, session)
+    fun groupByGroupAsTest(tc: EvaluatorTestCase) = runEvaluatorTestCase(tc, session)
 
     fun parametersForGroupByGroupAsTest() =
         // GROUP BY with GROUP AS (the same as above but with "GROUP AS g")
@@ -1019,7 +1019,7 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     @Parameters
-    fun groupByShadowingTest(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, session)
+    fun groupByShadowingTest(tc: EvaluatorTestCase) = runEvaluatorTestCase(tc, session)
 
     fun parametersForGroupByShadowingTest() =
         createGroupByTestCases(
@@ -1052,7 +1052,7 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     @Parameters
-    fun groupByDuplicateAliasesTest(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, session)
+    fun groupByDuplicateAliasesTest(tc: EvaluatorTestCase) = runEvaluatorTestCase(tc, session)
 
     fun parametersForGroupByDuplicateAliasesTest() =
         createGroupByTestCases(

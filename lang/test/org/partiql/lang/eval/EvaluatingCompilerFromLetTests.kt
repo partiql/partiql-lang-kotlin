@@ -90,7 +90,7 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(ArgsProviderValid::class)
-    fun validTests(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, session)
+    fun validTests(tc: EvaluatorTestCase) = runEvaluatorTestCase(tc, session)
 
     class ArgsProviderError : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(

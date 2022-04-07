@@ -77,7 +77,7 @@ class JoinWithOnConditionTest : EvaluatorTestBase() {
     @Test
     @Parameters
     fun joinWithOnConditionTest(pair: Pair<EvaluatorTestCase, EvaluationSession>): Unit =
-        runTestCaseInLegacyAndPermissiveModes(pair.first, pair.second)
+        runEvaluatorTestCase(pair.first, pair.second)
 
     fun parametersForJoinWithOnConditionTest(): List<Pair<EvaluatorTestCase, EvaluationSession>> {
 
@@ -139,7 +139,7 @@ class JoinWithOnConditionTest : EvaluatorTestBase() {
                 query = "SELECT * FROM A LEFT JOIN B ON A.n=B.n INNER JOIN C ON B.n=C.n",
                 expectedSql = """<< { 'n': 3, 'n': 3, 'n': 3 } >>"""
             )
-        runTestCase(testCase, session)
+        runEvaluatorTestCase(testCase, session)
     }
 
     @Test
@@ -149,6 +149,6 @@ class JoinWithOnConditionTest : EvaluatorTestBase() {
                 query = "SELECT * FROM A LEFT JOIN (B INNER JOIN C ON B.n=C.n) ON A.n=B.n",
                 expectedSql = """<< { 'n': 2, 'n': 2, '_3': NULL }, { 'n': 3, 'n': 3, 'n': 3 } >>"""
             )
-        runTestCase(testCase, session)
+        runEvaluatorTestCase(testCase, session)
     }
 }

@@ -102,7 +102,7 @@ class EvaluatingCompilerOffsetTests : EvaluatorTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(ArgsProviderValid::class)
-    fun validTests(tc: EvaluatorTestCase) = runTestCase(tc, session)
+    fun validTests(tc: EvaluatorTestCase) = runEvaluatorTestCase(tc, session)
 
     class ArgsProviderError : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(

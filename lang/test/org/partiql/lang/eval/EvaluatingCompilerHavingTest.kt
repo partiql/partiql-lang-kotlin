@@ -53,7 +53,7 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
 
     @Test
     @Parameters
-    fun groupByHavingTest(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, session)
+    fun groupByHavingTest(tc: EvaluatorTestCase) = runEvaluatorTestCase(tc, session)
 
     fun parametersForGroupByHavingTest() =
         listOf(
