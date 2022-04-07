@@ -86,13 +86,13 @@ class JoinWithOnConditionTest : EvaluatorTestBase() {
                 EvaluatorTestCase(
                     "JOIN ON with no nulls",
                     sqlUnderTest,
-                    """
-                            << 
+                    """ 
+                        << 
                             {'id':1, 'val1':'a', 'val2':10},
                             {'id':2, 'val1':'b', 'val2':20},
                             {'id':3, 'val1':'c', 'val2':30}
-                            >>
-                        """
+                        >>
+                    """
                 ),
                 sessionNoNulls
             ),
@@ -101,11 +101,11 @@ class JoinWithOnConditionTest : EvaluatorTestBase() {
                     "JOIN ON with no nulls",
                     sqlUnderTest,
                     """
-                            << 
+                        << 
                             {'id':1, 'val1':'a', 'val2':10},
                             {'id':3, 'val1':'c', 'val2':30}
-                            >>
-                        """
+                        >>
+                    """
                 ),
                 sessionNullIdRow
             ),
@@ -113,9 +113,7 @@ class JoinWithOnConditionTest : EvaluatorTestBase() {
                 EvaluatorTestCase(
                     "JOIN ON with no nulls",
                     sqlUnderTest,
-                    """
-                            <<>>
-                        """
+                    " <<>> "
                 ),
                 sessionNullTable
             ),
@@ -123,9 +121,7 @@ class JoinWithOnConditionTest : EvaluatorTestBase() {
                 EvaluatorTestCase(
                     "JOIN ON with no nulls",
                     sqlUnderTest,
-                    """
-                            <<>>
-                        """
+                    " <<>> "
                 ),
                 sessionNullTableRow
             )
@@ -137,7 +133,7 @@ class JoinWithOnConditionTest : EvaluatorTestBase() {
         val testCase =
             EvaluatorTestCase(
                 query = "SELECT * FROM A LEFT JOIN B ON A.n=B.n INNER JOIN C ON B.n=C.n",
-                expectedSql = """<< { 'n': 3, 'n': 3, 'n': 3 } >>"""
+                expectedResult = """<< { 'n': 3, 'n': 3, 'n': 3 } >>"""
             )
         runEvaluatorTestCase(testCase, session)
     }
@@ -147,7 +143,7 @@ class JoinWithOnConditionTest : EvaluatorTestBase() {
         val testCase =
             EvaluatorTestCase(
                 query = "SELECT * FROM A LEFT JOIN (B INNER JOIN C ON B.n=C.n) ON A.n=B.n",
-                expectedSql = """<< { 'n': 2, 'n': 2, '_3': NULL }, { 'n': 3, 'n': 3, 'n': 3 } >>"""
+                expectedResult = """<< { 'n': 2, 'n': 2, '_3': NULL }, { 'n': 3, 'n': 3, 'n': 3 } >>"""
             )
         runEvaluatorTestCase(testCase, session)
     }

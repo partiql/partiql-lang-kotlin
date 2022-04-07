@@ -1276,9 +1276,9 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
             "$partiql_bag::[]"
         )
 
-        EvaluatorTestCase(
+        test(
             "unpivotStructWithMissingField",
-            "test * FROM UNPIVOT { 'a': MISSING }",
+            "SELECT * FROM UNPIVOT { 'a': MISSING }",
             "$partiql_bag::[]"
         )
 

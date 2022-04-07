@@ -122,16 +122,11 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
                     groupName = "$testCaseGroup : LEGACY",
                     query = sqlUnderTest,
                     // dirty hack to simplify things.
-                    // in [Typing] mode, missing values are propagated as
-                    // null.  Swapping this here means we don't need to specify a legacy mode value separately.
+                    // in [TypingMode.LEGACY], missing values are propagated as
+                    // null. The .replace here means we don't need to specify a legacy mode value separately.
                     expectedResult = expectedResult.replace("missing", "null"),
-                    compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock
-                ),
-                EvaluatorTestCase(
-                    groupName = "$testCaseGroup : PERMISSIVE",
-                    query = sqlUnderTest,
-                    expectedResult = expectedResult,
-                    compileOptionsBuilderBlock = CompOptions.PERMISSIVE.optionsBlock
+                    compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock,
+                    expectedPermissiveModeResult = expectedResult
                 )
             )
         }
@@ -621,160 +616,160 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     // ////////////////////////////////////////////////
 
     @Test
-    fun aggregateSumWithNull() = assertEval("SELECT sum(x.n) from nullSample as x", "[{_1: 4}]", nullSample)
+    fun aggregateSumWithNull() = runEvaluatorTestCase("SELECT sum(x.n) from nullSample as x", "[{_1: 4}]", nullSample)
 
     @Test
-    fun aggregateSumWithMissing() = assertEval(
+    fun aggregateSumWithMissing() = runEvaluatorTestCase(
         "SELECT sum(x.n) from missingSample as x",
         "[{_1: 3}]",
         missingSample
     )
 
     @Test
-    fun aggregateSumWithMissingAndNull() = assertEval(
+    fun aggregateSumWithMissingAndNull() = runEvaluatorTestCase(
         "SELECT sum(x.n) from missingAndNullSample as x",
         "[{_1: 9}]",
         missingAndNullSample
     )
 
     @Test
-    fun aggregateMinWithNull() = assertEval("SELECT min(x.n) from nullSample as x", "[{_1: 1}]", nullSample)
+    fun aggregateMinWithNull() = runEvaluatorTestCase("SELECT min(x.n) from nullSample as x", "[{_1: 1}]", nullSample)
 
     @Test
-    fun aggregateMinWithMissing() = assertEval(
+    fun aggregateMinWithMissing() = runEvaluatorTestCase(
         "SELECT min(x.n) from missingSample as x",
         "[{_1: 1}]",
         missingSample
     )
 
     @Test
-    fun aggregateMinWithMissingAndNull() = assertEval(
+    fun aggregateMinWithMissingAndNull() = runEvaluatorTestCase(
         "SELECT min(x.n) from missingAndNullSample as x",
         "[{_1: 2}]",
         missingAndNullSample
     )
 
     @Test
-    fun aggregateAvgWithNull() = assertEval("SELECT avg(x.n) from nullSample as x", "[{_1: 2.}]", nullSample)
+    fun aggregateAvgWithNull() = runEvaluatorTestCase("SELECT avg(x.n) from nullSample as x", "[{_1: 2.}]", nullSample)
 
     @Test
-    fun aggregateAvgWithMissing() = assertEval(
+    fun aggregateAvgWithMissing() = runEvaluatorTestCase(
         "SELECT avg(x.n) from missingSample as x",
         "[{_1: 1.5}]",
         missingSample
     )
 
     @Test
-    fun aggregateAvgWithMissingAndNull() = assertEval(
+    fun aggregateAvgWithMissingAndNull() = runEvaluatorTestCase(
         "SELECT avg(x.n) from missingAndNullSample as x",
         "[{_1: 3.}]",
         missingAndNullSample
     )
 
     @Test
-    fun aggregateCountWithNull() = assertEval(
+    fun aggregateCountWithNull() = runEvaluatorTestCase(
         "SELECT count(x.n) from nullSample as x",
         "[{_1: 2}]",
         nullSample
     )
 
     @Test
-    fun aggregateCountWithMissing() = assertEval(
+    fun aggregateCountWithMissing() = runEvaluatorTestCase(
         "SELECT count(x.n) from missingSample as x",
         "[{_1: 2}]",
         missingSample
     )
 
     @Test
-    fun aggregateCountWithMissingAndNull() = assertEval(
+    fun aggregateCountWithMissingAndNull() = runEvaluatorTestCase(
         "SELECT count(x.n) from missingAndNullSample as x",
         "[{_1: 3}]",
         missingAndNullSample
     )
 
     @Test
-    fun countEmpty() = assertEval("SELECT count(*) from `[]`", "[{_1: 0}]")
+    fun countEmpty() = runEvaluatorTestCase("SELECT count(*) from `[]`", "[{_1: 0}]")
 
     @Test
-    fun countEmptyTuple() = assertEval("SELECT count(*) from `[{}]`", "[{_1: 1}]")
+    fun countEmptyTuple() = runEvaluatorTestCase("SELECT count(*) from `[{}]`", "[{_1: 1}]")
 
     @Test
-    fun sumEmpty() = assertEval("SELECT sum(x.i) from `[]` as x", "[{_1: null}]")
+    fun sumEmpty() = runEvaluatorTestCase("SELECT sum(x.i) from `[]` as x", "[{_1: null}]")
 
     @Test
-    fun sumEmptyTuple() = assertEval("SELECT sum(x.i) from `[{}]` as x", "[{_1: null}]")
+    fun sumEmptyTuple() = runEvaluatorTestCase("SELECT sum(x.i) from `[{}]` as x", "[{_1: null}]")
 
     @Test
-    fun avgEmpty() = assertEval("SELECT avg(x.i) from `[]` as x", "[{_1: null}]")
+    fun avgEmpty() = runEvaluatorTestCase("SELECT avg(x.i) from `[]` as x", "[{_1: null}]")
 
     @Test
-    fun avgEmptyTuple() = assertEval("SELECT avg(x.i) from `[{}]` as x", "[{_1: null}]")
+    fun avgEmptyTuple() = runEvaluatorTestCase("SELECT avg(x.i) from `[{}]` as x", "[{_1: null}]")
 
     @Test
-    fun avgSomeEmptyTuples() = assertEval(
+    fun avgSomeEmptyTuples() = runEvaluatorTestCase(
         "SELECT avg(x.i) from `[{i: 1}, {}, {i:3}]` as x",
         "[{_1: 2.}]"
     )
 
     @Test
-    fun avgSomeEmptyAndNullTuples() = assertEval(
+    fun avgSomeEmptyAndNullTuples() = runEvaluatorTestCase(
         "SELECT avg(x.i) from `[{i: 1}, {}, {i:null}, {i:3}]` as x",
         "[{_1: 2.}]"
     )
 
     @Test
-    fun minSomeEmptyTuples() = assertEval(
+    fun minSomeEmptyTuples() = runEvaluatorTestCase(
         "SELECT min(x.i) from `[{i: null}, {}, {i:3}]` as x",
         "[{_1: 3}]"
     )
 
     @Test
-    fun maxSomeEmptyTuples() = assertEval(
+    fun maxSomeEmptyTuples() = runEvaluatorTestCase(
         "SELECT max(x.i) from `[{i: null}, {}, {i:3}, {i:10}]` as x",
         "[{_1: 10}]"
     )
     @Test
-    fun minEmpty() = assertEval("SELECT min(x.i) from `[]` as x", "[{_1: null}]")
+    fun minEmpty() = runEvaluatorTestCase("SELECT min(x.i) from `[]` as x", "[{_1: null}]")
 
     @Test
-    fun minEmptyTuple() = assertEval("SELECT min(x.i) from `[{}]` as x", "[{_1: null}]")
+    fun minEmptyTuple() = runEvaluatorTestCase("SELECT min(x.i) from `[{}]` as x", "[{_1: null}]")
 
     @Test
-    fun maxEmpty() = assertEval("SELECT max(x.i) from `[]` as x", "[{_1: null}]")
+    fun maxEmpty() = runEvaluatorTestCase("SELECT max(x.i) from `[]` as x", "[{_1: null}]")
 
     @Test
-    fun maxEmptyTuple() = assertEval("SELECT max(x.i) from `[{}]` as x", "[{_1: null}]")
+    fun maxEmptyTuple() = runEvaluatorTestCase("SELECT max(x.i) from `[{}]` as x", "[{_1: null}]")
 
     @Test
-    fun maxSomeEmptyTuple() = assertEval(
+    fun maxSomeEmptyTuple() = runEvaluatorTestCase(
         "SELECT max(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
         "[{_1: 2}]"
     )
 
     @Test
-    fun minSomeEmptyTuple() = assertEval(
+    fun minSomeEmptyTuple() = runEvaluatorTestCase(
         "SELECT min(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
         "[{_1: 1}]"
     )
 
     @Test
-    fun sumSomeEmptyTuple() = assertEval(
+    fun sumSomeEmptyTuple() = runEvaluatorTestCase(
         "SELECT sum(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
         "[{_1: 3}]"
     )
 
     @Test
-    fun countSomeEmptyTuple() = assertEval(
+    fun countSomeEmptyTuple() = runEvaluatorTestCase(
         "SELECT count(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
         "[{_1: 2}]"
     )
 
     @Test
-    fun countStar() = assertEval(
+    fun countStar() = runEvaluatorTestCase(
         "SELECT count(*) from `[{}, {i:1}, {}, {i:2}]` as x",
         "[{_1: 4}]"
     )
 
     @Test
-    fun countLiteral() = assertEval("SELECT count(1) from `[{}, {}, {}, {}]` as x", "[{_1: 4}]")
+    fun countLiteral() = runEvaluatorTestCase("SELECT count(1) from `[{}, {}, {}, {}]` as x", "[{_1: 4}]")
 }

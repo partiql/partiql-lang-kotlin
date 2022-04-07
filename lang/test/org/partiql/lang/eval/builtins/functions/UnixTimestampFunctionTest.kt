@@ -16,7 +16,7 @@ class UnixTimestampFunctionTest : EvaluatorTestBase() {
     // Pass test cases
     @ParameterizedTest
     @ArgumentsSource(UnixTimestampPassCases::class)
-    fun runPassTests(tc: ExprFunctionTestCase) = assertEval(tc.source, tc.expected, tc.session)
+    fun runPassTests(tc: ExprFunctionTestCase) = runEvaluatorTestCase(tc.source, tc.expected, tc.session)
 
     class UnixTimestampPassCases : ArgumentsProviderBase() {
         private val epoch2020 = "1577836800"

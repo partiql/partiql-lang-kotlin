@@ -19,7 +19,7 @@ class ToTimestampEvaluationTest : EvaluatorTestBase() {
     // Pass test cases
     @ParameterizedTest
     @ArgumentsSource(ToTimestampPassCases::class)
-    fun runPassTests(testCase: ExprFunctionTestCase) = assertEval(testCase.source, testCase.expected)
+    fun runPassTests(testCase: ExprFunctionTestCase) = runEvaluatorTestCase(testCase.source, testCase.expected)
 
     class ToTimestampPassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(

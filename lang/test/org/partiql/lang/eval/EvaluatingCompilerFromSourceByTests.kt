@@ -46,33 +46,33 @@ class EvaluatingCompilerFromSourceByTests : EvaluatorTestBase() {
     }
 
     @Test
-    fun rangeOverListWithBy() = assertEval(
+    fun rangeOverListWithBy() = runEvaluatorTestCase(
         "SELECT VALUE addr FROM someList BY addr",
         """[101, 102, 103]""",
         session
     )
 
     @Test
-    fun rangeOverBagWithBy() = assertEval(
+    fun rangeOverBagWithBy() = runEvaluatorTestCase(
         "SELECT VALUE addr FROM someBag BY addr",
         """[111, 112, 113]""",
         session
     )
     @Test
-    fun rangeOverListWithAsAndAt() = assertEval(
+    fun rangeOverListWithAsAndAt() = runEvaluatorTestCase(
         "SELECT VALUE [i, v, z] FROM someList AS v AT i BY z",
         """[[0, 1, 101], [1, 2, 102], [2, 3, 103]]""",
         session
     )
     @Test
-    fun rangeOverBagWithAsAndAt() = assertEval(
+    fun rangeOverBagWithAsAndAt() = runEvaluatorTestCase(
         "SELECT VALUE [i, v, z] FROM someBag AS v AT i BY z",
         """[[null, 11, 111], [null, 12, 112], [null, 13, 113]]""",
         session
     )
 
     @Test
-    fun rangeOverListNested() = assertEval(
+    fun rangeOverListNested() = runEvaluatorTestCase(
         "SELECT VALUE [i, addr, v] FROM (SELECT VALUE v FROM someList AS v) AS v AT i BY addr",
         // the result of the inner query is a bag, so i should always be MISSING
         // However, addr should still contain an address since the items of that bag are unchanged
@@ -81,7 +81,7 @@ class EvaluatingCompilerFromSourceByTests : EvaluatorTestBase() {
     )
 
     @Test
-    fun rangeOverListNestedArithmetic() = assertEval(
+    fun rangeOverListNestedArithmetic() = runEvaluatorTestCase(
         "SELECT VALUE [i, addr, v] FROM (SELECT VALUE v + 1000 FROM someList AS v) AS v AT i BY addr",
         // However, since we + 1000 to v in the inner query, we create a new value that does not have an address.
         """[[null, null, 1001], [null, null, 1002], [null, null, 1003]]""",

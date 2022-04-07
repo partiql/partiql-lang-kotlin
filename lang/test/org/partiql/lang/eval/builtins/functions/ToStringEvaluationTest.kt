@@ -19,7 +19,7 @@ class ToStringEvaluationTest : EvaluatorTestBase() {
     // Pass test cases
     @ParameterizedTest
     @ArgumentsSource(ToStringPassCases::class)
-    fun runPassTests(testCase: ExprFunctionTestCase) = assertEval(testCase.source, testCase.expected)
+    fun runPassTests(testCase: ExprFunctionTestCase) = runEvaluatorTestCase(testCase.source, testCase.expected)
 
     class ToStringPassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(

@@ -10,7 +10,8 @@ class EvaluatingCompilerInTests : EvaluatorTestBase() {
     // as that is already well tested in [EvaluatingCompilerUnknownValuesTest].
     @ParameterizedTest
     @ArgumentsSource(BasicInOperatorTestCases::class)
-    fun basicInOperatorTests(tc: EvaluatorTestCase) = runEvaluatorTestCase(tc, EvaluationSession.standard())
+    fun basicInOperatorTests(tc: EvaluatorTestCase) =
+        runEvaluatorTestCase(tc, EvaluationSession.standard())
     class BasicInOperatorTestCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
             // These cases get the optimized thunk since the right-operand consists solely of known literal values
@@ -34,7 +35,8 @@ class EvaluatingCompilerInTests : EvaluatorTestBase() {
     // Tests the differences between [TypingMode.LEGACY] and [TypingMode.PERMISSIVE] for the IN operator.
     @ParameterizedTest
     @ArgumentsSource(InRightOpNotASequenceCases::class)
-    fun inRightOpNotASequence(tc: EvaluatorTestCase) = runEvaluatorTestCase(tc, EvaluationSession.standard())
+    fun inRightOpNotASequence(tc: EvaluatorTestCase) =
+        runEvaluatorTestCase(tc, EvaluationSession.standard())
     class InRightOpNotASequenceCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
             // TypingMode.LEGACY returns `false` when the right-hand operand is not a sequence
@@ -43,18 +45,8 @@ class EvaluatingCompilerInTests : EvaluatorTestBase() {
                 groupName = "IN--right operand not a sequence (TypingMode.LEGACY)",
                 query = "1 IN 'so long'",
                 expectedResult = "false",
-                compileOptionsBuilderBlock = {
-                    typingMode(TypingMode.LEGACY)
-                }
+                expectedPermissiveModeResult = "MISSING",
             ),
-            EvaluatorTestCase(
-                groupName = "IN--right operand not a sequence (TypingMode.PERMISSIVE)",
-                query = "1 IN 'thanks for all the fish'",
-                expectedResult = "MISSING",
-                compileOptionsBuilderBlock = {
-                    typingMode(TypingMode.PERMISSIVE)
-                }
-            )
         )
     }
 }

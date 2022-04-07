@@ -27,22 +27,22 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
 
     @Test
     fun selectValue() {
-        assertEval("SELECT VALUE someScalar FROM someScalar", "[1]", session)
+        runEvaluatorTestCase("SELECT VALUE someScalar FROM someScalar", "[1]", session)
     }
 
     @Test
     fun selectValueWithAsAlias() {
-        assertEval("SELECT VALUE s FROM someScalar as s", "[1]", session)
+        runEvaluatorTestCase("SELECT VALUE s FROM someScalar as s", "[1]", session)
     }
 
     @Test
     fun selectStar() {
-        assertEval("SELECT * FROM `[{a: 100, b: 101}]`", "[{a: 100, b: 101}]")
+        runEvaluatorTestCase("SELECT * FROM `[{a: 100, b: 101}]`", "[{a: 100, b: 101}]")
     }
 
     @Test
     fun selectStarWhere() {
-        assertEval(
+        runEvaluatorTestCase(
             "SELECT * FROM `[{a: 100, b: 1000}, {a: 101, b: 1001}]` WHERE a > 100",
             "[{a: 101, b: 1001}]"
         )
@@ -50,21 +50,21 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
 
     @Test
     fun selectList() {
-        assertEval("SELECT a, b FROM `[{a: 100, b: 101}]`", "[{a: 100, b: 101}]")
+        runEvaluatorTestCase("SELECT a, b FROM `[{a: 100, b: 101}]`", "[{a: 100, b: 101}]")
     }
 
     @Test
     fun selectListWithBinaryExpr() {
-        assertEval("SELECT a + b FROM `[{a: 100, b: 101}]`", "[{_1: 201}]")
+        runEvaluatorTestCase("SELECT a + b FROM `[{a: 100, b: 101}]`", "[{_1: 201}]")
     }
 
     @Test
     fun selectListWithBinaryExprAndAlias() {
-        assertEval("SELECT a + b AS c FROM `[{a: 100, b: 101}]`", "[{c: 201}]")
+        runEvaluatorTestCase("SELECT a + b AS c FROM `[{a: 100, b: 101}]`", "[{c: 201}]")
     }
 
     @Test
-    fun unpivot() = assertEval(
+    fun unpivot() = runEvaluatorTestCase(
         "SELECT name, val FROM UNPIVOT `{a:1, b:2, c:3, d:4, e:5, f:6}` AS val AT name",
         """[
             {name:"a",val:1},
@@ -77,7 +77,7 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
     )
 
     @Test
-    fun simpleJoin() = assertEval(
+    fun simpleJoin() = runEvaluatorTestCase(
         """SELECT * FROM `[{a: 1}, {a: 2}]` AS t1 INNER CROSS JOIN `[{b: 1, c: "one" }, {b: 2, c: "two" }]`""",
         """[
             {a:1,b:1,c:"one"},
@@ -88,7 +88,7 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
     )
 
     @Test
-    fun simpleJoinWithCondition() = assertEval(
+    fun simpleJoinWithCondition() = runEvaluatorTestCase(
         """
             SELECT *
             FROM `[{a: 1}, {a: 2}]` AS t1
@@ -101,7 +101,7 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
     )
 
     @Test
-    fun tableAliases() = assertEval("SELECT _2 FROM `[{_1: a, _2: 1}, {_1: a, _2: 'a'}, {_1: a, _2: 3}]` WHERE _2 = 21", "[]")
+    fun tableAliases() = runEvaluatorTestCase("SELECT _2 FROM `[{_1: a, _2: 1}, {_1: a, _2: 'a'}, {_1: a, _2: 3}]` WHERE _2 = 21", "[]")
 
     @Test
     fun castStringToIntFailed() = runEvaluatorErrorTestCase(
@@ -113,20 +113,20 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
 
     @Test
     fun sum() {
-        assertEval("SUM(`[1, 2, 3]`)", "6")
-        assertEval("SUM(`[1, 2e0, 3e0]`)", "6e0")
-        assertEval("SUM(`[1, 2d0, 3d0]`)", "6d0")
-        assertEval("SUM(`[1, 2e0, 3d0]`)", "6d0")
-        assertEval("SUM(`[1, 2d0, 3e0]`)", "6d0")
+        runEvaluatorTestCase("SUM(`[1, 2, 3]`)", "6")
+        runEvaluatorTestCase("SUM(`[1, 2e0, 3e0]`)", "6e0")
+        runEvaluatorTestCase("SUM(`[1, 2d0, 3d0]`)", "6d0")
+        runEvaluatorTestCase("SUM(`[1, 2e0, 3d0]`)", "6d0")
+        runEvaluatorTestCase("SUM(`[1, 2d0, 3e0]`)", "6d0")
     }
 
     @Test
     fun max() {
-        assertEval("max(`[1, 2, 3]`)", "3")
-        assertEval("max(`[1, 2.0, 3]`)", "3")
-        assertEval("max(`[1, 2e0, 3e0]`)", "3e0")
-        assertEval("max(`[1, 2d0, 3d0]`)", "3d0")
-        assertEval("max(`[1, 2e0, 3d0]`)", "3d0")
-        assertEval("max(`[1, 2d0, 3e0]`)", "3e0")
+        runEvaluatorTestCase("max(`[1, 2, 3]`)", "3")
+        runEvaluatorTestCase("max(`[1, 2.0, 3]`)", "3")
+        runEvaluatorTestCase("max(`[1, 2e0, 3e0]`)", "3e0")
+        runEvaluatorTestCase("max(`[1, 2d0, 3d0]`)", "3d0")
+        runEvaluatorTestCase("max(`[1, 2e0, 3d0]`)", "3d0")
+        runEvaluatorTestCase("max(`[1, 2d0, 3e0]`)", "3e0")
     }
 }

@@ -160,6 +160,7 @@ class EvaluatorStaticTypeTests {
             "pivotBadFieldType",
             "pivotLiteralFieldNameFrom",
             "pivotUnpivotWithWhereLimit",
+            "unpivotStructWithMissingField",
 
             // STIR does not support `CompilePipeline.undefinedVariableBehavior`
             // (these are likely to be a permanent entries to this list since STR/STIR will probably

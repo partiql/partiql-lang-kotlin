@@ -112,11 +112,56 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                 sqlTemplate.compilationOptions.forEach { compOptions ->
                     fun applySqlTemplate(aggFuncName: String) = sqlTemplate.sql.replace("{{agg}}", aggFuncName)
                     val coGroupName = "$compOptions|$groupName"
-                    expectedResultForCount?.let { cases.add(EvaluatorTestCase(coGroupName, applySqlTemplate("COUNT"), it, compOptions.optionsBlock)) }
-                    expectedResultForSum?.let { cases.add(EvaluatorTestCase(coGroupName, applySqlTemplate("SUM"), it, compOptions.optionsBlock)) }
-                    expectedResultForMin?.let { cases.add(EvaluatorTestCase(coGroupName, applySqlTemplate("MIN"), it, compOptions.optionsBlock)) }
-                    expectedResultForMax?.let { cases.add(EvaluatorTestCase(coGroupName, applySqlTemplate("MAX"), it, compOptions.optionsBlock)) }
-                    expectedResultForAvg?.let { cases.add(EvaluatorTestCase(coGroupName, applySqlTemplate("AVG"), it, compOptions.optionsBlock)) }
+                    expectedResultForCount?.let {
+                        cases.add(
+                            EvaluatorTestCase(
+                                coGroupName,
+                                applySqlTemplate("COUNT"),
+                                it,
+                                compOptions.optionsBlock,
+                            )
+                        )
+                    }
+                    expectedResultForSum?.let {
+                        cases.add(
+                            EvaluatorTestCase(
+                                coGroupName,
+                                applySqlTemplate("SUM"),
+                                it,
+                                compOptions.optionsBlock,
+                            )
+                        )
+                    }
+                    expectedResultForMin?.let {
+                        cases.add(
+                            EvaluatorTestCase(
+                                coGroupName,
+                                applySqlTemplate("MIN"),
+                                it,
+                                compOptions.optionsBlock,
+                            )
+                        )
+                    }
+                    expectedResultForMax?.let {
+                        cases.add(
+                            EvaluatorTestCase(
+                                coGroupName,
+                                applySqlTemplate("MAX"),
+                                it,
+                                compOptions.optionsBlock,
+                            )
+                        )
+                    }
+                    expectedResultForAvg?.let {
+                        cases.add(
+                            EvaluatorTestCase(
+                                coGroupName,
+                                applySqlTemplate("AVG"),
+                                it,
+                                compOptions.optionsBlock,
+                            )
+                        )
+                    }
                 }
             }
 
@@ -149,11 +194,23 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             query: String,
             expected: String,
             compilationOptions: List<CompOptions> = CompOptions.values().toList()
-        ) = compilationOptions.map { co -> EvaluatorTestCase(query, expected, co.optionsBlock) }
+        ) = compilationOptions.map { co ->
+            EvaluatorTestCase(
+                query,
+                expected,
+                compileOptionsBuilderBlock = co.optionsBlock
+            )
+        }
 
         private fun createGroupByTestCases(queries: List<String>, expected: String) =
             queries.flatMap { q ->
-                CompOptions.values().map { co -> EvaluatorTestCase(q, expected, co.optionsBlock) }
+                CompOptions.values().map { co ->
+                    EvaluatorTestCase(
+                        q,
+                        expected,
+                        compileOptionsBuilderBlock = co.optionsBlock
+                    )
+                }
             }
     }
 
@@ -423,7 +480,8 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     @Parameters
-    fun sql92StyleAggregatesTest(tc: EvaluatorTestCase) = runEvaluatorTestCase(tc, session)
+    fun sql92StyleAggregatesTest(tc: EvaluatorTestCase) =
+        runEvaluatorTestCase(tc, session)
 
     /**
      * Test cases that cover `COUNT`, `SUM`, `MIN`, `MAX`, and `AVG`.
@@ -769,7 +827,8 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     @Parameters
-    fun groupByAggregatesTest(tc: EvaluatorTestCase) = runEvaluatorTestCase(tc, session)
+    fun groupByAggregatesTest(tc: EvaluatorTestCase) =
+        runEvaluatorTestCase(tc, session)
 
     /**
      * These are test cases involving aggregates and cover behavior under less usual circumstances
@@ -1019,7 +1078,8 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     @Parameters
-    fun groupByShadowingTest(tc: EvaluatorTestCase) = runEvaluatorTestCase(tc, session)
+    fun groupByShadowingTest(tc: EvaluatorTestCase) =
+        runEvaluatorTestCase(tc, session)
 
     fun parametersForGroupByShadowingTest() =
         createGroupByTestCases(
@@ -1052,7 +1112,8 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     @Parameters
-    fun groupByDuplicateAliasesTest(tc: EvaluatorTestCase) = runEvaluatorTestCase(tc, session)
+    fun groupByDuplicateAliasesTest(tc: EvaluatorTestCase) =
+        runEvaluatorTestCase(tc, session)
 
     fun parametersForGroupByDuplicateAliasesTest() =
         createGroupByTestCases(

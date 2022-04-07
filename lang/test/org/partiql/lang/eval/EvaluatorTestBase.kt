@@ -19,6 +19,7 @@ package org.partiql.lang.eval
 
 import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
+import org.junit.jupiter.api.assertThrows
 import org.partiql.lang.CUSTOM_TEST_TYPES
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.ION
@@ -68,40 +69,135 @@ abstract class EvaluatorTestBase : TestBase() {
     protected fun Map<String, String>.toSession() = EvaluationSession.build { globals(this@toSession.toBindings()) }
 
     /**
-     * Assert that the result of the evaluation of source is the same as expected given optionally given an
-     * [EvaluationSession] and [CompileOptions].
+     * Constructor style override of [runEvaluatorTestCase].  Constructs an [EvaluatorTestCase]
+     * and runs it.  This is intended to be used by non-parameterized tests.
      *
-     * This function also passes the [ExprNode] AST returned from the parser through (de)serialization steps through
-     * s-exp AST version V0 and ensures that the deserialized forms of that are equivalent to each other.
-     *
-     * @param source query source to be tested
-     * @param expected expected result
-     * @param session [EvaluationSession] used for evaluation
-     * @param compilerPipelineBuilderBlock any additional configuration to the pipeline after the options are set.
-     * @param block function literal with receiver used to plug in custom assertions
+     * @see [EvaluatorTestCase].
      */
-    protected fun assertEval(
+    protected fun runEvaluatorTestCase(
         source: String,
         expected: String,
         session: EvaluationSession = EvaluationSession.standard(),
         excludeLegacySerializerAssertions: Boolean = false,
-        compileOptions: CompileOptions = CompileOptions.standard(),
+        compileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit = { },
         compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { },
         block: (ExprValue) -> Unit = { }
     ) {
-
-        val expectedIon = ion.singleValue(expected)
-
-        val result = eval(source, compileOptions, session, compilerPipelineBuilderBlock)
-        assertEquals(
-            expectedIon,
-            result.ionValue.cloneAndRemoveBagAndMissingAnnotations(),
-            "${compileOptions.typedOpBehavior} CAST in ${compileOptions.typingMode} typing mode, " +
-                "evaluated '$source' with evaluator"
+        val tc = EvaluatorTestCase(
+            query = source,
+            expectedResult = expected,
+            expectedResultMode = ExpectedResultMode.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS,
+            excludeLegacySerializerAssertions = excludeLegacySerializerAssertions,
+            compileOptionsBuilderBlock = compileOptionsBuilderBlock,
+            compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,
+            extraResultAssertions = block
         )
-        block(result)
+        runEvaluatorTestCase(tc, session)
+    }
 
-        commonAssertions(source, excludeLegacySerializerAssertions)
+    /**
+     * Runs an [EvaluatorTestCase].  This is intended to be used by parameterized tests.
+     *
+     * @see [EvaluatorTestCase].
+     */
+    protected fun runEvaluatorTestCase(tc: EvaluatorTestCase, session: EvaluationSession) {
+//        val testOpts = CompileOptions.build { tc.compileOptionsBuilderBlock(this) }
+//        assertNotEquals(TypingMode.PERMISSIVE, testOpts.typingMode)
+
+        // LEGACY mode
+        privateRunEvaluatorTestCase(tc, session, "compile options unaltered")
+
+        // PERMISSIVE mode
+        privateRunEvaluatorTestCase(
+            tc.copy(
+                compileOptionsBuilderBlock = {
+                    tc.compileOptionsBuilderBlock(this)
+                    typingMode(TypingMode.PERMISSIVE)
+                }
+            ),
+            session,
+            "compile options forced to PERMISSIVE mode"
+        )
+
+        commonAssertions(tc.query, tc.excludeLegacySerializerAssertions)
+    }
+
+    /**
+     * Runs the give test case once with the specified [session].
+     *
+     * If non-null, [message] will be dumped to the console before test failure to aid in the identification
+     * and debugging of failed tests.
+     */
+    private fun privateRunEvaluatorTestCase(
+        tc: EvaluatorTestCase,
+        session: EvaluationSession,
+        message: String
+    ) {
+        val msg = message.let { "($it)" }
+
+        fun showTestCase() {
+            println(listOfNotNull(message, tc.groupName).joinToString(" : "))
+            println("Query under test  : ${tc.query}")
+            println("Expected value    : ${tc.expectedResult}")
+            println()
+        }
+
+        val compileOptions = CompileOptions.build { tc.compileOptionsBuilderBlock(this) }
+
+        val actual = try {
+            eval(
+                source = tc.query,
+                compilerPipelineBuilderBlock = tc.compilerPipelineBuilderBlock,
+                session = session,
+                compileOptions = compileOptions
+            )
+        } catch (e: Throwable) {
+            showTestCase()
+            e.printStackTrace()
+            fail("Exception while attempting to evaluate the under test, see standard output $msg")
+            throw e
+        }
+
+        val expectedResult =
+            when (compileOptions.typingMode) {
+                TypingMode.LEGACY -> tc.expectedResult
+                TypingMode.PERMISSIVE -> tc.expectedPermissiveModeResult
+            }
+
+        when (tc.expectedResultMode) {
+            ExpectedResultMode.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS -> {
+                assertEquals(
+                    ION.singleValue(expectedResult),
+                    actual.ionValue.cloneAndRemoveBagAndMissingAnnotations(),
+                    "$message: ${compileOptions.typedOpBehavior} CAST in ${compileOptions.typingMode} typing mode, " +
+                        "evaluated '${tc.query}' with evaluator"
+                )
+            }
+            ExpectedResultMode.PARTIQL -> {
+                val expected = try {
+                    eval(
+                        source = expectedResult,
+                        compilerPipelineBuilderBlock = tc.compilerPipelineBuilderBlock,
+                        compileOptions = compileOptions,
+                        session = session
+                    )
+                } catch (e: Throwable) {
+                    showTestCase()
+                    e.printStackTrace()
+                    fail("Exception while attempting to evaluate the expected value, see standard output $msg")
+                    throw e
+                }
+                if (!expected.exprEquals(actual)) {
+                    showTestCase()
+                    println("Expected : $expected")
+                    println("Actual   : $actual")
+
+                    fail("Expected and actual ExprValue instances are not equivalent $msg")
+                }
+            }
+        }
+
+        tc.extraResultAssertions(actual)
     }
 
     /**
@@ -288,17 +384,20 @@ abstract class EvaluatorTestBase : TestBase() {
     }
 
     /** Runs an [EvaluatorErrorTestCase] once. */
-    private fun privateRunEvaluatorTestCase(
+    private fun privateRunEvaluatorErrorTestCase(
         tc: EvaluatorErrorTestCase,
         session: EvaluationSession,
     ) {
+//        val testOpts = CompileOptions.build { tc.compileOptionsBuilderBlock(this) }
+//        assertNotEquals(TypingMode.PERMISSIVE, testOpts.typingMode)
+
         val compilerPipeline = CompilerPipeline.build(ION) {
             customDataTypes(CUSTOM_TEST_TYPES)
             tc.compilerPipelineBuilderBlock(this)
             compileOptions { tc.compileOptionsBuilderBlock(this) }
         }
 
-        val ex = org.junit.jupiter.api.assertThrows<SqlException>("test case should throw during evaluation") {
+        val ex = assertThrows<SqlException>("test case should throw during evaluation") {
             // Note that an SqlException (usually a SemanticException or EvaluationException) might be thrown in
             // .compile OR in .eval.  We currently don't make a distinction, so tests cannot assert that certain
             // errors are compile-time and others are evaluation-time.  We really aught to create a way for tests to
@@ -358,7 +457,7 @@ abstract class EvaluatorTestBase : TestBase() {
      */
     protected fun runEvaluatorErrorTestCase(tc: EvaluatorErrorTestCase, session: EvaluationSession) {
         // Run the query once in legacy mode.
-        privateRunEvaluatorTestCase(
+        privateRunEvaluatorErrorTestCase(
             tc.copy(
                 compileOptionsBuilderBlock = {
                     tc.compileOptionsBuilderBlock(this)
@@ -385,7 +484,7 @@ abstract class EvaluatorTestBase : TestBase() {
                 )
 
                 // Run the query once in permissive mode.
-                privateRunEvaluatorTestCase(
+                privateRunEvaluatorErrorTestCase(
                     tc.copy(
                         compileOptionsBuilderBlock = {
                             tc.compileOptionsBuilderBlock(this)
@@ -450,93 +549,6 @@ abstract class EvaluatorTestBase : TestBase() {
             session,
             compilerPipelineBuilderBlock
         )
-    }
-
-    /**
-     * Runs each test case twice--once without altering the [CompileOptions] (intended for [TypingMode.LEGACY], which
-     * is the current default), and once while forcing [TypingMode.PERMISSIVE].  Used for cases where we expect the
-     * result to be the same in both modes.
-     */
-    protected fun runEvaluatorTestCase(tc: EvaluatorTestCase, session: EvaluationSession) {
-        // LEGACY mode
-        privateRunEvaluatorTestCase(tc, session, "compile options unaltered")
-
-        // PERMISSIVE mode
-        privateRunEvaluatorTestCase(
-            tc.copy(
-                compileOptionsBuilderBlock = {
-                    tc.compileOptionsBuilderBlock(this)
-                    typingMode(TypingMode.PERMISSIVE)
-                }
-            ),
-            session,
-            "compile options forced to PERMISSIVE mode"
-        )
-    }
-
-    /**
-     * Runs the give test case once with the specified [session].
-     *
-     * If specified, [compileOptionsMutator] will be invoked allow the compilation options to be mutated.
-     * This feature can be used multiple times consecutively to allow repetition of the same test case
-     * under different [CompileOptions].
-     *
-     * If non-null, [message] will be dumped to the console before test failure to aid in the identification
-     * and debugging of failed tests.
-     */
-    private fun privateRunEvaluatorTestCase(
-        tc: EvaluatorTestCase,
-        session: EvaluationSession,
-        message: String? = null
-    ) {
-        val msg = message?.let { "($it)" } ?: ""
-
-        fun showTestCase() {
-            println(listOfNotNull(message, tc.groupName).joinToString(" : "))
-            println("Query under test  : ${tc.query}")
-            println("Expected value    : ${tc.expectedResult}")
-            println()
-        }
-
-        val expected = try {
-            eval(
-                source = tc.expectedResult,
-                compilerPipelineBuilderBlock = tc.compilerPipelineBuilderBlock,
-                compileOptions = CompileOptions.build {
-                    tc.compileOptionsBuilderBlock(this)
-                },
-                session = session
-            )
-        } catch (e: Throwable) {
-            showTestCase()
-            e.printStackTrace()
-            fail("Exception while attempting to evaluate the expected value, see standard output $msg")
-            throw e
-        }
-
-        val actual = try {
-            eval(
-                source = tc.query,
-                compilerPipelineBuilderBlock = tc.compilerPipelineBuilderBlock,
-                session = session,
-                compileOptions = CompileOptions.build {
-                    tc.compileOptionsBuilderBlock(this)
-                }
-            )
-        } catch (e: Throwable) {
-            showTestCase()
-            e.printStackTrace()
-            fail("Exception while attempting to evaluate the under test, see standard output $msg")
-            throw e
-        }
-
-        if (!expected.exprEquals(actual)) {
-            showTestCase()
-            println("Expected : $expected")
-            println("Actual   : $actual")
-
-            fail("Expected and actual ExprValue instances are not equivalent $msg")
-        }
     }
 }
 

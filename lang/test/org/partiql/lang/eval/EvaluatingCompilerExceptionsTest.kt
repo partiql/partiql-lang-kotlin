@@ -137,9 +137,9 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
     @Test
     fun missingAlias() =
         // Same query as previous test--but DO NOT throw exception this time because of UndefinedVariableBehavior.MISSING
-        assertEval(
+        runEvaluatorTestCase(
             sqlWithUndefinedVariable, "[null]",
-            compileOptions = CompileOptions.build { undefinedVariable(UndefinedVariableBehavior.MISSING) }
+            compileOptionsBuilderBlock = { undefinedVariable(UndefinedVariableBehavior.MISSING) }
         )
 
     private val sqlWithUndefinedQuotedVariable = "SELECT VALUE \"y\" FROM << 'el1' >> AS x"
@@ -157,9 +157,9 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
     @Test
     fun missingQuotedAlias() =
         // Same query as previous test--but DO NOT throw exception this time because of UndefinedVariableBehavior.MISSING
-        assertEval(
+        runEvaluatorTestCase(
             sqlWithUndefinedQuotedVariable, "[null]",
-            compileOptions = CompileOptions.build { undefinedVariable(UndefinedVariableBehavior.MISSING) }
+            compileOptionsBuilderBlock = { undefinedVariable(UndefinedVariableBehavior.MISSING) }
         )
 
     @Test

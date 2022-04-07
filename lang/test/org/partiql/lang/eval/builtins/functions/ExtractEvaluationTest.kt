@@ -20,7 +20,7 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
     // Pass test cases
     @ParameterizedTest
     @ArgumentsSource(ExtractPassCases::class)
-    fun runPassTests(testCase: ExprFunctionTestCase) = assertEval(
+    fun runPassTests(testCase: ExprFunctionTestCase) = runEvaluatorTestCase(
         source = testCase.source,
         expected = testCase.expected,
         session = testCase.session,

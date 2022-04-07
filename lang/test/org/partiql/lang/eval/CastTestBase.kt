@@ -89,10 +89,10 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     }
                 }
             }
-            else -> assertEval(
+            else -> runEvaluatorTestCase(
                 castCase.expression,
                 castCase.expected,
-                compileOptions = CompileOptions.build(compileOptionBlock),
+                compileOptionsBuilderBlock = compileOptionBlock,
                 excludeLegacySerializerAssertions = true,
                 compilerPipelineBuilderBlock = configurePipeline,
                 block = castCase.additionalAssertBlock

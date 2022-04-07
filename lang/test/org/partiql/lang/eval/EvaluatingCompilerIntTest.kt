@@ -230,10 +230,10 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
     )
 
     @Test
-    fun castSmallDecimalExact() = assertEval("cast(5e0 as int)", "5")
+    fun castSmallDecimalExact() = runEvaluatorTestCase("cast(5e0 as int)", "5")
 
     @Test
-    fun castSmallDecimal() = assertEval("cast(5.2 as int)", "5")
+    fun castSmallDecimal() = runEvaluatorTestCase("cast(5.2 as int)", "5")
 
     @Test
     fun castHugeDecimal() = runEvaluatorErrorTestCase(
@@ -252,13 +252,13 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
     )
 
     @Test
-    fun castAlmostZeroDecimal() = assertEval("cast(1e-2147483609 as int)", "0")
+    fun castAlmostZeroDecimal() = runEvaluatorTestCase("cast(1e-2147483609 as int)", "0")
 
     @Test
-    fun castAlmostOneDecimal() = assertEval("cast((1.0 + 1e-2147483609) as int)", "1")
+    fun castAlmostOneDecimal() = runEvaluatorTestCase("cast((1.0 + 1e-2147483609) as int)", "1")
 
     private fun assertPair(pair: Pair<String, String>) {
         val (query, expected) = pair
-        assertEval(query, expected)
+        runEvaluatorTestCase(query, expected)
     }
 }

@@ -17,7 +17,7 @@ class DateAddEvaluationTest : EvaluatorTestBase() {
     // Pass test cases
     @ParameterizedTest
     @ArgumentsSource(DateAddPassCases::class)
-    fun runPassTests(testCase: ExprFunctionTestCase) = assertEval(testCase.source, testCase.expected, testCase.session)
+    fun runPassTests(testCase: ExprFunctionTestCase) = runEvaluatorTestCase(testCase.source, testCase.expected, testCase.session)
 
     class DateAddPassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(

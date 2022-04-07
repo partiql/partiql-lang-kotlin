@@ -50,7 +50,7 @@ class EvaluatingCompilerSelectStarTests : EvaluatorTestBase() {
             // SELECT * with AT projects the AT binding,
             EvaluatorTestCase(
                 query = "SELECT * FROM dogs AT idx",
-                expectedSql = """<< 
+                expectedResult = """<< 
                         { 'name': 'fido', 'idx': 100 }, 
                         { 'name': 'bella', 'idx': 101 },
                         { 'name': 'max', 'idx': 102 } 
@@ -59,7 +59,7 @@ class EvaluatingCompilerSelectStarTests : EvaluatorTestBase() {
             // SELECT * with BY projects the BY binding,
             EvaluatorTestCase(
                 query = "SELECT * FROM dogs BY addr",
-                expectedSql = """<< 
+                expectedResult = """<< 
                         { 'name': 'fido', 'addr': 'addr0' }, 
                         { 'name': 'bella', 'addr': 'addr1' },
                         { 'name': 'max', 'addr': 'addr2' } 
@@ -68,7 +68,7 @@ class EvaluatingCompilerSelectStarTests : EvaluatorTestBase() {
             // SELECT * with both AT and BY projects both,
             EvaluatorTestCase(
                 query = "SELECT * FROM dogs AT idx BY addr",
-                expectedSql = """<< 
+                expectedResult = """<< 
                         { 'name': 'fido', 'addr': 'addr0', 'idx': 100 }, 
                         { 'name': 'bella', 'addr': 'addr1', 'idx': 101 },
                         { 'name': 'max', 'addr': 'addr2', 'idx': 102 } 
@@ -81,7 +81,7 @@ class EvaluatingCompilerSelectStarTests : EvaluatorTestBase() {
         runEvaluatorTestCase(
             EvaluatorTestCase(
                 query = "select f.* from << { 'bar': 1 }, 10, << 11, 12 >> >> as f",
-                expectedSql = """<< { 'bar': 1 } ,{ '_1': 10 }, { '_1': <<11, 12>> } >>"""
+                expectedResult = """<< { 'bar': 1 } ,{ '_1': 10 }, { '_1': <<11, 12>> } >>"""
             ),
             session = EvaluationSession.standard()
         )

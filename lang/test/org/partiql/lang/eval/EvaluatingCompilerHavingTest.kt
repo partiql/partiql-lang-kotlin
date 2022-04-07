@@ -58,7 +58,7 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
     fun parametersForGroupByHavingTest() =
         listOf(
             EvaluatorTestCase(
-                "GROUP BY with HAVING - all rows",
+                groupName = "GROUP BY with HAVING - all rows",
                 """
                     SELECT attributeId, COUNT(*) as the_count
                     FROM repeating_things
@@ -75,7 +75,7 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
                 >>"""
             ),
             EvaluatorTestCase(
-                "GROUP BY with HAVING and WHERE",
+                groupName = "GROUP BY with HAVING and WHERE",
                 """
                     SELECT attributeId, COUNT(*) as the_count
                     FROM repeating_things
@@ -90,7 +90,7 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
                 >>"""
             ),
             EvaluatorTestCase(
-                "GROUP BY with HAVING - no rows",
+                groupName = "GROUP BY with HAVING - no rows",
                 """
                     SELECT attributeId, COUNT(*) as the_count
                     FROM repeating_things
@@ -100,7 +100,7 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
                 """<<>>"""
             ),
             EvaluatorTestCase(
-                "GROUP BY with HAVING",
+                groupName = "GROUP BY with HAVING",
                 """
                     SELECT attributeId, COUNT(*) as the_count
                     FROM repeating_things
@@ -113,7 +113,7 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
                 >>"""
             ),
             EvaluatorTestCase(
-                "GROUP BY with HAVING and WHERE",
+                groupName = "GROUP BY with HAVING and WHERE",
                 """
                     SELECT attributeId, COUNT(*) as the_count
                     FROM repeating_things
@@ -127,7 +127,7 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
                 >>"""
             ),
             EvaluatorTestCase(
-                "GROUP BY with HAVING that calls COUNT(*)",
+                groupName = "GROUP BY with HAVING that calls COUNT(*)",
                 """
                     SELECT attributeId, COUNT(*) as the_count
                     FROM repeating_things
@@ -142,7 +142,7 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
                 >>"""
             ),
             EvaluatorTestCase(
-                "GROUP BY with HAVING that calls SUM(*)",
+                groupName = "GROUP BY with HAVING that calls SUM(*)",
                 """
                     SELECT attributeId, SUM(attributeId) as the_count
                     FROM repeating_things
@@ -155,7 +155,7 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
                 >>"""
             ),
             EvaluatorTestCase(
-                "GROUP BY with HAVING that references GROUP AS variable",
+                groupName = "GROUP BY with HAVING that references GROUP AS variable",
                 """
                     SELECT attributeId, COUNT(*) as the_count
                     FROM repeating_things
