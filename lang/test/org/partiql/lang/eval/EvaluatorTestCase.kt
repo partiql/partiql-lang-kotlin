@@ -64,7 +64,7 @@ data class EvaluatorTestCase(
     /**
      * AN expression which will be evaluated to determine the set of expected values that should match the result
      * of [query].
-     * TODO: rename to expectedLegacyModeResult.
+     * DL TODO: rename to expectedLegacyModeResult.
      */
     val expectedResult: String,
 
@@ -88,7 +88,7 @@ data class EvaluatorTestCase(
     val excludeLegacySerializerAssertions: Boolean = false,
     val extraResultAssertions: (ExprValue) -> Unit = { }
 ) {
-    // TODO: delete this constructor (but reorder the properties and this constructor
+    // DL TODO: delete this constructor (but reorder the properties and this constructor
     // to match first).
     constructor(
         query: String,

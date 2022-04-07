@@ -54,20 +54,24 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
 
     @Test
     fun quotedIdResolvesWithSensitiveCaseResolvesToMissing() {
-        assertEvalIsMissing(
-            source = "\"abc\"",
+        runEvaluatorTestCase(
+            query = "\"abc\"",
+            expected = "MISSING",
+            expectedResultMode = ExpectedResultMode.PARTIQL,
+            compileOptionsBuilderBlock = { undefinedVariableMissingCompileOptionBlock() },
             session = simpleSession,
-            compileOptions = CompileOptions.build { undefinedVariableMissingCompileOptionBlock(this) }
         )
-        assertEvalIsMissing(
+        runEvaluatorTestCase(
             "\"ABC\"",
-            simpleSession,
-            compileOptions = CompileOptions.build { undefinedVariableMissingCompileOptionBlock(this) }
+            expected = "MISSING",
+            expectedResultMode = ExpectedResultMode.PARTIQL,
+            compileOptionsBuilderBlock = { undefinedVariableMissingCompileOptionBlock() },
+            session = simpleSession,
         )
 
         // Ensure case sensitive lookup still works.
         runEvaluatorTestCase(
-            source = "\"Abc\"",
+            query = "\"Abc\"",
             expected = "1",
             session = simpleSession,
             compileOptionsBuilderBlock = undefinedVariableMissingCompileOptionBlock

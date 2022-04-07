@@ -72,21 +72,24 @@ abstract class EvaluatorTestBase : TestBase() {
      * Constructor style override of [runEvaluatorTestCase].  Constructs an [EvaluatorTestCase]
      * and runs it.  This is intended to be used by non-parameterized tests.
      *
+     * DL TODO: reorder these parameters
+     *
      * @see [EvaluatorTestCase].
      */
     protected fun runEvaluatorTestCase(
-        source: String,
+        query: String,
         expected: String,
         session: EvaluationSession = EvaluationSession.standard(),
         excludeLegacySerializerAssertions: Boolean = false,
         compileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit = { },
         compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { },
+        expectedResultMode: ExpectedResultMode = ExpectedResultMode.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS,
         block: (ExprValue) -> Unit = { }
     ) {
         val tc = EvaluatorTestCase(
-            query = source,
+            query = query,
             expectedResult = expected,
-            expectedResultMode = ExpectedResultMode.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS,
+            expectedResultMode = expectedResultMode,
             excludeLegacySerializerAssertions = excludeLegacySerializerAssertions,
             compileOptionsBuilderBlock = compileOptionsBuilderBlock,
             compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,
@@ -198,59 +201,6 @@ abstract class EvaluatorTestBase : TestBase() {
         }
 
         tc.extraResultAssertions(actual)
-    }
-
-    /**
-     * Assert that the result of the evaluation of source is a `MISSING` value, optionally given an
-     * [EvaluationSession] and [CompileOptions].
-     *
-     * @param source query source to be tested
-     * @param session [EvaluationSession] used for evaluation
-     */
-    protected fun assertEvalIsMissing(
-        source: String,
-        session: EvaluationSession = EvaluationSession.standard(),
-        compileOptions: CompileOptions = CompileOptions.standard()
-    ) {
-
-        val parser = SqlParser(ion)
-        val deserializer = AstDeserializerBuilder(ion).build()
-
-        val originalAst = parser.parseAstStatement(source)
-
-        // Evaluate the ast originally obtained from the parser
-
-        fun evalAndAssertIsMissing(ast: PartiqlAst.Statement, message: String) {
-            // LEGACY mode
-            val result = eval(ast, compileOptions, session)
-            assertEquals(ExprValueType.MISSING, result.type, "(LEGACY mode) $message")
-            // PERMISSIVE mode
-            val resultForPermissiveMode = eval(ast, CompileOptions.builder(compileOptions).typingMode(TypingMode.PERMISSIVE).build(), session)
-            assertEquals(ExprValueType.MISSING, resultForPermissiveMode.type, "(PERMISSIVE mode) $message")
-        }
-
-        // Also send the serializer through V0 sexp AST and evaluate them again
-        // to be sure they still work after being deserialized
-        fun serializeRoundTripEvalAndAssertIsMissing(astVersion: AstVersion) {
-            val sexp = AstSerializer.serialize(originalAst.toExprNode(ion), astVersion, ion)
-            val sexpAST = deserializer.deserialize(sexp, astVersion)
-            assertEquals(originalAst.toExprNode(ion), sexpAST, "ExprNode deserialized from s-exp $astVersion AST must match the ExprNode returned by the parser")
-
-            // This step should only fail if there is a bug in the equality check that causes two
-            // dissimilar ASTs to be considered equal.
-
-            // LEGACY mode
-            val result = eval(sexpAST.toAstStatement(), compileOptions, session)
-            assertEquals(ExprValueType.MISSING, result.type, "(LEGACY mode) Evaluating AST created from deseriailzed $astVersion s-exp AST must result in missing")
-            // PERMISSIVE mode
-            val resultForPermissiveMode = eval(sexpAST.toAstStatement(), CompileOptions.builder(compileOptions).typingMode(TypingMode.PERMISSIVE).build(), session)
-            assertEquals(ExprValueType.MISSING, resultForPermissiveMode.type, "(PERMISSIVE mode) Evaluating AST created from deseriailzed $astVersion s-exp AST must result in missing")
-        }
-
-        evalAndAssertIsMissing(originalAst, "AST originated from parser")
-        AstVersion.values().forEach { serializeRoundTripEvalAndAssertIsMissing(it) }
-
-        assertAstRewriterBase(source, originalAst.toExprNode(ion))
     }
 
     protected fun assertExprEquals(expected: ExprValue, actual: ExprValue, message: String) {
