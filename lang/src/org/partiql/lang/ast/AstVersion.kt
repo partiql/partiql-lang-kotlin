@@ -12,6 +12,9 @@
  *  language governing permissions and limitations under the License.
  */
 
+// Don't need warnings about ExprNode deprecation.
+@file:Suppress("DEPRECATION")
+
 package org.partiql.lang.ast
 
 @Deprecated("AstVersion is used by legacy (de)serializers.  Use PIG-generated PartiqlAst instead.")

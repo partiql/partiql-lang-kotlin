@@ -1,3 +1,6 @@
+// Don't need warnings about ExprNode deprecation.
+@file:Suppress("DEPRECATION")
+
 package org.partiql.lang.util
 
 import org.partiql.lang.ast.ExprNode
