@@ -255,7 +255,8 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
     fun castAlmostZeroDecimal() = runEvaluatorTestCase("cast(1e-2147483609 as int)", "0")
 
     @Test
-    fun castAlmostOneDecimal() = runEvaluatorTestCase("cast((1.0 + 1e-2147483609) as int)", "1")
+    fun castAlmostOneDecimal() =
+        runEvaluatorTestCase("cast((1.0 + 1e-2147483609) as int)", "1")
 
     private fun assertPair(pair: Pair<String, String>) {
         val (query, expected) = pair

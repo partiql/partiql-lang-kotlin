@@ -56,14 +56,14 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
     fun quotedIdResolvesWithSensitiveCaseResolvesToMissing() {
         runEvaluatorTestCase(
             query = "\"abc\"",
-            expected = "MISSING",
+            expectedLegacyModeResult = "MISSING",
             expectedResultMode = ExpectedResultMode.PARTIQL,
             compileOptionsBuilderBlock = { undefinedVariableMissingCompileOptionBlock() },
             session = simpleSession,
         )
         runEvaluatorTestCase(
             "\"ABC\"",
-            expected = "MISSING",
+            expectedLegacyModeResult = "MISSING",
             expectedResultMode = ExpectedResultMode.PARTIQL,
             compileOptionsBuilderBlock = { undefinedVariableMissingCompileOptionBlock() },
             session = simpleSession,
@@ -72,7 +72,7 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
         // Ensure case sensitive lookup still works.
         runEvaluatorTestCase(
             query = "\"Abc\"",
-            expected = "1",
+            expectedLegacyModeResult = "1",
             session = simpleSession,
             compileOptionsBuilderBlock = undefinedVariableMissingCompileOptionBlock
         )
@@ -250,10 +250,12 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
         runEvaluatorTestCase(""" "a".z IS MISSING """, "true", nestedStructsLowercase.toSession())
 
     @Test
-    fun pathIndexing_quotedId() = runEvaluatorTestCase(""" "stores"[0]."books"[2]."title" """, "\"C\"", stores.toSession())
+    fun pathIndexing_quotedId() =
+        runEvaluatorTestCase(""" "stores"[0]."books"[2]."title" """, "\"C\"", stores.toSession())
 
     @Test
-    fun pathFieldStructLiteral_quotedId() = runEvaluatorTestCase("""{'a': 1, 'b': 2, 'b': 3}."a" """, "1")
+    fun pathFieldStructLiteral_quotedId() =
+        runEvaluatorTestCase("""{'a': 1, 'b': 2, 'b': 3}."a" """, "1")
 
     @Test
     fun pathWildcard_quotedId() = runEvaluatorTestCase(""" "stores"[0]."books"[*]."title" """, """["A", "B", "C", "D"]""", stores.toSession())

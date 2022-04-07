@@ -78,17 +78,19 @@ abstract class EvaluatorTestBase : TestBase() {
      */
     protected fun runEvaluatorTestCase(
         query: String,
-        expected: String,
+        expectedLegacyModeResult: String,
         session: EvaluationSession = EvaluationSession.standard(),
         excludeLegacySerializerAssertions: Boolean = false,
         compileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit = { },
         compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { },
         expectedResultMode: ExpectedResultMode = ExpectedResultMode.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS,
+        expectedPermissiveModeResult: String = expectedLegacyModeResult,
         block: (ExprValue) -> Unit = { }
     ) {
         val tc = EvaluatorTestCase(
             query = query,
-            expectedResult = expected,
+            expectedResult = expectedLegacyModeResult,
+            expectedPermissiveModeResult = expectedPermissiveModeResult,
             expectedResultMode = expectedResultMode,
             excludeLegacySerializerAssertions = excludeLegacySerializerAssertions,
             compileOptionsBuilderBlock = compileOptionsBuilderBlock,
@@ -212,38 +214,6 @@ abstract class EvaluatorTestBase : TestBase() {
             println("Actual ionValue  : ${ConfigurableExprValueFormatter.pretty.format(actual)} ")
             fail("$message Expected and actual ExprValue instances are not equivalent")
         }
-    }
-
-    /**
-     * Evaluates [expectedLegacyModeResult] and [sqlUnderTest] and asserts that the resulting [ExprValue]s
-     * are equivalent using PartiQL's equivalence rules. This differs from `assertEval`
-     * in that the [ExprValue]s are not converted to Ion before comparison.
-     * This function should be used for any result involving `BAG` and `MISSING`
-     * since Ion has no representation for these values.
-     *
-     * @param sqlUnderTest query source to be tested
-     * @param expectedLegacyModeResult expected result for legacy mode.
-     * @param session [EvaluationSession] used for evaluation
-     * @param expectedPermissiveModeResult expected result for permissive mode.  Defaults to [expectedLegacyModeResult].
-     */
-    protected fun assertEvalExprValue(
-        sqlUnderTest: String,
-        expectedLegacyModeResult: String,
-        session: EvaluationSession = EvaluationSession.standard(),
-        compileOptions: CompileOptions = CompileOptions.standard(),
-        expectedPermissiveModeResult: String = expectedLegacyModeResult
-    ) {
-        // LegacyMode
-        val originalExprValue = eval(sqlUnderTest, compileOptions, session)
-        val expectedExprValue = eval(expectedLegacyModeResult, compileOptions, session)
-        assertExprEquals(expectedExprValue, originalExprValue, "(LEGACY mode)")
-
-        // PERMISSIVE mode
-        val permissiveMode = CompileOptions.builder(compileOptions).typingMode(TypingMode.PERMISSIVE).build()
-
-        val originalExprValueForPermissiveMode = eval(sqlUnderTest, permissiveMode, session)
-        val expectedExprValueForPermissiveMode = eval(expectedPermissiveModeResult, permissiveMode, session)
-        assertExprEquals(expectedExprValueForPermissiveMode, originalExprValueForPermissiveMode, "(PERMISSIVE mode)")
     }
 
     /**

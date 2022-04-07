@@ -13,7 +13,8 @@ class UtcNowEvaluationTest : EvaluatorTestBase() {
     // Pass test cases
     @ParameterizedTest
     @ArgumentsSource(UtcNowPassCases::class)
-    fun runPassTests(tc: ExprFunctionTestCase) = runEvaluatorTestCase(tc.source, tc.expected, tc.session)
+    fun runPassTests(tc: ExprFunctionTestCase) =
+        runEvaluatorTestCase(tc.source, tc.expected, tc.session)
 
     class UtcNowPassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(

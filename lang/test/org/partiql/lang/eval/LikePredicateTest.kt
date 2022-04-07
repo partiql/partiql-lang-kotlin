@@ -46,7 +46,8 @@ class LikePredicateTest : EvaluatorTestBase() {
     ).toSession()
 
     @Test
-    fun emptyTextUnderscorePattern() = runEvaluatorTestCase("""SELECT * FROM `[true]` as a WHERE '' LIKE '_'  """, "[]", animals)
+    fun emptyTextUnderscorePattern() =
+        runEvaluatorTestCase("""SELECT * FROM `[true]` as a WHERE '' LIKE '_'  """, "[]", animals)
 
     @Test
     fun emptyTextPercentPattern() = runEvaluatorTestCase(
@@ -62,10 +63,12 @@ class LikePredicateTest : EvaluatorTestBase() {
     )
 
     @Test
-    fun valueLiteralPatternNull() = runEvaluatorTestCase("""SELECT * FROM animals as a WHERE 'A' LIKE null """, "[]", animals)
+    fun valueLiteralPatternNull() =
+        runEvaluatorTestCase("""SELECT * FROM animals as a WHERE 'A' LIKE null """, "[]", animals)
 
     @Test
-    fun valueNullPatternLiteral() = runEvaluatorTestCase("""SELECT * FROM animals as a WHERE null LIKE 'A' """, "[]", animals)
+    fun valueNullPatternLiteral() =
+        runEvaluatorTestCase("""SELECT * FROM animals as a WHERE null LIKE 'A' """, "[]", animals)
 
     @Test
     fun valueNullPatternLiteralEscapeNull() = runEvaluatorTestCase(
@@ -681,13 +684,16 @@ class LikePredicateTest : EvaluatorTestBase() {
     )
 
     @Test
-    fun valueIsNull() = runEvaluatorTestCase("SELECT * FROM <<>> AS a WHERE null LIKE 'a' ESCAPE '['", "[]")
+    fun valueIsNull() =
+        runEvaluatorTestCase("SELECT * FROM <<>> AS a WHERE null LIKE 'a' ESCAPE '['", "[]")
 
     @Test
-    fun patternIsNull() = runEvaluatorTestCase("SELECT * FROM <<>> AS a WHERE 'a' LIKE null ESCAPE '['", "[]")
+    fun patternIsNull() =
+        runEvaluatorTestCase("SELECT * FROM <<>> AS a WHERE 'a' LIKE null ESCAPE '['", "[]")
 
     @Test
-    fun escapeIsNull() = runEvaluatorTestCase("SELECT * FROM <<>> AS a WHERE 'a' LIKE 'a' ESCAPE null", "[]")
+    fun escapeIsNull() =
+        runEvaluatorTestCase("SELECT * FROM <<>> AS a WHERE 'a' LIKE 'a' ESCAPE null", "[]")
 
     @Test
     fun nonLiteralsMissingValue() = runEvaluatorTestCase(

@@ -27,7 +27,11 @@ class NullIfEvaluationTest : EvaluatorTestBase() {
 
     @ParameterizedTest
     @MethodSource("nullifEvaluationTests")
-    fun runTests(tc: NullIfTestCase) = assertEvalExprValue("nullif(${tc.expr1}, ${tc.expr2})", tc.expected)
+    fun runTests(tc: NullIfTestCase) = runEvaluatorTestCase(
+        query = "nullif(${tc.expr1}, ${tc.expr2})",
+        expectedLegacyModeResult = tc.expected,
+        expectedResultMode = ExpectedResultMode.PARTIQL
+    )
 
     companion object {
         fun testCase(expr1: String, expr2: String, expected: String) = NullIfTestCase(expr1, expr2, expected)

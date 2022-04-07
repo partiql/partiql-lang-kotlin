@@ -15,7 +15,8 @@ class SizeEvaluationTest : EvaluatorTestBase() {
     // Pass test cases
     @ParameterizedTest
     @ArgumentsSource(SizePassCases::class)
-    fun runPassTests(testCase: ExprFunctionTestCase) = runEvaluatorTestCase(testCase.source, testCase.expected)
+    fun runPassTests(testCase: ExprFunctionTestCase) =
+        runEvaluatorTestCase(testCase.source, testCase.expected)
 
     class SizePassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(

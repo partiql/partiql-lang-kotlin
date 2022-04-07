@@ -33,10 +33,11 @@ class CoalesceEvaluationTest : EvaluatorTestBase() {
     @ParameterizedTest
     @MethodSource("coalesceEvaluationTests")
     fun runTests(tc: CoalesceTestCase) =
-        assertEvalExprValue(
+        runEvaluatorTestCase(
             "coalesce(${tc.args.joinToString(",")})",
             expectedLegacyModeResult = tc.expectedLegacyResult,
-            expectedPermissiveModeResult = tc.expectedPermissiveResult
+            expectedPermissiveModeResult = tc.expectedPermissiveResult,
+            expectedResultMode = ExpectedResultMode.PARTIQL
         )
 
     companion object {

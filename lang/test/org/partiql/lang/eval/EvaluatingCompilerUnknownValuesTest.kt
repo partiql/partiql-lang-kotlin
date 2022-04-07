@@ -564,24 +564,25 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     ).toSession()
 
     @Test
-    fun andShortCircuits() = assertEvalExprValue(
-        "SELECT s.x FROM [{'x': '1.1'},{'x': '2'},{'x': '3'},{'x': '4'},{'x': '5'}] as s WHERE FALSE AND CAST(s.x as INT)",
-        "<<>>",
-        boolsWithUnknowns
+    fun andShortCircuits() = runEvaluatorTestCase(
+        query = "SELECT s.x FROM [{'x': '1.1'},{'x': '2'},{'x': '3'},{'x': '4'},{'x': '5'}] as s WHERE FALSE AND CAST(s.x as INT)",
+        expectedLegacyModeResult = "<<>>",
+        session = boolsWithUnknowns,
+        expectedResultMode = ExpectedResultMode.PARTIQL
     )
 
     @Test
     fun andWithNullDoesNotShortCircuits() = runEvaluatorErrorTestCase(
-        "SELECT s.x FROM [{'x': '1.1'},{'x': '2'},{'x': '3'},{'x': '4'},{'x': '5'}] as s WHERE NULL AND CAST(s.x as INT)",
-        ErrorCode.EVALUATOR_CAST_FAILED,
+        query = "SELECT s.x FROM [{'x': '1.1'},{'x': '2'},{'x': '3'},{'x': '4'},{'x': '5'}] as s WHERE NULL AND CAST(s.x as INT)",
+        expectedErrorCode = ErrorCode.EVALUATOR_CAST_FAILED,
         expectedErrorContext = propertyValueMapOf(1, 96, Property.CAST_TO to "INT", Property.CAST_FROM to "STRING"),
         expectedPermissiveModeResult = "<<>>"
     )
 
     @Test
     fun andWithMissingDoesNotShortCircuits() = runEvaluatorErrorTestCase(
-        "SELECT s.x FROM [{'x': '1.1'},{'x': '2'},{'x': '3'},{'x': '4'},{'x': '5'}] as s WHERE MISSING AND CAST(s.x as INT)",
-        ErrorCode.EVALUATOR_CAST_FAILED,
+        query = "SELECT s.x FROM [{'x': '1.1'},{'x': '2'},{'x': '3'},{'x': '4'},{'x': '5'}] as s WHERE MISSING AND CAST(s.x as INT)",
+        expectedErrorCode = ErrorCode.EVALUATOR_CAST_FAILED,
         expectedErrorContext = propertyValueMapOf(1, 99, Property.CAST_TO to "INT", Property.CAST_FROM to "STRING"),
         expectedPermissiveModeResult = "<<>>"
     )
@@ -591,24 +592,27 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     // ////////////////////////////////////////////////
 
     @Test
-    fun whereClauseExprEvalsToNull() = assertEvalExprValue(
-        "SELECT VALUE D.val from nullSample as D WHERE D.control",
-        "<<'A'>>",
-        nullSample
+    fun whereClauseExprEvalsToNull() = runEvaluatorTestCase(
+        query = "SELECT VALUE D.val from nullSample as D WHERE D.control",
+        expectedLegacyModeResult = "<<'A'>>",
+        session = nullSample,
+        expectedResultMode = ExpectedResultMode.PARTIQL
     )
 
     @Test
-    fun whereClauseExprEvalsToMissing() = assertEvalExprValue(
-        "SELECT VALUE D.val from missingSample as D WHERE D.control",
-        "<<'A'>>",
-        missingSample
+    fun whereClauseExprEvalsToMissing() = runEvaluatorTestCase(
+        query = "SELECT VALUE D.val from missingSample as D WHERE D.control",
+        expectedLegacyModeResult = "<<'A'>>",
+        session = missingSample,
+        expectedResultMode = ExpectedResultMode.PARTIQL
     )
 
     @Test
-    fun whereClauseExprEvalsToNullAndMissing() = assertEvalExprValue(
-        "SELECT VALUE D.val from missingAndNullSample as D WHERE D.control",
-        "<<'A'>>",
-        missingAndNullSample
+    fun whereClauseExprEvalsToNullAndMissing() = runEvaluatorTestCase(
+        query = "SELECT VALUE D.val from missingAndNullSample as D WHERE D.control",
+        expectedLegacyModeResult = "<<'A'>>",
+        session = missingAndNullSample,
+        expectedResultMode = ExpectedResultMode.PARTIQL
     )
 
     // ////////////////////////////////////////////////
@@ -691,19 +695,22 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     fun countEmpty() = runEvaluatorTestCase("SELECT count(*) from `[]`", "[{_1: 0}]")
 
     @Test
-    fun countEmptyTuple() = runEvaluatorTestCase("SELECT count(*) from `[{}]`", "[{_1: 1}]")
+    fun countEmptyTuple() =
+        runEvaluatorTestCase("SELECT count(*) from `[{}]`", "[{_1: 1}]")
 
     @Test
     fun sumEmpty() = runEvaluatorTestCase("SELECT sum(x.i) from `[]` as x", "[{_1: null}]")
 
     @Test
-    fun sumEmptyTuple() = runEvaluatorTestCase("SELECT sum(x.i) from `[{}]` as x", "[{_1: null}]")
+    fun sumEmptyTuple() =
+        runEvaluatorTestCase("SELECT sum(x.i) from `[{}]` as x", "[{_1: null}]")
 
     @Test
     fun avgEmpty() = runEvaluatorTestCase("SELECT avg(x.i) from `[]` as x", "[{_1: null}]")
 
     @Test
-    fun avgEmptyTuple() = runEvaluatorTestCase("SELECT avg(x.i) from `[{}]` as x", "[{_1: null}]")
+    fun avgEmptyTuple() =
+        runEvaluatorTestCase("SELECT avg(x.i) from `[{}]` as x", "[{_1: null}]")
 
     @Test
     fun avgSomeEmptyTuples() = runEvaluatorTestCase(
@@ -732,13 +739,15 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     fun minEmpty() = runEvaluatorTestCase("SELECT min(x.i) from `[]` as x", "[{_1: null}]")
 
     @Test
-    fun minEmptyTuple() = runEvaluatorTestCase("SELECT min(x.i) from `[{}]` as x", "[{_1: null}]")
+    fun minEmptyTuple() =
+        runEvaluatorTestCase("SELECT min(x.i) from `[{}]` as x", "[{_1: null}]")
 
     @Test
     fun maxEmpty() = runEvaluatorTestCase("SELECT max(x.i) from `[]` as x", "[{_1: null}]")
 
     @Test
-    fun maxEmptyTuple() = runEvaluatorTestCase("SELECT max(x.i) from `[{}]` as x", "[{_1: null}]")
+    fun maxEmptyTuple() =
+        runEvaluatorTestCase("SELECT max(x.i) from `[{}]` as x", "[{_1: null}]")
 
     @Test
     fun maxSomeEmptyTuple() = runEvaluatorTestCase(
@@ -771,5 +780,6 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     )
 
     @Test
-    fun countLiteral() = runEvaluatorTestCase("SELECT count(1) from `[{}, {}, {}, {}]` as x", "[{_1: 4}]")
+    fun countLiteral() =
+        runEvaluatorTestCase("SELECT count(1) from `[{}, {}, {}, {}]` as x", "[{_1: 4}]")
 }

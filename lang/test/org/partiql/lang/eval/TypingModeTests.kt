@@ -14,7 +14,7 @@ class TypingModeTests : EvaluatorTestBase() {
         typingMode(TypingMode.LEGACY)
     }
 
-    private val permissiveCompileOptions = CompileOptions.build {
+    private val permissiveCompileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit = {
         typingMode(TypingMode.PERMISSIVE)
     }
 
@@ -76,6 +76,11 @@ class TypingModeTests : EvaluatorTestBase() {
             )
         }
 
-        assertEvalExprValue(tc.sql, tc.expectedPermissiveModeResult, compileOptions = permissiveCompileOptions)
+        runEvaluatorTestCase(
+            tc.sql,
+            tc.expectedPermissiveModeResult,
+            compileOptionsBuilderBlock = permissiveCompileOptionsBuilderBlock,
+            expectedResultMode = ExpectedResultMode.PARTIQL
+        )
     }
 }
