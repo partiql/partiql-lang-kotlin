@@ -309,12 +309,12 @@ internal class Repl(
         }
     }
 
-    private fun parsePartiQLWithFilters(): ReplState = printString{ source ->
+    private fun parsePartiQLWithFilters(): ReplState = printString { source ->
         val ast = parser.parseAstStatement(source)
         astPrettyPrinter.prettyPrintAST(ast)
     }
 
-    private fun formatPartiQL(): ReplState = printString{ source ->
+    private fun formatPartiQL(): ReplState = printString { source ->
         queryFormatter.prettyPrintQuery(source)
     }
 
