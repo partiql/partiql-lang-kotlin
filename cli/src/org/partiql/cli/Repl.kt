@@ -14,8 +14,6 @@
 
 package org.partiql.cli
 
-import com.amazon.ion.system.IonTextWriterBuilder
-import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
@@ -27,6 +25,8 @@ import org.partiql.lang.eval.MapBindings
 import org.partiql.lang.eval.StructOrdering
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.delegate
+import org.partiql.lang.prettyprint.ASTPrettyPrinter
+import org.partiql.lang.prettyprint.QueryPrettyPrinter
 import org.partiql.lang.syntax.Parser
 import org.partiql.lang.util.ConfigurableExprValueFormatter
 import org.partiql.lang.util.ExprValueFormatter
@@ -61,6 +61,9 @@ private enum class ReplState {
 
     /** Ready to parse a PartiQL query and display AST with meta nodes filtered out. */
     PARSE_PARTIQL_WITH_FILTER,
+
+    /** Ready to format a PartiQL query. */
+    FORMAT_PARTIQL,
 
     /** Reading a REPL command. Transitions to execute when one of the execution tokens is found. */
     READ_REPL_COMMAND,
@@ -183,14 +186,8 @@ internal class Repl(
 
     private val bufferedReader = input.bufferedReader(Charsets.UTF_8)
     private val valuePrettyPrinter = ConfigurableExprValueFormatter.pretty
-    private val astPrettyPrinter = object : ExprValueFormatter {
-        val writer = IonTextWriterBuilder.pretty().build(outputWriter)
-
-        override fun formatTo(value: ExprValue, out: Appendable) {
-            value.ionValue.writeTo(writer)
-            writer.flush()
-        }
-    }
+    private val astPrettyPrinter = ASTPrettyPrinter()
+    private val queryFormatter = QueryPrettyPrinter()
 
     // Repl running state
     private val buffer = StringBuilder()
@@ -237,6 +234,37 @@ internal class Repl(
         return bufferedReader.readLine()?.trim()
     }
 
+    private fun printString(f: (String) -> (String)): ReplState {
+        try {
+            val source = buffer.toString().trim()
+            buffer.setLength(0)
+
+            val result = f(source)
+            if (result != null) {
+                outputWriter.write(BAR_1)
+                outputWriter.write("\n")
+
+                outputWriter.write(result)
+                outputWriter.write("\n")
+
+                outputWriter.write(BAR_2)
+                outputWriter.write("\n")
+            }
+            outputWriter.write("OK!")
+            outputWriter.write("\n")
+            outputWriter.flush()
+        } catch (e: Exception) {
+            e.printStackTrace(PrintWriter(outputWriter))
+            outputWriter.write("ERROR!")
+            outputWriter.write("\n")
+        }
+
+        return when (line) {
+            null -> ReplState.FINAL
+            else -> ReplState.READY
+        }
+    }
+
     private fun executeTemplate(formatter: ExprValueFormatter, f: (String) -> ExprValue?): ReplState {
         try {
             val source = buffer.toString().trim()
@@ -281,14 +309,13 @@ internal class Repl(
         }
     }
 
-    private fun parsePartiQLWithFilters(): ReplState = executeTemplate(astPrettyPrinter) { source ->
-        if (source != "") {
-            val astStatementSexp = parser.parseAstStatement(source).toIonElement()
-            val astStatmentIonValue = astStatementSexp.asAnyElement().toIonValue(valueFactory.ion)
-            valueFactory.newFromIonValue(astStatmentIonValue)
-        } else {
-            null
-        }
+    private fun parsePartiQLWithFilters(): ReplState = printString{ source ->
+        val ast = parser.parseAstStatement(source)
+        astPrettyPrinter.prettyPrintAST(ast)
+    }
+
+    private fun formatPartiQL(): ReplState = printString{ source ->
+        queryFormatter.prettyPrintQuery(source)
     }
 
     override fun run() {
@@ -305,7 +332,7 @@ internal class Repl(
                     line = readLine()
                     when {
                         line == null -> ReplState.FINAL
-                        arrayOf("!!", "").any { it == line } -> ReplState.EXECUTE_PARTIQL
+                        arrayOf("!!!", "!!", "").any { it == line } -> ReplState.EXECUTE_PARTIQL
                         line!!.startsWith("!") -> ReplState.READ_REPL_COMMAND
                         line!!.endsWith(";") -> ReplState.LAST_PARTIQL_LINE
                         else -> ReplState.READ_PARTIQL
@@ -320,6 +347,7 @@ internal class Repl(
                         line == "" -> ReplState.EXECUTE_PARTIQL
                         line!!.endsWith(";") -> ReplState.LAST_PARTIQL_LINE
                         line == "!!" -> ReplState.PARSE_PARTIQL_WITH_FILTER
+                        line == "!!!" -> ReplState.FORMAT_PARTIQL
                         else -> ReplState.READ_PARTIQL
                     }
                 }
@@ -341,6 +369,7 @@ internal class Repl(
 
                 ReplState.EXECUTE_PARTIQL -> executePartiQL()
                 ReplState.PARSE_PARTIQL_WITH_FILTER -> parsePartiQLWithFilters()
+                ReplState.FORMAT_PARTIQL -> formatPartiQL()
                 ReplState.EXECUTE_REPL_COMMAND -> executeReplCommand()
 
                 // shouldn't really happen
