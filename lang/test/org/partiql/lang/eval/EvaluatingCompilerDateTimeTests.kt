@@ -24,7 +24,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(ArgumentsForDateLiterals::class)
     fun testDate(tc: EvaluatorTestCase) {
-        val originalExprValue = eval(tc.query)
+        val originalExprValue = eval(tc.query) // compute expected ExprValue
         assertEquals(originalExprValue.toString(), tc.expectedResult)
         if (originalExprValue.type == ExprValueType.DATE) {
             val (year, month, day) = tc.expectedResult.split("-")
@@ -64,7 +64,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(ArgumentsForTimeLiterals::class)
     fun testTime(tc: TimeTestCase) {
-        val originalExprValue = eval(source = tc.query, compileOptions = tc.compileOptions)
+        val originalExprValue = eval(source = tc.query, compileOptions = tc.compileOptions) // compute expected ExprValue
         assertEquals(tc.expected, originalExprValue.toString())
         if (originalExprValue.type == ExprValueType.TIME) {
             val timeIonValue = originalExprValue.ionValue
@@ -214,7 +214,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         (RANDOM_TIMES + RANDOM_TIMES_WITH_TIMEZONE).map {
             val query = "TIME '$it'"
             val expected = it.expectedTimeString(withTimeZone = false)
-            val actual = eval(query)
+            val actual = eval(query) // call runEvaluatorTestCase instead
             assertEquals("Query $query failed.", expected, actual.toString())
         }
     }
@@ -224,7 +224,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         (RANDOM_TIMES_WITH_PRECISION + RANDOM_TIMES_WITH_PRECISION_AND_TIMEZONE).map {
             val query = "TIME (${it.precision}) '$it'"
             val expected = it.expectedTimeString(withTimeZone = false)
-            val actual = eval(query)
+            val actual = eval(query) // call runEvaluatorTestCase instead
             assertEquals(expected, actual.toString())
         }
     }
@@ -234,7 +234,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         (RANDOM_TIMES + RANDOM_TIMES_WITH_TIMEZONE).map {
             val query = "TIME WITH TIME ZONE '$it'"
             val expected = it.expectedTimeString(withTimeZone = true)
-            val actual = eval(query)
+            val actual = eval(query) // call runEvaluatorTestCase instead
             assertEquals(expected, actual.toString())
         }
     }
@@ -244,7 +244,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         (RANDOM_TIMES_WITH_PRECISION + RANDOM_TIMES_WITH_PRECISION_AND_TIMEZONE).map {
             val query = "TIME (${it.precision}) WITH TIME ZONE '$it'"
             val expected = it.expectedTimeString(withTimeZone = true)
-            val actual = eval(query)
+            val actual = eval(query) // call runEvaluatorTestCase instead
             assertEquals(expected, actual.toString())
         }
     }
@@ -260,7 +260,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
                     excludeLegacySerializerAssertions = true
                 )
             else -> {
-                val originalExprValue = eval(tc.query)
+                val originalExprValue = eval(tc.query)  // call runEvaluatorTestCase instead
                 assertEquals(tc.expected, originalExprValue.toString())
             }
         }

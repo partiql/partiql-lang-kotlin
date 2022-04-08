@@ -22,7 +22,7 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
     @ArgumentsSource(ExtractPassCases::class)
     fun runPassTests(testCase: ExprFunctionTestCase) = runEvaluatorTestCase(
         query = testCase.source,
-        expectedLegacyModeResult = testCase.expected,
+        expectedLegacyModeResult = testCase.expectedLegacyModeResult,
         session = testCase.session,
         excludeLegacySerializerAssertions = true
     )
@@ -45,7 +45,7 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("extract(second FROM missing)", "null"),
             ExprFunctionTestCase("extract(timezone_hour FROM missing)", "null"),
             ExprFunctionTestCase("extract(timezone_minute FROM missing)", "null"),
-            ExprFunctionTestCase("extract(second FROM a)", "55.", mapOf("a" to "2017-01-10T05:30:55Z").toSession()),
+            ExprFunctionTestCase("extract(second FROM a)", "55.", session = mapOf("a" to "2017-01-10T05:30:55Z").toSession()),
             // just year
             ExprFunctionTestCase("extract(year FROM `2017T`)", "2017."),
             ExprFunctionTestCase("extract(month FROM `2017T`)", "1."),

@@ -15,7 +15,7 @@ class TrimEvaluationTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(CharLengthPassCases::class)
     fun runPassTests(testCase: ExprFunctionTestCase) =
-        runEvaluatorTestCase(testCase.source, testCase.expected)
+        runEvaluatorTestCase(testCase.source, testCase.expectedLegacyModeResult)
 
     class CharLengthPassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(

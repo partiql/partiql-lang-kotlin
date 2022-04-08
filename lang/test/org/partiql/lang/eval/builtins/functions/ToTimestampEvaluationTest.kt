@@ -20,7 +20,7 @@ class ToTimestampEvaluationTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(ToTimestampPassCases::class)
     fun runPassTests(testCase: ExprFunctionTestCase) =
-        runEvaluatorTestCase(testCase.source, testCase.expected)
+        runEvaluatorTestCase(testCase.source, testCase.expectedLegacyModeResult)
 
     class ToTimestampPassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(

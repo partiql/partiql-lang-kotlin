@@ -4,22 +4,16 @@ import junitparams.JUnitParamsRunner
 import junitparams.Parameters
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.partiql.lang.SqlException
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 
 /** Integration tests showing the how [TypingMode.LEGACY] differs from [TypingMode.PERMISSIVE]. */
 @RunWith(JUnitParamsRunner::class)
 class TypingModeTests : EvaluatorTestBase() {
-    private val legacyCompileOptions = CompileOptions.build {
-        typingMode(TypingMode.LEGACY)
-    }
-
-    private val permissiveCompileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit = {
-        typingMode(TypingMode.PERMISSIVE)
-    }
 
     data class ExpectedError(
-        val errorCode: ErrorCode?,
+        val errorCode: ErrorCode,
         val lineNum: Int,
         val charOffset: Int
     )
@@ -59,28 +53,25 @@ class TypingModeTests : EvaluatorTestBase() {
     @Test
     @Parameters
     fun typingModeTests(tc: TestCase) {
-        try {
-            eval(tc.sql, compileOptions = legacyCompileOptions).ionValue
-            fail("Expected EvaluationException but none was thrown")
-        } catch (ex: EvaluationException) {
-            assertEquals("error code", tc.expectedLegacyError.errorCode, ex.errorCode)
-            assertEquals(
-                "line number",
-                tc.expectedLegacyError.lineNum.toLong(),
-                ex.errorContext?.get(Property.LINE_NUMBER)?.longValue()
-            )
-            assertEquals(
-                "column number",
-                tc.expectedLegacyError.charOffset.toLong(),
-                ex.errorContext?.get(Property.COLUMN_NUMBER)?.longValue()
-            )
-        }
-
-        runEvaluatorTestCase(
-            tc.sql,
-            tc.expectedPermissiveModeResult,
-            compileOptionsBuilderBlock = permissiveCompileOptionsBuilderBlock,
-            expectedResultMode = ExpectedResultMode.PARTIQL
+        runEvaluatorErrorTestCase(
+            query = tc.sql,
+            expectedErrorCode = tc.expectedLegacyError.errorCode,
+            expectedPermissiveModeResult = tc.expectedPermissiveModeResult,
+            addtionalExceptionAssertBlock = { ex: SqlException ->
+                // Have to use the addtionalExceptionAssertBlock instead of error context for this
+                // because there are a few cases with error context values other than line & column that we don't
+                // account for in [TestCase].
+                assertEquals(
+                    "line number",
+                    tc.expectedLegacyError.lineNum.toLong(),
+                    ex.errorContext?.get(Property.LINE_NUMBER)?.longValue()
+                )
+                assertEquals(
+                    "column number",
+                    tc.expectedLegacyError.charOffset.toLong(),
+                    ex.errorContext?.get(Property.COLUMN_NUMBER)?.longValue()
+                )
+            }
         )
     }
 }

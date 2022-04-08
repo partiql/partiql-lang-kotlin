@@ -118,32 +118,29 @@ class LikePredicateTest : EvaluatorTestBase() {
         )
 
         // Run the test with the given parameters
-        fun runTest(whereClause: String, softly: SoftAssertions, vararg types: Param) {
+        fun runTest(whereClause: String, vararg types: Param) {
             val input = """[{num: 1, str: "string", esc: "\\"}]"""
             val session = mapOf("Object" to input).toSession()
             val query = "Select * From Object a Where " + whereClause
 
-            softly.assertThatCode {
-                when (types.map { it.type }.minByOrNull { it.precedence }) {
-                    NULL -> runEvaluatorTestCase(query, "[]", session)
-                    INT -> {
-                        val ex = assertFailsWith<SqlException>(message = query) {
-                            eval(query, session = session).toList()
-                        }
-                        assertEquals(query, ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS, ex.errorCode)
-                    }
-                    STR -> runEvaluatorTestCase(query, input, session)
+            when (types.map { it.type }.minByOrNull { it.precedence }) {
+                NULL -> runEvaluatorTestCase(query, "[]", session)
+                STR -> runEvaluatorTestCase(query, input, session)
+                INT -> {
+                    runEvaluatorErrorTestCase(
+                        query = query,
+                        session = session,
+                        expectedErrorCode = ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
+                    )
                 }
-            }.`as`(query).doesNotThrowAnyException()
+            }
         }
 
-        softAssert {
-            // Try each combination of types as input to the test
-            for (value in types) for (pattern in types) {
-                runTest("${value.param} LIKE ${pattern.param}", this, value, pattern)
-                for (escape in types) {
-                    runTest("${value.param} LIKE ${pattern.param} ESCAPE ${escape.escParam}", this, value, pattern, escape)
-                }
+        // Try each combination of types as input to the test
+        for (value in types) for (pattern in types) {
+            runTest("${value.param} LIKE ${pattern.param}", value, pattern)
+            for (escape in types) {
+                runTest("${value.param} LIKE ${pattern.param} ESCAPE ${escape.escParam}", value, pattern, escape)
             }
         }
     }

@@ -138,7 +138,7 @@ abstract class EvaluatorTestBase : TestBase() {
         session: EvaluationSession,
         message: String
     ) {
-        val msg = message.let { "($it)" }
+        val assertionMessage = message.let { "($it)" }
 
         fun showTestCase() {
             println(listOfNotNull(message, tc.groupName).joinToString(" : "))
@@ -149,7 +149,7 @@ abstract class EvaluatorTestBase : TestBase() {
 
         val compileOptions = CompileOptions.build { tc.compileOptionsBuilderBlock(this) }
 
-        val actual = try {
+        val actualResult = try {
             eval(
                 source = tc.query,
                 compilerPipelineBuilderBlock = tc.compilerPipelineBuilderBlock,
@@ -159,7 +159,7 @@ abstract class EvaluatorTestBase : TestBase() {
         } catch (e: Throwable) {
             showTestCase()
             e.printStackTrace()
-            fail("Exception while attempting to evaluate the under test, see standard output $msg")
+            fail("Exception while attempting to evaluate the under test, see standard output $assertionMessage")
             throw e
         }
 
@@ -170,12 +170,18 @@ abstract class EvaluatorTestBase : TestBase() {
             }
 
         when (tc.expectedResultMode) {
-            ExpectedResultMode.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS -> {
+            ExpectedResultMode.ION, ExpectedResultMode.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS -> {
+                val expectedIonResult = ION.singleValue(expectedResult)
+                val actualIonResult = actualResult.ionValue.let {
+                    if(tc.expectedResultMode == ExpectedResultMode.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS)
+                        it.cloneAndRemoveBagAndMissingAnnotations()
+                    else
+                        it
+                }
                 assertEquals(
-                    ION.singleValue(expectedResult),
-                    actual.ionValue.cloneAndRemoveBagAndMissingAnnotations(),
-                    "$message: ${compileOptions.typedOpBehavior} CAST in ${compileOptions.typingMode} typing mode, " +
-                        "evaluated '${tc.query}' with evaluator"
+                    expectedIonResult,
+                    actualIonResult,
+                    assertionMessage
                 )
             }
             ExpectedResultMode.PARTIQL -> {
@@ -189,23 +195,24 @@ abstract class EvaluatorTestBase : TestBase() {
                 } catch (e: Throwable) {
                     showTestCase()
                     e.printStackTrace()
-                    fail("Exception while attempting to evaluate the expected value, see standard output $msg")
+                    fail("Exception while attempting to evaluate the expected value, see standard output $assertionMessage")
                     throw e
                 }
-                if (!expected.exprEquals(actual)) {
+                if (!expected.exprEquals(actualResult)) {
                     showTestCase()
                     println("Expected : $expected")
-                    println("Actual   : $actual")
+                    println("Actual   : $actualResult")
 
-                    fail("Expected and actual ExprValue instances are not equivalent $msg")
+                    fail("Expected and actual ExprValue instances are not equivalent $assertionMessage")
                 }
+                Unit
             }
-        }
+        }.let {}
 
-        tc.extraResultAssertions(actual)
+        tc.extraResultAssertions(actualResult)
     }
 
-    protected fun assertExprEquals(expected: ExprValue, actual: ExprValue, message: String) {
+    private fun assertExprEquals(expected: ExprValue, actual: ExprValue, message: String) {
         // exprEquals consider NULL and MISSING to be equivalent so we also check types here
         val isActuallyEquivalent = expected.type == actual.type && expected.exprEquals(actual)
 
@@ -229,31 +236,13 @@ abstract class EvaluatorTestBase : TestBase() {
         session: EvaluationSession = EvaluationSession.standard(),
         compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }
     ): ExprValue {
-        val p = SqlParser(ion, CUSTOM_TEST_TYPES)
-        val ast = p.parseAstStatement(source)
-        return eval(ast, compileOptions, session, compilerPipelineBuilderBlock)
-    }
-
-    /**
-     * Evaluates an [PartiqlAst.Statement] given a [EvaluationSession]
-     *
-     * @param astStatement The [PartiqlAst.Statement] instance to be evaluated.
-     * @param session [EvaluationSession] used for evaluation
-     * @param compilerPipelineBuilderBlock any additional configuration to the pipeline after the options are set.
-     */
-    protected fun eval(
-        astStatement: PartiqlAst.Statement,
-        compileOptions: CompileOptions = CompileOptions.standard(),
-        session: EvaluationSession = EvaluationSession.standard(),
-        compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }
-    ): ExprValue {
         val pipeline = CompilerPipeline.builder(ion).apply {
             customDataTypes(CUSTOM_TEST_TYPES)
             compileOptions(compileOptions)
             compilerPipelineBuilderBlock()
         }
 
-        return pipeline.build().compile(astStatement).eval(session)
+        return pipeline.build().compile(source).eval(session)
     }
 
     private fun commonAssertions(query: String, excludeLegacySerializerAssertions: Boolean) {
@@ -388,14 +377,7 @@ abstract class EvaluatorTestBase : TestBase() {
         )
         when (tc.expectedErrorCode.errorBehaviorInPermissiveMode) {
             ErrorBehaviorInPermissiveMode.THROW_EXCEPTION -> {
-                // Reaching this point means: that the exception thrown in legacy mode indicates
-                // that an exception should also be thrown in permissive mode (unlike other exceptions
-                // which cause an expression's value to be changed to MISSING).
-
-                // In that case, we are going to re-run the test in permissive mode to ensure the same exception
-                // is thrown and verify that the expected permissive mode result is correct.
-
-                // But first, we check to ensure that the test case itself is valid.
+                // The expected error code indicates that this error should also throw in permissive mode.
                 assertNull(
                     "An expectedPermissiveModeResult must not be specified when " +
                         "ErrorCode.errorBehaviorInPermissiveMode is set to " +
@@ -414,8 +396,9 @@ abstract class EvaluatorTestBase : TestBase() {
                     session
                 )
             }
-            // Return MISSING
             ErrorBehaviorInPermissiveMode.RETURN_MISSING -> {
+                // The expected error code indicates that this error should continue, but the expression should
+                // return missing.
                 assertNotNull(
                     "Required non null expectedPermissiveModeResult when ErrorCode.errorBehaviorInPermissiveMode is " +
                         "set to ErrorBehaviorInPermissiveMode.RETURN_MISSING",
@@ -459,12 +442,8 @@ abstract class EvaluatorTestBase : TestBase() {
         session: EvaluationSession = EvaluationSession.standard(),
         compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }
     ): ExprValue {
-
-        val p = SqlParser(ion, CUSTOM_TEST_TYPES)
-
-        val ast = p.parseAstStatement(source)
         return eval(
-            ast,
+            source,
             CompileOptions.builder(compileOptions).typingMode(TypingMode.PERMISSIVE).build(),
             session,
             compilerPipelineBuilderBlock

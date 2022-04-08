@@ -16,7 +16,12 @@ class DateDiffEvaluationTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(DateDiffPassCases::class)
     fun runPassTests(testCase: ExprFunctionTestCase) =
-        runEvaluatorTestCase(testCase.source, testCase.expected, testCase.session)
+        runEvaluatorTestCase(
+            query = testCase.source,
+            expectedLegacyModeResult = testCase.expectedLegacyModeResult,
+            expectedPermissiveModeResult = testCase.expectedPermissiveModeResult,
+            session = testCase.session
+        )
 
     class DateDiffPassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
@@ -27,7 +32,7 @@ class DateDiffEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase(
                 "date_diff(year, a, b)",
                 "1",
-                mapOf("a" to "2016-01-10T05:30:55Z", "b" to "2017-01-10T05:30:55Z").toSession()
+                session = mapOf("a" to "2016-01-10T05:30:55Z", "b" to "2017-01-10T05:30:55Z").toSession()
             ),
 
             // same dates

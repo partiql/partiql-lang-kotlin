@@ -36,6 +36,10 @@ data class EvaluatorErrorTestCase(
 
     /**
      * Expected result in the permissive mode. Default value is null.
+     *
+     * Since the expression with the error isn't always the top-most in the test case's query, value returned by the
+     * query may not be `MISSING`, but rather it might be a container with `MISSING` somewhere in it.  Thus, we cannot
+     * always assume the result will be `MISSING`.
      */
     val expectedPermissiveModeResult: String? = null,
 

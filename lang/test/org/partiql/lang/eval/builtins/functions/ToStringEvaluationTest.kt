@@ -20,7 +20,7 @@ class ToStringEvaluationTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(ToStringPassCases::class)
     fun runPassTests(testCase: ExprFunctionTestCase) =
-        runEvaluatorTestCase(testCase.source, testCase.expected)
+        runEvaluatorTestCase(testCase.source, testCase.expectedLegacyModeResult)
 
     class ToStringPassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(

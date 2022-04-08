@@ -5,6 +5,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluatorTestBase
+import org.partiql.lang.eval.ExpectedResultMode
 import org.partiql.lang.eval.builtins.Argument
 import org.partiql.lang.eval.builtins.ExprFunctionTestCase
 import org.partiql.lang.eval.builtins.checkInvalidArgType
@@ -16,30 +17,24 @@ import org.partiql.lang.util.propertyValueMapOf
 class MakeTimeEvaluationTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(MakeTimePassCases::class)
-    fun runPassTests(testCase: ExprFunctionTestCase) = assertEquals(eval(testCase.source).toString(), testCase.expected)
+    fun runPassTests(testCase: ExprFunctionTestCase) =
+        runEvaluatorTestCase(
+            query = testCase.source,
+            expectedLegacyModeResult = testCase.expectedLegacyModeResult,
+            expectedPermissiveModeResult = testCase.expectedPermissiveModeResult,
+            expectedResultMode = ExpectedResultMode.ION
+        )
 
     class MakeTimePassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
-            ExprFunctionTestCase("make_time(0, 0, 0.)", "00:00:00"),
-            ExprFunctionTestCase("make_time(0, 0, 0., 0)", "00:00:00+00:00"),
-            ExprFunctionTestCase("make_time(23, 12, 59.12345)", "23:12:59.12345"),
-            ExprFunctionTestCase("make_time(23, 12, 59.12345, 800)", "23:12:59.12345+13:20"),
-            ExprFunctionTestCase("make_time(23, 59, 59.999999999)", "23:59:59.999999999"),
-            ExprFunctionTestCase("make_time(23, 12, 59.12345, -800)", "23:12:59.12345-13:20"),
-            ExprFunctionTestCase("make_time(23, 59, 59.999999999, -1080)", "23:59:59.999999999-18:00"),
-            ExprFunctionTestCase("make_time(23, 59, 59.999999999, 1080)", "23:59:59.999999999+18:00"),
-            ExprFunctionTestCase("make_time(`23`, `12`, `59.12345`, `800`)", "23:12:59.12345+13:20"),
-            ExprFunctionTestCase("make_time(null, 59, 59.999999999)", "NULL"),
-            ExprFunctionTestCase("make_time(23, null, 59.999999999)", "NULL"),
-            ExprFunctionTestCase("make_time(23, 59, null)", "NULL"),
-            ExprFunctionTestCase("make_time(null, 59, 59.999999999, 1080)", "NULL"),
-            ExprFunctionTestCase("make_time(23, null, 59.999999999, 1080)", "NULL"),
-            ExprFunctionTestCase("make_time(23, 59, null, 1080)", "NULL"),
-            ExprFunctionTestCase("make_time(23, 59, 59.999999999, null)", "NULL"),
-            ExprFunctionTestCase("make_time(missing, 59,59.999999999, 1080)", "NULL"),
-            ExprFunctionTestCase("make_time(23, 59, missing, 1080)", "NULL"),
-            ExprFunctionTestCase("make_time(23, 59, 59.999999999, missing)", "NULL"),
-            ExprFunctionTestCase("make_time(23, 59, missing, null)", "NULL")
+            ExprFunctionTestCase("make_time(0, 0, 0.)", "\$partiql_time::{hour:0,minute:0,second:0.,timezone_hour:null.int,timezone_minute:null.int}"),
+            ExprFunctionTestCase("make_time(0, 0, 0., 0)", "\$partiql_time::{hour:0,minute:0,second:0.,timezone_hour:0,timezone_minute:0}"),
+            ExprFunctionTestCase("make_time(23, 12, 59.12345)", "\$partiql_time::{hour:23,minute:12,second:59.12345,timezone_hour:null.int,timezone_minute:null.int}"),
+            ExprFunctionTestCase("make_time(23, 12, 59.12345, 800)", "\$partiql_time::{hour:23,minute:12,second:59.12345,timezone_hour:13,timezone_minute:20}"),
+            ExprFunctionTestCase("make_time(23, 59, 59.999999999)", "\$partiql_time::{hour:23,minute:59,second:59.999999999,timezone_hour:null.int,timezone_minute:null.int}"),
+            ExprFunctionTestCase("make_time(23, 12, 59.12345, -800)", "\$partiql_time::{hour:23,minute:12,second:59.12345,timezone_hour:-13,timezone_minute:-20}"),
+            ExprFunctionTestCase("make_time(23, 59, 59.999999999, -1080)", "\$partiql_time::{hour:23,minute:59,second:59.999999999,timezone_hour:-18,timezone_minute:0}"),
+            ExprFunctionTestCase("make_time(23, 59, 59.999999999, 1080)", "\$partiql_time::{hour:23,minute:59,second:59.999999999,timezone_hour:18,timezone_minute:0}"),
         )
     }
 

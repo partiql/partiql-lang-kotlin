@@ -15,7 +15,7 @@ class ConcatEvaluationTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(ConcatPassCases::class)
     fun runPassTests(testCase: ExprFunctionTestCase) =
-        runEvaluatorTestCase(testCase.source, testCase.expected)
+        runEvaluatorTestCase(testCase.source, testCase.expectedLegacyModeResult)
 
     class ConcatPassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(

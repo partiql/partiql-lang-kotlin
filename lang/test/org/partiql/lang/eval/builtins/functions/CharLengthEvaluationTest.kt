@@ -16,7 +16,7 @@ class CharLengthEvaluationTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(PassCases::class)
     fun charLengthPassTests(testCase: ExprFunctionTestCase) =
-        runEvaluatorTestCase(testCase.source, testCase.expected)
+        runEvaluatorTestCase(testCase.source, testCase.expectedLegacyModeResult)
 
     class PassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(

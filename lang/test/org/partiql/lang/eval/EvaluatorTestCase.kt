@@ -29,6 +29,14 @@ import org.partiql.lang.CompilerPipeline
  */
 enum class ExpectedResultMode {
     /**
+     * The expected value is expressed in Ion and Ion's equivalence is used to assert the correct option.  This is the
+     * strictest (and preferred) option when the result isn't a bag because it doesn't support PartiQL's BAG semantics,
+     * thus, a query might have the correct result but in a different order the expected value, this would cause a
+     * false negative.
+     */
+    ION,
+
+    /**
      * The expected value is expressed in Ion but does not contain the `$partiql_bag` or `$partiql_missing` annotations.
      * Otherwise, standard Ion equivalence is used to assert the expected result matches.
      *
@@ -84,6 +92,14 @@ data class EvaluatorTestCase(
      * @see [ExpectedResultMode]
      */
     val expectedResultMode: ExpectedResultMode = ExpectedResultMode.PARTIQL,
+
+    /**
+     * The query's expected result when executed in permissive mode.  Defaults to [expectedResult].
+     *
+     * Some semantics of permissive mode have changed--namely, in permissive mode, MISSING propagates as NULL.
+     *
+     * Thus, even positive test cases may have a different result.
+     */
     val expectedPermissiveModeResult: String = expectedResult,
     val excludeLegacySerializerAssertions: Boolean = false,
     val extraResultAssertions: (ExprValue) -> Unit = { }

@@ -28,7 +28,6 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
     private val nullExprs = listOf(
         // reminder, annotations don't affect order
         "null",
-        "missing",
         "`a::null`",
         "`null.int`",
         "`null.struct`"
@@ -296,7 +295,7 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
     private fun List<List<String>>.eval() = map {
         it.map {
             try {
-                eval(it, compileOptions = CompileOptions.standard())
+                eval(it, compileOptions = CompileOptions.standard()) // computes expected ExprValue
             } catch (e: Exception) {
                 throw SqlException("Could not evaluate $it", errorCode = ErrorCode.EVALUATOR_SQL_EXCEPTION, cause = e)
             }
@@ -398,7 +397,12 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
     fun nonNullEqualityTests(equivalentPair: Pair<String, String>) {
         val (left, right) = equivalentPair
 
-        assertExprEquals(valueFactory.newBoolean(true), eval("$left = $right"), "epected `true`")
+        runEvaluatorTestCase(
+            query = "$left = $right",
+            expectedLegacyModeResult = "true",
+            expectedResultMode = ExpectedResultMode.ION,
+            excludeLegacySerializerAssertions = true
+        )
     }
 
     // null to non null pairs
@@ -419,6 +423,14 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
     fun nullEqualityTests(equivalentPair: Pair<String, String>) {
         val (left, right) = equivalentPair
 
-        assertExprEquals(valueFactory.nullValue, eval("$left = $right"), "epected `null`")
+        runEvaluatorTestCase(
+            query = "$left = $right",
+            expectedLegacyModeResult = if(left == "missing" || right == "missing")
+                "\$partiql_missing::null"
+            else
+                "null",
+            expectedResultMode = ExpectedResultMode.ION,
+            excludeLegacySerializerAssertions = true
+        )
     }
 }

@@ -1457,7 +1457,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
             }.map { case ->
                 // translate all of our CAST cases into the identity cast to ANY
                 val castCase = case.castCase
-                val identityValue = eval(castCase.source)
+                val identityValue = eval(castCase.source) // compute expected ExprValue
                 val newCastCase = castCase.copy(
                     type = "ANY",
                     // have to convert the identity value to an Ion string. .toString() is supposed to be

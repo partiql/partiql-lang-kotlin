@@ -18,7 +18,7 @@ class DateAddEvaluationTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(DateAddPassCases::class)
     fun runPassTests(testCase: ExprFunctionTestCase) =
-        runEvaluatorTestCase(testCase.source, testCase.expected, testCase.session)
+        runEvaluatorTestCase(testCase.source, testCase.expectedLegacyModeResult, testCase.session)
 
     class DateAddPassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
@@ -30,7 +30,7 @@ class DateAddEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase(
                 "date_add(second, a, b)",
                 "2017-01-10T05:30:56Z",
-                mapOf("a" to "1", "b" to "2017-01-10T05:30:55Z").toSession()
+                session = mapOf("a" to "1", "b" to "2017-01-10T05:30:55Z").toSession()
             ),
 
             // add 1 at different precision levels
