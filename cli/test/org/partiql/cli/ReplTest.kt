@@ -245,6 +245,8 @@ class ReplTest {
         )
     }
 
+    // TODO: add query formatter test
+
     @Test
     fun addToGlobalEnvAndQuery() {
         ReplTester().assertReplPrompt(
