@@ -19,13 +19,15 @@ package org.partiql.lang.eval
 
 import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
+import org.partiql.lang.CUSTOM_TEST_TYPES
 import org.partiql.lang.CompilerPipeline
+import org.partiql.lang.ION
 import org.partiql.lang.SqlException
 import org.partiql.lang.TestBase
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.PropertyValueMap
-import org.partiql.lang.eval.test.AstEvaluatorTestAdapater
-import org.partiql.lang.eval.test.EvaluatorTestAdapater
+import org.partiql.lang.eval.test.AstEvaluatorTestAdapter
+import org.partiql.lang.eval.test.EvaluatorTestAdapter
 import org.partiql.lang.util.asSequence
 import org.partiql.lang.util.newFromIonText
 
@@ -40,7 +42,7 @@ import org.partiql.lang.util.newFromIonText
  * As we parameterize PartiQL's other tests, we should migrate them away from using this base class as well.
  */
 abstract class EvaluatorTestBase : TestBase() {
-    private val testHarness: EvaluatorTestAdapater = AstEvaluatorTestAdapater()
+    private val testHarness: EvaluatorTestAdapter = AstEvaluatorTestAdapter()
 
     protected fun Map<String, String>.toSession() = EvaluationSession.build {
         globals(Bindings.ofMap(this@toSession.mapValues { valueFactory.newFromIonText(it.value) }))
@@ -63,21 +65,21 @@ abstract class EvaluatorTestBase : TestBase() {
         excludeLegacySerializerAssertions: Boolean = false,
         compileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit = { },
         compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { },
-        expectedResultMode: ExpectedResultMode = ExpectedResultMode.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS,
+        expectedResultFormat: ExpectedResultFormat = ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS,
         expectedPermissiveModeResult: String = expectedLegacyModeResult,
         includePermissiveModeTest: Boolean = true,
-        block: (ExprValue) -> Unit = { }
+        extraResultAssertions: (ExprValue) -> Unit = { }
     ) {
         val tc = EvaluatorTestCase(
             query = query,
             expectedResult = expectedLegacyModeResult,
             expectedPermissiveModeResult = expectedPermissiveModeResult,
-            expectedResultMode = expectedResultMode,
+            expectedResultMode = expectedResultFormat,
             excludeLegacySerializerAssertions = excludeLegacySerializerAssertions,
             compileOptionsBuilderBlock = compileOptionsBuilderBlock,
             compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,
             implicitPermissiveModeTest = includePermissiveModeTest,
-            extraResultAssertions = block
+            extraResultAssertions = extraResultAssertions
         )
         testHarness.runEvaluatorTestCase(tc, session)
     }
@@ -87,10 +89,13 @@ abstract class EvaluatorTestBase : TestBase() {
      *
      * @see [EvaluatorTestCase].
      */
-    protected fun runEvaluatorTestCase(tc: EvaluatorTestCase, session: EvaluationSession) =
+    protected fun runEvaluatorTestCase(
+        tc: EvaluatorTestCase,
+        session: EvaluationSession = EvaluationSession.standard()
+    ) =
         testHarness.runEvaluatorTestCase(tc, session)
 
-    /** @see [AstEvaluatorTestAdapater.runEvaluatorErrorTestCase]. */
+    /** @see [AstEvaluatorTestAdapter.runEvaluatorErrorTestCase]. */
     protected fun runEvaluatorErrorTestCase(
         query: String,
         expectedErrorCode: ErrorCode,
@@ -120,18 +125,35 @@ abstract class EvaluatorTestBase : TestBase() {
         testHarness.runEvaluatorErrorTestCase(tc, session)
     }
 
-    /** @see [AstEvaluatorTestAdapater.runEvaluatorTestCase] */
+    /** @see [AstEvaluatorTestAdapter.runEvaluatorTestCase] */
     fun runEvaluatorErrorTestCase(tc: EvaluatorErrorTestCase, session: EvaluationSession) =
         testHarness.runEvaluatorErrorTestCase(tc, session)
 
-    /** @see [AstEvaluatorTestAdapater.eval] */
+    /**
+     * Uses the AST compiler to evaluate some code.
+     *
+     * In general, this function this should be avoided.  It is currently only used to calculate
+     * some expected values in [CastTestBase] and [NaturalExprValueComparatorsTest].  TODO: refactor these locations
+     * to avoid calling this function.
+     *
+     * @param source query source to be evaluated
+     * @param session [EvaluationSession] used for evaluation
+     * @param compilerPipelineBuilderBlock any additional configuration to the pipeline after the options are set.
+     */
     fun eval(
         source: String,
         compileOptions: CompileOptions = CompileOptions.standard(),
         session: EvaluationSession = EvaluationSession.standard(),
         compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }
-    ): ExprValue =
-        testHarness.eval(source, compileOptions, session, compilerPipelineBuilderBlock)
+    ): ExprValue {
+        val pipeline = CompilerPipeline.builder(ION).apply {
+            customDataTypes(CUSTOM_TEST_TYPES)
+            compileOptions(compileOptions)
+            compilerPipelineBuilderBlock()
+        }
+
+        return pipeline.build().compile(source).eval(session)
+    }
 }
 
 internal fun IonValue.removeBagAndMissingAnnotations() {

@@ -37,7 +37,7 @@ class CoalesceEvaluationTest : EvaluatorTestBase() {
             "coalesce(${tc.args.joinToString(",")})",
             expectedLegacyModeResult = tc.expectedLegacyResult,
             expectedPermissiveModeResult = tc.expectedPermissiveResult,
-            expectedResultMode = ExpectedResultMode.PARTIQL
+            expectedResultFormat = ExpectedResultFormat.PARTIQL
         )
 
     companion object {

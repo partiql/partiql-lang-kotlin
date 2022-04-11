@@ -57,14 +57,14 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
         runEvaluatorTestCase(
             query = "\"abc\"",
             expectedLegacyModeResult = "MISSING",
-            expectedResultMode = ExpectedResultMode.PARTIQL,
+            expectedResultFormat = ExpectedResultFormat.PARTIQL,
             compileOptionsBuilderBlock = { undefinedVariableMissingCompileOptionBlock() },
             session = simpleSession,
         )
         runEvaluatorTestCase(
             "\"ABC\"",
             expectedLegacyModeResult = "MISSING",
-            expectedResultMode = ExpectedResultMode.PARTIQL,
+            expectedResultFormat = ExpectedResultFormat.PARTIQL,
             compileOptionsBuilderBlock = { undefinedVariableMissingCompileOptionBlock() },
             session = simpleSession,
         )

@@ -1,7 +1,6 @@
 package org.partiql.lang.eval
 
 import com.amazon.ion.IonStruct
-import com.amazon.ion.IonTimestamp
 import org.junit.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
@@ -21,30 +20,12 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
 
     private val randomTestsSize = 50000
 
-    @ParameterizedTest
-    @ArgumentsSource(ArgumentsForDateLiterals::class)
-    fun testDate(tc: EvaluatorTestCase) {
-        val originalExprValue = eval(tc.query) // compute expected ExprValue
-        assertEquals(originalExprValue.toString(), tc.expectedResult)
-        if (originalExprValue.type == ExprValueType.DATE) {
-            val (year, month, day) = tc.expectedResult.split("-")
-            val dateIonValue = originalExprValue.ionValue
-            dateIonValue as IonTimestamp
-            val timestamp = dateIonValue.timestampValue()
-            assertEquals("Expected year to be $year", year.toInt(), timestamp.year)
-            assertEquals("Expected month to be $month", month.toInt(), timestamp.month)
-            assertEquals("Expected day to be $day", day.toInt(), timestamp.day)
-        }
-    }
-
-    private class ArgumentsForDateLiterals : ArgumentsProviderBase() {
-        private fun case(query: String, expected: String) = EvaluatorTestCase(query, expected)
-
-        override fun getParameters() = listOf(
-            case("DATE '2012-02-29'", "2012-02-29"),
-            case("DATE '2021-02-28'", "2021-02-28"),
-            case("DATE '2021-03-17' IS DATE", "true"),
-            case("'2021-03-17' IS DATE", "false")
+    @Test
+    fun testDateLiteral() {
+        runEvaluatorTestCase(
+            query = "DATE '2000-01-02'",
+            expectedLegacyModeResult = "\$partiql_date::2000-01-02",
+            excludeLegacySerializerAssertions = true
         )
     }
 
@@ -59,19 +40,32 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         assertEquals(ion.newInt(expectedTime.tz_minutes?.rem(MINUTES_PER_HOUR)), actual["timezone_minute"])
     }
 
-    data class TimeTestCase(val query: String, val expected: String, val expectedTime: TimeForValidation? = null, val compileOptions: CompileOptions = CompileOptions.standard())
+    data class TimeTestCase(
+        val query: String,
+        val expected: String,
+        val expectedTime: TimeForValidation? = null,
+        val compileOptionsBlock: CompileOptions.Builder.() -> Unit
+    )
 
     @ParameterizedTest
     @ArgumentsSource(ArgumentsForTimeLiterals::class)
     fun testTime(tc: TimeTestCase) {
-        val originalExprValue = eval(source = tc.query, compileOptions = tc.compileOptions) // compute expected ExprValue
-        assertEquals(tc.expected, originalExprValue.toString())
-        if (originalExprValue.type == ExprValueType.TIME) {
-            val timeIonValue = originalExprValue.ionValue
-            timeIonValue as IonStruct
-            assertNotNull(tc.expectedTime)
-            assertEqualsIonTimeStruct(timeIonValue, tc.expectedTime!!)
-        }
+        runEvaluatorTestCase(
+            query = tc.query,
+            expectedLegacyModeResult = tc.expected,
+            expectedResultFormat = ExpectedResultFormat.STRING,
+            excludeLegacySerializerAssertions = true,
+            compileOptionsBuilderBlock = tc.compileOptionsBlock,
+            extraResultAssertions = { actualExprValue ->
+                assertEquals(tc.expected, actualExprValue.toString())
+                if (actualExprValue.type == ExprValueType.TIME) {
+                    val timeIonValue = actualExprValue.ionValue
+                    timeIonValue as IonStruct
+                    assertNotNull(tc.expectedTime)
+                    assertEqualsIonTimeStruct(timeIonValue, tc.expectedTime!!)
+                }
+            }
+        )
     }
 
     /**
@@ -81,11 +75,13 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         private val defaultTimezoneOffset = ZoneOffset.UTC
         private val defaultTzMinutes = defaultTimezoneOffset.totalSeconds / 60
 
-        private fun case(query: String, expected: String, expectedTime: TimeForValidation? = null) = TimeTestCase(query, expected, expectedTime)
+        private fun case(query: String, expected: String, expectedTime: TimeForValidation) = TimeTestCase(query, expected, expectedTime) { }
 
-        private fun case(query: String, expected: String, expectedTime: TimeForValidation? = null, compileOptions: CompileOptions) = TimeTestCase(query, expected, expectedTime, compileOptions)
+        private fun case(query: String, expected: String, expectedTime: TimeForValidation, compileOptionsBlock: CompileOptions.Builder.() -> Unit) = TimeTestCase(query, expected, expectedTime, compileOptionsBlock)
 
-        private fun buildCompileOptions(hours: Int = 0, minutes: Int = 0) = CompileOptions.build { defaultTimezoneOffset(ZoneOffset.ofHoursMinutes(hours, minutes)) }
+        private fun compileOptionsBlock(hours: Int = 0, minutes: Int = 0): CompileOptions.Builder.() -> Unit = {
+                defaultTimezoneOffset(ZoneOffset.ofHoursMinutes(hours, minutes))
+            }
 
         override fun getParameters() = listOf(
             case("TIME '00:00:00.000'", "00:00:00.000", TimeForValidation(0, 0, 0, 0, 3)),
@@ -113,15 +109,10 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
             case("TIME (5) WITH TIME ZONE '12:24:12.123678+05:30'", "12:24:12.12368+05:30", TimeForValidation(12, 24, 12, 123680000, 5, 330)),
             case("TIME (2) WITH TIME ZONE '12:59:59.135-05:30'", "12:59:59.14-05:30", TimeForValidation(12, 59, 59, 140000000, 2, -330)),
             case("TIME (2) WITH TIME ZONE '12:59:59.134-05:30'", "12:59:59.13-05:30", TimeForValidation(12, 59, 59, 130000000, 2, -330)),
-            case("TIME '12:25:12.123456' IS TIME", "true"),
-            case("TIME (2) '01:01:12' IS TIME", "true"),
-            case("TIME WITH TIME ZONE '12:25:12.123456' IS TIME", "true"),
-            case("TIME (2) WITH TIME ZONE '01:01:12' IS TIME", "true"),
-            case("'01:01:12' IS TIME", "false"),
-            case("TIME WITH TIME ZONE '00:00:00'", "00:00:00-01:00", TimeForValidation(0, 0, 0, 0, 0, -60), buildCompileOptions(-1)),
-            case("TIME WITH TIME ZONE '11:23:45.678'", "11:23:45.678+06:00", TimeForValidation(11, 23, 45, 678000000, 3, 360), buildCompileOptions(6)),
-            case("TIME WITH TIME ZONE '11:23:45.678-05:30'", "11:23:45.678-05:30", TimeForValidation(11, 23, 45, 678000000, 3, -330), buildCompileOptions(6)),
-            case("TIME (2) WITH TIME ZONE '12:59:59.13456'", "12:59:59.13-05:30", TimeForValidation(12, 59, 59, 130000000, 2, -330), buildCompileOptions(-5, -30))
+            case("TIME WITH TIME ZONE '00:00:00'", "00:00:00-01:00", TimeForValidation(0, 0, 0, 0, 0, -60), compileOptionsBlock(-1)),
+            case("TIME WITH TIME ZONE '11:23:45.678'", "11:23:45.678+06:00", TimeForValidation(11, 23, 45, 678000000, 3, 360), compileOptionsBlock(6)),
+            case("TIME WITH TIME ZONE '11:23:45.678-05:30'", "11:23:45.678-05:30", TimeForValidation(11, 23, 45, 678000000, 3, -330), compileOptionsBlock(6)),
+            case("TIME (2) WITH TIME ZONE '12:59:59.13456'", "12:59:59.13-05:30", TimeForValidation(12, 59, 59, 130000000, 2, -330), compileOptionsBlock(-5, -30))
         )
     }
 
@@ -214,8 +205,12 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         (RANDOM_TIMES + RANDOM_TIMES_WITH_TIMEZONE).map {
             val query = "TIME '$it'"
             val expected = it.expectedTimeString(withTimeZone = false)
-            val actual = eval(query) // call runEvaluatorTestCase instead
-            assertEquals("Query $query failed.", expected, actual.toString())
+            runEvaluatorTestCase(
+                query = query,
+                expectedLegacyModeResult = expected,
+                excludeLegacySerializerAssertions = true,
+                expectedResultFormat = ExpectedResultFormat.STRING
+            )
         }
     }
 
@@ -224,8 +219,12 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         (RANDOM_TIMES_WITH_PRECISION + RANDOM_TIMES_WITH_PRECISION_AND_TIMEZONE).map {
             val query = "TIME (${it.precision}) '$it'"
             val expected = it.expectedTimeString(withTimeZone = false)
-            val actual = eval(query) // call runEvaluatorTestCase instead
-            assertEquals(expected, actual.toString())
+            runEvaluatorTestCase(
+                query = query,
+                expectedLegacyModeResult = expected,
+                excludeLegacySerializerAssertions = true,
+                expectedResultFormat = ExpectedResultFormat.STRING
+            )
         }
     }
 
@@ -234,8 +233,12 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         (RANDOM_TIMES + RANDOM_TIMES_WITH_TIMEZONE).map {
             val query = "TIME WITH TIME ZONE '$it'"
             val expected = it.expectedTimeString(withTimeZone = true)
-            val actual = eval(query) // call runEvaluatorTestCase instead
-            assertEquals(expected, actual.toString())
+            runEvaluatorTestCase(
+                query = query,
+                expectedLegacyModeResult = expected,
+                excludeLegacySerializerAssertions = true,
+                expectedResultFormat = ExpectedResultFormat.STRING
+            )
         }
     }
 
@@ -244,8 +247,12 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         (RANDOM_TIMES_WITH_PRECISION + RANDOM_TIMES_WITH_PRECISION_AND_TIMEZONE).map {
             val query = "TIME (${it.precision}) WITH TIME ZONE '$it'"
             val expected = it.expectedTimeString(withTimeZone = true)
-            val actual = eval(query) // call runEvaluatorTestCase instead
-            assertEquals(expected, actual.toString())
+            runEvaluatorTestCase(
+                query = query,
+                expectedLegacyModeResult = expected,
+                excludeLegacySerializerAssertions = true,
+                expectedResultFormat = ExpectedResultFormat.STRING
+            )
         }
     }
     @ParameterizedTest
@@ -260,8 +267,12 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
                     excludeLegacySerializerAssertions = true
                 )
             else -> {
-                val originalExprValue = eval(tc.query) // call runEvaluatorTestCase instead
-                assertEquals(tc.expected, originalExprValue.toString())
+                runEvaluatorTestCase(
+                    query = tc.query,
+                    expectedLegacyModeResult = tc.expected,
+                    expectedResultFormat = ExpectedResultFormat.STRING,
+                    excludeLegacySerializerAssertions = true
+                )
             }
         }
     }

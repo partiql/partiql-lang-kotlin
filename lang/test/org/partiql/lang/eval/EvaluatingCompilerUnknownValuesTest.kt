@@ -568,7 +568,7 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
         query = "SELECT s.x FROM [{'x': '1.1'},{'x': '2'},{'x': '3'},{'x': '4'},{'x': '5'}] as s WHERE FALSE AND CAST(s.x as INT)",
         expectedLegacyModeResult = "<<>>",
         session = boolsWithUnknowns,
-        expectedResultMode = ExpectedResultMode.PARTIQL
+        expectedResultFormat = ExpectedResultFormat.PARTIQL
     )
 
     @Test
@@ -596,7 +596,7 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
         query = "SELECT VALUE D.val from nullSample as D WHERE D.control",
         expectedLegacyModeResult = "<<'A'>>",
         session = nullSample,
-        expectedResultMode = ExpectedResultMode.PARTIQL
+        expectedResultFormat = ExpectedResultFormat.PARTIQL
     )
 
     @Test
@@ -604,7 +604,7 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
         query = "SELECT VALUE D.val from missingSample as D WHERE D.control",
         expectedLegacyModeResult = "<<'A'>>",
         session = missingSample,
-        expectedResultMode = ExpectedResultMode.PARTIQL
+        expectedResultFormat = ExpectedResultFormat.PARTIQL
     )
 
     @Test
@@ -612,7 +612,7 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
         query = "SELECT VALUE D.val from missingAndNullSample as D WHERE D.control",
         expectedLegacyModeResult = "<<'A'>>",
         session = missingAndNullSample,
-        expectedResultMode = ExpectedResultMode.PARTIQL
+        expectedResultFormat = ExpectedResultFormat.PARTIQL
     )
 
     // ////////////////////////////////////////////////

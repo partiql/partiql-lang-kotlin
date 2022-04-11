@@ -30,7 +30,7 @@ class NullIfEvaluationTest : EvaluatorTestBase() {
     fun runTests(tc: NullIfTestCase) = runEvaluatorTestCase(
         query = "nullif(${tc.expr1}, ${tc.expr2})",
         expectedLegacyModeResult = tc.expected,
-        expectedResultMode = ExpectedResultMode.PARTIQL
+        expectedResultFormat = ExpectedResultFormat.PARTIQL
     )
 
     companion object {

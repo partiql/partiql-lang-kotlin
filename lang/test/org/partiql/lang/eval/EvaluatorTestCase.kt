@@ -53,9 +53,9 @@ data class EvaluatorTestCase(
     /**
      * How to handle the expected result.
      *
-     * @see [ExpectedResultMode]
+     * @see [ExpectedResultFormat]
      */
-    val expectedResultMode: ExpectedResultMode = ExpectedResultMode.PARTIQL,
+    val expectedResultMode: ExpectedResultFormat = ExpectedResultFormat.PARTIQL,
 
     /**
      * The query's expected result when executed in permissive mode.  Defaults to [expectedResult].
@@ -83,7 +83,7 @@ data class EvaluatorTestCase(
     constructor(
         query: String,
         expectedResult: String,
-        expectedResultMode: ExpectedResultMode = ExpectedResultMode.PARTIQL,
+        expectedResultMode: ExpectedResultFormat = ExpectedResultFormat.PARTIQL,
         expectedPermissiveModeResult: String = expectedResult,
         compileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit = { },
         compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { },

@@ -15,7 +15,7 @@ import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.EvaluatorErrorTestCase
 import org.partiql.lang.eval.EvaluatorTestCase
-import org.partiql.lang.eval.ExpectedResultMode
+import org.partiql.lang.eval.ExpectedResultFormat
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.cloneAndRemoveBagAndMissingAnnotations
@@ -26,26 +26,7 @@ import org.partiql.lang.util.stripMetas
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 
-class LegacySerializerTestAdapater : EvaluatorTestAdapater {
-    override fun runEvaluatorTestCase(tc: EvaluatorTestCase, session: EvaluationSession) {
-        TODO("not implemented")
-    }
-
-    override fun eval(
-        source: String,
-        compileOptions: CompileOptions,
-        session: EvaluationSession,
-        compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit
-    ): ExprValue {
-        TODO("not implemented")
-    }
-
-    override fun runEvaluatorErrorTestCase(tc: EvaluatorErrorTestCase, session: EvaluationSession) {
-        TODO("not implemented")
-    }
-}
-
-class AstEvaluatorTestAdapater : EvaluatorTestAdapater {
+class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
 
     @Suppress("DEPRECATION")
     private val defaultRewriter = org.partiql.lang.ast.passes.AstRewriterBase()
@@ -124,10 +105,10 @@ class AstEvaluatorTestAdapater : EvaluatorTestAdapater {
             }
 
         when (tc.expectedResultMode) {
-            ExpectedResultMode.ION, ExpectedResultMode.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS -> {
+            ExpectedResultFormat.ION, ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS -> {
                 val expectedIonResult = ION.singleValue(expectedResult)
                 val actualIonResult = actualResult.ionValue.let {
-                    if (tc.expectedResultMode == ExpectedResultMode.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS)
+                    if (tc.expectedResultMode == ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS)
                         it.cloneAndRemoveBagAndMissingAnnotations()
                     else
                         it
@@ -138,7 +119,7 @@ class AstEvaluatorTestAdapater : EvaluatorTestAdapater {
                     assertionMessage
                 )
             }
-            ExpectedResultMode.PARTIQL -> {
+            ExpectedResultFormat.PARTIQL -> {
                 val expected = try {
                     eval(
                         source = expectedResult,
@@ -161,12 +142,14 @@ class AstEvaluatorTestAdapater : EvaluatorTestAdapater {
                 }
                 Unit
             }
-        }.let {}
-
+            ExpectedResultFormat.STRING -> {
+                assertEquals(expectedResult, actualResult.toString(), "Actual result must match expected (string equality)")
+            }
+        }.let { }
         tc.extraResultAssertions(actualResult)
     }
 
-    override fun eval(
+    private fun eval(
         source: String,
         compileOptions: CompileOptions,
         session: EvaluationSession,

@@ -4,13 +4,13 @@ import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.ION
-import org.partiql.lang.eval.test.AstEvaluatorTestAdapater
+import org.partiql.lang.eval.test.AstEvaluatorTestAdapter
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EVALUATOR_TEST_SUITE
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.EvaluatorTestCase
-import org.partiql.lang.eval.test.EvaluatorTestAdapater
-import org.partiql.lang.eval.ExpectedResultMode
+import org.partiql.lang.eval.test.EvaluatorTestAdapter
+import org.partiql.lang.eval.ExpectedResultFormat
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.mockdb.MockDb
@@ -73,7 +73,7 @@ internal fun IonResultTestCase.runTestCase(
     db: MockDb,
     pipelineBlock: CompilerPipeline.Builder.() -> Unit = { }
 ) {
-    val harness: EvaluatorTestAdapater = AstEvaluatorTestAdapater()
+    val harness: EvaluatorTestAdapter = AstEvaluatorTestAdapter()
 
     val session = EvaluationSession.build {
         globals(db.valueBindings)
@@ -85,7 +85,7 @@ internal fun IonResultTestCase.runTestCase(
         query = this.sqlUnderTest,
         expectedResult = this.expectedLegacyModeIonResult,
         expectedPermissiveModeResult = this.expectedPermissiveModeIonResult,
-        expectedResultMode = ExpectedResultMode.ION,
+        expectedResultMode = ExpectedResultFormat.ION,
         compileOptionsBuilderBlock = this.compileOptionsBuilderBlock,
         compilerPipelineBuilderBlock = pipelineBlock,
         implicitPermissiveModeTest = false,

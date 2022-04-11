@@ -33,5 +33,7 @@ class EvaluatingCompilerCastTest : CastTestBase() {
     @ParameterizedTest
     @ArgumentsSource(DateTimeConfiguredCastArguments::class)
     fun dateTimeConfiguredCast(dateTimeConfiguredCastCase: ConfiguredCastCase) =
-        dateTimeConfiguredCastCase.assertCase()
+        dateTimeConfiguredCastCase.assertCase(
+            ExpectedResultFormat.STRING
+        )
 }

@@ -189,7 +189,7 @@ class EvaluatingCompilerIsTests : EvaluatorTestBase() {
             EvaluatorTestCase(
                 query = "50000 IS NOT INT",
                 expectedResult = "FALSE"
-            )
+            ),
         )
     }
 

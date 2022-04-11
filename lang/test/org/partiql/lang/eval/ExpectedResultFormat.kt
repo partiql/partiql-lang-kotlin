@@ -25,7 +25,7 @@ package org.partiql.lang.eval
  * `$partiql_missing` are removed from the actual result before equivalence assertions.  This to support older test
  * cases that existed before those annotations. See [ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS].
  */
-enum class ExpectedResultMode {
+enum class ExpectedResultFormat {
     /**
      * The expected value is expressed in Ion and Ion's equivalence is used to assert the correct option.  This is the
      * strictest (and preferred) option when the result isn't a bag because it doesn't support PartiQL's BAG semantics,
@@ -47,5 +47,13 @@ enum class ExpectedResultMode {
      * The expected value is expressed using PartiQL syntax, which is evaluated under the same pipeline and compile
      * options and session as the query under test. PartiQL equivalence is used to compare the result.
      */
-    PARTIQL
+    PARTIQL,
+
+    /**
+     * The expected value is an arbitrary string.  [org.partiql.lang.eval.ExprValue.toString]` is called on the result
+     * of the query and the expected/actual assertion is performed with regular string equality.
+     *
+     * This is suboptimal, but it is easier to support this here than it is to refactor hundreds of expected values.
+     */
+    STRING
 }
