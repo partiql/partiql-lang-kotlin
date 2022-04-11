@@ -20,8 +20,7 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.util.propertyValueMapOf
 
-class
-EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
+class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     private val session = mapOf(
         "simple_1_col_1_group" to "[{col1: 1}, {col1: 1}]",
@@ -85,6 +84,9 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
              { name: 'Ross', age: 22, manager: { 'name': 'Alex', address: { city: 'Chicago' } } }
         ]"""
     ).toSession()
+
+    private fun runTest(tc: EvaluatorTestCase, session: EvaluationSession) =
+        super.runEvaluatorTestCase(tc.copy(implicitPermissiveModeTest = false), session)
 
     companion object {
 
@@ -216,7 +218,7 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     @Parameters
-    fun groupByTest(tc: EvaluatorTestCase) = runEvaluatorTestCase(tc, session)
+    fun groupByTest(tc: EvaluatorTestCase) = runTest(tc, session)
 
     /** Test cases for GROUP BY without aggregates. */
     fun parametersForGroupByTest() =
@@ -481,7 +483,7 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
     @Test
     @Parameters
     fun sql92StyleAggregatesTest(tc: EvaluatorTestCase) =
-        runEvaluatorTestCase(tc, session)
+        runTest(tc, session)
 
     /**
      * Test cases that cover `COUNT`, `SUM`, `MIN`, `MAX`, and `AVG`.
@@ -828,7 +830,7 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
     @Test
     @Parameters
     fun groupByAggregatesTest(tc: EvaluatorTestCase) =
-        runEvaluatorTestCase(tc, session)
+        runTest(tc, session)
 
     /**
      * These are test cases involving aggregates and cover behavior under less usual circumstances
@@ -900,7 +902,7 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     @Parameters
-    fun groupByGroupAsTest(tc: EvaluatorTestCase) = runEvaluatorTestCase(tc, session)
+    fun groupByGroupAsTest(tc: EvaluatorTestCase) = runTest(tc, session)
 
     fun parametersForGroupByGroupAsTest() =
         // GROUP BY with GROUP AS (the same as above but with "GROUP AS g")
@@ -1079,7 +1081,7 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
     @Test
     @Parameters
     fun groupByShadowingTest(tc: EvaluatorTestCase) =
-        runEvaluatorTestCase(tc, session)
+        runTest(tc, session)
 
     fun parametersForGroupByShadowingTest() =
         createGroupByTestCases(
@@ -1113,7 +1115,7 @@ EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
     @Test
     @Parameters
     fun groupByDuplicateAliasesTest(tc: EvaluatorTestCase) =
-        runEvaluatorTestCase(tc, session)
+        runTest(tc, session)
 
     fun parametersForGroupByDuplicateAliasesTest() =
         createGroupByTestCases(

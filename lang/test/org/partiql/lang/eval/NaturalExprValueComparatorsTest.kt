@@ -425,7 +425,7 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
 
         runEvaluatorTestCase(
             query = "$left = $right",
-            expectedLegacyModeResult = if(left == "missing" || right == "missing")
+            expectedLegacyModeResult = if (left == "missing" || right == "missing")
                 "\$partiql_missing::null"
             else
                 "null",

@@ -260,7 +260,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
                     excludeLegacySerializerAssertions = true
                 )
             else -> {
-                val originalExprValue = eval(tc.query)  // call runEvaluatorTestCase instead
+                val originalExprValue = eval(tc.query) // call runEvaluatorTestCase instead
                 assertEquals(tc.expected, originalExprValue.toString())
             }
         }

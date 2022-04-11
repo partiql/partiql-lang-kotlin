@@ -7,6 +7,8 @@ import org.partiql.lang.ION
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EVALUATOR_TEST_SUITE
 import org.partiql.lang.eval.EvaluationSession
+import org.partiql.lang.eval.EvaluatorTestCase
+import org.partiql.lang.eval.ExpectedResultMode
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.mockdb.MockDb

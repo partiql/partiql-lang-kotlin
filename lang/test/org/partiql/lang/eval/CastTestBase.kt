@@ -81,6 +81,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                                 excludeLegacySerializerAssertions = true,
                                 compilerPipelineBuilderBlock = configurePipeline,
                                 compileOptionsBuilderBlock = compileOptionBlock,
+                                implicitPermissiveModeTest = false,
                                 addtionalExceptionAssertBlock = { it ->
                                     assertEquals(expectedErrorCode, it.errorCode)
                                 }
@@ -95,6 +96,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 compileOptionsBuilderBlock = compileOptionBlock,
                 excludeLegacySerializerAssertions = true,
                 compilerPipelineBuilderBlock = configurePipeline,
+                includePermissiveModeTest = false,
                 block = castCase.additionalAssertBlock
             )
         }

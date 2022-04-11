@@ -50,6 +50,11 @@ data class EvaluatorErrorTestCase(
     val excludeLegacySerializerAssertions: Boolean = false,
 
     /**
+     * Include permissive mode test.
+     */
+    val implicitPermissiveModeTest: Boolean = true,
+
+    /**
      * Builder block for building [CompileOptions].
      */
     val compileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit = { },

@@ -143,6 +143,7 @@ class EvaluatingCompilerIsTests : EvaluatorTestBase() {
     @ArgumentsSource(BasicIsOperatorTests::class)
     fun basicIsOperatorTests(tc: EvaluatorTestCase) =
         runEvaluatorTestCase(tc, EvaluationSession.standard())
+
     class BasicIsOperatorTests : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
             EvaluatorTestCase(
@@ -196,6 +197,7 @@ class EvaluatingCompilerIsTests : EvaluatorTestBase() {
     @ArgumentsSource(SizedIntegerTests::class)
     fun sizedIntegerTests(tc: EvaluatorTestCase) =
         runEvaluatorTestCase(tc, EvaluationSession.standard())
+
     class SizedIntegerTests : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> {
             fun constrainedIntCases(typeName: String, minValue: Long, maxValue: Long, includeOufRangeTests: Boolean) =
@@ -275,6 +277,7 @@ class EvaluatingCompilerIsTests : EvaluatorTestBase() {
     @ArgumentsSource(ZeroLengthCases::class)
     fun zeroLengthStringTests(tc: EvaluatorTestCase) =
         runEvaluatorTestCase(tc, EvaluationSession.standard())
+
     class ZeroLengthCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
             isStringTypeTestCase(
@@ -296,6 +299,7 @@ class EvaluatingCompilerIsTests : EvaluatorTestBase() {
     @ArgumentsSource(SingleByteCharacterCases::class)
     fun unicodeIsCharacterTypeTests(tc: EvaluatorTestCase) =
         runEvaluatorTestCase(tc, EvaluationSession.standard())
+
     class SingleByteCharacterCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> {
             val fourCharacterStrings = listOf(
@@ -383,6 +387,7 @@ class EvaluatingCompilerIsTests : EvaluatorTestBase() {
     @ArgumentsSource(DecimalIsOperatorTestCases::class)
     fun isDecimalTests(tc: EvaluatorTestCase) =
         runEvaluatorTestCase(tc, EvaluationSession.standard())
+
     class DecimalIsOperatorTestCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
             isDecimalTypeTestCase(
