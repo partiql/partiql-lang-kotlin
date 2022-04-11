@@ -24,6 +24,8 @@ import org.partiql.lang.SqlException
 import org.partiql.lang.TestBase
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.PropertyValueMap
+import org.partiql.lang.eval.test.AstEvaluatorTestAdapater
+import org.partiql.lang.eval.test.EvaluatorTestAdapater
 import org.partiql.lang.util.asSequence
 import org.partiql.lang.util.newFromIonText
 
@@ -38,7 +40,7 @@ import org.partiql.lang.util.newFromIonText
  * As we parameterize PartiQL's other tests, we should migrate them away from using this base class as well.
  */
 abstract class EvaluatorTestBase : TestBase() {
-    private val testHarness = AstEvaluatorTestHarness()
+    private val testHarness: EvaluatorTestAdapater = AstEvaluatorTestAdapater()
 
     protected fun Map<String, String>.toSession() = EvaluationSession.build {
         globals(Bindings.ofMap(this@toSession.mapValues { valueFactory.newFromIonText(it.value) }))
@@ -88,8 +90,7 @@ abstract class EvaluatorTestBase : TestBase() {
     protected fun runEvaluatorTestCase(tc: EvaluatorTestCase, session: EvaluationSession) =
         testHarness.runEvaluatorTestCase(tc, session)
 
-
-    /** @see [AstEvaluatorTestHarness.runEvaluatorErrorTestCase]. */
+    /** @see [AstEvaluatorTestAdapater.runEvaluatorErrorTestCase]. */
     protected fun runEvaluatorErrorTestCase(
         query: String,
         expectedErrorCode: ErrorCode,
@@ -119,11 +120,11 @@ abstract class EvaluatorTestBase : TestBase() {
         testHarness.runEvaluatorErrorTestCase(tc, session)
     }
 
-    /** @see [AstEvaluatorTestHarness.runEvaluatorTestCase] */
+    /** @see [AstEvaluatorTestAdapater.runEvaluatorTestCase] */
     fun runEvaluatorErrorTestCase(tc: EvaluatorErrorTestCase, session: EvaluationSession) =
         testHarness.runEvaluatorErrorTestCase(tc, session)
 
-    /** @see [AstEvaluatorTestHarness.eval] */
+    /** @see [AstEvaluatorTestAdapater.eval] */
     fun eval(
         source: String,
         compileOptions: CompileOptions = CompileOptions.standard(),

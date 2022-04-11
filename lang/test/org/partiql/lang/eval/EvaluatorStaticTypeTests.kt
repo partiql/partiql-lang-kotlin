@@ -182,7 +182,9 @@ class EvaluatorStaticTypeTests {
             EvaluatorTests.SKIP_LIST.union(FAILING_TESTS)
         ).map {
             it.copy(
-                compileOptions = CompileOptions.build(it.compileOptions) {
+                compileOptionsBuilderBlock = {
+                    it.compileOptionsBuilderBlock(this)
+
                     // set permissive mode
                     typingMode(TypingMode.PERMISSIVE)
                     // enable evaluation time type checking

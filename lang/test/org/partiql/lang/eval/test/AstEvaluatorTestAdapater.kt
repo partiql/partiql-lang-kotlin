@@ -1,4 +1,4 @@
-package org.partiql.lang.eval
+package org.partiql.lang.eval.test
 
 import org.junit.Assert
 import org.junit.jupiter.api.assertThrows
@@ -11,60 +11,41 @@ import org.partiql.lang.ast.toAstStatement
 import org.partiql.lang.ast.toExprNode
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorBehaviorInPermissiveMode
+import org.partiql.lang.eval.CompileOptions
+import org.partiql.lang.eval.EvaluationSession
+import org.partiql.lang.eval.EvaluatorErrorTestCase
+import org.partiql.lang.eval.EvaluatorTestCase
+import org.partiql.lang.eval.ExpectedResultMode
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.TypingMode
+import org.partiql.lang.eval.cloneAndRemoveBagAndMissingAnnotations
+import org.partiql.lang.eval.exprEquals
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.ConfigurableExprValueFormatter
 import org.partiql.lang.util.stripMetas
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 
-/**
- * Implementation of this interface allow for different PartiQL compilers to be tested.
- *
- * - [AstEvaluatorTestHarness] evaluates [EvaluatorTestCase] or [EvaluatorErrorTestCase] with the AST evaluator
- * (i.e [CompilerPipeline]/[EvaluatingCompiler] combination.
- *
- * Future implementations of [EvaluatorTestHarness] will:
- *
- * - Tests the query planner and physical plan compiler instead.
- * - [EvaluatorTestHarness] that delegates multiple other implementations, allowing multiple implementations to be
- * treated as one.
- */
-interface EvaluatorTestHarness {
-    /**
-     * Runs an [EvaluatorTestCase].  This is intended to be used by parameterized tests.
-     *
-     * Also runs additional assertions performed by [commonAssertions].
-     *
-     * @see [EvaluatorTestCase].
-     */
-    fun runEvaluatorTestCase(tc: EvaluatorTestCase, session: EvaluationSession)
+class LegacySerializerTestAdapater : EvaluatorTestAdapater {
+    override fun runEvaluatorTestCase(tc: EvaluatorTestCase, session: EvaluationSession) {
+        TODO("not implemented")
+    }
 
-    /**
-     * Evaluates a source query given a [EvaluationSession]
-     *
-     * @param source query source to be evaluated
-     * @param session [EvaluationSession] used for evaluation
-     * @param compilerPipelineBuilderBlock any additional configuration to the pipeline after the options are set.
-     */
-    fun eval(
+    override fun eval(
         source: String,
-        compileOptions: CompileOptions = CompileOptions.standard(),
-        session: EvaluationSession = EvaluationSession.standard(),
-        compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }
-    ): ExprValue
+        compileOptions: CompileOptions,
+        session: EvaluationSession,
+        compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit
+    ): ExprValue {
+        TODO("not implemented")
+    }
 
-    /**
-     * Runs an [EvaluatorErrorTestCase].  This should be the normal entry point for parameterized error test cases.
-     *
-     * If the [EvaluatorErrorTestCase.expectedErrorCode] has [ErrorBehaviorInPermissiveMode.RETURN_MISSING] set,
-     * evaluates and asserts no [SqlException] was thrown and the return value is equal to
-     * [EvaluatorErrorTestCase.expectedPermissiveModeResult] (PartiQL equivalence.)  Otherwise, the error assertions
-     * are the same as [TypingMode.LEGACY]
-     */
-    fun runEvaluatorErrorTestCase(tc: EvaluatorErrorTestCase, session: EvaluationSession)
+    override fun runEvaluatorErrorTestCase(tc: EvaluatorErrorTestCase, session: EvaluationSession) {
+        TODO("not implemented")
+    }
 }
 
-class AstEvaluatorTestHarness : EvaluatorTestHarness {
+class AstEvaluatorTestAdapater : EvaluatorTestAdapater {
 
     @Suppress("DEPRECATION")
     private val defaultRewriter = org.partiql.lang.ast.passes.AstRewriterBase()

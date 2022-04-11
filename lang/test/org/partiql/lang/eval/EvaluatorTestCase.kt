@@ -72,9 +72,10 @@ data class EvaluatorTestCase(
      *
      * The default is `true` to ensure that permissive mode is tested as thoroughly as legacy mode.  However, some
      * tests explicitly set legacy or permissive mode.  Such tests should set [implicitPermissiveModeTest] to
-     * `false`.
+     * `false`.  Note that, when `false`, [expectedPermissiveModeResult] is ignored.
      */
     val implicitPermissiveModeTest: Boolean = true,
+
     val extraResultAssertions: (ExprValue) -> Unit = { }
 ) {
     // DL TODO: delete this constructor (but reorder the properties and this constructor
