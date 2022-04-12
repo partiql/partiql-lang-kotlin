@@ -72,7 +72,6 @@ subprojects {
                 html.required.set(true)
                 html.outputLocation.set(file("${buildDir}/reports/jacoco/html"))
             }
-
             afterEvaluate {
                 classDirectories.setFrom(files(classDirectories.files.collect {
                     // exclude PIG generated files.
