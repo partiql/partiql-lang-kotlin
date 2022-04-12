@@ -27,64 +27,64 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
 
     @Test
     fun selectValue() {
-        runEvaluatorTestCase("SELECT VALUE someScalar FROM someScalar", "[1]", session)
+        runEvaluatorTestCase("SELECT VALUE someScalar FROM someScalar", session, "[1]")
     }
 
     @Test
     fun selectValueWithAsAlias() {
-        runEvaluatorTestCase("SELECT VALUE s FROM someScalar as s", "[1]", session)
+        runEvaluatorTestCase("SELECT VALUE s FROM someScalar as s", session, "[1]")
     }
 
     @Test
     fun selectStar() {
-        runEvaluatorTestCase("SELECT * FROM `[{a: 100, b: 101}]`", "[{a: 100, b: 101}]")
+        runEvaluatorTestCase("SELECT * FROM `[{a: 100, b: 101}]`", expectedResult = "[{a: 100, b: 101}]")
     }
 
     @Test
     fun selectStarWhere() {
         runEvaluatorTestCase(
             "SELECT * FROM `[{a: 100, b: 1000}, {a: 101, b: 1001}]` WHERE a > 100",
-            "[{a: 101, b: 1001}]"
+            expectedResult = "[{a: 101, b: 1001}]"
         )
     }
 
     @Test
     fun selectList() {
-        runEvaluatorTestCase("SELECT a, b FROM `[{a: 100, b: 101}]`", "[{a: 100, b: 101}]")
+        runEvaluatorTestCase("SELECT a, b FROM `[{a: 100, b: 101}]`", expectedResult = "[{a: 100, b: 101}]")
     }
 
     @Test
     fun selectListWithBinaryExpr() {
-        runEvaluatorTestCase("SELECT a + b FROM `[{a: 100, b: 101}]`", "[{_1: 201}]")
+        runEvaluatorTestCase("SELECT a + b FROM `[{a: 100, b: 101}]`", expectedResult = "[{_1: 201}]")
     }
 
     @Test
     fun selectListWithBinaryExprAndAlias() {
-        runEvaluatorTestCase("SELECT a + b AS c FROM `[{a: 100, b: 101}]`", "[{c: 201}]")
+        runEvaluatorTestCase("SELECT a + b AS c FROM `[{a: 100, b: 101}]`", expectedResult = "[{c: 201}]")
     }
 
     @Test
     fun unpivot() = runEvaluatorTestCase(
         "SELECT name, val FROM UNPIVOT `{a:1, b:2, c:3, d:4, e:5, f:6}` AS val AT name",
-        """[
-            {name:"a",val:1},
-            {name:"b",val:2},
-            {name:"c",val:3},
-            {name:"d",val:4},
-            {name:"e",val:5},
-            {name:"f",val:6}
-        ]"""
+        expectedResult = """[
+                    {name:"a",val:1},
+                    {name:"b",val:2},
+                    {name:"c",val:3},
+                    {name:"d",val:4},
+                    {name:"e",val:5},
+                    {name:"f",val:6}
+                ]"""
     )
 
     @Test
     fun simpleJoin() = runEvaluatorTestCase(
         """SELECT * FROM `[{a: 1}, {a: 2}]` AS t1 INNER CROSS JOIN `[{b: 1, c: "one" }, {b: 2, c: "two" }]`""",
-        """[
-            {a:1,b:1,c:"one"},
-            {a:1,b:2,c:"two"},
-            {a:2,b:1,c:"one"},
-            {a:2,b:2,c:"two"}
-        ]"""
+        expectedResult = """[
+                    {a:1,b:1,c:"one"},
+                    {a:1,b:2,c:"two"},
+                    {a:2,b:1,c:"one"},
+                    {a:2,b:2,c:"two"}
+                ]"""
     )
 
     @Test
@@ -94,14 +94,17 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
             FROM `[{a: 1}, {a: 2}]` AS t1
                 INNER JOIN `[{b: 1, c: "one" }, {b: 2, c:"two" }]` AS t2
                     ON t1.a = t2.b""",
-        """[
-            {a:1,b:1,c:"one"},
-            {a:2,b:2,c:"two"}
-        ]"""
+        expectedResult = """[
+                    {a:1,b:1,c:"one"},
+                    {a:2,b:2,c:"two"}
+                ]"""
     )
 
     @Test
-    fun tableAliases() = runEvaluatorTestCase("SELECT _2 FROM `[{_1: a, _2: 1}, {_1: a, _2: 'a'}, {_1: a, _2: 3}]` WHERE _2 = 21", "[]")
+    fun tableAliases() = runEvaluatorTestCase(
+        "SELECT _2 FROM `[{_1: a, _2: 1}, {_1: a, _2: 'a'}, {_1: a, _2: 3}]` WHERE _2 = 21",
+        expectedResult = "[]"
+    )
 
     @Test
     fun castStringToIntFailed() = runEvaluatorErrorTestCase(
@@ -113,20 +116,20 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
 
     @Test
     fun sum() {
-        runEvaluatorTestCase("SUM(`[1, 2, 3]`)", "6")
-        runEvaluatorTestCase("SUM(`[1, 2e0, 3e0]`)", "6e0")
-        runEvaluatorTestCase("SUM(`[1, 2d0, 3d0]`)", "6d0")
-        runEvaluatorTestCase("SUM(`[1, 2e0, 3d0]`)", "6d0")
-        runEvaluatorTestCase("SUM(`[1, 2d0, 3e0]`)", "6d0")
+        runEvaluatorTestCase("SUM(`[1, 2, 3]`)", expectedResult = "6")
+        runEvaluatorTestCase("SUM(`[1, 2e0, 3e0]`)", expectedResult = "6e0")
+        runEvaluatorTestCase("SUM(`[1, 2d0, 3d0]`)", expectedResult = "6d0")
+        runEvaluatorTestCase("SUM(`[1, 2e0, 3d0]`)", expectedResult = "6d0")
+        runEvaluatorTestCase("SUM(`[1, 2d0, 3e0]`)", expectedResult = "6d0")
     }
 
     @Test
     fun max() {
-        runEvaluatorTestCase("max(`[1, 2, 3]`)", "3")
-        runEvaluatorTestCase("max(`[1, 2.0, 3]`)", "3")
-        runEvaluatorTestCase("max(`[1, 2e0, 3e0]`)", "3e0")
-        runEvaluatorTestCase("max(`[1, 2d0, 3d0]`)", "3d0")
-        runEvaluatorTestCase("max(`[1, 2e0, 3d0]`)", "3d0")
-        runEvaluatorTestCase("max(`[1, 2d0, 3e0]`)", "3e0")
+        runEvaluatorTestCase("max(`[1, 2, 3]`)", expectedResult = "3")
+        runEvaluatorTestCase("max(`[1, 2.0, 3]`)", expectedResult = "3")
+        runEvaluatorTestCase("max(`[1, 2e0, 3e0]`)", expectedResult = "3e0")
+        runEvaluatorTestCase("max(`[1, 2d0, 3d0]`)", expectedResult = "3d0")
+        runEvaluatorTestCase("max(`[1, 2e0, 3d0]`)", expectedResult = "3d0")
+        runEvaluatorTestCase("max(`[1, 2d0, 3e0]`)", expectedResult = "3e0")
     }
 }

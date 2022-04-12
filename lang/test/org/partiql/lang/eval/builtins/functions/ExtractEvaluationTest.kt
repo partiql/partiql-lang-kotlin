@@ -22,8 +22,8 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
     @ArgumentsSource(ExtractPassCases::class)
     fun runPassTests(testCase: ExprFunctionTestCase) = runEvaluatorTestCase(
         query = testCase.source,
-        expectedLegacyModeResult = testCase.expectedLegacyModeResult,
         session = testCase.session,
+        expectedResult = testCase.expectedLegacyModeResult,
         excludeLegacySerializerAssertions = true
     )
 

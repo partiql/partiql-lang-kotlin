@@ -17,6 +17,7 @@ package org.partiql.lang.eval
 import org.junit.Test
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
+import org.partiql.lang.eval.test.ExpectedResultFormat
 import org.partiql.lang.util.propertyValueMapOf
 
 class QuotedIdentifierTests : EvaluatorTestBase() {
@@ -47,33 +48,33 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
     @Test
     fun quotedIdResolvesWithSensitiveCase() {
 
-        runEvaluatorTestCase("\"Abc\"", "1", simpleSession)
-        runEvaluatorTestCase("\"aBc\"", "2", simpleSession)
-        runEvaluatorTestCase("\"abC\"", "3", simpleSession)
+        runEvaluatorTestCase("\"Abc\"", simpleSession, "1")
+        runEvaluatorTestCase("\"aBc\"", simpleSession, "2")
+        runEvaluatorTestCase("\"abC\"", simpleSession, "3")
     }
 
     @Test
     fun quotedIdResolvesWithSensitiveCaseResolvesToMissing() {
         runEvaluatorTestCase(
             query = "\"abc\"",
-            expectedLegacyModeResult = "MISSING",
+            session = simpleSession,
+            expectedResult = "MISSING",
             expectedResultFormat = ExpectedResultFormat.PARTIQL,
             compileOptionsBuilderBlock = { undefinedVariableMissingCompileOptionBlock() },
-            session = simpleSession,
         )
         runEvaluatorTestCase(
             "\"ABC\"",
-            expectedLegacyModeResult = "MISSING",
+            session = simpleSession,
+            expectedResult = "MISSING",
             expectedResultFormat = ExpectedResultFormat.PARTIQL,
             compileOptionsBuilderBlock = { undefinedVariableMissingCompileOptionBlock() },
-            session = simpleSession,
         )
 
         // Ensure case sensitive lookup still works.
         runEvaluatorTestCase(
             query = "\"Abc\"",
-            expectedLegacyModeResult = "1",
             session = simpleSession,
+            expectedResult = "1",
             compileOptionsBuilderBlock = undefinedVariableMissingCompileOptionBlock
         )
     }
@@ -114,25 +115,25 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
 
     @Test
     fun selectFromTablesQuotedIdsAreCaseSensitive() {
-        runEvaluatorTestCase("SELECT * FROM \"Abc\"", "[{n:1}]", sessionWithCaseVaryingTables)
-        runEvaluatorTestCase("SELECT * FROM \"aBc\"", "[{n:2}]", sessionWithCaseVaryingTables)
-        runEvaluatorTestCase("SELECT * FROM \"abC\"", "[{n:3}]", sessionWithCaseVaryingTables)
+        runEvaluatorTestCase("SELECT * FROM \"Abc\"", sessionWithCaseVaryingTables, "[{n:1}]")
+        runEvaluatorTestCase("SELECT * FROM \"aBc\"", sessionWithCaseVaryingTables, "[{n:2}]")
+        runEvaluatorTestCase("SELECT * FROM \"abC\"", sessionWithCaseVaryingTables, "[{n:3}]")
     }
 
     @Test
     fun quotedTableAliasesReferencesAreCaseSensitive() =
         runEvaluatorTestCase(
             "SELECT \"Abc\".n AS a, \"aBc\".n AS b, \"abC\".n AS c FROM a as Abc, b as aBc, c as abC",
-            "[{a:1, b:2, c:3}]",
-            simpleSessionWithTables
+            simpleSessionWithTables,
+            "[{a:1, b:2, c:3}]"
         )
 
     @Test
     fun quotedTableAliasesAreCaseSensitive() =
         runEvaluatorTestCase(
             "SELECT \"Abc\".n AS a, \"aBc\".n AS b, \"abC\".n AS c FROM a as \"Abc\", b as \"aBc\", c as \"abC\"",
-            "[{a:1, b:2, c:3}]",
-            simpleSessionWithTables
+            simpleSessionWithTables,
+            "[{a:1, b:2, c:3}]"
         )
 
     val tableWithCaseVaryingFields = "[{ Abc: 1, aBc: 2, abC: 3}]"
@@ -141,7 +142,7 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
     fun quotedStructFieldsAreCaseSensitive() =
         runEvaluatorTestCase(
             "SELECT s.\"Abc\" , s.\"aBc\", s.\"abC\" FROM `$tableWithCaseVaryingFields` AS s",
-            tableWithCaseVaryingFields
+            expectedResult = tableWithCaseVaryingFields
         )
 
     @Test
@@ -228,66 +229,74 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
 
     @Test
     fun pathDotOnly_quotedId() =
-        runEvaluatorTestCase(""" "a"."b"."c"."d"."e" """, "5", nestedStructsLowercase.toSession())
+        runEvaluatorTestCase(""" "a"."b"."c"."d"."e" """, nestedStructsLowercase.toSession(), "5")
 
     @Test
     fun pathDotOnly_mixedIds() =
-        runEvaluatorTestCase(""" "a".b."c".d."e" """, "5", nestedStructsLowercase.toSession())
+        runEvaluatorTestCase(""" "a".b."c".d."e" """, nestedStructsLowercase.toSession(), "5")
     @Test
     fun pathDotOnly_mixedIds_Inverted() =
-        runEvaluatorTestCase(""" a."b".c."d".e """, "5", nestedStructsLowercase.toSession())
+        runEvaluatorTestCase(""" a."b".c."d".e """, nestedStructsLowercase.toSession(), "5")
 
     @Test
     fun pathDotMissingAttribute_quotedId() =
-        runEvaluatorTestCase(""" "a"."z" IS MISSING """, "true", nestedStructsLowercase.toSession())
+        runEvaluatorTestCase(""" "a"."z" IS MISSING """, nestedStructsLowercase.toSession(), "true")
 
     @Test
     fun pathDotMissingAttribute_mixedIds() =
-        runEvaluatorTestCase(""" a."z" IS MISSING """, "true", nestedStructsLowercase.toSession())
+        runEvaluatorTestCase(""" a."z" IS MISSING """, nestedStructsLowercase.toSession(), "true")
 
     @Test
     fun pathDotMissingAttribute_Inverted() =
-        runEvaluatorTestCase(""" "a".z IS MISSING """, "true", nestedStructsLowercase.toSession())
+        runEvaluatorTestCase(""" "a".z IS MISSING """, nestedStructsLowercase.toSession(), "true")
 
     @Test
     fun pathIndexing_quotedId() =
-        runEvaluatorTestCase(""" "stores"[0]."books"[2]."title" """, "\"C\"", stores.toSession())
+        runEvaluatorTestCase(""" "stores"[0]."books"[2]."title" """, stores.toSession(), "\"C\"")
 
     @Test
     fun pathFieldStructLiteral_quotedId() =
-        runEvaluatorTestCase("""{'a': 1, 'b': 2, 'b': 3}."a" """, "1")
+        runEvaluatorTestCase("""{'a': 1, 'b': 2, 'b': 3}."a" """, expectedResult = "1")
 
     @Test
-    fun pathWildcard_quotedId() = runEvaluatorTestCase(""" "stores"[0]."books"[*]."title" """, """["A", "B", "C", "D"]""", stores.toSession())
+    fun pathWildcard_quotedId() = runEvaluatorTestCase(
+        """ "stores"[0]."books"[*]."title" """,
+        stores.toSession(),
+        """["A", "B", "C", "D"]"""
+    )
 
     @Test
-    fun pathUnpivotWildcard_quotedId() = runEvaluatorTestCase(""" "friends"."kumo"."likes".*."type" """, """["dog", "human"]""", friends.toSession())
+    fun pathUnpivotWildcard_quotedId() = runEvaluatorTestCase(
+        """ "friends"."kumo"."likes".*."type" """,
+        friends.toSession(),
+        """["dog", "human"]"""
+    )
 
     @Test
     fun pathDoubleWildCard_quotedId() = runEvaluatorTestCase(
         """ "stores"[*]."books"[*]."title" """,
-        """["A", "B", "C", "D", "A", "E", "F"]""",
-        stores.toSession()
+        stores.toSession(),
+        """["A", "B", "C", "D", "A", "E", "F"]"""
     )
 
     @Test
     fun pathDoubleUnpivotWildCard_quotedId() = runEvaluatorTestCase(
         """ "friends".*."likes".*."type" """,
-        """["dog", "human", "dog", "cat"]""",
-        friends.toSession()
+        friends.toSession(),
+        """["dog", "human", "dog", "cat"]"""
     )
 
     @Test
     fun pathWildCardOverScalar_quotedId() = runEvaluatorTestCase(
         """ "s"[*] """,
-        """["hello"]""",
-        globalHello.toSession()
+        globalHello.toSession(),
+        """["hello"]"""
     )
 
     @Test
     fun pathUnpivotWildCardOverScalar_quotedId() = runEvaluatorTestCase(
         """ "s".*  """,
-        """["hello"]""",
-        globalHello.toSession()
+        globalHello.toSession(),
+        """["hello"]"""
     )
 }

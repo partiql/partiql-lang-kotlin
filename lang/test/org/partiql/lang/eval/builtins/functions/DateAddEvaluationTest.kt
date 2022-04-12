@@ -18,7 +18,7 @@ class DateAddEvaluationTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(DateAddPassCases::class)
     fun runPassTests(testCase: ExprFunctionTestCase) =
-        runEvaluatorTestCase(testCase.source, testCase.expectedLegacyModeResult, testCase.session)
+        runEvaluatorTestCase(testCase.source, testCase.session, testCase.expectedLegacyModeResult)
 
     class DateAddPassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(

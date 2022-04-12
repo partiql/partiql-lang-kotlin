@@ -5,6 +5,7 @@ import org.junit.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.eval.test.ExpectedResultFormat
 import org.partiql.lang.eval.time.MINUTES_PER_HOUR
 import org.partiql.lang.eval.time.NANOS_PER_SECOND
 import org.partiql.lang.eval.time.SECONDS_PER_MINUTE
@@ -24,7 +25,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
     fun testDateLiteral() {
         runEvaluatorTestCase(
             query = "DATE '2000-01-02'",
-            expectedLegacyModeResult = "\$partiql_date::2000-01-02",
+            expectedResult = "\$partiql_date::2000-01-02",
             excludeLegacySerializerAssertions = true
         )
     }
@@ -52,20 +53,19 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
     fun testTime(tc: TimeTestCase) {
         runEvaluatorTestCase(
             query = tc.query,
-            expectedLegacyModeResult = tc.expected,
-            expectedResultFormat = ExpectedResultFormat.STRING,
+            expectedResult = tc.expected,
             excludeLegacySerializerAssertions = true,
-            compileOptionsBuilderBlock = tc.compileOptionsBlock,
-            extraResultAssertions = { actualExprValue ->
-                assertEquals(tc.expected, actualExprValue.toString())
-                if (actualExprValue.type == ExprValueType.TIME) {
-                    val timeIonValue = actualExprValue.ionValue
-                    timeIonValue as IonStruct
-                    assertNotNull(tc.expectedTime)
-                    assertEqualsIonTimeStruct(timeIonValue, tc.expectedTime!!)
-                }
+            expectedResultFormat = ExpectedResultFormat.STRING,
+            compileOptionsBuilderBlock = tc.compileOptionsBlock
+        ) { actualExprValue ->
+            assertEquals(tc.expected, actualExprValue.toString())
+            if (actualExprValue.type == ExprValueType.TIME) {
+                val timeIonValue = actualExprValue.ionValue
+                timeIonValue as IonStruct
+                assertNotNull(tc.expectedTime)
+                assertEqualsIonTimeStruct(timeIonValue, tc.expectedTime!!)
             }
-        )
+        }
     }
 
     /**
@@ -207,7 +207,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
             val expected = it.expectedTimeString(withTimeZone = false)
             runEvaluatorTestCase(
                 query = query,
-                expectedLegacyModeResult = expected,
+                expectedResult = expected,
                 excludeLegacySerializerAssertions = true,
                 expectedResultFormat = ExpectedResultFormat.STRING
             )
@@ -221,7 +221,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
             val expected = it.expectedTimeString(withTimeZone = false)
             runEvaluatorTestCase(
                 query = query,
-                expectedLegacyModeResult = expected,
+                expectedResult = expected,
                 excludeLegacySerializerAssertions = true,
                 expectedResultFormat = ExpectedResultFormat.STRING
             )
@@ -235,7 +235,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
             val expected = it.expectedTimeString(withTimeZone = true)
             runEvaluatorTestCase(
                 query = query,
-                expectedLegacyModeResult = expected,
+                expectedResult = expected,
                 excludeLegacySerializerAssertions = true,
                 expectedResultFormat = ExpectedResultFormat.STRING
             )
@@ -249,7 +249,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
             val expected = it.expectedTimeString(withTimeZone = true)
             runEvaluatorTestCase(
                 query = query,
-                expectedLegacyModeResult = expected,
+                expectedResult = expected,
                 excludeLegacySerializerAssertions = true,
                 expectedResultFormat = ExpectedResultFormat.STRING
             )
@@ -269,9 +269,9 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
             else -> {
                 runEvaluatorTestCase(
                     query = tc.query,
-                    expectedLegacyModeResult = tc.expected,
-                    expectedResultFormat = ExpectedResultFormat.STRING,
-                    excludeLegacySerializerAssertions = true
+                    expectedResult = tc.expected,
+                    excludeLegacySerializerAssertions = true,
+                    expectedResultFormat = ExpectedResultFormat.STRING
                 )
             }
         }

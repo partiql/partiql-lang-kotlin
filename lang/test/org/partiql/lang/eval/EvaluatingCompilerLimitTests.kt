@@ -13,40 +13,40 @@ class EvaluatingCompilerLimitTests : EvaluatorTestBase() {
     fun `LIMIT 0 should return no results`() =
         runEvaluatorTestCase(
             "SELECT * FROM foo LIMIT 0",
-            "[]",
-            session
+            session,
+            "[]"
         )
 
     @Test
     fun `LIMIT 1 should return first result`() =
         runEvaluatorTestCase(
             "SELECT * FROM foo LIMIT 1",
-            "[{a: 1}]",
-            session
+            session,
+            "[{a: 1}]"
         )
 
     @Test
     fun `LIMIT 2 should return first two results`() =
         runEvaluatorTestCase(
             "SELECT * FROM foo LIMIT 2",
-            "[{a: 1}, {a: 2}]",
-            session
+            session,
+            "[{a: 1}, {a: 2}]"
         )
 
     @Test
     fun `LIMIT 2^31 should return all results`() =
         runEvaluatorTestCase(
             "SELECT * FROM foo LIMIT ${Integer.MAX_VALUE}",
-            "[ { a: 1 }, { a: 2 }, { a: 3 }, { a: 4 }, { a: 5 } ]",
-            session
+            session,
+            "[ { a: 1 }, { a: 2 }, { a: 3 }, { a: 4 }, { a: 5 } ]"
         )
 
     @Test
     fun `LIMIT 2^63 should return all results`() =
         runEvaluatorTestCase(
             "SELECT * FROM foo LIMIT ${Long.MAX_VALUE}",
-            "[ { a: 1 }, { a: 2 }, { a: 3 }, { a: 4 }, { a: 5 } ]",
-            session
+            session,
+            "[ { a: 1 }, { a: 2 }, { a: 3 }, { a: 4 }, { a: 5 } ]"
         )
 
     @Test
@@ -69,6 +69,6 @@ class EvaluatingCompilerLimitTests : EvaluatorTestBase() {
     fun `LIMIT applied after GROUP BY`() =
         runEvaluatorTestCase(
             "SELECT g FROM `[{foo: 1, bar: 10}, {foo: 1, bar: 11}]` AS f GROUP BY f.foo GROUP AS g LIMIT 1",
-            """[ { 'g': [ { 'f': { 'foo': 1, 'bar': 10 } }, { 'f': { 'foo': 1, 'bar': 11 } } ] } ]"""
+            expectedResult = """[ { 'g': [ { 'f': { 'foo': 1, 'bar': 10 } }, { 'f': { 'foo': 1, 'bar': 11 } } ] } ]"""
         )
 }

@@ -5,7 +5,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluatorTestBase
-import org.partiql.lang.eval.ExpectedResultFormat
+import org.partiql.lang.eval.test.ExpectedResultFormat
 import org.partiql.lang.eval.builtins.Argument
 import org.partiql.lang.eval.builtins.ExprFunctionTestCase
 import org.partiql.lang.eval.builtins.checkInvalidArgType
@@ -20,7 +20,7 @@ class MakeDateEvaluationTest : EvaluatorTestBase() {
     fun runPassTests(testCase: ExprFunctionTestCase) =
         runEvaluatorTestCase(
             query = testCase.source,
-            expectedLegacyModeResult = testCase.expectedLegacyModeResult,
+            expectedResult = testCase.expectedLegacyModeResult,
             expectedPermissiveModeResult = testCase.expectedPermissiveModeResult,
             expectedResultFormat = ExpectedResultFormat.ION
         )

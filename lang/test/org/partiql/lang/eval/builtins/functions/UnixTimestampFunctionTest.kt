@@ -19,9 +19,9 @@ class UnixTimestampFunctionTest : EvaluatorTestBase() {
     fun runPassTests(tc: ExprFunctionTestCase) =
         runEvaluatorTestCase(
             query = tc.source,
-            expectedLegacyModeResult = tc.expectedLegacyModeResult,
-            expectedPermissiveModeResult = tc.expectedPermissiveModeResult,
-            session = tc.session
+            session = tc.session,
+            expectedResult = tc.expectedLegacyModeResult,
+            expectedPermissiveModeResult = tc.expectedPermissiveModeResult
         )
 
     class UnixTimestampPassCases : ArgumentsProviderBase() {

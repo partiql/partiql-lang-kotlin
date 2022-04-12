@@ -15,7 +15,7 @@ class SubstringEvaluationTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(SubstringPassCases::class)
     fun runPassTests(testCase: ExprFunctionTestCase) =
-        runEvaluatorTestCase(testCase.source, testCase.expectedLegacyModeResult)
+        runEvaluatorTestCase(testCase.source, expectedResult = testCase.expectedLegacyModeResult)
 
     class SubstringPassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(

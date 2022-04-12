@@ -18,6 +18,7 @@ import junitparams.Parameters
 import org.junit.Test
 import org.partiql.lang.SqlException
 import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.eval.test.ExpectedResultFormat
 import java.util.Collections
 import java.util.Random
 
@@ -399,9 +400,9 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
 
         runEvaluatorTestCase(
             query = "$left = $right",
-            expectedLegacyModeResult = "true",
-            expectedResultFormat = ExpectedResultFormat.ION,
-            excludeLegacySerializerAssertions = true
+            expectedResult = "true",
+            excludeLegacySerializerAssertions = true,
+            expectedResultFormat = ExpectedResultFormat.ION
         )
     }
 
@@ -425,12 +426,12 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
 
         runEvaluatorTestCase(
             query = "$left = $right",
-            expectedLegacyModeResult = if (left == "missing" || right == "missing")
+            expectedResult = if (left == "missing" || right == "missing")
                 "\$partiql_missing::null"
             else
                 "null",
-            expectedResultFormat = ExpectedResultFormat.ION,
-            excludeLegacySerializerAssertions = true
+            excludeLegacySerializerAssertions = true,
+            expectedResultFormat = ExpectedResultFormat.ION
         )
     }
 }

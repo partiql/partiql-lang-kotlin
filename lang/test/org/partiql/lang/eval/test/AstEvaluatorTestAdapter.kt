@@ -8,7 +8,6 @@ import org.partiql.lang.SqlException
 import org.partiql.lang.errors.ErrorBehaviorInPermissiveMode
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluationSession
-import org.partiql.lang.eval.ExpectedResultFormat
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.cloneAndRemoveBagAndMissingAnnotations
@@ -37,7 +36,6 @@ private fun EvaluatorTestDefinition.createPipeline(forcePermissiveMode: Boolean 
 class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
 
     override fun runEvaluatorTestCase(tc: EvaluatorTestCase, session: EvaluationSession) {
-        // DL TODO: delete me
         if (tc.implicitPermissiveModeTest) {
             val testOpts = CompileOptions.build { tc.compileOptionsBuilderBlock(this) }
             assertNotEquals(
@@ -221,8 +219,6 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
                         "set to ErrorBehaviorInPermissiveMode.RETURN_MISSING",
                     tc.expectedPermissiveModeResult
                 )
-
-                // DL TODO: can we convert this EvaluatorErrorTestCase into an EvaluatorTestCase and run it instead?
 
                 // Compute the expected return value
                 val permissiveModePipeline = tc.createPipeline(forcePermissiveMode = true)

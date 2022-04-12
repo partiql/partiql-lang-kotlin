@@ -16,7 +16,7 @@ class UpperEvaluationTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(UpperPassCases::class)
     fun runPassTests(testCase: ExprFunctionTestCase) =
-        runEvaluatorTestCase(testCase.source, testCase.expectedLegacyModeResult)
+        runEvaluatorTestCase(testCase.source, expectedResult = testCase.expectedLegacyModeResult)
 
     class UpperPassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(

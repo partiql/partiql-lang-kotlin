@@ -31,6 +31,7 @@ import org.partiql.lang.eval.test.AstRewriterBaseTestAdapter
 import org.partiql.lang.eval.test.EvaluatorErrorTestCase
 import org.partiql.lang.eval.test.EvaluatorTestAdapter
 import org.partiql.lang.eval.test.EvaluatorTestCase
+import org.partiql.lang.eval.test.ExpectedResultFormat
 import org.partiql.lang.eval.test.LegacySerializerTestAdapter
 import org.partiql.lang.eval.test.MultipleTestAdapter
 import org.partiql.lang.eval.test.PartiqlAstExprNodeRoundTripAdapter
@@ -67,25 +68,23 @@ abstract class EvaluatorTestBase : TestBase() {
      *
      * The parameters of this function correspond to properties of [EvaluatorTestCase].
      *
-     * DL TODO: reorder these parameters
-     *
      * @see [EvaluatorTestCase]
      */
     protected fun runEvaluatorTestCase(
         query: String,
-        expectedLegacyModeResult: String,
         session: EvaluationSession = EvaluationSession.standard(),
+        expectedResult: String,
+        expectedPermissiveModeResult: String = expectedResult,
         excludeLegacySerializerAssertions: Boolean = false,
+        expectedResultFormat: ExpectedResultFormat = ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS,
+        includePermissiveModeTest: Boolean = true,
         compileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit = { },
         compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { },
-        expectedResultFormat: ExpectedResultFormat = ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS,
-        expectedPermissiveModeResult: String = expectedLegacyModeResult,
-        includePermissiveModeTest: Boolean = true,
         extraResultAssertions: (ExprValue) -> Unit = { }
     ) {
         val tc = EvaluatorTestCase(
             query = query,
-            expectedResult = expectedLegacyModeResult,
+            expectedResult = expectedResult,
             expectedPermissiveModeResult = expectedPermissiveModeResult,
             expectedResultFormat = expectedResultFormat,
             excludeLegacySerializerAssertions = excludeLegacySerializerAssertions,

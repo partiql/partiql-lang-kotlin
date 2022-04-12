@@ -20,6 +20,7 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.test.EvaluatorTestCase
+import org.partiql.lang.eval.test.ExpectedResultFormat
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.UnknownArguments
@@ -567,8 +568,8 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     @Test
     fun andShortCircuits() = runEvaluatorTestCase(
         query = "SELECT s.x FROM [{'x': '1.1'},{'x': '2'},{'x': '3'},{'x': '4'},{'x': '5'}] as s WHERE FALSE AND CAST(s.x as INT)",
-        expectedLegacyModeResult = "<<>>",
         session = boolsWithUnknowns,
+        expectedResult = "<<>>",
         expectedResultFormat = ExpectedResultFormat.PARTIQL
     )
 
@@ -595,24 +596,24 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     @Test
     fun whereClauseExprEvalsToNull() = runEvaluatorTestCase(
         query = "SELECT VALUE D.val from nullSample as D WHERE D.control",
-        expectedLegacyModeResult = "<<'A'>>",
         session = nullSample,
+        expectedResult = "<<'A'>>",
         expectedResultFormat = ExpectedResultFormat.PARTIQL
     )
 
     @Test
     fun whereClauseExprEvalsToMissing() = runEvaluatorTestCase(
         query = "SELECT VALUE D.val from missingSample as D WHERE D.control",
-        expectedLegacyModeResult = "<<'A'>>",
         session = missingSample,
+        expectedResult = "<<'A'>>",
         expectedResultFormat = ExpectedResultFormat.PARTIQL
     )
 
     @Test
     fun whereClauseExprEvalsToNullAndMissing() = runEvaluatorTestCase(
         query = "SELECT VALUE D.val from missingAndNullSample as D WHERE D.control",
-        expectedLegacyModeResult = "<<'A'>>",
         session = missingAndNullSample,
+        expectedResult = "<<'A'>>",
         expectedResultFormat = ExpectedResultFormat.PARTIQL
     )
 
@@ -621,166 +622,166 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     // ////////////////////////////////////////////////
 
     @Test
-    fun aggregateSumWithNull() = runEvaluatorTestCase("SELECT sum(x.n) from nullSample as x", "[{_1: 4}]", nullSample)
+    fun aggregateSumWithNull() = runEvaluatorTestCase("SELECT sum(x.n) from nullSample as x", nullSample, "[{_1: 4}]")
 
     @Test
     fun aggregateSumWithMissing() = runEvaluatorTestCase(
         "SELECT sum(x.n) from missingSample as x",
-        "[{_1: 3}]",
-        missingSample
+        missingSample,
+        "[{_1: 3}]"
     )
 
     @Test
     fun aggregateSumWithMissingAndNull() = runEvaluatorTestCase(
         "SELECT sum(x.n) from missingAndNullSample as x",
-        "[{_1: 9}]",
-        missingAndNullSample
+        missingAndNullSample,
+        "[{_1: 9}]"
     )
 
     @Test
-    fun aggregateMinWithNull() = runEvaluatorTestCase("SELECT min(x.n) from nullSample as x", "[{_1: 1}]", nullSample)
+    fun aggregateMinWithNull() = runEvaluatorTestCase("SELECT min(x.n) from nullSample as x", nullSample, "[{_1: 1}]")
 
     @Test
     fun aggregateMinWithMissing() = runEvaluatorTestCase(
         "SELECT min(x.n) from missingSample as x",
-        "[{_1: 1}]",
-        missingSample
+        missingSample,
+        "[{_1: 1}]"
     )
 
     @Test
     fun aggregateMinWithMissingAndNull() = runEvaluatorTestCase(
         "SELECT min(x.n) from missingAndNullSample as x",
-        "[{_1: 2}]",
-        missingAndNullSample
+        missingAndNullSample,
+        "[{_1: 2}]"
     )
 
     @Test
-    fun aggregateAvgWithNull() = runEvaluatorTestCase("SELECT avg(x.n) from nullSample as x", "[{_1: 2.}]", nullSample)
+    fun aggregateAvgWithNull() = runEvaluatorTestCase("SELECT avg(x.n) from nullSample as x", nullSample, "[{_1: 2.}]")
 
     @Test
     fun aggregateAvgWithMissing() = runEvaluatorTestCase(
         "SELECT avg(x.n) from missingSample as x",
-        "[{_1: 1.5}]",
-        missingSample
+        missingSample,
+        "[{_1: 1.5}]"
     )
 
     @Test
     fun aggregateAvgWithMissingAndNull() = runEvaluatorTestCase(
         "SELECT avg(x.n) from missingAndNullSample as x",
-        "[{_1: 3.}]",
-        missingAndNullSample
+        missingAndNullSample,
+        "[{_1: 3.}]"
     )
 
     @Test
     fun aggregateCountWithNull() = runEvaluatorTestCase(
         "SELECT count(x.n) from nullSample as x",
-        "[{_1: 2}]",
-        nullSample
+        nullSample,
+        "[{_1: 2}]"
     )
 
     @Test
     fun aggregateCountWithMissing() = runEvaluatorTestCase(
         "SELECT count(x.n) from missingSample as x",
-        "[{_1: 2}]",
-        missingSample
+        missingSample,
+        "[{_1: 2}]"
     )
 
     @Test
     fun aggregateCountWithMissingAndNull() = runEvaluatorTestCase(
         "SELECT count(x.n) from missingAndNullSample as x",
-        "[{_1: 3}]",
-        missingAndNullSample
+        missingAndNullSample,
+        "[{_1: 3}]"
     )
 
     @Test
-    fun countEmpty() = runEvaluatorTestCase("SELECT count(*) from `[]`", "[{_1: 0}]")
+    fun countEmpty() = runEvaluatorTestCase("SELECT count(*) from `[]`", expectedResult = "[{_1: 0}]")
 
     @Test
     fun countEmptyTuple() =
-        runEvaluatorTestCase("SELECT count(*) from `[{}]`", "[{_1: 1}]")
+        runEvaluatorTestCase("SELECT count(*) from `[{}]`", expectedResult = "[{_1: 1}]")
 
     @Test
-    fun sumEmpty() = runEvaluatorTestCase("SELECT sum(x.i) from `[]` as x", "[{_1: null}]")
+    fun sumEmpty() = runEvaluatorTestCase("SELECT sum(x.i) from `[]` as x", expectedResult = "[{_1: null}]")
 
     @Test
     fun sumEmptyTuple() =
-        runEvaluatorTestCase("SELECT sum(x.i) from `[{}]` as x", "[{_1: null}]")
+        runEvaluatorTestCase("SELECT sum(x.i) from `[{}]` as x", expectedResult = "[{_1: null}]")
 
     @Test
-    fun avgEmpty() = runEvaluatorTestCase("SELECT avg(x.i) from `[]` as x", "[{_1: null}]")
+    fun avgEmpty() = runEvaluatorTestCase("SELECT avg(x.i) from `[]` as x", expectedResult = "[{_1: null}]")
 
     @Test
     fun avgEmptyTuple() =
-        runEvaluatorTestCase("SELECT avg(x.i) from `[{}]` as x", "[{_1: null}]")
+        runEvaluatorTestCase("SELECT avg(x.i) from `[{}]` as x", expectedResult = "[{_1: null}]")
 
     @Test
     fun avgSomeEmptyTuples() = runEvaluatorTestCase(
         "SELECT avg(x.i) from `[{i: 1}, {}, {i:3}]` as x",
-        "[{_1: 2.}]"
+        expectedResult = "[{_1: 2.}]"
     )
 
     @Test
     fun avgSomeEmptyAndNullTuples() = runEvaluatorTestCase(
         "SELECT avg(x.i) from `[{i: 1}, {}, {i:null}, {i:3}]` as x",
-        "[{_1: 2.}]"
+        expectedResult = "[{_1: 2.}]"
     )
 
     @Test
     fun minSomeEmptyTuples() = runEvaluatorTestCase(
         "SELECT min(x.i) from `[{i: null}, {}, {i:3}]` as x",
-        "[{_1: 3}]"
+        expectedResult = "[{_1: 3}]"
     )
 
     @Test
     fun maxSomeEmptyTuples() = runEvaluatorTestCase(
         "SELECT max(x.i) from `[{i: null}, {}, {i:3}, {i:10}]` as x",
-        "[{_1: 10}]"
+        expectedResult = "[{_1: 10}]"
     )
     @Test
-    fun minEmpty() = runEvaluatorTestCase("SELECT min(x.i) from `[]` as x", "[{_1: null}]")
+    fun minEmpty() = runEvaluatorTestCase("SELECT min(x.i) from `[]` as x", expectedResult = "[{_1: null}]")
 
     @Test
     fun minEmptyTuple() =
-        runEvaluatorTestCase("SELECT min(x.i) from `[{}]` as x", "[{_1: null}]")
+        runEvaluatorTestCase("SELECT min(x.i) from `[{}]` as x", expectedResult = "[{_1: null}]")
 
     @Test
-    fun maxEmpty() = runEvaluatorTestCase("SELECT max(x.i) from `[]` as x", "[{_1: null}]")
+    fun maxEmpty() = runEvaluatorTestCase("SELECT max(x.i) from `[]` as x", expectedResult = "[{_1: null}]")
 
     @Test
     fun maxEmptyTuple() =
-        runEvaluatorTestCase("SELECT max(x.i) from `[{}]` as x", "[{_1: null}]")
+        runEvaluatorTestCase("SELECT max(x.i) from `[{}]` as x", expectedResult = "[{_1: null}]")
 
     @Test
     fun maxSomeEmptyTuple() = runEvaluatorTestCase(
         "SELECT max(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
-        "[{_1: 2}]"
+        expectedResult = "[{_1: 2}]"
     )
 
     @Test
     fun minSomeEmptyTuple() = runEvaluatorTestCase(
         "SELECT min(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
-        "[{_1: 1}]"
+        expectedResult = "[{_1: 1}]"
     )
 
     @Test
     fun sumSomeEmptyTuple() = runEvaluatorTestCase(
         "SELECT sum(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
-        "[{_1: 3}]"
+        expectedResult = "[{_1: 3}]"
     )
 
     @Test
     fun countSomeEmptyTuple() = runEvaluatorTestCase(
         "SELECT count(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
-        "[{_1: 2}]"
+        expectedResult = "[{_1: 2}]"
     )
 
     @Test
     fun countStar() = runEvaluatorTestCase(
         "SELECT count(*) from `[{}, {i:1}, {}, {i:2}]` as x",
-        "[{_1: 4}]"
+        expectedResult = "[{_1: 4}]"
     )
 
     @Test
     fun countLiteral() =
-        runEvaluatorTestCase("SELECT count(1) from `[{}, {}, {}, {}]` as x", "[{_1: 4}]")
+        runEvaluatorTestCase("SELECT count(1) from `[{}, {}, {}, {}]` as x", expectedResult = "[{_1: 4}]")
 }

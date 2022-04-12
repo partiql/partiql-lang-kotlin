@@ -2,7 +2,6 @@ package org.partiql.lang.eval.test
 
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.CompileOptions
-import org.partiql.lang.eval.ExpectedResultFormat
 import org.partiql.lang.eval.ExprValue
 
 /**
@@ -66,8 +65,6 @@ data class EvaluatorTestCase(
 
     val extraResultAssertions: (ExprValue) -> Unit = { }
 ) : EvaluatorTestDefinition {
-    // DL TODO: delete this constructor (but reorder the properties and this constructor
-    // to match first).
     constructor(
         query: String,
         expectedResult: String,

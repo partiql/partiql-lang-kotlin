@@ -18,9 +18,9 @@ class DateDiffEvaluationTest : EvaluatorTestBase() {
     fun runPassTests(testCase: ExprFunctionTestCase) =
         runEvaluatorTestCase(
             query = testCase.source,
-            expectedLegacyModeResult = testCase.expectedLegacyModeResult,
-            expectedPermissiveModeResult = testCase.expectedPermissiveModeResult,
-            session = testCase.session
+            session = testCase.session,
+            expectedResult = testCase.expectedLegacyModeResult,
+            expectedPermissiveModeResult = testCase.expectedPermissiveModeResult
         )
 
     class DateDiffPassCases : ArgumentsProviderBase() {

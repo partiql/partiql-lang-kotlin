@@ -16,7 +16,10 @@ import org.partiql.lang.util.propertyValueMapOf
 class FromUnixTimeFunctionTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(FromUnixTimePassCases::class)
-    fun runPassTests(tc: ExprFunctionTestCase) = runEvaluatorTestCase(tc.source, tc.expectedLegacyModeResult)
+    fun runPassTests(tc: ExprFunctionTestCase) = runEvaluatorTestCase(
+        tc.source,
+        expectedResult = tc.expectedLegacyModeResult
+    )
 
     class FromUnixTimePassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(

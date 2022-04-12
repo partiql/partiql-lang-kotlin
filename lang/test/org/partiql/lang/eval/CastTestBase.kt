@@ -17,6 +17,7 @@ import org.partiql.lang.eval.ExprValueType.NULL
 import org.partiql.lang.eval.ExprValueType.SEXP
 import org.partiql.lang.eval.ExprValueType.STRUCT
 import org.partiql.lang.eval.ExprValueType.TIMESTAMP
+import org.partiql.lang.eval.test.ExpectedResultFormat
 import org.partiql.lang.util.getOffsetHHmm
 import org.partiql.lang.util.honorTypedOpParameters
 import org.partiql.lang.util.legacyCastBehavior
@@ -85,12 +86,12 @@ abstract class CastTestBase : EvaluatorTestBase() {
             }
             else -> runEvaluatorTestCase(
                 castCase.expression,
-                castCase.expected,
-                compileOptionsBuilderBlock = compileOptionBlock,
+                expectedResult = castCase.expected,
                 excludeLegacySerializerAssertions = true,
-                compilerPipelineBuilderBlock = configurePipeline,
                 expectedResultFormat = expectedResultFormat,
                 includePermissiveModeTest = false,
+                compileOptionsBuilderBlock = compileOptionBlock,
+                compilerPipelineBuilderBlock = configurePipeline,
                 extraResultAssertions = castCase.additionalAssertBlock
             )
         }

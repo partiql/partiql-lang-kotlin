@@ -15,6 +15,7 @@ package org.partiql.lang.eval
 
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.lang.eval.test.ExpectedResultFormat
 import org.partiql.lang.util.ArgumentsProviderBase
 
 class EvaluatingCompilerCastTest : CastTestBase() {

@@ -1,4 +1,4 @@
-package org.partiql.lang.eval
+package org.partiql.lang.eval.test
 
 /**
  * Determines the format and equivalence that is used to perform assertions on the expected result of
@@ -9,21 +9,22 @@ package org.partiql.lang.eval
  * Ideally, all the test cases actually use a variation of Ion equivalence that recognizes the proper semantics
  * regarding `$partiql_bag::[]` (the order of items in bags is not relevant).  We can't have this yet because this
  * would involve changing the expected values of up to several 10s of thousands of unit tests (most of which are
- * generated).  Neither of the notions of equality utilized by the integration tests today are quite ideal.
+ * generated).  None of the 4 notions of equality utilized by the integration tests today are quite ideal.
  *
- * Today, the integration tests use one of two approaches:
+ * Today, the integration tests use one of 4 approaches:
  *
- * 1.  PartiQL equivalence (which involves evaluating a PartiQL expression to obtain the expected value), which does
- * support bag semantics, but this is otherwise too "loosey-goosey" in that it coerces values of mismatched but similar
- * data types before comparison (i.e. blobs and clobs, strings and symbols, as well as ints, floats and decimals).
- * This might result in some subtle bugs where the actual value returned by an expression is "equivalent", but still
- * have different types. See [PARTIQL].
- * 2. Ion's equivalence, (which involves parsing an Ion string to obtain the expected value), which avoids the
- * coercion pitfalls of the above with the down side that bag semantics are not supported.  See [ION]
- * an [EvaluatorTestHarness].
- * 2-a. Some of the older test cases use a slight variation of [ION], wherein the type annotations `$partiql_bag` and
+ * 1.  PartiQL equivalence, which requires evaluating a PartiQL expression to obtain the expected value, does support
+ * bag semantics, but this is otherwise too "loosey-goosey" in that it coerces values of mismatched but similar data
+ * types before comparison (i.e. blobs and clobs, strings and symbols, as well as ints, floats and decimals). This
+ * might result in some subtle bugs where the actual value returned by an expression is "equivalent", but still have
+ * different types. See [PARTIQL].
+ * 2. Ion's equivalence, (which involves parsing an Ion string to obtain the expected value), which avoids the coercion
+ * pitfalls of [PARTIQL] with the downside that bag semantics are not supported.  See [ION] an [EvaluatorTestHarness].
+ * 3. Some of the older test cases use a variation of [ION], wherein the type annotations `$partiql_bag` and
  * `$partiql_missing` are removed from the actual result before equivalence assertions.  This to support older test
  * cases that existed before those annotations. See [ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS].
+ * 4. We even have some tests (mostly related to `DATE` & `TIME` data types) that call `.toString()` on the resulting
+ * [org.partiql.lang.eval.ExprValue] and use standard string equivalence to compare the expected result.  See [STRING].
  */
 enum class ExpectedResultFormat {
     /**
