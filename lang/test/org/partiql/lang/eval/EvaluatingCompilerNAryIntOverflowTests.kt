@@ -2,6 +2,7 @@ package org.partiql.lang.eval
 
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.lang.eval.test.EvaluatorTestCase
 import org.partiql.lang.eval.visitors.StaticTypeInferenceVisitorTransform
 import org.partiql.lang.types.IntType
 import org.partiql.lang.types.StaticType

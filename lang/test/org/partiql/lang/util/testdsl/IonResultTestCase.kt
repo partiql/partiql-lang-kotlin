@@ -4,15 +4,15 @@ import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.ION
-import org.partiql.lang.eval.test.AstEvaluatorTestAdapter
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EVALUATOR_TEST_SUITE
 import org.partiql.lang.eval.EvaluationSession
-import org.partiql.lang.eval.EvaluatorTestCase
-import org.partiql.lang.eval.test.EvaluatorTestAdapter
 import org.partiql.lang.eval.ExpectedResultFormat
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.test.AstEvaluatorTestAdapter
+import org.partiql.lang.eval.test.EvaluatorTestAdapter
+import org.partiql.lang.eval.test.EvaluatorTestCase
 import org.partiql.lang.mockdb.MockDb
 import org.partiql.lang.syntax.SqlParser
 
@@ -85,11 +85,11 @@ internal fun IonResultTestCase.runTestCase(
         query = this.sqlUnderTest,
         expectedResult = this.expectedLegacyModeIonResult,
         expectedPermissiveModeResult = this.expectedPermissiveModeIonResult,
-        expectedResultMode = ExpectedResultFormat.ION,
+        expectedResultFormat = ExpectedResultFormat.ION,
+        excludeLegacySerializerAssertions = true,
+        implicitPermissiveModeTest = false,
         compileOptionsBuilderBlock = this.compileOptionsBuilderBlock,
         compilerPipelineBuilderBlock = pipelineBlock,
-        implicitPermissiveModeTest = false,
-        excludeLegacySerializerAssertions = true,
         extraResultAssertions = extraAssertions
     )
 

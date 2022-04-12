@@ -19,6 +19,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
+import org.partiql.lang.eval.test.EvaluatorTestCase
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.UnknownArguments
@@ -125,8 +126,8 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
                     // in [TypingMode.LEGACY], missing values are propagated as
                     // null. The .replace here means we don't need to specify a legacy mode value separately.
                     expectedResult = expectedResult.replace("missing", "null"),
-                    compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock,
-                    expectedPermissiveModeResult = expectedResult
+                    expectedPermissiveModeResult = expectedResult,
+                    compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock
                 )
             )
         }

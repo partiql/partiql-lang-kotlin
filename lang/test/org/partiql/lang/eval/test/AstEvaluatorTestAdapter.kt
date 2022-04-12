@@ -2,34 +2,39 @@ package org.partiql.lang.eval.test
 
 import org.junit.Assert
 import org.junit.jupiter.api.assertThrows
-import org.partiql.lang.CUSTOM_TEST_TYPES
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.ION
 import org.partiql.lang.SqlException
-import org.partiql.lang.ast.AstDeserializerBuilder
-import org.partiql.lang.ast.toAstStatement
-import org.partiql.lang.ast.toExprNode
-import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorBehaviorInPermissiveMode
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluationSession
-import org.partiql.lang.eval.EvaluatorErrorTestCase
-import org.partiql.lang.eval.EvaluatorTestCase
 import org.partiql.lang.eval.ExpectedResultFormat
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.cloneAndRemoveBagAndMissingAnnotations
 import org.partiql.lang.eval.exprEquals
-import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.ConfigurableExprValueFormatter
-import org.partiql.lang.util.stripMetas
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 
-class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
+private fun EvaluatorTestDefinition.createPipeline(forcePermissiveMode: Boolean = false): CompilerPipeline {
+    val compileOptions = CompileOptions.build(this@createPipeline.compileOptionsBuilderBlock).let { co ->
+        if (forcePermissiveMode) {
+            CompileOptions.build(co) {
+                typingMode(TypingMode.PERMISSIVE)
+            }
+        } else {
+            co
+        }
+    }
 
-    @Suppress("DEPRECATION")
-    private val defaultRewriter = org.partiql.lang.ast.passes.AstRewriterBase()
+    return CompilerPipeline.build(ION) {
+        compileOptions(compileOptions)
+        this@createPipeline.compilerPipelineBuilderBlock(this)
+    }
+}
+
+class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
 
     override fun runEvaluatorTestCase(tc: EvaluatorTestCase, session: EvaluationSession) {
         // DL TODO: delete me
@@ -58,8 +63,6 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
                 "compile options forced to PERMISSIVE mode"
             )
         }
-
-        commonAssertions(tc.query, tc.excludeLegacySerializerAssertions)
     }
 
     /**
@@ -82,15 +85,10 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
             println()
         }
 
-        val compileOptions = CompileOptions.build { tc.compileOptionsBuilderBlock(this) }
+        val pipeline = tc.createPipeline()
 
         val actualResult = try {
-            eval(
-                source = tc.query,
-                compilerPipelineBuilderBlock = tc.compilerPipelineBuilderBlock,
-                session = session,
-                compileOptions = compileOptions
-            )
+            pipeline.compile(tc.query).eval(session)
         } catch (e: Throwable) {
             showTestCase()
             e.printStackTrace()
@@ -99,16 +97,16 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
         }
 
         val expectedResult =
-            when (compileOptions.typingMode) {
+            when (pipeline.compileOptions.typingMode) {
                 TypingMode.LEGACY -> tc.expectedResult
                 TypingMode.PERMISSIVE -> tc.expectedPermissiveModeResult
             }
 
-        when (tc.expectedResultMode) {
+        when (tc.expectedResultFormat) {
             ExpectedResultFormat.ION, ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS -> {
                 val expectedIonResult = ION.singleValue(expectedResult)
                 val actualIonResult = actualResult.ionValue.let {
-                    if (tc.expectedResultMode == ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS)
+                    if (tc.expectedResultFormat == ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS)
                         it.cloneAndRemoveBagAndMissingAnnotations()
                     else
                         it
@@ -121,12 +119,7 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
             }
             ExpectedResultFormat.PARTIQL -> {
                 val expected = try {
-                    eval(
-                        source = expectedResult,
-                        compilerPipelineBuilderBlock = tc.compilerPipelineBuilderBlock,
-                        compileOptions = compileOptions,
-                        session = session
-                    )
+                    pipeline.compile(tc.query).eval(session)
                 } catch (e: Throwable) {
                     showTestCase()
                     e.printStackTrace()
@@ -149,97 +142,12 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
         tc.extraResultAssertions(actualResult)
     }
 
-    private fun eval(
-        source: String,
-        compileOptions: CompileOptions,
-        session: EvaluationSession,
-        compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit
-    ): ExprValue {
-        val pipeline = CompilerPipeline.builder(ION).apply {
-            customDataTypes(CUSTOM_TEST_TYPES)
-            compileOptions(compileOptions)
-            compilerPipelineBuilderBlock()
-        }
-
-        return pipeline.build().compile(source).eval(session)
-    }
-
-    /**
-     * Parses the given query and then:
-     *
-     * - Tests `ExprNode` <-> `PartiqlAst` transformations.
-     * - Tests [org.partiql.lang.ast.passes.AstRewriterBase].
-     * - When [excludeLegacySerializerAssertions] is `false`, tests the legacy (de)serializers for the V0 AST.
-     *
-     * @param query The SQL under test.
-     * @param excludeLegacySerializerAssertions Disables the legacy (de)serializers tests.  These are no longer
-     * being updated to support new AST nodes and therefore tests that include new nodes will fail unless this is
-     * set.
-     */
-    private fun commonAssertions(query: String, excludeLegacySerializerAssertions: Boolean) {
-        val parser = SqlParser(ION, CUSTOM_TEST_TYPES)
-        val ast = parser.parseAstStatement(query)
-
-        assertPartiqlAstExprNodeRoundTrip(ast)
-
-        val exprNode = ast.toExprNode(ION)
-
-        assertAstRewriterBase(query, exprNode)
-
-        if (!excludeLegacySerializerAssertions) {
-            assertLegacySerializer(exprNode)
-        }
-    }
-
-    @Suppress("DEPRECATION")
-    private fun assertLegacySerializer(
-        exprNode: org.partiql.lang.ast.ExprNode
-    ) {
-        val deserializer = AstDeserializerBuilder(ION).build()
-        org.partiql.lang.ast.AstVersion.values().forEach { astVersion ->
-            val sexpRepresentation = org.partiql.lang.ast.AstSerializer.serialize(exprNode, astVersion, ION)
-            val roundTrippedExprNode = deserializer.deserialize(sexpRepresentation, astVersion)
-            assertEquals(
-                exprNode.stripMetas(),
-                roundTrippedExprNode.stripMetas(),
-                "ExprNode deserialized from s-exp $astVersion AST must match the ExprNode returned by the parser"
-            )
-        }
-    }
-
-    private fun assertPartiqlAstExprNodeRoundTrip(ast: PartiqlAst.Statement) {
-        val roundTrippedAst = ast.toExprNode(ION).toAstStatement()
-        assertEquals(
-            ast,
-            roundTrippedAst,
-            "PIG ast resulting from round trip to ExprNode and back should be equivalent."
-        )
-    }
-
-    private fun assertAstRewriterBase(
-        originalSql: String,
-        @Suppress("DEPRECATION")
-        exprNode: org.partiql.lang.ast.ExprNode
-    ) {
-        val clonedAst = defaultRewriter.rewriteExprNode(exprNode)
-        assertEquals(
-            exprNode,
-            clonedAst,
-            "AST returned from default AstRewriterBase should match the original AST. SQL was: $originalSql"
-        )
-    }
-
     /** Runs an [EvaluatorErrorTestCase] once. */
     private fun privateRunEvaluatorErrorTestCase(
         tc: EvaluatorErrorTestCase,
         session: EvaluationSession,
     ) {
-
-        val compilerPipeline = CompilerPipeline.build(ION) {
-            customDataTypes(CUSTOM_TEST_TYPES)
-            tc.compilerPipelineBuilderBlock(this)
-            compileOptions { tc.compileOptionsBuilderBlock(this) }
-        }
+        val compilerPipeline = tc.createPipeline()
 
         val ex = assertThrows<SqlException>("test case should throw during evaluation") {
             // Note that an SqlException (usually a SemanticException or EvaluationException) might be thrown in
@@ -317,17 +225,14 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
                 // DL TODO: can we convert this EvaluatorErrorTestCase into an EvaluatorTestCase and run it instead?
 
                 // Compute the expected return value
-                val expectedExprValueForPermissiveMode = evalInPermissiveMode(
-                    tc.expectedPermissiveModeResult!!,
-                    session = session
-                )
+                val permissiveModePipeline = tc.createPipeline(forcePermissiveMode = true)
 
-                val actualReturnValueForPermissiveMode = evalInPermissiveMode(
-                    tc.query,
-                    session = session,
-                    compileOptions = CompileOptions.build { tc.compileOptionsBuilderBlock(this) },
-                    compilerPipelineBuilderBlock = tc.compilerPipelineBuilderBlock
-                )
+                val expectedExprValueForPermissiveMode = permissiveModePipeline
+                    .compile(tc.expectedPermissiveModeResult!!).eval(session)
+
+                val actualReturnValueForPermissiveMode = permissiveModePipeline
+                    .compile(tc.query).eval(session)
+
                 assertExprEquals(
                     expectedExprValueForPermissiveMode,
                     actualReturnValueForPermissiveMode,
@@ -335,30 +240,6 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
                 )
             }
         }
-
-        commonAssertions(tc.query, tc.excludeLegacySerializerAssertions)
-    }
-
-    /**
-     * Evaluates a source query given a [EvaluationSession] with default [CompileOptions] for [TypingMode.PERMISSIVE]
-     *
-     * The provided (or default) [compileOptions] are modified to have the [TypingMode] as [TypingMode.PERMISSIVE]
-     * @param source query source to be evaluated
-     * @param session [EvaluationSession] used for evaluation
-     * @param compilerPipelineBuilderBlock any additional configuration to the pipeline after the options are set.
-     */
-    private fun evalInPermissiveMode(
-        source: String,
-        compileOptions: CompileOptions = CompileOptions.standard(),
-        session: EvaluationSession = EvaluationSession.standard(),
-        compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }
-    ): ExprValue {
-        return eval(
-            source,
-            CompileOptions.builder(compileOptions).typingMode(TypingMode.PERMISSIVE).build(),
-            session,
-            compilerPipelineBuilderBlock
-        )
     }
 
     private fun assertExprEquals(expected: ExprValue, actual: ExprValue, message: String) {

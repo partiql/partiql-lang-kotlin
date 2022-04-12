@@ -17,6 +17,7 @@ package org.partiql.lang.eval
 import junitparams.Parameters
 import org.junit.Test
 import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.eval.test.EvaluatorTestCase
 import org.partiql.lang.util.propertyValueMapOf
 
 class EvaluatingCompilerHavingTest : EvaluatorTestBase() {

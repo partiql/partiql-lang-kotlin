@@ -1,9 +1,10 @@
-package org.partiql.lang.eval
+package org.partiql.lang.eval.test
 
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.SqlException
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.PropertyValueMap
+import org.partiql.lang.eval.CompileOptions
 
 /**
  * Defines a error test case for query evaluation.
@@ -12,12 +13,12 @@ data class EvaluatorErrorTestCase(
     /** The "group" of the tests--this only appears in the IDE's test runner and can be used to identify where in the
      * source code the test is defined.
      */
-    val groupName: String? = null,
+    override val groupName: String? = null,
 
     /**
      * The query to be evaluated.
      */
-    val query: String,
+    override val query: String,
 
     /**
      * The [ErrorCode] the query is to throw.
@@ -41,34 +42,34 @@ data class EvaluatorErrorTestCase(
      * query may not be `MISSING`, but rather it might be a container with `MISSING` somewhere in it.  Thus, we cannot
      * always assume the result will be `MISSING`.
      */
-    val expectedPermissiveModeResult: String? = null,
+    override val expectedPermissiveModeResult: String? = null,
 
     /**
      * Set to true to avoid testing the legacy AST serializers which are deprecated
      * and not being updated to include new AST nodes.
      */
-    val excludeLegacySerializerAssertions: Boolean = false,
+    override val excludeLegacySerializerAssertions: Boolean = false,
 
     /**
      * Include permissive mode test.
      */
-    val implicitPermissiveModeTest: Boolean = true,
+    override val implicitPermissiveModeTest: Boolean = true,
 
     /**
      * Builder block for building [CompileOptions].
      */
-    val compileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit = { },
+    override val compileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit = { },
 
     /**
      * Allows each test to configure its pipeline.
      */
-    val compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { },
+    override val compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { },
 
     /**
      * This will be executed to perform additional exceptions on the resulting exception.
      */
     val additionalExceptionAssertBlock: (SqlException) -> Unit = { }
-) {
+) : EvaluatorTestDefinition {
 
     /** This will show up in the IDE's test runner. */
     override fun toString(): String {

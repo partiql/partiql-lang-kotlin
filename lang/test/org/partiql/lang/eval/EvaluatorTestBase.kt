@@ -27,7 +27,13 @@ import org.partiql.lang.TestBase
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.test.AstEvaluatorTestAdapter
+import org.partiql.lang.eval.test.AstRewriterBaseTestAdapter
+import org.partiql.lang.eval.test.EvaluatorErrorTestCase
 import org.partiql.lang.eval.test.EvaluatorTestAdapter
+import org.partiql.lang.eval.test.EvaluatorTestCase
+import org.partiql.lang.eval.test.LegacySerializerTestAdapter
+import org.partiql.lang.eval.test.MultipleTestAdapter
+import org.partiql.lang.eval.test.PartiqlAstExprNodeRoundTripAdapter
 import org.partiql.lang.util.asSequence
 import org.partiql.lang.util.newFromIonText
 
@@ -42,7 +48,14 @@ import org.partiql.lang.util.newFromIonText
  * As we parameterize PartiQL's other tests, we should migrate them away from using this base class as well.
  */
 abstract class EvaluatorTestBase : TestBase() {
-    private val testHarness: EvaluatorTestAdapter = AstEvaluatorTestAdapter()
+    private val testHarness: EvaluatorTestAdapter = MultipleTestAdapter(
+        listOf(
+            AstEvaluatorTestAdapter(),
+            PartiqlAstExprNodeRoundTripAdapter(),
+            LegacySerializerTestAdapter(),
+            AstRewriterBaseTestAdapter()
+        )
+    )
 
     protected fun Map<String, String>.toSession() = EvaluationSession.build {
         globals(Bindings.ofMap(this@toSession.mapValues { valueFactory.newFromIonText(it.value) }))
@@ -74,11 +87,11 @@ abstract class EvaluatorTestBase : TestBase() {
             query = query,
             expectedResult = expectedLegacyModeResult,
             expectedPermissiveModeResult = expectedPermissiveModeResult,
-            expectedResultMode = expectedResultFormat,
+            expectedResultFormat = expectedResultFormat,
             excludeLegacySerializerAssertions = excludeLegacySerializerAssertions,
+            implicitPermissiveModeTest = includePermissiveModeTest,
             compileOptionsBuilderBlock = compileOptionsBuilderBlock,
             compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,
-            implicitPermissiveModeTest = includePermissiveModeTest,
             extraResultAssertions = extraResultAssertions
         )
         testHarness.runEvaluatorTestCase(tc, session)

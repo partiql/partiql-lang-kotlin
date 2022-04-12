@@ -2,6 +2,7 @@ package org.partiql.lang.eval
 
 import junitparams.Parameters
 import org.junit.Test
+import org.partiql.lang.eval.test.EvaluatorTestCase
 
 class JoinWithOnConditionTest : EvaluatorTestBase() {
 
@@ -84,9 +85,9 @@ class JoinWithOnConditionTest : EvaluatorTestBase() {
         return listOf(
             Pair(
                 EvaluatorTestCase(
-                    "JOIN ON with no nulls",
-                    sqlUnderTest,
-                    """ 
+                    groupName = "JOIN ON with no nulls",
+                    query = sqlUnderTest,
+                    expectedResult = """ 
                         << 
                             {'id':1, 'val1':'a', 'val2':10},
                             {'id':2, 'val1':'b', 'val2':20},
@@ -98,9 +99,9 @@ class JoinWithOnConditionTest : EvaluatorTestBase() {
             ),
             Pair(
                 EvaluatorTestCase(
-                    "JOIN ON with no nulls",
-                    sqlUnderTest,
-                    """
+                    groupName = "JOIN ON with no nulls",
+                    query = sqlUnderTest,
+                    expectedResult = """
                         << 
                             {'id':1, 'val1':'a', 'val2':10},
                             {'id':3, 'val1':'c', 'val2':30}
@@ -111,17 +112,17 @@ class JoinWithOnConditionTest : EvaluatorTestBase() {
             ),
             Pair(
                 EvaluatorTestCase(
-                    "JOIN ON with no nulls",
-                    sqlUnderTest,
-                    " <<>> "
+                    groupName = "JOIN ON with no nulls",
+                    query = sqlUnderTest,
+                    expectedResult = " <<>> "
                 ),
                 sessionNullTable
             ),
             Pair(
                 EvaluatorTestCase(
-                    "JOIN ON with no nulls",
-                    sqlUnderTest,
-                    " <<>> "
+                    groupName = "JOIN ON with no nulls",
+                    query = sqlUnderTest,
+                    expectedResult = " <<>> "
                 ),
                 sessionNullTableRow
             )

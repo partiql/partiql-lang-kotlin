@@ -80,8 +80,8 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         private fun case(query: String, expected: String, expectedTime: TimeForValidation, compileOptionsBlock: CompileOptions.Builder.() -> Unit) = TimeTestCase(query, expected, expectedTime, compileOptionsBlock)
 
         private fun compileOptionsBlock(hours: Int = 0, minutes: Int = 0): CompileOptions.Builder.() -> Unit = {
-                defaultTimezoneOffset(ZoneOffset.ofHoursMinutes(hours, minutes))
-            }
+            defaultTimezoneOffset(ZoneOffset.ofHoursMinutes(hours, minutes))
+        }
 
         override fun getParameters() = listOf(
             case("TIME '00:00:00.000'", "00:00:00.000", TimeForValidation(0, 0, 0, 0, 3)),
