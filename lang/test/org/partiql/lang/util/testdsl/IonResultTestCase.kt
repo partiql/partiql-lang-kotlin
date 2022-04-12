@@ -7,12 +7,12 @@ import org.partiql.lang.ION
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EVALUATOR_TEST_SUITE
 import org.partiql.lang.eval.EvaluationSession
-import org.partiql.lang.eval.test.ExpectedResultFormat
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.test.AstEvaluatorTestAdapter
 import org.partiql.lang.eval.test.EvaluatorTestAdapter
 import org.partiql.lang.eval.test.EvaluatorTestCase
+import org.partiql.lang.eval.test.ExpectedResultFormat
 import org.partiql.lang.mockdb.MockDb
 import org.partiql.lang.syntax.SqlParser
 
