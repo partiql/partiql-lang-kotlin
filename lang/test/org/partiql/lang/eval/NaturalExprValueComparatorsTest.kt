@@ -17,8 +17,6 @@ package org.partiql.lang.eval
 import junitparams.Parameters
 import org.junit.Test
 import org.junit.jupiter.api.assertDoesNotThrow
-import org.partiql.lang.SqlException
-import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.test.ExpectedResultFormat
 import java.util.Collections
 import java.util.Random

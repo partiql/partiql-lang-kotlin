@@ -1,6 +1,5 @@
 package org.partiql.lang.eval
 
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.lang.ION
@@ -203,5 +202,6 @@ class EvaluatorStaticTypeTests {
             valueFactory = valueFactory,
             db = mockDb,
             // Enable the static type inferencer for this
-            pipelineBlock = { this.globalTypeBindings(mockDb.typeBindings) })
+            pipelineBlock = { this.globalTypeBindings(mockDb.typeBindings) }
+        )
 }

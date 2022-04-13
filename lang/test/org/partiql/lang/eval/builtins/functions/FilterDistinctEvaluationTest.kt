@@ -48,7 +48,8 @@ class FilterDistinctEvaluationTest : EvaluatorTestBase() {
     fun toStringInvalidArgumentTests(testCase: InvalidArgTestCase) = runEvaluatorErrorTestCase(
         query = testCase.source,
         expectedErrorCode = ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL,
-        expectedErrorContext = propertyValueMapOf(1, 1,
+        expectedErrorContext = propertyValueMapOf(
+            1, 1,
             Property.FUNCTION_NAME to "filter_distinct",
             Property.EXPECTED_ARGUMENT_TYPES to "BAG, LIST, SEXP, or STRUCT",
             Property.ACTUAL_ARGUMENT_TYPES to testCase.actualArgumentType,

@@ -18,7 +18,6 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.errors.UNKNOWN
-import org.partiql.lang.util.propertyValueMapOf
 
 /**
  * General exception class for the interpreter.

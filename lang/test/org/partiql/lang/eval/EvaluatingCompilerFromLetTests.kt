@@ -35,15 +35,18 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
             // LET used in GROUP BY
             EvaluatorTestCase(
                 "SELECT * FROM C LET region AS X GROUP BY X",
-                """<< {'X': `EU`}, {'X': `NA`} >>"""),
+                """<< {'X': `EU`}, {'X': `NA`} >>"""
+            ),
             // LET used in projection after GROUP BY
             EvaluatorTestCase(
                 "SELECT foo FROM B LET 100 AS foo GROUP BY B.id, foo",
-                """<< {'foo': 100}, {'foo': 100} >>"""),
+                """<< {'foo': 100}, {'foo': 100} >>"""
+            ),
             // LET used in HAVING after GROUP BY
             EvaluatorTestCase(
                 "SELECT B.id FROM B LET 100 AS foo GROUP BY B.id, foo HAVING B.id > foo",
-                """<< {'id': 200} >>"""),
+                """<< {'id': 200} >>"""
+            ),
             // LET shadowed binding
             EvaluatorTestCase(
                 "SELECT X FROM A LET 1 AS X, 2 AS X",
@@ -77,7 +80,8 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
             // LET calling function with GROUP BY and aggregation
             EvaluatorTestCase(
                 "SELECT C.region, MAX(nameLength) AS maxLen FROM C LET char_length(C.name) AS nameLength GROUP BY C.region",
-                """<< {'region': `EU`, 'maxLen': 6}, {'region': `NA`, 'maxLen': 9} >>"""),
+                """<< {'region': `EU`, 'maxLen': 6}, {'region': `NA`, 'maxLen': 9} >>"""
+            ),
             // LET outer query has correct value
             EvaluatorTestCase(
                 "SELECT X FROM (SELECT VALUE X FROM A LET 1 AS X) LET 2 AS X",
