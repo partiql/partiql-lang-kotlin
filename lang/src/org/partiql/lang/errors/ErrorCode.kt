@@ -980,12 +980,6 @@ enum class ErrorCode(
         ErrorBehaviorInPermissiveMode.RETURN_MISSING
     ),
 
-    EVALUATOR_SQL_EXCEPTION(
-        ErrorCategory.EVALUATOR,
-        LOCATION,
-        "SQL exception"
-    ),
-
     EVALUATOR_COUNT_START_NOT_ALLOWED(
         ErrorCategory.EVALUATOR,
         LOCATION,

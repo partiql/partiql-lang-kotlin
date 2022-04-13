@@ -60,7 +60,6 @@ internal class MakeTimeExprFunction(val valueFactory: ExprValueFactory) : ExprFu
             err(
                 message = e.message,
                 errorCode = ErrorCode.EVALUATOR_TIME_FIELD_OUT_OF_RANGE,
-                errorContext = null,
                 internal = false
             )
         }

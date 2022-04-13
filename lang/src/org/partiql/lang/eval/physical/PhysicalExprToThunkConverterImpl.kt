@@ -458,7 +458,7 @@ internal class PhysicalExprToThunkConverterImpl(
                         }
                     }
                     TypingMode.PERMISSIVE -> {
-                        val biggestIntegerType = staticTypes.filterIsInstance<IntType>().maxBy {
+                        val biggestIntegerType = staticTypes.filterIsInstance<IntType>().maxByOrNull {
                             it.rangeConstraint.numBytes
                         }
                         when (biggestIntegerType) {
@@ -579,7 +579,7 @@ internal class PhysicalExprToThunkConverterImpl(
         val computeThunk = thunkFactory.thunkFold(metas, argThunks) { lValue, rValue ->
             val denominator = rValue.numberValue()
             if (denominator.isZero()) {
-                err("% by zero", ErrorCode.EVALUATOR_MODULO_BY_ZERO, null, false)
+                err("% by zero", ErrorCode.EVALUATOR_MODULO_BY_ZERO, internal = false)
             }
 
             (lValue.numberValue() % denominator).exprValue()
@@ -919,7 +919,6 @@ internal class PhysicalExprToThunkConverterImpl(
                     errInvalidArgumentType(
                         signature = signature,
                         position = position,
-                        numArgs = args.size,
                         expectedTypes = formalExprValueTypeDomain.toList(),
                         actualType = actualExprValueType
                     )

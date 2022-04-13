@@ -666,7 +666,7 @@ internal class EvaluatingCompiler(
         val computeThunk = thunkFactory.thunkFold(metas, argThunks) { lValue, rValue ->
             val denominator = rValue.numberValue()
             if (denominator.isZero()) {
-                err("% by zero", ErrorCode.EVALUATOR_MODULO_BY_ZERO, null, false)
+                err("% by zero", ErrorCode.EVALUATOR_MODULO_BY_ZERO, internal = false)
             }
 
             (lValue.numberValue() % denominator).exprValue()
@@ -2098,7 +2098,6 @@ internal class EvaluatingCompiler(
         } ?: err(
             "Order BY comparator cannot be null",
             ErrorCode.EVALUATOR_ORDER_BY_NULL_COMPARATOR,
-            null,
             internal = true
         )
 

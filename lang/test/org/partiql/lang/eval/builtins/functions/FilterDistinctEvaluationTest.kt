@@ -9,13 +9,15 @@ import org.partiql.lang.eval.EvaluatorTestBase
 import org.partiql.lang.eval.builtins.ExprFunctionTestCase
 import org.partiql.lang.eval.builtins.checkInvalidArity
 import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.lang.util.to
 
 class FilterDistinctEvaluationTest : EvaluatorTestBase() {
     // Pass test cases
     @ParameterizedTest
     @ArgumentsSource(ToStringPassCases::class)
-    fun runPassTests(testCase: ExprFunctionTestCase) = assertEval(testCase.source, testCase.expected)
+    fun runPassTests(testCase: ExprFunctionTestCase) =
+        runEvaluatorTestCase(query = testCase.source, expectedResult = testCase.expectedLegacyModeResult)
 
     // We rely on the built-in [DEFAULT_COMPARATOR] for the actual definition of equality, which is not being tested
     // here.
@@ -43,18 +45,16 @@ class FilterDistinctEvaluationTest : EvaluatorTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(InvalidArgCases::class)
-    fun toStringInvalidArgumentTests(testCase: InvalidArgTestCase) = checkInputThrowingEvaluationException(
-        testCase.source,
-        ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL,
-        mapOf(
-            Property.LINE_NUMBER to 1L,
-            Property.COLUMN_NUMBER to 1L,
+    fun toStringInvalidArgumentTests(testCase: InvalidArgTestCase) = runEvaluatorErrorTestCase(
+        query = testCase.source,
+        expectedErrorCode = ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL,
+        expectedErrorContext = propertyValueMapOf(1, 1,
             Property.FUNCTION_NAME to "filter_distinct",
             Property.EXPECTED_ARGUMENT_TYPES to "BAG, LIST, SEXP, or STRUCT",
             Property.ACTUAL_ARGUMENT_TYPES to testCase.actualArgumentType,
             Property.ARGUMENT_POSITION to 1
         ),
-        expectedPermissiveModeResult = "MISSING"
+        expectedPermissiveModeResult = "MISSING",
     )
 
     class InvalidArgCases : ArgumentsProviderBase() {

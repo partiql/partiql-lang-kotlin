@@ -52,7 +52,6 @@ internal class MakeDateExprFunction(val valueFactory: ExprValueFactory) : ExprFu
             err(
                 message = "Date field value out of range. $year-$month-$day",
                 errorCode = ErrorCode.EVALUATOR_DATE_FIELD_OUT_OF_RANGE,
-                errorContext = null,
                 internal = false
             )
         }

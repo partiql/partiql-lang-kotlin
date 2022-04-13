@@ -16,6 +16,7 @@ package org.partiql.lang.eval
 
 import junitparams.Parameters
 import org.junit.Test
+import org.junit.jupiter.api.assertDoesNotThrow
 import org.partiql.lang.SqlException
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.test.ExpectedResultFormat
@@ -295,10 +296,8 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
     private fun <T> List<List<T>>.flatten() = this.flatMap { it }
     private fun List<List<String>>.eval() = map {
         it.map {
-            try {
-                eval(it, compileOptions = CompileOptions.standard()) // computes expected ExprValue
-            } catch (e: Exception) {
-                throw SqlException("Could not evaluate $it", errorCode = ErrorCode.EVALUATOR_SQL_EXCEPTION, cause = e)
+            assertDoesNotThrow {
+                eval(it, compileOptions = CompileOptions.standard())
             }
         }
     }

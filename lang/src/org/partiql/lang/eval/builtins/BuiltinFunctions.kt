@@ -15,6 +15,7 @@
 package org.partiql.lang.eval.builtins
 
 import com.amazon.ion.system.IonSystemBuilder
+import org.partiql.lang.eval.DEFAULT_COMPARATOR
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue

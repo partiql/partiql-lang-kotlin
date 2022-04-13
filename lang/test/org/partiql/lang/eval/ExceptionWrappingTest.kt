@@ -26,7 +26,7 @@ class ExceptionWrappingTest {
 
     private val throwSemanticExceptionExprFunction = object : ExprFunction {
         override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
-            throw SemanticException("Intentionally throw a SemanticException", ErrorCode.SEMANTIC_AMBIGUOUS_BINDING, null)
+            throw SemanticException("Intentionally throw a SemanticException", ErrorCode.SEMANTIC_AMBIGUOUS_BINDING)
         }
 
         override val signature: FunctionSignature

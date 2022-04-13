@@ -25,7 +25,7 @@ open class SyntaxException(
     errorContext: PropertyValueMap,
     cause: Throwable? = null
 ) :
-    SqlException(message, errorCode, errorContext, internal = false, cause)
+    SqlException(message, errorCode, errorContext, cause)
 
 /** Error in the Lexer. */
 open class LexerException(

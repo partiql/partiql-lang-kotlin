@@ -18,6 +18,7 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.errors.UNKNOWN
+import org.partiql.lang.util.propertyValueMapOf
 
 /**
  * General exception class for the interpreter.
@@ -33,7 +34,7 @@ import org.partiql.lang.errors.UNKNOWN
  *
  * @param message the message for this exception
  * @param errorCode the error code for this exception
- * @param errorContext context for this error
+ * @param errorContext context for this error, includes details like line & character offsets, among others.
  * @param internal True to indicate that this exception a bug in ParitQL itself.  False to indicate it was caused by
  * incorrect usage of APIs or invalid end-user queries.
  * @param cause for this exception
@@ -41,8 +42,7 @@ import org.partiql.lang.errors.UNKNOWN
 open class SqlException(
     override var message: String,
     val errorCode: ErrorCode,
-    errorContext: PropertyValueMap? = null,
-    val internal: Boolean,
+    val errorContext: PropertyValueMap,
     cause: Throwable? = null
 ) :
     RuntimeException(message, cause) {

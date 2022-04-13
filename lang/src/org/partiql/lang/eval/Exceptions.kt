@@ -29,7 +29,7 @@ import org.partiql.lang.util.to
 open class EvaluationException(
     message: String,
     errorCode: ErrorCode,
-    errorContext: PropertyValueMap? = null,
+    errorContext: PropertyValueMap = propertyValueMapOf(),
     cause: Throwable? = null,
     override val internal: Boolean
 ) : SqlException(message, errorCode, errorContext, cause) {
@@ -37,7 +37,7 @@ open class EvaluationException(
     constructor(
         cause: Throwable,
         errorCode: ErrorCode,
-        errorContext: PropertyValueMap? = null,
+        errorContext: PropertyValueMap = propertyValueMapOf(),
         internal: Boolean
     ) : this(
         message = cause.message ?: "<NO MESSAGE>",
@@ -51,10 +51,11 @@ open class EvaluationException(
 /**
  * Shorthand for throwing function evaluation. Separated from [err] to avoid loosing the context unintentionally
  */
-internal fun errNoContext(message: String, errorCode: ErrorCode, internal: Boolean): Nothing = err(message, errorCode, null, internal)
+internal fun errNoContext(message: String, errorCode: ErrorCode, internal: Boolean): Nothing =
+    err(message, errorCode, propertyValueMapOf(), internal)
 
 /** Shorthand for throwing evaluation with context with an error code.. */
-internal fun err(message: String, errorCode: ErrorCode, errorContext: PropertyValueMap?, internal: Boolean): Nothing =
+internal fun err(message: String, errorCode: ErrorCode, errorContext: PropertyValueMap = propertyValueMapOf(), internal: Boolean): Nothing =
     throw EvaluationException(message, errorCode, errorContext, internal = internal)
 
 internal fun expectedArgTypeErrorMsg(types: List<ExprValueType>): String = when (types.size) {

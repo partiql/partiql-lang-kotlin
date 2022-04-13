@@ -27,9 +27,9 @@ import org.partiql.lang.util.propertyValueMapOf
 class SemanticException(
     message: String = "",
     errorCode: ErrorCode,
-    errorContext: PropertyValueMap?,
+    errorContext: PropertyValueMap = propertyValueMapOf(),
     cause: Throwable? = null
-) : SqlException(message, errorCode, errorContext, internal = false, cause) {
+) : SqlException(message, errorCode, errorContext, cause) {
 
     /**
      * Alternate constructor using a [Problem]. Error message is generated using [ProblemDetails.message].

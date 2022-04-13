@@ -427,18 +427,4 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
         expectedErrorContext = propertyValueMapOf(1, 11, Property.BINDING_NAME to "leading"),
         expectedPermissiveModeResult = "MISSING"
     )
-
-    // TODO: ORDER BY node is missing metas https://github.com/partiql/partiql-lang-kotlin/issues/516 hence the
-    //  incorrect source location in the reported error
-    @Test
-    fun orderByThrowsCorrectException() =
-        checkInputThrowingEvaluationException(
-            input = "SELECT 1 FROM <<>> ORDER BY x",
-            errorCode = ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
-            expectErrorContextValues = mapOf(
-                Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 1L,
-                Property.FEATURE_NAME to "ORDER BY"
-            )
-        )
 }

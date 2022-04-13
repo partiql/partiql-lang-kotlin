@@ -32,7 +32,7 @@ import org.partiql.lang.util.BuilderDsl
  * @param TEnv The type of the environment.  Generic so that the legacy AST compiler and the new compiler may use
  * different types here.
  */
-internal typealias ThunkEnv = (Environment) -> ExprValue
+internal typealias Thunk<TEnv> = (TEnv) -> ExprValue
 
 /**
  * A thunk taking a single [T] argument and the current environment.
@@ -46,7 +46,7 @@ internal typealias ThunkEnv = (Environment) -> ExprValue
  * different types here.
  * @param TArg The type of the additional argument.
  */
-internal typealias ThunkEnvValue<T> = (Environment, T) -> ExprValue
+internal typealias ThunkValue<TEnv, T> = (TEnv, T) -> ExprValue
 
 /**
  * A type alias for an exception handler which always throws(primarily used for [TypingMode.LEGACY]).
@@ -393,23 +393,13 @@ internal abstract class ThunkFactory<TEnv>(
     protected fun populateErrorContext(
         exception: EvaluationException,
         sourceLocation: SourceLocationMeta?
-    ) = when (exception.errorContext) {
-        null ->
-            EvaluationException(
-                message = exception.message,
-                errorCode = exception.errorCode,
-                errorContext = errorContextFrom(sourceLocation),
-                cause = exception,
-                internal = exception.internal
-            )
-        else -> {
-            // Only add source location data to the error context if it doesn't already exist
-            // in [errorContext].
-            if (!exception.errorContext.hasProperty(Property.LINE_NUMBER)) {
-                sourceLocation?.let { fillErrorContext(exception.errorContext, sourceLocation) }
-            }
-            exception
+    ): EvaluationException {
+        // Only add source location data to the error context if it doesn't already exist
+        // in [errorContext].
+        if (!exception.errorContext.hasProperty(Property.LINE_NUMBER)) {
+            sourceLocation?.let { fillErrorContext(exception.errorContext, sourceLocation) }
         }
+        return exception
     }
 
     /**
