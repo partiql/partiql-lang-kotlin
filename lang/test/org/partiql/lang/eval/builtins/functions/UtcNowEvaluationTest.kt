@@ -13,13 +13,14 @@ class UtcNowEvaluationTest : EvaluatorTestBase() {
     // Pass test cases
     @ParameterizedTest
     @ArgumentsSource(UtcNowPassCases::class)
-    fun runPassTests(tc: ExprFunctionTestCase) = assertEval(tc.source, tc.expected, tc.session)
+    fun runPassTests(tc: ExprFunctionTestCase) =
+        runEvaluatorTestCase(tc.source, tc.session, tc.expectedLegacyModeResult)
 
     class UtcNowPassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
-            ExprFunctionTestCase("utcnow()", "1970-01-01T00:00:00.000Z", buildSessionWithNow(0, 0)),
-            ExprFunctionTestCase("utcnow()", "1970-01-01T00:00:01.000Z", buildSessionWithNow(1_000, 0)),
-            ExprFunctionTestCase("utcnow()", "1970-01-01T00:05:00.000Z", buildSessionWithNow(5L * 60 * 1_000, 1)) // 1970-01-01T00:05:01.000+00:01
+            ExprFunctionTestCase("utcnow()", "1970-01-01T00:00:00.000Z", session = buildSessionWithNow(0, 0)),
+            ExprFunctionTestCase("utcnow()", "1970-01-01T00:00:01.000Z", session = buildSessionWithNow(1_000, 0)),
+            ExprFunctionTestCase("utcnow()", "1970-01-01T00:05:00.000Z", session = buildSessionWithNow(5L * 60 * 1_000, 1)) // 1970-01-01T00:05:01.000+00:01
         )
     }
 

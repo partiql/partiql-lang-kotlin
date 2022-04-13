@@ -36,7 +36,7 @@ allprojects {
 
 subprojects {
     group = 'org.partiql'
-    version = '0.5.1-SNAPSHOT'
+    version = '0.6.0'
 }
 
 buildDir = new File(rootProject.projectDir, "gradle-build/" + project.name)
@@ -72,6 +72,12 @@ subprojects {
             reports {
                 html.required.set(true)
                 html.outputLocation.set(file("${buildDir}/reports/jacoco/html"))
+            }
+            afterEvaluate {
+                classDirectories.setFrom(files(classDirectories.files.collect {
+                    // exclude PIG generated files.
+                    fileTree(dir: it, exclude: ["org/partiql/lang/domains/*.class"])
+                }))
             }
         }
     }

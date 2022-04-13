@@ -14,7 +14,10 @@ import org.partiql.lang.util.ArgumentsProviderBase
 class LowerEvaluationTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(LowerPassCases::class)
-    fun runPassTests(tc: ExprFunctionTestCase) = assertEval(tc.source, tc.expected)
+    fun runPassTests(tc: ExprFunctionTestCase) = runEvaluatorTestCase(
+        tc.source,
+        expectedResult = tc.expectedLegacyModeResult
+    )
 
     class LowerPassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(

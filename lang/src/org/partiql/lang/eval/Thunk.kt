@@ -32,7 +32,7 @@ import org.partiql.lang.util.BuilderDsl
  * @param TEnv The type of the environment.  Generic so that the legacy AST compiler and the new compiler may use
  * different types here.
  */
-internal typealias Thunk<TEnv> = (TEnv) -> ExprValue
+internal typealias ThunkEnv = (Environment) -> ExprValue
 
 /**
  * A thunk taking a single [T] argument and the current environment.
@@ -46,17 +46,17 @@ internal typealias Thunk<TEnv> = (TEnv) -> ExprValue
  * different types here.
  * @param TArg The type of the additional argument.
  */
-internal typealias ThunkValue<TEnv, TArg> = (TEnv, TArg) -> ExprValue
+internal typealias ThunkEnvValue<T> = (Environment, T) -> ExprValue
 
 /**
  * A type alias for an exception handler which always throws(primarily used for [TypingMode.LEGACY]).
  */
-typealias ThunkExceptionHandlerForLegacyMode = (Throwable, SourceLocationMeta?) -> Nothing
+internal typealias ThunkExceptionHandlerForLegacyMode = (Throwable, SourceLocationMeta?) -> Nothing
 
 /**
  * A type alias for an exception handler which does not always throw(primarily used for [TypingMode.PERMISSIVE]).
  */
-typealias ThunkExceptionHandlerForPermissiveMode = (Throwable, SourceLocationMeta?) -> Unit
+internal typealias ThunkExceptionHandlerForPermissiveMode = (Throwable, SourceLocationMeta?) -> Unit
 
 /**
  * Options for thunk construction.
@@ -109,7 +109,7 @@ data class ThunkOptions private constructor(
     }
 }
 
-val DEFAULT_EXCEPTION_HANDLER_FOR_LEGACY_MODE: ThunkExceptionHandlerForLegacyMode = { e, sourceLocation ->
+internal val DEFAULT_EXCEPTION_HANDLER_FOR_LEGACY_MODE: ThunkExceptionHandlerForLegacyMode = { e, sourceLocation ->
     val message = e.message ?: "<NO MESSAGE>"
     throw EvaluationException(
         "Internal error, $message",
@@ -120,7 +120,7 @@ val DEFAULT_EXCEPTION_HANDLER_FOR_LEGACY_MODE: ThunkExceptionHandlerForLegacyMod
     )
 }
 
-val DEFAULT_EXCEPTION_HANDLER_FOR_PERMISSIVE_MODE: ThunkExceptionHandlerForPermissiveMode = { _, _ -> }
+internal val DEFAULT_EXCEPTION_HANDLER_FOR_PERMISSIVE_MODE: ThunkExceptionHandlerForPermissiveMode = { _, _ -> }
 
 /**
  * An extension method for creating [ThunkFactory] based on the type of [TypingMode]
@@ -389,6 +389,29 @@ internal abstract class ThunkFactory<TEnv>(
         op: (ExprValue, ExprValue) -> Boolean
     ): Thunk<TEnv>
 
+    /** Populates [exception] with the line & column from the specified [SourceLocationMeta]. */
+    protected fun populateErrorContext(
+        exception: EvaluationException,
+        sourceLocation: SourceLocationMeta?
+    ) = when (exception.errorContext) {
+        null ->
+            EvaluationException(
+                message = exception.message,
+                errorCode = exception.errorCode,
+                errorContext = errorContextFrom(sourceLocation),
+                cause = exception,
+                internal = exception.internal
+            )
+        else -> {
+            // Only add source location data to the error context if it doesn't already exist
+            // in [errorContext].
+            if (!exception.errorContext.hasProperty(Property.LINE_NUMBER)) {
+                sourceLocation?.let { fillErrorContext(exception.errorContext, sourceLocation) }
+            }
+            exception
+        }
+    }
+
     /**
      * Handles exceptions appropriately for a run-time [Thunk<TEnv>].
      *
@@ -537,12 +560,7 @@ internal class LegacyThunkFactory<TEnv>(
         try {
             block()
         } catch (e: EvaluationException) {
-            // Only add source location data to the error context if it doesn't already exist
-            // in [errorContext].
-            if (!e.errorContext.hasProperty(Property.LINE_NUMBER)) {
-                sourceLocation?.let { fillErrorContext(e.errorContext, sourceLocation) }
-            }
-            throw e
+            throw populateErrorContext(e, sourceLocation)
         } catch (e: Exception) {
             thunkOptions.handleExceptionForLegacyMode(e, sourceLocation)
         }
@@ -693,7 +711,7 @@ internal class PermissiveThunkFactory<TEnv>(
             thunkOptions.handleExceptionForPermissiveMode(e, sourceLocation)
             when (e.errorCode.errorBehaviorInPermissiveMode) {
                 // Rethrows the exception as it does in LEGACY mode.
-                ErrorBehaviorInPermissiveMode.THROW_EXCEPTION -> throw e
+                ErrorBehaviorInPermissiveMode.THROW_EXCEPTION -> throw populateErrorContext(e, sourceLocation)
                 ErrorBehaviorInPermissiveMode.RETURN_MISSING -> valueFactory.missingValue
             }
         } catch (e: Exception) {

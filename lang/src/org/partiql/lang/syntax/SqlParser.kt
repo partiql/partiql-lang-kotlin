@@ -22,9 +22,6 @@ import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.toIonElement
-import org.partiql.lang.ast.AstSerializer
-import org.partiql.lang.ast.AstVersion
-import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.IonElementMetaContainer
 import org.partiql.lang.ast.IsCountStarMeta
 import org.partiql.lang.ast.IsImplictJoinMeta
@@ -131,6 +128,7 @@ class SqlParser(
         ORDER_BY,
         SORT_SPEC,
         ORDERING_SPEC,
+        NULLS_SPEC,
         GROUP,
         GROUP_PARTIAL,
         HAVING,
@@ -576,8 +574,20 @@ class SqlParser(
                         orderBy(
                             it.children[0].children.map {
                                 when (it.children.size) {
-                                    1 -> sortSpec(it.children[0].toAstExpr(), asc())
-                                    2 -> sortSpec(it.children[0].toAstExpr(), it.children[1].toOrderingSpec())
+                                    1 -> sortSpec(it.children[0].toAstExpr(), asc(), nullsLast())
+                                    2 -> when (it.children[1].type) {
+                                        ParseType.ORDERING_SPEC -> {
+                                            val orderingSpec = it.children[1].toOrderingSpec()
+                                            val defaultNullsSpec = when (orderingSpec) {
+                                                is PartiqlAst.OrderingSpec.Asc -> nullsLast()
+                                                is PartiqlAst.OrderingSpec.Desc -> nullsFirst()
+                                            }
+                                            sortSpec(it.children[0].toAstExpr(), orderingSpec, defaultNullsSpec)
+                                        }
+                                        ParseType.NULLS_SPEC -> sortSpec(it.children[0].toAstExpr(), asc(), it.children[1].toNullsSpec())
+                                        else -> errMalformedParseTree("Invalid ordering expressions syntax")
+                                    }
+                                    3 -> sortSpec(it.children[0].toAstExpr(), it.children[1].toOrderingSpec(), it.children[2].toNullsSpec())
                                     else -> errMalformedParseTree("Invalid ordering expressions syntax")
                                 }
                             }
@@ -821,7 +831,7 @@ class SqlParser(
                 SqlDataType.TIME -> timeType(arg1, metas)
                 SqlDataType.TIME_WITH_TIME_ZONE -> timeWithTimeZoneType(arg1, metas)
                 SqlDataType.ANY -> anyType(metas)
-                is SqlDataType.CustomDataType -> customType(typeName!!, metas)
+                is SqlDataType.CustomDataType -> customType(typeName, metas)
             }
         }
     }
@@ -1135,6 +1145,19 @@ class SqlParser(
                 TokenType.ASC -> asc()
                 TokenType.DESC -> desc()
                 else -> errMalformedParseTree("Invalid ordering spec parsing")
+            }
+        }
+    }
+
+    private fun ParseNode.toNullsSpec(): PartiqlAst.NullsSpec {
+        if (type != ParseType.NULLS_SPEC) {
+            errMalformedParseTree("Expected ParseType.NULLS_SPEC instead of $type")
+        }
+        return PartiqlAst.build {
+            when (token?.type) {
+                TokenType.FIRST -> nullsFirst()
+                TokenType.LAST -> nullsLast()
+                else -> errMalformedParseTree("Invalid nulls spec parsing")
             }
         }
     }
@@ -2209,17 +2232,6 @@ class SqlParser(
 
         parseOptionalSingleExpressionClause(ParseType.WHERE)
 
-        if (rem.head?.keywordText == "order") {
-            rem = rem.tail.tailExpectedToken(TokenType.BY)
-
-            val orderByChildren = listOf(rem.parseOrderByArgList())
-            rem = orderByChildren.first().remaining
-
-            children.add(
-                ParseNode(type = ParseType.ORDER_BY, token = null, children = orderByChildren, remaining = rem)
-            )
-        }
-
         if (rem.head?.keywordText == "group") {
             rem = rem.tail
             val type = when (rem.head?.keywordText) {
@@ -2274,6 +2286,17 @@ class SqlParser(
         }
 
         parseOptionalSingleExpressionClause(ParseType.HAVING)
+
+        if (rem.head?.keywordText == "order") {
+            rem = rem.tail.tailExpectedToken(TokenType.BY)
+
+            val orderByChildren = listOf(rem.parseOrderByArgList())
+            rem = orderByChildren.first().remaining
+
+            children.add(
+                ParseNode(type = ParseType.ORDER_BY, token = null, children = orderByChildren, remaining = rem)
+            )
+        }
 
         parseOptionalSingleExpressionClause(ParseType.LIMIT)
 
@@ -2836,13 +2859,12 @@ class SqlParser(
             var rem = this
 
             var child = rem.parseExpression()
-            var sortSpecKey = listOf(child)
+            var children = listOf(child)
             rem = child.remaining
 
             when (rem.head?.type) {
                 TokenType.ASC, TokenType.DESC -> {
-                    sortSpecKey = listOf(
-                        child,
+                    children = children + listOf(
                         ParseNode(
                             type = ParseType.ORDERING_SPEC,
                             token = rem.head,
@@ -2852,8 +2874,29 @@ class SqlParser(
                     )
                     rem = rem.tail
                 }
+                else -> { /* intentionally blank. */ }
             }
-            ParseNode(type = ParseType.SORT_SPEC, token = null, children = sortSpecKey, remaining = rem)
+            when (rem.head?.type) {
+                TokenType.NULLS -> {
+                    rem = rem.tail
+                    when (rem.head?.type) {
+                        TokenType.FIRST, TokenType.LAST -> {
+                            children = children + listOf(
+                                ParseNode(
+                                    type = ParseType.NULLS_SPEC,
+                                    token = rem.head,
+                                    children = listOf(),
+                                    remaining = rem.tail
+                                )
+                            )
+                        }
+                        else -> rem.head.err("Expected FIRST OR LAST after NULLS", ErrorCode.PARSE_UNEXPECTED_TOKEN)
+                    }
+                    rem = rem.tail
+                }
+                else -> { /* intentionally left blank. */ }
+            }.let { }
+            ParseNode(type = ParseType.SORT_SPEC, token = null, children = children, remaining = rem)
         }
     }
 
@@ -2975,7 +3018,7 @@ class SqlParser(
     ): ParseNode {
         val parseDelim = parseCommaDelim
 
-        return parseDelimitedList(parseDelim) { delim ->
+        return parseDelimitedList(parseDelim) { _ ->
             var rem = this
             var child = when (mode) {
                 ArgListMode.STRUCT_LITERAL_ARG_LIST -> {
@@ -3151,7 +3194,8 @@ class SqlParser(
 
     /** Entry point into the parser. */
     @Deprecated("`ExprNode` is deprecated. Please use `parseAstStatement` instead. ")
-    override fun parseExprNode(source: String): ExprNode {
+    @Suppress("DEPRECATION")
+    override fun parseExprNode(source: String): org.partiql.lang.ast.ExprNode {
         return parseAstStatement(source).toExprNode(ion)
     }
 
@@ -3178,5 +3222,9 @@ class SqlParser(
     }
 
     override fun parse(source: String): IonSexp =
-        AstSerializer.serialize(parseExprNode(source), AstVersion.V0, ion)
+        @Suppress("DEPRECATION")
+        org.partiql.lang.ast.AstSerializer.serialize(
+            parseExprNode(source),
+            org.partiql.lang.ast.AstVersion.V0, ion
+        )
 }

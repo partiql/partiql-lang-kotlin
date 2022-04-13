@@ -18,6 +18,8 @@ import junitparams.Parameters
 import org.junit.Ignore
 import org.junit.Test
 import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.eval.test.EvaluatorTestCase
+import org.partiql.lang.util.propertyValueMapOf
 
 class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
     val session = mapOf(
@@ -53,12 +55,12 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
 
     @Test
     @Parameters
-    fun groupByHavingTest(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, session)
+    fun groupByHavingTest(tc: EvaluatorTestCase) = runEvaluatorTestCase(tc, session)
 
     fun parametersForGroupByHavingTest() =
         listOf(
             EvaluatorTestCase(
-                "GROUP BY with HAVING - all rows",
+                groupName = "GROUP BY with HAVING - all rows",
                 """
                     SELECT attributeId, COUNT(*) as the_count
                     FROM repeating_things
@@ -75,7 +77,7 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
                 >>"""
             ),
             EvaluatorTestCase(
-                "GROUP BY with HAVING and WHERE",
+                groupName = "GROUP BY with HAVING and WHERE",
                 """
                     SELECT attributeId, COUNT(*) as the_count
                     FROM repeating_things
@@ -90,7 +92,7 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
                 >>"""
             ),
             EvaluatorTestCase(
-                "GROUP BY with HAVING - no rows",
+                groupName = "GROUP BY with HAVING - no rows",
                 """
                     SELECT attributeId, COUNT(*) as the_count
                     FROM repeating_things
@@ -100,7 +102,7 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
                 """<<>>"""
             ),
             EvaluatorTestCase(
-                "GROUP BY with HAVING",
+                groupName = "GROUP BY with HAVING",
                 """
                     SELECT attributeId, COUNT(*) as the_count
                     FROM repeating_things
@@ -113,7 +115,7 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
                 >>"""
             ),
             EvaluatorTestCase(
-                "GROUP BY with HAVING and WHERE",
+                groupName = "GROUP BY with HAVING and WHERE",
                 """
                     SELECT attributeId, COUNT(*) as the_count
                     FROM repeating_things
@@ -127,7 +129,7 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
                 >>"""
             ),
             EvaluatorTestCase(
-                "GROUP BY with HAVING that calls COUNT(*)",
+                groupName = "GROUP BY with HAVING that calls COUNT(*)",
                 """
                     SELECT attributeId, COUNT(*) as the_count
                     FROM repeating_things
@@ -142,7 +144,7 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
                 >>"""
             ),
             EvaluatorTestCase(
-                "GROUP BY with HAVING that calls SUM(*)",
+                groupName = "GROUP BY with HAVING that calls SUM(*)",
                 """
                     SELECT attributeId, SUM(attributeId) as the_count
                     FROM repeating_things
@@ -155,7 +157,7 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
                 >>"""
             ),
             EvaluatorTestCase(
-                "GROUP BY with HAVING that references GROUP AS variable",
+                groupName = "GROUP BY with HAVING that references GROUP AS variable",
                 """
                     SELECT attributeId, COUNT(*) as the_count
                     FROM repeating_things
@@ -175,8 +177,10 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
 
     @Test
     fun havingWithoutGroupBy() {
-        assertThrowsSqlException(ErrorCode.SEMANTIC_HAVING_USED_WITHOUT_GROUP_BY) {
-            voidEval("SELECT foo.bar FROM bat HAVING 1 = 1")
-        }
+        runEvaluatorErrorTestCase(
+            query = "SELECT foo.bar FROM bat HAVING 1 = 1",
+            expectedErrorCode = ErrorCode.SEMANTIC_HAVING_USED_WITHOUT_GROUP_BY,
+            expectedErrorContext = propertyValueMapOf(1, 1)
+        )
     }
 }

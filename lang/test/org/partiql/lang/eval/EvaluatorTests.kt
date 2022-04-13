@@ -43,13 +43,19 @@ class EvaluatorTests {
             return unskippedTests.map {
                 it.copy(
                     note = "legacy typing",
-                    compileOptions = CompileOptions.build(it.compileOptions) { typingMode(TypingMode.LEGACY) }
+                    compileOptionsBuilderBlock = {
+                        it.compileOptionsBuilderBlock(this)
+                        typingMode(TypingMode.LEGACY)
+                    }
                 )
             } +
                 unskippedTests.map {
                     it.copy(
                         note = "permissive typing",
-                        compileOptions = CompileOptions.build(it.compileOptions) { typingMode(TypingMode.PERMISSIVE) }
+                        compileOptionsBuilderBlock = {
+                            it.compileOptionsBuilderBlock(this)
+                            typingMode(TypingMode.PERMISSIVE)
+                        }
                     )
                 }
         }

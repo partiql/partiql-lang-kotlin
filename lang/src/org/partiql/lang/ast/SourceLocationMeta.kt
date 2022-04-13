@@ -12,6 +12,8 @@
  *  language governing permissions and limitations under the License.
  */
 
+@file:Suppress("DEPRECATION", "TYPEALIAS_EXPANSION_DEPRECATION") // We don't need warnings about ExprNode deprecation.
+
 package org.partiql.lang.ast
 
 import com.amazon.ion.IonValue
@@ -68,8 +70,8 @@ data class SourceLocationMeta(val lineNum: Long, val charOffset: Long, val lengt
         const val TAG = "\$source_location"
         val deserializer = object : MetaDeserializer {
             override val tag = TAG
-            override fun deserialize(value: IonValue): Meta {
-                val struct = value.asIonStruct()
+            override fun deserialize(sexp: IonValue): Meta {
+                val struct = sexp.asIonStruct()
                 val lineNum = struct.field("line_num").longValue()
                 val charOffset = struct.field("char_offset").longValue()
                 val length = struct.field("length").longValue()

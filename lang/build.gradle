@@ -23,7 +23,7 @@ plugins {
     id 'java-library'
     // https://docs.gradle.org/5.0/userguide/publishing_maven.html#header
     id 'maven-publish'
-    id 'org.jetbrains.dokka' version '0.9.18'
+    id 'org.jetbrains.dokka' version '1.6.10'
     id 'signing'
     id 'me.champeau.gradle.jmh' version '0.5.3'
 }
@@ -40,10 +40,11 @@ dependencies {
     // interpreter's API use kotlin.sequences.Sequence<ExprValue>.  Once that has been removed, we can change
     // 'api' below to 'implementation' to effect this.
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+    implementation 'org.jetbrains.kotlin:kotlin-reflect'
 
     api 'com.amazon.ion:ion-java:1.9.0'
     api 'com.amazon.ion:ion-element:0.2.0'
-    api 'org.partiql:partiql-ir-generator-runtime:0.4.1-SNAPSHOT'
+    api 'org.partiql:partiql-ir-generator-runtime:0.5.0'
     api 'org.partiql:partiql-isl-kotlin:0.1.0'
 
     implementation 'org.apache.commons:commons-csv:1.8'
@@ -56,14 +57,6 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
     testImplementation 'org.junit.vintage:junit-vintage-engine:5.7.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.7.0'
-}
-
-sourceSets {
-    jmh {
-        java.srcDirs = ['src/jmh/java']
-        resources.srcDirs = ['src/jmh/resources']
-        compileClasspath += sourceSets.main.runtimeClasspath
-    }
 }
 
 def PIG_SOURCE_ROOT = new File(projectDir, "build/generated-src/pig")
@@ -103,24 +96,31 @@ task generatePigDomains {
     }
 }
 
+sourceSets {
+    main {
+        kotlin.srcDirs += [PIG_SOURCE_ROOT]
+    }
+    jmh {
+        java.srcDirs = ['src/jmh/java']
+        kotlin.srcDirs = ["jmh"]
+        resources.srcDirs = ['src/jmh/resources']
+        compileClasspath += sourceSets.main.runtimeClasspath
+    }
+}
+
 compileKotlin.dependsOn generatePigDomains
 
 ktlint {
     filter {
-        // excluding multiple files from ktlint was somewhat of a challenge
-        // used "workaround" described here: https://github.com/JLLeitschuh/ktlint-gradle/issues/222
+        // excluding multiple files from ktlint was somewhat of a challenge using other approaches..
+        // We use the "workaround" described here: https://github.com/JLLeitschuh/ktlint-gradle/issues/222
         exclude({it.file.absolutePath.contains("/generated-src/")})
     }
 }
 
-sourceSets {
-    jmh.kotlin.srcDirs = ["jmh"]
-    main.kotlin.srcDirs += [PIG_SOURCE_ROOT]
-}
-
-dokka {
-    outputFormat = "html"
-    outputDirectory = "$buildDir/javadoc"
+tasks.dokkaHtml.configure {
+    dependsOn(generatePigDomains)
+    outputDirectory.set(file("$buildDir/javadoc"))
     //todo: includes = ["path/to/module.md"]
 }
 
@@ -130,8 +130,8 @@ task sourcesJar(type: Jar) {
 }
 
 task javadocJar(type: Jar) {
-    from dokka
-    classifier = "javadoc"
+    from dokkaHtml
+    archiveClassifier.set("javadoc")
 }
 
 publishing {
@@ -162,8 +162,8 @@ publishing {
                 }
                 developers {
                     developer {
-                        name = "Amazon Ion Team"
-                        email = "ion-team@amazon.com"
+                        name = "PartiQL Team"
+                        email = "partiql-team@amazon.com"
                         organization = "PartiQL"
                         organizationUrl = "https://github.com/partiql"
                     }

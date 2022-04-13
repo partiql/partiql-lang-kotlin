@@ -164,7 +164,7 @@ fun ExprValue.rangeOver(): Iterable<ExprValue> = when {
 fun ExprValue.stringify(): String =
     ConfigurableExprValueFormatter.standard.format(this)
 
-val DEFAULT_COMPARATOR = NaturalExprValueComparators.NULLS_FIRST
+val DEFAULT_COMPARATOR = NaturalExprValueComparators.NULLS_FIRST_ASC
 
 /** Provides the default equality function. */
 fun ExprValue.exprEquals(other: ExprValue): Boolean = DEFAULT_COMPARATOR.compare(this, other) == 0
@@ -394,7 +394,7 @@ fun ExprValue.cast(
                     }
 
                     valueFactory.newString(
-                        when (val l = type.lengthConstraint.length) {
+                        when (type.lengthConstraint.length) {
                             is NumberConstraint.Equals -> truncatedString.trimEnd { c -> c == '\u0020' }
                             is NumberConstraint.UpTo -> truncatedString
                         }

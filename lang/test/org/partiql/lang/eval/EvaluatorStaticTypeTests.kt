@@ -161,6 +161,7 @@ class EvaluatorStaticTypeTests {
             "pivotBadFieldType",
             "pivotLiteralFieldNameFrom",
             "pivotUnpivotWithWhereLimit",
+            "unpivotStructWithMissingField",
 
             // STIR does not support `CompilePipeline.undefinedVariableBehavior`
             // (these are likely to be a permanent entries to this list since STR/STIR will probably
@@ -181,7 +182,9 @@ class EvaluatorStaticTypeTests {
             EvaluatorTests.SKIP_LIST.union(FAILING_TESTS)
         ).map {
             it.copy(
-                compileOptions = CompileOptions.build(it.compileOptions) {
+                compileOptionsBuilderBlock = {
+                    it.compileOptionsBuilderBlock(this)
+
                     // set permissive mode
                     typingMode(TypingMode.PERMISSIVE)
                     thunkOptions {

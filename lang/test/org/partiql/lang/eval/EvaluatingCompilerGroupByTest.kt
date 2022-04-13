@@ -19,6 +19,8 @@ import org.junit.Ignore
 import org.junit.Test
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
+import org.partiql.lang.eval.test.EvaluatorTestCase
+import org.partiql.lang.util.propertyValueMapOf
 
 class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
@@ -85,6 +87,9 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
         ]"""
     ).toSession()
 
+    private fun runTest(tc: EvaluatorTestCase, session: EvaluationSession) =
+        super.runEvaluatorTestCase(tc.copy(implicitPermissiveModeTest = false), session)
+
     companion object {
 
         private class SqlTemplate(
@@ -111,11 +116,56 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                 sqlTemplate.compilationOptions.forEach { compOptions ->
                     fun applySqlTemplate(aggFuncName: String) = sqlTemplate.sql.replace("{{agg}}", aggFuncName)
                     val coGroupName = "$compOptions|$groupName"
-                    expectedResultForCount?.let { cases.add(EvaluatorTestCase(coGroupName, applySqlTemplate("COUNT"), it, compOptions)) }
-                    expectedResultForSum?.let { cases.add(EvaluatorTestCase(coGroupName, applySqlTemplate("SUM"), it, compOptions)) }
-                    expectedResultForMin?.let { cases.add(EvaluatorTestCase(coGroupName, applySqlTemplate("MIN"), it, compOptions)) }
-                    expectedResultForMax?.let { cases.add(EvaluatorTestCase(coGroupName, applySqlTemplate("MAX"), it, compOptions)) }
-                    expectedResultForAvg?.let { cases.add(EvaluatorTestCase(coGroupName, applySqlTemplate("AVG"), it, compOptions)) }
+                    expectedResultForCount?.let {
+                        cases.add(
+                            EvaluatorTestCase(
+                                groupName = coGroupName,
+                                query = applySqlTemplate("COUNT"),
+                                expectedResult = it,
+                                compileOptionsBuilderBlock = compOptions.optionsBlock,
+                            )
+                        )
+                    }
+                    expectedResultForSum?.let {
+                        cases.add(
+                            EvaluatorTestCase(
+                                groupName = coGroupName,
+                                query = applySqlTemplate("SUM"),
+                                expectedResult = it,
+                                compileOptionsBuilderBlock = compOptions.optionsBlock,
+                            )
+                        )
+                    }
+                    expectedResultForMin?.let {
+                        cases.add(
+                            EvaluatorTestCase(
+                                groupName = coGroupName,
+                                query = applySqlTemplate("MIN"),
+                                expectedResult = it,
+                                compileOptionsBuilderBlock = compOptions.optionsBlock,
+                            )
+                        )
+                    }
+                    expectedResultForMax?.let {
+                        cases.add(
+                            EvaluatorTestCase(
+                                groupName = coGroupName,
+                                query = applySqlTemplate("MAX"),
+                                expectedResult = it,
+                                compileOptionsBuilderBlock = compOptions.optionsBlock,
+                            )
+                        )
+                    }
+                    expectedResultForAvg?.let {
+                        cases.add(
+                            EvaluatorTestCase(
+                                groupName = coGroupName,
+                                applySqlTemplate("AVG"),
+                                expectedResult = it,
+                                compileOptionsBuilderBlock = compOptions.optionsBlock,
+                            )
+                        )
+                    }
                 }
             }
 
@@ -148,17 +198,29 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             query: String,
             expected: String,
             compilationOptions: List<CompOptions> = CompOptions.values().toList()
-        ) = compilationOptions.map { co -> EvaluatorTestCase(query, expected, co) }
+        ) = compilationOptions.map { co ->
+            EvaluatorTestCase(
+                query = query,
+                expectedResult = expected,
+                compileOptionsBuilderBlock = co.optionsBlock
+            )
+        }
 
         private fun createGroupByTestCases(queries: List<String>, expected: String) =
             queries.flatMap { q ->
-                CompOptions.values().map { co -> EvaluatorTestCase(q, expected, co) }
+                CompOptions.values().map { co ->
+                    EvaluatorTestCase(
+                        query = q,
+                        expectedResult = expected,
+                        compileOptionsBuilderBlock = co.optionsBlock
+                    )
+                }
             }
     }
 
     @Test
     @Parameters
-    fun groupByTest(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, session)
+    fun groupByTest(tc: EvaluatorTestCase) = runTest(tc, session)
 
     /** Test cases for GROUP BY without aggregates. */
     fun parametersForGroupByTest() =
@@ -422,7 +484,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     @Parameters
-    fun sql92StyleAggregatesTest(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, session)
+    fun sql92StyleAggregatesTest(tc: EvaluatorTestCase) =
+        runTest(tc, session)
 
     /**
      * Test cases that cover `COUNT`, `SUM`, `MIN`, `MAX`, and `AVG`.
@@ -768,7 +831,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     @Parameters
-    fun groupByAggregatesTest(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, session)
+    fun groupByAggregatesTest(tc: EvaluatorTestCase) =
+        runTest(tc, session)
 
     /**
      * These are test cases involving aggregates and cover behavior under less usual circumstances
@@ -776,41 +840,41 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
      */
     fun parametersForGroupByAggregatesTest() = listOf(
         EvaluatorTestCase(
-            "aggregates when used with empty from source",
-            """
-                SELECT
-                    COUNT(doesntMatterWontBeEvaluated),
-                    SUM(doesntMatterWontBeEvaluated),
-                    MIN(doesntMatterWontBeEvaluated),
-                    MAX(doesntMatterWontBeEvaluated),
-                    AVG(doesntMatterWontBeEvaluated)
-                FROM []
-            """,
+            groupName = "aggregates when used with empty from source",
+            query = """
+                            SELECT
+                                COUNT(doesntMatterWontBeEvaluated),
+                                SUM(doesntMatterWontBeEvaluated),
+                                MIN(doesntMatterWontBeEvaluated),
+                                MAX(doesntMatterWontBeEvaluated),
+                                AVG(doesntMatterWontBeEvaluated)
+                            FROM []
+                        """,
             // Note: COUNT(...) returning 0 here while the other aggregates return null does seem odd...
             // but this is consistent with at least mysql and postgres (possibly others).
-            """<<
-              {
-                '_1':  0,
-                '_2':  null,
-                '_3':  null,
-                '_4':  null,
-                '_5':  null
-              }
-            >>"""
+            expectedResult = """<<
+                          {
+                            '_1':  0,
+                            '_2':  null,
+                            '_3':  null,
+                            '_4':  null,
+                            '_5':  null
+                          }
+                        >>"""
         ),
         EvaluatorTestCase(
-            "Expression with multiple subqueriees containing aggregates",
-            "CAST((SELECT COUNT(1) FROM products) AS LIST)[0]._1 / CAST((SELECT COUNT(1) FROM suppliers) AS LIST)[0]._1",
+            groupName = "Expression with multiple subqueriees containing aggregates",
+            query = "CAST((SELECT COUNT(1) FROM products) AS LIST)[0]._1 / CAST((SELECT COUNT(1) FROM suppliers) AS LIST)[0]._1",
             "2"
         ),
         EvaluatorTestCase(
-            "Aggregates with subquery containing another aggregate",
-            "SELECT COUNT(1) + CAST((SELECT SUM(numInStock) FROM products) AS LIST)[0]._1 as a_number FROM products",
+            groupName = "Aggregates with subquery containing another aggregate",
+            query = "SELECT COUNT(1) + CAST((SELECT SUM(numInStock) FROM products) AS LIST)[0]._1 as a_number FROM products",
             "<<{ 'a_number': 11116 }>>"
         ),
         EvaluatorTestCase(
-            "GROUP BY with JOIN",
-            """
+            groupName = "GROUP BY with JOIN",
+            query = """
                 SELECT supplierName, COUNT(*) as the_count
                 FROM suppliers AS s
                     INNER JOIN products AS p ON s.supplierId = p.supplierId
@@ -822,25 +886,25 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             >>"""
         ),
         EvaluatorTestCase(
-            "`COUNT(*)`, should be equivalent to `COUNT(1)",
-            "SELECT COUNT(*) AS the_count_1, COUNT(1) AS the_count_2 FROM products",
-            "<< { 'the_count_1': 5, 'the_count_2': 5 } >>"
+            groupName = "`COUNT(*)`, should be equivalent to `COUNT(1)",
+            query = "SELECT COUNT(*) AS the_count_1, COUNT(1) AS the_count_2 FROM products",
+            expectedResult = "<< { 'the_count_1': 5, 'the_count_2': 5 } >>"
         ),
         EvaluatorTestCase(
-            "SELECT VALUE with nested aggregates",
-            "SELECT VALUE (SELECT SUM(outerFromSource.col1) AS the_sum FROM <<1>>) FROM simple_1_col_1_group as outerFromSource",
-            "<< << { 'the_sum': 1 } >>,  << { 'the_sum': 1 } >> >>"
+            groupName = "SELECT VALUE with nested aggregates",
+            query = "SELECT VALUE (SELECT SUM(outerFromSource.col1) AS the_sum FROM <<1>>) FROM simple_1_col_1_group as outerFromSource",
+            expectedResult = "<< << { 'the_sum': 1 } >>,  << { 'the_sum': 1 } >> >>"
         ),
         EvaluatorTestCase(
-            "SELECT with GROUP BY path expression having more than 1 component.",
-            "SELECT avg(age) as avg_employee_age, manager.address.city FROM employees GROUP BY manager.address.city",
-            "<<{'avg_employee_age': 22, 'city': 'Chicago'}, {'avg_employee_age': 26, 'city': 'Seattle'}>>"
+            groupName = "SELECT with GROUP BY path expression having more than 1 component.",
+            query = "SELECT avg(age) as avg_employee_age, manager.address.city FROM employees GROUP BY manager.address.city",
+            expectedResult = "<<{'avg_employee_age': 22, 'city': 'Chicago'}, {'avg_employee_age': 26, 'city': 'Seattle'}>>"
         )
     )
 
     @Test
     @Parameters
-    fun groupByGroupAsTest(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, session)
+    fun groupByGroupAsTest(tc: EvaluatorTestCase) = runTest(tc, session)
 
     fun parametersForGroupByGroupAsTest() =
         // GROUP BY with GROUP AS (the same as above but with "GROUP AS g")
@@ -1018,7 +1082,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     @Parameters
-    fun groupByShadowingTest(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, session)
+    fun groupByShadowingTest(tc: EvaluatorTestCase) =
+        runTest(tc, session)
 
     fun parametersForGroupByShadowingTest() =
         createGroupByTestCases(
@@ -1051,7 +1116,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     @Parameters
-    fun groupByDuplicateAliasesTest(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, session)
+    fun groupByDuplicateAliasesTest(tc: EvaluatorTestCase) =
+        runTest(tc, session)
 
     fun parametersForGroupByDuplicateAliasesTest() =
         createGroupByTestCases(
@@ -1073,171 +1139,130 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     fun cannotGroupBySelectListItemAliasTest() {
-        checkInputThrowingEvaluationException(
+        runEvaluatorErrorTestCase(
             "SELECT foo AS someSelectListAlias FROM <<{ 'a': 1 }>> GROUP BY someSelectListAlias",
             ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
-            mapOf(
-                Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 64L,
-                Property.BINDING_NAME to "someSelectListAlias"
-            ),
-            null,
+            propertyValueMapOf(1, 64, Property.BINDING_NAME to "someSelectListAlias"),
             expectedPermissiveModeResult = "<<{}>>"
         )
     }
 
     @Test
     fun missingGroupByTest() {
-        checkInputThrowingEvaluationException(
+        runEvaluatorErrorTestCase(
             "SELECT MAX(@v2), @v2 FROM `[1, 2.0, 3e0, 4, 5d0]` AS v2",
             ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
-            mapOf(
-                Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 19L,
-                Property.BINDING_NAME to "v2"
-            )
+            propertyValueMapOf(1, 19, Property.BINDING_NAME to "v2")
         )
     }
 
     @Test
     fun missingGroupByCausedByHavingTest() {
-        checkInputThrowingEvaluationException(
+        runEvaluatorErrorTestCase(
             "SELECT * FROM << {'a': 1 } >> AS f GROUP BY f.a HAVING f.id = 1",
             ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
-            mapOf(
-                Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 56L,
-                Property.BINDING_NAME to "f"
-            )
+            propertyValueMapOf(1, 56, Property.BINDING_NAME to "f")
         )
     }
 
     @Test
     fun missingGroupBySelectValueTest() {
-        checkInputThrowingEvaluationException(
+        runEvaluatorErrorTestCase(
             "SELECT VALUE f.id FROM << {'a': 'b' } >> AS f GROUP BY f.a",
             ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
-            mapOf(
-                Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 14L,
-                Property.BINDING_NAME to "f"
-            )
+            propertyValueMapOf(1, 14, Property.BINDING_NAME to "f")
         )
     }
 
     @Test
     fun missingGroupByCaseInsensitiveTest() {
-        checkInputThrowingEvaluationException(
+        runEvaluatorErrorTestCase(
             """
-            SELECT O.customerId, MAX(o.cost)
-            FROM orders as o
-            """,
-            session,
+                    SELECT O.customerId, MAX(o.cost)
+                    FROM orders as o
+                """,
             ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
-            mapOf(
-                Property.LINE_NUMBER to 2L,
-                Property.COLUMN_NUMBER to 20L,
-                Property.BINDING_NAME to "O"
-            )
+            propertyValueMapOf(2, 28, Property.BINDING_NAME to "O"),
+            session = session,
         )
     }
 
     @Test
     fun missingGroupByCaseSensitiveTest() {
-        checkInputThrowingEvaluationException(
+        runEvaluatorErrorTestCase(
             """
-            SELECT "O".customerId, MAX(o.cost)
-            FROM orders as o
-            """,
-            session,
+                    SELECT "O".customerId, MAX(o.cost)
+                    FROM orders as o
+                """,
             ErrorCode.EVALUATOR_QUOTED_BINDING_DOES_NOT_EXIST,
-            mapOf(
-                Property.LINE_NUMBER to 2L,
-                Property.COLUMN_NUMBER to 20L,
-                Property.BINDING_NAME to "O"
-            ),
-            expectedPermissiveModeResult = "<<{'_2': 10}>>"
+            propertyValueMapOf(2, 28, Property.BINDING_NAME to "O"),
+            expectedPermissiveModeResult = "<<{'_2': 10}>>",
+            session = session
         )
     }
 
     @Test
     fun missingGroupByJoinTest() {
-        checkInputThrowingEvaluationException(
-            """
-            SELECT MAX(o.cost), c.firstName
-            FROM customers AS c
-            INNER JOIN orders AS o ON c.customerId = o.customerId
-            """,
-            session,
-            ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
-            mapOf(
-                Property.LINE_NUMBER to 2L,
-                Property.COLUMN_NUMBER to 33L,
-                Property.BINDING_NAME to "c"
-            )
+        runEvaluatorErrorTestCase(
+            query = """
+                    SELECT MAX(o.cost), c.firstName
+                    FROM customers AS c
+                    INNER JOIN orders AS o ON c.customerId = o.customerId
+                """,
+            expectedErrorCode = ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
+            expectedErrorContext = propertyValueMapOf(2, 41, Property.BINDING_NAME to "c"),
+            session = session
         )
     }
 
     @Test
     fun missingGroupByHavingTest() {
-        checkInputThrowingEvaluationException(
-            """
-            SELECT MAX(o.cost), o.sellerId
-            FROM orders AS o
-            GROUP BY o.customerId
-            HAVING COUNT(1) > 1
-            """,
-            session,
-            ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
-            mapOf(
-                Property.LINE_NUMBER to 2L,
-                Property.COLUMN_NUMBER to 33L,
-                Property.BINDING_NAME to "o"
-            )
+        runEvaluatorErrorTestCase(
+            query = """
+                    SELECT MAX(o.cost), o.sellerId
+                    FROM orders AS o
+                    GROUP BY o.customerId
+                    HAVING COUNT(1) > 1
+                """,
+            expectedErrorCode = ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
+            expectedErrorContext = propertyValueMapOf(2, 41, Property.BINDING_NAME to "o"),
+            session = session
         )
     }
 
     @Test
     fun missingGroupByOuterQueryTest() {
-        checkInputThrowingEvaluationException(
-            """
-            SELECT AVG(o.cost), o.customerId
-            FROM orders AS o
-            WHERE
-	            o.customerId IN(
-                    SELECT VALUE o.customerId
-                    FROM orders AS o
-                    GROUP BY o.customerId
-                )
-            """,
-            session,
-            ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
-            mapOf(
-                Property.LINE_NUMBER to 2L,
-                Property.COLUMN_NUMBER to 33L,
-                Property.BINDING_NAME to "o"
-            )
+        runEvaluatorErrorTestCase(
+            query = """
+                SELECT AVG(o.cost), o.customerId
+                FROM orders AS o
+                WHERE
+                    o.customerId IN(
+                        SELECT VALUE o.customerId
+                        FROM orders AS o
+                        GROUP BY o.customerId
+                    )
+                """,
+            expectedErrorCode = ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
+            expectedErrorContext = propertyValueMapOf(2, 37, Property.BINDING_NAME to "o"),
+            session = session
         )
     }
 
     @Test
     fun missingGroupByInnerQueryTest() {
-        checkInputThrowingEvaluationException(
-            """
-            SELECT MIN(o.numOrders)
-            FROM(
-                SELECT o.customerId, COUNT(1) AS numOrders
-                FROM orders AS o
-            ) as o
-            GROUP BY o.customerId
-            """,
-            session,
-            ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
-            mapOf(
-                Property.LINE_NUMBER to 4L,
-                Property.COLUMN_NUMBER to 24L,
-                Property.BINDING_NAME to "o"
-            )
+        runEvaluatorErrorTestCase(
+            query = """
+                SELECT MIN(o.numOrders)
+                FROM(
+                    SELECT o.customerId, COUNT(1) AS numOrders
+                    FROM orders AS o
+                ) as o
+                GROUP BY o.customerId
+                """,
+            expectedErrorCode = ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
+            expectedErrorContext = propertyValueMapOf(4, 28, Property.BINDING_NAME to "o"),
+            session = session
         )
     }
 }

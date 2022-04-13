@@ -50,7 +50,7 @@ class SexpAstPrettyPrinter(val builder: StringBuilder = StringBuilder()) {
     var nestLevel = 0
 
     private fun nextLine() {
-        builder.appendln()
+        builder.appendLine()
         (1..nestLevel).forEach { builder.append("    ") }
     }
 

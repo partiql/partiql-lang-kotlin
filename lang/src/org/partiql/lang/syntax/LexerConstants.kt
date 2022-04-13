@@ -482,8 +482,8 @@ internal val DATE_TIME_PART_KEYWORDS: Set<String> = DateTimePart.values()
     listOf("all", "new") to ("all_new" to KEYWORD)
 )
 
-@JvmField internal val MULTI_LEXEME_MIN_LENGTH = MULTI_LEXEME_TOKEN_MAP.keys.map { it.size }.min()!!
-@JvmField internal val MULTI_LEXEME_MAX_LENGTH = MULTI_LEXEME_TOKEN_MAP.keys.map { it.size }.max()!!
+@JvmField internal val MULTI_LEXEME_MIN_LENGTH = MULTI_LEXEME_TOKEN_MAP.keys.minOf { it.size }
+@JvmField internal val MULTI_LEXEME_MAX_LENGTH = MULTI_LEXEME_TOKEN_MAP.keys.maxOf { it.size }
 
 @JvmField internal val MULTI_LEXEME_BINARY_OPERATORS =
     MULTI_LEXEME_TOKEN_MAP.values.filter {

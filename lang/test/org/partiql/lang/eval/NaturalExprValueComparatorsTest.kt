@@ -16,17 +16,19 @@ package org.partiql.lang.eval
 
 import junitparams.Parameters
 import org.junit.Test
+import org.partiql.lang.SqlException
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.eval.test.ExpectedResultFormat
 import java.util.Collections
 import java.util.Random
 
 class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
-    // the lists below represent the expected ordering of values
+    // the lists below represent the expected ordering of values for asc/desc ordering
     // grouped by lists of equivalent values.
 
     private val nullExprs = listOf(
         // reminder, annotations don't affect order
         "null",
-        "missing",
         "`a::null`",
         "`null.int`",
         "`null.struct`"
@@ -293,7 +295,11 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
     private fun <T> List<List<T>>.flatten() = this.flatMap { it }
     private fun List<List<String>>.eval() = map {
         it.map {
-            eval(it, compileOptions = CompileOptions.standard())
+            try {
+                eval(it, compileOptions = CompileOptions.standard()) // computes expected ExprValue
+            } catch (e: Exception) {
+                throw SqlException("Could not evaluate $it", errorCode = ErrorCode.EVALUATOR_SQL_EXCEPTION, cause = e)
+            }
         }
     }
 
@@ -321,6 +327,9 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
         fun <T> List<List<T>>.moveHeadToTail(): List<List<T>> =
             drop(1).plusElement(this[0])
 
+        fun <T> List<List<T>>.moveTailToHead(): List<List<T>> =
+            listOf(this.last()).plus(this).dropLast(1)
+
         fun shuffleCase(
             description: String,
             comparator: Comparator<ExprValue>,
@@ -341,8 +350,10 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
 
         return (1..iterations).flatMap {
             listOf(
-                shuffleCase("BASIC VALUES (NULLS FIRST)", NaturalExprValueComparators.NULLS_FIRST, basicExprs),
-                shuffleCase("BASIC VALUES (NULLS LAST)", NaturalExprValueComparators.NULLS_LAST, basicExprs.moveHeadToTail())
+                shuffleCase("BASIC VALUES (NULLS FIRST ASC)", NaturalExprValueComparators.NULLS_FIRST_ASC, basicExprs),
+                shuffleCase("BASIC VALUES (NULLS LAST ASC)", NaturalExprValueComparators.NULLS_LAST_ASC, basicExprs.moveHeadToTail()),
+                shuffleCase("BASIC VALUES (NULLS FIRST DESC)", NaturalExprValueComparators.NULLS_FIRST_DESC, basicExprs.reversed().moveTailToHead()),
+                shuffleCase("BASIC VALUES (NULLS LAST DESC)", NaturalExprValueComparators.NULLS_LAST_DESC, basicExprs.reversed()),
             )
         }
     }
@@ -387,7 +398,12 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
     fun nonNullEqualityTests(equivalentPair: Pair<String, String>) {
         val (left, right) = equivalentPair
 
-        assertExprEquals(valueFactory.newBoolean(true), eval("$left = $right"), "epected `true`")
+        runEvaluatorTestCase(
+            query = "$left = $right",
+            expectedResult = "true",
+            excludeLegacySerializerAssertions = true,
+            expectedResultFormat = ExpectedResultFormat.ION
+        )
     }
 
     // null to non null pairs
@@ -408,6 +424,14 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
     fun nullEqualityTests(equivalentPair: Pair<String, String>) {
         val (left, right) = equivalentPair
 
-        assertExprEquals(valueFactory.nullValue, eval("$left = $right"), "epected `null`")
+        runEvaluatorTestCase(
+            query = "$left = $right",
+            expectedResult = if (left == "missing" || right == "missing")
+                "\$partiql_missing::null"
+            else
+                "null",
+            excludeLegacySerializerAssertions = true,
+            expectedResultFormat = ExpectedResultFormat.ION
+        )
     }
 }

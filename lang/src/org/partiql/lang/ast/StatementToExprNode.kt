@@ -1,4 +1,4 @@
-@file:Suppress("UnusedImport")
+@file:Suppress("DEPRECATION", "TYPEALIAS_EXPANSION_DEPRECATION") // We don't need warnings about ExprNode deprecation.
 
 package org.partiql.lang.ast
 
@@ -295,15 +295,22 @@ private class StatementTransformer(val ion: IonSystem) {
             sortSpecItems = this.sortSpecs.map {
                 SortSpec(
                     it.expr.toExprNode(),
-                    it.orderingSpec.toOrderSpec()
+                    it.orderingSpec?.toOrderSpec(),
+                    it.nullsSpec?.toNullsSpec()
                 )
             }
         )
 
-    private fun PartiqlAst.OrderingSpec?.toOrderSpec(): OrderingSpec =
+    private fun PartiqlAst.OrderingSpec.toOrderSpec(): OrderingSpec =
         when (this) {
+            is PartiqlAst.OrderingSpec.Asc -> OrderingSpec.ASC
             is PartiqlAst.OrderingSpec.Desc -> OrderingSpec.DESC
-            else -> OrderingSpec.ASC
+        }
+
+    private fun PartiqlAst.NullsSpec.toNullsSpec(): NullsSpec =
+        when (this) {
+            is PartiqlAst.NullsSpec.NullsFirst -> NullsSpec.FIRST
+            is PartiqlAst.NullsSpec.NullsLast -> NullsSpec.LAST
         }
 
     private fun PartiqlAst.GroupBy.toGroupBy(): GroupBy =

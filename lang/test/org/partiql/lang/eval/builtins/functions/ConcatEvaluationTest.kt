@@ -7,12 +7,15 @@ import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.EvaluatorTestBase
 import org.partiql.lang.eval.builtins.ExprFunctionTestCase
 import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.lang.util.propertyValueMapOf
+import org.partiql.lang.util.toIntExact
 
 class ConcatEvaluationTest : EvaluatorTestBase() {
     // Pass test cases
     @ParameterizedTest
     @ArgumentsSource(ConcatPassCases::class)
-    fun runPassTests(testCase: ExprFunctionTestCase) = assertEval(testCase.source, testCase.expected)
+    fun runPassTests(testCase: ExprFunctionTestCase) =
+        runEvaluatorTestCase(testCase.source, expectedResult = testCase.expectedLegacyModeResult)
 
     class ConcatPassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
@@ -91,13 +94,12 @@ class ConcatEvaluationTest : EvaluatorTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(InvalidArgTypeCases::class)
-    fun concatInvalidArgumentTypeTests(testCase: InvalidArgTypeTestCase) = checkInputThrowingEvaluationException(
-        input = testCase.source,
-        errorCode = ErrorCode.EVALUATOR_CONCAT_FAILED_DUE_TO_INCOMPATIBLE_TYPE,
-        expectErrorContextValues = mapOf<Property, Any>(
-            Property.ACTUAL_ARGUMENT_TYPES to testCase.actualArgType,
-            Property.LINE_NUMBER to testCase.line,
-            Property.COLUMN_NUMBER to testCase.column
+    fun concatInvalidArgumentTypeTests(testCase: InvalidArgTypeTestCase) = runEvaluatorErrorTestCase(
+        query = testCase.source,
+        expectedErrorCode = ErrorCode.EVALUATOR_CONCAT_FAILED_DUE_TO_INCOMPATIBLE_TYPE,
+        expectedErrorContext = propertyValueMapOf(
+            testCase.line.toIntExact(), testCase.column.toIntExact(),
+            Property.ACTUAL_ARGUMENT_TYPES to testCase.actualArgType
         ),
         expectedPermissiveModeResult = "MISSING"
     )

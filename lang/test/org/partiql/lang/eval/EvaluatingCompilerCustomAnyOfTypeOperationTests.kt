@@ -43,10 +43,10 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests : CastTestBase() {
             listOf(
                 // null/missing
                 case("NULL", "null", CastQuality.LOSSLESS) {
-                    assertEquals(ExprValueType.NULL, exprValue.type)
+                    assertEquals(ExprValueType.NULL, it.type)
                 },
                 case("MISSING", "null", FixSemantics(CastQuality.LOSSY)) {
-                    assertEquals(ExprValueType.MISSING, exprValue.type)
+                    assertEquals(ExprValueType.MISSING, it.type)
                 },
                 // bool
                 case("TRUE", "true", CastQuality.LOSSLESS),
@@ -90,8 +90,8 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests : CastTestBase() {
                 case("`(a b [2099-01-21T12:34:56Z, {{Ymxhcmc=}}])`", ErrorCode.EVALUATOR_CAST_FAILED),
                 // bag
                 case("<<99, 20000, MISSING>>", "[99, 20000, null]", FixSemantics(CastQuality.LOSSY)) {
-                    assertEquals(ExprValueType.LIST, exprValue.type)
-                    assertEquals(ExprValueType.MISSING, exprValue.ordinalBindings[2]?.type)
+                    assertEquals(ExprValueType.LIST, it.type)
+                    assertEquals(ExprValueType.MISSING, it.ordinalBindings[2]?.type)
                 },
                 case("<<99, 20000, MISSING, `{{}}`>>", ErrorCode.EVALUATOR_CAST_FAILED),
                 // struct
@@ -236,7 +236,6 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests : CastTestBase() {
                                 castCase = configuredCase.castCase.copy(
                                     expected = "false",
                                     expectedErrorCode = null,
-                                    additionalAssertBlock = { }
                                 ),
                                 configurePipeline = {
                                     customDataTypes(
@@ -286,7 +285,6 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests : CastTestBase() {
                         castCase = case.castCase.copy(
                             expected = null,
                             expectedErrorCode = ErrorCode.SEMANTIC_UNION_TYPE_INVALID,
-                            additionalAssertBlock = { }
                         ),
                         configurePipeline = {
                             customDataTypes(

@@ -31,8 +31,8 @@ open class EvaluationException(
     errorCode: ErrorCode,
     errorContext: PropertyValueMap? = null,
     cause: Throwable? = null,
-    internal: Boolean
-) : SqlException(message, errorCode, errorContext, internal, cause) {
+    override val internal: Boolean
+) : SqlException(message, errorCode, errorContext, cause) {
 
     constructor(
         cause: Throwable,
@@ -71,11 +71,9 @@ internal fun expectedArgTypeErrorMsg(types: List<ExprValueType>): String = when 
 internal fun errInvalidArgumentType(
     signature: FunctionSignature,
     position: Int,
-    numArgs: Int,
     expectedTypes: List<ExprValueType>,
     actualType: ExprValueType
 ): Nothing {
-    val arity = signature.arity
 
     val expectedTypeMsg = expectedArgTypeErrorMsg(expectedTypes)
 

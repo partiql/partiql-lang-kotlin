@@ -42,6 +42,7 @@ import java.time.LocalDate
 
 internal const val MISSING_ANNOTATION = "\$partiql_missing"
 internal const val BAG_ANNOTATION = "\$partiql_bag"
+internal const val DATE_ANNOTATION = "\$partiql_date"
 
 /**
  * Provides a standard way of creating instances of ExprValue.
@@ -362,11 +363,10 @@ private class DateExprValue(val ion: IonSystem, val value: LocalDate) : ScalarEx
             )
         }
     }
-    private val PARTIQL_DATE_ANNOTATION = "\$partiql_date"
 
     private fun createIonDate() =
         ion.newTimestamp(Timestamp.forDay(value.year, value.monthValue, value.dayOfMonth)).apply {
-            addTypeAnnotation(PARTIQL_DATE_ANNOTATION)
+            addTypeAnnotation(DATE_ANNOTATION)
         }.seal()
 
     override val type: ExprValueType = ExprValueType.DATE

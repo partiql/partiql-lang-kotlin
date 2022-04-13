@@ -2,6 +2,7 @@ package org.partiql.lang.eval
 
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.lang.eval.test.EvaluatorTestCase
 import org.partiql.lang.util.ArgumentsProviderBase
 
 /**
@@ -25,14 +26,46 @@ private fun isStringTypeTestCase(
     expectedIsVarcharHonorParamsSql: String = expectedResult
 ) =
     listOf(
-        EvaluatorTestCase(sql.replace("{TYPE}", "CHAR"), expectedResult, CompOptions.STANDARD),
-        EvaluatorTestCase(sql.replace("{TYPE}", "CHARACTER"), expectedResult, CompOptions.STANDARD),
-        EvaluatorTestCase(sql.replace("{TYPE}", "VARCHAR"), expectedResult, CompOptions.STANDARD),
-        EvaluatorTestCase(sql.replace("{TYPE}", "CHARACTER VARYING"), expectedResult, CompOptions.STANDARD),
-        EvaluatorTestCase(sql.replace("{TYPE}", "CHAR"), expectedIsCharHonorParamsSql, CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS),
-        EvaluatorTestCase(sql.replace("{TYPE}", "CHARACTER"), expectedIsCharHonorParamsSql, CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS),
-        EvaluatorTestCase(sql.replace("{TYPE}", "VARCHAR"), expectedIsVarcharHonorParamsSql, CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS),
-        EvaluatorTestCase(sql.replace("{TYPE}", "CHARACTER VARYING"), expectedIsVarcharHonorParamsSql, CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS)
+        EvaluatorTestCase(
+            sql.replace("{TYPE}", "CHAR"),
+            expectedResult,
+            compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock
+        ),
+        EvaluatorTestCase(
+            sql.replace("{TYPE}", "CHARACTER"),
+            expectedResult,
+            compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock
+        ),
+        EvaluatorTestCase(
+            sql.replace("{TYPE}", "VARCHAR"),
+            expectedResult,
+            compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock
+        ),
+        EvaluatorTestCase(
+            sql.replace("{TYPE}", "CHARACTER VARYING"),
+            expectedResult,
+            compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock
+        ),
+        EvaluatorTestCase(
+            sql.replace("{TYPE}", "CHAR"),
+            expectedIsCharHonorParamsSql,
+            compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock
+        ),
+        EvaluatorTestCase(
+            sql.replace("{TYPE}", "CHARACTER"),
+            expectedIsCharHonorParamsSql,
+            compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock
+        ),
+        EvaluatorTestCase(
+            sql.replace("{TYPE}", "VARCHAR"),
+            expectedIsVarcharHonorParamsSql,
+            compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock
+        ),
+        EvaluatorTestCase(
+            sql.replace("{TYPE}", "CHARACTER VARYING"),
+            expectedIsVarcharHonorParamsSql,
+            compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock
+        )
     )
 
 /**
@@ -66,10 +99,26 @@ private fun isDecimalTypeTestCase(
     expectedIsDecimalHonorParamsResult: String = expectedResult
 ) =
     listOf(
-        EvaluatorTestCase(sql.replace("{TYPE}", "DECIMAL"), expectedResult, CompOptions.STANDARD),
-        EvaluatorTestCase(sql.replace("{TYPE}", "NUMERIC"), expectedResult, CompOptions.STANDARD),
-        EvaluatorTestCase(sql.replace("{TYPE}", "DECIMAL"), expectedIsDecimalHonorParamsResult, CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS),
-        EvaluatorTestCase(sql.replace("{TYPE}", "NUMERIC"), expectedIsDecimalHonorParamsResult, CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS)
+        EvaluatorTestCase(
+            sql.replace("{TYPE}", "DECIMAL"),
+            expectedResult,
+            compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock
+        ),
+        EvaluatorTestCase(
+            sql.replace("{TYPE}", "NUMERIC"),
+            expectedResult,
+            compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock
+        ),
+        EvaluatorTestCase(
+            sql.replace("{TYPE}", "DECIMAL"),
+            expectedIsDecimalHonorParamsResult,
+            compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock
+        ),
+        EvaluatorTestCase(
+            sql.replace("{TYPE}", "NUMERIC"),
+            expectedIsDecimalHonorParamsResult,
+            compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock
+        )
     )
 
 /**
@@ -80,8 +129,12 @@ private fun isIntDecimalTypeTestCase(
     expectedLegacyResult: String,
     expectedHonorParamsResult: String = expectedLegacyResult
 ) = listOf(
-    EvaluatorTestCase(sql, expectedLegacyResult, CompOptions.STANDARD),
-    EvaluatorTestCase(sql, expectedHonorParamsResult, CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS)
+    EvaluatorTestCase(sql, expectedLegacyResult, compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock),
+    EvaluatorTestCase(
+        sql,
+        expectedHonorParamsResult,
+        compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock
+    )
 )
 
 /** Tests for `IS` operator. */
@@ -89,59 +142,63 @@ class EvaluatingCompilerIsTests : EvaluatorTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(BasicIsOperatorTests::class)
-    fun basicIsOperatorTests(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, EvaluationSession.standard())
+    fun basicIsOperatorTests(tc: EvaluatorTestCase) =
+        runEvaluatorTestCase(tc, EvaluationSession.standard())
+
     class BasicIsOperatorTests : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
             EvaluatorTestCase(
                 query = "MISSING IS MISSING",
-                expectedSql = "TRUE"
+                expectedResult = "TRUE"
             ),
             EvaluatorTestCase(
                 query = "MISSING IS NULL",
-                expectedSql = "TRUE"
+                expectedResult = "TRUE"
             ),
             EvaluatorTestCase(
                 query = "NULL IS NOT MISSING",
-                expectedSql = "TRUE"
+                expectedResult = "TRUE"
             ),
             EvaluatorTestCase(
                 query = "NULL IS NOT NULL",
-                expectedSql = "FALSE"
+                expectedResult = "FALSE"
             ),
             EvaluatorTestCase(
                 query = "`null.string` IS NOT NULL",
-                expectedSql = "FALSE"
+                expectedResult = "FALSE"
             ),
             EvaluatorTestCase(
                 query = "'' IS STRING",
-                expectedSql = "TRUE"
+                expectedResult = "TRUE"
             ),
             EvaluatorTestCase(
                 query = "'' IS VARCHAR",
-                expectedSql = "TRUE"
+                expectedResult = "TRUE"
             ),
             EvaluatorTestCase(
                 query = "'hello' IS VARCHAR",
-                expectedSql = "TRUE"
+                expectedResult = "TRUE"
             ),
             EvaluatorTestCase(
                 query = "'hello' IS CHARACTER VARYING",
-                expectedSql = "TRUE"
+                expectedResult = "TRUE"
             ),
             EvaluatorTestCase(
                 query = "'hello' IS STRING",
-                expectedSql = "TRUE"
+                expectedResult = "TRUE"
             ),
             EvaluatorTestCase(
                 query = "50000 IS NOT INT",
-                expectedSql = "FALSE"
-            )
+                expectedResult = "FALSE"
+            ),
         )
     }
 
     @ParameterizedTest
     @ArgumentsSource(SizedIntegerTests::class)
-    fun sizedIntegerTests(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, EvaluationSession.standard())
+    fun sizedIntegerTests(tc: EvaluatorTestCase) =
+        runEvaluatorTestCase(tc, EvaluationSession.standard())
+
     class SizedIntegerTests : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> {
             fun constrainedIntCases(typeName: String, minValue: Long, maxValue: Long, includeOufRangeTests: Boolean) =
@@ -190,7 +247,8 @@ class EvaluatingCompilerIsTests : EvaluatorTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(NotAStringCases::class)
-    fun notAStringTests(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, EvaluationSession.standard())
+    fun notAStringTests(tc: EvaluatorTestCase) =
+        runEvaluatorTestCase(tc, EvaluationSession.standard())
     class NotAStringCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
             isStringTypeTestCase(
@@ -218,7 +276,9 @@ class EvaluatingCompilerIsTests : EvaluatorTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(ZeroLengthCases::class)
-    fun zeroLengthStringTests(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, EvaluationSession.standard())
+    fun zeroLengthStringTests(tc: EvaluatorTestCase) =
+        runEvaluatorTestCase(tc, EvaluationSession.standard())
+
     class ZeroLengthCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
             isStringTypeTestCase(
@@ -238,7 +298,9 @@ class EvaluatingCompilerIsTests : EvaluatorTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(SingleByteCharacterCases::class)
-    fun unicodeIsCharacterTypeTests(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, EvaluationSession.standard())
+    fun unicodeIsCharacterTypeTests(tc: EvaluatorTestCase) =
+        runEvaluatorTestCase(tc, EvaluationSession.standard())
+
     class SingleByteCharacterCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> {
             val fourCharacterStrings = listOf(
@@ -324,7 +386,9 @@ class EvaluatingCompilerIsTests : EvaluatorTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(DecimalIsOperatorTestCases::class)
-    fun isDecimalTests(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, EvaluationSession.standard())
+    fun isDecimalTests(tc: EvaluatorTestCase) =
+        runEvaluatorTestCase(tc, EvaluationSession.standard())
+
     class DecimalIsOperatorTestCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
             isDecimalTypeTestCase(

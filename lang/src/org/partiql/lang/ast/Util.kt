@@ -19,6 +19,7 @@ import com.amazon.ion.IonSystem
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 
+@Suppress("DEPRECATION")
 fun PropertyValueMap.addSourceLocation(metas: MetaContainer): PropertyValueMap {
     (metas.find(SourceLocationMeta.TAG) as? SourceLocationMeta)?.let {
         this[Property.LINE_NUMBER] = it.lineNum
@@ -31,6 +32,7 @@ fun PropertyValueMap.addSourceLocation(metas: MetaContainer): PropertyValueMap {
  * Creates an instance of [CallAgg] which is intended to be used to represent `COUNT(*)` when it is
  * used in a select list.
  */
+@Suppress("DEPRECATION")
 fun createCountStar(ion: IonSystem, metas: MetaContainer): CallAgg {
     // The [VariableReference] and [Literal] below should only get the [SourceLocationMeta] if present,
     // not any other metas.

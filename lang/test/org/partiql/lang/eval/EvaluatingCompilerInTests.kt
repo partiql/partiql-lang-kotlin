@@ -2,6 +2,7 @@ package org.partiql.lang.eval
 
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.lang.eval.test.EvaluatorTestCase
 import org.partiql.lang.util.ArgumentsProviderBase
 
 class EvaluatingCompilerInTests : EvaluatorTestBase() {
@@ -10,7 +11,8 @@ class EvaluatingCompilerInTests : EvaluatorTestBase() {
     // as that is already well tested in [EvaluatingCompilerUnknownValuesTest].
     @ParameterizedTest
     @ArgumentsSource(BasicInOperatorTestCases::class)
-    fun basicInOperatorTests(tc: EvaluatorTestCase) = runTestCaseInLegacyAndPermissiveModes(tc, EvaluationSession.standard())
+    fun basicInOperatorTests(tc: EvaluatorTestCase) =
+        runEvaluatorTestCase(tc, EvaluationSession.standard())
     class BasicInOperatorTestCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
             // These cases get the optimized thunk since the right-operand consists solely of known literal values
@@ -34,23 +36,18 @@ class EvaluatingCompilerInTests : EvaluatorTestBase() {
     // Tests the differences between [TypingMode.LEGACY] and [TypingMode.PERMISSIVE] for the IN operator.
     @ParameterizedTest
     @ArgumentsSource(InRightOpNotASequenceCases::class)
-    fun inRightOpNotASequence(tc: EvaluatorTestCase) = runTestCase(tc, EvaluationSession.standard())
+    fun inRightOpNotASequence(tc: EvaluatorTestCase) =
+        runEvaluatorTestCase(tc, EvaluationSession.standard())
     class InRightOpNotASequenceCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
             // TypingMode.LEGACY returns `false` when the right-hand operand is not a sequence
             // TypingMode.PERMISSIVE the same returns `MISSING`
             EvaluatorTestCase(
                 groupName = "IN--right operand not a sequence (TypingMode.LEGACY)",
-                sqlUnderTest = "1 IN 'so long'",
-                expectedSql = "false",
-                compOptions = CompOptions.STANDARD
+                query = "1 IN 'so long'",
+                expectedResult = "false",
+                expectedPermissiveModeResult = "MISSING",
             ),
-            EvaluatorTestCase(
-                groupName = "IN--right operand not a sequence (TypingMode.PERMISSIVE)",
-                sqlUnderTest = "1 IN 'thanks for all the fish'",
-                expectedSql = "MISSING",
-                compOptions = CompOptions.PERMISSIVE
-            )
         )
     }
 }

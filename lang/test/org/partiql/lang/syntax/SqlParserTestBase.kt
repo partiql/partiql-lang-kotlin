@@ -12,9 +12,12 @@
  *  language governing permissions and limitations under the License.
  */
 
+@file:Suppress("DEPRECATION") // Don't need warnings about ExprNode deprecation.
+
 package org.partiql.lang.syntax
 
 import com.amazon.ion.IonSexp
+import com.amazon.ion.IonValue
 import com.amazon.ionelement.api.SexpElement
 import com.amazon.ionelement.api.toIonElement
 import com.amazon.ionelement.api.toIonValue
@@ -27,11 +30,12 @@ import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.passes.MetaStrippingRewriter
 import org.partiql.lang.ast.toAstStatement
 import org.partiql.lang.ast.toExprNode
-import org.partiql.lang.checkErrorAndErrorContext
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
+import org.partiql.lang.util.SexpAstPrettyPrinter
 import org.partiql.lang.util.asIonSexp
+import org.partiql.lang.util.checkErrorAndErrorContext
 import org.partiql.lang.util.filterMetaNodes
 import org.partiql.lang.util.softAssert
 import org.partiql.pig.runtime.toIonElement
@@ -40,6 +44,20 @@ abstract class SqlParserTestBase : TestBase() {
     protected val parser = SqlParser(ion, CUSTOM_TEST_TYPES)
 
     protected fun parse(source: String): PartiqlAst.Statement = parser.parseAstStatement(source)
+
+    private fun assertSexpEquals(
+        expectedValue: IonValue,
+        actualValue: IonValue,
+        message: String = ""
+    ) {
+        if (!expectedValue.equals(actualValue)) {
+            fail(
+                "Expected and actual values do not match: $message\n" +
+                    "Expected:\n${SexpAstPrettyPrinter.format(expectedValue)}\n" +
+                    "Actual:\n${SexpAstPrettyPrinter.format(actualValue)}"
+            )
+        }
+    }
 
     /**
      * This method is used by test cases for parsing a string.

@@ -16,7 +16,13 @@ class UnixTimestampFunctionTest : EvaluatorTestBase() {
     // Pass test cases
     @ParameterizedTest
     @ArgumentsSource(UnixTimestampPassCases::class)
-    fun runPassTests(tc: ExprFunctionTestCase) = assertEval(tc.source, tc.expected, tc.session)
+    fun runPassTests(tc: ExprFunctionTestCase) =
+        runEvaluatorTestCase(
+            query = tc.source,
+            session = tc.session,
+            expectedResult = tc.expectedLegacyModeResult,
+            expectedPermissiveModeResult = tc.expectedPermissiveModeResult
+        )
 
     class UnixTimestampPassCases : ArgumentsProviderBase() {
         private val epoch2020 = "1577836800"
@@ -24,11 +30,11 @@ class UnixTimestampFunctionTest : EvaluatorTestBase() {
 
         override fun getParameters(): List<Any> = listOf(
             // No args
-            ExprFunctionTestCase("unix_timestamp()", "0", buildSessionWithNow(0, 0)), // now = 0
-            ExprFunctionTestCase("unix_timestamp()", "0", buildSessionWithNow(1, 0)), // now = 1ms
-            ExprFunctionTestCase("unix_timestamp()", "0", buildSessionWithNow(999, 0)), // now = 999ms
-            ExprFunctionTestCase("unix_timestamp()", "1", buildSessionWithNow(1000, 0)), // now = 1s
-            ExprFunctionTestCase("unix_timestamp()", "1", buildSessionWithNow(1001, 0)), // now = 1001ms
+            ExprFunctionTestCase("unix_timestamp()", "0", session = buildSessionWithNow(0, 0)), // now = 0
+            ExprFunctionTestCase("unix_timestamp()", "0", session = buildSessionWithNow(1, 0)), // now = 1ms
+            ExprFunctionTestCase("unix_timestamp()", "0", session = buildSessionWithNow(999, 0)), // now = 999ms
+            ExprFunctionTestCase("unix_timestamp()", "1", session = buildSessionWithNow(1000, 0)), // now = 1s
+            ExprFunctionTestCase("unix_timestamp()", "1", session = buildSessionWithNow(1001, 0)), // now = 1001ms
             // time before the last epoch
             ExprFunctionTestCase("unix_timestamp(`1969T`)", "-31536000"),
             ExprFunctionTestCase("unix_timestamp(`1969-12-31T23:59:59.999Z`)", "-0.001"),

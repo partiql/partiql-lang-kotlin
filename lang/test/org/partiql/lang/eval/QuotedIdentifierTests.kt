@@ -17,7 +17,8 @@ package org.partiql.lang.eval
 import org.junit.Test
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
-import org.partiql.lang.util.sourceLocationProperties
+import org.partiql.lang.eval.test.ExpectedResultFormat
+import org.partiql.lang.util.propertyValueMapOf
 
 class QuotedIdentifierTests : EvaluatorTestBase() {
 
@@ -40,101 +41,122 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
         "" to "empty_variable_name_value"
     ).toSession()
 
-    private val undefinedVariableMissingCompileOptions = CompileOptions.build { undefinedVariable(UndefinedVariableBehavior.MISSING) }
+    private val undefinedVariableMissingCompileOptionBlock: CompileOptions.Builder.() -> Unit = {
+        undefinedVariable(UndefinedVariableBehavior.MISSING)
+    }
 
     @Test
     fun quotedIdResolvesWithSensitiveCase() {
 
-        assertEval("\"Abc\"", "1", simpleSession)
-        assertEval("\"aBc\"", "2", simpleSession)
-        assertEval("\"abC\"", "3", simpleSession)
+        runEvaluatorTestCase("\"Abc\"", simpleSession, "1")
+        runEvaluatorTestCase("\"aBc\"", simpleSession, "2")
+        runEvaluatorTestCase("\"abC\"", simpleSession, "3")
     }
 
     @Test
     fun quotedIdResolvesWithSensitiveCaseResolvesToMissing() {
-        assertEvalIsMissing("\"abc\"", simpleSession, undefinedVariableMissingCompileOptions)
-        assertEvalIsMissing("\"ABC\"", simpleSession, undefinedVariableMissingCompileOptions)
+        runEvaluatorTestCase(
+            query = "\"abc\"",
+            session = simpleSession,
+            expectedResult = "MISSING",
+            expectedResultFormat = ExpectedResultFormat.PARTIQL,
+            compileOptionsBuilderBlock = { undefinedVariableMissingCompileOptionBlock() },
+        )
+        runEvaluatorTestCase(
+            "\"ABC\"",
+            session = simpleSession,
+            expectedResult = "MISSING",
+            expectedResultFormat = ExpectedResultFormat.PARTIQL,
+            compileOptionsBuilderBlock = { undefinedVariableMissingCompileOptionBlock() },
+        )
 
         // Ensure case sensitive lookup still works.
-        assertEval("\"Abc\"", "1", simpleSession, undefinedVariableMissingCompileOptions)
+        runEvaluatorTestCase(
+            query = "\"Abc\"",
+            session = simpleSession,
+            expectedResult = "1",
+            compileOptionsBuilderBlock = undefinedVariableMissingCompileOptionBlock
+        )
     }
 
     @Test
     fun quotedIdsCantFindMismatchedCase() {
-        checkInputThrowingEvaluationException(
+        runEvaluatorErrorTestCase(
             "\"abc\"",
-            simpleSession,
             ErrorCode.EVALUATOR_QUOTED_BINDING_DOES_NOT_EXIST,
-            sourceLocationProperties(1L, 1L) + mapOf(Property.BINDING_NAME to "abc"),
-            expectedPermissiveModeResult = "MISSING"
+            propertyValueMapOf(1, 1, Property.BINDING_NAME to "abc"),
+            expectedPermissiveModeResult = "MISSING",
+            session = simpleSession
         )
 
-        checkInputThrowingEvaluationException(
+        runEvaluatorErrorTestCase(
             "\"ABC\"",
-            simpleSession,
             ErrorCode.EVALUATOR_QUOTED_BINDING_DOES_NOT_EXIST,
-            sourceLocationProperties(1L, 1L) + mapOf(Property.BINDING_NAME to "ABC"),
-            expectedPermissiveModeResult = "MISSING"
+            propertyValueMapOf(1, 1, Property.BINDING_NAME to "ABC"),
+            expectedPermissiveModeResult = "MISSING",
+            session = simpleSession
         )
     }
 
     @Test
     fun unquotedIdIsAmbigous() {
-        checkInputThrowingEvaluationException(
+        runEvaluatorErrorTestCase(
             "abc",
-            simpleSession,
             ErrorCode.EVALUATOR_AMBIGUOUS_BINDING,
-            sourceLocationProperties(1L, 1L) + mapOf(
+            propertyValueMapOf(
+                1, 1,
                 Property.BINDING_NAME to "abc",
                 Property.BINDING_NAME_MATCHES to "Abc, aBc, abC"
             ),
-            expectedPermissiveModeResult = "MISSING"
+            expectedPermissiveModeResult = "MISSING",
+            session = simpleSession
         )
     }
 
     @Test
     fun selectFromTablesQuotedIdsAreCaseSensitive() {
-        assertEval("SELECT * FROM \"Abc\"", "[{n:1}]", sessionWithCaseVaryingTables)
-        assertEval("SELECT * FROM \"aBc\"", "[{n:2}]", sessionWithCaseVaryingTables)
-        assertEval("SELECT * FROM \"abC\"", "[{n:3}]", sessionWithCaseVaryingTables)
+        runEvaluatorTestCase("SELECT * FROM \"Abc\"", sessionWithCaseVaryingTables, "[{n:1}]")
+        runEvaluatorTestCase("SELECT * FROM \"aBc\"", sessionWithCaseVaryingTables, "[{n:2}]")
+        runEvaluatorTestCase("SELECT * FROM \"abC\"", sessionWithCaseVaryingTables, "[{n:3}]")
     }
 
     @Test
     fun quotedTableAliasesReferencesAreCaseSensitive() =
-        assertEval(
+        runEvaluatorTestCase(
             "SELECT \"Abc\".n AS a, \"aBc\".n AS b, \"abC\".n AS c FROM a as Abc, b as aBc, c as abC",
-            "[{a:1, b:2, c:3}]",
-            simpleSessionWithTables
+            simpleSessionWithTables,
+            "[{a:1, b:2, c:3}]"
         )
 
     @Test
     fun quotedTableAliasesAreCaseSensitive() =
-        assertEval(
+        runEvaluatorTestCase(
             "SELECT \"Abc\".n AS a, \"aBc\".n AS b, \"abC\".n AS c FROM a as \"Abc\", b as \"aBc\", c as \"abC\"",
-            "[{a:1, b:2, c:3}]",
-            simpleSessionWithTables
+            simpleSessionWithTables,
+            "[{a:1, b:2, c:3}]"
         )
 
     val tableWithCaseVaryingFields = "[{ Abc: 1, aBc: 2, abC: 3}]"
 
     @Test
     fun quotedStructFieldsAreCaseSensitive() =
-        assertEval(
+        runEvaluatorTestCase(
             "SELECT s.\"Abc\" , s.\"aBc\", s.\"abC\" FROM `$tableWithCaseVaryingFields` AS s",
-            tableWithCaseVaryingFields
+            expectedResult = tableWithCaseVaryingFields
         )
 
     @Test
     fun unquotedStructFieldsAreAmbiguous() {
-        checkInputThrowingEvaluationException(
+        runEvaluatorErrorTestCase(
             "SELECT s.abc FROM `$tableWithCaseVaryingFields` AS s",
-            simpleSession,
             ErrorCode.EVALUATOR_AMBIGUOUS_BINDING,
-            sourceLocationProperties(1L, 10L) + mapOf(
+            propertyValueMapOf(
+                1, 10,
                 Property.BINDING_NAME to "abc",
                 Property.BINDING_NAME_MATCHES to "Abc, aBc, abC"
             ),
-            expectedPermissiveModeResult = "<<{}>>"
+            expectedPermissiveModeResult = "<<{}>>",
+            session = simpleSession
         )
     }
 
@@ -207,64 +229,74 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
 
     @Test
     fun pathDotOnly_quotedId() =
-        assertEval(""" "a"."b"."c"."d"."e" """, "5", nestedStructsLowercase.toSession())
+        runEvaluatorTestCase(""" "a"."b"."c"."d"."e" """, nestedStructsLowercase.toSession(), "5")
 
     @Test
     fun pathDotOnly_mixedIds() =
-        assertEval(""" "a".b."c".d."e" """, "5", nestedStructsLowercase.toSession())
+        runEvaluatorTestCase(""" "a".b."c".d."e" """, nestedStructsLowercase.toSession(), "5")
     @Test
     fun pathDotOnly_mixedIds_Inverted() =
-        assertEval(""" a."b".c."d".e """, "5", nestedStructsLowercase.toSession())
+        runEvaluatorTestCase(""" a."b".c."d".e """, nestedStructsLowercase.toSession(), "5")
 
     @Test
     fun pathDotMissingAttribute_quotedId() =
-        assertEval(""" "a"."z" IS MISSING """, "true", nestedStructsLowercase.toSession())
+        runEvaluatorTestCase(""" "a"."z" IS MISSING """, nestedStructsLowercase.toSession(), "true")
 
     @Test
     fun pathDotMissingAttribute_mixedIds() =
-        assertEval(""" a."z" IS MISSING """, "true", nestedStructsLowercase.toSession())
+        runEvaluatorTestCase(""" a."z" IS MISSING """, nestedStructsLowercase.toSession(), "true")
 
     @Test
     fun pathDotMissingAttribute_Inverted() =
-        assertEval(""" "a".z IS MISSING """, "true", nestedStructsLowercase.toSession())
+        runEvaluatorTestCase(""" "a".z IS MISSING """, nestedStructsLowercase.toSession(), "true")
 
     @Test
-    fun pathIndexing_quotedId() = assertEval(""" "stores"[0]."books"[2]."title" """, "\"C\"", stores.toSession())
+    fun pathIndexing_quotedId() =
+        runEvaluatorTestCase(""" "stores"[0]."books"[2]."title" """, stores.toSession(), "\"C\"")
 
     @Test
-    fun pathFieldStructLiteral_quotedId() = assertEval("""{'a': 1, 'b': 2, 'b': 3}."a" """, "1")
+    fun pathFieldStructLiteral_quotedId() =
+        runEvaluatorTestCase("""{'a': 1, 'b': 2, 'b': 3}."a" """, expectedResult = "1")
 
     @Test
-    fun pathWildcard_quotedId() = assertEval(""" "stores"[0]."books"[*]."title" """, """["A", "B", "C", "D"]""", stores.toSession())
+    fun pathWildcard_quotedId() = runEvaluatorTestCase(
+        """ "stores"[0]."books"[*]."title" """,
+        stores.toSession(),
+        """["A", "B", "C", "D"]"""
+    )
 
     @Test
-    fun pathUnpivotWildcard_quotedId() = assertEval(""" "friends"."kumo"."likes".*."type" """, """["dog", "human"]""", friends.toSession())
+    fun pathUnpivotWildcard_quotedId() = runEvaluatorTestCase(
+        """ "friends"."kumo"."likes".*."type" """,
+        friends.toSession(),
+        """["dog", "human"]"""
+    )
 
     @Test
-    fun pathDoubleWildCard_quotedId() = assertEval(
+    fun pathDoubleWildCard_quotedId() = runEvaluatorTestCase(
         """ "stores"[*]."books"[*]."title" """,
-        """["A", "B", "C", "D", "A", "E", "F"]""",
-        stores.toSession()
+        stores.toSession(),
+        """["A", "B", "C", "D", "A", "E", "F"]"""
     )
 
     @Test
-    fun pathDoubleUnpivotWildCard_quotedId() = assertEval(
+    fun pathDoubleUnpivotWildCard_quotedId() = runEvaluatorTestCase(
         """ "friends".*."likes".*."type" """,
-        """["dog", "human", "dog", "cat"]""",
-        friends.toSession()
+        friends.toSession(),
+        """["dog", "human", "dog", "cat"]"""
     )
 
     @Test
-    fun pathWildCardOverScalar_quotedId() = assertEval(
+    fun pathWildCardOverScalar_quotedId() = runEvaluatorTestCase(
         """ "s"[*] """,
-        """["hello"]""",
-        globalHello.toSession()
+        globalHello.toSession(),
+        """["hello"]"""
     )
 
     @Test
-    fun pathUnpivotWildCardOverScalar_quotedId() = assertEval(
+    fun pathUnpivotWildCardOverScalar_quotedId() = runEvaluatorTestCase(
         """ "s".*  """,
-        """["hello"]""",
-        globalHello.toSession()
+        globalHello.toSession(),
+        """["hello"]"""
     )
 }

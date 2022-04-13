@@ -18,7 +18,6 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.errors.UNKNOWN
-import org.partiql.lang.util.propertyValueMapOf
 
 /**
  * General exception class for the interpreter.
@@ -48,10 +47,27 @@ open class SqlException(
 ) :
     RuntimeException(message, cause) {
 
-    val errorContext: PropertyValueMap = errorContext ?: propertyValueMapOf()
+    /**
+     * Indicates if this exception is due to an internal error or not.
+     *
+     * Internal errors are those that are likely due to a bug in PartiQL itself or in the usage of its APIs.
+     *
+     * Non-internal errors are caused by query authors--i.e. syntax errors, or semantic errors such as undefined
+     * variables, etc.
+     */
+    open val internal: Boolean get() = false
 
-    constructor(errorCode: ErrorCode, propertyValueMap: PropertyValueMap, internal: Boolean, cause: Throwable? = null) :
-        this("", errorCode, propertyValueMap, internal, cause)
+    /**
+     * Given  the [errorCode], error context as a [propertyValueMap] and optional [cause] creates an
+     * [SqlException] with an auto-generated error message.
+     * This is the constructor for the third configuration explained above.
+     *
+     * @param errorCode the error code for this exception
+     * @param propertyValueMap context for this error
+     * @param cause for this exception
+     */
+    constructor(errorCode: ErrorCode, propertyValueMap: PropertyValueMap, cause: Throwable? = null) :
+        this("", errorCode, propertyValueMap, cause)
 
     /**
      * Auto-generated message has the structure

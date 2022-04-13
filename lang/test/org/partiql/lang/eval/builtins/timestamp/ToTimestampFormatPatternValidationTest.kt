@@ -7,7 +7,7 @@ import org.junit.runner.RunWith
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.EvaluatorTestBase
-import org.partiql.lang.util.sourceLocationProperties
+import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.lang.util.to
 
 @RunWith(JUnitParamsRunner::class)
@@ -17,30 +17,30 @@ class ToTimestampFormatPatternValidationTest : EvaluatorTestBase() {
 
     @Test
     fun hourClock24HourAmPmMistmatchTest() {
-        checkInputThrowingEvaluationException(
+        runEvaluatorErrorTestCase(
             "TO_TIMESTAMP('doesnt matter', 'yyyy M dd H m a')",
             ErrorCode.EVALUATOR_TIMESTAMP_FORMAT_PATTERN_HOUR_CLOCK_AM_PM_MISMATCH,
-            sourceLocationProperties(1, 1) + mapOf(Property.TIMESTAMP_FORMAT_PATTERN to "yyyy M dd H m a"),
+            propertyValueMapOf(1, 1, Property.TIMESTAMP_FORMAT_PATTERN to "yyyy M dd H m a"),
             expectedPermissiveModeResult = "MISSING"
         )
     }
 
     @Test
     fun hourClock12HourAmPmMistmatchTest() {
-        checkInputThrowingEvaluationException(
+        runEvaluatorErrorTestCase(
             "TO_TIMESTAMP('doesnt matter', 'yyyy M dd h m')",
             ErrorCode.EVALUATOR_TIMESTAMP_FORMAT_PATTERN_HOUR_CLOCK_AM_PM_MISMATCH,
-            sourceLocationProperties(1, 1) + mapOf(Property.TIMESTAMP_FORMAT_PATTERN to "yyyy M dd h m"),
+            propertyValueMapOf(1, 1, Property.TIMESTAMP_FORMAT_PATTERN to "yyyy M dd h m"),
             expectedPermissiveModeResult = "MISSING"
         )
     }
 
     @Test
     fun firstLetterOfMonthIsInvalidForToTimestamp() {
-        checkInputThrowingEvaluationException(
+        runEvaluatorErrorTestCase(
             "TO_TIMESTAMP('doesnt matter', 'y MMMMM')",
             ErrorCode.EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_SYMBOL_FOR_PARSING,
-            sourceLocationProperties(1, 1) + mapOf(Property.TIMESTAMP_FORMAT_PATTERN to "y MMMMM"),
+            propertyValueMapOf(1, 1, Property.TIMESTAMP_FORMAT_PATTERN to "y MMMMM"),
             expectedPermissiveModeResult = "MISSING"
         )
     }
@@ -81,10 +81,11 @@ class ToTimestampFormatPatternValidationTest : EvaluatorTestBase() {
     @Test
     @Parameters
     fun incompleteFormatPatternTest(testCase: ValidationTestCase) {
-        checkInputThrowingEvaluationException(
+        runEvaluatorErrorTestCase(
             "TO_TIMESTAMP('doesnt matter', '${testCase.pattern.replace("'", "''")}')",
             ErrorCode.EVALUATOR_INCOMPLETE_TIMESTAMP_FORMAT_PATTERN,
-            sourceLocationProperties(1, 1) + mapOf(
+            propertyValueMapOf(
+                1, 1,
                 Property.TIMESTAMP_FORMAT_PATTERN to testCase.pattern,
                 Property.TIMESTAMP_FORMAT_PATTERN_FIELDS to testCase.fields
             ),
@@ -240,10 +241,11 @@ class ToTimestampFormatPatternValidationTest : EvaluatorTestBase() {
     @Test
     @Parameters
     fun duplicateFieldPatternTest(testCase: ValidationTestCase) {
-        checkInputThrowingEvaluationException(
+        runEvaluatorErrorTestCase(
             "TO_TIMESTAMP('doesnt matter', '${testCase.pattern}')",
             ErrorCode.EVALUATOR_TIMESTAMP_FORMAT_PATTERN_DUPLICATE_FIELDS,
-            sourceLocationProperties(1, 1) + mapOf(
+            propertyValueMapOf(
+                1, 1,
                 Property.TIMESTAMP_FORMAT_PATTERN to testCase.pattern,
                 Property.TIMESTAMP_FORMAT_PATTERN_FIELDS to testCase.fields
             ),

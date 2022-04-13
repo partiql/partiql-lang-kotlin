@@ -33,6 +33,7 @@ data class StaticTypeMeta(val type: StaticType) : Meta {
         val isl = when (hasISL) {
             true -> {
                 // Get name from metas if present, fallback to base type name
+                @Suppress("UNCHECKED_CAST")
                 name = (type.metas[ISL_META_KEY] as List<IonSchemaModel.TypeDefinition>)[0].name?.text ?: name
                 IonSchemaMapper(type).toIonSchema(name).toIsl()
             }
@@ -54,8 +55,8 @@ data class StaticTypeMeta(val type: StaticType) : Meta {
 
         val deserializer = object : MetaDeserializer {
             override val tag = TAG
-            override fun deserialize(value: IonValue): Meta {
-                val struct = value.asIonStruct()
+            override fun deserialize(sexp: IonValue): Meta {
+                val struct = sexp.asIonStruct()
 
                 // get serialized fields
                 val name = struct.field("name").stringValue()!!
@@ -79,5 +80,6 @@ data class StaticTypeMeta(val type: StaticType) : Meta {
     }
 }
 
+@Suppress("DEPRECATION")
 @Deprecated("Please use org.partiql.lang.domains.staticType")
 val MetaContainer.staticType: StaticTypeMeta? get() = find(StaticTypeMeta.TAG) as StaticTypeMeta?

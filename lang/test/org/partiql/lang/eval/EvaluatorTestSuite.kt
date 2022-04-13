@@ -1,13 +1,11 @@
 package org.partiql.lang.eval
 
 import org.junit.Assert
-import org.partiql.lang.ION
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.partiql_bag
 import org.partiql.lang.util.partiql_missing
 import org.partiql.lang.util.testdsl.IonResultTestSuite
 import org.partiql.lang.util.testdsl.defineTestSuite
-import kotlin.test.assertEquals
 
 class EvaluatorTestCasesAsExprNodeTestCases : ArgumentsProviderBase() {
     override fun getParameters() = EVALUATOR_TEST_SUITE.allTestsAsExprNodeTestCases()
@@ -121,7 +119,7 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
         test("tableValueConstructor", "VALUES (i), (f, d)", "$partiql_bag::[[1], [2e0, 3d0]]")
 
         test("emptyStructLiteral", "{}", "{}")
-        test("structLiteral", "{'a':i, 'b':f, 'c':d, 'd': 1}", "{a:1, b:2e0, c:3d0, d:1}") { exprValue, _ ->
+        test("structLiteral", "{'a':i, 'b':f, 'c':d, 'd': 1}", "{a:1, b:2e0, c:3d0, d:1}") { exprValue ->
             // struct literals provide ordered names
             val bindNames = exprValue.orderedNames!!
             Assert.assertEquals(listOf("a", "b", "c", "d"), bindNames)
@@ -209,7 +207,7 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
         test("pathUnpivotWildCardOverStructMultiple", "a.*.*.*.*", """$partiql_bag::[5, 6]""")
     }
 
-    val undefinedVariableMisisng = CompileOptions.build {
+    val undefinedVariableMisisng: CompileOptions.Builder.() -> Unit = {
         undefinedVariable(UndefinedVariableBehavior.MISSING)
     }
 
@@ -218,28 +216,28 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
             "undefinedUnqualifiedVariableWithUndefinedVariableBehaviorMissing",
             "undefined_variable",
             "$partiql_missing::null",
-            compileOptions = undefinedVariableMisisng
+            compileOptionsBuilderBlock = undefinedVariableMisisng
         )
 
         test(
             "undefinedUnqualifiedVariableIsNullExprWithUndefinedVariableBehaviorMissing",
             "undefined_variable IS NULL",
             "true",
-            compileOptions = undefinedVariableMisisng
+            compileOptionsBuilderBlock = undefinedVariableMisisng
         )
 
         test(
             "undefinedUnqualifiedVariableIsMissingExprWithUndefinedVariableBehaviorMissing",
             "undefined_variable IS MISSING",
             "true",
-            compileOptions = undefinedVariableMisisng
+            compileOptionsBuilderBlock = undefinedVariableMisisng
         )
 
         test(
             "undefinedUnqualifiedVariableInSelectWithUndefinedVariableBehaviorMissing",
             "SELECT s.a, s.undefined_variable, s.b FROM `[{a:100, b:200}]` s",
             "$partiql_bag::[{a:100, b:200}]",
-            compileOptions = undefinedVariableMisisng
+            compileOptionsBuilderBlock = undefinedVariableMisisng
         )
     }
 
@@ -726,18 +724,9 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
               SELECT VALUE b.title FROM stores[*].books[*] AS b WHERE b.price NOT IN 5
             """,
             // We assert the expected result below because it has a different result under [TypingMode.LEGACY].
-            expected = null
-        ) { exprValue, compileOptions ->
-            val ionResult = exprValue.ionValue
-
-            val expectedResult = when (compileOptions.typingMode) {
-                TypingMode.LEGACY -> ION.singleValue("""$partiql_bag::[ "A", "B", "C", "D", "A", "E", "F"]""")
-                TypingMode.PERMISSIVE -> ION.singleValue("$partiql_bag::[]")
-            }
-
-            assertEquals(expectedResult, ionResult)
-        }
-
+            expectedLegacyModeIonResult = """$partiql_bag::[ "A", "B", "C", "D", "A", "E", "F"]""",
+            expectedPermissiveModeIonResult = "$partiql_bag::[]"
+        )
         test(
             "notInPredicateSingleItemListVar",
             """ SELECT VALUE b.title FROM stores[*].books[*] AS b WHERE b.price NOT IN (prices) """,
@@ -1067,14 +1056,16 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
         )
     }
     group("projection iteration behavior unfiltered") {
-        val projectionIterationUnfiltered = CompileOptions.build { projectionIteration(ProjectionIterationBehavior.UNFILTERED) }
+        val projectionIterationUnfiltered: CompileOptions.Builder.() -> Unit = {
+            projectionIteration(ProjectionIterationBehavior.UNFILTERED)
+        }
 
         test(
             "undefinedUnqualifiedVariable_inSelect_withProjectionOption",
             "SELECT s.a, s.undefined_variable, s.b FROM `[{a:100, b:200}]` s",
             "$partiql_bag::[{a:100, b:200}]",
-            compileOptions = projectionIterationUnfiltered
-        ) { exprValue, _ ->
+            compileOptionsBuilderBlock = projectionIterationUnfiltered
+        ) { exprValue ->
             val actual = exprValue.iterator().next()
             Assert.assertEquals(actual.iterator().asSequence().joinToString(separator = ", "), "100, MISSING, 200")
         }
@@ -1083,14 +1074,14 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
             "projectionIterationBehaviorUnfiltered_select_list",
             "select x.someColumn from <<{'someColumn': MISSING}>> AS x",
             "$partiql_bag::[{someColumn: $partiql_missing::null}]",
-            compileOptions = projectionIterationUnfiltered
+            compileOptionsBuilderBlock = projectionIterationUnfiltered
         )
 
         test(
             "projectionIterationBehaviorUnfiltered_select_star",
             "select * from <<{'someColumn': MISSING}>>",
             "$partiql_bag::[{someColumn: $partiql_missing::null}]",
-            compileOptions = projectionIterationUnfiltered
+            compileOptionsBuilderBlock = projectionIterationUnfiltered
         )
     }
 
@@ -1099,7 +1090,7 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
             "wildcardOrderedNames",
             "SELECT * FROM <<{'a': 1, 'b': 2 }>> AS f",
             "$partiql_bag::[{a: 1, b: 2}]"
-        ) { exprValue, _ ->
+        ) { exprValue ->
             Assert.assertNull(
                 "Ordering of the fields should not be known when '*' is used",
                 exprValue.first().orderedNames
@@ -1110,7 +1101,7 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
             "aliasWildcardOrderedNames",
             "SELECT f.* FROM <<{'a': 1, 'b': 2 }>> AS f",
             "$partiql_bag::[{a: 1, b: 2}]"
-        ) { exprValue, _ ->
+        ) { exprValue ->
             Assert.assertNull(
                 "Ordering of the fields should not be known when 'alias.*' is used",
                 exprValue.first().orderedNames
@@ -1121,7 +1112,7 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
             "aliasWildcardOrderedNamesSelectList",
             "SELECT f.a, f.* FROM <<{'a': 1, 'b': 2 }>> AS f",
             "$partiql_bag::[{a: 1, a: 1, b: 2}]"
-        ) { exprValue, _ ->
+        ) { exprValue ->
             Assert.assertNull(
                 "Ordering of the fields should not be known when an 'alias.*' is used",
                 exprValue.first().orderedNames
@@ -1132,7 +1123,7 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
             "aliasOrderedNamesSelectList",
             "SELECT f.a, f.b FROM <<{'a': 1, 'b': 2 }>> AS f",
             "$partiql_bag::[{a:1, b:2}]"
-        ) { exprValue, _ ->
+        ) { exprValue ->
             Assert.assertEquals(
                 "Ordering of the fields should be known when no wildcards are used",
                 listOf("a", "b"),
@@ -1322,9 +1313,9 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
             "$partiql_bag::[]"
         )
 
-        EvaluatorTestCase(
+        test(
             "unpivotStructWithMissingField",
-            "test * FROM UNPIVOT { 'a': MISSING }",
+            "SELECT * FROM UNPIVOT { 'a': MISSING }",
             "$partiql_bag::[]"
         )
 
@@ -1395,7 +1386,7 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
             "implicitAliasSelectSingleSource",
             "SELECT id FROM stores",
             """$partiql_bag::[{id:"5"}, {id:"6"}, {id:"7"}]"""
-        ) { exprValue, _ ->
+        ) { exprValue ->
             // SELECT list provides ordered names facet
             exprValue.forEach {
                 val bindNames = it.orderedNames!!

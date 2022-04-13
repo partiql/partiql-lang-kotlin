@@ -12,6 +12,9 @@
  *  language governing permissions and limitations under the License.
  */
 
+// Don't need warnings about ExprNode deprecation.
+@file:Suppress("DEPRECATION")
+
 package org.partiql.lang.ast
 
 import com.amazon.ion.IonSexp
@@ -43,6 +46,7 @@ import org.partiql.lang.util.toListOfIonSexp
  */
 @Deprecated("Please use PartiqlAst")
 interface AstDeserializer {
+    @Suppress("DEPRECATION") // We don't need warnings about deprecated ExprNode.
     @Deprecated("Please use PartiqlAst")
     fun deserialize(sexp: IonSexp, astVersion: AstVersion): ExprNode
 }
@@ -257,6 +261,7 @@ private enum class NodeTag(val definition: TagDefinition) {
 
 // TODO: CustomTypes in this signature should be removed along with all it's usages
 //  once hardcoded types are removed from the PIG domain https://github.com/partiql/partiql-lang-kotlin/issues/510
+@Suppress("DEPRECATION") // We don't need warnings about deprecated ExprNode.
 class AstDeserializerBuilder(val ion: IonSystem, val customTypes: List<CustomType> = listOf()) {
     private val metaDeserializers = mutableMapOf(
         SourceLocationMeta.deserializer.tag to SourceLocationMeta.deserializer,
@@ -286,6 +291,7 @@ class AstDeserializerBuilder(val ion: IonSystem, val customTypes: List<CustomTyp
 
 // TODO: CustomTypes in this signature should be removed along with all it's usages
 //  once hardcoded types are removed from the PIG domain https://github.com/partiql/partiql-lang-kotlin/issues/510
+@Suppress("DEPRECATION") // We don't need warnings about deprecated ExprNode
 internal class AstDeserializerInternal(
     val astVersion: AstVersion,
     val ion: IonSystem,
