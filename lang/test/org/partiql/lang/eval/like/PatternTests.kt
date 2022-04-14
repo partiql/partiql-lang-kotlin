@@ -171,33 +171,38 @@ class PatternTests {
 
     @Test
     fun like() {
-        assertEquals("^\\Qfoo\\E$", parsePattern("foo", '\\'.toInt()).pattern())
+        val escape = '\\'.toInt()
 
-        assertEquals("^.*?\\Qfoo\\E$", parsePattern("%foo", '\\'.toInt()).pattern())
-        assertEquals("^\\Qfoo\\E.*?$", parsePattern("foo%", '\\'.toInt()).pattern())
-        assertEquals("^\\Qfoo\\E.*?\\Qbar\\E$", parsePattern("foo%bar", '\\'.toInt()).pattern())
-        assertEquals("^\\Qfoo\\E.*?\\Qbar\\E$", parsePattern("foo%%bar", '\\'.toInt()).pattern())
-        assertEquals("^\\Qfoo\\E.*?\\Qbar\\E$", parsePattern("foo%%%bar", '\\'.toInt()).pattern())
-        assertEquals("^\\Qfoo\\E.*?\\Qbar\\E$", parsePattern("foo%%%%bar", '\\'.toInt()).pattern())
+        assertEquals("^\\Qfoo\\E$", parsePattern("foo", escape).pattern())
+
+        assertEquals("^.*?\\Qfoo\\E$", parsePattern("%foo", escape).pattern())
+        assertEquals("^\\Qfoo\\E.*?$", parsePattern("foo%", escape).pattern())
+        assertEquals("^\\Qfoo\\E.*?\\Qbar\\E$", parsePattern("foo%bar", escape).pattern())
+        assertEquals("^\\Qfoo\\E.*?\\Qbar\\E$", parsePattern("foo%%bar", escape).pattern())
+        assertEquals("^\\Qfoo\\E.*?\\Qbar\\E$", parsePattern("foo%%%bar", escape).pattern())
+        assertEquals("^\\Qfoo\\E.*?\\Qbar\\E$", parsePattern("foo%%%%bar", escape).pattern())
         assertEquals(
             "^.*?\\Qfoo\\E.*?\\Qbar\\E.*?$",
-            parsePattern("%foo%%%%bar%", '\\'.toInt()).pattern(),
+            parsePattern("%foo%%%%bar%", escape).pattern(),
         )
         assertEquals(
             "^.*?\\Qfoo\\E.*?\\Qbar%baz\\E.*?$",
-            parsePattern("%foo%%%%bar\\%baz%", '\\'.toInt()).pattern(),
+            parsePattern("%foo%%%%bar\\%baz%", escape).pattern(),
         )
         assertEquals(
             "^.*?\\Qfoo\\E.*?\\Qbar%baz\\E.*?$",
             parsePattern("%foo%%%%bar*%baz%", '*'.toInt()).pattern(),
         )
-        assertEquals("^.\\Qfoo\\E$", parsePattern("_foo", '\\'.toInt()).pattern())
-        assertEquals("^\\Qfoo\\E.$", parsePattern("foo_", '\\'.toInt()).pattern())
-        assertEquals("^\\Qfoo\\E.\\Qbar\\E$", parsePattern("foo_bar", '\\'.toInt()).pattern())
-        assertEquals("^\\Qfoo\\E.{2,2}\\Qbar\\E$", parsePattern("foo__bar", '\\'.toInt()).pattern())
+        assertEquals("^.\\Qfoo\\E$", parsePattern("_foo", escape).pattern())
+        assertEquals("^\\Qfoo\\E.$", parsePattern("foo_", escape).pattern())
+        assertEquals("^\\Qfoo\\E.\\Qbar\\E$", parsePattern("foo_bar", escape).pattern())
+        assertEquals("^\\Qfoo\\E.{2,2}\\Qbar\\E$", parsePattern("foo__bar", escape).pattern())
+        assertEquals("^\\Qfoo\\E.{2,}?\\Qbar\\E$", parsePattern("foo_%_bar", escape).pattern())
+        assertEquals("^\\Qfoo\\E.{2,}?\\Qbar\\E$", parsePattern("foo_%_%bar", escape).pattern())
+        assertEquals("^\\Qfoo\\E.{2,}?\\Qbar\\E$", parsePattern("foo%_%%_%bar", escape).pattern())
         assertEquals(
             "^\\Qfoo\\E.\\Q.*?\\E.\\Qbar\\E$",
-            parsePattern("foo_.*?_bar", '\\'.toInt()).pattern(),
+            parsePattern("foo_.*?_bar", escape).pattern(),
         )
     }
 
