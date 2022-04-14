@@ -112,28 +112,24 @@ To view the AST of an SQL statement, type one and press enter only *once*, then 
 PartiQL> 1 + 1
    | !!
 ==='
++
+        Lit 1
+        Lit 1
+---
+OK!
+```
 
-(
-  ast
-  (
-    version
-    1
-  )
-  (
-    root
-    (
-      +
-      (
-        lit
-        1
-      )
-      (
-        lit
-        1
-      )
-    )
-  )
-)
+To format a query, type it and press enter only *once*, then type `!!!` and press enter:
+
+```
+PartiQL> select a from (select b from c) where d = e
+   | !!!
+==='
+SELECT a
+FROM (
+        SELECT b
+        FROM c)
+WHERE d = e
 ---
 OK!
 ```

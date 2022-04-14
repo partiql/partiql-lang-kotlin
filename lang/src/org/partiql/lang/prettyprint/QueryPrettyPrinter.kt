@@ -18,12 +18,10 @@ import kotlin.math.abs
  * of the parsed tree
  */
 class QueryPrettyPrinter {
+    private val sqlParser = SqlParser(IonSystemBuilder.standard().build())
+
     fun prettyPrintQuery(query: String): String =
-        astToPrettyQuery(
-            SqlParser(
-                IonSystemBuilder.standard().build()
-            ).parseAstStatement(query)
-        )
+        astToPrettyQuery(sqlParser.parseAstStatement(query))
 
     fun astToPrettyQuery(ast: PartiqlAst.Statement): String {
         val sb = StringBuilder()
