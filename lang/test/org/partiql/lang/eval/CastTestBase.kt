@@ -17,7 +17,7 @@ import org.partiql.lang.eval.ExprValueType.NULL
 import org.partiql.lang.eval.ExprValueType.SEXP
 import org.partiql.lang.eval.ExprValueType.STRUCT
 import org.partiql.lang.eval.ExprValueType.TIMESTAMP
-import org.partiql.lang.eval.test.ExpectedResultFormat
+import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.util.getOffsetHHmm
 import org.partiql.lang.util.honorTypedOpParameters
 import org.partiql.lang.util.legacyCastBehavior
@@ -75,7 +75,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                         },
                         expectedInternalFlag = null, // <-- disables internal flag assertion
                         excludeLegacySerializerAssertions = true,
-                        compilerPipelineBuilderBlock = configurePipeline,
+                        compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,
                         compileOptionsBuilderBlock = compileOptionBlock,
                         implicitPermissiveModeTest = false,
                         addtionalExceptionAssertBlock = { it ->
@@ -91,7 +91,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 expectedResultFormat = expectedResultFormat,
                 includePermissiveModeTest = false,
                 compileOptionsBuilderBlock = compileOptionBlock,
-                compilerPipelineBuilderBlock = configurePipeline,
+                compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,
                 extraResultAssertions = castCase.additionalAssertBlock
             )
         }
@@ -192,14 +192,14 @@ abstract class CastTestBase : EvaluatorTestBase() {
      * A [CastCase] bound to a configuration of compiler options.
      *
      * @param description Additional description for the test beyond the cast expression.
-     * @param configurePipeline Additional configuration for the compiler pipeline.
+     * @param compilerPipelineBuilderBlock Additional configuration for the compiler pipeline.
      * @param compileOptionBlock The optional lambda with a receiver to a [CompileOptions.Builder] to
      *  configure it.
      */
     data class ConfiguredCastCase(
         val castCase: CastCase,
         val description: String = "",
-        val configurePipeline: CompilerPipeline.Builder.() -> Unit = {},
+        val compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = {},
         val compileOptionBlock: CompileOptions.Builder.() -> Unit = {}
     ) {
         private val additionalDescription = when (description) {

@@ -9,10 +9,10 @@ import org.partiql.lang.eval.EVALUATOR_TEST_SUITE
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
-import org.partiql.lang.eval.test.AstEvaluatorTestAdapter
-import org.partiql.lang.eval.test.EvaluatorTestAdapter
-import org.partiql.lang.eval.test.EvaluatorTestCase
-import org.partiql.lang.eval.test.ExpectedResultFormat
+import org.partiql.lang.eval.evaluatortestframework.AstEvaluatorTestAdapter
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestAdapter
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
+import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.mockdb.MockDb
 import org.partiql.lang.syntax.SqlParser
 
@@ -71,7 +71,7 @@ data class IonResultTestCase(
 internal fun IonResultTestCase.runTestCase(
     valueFactory: ExprValueFactory,
     db: MockDb,
-    pipelineBlock: CompilerPipeline.Builder.() -> Unit = { }
+    compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }
 ) {
     val harness: EvaluatorTestAdapter = AstEvaluatorTestAdapter()
 
@@ -89,7 +89,7 @@ internal fun IonResultTestCase.runTestCase(
         excludeLegacySerializerAssertions = true,
         implicitPermissiveModeTest = false,
         compileOptionsBuilderBlock = this.compileOptionsBuilderBlock,
-        compilerPipelineBuilderBlock = pipelineBlock,
+        compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,
         extraResultAssertions = extraAssertions
     )
 

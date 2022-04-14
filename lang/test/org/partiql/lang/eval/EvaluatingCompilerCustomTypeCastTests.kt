@@ -183,7 +183,7 @@ class EvaluatingCompilerCustomTypeCastTests : CastTestBase() {
             }
             ).map {
             it.copy(
-                configurePipeline = {
+                compilerPipelineBuilderBlock = {
                     customDataTypes(CUSTOM_TEST_TYPES)
                 }
             )

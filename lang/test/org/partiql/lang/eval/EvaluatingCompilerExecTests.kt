@@ -8,8 +8,8 @@ import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedureSignature
-import org.partiql.lang.eval.test.EvaluatorErrorTestCase
-import org.partiql.lang.eval.test.EvaluatorTestCase
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorErrorTestCase
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.lang.util.to

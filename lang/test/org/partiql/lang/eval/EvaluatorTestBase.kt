@@ -26,27 +26,20 @@ import org.partiql.lang.SqlException
 import org.partiql.lang.TestBase
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.PropertyValueMap
-import org.partiql.lang.eval.test.AstEvaluatorTestAdapter
-import org.partiql.lang.eval.test.AstRewriterBaseTestAdapter
-import org.partiql.lang.eval.test.EvaluatorErrorTestCase
-import org.partiql.lang.eval.test.EvaluatorTestAdapter
-import org.partiql.lang.eval.test.EvaluatorTestCase
-import org.partiql.lang.eval.test.ExpectedResultFormat
-import org.partiql.lang.eval.test.LegacySerializerTestAdapter
-import org.partiql.lang.eval.test.MultipleTestAdapter
-import org.partiql.lang.eval.test.PartiqlAstExprNodeRoundTripAdapter
+import org.partiql.lang.eval.evaluatortestframework.AstEvaluatorTestAdapter
+import org.partiql.lang.eval.evaluatortestframework.AstRewriterBaseTestAdapter
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorErrorTestCase
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestAdapter
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
+import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
+import org.partiql.lang.eval.evaluatortestframework.LegacySerializerTestAdapter
+import org.partiql.lang.eval.evaluatortestframework.MultipleTestAdapter
+import org.partiql.lang.eval.evaluatortestframework.PartiqlAstExprNodeRoundTripAdapter
 import org.partiql.lang.util.asSequence
 import org.partiql.lang.util.newFromIonText
 
 /**
- * This class is being deprecated because it is becoming unmaintainable but can't be removed yet.
- *
- * New tests should use JUnit5's parameterized testing as much as possible.
- *
- * When code re-use among test classes is needed, please prefer making your new functions top-level and accessible
- * from any test class.
- *
- * As we parameterize PartiQL's other tests, we should migrate them away from using this base class as well.
+ * [EvaluatorTestBase] contains testing infrastructure needed by all test classes that need to evaluate a query.
  */
 abstract class EvaluatorTestBase : TestBase() {
     private val testHarness: EvaluatorTestAdapter = MultipleTestAdapter(
@@ -142,7 +135,7 @@ abstract class EvaluatorTestBase : TestBase() {
         testHarness.runEvaluatorErrorTestCase(tc, session)
 
     /**
-     * Uses the AST compiler to evaluate some code.
+     * Uses the AST compiler to evaluate a PartiQL query using the AST evaluator.
      *
      * In general, this function this should be avoided.  It is currently only used to calculate
      * some expected values in [CastTestBase] and [NaturalExprValueComparatorsTest].  TODO: refactor these locations

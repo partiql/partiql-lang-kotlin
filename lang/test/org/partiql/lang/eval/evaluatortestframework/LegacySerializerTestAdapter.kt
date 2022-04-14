@@ -1,6 +1,6 @@
 @file:Suppress("DEPRECATION") // deprecation warnings about ExprNode not needed here.
 
-package org.partiql.lang.eval.test
+package org.partiql.lang.eval.evaluatortestframework
 
 import org.partiql.lang.CUSTOM_TEST_TYPES
 import org.partiql.lang.ION

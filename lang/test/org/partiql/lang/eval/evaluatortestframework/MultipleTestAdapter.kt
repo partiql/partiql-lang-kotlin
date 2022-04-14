@@ -1,4 +1,4 @@
-package org.partiql.lang.eval.test
+package org.partiql.lang.eval.evaluatortestframework
 
 import org.partiql.lang.eval.EvaluationSession
 

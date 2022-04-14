@@ -128,7 +128,7 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests : CastTestBase() {
             }
             ).map {
             it.copy(
-                configurePipeline = {
+                compilerPipelineBuilderBlock = {
                     customDataTypes(customTypes)
                 }
             )
@@ -148,7 +148,7 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests : CastTestBase() {
             }
             ).map {
             it.copy(
-                configurePipeline = {
+                compilerPipelineBuilderBlock = {
                     customDataTypes(customTypes)
                 }
             )
@@ -237,7 +237,7 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests : CastTestBase() {
                                     expected = "false",
                                     expectedErrorCode = null,
                                 ),
-                                configurePipeline = {
+                                compilerPipelineBuilderBlock = {
                                     customDataTypes(
                                         listOf(
                                             CustomType(
@@ -286,7 +286,7 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests : CastTestBase() {
                             expected = null,
                             expectedErrorCode = ErrorCode.SEMANTIC_UNION_TYPE_INVALID,
                         ),
-                        configurePipeline = {
+                        compilerPipelineBuilderBlock = {
                             customDataTypes(
                                 listOf(
                                     CustomType(

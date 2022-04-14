@@ -201,6 +201,6 @@ class EvaluatorStaticTypeTests {
             valueFactory = valueFactory,
             db = mockDb,
             // Enable the static type inferencer for this
-            pipelineBlock = { this.globalTypeBindings(mockDb.typeBindings) }
+            compilerPipelineBuilderBlock = { this.globalTypeBindings(mockDb.typeBindings) }
         )
 }

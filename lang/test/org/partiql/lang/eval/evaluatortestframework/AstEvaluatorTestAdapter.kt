@@ -1,4 +1,4 @@
-package org.partiql.lang.eval.test
+package org.partiql.lang.eval.evaluatortestframework
 
 import org.junit.Assert
 import org.junit.jupiter.api.assertThrows
@@ -64,7 +64,7 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
     }
 
     /**
-     * Runs the given test case once with the specified [session].
+     * Runs the give test case once with the specified [session].
      *
      * If non-null, [message] will be dumped to the console before test failure to aid in the identification
      * and debugging of failed tests.
