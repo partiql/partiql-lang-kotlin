@@ -64,7 +64,7 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
     }
 
     /**
-     * Runs the give test case once with the specified [session].
+     * Runs the given test case once with the specified [session].
      *
      * If non-null, [message] will be dumped to the console before test failure to aid in the identification
      * and debugging of failed tests.
