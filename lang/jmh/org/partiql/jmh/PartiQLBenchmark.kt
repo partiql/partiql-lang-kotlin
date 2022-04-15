@@ -3,13 +3,16 @@ package org.partiql.jmh
 import com.amazon.ion.system.IonSystemBuilder
 import org.openjdk.jmh.annotations.Benchmark
 import org.openjdk.jmh.annotations.BenchmarkMode
+import org.openjdk.jmh.annotations.Fork
 import org.openjdk.jmh.annotations.Mode
+import org.openjdk.jmh.annotations.OutputTimeUnit
 import org.openjdk.jmh.annotations.Scope
 import org.openjdk.jmh.annotations.State
 import org.openjdk.jmh.infra.Blackhole
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.syntax.SqlParser
+import java.util.concurrent.TimeUnit
 
 /**
  * These are the sample benchmarks to demonstrate how JMH benchmarks in PartiQL should be set up.
@@ -66,6 +69,8 @@ open class PartiQLBenchmark {
      */
     @Benchmark
     @BenchmarkMode(Mode.AverageTime)
+    @OutputTimeUnit(TimeUnit.MICROSECONDS)
+    @Fork(value = 2)
     fun testPartiQLParser(state: MyState, blackhole: Blackhole) {
         val expr = state.parser.parseAstStatement(state.query)
         blackhole.consume(expr)
@@ -76,6 +81,8 @@ open class PartiQLBenchmark {
      */
     @Benchmark
     @BenchmarkMode(Mode.AverageTime)
+    @OutputTimeUnit(TimeUnit.MICROSECONDS)
+    @Fork(value = 2)
     fun testPartiQLCompiler(state: MyState, blackhole: Blackhole) {
         val exprValue = state.pipeline.compile(state.astStatement)
         blackhole.consume(exprValue)
@@ -86,8 +93,11 @@ open class PartiQLBenchmark {
      */
     @Benchmark
     @BenchmarkMode(Mode.AverageTime)
+    @OutputTimeUnit(TimeUnit.MICROSECONDS)
+    @Fork(value = 2)
     fun testPartiQLEvaluator(state: MyState, blackhole: Blackhole) {
         val exprValue = state.expression.eval(state.session)
         blackhole.consume(exprValue)
+        blackhole.consume(exprValue.iterator().forEach { })
     }
 }
