@@ -14,29 +14,29 @@
 
 package org.partiql.lang.eval
 
-import org.junit.Test
-import org.partiql.lang.TestBase
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.fail
+import org.partiql.lang.ION
+import org.partiql.lang.SqlException
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.util.newFromIonText
 
-class BindingsTest : TestBase() {
-
-    fun bind(text: String): Bindings<ExprValue> = valueFactory.newFromIonText(text).bindings
-
-    fun over(
-        text: String,
-        bindingsTransform: Bindings<ExprValue>.() -> Bindings<ExprValue>,
-        block: AssertExprValue.() -> Unit
-    ) =
-        AssertExprValue(
-            valueFactory.newFromIonText(text),
-            bindingsTransform
-        ).run(block)
+class BindingsTest {
+    private val valueFactory = ExprValueFactory.standard(ION)
 
     @Test
-    fun delegate() = over("{a:1, b:2}", { this.delegate(bind("{b:3, c:4}")) }) {
-        assertBinding("b") { ion.newInt(2) == ionValue }
-        assertBinding("c") { ion.newInt(4) == ionValue }
+    fun delegate() {
+        val innerBindings = valueFactory.newFromIonText("{a:1, b:2}").bindings
+        val outerBindings = valueFactory.newFromIonText("{b:3, c:4}").bindings
+
+        val delegatedBindings = innerBindings.delegate(outerBindings)
+
+        // note that "b" in the inner bindings is shadowed by the "b" in the outer bindings.
+        assertEquals(2, delegatedBindings[BindingName("b", BindingCase.INSENSITIVE)]!!.intValue())
+        assertEquals(4, delegatedBindings[BindingName("c", BindingCase.INSENSITIVE)]!!.intValue())
     }
 
     @Test
@@ -113,26 +113,26 @@ class BindingsTest : TestBase() {
         kotlin.test.assertEquals(1, bAtEvaluateCount, "bAt should be evaluated once")
         kotlin.test.assertEquals(1, BaTEvaluateCount, "BaT should be evaluated once")
 
-        // Attempting a case insensitive lookup of bat should result in ambiguous binding error
-        assertThrowsSqlException(ErrorCode.EVALUATOR_AMBIGUOUS_BINDING) {
+        val ex = assertThrows<SqlException>("case insensitive lookup of bat should result in ambiguous binding error") {
             testBindings[BindingName("bat", BindingCase.INSENSITIVE)]
         }
+        assertEquals(ErrorCode.EVALUATOR_AMBIGUOUS_BINDING, ex.errorCode)
     }
 
     private val bindingForCaseSensitiveTests = Bindings.ofIonStruct(
-        ion.newEmptyStruct().apply {
-            add("valueThatExists", ion.newInt(1))
-            add("duplicateFieldName", ion.newInt(1))
-            add("duplicateFieldName", ion.newInt(2))
+        ION.newEmptyStruct().apply {
+            add("valueThatExists", ION.newInt(1))
+            add("duplicateFieldName", ION.newInt(1))
+            add("duplicateFieldName", ION.newInt(2))
         },
         valueFactory
     )
 
     private val bindingForCaseInsensitiveTests = Bindings.ofIonStruct(
-        ion.newEmptyStruct().apply {
-            add("valueThatExists", ion.newInt(1))
-            add("ambiguousFieldName", ion.newInt(1))
-            add("AmbiguousFieldName", ion.newInt(2))
+        ION.newEmptyStruct().apply {
+            add("valueThatExists", ION.newInt(1))
+            add("ambiguousFieldName", ION.newInt(1))
+            add("AmbiguousFieldName", ION.newInt(2))
         },
         valueFactory
     )
@@ -144,7 +144,7 @@ class BindingsTest : TestBase() {
     @Test
     fun BindingsOfIonStruct_caseSensitiveFound() =
         assertEquals(
-            ion.newInt(1),
+            ION.newInt(1),
             bindingForCaseSensitiveTests[BindingName("valueThatExists", BindingCase.SENSITIVE)]?.ionValue
         )
 
@@ -164,7 +164,7 @@ class BindingsTest : TestBase() {
     @Test
     fun BindingsOfIonStruct_caseInsensitiveFound() =
         assertEquals(
-            ion.newInt(1),
+            ION.newInt(1),
             bindingForCaseInsensitiveTests[BindingName("valueThatExists", BindingCase.INSENSITIVE)]?.ionValue
         )
 

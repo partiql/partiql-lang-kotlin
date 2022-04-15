@@ -23,7 +23,6 @@ import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.metaContainerOf
 import com.amazon.ionelement.api.toIonElement
-import org.partiql.lang.ast.AstVersion
 import org.partiql.lang.ast.IonElementMetaContainer
 import org.partiql.lang.ast.IsCountStarMeta
 import org.partiql.lang.ast.IsImplictJoinMeta
@@ -2896,7 +2895,8 @@ class SqlParser(
                     }
                     rem = rem.tail
                 }
-            }
+                else -> { /* intentionally left blank. */ }
+            }.let { }
             ParseNode(type = ParseType.SORT_SPEC, token = null, children = children, remaining = rem)
         }
     }
@@ -3222,7 +3222,10 @@ class SqlParser(
         return node.toAstStatement()
     }
 
-    @Suppress("DEPRECATION")
     override fun parse(source: String): IonSexp =
-        org.partiql.lang.ast.AstSerializer.serialize(parseExprNode(source), AstVersion.V0, ion)
+        @Suppress("DEPRECATION")
+        org.partiql.lang.ast.AstSerializer.serialize(
+            parseExprNode(source),
+            org.partiql.lang.ast.AstVersion.V0, ion
+        )
 }

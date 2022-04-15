@@ -16,8 +16,8 @@ package org.partiql.lang.eval
 
 import junitparams.Parameters
 import org.junit.Test
-import org.partiql.lang.SqlException
-import org.partiql.lang.errors.ErrorCode
+import org.junit.jupiter.api.assertDoesNotThrow
+import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import java.util.Collections
 import java.util.Random
 
@@ -28,7 +28,6 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
     private val nullExprs = listOf(
         // reminder, annotations don't affect order
         "null",
-        "missing",
         "`a::null`",
         "`null.int`",
         "`null.struct`"
@@ -295,10 +294,8 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
     private fun <T> List<List<T>>.flatten() = this.flatMap { it }
     private fun List<List<String>>.eval() = map {
         it.map {
-            try {
+            assertDoesNotThrow {
                 eval(it, compileOptions = CompileOptions.standard())
-            } catch (e: Exception) {
-                throw SqlException("Could not evaluate $it", errorCode = ErrorCode.EVALUATOR_SQL_EXCEPTION, cause = e)
             }
         }
     }
@@ -398,7 +395,12 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
     fun nonNullEqualityTests(equivalentPair: Pair<String, String>) {
         val (left, right) = equivalentPair
 
-        assertExprEquals(valueFactory.newBoolean(true), eval("$left = $right"), "epected `true`")
+        runEvaluatorTestCase(
+            query = "$left = $right",
+            expectedResult = "true",
+            excludeLegacySerializerAssertions = true,
+            expectedResultFormat = ExpectedResultFormat.ION
+        )
     }
 
     // null to non null pairs
@@ -419,6 +421,14 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
     fun nullEqualityTests(equivalentPair: Pair<String, String>) {
         val (left, right) = equivalentPair
 
-        assertExprEquals(valueFactory.nullValue, eval("$left = $right"), "epected `null`")
+        runEvaluatorTestCase(
+            query = "$left = $right",
+            expectedResult = if (left == "missing" || right == "missing")
+                "\$partiql_missing::null"
+            else
+                "null",
+            excludeLegacySerializerAssertions = true,
+            expectedResultFormat = ExpectedResultFormat.ION
+        )
     }
 }

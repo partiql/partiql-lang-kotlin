@@ -19,7 +19,7 @@ import org.junit.Test
 import org.partiql.lang.TestBase
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.eval.cloneAndRemoveAnnotations
+import org.partiql.lang.eval.cloneAndRemoveBagAndMissingAnnotations
 import org.partiql.lang.eval.io.DelimitedValues.ConversionMode.AUTO
 import org.partiql.lang.eval.io.DelimitedValues.ConversionMode.NONE
 import org.partiql.lang.eval.orderedNamesValue
@@ -32,7 +32,7 @@ class DelimitedValuesTest : TestBase() {
         val expectedValues = ion.singleValue(expectedIon)
 
         assertSame(ExprValueType.BAG, value.type)
-        assertEquals(expectedValues, value.ionValue.cloneAndRemoveAnnotations())
+        assertEquals(expectedValues, value.ionValue.cloneAndRemoveBagAndMissingAnnotations())
     }
 
     private fun read(

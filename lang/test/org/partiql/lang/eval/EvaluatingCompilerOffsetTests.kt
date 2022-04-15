@@ -4,7 +4,10 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorErrorTestCase
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
 import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.lang.util.to
 
 class EvaluatingCompilerOffsetTests : EvaluatorTestBase() {
@@ -101,61 +104,50 @@ class EvaluatingCompilerOffsetTests : EvaluatorTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(ArgsProviderValid::class)
-    fun validTests(tc: EvaluatorTestCase) = runTestCase(tc, session)
+    fun validTests(tc: EvaluatorTestCase) = runEvaluatorTestCase(
+        tc.copy(excludeLegacySerializerAssertions = true),
+        session
+    )
 
     class ArgsProviderError : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
             // OFFSET -1 should throw exception
             EvaluatorErrorTestCase(
-                "select * from foo OFFSET -1",
-                ErrorCode.EVALUATOR_NEGATIVE_OFFSET,
-                mapOf(
-                    Property.LINE_NUMBER to 1L,
-                    Property.COLUMN_NUMBER to 27L
-                )
+                query = "select * from foo OFFSET -1",
+                expectedErrorCode = ErrorCode.EVALUATOR_NEGATIVE_OFFSET,
+                expectedErrorContext = propertyValueMapOf(1, 27)
             ),
             // OFFSET 1 - 2 should throw exception
             EvaluatorErrorTestCase(
-                "select * from foo OFFSET 1 - 2",
-                ErrorCode.EVALUATOR_NEGATIVE_OFFSET,
-                mapOf(
-                    Property.LINE_NUMBER to 1L,
-                    Property.COLUMN_NUMBER to 28L
-                )
+                query = "select * from foo OFFSET 1 - 2",
+                expectedErrorCode = ErrorCode.EVALUATOR_NEGATIVE_OFFSET,
+                expectedErrorContext = propertyValueMapOf(1, 28)
             ),
             // non-integer value should throw exception
             EvaluatorErrorTestCase(
-                "select * from foo OFFSET 'this won''t work'",
-                ErrorCode.EVALUATOR_NON_INT_OFFSET_VALUE,
-                mapOf(
-                    Property.LINE_NUMBER to 1L,
-                    Property.COLUMN_NUMBER to 26L,
-                    Property.ACTUAL_TYPE to "STRING"
-                )
+                query = "select * from foo OFFSET 'this won''t work'",
+                expectedErrorCode = ErrorCode.EVALUATOR_NON_INT_OFFSET_VALUE,
+                expectedErrorContext = propertyValueMapOf(1, 26, Property.ACTUAL_TYPE to "STRING")
             ),
             // non-integer value should throw exception
             EvaluatorErrorTestCase(
-                "select * from foo OFFSET 2.5",
-                ErrorCode.EVALUATOR_NON_INT_OFFSET_VALUE,
-                mapOf(
-                    Property.LINE_NUMBER to 1L,
-                    Property.COLUMN_NUMBER to 26L,
-                    Property.ACTUAL_TYPE to "DECIMAL"
-                )
+                query = "select * from foo OFFSET 2.5",
+                expectedErrorCode = ErrorCode.EVALUATOR_NON_INT_OFFSET_VALUE,
+                expectedErrorContext = propertyValueMapOf(1, 26, Property.ACTUAL_TYPE to "DECIMAL")
             ),
             // OFFSET value should not exceed Long type
             EvaluatorErrorTestCase(
-                "select * from foo OFFSET ${Long.MAX_VALUE}0",
-                ErrorCode.SEMANTIC_LITERAL_INT_OVERFLOW,
-                mapOf(
-                    Property.LINE_NUMBER to 1L,
-                    Property.COLUMN_NUMBER to 26L
-                )
+                query = "select * from foo OFFSET ${Long.MAX_VALUE}0",
+                expectedErrorCode = ErrorCode.SEMANTIC_LITERAL_INT_OVERFLOW,
+                expectedErrorContext = propertyValueMapOf(1, 26)
             )
         )
     }
 
     @ParameterizedTest
     @ArgumentsSource(ArgsProviderError::class)
-    fun errorTests(tc: EvaluatorErrorTestCase) = checkInputThrowingEvaluationException(tc, session)
+    fun errorTests(tc: EvaluatorErrorTestCase) = runEvaluatorErrorTestCase(
+        tc.copy(excludeLegacySerializerAssertions = true),
+        session
+    )
 }

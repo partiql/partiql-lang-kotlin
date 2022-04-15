@@ -4,19 +4,27 @@ import org.junit.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.EvaluatorTestBase
 import org.partiql.lang.eval.builtins.Argument
 import org.partiql.lang.eval.builtins.ExprFunctionTestCase
 import org.partiql.lang.eval.builtins.checkInvalidArgType
 import org.partiql.lang.eval.builtins.checkInvalidArity
+import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.lang.util.propertyValueMapOf
 
 class MakeDateEvaluationTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(MakeDatePassCases::class)
-    fun runPassTests(testCase: ExprFunctionTestCase) = assertEquals(eval(testCase.source).toString(), testCase.expected)
+    fun runPassTests(testCase: ExprFunctionTestCase) =
+        runEvaluatorTestCase(
+            query = testCase.source,
+            expectedResult = testCase.expectedLegacyModeResult,
+            expectedPermissiveModeResult = testCase.expectedPermissiveModeResult,
+            includePermissiveModeTest = false,
+            expectedResultFormat = ExpectedResultFormat.STRING
+        )
 
     class MakeDatePassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
@@ -47,13 +55,10 @@ class MakeDateEvaluationTest : EvaluatorTestBase() {
     // Invalid arguments
     @ParameterizedTest
     @ArgumentsSource(InvalidArgCases::class)
-    fun makeDateInvalidArgumentTests(query: String) = checkInputThrowingEvaluationException(
-        input = query,
-        errorCode = ErrorCode.EVALUATOR_DATE_FIELD_OUT_OF_RANGE,
-        expectErrorContextValues = mapOf<Property, Any>(
-            Property.LINE_NUMBER to 1L,
-            Property.COLUMN_NUMBER to 1L
-        )
+    fun makeDateInvalidArgumentTests(query: String) = runEvaluatorErrorTestCase(
+        query = query,
+        expectedErrorCode = ErrorCode.EVALUATOR_DATE_FIELD_OUT_OF_RANGE,
+        expectedErrorContext = propertyValueMapOf(1, 1)
     )
 
     class InvalidArgCases : ArgumentsProviderBase() {

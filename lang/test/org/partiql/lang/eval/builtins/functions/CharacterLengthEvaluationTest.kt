@@ -1,6 +1,6 @@
 package org.partiql.lang.eval.builtins.functions
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.eval.EvaluatorTestBase
@@ -16,7 +16,8 @@ class CharacterLengthEvaluationTest : EvaluatorTestBase() {
     // Pass test cases
     @ParameterizedTest
     @ArgumentsSource(PassCases::class)
-    fun characterLengthPassTests(testCase: ExprFunctionTestCase) = assertEval(testCase.source, testCase.expected)
+    fun characterLengthPassTests(testCase: ExprFunctionTestCase) =
+        runEvaluatorTestCase(testCase.source, expectedResult = testCase.expectedLegacyModeResult)
 
     class PassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(

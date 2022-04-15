@@ -17,11 +17,16 @@ package org.partiql.lang.eval
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
+import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.crossMap
+import org.partiql.lang.util.propertyValueMapOf
 
 /** Test cases for PartiQL unknown values `MISSING` and `NULL`, including their propagation. */
 class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
@@ -29,27 +34,28 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(NAryUnknownPropagationCases::class)
     fun testUnknownPropagation(tc: EvaluatorTestCase) =
-        runTestCase(
-            tc = tc,
-            session = EvaluationSession.standard(),
-            compilerPipelineBuilderBlock = {
-                addFunction(
-                    object : ExprFunction {
-                        override val signature: FunctionSignature
-                            get() = FunctionSignature(
-                                name = "simple_sum",
-                                requiredParameters = listOf(StaticType.INT8, StaticType.INT8, StaticType.INT8),
-                                returnType = StaticType.INT8,
-                                // NOTE: we do not test UnknownArguments.PASS_THRU in this test class
-                                // (this path is covered by [CoalesceEvaluationTest]).
-                                unknownArguments = UnknownArguments.PROPAGATE
-                            )
+        runEvaluatorTestCase(
+            tc = tc.copy(
+                compilerPipelineBuilderBlock = {
+                    addFunction(
+                        object : ExprFunction {
+                            override val signature: FunctionSignature
+                                get() = FunctionSignature(
+                                    name = "simple_sum",
+                                    requiredParameters = listOf(StaticType.INT8, StaticType.INT8, StaticType.INT8),
+                                    returnType = StaticType.INT8,
+                                    // NOTE: we do not test UnknownArguments.PASS_THRU in this test class
+                                    // (this path is covered by [CoalesceEvaluationTest]).
+                                    unknownArguments = UnknownArguments.PROPAGATE
+                                )
 
-                        override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue =
-                            valueFactory.newInt(required.map { it.numberValue().toLong() }.sum())
-                    }
-                )
-            }
+                            override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue =
+                                valueFactory.newInt(required.map { it.numberValue().toLong() }.sum())
+                        }
+                    )
+                }
+            ),
+            session = EvaluationSession.standard(),
         )
 
     /** Generates a few hundred test cases for most NAry operators as they relate to propagation of unknown values. */
@@ -116,18 +122,13 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
             return listOf(
                 EvaluatorTestCase(
                     groupName = "$testCaseGroup : LEGACY",
-                    sqlUnderTest = sqlUnderTest,
+                    query = sqlUnderTest,
                     // dirty hack to simplify things.
-                    // in [Typing] mode, missing values are propagated as
-                    // null.  Swapping this here means we don't need to specify a legacy mode value separately.
-                    expectedSql = expectedResult.replace("missing", "null"),
-                    compOptions = CompOptions.STANDARD
-                ),
-                EvaluatorTestCase(
-                    groupName = "$testCaseGroup : PERMISSIVE",
-                    sqlUnderTest = sqlUnderTest,
-                    expectedSql = expectedResult,
-                    compOptions = CompOptions.PERMISSIVE
+                    // in [TypingMode.LEGACY], missing values are propagated as
+                    // null. The .replace here means we don't need to specify a legacy mode value separately.
+                    expectedResult = expectedResult.replace("missing", "null"),
+                    expectedPermissiveModeResult = expectedResult,
+                    compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock
                 )
             )
         }
@@ -565,26 +566,27 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     ).toSession()
 
     @Test
-    fun andShortCircuits() = assertEvalExprValue(
-        "SELECT s.x FROM [{'x': '1.1'},{'x': '2'},{'x': '3'},{'x': '4'},{'x': '5'}] as s WHERE FALSE AND CAST(s.x as INT)",
-        "<<>>",
-        boolsWithUnknowns
+    fun andShortCircuits() = runEvaluatorTestCase(
+        query = "SELECT s.x FROM [{'x': '1.1'},{'x': '2'},{'x': '3'},{'x': '4'},{'x': '5'}] as s WHERE FALSE AND CAST(s.x as INT)",
+        session = boolsWithUnknowns,
+        expectedResult = "<<>>",
+        expectedResultFormat = ExpectedResultFormat.PARTIQL
     )
 
     @Test
-    fun andWithNullDoesNotShortCircuits() = assertThrows(
-        "SELECT s.x FROM [{'x': '1.1'},{'x': '2'},{'x': '3'},{'x': '4'},{'x': '5'}] as s WHERE NULL AND CAST(s.x as INT)",
-        "can't convert string value to INT",
-        NodeMetadata(1, 96),
-        "<<>>"
+    fun andWithNullDoesNotShortCircuits() = runEvaluatorErrorTestCase(
+        query = "SELECT s.x FROM [{'x': '1.1'},{'x': '2'},{'x': '3'},{'x': '4'},{'x': '5'}] as s WHERE NULL AND CAST(s.x as INT)",
+        expectedErrorCode = ErrorCode.EVALUATOR_CAST_FAILED,
+        expectedErrorContext = propertyValueMapOf(1, 96, Property.CAST_TO to "INT", Property.CAST_FROM to "STRING"),
+        expectedPermissiveModeResult = "<<>>"
     )
 
     @Test
-    fun andWithMissingDoesNotShortCircuits() = assertThrows(
-        "SELECT s.x FROM [{'x': '1.1'},{'x': '2'},{'x': '3'},{'x': '4'},{'x': '5'}] as s WHERE MISSING AND CAST(s.x as INT)",
-        "can't convert string value to INT",
-        NodeMetadata(1, 99),
-        "<<>>"
+    fun andWithMissingDoesNotShortCircuits() = runEvaluatorErrorTestCase(
+        query = "SELECT s.x FROM [{'x': '1.1'},{'x': '2'},{'x': '3'},{'x': '4'},{'x': '5'}] as s WHERE MISSING AND CAST(s.x as INT)",
+        expectedErrorCode = ErrorCode.EVALUATOR_CAST_FAILED,
+        expectedErrorContext = propertyValueMapOf(1, 99, Property.CAST_TO to "INT", Property.CAST_FROM to "STRING"),
+        expectedPermissiveModeResult = "<<>>"
     )
 
     // ////////////////////////////////////////////////
@@ -592,24 +594,27 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     // ////////////////////////////////////////////////
 
     @Test
-    fun whereClauseExprEvalsToNull() = assertEvalExprValue(
-        "SELECT VALUE D.val from nullSample as D WHERE D.control",
-        "<<'A'>>",
-        nullSample
+    fun whereClauseExprEvalsToNull() = runEvaluatorTestCase(
+        query = "SELECT VALUE D.val from nullSample as D WHERE D.control",
+        session = nullSample,
+        expectedResult = "<<'A'>>",
+        expectedResultFormat = ExpectedResultFormat.PARTIQL
     )
 
     @Test
-    fun whereClauseExprEvalsToMissing() = assertEvalExprValue(
-        "SELECT VALUE D.val from missingSample as D WHERE D.control",
-        "<<'A'>>",
-        missingSample
+    fun whereClauseExprEvalsToMissing() = runEvaluatorTestCase(
+        query = "SELECT VALUE D.val from missingSample as D WHERE D.control",
+        session = missingSample,
+        expectedResult = "<<'A'>>",
+        expectedResultFormat = ExpectedResultFormat.PARTIQL
     )
 
     @Test
-    fun whereClauseExprEvalsToNullAndMissing() = assertEvalExprValue(
-        "SELECT VALUE D.val from missingAndNullSample as D WHERE D.control",
-        "<<'A'>>",
-        missingAndNullSample
+    fun whereClauseExprEvalsToNullAndMissing() = runEvaluatorTestCase(
+        query = "SELECT VALUE D.val from missingAndNullSample as D WHERE D.control",
+        session = missingAndNullSample,
+        expectedResult = "<<'A'>>",
+        expectedResultFormat = ExpectedResultFormat.PARTIQL
     )
 
     // ////////////////////////////////////////////////
@@ -617,160 +622,166 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     // ////////////////////////////////////////////////
 
     @Test
-    fun aggregateSumWithNull() = assertEval("SELECT sum(x.n) from nullSample as x", "[{_1: 4}]", nullSample)
+    fun aggregateSumWithNull() = runEvaluatorTestCase("SELECT sum(x.n) from nullSample as x", nullSample, "[{_1: 4}]")
 
     @Test
-    fun aggregateSumWithMissing() = assertEval(
+    fun aggregateSumWithMissing() = runEvaluatorTestCase(
         "SELECT sum(x.n) from missingSample as x",
-        "[{_1: 3}]",
-        missingSample
-    )
-
-    @Test
-    fun aggregateSumWithMissingAndNull() = assertEval(
-        "SELECT sum(x.n) from missingAndNullSample as x",
-        "[{_1: 9}]",
-        missingAndNullSample
-    )
-
-    @Test
-    fun aggregateMinWithNull() = assertEval("SELECT min(x.n) from nullSample as x", "[{_1: 1}]", nullSample)
-
-    @Test
-    fun aggregateMinWithMissing() = assertEval(
-        "SELECT min(x.n) from missingSample as x",
-        "[{_1: 1}]",
-        missingSample
-    )
-
-    @Test
-    fun aggregateMinWithMissingAndNull() = assertEval(
-        "SELECT min(x.n) from missingAndNullSample as x",
-        "[{_1: 2}]",
-        missingAndNullSample
-    )
-
-    @Test
-    fun aggregateAvgWithNull() = assertEval("SELECT avg(x.n) from nullSample as x", "[{_1: 2.}]", nullSample)
-
-    @Test
-    fun aggregateAvgWithMissing() = assertEval(
-        "SELECT avg(x.n) from missingSample as x",
-        "[{_1: 1.5}]",
-        missingSample
-    )
-
-    @Test
-    fun aggregateAvgWithMissingAndNull() = assertEval(
-        "SELECT avg(x.n) from missingAndNullSample as x",
-        "[{_1: 3.}]",
-        missingAndNullSample
-    )
-
-    @Test
-    fun aggregateCountWithNull() = assertEval(
-        "SELECT count(x.n) from nullSample as x",
-        "[{_1: 2}]",
-        nullSample
-    )
-
-    @Test
-    fun aggregateCountWithMissing() = assertEval(
-        "SELECT count(x.n) from missingSample as x",
-        "[{_1: 2}]",
-        missingSample
-    )
-
-    @Test
-    fun aggregateCountWithMissingAndNull() = assertEval(
-        "SELECT count(x.n) from missingAndNullSample as x",
-        "[{_1: 3}]",
-        missingAndNullSample
-    )
-
-    @Test
-    fun countEmpty() = assertEval("SELECT count(*) from `[]`", "[{_1: 0}]")
-
-    @Test
-    fun countEmptyTuple() = assertEval("SELECT count(*) from `[{}]`", "[{_1: 1}]")
-
-    @Test
-    fun sumEmpty() = assertEval("SELECT sum(x.i) from `[]` as x", "[{_1: null}]")
-
-    @Test
-    fun sumEmptyTuple() = assertEval("SELECT sum(x.i) from `[{}]` as x", "[{_1: null}]")
-
-    @Test
-    fun avgEmpty() = assertEval("SELECT avg(x.i) from `[]` as x", "[{_1: null}]")
-
-    @Test
-    fun avgEmptyTuple() = assertEval("SELECT avg(x.i) from `[{}]` as x", "[{_1: null}]")
-
-    @Test
-    fun avgSomeEmptyTuples() = assertEval(
-        "SELECT avg(x.i) from `[{i: 1}, {}, {i:3}]` as x",
-        "[{_1: 2.}]"
-    )
-
-    @Test
-    fun avgSomeEmptyAndNullTuples() = assertEval(
-        "SELECT avg(x.i) from `[{i: 1}, {}, {i:null}, {i:3}]` as x",
-        "[{_1: 2.}]"
-    )
-
-    @Test
-    fun minSomeEmptyTuples() = assertEval(
-        "SELECT min(x.i) from `[{i: null}, {}, {i:3}]` as x",
+        missingSample,
         "[{_1: 3}]"
     )
 
     @Test
-    fun maxSomeEmptyTuples() = assertEval(
-        "SELECT max(x.i) from `[{i: null}, {}, {i:3}, {i:10}]` as x",
-        "[{_1: 10}]"
-    )
-    @Test
-    fun minEmpty() = assertEval("SELECT min(x.i) from `[]` as x", "[{_1: null}]")
-
-    @Test
-    fun minEmptyTuple() = assertEval("SELECT min(x.i) from `[{}]` as x", "[{_1: null}]")
-
-    @Test
-    fun maxEmpty() = assertEval("SELECT max(x.i) from `[]` as x", "[{_1: null}]")
-
-    @Test
-    fun maxEmptyTuple() = assertEval("SELECT max(x.i) from `[{}]` as x", "[{_1: null}]")
-
-    @Test
-    fun maxSomeEmptyTuple() = assertEval(
-        "SELECT max(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
-        "[{_1: 2}]"
+    fun aggregateSumWithMissingAndNull() = runEvaluatorTestCase(
+        "SELECT sum(x.n) from missingAndNullSample as x",
+        missingAndNullSample,
+        "[{_1: 9}]"
     )
 
     @Test
-    fun minSomeEmptyTuple() = assertEval(
-        "SELECT min(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
+    fun aggregateMinWithNull() = runEvaluatorTestCase("SELECT min(x.n) from nullSample as x", nullSample, "[{_1: 1}]")
+
+    @Test
+    fun aggregateMinWithMissing() = runEvaluatorTestCase(
+        "SELECT min(x.n) from missingSample as x",
+        missingSample,
         "[{_1: 1}]"
     )
 
     @Test
-    fun sumSomeEmptyTuple() = assertEval(
-        "SELECT sum(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
-        "[{_1: 3}]"
-    )
-
-    @Test
-    fun countSomeEmptyTuple() = assertEval(
-        "SELECT count(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
+    fun aggregateMinWithMissingAndNull() = runEvaluatorTestCase(
+        "SELECT min(x.n) from missingAndNullSample as x",
+        missingAndNullSample,
         "[{_1: 2}]"
     )
 
     @Test
-    fun countStar() = assertEval(
-        "SELECT count(*) from `[{}, {i:1}, {}, {i:2}]` as x",
-        "[{_1: 4}]"
+    fun aggregateAvgWithNull() = runEvaluatorTestCase("SELECT avg(x.n) from nullSample as x", nullSample, "[{_1: 2.}]")
+
+    @Test
+    fun aggregateAvgWithMissing() = runEvaluatorTestCase(
+        "SELECT avg(x.n) from missingSample as x",
+        missingSample,
+        "[{_1: 1.5}]"
     )
 
     @Test
-    fun countLiteral() = assertEval("SELECT count(1) from `[{}, {}, {}, {}]` as x", "[{_1: 4}]")
+    fun aggregateAvgWithMissingAndNull() = runEvaluatorTestCase(
+        "SELECT avg(x.n) from missingAndNullSample as x",
+        missingAndNullSample,
+        "[{_1: 3.}]"
+    )
+
+    @Test
+    fun aggregateCountWithNull() = runEvaluatorTestCase(
+        "SELECT count(x.n) from nullSample as x",
+        nullSample,
+        "[{_1: 2}]"
+    )
+
+    @Test
+    fun aggregateCountWithMissing() = runEvaluatorTestCase(
+        "SELECT count(x.n) from missingSample as x",
+        missingSample,
+        "[{_1: 2}]"
+    )
+
+    @Test
+    fun aggregateCountWithMissingAndNull() = runEvaluatorTestCase(
+        "SELECT count(x.n) from missingAndNullSample as x",
+        missingAndNullSample,
+        "[{_1: 3}]"
+    )
+
+    @Test
+    fun countEmpty() = runEvaluatorTestCase("SELECT count(*) from `[]`", expectedResult = "[{_1: 0}]")
+
+    @Test
+    fun countEmptyTuple() =
+        runEvaluatorTestCase("SELECT count(*) from `[{}]`", expectedResult = "[{_1: 1}]")
+
+    @Test
+    fun sumEmpty() = runEvaluatorTestCase("SELECT sum(x.i) from `[]` as x", expectedResult = "[{_1: null}]")
+
+    @Test
+    fun sumEmptyTuple() =
+        runEvaluatorTestCase("SELECT sum(x.i) from `[{}]` as x", expectedResult = "[{_1: null}]")
+
+    @Test
+    fun avgEmpty() = runEvaluatorTestCase("SELECT avg(x.i) from `[]` as x", expectedResult = "[{_1: null}]")
+
+    @Test
+    fun avgEmptyTuple() =
+        runEvaluatorTestCase("SELECT avg(x.i) from `[{}]` as x", expectedResult = "[{_1: null}]")
+
+    @Test
+    fun avgSomeEmptyTuples() = runEvaluatorTestCase(
+        "SELECT avg(x.i) from `[{i: 1}, {}, {i:3}]` as x",
+        expectedResult = "[{_1: 2.}]"
+    )
+
+    @Test
+    fun avgSomeEmptyAndNullTuples() = runEvaluatorTestCase(
+        "SELECT avg(x.i) from `[{i: 1}, {}, {i:null}, {i:3}]` as x",
+        expectedResult = "[{_1: 2.}]"
+    )
+
+    @Test
+    fun minSomeEmptyTuples() = runEvaluatorTestCase(
+        "SELECT min(x.i) from `[{i: null}, {}, {i:3}]` as x",
+        expectedResult = "[{_1: 3}]"
+    )
+
+    @Test
+    fun maxSomeEmptyTuples() = runEvaluatorTestCase(
+        "SELECT max(x.i) from `[{i: null}, {}, {i:3}, {i:10}]` as x",
+        expectedResult = "[{_1: 10}]"
+    )
+    @Test
+    fun minEmpty() = runEvaluatorTestCase("SELECT min(x.i) from `[]` as x", expectedResult = "[{_1: null}]")
+
+    @Test
+    fun minEmptyTuple() =
+        runEvaluatorTestCase("SELECT min(x.i) from `[{}]` as x", expectedResult = "[{_1: null}]")
+
+    @Test
+    fun maxEmpty() = runEvaluatorTestCase("SELECT max(x.i) from `[]` as x", expectedResult = "[{_1: null}]")
+
+    @Test
+    fun maxEmptyTuple() =
+        runEvaluatorTestCase("SELECT max(x.i) from `[{}]` as x", expectedResult = "[{_1: null}]")
+
+    @Test
+    fun maxSomeEmptyTuple() = runEvaluatorTestCase(
+        "SELECT max(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
+        expectedResult = "[{_1: 2}]"
+    )
+
+    @Test
+    fun minSomeEmptyTuple() = runEvaluatorTestCase(
+        "SELECT min(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
+        expectedResult = "[{_1: 1}]"
+    )
+
+    @Test
+    fun sumSomeEmptyTuple() = runEvaluatorTestCase(
+        "SELECT sum(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
+        expectedResult = "[{_1: 3}]"
+    )
+
+    @Test
+    fun countSomeEmptyTuple() = runEvaluatorTestCase(
+        "SELECT count(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
+        expectedResult = "[{_1: 2}]"
+    )
+
+    @Test
+    fun countStar() = runEvaluatorTestCase(
+        "SELECT count(*) from `[{}, {i:1}, {}, {i:2}]` as x",
+        expectedResult = "[{_1: 4}]"
+    )
+
+    @Test
+    fun countLiteral() =
+        runEvaluatorTestCase("SELECT count(1) from `[{}, {}, {}, {}]` as x", expectedResult = "[{_1: 4}]")
 }

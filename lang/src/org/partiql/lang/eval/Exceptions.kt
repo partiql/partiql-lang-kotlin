@@ -31,7 +31,7 @@ open class EvaluationException(
     errorCode: ErrorCode,
     errorContext: PropertyValueMap? = null,
     cause: Throwable? = null,
-    val internal: Boolean
+    override val internal: Boolean
 ) : SqlException(message, errorCode, errorContext, cause) {
 
     constructor(

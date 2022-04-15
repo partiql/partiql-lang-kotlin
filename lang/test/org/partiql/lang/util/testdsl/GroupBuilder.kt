@@ -8,9 +8,10 @@ interface GroupBuilder {
     fun test(
         name: String,
         sql: String,
-        expected: String?,
-        compileOptions: CompileOptions = CompileOptions.standard(),
-        extraAssertions: ((ExprValue, CompileOptions) -> Unit)? = null
+        expectedLegacyModeIonResult: String,
+        expectedPermissiveModeIonResult: String = expectedLegacyModeIonResult,
+        compileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit = { },
+        extraAssertions: (ExprValue) -> Unit = { }
     )
 }
 
@@ -23,16 +24,18 @@ class GroupBuilderImpl(private val groupName: String) : GroupBuilder {
     override fun test(
         name: String,
         sql: String,
-        expected: String?,
-        compileOptions: CompileOptions,
-        extraAssertions: ((ExprValue, CompileOptions) -> Unit)?
+        expectedLegacyModeIonResult: String,
+        expectedPermissiveModeIonResult: String,
+        compileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit,
+        extraAssertions: (ExprValue) -> Unit
     ) {
         tests.add(
             IonResultTestCase(
                 name = name,
                 sqlUnderTest = sql,
-                expectedIonResult = expected,
-                compileOptions = compileOptions,
+                expectedLegacyModeIonResult = expectedLegacyModeIonResult,
+                expectedPermissiveModeIonResult = expectedPermissiveModeIonResult,
+                compileOptionsBuilderBlock = compileOptionsBuilderBlock,
                 extraAssertions = extraAssertions
             )
         )

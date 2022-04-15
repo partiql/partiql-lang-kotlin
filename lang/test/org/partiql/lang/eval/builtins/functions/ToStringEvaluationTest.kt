@@ -12,13 +12,15 @@ import org.partiql.lang.eval.builtins.checkInvalidArgType
 import org.partiql.lang.eval.builtins.checkInvalidArity
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.lang.util.to
 
 class ToStringEvaluationTest : EvaluatorTestBase() {
     // Pass test cases
     @ParameterizedTest
     @ArgumentsSource(ToStringPassCases::class)
-    fun runPassTests(testCase: ExprFunctionTestCase) = assertEval(testCase.source, testCase.expected)
+    fun runPassTests(testCase: ExprFunctionTestCase) =
+        runEvaluatorTestCase(testCase.source, expectedResult = testCase.expectedLegacyModeResult)
 
     class ToStringPassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
@@ -55,12 +57,11 @@ class ToStringEvaluationTest : EvaluatorTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(InvalidArgCases::class)
-    fun toStringInvalidArgumentTests(testCase: InvalidArgTestCase) = checkInputThrowingEvaluationException(
+    fun toStringInvalidArgumentTests(testCase: InvalidArgTestCase) = runEvaluatorErrorTestCase(
         testCase.source,
         ErrorCode.EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN,
-        mapOf(
-            Property.LINE_NUMBER to 1L,
-            Property.COLUMN_NUMBER to 1L,
+        propertyValueMapOf(
+            1, 1,
             Property.TIMESTAMP_FORMAT_PATTERN to testCase.invalidTimeFormatPattern
         ),
         expectedPermissiveModeResult = "MISSING"

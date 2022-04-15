@@ -14,12 +14,10 @@
 
 package org.partiql.lang.eval
 
-import org.assertj.core.api.SoftAssertions
 import org.junit.Test
-import org.partiql.lang.SqlException
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.util.softAssert
-import kotlin.test.assertFailsWith
+import org.partiql.lang.errors.Property
+import org.partiql.lang.util.propertyValueMapOf
 
 class LikePredicateTest : EvaluatorTestBase() {
 
@@ -44,53 +42,56 @@ class LikePredicateTest : EvaluatorTestBase() {
     ).toSession()
 
     @Test
-    fun emptyTextUnderscorePattern() = assertEval("""SELECT * FROM `[true]` as a WHERE '' LIKE '_'  """, "[]", animals)
+    fun emptyTextUnderscorePattern() =
+        runEvaluatorTestCase("""SELECT * FROM `[true]` as a WHERE '' LIKE '_'  """, animals, "[]")
 
     @Test
-    fun emptyTextPercentPattern() = assertEval(
-        """SELECT * FROM `[true]` as a WHERE '' LIKE '%'  """, "[{_1: true}]",
-        animals
+    fun emptyTextPercentPattern() = runEvaluatorTestCase(
+        """SELECT * FROM `[true]` as a WHERE '' LIKE '%'  """, animals,
+        "[{_1: true}]"
     )
 
     @Test
-    fun allLiteralsAndEscapeIsNull() = assertEval(
+    fun allLiteralsAndEscapeIsNull() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE 'A' LIKE 'B' ESCAPE null """,
-        "[]",
-        animals
+        animals,
+        "[]"
     )
 
     @Test
-    fun valueLiteralPatternNull() = assertEval("""SELECT * FROM animals as a WHERE 'A' LIKE null """, "[]", animals)
+    fun valueLiteralPatternNull() =
+        runEvaluatorTestCase("""SELECT * FROM animals as a WHERE 'A' LIKE null """, animals, "[]")
 
     @Test
-    fun valueNullPatternLiteral() = assertEval("""SELECT * FROM animals as a WHERE null LIKE 'A' """, "[]", animals)
+    fun valueNullPatternLiteral() =
+        runEvaluatorTestCase("""SELECT * FROM animals as a WHERE null LIKE 'A' """, animals, "[]")
 
     @Test
-    fun valueNullPatternLiteralEscapeNull() = assertEval(
+    fun valueNullPatternLiteralEscapeNull() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE null LIKE 'A' ESCAPE null""",
-        "[]",
-        animals
+        animals,
+        "[]"
     )
 
     @Test
-    fun valueNullPatternNullEscapeLiteral() = assertEval(
+    fun valueNullPatternNullEscapeLiteral() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE null LIKE null ESCAPE '['""",
-        "[]",
-        animals
+        animals,
+        "[]"
     )
 
     @Test
-    fun valueLiteralPatternNullEscapeNull() = assertEval(
+    fun valueLiteralPatternNullEscapeNull() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE 'A' LIKE null ESCAPE null""",
-        "[]",
-        animals
+        animals,
+        "[]"
     )
 
     @Test
-    fun valueNullPatternNullEscapeNull() = assertEval(
+    fun valueNullPatternNullEscapeNull() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE null LIKE null ESCAPE null""",
-        "[]",
-        animals
+        animals,
+        "[]"
     )
 
     @Test
@@ -113,656 +114,656 @@ class LikePredicateTest : EvaluatorTestBase() {
         )
 
         // Run the test with the given parameters
-        fun runTest(whereClause: String, softly: SoftAssertions, vararg types: Param) {
+        fun runTest(whereClause: String, vararg types: Param) {
             val input = """[{num: 1, str: "string", esc: "\\"}]"""
             val session = mapOf("Object" to input).toSession()
             val query = "Select * From Object a Where " + whereClause
 
-            softly.assertThatCode {
-                when (types.map { it.type }.minByOrNull { it.precedence }) {
-                    NULL -> assertEval(query, "[]", session)
-                    INT -> {
-                        val ex = assertFailsWith<SqlException>(message = query) {
-                            eval(query, session = session).toList()
-                        }
-                        assertEquals(query, ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS, ex.errorCode)
-                    }
-                    STR -> assertEval(query, input, session)
+            when (types.map { it.type }.minByOrNull { it.precedence }) {
+                NULL -> runEvaluatorTestCase(query, session, "[]")
+                STR -> runEvaluatorTestCase(query, session, input)
+                INT -> {
+                    runEvaluatorErrorTestCase(
+                        query = query,
+                        session = session,
+                        expectedErrorCode = ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
+                    )
                 }
-            }.`as`(query).doesNotThrowAnyException()
+            }
         }
 
-        softAssert {
-            // Try each combination of types as input to the test
-            for (value in types) for (pattern in types) {
-                runTest("${value.param} LIKE ${pattern.param}", this, value, pattern)
-                for (escape in types) {
-                    runTest("${value.param} LIKE ${pattern.param} ESCAPE ${escape.escParam}", this, value, pattern, escape)
-                }
+        // Try each combination of types as input to the test
+        for (value in types) for (pattern in types) {
+            runTest("${value.param} LIKE ${pattern.param}", value, pattern)
+            for (escape in types) {
+                runTest("${value.param} LIKE ${pattern.param} ESCAPE ${escape.escParam}", value, pattern, escape)
             }
         }
     }
 
     @Test
-    fun textAndPatternEmpty() = assertEval(
+    fun textAndPatternEmpty() = runEvaluatorTestCase(
         """ SELECT * FROM animals WHERE '' LIKE '' """,
+        animals,
         """
              [
                 {name: "Kumo", type: "dog"},
                 {name:"Mochi",type:"dog"},
                 {name:"Lilikoi",type:"unicorn"}
               ]
-            """,
-        animals
+            """
     )
 
     @Test
-    fun textNonEmptyPatternEmpty() = assertEval(
+    fun textNonEmptyPatternEmpty() = runEvaluatorTestCase(
         """ SELECT * FROM animals WHERE 'Kumo' LIKE '' """,
+        animals,
         """
              []
-            """,
-        animals
+            """
     )
 
     @Test
-    fun noEscapeAllArgsLiteralsMatches() = assertEval(
+    fun noEscapeAllArgsLiteralsMatches() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE 'Kumo' LIKE 'Kumo' """,
+        animals,
         """
           [
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """,
-        animals
+        """
     )
 
     @Test
-    fun noEscapeAllArgsLiteralsMismatchCase() = assertEval(
+    fun noEscapeAllArgsLiteralsMismatchCase() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE 'Kumo' LIKE 'KuMo' """,
+        animals,
         """
           []
-        """,
-        animals
+        """
     )
 
     @Test
-    fun noEscapeAllArgsLiteralsMismatchPattern() = assertEval(
+    fun noEscapeAllArgsLiteralsMismatchPattern() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE 'xxx' LIKE 'Kumo' """,
+        animals,
         """
           []
-        """,
-        animals
+        """
     )
 
     @Test
-    fun noEscapeAllArgsLiteralsMatchUnderscore() = assertEval(
+    fun noEscapeAllArgsLiteralsMatchUnderscore() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K_mo' """,
+        animals,
         """
           [
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """,
-        animals
+        """
     )
 
     @Test
-    fun noEscapeAllArgsLiteralsNoMatchUnderscore() = assertEval(
+    fun noEscapeAllArgsLiteralsNoMatchUnderscore() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE 'Kuumo' LIKE 'K_mo' """,
+        animals,
         """
           []
-        """,
-        animals
+        """
     )
 
     @Test
-    fun noEscapeAllArgsLiteralsNoMatchUnderscoreExtraChar() = assertEval(
+    fun noEscapeAllArgsLiteralsNoMatchUnderscoreExtraChar() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE 'KKumo' LIKE 'K_mo' """,
+        animals,
         """
           []
-        """,
-        animals
+        """
     )
 
     @Test
-    fun noEscapeAllArgsLiteralsMatchConsecutiveUnderscores() = assertEval(
+    fun noEscapeAllArgsLiteralsMatchConsecutiveUnderscores() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K__o' """,
+        animals,
         """
           [
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """,
-        animals
+        """
     )
 
     @Test
-    fun noEscapeAllArgsLiteralsMatch2UnderscoresNonConsecutive() = assertEval(
+    fun noEscapeAllArgsLiteralsMatch2UnderscoresNonConsecutive() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE 'Kumo' LIKE '_u_o' """,
+        animals,
         """
           [
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """,
-        animals
+        """
     )
 
     @Test
-    fun noEscapeAllArgsLiteralsMatchUnderscoresAtEnd() = assertEval(
+    fun noEscapeAllArgsLiteralsMatchUnderscoresAtEnd() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE 'Kumo' LIKE 'Kum_' """,
+        animals,
         """
           [
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """,
-        animals
+        """
     )
 
     @Test
-    fun noEscapeAllArgsLiteralsMatchPercentage() = assertEval(
+    fun noEscapeAllArgsLiteralsMatchPercentage() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE 'Kumo' LIKE 'Ku%o' """,
+        animals,
         """
           [
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """,
-        animals
+        """
     )
 
     @Test
-    fun noEscapeAllArgsLiteralsNoMatchPercentageExtraCharBefore() = assertEval(
+    fun noEscapeAllArgsLiteralsNoMatchPercentageExtraCharBefore() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE 'KKumo' LIKE 'Ku%o' """,
+        animals,
         """
           []
-        """,
-        animals
+        """
     )
 
     @Test
-    fun noEscapeAllArgsLiteralsNoMatchPercentageExtraCharAfter() = assertEval(
+    fun noEscapeAllArgsLiteralsNoMatchPercentageExtraCharAfter() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE 'Kumol' LIKE 'Ku%o' """,
+        animals,
         """
           []
-        """,
-        animals
+        """
     )
 
     @Test
-    fun noEscapeAllArgsLiteralsMatch2PercentagesConsecutive() = assertEval(
+    fun noEscapeAllArgsLiteralsMatch2PercentagesConsecutive() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K%%o' """,
+        animals,
         """
           [
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """,
-        animals
+        """
     )
 
     @Test
-    fun noEscapeAllArgsLiteralsMatch2PercentagesNonConsecutive() = assertEval(
+    fun noEscapeAllArgsLiteralsMatch2PercentagesNonConsecutive() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K%m%' """,
+        animals,
         """
           [
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """,
-        animals
+        """
     )
 
     @Test
-    fun noEscapeAllArgsLiteralsMatchPercentageAsFirst() = assertEval(
+    fun noEscapeAllArgsLiteralsMatchPercentageAsFirst() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE 'Kumo' LIKE '%umo' """,
+        animals,
         """
           [
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """,
-        animals
+        """
     )
 
     @Test
-    fun noEscapeAllArgsLiteralsMatchPercentageAsLast() = assertEval(
+    fun noEscapeAllArgsLiteralsMatchPercentageAsLast() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE 'Kumo' LIKE 'Kum%' """,
+        animals,
         """
           [
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """,
-        animals
+        """
     )
 
     @Test
-    fun noEscapeAllArgsLiteralsPercentageAndUnderscore() = assertEval(
+    fun noEscapeAllArgsLiteralsPercentageAndUnderscore() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K_%mo' """,
+        animals,
         """
           [
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """,
-        animals
+        """
     )
 
     @Test
-    fun noEscapeAllArgsLiteralsPercentageAndUnderscoreNonConsecutive() = assertEval(
+    fun noEscapeAllArgsLiteralsPercentageAndUnderscoreNonConsecutive() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K_m%' """,
+        animals,
         """
           [
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """,
-        animals
+        """
     )
 
     @Test
-    fun noEscapeAllArgsLiteralsAllUnderscores() = assertEval(
+    fun noEscapeAllArgsLiteralsAllUnderscores() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE 'Kumo' LIKE '____' """,
+        animals,
         """
           [
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """,
-        animals
+        """
     )
 
     @Test
-    fun noEscapeAllArgsLiteralsJustPercentage() = assertEval(
+    fun noEscapeAllArgsLiteralsJustPercentage() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE 'Kumo' LIKE '%' """,
+        animals,
         """
           [
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """,
-        animals
+        """
     )
 
     @Test
-    fun noEscapeAllArgsLiteralsEmptyStringAndJustPercentage() = assertEval(
+    fun noEscapeAllArgsLiteralsEmptyStringAndJustPercentage() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE '' LIKE '%' """,
+        animals,
         """
           [
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """,
-        animals
+        """
     )
 
     @Test
-    fun EscapePercentageAllArgsLiterals() = assertEval(
+    fun EscapePercentageAllArgsLiterals() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE '%' LIKE '[%' ESCAPE '[' """,
+        animals,
         """
           [
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """,
-        animals
+        """
     )
 
     @Test
-    fun EscapePercentageAllArgsLiteralsPatternWithMetaPercentage() = assertEval(
+    fun EscapePercentageAllArgsLiteralsPatternWithMetaPercentage() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE '100%' LIKE '1%[%' ESCAPE '[' """,
+        animals,
         """
           [
             {name:"Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """,
-        animals
+        """
     )
 
     @Test
-    fun EscapePercentageWithBackSlashAllArgsLiteralsPatternWithMetaPercentage() = assertEval(
+    fun EscapePercentageWithBackSlashAllArgsLiteralsPatternWithMetaPercentage() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE '100%' LIKE '1%\%' ESCAPE '\' """,
+        animals,
         """
           [
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """,
-        animals
+        """
     )
 
     @Test
-    fun EscapePercentageAllArgsLiteralsPatternWithMetaUnderscore() = assertEval(
+    fun EscapePercentageAllArgsLiteralsPatternWithMetaUnderscore() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE '100%' LIKE '1__[%' ESCAPE '[' """,
+        animals,
         """
           [
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """,
-        animals
+        """
     )
 
     @Test
-    fun EscapePercentageAllArgsLiteralsPatternWithMetaPercentAtStart() = assertEval(
+    fun EscapePercentageAllArgsLiteralsPatternWithMetaPercentAtStart() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE '%100' LIKE '[%%' ESCAPE '[' """,
+        animals,
         """
           [
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """,
-        animals
+        """
     )
 
     @Test
-    fun EscapePercentageAllArgsLiteralsPatternWithMetaPercentAtStartFollowedByUnderscore() = assertEval(
+    fun EscapePercentageAllArgsLiteralsPatternWithMetaPercentAtStartFollowedByUnderscore() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE '%100' LIKE '[%_00' ESCAPE '[' """,
+        animals,
         """
           [
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """,
-        animals
+        """
     )
 
     @Test
-    fun EscapePercentageAllArgsLiteralsPatternWithMetaPercentAtStartFollowedByUnderscoreNoMatch() = assertEval(
+    fun EscapePercentageAllArgsLiteralsPatternWithMetaPercentAtStartFollowedByUnderscoreNoMatch() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE '%1XX' LIKE '[%_00' ESCAPE '[' """,
+        animals,
         """
           []
-        """,
-        animals
+        """
     )
 
     @Test
-    fun MultipleEscapesNoMeta() = assertEval(
+    fun MultipleEscapesNoMeta() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE '1_000_000%' LIKE '1[_000[_000[%' ESCAPE '[' """,
+        animals,
         """
           [
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """,
-        animals
+        """
     )
 
     @Test
-    fun MultipleEscapesWithMeta() = assertEval(
+    fun MultipleEscapesWithMeta() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE '1_000_000%' LIKE '1[____[_%[%' ESCAPE '[' """,
+        animals,
         """
           [
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """,
-        animals
+        """
     )
 
     @Test
-    fun MultipleEscapesWithMetaAtStart() = assertEval(
+    fun MultipleEscapesWithMetaAtStart() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE '1_000_000%' LIKE '_[_%[_%[%' ESCAPE '[' """,
+        animals,
         """
           [
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """,
-        animals
+        """
     )
 
     @Test
-    fun noEscapeValueIsBinding() = assertEval(
+    fun noEscapeValueIsBinding() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE a.name LIKE 'Kumo' """,
+        animals,
         """
           [
             {name: "Kumo", type: "dog"}
           ]
-        """,
-        animals
+        """
     )
 
     @Test
-    fun noEscapeValueIsStringAppendExpression() = assertEval(
+    fun noEscapeValueIsStringAppendExpression() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE a.name || 'xx' LIKE '%xx' """,
+        animals,
         """
           [
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
           ]
-        """,
-        animals
+        """
     )
 
     @Test
-    fun noEscapeValueAndPatternAreBindings() = assertEval(
+    fun noEscapeValueAndPatternAreBindings() = runEvaluatorTestCase(
         """SELECT a.name FROM
                   `[
                    { name:"Abcd", pattern:"A___" },
                    { name:"100",  pattern:"1%0" }
                   ]` as a
                WHERE a.name LIKE a.pattern """,
-        """
-          [
-             { name:"Abcd" },
-             { name:"100"}
-          ]
-        """
+        expectedResult = """
+                  [
+                     { name:"Abcd" },
+                     { name:"100"}
+                  ]
+                """
     )
 
     @Test
-    fun EscapeLiteralValueAndPatternAreBindings() = assertEval(
+    fun EscapeLiteralValueAndPatternAreBindings() = runEvaluatorTestCase(
         """SELECT a.name FROM
                   `[
                    { name:"Abcd", pattern:"A___" },
                    { name:"100%",  pattern:"1%0\\%" }
                   ]` as a
                WHERE a.name LIKE a.pattern ESCAPE '\' """,
-        """
-          [
-             { name:"Abcd" },
-             { name:"100%"}
-          ]
-        """
+        expectedResult = """
+                  [
+                     { name:"Abcd" },
+                     { name:"100%"}
+                  ]
+                """
     )
 
     @Test
-    fun EscapeValueAndPatternAreBindings() = assertEval(
+    fun EscapeValueAndPatternAreBindings() = runEvaluatorTestCase(
         """SELECT a.name FROM
                   `[
                    { name:"Abcd", pattern:"A___" , escapeChar:'['},
                    { name:"100%",  pattern:"1%0[%", escapeChar: '['}
                   ]` as a
                WHERE a.name LIKE a.pattern ESCAPE a.escapeChar """,
-        """
-          [
-             { name:"Abcd" },
-             { name:"100%"}
-          ]
-        """
+        expectedResult = """
+                  [
+                     { name:"Abcd" },
+                     { name:"100%"}
+                  ]
+                """
     )
 
     @Test
-    fun NotLikeEscapeValueAndPatternAreBindings() = assertEval(
+    fun NotLikeEscapeValueAndPatternAreBindings() = runEvaluatorTestCase(
         """SELECT a.name FROM
                   `[
                    { name:"Abcd", pattern:"A__" , escapeChar:'['},
                    { name:"1000%",  pattern:"1_0[%", escapeChar: '['}
                   ]` as a
                WHERE a.name NOT LIKE a.pattern ESCAPE a.escapeChar """,
-        """
-          [
-             { name:"Abcd" },
-             { name:"1000%"}
-          ]
-        """
+        expectedResult = """
+                  [
+                     { name:"Abcd" },
+                     { name:"1000%"}
+                  ]
+                """
     )
 
     @Test
-    fun emptyStringAsEscape() = assertThrows(
+    fun emptyStringAsEscape() = runEvaluatorErrorTestCase(
         "SELECT * FROM <<>> AS a WHERE '%' LIKE '%' ESCAPE ''",
-        "Cannot use empty character as ESCAPE character in a LIKE predicate: \"\"",
-        NodeMetadata(1, 51)
+        ErrorCode.EVALUATOR_LIKE_PATTERN_INVALID_ESCAPE_SEQUENCE,
+        expectedErrorContext = propertyValueMapOf(1, 51)
     )
 
     @Test
-    fun moreThanOneCharacterEscape() = assertThrows(
+    fun moreThanOneCharacterEscape() = runEvaluatorErrorTestCase(
         "SELECT * FROM <<>> AS a WHERE '%' LIKE '%' ESCAPE '[]'",
-        "Escape character must have size 1 : []",
-        NodeMetadata(1, 51)
+        ErrorCode.EVALUATOR_LIKE_PATTERN_INVALID_ESCAPE_SEQUENCE,
+        expectedErrorContext = propertyValueMapOf(1, 51)
     )
 
     @Test
-    fun escapeByItself() = assertThrows(
+    fun escapeByItself() = runEvaluatorErrorTestCase(
         "SELECT * FROM <<>> AS a WHERE 'aaaaa' LIKE '[' ESCAPE '['",
-        "Invalid escape sequence : [",
-        NodeMetadata(1, 44)
+        ErrorCode.EVALUATOR_LIKE_PATTERN_INVALID_ESCAPE_SEQUENCE,
+        expectedErrorContext = propertyValueMapOf(1, 44, Property.LIKE_PATTERN to "[", Property.LIKE_ESCAPE to "[")
     )
 
     @Test
-    fun escapeWithoutWildcard() = assertThrows(
+    fun escapeWithoutWildcard() = runEvaluatorErrorTestCase(
         "SELECT * FROM <<>> AS a WHERE 'aaaaa' LIKE '[a' ESCAPE '['",
-        "Invalid escape sequence : [a",
-        NodeMetadata(1, 44)
+        ErrorCode.EVALUATOR_LIKE_PATTERN_INVALID_ESCAPE_SEQUENCE,
+        expectedErrorContext = propertyValueMapOf(1, 44, Property.LIKE_PATTERN to "[a", Property.LIKE_ESCAPE to "[")
     )
 
     @Test
-    fun valueNotAString() = assertThrows(
+    fun valueNotAString() = runEvaluatorErrorTestCase(
         "SELECT * FROM <<>> AS a WHERE 1 LIKE 'a' ESCAPE '['",
-        "LIKE expression must be given non-null strings as input",
-        NodeMetadata(1, 33)
+        ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
+        expectedErrorContext = propertyValueMapOf(1, 33, Property.LIKE_VALUE to "1")
     )
 
     @Test
-    fun patternNotAString() = assertThrows(
+    fun patternNotAString() = runEvaluatorErrorTestCase(
         "SELECT * FROM <<>> AS a WHERE 'a' LIKE 1 ESCAPE '['",
-        "LIKE expression must be given non-null strings as input",
-        NodeMetadata(1, 35)
+        ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
+        expectedErrorContext = propertyValueMapOf(1, 35, Property.LIKE_PATTERN to "1", Property.LIKE_ESCAPE to "\"[\"")
     )
 
     @Test
-    fun escapeNotAString() = assertThrows(
+    fun escapeNotAString() = runEvaluatorErrorTestCase(
         // column is marked at the position of LIKE
         "SELECT * FROM <<>> AS a WHERE 'a' LIKE 'a' ESCAPE 1",
-        "LIKE expression must be given non-null strings as input",
-        NodeMetadata(1, 35)
+        ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
+        expectedErrorContext = propertyValueMapOf(1, 35, Property.LIKE_PATTERN to "\"a\"", Property.LIKE_ESCAPE to "1")
     )
 
     @Test
-    fun valueIsNull() = assertEval("SELECT * FROM <<>> AS a WHERE null LIKE 'a' ESCAPE '['", "[]")
+    fun valueIsNull() =
+        runEvaluatorTestCase("SELECT * FROM <<>> AS a WHERE null LIKE 'a' ESCAPE '['", expectedResult = "[]")
 
     @Test
-    fun patternIsNull() = assertEval("SELECT * FROM <<>> AS a WHERE 'a' LIKE null ESCAPE '['", "[]")
+    fun patternIsNull() =
+        runEvaluatorTestCase("SELECT * FROM <<>> AS a WHERE 'a' LIKE null ESCAPE '['", expectedResult = "[]")
 
     @Test
-    fun escapeIsNull() = assertEval("SELECT * FROM <<>> AS a WHERE 'a' LIKE 'a' ESCAPE null", "[]")
+    fun escapeIsNull() =
+        runEvaluatorTestCase("SELECT * FROM <<>> AS a WHERE 'a' LIKE 'a' ESCAPE null", expectedResult = "[]")
 
     @Test
-    fun nonLiteralsMissingValue() = assertEval(
+    fun nonLiteralsMissingValue() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE a.xxx LIKE '%' """,
+        animals,
         """
           []
-        """,
-        animals
+        """
     )
 
     @Test
-    fun nonLiteralsMissingPattern() = assertEval(
+    fun nonLiteralsMissingPattern() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE a.name LIKE a.xxx """,
+        animals,
         """
           []
-        """,
-        animals
+        """
     )
 
     @Test
-    fun nonLiteralsMissingEscape() = assertEval(
+    fun nonLiteralsMissingEscape() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE a.name LIKE '%' ESCAPE a.xxx""",
+        animals,
         """
           []
-        """,
-        animals
+        """
     )
 
     @Test
-    fun nonLiteralsNullValue() = assertEval(
+    fun nonLiteralsNullValue() = runEvaluatorTestCase(
         """SELECT * FROM animalsWithNulls as a WHERE a.name LIKE '%' """,
+        animalsWithNulls,
         """
           []
-        """,
-        animalsWithNulls
+        """
     )
 
     @Test
-    fun nonLiteralsNullPattern() = assertEval(
+    fun nonLiteralsNullPattern() = runEvaluatorTestCase(
         """SELECT * FROM animalsWithNulls as a WHERE a.type LIKE a.name """,
+        animalsWithNulls,
         """
           []
-        """,
-        animalsWithNulls
+        """
     )
 
     @Test
-    fun nonLiteralsNullEscape() = assertEval(
+    fun nonLiteralsNullEscape() = runEvaluatorTestCase(
         """SELECT * FROM animalsWithNulls as a WHERE a.type LIKE '%' ESCAPE a.name""",
+        animalsWithNulls,
         """
           []
-        """,
-        animalsWithNulls
+        """
     )
 
     @Test
-    fun nonLiteralsNonStringEscape() = assertThrows(
+    fun nonLiteralsNonStringEscape() = runEvaluatorErrorTestCase(
         "SELECT * FROM `[{name:1, type:\"a\"}]` as a WHERE a.type LIKE '%' ESCAPE a.name",
-        "LIKE expression must be given non-null strings as input",
-        NodeMetadata(1, 56)
+        ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
+        expectedErrorContext = propertyValueMapOf(1, 56, Property.LIKE_PATTERN to "\"%\"", Property.LIKE_ESCAPE to "1")
     )
 
     @Test
-    fun nonLiteralsNonStringPattern() = assertThrows(
+    fun nonLiteralsNonStringPattern() = runEvaluatorErrorTestCase(
         "SELECT * FROM `[{name:1, type:\"a\"}]` as a WHERE a.type LIKE a.name",
-        "LIKE expression must be given non-null strings as input",
-        NodeMetadata(1, 56)
+        ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
+        expectedErrorContext = propertyValueMapOf(1, 56, Property.LIKE_PATTERN to "1")
     )
 
     @Test
-    fun nonLiteralsNonStringValue() = assertThrows(
+    fun nonLiteralsNonStringValue() = runEvaluatorErrorTestCase(
         "SELECT * FROM `[{name:1, type:\"a\"}]` as a WHERE a.name LIKE a.type ",
-        "LIKE expression must be given non-null strings as input",
-        NodeMetadata(1, 56)
+        ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
+        expectedErrorContext = propertyValueMapOf(1, 56, Property.LIKE_VALUE to "1")
     )
 
     /** Regression test for: https://github.com/partiql/partiql-lang-kotlin/issues/32 */
     @Test
-    fun multiCodepointPattern() = assertEval("'😍' LIKE '😍'", "true")
+    fun multiCodepointPattern() = runEvaluatorTestCase("'😍' LIKE '😍'", expectedResult = "true")
 }

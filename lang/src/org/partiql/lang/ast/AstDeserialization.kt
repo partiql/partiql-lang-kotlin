@@ -12,6 +12,9 @@
  *  language governing permissions and limitations under the License.
  */
 
+// Don't need warnings about ExprNode deprecation.
+@file:Suppress("DEPRECATION")
+
 package org.partiql.lang.ast
 
 import com.amazon.ion.IonSexp
@@ -43,7 +46,6 @@ import org.partiql.lang.util.toListOfIonSexp
  */
 @Deprecated("Please use PartiqlAst")
 interface AstDeserializer {
-    @Suppress("DEPRECATION") // We don't need warnings about deprecated ExprNode.
     @Deprecated("Please use PartiqlAst")
     fun deserialize(sexp: IonSexp, astVersion: AstVersion): ExprNode
 }

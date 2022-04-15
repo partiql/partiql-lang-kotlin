@@ -3,14 +3,15 @@ package org.partiql.lang.eval.builtins.functions
 import org.junit.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluatorTestBase
-import org.partiql.lang.eval.NodeMetadata
 import org.partiql.lang.eval.builtins.Argument
 import org.partiql.lang.eval.builtins.ExprFunctionTestCase
 import org.partiql.lang.eval.builtins.checkInvalidArgType
 import org.partiql.lang.eval.builtins.toSession
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.lang.util.propertyValueMapOf
 
 /**
  * Parsing related tests in [org.partiql.lang.syntax.SqlParserTest] and [org.partiql.lang.errors.ParserErrorsTest].
@@ -19,7 +20,12 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
     // Pass test cases
     @ParameterizedTest
     @ArgumentsSource(ExtractPassCases::class)
-    fun runPassTests(testCase: ExprFunctionTestCase) = assertEval(testCase.source, testCase.expected, testCase.session)
+    fun runPassTests(testCase: ExprFunctionTestCase) = runEvaluatorTestCase(
+        query = testCase.source,
+        session = testCase.session,
+        expectedResult = testCase.expectedLegacyModeResult,
+        excludeLegacySerializerAssertions = true
+    )
 
     class ExtractPassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
@@ -39,7 +45,7 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("extract(second FROM missing)", "null"),
             ExprFunctionTestCase("extract(timezone_hour FROM missing)", "null"),
             ExprFunctionTestCase("extract(timezone_minute FROM missing)", "null"),
-            ExprFunctionTestCase("extract(second FROM a)", "55.", mapOf("a" to "2017-01-10T05:30:55Z").toSession()),
+            ExprFunctionTestCase("extract(second FROM a)", "55.", session = mapOf("a" to "2017-01-10T05:30:55Z").toSession()),
             // just year
             ExprFunctionTestCase("extract(year FROM `2017T`)", "2017."),
             ExprFunctionTestCase("extract(month FROM `2017T`)", "1."),
@@ -134,7 +140,13 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(InvalidArgCases::class)
     fun extractInvalidArgumentTests(testCase: InvalidArgTestCase) =
-        assertThrows(testCase.query, testCase.message, NodeMetadata(1, 1), "MISSING")
+        runEvaluatorErrorTestCase(
+            testCase.query,
+            ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_FUNC_CALL,
+            expectedErrorContext = propertyValueMapOf(1, 1),
+            expectedPermissiveModeResult = "MISSING",
+            excludeLegacySerializerAssertions = true
+        )
 
     class InvalidArgCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(

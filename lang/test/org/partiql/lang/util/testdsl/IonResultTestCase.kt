@@ -9,9 +9,12 @@ import org.partiql.lang.eval.EVALUATOR_TEST_SUITE
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.evaluatortestframework.AstEvaluatorTestAdapter
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestAdapter
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
+import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.mockdb.MockDb
 import org.partiql.lang.syntax.SqlParser
-import org.partiql.lang.util.assertIonEquals
 
 /** Defines a test case for query evaluation. */
 data class IonResultTestCase(
@@ -28,12 +31,14 @@ data class IonResultTestCase(
     val sqlUnderTest: String,
 
     /**
-     * The expected result, specified in Ion.
-     *
-     * If null, no assertion on the expected result will be performed, however [extraAssertions] will
-     * still be called (if it is not null).
+     * The expected result when run in [org.partiql.lang.eval.TypingMode.LEGACY], formatted in Ion text.
      */
-    val expectedIonResult: String?,
+    val expectedLegacyModeIonResult: String,
+
+    /**
+     * The expected result when run in [org.partiql.lang.eval.TypingMode.PERMISSIVE], formatted in Ion text.
+     */
+    val expectedPermissiveModeIonResult: String,
 
     /**
      * If the test unexpectedly succeeds, cause the unit test to fail.
@@ -46,10 +51,10 @@ data class IonResultTestCase(
     val expectFailure: Boolean = false,
 
     /** The compile options to use. */
-    val compileOptions: CompileOptions = CompileOptions.standard(),
+    val compileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit = { },
 
     /** An optional block in which to execute additional assertions. */
-    val extraAssertions: ((ExprValue, CompileOptions) -> Unit)? = null
+    val extraAssertions: (ExprValue) -> Unit
 ) {
     private val cleanedSqlUnderTest =
         sqlUnderTest.replace("\n", "")
@@ -66,65 +71,36 @@ data class IonResultTestCase(
 internal fun IonResultTestCase.runTestCase(
     valueFactory: ExprValueFactory,
     db: MockDb,
-    compileOptionsBlock: (CompileOptions.Builder.() -> Unit)? = null,
-    pipelineBlock: (CompilerPipeline.Builder.() -> Unit)? = null
-
+    compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }
 ) {
-    fun runTheTest() {
-        val parser = SqlParser(ION)
+    val harness: EvaluatorTestAdapter = AstEvaluatorTestAdapter()
 
-        val astStatement = assertDoesNotThrow("Parsing the sql under test should not throw for test \"${this.name}\"") {
-            parser.parseAstStatement(sqlUnderTest)
-        }
-
-        val expectedResult = assertDoesNotThrow(
-            "Parsing the expected ion result should not throw for test \"${this.name}\""
-        ) {
-            expectedIonResult?.let { ION.singleValue(it) }
-        }
-
-        val modifiedCompileOptions = when (compileOptionsBlock) {
-            null -> compileOptions
-            else -> CompileOptions.build { compileOptionsBlock() }
-        }
-
-        val pipeline = CompilerPipeline.build(ION) pipelineBlock@{
-            compileOptions(modifiedCompileOptions)
-            pipelineBlock?.invoke(this)
-        }
-
-        val expression = assertDoesNotThrow("Compiling the query should not throw for test \"${this.name}\"") {
-            pipeline.compile(astStatement)
-        }
-
-        val session = EvaluationSession.build {
-            globals(db.valueBindings)
-            parameters(EVALUATOR_TEST_SUITE.createParameters(valueFactory))
-        }
-
-        val (exprValueResult, ionValueResult) = assertDoesNotThrow(
-            "evaluating the expression should not throw for test \"${this.name}\""
-        ) {
-            val result = expression.eval(session)
-            result to result.ionValue
-        }
-
-        expectedResult?.let { assertIonEquals(it, ionValueResult, "for test \"${this.name}\", ") }
-
-        assertDoesNotThrow("extraAssertions should not throw for test \"${this.name}\"") {
-            extraAssertions?.invoke(exprValueResult, compileOptions)
-        }
+    val session = EvaluationSession.build {
+        globals(db.valueBindings)
+        parameters(EVALUATOR_TEST_SUITE.createParameters(valueFactory))
     }
 
-    when {
-        !expectFailure -> runTheTest()
-        else -> {
-            val message = "We expect test \"${this.name}\" to fail, but it did not. This check exists to ensure the " +
-                "failing list is up to date."
+    val tc = EvaluatorTestCase(
+        groupName = "${this.group}:${this.name}",
+        query = this.sqlUnderTest,
+        expectedResult = this.expectedLegacyModeIonResult,
+        expectedPermissiveModeResult = this.expectedPermissiveModeIonResult,
+        expectedResultFormat = ExpectedResultFormat.ION,
+        excludeLegacySerializerAssertions = true,
+        implicitPermissiveModeTest = false,
+        compileOptionsBuilderBlock = this.compileOptionsBuilderBlock,
+        compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,
+        extraResultAssertions = extraAssertions
+    )
 
-            assertThrows<Throwable>(message) {
-                runTheTest()
-            }
+    if (!this.expectFailure) {
+        harness.runEvaluatorTestCase(tc, session)
+    } else {
+        val message = "We expect test \"${this.name}\" to fail, but it did not. This check exists to ensure the " +
+            "failing list is up to date."
+
+        assertThrows<Throwable>(message) {
+            harness.runEvaluatorTestCase(tc, session)
         }
     }
 }

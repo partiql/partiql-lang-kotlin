@@ -1,6 +1,7 @@
 package org.partiql.lang.eval
 
 import org.partiql.lang.CompilerPipeline
+import org.partiql.lang.errors.ErrorBehaviorInPermissiveMode
 import org.partiql.lang.errors.ErrorCategory
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.ExprValueType.BAG
@@ -16,7 +17,7 @@ import org.partiql.lang.eval.ExprValueType.NULL
 import org.partiql.lang.eval.ExprValueType.SEXP
 import org.partiql.lang.eval.ExprValueType.STRUCT
 import org.partiql.lang.eval.ExprValueType.TIMESTAMP
-import org.partiql.lang.syntax.ParserException
+import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.util.getOffsetHHmm
 import org.partiql.lang.util.honorTypedOpParameters
 import org.partiql.lang.util.legacyCastBehavior
@@ -56,6 +57,46 @@ data class FixSemantics(val expectedQuality: CastQuality) : CastQualityStatus()
 
 abstract class CastTestBase : EvaluatorTestBase() {
 
+    fun ConfiguredCastCase.assertCase(
+        expectedResultFormat: ExpectedResultFormat = ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS
+    ) {
+        when (castCase.expected) {
+            null -> {
+                val expectedErrorCode: ErrorCode? = castCase.expectedErrorCode
+                if (expectedErrorCode == null) {
+                    fail("CastCase $castCase did not have an expected value or expected error code.")
+                } else {
+                    runEvaluatorErrorTestCase(
+                        query = castCase.expression,
+                        expectedErrorCode = expectedErrorCode,
+                        expectedPermissiveModeResult = when (expectedErrorCode.errorBehaviorInPermissiveMode) {
+                            ErrorBehaviorInPermissiveMode.THROW_EXCEPTION -> null
+                            ErrorBehaviorInPermissiveMode.RETURN_MISSING -> "MISSING"
+                        },
+                        expectedInternalFlag = null, // <-- disables internal flag assertion
+                        excludeLegacySerializerAssertions = true,
+                        compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,
+                        compileOptionsBuilderBlock = compileOptionBlock,
+                        implicitPermissiveModeTest = false,
+                        addtionalExceptionAssertBlock = { it ->
+                            assertEquals(expectedErrorCode, it.errorCode)
+                        }
+                    )
+                }
+            }
+            else -> runEvaluatorTestCase(
+                castCase.expression,
+                expectedResult = castCase.expected,
+                excludeLegacySerializerAssertions = true,
+                expectedResultFormat = expectedResultFormat,
+                includePermissiveModeTest = false,
+                compileOptionsBuilderBlock = compileOptionBlock,
+                compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,
+                extraResultAssertions = castCase.additionalAssertBlock
+            )
+        }
+    }
+
     /**
      * Test case for general casting tests.
      *
@@ -76,7 +117,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
         val expected: String?,
         val expectedErrorCode: ErrorCode?,
         val quality: CastQualityStatus?,
-        val additionalAssertBlock: AssertExprValue.() -> Unit = { }
+        val additionalAssertBlock: (ExprValue) -> Unit = { }
     ) {
         val expression = when (funcName.toUpperCase()) {
             "IS" -> "($source) IS $type"
@@ -151,14 +192,14 @@ abstract class CastTestBase : EvaluatorTestBase() {
      * A [CastCase] bound to a configuration of compiler options.
      *
      * @param description Additional description for the test beyond the cast expression.
-     * @param configurePipeline Additional configuration for the compiler pipeline.
+     * @param compilerPipelineBuilderBlock Additional configuration for the compiler pipeline.
      * @param compileOptionBlock The optional lambda with a receiver to a [CompileOptions.Builder] to
      *  configure it.
      */
     data class ConfiguredCastCase(
         val castCase: CastCase,
         val description: String = "",
-        val configurePipeline: CompilerPipeline.Builder.() -> Unit = {},
+        val compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = {},
         val compileOptionBlock: CompileOptions.Builder.() -> Unit = {}
     ) {
         private val additionalDescription = when (description) {
@@ -166,57 +207,6 @@ abstract class CastTestBase : EvaluatorTestBase() {
             else -> " - $description"
         }
         override fun toString() = "$castCase$additionalDescription"
-
-        fun assertCase() {
-            when (castCase.expected) {
-                null -> {
-                    try {
-                        voidEval(
-                            castCase.expression,
-                            compileOptions = CompileOptions.build(compileOptionBlock),
-                            compilerPipelineBuilderBlock = configurePipeline
-                        )
-                        fail("Expected evaluation error")
-                    } catch (e: EvaluationException) {
-                        if (castCase.expectedErrorCode == null) {
-                            fail("CastCase $castCase did not have an expected value or expected error code.")
-                        }
-                        assertEquals(castCase.expectedErrorCode, e.errorCode)
-                    }
-                }
-                else -> assertEval(
-                    castCase.expression,
-                    castCase.expected,
-                    compileOptions = CompileOptions.build(compileOptionBlock),
-                    compilerPipelineBuilderBlock = configurePipeline,
-                    block = castCase.additionalAssertBlock
-                )
-            }
-        }
-
-        // Separate tests for Date and Time as [assertEval] validates serialization and
-        // date and time literals are not supported by V0 AST serializer.
-        internal fun assertDateTimeCase() {
-            when (castCase.expected) {
-                null -> {
-                    try {
-                        voidEval(castCase.expression)
-                        fail("Expected evaluation error")
-                    } catch (e: EvaluationException) {
-                        if (castCase.expectedErrorCode == null) {
-                            fail("CastCase $castCase did not have an expected value or expected error code.")
-                        }
-                        assertEquals(castCase.expectedErrorCode, e.errorCode)
-                    } catch (p: ParserException) {
-                        if (castCase.expectedErrorCode == null) {
-                            fail("CastCase $castCase did not have an expected value or expected error code.")
-                        }
-                        assertEquals(castCase.expectedErrorCode, p.errorCode)
-                    }
-                }
-                else -> assertEquals(castCase.expected, eval(castCase.expression, compileOptions = CompileOptions.build(compileOptionBlock)).toString())
-            }
-        }
     }
 
     companion object : EvaluatorTestBase() {
@@ -226,7 +216,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
             source: String,
             expected: String?,
             quality: CastQuality,
-            additionalAssertBlock: AssertExprValue.() -> Unit = { }
+            additionalAssertBlock: (ExprValue) -> Unit = { }
         ): (String) -> CastCase = {
             CastCase("CAST", source, it, expected, null, Implemented(quality), additionalAssertBlock)
         }
@@ -236,7 +226,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
             source: String,
             expected: String?,
             qualityStatus: CastQualityStatus,
-            additionalAssertBlock: AssertExprValue.() -> Unit = { }
+            additionalAssertBlock: (ExprValue) -> Unit = { }
         ): (String) -> CastCase = {
             CastCase("CAST", source, it, expected, null, qualityStatus, additionalAssertBlock)
         }
@@ -268,22 +258,22 @@ abstract class CastTestBase : EvaluatorTestBase() {
             listOf(
                 listOf(
                     case("NULL", "null", CastQuality.LOSSLESS) {
-                        assertEquals(ExprValueType.NULL, exprValue.type)
+                        assertEquals(ExprValueType.NULL, it.type)
                     }
                 ).types(allTypeNames - "MISSING"),
                 listOf(
                     case("NULL", "null", CastQuality.LOSSLESS) {
-                        assertEquals(ExprValueType.MISSING, exprValue.type)
+                        assertEquals(ExprValueType.MISSING, it.type)
                     }
                 ).types(listOf("MISSING")),
                 listOf(
                     case("MISSING", "null", CastQuality.LOSSLESS) {
-                        assertEquals(ExprValueType.MISSING, exprValue.type)
+                        assertEquals(ExprValueType.MISSING, it.type)
                     }
                 ).types(allTypeNames - "NULL"),
                 listOf(
                     case("MISSING", "null", CastQuality.LOSSLESS) {
-                        assertEquals(ExprValueType.NULL, exprValue.type)
+                        assertEquals(ExprValueType.NULL, it.type)
                     }
                 ).types(listOf("NULL")),
                 listOf(
@@ -1323,11 +1313,6 @@ abstract class CastTestBase : EvaluatorTestBase() {
             ),
             // Error cases for TIME
             listOf(
-                case("TIME '23:12:12.1267'", "TIME (-1)", ErrorCode.PARSE_INVALID_PRECISION_FOR_TIME),
-                case("TIME '23:12:12.1267'", "TIME (1, 2)", ErrorCode.PARSE_CAST_ARITY),
-                case("TIME '23:12:12.1267'", "TIME (1, 2) WITH TIME ZONE", ErrorCode.PARSE_CAST_ARITY),
-                case("TIME '23:12:12.1267-05:30'", "TIME (10) WITH TIME ZONE", ErrorCode.PARSE_INVALID_PRECISION_FOR_TIME),
-                case("TIME '23:12:12.1267+05:30'", "TIME (10)", ErrorCode.PARSE_INVALID_PRECISION_FOR_TIME),
                 // Cannot cast timestamp with undefined timezone to "TIME WITH TIME ZONE"
                 case("`2007-02-23T`", "TIME WITH TIME ZONE", ErrorCode.EVALUATOR_CAST_FAILED),
                 case("`2007-02-23T12:14:33.079-00:00`", "TIME WITH TIME ZONE", ErrorCode.EVALUATOR_CAST_FAILED),
@@ -1400,7 +1385,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case.expectedErrorCode != null && case.expectedErrorCode.category != ErrorCategory.SEMANTIC -> {
                     // rewrite error code cases to `MISSING` for permissive mode
                     case.copy(expected = "null", expectedErrorCode = null) {
-                        assertEquals(ExprValueType.MISSING, exprValue.type)
+                        assertEquals(ExprValueType.MISSING, it.type)
                     }
                 }
                 else -> case
@@ -1472,11 +1457,11 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 val identityValue = eval(castCase.source)
                 val newCastCase = castCase.copy(
                     type = "ANY",
-                    expected = identityValue.ionValue.cloneAndRemoveAnnotations().toString(),
+                    expected = identityValue.ionValue.cloneAndRemoveBagAndMissingAnnotations().toString(),
                     expectedErrorCode = null
                 ) {
-                    assertEquals(identityValue.type, exprValue.type)
-                    assertEquals(0, DEFAULT_COMPARATOR.compare(identityValue, exprValue))
+                    assertEquals(identityValue.type, it.type)
+                    assertEquals(0, DEFAULT_COMPARATOR.compare(identityValue, it))
                 }
 
                 case.copy(

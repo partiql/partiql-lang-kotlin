@@ -44,6 +44,7 @@ internal fun buildSessionWithNow(numMillis: Long, localOffset: Int) =
  */
 data class ExprFunctionTestCase(
     val source: String,
-    val expected: String,
+    val expectedLegacyModeResult: String,
+    val expectedPermissiveModeResult: String = expectedLegacyModeResult,
     val session: EvaluationSession = EvaluationSession.standard()
 )

@@ -37,7 +37,6 @@ class ConfigurableExprValueFormatter(private val config: Configuration) : ExprVa
 
         fun recursivePrettyPrint(value: ExprValue) {
             when (value.type) {
-
                 ExprValueType.MISSING -> out.append(MISSING_STRING)
                 ExprValueType.NULL -> out.append(NULL_STRING)
                 ExprValueType.BOOL -> out.append(value.scalar.booleanValue().toString())

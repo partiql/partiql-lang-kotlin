@@ -17,6 +17,7 @@ package org.partiql.lang.eval.visitors
 import com.amazon.ionelement.api.ionTimestamp
 import com.amazon.ionelement.api.toIonElement
 import org.junit.Test
+import org.partiql.lang.SqlException
 import org.partiql.lang.TestBase
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorCode
@@ -26,6 +27,20 @@ class PartiqlAstSanityValidatorTests : TestBase() {
     private val litNull = PartiqlAst.build { lit(ion.newNull().toIonElement()) }
     private val missingExpr = PartiqlAst.build { missing() }
     private val partiqlAstSanityValidator: PartiqlAstSanityValidator = PartiqlAstSanityValidator()
+
+    /**
+     * Asserts that the specified [block] throws an [SqlException] and its [expectedErrorCode] matches the expected value.
+     */
+    private fun assertThrowsSqlException(expectedErrorCode: ErrorCode, block: () -> Unit) {
+        try {
+            block()
+            fail("Expected EvaluationException but there was no Exception")
+        } catch (e: SqlException) {
+            assertEquals("The expected error code did not match the actual error code", expectedErrorCode, e.errorCode)
+        } catch (e: Exception) {
+            fail("Expected EvaluationException but a different exception was thrown \n\t  $e")
+        }
+    }
 
     @Test
     fun groupPartial() {
