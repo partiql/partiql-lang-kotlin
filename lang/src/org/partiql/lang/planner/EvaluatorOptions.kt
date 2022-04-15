@@ -41,6 +41,7 @@ compatibility on behalf of a customer we don't have anymore.  Internal bug numbe
  * @param defaultTimezoneOffset Default timezone offset to be used when TIME WITH TIME ZONE does not explicitly
  * specify the time zone. Defaults to [ZoneOffset.UTC]
  */
+@Suppress("DataClassPrivateConstructor")
 data class EvaluatorOptions private constructor (
     val projectionIteration: ProjectionIterationBehavior = ProjectionIterationBehavior.FILTER_MISSING,
     val thunkOptions: ThunkOptions = ThunkOptions.standard(),
