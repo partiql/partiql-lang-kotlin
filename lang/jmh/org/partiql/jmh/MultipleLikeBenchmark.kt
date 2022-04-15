@@ -258,7 +258,20 @@ open class MultipleLikeBenchmark {
         val bindings = pipeline.compile(parser.parseAstStatement(data)).eval(EvaluationSession.standard()).bindings
         val session = EvaluationSession.build { globals(bindings) }
 
-        val query = """
+        val employeeData10 = employeeData + employeeData + employeeData + employeeData + employeeData +
+            employeeData + employeeData + employeeData + employeeData + employeeData
+        val data10 = """
+            { 
+                'hr': { 
+                    'employees': <<""" + employeeData10.joinToString(",") + """>>
+                } 
+            }
+        """.trimIndent()
+
+        val bindings10 = pipeline.compile(parser.parseAstStatement(data10)).eval(EvaluationSession.standard()).bindings
+        val session10 = EvaluationSession.build { globals(bindings10) }
+
+        val query15 = """
             SELECT * 
             FROM hr.employees as emp
             WHERE lower(emp.name) LIKE '%bob smith%'
@@ -277,8 +290,28 @@ open class MultipleLikeBenchmark {
                OR lower(emp.name) LIKE '%kadence bates%'
                OR lower(emp.name) LIKE '%jakobe townsend%'
             """
-        val astStatement = parser.parseAstStatement(query)
-        val expression = pipeline.compile(astStatement)
+        val astStatement15 = parser.parseAstStatement(query15)
+        val expression15 = pipeline.compile(astStatement15)
+
+        val query30 = query15 + """
+               OR lower(emp.name) LIKE '%austin pennington%'
+               OR lower(emp.name) LIKE '%colby woodward%'
+               OR lower(emp.name) LIKE '%brycen blair%'
+               OR lower(emp.name) LIKE '%cristal mercer%'
+               OR lower(emp.name) LIKE '%river gilmore%'
+               OR lower(emp.name) LIKE '%saniya bowers%'
+               OR lower(emp.name) LIKE '%braedon ross%'
+               OR lower(emp.name) LIKE '%clark mejia%'
+               OR lower(emp.name) LIKE '%ryan day%'
+               OR lower(emp.name) LIKE '%marilyn luna%'
+               OR lower(emp.name) LIKE '%avah sanchez%'
+               OR lower(emp.name) LIKE '%amelie wu%'
+               OR lower(emp.name) LIKE '%paola duke%'
+               OR lower(emp.name) LIKE '%jesse trevino%'
+               OR lower(emp.name) LIKE '%bianca cisneros%'
+            """
+        val astStatement30 = parser.parseAstStatement(query30)
+        val expression30 = pipeline.compile(astStatement30)
     }
 
     /**
@@ -288,8 +321,8 @@ open class MultipleLikeBenchmark {
     @BenchmarkMode(Mode.AverageTime)
     @OutputTimeUnit(TimeUnit.MICROSECONDS)
     @Fork(value = 2)
-    fun testPartiQLParser(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.query)
+    fun testPartiQLParser15(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.query15)
         blackhole.consume(expr)
     }
 
@@ -300,8 +333,8 @@ open class MultipleLikeBenchmark {
     @BenchmarkMode(Mode.AverageTime)
     @OutputTimeUnit(TimeUnit.MICROSECONDS)
     @Fork(value = 2)
-    fun testPartiQLCompiler(state: MyState, blackhole: Blackhole) {
-        val exprValue = state.pipeline.compile(state.astStatement)
+    fun testPartiQLCompiler15(state: MyState, blackhole: Blackhole) {
+        val exprValue = state.pipeline.compile(state.astStatement15)
         blackhole.consume(exprValue)
     }
 
@@ -312,8 +345,58 @@ open class MultipleLikeBenchmark {
     @BenchmarkMode(Mode.AverageTime)
     @OutputTimeUnit(TimeUnit.MICROSECONDS)
     @Fork(value = 2)
-    fun testPartiQLEvaluator(state: MyState, blackhole: Blackhole) {
-        val exprValue = state.expression.eval(state.session)
+    fun testPartiQLEvaluator15(state: MyState, blackhole: Blackhole) {
+        val exprValue = state.expression15.eval(state.session)
+        blackhole.consume(exprValue)
+        blackhole.consume(exprValue.iterator().forEach { })
+    }
+
+    /**
+     * Example PartiQL benchmark for parsing a query
+     */
+    @Benchmark
+    @BenchmarkMode(Mode.AverageTime)
+    @OutputTimeUnit(TimeUnit.MICROSECONDS)
+    @Fork(value = 2)
+    fun testPartiQLParser30(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.query30)
+        blackhole.consume(expr)
+    }
+
+    /**
+     * Example PartiQL benchmark for compiling a query
+     */
+    @Benchmark
+    @BenchmarkMode(Mode.AverageTime)
+    @OutputTimeUnit(TimeUnit.MICROSECONDS)
+    @Fork(value = 2)
+    fun testPartiQLCompiler30(state: MyState, blackhole: Blackhole) {
+        val exprValue = state.pipeline.compile(state.astStatement30)
+        blackhole.consume(exprValue)
+    }
+
+    /**
+     * Example PartiQL benchmark for evaluating a query
+     */
+    @Benchmark
+    @BenchmarkMode(Mode.AverageTime)
+    @OutputTimeUnit(TimeUnit.MICROSECONDS)
+    @Fork(value = 2)
+    fun testPartiQLEvaluator30(state: MyState, blackhole: Blackhole) {
+        val exprValue = state.expression30.eval(state.session)
+        blackhole.consume(exprValue)
+        blackhole.consume(exprValue.iterator().forEach { })
+    }
+
+    /**
+     * Example PartiQL benchmark for evaluating a query
+     */
+    @Benchmark
+    @BenchmarkMode(Mode.AverageTime)
+    @OutputTimeUnit(TimeUnit.MICROSECONDS)
+    @Fork(value = 2)
+    fun testPartiQLEvaluator30WithData10(state: MyState, blackhole: Blackhole) {
+        val exprValue = state.expression30.eval(state.session10)
         blackhole.consume(exprValue)
         blackhole.consume(exprValue.iterator().forEach { })
     }
