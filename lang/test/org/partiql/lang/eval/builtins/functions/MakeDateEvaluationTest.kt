@@ -22,18 +22,32 @@ class MakeDateEvaluationTest : EvaluatorTestBase() {
             query = testCase.source,
             expectedResult = testCase.expectedLegacyModeResult,
             expectedPermissiveModeResult = testCase.expectedPermissiveModeResult,
-            expectedResultFormat = ExpectedResultFormat.ION
+            includePermissiveModeTest = false,
+            expectedResultFormat = ExpectedResultFormat.STRING
         )
 
     class MakeDatePassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
-            ExprFunctionTestCase("make_date(100, 1, 1)", "\$partiql_date::0100-01-01"),
-            ExprFunctionTestCase("make_date(1985, 1, 1)", "\$partiql_date::1985-01-01"),
-            ExprFunctionTestCase("make_date(2102, 02, 03)", "\$partiql_date::2102-02-03"),
-            ExprFunctionTestCase("make_date(3000, 02, 03)", "\$partiql_date::3000-02-03"),
-            ExprFunctionTestCase("make_date(2012, 02, 29)", "\$partiql_date::2012-02-29"),
-            ExprFunctionTestCase("make_date(2021, 02, 28)", "\$partiql_date::2021-02-28"),
-            ExprFunctionTestCase("make_date(`100`, `1`, `1`)", "\$partiql_date::0100-01-01"),
+            ExprFunctionTestCase("make_date(100, 1, 1)", "0100-01-01"),
+            ExprFunctionTestCase("make_date(1985, 1, 1)", "1985-01-01"),
+            ExprFunctionTestCase("make_date(2102, 02, 03)", "2102-02-03"),
+            ExprFunctionTestCase("make_date(3000, 02, 03)", "3000-02-03"),
+            ExprFunctionTestCase("make_date(2012, 02, 29)", "2012-02-29"),
+            ExprFunctionTestCase("make_date(2021, 02, 28)", "2021-02-28"),
+            ExprFunctionTestCase("make_date(`100`, `1`, `1`)", "0100-01-01"),
+            ExprFunctionTestCase("make_date(NULL, 02, 28)", "NULL"),
+            ExprFunctionTestCase("make_date(2021, NULL, 28)", "NULL"),
+            ExprFunctionTestCase("make_date(2021, 02, NULL)", "NULL"),
+            ExprFunctionTestCase("make_date(MISSING, 02, 28)", "NULL"),
+            ExprFunctionTestCase("make_date(MISSING, 02, 28)", "NULL"),
+            ExprFunctionTestCase("make_date(2021, MISSING, 28)", "NULL"),
+            ExprFunctionTestCase("make_date(2021, 02, MISSING)", "NULL"),
+            ExprFunctionTestCase("make_date(NULL, MISSING, 28)", "NULL"),
+            ExprFunctionTestCase("make_date(MISSING, NULL, 28)", "NULL"),
+            ExprFunctionTestCase("make_date(MISSING, 02, NULL)", "NULL"),
+            ExprFunctionTestCase("make_date(NULL, NULL, 28)", "NULL"),
+            ExprFunctionTestCase("make_date(NULL, NULL, 28)", "NULL"),
+            ExprFunctionTestCase("make_date(MISSING, MISSING, MISSING)", "NULL"),
             ExprFunctionTestCase("make_date(2021, 03, 17) IS DATE", "true")
         )
     }
