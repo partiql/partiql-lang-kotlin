@@ -1,4 +1,4 @@
-package org.partiql.lang.eval.test
+package org.partiql.lang.eval.evaluatortestframework
 
 import org.junit.Assert
 import org.junit.jupiter.api.assertThrows

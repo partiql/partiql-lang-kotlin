@@ -2,7 +2,7 @@ package org.partiql.lang.eval
 
 import junitparams.Parameters
 import org.junit.Test
-import org.partiql.lang.eval.test.EvaluatorTestCase
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
 
 class JoinWithOnConditionTest : EvaluatorTestBase() {
 

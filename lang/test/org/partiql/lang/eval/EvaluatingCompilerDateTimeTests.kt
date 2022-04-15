@@ -5,7 +5,7 @@ import org.junit.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.eval.test.ExpectedResultFormat
+import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.eval.time.MINUTES_PER_HOUR
 import org.partiql.lang.eval.time.NANOS_PER_SECOND
 import org.partiql.lang.eval.time.SECONDS_PER_MINUTE
@@ -75,7 +75,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         private val defaultTimezoneOffset = ZoneOffset.UTC
         private val defaultTzMinutes = defaultTimezoneOffset.totalSeconds / 60
 
-        private fun case(query: String, expected: String, expectedTime: TimeForValidation) = TimeTestCase(query, expected, expectedTime) { }
+        private fun case(query: String, expected: String, expectedTime: TimeForValidation? = null) = TimeTestCase(query, expected, expectedTime) { }
 
         private fun case(query: String, expected: String, expectedTime: TimeForValidation, compileOptionsBlock: CompileOptions.Builder.() -> Unit) = TimeTestCase(query, expected, expectedTime, compileOptionsBlock)
 
@@ -109,6 +109,11 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
             case("TIME (5) WITH TIME ZONE '12:24:12.123678+05:30'", "12:24:12.12368+05:30", TimeForValidation(12, 24, 12, 123680000, 5, 330)),
             case("TIME (2) WITH TIME ZONE '12:59:59.135-05:30'", "12:59:59.14-05:30", TimeForValidation(12, 59, 59, 140000000, 2, -330)),
             case("TIME (2) WITH TIME ZONE '12:59:59.134-05:30'", "12:59:59.13-05:30", TimeForValidation(12, 59, 59, 130000000, 2, -330)),
+            case("TIME '12:25:12.123456' IS TIME", "true"),
+            case("TIME (2) '01:01:12' IS TIME", "true"),
+            case("TIME WITH TIME ZONE '12:25:12.123456' IS TIME", "true"),
+            case("TIME (2) WITH TIME ZONE '01:01:12' IS TIME", "true"),
+            case("'01:01:12' IS TIME", "false"),
             case("TIME WITH TIME ZONE '00:00:00'", "00:00:00-01:00", TimeForValidation(0, 0, 0, 0, 0, -60), compileOptionsBlock(-1)),
             case("TIME WITH TIME ZONE '11:23:45.678'", "11:23:45.678+06:00", TimeForValidation(11, 23, 45, 678000000, 3, 360), compileOptionsBlock(6)),
             case("TIME WITH TIME ZONE '11:23:45.678-05:30'", "11:23:45.678-05:30", TimeForValidation(11, 23, 45, 678000000, 3, -330), compileOptionsBlock(6)),

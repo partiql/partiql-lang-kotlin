@@ -9,7 +9,7 @@ import org.partiql.lang.eval.builtins.Argument
 import org.partiql.lang.eval.builtins.ExprFunctionTestCase
 import org.partiql.lang.eval.builtins.checkInvalidArgType
 import org.partiql.lang.eval.builtins.checkInvalidArity
-import org.partiql.lang.eval.test.ExpectedResultFormat
+import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.propertyValueMapOf
@@ -22,19 +22,19 @@ class MakeTimeEvaluationTest : EvaluatorTestBase() {
             query = testCase.source,
             expectedResult = testCase.expectedLegacyModeResult,
             expectedPermissiveModeResult = testCase.expectedPermissiveModeResult,
-            expectedResultFormat = ExpectedResultFormat.ION
+            expectedResultFormat = ExpectedResultFormat.STRING
         )
 
     class MakeTimePassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
-            ExprFunctionTestCase("make_time(0, 0, 0.)", "\$partiql_time::{hour:0,minute:0,second:0.,timezone_hour:null.int,timezone_minute:null.int}"),
-            ExprFunctionTestCase("make_time(0, 0, 0., 0)", "\$partiql_time::{hour:0,minute:0,second:0.,timezone_hour:0,timezone_minute:0}"),
-            ExprFunctionTestCase("make_time(23, 12, 59.12345)", "\$partiql_time::{hour:23,minute:12,second:59.12345,timezone_hour:null.int,timezone_minute:null.int}"),
-            ExprFunctionTestCase("make_time(23, 12, 59.12345, 800)", "\$partiql_time::{hour:23,minute:12,second:59.12345,timezone_hour:13,timezone_minute:20}"),
-            ExprFunctionTestCase("make_time(23, 59, 59.999999999)", "\$partiql_time::{hour:23,minute:59,second:59.999999999,timezone_hour:null.int,timezone_minute:null.int}"),
-            ExprFunctionTestCase("make_time(23, 12, 59.12345, -800)", "\$partiql_time::{hour:23,minute:12,second:59.12345,timezone_hour:-13,timezone_minute:-20}"),
-            ExprFunctionTestCase("make_time(23, 59, 59.999999999, -1080)", "\$partiql_time::{hour:23,minute:59,second:59.999999999,timezone_hour:-18,timezone_minute:0}"),
-            ExprFunctionTestCase("make_time(23, 59, 59.999999999, 1080)", "\$partiql_time::{hour:23,minute:59,second:59.999999999,timezone_hour:18,timezone_minute:0}"),
+            ExprFunctionTestCase("make_time(0, 0, 0.)", "00:00:00"),
+            ExprFunctionTestCase("make_time(0, 0, 0., 0)", "00:00:00+00:00"),
+            ExprFunctionTestCase("make_time(23, 12, 59.12345)", "23:12:59.12345"),
+            ExprFunctionTestCase("make_time(23, 12, 59.12345, 800)", "23:12:59.12345+13:20"),
+            ExprFunctionTestCase("make_time(23, 59, 59.999999999)", "23:59:59.999999999"),
+            ExprFunctionTestCase("make_time(23, 12, 59.12345, -800)", "23:12:59.12345-13:20"),
+            ExprFunctionTestCase("make_time(23, 59, 59.999999999, -1080)", "23:59:59.999999999-18:00"),
+            ExprFunctionTestCase("make_time(23, 59, 59.999999999, 1080)", "23:59:59.999999999+18:00"),
         )
     }
 

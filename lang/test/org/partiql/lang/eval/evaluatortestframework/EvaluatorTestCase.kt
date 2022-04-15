@@ -1,4 +1,4 @@
-package org.partiql.lang.eval.test
+package org.partiql.lang.eval.evaluatortestframework
 
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.CompileOptions
@@ -18,6 +18,8 @@ data class EvaluatorTestCase(
 
     /**
      * The query to be evaluated.
+     *
+     * The query is evaluated once in [TypingMode.LEGACY] and once in [TypingMode.PERMISSIVE].
      */
     override val query: String,
 
@@ -43,6 +45,10 @@ data class EvaluatorTestCase(
      */
     val expectedResultFormat: ExpectedResultFormat = ExpectedResultFormat.PARTIQL,
 
+    /**
+     * Set to true to skip testing the legacy serializers with an AST from the parsed [query].  This is needed
+     * because the legacy (de)serializers do not support newer AST nodes.
+     */
     override val excludeLegacySerializerAssertions: Boolean = false,
 
     /**

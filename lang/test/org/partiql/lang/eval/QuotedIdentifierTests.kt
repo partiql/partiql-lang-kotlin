@@ -17,7 +17,7 @@ package org.partiql.lang.eval
 import org.junit.Test
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
-import org.partiql.lang.eval.test.ExpectedResultFormat
+import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.util.propertyValueMapOf
 
 class QuotedIdentifierTests : EvaluatorTestBase() {

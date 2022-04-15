@@ -46,7 +46,6 @@ import org.partiql.lang.util.toListOfIonSexp
  */
 @Deprecated("Please use PartiqlAst")
 interface AstDeserializer {
-    @Suppress("DEPRECATION") // We don't need warnings about deprecated ExprNode.
     @Deprecated("Please use PartiqlAst")
     fun deserialize(sexp: IonSexp, astVersion: AstVersion): ExprNode
 }

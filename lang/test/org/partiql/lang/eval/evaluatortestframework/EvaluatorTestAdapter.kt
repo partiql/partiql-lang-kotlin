@@ -1,27 +1,14 @@
-package org.partiql.lang.eval.test
+package org.partiql.lang.eval.evaluatortestframework
 
-import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.EvaluationSession
 
 /**
  * Allows evaluates [EvaluatorTestCase] or [EvaluatorErrorTestCase] to be run against a specific
- * compiler/pipeline.
- *
- * There is currently only one implementation of this interface: [AstEvaluatorTestAdapter]
- * which evaluates [EvaluatorTestCase] or [EvaluatorErrorTestCase] with the AST evaluator
- * (i.e [CompilerPipeline]/[org.partiql.lang.eval.EvaluatingCompiler] combination.
- *
- * Future implementations of [EvaluatorTestAdapter] will:
- *
- * - Tests the query planner and physical plan compiler instead.
- * - [EvaluatorTestAdapter] that delegates multiple other implementations, allowing multiple implementations to be
- * treated as one.
+ * compiler/pipeline or perform other testing activities.  (See implementations of this interface for examples.)
  */
 interface EvaluatorTestAdapter {
     /**
      * Runs an [EvaluatorTestCase].  This is intended to be used by parameterized tests.
-     *
-     * Also runs additional assertions performed by [commonAssertions].
      *
      * @see [EvaluatorTestCase].
      */

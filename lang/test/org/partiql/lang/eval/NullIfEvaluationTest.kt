@@ -16,7 +16,7 @@ package org.partiql.lang.eval
 
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
-import org.partiql.lang.eval.test.ExpectedResultFormat
+import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 
 class NullIfEvaluationTest : EvaluatorTestBase() {
 
