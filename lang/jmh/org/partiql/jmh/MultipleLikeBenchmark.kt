@@ -315,7 +315,7 @@ open class MultipleLikeBenchmark {
     }
 
     /**
-     * Example PartiQL benchmark for parsing a query
+     * Benchmarks parsing a query containing 15 `OR`ed `LIKE` expressions
      */
     @Benchmark
     @BenchmarkMode(Mode.AverageTime)
@@ -327,7 +327,7 @@ open class MultipleLikeBenchmark {
     }
 
     /**
-     * Example PartiQL benchmark for compiling a query
+     * Benchmarks compiling a query containing 15 `OR`ed `LIKE` expressions
      */
     @Benchmark
     @BenchmarkMode(Mode.AverageTime)
@@ -339,7 +339,8 @@ open class MultipleLikeBenchmark {
     }
 
     /**
-     * Example PartiQL benchmark for evaluating a query
+     * Benchmarks evaluating a query containing 15 `OR`ed `LIKE` expressions
+     * against 10,201 rows of strings each of which are ~20 to ~220 codepoints long
      */
     @Benchmark
     @BenchmarkMode(Mode.AverageTime)
@@ -352,7 +353,7 @@ open class MultipleLikeBenchmark {
     }
 
     /**
-     * Example PartiQL benchmark for parsing a query
+     * Benchmarks parsing a query containing 30 `OR`ed `LIKE` expressions
      */
     @Benchmark
     @BenchmarkMode(Mode.AverageTime)
@@ -364,7 +365,7 @@ open class MultipleLikeBenchmark {
     }
 
     /**
-     * Example PartiQL benchmark for compiling a query
+     * Benchmarks compiling a query containing 30 `OR`ed `LIKE` expressions
      */
     @Benchmark
     @BenchmarkMode(Mode.AverageTime)
@@ -376,7 +377,8 @@ open class MultipleLikeBenchmark {
     }
 
     /**
-     * Example PartiQL benchmark for evaluating a query
+     * Benchmarks evaluating a query containing 30 `OR`ed `LIKE` expressions
+     * against 10,201 rows of strings each of which are ~20 to ~220 codepoints long
      */
     @Benchmark
     @BenchmarkMode(Mode.AverageTime)
@@ -389,7 +391,8 @@ open class MultipleLikeBenchmark {
     }
 
     /**
-     * Example PartiQL benchmark for evaluating a query
+     * Benchmarks evaluating a query containing 15 `OR`ed `LIKE` expressions
+     * against 102,010 rows of strings each of which are ~20 to ~220 codepoints long
      */
     @Benchmark
     @BenchmarkMode(Mode.AverageTime)
