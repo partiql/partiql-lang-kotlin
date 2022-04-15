@@ -117,7 +117,7 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
             }
             ExpectedResultFormat.PARTIQL -> {
                 val expected = try {
-                    pipeline.compile(tc.query).eval(session)
+                    pipeline.compile(expectedResult).eval(session)
                 } catch (e: Throwable) {
                     showTestCase()
                     e.printStackTrace()
