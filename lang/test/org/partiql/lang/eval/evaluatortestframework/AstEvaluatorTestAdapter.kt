@@ -1,19 +1,17 @@
 package org.partiql.lang.eval.evaluatortestframework
 
-import org.junit.Assert
-import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.ION
 import org.partiql.lang.SqlException
 import org.partiql.lang.errors.ErrorBehaviorInPermissiveMode
+import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluationSession
-import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.cloneAndRemoveBagAndMissingAnnotations
 import org.partiql.lang.eval.exprEquals
-import org.partiql.lang.util.ConfigurableExprValueFormatter
-import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 
 private fun EvaluatorTestDefinition.createPipeline(forcePermissiveMode: Boolean = false): CompilerPipeline {
@@ -33,7 +31,88 @@ private fun EvaluatorTestDefinition.createPipeline(forcePermissiveMode: Boolean 
     }
 }
 
+/** A generated and human readable description of this test case for display in assertion failure messages. */
+fun EvaluatorTestCase.testDetails(actualResult: String? = null): String {
+    val b = StringBuilder()
+    b.appendLine("Group name      : $groupName")
+    b.appendLine("Query           : $query")
+    b.appendLine("Expected result : $expectedResult")
+    if(actualResult != null) {
+        b.appendLine("Actual result   : $actualResult")
+    }
+    b.appendLine("Result format   : $expectedResultFormat")
+
+    return b.toString()
+}
+
+/** A generated and human readable description of this test case for display in assertion failure messages. */
+fun EvaluatorErrorTestCase.testDetails(
+    actualErrorCode: String? = null,
+    actualErrorContext: PropertyValueMap? = null,
+    actualPermissiveModeResult: String? = null,
+    actualInternalFlag: Boolean? = null,
+): String {
+    val b = StringBuilder()
+    b.appendLine("Group name                     : $groupName")
+    b.appendLine("Query                          : $query")
+    b.appendLine("Expected error code            : $expectedErrorCode")
+    if(actualErrorCode != null) {
+        b.appendLine("Actual error code              : $actualErrorCode")
+    }
+    b.appendLine("Expected error context         : $expectedErrorContext")
+    if(actualErrorContext != null) {
+        b.appendLine("Actual error context           : $actualErrorContext")
+    }
+    b.appendLine("Expected internal flag         : $expectedInternalFlag")
+    if(actualErrorContext != null) {
+        b.appendLine("Actual internal flag           : $actualInternalFlag")
+    }
+    b.appendLine("Expected permissive mode result: $expectedPermissiveModeResult")
+    if(actualPermissiveModeResult != null) {
+        b.appendLine("Actual permissive mode result  : $actualPermissiveModeResult")
+    }
+    return b.toString()
+}
+
+private fun assertEquals(
+    expected: Any?,
+    actual: Any?,
+    reason: EvaluatorTestFailureReason,
+    detailsBlock: () -> String
+) {
+    if (expected != actual) {
+        throw EvaluatorAssertionFailedError(reason, detailsBlock())
+    }
+}
+
+private fun <T> assertDoesNotThrow(reason: EvaluatorTestFailureReason,
+    detailsBlock: () -> String,
+block: () -> T): T {
+    try {
+        return block()
+    }catch (ex: Throwable) {
+        throw EvaluatorAssertionFailedError(reason, detailsBlock(), ex.cause)
+    }
+}
+
+private inline fun assertThrowsSqlException(
+    reason: EvaluatorTestFailureReason,
+    detailsBlock: () -> String,
+    block: () -> Unit
+): SqlException {
+    try {
+        block()
+        // if we made it here, the test failed.
+        throw EvaluatorAssertionFailedError(reason, detailsBlock())
+    }
+    catch (ex: SqlException) {
+        return ex
+    }
+}
+
+
 class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
+
 
     override fun runEvaluatorTestCase(tc: EvaluatorTestCase, session: EvaluationSession) {
         if (tc.implicitPermissiveModeTest) {
@@ -63,46 +142,39 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
         }
     }
 
+
     /**
      * Runs the give test case once with the specified [session].
-     *
-     * If non-null, [message] will be dumped to the console before test failure to aid in the identification
-     * and debugging of failed tests.
      */
     private fun privateRunEvaluatorTestCase(
         tc: EvaluatorTestCase,
         session: EvaluationSession,
-        message: String
+        todo: String,
     ) {
-        val assertionMessage = message.let { "($it)" }
-
-        fun showTestCase() {
-            println(listOfNotNull(message, tc.groupName).joinToString(" : "))
-            println("Query under test  : ${tc.query}")
-            println("Expected value    : ${tc.expectedResult}")
-            println()
-        }
-
         val pipeline = tc.createPipeline()
 
-        val actualResult = try {
+        val actualResult = assertDoesNotThrow(
+            EvaluatorTestFailureReason.FAILED_TO_EVALUATE_QUERY,
+            { tc.testDetails() }
+        ) {
             pipeline.compile(tc.query).eval(session)
-        } catch (e: Throwable) {
-            showTestCase()
-            e.printStackTrace()
-            Assert.fail("Exception while attempting to evaluate the under test, see standard output $assertionMessage")
-            throw e
         }
 
-        val expectedResult =
+        val (expectedResult, unexpectedResultErrorCode) =
             when (pipeline.compileOptions.typingMode) {
-                TypingMode.LEGACY -> tc.expectedResult
-                TypingMode.PERMISSIVE -> tc.expectedPermissiveModeResult
+                TypingMode.LEGACY -> tc.expectedResult to EvaluatorTestFailureReason.UNEXPECTED_QUERY_RESULT
+                TypingMode.PERMISSIVE -> tc.expectedPermissiveModeResult to EvaluatorTestFailureReason.UNEXPECTED_PERMISSIVE_MODE_RESULT
             }
 
         when (tc.expectedResultFormat) {
             ExpectedResultFormat.ION, ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS -> {
-                val expectedIonResult = ION.singleValue(expectedResult)
+                val expectedIonResult = assertDoesNotThrow(
+                    EvaluatorTestFailureReason.FAILED_TO_PARSE_ION_EXPECTED_RESULT,
+                    { tc.testDetails() }
+                ) {
+                    ION.singleValue(expectedResult)
+                }
+
                 val actualIonResult = actualResult.ionValue.let {
                     if (tc.expectedResultFormat == ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS)
                         it.cloneAndRemoveBagAndMissingAnnotations()
@@ -112,58 +184,79 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
                 assertEquals(
                     expectedIonResult,
                     actualIonResult,
-                    assertionMessage
-                )
+                    unexpectedResultErrorCode
+                ) { tc.testDetails(actualIonResult.toString()) }
             }
             ExpectedResultFormat.PARTIQL -> {
-                val expected = try {
+                val expectedResult = assertDoesNotThrow(
+                    EvaluatorTestFailureReason.FAILED_TO_EVALUATE_PARTIQL_EXPECTED_RESULT,
+                    { tc.testDetails() }
+                ) {
                     pipeline.compile(expectedResult).eval(session)
-                } catch (e: Throwable) {
-                    showTestCase()
-                    e.printStackTrace()
-                    Assert.fail("Exception while attempting to evaluate the expected value, see standard output $assertionMessage")
-                    throw e
                 }
-                if (!expected.exprEquals(actualResult)) {
-                    showTestCase()
-                    println("Expected : $expected")
-                    println("Actual   : $actualResult")
 
-                    Assert.fail("Expected and actual ExprValue instances are not equivalent $assertionMessage")
+                if (!expectedResult.exprEquals(actualResult)) {
+                    throw EvaluatorAssertionFailedError(
+                        EvaluatorTestFailureReason.UNEXPECTED_QUERY_RESULT,
+                        tc.testDetails(actualResult.toString()))
                 }
                 Unit
             }
             ExpectedResultFormat.STRING -> {
-                assertEquals(expectedResult, actualResult.toString(), "Actual result must match expected (string equality)")
+                val actualResultString = actualResult.toString()
+                assertEquals(
+                    expectedResult,
+                    actualResultString,
+                    EvaluatorTestFailureReason.UNEXPECTED_QUERY_RESULT,
+                ) { tc.testDetails(actualResultString) }
             }
         }.let { }
         tc.extraResultAssertions(actualResult)
     }
 
+
     /** Runs an [EvaluatorErrorTestCase] once. */
     private fun privateRunEvaluatorErrorTestCase(
         tc: EvaluatorErrorTestCase,
-        session: EvaluationSession,
+        session: EvaluationSession
     ) {
         val compilerPipeline = tc.createPipeline()
 
-        val ex = assertThrows<SqlException>("test case should throw during evaluation") {
+        val ex = assertThrowsSqlException(
+            EvaluatorTestFailureReason.EXPECTED_SQL_EXCEPTION_BUT_THERE_WAS_NONE,
+            { tc.testDetails() }
+        ) {
+
             // Note that an SqlException (usually a SemanticException or EvaluationException) might be thrown in
             // .compile OR in .eval.  We currently don't make a distinction, so tests cannot assert that certain
             // errors are compile-time and others are evaluation-time.  We really aught to create a way for tests to
             // indicate when the exception should be thrown.  This is undone.
             val expression = compilerPipeline.compile(tc.query)
+
+            // The call to .ionValue is important since query execution won't actually begin otherwise.
             expression.eval(session).ionValue
-            // The call to .ionValue is important since query execution won't actually
-            // begin otherwise.
         }
 
-        assertEquals(tc.expectedErrorCode, ex.errorCode, "Expected error code must match")
-        if (tc.expectedErrorContext != null) {
-            assertEquals(tc.expectedErrorContext, ex.errorContext, "Expected error context must match")
+        assertEquals(
+            tc.expectedErrorCode,
+            ex.errorCode,
+            EvaluatorTestFailureReason.UNEXPECTED_ERROR_CODE
+        ) { tc.testDetails(actualErrorCode = ex.errorCode.toString()) }
+
+        if(tc.expectedErrorContext != null) {
+            assertEquals(
+                tc.expectedErrorContext,
+                ex.errorContext,
+                EvaluatorTestFailureReason.UNEXPECTED_ERROR_CONTEXT
+            ) { tc.testDetails(actualErrorContext = ex.errorContext) }
         }
+
         if (tc.expectedInternalFlag != null) {
-            assertEquals(tc.expectedInternalFlag, ex.internal, "Expected internal flag must match")
+            assertEquals(
+                tc.expectedInternalFlag,
+                ex.internal,
+                EvaluatorTestFailureReason.UNEXPECTED_INTERNAL_FLAG
+            ) { tc.testDetails(actualInternalFlag = ex.internal) }
         }
 
         tc.additionalExceptionAssertBlock(ex)
@@ -173,7 +266,8 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
         if (tc.implicitPermissiveModeTest) {
             val testOpts = CompileOptions.build { tc.compileOptionsBuilderBlock(this) }
             assertNotEquals(
-                TypingMode.PERMISSIVE, testOpts.typingMode,
+                TypingMode.PERMISSIVE,
+                testOpts.typingMode,
                 "Setting TypingMode.PERMISSIVE when implicit permissive mode testing is enabled is redundant"
             )
         }
@@ -192,11 +286,10 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
         when (tc.expectedErrorCode.errorBehaviorInPermissiveMode) {
             ErrorBehaviorInPermissiveMode.THROW_EXCEPTION -> {
                 // The expected error code indicates that this error should also throw in permissive mode.
-                Assert.assertNull(
+                assertNull(
+                    tc.expectedPermissiveModeResult,
                     "An expectedPermissiveModeResult must not be specified when " +
-                        "ErrorCode.errorBehaviorInPermissiveMode is set to " +
-                        "ErrorBehaviorInPermissiveMode.THROW_EXCEPTION",
-                    tc.expectedPermissiveModeResult
+                        "ErrorCode.errorBehaviorInPermissiveMode is set to THROW_EXCEPTION"
                 )
 
                 // Run the query once in permissive mode.
@@ -214,10 +307,10 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
 
                 // The expected error code indicates that this error should continue, but the expression should
                 // return missing.
-                Assert.assertNotNull(
+                assertNotNull(
+                    tc.expectedPermissiveModeResult,
                     "Required non null expectedPermissiveModeResult when ErrorCode.errorBehaviorInPermissiveMode is " +
-                        "set to ErrorBehaviorInPermissiveMode.RETURN_MISSING",
-                    tc.expectedPermissiveModeResult
+                        "set to ErrorBehaviorInPermissiveMode.RETURN_MISSING"
                 )
 
                 // Compute the expected return value
@@ -229,23 +322,13 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
                 val actualReturnValueForPermissiveMode = permissiveModePipeline
                     .compile(tc.query).eval(session)
 
-                assertExprEquals(
-                    expectedExprValueForPermissiveMode,
-                    actualReturnValueForPermissiveMode,
-                    "(PERMISSIVE mode)"
-                )
+                if(!expectedExprValueForPermissiveMode.exprEquals(actualReturnValueForPermissiveMode)) {
+                    throw EvaluatorAssertionFailedError(
+                        EvaluatorTestFailureReason.UNEXPECTED_PERMISSIVE_MODE_RESULT,
+                        tc.testDetails(actualPermissiveModeResult = actualReturnValueForPermissiveMode.toString())
+                    )
+                }
             }
-        }
-    }
-
-    private fun assertExprEquals(expected: ExprValue, actual: ExprValue, message: String) {
-        // exprEquals consider NULL and MISSING to be equivalent so we also check types here
-        val isActuallyEquivalent = expected.type == actual.type && expected.exprEquals(actual)
-
-        if (!isActuallyEquivalent) {
-            println("Expected ionValue: ${ConfigurableExprValueFormatter.pretty.format(expected)} ")
-            println("Actual ionValue  : ${ConfigurableExprValueFormatter.pretty.format(actual)} ")
-            Assert.fail("$message Expected and actual ExprValue instances are not equivalent")
         }
     }
 }

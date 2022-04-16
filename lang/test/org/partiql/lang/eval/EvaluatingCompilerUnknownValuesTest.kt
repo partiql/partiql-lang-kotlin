@@ -36,7 +36,6 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     fun testUnknownPropagation(tc: EvaluatorTestCase) =
         runEvaluatorTestCase(
             tc = tc.copy(
-                implicitPermissiveModeTest = false,
                 compilerPipelineBuilderBlock = {
                     addFunction(
                         object : ExprFunction {
