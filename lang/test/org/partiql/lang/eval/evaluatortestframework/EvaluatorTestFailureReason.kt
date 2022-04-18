@@ -27,6 +27,6 @@ internal class EvaluatorAssertionFailedError(
     val reason: EvaluatorTestFailureReason,
     private val testDetails: String,
     cause: Throwable? = null
-): AssertionFailedError(reason.toString() + testDetails, cause) {
+) : AssertionFailedError(reason.toString() + testDetails, cause) {
     override val message: String? get() = "Failure reason: $reason\n$testDetails"
 }

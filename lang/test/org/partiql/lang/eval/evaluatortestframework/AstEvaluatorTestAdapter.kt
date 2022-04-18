@@ -37,7 +37,7 @@ fun EvaluatorTestCase.testDetails(actualResult: String? = null): String {
     b.appendLine("Group name      : $groupName")
     b.appendLine("Query           : $query")
     b.appendLine("Expected result : $expectedResult")
-    if(actualResult != null) {
+    if (actualResult != null) {
         b.appendLine("Actual result   : $actualResult")
     }
     b.appendLine("Result format   : $expectedResultFormat")
@@ -56,19 +56,19 @@ fun EvaluatorErrorTestCase.testDetails(
     b.appendLine("Group name                     : $groupName")
     b.appendLine("Query                          : $query")
     b.appendLine("Expected error code            : $expectedErrorCode")
-    if(actualErrorCode != null) {
+    if (actualErrorCode != null) {
         b.appendLine("Actual error code              : $actualErrorCode")
     }
     b.appendLine("Expected error context         : $expectedErrorContext")
-    if(actualErrorContext != null) {
+    if (actualErrorContext != null) {
         b.appendLine("Actual error context           : $actualErrorContext")
     }
     b.appendLine("Expected internal flag         : $expectedInternalFlag")
-    if(actualErrorContext != null) {
+    if (actualErrorContext != null) {
         b.appendLine("Actual internal flag           : $actualInternalFlag")
     }
     b.appendLine("Expected permissive mode result: $expectedPermissiveModeResult")
-    if(actualPermissiveModeResult != null) {
+    if (actualPermissiveModeResult != null) {
         b.appendLine("Actual permissive mode result  : $actualPermissiveModeResult")
     }
     return b.toString()
@@ -85,12 +85,14 @@ private fun assertEquals(
     }
 }
 
-private fun <T> assertDoesNotThrow(reason: EvaluatorTestFailureReason,
+private fun <T> assertDoesNotThrow(
+    reason: EvaluatorTestFailureReason,
     detailsBlock: () -> String,
-block: () -> T): T {
+    block: () -> T
+): T {
     try {
         return block()
-    }catch (ex: Throwable) {
+    } catch (ex: Throwable) {
         throw EvaluatorAssertionFailedError(reason, detailsBlock(), ex.cause)
     }
 }
@@ -104,15 +106,12 @@ private inline fun assertThrowsSqlException(
         block()
         // if we made it here, the test failed.
         throw EvaluatorAssertionFailedError(reason, detailsBlock())
-    }
-    catch (ex: SqlException) {
+    } catch (ex: SqlException) {
         return ex
     }
 }
 
-
 class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
-
 
     override fun runEvaluatorTestCase(tc: EvaluatorTestCase, session: EvaluationSession) {
         if (tc.implicitPermissiveModeTest) {
@@ -141,7 +140,6 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
             )
         }
     }
-
 
     /**
      * Runs the give test case once with the specified [session].
@@ -198,7 +196,8 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
                 if (!expectedResult.exprEquals(actualResult)) {
                     throw EvaluatorAssertionFailedError(
                         EvaluatorTestFailureReason.UNEXPECTED_QUERY_RESULT,
-                        tc.testDetails(actualResult.toString()))
+                        tc.testDetails(actualResult.toString())
+                    )
                 }
                 Unit
             }
@@ -213,7 +212,6 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
         }.let { }
         tc.extraResultAssertions(actualResult)
     }
-
 
     /** Runs an [EvaluatorErrorTestCase] once. */
     private fun privateRunEvaluatorErrorTestCase(
@@ -243,7 +241,7 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
             EvaluatorTestFailureReason.UNEXPECTED_ERROR_CODE
         ) { tc.testDetails(actualErrorCode = ex.errorCode.toString()) }
 
-        if(tc.expectedErrorContext != null) {
+        if (tc.expectedErrorContext != null) {
             assertEquals(
                 tc.expectedErrorContext,
                 ex.errorContext,
@@ -322,7 +320,7 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
                 val actualReturnValueForPermissiveMode = permissiveModePipeline
                     .compile(tc.query).eval(session)
 
-                if(!expectedExprValueForPermissiveMode.exprEquals(actualReturnValueForPermissiveMode)) {
+                if (!expectedExprValueForPermissiveMode.exprEquals(actualReturnValueForPermissiveMode)) {
                     throw EvaluatorAssertionFailedError(
                         EvaluatorTestFailureReason.UNEXPECTED_PERMISSIVE_MODE_RESULT,
                         tc.testDetails(actualPermissiveModeResult = actualReturnValueForPermissiveMode.toString())
