@@ -32,8 +32,9 @@ private fun EvaluatorTestDefinition.createPipeline(forcePermissiveMode: Boolean 
 }
 
 /** A generated and human readable description of this test case for display in assertion failure messages. */
-fun EvaluatorTestCase.testDetails(actualResult: String? = null): String {
+fun EvaluatorTestCase.testDetails(note: String, actualResult: String? = null): String {
     val b = StringBuilder()
+    b.appendLine("Note            : $note")
     b.appendLine("Group name      : $groupName")
     b.appendLine("Query           : $query")
     b.appendLine("Expected result : $expectedResult")
@@ -47,12 +48,14 @@ fun EvaluatorTestCase.testDetails(actualResult: String? = null): String {
 
 /** A generated and human readable description of this test case for display in assertion failure messages. */
 fun EvaluatorErrorTestCase.testDetails(
+    note: String,
     actualErrorCode: String? = null,
     actualErrorContext: PropertyValueMap? = null,
     actualPermissiveModeResult: String? = null,
     actualInternalFlag: Boolean? = null,
 ): String {
     val b = StringBuilder()
+    b.appendLine("Note                           : $note")
     b.appendLine("Group name                     : $groupName")
     b.appendLine("Query                          : $query")
     b.appendLine("Expected error code            : $expectedErrorCode")
@@ -147,13 +150,13 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
     private fun privateRunEvaluatorTestCase(
         tc: EvaluatorTestCase,
         session: EvaluationSession,
-        message: String,
+        note: String,
     ) {
         val pipeline = tc.createPipeline()
 
-        val actualResult = assertDoesNotThrow(
+        val actualExprValueResult = assertDoesNotThrow(
             EvaluatorTestFailureReason.FAILED_TO_EVALUATE_QUERY,
-            { tc.testDetails() }
+            { tc.testDetails(note) }
         ) {
             pipeline.compile(tc.query).eval(session)
         }
@@ -168,12 +171,12 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
             ExpectedResultFormat.ION, ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS -> {
                 val expectedIonResult = assertDoesNotThrow(
                     EvaluatorTestFailureReason.FAILED_TO_PARSE_ION_EXPECTED_RESULT,
-                    { tc.testDetails() }
+                    { tc.testDetails(note) }
                 ) {
                     ION.singleValue(expectedResult)
                 }
 
-                val actualIonResult = actualResult.ionValue.let {
+                val actualIonResult = actualExprValueResult.ionValue.let {
                     if (tc.expectedResultFormat == ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS)
                         it.cloneAndRemoveBagAndMissingAnnotations()
                     else
@@ -186,23 +189,23 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
                 ) { tc.testDetails(actualIonResult.toString()) }
             }
             ExpectedResultFormat.PARTIQL -> {
-                val expectedResult = assertDoesNotThrow(
+                val expectedExprValueResult = assertDoesNotThrow(
                     EvaluatorTestFailureReason.FAILED_TO_EVALUATE_PARTIQL_EXPECTED_RESULT,
-                    { tc.testDetails() }
+                    { tc.testDetails(note) }
                 ) {
                     pipeline.compile(expectedResult).eval(session)
                 }
 
-                if (!expectedResult.exprEquals(actualResult)) {
+                if (!expectedExprValueResult.exprEquals(actualExprValueResult)) {
                     throw EvaluatorAssertionFailedError(
                         EvaluatorTestFailureReason.UNEXPECTED_QUERY_RESULT,
-                        tc.testDetails(actualResult.toString())
+                        tc.testDetails(actualExprValueResult.toString())
                     )
                 }
                 Unit
             }
             ExpectedResultFormat.STRING -> {
-                val actualResultString = actualResult.toString()
+                val actualResultString = actualExprValueResult.toString()
                 assertEquals(
                     expectedResult,
                     actualResultString,
@@ -210,19 +213,20 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
                 ) { tc.testDetails(actualResultString) }
             }
         }.let { }
-        tc.extraResultAssertions(actualResult)
+        tc.extraResultAssertions(actualExprValueResult)
     }
 
     /** Runs an [EvaluatorErrorTestCase] once. */
     private fun privateRunEvaluatorErrorTestCase(
         tc: EvaluatorErrorTestCase,
-        session: EvaluationSession
+        session: EvaluationSession,
+        note: String
     ) {
         val compilerPipeline = tc.createPipeline()
 
         val ex = assertThrowsSqlException(
             EvaluatorTestFailureReason.EXPECTED_SQL_EXCEPTION_BUT_THERE_WAS_NONE,
-            { tc.testDetails() }
+            { tc.testDetails(note) }
         ) {
 
             // Note that an SqlException (usually a SemanticException or EvaluationException) might be thrown in
@@ -239,14 +243,14 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
             tc.expectedErrorCode,
             ex.errorCode,
             EvaluatorTestFailureReason.UNEXPECTED_ERROR_CODE
-        ) { tc.testDetails(actualErrorCode = ex.errorCode.toString()) }
+        ) { tc.testDetails(note, actualErrorCode = ex.errorCode.toString()) }
 
         if (tc.expectedErrorContext != null) {
             assertEquals(
                 tc.expectedErrorContext,
                 ex.errorContext,
                 EvaluatorTestFailureReason.UNEXPECTED_ERROR_CONTEXT
-            ) { tc.testDetails(actualErrorContext = ex.errorContext) }
+            ) { tc.testDetails(note, actualErrorContext = ex.errorContext) }
         }
 
         if (tc.expectedInternalFlag != null) {
@@ -254,7 +258,7 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
                 tc.expectedInternalFlag,
                 ex.internal,
                 EvaluatorTestFailureReason.UNEXPECTED_INTERNAL_FLAG
-            ) { tc.testDetails(actualInternalFlag = ex.internal) }
+            ) { tc.testDetails(note, actualInternalFlag = ex.internal) }
         }
 
         tc.additionalExceptionAssertBlock(ex)
@@ -272,13 +276,14 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
 
         // Run the query once with compile options unmodified.
         privateRunEvaluatorErrorTestCase(
-            tc.copy(
+            tc = tc.copy(
                 compileOptionsBuilderBlock = {
                     tc.compileOptionsBuilderBlock(this)
                     typingMode(TypingMode.LEGACY)
                 }
             ),
-            session
+            session = session,
+            note = "Typing mode forced to LEGACY"
         )
 
         when (tc.expectedErrorCode.errorBehaviorInPermissiveMode) {
@@ -298,7 +303,8 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
                             typingMode(TypingMode.PERMISSIVE)
                         }
                     ),
-                    session
+                    session,
+                    note = "Typing mode forced to PERMISSIVE"
                 )
             }
             ErrorBehaviorInPermissiveMode.RETURN_MISSING -> {
@@ -317,7 +323,7 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
                 val expectedExprValueForPermissiveMode =
                     assertDoesNotThrow(
                         EvaluatorTestFailureReason.FAILED_TO_EVALUATE_PARTIQL_EXPECTED_RESULT,
-                        { tc.testDetails() }
+                        { tc.testDetails("Evaluating expected permissive mode result") }
                     ) {
                         permissiveModePipeline.compile(tc.expectedPermissiveModeResult!!).eval(session)
                     }
@@ -325,7 +331,11 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
                 val actualReturnValueForPermissiveMode =
                     assertDoesNotThrow(
                         EvaluatorTestFailureReason.FAILED_TO_EVALUATE_QUERY,
-                        { tc.testDetails(tc.expectedPermissiveModeResult!!) }
+                        {
+                            tc.testDetails(
+                                "PERMISSIVE typing mode forced.  Query should throw in LEGACY mode but not in PERMISSIVE",
+                                tc.expectedPermissiveModeResult!!)
+                        }
                     ) {
                         permissiveModePipeline.compile(tc.query).eval(session)
                     }
@@ -333,7 +343,9 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
                 if (!expectedExprValueForPermissiveMode.exprEquals(actualReturnValueForPermissiveMode)) {
                     throw EvaluatorAssertionFailedError(
                         EvaluatorTestFailureReason.UNEXPECTED_PERMISSIVE_MODE_RESULT,
-                        tc.testDetails(actualPermissiveModeResult = actualReturnValueForPermissiveMode.toString())
+                        tc.testDetails(
+                            "PERMISSIVE typing mode forced.",
+                            actualPermissiveModeResult = actualReturnValueForPermissiveMode.toString())
                     )
                 }
             }
