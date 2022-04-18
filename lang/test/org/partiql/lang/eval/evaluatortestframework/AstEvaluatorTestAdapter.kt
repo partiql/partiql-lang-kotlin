@@ -334,7 +334,8 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
                         {
                             tc.testDetails(
                                 "PERMISSIVE typing mode forced.  Query should throw in LEGACY mode but not in PERMISSIVE",
-                                tc.expectedPermissiveModeResult!!)
+                                tc.expectedPermissiveModeResult!!
+                            )
                         }
                     ) {
                         permissiveModePipeline.compile(tc.query).eval(session)
@@ -345,7 +346,8 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
                         EvaluatorTestFailureReason.UNEXPECTED_PERMISSIVE_MODE_RESULT,
                         tc.testDetails(
                             "PERMISSIVE typing mode forced.",
-                            actualPermissiveModeResult = actualReturnValueForPermissiveMode.toString())
+                            actualPermissiveModeResult = actualReturnValueForPermissiveMode.toString()
+                        )
                     )
                 }
             }
