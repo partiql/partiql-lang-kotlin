@@ -31,11 +31,11 @@ class AstEvaluatorTestAdapterTests {
         assertEquals(expectedReason, ex.reason)
     }
 
-    class FooException() : Exception()
+    class FooException : Exception()
 
-    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //
     // runEvaluatorTestCase
-    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //
 
     @Test
     fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-ION`() {
@@ -300,24 +300,12 @@ class AstEvaluatorTestAdapterTests {
     }
 
     @Test
-    fun `runEvaluatorErrorTestCase - syntax error in query`() {
+    fun `runEvaluatorTestCase - syntax error in query`() {
         assertTestFails(
             EvaluatorTestFailureReason.FAILED_TO_EVALUATE_QUERY,
             EvaluatorTestCase(
                 query = "!@#$ syntax error intentional",
                 expectedResult = "Doesn't matter will throw before parsing this"
-            )
-        )
-    }
-
-    @Test
-    fun `runEvaluatorErrorTestCase - syntax error in expected result - ExpectedResultFormat-PARTIQL mode`() {
-        assertTestFails(
-            EvaluatorTestFailureReason.FAILED_TO_EVALUATE_PARTIQL_EXPECTED_RESULT,
-            EvaluatorTestCase(
-                query = "true",
-                expectedResult = "!@#$ syntax error intentional",
-                expectedResultFormat = ExpectedResultFormat.PARTIQL
             )
         )
     }
@@ -336,9 +324,9 @@ class AstEvaluatorTestAdapterTests {
         }
     }
 
-    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //
     // runEvaluatorErrorTestCase
-    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //
 
     @Test
     fun `runEvaluatorErrorTestCase - EXPECTED_SQL_EXCEPTION_BUT_THERE_WAS_NONE`() {
@@ -346,7 +334,8 @@ class AstEvaluatorTestAdapterTests {
             EvaluatorTestFailureReason.EXPECTED_SQL_EXCEPTION_BUT_THERE_WAS_NONE,
             EvaluatorErrorTestCase(
                 query = "1", // <-- does not throw an exception
-                expectedErrorCode = ErrorCode.INTERNAL_ERROR, // <-- doesn't matter since now exception is thrown anyway
+                expectedErrorCode = ErrorCode.INTERNAL_ERROR,
+                // ^ doesn't matter since now test correctly fails before this assertion is made
             )
         )
     }
@@ -359,6 +348,7 @@ class AstEvaluatorTestAdapterTests {
                 query = "undefined_function()",
                 expectedErrorCode = ErrorCode.INTERNAL_ERROR,
                 expectedPermissiveModeResult = "!@# syntax error"
+
             )
         )
     }
@@ -368,7 +358,7 @@ class AstEvaluatorTestAdapterTests {
         assertErrorTestFails(
             EvaluatorTestFailureReason.UNEXPECTED_ERROR_CONTEXT,
             EvaluatorErrorTestCase(
-                query = "undefined_function()", //
+                query = "undefined_function()",
                 expectedErrorCode = ErrorCode.EVALUATOR_NO_SUCH_FUNCTION,
                 expectedErrorContext = propertyValueMapOf(1, 2) // <-- incorrect char offset
             )
@@ -388,19 +378,31 @@ class AstEvaluatorTestAdapterTests {
     }
 
     @Test
-    fun `runEvaluatorErrorTestCase - UNEXPECTED_PERMISSIVE_MODE_RESULT`() {
+    fun `runEvaluatorErrorTestCase - FAILED_TO_EVALUATE_PARTIQL_EXPECTED_RESULT`() {
         assertErrorTestFails(
-            EvaluatorTestFailureReason.UNEXPECTED_PERMISSIVE_MODE_RESULT,
+            EvaluatorTestFailureReason.FAILED_TO_EVALUATE_PARTIQL_EXPECTED_RESULT,
             EvaluatorErrorTestCase(
-                query = "1 + 'foo'",
-                expectedErrorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE,
-                expectedPermissiveModeResult = "42" // <-- correct result is MISSING
+                query = "upper(1)",
+                expectedErrorCode = ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL,
+                expectedPermissiveModeResult = "undefined_function()" // <-- throws
             )
         )
     }
 
     @Test
-    fun `runEvaluatorErrorTestCase - addtitionalExceptionAssertBlock`() {
+    fun `runEvaluatorErrorTestCase - UNEXPECTED_PERMISSIVE_MODE_RESULT`() {
+        assertErrorTestFails(
+            EvaluatorTestFailureReason.UNEXPECTED_PERMISSIVE_MODE_RESULT,
+            EvaluatorErrorTestCase(
+                query = "upper(1)", // <-- throws in legacy mode but returns missing in permissive
+                expectedErrorCode = ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL,
+                expectedPermissiveModeResult = "42" // <-- result of upper(1) in permissive mode should be MISSING
+            )
+        )
+    }
+
+    @Test
+    fun `runEvaluatorErrorTestCase - additionalExceptionAssertBlock`() {
         assertThrows<FooException>("additionalExceptionAssertBlock should throw") {
             testAdapter.runEvaluatorErrorTestCase(
                 EvaluatorErrorTestCase(

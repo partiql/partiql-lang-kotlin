@@ -2,18 +2,9 @@ package org.partiql.lang.eval.evaluatortestframework
 
 import org.opentest4j.AssertionFailedError
 
-/*
-  Classes in this file all inherit from AssertionFailedError.  When they are thrown, they are treated like
-  any standard JUnit 5 assertion failure.  However, the unit tests [AstEvaluatorTestAdapterTests] can
-  assert that failures happen for a specific reason, instead of just that *any* assertion failed.  Otherwise,
-  it is extremely easy to have tests that falsely pass because the assertion failure happened for some other
-  reason.
-*/
-
 internal enum class EvaluatorTestFailureReason {
     FAILED_TO_PARSE_ION_EXPECTED_RESULT,
     FAILED_TO_EVALUATE_PARTIQL_EXPECTED_RESULT,
-    FAILED_TO_EVALUATE_PARTIQL_EXPECTED_PERMISSIVE_MODE_RESULT, // <-- only applies to EvaluatorErrorTestCase
     FAILED_TO_EVALUATE_QUERY,
     UNEXPECTED_QUERY_RESULT,
     UNEXPECTED_PERMISSIVE_MODE_RESULT, // <-- only applies to EvaluatorErrorTestCase
@@ -23,6 +14,12 @@ internal enum class EvaluatorTestFailureReason {
     EXPECTED_SQL_EXCEPTION_BUT_THERE_WAS_NONE
 }
 
+/**
+ * When this exception is thrown, the JUnit runner treats it like any failed assertion because it inherits from
+ * [AssertionFailedError].  Because of [reason], the unit tests of [EvaluatorTestAdapter] implementations can assert
+ * that test failures happen for a specific reason, instead of just that *any* assertion failed.  Without this, it is
+ * extremely easy to have tests that falsely pass because the assertion failure happened for some other reason.
+ */
 internal class EvaluatorAssertionFailedError(
     val reason: EvaluatorTestFailureReason,
     private val testDetails: String,

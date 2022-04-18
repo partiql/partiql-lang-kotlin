@@ -33,7 +33,7 @@ data class EvaluatorErrorTestCase(
     /**
      * The expected value of [org.partiql.lang.SqlException.internal].
      */
-    val expectedInternalFlag: Boolean? = false,
+    val expectedInternalFlag: Boolean? = null,
 
     /**
      * Expected result in the permissive mode. Default value is null.

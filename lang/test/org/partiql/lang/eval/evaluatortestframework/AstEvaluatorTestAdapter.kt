@@ -147,7 +147,7 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
     private fun privateRunEvaluatorTestCase(
         tc: EvaluatorTestCase,
         session: EvaluationSession,
-        todo: String,
+        message: String,
     ) {
         val pipeline = tc.createPipeline()
 
@@ -314,11 +314,21 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
                 // Compute the expected return value
                 val permissiveModePipeline = tc.createPipeline(forcePermissiveMode = true)
 
-                val expectedExprValueForPermissiveMode = permissiveModePipeline
-                    .compile(tc.expectedPermissiveModeResult!!).eval(session)
+                val expectedExprValueForPermissiveMode =
+                    assertDoesNotThrow(
+                        EvaluatorTestFailureReason.FAILED_TO_EVALUATE_PARTIQL_EXPECTED_RESULT,
+                        { tc.testDetails() }
+                    ) {
+                        permissiveModePipeline.compile(tc.expectedPermissiveModeResult!!).eval(session)
+                    }
 
-                val actualReturnValueForPermissiveMode = permissiveModePipeline
-                    .compile(tc.query).eval(session)
+                val actualReturnValueForPermissiveMode =
+                    assertDoesNotThrow(
+                        EvaluatorTestFailureReason.FAILED_TO_EVALUATE_QUERY,
+                        { tc.testDetails(tc.expectedPermissiveModeResult!!) }
+                    ) {
+                        permissiveModePipeline.compile(tc.query).eval(session)
+                    }
 
                 if (!expectedExprValueForPermissiveMode.exprEquals(actualReturnValueForPermissiveMode)) {
                     throw EvaluatorAssertionFailedError(
