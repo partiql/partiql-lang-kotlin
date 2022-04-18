@@ -34,7 +34,8 @@ enum class ExpectedResultFormat {
      * The expected value is an arbitrary string.  [org.partiql.lang.eval.ExprValue.toString]` is called on the result
      * of the query and the expected/actual assertion is performed with regular string equality.
      *
-     * This is suboptimal, but it is easier to support this here than it is to refactor hundreds of expected values.
+     * This is suboptimal (really, don't use this in new tests) but it is easier to support this here than it is to
+     * refactor hundreds of expected values.
      */
     STRING
 }

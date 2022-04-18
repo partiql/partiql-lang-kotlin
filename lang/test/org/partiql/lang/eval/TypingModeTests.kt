@@ -64,12 +64,12 @@ class TypingModeTests : EvaluatorTestBase() {
                 assertEquals(
                     "line number",
                     tc.expectedLegacyError.lineNum.toLong(),
-                    ex.errorContext[Property.LINE_NUMBER]?.longValue()
+                    ex.errorContext?.get(Property.LINE_NUMBER)?.longValue()
                 )
                 assertEquals(
                     "column number",
                     tc.expectedLegacyError.charOffset.toLong(),
-                    ex.errorContext[Property.COLUMN_NUMBER]?.longValue()
+                    ex.errorContext?.get(Property.COLUMN_NUMBER)?.longValue()
                 )
             }
         )

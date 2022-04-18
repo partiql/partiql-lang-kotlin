@@ -8,7 +8,7 @@ import org.junit.runner.RunWith
 import kotlin.test.assertEquals
 
 @RunWith(JUnitParamsRunner::class)
-class PatternPartTests {
+class PatternTests {
 
     data class TestCase(val pattern: String, val escapeChar: Int?, val input: String, val shouldMatch: Boolean)
 
@@ -151,7 +151,7 @@ class PatternPartTests {
     @Parameters
     fun patternTest(tc: TestCase) {
         val pat = parsePattern(tc.pattern, tc.escapeChar)
-        val actualMatches = executePattern(pat, tc.input)
+        val actualMatches = pat.matcher(tc.input).matches()
 
         Assert.assertEquals(tc.shouldMatch, actualMatches)
     }
@@ -159,24 +159,57 @@ class PatternPartTests {
     @Test
     fun patternParserTest() {
         // the parser should consider multiple consecutive % to be the same as one
-        val patParts = parsePattern("%%a%%%_%%% %%", escapeChar = null)
-        assertEquals(
-            listOf(
-                PatternPart.ZeroOrMoreOfAnyChar,
-                PatternPart.ExactChars("a".codePoints().toArray()),
-                PatternPart.ZeroOrMoreOfAnyChar,
-                PatternPart.AnyOneChar,
-                PatternPart.ZeroOrMoreOfAnyChar,
-                PatternPart.ExactChars(" ".codePoints().toArray()),
-                PatternPart.ZeroOrMoreOfAnyChar
-            ),
-            patParts
-        )
+        val pattern = parsePattern("%%a%%%_%%% %%", escapeChar = null)
+        assertEquals("^.*?\\Qa\\E.+?\\Q \\E.*?$", pattern.pattern())
     }
 
     @Test
     fun stressTest() {
         // makes absolutely certain we do not stack overflow on too many consecutive `%` characters
-        assertEquals(true, executePattern(parsePattern("%".repeat(10000) + "a", escapeChar = null), "aaaa"))
+        assertEquals(true, parsePattern("%".repeat(10000) + "a", escapeChar = null).matcher("aaaa").matches())
+    }
+
+    @Test
+    fun like() {
+        val escape = '\\'.toInt()
+
+        assertEquals("^\\Qfoo\\E$", parsePattern("foo", escape).pattern())
+
+        assertEquals("^.*?\\Qfoo\\E$", parsePattern("%foo", escape).pattern())
+        assertEquals("^\\Qfoo\\E.*?$", parsePattern("foo%", escape).pattern())
+        assertEquals("^\\Qfoo\\E.*?\\Qbar\\E$", parsePattern("foo%bar", escape).pattern())
+        assertEquals("^\\Qfoo\\E.*?\\Qbar\\E$", parsePattern("foo%%bar", escape).pattern())
+        assertEquals("^\\Qfoo\\E.*?\\Qbar\\E$", parsePattern("foo%%%bar", escape).pattern())
+        assertEquals("^\\Qfoo\\E.*?\\Qbar\\E$", parsePattern("foo%%%%bar", escape).pattern())
+        assertEquals(
+            "^.*?\\Qfoo\\E.*?\\Qbar\\E.*?$",
+            parsePattern("%foo%%%%bar%", escape).pattern(),
+        )
+        assertEquals(
+            "^.*?\\Qfoo\\E.*?\\Qbar%baz\\E.*?$",
+            parsePattern("%foo%%%%bar\\%baz%", escape).pattern(),
+        )
+        assertEquals(
+            "^.*?\\Qfoo\\E.*?\\Qbar%baz\\E.*?$",
+            parsePattern("%foo%%%%bar*%baz%", '*'.toInt()).pattern(),
+        )
+        assertEquals("^.\\Qfoo\\E$", parsePattern("_foo", escape).pattern())
+        assertEquals("^\\Qfoo\\E.$", parsePattern("foo_", escape).pattern())
+        assertEquals("^\\Qfoo\\E.\\Qbar\\E$", parsePattern("foo_bar", escape).pattern())
+        assertEquals("^\\Qfoo\\E.{2,2}\\Qbar\\E$", parsePattern("foo__bar", escape).pattern())
+        assertEquals("^\\Qfoo\\E.{2,}?\\Qbar\\E$", parsePattern("foo_%_bar", escape).pattern())
+        assertEquals("^\\Qfoo\\E.{2,}?\\Qbar\\E$", parsePattern("foo_%_%bar", escape).pattern())
+        assertEquals("^\\Qfoo\\E.{2,}?\\Qbar\\E$", parsePattern("foo%_%%_%bar", escape).pattern())
+        assertEquals(
+            "^\\Qfoo\\E.\\Q.*?\\E.\\Qbar\\E$",
+            parsePattern("foo_.*?_bar", escape).pattern(),
+        )
+    }
+
+    @Test
+    fun likeMatch() {
+        val pat = parsePattern("foo_.*?_bar", '\\'.toInt())
+
+        assert(pat.matcher("foos.*?qbar").matches())
     }
 }
