@@ -129,7 +129,7 @@ class AstEvaluatorTestAdapterTests {
                 EvaluatorTestCase(
                     query = "1 + MISSING",
                     expectedResult = "null",
-                    // note: In this ExpectedResultFormat we lose the f that this MISSING and not an
+                    // note: In this ExpectedResultFormat we lose the fact that this is MISSING and not an
                     // ordinary Ion null. This is unfortunate, but expected.
                     expectedPermissiveModeResult = "null",
                     expectedResultFormat = ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS
