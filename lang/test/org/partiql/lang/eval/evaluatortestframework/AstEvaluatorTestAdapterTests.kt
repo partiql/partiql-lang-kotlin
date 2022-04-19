@@ -200,7 +200,7 @@ class AstEvaluatorTestAdapterTests {
     }
 
     @Test
-    fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-PARTIQL mode`() {
+    fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS mode`() {
         assertDoesNotThrow("happy path - should not throw") {
             testAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
