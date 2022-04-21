@@ -70,8 +70,6 @@ import org.partiql.lang.eval.exprEquals
 import org.partiql.lang.eval.fillErrorContext
 import org.partiql.lang.eval.isNotUnknown
 import org.partiql.lang.eval.isUnknown
-import org.partiql.lang.eval.like.PatternPart
-import org.partiql.lang.eval.like.executePattern
 import org.partiql.lang.eval.like.parsePattern
 import org.partiql.lang.eval.name
 import org.partiql.lang.eval.namedValue
@@ -109,15 +107,16 @@ import org.partiql.lang.util.unaryMinus
 import java.math.BigDecimal
 import java.util.LinkedList
 import java.util.TreeSet
+import java.util.regex.Pattern
 import kotlin.collections.ArrayList
 
 /**
- * A basic compiler that converts an instance of [PartiqlPhysical.Expr] to an [Expression].
+ * A basic "compiler" that converts an instance of [PartiqlPhysical.Expr] to an [Expression].
  *
  * This is a modified copy of the legacy `EvaluatingCompiler` class, which is now legacy.
  * The primary differences between this class an `EvaluatingCompiler` are:
  *
- * - All references to `PartiqlAst` are replaced with `PartiqlPhysical`.
+ * - All references to `PartiqlPhysical` are replaced with `PartiqlPhysical`.
  * - `EvaluatingCompiler` compiles "monolithic" SFW queries--this class compiles relational
  * operators (in concert with [PhysicalBexprToThunkConverter]).
  *
@@ -1629,9 +1628,8 @@ internal class PhysicalExprToThunkConverterImpl(
         val patternLocationMeta = patternExpr.metas.toPartiQlMetaContainer().sourceLocation
         val escapeLocationMeta = escapeExpr?.metas?.toPartiQlMetaContainer()?.sourceLocation
 
-        // Note that the return value is a nullable and deferred.
         // This is so that null short-circuits can be supported.
-        fun getPatternParts(pattern: ExprValue, escape: ExprValue?): (() -> List<PatternPart>)? {
+        fun getRegexPattern(pattern: ExprValue, escape: ExprValue?): (() -> Pattern)? {
             val patternArgs = listOfNotNull(pattern, escape)
             when {
                 patternArgs.any { it.type.isUnknown } -> return null
@@ -1649,18 +1647,18 @@ internal class PhysicalExprToThunkConverterImpl(
                 else -> {
                     val (patternString: String, escapeChar: Int?) =
                         checkPattern(pattern.ionValue, patternLocationMeta, escape?.ionValue, escapeLocationMeta)
-                    val patternParts = when {
-                        patternString.isEmpty() -> emptyList()
+                    val likeRegexPattern = when {
+                        patternString.isEmpty() -> Pattern.compile("")
                         else -> parsePattern(patternString, escapeChar)
                     }
-                    return { patternParts }
+                    return { likeRegexPattern }
                 }
             }
         }
 
-        fun runPatternParts(value: ExprValue, patternParts: (() -> List<PatternPart>)?): ExprValue {
+        fun matchRegexPattern(value: ExprValue, likePattern: (() -> Pattern)?): ExprValue {
             return when {
-                patternParts == null || value.type.isUnknown -> valueFactory.nullValue
+                likePattern == null || value.type.isUnknown -> valueFactory.nullValue
                 !value.type.isText -> err(
                     "LIKE expression must be given non-null strings as input",
                     ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
@@ -1669,7 +1667,7 @@ internal class PhysicalExprToThunkConverterImpl(
                     },
                     internal = false
                 )
-                else -> valueFactory.newBoolean(executePattern(patternParts(), value.stringValue()))
+                else -> valueFactory.newBoolean(likePattern().matcher(value.stringValue()).matches())
             }
         }
 
@@ -1679,7 +1677,7 @@ internal class PhysicalExprToThunkConverterImpl(
         // re-use it with every execution. Otherwise, we must re-compile the pattern every time.
         return when {
             patternExpr is PartiqlPhysical.Expr.Lit && (escapeExpr == null || escapeExpr is PartiqlPhysical.Expr.Lit) -> {
-                val patternParts = getPatternParts(
+                val patternParts = getRegexPattern(
                     valueFactory.newFromIonValue(patternExpr.value.toIonValue(valueFactory.ion)),
                     (escapeExpr as? PartiqlPhysical.Expr.Lit)?.value?.toIonValue(valueFactory.ion)
                         ?.let { valueFactory.newFromIonValue(it) }
@@ -1687,14 +1685,14 @@ internal class PhysicalExprToThunkConverterImpl(
 
                 // If valueExpr is also a literal then we can evaluate this at compile time and return a constant.
                 if (valueExpr is PartiqlPhysical.Expr.Lit) {
-                    val resultValue = runPatternParts(
+                    val resultValue = matchRegexPattern(
                         valueFactory.newFromIonValue(valueExpr.value.toIonValue(valueFactory.ion)),
                         patternParts
                     )
                     return thunkFactory.thunkEnv(metas) { resultValue }
                 } else {
                     thunkFactory.thunkEnvOperands(metas, valueThunk) { _, value ->
-                        runPatternParts(value, patternParts)
+                        matchRegexPattern(value, patternParts)
                     }
                 }
             }
@@ -1704,8 +1702,8 @@ internal class PhysicalExprToThunkConverterImpl(
                     null -> {
                         // thunk that re-compiles the DFA every evaluation without a custom escape sequence
                         thunkFactory.thunkEnvOperands(metas, valueThunk, patternThunk) { _, value, pattern ->
-                            val pps = getPatternParts(pattern, null)
-                            runPatternParts(value, pps)
+                            val pps = getRegexPattern(pattern, null)
+                            matchRegexPattern(value, pps)
                         }
                     }
                     else -> {
@@ -1717,8 +1715,8 @@ internal class PhysicalExprToThunkConverterImpl(
                             patternThunk,
                             escapeThunk
                         ) { _, value, pattern, escape ->
-                            val pps = getPatternParts(pattern, escape)
-                            runPatternParts(value, pps)
+                            val pps = getRegexPattern(pattern, escape)
+                            matchRegexPattern(value, pps)
                         }
                     }
                 }

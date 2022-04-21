@@ -402,29 +402,6 @@ internal abstract class ThunkFactory<TEnv>(
         return exception
     }
 
-    /** Populates [exception] with the line & column from the specified [SourceLocationMeta]. */
-    protected fun populateErrorContext(
-        exception: EvaluationException,
-        sourceLocation: SourceLocationMeta?
-    ) = when (exception.errorContext) {
-        null ->
-            EvaluationException(
-                message = exception.message,
-                errorCode = exception.errorCode,
-                errorContext = errorContextFrom(sourceLocation),
-                cause = exception,
-                internal = exception.internal
-            )
-        else -> {
-            // Only add source location data to the error context if it doesn't already exist
-            // in [errorContext].
-            if (!exception.errorContext.hasProperty(Property.LINE_NUMBER)) {
-                sourceLocation?.let { fillErrorContext(exception.errorContext, sourceLocation) }
-            }
-            exception
-        }
-    }
-
     /**
      * Handles exceptions appropriately for a run-time [Thunk<TEnv>].
      *
