@@ -20,6 +20,7 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
@@ -622,166 +623,243 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     // ////////////////////////////////////////////////
 
     @Test
-    fun aggregateSumWithNull() = runEvaluatorTestCase("SELECT sum(x.n) from nullSample as x", nullSample, "[{_1: 4}]")
+    fun aggregateSumWithNull() = runEvaluatorTestCase(
+        "SELECT sum(x.n) from nullSample as x",
+        nullSample,
+        "[{_1: 4}]",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
+    )
 
     @Test
     fun aggregateSumWithMissing() = runEvaluatorTestCase(
         "SELECT sum(x.n) from missingSample as x",
         missingSample,
-        "[{_1: 3}]"
+        "[{_1: 3}]",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
     @Test
     fun aggregateSumWithMissingAndNull() = runEvaluatorTestCase(
         "SELECT sum(x.n) from missingAndNullSample as x",
         missingAndNullSample,
-        "[{_1: 9}]"
+        "[{_1: 9}]",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
     @Test
-    fun aggregateMinWithNull() = runEvaluatorTestCase("SELECT min(x.n) from nullSample as x", nullSample, "[{_1: 1}]")
+    fun aggregateMinWithNull() = runEvaluatorTestCase(
+        "SELECT min(x.n) from nullSample as x",
+        nullSample,
+        "[{_1: 1}]",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
+    )
 
     @Test
     fun aggregateMinWithMissing() = runEvaluatorTestCase(
         "SELECT min(x.n) from missingSample as x",
         missingSample,
-        "[{_1: 1}]"
+        "[{_1: 1}]",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
     @Test
     fun aggregateMinWithMissingAndNull() = runEvaluatorTestCase(
         "SELECT min(x.n) from missingAndNullSample as x",
         missingAndNullSample,
-        "[{_1: 2}]"
+        "[{_1: 2}]",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
     @Test
-    fun aggregateAvgWithNull() = runEvaluatorTestCase("SELECT avg(x.n) from nullSample as x", nullSample, "[{_1: 2.}]")
+    fun aggregateAvgWithNull() = runEvaluatorTestCase(
+        "SELECT avg(x.n) from nullSample as x",
+        nullSample,
+        "[{_1: 2.}]",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
+    )
 
     @Test
     fun aggregateAvgWithMissing() = runEvaluatorTestCase(
         "SELECT avg(x.n) from missingSample as x",
         missingSample,
-        "[{_1: 1.5}]"
+        "[{_1: 1.5}]",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
     @Test
     fun aggregateAvgWithMissingAndNull() = runEvaluatorTestCase(
         "SELECT avg(x.n) from missingAndNullSample as x",
         missingAndNullSample,
-        "[{_1: 3.}]"
+        "[{_1: 3.}]",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
     @Test
     fun aggregateCountWithNull() = runEvaluatorTestCase(
         "SELECT count(x.n) from nullSample as x",
         nullSample,
-        "[{_1: 2}]"
+        "[{_1: 2}]",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
     @Test
     fun aggregateCountWithMissing() = runEvaluatorTestCase(
         "SELECT count(x.n) from missingSample as x",
         missingSample,
-        "[{_1: 2}]"
+        "[{_1: 2}]",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
     @Test
     fun aggregateCountWithMissingAndNull() = runEvaluatorTestCase(
         "SELECT count(x.n) from missingAndNullSample as x",
         missingAndNullSample,
-        "[{_1: 3}]"
+        "[{_1: 3}]",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
     @Test
-    fun countEmpty() = runEvaluatorTestCase("SELECT count(*) from `[]`", expectedResult = "[{_1: 0}]")
+    fun countEmpty() = runEvaluatorTestCase(
+        "SELECT count(*) from `[]`",
+        expectedResult = "[{_1: 0}]",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
+    )
 
     @Test
     fun countEmptyTuple() =
-        runEvaluatorTestCase("SELECT count(*) from `[{}]`", expectedResult = "[{_1: 1}]")
+        runEvaluatorTestCase(
+            "SELECT count(*) from `[{}]`",
+            expectedResult = "[{_1: 1}]",
+            target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
+        )
 
     @Test
-    fun sumEmpty() = runEvaluatorTestCase("SELECT sum(x.i) from `[]` as x", expectedResult = "[{_1: null}]")
+    fun sumEmpty() = runEvaluatorTestCase(
+        "SELECT sum(x.i) from `[]` as x",
+        expectedResult = "[{_1: null}]",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
+    )
 
     @Test
     fun sumEmptyTuple() =
-        runEvaluatorTestCase("SELECT sum(x.i) from `[{}]` as x", expectedResult = "[{_1: null}]")
+        runEvaluatorTestCase(
+            "SELECT sum(x.i) from `[{}]` as x",
+            expectedResult = "[{_1: null}]",
+            target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
+        )
 
     @Test
-    fun avgEmpty() = runEvaluatorTestCase("SELECT avg(x.i) from `[]` as x", expectedResult = "[{_1: null}]")
+    fun avgEmpty() = runEvaluatorTestCase(
+        "SELECT avg(x.i) from `[]` as x",
+        expectedResult = "[{_1: null}]",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
+    )
 
     @Test
     fun avgEmptyTuple() =
-        runEvaluatorTestCase("SELECT avg(x.i) from `[{}]` as x", expectedResult = "[{_1: null}]")
+        runEvaluatorTestCase(
+            "SELECT avg(x.i) from `[{}]` as x",
+            expectedResult = "[{_1: null}]",
+            target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
+        )
 
     @Test
     fun avgSomeEmptyTuples() = runEvaluatorTestCase(
         "SELECT avg(x.i) from `[{i: 1}, {}, {i:3}]` as x",
-        expectedResult = "[{_1: 2.}]"
+        expectedResult = "[{_1: 2.}]",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
     @Test
     fun avgSomeEmptyAndNullTuples() = runEvaluatorTestCase(
         "SELECT avg(x.i) from `[{i: 1}, {}, {i:null}, {i:3}]` as x",
-        expectedResult = "[{_1: 2.}]"
+        expectedResult = "[{_1: 2.}]",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
     @Test
     fun minSomeEmptyTuples() = runEvaluatorTestCase(
         "SELECT min(x.i) from `[{i: null}, {}, {i:3}]` as x",
-        expectedResult = "[{_1: 3}]"
+        expectedResult = "[{_1: 3}]",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
     @Test
     fun maxSomeEmptyTuples() = runEvaluatorTestCase(
         "SELECT max(x.i) from `[{i: null}, {}, {i:3}, {i:10}]` as x",
-        expectedResult = "[{_1: 10}]"
+        expectedResult = "[{_1: 10}]",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
     @Test
-    fun minEmpty() = runEvaluatorTestCase("SELECT min(x.i) from `[]` as x", expectedResult = "[{_1: null}]")
+    fun minEmpty() = runEvaluatorTestCase(
+        "SELECT min(x.i) from `[]` as x",
+        expectedResult = "[{_1: null}]",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
+    )
 
     @Test
     fun minEmptyTuple() =
-        runEvaluatorTestCase("SELECT min(x.i) from `[{}]` as x", expectedResult = "[{_1: null}]")
+        runEvaluatorTestCase(
+            "SELECT min(x.i) from `[{}]` as x",
+            expectedResult = "[{_1: null}]",
+            target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
+        )
 
     @Test
-    fun maxEmpty() = runEvaluatorTestCase("SELECT max(x.i) from `[]` as x", expectedResult = "[{_1: null}]")
+    fun maxEmpty() = runEvaluatorTestCase(
+        "SELECT max(x.i) from `[]` as x",
+        expectedResult = "[{_1: null}]",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
+    )
 
     @Test
     fun maxEmptyTuple() =
-        runEvaluatorTestCase("SELECT max(x.i) from `[{}]` as x", expectedResult = "[{_1: null}]")
+        runEvaluatorTestCase(
+            "SELECT max(x.i) from `[{}]` as x",
+            expectedResult = "[{_1: null}]",
+            target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
+        )
 
     @Test
     fun maxSomeEmptyTuple() = runEvaluatorTestCase(
         "SELECT max(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
-        expectedResult = "[{_1: 2}]"
+        expectedResult = "[{_1: 2}]",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
     @Test
     fun minSomeEmptyTuple() = runEvaluatorTestCase(
         "SELECT min(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
-        expectedResult = "[{_1: 1}]"
+        expectedResult = "[{_1: 1}]",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
     @Test
     fun sumSomeEmptyTuple() = runEvaluatorTestCase(
         "SELECT sum(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
-        expectedResult = "[{_1: 3}]"
+        expectedResult = "[{_1: 3}]",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
     @Test
     fun countSomeEmptyTuple() = runEvaluatorTestCase(
         "SELECT count(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
-        expectedResult = "[{_1: 2}]"
+        expectedResult = "[{_1: 2}]",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
     @Test
     fun countStar() = runEvaluatorTestCase(
         "SELECT count(*) from `[{}, {i:1}, {}, {i:2}]` as x",
-        expectedResult = "[{_1: 4}]"
+        expectedResult = "[{_1: 4}]",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
     @Test
     fun countLiteral() =
-        runEvaluatorTestCase("SELECT count(1) from `[{}, {}, {}, {}]` as x", expectedResult = "[{_1: 4}]")
+        runEvaluatorTestCase(
+            "SELECT count(1) from `[{}, {}, {}, {}]` as x",
+            expectedResult = "[{_1: 4}]",
+            target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
+        )
 }

@@ -16,7 +16,6 @@ package org.partiql.lang.planner
 
 import org.partiql.lang.eval.ProjectionIterationBehavior
 import org.partiql.lang.eval.ThunkOptions
-import org.partiql.lang.eval.ThunkReturnTypeAssertions
 import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.util.BuilderDsl
@@ -39,7 +38,7 @@ compatibility on behalf of a customer we don't have anymore.  Internal bug numbe
  * Specifies options that effect the behavior of the PartiQL physical plan evaluator.
  *
  * @param defaultTimezoneOffset Default timezone offset to be used when TIME WITH TIME ZONE does not explicitly
- * specify the time zone. Defaults to [ZoneOffset.UTC]
+ * specify the time zone. Defaults to [ZoneOffset.UTC].
  */
 @Suppress("DataClassPrivateConstructor")
 data class EvaluatorOptions private constructor (
@@ -47,7 +46,6 @@ data class EvaluatorOptions private constructor (
     val thunkOptions: ThunkOptions = ThunkOptions.standard(),
     val typingMode: TypingMode = TypingMode.LEGACY,
     val typedOpBehavior: TypedOpBehavior = TypedOpBehavior.LEGACY,
-    val thunkReturnTypeAssertions: ThunkReturnTypeAssertions = ThunkReturnTypeAssertions.DISABLED,
     val defaultTimezoneOffset: ZoneOffset = ZoneOffset.UTC
 ) {
     companion object {
@@ -91,7 +89,6 @@ data class EvaluatorOptions private constructor (
         fun typingMode(value: TypingMode) = set { copy(typingMode = value) }
         fun typedOpBehavior(value: TypedOpBehavior) = set { copy(typedOpBehavior = value) }
         fun thunkOptions(value: ThunkOptions) = set { copy(thunkOptions = value) }
-        fun evaluationTimeTypeChecks(value: ThunkReturnTypeAssertions) = set { copy(thunkReturnTypeAssertions = value) }
         fun defaultTimezoneOffset(value: ZoneOffset) = set { copy(defaultTimezoneOffset = value) }
 
         private inline fun set(block: EvaluatorOptions.() -> EvaluatorOptions): Builder {

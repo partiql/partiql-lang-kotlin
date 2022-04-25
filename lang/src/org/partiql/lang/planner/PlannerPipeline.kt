@@ -129,27 +129,38 @@ interface PlannerPipeline {
             }
         }
 
+    @Suppress("DeprecatedCallableAddReplaceWith", "DEPRECATION")
     companion object {
+        private const val WARNING = "WARNING: PlannerPipeline is EXPERIMENTAL and has incomplete language support! " +
+            "For production use, see org.partiql.lang.CompilerPipeline which is stable and supports all PartiQL " +
+            "features."
+
         /** Kotlin style builder for [PlannerPipeline].  If calling from Java instead use [builder]. */
+        @Deprecated(WARNING)
         fun build(ion: IonSystem, block: Builder.() -> Unit) = build(ExprValueFactory.standard(ion), block)
 
         /** Kotlin style builder for [PlannerPipeline].  If calling from Java instead use [builder]. */
+        @Deprecated(WARNING)
         fun build(valueFactory: ExprValueFactory, block: Builder.() -> Unit) = Builder(valueFactory).apply(block).build()
 
         /** Fluent style builder.  If calling from Kotlin instead use the [build] method. */
         @JvmStatic
+        @Deprecated(WARNING)
         fun builder(ion: IonSystem): Builder = builder(ExprValueFactory.standard(ion))
 
         /** Fluent style builder.  If calling from Kotlin instead use the [build] method. */
         @JvmStatic
+        @Deprecated(WARNING)
         fun builder(valueFactory: ExprValueFactory): Builder = Builder(valueFactory)
 
         /** Returns an implementation of [PlannerPipeline] with all properties set to their defaults. */
         @JvmStatic
+        @Deprecated(WARNING)
         fun standard(ion: IonSystem): PlannerPipeline = standard(ExprValueFactory.standard(ion))
 
         /** Returns an implementation of [PlannerPipeline] with all properties set to their defaults. */
         @JvmStatic
+        @Deprecated(WARNING)
         fun standard(valueFactory: ExprValueFactory): PlannerPipeline = builder(valueFactory).build()
     }
 
@@ -167,6 +178,7 @@ interface PlannerPipeline {
         private val customProcedures: MutableMap<String, StoredProcedure> = HashMap()
         private var globalBindings: GlobalBindings = emptyGlobalBindings()
         private var allowUndefinedVariables: Boolean = false
+        private var enableLegacyExceptionHandling: Boolean = false
 
         /**
          * Specifies the [Parser] to be used to turn an PartiQL query into an instance of [PartiqlAst].
@@ -239,6 +251,15 @@ interface PlannerPipeline {
             this.allowUndefinedVariables = allow
         }
 
+        /**
+         * Prevents [SqlException] that occur during compilation from being converted into [Problem]s.
+         *
+         * This is for compatibility with the unit test suite, which hasn't been updated to handle [Problem]s yet.
+         */
+        internal fun enableLegacyExceptionHandling(): Builder = this.apply {
+            enableLegacyExceptionHandling = true
+        }
+
         /** Builds the actual implementation of [PlannerPipeline]. */
         fun build(): PlannerPipeline {
             val compileOptionsToUse = evaluatorOptions ?: EvaluatorOptions.standard()
@@ -261,13 +282,14 @@ interface PlannerPipeline {
 
             return PlannerPipelineImpl(
                 valueFactory = valueFactory,
-                parser = parser ?: SqlParser(valueFactory.ion),
+                parser = parser ?: SqlParser(valueFactory.ion, this.customDataTypes),
                 evaluatorOptions = compileOptionsToUse,
                 functions = allFunctions,
                 customDataTypes = customDataTypes,
                 procedures = customProcedures,
                 globalBindings = globalBindings,
-                allowUndefinedVariables = allowUndefinedVariables
+                allowUndefinedVariables = allowUndefinedVariables,
+                enableLegacyExceptionHandling = enableLegacyExceptionHandling
             )
         }
     }
@@ -281,7 +303,8 @@ internal class PlannerPipelineImpl(
     val customDataTypes: List<CustomType>,
     val procedures: Map<String, StoredProcedure>,
     val globalBindings: GlobalBindings,
-    val allowUndefinedVariables: Boolean
+    val allowUndefinedVariables: Boolean,
+    val enableLegacyExceptionHandling: Boolean
 ) : PlannerPipeline {
 
     init {
@@ -358,17 +381,24 @@ internal class PlannerPipelineImpl(
             evaluatorOptions = evaluatorOptions
         )
 
-        val expression = try {
-            compiler.compile(physcialPlan)
-        } catch (e: SqlException) {
-            val problem = Problem(
-                SourceLocationMeta(
-                    e.errorContext[Property.LINE_NUMBER]?.longValue() ?: -1,
-                    e.errorContext[Property.COLUMN_NUMBER]?.longValue() ?: -1
-                ),
-                PlanningProblemDetails.CompileError(e.generateMessageNoLocation())
-            )
-            return PassResult.Error(listOf(problem))
+        val expression = when {
+            enableLegacyExceptionHandling -> compiler.compile(physcialPlan)
+            else -> {
+                // Legacy exception handling is disabled, convert any [SqlException] into a Problem and return
+                // PassResult.Error.
+                try {
+                    compiler.compile(physcialPlan)
+                } catch (e: SqlException) {
+                    val problem = Problem(
+                        SourceLocationMeta(
+                            e.errorContext[Property.LINE_NUMBER]?.longValue() ?: -1,
+                            e.errorContext[Property.COLUMN_NUMBER]?.longValue() ?: -1
+                        ),
+                        PlanningProblemDetails.CompileError(e.generateMessageNoLocation())
+                    )
+                    return PassResult.Error(listOf(problem))
+                }
+            }
         }
 
         return PassResult.Success(expression, listOf())

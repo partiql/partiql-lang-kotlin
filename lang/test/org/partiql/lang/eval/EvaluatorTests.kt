@@ -17,6 +17,7 @@ package org.partiql.lang.eval
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.lang.ION
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.util.testdsl.IonResultTestCase
 import org.partiql.lang.util.testdsl.runTestCase
 
@@ -25,20 +26,19 @@ class EvaluatorTests {
     private val mockDb = EVALUATOR_TEST_SUITE.mockDb(valueFactory)
 
     companion object {
-        val SKIP_LIST = hashSetOf(
+        val AST_EVALUATOR_SKIP_LIST = hashSetOf(
             // https://github.com/partiql/partiql-lang-kotlin/issues/169
             "selectDistinctStarLists", "selectDistinctStarBags", "selectDistinctStarMixed",
 
             // https://github.com/partiql/partiql-lang-kotlin/issues/336
             "projectionIterationBehaviorUnfiltered_select_list",
-            "projectionIterationBehaviorUnfiltered_select_star",
+            "projectionIterationBehaviorUnfiltered_select_star"
         )
 
-        /** Test cases for `definedGlobalVariableTests`. */
         @JvmStatic
         @Suppress("UNUSED")
-        fun definedVariableTestCases(): List<IonResultTestCase> {
-            val unskippedTests = EVALUATOR_TEST_SUITE.getAllTests(SKIP_LIST)
+        fun astEvaluatorTests(): List<IonResultTestCase> {
+            val unskippedTests = EVALUATOR_TEST_SUITE.getAllTests(AST_EVALUATOR_SKIP_LIST)
 
             return unskippedTests.map {
                 it.copy(
@@ -60,98 +60,71 @@ class EvaluatorTests {
                 }
         }
 
-        /** Test cases for `undefinedGlobalVariableTests`. */
+        private val PLAN_EVALUATOR_SKIP_LIST = hashSetOf(
+            // below this line use features not supported by the current physical algebra compiler.
+            // most fail due to not supporting foundational nodes like id, global_id and scan yet.
+            // PartiQL's test cases are not all that cleanly separated.
+            "selectCorrelatedUnpivot", // TODO: Support UNPIVOT in physical plans
+            "nestedSelectJoinWithUnpivot", // TODO: Support UNPIVOT in physical plans
+            "nestedSelectJoinLimit", // TODO: Support UNPIVOT in physical plans
+            "pivotFrom", // TODO: Support PIVOT in physical plans
+            "pivotLiteralFieldNameFrom", // TODO: Support PIVOT in physical plans
+            "pivotBadFieldType", // TODO: Support PIVOT in physical plans
+            "pivotUnpivotWithWhereLimit", // TODO: Support PIVOT in physical plans
+            "topLevelCountDistinct", // TODO: Support aggregates in physical plans
+            "topLevelCount", // TODO: Support aggregates in physical plans
+            "topLevelAllCount", // TODO: Support aggregates in physical plans
+            "topLevelSum", // TODO: Support aggregates in physical plans
+            "topLevelAllSum", // TODO: Support aggregates in physical plans
+            "topLevelDistinctSum", // TODO: Support aggregates in physical plans
+            "topLevelMin", // TODO: Support aggregates in physical plans
+            "topLevelDistinctMin", // TODO: Support aggregates in physical plans
+            "topLevelAllMin", // TODO: Support aggregates in physical plans
+            "topLevelMax", // TODO: Support aggregates in physical plans
+            "topLevelDistinctMax", // TODO: Support aggregates in physical plans
+            "topLevelAllMax", // TODO: Support aggregates in physical plans
+            "topLevelAvg", // TODO: Support aggregates in physical plans
+            "topLevelDistinctAvg", // TODO: Support aggregates in physical plans
+            "topLevelAvgOnlyInt", // TODO: Support aggregates in physical plans
+            "selectValueAggregate", // TODO: Support aggregates in physical plans
+            "selectListCountStar", // TODO: Support aggregates in physical plans
+            "selectListCountVariable", // TODO: Support aggregates in physical plans
+            "selectListMultipleAggregates", // TODO: Support aggregates in physical plans
+            "selectListMultipleAggregatesNestedQuery", // TODO: Support aggregates in physical plans
+            "aggregateInSubqueryOfSelect", // TODO: Support aggregates in physical plans
+            "aggregateInSubqueryOfSelectValue", // TODO: Support aggregates in physical plans
+            "aggregateWithAliasingInSubqueryOfSelectValue", // TODO: Support aggregates in physical plans
+            "selectDistinctWithAggregate", // TODO: Support aggregates in physical plans
+            "selectDistinctAggregationWithGroupBy", // TODO: Support GROUP BY in physical plans
+            "selectDistinctWithGroupBy", // TODO: Support GROUP BY in physical plans
+            "unpivotMissing", // TODO: Support UNPIVOT in physical plans
+            "unpivotEmptyStruct", // TODO: Support UNPIVOT in physical plans
+            "unpivotMissingWithAsAndAt", // TODO: Support UNPIVOT in physical plans
+            "unpivotMissingCrossJoinWithAsAndAt", // TODO: Support UNPIVOT in physical plans
+        )
+
         @JvmStatic
         @Suppress("UNUSED")
-        fun undefinedVariableTestCases(): List<IonResultTestCase> {
-            val testCasesWithVariablesThatShadowGlobal = setOf(
-                "variableShadow",
-                "selectNonCorrelatedJoin",
-                "joinWithShadowedGlobal",
-            )
-            return definedVariableTestCases().map { tc ->
-                tc.takeIf { it.name in testCasesWithVariablesThatShadowGlobal }?.copy(expectFailure = true) ?: tc
-            }
-        }
+        fun planEvaluatorTests(): List<IonResultTestCase> =
+            // Since the physical plan evaluator is a modified copy of the AST evaluator, it inherits the
+            // AST evaluator's current skip list.  The physical plan evaluator also doesn't yet implement
+            // everything that the AST evaluator does, so has a separate skip list.
+            astEvaluatorTests().filter { it.name !in PLAN_EVALUATOR_SKIP_LIST }
     }
 
     @ParameterizedTest
-    @MethodSource("definedVariableTestCases")
-    fun definedGlobalVariableTests(tc: IonResultTestCase) = tc.runTestCase(
-        valueFactory,
-        mockDb
+    @MethodSource("astEvaluatorTests")
+    fun allAstEvaluatortests(tc: IonResultTestCase) = tc.runTestCase(
+        valueFactory = valueFactory,
+        db = mockDb,
+        target = EvaluatorTestTarget.COMPILER_PIPELINE
     )
 
-    // DL TODO: restore these tests for new phys. plan compiler
-
-//    val PHYS_COMPILER_SKIP_LIST = hashSetOf(
-//
-//        // below this line use features not supported by the current physical algebra compiler.
-//        // most fail due to not supporting foundational nodes like id, global_id and scan yet.
-//        // PartiQL's test cases are not all that cleanly separated.
-//        "selectCorrelatedUnpivot", // TODO: PHYS_ALGEBRA_REFACTOR_UNPIVOT
-//        "nestedSelectJoinWithUnpivot", // TODO: PHYS_ALGEBRA_REFACTOR_UNPIVOT
-//        "nestedSelectJoinLimit", // TODO: PHYS_ALGEBRA_REFACTOR_UNPIVOT
-//        "pivotFrom", // TODO: PHYS_ALGEBRA_REFACTOR_PIVOT
-//        "pivotLiteralFieldNameFrom", // TODO: PHYS_ALGEBRA_REFACTOR_PIVOT
-//        "pivotBadFieldType", // TODO: PHYS_ALGEBRA_REFACTOR_PIVOT
-//        "pivotUnpivotWithWhereLimit", // TODO: PHYS_ALGEBRA_REFACTOR_PIVOT
-//        "topLevelCountDistinct", // TODO: PHYS_ALGEBRA_REFACTOR_CALL_AGG
-//        "topLevelCount", // TODO: PHYS_ALGEBRA_REFACTOR_CALL_AGG
-//        "topLevelAllCount", // TODO: PHYS_ALGEBRA_REFACTOR_CALL_AGG
-//        "topLevelSum", // TODO: PHYS_ALGEBRA_REFACTOR_CALL_AGG
-//        "topLevelAllSum", // TODO: PHYS_ALGEBRA_REFACTOR_CALL_AGG
-//        "topLevelDistinctSum", // TODO: PHYS_ALGEBRA_REFACTOR_CALL_AGG
-//        "topLevelMin", // TODO: PHYS_ALGEBRA_REFACTOR_CALL_AGG
-//        "topLevelDistinctMin", // TODO: PHYS_ALGEBRA_REFACTOR_CALL_AGG
-//        "topLevelAllMin", // TODO: PHYS_ALGEBRA_REFACTOR_CALL_AGG
-//        "topLevelMax", // TODO: PHYS_ALGEBRA_REFACTOR_CALL_AGG
-//        "topLevelDistinctMax", // TODO: PHYS_ALGEBRA_REFACTOR_CALL_AGG
-//        "topLevelAllMax", // TODO: PHYS_ALGEBRA_REFACTOR_CALL_AGG
-//        "topLevelAvg", // TODO: PHYS_ALGEBRA_REFACTOR_CALL_AGG
-//        "topLevelDistinctAvg", // TODO: PHYS_ALGEBRA_REFACTOR_CALL_AGG
-//        "topLevelAvgOnlyInt", // TODO: PHYS_ALGEBRA_REFACTOR_CALL_AGG
-//        "selectValueAggregate", // TODO: PHYS_ALGEBRA_REFACTOR_CALL_AGG
-//        "selectListCountStar", // TODO: PHYS_ALGEBRA_REFACTOR_CALL_AGG
-//        "selectListCountVariable", // TODO: PHYS_ALGEBRA_REFACTOR_CALL_AGG
-//        "selectListMultipleAggregates", // TODO: PHYS_ALGEBRA_REFACTOR_CALL_AGG
-//        "selectListMultipleAggregatesNestedQuery", // TODO: PHYS_ALGEBRA_REFACTOR_CALL_AGG
-//        "aggregateInSubqueryOfSelect", // TODO: PHYS_ALGEBRA_REFACTOR_CALL_AGG
-//        "aggregateInSubqueryOfSelectValue", // TODO: PHYS_ALGEBRA_REFACTOR_CALL_AGG
-//        "aggregateWithAliasingInSubqueryOfSelectValue", // TODO: PHYS_ALGEBRA_REFACTOR_CALL_AGG
-//        "selectDistinctWithAggregate", // TODO: PHYS_ALGEBRA_REFACTOR_CALL_AGG
-//        "selectDistinctAggregationWithGroupBy", // TODO: PHYS_ALGEBRA_REFACTOR_GROUP_BY
-//        "selectDistinctWithGroupBy", // TODO: PHYS_ALGEBRA_REFACTOR_GROUP_BY
-//        "unpivotMissing", // TODO: PHYS_ALGEBRA_REFACTOR_UNPIVOT
-//        "unpivotEmptyStruct", // TODO: PHYS_ALGEBRA_REFACTOR_UNPIVOT
-//        "unpivotMissingWithAsAndAt", // TODO: PHYS_ALGEBRA_REFACTOR_UNPIVOT
-//        "unpivotMissingCrossJoinWithAsAndAt", // TODO: PHYS_ALGEBRA_REFACTOR_UNPIVOT
-//    )
-
-//    /**
-//     * Runs the tests with bindings that are known at compile-time.
-//     * In this scenario, global variables are unambiguously resolved at compile-time.
-//     */
-//    @ParameterizedTest
-//    @MethodSource("definedVariableTestCases")
-//    fun definedGlobalVariableTests(tc: IonResultTestCase) = tc.runTestCase(
-//        valueFactory,
-//        mockDb,
-//        defineGlobals = true
-//    )
-//
-//    /**
-//     * Runs the tests with bindings that are not known at compile-time.
-//     *
-//     * In this scenario, global variables are dynamically resolved at evaluation time.  This should be identical
-//     * to [definedGlobalVariableTests], with only one exception: a local variable with the same name as a global
-//     * variable will always be resolved to the local variables, even in within a `(scan ...)` `<expr>`.
-//     */
-//    @ParameterizedTest
-//    @MethodSource("undefinedVariableTestCases")
-//    fun undefinedGlobalVariableTests(tc: IonResultTestCase) = tc.runTestCase(
-//        valueFactory,
-//        mockDb,
-//        defineGlobals = false
-//    )
+    @ParameterizedTest
+    @MethodSource("planEvaluatorTests")
+    fun allPlanEvaluatortests(tc: IonResultTestCase) = tc.runTestCase(
+        valueFactory = valueFactory,
+        db = mockDb,
+        target = EvaluatorTestTarget.COMPILER_PIPELINE
+    )
 }

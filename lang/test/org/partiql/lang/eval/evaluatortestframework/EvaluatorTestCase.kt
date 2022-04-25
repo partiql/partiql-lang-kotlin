@@ -59,6 +59,9 @@ data class EvaluatorTestCase(
      * `false`.  Note that, when `false`, [expectedPermissiveModeResult] is ignored.
      */
     override val implicitPermissiveModeTest: Boolean = true,
+
+    override val target: EvaluatorTestTarget = EvaluatorTestTarget.ALL_PIPELINES,
+
     /**
      * Builder block for building [CompileOptions].
      */
@@ -78,6 +81,7 @@ data class EvaluatorTestCase(
         expectedResultFormat: ExpectedResultFormat = ExpectedResultFormat.PARTIQL,
         excludeLegacySerializerAssertions: Boolean = false,
         implicitPermissiveModeTest: Boolean = true,
+        target: EvaluatorTestTarget = EvaluatorTestTarget.ALL_PIPELINES,
         compileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit = { },
         compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { },
         extraResultAssertions: (ExprValue) -> Unit = { },
@@ -89,6 +93,7 @@ data class EvaluatorTestCase(
         expectedResultFormat = expectedResultFormat,
         excludeLegacySerializerAssertions = excludeLegacySerializerAssertions,
         implicitPermissiveModeTest = implicitPermissiveModeTest,
+        target = target,
         compileOptionsBuilderBlock = compileOptionsBuilderBlock,
         compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,
         extraResultAssertions = extraResultAssertions
@@ -97,6 +102,21 @@ data class EvaluatorTestCase(
     /** This will show up in the IDE's test runner. */
     override fun toString() = when {
         groupName != null -> "$groupName : $query"
-        else -> "$query"
+        else -> query
+    }
+
+    /** A generated and human-readable description of this test case for display in assertion failure messages. */
+    fun testDetails(note: String, actualResult: String? = null): String {
+        val b = StringBuilder()
+        b.appendLine("Note            : $note")
+        b.appendLine("Group name      : $groupName")
+        b.appendLine("Query           : $query")
+        b.appendLine("Expected result : $expectedResult")
+        if (actualResult != null) {
+            b.appendLine("Actual result   : $actualResult")
+        }
+        b.appendLine("Result format   : $expectedResultFormat")
+
+        return b.toString()
     }
 }

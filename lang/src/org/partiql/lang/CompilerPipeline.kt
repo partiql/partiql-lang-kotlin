@@ -103,6 +103,11 @@ interface CompilerPipeline {
      */
     val procedures: @JvmSuppressWildcards Map<String, StoredProcedure>
 
+    /**
+     * The configured global type bindings.
+     */
+    val globalTypeBindings: Bindings<StaticType>?
+
     /** Compiles the specified PartiQL query using the configured parser. */
     fun compile(query: String): Expression
 
@@ -246,7 +251,7 @@ internal class CompilerPipelineImpl(
     override val customDataTypes: List<CustomType>,
     override val procedures: Map<String, StoredProcedure>,
     private val preProcessingSteps: List<ProcessingStep>,
-    private val globalTypeBindings: Bindings<StaticType>?
+    override val globalTypeBindings: Bindings<StaticType>?
 ) : CompilerPipeline {
 
     private val compiler = EvaluatingCompiler(

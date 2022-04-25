@@ -9,10 +9,12 @@ import org.partiql.lang.eval.EVALUATOR_TEST_SUITE
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
-import org.partiql.lang.eval.evaluatortestframework.AstEvaluatorTestAdapter
-import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestAdapter
+import org.partiql.lang.eval.evaluatortestframework.CompilerPipelineFactory
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
+import org.partiql.lang.eval.evaluatortestframework.PipelineEvaluatorTestAdapter
+import org.partiql.lang.eval.evaluatortestframework.PlannerPipelineFactory
 import org.partiql.lang.mockdb.MockDb
 import org.partiql.lang.syntax.SqlParser
 
@@ -67,12 +69,20 @@ data class IonResultTestCase(
             ExprNodeTestCase(name, SqlParser(ION).parseExprNode(sqlUnderTest))
         }
 }
+
 internal fun IonResultTestCase.runTestCase(
     valueFactory: ExprValueFactory,
     db: MockDb,
+    target: EvaluatorTestTarget,
     compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }
 ) {
-    val harness: EvaluatorTestAdapter = AstEvaluatorTestAdapter()
+    val adapter = PipelineEvaluatorTestAdapter(
+        when (target) {
+            EvaluatorTestTarget.COMPILER_PIPELINE -> CompilerPipelineFactory()
+            EvaluatorTestTarget.PLANNER_PIPELINE -> PlannerPipelineFactory()
+            EvaluatorTestTarget.ALL_PIPELINES -> error("May only test one pipeline at a time with IonResultTestCase")
+        }
+    )
 
     val session = EvaluationSession.build {
         globals(db.valueBindings)
@@ -93,13 +103,13 @@ internal fun IonResultTestCase.runTestCase(
     )
 
     if (!this.expectFailure) {
-        harness.runEvaluatorTestCase(tc, session)
+        adapter.runEvaluatorTestCase(tc, session)
     } else {
         val message = "We expect test \"${this.name}\" to fail, but it did not. This check exists to ensure the " +
             "failing list is up to date."
 
         assertThrows<Throwable>(message) {
-            harness.runEvaluatorTestCase(tc, session)
+            adapter.runEvaluatorTestCase(tc, session)
         }
     }
 }

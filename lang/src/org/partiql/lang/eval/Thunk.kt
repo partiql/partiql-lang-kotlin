@@ -232,8 +232,11 @@ internal abstract class ThunkFactory<TEnv>(
      *
      * For all [TypingMode]s, if the values returned by [getVal1], [getVal2] and [getVal2] are all known,
      * [compute] is invoked to perform the operation-specific computation.
+     *
+     * Note: this must be public due to a Kotlin compiler bug: https://youtrack.jetbrains.com/issue/KT-22625.
+     * This shouldn't matter though because this class is still `internal`.
      */
-    protected abstract fun propagateUnknowns(
+    abstract fun propagateUnknowns(
         getVal1: () -> ExprValue,
         getVal2: (() -> ExprValue)?,
         getVal3: (() -> ExprValue)?,
@@ -243,8 +246,11 @@ internal abstract class ThunkFactory<TEnv>(
     /**
      * Similar to the other [propagateUnknowns] overload, performs unknown propagation for a variadic sequence of
      * operations.
+     *
+     * Note: this must be public due to a Kotlin compiler bug: https://youtrack.jetbrains.com/issue/KT-22625.
+     * This shouldn't matter though because this class is still `internal`.
      */
-    protected abstract fun propagateUnknowns(
+    abstract fun propagateUnknowns(
         operands: Sequence<ExprValue>,
         compute: (List<ExprValue>) -> ExprValue
     ): ExprValue

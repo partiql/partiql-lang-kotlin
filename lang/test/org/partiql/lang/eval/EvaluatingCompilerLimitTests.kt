@@ -3,6 +3,7 @@ package org.partiql.lang.eval
 import org.junit.Test
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.util.propertyValueMapOf
 
 class EvaluatingCompilerLimitTests : EvaluatorTestBase() {
@@ -54,7 +55,8 @@ class EvaluatingCompilerLimitTests : EvaluatorTestBase() {
         runEvaluatorErrorTestCase(
             """ select * from <<1>> limit -1 """,
             ErrorCode.EVALUATOR_NEGATIVE_LIMIT,
-            propertyValueMapOf(1, 29)
+            propertyValueMapOf(1, 29),
+            target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & physical plan have no support LIMIT (yet)
         )
 
     @Test
@@ -69,6 +71,7 @@ class EvaluatingCompilerLimitTests : EvaluatorTestBase() {
     fun `LIMIT applied after GROUP BY`() =
         runEvaluatorTestCase(
             "SELECT g FROM `[{foo: 1, bar: 10}, {foo: 1, bar: 11}]` AS f GROUP BY f.foo GROUP AS g LIMIT 1",
-            expectedResult = """[ { 'g': [ { 'f': { 'foo': 1, 'bar': 10 } }, { 'f': { 'foo': 1, 'bar': 11 } } ] } ]"""
+            expectedResult = """[ { 'g': [ { 'f': { 'foo': 1, 'bar': 10 } }, { 'f': { 'foo': 1, 'bar': 11 } } ] } ]""",
+            target = EvaluatorTestTarget.COMPILER_PIPELINE // planner & physical plan have no support for GROUP BY (yet)
         )
 }

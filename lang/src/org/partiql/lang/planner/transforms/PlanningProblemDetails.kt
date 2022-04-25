@@ -19,8 +19,8 @@ sealed class PlanningProblemDetails(
     data class ParseError(val parseErrorMessage: String) :
         PlanningProblemDetails(ProblemSeverity.ERROR, { parseErrorMessage })
 
-    data class CompileError(val parseErrorMessage: String) :
-        PlanningProblemDetails(ProblemSeverity.ERROR, { parseErrorMessage })
+    data class CompileError(val errorMessage: String) :
+        PlanningProblemDetails(ProblemSeverity.ERROR, { errorMessage })
 
     data class UndefinedVariable(val variableName: String, val caseSensitive: Boolean) :
         PlanningProblemDetails(

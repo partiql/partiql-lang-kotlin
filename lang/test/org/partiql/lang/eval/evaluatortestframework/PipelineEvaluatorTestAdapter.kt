@@ -1,136 +1,31 @@
 package org.partiql.lang.eval.evaluatortestframework
 
+import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
-import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.ION
-import org.partiql.lang.SqlException
 import org.partiql.lang.errors.ErrorBehaviorInPermissiveMode
-import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.PropertyValueMap
-import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluationSession
+import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.cloneAndRemoveBagAndMissingAnnotations
 import org.partiql.lang.eval.exprEquals
-import kotlin.test.assertNotEquals
 
-private fun EvaluatorTestDefinition.createPipeline(forcePermissiveMode: Boolean = false): CompilerPipeline {
-    val compileOptions = CompileOptions.build(this@createPipeline.compileOptionsBuilderBlock).let { co ->
-        if (forcePermissiveMode) {
-            CompileOptions.build(co) {
-                typingMode(TypingMode.PERMISSIVE)
-            }
-        } else {
-            co
-        }
-    }
-
-    return CompilerPipeline.build(ION) {
-        compileOptions(compileOptions)
-        this@createPipeline.compilerPipelineBuilderBlock(this)
-    }
-}
-
-/** A generated and human readable description of this test case for display in assertion failure messages. */
-fun EvaluatorTestCase.testDetails(note: String, actualResult: String? = null): String {
-    val b = StringBuilder()
-    b.appendLine("Note            : $note")
-    b.appendLine("Group name      : $groupName")
-    b.appendLine("Query           : $query")
-    b.appendLine("Expected result : $expectedResult")
-    if (actualResult != null) {
-        b.appendLine("Actual result   : $actualResult")
-    }
-    b.appendLine("Result format   : $expectedResultFormat")
-
-    return b.toString()
-}
-
-/** A generated and human readable description of this test case for display in assertion failure messages. */
-fun EvaluatorErrorTestCase.testDetails(
-    note: String,
-    actualErrorCode: ErrorCode? = null,
-    actualErrorContext: PropertyValueMap? = null,
-    actualPermissiveModeResult: String? = null,
-    actualInternalFlag: Boolean? = null,
-): String {
-    val b = StringBuilder()
-    b.appendLine("Note                           : $note")
-    b.appendLine("Group name                     : $groupName")
-    b.appendLine("Query                          : $query")
-    b.appendLine("Expected error code            : $expectedErrorCode")
-    if (actualErrorCode != null) {
-        b.appendLine("Actual error code              : $actualErrorCode")
-    }
-    b.appendLine("Expected error context         : $expectedErrorContext")
-    if (actualErrorContext != null) {
-        b.appendLine("Actual error context           : $actualErrorContext")
-    }
-    b.appendLine("Expected internal flag         : $expectedInternalFlag")
-    if (actualErrorContext != null) {
-        b.appendLine("Actual internal flag           : $actualInternalFlag")
-    }
-    b.appendLine("Expected permissive mode result: $expectedPermissiveModeResult")
-    if (actualPermissiveModeResult != null) {
-        b.appendLine("Actual permissive mode result  : $actualPermissiveModeResult")
-    }
-    return b.toString()
-}
-
-private fun assertEquals(
-    expected: Any?,
-    actual: Any?,
-    reason: EvaluatorTestFailureReason,
-    detailsBlock: () -> String
-) {
-    if (expected != actual) {
-        throw EvaluatorAssertionFailedError(reason, detailsBlock())
-    }
-}
-
-private fun <T> assertDoesNotThrow(
-    reason: EvaluatorTestFailureReason,
-    detailsBlock: () -> String,
-    block: () -> T
-): T {
-    try {
-        return block()
-    } catch (ex: Throwable) {
-        throw EvaluatorAssertionFailedError(reason, detailsBlock(), ex.cause)
-    }
-}
-
-private inline fun assertThrowsSqlException(
-    reason: EvaluatorTestFailureReason,
-    detailsBlock: () -> String,
-    block: () -> Unit
-): SqlException {
-    try {
-        block()
-        // if we made it here, the test failed.
-        throw EvaluatorAssertionFailedError(reason, detailsBlock())
-    } catch (ex: SqlException) {
-        return ex
-    }
-}
-
-class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
+internal class PipelineEvaluatorTestAdapter(
+    private val pipelineFactory: PipelineFactory
+) : EvaluatorTestAdapter {
 
     override fun runEvaluatorTestCase(tc: EvaluatorTestCase, session: EvaluationSession) {
-        if (tc.implicitPermissiveModeTest) {
-            val testOpts = CompileOptions.build { tc.compileOptionsBuilderBlock(this) }
-            assertNotEquals(
-                TypingMode.PERMISSIVE, testOpts.typingMode,
-                "Setting TypingMode.PERMISSIVE when implicit permissive mode testing is enabled is redundant"
-            )
+        if (tc.target != EvaluatorTestTarget.ALL_PIPELINES && pipelineFactory.target != tc.target) {
+            return
         }
+        checkRedundantPermissiveMode(tc)
 
         // Compile options unmodified... This covers [TypingMode.LEGACY], unless the test explicitly
         // sets the typing mode.
-        privateRunEvaluatorTestCase(tc, session, "compile options unaltered")
+        privateRunEvaluatorTestCase(tc, session, "${pipelineFactory.pipelineName} (compile options unaltered)")
 
-        // Unless the tests disable it, run again in permissive mode.
+        // Unless the test disables it, run again in permissive mode.
         if (tc.implicitPermissiveModeTest) {
             privateRunEvaluatorTestCase(
                 tc.copy(
@@ -140,7 +35,7 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
                     }
                 ),
                 session,
-                "compile options forced to PERMISSIVE mode"
+                "${pipelineFactory.pipelineName} (compile options forced to PERMISSIVE mode)"
             )
         }
     }
@@ -153,17 +48,17 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
         session: EvaluationSession,
         note: String,
     ) {
-        val pipeline = tc.createPipeline()
+        val pipeline = pipelineFactory.createPipeline(tc)
 
-        val actualExprValueResult = assertDoesNotThrow(
+        val actualExprValueResult: ExprValue = assertDoesNotThrow(
             EvaluatorTestFailureReason.FAILED_TO_EVALUATE_QUERY,
             { tc.testDetails(note = note) }
         ) {
-            pipeline.compile(tc.query).eval(session)
+            pipeline.evaluate(tc.query, session)
         }
 
         val (expectedResult, unexpectedResultErrorCode) =
-            when (pipeline.compileOptions.typingMode) {
+            when (pipeline.typingMode) {
                 TypingMode.LEGACY -> tc.expectedResult to EvaluatorTestFailureReason.UNEXPECTED_QUERY_RESULT
                 TypingMode.PERMISSIVE -> tc.expectedPermissiveModeResult to EvaluatorTestFailureReason.UNEXPECTED_PERMISSIVE_MODE_RESULT
             }
@@ -194,7 +89,7 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
                     EvaluatorTestFailureReason.FAILED_TO_EVALUATE_PARTIQL_EXPECTED_RESULT,
                     { tc.testDetails(note = note) }
                 ) {
-                    pipeline.compile(expectedResult).eval(session)
+                    pipeline.evaluate(expectedResult, session)
                 }
 
                 if (!expectedExprValueResult.exprEquals(actualExprValueResult)) {
@@ -223,7 +118,7 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
         session: EvaluationSession,
         note: String
     ) {
-        val compilerPipeline = tc.createPipeline()
+        val pipeline = pipelineFactory.createPipeline(tc)
 
         val ex = assertThrowsSqlException(
             EvaluatorTestFailureReason.EXPECTED_SQL_EXCEPTION_BUT_THERE_WAS_NONE,
@@ -234,10 +129,8 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
             // .compile OR in .eval.  We currently don't make a distinction, so tests cannot assert that certain
             // errors are compile-time and others are evaluation-time.  We really aught to create a way for tests to
             // indicate when the exception should be thrown.  This is undone.
-            val expression = compilerPipeline.compile(tc.query)
-
-            // The call to .ionValue is important since query execution won't actually begin otherwise.
-            expression.eval(session).ionValue
+            // The call to .ionValue below is important since query execution won't actually begin otherwise.
+            pipeline.evaluate(tc.query, session).ionValue
         }
 
         assertEquals(
@@ -266,14 +159,11 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
     }
 
     override fun runEvaluatorErrorTestCase(tc: EvaluatorErrorTestCase, session: EvaluationSession) {
-        if (tc.implicitPermissiveModeTest) {
-            val testOpts = CompileOptions.build { tc.compileOptionsBuilderBlock(this) }
-            assertNotEquals(
-                TypingMode.PERMISSIVE,
-                testOpts.typingMode,
-                "Setting TypingMode.PERMISSIVE when implicit permissive mode testing is enabled is redundant"
-            )
+        if (tc.target != EvaluatorTestTarget.ALL_PIPELINES && pipelineFactory.target != tc.target) {
+            return
         }
+
+        checkRedundantPermissiveMode(tc)
 
         // Run the query once with compile options unmodified.
         privateRunEvaluatorErrorTestCase(
@@ -284,7 +174,7 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
                 }
             ),
             session = session,
-            note = "Typing mode forced to LEGACY"
+            note = "${pipelineFactory.pipelineName} (Typing mode forced to LEGACY)"
         )
 
         when (tc.expectedErrorCode.errorBehaviorInPermissiveMode) {
@@ -305,7 +195,7 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
                         }
                     ),
                     session,
-                    note = "Typing mode forced to PERMISSIVE"
+                    note = "${pipelineFactory.pipelineName} (typing mode forced to PERMISSIVE)"
                 )
             }
             ErrorBehaviorInPermissiveMode.RETURN_MISSING -> {
@@ -319,14 +209,14 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
                 )
 
                 // Compute the expected return value
-                val permissiveModePipeline = tc.createPipeline(forcePermissiveMode = true)
+                val permissiveModePipeline = pipelineFactory.createPipeline(evaluatorTestDefinition = tc, forcePermissiveMode = true)
 
                 val expectedExprValueForPermissiveMode =
                     assertDoesNotThrow(
                         EvaluatorTestFailureReason.FAILED_TO_EVALUATE_PARTIQL_EXPECTED_RESULT,
                         { tc.testDetails(note = "Evaluating expected permissive mode result") }
                     ) {
-                        permissiveModePipeline.compile(tc.expectedPermissiveModeResult!!).eval(session)
+                        permissiveModePipeline.evaluate(tc.expectedPermissiveModeResult!!, session)
                     }
 
                 val actualReturnValueForPermissiveMode =
@@ -338,7 +228,7 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
                             )
                         }
                     ) {
-                        permissiveModePipeline.compile(tc.query).eval(session)
+                        permissiveModePipeline.evaluate(tc.query, session)
                     }
 
                 if (!expectedExprValueForPermissiveMode.exprEquals(actualReturnValueForPermissiveMode)) {
@@ -351,6 +241,17 @@ class AstEvaluatorTestAdapter : EvaluatorTestAdapter {
                     )
                 }
             }
+        }
+    }
+
+    private fun checkRedundantPermissiveMode(tc: EvaluatorTestDefinition) {
+        if (tc.implicitPermissiveModeTest) {
+            val pipeline = pipelineFactory.createPipeline(tc)
+            assertNotEquals(
+                TypingMode.PERMISSIVE,
+                pipeline.typingMode,
+                "Setting TypingMode.PERMISSIVE when implicit permissive mode testing is enabled is redundant"
+            )
         }
     }
 }
