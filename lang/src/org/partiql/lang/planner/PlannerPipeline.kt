@@ -60,10 +60,16 @@ Why not add an option to enable the planner to be used with CompilerPipeline?  S
  *
  * This class was originally derived from [org.partiql.lang.CompilerPipeline], which is the main compiler entry point
  * for the legacy AST compiler.  The main difference is that the logical and physical plans have taken the place of
- * PartiQL's AST.  [PlannerPipeline] will eventually support transformation of resolved logical plans and physical
- * plans--this is near-future work.
+ * PartiQL's AST, and that after parsing several passes over the AST are performed:
  *
- * Two basic scenarios for using this class:
+ * - It is transformed into a logical plan
+ * - Variables are resolved.
+ * - It is converted into a physical plan.
+ *
+ * In the future additional passes will exist to include optimizations like predicate & projection push-down, and
+ * will be extensible by customers who can include their own optimizations.
+ *
+ * Two basic scenarios for using this interface:
  *
  * 1. You want to plan and compile a query once, but don't care about re-using the plan across process instances.  In
  * this scenario, simply use the [planAndCompile] function to obtain an instance of [Expression] that can be
@@ -71,9 +77,7 @@ Why not add an option to enable the planner to be used with CompilerPipeline?  S
  * 2. You want to plan a query once and share a planned query across process boundaries.  In this scenario, use
  * [plan] to perform query planning and obtain an instance of [PartiqlPhysical.Statement] which can be serialized to
  * Ion text or binary format.  On the other side of the process boundary, use [compile] to turn the
- * [PartiqlPhysical.Statement] query plan into an [Expression].
- *
- * Compilation itself should be relatively fast, while query planning may not in the future be fast.
+ * [PartiqlPhysical.Statement] query plan into an [Expression]. Compilation itself should be relatively fast.
  *
  * The provided builder companion creates an instance of [PlannerPipeline] that is NOT thread safe and should NOT be
  * used to compile queries concurrently. If used in a multithreaded application, use one instance of [PlannerPipeline]

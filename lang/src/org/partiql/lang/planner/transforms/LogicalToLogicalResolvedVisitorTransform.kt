@@ -21,12 +21,13 @@ import org.partiql.pig.runtime.asPrimitive
  *
  * The [problemHandler] is notified of any undefined variables.  Resolution does not stop on the first error, rather
  * we keep going to provide the end user any additional error messaging, unless [ProblemHandler.handleProblem] throws
- * an exception when an error is logged.  **If any undefined variables are detected, a fake index value is used in
- * place of a real one and the resolved logical plan returned by this function is guaranteed to be invalid.**
- * **Therefore, it is the responsibility therefore of callers to check if any problems have been logged with
- * [org.partiql.lang.errors.ProblemSeverity.ERROR] and to abort further query planning if necessary.**
+ * an exception when an error is logged.  **If any undefined variables are detected, in order to allow traversal to
+ * continue, a fake index value is used in place of a real one and the resolved logical plan returned by this function
+ * is guaranteed to be invalid.** **Therefore, it is the responsibility therefore of callers to check if any problems
+ * have been logged with [org.partiql.lang.errors.ProblemSeverity.ERROR] and to abort further query planning if
+ * necessary.**
  *
- * Local variables are resolved independently here, but we rely on [globals] to resolve global variables.
+ * Local variables are resolved independently within this pass, but we rely on [globals] to resolve global variables.
  *
  * Ths works in two passes:
  * 1. All [PartiqlLogical.VarDecl] nodes are allocated unique indexes (which is stored in a meta).
@@ -92,7 +93,7 @@ private fun PartiqlLogical.Expr.Id.asErrorId(): PartiqlLogicalResolved.Expr =
 private data class LocalScope(val varDecls: List<PartiqlLogical.VarDecl>)
 
 private data class LogicalToLogicalResolvedVisitorTransform(
-    /** If set to `true`, do not log errors about undefined variables.  Leave `(id <name> <case>  */
+    /** If set to `true`, do not log errors about undefined variables. Rewrite such variables to a `dynamic_id` node. */
     val allowUndefinedVariables: Boolean,
     /** Where to send error reports. */
     private val problemHandler: ProblemHandler,
@@ -108,8 +109,9 @@ private data class LogicalToLogicalResolvedVisitorTransform(
     }
 
     /**
-     * This set to [VariableLookupStrategy.GLOBALS_THEN_LOCALS] for the `<expr>` in `(scan <expr> ...)` nodes and
-     * [VariableLookupStrategy.LOCALS_THEN_GLOBALS] for everything else.
+     * This is set to [VariableLookupStrategy.GLOBALS_THEN_LOCALS] for the `<expr>` in `(scan <expr> ...)` nodes and
+     * [VariableLookupStrategy.LOCALS_THEN_GLOBALS] for everything else.  This is we resolve globals first within
+     * a `FROM`.
      */
     private var currentVariableLookupStrategy: VariableLookupStrategy = VariableLookupStrategy.LOCALS_THEN_GLOBALS
 

@@ -27,9 +27,9 @@ Differences between CompilerOptions and PlannerOptions:
 
 - There is no EvaluatorOptions equivalent for CompileOptions.visitorTransformMode since the planner always runs some basic
  normalization and variable resolution passes *before* the customer can inject their own transforms.
-- There is no EvaluatorOptions equivalent for CompileOptions.thunkReturnTypeAssertions since PlannerPipeline support
-the static type inferencer (yet)
-- PlannerOptions.allowUndefinedVariables (might) be new
+- There is no EvaluatorOptions equivalent for CompileOptions.thunkReturnTypeAssertions since PlannerPipeline does not
+support the static type inferencer (yet).
+- PlannerOptions.allowUndefinedVariables is new.
 - PlannerOptions has no equivalent for CompileOptions.undefinedVariableBehavior -- this was added for backward
 compatibility on behalf of a customer we don't have anymore.  Internal bug number is IONSQL-134.
  */

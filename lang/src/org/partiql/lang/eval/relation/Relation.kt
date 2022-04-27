@@ -22,7 +22,12 @@ internal fun relation(
     return iterator
 }
 
+@DslMarker
+@Target(AnnotationTarget.CLASS, AnnotationTarget.TYPE)
+annotation class RelationDsl
+
 /** Defines functions within a block supplied to [relation]. */
+@RelationDsl
 internal interface RelationScope {
     /** Suspends the coroutine.  Should be called after processing the current row of the relation. */
     suspend fun yield()

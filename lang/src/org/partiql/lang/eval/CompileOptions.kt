@@ -108,7 +108,7 @@ enum class TypedOpBehavior {
 }
 
 /**
- * Controls the behavior of intrinsic AST visitor transforms with [EvaluatingCompiler.convert].
+ * Controls the behavior of intrinsic AST visitor transforms with [EvaluatingCompiler.compile].
  *
  * Most users will want [DEFAULT], which does the built-in visitor transforms for them, while
  * users wanting full control of the visitor transform process should use [NONE].
@@ -146,7 +146,6 @@ enum class ThunkReturnTypeAssertions {
 data class CompileOptions private constructor (
     val undefinedVariable: UndefinedVariableBehavior,
     val projectionIteration: ProjectionIterationBehavior = ProjectionIterationBehavior.FILTER_MISSING,
-    @Deprecated("Physical plan compiler does not use this, please avoid.")
     val visitorTransformMode: VisitorTransformMode = VisitorTransformMode.DEFAULT,
     val thunkOptions: ThunkOptions = ThunkOptions.standard(),
     val typingMode: TypingMode = TypingMode.LEGACY,
