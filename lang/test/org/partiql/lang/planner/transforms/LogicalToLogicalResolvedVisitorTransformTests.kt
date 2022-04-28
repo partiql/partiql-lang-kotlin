@@ -1,6 +1,7 @@
 package org.partiql.lang.planner.transforms
 
 import com.amazon.ion.system.IonSystemBuilder
+import com.amazon.ionelement.api.ionSymbol
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.fail
@@ -10,6 +11,8 @@ import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.PartiqlLogicalResolved
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemCollector
+import org.partiql.lang.eval.BindingCase
+import org.partiql.lang.eval.builtins.DYNAMIC_LOOKUP_FUNCTION_NAME
 import org.partiql.lang.eval.sourceLocationMeta
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.ArgumentsProviderBase
@@ -19,6 +22,36 @@ import org.partiql.planner.problem
 
 private fun localVariable(name: String, index: Int) =
     PartiqlLogicalResolved.build { localVariable(name, index.toLong()) }
+
+/** Shortcut for creating a dynamic lookup call site for the expected plans below. */
+private fun PartiqlLogicalResolved.Builder.dynamicLookup(
+    name: String,
+    case: BindingCase,
+    globalsFirst: Boolean = false,
+    vararg searchTargets: PartiqlLogicalResolved.Expr
+) =
+    call(
+        DYNAMIC_LOOKUP_FUNCTION_NAME,
+        listOf(
+            lit(ionSymbol(name)),
+            lit(
+                ionSymbol(
+                    when (case) {
+                        BindingCase.SENSITIVE -> "case_sensitive"
+                        BindingCase.INSENSITIVE -> "case_insensitive"
+                    }
+                )
+            ),
+            lit(
+                ionSymbol(
+                    when {
+                        globalsFirst -> "globals_then_locals"
+                        else -> "locals_then_globals"
+                    }
+                )
+            )
+        ) + searchTargets
+    )
 
 class LogicalToLogicalResolvedVisitorTransformTests {
     data class TestCase(
@@ -94,18 +127,28 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                             accumulator: List<PartiqlLogicalResolved.Expr>
                         ): List<PartiqlLogicalResolved.Expr> =
                             when (node) {
-                                is PartiqlLogicalResolved.Expr.Id,
                                 is PartiqlLogicalResolved.Expr.GlobalId,
                                 is PartiqlLogicalResolved.Expr.LocalId -> accumulator + node
+                                is PartiqlLogicalResolved.Expr.Call -> {
+                                    if (node.funcName.text == DYNAMIC_LOOKUP_FUNCTION_NAME) {
+                                        accumulator + node
+                                    } else {
+                                        accumulator
+                                    }
+                                }
                                 else -> accumulator
                             }
 
-                        // Don't include children of dynamic id
-                        override fun walkExprId(
-                            node: PartiqlLogicalResolved.Expr.Id,
+                        // Don't include children of dynamic lookup callsites
+                        override fun walkExprCall(
+                            node: PartiqlLogicalResolved.Expr.Call,
                             accumulator: List<PartiqlLogicalResolved.Expr>
                         ): List<PartiqlLogicalResolved.Expr> {
-                            return accumulator
+                            return if (node.funcName.text == DYNAMIC_LOOKUP_FUNCTION_NAME) {
+                                accumulator
+                            } else {
+                                super.walkExprCall(node, accumulator)
+                            }
                         }
                     }.walkPlan(resolved, emptyList())
 
@@ -242,7 +285,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 """some_undefined """,
                 Expectation.Success(
                     ResolvedId(1, 1) {
-                        id("some_undefined", caseInsensitive(), localsThenGlobals())
+                        dynamicLookup("some_undefined", BindingCase.INSENSITIVE, globalsFirst = false)
                     }
                 ),
                 allowUndefinedVariables = true
@@ -346,7 +389,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 "\"some_undefined\"",
                 Expectation.Success(
                     ResolvedId(1, 1) {
-                        id("some_undefined", caseSensitive(), localsThenGlobals())
+                        dynamicLookup("some_undefined", BindingCase.SENSITIVE)
                     }
                 ),
                 allowUndefinedVariables = true
@@ -552,7 +595,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
 
     @ParameterizedTest
     @ArgumentsSource(DynamicIdSearchCases::class)
-    fun `dynamic_id search order cases`(tc: TestCase) = runTestCase(tc)
+    fun `dynamic_lookup search order cases`(tc: TestCase) = runTestCase(tc)
     class DynamicIdSearchCases : ArgumentsProviderBase() {
         // The important thing being asserted here is the contents of the dynamicId.search, which
         // defines the places we'll look for variables that are unresolved at compile time.
@@ -561,8 +604,8 @@ class LogicalToLogicalResolvedVisitorTransformTests {
             TestCase(
                 "undefined1 + undefined2",
                 Expectation.Success(
-                    ResolvedId(1, 1) { id("undefined1", caseInsensitive(), localsThenGlobals()) },
-                    ResolvedId(1, 14) { id("undefined2", caseInsensitive(), localsThenGlobals()) }
+                    ResolvedId(1, 1) { dynamicLookup("undefined1", BindingCase.INSENSITIVE, globalsFirst = false) },
+                    ResolvedId(1, 14) { dynamicLookup("undefined2", BindingCase.INSENSITIVE, globalsFirst = false) }
                 ),
                 allowUndefinedVariables = true
             ),
@@ -571,16 +614,16 @@ class LogicalToLogicalResolvedVisitorTransformTests {
             TestCase(
                 "SELECT undefined1 AS u FROM 1 AS f WHERE undefined2", // 1 from source
                 Expectation.Success(
-                    ResolvedId(1, 8) { id("undefined1", caseInsensitive(), localsThenGlobals(), localId(0)) },
-                    ResolvedId(1, 42) { id("undefined2", caseInsensitive(), localsThenGlobals(), localId(0)) }
+                    ResolvedId(1, 8) { dynamicLookup("undefined1", BindingCase.INSENSITIVE, globalsFirst = false, localId(0)) },
+                    ResolvedId(1, 42) { dynamicLookup("undefined2", BindingCase.INSENSITIVE, globalsFirst = false, localId(0)) }
                 ).withLocals(localVariable("f", 0)),
                 allowUndefinedVariables = true
             ),
             TestCase(
                 sql = "SELECT undefined1 AS u FROM 1 AS a, 2 AS b WHERE undefined2", // 2 from sources
                 Expectation.Success(
-                    ResolvedId(1, 8) { id("undefined1", caseInsensitive(), localsThenGlobals(), localId(1), localId(0)) },
-                    ResolvedId(1, 50) { id("undefined2", caseInsensitive(), localsThenGlobals(), localId(1), localId(0)) }
+                    ResolvedId(1, 8) { dynamicLookup("undefined1", BindingCase.INSENSITIVE, globalsFirst = false, localId(1), localId(0)) },
+                    ResolvedId(1, 50) { dynamicLookup("undefined2", BindingCase.INSENSITIVE, globalsFirst = false, localId(1), localId(0)) }
                 ).withLocals(localVariable("a", 0), localVariable("b", 1)),
                 allowUndefinedVariables = true
             ),
@@ -588,10 +631,10 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 sql = "SELECT undefined1 AS u FROM 1 AS f, 1 AS b, 1 AS t WHERE undefined2", // 3 from sources
                 Expectation.Success(
                     ResolvedId(1, 8) {
-                        id("undefined1", caseInsensitive(), localsThenGlobals(), localId(2), localId(1), localId(0))
+                        dynamicLookup("undefined1", BindingCase.INSENSITIVE, globalsFirst = false, localId(2), localId(1), localId(0))
                     },
                     ResolvedId(1, 58) {
-                        id("undefined2", caseInsensitive(), localsThenGlobals(), localId(2), localId(1), localId(0))
+                        dynamicLookup("undefined2", BindingCase.INSENSITIVE, globalsFirst = false, localId(2), localId(1), localId(0))
                     }
                 ).withLocals(localVariable("f", 0), localVariable("b", 1), localVariable("t", 2)),
                 allowUndefinedVariables = true
@@ -622,7 +665,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                     // The variables reference in the inner query
                     ResolvedId(1, 38) { localId(0) },
                     // Note that `b` from the outer query is not accessible inside the query so we fall back on dynamic lookup
-                    ResolvedId(1, 43) { id("b", caseInsensitive(), localsThenGlobals(), localId(1), localId(0)) }
+                    ResolvedId(1, 43) { dynamicLookup("b", BindingCase.INSENSITIVE, globalsFirst = false, localId(1), localId(0)) }
                 ).withLocals(localVariable("a", 0), localVariable("x", 1), localVariable("b", 2)),
                 allowUndefinedVariables = true
             ),
@@ -633,7 +676,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 Expectation.Success(
                     ResolvedId(1, 8) { localId(0) },
                     ResolvedId(1, 13) { localId(1) },
-                    ResolvedId(1, 30) { id("undefined", caseInsensitive(), globalsThenLocals(), localId(0)) }
+                    ResolvedId(1, 30) { dynamicLookup("undefined", BindingCase.INSENSITIVE, globalsFirst = true, localId(0)) }
                 ).withLocals(localVariable("f", 0), localVariable("u", 1)),
                 allowUndefinedVariables = true
             ),

@@ -616,31 +616,17 @@ may then be further optimized by selecting better implementations of each operat
 
 
         // For `var_decl`, `name` with `index`.  The name of the variable can still be determined by looking at the
-        // `local_va4riable` with the same index.
+        // `local_variable` with the same index.
         (exclude var_decl scope_qualifier)
         (include
             (product var_decl index::int)
-
-            // Indicates scope search order when dynamically resolving variables with the `id` expression defined
-            // below. This is similar to `scope_qualifier`, however is *not* context sensitive.
-            // PHYS TODO: remove this when id (a.k.a dynamic_id) is replaced with an equivalent function
-            (sum lookup_strategy
-                (globals_then_locals)
-                (locals_then_globals))
         )
 
         (with expr
+            // At this point, there should be no undefined variables in the plan since the area all rewritten to
+            // dynamic lookup function call sites (if enabled).
             (exclude id)
             (include
-                 // A dynamically resolved variable or field.
-                 // - When `strategy` is `(globals_first)`, tries to resolve the variable in the global scope first.
-                 // If not found then returns the value of the first matching field in `search`.
-                 // - When `strategy` is `(dynamic_first)`, returns the value of the first matching field in `search`.
-                 // If not found then tries to resolve the variable in the global scope.
-                 // In the event that no field or global variable with the specified name is not found, an
-                 // evaluation-time exception is raised.
-                 (id name::symbol case::case_sensitivity strategy::lookup_strategy search::(* expr 0))
-
                 // A resolved reference to a variable that was defined within a query.  Otherwise known as a local
                 // variable. "Resolved" means that the variable is guaranteed to exist and we know its register index.
                 // Elements:
@@ -651,12 +637,12 @@ may then be further optimized by selecting better implementations of each operat
                 // Global variable reference--typically a table although it can actually be bound to any value.  Unlike
                 // local variables, global variables are not stored in registers.  Instead, they are typically stored
                 // in persistent storage.  Evaluating a `global_id` will return a value with an open iterator.  There
-                // is no syntactic represntation of this node in PartiQL--`global_id` nodes are produced by the planner
+                // is no syntactic representation of this node in PartiQL--`global_id` nodes are produced by the planner
                 // during the variable resolution pass when a variable is resolved to a global variable.
                 // Elements:
                 // - `name`: the original name of the variable, kept mostly just for error reporting purposes.
                 // - `uniqueId`: any Ion value that uniquely identifies the global variable, typically a storage
-                // specific UUID or the name of the table in its original letter case.
+                // defined UUID or the name of the table in its original letter case.
                 // The value of `uniqueId` is PartiQL integration defined and can be any symbol that uniquely
                 // identifies the global variable.  Examples include database object ids or the alphabetical case
                 // respecting table name found after case-insensitive lookup.

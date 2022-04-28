@@ -48,13 +48,13 @@ internal class PipelineEvaluatorTestAdapter(
         session: EvaluationSession,
         note: String,
     ) {
-        val pipeline = pipelineFactory.createPipeline(tc)
+        val pipeline = pipelineFactory.createPipeline(tc, session)
 
         val actualExprValueResult: ExprValue = assertDoesNotThrow(
             EvaluatorTestFailureReason.FAILED_TO_EVALUATE_QUERY,
             { tc.testDetails(note = note) }
         ) {
-            pipeline.evaluate(tc.query, session)
+            pipeline.evaluate(tc.query)
         }
 
         val (expectedResult, unexpectedResultErrorCode) =
@@ -89,7 +89,7 @@ internal class PipelineEvaluatorTestAdapter(
                     EvaluatorTestFailureReason.FAILED_TO_EVALUATE_PARTIQL_EXPECTED_RESULT,
                     { tc.testDetails(note = note) }
                 ) {
-                    pipeline.evaluate(expectedResult, session)
+                    pipeline.evaluate(expectedResult)
                 }
 
                 if (!expectedExprValueResult.exprEquals(actualExprValueResult)) {
@@ -118,7 +118,7 @@ internal class PipelineEvaluatorTestAdapter(
         session: EvaluationSession,
         note: String
     ) {
-        val pipeline = pipelineFactory.createPipeline(tc)
+        val pipeline = pipelineFactory.createPipeline(tc, session)
 
         val ex = assertThrowsSqlException(
             EvaluatorTestFailureReason.EXPECTED_SQL_EXCEPTION_BUT_THERE_WAS_NONE,
@@ -130,7 +130,7 @@ internal class PipelineEvaluatorTestAdapter(
             // errors are compile-time and others are evaluation-time.  We really aught to create a way for tests to
             // indicate when the exception should be thrown.  This is undone.
             // The call to .ionValue below is important since query execution won't actually begin otherwise.
-            pipeline.evaluate(tc.query, session).ionValue
+            pipeline.evaluate(tc.query).ionValue
         }
 
         assertEquals(
@@ -209,14 +209,14 @@ internal class PipelineEvaluatorTestAdapter(
                 )
 
                 // Compute the expected return value
-                val permissiveModePipeline = pipelineFactory.createPipeline(evaluatorTestDefinition = tc, forcePermissiveMode = true)
+                val permissiveModePipeline = pipelineFactory.createPipeline(evaluatorTestDefinition = tc, session, forcePermissiveMode = true)
 
                 val expectedExprValueForPermissiveMode =
                     assertDoesNotThrow(
                         EvaluatorTestFailureReason.FAILED_TO_EVALUATE_PARTIQL_EXPECTED_RESULT,
                         { tc.testDetails(note = "Evaluating expected permissive mode result") }
                     ) {
-                        permissiveModePipeline.evaluate(tc.expectedPermissiveModeResult!!, session)
+                        permissiveModePipeline.evaluate(tc.expectedPermissiveModeResult!!)
                     }
 
                 val actualReturnValueForPermissiveMode =
@@ -228,7 +228,7 @@ internal class PipelineEvaluatorTestAdapter(
                             )
                         }
                     ) {
-                        permissiveModePipeline.evaluate(tc.query, session)
+                        permissiveModePipeline.evaluate(tc.query)
                     }
 
                 if (!expectedExprValueForPermissiveMode.exprEquals(actualReturnValueForPermissiveMode)) {
@@ -246,7 +246,7 @@ internal class PipelineEvaluatorTestAdapter(
 
     private fun checkRedundantPermissiveMode(tc: EvaluatorTestDefinition) {
         if (tc.implicitPermissiveModeTest) {
-            val pipeline = pipelineFactory.createPipeline(tc)
+            val pipeline = pipelineFactory.createPipeline(tc, EvaluationSession.standard())
             assertNotEquals(
                 TypingMode.PERMISSIVE,
                 pipeline.typingMode,

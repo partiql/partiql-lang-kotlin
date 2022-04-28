@@ -56,6 +56,7 @@ internal fun createBuiltinFunctions(valueFactory: ExprValueFactory) =
         SizeExprFunction(valueFactory),
         FromUnixTimeFunction(valueFactory),
         UnixTimestampFunction(valueFactory)
+        // Note that we do not include DynamicLookupExprFunction here since it is only needed by the plan evaluator.
     )
 
 internal fun createExists(valueFactory: ExprValueFactory): ExprFunction = object : ExprFunction {

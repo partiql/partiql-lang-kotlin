@@ -9,6 +9,7 @@ import org.partiql.lang.eval.UndefinedVariableBehavior
 import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.planner.PassResult
 import org.partiql.lang.planner.PlannerPipeline
+import org.partiql.lang.planner.ResolutionResult
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 
@@ -22,6 +23,7 @@ internal class PlannerPipelineFactory : PipelineFactory {
 
     override fun createPipeline(
         evaluatorTestDefinition: EvaluatorTestDefinition,
+        session: EvaluationSession,
         forcePermissiveMode: Boolean
     ): AbstractPipeline {
 
@@ -67,13 +69,24 @@ internal class PlannerPipelineFactory : PipelineFactory {
             // For compatibility with the unit test suite, prevent the planner from catching SqlException during query
             // compilation and converting them into Problems
             enableLegacyExceptionHandling()
+
+            // Create a fake GlobalBinding implementation which defines any global that is also defined in the
+            // session.
+            globalBindings { bindingName ->
+                val boundValue = session.globals[bindingName]
+                if (boundValue != null) {
+                    ResolutionResult.GlobalVariable(bindingName.name)
+                } else {
+                    ResolutionResult.Undefined
+                }
+            }
         }
 
         return object : AbstractPipeline {
             override val typingMode: TypingMode
                 get() = evaluatorOptions.typingMode
 
-            override fun evaluate(query: String, session: EvaluationSession): ExprValue {
+            override fun evaluate(query: String): ExprValue {
                 when (val planningResult = plannerPipeline.planAndCompile(query)) {
                     is PassResult.Error -> {
                         fail("Query compilation unexpectedly failed: ${planningResult.errors}")

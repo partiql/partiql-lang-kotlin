@@ -116,7 +116,8 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
                 Property.BINDING_NAME_MATCHES to "Abc, aBc, abC"
             ),
             expectedPermissiveModeResult = "MISSING",
-            session = simpleSession
+            session = simpleSession,
+            target = EvaluatorTestTarget.COMPILER_PIPELINE // Planner will never throw ambiguous binding error
         )
     }
 

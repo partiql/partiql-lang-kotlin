@@ -26,6 +26,7 @@ import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.Expression
 import org.partiql.lang.eval.ThunkReturnTypeAssertions
+import org.partiql.lang.eval.builtins.DynamicLookupExprFunction
 import org.partiql.lang.eval.builtins.createBuiltinFunctions
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.physical.PhysicalExprToThunkConverterImpl
@@ -249,7 +250,9 @@ interface PlannerPipeline {
         /**
          * Sets a flag indicating if undefined variables are allowed.
          *
-         * When allowed, undefined variables are rewritten to dynamic lookups.
+         * When allowed, undefined variables are rewritten to dynamic lookups.  This is intended to provide a migration
+         * path for legacy PartiQL customers who depend on dynamic lookup of undefined variables to use the query
+         * planner & phys. algebra. New customers should not enable this.
          */
         fun allowUndefinedVariables(allow: Boolean = true): Builder = this.apply {
             this.allowUndefinedVariables = allow
@@ -258,7 +261,8 @@ interface PlannerPipeline {
         /**
          * Prevents [SqlException] that occur during compilation from being converted into [Problem]s.
          *
-         * This is for compatibility with the unit test suite, which hasn't been updated to handle [Problem]s yet.
+         * This is for compatibility with the legacy unit test suite, which hasn't been updated to handle
+         * [Problem]s yet.
          */
         internal fun enableLegacyExceptionHandling(): Builder = this.apply {
             enableLegacyExceptionHandling = true
@@ -276,19 +280,19 @@ interface PlannerPipeline {
                 )
             }
 
-            val builtinFunctions = createBuiltinFunctions(valueFactory).associateBy {
+            val builtinFunctions = createBuiltinFunctions(valueFactory) + DynamicLookupExprFunction()
+            val builtinFunctionsMap = builtinFunctions.associateBy {
                 it.signature.name
             }
 
             // customFunctions must be on the right side of + here to ensure that they overwrite any
             // built-in functions with the same name.
-            val allFunctions = builtinFunctions + customFunctions
-
+            val allFunctionsMap = builtinFunctionsMap + customFunctions
             return PlannerPipelineImpl(
                 valueFactory = valueFactory,
                 parser = parser ?: SqlParser(valueFactory.ion, this.customDataTypes),
                 evaluatorOptions = compileOptionsToUse,
-                functions = allFunctions,
+                functions = allFunctionsMap,
                 customDataTypes = customDataTypes,
                 procedures = customProcedures,
                 globalBindings = globalBindings,

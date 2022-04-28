@@ -16,6 +16,7 @@ internal class CompilerPipelineFactory : PipelineFactory {
 
     override fun createPipeline(
         evaluatorTestDefinition: EvaluatorTestDefinition,
+        session: EvaluationSession,
         forcePermissiveMode: Boolean
     ): AbstractPipeline {
         val concretePipeline = evaluatorTestDefinition.createCompilerPipeline(forcePermissiveMode)
@@ -24,7 +25,7 @@ internal class CompilerPipelineFactory : PipelineFactory {
             override val typingMode: TypingMode
                 get() = concretePipeline.compileOptions.typingMode
 
-            override fun evaluate(query: String, session: EvaluationSession): ExprValue =
+            override fun evaluate(query: String): ExprValue =
                 concretePipeline.compile(query).eval(session)
         }
     }

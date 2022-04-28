@@ -1,5 +1,6 @@
 package org.partiql.lang.planner.transforms
 
+import com.amazon.ionelement.api.ionSymbol
 import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.PartiqlLogicalResolved
@@ -8,6 +9,7 @@ import org.partiql.lang.domains.toBindingCase
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.eval.BindingName
+import org.partiql.lang.eval.builtins.DYNAMIC_LOOKUP_FUNCTION_NAME
 import org.partiql.lang.planner.GlobalBindings
 import org.partiql.lang.planner.ResolutionResult
 import org.partiql.pig.runtime.asPrimitive
@@ -240,7 +242,7 @@ private data class LogicalToLogicalResolvedVisitorTransform(
             }
             ResolutionResult.Undefined -> {
                 if (this.allowUndefinedVariables) {
-                    node.asDynamicId(
+                    node.asDynamicLookupCallsite(
                         currentDynamicResolutionCandidates()
                             .map {
                                 PartiqlLogicalResolved.build {
@@ -364,21 +366,25 @@ private data class LogicalToLogicalResolvedVisitorTransform(
         return LocalScope(concatenatedScopeVariables)
     }
 
-    private fun PartiqlLogical.Expr.Id.asDynamicId(
+    private fun PartiqlLogical.Expr.Id.asDynamicLookupCallsite(
         search: List<PartiqlLogicalResolved.Expr>
-    ): PartiqlLogicalResolved.Expr =
-        PartiqlLogicalResolved.build {
-            id_(
-                name = name,
-                case = transformCaseSensitivity(case),
-                strategy = when (this@LogicalToLogicalResolvedVisitorTransform.currentVariableLookupStrategy) {
-                    VariableLookupStrategy.LOCALS_THEN_GLOBALS -> localsThenGlobals()
-                    VariableLookupStrategy.GLOBALS_THEN_LOCALS -> globalsThenLocals()
-                },
-                search = search,
-                metas = this@asDynamicId.metas
+    ): PartiqlLogicalResolved.Expr {
+        val caseSensitivityString = when (case) {
+            is PartiqlLogical.CaseSensitivity.CaseInsensitive -> "case_insensitive"
+            is PartiqlLogical.CaseSensitivity.CaseSensitive -> "case_sensitive"
+        }
+        return PartiqlLogicalResolved.build {
+            call(
+                funcName = DYNAMIC_LOOKUP_FUNCTION_NAME,
+                args = listOf(
+                    lit(name.toIonElement()),
+                    lit(ionSymbol(caseSensitivityString)),
+                    lit(ionSymbol(currentVariableLookupStrategy.toString().toLowerCase())),
+                ) + search,
+                metas = this@asDynamicLookupCallsite.metas
             )
         }
+    }
 }
 
 /** Marks a variable for dynamic resolution--i.e. if undefined, this vardecl will be included in any dynamic_id lookup. */

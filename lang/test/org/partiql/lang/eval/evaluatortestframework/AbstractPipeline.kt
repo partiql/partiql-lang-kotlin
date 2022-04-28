@@ -1,6 +1,5 @@
 package org.partiql.lang.eval.evaluatortestframework
 
-import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.TypingMode
 
@@ -12,5 +11,5 @@ import org.partiql.lang.eval.TypingMode
  */
 interface AbstractPipeline {
     val typingMode: TypingMode
-    fun evaluate(query: String, session: EvaluationSession): ExprValue
+    fun evaluate(query: String): ExprValue
 }

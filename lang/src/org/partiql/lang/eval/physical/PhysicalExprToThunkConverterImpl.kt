@@ -28,7 +28,6 @@ import org.partiql.lang.domains.toBindingCase
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
-import org.partiql.lang.errors.UNBOUND_QUOTED_IDENTIFIER_HINT
 import org.partiql.lang.eval.AnyOfCastTable
 import org.partiql.lang.eval.Arguments
 import org.partiql.lang.eval.BaseExprValue
@@ -203,7 +202,6 @@ internal class PhysicalExprToThunkConverterImpl(
         return when (expr) {
             is PartiqlPhysical.Expr.Lit -> compileLit(expr, metas)
             is PartiqlPhysical.Expr.Missing -> compileMissing(metas)
-            is PartiqlPhysical.Expr.Id -> compileId(expr)
             is PartiqlPhysical.Expr.LocalId -> compileLocalId(expr, metas)
             is PartiqlPhysical.Expr.GlobalId -> compileGlobalId(expr)
             is PartiqlPhysical.Expr.SimpleCase -> compileSimpleCase(expr, metas)
@@ -963,48 +961,10 @@ internal class PhysicalExprToThunkConverterImpl(
     private fun compileMissing(metas: MetaContainer): PhysicalPlanThunk =
         thunkFactory.thunkEnv(metas) { valueFactory.missingValue }
 
-    private fun compileId(expr: PartiqlPhysical.Expr.Id): PhysicalPlanThunk {
-        val bindingName = BindingName(expr.name.text, expr.case.toBindingCase())
-        val searchThunks = expr.search.map { compileAstExpr(it) }.asSequence()
-
-        return thunkFactory.thunkEnv(expr.metas) { env ->
-            // search in the dynamic search locations first.
-            val found = searchThunks.map {
-                val found = it(env)
-                when (found.type) {
-                    ExprValueType.STRUCT ->
-                        found.bindings[bindingName]
-                    else ->
-                        null
-                }
-            }.firstOrNull { it != null }
-                ?: env.session.globals[bindingName]
-
-            return@thunkEnv found ?: handleUndefinedVariable(bindingName, expr.metas)
-        }
-    }
-
-    private fun handleUndefinedVariable(bindingName: BindingName, metas: MetaContainer): Nothing {
-        val (errorCode, hint) = when (bindingName.bindingCase) {
-            BindingCase.SENSITIVE ->
-                ErrorCode.EVALUATOR_QUOTED_BINDING_DOES_NOT_EXIST to " $UNBOUND_QUOTED_IDENTIFIER_HINT"
-            BindingCase.INSENSITIVE ->
-                ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST to ""
-        }
-        throw EvaluationException(
-            "No such binding: ${bindingName.name}.$hint",
-            errorCode,
-            errorContextFrom(metas).also {
-                it[Property.BINDING_NAME] = bindingName.name
-            },
-            internal = false
-        )
-    }
-
     private fun compileGlobalId(expr: PartiqlPhysical.Expr.GlobalId): PhysicalPlanThunk =
         thunkFactory.thunkEnv(expr.metas) { env ->
             val bindingName = BindingName(expr.uniqueId.text, BindingCase.SENSITIVE)
-            env.session.globals[bindingName] ?: handleUndefinedVariable(bindingName, expr.metas)
+            env.session.globals[bindingName] ?: throwUndefinedVariableException(bindingName, expr.metas)
         }
 
     @Suppress("UNUSED_PARAMETER")

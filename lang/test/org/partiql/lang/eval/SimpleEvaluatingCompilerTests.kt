@@ -90,6 +90,27 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
                 ]"""
     )
 
+    private val sessionWithG = mapOf(
+        "table_1" to "[{a:[{b: 1}, {b:2}]}]",
+        "g" to "{a: \"from global variable g\"}"
+    ).toSession()
+
+    /** Demonstrates that without the scope qualifier ('@'), the `g` in `g.b' refers to global `g`. */
+    @Test
+    fun joinWithoutScopeQualifier() = runEvaluatorTestCase(
+        """SELECT g2 FROM table_1 AS g, g.a AS g2""",
+        expectedResult = "[{g2:\"from global variable g\"}]",
+        session = sessionWithG
+    )
+
+    /** Demonstrates that with the scope qualifier ('@'), the `g` in `@g.b' refers to local `g`. */
+    @Test
+    fun joinWithScopeQualifier() = runEvaluatorTestCase(
+        """SELECT g2 FROM table_1 AS g, @g.a AS g2""",
+        expectedResult = "[{g2:{b:1}},{g2:{b:2}}]",
+        session = sessionWithG
+    )
+
     @Test
     fun simpleJoinWithCondition() = runEvaluatorTestCase(
         """
