@@ -52,6 +52,7 @@ internal class PlannerPipelineFactory : PipelineFactory {
             projectionIteration(co.projectionIteration)
         }
 
+        @Suppress("DEPRECATION")
         val plannerPipeline = PlannerPipeline.build(ION) {
             // this is for support of the existing test suite and may not be desirable for all future tests.
             allowUndefinedVariables(true)

@@ -16,6 +16,7 @@ import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.errorContextFrom
 import org.partiql.lang.planner.EvaluatorOptions
+import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.pig.runtime.LongPrimitive
 
 /**
@@ -26,6 +27,25 @@ import org.partiql.pig.runtime.LongPrimitive
  * Any exception thrown by this class should always be considered an indication of a bug:
  */
 class PartiqlPhysicalSanityValidator(val evaluatorOptions: EvaluatorOptions) : PartiqlPhysical.Visitor() {
+
+    /**
+     * Quick validation step to make sure the indexes of any variables make sense.
+     * It is unlikely that this check will ever fail, but if it does, it likely means there's a bug in
+     * [org.partiql.lang.planner.transforms.VariableIdAllocator] or that the plan was malformed by other means.
+     */
+    override fun visitPlan(node: PartiqlPhysical.Plan) {
+        node.locals.forEachIndexed { idx, it ->
+            if (it.registerIndex.value != idx.toLong()) {
+                throw EvaluationException(
+                    message = "Variable index must match ordinal position of variable",
+                    errorCode = ErrorCode.INTERNAL_ERROR,
+                    errorContext = propertyValueMapOf(),
+                    internal = true
+                )
+            }
+        }
+        super.visitPlan(node)
+    }
 
     override fun visitExprLit(node: PartiqlPhysical.Expr.Lit) {
         val ionValue = node.value

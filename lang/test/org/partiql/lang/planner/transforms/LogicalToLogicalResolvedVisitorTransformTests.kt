@@ -1,4 +1,4 @@
-package org.partiql.planner.transforms
+package org.partiql.lang.planner.transforms
 
 import com.amazon.ion.system.IonSystemBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -11,14 +11,14 @@ import org.partiql.lang.domains.PartiqlLogicalResolved
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemCollector
 import org.partiql.lang.eval.sourceLocationMeta
-import org.partiql.lang.planner.transforms.PlanningProblemDetails
-import org.partiql.lang.planner.transforms.toLogical
-import org.partiql.lang.planner.transforms.toResolved
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.toIntExact
 import org.partiql.planner.createFakeGlobalBindings
 import org.partiql.planner.problem
+
+private fun localVariable(name: String, index: Int) =
+    PartiqlLogicalResolved.build { localVariable(name, index.toLong()) }
 
 class LogicalToLogicalResolvedVisitorTransformTests {
     data class TestCase(
@@ -42,9 +42,15 @@ class LogicalToLogicalResolvedVisitorTransformTests {
             return "($line, $charOffset): $expr"
         }
     }
+
     sealed class Expectation {
-        data class Success(val expectedIds: List<ResolvedId>) : Expectation() {
-            constructor(vararg expectedIds: ResolvedId) : this(expectedIds.toList())
+        data class Success(
+            val expectedIds: List<ResolvedId>,
+            val expectedLocalVariables: List<PartiqlLogicalResolved.LocalVariable>
+        ) : Expectation() {
+            constructor(vararg expectedIds: ResolvedId) : this(expectedIds.toList(), emptyList())
+            fun withLocals(vararg expectedLocalVariables: PartiqlLogicalResolved.LocalVariable) =
+                this.copy(expectedLocalVariables = expectedLocalVariables.toList())
         }
         data class Problems(val problems: List<Problem>) : Expectation() {
             constructor(vararg problems: Problem) : this(problems.toList())
@@ -70,15 +76,15 @@ class LogicalToLogicalResolvedVisitorTransformTests {
     private val parser = SqlParser(ion)
 
     private fun runTestCase(tc: TestCase) {
-        val algebra: PartiqlLogical.Statement = assertDoesNotThrow {
-            parser.parseAstStatement(tc.sql).toLogical()
+        val plan: PartiqlLogical.Plan = assertDoesNotThrow {
+            parser.parseAstStatement(tc.sql).toLogicalPlan()
         }
 
         val problemHandler = ProblemCollector()
 
         when (tc.expectation) {
             is Expectation.Success -> {
-                val resolved = algebra.toResolved(problemHandler, globalBindings, tc.allowUndefinedVariables)
+                val resolved = plan.toResolvedPlan(problemHandler, globalBindings, tc.allowUndefinedVariables)
 
                 // extract all of the dynamic, global and local ids from the resolved logical plan.
                 val actualResolvedIds =
@@ -101,7 +107,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                         ): List<PartiqlLogicalResolved.Expr> {
                             return accumulator
                         }
-                    }.walkStatement(resolved, emptyList())
+                    }.walkPlan(resolved, emptyList())
 
                 assertEquals(
                     tc.expectation.expectedIds.size, actualResolvedIds.size,
@@ -116,21 +122,28 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 }
 
                 if (remainingActualResolvedIds.isNotEmpty()) {
-                    System.err.println("Unexpected ids:")
+                    val sb = StringBuilder()
+                    sb.appendLine("Unexpected ids:")
                     remainingActualResolvedIds.forEach {
-                        System.err.println(it)
+                        sb.appendLine(it)
                     }
-                    System.err.println("Expected ids:")
+                    sb.appendLine("Expected ids:")
                     tc.expectation.expectedIds.forEach {
-                        System.err.println(it)
+                        sb.appendLine(it)
                     }
 
-                    fail("Unmatched resolved ids were found. See stderr for details.")
+                    fail("Unmatched resolved ids were found.\n$sb")
                 }
+
+                assertEquals(
+                    tc.expectation.expectedLocalVariables,
+                    resolved.locals,
+                    "Expected and actual local variables must match"
+                )
             }
             is Expectation.Problems -> {
                 assertDoesNotThrow("Should not throw when variables are undefined") {
-                    algebra.toResolved(problemHandler, globalBindings)
+                    plan.toResolvedPlan(problemHandler, globalBindings)
                 }
                 assertEquals(tc.expectation.problems, problemHandler.problems)
             }
@@ -351,25 +364,25 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 // all uppercase
                 "SELECT FOO.* FROM 1 AS foo WHERE FOO",
                 Expectation.Success(
-                    ResolvedId(1, 8) { localId("FOO", 0) },
-                    ResolvedId(1, 34) { localId("FOO", 0) }
-                )
+                    ResolvedId(1, 8) { localId(0) },
+                    ResolvedId(1, 34) { localId(0) }
+                ).withLocals(localVariable("foo", 0))
             ),
             TestCase(
                 // all lowercase
                 "SELECT foo.* FROM 1 AS foo WHERE foo",
                 Expectation.Success(
-                    ResolvedId(1, 8) { localId("foo", 0) },
-                    ResolvedId(1, 34) { localId("foo", 0) }
-                )
+                    ResolvedId(1, 8) { localId(0) },
+                    ResolvedId(1, 34) { localId(0) }
+                ).withLocals(localVariable("foo", 0))
             ),
             TestCase(
                 // mixed case
                 "SELECT FoO.* FROM 1 AS foo WHERE fOo",
                 Expectation.Success(
-                    ResolvedId(1, 8) { localId("FoO", 0) },
-                    ResolvedId(1, 34) { localId("fOo", 0) }
-                )
+                    ResolvedId(1, 8) { localId(0) },
+                    ResolvedId(1, 34) { localId(0) }
+                ).withLocals(localVariable("foo", 0))
             ),
             TestCase(
                 // foobar is undefined (select list)
@@ -406,9 +419,9 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 // all lowercase
                 "SELECT \"foo\".* FROM 1 AS foo WHERE \"foo\"",
                 Expectation.Success(
-                    ResolvedId(1, 8) { localId("foo", 0) },
-                    ResolvedId(1, 36) { localId("foo", 0) },
-                ),
+                    ResolvedId(1, 8) { localId(0) },
+                    ResolvedId(1, 36) { localId(0) },
+                ).withLocals(localVariable("foo", 0))
             ),
             TestCase(
                 // mixed case
@@ -492,9 +505,9 @@ class LogicalToLogicalResolvedVisitorTransformTests {
             TestCase(
                 "SELECT $varName.* FROM foo AS a AT b BY c",
                 Expectation.Success(
-                    ResolvedId(1, 8) { localId(varName, expectedIndex.toLong()) },
+                    ResolvedId(1, 8) { localId(expectedIndex.toLong()) },
                     ResolvedId(1, 17) { globalId("foo", "fake_uid_for_foo") }
-                )
+                ).withLocals(localVariable("a", 0), localVariable("b", 1), localVariable("c", 2))
             )
 
         override fun getParameters() = listOf(
@@ -509,19 +522,19 @@ class LogicalToLogicalResolvedVisitorTransformTests {
             TestCase(
                 "SELECT b.* FROM bar AS b WHERE b.primaryKey = 42",
                 Expectation.Success(
-                    ResolvedId(1, 8) { localId("b", 0) },
+                    ResolvedId(1, 8) { localId(0) },
                     ResolvedId(1, 17) { globalId("bar", "fake_uid_for_bar") },
-                    ResolvedId(1, 32) { localId("b", 0) },
-                )
+                    ResolvedId(1, 32) { localId(0) },
+                ).withLocals(localVariable("b", 0))
             ),
 
             // Demonstrate that globals-first variable lookup only happens in the FROM clause.
             TestCase(
                 "SELECT shadow.* FROM shadow AS shadow", // `shadow` defined here shadows the global `shadow`
                 Expectation.Success(
-                    ResolvedId(1, 8) { localId("shadow", 0) },
+                    ResolvedId(1, 8) { localId(0) },
                     ResolvedId(1, 22) { globalId("shadow", "fake_uid_for_shadow") }
-                )
+                ).withLocals(localVariable("shadow", 0))
             ),
 
             // JOIN with shadowing
@@ -529,9 +542,10 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 // first `AS s` shadowed by second `AS s`.
                 "SELECT s.* FROM 1 AS s, @s AS s",
                 Expectation.Success(
-                    ResolvedId(1, 8) { localId("s", 1) },
-                    ResolvedId(1, 26) { localId("s", 0) }
-                )
+                    ResolvedId(1, 8) { localId(1) },
+                    ResolvedId(1, 26) { localId(0) }
+                ).withLocals(localVariable("s", 0), localVariable("s", 1))
+                // Note that these two variables (^) have the same name but different indexes.
             ),
         )
     }
@@ -557,29 +571,29 @@ class LogicalToLogicalResolvedVisitorTransformTests {
             TestCase(
                 "SELECT undefined1 AS u FROM 1 AS f WHERE undefined2", // 1 from source
                 Expectation.Success(
-                    ResolvedId(1, 8) { id("undefined1", caseInsensitive(), localsThenGlobals(), localId("f", 0)) },
-                    ResolvedId(1, 42) { id("undefined2", caseInsensitive(), localsThenGlobals(), localId("f", 0)) }
-                ),
+                    ResolvedId(1, 8) { id("undefined1", caseInsensitive(), localsThenGlobals(), localId(0)) },
+                    ResolvedId(1, 42) { id("undefined2", caseInsensitive(), localsThenGlobals(), localId(0)) }
+                ).withLocals(localVariable("f", 0)),
                 allowUndefinedVariables = true
             ),
             TestCase(
                 sql = "SELECT undefined1 AS u FROM 1 AS a, 2 AS b WHERE undefined2", // 2 from sources
                 Expectation.Success(
-                    ResolvedId(1, 8) { id("undefined1", caseInsensitive(), localsThenGlobals(), localId("b", 1), localId("a", 0)) },
-                    ResolvedId(1, 50) { id("undefined2", caseInsensitive(), localsThenGlobals(), localId("b", 1), localId("a", 0)) }
-                ),
+                    ResolvedId(1, 8) { id("undefined1", caseInsensitive(), localsThenGlobals(), localId(1), localId(0)) },
+                    ResolvedId(1, 50) { id("undefined2", caseInsensitive(), localsThenGlobals(), localId(1), localId(0)) }
+                ).withLocals(localVariable("a", 0), localVariable("b", 1)),
                 allowUndefinedVariables = true
             ),
             TestCase(
                 sql = "SELECT undefined1 AS u FROM 1 AS f, 1 AS b, 1 AS t WHERE undefined2", // 3 from sources
                 Expectation.Success(
                     ResolvedId(1, 8) {
-                        id("undefined1", caseInsensitive(), localsThenGlobals(), localId("t", 2), localId("b", 1), localId("f", 0))
+                        id("undefined1", caseInsensitive(), localsThenGlobals(), localId(2), localId(1), localId(0))
                     },
                     ResolvedId(1, 58) {
-                        id("undefined2", caseInsensitive(), localsThenGlobals(), localId("t", 2), localId("b", 1), localId("f", 0))
+                        id("undefined2", caseInsensitive(), localsThenGlobals(), localId(2), localId(1), localId(0))
                     }
-                ),
+                ).withLocals(localVariable("f", 0), localVariable("b", 1), localVariable("t", 2)),
                 allowUndefinedVariables = true
             )
         )
@@ -594,22 +608,22 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 // inner query does not reference variables outer query
                 "SELECT b.* FROM (SELECT a.* FROM 1 AS a) AS b",
                 Expectation.Success(
-                    ResolvedId(1, 8) { localId("b", 1) },
-                    ResolvedId(1, 25) { localId("a", 0) },
-                )
+                    ResolvedId(1, 8) { localId(1) },
+                    ResolvedId(1, 25) { localId(0) },
+                ).withLocals(localVariable("a", 0), localVariable("b", 1))
             ),
             TestCase(
                 // inner query references variable from outer query.
                 "SELECT a.*, b.* FROM 1 AS a, (SELECT a.*, b.* FROM 1 AS x) AS b",
                 Expectation.Success(
                     // The variables reference in the outer query
-                    ResolvedId(1, 8) { localId("a", 0) },
-                    ResolvedId(1, 13) { localId("b", 2) },
+                    ResolvedId(1, 8) { localId(0) },
+                    ResolvedId(1, 13) { localId(2) },
                     // The variables reference in the inner query
-                    ResolvedId(1, 38) { localId("a", 0) },
+                    ResolvedId(1, 38) { localId(0) },
                     // Note that `b` from the outer query is not accessible inside the query so we fall back on dynamic lookup
-                    ResolvedId(1, 43) { id("b", caseInsensitive(), localsThenGlobals(), localId("x", 1), localId("a", 0)) }
-                ),
+                    ResolvedId(1, 43) { id("b", caseInsensitive(), localsThenGlobals(), localId(1), localId(0)) }
+                ).withLocals(localVariable("a", 0), localVariable("x", 1), localVariable("b", 2)),
                 allowUndefinedVariables = true
             ),
 
@@ -617,10 +631,10 @@ class LogicalToLogicalResolvedVisitorTransformTests {
             TestCase(
                 "SELECT f.*, u.* FROM 1 AS f, undefined AS u",
                 Expectation.Success(
-                    ResolvedId(1, 8) { localId("f", 0) },
-                    ResolvedId(1, 13) { localId("u", 1) },
-                    ResolvedId(1, 30) { id("undefined", caseInsensitive(), globalsThenLocals(), localId("f", 0)) }
-                ),
+                    ResolvedId(1, 8) { localId(0) },
+                    ResolvedId(1, 13) { localId(1) },
+                    ResolvedId(1, 30) { id("undefined", caseInsensitive(), globalsThenLocals(), localId(0)) }
+                ).withLocals(localVariable("f", 0), localVariable("u", 1)),
                 allowUndefinedVariables = true
             ),
         )

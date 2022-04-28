@@ -1,4 +1,4 @@
-package org.partiql.planner.transforms
+package org.partiql.lang.planner.transforms
 
 import com.amazon.ionelement.api.ionBool
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -6,8 +6,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.domains.PartiqlLogicalResolved
 import org.partiql.lang.domains.PartiqlPhysical
-import org.partiql.lang.planner.transforms.DEFAULT_IMPL
-import org.partiql.lang.planner.transforms.LogicalResolvedToPhysicalVisitorTransform
 import org.partiql.lang.util.ArgumentsProviderBase
 
 class LogicalResolvedToPhysicalVisitorTransformTests {
@@ -25,18 +23,18 @@ class LogicalResolvedToPhysicalVisitorTransformTests {
                 PartiqlLogicalResolved.build {
                     scan(
                         expr = globalId("foo", "foo"),
-                        asDecl = varDecl("b", 0),
-                        atDecl = varDecl("c", 1),
-                        byDecl = varDecl("d", 2)
+                        asDecl = varDecl(0),
+                        atDecl = varDecl(1),
+                        byDecl = varDecl(2)
                     )
                 },
                 PartiqlPhysical.build {
                     scan(
                         i = DEFAULT_IMPL,
                         expr = globalId("foo", "foo"),
-                        asDecl = varDecl("b", 0),
-                        atDecl = varDecl("c", 1),
-                        byDecl = varDecl("d", 2)
+                        asDecl = varDecl(0),
+                        atDecl = varDecl(1),
+                        byDecl = varDecl(2)
                     )
                 }
             ),
@@ -46,9 +44,9 @@ class LogicalResolvedToPhysicalVisitorTransformTests {
                         predicate = lit(ionBool(true)),
                         source = scan(
                             expr = globalId("foo", "foo"),
-                            asDecl = varDecl("b", 0),
-                            atDecl = varDecl("c", 1),
-                            byDecl = varDecl("d", 2)
+                            asDecl = varDecl(0),
+                            atDecl = varDecl(1),
+                            byDecl = varDecl(2)
                         )
                     )
                 },
@@ -59,9 +57,9 @@ class LogicalResolvedToPhysicalVisitorTransformTests {
                         source = scan(
                             i = DEFAULT_IMPL,
                             expr = globalId("foo", "foo"),
-                            asDecl = varDecl("b", 0),
-                            atDecl = varDecl("c", 1),
-                            byDecl = varDecl("d", 2)
+                            asDecl = varDecl(0),
+                            atDecl = varDecl(1),
+                            byDecl = varDecl(2)
                         )
                     )
                 }

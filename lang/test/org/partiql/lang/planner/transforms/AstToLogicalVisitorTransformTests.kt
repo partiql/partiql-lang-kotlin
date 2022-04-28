@@ -1,4 +1,4 @@
-package org.partiql.planner.transforms
+package org.partiql.lang.planner.transforms
 
 import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.ionBool
@@ -13,7 +13,6 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.id
 import org.partiql.lang.domains.pathExpr
-import org.partiql.lang.planner.transforms.toLogical
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.SexpAstPrettyPrinter
@@ -29,7 +28,7 @@ class AstToLogicalVisitorTransformTests {
     private fun parseAndTransform(sql: String): PartiqlLogical.Statement {
         val parseAstStatement = parser.parseAstStatement(sql)
         println(SexpAstPrettyPrinter.format(parseAstStatement.toIonElement().asAnyElement().toIonValue(ion)))
-        return parseAstStatement.toLogical()
+        return parseAstStatement.toLogicalPlan().stmt
     }
 
     data class TestCase(val sql: String, val expectedAlgebra: PartiqlLogical.Statement)

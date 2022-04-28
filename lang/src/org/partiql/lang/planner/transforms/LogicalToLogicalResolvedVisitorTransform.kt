@@ -36,32 +36,20 @@ import org.partiql.pig.runtime.asPrimitive
  * replaced with `(global_id <name> <unique-id>)`.  For local variables, the original `id` node is replaced with a
  * `(id <name> <unique-index>)`), where `<unique-index>` is the index of the corresponding `var_decl`.
  */
-internal fun PartiqlLogical.Statement.toResolved(
+internal fun PartiqlLogical.Plan.toResolvedPlan(
     problemHandler: ProblemHandler,
     globals: GlobalBindings,
     allowUndefinedVariables: Boolean = false
-): PartiqlLogicalResolved.Statement {
+): PartiqlLogicalResolved.Plan {
     // Allocate a unique id for each `VarDecl`
-    val planWithAllocatedVariables = VariableIdAllocator().transformStatement(this)
+    val (planWithAllocatedVariables, allLocals) = this.allocateVariableIds()
 
     // Transform to `partiql_logical_resolved` while resolving variables.
-    return LogicalToLogicalResolvedVisitorTransform(allowUndefinedVariables, problemHandler, globals)
-        .transformStatement(planWithAllocatedVariables)
-}
+    val resolvedSt = LogicalToLogicalResolvedVisitorTransform(allowUndefinedVariables, problemHandler, globals)
+        .transformPlan(planWithAllocatedVariables)
+        .copy(locals = allLocals)
 
-private const val VARIABLE_ID_META_TAG = "\$variable_id"
-
-private val PartiqlLogical.VarDecl.indexMeta
-    get() = this.metas[VARIABLE_ID_META_TAG] as? Int ?: error("Meta $VARIABLE_ID_META_TAG was not present")
-
-/**
- * Allocates a unique index to every `var_decl` in the logical plan.  We use metas for this step to avoid a having
- * create another permuted domain.
- */
-private class VariableIdAllocator : PartiqlLogical.VisitorTransform() {
-    private var nextVariableId = 0
-    override fun transformVarDecl(node: PartiqlLogical.VarDecl): PartiqlLogical.VarDecl =
-        node.withMeta(VARIABLE_ID_META_TAG, nextVariableId++)
+    return resolvedSt
 }
 
 private fun PartiqlLogical.Expr.Id.asGlobalId(uniqueId: String): PartiqlLogicalResolved.Expr.GlobalId =
@@ -75,12 +63,12 @@ private fun PartiqlLogical.Expr.Id.asGlobalId(uniqueId: String): PartiqlLogicalR
 
 private fun PartiqlLogical.Expr.Id.asLocalId(index: Int): PartiqlLogicalResolved.Expr =
     PartiqlLogicalResolved.build {
-        localId_(name, index.asPrimitive(), this@asLocalId.metas)
+        localId_(index.asPrimitive(), this@asLocalId.metas)
     }
 
 private fun PartiqlLogical.Expr.Id.asErrorId(): PartiqlLogicalResolved.Expr =
     PartiqlLogicalResolved.build {
-        localId_(name, (-1).asPrimitive(), this@asErrorId.metas)
+        localId_((-1).asPrimitive(), this@asErrorId.metas)
     }
 
 /**
@@ -99,6 +87,7 @@ private data class LogicalToLogicalResolvedVisitorTransform(
     private val problemHandler: ProblemHandler,
     /** If a variable is not found using [inputScope], we will attempt to locate the binding here instead. */
     private val globals: GlobalBindings,
+
 ) : PartiqlLogicalToPartiqlLogicalResolvedVisitorTransform() {
     /** The current [LocalScope]. */
     private var inputScope: LocalScope = LocalScope(emptyList())
@@ -115,6 +104,14 @@ private data class LogicalToLogicalResolvedVisitorTransform(
      */
     private var currentVariableLookupStrategy: VariableLookupStrategy = VariableLookupStrategy.LOCALS_THEN_GLOBALS
 
+    private fun <T> withVariableLookupStrategy(nextVariableLookupStrategy: VariableLookupStrategy, block: () -> T): T {
+        val lastVariableLookupStrategy = this.currentVariableLookupStrategy
+        this.currentVariableLookupStrategy = nextVariableLookupStrategy
+        return block().also {
+            this.currentVariableLookupStrategy = lastVariableLookupStrategy
+        }
+    }
+
     private fun <T> withInputScope(nextScope: LocalScope, block: () -> T): T {
         val lastScope = inputScope
         inputScope = nextScope
@@ -123,13 +120,15 @@ private data class LogicalToLogicalResolvedVisitorTransform(
         }
     }
 
-    private fun <T> withVariableLookupStrategy(nextVariableLookupStrategy: VariableLookupStrategy, block: () -> T): T {
-        val lastVariableLookupStrategy = this.currentVariableLookupStrategy
-        this.currentVariableLookupStrategy = nextVariableLookupStrategy
-        return block().also {
-            this.currentVariableLookupStrategy = lastVariableLookupStrategy
+    override fun transformPlan(node: PartiqlLogical.Plan): PartiqlLogicalResolved.Plan =
+        PartiqlLogicalResolved.build {
+            plan_(
+                stmt = transformStatement(node.stmt),
+                version = node.version,
+                locals = emptyList(), // NOTE: locals will be populated by caller
+                metas = node.metas
+            )
         }
-    }
 
     override fun transformBexprScan_expr(node: PartiqlLogical.Bexpr.Scan): PartiqlLogicalResolved.Expr =
         withVariableLookupStrategy(VariableLookupStrategy.GLOBALS_THEN_LOCALS) {
@@ -192,7 +191,7 @@ private data class LogicalToLogicalResolvedVisitorTransform(
      */
     override fun transformVarDecl(node: PartiqlLogical.VarDecl): PartiqlLogicalResolved.VarDecl =
         PartiqlLogicalResolved.build {
-            varDecl_(node.name, node.indexMeta.asPrimitive())
+            varDecl(node.indexMeta.toLong())
         }
 
     /**
@@ -245,7 +244,7 @@ private data class LogicalToLogicalResolvedVisitorTransform(
                         currentDynamicResolutionCandidates()
                             .map {
                                 PartiqlLogicalResolved.build {
-                                    localId(it.name.text, it.indexMeta.toLong())
+                                    localId(it.indexMeta.toLong())
                                 }
                             }
                     )

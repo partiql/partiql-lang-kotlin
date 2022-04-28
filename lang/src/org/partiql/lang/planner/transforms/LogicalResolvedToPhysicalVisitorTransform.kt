@@ -8,8 +8,8 @@ import org.partiql.lang.domains.PartiqlPhysical
  * Transforms an instance of [PartiqlLogicalResolved.Statement] to [PartiqlPhysical.Statement],
  * specifying `(impl default)` for each relational operator.
  */
-internal fun PartiqlLogicalResolved.Statement.toPhysical() =
-    LogicalResolvedToPhysicalVisitorTransform().transformStatement(this)
+internal fun PartiqlLogicalResolved.Plan.toPhysicalPlan() =
+    LogicalResolvedToPhysicalVisitorTransform().transformPlan(this)
 
 internal val DEFAULT_IMPL = PartiqlPhysical.build { impl("default") }
 

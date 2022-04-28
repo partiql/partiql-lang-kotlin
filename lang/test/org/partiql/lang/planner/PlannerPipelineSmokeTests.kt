@@ -10,6 +10,7 @@ import org.partiql.lang.ION
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.planner.PassResult
 import org.partiql.lang.planner.PlannerPipeline
+import org.partiql.lang.planner.transforms.PLAN_VERSION_NUMBER
 import org.partiql.lang.planner.transforms.PlanningProblemDetails
 import org.partiql.lang.util.SexpAstPrettyPrinter
 
@@ -20,6 +21,7 @@ import org.partiql.lang.util.SexpAstPrettyPrinter
 class PlannerPipelineSmokeTests {
     private val ion = IonSystemBuilder.standard().build()
 
+    @Suppress("DEPRECATION")
     private fun createPlannerPipelineForTest(allowUndefinedVariables: Boolean) = PlannerPipeline.build(ion) {
         allowUndefinedVariables(allowUndefinedVariables)
         globalBindings(createFakeGlobalBindings("Customer" to "fake_uid_for_Customer"))
@@ -37,22 +39,29 @@ class PlannerPipelineSmokeTests {
             result,
             PassResult.Success(
                 result = PartiqlPhysical.build {
-                    query(
-                        bindingsToValues(
-                            exp = mergeStruct(structFields(localId("c", 0))),
-                            query = filter(
-                                i = impl("default"),
-                                predicate = eq(
-                                    operands0 = path(localId("c", 0), pathExpr(lit(ionString("primaryKey")), caseInsensitive())),
-                                    operands1 = lit(ionInt(42))
-                                ),
-                                source = scan(
+                    plan(
+                        stmt = query(
+                            bindingsToValues(
+                                exp = mergeStruct(structFields(localId(0))),
+                                query = filter(
                                     i = impl("default"),
-                                    expr = globalId("Customer", "fake_uid_for_Customer"),
-                                    asDecl = varDecl("c", 0)
+                                    predicate = eq(
+                                        operands0 = path(
+                                            localId(0),
+                                            pathExpr(lit(ionString("primaryKey")), caseInsensitive())
+                                        ),
+                                        operands1 = lit(ionInt(42))
+                                    ),
+                                    source = scan(
+                                        i = impl("default"),
+                                        expr = globalId("Customer", "fake_uid_for_Customer"),
+                                        asDecl = varDecl(0)
+                                    )
                                 )
                             )
-                        )
+                        ),
+                        locals = listOf(localVariable("c", 0)),
+                        version = PLAN_VERSION_NUMBER.toLong()
                     )
                 },
                 warnings = emptyList()

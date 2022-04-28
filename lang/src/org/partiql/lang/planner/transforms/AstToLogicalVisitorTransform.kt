@@ -13,8 +13,13 @@ import org.partiql.lang.domains.PartiqlLogical
  * This conversion (and the logical algebra) are early in their lifecycle and so only a very limited subset of
  * SFW queries are transformable.  See tests for this class to see which queries are transformable.
  */
-internal fun PartiqlAst.Statement.toLogical(): PartiqlLogical.Statement =
-    AstToLogicalVisitorTransform.transformStatement(this)
+internal fun PartiqlAst.Statement.toLogicalPlan(): PartiqlLogical.Plan =
+    PartiqlLogical.build {
+        plan(
+            AstToLogicalVisitorTransform.transformStatement(this@toLogicalPlan),
+            version = PLAN_VERSION_NUMBER.toLong()
+        )
+    }
 
 private object AstToLogicalVisitorTransform : PartiqlAstToPartiqlLogicalVisitorTransform() {
 

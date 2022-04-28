@@ -459,6 +459,14 @@ may then be further optimized by selecting better implementations of each operat
 (define partiql_logical
     (permute_domain partiql_ast
         (include
+            // This is the new top-level node for plans that are intended to be persisted to storage or survive across
+            // boundaries.  These need to include a version number so at least it is possible to know if a persisted
+            // plan is compatible with the current version of PartiQL.
+            (record plan
+                (stmt statement)
+                (version int)
+            )
+
             // An item to be projected in the logical algebra equivalent of a `SELECT`-list.
             // This is similar to project_item but has a better name for this domain and the as-alias is non-nullable.
             (sum struct_part
@@ -590,11 +598,28 @@ may then be further optimized by selecting better implementations of each operat
 // push-downs of filters and projections may be applied to this domain.
 (define partiql_logical_resolved
     (permute_domain partiql_logical
-        // Add `index` to `var_decl`.  Every variable `var_decl` is assigned this unique index (starting with index 0)
-        // and increasing by one for every `var_decl` encountered in the logical plan.
+        // Add `locals` to `plan`.
+        (exclude plan)
+        (include
+            (record plan
+                (stmt statement)
+                (version int)
+                (locals (* local_variable 0))
+            )
+
+            // Local variables currently include a name and register index.  In the future, something to indicate the
+            // static type of the variable may also be included here.  The index is included explicitly (instead of
+            // allowing it to be identified by ordinal position) simply to allow it to be easily identified by humans
+            // when examining plans with many local variables.
+            (product local_variable name::symbol register_index::int)
+        )
+
+
+        // For `var_decl`, `name` with `index`.  The name of the variable can still be determined by looking at the
+        // `local_va4riable` with the same index.
         (exclude var_decl scope_qualifier)
         (include
-            (product var_decl name::symbol index::int)
+            (product var_decl index::int)
 
             // Indicates scope search order when dynamically resolving variables with the `id` expression defined
             // below. This is similar to `scope_qualifier`, however is *not* context sensitive.
@@ -619,11 +644,9 @@ may then be further optimized by selecting better implementations of each operat
                 // A resolved reference to a variable that was defined within a query.  Otherwise known as a local
                 // variable. "Resolved" means that the variable is guaranteed to exist and we know its register index.
                 // Elements:
-                // - `name`: the original name of the variable, kept mostly just for error reporting purposes.
                 // - `index`: the index of the `var_decl` that this variable refers to, i.e. this always corresponds to
                 // the `var_decl` with the same index.
-                // PHYS TODO: consider removing `name`, as it will be redundant with the (locals ...) node.
-                (local_id name::symbol index::int)
+                (local_id index::int)
 
                 // Global variable reference--typically a table although it can actually be bound to any value.  Unlike
                 // local variables, global variables are not stored in registers.  Instead, they are typically stored
@@ -640,7 +663,6 @@ may then be further optimized by selecting better implementations of each operat
                 (global_id name::symbol uniqueId::symbol)
             )
         )
-
     )
 )
 

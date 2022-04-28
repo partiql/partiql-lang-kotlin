@@ -165,22 +165,16 @@ internal class PhysicalExprToThunkConverterImpl(
      * and throws [InterruptedException] if [Thread.interrupted] it has been set in the
      * hope that long-running compilations may be aborted by the caller.
      */
-    fun compile(plan: PartiqlPhysical.Statement): Expression {
-        PartiqlPhysicalSanityValidator(evaluatorOptions).walkStatement(plan)
+    fun compile(plan: PartiqlPhysical.Plan): Expression {
+        PartiqlPhysicalSanityValidator(evaluatorOptions).walkPlan(plan)
 
-        val thunk = compileAstStatement(plan)
-
-        // determine the number of registers we'll need.
-        val registerCount = object : PartiqlPhysical.VisitorFold<Long>() {
-            override fun visitVarDecl(node: PartiqlPhysical.VarDecl, accumulator: Long): Long =
-                if (accumulator > node.index.value) accumulator else node.index.value
-        }.walkStatement(plan, 0L) + 1
+        val thunk = compileAstStatement(plan.stmt)
 
         return object : Expression {
             override fun eval(session: EvaluationSession): ExprValue {
                 val env = EvaluatorState(
                     session = session,
-                    registers = Array(registerCount.toIntExact()) { valueFactory.missingValue }
+                    registers = Array(plan.locals.size) { valueFactory.missingValue }
                 )
 
                 return thunk(env)
