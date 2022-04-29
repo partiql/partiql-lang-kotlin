@@ -845,7 +845,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
                 properties.forEach { (property, expectedValue) ->
                     assertEquals(
                         "${property.propertyName} in error doesn't match",
-                        expectedValue, it.error.errorContext?.get(property)?.value
+                        expectedValue, it.error.errorContext[property]?.value
                     )
                 }
             }

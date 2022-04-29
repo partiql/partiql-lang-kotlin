@@ -401,8 +401,8 @@ internal abstract class ThunkFactory<TEnv>(
     ): EvaluationException {
         // Only add source location data to the error context if it doesn't already exist
         // in [errorContext].
-        if (exception.errorContext?.hasProperty(Property.LINE_NUMBER) != true) {
-            sourceLocation?.let { fillErrorContext(exception.errorContext ?: propertyValueMapOf(), sourceLocation) }
+        if (!exception.errorContext.hasProperty(Property.LINE_NUMBER)) {
+            sourceLocation?.let { fillErrorContext(exception.errorContext, sourceLocation) }
         }
         return exception
     }
