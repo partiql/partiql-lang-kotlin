@@ -3,6 +3,7 @@ package org.partiql.lang.eval
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.lang.ION
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.util.testdsl.IonResultTestCase
 import org.partiql.lang.util.testdsl.runTestCase
 
@@ -200,6 +201,7 @@ class EvaluatorStaticTypeTests {
         tc.runTestCase(
             valueFactory = valueFactory,
             db = mockDb,
+            target = EvaluatorTestTarget.COMPILER_PIPELINE,
             // Enable the static type inferencer for this
             compilerPipelineBuilderBlock = { this.globalTypeBindings(mockDb.typeBindings) }
         )

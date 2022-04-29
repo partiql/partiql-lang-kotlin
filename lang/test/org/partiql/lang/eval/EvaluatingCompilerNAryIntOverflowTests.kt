@@ -158,6 +158,7 @@ class EvaluatingCompilerNAryIntOverflowTests : EvaluatorTestBase() {
         val etc = EvaluatorTestCase(
             query = tc.sqlUnderTest,
             expectedResult = tc.expectedPermissiveModeResult,
+            implicitPermissiveModeTest = false,
             compilerPipelineBuilderBlock = {
                 globalTypeBindings(defaultEnv.typeBindings)
                 compileOptions {
