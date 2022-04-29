@@ -467,21 +467,26 @@ may then be further optimized by selecting better implementations of each operat
                 (version int)
             )
 
-            // An item to be projected in the logical algebra equivalent of a `SELECT`-list.
-            // This is similar to project_item but has a better name for this domain and the as-alias is non-nullable.
+            // Defines a field within a struct constructor or an expression which is expected to be a container
+            // that is included in the final struct.
             (sum struct_part
                 // For `.*` in SELECT list
                 // If `<expr>` is a struct, the fields of that struct will be part of the merged struct.
                 // If `<expr>` is not a struct, The field `_n` will be included in the struct, where `n` is the
-                // ordinal of the field in the final merged struct.
+                // ordinal of the field in the final merged struct. If `expr` returns a container that is not a struct,
+                // field names will be assigned in the format of `_n` where `n` is the ordinal position of the
+                // field within the struct.  If `expr` returns a scalar value, it will be coerced into a singleton bag
+                // expr and the previous logic will apply.
                 (struct_fields expr::expr)
-                // For `<expr> [AS <id>]`
-                (struct_field expr::expr as_alias::symbol))
+
+                // For `<expr> [AS <id>]`.  If `field_name` returns a non-text value, in legacy mode an exception
+                // will be thrown.  In permissive mode, the field will be excluded from the final struct.
+                (struct_field field_name::expr value::expr))
         )
 
         (with expr
-            // Remove the select node from the `expr` sum type.
-            (exclude select)
+            // Remove the select and struct node from the `expr` sum type, which will be replaced below.
+            (exclude select struct)
 
             (include
                 // Invokes `exp` once in the context of every binding tuple returned by `query`, returning a
@@ -489,11 +494,29 @@ may then be further optimized by selecting better implementations of each operat
                 // as the bindings collection returned by `query`.
                 (bindings_to_values exp::expr query::bexpr)
 
-                // PHYS TODO: remove this and replace with equivalent function
-                // `merge_struct` encapsulates semantics needed for `SELECT <expr>.*`, and `SELECT <expr> AS y`
-                // This has functionality above and beyond a the struct constructor, i.e. structs may be
-                // concatenated.
-                (merge_struct parts::(* struct_part 1))
+                // `struct` is the primary struct constructor and also encapsulates semantics needed for
+                // `SELECT <expr>.*`, and `SELECT <expr> AS y`.  It can be used as a regular struct constructor, or as
+                // a struct-union expression.
+                //
+                // Example as struct constructor:
+                //    (struct (struct_field (lit a) (lit 42))
+                // Returns: { a: 42 }
+                //
+                // Example as a struct-union. Given a global environment `{| foo: { a: 42 }, bar: { b: 43} |}`, then:
+                //     (struct
+                //         (struct_fields (id foo))
+                //         (struct_fields (id bar)))
+                // Returns { a: 42, b: 43 }
+                // Note that `struct_field` and `struct_fields` may be used in combination also:
+                //     (struct
+                //         (struct_fields (id foo))
+                //         (struct_fields (id bar))
+                //         (struct_field (lit c) (lit 44)))
+                // Returns { a: 42, b: 43, c: 44 }
+                //
+                // TODO:  in the future, when the legacy AST compiler has been removed and the AST is no longer
+                // part of the public API, we should consider moving this definition to the partiql_ast domain.
+                (struct parts::(* struct_part 1))
             )
         )
 

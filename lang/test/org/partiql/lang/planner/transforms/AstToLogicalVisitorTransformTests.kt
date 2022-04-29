@@ -55,7 +55,7 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     query(
                         bindingsToValues(
-                            mergeStruct(structFields(id("b"))),
+                            struct(structFields(id("b"))),
                             scan(id("bar"), varDecl("b"))
                         )
                     )
@@ -68,7 +68,7 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     query(
                         bindingsToValues(
-                            mergeStruct(structFields(id("b"))),
+                            struct(structFields(id("b"))),
                             filter(
                                 eq(lit(ionBool(true)), lit(ionBool(true))),
                                 scan(id("bar"), varDecl("b"))
@@ -82,7 +82,7 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     query(
                         bindingsToValues(
-                            mergeStruct(structFields(id("b"))),
+                            struct(structFields(id("b"))),
                             filter(
                                 eq(path(id("b"), pathExpr(lit(ionString("primaryKey")))), lit(ionInt(42))),
                                 scan(id("bar"), varDecl("b"))
@@ -98,7 +98,7 @@ class AstToLogicalVisitorTransformTests {
                         call(
                             "filter_distinct",
                             bindingsToValues(
-                                mergeStruct(structFields(id("b"))),
+                                struct(structFields(id("b"))),
                                 scan(id("bar"), varDecl("b"))
                             )
                         )

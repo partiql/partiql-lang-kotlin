@@ -55,13 +55,16 @@ private object AstToLogicalVisitorTransform : PartiqlAstToPartiqlLogicalVisitorT
                 when (val project = node.project) {
                     is PartiqlAst.Projection.ProjectValue -> transformExpr(project.value)
                     is PartiqlAst.Projection.ProjectList -> {
-                        mergeStruct(
+                        struct(
                             List(project.projectItems.size) { idx ->
                                 when (val projectItem = project.projectItems[idx]) {
                                     is PartiqlAst.ProjectItem.ProjectExpr ->
-                                        structField_(
+                                        structField(
+                                            lit(
+                                                projectItem.asAlias?.toIonElement()
+                                                    ?: errAstNotNormalized("SELECT-list item alias not specified")
+                                            ),
                                             transformExpr(projectItem.expr),
-                                            projectItem.asAlias ?: errAstNotNormalized("SELECT-list item alias not specified")
                                         )
                                     is PartiqlAst.ProjectItem.ProjectAll -> {
                                         structFields(transformExpr(projectItem.expr), projectItem.metas)
@@ -118,6 +121,19 @@ private object AstToLogicalVisitorTransform : PartiqlAstToPartiqlLogicalVisitorT
     override fun transformStatementDdl(node: PartiqlAst.Statement.Ddl): PartiqlLogical.Statement {
         TODO("Support for DDL")
     }
+
+    override fun transformExprStruct(node: PartiqlAst.Expr.Struct): PartiqlLogical.Expr =
+        PartiqlLogical.build {
+            struct(
+                node.fields.map {
+                    structField(
+                        transformExpr(it.first),
+                        transformExpr(it.second)
+                    )
+                },
+                metas = node.metas
+            )
+        }
 }
 
 private object FromSourceToBexpr : PartiqlAst.FromSource.Converter<PartiqlLogical.Bexpr> {

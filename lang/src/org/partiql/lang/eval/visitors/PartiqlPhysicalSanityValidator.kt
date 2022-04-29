@@ -95,19 +95,26 @@ class PartiqlPhysicalSanityValidator(val evaluatorOptions: EvaluatorOptions) : P
     }
 
     override fun visitExprStruct(node: PartiqlPhysical.Expr.Struct) {
-        node.fields.forEach { field ->
-            if (field.first is PartiqlPhysical.Expr.Missing || (field.first is PartiqlPhysical.Expr.Lit && field.first.value !is TextElement)) {
-                val type = when (field.first) {
-                    is PartiqlPhysical.Expr.Lit -> field.first.value.type.toString()
-                    else -> "MISSING"
-                }
-                throw SemanticException(
-                    "Found struct field to be of type $type",
-                    ErrorCode.SEMANTIC_NON_TEXT_STRUCT_FIELD_KEY,
-                    PropertyValueMap().addSourceLocation(field.first.metas).also { pvm ->
-                        pvm[Property.ACTUAL_TYPE] = type
+        node.parts.forEach { part ->
+            when (part) {
+                is PartiqlPhysical.StructPart.StructField -> {
+                    if (part.fieldName is PartiqlPhysical.Expr.Missing ||
+                        (part.fieldName is PartiqlPhysical.Expr.Lit && part.fieldName.value !is TextElement)
+                    ) {
+                        val type = when (part.fieldName) {
+                            is PartiqlPhysical.Expr.Lit -> part.fieldName.value.type.toString()
+                            else -> "MISSING"
+                        }
+                        throw SemanticException(
+                            "Found struct part to be of type $type",
+                            ErrorCode.SEMANTIC_NON_TEXT_STRUCT_FIELD_KEY,
+                            PropertyValueMap().addSourceLocation(part.fieldName.metas).also { pvm ->
+                                pvm[Property.ACTUAL_TYPE] = type
+                            }
+                        )
                     }
-                )
+                }
+                is PartiqlPhysical.StructPart.StructFields -> { /* intentionally empty */ }
             }
         }
     }

@@ -70,7 +70,6 @@ import org.partiql.lang.eval.fillErrorContext
 import org.partiql.lang.eval.isNotUnknown
 import org.partiql.lang.eval.isUnknown
 import org.partiql.lang.eval.like.parsePattern
-import org.partiql.lang.eval.name
 import org.partiql.lang.eval.namedValue
 import org.partiql.lang.eval.numberValue
 import org.partiql.lang.eval.rangeOver
@@ -207,7 +206,7 @@ internal class PhysicalExprToThunkConverterImpl(
             is PartiqlPhysical.Expr.SimpleCase -> compileSimpleCase(expr, metas)
             is PartiqlPhysical.Expr.SearchedCase -> compileSearchedCase(expr, metas)
             is PartiqlPhysical.Expr.Path -> compilePath(expr, metas)
-            is PartiqlPhysical.Expr.Struct -> compileStruct(expr, metas)
+            is PartiqlPhysical.Expr.Struct -> compileStruct(expr)
             is PartiqlPhysical.Expr.CallAgg -> compileCallAgg(expr, metas)
             is PartiqlPhysical.Expr.Parameter -> compileParameter(expr, metas)
             is PartiqlPhysical.Expr.Date -> compileDate(expr, metas)
@@ -271,71 +270,8 @@ internal class PhysicalExprToThunkConverterImpl(
                 )
             }
             is PartiqlPhysical.Expr.BindingsToValues -> compileBindingsToValues(expr)
-            is PartiqlPhysical.Expr.MergeStruct -> compileMergeStruct(expr)
         }
     }
-
-    private fun compileMergeStruct(expr: PartiqlPhysical.Expr.MergeStruct): PhysicalPlanThunk {
-        val structParts = compileStructParts(expr.parts)
-
-        val ordering = if (expr.parts.none { it is PartiqlPhysical.StructPart.StructFields })
-            StructOrdering.ORDERED
-        else
-            StructOrdering.UNORDERED
-
-        return thunkFactory.thunkEnv(expr.metas) { env ->
-            val columns = mutableListOf<ExprValue>()
-            for (element in structParts) {
-                when (element) {
-                    is CompiledStructPart.Field -> {
-                        val value = element.thunk(env)
-                        columns.add(value.namedValue(element.name))
-                    }
-                    is CompiledStructPart.StructMerge -> {
-                        for (projThunk in element.thunks) {
-                            val value = projThunk(env)
-                            if (value.type == ExprValueType.MISSING) continue
-
-                            val children = value.asSequence()
-                            if (!children.any() || value.type.isSequence) {
-                                val name = syntheticColumnName(columns.size).exprValue()
-                                columns.add(value.namedValue(name))
-                            } else {
-                                val valuesToProject =
-                                    when (evaluatorOptions.projectionIteration) {
-                                        ProjectionIterationBehavior.FILTER_MISSING -> {
-                                            value.filter { it.type != ExprValueType.MISSING }
-                                        }
-                                        ProjectionIterationBehavior.UNFILTERED -> value
-                                    }
-                                for (childValue in valuesToProject) {
-                                    val namedFacet = childValue.asFacet(Named::class.java)
-                                    val name = namedFacet?.name
-                                        ?: syntheticColumnName(columns.size).exprValue()
-                                    columns.add(childValue.namedValue(name))
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            createStructExprValue(columns.asSequence(), ordering)
-        }
-    }
-
-    private fun compileStructParts(projectItems: List<PartiqlPhysical.StructPart>): List<CompiledStructPart> =
-        projectItems.map { it ->
-            when (it) {
-                is PartiqlPhysical.StructPart.StructField -> {
-                    val alias = it.asAlias.text
-                    val thunk = compileAstExpr(it.expr)
-                    CompiledStructPart.Field(valueFactory.newString(alias), thunk)
-                }
-                is PartiqlPhysical.StructPart.StructFields -> {
-                    CompiledStructPart.StructMerge(listOf(compileAstExpr(it.expr)))
-                }
-            }
-        }
 
     private fun compileBindingsToValues(expr: PartiqlPhysical.Expr.BindingsToValues): PhysicalPlanThunk {
         val mapThunk = compileAstExpr(expr.exp)
@@ -1353,43 +1289,85 @@ internal class PhysicalExprToThunkConverterImpl(
         }
     }
 
-    private fun compileStruct(expr: PartiqlPhysical.Expr.Struct, metas: MetaContainer): PhysicalPlanThunk {
-        class StructFieldThunks(val nameThunk: PhysicalPlanThunk, val valueThunk: PhysicalPlanThunk)
+    private fun compileStruct(expr: PartiqlPhysical.Expr.Struct): PhysicalPlanThunk {
+        val structParts = compileStructParts(expr.parts)
 
-        val fieldThunks = expr.fields.map {
-            StructFieldThunks(compileAstExpr(it.first), compileAstExpr(it.second))
-        }
+        val ordering = if (expr.parts.none { it is PartiqlPhysical.StructPart.StructFields })
+            StructOrdering.ORDERED
+        else
+            StructOrdering.UNORDERED
 
-        return when (evaluatorOptions.typingMode) {
-            TypingMode.LEGACY -> thunkFactory.thunkEnv(metas) { env ->
-                val seq = fieldThunks.map {
-                    val nameValue = it.nameThunk(env)
-                    if (!nameValue.type.isText) {
-                        // Evaluation time error where variable reference might be evaluated to non-text struct field.
-                        err(
-                            "Found struct field key to be of type ${nameValue.type}",
-                            ErrorCode.EVALUATOR_NON_TEXT_STRUCT_FIELD_KEY,
-                            errorContextFrom(metas.sourceLocationMeta).also { pvm ->
-                                pvm[Property.ACTUAL_TYPE] = nameValue.type.toString()
-                            },
-                            internal = false
-                        )
+        return thunkFactory.thunkEnv(expr.metas) { env ->
+            val columns = mutableListOf<ExprValue>()
+            for (element in structParts) {
+                when (element) {
+                    is CompiledStructPart.Field -> {
+                        val fieldName = element.nameThunk(env)
+                        when (evaluatorOptions.typingMode) {
+                            TypingMode.LEGACY ->
+                                if (!fieldName.type.isText) {
+                                    err(
+                                        "Found struct field key to be of type ${fieldName.type}",
+                                        ErrorCode.EVALUATOR_NON_TEXT_STRUCT_FIELD_KEY,
+                                        errorContextFrom(expr.metas.sourceLocationMeta).also { pvm ->
+                                            pvm[Property.ACTUAL_TYPE] = fieldName.type.toString()
+                                        },
+                                        internal = false
+                                    )
+                                }
+                            TypingMode.PERMISSIVE ->
+                                if (!fieldName.type.isText) {
+                                    continue
+                                }
+                        }
+                        val fieldValue = element.valueThunk(env)
+                        columns.add(fieldValue.namedValue(fieldName))
                     }
-                    it.valueThunk(env).namedValue(nameValue)
-                }.asSequence()
-                createStructExprValue(seq, StructOrdering.ORDERED)
-            }
-            TypingMode.PERMISSIVE -> thunkFactory.thunkEnv(metas) { env ->
-                val seq = fieldThunks.map { it.valueThunk(env).namedValue(it.nameThunk(env)) }.asSequence()
-                    .filter {
-                        // fields with non-text keys are filtered out of the struct
-                        val keyType = it.name?.type
-                        keyType != null && keyType.isText
+                    is CompiledStructPart.StructMerge -> {
+                        for (projThunk in element.thunks) {
+                            val value = projThunk(env)
+                            if (value.type == ExprValueType.MISSING) continue
+
+                            val children = value.asSequence()
+                            if (!children.any() || value.type.isSequence) {
+                                val name = syntheticColumnName(columns.size).exprValue()
+                                columns.add(value.namedValue(name))
+                            } else {
+                                val valuesToProject =
+                                    when (evaluatorOptions.projectionIteration) {
+                                        ProjectionIterationBehavior.FILTER_MISSING -> {
+                                            value.filter { it.type != ExprValueType.MISSING }
+                                        }
+                                        ProjectionIterationBehavior.UNFILTERED -> value
+                                    }
+                                for (childValue in valuesToProject) {
+                                    val namedFacet = childValue.asFacet(Named::class.java)
+                                    val name = namedFacet?.name
+                                        ?: syntheticColumnName(columns.size).exprValue()
+                                    columns.add(childValue.namedValue(name))
+                                }
+                            }
+                        }
                     }
-                createStructExprValue(seq, StructOrdering.ORDERED)
+                }
             }
+            createStructExprValue(columns.asSequence(), ordering)
         }
     }
+
+    private fun compileStructParts(projectItems: List<PartiqlPhysical.StructPart>): List<CompiledStructPart> =
+        projectItems.map { it ->
+            when (it) {
+                is PartiqlPhysical.StructPart.StructField -> {
+                    val fieldThunk = compileAstExpr(it.fieldName)
+                    val valueThunk = compileAstExpr(it.value)
+                    CompiledStructPart.Field(fieldThunk, valueThunk)
+                }
+                is PartiqlPhysical.StructPart.StructFields -> {
+                    CompiledStructPart.StructMerge(listOf(compileAstExpr(it.expr)))
+                }
+            }
+        }
 
     private fun compileSeq(seqType: ExprValueType, itemExprs: List<PartiqlPhysical.Expr>, metas: MetaContainer): PhysicalPlanThunk {
         require(seqType.isSequence) { "seqType must be a sequence!" }
@@ -1909,7 +1887,7 @@ private sealed class CompiledStructPart {
      * - `name` is "value"
      * - `thunk` is compiled expression, i.e. `a + b`
      */
-    class Field(val name: ExprValue, val thunk: PhysicalPlanThunk) : CompiledStructPart()
+    class Field(val nameThunk: PhysicalPlanThunk, val valueThunk: PhysicalPlanThunk) : CompiledStructPart()
 
     /**
      * Represents a wildcard ((path_project_all) node) expression to be projected into the final result.

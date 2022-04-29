@@ -42,7 +42,7 @@ class PlannerPipelineSmokeTests {
                     plan(
                         stmt = query(
                             bindingsToValues(
-                                exp = mergeStruct(structFields(localId(0))),
+                                exp = struct(structFields(localId(0))),
                                 query = filter(
                                     i = impl("default"),
                                     predicate = eq(
