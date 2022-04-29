@@ -174,13 +174,12 @@ class EvaluatorStaticTypeTests {
             "aggregateInSubqueryOfSelect",
             "aggregateInSubqueryOfSelectValue",
             "aggregateWithAliasingInSubqueryOfSelectValue"
-
         )
 
         @JvmStatic
         @Suppress("unused")
         fun evaluatorStaticTypeTests() = EVALUATOR_TEST_SUITE.getAllTests(
-            EvaluatorTests.SKIP_LIST.union(FAILING_TESTS)
+            EvaluatorTests.AST_EVALUATOR_SKIP_LIST.union(FAILING_TESTS)
         ).map {
             it.copy(
                 compileOptionsBuilderBlock = {
@@ -201,8 +200,9 @@ class EvaluatorStaticTypeTests {
         tc.runTestCase(
             valueFactory = valueFactory,
             db = mockDb,
-            target = EvaluatorTestTarget.COMPILER_PIPELINE,
+            // the planner doesn't yet support type inferencing pass needed to make this work
+            EvaluatorTestTarget.COMPILER_PIPELINE,
             // Enable the static type inferencer for this
-            compilerPipelineBuilderBlock = { this.globalTypeBindings(mockDb.typeBindings) }
+            compilerPipelineBuilderBlock = { this.globalTypeBindings(mockDb.typeBindings) },
         )
 }

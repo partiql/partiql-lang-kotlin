@@ -17,6 +17,7 @@ package org.partiql.lang.eval
 import org.junit.Test
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.util.propertyValueMapOf
 
 class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
@@ -73,7 +74,9 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
                     {name:"d",val:4},
                     {name:"e",val:5},
                     {name:"f",val:6}
-                ]"""
+                ]""",
+        // planner & physical plan have no support for UNPIVOT (yet)
+        target = EvaluatorTestTarget.COMPILER_PIPELINE,
     )
 
     @Test
@@ -85,6 +88,27 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
                     {a:2,b:1,c:"one"},
                     {a:2,b:2,c:"two"}
                 ]"""
+    )
+
+    private val sessionWithG = mapOf(
+        "table_1" to "[{a:[{b: 1}, {b:2}]}]",
+        "g" to "{a: \"from global variable g\"}"
+    ).toSession()
+
+    /** Demonstrates that without the scope qualifier ('@'), the `g` in `g.b' refers to global `g`. */
+    @Test
+    fun joinWithoutScopeQualifier() = runEvaluatorTestCase(
+        """SELECT g2 FROM table_1 AS g, g.a AS g2""",
+        expectedResult = "[{g2:\"from global variable g\"}]",
+        session = sessionWithG
+    )
+
+    /** Demonstrates that with the scope qualifier ('@'), the `g` in `@g.b' refers to local `g`. */
+    @Test
+    fun joinWithScopeQualifier() = runEvaluatorTestCase(
+        """SELECT g2 FROM table_1 AS g, @g.a AS g2""",
+        expectedResult = "[{g2:{b:1}},{g2:{b:2}}]",
+        session = sessionWithG
     )
 
     @Test
@@ -116,20 +140,22 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
 
     @Test
     fun sum() {
-        runEvaluatorTestCase("SUM(`[1, 2, 3]`)", expectedResult = "6")
-        runEvaluatorTestCase("SUM(`[1, 2e0, 3e0]`)", expectedResult = "6e0")
-        runEvaluatorTestCase("SUM(`[1, 2d0, 3d0]`)", expectedResult = "6d0")
-        runEvaluatorTestCase("SUM(`[1, 2e0, 3d0]`)", expectedResult = "6d0")
-        runEvaluatorTestCase("SUM(`[1, 2d0, 3e0]`)", expectedResult = "6d0")
+        // Note: planner & phys. alg. have no support for aggregates (yet)
+        runEvaluatorTestCase("SUM(`[1, 2, 3]`)", expectedResult = "6", target = EvaluatorTestTarget.COMPILER_PIPELINE)
+        runEvaluatorTestCase("SUM(`[1, 2e0, 3e0]`)", expectedResult = "6e0", target = EvaluatorTestTarget.COMPILER_PIPELINE)
+        runEvaluatorTestCase("SUM(`[1, 2d0, 3d0]`)", expectedResult = "6d0", target = EvaluatorTestTarget.COMPILER_PIPELINE)
+        runEvaluatorTestCase("SUM(`[1, 2e0, 3d0]`)", expectedResult = "6d0", target = EvaluatorTestTarget.COMPILER_PIPELINE)
+        runEvaluatorTestCase("SUM(`[1, 2d0, 3e0]`)", expectedResult = "6d0", target = EvaluatorTestTarget.COMPILER_PIPELINE)
     }
 
     @Test
     fun max() {
-        runEvaluatorTestCase("max(`[1, 2, 3]`)", expectedResult = "3")
-        runEvaluatorTestCase("max(`[1, 2.0, 3]`)", expectedResult = "3")
-        runEvaluatorTestCase("max(`[1, 2e0, 3e0]`)", expectedResult = "3e0")
-        runEvaluatorTestCase("max(`[1, 2d0, 3d0]`)", expectedResult = "3d0")
-        runEvaluatorTestCase("max(`[1, 2e0, 3d0]`)", expectedResult = "3d0")
-        runEvaluatorTestCase("max(`[1, 2d0, 3e0]`)", expectedResult = "3e0")
+        // Note: planner & phys. alg. have no support for aggregates (yet)
+        runEvaluatorTestCase("max(`[1, 2, 3]`)", expectedResult = "3", target = EvaluatorTestTarget.COMPILER_PIPELINE)
+        runEvaluatorTestCase("max(`[1, 2.0, 3]`)", expectedResult = "3", target = EvaluatorTestTarget.COMPILER_PIPELINE)
+        runEvaluatorTestCase("max(`[1, 2e0, 3e0]`)", expectedResult = "3e0", target = EvaluatorTestTarget.COMPILER_PIPELINE)
+        runEvaluatorTestCase("max(`[1, 2d0, 3d0]`)", expectedResult = "3d0", target = EvaluatorTestTarget.COMPILER_PIPELINE)
+        runEvaluatorTestCase("max(`[1, 2e0, 3d0]`)", expectedResult = "3d0", target = EvaluatorTestTarget.COMPILER_PIPELINE)
+        runEvaluatorTestCase("max(`[1, 2d0, 3e0]`)", expectedResult = "3e0", target = EvaluatorTestTarget.COMPILER_PIPELINE)
     }
 }

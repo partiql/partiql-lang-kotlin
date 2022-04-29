@@ -19,6 +19,7 @@ import org.junit.Test
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.util.propertyValueMapOf
 
 class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
@@ -87,7 +88,13 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
     ).toSession()
 
     private fun runTest(tc: EvaluatorTestCase, session: EvaluationSession) =
-        super.runEvaluatorTestCase(tc.copy(implicitPermissiveModeTest = false), session)
+        super.runEvaluatorTestCase(
+            tc.copy(
+                implicitPermissiveModeTest = false, // we are manually setting typing mode
+                target = EvaluatorTestTarget.COMPILER_PIPELINE // no support in physical plans yet for GROUP BY
+            ),
+            session
+        )
 
     companion object {
 
@@ -1142,7 +1149,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             "SELECT foo AS someSelectListAlias FROM <<{ 'a': 1 }>> GROUP BY someSelectListAlias",
             ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST,
             propertyValueMapOf(1, 64, Property.BINDING_NAME to "someSelectListAlias"),
-            expectedPermissiveModeResult = "<<{}>>"
+            expectedPermissiveModeResult = "<<{}>>",
+            target = EvaluatorTestTarget.COMPILER_PIPELINE
         )
     }
 
@@ -1151,7 +1159,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
         runEvaluatorErrorTestCase(
             "SELECT MAX(@v2), @v2 FROM `[1, 2.0, 3e0, 4, 5d0]` AS v2",
             ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
-            propertyValueMapOf(1, 19, Property.BINDING_NAME to "v2")
+            propertyValueMapOf(1, 19, Property.BINDING_NAME to "v2"),
+            target = EvaluatorTestTarget.COMPILER_PIPELINE
         )
     }
 
@@ -1160,7 +1169,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
         runEvaluatorErrorTestCase(
             "SELECT * FROM << {'a': 1 } >> AS f GROUP BY f.a HAVING f.id = 1",
             ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
-            propertyValueMapOf(1, 56, Property.BINDING_NAME to "f")
+            propertyValueMapOf(1, 56, Property.BINDING_NAME to "f"),
+            target = EvaluatorTestTarget.COMPILER_PIPELINE
         )
     }
 
@@ -1169,7 +1179,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
         runEvaluatorErrorTestCase(
             "SELECT VALUE f.id FROM << {'a': 'b' } >> AS f GROUP BY f.a",
             ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
-            propertyValueMapOf(1, 14, Property.BINDING_NAME to "f")
+            propertyValueMapOf(1, 14, Property.BINDING_NAME to "f"),
+            target = EvaluatorTestTarget.COMPILER_PIPELINE
         )
     }
 
@@ -1183,6 +1194,7 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
             propertyValueMapOf(2, 28, Property.BINDING_NAME to "O"),
             session = session,
+            target = EvaluatorTestTarget.COMPILER_PIPELINE
         )
     }
 
@@ -1196,7 +1208,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             ErrorCode.EVALUATOR_QUOTED_BINDING_DOES_NOT_EXIST,
             propertyValueMapOf(2, 28, Property.BINDING_NAME to "O"),
             expectedPermissiveModeResult = "<<{'_2': 10}>>",
-            session = session
+            session = session,
+            target = EvaluatorTestTarget.COMPILER_PIPELINE
         )
     }
 
@@ -1210,7 +1223,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                 """,
             expectedErrorCode = ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
             expectedErrorContext = propertyValueMapOf(2, 41, Property.BINDING_NAME to "c"),
-            session = session
+            session = session,
+            target = EvaluatorTestTarget.COMPILER_PIPELINE
         )
     }
 
@@ -1225,7 +1239,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                 """,
             expectedErrorCode = ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
             expectedErrorContext = propertyValueMapOf(2, 41, Property.BINDING_NAME to "o"),
-            session = session
+            session = session,
+            target = EvaluatorTestTarget.COMPILER_PIPELINE
         )
     }
 
@@ -1244,7 +1259,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                 """,
             expectedErrorCode = ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
             expectedErrorContext = propertyValueMapOf(2, 37, Property.BINDING_NAME to "o"),
-            session = session
+            session = session,
+            target = EvaluatorTestTarget.COMPILER_PIPELINE
         )
     }
 
@@ -1261,7 +1277,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                 """,
             expectedErrorCode = ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
             expectedErrorContext = propertyValueMapOf(4, 28, Property.BINDING_NAME to "o"),
-            session = session
+            session = session,
+            target = EvaluatorTestTarget.COMPILER_PIPELINE
         )
     }
 }

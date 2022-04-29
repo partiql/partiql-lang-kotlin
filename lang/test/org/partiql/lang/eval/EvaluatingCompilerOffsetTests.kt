@@ -6,6 +6,7 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorErrorTestCase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.lang.util.to
@@ -105,7 +106,10 @@ class EvaluatingCompilerOffsetTests : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(ArgsProviderValid::class)
     fun validTests(tc: EvaluatorTestCase) = runEvaluatorTestCase(
-        tc.copy(excludeLegacySerializerAssertions = true),
+        tc.copy(
+            excludeLegacySerializerAssertions = true,
+            target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for OFFSET (yet)
+        ),
         session
     )
 
