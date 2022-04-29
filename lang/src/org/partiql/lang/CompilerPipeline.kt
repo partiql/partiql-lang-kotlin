@@ -205,7 +205,7 @@ interface CompilerPipeline {
         fun build(): CompilerPipeline {
             val compileOptionsToUse = compileOptions ?: CompileOptions.standard()
 
-            when (compileOptionsToUse.thunkReturnTypeAssertions) {
+            when (compileOptionsToUse.thunkOptions.thunkReturnTypeAssertions) {
                 ThunkReturnTypeAssertions.DISABLED -> { /* intentionally blank */ }
                 ThunkReturnTypeAssertions.ENABLED -> {
                     check(this.globalTypeBindings != null) {

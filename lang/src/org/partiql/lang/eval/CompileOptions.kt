@@ -141,6 +141,7 @@ enum class ThunkReturnTypeAssertions {
  * @param defaultTimezoneOffset Default timezone offset to be used when TIME WITH TIME ZONE does not explicitly
  * specify the time zone. Defaults to [ZoneOffset.UTC]
  */
+@Suppress("DataClassPrivateConstructor")
 data class CompileOptions private constructor (
     val undefinedVariable: UndefinedVariableBehavior,
     val projectionIteration: ProjectionIterationBehavior = ProjectionIterationBehavior.FILTER_MISSING,
@@ -148,7 +149,6 @@ data class CompileOptions private constructor (
     val thunkOptions: ThunkOptions = ThunkOptions.standard(),
     val typingMode: TypingMode = TypingMode.LEGACY,
     val typedOpBehavior: TypedOpBehavior = TypedOpBehavior.LEGACY,
-    val thunkReturnTypeAssertions: ThunkReturnTypeAssertions = ThunkReturnTypeAssertions.DISABLED,
     val defaultTimezoneOffset: ZoneOffset = ZoneOffset.UTC
 ) {
 
@@ -177,7 +177,7 @@ data class CompileOptions private constructor (
         fun build(options: CompileOptions, block: Builder.() -> Unit) = Builder(options).apply(block).build()
 
         /**
-         * Creates a [CompileOptions] instance with the standard values.
+         * Creates a [CompileOptions] instance with the standard values for use by the legacy AST compiler.
          */
         @JvmStatic
         fun standard() = Builder().build()
@@ -194,7 +194,7 @@ data class CompileOptions private constructor (
         fun typingMode(value: TypingMode) = set { copy(typingMode = value) }
         fun typedOpBehavior(value: TypedOpBehavior) = set { copy(typedOpBehavior = value) }
         fun thunkOptions(value: ThunkOptions) = set { copy(thunkOptions = value) }
-        fun evaluationTimeTypeChecks(value: ThunkReturnTypeAssertions) = set { copy(thunkReturnTypeAssertions = value) }
+        fun thunkOptions(build: ThunkOptions.Builder.() -> Unit) = set { copy(thunkOptions = ThunkOptions.build(build)) }
         fun defaultTimezoneOffset(value: ZoneOffset) = set { copy(defaultTimezoneOffset = value) }
 
         private inline fun set(block: CompileOptions.() -> CompileOptions): Builder {

@@ -88,6 +88,25 @@ import java.util.regex.Pattern
 import kotlin.Comparator
 
 /**
+ * A thunk with no parameters other than the current environment.
+ *
+ * See https://en.wikipedia.org/wiki/Thunk
+ *
+ * This name was chosen because it is a thunk that accepts an instance of `Environment`.
+ */
+private typealias ThunkEnv = Thunk<Environment>
+
+/**
+ * A thunk taking a single [T] argument and the current environment.
+ *
+ * See https://en.wikipedia.org/wiki/Thunk
+ *
+ * This name was chosen because it is a thunk that accepts an instance of `Environment` and an [ExprValue] as
+ * its arguments.
+ */
+private typealias ThunkEnvValue<T> = ThunkValue<Environment, T>
+
+/**
  * A basic compiler that converts an instance of [PartiqlAst] to an [Expression].
  *
  * This implementation produces a "compiled" form consisting of context-threaded
@@ -116,7 +135,7 @@ internal class EvaluatingCompiler(
     private val compileOptions: CompileOptions = CompileOptions.standard()
 ) {
     private val errorSignaler = compileOptions.typingMode.createErrorSignaler(valueFactory)
-    private val thunkFactory = compileOptions.typingMode.createThunkFactory(compileOptions, valueFactory)
+    private val thunkFactory = compileOptions.typingMode.createThunkFactory<Environment>(compileOptions.thunkOptions, valueFactory)
 
     private val compilationContextStack = Stack<CompilationContext>()
 
