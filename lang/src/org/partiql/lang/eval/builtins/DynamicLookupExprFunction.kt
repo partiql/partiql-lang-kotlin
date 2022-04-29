@@ -18,9 +18,9 @@ const val DYNAMIC_LOOKUP_FUNCTION_NAME = "\$__dynamic_lookup__"
 
 /**
  * Performs dynamic variable resolution.  Query authors should never call this function directly (and indeed it is
- * named to not be a likely collide with the names of custom functions)--instead, the query planner injects call sites
- * to this function to perform dynamic variable resolution of undefined variables.  This behavior allows legacy
- * customers that depend on this behavior a migration path to the new query planner.
+ * named to avoid collision with the names of custom functions)--instead, the query planner injects call sites
+ * to this function to perform dynamic variable resolution of undefined variables.  This provides a migration path
+ * for legacy customers that depend on this behavior.
  *
  * Arguments:
  *

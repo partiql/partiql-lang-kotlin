@@ -22,11 +22,12 @@ sealed class ResolutionResult {
     object Undefined : ResolutionResult()
 }
 
+
 fun interface GlobalBindings {
     /**
-     * Tries to resolve a global variable, typically a database table, which is identified by its [bindingName],
-     * which includes both the name and a [BindingCase] which indicates if the variable lookup should be
-     * case-sensitive.
+     * Implementations try to resolve a global variable which is typically a database table, as identified by a
+     * [bindingName].  The [bindingName] includes both the name as specified by the query author and a [BindingCase]
+     * which indicates if query author included double quotes (") which mean the lookup should be case-sensitive.
      *
      * Implementations of this function must return:
      *
@@ -39,7 +40,7 @@ fun interface GlobalBindings {
      * without providing an error. (This is consistent with Postres's behavior in this scenario.)
      *
      * Note that while [ResolutionResult.LocalVariable] exists, it is intentionally marked `internal` and cannot
-     * be used by PartiQL services.
+     * be used by outside of this project..
      */
     fun resolve(bindingName: BindingName): ResolutionResult
 }
