@@ -101,9 +101,7 @@ data class EvaluatorErrorTestCase(
             b.appendLine("Actual error code              : $actualErrorCode")
         }
         b.appendLine("Expected error context         : $expectedErrorContext")
-        if (actualErrorContext != null) {
-            b.appendLine("Actual error context           : $actualErrorContext")
-        }
+        b.appendLine("Actual error context           : ${actualErrorContext ?: "null"}")
         b.appendLine("Expected internal flag         : $expectedInternalFlag")
         if (actualErrorContext != null) {
             b.appendLine("Actual internal flag           : $actualInternalFlag")

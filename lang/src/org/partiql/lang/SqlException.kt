@@ -18,6 +18,7 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.errors.UNKNOWN
+import org.partiql.lang.util.propertyValueMapOf
 
 /**
  * General exception class for the interpreter.
@@ -43,10 +44,12 @@ import org.partiql.lang.errors.UNKNOWN
 open class SqlException(
     override var message: String,
     val errorCode: ErrorCode,
-    val errorContext: PropertyValueMap? = null,
+    errorContextArg: PropertyValueMap? = null,
     cause: Throwable? = null
-) :
-    RuntimeException(message, cause) {
+) : RuntimeException(message, cause) {
+
+    val errorContext: PropertyValueMap = errorContextArg ?: propertyValueMapOf()
+
 
     /**
      * Indicates if this exception is due to an internal error or not.
