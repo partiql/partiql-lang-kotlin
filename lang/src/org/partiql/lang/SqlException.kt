@@ -50,7 +50,6 @@ open class SqlException(
 
     val errorContext: PropertyValueMap = errorContextArg ?: propertyValueMapOf()
 
-
     /**
      * Indicates if this exception is due to an internal error or not.
      *
