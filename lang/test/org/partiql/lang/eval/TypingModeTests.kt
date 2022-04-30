@@ -58,7 +58,7 @@ class TypingModeTests : EvaluatorTestBase() {
             expectedErrorCode = tc.expectedLegacyError.errorCode,
             expectedPermissiveModeResult = tc.expectedPermissiveModeResult,
             addtionalExceptionAssertBlock = { ex: SqlException ->
-                // Have to use the addtionalExceptionAssertBlock instead of error context for this
+                // Have to use the additionalExceptionAssertBlock instead of error context for this
                 // because there are a few cases with error context values other than line & column that we don't
                 // account for in [TestCase].
                 assertEquals(

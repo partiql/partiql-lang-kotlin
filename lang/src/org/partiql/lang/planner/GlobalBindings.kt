@@ -39,7 +39,7 @@ fun interface GlobalBindings {
      * without providing an error. (This is consistent with Postres's behavior in this scenario.)
      *
      * Note that while [ResolutionResult.LocalVariable] exists, it is intentionally marked `internal` and cannot
-     * be used by outside of this project..
+     * be used by outside of this project.
      */
     fun resolve(bindingName: BindingName): ResolutionResult
 }

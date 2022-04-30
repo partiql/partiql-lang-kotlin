@@ -14,6 +14,7 @@ import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.eval.evaluatortestframework.PipelineEvaluatorTestAdapter
+import org.partiql.lang.eval.evaluatortestframework.PlannerPipelineFactory
 import org.partiql.lang.mockdb.MockDb
 import org.partiql.lang.syntax.SqlParser
 
@@ -78,11 +79,10 @@ internal fun IonResultTestCase.runTestCase(
     val adapter = PipelineEvaluatorTestAdapter(
         when (target) {
             EvaluatorTestTarget.COMPILER_PIPELINE -> CompilerPipelineFactory()
-            EvaluatorTestTarget.PLANNER_PIPELINE -> TODO("PlannerPipelineFactory()")
-            EvaluatorTestTarget.ALL_PIPELINES ->
-                // We don't support ALL_PIPELINES here because each pipeline needs a separate skip list, which
-                // is decided by the caller of this function.
-                error("May only test one pipeline at a time with IonResultTestCase")
+            EvaluatorTestTarget.PLANNER_PIPELINE -> PlannerPipelineFactory()
+            // We don't support ALL_PIPELINES here because each pipeline needs a separate skip list, which
+            // is decided by the caller of this function.
+            EvaluatorTestTarget.ALL_PIPELINES -> error("May only test one pipeline at a time with IonResultTestCase")
         }
     )
 

@@ -28,6 +28,7 @@ import org.partiql.lang.eval.Expression
 import org.partiql.lang.eval.ThunkReturnTypeAssertions
 import org.partiql.lang.eval.builtins.createBuiltinFunctions
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
+import org.partiql.lang.eval.physical.PhysicalExprToThunkConverterImpl
 import org.partiql.lang.planner.transforms.PlanningProblemDetails
 import org.partiql.lang.planner.transforms.normalize
 import org.partiql.lang.planner.transforms.toLogicalPlan
@@ -379,35 +380,34 @@ internal class PlannerPipelineImpl(
     }
 
     override fun compile(physcialPlan: PartiqlPhysical.Plan): PassResult<Expression> {
-        TODO("uncomment the code below in the PR introducing the plan evaluator")
-//        val compiler = PhysicalExprToThunkConverterImpl(
-//            valueFactory = valueFactory,
-//            functions = functions,
-//            customTypedOpParameters = customTypedOpParameters,
-//            procedures = procedures,
-//            evaluatorOptions = evaluatorOptions
-//        )
-//
-//        val expression = when {
-//            enableLegacyExceptionHandling -> compiler.compile(physcialPlan)
-//            else -> {
-//                // Legacy exception handling is disabled, convert any [SqlException] into a Problem and return
-//                // PassResult.Error.
-//                try {
-//                    compiler.compile(physcialPlan)
-//                } catch (e: SqlException) {
-//                    val problem = Problem(
-//                        SourceLocationMeta(
-//                            e.errorContext[Property.LINE_NUMBER]?.longValue() ?: -1,
-//                            e.errorContext[Property.COLUMN_NUMBER]?.longValue() ?: -1
-//                        ),
-//                        PlanningProblemDetails.CompileError(e.generateMessageNoLocation())
-//                    )
-//                    return PassResult.Error(listOf(problem))
-//                }
-//            }
-//        }
-//
-//        return PassResult.Success(expression, listOf())
+        val compiler = PhysicalExprToThunkConverterImpl(
+            valueFactory = valueFactory,
+            functions = functions,
+            customTypedOpParameters = customTypedOpParameters,
+            procedures = procedures,
+            evaluatorOptions = evaluatorOptions
+        )
+
+        val expression = when {
+            enableLegacyExceptionHandling -> compiler.compile(physcialPlan)
+            else -> {
+                // Legacy exception handling is disabled, convert any [SqlException] into a Problem and return
+                // PassResult.Error.
+                try {
+                    compiler.compile(physcialPlan)
+                } catch (e: SqlException) {
+                    val problem = Problem(
+                        SourceLocationMeta(
+                            e.errorContext[Property.LINE_NUMBER]?.longValue() ?: -1,
+                            e.errorContext[Property.COLUMN_NUMBER]?.longValue() ?: -1
+                        ),
+                        PlanningProblemDetails.CompileError(e.generateMessageNoLocation())
+                    )
+                    return PassResult.Error(listOf(problem))
+                }
+            }
+        }
+
+        return PassResult.Success(expression, listOf())
     }
 }
