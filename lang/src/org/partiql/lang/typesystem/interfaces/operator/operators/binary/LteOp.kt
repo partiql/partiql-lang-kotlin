@@ -6,6 +6,6 @@ import org.partiql.lang.typesystem.interfaces.operator.OpAlias
 /**
  * Used to define [OpAlias.LTE] operator
  */
-abstract class LteOp: BinaryOp() {
+abstract class LteOp : BinaryOp() {
     override fun getOperatorAlias(): OpAlias = OpAlias.LTE
 }

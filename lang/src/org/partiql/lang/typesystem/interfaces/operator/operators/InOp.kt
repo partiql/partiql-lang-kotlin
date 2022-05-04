@@ -10,7 +10,7 @@ import org.partiql.lang.typesystem.interfaces.type.TypeWithParameters
 /**
  * Used to define [OpAlias.IN] operator
  */
-abstract class InOp: PqlOperator {
+abstract class InOp : PqlOperator {
     override fun getOperatorAlias(): OpAlias = OpAlias.IN
 
     /**

@@ -6,6 +6,6 @@ import org.partiql.lang.typesystem.interfaces.operator.OpAlias
 /**
  * Used to define [OpAlias.CONCAT] operator
  */
-abstract class ConcatOp: BinaryOp() {
+abstract class ConcatOp : BinaryOp() {
     override fun getOperatorAlias(): OpAlias = OpAlias.CONCAT
 }

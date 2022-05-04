@@ -10,7 +10,7 @@ import org.partiql.lang.typesystem.interfaces.type.TypeWithParameters
 /**
  * Used to define [OpAlias.LIKE] operator
  */
-abstract class LkeOp: PqlOperator {
+abstract class LikeOp : PqlOperator {
     override fun getOperatorAlias(): OpAlias = OpAlias.LIKE
 
     /**

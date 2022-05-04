@@ -10,7 +10,7 @@ import org.partiql.lang.typesystem.interfaces.type.TypeWithParameters
 /**
  * Used to define [OpAlias.IS] operator
  */
-abstract class BetweenOp: PqlOperator {
+abstract class BetweenOp : PqlOperator {
     override fun getOperatorAlias(): OpAlias = OpAlias.BETWEEN
 
     /**

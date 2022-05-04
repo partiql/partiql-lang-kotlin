@@ -9,7 +9,7 @@ package org.partiql.lang.typesystem.interfaces.type
  * however, it should not be assigned to a value (not a data type). Thus, it does not
  * have a corresponding run-time type.
  */
-abstract class AbstractType internal constructor(): Type {
+abstract class AbstractType internal constructor() : Type {
     /**
      * Get the corresponding types
      */

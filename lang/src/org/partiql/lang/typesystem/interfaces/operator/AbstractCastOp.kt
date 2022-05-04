@@ -5,7 +5,7 @@ import org.partiql.lang.typesystem.interfaces.type.Type
 import org.partiql.lang.typesystem.interfaces.type.TypeParameters
 import org.partiql.lang.typesystem.interfaces.type.TypeWithParameters
 
-abstract class AbstractCastOp internal constructor(): PqlOperator {
+abstract class AbstractCastOp internal constructor() : PqlOperator {
     /**
      * Type of the source expression
      */

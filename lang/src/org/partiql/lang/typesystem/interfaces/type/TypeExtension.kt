@@ -5,7 +5,7 @@ import com.amazon.ion.IonValue
 /**
  * A sql type with actual parameters. If it is a non-parametric type, [parameters] should be an empty list.
  */
-data class TypeWithParameters (
+data class TypeWithParameters(
     val type: SqlType,
     val parameters: TypeParameters = emptyList()
 )

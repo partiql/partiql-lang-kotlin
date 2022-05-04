@@ -6,6 +6,6 @@ import org.partiql.lang.typesystem.interfaces.operator.UnaryOp
 /**
  * Used to define [OpAlias.NOT] operator
  */
-abstract class NotOp: UnaryOp() {
+abstract class NotOp : UnaryOp() {
     override fun getOperatorAlias(): OpAlias = OpAlias.NOT
 }

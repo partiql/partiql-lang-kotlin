@@ -5,7 +5,7 @@ import org.partiql.lang.eval.ExprValueType
 /**
  * This interface is used to define a sql type
  */
-abstract class SqlType internal constructor(): Type {
+abstract class SqlType internal constructor() : Type {
     /**
      * A sql type has a unique type name
      */

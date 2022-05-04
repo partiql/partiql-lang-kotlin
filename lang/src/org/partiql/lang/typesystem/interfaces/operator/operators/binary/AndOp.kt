@@ -6,6 +6,6 @@ import org.partiql.lang.typesystem.interfaces.operator.OpAlias
 /**
  * Used to define [OpAlias.AND] operator
  */
-abstract class AndOp: BinaryOp() {
+abstract class AndOp : BinaryOp() {
     override fun getOperatorAlias(): OpAlias = OpAlias.AND
 }

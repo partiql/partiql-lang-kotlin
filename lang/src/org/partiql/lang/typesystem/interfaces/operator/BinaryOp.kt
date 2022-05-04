@@ -5,7 +5,7 @@ import org.partiql.lang.typesystem.interfaces.type.Type
 import org.partiql.lang.typesystem.interfaces.type.TypeParameters
 import org.partiql.lang.typesystem.interfaces.type.TypeWithParameters
 
-abstract class BinaryOp internal constructor(): PqlOperator {
+abstract class BinaryOp internal constructor() : PqlOperator {
     /**
      * Type of left-hand side expression
      */
