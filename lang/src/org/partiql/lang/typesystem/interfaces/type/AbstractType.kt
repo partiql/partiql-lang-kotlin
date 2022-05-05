@@ -11,7 +11,7 @@ package org.partiql.lang.typesystem.interfaces.type
  */
 abstract class AbstractType internal constructor() : Type {
     /**
-     * Get the corresponding types
+     * Get the corresponding sql types
      */
-    abstract fun getTypes(): List<Type>
+    abstract fun getTypes(): List<SqlType>
 }
