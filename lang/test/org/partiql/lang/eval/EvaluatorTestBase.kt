@@ -128,7 +128,7 @@ abstract class EvaluatorTestBase : TestBase() {
             expectedPermissiveModeResult = expectedPermissiveModeResult,
             excludeLegacySerializerAssertions = excludeLegacySerializerAssertions,
             implicitPermissiveModeTest = implicitPermissiveModeTest,
-            target = target,
+            targetPipeline = target,
             compileOptionsBuilderBlock = compileOptionsBuilderBlock,
             compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,
             additionalExceptionAssertBlock = addtionalExceptionAssertBlock,

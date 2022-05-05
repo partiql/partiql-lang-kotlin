@@ -60,7 +60,11 @@ data class EvaluatorTestCase(
      */
     override val implicitPermissiveModeTest: Boolean = true,
 
-    override val target: EvaluatorTestTarget = EvaluatorTestTarget.ALL_PIPELINES,
+    /**
+     * Determines which pipeline this test should run against; the [CompilerPipeline],
+     * [org.partiql.lang.planner.PlannerPipeline] or both.
+     */
+    override val targetPipeline: EvaluatorTestTarget = EvaluatorTestTarget.ALL_PIPELINES,
 
     /**
      * Builder block for building [CompileOptions].
@@ -93,7 +97,7 @@ data class EvaluatorTestCase(
         expectedResultFormat = expectedResultFormat,
         excludeLegacySerializerAssertions = excludeLegacySerializerAssertions,
         implicitPermissiveModeTest = implicitPermissiveModeTest,
-        target = target,
+        targetPipeline = target,
         compileOptionsBuilderBlock = compileOptionsBuilderBlock,
         compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,
         extraResultAssertions = extraResultAssertions
@@ -111,6 +115,8 @@ data class EvaluatorTestCase(
         b.appendLine("Note            : $note")
         b.appendLine("Group name      : $groupName")
         b.appendLine("Query           : $query")
+        b.appendLine("Target pipeline : $targetPipeline")
+
         b.appendLine("Expected result : $expectedResult")
         if (actualResult != null) {
             b.appendLine("Actual result   : $actualResult")
