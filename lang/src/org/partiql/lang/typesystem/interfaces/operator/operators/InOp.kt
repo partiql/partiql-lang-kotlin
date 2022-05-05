@@ -11,24 +11,25 @@ import org.partiql.lang.typesystem.interfaces.type.TypeWithParameters
  * Used to define [OpAlias.IN] operator
  */
 abstract class InOp : PqlOperator {
-    override fun getOperatorAlias(): OpAlias = OpAlias.IN
+    override val operatorAlias: OpAlias
+        get() = OpAlias.IN
 
     /**
      * Type of the source expression
      */
-    abstract fun getSourceType(): Type
+    abstract val sourceType: Type
 
     /**
      * Type of the collection
      */
-    abstract fun getCollectionType(): Type
+    abstract val collectionType: Type
 
     /**
      * Function return type inference
      *
      * [paramRegistry] is used to get type parameters of operands
      */
-    abstract fun inferReturnType(paramRegistry: ParameterRegistry): List<TypeWithParameters>
+    abstract fun inferReturnType(paramRegistry: ParameterRegistry): TypeWithParameters
 
     /**
      * Evaluation

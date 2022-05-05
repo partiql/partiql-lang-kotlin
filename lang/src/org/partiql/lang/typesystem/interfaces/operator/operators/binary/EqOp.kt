@@ -7,5 +7,6 @@ import org.partiql.lang.typesystem.interfaces.operator.OpAlias
  * Used to define [OpAlias.EQ] operator
  */
 abstract class EqOp : BinaryOp() {
-    override fun getOperatorAlias(): OpAlias = OpAlias.EQ
+    override val operatorAlias: OpAlias
+        get() = OpAlias.EQ
 }

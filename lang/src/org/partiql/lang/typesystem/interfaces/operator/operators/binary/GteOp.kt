@@ -7,5 +7,6 @@ import org.partiql.lang.typesystem.interfaces.operator.OpAlias
  * Used to define [OpAlias.GTE] operator
  */
 abstract class GteOp : BinaryOp() {
-    override fun getOperatorAlias(): OpAlias = OpAlias.GTE
+    override val operatorAlias: OpAlias
+        get() = OpAlias.GTE
 }

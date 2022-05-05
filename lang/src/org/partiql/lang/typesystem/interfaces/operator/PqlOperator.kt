@@ -7,5 +7,5 @@ interface PqlOperator {
     /**
      * Which operator it is
      */
-    fun getOperatorAlias(): OpAlias
+    val operatorAlias: OpAlias
 }

@@ -9,20 +9,20 @@ abstract class SqlType internal constructor() : Type {
     /**
      * A sql type has a unique type name
      */
-    abstract fun getTypeName(): String
+    abstract val typeName: String
 
     /**
      * Run-time type
      */
-    abstract fun getExprValueType(): ExprValueType
+    abstract val exprValueType: ExprValueType
 
     /**
      * Whether it is a primitive type
      */
-    abstract fun isPrimitiveType(): Boolean
+    abstract val isPrimitiveType: Boolean
 
     /**
      * Whether it is a built-in type
      */
-    abstract fun isBuiltInType(): Boolean
+    abstract val isBuiltInType: Boolean
 }

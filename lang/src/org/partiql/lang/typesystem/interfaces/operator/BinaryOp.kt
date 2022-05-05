@@ -9,19 +9,19 @@ abstract class BinaryOp internal constructor() : PqlOperator {
     /**
      * Type of left-hand side expression
      */
-    abstract fun getLhsType(): Type
+    abstract val lhsType: Type
 
     /**
      * Type of right-hand side expression
      */
-    abstract fun getRhsType(): Type
+    abstract val rhsType: Type
 
     /**
      * Function return type inference
      *
      * [paramRegistry] is used to get type parameters of operands
      */
-    abstract fun inferReturnType(paramRegistry: ParameterRegistry): List<TypeWithParameters>
+    abstract fun inferReturnType(paramRegistry: ParameterRegistry): TypeWithParameters
 
     /**
      * Evaluation

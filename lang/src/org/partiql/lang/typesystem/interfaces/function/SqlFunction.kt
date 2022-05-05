@@ -11,32 +11,34 @@ interface SqlFunction {
     /**
      * Function name
      */
-    fun getFuncName(): String
+    val funcName: String
 
     /**
      * Required arguments of this function. Empty list means no required arguments.
      */
-    fun getRequiredArgTypes(): List<Type>
+    val requiredArgTypes: List<Type>
 
     /**
      * Optional arguments of this function. Empty list means no optional arguments.
      */
-    fun getOptionalArgTypes(): List<Type>
+    val optionalArgTypes: List<Type>
 
     /**
      * Variadic argument of this function. Null value means no variadic argument.
      */
-    fun getVariadicArgType(): Type?
+    val variadicArgType: Type?
 
     /**
      * Function return type inference
+     *
+     * [argTypes] is the
      */
-    fun inferReturnType(): List<TypeWithParameters>
+    fun inferReturnType(argTypes: List<Type>): TypeWithParameters
 
     /**
      * Function evaluation
      *
-     * [arguments] consists of required arguments and optional arguments
+     * [arguments] represents values of arguments
      */
     fun invoke(arguments: List<ExprValue>): ExprValue
 }

@@ -11,22 +11,23 @@ import org.partiql.lang.typesystem.interfaces.type.TypeWithParameters
  * Used to define [OpAlias.LIKE] operator
  */
 abstract class LikeOp : PqlOperator {
-    override fun getOperatorAlias(): OpAlias = OpAlias.LIKE
+    override val operatorAlias: OpAlias
+        get() = OpAlias.LIKE
 
     /**
      * Type of the source expression
      */
-    abstract fun getSourceType(): Type
+    abstract val sourceType: Type
 
     /**
      * Type of the matching pattern
      */
-    abstract fun getPatternType(): Type
+    abstract val patternType: Type
 
     /**
      * Type of the escaping characters
      */
-    abstract fun getEscapeType(): Type
+    abstract val escapeType: Type
 
     /**
      * Function return type inference

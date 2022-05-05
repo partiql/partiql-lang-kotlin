@@ -7,5 +7,6 @@ import org.partiql.lang.typesystem.interfaces.operator.UnaryOp
  * Used to define [OpAlias.POS] operator
  */
 abstract class PosOp : UnaryOp() {
-    override fun getOperatorAlias(): OpAlias = OpAlias.POS
+    override val operatorAlias: OpAlias
+        get() = OpAlias.POS
 }

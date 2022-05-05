@@ -7,5 +7,5 @@ interface Type {
     /**
      * Its parent type in PartiQL. Null value means no parent type.
      */
-    fun getParentType(): Type?
+    val parentType: Type?
 }

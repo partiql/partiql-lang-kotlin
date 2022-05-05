@@ -11,29 +11,30 @@ import org.partiql.lang.typesystem.interfaces.type.TypeWithParameters
  * Used to define [OpAlias.IS] operator
  */
 abstract class BetweenOp : PqlOperator {
-    override fun getOperatorAlias(): OpAlias = OpAlias.BETWEEN
+    override val operatorAlias: OpAlias
+        get() = OpAlias.BETWEEN
 
     /**
      * Type of the source expression
      */
-    abstract fun getSourceType(): Type
+    abstract val sourceType: Type
 
     /**
      * Type of the "from" expression
      */
-    abstract fun getFromType(): Type
+    abstract val fromType: Type
 
     /**
      * Type of the "to" expression
      */
-    abstract fun getToType(): Type
+    abstract val toType: Type
 
     /**
      * Function return type inference
      *
      * [paramRegistry] is used to get type parameters of operands
      */
-    abstract fun inferReturnType(paramRegistry: ParameterRegistry): List<TypeWithParameters>
+    abstract fun inferReturnType(paramRegistry: ParameterRegistry): TypeWithParameters
 
     /**
      * Evaluation

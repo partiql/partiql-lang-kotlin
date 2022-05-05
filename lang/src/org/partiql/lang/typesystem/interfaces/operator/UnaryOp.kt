@@ -9,14 +9,14 @@ abstract class UnaryOp internal constructor() : PqlOperator {
     /**
      * Type of expression
      */
-    abstract fun getExprType(): Type
+    abstract val exprType: Type
 
     /**
      * Function return type inference
      *
      * [paramRegistry] is used to get type parameters of the operand
      */
-    abstract fun inferReturnType(paramRegistry: ParameterRegistry): List<TypeWithParameters>
+    abstract fun inferReturnType(paramRegistry: ParameterRegistry): TypeWithParameters
 
     /**
      * Evaluation

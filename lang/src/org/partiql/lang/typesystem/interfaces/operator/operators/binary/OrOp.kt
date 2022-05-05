@@ -7,5 +7,6 @@ import org.partiql.lang.typesystem.interfaces.operator.OpAlias
  * Used to define [OpAlias.OR] operator
  */
 abstract class OrOp : BinaryOp() {
-    override fun getOperatorAlias(): OpAlias = OpAlias.OR
+    override val operatorAlias: OpAlias
+        get() = OpAlias.OR
 }

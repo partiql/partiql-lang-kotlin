@@ -9,19 +9,19 @@ abstract class AbstractCastOp internal constructor() : PqlOperator {
     /**
      * Type of the source expression
      */
-    abstract fun getSourceType(): Type
+    abstract val sourceType: Type
 
     /**
      * Target type
      */
-    abstract fun getTargetType(): Type
+    abstract val targetType: Type
 
     /**
      * Function return type inference
      *
      * [paramRegistry] is used to get type parameters of operands
      */
-    abstract fun inferReturnType(paramRegistry: ParameterRegistry): List<TypeWithParameters>
+    abstract fun inferReturnType(paramRegistry: ParameterRegistry): TypeWithParameters
 
     /**
      * Evaluation

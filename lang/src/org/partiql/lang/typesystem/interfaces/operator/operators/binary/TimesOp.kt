@@ -7,5 +7,6 @@ import org.partiql.lang.typesystem.interfaces.operator.OpAlias
  * Used to define [OpAlias.TIMES] operator
  */
 abstract class TimesOp : BinaryOp() {
-    override fun getOperatorAlias(): OpAlias = OpAlias.TIMES
+    override val operatorAlias: OpAlias
+        get() = OpAlias.TIMES
 }

@@ -7,5 +7,6 @@ import org.partiql.lang.typesystem.interfaces.operator.OpAlias
  * Used to define [OpAlias.CAST] operator
  */
 abstract class CastOp : AbstractCastOp() {
-    override fun getOperatorAlias(): OpAlias = OpAlias.CAST
+    override val operatorAlias: OpAlias
+        get() = OpAlias.CAST
 }
