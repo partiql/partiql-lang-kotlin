@@ -35,7 +35,7 @@ abstract class BinaryOp internal constructor() : PqlOperator {
     /**
      * Type parameters registry
      */
-    data class ParameterRegistry(
+    data class ParameterRegistry internal constructor(
         val parametersOfLhsType: TypeParameters,
         val parametersOfRhsType: TypeParameters
     )

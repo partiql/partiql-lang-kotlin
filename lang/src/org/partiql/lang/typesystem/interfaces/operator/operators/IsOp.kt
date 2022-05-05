@@ -41,7 +41,7 @@ abstract class IsOp : PqlOperator {
     /**
      * Type parameters registry
      */
-    data class ParameterRegistry(
+    data class ParameterRegistry internal constructor(
         val parametersOfSourceType: TypeParameters,
         val parametersOfExpectedType: TypeParameters
     )

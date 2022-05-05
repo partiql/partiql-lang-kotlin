@@ -48,7 +48,7 @@ abstract class LikeOp : PqlOperator {
     /**
      * Type parameters registry
      */
-    data class ParameterRegistry(
+    data class ParameterRegistry internal constructor(
         val parametersOfSourceType: TypeParameters,
         val parametersOfPatternType: TypeParameters,
         val parametersOfEscapeType: TypeParameters

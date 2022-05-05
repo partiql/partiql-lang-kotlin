@@ -48,7 +48,7 @@ abstract class BetweenOp : PqlOperator {
     /**
      * Type parameters registry
      */
-    data class ParameterRegistry(
+    data class ParameterRegistry internal constructor(
         val parametersOfSourceType: TypeParameters,
         val parametersOfFromType: TypeParameters,
         val parametersOfToType: TypeParameters
