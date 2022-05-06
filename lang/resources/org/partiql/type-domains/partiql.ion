@@ -528,7 +528,7 @@ may then be further optimized by selecting better implementations of each operat
             from_source
         )
 
-        // Change let_binding so that it has a var_decl instead of a only name to represent bindings.
+        // Change let_binding so that it has a var_decl instead of only a name to represent bindings.
         (exclude let_binding)
         (include (product let_binding value::expr decl::var_decl))
 
