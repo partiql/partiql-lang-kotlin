@@ -1,6 +1,6 @@
 package org.partiql.lang.typesystem.interfaces.type
 
-import com.amazon.ion.IonValue
+import org.partiql.lang.eval.ExprValue
 
 /**
  * A sql type with actual parameters. If it is a non-parametric type, [parameters] should be an empty list.
@@ -15,7 +15,7 @@ data class TypeWithParameters(
  */
 data class ValueWithType(
     val typeWithParameters: TypeWithParameters,
-    val value: IonValue
+    val value: ExprValue
 )
 
 /**

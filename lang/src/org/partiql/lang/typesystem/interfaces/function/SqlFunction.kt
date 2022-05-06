@@ -1,8 +1,7 @@
 package org.partiql.lang.typesystem.interfaces.function
 
-import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.typesystem.interfaces.type.Type
-import org.partiql.lang.typesystem.interfaces.type.TypeWithParameters
+import org.partiql.lang.typesystem.interfaces.type.ValueWithType
 
 /**
  * Used to define a sql function.
@@ -29,16 +28,14 @@ interface SqlFunction {
     val variadicArgType: Type?
 
     /**
-     * Function return type inference
-     *
-     * [argTypes] is the
+     * Type assigned to the return value
      */
-    fun inferReturnType(argTypes: List<Type>): TypeWithParameters
+    val returnType: Type
 
     /**
      * Function evaluation
      *
-     * [arguments] represents values of arguments
+     * [arguments] represents values of arguments with assigned type passed to this function
      */
-    fun invoke(arguments: List<ExprValue>): ExprValue
+    fun invoke(arguments: List<ValueWithType>): ValueWithType
 }

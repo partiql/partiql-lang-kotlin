@@ -1,9 +1,7 @@
 package org.partiql.lang.typesystem.interfaces.operator
 
-import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.typesystem.interfaces.type.Type
-import org.partiql.lang.typesystem.interfaces.type.TypeParameters
-import org.partiql.lang.typesystem.interfaces.type.TypeWithParameters
+import org.partiql.lang.typesystem.interfaces.type.ValueWithType
 
 abstract class BinaryOp internal constructor() : PqlOperator {
     /**
@@ -17,26 +15,10 @@ abstract class BinaryOp internal constructor() : PqlOperator {
     abstract val rhsType: Type
 
     /**
-     * Function return type inference
-     *
-     * [paramRegistry] is used to get type parameters of operands
-     */
-    abstract fun inferReturnType(paramRegistry: ParameterRegistry): TypeWithParameters
-
-    /**
      * Evaluation
      *
-     * [lhsValue] represents value of left-hand side
-     * [rhsValue] represents value of right-hand side
-     * [paramRegistry] is used to get type parameters of operands
+     * [lhs] represents value with assigned type of left-hand side
+     * [rhs] represents value with assigned type of right-hand side
      */
-    abstract fun invoke(lhsValue: ExprValue, rhsValue: ExprValue, paramRegistry: ParameterRegistry): ExprValue
-
-    /**
-     * Type parameters registry
-     */
-    data class ParameterRegistry internal constructor(
-        val parametersOfLhsType: TypeParameters,
-        val parametersOfRhsType: TypeParameters
-    )
+    abstract fun invoke(lhs: ValueWithType, rhs: ValueWithType): ValueWithType
 }

@@ -1,9 +1,8 @@
 package org.partiql.lang.typesystem.interfaces.operator
 
-import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.typesystem.interfaces.type.Type
-import org.partiql.lang.typesystem.interfaces.type.TypeParameters
 import org.partiql.lang.typesystem.interfaces.type.TypeWithParameters
+import org.partiql.lang.typesystem.interfaces.type.ValueWithType
 
 abstract class AbstractCastOp internal constructor() : PqlOperator {
     /**
@@ -17,25 +16,10 @@ abstract class AbstractCastOp internal constructor() : PqlOperator {
     abstract val targetType: Type
 
     /**
-     * Function return type inference
-     *
-     * [paramRegistry] is used to get type parameters of operands
-     */
-    abstract fun inferReturnType(paramRegistry: ParameterRegistry): TypeWithParameters
-
-    /**
      * Evaluation
      *
-     * [sourceValue] is the value of the source expression
-     * [paramRegistry] is used to get type parameters of operands
+     * [source] is the value of the source expression
+     * [expectedType] is the expected sql type
      */
-    abstract fun invoke(sourceValue: ExprValue, paramRegistry: ParameterRegistry): ExprValue
-
-    /**
-     * Type parameters registry
-     */
-    data class ParameterRegistry internal constructor(
-        val parametersOfSourceType: TypeParameters,
-        val parametersOfTargetType: TypeParameters
-    )
+    abstract fun invoke(source: ValueWithType, expectedType: TypeWithParameters): ValueWithType
 }
