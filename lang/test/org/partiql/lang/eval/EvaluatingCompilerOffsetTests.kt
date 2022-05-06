@@ -59,12 +59,14 @@ class EvaluatingCompilerOffsetTests : EvaluatorTestBase() {
             // LIMIT 2 and OFFSET 2 should return third and fourth results
             EvaluatorTestCase(
                 "SELECT * FROM foo GROUP BY a LIMIT 2 OFFSET 2",
-                "<<{'a': 3}, {'a': 4}>>"
+                "<<{'a': 3}, {'a': 4}>>",
+                target = EvaluatorTestTarget.COMPILER_PIPELINE // PlannerPipeline doesn't support GROUP BY yet
             ),
             // LIMIT and OFFSET applied after GROUP BY
             EvaluatorTestCase(
                 "SELECT * FROM foo GROUP BY a LIMIT 1 OFFSET 1",
-                "<<{'a': 2}>>"
+                "<<{'a': 2}>>",
+                target = EvaluatorTestTarget.COMPILER_PIPELINE // PlannerPipeline doesn't support GROUP BY yet
             ),
             // OFFSET value can be subtraction of 2 numbers
             EvaluatorTestCase(
@@ -89,7 +91,8 @@ class EvaluatingCompilerOffsetTests : EvaluatorTestBase() {
             // OFFSET with GROUP BY and HAVING
             EvaluatorTestCase(
                 "SELECT * FROM foo GROUP BY a HAVING a > 2 LIMIT 1 OFFSET 1",
-                "<<{'a': 4}>>"
+                "<<{'a': 4}>>",
+                target = EvaluatorTestTarget.COMPILER_PIPELINE // PlannerPipeline doesn't support GROUP BY yet
             ),
             // OFFSET with PIVOT
             EvaluatorTestCase(
@@ -98,7 +101,8 @@ class EvaluatingCompilerOffsetTests : EvaluatorTestBase() {
                     FROM <<{'a': 1, 'b':'I'}, {'a': 2, 'b':'II'}, {'a': 3, 'b':'III'}>> AS foo
                     LIMIT 1 OFFSET 1
                 """.trimIndent(),
-                "{'II': 2}"
+                "{'II': 2}",
+                target = EvaluatorTestTarget.COMPILER_PIPELINE // PlannerPipeline doesn't support PIVOT yet
             )
         )
     }
@@ -106,10 +110,7 @@ class EvaluatingCompilerOffsetTests : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(ArgsProviderValid::class)
     fun validTests(tc: EvaluatorTestCase) = runEvaluatorTestCase(
-        tc.copy(
-            excludeLegacySerializerAssertions = true,
-            target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for OFFSET (yet)
-        ),
+        tc.copy(excludeLegacySerializerAssertions = true),
         session
     )
 
