@@ -1,10 +1,12 @@
 package org.partiql.lang.typesystem.interfaces.function
 
-import org.partiql.lang.typesystem.interfaces.type.Type
-import org.partiql.lang.typesystem.interfaces.type.ValueWithType
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.typesystem.interfaces.type.SqlType
+import org.partiql.lang.typesystem.interfaces.type.TypeParameters
+import org.partiql.lang.typesystem.interfaces.type.TypeWithParameters
 
 /**
- * Used to define a sql function.
+ * Used to define a sql function, which takes arguments of sql types.
  */
 interface SqlFunction {
     /**
@@ -15,27 +17,32 @@ interface SqlFunction {
     /**
      * Required arguments of this function. Empty list means no required arguments.
      */
-    val requiredArgTypes: List<Type>
+    val requiredArgTypes: List<SqlType>
 
     /**
      * Optional arguments of this function. Empty list means no optional arguments.
      */
-    val optionalArgTypes: List<Type>
+    val optionalArgTypes: List<SqlType>
 
     /**
      * Variadic argument of this function. Null value means no variadic argument.
      */
-    val variadicArgType: Type?
+    val variadicArgType: SqlType?
 
     /**
-     * Type assigned to the return value
+     * Return type inference
+     *
+     * [argsTypeParameters] represents type parameters of arguments passed to this function during compile time.
      */
-    val returnType: Type
+    fun inferReturnType(argsTypeParameters: List<TypeParameters>): TypeWithParameters
 
     /**
      * Function evaluation
      *
-     * [arguments] represents values of arguments with assigned type passed to this function
+     * [argsValue] represents value of each argument passed to this function during evaluation time.
+     * [argsTypeParameters] represents type parameters of each argument passed to this function during compile time.
+     * This is needed in some cases. e.g. For the expression `char_length(x)`, where `x` has value of a string 'abc'
+     * with type of `CHAR(7)`, it should be evaluated to 7, which is the value of type parameter of the `CHAR` type.
      */
-    fun invoke(arguments: List<ValueWithType>): ValueWithType
+    fun invoke(argsValue: List<ExprValue>, argsTypeParameters: List<TypeParameters>): ExprValue
 }

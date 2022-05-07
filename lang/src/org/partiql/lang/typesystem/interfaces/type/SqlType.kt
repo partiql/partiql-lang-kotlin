@@ -5,24 +5,29 @@ import org.partiql.lang.eval.ExprValueType
 /**
  * This interface is used to define a sql type
  */
-abstract class SqlType internal constructor() : Type {
+interface SqlType {
     /**
      * A sql type has a unique type name
      */
-    abstract val typeName: String
+    val typeName: String
 
     /**
      * Run-time type
      */
-    abstract val exprValueType: ExprValueType
+    val exprValueType: ExprValueType
+
+    /**
+     * Its parent type in PartiQL. Null value means no parent type.
+     */
+    val parentType: SqlType?
 
     /**
      * Whether it is a primitive type
      */
-    abstract val isPrimitiveType: Boolean
+    val isPrimitiveType: Boolean
 
     /**
      * Whether it is a built-in type
      */
-    abstract val isBuiltInType: Boolean
+    val isBuiltInType: Boolean
 }

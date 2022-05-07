@@ -1,24 +1,42 @@
 package org.partiql.lang.typesystem.interfaces.operator
 
-import org.partiql.lang.typesystem.interfaces.type.Type
-import org.partiql.lang.typesystem.interfaces.type.ValueWithType
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.typesystem.interfaces.type.SqlType
+import org.partiql.lang.typesystem.interfaces.type.TypeParameters
+import org.partiql.lang.typesystem.interfaces.type.TypeWithParameters
 
 abstract class BinaryOp internal constructor() : PqlOperator {
     /**
      * Type of left-hand side expression
      */
-    abstract val lhsType: Type
+    abstract val lhsType: SqlType
 
     /**
      * Type of right-hand side expression
      */
-    abstract val rhsType: Type
+    abstract val rhsType: SqlType
+
+    /**
+     * Function return type inference
+     *
+     * [paramRegistry] is the registry of type parameters of operands.
+     */
+    abstract fun inferReturnType(paramRegistry: ParameterRegistry): TypeWithParameters
 
     /**
      * Evaluation
      *
-     * [lhs] represents value with assigned type of left-hand side
-     * [rhs] represents value with assigned type of right-hand side
+     * [lhsValue] is the value of left-hand side passed to this operator at evaluation time.
+     * [rhsValue] is the value of right-hand side passed to this operator at evaluation time.
+     * [paramRegistry] is the registry of type parameters of operands.
      */
-    abstract fun invoke(lhs: ValueWithType, rhs: ValueWithType): ValueWithType
+    abstract fun invoke(lhsValue: ExprValue, rhsValue: ExprValue, paramRegistry: ParameterRegistry): ExprValue
+
+    /**
+     * Type parameters registry. Type parameters are registered during compile time.
+     */
+    data class ParameterRegistry internal constructor(
+        val parametersOfLhsType: TypeParameters,
+        val parametersOfRhsType: TypeParameters
+    )
 }

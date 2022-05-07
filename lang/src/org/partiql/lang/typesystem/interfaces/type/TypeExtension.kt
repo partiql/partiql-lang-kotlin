@@ -14,8 +14,8 @@ data class TypeWithParameters(
  * A value with a sql type
  */
 data class ValueWithType(
-    val typeWithParameters: TypeWithParameters,
-    val value: ExprValue
+    val value: ExprValue,
+    val typeWithParameters: TypeWithParameters
 )
 
 /**
