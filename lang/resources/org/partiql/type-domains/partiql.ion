@@ -564,12 +564,12 @@ may then be further optimized by selecting better implementations of each operat
                 (filter predicate::expr source::bexpr)
 
                 // Basic join operator.  Covers cross, inner, left, right and full joins.
-                // For cross joins, set `join_type` to `(inner)` and the `predicate` to `(lit true)`.
+                // To represent a cross join, set `predicate` to `null`.
                 (join
                     join_type::join_type
                     left::bexpr
                     right::bexpr
-                    predicate::expr)
+                    predicate::(? expr))
 
                 // Skips `row_count` rows, then emits all remaining rows.
                 (offset row_count::expr source::bexpr)
