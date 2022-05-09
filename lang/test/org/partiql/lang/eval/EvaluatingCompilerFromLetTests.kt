@@ -171,7 +171,7 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
                     Property.COLUMN_NUMBER to 63L,
                     Property.BINDING_NAME to "foo"
                 ),
-                target = EvaluatorTestTarget.COMPILER_PIPELINE // no support in physical plans yet for GROUP BY
+                targetPipeline = EvaluatorTestTarget.COMPILER_PIPELINE // no support in physical plans yet for GROUP BY
             ),
             // LET binding referenced in projection not in GROUP BY
             EvaluatorErrorTestCase(
@@ -182,7 +182,7 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
                     Property.COLUMN_NUMBER to 8L,
                     Property.BINDING_NAME to "foo"
                 ),
-                target = EvaluatorTestTarget.COMPILER_PIPELINE // no support in physical plans yet for GROUP BY
+                targetPipeline = EvaluatorTestTarget.COMPILER_PIPELINE // no support in physical plans yet for GROUP BY
             )
         )
     }

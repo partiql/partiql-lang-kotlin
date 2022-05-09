@@ -279,7 +279,7 @@ class EvaluatingCompilerOrderByTests : EvaluatorTestBase() {
     fun validTests(tc: EvaluatorTestCase) = runEvaluatorTestCase(
         tc = tc.copy(
             excludeLegacySerializerAssertions = true,
-            target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for ORDER BY (yet)
+            targetPipeline = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for ORDER BY (yet)
         ),
         session = session
     )
