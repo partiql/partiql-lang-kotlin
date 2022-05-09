@@ -110,10 +110,7 @@ class EvaluatingCompilerOffsetTests : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(ArgsProviderValid::class)
     fun validTests(tc: EvaluatorTestCase) = runEvaluatorTestCase(
-        tc.copy(
-            excludeLegacySerializerAssertions = true,
-            target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for OFFSET (yet)
-        ),
+        tc.copy(excludeLegacySerializerAssertions = true),
         session
     )
 
