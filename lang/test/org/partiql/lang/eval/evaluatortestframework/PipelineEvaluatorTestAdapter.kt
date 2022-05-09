@@ -16,7 +16,8 @@ internal class PipelineEvaluatorTestAdapter(
 ) : EvaluatorTestAdapter {
 
     override fun runEvaluatorTestCase(tc: EvaluatorTestCase, session: EvaluationSession) {
-        if (tc.target != EvaluatorTestTarget.ALL_PIPELINES && pipelineFactory.target != tc.target) {
+        // Skip execution of this test case if it does not apply to the pipeline supplied by pipelineFactory.
+        if (tc.targetPipeline != EvaluatorTestTarget.ALL_PIPELINES && pipelineFactory.target != tc.targetPipeline) {
             return
         }
         checkRedundantPermissiveMode(tc)
@@ -159,7 +160,8 @@ internal class PipelineEvaluatorTestAdapter(
     }
 
     override fun runEvaluatorErrorTestCase(tc: EvaluatorErrorTestCase, session: EvaluationSession) {
-        if (tc.target != EvaluatorTestTarget.ALL_PIPELINES && pipelineFactory.target != tc.target) {
+        // Skip execution of this test case if it does not apply to the pipeline supplied by pipelineFactory.
+        if (tc.targetPipeline != EvaluatorTestTarget.ALL_PIPELINES && pipelineFactory.target != tc.targetPipeline) {
             return
         }
 

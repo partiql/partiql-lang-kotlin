@@ -79,7 +79,10 @@ internal fun IonResultTestCase.runTestCase(
         when (target) {
             EvaluatorTestTarget.COMPILER_PIPELINE -> CompilerPipelineFactory()
             EvaluatorTestTarget.PLANNER_PIPELINE -> TODO("PlannerPipelineFactory()")
-            EvaluatorTestTarget.ALL_PIPELINES -> error("May only test one pipeline at a time with IonResultTestCase")
+            EvaluatorTestTarget.ALL_PIPELINES ->
+                // We don't support ALL_PIPELINES here because each pipeline needs a separate skip list, which
+                // is decided by the caller of this function.
+                error("May only test one pipeline at a time with IonResultTestCase")
         }
     )
 

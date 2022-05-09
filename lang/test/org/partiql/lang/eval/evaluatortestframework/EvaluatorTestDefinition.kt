@@ -40,7 +40,7 @@ interface EvaluatorTestDefinition {
      * Determines which pipeline this test should run against; the [CompilerPipeline],
      * [org.partiql.lang.planner.PlannerPipeline] or both.
      */
-    val target: EvaluatorTestTarget
+    val targetPipeline: EvaluatorTestTarget
 
     /**
      * Builder block for building [CompileOptions].
