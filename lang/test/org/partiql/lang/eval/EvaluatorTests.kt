@@ -17,6 +17,7 @@ package org.partiql.lang.eval
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.lang.ION
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.util.testdsl.IonResultTestCase
 import org.partiql.lang.util.testdsl.runTestCase
 
@@ -62,5 +63,5 @@ class EvaluatorTests {
 
     @ParameterizedTest
     @MethodSource("evaluatorTests")
-    fun allTests(tc: IonResultTestCase) = tc.runTestCase(valueFactory, mockDb)
+    fun allTests(tc: IonResultTestCase) = tc.runTestCase(valueFactory, mockDb, EvaluatorTestTarget.COMPILER_PIPELINE)
 }

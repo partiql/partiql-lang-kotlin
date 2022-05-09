@@ -56,6 +56,17 @@ data class EvaluatorErrorTestCase(
     override val implicitPermissiveModeTest: Boolean = true,
 
     /**
+     * This will be executed to perform additional exceptions on the resulting exception.
+     */
+    val additionalExceptionAssertBlock: (SqlException) -> Unit = { },
+
+    /**
+     * Determines which pipeline this test should run against; the [CompilerPipeline],
+     * [org.partiql.lang.planner.PlannerPipeline] or both.
+     */
+    override val targetPipeline: EvaluatorTestTarget = EvaluatorTestTarget.ALL_PIPELINES,
+
+    /**
      * Builder block for building [CompileOptions].
      */
     override val compileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit = { },
@@ -65,15 +76,43 @@ data class EvaluatorErrorTestCase(
      */
     override val compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { },
 
-    /**
-     * This will be executed to perform additional exceptions on the resulting exception.
-     */
-    val additionalExceptionAssertBlock: (SqlException) -> Unit = { }
 ) : EvaluatorTestDefinition {
 
     /** This will show up in the IDE's test runner. */
     override fun toString(): String {
         val groupNameString = if (groupName == null) "" else "$groupName"
         return "$groupNameString $query : $expectedErrorCode : $expectedErrorContext"
+    }
+
+    /** A generated and human-readable description of this test case for display in assertion failure messages. */
+    fun testDetails(
+        note: String,
+        actualErrorCode: ErrorCode? = null,
+        actualErrorContext: PropertyValueMap? = null,
+        actualPermissiveModeResult: String? = null,
+        actualInternalFlag: Boolean? = null,
+    ): String {
+        val b = StringBuilder()
+        b.appendLine("Note                           : $note")
+        b.appendLine("Group name                     : $groupName")
+        b.appendLine("Query                          : $query")
+        b.appendLine("Target pipeline                : $targetPipeline")
+        b.appendLine("Expected error code            : $expectedErrorCode")
+        if (actualErrorCode != null) {
+            b.appendLine("Actual error code              : $actualErrorCode")
+        }
+        b.appendLine("Expected error context         : $expectedErrorContext")
+        if (actualErrorContext != null) {
+            b.appendLine("Actual error context           : $actualErrorContext")
+        }
+        b.appendLine("Expected internal flag         : $expectedInternalFlag")
+        if (actualErrorContext != null) {
+            b.appendLine("Actual internal flag           : $actualInternalFlag")
+        }
+        b.appendLine("Expected permissive mode result: $expectedPermissiveModeResult")
+        if (actualPermissiveModeResult != null) {
+            b.appendLine("Actual permissive mode result  : $actualPermissiveModeResult")
+        }
+        return b.toString()
     }
 }

@@ -37,6 +37,12 @@ interface EvaluatorTestDefinition {
     val implicitPermissiveModeTest: Boolean
 
     /**
+     * Determines which pipeline this test should run against; the [CompilerPipeline],
+     * [org.partiql.lang.planner.PlannerPipeline] or both.
+     */
+    val targetPipeline: EvaluatorTestTarget
+
+    /**
      * Builder block for building [CompileOptions].
      */
     val compileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit
