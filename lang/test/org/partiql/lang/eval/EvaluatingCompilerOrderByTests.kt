@@ -3,6 +3,7 @@ package org.partiql.lang.eval
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.util.ArgumentsProviderBase
 
 class EvaluatingCompilerOrderByTests : EvaluatorTestBase() {
@@ -276,7 +277,10 @@ class EvaluatingCompilerOrderByTests : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(ArgsProviderValid::class)
     fun validTests(tc: EvaluatorTestCase) = runEvaluatorTestCase(
-        tc = tc.copy(excludeLegacySerializerAssertions = true),
+        tc = tc.copy(
+            excludeLegacySerializerAssertions = true,
+            targetPipeline = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for ORDER BY (yet)
+        ),
         session = session
     )
 }

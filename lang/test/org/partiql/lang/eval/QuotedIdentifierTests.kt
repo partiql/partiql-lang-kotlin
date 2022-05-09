@@ -17,6 +17,7 @@ package org.partiql.lang.eval
 import org.junit.Test
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.util.propertyValueMapOf
 
@@ -60,6 +61,8 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
             session = simpleSession,
             expectedResult = "MISSING",
             expectedResultFormat = ExpectedResultFormat.PARTIQL,
+            // planner & physical plan have no support for UndefinedVariableBehavior.MISSING (and may never)
+            target = EvaluatorTestTarget.COMPILER_PIPELINE,
             compileOptionsBuilderBlock = { undefinedVariableMissingCompileOptionBlock() },
         )
         runEvaluatorTestCase(
@@ -67,6 +70,8 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
             session = simpleSession,
             expectedResult = "MISSING",
             expectedResultFormat = ExpectedResultFormat.PARTIQL,
+            // planner & physical plan have no support for UndefinedVariableBehavior.MISSING (and may never)
+            target = EvaluatorTestTarget.COMPILER_PIPELINE,
             compileOptionsBuilderBlock = { undefinedVariableMissingCompileOptionBlock() },
         )
 
@@ -75,6 +80,8 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
             query = "\"Abc\"",
             session = simpleSession,
             expectedResult = "1",
+            // planner & physical plan have no support for UndefinedVariableBehavior.MISSING (and may never)
+            target = EvaluatorTestTarget.COMPILER_PIPELINE,
             compileOptionsBuilderBlock = undefinedVariableMissingCompileOptionBlock
         )
     }
@@ -109,7 +116,8 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
                 Property.BINDING_NAME_MATCHES to "Abc, aBc, abC"
             ),
             expectedPermissiveModeResult = "MISSING",
-            session = simpleSession
+            session = simpleSession,
+            target = EvaluatorTestTarget.COMPILER_PIPELINE // Planner will never throw ambiguous binding error
         )
     }
 

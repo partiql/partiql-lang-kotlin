@@ -116,7 +116,6 @@ data class EvaluatorTestCase(
         b.appendLine("Group name      : $groupName")
         b.appendLine("Query           : $query")
         b.appendLine("Target pipeline : $targetPipeline")
-
         b.appendLine("Expected result : $expectedResult")
         if (actualResult != null) {
             b.appendLine("Actual result   : $actualResult")
