@@ -471,13 +471,13 @@ may then be further optimized by selecting better implementations of each operat
             // that is included in the final struct.
             (sum struct_part
                 // For `.*` in SELECT list
-                // If `<expr>` is a struct, the fields of that struct will be part of the merged struct.
-                // If `<expr>` is not a struct, The field `_n` will be included in the struct, where `n` is the
-                // ordinal of the field in the final merged struct. If `expr` returns a container that is not a struct,
-                // field names will be assigned in the format of `_n` where `n` is the ordinal position of the
-                // field within the merged struct.  If `expr` returns a scalar value, it will be coerced into a
-                // singleton bag expr and the previous logic will apply.
-                (struct_fields expr::expr)
+                // If `<part_expr>` is a struct, the fields of that struct will be part of the merged struct.
+                // If `<part_expr>` is not a struct, The field `_n` will be included in the struct, where `n` is the
+                // ordinal of the field in the final merged struct. If `<part_expr>` returns a container that is not a
+                // struct, field names will be assigned in the format of `_n` where `n` is the ordinal position of the
+                // field within the merged struct.  If `<part_expr>` returns a scalar value, it will be coerced into a
+                // singleton bag and the previous logic will apply.
+                (struct_fields part_expr::expr)
 
                 // For `<expr> [AS <id>]`.  If `field_name` returns a non-text value, in legacy mode an exception
                 // will be thrown.  In permissive mode, the field will be excluded from the final struct.
