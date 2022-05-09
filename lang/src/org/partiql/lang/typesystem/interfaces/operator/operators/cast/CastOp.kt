@@ -9,6 +9,4 @@ import org.partiql.lang.typesystem.interfaces.operator.OpAlias
 abstract class CastOp : AbstractCastOp() {
     override val operatorAlias: OpAlias
         get() = OpAlias.CAST
-
-    override val returnType: Type = targetType
 }
