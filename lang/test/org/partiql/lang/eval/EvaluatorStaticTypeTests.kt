@@ -187,8 +187,10 @@ class EvaluatorStaticTypeTests {
 
                     // set permissive mode
                     typingMode(TypingMode.PERMISSIVE)
-                    // enable evaluation time type checking
-                    evaluationTimeTypeChecks(ThunkReturnTypeAssertions.ENABLED)
+                    thunkOptions {
+                        // enable evaluation time type checking
+                        evaluationTimeTypeChecks(ThunkReturnTypeAssertions.ENABLED)
+                    }
                 }
             )
         }

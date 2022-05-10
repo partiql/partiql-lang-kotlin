@@ -28,7 +28,7 @@ class ParserErrorExample(out: PrintStream) : Example(out) {
 
         throw Exception("ParserException was not thrown")
     } catch (e: ParserException) {
-        val errorContext = e.errorContext!!
+        val errorContext = e.errorContext
 
         val errorInformation = "errorCode: ${e.errorCode}" +
             "\nLINE_NUMBER: ${errorContext[Property.LINE_NUMBER]}" +
