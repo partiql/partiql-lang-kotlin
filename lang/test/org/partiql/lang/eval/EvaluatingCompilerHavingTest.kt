@@ -57,7 +57,7 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
     @Parameters
     fun groupByHavingTest(tc: EvaluatorTestCase) =
         runEvaluatorTestCase(
-            tc.copy(target = EvaluatorTestTarget.COMPILER_PIPELINE), // Phys. Algebra doesn't yet support HAVING
+            tc.copy(targetPipeline = EvaluatorTestTarget.COMPILER_PIPELINE), // Phys. Algebra doesn't yet support HAVING
             session
         )
 

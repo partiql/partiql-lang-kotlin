@@ -163,7 +163,9 @@ class EvaluatingCompilerNAryIntOverflowTests : EvaluatorTestBase() {
                     typingMode(TypingMode.PERMISSIVE)
                 }
             },
-            target = EvaluatorTestTarget.COMPILER_PIPELINE // Requires PlannerPipeline to support globalTypeBindings and static type inference
+            // These tests requires support for globalTypeBindings and thus a static type inference pass
+            // which is not (yet) supported by `PlannerPipeline`
+            target = EvaluatorTestTarget.COMPILER_PIPELINE
         )
 
         runEvaluatorTestCase(etc, session)

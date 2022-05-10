@@ -95,7 +95,7 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
         "g" to "{a: \"from global variable g\"}"
     ).toSession()
 
-    /** Demonstrates that without the scope qualifier ('@'), the `g` in `g.b' refers to global `g`. */
+    /** Demonstrates that without the scope qualifier ('@'), the `g` in `g.a' refers to global `g`. */
     @Test
     fun joinWithoutScopeQualifier() = runEvaluatorTestCase(
         """SELECT g2 FROM table_1 AS g, g.a AS g2""",
@@ -103,7 +103,7 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
         session = sessionWithG
     )
 
-    /** Demonstrates that with the scope qualifier ('@'), the `g` in `@g.b' refers to local `g`. */
+    /** Demonstrates that with the scope qualifier ('@'), the `g` in `@g.a' refers to local `g`. */
     @Test
     fun joinWithScopeQualifier() = runEvaluatorTestCase(
         """SELECT g2 FROM table_1 AS g, @g.a AS g2""",

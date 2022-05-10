@@ -91,7 +91,7 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
         super.runEvaluatorTestCase(
             tc.copy(
                 implicitPermissiveModeTest = false, // we are manually setting typing mode
-                target = EvaluatorTestTarget.COMPILER_PIPELINE // no support in physical plans yet for GROUP BY
+                targetPipeline = EvaluatorTestTarget.COMPILER_PIPELINE // no support in physical plans yet for GROUP BY
             ),
             session
         )

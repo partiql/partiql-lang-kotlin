@@ -64,7 +64,7 @@ data class EvaluatorErrorTestCase(
      * Determines which pipeline this test should run against; the [CompilerPipeline],
      * [org.partiql.lang.planner.PlannerPipeline] or both.
      */
-    override val target: EvaluatorTestTarget = EvaluatorTestTarget.ALL_PIPELINES,
+    override val targetPipeline: EvaluatorTestTarget = EvaluatorTestTarget.ALL_PIPELINES,
 
     /**
      * Builder block for building [CompileOptions].
@@ -96,12 +96,15 @@ data class EvaluatorErrorTestCase(
         b.appendLine("Note                           : $note")
         b.appendLine("Group name                     : $groupName")
         b.appendLine("Query                          : $query")
+        b.appendLine("Target pipeline                : $targetPipeline")
         b.appendLine("Expected error code            : $expectedErrorCode")
         if (actualErrorCode != null) {
             b.appendLine("Actual error code              : $actualErrorCode")
         }
         b.appendLine("Expected error context         : $expectedErrorContext")
-        b.appendLine("Actual error context           : ${actualErrorContext ?: "null"}")
+        if (actualErrorContext != null) {
+            b.appendLine("Actual error context           : $actualErrorContext")
+        }
         b.appendLine("Expected internal flag         : $expectedInternalFlag")
         if (actualErrorContext != null) {
             b.appendLine("Actual internal flag           : $actualInternalFlag")

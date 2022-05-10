@@ -471,13 +471,13 @@ may then be further optimized by selecting better implementations of each operat
             // that is included in the final struct.
             (sum struct_part
                 // For `.*` in SELECT list
-                // If `<expr>` is a struct, the fields of that struct will be part of the merged struct.
-                // If `<expr>` is not a struct, The field `_n` will be included in the struct, where `n` is the
-                // ordinal of the field in the final merged struct. If `expr` returns a container that is not a struct,
-                // field names will be assigned in the format of `_n` where `n` is the ordinal position of the
-                // field within the struct.  If `expr` returns a scalar value, it will be coerced into a singleton bag
-                // expr and the previous logic will apply.
-                (struct_fields expr::expr)
+                // If `<part_expr>` is a struct, the fields of that struct will be part of the merged struct.
+                // If `<part_expr>` is not a struct, The field `_n` will be included in the struct, where `n` is the
+                // ordinal of the field in the final merged struct. If `<part_expr>` returns a container that is not a
+                // struct, field names will be assigned in the format of `_n` where `n` is the ordinal position of the
+                // field within the merged struct.  If `<part_expr>` returns a scalar value, it will be coerced into a
+                // singleton bag and the previous logic will apply.
+                (struct_fields part_expr::expr)
 
                 // For `<expr> [AS <id>]`.  If `field_name` returns a non-text value, in legacy mode an exception
                 // will be thrown.  In permissive mode, the field will be excluded from the final struct.
@@ -499,15 +499,18 @@ may then be further optimized by selecting better implementations of each operat
                 // a struct-union expression.
                 //
                 // Example as struct constructor:
-                //    (struct (struct_field (lit a) (lit 42))
-                // Returns: { a: 42 }
+                //    (struct
+                //        (struct_field (lit a) (lit 42))
+                //        (struct_field (lit b) (lit 43)))
+                // Returns: { a: 42, b: 43 }
                 //
-                // Example as a struct-union. Given a global environment `{| foo: { a: 42 }, bar: { b: 43} |}`, then:
+                // Example as a struct-union. Given a global environment with `foo` bound to `{ a: 42 }` and `bar`
+                // bound to `{ b: 43}`, then:
                 //     (struct
                 //         (struct_fields (id foo))
                 //         (struct_fields (id bar)))
                 // Returns { a: 42, b: 43 }
-                // Note that `struct_field` and `struct_fields` may be used in combination also:
+                // Note that `struct_field` and `struct_fields` may be used in combination:
                 //     (struct
                 //         (struct_fields (id foo))
                 //         (struct_fields (id bar))
@@ -528,7 +531,7 @@ may then be further optimized by selecting better implementations of each operat
             from_source
         )
 
-        // Change let_binding so that it has a var_decl instead of a only name to represent bindings.
+        // Change let_binding so that it has a var_decl instead of only a name to represent bindings.
         (exclude let_binding)
         (include (product let_binding value::expr decl::var_decl))
 
@@ -549,8 +552,7 @@ may then be further optimized by selecting better implementations of each operat
             // - `name`: the name of the variable as specified by the query author or determined statically.
             (product var_decl name::symbol)
 
-            // The operators of PartiQL's relational algebra. See `$projectDir/docs/dev/RELATIONAL-ALGEBRA.md` for
-            // more information.  Not all operators are included here yet.
+            // The operators of PartiQL's relational algebra.
             (sum bexpr
                 // Converts a value collection to a bindings collection.  Not used to perform physical reads.  (For
                 // that, see bexpr.project in the partiql_physical domain.)  If evaluating `expr` results in a scalar
@@ -562,12 +564,12 @@ may then be further optimized by selecting better implementations of each operat
                 (filter predicate::expr source::bexpr)
 
                 // Basic join operator.  Covers cross, inner, left, right and full joins.
-                // For cross joins, set `join_type` to `(inner)` and the `predicate` to `(lit true)`.
+                // To represent a cross join, set `predicate` to `null`.
                 (join
                     join_type::join_type
                     left::bexpr
                     right::bexpr
-                    predicate::expr)
+                    predicate::(? expr))
 
                 // Skips `row_count` rows, then emits all remaining rows.
                 (offset row_count::expr source::bexpr)
@@ -646,8 +648,8 @@ may then be further optimized by selecting better implementations of each operat
         )
 
         (with expr
-            // At this point, there should be no undefined variables in the plan since the area all rewritten to
-            // dynamic lookup function call sites (if enabled).
+            // At this point there should be no undefined variables in the plan.  All variables are rewritten to
+            // `local_id`, `global_id`.
             (exclude id)
             (include
                 // A resolved reference to a variable that was defined within a query.  Otherwise known as a local
@@ -658,10 +660,11 @@ may then be further optimized by selecting better implementations of each operat
                 (local_id index::int)
 
                 // Global variable reference--typically a table although it can actually be bound to any value.  Unlike
-                // local variables, global variables are not stored in registers.  Instead, they are typically stored
-                // in persistent storage.  Evaluating a `global_id` will return a value with an open iterator.  There
-                // is no syntactic representation of this node in PartiQL--`global_id` nodes are produced by the planner
-                // during the variable resolution pass when a variable is resolved to a global variable.
+                // local variables, global variables are not stored in registers.  Instead, they are typically
+                // retrieved from an implementation defined storage system, persistent or otherwise.  Evaluating a
+                // `global_id` will return a value with an open iterator.  There is no syntactic representation of this
+                // node in PartiQL--`global_id` nodes are produced by the planner during the variable resolution pass
+                // when a variable is resolved to a global variable.
                 // Elements:
                 // - `name`: the original name of the variable, kept mostly just for error reporting purposes.
                 // - `uniqueId`: any Ion value that uniquely identifies the global variable, typically a storage
@@ -687,8 +690,11 @@ may then be further optimized by selecting better implementations of each operat
             // identifies any static arguments required. This will initially have the `(impl default)` value, with
             // different implementations being selected as needed.
             // Elements:
-            // - `name`: the unique name of the implementation.  Each operator has a different namespace containing its
-            // default and PartiQL-specific
+            // - `name`: the unique name of the implementation.  Each relational operator has a different namespace
+            // containing its default and custom implementations.
+            // - `static_args`: Any static arguments.  These are arbitrary Ion values and are specific to the
+            // implementation.  These values are made available to the implementation at compile-time and evaluation
+            // time.
             (product impl name::symbol static_args::(* ion 0))
         )
 
