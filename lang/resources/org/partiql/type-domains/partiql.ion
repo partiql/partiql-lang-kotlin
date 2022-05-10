@@ -1,4 +1,32 @@
 /*
+Domains defined in this file are listed below.  They are listed in transformation order and ultimately arrive at a
+physical algebra that is ready to be evaluated.
+
+- partiql_ast: the result of parsing the PartiQL query.  Structure resembles the PartiQL syntax.
+- partiql_logical: a direct conversion from the partiql_ast to a logical query plan, with no semantic checking.
+- partiql_logical_resolved: a variation of partiql_logical wherein all variable declarations have been allocated unique
+identifiers and variable references have been resolved to a local or global variable and their unique identifiers have
+been identified.  Partial push-downs of filters and projections may be applied here.
+- partiql_physical: this is the same as partiql_logical_resolved, but with additional relational operators.  Also, all
+relational operators include an operand to identify the algorithm to be used at evaluation time.  After transforming
+from the logical algebra to physical, all operators will be set to use default implementations.  The physical algebra
+may then be further optimized by selecting better implementations of each operator.
+
+*/
+
+
+// Domain transformations
+
+// Makes PIG emit PartiqlAstToPartiqlLogicalVisitorTransform
+(transform partiql_ast partiql_logical)
+
+// Makes PIG emit PartiqlLogicalToPartiqlLogicalResolvedVisitorTransform
+(transform partiql_logical partiql_logical_resolved)
+
+// Makes PIG emit PartiqlLogicalResolvedToPartiqlPhysicalVisitorTransform
+(transform partiql_logical_resolved partiql_physical)
+
+/*
     The PartiQL AST.
 
     Within the partiql_ast type domain, the most fundamental of the data types is the `statement` sum type.  Start
@@ -426,4 +454,285 @@
     ) // end of domain
 ) // end of define
 
+// Same as partiql_ast, but without the syntactic representation of SFW queries and introduces PartiQL's relational
+// algebra.  Also removes some nodes not (yet) supported by the query planner and plan evaluator.
+(define partiql_logical
+    (permute_domain partiql_ast
+        (include
+            // This is the new top-level node for plans that are intended to be persisted to storage or survive across
+            // boundaries.  These need to include a version number so at least it is possible to know if a persisted
+            // plan is compatible with the current version of PartiQL.
+            (record plan
+                (stmt statement)
+                (version int)
+            )
+
+            // Defines a field within a struct constructor or an expression which is expected to be a container
+            // that is included in the final struct.
+            (sum struct_part
+                // For `.*` in SELECT list
+                // If `<part_expr>` is a struct, the fields of that struct will be part of the merged struct.
+                // If `<part_expr>` is not a struct, The field `_n` will be included in the struct, where `n` is the
+                // ordinal of the field in the final merged struct. If `<part_expr>` returns a container that is not a
+                // struct, field names will be assigned in the format of `_n` where `n` is the ordinal position of the
+                // field within the merged struct.  If `<part_expr>` returns a scalar value, it will be coerced into a
+                // singleton bag and the previous logic will apply.
+                (struct_fields part_expr::expr)
+
+                // For `<expr> [AS <id>]`.  If `field_name` returns a non-text value, in legacy mode an exception
+                // will be thrown.  In permissive mode, the field will be excluded from the final struct.
+                (struct_field field_name::expr value::expr))
+        )
+
+        (with expr
+            // Remove the select and struct node from the `expr` sum type, which will be replaced below.
+            (exclude select struct)
+
+            (include
+                // Invokes `exp` once in the context of every binding tuple returned by `query`, returning a
+                // collection of values produced by `exp`.  The returned collection's type (bag or list) is the same
+                // as the bindings collection returned by `query`.
+                (bindings_to_values exp::expr query::bexpr)
+
+                // `struct` is the primary struct constructor and also encapsulates semantics needed for
+                // `SELECT <expr>.*`, and `SELECT <expr> AS y`.  It can be used as a regular struct constructor, or as
+                // a struct-union expression.
+                //
+                // Example as struct constructor:
+                //    (struct
+                //        (struct_field (lit a) (lit 42))
+                //        (struct_field (lit b) (lit 43)))
+                // Returns: { a: 42, b: 43 }
+                //
+                // Example as a struct-union. Given a global environment with `foo` bound to `{ a: 42 }` and `bar`
+                // bound to `{ b: 43}`, then:
+                //     (struct
+                //         (struct_fields (id foo))
+                //         (struct_fields (id bar)))
+                // Returns { a: 42, b: 43 }
+                // Note that `struct_field` and `struct_fields` may be used in combination:
+                //     (struct
+                //         (struct_fields (id foo))
+                //         (struct_fields (id bar))
+                //         (struct_field (lit c) (lit 44)))
+                // Returns { a: 42, b: 43, c: 44 }
+                //
+                // TODO:  in the future, when the legacy AST compiler has been removed and the AST is no longer
+                // part of the public API, we should consider moving this definition to the partiql_ast domain.
+                (struct parts::(* struct_part 1))
+            )
+        )
+
+        // These should be excluded as well since they were referenced only by the `select` variant of `expr`, which
+        // was excluded above.
+        (exclude
+            project_item
+            projection
+            from_source
+        )
+
+        // Change let_binding so that it has a var_decl instead of only a name to represent bindings.
+        (exclude let_binding)
+        (include (product let_binding value::expr decl::var_decl))
+
+        // Now we include new stuff, including PartiQL's relational algebra.
+        (include
+            // Every instance of `var_decl` introduces a new binding in the current scope.
+            // Every part of the AST that can introduce a variable should be represented with one of these nodes.
+            // Examples of variable declarations include:
+            // - The `AS`, `AT`, and `BY` sub-clauses in `FROM`
+            // - The `AS` sub-clauses in within a `LET` clause.
+            // - The `AS` and `AT` names specified with, `PIVOT`, i.e. `PIVOT x AS y AT z`
+            // Note that `AS` aliases specified in a select list (i.e. `SELECT x AS y` are *not* variables, they are
+            // fields.)
+            // Modeling this with a separate node (as opposed to just a symbol) is beneficial because it is easy to
+            // identify all variable declarations within a logical plan during tree traversal, and because in later
+            // permuted domains we can add information to this type such as the variable's assigned index.
+            // Elements:
+            // - `name`: the name of the variable as specified by the query author or determined statically.
+            (product var_decl name::symbol)
+
+            // The operators of PartiQL's relational algebra.
+            (sum bexpr
+                // Converts a value collection to a bindings collection.  Not used to perform physical reads.  (For
+                // that, see bexpr.project in the partiql_physical domain.)  If evaluating `expr` results in a scalar
+                // value, it is converted into a singleton bag.
+                (scan expr::expr as_decl::var_decl at_decl::(? var_decl) by_decl::(? var_decl))
+
+                // Evaluates `predicate` within the scope of every row of `bexpr`, and only returns those
+                // rows for which `predicate` returns true.
+                (filter predicate::expr source::bexpr)
+
+                // Basic join operator.  Covers cross, inner, left, right and full joins.
+                // To represent a cross join, set `predicate` to `null`.
+                (join
+                    join_type::join_type
+                    left::bexpr
+                    right::bexpr
+                    predicate::(? expr))
+
+                // Skips `row_count` rows, then emits all remaining rows.
+                (offset row_count::expr source::bexpr)
+
+                // Emits `row_count` rows, discards all remaining rows.
+                (limit row_count::expr source::bexpr)
+
+                // For every row of `source`, adds each specified `let_binding`.
+                (let source::bexpr bindings::(* let_binding 1))
+            )
+        )
+
+        // Nodes excluded below this line will eventually have a representation in the logical algebra, but not
+        // initially.
+
+        (with statement
+            (exclude
+                dml
+                ddl
+            )
+        )
+
+        (exclude
+            group_by
+            grouping_strategy
+            group_key
+            group_key_list
+            order_by
+            sort_spec
+            ordering_spec
+
+            let
+
+            dml_op
+            dml_op_list
+            ddl_op
+            conflict_action
+            on_conflict
+            returning_expr
+            returning_elem
+            column_component
+            returning_mapping
+            assignment
+            identifier
+        )
+    )
+)
+
+// partiql_logical_resolved is a variation of partiql_logical wherein all variable declarations have been allocated
+// unique identifiers and variable references have been resolved.   The first set of optimizations such as partial
+// push-downs of filters and projections may be applied to this domain.
+(define partiql_logical_resolved
+    (permute_domain partiql_logical
+        // Add `locals` to `plan`.
+        (exclude plan)
+        (include
+            (record plan
+                (stmt statement)
+                (version int)
+                (locals (* local_variable 0))
+            )
+
+            // Local variables currently include a name and register index.  In the future, something to indicate the
+            // static type of the variable may also be included here.  The index is included explicitly (instead of
+            // allowing it to be identified by ordinal position) simply to allow it to be easily identified by humans
+            // when examining plans with many local variables.
+            (product local_variable name::symbol register_index::int)
+        )
+
+
+        // For `var_decl`, `name` with `index`.  The name of the variable can still be determined by looking at the
+        // `local_variable` with the same index.
+        (exclude var_decl scope_qualifier)
+        (include
+            (product var_decl index::int)
+        )
+
+        (with expr
+            // At this point there should be no undefined variables in the plan.  All variables are rewritten to
+            // `local_id`, `global_id`.
+            (exclude id)
+            (include
+                // A resolved reference to a variable that was defined within a query.  Otherwise known as a local
+                // variable. "Resolved" means that the variable is guaranteed to exist and we know its register index.
+                // Elements:
+                // - `index`: the index of the `var_decl` that this variable refers to, i.e. this always corresponds to
+                // the `var_decl` with the same index.
+                (local_id index::int)
+
+                // Global variable reference--typically a table although it can actually be bound to any value.  Unlike
+                // local variables, global variables are not stored in registers.  Instead, they are typically
+                // retrieved from an implementation defined storage system, persistent or otherwise.  Evaluating a
+                // `global_id` will return a value with an open iterator.  There is no syntactic representation of this
+                // node in PartiQL--`global_id` nodes are produced by the planner during the variable resolution pass
+                // when a variable is resolved to a global variable.
+                // Elements:
+                // - `name`: the original name of the variable, kept mostly just for error reporting purposes.
+                // - `uniqueId`: any Ion value that uniquely identifies the global variable, typically a storage
+                // defined UUID or the name of the table in its original letter case.
+                // The value of `uniqueId` is PartiQL integration defined and can be any symbol that uniquely
+                // identifies the global variable.  Examples include database object ids or the alphabetical case
+                // respecting table name found after case-insensitive lookup.
+                (global_id name::symbol uniqueId::symbol)
+            )
+        )
+    )
+)
+
+// Redefines `bexpr` of `partiql_logical_resolved` to include an `(impl ...)` node within every operator.  Following
+// transformation from partiql_logical_resolved, the implementation of each `bexpr` will be `(impl default)`.
+// Optimizations on this domain include but are not limited to: selection of `(impl ...)` other than `default` and
+// rewriting of `filter/scan` `mapValues/scan` to perform final push-down of filters and projections, and optimal
+// operator implementation selection (i.e. hash or merge join, etc)
+(define partiql_physical
+    (permute_domain partiql_logical_resolved
+        (include
+            // Identifies an implementation that has been selected for an instance of a physical operator and
+            // identifies any static arguments required. This will initially have the `(impl default)` value, with
+            // different implementations being selected as needed.
+            // Elements:
+            // - `name`: the unique name of the implementation.  Each relational operator has a different namespace
+            // containing its default and custom implementations.
+            // - `static_args`: Any static arguments.  These are arbitrary Ion values and are specific to the
+            // implementation.  These values are made available to the implementation at compile-time and evaluation
+            // time.
+            (product impl name::symbol static_args::(* ion 0))
+        )
+
+        // Every variant of bexpr changes by adding an `impl` element in the physical algebra, so let's replace it
+        // entirely.
+        (exclude bexpr)
+        (include
+            (sum bexpr
+                // A generic physical read operation.  At the moment, implementations of this operator may only
+                // bind each row read to `binding`.  In the future, `binding` might be replaced with multiple
+                // projection templates (these are Ion like path extractors but are capable of extracting subsets of an
+                // Ion container.)  Examples of physical read operations include:
+                // - full scan
+                // - index scan
+                // - index range scan
+                // - get-row-by-primary key
+                // - and many, others.
+                // The specific read operation represented by this node is determined by the `i::impl` element.
+                (project i::impl binding::var_decl args::(* arguments::expr 0))
+
+                // Operators below this point are the same as in the logical algebra, but also include an i::impl
+                // element.
+
+                (scan i::impl expr::expr as_decl::var_decl at_decl::(? var_decl) by_decl::(? var_decl))
+                (filter i::impl predicate::expr source::bexpr)
+                (join
+                    i::impl
+                    join_type::join_type
+                    left::bexpr
+                    right::bexpr
+                    predicate::expr)
+
+
+                (offset i::impl row_count::expr source::bexpr)
+                (limit i::impl row_count::expr source::bexpr)
+                (let i::impl source::bexpr bindings::(* let_binding 1))
+            )
+        )
+    )
+)
 
