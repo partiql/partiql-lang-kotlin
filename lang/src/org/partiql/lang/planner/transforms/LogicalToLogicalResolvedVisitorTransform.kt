@@ -288,10 +288,10 @@ private data class LogicalToLogicalResolvedVisitorTransform(
         }
     }
 
-    override fun transformBexprJoin_predicate(node: PartiqlLogical.Bexpr.Join): PartiqlLogicalResolved.Expr {
+    override fun transformBexprJoin_predicate(node: PartiqlLogical.Bexpr.Join): PartiqlLogicalResolved.Expr? {
         val bindings = getOutputScope(node)
         return withInputScope(bindings) {
-            this.transformExpr(node.predicate)
+            node.predicate?.let { this.transformExpr(it) }
         }
     }
 

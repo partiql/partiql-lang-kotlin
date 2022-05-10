@@ -51,7 +51,7 @@ internal class LogicalResolvedToPhysicalVisitorTransform : PartiqlLogicalResolve
                 joinType = thiz.transformJoinType(node.joinType),
                 left = thiz.transformBexpr(node.left),
                 right = thiz.transformBexpr(node.right),
-                predicate = thiz.transformExpr(node.predicate),
+                predicate = node.predicate?.let { thiz.transformExpr(it) },
                 metas = node.metas
             )
         }

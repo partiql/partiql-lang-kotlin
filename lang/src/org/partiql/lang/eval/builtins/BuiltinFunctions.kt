@@ -25,6 +25,8 @@ import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.UnknownArguments
 
+internal const val DYNAMIC_LOOKUP_FUNCTION_NAME = "\$__dynamic_lookup__"
+
 internal fun createBuiltinFunctionSignatures(): Map<String, FunctionSignature> =
     // Creating a new IonSystem in this instance is not the problem it would normally be since we are
     // discarding the created instances of the built-in functions after extracting all of the [FunctionSignature].
