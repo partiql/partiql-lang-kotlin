@@ -27,25 +27,21 @@ import org.partiql.lang.errors.Property
  *
  * See https://en.wikipedia.org/wiki/Thunk
  *
- * This name was chosen because it is a thunk that accepts an instance of `Environment`.
  * @param TEnv The type of the environment.  Generic so that the legacy AST compiler and the new compiler may use
  * different types here.
  */
 internal typealias Thunk<TEnv> = (TEnv) -> ExprValue
 
 /**
- * A thunk taking a single [T] argument and the current environment.
+ * A thunk taking a single argument and the current environment.
  *
  * See https://en.wikipedia.org/wiki/Thunk
- *
- * This name was chosen because it is a thunk that accepts an instance of `Environment` and an [ExprValue] as
- * its arguments.
  *
  * @param TEnv The type of the environment.  Generic so that the legacy AST compiler and the new compiler may use
  * different types here.
  * @param TArg The type of the additional argument.
  */
-internal typealias ThunkValue<TEnv, T> = (TEnv, T) -> ExprValue
+internal typealias ThunkValue<TEnv, TArg> = (TEnv, TArg) -> ExprValue
 
 /**
  * A type alias for an exception handler which always throws(primarily used for [TypingMode.LEGACY]).
@@ -62,6 +58,9 @@ internal typealias ThunkExceptionHandlerForPermissiveMode = (Throwable, SourceLo
  *
  *  - [handleExceptionForLegacyMode] will be called when in [TypingMode.LEGACY] mode
  *  - [handleExceptionForPermissiveMode] will be called when in [TypingMode.PERMISSIVE] mode
+ *  - [thunkReturnTypeAssertions] is intended for testing only, and ensures that the return value of every expression
+ *  conforms to its `StaticType` meta.  This has negative performance implications so should be avoided in production
+ *  environments.  This only be used for testing and diagnostic purposes only.
  * The default exception handler wraps any [Throwable] exception and throws [EvaluationException]
  */
 data class ThunkOptions private constructor(

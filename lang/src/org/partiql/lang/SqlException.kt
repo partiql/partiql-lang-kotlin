@@ -34,7 +34,7 @@ import org.partiql.lang.util.propertyValueMapOf
  *
  * @param message the message for this exception
  * @param errorCode the error code for this exception
- * @param propertyValueMap context for this error
+ * @param errorContextArg context for this error, contains details like line & column number among other attributes.
  * @param cause for this exception
  *
  * @constructor a custom error [message], the [errorCode], error context as a [propertyValueMap] and optional [cause] creates an
