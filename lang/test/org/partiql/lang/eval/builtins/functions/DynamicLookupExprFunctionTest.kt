@@ -105,7 +105,7 @@ class DynamicLookupExprFunctionTest : EvaluatorTestBase() {
                 expectedErrorContext = propertyValueMapOf(1, 1, Property.BINDING_NAME to "BaR")
             ),
             EvaluatorErrorTestCase(
-                 query = "\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`bAr`, `case_sensitive`, `locals_then_globals`, f, b)",
+                query = "\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`bAr`, `case_sensitive`, `locals_then_globals`, f, b)",
                 expectedErrorCode = ErrorCode.EVALUATOR_QUOTED_BINDING_DOES_NOT_EXIST,
                 expectedErrorContext = propertyValueMapOf(1, 1, Property.BINDING_NAME to "bAr")
             )
@@ -124,7 +124,8 @@ class DynamicLookupExprFunctionTest : EvaluatorTestBase() {
         runEvaluatorErrorTestCase(
             query = testCase.source,
             expectedErrorCode = ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL,
-            expectedErrorContext = propertyValueMapOf(1, 1,
+            expectedErrorContext = propertyValueMapOf(
+                1, 1,
                 Property.FUNCTION_NAME to DYNAMIC_LOOKUP_FUNCTION_NAME,
                 Property.EXPECTED_ARGUMENT_TYPES to "SYMBOL",
                 Property.ACTUAL_ARGUMENT_TYPES to testCase.actualArgumentType,

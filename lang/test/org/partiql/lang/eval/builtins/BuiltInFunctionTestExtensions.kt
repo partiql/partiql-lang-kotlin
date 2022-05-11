@@ -1,7 +1,6 @@
 package org.partiql.lang.eval.builtins
 
 import com.amazon.ion.Timestamp
-import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.ION
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
