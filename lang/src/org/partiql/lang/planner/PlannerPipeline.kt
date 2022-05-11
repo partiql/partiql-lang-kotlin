@@ -26,6 +26,7 @@ import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.Expression
 import org.partiql.lang.eval.ThunkReturnTypeAssertions
+import org.partiql.lang.eval.builtins.DynamicLookupExprFunction
 import org.partiql.lang.eval.builtins.createBuiltinFunctions
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.physical.PhysicalExprToThunkConverterImpl
@@ -277,9 +278,7 @@ interface PlannerPipeline {
                 )
             }
 
-            val builtinFunctions = createBuiltinFunctions(valueFactory)
-            // TODO: uncomment when DynamicLookupExprFunction exists
-//            val builtinFunctions = createBuiltinFunctions(valueFactory) + DynamicLookupExprFunction()
+            val builtinFunctions = createBuiltinFunctions(valueFactory) + DynamicLookupExprFunction()
             val builtinFunctionsMap = builtinFunctions.associateBy {
                 it.signature.name
             }
