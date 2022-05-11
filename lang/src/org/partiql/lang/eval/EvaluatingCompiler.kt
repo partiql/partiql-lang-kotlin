@@ -64,7 +64,6 @@ import org.partiql.lang.types.toTypedOpParameter
 import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.codePointSequence
-import org.partiql.lang.util.compareTo
 import org.partiql.lang.util.div
 import org.partiql.lang.util.drop
 import org.partiql.lang.util.foldLeftProduct
@@ -180,8 +179,8 @@ internal class EvaluatingCompiler(
      * Base class for [ExprAggregator] instances which accumulate values and perform a final computation.
      */
     private inner class Accumulator(
-        var current: Number? = 0L,
-        val nextFunc: (Number?, ExprValue) -> Number,
+        var current: ExprValue?,
+        val nextFunc: (ExprValue?, ExprValue) -> ExprValue,
         val valueFilter: (ExprValue) -> Boolean = { _ -> true }
     ) : ExprAggregator {
 
@@ -192,30 +191,26 @@ internal class EvaluatingCompiler(
             }
         }
 
-        override fun compute() = current?.exprValue() ?: valueFactory.nullValue
+        override fun compute() = current ?: valueFactory.nullValue
     }
 
-    private fun comparisonAccumulator(cmpFunc: (Number, Number) -> Boolean): (Number?, ExprValue) -> Number =
-        { curr, next ->
-            val nextNum = next.numberValue()
-            when (curr) {
-                null -> nextNum
-                else -> when {
-                    cmpFunc(nextNum, curr) -> nextNum
-                    else -> curr
-                }
+    private fun comparisonAccumulator(comparator: NaturalExprValueComparators): (ExprValue?, ExprValue) -> ExprValue =
+        { left, right ->
+            when {
+                left == null || comparator.compare(left, right) > 0 -> right
+                else -> left
             }
         }
 
     /** Dispatch table for built-in aggregate functions. */
     private val builtinAggregates: Map<Pair<String, PartiqlAst.SetQuantifier>, ExprAggregatorFactory> =
         run {
-            val countAccFunc: (Number?, ExprValue) -> Number = { curr, _ -> curr!! + 1L }
-            val sumAccFunc: (Number?, ExprValue) -> Number = { curr, next ->
-                curr?.let { it + next.numberValue() } ?: next.numberValue()
+            val countAccFunc: (ExprValue?, ExprValue) -> ExprValue = { accumulated, _ -> (accumulated!!.longValue() + 1L).exprValue() }
+            val sumAccFunc: (ExprValue?, ExprValue) -> ExprValue = { accumulated, nextItem ->
+                accumulated?.let { (it.numberValue() + nextItem.numberValue()).exprValue() } ?: nextItem
             }
-            val minAccFunc = comparisonAccumulator { left, right -> left < right }
-            val maxAccFunc = comparisonAccumulator { left, right -> left > right }
+            val minAccFunc = comparisonAccumulator(NaturalExprValueComparators.NULLS_LAST_ASC)
+            val maxAccFunc = comparisonAccumulator(NaturalExprValueComparators.NULLS_LAST_DESC)
             val avgAggregateGenerator = { filter: (ExprValue) -> Boolean ->
                 object : ExprAggregator {
                     var sum: Number? = null
@@ -237,11 +232,11 @@ internal class EvaluatingCompiler(
             // each distinct ExprAggregator must get its own createUniqueExprValueFilter()
             mapOf(
                 Pair("count", PartiqlAst.SetQuantifier.All()) to ExprAggregatorFactory.over {
-                    Accumulator(0L, countAccFunc, allFilter)
+                    Accumulator((0L).exprValue(), countAccFunc, allFilter)
                 },
 
                 Pair("count", PartiqlAst.SetQuantifier.Distinct()) to ExprAggregatorFactory.over {
-                    Accumulator(0L, countAccFunc, createUniqueExprValueFilter())
+                    Accumulator((0L).exprValue(), countAccFunc, createUniqueExprValueFilter())
                 },
 
                 Pair("sum", PartiqlAst.SetQuantifier.All()) to ExprAggregatorFactory.over {
@@ -2189,7 +2184,9 @@ internal class EvaluatingCompiler(
                 thunkFactory.thunkEnv(metas) { env ->
                     val aggregator = aggFactory.create()
                     val argValue = argThunk(env)
-                    argValue.forEach { aggregator.next(it) }
+                    argValue.forEach {
+                        aggregator.next(it)
+                    }
                     aggregator.compute()
                 }
             ExpressionContext.SELECT_LIST -> {

@@ -17,6 +17,7 @@ package org.partiql.lang.eval
 import org.junit.Test
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
+import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.util.propertyValueMapOf
 
 class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
@@ -125,11 +126,115 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
 
     @Test
     fun max() {
+        // Number
         runEvaluatorTestCase("max(`[1, 2, 3]`)", expectedResult = "3")
         runEvaluatorTestCase("max(`[1, 2.0, 3]`)", expectedResult = "3")
         runEvaluatorTestCase("max(`[1, 2e0, 3e0]`)", expectedResult = "3e0")
         runEvaluatorTestCase("max(`[1, 2d0, 3d0]`)", expectedResult = "3d0")
         runEvaluatorTestCase("max(`[1, 2e0, 3d0]`)", expectedResult = "3d0")
         runEvaluatorTestCase("max(`[1, 2d0, 3e0]`)", expectedResult = "3e0")
+
+        // String
+        runEvaluatorTestCase(
+            query = "max(['a', 'abc', '3'])",
+            expectedResult = "'abc'",
+            expectedResultFormat = ExpectedResultFormat.STRING
+        )
+        runEvaluatorTestCase(
+            query = "max(['1', '2', '3', null])",
+            expectedResult = "'3'",
+            expectedResultFormat = ExpectedResultFormat.STRING
+        )
+
+        // Timestamp
+        runEvaluatorTestCase(
+            "max([`2020-01-01T00:00:00Z`, `2020-01-01T00:00:01Z`, `2020-01-01T00:00:02Z`])",
+            expectedResult = "`2020-01-01T00:00:02Z`",
+            expectedResultFormat = ExpectedResultFormat.STRING
+        )
+        runEvaluatorTestCase(
+            "max([`2020-01-01T00:00:00Z`, `2020-01-01T00:01:00Z`, `2020-01-01T00:02:00Z`])",
+            expectedResult = "`2020-01-01T00:02:00Z`",
+            expectedResultFormat = ExpectedResultFormat.STRING
+        )
+        runEvaluatorTestCase(
+            "max([`2020-01-01T00:00:00Z`, `2020-01-01T01:00:00Z`, `2020-01-01T02:00:00Z`])",
+            expectedResult = "`2020-01-01T02:00:00Z`",
+            expectedResultFormat = ExpectedResultFormat.STRING
+        )
+        runEvaluatorTestCase(
+            "max([`2020-01-01T00:00:00Z`, `2020-01-02T00:00:00Z`, `2020-01-03T00:00:00Z`])",
+            expectedResult = "`2020-01-03T00:00:00Z`",
+            expectedResultFormat = ExpectedResultFormat.STRING
+        )
+        runEvaluatorTestCase(
+            "max([`2020-01-01T00:00:00Z`, `2020-02-01T00:00:00Z`, `2020-03-01T00:00:00Z`])",
+            expectedResult = "`2020-03-01T00:00:00Z`",
+            expectedResultFormat = ExpectedResultFormat.STRING
+        )
+        runEvaluatorTestCase(
+            "max([`2020-01-01T00:00:00Z`, `2021-01-01T00:00:00Z`, `2022-01-01T00:00:00Z`])",
+            expectedResult = "`2022-01-01T00:00:00Z`",
+            expectedResultFormat = ExpectedResultFormat.STRING
+        )
+        runEvaluatorTestCase(
+            "max([`2020-01-01T00:00:00Z`, `2020-01-01T00:00:01Z`, `2020-01-01T00:00:02Z`, null])",
+            expectedResult = "`2020-01-01T00:00:02Z`",
+            expectedResultFormat = ExpectedResultFormat.STRING
+        )
+
+        // Other data types
+        runEvaluatorTestCase(
+            "max([NULL, NULL])",
+            expectedResult = "NULL",
+            expectedResultFormat = ExpectedResultFormat.STRING
+        )
+        runEvaluatorTestCase(
+            "max([MISSING, NULL])",
+            expectedResult = "NULL",
+            expectedResultFormat = ExpectedResultFormat.STRING
+        )
+        runEvaluatorTestCase(
+            "max([MISSING, MISSING])",
+            expectedResult = "NULL",
+            expectedResultFormat = ExpectedResultFormat.STRING
+        )
+        runEvaluatorTestCase(
+            "max([false, true])",
+            expectedResult = "true",
+            expectedResultFormat = ExpectedResultFormat.STRING
+        )
+        runEvaluatorTestCase(
+            "max([`{{ aaaa }}`, `{{ aaab }}`])",
+            expectedResult = "`{{aaab}}`",
+            expectedResultFormat = ExpectedResultFormat.STRING
+        )
+        runEvaluatorTestCase(
+            "max([`{{\"a\"}}`, `{{\"b\"}}`])",
+            expectedResult = "`{{\"b\"}}`",
+            expectedResultFormat = ExpectedResultFormat.STRING
+        )
+
+        // Across data types
+        runEvaluatorTestCase(
+            "max([false, 1])",
+            expectedResult = "1",
+            expectedResultFormat = ExpectedResultFormat.STRING
+        )
+        runEvaluatorTestCase(
+            "max([`2020-01-01T00:00:00Z`, 1])",
+            expectedResult = "`2020-01-01T00:00:00Z`",
+            expectedResultFormat = ExpectedResultFormat.STRING
+        )
+        runEvaluatorTestCase(
+            "max([`2020-01-01T00:00:00Z`, '1'])",
+            expectedResult = "'1'",
+            expectedResultFormat = ExpectedResultFormat.STRING
+        )
+        runEvaluatorTestCase(
+            "max([`{{\"abcd\"}}`, '1'])",
+            expectedResult = "`{{\"abcd\"}}`",
+            expectedResultFormat = ExpectedResultFormat.STRING
+        )
     }
 }
