@@ -207,9 +207,9 @@ internal class EvaluatingCompiler(
         run {
             fun checkIsNumberType(funcName: String, value: ExprValue) {
                 if (!value.type.isNumber) {
-                    throw errNoContext(
+                    errNoContext(
                         message = "Aggregate function $funcName expects arguments of NUMBER type but the following value was provided: ${value.ionValue}, with type of ${value.type}",
-                        errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE,
+                        errorCode = ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_AGG_FUNCTION,
                         internal = false
                     )
                 }
