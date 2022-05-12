@@ -110,25 +110,25 @@ val ExprValue.address: ExprValue?
     get() = asFacet(Addressed::class.java)?.address
 
 fun ExprValue.booleanValue(): Boolean =
-    scalar.booleanValue() ?: errNoContext("A value of BOOLEAN type is expected, however, what's passed is: $ionValue, with type of ${ionValue.type}", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
+    scalar.booleanValue() ?: errNoContext("Expected boolean: $ionValue", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
 
 fun ExprValue.numberValue(): Number =
-    scalar.numberValue() ?: errNoContext("A value of NUMBER type is expected, however, what's passed is: $ionValue, with type of ${ionValue.type}", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
+    scalar.numberValue() ?: errNoContext("Expected number: $ionValue", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
 
 fun ExprValue.dateValue(): LocalDate =
-    scalar.dateValue() ?: errNoContext("A value of DATE type is expected, however, what's passed is: $ionValue, with type of ${ionValue.type}", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
+    scalar.dateValue() ?: errNoContext("Expected date: $ionValue", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
 
 fun ExprValue.timeValue(): Time =
-    scalar.timeValue() ?: errNoContext("A value of TIME type is expected, however, what's passed is: $ionValue, with type of ${ionValue.type}", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
+    scalar.timeValue() ?: errNoContext("Expected time: $ionValue", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
 
 fun ExprValue.timestampValue(): Timestamp =
-    scalar.timestampValue() ?: errNoContext("A value of TIMESTAMP type is expected, however, what's passed is: $ionValue, with type of ${ionValue.type}", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
+    scalar.timestampValue() ?: errNoContext("Expected timestamp: $ionValue", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
 
 fun ExprValue.stringValue(): String =
-    scalar.stringValue() ?: errNoContext("A value of STRING type is expected, however, what's passed is: $ionValue, with type of ${ionValue.type}", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
+    scalar.stringValue() ?: errNoContext("Expected string: $ionValue", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
 
 fun ExprValue.bytesValue(): ByteArray =
-    scalar.bytesValue() ?: errNoContext("A value of BYTES type is expected, however, what's passed is: $ionValue, with type of ${ionValue.type}", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
+    scalar.bytesValue() ?: errNoContext("Expected boolean: $ionValue", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
 
 internal fun ExprValue.dateTimePartValue(): DateTimePart =
     try {

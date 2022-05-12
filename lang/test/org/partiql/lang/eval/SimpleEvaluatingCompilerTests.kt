@@ -17,7 +17,6 @@ package org.partiql.lang.eval
 import org.junit.Test
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
-import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.util.propertyValueMapOf
 
 class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
@@ -141,181 +140,49 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
         runEvaluatorTestCase("min(`[1, 2d0, 3e0]`)", expectedResult = "1")
 
         // String
-        runEvaluatorTestCase(
-            query = "max(['a', 'abc', '3'])",
-            expectedResult = "'abc'",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
-        runEvaluatorTestCase(
-            query = "max(['1', '2', '3', null])",
-            expectedResult = "'3'",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
-        runEvaluatorTestCase(
-            query = "min(['a', 'abc', '3'])",
-            expectedResult = "'3'",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
-        runEvaluatorTestCase(
-            query = "min(['1', '2', '3', null])",
-            expectedResult = "'1'",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
+        runEvaluatorTestCase("max(['a', 'abc', '3'])", expectedResult = "\"abc\"")
+        runEvaluatorTestCase("max(['1', '2', '3', null])", expectedResult = "\"3\"")
+        runEvaluatorTestCase("min(['a', 'abc', '3'])", expectedResult = "\"3\"")
+        runEvaluatorTestCase("min(['1', '2', '3', null])", expectedResult = "\"1\"")
 
         // Timestamp
-        runEvaluatorTestCase(
-            "max([`2020-01-01T00:00:00Z`, `2020-01-01T00:00:01Z`, `2020-01-01T00:00:02Z`])",
-            expectedResult = "`2020-01-01T00:00:02Z`",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
-        runEvaluatorTestCase(
-            "max([`2020-01-01T00:00:00Z`, `2020-01-01T00:01:00Z`, `2020-01-01T00:02:00Z`])",
-            expectedResult = "`2020-01-01T00:02:00Z`",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
-        runEvaluatorTestCase(
-            "max([`2020-01-01T00:00:00Z`, `2020-01-01T01:00:00Z`, `2020-01-01T02:00:00Z`])",
-            expectedResult = "`2020-01-01T02:00:00Z`",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
-        runEvaluatorTestCase(
-            "max([`2020-01-01T00:00:00Z`, `2020-01-02T00:00:00Z`, `2020-01-03T00:00:00Z`])",
-            expectedResult = "`2020-01-03T00:00:00Z`",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
-        runEvaluatorTestCase(
-            "max([`2020-01-01T00:00:00Z`, `2020-02-01T00:00:00Z`, `2020-03-01T00:00:00Z`])",
-            expectedResult = "`2020-03-01T00:00:00Z`",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
-        runEvaluatorTestCase(
-            "max([`2020-01-01T00:00:00Z`, `2021-01-01T00:00:00Z`, `2022-01-01T00:00:00Z`])",
-            expectedResult = "`2022-01-01T00:00:00Z`",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
-        runEvaluatorTestCase(
-            "max([`2020-01-01T00:00:00Z`, `2020-01-01T00:00:01Z`, `2020-01-01T00:00:02Z`, null])",
-            expectedResult = "`2020-01-01T00:00:02Z`",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
-        runEvaluatorTestCase(
-            "min([`2020-01-01T00:00:00Z`, `2020-01-01T00:00:01Z`, `2020-01-01T00:00:02Z`])",
-            expectedResult = "`2020-01-01T00:00:00Z`",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
-        runEvaluatorTestCase(
-            "min([`2020-01-01T00:00:00Z`, `2020-01-01T00:01:00Z`, `2020-01-01T00:02:00Z`])",
-            expectedResult = "`2020-01-01T00:00:00Z`",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
-        runEvaluatorTestCase(
-            "min([`2020-01-01T00:00:00Z`, `2020-01-01T01:00:00Z`, `2020-01-01T02:00:00Z`])",
-            expectedResult = "`2020-01-01T00:00:00Z`",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
-        runEvaluatorTestCase(
-            "min([`2020-01-01T00:00:00Z`, `2020-01-02T00:00:00Z`, `2020-01-03T00:00:00Z`])",
-            expectedResult = "`2020-01-01T00:00:00Z`",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
-        runEvaluatorTestCase(
-            "min([`2020-01-01T00:00:00Z`, `2020-02-01T00:00:00Z`, `2020-03-01T00:00:00Z`])",
-            expectedResult = "`2020-01-01T00:00:00Z`",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
-        runEvaluatorTestCase(
-            "min([`2020-01-01T00:00:00Z`, `2021-01-01T00:00:00Z`, `2022-01-01T00:00:00Z`])",
-            expectedResult = "`2020-01-01T00:00:00Z`",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
-        runEvaluatorTestCase(
-            "min([`2020-01-01T00:00:00Z`, `2020-01-01T00:00:01Z`, `2020-01-01T00:00:02Z`, null])",
-            expectedResult = "`2020-01-01T00:00:00Z`",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
+        runEvaluatorTestCase("max([`2020-01-01T00:00:00Z`, `2020-01-01T00:00:01Z`, `2020-01-01T00:00:02Z`])", expectedResult = "2020-01-01T00:00:02Z")
+        runEvaluatorTestCase("max([`2020-01-01T00:00:00Z`, `2020-01-01T00:01:00Z`, `2020-01-01T00:02:00Z`])", expectedResult = "2020-01-01T00:02:00Z")
+        runEvaluatorTestCase("max([`2020-01-01T00:00:00Z`, `2020-01-01T01:00:00Z`, `2020-01-01T02:00:00Z`])", expectedResult = "2020-01-01T02:00:00Z")
+        runEvaluatorTestCase("max([`2020-01-01T00:00:00Z`, `2020-01-02T00:00:00Z`, `2020-01-03T00:00:00Z`])", expectedResult = "2020-01-03T00:00:00Z")
+        runEvaluatorTestCase("max([`2020-01-01T00:00:00Z`, `2020-02-01T00:00:00Z`, `2020-03-01T00:00:00Z`])", expectedResult = "2020-03-01T00:00:00Z")
+        runEvaluatorTestCase("max([`2020-01-01T00:00:00Z`, `2021-01-01T00:00:00Z`, `2022-01-01T00:00:00Z`])", expectedResult = "2022-01-01T00:00:00Z")
+        runEvaluatorTestCase("max([`2020-01-01T00:00:00Z`, `2020-01-01T00:00:01Z`, `2020-01-01T00:00:02Z`, null])", expectedResult = "2020-01-01T00:00:02Z")
+        runEvaluatorTestCase("min([`2020-01-01T00:00:00Z`, `2020-01-01T00:00:01Z`, `2020-01-01T00:00:02Z`])", expectedResult = "2020-01-01T00:00:00Z")
+        runEvaluatorTestCase("min([`2020-01-01T00:00:00Z`, `2020-01-01T00:01:00Z`, `2020-01-01T00:02:00Z`])", expectedResult = "2020-01-01T00:00:00Z")
+        runEvaluatorTestCase("min([`2020-01-01T00:00:00Z`, `2020-01-01T01:00:00Z`, `2020-01-01T02:00:00Z`])", expectedResult = "2020-01-01T00:00:00Z")
+        runEvaluatorTestCase("min([`2020-01-01T00:00:00Z`, `2020-01-02T00:00:00Z`, `2020-01-03T00:00:00Z`])", expectedResult = "2020-01-01T00:00:00Z")
+        runEvaluatorTestCase("min([`2020-01-01T00:00:00Z`, `2020-02-01T00:00:00Z`, `2020-03-01T00:00:00Z`])", expectedResult = "2020-01-01T00:00:00Z")
+        runEvaluatorTestCase("min([`2020-01-01T00:00:00Z`, `2021-01-01T00:00:00Z`, `2022-01-01T00:00:00Z`])", expectedResult = "2020-01-01T00:00:00Z")
+        runEvaluatorTestCase("min([`2020-01-01T00:00:00Z`, `2020-01-01T00:00:01Z`, `2020-01-01T00:00:02Z`, null])", expectedResult = "2020-01-01T00:00:00Z")
 
         // Other data types
-        runEvaluatorTestCase(
-            "max([NULL, NULL])",
-            expectedResult = "NULL",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
-        runEvaluatorTestCase(
-            "max([MISSING, NULL])",
-            expectedResult = "NULL",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
-        runEvaluatorTestCase(
-            "max([MISSING, MISSING])",
-            expectedResult = "NULL",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
-        runEvaluatorTestCase(
-            "max([false, true])",
-            expectedResult = "true",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
-        runEvaluatorTestCase(
-            "max([`{{ aaaa }}`, `{{ aaab }}`])",
-            expectedResult = "`{{aaab}}`",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
-        runEvaluatorTestCase(
-            "max([`{{\"a\"}}`, `{{\"b\"}}`])",
-            expectedResult = "`{{\"b\"}}`",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
-        runEvaluatorTestCase(
-            "min([NULL, NULL])",
-            expectedResult = "NULL",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
-        runEvaluatorTestCase(
-            "min([MISSING, NULL])",
-            expectedResult = "NULL",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
-        runEvaluatorTestCase(
-            "min([MISSING, MISSING])",
-            expectedResult = "NULL",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
-        runEvaluatorTestCase(
-            "min([false, true])",
-            expectedResult = "false",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
-        runEvaluatorTestCase(
-            "min([`{{ aaaa }}`, `{{ aaab }}`])",
-            expectedResult = "`{{aaaa}}`",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
-        runEvaluatorTestCase(
-            "min([`{{\"a\"}}`, `{{\"b\"}}`])",
-            expectedResult = "`{{\"a\"}}`",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
+        runEvaluatorTestCase("max([NULL, NULL])", expectedResult = "null")
+        runEvaluatorTestCase("max([MISSING, NULL])", expectedResult = "null")
+        runEvaluatorTestCase("max([MISSING, MISSING])", expectedResult = "null")
+        runEvaluatorTestCase("max([false, true])", expectedResult = "true")
+        runEvaluatorTestCase("max([`{{ aaaa }}`, `{{ aaab }}`])", expectedResult = "{{aaab}}")
+        runEvaluatorTestCase("max([`{{\"a\"}}`, `{{\"b\"}}`])", expectedResult = "{{\"b\"}}")
+        runEvaluatorTestCase("min([NULL, NULL])", expectedResult = "null")
+        runEvaluatorTestCase("min([MISSING, NULL])", expectedResult = "null")
+        runEvaluatorTestCase("min([MISSING, MISSING])", expectedResult = "null")
+        runEvaluatorTestCase("min([false, true])", expectedResult = "false")
+        runEvaluatorTestCase("min([`{{ aaaa }}`, `{{ aaab }}`])", expectedResult = "{{aaaa}}")
+        runEvaluatorTestCase("min([`{{\"a\"}}`, `{{\"b\"}}`])", expectedResult = "{{\"a\"}}")
 
         // Across data types
-        runEvaluatorTestCase(
-            "min([false, 1])",
-            expectedResult = "false",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
-        runEvaluatorTestCase(
-            "min([`2020-01-01T00:00:00Z`, 1])",
-            expectedResult = "1",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
-        runEvaluatorTestCase(
-            "min([`2020-01-01T00:00:00Z`, '1'])",
-            expectedResult = "`2020-01-01T00:00:00Z`",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
-        runEvaluatorTestCase(
-            "min([`{{\"abcd\"}}`, '1'])",
-            expectedResult = "'1'",
-            expectedResultFormat = ExpectedResultFormat.STRING
-        )
+        runEvaluatorTestCase("max([false, 1])", expectedResult = "1")
+        runEvaluatorTestCase("max([`2020-01-01T00:00:00Z`, 1])", expectedResult = "2020-01-01T00:00:00Z")
+        runEvaluatorTestCase("max([`2020-01-01T00:00:00Z`, '1'])", expectedResult = "\"1\"")
+        runEvaluatorTestCase("max([`{{\"abcd\"}}`, '1'])", expectedResult = "{{\"abcd\"}}")
+        runEvaluatorTestCase("min([false, 1])", expectedResult = "false")
+        runEvaluatorTestCase("min([`2020-01-01T00:00:00Z`, 1])", expectedResult = "1")
+        runEvaluatorTestCase("min([`2020-01-01T00:00:00Z`, '1'])", expectedResult = "2020-01-01T00:00:00Z")
+        runEvaluatorTestCase("min([`{{\"abcd\"}}`, '1'])", expectedResult = "\"1\"")
     }
 }

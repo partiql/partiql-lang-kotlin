@@ -205,8 +205,19 @@ internal class EvaluatingCompiler(
     /** Dispatch table for built-in aggregate functions. */
     private val builtinAggregates: Map<Pair<String, PartiqlAst.SetQuantifier>, ExprAggregatorFactory> =
         run {
+            fun checkIsNumberType(funcName: String, value: ExprValue) {
+                if (!value.type.isNumber) {
+                    throw errNoContext(
+                        message = "Aggregate function $funcName expects arguments of NUMBER type but the following value was provided: ${value.ionValue}, with type of ${value.type}",
+                        errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE,
+                        internal = false
+                    )
+                }
+            }
+
             val countAccFunc: (ExprValue?, ExprValue) -> ExprValue = { accumulated, _ -> (accumulated!!.longValue() + 1L).exprValue() }
             val sumAccFunc: (ExprValue?, ExprValue) -> ExprValue = { accumulated, nextItem ->
+                checkIsNumberType("SUM", nextItem)
                 accumulated?.let { (it.numberValue() + nextItem.numberValue()).exprValue() } ?: nextItem
             }
             val minAccFunc = comparisonAccumulator(NaturalExprValueComparators.NULLS_LAST_ASC)
@@ -218,6 +229,7 @@ internal class EvaluatingCompiler(
 
                     override fun next(value: ExprValue) {
                         if (value.isNotUnknown() && filter.invoke(value)) {
+                            checkIsNumberType("AVG", value)
                             sum = sum?.let { it + value.numberValue() } ?: value.numberValue()
                             count++
                         }
