@@ -113,23 +113,4 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
         propertyValueMapOf(1, 1, Property.CAST_FROM to "SYMBOL", Property.CAST_TO to "INT"),
         expectedPermissiveModeResult = "MISSING"
     )
-
-    @Test
-    fun sum() {
-        runEvaluatorTestCase("SUM(`[1, 2, 3]`)", expectedResult = "6")
-        runEvaluatorTestCase("SUM(`[1, 2e0, 3e0]`)", expectedResult = "6e0")
-        runEvaluatorTestCase("SUM(`[1, 2d0, 3d0]`)", expectedResult = "6d0")
-        runEvaluatorTestCase("SUM(`[1, 2e0, 3d0]`)", expectedResult = "6d0")
-        runEvaluatorTestCase("SUM(`[1, 2d0, 3e0]`)", expectedResult = "6d0")
-    }
-
-    @Test
-    fun max() {
-        runEvaluatorTestCase("max(`[1, 2, 3]`)", expectedResult = "3")
-        runEvaluatorTestCase("max(`[1, 2.0, 3]`)", expectedResult = "3")
-        runEvaluatorTestCase("max(`[1, 2e0, 3e0]`)", expectedResult = "3e0")
-        runEvaluatorTestCase("max(`[1, 2d0, 3d0]`)", expectedResult = "3d0")
-        runEvaluatorTestCase("max(`[1, 2e0, 3d0]`)", expectedResult = "3d0")
-        runEvaluatorTestCase("max(`[1, 2d0, 3e0]`)", expectedResult = "3e0")
-    }
 }
