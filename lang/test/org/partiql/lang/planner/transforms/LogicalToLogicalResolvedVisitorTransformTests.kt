@@ -638,7 +638,40 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                     }
                 ).withLocals(localVariable("f", 0), localVariable("b", 1), localVariable("t", 2)),
                 allowUndefinedVariables = true
-            )
+            ),
+            // In from clause
+            TestCase(
+                // Wihtout scope override
+                "SELECT 1 AS x FROM undefined_table AS f",
+                Expectation.Success(
+                    ResolvedId(1, 20) { dynamicLookup("undefined_table", BindingCase.INSENSITIVE, globalsFirst = true) },
+                ).withLocals(
+                    localVariable("f", 0),
+                ),
+                allowUndefinedVariables = true
+            ),
+            TestCase(
+                // Wiht scope override
+                "SELECT 1 AS x FROM @undefined_table AS f",
+                Expectation.Success(
+                    ResolvedId(1, 21) { dynamicLookup("undefined_table", BindingCase.INSENSITIVE, globalsFirst = false) },
+                ).withLocals(
+                    localVariable("f", 0),
+                ),
+                allowUndefinedVariables = true
+            ),
+            TestCase(
+                // with correlated join
+                "SELECT 1 AS x FROM undefined_table AS f, @asdf AS f2",
+                Expectation.Success(
+                    ResolvedId(1, 20) { dynamicLookup("undefined_table", BindingCase.INSENSITIVE, globalsFirst = true) },
+                    ResolvedId(1, 43) { dynamicLookup("asdf", BindingCase.INSENSITIVE, globalsFirst = false, localId(0)) }
+                ).withLocals(
+                    localVariable("f", 0),
+                    localVariable("f2", 1)
+                ),
+                allowUndefinedVariables = true
+            ),
         )
     }
 

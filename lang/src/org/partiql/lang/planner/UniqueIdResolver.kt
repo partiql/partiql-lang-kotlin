@@ -3,7 +3,7 @@ package org.partiql.lang.planner
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 
-/** Indicates the result of an attempt to resolve a global binding. */
+/** Indicates the result of an attempt to resolve a global variable to its customer supplied unique identifier. */
 sealed class ResolutionResult {
     /**
      * A success case, indicates the [uniqueId] of the match to the [BindingName] in the global scope.
@@ -22,10 +22,10 @@ sealed class ResolutionResult {
     object Undefined : ResolutionResult()
 }
 
-fun interface GlobalBindings {
+fun interface UniqueIdResolver {
     /**
-     * Implementations try to resolve a global variable which is typically a database table, as identified by a
-     * [bindingName].  The [bindingName] includes both the name as specified by the query author and a [BindingCase]
+     * Implementations try to resolve a global variable which is typically a database table to a unique identifier
+     * using [bindingName].  [bindingName] includes both the name as specified by the query author and a [BindingCase]
      * which indicates if query author included double quotes (") which mean the lookup should be case-sensitive.
      *
      * Implementations of this function must return:
@@ -39,12 +39,12 @@ fun interface GlobalBindings {
      * without providing an error. (This is consistent with Postres's behavior in this scenario.)
      *
      * Note that while [ResolutionResult.LocalVariable] exists, it is intentionally marked `internal` and cannot
-     * be used by outside of this project..
+     * be used by outside this project.
      */
     fun resolve(bindingName: BindingName): ResolutionResult
 }
 
-private val EMPTY = GlobalBindings { ResolutionResult.Undefined }
+private val EMPTY = UniqueIdResolver { ResolutionResult.Undefined }
 
-/** Convenience function for obtaining an instance of [GlobalBindings] with no defined variables. */
-fun emptyGlobalBindings(): GlobalBindings = EMPTY
+/** Convenience function for obtaining an instance of [UniqueIdResolver] with no defined variables. */
+fun emptyUniqueIdResolver(): UniqueIdResolver = EMPTY

@@ -9,7 +9,8 @@ sealed class PassResult<TResult> {
 
     /**
      * Indicates query planning was not successful and includes a list of errors and warnings that were encountered
-     * along the way.
+     * along the way.  Encountering both errors and warnings, as well as multiple errors is possible since we are not
+     * required to stop when encountering the first error.
      */
     data class Error<TResult>(val errors: List<Problem>) : PassResult<TResult>()
 }
