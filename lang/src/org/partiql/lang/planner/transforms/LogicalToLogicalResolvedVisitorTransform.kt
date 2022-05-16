@@ -10,8 +10,8 @@ import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.builtins.DYNAMIC_LOOKUP_FUNCTION_NAME
-import org.partiql.lang.planner.UniqueIdResolver
 import org.partiql.lang.planner.ResolutionResult
+import org.partiql.lang.planner.UniqueIdResolver
 import org.partiql.pig.runtime.asPrimitive
 
 /**
@@ -121,7 +121,7 @@ private data class LogicalToLogicalResolvedVisitorTransform(
     /** If a variable is not found using [inputScope], we will attempt to locate the binding here instead. */
     private val globals: UniqueIdResolver,
 
-    ) : PartiqlLogicalToPartiqlLogicalResolvedVisitorTransform() {
+) : PartiqlLogicalToPartiqlLogicalResolvedVisitorTransform() {
     /** The current [LocalScope]. */
     private var inputScope: LocalScope = LocalScope(emptyList())
 
@@ -404,11 +404,11 @@ private data class LogicalToLogicalResolvedVisitorTransform(
             is PartiqlLogical.CaseSensitivity.CaseInsensitive -> "case_insensitive"
             is PartiqlLogical.CaseSensitivity.CaseSensitive -> "case_sensitive"
         }
-        val variableLookupStrategy = when(currentVariableLookupStrategy) {
+        val variableLookupStrategy = when (currentVariableLookupStrategy) {
             // If we are not in a FROM source, ignore the scope qualifier
             VariableLookupStrategy.LOCALS_THEN_GLOBALS -> VariableLookupStrategy.LOCALS_THEN_GLOBALS
             // If we are in a FROM source, allow scope qualifier to override the current variable lookup strategy.
-            VariableLookupStrategy.GLOBALS_THEN_LOCALS -> when(this.qualifier) {
+            VariableLookupStrategy.GLOBALS_THEN_LOCALS -> when (this.qualifier) {
                 is PartiqlLogical.ScopeQualifier.LocalsFirst -> VariableLookupStrategy.LOCALS_THEN_GLOBALS
                 is PartiqlLogical.ScopeQualifier.Unqualified -> VariableLookupStrategy.GLOBALS_THEN_LOCALS
             }
