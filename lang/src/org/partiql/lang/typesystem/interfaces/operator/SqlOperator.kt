@@ -3,7 +3,7 @@ package org.partiql.lang.typesystem.interfaces.operator
 /**
  * Used to define a sql operator
  */
-interface PqlOperator {
+interface SqlOperator {
     /**
      * Which operator it is
      */

@@ -2,15 +2,15 @@ package org.partiql.lang.typesystem.interfaces.operator.operators
 
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.typesystem.interfaces.operator.OpAlias
-import org.partiql.lang.typesystem.interfaces.operator.PqlOperator
+import org.partiql.lang.typesystem.interfaces.operator.SqlOperator
 import org.partiql.lang.typesystem.interfaces.type.SqlType
+import org.partiql.lang.typesystem.interfaces.type.SqlTypeWithParameters
 import org.partiql.lang.typesystem.interfaces.type.TypeParameters
-import org.partiql.lang.typesystem.interfaces.type.TypeWithParameters
 
 /**
  * Used to define [OpAlias.IN] operator
  */
-abstract class InOp : PqlOperator {
+abstract class InOp : SqlOperator {
     override val operatorAlias: OpAlias
         get() = OpAlias.IN
 
@@ -29,7 +29,7 @@ abstract class InOp : PqlOperator {
      *
      * [paramRegistry] is the registry of type parameters.
      */
-    abstract fun inferReturnType(paramRegistry: ParameterRegistry): TypeWithParameters
+    abstract fun inferReturnType(paramRegistry: ParameterRegistry): SqlTypeWithParameters
 
     /**
      * Evaluation

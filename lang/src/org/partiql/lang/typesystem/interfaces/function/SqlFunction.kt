@@ -2,8 +2,8 @@ package org.partiql.lang.typesystem.interfaces.function
 
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.typesystem.interfaces.type.SqlType
+import org.partiql.lang.typesystem.interfaces.type.SqlTypeWithParameters
 import org.partiql.lang.typesystem.interfaces.type.TypeParameters
-import org.partiql.lang.typesystem.interfaces.type.TypeWithParameters
 
 /**
  * Used to define a sql function, which takes arguments of sql types.
@@ -34,7 +34,7 @@ interface SqlFunction {
      *
      * [argsTypeParameters] represents type parameters of arguments passed to this function during compile time.
      */
-    fun inferReturnType(argsTypeParameters: List<TypeParameters>): TypeWithParameters
+    fun inferReturnType(argsTypeParameters: List<TypeParameters>): SqlTypeWithParameters
 
     /**
      * Function evaluation

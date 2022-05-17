@@ -2,10 +2,10 @@ package org.partiql.lang.typesystem.interfaces.operator
 
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.typesystem.interfaces.type.SqlType
+import org.partiql.lang.typesystem.interfaces.type.SqlTypeWithParameters
 import org.partiql.lang.typesystem.interfaces.type.TypeParameters
-import org.partiql.lang.typesystem.interfaces.type.TypeWithParameters
 
-abstract class BinaryOp internal constructor() : PqlOperator {
+abstract class BinaryOp internal constructor() : SqlOperator {
     /**
      * Type of left-hand side expression
      */
@@ -21,7 +21,7 @@ abstract class BinaryOp internal constructor() : PqlOperator {
      *
      * [paramRegistry] is the registry of type parameters of operands.
      */
-    abstract fun inferReturnType(paramRegistry: ParameterRegistry): TypeWithParameters
+    abstract fun inferReturnType(paramRegistry: ParameterRegistry): SqlTypeWithParameters
 
     /**
      * Evaluation

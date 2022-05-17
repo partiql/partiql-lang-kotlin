@@ -2,10 +2,10 @@ package org.partiql.lang.typesystem.interfaces.operator
 
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.typesystem.interfaces.type.SqlType
+import org.partiql.lang.typesystem.interfaces.type.SqlTypeWithParameters
 import org.partiql.lang.typesystem.interfaces.type.TypeParameters
-import org.partiql.lang.typesystem.interfaces.type.TypeWithParameters
 
-abstract class UnaryOp internal constructor() : PqlOperator {
+abstract class UnaryOp internal constructor() : SqlOperator {
     /**
      * Type of expression
      */
@@ -16,7 +16,7 @@ abstract class UnaryOp internal constructor() : PqlOperator {
      *
      * [typeParametersOfExpr] is type parameters of the operand passed to this operator at compile time.
      */
-    abstract fun inferReturnType(typeParametersOfExpr: TypeParameters): List<TypeWithParameters>
+    abstract fun inferReturnType(typeParametersOfExpr: TypeParameters): List<SqlTypeWithParameters>
 
     /**
      * Evaluation

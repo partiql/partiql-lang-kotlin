@@ -7,7 +7,9 @@ import org.partiql.lang.eval.ExprValueType
  */
 interface SqlType {
     /**
-     * A sql type has a unique type name
+     * Type name
+     *
+     * A sql type must have a unique type name within a plugin
      */
     val typeName: String
 

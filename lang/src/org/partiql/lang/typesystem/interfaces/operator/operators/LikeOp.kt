@@ -2,15 +2,15 @@ package org.partiql.lang.typesystem.interfaces.operator.operators
 
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.typesystem.interfaces.operator.OpAlias
-import org.partiql.lang.typesystem.interfaces.operator.PqlOperator
+import org.partiql.lang.typesystem.interfaces.operator.SqlOperator
 import org.partiql.lang.typesystem.interfaces.type.SqlType
+import org.partiql.lang.typesystem.interfaces.type.SqlTypeWithParameters
 import org.partiql.lang.typesystem.interfaces.type.TypeParameters
-import org.partiql.lang.typesystem.interfaces.type.TypeWithParameters
 
 /**
  * Used to define [OpAlias.LIKE] operator
  */
-abstract class LikeOp : PqlOperator {
+abstract class LikeOp : SqlOperator {
     override val operatorAlias: OpAlias
         get() = OpAlias.LIKE
 
@@ -34,7 +34,7 @@ abstract class LikeOp : PqlOperator {
      *
      * [paramRegistry] is the registry of type parameters.
      */
-    abstract fun inferReturnType(paramRegistry: ParameterRegistry): TypeWithParameters
+    abstract fun inferReturnType(paramRegistry: ParameterRegistry): SqlTypeWithParameters
 
     /**
      * Evaluation

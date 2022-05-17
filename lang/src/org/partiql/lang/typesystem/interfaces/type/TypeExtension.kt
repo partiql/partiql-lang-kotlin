@@ -5,7 +5,7 @@ import org.partiql.lang.eval.ExprValue
 /**
  * A sql type with actual parameters. If it is a non-parametric type, [parameters] should be an empty list.
  */
-data class TypeWithParameters(
+data class SqlTypeWithParameters(
     val type: SqlType,
     val parameters: TypeParameters = emptyList()
 )
@@ -15,7 +15,7 @@ data class TypeWithParameters(
  */
 data class ValueWithType(
     val value: ExprValue,
-    val typeWithParameters: TypeWithParameters
+    val typeWithParameters: SqlTypeWithParameters
 )
 
 /**
