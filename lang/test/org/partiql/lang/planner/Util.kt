@@ -5,12 +5,12 @@ import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemDetails
 
 /**
- * Creates a fake implementation of [GlobalBindings] with the specified [globalVariableNames].
+ * Creates a fake implementation of [UniqueIdResolver] with the specified [globalVariableNames].
  *
  * The fake unique identifier of bound variables is computed to be `fake_uid_for_${globalVariableName}`.
  */
 fun createFakeGlobalBindings(vararg globalVariableNames: Pair<String, String>) =
-    GlobalBindings { bindingName ->
+    UniqueIdResolver { bindingName ->
         val matches = globalVariableNames.filter { bindingName.isEquivalentTo(it.first) }
         when (matches.size) {
             0 -> ResolutionResult.Undefined
