@@ -31,7 +31,7 @@ import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.planner.transforms.PlanningProblemDetails
 import org.partiql.lang.planner.transforms.normalize
 import org.partiql.lang.planner.transforms.toLogicalPlan
-import org.partiql.lang.planner.transforms.toPhysicalPlan
+import org.partiql.lang.planner.transforms.toDefaultPhysicalPlan
 import org.partiql.lang.planner.transforms.toResolvedPlan
 import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.SqlParser
@@ -177,7 +177,7 @@ interface PlannerPipeline {
         private val customFunctions: MutableMap<String, ExprFunction> = HashMap()
         private var customDataTypes: List<CustomType> = listOf()
         private val customProcedures: MutableMap<String, StoredProcedure> = HashMap()
-        private var globalBindings: GlobalBindings = emptyGlobalBindings()
+        private var globalBindings: UniqueIdResolver = emptyUniqueIdResolver()
         private var allowUndefinedVariables: Boolean = false
         private var enableLegacyExceptionHandling: Boolean = false
 
@@ -239,7 +239,7 @@ interface PlannerPipeline {
          *
          * [globalBindings] is queried during query planning to fetch database schema information.
          */
-        fun globalBindings(bindings: GlobalBindings): Builder = this.apply {
+        fun globalBindings(bindings: UniqueIdResolver): Builder = this.apply {
             this.globalBindings = bindings
         }
 
@@ -308,7 +308,7 @@ internal class PlannerPipelineImpl(
     val functions: Map<String, ExprFunction>,
     val customDataTypes: List<CustomType>,
     val procedures: Map<String, StoredProcedure>,
-    val globalBindings: GlobalBindings,
+    val globalBindings: UniqueIdResolver,
     val allowUndefinedVariables: Boolean,
     val enableLegacyExceptionHandling: Boolean
 ) : PlannerPipeline {
@@ -368,7 +368,7 @@ internal class PlannerPipelineImpl(
 
         // resolved logical plan -> physical plan.
         // this will give all relational operators `(impl default)`.
-        val physicalPlan = resolvedLogicalPlan.toPhysicalPlan()
+        val physicalPlan = resolvedLogicalPlan.toDefaultPhysicalPlan()
 
         // Future work: invoke passes to choose relational operator implementations other than `(impl default)`.
         // Future work: fully push down predicates and projections into their physical read operators.

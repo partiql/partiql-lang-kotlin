@@ -59,7 +59,7 @@ class PlannerPipelineSmokeTests {
                             )
                         ),
                         locals = listOf(localVariable("c", 0)),
-                        version = PLAN_VERSION_NUMBER.toLong()
+                        version = PLAN_VERSION_NUMBER
                     )
                 },
                 warnings = emptyList()
