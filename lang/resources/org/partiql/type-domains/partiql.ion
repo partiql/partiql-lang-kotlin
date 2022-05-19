@@ -464,7 +464,7 @@ may then be further optimized by selecting better implementations of each operat
             // plan is compatible with the current version of PartiQL.
             (record plan
                 (stmt statement)
-                (version int)
+                (version symbol) // This should really be a string: https://github.com/partiql/partiql-ir-generator/issues/122
             )
 
             // Defines a field within a struct constructor or an expression which is expected to be a container
@@ -628,7 +628,7 @@ may then be further optimized by selecting better implementations of each operat
         (include
             (record plan
                 (stmt statement)
-                (version int)
+                (version symbol) // This should really be a string: https://github.com/partiql/partiql-ir-generator/issues/122
                 (locals (* local_variable 0))
             )
 
@@ -725,7 +725,7 @@ may then be further optimized by selecting better implementations of each operat
                     join_type::join_type
                     left::bexpr
                     right::bexpr
-                    predicate::expr)
+                    predicate::(? expr))
 
 
                 (offset i::impl row_count::expr source::bexpr)

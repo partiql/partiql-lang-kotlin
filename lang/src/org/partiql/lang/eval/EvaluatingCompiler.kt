@@ -3058,7 +3058,7 @@ private class SingleProjectionElement(val name: ExprValue, val thunk: ThunkEnv) 
  */
 private class MultipleProjectionElement(val thunks: List<ThunkEnv>) : ProjectionElement()
 
-private val MetaContainer.sourceLocationMeta get() = this[SourceLocationMeta.TAG] as? SourceLocationMeta
+internal val MetaContainer.sourceLocationMeta get() = this[SourceLocationMeta.TAG] as? SourceLocationMeta
 
 private fun StaticType.getTypes() = when (val flattened = this.flatten()) {
     is AnyOfType -> flattened.types
