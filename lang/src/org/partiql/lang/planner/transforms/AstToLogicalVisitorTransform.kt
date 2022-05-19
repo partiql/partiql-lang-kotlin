@@ -1,6 +1,5 @@
 package org.partiql.lang.planner.transforms
 
-import com.amazon.ionelement.api.ionBool
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlAstToPartiqlLogicalVisitorTransform
 import org.partiql.lang.domains.PartiqlLogical
@@ -17,7 +16,7 @@ internal fun PartiqlAst.Statement.toLogicalPlan(): PartiqlLogical.Plan =
     PartiqlLogical.build {
         plan(
             AstToLogicalVisitorTransform.transformStatement(this@toLogicalPlan),
-            version = PLAN_VERSION_NUMBER.toLong()
+            version = PLAN_VERSION_NUMBER
         )
     }
 
@@ -161,7 +160,7 @@ private object FromSourceToBexpr : PartiqlAst.FromSource.Converter<PartiqlLogica
                 joinType = AstToLogicalVisitorTransform.transformJoinType(node.type),
                 left = convert(node.left),
                 right = convert(node.right),
-                predicate = node.predicate?.let { AstToLogicalVisitorTransform.transformExpr(it) } ?: lit(ionBool(true)),
+                predicate = node.predicate?.let { AstToLogicalVisitorTransform.transformExpr(it) },
                 node.metas
             )
         }
