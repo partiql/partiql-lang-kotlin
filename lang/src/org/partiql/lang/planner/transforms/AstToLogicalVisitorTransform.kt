@@ -16,7 +16,7 @@ internal fun PartiqlAst.Statement.toLogicalPlan(): PartiqlLogical.Plan =
     PartiqlLogical.build {
         plan(
             AstToLogicalVisitorTransform.transformStatement(this@toLogicalPlan),
-            version = PLAN_VERSION_NUMBER.toLong()
+            version = PLAN_VERSION_NUMBER
         )
     }
 
