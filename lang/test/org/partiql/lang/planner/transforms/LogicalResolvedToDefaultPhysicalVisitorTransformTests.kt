@@ -8,13 +8,13 @@ import org.partiql.lang.domains.PartiqlLogicalResolved
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.util.ArgumentsProviderBase
 
-class LogicalResolvedToPhysicalVisitorTransformTests {
+class LogicalResolvedToDefaultPhysicalVisitorTransformTests {
     data class TestCase(val input: PartiqlLogicalResolved.Bexpr, val expected: PartiqlPhysical.Bexpr)
 
     @ParameterizedTest
     @ArgumentsSource(ArgumentsForToPhysicalTests::class)
     fun `to physical`(tc: TestCase) {
-        assertEquals(tc.expected, LogicalResolvedToPhysicalVisitorTransform().transformBexpr(tc.input))
+        assertEquals(tc.expected, LogicalResolvedToDefaultPhysicalVisitorTransform().transformBexpr(tc.input))
     }
 
     class ArgumentsForToPhysicalTests : ArgumentsProviderBase() {

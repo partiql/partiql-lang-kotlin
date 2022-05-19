@@ -8,12 +8,12 @@ import org.partiql.lang.domains.PartiqlPhysical
  * Transforms an instance of [PartiqlLogicalResolved.Statement] to [PartiqlPhysical.Statement],
  * specifying `(impl default)` for each relational operator.
  */
-internal fun PartiqlLogicalResolved.Plan.toPhysicalPlan() =
-    LogicalResolvedToPhysicalVisitorTransform().transformPlan(this)
+internal fun PartiqlLogicalResolved.Plan.toDefaultPhysicalPlan() =
+    LogicalResolvedToDefaultPhysicalVisitorTransform().transformPlan(this)
 
 internal val DEFAULT_IMPL = PartiqlPhysical.build { impl("default") }
 
-internal class LogicalResolvedToPhysicalVisitorTransform : PartiqlLogicalResolvedToPartiqlPhysicalVisitorTransform() {
+internal class LogicalResolvedToDefaultPhysicalVisitorTransform : PartiqlLogicalResolvedToPartiqlPhysicalVisitorTransform() {
 
     /** Copies [PartiqlLogicalResolved.Bexpr.Scan] to [PartiqlPhysical.Bexpr.Scan], adding the default impl. */
     override fun transformBexprScan(node: PartiqlLogicalResolved.Bexpr.Scan): PartiqlPhysical.Bexpr {
