@@ -30,8 +30,8 @@ import org.partiql.lang.eval.builtins.createBuiltinFunctions
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.planner.transforms.PlanningProblemDetails
 import org.partiql.lang.planner.transforms.normalize
-import org.partiql.lang.planner.transforms.toLogicalPlan
 import org.partiql.lang.planner.transforms.toDefaultPhysicalPlan
+import org.partiql.lang.planner.transforms.toLogicalPlan
 import org.partiql.lang.planner.transforms.toResolvedPlan
 import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.SqlParser
