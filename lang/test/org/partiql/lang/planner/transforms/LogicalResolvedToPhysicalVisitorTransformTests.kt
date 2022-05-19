@@ -14,7 +14,7 @@ class LogicalResolvedToPhysicalVisitorTransformTests {
     @ParameterizedTest
     @ArgumentsSource(ArgumentsForToPhysicalTests::class)
     fun `to physical`(tc: TestCase) {
-        assertEquals(tc.expected, LogicalResolvedToPhysicalVisitorTransform().transformBexpr(tc.input))
+        assertEquals(tc.expected, LogicalResolvedToDefaultPhysicalVisitorTransform().transformBexpr(tc.input))
     }
 
     class ArgumentsForToPhysicalTests : ArgumentsProviderBase() {
