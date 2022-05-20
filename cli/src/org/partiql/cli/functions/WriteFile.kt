@@ -15,9 +15,7 @@
 package org.partiql.cli.functions
 
 import com.amazon.ion.IonStruct
-import com.amazon.ion.IonValue
 import com.amazon.ion.system.IonTextWriterBuilder
-import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
@@ -27,7 +25,6 @@ import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.asIonStruct
 import org.partiql.lang.util.booleanValue
-import org.partiql.lang.util.isBag
 import org.partiql.lang.util.stringValue
 import java.io.FileOutputStream
 import java.io.OutputStream
