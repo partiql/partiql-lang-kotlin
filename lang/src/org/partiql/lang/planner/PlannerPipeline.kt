@@ -32,27 +32,13 @@ import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.physical.PhysicalExprToThunkConverterImpl
 import org.partiql.lang.planner.transforms.PlanningProblemDetails
 import org.partiql.lang.planner.transforms.normalize
+import org.partiql.lang.planner.transforms.toDefaultPhysicalPlan
 import org.partiql.lang.planner.transforms.toLogicalPlan
-import org.partiql.lang.planner.transforms.toPhysicalPlan
 import org.partiql.lang.planner.transforms.toResolvedPlan
 import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.syntax.SyntaxException
 import org.partiql.lang.types.CustomType
-
-/*
-Differences between CompilerPipeline and PlannerPipeline:
-
-- CompilerPipeline's ProcessingSteps work only on AST.  PlannerPipeline does not depend on the AST at all.  The intent
-is to free customers from the need to manipulate or even be aware of the AST to the extent possible.  PlannerPipeline
-will eventually only support working on resolved logical plans and later, but not yet.
-- PlannerPipeline does not yet to work with static types.
-
-Why not add an option to enable the planner to be used with CompilerPipeline?  Some fundamental differences:
-- global bindings are (eventually) a GlobalBindings instance instead of a Bindings<StaticType> (globalTypeBindings).
-    - (ResolutionResult, returned from GlobalBindings, likely will eventually include a StaticType.)
-- there is more complexity than is needed (i.e. AST processing steps)
-*/
 
 /**
  * [PlannerPipeline] is the main interface for planning and compiling PartiQL queries into instances of [Expression]
@@ -92,9 +78,9 @@ interface PlannerPipeline {
      * - Parses the specified SQL string, producing an AST.
      * - Converts the AST to a logical plan.
      * - Resolves all global and local variables in the logical plan, assigning unique indexes to local variables
-     * and calling [GlobalBindings.resolve] of [globalBindings] to obtain PartiQL-service specific unique identifiers
-     * of global values such as tables, and optionally converts undefined variables to dynamic lookups.
-     * - Converts the AST to a physical plan with `(impl default)` operators.
+     * and calling [MetadataResolver.resolveVariable] to obtain PartiQL-service specific unique identifiers of global
+     * values such as tables, and optionally converts undefined variables to dynamic lookups.
+     * - Converts the logical plan to a physical plan with `(impl default)` operators.
      *
      * @param query The text of the SQL statement or expression to be planned.
      * @return [PassResult.Success] containing an instance of [PartiqlPhysical.Statement] and any applicable warnings
@@ -179,7 +165,7 @@ interface PlannerPipeline {
         private val customFunctions: MutableMap<String, ExprFunction> = HashMap()
         private var customDataTypes: List<CustomType> = listOf()
         private val customProcedures: MutableMap<String, StoredProcedure> = HashMap()
-        private var globalBindings: GlobalBindings = emptyGlobalBindings()
+        private var metadataResolver: MetadataResolver = emptyMetadataResolver()
         private var allowUndefinedVariables: Boolean = false
         private var enableLegacyExceptionHandling: Boolean = false
 
@@ -237,12 +223,12 @@ interface PlannerPipeline {
         }
 
         /**
-         * Adds the [GlobalBindings] for global variables.
+         * Adds the [MetadataResolver] for global variables.
          *
-         * [globalBindings] is queried during query planning to fetch database schema information.
+         * [metadataResolver] is queried during query planning to fetch metadata information such as table schemas.
          */
-        fun globalBindings(bindings: GlobalBindings): Builder = this.apply {
-            this.globalBindings = bindings
+        fun metadataResolver(bindings: MetadataResolver): Builder = this.apply {
+            this.metadataResolver = bindings
         }
 
         /**
@@ -293,7 +279,7 @@ interface PlannerPipeline {
                 functions = allFunctionsMap,
                 customDataTypes = customDataTypes,
                 procedures = customProcedures,
-                globalBindings = globalBindings,
+                metadataResolver = metadataResolver,
                 allowUndefinedVariables = allowUndefinedVariables,
                 enableLegacyExceptionHandling = enableLegacyExceptionHandling
             )
@@ -308,7 +294,7 @@ internal class PlannerPipelineImpl(
     val functions: Map<String, ExprFunction>,
     val customDataTypes: List<CustomType>,
     val procedures: Map<String, StoredProcedure>,
-    val globalBindings: GlobalBindings,
+    val metadataResolver: MetadataResolver,
     val allowUndefinedVariables: Boolean,
     val enableLegacyExceptionHandling: Boolean
 ) : PlannerPipeline {
@@ -353,7 +339,7 @@ internal class PlannerPipelineImpl(
 
         // logical plan -> resolved logical plan
         val problemHandler = ProblemCollector()
-        val resolvedLogicalPlan = logicalPlan.toResolvedPlan(problemHandler, globalBindings, allowUndefinedVariables)
+        val resolvedLogicalPlan = logicalPlan.toResolvedPlan(problemHandler, metadataResolver, allowUndefinedVariables)
         // If there are unresolved variables after attempting to resolve variables, then we can't proceed.
         if (problemHandler.hasErrors) {
             return PassResult.Error(problemHandler.problems)
@@ -368,7 +354,7 @@ internal class PlannerPipelineImpl(
 
         // resolved logical plan -> physical plan.
         // this will give all relational operators `(impl default)`.
-        val physicalPlan = resolvedLogicalPlan.toPhysicalPlan()
+        val physicalPlan = resolvedLogicalPlan.toDefaultPhysicalPlan()
 
         // Future work: invoke passes to choose relational operator implementations other than `(impl default)`.
         // Future work: fully push down predicates and projections into their physical read operators.

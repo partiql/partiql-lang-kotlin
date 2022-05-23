@@ -22,7 +22,7 @@ class PlannerPipelineSmokeTests {
     @Suppress("DEPRECATION")
     private fun createPlannerPipelineForTest(allowUndefinedVariables: Boolean) = PlannerPipeline.build(ion) {
         allowUndefinedVariables(allowUndefinedVariables)
-        globalBindings(createFakeGlobalBindings("Customer" to "fake_uid_for_Customer"))
+        metadataResolver(createFakeMetadataResolver("Customer" to "fake_uid_for_Customer"))
     }
 
     @Test
@@ -59,7 +59,7 @@ class PlannerPipelineSmokeTests {
                             )
                         ),
                         locals = listOf(localVariable("c", 0)),
-                        version = PLAN_VERSION_NUMBER.toLong()
+                        version = PLAN_VERSION_NUMBER
                     )
                 },
                 warnings = emptyList()

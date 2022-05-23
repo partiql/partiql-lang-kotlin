@@ -14,7 +14,7 @@ import org.partiql.lang.errors.ProblemCollector
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.builtins.DYNAMIC_LOOKUP_FUNCTION_NAME
 import org.partiql.lang.eval.sourceLocationMeta
-import org.partiql.lang.planner.createFakeGlobalBindings
+import org.partiql.lang.planner.createFakeMetadataResolver
 import org.partiql.lang.planner.problem
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.ArgumentsProviderBase
@@ -91,7 +91,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
     }
 
     /** Mock table resolver. That can resolve f, foo, or UPPERCASE_FOO, while respecting case-sensitivity. */
-    private val globalBindings = createFakeGlobalBindings(
+    private val globalBindings = createFakeMetadataResolver(
         *listOf(
             "shadow",
             "foo",
@@ -638,7 +638,40 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                     }
                 ).withLocals(localVariable("f", 0), localVariable("b", 1), localVariable("t", 2)),
                 allowUndefinedVariables = true
-            )
+            ),
+            // In from clause
+            TestCase(
+                // Wihtout scope override
+                "SELECT 1 AS x FROM undefined_table AS f",
+                Expectation.Success(
+                    ResolvedId(1, 20) { dynamicLookup("undefined_table", BindingCase.INSENSITIVE, globalsFirst = true) },
+                ).withLocals(
+                    localVariable("f", 0),
+                ),
+                allowUndefinedVariables = true
+            ),
+            TestCase(
+                // Wiht scope override
+                "SELECT 1 AS x FROM @undefined_table AS f",
+                Expectation.Success(
+                    ResolvedId(1, 21) { dynamicLookup("undefined_table", BindingCase.INSENSITIVE, globalsFirst = false) },
+                ).withLocals(
+                    localVariable("f", 0),
+                ),
+                allowUndefinedVariables = true
+            ),
+            TestCase(
+                // with correlated join
+                "SELECT 1 AS x FROM undefined_table AS f, @asdf AS f2",
+                Expectation.Success(
+                    ResolvedId(1, 20) { dynamicLookup("undefined_table", BindingCase.INSENSITIVE, globalsFirst = true) },
+                    ResolvedId(1, 43) { dynamicLookup("asdf", BindingCase.INSENSITIVE, globalsFirst = false, localId(0)) }
+                ).withLocals(
+                    localVariable("f", 0),
+                    localVariable("f2", 1)
+                ),
+                allowUndefinedVariables = true
+            ),
         )
     }
 
