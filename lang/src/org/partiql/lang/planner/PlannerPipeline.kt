@@ -76,9 +76,9 @@ interface PlannerPipeline {
      * - Parses the specified SQL string, producing an AST.
      * - Converts the AST to a logical plan.
      * - Resolves all global and local variables in the logical plan, assigning unique indexes to local variables
-     * and calling [GlobalBindings.resolve] of [globalBindings] to obtain PartiQL-service specific unique identifiers
-     * of global values such as tables, and optionally converts undefined variables to dynamic lookups.
-     * - Converts the AST to a physical plan with `(impl default)` operators.
+     * and calling [MetadataResolver.resolveVariable] to obtain PartiQL-service specific unique identifiers of global
+     * values such as tables, and optionally converts undefined variables to dynamic lookups.
+     * - Converts the logical plan to a physical plan with `(impl default)` operators.
      *
      * @param query The text of the SQL statement or expression to be planned.
      * @return [PassResult.Success] containing an instance of [PartiqlPhysical.Statement] and any applicable warnings
