@@ -8,6 +8,9 @@ sealed class ResolutionResult {
     /**
      * A success case, indicates the [uniqueId] of the match to the [BindingName] in the global scope.
      * Typically, this is defined by the storage layer.
+     *
+     * In the future, this will likely contain much more than just a unique id.  It might include detailed schema
+     * information about global variables.
      */
     data class GlobalVariable(val uniqueId: String) : ResolutionResult()
 
@@ -22,9 +25,19 @@ sealed class ResolutionResult {
     object Undefined : ResolutionResult()
 }
 
-fun interface UniqueIdResolver {
+/**
+ * Supplies the query planner with metadata about the current database.  Meant to be implemented by the application
+ * embedding PartiQL.
+ *
+ * Metadata is associated with global variables.  Global variables can be tables or (less commonly) any other
+ * application specific global variable.
+ *
+ * In the future, new methods could be added which expose information about other types of database metadata such as
+ * available indexes and table statistics.
+ */
+interface MetadataResolver {
     /**
-     * Implementations try to resolve a global variable which is typically a database table to a unique identifier
+     * Implementations try to resolve a variable which is typically a database table to a schema
      * using [bindingName].  [bindingName] includes both the name as specified by the query author and a [BindingCase]
      * which indicates if query author included double quotes (") which mean the lookup should be case-sensitive.
      *
@@ -41,10 +54,12 @@ fun interface UniqueIdResolver {
      * Note that while [ResolutionResult.LocalVariable] exists, it is intentionally marked `internal` and cannot
      * be used by outside this project.
      */
-    fun resolve(bindingName: BindingName): ResolutionResult
+    fun resolveVariable(bindingName: BindingName): ResolutionResult
 }
 
-private val EMPTY = UniqueIdResolver { ResolutionResult.Undefined }
+private val EMPTY: MetadataResolver = object : MetadataResolver {
+    override fun resolveVariable(bindingName: BindingName): ResolutionResult = ResolutionResult.Undefined
+}
 
-/** Convenience function for obtaining an instance of [UniqueIdResolver] with no defined variables. */
-fun emptyUniqueIdResolver(): UniqueIdResolver = EMPTY
+/** Convenience function for obtaining an instance of [MetadataResolver] with no defined variables. */
+fun emptyMetadataResolver(): MetadataResolver = EMPTY

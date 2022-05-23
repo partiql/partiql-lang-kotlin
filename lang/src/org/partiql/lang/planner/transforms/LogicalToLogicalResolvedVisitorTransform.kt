@@ -10,15 +10,15 @@ import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.builtins.DYNAMIC_LOOKUP_FUNCTION_NAME
+import org.partiql.lang.planner.MetadataResolver
 import org.partiql.lang.planner.ResolutionResult
-import org.partiql.lang.planner.UniqueIdResolver
 import org.partiql.pig.runtime.asPrimitive
 
 /**
  * Resolves all variables by rewriting `(id <name> <case-sensitivity> <scope-qualifier>)` to
  * `(id <unique-index>)`) or `(global_id <name> <unique-id>)`, or a `$__dynamic_lookup__` call site (if enabled).
  *
- * Local variables are resolved independently within this pass, but we rely on [globals] to resolve global variables.
+ * Local variables are resolved independently within this pass, but we rely on [resolver] to resolve global variables.
  *
  * There are actually two passes here:
  * 1. All [PartiqlLogical.VarDecl] nodes are allocated unique indexes (which is stored in a meta).  This pass is
@@ -71,14 +71,14 @@ import org.partiql.pig.runtime.asPrimitive
  */
 internal fun PartiqlLogical.Plan.toResolvedPlan(
     problemHandler: ProblemHandler,
-    globals: UniqueIdResolver,
+    resolver: MetadataResolver,
     allowUndefinedVariables: Boolean = false
 ): PartiqlLogicalResolved.Plan {
     // Allocate a unique id for each `VarDecl`
     val (planWithAllocatedVariables, allLocals) = this.allocateVariableIds()
 
     // Transform to `partiql_logical_resolved` while resolving variables.
-    val resolvedSt = LogicalToLogicalResolvedVisitorTransform(allowUndefinedVariables, problemHandler, globals)
+    val resolvedSt = LogicalToLogicalResolvedVisitorTransform(allowUndefinedVariables, problemHandler, resolver)
         .transformPlan(planWithAllocatedVariables)
         .copy(locals = allLocals)
 
@@ -119,7 +119,7 @@ private data class LogicalToLogicalResolvedVisitorTransform(
     /** Where to send error reports. */
     private val problemHandler: ProblemHandler,
     /** If a variable is not found using [inputScope], we will attempt to locate the binding here instead. */
-    private val globals: UniqueIdResolver,
+    private val globals: MetadataResolver,
 
 ) : PartiqlLogicalToPartiqlLogicalResolvedVisitorTransform() {
     /** The current [LocalScope]. */
@@ -253,14 +253,14 @@ private data class LogicalToLogicalResolvedVisitorTransform(
             node.qualifier is PartiqlLogical.ScopeQualifier.Unqualified
         ) {
             // look up variable in globals first, then locals
-            when (val globalResolutionResult = globals.resolve(bindingName)) {
+            when (val globalResolutionResult = globals.resolveVariable(bindingName)) {
                 ResolutionResult.Undefined -> lookupLocalVariable(bindingName)
                 else -> globalResolutionResult
             }
         } else {
             // look up variable in locals first, then globals.
             when (val localResolutionResult = lookupLocalVariable(bindingName)) {
-                ResolutionResult.Undefined -> globals.resolve(bindingName)
+                ResolutionResult.Undefined -> globals.resolveVariable(bindingName)
                 else -> localResolutionResult
             }
         }
