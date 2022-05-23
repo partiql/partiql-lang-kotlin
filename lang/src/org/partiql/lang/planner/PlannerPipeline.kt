@@ -38,20 +38,6 @@ import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.syntax.SyntaxException
 import org.partiql.lang.types.CustomType
 
-/*
-Differences between CompilerPipeline and PlannerPipeline:
-
-- CompilerPipeline's ProcessingSteps work only on AST.  PlannerPipeline does not depend on the AST at all.  The intent
-is to free customers from the need to manipulate or even be aware of the AST to the extent possible.  PlannerPipeline
-will eventually only support working on resolved logical plans and later, but not yet.
-- PlannerPipeline does not yet to work with static types.
-
-Why not add an option to enable the planner to be used with CompilerPipeline?  Some fundamental differences:
-- global bindings are (eventually) a GlobalBindings instance instead of a Bindings<StaticType> (globalTypeBindings).
-    - (ResolutionResult, returned from GlobalBindings, likely will eventually include a StaticType.)
-- there is more complexity than is needed (i.e. AST processing steps)
-*/
-
 /**
  * [PlannerPipeline] is the main interface for planning and compiling PartiQL queries into instances of [Expression]
  * which can be executed.
@@ -177,7 +163,7 @@ interface PlannerPipeline {
         private val customFunctions: MutableMap<String, ExprFunction> = HashMap()
         private var customDataTypes: List<CustomType> = listOf()
         private val customProcedures: MutableMap<String, StoredProcedure> = HashMap()
-        private var globalBindings: UniqueIdResolver = emptyUniqueIdResolver()
+        private var metadataResolver: MetadataResolver = emptyMetadataResolver()
         private var allowUndefinedVariables: Boolean = false
         private var enableLegacyExceptionHandling: Boolean = false
 
@@ -235,12 +221,12 @@ interface PlannerPipeline {
         }
 
         /**
-         * Adds the [GlobalBindings] for global variables.
+         * Adds the [MetadataResolver] for global variables.
          *
-         * [globalBindings] is queried during query planning to fetch database schema information.
+         * [metadataResolver] is queried during query planning to fetch metadata information such as table schemas.
          */
-        fun globalBindings(bindings: UniqueIdResolver): Builder = this.apply {
-            this.globalBindings = bindings
+        fun metadataResolver(bindings: MetadataResolver): Builder = this.apply {
+            this.metadataResolver = bindings
         }
 
         /**
@@ -293,7 +279,7 @@ interface PlannerPipeline {
                 functions = allFunctionsMap,
                 customDataTypes = customDataTypes,
                 procedures = customProcedures,
-                globalBindings = globalBindings,
+                metadataResolver = metadataResolver,
                 allowUndefinedVariables = allowUndefinedVariables,
                 enableLegacyExceptionHandling = enableLegacyExceptionHandling
             )
@@ -308,7 +294,7 @@ internal class PlannerPipelineImpl(
     val functions: Map<String, ExprFunction>,
     val customDataTypes: List<CustomType>,
     val procedures: Map<String, StoredProcedure>,
-    val globalBindings: UniqueIdResolver,
+    val metadataResolver: MetadataResolver,
     val allowUndefinedVariables: Boolean,
     val enableLegacyExceptionHandling: Boolean
 ) : PlannerPipeline {
@@ -353,7 +339,7 @@ internal class PlannerPipelineImpl(
 
         // logical plan -> resolved logical plan
         val problemHandler = ProblemCollector()
-        val resolvedLogicalPlan = logicalPlan.toResolvedPlan(problemHandler, globalBindings, allowUndefinedVariables)
+        val resolvedLogicalPlan = logicalPlan.toResolvedPlan(problemHandler, metadataResolver, allowUndefinedVariables)
         // If there are unresolved variables after attempting to resolve variables, then we can't proceed.
         if (problemHandler.hasErrors) {
             return PassResult.Error(problemHandler.problems)
