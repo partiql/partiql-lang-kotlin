@@ -62,4 +62,4 @@ private val EMPTY: MetadataResolver = object : MetadataResolver {
 }
 
 /** Convenience function for obtaining an instance of [MetadataResolver] with no defined variables. */
-fun emptySchemaResolver(): MetadataResolver = EMPTY
+fun emptyMetadataResolver(): MetadataResolver = EMPTY
