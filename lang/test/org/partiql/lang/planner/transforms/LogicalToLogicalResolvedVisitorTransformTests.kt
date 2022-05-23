@@ -14,7 +14,7 @@ import org.partiql.lang.errors.ProblemCollector
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.builtins.DYNAMIC_LOOKUP_FUNCTION_NAME
 import org.partiql.lang.eval.sourceLocationMeta
-import org.partiql.lang.planner.createFakeGlobalBindings
+import org.partiql.lang.planner.createFakeMetadataResolver
 import org.partiql.lang.planner.problem
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.ArgumentsProviderBase
@@ -91,7 +91,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
     }
 
     /** Mock table resolver. That can resolve f, foo, or UPPERCASE_FOO, while respecting case-sensitivity. */
-    private val globalBindings = createFakeGlobalBindings(
+    private val globalBindings = createFakeMetadataResolver(
         *listOf(
             "shadow",
             "foo",
