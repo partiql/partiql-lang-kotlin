@@ -34,12 +34,10 @@ import org.partiql.lang.util.propertyValueMapOf
  *
  * @param message the message for this exception
  * @param errorCode the error code for this exception
- * @param errorContextArg context for this error, contains details like line & column number among other attributes.
+ * @param errorContext context for this error, includes details like line & character offsets, among others.
+ * @param internal True to indicate that this exception a bug in ParitQL itself.  False to indicate it was caused by
+ * incorrect usage of APIs or invalid end-user queries.
  * @param cause for this exception
- *
- * @constructor a custom error [message], the [errorCode], error context as a [propertyValueMap] and optional [cause] creates an
- * [SqlException]. This is the constructor for the second configuration explained above.
- *
  */
 open class SqlException(
     override var message: String,
@@ -83,7 +81,7 @@ open class SqlException(
      *
      *  * ErrorCategory is one of `Lexer Error`, `Parser Error`, `Runtime Error`
      *  * ErrorLocation is the line and column where the error occurred
-     *  * Errormessatge is the **generated** error message
+     *  * ErrorMessage is the **generated** error message
      *
      *
      * TODO: Prepend to the auto-generated message the file name.
@@ -91,6 +89,10 @@ open class SqlException(
      */
     fun generateMessage(): String =
         "${errorCategory(errorCode)}: ${errorLocation(errorContext)}: ${errorMessage(errorCode, errorContext)}"
+
+    /** Same as [generateMessage] but without the location. */
+    fun generateMessageNoLocation(): String =
+        "${errorCategory(errorCode)}: ${errorMessage(errorCode, errorContext)}"
 
     private fun errorMessage(errorCode: ErrorCode?, propertyValueMap: PropertyValueMap?): String =
         errorCode?.getErrorMessage(propertyValueMap) ?: UNKNOWN
