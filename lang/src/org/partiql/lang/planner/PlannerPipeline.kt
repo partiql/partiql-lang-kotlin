@@ -27,7 +27,6 @@ import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.Expression
 import org.partiql.lang.eval.ThunkReturnTypeAssertions
 import org.partiql.lang.eval.builtins.createBuiltinFunctions
-import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.planner.transforms.PlanningProblemDetails
 import org.partiql.lang.planner.transforms.normalize
 import org.partiql.lang.planner.transforms.toDefaultPhysicalPlan
@@ -36,7 +35,6 @@ import org.partiql.lang.planner.transforms.toResolvedPlan
 import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.syntax.SyntaxException
-import org.partiql.lang.types.CustomType
 
 /**
  * [PlannerPipeline] is the main interface for planning and compiling PartiQL queries into instances of [Expression]
@@ -161,9 +159,6 @@ interface PlannerPipeline {
     class Builder(val valueFactory: ExprValueFactory) {
         private var parser: Parser? = null
         private var evaluatorOptions: EvaluatorOptions? = null
-        private val customFunctions: MutableMap<String, ExprFunction> = HashMap()
-        private var customDataTypes: List<CustomType> = listOf()
-        private val customProcedures: MutableMap<String, StoredProcedure> = HashMap()
         private var metadataResolver: MetadataResolver = emptyMetadataResolver()
         private var allowUndefinedVariables: Boolean = false
         private var enableLegacyExceptionHandling: Boolean = false
@@ -193,33 +188,6 @@ interface PlannerPipeline {
          */
         fun evaluatorOptions(block: EvaluatorOptions.Builder.() -> Unit): Builder =
             evaluatorOptions(EvaluatorOptions.build(block))
-
-        /**
-         * Add a custom function which will be callable by the compiled queries.
-         *
-         * Functions added here will replace any built-in function with the same name.
-         */
-        fun addFunction(function: ExprFunction): Builder = this.apply {
-            customFunctions[function.signature.name] = function
-        }
-
-        /**
-         * Add custom types to CAST/IS operators to.
-         *
-         * Built-in types will take precedence over custom types in case of a name collision.
-         */
-        fun customDataTypes(customTypes: List<CustomType>) = this.apply {
-            customDataTypes = customTypes
-        }
-
-        /**
-         * Add a custom stored procedure which will be callable by the compiled queries.
-         *
-         * Stored procedures added here will replace any built-in procedure with the same name.
-         */
-        fun addProcedure(procedure: StoredProcedure): Builder = this.apply {
-            customProcedures[procedure.signature.name] = procedure
-        }
 
         /**
          * Adds the [MetadataResolver] for global variables.
@@ -270,16 +238,11 @@ interface PlannerPipeline {
                 it.signature.name
             }
 
-            // customFunctions must be on the right side of + here to ensure that they overwrite any
-            // built-in functions with the same name.
-            val allFunctionsMap = builtinFunctionsMap + customFunctions
             return PlannerPipelineImpl(
                 valueFactory = valueFactory,
-                parser = parser ?: SqlParser(valueFactory.ion, this.customDataTypes),
+                parser = parser ?: SqlParser(valueFactory.ion),
                 evaluatorOptions = compileOptionsToUse,
-                functions = allFunctionsMap,
-                customDataTypes = customDataTypes,
-                procedures = customProcedures,
+                functions = builtinFunctionsMap,
                 metadataResolver = metadataResolver,
                 allowUndefinedVariables = allowUndefinedVariables,
                 enableLegacyExceptionHandling = enableLegacyExceptionHandling
@@ -293,8 +256,6 @@ internal class PlannerPipelineImpl(
     private val parser: Parser,
     val evaluatorOptions: EvaluatorOptions,
     val functions: Map<String, ExprFunction>,
-    val customDataTypes: List<CustomType>,
-    val procedures: Map<String, StoredProcedure>,
     val metadataResolver: MetadataResolver,
     val allowUndefinedVariables: Boolean,
     val enableLegacyExceptionHandling: Boolean
@@ -310,12 +271,6 @@ internal class PlannerPipelineImpl(
                 TODO("Support for EvaluatorOptions.thunkReturnTypeAsserts == ThunkReturnTypeAssertions.ENABLED")
         }
     }
-
-    val customTypedOpParameters = customDataTypes.map { customType ->
-        (customType.aliases + customType.name).map { alias ->
-            Pair(alias.toLowerCase(), customType.typedOpParameter)
-        }
-    }.flatten().toMap()
 
     override fun plan(query: String): PassResult<PartiqlPhysical.Plan> {
         val ast = try {
