@@ -7,6 +7,7 @@ import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
+import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 
 /**
@@ -25,7 +26,7 @@ class CliTestUtility() {
             input: String? = null,
             bindings: Bindings<ExprValue> = Bindings.empty(),
             outputFormat: OutputFormat = OutputFormat.ION_TEXT,
-            output: OutputStream = OutputStream.nullOutputStream(),
+            output: OutputStream = ByteArrayOutputStream(),
             ion: IonSystem = IonSystemBuilder.standard().build(),
             compilerPipeline: CompilerPipeline = CompilerPipeline.standard(ion),
             valueFactory: ExprValueFactory = ExprValueFactory.standard(ion)
