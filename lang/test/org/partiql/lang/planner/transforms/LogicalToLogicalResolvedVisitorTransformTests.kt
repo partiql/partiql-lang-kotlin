@@ -91,7 +91,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
     }
 
     /** Mock table resolver. That can resolve f, foo, or UPPERCASE_FOO, while respecting case-sensitivity. */
-    private val globalBindings = createFakeMetadataResolver(
+    private val metadataResolver = createFakeMetadataResolver(
         *listOf(
             "shadow",
             "foo",
@@ -117,7 +117,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
 
         when (tc.expectation) {
             is Expectation.Success -> {
-                val resolved = plan.toResolvedPlan(problemHandler, globalBindings, tc.allowUndefinedVariables)
+                val resolved = plan.toResolvedPlan(problemHandler, metadataResolver, tc.allowUndefinedVariables)
 
                 // extract all of the dynamic, global and local ids from the resolved logical plan.
                 val actualResolvedIds =
@@ -186,7 +186,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
             }
             is Expectation.Problems -> {
                 assertDoesNotThrow("Should not throw when variables are undefined") {
-                    plan.toResolvedPlan(problemHandler, globalBindings)
+                    plan.toResolvedPlan(problemHandler, metadataResolver)
                 }
                 assertEquals(tc.expectation.problems, problemHandler.problems)
             }

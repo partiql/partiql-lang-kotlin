@@ -2,11 +2,13 @@ package org.partiql.lang.eval.evaluatortestframework
 
 import org.junit.jupiter.api.fail
 import org.partiql.lang.ION
+import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.UndefinedVariableBehavior
 import org.partiql.lang.planner.EvaluatorOptions
+import org.partiql.lang.planner.MetadataResolver
 import org.partiql.lang.planner.PassResult
 import org.partiql.lang.planner.PlannerPipeline
 import org.partiql.lang.planner.ResolutionResult
@@ -71,16 +73,25 @@ internal class PlannerPipelineFactory : PipelineFactory {
             // compilation and converting them into Problems
             enableLegacyExceptionHandling()
 
-            // Create a fake GlobalBinding implementation which defines any global that is also defined in the
+            // Create a fake MetadataResolver implementation which defines any global that is also defined in the
             // session.
-            globalBindings { bindingName ->
-                val boundValue = session.globals[bindingName]
-                if (boundValue != null) {
-                    ResolutionResult.GlobalVariable(bindingName.name)
-                } else {
-                    ResolutionResult.Undefined
+            metadataResolver(
+                object : MetadataResolver {
+                    override fun resolveVariable(bindingName: BindingName): ResolutionResult {
+                        val boundValue = session.globals[bindingName]
+                        return if (boundValue != null) {
+                            // There is no way to tell the actual name of the global variable as it exists
+                            // in session.globals (case may differ).  For now we simply have to use binding.name
+                            // as the uniqueId of the variable, however, this is not desirable in production
+                            // scenarios.  At minimum, the name of the variable in its original letter-case should be
+                            // used.
+                            ResolutionResult.GlobalVariable(bindingName.name)
+                        } else {
+                            ResolutionResult.Undefined
+                        }
+                    }
                 }
-            }
+            )
         }
 
         return object : AbstractPipeline {
