@@ -293,6 +293,8 @@ internal class PlannerPipelineImpl(
     private val parser: Parser,
     val evaluatorOptions: EvaluatorOptions,
     val functions: Map<String, ExprFunction>,
+    val customDataTypes: List<CustomType>,
+    val procedures: Map<String, StoredProcedure>,
     val metadataResolver: MetadataResolver,
     val allowUndefinedVariables: Boolean,
     val enableLegacyExceptionHandling: Boolean
@@ -308,6 +310,12 @@ internal class PlannerPipelineImpl(
                 TODO("Support for EvaluatorOptions.thunkReturnTypeAsserts == ThunkReturnTypeAssertions.ENABLED")
         }
     }
+
+    val customTypedOpParameters = customDataTypes.map { customType ->
+        (customType.aliases + customType.name).map { alias ->
+            Pair(alias.toLowerCase(), customType.typedOpParameter)
+        }
+    }.flatten().toMap()
 
     override fun plan(query: String): PassResult<PartiqlPhysical.Plan> {
         val ast = try {
