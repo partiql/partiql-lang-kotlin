@@ -21,12 +21,12 @@ import org.partiql.pig.runtime.LongPrimitive
 
 /**
  * Provides rules for basic AST sanity checks that should be performed before any attempt at further phsycial
- * plan processing. This is provided as a distinct [PartiqlPhysical.Visitor] so that [PlanCompiler] may assume that
- * the physical plan passed the checks performed here.
+ * plan processing. This is provided as a distinct [PartiqlPhysical.Visitor] so that the planner and evaluator may
+ * assume that the physical plan has passed the checks performed here.
  *
- * Any exception thrown by this class should always be considered an indication of a bug:
+ * Any exception thrown by this class should always be considered an indication of a bug.
  */
-class PartiqlPhysicalSanityValidator(val evaluatorOptions: EvaluatorOptions) : PartiqlPhysical.Visitor() {
+class PartiqlPhysicalSanityValidator(private val evaluatorOptions: EvaluatorOptions) : PartiqlPhysical.Visitor() {
 
     /**
      * Quick validation step to make sure the indexes of any variables make sense.
