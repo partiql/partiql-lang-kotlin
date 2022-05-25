@@ -19,20 +19,47 @@ import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
+import org.partiql.cli.assertAsIon
+import org.partiql.cli.makeCliAndGetResult
+import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValueFactory
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.OutputStream
+import java.util.UUID
 
 class WriteFileTest {
     private val ion = IonSystemBuilder.standard().build()
     private val valueFactory = ExprValueFactory.standard(ion)
     private val function = WriteFile(valueFactory)
     private val session = EvaluationSession.standard()
+    private val pipeline: CompilerPipeline = CompilerPipeline.build(ion) {
+        addFunction(function)
+    }
 
     private fun String.exprValue() = valueFactory.newFromIonValue(ion.singleValue(this))
-    private fun readFile(path: String) = File(dirPath(path)).readText()
 
     private fun dirPath(fname: String = "") = "/tmp/partiqltest/$fname"
+    private fun readFileFromPath(path: String) = File(path).readText()
+    private fun createRandomTmpFilePath(extension: String? = "ion"): String {
+        val prefix: UUID = UUID.randomUUID()
+        val name = if (extension != null) "$prefix.$extension" else prefix.toString()
+        return dirPath(name)
+    }
+
+    private val outputStream: OutputStream = ByteArrayOutputStream()
+
+    companion object {
+        private const val TRUE_STRING: String = "true"
+        private const val FALSE_STRING: String = "false"
+    }
+
+    /**
+     *
+     * CONFIG
+     *
+     */
 
     @Before
     fun setUp() {
@@ -44,24 +71,156 @@ class WriteFileTest {
         File(dirPath()).deleteRecursively()
     }
 
+    /**
+     *
+     * UNIT TESTS
+     *
+     */
+
     @Test
-    fun writeIonAsDefault() {
-        val args = listOf(""" "${dirPath("data.ion")}" """, "[1, 2]").map { it.exprValue() }
+    fun unit_success_writeIonAsDefault() {
+        val filePath = createRandomTmpFilePath()
+        val args = listOf("\"$filePath\"", "[1, 2]").map { it.exprValue() }
         function.callWithRequired(session, args).ionValue
 
         val expected = "1 2"
 
-        Assert.assertEquals(ion.loader.load(expected), ion.loader.load(readFile("data.ion")))
+        Assert.assertEquals(ion.loader.load(expected), ion.loader.load(readFileFromPath(filePath)))
     }
 
     @Test
-    fun readIon() {
-        val args = listOf(""" "${dirPath("data1.ion")}" """, "[1, 2]").map { it.exprValue() }
+    fun unit_success_readIon() {
+        val filePath = createRandomTmpFilePath()
+        val args = listOf("\"$filePath\"", "[1, 2]").map { it.exprValue() }
         val additionalOptions = """{type: "ion"}""".exprValue()
         function.callWithOptional(session, args, additionalOptions).ionValue
 
         val expected = "1 2"
 
-        Assert.assertEquals(ion.loader.load(expected), ion.loader.load(readFile("data1.ion")))
+        Assert.assertEquals(ion.loader.load(expected), ion.loader.load(readFileFromPath(filePath)))
+    }
+
+    /**
+     *
+     * INTEGRATION TESTS
+     *
+     */
+
+    @Test
+    fun integration_success_singleValueStruct() {
+        // Arrange
+        val filePath = createRandomTmpFilePath()
+        val query = "write_file('$filePath', SELECT * FROM input_data)"
+        val input = "{a: 1}"
+        val expected = "{a: 1}"
+
+        // Act
+        val cliResponse =
+            makeCliAndGetResult(query = query, input = input, output = outputStream, compilerPipeline = pipeline)
+
+        // Assert
+        assertAsIon(TRUE_STRING, cliResponse)
+        Assert.assertEquals(ion.loader.load(expected), ion.loader.load(readFileFromPath(filePath)))
+    }
+
+    @Test
+    fun integration_success_nestedValueStruct() {
+        // Arrange
+        val filePath = createRandomTmpFilePath()
+        val query = "write_file('$filePath', SELECT a.b FROM input_data)"
+        val input = "{a: {b: 1}}"
+        val expected = "{b: 1}"
+
+        // Act
+        val cliResponse =
+            makeCliAndGetResult(query = query, input = input, output = outputStream, compilerPipeline = pipeline)
+
+        // Assert
+        assertAsIon(TRUE_STRING, cliResponse)
+        Assert.assertEquals(ion.loader.load(expected), ion.loader.load(readFileFromPath(filePath)))
+    }
+
+    @Test
+    fun integration_success_nestedValue() {
+        // Arrange
+        val filePath = createRandomTmpFilePath()
+        val query = "write_file('$filePath', SELECT VALUE a FROM input_data)"
+        val input = "{a: {b: 1}}"
+        val expected = "{b: 1}"
+
+        // Act
+        val cliResponse =
+            makeCliAndGetResult(query = query, input = input, output = outputStream, compilerPipeline = pipeline)
+
+        // Assert
+        assertAsIon(TRUE_STRING, cliResponse)
+        Assert.assertEquals(ion.loader.load(expected), ion.loader.load(readFileFromPath(filePath)))
+    }
+
+    @Test
+    fun integration_success_nestedValueInt() {
+        // Arrange
+        val filePath = createRandomTmpFilePath()
+        val query = "write_file('$filePath', SELECT VALUE a.b FROM input_data)"
+        val input = "{a: {b: 1}}"
+        val expected = "1"
+
+        // Act
+        val cliResponse =
+            makeCliAndGetResult(query = query, input = input, output = outputStream, compilerPipeline = pipeline)
+
+        // Assert
+        assertAsIon(TRUE_STRING, cliResponse)
+        Assert.assertEquals(ion.loader.load(expected), ion.loader.load(readFileFromPath(filePath)))
+    }
+
+    @Test
+    fun integration_success_nestedValueList() {
+        // Arrange
+        val filePath = createRandomTmpFilePath()
+        val query = "write_file('$filePath', SELECT VALUE a.b FROM input_data)"
+        val input = "{a: {b: [ 1, 2 ]}}"
+        val expected = "[ 1, 2 ]"
+
+        // Act
+        val cliResponse =
+            makeCliAndGetResult(query = query, input = input, output = outputStream, compilerPipeline = pipeline)
+
+        // Assert
+        assertAsIon(TRUE_STRING, cliResponse)
+        Assert.assertEquals(ion.loader.load(expected), ion.loader.load(readFileFromPath(filePath)))
+    }
+
+    @Test
+    fun integration_success_int() {
+        // Arrange
+        val filePath = createRandomTmpFilePath()
+        val query = "write_file('$filePath', SELECT VALUE a FROM input_data)"
+        val input = "{a : 5}"
+        val expected = "5"
+
+        // Act
+        val cliResponse =
+            makeCliAndGetResult(query = query, input = input, output = outputStream, compilerPipeline = pipeline)
+
+        // Assert
+        assertAsIon(TRUE_STRING, cliResponse)
+        Assert.assertEquals(ion.loader.load(expected), ion.loader.load(readFileFromPath(filePath)))
+    }
+
+    @Test
+    fun integration_fail_nestedValueBag() {
+        // Arrange
+        val filePath = createRandomTmpFilePath()
+        val query = "write_file('$filePath', SELECT VALUE a.b FROM input_data)"
+        val input = "{a: {b: << 1, 2 >>}}"
+        val expected = "<< 1, 2 >>"
+
+        // Act
+        val cliResponse =
+            makeCliAndGetResult(query = query, input = input, output = outputStream, compilerPipeline = pipeline)
+
+        // Assert
+        assertAsIon(FALSE_STRING, cliResponse)
     }
 }

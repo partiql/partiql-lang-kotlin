@@ -33,7 +33,7 @@ import java.io.OutputStreamWriter
 internal class WriteFile(valueFactory: ExprValueFactory) : BaseFunction(valueFactory) {
     override val signature = FunctionSignature(
         name = "write_file",
-        requiredParameters = listOf(StaticType.STRING, StaticType.STRING),
+        requiredParameters = listOf(StaticType.STRING, StaticType.ANY),
         optionalParameter = StaticType.STRUCT,
         returnType = StaticType.BOOL
     )
