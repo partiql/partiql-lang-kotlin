@@ -11,51 +11,41 @@ import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 
 /**
- * A helper class to initialize the internal-scoped [Cli] and run queries for the purpose of unit and integration
- * testing.
+ * Initializes a CLI and runs the passed-in query
  */
-class CliTestUtility() {
-
-    companion object {
-
-        /**
-         * Initializes a CLI and runs the passed-in query
-         */
-        fun makeCliAndGetResult(
-            query: String,
-            input: String? = null,
-            bindings: Bindings<ExprValue> = Bindings.empty(),
-            outputFormat: OutputFormat = OutputFormat.ION_TEXT,
-            output: OutputStream = ByteArrayOutputStream(),
-            ion: IonSystem = IonSystemBuilder.standard().build(),
-            compilerPipeline: CompilerPipeline = CompilerPipeline.standard(ion),
-            valueFactory: ExprValueFactory = ExprValueFactory.standard(ion)
-        ): String {
-            val cli = Cli(
-                valueFactory,
-                input?.byteInputStream(Charsets.UTF_8) ?: EmptyInputStream(),
-                output,
-                outputFormat,
-                compilerPipeline,
-                bindings,
-                query
-            )
-            cli.run()
-            return output.toString()
-        }
-
-        /**
-         * An assertion helper
-         */
-        fun assertAsIon(expected: String, actual: String) {
-            val ion = IonSystemBuilder.standard().build()
-            assertAsIon(ion, expected, actual)
-        }
-
-        /**
-         * An assertion helper
-         */
-        fun assertAsIon(ion: IonSystem, expected: String, actual: String) =
-            Assert.assertEquals(ion.loader.load(expected), ion.loader.load(actual))
-    }
+fun makeCliAndGetResult(
+    query: String,
+    input: String? = null,
+    bindings: Bindings<ExprValue> = Bindings.empty(),
+    outputFormat: OutputFormat = OutputFormat.ION_TEXT,
+    output: OutputStream = ByteArrayOutputStream(),
+    ion: IonSystem = IonSystemBuilder.standard().build(),
+    compilerPipeline: CompilerPipeline = CompilerPipeline.standard(ion),
+    valueFactory: ExprValueFactory = ExprValueFactory.standard(ion)
+): String {
+    val cli = Cli(
+        valueFactory,
+        input?.byteInputStream(Charsets.UTF_8) ?: EmptyInputStream(),
+        output,
+        outputFormat,
+        compilerPipeline,
+        bindings,
+        query
+    )
+    cli.run()
+    return output.toString()
 }
+
+/**
+ * An assertion helper
+ */
+fun assertAsIon(expected: String, actual: String) {
+    val ion = IonSystemBuilder.standard().build()
+    assertAsIon(ion, expected, actual)
+}
+
+/**
+ * An assertion helper
+ */
+fun assertAsIon(ion: IonSystem, expected: String, actual: String) =
+    Assert.assertEquals(ion.loader.load(expected), ion.loader.load(actual))

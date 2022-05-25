@@ -19,8 +19,8 @@ import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
-import org.partiql.cli.CliTestUtility.Companion.assertAsIon
-import org.partiql.cli.CliTestUtility.Companion.makeCliAndGetResult
+import org.partiql.cli.assertAsIon
+import org.partiql.cli.makeCliAndGetResult
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValueFactory
