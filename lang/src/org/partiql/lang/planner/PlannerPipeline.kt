@@ -78,8 +78,9 @@ interface PlannerPipeline {
      * - Parses the specified SQL string, producing an AST.
      * - Converts the AST to a logical plan.
      * - Resolves all global and local variables in the logical plan, assigning unique indexes to local variables
-     * and calling [MetadataResolver.resolveVariable] to obtain PartiQL-service specific unique identifiers of global
-     * values such as tables, and optionally converts undefined variables to dynamic lookups.
+     * and calling [MetadataResolver.resolveVariable] to obtain unique identifiers global values such as tables that
+     * are specific to the application embedding PartiQL, and optionally converts undefined variables to dynamic
+     * lookups.
      * - Converts the logical plan to a physical plan with `(impl default)` operators.
      *
      * @param query The text of the SQL statement or expression to be planned.
@@ -257,7 +258,7 @@ interface PlannerPipeline {
             val compileOptionsToUse = evaluatorOptions ?: EvaluatorOptions.standard()
 
             when (compileOptionsToUse.thunkOptions.thunkReturnTypeAssertions) {
-                ThunkReturnTypeAssertions.DISABLED -> { /* intentionally blank */ }
+                ThunkReturnTypeAssertions.DISABLED -> { /* take no action */ }
                 ThunkReturnTypeAssertions.ENABLED -> error(
                     "TODO: Support ThunkReturnTypeAssertions.ENABLED " +
                         "need a static type pass first)"
@@ -292,8 +293,6 @@ internal class PlannerPipelineImpl(
     private val parser: Parser,
     val evaluatorOptions: EvaluatorOptions,
     val functions: Map<String, ExprFunction>,
-    val customDataTypes: List<CustomType>,
-    val procedures: Map<String, StoredProcedure>,
     val metadataResolver: MetadataResolver,
     val allowUndefinedVariables: Boolean,
     val enableLegacyExceptionHandling: Boolean
@@ -309,12 +308,6 @@ internal class PlannerPipelineImpl(
                 TODO("Support for EvaluatorOptions.thunkReturnTypeAsserts == ThunkReturnTypeAssertions.ENABLED")
         }
     }
-
-    val customTypedOpParameters = customDataTypes.map { customType ->
-        (customType.aliases + customType.name).map { alias ->
-            Pair(alias.toLowerCase(), customType.typedOpParameter)
-        }
-    }.flatten().toMap()
 
     override fun plan(query: String): PassResult<PartiqlPhysical.Plan> {
         val ast = try {
