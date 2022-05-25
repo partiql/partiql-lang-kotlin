@@ -31,7 +31,6 @@ import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.AnyOfCastTable
 import org.partiql.lang.eval.Arguments
 import org.partiql.lang.eval.BaseExprValue
-import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.CastFunc
 import org.partiql.lang.eval.DEFAULT_COMPARATOR
@@ -897,11 +896,13 @@ internal class PhysicalExprToThunkConverterImpl(
     private fun compileMissing(metas: MetaContainer): PhysicalPlanThunk =
         thunkFactory.thunkEnv(metas) { valueFactory.missingValue }
 
-    private fun compileGlobalId(expr: PartiqlPhysical.Expr.GlobalId): PhysicalPlanThunk =
-        thunkFactory.thunkEnv(expr.metas) { env ->
-            val bindingName = BindingName(expr.uniqueId.text, BindingCase.SENSITIVE)
+    private fun compileGlobalId(expr: PartiqlPhysical.Expr.GlobalId): PhysicalPlanThunk {
+        val bindingCase = expr.case.toBindingCase()
+        return thunkFactory.thunkEnv(expr.metas) { env ->
+            val bindingName = BindingName(expr.uniqueId.text, bindingCase)
             env.session.globals[bindingName] ?: throwUndefinedVariableException(bindingName, expr.metas)
         }
+    }
 
     @Suppress("UNUSED_PARAMETER")
     private fun compileLocalId(expr: PartiqlPhysical.Expr.LocalId, metas: MetaContainer): PhysicalPlanThunk {

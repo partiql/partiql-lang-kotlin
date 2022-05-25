@@ -672,7 +672,7 @@ may then be further optimized by selecting better implementations of each operat
                 // The value of `uniqueId` is PartiQL integration defined and can be any symbol that uniquely
                 // identifies the global variable.  Examples include database object ids or the alphabetical case
                 // respecting table name found after case-insensitive lookup.
-                (global_id name::symbol uniqueId::symbol)
+                (global_id uniqueId::symbol case::case_sensitivity)
             )
         )
     )
