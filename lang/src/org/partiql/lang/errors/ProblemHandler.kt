@@ -5,7 +5,7 @@ import org.partiql.lang.ast.passes.SemanticException
 /**
  * Handles the encountered problem.
  */
-internal interface ProblemHandler {
+interface ProblemHandler {
     /** Handles a [problem] */
     fun handleProblem(problem: Problem)
 }

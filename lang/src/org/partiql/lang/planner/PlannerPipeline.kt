@@ -21,6 +21,7 @@ import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemCollector
+import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValueFactory
@@ -39,6 +40,38 @@ import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.syntax.SyntaxException
 import org.partiql.lang.types.CustomType
+
+/**
+ * Represents a pass over the physical plan that accepts a physical plan and returns a modified
+ * physical plan.
+ *
+ * Passes accept as input a [PartiqlPhysical.Plan] which is cloned & modified in some way before being returned.
+ * A second input to the pass is an instance of [ProblemHandler], which can be used to report semantic errors and
+ * warnings to the query author.
+ *
+ * Examples of passes:
+ *
+ * - Select optimal physical operator implementations.
+ * - Push down predicates or projections.
+ * - Convert filter predicates to index lookups.
+ * - Fold constants.
+ * - And many, many others, some will be specific to the application embedding PartiQL.
+ *
+ * Notes on exceptions and semantic problems:
+ *
+ * - The passes may throw any exception, however these will always abort query planning and bypass the user-friendly
+ * error reporting ([ProblemHandler]) mechanisms used for
+ * [syntax and semantic errors](https://www.educative.io/edpresso/what-is-the-difference-between-syntax-and-semantic-errors))
+ * - Use the [ProblemHandler] to report semantic errors and warnings in the query to the query author.
+ *
+ * @see [ProblemHandler.handleProblem]
+ * @see [Problem]
+ * @see [Problem.details]
+ * @see [org.partiql.lang.errors.ProblemSeverity]
+ */
+fun interface PartiqlPhysicalPass {
+    fun rewrite(inputPlan: PartiqlPhysical.Plan, problemHandler: ProblemHandler): PartiqlPhysical.Plan
+}
 
 /**
  * [PlannerPipeline] is the main interface for planning and compiling PartiQL queries into instances of [Expression]
@@ -166,6 +199,7 @@ interface PlannerPipeline {
         private val customFunctions: MutableMap<String, ExprFunction> = HashMap()
         private var customDataTypes: List<CustomType> = listOf()
         private val customProcedures: MutableMap<String, StoredProcedure> = HashMap()
+        private val physicalPlanPasses = ArrayList<PartiqlPhysicalPass>()
         private var metadataResolver: MetadataResolver = emptyMetadataResolver()
         private var allowUndefinedVariables: Boolean = false
         private var enableLegacyExceptionHandling: Boolean = false
@@ -235,6 +269,29 @@ interface PlannerPipeline {
         }
 
         /**
+         * Adds a pass over the physical algebra. The pass will be invoked every time a query is planned with the
+         * [PlannerPipeline] returned from the [build] function.
+         *
+         * Passes accept a [PartiqlPhysical.Plan] as input and return a rewritten [PartiqlPhysical.Plan] as output.
+         * The input of every pass is the output of the previous pass, starting with the default physical plan which is
+         * a direct conversion of the resolved logical plan to the physical, with default operator implementations
+         * specified.   Passes are invoked in the order they are added.
+         *
+         * If any pass invokes [ProblemHandler.handleProblem] with a [Problem] that is an error (see
+         * [org.partiql.lang.errors.ProblemSeverity]), planning will be aborted immediately after the pass returns and
+         * the list of errors and warnings will be returned to the caller.  [Problem]s that are warnings do not
+         * cause query planning to be aborted but are returned to the caller when planning has finished.
+         *
+         * @see [toDefaultPhysicalPlan].
+         * @see [PartiqlPhysicalPass]
+         * @see [org.partiql.lang.errors.ProblemDetails.severity]
+         * @see [org.partiql.lang.errors.ProblemSeverity]
+         */
+        fun addPhysicalPlanPass(pass: PartiqlPhysicalPass) = this.apply {
+            physicalPlanPasses.add(pass)
+        }
+
+        /**
          * Adds the [MetadataResolver] for global variables.
          *
          * [metadataResolver] is queried during query planning to fetch metadata information such as table schemas.
@@ -291,6 +348,7 @@ interface PlannerPipeline {
                 functions = allFunctionsMap,
                 customDataTypes = customDataTypes,
                 procedures = customProcedures,
+                physicalPlanPasses = physicalPlanPasses,
                 metadataResolver = metadataResolver,
                 allowUndefinedVariables = allowUndefinedVariables,
                 enableLegacyExceptionHandling = enableLegacyExceptionHandling
@@ -306,6 +364,7 @@ internal class PlannerPipelineImpl(
     val functions: Map<String, ExprFunction>,
     val customDataTypes: List<CustomType>,
     val procedures: Map<String, StoredProcedure>,
+    val physicalPlanPasses: List<PartiqlPhysicalPass>,
     val metadataResolver: MetadataResolver,
     val allowUndefinedVariables: Boolean,
     val enableLegacyExceptionHandling: Boolean
@@ -366,14 +425,20 @@ internal class PlannerPipelineImpl(
 
         // resolved logical plan -> physical plan.
         // this will give all relational operators `(impl default)`.
-        val physicalPlan = resolvedLogicalPlan.toDefaultPhysicalPlan()
+        val defaultPhysicalPlan = resolvedLogicalPlan.toDefaultPhysicalPlan()
 
-        // Future work: invoke passes to choose relational operator implementations other than `(impl default)`.
-        // Future work: fully push down predicates and projections into their physical read operators.
-        // Future work: customer supplied rewrites of phsyical plan
+        val finalPlan = physicalPlanPasses
+            .fold(defaultPhysicalPlan) { accumulator: PartiqlPhysical.Plan, current: PartiqlPhysicalPass ->
+                val passResult = current.rewrite(accumulator, problemHandler)
+                // stop planning if this pass resulted in any errors.
+                if (problemHandler.hasErrors) {
+                    return PassResult.Error(problemHandler.problems)
+                }
+                passResult
+            }
 
         // If we reach this far, we're successful.  If there were any problems at all, they were just warnings.
-        return PassResult.Success(physicalPlan, problemHandler.problems)
+        return PassResult.Success(finalPlan, problemHandler.problems)
     }
 
     override fun compile(physicalPlan: PartiqlPhysical.Plan): PassResult<Expression> {

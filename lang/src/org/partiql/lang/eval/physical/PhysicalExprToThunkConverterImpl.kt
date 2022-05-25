@@ -20,6 +20,7 @@ import com.amazon.ion.Timestamp
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.ast.SourceLocationMeta
+import org.partiql.lang.ast.UNKNOWN_SOURCE_LOCATION
 import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.ast.toPartiQlMetaContainer
 import org.partiql.lang.domains.PartiqlPhysical
@@ -72,6 +73,7 @@ import org.partiql.lang.eval.like.parsePattern
 import org.partiql.lang.eval.namedValue
 import org.partiql.lang.eval.numberValue
 import org.partiql.lang.eval.rangeOver
+import org.partiql.lang.eval.sourceLocationMeta
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.syntheticColumnName
 import org.partiql.lang.eval.time.Time
@@ -1870,6 +1872,7 @@ internal class PhysicalExprToThunkConverterImpl(
 }
 
 internal val MetaContainer.sourceLocationMeta get() = this[SourceLocationMeta.TAG] as? SourceLocationMeta
+internal val MetaContainer.sourceLocationMetaOrUnknown get() = this.sourceLocationMeta ?: UNKNOWN_SOURCE_LOCATION
 
 internal fun StaticType.getTypes() = when (val flattened = this.flatten()) {
     is AnyOfType -> flattened.types
