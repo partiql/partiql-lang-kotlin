@@ -200,8 +200,12 @@ interface PlannerPipeline {
          * Add a custom function which will be callable by the compiled queries.
          *
          * Functions added here will replace any built-in function with the same name.
+         *
+         * This function is marked as internal to prevent it from being used outside the tests in this
+         * project--it will be replaced during implementation of the open type system.
+         * https://github.com/partiql/partiql-lang-kotlin/milestone/4
          */
-        fun addFunction(function: ExprFunction): Builder = this.apply {
+        internal fun addFunction(function: ExprFunction): Builder = this.apply {
             customFunctions[function.signature.name] = function
         }
 
@@ -209,8 +213,12 @@ interface PlannerPipeline {
          * Add custom types to CAST/IS operators to.
          *
          * Built-in types will take precedence over custom types in case of a name collision.
+         *
+         * This function is marked as internal to prevent it from being used outside the tests in this
+         * project--it will be replaced during implementation of the open type system.
+         * https://github.com/partiql/partiql-lang-kotlin/milestone/4
          */
-        fun customDataTypes(customTypes: List<CustomType>) = this.apply {
+        internal fun customDataTypes(customTypes: List<CustomType>) = this.apply {
             customDataTypes = customTypes
         }
 
@@ -218,8 +226,11 @@ interface PlannerPipeline {
          * Add a custom stored procedure which will be callable by the compiled queries.
          *
          * Stored procedures added here will replace any built-in procedure with the same name.
+         * This function is marked as internal to prevent it from being used outside the tests in this
+         * project--it will be replaced during implementation of the open type system.
+         * https://github.com/partiql/partiql-lang-kotlin/milestone/4
          */
-        fun addProcedure(procedure: StoredProcedure): Builder = this.apply {
+        internal fun addProcedure(procedure: StoredProcedure): Builder = this.apply {
             customProcedures[procedure.signature.name] = procedure
         }
 
