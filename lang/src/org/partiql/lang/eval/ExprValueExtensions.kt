@@ -125,10 +125,10 @@ fun ExprValue.timestampValue(): Timestamp =
     scalar.timestampValue() ?: errNoContext("Expected timestamp: $ionValue", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
 
 fun ExprValue.stringValue(): String =
-    scalar.stringValue() ?: errNoContext("Expected text: $ionValue", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
+    scalar.stringValue() ?: errNoContext("Expected string: $ionValue", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
 
 fun ExprValue.bytesValue(): ByteArray =
-    scalar.bytesValue() ?: errNoContext("Expected LOB: $ionValue", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
+    scalar.bytesValue() ?: errNoContext("Expected boolean: $ionValue", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
 
 internal fun ExprValue.dateTimePartValue(): DateTimePart =
     try {
