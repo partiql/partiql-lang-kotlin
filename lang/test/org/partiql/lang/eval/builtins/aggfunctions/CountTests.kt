@@ -2,56 +2,116 @@ package org.partiql.lang.eval.builtins.aggfunctions
 
 import org.junit.Test
 import org.partiql.lang.eval.EvaluatorTestBase
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 
 class CountTests : EvaluatorTestBase() {
     @Test
-    fun countEmpty() = runEvaluatorTestCase("COUNT(`[]`)", expectedResult = "0")
+    fun countEmpty() =
+        runEvaluatorTestCase(query = "COUNT(`[]`)", expectedResult = "0", target = EvaluatorTestTarget.COMPILER_PIPELINE)
 
     @Test
-    fun countNull() = runEvaluatorTestCase("COUNT([null, null])", expectedResult = "0")
+    fun countNull() = runEvaluatorTestCase(
+        query = "COUNT([null, null])",
+        expectedResult = "0",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE
+    )
 
     @Test
-    fun countMissing() = runEvaluatorTestCase("COUNT([missing])", expectedResult = "0")
+    fun countMissing() =
+        runEvaluatorTestCase("COUNT([missing])", expectedResult = "0", target = EvaluatorTestTarget.COMPILER_PIPELINE)
 
     @Test
-    fun countBoolean() = runEvaluatorTestCase("COUNT(`[true, false]`)", expectedResult = "2")
+    fun countBoolean() = runEvaluatorTestCase(
+        query = "COUNT(`[true, false]`)",
+        expectedResult = "2",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE
+    )
 
     @Test
-    fun countInt() = runEvaluatorTestCase("COUNT(`[1, 2, 3]`)", expectedResult = "3")
+    fun countInt() =
+        runEvaluatorTestCase("COUNT(`[1, 2, 3]`)", expectedResult = "3", target = EvaluatorTestTarget.COMPILER_PIPELINE)
 
     @Test
-    fun countDecimal() = runEvaluatorTestCase("COUNT(`[1e0, 2e0, 3e0]`)", expectedResult = "3")
+    fun countDecimal() = runEvaluatorTestCase(
+        query = "COUNT(`[1e0, 2e0, 3e0]`)",
+        expectedResult = "3",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE
+    )
 
     @Test
-    fun countFloat() = runEvaluatorTestCase("COUNT(`[1e0, 2e0, 3e0]`)", expectedResult = "3")
+    fun countFloat() = runEvaluatorTestCase(
+        query = "COUNT(`[1e0, 2e0, 3e0]`)",
+        expectedResult = "3",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE
+    )
 
     @Test
-    fun countString() = runEvaluatorTestCase("COUNT(`[\"1\", \"2\", \"3\"]`)", expectedResult = "3")
+    fun countString() = runEvaluatorTestCase(
+        query = "COUNT(`[\"1\", \"2\", \"3\"]`)",
+        expectedResult = "3",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE
+    )
 
     @Test
-    fun countTimestamp() = runEvaluatorTestCase("COUNT(`[2020-01-01T00:00:00Z, 2020-01-01T00:00:01Z]`)", expectedResult = "2")
+    fun countTimestamp() = runEvaluatorTestCase(
+        query = "COUNT(`[2020-01-01T00:00:00Z, 2020-01-01T00:00:01Z]`)",
+        expectedResult = "2",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE
+    )
 
     @Test
-    fun countBlob() = runEvaluatorTestCase("COUNT(`[{{ aaaa }}, {{ aaab }}]`)", expectedResult = "2")
+    fun countBlob() = runEvaluatorTestCase(
+        query = "COUNT(`[{{ aaaa }}, {{ aaab }}]`)",
+        expectedResult = "2",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE
+    )
 
     @Test
-    fun countClob() = runEvaluatorTestCase("COUNT(`[{{ \"aaaa\" }}, {{ \"aaab\" }}]`)", expectedResult = "2")
+    fun countClob() = runEvaluatorTestCase(
+        query = "COUNT(`[{{ \"aaaa\" }}, {{ \"aaab\" }}]`)",
+        expectedResult = "2",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE
+    )
 
     @Test
-    fun countSexp() = runEvaluatorTestCase("COUNT(`[(1), (2)]`)", expectedResult = "2")
+    fun countSexp() = runEvaluatorTestCase(
+        query = "COUNT(`[(1), (2)]`)",
+        expectedResult = "2",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE
+    )
 
     @Test
-    fun countList() = runEvaluatorTestCase("COUNT(`[[1], [2]]`)", expectedResult = "2")
+    fun countList() = runEvaluatorTestCase(
+        query = "COUNT(`[[1], [2]]`)",
+        expectedResult = "2",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE
+    )
 
     @Test
-    fun countBag() = runEvaluatorTestCase("COUNT([<<1>>, <<2>>])", expectedResult = "2")
+    fun countBag() = runEvaluatorTestCase(
+        query = "COUNT([<<1>>, <<2>>])",
+        expectedResult = "2",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE
+    )
 
     @Test
-    fun countStruct() = runEvaluatorTestCase("COUNT(`[{'a':1}, {'a':2}]`)", expectedResult = "2")
+    fun countStruct() = runEvaluatorTestCase(
+        query = "COUNT(`[{'a':1}, {'a':2}]`)",
+        expectedResult = "2",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE
+    )
 
     @Test
-    fun countMixed0() = runEvaluatorTestCase("COUNT([null, missing, 1, 2])", expectedResult = "2")
+    fun countMixed0() = runEvaluatorTestCase(
+        query = "COUNT([null, missing, 1, 2])",
+        expectedResult = "2",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE
+    )
 
     @Test
-    fun countMixed1() = runEvaluatorTestCase("COUNT([1, '2', true, `2020-01-01T00:00:00Z`, `{{ aaaa }}`])", expectedResult = "5")
+    fun countMixed1() = runEvaluatorTestCase(
+        query = "COUNT([1, '2', true, `2020-01-01T00:00:00Z`, `{{ aaaa }}`])",
+        expectedResult = "5",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE
+    )
 }
