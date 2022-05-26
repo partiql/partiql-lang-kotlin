@@ -21,8 +21,10 @@ import kotlin.test.assertNull
  * an instance of [AbstractPipeline] and returned to the caller.
  *
  * Why?  Because the entire test infrastructure (and the many thousands of tests) are heavily dependent on
- * [org.partiql.lang.CompilerPipeline].  When that class is deprecated or removed we'll want to change this to
- * depend on the [PlannerPipeline] instead.
+ * [org.partiql.lang.CompilerPipeline].
+ *
+ * TODO: When that class is deprecated or removed we'll want to change the test infrastructure to depend on the
+ * [PlannerPipeline] instead.
  */
 internal class PlannerPipelineFactory : PipelineFactory {
 
