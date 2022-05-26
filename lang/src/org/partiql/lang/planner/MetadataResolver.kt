@@ -52,7 +52,7 @@ interface MetadataResolver {
      * without providing an error. (This is consistent with Postres's behavior in this scenario.)
      *
      * Note that while [ResolutionResult.LocalVariable] exists, it is intentionally marked `internal` and cannot
-     * be used by outside this project.
+     * be used outside this project.
      */
     fun resolveVariable(bindingName: BindingName): ResolutionResult
 }

@@ -52,7 +52,7 @@ class PlannerPipelineSmokeTests {
                                     ),
                                     source = scan(
                                         i = impl("default"),
-                                        expr = globalId("Customer", "fake_uid_for_Customer"),
+                                        expr = globalId("fake_uid_for_Customer", caseInsensitive()),
                                         asDecl = varDecl(0)
                                     )
                                 )

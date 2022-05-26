@@ -3,6 +3,7 @@ package org.partiql.lang.eval.builtins
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.EvaluatorTestBase
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.util.propertyValueMapOf
 
 /**
@@ -31,7 +32,7 @@ class InvalidArityChecker : EvaluatorTestBase() {
      * @param maxArity is the maximum arity of an ExprFunction.
      * @param minArity is the minimum arity of an ExprFunction.
      */
-    fun checkInvalidArity(funcName: String, minArity: Int, maxArity: Int) {
+    fun checkInvalidArity(funcName: String, minArity: Int, maxArity: Int, targetPipeline: EvaluatorTestTarget) {
         if (minArity < 0) throw IllegalStateException("Minimum arity has to be larger than 0.")
         if (maxArity < minArity) throw IllegalStateException("Maximum arity has to be larger than or equal to minimum arity.")
 
@@ -44,7 +45,7 @@ class InvalidArityChecker : EvaluatorTestBase() {
                 else -> sb.append(",null")
             }
             if (curArity < minArity || curArity > maxArity) { // If less or more argument provided, we catch invalid arity error
-                assertThrowsInvalidArity("$sb)", funcName, curArity, minArity, maxArity)
+                assertThrowsInvalidArity("$sb)", funcName, curArity, minArity, maxArity, targetPipeline)
             }
         }
     }
@@ -54,7 +55,8 @@ class InvalidArityChecker : EvaluatorTestBase() {
         funcName: String,
         actualArity: Int,
         minArity: Int,
-        maxArity: Int
+        maxArity: Int,
+        targetPipeline: EvaluatorTestTarget
     ) = runEvaluatorErrorTestCase(
         query = query,
         expectedErrorCode = ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL,
@@ -65,5 +67,6 @@ class InvalidArityChecker : EvaluatorTestBase() {
             Property.EXPECTED_ARITY_MAX to maxArity,
             Property.ACTUAL_ARITY to actualArity
         ),
+        target = targetPipeline
     )
 }

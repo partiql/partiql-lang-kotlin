@@ -647,7 +647,7 @@ enum class ErrorCode(
                 "got: ${errorContext?.get(Property.ACTUAL_ARGUMENT_TYPES) ?: UNKNOWN}"
     },
 
-    SEMANTIC_INFERENCER_ERROR(
+    SEMANTIC_PROBLEM(
         ErrorCategory.SEMANTIC,
         LOCATION + setOf(Property.MESSAGE),
         ""
@@ -978,12 +978,6 @@ enum class ErrorCode(
         LOCATION,
         "Arithmetic exception",
         ErrorBehaviorInPermissiveMode.RETURN_MISSING
-    ),
-
-    EVALUATOR_SQL_EXCEPTION(
-        ErrorCategory.EVALUATOR,
-        LOCATION,
-        "SQL exception"
     ),
 
     EVALUATOR_COUNT_START_NOT_ALLOWED(

@@ -85,25 +85,6 @@ internal fun PartiqlLogical.Plan.toResolvedPlan(
     return resolvedSt
 }
 
-private fun PartiqlLogical.Expr.Id.asGlobalId(uniqueId: String): PartiqlLogicalResolved.Expr.GlobalId =
-    PartiqlLogicalResolved.build {
-        globalId_(
-            name = name,
-            uniqueId = uniqueId.asPrimitive(),
-            metas = this@asGlobalId.metas
-        )
-    }
-
-private fun PartiqlLogical.Expr.Id.asLocalId(index: Int): PartiqlLogicalResolved.Expr =
-    PartiqlLogicalResolved.build {
-        localId_(index.asPrimitive(), this@asLocalId.metas)
-    }
-
-private fun PartiqlLogical.Expr.Id.asErrorId(): PartiqlLogicalResolved.Expr =
-    PartiqlLogicalResolved.build {
-        localId_((-1).asPrimitive(), this@asErrorId.metas)
-    }
-
 /**
  * A local scope is a list of variable declarations that are produced by a relational operator and an optional
  * reference to a parent scope.  This is handled separately from global variables.
@@ -152,6 +133,25 @@ private data class LogicalToLogicalResolvedVisitorTransform(
             inputScope = lastScope
         }
     }
+
+    private fun PartiqlLogical.Expr.Id.asGlobalId(uniqueId: String): PartiqlLogicalResolved.Expr.GlobalId =
+        PartiqlLogicalResolved.build {
+            globalId_(
+                uniqueId = uniqueId.asPrimitive(),
+                case = this@LogicalToLogicalResolvedVisitorTransform.transformCaseSensitivity(this@asGlobalId.case),
+                metas = this@asGlobalId.metas
+            )
+        }
+
+    private fun PartiqlLogical.Expr.Id.asLocalId(index: Int): PartiqlLogicalResolved.Expr =
+        PartiqlLogicalResolved.build {
+            localId_(index.asPrimitive(), this@asLocalId.metas)
+        }
+
+    private fun PartiqlLogical.Expr.Id.asErrorId(): PartiqlLogicalResolved.Expr =
+        PartiqlLogicalResolved.build {
+            localId_((-1).asPrimitive(), this@asErrorId.metas)
+        }
 
     override fun transformPlan(node: PartiqlLogical.Plan): PartiqlLogicalResolved.Plan =
         PartiqlLogicalResolved.build {

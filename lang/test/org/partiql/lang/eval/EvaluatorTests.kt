@@ -14,7 +14,6 @@
 
 package org.partiql.lang.eval
 
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.lang.ION
@@ -98,10 +97,17 @@ class EvaluatorTests {
             "selectDistinctWithAggregate", // TODO: Support aggregates in physical plans
             "selectDistinctAggregationWithGroupBy", // TODO: Support GROUP BY in physical plans
             "selectDistinctWithGroupBy", // TODO: Support GROUP BY in physical plans
+            "unpivotStructWithMissingField", // TODO: Support UNPIVOT in physical plans
             "unpivotMissing", // TODO: Support UNPIVOT in physical plans
             "unpivotEmptyStruct", // TODO: Support UNPIVOT in physical plans
             "unpivotMissingWithAsAndAt", // TODO: Support UNPIVOT in physical plans
             "unpivotMissingCrossJoinWithAsAndAt", // TODO: Support UNPIVOT in physical plans
+
+            // UndefinedVariableBehavior.MISSING not supported by plan evaluator
+            "undefinedUnqualifiedVariableWithUndefinedVariableBehaviorMissing",
+            "undefinedUnqualifiedVariableIsNullExprWithUndefinedVariableBehaviorMissing",
+            "undefinedUnqualifiedVariableIsMissingExprWithUndefinedVariableBehaviorMissing",
+            "undefinedUnqualifiedVariableInSelectWithUndefinedVariableBehaviorMissing",
         )
 
         @JvmStatic
@@ -119,6 +125,5 @@ class EvaluatorTests {
 
     @ParameterizedTest
     @MethodSource("planEvaluatorTests")
-    @Disabled("The planner will be merged in a future pull request.")
-    fun planEvalutorTests(tc: IonResultTestCase) = tc.runTestCase(valueFactory, mockDb, EvaluatorTestTarget.PLANNER_PIPELINE)
+    fun planEvaluatorTests(tc: IonResultTestCase) = tc.runTestCase(valueFactory, mockDb, EvaluatorTestTarget.PLANNER_PIPELINE)
 }

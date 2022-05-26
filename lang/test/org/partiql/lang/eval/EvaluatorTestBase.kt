@@ -37,6 +37,7 @@ import org.partiql.lang.eval.evaluatortestframework.LegacySerializerTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.MultipleTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.PartiqlAstExprNodeRoundTripAdapter
 import org.partiql.lang.eval.evaluatortestframework.PipelineEvaluatorTestAdapter
+import org.partiql.lang.eval.evaluatortestframework.PlannerPipelineFactory
 import org.partiql.lang.util.asSequence
 import org.partiql.lang.util.newFromIonText
 
@@ -47,7 +48,7 @@ abstract class EvaluatorTestBase : TestBase() {
     private val testHarness: EvaluatorTestAdapter = MultipleTestAdapter(
         listOf(
             PipelineEvaluatorTestAdapter(CompilerPipelineFactory()),
-            // TODO: PipelineEvaluatorTestAdapter(PlannerPipelineFactory()),
+            PipelineEvaluatorTestAdapter(PlannerPipelineFactory()),
             PartiqlAstExprNodeRoundTripAdapter(),
             LegacySerializerTestAdapter(),
             AstRewriterBaseTestAdapter()

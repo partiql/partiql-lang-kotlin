@@ -58,6 +58,9 @@ class PartiQlPtsEvaluator(equality: PtsEquality) : Evaluator(equality) {
             is ExpectedError -> TestResultSuccess(test)
             is ExpectedSuccess -> TestFailure(test, e.generateMessage(), TestFailure.FailureReason.UNEXPECTED_ERROR)
         }
+    } catch (e: Exception) {
+        // Other exception types are always failures.
+        TestFailure(test, "${e.javaClass.canonicalName} : ${e.message}", TestFailure.FailureReason.UNEXPECTED_ERROR)
     }
 
     private fun verifyTestResult(test: TestExpression, actualResult: IonValue): TestResult =
