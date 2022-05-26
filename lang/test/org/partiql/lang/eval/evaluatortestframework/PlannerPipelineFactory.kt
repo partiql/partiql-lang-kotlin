@@ -15,6 +15,15 @@ import org.partiql.lang.planner.ResolutionResult
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 
+/**
+ * Uses the test infrastructure (which is geared toward the legacy [org.partiql.lang.CompilerPipeline]) to create a
+ * standard [org.partiql.lang.CompilerPipeline], then creates an equivalent [PlannerPipeline] which is wrapped in
+ * an instance of [AbstractPipeline] and returned to the caller.
+ *
+ * Why?  Because the entire test infrastructure (and the many thousands of tests) are heavily dependent on
+ * [org.partiql.lang.CompilerPipeline].  When that class is deprecated or removed we'll want to change this to
+ * depend on the [PlannerPipeline] instead.
+ */
 internal class PlannerPipelineFactory : PipelineFactory {
 
     override val pipelineName: String
