@@ -930,3 +930,27 @@ FROM_UNIXTIME(0.1)          -- `1970-01-01T00:00:00.1-00:00`
 FROM_UNIXTIME(1)            -- `1970-01-01T00:00:01-00:00`
 FROM_UNIXTIME(1577836800)   -- `2020-01-01T00:00:00-00:00`      (unix_timestamp is Integer so no fractional seconds)
 ```
+
+### CEIL / CEILING
+
+Returns the nearest integer greater than or equal to the input.
+
+Signature : `CEIL/CEILING: Integer|Float|Decimal -> Integer`
+
+Examples:
+```sql
+CEIL(1.1) = 2
+CEIL(-42.8) = 42
+```
+
+### FLOOR
+
+Returns the nearest integer less than or equal to the input.
+
+Signature : `FLOOR: Integer|Float|Decimal -> Integer`
+
+Examples:
+```sql
+FLOOR(1.1) = 1
+FLOOR(-42.8) = 43
+```
