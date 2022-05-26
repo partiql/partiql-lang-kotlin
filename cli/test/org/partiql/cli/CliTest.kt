@@ -156,6 +156,30 @@ class CliTest {
     }
 
     @Test
+    fun withSelectIn() {
+        makeCli(
+            query = "SELECT age FROM << { 'name': 'John', 'age': 22 } >> WHERE name IN (SELECT name FROM <<{ 'name': 'John' }>>)",
+            output = FileOutputStream(testFile),
+            outputFormat = OutputFormat.ION_TEXT
+        ).run()
+        val actual = testFile.bufferedReader().use { it.readText() }
+
+        assertEquals("{age:22}\n", actual)
+    }
+
+    @Test
+    fun withSelectInButEmpty() {
+        makeCli(
+            query = "SELECT age FROM << { 'name': 'John', 'age': 22 } >> WHERE name IN (SELECT name FROM <<{ 'name': 'john' }>>)",
+            output = FileOutputStream(testFile),
+            outputFormat = OutputFormat.ION_TEXT
+        ).run()
+        val actual = testFile.bufferedReader().use { it.readText() }
+
+        assertEquals("\n", actual)
+    }
+
+    @Test
     fun withoutInput() {
         val subject = makeCli("1")
         val actual = subject.runAndOutput()

@@ -61,6 +61,7 @@ import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.types.UnsupportedTypeCheckException
 import org.partiql.lang.types.toTypedOpParameter
+import org.partiql.lang.util.asIonStruct
 import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.codePointSequence
@@ -732,8 +733,11 @@ internal class EvaluatingCompiler(
         val args = expr.operands
         val leftThunk = compileAstExpr(args[0])
         val rightOp = args[1]
+        fun PartiqlAst.Expr.Struct.isSingleValueOptimizedStruct() = this.fields.size == 1 && this.fields[0].second is PartiqlAst.Expr.Lit
 
-        fun isOptimizedCase(values: List<PartiqlAst.Expr>): Boolean = values.all { it is PartiqlAst.Expr.Lit && !it.value.isNull }
+        fun isOptimizedCase(values: List<PartiqlAst.Expr>): Boolean = values.all {
+            (it is PartiqlAst.Expr.Lit && !it.value.isNull) || (it is PartiqlAst.Expr.Struct && it.isSingleValueOptimizedStruct())
+        }
 
         fun optimizedCase(values: List<PartiqlAst.Expr>): ThunkEnv {
             // Put all the literals in the sequence into a pre-computed map to be checked later by the thunk.
@@ -743,6 +747,13 @@ internal class EvaluatingCompiler(
             // NOTE: we cannot use a [HashSet<>] here because [ExprValue] does not implement [Object.hashCode] or
             // [Object.equals].
             val precomputedLiteralsMap = values
+                .asSequence()
+                .map { value ->
+                    when (value) {
+                        is PartiqlAst.Expr.Struct -> if (value.isSingleValueOptimizedStruct()) value.fields[0].second else value
+                        else -> value
+                    }
+                }
                 .filterIsInstance<PartiqlAst.Expr.Lit>()
                 .mapTo(TreeSet<ExprValue>(DEFAULT_COMPARATOR)) {
                     valueFactory.newFromIonValue(
@@ -798,6 +809,12 @@ internal class EvaluatingCompiler(
                                 when (it.type) {
                                     ExprValueType.NULL -> nullSeen = true
                                     ExprValueType.MISSING -> missingSeen = true
+                                    // Allow comparison with 1-pair structs to remain compatible SQL-92
+                                    ExprValueType.STRUCT -> {
+                                        if (it.ionValue.asIonStruct().size() != 1) return@forEach
+                                        if (it.iterator().next().exprEquals(leftValue))
+                                            return@thunkEnvOperands valueFactory.newBoolean(true)
+                                    }
                                     // short-circuit to TRUE on the first matching value
                                     else -> if (it.exprEquals(leftValue)) {
                                         return@thunkEnvOperands valueFactory.newBoolean(true)
