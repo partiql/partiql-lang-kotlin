@@ -35,6 +35,7 @@ import org.partiql.lang.util.propertyValueMapOf
  * @param message the message for this exception
  * @param errorCode the error code for this exception
  * @param errorContextArg context for this error, includes details like line & character offsets, among others.
+ * TODO: https://github.com/partiql/partiql-lang-kotlin/issues/616
  * @param cause for this exception
  */
 open class SqlException(
