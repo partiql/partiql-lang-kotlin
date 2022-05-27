@@ -37,8 +37,8 @@ class ErrorSignalerTests {
             ex
         }
         assertEquals(ex.errorCode, ErrorCode.EVALUATOR_CAST_FAILED)
-        assertEquals(ex.errorContext!![Property.LINE_NUMBER]!!.longValue(), 4L)
-        assertEquals(ex.errorContext!![Property.COLUMN_NUMBER]!!.longValue(), 2L)
+        assertEquals(ex.errorContext[Property.LINE_NUMBER]!!.longValue(), 4L)
+        assertEquals(ex.errorContext[Property.COLUMN_NUMBER]!!.longValue(), 2L)
     }
 
     private fun runTest(ctx1: ErrorSignaler, value: Int): ExprValue =

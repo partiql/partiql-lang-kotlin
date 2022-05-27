@@ -3,6 +3,7 @@ package org.partiql.lang.eval
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.eval.visitors.StaticTypeInferenceVisitorTransform
 import org.partiql.lang.types.IntType
 import org.partiql.lang.types.StaticType
@@ -152,18 +153,19 @@ class EvaluatingCompilerNAryIntOverflowTests : EvaluatorTestBase() {
             globals(defaultEnv.valueBindings)
         }
 
-        // We use EvaluatorTestCase/runTestCase from EvaluatorTestBase here instead of assertEval
-        // because the expected values are expressed in PartiQL syntax, but with assertEval it's expressed in
-        // Ion syntax.
         val etc = EvaluatorTestCase(
             query = tc.sqlUnderTest,
             expectedResult = tc.expectedPermissiveModeResult,
+            implicitPermissiveModeTest = false,
             compilerPipelineBuilderBlock = {
                 globalTypeBindings(defaultEnv.typeBindings)
                 compileOptions {
                     typingMode(TypingMode.PERMISSIVE)
                 }
-            }
+            },
+            // These tests requires support for globalTypeBindings and thus a static type inference pass
+            // which is not (yet) supported by `PlannerPipeline`
+            target = EvaluatorTestTarget.COMPILER_PIPELINE
         )
 
         runEvaluatorTestCase(etc, session)

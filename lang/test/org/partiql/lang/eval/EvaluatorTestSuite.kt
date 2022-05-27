@@ -368,7 +368,7 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
             """
         )
     }
-    group("select-where") {
+    group("select_where") {
         test(
             "selectWhereStringEqualsSameCase",
             """SELECT * FROM animals as a WHERE a.name = 'Kumo' """,
@@ -387,7 +387,7 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
             """
         )
     }
-    group("select-join") {
+    group("select_join") {
         test(
             "selectJoin",
             """SELECT * FROM animals AS a, animal_types AS t WHERE a.type = t.id""",

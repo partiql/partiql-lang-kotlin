@@ -6,6 +6,7 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorErrorTestCase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.lang.util.to
@@ -58,12 +59,14 @@ class EvaluatingCompilerOffsetTests : EvaluatorTestBase() {
             // LIMIT 2 and OFFSET 2 should return third and fourth results
             EvaluatorTestCase(
                 "SELECT * FROM foo GROUP BY a LIMIT 2 OFFSET 2",
-                "<<{'a': 3}, {'a': 4}>>"
+                "<<{'a': 3}, {'a': 4}>>",
+                target = EvaluatorTestTarget.COMPILER_PIPELINE // PlannerPipeline doesn't support GROUP BY yet
             ),
             // LIMIT and OFFSET applied after GROUP BY
             EvaluatorTestCase(
                 "SELECT * FROM foo GROUP BY a LIMIT 1 OFFSET 1",
-                "<<{'a': 2}>>"
+                "<<{'a': 2}>>",
+                target = EvaluatorTestTarget.COMPILER_PIPELINE // PlannerPipeline doesn't support GROUP BY yet
             ),
             // OFFSET value can be subtraction of 2 numbers
             EvaluatorTestCase(
@@ -88,7 +91,8 @@ class EvaluatingCompilerOffsetTests : EvaluatorTestBase() {
             // OFFSET with GROUP BY and HAVING
             EvaluatorTestCase(
                 "SELECT * FROM foo GROUP BY a HAVING a > 2 LIMIT 1 OFFSET 1",
-                "<<{'a': 4}>>"
+                "<<{'a': 4}>>",
+                target = EvaluatorTestTarget.COMPILER_PIPELINE // PlannerPipeline doesn't support GROUP BY yet
             ),
             // OFFSET with PIVOT
             EvaluatorTestCase(
@@ -97,7 +101,8 @@ class EvaluatingCompilerOffsetTests : EvaluatorTestBase() {
                     FROM <<{'a': 1, 'b':'I'}, {'a': 2, 'b':'II'}, {'a': 3, 'b':'III'}>> AS foo
                     LIMIT 1 OFFSET 1
                 """.trimIndent(),
-                "{'II': 2}"
+                "{'II': 2}",
+                target = EvaluatorTestTarget.COMPILER_PIPELINE // PlannerPipeline doesn't support PIVOT yet
             )
         )
     }

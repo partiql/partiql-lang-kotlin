@@ -8,27 +8,42 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.util.propertyValueMapOf
 
+private fun assertTestFails(
+    testAdapter: PipelineEvaluatorTestAdapter,
+    expectedReason: EvaluatorTestFailureReason,
+    tc: EvaluatorTestCase
+) {
+    val ex = assertThrows<EvaluatorAssertionFailedError> {
+        testAdapter.runEvaluatorTestCase(tc, EvaluationSession.standard())
+    }
+    assertEquals(expectedReason, ex.reason)
+}
+
+private fun assertErrorTestFails(
+    testAdapter: PipelineEvaluatorTestAdapter,
+    expectedReason: EvaluatorTestFailureReason,
+    tc: EvaluatorErrorTestCase
+) {
+    val ex = assertThrows<EvaluatorAssertionFailedError> {
+        testAdapter.runEvaluatorErrorTestCase(tc, EvaluationSession.standard())
+    }
+
+    assertEquals(expectedReason, ex.reason)
+}
+
 /**
- * These are just some "smoke tests" to ensure that the essential parts of [AstEvaluatorTestAdapterTests] are
+ * These are "smoke tests" to ensure that the essential parts of [PipelineEvaluatorTestAdapterTests] are
  * working correctly.
  */
-class AstEvaluatorTestAdapterTests {
-    private val testAdapter = AstEvaluatorTestAdapter()
+class PipelineEvaluatorTestAdapterTests {
+    private val astPipelineTestAdapter = PipelineEvaluatorTestAdapter(CompilerPipelineFactory())
 
     private fun assertTestFails(expectedReason: EvaluatorTestFailureReason, tc: EvaluatorTestCase) {
-        val ex = assertThrows<EvaluatorAssertionFailedError> {
-            testAdapter.runEvaluatorTestCase(tc, EvaluationSession.standard())
-        }
-
-        assertEquals(expectedReason, ex.reason)
+        assertTestFails(astPipelineTestAdapter, expectedReason, tc)
     }
 
     private fun assertErrorTestFails(expectedReason: EvaluatorTestFailureReason, tc: EvaluatorErrorTestCase) {
-        val ex = assertThrows<EvaluatorAssertionFailedError> {
-            testAdapter.runEvaluatorErrorTestCase(tc, EvaluationSession.standard())
-        }
-
-        assertEquals(expectedReason, ex.reason)
+        assertErrorTestFails(astPipelineTestAdapter, expectedReason, tc)
     }
 
     class FooException : Exception()
@@ -40,7 +55,7 @@ class AstEvaluatorTestAdapterTests {
     @Test
     fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-ION`() {
         assertDoesNotThrow("happy path - should not throw") {
-            testAdapter.runEvaluatorTestCase(
+            astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
                     query = "1",
                     expectedResult = "1",
@@ -54,7 +69,7 @@ class AstEvaluatorTestAdapterTests {
     @Test
     fun `runEvaluatorTestCase - different permissive mode result - ExpectedResultFormat-ION`() {
         assertDoesNotThrow("happy path - should not throw") {
-            testAdapter.runEvaluatorTestCase(
+            astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
                     query = "1 + MISSING", // Note:unknown propagation works differently in legacy vs permissive modes.
                     expectedResult = "null",
@@ -69,7 +84,7 @@ class AstEvaluatorTestAdapterTests {
     @Test
     fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-ION (missing)`() {
         assertDoesNotThrow("happy path - should not throw") {
-            testAdapter.runEvaluatorTestCase(
+            astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
                     query = "MISSING",
                     expectedResult = "\$partiql_missing::null",
@@ -83,7 +98,7 @@ class AstEvaluatorTestAdapterTests {
     @Test
     fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-ION (date)`() {
         assertDoesNotThrow("happy path - should not throw") {
-            testAdapter.runEvaluatorTestCase(
+            astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
                     query = "DATE '2001-01-01'",
                     expectedResult = "\$partiql_date::2001-01-01",
@@ -97,7 +112,7 @@ class AstEvaluatorTestAdapterTests {
     @Test
     fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-ION (time)`() {
         assertDoesNotThrow("happy path - should not throw") {
-            testAdapter.runEvaluatorTestCase(
+            astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
                     query = "TIME '12:12:01'",
                     expectedResult = "\$partiql_time::{hour:12,minute:12,second:1.,timezone_hour:null.int,timezone_minute:null.int}",
@@ -111,7 +126,7 @@ class AstEvaluatorTestAdapterTests {
     @Test
     fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS mode (int)`() {
         assertDoesNotThrow("happy path - should not throw") {
-            testAdapter.runEvaluatorTestCase(
+            astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
                     query = "1",
                     expectedResult = "1",
@@ -125,7 +140,7 @@ class AstEvaluatorTestAdapterTests {
     @Test
     fun `runEvaluatorTestCase - different permissive mode result - ExpectedResultFormat-ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS`() {
         assertDoesNotThrow("happy path - should not throw") {
-            testAdapter.runEvaluatorTestCase(
+            astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
                     query = "1 + MISSING",
                     expectedResult = "null",
@@ -142,7 +157,7 @@ class AstEvaluatorTestAdapterTests {
     @Test
     fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS mode (bag)`() {
         assertDoesNotThrow("happy path - should not throw") {
-            testAdapter.runEvaluatorTestCase(
+            astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
                     query = "<<1>>",
                     // note: In this ExpectedResultFormat we lose the fact that this a BAG and not an
@@ -158,7 +173,7 @@ class AstEvaluatorTestAdapterTests {
     @Test
     fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS mode (missing)`() {
         assertDoesNotThrow("happy path - should not throw") {
-            testAdapter.runEvaluatorTestCase(
+            astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
                     query = "MISSING",
                     // note: In this ExpectedResultFormat we lose the fact that this MISSING and not an
@@ -174,7 +189,7 @@ class AstEvaluatorTestAdapterTests {
     @Test
     fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS mode (date)`() {
         assertDoesNotThrow("happy path - should not throw") {
-            testAdapter.runEvaluatorTestCase(
+            astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
                     query = "DATE '2001-01-01'",
                     expectedResult = "\$partiql_date::2001-01-01",
@@ -188,7 +203,7 @@ class AstEvaluatorTestAdapterTests {
     @Test
     fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS mode (time)`() {
         assertDoesNotThrow("happy path - should not throw") {
-            testAdapter.runEvaluatorTestCase(
+            astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
                     query = "TIME '12:12:01'",
                     expectedResult = "\$partiql_time::{hour:12,minute:12,second:1.,timezone_hour:null.int,timezone_minute:null.int}",
@@ -202,7 +217,7 @@ class AstEvaluatorTestAdapterTests {
     @Test
     fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS mode`() {
         assertDoesNotThrow("happy path - should not throw") {
-            testAdapter.runEvaluatorTestCase(
+            astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
                     query = "<<1>>",
                     expectedResult = "[1]",
@@ -216,7 +231,7 @@ class AstEvaluatorTestAdapterTests {
     @Test
     fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-STRING mode`() {
         assertDoesNotThrow("happy path - should not throw") {
-            testAdapter.runEvaluatorTestCase(
+            astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
                     query = "SEXP(1, 2, 3)",
                     expectedResult = "`(1 2 3)`", // <-- ExprValue.toString() produces this
@@ -313,7 +328,7 @@ class AstEvaluatorTestAdapterTests {
     @Test
     fun `runEvaluatorTestCase - extraResultAssertions`() {
         assertThrows<FooException>("extraResultAssertions should throw") {
-            testAdapter.runEvaluatorTestCase(
+            astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
                     query = "1",
                     expectedResult = "1",
@@ -403,8 +418,10 @@ class AstEvaluatorTestAdapterTests {
 
     @Test
     fun `runEvaluatorErrorTestCase - additionalExceptionAssertBlock`() {
+        // No need to test both test adapters here since additionalExceptionAssertBlock is invoked by
+        // PipelineEvaluatorTestAdapter.
         assertThrows<FooException>("additionalExceptionAssertBlock should throw") {
-            testAdapter.runEvaluatorErrorTestCase(
+            astPipelineTestAdapter.runEvaluatorErrorTestCase(
                 EvaluatorErrorTestCase(
                     query = "undefined_function()",
                     expectedErrorCode = ErrorCode.EVALUATOR_NO_SUCH_FUNCTION,

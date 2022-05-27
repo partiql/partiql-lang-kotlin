@@ -20,8 +20,8 @@ import kotlin.test.assertEquals
 class ThunkFactoryTests {
 
     companion object {
-        private val compileOptions = CompileOptions.build {
-            this.evaluationTimeTypeChecks(ThunkReturnTypeAssertions.ENABLED)
+        private val compileOptions = ThunkOptions.build {
+            evaluationTimeTypeChecks(ThunkReturnTypeAssertions.ENABLED)
         }
 
         private val valueFactory = ExprValueFactory.standard(ION)
@@ -38,7 +38,7 @@ class ThunkFactoryTests {
             val expectedType: StaticType,
             val thunkReturnValue: ExprValue,
             val expectError: Boolean,
-            internal val thunkFactory: ThunkFactory
+            internal val thunkFactory: ThunkFactory<Environment>
         ) {
             val metas = metaContainerOf(StaticTypeMeta(expectedType))
             val fakeThunk = thunkFactory.thunkEnv(IRRELEVANT_METAS) { IRRELEVANT }

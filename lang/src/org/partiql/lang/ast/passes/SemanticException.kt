@@ -37,7 +37,7 @@ class SemanticException(
     constructor(err: Problem, cause: Throwable? = null) :
         this(
             message = "",
-            errorCode = ErrorCode.SEMANTIC_INFERENCER_ERROR,
+            errorCode = ErrorCode.SEMANTIC_PROBLEM,
             errorContext = propertyValueMapOf(
                 Property.LINE_NUMBER to err.sourceLocation.lineNum,
                 Property.COLUMN_NUMBER to err.sourceLocation.charOffset,

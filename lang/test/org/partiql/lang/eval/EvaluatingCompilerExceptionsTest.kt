@@ -21,6 +21,7 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorErrorTestCase
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.lang.util.rootCause
@@ -33,7 +34,6 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
     // to follow a pattern that we'd like to change anyway.
     // FIXME - these tests don't seem to work, and when enabled the options are set but the `FLOAT` type is missing
     //         the parameter at the point we test it in the EvaluatingCompiler
-    // XXX - for some reason, @Ignore did not work on this parameterized test.
     @Disabled
     @ParameterizedTest
     @ArgumentsSource(ErrorTestCasesTestCases::class)
@@ -99,28 +99,32 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
         """SELECT VALUE a FROM `[{v:5}]` AS item, @item.v AS a, @item.v AS a""",
         ErrorCode.EVALUATOR_AMBIGUOUS_BINDING,
         expectedErrorContext = propertyValueMapOf(1, 14, Property.BINDING_NAME to "a", Property.BINDING_NAME_MATCHES to "a, a"),
-        expectedPermissiveModeResult = "<<MISSING>>"
+        expectedPermissiveModeResult = "<<MISSING>>",
+        target = EvaluatorTestTarget.COMPILER_PIPELINE
     )
 
     @Test
     fun topLevelCountStar() = runEvaluatorErrorTestCase(
         """COUNT(*)""",
         ErrorCode.EVALUATOR_COUNT_START_NOT_ALLOWED,
-        expectedErrorContext = propertyValueMapOf(1, 1)
+        expectedErrorContext = propertyValueMapOf(1, 1),
+        target = EvaluatorTestTarget.COMPILER_PIPELINE
     )
 
     @Test
     fun selectValueCountStar() = runEvaluatorErrorTestCase(
         """SELECT VALUE COUNT(*) FROM numbers""",
         ErrorCode.EVALUATOR_COUNT_START_NOT_ALLOWED,
-        expectedErrorContext = propertyValueMapOf(1, 14)
+        expectedErrorContext = propertyValueMapOf(1, 14),
+        target = EvaluatorTestTarget.COMPILER_PIPELINE
     )
 
     @Test
     fun selectListNestedAggregateCall() = runEvaluatorErrorTestCase(
         """SELECT SUM(AVG(n)) FROM <<numbers, numbers>> AS n""",
         ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_AGG_FUNCTION,
-        expectedErrorContext = propertyValueMapOf(1, 12)
+        expectedErrorContext = propertyValueMapOf(1, 12),
+        target = EvaluatorTestTarget.COMPILER_PIPELINE
     )
 
     private val sqlWithUndefinedVariable = "SELECT VALUE y FROM << 'el1' >> AS x"
@@ -140,7 +144,8 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
         // Same query as previous test--but DO NOT throw exception this time because of UndefinedVariableBehavior.MISSING
         runEvaluatorTestCase(
             sqlWithUndefinedVariable, expectedResult = "[null]",
-            compileOptionsBuilderBlock = { undefinedVariable(UndefinedVariableBehavior.MISSING) }
+            compileOptionsBuilderBlock = { undefinedVariable(UndefinedVariableBehavior.MISSING) },
+            target = EvaluatorTestTarget.COMPILER_PIPELINE
         )
 
     private val sqlWithUndefinedQuotedVariable = "SELECT VALUE \"y\" FROM << 'el1' >> AS x"
@@ -151,7 +156,7 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
             sqlWithUndefinedQuotedVariable,
             ErrorCode.EVALUATOR_QUOTED_BINDING_DOES_NOT_EXIST,
             propertyValueMapOf(1, 14, Property.BINDING_NAME to "y"),
-            expectedPermissiveModeResult = "<<MISSING>>"
+            expectedPermissiveModeResult = "<<MISSING>>",
         )
     }
 
@@ -160,7 +165,8 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
         // Same query as previous test--but DO NOT throw exception this time because of UndefinedVariableBehavior.MISSING
         runEvaluatorTestCase(
             sqlWithUndefinedQuotedVariable, expectedResult = "[null]",
-            compileOptionsBuilderBlock = { undefinedVariable(UndefinedVariableBehavior.MISSING) }
+            compileOptionsBuilderBlock = { undefinedVariable(UndefinedVariableBehavior.MISSING) },
+            target = EvaluatorTestTarget.COMPILER_PIPELINE
         )
 
     @Test
@@ -187,14 +193,16 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
     fun rightJoin() = runEvaluatorErrorTestCase(
         "SELECT * FROM animals AS a RIGHT CROSS JOIN animal_types AS a_type WHERE a.type = a_type.id",
         ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
-        expectedErrorContext = propertyValueMapOf(1, 28, Property.FEATURE_NAME to "RIGHT and FULL JOIN")
+        expectedErrorContext = propertyValueMapOf(1, 28, Property.FEATURE_NAME to "RIGHT and FULL JOIN"),
+        target = EvaluatorTestTarget.COMPILER_PIPELINE
     )
 
     @Test
     fun outerJoin() = runEvaluatorErrorTestCase(
         "SELECT * FROM animals AS a OUTER CROSS JOIN animal_types AS a_type WHERE a.type = a_type.id",
         ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
-        expectedErrorContext = propertyValueMapOf(1, 28, Property.FEATURE_NAME to "RIGHT and FULL JOIN")
+        expectedErrorContext = propertyValueMapOf(1, 28, Property.FEATURE_NAME to "RIGHT and FULL JOIN"),
+        target = EvaluatorTestTarget.COMPILER_PIPELINE
     )
 
     @Test

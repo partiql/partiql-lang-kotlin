@@ -27,19 +27,21 @@ import org.partiql.lang.errors.Property
  *
  * See https://en.wikipedia.org/wiki/Thunk
  *
- * This name was chosen because it is a thunk that accepts an instance of `Environment`.
+ * @param TEnv The type of the environment.  Generic so that the legacy AST compiler and the new compiler may use
+ * different types here.
  */
-internal typealias ThunkEnv = (Environment) -> ExprValue
+internal typealias Thunk<TEnv> = (TEnv) -> ExprValue
 
 /**
- * A thunk taking a single [T] argument and the current environment.
+ * A thunk taking a single argument and the current environment.
  *
  * See https://en.wikipedia.org/wiki/Thunk
  *
- * This name was chosen because it is a thunk that accepts an instance of `Environment` and an [ExprValue] as
- * its arguments.
+ * @param TEnv The type of the environment.  Generic so that the legacy AST compiler and the new compiler may use
+ * different types here.
+ * @param TArg The type of the additional argument.
  */
-internal typealias ThunkEnvValue<T> = (Environment, T) -> ExprValue
+internal typealias ThunkValue<TEnv, TArg> = (TEnv, TArg) -> ExprValue
 
 /**
  * A type alias for an exception handler which always throws(primarily used for [TypingMode.LEGACY]).
@@ -56,12 +58,17 @@ internal typealias ThunkExceptionHandlerForPermissiveMode = (Throwable, SourceLo
  *
  *  - [handleExceptionForLegacyMode] will be called when in [TypingMode.LEGACY] mode
  *  - [handleExceptionForPermissiveMode] will be called when in [TypingMode.PERMISSIVE] mode
+ *  - [thunkReturnTypeAssertions] is intended for testing only, and ensures that the return value of every expression
+ *  conforms to its `StaticType` meta.  This has negative performance implications so should be avoided in production
+ *  environments.  This only be used for testing and diagnostic purposes only.
  * The default exception handler wraps any [Throwable] exception and throws [EvaluationException]
  */
 data class ThunkOptions private constructor(
     val handleExceptionForLegacyMode: ThunkExceptionHandlerForLegacyMode = DEFAULT_EXCEPTION_HANDLER_FOR_LEGACY_MODE,
-    val handleExceptionForPermissiveMode: ThunkExceptionHandlerForPermissiveMode = DEFAULT_EXCEPTION_HANDLER_FOR_PERMISSIVE_MODE
+    val handleExceptionForPermissiveMode: ThunkExceptionHandlerForPermissiveMode = DEFAULT_EXCEPTION_HANDLER_FOR_PERMISSIVE_MODE,
+    val thunkReturnTypeAssertions: ThunkReturnTypeAssertions = ThunkReturnTypeAssertions.DISABLED,
 ) {
+
     companion object {
 
         /**
@@ -89,6 +96,7 @@ data class ThunkOptions private constructor(
         private var options = ThunkOptions()
         fun handleExceptionForLegacyMode(value: ThunkExceptionHandlerForLegacyMode) = set { copy(handleExceptionForLegacyMode = value) }
         fun handleExceptionForPermissiveMode(value: ThunkExceptionHandlerForPermissiveMode) = set { copy(handleExceptionForPermissiveMode = value) }
+        fun evaluationTimeTypeChecks(value: ThunkReturnTypeAssertions) = set { copy(thunkReturnTypeAssertions = value) }
         private inline fun set(block: ThunkOptions.() -> ThunkOptions): Builder {
             options = block(options)
             return this
@@ -116,18 +124,18 @@ internal val DEFAULT_EXCEPTION_HANDLER_FOR_PERMISSIVE_MODE: ThunkExceptionHandle
  *  - when [TypingMode] is [TypingMode.LEGACY], creates [LegacyThunkFactory]
  *  - when [TypingMode] is [TypingMode.PERMISSIVE], creates [PermissiveThunkFactory]
  */
-internal fun TypingMode.createThunkFactory(
-    compileOptions: CompileOptions,
+internal fun <TEnv> TypingMode.createThunkFactory(
+    thunkOptions: ThunkOptions,
     valueFactory: ExprValueFactory
-): ThunkFactory = when (this) {
-    TypingMode.LEGACY -> LegacyThunkFactory(compileOptions, valueFactory)
-    TypingMode.PERMISSIVE -> PermissiveThunkFactory(compileOptions, valueFactory)
+): ThunkFactory<TEnv> = when (this) {
+    TypingMode.LEGACY -> LegacyThunkFactory(thunkOptions, valueFactory)
+    TypingMode.PERMISSIVE -> PermissiveThunkFactory(thunkOptions, valueFactory)
 }
 /**
  * Provides methods for constructing new thunks according to the specified [CompileOptions].
  */
-internal abstract class ThunkFactory(
-    val compileOptions: CompileOptions,
+internal abstract class ThunkFactory<TEnv>(
+    val thunkOptions: ThunkOptions,
     val valueFactory: ExprValueFactory
 ) {
     private fun checkEvaluationTimeType(thunkResult: ExprValue, metas: MetaContainer): ExprValue {
@@ -157,11 +165,11 @@ internal abstract class ThunkFactory(
      * confusion in the case [StaticTypeInferenceVisitorTransform] has a bug which prevents it from assigning a
      * [StaticTypeMeta] or in case it is not run at all.
      */
-    protected fun ThunkEnv.typeCheck(metas: MetaContainer): ThunkEnv =
-        when (compileOptions.thunkReturnTypeAssertions) {
+    protected fun Thunk<TEnv>.typeCheck(metas: MetaContainer): Thunk<TEnv> =
+        when (thunkOptions.thunkReturnTypeAssertions) {
             ThunkReturnTypeAssertions.DISABLED -> this
             ThunkReturnTypeAssertions.ENABLED -> {
-                val wrapper = { env: Environment ->
+                val wrapper = { env: TEnv ->
                     val thunkResult: ExprValue = this(env)
                     checkEvaluationTimeType(thunkResult, metas)
                 }
@@ -169,12 +177,12 @@ internal abstract class ThunkFactory(
             }
         }
 
-    /** Same as [typeCheck] but works on a [ThunkEnvValue<ExprValue>] instead of a [ThunkEnv]. */
-    protected fun ThunkEnvValue<ExprValue>.typeCheckEnvValue(metas: MetaContainer): ThunkEnvValue<ExprValue> =
-        when (compileOptions.thunkReturnTypeAssertions) {
+    /** Same as [typeCheck] but works on a [ThunkEnvValue<ExprValue>] instead of a [Thunk<TEnv>]. */
+    protected fun ThunkValue<TEnv, ExprValue>.typeCheckEnvValue(metas: MetaContainer): ThunkValue<TEnv, ExprValue> =
+        when (thunkOptions.thunkReturnTypeAssertions) {
             ThunkReturnTypeAssertions.DISABLED -> this
             ThunkReturnTypeAssertions.ENABLED -> {
-                val wrapper = { env: Environment, value: ExprValue ->
+                val wrapper = { env: TEnv, value: ExprValue ->
                     val thunkResult: ExprValue = this(env, value)
                     checkEvaluationTimeType(thunkResult, metas)
                 }
@@ -182,12 +190,12 @@ internal abstract class ThunkFactory(
             }
         }
 
-    /** Same as [typeCheck] but works on a [ThunkEnvValue<List<ExprValue>>] instead of a [ThunkEnv]. */
-    protected fun ThunkEnvValue<List<ExprValue>>.typeCheckEnvValueList(metas: MetaContainer): ThunkEnvValue<List<ExprValue>> =
-        when (compileOptions.thunkReturnTypeAssertions) {
+    /** Same as [typeCheck] but works on a [ThunkEnvValue<List<ExprValue>>] instead of a [Thunk<TEnv>]. */
+    protected fun ThunkValue<TEnv, List<ExprValue>>.typeCheckEnvValueList(metas: MetaContainer): ThunkValue<TEnv, List<ExprValue>> =
+        when (thunkOptions.thunkReturnTypeAssertions) {
             ThunkReturnTypeAssertions.DISABLED -> this
             ThunkReturnTypeAssertions.ENABLED -> {
-                val wrapper = { env: Environment, value: List<ExprValue> ->
+                val wrapper = { env: TEnv, value: List<ExprValue> ->
                     val thunkResult: ExprValue = this(env, value)
                     checkEvaluationTimeType(thunkResult, metas)
                 }
@@ -196,17 +204,17 @@ internal abstract class ThunkFactory(
         }
 
     /**
-     * Creates a [ThunkEnv] which handles exceptions by wrapping them into an [EvaluationException] which uses
+     * Creates a [Thunk<TEnv>] which handles exceptions by wrapping them into an [EvaluationException] which uses
      * [handleException] to handle exceptions appropriately.
      *
      * Literal lambdas passed to this function as [t] are inlined into the body of the function being returned, which
      * reduces the need to create additional call contexts.  The lambdas passed as [t] may not contain non-local returns
      * (`crossinline`).
      */
-    internal inline fun thunkEnv(metas: MetaContainer, crossinline t: ThunkEnv): ThunkEnv {
+    internal inline fun thunkEnv(metas: MetaContainer, crossinline t: Thunk<TEnv>): Thunk<TEnv> {
         val sourceLocationMeta = metas[SourceLocationMeta.TAG] as? SourceLocationMeta
 
-        return { env: Environment ->
+        return { env: TEnv ->
             handleException(sourceLocationMeta) {
                 t(env)
             }
@@ -221,8 +229,11 @@ internal abstract class ThunkFactory(
      *
      * For all [TypingMode]s, if the values returned by [getVal1], [getVal2] and [getVal2] are all known,
      * [compute] is invoked to perform the operation-specific computation.
+     *
+     * Note: this must be public due to a Kotlin compiler bug: https://youtrack.jetbrains.com/issue/KT-22625.
+     * This shouldn't matter though because this class is still `internal`.
      */
-    protected abstract fun propagateUnknowns(
+    abstract fun propagateUnknowns(
         getVal1: () -> ExprValue,
         getVal2: (() -> ExprValue)?,
         getVal3: (() -> ExprValue)?,
@@ -232,14 +243,17 @@ internal abstract class ThunkFactory(
     /**
      * Similar to the other [propagateUnknowns] overload, performs unknown propagation for a variadic sequence of
      * operations.
+     *
+     * Note: this must be public due to a Kotlin compiler bug: https://youtrack.jetbrains.com/issue/KT-22625.
+     * This shouldn't matter though because this class is still `internal`.
      */
-    protected abstract fun propagateUnknowns(
+    abstract fun propagateUnknowns(
         operands: Sequence<ExprValue>,
         compute: (List<ExprValue>) -> ExprValue
     ): ExprValue
 
     /**
-     * Creates a thunk that accepts three [ThunkEnv] operands ([t1], [t2], and [t3]), evaluates them and propagates
+     * Creates a thunk that accepts three [Thunk<TEnv>] operands ([t1], [t2], and [t3]), evaluates them and propagates
      * unknowns according to the current [TypingMode].  When possible, use this function or one of its overloads
      * instead of [thunkEnv] when the operation requires propagation of unknown values.
      *
@@ -260,48 +274,48 @@ internal abstract class ThunkFactory(
      */
     internal inline fun thunkEnvOperands(
         metas: MetaContainer,
-        crossinline t1: ThunkEnv,
-        crossinline t2: ThunkEnv,
-        crossinline t3: ThunkEnv,
-        crossinline compute: (Environment, ExprValue, ExprValue, ExprValue) -> ExprValue
-    ): ThunkEnv =
+        crossinline t1: Thunk<TEnv>,
+        crossinline t2: Thunk<TEnv>,
+        crossinline t3: Thunk<TEnv>,
+        crossinline compute: (TEnv, ExprValue, ExprValue, ExprValue) -> ExprValue
+    ): Thunk<TEnv> =
         thunkEnv(metas) { env ->
             propagateUnknowns({ t1(env) }, { t2(env) }, { t3(env) }) { v1, v2, v3 ->
                 compute(env, v1, v2!!, v3!!)
             }
         }.typeCheck(metas)
 
-    /** See the [thunkEnvOperands] with three [ThunkEnv] operands. */
+    /** See the [thunkEnvOperands] with three [Thunk<TEnv>] operands. */
     internal inline fun thunkEnvOperands(
         metas: MetaContainer,
-        crossinline t1: ThunkEnv,
-        crossinline t2: ThunkEnv,
-        crossinline compute: (Environment, ExprValue, ExprValue) -> ExprValue
-    ): ThunkEnv =
+        crossinline t1: Thunk<TEnv>,
+        crossinline t2: Thunk<TEnv>,
+        crossinline compute: (TEnv, ExprValue, ExprValue) -> ExprValue
+    ): Thunk<TEnv> =
         this.thunkEnv(metas) { env ->
             propagateUnknowns({ t1(env) }, { t2(env) }, null) { v1, v2, _ ->
             compute(env, v1, v2!!)
         }
         }.typeCheck(metas)
 
-    /** See the [thunkEnvOperands] with three [ThunkEnv] operands. */
+    /** See the [thunkEnvOperands] with three [Thunk<TEnv>] operands. */
     internal inline fun thunkEnvOperands(
         metas: MetaContainer,
-        crossinline t1: ThunkEnv,
-        crossinline compute: (Environment, ExprValue) -> ExprValue
-    ): ThunkEnv =
+        crossinline t1: Thunk<TEnv>,
+        crossinline compute: (TEnv, ExprValue) -> ExprValue
+    ): Thunk<TEnv> =
         this.thunkEnv(metas) { env ->
             propagateUnknowns({ t1(env) }, null, null) { v1, _, _ ->
             compute(env, v1)
         }
         }.typeCheck(metas)
 
-    /** See the [thunkEnvOperands] with a variadic list of [ThunkEnv] operands. */
+    /** See the [thunkEnvOperands] with a variadic list of [Thunk<TEnv>] operands. */
     internal inline fun thunkEnvOperands(
         metas: MetaContainer,
-        operandThunks: List<ThunkEnv>,
-        crossinline compute: (Environment, List<ExprValue>) -> ExprValue
-    ): ThunkEnv {
+        operandThunks: List<Thunk<TEnv>>,
+        crossinline compute: (TEnv, List<ExprValue>) -> ExprValue
+    ): Thunk<TEnv> {
 
         return this.thunkEnv(metas) { env ->
             val operandSeq = sequence { operandThunks.forEach { yield(it(env)) } }
@@ -314,11 +328,11 @@ internal abstract class ThunkFactory(
     /** Similar to [thunkEnv], but creates a [ThunkEnvValue<ExprValue>] instead. */
     internal inline fun thunkEnvValue(
         metas: MetaContainer,
-        crossinline t: ThunkEnvValue<ExprValue>
-    ): ThunkEnvValue<ExprValue> {
+        crossinline t: ThunkValue<TEnv, ExprValue>
+    ): ThunkValue<TEnv, ExprValue> {
         val sourceLocationMeta = metas[SourceLocationMeta.TAG] as? SourceLocationMeta
 
-        return { env: Environment, arg1: ExprValue ->
+        return { env: TEnv, arg1: ExprValue ->
             handleException(sourceLocationMeta) {
                 t(env, arg1)
             }
@@ -328,11 +342,11 @@ internal abstract class ThunkFactory(
     /** Similar to [thunkEnv], but creates a [ThunkEnvValue<List<ExprValue>>] instead. */
     internal inline fun thunkEnvValueList(
         metas: MetaContainer,
-        crossinline t: ThunkEnvValue<List<ExprValue>>
-    ): ThunkEnvValue<List<ExprValue>> {
+        crossinline t: ThunkValue<TEnv, List<ExprValue>>
+    ): ThunkValue<TEnv, List<ExprValue>> {
         val sourceLocationMeta = metas[SourceLocationMeta.TAG] as? SourceLocationMeta
 
-        return { env: Environment, arg1: List<ExprValue> ->
+        return { env: TEnv, arg1: List<ExprValue> ->
             handleException(sourceLocationMeta) {
                 t(env, arg1)
             }
@@ -353,9 +367,9 @@ internal abstract class ThunkFactory(
      */
     internal abstract fun thunkFold(
         metas: MetaContainer,
-        argThunks: List<ThunkEnv>,
+        argThunks: List<Thunk<TEnv>>,
         op: (ExprValue, ExprValue) -> ExprValue
-    ): ThunkEnv
+    ): Thunk<TEnv>
 
     /**
      * Similar to [thunkFold] but intended for comparison operators, i.e. `=`, `>`, `>=`, `<`, `<=`.
@@ -374,35 +388,25 @@ internal abstract class ThunkFactory(
      */
     internal abstract fun thunkAndMap(
         metas: MetaContainer,
-        argThunks: List<ThunkEnv>,
+        argThunks: List<Thunk<TEnv>>,
         op: (ExprValue, ExprValue) -> Boolean
-    ): ThunkEnv
+    ): Thunk<TEnv>
 
     /** Populates [exception] with the line & column from the specified [SourceLocationMeta]. */
     protected fun populateErrorContext(
         exception: EvaluationException,
         sourceLocation: SourceLocationMeta?
-    ) = when (exception.errorContext) {
-        null ->
-            EvaluationException(
-                message = exception.message,
-                errorCode = exception.errorCode,
-                errorContext = errorContextFrom(sourceLocation),
-                cause = exception,
-                internal = exception.internal
-            )
-        else -> {
-            // Only add source location data to the error context if it doesn't already exist
-            // in [errorContext].
-            if (!exception.errorContext.hasProperty(Property.LINE_NUMBER)) {
-                sourceLocation?.let { fillErrorContext(exception.errorContext, sourceLocation) }
-            }
-            exception
+    ): EvaluationException {
+        // Only add source location data to the error context if it doesn't already exist
+        // in [errorContext].
+        if (!exception.errorContext.hasProperty(Property.LINE_NUMBER)) {
+            sourceLocation?.let { fillErrorContext(exception.errorContext, sourceLocation) }
         }
+        return exception
     }
 
     /**
-     * Handles exceptions appropriately for a run-time [ThunkEnv].
+     * Handles exceptions appropriately for a run-time [Thunk<TEnv>].
      *
      * - The [SourceLocationMeta] will be extracted from [MetaContainer] and included in any [EvaluationException] that
      * is thrown, if present.
@@ -419,10 +423,10 @@ internal abstract class ThunkFactory(
 /**
  * Provides methods for constructing new thunks according to the specified [CompileOptions] for [TypingMode.LEGACY] behaviour.
  */
-internal class LegacyThunkFactory(
-    compileOptions: CompileOptions,
+internal class LegacyThunkFactory<TEnv>(
+    thunkOptions: ThunkOptions,
     valueFactory: ExprValueFactory
-) : ThunkFactory(compileOptions, valueFactory) {
+) : ThunkFactory<TEnv>(thunkOptions, valueFactory) {
 
     override fun propagateUnknowns(
         getVal1: () -> ExprValue,
@@ -470,9 +474,9 @@ internal class LegacyThunkFactory(
     /** See [ThunkFactory.thunkFold]. */
     override fun thunkFold(
         metas: MetaContainer,
-        argThunks: List<ThunkEnv>,
+        argThunks: List<Thunk<TEnv>>,
         op: (ExprValue, ExprValue) -> ExprValue
-    ): ThunkEnv {
+    ): Thunk<TEnv> {
         require(argThunks.isNotEmpty()) { "argThunks must not be empty" }
 
         val firstThunk = argThunks.first()
@@ -498,9 +502,9 @@ internal class LegacyThunkFactory(
     /** See [ThunkFactory.thunkAndMap]. */
     override fun thunkAndMap(
         metas: MetaContainer,
-        argThunks: List<ThunkEnv>,
+        argThunks: List<Thunk<TEnv>>,
         op: (ExprValue, ExprValue) -> Boolean
-    ): ThunkEnv {
+    ): Thunk<TEnv> {
         require(argThunks.size >= 2) { "argThunks must have at least two elements" }
 
         val firstThunk = argThunks.first()
@@ -534,7 +538,7 @@ internal class LegacyThunkFactory(
     }
 
     /**
-     * Handles exceptions appropriately for a run-time [ThunkEnv] respecting [TypingMode.LEGACY] behaviour.
+     * Handles exceptions appropriately for a run-time [Thunk<TEnv>] respecting [TypingMode.LEGACY] behaviour.
      *
      * - The [SourceLocationMeta] will be extracted from [MetaContainer] and included in any [EvaluationException] that
      * is thrown, if present.
@@ -551,7 +555,7 @@ internal class LegacyThunkFactory(
         } catch (e: EvaluationException) {
             throw populateErrorContext(e, sourceLocation)
         } catch (e: Exception) {
-            compileOptions.thunkOptions.handleExceptionForLegacyMode(e, sourceLocation)
+            thunkOptions.handleExceptionForLegacyMode(e, sourceLocation)
         }
 }
 
@@ -559,10 +563,10 @@ internal class LegacyThunkFactory(
  * Provides methods for constructing new thunks according to the specified [CompileOptions] and for
  * [TypingMode.PERMISSIVE] behaviour.
  */
-internal class PermissiveThunkFactory(
-    compileOptions: CompileOptions,
+internal class PermissiveThunkFactory<TEnv>(
+    thunkOptions: ThunkOptions,
     valueFactory: ExprValueFactory
-) : ThunkFactory(compileOptions, valueFactory) {
+) : ThunkFactory<TEnv>(thunkOptions, valueFactory) {
 
     override fun propagateUnknowns(
         getVal1: () -> ExprValue,
@@ -628,9 +632,9 @@ internal class PermissiveThunkFactory(
     /** See [ThunkFactory.thunkFold]. */
     override fun thunkFold(
         metas: MetaContainer,
-        argThunks: List<ThunkEnv>,
+        argThunks: List<Thunk<TEnv>>,
         op: (ExprValue, ExprValue) -> ExprValue
-    ): ThunkEnv {
+    ): Thunk<TEnv> {
         require(argThunks.isNotEmpty()) { "argThunks must not be empty" }
 
         return thunkEnv(metas) { env ->
@@ -654,9 +658,9 @@ internal class PermissiveThunkFactory(
     /** See [ThunkFactory.thunkAndMap]. */
     override fun thunkAndMap(
         metas: MetaContainer,
-        argThunks: List<ThunkEnv>,
+        argThunks: List<Thunk<TEnv>>,
         op: (ExprValue, ExprValue) -> Boolean
-    ): ThunkEnv {
+    ): Thunk<TEnv> {
         require(argThunks.size >= 2) { "argThunks must have at least two elements" }
 
         return thunkEnv(metas) thunkBlock@{ env ->
@@ -684,7 +688,7 @@ internal class PermissiveThunkFactory(
     }
 
     /**
-     * Handles exceptions appropriately for a run-time [ThunkEnv] respecting [TypingMode.PERMISSIVE] behaviour.
+     * Handles exceptions appropriately for a run-time [Thunk<TEnv>] respecting [TypingMode.PERMISSIVE] behaviour.
      *
      * - Exceptions thrown by [block] that are [EvaluationException] are caught and [MissingExprValue] is returned.
      * - Exceptions thrown by [block] that are not an [EvaluationException] cause an [EvaluationException] to be thrown
@@ -697,13 +701,13 @@ internal class PermissiveThunkFactory(
         try {
             block()
         } catch (e: EvaluationException) {
-            compileOptions.thunkOptions.handleExceptionForPermissiveMode(e, sourceLocation)
+            thunkOptions.handleExceptionForPermissiveMode(e, sourceLocation)
             when (e.errorCode.errorBehaviorInPermissiveMode) {
                 // Rethrows the exception as it does in LEGACY mode.
                 ErrorBehaviorInPermissiveMode.THROW_EXCEPTION -> throw populateErrorContext(e, sourceLocation)
                 ErrorBehaviorInPermissiveMode.RETURN_MISSING -> valueFactory.missingValue
             }
         } catch (e: Exception) {
-            compileOptions.thunkOptions.handleExceptionForLegacyMode(e, sourceLocation)
+            thunkOptions.handleExceptionForLegacyMode(e, sourceLocation)
         }
 }

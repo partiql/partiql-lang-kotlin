@@ -15,15 +15,20 @@
 package org.partiql.lang.eval.builtins
 
 import com.amazon.ion.system.IonSystemBuilder
+import org.partiql.lang.eval.DEFAULT_COMPARATOR
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.stringValue
+import org.partiql.lang.eval.unnamedValue
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.UnknownArguments
+import java.util.TreeSet
+
+internal const val DYNAMIC_LOOKUP_FUNCTION_NAME = "\$__dynamic_lookup__"
 
 internal fun createBuiltinFunctionSignatures(): Map<String, FunctionSignature> =
     // Creating a new IonSystem in this instance is not the problem it would normally be since we are
@@ -40,6 +45,7 @@ internal fun createBuiltinFunctions(valueFactory: ExprValueFactory) =
         createCharacterLength("character_length", valueFactory),
         createCharacterLength("char_length", valueFactory),
         createUtcNow(valueFactory),
+        createFilterDistinct(valueFactory),
         DateAddExprFunction(valueFactory),
         DateDiffExprFunction(valueFactory),
         ExtractExprFunction(valueFactory),
@@ -77,6 +83,29 @@ internal fun createUtcNow(valueFactory: ExprValueFactory): ExprFunction = object
         valueFactory.newTimestamp(session.now)
 }
 
+internal fun createFilterDistinct(valueFactory: ExprValueFactory): ExprFunction = object : ExprFunction {
+    override val signature = FunctionSignature(
+        "filter_distinct",
+        listOf(StaticType.unionOf(StaticType.BAG, StaticType.LIST, StaticType.SEXP, StaticType.STRUCT)),
+        returnType = StaticType.BAG
+    )
+
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
+        val argument = required.first()
+        // We cannot use a [HashSet] here because [ExprValue] does not implement .equals() and .hashCode()
+        val encountered = TreeSet(DEFAULT_COMPARATOR)
+        return valueFactory.newBag(
+            sequence {
+                argument.asSequence().forEach {
+                    if (!encountered.contains(it)) {
+                        encountered.add(it.unnamedValue())
+                        yield(it)
+                    }
+                }
+            }
+        )
+    }
+}
 internal fun createCharacterLength(name: String, valueFactory: ExprValueFactory): ExprFunction =
     object : ExprFunction {
         override val signature: FunctionSignature

@@ -3,6 +3,7 @@ package org.partiql.lang.eval
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.lang.ION
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.util.testdsl.IonResultTestCase
 import org.partiql.lang.util.testdsl.runTestCase
 
@@ -173,13 +174,12 @@ class EvaluatorStaticTypeTests {
             "aggregateInSubqueryOfSelect",
             "aggregateInSubqueryOfSelectValue",
             "aggregateWithAliasingInSubqueryOfSelectValue"
-
         )
 
         @JvmStatic
         @Suppress("unused")
         fun evaluatorStaticTypeTests() = EVALUATOR_TEST_SUITE.getAllTests(
-            EvaluatorTests.SKIP_LIST.union(FAILING_TESTS)
+            EvaluatorTests.AST_EVALUATOR_SKIP_LIST.union(FAILING_TESTS)
         ).map {
             it.copy(
                 compileOptionsBuilderBlock = {
@@ -187,8 +187,10 @@ class EvaluatorStaticTypeTests {
 
                     // set permissive mode
                     typingMode(TypingMode.PERMISSIVE)
-                    // enable evaluation time type checking
-                    evaluationTimeTypeChecks(ThunkReturnTypeAssertions.ENABLED)
+                    thunkOptions {
+                        // enable evaluation time type checking
+                        evaluationTimeTypeChecks(ThunkReturnTypeAssertions.ENABLED)
+                    }
                 }
             )
         }
@@ -200,7 +202,9 @@ class EvaluatorStaticTypeTests {
         tc.runTestCase(
             valueFactory = valueFactory,
             db = mockDb,
+            // the planner doesn't yet support type inferencing pass needed to make this work
+            EvaluatorTestTarget.COMPILER_PIPELINE,
             // Enable the static type inferencer for this
-            compilerPipelineBuilderBlock = { this.globalTypeBindings(mockDb.typeBindings) }
+            compilerPipelineBuilderBlock = { this.globalTypeBindings(mockDb.typeBindings) },
         )
 }
