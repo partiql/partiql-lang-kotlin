@@ -20,7 +20,7 @@ import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.pig.runtime.LongPrimitive
 
 /**
- * Provides rules for basic AST sanity checks that should be performed before any attempt at further phsycial
+ * Provides rules for basic AST sanity checks that should be performed before any attempt at further physical
  * plan processing. This is provided as a distinct [PartiqlPhysical.Visitor] so that the planner and evaluator may
  * assume that the physical plan has passed the checks performed here.
  *

@@ -26,7 +26,7 @@ private val DEFAULT_IMPL = PartiqlPhysical.build { impl("default") }
 internal typealias PhysicalPlanThunk = Thunk<EvaluatorState>
 
 /** A specialization of [ThunkValue] that we use for evaluation of physical plans. */
-internal typealias PhsycialPlanThunkValue<T> = ThunkValue<EvaluatorState, T>
+internal typealias PhysicalPlanThunkValue<T> = ThunkValue<EvaluatorState, T>
 
 internal class PhysicalBexprToThunkConverter(
     private val exprConverter: PhysicalExprToThunkConverter,

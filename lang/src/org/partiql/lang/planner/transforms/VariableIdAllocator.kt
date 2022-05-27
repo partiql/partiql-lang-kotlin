@@ -11,8 +11,7 @@ import org.partiql.lang.domains.PartiqlLogicalResolved
  * declared within the plan, which becomes the `locals` sub-node of the `plan` node.
  */
 internal fun PartiqlLogical.Plan.allocateVariableIds(): Pair<PartiqlLogical.Plan, List<PartiqlLogicalResolved.LocalVariable>> {
-
-    var allLocals = mutableListOf<PartiqlLogicalResolved.LocalVariable>()
+    val allLocals = mutableListOf<PartiqlLogicalResolved.LocalVariable>()
     val planWithAllocatedVariables = VariableIdAllocator(allLocals).transformPlan(this)
     return planWithAllocatedVariables to allLocals.toList()
 }

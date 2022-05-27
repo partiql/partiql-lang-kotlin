@@ -1417,7 +1417,7 @@ internal class PhysicalExprToThunkConverterImpl(
     private fun compilePathComponents(
         remainingComponents: LinkedList<PartiqlPhysical.PathStep>,
         pathMetas: MetaContainer
-    ): PhsycialPlanThunkValue<ExprValue> {
+    ): PhysicalPlanThunkValue<ExprValue> {
 
         val componentThunks = ArrayList<ThunkValue<EvaluatorState, ExprValue>>()
 

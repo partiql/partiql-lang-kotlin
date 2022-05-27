@@ -50,7 +50,7 @@ class AstToLogicalVisitorTransformTests {
             TestCase(
                 // Note:
                 // `SELECT * FROM bar AS b` is rewritten to `SELECT b.* FROM bar as b` by [SelectStarVisitorTransform].
-                // Therefore, there is no need to support `SELECT *` in `ToLogicalVisitorTransform`.
+                // Therefore, there is no need to support `SELECT *` in `AstToLogicalVisitorTransform`.
                 "SELECT b.* FROM bar AS b",
                 PartiqlLogical.build {
                     query(
@@ -118,8 +118,8 @@ class AstToLogicalVisitorTransformTests {
     }
 
     /**
-     * A list of statements that cannot be converted into the logical algebra yet by [ToLogicalVisitorTransform].  This
-     * is temporary--in the near future, we will accomplish this with a better language restriction feature which
+     * A list of statements that cannot be converted into the logical algebra yet by [AstToLogicalVisitorTransform].
+     * This is temporary--in the near future, we will accomplish this with a better language restriction feature which
      * blocks all language features except those explicitly allowed.  This will be needed to constrain possible queries
      * to features supported by specific PartiQL-services.
      */

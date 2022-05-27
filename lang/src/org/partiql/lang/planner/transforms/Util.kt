@@ -7,7 +7,7 @@ package org.partiql.lang.planner.transforms
  * classes. The format is: `<major>.<minor>`.  One or both of these will need to be changed when the following
  * events happen:
  *
- * - Increment `<major>` and set `<minor>` to `0` when a change to `paritql.ion` is introduced that will cause the
+ * - Increment `<major>` and set `<minor>` to `0` when a change to `partiql.ion` is introduced that will cause the
  * persisted s-expressions to fail to load under the new version.  Examples include:
  *     - Making an element non-nullable that was previously nullable.
  *     - Renaming any type or sum variant.
@@ -15,7 +15,7 @@ package org.partiql.lang.planner.transforms
  *     - Adding or removing any element of any product type.
  *     - Changing the data type of any element.
  *     - Adding a required field to a record type.
- * - Increment `<minor>` when a change to `paritlq.ion` is introduced that will *not* cause the persisted s-expressions
+ * - Increment `<minor>` when a change to `partiql.ion` is introduced that will *not* cause the persisted s-expressions
  * to fail to load into the PIG-generated classes.  Examples include:
  *     - Adding a new, optional (nullable) field to a record type.
  *     - Adding a new sum variant.
