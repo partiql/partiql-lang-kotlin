@@ -22,13 +22,18 @@ import org.partiql.lang.types.VarargFormalParameter
  *
  * Arguments:
  *
- * - variable name
- * - case sensitivity
- * - lookup strategy (globals then locals or locals then globals)
- * - A variadic list of locations to be searched.
+ * 1. variable name (must be a symbol)
+ * 2. case sensitivity (must be a symbol; one of: `case_insensitive` or `case_sensitive`)
+ * 3. lookup strategy (must be a symbol; one of: `globals_then_locals` or `locals_then_globals`)
+ * 4. A variadic list of values to be searched.  Non-struct values are ignored.  This is requred because not currently
+ * possible to know the types of these arguments within the variable resolution pass
+ * ([org.partiql.lang.planner.transforms.LogicalToLogicalResolvedVisitorTransform]).  Therefore all variables
+ * in the current scope must be included in the list of values to be searched.
+ * TODO: when the open type system's static type inferencer is working, static type information can be used to identify
+ * and remove non-struct types from these dynamic call sites.
  *
- * The variadic arguments must be of type `any` because the planner doesn't yet have knowledge of static types
- * and therefore cannot filter out local variables types that are not structs.
+ * The name of this function is [DYNAMIC_LOOKUP_FUNCTION_NAME], which includes a unique prefix and suffix so as to
+ * avoid clashes with user-defined functions.
  */
 class DynamicLookupExprFunction : ExprFunction {
     override val signature: FunctionSignature
