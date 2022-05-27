@@ -5,6 +5,7 @@ import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.ThunkFactory
 import org.partiql.lang.eval.errorContextFrom
 import org.partiql.lang.eval.fillErrorContext
 import org.partiql.lang.eval.relation.RelationIterator
@@ -13,10 +14,10 @@ import org.partiql.lang.eval.relation.RelationIterator
 internal typealias RelationThunkEnv = (EvaluatorState) -> RelationIterator
 
 /**
- * Invokes [t] with error handling like is supplied by [org.partiql.lang.eval.ThunkFactory].
+ * Invokes [t] with error handling like is supplied by [ThunkFactory].
  *
- * This function is not currently in `ThunkFactory` to avoid complicating `ThunkFactory` further.  If a need arises,
- * it could be moved to `ThunkFactory`.
+ * This function is not currently in [ThunkFactory] to avoid complicating it further.  If a need arises, it could be
+ * moved.
  */
 internal inline fun relationThunk(metas: MetaContainer, crossinline t: RelationThunkEnv): RelationThunkEnv {
     val sourceLocationMeta = metas[SourceLocationMeta.TAG] as? SourceLocationMeta

@@ -92,11 +92,11 @@ interface PlannerPipeline {
     /**
      * Compiles the previously planned [PartiqlPhysical.Statement] instance.
      *
-     * @param physcialPlan The physical query plan.
+     * @param physicalPlan The physical query plan.
      * @return [PassResult.Success] containing an instance of [PartiqlPhysical.Statement] and any applicable warnings
      * if compilation was successful or [PassResult.Error] if not.
      */
-    fun compile(physcialPlan: PartiqlPhysical.Plan): PassResult<Expression>
+    fun compile(physicalPlan: PartiqlPhysical.Plan): PassResult<Expression>
 
     /**
      * Plans and compiles a query.
@@ -376,7 +376,7 @@ internal class PlannerPipelineImpl(
         return PassResult.Success(physicalPlan, problemHandler.problems)
     }
 
-    override fun compile(physcialPlan: PartiqlPhysical.Plan): PassResult<Expression> {
+    override fun compile(physicalPlan: PartiqlPhysical.Plan): PassResult<Expression> {
         val compiler = PhysicalExprToThunkConverterImpl(
             valueFactory = valueFactory,
             functions = functions,
@@ -386,12 +386,12 @@ internal class PlannerPipelineImpl(
         )
 
         val expression = when {
-            enableLegacyExceptionHandling -> compiler.compile(physcialPlan)
+            enableLegacyExceptionHandling -> compiler.compile(physicalPlan)
             else -> {
                 // Legacy exception handling is disabled, convert any [SqlException] into a Problem and return
                 // PassResult.Error.
                 try {
-                    compiler.compile(physcialPlan)
+                    compiler.compile(physicalPlan)
                 } catch (e: SqlException) {
                     val problem = Problem(
                         SourceLocationMeta(

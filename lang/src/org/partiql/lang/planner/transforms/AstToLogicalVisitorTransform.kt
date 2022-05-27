@@ -9,8 +9,8 @@ import org.partiql.lang.domains.PartiqlLogical
  *
  * Performs no semantic checks.
  *
- * This conversion (and the logical algebra) are early in their lifecycle and so only a very limited subset of
- * SFW queries are transformable.  See tests for this class to see which queries are transformable.
+ * This conversion (and the logical algebra) are early in their lifecycle and so only a limited subset of SFW queries
+ * are transformable.  See `AstToLogicalVisitorTransformTests` to see which queries are transformable.
  */
 internal fun PartiqlAst.Statement.toLogicalPlan(): PartiqlLogical.Plan =
     PartiqlLogical.build {
