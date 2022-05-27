@@ -26,6 +26,7 @@ fun makeCliAndGetResult(
     val cli = Cli(
         valueFactory,
         input?.byteInputStream(Charsets.UTF_8) ?: EmptyInputStream(),
+        InputFormat.ION,
         output,
         outputFormat,
         compilerPipeline,

@@ -69,6 +69,10 @@ private val formatter = object : BuiltinHelpFormatter(120, 2) {
     }
 }
 
+enum class InputFormat {
+    PARTIQL, ION
+}
+
 enum class OutputFormat {
     ION_TEXT, ION_BINARY, PARTIQL, PARTIQL_PRETTY
 }
@@ -92,6 +96,13 @@ private val inputFileOpt = optParser.acceptsAll(listOf("input", "i"), "input fil
     .availableIf(queryOpt)
     .withRequiredArg()
     .ofType(File::class.java)
+
+private val inputFormatOpt = optParser.acceptsAll(listOf("input-format", "if"), "output format, requires the query option")
+    .availableIf(queryOpt)
+    .withRequiredArg()
+    .ofType(InputFormat::class.java)
+    .describedAs("(${InputFormat.values().joinToString("|")})")
+    .defaultsTo(InputFormat.ION)
 
 private val outputFileOpt = optParser.acceptsAll(listOf("output", "o"), "output file, requires the query option (default: stdout)")
     .availableIf(queryOpt)
@@ -119,6 +130,7 @@ private val outputFormatOpt = optParser.acceptsAll(listOf("output-format", "of")
  * * Non interactive only:
  *      * -q --query: PartiQL query
  *      * -i --input: input file, default STDIN
+ *      * -if --input-format: ION_TEXT (default), ION_BINARY, PARTIQL
  *      * -o --output: output file, default STDOUT
  *      * -of --output-format: ION_TEXT, ION_BINARY, PARTIQL (default), PARTIQL_PRETTY
  */
@@ -128,7 +140,7 @@ fun main(args: Array<String>) = try {
     val optionSet = optParser.parse(*args)
     if (optionSet.has(helpOpt)) {
         optParser.printHelpOn(System.out)
-        System.exit(0) // print help and bail
+        exitProcess(0) // print help and bail
     }
 
     if (optionSet.nonOptionArguments().isNotEmpty()) {
@@ -191,13 +203,14 @@ private fun runCli(environment: Bindings<ExprValue>, optionSet: OptionSet, compi
         UnclosableOutputStream(System.out)
     }
 
-    val format = optionSet.valueOf(outputFormatOpt)
+    val inputFormat = optionSet.valueOf(inputFormatOpt)
+    val outputFormat = optionSet.valueOf(outputFormatOpt)
 
     val query = optionSet.valueOf(queryOpt)
 
     input.use {
         output.use {
-            Cli(valueFactory, input, output, format, compilerPipeline, environment, query).run()
+            Cli(valueFactory, input, inputFormat, output, outputFormat, compilerPipeline, environment, query).run()
         }
     }
 }

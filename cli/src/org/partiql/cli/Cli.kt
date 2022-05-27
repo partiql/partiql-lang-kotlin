@@ -35,8 +35,9 @@ import java.io.OutputStreamWriter
 internal class Cli(
     private val valueFactory: ExprValueFactory,
     private val input: InputStream,
+    private val inputFormat: InputFormat,
     private val output: OutputStream,
-    private val format: OutputFormat,
+    private val outputFormat: OutputFormat,
     private val compilerPipeline: CompilerPipeline,
     private val globals: Bindings<ExprValue>,
     private val query: String
@@ -48,26 +49,50 @@ internal class Cli(
     }
 
     override fun run() {
+        when (inputFormat) {
+            InputFormat.ION -> runWithIonInput()
+            InputFormat.PARTIQL -> runWithPartiQLInput()
+        }
+    }
+
+    private fun runWithIonInput() {
         IonReaderBuilder.standard().build(input).use { reader ->
-            val inputIonValue = valueFactory.ion.iterate(reader).asSequence().map { valueFactory.newFromIonValue(it) }
-            val inputExprValue = valueFactory.newBag(inputIonValue)
-            val bindings = Bindings.buildLazyBindings<ExprValue> {
-                // If `input` is a class of `EmptyInputStream`, it means there is no input data provided by user.
-                if (input !is EmptyInputStream) { addBinding("input_data") { inputExprValue } }
-            }.delegate(globals)
-
+            val bindings = when (reader.next()) {
+                null -> Bindings.buildLazyBindings<ExprValue> {}.delegate(globals)
+                else -> getBindingsFromIonValue(valueFactory.newFromIonReader(reader))
+            }
             val result = compilerPipeline.compile(query).eval(EvaluationSession.build { globals(bindings) })
+            outputResult(result)
+        }
+    }
 
-            when (format) {
-                OutputFormat.ION_TEXT -> ionTextWriterBuilder.build(output).use {
-                    printIon(it, result)
-                    output.write(System.lineSeparator().toByteArray(Charsets.UTF_8))
-                }
-                OutputFormat.ION_BINARY -> valueFactory.ion.newBinaryWriter(output).use { printIon(it, result) }
-                OutputFormat.PARTIQL -> OutputStreamWriter(output).use { it.write(result.toString()) }
-                OutputFormat.PARTIQL_PRETTY -> OutputStreamWriter(output).use {
-                    ConfigurableExprValueFormatter.pretty.formatTo(result, it)
-                }
+    private fun runWithPartiQLInput() {
+        val partiql =
+            compilerPipeline.compile(input.readAllBytes().toString(Charsets.UTF_8)).eval(EvaluationSession.standard())
+        val bindings = getBindingsFromIonValue(partiql)
+        val result = compilerPipeline.compile(query).eval(EvaluationSession.build { globals(bindings) })
+        outputResult(result)
+    }
+
+    private fun getBindingsFromIonValue(value: ExprValue): Bindings<ExprValue> {
+        return Bindings.buildLazyBindings<ExprValue> {
+            // If `input` is a class of `EmptyInputStream`, it means there is no input data provided by user.
+            if (input !is EmptyInputStream) {
+                addBinding("input_data") { value }
+            }
+        }.delegate(globals)
+    }
+
+    private fun outputResult(result: ExprValue) {
+        when (outputFormat) {
+            OutputFormat.ION_TEXT -> ionTextWriterBuilder.build(output).use {
+                printIon(it, result)
+                output.write(System.lineSeparator().toByteArray(Charsets.UTF_8))
+            }
+            OutputFormat.ION_BINARY -> valueFactory.ion.newBinaryWriter(output).use { printIon(it, result) }
+            OutputFormat.PARTIQL -> OutputStreamWriter(output).use { it.write(result.toString()) }
+            OutputFormat.PARTIQL_PRETTY -> OutputStreamWriter(output).use {
+                ConfigurableExprValueFormatter.pretty.formatTo(result, it)
             }
         }
     }

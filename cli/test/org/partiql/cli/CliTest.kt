@@ -58,6 +58,7 @@ class CliTest {
         Cli(
             valueFactory,
             input?.byteInputStream(Charsets.UTF_8) ?: EmptyInputStream(),
+            InputFormat.ION,
             output,
             outputFormat,
             compilerPipeline,
@@ -79,7 +80,7 @@ class CliTest {
 
     @Test
     fun runQueryOnSingleValue() {
-        val subject = makeCli("SELECT * FROM input_data", "{a: 1}")
+        val subject = makeCli("SELECT * FROM input_data", "[{a: 1}]")
         val actual = subject.runAndOutput()
 
         assertAsIon("{a: 1}", actual)
@@ -87,7 +88,7 @@ class CliTest {
 
     @Test
     fun runQueryOnMultipleValues() {
-        val subject = makeCli("SELECT * FROM input_data", "{a: 1}{a: 2}{a: 3}")
+        val subject = makeCli("SELECT * FROM input_data", "[{a: 1},{a: 2},{a: 3}]")
         val actual = subject.runAndOutput()
 
         assertAsIon("{a: 1} {a: 2} {a: 3}", actual)
@@ -95,7 +96,7 @@ class CliTest {
 
     @Test
     fun caseInsensitiveBindingName() {
-        val subject = makeCli("SELECT * FROM input_DAta", "{a: 1}")
+        val subject = makeCli("SELECT * FROM input_DAta", "[{a: 1}]")
         val actual = subject.runAndOutput()
 
         assertAsIon("{a: 1}", actual)
@@ -103,7 +104,7 @@ class CliTest {
 
     @Test
     fun withBinding() {
-        val subject = makeCli("SELECT v, d FROM bound_value v, input_data d", "{a: 1}", mapOf("bound_value" to "{b: 1}").asBinding())
+        val subject = makeCli("SELECT v, d FROM bound_value v, input_data d", "[{a: 1}]", mapOf("bound_value" to "{b: 1}").asBinding())
         val actual = subject.runAndOutput()
 
         assertAsIon("{v: {b: 1}, d: {a: 1}}", actual)
@@ -111,7 +112,7 @@ class CliTest {
 
     @Test
     fun withShadowingBinding() {
-        val subject = makeCli("SELECT * FROM input_data", "{a: 1}", mapOf("input_data" to "{b: 1}").asBinding())
+        val subject = makeCli("SELECT * FROM input_data", "[{a: 1}]", mapOf("input_data" to "{b: 1}").asBinding())
 
         val actual = subject.runAndOutput()
 
@@ -120,7 +121,7 @@ class CliTest {
 
     @Test
     fun withPartiQLOutput() {
-        val subject = makeCli("SELECT * FROM input_data", "{a: 1}", outputFormat = OutputFormat.PARTIQL)
+        val subject = makeCli("SELECT * FROM input_data", "[{a: 1}]", outputFormat = OutputFormat.PARTIQL)
         val actual = subject.runAndOutput()
 
         assertEquals("<<{'a': 1}>>", actual)
@@ -128,7 +129,7 @@ class CliTest {
 
     @Test
     fun withPartiQLPrettyOutput() {
-        val subject = makeCli("SELECT * FROM input_data", "{a: 1, b: 2}", outputFormat = OutputFormat.PARTIQL_PRETTY)
+        val subject = makeCli("SELECT * FROM input_data", "[{a: 1, b: 2}]", outputFormat = OutputFormat.PARTIQL_PRETTY)
         val actual = subject.runAndOutput()
 
         assertEquals("<<\n  {\n    'a': 1,\n    'b': 2\n  }\n>>", actual)
@@ -136,7 +137,7 @@ class CliTest {
 
     @Test
     fun withIonTextOutput() {
-        val subject = makeCli("SELECT * FROM input_data", "{a: 1} {b: 1}", outputFormat = OutputFormat.ION_TEXT)
+        val subject = makeCli("SELECT * FROM input_data", "[{a: 1}, {b: 1}]", outputFormat = OutputFormat.ION_TEXT)
         val actual = subject.runAndOutput()
 
         assertEquals("{a:1}\n{b:1}\n", actual)
@@ -146,7 +147,7 @@ class CliTest {
     fun withIonTextOutputToFile() {
         makeCli(
             "SELECT * FROM input_data",
-            "{a: 1} {b: 1}",
+            "[{a: 1}, {b: 1}]",
             output = FileOutputStream(testFile),
             outputFormat = OutputFormat.ION_TEXT
         ).run()
