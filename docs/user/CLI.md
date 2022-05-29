@@ -23,18 +23,18 @@ Option                                Description
 -e, --environment <File>              initial global environment (optional)
 -h, --help                            prints this help
 -i, --input <File>                    input file, requires the query option (optional)
+-if, --input-format <InputFormat>     input format, requires the query option -- [PARTIQL (default), ION]
 -o, --output <File>                   output file, requires the query option (default: stdout)
---of, --output-format <OutputFormat:  output format, requires the query option (default: PARTIQL)
-  (ION_TEXT|ION_BINARY|PARTIQL|PARTIQL_PRETTY)>
+-of, --output-format <OutputFormat>   output format, requires the query option [PARTIQL (default), PARTIQL_PRETTY, ION_TEXT, ION_BINARY]
 -p, --permissive                      run the PartiQL query in PERMISSIVE typing mode
 -q, --query <String>                  PartiQL query, triggers non interactive mode
 ```
 
-# Building the CLI 
+## Building the CLI 
 
-The CLI is built during the main Gradle build.  To build it separately execute:
+The root Gradle build also builds the CLI. To build the CLI separately, execute:
 
-```
+```shell
 ./gradlew :cli:build
 ```
 
@@ -43,72 +43,84 @@ project root).
 
 Be sure to include the correct relative path to `gradlew` if you are not in the project root.
 
-# Using the CLI
+## Using the CLI
 
 The following command will build any dependencies before starting the CLI.
 
-```
+```shell
 ./gradlew :cli:run -q --args="<command line arguments>"
 ```
 
-# REPL
+The CLI can be run in two manners, non-interactive (conventional) and interactive (REPL).
+
+
+
+## REPL
 
 To start an interactive read, eval, print loop (REPL) execute:
 
-```
+```shell
 rlwrap ./gradlew :cli:run --console=plain
 ```
 
 [rlwrap](https://github.com/hanslub42/rlwrap) provides command history support.  It allows 
 the use of the up and down arrow keys to cycle through recently executed commands and remembers commands entered into 
 previous sessions. `rlwrap` is available as an optional package in all major Linux distributions and in 
-[Homebrew](https://brew.sh/) on MacOS.  `rlwrap` is not required but is highly recommended. 
+[Homebrew](https://brew.sh/) on macOS.  `rlwrap` is not required but is highly recommended. 
 
 You will see a prompt that looks as follows:
 
-```
+```shell
 Welcome to the PartiQL REPL!
 PartiQL> 
 ```
 
-At this point you can type in SQL and press enter *twice* to execute it:
+At this point, you can type in valid SQL/PartiQL and press enter *twice* to execute it:
 
+```shell
+PartiQL> SELECT id FROM `[{id: 5, name:"bill"}, {id: 6, name:"bob"}]` WHERE name = 'bob';
 ```
-PartiQL> SELECT id FROM `[{id: 5, name:"bill"}, {id: 6, name:"bob"}]` WHERE name = 'bob'
-   |
-==='
+```ion
 <<
   {
     'id': 6
   }
 >>
----
-OK!
 ```
 
-The result of previous expression is stored in the variable named `_`, so you can then run subsequent
+Alternatively, you can denote the end of a query using a semi-colon:
+```shell
+PartiQL> SELECT id FROM `[{id: 5, name:"bill"}, {id: 6, name:"bob"}]` WHERE name = 'bob';
+```
+```ion
+<<
+  {
+    'id': 6
+  }
+>>
+```
+
+The result of the previous expression is stored in the variable named `_`, so you can then run subsequent
 expressions based on the last one.
 
+```shell
+PartiQL> SELECT id + 4 AS name FROM _;
 ```
-PartiQL> SELECT id + 4 AS name FROM _
-   |
-==='
+```ion
 <<
   {
     'name': 10
   }
 >>
----
-OK!
 ```
 
 Press control-D to exit the REPL.
 
-## Advanced REPL Features
+### Advanced REPL Features
 
-To view the AST of an SQL statement, type one and press enter only *once*, then type `!!` and press enter:
+To view the AST of a PartiQL statement, type one and press enter only *once*, then type `!!` and press enter:
 
-```
+```shell
 PartiQL> 1 + 1
    | !!
 ==='
@@ -138,14 +150,14 @@ PartiQL> 1 + 1
 OK!
 ```
 
-## Initial Environment
+### Initial Environment
 
-The initial environment for the REPL can be setup with a configuration file, which should be an PartiQL file with a 
+The initial environment for the REPL can be setup with a configuration file, which should be a PartiQL file with a 
 single `struct` containing the initial *global environment*.
 
-For example a file named `config.sql`, containing the following:
+For example, a file named `config.env` contains the following:
 
-```
+```ion
 {
   'animals':[
     {'name': 'Kumo', 'type': 'dog'},
@@ -160,28 +172,27 @@ For example a file named `config.sql`, containing the following:
 }
 ```
 
-Could be loaded into the REPL with `animals` and `types` bound list of `struct` values.
+The variables `animals` and `types` can both be bound to the execution environment for later access.
+To bind the environment file to the execution environment, start the REPL with the following command:
 
-The REPL could be started up with:
-
-```
-$ ./gradlew :cli:run -q --console=plain --args='-e config.sql'
-```
-
-(Note that shell expansions such as `~` do not work within the value of the `args` argument.)
-
-Or if you have extracted one of the compressed archives:
-
-```
-$ ./bin/partiql -e config.sql
+```shell
+$ ./gradlew :cli:run -q --console=plain --args='-e config.env'
 ```
 
-Expressions can then use the environment defined by `config.sql`:
+**Note**: Shell expansions such as `~` do not work within the value of the `args` argument.
 
+Or, if you have extracted one of the compressed archives:
+
+```shell
+$ ./bin/partiql -e config.env
 ```
+
+Expressions can then use the environment defined by `config.env`:
+
+```shell
 PartiQL> SELECT name, type, is_magic FROM animals, types WHERE type = id
-   |
-==='
+```
+```ion
 <<
   {
     'name': 'Kumo',
@@ -199,16 +210,14 @@ PartiQL> SELECT name, type, is_magic FROM animals, types WHERE type = id
     'is_magic': true
   }
 >>
----
-OK!
 ```
 
 To see the current REPL environment you can use `!global_env`, for example for the file above: 
 
+```shell
+PartiQL> !global_env;
 ```
-PartiQL> !global_env
-   |
-==='
+```ion
 {
   'types': [
     {
@@ -239,25 +248,24 @@ PartiQL> !global_env
     }
   ]
 }
----
-OK!
 ``` 
 
 You can also add new values to the global environment or replace existing values using `!add_to_global_env`. The 
 example below replaces the value bound to `types`
 
+```shell
+PartiQL> !add_to_global_env {'types': []};
 ```
-PartiQL> !add_to_global_env {'types': []}
-   |
-==='
+```ion
 {
   'types': []
 }
----
-OK!
+```
+Let's look at what has changed:
+```shell
 PartiQL> !global_env
-   |
-==='
+```
+```ion
 {
   'types': [],
   'animals': [
@@ -275,15 +283,13 @@ PartiQL> !global_env
     }
   ]
 }
----
-OK!
 ``` 
 
-# Working with Structure
+### Working with Structure
 
 Let's consider the following initial environment:
 
-```
+```ion
 {
   'stores':[
     {
@@ -307,15 +313,15 @@ Let's consider the following initial environment:
 }
 ```
 Set the environment as below
-```
+```shell
 PartiQL> !add_to_global_env { 'stores':[ { 'id': 5, 'books': [ {'title':'A', 'price': 5.0, 'categories':['sci-fi', 'action']}, {'title':'B', 'price': 2.0, 'categories':['sci-fi', 'comedy']}, {'title':'C', 'price': 7.0, 'categories':['action', 'suspense']}, {'title':'D', 'price': 9.0, 'categories':['suspense']} ] }, { 'id': 6, 'books': [ {'title':'A', 'price': 5.0, 'categories':['sci-fi', 'action']}, {'title':'E', 'price': 9.5, 'categories':['fantasy', 'comedy']}, {'title':'F', 'price': 10.0, 'categories':['history']} ] } ] }
 ```
 If we wanted to find all books *as their own rows* with a price greater than `7` we can use paths on the `FROM` for this:
 
+```shell
+PartiQL> SELECT * FROM stores[*].books[*] AS b WHERE b.price > 7;
 ```
-PartiQL> SELECT * FROM stores[*].books[*] AS b WHERE b.price > 7
-   |
-==='
+```ion
 <<
   {
     'title': 'D',
@@ -340,16 +346,14 @@ PartiQL> SELECT * FROM stores[*].books[*] AS b WHERE b.price > 7
     ]
   }
 >>
----
-OK!
 ```
 
 If you wanted to also de-normalize the store ID and title into the above rows:
 
+```shell
+PartiQL> SELECT s.id AS store, b.title AS title FROM stores AS s, @s.books AS b WHERE b.price > 7;
 ```
-PartiQL> SELECT s.id AS store, b.title AS title FROM stores AS s, @s.books AS b WHERE b.price > 7
-   |
-==='
+```ion
 <<
   {
     'store': 5,
@@ -364,21 +368,19 @@ PartiQL> SELECT s.id AS store, b.title AS title FROM stores AS s, @s.books AS b 
     'title': 'F'
   }
 >>
----
-OK!
 ```
 
 We can also use sub-queries with paths to predicate on sub-structure without changing the
 cardinality. So if we wanted to find all stores with books having prices greater than
 `9.5`
 
-```
+```shell
 PartiQL> SELECT * FROM stores AS s
    | WHERE EXISTS(
    |    SELECT * FROM @s.books AS b WHERE b.price > 9.5
-   | )
-   |
-==='
+   | );
+```
+```ion
 <<
   {
     'id': 6,
@@ -409,28 +411,28 @@ PartiQL> SELECT * FROM stores AS s
     ]
   }
 >>
----
-OK!
 ```
 
-# Reading/Writing Files
-The REPL provides the `read_file` function to stream data from a file. The files needs to be placed in the folder `cli`. 
-For example:
+## Reading/Writing Files
+The REPL provides the `read_file` function to stream data from a file. The files need to be placed in the folder `cli`, 
+and they must contain only a single Ion value (typically a list).
 
-Create a file called `data.ion` in the `cli` folder with the following contents
-```
-{ 'city': 'Seattle', 'state': 'WA' }
-{ 'city': 'Bellevue', 'state': 'WA' }
-{ 'city': 'Honolulu', 'state': 'HI' }
-{ 'city': 'Rochester', 'state': 'NY' }
+For example, create a file called `data.ion` in the `cli` folder with the following contents
+```ion
+[
+    { 'city': 'Seattle', 'state': 'WA' },
+    { 'city': 'Bellevue', 'state': 'WA' },
+    { 'city': 'Honolulu', 'state': 'HI' },
+    { 'city': 'Rochester', 'state': 'NY' }
+]
 ```
 
-Select the cities that are in `HI` and `NY` states
+To select the cities that are in `HI` and `NY` states:
 
+```shell
+PartiQL> SELECT city FROM read_file('data.ion') AS c, `["HI", "NY"]` AS s WHERE c.state = s;
 ```
-PartiQL> SELECT city FROM read_file('data.ion') AS c, `["HI", "NY"]` AS s WHERE c.state = s
-   | 
-==='
+```ion
 <<
   {
     'city': 'Honolulu'
@@ -439,34 +441,30 @@ PartiQL> SELECT city FROM read_file('data.ion') AS c, `["HI", "NY"]` AS s WHERE 
     'city': 'Rochester'
   }
 >>
-------
-OK!
 ```
 
 The REPL also has the capability to write files with the `write_file` function:
 
+```shell
+PartiQL> write_file('out.ion', SELECT * FROM _);
 ```
-PartiQL> write_file('out.ion', SELECT * FROM _)
-   | 
-==='
-true
-------
-OK!
-```
-A file called `out.ion` will be created in the `cli` directory with the following contents
-```
-{
-  city:Honolulu
-}
-{
-  city:Rochester
-}
+
+A file called `out.ion` will be created in the `cli` directory with the following contents:
+```ion
+[
+    {
+        city: Honolulu
+    },
+    {
+        city: Rochester
+    }
+]
 ```
 
 Functions and expressions can be used in the *global configuration* as well.  Consider
 the following `config.ion`:
 
-```
+```ion
 {
   'data': read_file('data.ion')
 }
@@ -474,30 +472,28 @@ the following `config.ion`:
 
 The `data` variable will now be bound to file containing Ion:
 
+```shell
+PartiQL> SELECT * FROM data;
 ```
-PartiQL> SELECT * FROM data
-   | 
-==='
+```ion
 <<
     {
-      'city: ;Seattle;,
-      'state: 'WA;
+      'city': 'Seattle',
+      'state': 'WA'
     },
     {
-      'city: 'Bellevue',
-      'state: 'WA'
+      'city': 'Bellevue',
+      'state': 'WA'
     },
     {
-      'city: 'Honolulu',
-      'state: 'HI'
+      'city': 'Honolulu',
+      'state': 'HI'
     },
     {
-      'city: 'Rochester',
-      'state: 'NY'
+      'city': 'Rochester',
+      'state': 'NY'
     }
 >>
-------
-OK!
 ```
 
 # TSV/CSV Data
@@ -506,18 +502,23 @@ The `read_file` function supports an optional struct argument to add additional 
 Parsing delimited files can be specified with the `type` field with a string `tsv` or `csv`
 to parse tab or comma separated values respectively.
 
-Create a file called `simple.csv` in the `cli` directory with the following contents
-```
+**Note**: One might ask how this differs from reading in Ion files. With Ion files, PartiQL expects a *single* value -- 
+typically a bag/list, but it can also be literals such as strings or integers. CSV & TSV rows, on the other hand, are 
+*always* interpreted as being contained within a bag.
+
+Create a file called `simple.csv` in the `cli` directory with the following contents:
+```text
 title,category,price
 harry potter,book,7.99
 dot,electronics,49.99
 echo,electronics,99.99
 ```
 
+You can read the file with the following CLI command:
+```shell
+PartiQL> read_file('simple.csv', {'type':'csv'});
 ```
-PartiQL> read_file('simple.csv', {'type':'csv'})
-   | 
-===' 
+```ion
 <<
     {
       _0:'title',
@@ -540,17 +541,15 @@ PartiQL> read_file('simple.csv', {'type':'csv'})
       _2:'99.99'
     }
 >>
----- 
-OK!
 ```
 
 The options `struct` can also define if the first row for delimited data should be the
 column names with the `header` field.
 
+```shell
+PartiQL> read_file('simple.csv', {'type': 'csv', 'header': true});
 ```
-PartiQL> read_file('simple.csv', {'type': 'csv', 'header': true})
-   | 
-===' 
+```ion
 <<
     {
       'title': 'harry potter',
@@ -568,16 +567,14 @@ PartiQL> read_file('simple.csv', {'type': 'csv', 'header': true})
       'price': '99.99'
     }
 >>
----- 
-OK!
 ```
 
-Auto conversion can also be specified numeric and timestamps in delimited data.
+Auto-conversion for numeric and timestamp values can also be specified as follows:
 
+```shell
+PartiQL> read_file('simple.csv', {'type':'csv', 'header':true, 'conversion':'auto'});
 ```
-PartiQL> read_file('simple.csv', {'type':'csv', 'header':true, 'conversion':'auto'})
-   | 
-===' 
+```ion
 <<
     {
       'title':' harry potter',
@@ -585,36 +582,29 @@ PartiQL> read_file('simple.csv', {'type':'csv', 'header':true, 'conversion':'aut
       'price': 7.99
     },
     {
-      'title: 'dot',
+      'title': 'dot',
       'category': 'electronics',
       'price': 49.99
     },
     {
-      'title: 'echo',
+      'title': 'echo',
       'category': 'electronics',
       'price': 99.99
     }
 >>
----- 
-OK!
 ```
 
 Writing TSV/CSV data can be done by specifying the optional `struct` argument to specify output
 format to the `write_file` function.  Similar to the `read_file` function, the `type` field
 can be used to specify `tsv`, `csv`, or `ion` output.
 
-```
-PartiQL> write_file('out.tsv', SELECT name, type FROM animals, {'type':'tsv'},)
-   | 
-===' 
-true
-----
-OK!
+```shell
+PartiQL> write_file('out.tsv', SELECT name, type FROM animals, {'type':'tsv'});
 ```
 
 This would produce the following file:
 
-```
+```shell
 $ cat out.tsv
 Kumo	dog
 Mochi	dog
@@ -624,18 +614,13 @@ Lilikoi	unicorn
 The options `struct` can also specify a `header` Boolean field to indicate whether the output
 TSV/CSV should have a header row.
 
-```
-PartiQL> write_file('out.tsv', SELECT name, type FROM animals, {'type':'tsv', 'header':true})
-   | 
-===' 
-true
-----
-OK!
+```shell
+PartiQL> write_file('out.tsv', SELECT name, type FROM animals, {'type':'tsv', 'header':true});
 ```
 
 Which would produce the following file:
 
-```
+```shell
 $ cat out.tsv
 name	type
 Kumo	dog
@@ -648,39 +633,39 @@ Lilikoi	unicorn
 The `read_file` function provides options to read other predefined CSV data formats. 
 For example, if a CSV file is exported from PostgreSQL, we can use the following command 
 to read the file: 
-```
-read_file('simple_postgresql.csv', {'type':'postgresql_csv'})
+```shell
+PartiQL> read_file('simple_postgresql.csv', {'type':'postgresql_csv'})
 ```
 Other available options for the argument `type` besides `postgresql_csv` are `excel_csv`, `mysql_csv`, and `postgresql_text`. 
 
 ## Customized CSV Data 
 The `read_file` function also provides options to read customized CSV data formats. 
 For example, we have a data file where the whitespace is the separator as shown below: 
-```
+```text
 title category price
 harry_potter book 7.99
 dot electronics 49.99
 echo electronics 99.99
 ```
 We can use the following command to read the file:
+```shell
+PartiQL> read_file('customized.csv', {'type':'customized', 'delimiter':' ', 'header':true})
 ```
-read_file('customized.csv', {'type':'customized', 'delimiter':' ', 'header':true})
-```
-All the available options for customized CSV files are shown as following: 
-1. Ignore empty lines: `'ignore_empty_line':true`
-2. Ignore spaces surrounding comma:  `'ignore_surrounding_space':true` 
-3. Trim leading and trailing blanks: `'trim':true` 
+All the available options for customized CSV files are as follows: 
+1. Ignore empty lines: `'ignore_empty_line': true`
+2. Ignore spaces surrounding comma:  `'ignore_surrounding_space': true` 
+3. Trim leading and trailing blanks: `'trim': true` 
 4. Set line breaker (only working with '\\r', '\\n' and '\\r\\n'): `'line_breaker: \n'`
-5. Set escape sign (single character only): `'escape':'\'`
-6. Set quote sign (single character only): `'quote':'"'`
-7. Set delimiter sign (single character only): `'delimiter':','`
+5. Set escape sign (single character only): `'escape': '\'`
+6. Set quote sign (single character only): `'quote': '"'`
+7. Set delimiter sign (single character only): `'delimiter': ','`
 
 ## Permissive Typing Mode
 By default, the CLI/REPL runs in [LEGACY](https://github.com/partiql/partiql-lang-kotlin/blob/main/lang/src/org/partiql/lang/eval/CompileOptions.kt#L53-L62)
 typing mode, which will give an evaluation time error in the case of data type mismatches.
 
-```
-(Running in the default LEGACY typing mode)
+```shell
+# Running in the default LEGACY typing mode
 PartiQL> 1 + 'foo';
 org.partiql.lang.eval.EvaluationException: ...
     ...
@@ -689,8 +674,8 @@ org.partiql.lang.eval.EvaluationException: ...
 Specifying the `-p` or `-permissive` flag will allow you to run PartiQL queries in [PERMISSIVE](https://github.com/partiql/partiql-lang-kotlin/blob/main/lang/src/org/partiql/lang/eval/CompileOptions.kt#L64-L73)
 typing mode, which will return `MISSING` in the case of data type mismatches.
 
-```
-(Running in PERMISSIVE typing mode)
+```shell
+# Running in PERMISSIVE typing mode
 PartiQL> 1 + 'foo';
 ==='
 MISSING
