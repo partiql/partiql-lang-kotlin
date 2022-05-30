@@ -73,7 +73,7 @@ internal class Cli(
 
     private fun runWithPartiQLInput() {
         val partiql =
-            compilerPipeline.compile(input.readAllBytes().toString(Charsets.UTF_8)).eval(EvaluationSession.standard())
+            compilerPipeline.compile(input.readBytes().toString(Charsets.UTF_8)).eval(EvaluationSession.standard())
         val bindings = getBindingsFromIonValue(partiql)
         val result = compilerPipeline.compile(query).eval(EvaluationSession.build { globals(bindings) })
         outputResult(result)
