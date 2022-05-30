@@ -41,7 +41,7 @@ internal class WriteFile(valueFactory: ExprValueFactory) : BaseFunction(valueFac
     companion object {
         @JvmStatic private val PRETTY_ION_WRITER: (ExprValue, OutputStream, IonStruct) -> Unit = { results, out, _ ->
             IonTextWriterBuilder.pretty().build(out).use { w ->
-                results.forEach { it.ionValue.writeTo(w) }
+                results.ionValue.writeTo(w)
             }
         }
     }

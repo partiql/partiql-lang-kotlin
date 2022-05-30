@@ -61,6 +61,11 @@ internal class Cli(
                 null -> Bindings.buildLazyBindings<ExprValue> {}.delegate(globals)
                 else -> getBindingsFromIonValue(valueFactory.newFromIonReader(reader))
             }
+            if (reader.next() != null) {
+                val message = "As of June 2022, PartiQL requires that Ion files contain only a single Ion value for " +
+                    "processing. Please consider wrapping multiple values in a list."
+                throw IllegalStateException(message)
+            }
             val result = compilerPipeline.compile(query).eval(EvaluationSession.build { globals(bindings) })
             outputResult(result)
         }

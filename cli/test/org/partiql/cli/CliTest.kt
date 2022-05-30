@@ -17,6 +17,7 @@ package org.partiql.cli
 import com.amazon.ion.system.IonSystemBuilder
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
 import org.junit.Before
 import org.junit.Test
 import org.partiql.lang.CompilerPipeline
@@ -84,6 +85,14 @@ class CliTest {
         val actual = subject.runAndOutput()
 
         assertAsIon("{a: 1}", actual)
+    }
+
+    @Test
+    fun runQueryOnBadValue() {
+        val subject = makeCli("SELECT * FROM input_data", "1 2")
+        assertThrows(IllegalStateException::class.java) {
+            subject.runAndOutput()
+        }
     }
 
     @Test
