@@ -1,11 +1,13 @@
-package org.partiql.lang.typesystem.interfaces.operator
+package org.partiql.lang.typesystem.interfaces.operator.operators
 
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.typesystem.interfaces.operator.OpAlias
+import org.partiql.lang.typesystem.interfaces.operator.SqlOperator
 import org.partiql.lang.typesystem.interfaces.type.SqlType
 import org.partiql.lang.typesystem.interfaces.type.SqlTypeWithParameters
 import org.partiql.lang.typesystem.interfaces.type.TypeParameters
 
-abstract class UnaryOp internal constructor() : SqlOperator {
+abstract class UnaryOp(override val operatorAlias: OpAlias) : SqlOperator {
     /**
      * Type of expression
      */
@@ -26,3 +28,7 @@ abstract class UnaryOp internal constructor() : SqlOperator {
      */
     abstract fun invoke(sourceValue: ExprValue, typeParametersOfExpr: TypeParameters): ExprValue
 }
+
+abstract class NegOp : UnaryOp(OpAlias.NEG)
+abstract class NotOp : UnaryOp(OpAlias.NOT)
+abstract class PosOp : UnaryOp(OpAlias.POS)
