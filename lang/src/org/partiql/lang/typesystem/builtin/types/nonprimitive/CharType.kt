@@ -5,7 +5,10 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.typesystem.builtin.types.primitive.IntType
 import org.partiql.lang.typesystem.builtin.types.primitive.StringType
 import org.partiql.lang.typesystem.builtin.types.valueFactory
-import org.partiql.lang.typesystem.interfaces.type.*
+import org.partiql.lang.typesystem.interfaces.type.BuiltInType
+import org.partiql.lang.typesystem.interfaces.type.ParametricType
+import org.partiql.lang.typesystem.interfaces.type.SqlType
+import org.partiql.lang.typesystem.interfaces.type.TypeParameters
 import org.partiql.lang.util.asIonInt
 
 object CharType : BuiltInType(), ParametricType {
