@@ -37,6 +37,7 @@ class CliTest {
     private val valueFactory = ExprValueFactory.standard(ion)
     private val output = ByteArrayOutputStream()
     private val testFile = File("test.ion")
+    private val partiqlBagAnnotation = "\$partiql_bag::"
 
     @Before
     fun setUp() {
@@ -83,8 +84,9 @@ class CliTest {
     fun runQueryOnSingleValue() {
         val subject = makeCli("SELECT * FROM input_data", "[{a: 1}]")
         val actual = subject.runAndOutput()
+        val expected = "$partiqlBagAnnotation[{a: 1}]"
 
-        assertAsIon("{a: 1}", actual)
+        assertAsIon(expected, actual)
     }
 
     @Test
@@ -99,33 +101,36 @@ class CliTest {
     fun runQueryOnMultipleValues() {
         val subject = makeCli("SELECT * FROM input_data", "[{a: 1},{a: 2},{a: 3}]")
         val actual = subject.runAndOutput()
+        val expected = "$partiqlBagAnnotation[{a: 1},{a: 2},{a: 3}]"
 
-        assertAsIon("{a: 1} {a: 2} {a: 3}", actual)
+        assertAsIon(expected, actual)
     }
 
     @Test
     fun caseInsensitiveBindingName() {
         val subject = makeCli("SELECT * FROM input_DAta", "[{a: 1}]")
         val actual = subject.runAndOutput()
+        val expected = "$partiqlBagAnnotation[{a: 1}]"
 
-        assertAsIon("{a: 1}", actual)
+        assertAsIon(expected, actual)
     }
 
     @Test
     fun withBinding() {
         val subject = makeCli("SELECT v, d FROM bound_value v, input_data d", "[{a: 1}]", mapOf("bound_value" to "{b: 1}").asBinding())
         val actual = subject.runAndOutput()
+        val expected = "$partiqlBagAnnotation[{v: {b: 1}, d: {a: 1}}]"
 
-        assertAsIon("{v: {b: 1}, d: {a: 1}}", actual)
+        assertAsIon(expected, actual)
     }
 
     @Test
     fun withShadowingBinding() {
         val subject = makeCli("SELECT * FROM input_data", "[{a: 1}]", mapOf("input_data" to "{b: 1}").asBinding())
-
         val actual = subject.runAndOutput()
+        val expected = "$partiqlBagAnnotation[{a: 1}]"
 
-        assertAsIon("{a: 1}", actual)
+        assertAsIon(expected, actual)
     }
 
     @Test
@@ -148,8 +153,9 @@ class CliTest {
     fun withIonTextOutput() {
         val subject = makeCli("SELECT * FROM input_data", "[{a: 1}, {b: 1}]", outputFormat = OutputFormat.ION_TEXT)
         val actual = subject.runAndOutput()
+        val expected = "$partiqlBagAnnotation[{a:1}\n,{b:1}\n]"
 
-        assertEquals("{a:1}\n{b:1}\n", actual)
+        assertAsIon(expected, actual)
     }
 
     @Test
@@ -161,16 +167,18 @@ class CliTest {
             outputFormat = OutputFormat.ION_TEXT
         ).run()
         val actual = testFile.bufferedReader().use { it.readText() }
+        val expected = "$partiqlBagAnnotation[{a:1}\n,{b:1}\n]"
 
-        assertEquals("{a:1}\n{b:1}\n", actual)
+        assertAsIon(expected, actual)
     }
 
     @Test
     fun withoutInput() {
         val subject = makeCli("1")
         val actual = subject.runAndOutput()
+        val expected = "1"
 
-        assertEquals("1\n", actual)
+        assertAsIon(expected, actual)
     }
 
     @Test(expected = EvaluationException::class)

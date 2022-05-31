@@ -14,7 +14,6 @@
 
 package org.partiql.cli
 
-import com.amazon.ion.IonWriter
 import com.amazon.ion.system.IonReaderBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
 import org.partiql.lang.CompilerPipeline
@@ -22,7 +21,6 @@ import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
-import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.delegate
 import org.partiql.lang.util.ConfigurableExprValueFormatter
 import java.io.InputStream
@@ -90,23 +88,12 @@ internal class Cli(
 
     private fun outputResult(result: ExprValue) {
         when (outputFormat) {
-            OutputFormat.ION_TEXT -> ionTextWriterBuilder.build(output).use {
-                printIon(it, result)
-                output.write(System.lineSeparator().toByteArray(Charsets.UTF_8))
-            }
-            OutputFormat.ION_BINARY -> valueFactory.ion.newBinaryWriter(output).use { printIon(it, result) }
+            OutputFormat.ION_TEXT -> ionTextWriterBuilder.build(output).use { result.ionValue.writeTo(it) }
+            OutputFormat.ION_BINARY -> valueFactory.ion.newBinaryWriter(output).use { result.ionValue.writeTo(it) }
             OutputFormat.PARTIQL -> OutputStreamWriter(output).use { it.write(result.toString()) }
             OutputFormat.PARTIQL_PRETTY -> OutputStreamWriter(output).use {
                 ConfigurableExprValueFormatter.pretty.formatTo(result, it)
             }
-        }
-    }
-
-    private fun printIon(ionWriter: IonWriter, value: ExprValue) {
-        when (value.type) {
-            // writes top level bags as a datagram
-            ExprValueType.BAG -> value.iterator().forEach { v -> v.ionValue.writeTo(ionWriter) }
-            else -> value.ionValue.writeTo(ionWriter)
         }
     }
 }
