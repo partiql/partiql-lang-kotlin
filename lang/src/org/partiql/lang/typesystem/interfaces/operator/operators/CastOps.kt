@@ -7,7 +7,7 @@ import org.partiql.lang.typesystem.interfaces.type.SqlType
 import org.partiql.lang.typesystem.interfaces.type.SqlTypeWithParameters
 import org.partiql.lang.typesystem.interfaces.type.TypeParameters
 
-abstract class AbstractCastOp(override val operatorAlias: OpAlias) : SqlOperator {
+sealed class AbstractCastOp(override val operatorAlias: OpAlias) : SqlOperator {
     /**
      * Type of the source expression
      */

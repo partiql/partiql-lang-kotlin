@@ -7,7 +7,7 @@ import org.partiql.lang.typesystem.interfaces.type.SqlType
 import org.partiql.lang.typesystem.interfaces.type.SqlTypeWithParameters
 import org.partiql.lang.typesystem.interfaces.type.TypeParameters
 
-abstract class UnaryOp(override val operatorAlias: OpAlias) : SqlOperator {
+sealed class UnaryOp(override val operatorAlias: OpAlias) : SqlOperator {
     /**
      * Type of expression
      */
