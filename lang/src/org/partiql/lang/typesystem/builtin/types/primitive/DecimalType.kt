@@ -3,10 +3,7 @@ package org.partiql.lang.typesystem.builtin.types.primitive
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.typesystem.builtin.types.valueFactory
-import org.partiql.lang.typesystem.interfaces.type.BuiltInType
-import org.partiql.lang.typesystem.interfaces.type.ParametricType
-import org.partiql.lang.typesystem.interfaces.type.SqlType
-import org.partiql.lang.typesystem.interfaces.type.ValueWithType
+import org.partiql.lang.typesystem.interfaces.type.*
 import org.partiql.lang.util.asIonInt
 
 object DecimalType : BuiltInType(), ParametricType {
@@ -29,7 +26,7 @@ object DecimalType : BuiltInType(), ParametricType {
         IntType to valueFactory.newInt(0)
     )
 
-    override fun validateParameters(parameters: List<ValueWithType>) {
+    override fun validateParameters(parameters: TypeParameters) {
         // Check if value of precision is larger than or equal to 0
         val precision = parameters[0]
         val valueOfPrecision = precision.value.ionValue.asIonInt().longValue()

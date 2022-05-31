@@ -3,10 +3,7 @@ package org.partiql.lang.typesystem.builtin.types.nonprimitive
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.typesystem.builtin.types.primitive.TimeType
-import org.partiql.lang.typesystem.interfaces.type.BuiltInType
-import org.partiql.lang.typesystem.interfaces.type.ParametricType
-import org.partiql.lang.typesystem.interfaces.type.SqlType
-import org.partiql.lang.typesystem.interfaces.type.ValueWithType
+import org.partiql.lang.typesystem.interfaces.type.*
 
 object TimeWithTimeZoneType : BuiltInType(), ParametricType {
     override val typeAliases: List<String>
@@ -31,7 +28,7 @@ object TimeWithTimeZoneType : BuiltInType(), ParametricType {
     /**
      * Similar to [TimeType]
      */
-    override fun validateParameters(parameters: List<ValueWithType>) {
+    override fun validateParameters(parameters: TypeParameters) {
         TimeType.validateParameters(parameters)
     }
 }
