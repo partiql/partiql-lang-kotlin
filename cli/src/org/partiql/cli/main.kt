@@ -32,6 +32,7 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.syntax.SqlParser
+import org.partiql.shell.Shell
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -179,7 +180,7 @@ fun main(args: Array<String>) = try {
     if (optionSet.has(queryOpt)) {
         runCli(environment, optionSet, compilerPipeline)
     } else {
-        runRepl(environment, compilerPipeline)
+        runShell(environment, compilerPipeline)
     }
 } catch (e: OptionException) {
     System.err.println("${e.message}\n")
@@ -190,8 +191,8 @@ fun main(args: Array<String>) = try {
     exitProcess(1)
 }
 
-private fun runRepl(environment: Bindings<ExprValue>, compilerPipeline: CompilerPipeline) {
-    Repl(valueFactory, System.`in`, System.out, parser, compilerPipeline, environment).run()
+private fun runShell(environment: Bindings<ExprValue>, compilerPipeline: CompilerPipeline) {
+    Shell(valueFactory, System.out, parser, compilerPipeline, environment).start()
 }
 
 private fun runCli(environment: Bindings<ExprValue>, optionSet: OptionSet, compilerPipeline: CompilerPipeline) {
