@@ -7,11 +7,12 @@ import org.partiql.lang.eval.ExprValueType
  */
 interface SqlType {
     /**
-     * Type name
+     * Type aliases
      *
-     * A sql type must have a unique type name within a plugin
+     * A sql type can have multiple type aliases. Within one plugin,
+     * one type alias can only be used once across types
      */
-    val typeName: String
+    val typeAliases: List<String>
 
     /**
      * Run-time type
@@ -19,7 +20,11 @@ interface SqlType {
     val exprValueType: ExprValueType
 
     /**
-     * Its parent type in PartiQL. Null value means no parent type.
+     * Its parent sql type. Null value means no parent sql type
+     *
+     * When we define a sql function or operator to take arguments of
+     * a certain type, its subtypes are also considered as valid as
+     * the argument type
      */
     val parentType: SqlType?
 
