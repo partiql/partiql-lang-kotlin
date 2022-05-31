@@ -754,9 +754,7 @@ internal class EvaluatingCompiler(
         val rightOp = args[1]
         fun PartiqlAst.Expr.Struct.isSingleValueOptimizedStruct() = this.fields.size == 1 && this.fields[0].second is PartiqlAst.Expr.Lit
 
-        fun isOptimizedCase(values: List<PartiqlAst.Expr>): Boolean = values.all {
-            (it is PartiqlAst.Expr.Lit && !it.value.isNull) || (it is PartiqlAst.Expr.Struct && it.isSingleValueOptimizedStruct())
-        }
+        fun isOptimizedCase(values: List<PartiqlAst.Expr>): Boolean = values.all { it is PartiqlAst.Expr.Lit && !it.value.isNull }
 
         fun optimizedCase(values: List<PartiqlAst.Expr>): ThunkEnv {
             // Put all the literals in the sequence into a pre-computed map to be checked later by the thunk.
@@ -766,13 +764,6 @@ internal class EvaluatingCompiler(
             // NOTE: we cannot use a [HashSet<>] here because [ExprValue] does not implement [Object.hashCode] or
             // [Object.equals].
             val precomputedLiteralsMap = values
-                .asSequence()
-                .map { value ->
-                    when (value) {
-                        is PartiqlAst.Expr.Struct -> if (value.isSingleValueOptimizedStruct()) value.fields[0].second else value
-                        else -> value
-                    }
-                }
                 .filterIsInstance<PartiqlAst.Expr.Lit>()
                 .mapTo(TreeSet<ExprValue>(DEFAULT_COMPARATOR)) {
                     valueFactory.newFromIonValue(
