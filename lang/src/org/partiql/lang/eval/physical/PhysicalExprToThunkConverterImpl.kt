@@ -90,6 +90,7 @@ import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.types.UnsupportedTypeCheckException
 import org.partiql.lang.types.toTypedOpParameter
+import org.partiql.lang.util.asIonStruct
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.codePointSequence
 import org.partiql.lang.util.div
@@ -652,6 +653,12 @@ internal class PhysicalExprToThunkConverterImpl(
                                 when (it.type) {
                                     ExprValueType.NULL -> nullSeen = true
                                     ExprValueType.MISSING -> missingSeen = true
+                                    // Allow comparison with 1-pair structs to remain compatible SQL-92
+                                    ExprValueType.STRUCT -> {
+                                        if (it.ionValue.asIonStruct().size() != 1) return@forEach
+                                        if (it.iterator().next().exprEquals(leftValue))
+                                            return@thunkEnvOperands valueFactory.newBoolean(true)
+                                    }
                                     // short-circuit to TRUE on the first matching value
                                     else -> if (it.exprEquals(leftValue)) {
                                         return@thunkEnvOperands valueFactory.newBoolean(true)
