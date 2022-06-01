@@ -1,11 +1,13 @@
-package org.partiql.lang.typesystem.interfaces.operator
+package org.partiql.lang.typesystem.interfaces.operator.operators
 
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.typesystem.interfaces.operator.OpAlias
+import org.partiql.lang.typesystem.interfaces.operator.SqlOperator
 import org.partiql.lang.typesystem.interfaces.type.SqlType
 import org.partiql.lang.typesystem.interfaces.type.SqlTypeWithParameters
 import org.partiql.lang.typesystem.interfaces.type.TypeParameters
 
-abstract class AbstractCastOp internal constructor() : SqlOperator {
+sealed class AbstractCastOp(override val operatorAlias: OpAlias) : SqlOperator {
     /**
      * Type of the source expression
      */
@@ -39,3 +41,7 @@ abstract class AbstractCastOp internal constructor() : SqlOperator {
         val parametersOfTargetType: TypeParameters
     )
 }
+
+abstract class CanCastOp : AbstractCastOp(OpAlias.CAN_CAST)
+abstract class CanLossCastOp : AbstractCastOp(OpAlias.CAN_LOSSLESS_CAST)
+abstract class CastOp : AbstractCastOp(OpAlias.CAST)
