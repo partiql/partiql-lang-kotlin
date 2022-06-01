@@ -3,7 +3,9 @@ package org.partiql.lang.util
 import com.amazon.ion.system.IonTextWriterBuilder
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.eval.dateValue
 import org.partiql.lang.eval.name
+import org.partiql.lang.eval.timeValue
 
 private const val MISSING_STRING = "MISSING"
 private const val NULL_STRING = "NULL"
@@ -42,8 +44,8 @@ class ConfigurableExprValueFormatter(private val config: Configuration) : ExprVa
                 ExprValueType.BOOL -> out.append(value.scalar.booleanValue().toString())
                 ExprValueType.INT, ExprValueType.DECIMAL -> out.append(value.scalar.numberValue().toString())
                 ExprValueType.STRING -> out.append("'${value.scalar.stringValue()}'")
-                ExprValueType.DATE -> out.append(value.scalar.dateValue().toString())
-                ExprValueType.TIME -> out.append(value.scalar.timeValue().toString())
+                ExprValueType.DATE -> out.append("DATE '${value.dateValue()}'")
+                ExprValueType.TIME -> out.append("TIME '${value.timeValue()}'")
 
                 // fallback to an Ion literal for all types that don't have a native PartiQL representation
                 ExprValueType.FLOAT, ExprValueType.TIMESTAMP, ExprValueType.SYMBOL,
