@@ -207,20 +207,4 @@ class WriteFileTest {
         assertAsIon(TRUE_STRING, cliResponse)
         Assert.assertEquals(ion.loader.load(expected), ion.loader.load(readFileFromPath(filePath)))
     }
-
-    @Test
-    fun integration_fail_nestedValueBag() {
-        // Arrange
-        val filePath = createRandomTmpFilePath()
-        val query = "write_file('$filePath', SELECT VALUE a.b FROM input_data)"
-        val input = "{a: {b: << 1, 2 >>}}"
-        val expected = "<< 1, 2 >>"
-
-        // Act
-        val cliResponse =
-            makeCliAndGetResult(query = query, input = input, output = outputStream, compilerPipeline = pipeline)
-
-        // Assert
-        assertAsIon(FALSE_STRING, cliResponse)
-    }
 }
