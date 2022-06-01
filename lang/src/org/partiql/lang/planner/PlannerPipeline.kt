@@ -61,7 +61,7 @@ import org.partiql.lang.types.CustomType
  *
  * - The passes may throw any exception, however these will always abort query planning and bypass the user-friendly
  * error reporting ([ProblemHandler]) mechanisms used for
- * [syntax and semantic errors](https://www.educative.io/edpresso/what-is-the-difference-between-syntax-and-semantic-errors))
+ * [syntax and semantic errors](https://www.educative.io/edpresso/what-is-the-difference-between-syntax-and-semantic-errors)
  * - Use the [ProblemHandler] to report semantic errors and warnings in the query to the query author.
  *
  * @see [ProblemHandler.handleProblem]
