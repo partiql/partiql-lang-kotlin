@@ -60,7 +60,7 @@ internal class Cli(
                 else -> getBindingsFromIonValue(valueFactory.newFromIonReader(reader))
             }
             if (reader.next() != null) {
-                val message = "As of June 2022, PartiQL requires that Ion files contain only a single Ion value for " +
+                val message = "As of v0.7.0, PartiQL requires that Ion files contain only a single Ion value for " +
                     "processing. Please consider wrapping multiple values in a list."
                 throw IllegalStateException(message)
             }
@@ -70,9 +70,9 @@ internal class Cli(
     }
 
     private fun runWithPartiQLInput() {
-        val partiql =
+        val inputEnvironment =
             compilerPipeline.compile(input.readBytes().toString(Charsets.UTF_8)).eval(EvaluationSession.standard())
-        val bindings = getBindingsFromIonValue(partiql)
+        val bindings = getBindingsFromIonValue(inputEnvironment)
         val result = compilerPipeline.compile(query).eval(EvaluationSession.build { globals(bindings) })
         outputResult(result)
     }

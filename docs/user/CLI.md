@@ -23,7 +23,7 @@ Option                                Description
 -e, --environment <File>              initial global environment (optional)
 -h, --help                            prints this help
 -i, --input <File>                    input file, requires the query option (optional)
--if, --input-format <InputFormat>     input format, requires the query option -- [PARTIQL (default), ION]
+-if, --input-format <InputFormat>     input format, requires the query option -- [ION (default), PARTIQL]
 -o, --output <File>                   output file, requires the query option (default: stdout)
 -of, --output-format <OutputFormat>   output format, requires the query option [PARTIQL (default), PARTIQL_PRETTY, ION_TEXT, ION_BINARY]
 -p, --permissive                      run the PartiQL query in PERMISSIVE typing mode
@@ -80,7 +80,7 @@ At this point, you can type in valid SQL/PartiQL and press enter *twice* to exec
 ```shell
 PartiQL> SELECT id FROM `[{id: 5, name:"bill"}, {id: 6, name:"bob"}]` WHERE name = 'bob';
 ```
-```ion
+```partiql
 <<
   {
     'id': 6
@@ -92,7 +92,7 @@ Alternatively, you can denote the end of a query using a semi-colon:
 ```shell
 PartiQL> SELECT id FROM `[{id: 5, name:"bill"}, {id: 6, name:"bob"}]` WHERE name = 'bob';
 ```
-```ion
+```partiql
 <<
   {
     'id': 6
@@ -106,7 +106,7 @@ expressions based on the last one.
 ```shell
 PartiQL> SELECT id + 4 AS name FROM _;
 ```
-```ion
+```partiql
 <<
   {
     'name': 10
@@ -157,7 +157,7 @@ single `struct` containing the initial *global environment*.
 
 For example, a file named `config.env` contains the following:
 
-```ion
+```partiql
 {
   'animals':[
     {'name': 'Kumo', 'type': 'dog'},
@@ -192,7 +192,7 @@ Expressions can then use the environment defined by `config.env`:
 ```shell
 PartiQL> SELECT name, type, is_magic FROM animals, types WHERE type = id
 ```
-```ion
+```partiql
 <<
   {
     'name': 'Kumo',
@@ -217,7 +217,7 @@ To see the current REPL environment you can use `!global_env`, for example for t
 ```shell
 PartiQL> !global_env;
 ```
-```ion
+```partiql
 {
   'types': [
     {
@@ -256,7 +256,7 @@ example below replaces the value bound to `types`
 ```shell
 PartiQL> !add_to_global_env {'types': []};
 ```
-```ion
+```partiql
 {
   'types': []
 }
@@ -265,7 +265,7 @@ Let's look at what has changed:
 ```shell
 PartiQL> !global_env
 ```
-```ion
+```partiql
 {
   'types': [],
   'animals': [
@@ -289,7 +289,7 @@ PartiQL> !global_env
 
 Let's consider the following initial environment:
 
-```ion
+```partiql
 {
   'stores':[
     {
@@ -321,7 +321,7 @@ If we wanted to find all books *as their own rows* with a price greater than `7`
 ```shell
 PartiQL> SELECT * FROM stores[*].books[*] AS b WHERE b.price > 7;
 ```
-```ion
+```partiql
 <<
   {
     'title': 'D',
@@ -353,7 +353,7 @@ If you wanted to also de-normalize the store ID and title into the above rows:
 ```shell
 PartiQL> SELECT s.id AS store, b.title AS title FROM stores AS s, @s.books AS b WHERE b.price > 7;
 ```
-```ion
+```partiql
 <<
   {
     'store': 5,
@@ -380,7 +380,7 @@ PartiQL> SELECT * FROM stores AS s
    |    SELECT * FROM @s.books AS b WHERE b.price > 9.5
    | );
 ```
-```ion
+```partiql
 <<
   {
     'id': 6,
@@ -432,7 +432,7 @@ To select the cities that are in `HI` and `NY` states:
 ```shell
 PartiQL> SELECT city FROM read_file('data.ion') AS c, `["HI", "NY"]` AS s WHERE c.state = s;
 ```
-```ion
+```partiql
 <<
   {
     'city': 'Honolulu'
@@ -451,7 +451,7 @@ PartiQL> write_file('out.ion', SELECT * FROM _);
 
 A file called `out.ion` will be created in the `cli` directory with the following contents:
 ```ion
-[
+$partiql_bag::[
     {
         city: Honolulu
     },
@@ -460,6 +460,9 @@ A file called `out.ion` will be created in the `cli` directory with the followin
     }
 ]
 ```
+
+Notice that PartiQL added the annotation of `$partiql_bag` to the Ion list. This is how Ion represents PartiQL 
+`BAGs`.
 
 Functions and expressions can be used in the *global configuration* as well.  Consider
 the following `config.ion`:
@@ -475,7 +478,7 @@ The `data` variable will now be bound to file containing Ion:
 ```shell
 PartiQL> SELECT * FROM data;
 ```
-```ion
+```partiql
 <<
     {
       'city': 'Seattle',
@@ -518,7 +521,7 @@ You can read the file with the following CLI command:
 ```shell
 PartiQL> read_file('simple.csv', {'type':'csv'});
 ```
-```ion
+```partiql
 <<
     {
       _0:'title',
@@ -549,7 +552,7 @@ column names with the `header` field.
 ```shell
 PartiQL> read_file('simple.csv', {'type': 'csv', 'header': true});
 ```
-```ion
+```partiql
 <<
     {
       'title': 'harry potter',
@@ -574,7 +577,7 @@ Auto-conversion for numeric and timestamp values can also be specified as follow
 ```shell
 PartiQL> read_file('simple.csv', {'type':'csv', 'header':true, 'conversion':'auto'});
 ```
-```ion
+```partiql
 <<
     {
       'title':' harry potter',

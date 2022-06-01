@@ -79,7 +79,7 @@ internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFact
                 else -> valueFactory.newFromIonReader(reader)
             }
             if (reader.next() != null) {
-                val message = "As of June 2022, PartiQL requires that Ion files contain only a single Ion value for " +
+                val message = "As of v0.7.0, PartiQL requires that Ion files contain only a single Ion value for " +
                     "processing. Please consider wrapping multiple values in a list."
                 throw IllegalStateException(message)
             }

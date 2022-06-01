@@ -96,7 +96,7 @@ PartiQL> SELECT * FROM [1,2,3]
 
 and press `ENTER` *twice*. The output should look similar to: 
 
-```ion
+```partiql
 <<
   {
     '_1': 1
@@ -137,7 +137,7 @@ the **special** REPL command `!global_env`, i.e.,
 ```shell
 PartiQL> !global_env;
 ```
-```ion
+```partiql
 {
   'hr': {
     'employees': <<
