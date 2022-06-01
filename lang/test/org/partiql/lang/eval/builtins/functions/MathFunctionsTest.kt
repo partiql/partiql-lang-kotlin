@@ -39,6 +39,9 @@ class MathFunctionsTest : EvaluatorTestBase() {
             ExprFunctionTestCase("ceiling(`1.1`)", "2"),
             ExprFunctionTestCase("ceiling(1.1e0)", "2"),
             ExprFunctionTestCase("ceiling(-42.8)", "-42"),
+            ExprFunctionTestCase("ceil(`+inf`)", "+inf"),
+            ExprFunctionTestCase("ceil(`-inf`)", "-inf"),
+            ExprFunctionTestCase("ceil(`nan`)", "nan"),
             ExprFunctionTestCase("floor(1)", "1"),
             ExprFunctionTestCase("floor(1.0)", "1"),
             ExprFunctionTestCase("floor(`1`)", "1"),
@@ -47,37 +50,31 @@ class MathFunctionsTest : EvaluatorTestBase() {
             ExprFunctionTestCase("floor(`1.1`)", "1"),
             ExprFunctionTestCase("floor(1.1e0)", "1"),
             ExprFunctionTestCase("floor(-42.8)", "-43"),
+            ExprFunctionTestCase("floor(`+inf`)", "+inf"),
+            ExprFunctionTestCase("floor(`-inf`)", "-inf"),
+            ExprFunctionTestCase("floor(`nan`)", "nan"),
         )
     }
 
     // Error test cases: Invalid argument type
     @Test
     fun sizeInvalidArgTypeTest() {
-        // TODO remove once #551 is merged
-        val numeric = StaticType.unionOf(
-            StaticType.INT2,
-            StaticType.INT4,
-            StaticType.INT8,
-            StaticType.INT,
-            StaticType.FLOAT,
-            StaticType.DECIMAL
-        )
         checkInvalidArgType(
             funcName = "ceil",
             args = listOf(
-                Argument(1, numeric, ")")
+                Argument(1, StaticType.NUMERIC, ")")
             )
         )
         checkInvalidArgType(
             funcName = "ceiling",
             args = listOf(
-                Argument(1, numeric, ")")
+                Argument(1, StaticType.NUMERIC, ")")
             )
         )
         checkInvalidArgType(
             funcName = "floor",
             args = listOf(
-                Argument(1, numeric, ")")
+                Argument(1, StaticType.NUMERIC, ")")
             )
         )
     }

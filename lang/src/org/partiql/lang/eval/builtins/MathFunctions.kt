@@ -5,50 +5,59 @@ import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.numberValue
-import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
-import kotlin.math.ceil
-import kotlin.math.floor
+import java.lang.Double.NEGATIVE_INFINITY
+import java.lang.Double.NaN
+import java.lang.Double.POSITIVE_INFINITY
 
 /**
  * A place to keep supported mathematical functions. We are missing many in comparison to PostgresQL.
- * https://www.postgresql.org/docs/9.5/functions-math.html
+ * https://www.postgresql.org/docs/14/functions-math.html
  */
 object MathFunctions {
 
     fun create(valueFactory: ExprValueFactory): List<ExprFunction> = listOf(
-        UnaryDoubleToInt("ceil", valueFactory) { ceil(it).toInt() },
-        UnaryDoubleToInt("ceiling", valueFactory) { ceil(it).toInt() },
-        UnaryDoubleToInt("floor", valueFactory) { floor(it).toInt() },
+        UnaryNumeric("ceil", valueFactory) { ceil(it) },
+        UnaryNumeric("ceiling", valueFactory) { ceil(it) },
+        UnaryNumeric("floor", valueFactory) { floor(it) },
     )
 }
-
-private val numericTypes =
-    setOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.FLOAT, StaticType.DECIMAL)
 
 /**
  * A convenience class to wrap `(Double) -> Int` as a PartiQL ExprFunction
  *
  * @property identifier Symbol for the given function
- * @property valueFactory
+ * @property valueFactory Used to create the output ExprValue
  * @property function Function to invoke for the given signature
- * @constructor
  */
-private class UnaryDoubleToInt(
+private class UnaryNumeric(
     private val identifier: String,
     private val valueFactory: ExprValueFactory,
-    private val function: (Double) -> Int,
+    private val function: (Number) -> Number,
 ) : ExprFunction {
 
     override val signature = FunctionSignature(
         identifier,
-        listOf(AnyOfType(numericTypes)),
-        returnType = StaticType.INT,
+        listOf(StaticType.NUMERIC),
+        returnType = StaticType.NUMERIC,
     )
 
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
         val v = required.first().numberValue()
-        return valueFactory.newInt(function.invoke(v.toDouble()))
+        return when (val result = function.invoke(v)) {
+            POSITIVE_INFINITY, NEGATIVE_INFINITY, NaN -> valueFactory.newFloat(result.toDouble())
+            else -> valueFactory.newInt(result.toInt())
+        }
     }
+}
+
+private fun ceil(n: Number): Number = when (n) {
+    POSITIVE_INFINITY, NEGATIVE_INFINITY, NaN -> n
+    else -> kotlin.math.ceil(n.toDouble())
+}
+
+private fun floor(n: Number): Number = when (n) {
+    POSITIVE_INFINITY, NEGATIVE_INFINITY, NaN -> n
+    else -> kotlin.math.floor(n.toDouble())
 }
