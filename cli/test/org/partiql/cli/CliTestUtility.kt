@@ -16,6 +16,7 @@ import java.io.OutputStream
 fun makeCliAndGetResult(
     query: String,
     input: String? = null,
+    inputFormat: InputFormat = InputFormat.ION,
     bindings: Bindings<ExprValue> = Bindings.empty(),
     outputFormat: OutputFormat = OutputFormat.ION_TEXT,
     output: OutputStream = ByteArrayOutputStream(),
@@ -26,7 +27,7 @@ fun makeCliAndGetResult(
     val cli = Cli(
         valueFactory,
         input?.byteInputStream(Charsets.UTF_8) ?: EmptyInputStream(),
-        InputFormat.ION,
+        inputFormat,
         output,
         outputFormat,
         compilerPipeline,
@@ -50,3 +51,7 @@ fun assertAsIon(expected: String, actual: String) {
  */
 fun assertAsIon(ion: IonSystem, expected: String, actual: String) =
     Assert.assertEquals(ion.loader.load(expected), ion.loader.load(actual))
+
+fun String.singleIonExprValue(ion: IonSystem = IonSystemBuilder.standard().build(), valueFactory: ExprValueFactory = ExprValueFactory.standard(ion)) = valueFactory.newFromIonValue(ion.singleValue(this))
+fun Map<String, String>.asBinding() =
+    Bindings.ofMap(this.mapValues { it.value.singleIonExprValue() })
