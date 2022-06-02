@@ -820,8 +820,9 @@ internal class EvaluatingCompiler(
                                     ExprValueType.MISSING -> missingSeen = true
                                     // Allow comparison with 1-pair structs to remain compatible SQL-92
                                     ExprValueType.STRUCT -> {
-                                        if (it.ionValue.asIonStruct().size() == 1 && it.iterator().next().exprEquals(leftValue))
+                                        if (it.ionValue.asIonStruct().size() == 1 && it.iterator().next().exprEquals(leftValue)) {
                                             return@thunkEnvOperands valueFactory.newBoolean(true)
+                                        }
                                     }
                                     // short-circuit to TRUE on the first matching value
                                     else -> if (it.exprEquals(leftValue)) {
