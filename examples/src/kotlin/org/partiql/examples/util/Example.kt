@@ -17,4 +17,13 @@ abstract class Example(val out: PrintStream) {
         out.println(label)
         out.println("    ${data.replace("\n", "\n    ")}")
     }
+
+    fun print(label: String, bindings: Map<String, ExprValue>) {
+        val data = buildString {
+            bindings.forEach { (k, v) ->
+                append(k).append(" => ").append(v).append('\n')
+            }
+        }.trimEnd()
+        print(label, data)
+    }
 }

@@ -10,7 +10,7 @@ class EvaluationWithBindingsTest : BaseExampleTest() {
         |PartiQL query:
         |    'Hello, ' || user_name
         |global variables:
-        |    user_name => userName
+        |    user_name => 'Homer Simpson'
         |result
         |    'Hello, Homer Simpson'
         |

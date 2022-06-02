@@ -1,3 +1,17 @@
+/*
+ * Copyright 2022 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *      http://aws.amazon.com/apache2.0/
+ *
+ * or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
+ */
+
 package org.partiql.examples;
 
 import com.amazon.ion.IonDatagram;
@@ -7,12 +21,10 @@ import com.amazon.ion.IonWriter;
 import com.amazon.ion.system.IonReaderBuilder;
 import com.amazon.ion.system.IonSystemBuilder;
 import com.amazon.ion.system.IonTextWriterBuilder;
-
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
-
 import org.jetbrains.annotations.NotNull;
 import org.partiql.examples.util.Example;
 import org.partiql.lang.CompilerPipeline;
@@ -24,9 +36,12 @@ import org.partiql.lang.eval.Expression;
 import java.io.IOException;
 import java.io.PrintStream;
 
-public class S3Example extends Example {
+/**
+ * This example executes a PartiQL query against ION data stored as an object in S3.
+ */
+public class S3JavaExample extends Example {
 
-    public S3Example(@NotNull PrintStream out) {
+    public S3JavaExample(@NotNull PrintStream out) {
         super(out);
     }
 

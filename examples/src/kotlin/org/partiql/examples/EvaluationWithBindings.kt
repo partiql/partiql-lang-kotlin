@@ -24,8 +24,9 @@ class EvaluationWithBindings(out: PrintStream) : Example(out) {
 
         // [Bindings.ofMap] can be used to construct a [Bindings] instance of
         // bindings with previously materialized values.
-        val globalVariables = Bindings.ofMap(mapOf("user_name" to usernameValue))
-        print("global variables:", "user_name => userName")
+        val globals = mapOf("user_name" to usernameValue)
+        val globalVariables = Bindings.ofMap(globals)
+        print("global variables:", globals)
 
         // Include globalVariables when building the EvaluationSession.
         val session = EvaluationSession.build { globals(globalVariables) }
