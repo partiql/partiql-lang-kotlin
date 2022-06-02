@@ -22,7 +22,8 @@ fun makeCliAndGetResult(
     output: OutputStream = ByteArrayOutputStream(),
     ion: IonSystem = IonSystemBuilder.standard().build(),
     compilerPipeline: CompilerPipeline = CompilerPipeline.standard(ion),
-    valueFactory: ExprValueFactory = ExprValueFactory.standard(ion)
+    valueFactory: ExprValueFactory = ExprValueFactory.standard(ion),
+    wrapIon: Boolean = false
 ): String {
     val cli = Cli(
         valueFactory,
@@ -32,7 +33,8 @@ fun makeCliAndGetResult(
         outputFormat,
         compilerPipeline,
         bindings,
-        query
+        query,
+        wrapIon
     )
     cli.run()
     return output.toString()

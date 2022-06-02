@@ -38,8 +38,15 @@ internal class Cli(
     private val outputFormat: OutputFormat,
     private val compilerPipeline: CompilerPipeline,
     private val globals: Bindings<ExprValue>,
-    private val query: String
+    private val query: String,
+    private val wrapIon: Boolean
 ) : PartiQLCommand {
+
+    init {
+        if (wrapIon && inputFormat != InputFormat.ION) {
+            throw IllegalArgumentException("Specifying --wrap-ion requires that the input format be ${InputFormat.ION}.")
+        }
+    }
 
     companion object {
         val ionTextWriterBuilder: IonTextWriterBuilder = IonTextWriterBuilder.standard()
@@ -54,6 +61,13 @@ internal class Cli(
     }
 
     private fun runWithIonInput() {
+        when (wrapIon) {
+            true -> runWithIonInputWrapped()
+            false -> runWithIonInputDefault()
+        }
+    }
+
+    private fun runWithIonInputDefault() {
         IonReaderBuilder.standard().build(input).use { reader ->
             val bindings = when (reader.next()) {
                 null -> Bindings.buildLazyBindings<ExprValue> {}.delegate(globals)
@@ -61,9 +75,20 @@ internal class Cli(
             }
             if (reader.next() != null) {
                 val message = "As of v0.7.0, PartiQL requires that Ion files contain only a single Ion value for " +
-                    "processing. Please consider wrapping multiple values in a list."
+                    "processing. Please consider wrapping multiple values in a list, or consider passing in the " +
+                    "--wrap-ion flag. Use --help for more information."
                 throw IllegalStateException(message)
             }
+            val result = compilerPipeline.compile(query).eval(EvaluationSession.build { globals(bindings) })
+            outputResult(result)
+        }
+    }
+
+    private fun runWithIonInputWrapped() {
+        IonReaderBuilder.standard().build(input).use { reader ->
+            val inputIonValue = valueFactory.ion.iterate(reader).asSequence().map { valueFactory.newFromIonValue(it) }
+            val inputExprValue = valueFactory.newBag(inputIonValue)
+            val bindings = getBindingsFromIonValue(inputExprValue)
             val result = compilerPipeline.compile(query).eval(EvaluationSession.build { globals(bindings) })
             outputResult(result)
         }

@@ -104,6 +104,9 @@ private val inputFormatOpt = optParser.acceptsAll(listOf("input-format", "if"), 
     .describedAs("(${InputFormat.values().joinToString("|")})")
     .defaultsTo(InputFormat.ION)
 
+private val wrapIonOpt = optParser.acceptsAll(listOf("wrap-ion", "w"), "wraps Ion input file values in a bag, requires the input format to be ION, requires the query option")
+    .availableIf(queryOpt)
+
 private val outputFileOpt = optParser.acceptsAll(listOf("output", "o"), "output file, requires the query option (default: stdout)")
     .availableIf(queryOpt)
     .withRequiredArg()
@@ -131,6 +134,7 @@ private val outputFormatOpt = optParser.acceptsAll(listOf("output-format", "of")
  *      * -q --query: PartiQL query
  *      * -i --input: input file
  *      * -if --input-format: (default: ION) [ION, PARTIQL]
+ *      * -w --wrap-ion: wraps Ion input file values in a bag, requires the input format to be ION, requires the query option
  *      * -o --output: output file (default: STDOUT)
  *      * -of --output-format: (default: PARTIQL) [ION_TEXT, ION_BINARY, PARTIQL, PARTIQL_PRETTY]
  */
@@ -206,11 +210,13 @@ private fun runCli(environment: Bindings<ExprValue>, optionSet: OptionSet, compi
     val inputFormat = optionSet.valueOf(inputFormatOpt)
     val outputFormat = optionSet.valueOf(outputFormatOpt)
 
+    val wrapIon = optionSet.has(wrapIonOpt)
+
     val query = optionSet.valueOf(queryOpt)
 
     input.use {
         output.use {
-            Cli(valueFactory, input, inputFormat, output, outputFormat, compilerPipeline, environment, query).run()
+            Cli(valueFactory, input, inputFormat, output, outputFormat, compilerPipeline, environment, query, wrapIon).run()
         }
     }
 }

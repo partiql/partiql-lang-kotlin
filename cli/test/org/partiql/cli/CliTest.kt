@@ -58,10 +58,29 @@ class CliTest {
     }
 
     @Test(expected = java.lang.IllegalStateException::class)
-    fun runQueryOnBadValue() {
+    fun runQueryOnMultipleIonValuesFailure() {
         val query = "SELECT * FROM input_data"
         val input = "1 2"
         makeCliAndGetResult(query, input)
+    }
+
+    @Test
+    fun runQueryOnMultipleIonValuesSuccess() {
+        val query = "SELECT * FROM input_data"
+        val input = "{a:1} {a:2}"
+        val expected = "$partiqlBagAnnotation[{a:1}, {a:2}]"
+
+        val result = makeCliAndGetResult(query, input, wrapIon = true)
+
+        assertAsIon(expected, result)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun specifyingWrapIonWithPartiQLInput() {
+        val query = "SELECT * FROM input_data"
+        val input = "{a:1} {a:2}"
+
+        makeCliAndGetResult(query, input, wrapIon = true, inputFormat = InputFormat.PARTIQL)
     }
 
     @Test
@@ -94,12 +113,15 @@ class CliTest {
     fun withBinding() {
         val query = "SELECT v, d FROM bound_value v, input_data d"
         val input = "[{'a': 1}]"
+        val wrappedInput = "{'a': 1}"
         val bindings = mapOf("bound_value" to "{b: 1}").asBinding()
         val expected = "$partiqlBagAnnotation[{v: {b: 1}, d: {a: 1}}]"
 
-        val ionInputResult = makeCliAndGetResult(query, input, bindings = bindings, inputFormat = InputFormat.ION)
+        val wrappedInputResult = makeCliAndGetResult(query, wrappedInput, bindings = bindings, wrapIon = true)
+        val ionInputResult = makeCliAndGetResult(query, input, bindings = bindings)
         val partiqlInputResult = makeCliAndGetResult(query, input, bindings = bindings, inputFormat = InputFormat.PARTIQL)
 
+        assertAsIon(expected, wrappedInputResult)
         assertAsIon(expected, ionInputResult)
         assertAsIon(expected, partiqlInputResult)
     }
@@ -108,12 +130,15 @@ class CliTest {
     fun withShadowingBinding() {
         val query = "SELECT * FROM input_data"
         val input = "[{'a': 1}]"
+        val wrappedInput = "{'a': 1}"
         val bindings = mapOf("input_data" to "{b: 1}").asBinding()
         val expected = "$partiqlBagAnnotation[{a: 1}]"
 
-        val ionInputResult = makeCliAndGetResult(query, input, bindings = bindings, inputFormat = InputFormat.ION)
+        val wrappedInputResult = makeCliAndGetResult(query, wrappedInput, bindings = bindings, wrapIon = true)
+        val ionInputResult = makeCliAndGetResult(query, input, bindings = bindings)
         val partiqlInputResult = makeCliAndGetResult(query, input, bindings = bindings, inputFormat = InputFormat.PARTIQL)
 
+        assertAsIon(expected, wrappedInputResult)
         assertAsIon(expected, ionInputResult)
         assertAsIon(expected, partiqlInputResult)
     }
@@ -122,11 +147,14 @@ class CliTest {
     fun withPartiQLOutput() {
         val query = "SELECT * FROM input_data"
         val input = "[{a: 1}]"
+        val wrappedInput = "{a: 1}"
         val expected = "<<{'a': 1}>>"
 
-        val actual = makeCliAndGetResult(query, input, inputFormat = InputFormat.ION, outputFormat = OutputFormat.PARTIQL)
+        val wrappedInputResult = makeCliAndGetResult(query, wrappedInput, wrapIon = true, outputFormat = OutputFormat.PARTIQL)
+        val ionInputResult = makeCliAndGetResult(query, input, inputFormat = InputFormat.ION, outputFormat = OutputFormat.PARTIQL)
 
-        assertEquals(expected, actual)
+        assertEquals(expected, wrappedInputResult)
+        assertEquals(expected, ionInputResult)
     }
 
     @Test
