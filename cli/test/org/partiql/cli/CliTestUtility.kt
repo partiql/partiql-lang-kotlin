@@ -16,21 +16,25 @@ import java.io.OutputStream
 fun makeCliAndGetResult(
     query: String,
     input: String? = null,
+    inputFormat: InputFormat = InputFormat.ION,
     bindings: Bindings<ExprValue> = Bindings.empty(),
     outputFormat: OutputFormat = OutputFormat.ION_TEXT,
     output: OutputStream = ByteArrayOutputStream(),
     ion: IonSystem = IonSystemBuilder.standard().build(),
     compilerPipeline: CompilerPipeline = CompilerPipeline.standard(ion),
-    valueFactory: ExprValueFactory = ExprValueFactory.standard(ion)
+    valueFactory: ExprValueFactory = ExprValueFactory.standard(ion),
+    wrapIon: Boolean = false
 ): String {
     val cli = Cli(
         valueFactory,
         input?.byteInputStream(Charsets.UTF_8) ?: EmptyInputStream(),
+        inputFormat,
         output,
         outputFormat,
         compilerPipeline,
         bindings,
-        query
+        query,
+        wrapIon
     )
     cli.run()
     return output.toString()
@@ -49,3 +53,7 @@ fun assertAsIon(expected: String, actual: String) {
  */
 fun assertAsIon(ion: IonSystem, expected: String, actual: String) =
     Assert.assertEquals(ion.loader.load(expected), ion.loader.load(actual))
+
+fun String.singleIonExprValue(ion: IonSystem = IonSystemBuilder.standard().build(), valueFactory: ExprValueFactory = ExprValueFactory.standard(ion)) = valueFactory.newFromIonValue(ion.singleValue(this))
+fun Map<String, String>.asBinding() =
+    Bindings.ofMap(this.mapValues { it.value.singleIonExprValue() })

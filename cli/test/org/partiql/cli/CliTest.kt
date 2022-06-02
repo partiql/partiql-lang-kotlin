@@ -14,28 +14,25 @@
 
 package org.partiql.cli
 
+import com.amazon.ion.IonException
 import com.amazon.ion.system.IonSystemBuilder
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.partiql.lang.CompilerPipeline
-import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationException
-import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.TypingMode
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
-import java.io.OutputStream
 import java.nio.file.Files
 
 class CliTest {
     private val ion = IonSystemBuilder.standard().build()
-    private val valueFactory = ExprValueFactory.standard(ion)
     private val output = ByteArrayOutputStream()
     private val testFile = File("test.ion")
+    private val partiqlBagAnnotation = "\$partiql_bag::"
 
     @Before
     fun setUp() {
@@ -47,125 +44,170 @@ class CliTest {
         Files.deleteIfExists(testFile.toPath())
     }
 
-    private fun makeCli(
-        query: String,
-        input: String? = null,
-        bindings: Bindings<ExprValue> = Bindings.empty(),
-        outputFormat: OutputFormat = OutputFormat.ION_TEXT,
-        output: OutputStream = this.output,
-        compilerPipeline: CompilerPipeline = CompilerPipeline.standard(ion)
-    ) =
-        Cli(
-            valueFactory,
-            input?.byteInputStream(Charsets.UTF_8) ?: EmptyInputStream(),
-            output,
-            outputFormat,
-            compilerPipeline,
-            bindings,
-            query
-        )
-
-    private fun Cli.runAndOutput(): String {
-        run()
-        return output.toString(Charsets.UTF_8.name())
-    }
-
-    private fun String.singleIonExprValue() = valueFactory.newFromIonValue(ion.singleValue(this))
-    private fun Map<String, String>.asBinding() =
-        Bindings.ofMap(this.mapValues { it.value.singleIonExprValue() })
-
-    private fun assertAsIon(expected: String, actual: String) =
-        assertEquals(ion.loader.load(expected), ion.loader.load(actual))
-
     @Test
     fun runQueryOnSingleValue() {
-        val subject = makeCli("SELECT * FROM input_data", "{a: 1}")
-        val actual = subject.runAndOutput()
+        val query = "SELECT * FROM input_data"
+        val input = "[{'a': 1}]"
+        val expected = "$partiqlBagAnnotation[{a: 1}]"
 
-        assertAsIon("{a: 1}", actual)
+        val ionInputResult = makeCliAndGetResult(query, input, inputFormat = InputFormat.ION)
+        val partiqlInputResult = makeCliAndGetResult(query, input, inputFormat = InputFormat.PARTIQL)
+
+        assertAsIon(expected, ionInputResult)
+        assertAsIon(expected, partiqlInputResult)
+    }
+
+    @Test(expected = java.lang.IllegalStateException::class)
+    fun runQueryOnMultipleIonValuesFailure() {
+        val query = "SELECT * FROM input_data"
+        val input = "1 2"
+        makeCliAndGetResult(query, input)
+    }
+
+    @Test
+    fun runQueryOnMultipleIonValuesSuccess() {
+        val query = "SELECT * FROM input_data"
+        val input = "{a:1} {a:2}"
+        val expected = "$partiqlBagAnnotation[{a:1}, {a:2}]"
+
+        val result = makeCliAndGetResult(query, input, wrapIon = true)
+
+        assertAsIon(expected, result)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun specifyingWrapIonWithPartiQLInput() {
+        val query = "SELECT * FROM input_data"
+        val input = "{a:1} {a:2}"
+
+        makeCliAndGetResult(query, input, wrapIon = true, inputFormat = InputFormat.PARTIQL)
     }
 
     @Test
     fun runQueryOnMultipleValues() {
-        val subject = makeCli("SELECT * FROM input_data", "{a: 1}{a: 2}{a: 3}")
-        val actual = subject.runAndOutput()
+        val query = "SELECT * FROM input_data"
+        val input = "[{'a': 1},{'a': 2},{'a': 3}]"
+        val expected = "$partiqlBagAnnotation[{a: 1},{a: 2},{a: 3}]"
 
-        assertAsIon("{a: 1} {a: 2} {a: 3}", actual)
+        val ionInputResult = makeCliAndGetResult(query, input, inputFormat = InputFormat.ION)
+        val partiqlInputResult = makeCliAndGetResult(query, input, inputFormat = InputFormat.PARTIQL)
+
+        assertAsIon(expected, ionInputResult)
+        assertAsIon(expected, partiqlInputResult)
     }
 
     @Test
     fun caseInsensitiveBindingName() {
-        val subject = makeCli("SELECT * FROM input_DAta", "{a: 1}")
-        val actual = subject.runAndOutput()
+        val query = "SELECT * FROM input_dAta"
+        val input = "[{'a': 1}]"
+        val expected = "$partiqlBagAnnotation[{a: 1}]"
 
-        assertAsIon("{a: 1}", actual)
+        val ionInputResult = makeCliAndGetResult(query, input, inputFormat = InputFormat.ION)
+        val partiqlInputResult = makeCliAndGetResult(query, input, inputFormat = InputFormat.PARTIQL)
+
+        assertAsIon(expected, ionInputResult)
+        assertAsIon(expected, partiqlInputResult)
     }
 
     @Test
     fun withBinding() {
-        val subject = makeCli("SELECT v, d FROM bound_value v, input_data d", "{a: 1}", mapOf("bound_value" to "{b: 1}").asBinding())
-        val actual = subject.runAndOutput()
+        val query = "SELECT v, d FROM bound_value v, input_data d"
+        val input = "[{'a': 1}]"
+        val wrappedInput = "{'a': 1}"
+        val bindings = mapOf("bound_value" to "{b: 1}").asBinding()
+        val expected = "$partiqlBagAnnotation[{v: {b: 1}, d: {a: 1}}]"
 
-        assertAsIon("{v: {b: 1}, d: {a: 1}}", actual)
+        val wrappedInputResult = makeCliAndGetResult(query, wrappedInput, bindings = bindings, wrapIon = true)
+        val ionInputResult = makeCliAndGetResult(query, input, bindings = bindings)
+        val partiqlInputResult = makeCliAndGetResult(query, input, bindings = bindings, inputFormat = InputFormat.PARTIQL)
+
+        assertAsIon(expected, wrappedInputResult)
+        assertAsIon(expected, ionInputResult)
+        assertAsIon(expected, partiqlInputResult)
     }
 
     @Test
     fun withShadowingBinding() {
-        val subject = makeCli("SELECT * FROM input_data", "{a: 1}", mapOf("input_data" to "{b: 1}").asBinding())
+        val query = "SELECT * FROM input_data"
+        val input = "[{'a': 1}]"
+        val wrappedInput = "{'a': 1}"
+        val bindings = mapOf("input_data" to "{b: 1}").asBinding()
+        val expected = "$partiqlBagAnnotation[{a: 1}]"
 
-        val actual = subject.runAndOutput()
+        val wrappedInputResult = makeCliAndGetResult(query, wrappedInput, bindings = bindings, wrapIon = true)
+        val ionInputResult = makeCliAndGetResult(query, input, bindings = bindings)
+        val partiqlInputResult = makeCliAndGetResult(query, input, bindings = bindings, inputFormat = InputFormat.PARTIQL)
 
-        assertAsIon("{a: 1}", actual)
+        assertAsIon(expected, wrappedInputResult)
+        assertAsIon(expected, ionInputResult)
+        assertAsIon(expected, partiqlInputResult)
     }
 
     @Test
     fun withPartiQLOutput() {
-        val subject = makeCli("SELECT * FROM input_data", "{a: 1}", outputFormat = OutputFormat.PARTIQL)
-        val actual = subject.runAndOutput()
+        val query = "SELECT * FROM input_data"
+        val input = "[{a: 1}]"
+        val wrappedInput = "{a: 1}"
+        val expected = "<<{'a': 1}>>"
 
-        assertEquals("<<{'a': 1}>>", actual)
+        val wrappedInputResult = makeCliAndGetResult(query, wrappedInput, wrapIon = true, outputFormat = OutputFormat.PARTIQL)
+        val ionInputResult = makeCliAndGetResult(query, input, inputFormat = InputFormat.ION, outputFormat = OutputFormat.PARTIQL)
+
+        assertEquals(expected, wrappedInputResult)
+        assertEquals(expected, ionInputResult)
     }
 
     @Test
     fun withPartiQLPrettyOutput() {
-        val subject = makeCli("SELECT * FROM input_data", "{a: 1, b: 2}", outputFormat = OutputFormat.PARTIQL_PRETTY)
-        val actual = subject.runAndOutput()
+        val query = "SELECT * FROM input_data"
+        val input = "[{a: 1, b: 2}]"
+        val expected = "<<\n  {\n    'a': 1,\n    'b': 2\n  }\n>>"
 
-        assertEquals("<<\n  {\n    'a': 1,\n    'b': 2\n  }\n>>", actual)
+        val actual = makeCliAndGetResult(query, input, inputFormat = InputFormat.ION, outputFormat = OutputFormat.PARTIQL_PRETTY)
+
+        assertEquals(expected, actual)
     }
 
     @Test
     fun withIonTextOutput() {
-        val subject = makeCli("SELECT * FROM input_data", "{a: 1} {b: 1}", outputFormat = OutputFormat.ION_TEXT)
-        val actual = subject.runAndOutput()
+        val query = "SELECT * FROM input_data"
+        val input = "[{a: 1}, {b: 1}]"
+        val expected = "$partiqlBagAnnotation[{a:1}\n,{b:1}\n]"
 
-        assertEquals("{a:1}\n{b:1}\n", actual)
+        val actual = makeCliAndGetResult(query, input, inputFormat = InputFormat.ION, outputFormat = OutputFormat.ION_TEXT)
+
+        assertAsIon(expected, actual)
     }
 
     @Test
     fun withIonTextOutputToFile() {
-        makeCli(
-            "SELECT * FROM input_data",
-            "{a: 1} {b: 1}",
-            output = FileOutputStream(testFile),
-            outputFormat = OutputFormat.ION_TEXT
-        ).run()
-        val actual = testFile.bufferedReader().use { it.readText() }
+        val query = "SELECT * FROM input_data"
+        val input = "[{'a': 1}, {'b': 1}]"
+        val expected = "$partiqlBagAnnotation[{a:1}\n,{b:1}\n]"
 
-        assertEquals("{a:1}\n{b:1}\n", actual)
+        makeCliAndGetResult(query, input, inputFormat = InputFormat.ION, outputFormat = OutputFormat.ION_TEXT, output = FileOutputStream(testFile))
+        val ionInputResult = testFile.bufferedReader().use { it.readText() }
+        assertAsIon(expected, ionInputResult)
+
+        makeCliAndGetResult(query, input, inputFormat = InputFormat.PARTIQL, outputFormat = OutputFormat.ION_TEXT, output = FileOutputStream(testFile))
+        val partiqlInputResult = testFile.bufferedReader().use { it.readText() }
+        assertAsIon(expected, partiqlInputResult)
     }
 
     @Test
     fun withoutInput() {
-        val subject = makeCli("1")
-        val actual = subject.runAndOutput()
+        val query = "1"
+        val expected = "1"
 
-        assertEquals("1\n", actual)
+        val actual = makeCliAndGetResult(query)
+
+        assertAsIon(expected, actual)
     }
 
     @Test(expected = EvaluationException::class)
     fun withoutInputWithInputDataBindingThrowsException() {
-        makeCli("SELECT * FROM input_data").runAndOutput()
+        val query = "SELECT * FROM input_data"
+        makeCliAndGetResult(query)
     }
 
     @Test
@@ -175,9 +217,27 @@ class CliTest {
                 typingMode(TypingMode.PERMISSIVE)
             }
         }
-        val subject = makeCli("1 + 'foo'", compilerPipeline = permissiveModeCP)
-        val actual = subject.runAndOutput()
+        val query = "1 + 'foo'"
+        val actual = makeCliAndGetResult(query, compilerPipeline = permissiveModeCP)
 
         assertAsIon("\$partiql_missing::null", actual)
+    }
+
+    @Test
+    fun partiqlInputSuccess() {
+        val query = "SELECT * FROM input_data"
+        val input = "<<{'a': 1}, {'b': 1}>>"
+        val expected = "$partiqlBagAnnotation[{a:1}\n,{b:1}\n]"
+
+        val partiqlInputResult = makeCliAndGetResult(query, input, inputFormat = InputFormat.PARTIQL)
+        assertAsIon(expected, partiqlInputResult)
+    }
+
+    @Test(expected = IonException::class)
+    fun partiqlInputFailure() {
+        val query = "SELECT * FROM input_data"
+        val input = "<<{'a': 1}, {'b': 1}>>"
+
+        makeCliAndGetResult(query, input, inputFormat = InputFormat.ION)
     }
 }

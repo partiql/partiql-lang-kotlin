@@ -19,13 +19,12 @@ import com.amazon.ion.IonValue
 import com.amazon.ion.system.IonSystemBuilder
 import org.junit.AfterClass
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertSame
+import org.junit.Assert.assertThrows
 import org.junit.BeforeClass
 import org.junit.Test
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
-import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.util.asSequence
 import java.io.File
 
@@ -83,13 +82,12 @@ class ReadFileTest {
     private fun assertValues(expectedIon: String, value: ExprValue) {
         val expectedValues = ion.singleValue(expectedIon)
 
-        assertSame(ExprValueType.BAG, value.type)
         assertEquals(expectedValues, value.ionValue.cloneAndRemoveAnnotations())
     }
 
     @Test
     fun readIonAsDefault() {
-        writeFile("data.ion", "1 2")
+        writeFile("data.ion", "[1, 2]")
 
         val args = listOf("\"${dirPath("data.ion")}\"").map { it.exprValue() }
         val actual = function.callWithRequired(session, args)
@@ -100,7 +98,7 @@ class ReadFileTest {
 
     @Test
     fun readIon() {
-        writeFile("data.ion", "1 2")
+        writeFile("data.ion", "[1, 2]")
 
         val args = listOf("\"${dirPath("data.ion")}\"").map { it.exprValue() }
         val additionalOptions = "{type:\"ion\"}".exprValue()
@@ -108,6 +106,17 @@ class ReadFileTest {
         val expected = "[1, 2]"
 
         assertValues(expected, actual)
+    }
+
+    @Test
+    fun readBadIon() {
+        writeFile("data.ion", "1 2")
+
+        val args = listOf("\"${dirPath("data.ion")}\"").map { it.exprValue() }
+        val additionalOptions = "{type:\"ion\"}".exprValue()
+        assertThrows(IllegalStateException::class.java) {
+            function.callWithOptional(session, args, additionalOptions)
+        }
     }
 
     @Test

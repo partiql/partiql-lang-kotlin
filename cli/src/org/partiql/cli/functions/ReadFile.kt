@@ -15,6 +15,7 @@
 package org.partiql.cli.functions
 
 import com.amazon.ion.IonStruct
+import com.amazon.ion.system.IonReaderBuilder
 import org.apache.commons.csv.CSVFormat
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
@@ -65,13 +66,25 @@ internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFact
             .let { if (record != null) it.withRecordSeparator(record) else it }
             .let { if (escape != null) it.withEscape(escape) else it }
             .let { if (quote != null) it.withQuote(quote) else it }
-
-        DelimitedValues.exprValue(valueFactory, reader, csvFormatWithOptions, conversionModeFor(conversion))
+        val seq = Sequence {
+            DelimitedValues.exprValue(valueFactory, reader, csvFormatWithOptions, conversionModeFor(conversion)).iterator()
+        }
+        valueFactory.newBag(seq)
     }
 
     private fun ionReadHandler(): (InputStream, IonStruct) -> ExprValue = { input, _ ->
-        @Suppress("DEPRECATION")
-        valueFactory.newBag(valueFactory.ion.iterate(input).asSequence().map { valueFactory.newFromIonValue(it) })
+        IonReaderBuilder.standard().build(input).use { reader ->
+            val value = when (reader.next()) {
+                null -> valueFactory.missingValue
+                else -> valueFactory.newFromIonReader(reader)
+            }
+            if (reader.next() != null) {
+                val message = "As of v0.7.0, PartiQL requires that Ion files contain only a single Ion value for " +
+                    "processing. Please consider wrapping multiple values in a list."
+                throw IllegalStateException(message)
+            }
+            value
+        }
     }
 
     private val readHandlers = mapOf(
@@ -89,13 +102,10 @@ internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFact
         val fileName = required[0].stringValue()
         val fileType = "ion"
         val handler = readHandlers[fileType] ?: throw IllegalArgumentException("Unknown file type: $fileType")
-        val seq = Sequence {
-            // TODO we should take care to clean up this `FileInputStream` properly
-            //  https://github.com/partiql/partiql-lang-kotlin/issues/518
-            val fileInput = FileInputStream(fileName)
-            handler(fileInput, valueFactory.ion.newEmptyStruct()).iterator()
-        }
-        return valueFactory.newBag(seq)
+        // TODO we should take care to clean up this `FileInputStream` properly
+        //  https://github.com/partiql/partiql-lang-kotlin/issues/518
+        val fileInput = FileInputStream(fileName)
+        return handler(fileInput, valueFactory.ion.newEmptyStruct())
     }
 
     override fun callWithOptional(session: EvaluationSession, required: List<ExprValue>, opt: ExprValue): ExprValue {
@@ -103,12 +113,9 @@ internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFact
         val fileName = required[0].stringValue()
         val fileType = options["type"]?.stringValue() ?: "ion"
         val handler = readHandlers[fileType] ?: throw IllegalArgumentException("Unknown file type: $fileType")
-        val seq = Sequence {
-            // TODO we should take care to clean up this `FileInputStream` properly
-            //  https://github.com/partiql/partiql-lang-kotlin/issues/518
-            val fileInput = FileInputStream(fileName)
-            handler(fileInput, options).iterator()
-        }
-        return valueFactory.newBag(seq)
+        // TODO we should take care to clean up this `FileInputStream` properly
+        //  https://github.com/partiql/partiql-lang-kotlin/issues/518
+        val fileInput = FileInputStream(fileName)
+        return handler(fileInput, options)
     }
 }

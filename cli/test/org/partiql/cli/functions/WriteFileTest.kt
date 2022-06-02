@@ -52,7 +52,6 @@ class WriteFileTest {
 
     companion object {
         private const val TRUE_STRING: String = "true"
-        private const val FALSE_STRING: String = "false"
     }
 
     /**
@@ -83,7 +82,7 @@ class WriteFileTest {
         val args = listOf("\"$filePath\"", "[1, 2]").map { it.exprValue() }
         function.callWithRequired(session, args).ionValue
 
-        val expected = "1 2"
+        val expected = "[1, 2]"
 
         Assert.assertEquals(ion.loader.load(expected), ion.loader.load(readFileFromPath(filePath)))
     }
@@ -95,7 +94,7 @@ class WriteFileTest {
         val additionalOptions = """{type: "ion"}""".exprValue()
         function.callWithOptional(session, args, additionalOptions).ionValue
 
-        val expected = "1 2"
+        val expected = "[1, 2]"
 
         Assert.assertEquals(ion.loader.load(expected), ion.loader.load(readFileFromPath(filePath)))
     }
@@ -112,7 +111,7 @@ class WriteFileTest {
         val filePath = createRandomTmpFilePath()
         val query = "write_file('$filePath', SELECT * FROM input_data)"
         val input = "{a: 1}"
-        val expected = "{a: 1}"
+        val expected = "\$partiql_bag::[{a: 1}]"
 
         // Act
         val cliResponse =
@@ -129,7 +128,7 @@ class WriteFileTest {
         val filePath = createRandomTmpFilePath()
         val query = "write_file('$filePath', SELECT a.b FROM input_data)"
         val input = "{a: {b: 1}}"
-        val expected = "{b: 1}"
+        val expected = "\$partiql_bag::[{b: 1}]"
 
         // Act
         val cliResponse =
@@ -146,7 +145,7 @@ class WriteFileTest {
         val filePath = createRandomTmpFilePath()
         val query = "write_file('$filePath', SELECT VALUE a FROM input_data)"
         val input = "{a: {b: 1}}"
-        val expected = "{b: 1}"
+        val expected = "\$partiql_bag::[{b: 1}]"
 
         // Act
         val cliResponse =
@@ -163,7 +162,7 @@ class WriteFileTest {
         val filePath = createRandomTmpFilePath()
         val query = "write_file('$filePath', SELECT VALUE a.b FROM input_data)"
         val input = "{a: {b: 1}}"
-        val expected = "1"
+        val expected = "\$partiql_bag::[1]"
 
         // Act
         val cliResponse =
@@ -180,7 +179,7 @@ class WriteFileTest {
         val filePath = createRandomTmpFilePath()
         val query = "write_file('$filePath', SELECT VALUE a.b FROM input_data)"
         val input = "{a: {b: [ 1, 2 ]}}"
-        val expected = "[ 1, 2 ]"
+        val expected = "\$partiql_bag::[[ 1, 2 ]]"
 
         // Act
         val cliResponse =
@@ -197,7 +196,7 @@ class WriteFileTest {
         val filePath = createRandomTmpFilePath()
         val query = "write_file('$filePath', SELECT VALUE a FROM input_data)"
         val input = "{a : 5}"
-        val expected = "5"
+        val expected = "\$partiql_bag::[5]"
 
         // Act
         val cliResponse =

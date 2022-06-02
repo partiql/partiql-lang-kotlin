@@ -69,7 +69,7 @@ form. The subfolder `code` contains 3 types of files:
 Run (double click on) `partiql.bat`. This should open a command-line
 prompt and start the PartiQL REPL which displays:
 
-```
+```shell
 Welcome to the PartiQL REPL!
 PartiQL> 
 ```
@@ -81,7 +81,7 @@ PartiQL>
 
 [^foldername]: The folder name will have the PartiQL version as a suffix, i.e., `partiql-cli-0.1.0`.
 
-```
+```shell
 Welcome to the PartiQL REPL!
 PartiQL>
 ```
@@ -90,16 +90,13 @@ PartiQL>
 
 Let's write a simple query to verify that our PartiQL REPL is working. At the `PartiQL>` prompt type: 
 
-```
+```shell
 PartiQL> SELECT * FROM [1,2,3]
 ```
 
 and press `ENTER` *twice*. The output should look similar to: 
 
-```
-PartiQL> SELECT * FROM [1,2,3]
-   | 
-===' 
+```partiql
 <<
   {
     '_1': 1
@@ -111,9 +108,6 @@ PartiQL> SELECT * FROM [1,2,3]
     '_1': 3
   }
 >>
---- 
-OK!
-PartiQL> 
 ```
 
 Congratulations! You successfully installed and run the PartiQL REPL.
@@ -133,19 +127,17 @@ An easy way to load the necessary data into the REPL
 is use the `-e` switch when starting the REPL
 and provide the name of a file that contains your data.
 
-
-```
+```shell
 ./bin/partiql  -e Tutorial/code/q1.env
 ```
 
 You can then see what is loaded in the REPL's global environment using
 the **special** REPL command `!global_env`, i.e.,
 
-``` 
-Welcome to the PartiQL REPL!
-PartiQL> !global_env
-   | 
-===' 
+```shell
+PartiQL> !global_env;
+```
+```partiql
 {
   'hr': {
     'employees': <<
@@ -167,7 +159,4 @@ PartiQL> !global_env
     >>
   }
 }
---- 
-OK!
-
 ```
