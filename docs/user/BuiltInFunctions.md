@@ -937,22 +937,28 @@ FROM_UNIXTIME(1577836800)   -- `2020-01-01T00:00:00-00:00`      (unix_timestamp 
 
 Returns the nearest integer greater than or equal to the input.
 
-Signature : `CEIL/CEILING: Integer|Float|Decimal -> Integer`
+Signature : `CEIL/CEILING: Numeric -> Numeric`
 
 Examples:
 ```sql
 CEIL(1.1) = 2
 CEIL(-42.8) = -42
+CEIL(`+inf`) = `+inf` -- Float
+CEIL(`-inf`) = `-inf` -- Float
+CEIL(`nan`) = `nan` -- Float
 ```
 
 ### FLOOR
 
 Returns the nearest integer less than or equal to the input.
 
-Signature : `FLOOR: Integer|Float|Decimal -> Integer`
+Signature : `FLOOR: Numeric -> Numeric`
 
 Examples:
 ```sql
 FLOOR(1.1) = 1
 FLOOR(-42.8) = -43
+FLOOR(`+inf`) = `+inf` -- Float
+FLOOR(`-inf`) = `-inf` -- Float
+FLOOR(`nan`) = `nan` -- Float
 ```

@@ -25,7 +25,7 @@ object MathFunctions {
 }
 
 /**
- * A convenience class to wrap `(Double) -> Int` as a PartiQL ExprFunction
+ * A convenience class to wrap `(Number) -> Number` as a PartiQL ExprFunction.
  *
  * @property identifier Symbol for the given function
  * @property valueFactory Used to create the output ExprValue
@@ -44,20 +44,21 @@ private class UnaryNumeric(
     )
 
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
-        val v = required.first().numberValue()
-        return when (val result = function.invoke(v)) {
-            POSITIVE_INFINITY, NEGATIVE_INFINITY, NaN -> valueFactory.newFloat(result.toDouble())
-            else -> valueFactory.newInt(result.toInt())
+        return when (val n = function.invoke(required.first().numberValue())) {
+            is Double, is Float -> valueFactory.newFloat(n.toDouble())
+            is Int -> valueFactory.newInt(n.toInt())
+            is Long -> valueFactory.newInt(n.toLong())
+            else -> valueFactory.newFloat(n.toDouble())
         }
     }
 }
 
 private fun ceil(n: Number): Number = when (n) {
     POSITIVE_INFINITY, NEGATIVE_INFINITY, NaN -> n
-    else -> kotlin.math.ceil(n.toDouble())
+    else -> kotlin.math.ceil(n.toDouble()).toInt()
 }
 
 private fun floor(n: Number): Number = when (n) {
     POSITIVE_INFINITY, NEGATIVE_INFINITY, NaN -> n
-    else -> kotlin.math.floor(n.toDouble())
+    else -> kotlin.math.floor(n.toDouble()).toInt()
 }
