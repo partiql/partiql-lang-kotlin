@@ -58,7 +58,7 @@ internal fun createBuiltinFunctions(valueFactory: ExprValueFactory) =
         SizeExprFunction(valueFactory),
         FromUnixTimeFunction(valueFactory),
         UnixTimestampFunction(valueFactory)
-    )
+    ) + MathFunctions.create(valueFactory)
 
 internal fun createExists(valueFactory: ExprValueFactory): ExprFunction = object : ExprFunction {
     override val signature = FunctionSignature(
