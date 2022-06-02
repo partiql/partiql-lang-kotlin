@@ -25,11 +25,15 @@ import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
 import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.eval.time.MINUTES_PER_HOUR
+import org.partiql.lang.eval.time.NANOS_PER_SECOND
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.util.booleanValueOrNull
 import org.partiql.lang.util.bytesValueOrNull
 import org.partiql.lang.util.isBag
+import org.partiql.lang.util.isDate
 import org.partiql.lang.util.isMissing
+import org.partiql.lang.util.isTime
 import org.partiql.lang.util.numberValueOrNull
 import org.partiql.lang.util.ordinal
 import org.partiql.lang.util.propertyValueMapOf
@@ -39,10 +43,12 @@ import org.partiql.lang.util.timestampValueOrNull
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.time.LocalDate
+import kotlin.collections.asSequence
 
 internal const val MISSING_ANNOTATION = "\$partiql_missing"
 internal const val BAG_ANNOTATION = "\$partiql_bag"
 internal const val DATE_ANNOTATION = "\$partiql_date"
+internal const val TIME_ANNOTATION = "\$partiql_time"
 
 /**
  * Provides a standard way of creating instances of ExprValue.
@@ -427,6 +433,8 @@ internal class IonExprValue(private val valueFactory: ExprValueFactory, override
         ionValue.isMissing -> ExprValueType.MISSING
         ionValue.isNullValue -> ExprValueType.NULL
         ionValue.isBag -> ExprValueType.BAG
+        ionValue.isDate -> ExprValueType.DATE
+        ionValue.isTime -> ExprValueType.TIME
         else -> ExprValueType.fromIonType(ionValue.type)
     }
 
@@ -437,6 +445,27 @@ internal class IonExprValue(private val valueFactory: ExprValueFactory, override
             override fun timestampValue(): Timestamp? = ionValue.timestampValueOrNull()
             override fun stringValue(): String? = ionValue.stringValueOrNull()
             override fun bytesValue(): ByteArray? = ionValue.bytesValueOrNull()
+            override fun dateValue(): LocalDate? {
+                val timestamp = timestampValue() ?: return null
+                return LocalDate.of(timestamp.year, timestamp.month, timestamp.day)
+            }
+            override fun timeValue(): Time? {
+                val hour = bindings[BindingName("hour", BindingCase.SENSITIVE)]?.intValue() ?: return null
+                val minute = bindings[BindingName("minute", BindingCase.SENSITIVE)]?.intValue() ?: return null
+                val second = bindings[BindingName("second", BindingCase.SENSITIVE)]?.intValue() ?: return null
+                val nano = bindings[BindingName("second", BindingCase.SENSITIVE)]?.bigDecimalValue()?.remainder(BigDecimal.ONE)?.multiply(NANOS_PER_SECOND.toBigDecimal())?.toInt() ?: 0
+                val precision = bindings[BindingName("second", BindingCase.SENSITIVE)]?.bigDecimalValue()?.scale() ?: 0
+                val tzHours = bindings[BindingName("timezone_hour", BindingCase.SENSITIVE)]?.intValue() ?: 0
+                val tzMinutes = bindings[BindingName("timezone_minute", BindingCase.SENSITIVE)]?.intValue() ?: 0
+                return Time.of(
+                    hour,
+                    minute,
+                    second,
+                    nano,
+                    precision,
+                    tzHours.times(MINUTES_PER_HOUR) + tzMinutes
+                )
+            }
         }
     }
 

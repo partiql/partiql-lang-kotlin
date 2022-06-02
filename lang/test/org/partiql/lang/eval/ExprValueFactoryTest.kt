@@ -54,22 +54,29 @@ class ExprValueFactoryTest {
 
     data class TestCase(val expectedType: ExprValueType, val expectedValue: Any?, val expectedIonValue: IonValue, val value: ExprValue)
 
-    fun parametersForExprValueFactoryTest() = listOf(
-        TestCase(ExprValueType.BOOL, true, ion.newBool(true), factory.newBoolean(true)),
-        TestCase(ExprValueType.BOOL, false, ion.newBool(false), factory.newBoolean(false)),
-        TestCase(ExprValueType.INT, 100L, ion.newInt(100), factory.newInt(100)), // <--Int converted to Long
-        TestCase(ExprValueType.INT, 101L, ion.newInt(101), factory.newInt(101L)),
-        TestCase(ExprValueType.FLOAT, 103.0, ion.newFloat(103.0), factory.newFloat(103.0)),
-        TestCase(ExprValueType.DECIMAL, BigDecimal(104), ion.newDecimal(BigDecimal(104)), factory.newDecimal(104)),
-        TestCase(ExprValueType.DECIMAL, BigDecimal(105), ion.newDecimal(BigDecimal(105)), factory.newDecimal(105L)),
-        TestCase(ExprValueType.DECIMAL, BigDecimal(106), ion.newDecimal(BigDecimal(106)), factory.newDecimal(BigDecimal(106))),
-        TestCase(ExprValueType.STRING, "107", ion.newString("107"), factory.newString("107")),
-        TestCase(ExprValueType.STRING, "", ion.newString(""), factory.newString("")),
-        TestCase(ExprValueType.SYMBOL, "108", ion.newSymbol("108"), factory.newSymbol("108")),
-        TestCase(ExprValueType.SYMBOL, "", ion.newSymbol(""), factory.newSymbol("")),
-        TestCase(ExprValueType.CLOB, someTestBytes, ion.newClob(someTestBytes), factory.newClob(someTestBytes)),
-        TestCase(ExprValueType.BLOB, someTestBytes, ion.newBlob(someTestBytes), factory.newBlob(someTestBytes))
-    )
+    fun parametersForExprValueFactoryTest(): List<TestCase> {
+        val localTime = LocalTime.of(17, 40, 1, 123456789)
+        val localDate = LocalDate.of(2022, 1, 1)
+        val time = Time.of(localTime, 9, ZoneOffset.ofHoursMinutes(1, 5))
+        return listOf(
+            TestCase(ExprValueType.BOOL, true, ion.newBool(true), factory.newBoolean(true)),
+            TestCase(ExprValueType.BOOL, false, ion.newBool(false), factory.newBoolean(false)),
+            TestCase(ExprValueType.INT, 100L, ion.newInt(100), factory.newInt(100)), // <--Int converted to Long
+            TestCase(ExprValueType.INT, 101L, ion.newInt(101), factory.newInt(101L)),
+            TestCase(ExprValueType.FLOAT, 103.0, ion.newFloat(103.0), factory.newFloat(103.0)),
+            TestCase(ExprValueType.DECIMAL, BigDecimal(104), ion.newDecimal(BigDecimal(104)), factory.newDecimal(104)),
+            TestCase(ExprValueType.DECIMAL, BigDecimal(105), ion.newDecimal(BigDecimal(105)), factory.newDecimal(105L)),
+            TestCase(ExprValueType.DECIMAL, BigDecimal(106), ion.newDecimal(BigDecimal(106)), factory.newDecimal(BigDecimal(106))),
+            TestCase(ExprValueType.STRING, "107", ion.newString("107"), factory.newString("107")),
+            TestCase(ExprValueType.STRING, "", ion.newString(""), factory.newString("")),
+            TestCase(ExprValueType.SYMBOL, "108", ion.newSymbol("108"), factory.newSymbol("108")),
+            TestCase(ExprValueType.SYMBOL, "", ion.newSymbol(""), factory.newSymbol("")),
+            TestCase(ExprValueType.CLOB, someTestBytes, ion.newClob(someTestBytes), factory.newClob(someTestBytes)),
+            TestCase(ExprValueType.BLOB, someTestBytes, ion.newBlob(someTestBytes), factory.newBlob(someTestBytes)),
+            TestCase(ExprValueType.DATE, localDate, ion.singleValue("\$partiql_date::2022-01-01"), factory.newDate(localDate)),
+            TestCase(ExprValueType.TIME, time, ion.singleValue("\$partiql_time::{hour:17,minute:40,second:1.123456789,timezone_hour:1,timezone_minute:5}"), factory.newTime(time))
+        )
+    }
 
     @Test
     @Parameters
@@ -163,6 +170,22 @@ class ExprValueFactoryTest {
                 assertNull(tc.value.scalar.stringValue())
                 assertEquals(expectedValue, tc.value.scalar.bytesValue())
                 assertNull(tc.value.scalar.timestampValue())
+            }
+            ExprValueType.DATE -> {
+                assertNull(tc.value.scalar.booleanValue())
+                assertNull(tc.value.scalar.numberValue())
+                assertNull(tc.value.scalar.stringValue())
+                assertNull(tc.value.scalar.bytesValue())
+                assertNull(tc.value.scalar.timestampValue())
+                assertEquals(expectedValue, tc.value.dateValue())
+            }
+            ExprValueType.TIME -> {
+                assertNull(tc.value.scalar.booleanValue())
+                assertNull(tc.value.scalar.numberValue())
+                assertNull(tc.value.scalar.stringValue())
+                assertNull(tc.value.scalar.bytesValue())
+                assertNull(tc.value.scalar.timestampValue())
+                assertEquals(expectedValue, tc.value.timeValue())
             }
             else -> fail("Unexpected ExprValueType: ${tc.expectedType}")
         }
@@ -467,5 +490,33 @@ class ExprValueFactoryTest {
         } catch (e: EvaluationException) {
             Assert.assertEquals(ErrorCode.EVALUATOR_INVALID_PRECISION_FOR_TIME, e.errorCode)
         }
+    }
+
+    @Test
+    fun testIonDate() {
+        // Arrange
+        val ionValueString = "\$partiql_date::2022-01-01"
+        val ionValue = ion.singleValue(ionValueString)
+        val expected = LocalDate.of(2022, 1, 1)
+
+        // Act
+        val exprValue = factory.newFromIonValue(ionValue)
+
+        // Assert
+        assertEquals(expected, exprValue.dateValue())
+    }
+
+    @Test
+    fun testIonTime() {
+        // Arrange
+        val ionValueString = "\$partiql_time::{hour:0,minute:40,second:1.123456789,timezone_hour:1,timezone_minute:5}"
+        val ionValue = ion.singleValue(ionValueString)
+        val expected = Time.of(0, 40, 1, 123456789, 9, 65)
+
+        // Act
+        val exprValue = factory.newFromIonValue(ionValue)
+
+        // Assert
+        assertEquals(expected, exprValue.timeValue())
     }
 }
