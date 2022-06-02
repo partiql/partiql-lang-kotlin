@@ -14,6 +14,7 @@
 
 package org.partiql.cli
 
+import com.amazon.ion.IonException
 import com.amazon.ion.system.IonSystemBuilder
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -192,5 +193,23 @@ class CliTest {
         val actual = makeCliAndGetResult(query, compilerPipeline = permissiveModeCP)
 
         assertAsIon("\$partiql_missing::null", actual)
+    }
+
+    @Test
+    fun partiqlInputSuccess() {
+        val query = "SELECT * FROM input_data"
+        val input = "<<{'a': 1}, {'b': 1}>>"
+        val expected = "$partiqlBagAnnotation[{a:1}\n,{b:1}\n]"
+
+        val partiqlInputResult = makeCliAndGetResult(query, input, inputFormat = InputFormat.PARTIQL)
+        assertAsIon(expected, partiqlInputResult)
+    }
+
+    @Test(expected = IonException::class)
+    fun partiqlInputFailure() {
+        val query = "SELECT * FROM input_data"
+        val input = "<<{'a': 1}, {'b': 1}>>"
+
+        makeCliAndGetResult(query, input, inputFormat = InputFormat.ION)
     }
 }

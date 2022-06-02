@@ -23,9 +23,9 @@ Option                                Description
 -e, --environment <File>              initial global environment (optional)
 -h, --help                            prints this help
 -i, --input <File>                    input file, requires the query option (optional)
--if, --input-format <InputFormat>     input format, requires the query option -- [ION (default), PARTIQL]
+-if, --input-format <InputFormat>     input format, requires the query option (default: ION) [ION, PARTIQL]
 -o, --output <File>                   output file, requires the query option (default: stdout)
--of, --output-format <OutputFormat>   output format, requires the query option [PARTIQL (default), PARTIQL_PRETTY, ION_TEXT, ION_BINARY]
+-of, --output-format <OutputFormat>   output format, requires the query option (default: PARTIQL) [PARTIQL, PARTIQL_PRETTY, ION_TEXT, ION_BINARY]
 -p, --permissive                      run the PartiQL query in PERMISSIVE typing mode
 -q, --query <String>                  PartiQL query, triggers non interactive mode
 ```
@@ -51,9 +51,7 @@ The following command will build any dependencies before starting the CLI.
 ./gradlew :cli:run -q --args="<command line arguments>"
 ```
 
-The CLI can be run in two manners, non-interactive (conventional) and interactive (REPL).
-
-
+The CLI can be run in two manners, non-interactive and interactive (REPL).
 
 ## REPL
 
@@ -118,7 +116,7 @@ Press control-D to exit the REPL.
 
 ### Advanced REPL Features
 
-To view the AST of a PartiQL statement, type one and press enter only *once*, then type `!!` and press enter:
+To view the AST of a PartiQL statement, type the statement and press enter only *once*, then type `!!` and press enter:
 
 ```shell
 PartiQL> 1 + 1
@@ -415,7 +413,9 @@ PartiQL> SELECT * FROM stores AS s
 
 ## Reading/Writing Files
 The REPL provides the `read_file` function to stream data from a file. The files need to be placed in the folder `cli`, 
-and they must contain only a single Ion value (typically a list).
+and, if using the default file type (Ion), they must contain only a single Ion value (typically a list).
+
+**Note**: Later on, we will introduce reading different file types, but we will first focus on the default (Ion).
 
 For example, create a file called `data.ion` in the `cli` folder with the following contents
 ```ion
@@ -461,8 +461,8 @@ $partiql_bag::[
 ]
 ```
 
-Notice that PartiQL added the annotation of `$partiql_bag` to the Ion list. This is how Ion represents PartiQL 
-`BAGs`.
+Notice that PartiQL added the annotation of `$partiql_bag` to the Ion list. When outputting to Ion, we use type 
+annotations to represent some PartiQL values/types not in Ion.
 
 Functions and expressions can be used in the *global configuration* as well.  Consider
 the following `config.ion`:

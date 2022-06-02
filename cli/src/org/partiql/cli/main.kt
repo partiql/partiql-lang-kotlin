@@ -97,7 +97,7 @@ private val inputFileOpt = optParser.acceptsAll(listOf("input", "i"), "input fil
     .withRequiredArg()
     .ofType(File::class.java)
 
-private val inputFormatOpt = optParser.acceptsAll(listOf("input-format", "if"), "output format, requires the query option")
+private val inputFormatOpt = optParser.acceptsAll(listOf("input-format", "if"), "input format, requires the query option")
     .availableIf(queryOpt)
     .withRequiredArg()
     .ofType(InputFormat::class.java)
@@ -129,10 +129,10 @@ private val outputFormatOpt = optParser.acceptsAll(listOf("output-format", "of")
  * mismatches)
  * * Non interactive only:
  *      * -q --query: PartiQL query
- *      * -i --input: input file, default STDIN
- *      * -if --input-format: ION_TEXT (default), ION_BINARY, PARTIQL
- *      * -o --output: output file, default STDOUT
- *      * -of --output-format: ION_TEXT, ION_BINARY, PARTIQL (default), PARTIQL_PRETTY
+ *      * -i --input: input file
+ *      * -if --input-format: (default: ION) [ION, PARTIQL]
+ *      * -o --output: output file (default: STDOUT)
+ *      * -of --output-format: (default: PARTIQL) [ION_TEXT, ION_BINARY, PARTIQL, PARTIQL_PRETTY]
  */
 fun main(args: Array<String>) = try {
     optParser.formatHelpWith(formatter)
