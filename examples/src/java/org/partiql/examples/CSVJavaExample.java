@@ -24,6 +24,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+/**
+ * This example executes a PartiQL query against CSV-formatted data.
+ */
 public class CSVJavaExample extends Example {
 
     public CSVJavaExample(@NotNull PrintStream out) {
