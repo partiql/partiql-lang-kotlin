@@ -27,14 +27,15 @@ class MakeDateEvaluationTest : EvaluatorTestBase() {
         )
 
     class MakeDatePassCases : ArgumentsProviderBase() {
+        private fun wrapDate(date: String): String = "DATE '$date'"
         override fun getParameters(): List<Any> = listOf(
-            ExprFunctionTestCase("make_date(100, 1, 1)", "0100-01-01"),
-            ExprFunctionTestCase("make_date(1985, 1, 1)", "1985-01-01"),
-            ExprFunctionTestCase("make_date(2102, 02, 03)", "2102-02-03"),
-            ExprFunctionTestCase("make_date(3000, 02, 03)", "3000-02-03"),
-            ExprFunctionTestCase("make_date(2012, 02, 29)", "2012-02-29"),
-            ExprFunctionTestCase("make_date(2021, 02, 28)", "2021-02-28"),
-            ExprFunctionTestCase("make_date(`100`, `1`, `1`)", "0100-01-01"),
+            ExprFunctionTestCase("make_date(100, 1, 1)", wrapDate("0100-01-01")),
+            ExprFunctionTestCase("make_date(1985, 1, 1)", wrapDate("1985-01-01")),
+            ExprFunctionTestCase("make_date(2102, 02, 03)", wrapDate("2102-02-03")),
+            ExprFunctionTestCase("make_date(3000, 02, 03)", wrapDate("3000-02-03")),
+            ExprFunctionTestCase("make_date(2012, 02, 29)", wrapDate("2012-02-29")),
+            ExprFunctionTestCase("make_date(2021, 02, 28)", wrapDate("2021-02-28")),
+            ExprFunctionTestCase("make_date(`100`, `1`, `1`)", wrapDate("0100-01-01")),
             ExprFunctionTestCase("make_date(NULL, 02, 28)", "NULL"),
             ExprFunctionTestCase("make_date(2021, NULL, 28)", "NULL"),
             ExprFunctionTestCase("make_date(2021, 02, NULL)", "NULL"),
