@@ -45,7 +45,11 @@ class ConfigurableExprValueFormatter(private val config: Configuration) : ExprVa
                 ExprValueType.INT, ExprValueType.DECIMAL -> out.append(value.scalar.numberValue().toString())
                 ExprValueType.STRING -> out.append("'${value.scalar.stringValue()}'")
                 ExprValueType.DATE -> out.append("DATE '${value.dateValue()}'")
-                ExprValueType.TIME -> out.append("TIME '${value.timeValue()}'")
+                ExprValueType.TIME -> {
+                    val time = value.timeValue()
+                    val prefix = if (time.offsetTime == null) "TIME" else "TIME WITH TIME ZONE"
+                    out.append("$prefix '$time'")
+                }
 
                 // fallback to an Ion literal for all types that don't have a native PartiQL representation
                 ExprValueType.FLOAT, ExprValueType.TIMESTAMP, ExprValueType.SYMBOL,
