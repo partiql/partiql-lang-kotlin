@@ -32,7 +32,9 @@ import com.amazon.ion.IonTimestamp
 import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
 import org.partiql.lang.eval.BAG_ANNOTATION
+import org.partiql.lang.eval.DATE_ANNOTATION
 import org.partiql.lang.eval.MISSING_ANNOTATION
+import org.partiql.lang.eval.TIME_ANNOTATION
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -209,6 +211,18 @@ val IonValue.isText: Boolean
 val IonValue.isBag: Boolean
     get() = when (this) {
         is IonList -> this.hasTypeAnnotation(BAG_ANNOTATION)
+        else -> false
+    }
+
+val IonValue.isDate: Boolean
+    get() = when (this) {
+        is IonTimestamp -> this.hasTypeAnnotation(DATE_ANNOTATION)
+        else -> false
+    }
+
+val IonValue.isTime: Boolean
+    get() = when (this) {
+        is IonStruct -> this.hasTypeAnnotation(TIME_ANNOTATION)
         else -> false
     }
 
