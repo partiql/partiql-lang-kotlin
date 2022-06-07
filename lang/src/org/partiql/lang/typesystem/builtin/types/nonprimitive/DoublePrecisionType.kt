@@ -4,7 +4,7 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.typesystem.interfaces.type.BuiltInType
 
 /**
- * DOUBLE_PRECISION type is actually FLOAT8
+ * The standard sql type DOUBLE PRECISION, which is actually FLOAT8
  */
 object DoublePrecisionType : BuiltInType() {
     override val typeAliases: List<String>

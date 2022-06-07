@@ -8,6 +8,9 @@ import org.partiql.lang.typesystem.interfaces.type.ParametricType
 import org.partiql.lang.typesystem.interfaces.type.SqlType
 import org.partiql.lang.typesystem.interfaces.type.TypeParameters
 
+/**
+ * The standard sql type TIME WITH TIME ZONE, e.g. '12:59:59.134-05:30'
+ */
 object TimeWithTimeZoneType : BuiltInType(), ParametricType {
     override val typeAliases: List<String>
         get() = listOf("time with time zone")

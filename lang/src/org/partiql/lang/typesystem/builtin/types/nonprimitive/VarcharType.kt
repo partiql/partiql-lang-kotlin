@@ -7,6 +7,9 @@ import org.partiql.lang.typesystem.interfaces.type.ParametricType
 import org.partiql.lang.typesystem.interfaces.type.SqlType
 import org.partiql.lang.typesystem.interfaces.type.TypeParameters
 
+/**
+ * The standard sql type VARCHAR(n), where "n" is the maximum number of characters of the string literal
+ */
 object VarcharType : BuiltInType(), ParametricType {
     override val typeAliases: List<String>
         get() = listOf("varchar", "character varying")

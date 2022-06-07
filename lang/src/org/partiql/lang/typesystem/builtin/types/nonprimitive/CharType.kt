@@ -10,7 +10,13 @@ import org.partiql.lang.typesystem.interfaces.type.SqlType
 import org.partiql.lang.typesystem.interfaces.type.TypeParameters
 import org.partiql.lang.util.asIonInt
 
+/**
+ * The standard sql type CHARACTER(n), where "n" is the fixed number of characters of the string literal
+ */
 object CharType : BuiltInType(), ParametricType {
+    private const val unboundedLength = Integer.MAX_VALUE
+    private const val maxLength = Integer.MAX_VALUE - 1
+
     override val typeAliases: List<String>
         get() = listOf("char", "character")
 
@@ -23,7 +29,7 @@ object CharType : BuiltInType(), ParametricType {
     override val requiredParameters: List<SqlType> = emptyList()
 
     override val optionalParameters: List<Pair<SqlType, ExprValue>> = listOf(
-        IntType to valueFactory.newInt(Integer.MAX_VALUE)
+        IntType to valueFactory.newInt(unboundedLength)
     )
 
     override fun validateParameters(parameters: TypeParameters) {
@@ -32,6 +38,9 @@ object CharType : BuiltInType(), ParametricType {
         val value = length.value.ionValue.asIonInt().longValue()
         if (value < 0) {
             throw IllegalArgumentException("Compile Error: The parameter of $this type, length, should be larger than or equal to 0")
+        }
+        if (value > maxLength) {
+            throw IllegalArgumentException("Compile Error: The parameter of $this type, length, should be less than or equal to $maxLength")
         }
     }
 }

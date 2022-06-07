@@ -9,6 +9,9 @@ import org.partiql.lang.typesystem.interfaces.type.SqlType
 import org.partiql.lang.typesystem.interfaces.type.TypeParameters
 import org.partiql.lang.util.asIonInt
 
+/**
+ * The standard sql type TIME, e.g. '10:23:54'
+ */
 object TimeType : BuiltInType(), ParametricType {
     override val typeAliases: List<String>
         get() = listOf("time")

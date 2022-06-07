@@ -8,7 +8,16 @@ import org.partiql.lang.typesystem.interfaces.type.ParametricType
 import org.partiql.lang.typesystem.interfaces.type.SqlType
 import org.partiql.lang.typesystem.interfaces.type.TypeParameters
 import org.partiql.lang.util.asIonInt
+import com.amazon.ion.IonType
 
+/**
+ * The standard sql type DECIMAL(p, s), where "p" refers to precision (maximum number of digits)
+ * and "s" refers to scale (number of digits to the right of the decimal point)
+ *
+ * The value of "s" should be always less than the value of "p"
+ *
+ * Also refers to [IonType.DECIMAL]
+ */
 object DecimalType : BuiltInType(), ParametricType {
     override val typeAliases: List<String>
         get() = listOf("dec", "decimal")

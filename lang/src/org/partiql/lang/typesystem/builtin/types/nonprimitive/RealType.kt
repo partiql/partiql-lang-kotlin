@@ -4,7 +4,7 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.typesystem.interfaces.type.BuiltInType
 
 /**
- * REAL type is actually FLOAT4
+ * The standard sql type REAL, which is actually FLOAT4
  */
 object RealType : BuiltInType() {
     override val typeAliases: List<String>
