@@ -11,7 +11,7 @@ import org.partiql.lang.eval.fillErrorContext
 import org.partiql.lang.eval.relation.RelationIterator
 
 /** A thunk that returns a [RelationIterator], which is the result of evaluating a relational operator. */
-internal typealias RelationThunkEnv = (EvaluatorState) -> RelationIterator
+typealias RelationThunkEnv = (EvaluatorState) -> RelationIterator
 
 /**
  * Invokes [t] with error handling like is supplied by [ThunkFactory].
@@ -19,7 +19,7 @@ internal typealias RelationThunkEnv = (EvaluatorState) -> RelationIterator
  * This function is not currently in [ThunkFactory] to avoid complicating it further.  If a need arises, it could be
  * moved.
  */
-internal inline fun relationThunk(metas: MetaContainer, crossinline t: RelationThunkEnv): RelationThunkEnv {
+inline fun relationThunk(metas: MetaContainer, crossinline t: RelationThunkEnv): RelationThunkEnv {
     val sourceLocationMeta = metas[SourceLocationMeta.TAG] as? SourceLocationMeta
     return { env: EvaluatorState ->
         try {

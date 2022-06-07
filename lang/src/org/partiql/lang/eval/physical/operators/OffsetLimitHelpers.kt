@@ -13,7 +13,7 @@ import org.partiql.lang.eval.numberValue
 // The functions in this file look very similar and so the temptation to DRY is quite strong....
 // However, there are enough subtle differences between them that avoiding the duplication isn't worth it.
 
-internal fun evalLimitRowCount(rowCountThunk: PhysicalPlanThunk, env: EvaluatorState, limitLocationMeta: SourceLocationMeta?): Long {
+internal fun evalLimitRowCount(rowCountThunk: ExprThunkEnv, env: EvaluatorState, limitLocationMeta: SourceLocationMeta?): Long {
     val limitExprValue = rowCountThunk(env)
 
     if (limitExprValue.type != ExprValueType.INT) {
@@ -60,7 +60,7 @@ internal fun evalLimitRowCount(rowCountThunk: PhysicalPlanThunk, env: EvaluatorS
     return limitValue
 }
 
-internal fun evalOffsetRowCount(rowCountThunk: PhysicalPlanThunk, env: EvaluatorState, offsetLocationMeta: SourceLocationMeta?): Long {
+internal fun evalOffsetRowCount(rowCountThunk: ExprThunkEnv, env: EvaluatorState, offsetLocationMeta: SourceLocationMeta?): Long {
     val offsetExprValue = rowCountThunk(env)
 
     if (offsetExprValue.type != ExprValueType.INT) {

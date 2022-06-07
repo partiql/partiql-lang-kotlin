@@ -13,7 +13,7 @@ import kotlin.coroutines.resume
  *
  * This is inspired heavily by Kotlin's [sequence] but for [RelationIterator] instead of [Sequence].
  */
-internal fun relation(
+fun relation(
     seqType: RelationType,
     block: suspend RelationScope.() -> Unit
 ): RelationIterator {
@@ -28,7 +28,7 @@ annotation class RelationDsl
 
 /** Defines functions within a block supplied to [relation]. */
 @RelationDsl
-internal interface RelationScope {
+interface RelationScope {
     /** Suspends the coroutine.  Should be called after processing the current row of the relation. */
     suspend fun yield()
 

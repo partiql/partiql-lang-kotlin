@@ -24,12 +24,21 @@ import org.partiql.lang.eval.ExprValue
  * Since the elements of [registers] are mutable, when/if we decide to make query execution multi-threaded, we'll have
  * to take care to not share [EvaluatorState] instances among different threads.
  *
+ * This class must be public because it has to be accessible to custom physical operator implementations.
+ *
  * @param session The evaluation session.
  * @param registers An array of registers containing [ExprValue]s needed during query execution.  Generally, there is
  * one register per local variable.  This is an array (and not a [List]) because its semantics match exactly what we
  * need: fixed length but mutable elements.
  */
-internal class EvaluatorState(
+class EvaluatorState(
     val session: EvaluationSession,
-    val registers: Array<ExprValue>
+    /**
+     * The current state of all variables during query execution.  This is marked as `internal` because there is no
+     * reasonable use-case for applications embedding PartiQL to either read or write directly to this state.  Doing
+     * so is very dangerous. Modification of this state by applications embedding PartiQL should be considered
+     * prohibited, except through [org.partiql.lang.eval.physical.SetVariableFunc] arguments to certain custom physical
+     * operators.
+     */
+    internal val registers: Array<ExprValue>
 )
