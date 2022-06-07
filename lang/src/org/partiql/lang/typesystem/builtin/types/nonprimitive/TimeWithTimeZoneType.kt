@@ -15,9 +15,6 @@ object TimeWithTimeZoneType : BuiltInType(), ParametricType {
     override val exprValueType: ExprValueType
         get() = ExprValueType.TIME
 
-    override val parentType: SqlType
-        get() = TimeType
-
     override val isPrimitiveType: Boolean
         get() = false
 

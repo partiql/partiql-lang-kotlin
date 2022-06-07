@@ -18,9 +18,6 @@ object NumericType : BuiltInType(), ParametricType {
     override val exprValueType: ExprValueType
         get() = ExprValueType.DECIMAL
 
-    override val parentType: SqlType
-        get() = DecimalType
-
     override val isPrimitiveType: Boolean
         get() = false
 

@@ -16,9 +16,6 @@ object DecimalType : BuiltInType(), ParametricType {
     override val exprValueType: ExprValueType
         get() = ExprValueType.DECIMAL
 
-    override val parentType: SqlType?
-        get() = null
-
     override val isPrimitiveType: Boolean
         get() = true
 

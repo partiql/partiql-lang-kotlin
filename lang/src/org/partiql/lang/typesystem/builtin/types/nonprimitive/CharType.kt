@@ -3,7 +3,6 @@ package org.partiql.lang.typesystem.builtin.types.nonprimitive
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.typesystem.builtin.types.primitive.IntType
-import org.partiql.lang.typesystem.builtin.types.primitive.StringType
 import org.partiql.lang.typesystem.builtin.types.valueFactory
 import org.partiql.lang.typesystem.interfaces.type.BuiltInType
 import org.partiql.lang.typesystem.interfaces.type.ParametricType
@@ -17,9 +16,6 @@ object CharType : BuiltInType(), ParametricType {
 
     override val exprValueType: ExprValueType
         get() = ExprValueType.STRING
-
-    override val parentType: SqlType
-        get() = StringType
 
     override val isPrimitiveType: Boolean
         get() = false

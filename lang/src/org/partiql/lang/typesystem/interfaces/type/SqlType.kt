@@ -20,15 +20,6 @@ interface SqlType {
     val exprValueType: ExprValueType
 
     /**
-     * Its parent sql type. Null value means no parent sql type
-     *
-     * When we define a sql function or operator to take arguments of
-     * a certain type, its subtypes are also considered as valid as
-     * the argument type
-     */
-    val parentType: SqlType?
-
-    /**
      * Whether it is a primitive type
      */
     val isPrimitiveType: Boolean

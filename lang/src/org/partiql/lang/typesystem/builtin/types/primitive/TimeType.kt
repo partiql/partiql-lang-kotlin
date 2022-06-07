@@ -16,9 +16,6 @@ object TimeType : BuiltInType(), ParametricType {
     override val exprValueType: ExprValueType
         get() = ExprValueType.TIME
 
-    override val parentType: SqlType?
-        get() = null
-
     override val isPrimitiveType: Boolean
         get() = true
 

@@ -16,9 +16,6 @@ object FloatType : BuiltInType(), ParametricType {
     override val exprValueType: ExprValueType
         get() = ExprValueType.FLOAT
 
-    override val parentType: SqlType?
-        get() = null
-
     override val isPrimitiveType: Boolean
         get() = true
 
