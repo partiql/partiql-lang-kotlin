@@ -21,9 +21,6 @@ object TimeType : BuiltInType(), ParametricType {
 
     override val requiredParameters: List<SqlType> = emptyList()
 
-    /**
-     * Define type & default value of each optional parameter
-     */
     override val optionalParameters: List<Pair<SqlType, ExprValue>> = listOf(
         IntType to valueFactory.newInt(Integer.MAX_VALUE)
     )

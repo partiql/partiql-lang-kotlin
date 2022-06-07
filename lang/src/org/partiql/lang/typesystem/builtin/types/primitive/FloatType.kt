@@ -19,14 +19,8 @@ object FloatType : BuiltInType(), ParametricType {
     override val isPrimitiveType: Boolean
         get() = true
 
-    /**
-     * Define type of each required parameter
-     */
     override val requiredParameters: List<SqlType> = emptyList()
 
-    /**
-     * Define type & default value of each optional parameter
-     */
     override val optionalParameters: List<Pair<SqlType, ExprValue>> = listOf(
         IntType to valueFactory.newInt(53)
     )
