@@ -1,8 +1,8 @@
 package org.partiql.lang.typesystem.builtin.types.primitive
 
+import com.amazon.ion.IonType
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.typesystem.interfaces.type.BuiltInType
-import com.amazon.ion.IonType
 
 /**
  * Refers to standard sql type INTEGER, whose value rages from -2147483648 to +2147483647

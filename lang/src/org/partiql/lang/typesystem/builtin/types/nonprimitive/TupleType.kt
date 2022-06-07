@@ -1,8 +1,8 @@
 package org.partiql.lang.typesystem.builtin.types.nonprimitive
 
 import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.typesystem.interfaces.type.BuiltInType
 import org.partiql.lang.typesystem.builtin.types.primitive.StructType
+import org.partiql.lang.typesystem.interfaces.type.BuiltInType
 
 /**
  * The same as [StructType]

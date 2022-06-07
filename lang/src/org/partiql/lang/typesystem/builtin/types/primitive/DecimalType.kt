@@ -1,5 +1,6 @@
 package org.partiql.lang.typesystem.builtin.types.primitive
 
+import com.amazon.ion.IonType
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.typesystem.builtin.types.valueFactory
@@ -8,7 +9,6 @@ import org.partiql.lang.typesystem.interfaces.type.ParametricType
 import org.partiql.lang.typesystem.interfaces.type.SqlType
 import org.partiql.lang.typesystem.interfaces.type.TypeParameters
 import org.partiql.lang.util.asIonInt
-import com.amazon.ion.IonType
 
 /**
  * The standard sql type DECIMAL(p, s), where "p" refers to precision (maximum number of digits)
