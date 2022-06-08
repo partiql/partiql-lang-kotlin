@@ -1,7 +1,6 @@
-package org.partiql.lang.typesystem.builtin.types.nonprimitive
+package org.partiql.lang.typesystem.builtin.types
 
 import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.typesystem.builtin.types.primitive.IntType
 import org.partiql.lang.typesystem.interfaces.type.BuiltInType
 
 /**
@@ -13,7 +12,4 @@ object Int4Type : BuiltInType() {
 
     override val exprValueType: ExprValueType
         get() = ExprValueType.INT
-
-    override val isPrimitiveType: Boolean
-        get() = false
 }

@@ -1,9 +1,8 @@
-package org.partiql.lang.typesystem.builtin.types.primitive
+package org.partiql.lang.typesystem.builtin.types
 
 import com.amazon.ion.IonType
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.typesystem.builtin.types.valueFactory
 import org.partiql.lang.typesystem.interfaces.type.BuiltInType
 import org.partiql.lang.typesystem.interfaces.type.ParametricType
 import org.partiql.lang.typesystem.interfaces.type.SqlType
@@ -24,9 +23,6 @@ object DecimalType : BuiltInType(), ParametricType {
 
     override val exprValueType: ExprValueType
         get() = ExprValueType.DECIMAL
-
-    override val isPrimitiveType: Boolean
-        get() = true
 
     override val requiredParameters: List<SqlType> = emptyList()
 

@@ -1,7 +1,6 @@
-package org.partiql.lang.typesystem.builtin.types.nonprimitive
+package org.partiql.lang.typesystem.builtin.types
 
 import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.typesystem.builtin.types.primitive.StructType
 import org.partiql.lang.typesystem.interfaces.type.BuiltInType
 
 /**
@@ -13,7 +12,4 @@ object TupleType : BuiltInType() {
 
     override val exprValueType: ExprValueType
         get() = ExprValueType.STRUCT
-
-    override val isPrimitiveType: Boolean
-        get() = false
 }

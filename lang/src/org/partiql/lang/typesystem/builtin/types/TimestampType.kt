@@ -1,4 +1,4 @@
-package org.partiql.lang.typesystem.builtin.types.primitive
+package org.partiql.lang.typesystem.builtin.types
 
 import com.amazon.ion.IonType
 import org.partiql.lang.eval.ExprValueType
@@ -15,7 +15,4 @@ object TimestampType : BuiltInType() {
 
     override val exprValueType: ExprValueType
         get() = ExprValueType.TIMESTAMP
-
-    override val isPrimitiveType: Boolean
-        get() = true
 }

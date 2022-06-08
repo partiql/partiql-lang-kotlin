@@ -20,11 +20,6 @@ interface SqlType {
     val exprValueType: ExprValueType
 
     /**
-     * Whether it is a primitive type. A primitive type corresponds to one [ExprValueType]
-     */
-    val isPrimitiveType: Boolean
-
-    /**
      * Whether it is a built-in type
      */
     val isBuiltInType: Boolean

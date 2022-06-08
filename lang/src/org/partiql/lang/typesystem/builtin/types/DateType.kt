@@ -1,4 +1,4 @@
-package org.partiql.lang.typesystem.builtin.types.primitive
+package org.partiql.lang.typesystem.builtin.types
 
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.typesystem.interfaces.type.BuiltInType
@@ -12,7 +12,4 @@ object DateType : BuiltInType() {
 
     override val exprValueType: ExprValueType
         get() = ExprValueType.DATE
-
-    override val isPrimitiveType: Boolean
-        get() = true
 }

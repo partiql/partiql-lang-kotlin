@@ -14,7 +14,7 @@ interface ParametricType {
     /**
      * Define type & default value of each optional parameter
      */
-    val optionalParameters: List<Pair<SqlType, ExprValue>>
+    val optionalParameters: List<Pair<SqlType, ExprValue?>>
 
     // TODO: support defining variadic parameter
 
