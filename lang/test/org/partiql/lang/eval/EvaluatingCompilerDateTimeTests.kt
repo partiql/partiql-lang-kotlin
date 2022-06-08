@@ -97,27 +97,27 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
             case("TIME (4) '12:24:12.12300'", "TIME '12:24:12.1230'", TimeForValidation(12, 24, 12, 123000000, 4)),
             case("TIME (4) '12:24:12.123'", "TIME '12:24:12.1230'", TimeForValidation(12, 24, 12, 123000000, 4)),
             case("TIME (0) '12:59:59.9'", "TIME '13:00:00'", TimeForValidation(13, 0, 0, 0, 0)),
-            case("TIME WITH TIME ZONE '00:00:00'", "TIME '00:00:00${defaultTimezoneOffset.getOffsetHHmm()}'", TimeForValidation(0, 0, 0, 0, 0, defaultTzMinutes)),
-            case("TIME (2) WITH TIME ZONE '12:24:12.123'", "TIME '12:24:12.12${defaultTimezoneOffset.getOffsetHHmm()}'", TimeForValidation(12, 24, 12, 120000000, 2, defaultTzMinutes)),
-            case("TIME WITH TIME ZONE '12:24:12.12300'", "TIME '12:24:12.12300${defaultTimezoneOffset.getOffsetHHmm()}'", TimeForValidation(12, 24, 12, 123000000, 5, defaultTzMinutes)),
-            case("TIME (3) WITH TIME ZONE '12:24:12.12300'", "TIME '12:24:12.123${defaultTimezoneOffset.getOffsetHHmm()}'", TimeForValidation(12, 24, 12, 123000000, 3, defaultTzMinutes)),
-            case("TIME (4) WITH TIME ZONE '12:24:12.12300'", "TIME '12:24:12.1230${defaultTimezoneOffset.getOffsetHHmm()}'", TimeForValidation(12, 24, 12, 123000000, 4, defaultTzMinutes)),
-            case("TIME (4) WITH TIME ZONE '12:24:12.123'", "TIME '12:24:12.1230${defaultTimezoneOffset.getOffsetHHmm()}'", TimeForValidation(12, 24, 12, 123000000, 4, defaultTzMinutes)),
-            case("TIME (2) WITH TIME ZONE '12:24:12.123-00:00'", "TIME '12:24:12.12+00:00'", TimeForValidation(12, 24, 12, 120000000, 2, 0)),
-            case("TIME (2) WITH TIME ZONE '12:24:12.123+00:00'", "TIME '12:24:12.12+00:00'", TimeForValidation(12, 24, 12, 120000000, 2, 0)),
-            case("TIME (2) WITH TIME ZONE '12:24:12.123+05:30'", "TIME '12:24:12.12+05:30'", TimeForValidation(12, 24, 12, 120000000, 2, 330)),
-            case("TIME (5) WITH TIME ZONE '12:24:12.123678+05:30'", "TIME '12:24:12.12368+05:30'", TimeForValidation(12, 24, 12, 123680000, 5, 330)),
-            case("TIME (2) WITH TIME ZONE '12:59:59.135-05:30'", "TIME '12:59:59.14-05:30'", TimeForValidation(12, 59, 59, 140000000, 2, -330)),
-            case("TIME (2) WITH TIME ZONE '12:59:59.134-05:30'", "TIME '12:59:59.13-05:30'", TimeForValidation(12, 59, 59, 130000000, 2, -330)),
+            case("TIME WITH TIME ZONE '00:00:00'", "TIME WITH TIME ZONE '00:00:00${defaultTimezoneOffset.getOffsetHHmm()}'", TimeForValidation(0, 0, 0, 0, 0, defaultTzMinutes)),
+            case("TIME (2) WITH TIME ZONE '12:24:12.123'", "TIME WITH TIME ZONE '12:24:12.12${defaultTimezoneOffset.getOffsetHHmm()}'", TimeForValidation(12, 24, 12, 120000000, 2, defaultTzMinutes)),
+            case("TIME WITH TIME ZONE '12:24:12.12300'", "TIME WITH TIME ZONE '12:24:12.12300${defaultTimezoneOffset.getOffsetHHmm()}'", TimeForValidation(12, 24, 12, 123000000, 5, defaultTzMinutes)),
+            case("TIME (3) WITH TIME ZONE '12:24:12.12300'", "TIME WITH TIME ZONE '12:24:12.123${defaultTimezoneOffset.getOffsetHHmm()}'", TimeForValidation(12, 24, 12, 123000000, 3, defaultTzMinutes)),
+            case("TIME (4) WITH TIME ZONE '12:24:12.12300'", "TIME WITH TIME ZONE '12:24:12.1230${defaultTimezoneOffset.getOffsetHHmm()}'", TimeForValidation(12, 24, 12, 123000000, 4, defaultTzMinutes)),
+            case("TIME (4) WITH TIME ZONE '12:24:12.123'", "TIME WITH TIME ZONE '12:24:12.1230${defaultTimezoneOffset.getOffsetHHmm()}'", TimeForValidation(12, 24, 12, 123000000, 4, defaultTzMinutes)),
+            case("TIME (2) WITH TIME ZONE '12:24:12.123-00:00'", "TIME WITH TIME ZONE '12:24:12.12+00:00'", TimeForValidation(12, 24, 12, 120000000, 2, 0)),
+            case("TIME (2) WITH TIME ZONE '12:24:12.123+00:00'", "TIME WITH TIME ZONE '12:24:12.12+00:00'", TimeForValidation(12, 24, 12, 120000000, 2, 0)),
+            case("TIME (2) WITH TIME ZONE '12:24:12.123+05:30'", "TIME WITH TIME ZONE '12:24:12.12+05:30'", TimeForValidation(12, 24, 12, 120000000, 2, 330)),
+            case("TIME (5) WITH TIME ZONE '12:24:12.123678+05:30'", "TIME WITH TIME ZONE '12:24:12.12368+05:30'", TimeForValidation(12, 24, 12, 123680000, 5, 330)),
+            case("TIME (2) WITH TIME ZONE '12:59:59.135-05:30'", "TIME WITH TIME ZONE '12:59:59.14-05:30'", TimeForValidation(12, 59, 59, 140000000, 2, -330)),
+            case("TIME (2) WITH TIME ZONE '12:59:59.134-05:30'", "TIME WITH TIME ZONE '12:59:59.13-05:30'", TimeForValidation(12, 59, 59, 130000000, 2, -330)),
             case("TIME '12:25:12.123456' IS TIME", "true"),
             case("TIME (2) '01:01:12' IS TIME", "true"),
             case("TIME WITH TIME ZONE '12:25:12.123456' IS TIME", "true"),
             case("TIME (2) WITH TIME ZONE '01:01:12' IS TIME", "true"),
             case("'01:01:12' IS TIME", "false"),
-            case("TIME WITH TIME ZONE '00:00:00'", "TIME '00:00:00-01:00'", TimeForValidation(0, 0, 0, 0, 0, -60), compileOptionsBlock(-1)),
-            case("TIME WITH TIME ZONE '11:23:45.678'", "TIME '11:23:45.678+06:00'", TimeForValidation(11, 23, 45, 678000000, 3, 360), compileOptionsBlock(6)),
-            case("TIME WITH TIME ZONE '11:23:45.678-05:30'", "TIME '11:23:45.678-05:30'", TimeForValidation(11, 23, 45, 678000000, 3, -330), compileOptionsBlock(6)),
-            case("TIME (2) WITH TIME ZONE '12:59:59.13456'", "TIME '12:59:59.13-05:30'", TimeForValidation(12, 59, 59, 130000000, 2, -330), compileOptionsBlock(-5, -30))
+            case("TIME WITH TIME ZONE '00:00:00'", "TIME WITH TIME ZONE '00:00:00-01:00'", TimeForValidation(0, 0, 0, 0, 0, -60), compileOptionsBlock(-1)),
+            case("TIME WITH TIME ZONE '11:23:45.678'", "TIME WITH TIME ZONE '11:23:45.678+06:00'", TimeForValidation(11, 23, 45, 678000000, 3, 360), compileOptionsBlock(6)),
+            case("TIME WITH TIME ZONE '11:23:45.678-05:30'", "TIME WITH TIME ZONE '11:23:45.678-05:30'", TimeForValidation(11, 23, 45, 678000000, 3, -330), compileOptionsBlock(6)),
+            case("TIME (2) WITH TIME ZONE '12:59:59.13456'", "TIME WITH TIME ZONE '12:59:59.13-05:30'", TimeForValidation(12, 59, 59, 130000000, 2, -330), compileOptionsBlock(-5, -30))
         )
     }
 
@@ -237,7 +237,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
     fun testRandomTimesWithTimezone() {
         (RANDOM_TIMES + RANDOM_TIMES_WITH_TIMEZONE).map {
             val query = "TIME WITH TIME ZONE '$it'"
-            val expected = "TIME '${it.expectedTimeString(withTimeZone = true)}'"
+            val expected = "TIME WITH TIME ZONE '${it.expectedTimeString(withTimeZone = true)}'"
             runEvaluatorTestCase(
                 query = query,
                 expectedResult = expected,
@@ -251,7 +251,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
     fun testRandomTimesWithPrecisionAndTimezone() {
         (RANDOM_TIMES_WITH_PRECISION + RANDOM_TIMES_WITH_PRECISION_AND_TIMEZONE).map {
             val query = "TIME (${it.precision}) WITH TIME ZONE '$it'"
-            val expected = "TIME '${it.expectedTimeString(withTimeZone = true)}'"
+            val expected = "TIME WITH TIME ZONE '${it.expectedTimeString(withTimeZone = true)}'"
             runEvaluatorTestCase(
                 query = query,
                 expectedResult = expected,
