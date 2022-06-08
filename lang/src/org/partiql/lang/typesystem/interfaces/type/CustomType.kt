@@ -6,7 +6,4 @@ package org.partiql.lang.typesystem.interfaces.type
 abstract class CustomType : SqlType {
     override val isBuiltInType: Boolean
         get() = false
-
-    override val isPrimitiveType: Boolean
-        get() = false
 }
