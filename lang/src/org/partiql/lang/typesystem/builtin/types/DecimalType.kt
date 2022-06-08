@@ -41,7 +41,7 @@ object DecimalType : BuiltInType(), ParametricType {
 
         // Check if the value of scale is larger than or equal to 0, and also less than value of precision
         val scale = parameters[1]
-        val valueOfScale = precision.value.ionValue.asIonInt().longValue()
+        val valueOfScale = scale.value.ionValue.asIonInt().longValue()
         if (valueOfScale < 0) {
             throw IllegalArgumentException("Compile Error: The second parameter of $this type, scale, must be larger than or equal to 0")
         }
