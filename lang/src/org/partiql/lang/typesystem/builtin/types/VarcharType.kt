@@ -22,7 +22,7 @@ object VarcharType : BuiltInType(), ParametricType {
     /**
      * Similar to [CharType]
      */
-    override val optionalParameters: List<Pair<SqlType, ExprValue>> = CharType.optionalParameters
+    override val optionalParameters: List<Pair<SqlType, ExprValue?>> = CharType.optionalParameters
 
     /**
      * Similar to [CharType]
