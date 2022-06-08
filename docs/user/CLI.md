@@ -58,14 +58,11 @@ The CLI can be run in two manners, non-interactive and interactive (REPL).
 
 To start an interactive read, eval, print loop (REPL) execute:
 
-```shell
-rlwrap ./gradlew :cli:run --console=plain
-```
+> Note that running directly with Gradle will eat arrow keys and control sequences due to the Gradle daemon.
 
-[rlwrap](https://github.com/hanslub42/rlwrap) provides command history support.  It allows 
-the use of the up and down arrow keys to cycle through recently executed commands and remembers commands entered into 
-previous sessions. `rlwrap` is available as an optional package in all major Linux distributions and in 
-[Homebrew](https://brew.sh/) on macOS.  `rlwrap` is not required but is highly recommended. 
+```shell
+./cli/shell
+```
 
 You will see a prompt that looks as follows:
 

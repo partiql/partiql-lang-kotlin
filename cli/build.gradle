@@ -19,13 +19,22 @@ distributions {
 
 (tasks.findByName("distTar") as Tar).compression = Compression.GZIP
 
-// Allows the CLI to receive input from the keyboard when invoked using `./gradlew :cli:run`
 tasks['run'].standardInput = System.in
+
+task install(type: GradleBuild) {
+    tasks = ['assembleDist', 'distZip', 'installDist']
+}
 
 dependencies {
     implementation project(":lang")
     implementation 'net.sf.jopt-simple:jopt-simple:[5.0,6.0)'
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+
+    // REPL / Shell
+    implementation 'org.jline:jline:3.21.0'
+    implementation 'org.fusesource.jansi:jansi:2.4.0'
+    implementation 'joda-time:joda-time:2.10.14'
+    implementation 'com.google.guava:guava:31.1-jre'
 
     implementation 'org.apache.commons:commons-csv:1.8'
 
