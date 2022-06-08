@@ -3,8 +3,8 @@ package org.partiql.lang.typesystem.interfaces.operator.operators
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.typesystem.interfaces.operator.OpAlias
 import org.partiql.lang.typesystem.interfaces.operator.SqlOperator
+import org.partiql.lang.typesystem.interfaces.type.CompileTimeType
 import org.partiql.lang.typesystem.interfaces.type.SqlType
-import org.partiql.lang.typesystem.interfaces.type.SqlTypeWithParameters
 import org.partiql.lang.typesystem.interfaces.type.TypeParameters
 
 /**
@@ -34,7 +34,7 @@ abstract class LikeOp : SqlOperator {
      *
      * [paramRegistry] is the registry of type parameters.
      */
-    abstract fun inferReturnType(paramRegistry: ParameterRegistry): SqlTypeWithParameters
+    abstract fun inferReturnType(paramRegistry: ParameterRegistry): CompileTimeType
 
     /**
      * Evaluation
