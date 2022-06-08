@@ -14,8 +14,10 @@ import org.partiql.lang.util.asIonInt
  * The standard sql type CHARACTER(n), where "n" is the fixed number of characters of the string literal
  */
 object CharType : BuiltInType(), ParametricType {
-    private const val unboundedLength = Integer.MAX_VALUE
-    private const val maxLength = Integer.MAX_VALUE - 1
+    /**
+     * If the parameter's value is -1, it means the user did not explicitly specify the parameter of the VARCHAR type.
+     */
+    private const val unboundedLength = -1
 
     override val typeAliases: List<String>
         get() = listOf("char", "character")
@@ -38,9 +40,6 @@ object CharType : BuiltInType(), ParametricType {
         val value = length.value.ionValue.asIonInt().longValue()
         if (value < 0) {
             throw IllegalArgumentException("Compile Error: The parameter of $this type, length, should be larger than or equal to 0")
-        }
-        if (value > maxLength) {
-            throw IllegalArgumentException("Compile Error: The parameter of $this type, length, should be less than or equal to $maxLength")
         }
     }
 }
