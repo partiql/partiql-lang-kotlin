@@ -30,10 +30,11 @@ import org.partiql.lang.types.StaticType
  * It uses the default configuration provider to establish a connection with AWS. Please reference the official
  * AWS documentation for specifying which account/profile to use via credentials overrides. Reference the CLI.md
  * file within this repository for more information.
+ * Example usage: query_ddb('SELECT <attribute> FROM <table> WHERE <key> = <value>');
  */
 class QueryDDB(valueFactory: ExprValueFactory) : BaseFunction(valueFactory) {
 
-    private val client: AmazonDynamoDB = AmazonDynamoDBClientBuilder.defaultClient()
+    internal var client: AmazonDynamoDB = AmazonDynamoDBClientBuilder.defaultClient()
 
     override val signature = FunctionSignature(
         name = "query_ddb",
