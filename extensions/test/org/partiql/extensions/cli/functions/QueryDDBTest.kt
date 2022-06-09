@@ -14,7 +14,7 @@
 package org.partiql.extensions.cli.functions
 
 import com.amazon.ion.system.IonSystemBuilder
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.ExecuteStatementResult
 import org.junit.Assert
@@ -22,7 +22,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
-import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
 import org.mockito.junit.MockitoJUnitRunner
@@ -34,20 +33,15 @@ class QueryDDBTest {
 
     private val ion = IonSystemBuilder.standard().build()
     private val factory = ExprValueFactory.standard(ion)
-
-    @Mock
-    lateinit var client: AmazonDynamoDB
-
-    lateinit var function: QueryDDB
+    private val session = EvaluationSession.standard()
+    private val client: AmazonDynamoDBClient = Mockito.mock(AmazonDynamoDBClient::class.java)
+    private lateinit var function: QueryDDB
 
     @BeforeEach
     fun setUp() {
         MockitoAnnotations.openMocks(this)
-        this.function = QueryDDB(factory)
-        this.function.client = this.client
+        this.function = QueryDDB(factory, client)
     }
-
-    private val session = EvaluationSession.standard()
 
     @Test
     fun basicQuery() {

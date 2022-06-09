@@ -34,7 +34,11 @@ import org.partiql.lang.types.StaticType
  */
 class QueryDDB(valueFactory: ExprValueFactory) : BaseFunction(valueFactory) {
 
-    internal var client: AmazonDynamoDB = AmazonDynamoDBClientBuilder.defaultClient()
+    private lateinit var client: AmazonDynamoDB
+
+    constructor(valueFactory: ExprValueFactory, client: AmazonDynamoDB) : this(valueFactory) {
+        this.client = client
+    }
 
     override val signature = FunctionSignature(
         name = "query_ddb",
@@ -44,6 +48,7 @@ class QueryDDB(valueFactory: ExprValueFactory) : BaseFunction(valueFactory) {
     )
 
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
+        initializeClient()
         val queryString = required[0].stringValue()
         val request = ExecuteStatementRequest().withStatement(queryString)
         var nextToken: String?
@@ -62,6 +67,15 @@ class QueryDDB(valueFactory: ExprValueFactory) : BaseFunction(valueFactory) {
                 type = reader.next()
             }
             valueFactory.newList(ionValues)
+        }
+    }
+
+    /**
+     * Setter to initialize the lateinit client
+     */
+    private fun initializeClient() {
+        if (!this::client.isInitialized) {
+            this.client = AmazonDynamoDBClientBuilder.defaultClient()
         }
     }
 }
