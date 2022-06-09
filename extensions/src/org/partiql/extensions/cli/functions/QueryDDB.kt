@@ -27,10 +27,12 @@ import org.partiql.lang.types.StaticType
 
 /**
  * [QueryDDB] is a function to perform a single query on DDB using PartiQL.
- * It uses the default configuration provider to establish a connection with AWS. Please reference the official
- * AWS documentation for specifying which account/profile to use via credentials overrides. Reference the CLI.md
- * file within this repository for more information.
- * Example usage: query_ddb('SELECT <attribute> FROM <table> WHERE <key> = <value>');
+ * If no [AmazonDynamoDB] client is passed, it uses the default AmazonDynamoDBClient along with the default
+ * configuration provider to establish a connection with AWS. If an [AmazonDynamoDB] client is passed, it uses the
+ * passed client (along with its configured credentials) to make all calls.
+ * Please reference the official AWS documentation for specifying which account/profile to use via credentials
+ * overrides. Reference the CLI.md file within this repository for more information.
+ * Example CLI usage: query_ddb('SELECT <attribute> FROM <table> WHERE <key> = <value>');
  */
 class QueryDDB(valueFactory: ExprValueFactory) : BaseFunction(valueFactory) {
 

@@ -661,7 +661,7 @@ All the available options for customized CSV files are as follows:
 6. Set quote sign (single character only): `'quote': '"'`
 7. Set delimiter sign (single character only): `'delimiter': ','`
 
-## Querying DDB
+## Querying Amazon DynamoDB
 
 We also provide a CLI function, `query_ddb`, that allows you to query AWS DynamoDB tables and perform additional computations on
 the response.
@@ -669,8 +669,8 @@ the response.
 **Note**: This implementation uses the [Default Credentials Provider](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html). 
 Please see the link to determine how you can specify which account/profile to use.
 
-For example, let's say you have a DDB table called `users` with primary-key of `id`. If your AWS credentials are set
-correctly within `~/.aws/credentials`, you can perform the following:
+For example, let's say you have a DDB table called `users` with primary-key of `id`. If your AWS credentials and 
+configurations are set correctly, you can perform the following:
 ```shell
 PartiQL> query_ddb('SELECT * FROM users WHERE id = 0');
 ```
