@@ -30,7 +30,13 @@ import org.partiql.lang.eval.ThunkReturnTypeAssertions
 import org.partiql.lang.eval.builtins.DynamicLookupExprFunction
 import org.partiql.lang.eval.builtins.createBuiltinFunctions
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
+import org.partiql.lang.eval.physical.PhysicalBexprToThunkConverter
+import org.partiql.lang.eval.physical.PhysicalExprToThunkConverter
 import org.partiql.lang.eval.physical.PhysicalExprToThunkConverterImpl
+import org.partiql.lang.eval.physical.PhysicalPlanThunk
+import org.partiql.lang.eval.physical.operators.DEFAULT_OPERATOR_FACTORIES
+import org.partiql.lang.eval.physical.operators.PhysicalOperatorFactory
+import org.partiql.lang.eval.physical.operators.PhysicalOperatorFactoryKey
 import org.partiql.lang.planner.transforms.PlanningProblemDetails
 import org.partiql.lang.planner.transforms.normalize
 import org.partiql.lang.planner.transforms.toDefaultPhysicalPlan
@@ -200,6 +206,7 @@ interface PlannerPipeline {
         private var customDataTypes: List<CustomType> = listOf()
         private val customProcedures: MutableMap<String, StoredProcedure> = HashMap()
         private val physicalPlanPasses = ArrayList<PartiqlPhysicalPass>()
+        private val physicalOperatorFactories = ArrayList<PhysicalOperatorFactory>()
         private var metadataResolver: MetadataResolver = emptyMetadataResolver()
         private var allowUndefinedVariables: Boolean = false
         private var enableLegacyExceptionHandling: Boolean = false
@@ -292,6 +299,16 @@ interface PlannerPipeline {
         }
 
         /**
+         * Makes an instance of [PhysicalOperatorFactory] available during plan compilation.
+         *
+         * To actually be used, operator implementations must be selected during a pass over the physical plan.
+         * See [addPhysicalPlanPass].
+         */
+        fun addPhysicalOperatorFactory(factory: PhysicalOperatorFactory) = this.apply {
+            physicalOperatorFactories.add(factory)
+        }
+
+        /**
          * Adds the [MetadataResolver] for global variables.
          *
          * [metadataResolver] is queried during query planning to fetch metadata information such as table schemas.
@@ -333,6 +350,17 @@ interface PlannerPipeline {
                 )
             }
 
+            // check for duplicate operator factories.  Unlike [ExprFunctions], we do not allow the default
+            // operator implementations to be overridden.
+            val allPhysicalOperatorFactories = (DEFAULT_OPERATOR_FACTORIES + physicalOperatorFactories).apply {
+                groupBy { it.key }.entries.firstOrNull { it.value.size > 1 }?.let {
+                    throw IllegalArgumentException(
+                        "More than one BindingsOperatorFactory for ${it.key.operator} " +
+                            "named '${it.value}' was specified."
+                    )
+                }
+            }
+
             val builtinFunctions = createBuiltinFunctions(valueFactory) + DynamicLookupExprFunction()
             val builtinFunctionsMap = builtinFunctions.associateBy {
                 it.signature.name
@@ -349,6 +377,7 @@ interface PlannerPipeline {
                 customDataTypes = customDataTypes,
                 procedures = customProcedures,
                 physicalPlanPasses = physicalPlanPasses,
+                bindingsOperatorFactories = allPhysicalOperatorFactories.associateBy { it.key },
                 metadataResolver = metadataResolver,
                 allowUndefinedVariables = allowUndefinedVariables,
                 enableLegacyExceptionHandling = enableLegacyExceptionHandling
@@ -365,6 +394,7 @@ internal class PlannerPipelineImpl(
     val customDataTypes: List<CustomType>,
     val procedures: Map<String, StoredProcedure>,
     val physicalPlanPasses: List<PartiqlPhysicalPass>,
+    val bindingsOperatorFactories: Map<PhysicalOperatorFactoryKey, PhysicalOperatorFactory>,
     val metadataResolver: MetadataResolver,
     val allowUndefinedVariables: Boolean,
     val enableLegacyExceptionHandling: Boolean
@@ -442,21 +472,35 @@ internal class PlannerPipelineImpl(
     }
 
     override fun compile(physicalPlan: PartiqlPhysical.Plan): PassResult<Expression> {
-        val compiler = PhysicalExprToThunkConverterImpl(
+        // PhysicalBExprToThunkConverter and PhysicalExprToThunkConverterImpl are mutually recursive therefore
+        // we have to fall back on mutable variables to allow them to reference each other.
+        var exprConverter: PhysicalExprToThunkConverterImpl? = null
+
+        val bexperConverter = PhysicalBexprToThunkConverter(
+            valueFactory = this.valueFactory,
+            exprConverter = object : PhysicalExprToThunkConverter {
+                override fun convert(expr: PartiqlPhysical.Expr): PhysicalPlanThunk =
+                    exprConverter!!.convert(expr)
+            },
+            physicalOperatorFactory = bindingsOperatorFactories
+        )
+
+        exprConverter = PhysicalExprToThunkConverterImpl(
             valueFactory = valueFactory,
             functions = functions,
             customTypedOpParameters = customTypedOpParameters,
             procedures = procedures,
-            evaluatorOptions = evaluatorOptions
+            evaluatorOptions = evaluatorOptions,
+            bexperConverter = bexperConverter
         )
 
         val expression = when {
-            enableLegacyExceptionHandling -> compiler.compile(physicalPlan)
+            enableLegacyExceptionHandling -> exprConverter.compile(physicalPlan)
             else -> {
                 // Legacy exception handling is disabled, convert any [SqlException] into a Problem and return
                 // PassResult.Error.
                 try {
-                    compiler.compile(physicalPlan)
+                    exprConverter.compile(physicalPlan)
                 } catch (e: SqlException) {
                     val problem = Problem(
                         SourceLocationMeta(

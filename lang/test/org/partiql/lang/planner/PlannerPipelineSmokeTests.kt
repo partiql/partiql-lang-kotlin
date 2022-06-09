@@ -5,13 +5,19 @@ import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.toIonValue
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.partiql.lang.ION
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemDetails
 import org.partiql.lang.errors.ProblemSeverity
+import org.partiql.lang.eval.physical.SetVariableFunc
+import org.partiql.lang.eval.physical.operators.BindingsExpr
+import org.partiql.lang.eval.physical.operators.ScanPhysicalOperatorFactory
+import org.partiql.lang.eval.physical.operators.ValueExpr
 import org.partiql.lang.eval.physical.sourceLocationMetaOrUnknown
+import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
 import org.partiql.lang.planner.transforms.PLAN_VERSION_NUMBER
 import org.partiql.lang.planner.transforms.PlanningProblemDetails
 import org.partiql.lang.util.SexpAstPrettyPrinter
@@ -158,5 +164,28 @@ class PlannerPipelineSmokeTests {
             sourceLocationMeta,
             FakeProblemDetails()
         )
+    }
+
+    @Test
+    fun `duplicate physical operator factories are blocked`() {
+        // This will duplicate the default scan operator factory.
+        val fakeOperator = object : ScanPhysicalOperatorFactory(DEFAULT_IMPL_NAME) {
+            override fun create(
+                impl: PartiqlPhysical.Impl,
+                expr: ValueExpr,
+                setAsVar: SetVariableFunc,
+                setAtVar: SetVariableFunc?,
+                setByVar: SetVariableFunc?
+            ): BindingsExpr {
+                TODO("doens't matter won't be invoked")
+            }
+        }
+
+        assertThrows<IllegalArgumentException> {
+            @Suppress("DEPRECATION") // don't warn about use of experimental APIs.
+            PlannerPipeline.build(ION) {
+                addPhysicalOperatorFactory(fakeOperator)
+            }
+        }
     }
 }

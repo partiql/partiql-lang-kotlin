@@ -16,6 +16,7 @@ package org.partiql.lang.eval.physical
 
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
 
 /**
  * Contains state needed during query evaluation such as an instance of [EvaluationSession] and an array of [registers]
@@ -25,11 +26,21 @@ import org.partiql.lang.eval.ExprValue
  * to take care to not share [EvaluatorState] instances among different threads.
  *
  * @param session The evaluation session.
- * @param registers An array of registers containing [ExprValue]s needed during query execution.  Generally, there is
- * one register per local variable.  This is an array (and not a [List]) because its semantics match exactly what we
- * need: fixed length but mutable elements.
  */
-internal class EvaluatorState(
+class EvaluatorState(
+    /** The current [EvaluationSession]. */
     val session: EvaluationSession,
-    val registers: Array<ExprValue>
+
+    /** The current [ExprValueFactory], provided here as a convenience. */
+    val valueFactory: ExprValueFactory,
+
+    /**
+     * An array of registers containing [ExprValue]s needed during query execution.  Generally, there is
+     * one register per local variable.  This is an array (and not a [List]) because its semantics match exactly what
+     * we need: fixed length with mutable elements.
+     *
+     * This state should not be modified by customer provided operator implementations except through instances
+     * of [SetVariableFunc] that were provided by this library, thus it is marked as `internal`.
+     */
+    internal val registers: Array<ExprValue>
 )

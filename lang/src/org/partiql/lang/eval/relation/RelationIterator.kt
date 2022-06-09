@@ -24,7 +24,7 @@ enum class RelationType { BAG, LIST }
  * including filters and joins that requires advancing through possibly all remaining rows to see if any remaining row
  * matches the predicate.  This is awkward to implement and would force eager evaluation of the [Iterator].
  */
-internal interface RelationIterator {
+interface RelationIterator {
     val relType: RelationType
 
     /**

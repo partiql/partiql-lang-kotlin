@@ -11,7 +11,8 @@ import org.partiql.lang.domains.PartiqlPhysical
 internal fun PartiqlLogicalResolved.Plan.toDefaultPhysicalPlan() =
     LogicalResolvedToDefaultPhysicalVisitorTransform().transformPlan(this)
 
-internal val DEFAULT_IMPL = PartiqlPhysical.build { impl("default") }
+internal const val DEFAULT_IMPL_NAME = "default"
+internal val DEFAULT_IMPL = PartiqlPhysical.build { impl(DEFAULT_IMPL_NAME) }
 
 internal class LogicalResolvedToDefaultPhysicalVisitorTransform : PartiqlLogicalResolvedToPartiqlPhysicalVisitorTransform() {
 
