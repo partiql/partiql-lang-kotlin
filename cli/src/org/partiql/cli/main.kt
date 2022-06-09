@@ -22,9 +22,9 @@ import joptsimple.OptionDescriptor
 import joptsimple.OptionException
 import joptsimple.OptionParser
 import joptsimple.OptionSet
-import org.partiql.cli.functions.QueryDDB
 import org.partiql.cli.functions.ReadFile
 import org.partiql.cli.functions.WriteFile
+import org.partiql.extensions.cli.functions.QueryDDB
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.CompileOptions

@@ -27,6 +27,7 @@ task install(type: GradleBuild) {
 
 dependencies {
     implementation project(":lang")
+    implementation project(":extensions")
     implementation 'net.sf.jopt-simple:jopt-simple:[5.0,6.0)'
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
 
@@ -35,10 +36,6 @@ dependencies {
     implementation 'org.fusesource.jansi:jansi:2.4.0'
     implementation 'joda-time:joda-time:2.10.14'
     implementation 'com.google.guava:guava:31.1-jre'
-
-    // Amazon SDK
-    implementation platform('com.amazonaws:aws-java-sdk-bom:1.11.1000')
-    implementation 'com.amazonaws:aws-java-sdk-dynamodb'
 
     implementation 'org.apache.commons:commons-csv:1.8'
 

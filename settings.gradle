@@ -19,5 +19,6 @@ include('lang',
         'cli', 
         'examples', 
         'testscript',
-        'pts')
+        'pts',
+        'extensions')
 
