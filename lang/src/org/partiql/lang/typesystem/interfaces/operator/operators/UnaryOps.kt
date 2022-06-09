@@ -3,8 +3,8 @@ package org.partiql.lang.typesystem.interfaces.operator.operators
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.typesystem.interfaces.operator.OpAlias
 import org.partiql.lang.typesystem.interfaces.operator.SqlOperator
+import org.partiql.lang.typesystem.interfaces.type.CompileTimeType
 import org.partiql.lang.typesystem.interfaces.type.SqlType
-import org.partiql.lang.typesystem.interfaces.type.SqlTypeWithParameters
 import org.partiql.lang.typesystem.interfaces.type.TypeParameters
 
 sealed class UnaryOp(override val operatorAlias: OpAlias) : SqlOperator {
@@ -18,7 +18,7 @@ sealed class UnaryOp(override val operatorAlias: OpAlias) : SqlOperator {
      *
      * [typeParametersOfExpr] is type parameters of the operand passed to this operator at compile time.
      */
-    abstract fun inferReturnType(typeParametersOfExpr: TypeParameters): List<SqlTypeWithParameters>
+    abstract fun inferReturnType(typeParametersOfExpr: TypeParameters): List<CompileTimeType>
 
     /**
      * Evaluation

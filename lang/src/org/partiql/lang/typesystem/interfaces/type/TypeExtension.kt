@@ -3,22 +3,24 @@ package org.partiql.lang.typesystem.interfaces.type
 import org.partiql.lang.eval.ExprValue
 
 /**
- * A sql type with actual parameters. If it is a non-parametric type, [parameters] should be an empty list.
+ * A sql type at compile time, during which type parameters are known.
+ *
+ * [parameters] should be an empty list for non-parametric types.
  */
-data class SqlTypeWithParameters(
+data class CompileTimeType(
     val type: SqlType,
     val parameters: TypeParameters = emptyList()
 )
 
 /**
- * A value with a sql type
+ * A type parameter. The value of type parameter must be known at compile time.
  */
-data class ValueWithType(
+data class TypeParameter(
     val value: ExprValue,
-    val typeWithParameters: SqlTypeWithParameters
+    val typeWithParameters: CompileTimeType
 )
 
 /**
  * Parameters of a parametric type
  */
-typealias TypeParameters = List<ValueWithType>
+typealias TypeParameters = List<TypeParameter>
