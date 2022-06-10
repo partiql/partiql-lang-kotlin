@@ -24,6 +24,7 @@ import joptsimple.OptionParser
 import joptsimple.OptionSet
 import org.partiql.cli.functions.ReadFile
 import org.partiql.cli.functions.WriteFile
+import org.partiql.extensions.cli.functions.QueryDDB
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.CompileOptions
@@ -164,6 +165,7 @@ fun main(args: Array<String>) = try {
     val compilerPipeline = CompilerPipeline.build(ion) {
         addFunction(ReadFile(valueFactory))
         addFunction(WriteFile(valueFactory))
+        addFunction(QueryDDB(valueFactory))
         compileOptions(compileOptions)
     }
 

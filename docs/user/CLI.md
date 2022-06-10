@@ -661,6 +661,61 @@ All the available options for customized CSV files are as follows:
 6. Set quote sign (single character only): `'quote': '"'`
 7. Set delimiter sign (single character only): `'delimiter': ','`
 
+## Querying Amazon DynamoDB
+
+We also provide a CLI function, `query_ddb`, that allows you to query AWS DynamoDB tables and perform additional computations on
+the response.
+
+**Note**: This implementation uses the [Default Credentials Provider](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html). 
+Please see the link to determine how you can specify which account/profile to use.
+
+For example, let's say you have a DDB table called `users` with primary-key of `id`. If your AWS credentials and 
+configurations are set correctly, you can perform the following:
+```shell
+PartiQL> query_ddb('SELECT * FROM users WHERE id = 0');
+```
+Which, depending on the content of your table, will return something like:
+```shell
+[
+  {
+    'id': 0,
+    'name': 'John Doe',
+    'age': 22
+  }
+]
+```
+Now, while we don't recommend performing scans on your DDB tables (due to the cost), you can execute queries similar to:
+```shell
+PartiQL> !add_to_global_env {
+             'fullNames': <<
+               'John Doe',
+               'Sarah Jane',
+               'Boe Jackson'
+             >>
+         };
+PartiQL> SELECT VALUE id 
+         FROM query_ddb('SELECT id, name, age FROM users')
+         WHERE name IN fullNames;
+```
+The above query will get the `id`'s of all the users in your local environment, something like:
+```partiql
+<<
+    0,
+    17,
+    1004
+>>
+```
+
+Also, if you'd like to perform insertions into DDB tables, you can perform them as follows:
+```shell
+PartiQL> query_ddb('INSERT INTO users VALUE {''id'': 96, ''name'': ''Kim Lu'', ''age'': 26}');
+```
+
+**Note**: You can escape the PartiQL single-quote by prepending another single-quote. See above.
+
+For in-depth documentation on valid DDB PartiQL queries, please reference the official 
+[AWS DynamoDB PartiQL Docs](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/ql-reference.html).
+
 ## Permissive Typing Mode
 By default, the CLI/REPL runs in [LEGACY](https://github.com/partiql/partiql-lang-kotlin/blob/main/lang/src/org/partiql/lang/eval/CompileOptions.kt#L53-L62)
 typing mode, which will give an evaluation time error in the case of data type mismatches.

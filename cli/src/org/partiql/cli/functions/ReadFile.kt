@@ -17,6 +17,7 @@ package org.partiql.cli.functions
 import com.amazon.ion.IonStruct
 import com.amazon.ion.system.IonReaderBuilder
 import org.apache.commons.csv.CSVFormat
+import org.partiql.extensions.cli.functions.BaseFunction
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
