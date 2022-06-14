@@ -1153,7 +1153,7 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
                     MISSING, NULL, NULL, MISSING, 
                     {'a':1}, {'a':1}, {'a':2}]
             """,
-            """ $partiql_bag::[{_1:1},{_1:2},{},{_1:null},{a:1},{a:2}] """
+            "$partiql_bag::[{_1:1},{_1:2},{_1:[1]},{_1:[1,2]},{_1:$partiql_bag::[]},{},{_1:null},{a:1},{a:2}]"
         )
 
         test(
@@ -1177,13 +1177,20 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
         test(
             "selectDistinctStarBags",
             "SELECT DISTINCT * FROM [ <<>>, <<>>, <<1>>, <<1>>, <<1, 2>>, <<2, 1>>, <<3, 4>>]",
-            "$partiql_bag::[{_1:[]}, {_1: [1]}]"
+            """
+                $partiql_bag::[
+                  {_1: $partiql_bag::[]},
+                  {_1: $partiql_bag::[1]},
+                  {_1: $partiql_bag::[1,2]},
+                  {_1: $partiql_bag::[3,4]}
+                ]
+            """
         )
 
         test(
             "selectDistinctStarLists",
             "SELECT DISTINCT * FROM [[1], [1], [1, 2]]",
-            "$partiql_bag[{_1:[1]}, {_1: [1, 2]}]"
+            "$partiql_bag::[{_1:[1]}, {_1: [1, 2]}]"
         )
 
         test(

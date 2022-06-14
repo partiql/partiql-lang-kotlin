@@ -24,7 +24,7 @@ class EvaluatorStaticTypeTests {
 
         // These tests are known to be failing.  If they are fixed but not removed from this list
         // the test will fail.  (This forces us to keep this list up-to-date.)
-        val FAILING_TESTS = hashSetOf(
+        private val FAILING_TESTS = hashSetOf(
             // https://github.com/partiql/partiql-lang-kotlin/issues/497
             "selectIndexStruct",
 
@@ -57,6 +57,9 @@ class EvaluatorStaticTypeTests {
 
             // TODO: why are these failing due to unexpected (empty) result?
             "selectDistinct",
+            "selectDistinctStarBags",
+            "selectDistinctStarLists",
+            "selectDistinctStarMixed",
             "selectDistinctSubQuery",
             "selectDistinctWithSubQuery",
             "selectDistinctStarStructs",

@@ -27,9 +27,6 @@ class EvaluatorTests {
 
     companion object {
         val AST_EVALUATOR_SKIP_LIST = hashSetOf(
-            // https://github.com/partiql/partiql-lang-kotlin/issues/169
-            "selectDistinctStarLists", "selectDistinctStarBags", "selectDistinctStarMixed",
-
             // https://github.com/partiql/partiql-lang-kotlin/issues/336
             "projectionIterationBehaviorUnfiltered_select_list",
             "projectionIterationBehaviorUnfiltered_select_star"
