@@ -17,7 +17,7 @@ package org.partiql.cli.functions
 import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
 import com.amazon.ion.system.IonSystemBuilder
-import org.junit.AfterClass
+// import org.junit.AfterClass
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.BeforeClass
@@ -46,11 +46,11 @@ class ReadFileTest {
             File(dirPath()).mkdir()
         }
 
-        @AfterClass
-        @JvmStatic
-        fun tearDown() {
-            File(dirPath()).deleteRecursively()
-        }
+//        @AfterClass
+//        @JvmStatic
+//        fun tearDown() {
+//            File(dirPath()).deleteRecursively()
+//        }
     }
 
     private fun IonValue.removeAnnotations() {
@@ -320,6 +320,32 @@ class ReadFileTest {
         val actual = function.callWithOptional(session, args, additionalOptions)
         val expected = "[{id:\"1,\",name:\"Bob\",balance:\"10000.00\"}]"
 
+        assertValues(expected, actual)
+    }
+
+    @Test
+    fun readMarkdownTable() {
+        writeFile("table.md", "| Name | Age | Tenure |\n" + "| ---- | --- | ------ | \n" + "| \"a\"  | \"25\"  | 1      | \n" + "| \"b\"  | 45  | 6      | \n" + "| \"a\"  | 25  | 2      |  ")
+
+        var args = listOf("\"${dirPath("table_1.md")}\"").map { it.exprValue() }
+        val additionalOptions = "{type:\"md\"}".exprValue()
+        val actual = function.callWithOptional(session, args, additionalOptions)
+        val expected = "[{\'Name\': \'a\', \'Age\': 24, \'Tenure\': 1}, {\'Name\': \'b\', \'Age\': 45, \'Tenure\': 6}, {\'Name\': \'a\', \'Age\': 24, \'Tenure\': 2}]"
+        println(actual)
+        /**
+         *     Expect
+         *      {'Age' : '23'} --> Type.String
+         *
+         *    Acutal:
+         *      {'Age' : 23} --> Type.Int
+         *
+         *     Expect String '23'
+         */
+        // this will complain because ion type
+        // ie: age in the actual has a type int
+        // while in expected it has a type string
+        // the only way I can think of to solve this problem is to have it constructed to be a ion directly
+        // ex. ionreaderBuilder....
         assertValues(expected, actual)
     }
 }
