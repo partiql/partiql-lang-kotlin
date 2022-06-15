@@ -20,7 +20,7 @@ import org.jline.reader.LineReader
 import org.jline.utils.AttributedString
 import org.jline.utils.AttributedStyle
 import java.io.PrintStream
-import java.nio.file.Path
+import java.net.URI
 import java.util.regex.Pattern
 
 private val SUCCESS: AttributedStyle = AttributedStyle.DEFAULT.foreground(AttributedStyle.GREEN)
@@ -28,9 +28,9 @@ private val ERROR: AttributedStyle = AttributedStyle.DEFAULT.foreground(Attribut
 private val INFO: AttributedStyle = AttributedStyle.DEFAULT
 private val WARN: AttributedStyle = AttributedStyle.DEFAULT.foreground(AttributedStyle.YELLOW)
 
-class ShellHighlighter(private val syntaxFile: Path) : Highlighter {
+class ShellHighlighter(syntaxUri: URI) : Highlighter {
 
-    private val syntax = SyntaxHighlighter.build(syntaxFile, "PartiQL")
+    private val syntax = SyntaxHighlighter.build(syntaxUri.toString())
 
     override fun highlight(reader: LineReader, line: String): AttributedString = syntax.highlight(line)
 

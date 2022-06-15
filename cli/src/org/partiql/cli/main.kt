@@ -109,6 +109,8 @@ private val inputFormatOpt = optParser.acceptsAll(listOf("input-format", "if"), 
 private val wrapIonOpt = optParser.acceptsAll(listOf("wrap-ion", "w"), "wraps Ion input file values in a bag, requires the input format to be ION, requires the query option")
     .availableIf(queryOpt)
 
+private val monochromeOpt = optParser.acceptsAll(listOf("monochrome", "m"), "removes syntax highlighting for the REPL")
+
 private val outputFileOpt = optParser.acceptsAll(listOf("output", "o"), "output file, requires the query option (default: stdout)")
     .availableIf(queryOpt)
     .withRequiredArg()
@@ -139,6 +141,7 @@ private val outputFormatOpt = optParser.acceptsAll(listOf("output-format", "of")
  *      * -w --wrap-ion: wraps Ion input file values in a bag, requires the input format to be ION, requires the query option
  *      * -o --output: output file (default: STDOUT)
  *      * -of --output-format: (default: PARTIQL) [ION_TEXT, ION_BINARY, PARTIQL, PARTIQL_PRETTY]
+ *      * -m --monochrome: removes syntax highlighting for the REPL
  */
 fun main(args: Array<String>) = try {
     optParser.formatHelpWith(formatter)
@@ -182,7 +185,7 @@ fun main(args: Array<String>) = try {
     if (optionSet.has(queryOpt)) {
         runCli(environment, optionSet, compilerPipeline)
     } else {
-        runShell(environment, compilerPipeline)
+        runShell(environment, optionSet, compilerPipeline)
     }
 } catch (e: OptionException) {
     System.err.println("${e.message}\n")
@@ -193,8 +196,9 @@ fun main(args: Array<String>) = try {
     exitProcess(1)
 }
 
-private fun runShell(environment: Bindings<ExprValue>, compilerPipeline: CompilerPipeline) {
-    Shell(valueFactory, System.out, parser, compilerPipeline, environment).start()
+private fun runShell(environment: Bindings<ExprValue>, optionSet: OptionSet, compilerPipeline: CompilerPipeline) {
+    val isMonochrome = optionSet.has(monochromeOpt)
+    Shell(valueFactory, System.out, parser, compilerPipeline, environment, isMonochrome).start()
 }
 
 private fun runCli(environment: Bindings<ExprValue>, optionSet: OptionSet, compilerPipeline: CompilerPipeline) {
