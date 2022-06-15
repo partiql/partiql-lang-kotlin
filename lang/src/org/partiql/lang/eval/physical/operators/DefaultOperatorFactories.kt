@@ -14,16 +14,25 @@ import org.partiql.lang.eval.relation.relation
 import org.partiql.lang.eval.unnamedValue
 import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
 
-internal val DEFAULT_OPERATOR_FACTORIES = listOf(
-    object : ScanPhysicalOperatorFactory(DEFAULT_IMPL_NAME) {
+/**
+ * A collection of all the default relational operator implementations provided by PartiQL.
+ *
+ * By default, the query planner will select these as the implementations for all relational operators, but
+ * alternate implementations may be provided and chosen by physical plan passes.
+ *
+ * @see [org.partiql.lang.planner.PlannerPipeline.Builder.addPhysicalPlanPass]
+ * @see [org.partiql.lang.planner.PlannerPipeline.Builder.addRelationalOperatorFactory]
+ */
+internal val DEFAULT_RELATIONAL_OPERATOR_FACTORIES = listOf(
+    object : ScanRelationalOperatorFactory(DEFAULT_IMPL_NAME) {
         override fun create(
             impl: PartiqlPhysical.Impl,
-            expr: ValueExpr,
+            expr: ValueExpression,
             setAsVar: SetVariableFunc,
             setAtVar: SetVariableFunc?,
             setByVar: SetVariableFunc?
-        ): BindingsExpr =
-            BindingsExpr { state ->
+        ): RelationExpression =
+            RelationExpression { state ->
                 val valueToScan = expr(state)
 
                 // coerces non-collection types to a singleton Sequence<>.
@@ -37,10 +46,8 @@ internal val DEFAULT_OPERATOR_FACTORIES = listOf(
                     while (rowsIter.hasNext()) {
                         val item = rowsIter.next()
 
-                        // Note that although we could access [EvaluatorState.registers] directly within relationThunk,
-                        // we don't as a means to demonstrate the proper way that custom operator implementations should
-                        // set the values of variables.  See [toSetFunc] and [SetVarFunc] for more info.
-                        setAsVar(state, item.unnamedValue()) // Remove any ordinal (output is a bag)
+                        // .unnamedValue() removes any ordinal that might exist on item
+                        setAsVar(state, item.unnamedValue())
 
                         if (setAtVar != null) {
                             setAtVar(state, item.name ?: state.valueFactory.missingValue)
@@ -54,41 +61,41 @@ internal val DEFAULT_OPERATOR_FACTORIES = listOf(
                 }
             }
     },
-    object : FilterPhysicalOperatorFactory(DEFAULT_IMPL_NAME) {
-        override fun create(impl: PartiqlPhysical.Impl, predicate: ValueExpr, sourceBexpr: BindingsExpr) =
-            BindingsExpr { state ->
-                val sourceToFilter = sourceBexpr(state)
+    object : FilterRelationalOperatorFactory(DEFAULT_IMPL_NAME) {
+        override fun create(impl: PartiqlPhysical.Impl, predicate: ValueExpression, sourceBexpr: RelationExpression) =
+            RelationExpression { state ->
+                val sourceToFilter = sourceBexpr.evaluate(state)
                 createFilterRelItr(sourceToFilter, predicate, state)
             }
     },
-    object : JoinPhysicalOperatorFactory(DEFAULT_IMPL_NAME) {
+    object : JoinRelationalOperatorFactory(DEFAULT_IMPL_NAME) {
         override fun create(
             impl: PartiqlPhysical.Impl,
             joinType: PartiqlPhysical.JoinType,
-            leftBexpr: BindingsExpr,
-            rightBexpr: BindingsExpr,
-            predicateExpr: ValueExpr?,
+            leftBexpr: RelationExpression,
+            rightBexpr: RelationExpression,
+            predicateExpr: ValueExpression?,
             setLeftSideVariablesToNull: (EvaluatorState) -> Unit,
             setRightSideVariablesToNull: (EvaluatorState) -> Unit
-        ): BindingsExpr =
+        ): RelationExpression =
             when (joinType) {
                 is PartiqlPhysical.JoinType.Inner -> {
                     if (predicateExpr == null) {
-                        BindingsExpr { state ->
+                        RelationExpression { state ->
                             createCrossJoinRelItr(leftBexpr, rightBexpr, state)
                         }
                     } else {
-                        BindingsExpr { state ->
+                        RelationExpression { state ->
                             val crossJoinRelItr = createCrossJoinRelItr(leftBexpr, rightBexpr, state)
                             createFilterRelItr(crossJoinRelItr, predicateExpr, state)
                         }
                     }
                 }
                 is PartiqlPhysical.JoinType.Left -> {
-                    BindingsExpr { state ->
+                    RelationExpression { state ->
                         createLeftJoinRelItr(
-                            leftBexpr = leftBexpr,
-                            rightBexpr = rightBexpr,
+                            leftRel = leftBexpr,
+                            rightRel = rightBexpr,
                             predicateExpr = predicateExpr,
                             setRightSideVariablesToNull = setRightSideVariablesToNull,
                             state = state
@@ -97,10 +104,10 @@ internal val DEFAULT_OPERATOR_FACTORIES = listOf(
                 }
                 is PartiqlPhysical.JoinType.Right -> {
                     // Note that this is the same as the left join but the right and left sides are swapped.
-                    BindingsExpr { state ->
+                    RelationExpression { state ->
                         createLeftJoinRelItr(
-                            leftBexpr = rightBexpr,
-                            rightBexpr = leftBexpr,
+                            leftRel = rightBexpr,
+                            rightRel = leftBexpr,
                             predicateExpr = predicateExpr,
                             setRightSideVariablesToNull = setLeftSideVariablesToNull,
                             state = state
@@ -110,16 +117,16 @@ internal val DEFAULT_OPERATOR_FACTORIES = listOf(
                 is PartiqlPhysical.JoinType.Full -> TODO("Full join")
             }
     },
-    object : OffsetPhysicalOperatorFactory(DEFAULT_IMPL_NAME) {
+    object : OffsetRelationalOperatorFactory(DEFAULT_IMPL_NAME) {
         override fun create(
             impl: PartiqlPhysical.Impl,
-            rowCountExpr: ValueExpr,
-            sourceBexpr: BindingsExpr
-        ): BindingsExpr =
-            BindingsExpr { state ->
+            rowCountExpr: ValueExpression,
+            sourceBexpr: RelationExpression
+        ): RelationExpression =
+            RelationExpression { state ->
                 val skipCount: Long = evalOffsetRowCount(rowCountExpr, state)
                 relation(RelationType.BAG) {
-                    val sourceRel = sourceBexpr(state)
+                    val sourceRel = sourceBexpr.evaluate(state)
                     var rowCount = 0L
                     while (rowCount++ < skipCount) {
                         // stop iterating if we run out of rows before we hit the offset.
@@ -131,15 +138,15 @@ internal val DEFAULT_OPERATOR_FACTORIES = listOf(
                 }
             }
     },
-    object : LimitPhysicalOperatorFactory(DEFAULT_IMPL_NAME) {
+    object : LimitRelationalOperatorFactory(DEFAULT_IMPL_NAME) {
         override fun create(
             impl: PartiqlPhysical.Impl,
-            rowCountExpr: ValueExpr,
-            sourceBexpr: BindingsExpr
-        ): BindingsExpr =
-            BindingsExpr { state ->
+            rowCountExpr: ValueExpression,
+            sourceBexpr: RelationExpression
+        ): RelationExpression =
+            RelationExpression { state ->
                 val limitCount = evalLimitRowCount(rowCountExpr, state)
-                val rowIter = sourceBexpr(state)
+                val rowIter = sourceBexpr.evaluate(state)
                 relation(RelationType.BAG) {
                     var rowCount = 0L
                     while (rowCount++ < limitCount && rowIter.nextRow()) {
@@ -148,13 +155,13 @@ internal val DEFAULT_OPERATOR_FACTORIES = listOf(
                 }
             }
     },
-    object : LetPhysicalOperatorFactory(DEFAULT_IMPL_NAME) {
+    object : LetRelationalOperatorFactory(DEFAULT_IMPL_NAME) {
         override fun create(
             impl: PartiqlPhysical.Impl,
-            sourceBexpr: BindingsExpr,
+            sourceBexpr: RelationExpression,
             bindings: List<VariableBinding>
-        ) = BindingsExpr { state ->
-            val sourceItr = sourceBexpr(state)
+        ) = RelationExpression { state ->
+            val sourceItr = sourceBexpr.evaluate(state)
 
             relation(sourceItr.relType) {
                 while (sourceItr.nextRow()) {

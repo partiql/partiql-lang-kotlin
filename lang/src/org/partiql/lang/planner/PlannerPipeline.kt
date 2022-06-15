@@ -34,9 +34,9 @@ import org.partiql.lang.eval.physical.PhysicalBexprToThunkConverter
 import org.partiql.lang.eval.physical.PhysicalExprToThunkConverter
 import org.partiql.lang.eval.physical.PhysicalExprToThunkConverterImpl
 import org.partiql.lang.eval.physical.PhysicalPlanThunk
-import org.partiql.lang.eval.physical.operators.DEFAULT_OPERATOR_FACTORIES
-import org.partiql.lang.eval.physical.operators.PhysicalOperatorFactory
-import org.partiql.lang.eval.physical.operators.PhysicalOperatorFactoryKey
+import org.partiql.lang.eval.physical.operators.DEFAULT_RELATIONAL_OPERATOR_FACTORIES
+import org.partiql.lang.eval.physical.operators.RelationalOperatorFactory
+import org.partiql.lang.eval.physical.operators.RelationalOperatorFactoryKey
 import org.partiql.lang.planner.transforms.PlanningProblemDetails
 import org.partiql.lang.planner.transforms.normalize
 import org.partiql.lang.planner.transforms.toDefaultPhysicalPlan
@@ -206,7 +206,7 @@ interface PlannerPipeline {
         private var customDataTypes: List<CustomType> = listOf()
         private val customProcedures: MutableMap<String, StoredProcedure> = HashMap()
         private val physicalPlanPasses = ArrayList<PartiqlPhysicalPass>()
-        private val physicalOperatorFactories = ArrayList<PhysicalOperatorFactory>()
+        private val physicalOperatorFactories = ArrayList<RelationalOperatorFactory>()
         private var metadataResolver: MetadataResolver = emptyMetadataResolver()
         private var allowUndefinedVariables: Boolean = false
         private var enableLegacyExceptionHandling: Boolean = false
@@ -299,12 +299,12 @@ interface PlannerPipeline {
         }
 
         /**
-         * Makes an instance of [PhysicalOperatorFactory] available during plan compilation.
+         * Makes an instance of [RelationalOperatorFactory] available during plan compilation.
          *
          * To actually be used, operator implementations must be selected during a pass over the physical plan.
          * See [addPhysicalPlanPass].
          */
-        fun addPhysicalOperatorFactory(factory: PhysicalOperatorFactory) = this.apply {
+        fun addRelationalOperatorFactory(factory: RelationalOperatorFactory) = this.apply {
             physicalOperatorFactories.add(factory)
         }
 
@@ -352,7 +352,7 @@ interface PlannerPipeline {
 
             // check for duplicate operator factories.  Unlike [ExprFunctions], we do not allow the default
             // operator implementations to be overridden.
-            val allPhysicalOperatorFactories = (DEFAULT_OPERATOR_FACTORIES + physicalOperatorFactories).apply {
+            val allPhysicalOperatorFactories = (DEFAULT_RELATIONAL_OPERATOR_FACTORIES + physicalOperatorFactories).apply {
                 groupBy { it.key }.entries.firstOrNull { it.value.size > 1 }?.let {
                     throw IllegalArgumentException(
                         "More than one BindingsOperatorFactory for ${it.key.operator} " +
@@ -394,7 +394,7 @@ internal class PlannerPipelineImpl(
     val customDataTypes: List<CustomType>,
     val procedures: Map<String, StoredProcedure>,
     val physicalPlanPasses: List<PartiqlPhysicalPass>,
-    val bindingsOperatorFactories: Map<PhysicalOperatorFactoryKey, PhysicalOperatorFactory>,
+    val bindingsOperatorFactories: Map<RelationalOperatorFactoryKey, RelationalOperatorFactory>,
     val metadataResolver: MetadataResolver,
     val allowUndefinedVariables: Boolean,
     val enableLegacyExceptionHandling: Boolean
@@ -482,7 +482,7 @@ internal class PlannerPipelineImpl(
                 override fun convert(expr: PartiqlPhysical.Expr): PhysicalPlanThunk =
                     exprConverter!!.convert(expr)
             },
-            physicalOperatorFactory = bindingsOperatorFactories
+            relationalOperatorFactory = bindingsOperatorFactories
         )
 
         exprConverter = PhysicalExprToThunkConverterImpl(

@@ -7,19 +7,19 @@ import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.Thunk
 import org.partiql.lang.eval.ThunkValue
-import org.partiql.lang.eval.physical.operators.BindingsExpr
-import org.partiql.lang.eval.physical.operators.FilterPhysicalOperatorFactory
-import org.partiql.lang.eval.physical.operators.JoinPhysicalOperatorFactory
-import org.partiql.lang.eval.physical.operators.LetPhysicalOperatorFactory
-import org.partiql.lang.eval.physical.operators.LimitPhysicalOperatorFactory
-import org.partiql.lang.eval.physical.operators.OffsetPhysicalOperatorFactory
-import org.partiql.lang.eval.physical.operators.PhysicalOperatorFactory
-import org.partiql.lang.eval.physical.operators.PhysicalOperatorFactoryKey
-import org.partiql.lang.eval.physical.operators.PhysicalOperatorKind
-import org.partiql.lang.eval.physical.operators.ProjectPhysicalOperatorFactory
-import org.partiql.lang.eval.physical.operators.ScanPhysicalOperatorFactory
+import org.partiql.lang.eval.physical.operators.FilterRelationalOperatorFactory
+import org.partiql.lang.eval.physical.operators.JoinRelationalOperatorFactory
+import org.partiql.lang.eval.physical.operators.LetRelationalOperatorFactory
+import org.partiql.lang.eval.physical.operators.LimitRelationalOperatorFactory
+import org.partiql.lang.eval.physical.operators.OffsetRelationalOperatorFactory
+import org.partiql.lang.eval.physical.operators.ProjectRelationalOperatorFactory
+import org.partiql.lang.eval.physical.operators.RelationExpression
+import org.partiql.lang.eval.physical.operators.RelationalOperatorFactory
+import org.partiql.lang.eval.physical.operators.RelationalOperatorFactoryKey
+import org.partiql.lang.eval.physical.operators.RelationalOperatorKind
+import org.partiql.lang.eval.physical.operators.ScanRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.VariableBinding
-import org.partiql.lang.eval.physical.operators.valueExpr
+import org.partiql.lang.eval.physical.operators.valueExpression
 import org.partiql.lang.util.toIntExact
 
 /** A specialization of [Thunk] that we use for evaluation of physical plans. */
@@ -31,21 +31,21 @@ internal typealias PhysicalPlanThunkValue<T> = ThunkValue<EvaluatorState, T>
 internal class PhysicalBexprToThunkConverter(
     private val exprConverter: PhysicalExprToThunkConverter,
     private val valueFactory: ExprValueFactory,
-    private val physicalOperatorFactory: Map<PhysicalOperatorFactoryKey, PhysicalOperatorFactory>
+    private val relationalOperatorFactory: Map<RelationalOperatorFactoryKey, RelationalOperatorFactory>
 ) : PartiqlPhysical.Bexpr.Converter<RelationThunkEnv> {
 
     private fun PhysicalPlanThunk.toValueExpr(sourceLocationMeta: SourceLocationMeta?) =
-        valueExpr(sourceLocationMeta) { state -> this(state) }
+        valueExpression(sourceLocationMeta) { state -> this(state) }
 
-    private fun BindingsExpr.toRelationThunk(metas: MetaContainer) = relationThunk(metas) { state -> this(state) }
+    private fun RelationExpression.toRelationThunk(metas: MetaContainer) = relationThunk(metas) { state -> this.evaluate(state) }
 
-    private inline fun <reified T : PhysicalOperatorFactory> findOperatorFactory(
-        operator: PhysicalOperatorKind,
+    private inline fun <reified T : RelationalOperatorFactory> findOperatorFactory(
+        operator: RelationalOperatorKind,
         name: String
     ): T {
-        val key = PhysicalOperatorFactoryKey(operator, name)
+        val key = RelationalOperatorFactoryKey(operator, name)
         val found =
-            physicalOperatorFactory[key] ?: error("Factory for operator ${key.operator} named '${key.name}' does not exist.")
+            relationalOperatorFactory[key] ?: error("Factory for operator ${key.operator} named '${key.name}' does not exist.")
         return found as? T
             ?: error(
                 "Internal error: Operator factory ${key.operator} named '${key.name}' does not derive from " +
@@ -58,7 +58,7 @@ internal class PhysicalBexprToThunkConverter(
         val argExprs = node.args.map { exprConverter.convert(it).toValueExpr(it.metas.sourceLocationMeta) }
 
         // locate operator factory
-        val factory = findOperatorFactory<ProjectPhysicalOperatorFactory>(PhysicalOperatorKind.PROJECT, node.i.name.text)
+        val factory = findOperatorFactory<ProjectRelationalOperatorFactory>(RelationalOperatorKind.PROJECT, node.i.name.text)
 
         // create operator implementation
         val bindingsExpr = factory.create(node.i, node.binding.toSetVariableFunc(), argExprs)
@@ -75,7 +75,7 @@ internal class PhysicalBexprToThunkConverter(
         val bySetter = node.byDecl?.toSetVariableFunc()
 
         // locate operator factory
-        val factory = findOperatorFactory<ScanPhysicalOperatorFactory>(PhysicalOperatorKind.SCAN, node.i.name.text)
+        val factory = findOperatorFactory<ScanRelationalOperatorFactory>(RelationalOperatorKind.SCAN, node.i.name.text)
 
         // create operator implementation
         val bindingsExpr = factory.create(
@@ -96,7 +96,7 @@ internal class PhysicalBexprToThunkConverter(
         val sourceBindingsExpr = this.convert(node.source)
 
         // locate operator factory
-        val factory = findOperatorFactory<FilterPhysicalOperatorFactory>(PhysicalOperatorKind.FILTER, node.i.name.text)
+        val factory = findOperatorFactory<FilterRelationalOperatorFactory>(RelationalOperatorKind.FILTER, node.i.name.text)
 
         // create operator implementation
         val bindingsExpr = factory.create(node.i, predicateValueExpr, sourceBindingsExpr)
@@ -116,7 +116,7 @@ internal class PhysicalBexprToThunkConverter(
         }
 
         // locate operator factory
-        val factory = findOperatorFactory<JoinPhysicalOperatorFactory>(PhysicalOperatorKind.JOIN, node.i.name.text)
+        val factory = findOperatorFactory<JoinRelationalOperatorFactory>(RelationalOperatorKind.JOIN, node.i.name.text)
 
         // Compute a function to set the left-side variables to NULL.  This is for use with RIGHT JOIN, when the left
         // side of the join is empty or no rows match the predicate.
@@ -169,7 +169,7 @@ internal class PhysicalBexprToThunkConverter(
         val sourceBexpr = this.convert(node.source)
 
         // locate operator factory
-        val factory = findOperatorFactory<OffsetPhysicalOperatorFactory>(PhysicalOperatorKind.OFFSET, node.i.name.text)
+        val factory = findOperatorFactory<OffsetRelationalOperatorFactory>(RelationalOperatorKind.OFFSET, node.i.name.text)
 
         // create operator implementation
         val bindingsExpr = factory.create(node.i, rowCountExpr, sourceBexpr)
@@ -183,7 +183,7 @@ internal class PhysicalBexprToThunkConverter(
         val sourceBexpr = this.convert(node.source)
 
         // locate operator factory
-        val factory = findOperatorFactory<LimitPhysicalOperatorFactory>(PhysicalOperatorKind.LIMIT, node.i.name.text)
+        val factory = findOperatorFactory<LimitRelationalOperatorFactory>(RelationalOperatorKind.LIMIT, node.i.name.text)
 
         // create operator implementation
         val bindingsExpr = factory.create(node.i, rowCountExpr, sourceBexpr)
@@ -202,7 +202,7 @@ internal class PhysicalBexprToThunkConverter(
             )
         }
         // locate operator factory
-        val factory = findOperatorFactory<LetPhysicalOperatorFactory>(PhysicalOperatorKind.LET, node.i.name.text)
+        val factory = findOperatorFactory<LetRelationalOperatorFactory>(RelationalOperatorKind.LET, node.i.name.text)
 
         // create operator implementation
         val bindingsExpr = factory.create(node.i, sourceBexpr, compiledBindings)

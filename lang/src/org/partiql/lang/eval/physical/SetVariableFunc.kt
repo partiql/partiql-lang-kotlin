@@ -7,11 +7,10 @@ import org.partiql.lang.util.toIntExact
 /**
  * Sets the value of a variable which is stored in an [EvaluatorState].
  *
- * To obtain an instance of [SetVariableFunc] that sets a specific variable, see [toSetVariableFunc], which is
- * intentionlly `internal` to avoid exposing it to customers.  This is because [EvaluatorState.registers] contains the
- * current value of all variables in an SFW query.  As such, allowing direct access to the registers is very risky--for
- * example, if the wrong register is set the query will have the incorrect result or trigger an evaluation-time
- * exception.
+ * To obtain an instance of [SetVariableFunc] that sets a specific variable, see [toSetVariableFunc]. This is because
+ * [EvaluatorState.registers] contains the current value of all variables in an SFW query.  As such, allowing direct
+ * access to the registers is very risky--for example, if the wrong register is set the query will have the incorrect
+ * result or trigger an evaluation-time exception.
  *
  * To mitigate this risk, [EvaluatorState.registers] is marked to `internal` to avoid exposing it publicly and
  * [SetVariableFunc] is provided to allow custom operator implementation to assign values to only specific variables
@@ -30,5 +29,7 @@ typealias SetVariableFunc = (EvaluatorState, ExprValue) -> Unit
  * access to the [EvaluatorState.registers] array, which is marked as `internal` to reduce the likelihood of being
  * clobbered by a physical operator implementation which was not supplied by this library.
  */
-internal fun PartiqlPhysical.VarDecl.toSetVariableFunc(): SetVariableFunc =
-    { state, value -> state.registers[this.index.value.toIntExact()] = value }
+internal fun PartiqlPhysical.VarDecl.toSetVariableFunc(): SetVariableFunc {
+    val index = this.index.value.toIntExact()
+    return { state, value -> state.registers[index] = value }
+}

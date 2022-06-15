@@ -8,12 +8,12 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.errorContextFrom
 import org.partiql.lang.eval.numberValue
-import org.partiql.lang.eval.physical.operators.ValueExpr
+import org.partiql.lang.eval.physical.operators.ValueExpression
 
 // The functions in this file look very similar and so the temptation to DRY is quite strong....
 // However, there are enough subtle differences between them that avoiding the duplication isn't worth it.
 
-internal fun evalLimitRowCount(rowCountExpr: ValueExpr, env: EvaluatorState): Long {
+internal fun evalLimitRowCount(rowCountExpr: ValueExpression, env: EvaluatorState): Long {
     val limitExprValue = rowCountExpr(env)
 
     if (limitExprValue.type != ExprValueType.INT) {
@@ -60,7 +60,7 @@ internal fun evalLimitRowCount(rowCountExpr: ValueExpr, env: EvaluatorState): Lo
     return limitValue
 }
 
-internal fun evalOffsetRowCount(rowCountExpr: ValueExpr, state: EvaluatorState): Long {
+internal fun evalOffsetRowCount(rowCountExpr: ValueExpression, state: EvaluatorState): Long {
     val offsetExprValue = rowCountExpr(state)
 
     if (offsetExprValue.type != ExprValueType.INT) {

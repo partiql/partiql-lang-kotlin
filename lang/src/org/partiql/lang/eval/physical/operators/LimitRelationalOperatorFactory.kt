@@ -3,10 +3,10 @@ package org.partiql.lang.eval.physical.operators
 import org.partiql.lang.domains.PartiqlPhysical
 
 /** Provides an implementation of the [PartiqlPhysical.Bexpr.Limit] operator.*/
-abstract class LimitPhysicalOperatorFactory(name: String) : PhysicalOperatorFactory {
-    final override val key: PhysicalOperatorFactoryKey = PhysicalOperatorFactoryKey(PhysicalOperatorKind.LIMIT, name)
+abstract class LimitRelationalOperatorFactory(name: String) : RelationalOperatorFactory {
+    final override val key: RelationalOperatorFactoryKey = RelationalOperatorFactoryKey(RelationalOperatorKind.LIMIT, name)
 
-    /** Creates a [BindingsExpr] instance for [PartiqlPhysical.Bexpr.Limit]. */
+    /** Creates a [RelationExpression] instance for [PartiqlPhysical.Bexpr.Limit]. */
     abstract fun create(
         /**
          * Contains any static arguments needed by the operator implementation that were supplied by the planner
@@ -14,8 +14,8 @@ abstract class LimitPhysicalOperatorFactory(name: String) : PhysicalOperatorFact
          */
         impl: PartiqlPhysical.Impl,
         /** Invokes the row count expression. */
-        rowCountExpr: ValueExpr,
+        rowCountExpr: ValueExpression,
         /** Invokes the source bindings expression. */
-        sourceBexpr: BindingsExpr
-    ): BindingsExpr
+        sourceBexpr: RelationExpression
+    ): RelationExpression
 }
