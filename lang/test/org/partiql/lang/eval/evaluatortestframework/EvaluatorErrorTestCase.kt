@@ -91,28 +91,26 @@ data class EvaluatorErrorTestCase(
         actualErrorContext: PropertyValueMap? = null,
         actualPermissiveModeResult: String? = null,
         actualInternalFlag: Boolean? = null,
-    ): String {
-        val b = StringBuilder()
-        b.appendLine("Note                           : $note")
-        b.appendLine("Group name                     : $groupName")
-        b.appendLine("Query                          : $query")
-        b.appendLine("Target pipeline                : $targetPipeline")
-        b.appendLine("Expected error code            : $expectedErrorCode")
+    ) = buildString {
+        appendLine("Note                           : $note")
+        appendLine("Group name                     : $groupName")
+        appendLine("Query                          : $query")
+        appendLine("Target pipeline                : $targetPipeline")
+        appendLine("Expected error code            : $expectedErrorCode")
         if (actualErrorCode != null) {
-            b.appendLine("Actual error code              : $actualErrorCode")
+            appendLine("Actual error code              : $actualErrorCode")
         }
-        b.appendLine("Expected error context         : $expectedErrorContext")
+        appendLine("Expected error context         : $expectedErrorContext")
         if (actualErrorContext != null) {
-            b.appendLine("Actual error context           : $actualErrorContext")
+            appendLine("Actual error context           : $actualErrorContext")
         }
-        b.appendLine("Expected internal flag         : $expectedInternalFlag")
+        appendLine("Expected internal flag         : $expectedInternalFlag")
         if (actualErrorContext != null) {
-            b.appendLine("Actual internal flag           : $actualInternalFlag")
+            appendLine("Actual internal flag           : $actualInternalFlag")
         }
-        b.appendLine("Expected permissive mode result: $expectedPermissiveModeResult")
+        appendLine("Expected permissive mode result: $expectedPermissiveModeResult")
         if (actualPermissiveModeResult != null) {
-            b.appendLine("Actual permissive mode result  : $actualPermissiveModeResult")
+            appendLine("Actual permissive mode result  : $actualPermissiveModeResult")
         }
-        return b.toString()
     }
 }
