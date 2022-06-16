@@ -28,7 +28,7 @@ private val ERROR: AttributedStyle = AttributedStyle.DEFAULT.foreground(Attribut
 private val INFO: AttributedStyle = AttributedStyle.DEFAULT
 private val WARN: AttributedStyle = AttributedStyle.DEFAULT.foreground(AttributedStyle.YELLOW)
 
-class ShellHighlighter(syntaxUri: URI) : Highlighter {
+internal class ShellHighlighter(syntaxUri: URI) : Highlighter {
 
     private val syntax = SyntaxHighlighter.build(syntaxUri.toString())
 

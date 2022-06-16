@@ -270,6 +270,10 @@ class Shell(
         }
     }
 
+    /**
+     * A configuration class representing any configurations specified by the user
+     * @param isMonochrome specifies the removal of syntax highlighting
+     */
     class ShellConfiguration(val isMonochrome: Boolean = false)
 }
 

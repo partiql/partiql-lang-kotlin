@@ -1,7 +1,7 @@
 syntax "PartiQL" "\.pql$"
 
 # Numbers
-color magenta "([0-9]+(\.)?[0-9]*|[0-9]*(\.)?[0-9]+)([eE][+-]?[0-9]+)*"
+color magenta "([0-9]+(\.)?[0-9]*|[0-9]*(\.)?[0-9]+)([eEdD][+-]?[0-9]+)*"
 
 # PartiQL Data Types
 icolor green "\<(int|smallint|bigint|integer|integer2|int2|integer4|int4|integer8|int8|char|character|time)\>"

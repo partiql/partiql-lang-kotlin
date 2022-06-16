@@ -135,6 +135,8 @@ private val outputFormatOpt = optParser.acceptsAll(listOf("output-format", "of")
  * * -e --environment: takes an environment file to load as the initial global environment
  * * -p --permissive: run the query in permissive typing mode (returns MISSING rather than error for data type
  * mismatches)
+ * * Interactive only:
+ *      * -m --monochrome: removes syntax highlighting for the REPL
  * * Non interactive only:
  *      * -q --query: PartiQL query
  *      * -i --input: input file
@@ -142,7 +144,6 @@ private val outputFormatOpt = optParser.acceptsAll(listOf("output-format", "of")
  *      * -w --wrap-ion: wraps Ion input file values in a bag, requires the input format to be ION, requires the query option
  *      * -o --output: output file (default: STDOUT)
  *      * -of --output-format: (default: PARTIQL) [ION_TEXT, ION_BINARY, PARTIQL, PARTIQL_PRETTY]
- *      * -m --monochrome: removes syntax highlighting for the REPL
  */
 fun main(args: Array<String>) = try {
     optParser.formatHelpWith(formatter)
