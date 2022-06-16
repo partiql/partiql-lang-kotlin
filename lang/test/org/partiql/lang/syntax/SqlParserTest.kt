@@ -4268,4 +4268,26 @@ class SqlParserTest : SqlParserTestBase() {
             System.currentTimeMillis() - startTime < maxParseTime
         )
     }
+
+    @Test
+    fun testMetas() {
+        // Arrange
+        val query = "SELECT * FROM << { 'x': 2 } >> ORDER BY x"
+        val expected = SourceLocationMeta(1, 32, 5)
+
+        // Act
+        val stmt = parser.parseAstStatement(query)
+
+        // Gather Metas and Assert
+        val expr = when (stmt) {
+            is PartiqlAst.Statement.Query -> stmt.expr
+            else -> throw AssertionError()
+        }
+        val orderExpr = when (expr) {
+            is PartiqlAst.Expr.Select -> expr.order
+            else -> throw AssertionError()
+        }
+        val metas = orderExpr?.metas ?: throw AssertionError()
+        assertEquals(expected, metas.sourceLocation)
+    }
 }

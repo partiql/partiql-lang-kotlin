@@ -591,7 +591,8 @@ class SqlParser(
                                     3 -> sortSpec(it.children[0].toAstExpr(), it.children[1].toOrderingSpec(), it.children[2].toNullsSpec())
                                     else -> errMalformedParseTree("Invalid ordering expressions syntax")
                                 }
-                            }
+                            },
+                            it.getMetas()
                         )
                     }
 
@@ -2289,13 +2290,14 @@ class SqlParser(
         parseOptionalSingleExpressionClause(ParseType.HAVING)
 
         if (rem.head?.keywordText == "order") {
+            val orderToken = rem.head
             rem = rem.tail.tailExpectedToken(TokenType.BY)
 
             val orderByChildren = listOf(rem.parseOrderByArgList())
             rem = orderByChildren.first().remaining
 
             children.add(
-                ParseNode(type = ParseType.ORDER_BY, token = null, children = orderByChildren, remaining = rem)
+                ParseNode(type = ParseType.ORDER_BY, token = orderToken, children = orderByChildren, remaining = rem)
             )
         }
 
