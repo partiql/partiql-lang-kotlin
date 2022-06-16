@@ -21,9 +21,16 @@ import com.amazon.ion.system.IonSystemBuilder
 import org.apache.commons.csv.CSVFormat
 import org.partiql.extensions.cli.functions.BaseFunction
 import org.partiql.lang.CompilerPipeline
-import org.partiql.lang.eval.*
+import org.partiql.lang.eval.BaseExprValue
+import org.partiql.lang.eval.Bindings
+import org.partiql.lang.eval.EvaluationSession
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.io.DelimitedValues
 import org.partiql.lang.eval.io.DelimitedValues.ConversionMode
+import org.partiql.lang.eval.namedValue
+import org.partiql.lang.eval.stringValue
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.asIonStruct
