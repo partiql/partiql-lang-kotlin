@@ -79,7 +79,7 @@ class Shell(
     private val parser: Parser,
     private val compiler: CompilerPipeline,
     private val initialGlobal: Bindings<ExprValue>,
-    private val isMonochrome: Boolean = false
+    private val config: ShellConfiguration = ShellConfiguration()
 ) {
 
     private val homeDir: Path = Paths.get(System.getProperty("user.home"))
@@ -125,9 +125,10 @@ class Shell(
     private fun run(exiting: AtomicBoolean) = TerminalBuilder.builder().build().use { terminal ->
         val userSyntaxFile = homeDir.resolve(".nano/PartiQL.nanorc")
         val highlighter = when {
-            this.isMonochrome -> null
+            this.config.isMonochrome -> null
             userSyntaxFile.toFile().exists() -> ShellHighlighter(userSyntaxFile.toUri())
-            else -> ShellHighlighter(Shell::class.java.classLoader.getResource("org/partiql/cli/syntax/PartiQL.nanorc").toURI())
+            else -> Shell::class.java.classLoader.getResource("org/partiql/cli/syntax/PartiQL.nanorc")
+                ?.let { ShellHighlighter(it.toURI()) }
         }
         val reader = LineReaderBuilder.builder()
             .terminal(terminal)
@@ -268,6 +269,8 @@ class Shell(
             }
         }
     }
+
+    class ShellConfiguration(val isMonochrome: Boolean = false)
 }
 
 /**

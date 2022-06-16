@@ -4,9 +4,9 @@ syntax "PartiQL" "\.pql$"
 color magenta "([0-9]+(\.)?[0-9]*|[0-9]*(\.)?[0-9]+)([eE][+-]?[0-9]+)*"
 
 # PartiQL Data Types
-icolor green "\<(smallint|integer2|int2|integer4|int4|integer8|int8|char|character|time)\>"
+icolor green "\<(int|smallint|bigint|integer|integer2|int2|integer4|int4|integer8|int8|char|character|time)\>"
 icolor green "\<(bool|boolean|string|symbol|clob|blob|struct|list|sexp|bag)\>"
-icolor green "\<(varchar|date|smallint|int|integer|bigint|float|double|decimal)\>"
+icolor green "\<(varchar|date|float|double|decimal)\>"
 icolor green "\<(timestamp|time)\>"
 
 # PartiQL Keywords (Non Data Types)
