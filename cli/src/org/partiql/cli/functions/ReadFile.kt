@@ -102,7 +102,11 @@ internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFact
         private val lazyIonValue by lazy {
             valueFactory.ion.newEmptyStruct().apply {
                 rowValues.map { kvp ->
-                    add(kvp.key, valueFactory.ion.newString(kvp.value.stringValue()))
+                    if (kvp.value.scalar.numberValue() != null) {
+                        add(kvp.key, valueFactory.ion.newInt(kvp.value.scalar.numberValue()))
+                    } else {
+                        add(kvp.key, valueFactory.ion.newString(kvp.value.scalar.stringValue()))
+                    }
                 }
                 makeReadOnly()
             }

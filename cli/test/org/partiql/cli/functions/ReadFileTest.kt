@@ -325,27 +325,12 @@ class ReadFileTest {
 
     @Test
     fun readMarkdownTable() {
-        writeFile("table.md", "| Name | Age | Tenure |\n" + "| ---- | --- | ------ | \n" + "| \"a\"  | \"25\"  | 1      | \n" + "| \"b\"  | 45  | 6      | \n" + "| \"a\"  | 25  | 2      |  ")
+        writeFile("table.md", "| Name | Age | Tenure |\n" + "| ---- | --- | ------ | \n" + "| \"a\"  | 24  | 1      | \n" + "| \"b\"  | 45  | 6      | \n" + "| \"a\"  | 24  | 2      |  ")
 
-        var args = listOf("\"${dirPath("table_1.md")}\"").map { it.exprValue() }
+        var args = listOf("\"${dirPath("table.md")}\"").map { it.exprValue() }
         val additionalOptions = "{type:\"md\"}".exprValue()
         val actual = function.callWithOptional(session, args, additionalOptions)
-        val expected = "[{\'Name\': \'a\', \'Age\': 24, \'Tenure\': 1}, {\'Name\': \'b\', \'Age\': 45, \'Tenure\': 6}, {\'Name\': \'a\', \'Age\': 24, \'Tenure\': 2}]"
-        println(actual)
-        /**
-         *     Expect
-         *      {'Age' : '23'} --> Type.String
-         *
-         *    Acutal:
-         *      {'Age' : 23} --> Type.Int
-         *
-         *     Expect String '23'
-         */
-        // this will complain because ion type
-        // ie: age in the actual has a type int
-        // while in expected it has a type string
-        // the only way I can think of to solve this problem is to have it constructed to be a ion directly
-        // ex. ionreaderBuilder....
+        val expected = "[{Name: \"a\", Age: 24, Tenure: 1}, {Name: \"b\", Age: 45, Tenure: 6}, {Name: \"a\", Age: 24, Tenure: 2}]"
         assertValues(expected, actual)
     }
 }
