@@ -134,7 +134,8 @@ internal class PhysicalExprToThunkConverterImpl(
     private val functions: Map<String, ExprFunction>,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val procedures: Map<String, StoredProcedure>,
-    private val evaluatorOptions: EvaluatorOptions = EvaluatorOptions.standard()
+    private val evaluatorOptions: EvaluatorOptions = EvaluatorOptions.standard(),
+    private val bexperConverter: PhysicalBexprToThunkConverter,
 ) : PhysicalExprToThunkConverter {
     private val errorSignaler = evaluatorOptions.typingMode.createErrorSignaler(valueFactory)
     private val thunkFactory = evaluatorOptions.typingMode.createThunkFactory<EvaluatorState>(
@@ -173,6 +174,7 @@ internal class PhysicalExprToThunkConverterImpl(
             override fun eval(session: EvaluationSession): ExprValue {
                 val env = EvaluatorState(
                     session = session,
+                    valueFactory = valueFactory,
                     registers = Array(plan.locals.size) { valueFactory.missingValue }
                 )
 
@@ -276,8 +278,7 @@ internal class PhysicalExprToThunkConverterImpl(
 
     private fun compileBindingsToValues(expr: PartiqlPhysical.Expr.BindingsToValues): PhysicalPlanThunk {
         val mapThunk = compileAstExpr(expr.exp)
-        val bexprThunk: RelationThunkEnv = PhysicalBexprToThunkConverter(this, thunkFactory.valueFactory)
-            .convert(expr.query)
+        val bexprThunk: RelationThunkEnv = bexperConverter.convert(expr.query)
 
         return thunkFactory.thunkEnv(expr.metas) { env ->
             val elements = sequence {

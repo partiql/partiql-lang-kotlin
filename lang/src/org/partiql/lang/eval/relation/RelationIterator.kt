@@ -19,12 +19,14 @@ enum class RelationType { BAG, LIST }
  * 1. [Iterator.next] returns the current element, but this isn't actually an iterator over a collection.   Instead,
  * execution of [nextRow] may have a side effect of populating value(s) in the current [EvaluatorState.registers]
  * array.  Bridge operators such as [BindingsToValues] are responsible for extracting current values from
- * [EvaluatorState.registers] and converting them to the appropriate container [ExprValue]s.
+ * [EvaluatorState.registers] and converting them to the appropriate container [ExprValue]s.  In this sense,
+ * PartiQL's "relations" are actually logical collections of variable bindings.  This differs from how the term
+ * is defined by [E. F. Codd's relational algebra](https://en.wikipedia.org/wiki/Relational_algebra).
  * 2. [Iterator.hasNext] would require knowing if additional rows remain after the current row, but in a few cases
  * including filters and joins that requires advancing through possibly all remaining rows to see if any remaining row
  * matches the predicate.  This is awkward to implement and would force eager evaluation of the [Iterator].
  */
-internal interface RelationIterator {
+interface RelationIterator {
     val relType: RelationType
 
     /**
