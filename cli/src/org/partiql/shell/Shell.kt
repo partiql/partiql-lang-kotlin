@@ -123,12 +123,9 @@ class Shell(
     }
 
     private fun run(exiting: AtomicBoolean) = TerminalBuilder.builder().build().use { terminal ->
-        val userSyntaxFile = homeDir.resolve(".nano/PartiQL.nanorc")
         val highlighter = when {
             this.config.isMonochrome -> null
-            userSyntaxFile.toFile().exists() -> ShellHighlighter(userSyntaxFile.toUri())
-            else -> Shell::class.java.classLoader.getResource("org/partiql/cli/syntax/PartiQL.nanorc")
-                ?.let { ShellHighlighter(it.toURI()) }
+            else -> ShellHighlighter()
         }
         val reader = LineReaderBuilder.builder()
             .terminal(terminal)

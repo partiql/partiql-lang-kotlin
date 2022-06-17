@@ -66,4 +66,11 @@ data class Token(
             isBinaryOperator || isSpecialOperator -> OPERATOR_PRECEDENCE[text] ?: 0
             else -> 0
         }
+
+    val isDataType: Boolean
+        get() = when {
+            type == TokenType.KEYWORD && CORE_TYPE_NAME_ARITY_MAP.keys.union(TYPE_ALIASES.keys)
+                .contains(text?.toLowerCase()) -> true
+            else -> false
+        }
 }

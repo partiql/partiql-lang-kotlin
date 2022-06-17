@@ -97,10 +97,6 @@ PartiQL> SELECT id FROM `[{id: 5, name:"bill"}, {id: 6, name:"bob"}]` WHERE name
 >>
 ```
 
-**Note on Syntax Highlighting**: You'll notice that the PartiQL REPL supports PartiQL syntax highlighting on input
-queries. Internally, the REPL uses `.nanorc` files to specify syntax, and you can override the default highlights
-by providing an override file at `~/.nano/PartiQL.nanorc`.
-
 The result of the previous expression is stored in the variable named `_`, so you can then run subsequent
 expressions based on the last one.
 
