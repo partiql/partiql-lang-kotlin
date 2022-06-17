@@ -34,6 +34,8 @@ private val ERROR: AttributedStyle = AttributedStyle.DEFAULT.foreground(Attribut
 private val INFO: AttributedStyle = AttributedStyle.DEFAULT
 private val WARN: AttributedStyle = AttributedStyle.DEFAULT.foreground(AttributedStyle.YELLOW)
 
+private val ALLOWED_SUFFIXES = setOf("!!")
+
 internal class ShellHighlighter() : Highlighter {
 
     private val ion = IonSystemBuilder.standard().build()
@@ -47,9 +49,6 @@ internal class ShellHighlighter() : Highlighter {
     override fun highlight(reader: LineReader, input: String): AttributedString {
         if (input.isEmpty()) return AttributedString(input)
 
-        var builder = AttributedStringBuilder()
-        builder.append(AttributedString(input))
-
         // Map Between Line Number and Index
         val lineIndexesMap = mutableMapOf<Int, Int>()
         var currentLine = 0
@@ -58,20 +57,44 @@ internal class ShellHighlighter() : Highlighter {
             if (char == '\n') lineIndexesMap[++currentLine] = index
         }
 
+        // Check for Non-PartiQL Suffixes (REPL Only)
+        val lastNewlineIndex = lineIndexesMap[currentLine]!!
+        val suffixString = input.substring(lastNewlineIndex + 1, input.lastIndex + 1)
+        val lastValidQueryIndex = when (currentLine > 0 && ALLOWED_SUFFIXES.contains(suffixString)) {
+            true -> lastNewlineIndex
+            false -> input.length
+        }
+
         // Get Tokens
         val tokens: List<Token>
         try {
-            tokens = lexer.tokenize(input)
+            tokens = lexer.tokenize(input.substring(0, lastValidQueryIndex))
         } catch (e: Exception) {
             return AttributedString(input, AttributedStyle().foreground(AttributedStyle.RED))
         }
 
-        // Replace Token Colors
-        tokens.forEach { builder = createAttributeStringBuilder(it, lineIndexesMap, builder, false) }
+        // Build Token Colors (Last Token is EOF)
+        var builder = AttributedStringBuilder()
+        for (tokenIndex in 0..(tokens.size - 2)) {
+            if (tokenIndex == tokens.lastIndex) break
+            val currentToken = tokens[tokenIndex]
+            val preIndex = when (tokenIndex) {
+                0 -> 0
+                else -> {
+                    val prevToken = tokens[tokenIndex - 1]
+                    (getTokenIndex(prevToken, lineIndexesMap) ?: 0) + prevToken.span.length.toInt()
+                }
+            }
+            val postIndex = when (tokenIndex) {
+                tokens.lastIndex - 1 -> input.lastIndex + 1
+                else -> (getTokenIndex(currentToken, lineIndexesMap) ?: input.lastIndex) + currentToken.span.length.toInt()
+            }
+            addToAttributeStringBuilder(currentToken, lineIndexesMap, builder, input, preIndex, postIndex)
+        }
 
-        // Parse
+        // Parse and Replace Token Style if Failures
         try {
-            parser.parseAstStatement(input)
+            parser.parseAstStatement(input.substring(0, lastValidQueryIndex))
         } catch (e: ParserException) {
             val column =
                 e.errorContext[Property.COLUMN_NUMBER]?.longValue()?.toInt() ?: return builder.toAttributedString()
@@ -80,7 +103,7 @@ internal class ShellHighlighter() : Highlighter {
             val token = tokens.find {
                 it.span.column.toInt() == column && it.span.line.toInt() == lineNumber
             } ?: return builder.toAttributedString()
-            builder = createAttributeStringBuilder(token, lineIndexesMap, builder, true)
+            builder = createAttributeStringBuilder(token, lineIndexesMap, builder)
         }
         return builder.toAttributedString()
     }
@@ -91,27 +114,51 @@ internal class ShellHighlighter() : Highlighter {
 
     /**
      * Based on the [token] type and location, this function will return a replica of the [stringBuilder] with the
-     * token's location having an updated color-scheme (style). If [isFailure] is passed, the style will always be RED.
+     * token's location having an updated color-scheme (of color RED). This is used if the [parser] throws a
+     * [ParserException].
      */
     private fun createAttributeStringBuilder(
         token: Token,
         lineIndexes: Map<Int, Int>,
-        stringBuilder: AttributedStringBuilder,
-        isFailure: Boolean
+        stringBuilder: AttributedStringBuilder
     ): AttributedStringBuilder {
         val a = AttributedStringBuilder()
-        val style = when (isFailure) {
-            true -> AttributedStyle().foreground(AttributedStyle.RED)
-            false -> getStyle(token)
-        }
-        val column = token.span.column.toInt()
-        val lineNumber = token.span.line.toInt() - 1
+        val style = AttributedStyle().foreground(AttributedStyle.RED)
         val length = token.span.length.toInt()
-        val index = lineIndexes[lineNumber]?.plus(column) ?: return stringBuilder
+        val index = getTokenIndex(token, lineIndexes) ?: return a
         a.append(stringBuilder.subSequence(0, index))
         a.append(stringBuilder.subSequence(index, index + length), style)
         a.append(stringBuilder.subSequence(index + length, stringBuilder.length))
         return a
+    }
+
+    /**
+     * Based on the [token] type and location, this function will modify the [stringBuilder] in place by adding a
+     * [token] and its associated [AttributedStyle]. This is used by the [lexer] to create the highlighted string.
+     */
+    private fun addToAttributeStringBuilder(
+        token: Token,
+        lineIndexes: Map<Int, Int>,
+        stringBuilder: AttributedStringBuilder,
+        input: String,
+        preIndex: Int,
+        postIndex: Int
+    ) {
+        val style = getStyle(token)
+        val length = token.span.length.toInt()
+        val index = getTokenIndex(token, lineIndexes) ?: return
+        stringBuilder.append(input.subSequence(preIndex, index))
+        stringBuilder.append(input.subSequence(index, index + length), style)
+        stringBuilder.append(input.subSequence(index + length, postIndex))
+    }
+
+    /**
+     * Gets the index of a specific token
+     */
+    private fun getTokenIndex(token: Token, lineIndexes: Map<Int, Int>): Int? {
+        val column = token.span.column.toInt()
+        val lineNumber = token.span.line.toInt() - 1
+        return lineIndexes[lineNumber]?.plus(column)
     }
 
     /**
