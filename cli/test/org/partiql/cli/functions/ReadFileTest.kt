@@ -17,6 +17,7 @@ package org.partiql.cli.functions
 import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
 import com.amazon.ion.system.IonSystemBuilder
+import org.junit.AfterClass
 // import org.junit.AfterClass
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
@@ -46,11 +47,11 @@ class ReadFileTest {
             File(dirPath()).mkdir()
         }
 
-//        @AfterClass
-//        @JvmStatic
-//        fun tearDown() {
-//            File(dirPath()).deleteRecursively()
-//        }
+        @AfterClass
+        @JvmStatic
+        fun tearDown() {
+            File(dirPath()).deleteRecursively()
+        }
     }
 
     private fun IonValue.removeAnnotations() {
@@ -327,7 +328,7 @@ class ReadFileTest {
     fun readMarkdownTable() {
         writeFile("table.md", "| Name | Age | Tenure |\n" + "| ---- | --- | ------ | \n" + "| \"a\"  | 24  | 1      | \n" + "| \"b\"  | 45  | 6      | \n" + "| \"a\"  | 24  | 2      |  ")
 
-        var args = listOf("\"${dirPath("table.md")}\"").map { it.exprValue() }
+        val args = listOf("\"${dirPath("table.md")}\"").map { it.exprValue() }
         val additionalOptions = "{type:\"md\"}".exprValue()
         val actual = function.callWithOptional(session, args, additionalOptions)
         val expected = "[{Name: \"a\", Age: 24, Tenure: 1}, {Name: \"b\", Age: 45, Tenure: 6}, {Name: \"a\", Age: 24, Tenure: 2}]"

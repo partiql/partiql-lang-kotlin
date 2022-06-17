@@ -15,18 +15,13 @@
 package org.partiql.cli.functions
 
 import com.amazon.ion.IonStruct
-import com.amazon.ion.IonValue
 import com.amazon.ion.system.IonReaderBuilder
-import com.amazon.ion.system.IonSystemBuilder
 import org.apache.commons.csv.CSVFormat
 import org.partiql.extensions.cli.functions.BaseFunction
-import org.partiql.lang.CompilerPipeline
-import org.partiql.lang.eval.BaseExprValue
-import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
-import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.eval.StructOrdering
 import org.partiql.lang.eval.io.DelimitedValues
 import org.partiql.lang.eval.io.DelimitedValues.ConversionMode
 import org.partiql.lang.eval.namedValue
@@ -95,90 +90,34 @@ internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFact
         }
     }
 
-    class MDRowExprValue(private val valueFactory: ExprValueFactory, private val rowString: String, private val header: List<String>) :
-        BaseExprValue() {
-        /** The Ion type that MarkdownRowExprValue is must similar to is a struct. */
-        override val type: ExprValueType
-            get() = ExprValueType.STRUCT
-
-        /** Ion representation of the current value. */
-        override val ionValue: IonValue
-            get() = lazyIonValue
-
-        /** Laziness is even more important here because [ionValue] is likely to never be called. */
-        private val lazyIonValue by lazy {
-            valueFactory.ion.newEmptyStruct().apply {
-                rowValues.map { kvp ->
-                    if (kvp.value.scalar.numberValue() != null) {
-                        add(kvp.key, valueFactory.ion.newInt(kvp.value.scalar.numberValue()))
-                    } else {
-                        add(kvp.key, valueFactory.ion.newString(kvp.value.scalar.stringValue()))
-                    }
-                }
-                makeReadOnly()
-            }
-        }
-
-        /**
-         * The lazily constructed set of row values.  Laziness is good practice here because it avoids
-         * constructing this map if it isn't needed.
-         */
-        private val rowValues: Map<String, ExprValue> by lazy {
-            rowString.trim().drop(1).dropLast(1)
-                .split('|')
-                .mapIndexed { i, it ->
-                    val fieldName = header[i]
-
-                    val value = it.trim()
-                    // Note that we invoke
-                    if (value[0] == '\"') {
-                        fieldName to valueFactory.newString(value.drop(1).dropLast(1)).namedValue(valueFactory.newString(fieldName))
-                    } else {
-                        fieldName to valueFactory.newInt(value.toInt()).namedValue(valueFactory.newString(fieldName))
-                    }
-                }.toMap()
-        }
-
-        /** An iterator over the values contained in this instance of [ExprValue], if any. */
-        override fun iterator() = rowValues.values.iterator()
-
-        private val bindingsInstance by lazy {
-            Bindings.ofMap(rowValues)
-        }
-
-        override val bindings: Bindings<ExprValue>
-            get() = bindingsInstance
-    }
     /**
      * The current supported format for readFile function is
      * read_file('simple.csv', {'type':'csv'});
      * Extend the support to markdown
      */
-    private fun mdReadHandler(): (InputStream, IonStruct) -> ExprValue = { input, options ->
-        val reader = InputStreamReader(input)
-        val ion = IonSystemBuilder.standard().build()
-        val valueFactory = ExprValueFactory.standard(ion)
-        val pipeline = CompilerPipeline.standard(valueFactory)
-        // get header
-        val rowData = reader.readLines()
-        val header = rowData[0]
-            .trim()
+    private fun mdReadHandler(): (InputStream, IonStruct) -> ExprValue = { input, _ ->
+        val reader = InputStreamReader(input) // prepare the reader
+        val rowData = reader.readLines() // prepare the rowData (List<String>)
+        val header = rowData[0] // prepare the header
             .drop(1)
             .dropLast(1)
             .split('|')
             .map { it ->
-                it.trim()
+                it.trim() // trim here because later we use the newString()
             }
-
-        // a bag is a sequence of ExprValue, so create a Mdrowexprvalue class
-        valueFactory.newBag(
-            rowData.asSequence()
-                .filter { it -> it.isNotEmpty() }
-                .drop(2)
-                .map { it ->
-                    MDRowExprValue(pipeline.valueFactory, it, header)
-                }
-        )
+        val seq = rowData.drop(2).asSequence().map { mdRecord ->
+            println("mdRecord $mdRecord")
+            // no need to trim because ion ignores whitespace?
+            val mdCell = mdRecord.split("|").drop(1).dropLast(1)
+            println("mdCell $mdCell")
+            valueFactory.newStruct(
+                mdCell.mapIndexed { index, value ->
+                    valueFactory.newFromIonValue(valueFactory.ion.singleValue(value)).namedValue(valueFactory.newString(header[index]))
+                },
+                StructOrdering.ORDERED
+            )
+        }
+        valueFactory.newBag(seq)
     }
 
     private val readHandlers = mapOf(
