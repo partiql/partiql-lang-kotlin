@@ -106,10 +106,8 @@ internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFact
                 it.trim() // trim here because later we use the newString()
             }
         val seq = rowData.drop(2).asSequence().map { mdRecord ->
-            println("mdRecord $mdRecord")
             // no need to trim because ion ignores whitespace?
             val mdCell = mdRecord.split("|").drop(1).dropLast(1)
-            println("mdCell $mdCell")
             valueFactory.newStruct(
                 mdCell.mapIndexed { index, value ->
                     valueFactory.newFromIonValue(valueFactory.ion.singleValue(value)).namedValue(valueFactory.newString(header[index]))

@@ -18,7 +18,6 @@ import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
 import com.amazon.ion.system.IonSystemBuilder
 import org.junit.AfterClass
-// import org.junit.AfterClass
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.BeforeClass
