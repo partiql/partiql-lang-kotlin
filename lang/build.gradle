@@ -109,6 +109,7 @@ sourceSets {
 }
 
 compileKotlin.dependsOn generatePigDomains
+runKtlintCheckOverMainSourceSet.dependsOn generatePigDomains
 
 ktlint {
     filter {
