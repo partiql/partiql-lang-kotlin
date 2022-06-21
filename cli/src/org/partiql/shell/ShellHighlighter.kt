@@ -34,6 +34,7 @@ private val ERROR: AttributedStyle = AttributedStyle.DEFAULT.foreground(Attribut
 private val INFO: AttributedStyle = AttributedStyle.DEFAULT
 private val WARN: AttributedStyle = AttributedStyle.DEFAULT.foreground(AttributedStyle.YELLOW)
 
+private val ADD_TO_GLOBAL_ENV = "!add_to_global_env"
 private val ALLOWED_SUFFIXES = setOf("!!")
 
 internal class ShellHighlighter() : Highlighter {
@@ -65,10 +66,15 @@ internal class ShellHighlighter() : Highlighter {
             false -> input.length
         }
 
+        var beginAt = 0
+        if (input.startsWith(ADD_TO_GLOBAL_ENV)) {
+            beginAt = ADD_TO_GLOBAL_ENV.length
+        }
+
         // Get Tokens
         val tokens: List<Token>
         try {
-            tokens = lexer.tokenize(input.substring(0, lastValidQueryIndex))
+            tokens = lexer.tokenize(input.substring(beginAt, lastValidQueryIndex))
         } catch (e: Exception) {
             return AttributedString(input, AttributedStyle().foreground(AttributedStyle.RED))
         }
@@ -87,14 +93,17 @@ internal class ShellHighlighter() : Highlighter {
             }
             val postIndex = when (tokenIndex) {
                 tokens.lastIndex - 1 -> input.lastIndex + 1
-                else -> (getTokenIndex(currentToken, lineIndexesMap) ?: input.lastIndex) + currentToken.span.length.toInt()
+                else -> (
+                    getTokenIndex(currentToken, lineIndexesMap)
+                        ?: input.lastIndex
+                    ) + currentToken.span.length.toInt()
             }
             addToAttributeStringBuilder(currentToken, lineIndexesMap, builder, input, preIndex, postIndex)
         }
 
         // Parse and Replace Token Style if Failures
         try {
-            parser.parseAstStatement(input.substring(0, lastValidQueryIndex))
+            parser.parseAstStatement(input.substring(beginAt, lastValidQueryIndex))
         } catch (e: ParserException) {
             val column =
                 e.errorContext[Property.COLUMN_NUMBER]?.longValue()?.toInt() ?: return builder.toAttributedString()
