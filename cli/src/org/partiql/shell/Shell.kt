@@ -79,6 +79,7 @@ class Shell(
     private val parser: Parser,
     private val compiler: CompilerPipeline,
     private val initialGlobal: Bindings<ExprValue>,
+    private val config: ShellConfiguration = ShellConfiguration()
 ) {
 
     private val homeDir: Path = Paths.get(System.getProperty("user.home"))
@@ -122,11 +123,15 @@ class Shell(
     }
 
     private fun run(exiting: AtomicBoolean) = TerminalBuilder.builder().build().use { terminal ->
-
+        val highlighter = when {
+            this.config.isMonochrome -> null
+            else -> ShellHighlighter()
+        }
         val reader = LineReaderBuilder.builder()
             .terminal(terminal)
             .parser(ShellParser)
             .completer(NullCompleter())
+            .highlighter(highlighter)
             .expander(ShellExpander)
             .variable(LineReader.HISTORY_FILE, homeDir.resolve(".partiql/.history"))
             .variable(LineReader.SECONDARY_PROMPT_PATTERN, PROMPT_2)
@@ -261,6 +266,12 @@ class Shell(
             }
         }
     }
+
+    /**
+     * A configuration class representing any configurations specified by the user
+     * @param isMonochrome specifies the removal of syntax highlighting
+     */
+    class ShellConfiguration(val isMonochrome: Boolean = false)
 }
 
 /**

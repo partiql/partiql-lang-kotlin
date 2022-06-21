@@ -25,6 +25,7 @@ Option                                Description
 -i, --input <File>                    input file, requires the query option (optional)
 -if, --input-format <InputFormat>     input format, requires the query option (default: ION) [ION, PARTIQL]
 -w, --wrap-ion                        wraps Ion input file values in a bag, requires the input format to be ION, requires the query option
+-m, --monochrome                      removes syntax highlighting for the REPL
 -o, --output <File>                   output file, requires the query option (default: stdout)
 -of, --output-format <OutputFormat>   output format, requires the query option (default: PARTIQL) [PARTIQL, PARTIQL_PRETTY, ION_TEXT, ION_BINARY]
 -p, --permissive                      run the PartiQL query in PERMISSIVE typing mode
@@ -61,7 +62,7 @@ To start an interactive read, eval, print loop (REPL) execute:
 > Note that running directly with Gradle will eat arrow keys and control sequences due to the Gradle daemon.
 
 ```shell
-./cli/shell
+./cli/shell.sh
 ```
 
 You will see a prompt that looks as follows:

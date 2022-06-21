@@ -34,6 +34,7 @@ import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.shell.Shell
+import org.partiql.shell.Shell.ShellConfiguration
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -109,6 +110,8 @@ private val inputFormatOpt = optParser.acceptsAll(listOf("input-format", "if"), 
 private val wrapIonOpt = optParser.acceptsAll(listOf("wrap-ion", "w"), "wraps Ion input file values in a bag, requires the input format to be ION, requires the query option")
     .availableIf(queryOpt)
 
+private val monochromeOpt = optParser.acceptsAll(listOf("monochrome", "m"), "removes syntax highlighting for the REPL")
+
 private val outputFileOpt = optParser.acceptsAll(listOf("output", "o"), "output file, requires the query option (default: stdout)")
     .availableIf(queryOpt)
     .withRequiredArg()
@@ -132,6 +135,8 @@ private val outputFormatOpt = optParser.acceptsAll(listOf("output-format", "of")
  * * -e --environment: takes an environment file to load as the initial global environment
  * * -p --permissive: run the query in permissive typing mode (returns MISSING rather than error for data type
  * mismatches)
+ * * Interactive only:
+ *      * -m --monochrome: removes syntax highlighting for the REPL
  * * Non interactive only:
  *      * -q --query: PartiQL query
  *      * -i --input: input file
@@ -182,7 +187,7 @@ fun main(args: Array<String>) = try {
     if (optionSet.has(queryOpt)) {
         runCli(environment, optionSet, compilerPipeline)
     } else {
-        runShell(environment, compilerPipeline)
+        runShell(environment, optionSet, compilerPipeline)
     }
 } catch (e: OptionException) {
     System.err.println("${e.message}\n")
@@ -193,8 +198,9 @@ fun main(args: Array<String>) = try {
     exitProcess(1)
 }
 
-private fun runShell(environment: Bindings<ExprValue>, compilerPipeline: CompilerPipeline) {
-    Shell(valueFactory, System.out, parser, compilerPipeline, environment).start()
+private fun runShell(environment: Bindings<ExprValue>, optionSet: OptionSet, compilerPipeline: CompilerPipeline) {
+    val config = ShellConfiguration(isMonochrome = optionSet.has(monochromeOpt))
+    Shell(valueFactory, System.out, parser, compilerPipeline, environment, config).start()
 }
 
 private fun runCli(environment: Bindings<ExprValue>, optionSet: OptionSet, compilerPipeline: CompilerPipeline) {
