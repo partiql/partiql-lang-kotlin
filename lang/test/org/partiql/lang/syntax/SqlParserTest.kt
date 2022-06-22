@@ -4270,7 +4270,7 @@ class SqlParserTest : SqlParserTestBase() {
     }
 
     @Test
-    fun testMetas() {
+    fun testOrderByMetas() {
         // Arrange
         val query = "SELECT * FROM << { 'x': 2 } >> ORDER BY x"
         val expected = SourceLocationMeta(1, 32, 5)
@@ -4281,11 +4281,11 @@ class SqlParserTest : SqlParserTestBase() {
         // Gather Metas and Assert
         val expr = when (stmt) {
             is PartiqlAst.Statement.Query -> stmt.expr
-            else -> throw AssertionError()
+            else -> throw AssertionError("Expected a PartiqlAst.Statement.Query")
         }
         val orderExpr = when (expr) {
             is PartiqlAst.Expr.Select -> expr.order
-            else -> throw AssertionError()
+            else -> throw AssertionError("Expected query with an ORDER BY clause")
         }
         val metas = orderExpr?.metas ?: throw AssertionError()
         assertEquals(expected, metas.sourceLocation)
