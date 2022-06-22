@@ -151,7 +151,7 @@ private val outputFormatOpt = optParser.acceptsAll(listOf("output-format", "of")
  * Options:
  * * -e --environment: takes an environment file to load as the initial global environment
  * * -p --permissive: run the query in permissive typing mode (returns MISSING rather than error for data type
- * * -t --typed-op-behavior: indicates how CAST should behave: (default: LEGACY) [LEGACY, HONOR_PARAMETERS]
+ * * -t --typed-op-behavior: indicates how CAST should behave: (default: HONOR_PARAMETERS) [LEGACY, HONOR_PARAMETERS]
  * * -r --projection-iter-behavior: Controls the behavior of ExprValue.iterator in the projection result: (default: FILTER_MISSING) [FILTER_MISSING, UNFILTERED]
  * * -v --undefined-variable-behavior: Defines the behavior when a non-existent variable is referenced: (default: ERROR) [ERROR, MISSING]
  * mismatches)
