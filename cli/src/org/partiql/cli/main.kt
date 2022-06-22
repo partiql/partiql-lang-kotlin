@@ -11,7 +11,6 @@
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
  *  language governing permissions and limitations under the License.
  */
-
 @file:JvmName("Main")
 
 package org.partiql.cli
@@ -31,7 +30,10 @@ import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.ProjectionIterationBehavior
+import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.TypingMode
+import org.partiql.lang.eval.UndefinedVariableBehavior
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.shell.Shell
 import org.partiql.shell.Shell.ShellConfiguration
@@ -91,6 +93,24 @@ private val queryOpt = optParser.acceptsAll(listOf("query", "q"), "PartiQL query
 
 private val permissiveModeOpt = optParser.acceptsAll(listOf("permissive", "p"), "runs the query in permissive mode")
 
+private val typedOpBehaviorOpt = optParser.acceptsAll(listOf("typed-op-behavior", "t"), "indicates how CAST should behave")
+    .withRequiredArg()
+    .ofType(TypedOpBehavior::class.java)
+    .describedAs("(${TypedOpBehavior.values().joinToString("|")})")
+    .defaultsTo(TypedOpBehavior.HONOR_PARAMETERS)
+
+private val projectionIterationBehaviorOpt = optParser.acceptsAll(listOf("projection-iter-behavior", "r"), "Controls the behavior of ExprValue.iterator in the projection result")
+    .withRequiredArg()
+    .ofType(ProjectionIterationBehavior::class.java)
+    .describedAs("(${ProjectionIterationBehavior.values().joinToString("|")})")
+    .defaultsTo(ProjectionIterationBehavior.FILTER_MISSING)
+
+private val undefinedVariableBehaviorOpt = optParser.acceptsAll(listOf("undefined-variable-behavior", "v"), "Defines the behavior when a non-existent variable is referenced")
+    .withRequiredArg()
+    .ofType(UndefinedVariableBehavior::class.java)
+    .describedAs("(${UndefinedVariableBehavior.values().joinToString("|")})")
+    .defaultsTo(UndefinedVariableBehavior.ERROR)
+
 private val environmentOpt = optParser.acceptsAll(listOf("environment", "e"), "initial global environment (optional)")
     .withRequiredArg()
     .ofType(File::class.java)
@@ -134,6 +154,9 @@ private val outputFormatOpt = optParser.acceptsAll(listOf("output-format", "of")
  * Options:
  * * -e --environment: takes an environment file to load as the initial global environment
  * * -p --permissive: run the query in permissive typing mode (returns MISSING rather than error for data type
+ * * -t --typed-op-behavior: indicates how CAST should behave: (default: HONOR_PARAMETERS) [LEGACY, HONOR_PARAMETERS]
+ * * -r --projection-iter-behavior: Controls the behavior of ExprValue.iterator in the projection result: (default: FILTER_MISSING) [FILTER_MISSING, UNFILTERED]
+ * * -v --undefined-variable-behavior: Defines the behavior when a non-existent variable is referenced: (default: ERROR) [ERROR, MISSING]
  * mismatches)
  * * Interactive only:
  *      * -m --monochrome: removes syntax highlighting for the REPL
@@ -158,9 +181,11 @@ fun main(args: Array<String>) = try {
         throw IllegalArgumentException("Non option arguments are not allowed!")
     }
 
-    // compile options
-    // TODO: add other compile options https://github.com/partiql/partiql-lang-kotlin/issues/544
+    // Compile Options
     val compileOptions = CompileOptions.build {
+        typedOpBehavior(optionSet.valueOf(typedOpBehaviorOpt))
+        projectionIteration(optionSet.valueOf(projectionIterationBehaviorOpt))
+        undefinedVariable(optionSet.valueOf(undefinedVariableBehaviorOpt))
         when (optionSet.has(permissiveModeOpt)) {
             true -> typingMode(TypingMode.PERMISSIVE)
             false -> typingMode(TypingMode.LEGACY)
