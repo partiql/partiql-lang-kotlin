@@ -96,7 +96,7 @@ private val typedOpBehaviorOpt = optParser.acceptsAll(listOf("typed-op-behavior"
     .withRequiredArg()
     .ofType(TypedOpBehavior::class.java)
     .describedAs("(${TypedOpBehavior.values().joinToString("|")})")
-    .defaultsTo(TypedOpBehavior.LEGACY)
+    .defaultsTo(TypedOpBehavior.HONOR_PARAMETERS)
 
 private val projectionIterationBehaviorOpt = optParser.acceptsAll(listOf("projection-iter-behavior", "r"), "Controls the behavior of ExprValue.iterator in the projection result")
     .withRequiredArg()

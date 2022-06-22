@@ -22,7 +22,10 @@ import org.junit.Before
 import org.junit.Test
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.ProjectionIterationBehavior
+import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.TypingMode
+import org.partiql.lang.eval.UndefinedVariableBehavior
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -221,6 +224,96 @@ class CliTest {
         val actual = makeCliAndGetResult(query, compilerPipeline = permissiveModeCP)
 
         assertAsIon("\$partiql_missing::null", actual)
+    }
+
+    @Test
+    fun runWithTypedOpBehaviorLegacy() {
+        val pipeline = CompilerPipeline.build(ion) {
+            compileOptions {
+                typedOpBehavior(TypedOpBehavior.LEGACY)
+            }
+        }
+        val query = "CAST('abcde' as VARCHAR(3));"
+        val actual = makeCliAndGetResult(query, compilerPipeline = pipeline)
+
+        assertAsIon("\"abcde\"", actual)
+    }
+
+    @Test
+    fun runWithTypedOpBehaviorHonorParameters() {
+        val pipeline = CompilerPipeline.build(ion) {
+            compileOptions {
+                typedOpBehavior(TypedOpBehavior.HONOR_PARAMETERS)
+            }
+        }
+        val query = "CAST('abcde' as VARCHAR(3));"
+        val actual = makeCliAndGetResult(query, compilerPipeline = pipeline)
+
+        assertAsIon("\"abc\"", actual)
+    }
+
+    @Test(expected = EvaluationException::class)
+    fun runWithProjectionIterationFilterMissingFailure() {
+        val input = "<<{'a': null, 'b': missing, 'c': 1}>>"
+        val pipeline = CompilerPipeline.build(ion) {
+            compileOptions {
+                projectionIteration(ProjectionIterationBehavior.FILTER_MISSING)
+            }
+        }
+        val query = "SELECT a, b, c FROM input_data"
+        makeCliAndGetResult(query, input, compilerPipeline = pipeline, inputFormat = InputFormat.PARTIQL)
+    }
+
+    @Test()
+    fun runWithProjectionIterationFilterMissingSuccess() {
+        val input = "<<{'a': null, 'b': missing, 'c': 1}>>"
+        val pipeline = CompilerPipeline.build(ion) {
+            compileOptions {
+                projectionIteration(ProjectionIterationBehavior.FILTER_MISSING)
+            }
+        }
+        val query = "SELECT * FROM input_data"
+        val actual = makeCliAndGetResult(query, input, compilerPipeline = pipeline, inputFormat = InputFormat.PARTIQL)
+        assertAsIon("$partiqlBagAnnotation[{a:null,c:1}]", actual)
+    }
+
+    @Test
+    fun runWithProjectionIterationUnfiltered() {
+        val input = "<<{'a': null, 'b': missing, 'c': 1}>>"
+        val pipeline = CompilerPipeline.build(ion) {
+            compileOptions {
+                projectionIteration(ProjectionIterationBehavior.UNFILTERED)
+            }
+        }
+        val query = "SELECT a, b, c FROM input_data"
+        val actual = makeCliAndGetResult(query, input, compilerPipeline = pipeline, inputFormat = InputFormat.PARTIQL)
+
+        assertAsIon("$partiqlBagAnnotation[{a:null,c:1}]", actual)
+    }
+
+    @Test(expected = EvaluationException::class)
+    fun runWithUndefinedVariableError() {
+        val input = "<<{'a': 1}>>"
+        val pipeline = CompilerPipeline.build(ion) {
+            compileOptions {
+                undefinedVariable(UndefinedVariableBehavior.ERROR)
+            }
+        }
+        val query = "SELECT * FROM undefined_variable"
+        makeCliAndGetResult(query, input, compilerPipeline = pipeline, inputFormat = InputFormat.PARTIQL)
+    }
+
+    @Test()
+    fun runWithUndefinedVariableMissing() {
+        val input = "<<{'a': 1}>>"
+        val pipeline = CompilerPipeline.build(ion) {
+            compileOptions {
+                undefinedVariable(UndefinedVariableBehavior.MISSING)
+            }
+        }
+        val query = "SELECT * FROM undefined_variable"
+        val actual = makeCliAndGetResult(query, input, compilerPipeline = pipeline, inputFormat = InputFormat.PARTIQL)
+        assertAsIon("$partiqlBagAnnotation[{}]", actual)
     }
 
     @Test
