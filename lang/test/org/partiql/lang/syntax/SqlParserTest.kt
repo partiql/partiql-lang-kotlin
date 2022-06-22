@@ -4285,9 +4285,9 @@ class SqlParserTest : SqlParserTestBase() {
         }
         val orderExpr = when (expr) {
             is PartiqlAst.Expr.Select -> expr.order
-            else -> throw AssertionError("Expected query with an ORDER BY clause")
+            else -> throw AssertionError("Expected query to be a SELECT expression")
         }
-        val metas = orderExpr?.metas ?: throw AssertionError()
+        val metas = orderExpr?.metas ?: throw AssertionError("Expected ORDER BY clause to have metas")
         assertEquals(expected, metas.sourceLocation)
     }
 }
