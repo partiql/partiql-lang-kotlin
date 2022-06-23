@@ -175,6 +175,13 @@ class SqlParser(
         FROM,
         FROM_CLAUSE,
         FROM_SOURCE_JOIN,
+        MATCH,
+        MATCH_EXPR,
+        MATCH_EXPR_NODE,
+        MATCH_EXPR_EDGE,
+        MATCH_EXPR_EDGE_DIRECTION,
+        MATCH_EXPR_NAME,
+        MATCH_EXPR_LABEL,
         CHECK,
         ON_CONFLICT,
         CONFLICT_ACTION,
@@ -912,8 +919,131 @@ class SqlParser(
                         if (isCrossJoin) metas + metaContainerOf(IsImplictJoinMeta.instance) else metas
                     )
                 }
+                ParseType.MATCH -> toGraphMatch()
                 else -> unwrapAliasesAndUnpivot()
             }
+        }
+    }
+
+    private fun ParseNode.toGraphMatch(): PartiqlAst.FromSource {
+        val metas = getMetas()
+
+        return PartiqlAst.build {
+            val expr = children[0].toAstExpr()
+            val patterns = children.tail.map {
+                if (it.type != ParseType.MATCH_EXPR) error("Invalid parse tree: expecting match expression in MATCH")
+                it.toGraphMatchPattern()
+            }
+
+            val matchExpr = PartiqlAst.GraphMatchExpr(patterns, metas = metas)
+            PartiqlAst.FromSource.GraphMatch(expr, matchExpr, metas)
+        }
+    }
+
+    private fun ParseNode.toGraphMatchPattern(): PartiqlAst.GraphMatchPattern {
+        val metas = getMetas()
+
+        return PartiqlAst.build {
+            val parts = children.map {
+                when (it.type) {
+                    ParseType.MATCH_EXPR_NODE -> {
+                        PartiqlAst.GraphMatchPatternPart.Node(it.toGraphMatchNode(), it.getMetas())
+                    }
+                    ParseType.MATCH_EXPR_EDGE -> {
+                        PartiqlAst.GraphMatchPatternPart.Edge(it.toGraphMatchEdge(), it.getMetas())
+                    }
+                    else -> {
+                        TODO("Handle pattern part other than node&edge")
+                    }
+                }
+            }
+
+            // TODO quantifier
+            PartiqlAst.GraphMatchPattern(quantifier = null, parts = parts, metas = metas)
+        }
+    }
+
+    private fun ParseNode.toGraphMatchNode(): PartiqlAst.GraphMatchNode {
+        val metas = getMetas()
+
+        var name: SymbolPrimitive? = null
+        var label = mutableListOf<SymbolPrimitive>()
+        var predicate = null
+
+        for (child in children) {
+            when (child.type) {
+                ParseType.MATCH_EXPR_NAME -> {
+                    if (name != null) error("Invalid parse tree: name encountered more than once in MATCH")
+                    name = SymbolPrimitive(child.children[0].token!!.text!!, child.getMetas())
+                }
+                ParseType.MATCH_EXPR_LABEL -> {
+                    label.add(SymbolPrimitive(child.children[0].token!!.text!!, child.getMetas()))
+                }
+                else -> {
+                    TODO("Unhandled case for graph match node")
+                }
+            }
+        }
+
+        return PartiqlAst.build {
+            PartiqlAst.GraphMatchNode(
+                variable = name,
+                label = label,
+                predicate = predicate,
+                metas = metas
+            )
+        }
+    }
+
+    private fun ParseNode.toGraphMatchEdge(): PartiqlAst.GraphMatchEdge {
+        val metas = getMetas()
+
+        var direction: PartiqlAst.GraphMatchDirection? = null
+        var name: SymbolPrimitive? = null
+        var label = mutableListOf<SymbolPrimitive>()
+        var predicate = null
+
+        for (child in children) {
+            when (child.type) {
+                ParseType.MATCH_EXPR_NAME -> {
+                    if (name != null) error("Invalid parse tree: name encountered more than once in MATCH")
+                    name = SymbolPrimitive(child.children[0].token!!.text!!, child.getMetas())
+                }
+                ParseType.MATCH_EXPR_LABEL -> {
+                    label.add(SymbolPrimitive(child.children[0].token!!.text!!, child.getMetas()))
+                }
+                ParseType.MATCH_EXPR_EDGE_DIRECTION -> {
+                    direction = when (child.token!!.text!!) {
+                        "<-" -> PartiqlAst.GraphMatchDirection.EdgeLeft()
+                        "~" -> PartiqlAst.GraphMatchDirection.EdgeUndirected()
+                        "->" -> PartiqlAst.GraphMatchDirection.EdgeRight()
+                        "<~" -> PartiqlAst.GraphMatchDirection.EdgeLeftOrUndirected()
+                        "~>" -> PartiqlAst.GraphMatchDirection.EdgeUndirectedOrRight()
+                        "<->" -> PartiqlAst.GraphMatchDirection.EdgeLeftOrRight()
+                        "-" -> PartiqlAst.GraphMatchDirection.EdgeLeftOrUndirectedOrRight()
+                        else -> error("Invalid parse tree: unknown edge direction ${child.token.text!!}")
+                    }
+                }
+                else -> {
+                    TODO("Unhandled case for graph match edge")
+                }
+            }
+        }
+
+        if (direction == null) {
+            error("Invalid parse tree: null edge direction")
+        }
+
+        // TODO quantifier
+        return PartiqlAst.build {
+            PartiqlAst.GraphMatchEdge(
+                direction = direction,
+                quantifier = null,
+                variable = name,
+                label = label,
+                predicate = predicate,
+                metas = metas
+            )
         }
     }
 
@@ -2928,6 +3058,10 @@ class SqlParser(
         }
         rem = child.remaining
 
+        child = rem.parseOptionalMatchClause(child).also {
+            rem = it.remaining
+        }
+
         child = rem.parseOptionalAsAlias(child).also {
             rem = it.remaining
         }
@@ -3152,6 +3286,283 @@ class SqlParser(
                 "Keyword ${token?.text} only expected at the top level in the query",
                 ErrorCode.PARSE_UNEXPECTED_TERM, PropertyValueMap()
             )
+
+    private fun List<Token>.parseOptionalMatchClause(child: ParseNode): ParseNode {
+        var rem = this
+        return when (rem.head?.keywordText) {
+            "match" -> {
+                rem.parseMatch(child)
+            }
+            else -> {
+                child
+            }
+        }
+    }
+
+    private fun List<Token>.parseMatch(expr: ParseNode): ParseNode {
+        val matches = ArrayList<ParseNode>()
+        var rem = this.tail
+
+        fun consume(type: TokenType): Boolean {
+            if (rem.head?.type == type) {
+                rem = rem.tail
+                return true
+            }
+            return false
+        }
+
+        do {
+            val pattern = rem.parseMatchPattern()
+            matches.add(pattern)
+            rem = pattern.remaining
+        } while (consume(TokenType.COMMA))
+
+        return ParseNode(ParseType.MATCH, this.head, listOf(expr) + matches, rem)
+    }
+
+    private fun List<Token>.parseMatchPattern(): ParseNode {
+
+        val abbreviationMap = Array(2) { Array(2) { Array(2) { "" } } }.also {
+            it[0][0][1] = "~"
+            it[0][1][0] = "->"
+            it[0][1][1] = "~>"
+            it[1][0][0] = "<-"
+            it[1][0][1] = "<~"
+            it[1][1][0] = "<->"
+            it[1][1][1] = "-"
+        }
+
+        data class EdgeType(val left: Boolean, val right: Boolean, val undirected: Boolean) {
+            fun union(other: EdgeType): EdgeType {
+                val left = this.left.or(other.left)
+                val right = this.right.or(other.right)
+                val undirected = this.undirected.or(other.undirected)
+                val union = EdgeType(left = left, right = right, undirected = undirected)
+                return union
+            }
+        }
+
+        fun EdgeType.abbreviation(): String {
+            return abbreviationMap[if (left) 1 else 0][if (right) 1 else 0][if (undirected) 1 else 0]
+        }
+
+        val abbreviations = HashMap<String, EdgeType>().also {
+            for (lIdx in 0..1) {
+                for (rIdx in 0..1) {
+                    for (unIdx in 0..1) {
+                        val abbreviation = abbreviationMap[lIdx][rIdx][unIdx]
+                        if (abbreviation.isNotEmpty()) {
+                            it[abbreviation] = EdgeType(left = (lIdx > 0), right = (rIdx > 0), undirected = (unIdx > 0))
+                        }
+                    }
+                }
+            }
+        }
+
+        var rem = this
+
+        fun parseName(): ParseNode? {
+            if (rem.head?.type?.isIdentifier() == true) {
+                val name = rem.atomFromHead()
+                return ParseNode(ParseType.MATCH_EXPR_NAME, null, listOf(name), name.remaining)
+            } else {
+                return null
+            }
+        }
+
+        fun parseLabel(): ParseNode? {
+            return when (rem.head?.type) {
+                TokenType.COLON -> {
+                    rem = rem.tail
+                    if (rem.head?.type?.isIdentifier() == true) {
+                        val name = rem.atomFromHead()
+                        return ParseNode(ParseType.MATCH_EXPR_LABEL, null, listOf(name), name.remaining)
+                    } else {
+                        rem.head.err(
+                            "Expected identifier for",
+                            ErrorCode.PARSE_EXPECTED_IDENT_FOR_MATCH
+                        )
+                    }
+                }
+                else -> null
+            }
+        }
+
+        fun consume(type: TokenType, keywordText: String? = null): Boolean {
+            if (rem.head?.type == type) {
+                if (keywordText == null || rem.head?.keywordText == keywordText) {
+                    rem = rem.tail
+                    return true
+                }
+            }
+            return false
+        }
+
+        fun expect1(type: TokenType, errorCode: ErrorCode, errorMsg: String) {
+            if (!consume(type)) {
+                rem.head.err(
+                    "Expected ${type.name} for $errorMsg", errorCode
+                )
+            }
+        }
+
+        fun parseNode(): ParseNode {
+            expect1(TokenType.LEFT_PAREN, ErrorCode.PARSE_EXPECTED_LEFT_PAREN_FOR_MATCH_NODE, "match node")
+            val name = parseName()
+            rem = name?.remaining ?: rem
+            val label = parseLabel()
+            rem = label?.remaining ?: rem
+            expect1(TokenType.RIGHT_PAREN, ErrorCode.PARSE_EXPECTED_RIGHT_PAREN_FOR_MATCH_NODE, "match node")
+
+            return ParseNode(ParseType.MATCH_EXPR_NODE, null, listOfNotNull(name, label), rem)
+        }
+
+        fun errorEdgeParse(): Nothing {
+            rem.head.err("Expected edge pattern for match", ErrorCode.PARSE_EXPECTED_EDGE_PATTERN_MATCH_EDGE)
+        }
+
+        fun parseLeftEdgePattern(): EdgeType {
+            val direction = if (rem.head?.type == TokenType.OPERATOR) {
+                when (rem.head!!.keywordText) {
+                    "<" -> {
+                        rem = rem.tail
+                        if (rem.head?.type == TokenType.OPERATOR) {
+                            when (rem.head!!.keywordText) {
+                                "-" -> EdgeType(left = true, right = false, undirected = false)
+                                "~" -> EdgeType(left = true, right = false, undirected = true)
+                                else -> errorEdgeParse()
+                            }
+                        } else {
+                            errorEdgeParse()
+                        }
+                    }
+                    "-" -> EdgeType(left = false, right = true, undirected = false)
+                    "~" -> EdgeType(left = false, right = false, undirected = true)
+                    else -> errorEdgeParse()
+                }
+            } else {
+                errorEdgeParse()
+            }
+            rem = rem.tail
+
+            return direction
+        }
+
+        fun parseRightEdgePattern(): EdgeType {
+            val direction = if (rem.head?.type == TokenType.OPERATOR) {
+                when (rem.head!!.keywordText) {
+                    "-" -> {
+                        if (rem.tail.head?.type == TokenType.OPERATOR && rem.tail.head?.keywordText == ">") {
+                            rem = rem.tail
+                            EdgeType(left = false, right = true, undirected = false)
+                        } else {
+                            EdgeType(left = true, right = false, undirected = false)
+                        }
+                    }
+                    "~" -> {
+                        if (rem.tail.head?.type == TokenType.OPERATOR && rem.tail.head?.keywordText == ">") {
+                            rem = rem.tail
+                            EdgeType(left = false, right = true, undirected = true)
+                        } else {
+                            EdgeType(left = false, right = false, undirected = true)
+                        }
+                    }
+                    else -> errorEdgeParse()
+                }
+            } else {
+                errorEdgeParse()
+            }
+            rem = rem.tail
+
+            return direction
+        }
+
+        fun parseEdgeWithSpec(): ParseNode {
+            val dir1 = parseLeftEdgePattern()
+            expect1(TokenType.LEFT_BRACKET, ErrorCode.PARSE_EXPECTED_LEFT_BRACKET_FOR_MATCH_EDGE, "match edge")
+            val name = parseName()
+            rem = name?.remaining ?: rem
+            val label = parseLabel()
+            rem = label?.remaining ?: rem
+            expect1(TokenType.RIGHT_BRACKET, ErrorCode.PARSE_EXPECTED_RIGHT_BRACKET_FOR_MATCH_EDGE, "match edge")
+            val dir2 = parseRightEdgePattern()
+
+            val dir = if (dir1 == EdgeType(left = false, right = true, undirected = false) &&
+                dir2 == EdgeType(left = true, right = false, undirected = false)
+            ) {
+                EdgeType(left = true, right = true, undirected = true)
+            } else {
+                dir1.union(dir2)
+            }
+
+            val directionToken =
+                Token(TokenType.OPERATOR, ion.newSymbol(dir.abbreviation()), SourceSpan(0, 0, 0))
+            val direction = ParseNode(ParseType.MATCH_EXPR_EDGE_DIRECTION, directionToken, emptyList(), rem)
+
+            return ParseNode(ParseType.MATCH_EXPR_EDGE, null, listOfNotNull(direction, name, label), rem)
+        }
+
+        fun parseEdgeAbbreviated(): ParseNode {
+            var candidates: Map<String, EdgeType> = abbreviations
+            do {
+                if (rem.head?.type == TokenType.OPERATOR) {
+                    val char = rem.head!!.keywordText!!
+                    rem = rem.tail
+                    candidates = candidates.filterKeys { it.startsWith(char) }.mapKeys { it.key.removePrefix(char) }
+                    if (candidates.size == 1) {
+                        val edge = candidates.values.first()
+                        val directionToken =
+                            Token(TokenType.OPERATOR, ion.newSymbol(edge.abbreviation()), SourceSpan(0, 0, 0))
+                        val direction = ParseNode(ParseType.MATCH_EXPR_EDGE_DIRECTION, directionToken, emptyList(), rem)
+                        return ParseNode(ParseType.MATCH_EXPR_EDGE, null, listOf(direction), rem)
+                    }
+                } else if (candidates.contains("")) {
+                    val edge = candidates[""]!!
+                    val directionToken =
+                        Token(TokenType.OPERATOR, ion.newSymbol(edge.abbreviation()), SourceSpan(0, 0, 0))
+                    val direction = ParseNode(ParseType.MATCH_EXPR_EDGE_DIRECTION, directionToken, emptyList(), rem)
+                    return ParseNode(ParseType.MATCH_EXPR_EDGE, null, listOf(direction), rem)
+                } else {
+                    errorEdgeParse()
+                }
+            } while (candidates.isNotEmpty())
+            errorEdgeParse()
+        }
+
+        fun parseEdge(): ParseNode {
+            var preRem = rem
+            return try {
+                parseEdgeWithSpec()
+            } catch (e: ParserException) {
+                rem = preRem
+                parseEdgeAbbreviated()
+            }
+        }
+
+        val patterns = ArrayList<ParseNode?>()
+        val nodeLeft = try {
+            parseNode()
+        } catch (e: ParserException) {
+            null
+        }
+        patterns.add(nodeLeft)
+        do {
+            val edge = try {
+                parseEdge()
+            } catch (e: ParserException) {
+                null
+            }
+            patterns.add(edge)
+            val nodeRight = try {
+                parseNode()
+            } catch (e: ParserException) {
+                null
+            }
+            patterns.add(nodeRight)
+        } while (edge != null && nodeRight != null)
+
+        return ParseNode(ParseType.MATCH_EXPR, null, patterns.filterNotNull(), rem)
+    }
 
     /**
      * Validates tree to make sure that the top level tokens are not found below the top level.

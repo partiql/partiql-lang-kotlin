@@ -393,6 +393,42 @@ enum class ErrorCode(
         "expected identifier for alias"
     ),
 
+    PARSE_EXPECTED_IDENT_FOR_MATCH(
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "expected identifier for match"
+    ),
+
+    PARSE_EXPECTED_LEFT_PAREN_FOR_MATCH_NODE(
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "expected left parenthesis for match node"
+    ),
+
+    PARSE_EXPECTED_RIGHT_PAREN_FOR_MATCH_NODE(
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "expected right parenthesis for match node"
+    ),
+
+    PARSE_EXPECTED_LEFT_BRACKET_FOR_MATCH_EDGE(
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "expected left bracket for match edge"
+    ),
+
+    PARSE_EXPECTED_RIGHT_BRACKET_FOR_MATCH_EDGE(
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "expected right bracket for match edge"
+    ),
+
+    PARSE_EXPECTED_EDGE_PATTERN_MATCH_EDGE(
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "expected edge pattern for match edge"
+    ),
+
     PARSE_EXPECTED_AS_FOR_LET(
         ErrorCategory.PARSER,
         LOC_TOKEN,
