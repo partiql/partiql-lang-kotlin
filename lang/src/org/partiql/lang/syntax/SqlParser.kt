@@ -946,12 +946,8 @@ class SqlParser(
         return PartiqlAst.build {
             val parts = children.map {
                 when (it.type) {
-                    ParseType.MATCH_EXPR_NODE -> {
-                        PartiqlAst.GraphMatchPatternPart.Node(it.toGraphMatchNode(), it.getMetas())
-                    }
-                    ParseType.MATCH_EXPR_EDGE -> {
-                        PartiqlAst.GraphMatchPatternPart.Edge(it.toGraphMatchEdge(), it.getMetas())
-                    }
+                    ParseType.MATCH_EXPR_NODE -> it.toGraphMatchNode()
+                    ParseType.MATCH_EXPR_EDGE -> it.toGraphMatchEdge()
                     else -> {
                         TODO("Handle pattern part other than node&edge")
                     }
@@ -963,7 +959,7 @@ class SqlParser(
         }
     }
 
-    private fun ParseNode.toGraphMatchNode(): PartiqlAst.GraphMatchNode {
+    private fun ParseNode.toGraphMatchNode(): PartiqlAst.GraphMatchPatternPart.Node {
         val metas = getMetas()
 
         var name: SymbolPrimitive? = null
@@ -986,7 +982,7 @@ class SqlParser(
         }
 
         return PartiqlAst.build {
-            PartiqlAst.GraphMatchNode(
+            PartiqlAst.GraphMatchPatternPart.Node(
                 variable = name,
                 label = label,
                 predicate = predicate,
@@ -995,7 +991,7 @@ class SqlParser(
         }
     }
 
-    private fun ParseNode.toGraphMatchEdge(): PartiqlAst.GraphMatchEdge {
+    private fun ParseNode.toGraphMatchEdge(): PartiqlAst.GraphMatchPatternPart.Edge {
         val metas = getMetas()
 
         var direction: PartiqlAst.GraphMatchDirection? = null
@@ -1036,7 +1032,7 @@ class SqlParser(
 
         // TODO quantifier
         return PartiqlAst.build {
-            PartiqlAst.GraphMatchEdge(
+            PartiqlAst.GraphMatchPatternPart.Edge(
                 direction = direction,
                 quantifier = null,
                 variable = name,

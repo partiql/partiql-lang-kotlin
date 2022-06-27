@@ -219,23 +219,6 @@ may then be further optimized by selecting better implementations of each operat
         // Indicates the logical type of join.
         (sum join_type (inner) (left) (right) (full))
 
-        // A quantifier for graph edges or patterns. (e.g., the `{2,5}` in `MATCH (x)->{2,5}->(y)`)
-        (product graph_match_quantifier lower::int upper::(? int))
-
-        // A single node in a graph pattern.
-        (product graph_match_node
-                 predicate::(? expr)   // an optional node pre-filter
-                 variable::(? symbol)  // the optional element variable of the node match
-                 label::(* symbol 0))  // the optional label(s) to match for the node
-
-        // A single edge in a graph pattern.
-        (product graph_match_edge
-                 direction::graph_match_direction       // edge direction
-                 quantifier::(? graph_match_quantifier) // an optional quantifier for the edge match
-                 predicate::(? expr)   // an optional edge pre-filter
-                 variable::(? symbol)  // the optional element variable of the edge match
-                 label::(* symbol 0))  // the optional label(s) to match for the edge
-
         // The direction of an edge
         (sum graph_match_direction
              (edge_left)
@@ -246,10 +229,25 @@ may then be further optimized by selecting better implementations of each operat
              (edge_left_or_right)
              (edge_left_or_undirected_or_right))
 
+        // A part of a graph pattern
         (sum graph_match_pattern_part
-             (node node::graph_match_node)
-             (edge edge::graph_match_edge)
+             // A single node in a graph pattern.
+             (node
+                 predicate::(? expr)   // an optional node pre-filter
+                 variable::(? symbol)  // the optional element variable of the node match
+                 label::(* symbol 0))  // the optional label(s) to match for the node
+             // A single edge in a graph pattern.
+             (edge
+                 direction::graph_match_direction       // edge direction
+                 quantifier::(? graph_match_quantifier) // an optional quantifier for the edge match
+                 predicate::(? expr)   // an optional edge pre-filter
+                 variable::(? symbol)  // the optional element variable of the edge match
+                 label::(* symbol 0))  // the optional label(s) to match for the edge
+             // A sub-pattern.
              (pattern pattern::graph_match_pattern))
+
+        // A quantifier for graph edges or patterns. (e.g., the `{2,5}` in `MATCH (x)->{2,5}->(y)`)
+        (product graph_match_quantifier lower::int upper::(? int))
 
         // A single graph match pattern.
         (product graph_match_pattern

@@ -7,6 +7,7 @@ import org.junit.Ignore
 import org.junit.Test
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.id
+import org.partiql.pig.runtime.asPrimitive
 
 class SqlParserMatchTest : SqlParserTestBase() {
     @Test
@@ -20,7 +21,13 @@ class SqlParserMatchTest : SqlParserTestBase() {
                 graphExpr = graphMatchExpr(
                     patterns = listOf(
                         graphMatchPattern(
-                            parts = listOf(PartiqlAst.GraphMatchPatternPart.Node((graphMatchNode())))
+                            parts = listOf(
+                                PartiqlAst.GraphMatchPatternPart.Node(
+                                    predicate = null,
+                                    variable = null,
+                                    label = listOf()
+                                )
+                            )
                         )
                     )
                 )
@@ -40,7 +47,13 @@ class SqlParserMatchTest : SqlParserTestBase() {
                 graphExpr = graphMatchExpr(
                     patterns = listOf(
                         graphMatchPattern(
-                            parts = listOf(PartiqlAst.GraphMatchPatternPart.Node((graphMatchNode())))
+                            parts = listOf(
+                                PartiqlAst.GraphMatchPatternPart.Node(
+                                    predicate = null,
+                                    variable = null,
+                                    label = listOf()
+                                )
+                            )
                         )
                     )
                 )
@@ -65,7 +78,13 @@ class SqlParserMatchTest : SqlParserTestBase() {
                 graphExpr = graphMatchExpr(
                     patterns = listOf(
                         graphMatchPattern(
-                            parts = listOf(PartiqlAst.GraphMatchPatternPart.Node((graphMatchNode(variable = "x"))))
+                            parts = listOf(
+                                PartiqlAst.GraphMatchPatternPart.Node(
+                                    predicate = null,
+                                    variable = "x".asPrimitive(),
+                                    label = listOf()
+                                )
+                            )
                         )
                     )
                 )
@@ -90,10 +109,9 @@ class SqlParserMatchTest : SqlParserTestBase() {
                         graphMatchPattern(
                             parts = listOf(
                                 PartiqlAst.GraphMatchPatternPart.Node(
-                                    graphMatchNode(
-                                        variable = "x",
-                                        label = listOf("Label")
-                                    )
+                                    predicate = null,
+                                    variable = "x".asPrimitive(),
+                                    label = listOf("Label".asPrimitive())
                                 )
                             )
                         )
@@ -120,7 +138,15 @@ class SqlParserMatchTest : SqlParserTestBase() {
                 graphExpr = graphMatchExpr(
                     patterns = listOf(
                         graphMatchPattern(
-                            parts = listOf(PartiqlAst.GraphMatchPatternPart.Edge((graphMatchEdge(direction = edgeRight()))))
+                            parts = listOf(
+                                PartiqlAst.GraphMatchPatternPart.Edge(
+                                    direction = edgeRight(),
+                                    quantifier = null,
+                                    predicate = null,
+                                    variable = null,
+                                    label = listOf()
+                                )
+                            )
                         )
                     )
                 )
@@ -140,23 +166,21 @@ class SqlParserMatchTest : SqlParserTestBase() {
                             graphMatchPattern(
                                 parts = listOf(
                                     PartiqlAst.GraphMatchPatternPart.Node(
-                                        graphMatchNode(
-                                            variable = "a",
-                                            label = listOf("A")
-                                        )
+                                        predicate = null,
+                                        variable = "a".asPrimitive(),
+                                        label = listOf("A".asPrimitive())
                                     ),
                                     PartiqlAst.GraphMatchPatternPart.Edge(
-                                        graphMatchEdge(
-                                            direction = direction,
-                                            variable = variable,
-                                            label = label ?: emptyList()
-                                        )
+                                        direction = direction,
+                                        quantifier = null,
+                                        predicate = null,
+                                        variable = variable?.asPrimitive(),
+                                        label = label?.map { it.asPrimitive() } ?: emptyList()
                                     ),
                                     PartiqlAst.GraphMatchPatternPart.Node(
-                                        graphMatchNode(
-                                            variable = "b",
-                                            label = listOf("B")
-                                        )
+                                        predicate = null,
+                                        variable = "b".asPrimitive(),
+                                        label = listOf("B".asPrimitive())
                                     ),
                                 )
                             )
@@ -288,23 +312,21 @@ class SqlParserMatchTest : SqlParserTestBase() {
                         graphMatchPattern(
                             parts = listOf(
                                 PartiqlAst.GraphMatchPatternPart.Node(
-                                    graphMatchNode(
-                                        variable = "the_a",
-                                        label = listOf("a")
-                                    )
+                                    predicate = null,
+                                    variable = "the_a".asPrimitive(),
+                                    label = listOf("a".asPrimitive())
                                 ),
                                 PartiqlAst.GraphMatchPatternPart.Edge(
-                                    graphMatchEdge(
-                                        direction = edgeRight(),
-                                        variable = "the_y",
-                                        label = listOf("y")
-                                    )
+                                    direction = edgeRight(),
+                                    quantifier = null,
+                                    predicate = null,
+                                    variable = "the_y".asPrimitive(),
+                                    label = listOf("y".asPrimitive())
                                 ),
                                 PartiqlAst.GraphMatchPatternPart.Node(
-                                    graphMatchNode(
-                                        variable = "the_b",
-                                        label = listOf("b")
-                                    )
+                                    predicate = null,
+                                    variable = "the_b".asPrimitive(),
+                                    label = listOf("b".asPrimitive())
                                 ),
                             )
                         )
@@ -335,26 +357,44 @@ class SqlParserMatchTest : SqlParserTestBase() {
                     patterns = listOf(
                         graphMatchPattern(
                             parts = listOf(
-                                PartiqlAst.GraphMatchPatternPart.Node(graphMatchNode(variable = "a")),
-                                PartiqlAst.GraphMatchPatternPart.Edge(
-                                    graphMatchEdge(
-                                        direction = edgeRight(),
-                                        label = listOf("has")
-                                    )
+                                PartiqlAst.GraphMatchPatternPart.Node(
+                                    predicate = null,
+                                    variable = "a".asPrimitive(),
+                                    label = listOf()
                                 ),
-                                PartiqlAst.GraphMatchPatternPart.Node(graphMatchNode(variable = "x")),
+                                PartiqlAst.GraphMatchPatternPart.Edge(
+                                    direction = edgeRight(),
+                                    quantifier = null,
+                                    predicate = null,
+                                    variable = null,
+                                    label = listOf("has".asPrimitive())
+                                ),
+                                PartiqlAst.GraphMatchPatternPart.Node(
+                                    predicate = null,
+                                    variable = "x".asPrimitive(),
+                                    label = listOf()
+                                ),
                             )
                         ),
                         graphMatchPattern(
                             parts = listOf(
-                                PartiqlAst.GraphMatchPatternPart.Node(graphMatchNode(variable = "x")),
-                                PartiqlAst.GraphMatchPatternPart.Edge(
-                                    graphMatchEdge(
-                                        direction = edgeRight(),
-                                        label = listOf("contains")
-                                    )
+                                PartiqlAst.GraphMatchPatternPart.Node(
+                                    predicate = null,
+                                    variable = "x".asPrimitive(),
+                                    label = listOf()
                                 ),
-                                PartiqlAst.GraphMatchPatternPart.Node(graphMatchNode(variable = "b")),
+                                PartiqlAst.GraphMatchPatternPart.Edge(
+                                    direction = edgeRight(),
+                                    quantifier = null,
+                                    predicate = null,
+                                    variable = null,
+                                    label = listOf("contains".asPrimitive())
+                                ),
+                                PartiqlAst.GraphMatchPatternPart.Node(
+                                    predicate = null,
+                                    variable = "b".asPrimitive(),
+                                    label = listOf()
+                                ),
                             )
                         )
                     )
@@ -378,21 +418,35 @@ class SqlParserMatchTest : SqlParserTestBase() {
                     patterns = listOf(
                         graphMatchPattern(
                             parts = listOf(
-                                PartiqlAst.GraphMatchPatternPart.Node(graphMatchNode(variable = "a")),
-                                PartiqlAst.GraphMatchPatternPart.Edge(
-                                    graphMatchEdge(
-                                        direction = edgeRight(),
-                                        label = listOf("has")
-                                    )
+                                PartiqlAst.GraphMatchPatternPart.Node(
+                                    predicate = null,
+                                    variable = "a".asPrimitive(),
+                                    label = listOf()
                                 ),
-                                PartiqlAst.GraphMatchPatternPart.Node(graphMatchNode()),
                                 PartiqlAst.GraphMatchPatternPart.Edge(
-                                    graphMatchEdge(
-                                        direction = edgeRight(),
-                                        label = listOf("contains")
-                                    )
+                                    direction = edgeRight(),
+                                    quantifier = null,
+                                    predicate = null,
+                                    variable = null,
+                                    label = listOf("has".asPrimitive())
                                 ),
-                                PartiqlAst.GraphMatchPatternPart.Node(graphMatchNode(variable = "b")),
+                                PartiqlAst.GraphMatchPatternPart.Node(
+                                    predicate = null,
+                                    variable = null,
+                                    label = listOf()
+                                ),
+                                PartiqlAst.GraphMatchPatternPart.Edge(
+                                    direction = edgeRight(),
+                                    quantifier = null,
+                                    predicate = null,
+                                    variable = null,
+                                    label = listOf("contains".asPrimitive())
+                                ),
+                                PartiqlAst.GraphMatchPatternPart.Node(
+                                    predicate = null,
+                                    variable = "b".asPrimitive(),
+                                    label = listOf()
+                                ),
                             )
                         )
                     )
