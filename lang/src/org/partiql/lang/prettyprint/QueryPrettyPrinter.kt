@@ -20,9 +20,15 @@ import kotlin.math.abs
 class QueryPrettyPrinter {
     private val sqlParser = SqlParser(IonSystemBuilder.standard().build())
 
+    /**
+     * Format a PartiQL query
+     */
     fun prettyPrintQuery(query: String): String =
         astToPrettyQuery(sqlParser.parseAstStatement(query))
 
+    /**
+     * Transform a [PartiqlAst.Statement] back to a formatted string.
+     */
     fun astToPrettyQuery(ast: PartiqlAst.Statement): String {
         val sb = StringBuilder()
         writeAstNode(ast, sb)
@@ -461,7 +467,7 @@ class QueryPrettyPrinter {
                             val value = it.index.value.stringValue // It must be a string according to behavior of Lexer
                             sb.append(".$value")
                         }
-                        else -> IllegalArgumentException("PathExpr's attribute 'index' must be PartiqlAst.Expr.Lit when 'caseSensitive' is CaseInsensitive")
+                        else -> throw IllegalArgumentException("PathExpr's attribute 'index' must be PartiqlAst.Expr.Lit when case sensitivity is insensitive")
                     }
                 }
                 is PartiqlAst.PathStep.PathUnpivot -> sb.append(".[*]")
@@ -527,8 +533,8 @@ class QueryPrettyPrinter {
         // LET clause
         node.fromLet?.let {
             val sqLevel = getSubQueryLevel(level)
-            val separator = getSeparator(sqLevel)
-            sb.append("${separator}LET ")
+            val fromLetSeparator = getSeparator(sqLevel)
+            sb.append("${fromLetSeparator}LET ")
             writeFromLet(it, sb, level)
         }
 
@@ -848,7 +854,9 @@ class QueryPrettyPrinter {
     }
 
     private fun writeNAryOperator(operatorName: String, operands: List<PartiqlAst.Expr>, sb: StringBuilder, level: Int) {
-        if (operands.size < 2) IllegalStateException("Internal Error: NAry operator $operatorName must have at least 2 operands")
+        if (operands.size < 2) {
+            throw IllegalStateException("Internal Error: NAry operator $operatorName must have at least 2 operands")
+        }
         operands.forEach {
             writeAstNodeCheckOp(it, sb, level)
             sb.append(" $operatorName ")

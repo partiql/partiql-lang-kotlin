@@ -15,12 +15,12 @@ import org.partiql.lang.domains.PartiqlAst
  * Take the [PartiqlAst.Expr.Eq] node in the WHERE clause in `SELECT a FROM b WHERE c = d` as example.
  * [astType] is '=', [value] is null, [attrOfParent] is 'where', [children] is a list of [PartiqlAst.Expr.Id] c and d.
  */
-class RecursionTree(astType: String, value: String? = null, attrOfParent: String? = null, children: List<RecursionTree>? = null) {
-    private val astType = astType
-    private val value = value
-    private val attrOfParent = attrOfParent
-    private val children = children
-
+class RecursionTree(
+    private val astType: String,
+    private val value: String? = null,
+    private val attrOfParent: String? = null,
+    private val children: List<RecursionTree>? = null
+) {
     fun convertToString(): String {
         val result = StringBuilder()
         recurseToResult(0, result)

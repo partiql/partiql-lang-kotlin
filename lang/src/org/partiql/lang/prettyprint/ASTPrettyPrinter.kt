@@ -101,11 +101,11 @@ class ASTPrettyPrinter {
             children = listOf(
                 toRecursionTree(node.operations, "operations")
             ).let {
-                if (node.from == null) it else (it.plusElement(toRecursionTree(node.from!!, "from")))
+                if (node.from == null) it else (it.plusElement(toRecursionTree(node.from, "from")))
             }.let {
-                if (node.where == null) it else (it.plusElement(toRecursionTree(node.where!!, "where")))
+                if (node.where == null) it else (it.plusElement(toRecursionTree(node.where, "where")))
             }.let {
-                if (node.returning == null) it else (it.plusElement(toRecursionTree(node.returning!!, "returning")))
+                if (node.returning == null) it else (it.plusElement(toRecursionTree(node.returning, "returning")))
             }
         )
 
@@ -137,9 +137,9 @@ class ASTPrettyPrinter {
                     toRecursionTree(node.target, "target"),
                     toRecursionTree(node.value, "value")
                 ).let {
-                    if (node.index == null) it else (it.plusElement(toRecursionTree(node.index!!, "index")))
+                    if (node.index == null) it else (it.plusElement(toRecursionTree(node.index, "index")))
                 }.let {
-                    if (node.onConflict == null) it else (it.plusElement(toRecursionTree(node.onConflict!!, "onConflict")))
+                    if (node.onConflict == null) it else (it.plusElement(toRecursionTree(node.onConflict, "onConflict")))
                 }
             )
             is PartiqlAst.DmlOp.Remove -> RecursionTree(
@@ -387,7 +387,7 @@ class ASTPrettyPrinter {
                     toRecursionTree(node.value, "value"),
                     toRecursionTree(node.pattern, "pattern")
                 ).let {
-                    if (node.escape == null) it else (it + listOf(toRecursionTree(node.escape!!, "escape")))
+                    if (node.escape == null) it else (it + listOf(toRecursionTree(node.escape, "escape")))
                 }
             )
             is PartiqlAst.Expr.Between -> RecursionTree(
@@ -406,7 +406,7 @@ class ASTPrettyPrinter {
                     toRecursionTree(node.expr, "expr"),
                     toRecursionTree(node.cases, "cases")
                 ).let {
-                    if (node.default == null) it else (it.plusElement(toRecursionTree(node.default!!, "default")))
+                    if (node.default == null) it else (it.plusElement(toRecursionTree(node.default, "default")))
                 }
             )
             is PartiqlAst.Expr.SearchedCase -> RecursionTree(
@@ -415,7 +415,7 @@ class ASTPrettyPrinter {
                 children = listOf(
                     toRecursionTree(node.cases, "cases")
                 ).let {
-                    if (node.default == null) it else (it.plusElement(toRecursionTree(node.default!!, "default")))
+                    if (node.default == null) it else (it.plusElement(toRecursionTree(node.default, "default")))
                 }
             )
             is PartiqlAst.Expr.Struct -> RecursionTree(
@@ -521,19 +521,19 @@ class ASTPrettyPrinter {
                     toRecursionTree(node.project, "project"),
                     toRecursionTree(node.from, "from")
                 ).let {
-                    if (node.fromLet == null) it else (it.plusElement(toRecursionTree(node.fromLet!!, "let")))
+                    if (node.fromLet == null) it else (it.plusElement(toRecursionTree(node.fromLet, "let")))
                 }.let {
-                    if (node.where == null) it else (it.plusElement(toRecursionTree(node.where!!, "where")))
+                    if (node.where == null) it else (it.plusElement(toRecursionTree(node.where, "where")))
                 }.let {
-                    if (node.group == null) it else (it.plusElement(toRecursionTree(node.group!!, "group")))
+                    if (node.group == null) it else (it.plusElement(toRecursionTree(node.group, "group")))
                 }.let {
-                    if (node.having == null) it else (it.plusElement(toRecursionTree(node.having!!, "having")))
+                    if (node.having == null) it else (it.plusElement(toRecursionTree(node.having, "having")))
                 }.let {
-                    if (node.order == null) it else (it.plusElement(toRecursionTree(node.order!!, "order")))
+                    if (node.order == null) it else (it.plusElement(toRecursionTree(node.order, "order")))
                 }.let {
-                    if (node.limit == null) it else (it.plusElement(toRecursionTree(node.limit!!, "limit")))
+                    if (node.limit == null) it else (it.plusElement(toRecursionTree(node.limit, "limit")))
                 }.let {
-                    if (node.offset == null) it else (it.plusElement(toRecursionTree(node.offset!!, "offset")))
+                    if (node.offset == null) it else (it.plusElement(toRecursionTree(node.offset, "offset")))
                 }
             )
         }
@@ -608,7 +608,7 @@ class ASTPrettyPrinter {
                 astType = "ProjectExpr",
                 attrOfParent = attrOfParent,
                 children = listOf(toRecursionTree(node.expr, "expr")).let {
-                    if (node.asAlias == null) it else { it.plusElement(toRecursionTree(node.asAlias!!, "as")) }
+                    if (node.asAlias == null) it else { it.plusElement(toRecursionTree(node.asAlias, "as")) }
                 }
             )
         }
@@ -622,29 +622,29 @@ class ASTPrettyPrinter {
                     toRecursionTree(node.left, "left"),
                     toRecursionTree(node.right, "right")
                 ).let {
-                    if (node.predicate == null) it else { it.plusElement(toRecursionTree(node.predicate!!, "on")) }
+                    if (node.predicate == null) it else { it.plusElement(toRecursionTree(node.predicate, "on")) }
                 }
             )
             is PartiqlAst.FromSource.Scan -> RecursionTree(
                 astType = "Scan",
                 attrOfParent = attrOfParent,
                 children = listOf(toRecursionTree(node.expr)).let {
-                    if (node.asAlias == null) it else { it.plusElement(toRecursionTree(node.asAlias!!, attrOfParent = "as")) }
+                    if (node.asAlias == null) it else { it.plusElement(toRecursionTree(node.asAlias, attrOfParent = "as")) }
                 }.let {
-                    if (node.atAlias == null) it else { it.plusElement(toRecursionTree(node.atAlias!!, attrOfParent = "at")) }
+                    if (node.atAlias == null) it else { it.plusElement(toRecursionTree(node.atAlias, attrOfParent = "at")) }
                 }.let {
-                    if (node.byAlias == null) it else { it.plusElement(toRecursionTree(node.byAlias!!, attrOfParent = "by")) }
+                    if (node.byAlias == null) it else { it.plusElement(toRecursionTree(node.byAlias, attrOfParent = "by")) }
                 }
             )
             is PartiqlAst.FromSource.Unpivot -> RecursionTree(
                 astType = "Unpivot",
                 attrOfParent = attrOfParent,
                 children = listOf(toRecursionTree(node.expr)).let {
-                    if (node.asAlias == null) it else { it.plusElement(toRecursionTree(node.asAlias!!, attrOfParent = "as")) }
+                    if (node.asAlias == null) it else { it.plusElement(toRecursionTree(node.asAlias, attrOfParent = "as")) }
                 }.let {
-                    if (node.atAlias == null) it else { it.plusElement(toRecursionTree(node.atAlias!!, attrOfParent = "at")) }
+                    if (node.atAlias == null) it else { it.plusElement(toRecursionTree(node.atAlias, attrOfParent = "at")) }
                 }.let {
-                    if (node.byAlias == null) it else { it.plusElement(toRecursionTree(node.byAlias!!, attrOfParent = "by")) }
+                    if (node.byAlias == null) it else { it.plusElement(toRecursionTree(node.byAlias, attrOfParent = "by")) }
                 }
             )
         }
@@ -688,13 +688,13 @@ class ASTPrettyPrinter {
                             children = listOf(
                                 toRecursionTree(groupKey.expr, "expr")
                             ).let {
-                                if (groupKey.asAlias == null) it else { it.plusElement(toRecursionTree(groupKey.asAlias!!, "as")) }
+                                if (groupKey.asAlias == null) it else { it.plusElement(toRecursionTree(groupKey.asAlias, "as")) }
                             }
                         )
                     }
                 )
             ).let {
-                if (node.groupAsAlias == null) it else { it.plusElement(toRecursionTree(node.groupAsAlias!!, attrOfParent = "groupAs")) }
+                if (node.groupAsAlias == null) it else { it.plusElement(toRecursionTree(node.groupAsAlias, attrOfParent = "groupAs")) }
             }
         )
 
@@ -723,16 +723,4 @@ class ASTPrettyPrinter {
             value = symbol.text,
             attrOfParent = attrOfParent
         )
-
-    private fun toRecursionTree(node: PartiqlAst.ScopeQualifier, attrOfParent: String? = null): RecursionTree =
-        when (node) {
-            is PartiqlAst.ScopeQualifier.Unqualified -> RecursionTree(
-                astType = "Unqualified",
-                attrOfParent = attrOfParent
-            )
-            is PartiqlAst.ScopeQualifier.LocalsFirst -> RecursionTree(
-                astType = "LocalsFirst",
-                attrOfParent = attrOfParent
-            )
-        }
 }
