@@ -220,6 +220,18 @@ may then be further optimized by selecting better implementations of each operat
         (sum join_type (inner) (left) (right) (full))
 
         // The direction of an edge
+        // | Orientation               | Edge pattern | Abbreviation |
+        // |---------------------------+--------------+--------------|
+        // | Pointing left             | <−[ spec ]−  | <−           |
+        // | Undirected                | ~[ spec ]~   | ~            |
+        // | Pointing right            | −[ spec ]−>  | −>           |
+        // | Left or undirected        | <~[ spec ]~  | <~           |
+        // | Undirected or right       | ~[ spec ]~>  | ~>           |
+        // | Left or right             | <−[ spec ]−> | <−>          |
+        // | Left, undirected or right | −[ spec ]−   | −            |
+        //
+        // Fig. 5. Table of edge patterns:
+        // https://arxiv.org/abs/2112.06217
         (sum graph_match_direction
              (edge_left)
              (edge_undirected)
@@ -233,20 +245,21 @@ may then be further optimized by selecting better implementations of each operat
         (sum graph_match_pattern_part
              // A single node in a graph pattern.
              (node
-                 predicate::(? expr)   // an optional node pre-filter
-                 variable::(? symbol)  // the optional element variable of the node match
-                 label::(* symbol 0))  // the optional label(s) to match for the node
+                 predicate::(? expr)   // an optional node pre-filter, e.g.: `WHERE c.name='Alarm'` in `MATCH (c WHERE c.name='Alarm')`
+                 variable::(? symbol)  // the optional element variable of the node match, e.g.: `x` in `MATCH (x)`
+                 label::(* symbol 0))  // the optional label(s) to match for the node, e.g.: `Entity` in `MATCH (x:Entity)`
+
              // A single edge in a graph pattern.
              (edge
                  direction::graph_match_direction       // edge direction
                  quantifier::(? graph_match_quantifier) // an optional quantifier for the edge match
-                 predicate::(? expr)   // an optional edge pre-filter
-                 variable::(? symbol)  // the optional element variable of the edge match
-                 label::(* symbol 0))  // the optional label(s) to match for the edge
+                 predicate::(? expr)   // an optional edge pre-filter, e.g.: `WHERE t.capacity>100` in `MATCH −[t:hasSupply WHERE t.capacity>100]−>`
+                 variable::(? symbol)  // the optional element variable of the edge match, e.g.: `t` in `MATCH −[t]−>`
+                 label::(* symbol 0))  // the optional label(s) to match for the edge. e.g.: `Target` in `MATCH −[t:Target]−>`
              // A sub-pattern.
              (pattern pattern::graph_match_pattern))
 
-        // A quantifier for graph edges or patterns. (e.g., the `{2,5}` in `MATCH (x)->{2,5}->(y)`)
+        // A quantifier for graph edges or patterns. (e.g., the `{2,5}` in `MATCH (x)->{2,5}(y)`)
         (product graph_match_quantifier lower::int upper::(? int))
 
         // A single graph match pattern.
@@ -254,7 +267,8 @@ may then be further optimized by selecting better implementations of each operat
                  quantifier::(? graph_match_quantifier) // an optional quantifier for the entire pattern match
                  parts::(* graph_match_pattern_part 1)) // the ordered pattern parts
 
-        // A graph match clause.
+        // A graph match clause as defined in GPML
+        // See https://arxiv.org/abs/2112.06217
         (product graph_match_expr patterns::(*graph_match_pattern 1))
 
 

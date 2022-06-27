@@ -3317,7 +3317,8 @@ class SqlParser(
     }
 
     private fun List<Token>.parseMatchPattern(): ParseNode {
-
+        // left/right/undirected edge directions essentially form a 3-bit flag
+        // represent here the 7 (non-zero) 3-bit combinations to their abbreviation for lookup
         val abbreviationMap = Array(2) { Array(2) { Array(2) { "" } } }.also {
             it[0][0][1] = "~"
             it[0][1][0] = "->"
@@ -3329,12 +3330,28 @@ class SqlParser(
         }
 
         data class EdgeType(val left: Boolean, val right: Boolean, val undirected: Boolean) {
+            // Just union all the left/right/undirected flags
             fun union(other: EdgeType): EdgeType {
                 val left = this.left.or(other.left)
                 val right = this.right.or(other.right)
                 val undirected = this.undirected.or(other.undirected)
                 val union = EdgeType(left = left, right = right, undirected = undirected)
                 return union
+            }
+
+            // Combine leading and trailing edge detection.
+            // If leading thinks right and trailing thinks left
+            //    then left + right + undirected
+            // else
+            //    union(leading, trailing)
+            fun combine(other: EdgeType): EdgeType {
+                return if (this == EdgeType(left = false, right = true, undirected = false) &&
+                    other == EdgeType(left = true, right = false, undirected = false)
+                ) {
+                    EdgeType(left = true, right = true, undirected = true)
+                } else {
+                    this.union(other)
+                }
             }
         }
 
@@ -3473,6 +3490,20 @@ class SqlParser(
             return direction
         }
 
+        // Parses an edge pattern containing a spec as defined by
+        //
+        // | Orientation               | Edge pattern | Abbreviation |
+        // |---------------------------+--------------+--------------|
+        // | Pointing left             | <−[ spec ]−  | <−           |
+        // | Undirected                | ~[ spec ]~   | ~            |
+        // | Pointing right            | −[ spec ]−>  | −>           |
+        // | Left or undirected        | <~[ spec ]~  | <~           |
+        // | Undirected or right       | ~[ spec ]~>  | ~>           |
+        // | Left or right             | <−[ spec ]−> | <−>          |
+        // | Left, undirected or right | −[ spec ]−   | −            |
+        //
+        // Fig. 5. Table of edge patterns:
+        // https://arxiv.org/abs/2112.06217
         fun parseEdgeWithSpec(): ParseNode {
             val dir1 = parseLeftEdgePattern()
             expect1(TokenType.LEFT_BRACKET, ErrorCode.PARSE_EXPECTED_LEFT_BRACKET_FOR_MATCH_EDGE, "match edge")
@@ -3483,13 +3514,7 @@ class SqlParser(
             expect1(TokenType.RIGHT_BRACKET, ErrorCode.PARSE_EXPECTED_RIGHT_BRACKET_FOR_MATCH_EDGE, "match edge")
             val dir2 = parseRightEdgePattern()
 
-            val dir = if (dir1 == EdgeType(left = false, right = true, undirected = false) &&
-                dir2 == EdgeType(left = true, right = false, undirected = false)
-            ) {
-                EdgeType(left = true, right = true, undirected = true)
-            } else {
-                dir1.union(dir2)
-            }
+            val dir = dir1.combine(dir2)
 
             val directionToken =
                 Token(TokenType.OPERATOR, ion.newSymbol(dir.abbreviation()), SourceSpan(0, 0, 0))
@@ -3498,6 +3523,20 @@ class SqlParser(
             return ParseNode(ParseType.MATCH_EXPR_EDGE, null, listOfNotNull(direction, name, label), rem)
         }
 
+        // Parses an abbreviated edge pattern (i.e, no label, no variable, no predicate) as defined by
+        //
+        // | Orientation               | Edge pattern | Abbreviation |
+        // |---------------------------+--------------+--------------|
+        // | Pointing left             | <−[ spec ]−  | <−           |
+        // | Undirected                | ~[ spec ]~   | ~            |
+        // | Pointing right            | −[ spec ]−>  | −>           |
+        // | Left or undirected        | <~[ spec ]~  | <~           |
+        // | Undirected or right       | ~[ spec ]~>  | ~>           |
+        // | Left or right             | <−[ spec ]−> | <−>          |
+        // | Left, undirected or right | −[ spec ]−   | −            |
+        //
+        // Fig. 5. Table of edge patterns:
+        // https://arxiv.org/abs/2112.06217
         fun parseEdgeAbbreviated(): ParseNode {
             var candidates: Map<String, EdgeType> = abbreviations
             do {
