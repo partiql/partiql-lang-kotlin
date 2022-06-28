@@ -512,6 +512,43 @@ class SqlParserMatchTest : SqlParserTestBase() {
         )
     }
 
+    @Test
+    fun pathVariable() = assertExpressionNoRoundTrip(
+        "SELECT a,b FROM g MATCH p = (a:A) -[e:E]-> (b:B)",
+    ) {
+        PartiqlAst.build {
+            select(
+                project = projectList(projectExpr(id("a")), projectExpr(id("b"))),
+                from = graphMatch(
+                    expr = id("g"),
+                    graphExpr = graphMatchExpr(
+                        patterns = listOf(
+                            graphMatchPattern(
+                                variable = "p",
+                                parts = listOf(
+                                    node(
+                                        variable = "a",
+                                        label = listOf("A")
+                                    ),
+                                    edge(
+                                        direction = edgeRight(),
+                                        variable = "e",
+                                        label = listOf("E")
+                                    ),
+                                    node(
+                                        variable = "b",
+                                        label = listOf("B")
+                                    ),
+                                )
+                            )
+                        )
+                    )
+                ),
+                where = null
+            )
+        }
+    }
+
     // TODO prefilters
     @Test
     @Ignore
@@ -562,7 +599,6 @@ class SqlParserMatchTest : SqlParserTestBase() {
         TODO()
     }
 
-    // TODO path variable (e.g., `MATCH p = (x) -> (y)`
     // TODO parenthisized patterns (e.g., `MATCH (a:Node) [()−[:Edge]−>()] (b:Node)`)
     // TODO pattern quantifiers (e.g., `MATCH (a:Node)[()−[:Edge]−>()]{2,5}(b:Node)`,  `*`, `+`)
     // TODO group variables (e.g., `MATCH ... WHERE SUM()...`)

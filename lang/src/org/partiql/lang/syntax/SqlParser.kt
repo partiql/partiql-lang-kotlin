@@ -947,18 +947,24 @@ class SqlParser(
         val metas = getMetas()
 
         return PartiqlAst.build {
-            val parts = children.map {
-                when (it.type) {
-                    ParseType.MATCH_EXPR_NODE -> it.toGraphMatchNode()
-                    ParseType.MATCH_EXPR_EDGE -> it.toGraphMatchEdge()
+            var variable: SymbolPrimitive? = null
+            var quantifier: PartiqlAst.GraphMatchQuantifier? = null
+            val parts = mutableListOf<PartiqlAst.GraphMatchPatternPart>()
+
+            for (child in children) {
+                when (child.type) {
+                    ParseType.MATCH_EXPR_NAME -> {
+                        variable = SymbolPrimitive(child.children[0].token!!.text!!, child.getMetas())
+                    }
+                    ParseType.MATCH_EXPR_NODE -> parts.add(child.toGraphMatchNode())
+                    ParseType.MATCH_EXPR_EDGE -> parts.add(child.toGraphMatchEdge())
                     else -> {
-                        TODO("Handle pattern part other than node&edge")
+                        error("Invalid parse tree: unexpected subexpression for MATCH pattern")
                     }
                 }
             }
 
-            // TODO quantifier
-            PartiqlAst.GraphMatchPattern(quantifier = null, parts = parts, metas = metas)
+            PartiqlAst.GraphMatchPattern(variable = variable, quantifier = quantifier, parts = parts, metas = metas)
         }
     }
 
@@ -3445,7 +3451,7 @@ class SqlParser(
         }
 
         // `consume` a single token matching the specified type or throw an error if not possible
-        fun expect(type: TokenType, errorCode: ErrorCode, errorMsg: String) {
+        fun expect(type: TokenType, keywordText: String? = null, errorCode: ErrorCode, errorMsg: String) {
             if (!consume(type)) {
                 rem.head.err(
                     "Expected ${type.name} for $errorMsg", errorCode
@@ -3454,12 +3460,12 @@ class SqlParser(
         }
 
         fun parseNode(): ParseNode {
-            expect(TokenType.LEFT_PAREN, ErrorCode.PARSE_EXPECTED_LEFT_PAREN_FOR_MATCH_NODE, "match node")
+            expect(TokenType.LEFT_PAREN, null, ErrorCode.PARSE_EXPECTED_LEFT_PAREN_FOR_MATCH_NODE, "match node")
             val name = parseName()
             rem = name?.remaining ?: rem
             val label = parseLabel()
             rem = label?.remaining ?: rem
-            expect(TokenType.RIGHT_PAREN, ErrorCode.PARSE_EXPECTED_RIGHT_PAREN_FOR_MATCH_NODE, "match node")
+            expect(TokenType.RIGHT_PAREN, null, ErrorCode.PARSE_EXPECTED_RIGHT_PAREN_FOR_MATCH_NODE, "match node")
 
             return ParseNode(ParseType.MATCH_EXPR_NODE, null, listOfNotNull(name, label), rem)
         }
@@ -3540,12 +3546,12 @@ class SqlParser(
         // https://arxiv.org/abs/2112.06217
         fun parseEdgeWithSpec(): ParseNode {
             val dir1 = parseLeftEdgePattern()
-            expect(TokenType.LEFT_BRACKET, ErrorCode.PARSE_EXPECTED_LEFT_BRACKET_FOR_MATCH_EDGE, "match edge")
+            expect(TokenType.LEFT_BRACKET, null, ErrorCode.PARSE_EXPECTED_LEFT_BRACKET_FOR_MATCH_EDGE, "match edge")
             val name = parseName()
             rem = name?.remaining ?: rem
             val label = parseLabel()
             rem = label?.remaining ?: rem
-            expect(TokenType.RIGHT_BRACKET, ErrorCode.PARSE_EXPECTED_RIGHT_BRACKET_FOR_MATCH_EDGE, "match edge")
+            expect(TokenType.RIGHT_BRACKET, null, ErrorCode.PARSE_EXPECTED_RIGHT_BRACKET_FOR_MATCH_EDGE, "match edge")
             val dir2 = parseRightEdgePattern()
 
             val dir = dir1.combine(dir2)
@@ -3621,7 +3627,7 @@ class SqlParser(
                         val lower = rem.atomFromHead(ParseType.MATCH_EXPR_QUANTIFIER)
                         rem = rem.tail
 
-                        expect(TokenType.COMMA, ErrorCode.PARSE_EXPECTED_EDGE_PATTERN_MATCH_EDGE, "quantifier")
+                        expect(TokenType.COMMA, null, ErrorCode.PARSE_EXPECTED_EDGE_PATTERN_MATCH_EDGE, "quantifier")
 
                         val upper = if (rem.head?.type == TokenType.LITERAL) {
                             val upper = rem.atomFromHead(ParseType.MATCH_EXPR_QUANTIFIER)
@@ -3631,7 +3637,12 @@ class SqlParser(
                             null
                         }
 
-                        expect(TokenType.RIGHT_CURLY, ErrorCode.PARSE_EXPECTED_EDGE_PATTERN_MATCH_EDGE, "quantifier")
+                        expect(
+                            TokenType.RIGHT_CURLY,
+                            null,
+                            ErrorCode.PARSE_EXPECTED_EDGE_PATTERN_MATCH_EDGE,
+                            "quantifier"
+                        )
 
                         listOfNotNull(lower, upper)
                     } else {
@@ -3645,7 +3656,7 @@ class SqlParser(
         }
 
         fun parseEdge(): ParseNode {
-            var preRem = rem
+            val preRem = rem
             val edge = try {
                 parseEdgeWithSpec()
             } catch (e: ParserException) {
@@ -3657,29 +3668,49 @@ class SqlParser(
             return edge.copy(children = edge.children + quantifer, remaining = rem)
         }
 
-        val patterns = ArrayList<ParseNode?>()
+        fun parsePathVariable(): ParseNode? {
+            val name = parseName()
+            return if (name != null) {
+                rem = name.remaining
+                expect(
+                    TokenType.OPERATOR,
+                    "=",
+                    ErrorCode.PARSE_EXPECTED_EQUALS_FOR_MATCH_PATH_VARIABLE,
+                    "path variable"
+                )
+                name.copy(remaining = rem)
+            } else {
+                null
+            }
+        }
+
+        val patternElements = ArrayList<ParseNode?>()
+
+        val pathVariable = parsePathVariable()
+        patternElements.add(pathVariable)
+
         val nodeLeft = try {
             parseNode()
         } catch (e: ParserException) {
             null
         }
-        patterns.add(nodeLeft)
+        patternElements.add(nodeLeft)
         do {
             val edge = try {
                 parseEdge()
             } catch (e: ParserException) {
                 null
             }
-            patterns.add(edge)
+            patternElements.add(edge)
             val nodeRight = try {
                 parseNode()
             } catch (e: ParserException) {
                 null
             }
-            patterns.add(nodeRight)
+            patternElements.add(nodeRight)
         } while (edge != null && nodeRight != null)
 
-        return ParseNode(ParseType.MATCH_EXPR, null, patterns.filterNotNull(), rem)
+        return ParseNode(ParseType.MATCH_EXPR, null, patternElements.filterNotNull(), rem)
     }
 
     /**

@@ -429,6 +429,12 @@ enum class ErrorCode(
         "expected edge pattern for match edge"
     ),
 
+    PARSE_EXPECTED_EQUALS_FOR_MATCH_PATH_VARIABLE(
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "expected equals for match path variable"
+    ),
+
     PARSE_EXPECTED_AS_FOR_LET(
         ErrorCategory.PARSER,
         LOC_TOKEN,
