@@ -235,8 +235,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.4-alpha] - 2020-11-08
 
 ### Fixed
-- [Fix `LIMIT` clause execution order][#300](https://github.com/partiql/partiql-lang-kotlin/pull/300)
-- [Stop treating date parts as if they are string literals][#317](https://github.com/partiql/partiql-lang-kotlin/pull/317)
+- Fix `LIMIT` clause execution order #300
+- Stop treating date parts as if they are string literals #317
 
 ## [0.2.3-alpha] - 2020-10-09
 
