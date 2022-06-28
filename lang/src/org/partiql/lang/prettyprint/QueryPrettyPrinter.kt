@@ -21,13 +21,30 @@ class QueryPrettyPrinter {
     private val sqlParser = SqlParser(IonSystemBuilder.standard().build())
 
     /**
-     * Format a PartiQL query
-     */
+     * For the given SQL query outputs the corresponding string formatted PartiQL AST representation, e.g:
+     * Given:
+     *  "FROM x WHERE a = b SET k = 5, m = 6 INSERT INTO c VALUE << 1 >> REMOVE a SET l = 3 REMOVE b RETURNING MODIFIED OLD a, ALL NEW *"
+     * Outputs:
+        """
+        FROM x
+        WHERE a = b
+        SET k = 5, m = 6
+        INSERT INTO c VALUE << 1 >>
+        REMOVE a
+        SET l = 3
+        REMOVE b
+        RETURNING MODIFIED OLD a, ALL NEW *
+        """
+    * @param query An SQL query as string.
+    * @return formatted SQL query
+    */
     fun prettyPrintQuery(query: String): String =
         astToPrettyQuery(sqlParser.parseAstStatement(query))
 
     /**
-     * Transform a [PartiqlAst.Statement] back to a formatted string.
+     * For the given PartiQL AST Statement, outputs a string formatted query corresponding the given AST, e.g:
+     * @param [PartiqlAst.Statement] An SQL query as string.
+     * @return formatted SQL query
      */
     fun astToPrettyQuery(ast: PartiqlAst.Statement): String {
         val sb = StringBuilder()
