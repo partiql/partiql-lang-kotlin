@@ -40,6 +40,7 @@ import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.time.MAX_PRECISION_FOR_TIME
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.util.DATE_PATTERN_REGEX
+import org.partiql.lang.util.asIonInt
 import org.partiql.lang.util.atomFromHead
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.err
@@ -60,6 +61,7 @@ import org.partiql.lang.util.tailExpectedKeyword
 import org.partiql.lang.util.tailExpectedToken
 import org.partiql.lang.util.timeWithoutTimeZoneRegex
 import org.partiql.lang.util.unaryMinus
+import org.partiql.pig.runtime.LongPrimitive
 import org.partiql.pig.runtime.SymbolPrimitive
 import java.time.LocalDate
 import java.time.LocalTime
@@ -182,6 +184,7 @@ class SqlParser(
         MATCH_EXPR_EDGE_DIRECTION,
         MATCH_EXPR_NAME,
         MATCH_EXPR_LABEL,
+        MATCH_EXPR_QUANTIFIER,
         CHECK,
         ON_CONFLICT,
         CONFLICT_ACTION,
@@ -995,6 +998,7 @@ class SqlParser(
         val metas = getMetas()
 
         var direction: PartiqlAst.GraphMatchDirection? = null
+        var quantifier: PartiqlAst.GraphMatchQuantifier? = null
         var name: SymbolPrimitive? = null
         val label = mutableListOf<SymbolPrimitive>()
         val predicate = null
@@ -1020,6 +1024,34 @@ class SqlParser(
                         else -> error("Invalid parse tree: unknown edge direction ${child.token.text!!}")
                     }
                 }
+                ParseType.MATCH_EXPR_QUANTIFIER -> {
+                    when (child.token!!.type) {
+                        TokenType.STAR -> {
+                            quantifier = PartiqlAst.GraphMatchQuantifier(
+                                lower = LongPrimitive(0, child.getMetas()),
+                                upper = null
+                            )
+                        }
+                        TokenType.OPERATOR -> {
+                            when (child.token.keywordText) {
+                                "+" -> {
+                                    quantifier = PartiqlAst.GraphMatchQuantifier(
+                                        lower = LongPrimitive(1, child.getMetas()),
+                                        upper = null
+                                    )
+                                }
+                            }
+                        }
+                        TokenType.LITERAL -> {
+                            val q = LongPrimitive(child.token.value!!.asIonInt().longValue(), child.getMetas())
+                            if (quantifier == null) {
+                                quantifier = PartiqlAst.GraphMatchQuantifier(lower = q, upper = null)
+                            } else {
+                                quantifier = PartiqlAst.GraphMatchQuantifier(lower = quantifier.lower, upper = q)
+                            }
+                        }
+                    }
+                }
                 else -> {
                     TODO("Unhandled case for graph match edge")
                 }
@@ -1034,7 +1066,7 @@ class SqlParser(
         return PartiqlAst.build {
             PartiqlAst.GraphMatchPatternPart.Edge(
                 direction = direction,
-                quantifier = null,
+                quantifier = quantifier,
                 variable = name,
                 label = label,
                 predicate = predicate,
@@ -3542,7 +3574,7 @@ class SqlParser(
         fun parseEdgeAbbreviated(): ParseNode {
             var candidates: Map<String, EdgeType> = abbreviations
             do {
-                if (rem.head?.type == TokenType.OPERATOR) {
+                if (rem.head?.type == TokenType.OPERATOR && rem.head!!.keywordText in listOf("<", "-", ">", "~")) {
                     val char = rem.head!!.keywordText!!
                     rem = rem.tail
                     candidates = candidates.filterKeys { it.startsWith(char) }.mapKeys { it.key.removePrefix(char) }
@@ -3566,14 +3598,63 @@ class SqlParser(
             errorEdgeParse()
         }
 
+        fun parseQuantifier(): List<ParseNode> {
+            return when (rem.head?.type) {
+                TokenType.STAR -> {
+                    val q = listOf(ParseNode(ParseType.MATCH_EXPR_QUANTIFIER, rem.head, listOf(), rem.tail))
+                    rem = rem.tail
+                    q
+                }
+                TokenType.OPERATOR -> {
+                    when (rem.head!!.keywordText) {
+                        "+" -> {
+                            val q = listOf(ParseNode(ParseType.MATCH_EXPR_QUANTIFIER, rem.head, listOf(), rem.tail))
+                            rem = rem.tail
+                            q
+                        }
+                        else -> emptyList()
+                    }
+                }
+                TokenType.LEFT_CURLY -> {
+                    rem = rem.tail
+                    if (rem.head?.type == TokenType.LITERAL) {
+                        val lower = rem.atomFromHead(ParseType.MATCH_EXPR_QUANTIFIER)
+                        rem = rem.tail
+
+                        expect(TokenType.COMMA, ErrorCode.PARSE_EXPECTED_EDGE_PATTERN_MATCH_EDGE, "quantifier")
+
+                        val upper = if (rem.head?.type == TokenType.LITERAL) {
+                            val upper = rem.atomFromHead(ParseType.MATCH_EXPR_QUANTIFIER)
+                            rem = rem.tail
+                            upper
+                        } else {
+                            null
+                        }
+
+                        expect(TokenType.RIGHT_CURLY, ErrorCode.PARSE_EXPECTED_EDGE_PATTERN_MATCH_EDGE, "quantifier")
+
+                        listOfNotNull(lower, upper)
+                    } else {
+                        errorEdgeParse()
+                    }
+                }
+                else -> {
+                    emptyList()
+                }
+            }
+        }
+
         fun parseEdge(): ParseNode {
             var preRem = rem
-            return try {
+            val edge = try {
                 parseEdgeWithSpec()
             } catch (e: ParserException) {
                 rem = preRem
                 parseEdgeAbbreviated()
             }
+
+            val quantifer = parseQuantifier()
+            return edge.copy(children = edge.children + quantifer, remaining = rem)
         }
 
         val patterns = ArrayList<ParseNode?>()
@@ -3610,7 +3691,12 @@ class SqlParser(
      * If [topLevelTokenSeen] is true, it means it has been encountered at least once before while traversing the parse tree.
      * If [dmlListTokenSeen] is true, it means it has been encountered at least once before while traversing the parse tree.
      */
-    private fun validateTopLevelNodes(node: ParseNode, level: Int, topLevelTokenSeen: Boolean, dmlListTokenSeen: Boolean) {
+    private fun validateTopLevelNodes(
+        node: SqlParser.ParseNode,
+        level: Int,
+        topLevelTokenSeen: Boolean,
+        dmlListTokenSeen: Boolean
+    ) {
         checkThreadInterrupted()
         val isTopLevelType = when (node.type.isDml) {
             // DML_LIST token type allows multiple DML keywords to be used in the same statement.
@@ -3638,7 +3724,7 @@ class SqlParser(
                 node = it,
                 level = level + 1,
                 topLevelTokenSeen = topLevelTokenSeen || isTopLevelType,
-                dmlListTokenSeen = dmlListTokenSeen || node.type == ParseType.DML_LIST
+                dmlListTokenSeen = dmlListTokenSeen || node.type == SqlParser.ParseType.DML_LIST
             )
         }
     }

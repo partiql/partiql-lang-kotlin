@@ -154,140 +154,197 @@ class SqlParserMatchTest : SqlParserTestBase() {
         )
     }
 
-    val simpleGraphAST = { direction: PartiqlAst.GraphMatchDirection, variable: String?, label: List<String>? ->
-        PartiqlAst.build {
-            select(
-                project = projectList(projectExpr(id("a")), projectExpr(id("b"))),
-                from = graphMatch(
-                    expr = id("g"),
-                    graphExpr = graphMatchExpr(
-                        patterns = listOf(
-                            graphMatchPattern(
-                                quantifier = null,
-                                parts = listOf(
-                                    node(
-                                        predicate = null,
-                                        variable = "a",
-                                        label = listOf("A")
-                                    ),
-                                    edge(
-                                        direction = direction,
-                                        quantifier = null,
-                                        predicate = null,
-                                        variable = variable,
-                                        label = label ?: emptyList()
-                                    ),
-                                    node(
-                                        predicate = null,
-                                        variable = "b",
-                                        label = listOf("B")
-                                    ),
+    val simpleGraphAST =
+        { direction: PartiqlAst.GraphMatchDirection, quantifier: PartiqlAst.GraphMatchQuantifier?, variable: String?, label: List<String>? ->
+            PartiqlAst.build {
+                select(
+                    project = projectList(projectExpr(id("a")), projectExpr(id("b"))),
+                    from = graphMatch(
+                        expr = id("g"),
+                        graphExpr = graphMatchExpr(
+                            patterns = listOf(
+                                graphMatchPattern(
+                                    quantifier = null,
+                                    parts = listOf(
+                                        node(
+                                            predicate = null,
+                                            variable = "a",
+                                            label = listOf("A")
+                                        ),
+                                        edge(
+                                            direction = direction,
+                                            quantifier = quantifier,
+                                            predicate = null,
+                                            variable = variable,
+                                            label = label ?: emptyList()
+                                        ),
+                                        node(
+                                            predicate = null,
+                                            variable = "b",
+                                            label = listOf("B")
+                                        ),
+                                    )
                                 )
                             )
                         )
-                    )
-                ),
-                where = null
-            )
+                    ),
+                    where = null
+                )
+            }
         }
-    }
 
     @Test
     fun rightDirected() = assertExpressionNoRoundTrip(
         "SELECT a,b FROM g MATCH (a:A) -[e:E]-> (b:B)",
     ) {
-        simpleGraphAST(edgeRight(), "e", listOf("E"))
+        simpleGraphAST(edgeRight(), null, "e", listOf("E"))
     }
 
     @Test
     fun rightDirectedAbbreviated() = assertExpressionNoRoundTrip(
         "SELECT a,b FROM g MATCH (a:A) -> (b:B)",
     ) {
-        simpleGraphAST(edgeRight(), null, null)
+        simpleGraphAST(edgeRight(), null, null, null)
     }
 
     @Test
     fun leftDirected() = assertExpressionNoRoundTrip(
         "SELECT a,b FROM g MATCH (a:A) <-[e:E]- (b:B)",
     ) {
-        simpleGraphAST(edgeLeft(), "e", listOf("E"))
+        simpleGraphAST(edgeLeft(), null, "e", listOf("E"))
     }
 
     @Test
     fun leftDirectedAbbreviated() = assertExpressionNoRoundTrip(
         "SELECT a,b FROM g MATCH (a:A) <- (b:B)",
     ) {
-        simpleGraphAST(edgeLeft(), null, null)
+        simpleGraphAST(edgeLeft(), null, null, null)
     }
 
     @Test
     fun undirected() = assertExpressionNoRoundTrip(
         "SELECT a,b FROM g MATCH (a:A) ~[e:E]~ (b:B)",
     ) {
-        simpleGraphAST(edgeUndirected(), "e", listOf("E"))
+        simpleGraphAST(edgeUndirected(), null, "e", listOf("E"))
     }
 
     @Test
     fun undirectedAbbreviated() = assertExpressionNoRoundTrip(
         "SELECT a,b FROM g MATCH (a:A) ~ (b:B)",
     ) {
-        simpleGraphAST(edgeUndirected(), null, null)
+        simpleGraphAST(edgeUndirected(), null, null, null)
     }
 
     @Test
     fun rightOrUnDirected() = assertExpressionNoRoundTrip(
         "SELECT a,b FROM g MATCH (a:A) ~[e:E]~> (b:B)",
     ) {
-        simpleGraphAST(edgeUndirectedOrRight(), "e", listOf("E"))
+        simpleGraphAST(edgeUndirectedOrRight(), null, "e", listOf("E"))
     }
 
     @Test
     fun rightOrUnDirectedAbbreviated() = assertExpressionNoRoundTrip(
         "SELECT a,b FROM g MATCH (a:A) ~> (b:B)",
     ) {
-        simpleGraphAST(edgeUndirectedOrRight(), null, null)
+        simpleGraphAST(edgeUndirectedOrRight(), null, null, null)
     }
 
     @Test
     fun leftOrUnDirected() = assertExpressionNoRoundTrip(
         "SELECT a,b FROM g MATCH (a:A) <~[e:E]~ (b:B)",
     ) {
-        simpleGraphAST(edgeLeftOrUndirected(), "e", listOf("E"))
+        simpleGraphAST(edgeLeftOrUndirected(), null, "e", listOf("E"))
     }
 
     @Test
     fun leftOrUnDirectedAbbreviated() = assertExpressionNoRoundTrip(
         "SELECT a,b FROM g MATCH (a:A) <~ (b:B)",
     ) {
-        simpleGraphAST(edgeLeftOrUndirected(), null, null)
+        simpleGraphAST(edgeLeftOrUndirected(), null, null, null)
     }
 
     @Test
     fun leftOrRight() = assertExpressionNoRoundTrip(
         "SELECT a,b FROM g MATCH (a:A) <-[e:E]-> (b:B)",
     ) {
-        simpleGraphAST(edgeLeftOrRight(), "e", listOf("E"))
+        simpleGraphAST(edgeLeftOrRight(), null, "e", listOf("E"))
     }
 
     @Test
     fun leftOrRightAbbreviated() = assertExpressionNoRoundTrip(
         "SELECT a,b FROM g MATCH (a:A) <-> (b:B)",
     ) {
-        simpleGraphAST(edgeLeftOrRight(), null, null)
+        simpleGraphAST(edgeLeftOrRight(), null, null, null)
     }
 
     @Test
     fun leftOrRightOrUndirected() = assertExpressionNoRoundTrip(
         "SELECT a,b FROM g MATCH (a:A) -[e:E]- (b:B)",
     ) {
-        simpleGraphAST(edgeLeftOrUndirectedOrRight(), "e", listOf("E"))
+        simpleGraphAST(edgeLeftOrUndirectedOrRight(), null, "e", listOf("E"))
     }
 
     @Test
     fun leftOrRightOrUndirectedAbbreviated() = assertExpressionNoRoundTrip(
         "SELECT a,b FROM g MATCH (a:A) - (b:B)",
     ) {
-        simpleGraphAST(edgeLeftOrUndirectedOrRight(), null, null)
+        simpleGraphAST(edgeLeftOrUndirectedOrRight(), null, null, null)
+    }
+
+    @Test
+    fun quantifierStar() = assertExpressionNoRoundTrip(
+        "SELECT a,b FROM g MATCH (a:A)-[:edge]->*(b:B)",
+    ) {
+        simpleGraphAST(edgeRight(), graphMatchQuantifier(lower = 0, upper = null), null, listOf("edge"))
+    }
+
+    @Test
+    fun quantifierPlus() = assertExpressionNoRoundTrip(
+        "SELECT a,b FROM g MATCH (a:A)<-[:edge]-+(b:B)",
+    ) {
+        simpleGraphAST(edgeLeft(), graphMatchQuantifier(lower = 1, upper = null), null, listOf("edge"))
+    }
+
+    @Test
+    fun quantifierM() = assertExpressionNoRoundTrip(
+        "SELECT a,b FROM g MATCH (a:A)~[:edge]~{5,}(b:B)",
+    ) {
+        simpleGraphAST(edgeUndirected(), graphMatchQuantifier(lower = 5, upper = null), null, listOf("edge"))
+    }
+
+    @Test
+    fun quantifierMN() = assertExpressionNoRoundTrip(
+        "SELECT a,b FROM g MATCH (a:A)-[e:edge]-{2,6}(b:B)",
+    ) {
+        simpleGraphAST(edgeLeftOrUndirectedOrRight(), graphMatchQuantifier(lower = 2, upper = 6), "e", listOf("edge"))
+    }
+
+    @Test
+    fun quantifierAbbreviatedStar() = assertExpressionNoRoundTrip(
+        "SELECT a,b FROM g MATCH (a:A)->*(b:B)",
+    ) {
+        simpleGraphAST(edgeRight(), graphMatchQuantifier(lower = 0, upper = null), null, null)
+    }
+
+    @Test
+    fun quantifierAbbreviatedPlus() = assertExpressionNoRoundTrip(
+        "SELECT a,b FROM g MATCH (a:A)<-+(b:B)",
+    ) {
+        simpleGraphAST(edgeLeft(), graphMatchQuantifier(lower = 1, upper = null), null, null)
+    }
+
+    @Test
+    fun quantifierAbbreviatedM() = assertExpressionNoRoundTrip(
+        "SELECT a,b FROM g MATCH (a:A)~{5,}(b:B)",
+    ) {
+        simpleGraphAST(edgeUndirected(), graphMatchQuantifier(lower = 5, upper = null), null, null)
+    }
+
+    @Test
+    fun quantifierAbbreviatedMN() = assertExpressionNoRoundTrip(
+        "SELECT a,b FROM g MATCH (a:A)-{2,6}(b:B)",
+    ) {
+        simpleGraphAST(edgeLeftOrUndirectedOrRight(), graphMatchQuantifier(lower = 2, upper = 6), null, null)
     }
 
     @Test
@@ -506,7 +563,8 @@ class SqlParserMatchTest : SqlParserTestBase() {
     }
 
     // TODO path variable (e.g., `MATCH p = (x) -> (y)`
-    // TODO quantifiers (e.g., `MATCH (a:Node)−[:Edge]−>{2,5}(b:Node)`,  `*`, `+`)
+    // TODO parenthisized patterns (e.g., `MATCH (a:Node) [()−[:Edge]−>()] (b:Node)`)
+    // TODO pattern quantifiers (e.g., `MATCH (a:Node)[()−[:Edge]−>()]{2,5}(b:Node)`,  `*`, `+`)
     // TODO group variables (e.g., `MATCH ... WHERE SUM()...`)
     // TODO union & multiset (e.g., `MATCH (a:Label) | (a:Label2)` , `MATCH (a:Label) |+| (a:Label2)`
     // TODO conditional variables
