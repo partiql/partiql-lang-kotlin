@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `CHANGELOG.md` with back-filling of the previous releases to the change log to provide more visibility on unreleased
+  changes and make the release process easier by using the `unreleased` section of change log. The `CONTRIBUTING.md`
+  has also been updated to ensure this is part of the process.
+- backward-incompatiblity and dependency questions are added to the project's PR process to provide more context
+  on the changes that include these and the alternatives that have been considered.
 
 ### Changed
 
