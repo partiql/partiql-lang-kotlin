@@ -676,6 +676,7 @@ class ASTPrettyPrinter {
                     if (node.byAlias == null) it else { it.plusElement(toRecursionTree(node.byAlias, attrOfParent = "by")) }
                 }
             )
+            else -> TODO("Unsupported FROM AST node")
         }
 
     private fun toRecursionTree(node: PartiqlAst.Let, attrOfParent: String? = null): RecursionTree =
