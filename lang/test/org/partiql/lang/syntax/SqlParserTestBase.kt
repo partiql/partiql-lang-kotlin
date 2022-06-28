@@ -66,7 +66,8 @@ abstract class SqlParserTestBase : TestBase() {
      */
     protected fun assertExpression(
         source: String,
-        expectedPigAst: String
+        expectedPigAst: String,
+        roundTrip: Boolean = true,
     ) {
         val actualStatement = parse(source)
         val expectedIonSexp = loadIonSexp(expectedPigAst)
@@ -80,7 +81,25 @@ abstract class SqlParserTestBase : TestBase() {
         pigDomainAssert(actualStatement, expectedElement)
 
         // Check equals for actual value after round trip transformation: astStatement -> ExprNode -> astStatement
-        assertRoundTripPigAstToExprNode(actualStatement)
+        if (roundTrip) {
+            assertRoundTripPigAstToExprNode(actualStatement)
+        }
+    }
+
+    /**
+     * This method is used by test cases for parsing a string.
+     * The test are performed with only PIG AST.
+     * The expected PIG AST is a PIG builder.
+     * No ExprNode <-> PIG AST round trip is performed.
+     */
+    protected fun assertExpressionNoRoundTrip(
+        source: String,
+        expectedPigBuilder: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode
+    ) {
+        val expectedPigAst = PartiqlAst.build { expectedPigBuilder() }.toIonElement().toString()
+
+        // Refer to comments inside the main body of the following function to see what checks are performed.
+        assertExpression(source, expectedPigAst, roundTrip = false)
     }
 
     /**
@@ -95,7 +114,7 @@ abstract class SqlParserTestBase : TestBase() {
         val expectedPigAst = PartiqlAst.build { expectedPigBuilder() }.toIonElement().toString()
 
         // Refer to comments inside the main body of the following function to see what checks are performed.
-        assertExpression(source, expectedPigAst)
+        assertExpression(source, expectedPigAst, roundTrip = true)
     }
 
     /**

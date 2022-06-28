@@ -499,15 +499,20 @@ internal val DATE_TIME_PART_KEYWORDS: Set<String> = DateTimePart.values()
     "+", "-", "not"
 )
 
+/** Operators specific to the `MATCH` clause. */
+@JvmField internal val MATCH_OPERATORS = setOf(
+    "~"
+)
+
 /** All operators with special parsing rules. */
 @JvmField internal val SPECIAL_OPERATORS = SPECIAL_INFIX_OPERATORS + setOf(
     "@"
 )
 
 @JvmField internal val ALL_SINGLE_LEXEME_OPERATORS =
-    SINGLE_LEXEME_BINARY_OPERATORS + UNARY_OPERATORS + SPECIAL_OPERATORS
+    SINGLE_LEXEME_BINARY_OPERATORS + UNARY_OPERATORS + SPECIAL_OPERATORS + MATCH_OPERATORS
 @JvmField internal val ALL_OPERATORS =
-    BINARY_OPERATORS + UNARY_OPERATORS + SPECIAL_OPERATORS
+    BINARY_OPERATORS + UNARY_OPERATORS + SPECIAL_OPERATORS + MATCH_OPERATORS
 
 /**
  * Operator precedence groups
@@ -585,7 +590,7 @@ internal const val DIGIT_CHARS = "0" + NON_ZERO_DIGIT_CHARS
 
 @JvmField internal val E_NOTATION_CHARS = allCase("E")
 
-internal const val NON_OVERLOADED_OPERATOR_CHARS = "^%=@+"
+internal const val NON_OVERLOADED_OPERATOR_CHARS = "^%=@+~"
 internal const val OPERATOR_CHARS = NON_OVERLOADED_OPERATOR_CHARS + "-*/<>|!"
 
 @JvmField internal val ALPHA_CHARS = allCase("ABCDEFGHIJKLMNOPQRSTUVWXYZ")

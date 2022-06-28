@@ -165,4 +165,8 @@ private object FromSourceToBexpr : PartiqlAst.FromSource.Converter<PartiqlLogica
                 node.metas
             )
         }
+
+    override fun convertGraphMatch(node: PartiqlAst.FromSource.GraphMatch): PartiqlLogical.Bexpr {
+        TODO("Support for MATCH")
+    }
 }

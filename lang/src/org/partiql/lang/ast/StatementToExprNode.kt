@@ -266,6 +266,7 @@ private class StatementTransformer(val ion: IonSystem) {
                     condition = predicate?.toExprNode() ?: Literal(ion.newBool(true), metaContainerOf(StaticTypeMeta(StaticType.BOOL))),
                     metas = metas
                 )
+            is PartiqlAst.FromSource.GraphMatch -> error("$this node has no representation in prior ASTs.")
         }
     }
 
