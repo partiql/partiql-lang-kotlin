@@ -963,8 +963,8 @@ class SqlParser(
         val metas = getMetas()
 
         var name: SymbolPrimitive? = null
-        var label = mutableListOf<SymbolPrimitive>()
-        var predicate = null
+        val label = mutableListOf<SymbolPrimitive>()
+        val predicate = null
 
         for (child in children) {
             when (child.type) {
@@ -996,8 +996,8 @@ class SqlParser(
 
         var direction: PartiqlAst.GraphMatchDirection? = null
         var name: SymbolPrimitive? = null
-        var label = mutableListOf<SymbolPrimitive>()
-        var predicate = null
+        val label = mutableListOf<SymbolPrimitive>()
+        val predicate = null
 
         for (child in children) {
             when (child.type) {
@@ -3284,7 +3284,7 @@ class SqlParser(
             )
 
     private fun List<Token>.parseOptionalMatchClause(child: ParseNode): ParseNode {
-        var rem = this
+        val rem = this
         return when (rem.head?.keywordText) {
             "match" -> {
                 rem.parseMatch(child)
@@ -3401,6 +3401,7 @@ class SqlParser(
             }
         }
 
+        // 'consume' a single token matching the specified type and optionally matching a specified keyword
         fun consume(type: TokenType, keywordText: String? = null): Boolean {
             if (rem.head?.type == type) {
                 if (keywordText == null || rem.head?.keywordText == keywordText) {
@@ -3411,7 +3412,8 @@ class SqlParser(
             return false
         }
 
-        fun expect1(type: TokenType, errorCode: ErrorCode, errorMsg: String) {
+        // `consume` a single token matching the specified type or throw an error if not possible
+        fun expect(type: TokenType, errorCode: ErrorCode, errorMsg: String) {
             if (!consume(type)) {
                 rem.head.err(
                     "Expected ${type.name} for $errorMsg", errorCode
@@ -3420,12 +3422,12 @@ class SqlParser(
         }
 
         fun parseNode(): ParseNode {
-            expect1(TokenType.LEFT_PAREN, ErrorCode.PARSE_EXPECTED_LEFT_PAREN_FOR_MATCH_NODE, "match node")
+            expect(TokenType.LEFT_PAREN, ErrorCode.PARSE_EXPECTED_LEFT_PAREN_FOR_MATCH_NODE, "match node")
             val name = parseName()
             rem = name?.remaining ?: rem
             val label = parseLabel()
             rem = label?.remaining ?: rem
-            expect1(TokenType.RIGHT_PAREN, ErrorCode.PARSE_EXPECTED_RIGHT_PAREN_FOR_MATCH_NODE, "match node")
+            expect(TokenType.RIGHT_PAREN, ErrorCode.PARSE_EXPECTED_RIGHT_PAREN_FOR_MATCH_NODE, "match node")
 
             return ParseNode(ParseType.MATCH_EXPR_NODE, null, listOfNotNull(name, label), rem)
         }
@@ -3506,12 +3508,12 @@ class SqlParser(
         // https://arxiv.org/abs/2112.06217
         fun parseEdgeWithSpec(): ParseNode {
             val dir1 = parseLeftEdgePattern()
-            expect1(TokenType.LEFT_BRACKET, ErrorCode.PARSE_EXPECTED_LEFT_BRACKET_FOR_MATCH_EDGE, "match edge")
+            expect(TokenType.LEFT_BRACKET, ErrorCode.PARSE_EXPECTED_LEFT_BRACKET_FOR_MATCH_EDGE, "match edge")
             val name = parseName()
             rem = name?.remaining ?: rem
             val label = parseLabel()
             rem = label?.remaining ?: rem
-            expect1(TokenType.RIGHT_BRACKET, ErrorCode.PARSE_EXPECTED_RIGHT_BRACKET_FOR_MATCH_EDGE, "match edge")
+            expect(TokenType.RIGHT_BRACKET, ErrorCode.PARSE_EXPECTED_RIGHT_BRACKET_FOR_MATCH_EDGE, "match edge")
             val dir2 = parseRightEdgePattern()
 
             val dir = dir1.combine(dir2)

@@ -499,7 +499,7 @@ internal val DATE_TIME_PART_KEYWORDS: Set<String> = DateTimePart.values()
     "+", "-", "not"
 )
 
-/** All operators with special parsing rules. */
+/** Operators specific to the `MATCH` clause. */
 @JvmField internal val MATCH_OPERATORS = setOf(
     "~"
 )
