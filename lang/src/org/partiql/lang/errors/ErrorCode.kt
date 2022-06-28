@@ -423,6 +423,12 @@ enum class ErrorCode(
         "expected right bracket for match edge"
     ),
 
+    PARSE_EXPECTED_PARENTHESIZED_PATTERN(
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "expected appropriate closing punctuation for parenthesized pattern"
+    ),
+
     PARSE_EXPECTED_EDGE_PATTERN_MATCH_EDGE(
         ErrorCategory.PARSER,
         LOC_TOKEN,

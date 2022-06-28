@@ -953,11 +953,49 @@ class SqlParser(
 
             for (child in children) {
                 when (child.type) {
+                    ParseType.MATCH_EXPR -> {
+                        val subPattern = PartiqlAst.GraphMatchPatternPart.Pattern(
+                            pattern = child.toGraphMatchPattern(),
+                            metas = child.getMetas()
+                        )
+                        parts.add(subPattern)
+                    }
                     ParseType.MATCH_EXPR_NAME -> {
                         variable = SymbolPrimitive(child.children[0].token!!.text!!, child.getMetas())
                     }
                     ParseType.MATCH_EXPR_NODE -> parts.add(child.toGraphMatchNode())
                     ParseType.MATCH_EXPR_EDGE -> parts.add(child.toGraphMatchEdge())
+                    ParseType.MATCH_EXPR_QUANTIFIER -> {
+                        when (child.token!!.type) {
+                            TokenType.STAR -> {
+                                quantifier = PartiqlAst.GraphMatchQuantifier(
+                                    lower = LongPrimitive(0, child.getMetas()),
+                                    upper = null
+                                )
+                            }
+                            TokenType.OPERATOR -> {
+                                when (child.token.keywordText) {
+                                    "+" -> {
+                                        quantifier = PartiqlAst.GraphMatchQuantifier(
+                                            lower = LongPrimitive(1, child.getMetas()),
+                                            upper = null
+                                        )
+                                    }
+                                }
+                            }
+                            TokenType.LITERAL -> {
+                                val q = LongPrimitive(child.token.value!!.asIonInt().longValue(), child.getMetas())
+                                if (quantifier == null) {
+                                    quantifier = PartiqlAst.GraphMatchQuantifier(lower = q, upper = null)
+                                } else {
+                                    quantifier = PartiqlAst.GraphMatchQuantifier(lower = quantifier.lower, upper = q)
+                                }
+                            }
+                            else -> {
+                                error("Invalid parse tree: unexpected subexpression for MATCH quantifier")
+                            }
+                        }
+                    }
                     else -> {
                         error("Invalid parse tree: unexpected subexpression for MATCH pattern")
                     }
@@ -985,7 +1023,7 @@ class SqlParser(
                     label.add(SymbolPrimitive(child.children[0].token!!.text!!, child.getMetas()))
                 }
                 else -> {
-                    TODO("Unhandled case for graph match node")
+                    error("Invalid parse tree: unexpected subexpression for MATCH node")
                 }
             }
         }
@@ -1056,10 +1094,13 @@ class SqlParser(
                                 quantifier = PartiqlAst.GraphMatchQuantifier(lower = quantifier.lower, upper = q)
                             }
                         }
+                        else -> {
+                            error("Invalid parse tree: unexpected subexpression for MATCH quantifier")
+                        }
                     }
                 }
                 else -> {
-                    TODO("Unhandled case for graph match edge")
+                    error("Invalid parse tree: unexpected subexpression for MATCH edge")
                 }
             }
         }
@@ -1068,7 +1109,6 @@ class SqlParser(
             error("Invalid parse tree: null edge direction")
         }
 
-        // TODO quantifier
         return PartiqlAst.build {
             PartiqlAst.GraphMatchPatternPart.Edge(
                 direction = direction,
@@ -3354,70 +3394,70 @@ class SqlParser(
         return ParseNode(ParseType.MATCH, this.head, listOf(expr) + matches, rem)
     }
 
-    private fun List<Token>.parseMatchPattern(): ParseNode {
-        // left/right/undirected edge directions essentially form a 3-bit flag
-        // represent here the 7 (non-zero) 3-bit combinations to their abbreviation for lookup
-        val abbreviationMap = Array(2) { Array(2) { Array(2) { "" } } }.also {
-            it[0][0][1] = "~"
-            it[0][1][0] = "->"
-            it[0][1][1] = "~>"
-            it[1][0][0] = "<-"
-            it[1][0][1] = "<~"
-            it[1][1][0] = "<->"
-            it[1][1][1] = "-"
+    // left/right/undirected edge directions essentially form a 3-bit flag
+    // represent here the 7 (non-zero) 3-bit combinations to their abbreviation for lookup
+    val matchEdgeAbbreviationMap = Array(2) { Array(2) { Array(2) { "" } } }.also {
+        it[0][0][1] = "~"
+        it[0][1][0] = "->"
+        it[0][1][1] = "~>"
+        it[1][0][0] = "<-"
+        it[1][0][1] = "<~"
+        it[1][1][0] = "<->"
+        it[1][1][1] = "-"
+    }
+
+    data class EdgeType(val left: Boolean, val right: Boolean, val undirected: Boolean) {
+        // Just union all the left/right/undirected flags
+        fun union(other: EdgeType): EdgeType {
+            val left = this.left.or(other.left)
+            val right = this.right.or(other.right)
+            val undirected = this.undirected.or(other.undirected)
+            val union = EdgeType(left = left, right = right, undirected = undirected)
+            return union
         }
 
-        data class EdgeType(val left: Boolean, val right: Boolean, val undirected: Boolean) {
-            // Just union all the left/right/undirected flags
-            fun union(other: EdgeType): EdgeType {
-                val left = this.left.or(other.left)
-                val right = this.right.or(other.right)
-                val undirected = this.undirected.or(other.undirected)
-                val union = EdgeType(left = left, right = right, undirected = undirected)
-                return union
-            }
-
-            // Combine leading and trailing edge detection.
-            // If leading thinks right and trailing thinks left
-            //    then left + right + undirected
-            // else
-            //    union(leading, trailing)
-            fun combine(other: EdgeType): EdgeType {
-                return if (this == EdgeType(left = false, right = true, undirected = false) &&
-                    other == EdgeType(left = true, right = false, undirected = false)
-                ) {
-                    EdgeType(left = true, right = true, undirected = true)
-                } else {
-                    this.union(other)
-                }
+        // Combine leading and trailing edge detection.
+        // If leading thinks right and trailing thinks left
+        //    then left + right + undirected
+        // else
+        //    union(leading, trailing)
+        fun combine(other: EdgeType): EdgeType {
+            return if (this == EdgeType(left = false, right = true, undirected = false) &&
+                other == EdgeType(left = true, right = false, undirected = false)
+            ) {
+                EdgeType(left = true, right = true, undirected = true)
+            } else {
+                this.union(other)
             }
         }
+    }
 
-        fun EdgeType.abbreviation(): String {
-            return abbreviationMap[if (left) 1 else 0][if (right) 1 else 0][if (undirected) 1 else 0]
-        }
+    fun EdgeType.abbreviation(): String {
+        return matchEdgeAbbreviationMap[if (left) 1 else 0][if (right) 1 else 0][if (undirected) 1 else 0]
+    }
 
-        val abbreviations = HashMap<String, EdgeType>().also {
-            for (lIdx in 0..1) {
-                for (rIdx in 0..1) {
-                    for (unIdx in 0..1) {
-                        val abbreviation = abbreviationMap[lIdx][rIdx][unIdx]
-                        if (abbreviation.isNotEmpty()) {
-                            it[abbreviation] = EdgeType(left = (lIdx > 0), right = (rIdx > 0), undirected = (unIdx > 0))
-                        }
+    val matchAbbreviations = HashMap<String, EdgeType>().also {
+        for (lIdx in 0..1) {
+            for (rIdx in 0..1) {
+                for (unIdx in 0..1) {
+                    val abbreviation = matchEdgeAbbreviationMap[lIdx][rIdx][unIdx]
+                    if (abbreviation.isNotEmpty()) {
+                        it[abbreviation] = EdgeType(left = (lIdx > 0), right = (rIdx > 0), undirected = (unIdx > 0))
                     }
                 }
             }
         }
+    }
 
+    private fun List<Token>.parseMatchPattern(): ParseNode {
         var rem = this
 
         fun parseName(): ParseNode? {
-            if (rem.head?.type?.isIdentifier() == true) {
+            return if (rem.head?.type?.isIdentifier() == true) {
                 val name = rem.atomFromHead()
-                return ParseNode(ParseType.MATCH_EXPR_NAME, null, listOf(name), name.remaining)
+                ParseNode(ParseType.MATCH_EXPR_NAME, null, listOf(name), name.remaining)
             } else {
-                return null
+                null
             }
         }
 
@@ -3452,7 +3492,7 @@ class SqlParser(
 
         // `consume` a single token matching the specified type or throw an error if not possible
         fun expect(type: TokenType, keywordText: String? = null, errorCode: ErrorCode, errorMsg: String) {
-            if (!consume(type)) {
+            if (!consume(type, keywordText)) {
                 rem.head.err(
                     "Expected ${type.name} for $errorMsg", errorCode
                 )
@@ -3578,7 +3618,7 @@ class SqlParser(
         // Fig. 5. Table of edge patterns:
         // https://arxiv.org/abs/2112.06217
         fun parseEdgeAbbreviated(): ParseNode {
-            var candidates: Map<String, EdgeType> = abbreviations
+            var candidates: Map<String, EdgeType> = matchAbbreviations
             do {
                 if (rem.head?.type == TokenType.OPERATOR && rem.head!!.keywordText in listOf("<", "-", ">", "~")) {
                     val char = rem.head!!.keywordText!!
@@ -3684,31 +3724,63 @@ class SqlParser(
             }
         }
 
+        fun parseParenthesizedPattern(): ParseNode? {
+            fun parse(expectedClose: TokenType): ParseNode {
+                rem = rem.tail
+                val pattern = rem.parseMatchPattern()
+                rem = pattern.remaining
+
+                expect(
+                    expectedClose,
+                    null,
+                    ErrorCode.PARSE_EXPECTED_PARENTHESIZED_PATTERN,
+                    "parenthesized pattern"
+                )
+
+                return pattern
+            }
+
+            val subPattern = when (rem.head?.type) {
+                TokenType.LEFT_BRACKET -> parse(TokenType.RIGHT_BRACKET)
+                TokenType.LEFT_PAREN -> null // parse(TokenType.RIGHT_PAREN)
+                else -> null
+            }
+
+            val quantifer = if (subPattern != null) {
+                parseQuantifier()
+            } else {
+                emptyList()
+            }
+            return subPattern?.copy(children = subPattern.children + quantifer, remaining = rem)
+        }
+
+        fun parsePatternPart(): ParseNode? {
+            val parenthesized = try {
+                parseParenthesizedPattern()
+            } catch (e: ParserException) {
+                null
+            }
+
+            return parenthesized ?: try {
+                parseNode()
+            } catch (e: ParserException) {
+                try {
+                    parseEdge()
+                } catch (e: ParserException) {
+                    null
+                }
+            }
+        }
+
         val patternElements = ArrayList<ParseNode?>()
 
         val pathVariable = parsePathVariable()
         patternElements.add(pathVariable)
 
-        val nodeLeft = try {
-            parseNode()
-        } catch (e: ParserException) {
-            null
-        }
-        patternElements.add(nodeLeft)
         do {
-            val edge = try {
-                parseEdge()
-            } catch (e: ParserException) {
-                null
-            }
-            patternElements.add(edge)
-            val nodeRight = try {
-                parseNode()
-            } catch (e: ParserException) {
-                null
-            }
-            patternElements.add(nodeRight)
-        } while (edge != null && nodeRight != null)
+            val part = parsePatternPart()
+            patternElements.add(part)
+        } while (part != null)
 
         return ParseNode(ParseType.MATCH_EXPR, null, patternElements.filterNotNull(), rem)
     }

@@ -264,9 +264,9 @@ may then be further optimized by selecting better implementations of each operat
 
         // A single graph match pattern.
         (product graph_match_pattern
-                 variable::(? symbol)   // the optional element variable of the pattern, e.g.: `p` in `MATCH p = (a) −[t]−> (b)`
-                 quantifier::(? graph_match_quantifier) // an optional quantifier for the entire pattern match
-                 parts::(* graph_match_pattern_part 1)) // the ordered pattern parts
+             variable::(? symbol)   // the optional element variable of the pattern, e.g.: `p` in `MATCH p = (a) −[t]−> (b)`
+             quantifier::(? graph_match_quantifier) // an optional quantifier for the entire pattern match
+             parts::(* graph_match_pattern_part 1)) // the ordered pattern parts
 
         // A graph match clause as defined in GPML
         // See https://arxiv.org/abs/2112.06217

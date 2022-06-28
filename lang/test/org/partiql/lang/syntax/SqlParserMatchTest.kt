@@ -549,6 +549,96 @@ class SqlParserMatchTest : SqlParserTestBase() {
         }
     }
 
+    @Test
+    fun parenthesizedEdgePattern() = assertExpressionNoRoundTrip(
+        "SELECT a,b FROM g MATCH pathVar = (a:A)[()-[e:Edge]->()]{1,3}(b:B)",
+    ) {
+        PartiqlAst.build {
+            select(
+                project = projectList(projectExpr(id("a")), projectExpr(id("b"))),
+                from = graphMatch(
+                    expr = id("g"),
+                    graphExpr = graphMatchExpr(
+                        patterns = listOf(
+                            graphMatchPattern(
+                                variable = "pathVar",
+                                parts = listOf(
+                                    node(
+                                        variable = "a",
+                                        label = listOf("A")
+                                    ),
+                                    pattern(
+                                        graphMatchPattern(
+                                            quantifier = graphMatchQuantifier(lower = 1, upper = 3),
+                                            parts = listOf(
+                                                node(),
+                                                edge(
+                                                    direction = edgeRight(),
+                                                    variable = "e",
+                                                    label = listOf("Edge")
+                                                ),
+                                                node(),
+                                            )
+                                        )
+                                    ),
+                                    node(
+                                        variable = "b",
+                                        label = listOf("B")
+                                    ),
+                                )
+                            )
+                        )
+                    )
+                ),
+                where = null
+            )
+        }
+    }
+
+    @Test
+    fun parenthesizedEdgeStar() = assertExpressionNoRoundTrip(
+        "SELECT a,b FROM g MATCH pathVar = (a:A)[-[e:Edge]->]*(b:B)",
+    ) {
+        PartiqlAst.build {
+            select(
+                project = projectList(projectExpr(id("a")), projectExpr(id("b"))),
+                from = graphMatch(
+                    expr = id("g"),
+                    graphExpr = graphMatchExpr(
+                        patterns = listOf(
+                            graphMatchPattern(
+                                variable = "pathVar",
+                                parts = listOf(
+                                    node(
+                                        variable = "a",
+                                        label = listOf("A")
+                                    ),
+                                    pattern(
+                                        graphMatchPattern(
+                                            quantifier = graphMatchQuantifier(lower = 0, upper = null),
+                                            parts = listOf(
+                                                edge(
+                                                    direction = edgeRight(),
+                                                    variable = "e",
+                                                    label = listOf("Edge")
+                                                ),
+                                            )
+                                        )
+                                    ),
+                                    node(
+                                        variable = "b",
+                                        label = listOf("B")
+                                    ),
+                                )
+                            )
+                        )
+                    )
+                ),
+                where = null
+            )
+        }
+    }
+
     // TODO prefilters
     @Test
     @Ignore
@@ -599,8 +689,6 @@ class SqlParserMatchTest : SqlParserTestBase() {
         TODO()
     }
 
-    // TODO parenthisized patterns (e.g., `MATCH (a:Node) [()−[:Edge]−>()] (b:Node)`)
-    // TODO pattern quantifiers (e.g., `MATCH (a:Node)[()−[:Edge]−>()]{2,5}(b:Node)`,  `*`, `+`)
     // TODO group variables (e.g., `MATCH ... WHERE SUM()...`)
     // TODO union & multiset (e.g., `MATCH (a:Label) | (a:Label2)` , `MATCH (a:Label) |+| (a:Label2)`
     // TODO conditional variables
