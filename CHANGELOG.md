@@ -305,7 +305,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Refactors code in CLI
 
 ### Fixed
--Fixes treatment of null values in JOIN conditions
+- Fixes treatment of null values in JOIN conditions
 
 ## [0.1.0-alpha] - 2019-07-30
 
