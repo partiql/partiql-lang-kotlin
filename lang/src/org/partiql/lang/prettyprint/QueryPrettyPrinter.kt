@@ -25,19 +25,19 @@ class QueryPrettyPrinter {
      * Given:
      *  "FROM x WHERE a = b SET k = 5, m = 6 INSERT INTO c VALUE << 1 >> REMOVE a SET l = 3 REMOVE b RETURNING MODIFIED OLD a, ALL NEW *"
      * Outputs:
-        """
-        FROM x
-        WHERE a = b
-        SET k = 5, m = 6
-        INSERT INTO c VALUE << 1 >>
-        REMOVE a
-        SET l = 3
-        REMOVE b
-        RETURNING MODIFIED OLD a, ALL NEW *
-        """
-    * @param query An SQL query as string.
-    * @return formatted SQL query
-    */
+     * """
+     *  FROM x
+     *  WHERE a = b
+     *  SET k = 5, m = 6
+     *  INSERT INTO c VALUE << 1 >>
+     *  REMOVE a
+     *  SET l = 3
+     *  REMOVE b
+     *  RETURNING MODIFIED OLD a, ALL NEW *
+     * """
+     * @param query An SQL query as string.
+     * @return formatted SQL query
+     */
     fun prettyPrintQuery(query: String): String =
         astToPrettyQuery(sqlParser.parseAstStatement(query))
 
