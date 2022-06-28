@@ -9,6 +9,33 @@ import org.partiql.pig.runtime.SymbolPrimitive
  * This class is used to pretty print PIG AST.
  */
 class ASTPrettyPrinter {
+    /**
+     * For the given SQL query outputs the corresponding string formatted PartiQL AST representation, e.g:
+     * Given:
+     *  "SELECT * FROM 1 WHERE a = b GROUP BY c HAVING d = '123' LIMIT 3 OFFSET 4"
+     * Outputs:
+        """
+        Select
+            project: *
+            from: Scan
+                Lit 1
+            where: =
+                Id a (case_insensitive) (unqualified)
+                Id b (case_insensitive) (unqualified)
+            group: Group
+                strategy: GroupFull
+                keyList: GroupKeyList
+                    key1: GroupKey
+                        expr: Id c (case_insensitive) (unqualified)
+            having: =
+                Id d (case_insensitive) (unqualified)
+                Lit "123"
+            limit: Lit 3
+            offset: Lit 4
+        """
+     * @param query An SQL query as string.
+     * @return formatted string corresponding to the input AST.
+    */
     fun prettyPrintAST(query: String): String {
         val ion = IonSystemBuilder.standard().build()
         val ast = SqlParser(ion).parseAstStatement(query)
@@ -17,9 +44,20 @@ class ASTPrettyPrinter {
     }
 
     /**
-     * PIG AST is first transformed into a recursive tree structure, RecursionTree, then it is pretty printed.
+     * For the given PartiQL AST Statement, outputs a string formatted query representing the given AST, e.g:
+     * @param [PartiqlAst.Statement] An SQL query as string.
+     * @return formatted string corresponding to the input AST.
      */
     fun prettyPrintAST(ast: PartiqlAst.Statement): String {
+        val recursionTree = when (ast) {
+            is PartiqlAst.Statement.Query -> toRecursionTree(ast.expr)
+            is PartiqlAst.Statement.Dml -> toRecursionTree(ast)
+            is PartiqlAst.Statement.Ddl -> toRecursionTree(ast)
+            is PartiqlAst.Statement.Exec -> toRecursionTree(ast)
+        }
+
+        return recursionTree.convertToString()
+    }
         val recursionTree = when (ast) {
             is PartiqlAst.Statement.Query -> toRecursionTree(ast.expr)
             is PartiqlAst.Statement.Dml -> toRecursionTree(ast)
