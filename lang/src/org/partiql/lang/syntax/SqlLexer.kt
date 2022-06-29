@@ -586,6 +586,7 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
                             Token(
                                 type = tokenType,
                                 value = ionValue,
+                                sourceText = text,
                                 span = SourceSpan(currPos.line, currPos.column, tokenCodePointCount)
                             )
                         )
@@ -650,7 +651,7 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
 
             // create our new token
             val (keyword, type) = lexemeMapping
-            newToken = Token(type, ion.newSymbol(keyword), newPos)
+            newToken = Token(type, ion.newSymbol(keyword), sourceText = null, newPos)
         }
 
         add(newToken)

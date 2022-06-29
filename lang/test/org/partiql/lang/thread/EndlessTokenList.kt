@@ -22,12 +22,14 @@ internal class EndlessTokenList(val ion: IonSystem, val startIndex: Int = 0) : A
             0 -> Token(
                 type = TokenType.LITERAL,
                 value = ion.newInt(startIndex + index),
+                sourceText = null,
                 span = span
             )
             1 -> Token(
-                TokenType.OPERATOR,
-                ion.newSymbol("+"),
-                span
+                type = TokenType.OPERATOR,
+                value = ion.newSymbol("+"),
+                sourceText = null,
+                span = span
             )
             else -> error("shouldn't happen")
         }

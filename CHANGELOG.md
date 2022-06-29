@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - backward-incompatiblity and dependency questions are added to the project's PR process to provide more context
   on the changes that include these and the alternatives that have been considered.
 - README.md badges for GitHub Actions status, codecov, and license
+- An experimental embedding of a subset of the GPML (Graph Pattern Matching Language) graph query into the `FROM` clause
 
 ### Changed
 

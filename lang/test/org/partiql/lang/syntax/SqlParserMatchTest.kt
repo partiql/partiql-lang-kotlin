@@ -550,6 +550,53 @@ class SqlParserMatchTest : SqlParserTestBase() {
     }
 
     @Test
+    fun parenthesizedPatternWithFilter() = assertExpressionNoRoundTrip(
+        "SELECT a,b FROM g MATCH [(a:A)-[e:Edge]->(b:A) WHERE a.owner=b.owner]{2,5}",
+    ) {
+        PartiqlAst.build {
+            select(
+                project = projectList(projectExpr(id("a")), projectExpr(id("b"))),
+                from = graphMatch(
+                    expr = id("g"),
+                    graphExpr = graphMatchExpr(
+                        patterns = listOf(
+                            graphMatchPattern(
+                                parts = listOf(
+                                    pattern(
+                                        graphMatchPattern(
+                                            predicate = eq(
+                                                path(id("a"), pathExpr(lit(ionString("owner")), caseInsensitive())),
+                                                path(id("b"), pathExpr(lit(ionString("owner")), caseInsensitive()))
+                                            ),
+                                            quantifier = graphMatchQuantifier(lower = 2, upper = 5),
+                                            parts = listOf(
+                                                node(
+                                                    variable = "a",
+                                                    label = listOf("A")
+                                                ),
+                                                edge(
+                                                    direction = edgeRight(),
+                                                    variable = "e",
+                                                    label = listOf("Edge")
+                                                ),
+                                                node(
+                                                    variable = "b",
+                                                    label = listOf("A")
+                                                ),
+                                            ),
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                ),
+                where = null
+            )
+        }
+    }
+
+    @Test
     fun parenthesizedEdgePattern() = assertExpressionNoRoundTrip(
         "SELECT a,b FROM g MATCH pathVar = (a:A)[()-[e:Edge]->()]{1,3}(b:B)",
     ) {
@@ -595,10 +642,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
         }
     }
 
-    @Test
-    fun parenthesizedEdgeStar() = assertExpressionNoRoundTrip(
-        "SELECT a,b FROM g MATCH pathVar = (a:A)[-[e:Edge]->]*(b:B)",
-    ) {
+    val parenthesizedEdgeStarAST = {
         PartiqlAst.build {
             select(
                 project = projectList(projectExpr(id("a")), projectExpr(id("b"))),
@@ -639,13 +683,83 @@ class SqlParserMatchTest : SqlParserTestBase() {
         }
     }
 
-    // TODO prefilters
     @Test
-    @Ignore
-    fun prefilters() = assertExpressionNoRoundTrip(
-        "SELECT u as banCandidate FROM g MATCH (p:Post Where p.isFlagged = true) ~[ep:createdPost]~ (u:User WHERE u.isBanned = false AND u.karma < 20) -[ec:createdComment]->(c:Comment WHERE c.isFlagged = true)",
+    fun squareParenthesizedEdgeStar() = assertExpressionNoRoundTrip(
+        "SELECT a,b FROM g MATCH pathVar = (a:A)[-[e:Edge]->]*(b:B)",
     ) {
-        TODO()
+        parenthesizedEdgeStarAST()
+    }
+
+    @Test
+    fun roundParenthesizedEdgeStar() = assertExpressionNoRoundTrip(
+        "SELECT a,b FROM g MATCH pathVar = (a:A)(-[e:Edge]->)*(b:B)",
+    ) {
+        parenthesizedEdgeStarAST()
+    }
+
+    @Test
+    fun prefilters() = assertExpressionNoRoundTrip(
+        "SELECT u as banCandidate FROM g MATCH (p:Post Where p.isFlagged = true) <-[:createdPost]- (u:User WHERE u.isBanned = false AND u.karma < 20) -[:createdComment]->(c:Comment WHERE c.isFlagged = true) WHERE p.title LIKE '%considered harmful%'",
+    ) {
+        PartiqlAst.build {
+            select(
+                project = projectList(projectExpr(id("u"), asAlias = "banCandidate")),
+                from = graphMatch(
+                    expr = id("g"),
+                    graphExpr = graphMatchExpr(
+                        patterns = listOf(
+                            graphMatchPattern(
+                                parts = listOf(
+                                    node(
+                                        variable = "p",
+                                        label = listOf("Post"),
+                                        predicate = eq(
+                                            path(id("p"), pathExpr(lit(ionString("isFlagged")), caseInsensitive())),
+                                            lit(ionBool(true))
+                                        )
+                                    ),
+                                    edge(
+                                        direction = edgeLeft(),
+                                        label = listOf("createdPost")
+                                    ),
+                                    node(
+                                        variable = "u",
+                                        label = listOf("User"),
+                                        predicate = and(
+                                            eq(
+                                                path(id("u"), pathExpr(lit(ionString("isBanned")), caseInsensitive())),
+                                                lit(ionBool(false))
+                                            ),
+                                            lt(
+                                                path(id("u"), pathExpr(lit(ionString("karma")), caseInsensitive())),
+                                                lit(ionInt(20))
+                                            )
+                                        )
+                                    ),
+                                    edge(
+                                        direction = edgeRight(),
+                                        label = listOf("createdComment")
+                                    ),
+                                    node(
+                                        variable = "c",
+                                        label = listOf("Comment"),
+                                        predicate =
+                                        eq(
+                                            path(id("c"), pathExpr(lit(ionString("isFlagged")), caseInsensitive())),
+                                            lit(ionBool(true))
+                                        )
+                                    ),
+                                ),
+                            )
+                        )
+                    )
+                ),
+                where = like(
+                    value = path(id("p"), pathExpr(lit(ionString("title")), caseInsensitive())),
+                    pattern = lit(ionString("%considered harmful%"))
+                )
+            )
+        }
     }
 
     // TODO label combinators

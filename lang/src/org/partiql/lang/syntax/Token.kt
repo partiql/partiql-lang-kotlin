@@ -23,6 +23,7 @@ import org.partiql.lang.util.stringValue
 data class Token(
     val type: TokenType,
     val value: IonValue? = null,
+    val sourceText: String? = null,
     val span: SourceSpan
 ) {
     val text: String?

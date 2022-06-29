@@ -264,6 +264,7 @@ may then be further optimized by selecting better implementations of each operat
 
         // A single graph match pattern.
         (product graph_match_pattern
+             predicate::(? expr)    // an optional pattern pre-filter, e.g.: `WHERE a.name=b.name` in `MATCH [(a)->(b) WHERE a.name=b.name]`
              variable::(? symbol)   // the optional element variable of the pattern, e.g.: `p` in `MATCH p = (a) −[t]−> (b)`
              quantifier::(? graph_match_quantifier) // an optional quantifier for the entire pattern match
              parts::(* graph_match_pattern_part 1)) // the ordered pattern parts

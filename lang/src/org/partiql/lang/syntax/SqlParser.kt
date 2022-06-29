@@ -23,6 +23,7 @@ import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.metaContainerOf
 import com.amazon.ionelement.api.toIonElement
+import org.partiql.lang.ast.DeleteOp.name
 import org.partiql.lang.ast.IonElementMetaContainer
 import org.partiql.lang.ast.IsCountStarMeta
 import org.partiql.lang.ast.IsImplictJoinMeta
@@ -947,6 +948,7 @@ class SqlParser(
         val metas = getMetas()
 
         return PartiqlAst.build {
+            var predicate: PartiqlAst.Expr? = null
             var variable: SymbolPrimitive? = null
             var quantifier: PartiqlAst.GraphMatchQuantifier? = null
             val parts = mutableListOf<PartiqlAst.GraphMatchPatternPart>()
@@ -997,12 +999,22 @@ class SqlParser(
                         }
                     }
                     else -> {
-                        error("Invalid parse tree: unexpected subexpression for MATCH pattern")
+                        if (predicate == null) {
+                            predicate = child.toAstExpr()
+                        } else {
+                            error("Invalid parse tree: unexpected subexpression for MATCH pattern")
+                        }
                     }
                 }
             }
 
-            PartiqlAst.GraphMatchPattern(variable = variable, quantifier = quantifier, parts = parts, metas = metas)
+            PartiqlAst.GraphMatchPattern(
+                predicate = predicate,
+                variable = variable,
+                quantifier = quantifier,
+                parts = parts,
+                metas = metas
+            )
         }
     }
 
@@ -1011,19 +1023,33 @@ class SqlParser(
 
         var name: SymbolPrimitive? = null
         val label = mutableListOf<SymbolPrimitive>()
-        val predicate = null
+        var predicate: PartiqlAst.Expr? = null
 
         for (child in children) {
             when (child.type) {
                 ParseType.MATCH_EXPR_NAME -> {
                     if (name != null) error("Invalid parse tree: name encountered more than once in MATCH")
-                    name = SymbolPrimitive(child.children[0].token!!.text!!, child.getMetas())
+                    val token = child.children[0].token!!
+                    val nameText = when (token.type) {
+                        TokenType.KEYWORD -> token.sourceText!!
+                        else -> token.text!!
+                    }
+                    name = SymbolPrimitive(nameText, child.getMetas())
                 }
                 ParseType.MATCH_EXPR_LABEL -> {
-                    label.add(SymbolPrimitive(child.children[0].token!!.text!!, child.getMetas()))
+                    val token = child.children[0].token!!
+                    val labelText = when (token.type) {
+                        TokenType.KEYWORD -> token.sourceText!!
+                        else -> token.text!!
+                    }
+                    label.add(SymbolPrimitive(labelText, child.getMetas()))
                 }
                 else -> {
-                    error("Invalid parse tree: unexpected subexpression for MATCH node")
+                    if (predicate == null) {
+                        predicate = child.toAstExpr()
+                    } else {
+                        error("Invalid parse tree: unexpected subexpression for MATCH node")
+                    }
                 }
             }
         }
@@ -1045,16 +1071,26 @@ class SqlParser(
         var quantifier: PartiqlAst.GraphMatchQuantifier? = null
         var name: SymbolPrimitive? = null
         val label = mutableListOf<SymbolPrimitive>()
-        val predicate = null
+        var predicate: PartiqlAst.Expr? = null
 
         for (child in children) {
             when (child.type) {
                 ParseType.MATCH_EXPR_NAME -> {
                     if (name != null) error("Invalid parse tree: name encountered more than once in MATCH")
-                    name = SymbolPrimitive(child.children[0].token!!.text!!, child.getMetas())
+                    val token = child.children[0].token!!
+                    val nameText = when (token.type) {
+                        TokenType.KEYWORD -> token.sourceText!!
+                        else -> token.text!!
+                    }
+                    name = SymbolPrimitive(nameText, child.getMetas())
                 }
                 ParseType.MATCH_EXPR_LABEL -> {
-                    label.add(SymbolPrimitive(child.children[0].token!!.text!!, child.getMetas()))
+                    val token = child.children[0].token!!
+                    val labelText = when (token.type) {
+                        TokenType.KEYWORD -> token.sourceText!!
+                        else -> token.text!!
+                    }
+                    label.add(SymbolPrimitive(labelText, child.getMetas()))
                 }
                 ParseType.MATCH_EXPR_EDGE_DIRECTION -> {
                     direction = when (child.token!!.text!!) {
@@ -1100,7 +1136,11 @@ class SqlParser(
                     }
                 }
                 else -> {
-                    error("Invalid parse tree: unexpected subexpression for MATCH edge")
+                    if (predicate == null) {
+                        predicate = child.toAstExpr()
+                    } else {
+                        error("Invalid parse tree: unexpected subexpression for MATCH edge")
+                    }
                 }
             }
         }
@@ -1592,11 +1632,13 @@ class SqlParser(
                     rem = rem.tail
                     val pathPart = when (rem.head?.type) {
                         TokenType.IDENTIFIER -> {
-                            val litToken = Token(TokenType.LITERAL, ion.newString(rem.head?.text!!), rem.head!!.span)
+                            val litToken =
+                                Token(TokenType.LITERAL, ion.newString(rem.head?.text!!), null, rem.head!!.span)
                             ParseNode(ParseType.CASE_INSENSITIVE_ATOM, litToken, emptyList(), rem.tail)
                         }
                         TokenType.QUOTED_IDENTIFIER -> {
-                            val litToken = Token(TokenType.LITERAL, ion.newString(rem.head?.text!!), rem.head!!.span)
+                            val litToken =
+                                Token(TokenType.LITERAL, ion.newString(rem.head?.text!!), null, rem.head!!.span)
                             ParseNode(ParseType.CASE_SENSITIVE_ATOM, litToken, emptyList(), rem.tail)
                         }
                         TokenType.STAR -> {
@@ -2921,7 +2963,12 @@ class SqlParser(
         // The source span here is just the filler value and does not reflect the actual source location of the precision
         // as it does not exists in case the precision is unspecified.
         val precisionOfValue = precision.token
-            ?: Token(TokenType.LITERAL, ion.newInt(getPrecisionFromTimeString(timeString)), timeStringToken.span)
+            ?: Token(
+                TokenType.LITERAL,
+                ion.newInt(getPrecisionFromTimeString(timeString)),
+                sourceText = timeString,
+                timeStringToken.span
+            )
 
         return ParseNode(
             if (withTimeZone) ParseType.TIME_WITH_TIME_ZONE else ParseType.TIME,
@@ -3453,11 +3500,12 @@ class SqlParser(
         var rem = this
 
         fun parseName(): ParseNode? {
-            return if (rem.head?.type?.isIdentifier() == true) {
-                val name = rem.atomFromHead()
-                ParseNode(ParseType.MATCH_EXPR_NAME, null, listOf(name), name.remaining)
-            } else {
-                null
+            return when (rem.head?.type!!) {
+                TokenType.IDENTIFIER, TokenType.QUOTED_IDENTIFIER, TokenType.KEYWORD -> {
+                    val name = rem.atomFromHead()
+                    ParseNode(ParseType.MATCH_EXPR_NAME, null, listOf(name), name.remaining)
+                }
+                else -> null
             }
         }
 
@@ -3465,14 +3513,17 @@ class SqlParser(
             return when (rem.head?.type) {
                 TokenType.COLON -> {
                     rem = rem.tail
-                    if (rem.head?.type?.isIdentifier() == true) {
-                        val name = rem.atomFromHead()
-                        return ParseNode(ParseType.MATCH_EXPR_LABEL, null, listOf(name), name.remaining)
-                    } else {
-                        rem.head.err(
-                            "Expected identifier for",
-                            ErrorCode.PARSE_EXPECTED_IDENT_FOR_MATCH
-                        )
+                    when (rem.head?.type!!) {
+                        TokenType.IDENTIFIER, TokenType.QUOTED_IDENTIFIER, TokenType.KEYWORD -> {
+                            val name = rem.atomFromHead()
+                            ParseNode(ParseType.MATCH_EXPR_LABEL, null, listOf(name), name.remaining)
+                        }
+                        else -> {
+                            rem.head.err(
+                                "Expected identifier for",
+                                ErrorCode.PARSE_EXPECTED_IDENT_FOR_MATCH
+                            )
+                        }
                     }
                 }
                 else -> null
@@ -3501,13 +3552,24 @@ class SqlParser(
 
         fun parseNode(): ParseNode {
             expect(TokenType.LEFT_PAREN, null, ErrorCode.PARSE_EXPECTED_LEFT_PAREN_FOR_MATCH_NODE, "match node")
+
             val name = parseName()
             rem = name?.remaining ?: rem
+
             val label = parseLabel()
             rem = label?.remaining ?: rem
+
+            val predicate = if (rem.head?.keywordText == "where") {
+                val rem = rem.tail
+                rem.parseExpression()
+            } else {
+                null
+            }
+            rem = predicate?.remaining ?: rem
+
             expect(TokenType.RIGHT_PAREN, null, ErrorCode.PARSE_EXPECTED_RIGHT_PAREN_FOR_MATCH_NODE, "match node")
 
-            return ParseNode(ParseType.MATCH_EXPR_NODE, null, listOfNotNull(name, label), rem)
+            return ParseNode(ParseType.MATCH_EXPR_NODE, null, listOfNotNull(name, label, predicate), rem)
         }
 
         fun errorEdgeParse(): Nothing {
@@ -3586,21 +3648,34 @@ class SqlParser(
         // https://arxiv.org/abs/2112.06217
         fun parseEdgeWithSpec(): ParseNode {
             val dir1 = parseLeftEdgePattern()
+
             expect(TokenType.LEFT_BRACKET, null, ErrorCode.PARSE_EXPECTED_LEFT_BRACKET_FOR_MATCH_EDGE, "match edge")
+
             val name = parseName()
             rem = name?.remaining ?: rem
+
             val label = parseLabel()
             rem = label?.remaining ?: rem
+
+            val predicate = if (rem.head?.keywordText == "where") {
+                val rem = rem.tail
+                rem.parseExpression()
+            } else {
+                null
+            }
+            rem = predicate?.remaining ?: rem
+
             expect(TokenType.RIGHT_BRACKET, null, ErrorCode.PARSE_EXPECTED_RIGHT_BRACKET_FOR_MATCH_EDGE, "match edge")
+
             val dir2 = parseRightEdgePattern()
 
             val dir = dir1.combine(dir2)
 
             val directionToken =
-                Token(TokenType.OPERATOR, ion.newSymbol(dir.abbreviation()), SourceSpan(0, 0, 0))
+                Token(TokenType.OPERATOR, ion.newSymbol(dir.abbreviation()), null, SourceSpan(0, 0, 0))
             val direction = ParseNode(ParseType.MATCH_EXPR_EDGE_DIRECTION, directionToken, emptyList(), rem)
 
-            return ParseNode(ParseType.MATCH_EXPR_EDGE, null, listOfNotNull(direction, name, label), rem)
+            return ParseNode(ParseType.MATCH_EXPR_EDGE, null, listOfNotNull(direction, name, label, predicate), rem)
         }
 
         // Parses an abbreviated edge pattern (i.e, no label, no variable, no predicate) as defined by
@@ -3627,14 +3702,14 @@ class SqlParser(
                     if (candidates.size == 1) {
                         val edge = candidates.values.first()
                         val directionToken =
-                            Token(TokenType.OPERATOR, ion.newSymbol(edge.abbreviation()), SourceSpan(0, 0, 0))
+                            Token(TokenType.OPERATOR, ion.newSymbol(edge.abbreviation()), null, SourceSpan(0, 0, 0))
                         val direction = ParseNode(ParseType.MATCH_EXPR_EDGE_DIRECTION, directionToken, emptyList(), rem)
                         return ParseNode(ParseType.MATCH_EXPR_EDGE, null, listOf(direction), rem)
                     }
                 } else if (candidates.contains("")) {
                     val edge = candidates[""]!!
                     val directionToken =
-                        Token(TokenType.OPERATOR, ion.newSymbol(edge.abbreviation()), SourceSpan(0, 0, 0))
+                        Token(TokenType.OPERATOR, ion.newSymbol(edge.abbreviation()), null, SourceSpan(0, 0, 0))
                     val direction = ParseNode(ParseType.MATCH_EXPR_EDGE_DIRECTION, directionToken, emptyList(), rem)
                     return ParseNode(ParseType.MATCH_EXPR_EDGE, null, listOf(direction), rem)
                 } else {
@@ -3725,10 +3800,23 @@ class SqlParser(
         }
 
         fun parseParenthesizedPattern(): ParseNode? {
-            fun parse(expectedClose: TokenType): ParseNode {
+            fun parse(expectedClose: TokenType): Pair<ParseNode, ParseNode?>? {
+                // look ahead 1, parse `()` as empty node and `[]` as empty edge, not an empty pattern
+                if (rem.tail.head?.type == expectedClose) {
+                    return null
+                }
+
                 rem = rem.tail
                 val pattern = rem.parseMatchPattern()
                 rem = pattern.remaining
+
+                val predicate = if (rem.head?.keywordText == "where") {
+                    val rem = rem.tail
+                    rem.parseExpression()
+                } else {
+                    null
+                }
+                rem = predicate?.remaining ?: rem
 
                 expect(
                     expectedClose,
@@ -3737,21 +3825,29 @@ class SqlParser(
                     "parenthesized pattern"
                 )
 
-                return pattern
+                return Pair(pattern, predicate)
             }
 
-            val subPattern = when (rem.head?.type) {
-                TokenType.LEFT_BRACKET -> parse(TokenType.RIGHT_BRACKET)
-                TokenType.LEFT_PAREN -> null // parse(TokenType.RIGHT_PAREN)
-                else -> null
+            val preParseRem = rem
+            val parenthesized = try {
+                when (rem.head?.type) {
+                    TokenType.LEFT_BRACKET -> parse(TokenType.RIGHT_BRACKET)
+                    TokenType.LEFT_PAREN -> parse(TokenType.RIGHT_PAREN)
+                    else -> null
+                }
+            } catch (e: ParserException) {
+                rem = preParseRem
+                null
             }
 
-            val quantifer = if (subPattern != null) {
-                parseQuantifier()
+            return if (parenthesized != null) {
+                val subPattern = parenthesized.first
+                val predicate = parenthesized.second
+                val quantifer = parseQuantifier()
+                subPattern.copy(children = subPattern.children + quantifer + listOfNotNull(predicate), remaining = rem)
             } else {
-                emptyList()
+                null
             }
-            return subPattern?.copy(children = subPattern.children + quantifer, remaining = rem)
         }
 
         fun parsePatternPart(): ParseNode? {
