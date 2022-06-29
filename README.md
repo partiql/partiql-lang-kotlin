@@ -1,7 +1,8 @@
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.partiql/partiql-lang-kotlin/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.partiql/partiql-lang-kotlin)
-[![Build Status](https://travis-ci.org/partiql/partiql-lang-kotlin.svg?branch=master)](https://travis-ci.org/partiql/partiql-lang-kotlin)
-[![codecov](https://codecov.io/gh/partiql/partiql-lang-kotlin/branch/master/graph/badge.svg)](https://codecov.io/gh/partiql/partiql-lang-kotlin)
+[![License](https://img.shields.io/hexpm/l/plug.svg)](https://github.com/partiql/partiql-lang-kotlin/blob/main/LICENSE)
+[![CI Build](https://github.com/partiql/partiql-lang-kotlin/actions/workflows/build.yml/badge.svg)](https://github.com/partiql/partiql-lang-kotlin/actions?query=workflow%3A%22Build+and+Report+Generation%22)
+[![codecov](https://codecov.io/gh/partiql/partiql-lang-kotlin/branch/main/graph/badge.svg)](https://codecov.io/gh/partiql/partiql-lang-kotlin)
 
 # PartiQL Lang Kotlin
 
