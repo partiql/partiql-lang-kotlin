@@ -34,7 +34,7 @@ jobs:
         with:
           java-version: 11
       - name: Generate test coverage report
-        run: ./gradlew jacocoTestReport
+        run: ./gradlew build jacocoTestReport
 
       # Upload coverage for CLI, LANG, PTS, TEST_SCRIPT, and EXAMPLES
       - name: Upload CLI coverage
