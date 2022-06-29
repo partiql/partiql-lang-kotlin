@@ -70,6 +70,7 @@ subprojects {
         useJUnitPlatform()
         jacocoTestReport {
             reports {
+                xml.required.set(true)
                 html.required.set(true)
                 html.outputLocation.set(file("${buildDir}/reports/jacoco/html"))
             }
