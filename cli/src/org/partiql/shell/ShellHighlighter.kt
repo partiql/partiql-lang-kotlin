@@ -34,7 +34,9 @@ private val ERROR: AttributedStyle = AttributedStyle.DEFAULT.foreground(Attribut
 private val INFO: AttributedStyle = AttributedStyle.DEFAULT
 private val WARN: AttributedStyle = AttributedStyle.DEFAULT.foreground(AttributedStyle.YELLOW)
 
-private val ADD_TO_GLOBAL_ENV = "!add_to_global_env"
+private const val ADD_TO_GLOBAL_ENV = "!add_to_global_env"
+private val ADD_TO_GLOBAL_ENV_COMMAND =
+    AttributedString(ADD_TO_GLOBAL_ENV, AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN))
 private val ALLOWED_SUFFIXES = setOf("!!")
 
 internal class ShellHighlighter() : Highlighter {
@@ -47,8 +49,22 @@ internal class ShellHighlighter() : Highlighter {
      * Returns a highlighted string by passing the [input] string through the [lexer] and [parser] to identify and
      * highlight tokens
      */
-    override fun highlight(reader: LineReader, input: String): AttributedString {
-        if (input.isEmpty()) return AttributedString(input)
+    override fun highlight(reader: LineReader, line: String): AttributedString {
+
+        val hasAddToGlobalEnv = line.toLowerCase().startsWith(ADD_TO_GLOBAL_ENV)
+        val input = if (hasAddToGlobalEnv) {
+            line.substring(ADD_TO_GLOBAL_ENV.length, line.length)
+        } else {
+            line
+        }
+
+        if (input.isBlank()) {
+            return if (hasAddToGlobalEnv) {
+                AttributedString(line, AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN))
+            } else {
+                AttributedString(line)
+            }
+        }
 
         // Map Between Line Number and Index
         val lineIndexesMap = mutableMapOf<Int, Int>()
@@ -66,17 +82,21 @@ internal class ShellHighlighter() : Highlighter {
             false -> input.length
         }
 
-        var beginAt = 0
-        if (input.startsWith(ADD_TO_GLOBAL_ENV)) {
-            beginAt = ADD_TO_GLOBAL_ENV.length
-        }
-
         // Get Tokens
         val tokens: List<Token>
         try {
-            tokens = lexer.tokenize(input.substring(beginAt, lastValidQueryIndex))
+            tokens = lexer.tokenize(input.substring(0, lastValidQueryIndex))
         } catch (e: Exception) {
-            return AttributedString(input, AttributedStyle().foreground(AttributedStyle.RED))
+            val error = AttributedString(input, AttributedStyle().foreground(AttributedStyle.RED))
+            return if (hasAddToGlobalEnv) {
+                with(AttributedStringBuilder()) {
+                    append(ADD_TO_GLOBAL_ENV_COMMAND)
+                    append(error)
+                    toAttributedString()
+                }
+            } else {
+                error
+            }
         }
 
         // Build Token Colors (Last Token is EOF)
@@ -103,7 +123,7 @@ internal class ShellHighlighter() : Highlighter {
 
         // Parse and Replace Token Style if Failures
         try {
-            parser.parseAstStatement(input.substring(beginAt, lastValidQueryIndex))
+            parser.parseAstStatement(input.substring(0, lastValidQueryIndex))
         } catch (e: ParserException) {
             val column =
                 e.errorContext[Property.COLUMN_NUMBER]?.longValue()?.toInt() ?: return builder.toAttributedString()
@@ -114,7 +134,15 @@ internal class ShellHighlighter() : Highlighter {
             } ?: return builder.toAttributedString()
             builder = createAttributeStringBuilder(token, lineIndexesMap, builder)
         }
-        return builder.toAttributedString()
+        return if (hasAddToGlobalEnv) {
+            with(AttributedStringBuilder()) {
+                append(ADD_TO_GLOBAL_ENV_COMMAND)
+                append(builder.toAttributedString())
+                toAttributedString()
+            }
+        } else {
+            builder.toAttributedString()
+        }
     }
 
     override fun setErrorPattern(errorPattern: Pattern?) {}
