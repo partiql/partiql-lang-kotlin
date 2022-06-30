@@ -762,6 +762,100 @@ class SqlParserMatchTest : SqlParserTestBase() {
         }
     }
 
+    @Test
+    fun restrictorTrail() = assertExpressionNoRoundTrip(
+        "SELECT p FROM g MATCH TRAIL p = (a WHERE a.owner='Dave') -[t:Transfer]-> * (b WHERE b.owner='Aretha')",
+    ) {
+        PartiqlAst.build {
+            select(
+                project = projectList(projectExpr(id("p"))),
+                from = graphMatch(
+                    expr = id("g"),
+                    graphExpr = graphMatchExpr(
+                        patterns = listOf(
+                            graphMatchPattern(
+                                restrictor = restrictorTrail(),
+                                variable = "p",
+                                parts = listOf(
+                                    node(
+                                        variable = "a",
+                                        predicate =
+                                        eq(
+                                            path(id("a"), pathExpr(lit(ionString("owner")), caseInsensitive())),
+                                            lit(ionString("Dave"))
+                                        ),
+                                    ),
+                                    edge(
+                                        direction = edgeRight(),
+                                        variable = "t",
+                                        label = listOf("Transfer"),
+                                        quantifier = graphMatchQuantifier(0)
+                                    ),
+                                    node(
+                                        variable = "b",
+                                        predicate =
+                                        eq(
+                                            path(id("b"), pathExpr(lit(ionString("owner")), caseInsensitive())),
+                                            lit(ionString("Aretha"))
+                                        ),
+                                    ),
+                                )
+                            )
+                        )
+                    )
+                ),
+                where = null
+            )
+        }
+    }
+
+    @Test
+    fun selectorAnyShortest() = assertExpressionNoRoundTrip(
+        "SELECT p FROM g MATCH ANY SHORTEST p = (a WHERE a.owner='Dave') -[t:Transfer]-> * (b WHERE b.owner='Aretha')",
+    ) {
+        PartiqlAst.build {
+            select(
+                project = projectList(projectExpr(id("p"))),
+                from = graphMatch(
+                    expr = id("g"),
+                    graphExpr = graphMatchExpr(
+                        selector = selectorAnyShortest(),
+                        patterns = listOf(
+                            graphMatchPattern(
+                                variable = "p",
+                                parts = listOf(
+                                    node(
+                                        variable = "a",
+                                        predicate =
+                                        eq(
+                                            path(id("a"), pathExpr(lit(ionString("owner")), caseInsensitive())),
+                                            lit(ionString("Dave"))
+                                        ),
+                                    ),
+                                    edge(
+                                        direction = edgeRight(),
+                                        variable = "t",
+                                        label = listOf("Transfer"),
+                                        quantifier = graphMatchQuantifier(0)
+                                    ),
+                                    node(
+                                        variable = "b",
+                                        predicate =
+                                        eq(
+                                            path(id("b"), pathExpr(lit(ionString("owner")), caseInsensitive())),
+                                            lit(ionString("Aretha"))
+                                        ),
+                                    ),
+                                )
+                            )
+                        )
+                    )
+                ),
+                where = null
+            )
+        }
+    }
+
     // TODO label combinators
     @Test
     @Ignore

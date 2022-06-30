@@ -23,7 +23,6 @@ import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.metaContainerOf
 import com.amazon.ionelement.api.toIonElement
-import org.partiql.lang.ast.DeleteOp.name
 import org.partiql.lang.ast.IonElementMetaContainer
 import org.partiql.lang.ast.IsCountStarMeta
 import org.partiql.lang.ast.IsImplictJoinMeta
@@ -186,6 +185,8 @@ class SqlParser(
         MATCH_EXPR_NAME,
         MATCH_EXPR_LABEL,
         MATCH_EXPR_QUANTIFIER,
+        MATCH_EXPR_RESTRICTOR,
+        MATCH_EXPR_SELECTOR,
         CHECK,
         ON_CONFLICT,
         CONFLICT_ACTION,
@@ -931,15 +932,42 @@ class SqlParser(
 
     private fun ParseNode.toGraphMatch(): PartiqlAst.FromSource {
         val metas = getMetas()
+        var selector: PartiqlAst.GraphMatchSelector? = null
 
         return PartiqlAst.build {
             val expr = children[0].toAstExpr()
-            val patterns = children.tail.map {
+
+            var rest = children.tail
+            if (rest.head?.type == ParseType.MATCH_EXPR_SELECTOR) {
+                val selectorNode = rest.head!!
+                selector = when (selectorNode.token!!.text) {
+                    "ANY" -> selectorAny()
+                    "ANY_SHORTEST" -> selectorAnyShortest()
+                    "ALL_SHORTEST" -> selectorAllShortest()
+                    "ANY_K" -> {
+                        val k = selectorNode.children[0].numberValue()
+                        selectorAnyK(k.toLong())
+                    }
+                    "SHORTEST_K" -> {
+                        val k = selectorNode.children[0].numberValue()
+                        selectorShortestK(k.toLong())
+                    }
+                    "SHORTEST_K_GROUP" -> {
+                        val k = selectorNode.children[0].numberValue()
+                        selectorShortestKGroup(k.toLong())
+                    }
+                    else -> null
+                }
+
+                rest = rest.tail
+            }
+
+            val patterns = rest.map {
                 if (it.type != ParseType.MATCH_EXPR) error("Invalid parse tree: expecting match expression in MATCH")
                 it.toGraphMatchPattern()
             }
 
-            val matchExpr = PartiqlAst.GraphMatchExpr(patterns, metas = metas)
+            val matchExpr = PartiqlAst.GraphMatchExpr(selector = selector, patterns = patterns, metas = metas)
             PartiqlAst.FromSource.GraphMatch(expr, matchExpr, metas)
         }
     }
@@ -948,6 +976,7 @@ class SqlParser(
         val metas = getMetas()
 
         return PartiqlAst.build {
+            var restrictor: PartiqlAst.GraphMatchRestrictor? = null
             var predicate: PartiqlAst.Expr? = null
             var variable: SymbolPrimitive? = null
             var quantifier: PartiqlAst.GraphMatchQuantifier? = null
@@ -998,6 +1027,17 @@ class SqlParser(
                             }
                         }
                     }
+                    ParseType.MATCH_EXPR_RESTRICTOR -> {
+                        restrictor = when (child.children[0].token!!.sourceText?.toUpperCase()) {
+                            "TRAIL" -> restrictorTrail()
+                            "ACYCLIC" -> restrictorAcyclic()
+                            "SIMPLE" -> restrictorSimple()
+                            else -> error("Invalid parse tree: unexpected restrictor `${child.children[0].token!!.sourceText}` for MATCH pattern")
+                        }
+                    }
+                    ParseType.MATCH_EXPR_SELECTOR -> {
+                        error("Invalid parse tree: unexpected selector for MATCH pattern")
+                    }
                     else -> {
                         if (predicate == null) {
                             predicate = child.toAstExpr()
@@ -1009,6 +1049,7 @@ class SqlParser(
             }
 
             PartiqlAst.GraphMatchPattern(
+                restrictor = restrictor,
                 predicate = predicate,
                 variable = variable,
                 quantifier = quantifier,
@@ -3432,13 +3473,94 @@ class SqlParser(
             return false
         }
 
+        fun consumeInt(): ParseNode? {
+            if (rem.head?.type == TokenType.LITERAL &&
+                rem.head!!.value?.isUnsignedInteger == true
+            ) {
+                val int = rem.atomFromHead()
+                rem = rem.tail
+                return int
+            }
+            return null
+        }
+
+        fun consumeKW(keyword: String): Boolean {
+            return when (rem.head?.type!!) {
+                TokenType.IDENTIFIER, TokenType.QUOTED_IDENTIFIER, TokenType.KEYWORD -> {
+                    if (rem.head!!.sourceText?.toUpperCase() == keyword) {
+                        rem = rem.tail
+                        true
+                    } else {
+                        false
+                    }
+                }
+                else -> false
+            }
+        }
+
+        fun parseSelector(): ParseNode? {
+            var selector: Token? = null
+            var selectorK: ParseNode? = null
+            if (consumeKW("ANY")) {
+                if (consumeKW("SHORTEST")) {
+                    selector = Token(TokenType.OPERATOR, ion.newSymbol("ANY_SHORTEST"), null, SourceSpan(0, 0, 0))
+                } else {
+                    val k = consumeInt()
+                    if (k != null) {
+                        selector = Token(TokenType.OPERATOR, ion.newSymbol("ANY_K"), null, SourceSpan(0, 0, 0))
+                        selectorK = k
+                    } else {
+                        selector = Token(TokenType.OPERATOR, ion.newSymbol("ANY"), null, SourceSpan(0, 0, 0))
+                    }
+                }
+            } else if (consumeKW("ALL")) {
+                if (consumeKW("SHORTEST")) {
+                    selector = Token(TokenType.OPERATOR, ion.newSymbol("ALL_SHORTEST"), null, SourceSpan(0, 0, 0))
+                } else {
+                    rem.head.err(
+                        "Expected 'SHORTEST' after 'ALL'",
+                        ErrorCode.PARSE_EXPECTED_KEYWORD_FOR_MATCH
+                    )
+                }
+            } else if (consumeKW("SHORTEST")) {
+                val k = consumeInt()
+                if (k != null) {
+                    selector = if (consumeKW("GROUP")) {
+                        Token(
+                            TokenType.OPERATOR,
+                            ion.newSymbol("SHORTEST_K_GROUP"),
+                            null,
+                            SourceSpan(0, 0, 0)
+                        )
+                    } else {
+                        Token(TokenType.OPERATOR, ion.newSymbol("SHORTEST_K"), null, SourceSpan(0, 0, 0))
+                    }
+                    selectorK = k
+                } else {
+                    rem.head.err(
+                        "Expected a number after 'SHORTEST'",
+                        ErrorCode.PARSE_EXPECTED_KEYWORD_FOR_MATCH
+                    )
+                }
+            }
+
+            return if (selector != null) {
+                ParseNode(ParseType.MATCH_EXPR_SELECTOR, selector, listOfNotNull(selectorK), rem)
+            } else {
+                null
+            }
+        }
+
+        val selector = parseSelector()
+        rem = selector?.remaining ?: rem
+
         do {
             val pattern = rem.parseMatchPattern()
             matches.add(pattern)
             rem = pattern.remaining
         } while (consume(TokenType.COMMA))
 
-        return ParseNode(ParseType.MATCH, this.head, listOf(expr) + matches, rem)
+        return ParseNode(ParseType.MATCH, this.head, listOfNotNull(expr, selector) + matches, rem)
     }
 
     // left/right/undirected edge directions essentially form a 3-bit flag
@@ -3495,6 +3617,8 @@ class SqlParser(
             }
         }
     }
+
+    val matchRestrictorKWs = listOf("TRAIL", "ACYCLIC", "SIMPLE")
 
     private fun List<Token>.parseMatchPattern(): ParseNode {
         var rem = this
@@ -3560,8 +3684,7 @@ class SqlParser(
             rem = label?.remaining ?: rem
 
             val predicate = if (rem.head?.keywordText == "where") {
-                val rem = rem.tail
-                rem.parseExpression()
+                rem.tail.parseExpression()
             } else {
                 null
             }
@@ -3658,8 +3781,7 @@ class SqlParser(
             rem = label?.remaining ?: rem
 
             val predicate = if (rem.head?.keywordText == "where") {
-                val rem = rem.tail
-                rem.parseExpression()
+                rem.tail.parseExpression()
             } else {
                 null
             }
@@ -3783,6 +3905,21 @@ class SqlParser(
             return edge.copy(children = edge.children + quantifer, remaining = rem)
         }
 
+        fun parseRestrictor(): ParseNode? {
+            return when (rem.head?.type!!) {
+                TokenType.IDENTIFIER -> {
+                    if (rem.head!!.sourceText?.toUpperCase() in matchRestrictorKWs) {
+                        val name = rem.atomFromHead()
+                        rem = name.remaining
+                        ParseNode(ParseType.MATCH_EXPR_RESTRICTOR, null, listOf(name), name.remaining)
+                    } else {
+                        null
+                    }
+                }
+                else -> null
+            }
+        }
+
         fun parsePathVariable(): ParseNode? {
             val name = parseName()
             return if (name != null) {
@@ -3869,6 +4006,9 @@ class SqlParser(
         }
 
         val patternElements = ArrayList<ParseNode?>()
+
+        val restrictor = parseRestrictor()
+        patternElements.add(restrictor)
 
         val pathVariable = parsePathVariable()
         patternElements.add(pathVariable)

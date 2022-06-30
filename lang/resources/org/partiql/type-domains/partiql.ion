@@ -262,16 +262,53 @@ may then be further optimized by selecting better implementations of each operat
         // A quantifier for graph edges or patterns. (e.g., the `{2,5}` in `MATCH (x)->{2,5}(y)`)
         (product graph_match_quantifier lower::int upper::(? int))
 
+        // A path restrictor
+        // | Keyword        | Description
+        // |----------------+--------------
+        // | TRAIL          | No repeated edges.
+        // | ACYCLIC        | No repeated nodes.
+        // | SIMPLE         | No repeated nodes, except that the ﬁrst and last nodes may be the same.
+        //
+        // Fig. 7. Table of restrictors:
+        // https://arxiv.org/abs/2112.06217
+        (sum graph_match_restrictor
+             (restrictor_trail)
+             (restrictor_acyclic)
+             (restrictor_simple))
+
         // A single graph match pattern.
         (product graph_match_pattern
+             restrictor::(? graph_match_restrictor)
              predicate::(? expr)    // an optional pattern pre-filter, e.g.: `WHERE a.name=b.name` in `MATCH [(a)->(b) WHERE a.name=b.name]`
              variable::(? symbol)   // the optional element variable of the pattern, e.g.: `p` in `MATCH p = (a) −[t]−> (b)`
              quantifier::(? graph_match_quantifier) // an optional quantifier for the entire pattern match
              parts::(* graph_match_pattern_part 1)) // the ordered pattern parts
 
+        // A path selector
+        // | Keyword
+        // |------------------
+        // | ANY SHORTEST
+        // | ALL SHORTEST
+        // | ANY
+        // | ANY k
+        // | SHORTEST k
+        // | SHORTEST k GROUP
+        //
+        // Fig. 8. Table of restrictors:
+        // https://arxiv.org/abs/2112.06217
+        (sum graph_match_selector
+             (selector_any_shortest)
+             (selector_all_shortest)
+             (selector_any)
+             (selector_any_k k::int)
+             (selector_shortest_k k::int)
+             (selector_shortest_k_group k::int))
+
         // A graph match clause as defined in GPML
         // See https://arxiv.org/abs/2112.06217
-        (product graph_match_expr patterns::(*graph_match_pattern 1))
+        (product graph_match_expr
+                 selector::(? graph_match_selector)
+                 patterns::(* graph_match_pattern 1))
 
 
         // A generic pair of expressions.  Used in the `struct`, `searched_case` and `simple_case` expr variants above.

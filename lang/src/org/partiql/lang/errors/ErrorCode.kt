@@ -393,6 +393,12 @@ enum class ErrorCode(
         "expected identifier for alias"
     ),
 
+    PARSE_EXPECTED_KEYWORD_FOR_MATCH(
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "expected keyword for match"
+    ),
+
     PARSE_EXPECTED_IDENT_FOR_MATCH(
         ErrorCategory.PARSER,
         LOC_TOKEN,
