@@ -12,14 +12,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   has also been updated to ensure this is part of the process.
 - backward-incompatiblity and dependency questions are added to the project's PR process to provide more context
   on the changes that include these and the alternatives that have been considered.
+- README.md badges for GitHub Actions status, codecov, and license
 
 ### Changed
 
 ### Deprecated
 
 ### Fixed
+- Codecov report uploads in GitHub Actions workflow
+- GitHub Actions capability to run on forks
 
 ### Removed
+- README.md badge for travisci
 
 ### Security
 

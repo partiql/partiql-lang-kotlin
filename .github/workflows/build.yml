@@ -1,14 +1,5 @@
 name: "Build and Report Generation"
-on:
-  push:
-  pull_request:
-    branches:
-      # Branches from forks have the form 'user:branch-name' so we only run
-      # this job on pull_request events for branches that look like fork
-      # branches. Without this we would end up running this job twice for non
-      # forked PRs, once for the push and then once for opening the PR.
-      # Taken from https://github.community/t/how-to-trigger-an-action-on-push-or-pull-request-but-not-both/16662/10
-      - '**:**'
+on: [push, pull_request]
 
 jobs:
   test:
@@ -38,31 +29,37 @@ jobs:
 
       # Upload coverage for CLI, LANG, PTS, TEST_SCRIPT, and EXAMPLES
       - name: Upload CLI coverage
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v3
         with:
-          directory: cli/build/reports
+          file: cli/build/reports/jacoco/test/jacocoTestReport.xml
           flags: CLI
 
       - name: Upload LANG coverage
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v3
         with:
-          directory: lang/build/reports
+          file: lang/build/reports/jacoco/test/jacocoTestReport.xml
           flags: LANG
 
       - name: Upload PTS coverage
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v3
         with:
-          directory: pts/build/reports
+          file: pts/build/reports/jacoco/test/jacocoTestReport.xml
           flags: PTS
 
       - name: Upload TEST_SCRIPT coverage
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v3
         with:
-          directory: testscript/build/reports
+          file: testscript/build/reports/jacoco/test/jacocoTestReport.xml
           flags: TEST_SCRIPT
 
       - name: Upload EXAMPLES coverage
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v3
         with:
-          directory: examples/build/reports
+          file: examples/build/reports/jacoco/test/jacocoTestReport.xml
           flags: EXAMPLES
+
+      - name: Upload EXTENSIONS coverage
+        uses: codecov/codecov-action@v3
+        with:
+          file: extensions/build/reports/jacoco/test/jacocoTestReport.xml
+          flags: EXTENSIONS
