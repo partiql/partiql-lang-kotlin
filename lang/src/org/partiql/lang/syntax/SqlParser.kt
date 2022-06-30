@@ -3450,10 +3450,39 @@ class SqlParser(
             )
 
     private fun List<Token>.parseOptionalMatchClause(child: ParseNode): ParseNode {
-        val rem = this
+        var rem = this
         return when (rem.head?.keywordText) {
             "match" -> {
-                rem.parseMatch(child)
+                rem = rem.tail
+
+                // `maybeNested` is a heuristic as to whether the whole match is surrounded by parentheses
+                //     e.g., `SELECT ... FROM g MATCH ( () -> () )`
+                val maybeNested = if (rem.head?.type == TokenType.LEFT_PAREN) {
+                    val nextNextIsRParen = rem.tail.head?.type == TokenType.RIGHT_PAREN
+                    var looksLikeNode = false
+                    for (t in rem.tail) {
+                        if (t.type == TokenType.LEFT_PAREN) {
+                            break // another left paren means this is likely parens around the whole match
+                        } else if (t.type in listOf(TokenType.COLON, TokenType.RIGHT_PAREN)) {
+                            looksLikeNode = true
+                            break
+                        }
+                    }
+
+                    !nextNextIsRParen && !looksLikeNode
+                } else {
+                    false
+                }
+
+                if (maybeNested) {
+                    try {
+                        rem.tail.parseMatch(child).deriveExpected(TokenType.RIGHT_PAREN)
+                    } catch (e: ParserException) {
+                        rem.parseMatch(child)
+                    }
+                } else {
+                    rem.parseMatch(child)
+                }
             }
             else -> {
                 child
@@ -3463,7 +3492,7 @@ class SqlParser(
 
     private fun List<Token>.parseMatch(expr: ParseNode): ParseNode {
         val matches = ArrayList<ParseNode>()
-        var rem = this.tail
+        var rem = this
 
         fun consume(type: TokenType): Boolean {
             if (rem.head?.type == type) {

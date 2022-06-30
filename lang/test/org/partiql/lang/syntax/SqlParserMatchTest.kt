@@ -856,6 +856,65 @@ class SqlParserMatchTest : SqlParserTestBase() {
         }
     }
 
+    @Test
+    fun matchAndJoinCommas() = assertExpressionNoRoundTrip(
+        "SELECT a,b,c, t1.x as x, t2.y as y FROM graph MATCH ((a) -> (b), (a) -> (c)), table1 as t1, table2 as t2",
+    ) {
+        val match = PartiqlAst.build {
+            graphMatch(
+                expr = id("graph"),
+                graphExpr = graphMatchExpr(
+                    patterns = listOf(
+                        graphMatchPattern(
+                            parts = listOf(
+                                node(variable = "a"),
+                                edge(direction = edgeRight()),
+                                node(variable = "b"),
+                            )
+                        ),
+                        graphMatchPattern(
+                            parts = listOf(
+                                node(variable = "a"),
+                                edge(direction = edgeRight()),
+                                node(variable = "c"),
+                            )
+                        )
+                    )
+                )
+            )
+        }
+
+        val t1 = PartiqlAst.build {
+            scan(expr = id("table1"), asAlias = "t1")
+        }
+
+        val t2 = PartiqlAst.build {
+            scan(expr = id("table2"), asAlias = "t2")
+        }
+
+        PartiqlAst.build {
+            select(
+                project = projectList(
+                    projectExpr(id("a")),
+                    projectExpr(id("b")),
+                    projectExpr(id("c")),
+                    projectExpr(path(id("t1"), pathExpr(lit(ionString("x")), caseInsensitive())), "x"),
+                    projectExpr(path(id("t2"), pathExpr(lit(ionString("y")), caseInsensitive())), "y")
+                ),
+                from = join(
+                    type = inner(),
+                    left = join(
+                        type = inner(),
+                        left = match,
+                        right = t1
+                    ),
+                    right = t2
+                ),
+                where = null
+            )
+        }
+    }
+
     // TODO label combinators
     @Test
     @Ignore
