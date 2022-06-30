@@ -62,7 +62,7 @@ internal class ShellHighlighter() : Highlighter {
             return if (hasAddToGlobalEnv) {
                 AttributedString(line, AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN))
             } else {
-                AttributedString("")
+                AttributedString(line)
             }
         }
 
