@@ -60,7 +60,7 @@ internal class ShellHighlighter() : Highlighter {
 
         if (input.isBlank()) {
             return if (hasAddToGlobalEnv) {
-                ADD_TO_GLOBAL_ENV_COMMAND
+                AttributedString(line, AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN))
             } else {
                 AttributedString("")
             }
