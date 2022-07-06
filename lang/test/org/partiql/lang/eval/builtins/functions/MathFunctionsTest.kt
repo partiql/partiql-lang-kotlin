@@ -53,6 +53,7 @@ class MathFunctionsTest : EvaluatorTestBase() {
             ExprFunctionTestCase("floor(`+inf`)", "+inf"),
             ExprFunctionTestCase("floor(`-inf`)", "-inf"),
             ExprFunctionTestCase("floor(`nan`)", "nan"),
+            // test case for literal larger than 64 bits
             ExprFunctionTestCase("ceil(`1.00000000000000001`)", "2"),
             ExprFunctionTestCase("ceil(1.00000000000000001)", "2"),
             ExprFunctionTestCase("floor(`1.9999999999999999`)", "1"),
