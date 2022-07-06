@@ -10,6 +10,8 @@ import org.partiql.lang.types.StaticType
 import java.lang.Double.NEGATIVE_INFINITY
 import java.lang.Double.NaN
 import java.lang.Double.POSITIVE_INFINITY
+import java.math.BigDecimal
+import java.math.RoundingMode
 
 /**
  * A place to keep supported mathematical functions. We are missing many in comparison to PostgresQL.
@@ -55,10 +57,13 @@ private class UnaryNumeric(
 
 private fun ceil(n: Number): Number = when (n) {
     POSITIVE_INFINITY, NEGATIVE_INFINITY, NaN -> n
+    // support for numbers that are larger than 64 bits.
+    is BigDecimal -> n.setScale(0, RoundingMode.CEILING).toInt()
     else -> kotlin.math.ceil(n.toDouble()).toInt()
 }
 
 private fun floor(n: Number): Number = when (n) {
     POSITIVE_INFINITY, NEGATIVE_INFINITY, NaN -> n
+    is BigDecimal -> n.setScale(0, RoundingMode.FLOOR).toInt()
     else -> kotlin.math.floor(n.toDouble()).toInt()
 }

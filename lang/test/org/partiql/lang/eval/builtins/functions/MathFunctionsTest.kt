@@ -53,6 +53,10 @@ class MathFunctionsTest : EvaluatorTestBase() {
             ExprFunctionTestCase("floor(`+inf`)", "+inf"),
             ExprFunctionTestCase("floor(`-inf`)", "-inf"),
             ExprFunctionTestCase("floor(`nan`)", "nan"),
+            ExprFunctionTestCase("ceil(`1.00000000000000001`)", "2"),
+            ExprFunctionTestCase("ceil(1.00000000000000001)", "2"),
+            ExprFunctionTestCase("floor(`1.9999999999999999`)", "1"),
+            ExprFunctionTestCase("floor(1.99999999999999999999)", "1")
         )
     }
 
