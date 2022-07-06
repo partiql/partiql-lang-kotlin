@@ -996,37 +996,7 @@ class SqlParser(
                     }
                     ParseType.MATCH_EXPR_NODE -> parts.add(child.toGraphMatchNode())
                     ParseType.MATCH_EXPR_EDGE -> parts.add(child.toGraphMatchEdge())
-                    ParseType.MATCH_EXPR_QUANTIFIER -> {
-                        when (child.token!!.type) {
-                            TokenType.STAR -> {
-                                quantifier = PartiqlAst.GraphMatchQuantifier(
-                                    lower = LongPrimitive(0, child.getMetas()),
-                                    upper = null
-                                )
-                            }
-                            TokenType.OPERATOR -> {
-                                when (child.token.keywordText) {
-                                    "+" -> {
-                                        quantifier = PartiqlAst.GraphMatchQuantifier(
-                                            lower = LongPrimitive(1, child.getMetas()),
-                                            upper = null
-                                        )
-                                    }
-                                }
-                            }
-                            TokenType.LITERAL -> {
-                                val q = LongPrimitive(child.token.value!!.asIonInt().longValue(), child.getMetas())
-                                if (quantifier == null) {
-                                    quantifier = PartiqlAst.GraphMatchQuantifier(lower = q, upper = null)
-                                } else {
-                                    quantifier = PartiqlAst.GraphMatchQuantifier(lower = quantifier.lower, upper = q)
-                                }
-                            }
-                            else -> {
-                                error("Invalid parse tree: unexpected subexpression for MATCH quantifier")
-                            }
-                        }
-                    }
+                    ParseType.MATCH_EXPR_QUANTIFIER -> quantifier = child.toGraphMatchQuantifier(quantifier)
                     ParseType.MATCH_EXPR_RESTRICTOR -> {
                         restrictor = when (child.children[0].token!!.sourceText?.toUpperCase()) {
                             "TRAIL" -> restrictorTrail()
@@ -1050,7 +1020,7 @@ class SqlParser(
 
             PartiqlAst.GraphMatchPattern(
                 restrictor = restrictor,
-                predicate = predicate,
+                prefilter = predicate,
                 variable = variable,
                 quantifier = quantifier,
                 parts = parts,
@@ -1099,9 +1069,46 @@ class SqlParser(
             PartiqlAst.GraphMatchPatternPart.Node(
                 variable = name,
                 label = label,
-                predicate = predicate,
+                prefilter = predicate,
                 metas = metas
             )
+        }
+    }
+
+    private fun ParseNode.toGraphMatchQuantifier(previous: PartiqlAst.GraphMatchQuantifier?): PartiqlAst.GraphMatchQuantifier {
+        val metas = getMetas()
+
+        return when (token!!.type) {
+            TokenType.STAR -> {
+                PartiqlAst.GraphMatchQuantifier(
+                    lower = LongPrimitive(0, metas),
+                    upper = null
+                )
+            }
+            TokenType.OPERATOR -> {
+                when (token.keywordText) {
+                    "+" -> {
+                        PartiqlAst.GraphMatchQuantifier(
+                            lower = LongPrimitive(1, metas),
+                            upper = null
+                        )
+                    }
+                    else -> {
+                        error("Invalid parse tree: unexpected subexpression for MATCH quantifier")
+                    }
+                }
+            }
+            TokenType.LITERAL -> {
+                val q = LongPrimitive(token.value!!.asIonInt().longValue(), metas)
+                if (previous == null) {
+                    PartiqlAst.GraphMatchQuantifier(lower = q, upper = null)
+                } else {
+                    PartiqlAst.GraphMatchQuantifier(lower = previous.lower, upper = q)
+                }
+            }
+            else -> {
+                error("Invalid parse tree: unexpected subexpression for MATCH quantifier")
+            }
         }
     }
 
@@ -1145,37 +1152,7 @@ class SqlParser(
                         else -> error("Invalid parse tree: unknown edge direction ${child.token.text!!}")
                     }
                 }
-                ParseType.MATCH_EXPR_QUANTIFIER -> {
-                    when (child.token!!.type) {
-                        TokenType.STAR -> {
-                            quantifier = PartiqlAst.GraphMatchQuantifier(
-                                lower = LongPrimitive(0, child.getMetas()),
-                                upper = null
-                            )
-                        }
-                        TokenType.OPERATOR -> {
-                            when (child.token.keywordText) {
-                                "+" -> {
-                                    quantifier = PartiqlAst.GraphMatchQuantifier(
-                                        lower = LongPrimitive(1, child.getMetas()),
-                                        upper = null
-                                    )
-                                }
-                            }
-                        }
-                        TokenType.LITERAL -> {
-                            val q = LongPrimitive(child.token.value!!.asIonInt().longValue(), child.getMetas())
-                            if (quantifier == null) {
-                                quantifier = PartiqlAst.GraphMatchQuantifier(lower = q, upper = null)
-                            } else {
-                                quantifier = PartiqlAst.GraphMatchQuantifier(lower = quantifier.lower, upper = q)
-                            }
-                        }
-                        else -> {
-                            error("Invalid parse tree: unexpected subexpression for MATCH quantifier")
-                        }
-                    }
-                }
+                ParseType.MATCH_EXPR_QUANTIFIER -> quantifier = child.toGraphMatchQuantifier(quantifier)
                 else -> {
                     if (predicate == null) {
                         predicate = child.toAstExpr()
@@ -1196,7 +1173,7 @@ class SqlParser(
                 quantifier = quantifier,
                 variable = name,
                 label = label,
-                predicate = predicate,
+                prefilter = predicate,
                 metas = metas
             )
         }
@@ -1674,12 +1651,22 @@ class SqlParser(
                     val pathPart = when (rem.head?.type) {
                         TokenType.IDENTIFIER -> {
                             val litToken =
-                                Token(TokenType.LITERAL, ion.newString(rem.head?.text!!), null, rem.head!!.span)
+                                Token(
+                                    TokenType.LITERAL,
+                                    ion.newString(rem.head?.text!!),
+                                    rem.head?.text!!,
+                                    rem.head!!.span
+                                )
                             ParseNode(ParseType.CASE_INSENSITIVE_ATOM, litToken, emptyList(), rem.tail)
                         }
                         TokenType.QUOTED_IDENTIFIER -> {
                             val litToken =
-                                Token(TokenType.LITERAL, ion.newString(rem.head?.text!!), null, rem.head!!.span)
+                                Token(
+                                    TokenType.LITERAL,
+                                    ion.newString(rem.head?.text!!),
+                                    rem.head?.text!!,
+                                    rem.head!!.span
+                                )
                             ParseNode(ParseType.CASE_SENSITIVE_ATOM, litToken, emptyList(), rem.tail)
                         }
                         TokenType.STAR -> {
@@ -3491,7 +3478,6 @@ class SqlParser(
     }
 
     private fun List<Token>.parseMatch(expr: ParseNode): ParseNode {
-        val matches = ArrayList<ParseNode>()
         var rem = this
 
         fun consume(type: TokenType): Boolean {
@@ -3530,21 +3516,42 @@ class SqlParser(
         fun parseSelector(): ParseNode? {
             var selector: Token? = null
             var selectorK: ParseNode? = null
+            val start = rem
+
+            fun span(count: Int): SourceSpan {
+                val startSpan = start.head!!.span
+                var last = startSpan
+                var len = 0L
+                for (next in start!!.tail.subList(0, count - 1)) {
+                    if (next.span.line == last.line) {
+                        len += (next.span.column - last.column)
+                    } else {
+                        len += last.length
+                    }
+                    last = next.span
+                }
+                len += last.length
+
+                return SourceSpan(startSpan.line, startSpan.column, len)
+            }
+
             if (consumeKW("ANY")) {
                 if (consumeKW("SHORTEST")) {
-                    selector = Token(TokenType.OPERATOR, ion.newSymbol("ANY_SHORTEST"), null, SourceSpan(0, 0, 0))
+                    selector =
+                        Token(TokenType.OPERATOR, ion.newSymbol("ANY_SHORTEST"), "ANY_SHORTEST", span(2))
                 } else {
                     val k = consumeInt()
                     if (k != null) {
-                        selector = Token(TokenType.OPERATOR, ion.newSymbol("ANY_K"), null, SourceSpan(0, 0, 0))
+                        selector = Token(TokenType.OPERATOR, ion.newSymbol("ANY_K"), "ANY_K", span(2))
                         selectorK = k
                     } else {
-                        selector = Token(TokenType.OPERATOR, ion.newSymbol("ANY"), null, SourceSpan(0, 0, 0))
+                        selector = Token(TokenType.OPERATOR, ion.newSymbol("ANY"), "ANY", span(1))
                     }
                 }
             } else if (consumeKW("ALL")) {
                 if (consumeKW("SHORTEST")) {
-                    selector = Token(TokenType.OPERATOR, ion.newSymbol("ALL_SHORTEST"), null, SourceSpan(0, 0, 0))
+                    selector =
+                        Token(TokenType.OPERATOR, ion.newSymbol("ALL_SHORTEST"), "ALL_SHORTEST", span(2))
                 } else {
                     rem.head.err(
                         "Expected 'SHORTEST' after 'ALL'",
@@ -3558,11 +3565,11 @@ class SqlParser(
                         Token(
                             TokenType.OPERATOR,
                             ion.newSymbol("SHORTEST_K_GROUP"),
-                            null,
-                            SourceSpan(0, 0, 0)
+                            "SHORTEST_K_GROUP",
+                            span(3)
                         )
                     } else {
-                        Token(TokenType.OPERATOR, ion.newSymbol("SHORTEST_K"), null, SourceSpan(0, 0, 0))
+                        Token(TokenType.OPERATOR, ion.newSymbol("SHORTEST_K"), "SHORTEST_K", span(2))
                     }
                     selectorK = k
                 } else {
@@ -3583,10 +3590,22 @@ class SqlParser(
         val selector = parseSelector()
         rem = selector?.remaining ?: rem
 
+        val matches = ArrayList<ParseNode>()
+        var preComma = rem
         do {
-            val pattern = rem.parseMatchPattern()
-            matches.add(pattern)
-            rem = pattern.remaining
+            try {
+                val pattern = rem.parseMatchPattern()
+                matches.add(pattern)
+                rem = pattern.remaining
+                preComma = rem
+            } catch (e: ParserException) {
+                if (matches.isEmpty()) {
+                    throw e
+                } else {
+                    rem = preComma
+                    break
+                }
+            }
         } while (consume(TokenType.COMMA))
 
         return ParseNode(ParseType.MATCH, this.head, listOfNotNull(expr, selector) + matches, rem)
@@ -3823,7 +3842,7 @@ class SqlParser(
             val dir = dir1.combine(dir2)
 
             val directionToken =
-                Token(TokenType.OPERATOR, ion.newSymbol(dir.abbreviation()), null, SourceSpan(0, 0, 0))
+                Token(TokenType.OPERATOR, ion.newSymbol(dir.abbreviation()), dir.abbreviation(), SourceSpan(0, 0, 0))
             val direction = ParseNode(ParseType.MATCH_EXPR_EDGE_DIRECTION, directionToken, emptyList(), rem)
 
             return ParseNode(ParseType.MATCH_EXPR_EDGE, null, listOfNotNull(direction, name, label, predicate), rem)
@@ -3853,14 +3872,24 @@ class SqlParser(
                     if (candidates.size == 1) {
                         val edge = candidates.values.first()
                         val directionToken =
-                            Token(TokenType.OPERATOR, ion.newSymbol(edge.abbreviation()), null, SourceSpan(0, 0, 0))
+                            Token(
+                                TokenType.OPERATOR,
+                                ion.newSymbol(edge.abbreviation()),
+                                edge.abbreviation(),
+                                SourceSpan(0, 0, 0)
+                            )
                         val direction = ParseNode(ParseType.MATCH_EXPR_EDGE_DIRECTION, directionToken, emptyList(), rem)
                         return ParseNode(ParseType.MATCH_EXPR_EDGE, null, listOf(direction), rem)
                     }
                 } else if (candidates.contains("")) {
                     val edge = candidates[""]!!
                     val directionToken =
-                        Token(TokenType.OPERATOR, ion.newSymbol(edge.abbreviation()), null, SourceSpan(0, 0, 0))
+                        Token(
+                            TokenType.OPERATOR,
+                            ion.newSymbol(edge.abbreviation()),
+                            edge.abbreviation(),
+                            SourceSpan(0, 0, 0)
+                        )
                     val direction = ParseNode(ParseType.MATCH_EXPR_EDGE_DIRECTION, directionToken, emptyList(), rem)
                     return ParseNode(ParseType.MATCH_EXPR_EDGE, null, listOf(direction), rem)
                 } else {

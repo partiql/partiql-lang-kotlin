@@ -21,7 +21,7 @@ class SqlLexerTest : TestBase() {
     val lexer = SqlLexer(ion)
 
     // TODO: remove default value on [length] and specify the correct value for all invocations of this function
-    fun token(type: TokenType, lit: String?, sourceText: String?, line: Long, column: Long, length: Long): Token {
+    fun token(type: TokenType, lit: String?, sourceText: String, line: Long, column: Long, length: Long): Token {
         val value = when (lit) {
             null -> null
             else -> ion.singleValue(lit)
@@ -29,7 +29,7 @@ class SqlLexerTest : TestBase() {
         return Token(type, value, sourceText, SourceSpan(line, column, length))
     }
 
-    fun token(type: TokenType, lit: String?, line: Long, column: Long, length: Long): Token {
+    fun token(type: TokenType, lit: String, line: Long, column: Long, length: Long): Token {
         return token(type, lit, lit, line, column, length)
     }
 
@@ -218,8 +218,8 @@ class SqlLexerTest : TestBase() {
     @Test
     fun multiLexemeOperators() = assertTokens(
         "UNION ALL IS NOT union_all is_not",
-        token(TokenType.OPERATOR, "union_all", null, 1, 1, 5),
-        token(TokenType.OPERATOR, "is_not", null, 1, 11, 2),
+        token(TokenType.OPERATOR, "union_all", "UNION ALL", 1, 1, 5),
+        token(TokenType.OPERATOR, "is_not", "IS NOT", 1, 11, 2),
         token(TokenType.IDENTIFIER, "union_all", "union_all", 1, 18, 9),
         token(TokenType.IDENTIFIER, "is_not", "is_not", 1, 28, 6)
     )
@@ -227,8 +227,8 @@ class SqlLexerTest : TestBase() {
     @Test
     fun multiLexemeKeywords() = assertTokens(
         "CHARACTER VARYING DoUblE PrEcision double_precision character_varying",
-        token(TokenType.KEYWORD, "character_varying", null, 1, 1, 9),
-        token(TokenType.KEYWORD, "double_precision", null, 1, 19, 6),
+        token(TokenType.KEYWORD, "character_varying", "CHARACTER VARYING", 1, 1, 9),
+        token(TokenType.KEYWORD, "double_precision", "DoUblE PrEcision", 1, 19, 6),
         token(TokenType.IDENTIFIER, "double_precision", "double_precision", 1, 36, 16),
         token(TokenType.IDENTIFIER, "character_varying", "character_varying", 1, 53, 17)
     )
@@ -238,19 +238,19 @@ class SqlLexerTest : TestBase() {
         "cRoSs Join left join left left Inner joiN RIGHT JOIN RIGHT OUTER JOIN LEFT OUTER JOIN" +
             "\nFULL join OUTER JOIN FULL OUTER JOIN" +
             "\nCROSS CROSS JOIN JOIN",
-        token(TokenType.KEYWORD, "cross_join", null, 1, 1, 5),
-        token(TokenType.KEYWORD, "left_join", null, 1, 12, 4),
+        token(TokenType.KEYWORD, "cross_join", "cRoSs Join", 1, 1, 5),
+        token(TokenType.KEYWORD, "left_join", "left join", 1, 12, 4),
         token(TokenType.KEYWORD, "left", "left", 1, 22, 4),
         token(TokenType.KEYWORD, "left", "left", 1, 27, 4),
-        token(TokenType.KEYWORD, "inner_join", null, 1, 32, 5),
-        token(TokenType.KEYWORD, "right_join", null, 1, 43, 5),
-        token(TokenType.KEYWORD, "right_join", null, 1, 54, 5),
-        token(TokenType.KEYWORD, "left_join", null, 1, 71, 4),
-        token(TokenType.KEYWORD, "outer_join", null, 2, 1, 4),
-        token(TokenType.KEYWORD, "outer_join", null, 2, 11, 5),
-        token(TokenType.KEYWORD, "outer_join", null, 2, 22, 4),
+        token(TokenType.KEYWORD, "inner_join", "Inner joiN", 1, 32, 5),
+        token(TokenType.KEYWORD, "right_join", "RIGHT JOIN", 1, 43, 5),
+        token(TokenType.KEYWORD, "right_join", "RIGHT OUTER JOIN", 1, 54, 5),
+        token(TokenType.KEYWORD, "left_join", "LEFT OUTER JOIN", 1, 71, 4),
+        token(TokenType.KEYWORD, "outer_join", "FULL join", 2, 1, 4),
+        token(TokenType.KEYWORD, "outer_join", "OUTER JOIN", 2, 11, 5),
+        token(TokenType.KEYWORD, "outer_join", "FULL OUTER JOIN", 2, 22, 4),
         token(TokenType.KEYWORD, "cross", "CROSS", 3, 1, 5),
-        token(TokenType.KEYWORD, "cross_join", null, 3, 7, 5),
+        token(TokenType.KEYWORD, "cross_join", "CROSS JOIN", 3, 7, 5),
         token(TokenType.KEYWORD, "join", "JOIN", 3, 18, 4)
     )
 
@@ -311,7 +311,7 @@ class SqlLexerTest : TestBase() {
     @Test
     fun doublePrecisionType() = assertTokens(
         "DOUBLE PRECISION",
-        token(TokenType.KEYWORD, "double_precision", null, 1, 1, 6)
+        token(TokenType.KEYWORD, "double_precision", "DOUBLE PRECISION", 1, 1, 6)
     )
 
     @Test
@@ -353,7 +353,7 @@ class SqlLexerTest : TestBase() {
     @Test
     fun characterVaryingType() = assertTokens(
         "CHARACTER VARYING",
-        token(TokenType.KEYWORD, "character_varying", null, 1, 1, 9)
+        token(TokenType.KEYWORD, "character_varying", "CHARACTER VARYING", 1, 1, 9)
     )
 
     @Test

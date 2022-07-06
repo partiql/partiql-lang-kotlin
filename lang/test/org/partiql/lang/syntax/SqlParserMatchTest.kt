@@ -22,7 +22,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
                         graphMatchPattern(
                             parts = listOf(
                                 node(
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = null,
                                     label = listOf()
                                 )
@@ -48,7 +48,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
                         graphMatchPattern(
                             parts = listOf(
                                 node(
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = null,
                                     label = listOf()
                                 )
@@ -79,7 +79,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
                         graphMatchPattern(
                             parts = listOf(
                                 node(
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = "x",
                                     label = listOf()
                                 )
@@ -108,7 +108,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
                         graphMatchPattern(
                             parts = listOf(
                                 node(
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = "x",
                                     label = listOf("Label")
                                 )
@@ -141,7 +141,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
                                 edge(
                                     direction = edgeRight(),
                                     quantifier = null,
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = null,
                                     label = listOf()
                                 )
@@ -167,19 +167,19 @@ class SqlParserMatchTest : SqlParserTestBase() {
                                     quantifier = null,
                                     parts = listOf(
                                         node(
-                                            predicate = null,
+                                            prefilter = null,
                                             variable = "a",
                                             label = listOf("A")
                                         ),
                                         edge(
                                             direction = direction,
                                             quantifier = quantifier,
-                                            predicate = null,
+                                            prefilter = null,
                                             variable = variable,
                                             label = label ?: emptyList()
                                         ),
                                         node(
-                                            predicate = null,
+                                            prefilter = null,
                                             variable = "b",
                                             label = listOf("B")
                                         ),
@@ -369,19 +369,19 @@ class SqlParserMatchTest : SqlParserTestBase() {
                         graphMatchPattern(
                             parts = listOf(
                                 node(
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = "the_a",
                                     label = listOf("a")
                                 ),
                                 edge(
                                     direction = edgeRight(),
                                     quantifier = null,
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = "the_y",
                                     label = listOf("y")
                                 ),
                                 node(
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = "the_b",
                                     label = listOf("b")
                                 ),
@@ -415,19 +415,19 @@ class SqlParserMatchTest : SqlParserTestBase() {
                         graphMatchPattern(
                             parts = listOf(
                                 node(
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = "a",
                                     label = listOf()
                                 ),
                                 edge(
                                     direction = edgeRight(),
                                     quantifier = null,
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = null,
                                     label = listOf("has")
                                 ),
                                 node(
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = "x",
                                     label = listOf()
                                 ),
@@ -436,19 +436,19 @@ class SqlParserMatchTest : SqlParserTestBase() {
                         graphMatchPattern(
                             parts = listOf(
                                 node(
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = "x",
                                     label = listOf()
                                 ),
                                 edge(
                                     direction = edgeRight(),
                                     quantifier = null,
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = null,
                                     label = listOf("contains")
                                 ),
                                 node(
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = "b",
                                     label = listOf()
                                 ),
@@ -476,31 +476,31 @@ class SqlParserMatchTest : SqlParserTestBase() {
                         graphMatchPattern(
                             parts = listOf(
                                 node(
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = "a",
                                     label = listOf()
                                 ),
                                 edge(
                                     direction = edgeRight(),
                                     quantifier = null,
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = null,
                                     label = listOf("has")
                                 ),
                                 node(
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = null,
                                     label = listOf()
                                 ),
                                 edge(
                                     direction = edgeRight(),
                                     quantifier = null,
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = null,
                                     label = listOf("contains")
                                 ),
                                 node(
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = "b",
                                     label = listOf()
                                 ),
@@ -564,7 +564,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
                                 parts = listOf(
                                     pattern(
                                         graphMatchPattern(
-                                            predicate = eq(
+                                            prefilter = eq(
                                                 path(id("a"), pathExpr(lit(ionString("owner")), caseInsensitive())),
                                                 path(id("b"), pathExpr(lit(ionString("owner")), caseInsensitive()))
                                             ),
@@ -713,7 +713,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
                                     node(
                                         variable = "p",
                                         label = listOf("Post"),
-                                        predicate = eq(
+                                        prefilter = eq(
                                             path(id("p"), pathExpr(lit(ionString("isFlagged")), caseInsensitive())),
                                             lit(ionBool(true))
                                         )
@@ -725,7 +725,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
                                     node(
                                         variable = "u",
                                         label = listOf("User"),
-                                        predicate = and(
+                                        prefilter = and(
                                             eq(
                                                 path(id("u"), pathExpr(lit(ionString("isBanned")), caseInsensitive())),
                                                 lit(ionBool(false))
@@ -743,7 +743,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
                                     node(
                                         variable = "c",
                                         label = listOf("Comment"),
-                                        predicate =
+                                        prefilter =
                                         eq(
                                             path(id("c"), pathExpr(lit(ionString("isFlagged")), caseInsensitive())),
                                             lit(ionBool(true))
@@ -762,10 +762,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
         }
     }
 
-    @Test
-    fun restrictorTrail() = assertExpressionNoRoundTrip(
-        "SELECT p FROM g MATCH TRAIL p = (a WHERE a.owner='Dave') -[t:Transfer]-> * (b WHERE b.owner='Aretha')",
-    ) {
+    val restrictorAst = { restrictor: PartiqlAst.GraphMatchRestrictor ->
         PartiqlAst.build {
             select(
                 project = projectList(projectExpr(id("p"))),
@@ -774,12 +771,12 @@ class SqlParserMatchTest : SqlParserTestBase() {
                     graphExpr = graphMatchExpr(
                         patterns = listOf(
                             graphMatchPattern(
-                                restrictor = restrictorTrail(),
+                                restrictor = restrictor,
                                 variable = "p",
                                 parts = listOf(
                                     node(
                                         variable = "a",
-                                        predicate =
+                                        prefilter =
                                         eq(
                                             path(id("a"), pathExpr(lit(ionString("owner")), caseInsensitive())),
                                             lit(ionString("Dave"))
@@ -793,7 +790,72 @@ class SqlParserMatchTest : SqlParserTestBase() {
                                     ),
                                     node(
                                         variable = "b",
-                                        predicate =
+                                        prefilter =
+                                        eq(
+                                            path(id("b"), pathExpr(lit(ionString("owner")), caseInsensitive())),
+                                            lit(ionString("Aretha"))
+                                        ),
+                                    ),
+                                )
+                            )
+                        )
+                    )
+                ),
+                where = null
+            )
+        }
+    }
+
+    @Test
+    fun restrictorTrail() = assertExpressionNoRoundTrip(
+        "SELECT p FROM g MATCH TRAIL p = (a WHERE a.owner='Dave') -[t:Transfer]-> * (b WHERE b.owner='Aretha')",
+    ) {
+        restrictorAst(restrictorTrail())
+    }
+
+    @Test
+    fun restrictorAcyclic() = assertExpressionNoRoundTrip(
+        "SELECT p FROM g MATCH ACYCLIC p = (a WHERE a.owner='Dave') -[t:Transfer]-> * (b WHERE b.owner='Aretha')",
+    ) {
+        restrictorAst(restrictorAcyclic())
+    }
+
+    @Test
+    fun restrictorSimple() = assertExpressionNoRoundTrip(
+        "SELECT p FROM g MATCH SIMPLE p = (a WHERE a.owner='Dave') -[t:Transfer]-> * (b WHERE b.owner='Aretha')",
+    ) {
+        restrictorAst(restrictorSimple())
+    }
+
+    val selectorAST = { selector: PartiqlAst.GraphMatchSelector ->
+        PartiqlAst.build {
+            select(
+                project = projectList(projectExpr(id("p"))),
+                from = graphMatch(
+                    expr = id("g"),
+                    graphExpr = graphMatchExpr(
+                        selector = selector,
+                        patterns = listOf(
+                            graphMatchPattern(
+                                variable = "p",
+                                parts = listOf(
+                                    node(
+                                        variable = "a",
+                                        prefilter =
+                                        eq(
+                                            path(id("a"), pathExpr(lit(ionString("owner")), caseInsensitive())),
+                                            lit(ionString("Dave"))
+                                        ),
+                                    ),
+                                    edge(
+                                        direction = edgeRight(),
+                                        variable = "t",
+                                        label = listOf("Transfer"),
+                                        quantifier = graphMatchQuantifier(0)
+                                    ),
+                                    node(
+                                        variable = "b",
+                                        prefilter =
                                         eq(
                                             path(id("b"), pathExpr(lit(ionString("owner")), caseInsensitive())),
                                             lit(ionString("Aretha"))
@@ -813,53 +875,45 @@ class SqlParserMatchTest : SqlParserTestBase() {
     fun selectorAnyShortest() = assertExpressionNoRoundTrip(
         "SELECT p FROM g MATCH ANY SHORTEST p = (a WHERE a.owner='Dave') -[t:Transfer]-> * (b WHERE b.owner='Aretha')",
     ) {
-        PartiqlAst.build {
-            select(
-                project = projectList(projectExpr(id("p"))),
-                from = graphMatch(
-                    expr = id("g"),
-                    graphExpr = graphMatchExpr(
-                        selector = selectorAnyShortest(),
-                        patterns = listOf(
-                            graphMatchPattern(
-                                variable = "p",
-                                parts = listOf(
-                                    node(
-                                        variable = "a",
-                                        predicate =
-                                        eq(
-                                            path(id("a"), pathExpr(lit(ionString("owner")), caseInsensitive())),
-                                            lit(ionString("Dave"))
-                                        ),
-                                    ),
-                                    edge(
-                                        direction = edgeRight(),
-                                        variable = "t",
-                                        label = listOf("Transfer"),
-                                        quantifier = graphMatchQuantifier(0)
-                                    ),
-                                    node(
-                                        variable = "b",
-                                        predicate =
-                                        eq(
-                                            path(id("b"), pathExpr(lit(ionString("owner")), caseInsensitive())),
-                                            lit(ionString("Aretha"))
-                                        ),
-                                    ),
-                                )
-                            )
-                        )
-                    )
-                ),
-                where = null
-            )
-        }
+        selectorAST(selectorAnyShortest())
     }
 
     @Test
-    fun matchAndJoinCommas() = assertExpressionNoRoundTrip(
-        "SELECT a,b,c, t1.x as x, t2.y as y FROM graph MATCH ((a) -> (b), (a) -> (c)), table1 as t1, table2 as t2",
+    fun selectorAllShortest() = assertExpressionNoRoundTrip(
+        "SELECT p FROM g MATCH All SHORTEST p = (a WHERE a.owner='Dave') -[t:Transfer]-> * (b WHERE b.owner='Aretha')",
     ) {
+        selectorAST(selectorAllShortest())
+    }
+
+    @Test
+    fun selectorAny() = assertExpressionNoRoundTrip(
+        "SELECT p FROM g MATCH ANY p = (a WHERE a.owner='Dave') -[t:Transfer]-> * (b WHERE b.owner='Aretha')",
+    ) {
+        selectorAST(selectorAny())
+    }
+
+    @Test
+    fun selectorAnyK() = assertExpressionNoRoundTrip(
+        "SELECT p FROM g MATCH ANY 5 p = (a WHERE a.owner='Dave') -[t:Transfer]-> * (b WHERE b.owner='Aretha')",
+    ) {
+        selectorAST(selectorAnyK(5))
+    }
+
+    @Test
+    fun selectorShortestK() = assertExpressionNoRoundTrip(
+        "SELECT p FROM g MATCH SHORTEST 5 p = (a WHERE a.owner='Dave') -[t:Transfer]-> * (b WHERE b.owner='Aretha')",
+    ) {
+        selectorAST(selectorShortestK(5))
+    }
+
+    @Test
+    fun selectorShortestKGroup() = assertExpressionNoRoundTrip(
+        "SELECT p FROM g MATCH SHORTEST 5 GROUP p = (a WHERE a.owner='Dave') -[t:Transfer]-> * (b WHERE b.owner='Aretha')",
+    ) {
+        selectorAST(selectorShortestKGroup(5))
+    }
+
+    val joinedMatch = {
         val match = PartiqlAst.build {
             graphMatch(
                 expr = id("graph"),
@@ -913,6 +967,20 @@ class SqlParserMatchTest : SqlParserTestBase() {
                 where = null
             )
         }
+    }
+
+    @Test
+    fun matchAndJoinCommasParenthesized() = assertExpressionNoRoundTrip(
+        "SELECT a,b,c, t1.x as x, t2.y as y FROM graph MATCH ((a) -> (b), (a) -> (c)), table1 as t1, table2 as t2",
+    ) {
+        joinedMatch()
+    }
+
+    @Test
+    fun matchAndJoinCommas() = assertExpressionNoRoundTrip(
+        "SELECT a,b,c, t1.x as x, t2.y as y FROM graph MATCH (a) -> (b), (a) -> (c), table1 as t1, table2 as t2",
+    ) {
+        joinedMatch()
     }
 
     // TODO label combinators

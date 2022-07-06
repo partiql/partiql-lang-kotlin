@@ -245,15 +245,15 @@ may then be further optimized by selecting better implementations of each operat
         (sum graph_match_pattern_part
              // A single node in a graph pattern.
              (node
-                 predicate::(? expr)   // an optional node pre-filter, e.g.: `WHERE c.name='Alarm'` in `MATCH (c WHERE c.name='Alarm')`
+                 prefilter::(? expr)   // an optional node pre-filter, e.g.: `WHERE c.name='Alarm'` in `MATCH (c WHERE c.name='Alarm')`
                  variable::(? symbol)  // the optional element variable of the node match, e.g.: `x` in `MATCH (x)`
                  label::(* symbol 0))  // the optional label(s) to match for the node, e.g.: `Entity` in `MATCH (x:Entity)`
 
              // A single edge in a graph pattern.
              (edge
                  direction::graph_match_direction       // edge direction
-                 quantifier::(? graph_match_quantifier) // an optional quantifier for the edge match
-                 predicate::(? expr)   // an optional edge pre-filter, e.g.: `WHERE t.capacity>100` in `MATCH −[t:hasSupply WHERE t.capacity>100]−>`
+                 quantifier::(? graph_match_quantifier) // an optional quantifier for the entire pattern match, e.g. `{2,5}` in `MATCH (a:Account)−[:Transfer]−>{2,5}(b:Account)`
+                 prefilter::(? expr)   // an optional edge pre-filter, e.g.: `WHERE t.capacity>100` in `MATCH −[t:hasSupply WHERE t.capacity>100]−>`
                  variable::(? symbol)  // the optional element variable of the edge match, e.g.: `t` in `MATCH −[t]−>`
                  label::(* symbol 0))  // the optional label(s) to match for the edge. e.g.: `Target` in `MATCH −[t:Target]−>`
              // A sub-pattern.
@@ -279,9 +279,9 @@ may then be further optimized by selecting better implementations of each operat
         // A single graph match pattern.
         (product graph_match_pattern
              restrictor::(? graph_match_restrictor)
-             predicate::(? expr)    // an optional pattern pre-filter, e.g.: `WHERE a.name=b.name` in `MATCH [(a)->(b) WHERE a.name=b.name]`
+             prefilter::(? expr)    // an optional pattern pre-filter, e.g.: `WHERE a.name=b.name` in `MATCH [(a)->(b) WHERE a.name=b.name]`
              variable::(? symbol)   // the optional element variable of the pattern, e.g.: `p` in `MATCH p = (a) −[t]−> (b)`
-             quantifier::(? graph_match_quantifier) // an optional quantifier for the entire pattern match
+             quantifier::(? graph_match_quantifier) // an optional quantifier for the entire pattern match, e.g. `{2,5}` in `MATCH (a:Account)−[:Transfer]−>{2,5}(b:Account)`
              parts::(* graph_match_pattern_part 1)) // the ordered pattern parts
 
         // A path selector
