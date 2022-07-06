@@ -22,7 +22,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
                         graphMatchPattern(
                             parts = listOf(
                                 node(
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = null,
                                     label = listOf()
                                 )
@@ -48,7 +48,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
                         graphMatchPattern(
                             parts = listOf(
                                 node(
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = null,
                                     label = listOf()
                                 )
@@ -79,7 +79,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
                         graphMatchPattern(
                             parts = listOf(
                                 node(
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = "x",
                                     label = listOf()
                                 )
@@ -108,7 +108,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
                         graphMatchPattern(
                             parts = listOf(
                                 node(
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = "x",
                                     label = listOf("Label")
                                 )
@@ -141,7 +141,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
                                 edge(
                                     direction = edgeRight(),
                                     quantifier = null,
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = null,
                                     label = listOf()
                                 )
@@ -154,140 +154,197 @@ class SqlParserMatchTest : SqlParserTestBase() {
         )
     }
 
-    val simpleGraphAST = { direction: PartiqlAst.GraphMatchDirection, variable: String?, label: List<String>? ->
-        PartiqlAst.build {
-            select(
-                project = projectList(projectExpr(id("a")), projectExpr(id("b"))),
-                from = graphMatch(
-                    expr = id("g"),
-                    graphExpr = graphMatchExpr(
-                        patterns = listOf(
-                            graphMatchPattern(
-                                quantifier = null,
-                                parts = listOf(
-                                    node(
-                                        predicate = null,
-                                        variable = "a",
-                                        label = listOf("A")
-                                    ),
-                                    edge(
-                                        direction = direction,
-                                        quantifier = null,
-                                        predicate = null,
-                                        variable = variable,
-                                        label = label ?: emptyList()
-                                    ),
-                                    node(
-                                        predicate = null,
-                                        variable = "b",
-                                        label = listOf("B")
-                                    ),
+    val simpleGraphAST =
+        { direction: PartiqlAst.GraphMatchDirection, quantifier: PartiqlAst.GraphMatchQuantifier?, variable: String?, label: List<String>? ->
+            PartiqlAst.build {
+                select(
+                    project = projectList(projectExpr(id("a")), projectExpr(id("b"))),
+                    from = graphMatch(
+                        expr = id("g"),
+                        graphExpr = graphMatchExpr(
+                            patterns = listOf(
+                                graphMatchPattern(
+                                    quantifier = null,
+                                    parts = listOf(
+                                        node(
+                                            prefilter = null,
+                                            variable = "a",
+                                            label = listOf("A")
+                                        ),
+                                        edge(
+                                            direction = direction,
+                                            quantifier = quantifier,
+                                            prefilter = null,
+                                            variable = variable,
+                                            label = label ?: emptyList()
+                                        ),
+                                        node(
+                                            prefilter = null,
+                                            variable = "b",
+                                            label = listOf("B")
+                                        ),
+                                    )
                                 )
                             )
                         )
-                    )
-                ),
-                where = null
-            )
+                    ),
+                    where = null
+                )
+            }
         }
-    }
 
     @Test
     fun rightDirected() = assertExpressionNoRoundTrip(
         "SELECT a,b FROM g MATCH (a:A) -[e:E]-> (b:B)",
     ) {
-        simpleGraphAST(edgeRight(), "e", listOf("E"))
+        simpleGraphAST(edgeRight(), null, "e", listOf("E"))
     }
 
     @Test
     fun rightDirectedAbbreviated() = assertExpressionNoRoundTrip(
         "SELECT a,b FROM g MATCH (a:A) -> (b:B)",
     ) {
-        simpleGraphAST(edgeRight(), null, null)
+        simpleGraphAST(edgeRight(), null, null, null)
     }
 
     @Test
     fun leftDirected() = assertExpressionNoRoundTrip(
         "SELECT a,b FROM g MATCH (a:A) <-[e:E]- (b:B)",
     ) {
-        simpleGraphAST(edgeLeft(), "e", listOf("E"))
+        simpleGraphAST(edgeLeft(), null, "e", listOf("E"))
     }
 
     @Test
     fun leftDirectedAbbreviated() = assertExpressionNoRoundTrip(
         "SELECT a,b FROM g MATCH (a:A) <- (b:B)",
     ) {
-        simpleGraphAST(edgeLeft(), null, null)
+        simpleGraphAST(edgeLeft(), null, null, null)
     }
 
     @Test
     fun undirected() = assertExpressionNoRoundTrip(
         "SELECT a,b FROM g MATCH (a:A) ~[e:E]~ (b:B)",
     ) {
-        simpleGraphAST(edgeUndirected(), "e", listOf("E"))
+        simpleGraphAST(edgeUndirected(), null, "e", listOf("E"))
     }
 
     @Test
     fun undirectedAbbreviated() = assertExpressionNoRoundTrip(
         "SELECT a,b FROM g MATCH (a:A) ~ (b:B)",
     ) {
-        simpleGraphAST(edgeUndirected(), null, null)
+        simpleGraphAST(edgeUndirected(), null, null, null)
     }
 
     @Test
     fun rightOrUnDirected() = assertExpressionNoRoundTrip(
         "SELECT a,b FROM g MATCH (a:A) ~[e:E]~> (b:B)",
     ) {
-        simpleGraphAST(edgeUndirectedOrRight(), "e", listOf("E"))
+        simpleGraphAST(edgeUndirectedOrRight(), null, "e", listOf("E"))
     }
 
     @Test
     fun rightOrUnDirectedAbbreviated() = assertExpressionNoRoundTrip(
         "SELECT a,b FROM g MATCH (a:A) ~> (b:B)",
     ) {
-        simpleGraphAST(edgeUndirectedOrRight(), null, null)
+        simpleGraphAST(edgeUndirectedOrRight(), null, null, null)
     }
 
     @Test
     fun leftOrUnDirected() = assertExpressionNoRoundTrip(
         "SELECT a,b FROM g MATCH (a:A) <~[e:E]~ (b:B)",
     ) {
-        simpleGraphAST(edgeLeftOrUndirected(), "e", listOf("E"))
+        simpleGraphAST(edgeLeftOrUndirected(), null, "e", listOf("E"))
     }
 
     @Test
     fun leftOrUnDirectedAbbreviated() = assertExpressionNoRoundTrip(
         "SELECT a,b FROM g MATCH (a:A) <~ (b:B)",
     ) {
-        simpleGraphAST(edgeLeftOrUndirected(), null, null)
+        simpleGraphAST(edgeLeftOrUndirected(), null, null, null)
     }
 
     @Test
     fun leftOrRight() = assertExpressionNoRoundTrip(
         "SELECT a,b FROM g MATCH (a:A) <-[e:E]-> (b:B)",
     ) {
-        simpleGraphAST(edgeLeftOrRight(), "e", listOf("E"))
+        simpleGraphAST(edgeLeftOrRight(), null, "e", listOf("E"))
     }
 
     @Test
     fun leftOrRightAbbreviated() = assertExpressionNoRoundTrip(
         "SELECT a,b FROM g MATCH (a:A) <-> (b:B)",
     ) {
-        simpleGraphAST(edgeLeftOrRight(), null, null)
+        simpleGraphAST(edgeLeftOrRight(), null, null, null)
     }
 
     @Test
     fun leftOrRightOrUndirected() = assertExpressionNoRoundTrip(
         "SELECT a,b FROM g MATCH (a:A) -[e:E]- (b:B)",
     ) {
-        simpleGraphAST(edgeLeftOrUndirectedOrRight(), "e", listOf("E"))
+        simpleGraphAST(edgeLeftOrUndirectedOrRight(), null, "e", listOf("E"))
     }
 
     @Test
     fun leftOrRightOrUndirectedAbbreviated() = assertExpressionNoRoundTrip(
         "SELECT a,b FROM g MATCH (a:A) - (b:B)",
     ) {
-        simpleGraphAST(edgeLeftOrUndirectedOrRight(), null, null)
+        simpleGraphAST(edgeLeftOrUndirectedOrRight(), null, null, null)
+    }
+
+    @Test
+    fun quantifierStar() = assertExpressionNoRoundTrip(
+        "SELECT a,b FROM g MATCH (a:A)-[:edge]->*(b:B)",
+    ) {
+        simpleGraphAST(edgeRight(), graphMatchQuantifier(lower = 0, upper = null), null, listOf("edge"))
+    }
+
+    @Test
+    fun quantifierPlus() = assertExpressionNoRoundTrip(
+        "SELECT a,b FROM g MATCH (a:A)<-[:edge]-+(b:B)",
+    ) {
+        simpleGraphAST(edgeLeft(), graphMatchQuantifier(lower = 1, upper = null), null, listOf("edge"))
+    }
+
+    @Test
+    fun quantifierM() = assertExpressionNoRoundTrip(
+        "SELECT a,b FROM g MATCH (a:A)~[:edge]~{5,}(b:B)",
+    ) {
+        simpleGraphAST(edgeUndirected(), graphMatchQuantifier(lower = 5, upper = null), null, listOf("edge"))
+    }
+
+    @Test
+    fun quantifierMN() = assertExpressionNoRoundTrip(
+        "SELECT a,b FROM g MATCH (a:A)-[e:edge]-{2,6}(b:B)",
+    ) {
+        simpleGraphAST(edgeLeftOrUndirectedOrRight(), graphMatchQuantifier(lower = 2, upper = 6), "e", listOf("edge"))
+    }
+
+    @Test
+    fun quantifierAbbreviatedStar() = assertExpressionNoRoundTrip(
+        "SELECT a,b FROM g MATCH (a:A)->*(b:B)",
+    ) {
+        simpleGraphAST(edgeRight(), graphMatchQuantifier(lower = 0, upper = null), null, null)
+    }
+
+    @Test
+    fun quantifierAbbreviatedPlus() = assertExpressionNoRoundTrip(
+        "SELECT a,b FROM g MATCH (a:A)<-+(b:B)",
+    ) {
+        simpleGraphAST(edgeLeft(), graphMatchQuantifier(lower = 1, upper = null), null, null)
+    }
+
+    @Test
+    fun quantifierAbbreviatedM() = assertExpressionNoRoundTrip(
+        "SELECT a,b FROM g MATCH (a:A)~{5,}(b:B)",
+    ) {
+        simpleGraphAST(edgeUndirected(), graphMatchQuantifier(lower = 5, upper = null), null, null)
+    }
+
+    @Test
+    fun quantifierAbbreviatedMN() = assertExpressionNoRoundTrip(
+        "SELECT a,b FROM g MATCH (a:A)-{2,6}(b:B)",
+    ) {
+        simpleGraphAST(edgeLeftOrUndirectedOrRight(), graphMatchQuantifier(lower = 2, upper = 6), null, null)
     }
 
     @Test
@@ -312,19 +369,19 @@ class SqlParserMatchTest : SqlParserTestBase() {
                         graphMatchPattern(
                             parts = listOf(
                                 node(
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = "the_a",
                                     label = listOf("a")
                                 ),
                                 edge(
                                     direction = edgeRight(),
                                     quantifier = null,
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = "the_y",
                                     label = listOf("y")
                                 ),
                                 node(
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = "the_b",
                                     label = listOf("b")
                                 ),
@@ -358,19 +415,19 @@ class SqlParserMatchTest : SqlParserTestBase() {
                         graphMatchPattern(
                             parts = listOf(
                                 node(
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = "a",
                                     label = listOf()
                                 ),
                                 edge(
                                     direction = edgeRight(),
                                     quantifier = null,
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = null,
                                     label = listOf("has")
                                 ),
                                 node(
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = "x",
                                     label = listOf()
                                 ),
@@ -379,19 +436,19 @@ class SqlParserMatchTest : SqlParserTestBase() {
                         graphMatchPattern(
                             parts = listOf(
                                 node(
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = "x",
                                     label = listOf()
                                 ),
                                 edge(
                                     direction = edgeRight(),
                                     quantifier = null,
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = null,
                                     label = listOf("contains")
                                 ),
                                 node(
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = "b",
                                     label = listOf()
                                 ),
@@ -419,31 +476,31 @@ class SqlParserMatchTest : SqlParserTestBase() {
                         graphMatchPattern(
                             parts = listOf(
                                 node(
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = "a",
                                     label = listOf()
                                 ),
                                 edge(
                                     direction = edgeRight(),
                                     quantifier = null,
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = null,
                                     label = listOf("has")
                                 ),
                                 node(
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = null,
                                     label = listOf()
                                 ),
                                 edge(
                                     direction = edgeRight(),
                                     quantifier = null,
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = null,
                                     label = listOf("contains")
                                 ),
                                 node(
-                                    predicate = null,
+                                    prefilter = null,
                                     variable = "b",
                                     label = listOf()
                                 ),
@@ -455,13 +512,475 @@ class SqlParserMatchTest : SqlParserTestBase() {
         )
     }
 
-    // TODO prefilters
     @Test
-    @Ignore
-    fun prefilters() = assertExpressionNoRoundTrip(
-        "SELECT u as banCandidate FROM g MATCH (p:Post Where p.isFlagged = true) ~[ep:createdPost]~ (u:User WHERE u.isBanned = false AND u.karma < 20) -[ec:createdComment]->(c:Comment WHERE c.isFlagged = true)",
+    fun pathVariable() = assertExpressionNoRoundTrip(
+        "SELECT a,b FROM g MATCH p = (a:A) -[e:E]-> (b:B)",
     ) {
-        TODO()
+        PartiqlAst.build {
+            select(
+                project = projectList(projectExpr(id("a")), projectExpr(id("b"))),
+                from = graphMatch(
+                    expr = id("g"),
+                    graphExpr = graphMatchExpr(
+                        patterns = listOf(
+                            graphMatchPattern(
+                                variable = "p",
+                                parts = listOf(
+                                    node(
+                                        variable = "a",
+                                        label = listOf("A")
+                                    ),
+                                    edge(
+                                        direction = edgeRight(),
+                                        variable = "e",
+                                        label = listOf("E")
+                                    ),
+                                    node(
+                                        variable = "b",
+                                        label = listOf("B")
+                                    ),
+                                )
+                            )
+                        )
+                    )
+                ),
+                where = null
+            )
+        }
+    }
+
+    @Test
+    fun parenthesizedPatternWithFilter() = assertExpressionNoRoundTrip(
+        "SELECT a,b FROM g MATCH [(a:A)-[e:Edge]->(b:A) WHERE a.owner=b.owner]{2,5}",
+    ) {
+        PartiqlAst.build {
+            select(
+                project = projectList(projectExpr(id("a")), projectExpr(id("b"))),
+                from = graphMatch(
+                    expr = id("g"),
+                    graphExpr = graphMatchExpr(
+                        patterns = listOf(
+                            graphMatchPattern(
+                                parts = listOf(
+                                    pattern(
+                                        graphMatchPattern(
+                                            prefilter = eq(
+                                                path(id("a"), pathExpr(lit(ionString("owner")), caseInsensitive())),
+                                                path(id("b"), pathExpr(lit(ionString("owner")), caseInsensitive()))
+                                            ),
+                                            quantifier = graphMatchQuantifier(lower = 2, upper = 5),
+                                            parts = listOf(
+                                                node(
+                                                    variable = "a",
+                                                    label = listOf("A")
+                                                ),
+                                                edge(
+                                                    direction = edgeRight(),
+                                                    variable = "e",
+                                                    label = listOf("Edge")
+                                                ),
+                                                node(
+                                                    variable = "b",
+                                                    label = listOf("A")
+                                                ),
+                                            ),
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                ),
+                where = null
+            )
+        }
+    }
+
+    @Test
+    fun parenthesizedEdgePattern() = assertExpressionNoRoundTrip(
+        "SELECT a,b FROM g MATCH pathVar = (a:A)[()-[e:Edge]->()]{1,3}(b:B)",
+    ) {
+        PartiqlAst.build {
+            select(
+                project = projectList(projectExpr(id("a")), projectExpr(id("b"))),
+                from = graphMatch(
+                    expr = id("g"),
+                    graphExpr = graphMatchExpr(
+                        patterns = listOf(
+                            graphMatchPattern(
+                                variable = "pathVar",
+                                parts = listOf(
+                                    node(
+                                        variable = "a",
+                                        label = listOf("A")
+                                    ),
+                                    pattern(
+                                        graphMatchPattern(
+                                            quantifier = graphMatchQuantifier(lower = 1, upper = 3),
+                                            parts = listOf(
+                                                node(),
+                                                edge(
+                                                    direction = edgeRight(),
+                                                    variable = "e",
+                                                    label = listOf("Edge")
+                                                ),
+                                                node(),
+                                            )
+                                        )
+                                    ),
+                                    node(
+                                        variable = "b",
+                                        label = listOf("B")
+                                    ),
+                                )
+                            )
+                        )
+                    )
+                ),
+                where = null
+            )
+        }
+    }
+
+    val parenthesizedEdgeStarAST = {
+        PartiqlAst.build {
+            select(
+                project = projectList(projectExpr(id("a")), projectExpr(id("b"))),
+                from = graphMatch(
+                    expr = id("g"),
+                    graphExpr = graphMatchExpr(
+                        patterns = listOf(
+                            graphMatchPattern(
+                                variable = "pathVar",
+                                parts = listOf(
+                                    node(
+                                        variable = "a",
+                                        label = listOf("A")
+                                    ),
+                                    pattern(
+                                        graphMatchPattern(
+                                            quantifier = graphMatchQuantifier(lower = 0, upper = null),
+                                            parts = listOf(
+                                                edge(
+                                                    direction = edgeRight(),
+                                                    variable = "e",
+                                                    label = listOf("Edge")
+                                                ),
+                                            )
+                                        )
+                                    ),
+                                    node(
+                                        variable = "b",
+                                        label = listOf("B")
+                                    ),
+                                )
+                            )
+                        )
+                    )
+                ),
+                where = null
+            )
+        }
+    }
+
+    @Test
+    fun squareParenthesizedEdgeStar() = assertExpressionNoRoundTrip(
+        "SELECT a,b FROM g MATCH pathVar = (a:A)[-[e:Edge]->]*(b:B)",
+    ) {
+        parenthesizedEdgeStarAST()
+    }
+
+    @Test
+    fun roundParenthesizedEdgeStar() = assertExpressionNoRoundTrip(
+        "SELECT a,b FROM g MATCH pathVar = (a:A)(-[e:Edge]->)*(b:B)",
+    ) {
+        parenthesizedEdgeStarAST()
+    }
+
+    @Test
+    fun prefilters() = assertExpressionNoRoundTrip(
+        "SELECT u as banCandidate FROM g MATCH (p:Post Where p.isFlagged = true) <-[:createdPost]- (u:User WHERE u.isBanned = false AND u.karma < 20) -[:createdComment]->(c:Comment WHERE c.isFlagged = true) WHERE p.title LIKE '%considered harmful%'",
+    ) {
+        PartiqlAst.build {
+            select(
+                project = projectList(projectExpr(id("u"), asAlias = "banCandidate")),
+                from = graphMatch(
+                    expr = id("g"),
+                    graphExpr = graphMatchExpr(
+                        patterns = listOf(
+                            graphMatchPattern(
+                                parts = listOf(
+                                    node(
+                                        variable = "p",
+                                        label = listOf("Post"),
+                                        prefilter = eq(
+                                            path(id("p"), pathExpr(lit(ionString("isFlagged")), caseInsensitive())),
+                                            lit(ionBool(true))
+                                        )
+                                    ),
+                                    edge(
+                                        direction = edgeLeft(),
+                                        label = listOf("createdPost")
+                                    ),
+                                    node(
+                                        variable = "u",
+                                        label = listOf("User"),
+                                        prefilter = and(
+                                            eq(
+                                                path(id("u"), pathExpr(lit(ionString("isBanned")), caseInsensitive())),
+                                                lit(ionBool(false))
+                                            ),
+                                            lt(
+                                                path(id("u"), pathExpr(lit(ionString("karma")), caseInsensitive())),
+                                                lit(ionInt(20))
+                                            )
+                                        )
+                                    ),
+                                    edge(
+                                        direction = edgeRight(),
+                                        label = listOf("createdComment")
+                                    ),
+                                    node(
+                                        variable = "c",
+                                        label = listOf("Comment"),
+                                        prefilter =
+                                        eq(
+                                            path(id("c"), pathExpr(lit(ionString("isFlagged")), caseInsensitive())),
+                                            lit(ionBool(true))
+                                        )
+                                    ),
+                                ),
+                            )
+                        )
+                    )
+                ),
+                where = like(
+                    value = path(id("p"), pathExpr(lit(ionString("title")), caseInsensitive())),
+                    pattern = lit(ionString("%considered harmful%"))
+                )
+            )
+        }
+    }
+
+    val restrictorAst = { restrictor: PartiqlAst.GraphMatchRestrictor ->
+        PartiqlAst.build {
+            select(
+                project = projectList(projectExpr(id("p"))),
+                from = graphMatch(
+                    expr = id("g"),
+                    graphExpr = graphMatchExpr(
+                        patterns = listOf(
+                            graphMatchPattern(
+                                restrictor = restrictor,
+                                variable = "p",
+                                parts = listOf(
+                                    node(
+                                        variable = "a",
+                                        prefilter =
+                                        eq(
+                                            path(id("a"), pathExpr(lit(ionString("owner")), caseInsensitive())),
+                                            lit(ionString("Dave"))
+                                        ),
+                                    ),
+                                    edge(
+                                        direction = edgeRight(),
+                                        variable = "t",
+                                        label = listOf("Transfer"),
+                                        quantifier = graphMatchQuantifier(0)
+                                    ),
+                                    node(
+                                        variable = "b",
+                                        prefilter =
+                                        eq(
+                                            path(id("b"), pathExpr(lit(ionString("owner")), caseInsensitive())),
+                                            lit(ionString("Aretha"))
+                                        ),
+                                    ),
+                                )
+                            )
+                        )
+                    )
+                ),
+                where = null
+            )
+        }
+    }
+
+    @Test
+    fun restrictorTrail() = assertExpressionNoRoundTrip(
+        "SELECT p FROM g MATCH TRAIL p = (a WHERE a.owner='Dave') -[t:Transfer]-> * (b WHERE b.owner='Aretha')",
+    ) {
+        restrictorAst(restrictorTrail())
+    }
+
+    @Test
+    fun restrictorAcyclic() = assertExpressionNoRoundTrip(
+        "SELECT p FROM g MATCH ACYCLIC p = (a WHERE a.owner='Dave') -[t:Transfer]-> * (b WHERE b.owner='Aretha')",
+    ) {
+        restrictorAst(restrictorAcyclic())
+    }
+
+    @Test
+    fun restrictorSimple() = assertExpressionNoRoundTrip(
+        "SELECT p FROM g MATCH SIMPLE p = (a WHERE a.owner='Dave') -[t:Transfer]-> * (b WHERE b.owner='Aretha')",
+    ) {
+        restrictorAst(restrictorSimple())
+    }
+
+    val selectorAST = { selector: PartiqlAst.GraphMatchSelector ->
+        PartiqlAst.build {
+            select(
+                project = projectList(projectExpr(id("p"))),
+                from = graphMatch(
+                    expr = id("g"),
+                    graphExpr = graphMatchExpr(
+                        selector = selector,
+                        patterns = listOf(
+                            graphMatchPattern(
+                                variable = "p",
+                                parts = listOf(
+                                    node(
+                                        variable = "a",
+                                        prefilter =
+                                        eq(
+                                            path(id("a"), pathExpr(lit(ionString("owner")), caseInsensitive())),
+                                            lit(ionString("Dave"))
+                                        ),
+                                    ),
+                                    edge(
+                                        direction = edgeRight(),
+                                        variable = "t",
+                                        label = listOf("Transfer"),
+                                        quantifier = graphMatchQuantifier(0)
+                                    ),
+                                    node(
+                                        variable = "b",
+                                        prefilter =
+                                        eq(
+                                            path(id("b"), pathExpr(lit(ionString("owner")), caseInsensitive())),
+                                            lit(ionString("Aretha"))
+                                        ),
+                                    ),
+                                )
+                            )
+                        )
+                    )
+                ),
+                where = null
+            )
+        }
+    }
+
+    @Test
+    fun selectorAnyShortest() = assertExpressionNoRoundTrip(
+        "SELECT p FROM g MATCH ANY SHORTEST p = (a WHERE a.owner='Dave') -[t:Transfer]-> * (b WHERE b.owner='Aretha')",
+    ) {
+        selectorAST(selectorAnyShortest())
+    }
+
+    @Test
+    fun selectorAllShortest() = assertExpressionNoRoundTrip(
+        "SELECT p FROM g MATCH All SHORTEST p = (a WHERE a.owner='Dave') -[t:Transfer]-> * (b WHERE b.owner='Aretha')",
+    ) {
+        selectorAST(selectorAllShortest())
+    }
+
+    @Test
+    fun selectorAny() = assertExpressionNoRoundTrip(
+        "SELECT p FROM g MATCH ANY p = (a WHERE a.owner='Dave') -[t:Transfer]-> * (b WHERE b.owner='Aretha')",
+    ) {
+        selectorAST(selectorAny())
+    }
+
+    @Test
+    fun selectorAnyK() = assertExpressionNoRoundTrip(
+        "SELECT p FROM g MATCH ANY 5 p = (a WHERE a.owner='Dave') -[t:Transfer]-> * (b WHERE b.owner='Aretha')",
+    ) {
+        selectorAST(selectorAnyK(5))
+    }
+
+    @Test
+    fun selectorShortestK() = assertExpressionNoRoundTrip(
+        "SELECT p FROM g MATCH SHORTEST 5 p = (a WHERE a.owner='Dave') -[t:Transfer]-> * (b WHERE b.owner='Aretha')",
+    ) {
+        selectorAST(selectorShortestK(5))
+    }
+
+    @Test
+    fun selectorShortestKGroup() = assertExpressionNoRoundTrip(
+        "SELECT p FROM g MATCH SHORTEST 5 GROUP p = (a WHERE a.owner='Dave') -[t:Transfer]-> * (b WHERE b.owner='Aretha')",
+    ) {
+        selectorAST(selectorShortestKGroup(5))
+    }
+
+    val joinedMatch = {
+        val match = PartiqlAst.build {
+            graphMatch(
+                expr = id("graph"),
+                graphExpr = graphMatchExpr(
+                    patterns = listOf(
+                        graphMatchPattern(
+                            parts = listOf(
+                                node(variable = "a"),
+                                edge(direction = edgeRight()),
+                                node(variable = "b"),
+                            )
+                        ),
+                        graphMatchPattern(
+                            parts = listOf(
+                                node(variable = "a"),
+                                edge(direction = edgeRight()),
+                                node(variable = "c"),
+                            )
+                        )
+                    )
+                )
+            )
+        }
+
+        val t1 = PartiqlAst.build {
+            scan(expr = id("table1"), asAlias = "t1")
+        }
+
+        val t2 = PartiqlAst.build {
+            scan(expr = id("table2"), asAlias = "t2")
+        }
+
+        PartiqlAst.build {
+            select(
+                project = projectList(
+                    projectExpr(id("a")),
+                    projectExpr(id("b")),
+                    projectExpr(id("c")),
+                    projectExpr(path(id("t1"), pathExpr(lit(ionString("x")), caseInsensitive())), "x"),
+                    projectExpr(path(id("t2"), pathExpr(lit(ionString("y")), caseInsensitive())), "y")
+                ),
+                from = join(
+                    type = inner(),
+                    left = join(
+                        type = inner(),
+                        left = match,
+                        right = t1
+                    ),
+                    right = t2
+                ),
+                where = null
+            )
+        }
+    }
+
+    @Test
+    fun matchAndJoinCommasParenthesized() = assertExpressionNoRoundTrip(
+        "SELECT a,b,c, t1.x as x, t2.y as y FROM graph MATCH ((a) -> (b), (a) -> (c)), table1 as t1, table2 as t2",
+    ) {
+        joinedMatch()
+    }
+
+    @Test
+    fun matchAndJoinCommas() = assertExpressionNoRoundTrip(
+        "SELECT a,b,c, t1.x as x, t2.y as y FROM graph MATCH (a) -> (b), (a) -> (c), table1 as t1, table2 as t2",
+    ) {
+        joinedMatch()
     }
 
     // TODO label combinators
@@ -505,8 +1024,6 @@ class SqlParserMatchTest : SqlParserTestBase() {
         TODO()
     }
 
-    // TODO path variable (e.g., `MATCH p = (x) -> (y)`
-    // TODO quantifiers (e.g., `MATCH (a:Node)−[:Edge]−>{2,5}(b:Node)`,  `*`, `+`)
     // TODO group variables (e.g., `MATCH ... WHERE SUM()...`)
     // TODO union & multiset (e.g., `MATCH (a:Label) | (a:Label2)` , `MATCH (a:Label) |+| (a:Label2)`
     // TODO conditional variables

@@ -21,12 +21,16 @@ class SqlLexerTest : TestBase() {
     val lexer = SqlLexer(ion)
 
     // TODO: remove default value on [length] and specify the correct value for all invocations of this function
-    fun token(type: TokenType, lit: String?, line: Long, column: Long, length: Long): Token {
+    fun token(type: TokenType, lit: String?, sourceText: String, line: Long, column: Long, length: Long): Token {
         val value = when (lit) {
             null -> null
             else -> ion.singleValue(lit)
         }
-        return Token(type, value, SourceSpan(line, column, length))
+        return Token(type, value, sourceText, SourceSpan(line, column, length))
+    }
+
+    fun token(type: TokenType, lit: String, line: Long, column: Long, length: Long): Token {
+        return token(type, lit, lit, line, column, length)
     }
 
     fun tokenize(text: String): Pair<Token, List<Token>> {
@@ -48,27 +52,27 @@ class SqlLexerTest : TestBase() {
     @Test
     fun punctuation() = assertTokens(
         "()[]{}:,.*<<>>;",
-        token(TokenType.LEFT_PAREN, "'('", 1, 1, 1),
-        token(TokenType.RIGHT_PAREN, "')'", 1, 2, 1),
-        token(TokenType.LEFT_BRACKET, "'['", 1, 3, 1),
-        token(TokenType.RIGHT_BRACKET, "']'", 1, 4, 1),
-        token(TokenType.LEFT_CURLY, "'{'", 1, 5, 1),
-        token(TokenType.RIGHT_CURLY, "'}'", 1, 6, 1),
-        token(TokenType.COLON, "':'", 1, 7, 1),
-        token(TokenType.COMMA, "','", 1, 8, 1),
-        token(TokenType.DOT, "'.'", 1, 9, 1),
-        token(TokenType.STAR, "'*'", 1, 10, 1),
-        token(TokenType.LEFT_DOUBLE_ANGLE_BRACKET, "'<<'", 1, 11, 2),
-        token(TokenType.RIGHT_DOUBLE_ANGLE_BRACKET, "'>>'", 1, 13, 2),
-        token(TokenType.SEMICOLON, "';'", 1, 15, 1)
+        token(TokenType.LEFT_PAREN, "'('", "(", 1, 1, 1),
+        token(TokenType.RIGHT_PAREN, "')'", ")", 1, 2, 1),
+        token(TokenType.LEFT_BRACKET, "'['", "[", 1, 3, 1),
+        token(TokenType.RIGHT_BRACKET, "']'", "]", 1, 4, 1),
+        token(TokenType.LEFT_CURLY, "'{'", "{", 1, 5, 1),
+        token(TokenType.RIGHT_CURLY, "'}'", "}", 1, 6, 1),
+        token(TokenType.COLON, "':'", ":", 1, 7, 1),
+        token(TokenType.COMMA, "','", ",", 1, 8, 1),
+        token(TokenType.DOT, "'.'", ".", 1, 9, 1),
+        token(TokenType.STAR, "'*'", "*", 1, 10, 1),
+        token(TokenType.LEFT_DOUBLE_ANGLE_BRACKET, "'<<'", "<<", 1, 11, 2),
+        token(TokenType.RIGHT_DOUBLE_ANGLE_BRACKET, "'>>'", ">>", 1, 13, 2),
+        token(TokenType.SEMICOLON, "';'", ";", 1, 15, 1)
     )
 
     @Test
     fun keywordsThatHaveTheirOwnTokenTypes() = assertTokens(
         "AS AT FOR",
-        token(TokenType.AS, "as", 1, 1, 2),
-        token(TokenType.AT, "at", 1, 4, 2),
-        token(TokenType.FOR, "for", 1, 7, 3)
+        token(TokenType.AS, "as", "AS", 1, 1, 2),
+        token(TokenType.AT, "at", "AT", 1, 4, 2),
+        token(TokenType.FOR, "for", "FOR", 1, 7, 3)
     )
 
     @Test
@@ -124,45 +128,45 @@ class SqlLexerTest : TestBase() {
     @Test
     fun nullAndMissing() = assertTokens(
         "null Null MISSING `null`",
-        token(TokenType.NULL, "null", 1, 1, 4),
-        token(TokenType.NULL, "null", 1, 6, 4),
-        token(TokenType.MISSING, "null", 1, 11, 7),
-        token(TokenType.ION_LITERAL, "null", 1, 19, 6)
+        token(TokenType.NULL, "null", "null", 1, 1, 4),
+        token(TokenType.NULL, "null", "Null", 1, 6, 4),
+        token(TokenType.MISSING, "null", "MISSING", 1, 11, 7),
+        token(TokenType.ION_LITERAL, "null", "null", 1, 19, 6)
     )
 
     @Test
     fun numbers() = assertTokens(
         "500 600. 0.1 . .1 0000 0.00e0 1e+1",
         token(TokenType.LITERAL, "500", 1, 1, 3),
-        token(TokenType.LITERAL, "600d0", 1, 5, 4),
-        token(TokenType.LITERAL, "1d-1", 1, 10, 3),
-        token(TokenType.DOT, "'.'", 1, 14, 1),
-        token(TokenType.LITERAL, "1d-1", 1, 16, 2),
-        token(TokenType.LITERAL, "0", 1, 19, 4),
-        token(TokenType.LITERAL, "0d-2", 1, 24, 6),
-        token(TokenType.LITERAL, "1d1", 1, 31, 4)
+        token(TokenType.LITERAL, "600d0", "600.", 1, 5, 4),
+        token(TokenType.LITERAL, "1d-1", "0.1", 1, 10, 3),
+        token(TokenType.DOT, "'.'", ".", 1, 14, 1),
+        token(TokenType.LITERAL, "1d-1", ".1", 1, 16, 2),
+        token(TokenType.LITERAL, "0", "0000", 1, 19, 4),
+        token(TokenType.LITERAL, "0d-2", "0.00e0", 1, 24, 6),
+        token(TokenType.LITERAL, "1d1", "1e+1", 1, 31, 4)
     )
 
     @Test
     fun signedNumbers() = assertTokens(
         "+500 -600. -0.1 . +.1 -0000 +0.00e0 -+-1e+1",
-        token(TokenType.OPERATOR, "'+'", 1, 1, 1),
+        token(TokenType.OPERATOR, "'+'", "+", 1, 1, 1),
         token(TokenType.LITERAL, "500", 1, 2, 3),
-        token(TokenType.OPERATOR, "'-'", 1, 6, 1),
-        token(TokenType.LITERAL, "600d0", 1, 7, 4),
-        token(TokenType.OPERATOR, "'-'", 1, 12, 1),
-        token(TokenType.LITERAL, "1d-1", 1, 13, 3),
-        token(TokenType.DOT, "'.'", 1, 17, 1),
-        token(TokenType.OPERATOR, "'+'", 1, 19, 1),
-        token(TokenType.LITERAL, "1d-1", 1, 20, 2),
-        token(TokenType.OPERATOR, "'-'", 1, 23, 1),
-        token(TokenType.LITERAL, "0", 1, 24, 4),
-        token(TokenType.OPERATOR, "'+'", 1, 29, 1),
-        token(TokenType.LITERAL, "0d-2", 1, 30, 6),
-        token(TokenType.OPERATOR, "'-'", 1, 37, 1),
-        token(TokenType.OPERATOR, "'+'", 1, 38, 1),
-        token(TokenType.OPERATOR, "'-'", 1, 39, 1),
-        token(TokenType.LITERAL, "1d1", 1, 40, 4)
+        token(TokenType.OPERATOR, "'-'", "-", 1, 6, 1),
+        token(TokenType.LITERAL, "600d0", "600.", 1, 7, 4),
+        token(TokenType.OPERATOR, "'-'", "-", 1, 12, 1),
+        token(TokenType.LITERAL, "1d-1", "0.1", 1, 13, 3),
+        token(TokenType.DOT, "'.'", ".", 1, 17, 1),
+        token(TokenType.OPERATOR, "'+'", "+", 1, 19, 1),
+        token(TokenType.LITERAL, "1d-1", ".1", 1, 20, 2),
+        token(TokenType.OPERATOR, "'-'", "-", 1, 23, 1),
+        token(TokenType.LITERAL, "0", "0000", 1, 24, 4),
+        token(TokenType.OPERATOR, "'+'", "+", 1, 29, 1),
+        token(TokenType.LITERAL, "0d-2", "0.00e0", 1, 30, 6),
+        token(TokenType.OPERATOR, "'-'", "-", 1, 37, 1),
+        token(TokenType.OPERATOR, "'+'", "+", 1, 38, 1),
+        token(TokenType.OPERATOR, "'-'", "-", 1, 39, 1),
+        token(TokenType.LITERAL, "1d1", "1e+1", 1, 40, 4)
     )
 
     @Test
@@ -170,8 +174,8 @@ class SqlLexerTest : TestBase() {
         "`1e0` `{a:5}` `/*`*/\"`\"` `//`\n'''`'''` `{{ +AB//A== }}` `{{ \"not a comment //\" }}`",
         token(TokenType.ION_LITERAL, "1e0", 1, 1, 5),
         token(TokenType.ION_LITERAL, "{a:5}", 1, 7, 7),
-        token(TokenType.ION_LITERAL, "\"`\"", 1, 15, 10),
-        token(TokenType.ION_LITERAL, "\"`\"", 1, 26, 13),
+        token(TokenType.ION_LITERAL, "\"`\"", "/*`*/\"`\"", 1, 15, 10),
+        token(TokenType.ION_LITERAL, "\"`\"", "//`\n'''`'''", 1, 26, 13),
         token(TokenType.ION_LITERAL, "{{ +AB//A== }}", 2, 10, 16),
         token(TokenType.ION_LITERAL, "{{ \"not a comment //\" }}", 2, 27, 26)
     )
@@ -179,15 +183,15 @@ class SqlLexerTest : TestBase() {
     @Test
     fun quotedStrings() = assertTokens(
         "'1e0' '{''a'':5}'",
-        token(TokenType.LITERAL, "\"1e0\"", 1, 1, 5),
-        token(TokenType.LITERAL, "\"{'a':5}\"", 1, 7, 11)
+        token(TokenType.LITERAL, "\"1e0\"", "1e0", 1, 1, 5),
+        token(TokenType.LITERAL, "\"{'a':5}\"", "{'a':5}", 1, 7, 11)
     )
 
     @Test
     fun quotedIdentifiers() = assertTokens(
         "\"1e0\" \"{\"\"a\"\":5}\"",
-        token(TokenType.QUOTED_IDENTIFIER, "'1e0'", 1, 1, 5),
-        token(TokenType.QUOTED_IDENTIFIER, "'{\"a\":5}'", 1, 7, 11)
+        token(TokenType.QUOTED_IDENTIFIER, "'1e0'", "1e0", 1, 1, 5),
+        token(TokenType.QUOTED_IDENTIFIER, "'{\"a\":5}'", "{\"a\":5}", 1, 7, 11)
     )
 
     @Test
@@ -201,7 +205,7 @@ class SqlLexerTest : TestBase() {
                 in KEYWORDS -> TokenType.KEYWORD
                 else -> TokenType.OPERATOR
             }
-            expected.add(token(type, "'$op'", 1, buf.length + 1L, op.length.toLong()))
+            expected.add(token(type, "'$op'", op, 1, buf.length + 1L, op.length.toLong()))
             buf.append(op)
             // make sure we have a token between things to avoid hitting multi-lexeme
             // tokens by mistake
@@ -214,19 +218,19 @@ class SqlLexerTest : TestBase() {
     @Test
     fun multiLexemeOperators() = assertTokens(
         "UNION ALL IS NOT union_all is_not",
-        token(TokenType.OPERATOR, "union_all", 1, 1, 5),
-        token(TokenType.OPERATOR, "is_not", 1, 11, 2),
-        token(TokenType.IDENTIFIER, "union_all", 1, 18, 9),
-        token(TokenType.IDENTIFIER, "is_not", 1, 28, 6)
+        token(TokenType.OPERATOR, "union_all", "UNION ALL", 1, 1, 5),
+        token(TokenType.OPERATOR, "is_not", "IS NOT", 1, 11, 2),
+        token(TokenType.IDENTIFIER, "union_all", "union_all", 1, 18, 9),
+        token(TokenType.IDENTIFIER, "is_not", "is_not", 1, 28, 6)
     )
 
     @Test
     fun multiLexemeKeywords() = assertTokens(
         "CHARACTER VARYING DoUblE PrEcision double_precision character_varying",
-        token(TokenType.KEYWORD, "character_varying", 1, 1, 9),
-        token(TokenType.KEYWORD, "double_precision", 1, 19, 6),
-        token(TokenType.IDENTIFIER, "double_precision", 1, 36, 16),
-        token(TokenType.IDENTIFIER, "character_varying", 1, 53, 17)
+        token(TokenType.KEYWORD, "character_varying", "CHARACTER VARYING", 1, 1, 9),
+        token(TokenType.KEYWORD, "double_precision", "DoUblE PrEcision", 1, 19, 6),
+        token(TokenType.IDENTIFIER, "double_precision", "double_precision", 1, 36, 16),
+        token(TokenType.IDENTIFIER, "character_varying", "character_varying", 1, 53, 17)
     )
 
     @Test
@@ -234,164 +238,164 @@ class SqlLexerTest : TestBase() {
         "cRoSs Join left join left left Inner joiN RIGHT JOIN RIGHT OUTER JOIN LEFT OUTER JOIN" +
             "\nFULL join OUTER JOIN FULL OUTER JOIN" +
             "\nCROSS CROSS JOIN JOIN",
-        token(TokenType.KEYWORD, "cross_join", 1, 1, 5),
-        token(TokenType.KEYWORD, "left_join", 1, 12, 4),
-        token(TokenType.KEYWORD, "left", 1, 22, 4),
-        token(TokenType.KEYWORD, "left", 1, 27, 4),
-        token(TokenType.KEYWORD, "inner_join", 1, 32, 5),
-        token(TokenType.KEYWORD, "right_join", 1, 43, 5),
-        token(TokenType.KEYWORD, "right_join", 1, 54, 5),
-        token(TokenType.KEYWORD, "left_join", 1, 71, 4),
-        token(TokenType.KEYWORD, "outer_join", 2, 1, 4),
-        token(TokenType.KEYWORD, "outer_join", 2, 11, 5),
-        token(TokenType.KEYWORD, "outer_join", 2, 22, 4),
-        token(TokenType.KEYWORD, "cross", 3, 1, 5),
-        token(TokenType.KEYWORD, "cross_join", 3, 7, 5),
-        token(TokenType.KEYWORD, "join", 3, 18, 4)
+        token(TokenType.KEYWORD, "cross_join", "cRoSs Join", 1, 1, 5),
+        token(TokenType.KEYWORD, "left_join", "left join", 1, 12, 4),
+        token(TokenType.KEYWORD, "left", "left", 1, 22, 4),
+        token(TokenType.KEYWORD, "left", "left", 1, 27, 4),
+        token(TokenType.KEYWORD, "inner_join", "Inner joiN", 1, 32, 5),
+        token(TokenType.KEYWORD, "right_join", "RIGHT JOIN", 1, 43, 5),
+        token(TokenType.KEYWORD, "right_join", "RIGHT OUTER JOIN", 1, 54, 5),
+        token(TokenType.KEYWORD, "left_join", "LEFT OUTER JOIN", 1, 71, 4),
+        token(TokenType.KEYWORD, "outer_join", "FULL join", 2, 1, 4),
+        token(TokenType.KEYWORD, "outer_join", "OUTER JOIN", 2, 11, 5),
+        token(TokenType.KEYWORD, "outer_join", "FULL OUTER JOIN", 2, 22, 4),
+        token(TokenType.KEYWORD, "cross", "CROSS", 3, 1, 5),
+        token(TokenType.KEYWORD, "cross_join", "CROSS JOIN", 3, 7, 5),
+        token(TokenType.KEYWORD, "join", "JOIN", 3, 18, 4)
     )
 
     @Test
     fun functionKeywordNames() = assertTokens(
         "SUBSTRING",
-        token(TokenType.KEYWORD, "substring", 1, 1, 9)
+        token(TokenType.KEYWORD, "substring", "SUBSTRING", 1, 1, 9)
     )
 
     @Test
     fun boolType() = assertTokens(
         "BOOL",
-        token(TokenType.KEYWORD, "boolean", 1, 1, 4)
+        token(TokenType.KEYWORD, "boolean", "BOOL", 1, 1, 4)
     )
 
     @Test
     fun smallintType() = assertTokens(
         "SMALLINT",
-        token(TokenType.KEYWORD, "smallint", 1, 1, 8)
+        token(TokenType.KEYWORD, "smallint", "SMALLINT", 1, 1, 8)
     )
 
     @Test
     fun integer4Type() = assertTokens(
         "INTEGER4",
-        token(TokenType.KEYWORD, "integer4", 1, 1, 8)
+        token(TokenType.KEYWORD, "integer4", "INTEGER4", 1, 1, 8)
     )
 
     @Test
     fun int4Type() = assertTokens(
         "INT4",
-        token(TokenType.KEYWORD, "integer4", 1, 1, 4)
+        token(TokenType.KEYWORD, "integer4", "INT4", 1, 1, 4)
     )
 
     @Test
     fun intType() = assertTokens(
         "INT",
-        token(TokenType.KEYWORD, "integer", 1, 1, 3)
+        token(TokenType.KEYWORD, "integer", "INT", 1, 1, 3)
     )
 
     @Test
     fun integerType() = assertTokens(
         "INTEGER",
-        token(TokenType.KEYWORD, "integer", 1, 1, 7)
+        token(TokenType.KEYWORD, "integer", "INTEGER", 1, 1, 7)
     )
 
     @Test
     fun floatType() = assertTokens(
         "FLOAT",
-        token(TokenType.KEYWORD, "float", 1, 1, 5)
+        token(TokenType.KEYWORD, "float", "FLOAT", 1, 1, 5)
     )
 
     @Test
     fun realType() = assertTokens(
         "REAL",
-        token(TokenType.KEYWORD, "real", 1, 1, 4)
+        token(TokenType.KEYWORD, "real", "REAL", 1, 1, 4)
     )
 
     @Test
     fun doublePrecisionType() = assertTokens(
         "DOUBLE PRECISION",
-        token(TokenType.KEYWORD, "double_precision", 1, 1, 6)
+        token(TokenType.KEYWORD, "double_precision", "DOUBLE PRECISION", 1, 1, 6)
     )
 
     @Test
     fun decimalType() = assertTokens(
         "DECIMAL",
-        token(TokenType.KEYWORD, "decimal", 1, 1, 7)
+        token(TokenType.KEYWORD, "decimal", "DECIMAL", 1, 1, 7)
     )
 
     @Test
     fun numericType() = assertTokens(
         "NUMERIC",
-        token(TokenType.KEYWORD, "numeric", 1, 1, 7)
+        token(TokenType.KEYWORD, "numeric", "NUMERIC", 1, 1, 7)
     )
 
     @Test
     fun timestampType() = assertTokens(
         "TIMESTAMP",
-        token(TokenType.KEYWORD, "timestamp", 1, 1, 9)
+        token(TokenType.KEYWORD, "timestamp", "TIMESTAMP", 1, 1, 9)
     )
 
     @Test
     fun characterType() = assertTokens(
         "CHARACTER",
-        token(TokenType.KEYWORD, "character", 1, 1, 9)
+        token(TokenType.KEYWORD, "character", "CHARACTER", 1, 1, 9)
     )
 
     @Test
     fun charType() = assertTokens(
         "CHAR",
-        token(TokenType.KEYWORD, "character", 1, 1, 4)
+        token(TokenType.KEYWORD, "character", "CHAR", 1, 1, 4)
     )
 
     @Test
     fun varcharType() = assertTokens(
         "VARCHAR",
-        token(TokenType.KEYWORD, "character_varying", 1, 1, 7)
+        token(TokenType.KEYWORD, "character_varying", "VARCHAR", 1, 1, 7)
     )
 
     @Test
     fun characterVaryingType() = assertTokens(
         "CHARACTER VARYING",
-        token(TokenType.KEYWORD, "character_varying", 1, 1, 9)
+        token(TokenType.KEYWORD, "character_varying", "CHARACTER VARYING", 1, 1, 9)
     )
 
     @Test
     fun stringType() = assertTokens(
         "STRING",
-        token(TokenType.KEYWORD, "string", 1, 1, 6)
+        token(TokenType.KEYWORD, "string", "STRING", 1, 1, 6)
     )
 
     @Test
     fun symbolType() = assertTokens(
         "SYMBOL",
-        token(TokenType.KEYWORD, "symbol", 1, 1, 6)
+        token(TokenType.KEYWORD, "symbol", "SYMBOL", 1, 1, 6)
     )
 
     @Test
     fun clobType() = assertTokens(
         "CLOB",
-        token(TokenType.KEYWORD, "clob", 1, 1, 4)
+        token(TokenType.KEYWORD, "clob", "CLOB", 1, 1, 4)
     )
 
     @Test
     fun blobType() = assertTokens(
         "BLOB",
-        token(TokenType.KEYWORD, "blob", 1, 1, 4)
+        token(TokenType.KEYWORD, "blob", "BLOB", 1, 1, 4)
     )
 
     @Test
     fun structType() = assertTokens(
         "STRUCT",
-        token(TokenType.KEYWORD, "struct", 1, 1, 6)
+        token(TokenType.KEYWORD, "struct", "STRUCT", 1, 1, 6)
     )
 
     @Test
     fun listType() = assertTokens(
         "LIST",
-        token(TokenType.KEYWORD, "list", 1, 1, 4)
+        token(TokenType.KEYWORD, "list", "LIST", 1, 1, 4)
     )
 
     @Test
     fun sexpType() = assertTokens(
         "SEXP",
-        token(TokenType.KEYWORD, "sexp", 1, 1, 4)
+        token(TokenType.KEYWORD, "sexp", "SEXP", 1, 1, 4)
     )
 
     @Test

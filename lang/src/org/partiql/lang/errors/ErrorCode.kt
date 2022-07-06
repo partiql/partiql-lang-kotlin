@@ -393,6 +393,12 @@ enum class ErrorCode(
         "expected identifier for alias"
     ),
 
+    PARSE_EXPECTED_KEYWORD_FOR_MATCH(
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "expected keyword for match"
+    ),
+
     PARSE_EXPECTED_IDENT_FOR_MATCH(
         ErrorCategory.PARSER,
         LOC_TOKEN,
@@ -423,10 +429,22 @@ enum class ErrorCode(
         "expected right bracket for match edge"
     ),
 
+    PARSE_EXPECTED_PARENTHESIZED_PATTERN(
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "expected appropriate closing punctuation for parenthesized pattern"
+    ),
+
     PARSE_EXPECTED_EDGE_PATTERN_MATCH_EDGE(
         ErrorCategory.PARSER,
         LOC_TOKEN,
         "expected edge pattern for match edge"
+    ),
+
+    PARSE_EXPECTED_EQUALS_FOR_MATCH_PATH_VARIABLE(
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "expected equals for match path variable"
     ),
 
     PARSE_EXPECTED_AS_FOR_LET(
