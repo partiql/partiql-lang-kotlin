@@ -65,6 +65,15 @@ enum class ErrorCode(
             getTokenString(errorContext)
     },
 
+    LEXER_INVALID_TOKEN(
+        ErrorCategory.LEXER,
+        LOC_TOKEN_STR,
+        "invalid token"
+    ) {
+        override fun detailMessageSuffix(errorContext: PropertyValueMap?): String =
+            getTokenString(errorContext)
+    },
+
     LEXER_INVALID_NAME(
         ErrorCategory.LEXER,
         LOC_TOKEN_STR,
