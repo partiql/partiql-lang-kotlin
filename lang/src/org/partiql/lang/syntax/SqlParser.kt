@@ -3591,21 +3591,10 @@ class SqlParser(
         rem = selector?.remaining ?: rem
 
         val matches = ArrayList<ParseNode>()
-        var preComma = rem
         do {
-            try {
-                val pattern = rem.parseMatchPattern()
-                matches.add(pattern)
-                rem = pattern.remaining
-                preComma = rem
-            } catch (e: ParserException) {
-                if (matches.isEmpty()) {
-                    throw e
-                } else {
-                    rem = preComma
-                    break
-                }
-            }
+            val pattern = rem.parseMatchPattern()
+            matches.add(pattern)
+            rem = pattern.remaining
         } while (consume(TokenType.COMMA))
 
         return ParseNode(ParseType.MATCH, this.head, listOfNotNull(expr, selector) + matches, rem)
