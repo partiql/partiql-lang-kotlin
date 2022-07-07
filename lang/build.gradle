@@ -35,12 +35,16 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 }
 
 dependencies {
+    implementation project(":partiql-antlr")
     // run-time dependencies
     // TODO:  don't expose Kotlin stdlib as part of the API.  This is currently needed because parts of the
     // interpreter's API use kotlin.sequences.Sequence<ExprValue>.  Once that has been removed, we can change
     // 'api' below to 'implementation' to effect this.
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
     implementation 'org.jetbrains.kotlin:kotlin-reflect'
+    
+    // ANTLR Runtime for Parser
+    implementation 'org.antlr:antlr4-runtime:4.10.1'
 
     api 'com.amazon.ion:ion-java:1.9.0'
     api 'com.amazon.ion:ion-element:0.2.0'
@@ -59,6 +63,7 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.7.0'
 }
 
+// PIG Configuration
 def PIG_SOURCE_ROOT = new File(projectDir, "build/generated-src/pig")
 def PIG_OUTPUT_DIR = new File(PIG_SOURCE_ROOT, "org/partiql/lang/domains")
 
@@ -68,11 +73,9 @@ task generatePigDomains {
     // TODO: in the future, utilize the API created as part of this ticket:
     // https://github.com/partiql/partiql-ir-generator/issues/5
 
-
     def typeUniverse = new File(projectDir, "resources/org/partiql/type-domains/partiql.ion")
     def targetLanguage = new TargetLanguage.Kotlin("org.partiql.lang.domains", PIG_OUTPUT_DIR)
     def cmd = new Command.Generate(typeUniverse , targetLanguage)
-
 
     // Tell gradle about the input and output of this task so that it only invokes pig when
     // the input file has changed or the output files are missing.
