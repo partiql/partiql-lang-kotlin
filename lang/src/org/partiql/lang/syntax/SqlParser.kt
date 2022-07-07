@@ -998,7 +998,7 @@ class SqlParser(
                     ParseType.MATCH_EXPR_EDGE -> parts.add(child.toGraphMatchEdge())
                     ParseType.MATCH_EXPR_QUANTIFIER -> quantifier = child.toGraphMatchQuantifier(quantifier)
                     ParseType.MATCH_EXPR_RESTRICTOR -> {
-                        restrictor = when (child.children[0].token!!.sourceText?.toUpperCase()) {
+                        restrictor = when (child.children[0].token!!.sourceText.toUpperCase()) {
                             "TRAIL" -> restrictorTrail()
                             "ACYCLIC" -> restrictorAcyclic()
                             "SIMPLE" -> restrictorSimple()
@@ -1042,7 +1042,7 @@ class SqlParser(
                     if (name != null) error("Invalid parse tree: name encountered more than once in MATCH")
                     val token = child.children[0].token!!
                     val nameText = when (token.type) {
-                        TokenType.KEYWORD -> token.sourceText!!
+                        TokenType.KEYWORD -> token.sourceText
                         else -> token.text!!
                     }
                     name = SymbolPrimitive(nameText, child.getMetas())
@@ -1050,7 +1050,7 @@ class SqlParser(
                 ParseType.MATCH_EXPR_LABEL -> {
                     val token = child.children[0].token!!
                     val labelText = when (token.type) {
-                        TokenType.KEYWORD -> token.sourceText!!
+                        TokenType.KEYWORD -> token.sourceText
                         else -> token.text!!
                     }
                     label.add(SymbolPrimitive(labelText, child.getMetas()))
@@ -1127,7 +1127,7 @@ class SqlParser(
                     if (name != null) error("Invalid parse tree: name encountered more than once in MATCH")
                     val token = child.children[0].token!!
                     val nameText = when (token.type) {
-                        TokenType.KEYWORD -> token.sourceText!!
+                        TokenType.KEYWORD -> token.sourceText
                         else -> token.text!!
                     }
                     name = SymbolPrimitive(nameText, child.getMetas())
@@ -1135,7 +1135,7 @@ class SqlParser(
                 ParseType.MATCH_EXPR_LABEL -> {
                     val token = child.children[0].token!!
                     val labelText = when (token.type) {
-                        TokenType.KEYWORD -> token.sourceText!!
+                        TokenType.KEYWORD -> token.sourceText
                         else -> token.text!!
                     }
                     label.add(SymbolPrimitive(labelText, child.getMetas()))
@@ -3502,7 +3502,7 @@ class SqlParser(
         fun consumeKW(keyword: String): Boolean {
             return when (rem.head?.type!!) {
                 TokenType.IDENTIFIER, TokenType.QUOTED_IDENTIFIER, TokenType.KEYWORD -> {
-                    if (rem.head!!.sourceText?.toUpperCase() == keyword) {
+                    if (rem.head!!.sourceText.toUpperCase() == keyword) {
                         rem = rem.tail
                         true
                     } else {
@@ -3522,7 +3522,7 @@ class SqlParser(
                 val startSpan = start.head!!.span
                 var last = startSpan
                 var len = 0L
-                for (next in start!!.tail.subList(0, count - 1)) {
+                for (next in start.tail.subList(0, count - 1)) {
                     if (next.span.line == last.line) {
                         len += (next.span.column - last.column)
                     } else {
@@ -3955,7 +3955,7 @@ class SqlParser(
         fun parseRestrictor(): ParseNode? {
             return when (rem.head?.type!!) {
                 TokenType.IDENTIFIER -> {
-                    if (rem.head!!.sourceText?.toUpperCase() in matchRestrictorKWs) {
+                    if (rem.head!!.sourceText.toUpperCase() in matchRestrictorKWs) {
                         val name = rem.atomFromHead()
                         rem = name.remaining
                         ParseNode(ParseType.MATCH_EXPR_RESTRICTOR, null, listOf(name), name.remaining)
@@ -3995,8 +3995,7 @@ class SqlParser(
                 rem = pattern.remaining
 
                 val predicate = if (rem.head?.keywordText == "where") {
-                    val rem = rem.tail
-                    rem.parseExpression()
+                    rem.tail.parseExpression()
                 } else {
                     null
                 }
