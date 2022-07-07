@@ -58,8 +58,16 @@ configure(subprojects.findAll { it.name != 'example' }) {
     }
 }
 
-subprojects {
-    apply plugin: "org.jetbrains.kotlin.jvm"
+subprojects { proj ->
+
+    if (proj.name == "partiql-antlr") {
+        return
+    }
+
+    if (proj.name != "partiql-antlr") {
+        apply plugin: "org.jetbrains.kotlin.jvm"
+    }
+    
     tasks.withType(Test) {
         jvmArgs += ['-Duser.language=en', '-Duser.country=US']
         maxHeapSize = "4g"
@@ -88,23 +96,27 @@ subprojects {
     }
 
     plugins.withId('java', { _ ->
-
-        sourceSets {
-            main.java.srcDirs = ["src"]
-            main.resources.srcDirs = ["resources"]
-            test.java.srcDirs = ["test"]
-            test.resources.srcDirs = ["test-resources"]
+        if (proj.name != "partiql-antlr") {
+            sourceSets {
+                main.java.srcDirs = ["src"]
+                main.resources.srcDirs = ["resources"]
+                test.java.srcDirs = ["test"]
+                test.resources.srcDirs = ["test-resources"]
+            }
         }
     })
     plugins.withId('org.jetbrains.kotlin.jvm', { _ ->
         def generatedVersionDir = "${buildDir}/generated-version"
 
-        sourceSets {
-            main.kotlin.srcDirs = ["src"]
-            test.kotlin.srcDirs = ["test"]
+        if (proj.name != "partiql-antlr") {
+            
+            sourceSets {
+                main.kotlin.srcDirs = ["src"]
+                test.kotlin.srcDirs = ["test"]
 
-            main {
-                output.dir(generatedVersionDir, builtBy: 'generateVersionAndHashProperties')
+                main {
+                    output.dir(generatedVersionDir, builtBy: 'generateVersionAndHashProperties')
+                }
             }
         }
 

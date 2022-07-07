@@ -21,4 +21,5 @@ include('lang',
         'testscript',
         'pts',
         'extensions')
+include 'partiql-antlr'
 
