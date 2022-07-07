@@ -6,13 +6,34 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java: [8, 9, 10, 11]
+        java: [8, 11]
     steps:
       - uses: actions/checkout@v2
+
+      # Java 11 is required for building the ANTLR Source Files (*.g4).
+      - name: Setup JDK 11
+        uses: actions/setup-java@v3.4.1
+        with:
+          java-version: 11
+          distribution: corretto
+
+      # Generate Grammar Source (requires Java 11 -- see above)
+      - name: Generate Grammar Source
+        run: ./gradlew :partiql-antlr:generateGrammarSource
+
+      # Java Matrix is set up after 11, so that JAVA_HOME used by Gradle during build will point to the matrix.
       - name: Use Java ${{ matrix.java }}
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v3.4.1
         with:
           java-version: ${{ matrix.java }}
+          distribution: corretto
+
+      - name: Inspect Java Environments
+        run: set | grep JAVA
+
+      - name: Examine Java Toolchain
+        run: ./gradlew -q javaToolchains
+        
       - name: Build and test
         run: ./gradlew build
 
@@ -21,9 +42,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Use Java 11
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v3.4.1
         with:
           java-version: 11
+          distribution: corretto
       - name: Generate test coverage report
         run: ./gradlew build jacocoTestReport
 
