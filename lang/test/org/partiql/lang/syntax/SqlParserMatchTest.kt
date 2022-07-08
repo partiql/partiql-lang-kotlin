@@ -7,6 +7,7 @@ import org.junit.Ignore
 import org.junit.Test
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.id
+import kotlin.test.assertFailsWith
 
 class SqlParserMatchTest : SqlParserTestBase() {
     @Test
@@ -977,10 +978,14 @@ class SqlParserMatchTest : SqlParserTestBase() {
     }
 
     @Test
-    fun matchAndJoinCommas() = assertExpressionNoRoundTrip(
-        "SELECT a,b,c, t1.x as x, t2.y as y FROM graph MATCH (a) -> (b), (a) -> (c), table1 as t1, table2 as t2",
-    ) {
-        joinedMatch()
+    fun matchAndJoinCommas() {
+        assertFailsWith<ParserException> {
+            assertExpressionNoRoundTrip(
+                "SELECT a,b,c, t1.x as x, t2.y as y FROM graph MATCH (a) -> (b), (a) -> (c), table1 as t1, table2 as t2",
+            ) {
+                joinedMatch()
+            }
+        }
     }
 
     // TODO label combinators
