@@ -317,6 +317,7 @@ BAG: 'BAG';
 /**
  * LEXER: Operators and Literals
  */
+CARROT: '^';
 COMMA: ',';
 PLUS: '+';
 MINUS: '-';
@@ -328,7 +329,7 @@ ASTERISK: '*';
 LT_EQ: '<=';
 GT_EQ: '>=';
 EQ: '=';
-NEQ: '<>';
+NEQ: '<>' | '!=';
 CONCAT: '||';
 ANGLE_LEFT: '<';
 ANGLE_RIGHT: '>';
@@ -356,8 +357,11 @@ LITERAL_DECIMAL:
     | '.' DIGIT DIGIT* ([e] [+-]? DIGIT+)?
     | DIGIT DIGIT* ([e] [+-]? DIGIT+)?
     ;
+// @TODO: Rename to IDENTIFIER_UNQUOTED
 IDENTIFIER: [A-Z$_][A-Z0-9$_]*;
+IDENTIFIER_AT_UNQUOTED: '@' [A-Z_$][A-Z0-9_$]*;
 IDENTIFIER_QUOTED: '"' ( ('""') | ~('"') )* '"';
+IDENTIFIER_AT_QUOTED: '@' '"' ( ('""') | ~('"') )* '"';
 
 /**
  * LEXER: Remove
