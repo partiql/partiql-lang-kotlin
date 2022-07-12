@@ -4,7 +4,6 @@ import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
-import com.amazon.ionelement.api.toIonValue
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
@@ -15,7 +14,6 @@ import org.partiql.lang.domains.id
 import org.partiql.lang.domains.pathExpr
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.ArgumentsProviderBase
-import org.partiql.lang.util.SexpAstPrettyPrinter
 
 /**
  * Test cases in this class might seem a little light--that's because [AstToLogicalVisitorTransform] is getting
@@ -27,7 +25,7 @@ class AstToLogicalVisitorTransformTests {
 
     private fun parseAndTransform(sql: String): PartiqlLogical.Statement {
         val parseAstStatement = parser.parseAstStatement(sql)
-        println(SexpAstPrettyPrinter.format(parseAstStatement.toIonElement().asAnyElement().toIonValue(ion)))
+        // println(SexpAstPrettyPrinter.format(parseAstStatement.toIonElement().asAnyElement().toIonValue(ion)))
         return parseAstStatement.toLogicalPlan().stmt
     }
 
@@ -37,15 +35,15 @@ class AstToLogicalVisitorTransformTests {
         val algebra = assertDoesNotThrow("Parsing TestCase.sql should not throw") {
             parseAndTransform(tc.sql)
         }
-        println(SexpAstPrettyPrinter.format(algebra.toIonElement().asAnyElement().toIonValue(ion)))
+        // println(SexpAstPrettyPrinter.format(algebra.toIonElement().asAnyElement().toIonValue(ion)))
         Assertions.assertEquals(tc.expectedAlgebra, algebra)
     }
 
     @ParameterizedTest
-    @ArgumentsSource(ArgumentsForToLogicalTests::class)
-    fun `to logical`(tc: TestCase) = runTestCase(tc)
+    @ArgumentsSource(ArgumentsForToLogicalSfwTests::class)
+    fun `to logical (SFW)`(tc: TestCase) = runTestCase(tc)
 
-    class ArgumentsForToLogicalTests : ArgumentsProviderBase() {
+    class ArgumentsForToLogicalSfwTests : ArgumentsProviderBase() {
         override fun getParameters() = listOf(
             TestCase(
                 // Note:
@@ -108,6 +106,68 @@ class AstToLogicalVisitorTransformTests {
         )
     }
 
+    @ParameterizedTest
+    @ArgumentsSource(ArgumentsForToLogicalDmlTests::class)
+    fun `to logical (DML)`(tc: TestCase) = runTestCase(tc)
+    class ArgumentsForToLogicalDmlTests : ArgumentsProviderBase() {
+        private val insertIntoFooBagOf1 = PartiqlLogical.build {
+            dml(
+                dmlTarget(id("foo", caseInsensitive(), unqualified())),
+                dmlInsert(),
+                bag(lit(ionInt(1)))
+            )
+        }
+        override fun getParameters() = listOf(
+            // these two semantically identical cases result in the same logical plan
+            TestCase("INSERT INTO foo VALUE 1", insertIntoFooBagOf1),
+            TestCase("INSERT INTO foo << 1 >>", insertIntoFooBagOf1),
+
+            TestCase(
+                "INSERT INTO foo SELECT x.* FROM 1 AS x",
+                PartiqlLogical.build {
+                    dml(
+                        dmlTarget(id("foo", caseInsensitive(), unqualified())),
+                        dmlInsert(),
+                        bindingsToValues(
+                            struct(structFields(id("x", caseInsensitive(), unqualified()))),
+                            scan(lit(ionInt(1)), varDecl("x"))
+                        )
+                    )
+                }
+            ),
+            TestCase(
+                "DELETE FROM y AS y",
+                PartiqlLogical.build {
+                    dml(
+                        dmlTarget(id("y", caseInsensitive(), unqualified())),
+                        dmlDelete(),
+                        bindingsToValues(
+                            id("y", caseSensitive(), unqualified()),
+                            scan(id("y", caseInsensitive(), unqualified()), varDecl("y"))
+                        )
+                    )
+                }
+            ),
+            TestCase(
+                "DELETE FROM y AS y WHERE 1=1",
+                PartiqlLogical.build {
+                    dml(
+                        dmlTarget(id("y", caseInsensitive(), unqualified())),
+                        dmlDelete(),
+                        bindingsToValues(
+                            id("y", caseSensitive(), unqualified()),
+                            // this logical plan is same as previous but includes this filter
+                            filter(
+                                eq(lit(ionInt(1)), lit(ionInt(1))),
+                                scan(id("y", caseInsensitive(), unqualified()), varDecl("y"))
+                            )
+                        )
+                    )
+                }
+            ),
+        )
+    }
+
     data class TodoTestCase(val sql: String)
     @ParameterizedTest
     @ArgumentsSource(ArgumentsForToToDoTests::class)
@@ -132,21 +192,21 @@ class AstToLogicalVisitorTransformTests {
             TodoTestCase("SELECT b.* FROM bar AS b ORDER BY y"),
             TodoTestCase("PIVOT v AT n FROM data AS d"),
 
-            // DML
+            // DDL
             TodoTestCase("CREATE TABLE foo"),
             TodoTestCase("DROP TABLE foo"),
             TodoTestCase("CREATE INDEX ON foo (x)"),
             TodoTestCase("DROP INDEX bar ON foo"),
 
-            // DDL
-            TodoTestCase("INSERT INTO foo VALUE 1"),
-            TodoTestCase("INSERT INTO foo VALUE 1"),
-            TodoTestCase("FROM x WHERE a = b SET k = 5"),
-            TodoTestCase("FROM x INSERT INTO foo VALUES (1, 2)"),
+            // DML
+            // DL TODO: include DELETE with non-scan relational operators
+            // DL TODO: TodoTestCase("INSERT INTO foo VALUES(1)"),
+            TodoTestCase("FROM x AS xx INSERT INTO foo VALUES (1, 2)"),
+            TodoTestCase("FROM x AS xx WHERE a = b SET k = 5"),
             TodoTestCase("UPDATE x SET k = 5"),
             TodoTestCase("UPDATE x INSERT INTO k << 1 >>"),
-            TodoTestCase("DELETE FROM y"),
-            TodoTestCase("REMOVE y"),
         )
     }
+    // DL TODO: include AT, BY aliases
+    // DL TODO: scan AstToLogicalVisitorTransform.kt for additional error cases and test them.
 }

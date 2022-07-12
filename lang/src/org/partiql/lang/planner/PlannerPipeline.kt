@@ -141,7 +141,7 @@ interface PlannerPipeline {
      * @return [PlannerPassResult.Success] containing an instance of [PartiqlPhysical.Statement] and any applicable warnings
      * if compilation was successful or [PlannerPassResult.Error] if not.
      */
-    fun compile(physicalPlan: PartiqlPhysical.Plan): PlannerPassResult<Expression>
+    fun compile(physicalPlan: PartiqlPhysical.Plan): PlannerPassResult<QueryPlan>
 
     /**
      * Plans and compiles a query.
@@ -150,7 +150,7 @@ interface PlannerPipeline {
      * @return [PlannerPassResult.Success] containing an instance of [PartiqlPhysical.Statement] and any applicable warnings
      * if compiling and planning was successful or [PlannerPassResult.Error] if not.
      */
-    fun planAndCompile(query: String): PlannerPassResult<Expression> =
+    fun planAndCompile(query: String): PlannerPassResult<QueryPlan> =
         when (val planResult = plan(query)) {
             is PlannerPassResult.Error -> PlannerPassResult.Error(planResult.errors)
             is PlannerPassResult.Success -> {
@@ -211,6 +211,7 @@ interface PlannerPipeline {
         private val customFunctions: MutableMap<String, ExprFunction> = HashMap()
         private var customDataTypes: List<CustomType> = listOf()
         private val customProcedures: MutableMap<String, StoredProcedure> = HashMap()
+        private val logicalResolvedPlanPasses = ArrayList<PartiqlLogicalResolvedPass>()
         private val physicalPlanPasses = ArrayList<PartiqlPhysicalPass>()
         private val physicalOperatorFactories = ArrayList<RelationalOperatorFactory>()
         private var globalVariableResolver: GlobalVariableResolver = emptyGlobalsResolver()
@@ -279,6 +280,11 @@ interface PlannerPipeline {
          */
         internal fun addProcedure(procedure: StoredProcedure): Builder = this.apply {
             customProcedures[procedure.signature.name] = procedure
+        }
+
+        /** DL TODO */
+        fun addLogicalPlanPass(pass: PartiqlLogicalResolvedPass) = this.apply {
+            logicalResolvedPlanPasses.add(pass)
         }
 
         /**
@@ -382,6 +388,7 @@ interface PlannerPipeline {
                 functions = allFunctionsMap,
                 customDataTypes = customDataTypes,
                 procedures = customProcedures,
+                logicalResolvedPlanPasses = logicalResolvedPlanPasses,
                 physicalPlanPasses = physicalPlanPasses,
                 bindingsOperatorFactories = allPhysicalOperatorFactories.associateBy { it.key },
                 globalVariableResolver = globalVariableResolver,
@@ -399,11 +406,12 @@ internal class PlannerPipelineImpl(
     val functions: Map<String, ExprFunction>,
     val customDataTypes: List<CustomType>,
     val procedures: Map<String, StoredProcedure>,
-    val physicalPlanPasses: List<PartiqlPhysicalPass>,
     val bindingsOperatorFactories: Map<RelationalOperatorFactoryKey, RelationalOperatorFactory>,
     val globalVariableResolver: GlobalVariableResolver,
     val allowUndefinedVariables: Boolean,
-    val enableLegacyExceptionHandling: Boolean
+    val enableLegacyExceptionHandling: Boolean,
+    val logicalResolvedPlanPasses: ArrayList<PartiqlLogicalResolvedPass>,
+    val physicalPlanPasses: List<PartiqlPhysicalPass>,
 ) : PlannerPipeline {
 
     init {
@@ -446,11 +454,22 @@ internal class PlannerPipelineImpl(
 
         // logical plan -> resolved logical plan
         val problemHandler = ProblemCollector()
-        val resolvedLogicalPlan = logicalPlan.toResolvedPlan(problemHandler, globalVariableResolver, allowUndefinedVariables)
+        val defaultResolvedLogicalPlan = logicalPlan.toResolvedPlan(problemHandler, globalVariableResolver, allowUndefinedVariables)
         // If there are unresolved variables after attempting to resolve variables, then we can't proceed.
         if (problemHandler.hasErrors) {
             return PlannerPassResult.Error(problemHandler.problems)
         }
+
+        // Apply all of the passes over the local resolved plan.
+        val finalResolvedLogicalPlan = logicalResolvedPlanPasses
+            .fold(defaultResolvedLogicalPlan) { accumulator: PartiqlLogicalResolved.Plan, current: PartiqlLogicalResolvedPass ->
+                val passResult = current.rewrite(accumulator, problemHandler)
+                // stop planning if this pass resulted in any errors.
+                if (problemHandler.hasErrors) {
+                    return PlannerPassResult.Error(problemHandler.problems)
+                }
+                passResult
+            }
 
         // Possible future passes:
         // - type checking and inferencing?
@@ -461,7 +480,7 @@ internal class PlannerPipelineImpl(
 
         // resolved logical plan -> physical plan.
         // this will give all relational operators `(impl default)`.
-        val defaultPhysicalPlan = resolvedLogicalPlan.toDefaultPhysicalPlan()
+        val defaultPhysicalPlan = finalResolvedLogicalPlan.toDefaultPhysicalPlan()
 
         val finalPlan = physicalPlanPasses
             .fold(defaultPhysicalPlan) { accumulator: PartiqlPhysical.Plan, current: PartiqlPhysicalPass ->
@@ -477,7 +496,7 @@ internal class PlannerPipelineImpl(
         return PlannerPassResult.Success(finalPlan, problemHandler.problems)
     }
 
-    override fun compile(physicalPlan: PartiqlPhysical.Plan): PlannerPassResult<Expression> {
+    override fun compile(physicalPlan: PartiqlPhysical.Plan): PlannerPassResult<QueryPlan> {
         // PhysicalBExprToThunkConverter and PhysicalExprToThunkConverterImpl are mutually recursive therefore
         // we have to fall back on mutable variables to allow them to reference each other.
         var exprConverter: PhysicalExprToThunkConverterImpl? = null
@@ -520,6 +539,12 @@ internal class PlannerPipelineImpl(
             }
         }
 
-        return PlannerPassResult.Success(expression, listOf())
+        val queryPlan = when (physicalPlan.stmt) {
+            is PartiqlPhysical.Statement.DmlQuery ->
+                QueryPlan { session -> expression.eval(session).toDmlCommand() }
+            is PartiqlPhysical.Statement.Query, is PartiqlPhysical.Statement.Exec ->
+                QueryPlan { session -> QueryResult.Value(expression.eval(session)) }
+        }
+        return PlannerPassResult.Success(queryPlan, listOf())
     }
 }

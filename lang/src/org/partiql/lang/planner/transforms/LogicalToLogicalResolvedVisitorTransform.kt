@@ -171,7 +171,6 @@ private data class LogicalToLogicalResolvedVisitorTransform(
         PartiqlLogicalResolved.build {
             globalId_(
                 uniqueId = uniqueId.asPrimitive(),
-                case = this@LogicalToLogicalResolvedVisitorTransform.transformCaseSensitivity(this@asGlobalId.case),
                 metas = this@asGlobalId.metas
             )
         }

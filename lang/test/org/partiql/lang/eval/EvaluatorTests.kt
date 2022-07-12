@@ -105,6 +105,10 @@ class EvaluatorTests {
             "undefinedUnqualifiedVariableIsNullExprWithUndefinedVariableBehaviorMissing",
             "undefinedUnqualifiedVariableIsMissingExprWithUndefinedVariableBehaviorMissing",
             "undefinedUnqualifiedVariableInSelectWithUndefinedVariableBehaviorMissing",
+
+            // we are currently not plumbed to be able to return the original letter casing of global variables.
+            // (there are other tests in LogicalToLogicalResolvedVisitorTransform which cover this case)
+            "identifierCaseMismatch"
         )
 
         @JvmStatic
