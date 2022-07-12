@@ -22,7 +22,7 @@ import com.amazon.ion.Timestamp
  *
  * @property globals The global bindings. Defaults to [Bindings.empty]
  * @property parameters List of parameters to be substituted for positional placeholders
- * @property contextVariables A string-keyed map of arbitrary data associated with this [EvaluationSession].  This
+ * @property context A string-keyed map of arbitrary data associated with this [EvaluationSession].  This
  * provides a way to make custom session state such as current user and transaction details available to
  * custom [ExprFunction] implementations and custom physical operator implementations.
  * @property now Timestamp to consider as the current time, used by functions like `utcnow()` and `now()`. Defaults to [Timestamp.nowZ]
@@ -30,7 +30,7 @@ import com.amazon.ion.Timestamp
 class EvaluationSession private constructor(
     val globals: Bindings<ExprValue>,
     val parameters: List<ExprValue>,
-    val contextVariables: Map<String, Any>,
+    val context: Map<String, Any>,
     val now: Timestamp
 ) {
 
@@ -84,7 +84,7 @@ class EvaluationSession private constructor(
         fun build(): EvaluationSession = EvaluationSession(
             now = now ?: Timestamp.nowZ(),
             parameters = parameters,
-            contextVariables = contextVariables,
+            context = contextVariables,
             globals = globals
         )
     }

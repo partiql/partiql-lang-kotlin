@@ -65,9 +65,9 @@ class EvaluationSessionTest {
             withContextVariable("meaning", 42)
             withContextVariable("captain", "Picard")
         }
-        assertEquals(2, session.contextVariables.size)
-        assertEquals(42, session.contextVariables["meaning"])
-        assertEquals("Picard", session.contextVariables["captain"])
+        assertEquals(2, session.context.size)
+        assertEquals(42, session.context["meaning"])
+        assertEquals("Picard", session.context["captain"])
     }
 
     @Test
