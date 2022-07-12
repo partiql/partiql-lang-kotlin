@@ -26,6 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - path quantifiers  (section 4.4 of the GPML paper)
   - restrictors and selector  (section 5.1 of the GPML paper)
   - pre-filters and post-filters (section 5.2 of the GPML paper)
+- Added EvaluatonSession.context: A string-keyed map of arbitrary values which provides a way to make  
+session state such as current user and transaction details available to custom [ExprFunction] implementations 
+and custom physical operator implementations.
 
 ### Changed
 

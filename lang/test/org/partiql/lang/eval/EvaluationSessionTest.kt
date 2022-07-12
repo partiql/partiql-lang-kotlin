@@ -60,6 +60,17 @@ class EvaluationSessionTest {
     }
 
     @Test
+    fun canSetContextVariables() {
+        val session = EvaluationSession.build {
+            withContextVariable("meaning", 42)
+            withContextVariable("captain", "Picard")
+        }
+        assertEquals(2, session.context.size)
+        assertEquals(42, session.context["meaning"])
+        assertEquals("Picard", session.context["captain"])
+    }
+
+    @Test
     fun settingNow() {
         val now = Timestamp.forMillis(10, 0)
         val session = EvaluationSession.build { now(now) }
