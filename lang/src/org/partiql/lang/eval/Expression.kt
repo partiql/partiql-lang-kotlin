@@ -14,10 +14,8 @@
 
 package org.partiql.lang.eval
 
-import com.amazon.ion.IonValue
-
 /**
- * An expression that can be evaluated to [IonValue].
+ * An expression that can be evaluated to [ExprValue].
  */
 interface Expression {
 

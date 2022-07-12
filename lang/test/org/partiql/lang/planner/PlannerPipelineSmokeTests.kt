@@ -65,11 +65,12 @@ class PlannerPipelineSmokeTests {
                                     ),
                                     source = scan(
                                         i = impl("default"),
-                                        expr = globalId("fake_uid_for_Customer", caseInsensitive()),
+                                        expr = globalId("fake_uid_for_Customer"),
                                         asDecl = varDecl(0)
                                     )
                                 )
-                            )
+                            ),
+                            isDml = false
                         ),
                         locals = listOf(localVariable("c", 0)),
                         version = PLAN_VERSION_NUMBER
@@ -123,7 +124,7 @@ class PlannerPipelineSmokeTests {
     private fun createFakePlan(number: Int) =
         PartiqlPhysical.build {
             plan(
-                stmt = query(lit(ionInt(number.toLong()))),
+                stmt = query(lit(ionInt(number.toLong())), isDml = false),
                 version = PLAN_VERSION_NUMBER
             )
         }

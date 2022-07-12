@@ -11,6 +11,7 @@ import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.planner.MetadataResolver
 import org.partiql.lang.planner.PassResult
 import org.partiql.lang.planner.PlannerPipeline
+import org.partiql.lang.planner.QueryResult
 import org.partiql.lang.planner.ResolutionResult
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
@@ -94,8 +95,8 @@ internal class PlannerPipelineFactory : PipelineFactory {
                             // There is no way to tell the actual name of the global variable as it exists
                             // in session.globals (case may differ).  For now we simply have to use binding.name
                             // as the uniqueId of the variable, however, this is not desirable in production
-                            // scenarios.  At minimum, the name of the variable in its original letter-case should be
-                            // used.
+                            // scenarios.  Ideally the name of the variable in the letter case of its declaration
+                            // should be used.
                             ResolutionResult.GlobalVariable(bindingName.name)
                         } else {
                             ResolutionResult.Undefined
@@ -115,7 +116,10 @@ internal class PlannerPipelineFactory : PipelineFactory {
                         fail("Query compilation unexpectedly failed: ${planningResult.errors}")
                     }
                     is PassResult.Success -> {
-                        return planningResult.result.eval(session)
+                        when (val queryResult = planningResult.result.eval(session)) {
+                            is QueryResult.DmlCommand -> error("DML is not supported by test suite")
+                            is QueryResult.Value -> return queryResult.value
+                        }
                     }
                 }
             }

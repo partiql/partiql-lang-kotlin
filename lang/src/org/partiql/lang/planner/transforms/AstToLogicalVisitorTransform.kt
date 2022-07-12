@@ -115,7 +115,86 @@ private object AstToLogicalVisitorTransform : PartiqlAstToPartiqlLogicalVisitorT
         }
 
     override fun transformStatementDml(node: PartiqlAst.Statement.Dml): PartiqlLogical.Statement {
-        TODO("Support for DML")
+        // `INSERT` and `DELETE` statements are all that's needed for the current effort--and it just so
+        // happens that these never utilize more than one DML operation anyway.  We don't need to
+        // support more than one DML operation until we start supporting UPDATE statements.
+        if (node.operations.ops.size != 1) {
+            TODO("support more than one DML operation!")
+        }
+        val dmlOp = node.operations.ops.single()
+
+        // All
+        return when (dmlOp) {
+            is PartiqlAst.DmlOp.Insert -> {
+                node.from?.let { TODO("FROM / INSERT ") }
+                // Check for and block `INSERT INTO <tbl> VALUES (...)`  This is *no* way to support this
+                // within PartiQL itself since this flavor requires schema which we do not yet have.
+                // We block this by identifying (bag (list ...) ...) nodes which  is how the parser represents the
+                // VALUES constructor.  Since parser uses the same nodes for the alternate syntactic representations
+                // `<< [ ... ] ... >>` and `BAG(LIST(...), ...)` those get blocked too.  This is probably just as well.
+                if (dmlOp.values is PartiqlAst.Expr.Bag) {
+                    if (dmlOp.values.values.any { it is PartiqlAst.Expr.List }) {
+                        TODO("error message for use of INSERT ... VALUES (or other bag of lists expression)")
+                    }
+                }
+
+                PartiqlLogical.build {
+                    dml(
+                        target = dmlTarget(transformExpr(dmlOp.target)),
+                        operation = dmlInsert(),
+                        rows = transformExpr(dmlOp.values),
+                        metas = node.metas
+                    )
+                }
+            }
+            // This is essentially the same as the previous, but inserts a single row.  Translates to the same
+            // logical plan but the sinsgle value is wrapped in a BAG.
+            is PartiqlAst.DmlOp.InsertValue -> {
+                node.from?.let { TODO("Support FROM with INSERT INTO ... VALUE") }
+                dmlOp.index?.let { TODO("Support AT with INSERT INTO ... VALUE") }
+                dmlOp.onConflict?.let { TODO("Support ON CONFLICT") }
+
+                PartiqlLogical.build {
+                    dml(
+                        target = dmlTarget(transformExpr(dmlOp.target)),
+                        operation = dmlInsert(),
+                        rows = bag(transformExpr(dmlOp.value)),
+                        metas = node.metas
+                    )
+                }
+            }
+            is PartiqlAst.DmlOp.Delete -> {
+                val relation = node.from?.let { FromSourceToBexpr.convert(it) }
+                if (node.from == null) {
+                    TODO("TODO: omission of FROM clause with DELETE")
+                } else {
+                    val scan = relation as? PartiqlLogical.Bexpr.Scan
+                        ?: TODO("${node.from} is an unsupported delete target")
+
+                    val predicate = node.where?.let { transformExpr(it) }
+                    val rows = if (predicate == null) scan else PartiqlLogical.build { filter(predicate, scan) }
+
+                    PartiqlLogical.build {
+                        dml(
+                            target = dmlTarget(scan.expr),
+                            operation = dmlDelete(),
+                            rows = bindingsToValues(
+                                // This returns entire rows which are to be deleted, which is very naive but
+                                // is unavoidable without knowledge of schema. PartiQL embedders may apply a
+                                // pass over the resolved logical (oor later) plan that changes this to only include
+                                // the primary keys of the rows to be deleted.
+                                exp = id(scan.asDecl.name.text, caseSensitive(), unqualified()),
+                                query = rows,
+                            ),
+                            metas = node.metas
+                        )
+                    }
+                }
+            }
+            is PartiqlAst.DmlOp.Remove, is PartiqlAst.DmlOp.Set -> {
+                TODO("${dmlOp::class.java}")
+            }
+        }
     }
 
     override fun transformStatementDdl(node: PartiqlAst.Statement.Ddl): PartiqlLogical.Statement {

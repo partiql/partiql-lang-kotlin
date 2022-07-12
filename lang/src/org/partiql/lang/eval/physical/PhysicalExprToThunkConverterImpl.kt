@@ -32,6 +32,7 @@ import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.AnyOfCastTable
 import org.partiql.lang.eval.Arguments
 import org.partiql.lang.eval.BaseExprValue
+import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.CastFunc
 import org.partiql.lang.eval.DEFAULT_COMPARATOR
@@ -900,9 +901,11 @@ internal class PhysicalExprToThunkConverterImpl(
         thunkFactory.thunkEnv(metas) { valueFactory.missingValue }
 
     private fun compileGlobalId(expr: PartiqlPhysical.Expr.GlobalId): PhysicalPlanThunk {
-        val bindingCase = expr.case.toBindingCase()
+        // TODO: we really should consider using something other than `Bindings<ExprValue>` for global variables
+        // with the physical plan evaluator because `Bindings<ExprValue>.get()` accepts a `BindingName` instance
+        // which contains the `case` property which is always set to `SENSITIVE` and is therefore redundant.
+        val bindingName = BindingName(expr.uniqueId.text, BindingCase.SENSITIVE)
         return thunkFactory.thunkEnv(expr.metas) { env ->
-            val bindingName = BindingName(expr.uniqueId.text, bindingCase)
             env.session.globals[bindingName] ?: throwUndefinedVariableException(bindingName, expr.metas)
         }
     }

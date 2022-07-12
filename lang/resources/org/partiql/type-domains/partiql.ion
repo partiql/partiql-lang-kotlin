@@ -480,7 +480,7 @@ may then be further optimized by selecting better implementations of each operat
             // `DOUBLE_PRECISION`
             (double_precision_type)
 
-            // `DEICMAL[(<int> [, int])]`.  Elements are precision then scale.
+            // `DECIMAL[(<int> [, int])]`.  Elements are precision then scale.
             (decimal_type precision::(? int) scale::(? int))
 
             // `NUMERIC[(<int> [, int])]`.  Elements are precision then scale.
@@ -638,8 +638,8 @@ may then be further optimized by selecting better implementations of each operat
             // - The `AS`, `AT`, and `BY` sub-clauses in `FROM`
             // - The `AS` sub-clauses in within a `LET` clause.
             // - The `AS` and `AT` names specified with, `PIVOT`, i.e. `PIVOT x AS y AT z`
-            // Note that `AS` aliases specified in a select list (i.e. `SELECT x AS y` are *not* variables, they are
-            // fields.)
+            // Note that `AS` aliases specified in a select list (i.e. `SELECT x AS y`) are *not* variables, they are
+            // fields.
             // Modeling this with a separate node (as opposed to just a symbol) is beneficial because it is easy to
             // identify all variable declarations within a logical plan during tree traversal, and because in later
             // permuted domains we can add information to this type such as the variable's assigned index.
@@ -677,15 +677,46 @@ may then be further optimized by selecting better implementations of each operat
             )
         )
 
+        // DL TOOD: document everything
+        (include
+            (product dml_target
+                target::expr // permuted in resolved domain to be table uniqueid.
+            )
+
+            // Indicates kind of DML operation.
+            (sum dml_operation
+                // INSERT INTO
+                (dml_insert)
+
+                // DELETE FROM
+                (dml_delete)
+
+                // TODO:
+                // (dml_update)
+            )
+        )
+
+        // Redefine statement.dml to be a simple simple subset of the full DML functionality expressed with
+        // the PartiQL's DML syntax.  This is factored minimally to support `INSERT INTO` and
+        // `DELETE FROM ... [WHERE <predicate>]` but this may neeed refactoring when `FROM ... UPDATE` and
+        // `UPDATE` is supported later.
+        //need refactoring when PartiQL's `UPDATE` is supported later.
+        (with statement
+            (exclude dml)
+            (include
+                // A DML operation, such as `INSERT`, `UPDATE` or `DELETE`
+                (dml
+                    target::dml_target
+                    operation::dml_operation
+                    rows::expr
+                )
+            )
+        )
+
         // Nodes excluded below this line will eventually have a representation in the logical algebra, but not
         // initially.
 
-        (with statement
-            (exclude
-                dml
-                ddl
-            )
-        )
+        (with statement (exclude ddl))
 
         (exclude
             group_by
@@ -765,9 +796,9 @@ may then be further optimized by selecting better implementations of each operat
                 // - `uniqueId`: any Ion value that uniquely identifies the global variable, typically a storage
                 // defined UUID or the name of the table in its original letter case.
                 // The value of `uniqueId` is PartiQL integration defined and can be any symbol that uniquely
-                // identifies the global variable.  Examples include database object ids or the alphabetical case
-                // respecting table name found after case-insensitive lookup.
-                (global_id uniqueId::symbol case::case_sensitivity)
+                // identifies the global variable.  Examples include database object ids or the name of the variable
+                // in its the original letter case (as it was defined).
+                (global_id uniqueId::symbol)
             )
         )
     )
@@ -791,6 +822,18 @@ may then be further optimized by selecting better implementations of each operat
             // implementation.  These values are made available to the implementation at compile-time and evaluation
             // time.
             (product impl name::symbol static_args::(* ion 0))
+        )
+
+        // drop DML stuff added in partiql_logical (we expect these to be rewritten into pure bexprs by the time
+        // we transform a query to this domain).
+        (exclude dml_target dml_operation)
+        (with statement
+            (exclude dml query)
+
+            (include
+                // Include is_dml::bool in the query variant so that we know how to interpret the results of the
+                // query.
+                (query expr::expr is_dml::bool))
         )
 
         // Every variant of bexpr changes by adding an `impl` element in the physical algebra, so let's replace it
@@ -821,7 +864,6 @@ may then be further optimized by selecting better implementations of each operat
                     left::bexpr
                     right::bexpr
                     predicate::(? expr))
-
 
                 (offset i::impl row_count::expr source::bexpr)
                 (limit i::impl row_count::expr source::bexpr)

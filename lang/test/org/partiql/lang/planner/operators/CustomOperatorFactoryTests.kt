@@ -127,7 +127,7 @@ class CustomOperatorFactoryTests {
 
         private fun PartiqlPhysical.Builder.defaultScan() = scan(
             DEFAULT_IMPL,
-            globalId("whatever", caseInsensitive()), varDecl(0)
+            globalId("whatever"), varDecl(0)
         )
 
         private fun <T : PartiqlPhysical.Bexpr> createTestCase(
@@ -139,9 +139,10 @@ class CustomOperatorFactoryTests {
                 plan(
                     stmt = query(
                         bindingsToValues(
-                            globalId("whatever", caseInsensitive()),
+                            globalId("whatever"),
                             this.block()
-                        )
+                        ),
+                        isDml = false
                     ),
                     version = PLAN_VERSION_NUMBER
                 )
