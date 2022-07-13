@@ -169,4 +169,114 @@ class MathFunctionsTest : EvaluatorTestBase() {
             ),
         )
     }
+
+    // Could be merged with math function test cases
+    @ParameterizedTest
+    @ArgumentsSource(RoundFunctionsPassCases::class)
+    fun runRoundPassTests(tc: ExprFunctionTestCase) = runEvaluatorTestCase(
+        tc.source,
+        expectedResult = tc.expectedLegacyModeResult
+    )
+
+    class RoundFunctionsPassCases : ArgumentsProviderBase() {
+        override fun getParameters(): List<Any> = listOf(
+            // without optional input
+            // source is int
+            ExprFunctionTestCase("round($MAX_INT8)", "$MAX_INT8"),
+            ExprFunctionTestCase("round(`$MIN_INT8`)", "$MIN_INT8"),
+            // source is float/double/ion float
+            ExprFunctionTestCase("round(1.1)", "1"),
+            ExprFunctionTestCase("round(0.12e4)", "1200"),
+            ExprFunctionTestCase("round(`-0.12e4`)", "-1200"),
+            ExprFunctionTestCase("round(-1.5)", "-2"),
+            // source is bigDecimal/ion decimal
+            ExprFunctionTestCase("round(`0.12d4`)", "1200"),
+            ExprFunctionTestCase("round(`-123_456.789_012`)", "-123457"),
+            ExprFunctionTestCase("round(1.99999999999999999999)", "2"),
+            ExprFunctionTestCase("round(-1.99999999999999999999)", "-2"),
+            // special input
+            ExprFunctionTestCase("round(`+inf`)", "+inf"),
+            ExprFunctionTestCase("round(`-inf`)", "-inf"),
+            ExprFunctionTestCase("round(`nan`)", "nan"),
+
+            // without optional input
+            // source is int
+            ExprFunctionTestCase("round($MAX_INT8,1)", "$MAX_INT8.0"),
+            // source is float/double/ion float
+            ExprFunctionTestCase("round(1.14,1)", "1.1"),
+            ExprFunctionTestCase("round(0.12e4,4)", "1200.0000"),
+            ExprFunctionTestCase("round(-1.17,1)", "-1.2"),
+            ExprFunctionTestCase("round(`-0.128e-1`,3)", "-0.013"),
+            // source is bigDecimal/ion decimal
+            ExprFunctionTestCase("round(`0.12d4`,3)", "1200.000"),
+            ExprFunctionTestCase("round(`-123_456.789_012`,3)", "-123456.789"),
+            ExprFunctionTestCase("round(1.99999999999999999999,3)", "2.000"),
+            ExprFunctionTestCase("round(${MAX_INT8}0.00,1)", "${MAX_INT8}0.0"),
+            ExprFunctionTestCase("round(${MIN_INT8}0.00,1)", "${MIN_INT8}0.0"),
+            // special input
+            ExprFunctionTestCase("round(`+inf`,1)", "+inf"),
+            ExprFunctionTestCase("round(`-inf`,1)", "-inf"),
+            ExprFunctionTestCase("round(`nan`,1)", "nan"),
+            // higher precision
+            ExprFunctionTestCase("round(`1.32`,10)", "1.3200000000"),
+            ExprFunctionTestCase("round(`1.123_123_123_123_123_123`, 21)", "1.123_123_123_123_123_123_000")
+        )
+    }
+
+    class RoundFunctionOverflowTest : ArgumentsProviderBase() {
+        override fun getParameters(): List<Any> = listOf(
+            // overflow caused by expression evaluation inside the function
+            EvaluatorErrorTestCase(
+                query = "round($MAX_INT8+1)",
+                expectedErrorCode = ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
+                expectedPermissiveModeResult = "MISSING"
+            ),
+            EvaluatorErrorTestCase(
+                query = "round($MIN_INT8-1)",
+                expectedErrorCode = ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
+                expectedPermissiveModeResult = "MISSING"
+            ),
+            // overflow caused by argument
+            EvaluatorErrorTestCase(
+                query = "round(${MAX_INT8}1)",
+                expectedErrorCode = ErrorCode.SEMANTIC_LITERAL_INT_OVERFLOW,
+            ),
+            EvaluatorErrorTestCase(
+                query = "round(${MIN_INT8}1)",
+                expectedErrorCode = ErrorCode.SEMANTIC_LITERAL_INT_OVERFLOW,
+            ),
+//             edge case, overflow caused by function evulation
+            EvaluatorErrorTestCase(
+                query = "round($MAX_INT8.5)",
+                expectedErrorCode = ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
+                expectedPermissiveModeResult = "MISSING",
+                targetPipeline = EvaluatorTestTarget.ALL_PIPELINES
+            ),
+            EvaluatorErrorTestCase(
+                query = "round($MIN_INT8.5)",
+                expectedErrorCode = ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
+                expectedPermissiveModeResult = "MISSING",
+                targetPipeline = EvaluatorTestTarget.ALL_PIPELINES
+            ),
+            EvaluatorErrorTestCase(
+                query = "round($MIN_INT8)",
+                expectedErrorCode = ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
+                expectedPermissiveModeResult = "MISSING",
+                targetPipeline = EvaluatorTestTarget.ALL_PIPELINES
+            )
+        )
+    }
+
+    @ParameterizedTest
+    @ArgumentsSource(RoundFunctionOverflowTest::class)
+    fun roundOverflowTests(tc: EvaluatorErrorTestCase) = runEvaluatorErrorTestCase(
+        tc.query,
+        expectedErrorCode = tc.expectedErrorCode,
+        expectedPermissiveModeResult = tc.expectedPermissiveModeResult
+    )
+
+    @Test
+    fun roundFuncSizeInvalidArityTest() {
+        checkInvalidArity("round", 1, 2)
+    }
 }
