@@ -238,30 +238,115 @@ expr_query
     | function_call
     | expr_precedence_01
     ;
-
-
-// TODO: Find in other grammar
+    
 case_expr
-    :
-    ;
-
-    
-from_clause
-    : FROM table_reference
+    : CASE expr_query? expr_pair_when_then+ else_clause? END
     ;
     
-query
-    :
+expr_pair_when_then
+    : WHEN expr_query THEN expr_query
     ;
+else_clause
+    : ELSE expr_query
+    ;
+    
 where_clause
-    :
+    : WHERE expr_query
     ;
+    
+group_strategy
+    : ALL
+    | PARTIAL
+    ;
+group_key
+    : expr_query
+    | expr_query AS symbol_primitive
+    ;
+    
+// NOTE: Made group_strategy optional
 group_clause
-    :
+    : GROUP group_strategy? BY group_key (COMMA group_key )* group_alias?
+    ;
+group_alias
+    : GROUP AS symbol_primitive
     ;
 having_clause
-    :
+    : HAVING expr_query
     ;
+from_clause
+    : FROM ( table_reference COMMA LATERAL? )* table_reference
+    ;
+    
+// TODO: Check expansion
+values
+    : VALUES value_row ( COMMA value_row )*
+    ;
+
+value_row
+    : PAREN_LEFT expr_query PAREN_RIGHT
+    | expr_term_collection
+    ;
+    
+single_query
+    : expr_query
+    | sfw_query
+    | values
+    ;
+    
+// NOTE: Modified rule
+query_set
+    : query_set set_op_union_except set_quantifier query_set
+    | query_set set_op_intersect set_quantifier single_query
+    | single_query
+    ;
+query
+    : query_set order_by_clause? limit_clause? offset_by_clause?
+    ;
+    
+set_op_union_except
+    : UNION
+    | EXCEPT
+    ;
+
+set_op_intersect
+    : INTERSECT
+    ;
+    
+set_quantifier
+    : DISTINCT
+    | ALL?
+    ;
+    
+offset_by_clause
+    : OFFSET expr_query
+    ;
+    
+// TODO Check expansion
+order_by_clause
+    : ORDER BY PRESERVE
+    | ORDER BY order_sort_spec ( COMMA order_sort_spec )*
+    ;
+    
+order_sort_spec
+    : expr_query by_spec? by_null_spec?
+    ;
+    
+by_spec
+    : ASC
+    | DESC
+    ;
+    
+by_null_spec
+    : NULLS FIRST
+    | NULLS LAST
+    ;
+    
+limit_clause
+    : LIMIT expr_query
+    ;
+    
+// TODO: Find in other grammar
+
     
 // TODO: Need to figure out
 with_clause
