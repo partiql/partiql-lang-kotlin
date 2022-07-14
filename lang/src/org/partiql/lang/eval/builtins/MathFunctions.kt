@@ -103,7 +103,7 @@ private fun Number.exprValue(valueFactory: ExprValueFactory): ExprValue = when (
  * | Inexact | > 0         | Not allowed | allowing this potentially introduce accuracy loss
  * | Inexact | < 0         | Integer     | round to [targetScale] decimal places
  * | Exact   | omitted/0   | Integer     | round to the nearest Integer
- * | Exact   | > 0         | Integer     | round to [targetScale] decimal places
+ * | Exact   | > 0         | Decimal     | round to [targetScale] decimal places
  * | Exact   | < 0         | Integer     | round to [targetScale] decimal places
  **/
 internal class RoundFunction(val valueFactory: ExprValueFactory) : ExprFunction {
