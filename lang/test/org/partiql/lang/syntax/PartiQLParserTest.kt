@@ -16,7 +16,11 @@ package org.partiql.lang.syntax
 
 import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestFailureReason
+import org.partiql.lang.eval.evaluatortestframework.assertEquals
+import org.partiql.lang.util.ArgumentsProviderBase
 
 class PartiQLParserTest {
 
@@ -24,20 +28,33 @@ class PartiQLParserTest {
     val parser = PartiQLParser(ion)
     val oldParser = SqlParser(ion)
 
-    @Test
-    fun test() {
-        // Arrange
-        val query = "SELECT a, \"b\", @c, @\"d\" FROM <<true, false, null, missing, `hello`, 'this is a string', 4, 4e2, 4.2, .4, DATE '2022-02-01', TIME '23:11:59.123456789' >>"
-
+    @ParameterizedTest
+    @ArgumentsSource(QueryCases::class)
+    fun test(query: String) {
         // Act
-        val tree = parser.parseQuery(query)
-        val stmt = parser.parseAstStatement(query)
         val expected = oldParser.parseAstStatement(query)
+        val stmt = parser.parseAstStatement(query)
+        val tree = parser.parseQuery(query)
 
-        // Print
-        println("QUERY              : \"$query\"")
-        println("ANTLR TREE         : ${tree.toStringTree(parser.getParser(query))}")
-        println("ACTUAL STATEMENT   : $stmt")
-        println("EXPECTED STATEMENT : $expected")
+        // Build Message
+        val b = StringBuilder()
+        b.appendLine("QUERY              : \"$query\"")
+        b.appendLine("ANTLR TREE         : ${tree.toStringTree(parser.getParser(query))}")
+        b.appendLine("ACTUAL STATEMENT   : $stmt")
+        b.appendLine("EXPECTED STATEMENT : $expected")
+
+        // Assert
+        assertEquals(expected, stmt, EvaluatorTestFailureReason.FAILED_TO_EVALUATE_QUERY) {
+            b.toString()
+        }
+    }
+
+    class QueryCases : ArgumentsProviderBase() {
+        override fun getParameters(): List<Any> {
+            return listOf(
+                "SELECT a, \"b\", @c, @\"d\" FROM <<true, false, null, missing, `hello`, 'this is a string', 4, 4e2, 4.2, .4, DATE '2022-02-01', TIME '23:11:59.123456789' >>",
+                "SELECT 5 + 5 / 2 FROM <<>>"
+            )
+        }
     }
 }
