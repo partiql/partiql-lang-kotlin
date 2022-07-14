@@ -8,103 +8,95 @@ options {
 
 // TODO: Search LATERAL
 
-sfw_query
-    : sfw_clauses
-    | fws_clauses
+sfwQuery
+    : withClause? selectClause fromClause? whereClause? groupClause? havingClause? # SelectFromWhere
+    | withClause? fromClause whereClause? groupClause? havingClause? selectClause  # FromWhereSelect
     ;
     
-sfw_clauses
-    : with_clause? select_clause from_clause? where_clause? group_clause? having_clause?
-    ;
-
-fws_clauses
-    : with_clause? from_clause where_clause? group_clause? having_clause? select_clause
-    ;
-
-select_clause
-    : SELECT set_quantifier_strategy? ASTERISK
-    | SELECT set_quantifier_strategy? projection_items
-    | SELECT set_quantifier_strategy? VALUE expr_query
-    | PIVOT expr_query AT expr_query
+selectClause
+    : SELECT setQuantifierStrategy? ASTERISK          # SelectAll
+    | SELECT setQuantifierStrategy? projectionItems  # SelectItems
+    | SELECT setQuantifierStrategy? VALUE exprQuery  # SelectValue
+    | PIVOT exprQuery AT exprQuery                    # SelectPivot
     ;
     
-set_quantifier_strategy
+setQuantifierStrategy
     : DISTINCT
     | ALL
     ;
     
 // TODO: Check comma
-projection_items
-    : projection_item ( COMMA projection_item )*
+projectionItems
+    : projectionItem ( COMMA projectionItem )*
     ;
     
-projection_item
-    : expr_query ( AS? symbol_primitive )?
+projectionItem
+    : exprQuery ( AS? symbolPrimitive )?
     ;
     
-symbol_primitive
+symbolPrimitive
     : IDENTIFIER
     | IDENTIFIER_QUOTED
     ;
 // TODO: Mental note. Needed to duplicate table_joined to remove left recursion
-table_reference
-    : table_non_join
-    | table_reference join_type? CROSS JOIN join_rhs
-    | table_reference join_type JOIN LATERAL? join_rhs join_spec
-    | table_reference NATURAL join_type JOIN LATERAL? join_rhs
-    | PAREN_LEFT table_joined PAREN_RIGHT
+tableReference
+    : tableNonJoin                                              # TableRefNonJoin
+    | tableReference joinType? CROSS JOIN joinRhs              # TableRefCrossJoin
+    | tableReference joinType JOIN LATERAL? joinRhs joinSpec  # TableRefJoin
+    | tableReference NATURAL joinType JOIN LATERAL? joinRhs    # TableRefNaturalJoin
+    | PAREN_LEFT tableJoined PAREN_RIGHT                         # TableRefWrappedJoin
     ;
-table_non_join
-    : table_base_reference
-    | table_unpivot
+tableNonJoin
+    : tableBaseReference
+    | tableUnpivot
     ;
-as_ident
-    : AS symbol_primitive
+asIdent
+    : AS symbolPrimitive
     ;
-at_ident
-    : AT symbol_primitive
+atIdent
+    : AT symbolPrimitive
     ;
-by_ident
-    : BY symbol_primitive
+byIdent
+    : BY symbolPrimitive
     ;
-table_base_reference
-    : expr_query symbol_primitive
-    | expr_query as_ident? at_ident? by_ident?
-    ;
-    
-// TODO: Check that all uses use a table_reference before token
-table_joined
-    : table_cross_join
-    | table_qualified_join
-    | PAREN_LEFT table_joined PAREN_RIGHT
-    ;
-    
-table_unpivot
-    : UNPIVOT expr_query as_ident? at_ident?
+tableBaseReference
+    : exprQuery symbolPrimitive
+    | exprQuery asIdent? atIdent? byIdent?
     ;
     
 // TODO: Check that all uses use a table_reference before token
-table_cross_join
-    : table_reference join_type? CROSS JOIN join_rhs
-    ;
-// TODO: Check that all uses use a table_reference before token
-table_qualified_join
-    : table_reference join_type JOIN LATERAL? join_rhs join_spec
-    | table_reference NATURAL join_type JOIN LATERAL? join_rhs
+tableJoined
+    : tableCrossJoin
+    | tableQualifiedJoin
+    | PAREN_LEFT tableJoined PAREN_RIGHT
     ;
     
-join_rhs
-    : table_non_join
-    | PAREN_LEFT table_joined PAREN_RIGHT
+tableUnpivot
+    : UNPIVOT exprQuery asIdent? atIdent?
+    ;
+    
+// TODO: Check that all uses use a table_reference before token
+tableCrossJoin
+    : tableReference joinType? CROSS JOIN joinRhs
+    ;
+// TODO: Check that all uses use a table_reference before token
+tableQualifiedJoin
+    : tableReference joinType JOIN LATERAL? joinRhs joinSpec
+    | tableReference NATURAL joinType JOIN LATERAL? joinRhs
+    ;
+    
+joinRhs
+    : tableNonJoin
+    | PAREN_LEFT tableJoined PAREN_RIGHT
     ;
     
 // TODO: Check comma
-join_spec
-    : ON expr_query
-    | USING PAREN_LEFT path_expr ( COMMA path_expr )* PAREN_RIGHT
+joinSpec
+    : ON exprQuery
+    | USING PAREN_LEFT pathExpr ( COMMA pathExpr )* PAREN_RIGHT
     ;
     
-join_type
+joinType
     : INNER
     | LEFT OUTER?
     | RIGHT OUTER?
@@ -113,242 +105,241 @@ join_type
     ;
     
 // TODO: Check
-function_call
-    : name=IDENTIFIER PAREN_LEFT ( function_call_arg ( COMMA function_call_arg )* )? PAREN_RIGHT
+functionCall
+    : name=IDENTIFIER PAREN_LEFT ( functionCallArg ( COMMA functionCallArg )* )? PAREN_RIGHT
     ;
     
-function_call_arg
-    : function_arg_positional
-    | function_arg_named
+functionCallArg
+    : functionArgPositional
+    | functionArgNamed
     ;
     
-function_arg_positional
+functionArgPositional
     : ASTERISK
-    | expr_query
+    | exprQuery
     ;
     
-function_arg_named
-    : symbol_primitive COLON expr_query
+functionArgNamed
+    : symbolPrimitive COLON exprQuery
     ;
     
-expr_precedence_01
-    : function_call
-    | expr_term
+exprPrecedence01
+    : functionCall
+    | exprTerm
     ;
     
 literal
-    : NULL
-    | MISSING
-    | TRUE
-    | FALSE
-    | LITERAL_STRING
-    | LITERAL_INTEGER
-    | LITERAL_DECIMAL
-    | ION_CLOSURE
-    | DATE LITERAL_STRING
-    | TIME LITERAL_STRING
-    | TIMESTAMP LITERAL_STRING
+    : NULL                           # LiteralNull
+    | MISSING                        # LiteralMissing
+    | TRUE                           # LiteralTrue
+    | FALSE                          # LiteralFalse
+    | LITERAL_STRING                 # LiteralString
+    | LITERAL_INTEGER                # LiteralInteger
+    | LITERAL_DECIMAL                # LiteralDecimal
+    | ION_CLOSURE                    # LiteralIon
+    | DATE LITERAL_STRING            # LiteralDate
+    | TIME LITERAL_STRING            # LiteralTime
     ;
     
 // TODO: Check the '!' in Rust grammar
-expr_term
+exprTerm
     : PAREN_LEFT query PAREN_RIGHT
     | literal
-    | var_ref_expr
-    | expr_term_collection
-    | expr_term_tuple
+    | varRefExpr
+    | exprTermCollection
+    | exprTermTuple
     ;
     
-expr_term_collection
-    : expr_term_array
-    | expr_term_bag
+exprTermCollection
+    : exprTermArray
+    | exprTermBag
     ;
     
 // @TODO Check expansion
-expr_term_array
-    : BRACKET_LEFT ( expr_query ( COMMA expr_query )* )? BRACKET_RIGHT
+exprTermArray
+    : BRACKET_LEFT ( exprQuery ( COMMA exprQuery )* )? BRACKET_RIGHT
     ;
-expr_term_bag
-    : ANGLE_DOUBLE_LEFT ( expr_query ( COMMA expr_query )* )? ANGLE_DOUBLE_RIGHT
+exprTermBag
+    : ANGLE_DOUBLE_LEFT ( exprQuery ( COMMA exprQuery )* )? ANGLE_DOUBLE_RIGHT
     ;
     
 // TODO: Check expansion
-expr_term_tuple
-    : BRACE_LEFT ( expr_pair ( COMMA expr_pair )* )? BRACE_RIGHT
+exprTermTuple
+    : BRACE_LEFT ( exprPair ( COMMA exprPair )* )? BRACE_RIGHT
     ;
     
-expr_pair
-    : expr_query COLON expr_query
+exprPair
+    : exprQuery COLON exprQuery
     ;
     
-var_ref_expr
+varRefExpr
     : IDENTIFIER
     | IDENTIFIER_AT_UNQUOTED
     | IDENTIFIER_QUOTED
     | IDENTIFIER_AT_QUOTED
     ;
     
-path_expr
-    : expr_precedence_01 PERIOD path_steps
-    | expr_precedence_01 PERIOD ASTERISK
-    | expr_precedence_01 BRACKET_LEFT ASTERISK BRACKET_RIGHT
-    | expr_precedence_01 BRACKET_LEFT expr_query BRACKET_RIGHT
+pathExpr
+    : exprPrecedence01 PERIOD pathSteps
+    | exprPrecedence01 PERIOD ASTERISK
+    | exprPrecedence01 BRACKET_LEFT ASTERISK BRACKET_RIGHT
+    | exprPrecedence01 BRACKET_LEFT exprQuery BRACKET_RIGHT
     ;
     
-path_steps
-    : path_steps PERIOD path_expr_var_ref
-    | path_steps BRACKET_LEFT ASTERISK BRACKET_RIGHT
-    | path_steps PERIOD ASTERISK
-    | path_steps BRACKET_LEFT expr_query BRACKET_RIGHT // TODO: Add path expression. See Rust impl TODO.
-    | path_expr_var_ref
+pathSteps
+    : pathSteps PERIOD pathExprVarRef
+    | pathSteps BRACKET_LEFT ASTERISK BRACKET_RIGHT
+    | pathSteps PERIOD ASTERISK
+    | pathSteps BRACKET_LEFT exprQuery BRACKET_RIGHT // TODO: Add path expression. See Rust impl TODO.
+    | pathExprVarRef
     ;
     
-path_expr_var_ref
+pathExprVarRef
     : LITERAL_STRING
-    | var_ref_expr
+    | varRefExpr
     ;
 
 // TODO: Check order and recheck all
-expr_query
-    : expr_query OR expr_query
-    | expr_query AND expr_query
-    | NOT expr_query
-    | expr_query IS expr_query
-    | expr_query IS NOT expr_query
-    | expr_query EQ expr_query
-    | expr_query NEQ expr_query
-    | expr_query ANGLE_LEFT expr_query
-    | expr_query ANGLE_RIGHT expr_query
-    | expr_query LT_EQ expr_query
-    | expr_query GT_EQ expr_query
-    | expr_query NOT? BETWEEN expr_query AND expr_query
-    | expr_query NOT? LIKE expr_query ( ESCAPE expr_query )?
-    | expr_query NOT? IN expr_query
-    | expr_query CONCAT expr_query
-    | expr_query PLUS expr_query
-    | expr_query MINUS expr_query
-    | expr_query ASTERISK expr_query
-    | expr_query SLASH_FORWARD expr_query
-    | expr_query PERCENT expr_query
-    | expr_query CARROT expr_query
-    | PLUS expr_query
-    | MINUS expr_query
-    | case_expr
-    | path_expr
-    | function_call
-    | expr_precedence_01
+exprQuery
+    : exprQuery OR exprQuery
+    | exprQuery AND exprQuery
+    | NOT exprQuery
+    | exprQuery IS exprQuery
+    | exprQuery IS NOT exprQuery
+    | exprQuery EQ exprQuery
+    | exprQuery NEQ exprQuery
+    | exprQuery ANGLE_LEFT exprQuery
+    | exprQuery ANGLE_RIGHT exprQuery
+    | exprQuery LT_EQ exprQuery
+    | exprQuery GT_EQ exprQuery
+    | exprQuery NOT? BETWEEN exprQuery AND exprQuery
+    | exprQuery NOT? LIKE exprQuery ( ESCAPE exprQuery )?
+    | exprQuery NOT? IN exprQuery
+    | exprQuery CONCAT exprQuery
+    | exprQuery PLUS exprQuery
+    | exprQuery MINUS exprQuery
+    | exprQuery ASTERISK exprQuery
+    | exprQuery SLASH_FORWARD exprQuery
+    | exprQuery PERCENT exprQuery
+    | exprQuery CARROT exprQuery
+    | PLUS exprQuery
+    | MINUS exprQuery
+    | caseExpr
+    | pathExpr
+    | functionCall
+    | exprPrecedence01
     ;
     
-case_expr
-    : CASE expr_query? expr_pair_when_then+ else_clause? END
+caseExpr
+    : CASE exprQuery? exprPairWhenThen+ elseClause? END
     ;
     
-expr_pair_when_then
-    : WHEN expr_query THEN expr_query
+exprPairWhenThen
+    : WHEN exprQuery THEN exprQuery
     ;
-else_clause
-    : ELSE expr_query
-    ;
-    
-where_clause
-    : WHERE expr_query
+elseClause
+    : ELSE exprQuery
     ;
     
-group_strategy
+whereClause
+    : WHERE exprQuery
+    ;
+    
+groupStrategy
     : ALL
     | PARTIAL
     ;
-group_key
-    : expr_query
-    | expr_query AS symbol_primitive
+groupKey
+    : exprQuery
+    | exprQuery AS symbolPrimitive
     ;
     
 // NOTE: Made group_strategy optional
-group_clause
-    : GROUP group_strategy? BY group_key (COMMA group_key )* group_alias?
+groupClause
+    : GROUP groupStrategy? BY groupKey (COMMA groupKey )* groupAlias?
     ;
-group_alias
-    : GROUP AS symbol_primitive
+groupAlias
+    : GROUP AS symbolPrimitive
     ;
-having_clause
-    : HAVING expr_query
+havingClause
+    : HAVING exprQuery
     ;
-from_clause
-    : FROM ( table_reference COMMA LATERAL? )* table_reference
+fromClause
+    : FROM ( tableReference COMMA LATERAL? )* tableReference
     ;
     
 // TODO: Check expansion
 values
-    : VALUES value_row ( COMMA value_row )*
+    : VALUES valueRow ( COMMA valueRow )*
     ;
 
-value_row
-    : PAREN_LEFT expr_query PAREN_RIGHT
-    | expr_term_collection
+valueRow
+    : PAREN_LEFT exprQuery PAREN_RIGHT
+    | exprTermCollection
     ;
     
-single_query
-    : expr_query
-    | sfw_query
+singleQuery
+    : exprQuery
+    | sfwQuery
     | values
     ;
     
 // NOTE: Modified rule
-query_set
-    : query_set set_op_union_except set_quantifier query_set
-    | query_set set_op_intersect set_quantifier single_query
-    | single_query
+querySet
+    : querySet setOpUnionExcept setQuantifier querySet
+    | querySet setOpIntersect setQuantifier singleQuery
+    | singleQuery
     ;
 query
-    : query_set order_by_clause? limit_clause? offset_by_clause?
+    : querySet orderByClause? limitClause? offsetByClause?
     ;
     
-set_op_union_except
+setOpUnionExcept
     : UNION
     | EXCEPT
     ;
 
-set_op_intersect
+setOpIntersect
     : INTERSECT
     ;
     
-set_quantifier
+setQuantifier
     : DISTINCT
     | ALL?
     ;
     
-offset_by_clause
-    : OFFSET expr_query
+offsetByClause
+    : OFFSET exprQuery
     ;
     
 // TODO Check expansion
-order_by_clause
+orderByClause
     : ORDER BY PRESERVE
-    | ORDER BY order_sort_spec ( COMMA order_sort_spec )*
+    | ORDER BY orderSortSpec ( COMMA orderSortSpec )*
     ;
     
-order_sort_spec
-    : expr_query by_spec? by_null_spec?
+orderSortSpec
+    : exprQuery bySpec? byNullSpec?
     ;
     
-by_spec
+bySpec
     : ASC
     | DESC
     ;
     
-by_null_spec
+byNullSpec
     : NULLS FIRST
     | NULLS LAST
     ;
     
-limit_clause
-    : LIMIT expr_query
+limitClause
+    : LIMIT exprQuery
     ;
     
 // TODO: Find in other grammar
 
     
 // TODO: Need to figure out
-with_clause
-    :
+withClause
+    : CARROT
     ;
