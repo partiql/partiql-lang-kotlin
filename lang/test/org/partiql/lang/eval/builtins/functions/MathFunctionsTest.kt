@@ -180,50 +180,46 @@ class MathFunctionsTest : EvaluatorTestBase() {
 
     class RoundFunctionsPassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
-            // without optional input
-            // source is int
+            // input is integer
+            ExprFunctionTestCase("round($MIN_INT8)", "$MIN_INT8"),
             ExprFunctionTestCase("round($MAX_INT8)", "$MAX_INT8"),
-            ExprFunctionTestCase("round(`$MIN_INT8`)", "$MIN_INT8"),
-            // source is float/double/ion float
-            ExprFunctionTestCase("round(1.1)", "1"),
-            ExprFunctionTestCase("round(0.12e4)", "1200"),
-            ExprFunctionTestCase("round(`-0.12e4`)", "-1200"),
-            ExprFunctionTestCase("round(-1.5)", "-2"),
-            // source is bigDecimal/ion decimal
-            ExprFunctionTestCase("round(`0.12d4`)", "1200"),
-            ExprFunctionTestCase("round(`-123_456.789_012`)", "-123457"),
-            ExprFunctionTestCase("round(1.99999999999999999999)", "2"),
-            ExprFunctionTestCase("round(-1.99999999999999999999)", "-2"),
-            // special input
+            ExprFunctionTestCase("round($MAX_INT8,2)", "$MAX_INT8.00"),
+            ExprFunctionTestCase("round($MIN_INT8,2)", "$MIN_INT8.00"),
+            ExprFunctionTestCase("round(100010, -2)", "100000"),
+            ExprFunctionTestCase("round(-100010, -2)", "-100000"),
+            ExprFunctionTestCase("round(100010, -20)", "0"),
+            ExprFunctionTestCase("round(-100010, -20)", "0"),
+
+            // input is inexact
+            ExprFunctionTestCase("round(`1.12e-4`)", "0"),
+            ExprFunctionTestCase("round(111.12e0)", "111"),
+            ExprFunctionTestCase("round(111.12e0,-2)", "100"),
+            ExprFunctionTestCase("round(191.12e0,-2)", "200"),
+
+            // input is exact
+            ExprFunctionTestCase("round($MAX_INT8.0)", "$MAX_INT8"),
+            ExprFunctionTestCase("round($MIN_INT8.0)", "$MIN_INT8"),
+            ExprFunctionTestCase("round(1.5)", "2"),
+            ExprFunctionTestCase("round(`1.5`)", "2"),
+            ExprFunctionTestCase("round(`111.12d0`)", "111"),
+            ExprFunctionTestCase("round(1.55,1)", "1.6"),
+            ExprFunctionTestCase("round(`1.54`,1)", "1.5"),
+            ExprFunctionTestCase("round(0.33333333,-1)", "0"),
+            ExprFunctionTestCase("round(5.666666666,-1)", "10"),
+            ExprFunctionTestCase("round(-0.333333333,-1)", "0"),
+            ExprFunctionTestCase("round(-0.666666666,-1)", "0"),
+            ExprFunctionTestCase("round(`111.12d0`, -2)", "100"),
+            ExprFunctionTestCase("round(`191.12d0`, -2)", "200"),
+            ExprFunctionTestCase("round(`1.123_456_789_123`,18)", "1.123_456_789_123_000_000"),
+
+            // special Input
             ExprFunctionTestCase("round(`+inf`)", "+inf"),
             ExprFunctionTestCase("round(`-inf`)", "-inf"),
             ExprFunctionTestCase("round(`nan`)", "nan"),
-
-            // without optional input
-            // source is int
-            ExprFunctionTestCase("round($MAX_INT8,1)", "$MAX_INT8.0"),
-            // source is float/double/ion float
-            ExprFunctionTestCase("round(1.14,1)", "1.1"),
-            ExprFunctionTestCase("round(0.12e4,4)", "1200.0000"),
-            ExprFunctionTestCase("round(-1.17,1)", "-1.2"),
-            ExprFunctionTestCase("round(`-0.128e-1`,3)", "-0.013"),
-            // source is bigDecimal/ion decimal
-            ExprFunctionTestCase("round(`0.12d4`,3)", "1200.000"),
-            ExprFunctionTestCase("round(`-123_456.789_012`,3)", "-123456.789"),
-            ExprFunctionTestCase("round(1.99999999999999999999,3)", "2.000"),
-            ExprFunctionTestCase("round(${MAX_INT8}0.00,1)", "${MAX_INT8}0.0"),
-            ExprFunctionTestCase("round(${MIN_INT8}0.00,1)", "${MIN_INT8}0.0"),
-            // special input
-            ExprFunctionTestCase("round(`+inf`,1)", "+inf"),
-            ExprFunctionTestCase("round(`-inf`,1)", "-inf"),
-            ExprFunctionTestCase("round(`nan`,1)", "nan"),
-            // higher precision
-            ExprFunctionTestCase("round(`1.32`,10)", "1.3200000000"),
-            ExprFunctionTestCase("round(`1.123_123_123_123_123_123`, 21)", "1.123_123_123_123_123_123_000")
         )
     }
 
-    class RoundFunctionOverflowTest : ArgumentsProviderBase() {
+    class RoundFunctionExceptionTest : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
             // overflow caused by expression evaluation inside the function
             EvaluatorErrorTestCase(
@@ -245,7 +241,7 @@ class MathFunctionsTest : EvaluatorTestBase() {
                 query = "round(${MIN_INT8}1)",
                 expectedErrorCode = ErrorCode.SEMANTIC_LITERAL_INT_OVERFLOW,
             ),
-//             edge case, overflow caused by function evulation
+            // edge case, overflow caused by function evulation
             EvaluatorErrorTestCase(
                 query = "round($MAX_INT8.5)",
                 expectedErrorCode = ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
@@ -258,9 +254,10 @@ class MathFunctionsTest : EvaluatorTestBase() {
                 expectedPermissiveModeResult = "MISSING",
                 targetPipeline = EvaluatorTestTarget.ALL_PIPELINES
             ),
+            // inexact type supplied to round function with targeted scale > 0
             EvaluatorErrorTestCase(
-                query = "round($MIN_INT8)",
-                expectedErrorCode = ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
+                query = "round(`3.333333e0`,2)",
+                expectedErrorCode = ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_FUNC_CALL,
                 expectedPermissiveModeResult = "MISSING",
                 targetPipeline = EvaluatorTestTarget.ALL_PIPELINES
             )
@@ -268,7 +265,7 @@ class MathFunctionsTest : EvaluatorTestBase() {
     }
 
     @ParameterizedTest
-    @ArgumentsSource(RoundFunctionOverflowTest::class)
+    @ArgumentsSource(RoundFunctionExceptionTest::class)
     fun roundOverflowTests(tc: EvaluatorErrorTestCase) = runEvaluatorErrorTestCase(
         tc.query,
         expectedErrorCode = tc.expectedErrorCode,

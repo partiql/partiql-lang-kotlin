@@ -95,16 +95,16 @@ private fun Number.exprValue(valueFactory: ExprValueFactory): ExprValue = when (
 }
 
 /**
- * Built in function to round to the [targetedScale] places to the right of the decimal points
- *
- * syntax: `round(source[, targetScale])`
- * where source is a numeric literal or expression that can be evaluated to numeric literal
- * targetScale is an Integer Type.
- * If omitted, targetScale is set to 0, and round function will return an integer
- * else if source bigger than or equal to 0 ->
- *          Round(source, targetScale) = Floor( source * 10^targetScale + 0.5) * (10^-targetInteger)
- * else if source less than 0 ->
- *          Round(source, targetScale) = - Round(-source, targetScale)
+ * | source  | targetScale | output      | description|
+ * | Integer | omitted/0   | Integer     | round to the nearest Integer
+ * | Integer | > 0         | Decimal     | transform to Decimal
+ * | Integer | < 0         | Integer     | round to [targetScale] decimal places
+ * | Inexact | omitted/0   | Integer     | round to the nearest Integer
+ * | Inexact | > 0         | Not allowed | allowing this potentially introduce accuracy loss
+ * | Inexact | < 0         | Integer     | round to [targetScale] decimal places
+ * | Exact   | omitted/0   | Integer     | round to the nearest Integer
+ * | Exact   | > 0         | Integer     | round to [targetScale] decimal places
+ * | Exact   | < 0         | Integer     | round to [targetScale] decimal places
  **/
 internal class RoundFunction(val valueFactory: ExprValueFactory) : ExprFunction {
     override val signature = FunctionSignature(
@@ -115,50 +115,77 @@ internal class RoundFunction(val valueFactory: ExprValueFactory) : ExprFunction 
     )
 
     override fun callWithOptional(session: EvaluationSession, required: List<ExprValue>, opt: ExprValue): ExprValue {
-        return when (opt.intValue()) {
-            0 -> callWithRequired(session, required)
-            else -> round(required.first().numberValue(), opt.intValue()).exprValue(valueFactory)
-        }
+        return round(required.first().numberValue(), opt.intValue()).exprValue(valueFactory)
     }
 
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
         return round(required.first().numberValue(), 0).exprValue(valueFactory)
     }
 
-    private fun round(source: Number, targetScale: Int = 0): Number = when (source) {
-        POSITIVE_INFINITY, NEGATIVE_INFINITY, NaN -> source
-        else -> {
-            if (source >= 0.0) {
-                roundHelper(source, targetScale)
-            } else {
-                // if the negation cased integer to be overflow, report a runtime evaluation error.
-                when (val positiveSource = -source) {
-                    is BigInteger -> errIntOverflow(8)
-                    else -> -(roundHelper(positiveSource, targetScale))
-                }
-            }
+    private fun round(source: Number, targetScale: Int): Number =
+        when (source) {
+            POSITIVE_INFINITY, NEGATIVE_INFINITY, NaN -> source
+            is Int, is Long -> roundInt(source, targetScale)
+            is Double, is Float -> roundInexact(source, targetScale)
+            else -> roundExact(source, targetScale)
         }
+
+    private fun roundInt(source: Number, targetScale: Int): Number = when (targetScale) {
+        // target scale is 0, no need to round
+        0 -> source
+        // target source is less than 0, we round this to integer
+        in -Int.MAX_VALUE..-1 -> transformIntType(roundToDecimal(source, targetScale).toBigIntegerExact())
+        // target source is bigger than 0
+        // not really rounding this, just transform it to decimal with required scale
+        else -> bigDecimalOf(source).setScale(targetScale)
     }
 
-    private fun roundHelper(positiveSource: Number, targetScale: Int): Number {
-        val roundRes = bigDecimalOf(positiveSource).multiply(
-            (
-                BigDecimal.ONE
-                    .scaleByPowerOfTen(targetScale)
-                )
-        ).add(bigDecimalOf(0.5)).setScale(0, RoundingMode.FLOOR).multiply(
-            BigDecimal.ONE.scaleByPowerOfTen(-targetScale)
+    private fun roundInexact(source: Number, targetScale: Int) = when (targetScale) {
+        // target scale is 0, we around this to Integer
+        0 -> transformIntType(roundToDecimal(source, targetScale).toBigIntegerExact())
+        // target source is less than 0, we round this to integer
+        in -Int.MAX_VALUE..-1 -> transformIntType(roundToDecimal(source, targetScale).toBigIntegerExact())
+        // target source is bigger than 0, we do not round this because it may introduce accuracy issues if target scale is higher than the original accuracy
+        else -> errNoContext(
+            message = "Round Function with specified target scale other than 0 requires the source to be exact",
+            // should I go with "FEATURE NOT SUPPORT YET"?
+            errorCode = ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_FUNC_CALL,
+            internal = true
         )
-        return when (targetScale) {
-            0 -> (transformIntType(roundRes.toBigIntegerExact()))
-            else -> roundRes
+    }
+
+    private fun roundExact(source: Number, targetScale: Int) = when (targetScale) {
+        // target scale is 0, we around this to Integer
+        0 -> transformIntType(roundToDecimal(source, targetScale).toBigIntegerExact())
+        // target source is less than 0, we round this to integer
+        in -Int.MAX_VALUE..-1 -> transformIntType(roundToDecimal(source, targetScale).toBigIntegerExact())
+        // target source is bigger than 0, we round this to big decimal
+        else -> roundToDecimal(source, targetScale)
+    }
+
+    // round decimal number to given target scale
+    private fun roundToDecimal(source: Number, targetScale: Int): BigDecimal {
+        return if (source >= 0.0) {
+            roundHelper(source, targetScale)
+        } else {
+            -(roundHelper(-source, targetScale)) as BigDecimal
         }
     }
 
-    // For some reasons most of the extended operator for numbers do not have int
-    // if approved, could add the int case to those operator functions.
+    private fun roundHelper(positiveSource: Number, targetScale: Int) = bigDecimalOf(positiveSource).multiply(
+        (
+            BigDecimal.ONE
+                .scaleByPowerOfTen(targetScale)
+            )
+    ).add(bigDecimalOf(0.5)).setScale(0, RoundingMode.FLOOR).multiply(
+        BigDecimal.ONE.scaleByPowerOfTen(-targetScale)
+    )
+
+    // During the implementation of the round function, I figured that the unaryMinus could potentially introduce some edge cases.
     operator fun Number.unaryMinus(): Number {
         return when (this) {
+            // For some reasons most of the extended operator for numbers do not have int
+            // if approved, could add the int case to those operator functions.
             is Int -> -this
             // this is an unfortunate edge case
             // taking bytes for example, bytes has 8 bits, signed byte ranges from -128 to 127, using two's complement
