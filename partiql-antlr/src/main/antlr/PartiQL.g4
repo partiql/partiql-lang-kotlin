@@ -15,8 +15,8 @@ sfwQuery
     
 selectClause
     : SELECT setQuantifierStrategy? ASTERISK          # SelectAll
-    | SELECT setQuantifierStrategy? projectionItems  # SelectItems
-    | SELECT setQuantifierStrategy? VALUE exprQuery  # SelectValue
+    | SELECT setQuantifierStrategy? projectionItems   # SelectItems
+    | SELECT setQuantifierStrategy? VALUE exprQuery   # SelectValue
     | PIVOT exprQuery AT exprQuery                    # SelectPivot
     ;
     
@@ -35,8 +35,8 @@ projectionItem
     ;
     
 symbolPrimitive
-    : IDENTIFIER
-    | IDENTIFIER_QUOTED
+    : IDENTIFIER         # SymbolIdentifierUnquoted
+    | IDENTIFIER_QUOTED  # SymbolIdentifierQuoted
     ;
 // TODO: Mental note. Needed to duplicate table_joined to remove left recursion
 tableReference
@@ -143,11 +143,11 @@ literal
     
 // TODO: Check the '!' in Rust grammar
 exprTerm
-    : PAREN_LEFT query PAREN_RIGHT
-    | literal
-    | varRefExpr
-    | exprTermCollection
-    | exprTermTuple
+    : PAREN_LEFT query PAREN_RIGHT # ExprTermWrappedQuery
+    | literal                      # ExprTermLiteral
+    | varRefExpr                   # ExprTermVarRefExpr
+    | exprTermCollection           # ExprTermExprTermCollection
+    | exprTermTuple                # ExprTermExprTermTuple
     ;
     
 exprTermCollection
@@ -173,10 +173,10 @@ exprPair
     ;
     
 varRefExpr
-    : IDENTIFIER
-    | IDENTIFIER_AT_UNQUOTED
-    | IDENTIFIER_QUOTED
-    | IDENTIFIER_AT_QUOTED
+    : IDENTIFIER              # VarRefExprIdentUnquoted
+    | IDENTIFIER_AT_UNQUOTED  # VarRefExprIdentAtUnquoted
+    | IDENTIFIER_QUOTED       # VarRefExprIdentQuoted
+    | IDENTIFIER_AT_QUOTED    # VarRefExprIdentAtQuoted
     ;
     
 pathExpr
