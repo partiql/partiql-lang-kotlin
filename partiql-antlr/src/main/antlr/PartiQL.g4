@@ -201,33 +201,32 @@ pathExprVarRef
 
 // TODO: Check order and recheck all
 exprQuery
-    : exprQuery OR exprQuery
-    | exprQuery AND exprQuery
-    | NOT exprQuery
-    | exprQuery IS exprQuery
-    | exprQuery IS NOT exprQuery
-    | exprQuery EQ exprQuery
-    | exprQuery NEQ exprQuery
-    | exprQuery ANGLE_LEFT exprQuery
-    | exprQuery ANGLE_RIGHT exprQuery
-    | exprQuery LT_EQ exprQuery
-    | exprQuery GT_EQ exprQuery
-    | exprQuery NOT? BETWEEN exprQuery AND exprQuery
-    | exprQuery NOT? LIKE exprQuery ( ESCAPE exprQuery )?
-    | exprQuery NOT? IN exprQuery
-    | exprQuery CONCAT exprQuery
-    | exprQuery PLUS exprQuery
-    | exprQuery MINUS exprQuery
-    | exprQuery ASTERISK exprQuery
-    | exprQuery SLASH_FORWARD exprQuery
-    | exprQuery PERCENT exprQuery
-    | exprQuery CARROT exprQuery
-    | PLUS exprQuery
-    | MINUS exprQuery
-    | caseExpr
-    | pathExpr
-    | functionCall
-    | exprPrecedence01
+    : exprQuery OR exprQuery                                # ExprQueryOr
+    | exprQuery AND exprQuery                               # ExprQueryAnd
+    | NOT exprQuery                                         # ExprQueryNot
+    | exprQuery IS NOT? exprQuery                           # ExprQueryIs
+    | exprQuery EQ exprQuery                                # ExprQueryEq
+    | exprQuery NEQ exprQuery                               # ExprQueryNeq
+    | exprQuery ANGLE_LEFT exprQuery                        # ExprQueryLt
+    | exprQuery ANGLE_RIGHT exprQuery                       # ExprQueryGt
+    | exprQuery LT_EQ exprQuery                             # ExprQueryLtEq
+    | exprQuery GT_EQ exprQuery                             # ExprQueryGtEq
+    | exprQuery NOT? BETWEEN exprQuery AND exprQuery        # ExprQueryBetween
+    | exprQuery NOT? LIKE exprQuery ( ESCAPE exprQuery )?   # ExprQueryLike
+    | exprQuery NOT? IN exprQuery                           # ExprQueryIn
+    | exprQuery CONCAT exprQuery                            # ExprQueryConcat
+    | exprQuery PLUS exprQuery                              # ExprQueryPlus
+    | exprQuery MINUS exprQuery                             # ExprQueryMinus
+    | exprQuery ASTERISK exprQuery                          # ExprQueryMultiply
+    | exprQuery SLASH_FORWARD exprQuery                     # ExprQueryDivide
+    | exprQuery PERCENT exprQuery                           # ExprQueryModulus
+    | exprQuery CARROT exprQuery                            # ExprQueryExponent
+    | PLUS exprQuery                                        # ExprQueryPositive
+    | MINUS exprQuery                                       # ExprQueryNegative
+    | caseExpr                                              # ExprQueryCase
+    | pathExpr                                              # ExprQueryPath
+    | functionCall                                          # ExprQueryFunctionCall
+    | exprPrecedence01                                      # ExprQueryPrimary
     ;
     
 caseExpr
