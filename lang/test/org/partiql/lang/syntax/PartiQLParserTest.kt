@@ -16,7 +16,7 @@ package org.partiql.lang.syntax
 
 import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class PartiQLParserTest {
 
