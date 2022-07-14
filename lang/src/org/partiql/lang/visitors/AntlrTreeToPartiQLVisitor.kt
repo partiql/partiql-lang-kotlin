@@ -35,52 +35,41 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
         return PartiqlAst.BUILDER().query(select)
     }
 
-    override fun visitSelectAll(ctx: PartiQLParser.SelectAllContext): PartiqlAst.PartiqlAstNode {
-        return PartiqlAst.BUILDER().projectStar()
-    }
+    override fun visitSelectAll(ctx: PartiQLParser.SelectAllContext): PartiqlAst.PartiqlAstNode = PartiqlAst.BUILDER().projectStar()
 
-    override fun visitSelectItems(ctx: PartiQLParser.SelectItemsContext): PartiqlAst.PartiqlAstNode {
-        return visit(ctx.projectionItems())
-    }
+    override fun visitSelectItems(ctx: PartiQLParser.SelectItemsContext): PartiqlAst.PartiqlAstNode = visit(ctx.projectionItems())
 
     override fun visitProjectionItems(ctx: PartiQLParser.ProjectionItemsContext): PartiqlAst.PartiqlAstNode {
-        val projections = ctx.projectionItem().map { projection ->
-            visit(projection) as PartiqlAst.ProjectItem
-        }
+        val projections = ctx.projectionItem().map { projection -> visit(projection) as PartiqlAst.ProjectItem }
         return PartiqlAst.BUILDER().projectList(projections)
     }
 
     override fun visitProjectionItem(ctx: PartiQLParser.ProjectionItemContext): PartiqlAst.PartiqlAstNode {
-        println(ctx.exprQuery().text)
         val expr = visit(ctx.exprQuery()) as PartiqlAst.Expr
         return PartiqlAst.BUILDER().projectExpr(expr)
     }
 
     // TODO: Probably redo
-    override fun visitSymbolIdentifierQuoted(ctx: PartiQLParser.SymbolIdentifierQuotedContext): PartiqlAst.PartiqlAstNode {
-        println(ctx.IDENTIFIER_QUOTED().text)
-        return PartiqlAst.BUILDER().id(ctx.IDENTIFIER_QUOTED().text.toPartiQLIdentifier(), PartiqlAst.CaseSensitivity.CaseSensitive(), PartiqlAst.ScopeQualifier.LocalsFirst())
-    }
+    override fun visitSymbolIdentifierQuoted(ctx: PartiQLParser.SymbolIdentifierQuotedContext): PartiqlAst.PartiqlAstNode =
+        PartiqlAst.BUILDER().id(ctx.IDENTIFIER_QUOTED().text.toPartiQLIdentifier(), PartiqlAst.CaseSensitivity.CaseSensitive(), PartiqlAst.ScopeQualifier.LocalsFirst())
 
     // TODO: Probably redo
-    override fun visitSymbolIdentifierUnquoted(ctx: PartiQLParser.SymbolIdentifierUnquotedContext): PartiqlAst.PartiqlAstNode {
-        println(ctx.IDENTIFIER())
-        return PartiqlAst.BUILDER().id(ctx.IDENTIFIER().text, PartiqlAst.CaseSensitivity.CaseSensitive(), PartiqlAst.ScopeQualifier.LocalsFirst())
-    }
+    override fun visitSymbolIdentifierUnquoted(ctx: PartiQLParser.SymbolIdentifierUnquotedContext): PartiqlAst.PartiqlAstNode =
+        PartiqlAst.BUILDER().id(ctx.IDENTIFIER().text, PartiqlAst.CaseSensitivity.CaseSensitive(), PartiqlAst.ScopeQualifier.LocalsFirst())
 
-    // TODO: Do the IDENT_AT ones. LocalsFirst for scope.
-    override fun visitVarRefExprIdentQuoted(ctx: PartiQLParser.VarRefExprIdentQuotedContext): PartiqlAst.PartiqlAstNode {
-        return PartiqlAst.BUILDER().id(ctx.IDENTIFIER_QUOTED().text.toPartiQLIdentifier(), PartiqlAst.CaseSensitivity.CaseSensitive(), PartiqlAst.ScopeQualifier.Unqualified())
-    }
+    override fun visitVarRefExprIdentQuoted(ctx: PartiQLParser.VarRefExprIdentQuotedContext): PartiqlAst.PartiqlAstNode =
+        PartiqlAst.BUILDER().id(ctx.toRawString(), PartiqlAst.CaseSensitivity.CaseSensitive(), PartiqlAst.ScopeQualifier.Unqualified())
 
-    override fun visitVarRefExprIdentUnquoted(ctx: PartiQLParser.VarRefExprIdentUnquotedContext): PartiqlAst.PartiqlAstNode {
-        return PartiqlAst.BUILDER().id(ctx.IDENTIFIER().text, PartiqlAst.CaseSensitivity.CaseInsensitive(), PartiqlAst.ScopeQualifier.Unqualified())
-    }
+    override fun visitVarRefExprIdentAtQuoted(ctx: PartiQLParser.VarRefExprIdentAtQuotedContext): PartiqlAst.PartiqlAstNode =
+        PartiqlAst.BUILDER().id(ctx.toRawString(), PartiqlAst.CaseSensitivity.CaseSensitive(), PartiqlAst.ScopeQualifier.LocalsFirst())
 
-    override fun visitExprTermVarRefExpr(ctx: PartiQLParser.ExprTermVarRefExprContext): PartiqlAst.PartiqlAstNode {
-        println("EXPR TERM VAR REF EXPR: ${ctx.varRefExpr().text}")
-        return visit(ctx.varRefExpr())
-    }
+    override fun visitVarRefExprIdentAtUnquoted(ctx: PartiQLParser.VarRefExprIdentAtUnquotedContext): PartiqlAst.PartiqlAstNode =
+        PartiqlAst.BUILDER().id(ctx.toRawString(), PartiqlAst.CaseSensitivity.CaseInsensitive(), PartiqlAst.ScopeQualifier.LocalsFirst())
+
+    override fun visitVarRefExprIdentUnquoted(ctx: PartiQLParser.VarRefExprIdentUnquotedContext): PartiqlAst.PartiqlAstNode =
+        PartiqlAst.BUILDER().id(ctx.toRawString(), PartiqlAst.CaseSensitivity.CaseInsensitive(), PartiqlAst.ScopeQualifier.Unqualified())
+
+    override fun visitExprTermVarRefExpr(ctx: PartiQLParser.ExprTermVarRefExprContext): PartiqlAst.PartiqlAstNode = visit(ctx.varRefExpr())
 
     // TODO
     override fun visitFromClause(ctx: PartiQLParser.FromClauseContext): PartiqlAst.PartiqlAstNode {
@@ -89,9 +78,7 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
     }
 
     override fun visitExprTermBag(ctx: PartiQLParser.ExprTermBagContext): PartiqlAst.PartiqlAstNode {
-        val exprList = ctx.exprQuery().map { exprQuery ->
-            visit(exprQuery) as PartiqlAst.Expr
-        }
+        val exprList = ctx.exprQuery().map { exprQuery -> visit(exprQuery) as PartiqlAst.Expr }
         return PartiqlAst.Expr.Bag(exprList)
     }
 
@@ -101,44 +88,18 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
      *
      */
 
-    override fun visitLiteralNull(ctx: PartiQLParser.LiteralNullContext): PartiqlAst.PartiqlAstNode {
-        return PartiqlAst.Expr.Lit(ion.newNull().toIonElement())
-    }
-
-    override fun visitLiteralMissing(ctx: PartiQLParser.LiteralMissingContext): PartiqlAst.PartiqlAstNode {
-        return PartiqlAst.BUILDER().missing()
-    }
-
-    override fun visitLiteralTrue(ctx: PartiQLParser.LiteralTrueContext): PartiqlAst.PartiqlAstNode {
-        return PartiqlAst.Expr.Lit(ion.newBool(true).toIonElement())
-    }
-    override fun visitLiteralFalse(ctx: PartiQLParser.LiteralFalseContext): PartiqlAst.PartiqlAstNode {
-        return PartiqlAst.Expr.Lit(ion.newBool(false).toIonElement())
-    }
-
-    override fun visitLiteralIon(ctx: PartiQLParser.LiteralIonContext): PartiqlAst.PartiqlAstNode {
-        return PartiqlAst.Expr.Lit(ion.singleValue(ctx.ION_CLOSURE().text.toIonString()).toIonElement())
-    }
-
-    override fun visitLiteralString(ctx: PartiQLParser.LiteralStringContext): PartiqlAst.PartiqlAstNode {
-        return PartiqlAst.Expr.Lit(ion.newString(ctx.LITERAL_STRING().text.toPartiQLString()).toIonElement())
-    }
-
-    // TODO: Catch exception for exponent too large
-    override fun visitLiteralDecimal(ctx: PartiQLParser.LiteralDecimalContext): PartiqlAst.PartiqlAstNode {
-        return PartiqlAst.Expr.Lit(ion.newDecimal(bigDecimalOf(ctx.LITERAL_DECIMAL().text)).toIonElement())
-    }
-
-    override fun visitLiteralInteger(ctx: PartiQLParser.LiteralIntegerContext): PartiqlAst.PartiqlAstNode {
-        return PartiqlAst.Expr.Lit(ion.newInt(BigInteger(ctx.LITERAL_INTEGER().text, 10)).toIonElement())
-    }
-
+    override fun visitLiteralNull(ctx: PartiQLParser.LiteralNullContext): PartiqlAst.PartiqlAstNode = PartiqlAst.Expr.Lit(ion.newNull().toIonElement())
+    override fun visitLiteralMissing(ctx: PartiQLParser.LiteralMissingContext): PartiqlAst.PartiqlAstNode = PartiqlAst.BUILDER().missing()
+    override fun visitLiteralTrue(ctx: PartiQLParser.LiteralTrueContext): PartiqlAst.PartiqlAstNode = PartiqlAst.Expr.Lit(ion.newBool(true).toIonElement())
+    override fun visitLiteralFalse(ctx: PartiQLParser.LiteralFalseContext): PartiqlAst.PartiqlAstNode = PartiqlAst.Expr.Lit(ion.newBool(false).toIonElement())
+    override fun visitLiteralIon(ctx: PartiQLParser.LiteralIonContext): PartiqlAst.PartiqlAstNode = PartiqlAst.Expr.Lit(ion.singleValue(ctx.ION_CLOSURE().text.toIonString()).toIonElement())
+    override fun visitLiteralString(ctx: PartiQLParser.LiteralStringContext): PartiqlAst.PartiqlAstNode = PartiqlAst.Expr.Lit(ion.newString(ctx.LITERAL_STRING().text.toPartiQLString()).toIonElement())
+    override fun visitLiteralInteger(ctx: PartiQLParser.LiteralIntegerContext): PartiqlAst.PartiqlAstNode = PartiqlAst.Expr.Lit(ion.newInt(BigInteger(ctx.LITERAL_INTEGER().text, 10)).toIonElement())
     override fun visitLiteralDate(ctx: PartiQLParser.LiteralDateContext): PartiqlAst.PartiqlAstNode {
         val dateString = ctx.LITERAL_STRING().text.toPartiQLString()
         val (year, month, day) = dateString.split("-")
         return PartiqlAst.BUILDER().date(year.toLong(), month.toLong(), day.toLong())
     }
-
     override fun visitLiteralTime(ctx: PartiQLParser.LiteralTimeContext): PartiqlAst.PartiqlAstNode {
         val timeString = ctx.LITERAL_STRING().text.toPartiQLString()
         // TODO: Get precision if specified
@@ -151,6 +112,8 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
             )
         )
     }
+    // TODO: Catch exception for exponent too large
+    override fun visitLiteralDecimal(ctx: PartiQLParser.LiteralDecimalContext): PartiqlAst.PartiqlAstNode = PartiqlAst.Expr.Lit(ion.newDecimal(bigDecimalOf(ctx.LITERAL_DECIMAL().text)).toIonElement())
 
     /**
      *
@@ -158,21 +121,21 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
      *
      */
 
-    private fun String.toPartiQLString(): String {
-        return this.trim('\'').replace("''", "'")
-    }
+    private fun PartiQLParser.VarRefExprIdentAtUnquotedContext.toRawString() = this.IDENTIFIER_AT_UNQUOTED().text.removePrefix("@")
+    private fun PartiQLParser.VarRefExprIdentAtQuotedContext.toRawString() = this.IDENTIFIER_AT_QUOTED().text.removePrefix("@").trim('"')
+    private fun PartiQLParser.VarRefExprIdentQuotedContext.toRawString() = this.IDENTIFIER_QUOTED().text.toPartiQLIdentifier()
+    private fun PartiQLParser.VarRefExprIdentUnquotedContext.toRawString() = this.IDENTIFIER().text
 
-    private fun String.toPartiQLIdentifier(): String {
-        return this.trim('"').replace("\"\"", "\"")
-    }
-
-    private fun String.toIonString(): String {
-        return this.trim('`')
-    }
+    private fun String.toPartiQLString(): String = this.trim('\'').replace("''", "'")
+    private fun String.toPartiQLIdentifier(): String = this.trim('"').replace("\"\"", "\"")
+    private fun String.toIonString(): String = this.trim('`')
 
     private fun getStrategy(strategy: PartiQLParser.SetQuantifierStrategyContext?): PartiqlAst.SetQuantifier? {
-        if (strategy == null) return null
-        return if (strategy.text.toUpperCase() == "DISTINCT") PartiqlAst.SetQuantifier.Distinct() else PartiqlAst.SetQuantifier.All()
+        return when {
+            strategy == null -> null
+            strategy.text.toUpperCase() == "DISTINCT" -> PartiqlAst.SetQuantifier.Distinct()
+            else -> PartiqlAst.SetQuantifier.All()
+        }
     }
 
     private fun getSetQuantifierStrategy(ctx: PartiQLParser.SelectClauseContext): PartiqlAst.SetQuantifier? {
