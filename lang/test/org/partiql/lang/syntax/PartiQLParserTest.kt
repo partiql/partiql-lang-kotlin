@@ -27,7 +27,7 @@ class PartiQLParserTest {
     @Test
     fun test() {
         // Arrange
-        val query = "SELECT * FROM <<true, false, null, missing, `hello`, 'this is a string', 4, 4e2, 4.2, .4, DATE '2022-02-01', TIME '23:11:59.123456789' >>"
+        val query = "SELECT a, \"b\" FROM <<true, false, null, missing, `hello`, 'this is a string', 4, 4e2, 4.2, .4, DATE '2022-02-01', TIME '23:11:59.123456789' >>"
 
         // Act
         val tree = parser.parseQuery(query)

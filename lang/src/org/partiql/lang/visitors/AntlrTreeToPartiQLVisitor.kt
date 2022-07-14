@@ -40,8 +40,46 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
     }
 
     override fun visitSelectItems(ctx: PartiQLParser.SelectItemsContext): PartiqlAst.PartiqlAstNode {
-        ctx.projectionItems()
-        return super.visitSelectItems(ctx)
+        return visit(ctx.projectionItems())
+    }
+
+    override fun visitProjectionItems(ctx: PartiQLParser.ProjectionItemsContext): PartiqlAst.PartiqlAstNode {
+        val projections = ctx.projectionItem().map { projection ->
+            visit(projection) as PartiqlAst.ProjectItem
+        }
+        return PartiqlAst.BUILDER().projectList(projections)
+    }
+
+    override fun visitProjectionItem(ctx: PartiQLParser.ProjectionItemContext): PartiqlAst.PartiqlAstNode {
+        println(ctx.exprQuery().text)
+        val expr = visit(ctx.exprQuery()) as PartiqlAst.Expr
+        return PartiqlAst.BUILDER().projectExpr(expr)
+    }
+
+    // TODO: Probably redo
+    override fun visitSymbolIdentifierQuoted(ctx: PartiQLParser.SymbolIdentifierQuotedContext): PartiqlAst.PartiqlAstNode {
+        println(ctx.IDENTIFIER_QUOTED().text)
+        return PartiqlAst.BUILDER().id(ctx.IDENTIFIER_QUOTED().text.toPartiQLIdentifier(), PartiqlAst.CaseSensitivity.CaseSensitive(), PartiqlAst.ScopeQualifier.LocalsFirst())
+    }
+
+    // TODO: Probably redo
+    override fun visitSymbolIdentifierUnquoted(ctx: PartiQLParser.SymbolIdentifierUnquotedContext): PartiqlAst.PartiqlAstNode {
+        println(ctx.IDENTIFIER())
+        return PartiqlAst.BUILDER().id(ctx.IDENTIFIER().text, PartiqlAst.CaseSensitivity.CaseSensitive(), PartiqlAst.ScopeQualifier.LocalsFirst())
+    }
+
+    // TODO: Do the IDENT_AT ones. LocalsFirst for scope.
+    override fun visitVarRefExprIdentQuoted(ctx: PartiQLParser.VarRefExprIdentQuotedContext): PartiqlAst.PartiqlAstNode {
+        return PartiqlAst.BUILDER().id(ctx.IDENTIFIER_QUOTED().text.toPartiQLIdentifier(), PartiqlAst.CaseSensitivity.CaseSensitive(), PartiqlAst.ScopeQualifier.Unqualified())
+    }
+
+    override fun visitVarRefExprIdentUnquoted(ctx: PartiQLParser.VarRefExprIdentUnquotedContext): PartiqlAst.PartiqlAstNode {
+        return PartiqlAst.BUILDER().id(ctx.IDENTIFIER().text, PartiqlAst.CaseSensitivity.CaseInsensitive(), PartiqlAst.ScopeQualifier.Unqualified())
+    }
+
+    override fun visitExprTermVarRefExpr(ctx: PartiQLParser.ExprTermVarRefExprContext): PartiqlAst.PartiqlAstNode {
+        println("EXPR TERM VAR REF EXPR: ${ctx.varRefExpr().text}")
+        return visit(ctx.varRefExpr())
     }
 
     // TODO
@@ -122,6 +160,10 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
 
     private fun String.toPartiQLString(): String {
         return this.trim('\'').replace("''", "'")
+    }
+
+    private fun String.toPartiQLIdentifier(): String {
+        return this.trim('"').replace("\"\"", "\"")
     }
 
     private fun String.toIonString(): String {
