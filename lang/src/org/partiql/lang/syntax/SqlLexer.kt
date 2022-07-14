@@ -586,6 +586,7 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
                             Token(
                                 type = tokenType,
                                 value = ionValue,
+                                sourceText = text,
                                 span = SourceSpan(currPos.line, currPos.column, tokenCodePointCount)
                             )
                         )
@@ -612,6 +613,7 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
                 Token(
                     type = TokenType.EOF,
                     value = ion.newSymbol("EOF"),
+                    sourceText = "",
                     span = SourceSpan(currPos.line, currPos.column, 0)
                 )
             )
@@ -640,6 +642,11 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
                 .map { it.keywordText }
                 .toList()
             val lexemeMapping = MULTI_LEXEME_TOKEN_MAP[keywords] ?: continue
+            val sourceText = subList(size - prefixLength, size)
+                .asSequence()
+                .plus(newToken)
+                .map { it.sourceText }
+                .joinToString(" ")
 
             // at this point we found the candidate so we need to replace the suffix
             var newPos = newToken.span
@@ -650,7 +657,7 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
 
             // create our new token
             val (keyword, type) = lexemeMapping
-            newToken = Token(type, ion.newSymbol(keyword), newPos)
+            newToken = Token(type, ion.newSymbol(keyword), sourceText = sourceText, newPos)
         }
 
         add(newToken)

@@ -15,7 +15,6 @@ import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.compareTo
 import org.partiql.lang.util.isZero
-import org.partiql.lang.util.unaryMinus
 import java.lang.Double.NEGATIVE_INFINITY
 import java.lang.Double.NaN
 import java.lang.Double.POSITIVE_INFINITY

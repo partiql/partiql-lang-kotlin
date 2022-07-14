@@ -19,10 +19,16 @@ import org.partiql.lang.util.stringValue
 
 /**
  * Simple [IonValue] based token for lexing PartiQL.
+ *
+ * @property type the [TokenType] of this token
+ * @property value an optional [IonValue] representing this token (may be transformed)
+ * @property sourceText the literal source [String] of the token, if available
+ * @property span the [SourceSpan] in the source where this token appears
  */
 data class Token(
     val type: TokenType,
     val value: IonValue? = null,
+    val sourceText: String,
     val span: SourceSpan
 ) {
     val text: String?
