@@ -9,8 +9,8 @@ options {
 // TODO: Search LATERAL
 
 sfwQuery
-    : withClause? selectClause fromClause? whereClause? groupClause? havingClause? # SelectFromWhere
-    | withClause? fromClause whereClause? groupClause? havingClause? selectClause  # FromWhereSelect
+    : withClause? selectClause fromClause? whereClause? groupClause? havingClause? orderByClause? limitClause? offsetByClause? # SelectFromWhere
+    | withClause? fromClause whereClause? groupClause? havingClause? selectClause orderByClause? limitClause? offsetByClause?  # FromWhereSelect
     ;
     
 selectClause
@@ -302,8 +302,10 @@ querySet
     | querySet setOpIntersect setQuantifier singleQuery
     | singleQuery
     ;
+    
+// TODO: Determine if the following needs to be uncommented
 query
-    : querySet orderByClause? limitClause? offsetByClause?
+    : querySet //  orderByClause? limitClause? offsetByClause?
     ;
     
 setOpUnionExcept
@@ -326,22 +328,22 @@ offsetByClause
     
 // TODO Check expansion
 orderByClause
-    : ORDER BY PRESERVE
-    | ORDER BY orderSortSpec ( COMMA orderSortSpec )*
+    : ORDER BY orderSortSpec ( COMMA orderSortSpec )*     # OrderBy
+    // ORDER BY PRESERVE
     ;
     
 orderSortSpec
-    : exprQuery bySpec? byNullSpec?
+    : exprQuery bySpec? byNullSpec?      # OrderBySortSpec
     ;
     
 bySpec
-    : ASC
-    | DESC
+    : ASC   # OrderByAsc
+    | DESC  # OrderByDesc
     ;
     
 byNullSpec
-    : NULLS FIRST
-    | NULLS LAST
+    : NULLS FIRST  # NullSpecFirst
+    | NULLS LAST   # NullSpecLast
     ;
     
 limitClause

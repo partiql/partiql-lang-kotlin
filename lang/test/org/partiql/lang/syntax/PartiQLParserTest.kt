@@ -58,7 +58,13 @@ class PartiQLParserTest {
                 "SELECT false OR 1 * 2 / 3 % 4 = 5 AND true + 6 OR 7 + 8 FROM <<>>",
                 "SELECT true OR false FROM <<>>",
                 "SELECT 5 <= 2 FROM <<>>",
-                "SELECT 5 BETWEEN 1 AND 2 AND 3 LIKE 4 FROM <<>>"
+                "SELECT 5 BETWEEN 1 AND 2 AND 3 LIKE 4 FROM <<>>",
+                "SELECT * FROM <<>> ORDER BY 1 ASC NULLS FIRST",
+                "SELECT * FROM <<>> ORDER BY 1 ASC NULLS LAST",
+                "SELECT * FROM <<>> ORDER BY 1 ASC",
+                "SELECT * FROM <<>> ORDER BY 1 DESC",
+                "SELECT * FROM <<>> ORDER BY 1",
+                "SELECT * FROM <<>> ORDER BY 1 NULLS FIRST"
             )
             return queries
         }
