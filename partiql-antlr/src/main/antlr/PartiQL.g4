@@ -124,8 +124,13 @@ functionArgNamed
     ;
     
 exprPrimary
-    : exprTerm
-    | functionCall
+    : exprTerm                                                             # ExprPrimaryTerm
+    | functionCall                                                         # ExprQueryFunctionCall
+    | exprPrimary PERIOD pathSteps                                         # ExprPrimaryPath
+    | exprPrimary PERIOD ASTERISK                                          # ExprPrimaryPathAll
+    | exprPrimary BRACKET_LEFT ASTERISK BRACKET_RIGHT                      # ExprPrimaryPathIndexAll
+    | exprPrimary BRACKET_LEFT exprQuery BRACKET_RIGHT                     # ExprPrimaryIndex
+    | caseExpr                                                             # ExprQueryCase
     ;
     
 literal
@@ -198,37 +203,45 @@ pathExprVarRef
     : LITERAL_STRING
     | varRefExpr
     ;
-
-// Note: Reversed order, but see below.
-// TODO: Check order and recheck all
+    
 exprQuery
-    : exprPrimary                                                          # ExprQueryPrimary
-    | functionCall                                                         # ExprQueryFunctionCall
-    | pathExpr                                                             # ExprQueryPath
-    | caseExpr                                                             # ExprQueryCase
-    | MINUS rhs=exprQuery                                                  # ExprQueryNegative
-    | PLUS rhs=exprQuery                                                   # ExprQueryPositive
-    | lhs=exprQuery ASTERISK rhs=exprQuery                                 # ExprQueryMultiply
-    | lhs=exprQuery SLASH_FORWARD rhs=exprQuery                            # ExprQueryDivide
-    | lhs=exprQuery PERCENT rhs=exprQuery                                  # ExprQueryModulo
-    | lhs=exprQuery PLUS rhs=exprQuery                                     # ExprQueryPlus
-    | lhs=exprQuery MINUS rhs=exprQuery                                    # ExprQueryMinus
-    | lhs=exprQuery CONCAT rhs=exprQuery                                   # ExprQueryConcat
-    | lhs=exprQuery NOT? IN rhs=exprQuery                                  # ExprQueryIn
-    | lhs=exprQuery NOT? LIKE rhs=exprQuery ( ESCAPE escape=exprQuery )?   # ExprQueryLike
-    | lhs=exprQuery NOT? BETWEEN lower=exprQuery AND upper=exprQuery       # ExprQueryBetween
-    | lhs=exprQuery ANGLE_LEFT rhs=exprQuery                               # ExprQueryLt
-    | lhs=exprQuery LT_EQ rhs=exprQuery                                    # ExprQueryLtEq
-    | lhs=exprQuery ANGLE_RIGHT rhs=exprQuery                              # ExprQueryGt
-    | lhs=exprQuery GT_EQ rhs=exprQuery                                    # ExprQueryGtEq
-    | lhs=exprQuery NEQ rhs=exprQuery                                      # ExprQueryNeq
-    | lhs=exprQuery EQ rhs=exprQuery                                       # ExprQueryEq
-    | lhs=exprQuery IS NOT? rhs=exprQuery                                  # ExprQueryIs
-    | NOT rhs=exprQuery                                                    # ExprQueryNot
-    | lhs=exprQuery AND rhs=exprQuery                                      # ExprQueryAnd
-    | lhs=exprQuery OR rhs=exprQuery                                       # ExprQueryOr
+    : booleanExpr
     ;
     
+booleanExpr
+    : valueExpr predicate[$valueExpr.ctx]?                                  # ExprPredicate
+    | NOT rhs=booleanExpr                                                    # ExprQueryNot
+    | lhs=booleanExpr AND rhs=booleanExpr                                   # ExprQueryAnd
+    | lhs=booleanExpr OR rhs=booleanExpr                                    # ExprQueryOr
+    ;
+    
+// TODO
+valueExpr
+    : exprPrimary                                                          # ExprQueryPrimary
+    | PLUS rhs=valueExpr                                                   # ExprQueryPositive
+    | MINUS rhs=valueExpr                                                  # ExprQueryNegative
+    | lhs=valueExpr ASTERISK rhs=valueExpr                                 # ExprQueryMultiply
+    | lhs=valueExpr SLASH_FORWARD rhs=valueExpr                            # ExprQueryDivide
+    | lhs=valueExpr PERCENT rhs=valueExpr                                  # ExprQueryModulo
+    | lhs=valueExpr PLUS rhs=valueExpr                                     # ExprQueryPlus
+    | lhs=valueExpr MINUS rhs=valueExpr                                    # ExprQueryMinus
+    | lhs=valueExpr CONCAT rhs=valueExpr                                   # ExprQueryConcat
+    ;
+    
+// TODO
+predicate[ParserRuleContext lhs]
+    : ANGLE_LEFT rhs=valueExpr                               # ExprQueryLt
+    | LT_EQ rhs=valueExpr                                    # ExprQueryLtEq
+    | ANGLE_RIGHT rhs=valueExpr                              # ExprQueryGt
+    | GT_EQ rhs=valueExpr                                    # ExprQueryGtEq
+    | NEQ rhs=valueExpr                                      # ExprQueryNeq
+    | EQ rhs=valueExpr                                       # ExprQueryEq
+    | NOT? BETWEEN lower=valueExpr AND upper=valueExpr       # ExprQueryBetween
+    | NOT? IN rhs=exprQuery                                       # ExprQueryIn
+    | NOT? LIKE rhs=valueExpr ( ESCAPE escape=valueExpr )?   # ExprQueryLike
+    | IS NOT? rhs=valueExpr                                  # ExprQueryIs
+    ;
+
 caseExpr
     : CASE exprQuery? exprPairWhenThen+ elseClause? END
     ;
