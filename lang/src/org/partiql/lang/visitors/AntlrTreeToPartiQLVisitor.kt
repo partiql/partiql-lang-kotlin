@@ -44,12 +44,26 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
         val where = if (ctx.whereClause() != null) visit(ctx.whereClause()) as PartiqlAst.Expr else null
         val having = if (ctx.havingClause() != null) visit(ctx.havingClause()) as PartiqlAst.Expr else null
         val let = if (ctx.letClause() != null) visit(ctx.letClause()) as PartiqlAst.Let else null
-        val select = PartiqlAst.BUILDER().select(project = projection, from = from, setq = strategy, order = order, group = group, limit = limit, offset = offset, where = where, having = having, fromLet = let)
+        val select = PartiqlAst.BUILDER().select(
+            project = projection,
+            from = from,
+            setq = strategy,
+            order = order,
+            group = group,
+            limit = limit,
+            offset = offset,
+            where = where,
+            having = having,
+            fromLet = let
+        )
         return PartiqlAst.BUILDER().query(select)
     }
 
-    override fun visitSelectAll(ctx: PartiQLParser.SelectAllContext): PartiqlAst.PartiqlAstNode = PartiqlAst.BUILDER().projectStar()
-    override fun visitSelectItems(ctx: PartiQLParser.SelectItemsContext): PartiqlAst.PartiqlAstNode = visit(ctx.projectionItems())
+    override fun visitSelectAll(ctx: PartiQLParser.SelectAllContext): PartiqlAst.PartiqlAstNode =
+        PartiqlAst.BUILDER().projectStar()
+
+    override fun visitSelectItems(ctx: PartiQLParser.SelectItemsContext): PartiqlAst.PartiqlAstNode =
+        visit(ctx.projectionItems())
 
     override fun visitProjectionItems(ctx: PartiQLParser.ProjectionItemsContext): PartiqlAst.PartiqlAstNode {
         val projections = ctx.projectionItem().map { projection -> visit(projection) as PartiqlAst.ProjectItem }
@@ -68,10 +82,17 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
      *
      */
 
-    override fun visitLimitClause(ctx: PartiQLParser.LimitClauseContext): PartiqlAst.PartiqlAstNode = visit(ctx.exprQuery()) as PartiqlAst.Expr
-    override fun visitOffsetByClause(ctx: PartiQLParser.OffsetByClauseContext): PartiqlAst.PartiqlAstNode = visit(ctx.exprQuery()) as PartiqlAst.Expr
-    override fun visitWhereClause(ctx: PartiQLParser.WhereClauseContext): PartiqlAst.PartiqlAstNode = visit(ctx.exprQuery()) as PartiqlAst.Expr
-    override fun visitHavingClause(ctx: PartiQLParser.HavingClauseContext): PartiqlAst.PartiqlAstNode = visit(ctx.exprQuery()) as PartiqlAst.Expr
+    override fun visitLimitClause(ctx: PartiQLParser.LimitClauseContext): PartiqlAst.PartiqlAstNode =
+        visit(ctx.exprQuery()) as PartiqlAst.Expr
+
+    override fun visitOffsetByClause(ctx: PartiQLParser.OffsetByClauseContext): PartiqlAst.PartiqlAstNode =
+        visit(ctx.exprQuery()) as PartiqlAst.Expr
+
+    override fun visitWhereClause(ctx: PartiQLParser.WhereClauseContext): PartiqlAst.PartiqlAstNode =
+        visit(ctx.exprQuery()) as PartiqlAst.Expr
+
+    override fun visitHavingClause(ctx: PartiQLParser.HavingClauseContext): PartiqlAst.PartiqlAstNode =
+        visit(ctx.exprQuery()) as PartiqlAst.Expr
 
     /**
      *
@@ -103,7 +124,8 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
 
     override fun visitOrderBySortSpec(ctx: PartiQLParser.OrderBySortSpecContext): PartiqlAst.PartiqlAstNode {
         val expr = visit(ctx.exprQuery()) as PartiqlAst.Expr
-        val order = if (ctx.bySpec() != null) visit(ctx.bySpec()) as PartiqlAst.OrderingSpec else PartiqlAst.BUILDER().asc()
+        val order =
+            if (ctx.bySpec() != null) visit(ctx.bySpec()) as PartiqlAst.OrderingSpec else PartiqlAst.BUILDER().asc()
         val nullSpec = when {
             ctx.byNullSpec() != null -> visit(ctx.byNullSpec()) as PartiqlAst.NullsSpec
             order == PartiqlAst.BUILDER().desc() -> PartiqlAst.BUILDER().nullsFirst()
@@ -112,10 +134,17 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
         return PartiqlAst.BUILDER().sortSpec(expr, orderingSpec = order, nullsSpec = nullSpec)
     }
 
-    override fun visitNullSpecFirst(ctx: PartiQLParser.NullSpecFirstContext): PartiqlAst.PartiqlAstNode = PartiqlAst.BUILDER().nullsFirst()
-    override fun visitNullSpecLast(ctx: PartiQLParser.NullSpecLastContext): PartiqlAst.PartiqlAstNode = PartiqlAst.BUILDER().nullsLast()
-    override fun visitOrderByAsc(ctx: PartiQLParser.OrderByAscContext): PartiqlAst.PartiqlAstNode = PartiqlAst.BUILDER().asc()
-    override fun visitOrderByDesc(ctx: PartiQLParser.OrderByDescContext): PartiqlAst.PartiqlAstNode = PartiqlAst.BUILDER().desc()
+    override fun visitNullSpecFirst(ctx: PartiQLParser.NullSpecFirstContext): PartiqlAst.PartiqlAstNode =
+        PartiqlAst.BUILDER().nullsFirst()
+
+    override fun visitNullSpecLast(ctx: PartiQLParser.NullSpecLastContext): PartiqlAst.PartiqlAstNode =
+        PartiqlAst.BUILDER().nullsLast()
+
+    override fun visitOrderByAsc(ctx: PartiQLParser.OrderByAscContext): PartiqlAst.PartiqlAstNode =
+        PartiqlAst.BUILDER().asc()
+
+    override fun visitOrderByDesc(ctx: PartiQLParser.OrderByDescContext): PartiqlAst.PartiqlAstNode =
+        PartiqlAst.BUILDER().desc()
 
     /**
      *
@@ -124,7 +153,8 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
      */
 
     override fun visitGroupClause(ctx: PartiQLParser.GroupClauseContext): PartiqlAst.PartiqlAstNode {
-        val strategy = if (ctx.PARTIAL() != null) PartiqlAst.BUILDER().groupPartial() else PartiqlAst.BUILDER().groupFull()
+        val strategy =
+            if (ctx.PARTIAL() != null) PartiqlAst.BUILDER().groupPartial() else PartiqlAst.BUILDER().groupFull()
         val keys = ctx.groupKey().map { key -> visit(key) as PartiqlAst.GroupKey }
         val keyList = PartiqlAst.BUILDER().groupKeyList(keys)
         val alias = if (ctx.groupAlias() != null) ctx.groupAlias().symbolPrimitive().getString() else null
@@ -166,18 +196,29 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
      */
 
     override fun visitVarRefExprIdentQuoted(ctx: PartiQLParser.VarRefExprIdentQuotedContext): PartiqlAst.PartiqlAstNode =
-        PartiqlAst.BUILDER().id(ctx.toRawString(), PartiqlAst.CaseSensitivity.CaseSensitive(), PartiqlAst.ScopeQualifier.Unqualified())
+        PartiqlAst.BUILDER()
+            .id(ctx.toRawString(), PartiqlAst.CaseSensitivity.CaseSensitive(), PartiqlAst.ScopeQualifier.Unqualified())
 
     override fun visitVarRefExprIdentAtQuoted(ctx: PartiQLParser.VarRefExprIdentAtQuotedContext): PartiqlAst.PartiqlAstNode =
-        PartiqlAst.BUILDER().id(ctx.toRawString(), PartiqlAst.CaseSensitivity.CaseSensitive(), PartiqlAst.ScopeQualifier.LocalsFirst())
+        PartiqlAst.BUILDER()
+            .id(ctx.toRawString(), PartiqlAst.CaseSensitivity.CaseSensitive(), PartiqlAst.ScopeQualifier.LocalsFirst())
 
     override fun visitVarRefExprIdentAtUnquoted(ctx: PartiQLParser.VarRefExprIdentAtUnquotedContext): PartiqlAst.PartiqlAstNode =
-        PartiqlAst.BUILDER().id(ctx.toRawString(), PartiqlAst.CaseSensitivity.CaseInsensitive(), PartiqlAst.ScopeQualifier.LocalsFirst())
+        PartiqlAst.BUILDER().id(
+            ctx.toRawString(),
+            PartiqlAst.CaseSensitivity.CaseInsensitive(),
+            PartiqlAst.ScopeQualifier.LocalsFirst()
+        )
 
     override fun visitVarRefExprIdentUnquoted(ctx: PartiQLParser.VarRefExprIdentUnquotedContext): PartiqlAst.PartiqlAstNode =
-        PartiqlAst.BUILDER().id(ctx.toRawString(), PartiqlAst.CaseSensitivity.CaseInsensitive(), PartiqlAst.ScopeQualifier.Unqualified())
+        PartiqlAst.BUILDER().id(
+            ctx.toRawString(),
+            PartiqlAst.CaseSensitivity.CaseInsensitive(),
+            PartiqlAst.ScopeQualifier.Unqualified()
+        )
 
-    override fun visitExprTermVarRefExpr(ctx: PartiQLParser.ExprTermVarRefExprContext): PartiqlAst.PartiqlAstNode = visit(ctx.varRefExpr())
+    override fun visitExprTermVarRefExpr(ctx: PartiQLParser.ExprTermVarRefExprContext): PartiqlAst.PartiqlAstNode =
+        visit(ctx.varRefExpr())
 
     /**
      * EXPRESSIONS
@@ -311,18 +352,33 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
      *
      */
 
-    override fun visitLiteralNull(ctx: PartiQLParser.LiteralNullContext): PartiqlAst.PartiqlAstNode = PartiqlAst.Expr.Lit(ion.newNull().toIonElement())
-    override fun visitLiteralMissing(ctx: PartiQLParser.LiteralMissingContext): PartiqlAst.PartiqlAstNode = PartiqlAst.BUILDER().missing()
-    override fun visitLiteralTrue(ctx: PartiQLParser.LiteralTrueContext): PartiqlAst.PartiqlAstNode = PartiqlAst.Expr.Lit(ion.newBool(true).toIonElement())
-    override fun visitLiteralFalse(ctx: PartiQLParser.LiteralFalseContext): PartiqlAst.PartiqlAstNode = PartiqlAst.Expr.Lit(ion.newBool(false).toIonElement())
-    override fun visitLiteralIon(ctx: PartiQLParser.LiteralIonContext): PartiqlAst.PartiqlAstNode = PartiqlAst.Expr.Lit(ion.singleValue(ctx.ION_CLOSURE().text.toIonString()).toIonElement())
-    override fun visitLiteralString(ctx: PartiQLParser.LiteralStringContext): PartiqlAst.PartiqlAstNode = PartiqlAst.Expr.Lit(ion.newString(ctx.LITERAL_STRING().text.toPartiQLString()).toIonElement())
-    override fun visitLiteralInteger(ctx: PartiQLParser.LiteralIntegerContext): PartiqlAst.PartiqlAstNode = PartiqlAst.Expr.Lit(ion.newInt(BigInteger(ctx.LITERAL_INTEGER().text, 10)).toIonElement())
+    override fun visitLiteralNull(ctx: PartiQLParser.LiteralNullContext): PartiqlAst.PartiqlAstNode =
+        PartiqlAst.Expr.Lit(ion.newNull().toIonElement())
+
+    override fun visitLiteralMissing(ctx: PartiQLParser.LiteralMissingContext): PartiqlAst.PartiqlAstNode =
+        PartiqlAst.BUILDER().missing()
+
+    override fun visitLiteralTrue(ctx: PartiQLParser.LiteralTrueContext): PartiqlAst.PartiqlAstNode =
+        PartiqlAst.Expr.Lit(ion.newBool(true).toIonElement())
+
+    override fun visitLiteralFalse(ctx: PartiQLParser.LiteralFalseContext): PartiqlAst.PartiqlAstNode =
+        PartiqlAst.Expr.Lit(ion.newBool(false).toIonElement())
+
+    override fun visitLiteralIon(ctx: PartiQLParser.LiteralIonContext): PartiqlAst.PartiqlAstNode =
+        PartiqlAst.Expr.Lit(ion.singleValue(ctx.ION_CLOSURE().text.toIonString()).toIonElement())
+
+    override fun visitLiteralString(ctx: PartiQLParser.LiteralStringContext): PartiqlAst.PartiqlAstNode =
+        PartiqlAst.Expr.Lit(ion.newString(ctx.LITERAL_STRING().text.toPartiQLString()).toIonElement())
+
+    override fun visitLiteralInteger(ctx: PartiQLParser.LiteralIntegerContext): PartiqlAst.PartiqlAstNode =
+        PartiqlAst.Expr.Lit(ion.newInt(BigInteger(ctx.LITERAL_INTEGER().text, 10)).toIonElement())
+
     override fun visitLiteralDate(ctx: PartiQLParser.LiteralDateContext): PartiqlAst.PartiqlAstNode {
         val dateString = ctx.LITERAL_STRING().text.toPartiQLString()
         val (year, month, day) = dateString.split("-")
         return PartiqlAst.BUILDER().date(year.toLong(), month.toLong(), day.toLong())
     }
+
     override fun visitLiteralTime(ctx: PartiQLParser.LiteralTimeContext): PartiqlAst.PartiqlAstNode {
         val timeString = ctx.LITERAL_STRING().text.toPartiQLString()
         // TODO: Get precision if specified
@@ -335,8 +391,10 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
             )
         )
     }
+
     // TODO: Catch exception for exponent too large
-    override fun visitLiteralDecimal(ctx: PartiQLParser.LiteralDecimalContext): PartiqlAst.PartiqlAstNode = PartiqlAst.Expr.Lit(ion.newDecimal(bigDecimalOf(ctx.LITERAL_DECIMAL().text)).toIonElement())
+    override fun visitLiteralDecimal(ctx: PartiQLParser.LiteralDecimalContext): PartiqlAst.PartiqlAstNode =
+        PartiqlAst.Expr.Lit(ion.newDecimal(bigDecimalOf(ctx.LITERAL_DECIMAL().text)).toIonElement())
 
     /**
      *
@@ -344,9 +402,15 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
      *
      */
 
-    private fun PartiQLParser.VarRefExprIdentAtUnquotedContext.toRawString() = this.IDENTIFIER_AT_UNQUOTED().text.removePrefix("@")
-    private fun PartiQLParser.VarRefExprIdentAtQuotedContext.toRawString() = this.IDENTIFIER_AT_QUOTED().text.removePrefix("@").trim('"')
-    private fun PartiQLParser.VarRefExprIdentQuotedContext.toRawString() = this.IDENTIFIER_QUOTED().text.toPartiQLIdentifier()
+    private fun PartiQLParser.VarRefExprIdentAtUnquotedContext.toRawString() =
+        this.IDENTIFIER_AT_UNQUOTED().text.removePrefix("@")
+
+    private fun PartiQLParser.VarRefExprIdentAtQuotedContext.toRawString() =
+        this.IDENTIFIER_AT_QUOTED().text.removePrefix("@").trim('"')
+
+    private fun PartiQLParser.VarRefExprIdentQuotedContext.toRawString() =
+        this.IDENTIFIER_QUOTED().text.toPartiQLIdentifier()
+
     private fun PartiQLParser.VarRefExprIdentUnquotedContext.toRawString() = this.IDENTIFIER().text
 
     private fun String.toPartiQLString(): String = this.trim('\'').replace("''", "'")
