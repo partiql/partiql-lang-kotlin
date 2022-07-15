@@ -21,4 +21,8 @@ include('lang',
         'testscript',
         'pts',
         'extensions')
+include 'plugins'
+include 'pstsi'
+include 'plugins'
+include 'psts'
 
