@@ -51,14 +51,16 @@ class PartiQLParserTest {
 
     class QueryCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> {
-            return listOf(
+            val queries = listOf(
                 "SELECT a, \"b\", @c, @\"d\" FROM <<true, false, null, missing, `hello`, 'this is a string', 4, 4e2, 4.2, .4, DATE '2022-02-01', TIME '23:11:59.123456789' >>",
                 "SELECT 5 + 5 / 2 FROM <<>>",
                 "SELECT 1 + 2 / 3 - 4 % 5 AND true + 6 OR 7 + 8 FROM <<>>",
                 "SELECT false OR 1 * 2 / 3 % 4 = 5 AND true + 6 OR 7 + 8 FROM <<>>",
-                "SELECT true OR false AND 5 <= 2 > 1 >= 3 = 2 FROM <<>>",
+                "SELECT true OR false FROM <<>>",
+                "SELECT 5 <= 2 FROM <<>>",
                 "SELECT 5 BETWEEN 1 AND 2 AND 3 LIKE 4 FROM <<>>"
             )
+            return queries
         }
     }
 }
