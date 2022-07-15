@@ -2,14 +2,14 @@ package org.partiql.lang.typesystem.builtin.types
 
 import com.amazon.ion.IonType
 import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.typesystem.interfaces.type.BuiltInType
+import org.partiql.lang.typesystem.interfaces.type.ScalarType
 
 /**
  * The standard SQL type BOOLEAN
  *
  * Also refers to [IonType.BOOL]
  */
-object BooleanType : BuiltInType() {
+object BooleanType : ScalarType {
     override val typeAliases: List<String>
         get() = listOf("bool", "boolean")
 

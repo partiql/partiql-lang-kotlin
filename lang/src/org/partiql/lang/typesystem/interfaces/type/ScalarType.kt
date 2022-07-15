@@ -3,13 +3,13 @@ package org.partiql.lang.typesystem.interfaces.type
 import org.partiql.lang.eval.ExprValueType
 
 /**
- * This interface is used to define a sql type
+ * This interface is used to define a scalar type
  */
-interface SqlType {
+interface ScalarType {
     /**
      * Type aliases
      *
-     * A sql type can have multiple type aliases. Within one plugin,
+     * A type can have multiple type aliases. Within one plugin,
      * one type alias can only be used once across types
      */
     val typeAliases: List<String>
@@ -18,9 +18,4 @@ interface SqlType {
      * Run-time type
      */
     val exprValueType: ExprValueType
-
-    /**
-     * Whether it is a built-in type
-     */
-    val isBuiltInType: Boolean
 }

@@ -3,9 +3,8 @@ package org.partiql.lang.typesystem.builtin.types
 import com.amazon.ion.IonType
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.typesystem.interfaces.type.BuiltInType
 import org.partiql.lang.typesystem.interfaces.type.ParametricType
-import org.partiql.lang.typesystem.interfaces.type.SqlType
+import org.partiql.lang.typesystem.interfaces.type.ScalarType
 import org.partiql.lang.typesystem.interfaces.type.TypeParameters
 import org.partiql.lang.util.asIonInt
 
@@ -17,16 +16,16 @@ import org.partiql.lang.util.asIonInt
  *
  * Also refers to [IonType.DECIMAL]
  */
-object DecimalType : BuiltInType(), ParametricType {
+object DecimalType : ScalarType, ParametricType {
     override val typeAliases: List<String>
         get() = listOf("dec", "decimal")
 
     override val exprValueType: ExprValueType
         get() = ExprValueType.DECIMAL
 
-    override val requiredParameters: List<SqlType> = emptyList()
+    override val requiredParameters: List<ScalarType> = emptyList()
 
-    override val optionalParameters: List<Pair<SqlType, ExprValue>> = listOf(
+    override val optionalParameters: List<Pair<ScalarType, ExprValue>> = listOf(
         IntType to valueFactory.newInt(Integer.MAX_VALUE),
         IntType to valueFactory.newInt(0)
     )

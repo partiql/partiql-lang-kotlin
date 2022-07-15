@@ -2,13 +2,13 @@ package org.partiql.lang.typesystem.interfaces.function
 
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.typesystem.interfaces.type.CompileTimeType
-import org.partiql.lang.typesystem.interfaces.type.SqlType
+import org.partiql.lang.typesystem.interfaces.type.ScalarType
 import org.partiql.lang.typesystem.interfaces.type.TypeParameters
 
 /**
- * Used to define a sql function, which takes arguments of sql types.
+ * Used to define a scalar function, which takes arguments of scalar types only.
  */
-interface SqlFunction {
+interface PluggableFunction {
     /**
      * Function name
      */
@@ -17,17 +17,17 @@ interface SqlFunction {
     /**
      * Required arguments of this function. Empty list means no required arguments.
      */
-    val requiredArgTypes: List<SqlType>
+    val requiredArgTypes: List<ScalarType>
 
     /**
      * Optional arguments of this function. Empty list means no optional arguments.
      */
-    val optionalArgTypes: List<SqlType>
+    val optionalArgTypes: List<ScalarType>
 
     /**
      * Variadic argument of this function. Null value means no variadic argument.
      */
-    val variadicArgType: SqlType?
+    val variadicArgType: ScalarType?
 
     /**
      * Return type inference
