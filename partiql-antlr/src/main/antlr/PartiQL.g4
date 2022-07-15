@@ -257,18 +257,14 @@ whereClause
     : WHERE exprQuery
     ;
     
-groupStrategy
-    : ALL
-    | PARTIAL
-    ;
 groupKey
-    : exprQuery
-    | exprQuery AS symbolPrimitive
+    : exprQuery                     # GroupKeyAliasNone
+    | exprQuery AS symbolPrimitive  # GroupKeyAlias
     ;
     
 // NOTE: Made group_strategy optional
 groupClause
-    : GROUP groupStrategy? BY groupKey (COMMA groupKey )* groupAlias?
+    : GROUP PARTIAL? BY groupKey (COMMA groupKey )* groupAlias?
     ;
 groupAlias
     : GROUP AS symbolPrimitive
