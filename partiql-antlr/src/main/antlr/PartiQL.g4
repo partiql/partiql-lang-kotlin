@@ -9,7 +9,7 @@ options {
 // TODO: Search LATERAL
 
 sfwQuery
-    : withClause? selectClause fromClause? whereClause? groupClause? havingClause? orderByClause? limitClause? offsetByClause? # SelectFromWhere
+    : withClause? selectClause fromClause? letClause? whereClause? groupClause? havingClause? orderByClause? limitClause? offsetByClause? # SelectFromWhere
     | withClause? fromClause whereClause? groupClause? havingClause? selectClause orderByClause? limitClause? offsetByClause?  # FromWhereSelect
     ;
     
@@ -20,19 +20,18 @@ selectClause
     | PIVOT exprQuery AT exprQuery                    # SelectPivot
     ;
     
+letClause: LET letBindings;
+letBinding: exprQuery AS symbolPrimitive ;
+letBindings: letBinding ( COMMA letBinding )* ;
+    
 setQuantifierStrategy
     : DISTINCT
     | ALL
     ;
     
 // TODO: Check comma
-projectionItems
-    : projectionItem ( COMMA projectionItem )*
-    ;
-    
-projectionItem
-    : exprQuery ( AS? symbolPrimitive )?
-    ;
+projectionItems: projectionItem ( COMMA projectionItem )* ;
+projectionItem: exprQuery ( AS? symbolPrimitive )? ;
     
 symbolPrimitive
     : IDENTIFIER         # SymbolIdentifierUnquoted
@@ -50,15 +49,9 @@ tableNonJoin
     : tableBaseReference
     | tableUnpivot
     ;
-asIdent
-    : AS symbolPrimitive
-    ;
-atIdent
-    : AT symbolPrimitive
-    ;
-byIdent
-    : BY symbolPrimitive
-    ;
+asIdent: AS symbolPrimitive ;
+atIdent: AT symbolPrimitive ;
+byIdent: BY symbolPrimitive ;
 tableBaseReference
     : exprQuery symbolPrimitive
     | exprQuery asIdent? atIdent? byIdent?
@@ -71,14 +64,11 @@ tableJoined
     | PAREN_LEFT tableJoined PAREN_RIGHT
     ;
     
-tableUnpivot
-    : UNPIVOT exprQuery asIdent? atIdent?
-    ;
+tableUnpivot: UNPIVOT exprQuery asIdent? atIdent? ;
     
 // TODO: Check that all uses use a table_reference before token
-tableCrossJoin
-    : tableReference joinType? CROSS JOIN joinRhs
-    ;
+tableCrossJoin: tableReference joinType? CROSS JOIN joinRhs ;
+
 // TODO: Check that all uses use a table_reference before token
 tableQualifiedJoin
     : tableReference joinType JOIN LATERAL? joinRhs joinSpec
