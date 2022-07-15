@@ -72,7 +72,8 @@ class PartiQLParserTest {
                 "SELECT * FROM <<>> GROUP BY 1 + 1",
                 "SELECT * FROM <<>> LIMIT 5",
                 "SELECT * FROM <<>> LIMIT 5 + 5",
-                "SELECT * FROM <<1, 2, 3>> OFFSET 2"
+                "SELECT * FROM <<1, 2, 3>> OFFSET 2",
+                "SELECT * FROM <<>> WHERE 1 = 1"
             )
             return queries
         }
