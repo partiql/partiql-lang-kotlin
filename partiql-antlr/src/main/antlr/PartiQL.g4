@@ -123,9 +123,9 @@ functionArgNamed
     : symbolPrimitive COLON exprQuery
     ;
     
-exprPrecedence01
-    : functionCall
-    | exprTerm
+exprPrimary
+    : exprTerm
+    | functionCall
     ;
     
 literal
@@ -180,10 +180,10 @@ varRefExpr
     ;
     
 pathExpr
-    : exprPrecedence01 PERIOD pathSteps
-    | exprPrecedence01 PERIOD ASTERISK
-    | exprPrecedence01 BRACKET_LEFT ASTERISK BRACKET_RIGHT
-    | exprPrecedence01 BRACKET_LEFT exprQuery BRACKET_RIGHT
+    : exprPrimary PERIOD pathSteps
+    | exprPrimary PERIOD ASTERISK
+    | exprPrimary BRACKET_LEFT ASTERISK BRACKET_RIGHT
+    | exprPrimary BRACKET_LEFT exprQuery BRACKET_RIGHT
     ;
     
 pathSteps
@@ -199,34 +199,34 @@ pathExprVarRef
     | varRefExpr
     ;
 
+// Note: Reversed order, but see below.
 // TODO: Check order and recheck all
 exprQuery
-    : exprQuery OR exprQuery                                # ExprQueryOr
-    | exprQuery AND exprQuery                               # ExprQueryAnd
-    | NOT exprQuery                                         # ExprQueryNot
-    | exprQuery IS NOT? exprQuery                           # ExprQueryIs
-    | exprQuery EQ exprQuery                                # ExprQueryEq
-    | exprQuery NEQ exprQuery                               # ExprQueryNeq
-    | exprQuery ANGLE_LEFT exprQuery                        # ExprQueryLt
-    | exprQuery ANGLE_RIGHT exprQuery                       # ExprQueryGt
-    | exprQuery LT_EQ exprQuery                             # ExprQueryLtEq
-    | exprQuery GT_EQ exprQuery                             # ExprQueryGtEq
-    | exprQuery NOT? BETWEEN exprQuery AND exprQuery        # ExprQueryBetween
-    | exprQuery NOT? LIKE exprQuery ( ESCAPE exprQuery )?   # ExprQueryLike
-    | exprQuery NOT? IN exprQuery                           # ExprQueryIn
-    | exprQuery CONCAT exprQuery                            # ExprQueryConcat
-    | exprQuery PLUS exprQuery                              # ExprQueryPlus
-    | exprQuery MINUS exprQuery                             # ExprQueryMinus
-    | exprQuery ASTERISK exprQuery                          # ExprQueryMultiply
-    | exprQuery SLASH_FORWARD exprQuery                     # ExprQueryDivide
-    | exprQuery PERCENT exprQuery                           # ExprQueryModulus
-    | exprQuery CARROT exprQuery                            # ExprQueryExponent
-    | PLUS exprQuery                                        # ExprQueryPositive
-    | MINUS exprQuery                                       # ExprQueryNegative
-    | caseExpr                                              # ExprQueryCase
-    | pathExpr                                              # ExprQueryPath
-    | functionCall                                          # ExprQueryFunctionCall
-    | exprPrecedence01                                      # ExprQueryPrimary
+    : exprPrimary                                                          # ExprQueryPrimary
+    | functionCall                                                         # ExprQueryFunctionCall
+    | pathExpr                                                             # ExprQueryPath
+    | caseExpr                                                             # ExprQueryCase
+    | MINUS rhs=exprQuery                                                  # ExprQueryNegative
+    | PLUS rhs=exprQuery                                                   # ExprQueryPositive
+    | lhs=exprQuery ASTERISK rhs=exprQuery                                 # ExprQueryMultiply
+    | lhs=exprQuery SLASH_FORWARD rhs=exprQuery                            # ExprQueryDivide
+    | lhs=exprQuery PERCENT rhs=exprQuery                                  # ExprQueryModulo
+    | lhs=exprQuery PLUS rhs=exprQuery                                     # ExprQueryPlus
+    | lhs=exprQuery MINUS rhs=exprQuery                                    # ExprQueryMinus
+    | lhs=exprQuery CONCAT rhs=exprQuery                                   # ExprQueryConcat
+    | lhs=exprQuery NOT? IN rhs=exprQuery                                  # ExprQueryIn
+    | lhs=exprQuery NOT? LIKE rhs=exprQuery ( ESCAPE escape=exprQuery )?   # ExprQueryLike
+    | lhs=exprQuery NOT? BETWEEN lower=exprQuery AND upper=exprQuery       # ExprQueryBetween
+    | lhs=exprQuery ANGLE_LEFT rhs=exprQuery                               # ExprQueryLt
+    | lhs=exprQuery LT_EQ rhs=exprQuery                                    # ExprQueryLtEq
+    | lhs=exprQuery ANGLE_RIGHT rhs=exprQuery                              # ExprQueryGt
+    | lhs=exprQuery GT_EQ rhs=exprQuery                                    # ExprQueryGtEq
+    | lhs=exprQuery NEQ rhs=exprQuery                                      # ExprQueryNeq
+    | lhs=exprQuery EQ rhs=exprQuery                                       # ExprQueryEq
+    | lhs=exprQuery IS NOT? rhs=exprQuery                                  # ExprQueryIs
+    | NOT rhs=exprQuery                                                    # ExprQueryNot
+    | lhs=exprQuery AND rhs=exprQuery                                      # ExprQueryAnd
+    | lhs=exprQuery OR rhs=exprQuery                                       # ExprQueryOr
     ;
     
 caseExpr
@@ -334,9 +334,6 @@ byNullSpec
 limitClause
     : LIMIT exprQuery
     ;
-    
-// TODO: Find in other grammar
-
     
 // TODO: Need to figure out
 withClause
