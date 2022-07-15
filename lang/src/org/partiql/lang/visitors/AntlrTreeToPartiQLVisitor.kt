@@ -39,7 +39,8 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
         val from = visit(ctx.fromClause()) as PartiqlAst.FromSource
         val order = if (ctx.orderByClause() != null) visit(ctx.orderByClause()) as PartiqlAst.OrderBy else null
         val group = if (ctx.groupClause() != null) visit(ctx.groupClause()) as PartiqlAst.GroupBy else null
-        val select = PartiqlAst.BUILDER().select(project = projection, from = from, setq = strategy, order = order, group = group)
+        val limit = if (ctx.limitClause() != null) visit(ctx.limitClause()) as PartiqlAst.Expr else null
+        val select = PartiqlAst.BUILDER().select(project = projection, from = from, setq = strategy, order = order, group = group, limit = limit)
         return PartiqlAst.BUILDER().query(select)
     }
 
@@ -56,6 +57,14 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
         val alias = if (ctx.symbolPrimitive() != null) ctx.symbolPrimitive().getString() else null
         return PartiqlAst.BUILDER().projectExpr(expr, asAlias = alias)
     }
+
+    /**
+     *
+     * LIMIT CLAUSE
+     *
+     */
+
+    override fun visitLimitClause(ctx: PartiQLParser.LimitClauseContext): PartiqlAst.PartiqlAstNode = visit(ctx.exprQuery()) as PartiqlAst.Expr
 
     /**
      *
