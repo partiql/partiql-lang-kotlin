@@ -41,7 +41,8 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
         val group = if (ctx.groupClause() != null) visit(ctx.groupClause()) as PartiqlAst.GroupBy else null
         val limit = if (ctx.limitClause() != null) visit(ctx.limitClause()) as PartiqlAst.Expr else null
         val offset = if (ctx.offsetByClause() != null) visit(ctx.offsetByClause()) as PartiqlAst.Expr else null
-        val select = PartiqlAst.BUILDER().select(project = projection, from = from, setq = strategy, order = order, group = group, limit = limit, offset = offset)
+        val where = if (ctx.whereClause() != null) visit(ctx.whereClause()) as PartiqlAst.Expr else null
+        val select = PartiqlAst.BUILDER().select(project = projection, from = from, setq = strategy, order = order, group = group, limit = limit, offset = offset, where = where)
         return PartiqlAst.BUILDER().query(select)
     }
 
@@ -67,6 +68,7 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
 
     override fun visitLimitClause(ctx: PartiQLParser.LimitClauseContext): PartiqlAst.PartiqlAstNode = visit(ctx.exprQuery()) as PartiqlAst.Expr
     override fun visitOffsetByClause(ctx: PartiQLParser.OffsetByClauseContext): PartiqlAst.PartiqlAstNode = visit(ctx.exprQuery()) as PartiqlAst.Expr
+    override fun visitWhereClause(ctx: PartiQLParser.WhereClauseContext): PartiqlAst.PartiqlAstNode = visit(ctx.exprQuery()) as PartiqlAst.Expr
 
     /**
      *
