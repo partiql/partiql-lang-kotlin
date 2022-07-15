@@ -43,7 +43,8 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
         val offset = if (ctx.offsetByClause() != null) visit(ctx.offsetByClause()) as PartiqlAst.Expr else null
         val where = if (ctx.whereClause() != null) visit(ctx.whereClause()) as PartiqlAst.Expr else null
         val having = if (ctx.havingClause() != null) visit(ctx.havingClause()) as PartiqlAst.Expr else null
-        val select = PartiqlAst.BUILDER().select(project = projection, from = from, setq = strategy, order = order, group = group, limit = limit, offset = offset, where = where, having = having)
+        val let = if (ctx.letClause() != null) visit(ctx.letClause()) as PartiqlAst.Let else null
+        val select = PartiqlAst.BUILDER().select(project = projection, from = from, setq = strategy, order = order, group = group, limit = limit, offset = offset, where = where, having = having, fromLet = let)
         return PartiqlAst.BUILDER().query(select)
     }
 
@@ -71,6 +72,23 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
     override fun visitOffsetByClause(ctx: PartiQLParser.OffsetByClauseContext): PartiqlAst.PartiqlAstNode = visit(ctx.exprQuery()) as PartiqlAst.Expr
     override fun visitWhereClause(ctx: PartiQLParser.WhereClauseContext): PartiqlAst.PartiqlAstNode = visit(ctx.exprQuery()) as PartiqlAst.Expr
     override fun visitHavingClause(ctx: PartiQLParser.HavingClauseContext): PartiqlAst.PartiqlAstNode = visit(ctx.exprQuery()) as PartiqlAst.Expr
+
+    /**
+     *
+     * LET CLAUSE
+     *
+     */
+
+    override fun visitLetClause(ctx: PartiQLParser.LetClauseContext): PartiqlAst.PartiqlAstNode {
+        val letBindings = ctx.letBindings().letBinding().map { binding -> visit(binding) as PartiqlAst.LetBinding }
+        return PartiqlAst.BUILDER().let(letBindings)
+    }
+
+    override fun visitLetBinding(ctx: PartiQLParser.LetBindingContext): PartiqlAst.PartiqlAstNode {
+        val expr = visit(ctx.exprQuery()) as PartiqlAst.Expr
+        val name = ctx.symbolPrimitive().getString()
+        return PartiqlAst.BUILDER().letBinding(expr, name)
+    }
 
     /**
      *
