@@ -64,7 +64,12 @@ class PartiQLParserTest {
                 "SELECT * FROM <<>> ORDER BY 1 ASC",
                 "SELECT * FROM <<>> ORDER BY 1 DESC",
                 "SELECT * FROM <<>> ORDER BY 1",
-                "SELECT * FROM <<>> ORDER BY 1 NULLS FIRST"
+                "SELECT * FROM <<>> ORDER BY 1 NULLS FIRST",
+                "SELECT * FROM <<>> GROUP PARTIAL BY 1 + 1",
+                "SELECT * FROM <<>> GROUP BY 1 + 1, 2 + 2",
+                "SELECT * FROM <<>> GROUP BY 1 + 1 AS a, 2 + 2 AS b",
+                "SELECT * FROM <<>> GROUP BY 1 + 1 AS a, 2 + 2 AS b GROUP AS c",
+                "SELECT * FROM <<>> GROUP BY 1 + 1"
             )
             return queries
         }

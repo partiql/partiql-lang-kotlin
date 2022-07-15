@@ -38,7 +38,8 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
         val strategy = getSetQuantifierStrategy(ctx.selectClause())
         val from = visit(ctx.fromClause()) as PartiqlAst.FromSource
         val order = if (ctx.orderByClause() != null) visit(ctx.orderByClause()) as PartiqlAst.OrderBy else null
-        val select = PartiqlAst.BUILDER().select(project = projection, from = from, setq = strategy, order = order)
+        val group = if (ctx.groupClause() != null) visit(ctx.groupClause()) as PartiqlAst.GroupBy else null
+        val select = PartiqlAst.BUILDER().select(project = projection, from = from, setq = strategy, order = order, group = group)
         return PartiqlAst.BUILDER().query(select)
     }
 
@@ -52,7 +53,8 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
 
     override fun visitProjectionItem(ctx: PartiQLParser.ProjectionItemContext): PartiqlAst.PartiqlAstNode {
         val expr = visit(ctx.exprQuery()) as PartiqlAst.Expr
-        return PartiqlAst.BUILDER().projectExpr(expr)
+        val alias = if (ctx.symbolPrimitive() != null) ctx.symbolPrimitive().getString() else null
+        return PartiqlAst.BUILDER().projectExpr(expr, asAlias = alias)
     }
 
     /**
@@ -66,24 +68,46 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
         return PartiqlAst.BUILDER().orderBy(sortSpecs)
     }
 
-    // TODO: Clean this up
     override fun visitOrderBySortSpec(ctx: PartiQLParser.OrderBySortSpecContext): PartiqlAst.PartiqlAstNode {
         val expr = visit(ctx.exprQuery()) as PartiqlAst.Expr
         val order = if (ctx.bySpec() != null) visit(ctx.bySpec()) as PartiqlAst.OrderingSpec else PartiqlAst.BUILDER().asc()
-        val nulls = if (ctx.byNullSpec() != null) {
-            visit(ctx.byNullSpec()) as PartiqlAst.NullsSpec
-        } else if (order == PartiqlAst.BUILDER().desc()) {
-            PartiqlAst.BUILDER().nullsFirst()
-        } else {
-            PartiqlAst.BUILDER().nullsLast()
+        val nullSpec = when {
+            ctx.byNullSpec() != null -> visit(ctx.byNullSpec()) as PartiqlAst.NullsSpec
+            order == PartiqlAst.BUILDER().desc() -> PartiqlAst.BUILDER().nullsFirst()
+            else -> PartiqlAst.BUILDER().nullsLast()
         }
-        return PartiqlAst.BUILDER().sortSpec(expr, orderingSpec = order, nullsSpec = nulls)
+        return PartiqlAst.BUILDER().sortSpec(expr, orderingSpec = order, nullsSpec = nullSpec)
     }
 
     override fun visitNullSpecFirst(ctx: PartiQLParser.NullSpecFirstContext): PartiqlAst.PartiqlAstNode = PartiqlAst.BUILDER().nullsFirst()
     override fun visitNullSpecLast(ctx: PartiQLParser.NullSpecLastContext): PartiqlAst.PartiqlAstNode = PartiqlAst.BUILDER().nullsLast()
     override fun visitOrderByAsc(ctx: PartiQLParser.OrderByAscContext): PartiqlAst.PartiqlAstNode = PartiqlAst.BUILDER().asc()
     override fun visitOrderByDesc(ctx: PartiQLParser.OrderByDescContext): PartiqlAst.PartiqlAstNode = PartiqlAst.BUILDER().desc()
+
+    /**
+     *
+     * GROUP BY
+     *
+     */
+
+    override fun visitGroupClause(ctx: PartiQLParser.GroupClauseContext): PartiqlAst.PartiqlAstNode {
+        val strategy = if (ctx.PARTIAL() != null) PartiqlAst.BUILDER().groupPartial() else PartiqlAst.BUILDER().groupFull()
+        val keys = ctx.groupKey().map { key -> visit(key) as PartiqlAst.GroupKey }
+        val keyList = PartiqlAst.BUILDER().groupKeyList(keys)
+        val alias = if (ctx.groupAlias() != null) ctx.groupAlias().symbolPrimitive().getString() else null
+        return PartiqlAst.BUILDER().groupBy(strategy, keyList = keyList, groupAsAlias = alias)
+    }
+
+    override fun visitGroupKeyAliasNone(ctx: PartiQLParser.GroupKeyAliasNoneContext): PartiqlAst.PartiqlAstNode {
+        val expr = visit(ctx.exprQuery()) as PartiqlAst.Expr
+        return PartiqlAst.BUILDER().groupKey(expr)
+    }
+
+    override fun visitGroupKeyAlias(ctx: PartiQLParser.GroupKeyAliasContext): PartiqlAst.PartiqlAstNode {
+        val expr = visit(ctx.exprQuery()) as PartiqlAst.Expr
+        val alias = if (ctx.symbolPrimitive() != null) ctx.symbolPrimitive().getString() else null
+        return PartiqlAst.BUILDER().groupKey(expr, asAlias = alias)
+    }
 
     /**
      *
@@ -107,14 +131,6 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
      * IDENTIFIERS
      *
      */
-
-    // TODO: Probably redo
-    override fun visitSymbolIdentifierQuoted(ctx: PartiQLParser.SymbolIdentifierQuotedContext): PartiqlAst.PartiqlAstNode =
-        PartiqlAst.BUILDER().id(ctx.IDENTIFIER_QUOTED().text.toPartiQLIdentifier(), PartiqlAst.CaseSensitivity.CaseSensitive(), PartiqlAst.ScopeQualifier.LocalsFirst())
-
-    // TODO: Probably redo
-    override fun visitSymbolIdentifierUnquoted(ctx: PartiQLParser.SymbolIdentifierUnquotedContext): PartiqlAst.PartiqlAstNode =
-        PartiqlAst.BUILDER().id(ctx.IDENTIFIER().text, PartiqlAst.CaseSensitivity.CaseSensitive(), PartiqlAst.ScopeQualifier.LocalsFirst())
 
     override fun visitVarRefExprIdentQuoted(ctx: PartiQLParser.VarRefExprIdentQuotedContext): PartiqlAst.PartiqlAstNode =
         PartiqlAst.BUILDER().id(ctx.toRawString(), PartiqlAst.CaseSensitivity.CaseSensitive(), PartiqlAst.ScopeQualifier.Unqualified())
@@ -319,6 +335,14 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
             is PartiQLParser.SelectValueContext -> getStrategy(ctx.setQuantifierStrategy())
             is PartiQLParser.SelectPivotContext -> null
             else -> null
+        }
+    }
+
+    private fun PartiQLParser.SymbolPrimitiveContext.getString(): String {
+        return when (this) {
+            is PartiQLParser.SymbolIdentifierQuotedContext -> this.IDENTIFIER_QUOTED().text.toPartiQLIdentifier()
+            is PartiQLParser.SymbolIdentifierUnquotedContext -> this.IDENTIFIER().text
+            else -> "UNKNOWN"
         }
     }
 }
