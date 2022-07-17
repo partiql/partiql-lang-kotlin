@@ -4,8 +4,8 @@ import com.amazon.ionelement.api.TextElement
 import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.ionSymbol
 import org.partiql.lang.domains.PartiqlPhysical
-import org.partiql.lang.planner.MetadataResolver
 import org.partiql.lang.planner.PartiqlPhysicalPass
+import org.partiql.lang.planner.StaticTypeResolver
 import org.partiql.lang.planner.transforms.DEFAULT_IMPL
 import org.partiql.lang.types.BagType
 import org.partiql.lang.types.ListType
@@ -43,30 +43,33 @@ data class FieldEqualityPredicate(val keyFieldName: String, val equivalentValue:
  */
 fun createFilterScanToKeyLookupPass(
     customOperatorName: String,
-    metadataResolver: MetadataResolver,
+    staticTypeResolver: StaticTypeResolver,
     createKeyValueConstructor: (StructType, List<FieldEqualityPredicate>) -> PartiqlPhysical.Expr
 ): PartiqlPhysicalPass =
     PartiqlPhysicalPass { inputPlan, _ ->
         object : PartiqlPhysical.VisitorTransform() {
             override fun transformBexprFilter(node: PartiqlPhysical.Bexpr.Filter): PartiqlPhysical.Bexpr {
+                // Rewrite children first.
                 val rewritten = super.transformBexprFilter(node) as PartiqlPhysical.Bexpr.Filter
                 when (val filterSource = rewritten.source) {
+                    // check if the source of the filter is a full scan
                     is PartiqlPhysical.Bexpr.Scan -> {
                         when (val scanExpr = filterSource.expr) {
+                            // check if the scan's expression is a reference to a global variable
                             is PartiqlPhysical.Expr.GlobalId -> {
                                 // At this point, we've matched a (filter ... (scan (global_id <uuid>)))
-                                // And we know the unique id of the table and we can use this table id to get its static
+                                // We know the unique id of the table, and we can use the id to get the table's static
                                 // type.
 
-                                // The global variable must be a bag or list of structs, otherwise, it's not a table
-                                // and this optimization does not apply.
+                                // Non-table global variables may exist and can be any type.
+                                // Tables however are always bags or lists of structs.
                                 val rowStaticType = when (
                                     val globalStaticType =
-                                        metadataResolver.getGlboalVariableStaticType(scanExpr.uniqueId.text)
+                                        staticTypeResolver.getVariableStaticType(scanExpr.uniqueId.text)
                                 ) {
                                     is BagType -> globalStaticType.elementType
                                     is ListType -> globalStaticType.elementType
-                                    else -> return rewritten
+                                    else -> return rewritten // <-- bail out; this optimization does not apply
                                 }
 
                                 // If the element type (i.e. type of its rows) of the global variable is not a struct,
@@ -76,15 +79,25 @@ fun createFilterScanToKeyLookupPass(
                                 }
 
                                 // Now that we have the metadata on hand we can attempt to rewrite the filter predicate
+                                // replacing `<table>.<pkField> = <expr>` with `TRUE`, but leaving any other expression
+                                // behind.  This function also returns one instance of KeyFieldEqualityPredicate for
+                                // each replacement it made, which contains
                                 val (newPredicate, keyFieldEqualityPredicates) = rewritten.predicate.rewriteFilterPredicate(
                                     filterSource.asDecl.index.value,
                                     rowStaticType.primaryKeyFields
-                                )
-                                    ?: return rewritten // if we didn't succeed in rewriting the filter predicate, return original node.
+                                )   // if we didn't succeed in rewriting the filter predicate, there are no primary
+                                    // key field references in equality expressions in the filter predicate (or not all
+                                    // key fields were included) and this optimization does not apply.
+                                    ?: return rewritten
 
-                                // just a quick sanity check to be more confident in the result of .rewriteFilterPredicate()
+                                // just a quick sanity check to be more confident in the result of
+                                // .rewriteFilterPredicate(), above if this fails, there is definitely a bug.
                                 require(keyFieldEqualityPredicates.size == rowStaticType.primaryKeyFields.size)
 
+                                // Finally, compose a new filter/project to replace the original filter/scan.
+                                // For single-key tables, the rewritten filter predicate will just be `(lit true)`,
+                                // meaning it would be possible to eliminate the filter here.  However, this is
+                                // not the cause for tables with compound keys, so we don't
                                 return PartiqlPhysical.build {
                                     filter(
                                         DEFAULT_IMPL,
@@ -118,8 +131,16 @@ fun createFilterScanToKeyLookupPass(
  * - A list of the referenced key fields and value expressions.
  */
 private fun PartiqlPhysical.Expr.rewriteFilterPredicate(
-    /** The index of the variable containing the primary key. */
+    /**
+     * The index of the variable containing the primary key. We ignore equality expressions that don't reference this
+     * variable.
+     */
     variableIndexId: Long,
+
+    /**
+     * A list of primary key fields.  Equals expressions must be found in the filter predicate that match all these
+     * keys, otherwise, we refuse to rewrite the filter predicate.
+     */
     primaryKeyFields: List<String>
 ): Pair<PartiqlPhysical.Expr, List<FieldEqualityPredicate>>? {
     val remainingFilterKeys = primaryKeyFields.toMutableSet()
@@ -130,17 +151,30 @@ private fun PartiqlPhysical.Expr.rewriteFilterPredicate(
             // DL TODO: is it needed to recurse here?  what might be in child that we'd skip if we don't recurse?
             val rewritten = super.transformExprEq(node) as PartiqlPhysical.Expr.Eq
 
-            // TODO: We still need to normalize predicates here so that f.key always appears left of =, i..e f.key = 42.
-            // TODO: For now this pass won't work if the opposite (42 = f.key) is specified by the user.
-
             // TODO: support more than two operands here? (The AST's modeling allows n arguments, but IRL the parser
             // TODO: never constructs a node with more than 2)
             require(rewritten.operands.size == 2)
-            val left = rewritten.operands[0]
-            val right = rewritten.operands[1]
+            var matched = handleKeyEqualityPredicate(rewritten.operands[0], rewritten.operands[1])
 
-            // assume the lhs has the path expression for now since we are not yet normalizing.
-            val fieldReference = left.getCandidateKeyFieldReference() ?: return rewritten
+            if(!matched) {
+                matched = handleKeyEqualityPredicate(rewritten.operands[1], rewritten.operands[0])
+            }
+
+            return when (matched) {
+                false -> rewritten
+                true ->
+                    // If we've found a reference to a key field, we can replace it with (lit true).
+                    // This might make an `and` expression or `(filter ...)` predicate redundant (i.e. `(and (lit true)...)`
+                    // or (filter (lit true) ...)` but we remove those in a later pass.
+                    PartiqlPhysical.build { lit(ionBool(true)) }
+            }
+        }
+
+        private fun handleKeyEqualityPredicate(
+            operand1: PartiqlPhysical.Expr,
+            operand2: PartiqlPhysical.Expr
+        ): Boolean {
+            val fieldReference = operand1.getKeyFieldReference() ?: return false
 
             // DL TODO: support case-insensitivity here. for now we force case-sensitive.
             return when {
@@ -150,23 +184,17 @@ private fun PartiqlPhysical.Expr.rewriteFilterPredicate(
                     // Need to track keep track of the key field equals expressions that we've removed so they can be
                     // used to make a constructor expression that returns only the values of the primary key fields
                     // later.
-                    filterKeyValueExpressions.add(FieldEqualityPredicate(fieldReference.referencedKey, right))
-
-                    // If we've found a reference to a key field, we can replace it with (lit true)!
-                    // This might make an `and` expression or `(filter ...)` predicate redundant (i.e. `(and (lit true)...)`
-                    // or (filter (lit true) ...)` but we remove those in a later pass.
-                    PartiqlPhysical.build { lit(ionBool(true)) }
+                    filterKeyValueExpressions.add(FieldEqualityPredicate(fieldReference.referencedKey, operand2))
+                    true
                 }
-                else -> {
-                    // We didn't find a reference to a key field, so let's leave the expression untouched.
-                    rewritten
-                }
+                else -> false
             }
         }
 
-        // Prevent recursion into sub-queries.
-        override fun transformExprBindingsToValues(node: PartiqlPhysical.Expr.BindingsToValues): PartiqlPhysical.Expr =
-            node
+        override fun transformExprBindingsToValues(
+            node: PartiqlPhysical.Expr.BindingsToValues
+        ): PartiqlPhysical.Expr = node // <-- prevents recursion into sub-queries.
+
     }.transformExpr(this)
 
     // The rewrite only succeeds if *all* of the key fields have been written out of the predicate.
@@ -177,32 +205,31 @@ private fun PartiqlPhysical.Expr.rewriteFilterPredicate(
     }
 }
 
-/** todo: kdoc. */
-data class FieldReferernce(val variableId: Long, val referencedKey: String, val case: PartiqlPhysical.CaseSensitivity)
+private data class FieldReference(
+    val variableId: Long,
+    val referencedKey: String,
+    val case: PartiqlPhysical.CaseSensitivity
+)
 
 /**
- * If the receiver matches `(path (local_id <n>) (path_step (lit <field>))` and `<field>` is a string,
- * returns `FieldReference(n, field)`.
+ * If the receiver matches `(path (local_id <n>) (path_step (lit <field>) <case_sensitivity>)` and if `<field>`
+ * is a string, returns `FieldReference(n, field, case_sensitivity)`.  Otherwise, returns null.
  *
- * DL TODO: explain use of the term "candidate".
+ * This makes no determination if the field reference a key or not.
  */
-private fun PartiqlPhysical.Expr.getCandidateKeyFieldReference(): FieldReferernce? {
+private fun PartiqlPhysical.Expr.getKeyFieldReference(): FieldReference? {
     when (this) {
         is PartiqlPhysical.Expr.Path -> {
             if (this.steps.size != 1) {
                 return null
             }
-            val fieldStep: PartiqlPhysical.PathStep = this.steps.single()
-            if (fieldStep !is PartiqlPhysical.PathStep.PathExpr) {
-                return null
-            }
+            val fieldStep = this.steps.single() as? PartiqlPhysical.PathStep.PathExpr ?: return null
             val fieldStepIndex = fieldStep.index
             return when {
                 fieldStepIndex is PartiqlPhysical.Expr.Lit && fieldStepIndex.value is TextElement ->
                     when (val root = this.root) {
-                        is PartiqlPhysical.Expr.LocalId -> {
-                            FieldReferernce(root.index.value, fieldStepIndex.value.textValue, fieldStep.case)
-                        }
+                        is PartiqlPhysical.Expr.LocalId ->
+                            FieldReference(root.index.value, fieldStepIndex.value.textValue, fieldStep.case)
                         else -> null
                     }
                 else -> null

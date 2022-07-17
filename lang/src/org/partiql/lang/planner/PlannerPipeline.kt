@@ -455,10 +455,10 @@ internal class PlannerPipelineImpl(
             val logicalPlan = normalizedAst.toLogicalPlan()
 
             val defaultResolvedLogicalPlan =
-                logicalPlan.toResolvedPlan(problemHandler, metadataResolver, allowUndefinedVariables)
+                logicalPlan.toResolvedPlan(problemHandler, globalVariableResolver, allowUndefinedVariables)
             // If there are unresolved variables after attempting to resolve variables, then we can't proceed.
             if (problemHandler.hasErrors) {
-                return PassResult.Error(problemHandler.problems)
+                return PlannerPassResult.Error(problemHandler.problems)
             }
 
             // Apply all of the passes over the local resolved plan.
@@ -496,7 +496,7 @@ internal class PlannerPipelineImpl(
             return PlannerPassResult.Success(finalPlan, problemHandler.problems)
         } catch (ex: PlanningAbortedException) {
             problemHandler.handleProblem(ex.problem)
-            return PassResult.Error(problemHandler.problems)
+            return PlannerPassResult.Error(problemHandler.problems)
         }
     }
 

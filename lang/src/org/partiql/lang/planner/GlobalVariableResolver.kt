@@ -32,7 +32,7 @@ sealed class GlobalResolutionResult {
  * This interface is meant to be implemented by the application embedding PartiQL and added to the [PlannerPipeline]
  * via [PlannerPipeline.Builder.globalVariableResolver].
  */
-interface GlobalVariableResolver {
+fun interface GlobalVariableResolver {
     /**
      * Implementations try to resolve a variable which is typically a database table to a schema
      * using [bindingName].  [bindingName] includes both the name as specified by the query author and a [BindingCase]
@@ -54,9 +54,7 @@ interface GlobalVariableResolver {
     fun resolveGlobal(bindingName: BindingName): GlobalResolutionResult
 }
 
-private val EMPTY: GlobalVariableResolver = object : GlobalVariableResolver {
-    override fun resolveGlobal(bindingName: BindingName): GlobalResolutionResult = GlobalResolutionResult.Undefined
-}
+private val EMPTY: GlobalVariableResolver = GlobalVariableResolver { GlobalResolutionResult.Undefined }
 
 /** Convenience function for obtaining an instance of [GlobalVariableResolver] with no defined global variables. */
 fun emptyGlobalsResolver(): GlobalVariableResolver = EMPTY

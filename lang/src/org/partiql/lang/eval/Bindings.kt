@@ -61,6 +61,7 @@ fun CaseSensitivity.toBindingCase(): BindingCase = when (this) {
  */
 data class BindingName(val name: String, val bindingCase: BindingCase) {
     val loweredName: String by lazy(LazyThreadSafetyMode.PUBLICATION) { name.toLowerCase() }
+
     /**
      * Compares [name] to [otherName] using the rules specified by [bindingCase].
      */

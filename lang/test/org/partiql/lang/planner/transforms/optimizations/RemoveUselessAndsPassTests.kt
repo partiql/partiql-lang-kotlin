@@ -29,7 +29,7 @@ class RemoveUselessAndsPassTests {
             ),
 
             // Removes (lit true) from and expressions with two or more non-(lit true) operands
-            // with three opreands
+            // with three operands
             PhysicalPlanPassExprTestCase(
                 PartiqlPhysical.build { and(litTrue(), localId(42), localId(43)) },
                 PartiqlPhysical.build { and(localId(42), localId(43)) }

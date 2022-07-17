@@ -7,13 +7,11 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.ION
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.BindingCase
-import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.ExprValueFactory
-import org.partiql.lang.planner.MetadataResolver
+import org.partiql.lang.planner.GlobalResolutionResult
 import org.partiql.lang.planner.PartiqlPhysicalPass
-import org.partiql.lang.planner.PassResult
+import org.partiql.lang.planner.PlannerPassResult
 import org.partiql.lang.planner.PlannerPipeline
-import org.partiql.lang.planner.ResolutionResult
 import org.partiql.lang.planner.assertSexpEquals
 import org.partiql.lang.planner.litInt
 import org.partiql.lang.planner.litString
@@ -43,8 +41,8 @@ class FilterScanToKeyLookupTests {
         val planningResult = planner.plan(tc.inputSql)
 
         val actualOutputPlan = when(planningResult) {
-            is PassResult.Success -> planningResult.result
-            is PassResult.Error -> {
+            is PlannerPassResult.Success -> planningResult.output
+            is PlannerPassResult.Error -> {
                 planningResult.errors.forEach { System.err.println(it) }
                 fail("Encountered one or more errors during planning.  See stderr.")
             }
@@ -55,12 +53,13 @@ class FilterScanToKeyLookupTests {
     }
 
     class Arguments : ArgumentsProviderBase() {
-        // stuff to test:
+        // TODO: stuff to test:
         // x single-field primary keys
         // x compound primary keys (all key fields included)
         // x compound primary keys (some key fields omitted)
         // - path expressions with various case-sensitivity (i.e. `f.id` vs `f."id"`)
         // - tables of type list.
+        // - Non-table variable in from-clause (i.e. a scalar)
         // - non container types, struct types (pass does not apply in that case)
         // - ORs and sub-queries are not recursed into into
         // todo: scour the code looking for more cases.
@@ -69,7 +68,7 @@ class FilterScanToKeyLookupTests {
         // we gotta lotta test cases to include here and anything we can do to reduce the verbosity
         // should be considered.
         override fun getParameters() = listOf(
-            // single-field primary key
+            // single-field primary key (field-reference on LHS)
             TestCase(
                 "SELECT * FROM $TABLE_WITH_1_FIELD_PK AS f WHERE f.id = 42",
                 PartiqlPhysical.build {
@@ -80,10 +79,32 @@ class FilterScanToKeyLookupTests {
                     )
                 }
             ),
-            // compound primary key: note: predicate lists fields in incorrect order, but they still appear
-            // in the correct order in the primary key constructor.
+            // single-field primary key (field-reference on RHS)
+            TestCase(
+                "SELECT * FROM $TABLE_WITH_1_FIELD_PK AS f WHERE 42 = f.id",
+                PartiqlPhysical.build {
+                    project(
+                        impl(FAKE_GET_BY_KEY_PROJECT_OPERATOR_NAME, listOf(ionSymbol(TABLE_WITH_1_FIELD_PK_UUID))),
+                        varDecl(0),
+                        list(litInt(42)),
+                    )
+                }
+            ),
+            // compound primary key. note: WHERE predicate lists fields in different order than
+            // specified in primary key, but they still appear in the correct order in the primary key constructor.
             TestCase(
                 "SELECT * FROM $TABLE_WITH_3_FIELD_PK AS f WHERE f.marketplaceId = 43 AND f.fulfillmentCenterId = 44 AND f.customerId = 42",
+                PartiqlPhysical.build {
+                    project(
+                        impl(FAKE_GET_BY_KEY_PROJECT_OPERATOR_NAME, listOf(ionSymbol(TABLE_WITH_3_FIELD_PK_UUID))),
+                        varDecl(0),
+                        list(litInt(42), litInt(43), litInt(44)),
+                    )
+                }
+            ),
+            // same as previous but LHS and RHS reversed
+            TestCase(
+                "SELECT * FROM $TABLE_WITH_3_FIELD_PK AS f WHERE 43 = f.marketplaceId AND 44 = f.fulfillmentCenterId AND 42 = f.customerId",
                 PartiqlPhysical.build {
                     project(
                         impl(FAKE_GET_BY_KEY_PROJECT_OPERATOR_NAME, listOf(ionSymbol(TABLE_WITH_3_FIELD_PK_UUID))),
@@ -136,32 +157,31 @@ class FilterScanToKeyLookupTests {
             )
         )
     )
-    // planner needs to resolve global variables (i.e. tables)
-    private val resolver = object : MetadataResolver {
-        override fun resolveVariable(bindingName: BindingName): ResolutionResult =
-            when(bindingName.bindingCase) {
-                BindingCase.SENSITIVE -> tables.firstOrNull { it.tableName == bindingName.name }
-                BindingCase.INSENSITIVE ->
-                    tables.firstOrNull { it.tableName.compareTo(bindingName.name, ignoreCase = true) == 0 }
-            }?.let { ResolutionResult.GlobalVariable(it.uniqueId) } ?: ResolutionResult.Undefined
-
-        override fun getGlboalVariableStaticType(uniqueId: String): StaticType =
-            tables.single { it.uniqueId == uniqueId }.staticType
-    }
 
     @Suppress("DEPRECATION") // <-- PlannerPipeline is experimental, we are ok with it being deprecated.
     private val planner = PlannerPipeline.build(valueFactory) {
-        metadataResolver(resolver)
+        // planner needs to resolve global variables (i.e. tables). By "resolve" we mean to look up the
+        // uniqueId of the table.
+        globalVariableResolver { bindingName ->
+            tables.firstOrNull { bindingName.isEquivalentTo(it.tableName) }
+                ?.let { GlobalResolutionResult.GlobalVariable(it.uniqueId) }
+                ?: GlobalResolutionResult.Undefined
+        }
+
         addPhysicalPlanPass(
             createFilterScanToKeyLookupPass(
                 customOperatorName = FAKE_GET_BY_KEY_PROJECT_OPERATOR_NAME,
-                metadataResolver = resolver
+                staticTypeResolver = { uniqueId ->
+                    // The uniqueId here was returned from the global variable resolver, above, so we should be able
+                    // to safely assume it's valid.
+                    tables.single { it.uniqueId == uniqueId }.staticType
+                }
             ) { recordType, keyFieldEqualityPredicates ->
                 PartiqlPhysical.build {
                     list(
-                        // Key values are expressed to the imaginary storage layer as ordered list. Therefore, we need to
-                        // ensure that the list we pass in as an argument to the custom_get_by_key project operator impl is
-                        // in the right order.
+                        // Key values are expressed to the imaginary storage layer as ordered list. Therefore, we need
+                        // to ensure that the list we pass in as an argument to the custom_get_by_key project operator
+                        // impl is in the right order.
                         recordType.primaryKeyFields.map { keyFieldName ->
                             keyFieldEqualityPredicates.single { it.keyFieldName == keyFieldName }.equivalentValue
                         }
@@ -171,6 +191,7 @@ class FilterScanToKeyLookupTests {
         )
         // We include these passes below to ensure they work correctly with "filter scan to key lookup" pass and
         // to reduce the syntactic overhead of the expected values.
+        // DL TODO: reconsider this decision--this hides what the result coming out of the pass actually looks like.
         addPhysicalPlanPass(createRemoveUselessAndsPass())
         addPhysicalPlanPass(createRemoveUselessFiltersPass())
     }

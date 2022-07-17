@@ -11,18 +11,18 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.StructOrdering
 import org.partiql.lang.eval.namedValue
 import org.partiql.lang.planner.DmlAction
-import org.partiql.lang.planner.MetadataResolver
+import org.partiql.lang.planner.GlobalResolutionResult
+import org.partiql.lang.planner.GlobalVariableResolver
 import org.partiql.lang.planner.PartiqlPhysicalPass
-import org.partiql.lang.planner.PassResult
+import org.partiql.lang.planner.PlannerPassResult
 import org.partiql.lang.planner.PlannerPipeline
 import org.partiql.lang.planner.QueryResult
-import org.partiql.lang.planner.ResolutionResult
 import org.partiql.lang.planner.e2e.operators.GetByKeyProjectRelationalOperatorFactory
+import org.partiql.lang.planner.StaticTypeResolver
 import org.partiql.lang.planner.transforms.optimizations.createFilterScanToKeyLookupPass
 import org.partiql.lang.planner.transforms.optimizations.createRemoveUselessAndsPass
 import org.partiql.lang.planner.transforms.optimizations.createRemoveUselessFiltersPass
 import org.partiql.lang.types.BagType
-import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.StructType
 import org.partiql.lang.util.SexpAstPrettyPrinter
 import java.util.UUID
@@ -36,32 +36,32 @@ internal const val DB_CONTEXT_VAR = "in-memory-database"
 class QueryEngine(val db: InMemoryDatabase) {
     var enableDebugOutput = false
 
-    // planner needs to resolve global variables (i.e. tables)
-    private val resolver = object : MetadataResolver {
-        override fun resolveVariable(bindingName: BindingName): ResolutionResult =
-            // The planner has asked us to resolve a global variable named [bindingName]. let's do so and return the
-            // UUID of the table.  This will get packaged into a (global_id <uuid>) node (a reference to an
-            // unambiguously global variable).
-            db.findTableMetadata(bindingName)?.let { tableMetadata ->
-                ResolutionResult.GlobalVariable(tableMetadata.tableId.toString())
-            } ?: ResolutionResult.Undefined
+    /** Given a [BindingName], inform the planner the unique identifier of the global variable (usually a table). */
+    private val globalVariableResolver = GlobalVariableResolver { bindingName ->
+        // The planner has asked us to resolve a global variable named [bindingName]. let's do so and return the
+        // UUID of the table.  This will get packaged into a (global_id <uuid>) node (a reference to an
+        // unambiguously global variable).
+        db.findTableMetadata(bindingName)?.let { tableMetadata ->
+            GlobalResolutionResult.GlobalVariable(tableMetadata.tableId.toString())
+        } ?: GlobalResolutionResult.Undefined
+    }
 
-        override fun getGlboalVariableStaticType(uniqueId: String): StaticType {
-            val tableMetadata = db.getTableMetadata(UUID.fromString(uniqueId))
-            // Tables are a bag of structs.
-            return BagType(
-                StructType(
-                    // TODO: at some point we'll populate this with complete schema information.
-                    // TODO: right now we only know about the primary key field names and we don't know
-                    // TODO: their types.
-                    fields = tableMetadata.primaryKeyFields.map { it to StaticType.ANY }.toMap(),
-                    // we leave content open because we know for a fact the table will have columns we arent'
-                    // able to include here yet.
-                    contentClosed = false,
-                    primaryKeyFields = tableMetadata.primaryKeyFields
-                )
+    /** Given a global variable's unique id, informs the planner about the static type (schema) of the global variable. */
+    private val staticTypeResolver = StaticTypeResolver { uniqueId ->
+        val tableMetadata = db.getTableMetadata(UUID.fromString(uniqueId))
+        // Tables are a bag of structs.
+        // TODO: at some point we'll populate this with complete schema information.
+        BagType(
+            StructType(
+                // TODO: nothing in the planner uses the fields property yet
+                fields = emptyMap(),
+                // TODO: nothing in the planner uses the contentClosed property yet
+                // But "technically" do have open content since nothing is constraining the fields in the table.
+                contentClosed = false,
+                // TODO: The FilterScanTokeyLookup pass does use this.
+                primaryKeyFields = tableMetadata.primaryKeyFields
             )
-        }
+        )
     }
 
     val bindings = object : Bindings<ExprValue> {
@@ -100,26 +100,29 @@ class QueryEngine(val db: InMemoryDatabase) {
 
     @Suppress("DEPRECATION") // <-- PlannerPipeline is experimental, we are ok with it being deprecated.
     private val planner = PlannerPipeline.build(db.valueFactory) {
-        metadataResolver(resolver)
+        globalVariableResolver(globalVariableResolver)
 
         addRelationalOperatorFactory(GetByKeyProjectRelationalOperatorFactory())
 
         // DL TODO: push-down filters on top of scans
-        // DL TODO: normalize filter predicates (i.e. put path expressions on left side)?
         addPhysicalPlanPass(
-            createFilterScanToKeyLookupPass(GET_BY_KEY_PROJECT_IMPL_NAME, resolver) { recordType, keyFieldEqualityPredicates ->
-                require(recordType.primaryKeyFields.size == keyFieldEqualityPredicates.size)
-                PartiqlPhysical.build {
-                    list(
-                        // Key values are expressed to the in-memory storage engine as ordered list. Therefore, we need
-                        // to ensure that the list we pass in as an argument to the custom_get_by_key project operator
-                        // impl is in the right order.
-                        recordType.primaryKeyFields.map { keyFieldName ->
-                            keyFieldEqualityPredicates.single { it.keyFieldName == keyFieldName }.equivalentValue
-                        }
-                    )
+            createFilterScanToKeyLookupPass(
+                customOperatorName = GET_BY_KEY_PROJECT_IMPL_NAME,
+                staticTypeResolver = staticTypeResolver,
+                createKeyValueConstructor = { recordType, keyFieldEqualityPredicates ->
+                    require(recordType.primaryKeyFields.size == keyFieldEqualityPredicates.size)
+                    PartiqlPhysical.build {
+                        list(
+                            // Key values are expressed to the in-memory storage engine as ordered list. Therefore, we need
+                            // to ensure that the list we pass in as an argument to the custom_get_by_key project operator
+                            // impl is in the right order.
+                            recordType.primaryKeyFields.map { keyFieldName ->
+                                keyFieldEqualityPredicates.single { it.keyFieldName == keyFieldName }.equivalentValue
+                            }
+                        )
+                    }
                 }
-            }
+            )
         )
 
         // Note that the order of the following plans is relevant--the "remove useless filters" pass
@@ -128,6 +131,9 @@ class QueryEngine(val db: InMemoryDatabase) {
         // After the filter-scan-to-key-lookup pass above, we may be left with some `(and ...)` expressions
         // whose operands were replaced with `(lit true)`. This pass removes `(lit true)` operands from `and`
         // expressions, and replaces any `and` expressions with only `(lit true)` operands with `(lit true)`.
+        // This happens recursively, so an entire tree of useless `(and ...)` expressions will be replaced
+        // with a single `(lit true)`.
+        // A constant folding pass might one day eliminate the need for this, but that is not within the current scope.
         addPhysicalPlanPass(createRemoveUselessAndsPass().debuggable("Useless ANDs removed"))
 
         // After the previous pass, we may have some `(filter ... )` nodes with `(lit true)` as a predicate.
@@ -145,12 +151,12 @@ class QueryEngine(val db: InMemoryDatabase) {
         // AST -> logical plan -> resolved logical plan -> default physical plan -> custom physical plan
         when (val planResult = planner.plan(sql)) {
             // PassResult is sorta like Rust's Result<T, E> (but in our case the E is not generic).
-            is PassResult.Error -> error(planResult)
-            is PassResult.Success -> {
-                val planObjectModel = planResult.result
+            is PlannerPassResult.Error -> error(planResult)
+            is PlannerPassResult.Success -> {
+                val planObjectModel = planResult.output
                 when (val compileResult = planner.compile(planObjectModel)) {
-                    is PassResult.Error -> error(compileResult)
-                    is PassResult.Success -> {
+                    is PlannerPassResult.Error -> error(compileResult)
+                    is PlannerPassResult.Success -> {
 
                         val session = EvaluationSession.build {
                             globals(bindings)
@@ -158,7 +164,7 @@ class QueryEngine(val db: InMemoryDatabase) {
                             // returns, (Hopefully that will reduce the chances of it being abused.)
                             withContextVariable("in-memory-database", db)
                         }
-                        return when (val queryResult = compileResult.result.eval(session)) {
+                        return when (val queryResult = compileResult.output.eval(session)) {
                             is QueryResult.Value -> queryResult.value
                             is QueryResult.DmlCommand -> {
                                 val targetTableId = UUID.fromString(queryResult.targetUniqueId)

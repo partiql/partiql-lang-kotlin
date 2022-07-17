@@ -23,17 +23,26 @@ class GetByKeyProjectRelationalOperatorFactory : ProjectRelationalOperatorFactor
         args: List<ValueExpression>
     ): RelationExpression {
         // this code runs at compile-time.
+
+        // Sanity check the static and dynamic arguments of this operator.
+
+        // If either of these checks fail, it would indicate a bug in the rewrite which created this (project ...)
+        // operator.
+        require(impl.staticArgs.size == 1) {
+            "Expected one static argument to $GET_BY_KEY_PROJECT_IMPL_NAME but found ${args.size}"
+        }
         require(args.size == 1) {
             "Expected one argument to $GET_BY_KEY_PROJECT_IMPL_NAME but found ${args.size}"
         }
 
+        // Extract the key value constructor
         val keyValueExpression = args.single()
 
+        // Parse the tableId so we don't have to at evaluation-time
         val tableId = UUID.fromString(impl.staticArgs.single().textValue)
 
-        // DL TODO: probably want to refactor this to a get-by-key or get-by-range operation because it
-        // DL TODO: is closer to real-life.  The custom scan operation really provides no value over the
-        // DL TODO: default scan
+        // Finally, return a RelationExpression which evaluates the key value expression and returns a
+        // RelationIterator containing a single row corresponding to the key (or no rows if nothing matches)
         return RelationExpression { state ->
             // this code runs at evaluation-time.
 
@@ -51,11 +60,12 @@ class GetByKeyProjectRelationalOperatorFactory : ProjectRelationalOperatorFactor
 
             // if the record was not found, return an empty relation:
             if (record == null)
-                relation(RelationType.BAG) { }
+                relation(RelationType.BAG) {
+                    // this is an empty relation empty because there is no call to yield()
+                }
             else {
-                // Return the relation which is Kotlin-coroutine that simply iterates every item in the table.
-                // This is very naive and doesn't really provide any value over the default scan operator
-                // that might be used in conjunction with this.bindings, above.
+                // Return the relation which is Kotlin-coroutine that simply projects the single record we
+                // found above into the one variable allowed by the project operator, yields, and then returns.
                 relation(RelationType.BAG) {
                     // `state` is sacrosanct and should not be modified outside PartiQL.  PartiQL
                     // provides the setVar function so that embedders can safely set the value of the

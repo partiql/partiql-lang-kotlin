@@ -1,6 +1,5 @@
 package org.partiql.lang.planner
 
-import com.amazon.ion.IonValue
 import com.amazon.ionelement.api.IonElement
 import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.ionInt
@@ -13,8 +12,6 @@ import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemDetails
-import org.partiql.lang.eval.BindingName
-import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.SexpAstPrettyPrinter
 
 /**
@@ -23,17 +20,11 @@ import org.partiql.lang.util.SexpAstPrettyPrinter
  * The fake unique identifier of bound variables is computed to be `fake_uid_for_${globalVariableName}`.
  */
 fun createFakeGlobalsResolver(vararg globalVariableNames: Pair<String, String>) =
-    object : GlobalVariableResolver {
-        override fun resolveGlobal(bindingName: BindingName): GlobalResolutionResult {
-            val matches = globalVariableNames.filter { bindingName.isEquivalentTo(it.first) }
-            return when (matches.size) {
-                0 -> GlobalResolutionResult.Undefined
-                else -> GlobalResolutionResult.GlobalVariable(matches.first().second)
-            }
-        }
-
-        override fun getGlboalVariableStaticType(uniqueId: String): StaticType {
-            TODO("Not yet implemented")
+    GlobalVariableResolver { bindingName ->
+        val matches = globalVariableNames.filter { bindingName.isEquivalentTo(it.first) }
+        when (matches.size) {
+            0 -> GlobalResolutionResult.Undefined
+            else -> GlobalResolutionResult.GlobalVariable(matches.first().second)
         }
     }
 

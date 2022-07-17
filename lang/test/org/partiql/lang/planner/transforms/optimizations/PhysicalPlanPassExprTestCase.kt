@@ -8,7 +8,7 @@ import org.partiql.lang.planner.PartiqlPhysicalPass
 import org.partiql.lang.planner.transforms.PLAN_VERSION_NUMBER
 
 /** A test case for [PartiqlPhysicalPass] implementations that work on expressions in the [PartiqlPhysical] domain. */
-class PhysicalPlanPassExprTestCase(
+data class PhysicalPlanPassExprTestCase(
     private val inputExpr: PartiqlPhysical.Expr,
     private val expectedOutputExpr: PartiqlPhysical.Expr
 ) {

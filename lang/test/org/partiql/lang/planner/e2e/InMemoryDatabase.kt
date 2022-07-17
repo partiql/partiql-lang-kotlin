@@ -21,37 +21,29 @@ class TableMetadata(val tableId: UUID, val name: String, val primaryKeyFields: L
  */
 class InMemoryDatabase {
     val valueFactory = ExprValueFactory.standard(ION)
-    private val tablesByName = HashMap<String, InMemoryTable>()
-    private val tablesById = HashMap<UUID, InMemoryTable>()
+    private val tables = ArrayList<InMemoryTable>()
 
     /**
      * Locates a table's schema by name, with optional case-insensitivity.
      *
      * Returns `null` if the table doesn't exist.
      */
-    fun findTableMetadata(bindingName: BindingName): TableMetadata? {
-        return when (bindingName.bindingCase) {
-            // Utilize hash map if the lookup should be case-sensitive
-            BindingCase.SENSITIVE -> tablesByName[bindingName.name]?.metadata
-            // Search each entry one by one if the lookup should be case-insensitive
-            BindingCase.INSENSITIVE ->
-                tablesByName.entries
-                    .firstOrNull { it.key.compareTo(bindingName.name, ignoreCase = true) == 0 }?.value?.metadata
-        }
-    }
+    fun findTableMetadata(bindingName: BindingName): TableMetadata? =
+        tables.firstOrNull { bindingName.isEquivalentTo(it.metadata.name) }?.metadata
 
     /**
      * Returns a table's metadata, given it's UUID. If no table with the given UUID exists, an an exception is
      * thrown.
      */
     fun getTableMetadata(tableId: UUID): TableMetadata =
-        tablesById[tableId]?.metadata ?: error("Requested table id does not exist: $tableId")
+        tables.firstOrNull { it.metadata.tableId == tableId }?.metadata
+            ?: error("Table with id '$tableId' does not exist!")
 
     /**
      * Creates a table with the specified name and primary key fields.
      *
      * Currently, we assume that primary key fields are case-sensitive, but this is probably
-     * incorrect. TODO: verify this and change it if needed.
+     * incorrect. DL TODO: verify this and change it if needed.
      */
     fun createTable(tableName: String, primaryKeyFields: List<String>): TableMetadata {
         findTableMetadata(BindingName(tableName, BindingCase.SENSITIVE))?.let {
@@ -60,14 +52,13 @@ class InMemoryDatabase {
 
         val metadata = TableMetadata(UUID.randomUUID(), tableName, primaryKeyFields)
         val newTable = InMemoryTable(metadata, valueFactory)
-        tablesById[metadata.tableId] = newTable
-        tablesByName[metadata.name] = newTable
+        tables.add(newTable)
 
         return metadata
     }
 
     private fun getTable(tableId: UUID) =
-        tablesById[tableId]
+        tables.firstOrNull { it.metadata.tableId == tableId }
             // if this happens either the table has been dropped and the plan being executed is no longer valid
             // or there's a bug in the query planner and/or one of the custom passes.
             ?: error("Table with id '$tableId' does not exist!")
