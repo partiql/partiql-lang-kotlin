@@ -8,10 +8,10 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.UndefinedVariableBehavior
 import org.partiql.lang.planner.EvaluatorOptions
-import org.partiql.lang.planner.MetadataResolver
+import org.partiql.lang.planner.GlboalResolutionResult
+import org.partiql.lang.planner.GlobalVariableResolver
 import org.partiql.lang.planner.PlannerPassResult
 import org.partiql.lang.planner.PlannerPipeline
-import org.partiql.lang.planner.ResolutionResult
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 
@@ -84,11 +84,11 @@ internal class PlannerPipelineFactory : PipelineFactory {
             // compilation and converting them into Problems
             enableLegacyExceptionHandling()
 
-            // Create a fake MetadataResolver implementation which defines any global that is also defined in the
+            // Create a fake GlobalVariableResolver implementation which defines any global that is also defined in the
             // session.
-            metadataResolver(
-                object : MetadataResolver {
-                    override fun resolveVariable(bindingName: BindingName): ResolutionResult {
+            globalVariableResolver(
+                object : GlobalVariableResolver {
+                    override fun resolveGlobal(bindingName: BindingName): GlboalResolutionResult {
                         val boundValue = session.globals[bindingName]
                         return if (boundValue != null) {
                             // There is no way to tell the actual name of the global variable as it exists
@@ -96,9 +96,9 @@ internal class PlannerPipelineFactory : PipelineFactory {
                             // as the uniqueId of the variable, however, this is not desirable in production
                             // scenarios.  Ideally the name of the variable in the letter case of its declaration
                             // should be used.
-                            ResolutionResult.GlobalVariable(bindingName.name)
+                            GlboalResolutionResult.GlobalVariable(bindingName.name)
                         } else {
-                            ResolutionResult.Undefined
+                            GlboalResolutionResult.Undefined
                         }
                     }
                 }

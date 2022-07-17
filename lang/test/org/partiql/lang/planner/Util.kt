@@ -6,17 +6,17 @@ import org.partiql.lang.errors.ProblemDetails
 import org.partiql.lang.eval.BindingName
 
 /**
- * Creates a fake implementation of [MetadataResolver] with the specified [globalVariableNames].
+ * Creates a fake implementation of [GlobalVariableResolver] with the specified [globalVariableNames].
  *
  * The fake unique identifier of bound variables is computed to be `fake_uid_for_${globalVariableName}`.
  */
-fun createFakeMetadataResolver(vararg globalVariableNames: Pair<String, String>) =
-    object : MetadataResolver {
-        override fun resolveVariable(bindingName: BindingName): ResolutionResult {
+fun createFakeGlobalsResolver(vararg globalVariableNames: Pair<String, String>) =
+    object : GlobalVariableResolver {
+        override fun resolveGlobal(bindingName: BindingName): GlboalResolutionResult {
             val matches = globalVariableNames.filter { bindingName.isEquivalentTo(it.first) }
             return when (matches.size) {
-                0 -> ResolutionResult.Undefined
-                else -> ResolutionResult.GlobalVariable(matches.first().second)
+                0 -> GlboalResolutionResult.Undefined
+                else -> GlboalResolutionResult.GlobalVariable(matches.first().second)
             }
         }
     }

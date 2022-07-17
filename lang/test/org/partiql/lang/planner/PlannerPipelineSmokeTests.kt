@@ -34,7 +34,7 @@ class PlannerPipelineSmokeTests {
         block: PlannerPipeline.Builder.() -> Unit = { }
     ) = PlannerPipeline.build(ION) {
         allowUndefinedVariables(allowUndefinedVariables)
-        metadataResolver(createFakeMetadataResolver("Customer" to "fake_uid_for_Customer"))
+        globalVariableResolver(createFakeGlobalsResolver("Customer" to "fake_uid_for_Customer"))
         block()
     }
 

@@ -123,7 +123,7 @@ interface PlannerPipeline {
      * - Parses the specified SQL string, producing an AST.
      * - Converts the AST to a logical plan.
      * - Resolves all global and local variables in the logical plan, assigning unique indexes to local variables
-     * and calling [MetadataResolver.resolveVariable] to obtain unique identifiers global values such as tables that
+     * and calling [GlobalVariableResolver.resolveGlobal] to obtain unique identifiers global values such as tables that
      * are specific to the application embedding PartiQL, and optionally converts undefined variables to dynamic
      * lookups.
      * - Converts the logical plan to a physical plan with `(impl default)` operators.
@@ -213,7 +213,7 @@ interface PlannerPipeline {
         private val customProcedures: MutableMap<String, StoredProcedure> = HashMap()
         private val physicalPlanPasses = ArrayList<PartiqlPhysicalPass>()
         private val physicalOperatorFactories = ArrayList<RelationalOperatorFactory>()
-        private var metadataResolver: MetadataResolver = emptyMetadataResolver()
+        private var globalVariableResolver: GlobalVariableResolver = emptyGlobalsResolver()
         private var allowUndefinedVariables: Boolean = false
         private var enableLegacyExceptionHandling: Boolean = false
 
@@ -315,12 +315,12 @@ interface PlannerPipeline {
         }
 
         /**
-         * Adds the [MetadataResolver] for global variables.
+         * Adds the [GlobalVariableResolver] for global variables (usually tables).
          *
-         * [metadataResolver] is queried during query planning to fetch metadata information such as table schemas.
+         * [globalVariableResolver] is queried during query planning to fetch unique ids for global variables.
          */
-        fun metadataResolver(bindings: MetadataResolver): Builder = this.apply {
-            this.metadataResolver = bindings
+        fun globalVariableResolver(bindings: GlobalVariableResolver): Builder = this.apply {
+            this.globalVariableResolver = bindings
         }
 
         /**
@@ -384,7 +384,7 @@ interface PlannerPipeline {
                 procedures = customProcedures,
                 physicalPlanPasses = physicalPlanPasses,
                 bindingsOperatorFactories = allPhysicalOperatorFactories.associateBy { it.key },
-                metadataResolver = metadataResolver,
+                globalVariableResolver = globalVariableResolver,
                 allowUndefinedVariables = allowUndefinedVariables,
                 enableLegacyExceptionHandling = enableLegacyExceptionHandling
             )
@@ -401,7 +401,7 @@ internal class PlannerPipelineImpl(
     val procedures: Map<String, StoredProcedure>,
     val physicalPlanPasses: List<PartiqlPhysicalPass>,
     val bindingsOperatorFactories: Map<RelationalOperatorFactoryKey, RelationalOperatorFactory>,
-    val metadataResolver: MetadataResolver,
+    val globalVariableResolver: GlobalVariableResolver,
     val allowUndefinedVariables: Boolean,
     val enableLegacyExceptionHandling: Boolean
 ) : PlannerPipeline {
@@ -446,7 +446,7 @@ internal class PlannerPipelineImpl(
 
         // logical plan -> resolved logical plan
         val problemHandler = ProblemCollector()
-        val resolvedLogicalPlan = logicalPlan.toResolvedPlan(problemHandler, metadataResolver, allowUndefinedVariables)
+        val resolvedLogicalPlan = logicalPlan.toResolvedPlan(problemHandler, globalVariableResolver, allowUndefinedVariables)
         // If there are unresolved variables after attempting to resolve variables, then we can't proceed.
         if (problemHandler.hasErrors) {
             return PlannerPassResult.Error(problemHandler.problems)
