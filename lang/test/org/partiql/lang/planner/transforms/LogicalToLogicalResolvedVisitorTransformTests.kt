@@ -15,6 +15,7 @@ import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.builtins.DYNAMIC_LOOKUP_FUNCTION_NAME
 import org.partiql.lang.eval.sourceLocationMeta
 import org.partiql.lang.planner.createFakeGlobalsResolver
+import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.problem
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.ArgumentsProviderBase

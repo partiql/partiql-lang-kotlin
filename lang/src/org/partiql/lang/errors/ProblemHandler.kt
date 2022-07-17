@@ -2,9 +2,7 @@ package org.partiql.lang.errors
 
 import org.partiql.lang.ast.passes.SemanticException
 
-/**
- * Handles the encountered problem.
- */
+/** Handles the encountered problem. */
 interface ProblemHandler {
     /** Handles a [problem] */
     fun handleProblem(problem: Problem)

@@ -28,7 +28,7 @@ class InMemoryDatabase(
 
     // planner needs to resolve global variables (i.e. tables)
     private val resolver = object : GlobalVariableResolver {
-        override fun resolveGlobal(bindingName: BindingName): GlboalResolutionResult {
+        override fun resolveGlobal(bindingName: BindingName): GlobalResolutionResult {
             return when (bindingName.bindingCase) {
                 BindingCase.SENSITIVE -> tables[bindingName.name]
                 BindingCase.INSENSITIVE -> tables.entries.firstOrNull { it.key.compareTo(bindingName.name) == 0 }?.value
@@ -39,8 +39,8 @@ class InMemoryDatabase(
                 // Therefore it is important to use the defined name of the table and *not* the name of the
                 // variable, which might vary by letter case.
                 // DL TODO: the above may not be true (see dl todo comments in the `binding` declaration below
-                GlboalResolutionResult.GlobalVariable(it.name)
-            } ?: GlboalResolutionResult.Undefined
+                GlobalResolutionResult.GlobalVariable(it.name)
+            } ?: GlobalResolutionResult.Undefined
         }
     }
 

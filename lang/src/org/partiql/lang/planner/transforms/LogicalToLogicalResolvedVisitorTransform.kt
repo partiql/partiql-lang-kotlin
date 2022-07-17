@@ -12,6 +12,7 @@ import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.builtins.DYNAMIC_LOOKUP_FUNCTION_NAME
 import org.partiql.lang.planner.GlobalResolutionResult
 import org.partiql.lang.planner.GlobalVariableResolver
+import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.pig.runtime.asPrimitive
 
 /**

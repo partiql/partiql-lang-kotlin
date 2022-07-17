@@ -13,6 +13,7 @@ import org.partiql.lang.planner.GlobalVariableResolver
 import org.partiql.lang.planner.PlannerPassResult
 import org.partiql.lang.planner.PlannerPipeline
 import org.partiql.lang.planner.QueryResult
+import org.partiql.lang.types.StaticType
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 

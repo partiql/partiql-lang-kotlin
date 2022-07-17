@@ -24,10 +24,10 @@ class DmlIntegrationTests {
         // DL TODO: DML queries return { rows_effected: n } we should assert on that.
 
         // start by inserting 4 rows
-        database.executeQuery("INSERT INTO customer VALUE { 'id': 1, 'name': 'bob' }")
-        database.executeQuery("INSERT INTO customer VALUE { 'id': 2, 'name': 'jane' }")
-        database.executeQuery("INSERT INTO customer VALUE { 'id': 3, 'name': 'moe' }")
-        database.executeQuery("INSERT INTO customer VALUE { 'id': 4, 'name': 'sue' }")
+        database.executeQuery("INSERT INTO customer << { 'id': 1, 'name': 'bob' } >>")
+        database.executeQuery("INSERT INTO customer << { 'id': 2, 'name': 'jane' } >>")
+        database.executeQuery("INSERT INTO customer << { 'id': 3, 'name': 'moe' } >>")
+        database.executeQuery("INSERT INTO customer << { 'id': 4, 'name': 'sue' } >>")
 
         // assert each of the rows is present in the actual table.
         assertEquals(4, customerTbl.size)

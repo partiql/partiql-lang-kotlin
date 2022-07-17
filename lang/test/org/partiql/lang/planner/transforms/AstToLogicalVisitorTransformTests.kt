@@ -119,7 +119,7 @@ class AstToLogicalVisitorTransformTests {
         }
         override fun getParameters() = listOf(
             // these two semantically identical cases result in the same logical plan
-            TestCase("INSERT INTO foo VALUE 1", insertIntoFooBagOf1),
+            // TestCase("INSERT INTO foo VALUE 1", insertIntoFooBagOf1),
             TestCase("INSERT INTO foo << 1 >>", insertIntoFooBagOf1),
 
             TestCase(
