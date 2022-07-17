@@ -9,7 +9,7 @@ import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.UndefinedVariableBehavior
 import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.planner.MetadataResolver
-import org.partiql.lang.planner.PassResult
+import org.partiql.lang.planner.PlannerPassResult
 import org.partiql.lang.planner.PlannerPipeline
 import org.partiql.lang.planner.ResolutionResult
 import kotlin.test.assertNotEquals
@@ -94,8 +94,8 @@ internal class PlannerPipelineFactory : PipelineFactory {
                             // There is no way to tell the actual name of the global variable as it exists
                             // in session.globals (case may differ).  For now we simply have to use binding.name
                             // as the uniqueId of the variable, however, this is not desirable in production
-                            // scenarios.  At minimum, the name of the variable in its original letter-case should be
-                            // used.
+                            // scenarios.  Ideally the name of the variable in the letter case of its declaration
+                            // should be used.
                             ResolutionResult.GlobalVariable(bindingName.name)
                         } else {
                             ResolutionResult.Undefined
@@ -111,11 +111,11 @@ internal class PlannerPipelineFactory : PipelineFactory {
 
             override fun evaluate(query: String): ExprValue {
                 when (val planningResult = plannerPipeline.planAndCompile(query)) {
-                    is PassResult.Error -> {
+                    is PlannerPassResult.Error -> {
                         fail("Query compilation unexpectedly failed: ${planningResult.errors}")
                     }
-                    is PassResult.Success -> {
-                        return planningResult.result.eval(session)
+                    is PlannerPassResult.Success -> {
+                        return planningResult.output.eval(session)
                     }
                 }
             }

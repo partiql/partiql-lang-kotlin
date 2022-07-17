@@ -43,13 +43,13 @@ class PlannerPipelineSmokeTests {
         val pipeline = createPlannerPipelineForTest(allowUndefinedVariables = true)
         val result = pipeline.plan("SELECT c.* FROM Customer AS c WHERE c.primaryKey = 42")
 
-        result as PassResult.Success
-        println(SexpAstPrettyPrinter.format(result.result.toIonElement().asAnyElement().toIonValue(ION)))
+        result as PlannerPassResult.Success
+        println(SexpAstPrettyPrinter.format(result.output.toIonElement().asAnyElement().toIonValue(ION)))
 
         assertEquals(
             result,
-            PassResult.Success(
-                result = PartiqlPhysical.build {
+            PlannerPassResult.Success(
+                output = PartiqlPhysical.build {
                     plan(
                         stmt = query(
                             bindingsToValues(
@@ -85,7 +85,7 @@ class PlannerPipelineSmokeTests {
         val qp = createPlannerPipelineForTest(allowUndefinedVariables = false)
         val result = qp.plan("SELECT undefined.* FROM Customer AS c")
         assertEquals(
-            PassResult.Error<PartiqlPhysical.Statement>(
+            PlannerPassResult.Error<PartiqlPhysical.Statement>(
                 listOf(problem(1, 8, PlanningProblemDetails.UndefinedVariable("undefined", caseSensitive = false)))
             ),
             result
@@ -117,7 +117,7 @@ class PlannerPipelineSmokeTests {
         val actualPlanResult = qp.plan("1")
 
         // final plan should be the output of the third pass.
-        assertEquals(PassResult.Success(createFakePlan(4), emptyList()), actualPlanResult)
+        assertEquals(PlannerPassResult.Success(createFakePlan(4), emptyList()), actualPlanResult)
     }
 
     private fun createFakePlan(number: Int) =
@@ -151,7 +151,7 @@ class PlannerPipelineSmokeTests {
             "'the meaning of life, the universe, and everything is 42'"
         )
 
-        assertEquals(PassResult.Error<PartiqlPhysical.Plan>(listOf(expectedError)), actualPassResult)
+        assertEquals(PlannerPassResult.Error<PartiqlPhysical.Plan>(listOf(expectedError)), actualPassResult)
     }
 
     private fun createFakeErrorProblem(sourceLocationMeta: SourceLocationMeta): Problem {
