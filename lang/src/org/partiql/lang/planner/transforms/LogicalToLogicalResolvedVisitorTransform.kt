@@ -10,7 +10,7 @@ import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.builtins.DYNAMIC_LOOKUP_FUNCTION_NAME
-import org.partiql.lang.planner.GlboalResolutionResult
+import org.partiql.lang.planner.GlobalResolutionResult
 import org.partiql.lang.planner.GlobalVariableResolver
 import org.partiql.pig.runtime.asPrimitive
 
@@ -109,13 +109,13 @@ private sealed class ResolvedVariable {
 }
 
 /**
- * Converts the public [GlboalResolutionResult] (which cannot represent local variables) to the private [ResolvedVariable],
+ * Converts the public [GlobalResolutionResult] (which cannot represent local variables) to the private [ResolvedVariable],
  * which can represent local variables.
  */
-private fun GlboalResolutionResult.toResolvedVariable() =
+private fun GlobalResolutionResult.toResolvedVariable() =
     when (this) {
-        is GlboalResolutionResult.GlobalVariable -> ResolvedVariable.Global(this.uniqueId)
-        GlboalResolutionResult.Undefined -> ResolvedVariable.Undefined
+        is GlobalResolutionResult.GlobalVariable -> ResolvedVariable.Global(this.uniqueId)
+        GlobalResolutionResult.Undefined -> ResolvedVariable.Undefined
     }
 
 /**
@@ -261,9 +261,9 @@ private data class LogicalToLogicalResolvedVisitorTransform(
         }
 
     /**
-     * Returns [GlboalResolutionResult.LocalVariable] if [bindingName] refers to a local variable.
+     * Returns [GlobalResolutionResult.LocalVariable] if [bindingName] refers to a local variable.
      *
-     * Otherwise, returns [GlboalResolutionResult.Undefined].  (Elsewhere, [globals] will be checked next.)
+     * Otherwise, returns [GlobalResolutionResult.Undefined].  (Elsewhere, [globals] will be checked next.)
      */
     private fun resolveLocalVariable(bindingName: BindingName): ResolvedVariable {
         val found = this.inputScope.varDecls.firstOrNull { bindingName.isEquivalentTo(it.name.text) }
@@ -281,13 +281,13 @@ private data class LogicalToLogicalResolvedVisitorTransform(
     override fun transformExprId(node: PartiqlLogical.Expr.Id): PartiqlLogicalResolved.Expr {
         val bindingName = BindingName(node.name.text, node.case.toBindingCase())
 
-        val glboalResolutionResult = if (
+        val globalResolutionResult = if (
             this.currentVariableLookupStrategy == VariableLookupStrategy.GLOBALS_THEN_LOCALS &&
             node.qualifier is PartiqlLogical.ScopeQualifier.Unqualified
         ) {
             // look up variable in globals first, then locals
             when (val resolvedVariable = globals.resolveGlobal(bindingName)) {
-                GlboalResolutionResult.Undefined -> resolveLocalVariable(bindingName)
+                GlobalResolutionResult.Undefined -> resolveLocalVariable(bindingName)
                 else -> resolvedVariable.toResolvedVariable()
             }
         } else {
@@ -297,12 +297,12 @@ private data class LogicalToLogicalResolvedVisitorTransform(
                 else -> localResolutionResult
             }
         }
-        return when (glboalResolutionResult) {
+        return when (globalResolutionResult) {
             is ResolvedVariable.Global -> {
-                node.asGlobalId(glboalResolutionResult.uniqueId)
+                node.asGlobalId(globalResolutionResult.uniqueId)
             }
             is ResolvedVariable.LocalVariable -> {
-                node.asLocalId(glboalResolutionResult.index)
+                node.asLocalId(globalResolutionResult.index)
             }
             ResolvedVariable.Undefined -> {
                 if (this.allowUndefinedVariables) {

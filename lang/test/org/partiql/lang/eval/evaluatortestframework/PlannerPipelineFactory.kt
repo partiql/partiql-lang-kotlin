@@ -8,7 +8,7 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.UndefinedVariableBehavior
 import org.partiql.lang.planner.EvaluatorOptions
-import org.partiql.lang.planner.GlboalResolutionResult
+import org.partiql.lang.planner.GlobalResolutionResult
 import org.partiql.lang.planner.GlobalVariableResolver
 import org.partiql.lang.planner.PlannerPassResult
 import org.partiql.lang.planner.PlannerPipeline
@@ -88,7 +88,7 @@ internal class PlannerPipelineFactory : PipelineFactory {
             // session.
             globalVariableResolver(
                 object : GlobalVariableResolver {
-                    override fun resolveGlobal(bindingName: BindingName): GlboalResolutionResult {
+                    override fun resolveGlobal(bindingName: BindingName): GlobalResolutionResult {
                         val boundValue = session.globals[bindingName]
                         return if (boundValue != null) {
                             // There is no way to tell the actual name of the global variable as it exists
@@ -96,9 +96,9 @@ internal class PlannerPipelineFactory : PipelineFactory {
                             // as the uniqueId of the variable, however, this is not desirable in production
                             // scenarios.  Ideally the name of the variable in the letter case of its declaration
                             // should be used.
-                            GlboalResolutionResult.GlobalVariable(bindingName.name)
+                            GlobalResolutionResult.GlobalVariable(bindingName.name)
                         } else {
-                            GlboalResolutionResult.Undefined
+                            GlobalResolutionResult.Undefined
                         }
                     }
                 }

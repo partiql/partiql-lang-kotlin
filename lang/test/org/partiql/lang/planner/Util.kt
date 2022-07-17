@@ -12,11 +12,11 @@ import org.partiql.lang.eval.BindingName
  */
 fun createFakeGlobalsResolver(vararg globalVariableNames: Pair<String, String>) =
     object : GlobalVariableResolver {
-        override fun resolveGlobal(bindingName: BindingName): GlboalResolutionResult {
+        override fun resolveGlobal(bindingName: BindingName): GlobalResolutionResult {
             val matches = globalVariableNames.filter { bindingName.isEquivalentTo(it.first) }
             return when (matches.size) {
-                0 -> GlboalResolutionResult.Undefined
-                else -> GlboalResolutionResult.GlobalVariable(matches.first().second)
+                0 -> GlobalResolutionResult.Undefined
+                else -> GlobalResolutionResult.GlobalVariable(matches.first().second)
             }
         }
     }
