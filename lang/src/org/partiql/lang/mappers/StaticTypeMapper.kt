@@ -105,7 +105,7 @@ class StaticTypeMapper(schema: IonSchemaModel.Schema) {
             is ListType -> ListType(getElement(currentTopLevelTypeName), metas)
             is SexpType -> SexpType(getElement(currentTopLevelTypeName), metas)
             is BagType -> BagType(getElement(currentTopLevelTypeName), metas)
-            is StructType -> StructType(getFields(currentTopLevelTypeName), isClosedContent(), metas)
+            is StructType -> StructType(getFields(currentTopLevelTypeName), contentClosed = isClosedContent(), metas = metas)
             else -> coreType.withMetas(metas)
         }
     }

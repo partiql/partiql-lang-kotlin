@@ -3,6 +3,11 @@ package org.partiql.lang.planner.transforms
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlAstToPartiqlLogicalVisitorTransform
 import org.partiql.lang.domains.PartiqlLogical
+import org.partiql.lang.errors.Problem
+import org.partiql.lang.eval.physical.sourceLocationMetaOrUnknown
+import org.partiql.lang.planner.PlanningProblemDetails
+import org.partiql.lang.planner.abortQueryPlanning
+import org.partiql.lang.planner.abortUnimplementedFeature
 
 /**
  * Transforms an instance of [PartiqlAst.Statement] to [PartiqlLogical.Statement].  This representation of the query
@@ -99,9 +104,9 @@ private object AstToLogicalVisitorTransform : PartiqlAstToPartiqlLogicalVisitorT
      */
     private fun checkForUnsupportedSelectClauses(node: PartiqlAst.Expr.Select) {
         when {
-            node.group != null -> TODO("Support for GROUP BY")
-            node.order != null -> TODO("Support for ORDER BY")
-            node.having != null -> TODO("Support for HAVING")
+            node.group != null -> abortUnimplementedFeature(node, "GROUP BY")
+            node.order != null -> abortUnimplementedFeature(node, "ORDER BY")
+            node.having != null -> abortUnimplementedFeature(node, "HAVING")
         }
     }
 
@@ -119,7 +124,7 @@ private object AstToLogicalVisitorTransform : PartiqlAstToPartiqlLogicalVisitorT
         // happens that these never utilize more than one DML operation anyway.  We don't need to
         // support more than one DML operation until we start supporting UPDATE statements.
         if (node.operations.ops.size != 1) {
-            TODO("support more than one DML operation!")
+            abortUnimplementedFeature(node, "more than one DML operation")
         }
         val dmlOp = node.operations.ops.single()
 
@@ -133,8 +138,13 @@ private object AstToLogicalVisitorTransform : PartiqlAstToPartiqlLogicalVisitorT
                 // VALUES constructor.  Since parser uses the same nodes for the alternate syntactic representations
                 // `<< [ ... ] ... >>` and `BAG(LIST(...), ...)` those get blocked too.  This is probably just as well.
                 if (dmlOp.values is PartiqlAst.Expr.Bag) {
-                    if (dmlOp.values.values.any { it is PartiqlAst.Expr.List }) {
-                        TODO("error message for use of INSERT ... VALUES (or other bag of lists expression)")
+                    dmlOp.values.values.firstOrNull { it is PartiqlAst.Expr.List }?.let {
+                        abortQueryPlanning(
+                            Problem(
+                                it.metas.sourceLocationMetaOrUnknown,
+                                PlanningProblemDetails.InsertValuesDisallowed
+                            )
+                        )
                     }
                 }
 
@@ -147,29 +157,29 @@ private object AstToLogicalVisitorTransform : PartiqlAstToPartiqlLogicalVisitorT
                     )
                 }
             }
-            // This is essentially the same as the previous, but inserts a single row.  Translates to the same
-            // logical plan but the sinsgle value is wrapped in a BAG.
+            // INSERT single row with VALUE is disallowed use INSERT INTO <target> << <value>, <value> >> instead.
             is PartiqlAst.DmlOp.InsertValue -> {
-                node.from?.let { TODO("Support FROM with INSERT INTO ... VALUE") }
-                dmlOp.index?.let { TODO("Support AT with INSERT INTO ... VALUE") }
-                dmlOp.onConflict?.let { TODO("Support ON CONFLICT") }
-
-                PartiqlLogical.build {
-                    dml(
-                        target = dmlTarget(transformExpr(dmlOp.target)),
-                        operation = dmlInsert(),
-                        rows = bag(transformExpr(dmlOp.value)),
-                        metas = node.metas
+                abortQueryPlanning(
+                    Problem(
+                        node.metas.sourceLocationMetaOrUnknown,
+                        PlanningProblemDetails.InsertValueDisallowed
                     )
-                }
+                )
             }
             is PartiqlAst.DmlOp.Delete -> {
                 val relation = node.from?.let { FromSourceToBexpr.convert(it) }
                 if (node.from == null) {
-                    TODO("TODO: omission of FROM clause with DELETE")
+                    // unfortunately, the AST allows malformations such as this however the parser should
+                    // never actually create an AST for a DELETE statement without a FROM clause.
+                    error("Malformed AST: DELETE without FROM (this should never happen)")
                 } else {
                     val scan = relation as? PartiqlLogical.Bexpr.Scan
-                        ?: TODO("${node.from} is an unsupported delete target")
+                        ?: abortQueryPlanning(
+                            Problem(
+                                node.metas.sourceLocationMetaOrUnknown,
+                                PlanningProblemDetails.InvalidDmlTarget
+                            )
+                        )
 
                     val predicate = node.where?.let { transformExpr(it) }
                     val rows = if (predicate == null) scan else PartiqlLogical.build { filter(predicate, scan) }
@@ -191,15 +201,22 @@ private object AstToLogicalVisitorTransform : PartiqlAstToPartiqlLogicalVisitorT
                     }
                 }
             }
-            is PartiqlAst.DmlOp.Remove, is PartiqlAst.DmlOp.Set -> {
-                TODO("${dmlOp::class.java}")
+            is PartiqlAst.DmlOp.Remove -> {
+                abortQueryPlanning(
+                    Problem(node.metas.sourceLocationMetaOrUnknown, PlanningProblemDetails.InvalidUseOfRemove)
+                )
+            }
+            is PartiqlAst.DmlOp.Set -> {
+                abortQueryPlanning(
+                    Problem(node.metas.sourceLocationMetaOrUnknown, PlanningProblemDetails.InvalidUseOfSet)
+                )
             }
         }
     }
 
-    override fun transformStatementDdl(node: PartiqlAst.Statement.Ddl): PartiqlLogical.Statement {
-        TODO("Support for DDL")
-    }
+    override fun transformStatementDdl(node: PartiqlAst.Statement.Ddl): PartiqlLogical.Statement = abortQueryPlanning(
+        Problem(node.metas.sourceLocationMetaOrUnknown, PlanningProblemDetails.DdlUnsupported)
+    )
 
     override fun transformExprStruct(node: PartiqlAst.Expr.Struct): PartiqlLogical.Expr =
         PartiqlLogical.build {
@@ -231,7 +248,7 @@ private object FromSourceToBexpr : PartiqlAst.FromSource.Converter<PartiqlLogica
     }
 
     override fun convertUnpivot(node: PartiqlAst.FromSource.Unpivot): PartiqlLogical.Bexpr {
-        TODO("Support for UNPIVOT")
+        abortUnimplementedFeature(node, "UNPIVOT")
     }
 
     override fun convertJoin(node: PartiqlAst.FromSource.Join): PartiqlLogical.Bexpr =
@@ -245,7 +262,6 @@ private object FromSourceToBexpr : PartiqlAst.FromSource.Converter<PartiqlLogica
             )
         }
 
-    override fun convertGraphMatch(node: PartiqlAst.FromSource.GraphMatch): PartiqlLogical.Bexpr {
-        TODO("Support for MATCH")
-    }
+    override fun convertGraphMatch(node: PartiqlAst.FromSource.GraphMatch): PartiqlLogical.Bexpr =
+        abortUnimplementedFeature(node, "MATCH")
 }

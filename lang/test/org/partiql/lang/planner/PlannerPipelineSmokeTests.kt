@@ -19,7 +19,6 @@ import org.partiql.lang.eval.physical.operators.ValueExpression
 import org.partiql.lang.eval.physical.sourceLocationMetaOrUnknown
 import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
 import org.partiql.lang.planner.transforms.PLAN_VERSION_NUMBER
-import org.partiql.lang.planner.transforms.PlanningProblemDetails
 import org.partiql.lang.util.SexpAstPrettyPrinter
 
 /**

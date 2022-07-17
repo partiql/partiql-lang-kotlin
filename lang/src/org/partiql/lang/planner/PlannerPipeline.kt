@@ -38,7 +38,6 @@ import org.partiql.lang.eval.physical.PhysicalPlanThunk
 import org.partiql.lang.eval.physical.operators.DEFAULT_RELATIONAL_OPERATOR_FACTORIES
 import org.partiql.lang.eval.physical.operators.RelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.RelationalOperatorFactoryKey
-import org.partiql.lang.planner.transforms.PlanningProblemDetails
 import org.partiql.lang.planner.transforms.normalize
 import org.partiql.lang.planner.transforms.toDefaultPhysicalPlan
 import org.partiql.lang.planner.transforms.toLogicalPlan
@@ -446,54 +445,59 @@ internal class PlannerPipelineImpl(
         }
         // Now run the AST thru each pass until we arrive at the physical algebra.
 
-        // Normalization--synthesizes any unspecified `AS` aliases, converts `SELECT *` to `SELECT f.*[, ...]` ...
-        val normalizedAst = ast.normalize()
-
-        // ast -> logical plan
-        val logicalPlan = normalizedAst.toLogicalPlan()
-
         // logical plan -> resolved logical plan
         val problemHandler = ProblemCollector()
-        val defaultResolvedLogicalPlan = logicalPlan.toResolvedPlan(problemHandler, globalVariableResolver, allowUndefinedVariables)
-        // If there are unresolved variables after attempting to resolve variables, then we can't proceed.
-        if (problemHandler.hasErrors) {
-            return PlannerPassResult.Error(problemHandler.problems)
+        try {
+            // Normalization--synthesizes any unspecified `AS` aliases, converts `SELECT *` to `SELECT f.*[, ...]` ...
+            val normalizedAst = ast.normalize()
+
+            // ast -> logical plan
+            val logicalPlan = normalizedAst.toLogicalPlan()
+
+            val defaultResolvedLogicalPlan =
+                logicalPlan.toResolvedPlan(problemHandler, metadataResolver, allowUndefinedVariables)
+            // If there are unresolved variables after attempting to resolve variables, then we can't proceed.
+            if (problemHandler.hasErrors) {
+                return PassResult.Error(problemHandler.problems)
+            }
+
+            // Apply all of the passes over the local resolved plan.
+            val finalResolvedLogicalPlan = logicalResolvedPlanPasses
+                .fold(defaultResolvedLogicalPlan) { accumulator: PartiqlLogicalResolved.Plan, current: PartiqlLogicalResolvedPass ->
+                    val passResult = current.rewrite(accumulator, problemHandler)
+                    // stop planning if this pass resulted in any errors.
+                    if (problemHandler.hasErrors) {
+                        return PlannerPassResult.Error(problemHandler.problems)
+                    }
+                    passResult
+                }
+
+            // Possible future passes:
+            // - type checking and inferencing?
+            // - constant folding
+            // - common sub-expression removal
+            // - push down predicates & projections on top of their scan nodes.
+            // - customer supplied rewrites of resolved logical plan.
+
+            // resolved logical plan -> physical plan.
+            // this will give all relational operators `(impl default)`.
+            val defaultPhysicalPlan = finalResolvedLogicalPlan.toDefaultPhysicalPlan()
+
+            val finalPlan = physicalPlanPasses
+                .fold(defaultPhysicalPlan) { accumulator: PartiqlPhysical.Plan, current: PartiqlPhysicalPass ->
+                    val passResult = current.rewrite(accumulator, problemHandler)
+                    // stop planning if this pass resulted in any errors.
+                    if (problemHandler.hasErrors) {
+                        return PlannerPassResult.Error(problemHandler.problems)
+                    }
+                    passResult
+                }
+            // If we reach this far, we're successful.  If there were any problems at all, they were just warnings.
+            return PlannerPassResult.Success(finalPlan, problemHandler.problems)
+        } catch (ex: PlanningAbortedException) {
+            problemHandler.handleProblem(ex.problem)
+            return PassResult.Error(problemHandler.problems)
         }
-
-        // Apply all of the passes over the local resolved plan.
-        val finalResolvedLogicalPlan = logicalResolvedPlanPasses
-            .fold(defaultResolvedLogicalPlan) { accumulator: PartiqlLogicalResolved.Plan, current: PartiqlLogicalResolvedPass ->
-                val passResult = current.rewrite(accumulator, problemHandler)
-                // stop planning if this pass resulted in any errors.
-                if (problemHandler.hasErrors) {
-                    return PlannerPassResult.Error(problemHandler.problems)
-                }
-                passResult
-            }
-
-        // Possible future passes:
-        // - type checking and inferencing?
-        // - constant folding
-        // - common sub-expression removal
-        // - push down predicates & projections on top of their scan nodes.
-        // - customer supplied rewrites of resolved logical plan.
-
-        // resolved logical plan -> physical plan.
-        // this will give all relational operators `(impl default)`.
-        val defaultPhysicalPlan = finalResolvedLogicalPlan.toDefaultPhysicalPlan()
-
-        val finalPlan = physicalPlanPasses
-            .fold(defaultPhysicalPlan) { accumulator: PartiqlPhysical.Plan, current: PartiqlPhysicalPass ->
-                val passResult = current.rewrite(accumulator, problemHandler)
-                // stop planning if this pass resulted in any errors.
-                if (problemHandler.hasErrors) {
-                    return PlannerPassResult.Error(problemHandler.problems)
-                }
-                passResult
-            }
-
-        // If we reach this far, we're successful.  If there were any problems at all, they were just warnings.
-        return PlannerPassResult.Success(finalPlan, problemHandler.problems)
     }
 
     override fun compile(physicalPlan: PartiqlPhysical.Plan): PlannerPassResult<QueryPlan> {
