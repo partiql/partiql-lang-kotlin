@@ -75,7 +75,9 @@ class PartiQLParserTest {
                 "SELECT * FROM <<1, 2, 3>> OFFSET 2",
                 "SELECT * FROM <<>> WHERE 1 = 1",
                 "SELECT * FROM <<>> HAVING true",
-                "SELECT * FROM <<>> LET 2 AS a"
+                "SELECT * FROM <<>> LET 2 AS a",
+                "SELECT * FROM a, (SELECT * FROM <<>>)",
+                "SELECT * FROM a, b, c"
             )
             return queries
         }
