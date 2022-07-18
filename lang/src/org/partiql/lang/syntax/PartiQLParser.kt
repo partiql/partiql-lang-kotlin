@@ -46,7 +46,7 @@ class PartiQLParser(
 
     fun parseQuery(source: String): ParseTree {
         val parser = getParser(source)
-        return parser.sfwQuery()
+        return parser.topQuery()
     }
 
     fun getParser(source: String): GeneratedParser {

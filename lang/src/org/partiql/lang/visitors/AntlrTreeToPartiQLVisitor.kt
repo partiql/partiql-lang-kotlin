@@ -33,7 +33,7 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
      *
      */
 
-    override fun visitSelectFromWhere(ctx: PartiQLParser.SelectFromWhereContext): PartiqlAst.PartiqlAstNode {
+    override fun visitSelectFromWhere(ctx: PartiQLParser.SelectFromWhereContext): PartiqlAst.Expr.Select {
         val projection = visit(ctx.selectClause()) as PartiqlAst.Projection
         val strategy = getSetQuantifierStrategy(ctx.selectClause())
         val from = visit(ctx.fromClause()) as PartiqlAst.FromSource
@@ -44,7 +44,7 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
         val where = if (ctx.whereClause() != null) visit(ctx.whereClause()) as PartiqlAst.Expr else null
         val having = if (ctx.havingClause() != null) visit(ctx.havingClause()) as PartiqlAst.Expr else null
         val let = if (ctx.letClause() != null) visit(ctx.letClause()) as PartiqlAst.Let else null
-        val select = PartiqlAst.BUILDER().select(
+        return PartiqlAst.BUILDER().select(
             project = projection,
             from = from,
             setq = strategy,
@@ -56,7 +56,6 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
             having = having,
             fromLet = let
         )
-        return PartiqlAst.BUILDER().query(select)
     }
 
     override fun visitSelectAll(ctx: PartiQLParser.SelectAllContext): PartiqlAst.PartiqlAstNode =
@@ -178,13 +177,45 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
      *
      */
 
-    // TODO
-    override fun visitFromClause(ctx: PartiQLParser.FromClauseContext): PartiqlAst.PartiqlAstNode {
-        val tableRef = visit(ctx.tableReference(0)) as PartiqlAst.Expr // TODO: Get ALL
-        return PartiqlAst.FromSource.Scan(tableRef, asAlias = null, byAlias = null, atAlias = null)
+    override fun visitFromClause(ctx: PartiQLParser.FromClauseContext): PartiqlAst.FromSource {
+        var toJoin = visit(ctx.tableReference(0)) as PartiqlAst.FromSource
+        return if (ctx.tableReference().size > 1) {
+            for (index in 1 until ctx.tableReference().size) {
+                val rhs = visit(ctx.tableReference(index)) as PartiqlAst.FromSource
+                toJoin = PartiqlAst.BUILDER().join(PartiqlAst.JoinType.Inner(), toJoin, rhs)
+            }
+            toJoin
+        } else toJoin
     }
 
-    override fun visitExprTermBag(ctx: PartiQLParser.ExprTermBagContext): PartiqlAst.PartiqlAstNode {
+    override fun visitExprTermWrappedQuery(ctx: PartiQLParser.ExprTermWrappedQueryContext): PartiqlAst.Expr {
+        return visit(ctx.query()) as PartiqlAst.Expr
+    }
+
+    override fun visitTopQuery(ctx: PartiQLParser.TopQueryContext): PartiqlAst.Statement.Query {
+        val queryExpr = visitQuery(ctx.query())
+        return PartiqlAst.BUILDER().query(queryExpr)
+    }
+
+    override fun visitQuery(ctx: PartiQLParser.QueryContext): PartiqlAst.Expr {
+        return visitQuerySet(ctx.querySet())
+    }
+
+    // TODO: Do other scenarios
+    override fun visitQuerySet(ctx: PartiQLParser.QuerySetContext): PartiqlAst.Expr {
+        return visit(ctx.singleQuery()) as PartiqlAst.Expr
+    }
+
+    override fun visitQuerySfw(ctx: PartiQLParser.QuerySfwContext): PartiqlAst.Expr.Select {
+        return visit(ctx.sfwQuery()) as PartiqlAst.Expr.Select
+    }
+
+    override fun visitTableBaseRefClauses(ctx: PartiQLParser.TableBaseRefClausesContext): PartiqlAst.FromSource.Scan {
+        val expr = visit(ctx.exprQuery()) as PartiqlAst.Expr
+        return PartiqlAst.FromSource.Scan(expr, asAlias = null, byAlias = null, atAlias = null)
+    }
+
+    override fun visitExprTermBag(ctx: PartiQLParser.ExprTermBagContext): PartiqlAst.Expr.Bag {
         val exprList = ctx.exprQuery().map { exprQuery -> visit(exprQuery) as PartiqlAst.Expr }
         return PartiqlAst.Expr.Bag(exprList)
     }
