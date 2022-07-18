@@ -8,6 +8,8 @@ options {
 
 // TODO: Search LATERAL
 
+topQuery: query;
+
 sfwQuery
     : withClause? selectClause fromClause? letClause? whereClause? groupClause? havingClause? orderByClause? limitClause? offsetByClause? # SelectFromWhere
     | withClause? fromClause whereClause? groupClause? havingClause? selectClause orderByClause? limitClause? offsetByClause?  # FromWhereSelect
@@ -39,22 +41,22 @@ symbolPrimitive
     ;
 // TODO: Mental note. Needed to duplicate table_joined to remove left recursion
 tableReference
-    : tableNonJoin                                              # TableRefNonJoin
+    : tableNonJoin                                             # TableRefNonJoin
     | tableReference joinType? CROSS JOIN joinRhs              # TableRefCrossJoin
-    | tableReference joinType JOIN LATERAL? joinRhs joinSpec  # TableRefJoin
+    | tableReference joinType JOIN LATERAL? joinRhs joinSpec   # TableRefJoin
     | tableReference NATURAL joinType JOIN LATERAL? joinRhs    # TableRefNaturalJoin
-    | PAREN_LEFT tableJoined PAREN_RIGHT                         # TableRefWrappedJoin
+    | PAREN_LEFT tableJoined PAREN_RIGHT                       # TableRefWrappedJoin
     ;
 tableNonJoin
-    : tableBaseReference
-    | tableUnpivot
+    : tableBaseReference          # TableNonJoinBaseRef
+    | tableUnpivot                # TableNonJoinUnpivot
     ;
 asIdent: AS symbolPrimitive ;
 atIdent: AT symbolPrimitive ;
 byIdent: BY symbolPrimitive ;
 tableBaseReference
-    : exprQuery symbolPrimitive
-    | exprQuery asIdent? atIdent? byIdent?
+    : exprQuery symbolPrimitive             # TableBaseRefSymbol
+    | exprQuery asIdent? atIdent? byIdent?  # TableBaseRefClauses
     ;
     
 // TODO: Check that all uses use a table_reference before token
@@ -277,9 +279,9 @@ valueRow
     ;
     
 singleQuery
-    : exprQuery
-    | sfwQuery
-    | values
+    : exprQuery   # QueryExpr
+    | sfwQuery    # QuerySfw
+    | values      # QueryValues
     ;
     
 // NOTE: Modified rule
