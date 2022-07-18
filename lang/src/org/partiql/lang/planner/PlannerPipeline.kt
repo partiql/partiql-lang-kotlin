@@ -18,6 +18,7 @@ import com.amazon.ion.IonSystem
 import org.partiql.lang.SqlException
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.PartiqlLogicalResolved
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemCollector
@@ -79,6 +80,11 @@ fun interface PartiqlPhysicalPass {
     fun rewrite(inputPlan: PartiqlPhysical.Plan, problemHandler: ProblemHandler): PartiqlPhysical.Plan
 }
 
+/** Similar to [PartiqlPhysicalPass] but on the resolved logical plan. */
+fun interface PartiqlLogicalResolvedPass {
+    fun rewrite(inputPlan: PartiqlLogicalResolved.Plan, problemHandler: ProblemHandler): PartiqlLogicalResolved.Plan
+}
+
 /**
  * [PlannerPipeline] is the main interface for planning and compiling PartiQL queries into instances of [Expression]
  * which can be executed.
@@ -123,35 +129,35 @@ interface PlannerPipeline {
      * - Converts the logical plan to a physical plan with `(impl default)` operators.
      *
      * @param query The text of the SQL statement or expression to be planned.
-     * @return [PassResult.Success] containing an instance of [PartiqlPhysical.Statement] and any applicable warnings
-     * if planning was successful or [PassResult.Error] if not.
+     * @return [PlannerPassResult.Success] containing an instance of [PartiqlPhysical.Statement] and any applicable warnings
+     * if planning was successful or [PlannerPassResult.Error] if not.
      */
-    fun plan(query: String): PassResult<PartiqlPhysical.Plan>
+    fun plan(query: String): PlannerPassResult<PartiqlPhysical.Plan>
 
     /**
      * Compiles the previously planned [PartiqlPhysical.Statement] instance.
      *
      * @param physicalPlan The physical query plan.
-     * @return [PassResult.Success] containing an instance of [PartiqlPhysical.Statement] and any applicable warnings
-     * if compilation was successful or [PassResult.Error] if not.
+     * @return [PlannerPassResult.Success] containing an instance of [PartiqlPhysical.Statement] and any applicable warnings
+     * if compilation was successful or [PlannerPassResult.Error] if not.
      */
-    fun compile(physicalPlan: PartiqlPhysical.Plan): PassResult<Expression>
+    fun compile(physicalPlan: PartiqlPhysical.Plan): PlannerPassResult<Expression>
 
     /**
      * Plans and compiles a query.
      *
      * @param query The text of the SQL statement or expression to be planned and compiled.
-     * @return [PassResult.Success] containing an instance of [PartiqlPhysical.Statement] and any applicable warnings
-     * if compiling and planning was successful or [PassResult.Error] if not.
+     * @return [PlannerPassResult.Success] containing an instance of [PartiqlPhysical.Statement] and any applicable warnings
+     * if compiling and planning was successful or [PlannerPassResult.Error] if not.
      */
-    fun planAndCompile(query: String): PassResult<Expression> =
+    fun planAndCompile(query: String): PlannerPassResult<Expression> =
         when (val planResult = plan(query)) {
-            is PassResult.Error -> PassResult.Error(planResult.errors)
-            is PassResult.Success -> {
-                when (val compileResult = compile(planResult.result)) {
-                    is PassResult.Error -> compileResult
-                    is PassResult.Success -> PassResult.Success(
-                        compileResult.result,
+            is PlannerPassResult.Error -> PlannerPassResult.Error(planResult.errors)
+            is PlannerPassResult.Success -> {
+                when (val compileResult = compile(planResult.output)) {
+                    is PlannerPassResult.Error -> compileResult
+                    is PlannerPassResult.Success -> PlannerPassResult.Success(
+                        compileResult.output,
                         // Need to include any warnings that may have been discovered during planning.
                         planResult.warnings + compileResult.warnings
                     )
@@ -417,7 +423,7 @@ internal class PlannerPipelineImpl(
         }
     }.flatten().toMap()
 
-    override fun plan(query: String): PassResult<PartiqlPhysical.Plan> {
+    override fun plan(query: String): PlannerPassResult<PartiqlPhysical.Plan> {
         val ast = try {
             parser.parseAstStatement(query)
         } catch (ex: SyntaxException) {
@@ -428,7 +434,7 @@ internal class PlannerPipelineImpl(
                 ),
                 PlanningProblemDetails.ParseError(ex.generateMessageNoLocation())
             )
-            return PassResult.Error(listOf(problem))
+            return PlannerPassResult.Error(listOf(problem))
         }
         // Now run the AST thru each pass until we arrive at the physical algebra.
 
@@ -443,7 +449,7 @@ internal class PlannerPipelineImpl(
         val resolvedLogicalPlan = logicalPlan.toResolvedPlan(problemHandler, metadataResolver, allowUndefinedVariables)
         // If there are unresolved variables after attempting to resolve variables, then we can't proceed.
         if (problemHandler.hasErrors) {
-            return PassResult.Error(problemHandler.problems)
+            return PlannerPassResult.Error(problemHandler.problems)
         }
 
         // Possible future passes:
@@ -462,16 +468,16 @@ internal class PlannerPipelineImpl(
                 val passResult = current.rewrite(accumulator, problemHandler)
                 // stop planning if this pass resulted in any errors.
                 if (problemHandler.hasErrors) {
-                    return PassResult.Error(problemHandler.problems)
+                    return PlannerPassResult.Error(problemHandler.problems)
                 }
                 passResult
             }
 
         // If we reach this far, we're successful.  If there were any problems at all, they were just warnings.
-        return PassResult.Success(finalPlan, problemHandler.problems)
+        return PlannerPassResult.Success(finalPlan, problemHandler.problems)
     }
 
-    override fun compile(physicalPlan: PartiqlPhysical.Plan): PassResult<Expression> {
+    override fun compile(physicalPlan: PartiqlPhysical.Plan): PlannerPassResult<Expression> {
         // PhysicalBExprToThunkConverter and PhysicalExprToThunkConverterImpl are mutually recursive therefore
         // we have to fall back on mutable variables to allow them to reference each other.
         var exprConverter: PhysicalExprToThunkConverterImpl? = null
@@ -509,11 +515,11 @@ internal class PlannerPipelineImpl(
                         ),
                         PlanningProblemDetails.CompileError(e.generateMessageNoLocation())
                     )
-                    return PassResult.Error(listOf(problem))
+                    return PlannerPassResult.Error(listOf(problem))
                 }
             }
         }
 
-        return PassResult.Success(expression, listOf())
+        return PlannerPassResult.Success(expression, listOf())
     }
 }

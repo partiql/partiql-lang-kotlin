@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added EvaluatonSession.context: A string-keyed map of arbitrary values which provides a way to make  
 session state such as current user and transaction details available to custom [ExprFunction] implementations 
 and custom physical operator implementations.
+- Renamed PassResult to PlannerPassResult for clarity. (This is part of the experimental query planner API.)
 
 ### Changed
 
